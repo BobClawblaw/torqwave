@@ -93,7 +93,12 @@ Shift-click selects several clips, note and audio together, to move, nudge, quan
 
 ## Automate the instrument
 
-An instrument's parameters can be automated like any effect's. Click the track's **A** button and show one of its parameters' envelopes. See [Automation](06-multitrack-sessions.md#automation).
+An instrument's parameters can be automated like any effect's:
+
+- **Draw it:** click the track's **A** button, open **Show <instrument> Envelope** (the instrument's name, above the numbered effects) and choose a parameter. Click its line to add points.
+- **Write it while playing:** turn on **Write Automation** (W), open the instrument's window (**Inst** > **Instrument Window**) and move its controls while the session plays.
+
+The envelope is saved with the session and plays when the session is mixed down, bounced or frozen. Parameters with an envelope are marked "(automated)" in the menu. The envelope belongs to that instrument: choosing a different instrument for the track leaves the envelope unused. See [Automation](06-multitrack-sessions.md#automation).
 
 ## Freeze, bounce and export
 

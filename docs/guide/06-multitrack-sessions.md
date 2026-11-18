@@ -166,12 +166,12 @@ The master meter is on the right.
 
 ## Automation
 
-An envelope makes volume, pan or an effect parameter change over time.
+An envelope makes volume, pan, an effect parameter or, on an instrument track, an instrument parameter change over time.
 
 - **See it:** a track with automation shows its envelope over its lane: volume first, else pan, else the first effect parameter that has one. To see another, or none, click the track's **A** button and choose it, or **Hide Envelope**. A track you hide stays hidden.
-- **Draw it:** click the **A** button and choose the envelope to show: volume, pan, or a parameter of one of the track's effects. Click the line to add a point and drag points to shape it.
+- **Draw it:** click the **A** button and choose the envelope to show: volume, pan, a parameter of the track's instrument (**Show <instrument> Envelope**, on an instrument track), or a parameter of one of its effects (**Show 1. <effect> Envelope** and on, numbered as in the FX menu). Click the line to add a point and drag points to shape it.
 - **Remove points:** click a point to select it (Shift-click adds more), then press Delete or Backspace. Or Option-click a point: with Option held, the pointer over a point shows a red minus, and an Option-click on the line adds nothing.
-- **Write it while playing:** turn on **Write Automation** (W) and play. Moving the track's volume or pan then writes into its envelope, and the envelope shows as it is written, unless you hid it.
+- **Write it while playing:** turn on **Write Automation** (W) and play. Moving the track's volume or pan, or a control in its instrument's or an effect's own window, then writes into that envelope, and the envelope shows as it is written, unless you hid it.
 
 ![The Keys track's volume envelope, shown with its A button: the line drops for the verse and rises into the chorus](../screenshots/guide-automation.png)
 

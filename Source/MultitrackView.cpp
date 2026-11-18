@@ -1008,9 +1008,11 @@ void MultitrackView::showAutomationMenu (juce::uint32 trackId, juce::Component& 
         menu.addSubMenu ("Show Surround Envelope", surround);
     }
 
-    // Each effect's parameters, in the plug-in's order; automated ones say so.
+    // The instrument's parameters, then each effect's, in the plug-in's order; automated ones say
+    // so. The instrument is named alone and the effects numbered from 1, as the FX menu has them.
     std::vector<AutomationTarget> effectTargets;
     const auto& effects = engine.getTrackEffects();
+    const auto firstEffectSlot = effects.getInstrument (trackId) != nullptr ? 1 : 0;
 
     for (int slot = 0; slot < effects.getNumSlots (trackId); ++slot)
     {
@@ -1034,7 +1036,8 @@ void MultitrackView::showAutomationMenu (juce::uint32 trackId, juce::Component& 
             effectTargets.push_back (effectTarget);
         }
 
-        menu.addSubMenu ("Show " + juce::String (slot + 1) + ". " + plugin->getName() + " Envelope", parameters, ! byIndex.empty());
+        const auto name = slot < firstEffectSlot ? plugin->getName() : juce::String (slot - firstEffectSlot + 1) + ". " + plugin->getName();
+        menu.addSubMenu ("Show " + name + " Envelope", parameters, ! byIndex.empty());
     }
 
     menu.addItem (hide, "Hide Envelope", showing.has_value());

@@ -6,6 +6,8 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 **Envelopes on instrument tracks**
 - A click on an instrument track's envelope line over a note clip adds a point, as it does over an audio clip. Before, the note clip under the line took the click, so on a track full of note clips the envelope could only be drawn in the gaps between them.
+- The A button's menu names an instrument track's instrument on its own: **Show <instrument> Envelope**, above the effects, which are numbered from 1 as the FX menu numbers them. Before, the instrument was listed as effect 1 ("Show 1. <instrument> Envelope") and the effects from 2, so the numbers did not match the FX menu's. Its parameters were already automatable (drawn, written from its window with Write Automation, saved, played, copied and moved with time like an effect's); the guide now says how.
+- Measured by the tests (2 new checks): an envelope drawn on the built-in synth's level comes back from a session file exactly, the synth reloaded into the same slot; and played from the reloaded chain, the synth follows it (a tenth of the sound at -20 dB, then the full sound, its level left at the envelope's end), bit for bit the same as before saving. The A menu's new names have no automated check. The whole suite passed (1,707 checks; 340 commands, 107 default keys).
 
 ## Released
 

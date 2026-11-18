@@ -806,6 +806,47 @@ namespace
                    && offline.getInstrument (trackId) != nullptr && same (live, again),
                "instrument tracks: what freezing renders keeps the note clips, and the chain a bounce or mixdown loads from the "
                    "session's XML has the instrument first and mixes the same, bit for bit");
+
+        // An envelope drawn on the instrument's own level (its slot first in the chain, as the A
+        // menu names it): -20 dB, then 0 dB from 12,032 (a step's start). Saved in a session file
+        // with the chain, read back, its chain loaded afresh: the envelope is the same, the
+        // instrument keeps its slot, and what plays follows the envelope.
+        const auto instrumentSlot = effects.getSlotId (trackId, 0);
+        const Envelope drawn { { { 0, 0.5f }, { 12031, 0.5f }, { 12032, 1.0f }, { 47999, 1.0f } } };
+        auto drawnOn = s;
+        const auto set = SessionEdits::setEnvelope (drawnOn, trackId, AutomationTarget::effect (instrumentSlot, "level"), drawn);
+        const auto file = juce::File::createTempFile (".tqsession");
+        const auto saveError = SessionFile::save (drawnOn, file, [&effects] (juce::uint32 id) { return effects.createXml (id); });
+        const auto loaded = SessionFile::load (file, engine.formatManager);
+        file.deleteFile();
+
+        const auto* back = loaded.state.tracks.size() == 1 ? &loaded.state.tracks[0] : nullptr;
+        std::map<juce::uint32, std::unique_ptr<juce::XmlElement>> loadedXml;
+
+        for (auto& [id, chain] : loaded.effects)
+            if (chain != nullptr)
+                loadedXml[id] = std::make_unique<juce::XmlElement> (*chain);
+
+        TrackEffects reloaded;
+        const auto reloadErrors = OfflineRender::loadTrackEffects (loadedXml, engine.pluginFormatManager, rate, reloaded);
+        const auto backId = back != nullptr ? back->id : 0u;
+        auto* reloadedSynth = reloaded.getInstrument (backId);
+        check (instrumentSlot == slotId && set && saveError.isEmpty() && loaded.error.isEmpty() && back != nullptr
+                   && back->effectEnvelopes == drawnOn.tracks[0].effectEnvelopes && back->envelope (AutomationTarget::effect (instrumentSlot, "level")) == drawn
+                   && reloadErrors.isEmpty() && reloadedSynth != nullptr && reloaded.getSlotId (backId, 0) == instrumentSlot,
+               "instrument tracks: an envelope drawn on the instrument's parameter comes back from the session file, its instrument in the same slot");
+
+        if (back == nullptr || reloadedSynth == nullptr)
+            return;
+
+        auto* level = TrackEffects::parametersById (*reloadedSynth)["level"];
+        const auto heard = play (loaded.state, 0, 48000, 512, &reloaded);
+        const auto quiet = rms (heard, 2000, 8000), loud = rms (heard, 14000, 8000);
+        const auto followed = level != nullptr && juce::exactlyEqual (level->getValue(), 1.0f);
+        const auto liveHeard = play (drawnOn, 0, 48000, 512, &effects);
+        check (followed && std::abs (quiet / loud - 0.1) < 0.0005 && std::abs (loud - sounding) < 0.001 * sounding && same (heard, liveHeard),
+               "instrument tracks: reloaded, the instrument follows its envelope as it plays (" + juce::String (quiet / loud, 5)
+                   + " of the sound at -20 dB before 12,032, the full sound after, its level left at the envelope's end), the same as before saving, bit for bit");
     }
 
     // Notes played live (the on-screen keyboard, a MIDI input) with the session stopped: the
