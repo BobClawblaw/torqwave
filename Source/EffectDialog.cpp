@@ -183,6 +183,7 @@ EffectDialog::EffectDialog (Options o) : options (std::move (o))
     message.setText (options.message, juce::dontSendNotification);
     message.setJustificationType (juce::Justification::topLeft);
     message.setMinimumHorizontalScale (1.0f);
+    message.setBorderSize ({});   // drawn at the width its height is measured for
     addAndMakeVisible (message);
 
     for (auto& f : options.fields)

@@ -5713,6 +5713,50 @@ namespace
             });
         }
     };
+
+    /** The File Info dialog's fields, each with its label beside its box. An alert window's own text
+        boxes take 50 points each and the window is cut to the screen's height, which put its buttons
+        over the last fields. */
+    class InfoFields final : public juce::Component
+    {
+    public:
+        void add (const juce::String& label, const juce::String& value, int limit)
+        {
+            auto& row = *rows.emplace_back (std::make_unique<Row>());
+            row.label.setText (label, juce::dontSendNotification);
+            row.editor.setSelectAllWhenFocused (true);
+            row.editor.setEscapeAndReturnKeysConsumed (false);   // Return and Escape reach the dialog's buttons
+            row.editor.setColour (juce::TextEditor::outlineColourId, getLookAndFeel().findColour (juce::ComboBox::outlineColourId));
+            row.editor.setFont (getLookAndFeel().getAlertWindowMessageFont());
+            row.editor.setText (value, false);
+
+            if (limit > 0)
+                row.editor.setInputRestrictions (limit);
+
+            addAndMakeVisible (row.label);
+            addAndMakeVisible (row.editor);
+            setSize (650, (int) rows.size() * rowHeight);
+        }
+
+        juce::String getText (size_t index) const  { return rows[index]->editor.getText(); }
+
+        void resized() override
+        {
+            auto r = getLocalBounds();
+
+            for (auto& row : rows)
+            {
+                auto line = r.removeFromTop (rowHeight).withTrimmedBottom (4);
+                row->label.setBounds (line.removeFromLeft (labelWidth));
+                row->editor.setBounds (line);
+            }
+        }
+
+    private:
+        struct Row { juce::Label label; juce::TextEditor editor; };
+        std::vector<std::unique_ptr<Row>> rows;
+        static constexpr int rowHeight = 30, labelWidth = 290;
+    };
 }
 
 void MainComponent::batchProcess()
@@ -7318,15 +7362,15 @@ void MainComponent::showFileInfo()
     const auto& doc = engine.document;
     const auto current = doc.getInfo();
 
-    struct Field { const char* key; const char* label; juce::String FileInfo::* field; int limit; };
+    struct Field { const char* label; juce::String FileInfo::* field; int limit; };
     static const Field fields[] {
-        { "title", "Title", &FileInfo::title, 0 }, { "artist", "Artist", &FileInfo::artist, 0 }, { "album", "Album", &FileInfo::album, 0 },
-        { "genre", "Genre", &FileInfo::genre, 0 }, { "year", "Year", &FileInfo::year, 0 }, { "track", "Track (3 or 3/12)", &FileInfo::track, 0 },
-        { "comment", "Comment", &FileInfo::comment, 0 },
-        { "description", "Broadcast: description", &FileInfo::description, 256 }, { "originator", "Broadcast: originator", &FileInfo::originator, 32 },
-        { "reference", "Broadcast: originator reference", &FileInfo::originatorReference, 32 },
-        { "date", "Broadcast: origination date (yyyy-mm-dd)", &FileInfo::originationDate, 10 },
-        { "time", "Broadcast: origination time (hh:mm:ss)", &FileInfo::originationTime, 8 } };
+        { "Title", &FileInfo::title, 0 }, { "Artist", &FileInfo::artist, 0 }, { "Album", &FileInfo::album, 0 },
+        { "Genre", &FileInfo::genre, 0 }, { "Year", &FileInfo::year, 0 }, { "Track (3 or 3/12)", &FileInfo::track, 0 },
+        { "Comment", &FileInfo::comment, 0 },
+        { "Broadcast: description", &FileInfo::description, 256 }, { "Broadcast: originator", &FileInfo::originator, 32 },
+        { "Broadcast: originator reference", &FileInfo::originatorReference, 32 },
+        { "Broadcast: origination date (yyyy-mm-dd)", &FileInfo::originationDate, 10 },
+        { "Broadcast: origination time (hh:mm:ss)", &FileInfo::originationTime, 8 } };
 
     auto* box = new juce::AlertWindow ("File Info", "WAV, AIFF and FLAC files, and MP3 and AAC exports, keep the cover and the first seven; "
                                                     "WAV files keep the broadcast details too (in their bext chunk); exports through ffmpeg keep "
@@ -7335,26 +7379,25 @@ void MainComponent::showFileInfo()
     auto picker = std::make_shared<CoverPicker> (current.cover);
     box->addCustomComponent (picker.get());
 
-    for (const auto& f : fields)
-    {
-        box->addTextEditor (f.key, current.*f.field, f.label);
+    auto boxes = std::make_shared<InfoFields>();
 
-        if (f.limit > 0)
-            box->getTextEditor (f.key)->setInputRestrictions (f.limit);
-    }
+    for (const auto& f : fields)
+        boxes->add (f.label, current.*f.field, f.limit);
+
+    box->addCustomComponent (boxes.get());
 
     box->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
     box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
 
-    box->enterModalState (true, juce::ModalCallbackFunction::create ([this, box, current, picker] (int result)
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([this, current, picker, boxes] (int result)
     {
         if (result != 1)
             return;
 
         auto next = current;
 
-        for (const auto& f : fields)
-            next.*f.field = box->getTextEditorContents (f.key).trim();
+        for (size_t i = 0; i < std::size (fields); ++i)
+            next.*fields[i].field = boxes->getText (i).trim();
 
         next.cover = picker->getCover();
 
