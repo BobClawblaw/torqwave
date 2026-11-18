@@ -5,7 +5,7 @@ A long post for x.com introducing Torqwave. The post itself is the plain text in
 ## The post
 
 ```text
-Introducing Torqwave 🎚️
+Introducing Torqwave 🐶
 
 A free, open-source audio editor for macOS, Windows and Linux, growing into a real alternative to Audacity.
 
