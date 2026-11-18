@@ -1,5 +1,6 @@
 #include "LoadingScreen.h"
 #include "BinaryData.h"
+#include "BuildStamp.h"
 
 LoadingScreen::LoadingScreen()
     : logo (juce::ImageCache::getFromMemory (BinaryData::torqwavebanner_png, BinaryData::torqwavebanner_pngSize)),
@@ -8,7 +9,7 @@ LoadingScreen::LoadingScreen()
     setOpaque (true);
 
     if (auto* app = juce::JUCEApplication::getInstance())
-        version = app->getApplicationVersion();
+        version = BuildStamp::describe (app->getApplicationVersion());
 
     continueButton.setTooltip ("Use the app now; what is still loading carries on behind");
     continueButton.onClick = [this] { finish(); };
@@ -120,12 +121,14 @@ void LoadingScreen::paint (juce::Graphics& g)
     g.setColour (juce::Colour (0xff2a2f36));
     g.drawRect (getLocalBounds());
 
-    // The version, small in the bottom right corner, clear of the status line and Continue.
+    // The version in the bottom right corner, clear of the status line and Continue (a test
+    // build's stamp, when it is too long for the room beside Continue, goes onto a second line).
     if (version.isNotEmpty())
     {
-        g.setColour (juce::Colour (0xff6c7488));
-        g.setFont (juce::FontOptions (11.0f));
-        g.drawText ("Version " + version, getLocalBounds().reduced (10, 6), juce::Justification::bottomRight);
+        g.setColour (juce::Colour (0xffaab2c2));
+        g.setFont (juce::FontOptions (13.0f));
+        const auto room = getLocalBounds().reduced (12, 8);
+        g.drawFittedText ("Version " + version, room.withLeft (room.getCentreX() + 64), juce::Justification::bottomRight, 2, 1.0f);
     }
 
     if (const auto status = getStatus(); status.isNotEmpty())

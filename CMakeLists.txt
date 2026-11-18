@@ -293,6 +293,17 @@ target_compile_definitions(Torqwave PRIVATE
     JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:Torqwave,JUCE_PRODUCT_NAME>"
     JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:Torqwave,JUCE_VERSION>")
 
+# What this build is (a release, or a test build with its time and commit), written at every
+# build into TorqwaveBuildStamp.h for Source/BuildStamp.h.
+set(TORQWAVE_STAMP_DIR "${CMAKE_BINARY_DIR}/stamp")
+add_custom_target(TorqwaveBuildStamp ALL
+    COMMAND ${CMAKE_COMMAND} -DOUT=${TORQWAVE_STAMP_DIR}/TorqwaveBuildStamp.h -DSRC=${CMAKE_SOURCE_DIR}
+            -DVERSION=${PROJECT_VERSION} -P ${CMAKE_SOURCE_DIR}/Scripts/build-stamp.cmake
+    BYPRODUCTS ${TORQWAVE_STAMP_DIR}/TorqwaveBuildStamp.h
+    COMMENT "Stamping the build")
+add_dependencies(Torqwave TorqwaveBuildStamp)
+target_include_directories(Torqwave PRIVATE ${TORQWAVE_STAMP_DIR})
+
 # The logo on the loading screen.
 juce_add_binary_data(TorqwaveArt SOURCES Art/torqwave-banner.png ThirdParty/UCS/ucs_v8_2_1.tsv)
 
@@ -571,6 +582,7 @@ target_compile_definitions(TorqwaveTests PRIVATE ${torqwave_defs} JUCE_MODAL_LOO
 add_dependencies(TorqwaveTests Torqwave)
 target_compile_definitions(TorqwaveTests PRIVATE TORQWAVE_APP_EXECUTABLE="$<TARGET_FILE:Torqwave>")
 target_compile_definitions(TorqwaveTests PRIVATE TORQWAVE_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+target_include_directories(TorqwaveTests PRIVATE ${TORQWAVE_STAMP_DIR})
 
 if(WIN32)
     target_link_libraries(TorqwaveTests PRIVATE mfplat mfuuid wmcodecdspuuid delayimp)

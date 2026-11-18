@@ -73,6 +73,12 @@ public:
     bool isNoteClipSelected (juce::uint32 clipId) const  { return selectedNoteClips.count (clipId) > 0; }
     void showNoteClipMenu (juce::uint32 clipId);
 
+    /** The menu of a right-click on the lanes away from a clip (or below them, or on the ruler
+        away from a marker): add a track, an instrument track or a bus; on an instrument track
+        add notes or a trigger there; paste there; select every clip. Its items that work at a
+        place first move the cursor to `p` (the track there selected). */
+    juce::PopupMenu laneMenuAt (juce::Point<int> p);
+
     /** Puts a one-note clip (a hit: C4, a tenth of a second) at the cursor on the track, selected. */
     void addTrigger (juce::uint32 trackId);
 
@@ -513,6 +519,14 @@ public:
 
     static constexpr int minLaneHeight = 56, maxLaneHeight = 312, laneHeightStep = 24;
 
+    /** The width of the track list on the left, from headerWidth (to start with) to
+        maxListWidth: dragged by the edge between it and the lanes. onListWidthChanged is
+        called when such a drag ends, to keep the width. */
+    int getListWidth() const noexcept                { return listWidth; }
+    void setListWidth (int);
+    std::function<void (int width)> onListWidthChanged;
+    static constexpr int maxListWidth = 600;
+
     /** Fills the timeline with a range of the session, with a small margin either side. */
     void zoomToRange (juce::Range<juce::int64>);
 
@@ -548,7 +562,9 @@ private:
     class SendsPanel;
 
     enum class Drag { none, range, move, trimStart, trimEnd, fadeIn, fadeOut, envelopePoint, marker, clipGain, clipGainPoint, scrub,
-                      stretchStart, stretchEnd, moveNotes, trimNotesStart, trimNotesEnd, stretchNotesStart, stretchNotesEnd, drawNotes, rubberBand };
+                      stretchStart, stretchEnd, moveNotes, trimNotesStart, trimNotesEnd, stretchNotesStart, stretchNotesEnd, drawNotes, rubberBand, listWidth };
+    int listWidth = headerWidth;
+    bool overListEdge (juce::Point<int> p) const noexcept   { return p.x >= listWidth - 3 && p.x < listWidth + 4; }
     Tool tool = Tool::select;
     juce::Point<int> rubberStart;             // where a rubber band began
     juce::Rectangle<int> rubberBand;          // the band so far (empty between drags)
@@ -652,6 +668,7 @@ private:
     void showInputMenu (juce::uint32 trackId, juce::Component& target);
     void showEffectsMenu (juce::uint32 trackId, juce::Component& target);
     juce::PopupMenu instrumentMenuFor (juce::uint32 trackId);   // choose, swap, open or remove the track's instrument
+    void addTrackItems (juce::PopupMenu&);   // Add Track, Add Instrument Track (a submenu of instruments), Add Bus
     void showSends (juce::uint32 trackId, juce::Component& target);
     void showAutomationMenu (juce::uint32 trackId, juce::Component& target);
     void showClipMenu (juce::uint32 clipId);

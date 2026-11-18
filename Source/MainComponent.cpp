@@ -1,4 +1,5 @@
 #include "MainComponent.h"
+#include "BuildStamp.h"
 #include "CopyLine.h"
 #include "Platform.h"
 #include "PreviousName.h"
@@ -60,6 +61,7 @@ namespace
     constexpr const char* prerollKey      = "preroll";
     constexpr const char* postrollKey     = "postroll";
     constexpr const char* laneHeightKey   = "laneHeight";
+    constexpr const char* trackListWidthKey = "trackListWidth";
     constexpr const char* loopPlaybackKey = "loopPlayback";
     constexpr const char* fileTabsKey = "fileTabs";
     constexpr const char* projectHistoryKey = "projectHistory";
@@ -870,7 +872,7 @@ MainComponent::MainComponent()
     engine.document.addChangeListener (this);
     engine.session.addChangeListener (this);
 
-    for (auto* b : { &editorButton, &multitrackButton, &openButton, &pluginsButton, &audioButton })
+    for (auto* b : { &editorButton, &multitrackButton, &pluginsButton, &audioButton })
         addAndMakeVisible (b);
 
     // The mode switch: the side in use is lit, the other is where a click goes.
@@ -883,7 +885,6 @@ MainComponent::MainComponent()
     editorButton.onClick = [this] { setMultitrack (false); };
     multitrackButton.onClick = [this] { setMultitrack (true); };
 
-    openButton.onClick     = [this] { commands.invokeDirectly (cmdOpen, true); };
     pluginsButton.onClick  = [this] { showPluginList(); };
     audioButton.onClick    = [this] { showSettings ("Audio"); };
     selectionPanel.onClick = [this] { commands.invokeDirectly (cmdSetSelection, true); };
@@ -981,6 +982,8 @@ MainComponent::MainComponent()
     loopPlayback = settings->getBoolValue (loopPlaybackKey, false);
     editorPanel->setTabsWanted (settings->getBoolValue (fileTabsKey, false));
     multitrack.setLaneHeight (settings->getIntValue (laneHeightKey, MultitrackView::trackHeight));
+    multitrack.setListWidth (settings->getIntValue (trackListWidthKey, MultitrackView::headerWidth));
+    multitrack.onListWidthChanged = [this] (int width) { appProperties.getUserSettings()->setValue (trackListWidthKey, width); };
     rolls.preroll = juce::jlimit (0.0, SessionRecording::Rolls::longest, settings->getDoubleValue (prerollKey, rolls.preroll));
     rolls.postroll = juce::jlimit (0.0, SessionRecording::Rolls::longest, settings->getDoubleValue (postrollKey, rolls.postroll));
     multitrack.onOpenInEditor = [this] (const juce::File& f) { openFile (f); };
@@ -1358,12 +1361,10 @@ void MainComponent::resized()
 {
     auto r = getLocalBounds().reduced (6);
 
-    // Top: the mode and Open, the transport with the time and zoom in the middle, then the setup buttons.
+    // Top: the mode, the transport with the time and zoom in the middle, then the setup buttons.
     auto toolbar = r.removeFromTop (30);
     editorButton.setBounds (toolbar.removeFromLeft (64).reduced (0, 2));
     multitrackButton.setBounds (toolbar.removeFromLeft (86).reduced (0, 2));
-    toolbar.removeFromLeft (6);
-    openButton.setBounds (toolbar.removeFromLeft (76).reduced (0, 2));
     audioButton.setBounds (toolbar.removeFromRight (124).reduced (0, 2));
     toolbar.removeFromRight (6);
     pluginsButton.setBounds (toolbar.removeFromRight (96).reduced (0, 2));
@@ -3148,18 +3149,52 @@ void MainComponent::updateInputs()
     engine.setMonitoredTracks (inputMonitoring && multitrackMode ? monitored : std::vector<std::pair<juce::uint32, TrackInput>>());
 }
 
+void MainComponent::routeLiveMidi()
+{
+    // The selected track when it is an instrument track, else the track of the note clip in the
+    // piano roll; a note sounding from the piano roll keeps its own track, and a recording the
+    // track it began on.
+    const auto state = engine.session.getState();
+    const SessionTrack* target = nullptr;
+
+    if (multitrackMode && auditionTrack != 0)
+        target = state->findTrack (auditionTrack);
+    else if (multitrackMode && recordingNotes)
+        target = state->findTrack (engine.getLiveMidi().getTrack());
+    else if (multitrackMode)
+    {
+        const auto selected = multitrack.getSelectedTrack();
+
+        if (juce::isPositiveAndBelow (selected, (int) state->tracks.size()) && state->tracks[(size_t) selected].isInstrument)
+            target = &state->tracks[(size_t) selected];
+        else if (const auto where = state->findNoteClip (multitrack.getSelectedNoteClip()); where.has_value())
+            target = &state->tracks[(size_t) where->first];
+    }
+
+    engine.getLiveMidi().setTrack (target != nullptr ? target->id : 0u);
+
+    // An instrument's window open: it may sound from its own keys, so the instruments keep running.
+    for (auto* w : editorWindows)
+        if (auto* p = dynamic_cast<juce::AudioPluginInstance*> (&w->processor); p != nullptr && TrackEffects::isInstrument (*p))
+            engine.getLiveMidi().keepSounding();
+
+    // The keyboard says what it plays, or why nothing.
+    if (auto it = madePanels.find (Panels::keyboard); it != madePanels.end())
+        if (auto* keyboard = dynamic_cast<MidiIn::KeyboardPanel*> (it->second.get()))
+            keyboard->setStatus (! multitrackMode ? juce::String ("Instruments play in the Multitrack view.")
+                                 : target == nullptr ? juce::String ("Select an instrument track to play its instrument.")
+                                 : engine.getTrackEffects().getInstrument (target->id) == nullptr ? target->name + " has no instrument yet."
+                                 : "Plays " + target->name + "'s instrument.");
+}
+
 void MainComponent::timerCallback()
 {
     auto& player = engine.getPlayer();
     auto& recorder = engine.getRecorder();
     keepRecoveryCopy();
 
-    // Live MIDI plays the selected track's instrument; a note recording ends with playback.
-    {
-        const auto state = engine.session.getState();
-        const auto track = multitrack.getSelectedTrack();
-        engine.getLiveMidi().setTrack (multitrackMode && juce::isPositiveAndBelow (track, (int) state->tracks.size()) ? state->tracks[(size_t) track].id : 0u);
-    }
+    // Live MIDI plays the instrument of the track being worked on; a note recording ends with playback.
+    routeLiveMidi();
 
     if (recordingNotes && ! player.isPlaying())
         finishRecordingNotes();
@@ -5213,8 +5248,9 @@ juce::String MainComponent::openWildcard()
 void MainComponent::chooseFile()
 {
     auto* preview = makeOpenPreview();
-    chooser = std::make_unique<juce::FileChooser> ("Open audio file", engine.document.getFile().getParentDirectory(),
-                                                   openWildcard());
+    // Audio files, and sessions and projects (each opened as such by openDocuments).
+    chooser = std::make_unique<juce::FileChooser> ("Open audio file, session or project", engine.document.getFile().getParentDirectory(),
+                                                   RecentFiles::openPatterns (openWildcard(), Project::extension));
     chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles
                               | juce::FileBrowserComponent::canSelectMultipleItems,
                           [this] (const juce::FileChooser& fc)
@@ -10764,7 +10800,7 @@ void MainComponent::showConvolutionDialog (std::shared_ptr<const Convolver::Impu
 
 void MainComponent::showAbout()
 {
-    const auto version = juce::JUCEApplication::getInstance() != nullptr ? juce::JUCEApplication::getInstance()->getApplicationVersion() : juce::String();
+    const auto version = BuildStamp::describe (juce::JUCEApplication::getInstance() != nullptr ? juce::JUCEApplication::getInstance()->getApplicationVersion() : juce::String());
     // The text laid out at a set width (the window sized to it), its last line the address,
     // which copies itself when clicked.
     auto* box = new juce::AlertWindow ("About Torqwave", {}, juce::MessageBoxIconType::NoIcon, this);
@@ -12986,7 +13022,6 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
         auto panel = std::make_unique<FilesPanel> (openFiles);
         panel->onChoose = [this] (int index) { switchToFile (index); };
         panel->onClose = [this] (int index) { closeFile (index); };
-        panel->onOpen = [this] { chooseFile(); };
         made = std::move (panel);
     }
     else if (id == Panels::mixer)
@@ -13101,6 +13136,27 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
 
             if (SessionEdits::replaceNoteClip (next, clip.id, clip))
                 engine.session.apply (std::move (next), description);
+        };
+        panel->audition = [this] (int pitch, float velocity)
+        {
+            auto& live = engine.getLiveMidi();
+
+            if (velocity <= 0.0f)
+            {
+                live.addMessage (juce::MidiMessage::noteOff (1, pitch));
+                auditionTrack = 0;
+                return;
+            }
+
+            // The clip's own instrument, whichever track is selected.
+            const auto state = engine.session.getState();
+
+            if (const auto where = state->findNoteClip (multitrack.getSelectedNoteClip()); where.has_value() && multitrackMode)
+            {
+                auditionTrack = state->tracks[(size_t) where->first].id;
+                live.setTrack (auditionTrack);
+                live.addMessage (juce::MidiMessage::noteOn (1, pitch, velocity));
+            }
         };
         made = std::move (panel);
     }

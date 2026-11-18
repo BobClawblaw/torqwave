@@ -24,6 +24,7 @@
 #include "../Source/TrackEffects.h"
 #include "../Source/UndoHistory.h"
 #include "TestPlugins.h"
+#include "../Source/BuildStamp.h"
 #include "TestUtils.h"
 #include "MixerTests.h"
 
@@ -1763,6 +1764,15 @@ namespace
                             && items[1].first == 102 && items.back() == std::pair<int, juce::String> (110, "Clear Menu");
         const auto kinds = RecentFiles::isSession (files[3]) && ! RecentFiles::isSession (files[4]);
 
+        // File > Open takes sessions and projects as well as audio, new names and old.
+        {
+            const juce::WildcardFileFilter filter (RecentFiles::openPatterns ("*.wav;*.flac", "tqproject"), {}, "open");
+            const auto takes = [&filter] (const char* name) { return filter.isFileSuitable (juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile (name)); };
+            check (takes ("a.wav") && takes ("b.tqsession") && takes ("c.tqproject") && takes ("d.sbsession") && takes ("e.sbproject")
+                       && ! takes ("f.txt") && RecentFiles::openPatterns ({}, "tqproject") == "*.tqsession;*.sbsession;*.tqproject;*.sbproject",
+                   "File > Open shows audio files, sessions and projects as openable, and nothing else");
+        }
+
         RecentFiles::clear (list, settings);
         juce::RecentlyOpenedFilesList cleared;
         RecentFiles::restore (cleared, settings);
@@ -1876,6 +1886,12 @@ namespace
             screen.setVersion ("9.8.7");
             const auto versioned = screen.getVersion() == "9.8.7" && screen.createComponentSnapshot (screen.getLocalBounds()).isValid();
             logo = logo && unversioned && versioned;
+
+            // The version as shown: plain for a release build, else stamped as a test build.
+            const auto shown = BuildStamp::describe ("9.8.7");
+            check (BuildStamp::describe ({}).isEmpty()
+                       && (TORQWAVE_BUILD_RELEASE != 0 ? shown == "9.8.7" : shown.startsWith ("9.8.7 (test build ") && shown.endsWith (")")),
+                   "loading screen: the version shown is plain for a release build and stamped for a test build (" + shown + ")");
             screen.begin ("device", "Opening the interface");
             screen.begin ("plug-ins", "Reading the plug-in list");
             const auto newest = screen.getStatus() == "Reading the plug-in list";

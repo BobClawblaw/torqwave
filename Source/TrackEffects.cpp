@@ -259,6 +259,8 @@ void TrackEffects::prepare (double sampleRate)
     const juce::ScopedLock sl (lock);
     rate = sampleRate;
     midi.ensureSize (256);
+    missedLive.ensureSize (1024);
+    missedLive.clear();
 
     for (auto& [id, chain] : chains)
         for (auto& slot : chain)
@@ -384,6 +386,17 @@ juce::uint32 TrackEffects::add (juce::uint32 trackId, std::unique_ptr<juce::Audi
 bool TrackEffects::isInstrument (const juce::AudioPluginInstance& p)
 {
     return p.acceptsMidi() && p.getPluginDescription().isInstrument;
+}
+
+bool TrackEffects::hasInstrument (juce::uint32 trackId)
+{
+    const juce::ScopedTryLock sl (lock);
+
+    if (! sl.isLocked())
+        return true;
+
+    const auto* chain = find (trackId);
+    return chain != nullptr && ! chain->empty() && isInstrument (*chain->front()->plugin);
 }
 
 juce::AudioPluginInstance* TrackEffects::getInstrument (juce::uint32 trackId) const
@@ -602,6 +615,21 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
 
     if (chain == nullptr)
     {
+        // Locked out: this block's live messages for the track wait for its next one.
+        if (! sl.isLocked() && liveMidi != nullptr && track.id == liveTrack)
+        {
+            if (missedTrack != track.id)
+                missedLive.clear();
+
+            missedTrack = track.id;
+
+            for (const auto meta : *liveMidi)
+                if (meta.samplePosition >= liveFrom && meta.samplePosition < liveFrom + numFrames)
+                    missedLive.addEvent (meta.getMessage(), 0);
+
+            liveFrom += numFrames;
+        }
+
         buffer.clear (0, numFrames);
         return;
     }
@@ -629,17 +657,39 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
         {
             midi.clear();
 
-            if (s.allOff.exchange (false))
+            const auto wasReset = s.allOff.exchange (false);
+            const auto playEnded = s.notesEnded != notesEnded;
+            s.notesEnded = notesEnded;
+
+            // Every note it was given and not yet ended gets its own off first: many instruments
+            // ignore All Notes Off and All Sound Off.
+            if (wasReset || playEnded)
             {
+                for (int channel = 0; channel < 16; ++channel)
+                    for (int pitch = 0; pitch < 128; ++pitch)
+                        if (s.held[(size_t) channel][(size_t) pitch])
+                            midi.addEvent (juce::MidiMessage::noteOff (channel + 1, pitch), 0);
+
                 midi.addEvent (juce::MidiMessage::allNotesOff (1), 0);
                 midi.addEvent (juce::MidiMessage::allSoundOff (1), 0);
             }
 
-            for (auto& clip : track.noteClips)
-                if (! clip.muted)
-                    clip.addMidi (at, n, midi);
+            // The block the play stopped in starts no clip notes: their offs would never come.
+            if (clipNotes && ! playEnded)
+                for (auto& clip : track.noteClips)
+                    if (! clip.muted)
+                        clip.addMidi (at, n, midi);
 
-            // What is played live for this track: the next n frames of this block's messages.
+            // Live messages from blocks locked out, first; then what is played live for this
+            // track: the next n frames of this block's messages.
+            if (track.id == missedTrack && ! missedLive.isEmpty())
+            {
+                for (const auto meta : missedLive)
+                    midi.addEvent (meta.getMessage(), 0);
+
+                missedLive.clear();
+            }
+
             if (liveMidi != nullptr && track.id == liveTrack)
             {
                 for (const auto meta : *liveMidi)
@@ -647,6 +697,20 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
                         midi.addEvent (meta.getMessage(), meta.samplePosition - liveFrom);
 
                 liveFrom += n;
+            }
+
+            // The notes it is left holding, for ending them later.
+            for (const auto meta : midi)
+            {
+                const auto m = meta.getMessage();
+                auto& held = s.held[(size_t) juce::jlimit (0, 15, m.getChannel() - 1)];
+
+                if (m.isNoteOn())
+                    held.set ((size_t) m.getNoteNumber());
+                else if (m.isNoteOff())
+                    held.reset ((size_t) m.getNoteNumber());
+                else if (m.isAllNotesOff() || m.isAllSoundOff())
+                    held.reset();
             }
 
             p.processBlock (work, midi);

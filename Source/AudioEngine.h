@@ -299,6 +299,7 @@ private:
     SessionSource sessionSource;
     Mode mode = Mode::document;
     juce::MidiBuffer liveBlock;            // this block's live MIDI
+    bool wasPlaying = false;               // the audio thread's: the transport played the last block
 
 public:
     /** The player's channels: the mix (0 and 1), then one for each interface output (from

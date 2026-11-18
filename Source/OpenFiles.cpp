@@ -170,9 +170,6 @@ namespace
 
 FilesPanel::FilesPanel (OpenFiles& f) : files (f)
 {
-    addAndMakeVisible (openButton);
-    openButton.setTooltip ("Open another file (it opens beside these)");
-    openButton.onClick = [this] { if (onOpen != nullptr) onOpen(); };
     list.setRowHeight (rowHeight);
     list.setRowSelectedOnMouseDown (false);   // a click switches on mouse up, so a drag does not switch
     list.setColour (juce::ListBox::backgroundColourId, juce::Colours::transparentBlack);
@@ -246,8 +243,6 @@ juce::var FilesPanel::getDragSourceDescription (const juce::SparseSet<int>& rows
 void FilesPanel::resized()
 {
     auto r = getLocalBounds().reduced (8, 6);
-    openButton.setBounds (r.removeFromTop (26).removeFromLeft (90));
-    r.removeFromTop (6);
     list.setBounds (r);
 }
 
@@ -259,7 +254,7 @@ void FilesPanel::paint (juce::Graphics& g)
     {
         g.setColour (Theme::dimText);
         g.setFont (juce::FontOptions (13.0f));
-        g.drawFittedText ("No files open. Open some, or drop them on the editor.", list.getBounds().reduced (6), juce::Justification::centredTop, 3);
+        g.drawFittedText ("No files open. Open some with File > Open, or drop them on the editor.", list.getBounds().reduced (6), juce::Justification::centredTop, 3);
     }
 }
 

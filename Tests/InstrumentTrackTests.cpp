@@ -2,6 +2,7 @@
 #pragma clang diagnostic ignored "-Wfloat-equal"
 
 #include <JuceHeader.h>
+#include <thread>
 #include "../Source/AudioFileIO.h"
 #include "../Source/Session.h"
 #include "../Source/SessionMixer.h"
@@ -9,6 +10,7 @@
 #include "../Source/OfflineRender.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/AudioEngine.h"
+#include "../Source/MidiInput.h"
 #include "../Source/Instrument.h"
 #include "../Source/MultitrackView.h"
 #include "TestPlugins.h"
@@ -805,10 +807,225 @@ namespace
                "instrument tracks: what freezing renders keeps the note clips, and the chain a bounce or mixdown loads from the "
                    "session's XML has the instrument first and mixes the same, bit for bit");
     }
+
+    // Notes played live (the on-screen keyboard, a MIDI input) with the session stopped: the
+    // chosen track's instrument sounds them through the player straight away.
+    void testLivePlay (AudioEngine& engine)
+    {
+        juce::PluginDescription synthDescription;
+
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.fileOrIdentifier == BuiltInEffects::basicSynthId)
+                synthDescription = d;
+
+        juce::String error;
+        auto synth = engine.pluginFormatManager.createPluginInstance (synthDescription, rate, 512, error);
+
+        if (synth == nullptr)
+        {
+            check (false, "instrument tracks: the basic synth could not be made: " + error);
+            return;
+        }
+
+        setPlain (*synth, "wave", 0);
+        setPlain (*synth, "level", 0.0f);
+        setPlain (*synth, "attack", 0.0f);
+        setPlain (*synth, "sustain", 100.0f);
+
+        SessionState s;
+        s.sampleRate = rate;
+        const auto trackId = s.addInstrumentTrack().id;
+
+        AudioDocument document;
+        Session session;
+        session.reset (s, {});
+        TrackEffects effects;
+        effects.prepare (rate);
+        effects.add (trackId, std::move (synth));
+
+        MidiIn::Live live;
+        DocumentPlayerProcessor player (document, session, effects, &live);
+        player.setMode (DocumentPlayerProcessor::Mode::session);
+        player.prepareToPlay (rate, 512);
+        live.setTrack (trackId);
+
+        juce::AudioBuffer<float> block (2, 512);
+        juce::MidiBuffer midi;
+
+        const auto loudest = [&] (int blocks)
+        {
+            float peak = 0.0f;
+
+            for (int i = 0; i < blocks; ++i)
+            {
+                player.processBlock (block, midi);
+                peak = juce::jmax (peak, block.getMagnitude (0, 512));
+            }
+
+            return peak;
+        };
+
+        const auto before = loudest (4);
+        live.addMessage (juce::MidiMessage::noteOn (1, 69, 1.0f));
+        const auto held = loudest (20);
+
+        check (before == 0.0f && held > 0.5f,
+               "instrument tracks: a note played live with the session stopped sounds through the chosen track's instrument (peak "
+                   + juce::String (held, 3) + ")");
+    }
+
+    void testLiveThroughLock()
+    {
+        // A note played live whose off comes while the message thread holds the chains (here a
+        // slow state save, as a plug-in just loaded may make) still ends: the off is given late,
+        // not lost.
+        SessionState s;
+        s.sampleRate = rate;
+        const auto trackId = s.addInstrumentTrack().id;
+
+        AudioDocument document;
+        Session session;
+        session.reset (s, {});
+        TrackEffects effects;
+        effects.prepare (rate);
+        auto owned = std::make_unique<ClickInstrument> (0);
+        auto& click = *owned;
+        effects.add (trackId, std::move (owned));
+
+        MidiIn::Live live;
+        DocumentPlayerProcessor player (document, session, effects, &live);
+        player.setMode (DocumentPlayerProcessor::Mode::session);
+        player.prepareToPlay (rate, 512);
+        live.setTrack (trackId);
+
+        juce::AudioBuffer<float> block (2, 512);
+        juce::MidiBuffer midi;
+        const auto play = [&] (int blocks) { for (int i = 0; i < blocks; ++i) player.processBlock (block, midi); };
+
+        live.addMessage (juce::MidiMessage::noteOn (1, 64, 1.0f));
+        play (2);
+
+        std::atomic<bool> saving { false }, release { false };
+        click.onSaveState = [&]
+        {
+            saving = true;
+
+            while (! release)
+                std::this_thread::yield();
+        };
+        std::thread saver ([&] { effects.createXml (trackId); });
+
+        while (! saving)
+            std::this_thread::yield();
+
+        live.addMessage (juce::MidiMessage::noteOff (1, 64));
+        play (3);
+        const auto offWhileLocked = click.offs.size();
+        release = true;
+        saver.join();
+        click.onSaveState = nullptr;
+        play (2);
+
+        check (click.notes.size() == 1 && offWhileLocked == 0 && click.offs.size() == 1 && click.offs[0].first == 64,
+               "instrument tracks: a live note-off that comes while the chains are held reaches the instrument once they are free ("
+                   + juce::String ((int) click.offs.size()) + " offs, " + juce::String ((int) offWhileLocked) + " while held, "
+                   + juce::String ((int) click.notes.size()) + " ons)");
+    }
 }
 
 namespace
 {
+    void testStoppedClipNotes()
+    {
+        // Stopped, the session mixes the frames at the cursor block after block; a note clip's
+        // note starting there must not start again each block (it never ended: a stuck note).
+        // Only what is played live reaches the instrument.
+        SessionState s;
+        s.sampleRate = rate;
+        const auto trackId = s.addInstrumentTrack().id;
+        NoteClip clip;
+        clip.length = (juce::int64) rate;
+        clip.notes = { { 60, 0, (juce::int64) (rate / 2), 0.8f } };
+        SessionEdits::addNoteClip (s, trackId, clip);
+
+        AudioDocument document;
+        Session session;
+        session.reset (s, {});
+        TrackEffects effects;
+        effects.prepare (rate);
+        auto owned = std::make_unique<ClickInstrument> (0);
+        auto& click = *owned;
+        effects.add (trackId, std::move (owned));
+
+        MidiIn::Live live;
+        DocumentPlayerProcessor player (document, session, effects, &live);
+        player.setMode (DocumentPlayerProcessor::Mode::session);
+        player.prepareToPlay (rate, 512);
+        live.setTrack (trackId);
+
+        juce::AudioBuffer<float> block (2, 512);
+        juce::MidiBuffer midi;
+        live.addMessage (juce::MidiMessage::noteOn (1, 64, 1.0f));
+
+        for (int i = 0; i < 20; ++i)
+            player.processBlock (block, midi);
+
+        live.addMessage (juce::MidiMessage::noteOff (1, 64));
+
+        for (int i = 0; i < 4; ++i)
+            player.processBlock (block, midi);
+
+        const auto clipStarts = std::count_if (click.notes.begin(), click.notes.end(), [] (auto& n) { return n.first == 60; });
+        const auto liveStarts = std::count_if (click.notes.begin(), click.notes.end(), [] (auto& n) { return n.first == 64; });
+        check (clipStarts == 0 && liveStarts == 1 && click.offs.size() == 1,
+               "instrument tracks: stopped, a note clip's note at the cursor is not played (" + juce::String ((int) clipStarts)
+                   + " starts of it over 24 blocks), and a note played live is, once, and ends");
+    }
+
+    void testStopEndsNotes()
+    {
+        // Playback stopped in the middle of a clip's note: the note's off never comes, so the
+        // instrument is told every note off the next time it runs (here at once, as with its
+        // window open).
+        SessionState s;
+        s.sampleRate = rate;
+        const auto trackId = s.addInstrumentTrack().id;
+        NoteClip clip;
+        clip.length = (juce::int64) (4 * rate);
+        clip.notes = { { 60, 0, (juce::int64) (4 * rate), 0.8f } };
+        SessionEdits::addNoteClip (s, trackId, clip);
+
+        AudioDocument document;
+        Session session;
+        session.reset (s, {});
+        TrackEffects effects;
+        effects.prepare (rate);
+        auto owned = std::make_unique<ClickInstrument> (0);
+        auto& click = *owned;
+        effects.add (trackId, std::move (owned));
+
+        MidiIn::Live live;
+        DocumentPlayerProcessor player (document, session, effects, &live);
+        player.setMode (DocumentPlayerProcessor::Mode::session);
+        player.prepareToPlay (rate, 512);
+        juce::AudioBuffer<float> block (2, 512);
+        juce::MidiBuffer midi;
+        const auto run = [&] (int blocks) { for (int i = 0; i < blocks; ++i) player.processBlock (block, midi); };
+
+        player.play (0, -1);
+        run (10);
+        const auto started = click.notes.size() == 1 && click.offs.empty();
+        const auto offsWhilePlaying = click.allOff;
+        player.pause();
+        live.keepSounding();
+        run (2);
+
+        // Its own off, for the many instruments that ignore All Notes Off, and All Notes Off.
+        check (started && click.allOff > offsWhilePlaying && click.offs.size() == 1 && click.offs[0].first == 60,
+               "instrument tracks: stopping playback in the middle of a clip's note sends the instrument that note's off ("
+                   + juce::String ((int) click.offs.size()) + ") and every note off, so the note does not go on sounding");
+    }
+
     void testAddInstrumentTrack (AudioEngine& engine)
     {
         // The instruments the app offers: the built-in synth first, named with where it is from;
@@ -833,6 +1050,44 @@ namespace
         const auto selected = TestUtils::runUntil ([&] { return view.getSelectedTrack() == 1; }, 5000);
         const auto added = state->tracks.size() == 2 && state->tracks[1].name == "Basic Synth" && state->tracks[1].isInstrument && selected;
         const auto loaded = TestUtils::runUntil ([&] { return engine.getTrackEffects().getInstrument (trackId) != nullptr; }, 10000);
+
+        // A right-click on a lane away from the clips: adding tracks anywhere, notes on an
+        // instrument track's lane alone; Add Track adds one.
+        const auto itemsAt = [&view] (juce::Point<int> p)
+        {
+            juce::StringArray names;
+            auto menu = view.laneMenuAt (p);
+
+            for (juce::PopupMenu::MenuItemIterator it (menu); it.next();)
+                if (! it.getItem().isSeparator)
+                    names.add (it.getItem().text);
+
+            return names;
+        };
+        const auto x = MultitrackView::headerWidth + 100, laneMiddle = view.getLaneHeight() / 2;
+        const auto onAudio = itemsAt ({ x, MultitrackView::rulerHeight + laneMiddle });
+        const auto onInstrument = itemsAt ({ x, MultitrackView::rulerHeight + view.getLaneHeight() + laneMiddle });
+        const auto below = itemsAt ({ x, MultitrackView::rulerHeight + 2 * view.getLaneHeight() + laneMiddle });
+        const auto adds = [] (const juce::StringArray& n) { return n.contains ("Add Track") && n.contains ("Add Instrument Track") && n.contains ("Add Bus")
+                                                                   && n.contains ("Paste Here") && n.contains ("Select All Clips"); };
+        auto addTrack = view.laneMenuAt ({ x, MultitrackView::rulerHeight + laneMiddle });
+
+        for (juce::PopupMenu::MenuItemIterator it (addTrack); it.next();)
+            if (it.getItem().text == "Add Track" && it.getItem().action != nullptr)
+                it.getItem().action();
+
+        const auto tracksAfter = engine.session.getState()->tracks.size();
+
+        // The track list's empty space below the headers is the view's, so its right-click opens that menu.
+        view.setSize (800, 900);
+        view.setVisible (true);
+        const auto belowHeaders = view.getComponentAt (juce::Point<int> (20, 700)) == &view;
+        check (adds (onAudio) && adds (onInstrument) && adds (below)
+                   && onInstrument.contains ("Add Notes Here...") && onInstrument.contains ("Add Trigger Here")
+                   && ! onAudio.contains ("Add Notes Here...") && ! below.contains ("Add Trigger Here") && tracksAfter == 3 && belowHeaders,
+               "multitrack: a right-click on the lanes offers Add Track, Add Instrument Track and Add Bus, Paste and Select All, with notes "
+               "and a trigger on an instrument track's lane alone, and below the track headers; Add Track adds one (" + onInstrument.joinIntoString (", ") + ")");
+
         view.removeTrackInstrument (trackId);
         // The menu: few scanned instruments flat with their format and maker in the name, many in
         // submenus a format and a maker; the built-in always first and plain.
@@ -1017,6 +1272,10 @@ void runInstrumentTrackTests (AudioEngine& engine)
     testFile (engine.formatManager);
     testChain();
     testSynth (engine);
+    testLivePlay (engine);
+    testLiveThroughLock();
+    testStoppedClipNotes();
+    testStopEndsNotes();
     testAddInstrumentTrack (engine);
     testMusicalTimebase();
     testNoteFunctions();

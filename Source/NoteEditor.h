@@ -21,8 +21,11 @@
     across is the notes' whole timeline: the part before the clip's start (its offset, after a
     trim or split) and the part past the pattern are washed out, as their notes don't play.
 
-    Each change is handed back through `apply` as one undoable step. readClip gives what to show;
-    the editor reads it ten times a second and redraws when it changed. */
+    The keyboard down the left plays: a click sounds its key until the mouse is let go, and a drag
+    along it plays the keys it passes. A note sounds too while it is put in, clicked or dragged
+    (at its new pitch as it moves). Each change is handed back through `apply` as one undoable
+    step; what sounds goes to `audition`. readClip gives what to show; the editor reads it ten
+    times a second and redraws when it changed. */
 class NoteEditor final : public juce::Component,
                          private juce::Timer
 {
@@ -44,6 +47,7 @@ public:
 
     std::function<std::optional<Shown>()> readClip;
     std::function<void (const NoteClip&, const juce::String& description)> apply;
+    std::function<void (int pitch, float velocity)> audition;   // a velocity of 0 ends the note
 
     NoteEditor();
     ~NoteEditor() override;
@@ -93,7 +97,7 @@ public:
     static constexpr int keyboardWidth = 44, rowHeight = 12, topBar = 30, laneHeight = 72;
 
 private:
-    enum class Drag { none, move, resize, box, loop, lanePoint, nothing };
+    enum class Drag { none, move, resize, box, loop, lanePoint, keys, nothing };
 
     void timerCallback() override;
     void commit (const juce::String& description);
@@ -103,6 +107,8 @@ private:
     void scrollToNotes();
     void moveSelected (int semitones, juce::int64 frames);
     void refreshControls();
+    void sound (int pitch, float velocity);   // the note heard now, ending the one before
+    void silence();
 
     std::optional<Shown> shown, base;      // what is shown, and as it was when a drag began
     std::set<int> selected;
@@ -117,6 +123,7 @@ private:
     int dragPitch = 0;
     juce::Rectangle<float> box;
     bool dragged = false;
+    int heard = -1;                        // the pitch sounding through `audition`, or -1
 
     juce::ComboBox gridBox, laneBox;
     juce::Label laneLabel;

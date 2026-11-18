@@ -1,11 +1,12 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <bitset>
 #include "Session.h"
 
-/** MIDI coming in live (from the MIDI inputs the audio settings turn on, and the on-screen
-    keyboard), played by the selected track's instrument and recorded into a note clip; and
-    Standard MIDI Files read into note clips. */
+/** MIDI coming in live (from the MIDI inputs the audio settings turn on, the on-screen keyboard,
+    and the piano roll's keys and notes), played by the instrument of the track being worked on and
+    recorded into a note clip; and Standard MIDI Files read into note clips. */
 namespace MidiIn
 {
     /** A note played live, in session frames: on, and off (or the capture's end). */
@@ -47,9 +48,13 @@ namespace MidiIn
         /** A message from a device (timestamped by it) or the keyboard (now). */
         void addMessage (const juce::MidiMessage&);
 
-        /** The track whose instrument plays the messages (0: none). */
+        /** The track whose instrument plays the messages (0: none). The blocks taken go on to it
+            once no note is held, so a note's off reaches the instrument its on did. */
         void setTrack (juce::uint32 trackId) noexcept        { track = trackId; }
         juce::uint32 getTrack() const noexcept                { return track; }
+
+        /** The track the last block taken was for: the one set, or while a note was held the one before. */
+        juce::uint32 getPlayingTrack() const noexcept         { return playing; }
 
         /** Audio thread: this block's messages, at frames from 0. True when there were any. */
         bool takeBlock (juce::MidiBuffer& into, int numFrames);
@@ -57,6 +62,10 @@ namespace MidiIn
         /** Audio thread: frames the instrument should keep running for after a message (a release
             ringing on), counted down by each block taken: more than 0 while something may sound. */
         juce::int64 getSoundingFrames() const noexcept        { return sounding; }
+
+        /** Keeps the instruments running for the tail from now, as a message would: for sound an
+            instrument makes on its own (its window's keys clicked) while the session is stopped. */
+        void keepSounding() noexcept                          { sounding = (juce::int64) (tailSeconds * rate); }
 
         /** Starts keeping the notes and controller moves taken from now on; stopCapture gives
             them, notes still held ended at `endFrame`, and forgets them. A block's messages are
@@ -75,7 +84,8 @@ namespace MidiIn
     private:
         juce::MidiMessageCollector collector;
         double rate = 48000.0;
-        std::atomic<juce::uint32> track { 0 };
+        std::atomic<juce::uint32> track { 0 }, playing { 0 };
+        std::bitset<128> sounded;                         // the audio thread's: pitches taken on and not yet off
         std::atomic<bool> capturing { false };
         std::atomic<juce::int64> sounding { 0 };
 

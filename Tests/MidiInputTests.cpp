@@ -43,6 +43,27 @@ namespace
                    && live.getSoundingFrames() == sounding - 4096,
                "live MIDI: queued messages come out of the next block in order, then nothing, and the instrument is kept running for the tail");
 
+        // Changing the track while a note is held waits for its off, so the off reaches the instrument the on did.
+        {
+            MidiIn::Live routed;
+            routed.prepare (rate);
+            juce::MidiBuffer b;
+            routed.setTrack (1);
+            routed.addMessage (juce::MidiMessage::noteOn (1, 60, 0.8f));
+            routed.takeBlock (b, 512);
+            const auto onTo = routed.getPlayingTrack();
+            routed.setTrack (2);
+            routed.takeBlock (b, 512);
+            const auto heldTo = routed.getPlayingTrack();
+            routed.addMessage (juce::MidiMessage::noteOff (1, 60));
+            routed.takeBlock (b, 512);
+            const auto offTo = routed.getPlayingTrack();
+            routed.takeBlock (b, 512);
+            const auto afterTo = routed.getPlayingTrack();
+            check (onTo == 1 && heldTo == 1 && offTo == 1 && afterTo == 2 && routed.getTrack() == 2,
+                   "live MIDI: a new track takes over once the held note is off, which still goes to the track that played it");
+        }
+
         // A capture keeps a block's notes at their session frames; a note still held ends at the stop.
         live.startCapture();
         juce::MidiBuffer played;

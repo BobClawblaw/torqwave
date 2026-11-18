@@ -136,6 +136,9 @@ public:
 
         for (auto* c : std::initializer_list<juce::Component*> { &name, &effectsButton, &instrumentButton, &arm, &mute, &solo, &gain, &pan, &sendsButton, &inputButton, &automationButton })
             addAndMakeVisible (c);
+
+        // A right-click on the name opens the header's menu (a double-click still renames).
+        name.addMouseListener (this, false);
     }
 
     /** A control moved. While automation is being written and the session plays, it records
@@ -474,6 +477,17 @@ public:
 
     void mouseDown (const juce::MouseEvent& e) override
     {
+        if (e.eventComponent != this)
+        {
+            if (e.mods.isPopupMenu())
+            {
+                view.selectTrack (index());
+                showGroupMenu();
+            }
+
+            return;
+        }
+
         view.selectTrack (index());
 
         if (! isFolder && ! e.mods.isPopupMenu() && meterArea().expanded (2).contains (e.getPosition()))
@@ -562,13 +576,15 @@ public:
         menu.addSubMenu ("Colour", colours);
         menu.addItem ("Note...", [this] { view.askForTrackNote (trackId); });
         menu.addItem ("Hide", [this] { view.setTrackHidden (trackId, true); });
+        menu.addSeparator();
+        view.addTrackItems (menu);
         menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition());
     }
 
     // Dragged by its background, the header moves its track: the view shows where it would go.
     void mouseDrag (const juce::MouseEvent& e) override
     {
-        if (e.getDistanceFromDragStartY() == 0 && view.trackDropIndex < 0)
+        if (e.eventComponent != this || (e.getDistanceFromDragStartY() == 0 && view.trackDropIndex < 0))
             return;
 
         const auto y = e.getEventRelativeTo (&view).position.y;
@@ -576,8 +592,11 @@ public:
         view.repaint();
     }
 
-    void mouseUp (const juce::MouseEvent&) override
+    void mouseUp (const juce::MouseEvent& e) override
     {
+        if (e.eventComponent != this)
+            return;
+
         const auto to = std::exchange (view.trackDropIndex, -1);
         view.repaint();
 
@@ -921,6 +940,7 @@ MultitrackView::MultitrackView (AudioEngine& e) : engine (e)
         effectParameterTouched (touch, playing ? std::optional<juce::int64> (player.getHeardFrame()) : std::nullopt);
     });
     addAndMakeVisible (headerArea);
+    headerArea.setInterceptsMouseClicks (false, true);   // its empty space is the view's: a right-click there opens the lane menu
     addAndMakeVisible (hScroll);
     addAndMakeVisible (vScroll);
     hScroll.addListener (this);
@@ -1356,6 +1376,76 @@ void MultitrackView::showInstrumentWindow (juce::uint32 trackId)
         onEditPlugin (*instrument);
 }
 
+void MultitrackView::addTrackItems (juce::PopupMenu& menu)
+{
+    const juce::Component::SafePointer<MultitrackView> safe (this);
+    menu.addItem ("Add Track", [safe]
+    {
+        if (safe == nullptr)
+            return;
+
+        auto next = *safe->engine.session.getState();
+        next.addTrack();
+        safe->engine.session.apply (std::move (next), "Add Track");
+    });
+
+    juce::PopupMenu instruments;
+    const auto known = Instrument::known (engine.knownPlugins);
+
+    if (known.isEmpty())
+        instruments.addItem ("No instruments: scan with Plug-ins... first", false, false, nullptr);
+
+    Instrument::addMenu (instruments, known, [safe] (const juce::PluginDescription& d) { if (safe != nullptr) safe->addInstrumentTrack (d); });
+    menu.addSubMenu ("Add Instrument Track", instruments);
+    menu.addItem ("Add Bus", [safe]
+    {
+        if (safe == nullptr)
+            return;
+
+        auto next = *safe->engine.session.getState();
+        next.addBus();
+        safe->engine.session.apply (std::move (next), "Add Bus");
+    });
+}
+
+juce::PopupMenu MultitrackView::laneMenuAt (juce::Point<int> p)
+{
+    const juce::Component::SafePointer<MultitrackView> safe (this);
+    const auto frame = juce::jmax ((juce::int64) 0, snapped (frameForX ((float) p.x), 0, false));
+    const auto t = trackAt (p.y);
+    const auto* track = juce::isPositiveAndBelow (t, (int) shown().tracks.size()) ? &shown().tracks[(size_t) t] : nullptr;
+    const auto trackId = track != nullptr ? track->id : 0u;
+
+    // Moves the cursor to where the menu was opened, the track there selected, before an item that works there.
+    const auto here = [safe, frame, t, trackId]
+    {
+        if (safe == nullptr)
+            return false;
+
+        if (trackId != 0)
+            safe->selectTrack (t);
+
+        safe->setCursor (frame);
+        return true;
+    };
+
+    juce::PopupMenu menu;
+    addTrackItems (menu);
+
+    if (track != nullptr && track->takesNoteClips())
+    {
+        menu.addSeparator();
+        menu.addItem ("Add Notes Here...", ! track->isFrozen() && onEditNotes != nullptr, false,
+                      [safe, here, trackId] { if (here() && safe->onEditNotes != nullptr) safe->onEditNotes (trackId, 0); });
+        menu.addItem ("Add Trigger Here", ! track->isFrozen(), false, [safe, here, trackId] { if (here()) safe->addTrigger (trackId); });
+    }
+
+    menu.addSeparator();
+    menu.addItem ("Paste Here", canPaste(), false, [safe, here] { if (here()) safe->pasteClip(); });
+    menu.addItem ("Select All Clips", [safe] { if (safe != nullptr) safe->selectAllClips(); });
+    return menu;
+}
+
 void MultitrackView::addInstrumentTrack (const juce::PluginDescription& description)
 {
     auto next = *engine.session.getState();
@@ -1650,9 +1740,9 @@ void MultitrackView::layoutHeaders()
 void MultitrackView::resized()
 {
     auto r = getLocalBounds();
-    hScroll.setBounds (r.removeFromBottom (12).withTrimmedLeft (headerWidth));
+    hScroll.setBounds (r.removeFromBottom (12).withTrimmedLeft (listWidth));
     vScroll.setBounds (r.removeFromRight (12).withTrimmedTop (rulerHeight));
-    headerArea.setBounds (r.removeFromLeft (headerWidth).withTrimmedTop (rulerHeight));
+    headerArea.setBounds (r.removeFromLeft (listWidth).withTrimmedTop (rulerHeight));
     layoutHeaders();
     updateScrollBars();
 }
@@ -1660,7 +1750,7 @@ void MultitrackView::resized()
 //==============================================================================
 juce::Rectangle<int> MultitrackView::timelineArea() const
 {
-    return getLocalBounds().withTrimmedLeft (headerWidth).withTrimmedRight (12).withTrimmedBottom (12).withTrimmedTop (rulerHeight);
+    return getLocalBounds().withTrimmedLeft (listWidth).withTrimmedRight (12).withTrimmedBottom (12).withTrimmedTop (rulerHeight);
 }
 
 int MultitrackView::rowOf (int track) const
@@ -1698,12 +1788,12 @@ int MultitrackView::trackAt (int y) const
 
 float MultitrackView::xForFrame (juce::int64 frame) const
 {
-    return (float) headerWidth + (float) (((double) frame - viewStart) / framesPerPixel);
+    return (float) listWidth + (float) (((double) frame - viewStart) / framesPerPixel);
 }
 
 juce::int64 MultitrackView::frameForX (float x) const
 {
-    return juce::jmax ((juce::int64) 0, (juce::int64) std::llround (viewStart + (double) (x - (float) headerWidth) * framesPerPixel));
+    return juce::jmax ((juce::int64) 0, (juce::int64) std::llround (viewStart + (double) (x - (float) listWidth) * framesPerPixel));
 }
 
 juce::Rectangle<int> MultitrackView::clipBounds (int track, const SessionClip& c) const
@@ -1717,7 +1807,7 @@ std::optional<std::pair<int, int>> MultitrackView::clipAt (juce::Point<int> p) c
     const auto& tracks = shown().tracks;
     const auto t = trackAt (p.y);
 
-    if (! juce::isPositiveAndBelow (t, (int) tracks.size()) || p.x < headerWidth)
+    if (! juce::isPositiveAndBelow (t, (int) tracks.size()) || p.x < listWidth)
         return std::nullopt;
 
     // The topmost (last drawn) clip wins.
@@ -1739,7 +1829,7 @@ std::optional<std::pair<int, int>> MultitrackView::noteClipAt (juce::Point<int> 
     const auto& tracks = shown().tracks;
     const auto t = trackAt (p.y);
 
-    if (! juce::isPositiveAndBelow (t, (int) tracks.size()) || p.x < headerWidth)
+    if (! juce::isPositiveAndBelow (t, (int) tracks.size()) || p.x < listWidth)
         return std::nullopt;
 
     for (auto c = (int) tracks[(size_t) t].noteClips.size() - 1; c >= 0; --c)
@@ -1783,7 +1873,7 @@ void MultitrackView::drawNoteClip (juce::Graphics& g, int track, const NoteClip&
 
     // The notes as bars, the pitch up the body over the notes' own range (a lone pitch in the
     // middle), each pass of a repeating clip drawn where it plays, with a line at each repeat.
-    const auto left = juce::jmax (body.getX(), headerWidth), right = juce::jmin (body.getRight(), timelineArea().getRight());
+    const auto left = juce::jmax (body.getX(), listWidth), right = juce::jmin (body.getRight(), timelineArea().getRight());
 
     if (body.getHeight() < 6 || right <= left || c.notes.empty())
         return;
@@ -1859,9 +1949,9 @@ void MultitrackView::scrollTo (double startFrame)
 
 void MultitrackView::zoomAround (float x, double factor)
 {
-    const auto anchor = viewStart + (double) (x - (float) headerWidth) * framesPerPixel;
+    const auto anchor = viewStart + (double) (x - (float) listWidth) * framesPerPixel;
     const auto fpp = framesPerPixel * factor;
-    setView (anchor - (double) (x - (float) headerWidth) * fpp, fpp);
+    setView (anchor - (double) (x - (float) listWidth) * fpp, fpp);
 }
 
 void MultitrackView::zoomIn()     { zoomAround ((float) xForFrame (cursor), 0.5); }
@@ -1871,6 +1961,18 @@ void MultitrackView::zoomToFit()
 {
     const auto length = (double) juce::jmax (shown().getLength(), (juce::int64) (shown().sampleRate * 10.0));
     setView (0.0, length * 1.05 / juce::jmax (1, timelineArea().getWidth()));
+}
+
+void MultitrackView::setListWidth (int width)
+{
+    const auto limited = juce::jlimit (headerWidth, maxListWidth, width);
+
+    if (limited == listWidth)
+        return;
+
+    listWidth = limited;
+    resized();
+    repaint();
 }
 
 void MultitrackView::setLaneHeight (int height)
@@ -1999,7 +2101,7 @@ std::optional<MultitrackView::EnvelopeHit> MultitrackView::envelopeAt (juce::Poi
     const auto& tracks = shown().tracks;
     const auto t = trackAt (p.y);
 
-    if (! juce::isPositiveAndBelow (t, (int) tracks.size()) || p.x < headerWidth)
+    if (! juce::isPositiveAndBelow (t, (int) tracks.size()) || p.x < listWidth)
         return std::nullopt;
 
     const auto& track = tracks[(size_t) t];
@@ -2109,7 +2211,7 @@ void MultitrackView::drawClipGain (juce::Graphics& g, int track, const SessionCl
         return;
 
     const auto area = clipGainArea (track, c);
-    const auto left = juce::jmax (area.getX(), (float) headerWidth), right = juce::jmin (area.getRight(), (float) timelineArea().getRight());
+    const auto left = juce::jmax (area.getX(), (float) listWidth), right = juce::jmin (area.getRight(), (float) timelineArea().getRight());
 
     if (area.getHeight() < 8.0f || right <= left)
         return;
@@ -2450,7 +2552,7 @@ void MultitrackView::drawClip (juce::Graphics& g, int track, const SessionClip& 
         const auto wideChannels = shown().tracks[(size_t) track].wideChannels();
         const auto channels = juce::jmin (wideChannels > 0 ? wideChannels : 2, c.audio->getNumChannels());
         const auto clipGain = juce::Decibels::decibelsToGain (c.gainDb);
-        const auto left = juce::jmax (body.getX(), headerWidth);
+        const auto left = juce::jmax (body.getX(), listWidth);
         const auto right = juce::jmin (body.getRight(), timelineArea().getRight());
         g.setColour (colour.withAlpha (0.9f));
 
@@ -2793,17 +2895,17 @@ void MultitrackView::paint (juce::Graphics& g)
     }
 
     g.setColour (Theme::surface);
-    g.fillRect (0, 0, headerWidth, rulerHeight);
+    g.fillRect (0, 0, listWidth, rulerHeight);
     g.setColour (Theme::text);
     g.setFont (12.0f);
-    g.drawText (juce::String (s.sampleRate / 1000.0, 1) + " kHz session", juce::Rectangle<int> (8, 0, headerWidth - 8, timeRulerHeight),
+    g.drawText (juce::String (s.sampleRate / 1000.0, 1) + " kHz session", juce::Rectangle<int> (8, 0, listWidth - 8, timeRulerHeight),
                 juce::Justification::centredLeft);
 }
 
 //==============================================================================
 int MultitrackView::markerAt (juce::Point<int> p) const
 {
-    if (p.x < headerWidth || p.y < timeRulerHeight || p.y >= rulerHeight)
+    if (p.x < listWidth || p.y < timeRulerHeight || p.y >= rulerHeight)
         return -1;
 
     const auto& markers = shown().markers;
@@ -4651,8 +4753,21 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
     drag = Drag::none;
     preview.reset();
 
-    if (p.x < headerWidth)
+    // The edge between the track list and the lanes: a drag sizes the list.
+    if (! e.mods.isPopupMenu() && overListEdge (p))
+    {
+        drag = Drag::listWidth;
         return;
+    }
+
+    // The track headers have their own menus; the space below them has the lanes'.
+    if (p.x < listWidth)
+    {
+        if (e.mods.isPopupMenu() && p.y >= rulerHeight)
+            laneMenuAt (p).showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition());
+
+        return;
+    }
 
     if (p.y >= timeRulerHeight && p.y < rulerHeight)
     {
@@ -4692,7 +4807,7 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
-    if (p.y < rulerHeight)
+    if (p.y < rulerHeight && ! e.mods.isPopupMenu())
     {
         drag = Drag::range;
         dragFrame = snapped (frameForX ((float) p.x), 0, false);
@@ -4834,6 +4949,13 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
         selectedClip = clip.id;
         selectTrack (hit->first);
         showClipMenu (clip.id);
+        return;
+    }
+
+    // A right-click anywhere else on the lanes: what can be added or done there.
+    if (e.mods.isPopupMenu())
+    {
+        laneMenuAt (p).showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition());
         return;
     }
 
@@ -4979,9 +5101,15 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
 {
     const auto p = e.getPosition();
 
+    if (drag == Drag::listWidth)
+    {
+        setListWidth (p.x);
+        return;
+    }
+
     if (drag == Drag::scrub)
     {
-        const auto frame = juce::jlimit ((juce::int64) 0, shown().getLength(), frameForX ((float) juce::jmax (headerWidth, p.x)));
+        const auto frame = juce::jlimit ((juce::int64) 0, shown().getLength(), frameForX ((float) juce::jmax (listWidth, p.x)));
         engine.getPlayer().getScrubber().moveTo (frame);
         setCursor (frame);
         return;
@@ -4991,7 +5119,7 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
     {
         // The band from where the mouse went down to here: the clips it crosses (a grouped clip
         // with its group) join the selection it began with.
-        const auto lanes = juce::Rectangle<int> (headerWidth, rulerHeight, juce::jmax (0, getWidth() - headerWidth), juce::jmax (0, getHeight() - rulerHeight));
+        const auto lanes = juce::Rectangle<int> (listWidth, rulerHeight, juce::jmax (0, getWidth() - listWidth), juce::jmax (0, getHeight() - rulerHeight));
         rubberBand = juce::Rectangle<int>::leftTopRightBottom (juce::jmin (rubberStart.x, p.x), juce::jmin (rubberStart.y, p.y),
                                                                juce::jmax (rubberStart.x, p.x), juce::jmax (rubberStart.y, p.y))
                          .getIntersection (lanes);
@@ -5031,7 +5159,7 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
     {
         // Dragging selects the range between where the mouse went down and where it is now; the
         // cursor follows the range's start.
-        const auto frame = snapped (frameForX ((float) juce::jmax (headerWidth, p.x)), 0, false);
+        const auto frame = snapped (frameForX ((float) juce::jmax (listWidth, p.x)), 0, false);
         const auto range = juce::Range<juce::int64>::between (dragFrame, frame);
         setCursor (range.getStart());
         setTimeSelection (range);
@@ -5040,7 +5168,7 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
 
     if (drag == Drag::drawNotes)
     {
-        drawEnd = snapped (frameForX ((float) juce::jmax (headerWidth, p.x)), 0, false);
+        drawEnd = snapped (frameForX ((float) juce::jmax (listWidth, p.x)), 0, false);
         repaint();
         return;
     }
@@ -5226,6 +5354,7 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
         case Drag::stretchNotesStart:
         case Drag::stretchNotesEnd:
         case Drag::drawNotes:
+        case Drag::listWidth:
             break;
     }
 
@@ -5249,6 +5378,16 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
 
 void MultitrackView::mouseUp (const juce::MouseEvent&)
 {
+    if (drag == Drag::listWidth)
+    {
+        drag = Drag::none;
+
+        if (onListWidthChanged != nullptr)
+            onListWidthChanged (listWidth);
+
+        return;
+    }
+
     if (drag == Drag::scrub)
         engine.getPlayer().getScrubber().stop();
 
@@ -5321,9 +5460,15 @@ void MultitrackView::mouseMove (const juce::MouseEvent& e)
 {
     auto cursorShape = juce::MouseCursor::NormalCursor;
     const auto p = e.getPosition();
+
+    if (overListEdge (p))
+    {
+        setMouseCursor (juce::MouseCursor::LeftRightResizeCursor);
+        return;
+    }
     const auto overNotes = noteClipAt (p).has_value() && ! clipAt (p).has_value();
     const auto t = trackAt (p.y);
-    const auto overLane = p.x >= headerWidth && p.y >= rulerHeight && (t >= (int) shown().tracks.size() || (t >= 0 && shown().tracks[(size_t) t].takesNoteClips()));
+    const auto overLane = p.x >= listWidth && p.y >= rulerHeight && (t >= (int) shown().tracks.size() || (t >= 0 && shown().tracks[(size_t) t].takesNoteClips()));
 
     if (markerAt (p) >= 0)
     {
@@ -5357,7 +5502,7 @@ void MultitrackView::mouseMove (const juce::MouseEvent& e)
 
     // The tools say what a click would do: Split and Draw a crosshair where they act, Glue a hand
     // over a note clip, Range a text cursor over the lanes.
-    if (tool == Tool::range && p.x >= headerWidth && p.y >= rulerHeight)
+    if (tool == Tool::range && p.x >= listWidth && p.y >= rulerHeight)
         cursorShape = juce::MouseCursor::IBeamCursor;
     else if (tool == Tool::mute && (overNotes || clipAt (p).has_value()))
         cursorShape = juce::MouseCursor::PointingHandCursor;
@@ -5460,7 +5605,7 @@ void MultitrackView::mouseDoubleClick (const juce::MouseEvent& e)
     }
 
     // An empty spot in the marker lane: a new marker there.
-    if (p.x >= headerWidth && p.y >= timeRulerHeight && p.y < rulerHeight)
+    if (p.x >= listWidth && p.y >= timeRulerHeight && p.y < rulerHeight)
     {
         addMarkerAt (snapped (frameForX ((float) p.x), 0, true));
         return;
@@ -5514,7 +5659,7 @@ bool MultitrackView::isInterestedInFileDrag (const juce::StringArray& files)
 void MultitrackView::filesDropped (const juce::StringArray& files, int x, int y)
 {
     if (onFilesDropped != nullptr)
-        onFilesDropped (files, trackAt (y), x < headerWidth ? 0 : snapped (frameForX ((float) x)));
+        onFilesDropped (files, trackAt (y), x < listWidth ? 0 : snapped (frameForX ((float) x)));
 }
 
 bool MultitrackView::isInterestedInDragSource (const SourceDetails& details)
@@ -5528,5 +5673,5 @@ void MultitrackView::itemDropped (const SourceDetails& details)
     const auto x = details.localPosition.x;
 
     if (row >= 0 && onOpenFileDropped != nullptr)
-        onOpenFileDropped (row, trackAt (details.localPosition.y), x < headerWidth ? 0 : snapped (frameForX ((float) x)));
+        onOpenFileDropped (row, trackAt (details.localPosition.y), x < listWidth ? 0 : snapped (frameForX ((float) x)));
 }

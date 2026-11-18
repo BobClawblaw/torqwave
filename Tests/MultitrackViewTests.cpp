@@ -435,9 +435,42 @@ namespace
     }
 }
 
+namespace
+{
+    void testListWidth (AudioEngine& engine)
+    {
+        // The edge between the track list and the lanes drags the list wider (the headers and the
+        // lanes follow), within its limits; the width is reported once the drag ends.
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.addTrack();
+        engine.session.reset (s, {});
+        MultitrackView view (engine);
+        view.setSize (1200, MultitrackView::rulerHeight + 2 * MultitrackView::trackHeight + 12);
+        int reported = -1;
+        view.onListWidthChanged = [&reported] (int w) { reported = w; };
+        Mouse mouse { view };
+        Mouse::settle();
+        const auto edgeY = (float) (MultitrackView::rulerHeight + 20);
+        const auto resizeCursor = mouse.cursorAt ({ (float) MultitrackView::headerWidth + 1.0f, edgeY })
+                                  == juce::MouseCursor (juce::MouseCursor::LeftRightResizeCursor);
+        mouse.drag ({ (float) MultitrackView::headerWidth + 1.0f, edgeY }, { 340.0f, edgeY });
+        const auto widened = view.getListWidth() == 340 && reported == 340;
+        mouse.drag ({ 341.0f, edgeY }, { 2000.0f, edgeY });
+        const auto widest = view.getListWidth();
+        view.setListWidth (10);
+        const auto narrowest = view.getListWidth();
+
+        check (resizeCursor && widened && widest == MultitrackView::maxListWidth && narrowest == MultitrackView::headerWidth,
+               "multitrack: the track list's edge shows a resize pointer and drags the list wider (to 340 px, "
+               "reported at the end), up to " + juce::String (widest) + " px and down to " + juce::String (narrowest));
+    }
+}
+
 void runMultitrackViewTests (AudioEngine& engine)
 {
     testTrackTools (engine);
+    testListWidth (engine);
     testNoteClipSelection (engine);
     testRangeAndRubberBand (engine);
     // Two clips on one track: A from 1 s to 3 s, B from 5 s to 6 s, in a 10 s view.

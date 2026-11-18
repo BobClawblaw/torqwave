@@ -183,9 +183,10 @@ public:
     void setCurrentProgram (int) override        {}
     const juce::String getProgramName (int) override { return {}; }
     void changeProgramName (int, const juce::String&) override {}
-    void getStateInformation (juce::MemoryBlock&) override {}
+    void getStateInformation (juce::MemoryBlock&) override { if (onSaveState != nullptr) onSaveState(); }
     void setStateInformation (const void*, int) override {}
 
+    std::function<void()> onSaveState;                      // called as its state is saved (a slow save, in a test)
     std::vector<std::pair<int, juce::int64>> notes, offs;   // (pitch, frame) of each note-on and note-off
     int prepared = 0, released = 0;
     int allOff = 0;                                         // All Notes Off or All Sound Off messages (each drops the clicks pending)

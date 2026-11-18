@@ -182,6 +182,49 @@ void runNoteEditorTests()
     e.refresh();
     check (dropped && ! e.getShown().has_value(), "piano roll: a different clip clears the selection, and with none selected it shows nothing");
 
+    // What sounds: the keys down the left, a note put in, clicked or dragged, each ended when the mouse is let go.
+    {
+        Rig sound;
+        std::vector<std::pair<int, float>> heard;
+        sound.editor.audition = [&heard] (int pitch, float velocity) { heard.emplace_back (pitch, velocity); };
+
+        // Every note on is ended, by the off of its own pitch, before the next starts.
+        const auto paired = [&heard]
+        {
+            if (heard.size() % 2 != 0)
+                return false;
+
+            for (size_t i = 0; i < heard.size(); i += 2)
+                if (heard[i].second <= 0.0f || heard[i + 1].first != heard[i].first || heard[i + 1].second != 0.0f)
+                    return false;
+
+            return true;
+        };
+
+        const auto slider = 100.0f / 127.0f;
+        const juce::Point<float> key60 { 10.0f, sound.at (60, 0).y }, key62 { 10.0f, sound.at (62, 0).y };
+        sound.click (key60);
+        const auto keyClick = heard;
+        heard.clear();
+        sound.drag (key60, key62);
+        const auto glide = heard;
+        const auto glidePaired = paired();
+        heard.clear();
+        check (keyClick.size() == 2 && keyClick[0].first == 60 && std::abs (keyClick[0].second - slider) < 1.0e-6f && keyClick[1] == std::pair<int, float> (60, 0.0f)
+                   && glidePaired && glide.front().first == 60 && glide[glide.size() - 2].first == 62 && sound.applied.empty(),
+               "piano roll: a key clicked sounds at the slider's velocity until let go, and a drag along the keys plays each it passes, "
+               "ending each before the next, without touching the clip");
+
+        sound.click (sound.at (64, 7000));
+        const auto putIn = heard;
+        heard.clear();
+        sound.drag (sound.at (64, 8000), sound.at (66, 8000));
+        const auto movedPaired = paired();
+        check (putIn.size() == 2 && putIn[0].first == 64 && putIn[1] == std::pair<int, float> (64, 0.0f)
+                   && movedPaired && heard.front().first == 64 && heard[heard.size() - 2].first == 66 && sound.notes().size() == 1 && sound.notes()[0].pitch == 66,
+               "piano roll: a note put in sounds while the mouse is down, and one dragged sounds at each pitch it moves to");
+    }
+
     // Drawn in every theme without an unpainted spot.
     auto painted = true;
 

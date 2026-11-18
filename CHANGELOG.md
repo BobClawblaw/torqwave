@@ -4,7 +4,50 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
-Nothing yet.
+**Instruments sound as you play and edit them**
+- The piano roll plays what you do: a click on its keyboard sounds the key until the mouse is let go, a drag along the keys plays each one it passes, and a note sounds while it is put in, clicked or dragged, at each pitch it moves to, through the clip's instrument. Before, nothing sounded until the session played.
+- Notes played live (the Keyboard panel and the MIDI inputs) go to the instrument of the track being worked on: the selected track when it is an instrument track, otherwise the track of the note clip in the piano roll. Before, they went to the selected track alone, so with an audio track or nothing selected they went nowhere.
+- The Keyboard panel says what it plays ("Plays Synth's instrument"), or why nothing will sound: not in the Multitrack view, no instrument track to play, or a track without an instrument yet.
+- A note held while the target changes ends on the instrument it started on: the new track takes over once no note is held.
+- An instrument plug-in's own keys sound while the session is stopped: with an instrument's window open the instruments keep running (and for ten seconds after it closes, for the release). Before, a stopped session ran its instruments only after a note came in through the app, so notes clicked in the plug-in's window made no sound.
+- Notes played live no longer stick, and the sound no longer stalls, while the app reads or changes the plug-ins (saving a plug-in's state, as it does soon after one is loaded). The audio thread had two problems while the plug-ins were held. It dropped that block's live notes, so a note's off could be lost and the note left sounding; now they wait and reach the instrument on its next block. It also waited for the plug-ins to come free when telling whether a track has an instrument; now it never waits.
+- A clip's note sounding when playback stops ends at the stop. Before, its note-off never came, and when the instrument went on running stopped (its window open, or a note just played live) the note went on sounding. Now, the next time an instrument runs after a stop (or a jump), it is sent an off for each note it was given and not yet ended, then All Notes Off and All Sound Off: many plug-ins ignore those two alone. The block playback stops in starts no clip notes.
+
+**Right-click menus on the lanes**
+- A right-click on the multitrack lanes away from a clip, below the tracks or on the ruler away from a marker opens a menu:
+  - Add Track, Add Instrument Track (with the instruments to choose from) and Add Bus;
+  - on an instrument track's lane, Add Notes Here... and Add Trigger Here, at the clicked place;
+  - Paste Here and Select All Clips.
+
+  Before, a right-click there did nothing (or started a selection); clips, note clips, markers and track headers had their menus, the rest none.
+- In the track list on the left, a track header's menu ends with the same Add Track, Add Instrument Track and Add Bus, and the empty space below the headers opens the lane menu (before, the list's holder took every click on its empty space, so nothing opened there). A right-click on a track's name now opens its menu too; before, the name took the click and nothing opened. A double-click on the name still renames it.
+
+**The track list sizes**
+- The track list on the left of the multitrack view can be made wider: drag the edge between it and the lanes (the pointer shows a resize arrow there), from its old 220 px up to 600 px. The width is kept for next time. Before, it was fixed at 220 px.
+
+**File > Open takes sessions and projects**
+- File > Open shows sessions and projects (`.tqsession`, `.tqproject`, and SpectraBlade's `.sbsession`, `.sbproject`) as openable beside audio files, and opens each as a session or project. Before, they were greyed out there, and only File > Open Session... or Open Project... could open them.
+
+**Which build is running**
+- The loading screen's version is larger and brighter, and a build that is not a release says so, with when it was built and its commit, for example "Version 0.16.1 (test build Nov 18 09:21, 4906229+changes)". The About box shows the same. A release build (made at its tag with no uncommitted changes, or by the release workflows) shows the plain version. Before, the version was small and dim, and every build of a version looked the same.
+
+**No Open buttons**
+- The Open... button is gone from the toolbar and from the top of the Files panel: File > Open (Cmd+O) opens files, as before.
+
+**Checked on the development Mac (macOS 27)**
+- The whole suite passed, with new checks that:
+  - a note played live into a stopped session sounds through the track's instrument (the built-in synth);
+  - a new track takes over only once the held note is off;
+  - the piano roll's keys and notes sound and end as the mouse goes down, moves and is let go;
+  - a live note-off that comes while a plug-in's state is being saved reaches the instrument once the save ends (the same check lost it before the fix);
+  - the lane menu offers what it should on an audio lane, an instrument lane and below the tracks, its Add Track adds one, and the empty track list below the headers is the view's to click (the same check failed before the fix);
+  - the track list's edge shows a resize pointer, drags the list to 340 px and reports it, and stops at 600 and 220 px;
+  - File > Open's file patterns take audio, sessions and projects and nothing else;
+  - the version shown is plain for a release build and stamped for a test build;
+  - stopping playback in the middle of a clip's note sends the instrument that note's own off and every note off (the same check failed before the fix);
+  - stopped, a note clip's note at the cursor is not played again block after block (before the fix it started in all 24 of 24 blocks).
+- The header menu's new items and the right-click on a track's name have no automated check; they are for checking by hand.
+- A plug-in's own keys sounding, and the stuck notes being gone, are for checking by hand.
 
 ## Released
 

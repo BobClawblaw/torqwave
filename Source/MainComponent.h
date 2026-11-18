@@ -564,6 +564,8 @@ private:
     void toggleRecordNotes();
     void finishRecordingNotes();
     bool recordingNotes = false;
+    juce::uint32 auditionTrack = 0;   // the track a note from the piano roll is sounding on, or 0
+    void routeLiveMidi();
     juce::int64 noteRecordStart = 0;
 
     /** Standard MIDI Files into the session: each file's tracks with notes as note clips on new
@@ -619,7 +621,7 @@ private:
     AudioClip clipboard;
 
     juce::TextButton editorButton { "Editor" }, multitrackButton { "Multitrack" };   // a two-part switch, lit on the side in use
-    juce::TextButton openButton { "Open..." }, pluginsButton { "Plug-ins..." }, audioButton { "Audio Settings..." };
+    juce::TextButton pluginsButton { "Plug-ins..." }, audioButton { "Audio Settings..." };
     std::unique_ptr<TransportBar::Bar> transportBar;   // made once the commands are registered
     TransportBar::SelectionPanel selectionPanel;
     void stopTransport();

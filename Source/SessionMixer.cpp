@@ -671,6 +671,9 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
     for (int ch = 0; ch < dest.getNumChannels(); ++ch)
         dest.clear (ch, destStart, numFrames);
 
+    if (inserts != nullptr)
+        inserts->setClipNotes (live == nullptr || live->clips);
+
     grow (buffers.track, numFrames);
     grow (buffers.automation, numFrames);
 

@@ -121,6 +121,15 @@ namespace SessionMixer
             this track's instrument, or null for none. The buffer must outlive the block. */
         virtual void setLiveMidi (juce::uint32 /*trackId*/, const juce::MidiBuffer* /*midi*/)   {}
 
+        /** Audio thread, before a block is mixed: whether instruments play their note clips (false
+            when the clips are silent, the session stopped: the same frames are mixed block after
+            block, so a note starting there would start again each one and never end). */
+        virtual void setClipNotes (bool /*play*/)   {}
+
+        /** Audio thread: every instrument ends its notes before its next block (playback stopped
+            with a clip's note sounding, whose off will now never come). */
+        virtual void endNotes()   {}
+
         /** Whether the track's chain starts with an instrument (a stereo source, for its pan). */
         virtual bool hasInstrument (juce::uint32 /*trackId*/)   { return false; }
 

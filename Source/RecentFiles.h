@@ -52,4 +52,15 @@ namespace RecentFiles
     }
 
     inline bool isSession (const juce::File& file)        { return file.hasFileExtension ("tqsession") || file.hasFileExtension (PreviousName::sessionExtension); }
+
+    /** File > Open's file patterns: the audio ones given, then sessions and projects (the
+        project extension given), new names and old. */
+    inline juce::String openPatterns (juce::String audio, const juce::String& projectExtension)
+    {
+        for (const auto& extension : { juce::String ("tqsession"), juce::String (PreviousName::sessionExtension), projectExtension,
+                                       juce::String (PreviousName::projectExtension) })
+            audio << (audio.isEmpty() ? "" : ";") << "*." << extension;
+
+        return audio;
+    }
 }

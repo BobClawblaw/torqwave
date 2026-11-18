@@ -93,6 +93,29 @@ NoteEditor::NoteEditor()
 NoteEditor::~NoteEditor()
 {
     stopTimer();
+    silence();
+}
+
+void NoteEditor::sound (int pitch, float velocity)
+{
+    if (pitch == heard)
+        return;
+
+    silence();
+
+    if (audition != nullptr)
+    {
+        audition (pitch, juce::jmax (0.01f, velocity));
+        heard = pitch;
+    }
+}
+
+void NoteEditor::silence()
+{
+    if (heard >= 0 && audition != nullptr)
+        audition (heard, 0.0f);
+
+    heard = -1;
 }
 
 void NoteEditor::timerCallback()
@@ -537,6 +560,14 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
+    // The keyboard: the key under the mouse sounds.
+    if (const auto roll = rollArea(); juce::Rectangle<int> (0, roll.getY(), keyboardWidth, roll.getHeight()).contains (e.getPosition()))
+    {
+        drag = Drag::keys;
+        sound (pitchAt (e.position.y), getVelocity());
+        return;
+    }
+
     if (! rollArea().contains (e.getPosition()))
         return;
 
@@ -578,6 +609,7 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
         dragNote = hit;
         dragFrame = frameAt (p.x);
         dragPitch = pitchAt (p.y);
+        sound (n.pitch, n.velocity);
         velocitySlider.setValue (std::round (n.velocity * 127.0f), juce::dontSendNotification);
         refreshControls();
         repaint();
@@ -621,6 +653,7 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
     dragNote = (int) shown->clip.notes.size() - 1;
     dragFrame = n.start;
     dragPitch = n.pitch;
+    sound (n.pitch, n.velocity);
     drag = Drag::resize;   // dragging on sets its length
     base = shown;
     commit ("Add Note");
@@ -629,6 +662,13 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
 
 void NoteEditor::mouseDrag (const juce::MouseEvent& e)
 {
+    if (drag == Drag::keys)
+    {
+        const auto roll = rollArea();
+        sound (pitchAt (juce::jlimit ((float) roll.getY(), (float) roll.getBottom() - 1.0f, e.position.y)), getVelocity());
+        return;
+    }
+
     if (! shown.has_value() || ! base.has_value() || drag == Drag::none || drag == Drag::nothing)
         return;
 
@@ -714,6 +754,9 @@ void NoteEditor::mouseDrag (const juce::MouseEvent& e)
                 n.start += frames;
                 n.length = juce::jmin (n.length, length - n.start);
             }
+
+        const auto& moved = shown->clip.notes[(size_t) dragNote];
+        sound (moved.pitch, moved.velocity);
     }
 
     repaint();
@@ -721,6 +764,7 @@ void NoteEditor::mouseDrag (const juce::MouseEvent& e)
 
 void NoteEditor::mouseUp (const juce::MouseEvent&)
 {
+    silence();
     const auto was = std::exchange (drag, Drag::none);
 
     if (was == Drag::box)

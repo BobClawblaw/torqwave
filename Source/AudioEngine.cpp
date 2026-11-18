@@ -658,13 +658,19 @@ void DocumentPlayerProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     juce::AudioSourceChannelInfo info (&buffer, 0, numFrames);
     const auto playing = transport.isPlaying();
+
+    // Stopped (by hand or at the end): a clip's note sounding will get no off, so the instruments
+    // end their notes the next time they run (at once, while an instrument's window is open or a
+    // note was played live).
+    if (std::exchange (wasPlaying, playing) && ! playing && mode == Mode::session)
+        inserts.endNotes();
     const auto blocksRead = sessionSource.getBlocksRead();
 
     // Live MIDI for the chosen track's instrument this block; while playing a session at the
     // device's rate, its notes are captured at their session frames.
     const auto liveAny = liveMidi.takeBlock (liveBlock, numFrames);
     const auto blockFrame = sessionSource.getNextReadPosition();
-    inserts.setLiveMidi (liveMidi.getTrack(), mode == Mode::session ? &liveBlock : nullptr);
+    inserts.setLiveMidi (liveMidi.getPlayingTrack(), mode == Mode::session ? &liveBlock : nullptr);
 
     if (liveAny && playing && mode == Mode::session && juce::exactlyEqual (sourceRate, deviceRate))
         liveMidi.captureBlock (liveBlock, blockFrame);

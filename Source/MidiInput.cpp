@@ -14,6 +14,8 @@ namespace MidiIn
     {
         rate = sampleRate;
         collector.reset (sampleRate);
+        sounded.reset();
+        playing = track.load();
     }
 
     void Live::addMessage (const juce::MidiMessage& m)
@@ -28,14 +30,34 @@ namespace MidiIn
 
     bool Live::takeBlock (juce::MidiBuffer& into, int numFrames)
     {
+        // A new track takes over only between notes.
+        if (sounded.none())
+            playing = track.load();
+
         into.clear();
         collector.removeNextBlockOfMessages (into, numFrames);
         const auto any = ! into.isEmpty();
+
+        for (const auto meta : into)
+        {
+            const auto m = meta.getMessage();
+
+            if (m.isNoteOn())
+                sounded.set ((size_t) m.getNoteNumber());
+            else if (m.isNoteOff())
+                sounded.reset ((size_t) m.getNoteNumber());
+            else if (m.isAllNotesOff() || m.isAllSoundOff())
+                sounded.reset();
+        }
 
         if (any)
             sounding = (juce::int64) (tailSeconds * rate);
         else if (sounding > 0)
             sounding = juce::jmax ((juce::int64) 0, sounding.load() - numFrames);
+
+        // A note whose off never came (a device unplugged) stops holding the track after the tail.
+        if (sounding == 0)
+            sounded.reset();
 
         return any;
     }
@@ -244,7 +266,7 @@ namespace MidiIn
         addAndMakeVisible (status);
         status.setFont (juce::Font (juce::FontOptions (12.0f)));
         Theme::follow (status, juce::Label::textColourId, Theme::dimText);
-        status.setText ("Plays the selected track's instrument.", juce::dontSendNotification);
+        status.setText ("Plays the instrument of the track being worked on.", juce::dontSendNotification);
     }
 
     KeyboardPanel::~KeyboardPanel()

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <bitset>
 #include "SessionMixer.h"
 
 /** The plug-in effects on each session track, in order, keyed by track id.
@@ -133,7 +134,11 @@ public:
 
     // SessionMixer::Inserts, for the audio thread
     void setLiveMidi (juce::uint32 trackId, const juce::MidiBuffer*) override;
-    bool hasInstrument (juce::uint32 trackId) override   { return getInstrument (trackId) != nullptr; }
+    void setClipNotes (bool play) override   { clipNotes = play; }
+    void endNotes() override                 { ++notesEnded; }
+    /** Audio thread: never waits for the lock. While the chains are being changed or read, true
+        (the track is silent for that block then, so its pan law doesn't matter). */
+    bool hasInstrument (juce::uint32 trackId) override;
     bool isActive (juce::uint32 trackId) override;
     int getLatency (juce::uint32 trackId) override;
     void reset (juce::uint32 trackId) override;
@@ -172,6 +177,8 @@ private:
         juce::uint32 id = 0;
         bool bypassed = false;
         std::atomic<bool> allOff { false };   // an instrument: every note off before its next block (after a reset)
+        int notesEnded = 0;                    // the audio thread's: the endNotes() it has acted on
+        std::array<std::bitset<128>, 16> held; // the audio thread's: an instrument's notes on and not yet off, by channel
         juce::AudioBuffer<float> work;
         std::map<juce::String, juce::AudioProcessorParameter*> parameters;
         std::unique_ptr<Watcher> watcher;      // after the plug-in, so it goes first
@@ -207,4 +214,12 @@ private:
     const juce::MidiBuffer* liveMidi = nullptr;
     juce::uint32 liveTrack = 0;
     int liveFrom = 0;
+
+    // Live messages of blocks that found the chains locked (the message thread changing or
+    // reading them), for `missedTrack`'s instrument (audio thread): given to it at the start of
+    // its next block, so a note's off is not lost and the note left sounding.
+    juce::MidiBuffer missedLive;
+    juce::uint32 missedTrack = 0;
+    bool clipNotes = true;   // the audio thread's: false while the session is stopped (setClipNotes)
+    int notesEnded = 0;      // the audio thread's: counts endNotes(), each instrument's slot catching up
 };

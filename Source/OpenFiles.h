@@ -96,7 +96,6 @@ public:
     ~FilesPanel() override;
 
     std::function<void (int)> onChoose, onClose;
-    std::function<void()> onOpen;
 
     /** The text a row shows: its name with a dot when unsaved, then its length and format. */
     juce::String describeRow (int row) const;
@@ -123,7 +122,6 @@ private:
     juce::Rectangle<int> closeBounds (int width) const   { return { width - 26, (rowHeight - 18) / 2, 18, 18 }; }
 
     OpenFiles& files;
-    juce::TextButton openButton { "Open..." };
     juce::ListBox list { {}, this };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FilesPanel)
