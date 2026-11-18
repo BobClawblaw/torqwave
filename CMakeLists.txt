@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(Torqwave VERSION 0.16.1 LANGUAGES C CXX)
+project(Torqwave VERSION 0.16.2 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -286,7 +286,7 @@ target_compile_definitions(Torqwave PRIVATE
     JUCE_PLUGINHOST_AU=1
     JUCE_PLUGINHOST_VST3=1
     JUCE_PLUGINHOST_VST=0
-    JUCE_PLUGINHOST_LV2=0
+    JUCE_PLUGINHOST_LV2=$<IF:$<PLATFORM_ID:Windows>,0,1>
     JUCE_PLUGINHOST_ARA=0
     JUCE_USE_FLAC=1
     JUCE_USE_OGGVORBIS=1
@@ -589,6 +589,36 @@ elseif(WIN32)
     set_target_properties(IntelOnlyBundle PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/TestBundles/IntelOnlyBundle.vst3/Contents/x86-win>")
 endif()
+
+# An LV2 effect for the LV2 hosting tests (LV2 is hosted on the Mac and Linux): a bundle folder holding its Turtle files and module.
+if(NOT WIN32)
+    if(TORQWAVE_JUCE_DIR)
+        set(torqwave_lv2_sdk "${TORQWAVE_JUCE_DIR}/modules/juce_audio_processors_headless/format_types/LV2_SDK/lv2")
+    else()
+        set(torqwave_lv2_sdk "${juce_SOURCE_DIR}/modules/juce_audio_processors_headless/format_types/LV2_SDK/lv2")
+    endif()
+
+    set(test_lv2_bundle "${CMAKE_BINARY_DIR}/TestBundles/TorqwaveTestGain.lv2")
+    add_library(TorqwaveTestGain MODULE Tests/TestLv2Gain/TestLv2Gain.c)
+    target_include_directories(TorqwaveTestGain PRIVATE "${torqwave_lv2_sdk}")
+    set_target_properties(TorqwaveTestGain PROPERTIES PREFIX "" C_VISIBILITY_PRESET hidden
+                          LIBRARY_OUTPUT_DIRECTORY "$<1:${test_lv2_bundle}>")
+
+    # A Mac module is a .dylib, as LV2 bundles there have it; on Linux a .so.
+    if(APPLE)
+        set(test_gain_suffix ".dylib")
+    else()
+        set(test_gain_suffix "${CMAKE_SHARED_MODULE_SUFFIX}")
+    endif()
+
+    set_target_properties(TorqwaveTestGain PROPERTIES SUFFIX "${test_gain_suffix}")
+    set(TEST_GAIN_BINARY "TorqwaveTestGain${test_gain_suffix}")
+
+    configure_file(Tests/TestLv2Gain/manifest.ttl.in "${test_lv2_bundle}/manifest.ttl" @ONLY)
+    configure_file(Tests/TestLv2Gain/gain.ttl "${test_lv2_bundle}/gain.ttl" COPYONLY)
+    add_dependencies(TorqwaveTests TorqwaveTestGain)
+endif()
+
 target_compile_definitions(HangingBundle PRIVATE TEST_BUNDLE_HANGS=1)
 target_compile_definitions(CrashingBundle PRIVATE TEST_BUNDLE_CRASHES=1)
 target_compile_definitions(TorqwaveTests PRIVATE TORQWAVE_TEST_BUNDLES="${CMAKE_BINARY_DIR}/TestBundles")

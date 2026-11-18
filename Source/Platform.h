@@ -32,13 +32,16 @@ namespace Platform
        #endif
     }
 
-    /** The plug-in formats Torqwave hosts here, as a phrase: "VST3 and Audio Unit" or "VST3". */
+    /** The plug-in formats Torqwave hosts here, as a phrase: "VST3, Audio Unit and LV2" on the Mac,
+        "VST3 and LV2" on Linux, "VST3" on Windows. */
     inline juce::String pluginFormats()
     {
        #if JUCE_MAC
-        return "VST3 and Audio Unit";
-       #else
+        return "VST3, Audio Unit and LV2";
+       #elif JUCE_WINDOWS
         return "VST3";
+       #else
+        return "VST3 and LV2";
        #endif
     }
 

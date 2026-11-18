@@ -12494,7 +12494,7 @@ Settings::Model MainComponent::makeSettingsModel()
                                return std::make_unique<juce::AudioDeviceSelectorComponent> (engine.deviceManager, 0, 0, 1, 256, true, false, true, false);
                            }) } });
 
-    model.push_back ({ "Plug-ins", "VST3 and Audio Unit effects are found by a scan and listed in the Plug-ins window, where one that fails can be checked again.",
+    model.push_back ({ "Plug-ins", Platform::pluginFormats() + " effects are found by a scan and listed in the Plug-ins window, where one that fails can be checked again.",
         { Item::button ("Plug-ins...", "Scan for plug-ins and manage the list", [this] { showPluginList(); }) } });
 
     model.push_back ({ "Keys", "Every command's keys, to change, export and import, or to take from another key set.",

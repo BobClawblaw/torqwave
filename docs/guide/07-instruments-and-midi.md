@@ -2,7 +2,7 @@
 
 [Guide](README.md) › Instruments and MIDI
 
-An **instrument track** plays a synthesizer: Torqwave's built-in Basic Synth, or any VST3 instrument (and Audio Unit on the Mac) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
+An **instrument track** plays a synthesizer: Torqwave's built-in Basic Synth, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
 
 ## Make an instrument track
 

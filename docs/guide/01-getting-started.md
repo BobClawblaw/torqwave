@@ -35,7 +35,7 @@ Some file types and the Video panel need [ffmpeg](https://ffmpeg.org) installed.
 Two things to do once:
 
 1. **Choose your audio interface.** Click **Audio Settings...** at the top right of the window. Pick the device, its outputs and inputs, the sample rate and the buffer size. MIDI inputs, for playing instruments from a keyboard, are turned on here too.
-2. **Scan your plug-ins** (if you use VST3, or Audio Units on the Mac). Click **Plug-ins...** and **Scan for Plug-ins**. The scan runs in the background and the window shows how far it has got. A big collection takes a while the first time. Each plug-in is tried in a separate worker, so one that crashes or hangs is marked as not working and Torqwave keeps running.
+2. **Scan your plug-ins** (if you use VST3, LV2, or Audio Units on the Mac). Click **Plug-ins...** and **Scan for Plug-ins**. The scan runs in the background and the window shows how far it has got. A big collection takes a while the first time. Each plug-in is tried in a separate worker, so one that crashes or hangs is marked as not working and Torqwave keeps running.
 
 If you used Torqwave under its old name, SpectraBlade, your settings, presets and Sound Library are copied across the first time it starts.
 

@@ -190,6 +190,101 @@ namespace
         return found;
     }
 
+   #if JUCE_PLUGINHOST_LV2
+    /** LV2: the test gain bundle (built with the tests) is found by the scan in the app's worker,
+        then loads here, plays at the gain its control is set to and keeps it in its state. */
+    void testLv2 (AudioEngine& engine, juce::Array<juce::PluginDescription>& found)
+    {
+        auto* lv2 = findFormat (engine, "LV2");
+        check (lv2 != nullptr, "LV2: the plug-in format is there");
+
+        if (lv2 == nullptr)
+            return;
+
+        const auto bundle = juce::File (TORQWAVE_TEST_BUNDLES).getChildFile ("TorqwaveTestGain.lv2").getFullPathName();
+        juce::OwnedArray<juce::PluginDescription> results;
+        bool ok = false;
+
+        inBackground ([&]
+        {
+            OutOfProcessScanner scanner (TestUtils::appExecutable);
+            ok = scanner.findPluginTypesFor (*lv2, results, bundle);
+            scanner.scanFinished();
+        });
+
+        check (ok && results.size() == 1 && results[0]->name == "Torqwave Test Gain" && results[0]->pluginFormatName == "LV2"
+                   && results[0]->fileOrIdentifier == "urn:torqwave:test:gain" && results[0]->numInputChannels == 2,
+               "LV2: the scan finds the test gain in its bundle and checks it in the app's worker");
+
+        if (results.size() != 1)
+            return;
+
+        // The app knows the plug-ins in the LV2 folders from the start; this bundle is elsewhere.
+        juce::OwnedArray<juce::PluginDescription> here;
+        lv2->findAllTypesForFile (here, bundle);
+
+        juce::String error;
+        auto plugin = lv2->createInstanceFromDescription (*results[0], rate, 512, error);
+        check (plugin != nullptr, "LV2: the test gain loads in the app" + (error.isEmpty() ? juce::String() : ": " + error));
+
+        if (plugin == nullptr)
+            return;
+
+        juce::AudioProcessorParameter* gain = nullptr;
+
+        for (auto* p : plugin->getParameters())
+            if (p->getName (32) == "Gain")
+                gain = p;
+
+        check (gain != nullptr, "LV2: the test gain's control is a parameter");
+
+        if (gain == nullptr)
+            return;
+
+        // 0 to 2: a quarter of the way is half the level. A change reaches the plug-in at the
+        // next block it plays, so one block goes first.
+        plugin->prepareToPlay (rate, 512);
+        gain->setValueNotifyingHost (0.25f);
+        juce::AudioBuffer<float> audio (2, 512);
+        juce::MidiBuffer midi;
+        plugin->processBlock (audio, midi);
+
+        for (int ch = 0; ch < 2; ++ch)
+            for (int i = 0; i < 512; ++i)
+                audio.setSample (ch, i, 0.8f * std::sin ((float) i * 0.05f + (float) ch));
+
+        const juce::AudioBuffer<float> input (audio);
+        plugin->processBlock (audio, midi);
+        float worst = 0.0f;
+
+        for (int ch = 0; ch < 2; ++ch)
+            for (int i = 0; i < 512; ++i)
+                worst = juce::jmax (worst, std::abs (audio.getSample (ch, i) - 0.5f * input.getSample (ch, i)));
+
+        check (worst < 1.0e-6f, "LV2: the test gain plays at the level its control is set to (worst " + juce::String (worst, 8) + ")");
+
+        juce::MemoryBlock state;
+        plugin->getStateInformation (state);
+        plugin->releaseResources();
+        auto second = lv2->createInstanceFromDescription (*results[0], rate, 512, error);
+        juce::AudioProcessorParameter* secondGain = nullptr;
+
+        if (second != nullptr)
+        {
+            second->setStateInformation (state.getData(), (int) state.getSize());
+
+            for (auto* p : second->getParameters())
+                if (p->getName (32) == "Gain")
+                    secondGain = p;
+        }
+
+        check (secondGain != nullptr && std::abs (secondGain->getValue() - 0.25f) < 1.0e-4f,
+               "LV2: the control's setting comes back from the plug-in's state");
+
+        found.add (*results[0]);
+    }
+   #endif
+
     void testThirdPartyInRack (AudioEngine& engine, const juce::Array<juce::PluginDescription>& found)
     {
         for (auto& d : found)
@@ -248,7 +343,10 @@ namespace
 void runPluginTests (AudioEngine& engine)
 {
     testCheck (engine);
-    const auto found = testScan (engine);
+    auto found = testScan (engine);
+   #if JUCE_PLUGINHOST_LV2
+    testLv2 (engine, found);
+   #endif
     testThirdPartyInRack (engine, found);
 }
 

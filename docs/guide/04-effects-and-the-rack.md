@@ -58,7 +58,7 @@ The rack is the **Effects Rack** panel beside the editor. Window > Effects Rack 
 
 1. Click **+ Add Effect**. The menu lists effects by format, then by maker:
    - **Torqwave**: the built-in effects. These are Parametric EQ, Dynamic EQ, both Graphic EQs, Compressor, Multiband Compressor, Limiter, Maximizer, De-esser, Transient Shaper, Exciter, Multiband Stereo Width, Chorus, Flanger, Phaser, Reverb and Convolution Reverb.
-   - **VST3**, and **Audio Units** on the Mac: the plug-ins your scan found.
+   - **VST3**, **Audio Units** on the Mac and **LV2** on the Mac and Linux: the plug-ins your scan found.
 2. The new effect's window opens in front. Set it up while you play the file.
 3. Add more effects. They run from top to bottom.
 
@@ -100,7 +100,7 @@ Each effect has a row of controls:
 
 ## Plug-ins
 
-Torqwave hosts VST3 plug-ins everywhere, and Audio Units (v2 and v3) on the Mac. VST2 isn't supported, because Steinberg no longer licenses it.
+Torqwave hosts VST3 plug-ins everywhere, Audio Units (v2 and v3) on the Mac, and LV2 plug-ins on the Mac and Linux. VST2 isn't supported, because Steinberg no longer licenses it.
 
 1. Click **Plug-ins...** in the toolbar (or Window > Plug-ins...), then **Scan for Plug-ins**.
 2. Each plug-in is loaded in a separate worker while it is checked. One that crashes, or hangs for more than 60 seconds, is marked as not working, and Torqwave keeps running.
@@ -114,6 +114,8 @@ Where Torqwave looks for plug-ins:
 | VST3 (Mac) | `/Library/Audio/Plug-Ins/VST3`, `~/Library/Audio/Plug-Ins/VST3` |
 | VST3 (Windows) | `C:\Program Files\Common Files\VST3` |
 | VST3 (Linux) | `~/.vst3`, `/usr/lib/vst3`, `/usr/local/lib/vst3` |
+| LV2 (Mac) | `~/Library/Audio/Plug-Ins/LV2`, `~/.lv2`, `/Library/Audio/Plug-Ins/LV2`, `/usr/local/lib/lv2`, `/usr/lib/lv2`, and the folders in `LV2_PATH` |
+| LV2 (Linux) | `~/.lv2`, `/usr/local/lib/lv2`, `/usr/lib/lv2` (`lib64` where the system has it), and the folders in `LV2_PATH` |
 
 ## Recorded sequences
 

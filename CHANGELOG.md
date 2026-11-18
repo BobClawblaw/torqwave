@@ -4,7 +4,28 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
-Nothing yet.
+**The user guide inside the app**
+- Help > User Guide (F1) opens the guide in a window of its own: its pages listed down the left, the page on the right with its headings, lists, tables, links and screenshots, styled by the theme. Links between pages open there, with Back and Forward; other links open in the browser. Help > Keyboard Shortcut List opens the shortcut list there. The pages, the shortcut list and their screenshots are built into the app, so it needs no connection. The Mac has a Help menu now.
+- The tests parse every page and check that each picture decodes and each link reaches a page and heading the app carries, or the web.
+
+**A home screen**
+- With nothing open, the editor shows buttons for New File, Open..., New Session, Open Project... and the User Guide, and up to twelve recent files, sessions and projects as cards. A card shows an audio file's waveform, a session's tracks with their clips in their colours, or a project's session or the file it had in front, with its kind, when it was last saved and its folder; a click opens it. The pictures are made in the background and kept on disk by each file's path, size and time, so the next launch draws them at once. Before, the empty editor listed the recent files by name.
+
+**Splitting several clips at once**
+- Split Clip (Cmd-K) cuts every selected clip and note clip the cursor crosses. Split All Tracks (Shift-Cmd-K), or a Shift-click with the Split tool, cuts every clip there on every shown track, skipping locked ones. Each is one undo step. Before, Split Clip cut one clip.
+
+**Ripple editing**
+- Multitrack > Editing and Recording gains No Ripple, Ripple Track and Ripple All Tracks (also in Settings > Multitrack, and kept). Deleting or cutting clips then closes up the time they leave: on their own track (its later clips, note clips and envelope points move left), or across the whole session, markers and envelopes too, where no other track still plays over that time. No Ripple leaves the gap, as before.
+
+**Layered overlapping clips**
+- With Multitrack > Editing and Recording > Layer Overlapping Clips on (kept with the session, an undo step), the clip on top of an overlap is heard alone, as the lanes draw it, except over its fades, so crossfades still sound both. Bring Clip to Front and Send Clip to Back (also in a clip's right-click menu) restack the selected clips. Off, overlapping clips mix as before.
+
+**An accent colour for each workspace**
+- Window > Workspace > Accent for <workspace> gives the current workspace an accent of its own, shown whenever that workspace is in use, so each one is told apart at a glance. The App's Own goes back to the accent chosen in View > Theme, and choosing one there clears the current workspace's. Save Workspace keeps the accent, and the accents are kept with the workspaces.
+
+**LV2 plug-ins on the Mac and Linux**
+- The plug-in scan finds LV2 effects and instruments in the LV2 folders (`~/.lv2`, `/usr/local/lib/lv2`, `/usr/lib/lv2`, on the Mac also `~/Library/Audio/Plug-Ins/LV2` and `/Library/Audio/Plug-Ins/LV2`, and the folders in `LV2_PATH`), checks each in a worker as it does VST3 and Audio Units, and lists them under LV2 in the plug-in menus, for the rack, track effects and instrument tracks. Windows stays VST3 only for now: its builds run no tests yet.
+- The tests build a small LV2 gain into a bundle and check that the scan finds it in the app's worker, that it loads, plays at the level its control is set to, keeps that setting in its state, and goes through the rack and back from a saved rack.
 
 ## Released
 

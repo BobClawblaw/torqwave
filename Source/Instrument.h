@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 
-/** Playing an instrument plug-in (a synthesizer, built in or a scanned VST3 or Audio Unit
+/** Playing an instrument plug-in (a synthesizer, built in or a scanned VST3, Audio Unit or LV2
     instrument) offline: notes rendered into audio, as Generate from Instrument puts them in a file. */
 namespace Instrument
 {
