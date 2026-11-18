@@ -1,6 +1,6 @@
 # Announcing Torqwave on X
 
-A long post for x.com introducing Torqwave. The post itself is the plain text in the box below: copy it from there and paste it into X's composer. X does not render Markdown, so it uses plain line breaks, `•` bullets and capitals for headings, which survive pasting. It is about 2,800 characters, which needs X's long-post length (more than 280 characters).
+A long post for x.com introducing Torqwave. The post itself is the plain text in the box below: copy it from there and paste it into X's composer. X does not render Markdown, so it uses plain line breaks, `•` bullets and capitals for headings, which survive pasting. It is about 2,900 characters, which needs X's long-post length (more than 280 characters).
 
 ## The post
 
@@ -17,13 +17,13 @@ If you saw this project as SpectraBlade: same app, new name. Another audio produ
 
 WHAT IT IS
 
-A clean-room editor built in C++20 on JUCE, licensed AGPL-3.0. Waveform and spectrogram editing, repair and loudness tools, 20+ built-in effects, multitrack sessions with mixdown, and VST3 plug-ins (plus Audio Units on the Mac).
+A clean-room editor built in C++20 on JUCE, licensed AGPL-3.0. Waveform and spectrogram editing, repair and loudness tools, 20+ built-in effects, multitrack sessions with mixdown, and VST3 plug-ins (plus Audio Units on the Mac, and LV2 on the Mac and Linux). The user guide is built in: press F1.
 
 WHAT YOU GET THAT AUDACITY DOESN'T HAVE
 
 • Instrument plug-ins and MIDI: instrument tracks that host VST3 and AU synths, a piano roll, note clips, live MIDI input and an on-screen keyboard. Audacity can't host instruments, and Audacity 4.0 shipped without its note tracks.
 • A real mixer: buses, sends, sidechain inputs on plug-ins, ducking under a voice, track folders and groups. Audacity 4.0 shipped without its Mixer.
-• Automation: effect parameters drawn as envelopes over time, or written live as the session plays.
+• Automation: volume, pan, effect and instrument parameters drawn as envelopes over time, or written live as the session plays.
 • Surround: 5.1 and 7.1 tracks with a surround panner.
 • Video: a Video panel that follows the playhead, and the edited sound or session mix written back into a copy of the video.
 • A Sound Library: your sound-effects folders indexed and searchable, browsed by UCS category, rated and tagged.
@@ -35,7 +35,7 @@ STILL EARLY, AND THAT'S THE POINT
 
 Torqwave is still early in development, but I'm happy enough with it to put it into more hands for testing. Every release is a dogfooding release: what real use turns up gets fixed and shipped, and 1.0.0 comes once a round of use like that runs clean.
 
-The latest, 0.16.1, came straight out of that loop: instruments now sound as you play them (piano roll, keyboard, MIDI inputs, a plug-in's own keys), stuck notes are gone, and the multitrack view has right-click menus everywhere.
+The latest, 0.16.4, came straight out of that loop: a home screen with your recent work, ripple editing, Option-drag to copy clips, envelope points you can select and delete, automation that shows itself, and instrument parameters you can automate.
 
 GET IT
 
