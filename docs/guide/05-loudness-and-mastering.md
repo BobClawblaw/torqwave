@@ -31,6 +31,8 @@ The **Analysis** workspace (Window > Workspace > Analysis) lays out the analyzer
 
 **Effects > Level and Loudness > Match Loudness...** sets the integrated loudness of the selection or file.
 
+<img src="../screenshots/guide-match.png" width="562" alt="The Match Loudness dialog: Target -23 LUFS, true peak ceiling -1 dBTP, and what to do when the ceiling stops the gain">
+
 | Setting | What it does |
 |---|---|
 | Target (LUFS) | The loudness to reach. Common targets: EBU R128 -23, ATSC A/85 -24, podcasts -16, streaming -14 |

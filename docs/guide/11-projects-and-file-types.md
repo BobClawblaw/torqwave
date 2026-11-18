@@ -77,4 +77,6 @@ The [README](../../README.md#file-formats) has the details: which tags each type
 
 WAV keeps all of them. AIFF, FLAC, MP3 and AAC keep the tags and the cover.
 
+<img src="../screenshots/guide-fileinfo.png" width="812" alt="The File Info dialog: the front cover, then Title, Artist, Album, Genre, Year, Track and Comment filled in, and the broadcast-wave fields below">
+
 Next: [Customising and troubleshooting](12-customising-and-troubleshooting.md).
