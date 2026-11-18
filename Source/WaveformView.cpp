@@ -766,55 +766,127 @@ void WaveformView::resized()
 
 void WaveformView::drawEmpty (juce::Graphics& g, juce::Rectangle<int> area)
 {
-    // The hint, and under it the recent files to open with a click, their folders dimmed beside them.
+    // The home screen: a welcome with buttons to start, then the recent files, sessions and
+    // projects as cards with a picture of each, then where to drop a file.
     std::vector<std::pair<juce::Rectangle<int>, juce::File>> links;
+    std::vector<std::pair<juce::Rectangle<int>, HomeAction>> buttons;
     juce::Array<juce::File> recent;
 
     if (getRecentFiles != nullptr)
         for (auto& f : getRecentFiles())
-            if (recent.size() < 8)
+            if (recent.size() < 12)
                 recent.add (f);
 
-    const auto lineHeight = 24;
-    const auto listHeight = recent.isEmpty() ? 0 : 34 + recent.size() * lineHeight;
-    auto block = area.withSizeKeepingCentre (juce::jmin (area.getWidth() - 40, 560), 30 + listHeight);
+    constexpr int cardWidth = 210, cardHeight = 172, cardGap = 16, pictureHeight = 104;
+    auto page = area.reduced (32, 24);
+    const auto across = juce::jlimit (1, 5, (page.getWidth() + cardGap) / (cardWidth + cardGap));
+    const auto width = juce::jmin (page.getWidth(), across * (cardWidth + cardGap) - cardGap);
+    const auto rows = recent.isEmpty() ? 0 : (recent.size() + across - 1) / across;
+    const auto height = 44 + 26 + 54 + (rows > 0 ? 34 + rows * (cardHeight + cardGap) : 0) + 30;
+    page = page.withSizeKeepingCentre (width, juce::jmin (page.getHeight(), height)).withY (juce::jmax (page.getY(), area.getCentreY() - height / 2));
+
+    g.setColour (Theme::textStrong);
+    g.setFont (juce::FontOptions (30.0f, juce::Font::bold));
+    g.drawText ("Torqwave", page.removeFromTop (44), juce::Justification::centredLeft);
     g.setColour (Theme::dimText);
-    g.setFont (juce::FontOptions (16.0f));
-    g.drawText ("Drop an audio file here, use File > Open, or start one with File > New File", block.removeFromTop (30), juce::Justification::centred);
+    g.setFont (juce::FontOptions (15.0f));
+    g.drawText ("Open something you were working on, or start something new.", page.removeFromTop (26), juce::Justification::centredLeft);
+    page.removeFromTop (14);
+
+    // The buttons, each as wide as its words.
+    auto row = page.removeFromTop (34);
+    const std::array<std::pair<HomeAction, const char*>, 5> actions { { { HomeAction::newFile, "New File" }, { HomeAction::open, "Open..." },
+                                                                        { HomeAction::newSession, "New Session" },
+                                                                        { HomeAction::openProject, "Open Project..." }, { HomeAction::guide, "User Guide" } } };
+    g.setFont (juce::FontOptions (14.0f));
+
+    for (const auto& [action, label] : actions)
+    {
+        const auto w = juce::GlyphArrangement::getStringWidthInt (g.getCurrentFont(), label) + 32;
+
+        if (w > row.getWidth())
+            break;
+
+        const auto button = row.removeFromLeft (w);
+        row.removeFromLeft (10);
+        const auto hovered = (int) buttons.size() == hoveredButton;
+        const auto first = action == HomeAction::newFile;
+        g.setColour (first ? Theme::accentDeep : hovered ? Theme::hover : Theme::raised);
+        g.fillRoundedRectangle (button.toFloat(), Theme::radius);
+        g.setColour (first ? Theme::accent : Theme::lineStrong);
+        g.drawRoundedRectangle (button.toFloat().reduced (0.5f), Theme::radius, 1.0f);
+        g.setColour (hovered || first ? Theme::textStrong : Theme::text);
+        g.drawText (label, button, juce::Justification::centred);
+        buttons.emplace_back (button, action);
+    }
+
+    page.removeFromTop (20);
 
     if (! recent.isEmpty())
     {
-        block.removeFromTop (14);
         g.setFont (juce::FontOptions (12.0f, juce::Font::bold));
         g.setColour (Theme::dimText);
-        g.drawText ("RECENT", block.removeFromTop (20), juce::Justification::centredLeft);
+        g.drawText ("RECENT", page.removeFromTop (20), juce::Justification::centredLeft);
+        page.removeFromTop (14);
+
+        const auto home = juce::File::getSpecialLocation (juce::File::userHomeDirectory).getFullPathName();
+        const auto today = juce::Time::getCurrentTime().formatted ("%Y-%m-%d");
 
         for (int i = 0; i < recent.size(); ++i)
         {
-            auto line = block.removeFromTop (lineHeight);
-            const auto hovered = i == hoveredRecent;
+            const auto& f = recent[i];
+            const auto card = juce::Rectangle<int> (page.getX() + (i % across) * (cardWidth + cardGap), page.getY() + (i / across) * (cardHeight + cardGap),
+                                                    cardWidth, cardHeight);
 
-            if (hovered)
+            if (card.getBottom() > area.getBottom())
+                break;
+
+            const auto hovered = i == hoveredRecent;
+            g.setColour (hovered ? Theme::hover : Theme::surface);
+            g.fillRoundedRectangle (card.toFloat(), 6.0f);
+            g.setColour (hovered ? Theme::accent : Theme::line);
+            g.drawRoundedRectangle (card.toFloat().reduced (0.5f), 6.0f, 1.0f);
+
+            auto inside = card.reduced (8);
+            const auto picture = inside.removeFromTop (pictureHeight).toFloat();
+
+            if (homePictures != nullptr)
             {
-                g.setColour (Theme::line);
-                g.fillRoundedRectangle (line.toFloat(), 4.0f);
+                Home::drawPicture (g, picture, f, *homePictures);
+            }
+            else
+            {
+                g.setColour (Theme::canvas);
+                g.fillRoundedRectangle (picture, Theme::radius);
             }
 
-            auto text = line.reduced (8, 0);
-            const auto name = recent[i].getFileName();
-            g.setFont (juce::FontOptions (14.0f));
-            const auto nameWidth = juce::jmin (text.getWidth(), juce::GlyphArrangement::getStringWidthInt (g.getCurrentFont(), name) + 16);
-            g.setColour (hovered ? Theme::accentLight : Theme::text);
-            g.drawText (name, text.removeFromLeft (nameWidth), juce::Justification::centredLeft, true);
+            inside.removeFromTop (6);
+            g.setColour (hovered ? Theme::accentLight : Theme::textStrong);
+            g.setFont (juce::FontOptions (14.0f, juce::Font::bold));
+            g.drawText (f.getFileNameWithoutExtension(), inside.removeFromTop (20), juce::Justification::centredLeft, true);
+
+            const auto kind = Home::kindOf (f);
+            const auto when = f.getLastModificationTime();
+            const auto whenText = when.formatted ("%Y-%m-%d") == today ? "Today " + when.formatted ("%H:%M") : when.formatted ("%e %b %Y").trim();
             g.setFont (juce::FontOptions (12.0f));
+            g.setColour (Theme::dimText);
+            g.drawText ((kind == Home::Kind::audio ? f.getFileExtension().substring (1).toUpperCase() : kind == Home::Kind::session ? juce::String ("Session") : juce::String ("Project"))
+                            + "  " + juce::String (juce::CharPointer_UTF8 ("\xc2\xb7")) + "  " + whenText,
+                        inside.removeFromTop (17), juce::Justification::centredLeft, true);
             g.setColour (Theme::faintText);
-            g.drawText (recent[i].getParentDirectory().getFullPathName().replace (juce::File::getSpecialLocation (juce::File::userHomeDirectory).getFullPathName(), "~"),
-                        text, juce::Justification::centredLeft, true);
-            links.emplace_back (line, recent[i]);
+            g.drawText (f.getParentDirectory().getFullPathName().replace (home, "~"), inside.removeFromTop (16), juce::Justification::centredLeft, true);
+            links.emplace_back (card, f);
         }
+
+        page.removeFromTop (rows * (cardHeight + cardGap));
     }
 
+    g.setColour (Theme::faintText);
+    g.setFont (juce::FontOptions (13.0f));
+    g.drawText ("Or drop an audio file here to open it.", page.removeFromTop (24), juce::Justification::centredLeft);
+
     recentLinks = std::move (links);
+    homeButtons = std::move (buttons);
 }
 
 //==============================================================================
@@ -822,6 +894,14 @@ void WaveformView::mouseDown (const juce::MouseEvent& e)
 {
     if (! engine.document.hasAudio())
     {
+        for (auto& [area, action] : homeButtons)
+            if (area.contains (e.getPosition()) && onHomeAction != nullptr)
+            {
+                const auto chosen = action;   // the click may open a file, which repaints the screen
+                onHomeAction (chosen);
+                return;
+            }
+
         for (auto& [area, file] : recentLinks)
             if (area.contains (e.getPosition()) && onRecentFileClicked != nullptr)
             {
@@ -1138,19 +1218,24 @@ void WaveformView::mouseMove (const juce::MouseEvent& e)
 {
     if (! engine.document.hasAudio())
     {
-        auto over = -1;
+        auto over = -1, overButton = -1;
 
         for (size_t i = 0; i < recentLinks.size(); ++i)
             if (recentLinks[i].first.contains (e.getPosition()))
                 over = (int) i;
 
-        if (over != hoveredRecent)
+        for (size_t i = 0; i < homeButtons.size(); ++i)
+            if (homeButtons[i].first.contains (e.getPosition()))
+                overButton = (int) i;
+
+        if (over != hoveredRecent || overButton != hoveredButton)
         {
             hoveredRecent = over;
+            hoveredButton = overButton;
             repaint();
         }
 
-        setMouseCursor (over >= 0 ? juce::MouseCursor::PointingHandCursor : juce::MouseCursor::NormalCursor);
+        setMouseCursor (over >= 0 || overButton >= 0 ? juce::MouseCursor::PointingHandCursor : juce::MouseCursor::NormalCursor);
         return;
     }
 

@@ -82,13 +82,21 @@ Each workspace remembers how you left it. **Save Workspace...** keeps the curren
 
 A workspace can have an accent colour of its own, so you can tell at a glance which one you are in: choose it from **Window > Workspace > Accent for** *(the workspace)*. **The App's Own** goes back to the accent chosen in View > Theme. Choosing an accent in View > Theme clears the current workspace's own, so you see the one you picked.
 
+## The home screen
+
+With nothing open, the editor shows the home screen: buttons for **New File**, **Open...**, **New Session**, **Open Project...** and the **User Guide**, and your recent files, sessions and projects as cards. Each card has a picture of what it holds. An audio file shows its waveform. A session shows its tracks with their clips in their colours. A project shows its session, or the file it had in front. Under the name are the kind, when you last saved it and its folder. Click a card to open it again.
+
+![The home screen with buttons to start and cards for six recent files, sessions and projects](../screenshots/guide-home.png)
+
+The pictures are made in the background the first time and kept, so the home screen draws them at once next time. They follow the theme's colours.
+
 ## Open a file
 
 Any of these opens a file:
 
 - **File > Open...** (Cmd-O). Tick **Preview** in the open panel to hear files as you select them.
 - Drop the file on the window.
-- Click one of the recent files listed in the empty editor, or use **File > Open Recent**.
+- Click a card on the home screen, or use **File > Open Recent**.
 - Open it from Finder or Explorer with Torqwave.
 
 Files you open join the ones already open. Each file shows in the **Files** panel; click one there to show it in the editor. Each file keeps its own selection, zoom and undo history. Window > File Tabs adds tabs over the editor as well.

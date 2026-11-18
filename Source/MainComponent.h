@@ -672,6 +672,7 @@ private:
     std::unique_ptr<PluginListWindow> pluginListWindow;
     std::unique_ptr<KeyShortcutsWindow> keyShortcutsWindow;
     std::unique_ptr<Guide::Window> guideWindow;
+    std::unique_ptr<Home::Pictures> homePictures;   // the pictures on the home screen's cards
     std::unique_ptr<SettingsWindow> settingsWindow;
     std::unique_ptr<EqWindow> eqWindow;
     std::unique_ptr<RackRenderJob> renderJob;

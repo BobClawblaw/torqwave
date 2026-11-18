@@ -279,7 +279,8 @@ target_sources(Torqwave PRIVATE
     Source/MultitrackView.cpp
     Source/RackView.cpp
     Source/Guide.cpp
-    Source/GuideView.cpp)
+    Source/GuideView.cpp
+    Source/Home.cpp)
 
 target_compile_definitions(Torqwave PRIVATE
     JUCE_PLUGINHOST_AU=1
@@ -432,6 +433,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/DuckingTests.cpp
     Tests/FadeHandleTests.cpp
     Tests/GuideTests.cpp
+    Tests/HomeTests.cpp
     Source/AudioDocument.cpp
     Source/Markers.cpp
     Source/Metronome.cpp
@@ -558,7 +560,8 @@ target_sources(TorqwaveTests PRIVATE
     Source/RackView.cpp
     Source/MultitrackView.cpp
     Source/Guide.cpp
-    Source/GuideView.cpp)
+    Source/GuideView.cpp
+    Source/Home.cpp)
 # Plug-in bundles that misbehave on purpose, for the scan tests (see Tests/TestBundle.cpp).
 # On Windows each is a .vst3 DLL; the generator expression keeps multi-config builds from adding a
 # configuration folder. IntelOnlyBundle there is a bundle folder holding only 32-bit (x86-win) code.

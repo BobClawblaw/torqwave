@@ -1034,6 +1034,15 @@ MainComponent::MainComponent()
         menuItemsChanged();
     };
     waveform.onRecentFileClicked = [this] (const juce::File& f) { openDocument (f); };
+    homePictures = std::make_unique<Home::Pictures> (juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory).getChildFile ("Torqwave/Thumbnails"));
+    homePictures->onChange = [this] { waveform.repaint(); };
+    waveform.setHomePictures (homePictures.get());
+    waveform.onHomeAction = [this] (WaveformView::HomeAction action)
+    {
+        using A = WaveformView::HomeAction;
+        commands.invokeDirectly (action == A::newFile ? cmdNewFile : action == A::open ? cmdOpen : action == A::newSession ? cmdNewSession
+                                 : action == A::openProject ? cmdOpenProject : cmdUserGuide, true);
+    };
     rackView.onEditSlot = [this] (int index) { showEditor (index); };
     rackView.onApply = [this] { commands.invokeDirectly (cmdApplyRack, true); };
     engine.onPluginAboutToBeRemoved = [this] (juce::AudioProcessor* p) { closeEditorFor (p); };
@@ -1311,6 +1320,7 @@ void MainComponent::offerRecoveredSession()
 
 MainComponent::~MainComponent()
 {
+    waveform.setHomePictures (nullptr);
    #if JUCE_MAC
     juce::MenuBarModel::setMacMainMenu (nullptr);
    #endif

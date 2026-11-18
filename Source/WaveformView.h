@@ -5,6 +5,7 @@
 #include "FileFades.h"
 #include "Spectrogram.h"
 #include "SpectralEdit.h"
+#include "Home.h"
 
 /** The editor view: time ruler, marker lane, one lane per channel, selection, cursor and playhead.
     Drag to select, shift-click to extend, wheel or pinch to zoom, horizontal scroll to pan.
@@ -136,9 +137,17 @@ public:
     bool isInterestedInFileDrag (const juce::StringArray& files) override;
     void filesDropped (const juce::StringArray& files, int x, int y) override;
 
-    /** With no audio open, the view lists these files (the recent ones), each opened with a click. */
+    /** With no audio open, the view is the home screen: buttons to start, and these files (the
+        recent ones) as cards, each opened with a click. */
     std::function<juce::Array<juce::File>()> getRecentFiles;   // those known to be there, newest first
     std::function<void (const juce::File&)> onRecentFileClicked;
+
+    /** The home screen's buttons, in order. */
+    enum class HomeAction { newFile, open, newSession, openProject, guide };
+    std::function<void (HomeAction)> onHomeAction;
+
+    /** Where the cards' pictures come from; without one they show only their kind. */
+    void setHomePictures (Home::Pictures* p)      { homePictures = p; repaint(); }
 
     /** Where the empty view drew each recent file, for clicks (and the tests). */
     const std::vector<std::pair<juce::Rectangle<int>, juce::File>>& getRecentLinks() const noexcept  { return recentLinks; }
@@ -146,7 +155,9 @@ public:
 private:
     void drawEmpty (juce::Graphics&, juce::Rectangle<int> area);
     std::vector<std::pair<juce::Rectangle<int>, juce::File>> recentLinks;
-    int hoveredRecent = -1;
+    std::vector<std::pair<juce::Rectangle<int>, HomeAction>> homeButtons;
+    int hoveredRecent = -1, hoveredButton = -1;
+    Home::Pictures* homePictures = nullptr;
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
     void scrollBarMoved (juce::ScrollBar*, double newRangeStart) override;
