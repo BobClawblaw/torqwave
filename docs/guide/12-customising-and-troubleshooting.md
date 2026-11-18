@@ -22,6 +22,8 @@
 
 Each change takes effect at once, and the menus' own switches stay in step with it.
 
+<img src="../screenshots/guide-settings.png" width="780" alt="The Settings window on its Look page: Theme, Accent, Waveform colour, Time format and Editor shows">
+
 ### Themes
 
 **View > Theme** sets three things:
@@ -62,6 +64,8 @@ See [the window](01-getting-started.md#the-window): docking, tabs, floating pane
 - **Give it new keys:** change them in the list.
 - **Share them:** export and import them to move them between computers.
 - **Use Audition's keys:** **Key Sets... > Audition-Style Keys** switches to keys like Adobe Audition's.
+
+<img src="../screenshots/guide-shortcuts.png" width="680" alt="The Keyboard Shortcuts window: a search box, the list of commands with their keys, and Key Sets, Import, Export and Reset All">
 
 [SHORTCUTS.md](../SHORTCUTS.md) lists the keys Torqwave ships with.
 

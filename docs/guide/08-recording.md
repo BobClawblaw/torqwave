@@ -13,6 +13,8 @@ Torqwave records into a file in the editor, or onto tracks in a session.
    - A new, empty file or session simply takes the interface's rate.
 3. **Set the pre-roll and post-roll:** how long playback runs before a punch-in and after a punch-out. Use **Transport > Recording Options...**, or the Recording page of **File > Settings...**.
 
+<img src="../screenshots/guide-recopts.png" width="594" alt="The Recording Options dialog: pre-roll and post-roll in seconds, 0 to 10">
+
 **Record** is Shift-Space, or the red button on the transport. Press it again to stop.
 
 ## Into a file

@@ -31,8 +31,12 @@ The selected instrument track plays whatever comes in live:
 
 - **A MIDI keyboard.** Turn its input on in **Audio Settings...**.
 - **Window > Keyboard**, the on-screen keyboard. Click its keys, or use your computer's keys. Its line at the top says which track it plays, or why nothing will sound.
-- **The instrument's own window.** Open it with the instrument button, and its keys sound even while the session is stopped.
+- **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**), and its keys sound even while the session is stopped.
 - **The Piano Roll's keyboard** (see below).
+
+<img src="../screenshots/guide-synth.png" width="430" alt="The Basic Synth window: Presets, Wave, Level, Attack, Decay, Sustain, Release, Cutoff and Resonance">
+
+*The window of Basic Synth, the built-in instrument.*
 
 ## Edit the notes: the Piano Roll
 
@@ -51,6 +55,10 @@ Double-click a note clip, or choose **Window > Piano Roll**, to edit the clip's 
 | Hear a pitch | Click a key on the keyboard at the left; drag along it to play each key you pass |
 
 Notes sound as you put them in, click them or drag them. The **grid** choice divides the beat into 1, 2, 4, 8, 16 or 32 steps, or turns the grid off.
+
+![The Piano Roll under the multitrack view, showing the Lead clip's 12 notes, with the Grid, Velocity and Lane controls along its top](../screenshots/guide-pianoroll.png)
+
+*The Lead clip's notes in the Piano Roll. Clip Properties, at the right, shows the clip's name, start and length.*
 
 ### Controller lanes
 

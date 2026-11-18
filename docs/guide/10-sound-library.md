@@ -6,6 +6,10 @@ The Sound Library is a browser for a large collection of sound effects or sample
 
 Open it with **Window > Sound Library**, or **F5**, which shows it and hides it again. It is a window of its own.
 
+![The Sound Library browsing by category: 17 sounds listed with their ratings, lengths and folders, one rated five stars and marked as a favourite, and the selected door creak's waveform in the preview below](../screenshots/guide-library.png)
+
+*A small library browsed by category. The UCS file names put each sound in its category. One sound is a favourite with five stars, and the selected one shows in the preview.*
+
 ## Add your folders
 
 Nothing is scanned until you add a folder.

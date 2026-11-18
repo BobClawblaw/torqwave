@@ -21,6 +21,10 @@ The **Analysis** workspace (Window > Workspace > Analysis) lays out the analyzer
 
 ![The Analysis workspace in the Darker theme: the frequency analyzer and phase meter under the editor](../screenshots/analysis.png)
 
+<img src="../screenshots/guide-stats.png" width="450" alt="Loudness Statistics for a whole file: integrated loudness -18.8 LUFS, loudness range 1.2 LU, true peak -0.6 dBTP, and each channel's peak, RMS and DC offset">
+
+*Loudness Statistics for a whole file.*
+
 ## Hit a loudness target
 
 ### Match Loudness
@@ -44,6 +48,8 @@ The **Analysis** workspace (Window > Workspace > Analysis) lays out the analyzer
 | Online -16 LUFS | -16 LUFS | ±1 LU | -1 dBTP |
 | Online -14 LUFS | -14 LUFS | ±1 LU | -1 dBTP |
 | Your own | -70 to 0 LUFS | 0.1 to 10 LU | -30 to 0 dBTP |
+
+<img src="../screenshots/guide-delivery.png" width="562" alt="The Meet Delivery Spec dialog with the EBU R128 spec chosen, and the custom spec's target, tolerance and true peak below it">
 
 Torqwave applies the gain to reach the target. Where that gain would push the true peak past the ceiling, it uses a true-peak limiter instead.
 
