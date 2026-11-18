@@ -1,6 +1,6 @@
 # Announcing Torqwave on X
 
-A long post for x.com introducing Torqwave. The post itself is the plain text in the box below: copy it from there and paste it into X's composer. X does not render Markdown, so it uses plain line breaks, `•` bullets and capitals for headings, which survive pasting. It is about 2,900 characters, which needs X's long-post length (more than 280 characters).
+A long post for x.com introducing Torqwave. The post itself is the plain text in the box below: copy it from there and paste it into X's composer. X does not render Markdown, so it uses plain line breaks, `•` bullets and capitals for headings, which survive pasting. It is about 3,200 characters, which needs X's long-post length (more than 280 characters).
 
 ## The post
 
@@ -8,6 +8,8 @@ A long post for x.com introducing Torqwave. The post itself is the plain text in
 Introducing Torqwave 🎚️
 
 A free, open-source audio editor for macOS, Windows and Linux, growing into a real alternative to Audacity.
+
+Audacity 4.0 shipped without its note tracks and its mixer. Torqwave has both, plus instrument plug-ins, buses and sends, automation, surround and video.
 
 github.com/BobClawblaw/torqwave
 
@@ -21,9 +23,9 @@ A clean-room editor built in C++20 on JUCE, licensed AGPL-3.0. Waveform and spec
 
 WHAT YOU GET THAT AUDACITY DOESN'T HAVE
 
-• Instrument plug-ins and MIDI: instrument tracks that host VST3 and AU synths, a piano roll, note clips, live MIDI input and an on-screen keyboard. Audacity can't host instruments, and Audacity 4.0 shipped without its note tracks.
-• A real mixer: buses, sends, sidechain inputs on plug-ins, ducking under a voice, track folders and groups. Audacity 4.0 shipped without its Mixer.
-• Automation: volume, pan, effect and instrument parameters drawn as envelopes over time, or written live as the session plays.
+• Instrument plug-ins and MIDI: instrument tracks that host VST3, AU and LV2 synths, a piano roll, note clips, live MIDI input and an on-screen keyboard. Audacity can't host instruments at all, and Audacity 4.0 shipped without its note tracks.
+• A real mixer: buses, sends, sidechain inputs on plug-ins, ducking under a voice, track folders and groups. Audacity has no buses or sends, and 4.0 shipped without its Mixer.
+• Real automation: pan, effect and instrument parameters, not just volume, drawn as envelopes or written live from the controls as the session plays. Audacity's envelopes only set volume.
 • Surround: 5.1 and 7.1 tracks with a surround panner.
 • Video: a Video panel that follows the playhead, and the edited sound or session mix written back into a copy of the video.
 • A Sound Library: your sound-effects folders indexed and searchable, browsed by UCS category, rated and tagged.
@@ -55,6 +57,8 @@ Every comparison with Audacity above was checked on 2026-11-18:
 - **Audacity 4.0** came out on 3 September 2026, rebuilt on Qt. Its own release notes list what is not in it at launch, among them Note/MIDI tracks and the Mixer: [Audacity 4.0.0 release notes](https://www.audacityteam.org/changelog/4.0.0/), with coverage in [OMG! Ubuntu](https://www.omgubuntu.co.uk/2026/09/audacity-4-released).
 - **Instrument plug-ins:** Audacity hosts effect plug-ins but not instruments (VSTi); requests for it remain open on the [Audacity forum](https://forum.audacityteam.org/t/midi-support-w-vst-instruments/105529).
 - **Buses, sends, sidechains, effect automation, surround panning, a video panel and a sound library** are not in Audacity 3.7 or 4.0.
+- **Envelopes:** Audacity's Envelope Tool shapes a track's or clip's volume only; it has no pan, effect or instrument parameter automation. The post claims pan, effect and instrument automation, not volume envelopes, as Torqwave's own.
+- **LV2:** Audacity loads LV2 effects too, so the post lists LV2 in what Torqwave is, not in what Audacity lacks.
 - Audacity 4.0 does have **workspaces** and **non-destructive clip editing**. The post doesn't claim either as Torqwave's alone.
 
 What Torqwave has is from the [README](../README.md) and the [changelog](../CHANGELOG.md). Before posting, check that:
