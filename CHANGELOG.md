@@ -6,6 +6,7 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 **Starting on the home screen**
 - Torqwave starts on the home screen. Before, it reopened the file that was open when it quit, so the home screen showed only after closing every file. Settings > Start > On start chooses between the home screen (the default) and Reopen the last file, which works as before.
+- A file or session you save goes on the recent list, so it shows on the home screen and in File > Open Recent: Save and Save As for audio files (through the rack too), and Save Session and Save Session As. Before, only opening one put it there, so a new recording or a session you had just built showed only after you opened it again.
 
 ## Released
 
