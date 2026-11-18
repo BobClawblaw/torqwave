@@ -1173,15 +1173,43 @@ std::optional<AutomationTarget> MultitrackView::getShownEnvelope (juce::uint32 t
     if (const auto found = shownEnvelopes.find (trackId); found != shownEnvelopes.end())
         return found->second;
 
-    return std::nullopt;
+    if (hiddenEnvelopes.count (trackId) > 0)
+        return std::nullopt;
+
+    // A track with automation shows it until its envelope is hidden: volume, then pan, then the
+    // surround pan, then its first effect parameter.
+    const auto* track = shown().findTrack (trackId);
+
+    if (track == nullptr || ! track->isAutomated())
+        return std::nullopt;
+
+    if (! track->volumeEnvelope.isEmpty())
+        return AutomationTarget (AutomationParameter::volume);
+
+    if (! track->panEnvelope.isEmpty())
+        return AutomationTarget (AutomationParameter::pan);
+
+    for (size_t i = 0; i < surroundParameters.size(); ++i)
+        if (! track->surroundEnvelopes[i].isEmpty())
+            return AutomationTarget (surroundParameters[i]);
+
+    const auto& first = track->effectEnvelopes.front();
+    return AutomationTarget::effect (first.slotId, first.parameterId);
 }
 
 void MultitrackView::showEnvelope (juce::uint32 trackId, std::optional<AutomationTarget> parameter)
 {
+    // Hiding is remembered, so a track's automation doesn't show itself again.
     if (parameter.has_value())
+    {
         shownEnvelopes[trackId] = *parameter;
+        hiddenEnvelopes.erase (trackId);
+    }
     else
+    {
         shownEnvelopes.erase (trackId);
+        hiddenEnvelopes.insert (trackId);
+    }
 
     repaint();
 }
@@ -1525,6 +1553,9 @@ void MultitrackView::changeListenerCallback (juce::ChangeBroadcaster*)
 
     for (auto it = shownEnvelopes.begin(); it != shownEnvelopes.end();)
         it = state->findTrack (it->first) == nullptr ? shownEnvelopes.erase (it) : std::next (it);
+
+    for (auto it = hiddenEnvelopes.begin(); it != hiddenEnvelopes.end();)
+        it = state->findTrack (*it) == nullptr ? hiddenEnvelopes.erase (it) : std::next (it);
 
     rebuildHeaders();
     updateScrollBars();
@@ -4578,6 +4609,84 @@ bool MultitrackView::cutTimeSelection()
     return true;
 }
 
+bool MultitrackView::copyRange()
+{
+    if (timeSelection.isEmpty())
+        return false;
+
+    // The clips across the range, cut to it, each with its track counted from the topmost.
+    const auto current = engine.session.getState();
+    const auto time = SessionEdits::copyTime (*current, timeSelection.getStart(), timeSelection.getEnd());
+    std::vector<std::pair<int, SessionClip>> copied;
+    std::vector<std::pair<int, NoteClip>> copiedNotes;
+    auto topmost = std::numeric_limits<int>::max();
+
+    for (int t = 0; t < (int) time.tracks.size(); ++t)
+    {
+        for (auto& c : time.tracks[(size_t) t].clips)
+            copied.emplace_back (t, c);
+
+        for (auto& c : time.tracks[(size_t) t].noteClips)
+            copiedNotes.emplace_back (t, c);
+
+        if (! time.tracks[(size_t) t].clips.empty() || ! time.tracks[(size_t) t].noteClips.empty())
+            topmost = juce::jmin (topmost, t);
+    }
+
+    if (copied.empty() && copiedNotes.empty())
+        return false;
+
+    for (auto& [track, clip] : copied)
+        track -= topmost;
+
+    for (auto& [track, clip] : copiedNotes)
+        track -= topmost;
+
+    copiedClips = std::move (copied);
+    copiedNoteClips = std::move (copiedNotes);
+    copiedRate = current->sampleRate;
+    return true;
+}
+
+bool MultitrackView::deleteRange (bool cutting)
+{
+    const auto range = timeSelection;
+
+    if (range.isEmpty())
+        return false;
+
+    // Cleared on each track with something there, then closed up as the ripple setting has it:
+    // the cleared time is empty on every track, so Ripple All Tracks takes all of it out.
+    auto next = *engine.session.getState();
+    std::vector<SessionEdits::RemovedSpan> spans;
+
+    for (int t = 0; t < (int) next.tracks.size(); ++t)
+    {
+        const auto cleared = SessionEdits::clearRange (next, t, range.getStart(), range.getEnd());
+
+        if (SessionEdits::clearNoteRange (next, t, range.getStart(), range.getEnd()) || cleared)
+            spans.push_back ({ t, range.getStart(), range.getEnd() });
+    }
+
+    if (spans.empty())
+        return false;
+
+    if (cutting)
+        copyRange();
+
+    SessionEdits::rippleRemoved (next, spans, ripple);
+    engine.session.apply (std::move (next), cutting ? "Cut Range" : "Delete Range");
+
+    // Where the time closed up, the range no longer marks anything: the cursor goes to where it began.
+    if (ripple != SessionEdits::Ripple::off)
+    {
+        setTimeSelection ({});
+        setCursor (range.getStart());
+    }
+
+    return true;
+}
+
 bool MultitrackView::canPasteTime() const
 {
     return copiedTime.length > 0 && juce::exactlyEqual (copiedTime.sampleRate, engine.session.getState()->sampleRate);
@@ -4953,6 +5062,11 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
     const auto p = e.getPosition();
     drag = Drag::none;
     preview.reset();
+
+    // Any click but a right-click turns Cut, Copy and Delete back to clips and points, until a
+    // range is drawn again.
+    if (! e.mods.isPopupMenu())
+        rangeForEdits = false;
 
     // The edge between the track list and the lanes: a drag sizes the list.
     if (! e.mods.isPopupMenu() && overListEdge (p))
@@ -5398,6 +5512,16 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
         const auto range = juce::Range<juce::int64>::between (dragFrame, frame);
         setCursor (range.getStart());
         setTimeSelection (range);
+
+        // A range drawn is what Cut, Copy and Delete act on now, rather than any points selected.
+        rangeForEdits = ! range.isEmpty();
+
+        if (rangeForEdits && selectedPoints.has_value())
+        {
+            selectedPoints.reset();
+            repaint();
+        }
+
         return;
     }
 

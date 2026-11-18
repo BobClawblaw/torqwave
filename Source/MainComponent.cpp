@@ -2297,12 +2297,14 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
             case cmdRedo:   info.shortName = session.canRedo() ? "Redo " + session.getRedoDescription() : juce::String ("Redo");
                             info.setActive (session.canRedo()); break;
             case cmdDelete: info.shortName = multitrack.hasSelectedPoints() ? (multitrack.getNumSelectedPoints() > 1 ? "Delete Points" : "Delete Point")
-                                                                            : juce::String ("Delete Clip");
-                            info.setActive (multitrack.hasSelectedClip() || multitrack.hasSelectedPoints()); break;
+                                           : multitrack.hasRangeForEdits() ? juce::String ("Delete Range") : juce::String ("Delete Clip");
+                            info.setActive (multitrack.hasSelectedClip() || multitrack.hasSelectedPoints() || multitrack.hasRangeForEdits()); break;
             case cmdSelectAll: info.shortName = "Select All Clips"; info.setActive (hasClips); break;
             case cmdZoomSelection: info.shortName = "Zoom to Time Range"; info.setActive (! multitrack.getTimeSelection().isEmpty()); break;
-            case cmdCut:    info.shortName = "Cut Clip"; info.setActive (multitrack.hasSelectedClip()); break;
-            case cmdCopy:   info.shortName = "Copy Clip"; info.setActive (multitrack.hasSelectedClip()); break;
+            case cmdCut:    info.shortName = multitrack.hasRangeForEdits() ? "Cut Range" : "Cut Clip";
+                            info.setActive (multitrack.hasSelectedClip() || multitrack.hasRangeForEdits()); break;
+            case cmdCopy:   info.shortName = multitrack.hasRangeForEdits() ? "Copy Range" : "Copy Clip";
+                            info.setActive (multitrack.hasSelectedClip() || multitrack.hasRangeForEdits()); break;
             case cmdPaste:  info.shortName = "Paste Clip"; info.setActive (multitrack.canPaste()); break;
             case cmdPlayPause: case cmdGoToStart: case cmdGoToEnd: case cmdZoomIn: case cmdZoomOut: case cmdZoomFit:
                             info.setActive (hasClips); break;
@@ -2363,8 +2365,14 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdSaveAs:     if (multitrackMode) saveSessionAs(); else saveAs(); break;
         case cmdUndo:       if (multitrackMode) engine.session.undo(); else if (! waveform.undoStroke()) engine.document.undo(); break;
         case cmdRedo:       if (multitrackMode) engine.session.redo(); else engine.document.redo(); break;
-        case cmdCut:        if (multitrackMode) multitrack.cutSelectedClip(); else cut(); break;
-        case cmdCopy:       if (multitrackMode) { multitrack.copySelectedClip(); commands.commandStatusChanged(); } else copy(); break;
+        case cmdCut:        if (! multitrackMode) cut();
+                            else if (multitrack.hasRangeForEdits()) multitrack.deleteRange (true);
+                            else multitrack.cutSelectedClip();
+                            break;
+        case cmdCopy:       if (! multitrackMode) { copy(); break; }
+                            if (multitrack.hasRangeForEdits()) multitrack.copyRange(); else multitrack.copySelectedClip();
+                            commands.commandStatusChanged();
+                            break;
         case cmdPaste:      if (multitrackMode) multitrack.pasteClip(); else paste (PasteMode::insert); break;
         case cmdPasteMix:   paste (PasteMode::mix); break;
         case cmdPasteFill:  paste (PasteMode::fill); break;
@@ -2372,7 +2380,13 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdSaveRegions: chooseFileRegionsFolder (false); break;
         case cmdSavePieces: chooseFileRegionsFolder (true); break;
         case cmdDuplicateClip: multitrack.duplicateSelectedClip(); break;
-        case cmdDelete:     if (multitrackMode) { if (! multitrack.deleteSelectedPoints()) multitrack.deleteSelectedClip(); }
+        case cmdDelete:     if (multitrackMode)
+                            {
+                                // Points, else a range drawn, else the clips: a range with nothing in it deletes nothing.
+                                if (multitrack.hasSelectedPoints()) multitrack.deleteSelectedPoints();
+                                else if (multitrack.hasRangeForEdits()) multitrack.deleteRange (false);
+                                else multitrack.deleteSelectedClip();
+                            }
                             else deleteSelection();
                             break;   // a spectral selection: its frequencies
         case cmdSelectAll:  if (multitrackMode) multitrack.selectAllClips(); else waveform.selectAll(); break;

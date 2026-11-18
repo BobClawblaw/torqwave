@@ -37,7 +37,7 @@ The track list on the left holds a header for each track. Drag its right edge to
 | Volume, pan | Drag them; they show a value and follow an envelope when one is drawn |
 | **In** | The input the track records from |
 | **Sends** | Sends to buses, the output and ducking (see below) |
-| **A** | The track's envelopes: volume, pan, and the parameters of its effects |
+| **A** | The track's envelopes: volume, pan, and the parameters of its effects. It is lit when the track has automation |
 
 The **Multitrack > Tracks** menu adds tracks, buses and folders, and also:
 
@@ -69,7 +69,17 @@ Select several clips with Shift-click, or drag across empty lane space with the 
 | Ripple Track | The later clips on the same track move back to close it, with that track's envelopes; other tracks and markers stay |
 | Ripple All Tracks | The time comes out of the whole session: every track's later clips, the envelopes and the markers move back together, so they stay in sync |
 
-Ripple All Tracks takes out only time that is empty on every track: if another track still plays over it, nothing moves. Locked clips stay where they are. The same choice is in **Settings > Multitrack**.
+Ripple All Tracks takes out only time that is empty on every track: if another track still plays over it, nothing moves. Locked clips stay where they are. The same choice is in **Settings > Multitrack**. Torqwave starts with No Ripple, and keeps the choice you make.
+
+The setting covers a time range too. Draw one with the Range tool (6), or across the marker lane under the ruler, and **Delete** or **Cut** (Cmd-X) acts on the range instead of the selected clips, on each track with something in it:
+
+| Setting | Delete or Cut on a time range |
+|---|---|
+| No Ripple | The range is cleared and the time stays empty; clips across its edges are cut back |
+| Ripple Track | The range is cleared and the later clips on those tracks move back to close it; other tracks and markers stay |
+| Ripple All Tracks | The time comes out of the whole session, as Delete Time does |
+
+Cut copies what was in the range, so **Paste** (Cmd-V) puts those clips at the cursor. **Copy** (Cmd-C) copies them without taking anything out. The Edit menu says which it will do: Delete Range or Delete Clip. A click on a clip, a point or an empty lane turns Delete, Cut and Copy back to the selected clips.
 
 ### The tools
 
@@ -158,12 +168,14 @@ The master meter is on the right.
 
 An envelope makes volume, pan or an effect parameter change over time.
 
-- **Draw it:** click a track's **A** button and choose the envelope to show: volume, pan, or a parameter of one of the track's effects. Click the line to add a point, drag points to shape it, Click a point to select it (Shift-click adds more) and press Delete or Backspace to remove the selected points, or Option-click a point to remove it (with Option held, the pointer over a point shows a red minus; over the line, Option-click adds nothing).
-- **Write it while playing:** turn on **Write Automation** (W) and play. Moving the track's volume or pan then writes into its envelope.
+- **See it:** a track with automation shows its envelope over its lane: volume first, else pan, else the first effect parameter that has one. To see another, or none, click the track's **A** button and choose it, or **Hide Envelope**. A track you hide stays hidden.
+- **Draw it:** click the **A** button and choose the envelope to show: volume, pan, or a parameter of one of the track's effects. Click the line to add a point and drag points to shape it.
+- **Remove points:** click a point to select it (Shift-click adds more), then press Delete or Backspace. Or Option-click a point: with Option held, the pointer over a point shows a red minus, and an Option-click on the line adds nothing.
+- **Write it while playing:** turn on **Write Automation** (W) and play. Moving the track's volume or pan then writes into its envelope, and the envelope shows as it is written, unless you hid it.
 
 ![The Keys track's volume envelope, shown with its A button: the line drops for the verse and rises into the chorus](../screenshots/guide-automation.png)
 
-*The Keys track's volume envelope, from -4 dB down to -11 dB for the verse and up to -2 dB for the chorus. The A button is lit while an envelope shows.*
+*The Keys track's volume envelope, from -4 dB down to -11 dB for the verse and up to -2 dB for the chorus. The A button is lit because the track has automation.*
 
 A parameter that has an envelope is marked "(automated)" in the menu.
 

@@ -237,6 +237,21 @@ public:
     /** Removes the selected points, as one undo step; false, changing nothing, when none are. */
     bool deleteSelectedPoints();
 
+    /** True when Edit > Cut, Copy and Delete act on the time range: one drawn with the Range tool
+        or across the ruler, with no click on a clip, a point or an empty lane since. */
+    bool hasRangeForEdits() const noexcept        { return rangeForEdits && ! timeSelection.isEmpty(); }
+
+    /** Takes the time range out of each track with something in it, as the Ripple setting says:
+        No Ripple clears it and leaves the time empty; Ripple Track closes the gap on those tracks;
+        Ripple All Tracks takes the time out of the session, markers and all, as Delete Time does.
+        With cutting, the clips in it are copied first, for Paste. One undo step ("Delete Range"
+        or "Cut Range"). False, changing nothing, with no range or nothing in it. */
+    bool deleteRange (bool cutting);
+
+    /** Copies the clips in the time range, cut to it, for Paste (which places them as clips).
+        False with no range or nothing in it. */
+    bool copyRange();
+
     /** The selected clips, copied for pasting (their audio is shared, not duplicated), with
         where they are on the timeline and the tracks relative to each other. */
     bool copySelectedClip();
@@ -533,7 +548,9 @@ public:
         return pass.has_value() && pass->trackId == trackId && std::find (pass->parameters.begin(), pass->parameters.end(), p) != pass->parameters.end();
     }
 
-    /** The envelope shown over a track's lane, if any: volume, pan or an effect parameter. */
+    /** The envelope shown over a track's lane, if any: volume, pan or an effect parameter. The
+        one chosen in the track's A menu; without a choice, a track with automation shows it
+        (volume first), unless it was hidden there. */
     std::optional<AutomationTarget> getShownEnvelope (juce::uint32 trackId) const;
     void showEnvelope (juce::uint32 trackId, std::optional<AutomationTarget>);
 
@@ -773,7 +790,8 @@ private:
     /** Where automated controls show their envelope's value: the play position while the session
         plays, otherwise the cursor. */
     juce::int64 controlFrame() const;
-    std::map<juce::uint32, AutomationTarget> shownEnvelopes;
+    std::map<juce::uint32, AutomationTarget> shownEnvelopes;   // chosen in the A menu
+    std::set<juce::uint32> hiddenEnvelopes;                    // hidden there: automation stays out of sight
 
     /** Selected points, all on one line: a track's envelope, or a clip's gain line (clipId set).
         Kept by time and value, so a selection that no longer matches a point removes nothing. */
@@ -795,6 +813,7 @@ private:
     };
 
     std::optional<PointSelection> selectedPoints;
+    bool rangeForEdits = false;   // see hasRangeForEdits
 
     /** Selects one point (dropping the clip selection), or with adding, adds it to the points
         selected on its line or takes it out. */

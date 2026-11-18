@@ -614,6 +614,79 @@ namespace
         mouse.click ({ x (72000), bodyY });
         view.cutSelectedClip();
         check (starts (0) == std::vector<juce::int64> { 0, 96000 } && engine.session.getUndoDescription() == "Cut Clip", "ripple: cutting a clip ripples too");
+        engine.session.undo();
+        Mouse::settle();
+
+        // A time range drawn with the Range tool over the middle of B (1.25 s to 1.75 s), where
+        // track 1 has nothing: Delete and Cut act on it, as the ripple setting says.
+        view.setSnapping (false);
+        const auto drawRange = [&]
+        {
+            view.setTool (MultitrackView::Tool::range);
+            mouse.drag ({ x (60000), bodyY }, { x (84000), bodyY });
+            view.setTool (MultitrackView::Tool::select);
+            return view.hasRangeForEdits();
+        };
+        const auto range = [&] { return view.getTimeSelection(); };
+
+        auto drawn = drawRange();
+        const auto cut = range();   // where the drag landed, to the pixel
+        const auto len = cut.getLength();
+        view.setRipple (SessionEdits::Ripple::off);
+        const auto offDeleted = view.deleteRange (false) && starts (0) == std::vector<juce::int64> { 0, 48000, cut.getEnd(), 144000 }
+                             && starts (1) == std::vector<juce::int64> { 144000 } && engine.session.getUndoDescription() == "Delete Range"
+                             && range() == cut;
+        engine.session.undo();
+        Mouse::settle();
+
+        view.setRipple (SessionEdits::Ripple::track);
+        const auto trackDeleted = view.deleteRange (false) && starts (0) == std::vector<juce::int64> { 0, 48000, cut.getStart(), 144000 - len }
+                               && starts (1) == std::vector<juce::int64> { 144000 } && state()->markers[0].start == 144000
+                               && range().isEmpty() && ! view.hasRangeForEdits();
+        engine.session.undo();
+        Mouse::settle();
+
+        drawn = drawRange() && drawn && range() == cut;
+        view.setRipple (SessionEdits::Ripple::allTracks);
+        const auto allDeleted = view.deleteRange (false) && starts (0) == std::vector<juce::int64> { 0, 48000, cut.getStart(), 144000 - len }
+                             && starts (1) == std::vector<juce::int64> { 144000 - len } && state()->markers[0].start == 144000 - len;
+        engine.session.undo();
+        Mouse::settle();
+
+        drawn = drawRange() && drawn;
+        view.setRipple (SessionEdits::Ripple::track);
+        const auto cutRange = view.deleteRange (true) && starts (0) == std::vector<juce::int64> { 0, 48000, cut.getStart(), 144000 - len }
+                           && engine.session.getUndoDescription() == "Cut Range" && view.canPaste();
+        engine.session.undo();
+        Mouse::settle();
+
+        // A click on a clip turns Delete back to the clips; a range with nothing in it deletes nothing.
+        drawn = drawRange() && drawn;
+        mouse.click ({ x (24000), bodyY });
+        const auto clickDrops = ! view.hasRangeForEdits();
+        view.setTool (MultitrackView::Tool::range);
+        mouse.drag ({ x (400000), bodyY }, { x (420000), bodyY });
+        view.setTool (MultitrackView::Tool::select);
+        const auto emptyRange = view.hasRangeForEdits() && ! view.deleteRange (false) && ! view.copyRange();
+        view.setSnapping (true);
+
+        check (drawn && offDeleted && trackDeleted && allDeleted && cutRange && clickDrops && emptyRange,
+               "ripple: Delete and Cut on a time range follow the setting (off leaves the gap, Ripple Track closes it on the "
+               "tracks it cut, Ripple All Tracks takes it out of the session, markers too); Cut copies it for Paste; a click "
+               "on a clip turns them back to clips");
+
+        // Envelopes show themselves: track 0 has volume automation, track 1 none. Hiding one in
+        // the A menu keeps it hidden.
+        const auto id0 = state()->tracks[0].id, id1 = state()->tracks[1].id;
+        const auto autoShown = view.getShownEnvelope (id0) == std::optional<AutomationTarget> (AutomationParameter::volume)
+                            && ! view.getShownEnvelope (id1).has_value();
+        view.showEnvelope (id0, std::nullopt);
+        const auto staysHidden = ! view.getShownEnvelope (id0).has_value();
+        view.showEnvelope (id0, AutomationParameter::pan);
+        const auto chosen = view.getShownEnvelope (id0) == std::optional<AutomationTarget> (AutomationParameter::pan);
+        check (autoShown && staysHidden && chosen,
+               "envelopes: a track with automation shows its envelope without asking, one without shows none, and hiding it keeps it hidden");
+
         view.setRipple (SessionEdits::Ripple::off);
     }
 
