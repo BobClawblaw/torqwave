@@ -71,9 +71,9 @@ File > Batch Process... puts many files through the same steps and writes each a
 
 The Editing workspace: the Editor | Multitrack switch at the top left, lit on the side in use, with the transport beside it; two files open in the Files panel on the left (click one to work on it; Window > File Tabs adds tabs over the editor); the effects rack, undo history and selection panel on the right; and the levels meter below. The small handles at the waveform's top corners drag fades in and out; the strip under the waveform holds the box, lasso, brush and heal tools, shows the cursor, selection and view, and holds the zoom controls. The status line at the bottom says which file is being edited.
 
-![A multitrack session: the switch on Multitrack, four tracks and a reverb bus, with clips, fades, sends, markers and the mixer](docs/screenshots/multitrack.png)
+![A multitrack session: the switch on Multitrack, three audio tracks, an instrument track playing the built-in Basic Synth from note clips, and a reverb bus, with clips, fades, sends, markers and the mixer](docs/screenshots/multitrack.png)
 
-A multitrack session in the Multitrack workspace, the switch lit on Multitrack and the status line saying so: four tracks and a reverb bus with clips, clip fades, a crossfade, sends and markers, the mixer underneath, and clip properties, the rack, markers and the clip list as tabs on the right.
+A multitrack session in the Multitrack workspace, the switch lit on Multitrack and the status line saying so: three audio tracks with clips, clip fades and a crossfade; an instrument track, Lead, playing the built-in Basic Synth from its note clips; a reverb bus fed by sends; markers; the editing tools under the lanes; the mixer underneath; and clip properties, the rack, markers and the clip list as tabs on the right.
 
 ![The Analysis workspace in the Darker theme: the frequency analyzer and phase meter under the editor](docs/screenshots/analysis.png)
 
