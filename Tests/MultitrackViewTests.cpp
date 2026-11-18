@@ -53,9 +53,9 @@ namespace
 
         void click (juce::Point<float> at, juce::ModifierKeys mods = {}) const   { drag (at, at, mods); }
 
-        juce::MouseCursor cursorAt (juce::Point<float> at) const
+        juce::MouseCursor cursorAt (juce::Point<float> at, juce::ModifierKeys mods = {}) const
         {
-            view.mouseMove (event (at, at, {}, false));
+            view.mouseMove (event (at, at, mods, false));
             return view.getMouseCursor();
         }
 
@@ -683,6 +683,44 @@ void runMultitrackViewTests (AudioEngine& engine)
     engine.session.undo();
     Mouse::settle();
 
+    // Option-drag copies B: B stays, the copy lands where it is dropped and is selected, in one
+    // undo step. Option pressed during the drag copies too.
+    {
+        const auto copyCursor = mouse.cursorAt (grab, juce::ModifierKeys::altModifier) == juce::MouseCursor (juce::MouseCursor::CopyingCursor)
+                             && mouse.cursorAt (grab) == juce::MouseCursor (juce::MouseCursor::DraggingHandCursor);
+        const auto copyTrack = engine.session.getState()->findClip (clipB)->first;
+        const auto clipsOnTrack = [&] { return engine.session.getState()->tracks[(size_t) copyTrack].clips.size(); };
+        const auto before = clipsOnTrack();
+        const auto to = grab.translated (x (400000) - x (240000), 0.0f);
+        view.setSnapping (false);
+        mouse.drag (grab, to, juce::ModifierKeys::altModifier);
+        const auto& copy = engine.session.getState()->tracks[(size_t) copyTrack].clips.back();
+        const auto copied = clipsOnTrack() == before + 1 && clip (clipB).position == 240000 && copy.id != clipB
+                         && std::abs (copy.position - 400000) < 4 * (juce::int64) framesPerPixel && copy.length == clip (clipB).length
+                         && view.isClipSelected (copy.id) && ! view.isClipSelected (clipB)
+                         && engine.session.getUndoDescription() == "Copy Clip";
+        engine.session.undo();
+        Mouse::settle();
+        const auto undone = clipsOnTrack() == before && clip (clipB).position == 240000;
+
+        // Option pressed only once the drag is under way.
+        const auto held = juce::ModifierKeys (juce::ModifierKeys::leftButtonModifier);
+        view.mouseDown (mouse.event (grab, grab, held, false));
+        view.mouseDrag (mouse.event (grab.translated (20.0f, 0.0f), grab, held, true));
+        view.mouseDrag (mouse.event (to, grab, held.withFlags (juce::ModifierKeys::altModifier), true));
+        view.mouseUp (mouse.event (to, grab, {}, true));
+        Mouse::settle();
+        const auto lateOption = clipsOnTrack() == before + 1 && clip (clipB).position == 240000;
+        engine.session.undo();
+        Mouse::settle();
+        view.setSnapping (true);
+        mouse.click (grab);
+
+        check (copyCursor && copied && undone && lateOption,
+               "view: Option-dragging a clip copies it (Option over a clip shows the copy cursor; the original stays, the copy is "
+               "selected and one undo removes it; Option pressed mid-drag copies too)");
+    }
+
     // Move B over A's end, snapping its start to the cursor at 2.5 s: they crossfade over the
     // 0.5 s they share. With crossfading off, the fades stay as they were.
     auto noFadeOut = *engine.session.getState();
@@ -734,7 +772,31 @@ void runMultitrackViewTests (AudioEngine& engine)
     check (mouse.cursorAt ({ pointX, pointY }) == juce::MouseCursor (juce::MouseCursor::DraggingHandCursor),
            "view: the point shows a hand under the mouse");
 
-    mouse.click ({ pointX, pointY }, juce::ModifierKeys::altModifier);
+    // With Option held the pointer says a click deletes: the delete pointer over the point, a plain
+    // arrow on the line, where an Option-click does nothing (a near miss adds no point).
+    const auto optionHeld = juce::ModifierKeys (juce::ModifierKeys::altModifier);
+    check (mouse.cursorAt ({ pointX, pointY }, optionHeld) == MultitrackView::getDeletePointCursor()
+               && mouse.cursorAt ({ pointX, pointY }) == juce::MouseCursor (juce::MouseCursor::DraggingHandCursor),
+           "view: with Option held, the pointer over a point is the delete pointer, and the hand again without it");
+
+    const auto pointsBefore = engine.session.getState()->tracks[0].volumeEnvelope.points.size();
+    const auto undoBefore = engine.session.getUndoDescription();
+    auto lineAt = -1.0f;
+
+    for (auto y = (float) MultitrackView::rulerHeight; y < (float) (MultitrackView::rulerHeight + MultitrackView::trackHeight); y += 1.0f)
+        if (mouse.cursorAt ({ x (100000), y }) == juce::MouseCursor (juce::MouseCursor::CrosshairCursor))
+        {
+            lineAt = y + 3.0f;
+            break;
+        }
+
+    check (lineAt > 0.0f && mouse.cursorAt ({ x (100000), lineAt }, optionHeld) == juce::MouseCursor (juce::MouseCursor::NormalCursor),
+           "view: with Option held, the pointer on the line between points is a plain arrow");
+    mouse.click ({ x (100000), lineAt }, optionHeld);
+    check (engine.session.getState()->tracks[0].volumeEnvelope.points.size() == pointsBefore && engine.session.getUndoDescription() == undoBefore,
+           "view: an Option-click on the line, off every point, adds nothing");
+
+    mouse.click ({ pointX, pointY }, optionHeld);
     check (engine.session.getState()->tracks[0].volumeEnvelope.isEmpty() && engine.session.getUndoDescription() == "Delete Envelope Point",
            "view: Option-click deletes the point");
 
@@ -2641,11 +2703,14 @@ void runMultitrackViewTests (AudioEngine& engine)
         const auto dragged = linePoints().size() == 1 && std::abs (linePoints()[0].frame - 144000) < 600
                              && juce::exactlyEqual (linePoints()[0].value, SessionClip::minGainDb)
                              && engine.session.getUndoDescription() == "Move Clip Gain Point";
-        gainMouse.click ({ at ((linePoints().empty() ? (juce::int64) 144000 : linePoints()[0].frame) + 48000), bottom }, juce::ModifierKeys::altModifier);
+        const auto gainPoint = juce::Point<float> (at ((linePoints().empty() ? (juce::int64) 144000 : linePoints()[0].frame) + 48000), bottom);
+        const auto deletePointer = gainMouse.cursorAt (gainPoint, juce::ModifierKeys::altModifier) == MultitrackView::getDeletePointCursor();
+        gainMouse.click (gainPoint, juce::ModifierKeys::altModifier);
         const auto removed = linePoints().empty() && engine.session.getUndoDescription() == "Delete Clip Gain Point";
 
-        check (hiddenDoesNothing && added && dragged && removed,
-               "clip gain line: with the lines shown, clicking a clip's line adds a point, dragging moves it (by its clip's audio frames), Alt-click removes it");
+        check (hiddenDoesNothing && added && dragged && deletePointer && removed,
+               "clip gain line: with the lines shown, clicking a clip's line adds a point, dragging moves it (by its clip's audio frames), "
+               "and with Option held the point shows the delete pointer and a click removes it");
     }
 
     {

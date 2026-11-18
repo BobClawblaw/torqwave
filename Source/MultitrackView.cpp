@@ -5064,12 +5064,18 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
         auto envelope = track.envelope (hit->parameter);
         selectTrack (hit->track);
 
-        if (hit->point >= 0 && e.mods.isAltDown())
+        // Option deletes the point under the mouse; on the line between points it does nothing,
+        // so a click that just misses a point doesn't add one.
+        if (e.mods.isAltDown())
         {
-            envelope.remove (hit->point);
-            auto next = *engine.session.getState();
-            SessionEdits::setEnvelope (next, track.id, hit->parameter, std::move (envelope));
-            engine.session.apply (std::move (next), "Delete Envelope Point");
+            if (hit->point >= 0)
+            {
+                envelope.remove (hit->point);
+                auto next = *engine.session.getState();
+                SessionEdits::setEnvelope (next, track.id, hit->parameter, std::move (envelope));
+                engine.session.apply (std::move (next), "Delete Envelope Point");
+            }
+
             return;
         }
 
@@ -5100,12 +5106,17 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
         auto envelope = clip.gainEnvelope;
         selectTrack (hit->track);
 
-        if (hit->point >= 0 && e.mods.isAltDown())
+        // Option deletes the point under the mouse, and does nothing on the line between points.
+        if (e.mods.isAltDown())
         {
-            envelope.remove (hit->point);
-            auto next = *engine.session.getState();
-            SessionEdits::setClipGainEnvelope (next, clip.id, std::move (envelope));
-            engine.session.apply (std::move (next), "Delete Clip Gain Point");
+            if (hit->point >= 0)
+            {
+                envelope.remove (hit->point);
+                auto next = *engine.session.getState();
+                SessionEdits::setClipGainEnvelope (next, clip.id, std::move (envelope));
+                engine.session.apply (std::move (next), "Delete Clip Gain Point");
+            }
+
             return;
         }
 
@@ -5470,9 +5481,60 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
         for (auto& c : dragGroup)
             SessionEdits::crossfade (next, c.id);
 
+    // With Option held (pressed before the drag or during it), the clips are copied: they stay
+    // where they were, and copies go where the drag has taken them.
+    copiedByDrag.clear();
+    copiedNotesByDrag.clear();
+
+    if (drag == Drag::move || drag == Drag::moveNotes)
+    {
+        if (e.mods.isAltDown())
+            next = withDragCopies (next);
+
+        setMouseCursor (e.mods.isAltDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
+    }
+
     preview = std::move (next);
     rebuildHeaders();
     repaint();
+}
+
+SessionState MultitrackView::withDragCopies (const SessionState& moved)
+{
+    // The session as it was, with a copy of each dragged clip placed where the move put it.
+    auto next = *engine.session.getState();
+    std::vector<juce::uint32> audio, notes;
+
+    if (drag == Drag::move)
+        audio.push_back (dragClip.id);
+    else
+        notes.push_back (dragNoteClip.id);
+
+    for (auto& c : dragGroup)
+        audio.push_back (c.id);
+
+    for (auto& c : dragNoteGroup)
+        notes.push_back (c.id);
+
+    for (const auto id : audio)
+        if (const auto where = moved.findClip (id))
+        {
+            const auto& clip = moved.tracks[(size_t) where->first].clips[(size_t) where->second];
+            copiedByDrag.push_back (SessionEdits::placeClip (next, where->first, clip, clip.position));
+        }
+
+    for (const auto id : notes)
+        if (const auto where = moved.findNoteClip (id))
+        {
+            const auto& clip = moved.tracks[(size_t) where->first].noteClips[(size_t) where->second];
+            copiedNotesByDrag.push_back (SessionEdits::placeNoteClip (next, where->first, clip, clip.position));
+        }
+
+    if (crossfading)
+        for (const auto id : copiedByDrag)
+            SessionEdits::crossfade (next, id);
+
+    return next;
 }
 
 void MultitrackView::mouseUp (const juce::MouseEvent&)
@@ -5540,7 +5602,22 @@ void MultitrackView::mouseUp (const juce::MouseEvent&)
         auto next = std::move (*preview);
         preview.reset();
         MarkerEdits::sort (next.markers);
-        engine.session.apply (std::move (next), dragDescription);
+        auto description = dragDescription;
+
+        // An Option-drag made copies: they are the selection now, as after Duplicate.
+        if (const auto copies = copiedByDrag.size() + copiedNotesByDrag.size(); copies > 0)
+        {
+            selectedClips = { copiedByDrag.begin(), copiedByDrag.end() };
+            selectedClip = copiedByDrag.empty() ? 0 : copiedByDrag.front();
+            selectedNoteClips = { copiedNotesByDrag.begin(), copiedNotesByDrag.end() };
+            selectedNoteClip = copiedNotesByDrag.empty() ? 0 : copiedNotesByDrag.front();
+            description = copies > 1 ? "Copy " + juce::String ((int) copies) + " Clips"
+                        : copiedByDrag.size() == 1 ? juce::String ("Copy Clip") : juce::String ("Copy Notes");
+        }
+
+        copiedByDrag.clear();
+        copiedNotesByDrag.clear();
+        engine.session.apply (std::move (next), description);
     }
 
     if (drag == Drag::rubberBand)
@@ -5555,10 +5632,66 @@ void MultitrackView::mouseUp (const juce::MouseEvent&)
     drag = Drag::none;
 }
 
+namespace
+{
+    /** The pointer over an envelope or clip gain point while Option is held: the point with a
+        red minus beside it, so it is plain that a click deletes it. Its hot spot is the point. */
+    const juce::MouseCursor& deletePointCursor()
+    {
+        static const juce::MouseCursor cursor = []
+        {
+            constexpr float scale = 2.0f, size = 24.0f;
+            juce::Image image (juce::Image::ARGB, (int) (size * scale), (int) (size * scale), true);
+            juce::Graphics g (image);
+            g.addTransform (juce::AffineTransform::scale (scale));
+
+            const auto dot = juce::Rectangle<float> (9.0f, 9.0f).withCentre ({ 8.0f, 8.0f });
+            g.setColour (juce::Colours::black);
+            g.fillEllipse (dot.expanded (1.5f));
+            g.setColour (juce::Colours::white);
+            g.fillEllipse (dot);
+
+            const auto badge = juce::Rectangle<float> (11.0f, 11.0f).withCentre ({ 17.0f, 17.0f });
+            g.setColour (juce::Colours::black);
+            g.fillEllipse (badge.expanded (1.5f));
+            g.setColour (juce::Colour (0xffe5484d));
+            g.fillEllipse (badge);
+            g.setColour (juce::Colours::white);
+            g.fillRoundedRectangle (juce::Rectangle<float> (6.5f, 2.0f).withCentre (badge.getCentre()), 1.0f);
+
+            return juce::MouseCursor (juce::ScaledImage (image, scale), { 8, 8 });
+        }();
+
+        return cursor;
+    }
+}
+
+const juce::MouseCursor& MultitrackView::getDeletePointCursor()
+{
+    return deletePointCursor();
+}
+
+void MultitrackView::modifierKeysChanged (const juce::ModifierKeys& mods)
+{
+    // Holding or letting go of Option changes what a click on a point does, so the pointer
+    // follows it without the mouse having to move.
+    if (isMouseOver() && drag == Drag::none)
+    {
+        const auto at = getMouseXYRelative().toFloat();
+        const auto now = juce::Time::getCurrentTime();
+        mouseMove ({ juce::Desktop::getInstance().getMainMouseSource(), at, mods, juce::MouseInputSource::defaultPressure,
+                     juce::MouseInputSource::defaultOrientation, juce::MouseInputSource::defaultRotation,
+                     juce::MouseInputSource::defaultTiltX, juce::MouseInputSource::defaultTiltY,
+                     this, this, now, at, now, 0, false });
+    }
+}
+
 void MultitrackView::mouseMove (const juce::MouseEvent& e)
 {
     auto cursorShape = juce::MouseCursor::NormalCursor;
     const auto p = e.getPosition();
+    // Option deletes points with the tools that reach them (the others take the click first), and copies clips it drags.
+    const auto optionHeld = e.mods.isAltDown() && (tool == Tool::select || tool == Tool::stretch);
 
     if (overListEdge (p))
     {
@@ -5575,17 +5708,32 @@ void MultitrackView::mouseMove (const juce::MouseEvent& e)
     }
     else if (const auto envelope = envelopeAt (p))
     {
+        // With Option held a click deletes the point, or does nothing on the line.
+        if (optionHeld)
+        {
+            setMouseCursor (envelope->point >= 0 ? deletePointCursor() : juce::MouseCursor (juce::MouseCursor::NormalCursor));
+            return;
+        }
+
         cursorShape = envelope->point >= 0 ? juce::MouseCursor::DraggingHandCursor : juce::MouseCursor::CrosshairCursor;
     }
     else if (const auto gain = clipGainAt (p))
     {
+        if (optionHeld)
+        {
+            setMouseCursor (gain->point >= 0 ? deletePointCursor() : juce::MouseCursor (juce::MouseCursor::NormalCursor));
+            return;
+        }
+
         cursorShape = gain->point >= 0 ? juce::MouseCursor::DraggingHandCursor : juce::MouseCursor::CrosshairCursor;
     }
     else if (const auto notes = noteClipAt (p); notes.has_value() && ! clipAt (p).has_value())
     {
         const auto r = noteClipBounds (notes->first, shown().tracks[(size_t) notes->first].noteClips[(size_t) notes->second]);
         cursorShape = r.getWidth() > 3 * edgeGrab && (p.x <= r.getX() + edgeGrab || p.x >= r.getRight() - edgeGrab)
-                          ? juce::MouseCursor::LeftRightResizeCursor : juce::MouseCursor::DraggingHandCursor;
+                          ? juce::MouseCursor::LeftRightResizeCursor
+                      : optionHeld ? juce::MouseCursor::CopyingCursor   // Option-drag copies
+                                 : juce::MouseCursor::DraggingHandCursor;
     }
     else if (const auto hit = clipAt (p))
     {
@@ -5596,7 +5744,8 @@ void MultitrackView::mouseMove (const juce::MouseEvent& e)
                     : fadeHandleAt (p, hit->first, clip) != Drag::none
                           || (r.getWidth() > 3 * edgeGrab && (p.x <= r.getX() + edgeGrab || p.x >= r.getRight() - edgeGrab))
                           ? juce::MouseCursor::LeftRightResizeCursor
-                          : juce::MouseCursor::DraggingHandCursor;
+                    : optionHeld ? juce::MouseCursor::CopyingCursor   // Option-drag copies
+                               : juce::MouseCursor::DraggingHandCursor;
     }
 
     // The tools say what a click would do: Split and Draw a crosshair where they act, Glue a hand

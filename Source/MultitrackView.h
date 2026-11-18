@@ -563,6 +563,10 @@ public:
     void mouseDrag (const juce::MouseEvent&) override;
     void mouseUp (const juce::MouseEvent&) override;
     void mouseMove (const juce::MouseEvent&) override;
+    void modifierKeysChanged (const juce::ModifierKeys&) override;
+
+    /** The pointer over an envelope or clip gain point while Option is held (a click deletes it). */
+    static const juce::MouseCursor& getDeletePointCursor();
     void mouseDoubleClick (const juce::MouseEvent&) override;
     void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
     void mouseMagnify (const juce::MouseEvent&, float scaleFactor) override;
@@ -737,6 +741,11 @@ private:
     Envelope dragEnvelopeBase;             // its envelope, with the point, as the drag began
     ClipGainHit dragClipGain;              // the clip gain point being dragged, its line as it began in dragEnvelopeBase
     juce::String dragDescription;          // the undo step a drag makes
+    std::vector<juce::uint32> copiedByDrag, copiedNotesByDrag;   // the copies an Option-drag is making
+
+    /** The session as it was, with copies of the dragged clips where moved (the move's result) has
+        them; fills copiedByDrag and copiedNotesByDrag with their ids. */
+    SessionState withDragCopies (const SessionState& moved);
 
     bool snapping = true, crossfading = true, writingAutomation = false, zeroCrossings = false;
     juce::int64 toZeroCrossing (const SessionClip&, juce::int64 frame) const;

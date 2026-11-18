@@ -8,6 +8,10 @@ Each milestone as it was built, newest first, with what the tests measured on th
 - Torqwave starts on the home screen. Before, it reopened the file that was open when it quit, so the home screen showed only after closing every file. Settings > Start > On start chooses between the home screen (the default) and Reopen the last file, which works as before.
 - A file or session you save goes on the recent list, so it shows on the home screen and in File > Open Recent: Save and Save As for audio files (through the rack too), and Save Session and Save Session As. Before, only opening one put it there, so a new recording or a session you had just built showed only after you opened it again.
 
+**Copying clips by dragging, and a clearer way to remove points**
+- Option-drag a clip in a session to copy it, as in other multitrack editors: the clip stays, a copy lands where it is dropped (on another track too), and every selected clip and note clip comes along. Option over a clip shows the copy cursor; pressing Option during a drag copies as well. The copies are selected afterwards, and the copy is one undo step ("Copy Clip", or "Copy N Clips"). Option on a clip's edge still stretches it.
+- With Option held over an envelope or clip-gain point, the pointer turns into a dot with a red minus, so you can see a click will remove it. Before, it stayed a hand. An Option-click that misses a point now does nothing; before, it added a point.
+
 ## Released
 
 **Release 0.16.2: The guide in the app, a home screen, ripple and layered clips, workspace accents, LV2**

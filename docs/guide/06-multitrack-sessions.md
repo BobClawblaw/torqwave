@@ -50,6 +50,7 @@ The **Multitrack > Tracks** menu adds tracks, buses and folders, and also:
 ## Clips
 
 - **Move a clip:** drag it, onto another track if you like.
+- **Copy a clip:** Option-drag it. The clip stays where it was and a copy goes where you drop it; with several clips selected, they are all copied. The cursor shows a plus while Option is held over a clip, and you can press Option during the drag too. The copies are left selected, and one undo removes them.
 - **Trim it:** drag its left or right edge.
 - **Fade it:** drag the small squares at its top corners.
 - **Crossfade two clips:** with **Crossfade Overlaps** on (X), a clip dragged over part of another crossfades with it.
@@ -98,7 +99,7 @@ Beside the tools are the tempo (click it to set it) and the **Bars** switch, whi
 
 - Click the line to add a point.
 - Drag a point to move it.
-- Option-click a point to remove it.
+- Option-click a point to remove it. With Option held, the pointer over a point turns into a dot with a red minus; over the line, Option-click adds nothing.
 
 **Clip Properties** (Shift-Cmd-I) shows the selected clip's name, start, length, gain and fades, for reading and typing.
 
@@ -156,7 +157,7 @@ The master meter is on the right.
 
 An envelope makes volume, pan or an effect parameter change over time.
 
-- **Draw it:** click a track's **A** button and choose the envelope to show: volume, pan, or a parameter of one of the track's effects. Click the line to add a point, drag points to shape it, and Option-click a point to remove it.
+- **Draw it:** click a track's **A** button and choose the envelope to show: volume, pan, or a parameter of one of the track's effects. Click the line to add a point, drag points to shape it, and Option-click a point to remove it (with Option held, the pointer over a point shows a red minus; over the line, Option-click adds nothing).
 - **Write it while playing:** turn on **Write Automation** (W) and play. Moving the track's volume or pan then writes into its envelope.
 
 ![The Keys track's volume envelope, shown with its A button: the line drops for the verse and rises into the chorus](../screenshots/guide-automation.png)
