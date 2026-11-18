@@ -465,10 +465,164 @@ namespace
                "multitrack: the track list's edge shows a resize pointer and drags the list wider (to 340 px, "
                "reported at the end), up to " + juce::String (widest) + " px and down to " + juce::String (narrowest));
     }
+    /** Splitting several clips at once: Split Clip cuts every selected clip the cursor crosses,
+        Split All Tracks every clip under it on every track (locked ones left whole), and the
+        Split tool does that with Shift, each as one undo step. */
+    void testSplitting (AudioEngine& engine)
+    {
+        SessionState initial;
+        initial.sampleRate = rate;
+        initial.addTrack();
+        initial.addTrack();
+        initial.addTrack();
+        SessionEdits::addClip (initial, 0, juce::File ("/tmp/a.wav"), silence (96000), 48000);
+        SessionEdits::addClip (initial, 1, juce::File ("/tmp/b.wav"), silence (96000), 48000);
+        SessionEdits::addClip (initial, 2, juce::File ("/tmp/c.wav"), silence (96000), 48000);
+        engine.session.reset (initial, {});
+
+        MultitrackView view (engine);
+        view.setSize (MultitrackView::headerWidth + timelineWidth + 12, MultitrackView::rulerHeight + 4 * MultitrackView::trackHeight + 12);
+        view.zoomToFit();
+        Mouse mouse { view };
+        Mouse::settle();
+
+        const auto framesPerPixel = rate * 10.0 * 1.05 / timelineWidth;
+        const auto x = [&] (juce::int64 frame) { return (float) MultitrackView::headerWidth + (float) ((double) frame / framesPerPixel); };
+        const auto bodyY = [] (int track) { return (float) (MultitrackView::rulerHeight + track * MultitrackView::trackHeight + 60); };
+        const auto starts = [&] (int track)
+        {
+            std::vector<juce::int64> v;
+
+            for (const auto& c : engine.session.getState()->tracks[(size_t) track].clips)
+                v.push_back (c.position);
+
+            std::sort (v.begin(), v.end());
+            return v;
+        };
+        const std::vector<juce::int64> whole { 48000 }, cut { 48000, 96000 };
+
+        mouse.click ({ x (60000), bodyY (0) });
+        mouse.click ({ x (60000), bodyY (1) }, juce::ModifierKeys::shiftModifier);
+        view.setCursor (96000);
+        view.splitSelectedClip();
+        check (starts (0) == cut && starts (1) == cut && starts (2) == whole && engine.session.getUndoDescription() == "Split Clips",
+               "split: Split Clip cuts both selected clips at the cursor, as one step, and leaves the third");
+
+        engine.session.undo();
+        Mouse::settle();
+        auto locked = *engine.session.getState();
+        SessionEdits::setClipLocked (locked, locked.tracks[1].clips[0].id, true);
+        engine.session.apply (std::move (locked), "Lock Clip");
+        Mouse::settle();
+        check (view.splitAllTracksAtCursor() && starts (0) == cut && starts (1) == whole && starts (2) == cut
+                   && engine.session.getUndoDescription() == "Split All Tracks",
+               "split: Split All Tracks cuts every track's clip under the cursor but the locked one");
+        engine.session.undo();
+        Mouse::settle();
+        view.setCursor (0);
+        check (! view.splitAllTracksAtCursor() && engine.session.getUndoDescription() == "Lock Clip", "split: with no clip under the cursor nothing is split");
+
+        view.setSnapping (false);
+        view.setTool (MultitrackView::Tool::split);
+        mouse.click ({ x (120000), bodyY (2) }, juce::ModifierKeys::shiftModifier);
+        const auto at = engine.session.getState()->tracks[0].clips.size() == 2 ? starts (0)[1] : -1;
+        check (starts (0).size() == 2 && starts (2).size() == 2 && starts (2)[1] == at && starts (1) == whole && std::abs (at - 120000) <= (juce::int64) framesPerPixel,
+               "split: a Shift-click with the Split tool cuts every track there (at " + juce::String (at) + ")");
+        view.setTool (MultitrackView::Tool::select);
+        view.setSnapping (true);
+    }
+
+    /** Ripple: deleting a clip with Ripple Track closes its gap on its own track (clips and
+        envelope after it move back, other tracks and markers stay); with Ripple All Tracks the
+        time leaves the whole session, unless another track still plays over it; off, nothing
+        moves. Cutting ripples the same way. */
+    void testRipple (AudioEngine& engine)
+    {
+        // Track 0: A 0-1 s, B 1-2 s, C 3-4 s. Track 1: D 3-4 s. A marker at 3 s, a volume point at 3.5 s on track 0.
+        SessionState initial;
+        initial.sampleRate = rate;
+        initial.addTrack();
+        initial.addTrack();
+        SessionEdits::addClip (initial, 0, juce::File ("/tmp/a.wav"), silence (48000), 0);
+        SessionEdits::addClip (initial, 0, juce::File ("/tmp/b.wav"), silence (48000), 48000);
+        SessionEdits::addClip (initial, 0, juce::File ("/tmp/c.wav"), silence (48000), 144000);
+        SessionEdits::addClip (initial, 1, juce::File ("/tmp/d.wav"), silence (48000), 144000);
+        initial.markers = { { 144000, 0, "Here" } };
+        initial.tracks[0].volumeEnvelope.points = { { 168000, -6.0f } };
+        engine.session.reset (initial, {});
+
+        MultitrackView view (engine);
+        view.setSize (MultitrackView::headerWidth + timelineWidth + 12, MultitrackView::rulerHeight + 3 * MultitrackView::trackHeight + 12);
+        view.zoomToFit();
+        Mouse mouse { view };
+        Mouse::settle();
+
+        const auto framesPerPixel = rate * 10.0 * 1.05 / timelineWidth;   // zoomToFit shows at least 10 s
+        const auto x = [&] (juce::int64 frame) { return (float) MultitrackView::headerWidth + (float) ((double) frame / framesPerPixel); };
+        const auto bodyY = (float) (MultitrackView::rulerHeight + 60);
+        const auto starts = [&] (int track)
+        {
+            std::vector<juce::int64> v;
+
+            for (const auto& c : engine.session.getState()->tracks[(size_t) track].clips)
+                v.push_back (c.position);
+
+            std::sort (v.begin(), v.end());
+            return v;
+        };
+        const auto state = [&] { return engine.session.getState(); };
+
+        // B, the middle clip of track 0, is deleted each time.
+        const auto deleteB = [&] (SessionEdits::Ripple r)
+        {
+            view.setRipple (r);
+            mouse.click ({ x (72000), bodyY });
+            view.deleteSelectedClip();
+        };
+
+        deleteB (SessionEdits::Ripple::off);
+        check (starts (0) == std::vector<juce::int64> { 0, 144000 } && starts (1) == std::vector<juce::int64> { 144000 }, "ripple: off, deleting a clip leaves the gap");
+        engine.session.undo();
+        Mouse::settle();
+
+        deleteB (SessionEdits::Ripple::track);
+        check (starts (0) == std::vector<juce::int64> { 0, 96000 } && starts (1) == std::vector<juce::int64> { 144000 }
+                   && state()->markers[0].start == 144000 && state()->tracks[0].volumeEnvelope.points.back().frame == 120000,
+               "ripple: Ripple Track moves the clips and envelope after it on its track back by its length, and nothing else");
+        engine.session.undo();
+        Mouse::settle();
+
+        deleteB (SessionEdits::Ripple::allTracks);
+        check (starts (0) == std::vector<juce::int64> { 0, 96000 } && starts (1) == std::vector<juce::int64> { 96000 } && state()->markers[0].start == 96000,
+               "ripple: Ripple All Tracks takes its time out of the session, other tracks and markers too");
+        engine.session.undo();
+        Mouse::settle();
+
+        // With D moved over B's time on track 1, that time isn't empty on every track: nothing closes.
+        auto covered = *state();
+        covered.tracks[1].clips[0].position = 48000;
+        engine.session.apply (std::move (covered), "Move Clip");
+        Mouse::settle();
+        deleteB (SessionEdits::Ripple::allTracks);
+        check (starts (0) == std::vector<juce::int64> { 0, 144000 } && starts (1) == std::vector<juce::int64> { 48000 },
+               "ripple: Ripple All Tracks leaves time another track still plays over");
+        engine.session.undo();
+        engine.session.undo();
+        Mouse::settle();
+
+        view.setRipple (SessionEdits::Ripple::track);
+        mouse.click ({ x (72000), bodyY });
+        view.cutSelectedClip();
+        check (starts (0) == std::vector<juce::int64> { 0, 96000 } && engine.session.getUndoDescription() == "Cut Clip", "ripple: cutting a clip ripples too");
+        view.setRipple (SessionEdits::Ripple::off);
+    }
+
 }
 
 void runMultitrackViewTests (AudioEngine& engine)
 {
+    testRipple (engine);
+    testSplitting (engine);
     testTrackTools (engine);
     testListWidth (engine);
     testNoteClipSelection (engine);

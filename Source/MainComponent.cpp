@@ -57,6 +57,7 @@ namespace
     constexpr const char* fadeShapeKey    = "editorFadeShape";
     constexpr const char* snappingKey     = "snapping";
     constexpr const char* crossfadingKey  = "crossfading";
+    constexpr const char* rippleKey       = "ripple";   // 0 off, 1 the clip's track, 2 every track
     constexpr const char* zeroCrossingsKey = "zeroCrossings";
     constexpr const char* selectZeroCrossingsKey = "selectZeroCrossings";
     constexpr const char* prerollKey      = "preroll";
@@ -164,7 +165,7 @@ namespace
         cmdExtremeStretch, cmdNewFile, cmdSettings, cmdGenerateInstrument, cmdShowPianoRoll, cmdShowKeyboard, cmdRecordNotes, cmdImportMidi, cmdAddInstrumentTrack,
         cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute,   // one a MultitrackView::Tool, in its order
         cmdTimeWithBars, cmdMusicalTimebase, cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes, cmdTimeTool,
-        cmdUserGuide, cmdShortcutList,
+        cmdUserGuide, cmdShortcutList, cmdSplitAllTracks, cmdRippleOff, cmdRippleTrack, cmdRippleAll,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -975,6 +976,7 @@ MainComponent::MainComponent()
     fileTabs.onClose = [this] (int index) { closeFile (index); };
     multitrack.setSnapping (settings->getBoolValue (snappingKey, true));
     multitrack.setCrossfading (settings->getBoolValue (crossfadingKey, true));
+    multitrack.setRipple ((SessionEdits::Ripple) juce::jlimit (0, 2, settings->getIntValue (rippleKey, 0)));
     multitrack.setFindingZeroCrossings (settings->getBoolValue (zeroCrossingsKey, false));
     selectZeroCrossings = settings->getBoolValue (selectZeroCrossingsKey, false);
     waveform.snapSelectionFrame = [this] (juce::int64 frame)
@@ -2114,6 +2116,12 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.addDefaultKeypress ('w', 0); info.setTicked (multitrack.isWritingAutomation()); info.setActive (multitrackMode); break;
         case cmdCrossfade:  info.setInfo ("Crossfade Overlaps", "Crossfade a clip moved or trimmed over part of another", "Multitrack", 0);
                             info.addDefaultKeypress ('x', 0); info.setTicked (multitrack.isCrossfading()); info.setActive (multitrackMode); break;
+        case cmdRippleOff:  info.setInfo ("No Ripple", "Deleting or cutting clips leaves the time they played over empty", "Multitrack", 0);
+                            info.setTicked (multitrack.getRipple() == SessionEdits::Ripple::off); info.setActive (multitrackMode); break;
+        case cmdRippleTrack: info.setInfo ("Ripple Track", "Deleting or cutting clips moves the later clips on their tracks back to close the gap", "Multitrack", 0);
+                            info.setTicked (multitrack.getRipple() == SessionEdits::Ripple::track); info.setActive (multitrackMode); break;
+        case cmdRippleAll:  info.setInfo ("Ripple All Tracks", "Deleting or cutting clips takes the time they leave empty out of every track, markers and all", "Multitrack", 0);
+                            info.setTicked (multitrack.getRipple() == SessionEdits::Ripple::allTracks); info.setActive (multitrackMode); break;
         case cmdMixDown:    info.setInfo ("Mix Down...", "Mix the session, or its time range, to an audio file", "Multitrack", 0);
                             info.addDefaultKeypress ('e', cmd | shift);
                             info.setActive (multitrackMode && backgroundJob == nullptr
@@ -2190,8 +2198,10 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                                                                            [] (auto& t) { return t.hidden; })); break;
         case cmdDuplicateTrack: info.setInfo ("Duplicate Track", "Copy the selected track or bus, with its clips, effects and settings", "Multitrack", 0);
                             info.setActive (multitrackMode && multitrack.getSelectedTrack() >= 0 && ! isRecording()); break;
-        case cmdSplitClip:  info.setInfo ("Split Clip", "Split the selected clip (or note clip) at the cursor", "Multitrack", 0);
+        case cmdSplitClip:  info.setInfo ("Split Clip", "Split the selected clips and note clips at the cursor", "Multitrack", 0);
                             info.addDefaultKeypress ('k', cmd); info.setActive (multitrackMode && multitrack.hasSelectedClip()); break;
+        case cmdSplitAllTracks: info.setInfo ("Split All Tracks", "Split every clip and note clip the cursor crosses, on every track", "Multitrack", 0);
+                            info.addDefaultKeypress ('k', cmd | shift); info.setActive (multitrackMode && ! isRecording()); break;
         case cmdConvertRate: info.setInfo ("Convert Sample Rate...", "Resample the whole file to another rate", "Edit", 0);
                             info.setActive (hasAudio && backgroundJob == nullptr); break;
 
@@ -2712,6 +2722,7 @@ bool MainComponent::perform (const InvocationInfo& info)
             commands.commandStatusChanged();
             break;
         case cmdSplitClip:  multitrack.splitSelectedClip(); break;
+        case cmdSplitAllTracks: multitrack.splitAllTracksAtCursor(); break;
         case cmdMixDown:    chooseMixDownFile(); break;
         case cmdMetronome:
             engine.getPlayer().setMetronome (! engine.getPlayer().isMetronomeOn());
@@ -2776,6 +2787,12 @@ bool MainComponent::perform (const InvocationInfo& info)
             break;
         case cmdWriteAutomation:
             multitrack.setWritingAutomation (! multitrack.isWritingAutomation());
+            commands.commandStatusChanged();
+            break;
+        case cmdRippleOff: case cmdRippleTrack: case cmdRippleAll:
+            multitrack.setRipple (info.commandID == cmdRippleTrack ? SessionEdits::Ripple::track
+                                  : info.commandID == cmdRippleAll ? SessionEdits::Ripple::allTracks : SessionEdits::Ripple::off);
+            appProperties.getUserSettings()->setValue (rippleKey, (int) multitrack.getRipple());
             commands.commandStatusChanged();
             break;
         case cmdCrossfade:
@@ -3029,11 +3046,11 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdAddFromTemplate, cmdSaveTrackTemplate, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
                                0, cmdTrackAbove, cmdTrackBelow, 0, cmdUnsoloAll, cmdUnmuteAll });
             group ("Tools", { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute });
-            group ("Clips", { cmdSplitClip, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines });
+            group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines });
             group ("Arrange", { cmdNudgeEarlier, cmdNudgeLater, cmdMoveClipsToCursor, cmdTrimStartToCursor, cmdTrimEndToCursor, cmdCloseGaps, cmdQuantize });
             group ("Notes", { cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes });
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
-            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, 0, cmdWriteAutomation, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes });
+            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdWriteAutomation, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes });
             group ("Tempo", { cmdMetronome, cmdCountIn, 0, cmdTempo, cmdTapTempo, cmdTempoChange, cmdBarsAndBeats, cmdTimeWithBars, 0, cmdMusicalTimebase });
             group ("Surround", { cmdSurroundMaster, cmdSevenOneMaster });
             group ("Render and Export", { cmdBounceTrack, cmdFreezeTrack, 0, cmdMixDown, cmdExportStems, cmdExportFolderStems, cmdExportRegions });
@@ -12378,6 +12395,9 @@ Settings::Model MainComponent::makeSettingsModel()
           Item::toggle ("Crossfade at edits", "Clips that overlap after an edit get a short crossfade",
                         [this] { return multitrack.isCrossfading(); },
                         [this, settings, changed] (bool on) { multitrack.setCrossfading (on); settings->setValue (crossfadingKey, on); changed(); }),
+          Item::choice ("Ripple", "What deleting or cutting clips does to the time they played over", { "Leave it empty", "Close it on their tracks", "Close it on every track" },
+                        [this] { return (int) multitrack.getRipple(); },
+                        [this, settings, changed] (int i) { multitrack.setRipple ((SessionEdits::Ripple) i); settings->setValue (rippleKey, i); changed(); }),
           Item::toggle ("Write automation", "Moves on the mixer and in effect windows are written as automation while playing",
                         [this] { return multitrack.isWritingAutomation(); },
                         [this, changed] (bool on) { multitrack.setWritingAutomation (on); changed(); }) } });

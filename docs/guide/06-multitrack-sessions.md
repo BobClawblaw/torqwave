@@ -57,6 +57,18 @@ The **Multitrack > Tracks** menu adds tracks, buses and folders, and also:
 
 Select several clips with Shift-click, or drag across empty lane space with the Select tool. They then move, nudge, copy, mute or delete together.
 
+### Closing the gap when you delete (ripple)
+
+**Multitrack > Editing and Recording** has three Ripple choices that set what deleting or cutting clips does to the time they played over:
+
+| Setting | What happens |
+|---|---|
+| No Ripple | The gap stays where the clip was |
+| Ripple Track | The later clips on the same track move back to close it, with that track's envelopes; other tracks and markers stay |
+| Ripple All Tracks | The time comes out of the whole session: every track's later clips, the envelopes and the markers move back together, so they stay in sync |
+
+Ripple All Tracks takes out only time that is empty on every track: if another track still plays over it, nothing moves. Locked clips stay where they are. The same choice is in **Settings > Multitrack**.
+
 ### The tools
 
 The toolbar under the lanes holds the tools. Each has a number key:
@@ -65,7 +77,7 @@ The toolbar under the lanes holds the tools. Each has a number key:
 |---|---|---|
 | Select | 1 | Selects and moves clips; a drag across empty lane space selects the clips it crosses |
 | Draw | 2 | On an instrument track, drags out a note clip |
-| Split | 3 | Cuts a clip where you click |
+| Split | 3 | Cuts a clip where you click; with Shift, every track's clips there |
 | Stretch | 4 | Drags a clip's edge to make it longer or shorter, pitch kept (Option-drag does this with the Select tool) |
 | Glue | 5 | Joins a note clip with the next one |
 | Range | 6 | Selects a stretch of time across every track, leaving the clips as they are |
@@ -77,7 +89,7 @@ Beside the tools are the tempo (click it to set it) and the **Bars** switch, whi
 
 **Multitrack > Clips** has:
 
-- Split Clip (Cmd-K), Duplicate Clip (Cmd-D) and Repeat Clip to Range End;
+- Split Clip (Cmd-K: every selected clip the cursor crosses), Split All Tracks (Shift-Cmd-K: every clip under the cursor, on every track), Duplicate Clip (Cmd-D) and Repeat Clip to Range End;
 - Reverse Clip, Stretch Clip... and Shift Clip Pitch...;
 - Lock Clip, Mute Clip, and Group and Ungroup Clips.
 

@@ -97,8 +97,8 @@ public:
     Tool getTool() const noexcept                 { return tool; }
 
     /** Cuts the clip or note clip under a point at that frame (snapped; a clip's cut moved to a
-        zero crossing when that is on). */
-    void splitAt (juce::Point<int>);
+        zero crossing when that is on); with Shift, every track's clips there. */
+    void splitAt (juce::Point<int>, bool everyTrack = false);
 
     /** Joins a note clip with the next one on its track (the next to start after it), as one
         undo step; nothing without a next. */
@@ -248,7 +248,15 @@ public:
         there, and selects the copies. */
     void duplicateSelectedClip();
 
-    void splitSelectedClip();      // at the cursor
+    /** Cuts every selected clip and note clip the cursor crosses, at the cursor, as one undo step
+        (one clip alone at a zero crossing near it, when that is on). */
+    void splitSelectedClip();
+
+    /** Cuts every clip and note clip under a frame, on every track shown, as one undo step; all at
+        the frame itself, so the tracks stay in line. Locked clips are left whole. False when
+        there was none to cut. */
+    bool splitAllTracksAt (juce::int64 frame);
+    bool splitAllTracksAtCursor()                 { return splitAllTracksAt (cursor); }
 
     /** Moves the selected clips together, each on its own track, so that the earliest starts at
         the cursor, as one undo step. False when there are none, one is locked, or they are there. */
@@ -457,6 +465,10 @@ public:
     void setFindingZeroCrossings (bool on)        { zeroCrossings = on; }
     static constexpr double zeroCrossingReach = 0.005;
     void setSnapping (bool on)                    { snapping = on; }
+
+    /** How deleting or cutting clips closes the time they leave (Multitrack > Ripple). */
+    void setRipple (SessionEdits::Ripple r)       { ripple = r; }
+    SessionEdits::Ripple getRipple() const noexcept { return ripple; }
     bool isCrossfading() const noexcept           { return crossfading; }
 
     /** Bars and beats: the ruler counts bars and beats of the session's tempo, the lanes show
@@ -665,6 +677,10 @@ private:
     void selectTrack (int track);
     void scrollToTrack (int track);    // its lane in view
     void selectClip (juce::uint32 clipId, bool adding);   // adding: Shift-click, which toggles it
+
+    /** Removes a clip or note clip, adding where it was to spans; false when it stays (locked). */
+    bool removeClipKeepingSpan (SessionState&, juce::uint32 clipId, std::vector<SessionEdits::RemovedSpan>&);
+    bool removeNoteClipKeepingSpan (SessionState&, juce::uint32 clipId, std::vector<SessionEdits::RemovedSpan>&);
     void showInputMenu (juce::uint32 trackId, juce::Component& target);
     void showEffectsMenu (juce::uint32 trackId, juce::Component& target);
     juce::PopupMenu instrumentMenuFor (juce::uint32 trackId);   // choose, swap, open or remove the track's instrument
@@ -686,6 +702,7 @@ private:
     juce::uint32 selectedClip = 0, selectedTrackId = 0;
     std::set<juce::uint32> selectedClips;  // selectedClip among them
     juce::uint32 selectedNoteClip = 0;
+    SessionEdits::Ripple ripple = SessionEdits::Ripple::off;   // what deleting clips does to the time they leave
     std::set<juce::uint32> selectedNoteClips;  // selectedNoteClip among them
     bool lastPickedNotes = false;          // the clip clicked last was a note clip
     NoteClip dragNoteClip;                 // the note clip being moved or trimmed, as it was

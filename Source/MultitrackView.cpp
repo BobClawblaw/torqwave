@@ -3677,23 +3677,60 @@ void MultitrackView::selectClipsWhere (const std::function<bool (const SessionTr
 
 void MultitrackView::deleteSelectedClip()
 {
-    // Every selected clip of either kind goes (locked audio clips stay).
+    // Every selected clip of either kind goes (locked audio clips stay), the time they leave
+    // closed up as the ripple setting has it.
     auto next = *engine.session.getState();
+    std::vector<SessionEdits::RemovedSpan> spans;
     auto removed = 0, notesRemoved = 0;
 
     for (auto id : getSelectedClips())
-        removed += SessionEdits::removeClip (next, id) ? 1 : 0;
+        removed += removeClipKeepingSpan (next, id, spans) ? 1 : 0;
 
     for (auto id : getSelectedNoteClips())
-        notesRemoved += SessionEdits::removeNoteClip (next, id) ? 1 : 0;
+        notesRemoved += removeNoteClipKeepingSpan (next, id, spans) ? 1 : 0;
 
     if (removed + notesRemoved == 0)
         return;
 
+    SessionEdits::rippleRemoved (next, spans, ripple);
     selectClip (0, false);
     selectNoteClip (0);
     engine.session.apply (std::move (next), removed + notesRemoved > 1 ? "Delete " + juce::String (removed + notesRemoved) + " Clips"
                                             : removed == 1 ? juce::String ("Delete Clip") : juce::String ("Remove Notes"));
+}
+
+bool MultitrackView::removeClipKeepingSpan (SessionState& s, juce::uint32 id, std::vector<SessionEdits::RemovedSpan>& spans)
+{
+    const auto where = s.findClip (id);
+
+    if (! where.has_value())
+        return false;
+
+    const auto& c = s.tracks[(size_t) where->first].clips[(size_t) where->second];
+    const SessionEdits::RemovedSpan span { where->first, c.position, c.getEnd() };
+
+    if (! SessionEdits::removeClip (s, id))
+        return false;
+
+    spans.push_back (span);
+    return true;
+}
+
+bool MultitrackView::removeNoteClipKeepingSpan (SessionState& s, juce::uint32 id, std::vector<SessionEdits::RemovedSpan>& spans)
+{
+    const auto where = s.findNoteClip (id);
+
+    if (! where.has_value())
+        return false;
+
+    const auto& c = s.tracks[(size_t) where->first].noteClips[(size_t) where->second];
+    const SessionEdits::RemovedSpan span { where->first, c.position, c.getEnd() };
+
+    if (! SessionEdits::removeNoteClip (s, id))
+        return false;
+
+    spans.push_back (span);
+    return true;
 }
 
 bool MultitrackView::copySelectedClip()
@@ -3740,16 +3777,18 @@ bool MultitrackView::cutSelectedClip()
 
     // Locked clips are copied but stay where they are.
     auto next = *engine.session.getState();
+    std::vector<SessionEdits::RemovedSpan> spans;
     auto removed = 0, notesRemoved = 0;
 
     for (auto& copied : copiedClips)
-        removed += SessionEdits::removeClip (next, copied.second.id) ? 1 : 0;
+        removed += removeClipKeepingSpan (next, copied.second.id, spans) ? 1 : 0;
 
     for (auto& copied : copiedNoteClips)
-        notesRemoved += SessionEdits::removeNoteClip (next, copied.second.id) ? 1 : 0;
+        notesRemoved += removeNoteClipKeepingSpan (next, copied.second.id, spans) ? 1 : 0;
 
     if (removed + notesRemoved > 0)
     {
+        SessionEdits::rippleRemoved (next, spans, ripple);
         selectClip (0, false);
         selectNoteClip (0);
         engine.session.apply (std::move (next), removed + notesRemoved > 1 ? "Cut " + juce::String (removed + notesRemoved) + " Clips"
@@ -3918,24 +3957,62 @@ void MultitrackView::duplicateSelectedClip()
 void MultitrackView::splitSelectedClip()
 {
     auto next = *engine.session.getState();
+    const auto audio = getSelectedClips();
+    const auto notes = getSelectedNoteClips();
+    auto count = 0;
 
-    if (selectedNoteClip != 0)
+    for (const auto id : notes)
+        count += SessionEdits::splitNoteClip (next, id, cursor) ? 1 : 0;
+
+    for (const auto id : audio)
     {
-        if (SessionEdits::splitNoteClip (next, selectedNoteClip, cursor))
-            engine.session.apply (std::move (next), "Split Notes");
+        const auto where = next.findClip (id);
 
-        return;
+        if (! where.has_value())
+            continue;
+
+        // One clip alone may move its cut to a zero crossing; several are cut together, in line.
+        const auto& clip = next.tracks[(size_t) where->first].clips[(size_t) where->second];
+        const auto at = audio.size() == 1 && notes.empty() ? toZeroCrossing (clip, cursor) : cursor;
+        count += SessionEdits::splitClip (next, id, at) ? 1 : 0;
     }
 
-    const auto where = next.findClip (selectedClip);
+    if (count > 0)
+        engine.session.apply (std::move (next), count > 1 ? "Split Clips" : ! notes.empty() && audio.empty() ? "Split Notes" : "Split Clip");
+}
 
-    if (! where.has_value())
-        return;
+bool MultitrackView::splitAllTracksAt (juce::int64 frame)
+{
+    auto next = *engine.session.getState();
+    std::vector<juce::uint32> audio, notes;
 
-    const auto at = toZeroCrossing (next.tracks[(size_t) where->first].clips[(size_t) where->second], cursor);
+    for (const auto& t : next.tracks)
+    {
+        if (t.hidden)
+            continue;
 
-    if (SessionEdits::splitClip (next, selectedClip, at))
-        engine.session.apply (std::move (next), "Split Clip");
+        for (const auto& c : t.clips)
+            if (! c.locked && frame > c.position && frame < c.getEnd())
+                audio.push_back (c.id);
+
+        for (const auto& c : t.noteClips)
+            if (frame > c.position && frame < c.getEnd())
+                notes.push_back (c.id);
+    }
+
+    auto count = 0;
+
+    for (const auto id : audio)
+        count += SessionEdits::splitClip (next, id, frame) ? 1 : 0;
+
+    for (const auto id : notes)
+        count += SessionEdits::splitNoteClip (next, id, frame) ? 1 : 0;
+
+    if (count == 0)
+        return false;
+
+    engine.session.apply (std::move (next), "Split All Tracks");
+    return true;
 }
 
 juce::int64 MultitrackView::toZeroCrossing (const SessionClip& c, juce::int64 frame) const
@@ -4816,10 +4893,11 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
-    // The Split tool cuts the clip under the mouse; Glue joins a note clip with the next.
+    // The Split tool cuts the clip under the mouse (with Shift, every track's there); Glue joins a
+    // note clip with the next.
     if (! e.mods.isPopupMenu() && tool == Tool::split)
     {
-        splitAt (p);
+        splitAt (p, e.mods.isShiftDown());
         return;
     }
 
@@ -5506,7 +5584,7 @@ void MultitrackView::mouseMove (const juce::MouseEvent& e)
         cursorShape = juce::MouseCursor::IBeamCursor;
     else if (tool == Tool::mute && (overNotes || clipAt (p).has_value()))
         cursorShape = juce::MouseCursor::PointingHandCursor;
-    else if (tool == Tool::split && (overNotes || clipAt (p).has_value()))
+    else if (tool == Tool::split && (overNotes || clipAt (p).has_value() || (overLane && e.mods.isShiftDown())))
         cursorShape = juce::MouseCursor::CrosshairCursor;
     else if (tool == Tool::glue && overNotes)
         cursorShape = juce::MouseCursor::PointingHandCursor;
@@ -5528,10 +5606,16 @@ void MultitrackView::setTool (Tool t)
     repaint();
 }
 
-void MultitrackView::splitAt (juce::Point<int> p)
+void MultitrackView::splitAt (juce::Point<int> p, bool everyTrack)
 {
     auto next = *engine.session.getState();
     const auto frame = snapped (frameForX ((float) p.x), 0, false);
+
+    if (everyTrack)
+    {
+        splitAllTracksAt (frame);
+        return;
+    }
 
     if (const auto hit = noteClipAt (p); hit.has_value() && ! clipAt (p).has_value())
     {

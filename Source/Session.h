@@ -774,6 +774,23 @@ namespace SessionEdits
         when nothing changed. */
     bool deleteTime (SessionState&, juce::int64 start, juce::int64 end);
 
+    /** How removing clips closes the time they leave: not at all, on their own tracks, or on every track. */
+    enum class Ripple { off, track, allTracks };
+
+    /** Where a removed clip was: its track and the session time it played over. */
+    struct RemovedSpan
+    {
+        int track = 0;
+        juce::int64 start = 0, end = 0;
+    };
+
+    /** After clips were removed, closes the time they left empty, the parts of it no clip still
+        plays over. Ripple::track: on each clip's own track, its later clips, note clips and
+        envelope points move back. Ripple::allTracks: the empty time (empty on every track) is
+        taken out of the session as deleteTime does, markers and all. Locked clips stay where
+        they are. False when nothing moved. */
+    bool rippleRemoved (SessionState&, const std::vector<RemovedSpan>&, Ripple);
+
     /** Puts `length` frames of empty time into the session at `at`. On every track, hidden ones
         too, clips across it are split there, and the clips, envelope points and markers from it on
         move later by `length`; envelopes hold their value at `at` over the new time. Locked clips

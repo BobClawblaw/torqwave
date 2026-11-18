@@ -3,6 +3,7 @@
 #include "Surround.h"
 
 #include <numeric>
+#include <map>
 #include <set>
 
 #include "AudioEdits.h"
@@ -1735,6 +1736,141 @@ bool deleteTime (SessionState& s, juce::int64 start, juce::int64 end)
 
     changed = changeEnvelopes (s, [=] (const Envelope& e) { return withoutTime (e, start, end); }) || changed;
     return changeMarkers (s, MarkerEdits::afterReplace (s.markers, start, end, 0)) || changed;
+}
+
+namespace
+{
+    /** The spans merged, less every part a clip or note clip on one of the tracks plays over. */
+    std::vector<juce::Range<juce::int64>> emptyParts (std::vector<juce::Range<juce::int64>> spans, const SessionState& s, const std::vector<int>& tracks)
+    {
+        std::sort (spans.begin(), spans.end(), [] (auto a, auto b) { return a.getStart() < b.getStart(); });
+        std::vector<juce::Range<juce::int64>> merged;
+
+        for (auto r : spans)
+        {
+            if (r.isEmpty())
+                continue;
+
+            if (! merged.empty() && r.getStart() <= merged.back().getEnd())
+                merged.back() = merged.back().getUnionWith (r);
+            else
+                merged.push_back (r);
+        }
+
+        const auto subtract = [&merged] (juce::Range<juce::int64> taken)
+        {
+            std::vector<juce::Range<juce::int64>> out;
+
+            for (auto r : merged)
+            {
+                if (! r.intersects (taken))
+                {
+                    out.push_back (r);
+                    continue;
+                }
+
+                if (r.getStart() < taken.getStart())
+                    out.push_back ({ r.getStart(), taken.getStart() });
+
+                if (taken.getEnd() < r.getEnd())
+                    out.push_back ({ taken.getEnd(), r.getEnd() });
+            }
+
+            merged = std::move (out);
+        };
+
+        for (const auto t : tracks)
+        {
+            for (const auto& c : s.tracks[(size_t) t].clips)
+                subtract ({ c.position, c.getEnd() });
+
+            for (const auto& c : s.tracks[(size_t) t].noteClips)
+                subtract ({ c.position, c.getEnd() });
+        }
+
+        return merged;
+    }
+}
+
+bool rippleRemoved (SessionState& s, const std::vector<RemovedSpan>& removed, Ripple mode)
+{
+    if (mode == Ripple::off || removed.empty())
+        return false;
+
+    auto changed = false;
+
+    if (mode == Ripple::allTracks)
+    {
+        std::vector<juce::Range<juce::int64>> spans;
+        std::vector<int> every;
+
+        for (const auto& r : removed)
+            spans.push_back ({ r.start, r.end });
+
+        for (int t = 0; t < (int) s.tracks.size(); ++t)
+            every.push_back (t);
+
+        // Latest first, so each gap's times are still where they were.
+        auto gaps = emptyParts (std::move (spans), s, every);
+
+        for (auto g = gaps.rbegin(); g != gaps.rend(); ++g)
+            changed = deleteTime (s, g->getStart(), g->getEnd()) || changed;
+
+        return changed;
+    }
+
+    std::map<int, std::vector<juce::Range<juce::int64>>> byTrack;
+
+    for (const auto& r : removed)
+        if (r.track >= 0 && r.track < (int) s.tracks.size())
+            byTrack[r.track].push_back ({ r.start, r.end });
+
+    for (auto& [t, spans] : byTrack)
+    {
+        auto& track = s.tracks[(size_t) t];
+
+        if (track.isFrozen())
+            continue;
+
+        auto gaps = emptyParts (std::move (spans), s, { t });
+
+        for (auto g = gaps.rbegin(); g != gaps.rend(); ++g)
+        {
+            const auto start = g->getStart(), end = g->getEnd();
+
+            for (auto& c : track.clips)
+                if (! c.locked && c.position >= end)
+                {
+                    c.position -= end - start;
+                    changed = true;
+                }
+
+            for (auto& c : track.noteClips)
+                if (c.position >= end)
+                {
+                    c.position -= end - start;
+                    changed = true;
+                }
+
+            const auto close = [&] (Envelope& e)
+            {
+                auto next = withoutTime (e, start, end);
+                changed = changed || next != e;
+                e = std::move (next);
+            };
+
+            close (track.volumeEnvelope);
+            close (track.panEnvelope);
+
+            for (auto& e : track.surroundEnvelopes)
+                close (e);
+
+            for (auto& effect : track.effectEnvelopes)
+                close (effect.envelope);
+        }
+    }
+
+    return changed;
 }
 
 bool insertTime (SessionState& s, juce::int64 at, juce::int64 length)

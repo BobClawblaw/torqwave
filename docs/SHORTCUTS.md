@@ -129,6 +129,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Trim End to Cursor | `Option-]` |
 | Duplicate Time | `Option-Cmd-D` |
 | Split Clip | `Cmd-K` |
+| Split All Tracks | `Shift-Cmd-K` |
 | Select Track Above | `Up Arrow` |
 | Select Track Below | `Down Arrow` |
 
