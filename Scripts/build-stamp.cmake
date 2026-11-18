@@ -3,6 +3,9 @@
 # or by a workflow building that tag (RELEASE_TAG); any other is a test build, stamped with when
 # it was built and its commit ("+changes" when the tree had uncommitted ones).
 
+# A script run with -P starts with no policies set: this sets them as the project does.
+cmake_minimum_required (VERSION 3.22)
+
 execute_process (COMMAND git -C "${SRC}" rev-parse --short=7 HEAD
                  OUTPUT_VARIABLE commit OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET RESULT_VARIABLE noGit)
 execute_process (COMMAND git -C "${SRC}" status --porcelain --untracked-files=no
@@ -16,8 +19,9 @@ endif ()
 
 set (release 0)
 string (REPLACE "\n" ";" tagList "${tags}")
+list (FIND tagList "v${VERSION}" tagAt)   # not IN_LIST: older CMake reads that only under policy CMP0057
 
-if (("v${VERSION}" IN_LIST tagList AND changes STREQUAL "") OR "$ENV{RELEASE_TAG}" STREQUAL "v${VERSION}")
+if ((NOT tagAt EQUAL -1 AND changes STREQUAL "") OR "$ENV{RELEASE_TAG}" STREQUAL "v${VERSION}")
     set (release 1)
 elseif (NOT changes STREQUAL "" AND NOT commit STREQUAL "")
     string (APPEND commit "+changes")
