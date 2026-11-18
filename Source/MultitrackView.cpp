@@ -235,7 +235,7 @@ public:
 
         // An automated volume or pan follows its envelope; the control shows its value at the cursor.
         const auto volumeAutomated = ! t.volumeEnvelope.isEmpty(), panAutomated = ! t.panEnvelope.isEmpty();
-        automationButton.setToggleState (t.isAutomated(), juce::dontSendNotification);
+        automationButton.setToggleState (view.hasLiveAutomation (t), juce::dontSendNotification);
         const auto writing = view.isWritingAutomation();
         gain.setEnabled (! volumeAutomated || writing);
         pan.setEnabled ((! panAutomated || writing) && ! t.isWide());
@@ -1183,7 +1183,7 @@ std::optional<AutomationTarget> MultitrackView::getShownEnvelope (juce::uint32 t
     // surround pan, then its first effect parameter.
     const auto* track = shown().findTrack (trackId);
 
-    if (track == nullptr || ! track->isAutomated())
+    if (track == nullptr || ! hasLiveAutomation (*track))
         return std::nullopt;
 
     if (! track->volumeEnvelope.isEmpty())
@@ -1196,8 +1196,23 @@ std::optional<AutomationTarget> MultitrackView::getShownEnvelope (juce::uint32 t
         if (! track->surroundEnvelopes[i].isEmpty())
             return AutomationTarget (surroundParameters[i]);
 
-    const auto& first = track->effectEnvelopes.front();
-    return AutomationTarget::effect (first.slotId, first.parameterId);
+    for (const auto& e : track->effectEnvelopes)
+        if (engine.getTrackEffects().findSlot (trackId, e.slotId) != nullptr)
+            return AutomationTarget::effect (e.slotId, e.parameterId);
+
+    return std::nullopt;
+}
+
+bool MultitrackView::hasLiveAutomation (const SessionTrack& track) const
+{
+    // An effect's envelopes outlive it in the session (a removed effect, a swapped instrument):
+    // they drive nothing, so they don't count.
+    if (! track.volumeEnvelope.isEmpty() || ! track.panEnvelope.isEmpty() || track.hasSurroundAutomation())
+        return true;
+
+    const auto& effects = engine.getTrackEffects();
+    return std::any_of (track.effectEnvelopes.begin(), track.effectEnvelopes.end(),
+                        [&] (const EffectEnvelope& e) { return effects.findSlot (track.id, e.slotId) != nullptr; });
 }
 
 void MultitrackView::showEnvelope (juce::uint32 trackId, std::optional<AutomationTarget> parameter)

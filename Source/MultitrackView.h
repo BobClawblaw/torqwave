@@ -552,6 +552,10 @@ public:
         one chosen in the track's A menu; without a choice, a track with automation shows it
         (volume first), unless it was hidden there. */
     std::optional<AutomationTarget> getShownEnvelope (juce::uint32 trackId) const;
+
+    /** True when a track has automation that plays: volume, pan or surround envelopes, or an
+        envelope of an effect (or instrument) still on it. Lights its A button. */
+    bool hasLiveAutomation (const SessionTrack&) const;
     void showEnvelope (juce::uint32 trackId, std::optional<AutomationTarget>);
 
     void zoomIn();

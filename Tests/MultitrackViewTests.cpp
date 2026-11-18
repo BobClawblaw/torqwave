@@ -707,8 +707,20 @@ namespace
         const auto staysHidden = ! view.getShownEnvelope (id0).has_value();
         view.showEnvelope (id0, AutomationParameter::pan);
         const auto chosen = view.getShownEnvelope (id0) == std::optional<AutomationTarget> (AutomationParameter::pan);
-        check (autoShown && staysHidden && chosen,
-               "envelopes: a track with automation shows its envelope without asking, one without shows none, and hiding it keeps it hidden");
+        // An envelope left by an effect no longer on the track (a removed effect, a swapped
+        // instrument) drives nothing: it neither shows itself nor counts as automation.
+        auto leftOver = *state();
+        SessionEdits::setEnvelope (leftOver, id1, AutomationTarget::effect (987654, "level"), Envelope { { { 0, 0.5f } } });
+        engine.session.apply (std::move (leftOver), "Envelope");
+        Mouse::settle();
+        const auto orphanIgnored = ! state()->tracks[1].effectEnvelopes.empty() && ! view.getShownEnvelope (id1).has_value()
+                                && ! view.hasLiveAutomation (state()->tracks[1]) && view.hasLiveAutomation (state()->tracks[0]);
+        engine.session.undo();
+        Mouse::settle();
+
+        check (autoShown && staysHidden && chosen && orphanIgnored,
+               "envelopes: a track with automation shows its envelope without asking, one without shows none, and hiding it keeps it "
+               "hidden; an envelope of an effect no longer on the track neither shows nor lights the A button");
 
         view.setRipple (SessionEdits::Ripple::off);
     }
