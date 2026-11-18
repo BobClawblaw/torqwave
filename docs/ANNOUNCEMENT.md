@@ -48,6 +48,8 @@ GET IT
 Builds are on the GitHub Releases page. They aren't notarized or signed with a developer certificate yet, so your OS will ask you to confirm the first launch.
 
 Try it on real work and tell me what breaks: issues and ideas are welcome on GitHub. 🙏
+
+— Torq 🐶
 ```
 
 ## Notes on the claims
