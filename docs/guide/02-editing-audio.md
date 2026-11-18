@@ -57,7 +57,7 @@ Torqwave can also find things for you, from the **Edit** menu:
 - **Go to Time...** (Cmd-J) jumps to a time you type. Clicking the cursor's time under the editor does the same.
 - **Scrub to find a spot by ear:** while stopped, drag along the ruler above the waveform. The sound under the mouse plays as you move, faster or backwards as you drag, and the cursor stays where you let go.
 
-What you hear goes through the effects rack if it has effects in it. See [Effects and the rack](README.md#pages).
+What you hear goes through the effects rack if it has effects in it. See [Effects and the rack](04-effects-and-the-rack.md).
 
 ## Cut, copy and paste
 
@@ -107,7 +107,7 @@ The **Effects > Fades** menu does the same to a selection:
 - **Gain...** raises or lowers the level by a number of decibels.
 - **Normalize...** brings the peak up or down to a level. It can treat each channel on its own.
 - **Normalize Each Region...** does that region by region.
-- **Match Loudness...** and **Meet Delivery Spec...** set the loudness in LUFS, for broadcast and streaming. They have their own page: [Loudness and mastering](README.md#pages).
+- **Match Loudness...** and **Meet Delivery Spec...** set the loudness in LUFS, for broadcast and streaming. They have their own page: [Loudness and mastering](05-loudness-and-mastering.md).
 
 ## Using an effect dialog
 

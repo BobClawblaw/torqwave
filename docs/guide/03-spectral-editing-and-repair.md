@@ -122,4 +122,4 @@ When you cut or silence a pause in speech, the sudden total quiet can be heard. 
 
 **Effects > Spectral > Rebalance...** works on a finished mix. It turns the voice, the bass, the drums and the rest up or down separately, without the original tracks.
 
-Next: effects and the rack (coming soon). Back to the [guide](README.md).
+Next: [Effects and the rack](04-effects-and-the-rack.md).
