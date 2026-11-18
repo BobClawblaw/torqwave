@@ -35,6 +35,10 @@ Each change takes effect at once, and the menus' own switches stay in step with 
 
 The change shows at once and is kept for next time.
 
+| Light | High Contrast |
+|---|---|
+| ![The Light theme](../screenshots/theme-light.png) | ![The High Contrast theme](../screenshots/theme-high-contrast.png) |
+
 ### Time format
 
 **View > Time Format** shows every time in the app (rulers, transport, lists and dialogs) as one of:

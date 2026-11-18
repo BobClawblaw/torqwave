@@ -19,6 +19,8 @@ This page shows how to measure both, hit a target in one step, and finish a mast
 
 The **Analysis** workspace (Window > Workspace > Analysis) lays out the analyzer, the phase meter and the levels together.
 
+![The Analysis workspace in the Darker theme: the frequency analyzer and phase meter under the editor](../screenshots/analysis.png)
+
 ## Hit a loudness target
 
 ### Match Loudness
