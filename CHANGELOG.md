@@ -4,14 +4,19 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+## Released
+
+**Release 0.16.4: Automation on instrument tracks**
+- `Torqwave-0.16.4.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.16.4-windows-x64-setup.exe` and `Torqwave-0.16.4-windows-x64.zip`) and the Linux tarball (`Torqwave-0.16.4-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the changes below on top of 0.16.3. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app for arm64 at the release's tag, signed it, and the whole suite (1,707 checks) passed with the signed app from the disk image as the plug-in scan worker; the disk image's SHA-256 matched its `.sha256`, its app verified (`codesign --verify --deep --strict`), reads 0.16.4 with the bundle ID `org.torqwave.editor` and holds arm64 alone, and it is stamped as a release build.
+- Checked on Linux (Ubuntu 24.04 in a container, x86_64, a virtual display with a window manager, no audio device): 1,672 checks passed, the new ones among them; the two that failed (ffmpeg reading a WAV's broadcast details, and the rack's device-list announcements) are the two that failed there for 0.16.2 and 0.16.3, from that setup.
+
 **Envelopes on instrument tracks**
 - A click on an instrument track's envelope line over a note clip adds a point, as it does over an audio clip. Before, the note clip under the line took the click, so on a track full of note clips the envelope could only be drawn in the gaps between them.
 - Envelopes left in a session by an effect that is no longer on the track, or by an instrument swapped for another, drive nothing: they no longer show themselves over the lane or light the A button.
 - The A button's tooltip reads "Automation Envelopes". It said "Volume and pan envelopes", though the button also shows effect and instrument parameters' envelopes.
 - The A button's menu names an instrument track's instrument on its own: **Show <instrument> Envelope**, above the effects, which are numbered from 1 as the FX menu numbers them. Before, the instrument was listed as effect 1 ("Show 1. <instrument> Envelope") and the effects from 2, so the numbers did not match the FX menu's. Its parameters were already automatable (drawn, written from its window with Write Automation, saved, played, copied and moved with time like an effect's); the guide now says how.
 - Measured by the tests (2 new checks): an envelope drawn on the built-in synth's level comes back from a session file exactly, the synth reloaded into the same slot; and played from the reloaded chain, the synth follows it (a tenth of the sound at -20 dB, then the full sound, its level left at the envelope's end), bit for bit the same as before saving. The A menu's new names have no automated check. The whole suite passed (1,707 checks; 340 commands, 107 default keys).
-
-## Released
 
 **Release 0.16.3: The home screen first, Option-drag copies, selecting points, ripple for a time range, envelopes that show themselves**
 - `Torqwave-0.16.3.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.16.3-windows-x64-setup.exe` and `Torqwave-0.16.3-windows-x64.zip`) and the Linux tarball (`Torqwave-0.16.3-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the changes below on top of 0.16.2. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.
