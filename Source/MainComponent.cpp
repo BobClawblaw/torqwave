@@ -3611,9 +3611,14 @@ void MainComponent::saveSession (std::function<void (bool)> done)
     const auto error = SessionFile::save (*engine.session.getState(), file, [this] (juce::uint32 id) { return engine.getTrackEffects().createXml (id); });
 
     if (error.isNotEmpty())
+    {
         showError ("Save Session", error);
+    }
     else
+    {
         engine.session.markSaved (file);
+        noteRecent (file);
+    }
 
     if (done != nullptr)
         done (error.isEmpty());
@@ -4791,9 +4796,14 @@ void MainComponent::saveSessionAs (std::function<void (bool)> done)
                               const auto error = SessionFile::save (*engine.session.getState(), file, [this] (juce::uint32 id) { return engine.getTrackEffects().createXml (id); });
 
                               if (error.isNotEmpty())
+                              {
                                   showError ("Save Session", error);
+                              }
                               else
+                              {
                                   engine.session.markSaved (file);
+                                  noteRecent (file);
+                              }
 
                               if (done != nullptr)
                                   done (error.isEmpty());
@@ -7572,6 +7582,7 @@ void MainComponent::writeFile (const juce::File& file, int bitDepth, std::functi
     {
         doc.markSaved (file, bitDepth);
         noteWhatFileKeeps (file);
+        noteRecent (file);
     }
 
     if (done != nullptr)
@@ -7688,9 +7699,14 @@ void MainComponent::writeFileThroughRack (const juce::File& file, int bitDepth, 
                                               doc.getMarkers(), doc.getInfo());
 
         if (error.isNotEmpty())
+        {
             showError ("Save failed", error);
+        }
         else
+        {
             noteWhatFileKeeps (file);
+            noteRecent (file);
+        }
 
         if (done != nullptr)
             done (error.isEmpty());
