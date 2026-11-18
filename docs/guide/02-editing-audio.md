@@ -135,6 +135,10 @@ An effect applies to the selection, or to the whole file when nothing is selecte
 
 WAV files keep markers and regions inside the file; AIFF keeps markers.
 
+![A WAV file with the markers Intro, Verse and Outro, the region Whistle above the waveform, and the Verse selected up to the region](../screenshots/guide-editing.png)
+
+*Markers and a region read from the WAV file. The Verse is selected, and the Selection/View panel shows its exact times.*
+
 ## Undo
 
 - **Cmd-Z** undoes and **Shift-Cmd-Z** redoes. Each file has its own history.

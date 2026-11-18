@@ -18,6 +18,10 @@ Torqwave edits the sound of a video while you watch its picture, then writes the
    - If the length is unchanged, the picture is copied exactly as it was.
    - If the length changed, the picture is cut to match and encoded again: H.264, or VP9 for WebM and MPEG-4 for AVI.
 
+![The editor with the Video panel docked beside it, showing the frame at the cursor, 6 seconds in](../screenshots/guide-video.png)
+
+*The Video panel shows the frame at the cursor (the test picture's own clock reads 00:00:06.000). Its foot names the video and its size.*
+
 To give an audio file a video to go with it, use **File > Attach Video...**. **Detach Video** removes it.
 
 ### A video in a session

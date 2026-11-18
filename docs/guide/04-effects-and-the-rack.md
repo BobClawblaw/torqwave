@@ -71,6 +71,10 @@ Each effect has a row of controls:
 | **▲** and **▼** | Move it up or down the chain |
 | **x** | Removes it |
 
+![The Effects Rack holding 1. Parametric EQ, 2. Compressor and 3. Limiter beside the editor](../screenshots/guide-rack.png)
+
+*A mastering chain of three built-in effects. Each row has its bypass switch, Edit, the arrows to reorder it, and x.*
+
 ### Apply it, or keep it live
 
 - **Apply** on the panel, or **Effects > Apply Effects Rack** (Cmd-R), writes the chain into the selection, or into the whole file. The rack then empties, so you don't hear the effects twice. Undo brings back both the audio and the rack as they were.

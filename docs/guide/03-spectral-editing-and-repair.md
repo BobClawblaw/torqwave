@@ -72,6 +72,10 @@ All three are in **Effects > Spectral**. After any of them, the drawing is used 
 5. To get every line at once, press **P** for the brush. Shift-drag over each line to add it, then check again with Space.
 6. Press **Shift-Cmd-H** to heal it, then play the passage. If some ring is left, select what is left and heal again.
 
+![The spectrogram of a sung phrase with a box selection round the phone ring's two tones, between 1.25 and 1.95 kHz, in both channels](../screenshots/guide-spectral-box.png)
+
+*A box round the ring's two tones, from 1.25 to 1.95 kHz and 3.2 to 5.8 seconds. Only what is inside the box is selected, so an edit leaves the voice above and below it alone.*
+
 ## Noise reduction
 
 For a steady noise that runs through the whole recording (hiss, fan, air conditioning, a hum with a broad spread), learn the noise first and then take it out:
