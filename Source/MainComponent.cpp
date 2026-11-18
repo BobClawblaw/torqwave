@@ -3411,6 +3411,10 @@ void MainComponent::setMultitrack (bool on)
         if (auto* history = dynamic_cast<UndoHistory*> (it->second.get()))
             history->refresh();   // the file's steps, or the session's
     refreshTitle();
+
+    if (dock != nullptr)
+        dock->repaint();   // the editor's tab is named for the mode
+
     timerCallback();
     commands.commandStatusChanged();
 }
@@ -13187,7 +13191,7 @@ void MainComponent::panelHidden (const juce::String& id)
 
 juce::String MainComponent::getTitle (const juce::String& id)
 {
-    if (id == Panels::editor)          return "Editor";
+    if (id == Panels::editor)          return multitrackMode ? "Multitrack" : "Editor";   // named for the side in use
     if (id == Panels::rack)            return "Effects Rack";
     if (id == Panels::selection)       return "Selection/View";
     if (id == Panels::mixer)           return "Mixer";

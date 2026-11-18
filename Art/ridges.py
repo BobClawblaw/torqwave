@@ -44,10 +44,11 @@ def hot_line(i, f, bright):
 
 
 def mark(box, lines=64, twist=45, stroke=2.6, peak=1.0, points=260, seed=11, background="#08070d", bright=0.0,
-         colour=hot_line):
+         colour=hot_line, lift=None):
     """The mark fitted inside box = (x, y, width, height): SVG elements, with a bloom filter that
     the caller defines as id "bloom". bright (0..1) lifts the far lines, for small sizes. colour
-    gives a slice's (r, g, b), 0..1, from its index i and its depth f (0 front .. 1 back)."""
+    gives a slice's (r, g, b), 0..1, from its index i and its depth f (0 front .. 1 back). lift maps
+    a slice's index to a factor on its height, for a slice the seed left too flat."""
     rng = random.Random(seed)
     turn = math.radians(twist)
     polys, strokes, allpts = [], [], []
@@ -55,7 +56,7 @@ def mark(box, lines=64, twist=45, stroke=2.6, peak=1.0, points=260, seed=11, bac
         f = i / (lines - 1)                           # 0 front .. 1 back
         z = f * DEPTH - DEPTH * 0.35
         th = turn * (f - 0.5)
-        hs = [h * peak for h in slice_heights(i, rng, points)]
+        hs = [h * peak * (lift or {}).get(i, 1.0) for h in slice_heights(i, rng, points)]
         n = len(hs) - 1
         line, below = [], []
         for k in range(n + 1):

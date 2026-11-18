@@ -135,6 +135,7 @@ juce_add_gui_app(Torqwave
     COMPANY_COPYRIGHT            "Copyright (C) 2026 BobClawblaw. Licensed under the GNU AGPLv3."
     BUNDLE_ID                    org.torqwave.editor
     ICON_BIG                     "${CMAKE_CURRENT_SOURCE_DIR}/Art/torqwave-icon.png"
+    ICON_SMALL                   "${CMAKE_CURRENT_SOURCE_DIR}/Art/torqwave-icon-small.png"
     PLUGINHOST_AU                TRUE
     MICROPHONE_PERMISSION_ENABLED TRUE
     MICROPHONE_PERMISSION_TEXT   "Torqwave records from your audio interface."
