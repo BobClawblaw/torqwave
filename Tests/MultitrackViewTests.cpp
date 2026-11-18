@@ -103,6 +103,29 @@ namespace
         const auto shift = juce::ModifierKeys::shiftModifier;
         const auto state = [&] { return engine.session.getState(); };
         const auto notePos = [&] (juce::uint32 id) { const auto st = state(); const auto w = st->findNoteClip (id); return w ? st->tracks[(size_t) w->first].noteClips[(size_t) w->second].position : (juce::int64) -1; };
+
+        // The instrument track's volume envelope, shown over note clip A: a click on its line adds
+        // a point, rather than picking the note clip under it.
+        {
+            const auto trackId = state()->tracks[0].id;
+            view.showEnvelope (trackId, AutomationParameter::volume);
+            auto lineAt = -1.0f;
+
+            for (auto y = (float) MultitrackView::rulerHeight; y < (float) (MultitrackView::rulerHeight + MultitrackView::trackHeight); y += 1.0f)
+                if (mouse.cursorAt ({ x (72000), y }) == juce::MouseCursor (juce::MouseCursor::CrosshairCursor))
+                {
+                    lineAt = y + 3.0f;
+                    break;
+                }
+
+            mouse.click ({ x (72000), lineAt });
+            const auto added = lineAt > 0.0f && state()->tracks[0].volumeEnvelope.points.size() == 1 && notePos (aId) == 48000
+                            && engine.session.getUndoDescription() == "Add Envelope Point" && ! view.isNoteClipSelected (aId);
+            engine.session.undo();
+            Mouse::settle();
+            view.showEnvelope (trackId, std::nullopt);
+            check (added, "note clips: a click on an instrument track's envelope line over a note clip adds a point to the envelope");
+        }
         const auto noteTrack = [&] (juce::uint32 id) { const auto w = state()->findNoteClip (id); return w ? w->first : -1; };
         const auto noteMuted = [&] (juce::uint32 id) { const auto st = state(); const auto w = st->findNoteClip (id); return w && st->tracks[(size_t) w->first].noteClips[(size_t) w->second].muted; };
         const auto clipPos = [&] (juce::uint32 id) { const auto st = state(); const auto w = st->findClip (id); return w ? st->tracks[(size_t) w->first].clips[(size_t) w->second].position : (juce::int64) -1; };

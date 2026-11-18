@@ -5189,8 +5189,9 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
     }
 
     // A note clip: right-click for its menu, a click selects it, a drag moves it in time (with
-    // the Stretch tool, a drag on an edge stretches it).
-    if (const auto hit = noteClipAt (p); hit.has_value() && ! clipAt (p).has_value())
+    // the Stretch tool, a drag on an edge stretches it). A click on the track's envelope over it
+    // goes to the envelope, as it does over an audio clip.
+    if (const auto hit = noteClipAt (p); hit.has_value() && ! clipAt (p).has_value() && (e.mods.isPopupMenu() || ! envelopeAt (p).has_value()))
     {
         const auto& clip = shown().tracks[(size_t) hit->first].noteClips[(size_t) hit->second];
 

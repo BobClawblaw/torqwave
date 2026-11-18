@@ -4,6 +4,9 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Envelopes on instrument tracks**
+- A click on an instrument track's envelope line over a note clip adds a point, as it does over an audio clip. Before, the note clip under the line took the click, so on a track full of note clips the envelope could only be drawn in the gaps between them.
+
 ## Released
 
 **Release 0.16.3: The home screen first, Option-drag copies, selecting points, ripple for a time range, envelopes that show themselves**
