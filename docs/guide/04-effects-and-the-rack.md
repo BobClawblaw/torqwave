@@ -62,6 +62,10 @@ The rack is the **Effects Rack** panel beside the editor. Window > Effects Rack 
 2. The new effect's window opens in front. Set it up while you play the file.
 3. Add more effects. They run from top to bottom.
 
+<img src="../screenshots/guide-eq-dialog.png" width="522" alt="The Parametric EQ window from the rack: a low shelf lifted 2.6 dB, a 3.8 dB cut at 400 Hz and a high shelf lifted 4.2 dB, drawn on the curve and listed band by band">
+
+*The Parametric EQ's window. Drag a band's point on the curve, or type its values in the list.*
+
 Each effect has a row of controls:
 
 | Control | What it does |

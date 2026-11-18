@@ -30,10 +30,18 @@ The tools are on the strip under the editor and in the **Edit** menu. The one in
 - The lasso follows the mouse and shows the line so far. A faint dotted edge runs back to where you started.
 - When you let go, the shape closes along that edge.
 
+![A lasso drawn round the phone ring in the spectrogram, a dotted oval in each channel](../screenshots/guide-lasso.png)
+
+*A lasso drawn freehand round the ring. The shape is the selection, in both channels.*
+
 **Brush:**
 
 - **[** and **]** make the brush smaller or larger.
 - **Shift-[** and **Shift-]** make it lighter or heavier, in steps of 10%. An effect applies only that much to what a light brush painted: Remove Frequencies with a 50% brush takes away only part of the sound there, not all of it.
+
+![One brush stroke painted along the phone ring's two tones, with the brush's circle at the start of the stroke](../screenshots/guide-brush.png)
+
+*One stroke of the brush along the ring's tones. The circle shows the brush's size.*
 
 **Lasso and brush, both:**
 
@@ -85,6 +93,8 @@ For a steady noise that runs through the whole recording (hiss, fan, air conditi
 3. Select the part to clean, or nothing for the whole file.
 4. Choose **Noise Reduction...** (Shift-Cmd-P). Press Space to preview, and set how much to take away.
 5. Use **Bypass** to compare, then apply.
+
+<img src="../screenshots/guide-noise-dialog.png" width="562" alt="The Noise Reduction dialog: Reduction 12 dB, Threshold above the print 3 dB, Presets, Preview and Bypass, Cancel and Reduce">
 
 Taking too much away makes the voice watery or "underwater". Back off until it sounds clean.
 

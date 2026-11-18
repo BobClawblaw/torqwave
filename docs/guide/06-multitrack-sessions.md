@@ -146,6 +146,10 @@ An envelope makes volume, pan or an effect parameter change over time.
 - **Draw it:** click a track's **A** button and choose the envelope to show: volume, pan, or a parameter of one of the track's effects. Click the line to add a point, drag points to shape it, and Option-click a point to remove it.
 - **Write it while playing:** turn on **Write Automation** (W) and play. Moving the track's volume or pan then writes into its envelope.
 
+![The Keys track's volume envelope, shown with its A button: the line drops for the verse and rises into the chorus](../screenshots/guide-automation.png)
+
+*The Keys track's volume envelope, from -4 dB down to -11 dB for the verse and up to -2 dB for the chorus. The A button is lit while an envelope shows.*
+
 A parameter that has an envelope is marked "(automated)" in the menu.
 
 ## Tempo and bars
