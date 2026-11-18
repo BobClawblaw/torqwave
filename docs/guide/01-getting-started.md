@@ -80,6 +80,8 @@ A workspace is a saved layout of panels. **Window > Workspace** switches between
 
 Each workspace remembers how you left it. **Save Workspace...** keeps the current layout under a name of your own, and **Reset Workspace** puts one back as it was saved.
 
+A workspace can have an accent colour of its own, so you can tell at a glance which one you are in: choose it from **Window > Workspace > Accent for** *(the workspace)*. **The App's Own** goes back to the accent chosen in View > Theme. Choosing an accent in View > Theme clears the current workspace's own, so you see the one you picked.
+
 ## Open a file
 
 Any of these opens a file:

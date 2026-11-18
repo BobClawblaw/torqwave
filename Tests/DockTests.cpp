@@ -186,6 +186,19 @@ namespace
 
         check (! back.remove ("Classic") && back.remove ("Podcast") && back.current().name == "Classic" && back.all().size() == 2,
                "Workspaces: a built-in one can't be deleted; deleting the current one goes back to the first");
+
+        // Accents: one of a workspace's own, kept for built-ins and the person's, copied by Save As.
+        back.select ("Mixing");
+        back.setAccent ("Green");
+        check (back.saveAs ("Music", mixing) && back.current().accent == "Green", "Workspaces: Save As keeps the accent of the workspace it was saved from");
+        back.setAccent ("Pink");
+        back.select ("Classic");
+        check (back.current().accent.isEmpty(), "Workspaces: one without an accent of its own uses the app's");
+        const auto accentXml = back.toXml();
+        Dock::Workspaces again ({ { "Classic", classic }, { "Mixing", mixing } });
+        again.restore (*accentXml, known, "editor");
+        check (again.all()[0].accent.isEmpty() && again.all()[1].accent == "Green" && again.all()[2].accent == "Pink",
+               "Workspaces: each one's accent comes back as it was set");
     }
 
     /** A dock with plain panels, each a component of its own. */

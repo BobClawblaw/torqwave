@@ -1058,6 +1058,9 @@ MainComponent::MainComponent()
         workspaces->update (layout);
     }
 
+    if (workspaces->current().accent.isNotEmpty())
+        applyLook();
+
     dock = std::make_unique<Dock::Area> (static_cast<Dock::Host&> (*this));
     dock->setLayout (workspaces->current().now);
     addAndMakeVisible (*dock);
@@ -3077,6 +3080,17 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             for (size_t i = 0; i < workspaces->all().size(); ++i)
                 workspaceMenu.addItem (workspaceBaseId + (int) i, workspaces->all()[i].name, true, (int) i == workspaces->getCurrentIndex());
 
+            juce::PopupMenu accentMenu;
+            const auto own = workspaces->current().accent;
+            const auto accentChoices = Theme::accentNames();
+            accentMenu.addItem (workspaceAccentBaseId, "The App's Own (" + appProperties.getUserSettings()->getValue (accentKey, "Blue") + ")", true, own.isEmpty());
+            accentMenu.addSeparator();
+
+            for (int i = 0; i < accentChoices.size(); ++i)
+                accentMenu.addItem (workspaceAccentBaseId + 1 + i, accentChoices[i], true, accentChoices[i] == own);
+
+            workspaceMenu.addSeparator();
+            workspaceMenu.addSubMenu ("Accent for " + workspaces->current().name, accentMenu);
             workspaceMenu.addSeparator();
             workspaceMenu.addCommandItem (&commands, cmdSaveWorkspace);
             workspaceMenu.addCommandItem (&commands, cmdResetWorkspace);
@@ -5190,11 +5204,31 @@ void MainComponent::noteRecent (const juce::File& file)
 void MainComponent::setTheme (const juce::String& theme, const juce::String& accentName, const juce::String& waveformName)
 {
     auto* settings = appProperties.getUserSettings();
+
+    // Choosing an accent here shows it: the current workspace gives up one of its own.
+    if (accentName != settings->getValue (accentKey, "Blue") && workspaces->current().accent.isNotEmpty())
+    {
+        workspaces->setAccent ({});
+        layoutChanged();
+    }
+
     settings->setValue (themeKey, theme);
     settings->setValue (accentKey, accentName);
     settings->setValue (waveformColourKey, waveformName);
-    Theme::apply (Theme::make (theme, accentName, waveformName));
+    applyLook();
     menuItemsChanged();
+}
+
+juce::String MainComponent::lookAccent()
+{
+    const auto own = workspaces != nullptr ? workspaces->current().accent : juce::String();
+    return Theme::accentNames().contains (own) ? own : appProperties.getUserSettings()->getValue (accentKey, "Blue");
+}
+
+void MainComponent::applyLook()
+{
+    auto* settings = appProperties.getUserSettings();
+    Theme::apply (Theme::make (settings->getValue (themeKey, "Dark"), lookAccent(), settings->getValue (waveformColourKey, "Theme")));
 }
 
 void MainComponent::menuItemSelected (int menuItemId, int)
@@ -5215,6 +5249,15 @@ void MainComponent::menuItemSelected (int menuItemId, int)
     if (const auto waveforms = Theme::waveformNames(); juce::isPositiveAndBelow (menuItemId - waveformColourBaseId, waveforms.size()))
     {
         setTheme (Theme::current().name, appProperties.getUserSettings()->getValue (accentKey, "Blue"), waveforms[menuItemId - waveformColourBaseId]);
+        return;
+    }
+
+    if (const auto accents = Theme::accentNames(); juce::isPositiveAndBelow (menuItemId - workspaceAccentBaseId, accents.size() + 1))
+    {
+        workspaces->setAccent (menuItemId == workspaceAccentBaseId ? juce::String() : accents[menuItemId - workspaceAccentBaseId - 1]);
+        layoutChanged();
+        applyLook();
+        menuItemsChanged();
         return;
     }
 
@@ -13436,6 +13479,8 @@ void MainComponent::selectWorkspace (const juce::String& name)
         return;
 
     dock->setLayout (workspaces->current().now);
+    applyLook();   // its accent, or the app's own
+
     layoutChanged();
     menuItemsChanged();
 }

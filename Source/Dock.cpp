@@ -440,7 +440,7 @@ std::optional<Layout> Layout::fromXml (const juce::XmlElement& xml, const juce::
 Workspaces::Workspaces (std::vector<std::pair<juce::String, Layout>> builtIns)
 {
     for (auto& [name, layout] : builtIns)
-        list.push_back ({ name, layout, layout, true });
+        list.push_back ({ name, layout, layout, true, {} });
 
     jassert (! list.empty());
 }
@@ -490,11 +490,12 @@ bool Workspaces::saveAs (const juce::String& rawName, const Layout& layout)
             return false;
 
         list[(size_t) index].saved = list[(size_t) index].now = layout;
+        list[(size_t) index].accent = current().accent;
         currentIndex = index;
         return true;
     }
 
-    list.push_back ({ name, layout, layout, false });
+    list.push_back ({ name, layout, layout, false, current().accent });
     currentIndex = (int) list.size() - 1;
     return true;
 }
@@ -526,6 +527,9 @@ std::unique_ptr<juce::XmlElement> Workspaces::toXml() const
         auto* e = xml->createNewChildElement ("WORKSPACE");
         e->setAttribute ("name", w.name);
         e->setAttribute ("builtIn", w.builtIn);
+
+        if (w.accent.isNotEmpty())
+            e->setAttribute ("accent", w.accent);
 
         if (! w.builtIn)
             e->createNewChildElement ("SAVED")->addChildElement (w.saved.toXml().release());
@@ -563,6 +567,7 @@ void Workspaces::restore (const juce::XmlElement& xml, const juce::StringArray& 
             if (auto now = read (e, "NOW"))
                 list[(size_t) index].now = *now;
 
+            list[(size_t) index].accent = e->getStringAttribute ("accent");
             continue;
         }
 
@@ -575,7 +580,7 @@ void Workspaces::restore (const juce::XmlElement& xml, const juce::StringArray& 
             continue;
 
         auto now = read (e, "NOW");
-        Workspace w { name, *saved, now.value_or (*saved), false };
+        Workspace w { name, *saved, now.value_or (*saved), false, e->getStringAttribute ("accent") };
 
         if (index >= 0)
             list[(size_t) index] = std::move (w);

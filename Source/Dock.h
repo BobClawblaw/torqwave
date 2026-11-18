@@ -97,6 +97,7 @@ namespace Dock
             juce::String name;
             Layout saved, now;
             bool builtIn = false;
+            juce::String accent;   // the accent colour while it is in use; empty for the app's own
         };
 
         /** Starts with the built-in workspaces; the first is the current one. */
@@ -113,11 +114,16 @@ namespace Dock
         /** Records the current workspace's layout as it is now. */
         void update (const Layout&);
 
+        /** Gives the current workspace an accent colour of its own (by its Theme name), or the
+            app's own back with an empty one. */
+        void setAccent (const juce::String& accentName)  { list[(size_t) currentIndex].accent = accentName; }
+
         /** Puts the current workspace's saved layout back. */
         void reset();
 
         /** Saves the current layout as a new workspace (or over one of the person's own with that
-            name) and switches to it. False for an empty name or a built-in one's. */
+            name), with the current one's accent, and switches to it. False for an empty name or a
+            built-in one's. */
         bool saveAs (const juce::String& name, const Layout&);
 
         /** Deletes one of the person's own workspaces; the current one becomes the first if it
