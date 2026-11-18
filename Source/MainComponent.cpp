@@ -43,6 +43,7 @@
 #include "Surround.h"
 #include "Video.h"
 #include "Project.h"
+#include "GuideView.h"
 
 namespace
 {
@@ -163,6 +164,7 @@ namespace
         cmdExtremeStretch, cmdNewFile, cmdSettings, cmdGenerateInstrument, cmdShowPianoRoll, cmdShowKeyboard, cmdRecordNotes, cmdImportMidi, cmdAddInstrumentTrack,
         cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute,   // one a MultitrackView::Tool, in its order
         cmdTimeWithBars, cmdMusicalTimebase, cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes, cmdTimeTool,
+        cmdUserGuide, cmdShortcutList,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -1408,8 +1410,8 @@ void MainComponent::getCommandInfo (juce::CommandID id, juce::ApplicationCommand
 {
     describeCommand (id, info);
 
-    // While loading only About works; afterwards, what plays, records or sets up the device waits for it.
-    if ((booting() && id != cmdAbout) || (! engine.isDeviceOpen() && (id == cmdPlayPause || id == cmdRecord || id == cmdAudioSettings)))
+    // While loading only About and the help pages work; afterwards, what plays, records or sets up the device waits for it.
+    if ((booting() && id != cmdAbout && id != cmdUserGuide && id != cmdShortcutList) || (! engine.isDeviceOpen() && (id == cmdPlayPause || id == cmdRecord || id == cmdAudioSettings)))
         info.setActive (false);
 }
 
@@ -1575,6 +1577,9 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
         case cmdGraphicEq10: info.setInfo ("Graphic EQ (10 Bands)...", "Boost or cut ten bands an octave apart, in the selection or the whole file", "Effects", 0);
                             info.setActive (hasAudio); break;
         case cmdAbout: info.setInfo ("About Torqwave", "Show the version, the copyright and the licence", "Help", 0); break;
+        case cmdUserGuide: info.setInfo ("User Guide", "Open the user guide, with its pictures, in a window of its own", "Help", 0);
+                           info.addDefaultKeypress (juce::KeyPress::F1Key, 0); break;
+        case cmdShortcutList: info.setInfo ("Keyboard Shortcut List", "Open the list of the keys Torqwave ships with, in the user guide's window", "Help", 0); break;
         case cmdGraphicEq31: info.setInfo ("Graphic EQ (31 Bands)...", "Boost or cut 31 bands a third of an octave apart, in the selection or the whole file", "Effects", 0);
                             info.setActive (hasAudio); break;
         case cmdTremolo:    info.setInfo ("Tremolo...", "Make the level rise and fall at a chosen rate and depth, in the selection or the whole file", "Effects", 0);
@@ -2383,6 +2388,8 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdGraphicEq10: showGraphicEq (10); break;
         case cmdGraphicEq31: showGraphicEq (31); break;
         case cmdAbout: showAbout(); break;
+        case cmdUserGuide: showGuide ("docs/guide/README.md"); break;
+        case cmdShortcutList: showGuide ("docs/SHORTCUTS.md"); break;
         case cmdFadeRegions: showFadeEdges (true); break;
         case cmdNormalizeRegions:
             askForDecibels ("Normalize Each Region", "Peak level (dBFS)", -0.1f, -48.0, 0.0, "torqwave:normalize-regions", [this] (float db)
@@ -2909,12 +2916,8 @@ bool MainComponent::perform (const InvocationInfo& info)
 
 juce::StringArray MainComponent::getMenuBarNames()
 {
-   #if JUCE_MAC
-    return { "File", "Edit", "Effects", "View", "Multitrack", "Transport", "Markers", "Window" };
-   #else
-    // No application menu here: About goes in a Help menu, and Exit at the end of File.
+    // About is in the Mac's application menu; elsewhere it ends the Help menu, and Exit ends File.
     return { "File", "Edit", "Effects", "View", "Multitrack", "Transport", "Markers", "Window", "Help" };
-   #endif
 }
 
 juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
@@ -3055,9 +3058,13 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             menu.addSubMenu ("Workspace", workspaceMenu);
             break;
         }
-       #if ! JUCE_MAC
-        case 8: add ({ cmdAbout }); break;
-       #endif
+        case 8:
+            add ({ cmdUserGuide, cmdShortcutList });
+           #if ! JUCE_MAC
+            menu.addSeparator();
+            add ({ cmdAbout });   // in the application menu on the Mac
+           #endif
+            break;
         default: break;
     }
 
@@ -12948,6 +12955,26 @@ void MainComponent::showKeyShortcuts()
     {
         keyShortcutsWindow->toFront (true);
     }
+}
+
+void MainComponent::showGuide (const juce::String& page)
+{
+    // Deleted later, not inside its own close button's callback.
+    if (guideWindow == nullptr)
+    {
+        guideWindow = std::make_unique<Guide::Window> ([this]
+        {
+            juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<MainComponent> (this)]
+            {
+                if (safe != nullptr)
+                    safe->guideWindow = nullptr;
+            });
+        });
+        places->watch (*guideWindow, "User Guide");
+    }
+
+    guideWindow->getBrowser().show (page);
+    guideWindow->toFront (true);
 }
 
 void MainComponent::showPluginList()

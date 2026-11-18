@@ -277,7 +277,9 @@ target_sources(Torqwave PRIVATE
     Source/MixerView.cpp
     Source/SurroundPad.cpp
     Source/MultitrackView.cpp
-    Source/RackView.cpp)
+    Source/RackView.cpp
+    Source/Guide.cpp
+    Source/GuideView.cpp)
 
 target_compile_definitions(Torqwave PRIVATE
     JUCE_PLUGINHOST_AU=1
@@ -307,8 +309,16 @@ target_include_directories(Torqwave PRIVATE ${TORQWAVE_STAMP_DIR})
 # The logo on the loading screen.
 juce_add_binary_data(TorqwaveArt SOURCES Art/torqwave-banner.png ThirdParty/UCS/ucs_v8_2_1.tsv)
 
+# The user guide, read inside the app (Help > User Guide): its pages, the shortcut list and the
+# screenshots they show. Source/Guide.cpp finds each by its file name.
+file(GLOB torqwave_guide_pages CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/docs/guide/*.md)
+file(GLOB torqwave_guide_images CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/docs/screenshots/*.png)
+juce_add_binary_data(TorqwaveGuide NAMESPACE GuideData HEADER_NAME GuideData.h
+    SOURCES ${torqwave_guide_pages} docs/SHORTCUTS.md ${torqwave_guide_images})
+
 target_link_libraries(Torqwave PRIVATE
     TorqwaveArt
+    TorqwaveGuide
     TorqwaveLame
     TorqwaveStretch
     juce::juce_audio_utils
@@ -421,6 +431,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/SpectralShapeTests.cpp
     Tests/DuckingTests.cpp
     Tests/FadeHandleTests.cpp
+    Tests/GuideTests.cpp
     Source/AudioDocument.cpp
     Source/Markers.cpp
     Source/Metronome.cpp
@@ -545,7 +556,9 @@ target_sources(TorqwaveTests PRIVATE
     Source/MixerView.cpp
     Source/SurroundPad.cpp
     Source/RackView.cpp
-    Source/MultitrackView.cpp)
+    Source/MultitrackView.cpp
+    Source/Guide.cpp
+    Source/GuideView.cpp)
 # Plug-in bundles that misbehave on purpose, for the scan tests (see Tests/TestBundle.cpp).
 # On Windows each is a .vst3 DLL; the generator expression keeps multi-config builds from adding a
 # configuration folder. IntelOnlyBundle there is a bundle folder holding only 32-bit (x86-win) code.
@@ -590,6 +603,7 @@ if(WIN32)
 endif()
 target_link_libraries(TorqwaveTests PRIVATE
     TorqwaveArt
+    TorqwaveGuide
     TorqwaveLame
     TorqwaveStretch
     juce::juce_audio_utils

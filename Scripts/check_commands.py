@@ -28,7 +28,7 @@ SHORTCUTS = pathlib.Path(__file__).resolve().parent.parent / 'docs' / 'SHORTCUTS
 
 KEY_WORDS = {'upKey': 'Up', 'downKey': 'Down', 'leftKey': 'Left', 'rightKey': 'Right', 'backspaceKey': 'Delete',
              'deleteKey': 'Forward Delete', 'spaceKey': 'Space', 'returnKey': 'Return', 'escapeKey': 'Escape',
-             'homeKey': 'Home', 'endKey': 'End', 'tabKey': 'Tab', 'F5Key': 'F5', 'pageUpKey': 'Page Up', 'pageDownKey': 'Page Down'}
+             'homeKey': 'Home', 'endKey': 'End', 'tabKey': 'Tab', 'F1Key': 'F1', 'F5Key': 'F5', 'pageUpKey': 'Page Up', 'pageDownKey': 'Page Down'}
 MODIFIER_ORDER = ['alt', 'shift', 'cmd', 'ctrl']
 MODIFIER_NAMES = {'alt': 'Option', 'shift': 'Shift', 'cmd': 'Cmd', 'ctrl': 'Ctrl'}
 

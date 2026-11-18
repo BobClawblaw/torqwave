@@ -141,6 +141,12 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Settings... | `Cmd-,` |
 | Maximize Editor, or Restore All Panels | `Shift-Cmd-F` |
 
+## Help
+
+| Command | Keys |
+|---|---|
+| User Guide | `F1` |
+
 ## With the mouse
 
 | Action | How |

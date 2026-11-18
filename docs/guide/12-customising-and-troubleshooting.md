@@ -67,7 +67,7 @@ See [the window](01-getting-started.md#the-window): docking, tabs, floating pane
 
 <img src="../screenshots/guide-shortcuts.png" width="680" alt="The Keyboard Shortcuts window: a search box, the list of commands with their keys, and Key Sets, Import, Export and Reset All">
 
-[SHORTCUTS.md](../SHORTCUTS.md) lists the keys Torqwave ships with.
+[SHORTCUTS.md](../SHORTCUTS.md) lists the keys Torqwave ships with. **Help > Keyboard Shortcut List** opens it in the guide's window.
 
 ## Troubleshooting
 

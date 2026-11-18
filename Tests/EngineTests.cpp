@@ -61,6 +61,7 @@
 #include "AmbienceTests.h"
 #include "DialogueContourTests.h"
 #include "AzimuthTests.h"
+#include "GuideTests.h"
 #include "CodecPreviewTests.h"
 #include "BuiltInEffectsTests.h"
 #include "EffectPreviewTests.h"
@@ -736,6 +737,7 @@ int main (int argc, char* argv[])
         runAmbienceTests();
         runDialogueContourTests();
         runAzimuthTests();
+        runGuideTests();
         runCodecPreviewTests();
         runDynamicsTests();
         runModulationTests();

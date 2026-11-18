@@ -60,6 +60,8 @@
 #include "SoundLibraryView.h"
 #include "SettingsPanel.h"
 
+namespace Guide { class Window; }
+
 class MainComponent final : public juce::Component,
                             public juce::ApplicationCommandTarget,
                             public juce::MenuBarModel,
@@ -589,6 +591,7 @@ private:
     void showQuantizeNotesDialog();
     void showRecordingOptions();
     void showKeyShortcuts();
+    void showGuide (const juce::String& page);
 
     /** Asks for a folder, then mixes each region of the session to a file of its own there. */
     void chooseRegionsFolder();
@@ -668,6 +671,7 @@ private:
     juce::OwnedArray<PluginEditorWindow> editorWindows;
     std::unique_ptr<PluginListWindow> pluginListWindow;
     std::unique_ptr<KeyShortcutsWindow> keyShortcutsWindow;
+    std::unique_ptr<Guide::Window> guideWindow;
     std::unique_ptr<SettingsWindow> settingsWindow;
     std::unique_ptr<EqWindow> eqWindow;
     std::unique_ptr<RackRenderJob> renderJob;

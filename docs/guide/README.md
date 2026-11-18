@@ -1,6 +1,6 @@
 # Torqwave user guide
 
-How to use Torqwave, one job at a time. The [README](../../README.md) lists everything the app does; this guide shows you how to do it.
+How to use Torqwave, one job at a time. The [README](../../README.md) lists everything the app does; this guide shows you how to do it. The app carries this guide too: **Help > User Guide** (`F1`) opens it in a window of its own, with the pages listed down the left, links between them and Back and Forward.
 
 Keys are written for the Mac. On Windows and Linux, read Ctrl for Cmd and Alt for Option, and Explorer (or your file manager) for Finder. Every key can be changed in Window > Keyboard Shortcuts..., and [SHORTCUTS.md](../SHORTCUTS.md) lists the ones Torqwave ships with.
 
