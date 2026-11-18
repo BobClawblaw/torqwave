@@ -96,7 +96,7 @@ Torqwave hosts VST3 plug-ins everywhere, and Audio Units (v2 and v3) on the Mac.
 
 1. Click **Plug-ins...** in the toolbar (or Window > Plug-ins...), then **Scan for Plug-ins**.
 2. Each plug-in is loaded in a separate worker while it is checked. One that crashes, or hangs for more than 60 seconds, is marked as not working, and Torqwave keeps running.
-3. Effects then appear under **+ Add Effect** in the rack, and in a track's **FX** menu in a session. Instruments go on instrument tracks; see [instruments and MIDI](README.md#pages).
+3. Effects then appear under **+ Add Effect** in the rack, and in a track's **FX** menu in a session. Instruments go on instrument tracks; see [Instruments and MIDI](07-instruments-and-midi.md).
 
 Where Torqwave looks for plug-ins:
 

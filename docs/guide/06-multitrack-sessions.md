@@ -15,7 +15,7 @@ Switch between the editor and the session with the **Editor | Multitrack** switc
   - **Multitrack > Import Audio...** (Cmd-I) puts each file on a new track at the cursor.
   - Drag files from Finder, from the Files panel, or from the Sound Library onto the lanes.
   - Dropping below the last track makes a new track.
-- **Bring MIDI in:** **Multitrack > Import MIDI File...** adds a Standard MIDI File's tracks as note clips. See instruments and MIDI (coming soon).
+- **Bring MIDI in:** **Multitrack > Import MIDI File...** adds a Standard MIDI File's tracks as note clips. See [Instruments and MIDI](07-instruments-and-midi.md).
 
 **Right-click** works almost everywhere in the multitrack view:
 
@@ -173,7 +173,7 @@ A parameter that has an envelope is marked "(automated)" in the menu.
 | Bounce Track | Renders a track through its effects onto a new track, and mutes the original |
 | Freeze Track | Renders a track's effects so they stop using the processor while you work |
 
-A session can also be mixed in 5.1 or 7.1 (**Multitrack > Surround**). See video and surround (coming soon).
+A session can also be mixed in 5.1 or 7.1 (**Multitrack > Surround**). See [Video and surround](09-video-and-surround.md#surround-sessions).
 
 ## Saving
 
@@ -182,4 +182,4 @@ A session can also be mixed in 5.1 or 7.1 (**Multitrack > Surround**). See video
 - **A project** keeps the session together with the files open in the editor.
 - **After a crash,** Torqwave offers to recover the session the next time it starts.
 
-Next: instruments and MIDI (coming soon). Back to the [guide](README.md).
+Next: [Instruments and MIDI](07-instruments-and-midi.md).
