@@ -1,16 +1,22 @@
 # Changelog
 
-Each milestone as it was built, newest first, with what the tests measured on the development Mac. Releases are marked where they were cut. Torqwave was called SpectraBlade up to 0.15.10: the entries for those releases keep the name it had then, and their downloads, named `SpectraBlade-<version>`, are on the Releases page of the [SpectraBlade repository](https://github.com/BobClawblaw/spectrablade/releases).
+Each milestone as it was built, newest first, with what the tests measured on the development Mac. Releases are marked where they were cut. Torqwave was briefly called SpectraBlade, up to 0.15.10, and was renamed in 0.16.0 because another audio product already used a similar name: the entries for those releases keep the name it had then.
 
 ## Unreleased
 
+Nothing yet.
+
+## Released
+
+**Release 0.16.0: Torqwave**
+- `Torqwave-0.16.0.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.16.0-windows-x64-setup.exe` and `Torqwave-0.16.0-windows-x64.zip`) and the Linux tarball (`Torqwave-0.16.0-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the new name and artwork below, on top of 0.15.10, with nothing else changed. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app for arm64, signed it, and the whole suite (1,623 checks, the command table audit and the three SpectraBlade checks among them) passed with the signed app as the plug-in scan worker; the disk image's SHA-256 matched its `.sha256`, its app verified (`codesign --verify --deep --strict`), reads 0.16.0 with the bundle ID `org.torqwave.editor`, holds arm64 alone, and carries a licence identical to `LICENSE` with LAME's and Signalsmith's licences. The image's app, copied to Applications, launched and quit cleanly. Its first launch on a Mac with SpectraBlade's settings was checked on a development build: the settings, Sound Library and recovery folder came across, with no SpectraBlade name left in the settings. Nothing has been listened to for this release.
+
 **SpectraBlade is now Torqwave**
-- The app has a new name, Torqwave, everywhere: the app and its window, menus and installers, the bundle ID (`org.torqwave.editor`), the settings and data folders, and the files it saves (`.tqsession`, `.tqproject`, `.tqrack`). The source now lives at [BobClawblaw/torqwave](https://github.com/BobClawblaw/torqwave); SpectraBlade's history and releases stay at [BobClawblaw/spectrablade](https://github.com/BobClawblaw/spectrablade).
+- The app has a new name, Torqwave, everywhere: the app and its window, menus and installers, the bundle ID (`org.torqwave.editor`), the settings and data folders, and the files it saves (`.tqsession`, `.tqproject`, `.tqrack`).
 - What SpectraBlade left behind still works. On the first launch Torqwave copies SpectraBlade's settings (audio devices, the plug-in list and everything else it remembered), its effect presets, Sound Library and recovered sessions to its own folders, leaving SpectraBlade's in place. SpectraBlade's sessions, projects and racks (`.sbsession`, `.sbproject`, `.sbrack`) open, with the built-in effects saved in them, and its presets load. The Windows installer removes SpectraBlade's program folder and file types and opens `.sbsession` and `.sbproject` files with Torqwave; the Linux `install.sh` removes what SpectraBlade installed. On the Mac, drag SpectraBlade to the Trash.
 - New artwork for the new name: the app icon and the banner (on the loading screen and in the README) show a stack of waveforms seen in depth, each hiding those behind it, twisted along the stack: white lines on black with the front one in orange, the name in white with WAVE in the same orange, where SpectraBlade's showed a razor blade. `Art/make-icon.py` and `Art/make-banner.py` draw them from the mark in `Art/ridges.py`; the icon has fewer, bolder slices so it reads at small sizes.
 - Racks and settings from before SpectraBlade (WaveDrill's `.wdrack`, Waveloom's `.wlrack`) are no longer read.
-
-## Released
 
 **Release 0.15.10: The spectrogram's tools**
 - `SpectraBlade-0.15.10.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`SpectraBlade-0.15.10-windows-x64-setup.exe` and `SpectraBlade-0.15.10-windows-x64.zip`) and the Linux tarball (`SpectraBlade-0.15.10-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: Milestones 390 to 392 below on top of 0.15.9, asked for while using the 0.15 line by hand: a Time Selection tool beside a Box tool that draws a box on a plain drag (390), the box resized by its edges and corners (391), and a new box or drawing taking over while one plays (392); in the [dogfooding log](docs/DOGFOODING.md) as rows 29 to 31. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.

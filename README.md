@@ -13,13 +13,13 @@
 
 A free, open-source audio editor for macOS, Windows and Linux, and an alternative to Audacity: waveform and spectral editing, repair and loudness tools, built-in effects, multitrack sessions with automation and mixdown, and VST3 plug-ins (and Audio Units on the Mac). Clean-room, built on JUCE 9.0.4.
 
-Torqwave was called SpectraBlade up to 0.15.10. It opens SpectraBlade's sessions, projects and racks (`.sbsession`, `.sbproject`, `.sbrack`) and presets, and copies its settings, presets and Sound Library across the first time it starts.
+Torqwave was briefly called SpectraBlade, up to 0.15.10, and was renamed in 0.16.0 because another audio product already used a similar name. It opens SpectraBlade's sessions, projects and racks (`.sbsession`, `.sbproject`, `.sbrack`) and presets, and copies its settings, presets and Sound Library across the first time it starts.
 
 ![Torqwave](Art/torqwave-banner.png)
 
 **[Download the latest release](https://github.com/BobClawblaw/torqwave/releases/latest)** (macOS 13 or later, Apple silicon; Windows 10 or later, 64-bit; Linux, 64-bit x86). Every build is on the [Releases](https://github.com/BobClawblaw/torqwave/releases) page.
 
-**Status:** 0.15.10 is the latest release: the 0.15 line, instrument plug-ins, MIDI and automation for sound design (instrument tracks, note clips, a piano roll, live MIDI input, controller lanes), with the fixes from using it, a round of MIDI editing in the multitrack view (a toolbar with Select, Draw, Split, Stretch, Glue, Range and Mute tools, the time under the bars on the ruler, several note clips selected at once with audio clips, a rubber band, Clip Properties for note clips, a musical timebase so clips follow tempo changes, and transpose, velocity and quantize for the selected clips' notes), and a round on the effects rack: the rack stays live until it is applied, an Apply button on its panel, Save As and every export written through the rack as it plays, and applying the rack empties it with Undo bringing it back; 0.15.8 makes Loop Playback go round the whole file or session when nothing is selected, 0.15.9 brings Torqwave to Linux, and 0.15.10 gives the spectrogram a Time Selection tool beside a Box tool that draws a box on a plain drag, resizable by its edges and corners, with a new box taking over while one plays. It is still a dogfooding release: what real use turns up is fixed alongside, and 1.0.0 follows once that line has had a round of use. See the [changelog](CHANGELOG.md) for what each version holds, the [dogfooding log](docs/DOGFOODING.md) for what use has found and what fixed it, the [roadmap](ROADMAP.md) for what comes next, and [keyboard shortcuts](docs/SHORTCUTS.md) for the keys.
+**Status:** 0.16.0 is the latest release: the app's new name and artwork, with nothing else changed from 0.15.10, which ends the 0.15 line: instrument plug-ins, MIDI and automation for sound design (instrument tracks, note clips, a piano roll, live MIDI input, controller lanes), with the fixes from using it, a round of MIDI editing in the multitrack view (a toolbar with Select, Draw, Split, Stretch, Glue, Range and Mute tools, the time under the bars on the ruler, several note clips selected at once with audio clips, a rubber band, Clip Properties for note clips, a musical timebase so clips follow tempo changes, and transpose, velocity and quantize for the selected clips' notes), and a round on the effects rack: the rack stays live until it is applied, an Apply button on its panel, Save As and every export written through the rack as it plays, and applying the rack empties it with Undo bringing it back; 0.15.8 makes Loop Playback go round the whole file or session when nothing is selected, 0.15.9 brings Torqwave to Linux, and 0.15.10 gives the spectrogram a Time Selection tool beside a Box tool that draws a box on a plain drag, resizable by its edges and corners, with a new box taking over while one plays. It is still a dogfooding release: what real use turns up is fixed alongside, and 1.0.0 follows once that line has had a round of use. See the [changelog](CHANGELOG.md) for what each version holds, the [dogfooding log](docs/DOGFOODING.md) for what use has found and what fixed it, the [roadmap](ROADMAP.md) for what comes next, and [keyboard shortcuts](docs/SHORTCUTS.md) for the keys.
 
 ## Features
 
@@ -90,8 +90,6 @@ The audio in all of them was generated for the screenshots.
 ## Download and install
 
 The newest build is at [Releases > Latest](https://github.com/BobClawblaw/torqwave/releases/latest); every build is on the [Releases](https://github.com/BobClawblaw/torqwave/releases) page, as `Torqwave-<version>.dmg` for the Mac and `Torqwave-<version>-windows-x64-setup.exe` and `Torqwave-<version>-windows-x64.zip` for Windows (see [Windows](#windows)), and `Torqwave-<version>-linux-x86_64.tar.gz` for Linux (see [Linux](#linux)), with a `.sha256` beside each. The Mac builds are for Apple silicon and need macOS 13 or later. There is no Intel build (releases up to 0.14.0 were universal, but their Intel half was never tried).
-
-Releases up to 0.15.10, from when the app was called SpectraBlade, are named `SpectraBlade-<version>` and are on the [SpectraBlade repository's Releases](https://github.com/BobClawblaw/spectrablade/releases) page.
 
 Open `Torqwave-<version>.dmg` and drag Torqwave to Applications; the licence is beside it as `LICENSE.txt`. The app is signed ad hoc, not with a Developer ID, so macOS blocks it the first time: open it once, then choose Open Anyway under System Settings > Privacy & Security. After that it opens normally. macOS asks for microphone access the first time you choose a recording input.
 
@@ -212,7 +210,7 @@ This builds a Release program in `build-release-linux/`, runs the tests with it 
 To check a disk image's app on its own, mount it and point the tests at it:
 
 ```bash
-./build-release/TorqwaveTests_artefacts/Release/TorqwaveTests --app "/Volumes/Torqwave 0.15.10/Torqwave.app/Contents/MacOS/Torqwave"
+./build-release/TorqwaveTests_artefacts/Release/TorqwaveTests --app "/Volumes/Torqwave 0.16.0/Torqwave.app/Contents/MacOS/Torqwave"
 ```
 
 ## Tests
