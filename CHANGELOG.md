@@ -4,6 +4,15 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+Nothing yet.
+
+## Released
+
+**Release 0.16.2: The guide in the app, a home screen, ripple and layered clips, workspace accents, LV2**
+- `Torqwave-0.16.2.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.16.2-windows-x64-setup.exe` and `Torqwave-0.16.2-windows-x64.zip`) and the Linux tarball (`Torqwave-0.16.2-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the changes below on top of 0.16.1. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app for arm64 at the release's tag, signed it, and the whole suite (1,696 checks) passed with the signed app as the plug-in scan worker; the disk image's SHA-256 matched its `.sha256`, its app verified (`codesign --verify --deep --strict`), reads 0.16.2 with the bundle ID `org.torqwave.editor` and holds arm64 alone, and it is stamped as a release build.
+- Checked on Linux (Ubuntu 24.04 in a container, x86_64, a virtual display with a window manager, no audio device): the suite ran 1,663 checks; all the LV2 checks passed, and the two that failed (ffmpeg reading a WAV's broadcast details, and the rack's device-list announcements) fail the same way there on the tree before these changes, so they come from that setup, not this release.
+
 **The user guide inside the app**
 - Help > User Guide (F1) opens the guide in a window of its own: its pages listed down the left, the page on the right with its headings, lists, tables, links and screenshots, styled by the theme. Links between pages open there, with Back and Forward; other links open in the browser. Help > Keyboard Shortcut List opens the shortcut list there. The pages, the shortcut list and their screenshots are built into the app, so it needs no connection. The Mac has a Help menu now.
 - The tests parse every page and check that each picture decodes and each link reaches a page and heading the app carries, or the web.
@@ -26,8 +35,6 @@ Each milestone as it was built, newest first, with what the tests measured on th
 **LV2 plug-ins on the Mac and Linux**
 - The plug-in scan finds LV2 effects and instruments in the LV2 folders (`~/.lv2`, `/usr/local/lib/lv2`, `/usr/lib/lv2`, on the Mac also `~/Library/Audio/Plug-Ins/LV2` and `/Library/Audio/Plug-Ins/LV2`, and the folders in `LV2_PATH`), checks each in a worker as it does VST3 and Audio Units, and lists them under LV2 in the plug-in menus, for the rack, track effects and instrument tracks. Windows stays VST3 only for now: its builds run no tests yet.
 - The tests build a small LV2 gain into a bundle and check that the scan finds it in the app's worker, that it loads, plays at the level its control is set to, keeps that setting in its state, and goes through the rack and back from a saved rack.
-
-## Released
 
 **Release 0.16.1: Instruments as you play them**
 - `Torqwave-0.16.1.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.16.1-windows-x64-setup.exe` and `Torqwave-0.16.1-windows-x64.zip`) and the Linux tarball (`Torqwave-0.16.1-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the changes below on top of 0.16.0, from a round of use of 0.16.0 with instrument tracks; in the [dogfooding log](docs/DOGFOODING.md) as rows 33 to 41. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.
