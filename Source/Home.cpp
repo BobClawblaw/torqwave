@@ -275,6 +275,21 @@ void Pictures::handleAsyncUpdate()
 }
 
 //==============================================================================
+Start startWith (const juce::PropertySet& settings)
+{
+    return settings.getIntValue (startKey, 0) == 1 ? Start::lastFile : Start::homeScreen;
+}
+
+juce::File fileToReopen (const juce::PropertySet& settings, const juce::String& lastFileKey)
+{
+    if (startWith (settings) != Start::lastFile)
+        return {};
+
+    const auto path = settings.getValue (lastFileKey);
+    return juce::File::isAbsolutePath (path) ? juce::File (path) : juce::File();
+}
+
+//==============================================================================
 void drawPicture (juce::Graphics& g, juce::Rectangle<float> area, const juce::File& f, Pictures& pictures)
 {
     g.setColour (Theme::canvas);

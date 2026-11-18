@@ -86,6 +86,8 @@ A workspace can have an accent colour of its own, so you can tell at a glance wh
 
 With nothing open, the editor shows the home screen: buttons for **New File**, **Open...**, **New Session**, **Open Project...** and the **User Guide**, and your recent files, sessions and projects as cards. Each card has a picture of what it holds. An audio file shows its waveform. A session shows its tracks with their clips in their colours. A project shows its session, or the file it had in front. Under the name are the kind, when you last saved it and its folder. Click a card to open it again.
 
+Torqwave starts on the home screen. To have it reopen the file you had open when you quit instead, choose **Reopen the last file** under **File > Settings... > Start**.
+
 ![The home screen with buttons to start and cards for six recent files, sessions and projects](../screenshots/guide-home.png)
 
 The pictures are made in the background the first time and kept, so the home screen draws them at once next time. They follow the theme's colours.
@@ -136,7 +138,7 @@ To come back later to everything you have open (files, effects rack and session)
 
 ## Make it yours
 
-- **File > Settings...** (Cmd-,) holds every setting in one window: Look, Editing, Playback, Multitrack, Recording, Audio, Plug-ins, Keys and the Sound Library. Changes take effect at once.
+- **File > Settings...** (Cmd-,) holds every setting in one window: Start, Look, Editing, Playback, Multitrack, Recording, Audio, Plug-ins, Keys and the Sound Library. Changes take effect at once.
 - **View > Theme** picks one of nine themes, an accent colour and a waveform colour.
 - **View > Time Format** shows every time in the app as one of:
   - minutes and seconds;

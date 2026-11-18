@@ -1095,14 +1095,15 @@ MainComponent::MainComponent()
 
     RecentFiles::restore (recentFiles, *settings);
 
-    // Reopening the last file is quiet, and read off the message thread, so a slow or absent volume
+    // The last file is reopened only when Settings > Start asks for it; by default the app starts
+    // on the home screen. Reopening is quiet, and read off the message thread, so a slow or absent volume
     // doesn't hold up the window: it comes in when read, unless something else was opened, recorded
     // or edited first. One that can no longer be read is logged and forgotten; one that isn't there
     // (its volume not mounted) is kept for next time.
     loading = std::make_unique<LoadingScreen>();
     loading->onFinished = [this] { bootFinished(); };
 
-    if (const juce::File last (settings->getValue (lastFileKey)); last != juce::File())
+    if (const auto last = Home::fileToReopen (*settings, lastFileKey); last != juce::File())
     {
         loading->begin ("file", "Reopening " + last.getFileName(),
                         "The last file's volume isn't answering. Continue to use Torqwave now; the file opens when it can be read.");
@@ -12405,6 +12406,12 @@ Settings::Model MainComponent::makeSettingsModel()
         fadeNames.add (FadeShapes::id (shape));
 
     Settings::Model model;
+
+    model.push_back ({ "Start", "What Torqwave shows when it opens.",
+        { Item::choice ("On start", "The home screen with your recent files, or the file that was open when you quit",
+                        { "Show the home screen", "Reopen the last file" },
+                        [settings] { return (int) Home::startWith (*settings); },
+                        [settings, changed] (int i) { settings->setValue (Home::startKey, i); changed(); }) } });
 
     model.push_back ({ "Look", "How the app looks, and how times read. Each change shows at once.",
         { Item::choice ("Theme", "The colours of every window", themes,

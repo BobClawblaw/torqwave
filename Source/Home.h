@@ -92,6 +92,16 @@ namespace Home
         void handleAsyncUpdate() override;
     };
 
+    /** What the app shows when it starts: the home screen (the default), or the file that was
+        open when it quit. Kept in the settings under startKey as 0 or 1. */
+    enum class Start { homeScreen, lastFile };
+    inline constexpr const char* startKey = "onStart";
+    Start startWith (const juce::PropertySet& settings);
+
+    /** The file to reopen at start: the one kept under lastFileKey when the settings ask for the
+        last file, otherwise none. */
+    juce::File fileToReopen (const juce::PropertySet& settings, const juce::String& lastFileKey);
+
     /** Draws a card's picture: a waveform, an arrangement, or a plain mark for its kind while
         there is none yet. */
     void drawPicture (juce::Graphics&, juce::Rectangle<float> area, const juce::File&, Pictures&);

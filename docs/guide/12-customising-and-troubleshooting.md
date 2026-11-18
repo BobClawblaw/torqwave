@@ -10,6 +10,7 @@
 
 | Section | What it holds |
 |---|---|
+| Start | Whether the app opens on the home screen (the default) or reopens the file you had open when you quit |
 | Look | Theme, accent, waveform colour, time format, and what the editor shows |
 | Editing | How editing behaves |
 | Playback | How playback behaves |

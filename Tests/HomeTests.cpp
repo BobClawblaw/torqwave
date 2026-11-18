@@ -110,6 +110,27 @@ namespace
 
         check (again != nullptr && *again == *first, "home pictures: the next launch gets the same waveform from the disk");
     }
+
+    void testStart()
+    {
+        const auto last = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("Last Take.wav");
+        juce::PropertySet settings;
+        settings.setValue ("lastFile", last.getFullPathName());
+        const auto byDefault = Home::startWith (settings) == Home::Start::homeScreen && Home::fileToReopen (settings, "lastFile") == juce::File();
+
+        settings.setValue (Home::startKey, 1);
+        const auto reopens = Home::startWith (settings) == Home::Start::lastFile && Home::fileToReopen (settings, "lastFile") == last;
+
+        settings.setValue ("lastFile", "");
+        const auto nothingKept = Home::fileToReopen (settings, "lastFile") == juce::File();
+
+        settings.setValue (Home::startKey, juce::var (0));
+        settings.setValue ("lastFile", last.getFullPathName());
+        const auto backToHome = Home::fileToReopen (settings, "lastFile") == juce::File();
+
+        check (byDefault && reopens && nothingKept && backToHome,
+               "home: the app starts on the home screen by default, and reopens the last file only when the settings ask for it");
+    }
 }
 
 void runHomeTests()
@@ -119,5 +140,6 @@ void runHomeTests()
     dir.createDirectory();
     testReading (dir);
     testPictures (dir);
+    testStart();
     dir.deleteRecursively();
 }

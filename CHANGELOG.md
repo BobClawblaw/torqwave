@@ -4,7 +4,8 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
-Nothing yet.
+**Starting on the home screen**
+- Torqwave starts on the home screen. Before, it reopened the file that was open when it quit, so the home screen showed only after closing every file. Settings > Start > On start chooses between the home screen (the default) and Reopen the last file, which works as before.
 
 ## Released
 
