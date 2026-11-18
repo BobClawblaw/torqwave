@@ -85,7 +85,7 @@ public:
         Theme::follow (instrumentButton, juce::TextButton::buttonOnColourId, Theme::accentDeep);
         instrumentButton.onClick = [this] { view.showInstrumentMenu (trackId, instrumentButton); };
 
-        automationButton.setTooltip ("Volume and pan envelopes");
+        automationButton.setTooltip ("Automation Envelopes");
         Theme::follow (automationButton, juce::TextButton::buttonOnColourId, Theme::accentDeep);
         automationButton.onClick = [this] { view.showAutomationMenu (trackId, automationButton); };
 
