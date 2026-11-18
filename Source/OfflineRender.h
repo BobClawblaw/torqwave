@@ -1,0 +1,43 @@
+#pragma once
+
+#include <JuceHeader.h>
+#include "SessionMixer.h"
+
+class TrackEffects;
+
+namespace OfflineRender
+{
+    /** Processes audio in place through the rack described by rackXml (AudioEngine::createRackXml()),
+        using fresh plug-in instances so the live rack keeps playing. Bypassed slots are skipped and each
+        plug-in's reported latency is compensated, so the result lines up with the input. Effect tails
+        past the end of the audio are cut off. Audio of more than two channels goes through two at a
+        time (L R, C LFE, Ls Rs for 5.1; a last odd channel alone), each group through instances of
+        its own, except a built-in effect that links channels (the compressor, the limiter), which
+        takes them all at once, as the rack plays them.
+
+        Call from a background thread: plug-ins are created synchronously, which AUv3 requires to happen
+        off the message thread. progress receives 0..1 and returns false to cancel.
+        Returns an error message, or empty on success. */
+    juce::String processThroughRack (const juce::XmlElement& rackXml,
+                                     juce::AudioPluginFormatManager& formats,
+                                     double sampleRate,
+                                     juce::AudioBuffer<float>& audio,
+                                     const std::function<bool (float progress)>& progress);
+
+    /** Loads fresh instances of each track's effects (TrackEffects::createXml(), keyed by track id)
+        into `into`, prepared at this rate for offline processing, so the live chains keep playing.
+        A plug-in that can't be created is left out and named in the returned errors (one per line).
+
+        Call from a background thread, as for processThroughRack(). */
+    juce::String loadTrackEffects (const std::map<juce::uint32, std::unique_ptr<juce::XmlElement>>& effects,
+                                   juce::AudioPluginFormatManager& formats,
+                                   double sampleRate,
+                                   TrackEffects& into);
+
+    /** Mixes session frames [range.start, range.end) into dest as playback would, primed for the
+        range's start so effects and their delay compensation are already in time: resized to two
+        channels, or six (L R C LFE Ls Rs) for a 5.1 master. What plays out of interface pairs is
+        left out. Returns false if progress cancelled it. */
+    bool mixSession (const SessionState&, juce::Range<juce::int64> range, juce::AudioBuffer<float>& dest,
+                     SessionMixer::Inserts*, const std::function<bool (float progress)>& progress);
+}

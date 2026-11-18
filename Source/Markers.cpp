@@ -1,0 +1,494 @@
+#include "Markers.h"
+
+#include <set>
+
+namespace MarkerEdits
+{
+namespace
+{
+    juce::String clean (const juce::String& text)
+    {
+        // Label text is stored with a terminating null; a juce::String already stops there.
+        return text.trim();
+    }
+}
+
+void sort (Markers& markers)
+{
+    std::stable_sort (markers.begin(), markers.end(), [] (const Marker& a, const Marker& b)
+    {
+        return a.start != b.start ? a.start < b.start : a.length < b.length;
+    });
+}
+
+Markers afterReplace (const Markers& markers, juce::int64 start, juce::int64 end, juce::int64 newLength)
+{
+    const auto delta = newLength - (end - start);
+    Markers result;
+
+    for (auto m : markers)
+    {
+        if (! m.isRegion())
+        {
+            if (m.start <= start)
+                result.push_back (m);
+            else if (m.start >= end)
+                result.push_back ({ m.start + delta, 0, m.name, m.colour });
+
+            continue;
+        }
+
+        // A start inside the replaced range moves to the end of the new material; an end inside it
+        // moves to the start of the range. Whatever is left (if anything) is the region.
+        const auto a = m.start <= start ? m.start : m.start >= end ? m.start + delta : start + newLength;
+        const auto b = m.getEnd() <= start ? m.getEnd() : m.getEnd() >= end ? m.getEnd() + delta : start;
+
+        if (b > a)
+            result.push_back ({ a, b - a, m.name, m.colour });
+    }
+
+    sort (result);
+    return result;
+}
+
+Markers afterStretch (const Markers& markers, juce::int64 start, juce::int64 end, juce::int64 newLength)
+{
+    const auto length = end - start;
+    const auto place = [&] (juce::int64 frame)
+    {
+        if (frame <= start || length <= 0)
+            return frame;
+
+        if (frame >= end)
+            return frame + newLength - length;
+
+        return start + (juce::int64) std::llround ((double) (frame - start) * (double) newLength / (double) length);
+    };
+
+    Markers result;
+
+    for (auto m : markers)
+    {
+        const auto a = place (m.start);
+        result.push_back ({ a, m.isRegion() ? juce::jmax ((juce::int64) 1, place (m.getEnd()) - a) : 0, m.name, m.colour });
+    }
+
+    sort (result);
+    return result;
+}
+
+Markers afterCrop (const Markers& markers, juce::int64 start, juce::int64 end)
+{
+    Markers result;
+
+    for (const auto& m : markers)
+    {
+        if (! m.isRegion())
+        {
+            if (m.start >= start && m.start <= end)
+                result.push_back ({ m.start - start, 0, m.name, m.colour });
+
+            continue;
+        }
+
+        const auto a = juce::jmax (m.start, start);
+        const auto b = juce::jmin (m.getEnd(), end);
+
+        if (b > a)
+            result.push_back ({ a - start, b - a, m.name, m.colour });
+    }
+
+    sort (result);
+    return result;
+}
+
+std::optional<juce::int64> nextStop (const Markers& markers, juce::int64 from, bool forwards)
+{
+    std::optional<juce::int64> target;
+
+    for (const auto& m : markers)
+        for (auto frame : { m.start, m.getEnd() })
+            if (forwards ? frame > from && (! target || frame < *target)
+                         : frame < from && (! target || frame > *target))
+                target = frame;
+
+    return target;
+}
+
+int regionsFromPoints (Markers& markers, juce::int64 end)
+{
+    std::vector<juce::int64> points;
+
+    for (auto& m : markers)
+        if (! m.isRegion())
+            points.push_back (m.start);
+
+    std::sort (points.begin(), points.end());
+    auto turned = 0;
+
+    for (auto& m : markers)
+    {
+        if (m.isRegion() || m.start >= end)
+            continue;
+
+        const auto next = std::upper_bound (points.begin(), points.end(), m.start);
+        m.length = (next != points.end() ? juce::jmin (*next, end) : end) - m.start;
+        ++turned;
+    }
+
+    sort (markers);
+    return turned;
+}
+
+Markers piecesBetweenPoints (const Markers& markers, juce::int64 end)
+{
+    Markers pieces;
+
+    for (const auto& m : markers)
+        if (! m.isRegion() && m.start >= 0 && m.start < end)
+            pieces.push_back (m);
+
+    if (pieces.empty())
+        return {};
+
+    sort (pieces);
+
+    if (pieces.front().start > 0)
+        pieces.insert (pieces.begin(), Marker { 0, 0, "Start" });
+
+    regionsFromPoints (pieces, end);
+    pieces.erase (std::remove_if (pieces.begin(), pieces.end(), [] (const Marker& m) { return ! m.isRegion(); }), pieces.end());
+    return pieces;
+}
+
+int removeStartingIn (Markers& markers, juce::Range<juce::int64> range)
+{
+    const auto before = markers.size();
+    markers.erase (std::remove_if (markers.begin(), markers.end(), [range] (const Marker& m) { return range.contains (m.start); }), markers.end());
+    return (int) (before - markers.size());
+}
+
+int moveStartingIn (Markers& markers, juce::Range<juce::int64> range, juce::int64 offset, juce::int64 total)
+{
+    const auto inside = [range] (const Marker& m) { return range.contains (m.start); };
+
+    if (offset == 0 || std::any_of (markers.begin(), markers.end(), [&] (const Marker& m)
+                                    { return inside (m) && (m.start + offset < 0 || m.getEnd() + offset > total); }))
+        return 0;
+
+    auto moved = 0;
+
+    for (auto& m : markers)
+        if (inside (m))
+        {
+            m.start += offset;
+            ++moved;
+        }
+
+    sort (markers);
+    return moved;
+}
+
+bool renameInSequence (Markers& markers, const juce::String& base)
+{
+    const auto trimmed = base.trim();
+
+    if (trimmed.isEmpty() || markers.empty())
+        return false;
+
+    sort (markers);
+    const auto digits = juce::jmax (2, (int) juce::String ((int) markers.size()).length());
+
+    for (size_t i = 0; i < markers.size(); ++i)
+        markers[i].name = trimmed + " " + juce::String ((int) i + 1).paddedLeft ('0', digits);
+
+    return true;
+}
+
+int addAtIntervals (Markers& markers, juce::Range<juce::int64> range, juce::int64 step)
+{
+    if (step <= 0 || range.isEmpty() || (range.getLength() + step - 1) / step > maxIntervalMarkers)
+        return 0;
+
+    std::set<juce::int64> taken;
+
+    for (auto& m : markers)
+        if (! m.isRegion())
+            taken.insert (m.start);
+
+    auto added = 0;
+
+    for (auto frame = range.getStart(); frame < range.getEnd(); frame += step)
+    {
+        if (taken.count (frame) > 0)
+            continue;
+
+        markers.push_back ({ frame, 0, nextName (markers, false) });
+        ++added;
+    }
+
+    sort (markers);
+    return added;
+}
+
+std::optional<juce::Range<juce::int64>> adjacentRegion (const Markers& markers, juce::int64 from, bool forwards)
+{
+    std::optional<juce::Range<juce::int64>> found;
+
+    for (auto& m : markers)
+    {
+        if (! m.isRegion() || (forwards ? m.start <= from : m.start >= from))
+            continue;
+
+        const auto better = ! found || (forwards ? m.start < found->getStart() : m.start > found->getStart())
+                            || (m.start == found->getStart() && m.length < found->getLength());
+
+        if (better)
+            found = juce::Range<juce::int64> (m.start, m.getEnd());
+    }
+
+    return found;
+}
+
+std::optional<juce::Range<juce::int64>> regionAt (const Markers& markers, juce::int64 frame)
+{
+    std::optional<juce::Range<juce::int64>> found;
+
+    for (auto& m : markers)
+        if (m.isRegion() && m.start <= frame && frame < m.getEnd() && (! found || m.length < found->getLength()))
+            found = juce::Range<juce::int64> (m.start, m.getEnd());
+
+    return found;
+}
+
+std::optional<juce::Range<juce::int64>> spanAround (const Markers& markers, juce::int64 frame, juce::int64 end)
+{
+    if (markers.empty())
+        return {};
+
+    const auto from = nextStop (markers, frame + 1, false).value_or (0);
+    const auto to = nextStop (markers, frame, true).value_or (end);
+
+    if (to <= from || frame >= to)
+        return {};
+
+    return juce::Range<juce::int64> (from, to);
+}
+
+juce::String nextName (const Markers& markers, bool region)
+{
+    const juce::String base (region ? "Region " : "Marker ");
+
+    for (int n = 1;; ++n)
+    {
+        const auto name = base + juce::String (n).paddedLeft ('0', 2);
+
+        if (std::none_of (markers.begin(), markers.end(), [&] (const Marker& m) { return m.name == name; }))
+            return name;
+    }
+}
+
+Markers fromMetadata (const juce::StringPairArray& metadata, juce::int64 numFrames)
+{
+    auto value = [&] (const juce::String& key) { return metadata.getValue (key, {}); };
+
+    // Labels and regions refer to cue points by identifier.
+    std::map<int, juce::String> labels;
+    std::map<int, std::pair<juce::int64, juce::String>> regions;
+
+    for (int i = 0; i < value ("NumCueLabels").getIntValue(); ++i)
+        labels[value ("CueLabel" + juce::String (i) + "Identifier").getIntValue()] = clean (value ("CueLabel" + juce::String (i) + "Text"));
+
+    for (int i = 0; i < value ("NumCueRegions").getIntValue(); ++i)
+    {
+        const auto prefix = "CueRegion" + juce::String (i);
+        regions[value (prefix + "Identifier").getIntValue()] = { (juce::int64) value (prefix + "SampleLength").getLargeIntValue(),
+                                                                 clean (value (prefix + "Text")) };
+    }
+
+    Markers markers;
+
+    for (int i = 0; i < value ("NumCuePoints").getIntValue(); ++i)
+    {
+        const auto prefix = "Cue" + juce::String (i);
+        const auto id = value (prefix + "Identifier").getIntValue();
+        Marker m;
+        m.start = juce::jlimit ((juce::int64) 0, numFrames, (juce::int64) value (prefix + "Offset").getLargeIntValue());
+
+        if (const auto r = regions.find (id); r != regions.end())
+        {
+            m.length = juce::jlimit ((juce::int64) 0, numFrames - m.start, r->second.first);
+            m.name = r->second.second;
+        }
+
+        if (const auto l = labels.find (id); l != labels.end() && l->second.isNotEmpty())
+            m.name = l->second;
+
+        if (m.name.isEmpty())
+            m.name = nextName (markers, m.isRegion());
+
+        markers.push_back (m);
+    }
+
+    sort (markers);
+    return markers;
+}
+
+juce::String toCsv (const Markers& markers, double sampleRate)
+{
+    const auto seconds = [sampleRate] (juce::int64 frames) { return juce::String ((double) frames / sampleRate, 6); };
+    juce::String csv ("Name,Start (s),End (s),Length (s),Start (frames),Length (frames)\r\n");
+
+    for (auto& m : markers)
+    {
+        auto name = m.name;
+
+        if (name.containsAnyOf (",\"\r\n"))
+            name = "\"" + name.replace ("\"", "\"\"") + "\"";
+
+        csv << name << "," << seconds (m.start) << "," << (m.isRegion() ? seconds (m.getEnd()) : juce::String()) << ","
+            << (m.isRegion() ? seconds (m.length) : juce::String()) << "," << juce::String (m.start) << "," << juce::String (m.length) << "\r\n";
+    }
+
+    return csv;
+}
+
+std::optional<Markers> fromCsv (const juce::String& csv, double sampleRate, juce::int64 numFrames)
+{
+    // RFC 4180 rows: fields split at commas, quoted ones holding commas, doubled quotes and line breaks.
+    std::vector<juce::StringArray> rows;
+    juce::StringArray row;
+    juce::String field;
+    auto quoted = false, any = false;
+
+    const auto endRow = [&]
+    {
+        if (any || field.isNotEmpty())
+        {
+            row.add (field);
+            rows.push_back (row);
+        }
+
+        row.clear();
+        field.clear();
+        any = false;
+    };
+
+    for (auto p = csv.getCharPointer(); ! p.isEmpty(); ++p)
+    {
+        const auto c = *p;
+
+        if (quoted)
+        {
+            if (c == '"' && *(p + 1) == '"')      { field << '"'; ++p; }
+            else if (c == '"')                    quoted = false;
+            else                                  field << juce::String::charToString (c);
+        }
+        else if (c == '"')                        { quoted = true; any = true; }
+        else if (c == ',')                        { row.add (field); field.clear(); any = true; }
+        else if (c == '\n' || c == '\r')
+        {
+            endRow();
+        }
+        else
+        {
+            field << juce::String::charToString (c);
+        }
+    }
+
+    endRow();
+
+    if (quoted || rows.empty() || rows[0].size() < 4 || rows[0][0] != "Name" || rows[0][1] != "Start (s)" || rows[0][2] != "End (s)")
+        return {};
+
+    const auto seconds = [sampleRate] (const juce::String& text) -> std::optional<juce::int64>
+    {
+        const auto t = text.trim();
+
+        if (t.isEmpty() || ! t.containsOnly ("0123456789.") || t.indexOfChar ('.') != t.lastIndexOfChar ('.'))
+            return {};
+
+        return (juce::int64) std::llround (t.getDoubleValue() * sampleRate);
+    };
+
+    Markers markers;
+
+    for (size_t i = 1; i < rows.size(); ++i)
+    {
+        const auto& r = rows[i];
+        const auto start = r.size() >= 3 ? seconds (r[1]) : std::nullopt;
+
+        if (! start || (r[2].trim().isNotEmpty() && ! seconds (r[2])))
+            return {};
+
+        if (*start > numFrames)
+            continue;
+
+        const auto end = r[2].trim().isNotEmpty() ? juce::jmin (numFrames, *seconds (r[2])) : *start;
+        markers.push_back ({ *start, juce::jmax ((juce::int64) 0, end - *start), r[0] });
+    }
+
+    sort (markers);
+    return markers;
+}
+
+int merge (Markers& into, const Markers& added)
+{
+    auto count = 0;
+
+    for (auto& m : added)
+    {
+        if (std::any_of (into.begin(), into.end(), [&m] (const Marker& o) { return o.start == m.start && o.length == m.length && o.name == m.name; }))
+            continue;
+
+        into.push_back (m);
+        ++count;
+    }
+
+    sort (into);
+    return count;
+}
+
+std::unordered_map<juce::String, juce::String> toMetadata (const Markers& markers)
+{
+    std::unordered_map<juce::String, juce::String> values;
+
+    if (markers.empty())
+        return values;
+
+    int regionIndex = 0;
+
+    for (size_t i = 0; i < markers.size(); ++i)
+    {
+        const auto& m = markers[i];
+        const juce::String id ((int) i + 1);
+        const auto cue = "Cue" + juce::String ((int) i);
+        const auto label = "CueLabel" + juce::String ((int) i);
+
+        values[cue + "Identifier"] = id;
+        values[cue + "Order"] = id;
+        values[cue + "Offset"] = juce::String (m.start);
+        values[cue + "BlockStart"] = "0";
+        values[cue + "ChunkStart"] = "0";
+        values[label + "Identifier"] = id;
+        values[label + "Text"] = m.name;
+
+        if (m.isRegion())
+        {
+            const auto region = "CueRegion" + juce::String (regionIndex++);
+            values[region + "Identifier"] = id;
+            values[region + "SampleLength"] = juce::String (m.length);
+            values[region + "Purpose"] = juce::String ((int) juce::ByteOrder::littleEndianInt ("rgn "));
+            values[region + "Text"] = m.name;
+        }
+    }
+
+    values["NumCuePoints"] = juce::String ((int) markers.size());
+    values["NumCueLabels"] = juce::String ((int) markers.size());
+
+    if (regionIndex > 0)
+        values["NumCueRegions"] = juce::String (regionIndex);
+
+    return values;
+}
+}

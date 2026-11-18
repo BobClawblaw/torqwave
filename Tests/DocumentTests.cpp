@@ -1,0 +1,1181 @@
+// Editing, undo, file round trips and offline rendering, checked sample by sample.
+
+// Samples are compared bit for bit on purpose.
+#pragma clang diagnostic ignored "-Wfloat-equal"
+
+#include <JuceHeader.h>
+#include "../Source/AudioEdits.h"
+#include "../Source/AudioEngine.h"
+#include "../Source/AudioFileIO.h"
+#include "../Source/OfflineRender.h"
+#include "../Source/SessionMixer.h"
+#include "TestUtils.h"
+#include "DocumentTests.h"
+
+namespace
+{
+    using TestUtils::check;
+    using AudioEdits::Snapshot;
+
+    constexpr double rate = 48000.0;
+
+    /** 3 s of deterministic stereo test signal: different tones per channel plus a little noise. */
+    juce::AudioBuffer<float> makeSignal (int frames = 3 * 48000)
+    {
+        juce::AudioBuffer<float> b (2, frames);
+        juce::Random random (1234);
+
+        for (int i = 0; i < frames; ++i)
+        {
+            const auto t = (double) i / rate;
+            b.setSample (0, i, (float) (0.5 * std::sin (2.0 * juce::MathConstants<double>::pi * 440.0 * t)) + random.nextFloat() * 0.01f);
+            b.setSample (1, i, (float) (0.25 * std::sin (2.0 * juce::MathConstants<double>::pi * 660.0 * t)) - random.nextFloat() * 0.01f);
+        }
+
+        return b;
+    }
+
+    juce::AudioBuffer<float> readAll (const AudioSnapshot& s)
+    {
+        juce::AudioBuffer<float> b (s.getNumChannels(), (int) s.getNumFrames());
+        s.read (b, 0, 0, b.getNumSamples());
+        return b;
+    }
+
+    /** Largest absolute difference; infinity if the shapes differ. */
+    float maxDifference (const juce::AudioBuffer<float>& a, const juce::AudioBuffer<float>& b)
+    {
+        if (a.getNumChannels() != b.getNumChannels() || a.getNumSamples() != b.getNumSamples())
+            return std::numeric_limits<float>::infinity();
+
+        float worst = 0.0f;
+
+        for (int ch = 0; ch < a.getNumChannels(); ++ch)
+            for (int i = 0; i < a.getNumSamples(); ++i)
+                worst = juce::jmax (worst, std::abs (a.getSample (ch, i) - b.getSample (ch, i)));
+
+        return worst;
+    }
+
+    bool identical (const juce::AudioBuffer<float>& a, const juce::AudioBuffer<float>& b)
+    {
+        return maxDifference (a, b) == 0.0f;
+    }
+
+    /** Frames [start, end) of a buffer. */
+    juce::AudioBuffer<float> range (const juce::AudioBuffer<float>& b, int start, int end)
+    {
+        juce::AudioBuffer<float> out (b.getNumChannels(), end - start);
+
+        for (int ch = 0; ch < b.getNumChannels(); ++ch)
+            out.copyFrom (ch, 0, b, ch, start, end - start);
+
+        return out;
+    }
+
+    juce::AudioBuffer<float> concat (std::initializer_list<juce::AudioBuffer<float>> parts)
+    {
+        int total = 0;
+
+        for (auto& p : parts)
+            total += p.getNumSamples();
+
+        juce::AudioBuffer<float> out (parts.begin()->getNumChannels(), total);
+        int pos = 0;
+
+        for (auto& p : parts)
+        {
+            for (int ch = 0; ch < out.getNumChannels(); ++ch)
+                out.copyFrom (ch, pos, p, ch, 0, p.getNumSamples());
+
+            pos += p.getNumSamples();
+        }
+
+        return out;
+    }
+
+    //==============================================================================
+    void testEditsAndUndo()
+    {
+        const auto signal = makeSignal();
+        const auto n = signal.getNumSamples();
+        AudioDocument doc;
+        doc.reset (AudioEdits::fromBuffer (juce::AudioBuffer<float> (signal)), rate, {}, 24);
+        const auto a = n / 3, b = 2 * n / 3;
+
+        // Cut the middle third, then paste it back: bit-identical to the original.
+        auto clip = AudioEdits::copy (*doc.getSnapshot(), a, b, rate);
+        doc.apply (AudioEdits::remove (*doc.getSnapshot(), a, b), "Cut");
+        check (identical (readAll (*doc.getSnapshot()), concat ({ range (signal, 0, a), range (signal, b, n) })), "cut removes exactly the range");
+        check (doc.isDirty(), "an edit makes the document dirty");
+
+        doc.apply (AudioEdits::replaceWithClip (*doc.getSnapshot(), a, a, clip), "Paste");
+        check (identical (readAll (*doc.getSnapshot()), signal), "paste puts it back bit-identically");
+
+        doc.undo();
+        doc.undo();
+        check (identical (readAll (*doc.getSnapshot()), signal) && ! doc.isDirty(), "undo returns to the original and clean state");
+        doc.redo();
+        check (doc.getNumFrames() == n - (b - a) && doc.getUndoDescription() == "Cut", "redo reapplies the cut");
+
+        // A new edit after undo discards the redo branch.
+        doc.undo();
+        doc.apply (AudioEdits::silence (*doc.getSnapshot(), 0, 10), "Silence");
+        check (! doc.canRedo(), "a new edit clears redo");
+
+        // A step that wrote the effects rack in remembers the rack, for the undo that brings it back;
+        // other steps remember none, and the memory goes with the history through getSteps and restoreHistory.
+        {
+            const auto rack = std::make_shared<const juce::XmlElement> ("rack");
+            doc.apply (AudioEdits::silence (*doc.getSnapshot(), 0, 5), "Apply Effects Rack");
+            doc.setRackApplied (rack);
+            const auto at = doc.getPosition();
+            doc.apply (AudioEdits::silence (*doc.getSnapshot(), 5, 10), "Silence");
+            const auto kept = doc.getRackAppliedAt (at) == rack && doc.getRackAppliedAt (at + 1) == nullptr
+                              && doc.getRackAppliedAt (at - 1) == nullptr && doc.getRackAppliedAt (99) == nullptr && doc.getRackAppliedAt (-1) == nullptr;
+            AudioDocument other;
+            other.restoreHistory (doc.getSteps(), doc.getPosition(), doc.getSavedPosition(), {}, 24);
+            check (kept && other.getRackAppliedAt (at) == rack && other.getRackAppliedAt (at + 1) == nullptr,
+                   "a step that applied the effects rack keeps the rack for undo, other steps keep none, and the history carries it");
+        }
+
+        // Several edits leave many segments; a crop across them must still read the right frames.
+        doc.reset (AudioEdits::fromBuffer (juce::AudioBuffer<float> (signal)), rate, {}, 24);
+        auto expected = signal;
+
+        for (int k = 0; k < 6; ++k)
+        {
+            const auto s = 1000 + k * 7919, e = s + 3001;
+            doc.apply (AudioEdits::invert (*doc.getSnapshot(), s, e), "Invert");
+
+            for (int ch = 0; ch < 2; ++ch)
+                expected.applyGain (ch, s, e - s, -1.0f);
+        }
+
+        doc.apply (AudioEdits::crop (*doc.getSnapshot(), 500, 60000), "Crop");
+        check (identical (readAll (*doc.getSnapshot()), range (expected, 500, 60000)), "crop across many segments is exact");
+
+        // Peak tables agree with a brute-force scan, across segment and chunk boundaries.
+        const auto snap = doc.getSnapshot();
+        const auto all = readAll (*snap);
+        juce::Random random (99);
+        bool peaksOk = true;
+
+        for (int t = 0; t < 200 && peaksOk; ++t)
+        {
+            const auto s = random.nextInt (all.getNumSamples() - 2);
+            const auto e = s + 1 + random.nextInt (juce::jmin (20000, all.getNumSamples() - s - 1));
+
+            for (int ch = 0; ch < 2; ++ch)
+            {
+                const auto brute = juce::FloatVectorOperations::findMinAndMax (all.getReadPointer (ch, s), e - s);
+                peaksOk = peaksOk && snap->getPeak (ch, s, e) == brute;
+            }
+        }
+
+        check (peaksOk, "peak tables match a brute-force min/max (200 random ranges)");
+    }
+
+    void testEffects()
+    {
+        const auto signal = makeSignal();
+        const auto n = signal.getNumSamples();
+        const auto original = AudioEdits::fromBuffer (juce::AudioBuffer<float> (signal));
+
+        auto doubled = readAll (*AudioEdits::gain (*original, 0, n, juce::Decibels::gainToDecibels (2.0f)));
+        auto twice = signal;
+        twice.applyGain (2.0f);
+        check (maxDifference (doubled, twice) < 1.0e-6f, "gain +6.02 dB doubles every sample");
+
+        auto normalized = AudioEdits::normalize (*original, 0, n, -6.0f);
+        check (std::abs (AudioEdits::peakLevel (*normalized, 0, n) - juce::Decibels::decibelsToGain (-6.0f)) < 1.0e-6f,
+               "normalize sets the peak to -6 dBFS");
+        check (AudioEdits::normalize (*AudioEdits::silence (*original, 0, n), 0, n, -1.0f) == nullptr, "normalize refuses silence");
+
+        auto reversedTwice = AudioEdits::reverse (*AudioEdits::reverse (*original, 100, 5000), 100, 5000);
+        check (identical (readAll (*reversedTwice), signal), "reverse twice is the identity");
+
+        // DC offset: +0.25 on a square wave of +-0.5, and a constant -0.1, each centred on 0 exactly;
+        // outside the range nothing changes.
+        juce::AudioBuffer<float> offset (2, 1000);
+
+        for (int i = 0; i < 1000; ++i)
+        {
+            offset.setSample (0, i, (i % 2 == 0 ? 0.5f : -0.5f) + 0.25f);
+            offset.setSample (1, i, -0.1f);
+        }
+
+        const auto centred = readAll (*AudioEdits::removeDcOffset (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (offset)), 100, 900));
+        auto dcExact = true;
+
+        for (int i = 0; i < 1000; ++i)
+        {
+            const auto inside = i >= 100 && i < 900;
+            dcExact = dcExact && juce::exactlyEqual (centred.getSample (0, i), inside ? (i % 2 == 0 ? 0.5f : -0.5f) : offset.getSample (0, i))
+                      && juce::exactlyEqual (centred.getSample (1, i), inside ? 0.0f : -0.1f);
+        }
+
+        check (dcExact, "remove DC offset: each channel's average over the range taken out, exactly; nothing outside it");
+
+        // Swapping: left and right exchanged inside the range only; a mono file is left as it is.
+        const auto swapped = readAll (*AudioEdits::swapChannels (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (offset)), 100, 900));
+        auto swapExact = true;
+
+        for (int i = 0; i < 1000; ++i)
+        {
+            const auto inside = i >= 100 && i < 900;
+            swapExact = swapExact && juce::exactlyEqual (swapped.getSample (0, i), offset.getSample (inside ? 1 : 0, i))
+                        && juce::exactlyEqual (swapped.getSample (1, i), offset.getSample (inside ? 0 : 1, i));
+        }
+
+        check (swapExact, "swap channels: left and right exchanged inside the range, unchanged outside it");
+
+        // Normalizing each channel apart: left 0.5 / -0.5 and right 0.25 / -0.25 both reach -6.0206 dB
+        // (gain 0.5); a silent channel stays silent; all silence gives nothing.
+        juce::AudioBuffer<float> uneven (2, 100);
+        juce::AudioBuffer<float> quietRight (2, 100);
+        quietRight.clear();
+
+        for (int i = 0; i < 100; ++i)
+        {
+            uneven.setSample (0, i, i % 2 == 0 ? 0.5f : -0.5f);
+            uneven.setSample (1, i, i % 2 == 0 ? 0.25f : -0.25f);
+            quietRight.setSample (0, i, 0.25f);
+        }
+
+        const auto target = juce::Decibels::gainToDecibels (0.5f);
+        const auto even = readAll (*AudioEdits::normalizeChannels (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (uneven)), 0, 100, target));
+        const auto oneSided = readAll (*AudioEdits::normalizeChannels (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (quietRight)), 0, 100, target));
+        juce::AudioBuffer<float> hushed (2, 100);
+        hushed.clear();
+        check (std::abs (even.getMagnitude (0, 0, 100) - 0.5f) < 1.0e-6f && std::abs (even.getMagnitude (1, 0, 100) - 0.5f) < 1.0e-6f
+                   && std::abs (oneSided.getMagnitude (0, 0, 100) - 0.5f) < 1.0e-6f && juce::exactlyEqual (oneSided.getMagnitude (1, 0, 100), 0.0f)
+                   && AudioEdits::normalizeChannels (*AudioEdits::fromBuffer (std::move (hushed)), 0, 100, target) == nullptr,
+               "normalize channels: each channel's peak brought to the level on its own; a silent one left silent; all silence refused");
+
+        // Levels per channel: a square wave of 0.5 has peak and RMS 0.5 and no offset; 0.25 constant
+        // has offset 0.25; over 70,000 frames, across a block.
+        juce::AudioBuffer<float> measured (2, 70000);
+
+        for (int i = 0; i < 70000; ++i)
+        {
+            measured.setSample (0, i, i % 2 == 0 ? 0.5f : -0.5f);
+            measured.setSample (1, i, 0.25f);
+        }
+
+        const auto levels = AudioEdits::channelLevels (*AudioEdits::fromBuffer (std::move (measured)), 0, 70000);
+        check (levels.size() == 2 && juce::exactlyEqual (levels[0].peak, 0.5f) && juce::exactlyEqual (levels[0].rms, 0.5)
+                   && juce::exactlyEqual (levels[0].mean, 0.0) && juce::exactlyEqual (levels[1].peak, 0.25f) && juce::exactlyEqual (levels[1].rms, 0.25)
+                   && juce::exactlyEqual (levels[1].mean, 0.25),
+               "channel levels: peak, RMS and DC offset per channel, exact across blocks");
+
+        // Clipping: two full-scale samples are too few; three on the right channel, crossing a block
+        // edge, are found; searching from past them finds the run at the very end.
+        juce::AudioBuffer<float> clipped (2, 140000);
+        clipped.clear();
+        clipped.setSample (0, 1000, 1.0f);
+        clipped.setSample (0, 1001, -1.0f);
+
+        for (auto i : { 65535, 65536, 65537 })
+            clipped.setSample (1, i, -1.0f);
+
+        for (auto i : { 139996, 139997, 139998, 139999 })
+            clipped.setSample (0, i, 0.9995f);
+
+        const auto clippedSnap = AudioEdits::fromBuffer (std::move (clipped));
+        const auto firstRun = AudioEdits::nextClipping (*clippedSnap, 0, 0.999f, 3);
+        const auto lastRun = firstRun ? AudioEdits::nextClipping (*clippedSnap, firstRun->getEnd(), 0.999f, 3) : std::nullopt;
+        check (firstRun == juce::Range<juce::int64> (65535, 65538) && lastRun == juce::Range<juce::int64> (139996, 140000)
+                   && ! AudioEdits::nextClipping (*clippedSnap, 140000, 0.999f, 3) && AudioEdits::nextClipping (*clippedSnap, 0, 0.999f, 2) == juce::Range<juce::int64> (1000, 1002),
+               "find clipping: runs of the length or longer, on any channel, across a block edge and at the end; shorter ones skipped");
+        check (AudioEdits::clippingStarts (*clippedSnap, 0.999f, 3, 10) == std::vector<juce::int64> { 65535, 139996 }
+                   && AudioEdits::clippingStarts (*clippedSnap, 0.999f, 2, 10) == std::vector<juce::int64> { 1000, 65535, 139996 }
+                   && AudioEdits::clippingStarts (*clippedSnap, 0.999f, 2, 1) == std::vector<juce::int64> { 1000 }
+                   && AudioEdits::clippingStarts (*clippedSnap, 1.5f, 1, 10).empty(),
+               "clipping starts: the first frame of every run, in order, capped at the count; none above full scale");
+
+        using R = juce::Range<juce::int64>;
+        check (AudioEdits::stepSelection ({ 100, 300 }, 1000, true) == R (300, 500) && AudioEdits::stepSelection ({ 100, 300 }, 1000, false) == R (0, 200)
+                   && AudioEdits::stepSelection ({ 700, 900 }, 1000, true) == R (800, 1000) && AudioEdits::stepSelection ({ 800, 1000 }, 1000, true) == R (800, 1000)
+                   && AudioEdits::stepSelection ({ 5, 5 }, 1000, true) == R (5, 5),
+               "step selection: by its own length, stopping at the ends with its length kept; an empty one stays");
+
+        check (AudioEdits::resizeSelection ({ 100, 300 }, 1000, true) == R (100, 500) && AudioEdits::resizeSelection ({ 700, 900 }, 1000, true) == R (700, 1000)
+                   && AudioEdits::resizeSelection ({ 100, 300 }, 1000, false) == R (100, 200) && AudioEdits::resizeSelection ({ 100, 101 }, 1000, false) == R (100, 101)
+                   && AudioEdits::resizeSelection ({ 5, 5 }, 1000, true) == R (5, 5),
+               "resize selection: doubled from its start up to the end, halved down to one frame; an empty one stays");
+
+        // Zero crossings: a 100-frame square wave crosses at every 50th frame; ends 10 frames off
+        // move to them, an end 30 off with a reach of 20 stays.
+        juce::AudioBuffer<float> square (1, 1000);
+
+        for (int i = 0; i < 1000; ++i)
+            square.setSample (0, i, (i / 50) % 2 == 0 ? 0.5f : -0.5f);
+
+        const auto squareSnap = AudioEdits::fromBuffer (std::move (square));
+        check (AudioEdits::toZeroCrossings (squareSnap, { 110, 390 }, 20) == R (100, 400) && AudioEdits::toZeroCrossings (squareSnap, { 120, 425 }, 20) == R (100, 425)
+                   && AudioEdits::toZeroCrossings (squareSnap, { 5, 5 }, 20) == R (5, 5),
+               "selection to zero crossings: each end to the nearest crossing in reach, one with none in reach left; an empty one stays");
+        check (AudioEdits::nudgeSelection ({ 100, 300 }, 1000, true, false, 10) == R (90, 300) && AudioEdits::nudgeSelection ({ 100, 300 }, 1000, true, true, 10) == R (110, 300)
+                   && AudioEdits::nudgeSelection ({ 100, 300 }, 1000, false, false, 10) == R (100, 290) && AudioEdits::nudgeSelection ({ 100, 300 }, 1000, false, true, 10) == R (100, 310)
+                   && AudioEdits::nudgeSelection ({ 5, 300 }, 1000, true, false, 10) == R (0, 300) && AudioEdits::nudgeSelection ({ 100, 995 }, 1000, false, true, 10) == R (100, 1000)
+                   && AudioEdits::nudgeSelection ({ 100, 105 }, 1000, true, true, 10) == R (104, 105) && AudioEdits::nudgeSelection ({ 100, 105 }, 1000, false, false, 10) == R (100, 101)
+                   && AudioEdits::nudgeSelection ({ 5, 5 }, 1000, true, true, 10) == R (5, 5),
+               "nudge selection: either end by the step, stopping at the file's ends and a frame short of the other end; an empty one stays");
+        check (AudioEdits::zeroCrossingFrom (squareSnap, 110, true, 60) == 150 && AudioEdits::zeroCrossingFrom (squareSnap, 110, false, 60) == 100
+                   && AudioEdits::zeroCrossingFrom (squareSnap, 150, true, 60) == 150 && AudioEdits::zeroCrossingFrom (squareSnap, 110, true, 20) == 110
+                   && AudioEdits::zeroCrossingFrom (squareSnap, 999, true, 60) == 999
+                   && AudioEdits::zeroCrossingNear (squareSnap, 110, 20) == 100 && AudioEdits::zeroCrossingNear (squareSnap, 130, 10) == 130,
+               "zero crossing from a frame: the first one on the way asked, the frame itself when it is one or none is in reach, none past the end; the nearest one in reach");
+        auto snapped = Markers { { 110, 0, "A" }, { 425, 0, "B" }, { 210, 180, "R" }, { 150, 0, "On" }, { 2000, 0, "Past" } };
+        const auto snappedCount = AudioEdits::markersToZeroCrossings (squareSnap, snapped, 20);
+        juce::StringArray snappedText;
+
+        for (auto& m : snapped)
+            snappedText.add (m.name + "@" + juce::String (m.start) + "+" + juce::String (m.length));
+
+        check (snappedCount == 2 && snappedText.joinIntoString (" ") == "A@100+0 On@150+0 R@200+200 B@425+0 Past@2000+0",
+               "markers to zero crossings: points and both region ends to the nearest crossing in reach; ones on a crossing, out of reach or past the end left ("
+                   + snappedText.joinIntoString (" ") + ")");
+
+        // Crossfade loop over [400, 800) with 100 frames: frames up to 700 and outside the range are
+        // untouched, frame 799 becomes frame 399, and the frames in between are a blend of the two.
+        juce::AudioBuffer<float> rampUp (1, 1000);
+
+        for (int i = 0; i < 1000; ++i)
+            rampUp.setSample (0, i, (float) i / 1000.0f);
+
+        const auto rampSnap = AudioEdits::fromBuffer (juce::AudioBuffer<float> (rampUp));
+        const auto looped = readAll (*AudioEdits::crossfadeLoop (*rampSnap, 400, 800, 100));
+        auto loopKept = true;
+
+        for (int i = 0; i < 1000; ++i)
+            if (i < 700 || i >= 800)
+                loopKept = loopKept && juce::exactlyEqual (looped.getSample (0, i), rampUp.getSample (0, i));
+
+        const auto middle = looped.getSample (0, 750);
+        check (loopKept && juce::exactlyEqual (looped.getSample (0, 799), rampUp.getSample (0, 399))
+                   && ! juce::exactlyEqual (middle, rampUp.getSample (0, 750)) && ! juce::exactlyEqual (middle, rampUp.getSample (0, 350))
+                   && ! AudioEdits::crossfadeLoop (*rampSnap, 400, 800, 0) && ! AudioEdits::crossfadeLoop (*rampSnap, 400, 800, 201)
+                   && ! AudioEdits::crossfadeLoop (*rampSnap, 50, 800, 100),
+               "crossfade loop: the end blended into the audio before the start, its last frame the one before the start; bad lengths refused");
+
+        const auto repeated = readAll (*AudioEdits::repeatRange (*rampSnap, 100, 300, 3));
+        check (identical (repeated, concat ({ range (rampUp, 0, 300), range (rampUp, 100, 300), range (rampUp, 100, 300), range (rampUp, 100, 300), range (rampUp, 300, 1000) }))
+                   && ! AudioEdits::repeatRange (*rampSnap, 100, 100, 3) && ! AudioEdits::repeatRange (*rampSnap, 100, 300, 0),
+               "repeat selection: copies right after the range, bit for bit, the rest moved on; an empty range or no copies refused");
+
+        const auto loopClip = AudioEdits::copy (*rampSnap, 10, 40, 44100.0);
+        const auto filledRamp = readAll (*AudioEdits::fillWithClip (*rampSnap, 500, 600, loopClip));
+        auto expectFill = concat ({ range (rampUp, 0, 500) });
+
+        for (int i = 0; i < 3; ++i)
+            expectFill = concat ({ expectFill, range (rampUp, 10, 40) });
+
+        expectFill = concat ({ expectFill, range (rampUp, 10, 20), range (rampUp, 600, 1000) });
+        const auto tiny = AudioEdits::copy (*rampSnap, 0, 1, 44100.0);
+        juce::AudioBuffer<float> longSilence (1, (int) AudioEdits::maxFillCopies + 1);
+        longSilence.clear();
+        const auto longSnap = AudioEdits::fromBuffer (std::move (longSilence));
+        check (identical (filledRamp, expectFill) && filledRamp.getNumSamples() == rampUp.getNumSamples()
+                   && ! AudioEdits::fillWithClip (*rampSnap, 500, 500, loopClip)
+                   && AudioEdits::fillWithClip (*longSnap, 0, AudioEdits::maxFillCopies, tiny) != nullptr
+                   && ! AudioEdits::fillWithClip (*longSnap, 0, AudioEdits::maxFillCopies + 1, tiny),
+               "paste to fill: the clipboard repeated over the range, the last copy cut short, the length kept; empty or too many copies refused");
+
+        juce::AudioBuffer<float> twoRamps (2, 1000);
+
+        for (int i = 0; i < 1000; ++i)
+        {
+            twoRamps.setSample (0, i, (float) i / 1000.0f);
+            twoRamps.setSample (1, i, 0.5f - (float) i / 2000.0f);
+        }
+
+        const auto twoSnap = AudioEdits::fromBuffer (juce::AudioBuffer<float> (twoRamps));
+        const auto rightFlipped = readAll (*AudioEdits::invertChannel (*twoSnap, 200, 700, 1));
+        auto onlyRight = rightFlipped.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && onlyRight; ++i)
+            onlyRight = juce::exactlyEqual (rightFlipped.getSample (0, i), twoRamps.getSample (0, i))
+                        && juce::exactlyEqual (rightFlipped.getSample (1, i), (i >= 200 && i < 700 ? -1.0f : 1.0f) * twoRamps.getSample (1, i));
+
+        check (onlyRight && ! AudioEdits::invertChannel (*twoSnap, 0, 1000, 2) && ! AudioEdits::invertChannel (*rampSnap, 0, 1000, 1),
+               "invert one channel: only that channel's polarity flipped, only in the range; a channel the audio lacks refused");
+
+        const auto leftQuiet = readAll (*AudioEdits::silenceChannel (*twoSnap, 300, 600, 0));
+        auto onlyLeft = leftQuiet.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && onlyLeft; ++i)
+            onlyLeft = juce::exactlyEqual (leftQuiet.getSample (0, i), i >= 300 && i < 600 ? 0.0f : twoRamps.getSample (0, i))
+                       && juce::exactlyEqual (leftQuiet.getSample (1, i), twoRamps.getSample (1, i));
+
+        check (onlyLeft && ! AudioEdits::silenceChannel (*twoSnap, 0, 1000, -1) && ! AudioEdits::silenceChannel (*rampSnap, 0, 1000, 1),
+               "silence one channel: only that channel zeroed, only in the range; a channel the audio lacks refused");
+
+        const auto rightOnBoth = readAll (*AudioEdits::copyChannel (*twoSnap, 100, 900, 1, 0));
+        auto copiedOver = rightOnBoth.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && copiedOver; ++i)
+            copiedOver = juce::exactlyEqual (rightOnBoth.getSample (0, i), twoRamps.getSample (i >= 100 && i < 900 ? 1 : 0, i))
+                         && juce::exactlyEqual (rightOnBoth.getSample (1, i), twoRamps.getSample (1, i));
+
+        check (copiedOver && ! AudioEdits::copyChannel (*twoSnap, 0, 1000, 1, 1) && ! AudioEdits::copyChannel (*twoSnap, 0, 1000, 0, 2)
+                   && ! AudioEdits::copyChannel (*rampSnap, 0, 1000, 0, 1),
+               "copy one channel to the other: the target replaced in the range, the source untouched; same or missing channels refused");
+
+        // Loud 0..300, a quiet hiss 300..700, loud again: gating with 50-frame fades leaves the loud
+        // parts alone, fades the hiss out and in at its edges, and zeroes 350..650.
+        juce::AudioBuffer<float> hissy (1, 1000);
+
+        for (int i = 0; i < 1000; ++i)
+            hissy.setSample (0, i, i >= 300 && i < 700 ? 0.001f : 0.5f);
+
+        const auto hissySnap = AudioEdits::fromBuffer (juce::AudioBuffer<float> (hissy));
+        const auto gatedAll = readAll (*AudioEdits::gateQuiet (*hissySnap, 0, 1000, 0.01f, 100, 50));
+        const auto gatedPart = readAll (*AudioEdits::gateQuiet (*hissySnap, 0, 500, 0.01f, 100, 50));
+        auto gateRight = gatedAll.getNumSamples() == 1000 && gatedPart.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && gateRight; ++i)
+        {
+            const auto in = hissy.getSample (0, i);
+            const auto all = gatedAll.getSample (0, i), part = gatedPart.getSample (0, i);
+            const auto keptAll = i < 300 || i >= 700, zeroAll = i >= 350 && i < 650;
+            const auto keptPart = i < 300 || i >= 500, zeroPart = i >= 350 && i < 450;
+            gateRight = (keptAll ? juce::exactlyEqual (all, in) : zeroAll ? juce::exactlyEqual (all, 0.0f) : (all >= 0.0f && all <= in))
+                        && (keptPart ? juce::exactlyEqual (part, in) : zeroPart ? juce::exactlyEqual (part, 0.0f) : (part >= 0.0f && part <= in));
+        }
+
+        check (gateRight && ! juce::exactlyEqual (gatedAll.getSample (0, 320), 0.0f) && ! AudioEdits::gateQuiet (*hissySnap, 0, 1000, 0.0001f, 100, 50)
+                   && ! AudioEdits::gateQuiet (*hissySnap, 0, 1000, 0.01f, 500, 50),
+               "noise gate: the quiet stretch faded out and in and zeroed between, the sound around it bit for bit, the range kept to; nothing quiet enough refused");
+
+        juce::AudioBuffer<float> sameTwice (2, 1000), mirrored (2, 1000), oneDead (2, 1000);
+        oneDead.clear();
+
+        for (int i = 0; i < 1000; ++i)
+        {
+            const auto v = std::sin ((float) i * 0.05f);
+            sameTwice.setSample (0, i, v);
+            sameTwice.setSample (1, i, v);
+            mirrored.setSample (0, i, v);
+            mirrored.setSample (1, i, -v);
+            oneDead.setSample (0, i, v);
+        }
+
+        const auto corrSame = AudioEdits::stereoCorrelation (*AudioEdits::fromBuffer (std::move (sameTwice)), 0, 1000);
+        const auto corrMirror = AudioEdits::stereoCorrelation (*AudioEdits::fromBuffer (std::move (mirrored)), 0, 1000);
+        const auto corrRamps = AudioEdits::stereoCorrelation (*twoSnap, 0, 1000);
+        check (corrSame && std::abs (*corrSame - 1.0) < 1.0e-9 && corrMirror && std::abs (*corrMirror + 1.0) < 1.0e-9
+                   && corrRamps && *corrRamps > -1.0 && *corrRamps < 1.0
+                   && ! AudioEdits::stereoCorrelation (*AudioEdits::fromBuffer (std::move (oneDead)), 0, 1000)
+                   && ! AudioEdits::stereoCorrelation (*rampSnap, 0, 1000),
+               "stereo correlation: +1 for the same channels, -1 for one inverted, between for others; a dead channel or mono gives none");
+
+        // A straight line with a burst of clicks in 400..420: the repair puts the line back (to float
+        // rounding) and leaves every frame outside the range bit for bit.
+        juce::AudioBuffer<float> clicky (rampUp);
+
+        for (int i = 400; i < 420; ++i)
+            clicky.setSample (0, i, i % 2 == 0 ? 0.9f : -0.9f);
+
+        const auto clickySnap = AudioEdits::fromBuffer (std::move (clicky));
+        const auto repaired = readAll (*AudioEdits::repair (*clickySnap, 400, 420));
+        auto repairRight = repaired.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && repairRight; ++i)
+            repairRight = i >= 400 && i < 420 ? std::abs (repaired.getSample (0, i) - rampUp.getSample (0, i)) < 1.0e-6f
+                                              : juce::exactlyEqual (repaired.getSample (0, i), rampUp.getSample (0, i));
+
+        check (repairRight && ! AudioEdits::repair (*clickySnap, 1, 10) && ! AudioEdits::repair (*clickySnap, 990, 999)
+                   && ! AudioEdits::repair (*clickySnap, 500, 500) && AudioEdits::repair (*clickySnap, 2, 998) != nullptr
+                   && ! AudioEdits::repair (*longSnap, 100, 100 + AudioEdits::maxRepairFrames + 1),
+               "repair: clicks on a straight line redrawn back onto it, the frames around untouched; no room either side, empty or too long refused");
+
+        const auto edged = readAll (*AudioEdits::fadeEdges (*rampSnap, 200, 800, 100, FadeShape::linear));
+        const auto inOnly = readAll (*AudioEdits::fadeIn (*rampSnap, 200, 300, FadeShape::linear));
+        const auto outOnly = readAll (*AudioEdits::fadeOut (*rampSnap, 700, 800, FadeShape::linear));
+        auto edgesRight = edged.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && edgesRight; ++i)
+            edgesRight = juce::exactlyEqual (edged.getSample (0, i), i < 500 ? inOnly.getSample (0, i) : outOnly.getSample (0, i));
+
+        const auto shortEdged = readAll (*AudioEdits::fadeEdges (*rampSnap, 200, 210, 100, FadeShape::linear));
+        const auto shortIn = readAll (*AudioEdits::fadeIn (*rampSnap, 200, 205, FadeShape::linear));
+        check (edgesRight && juce::exactlyEqual (shortEdged.getSample (0, 202), shortIn.getSample (0, 202))
+                   && ! AudioEdits::fadeEdges (*rampSnap, 200, 800, 0) && ! AudioEdits::fadeEdges (*rampSnap, 200, 201, 100),
+               "fade selection edges: the same as a fade in at the start and a fade out at the end, each at most half the range; no fade refused");
+
+        juce::AudioBuffer<float> flat (2, 100);
+
+        for (int ch = 0; ch < 2; ++ch)
+            for (int i = 0; i < 100; ++i)
+                flat.setSample (ch, i, 1.0f);
+
+        const auto ramped = readAll (*AudioEdits::gainRamp (*AudioEdits::fromBuffer (std::move (flat)), 10, 31, 0.0f, -20.0f));
+        auto rampRight = ramped.getNumSamples() == 100;
+
+        for (int ch = 0; ch < 2 && rampRight; ++ch)
+            for (int i = 0; i < 100 && rampRight; ++i)
+                rampRight = i < 10 || i >= 31 ? juce::exactlyEqual (ramped.getSample (ch, i), 1.0f)
+                                              : std::abs (ramped.getSample (ch, i) - std::pow (10.0f, -(float) (i - 10) / 20.0f)) < 1.0e-6f;
+
+        check (rampRight && std::abs (ramped.getSample (0, 30) - 0.1f) < 1.0e-6f && std::abs (ramped.getSample (1, 20) - std::pow (10.0f, -0.5f)) < 1.0e-6f,
+               "gain ramp: from 0 dB at the first frame to -20 dB at the last, even in decibels, on every channel; the rest untouched");
+
+        // 441 Hz at 44.1 kHz: a 100-frame cycle from frame 200, full at its start, 1 - depth halfway.
+        const auto trembled = readAll (*AudioEdits::tremolo (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (rampUp)), 200, 600, 44100.0, 441.0, 0.5f));
+        auto tremoloRight = trembled.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && tremoloRight; ++i)
+        {
+            const auto expected = i < 200 || i >= 600 ? 1.0f : 1.0f - 0.5f * 0.5f * (1.0f - std::cos (juce::MathConstants<float>::twoPi * (float) (i - 200) / 100.0f));
+            tremoloRight = i < 200 || i >= 600 ? juce::exactlyEqual (trembled.getSample (0, i), rampUp.getSample (0, i))
+                                               : std::abs (trembled.getSample (0, i) - expected * rampUp.getSample (0, i)) < 1.0e-5f;
+        }
+
+        check (tremoloRight && std::abs (trembled.getSample (0, 250) - 0.5f * rampUp.getSample (0, 250)) < 1.0e-5f
+                   && juce::exactlyEqual (trembled.getSample (0, 300), rampUp.getSample (0, 300))
+                   && ! AudioEdits::tremolo (*rampSnap, 0, 1000, 44100.0, 0.0, 0.5f) && ! AudioEdits::tremolo (*rampSnap, 0, 1000, 44100.0, 5.0, 1.5f),
+               "tremolo: a raised-cosine dip by the depth once a cycle from the range's start, the rest untouched; no rate or too deep refused");
+
+        juce::AudioBuffer<float> click (2, 1000);
+        click.clear();
+        click.setSample (0, 100, 1.0f);
+        click.setSample (1, 100, -0.5f);
+        click.setSample (0, 900, 1.0f);
+        const auto echoed = readAll (*AudioEdits::echo (*AudioEdits::fromBuffer (std::move (click)), 100, 450, 100, 0.5f));
+        auto echoRight = echoed.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && echoRight; ++i)
+        {
+            const auto repeat = i >= 100 && i < 450 && (i - 100) % 100 == 0 ? std::pow (0.5f, (float) ((i - 100) / 100)) : 0.0f;
+            echoRight = juce::exactlyEqual (echoed.getSample (0, i), i == 900 ? 1.0f : repeat) && juce::exactlyEqual (echoed.getSample (1, i), -0.5f * repeat);
+        }
+
+        check (echoRight && ! AudioEdits::echo (*rampSnap, 0, 1000, 0, 0.5f) && ! AudioEdits::echo (*rampSnap, 0, 1000, 10, AudioEdits::maxEchoFeedback + 0.01f),
+               "echo: repeats every delay, each half the last, on every channel, stopping at the range's end; no delay or too much feedback refused");
+
+        const auto onlyKept = [&] (juce::int64 from, juce::int64 to)
+        {
+            const auto out = readAll (*AudioEdits::silenceOutside (*twoSnap, from, to));
+            auto right = out.getNumSamples() == 1000;
+
+            for (int ch = 0; ch < 2 && right; ++ch)
+                for (int i = 0; i < 1000 && right; ++i)
+                    right = juce::exactlyEqual (out.getSample (ch, i), i >= from && i < to ? twoRamps.getSample (ch, i) : 0.0f);
+
+            return right;
+        };
+        check (onlyKept (300, 700) && onlyKept (0, 400) && onlyKept (600, 1000) && ! AudioEdits::silenceOutside (*twoSnap, 0, 1000)
+                   && ! AudioEdits::silenceOutside (*twoSnap, 500, 500),
+               "silence outside: everything but the range zeroed, the range bit for bit, the length kept; the whole file or nothing refused");
+
+        // Regions at 0..200 (peak 0.25), 300..500 (peak 0.5), 400..600 overlapping it, and 700..800
+        // (silent): the first two are brought to -6.0206 dB (0.5), the others skipped.
+        juce::AudioBuffer<float> unevenTakes (1, 1000);
+        unevenTakes.clear();
+
+        for (int i = 0; i < 200; ++i)
+            unevenTakes.setSample (0, i, i % 2 == 0 ? 0.25f : -0.125f);
+
+        for (int i = 300; i < 600; ++i)
+            unevenTakes.setSample (0, i, i % 2 == 0 ? 0.5f : -0.25f);
+
+        auto regionsSkipped = 0;
+        const auto evened = readAll (*AudioEdits::normalizeRegions (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (unevenTakes)),
+                                                                    { { 0, 200, "A" }, { 300, 200, "B" }, { 400, 200, "Over" }, { 700, 100, "Quiet" }, { 900, 0, "Point" } },
+                                                                    juce::Decibels::gainToDecibels (0.5f), regionsSkipped));
+        auto evenRight = evened.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && evenRight; ++i)
+            evenRight = std::abs (evened.getSample (0, i) - (i < 200 ? 2.0f : 1.0f) * unevenTakes.getSample (0, i)) < 1.0e-6f;
+
+        auto noneSkipped = 0;
+        check (evenRight && regionsSkipped == 2
+                   && ! AudioEdits::normalizeRegions (*rampSnap, { { 100, 0, "Point" } }, -1.0f, noneSkipped) && noneSkipped == 0,
+               "normalize each region: each region's peak to the level on its own, the audio between untouched; overlapping and silent ones skipped");
+
+        auto fadeSkipped = 0;
+        const auto regionsFaded = readAll (*AudioEdits::fadeRegions (*rampSnap, { { 100, 200, "A" }, { 250, 100, "Over" }, { 500, 300, "B" }, { 900, 1, "Tiny" } },
+                                                                     50, FadeShape::linear, fadeSkipped));
+        const auto fadedA = readAll (*AudioEdits::fadeEdges (*rampSnap, 100, 300, 50, FadeShape::linear));
+        const auto fadedB = readAll (*AudioEdits::fadeEdges (*rampSnap, 500, 800, 50, FadeShape::linear));
+        auto regionFadesRight = regionsFaded.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && regionFadesRight; ++i)
+            regionFadesRight = juce::exactlyEqual (regionsFaded.getSample (0, i), i < 400 ? fadedA.getSample (0, i) : fadedB.getSample (0, i));
+
+        check (regionFadesRight && fadeSkipped == 2,
+               "fade each region: each region as Fade Selection Edges fades it, the rest untouched; overlapping and one-frame ones skipped");
+
+        // Reverse each region: 100..300 and 500..800 turned round in place; the overlapping one, the
+        // one-frame one and a point skipped; a region running past the end reversed up to the end.
+        auto reverseSkipped = 0;
+        const auto reversedRegions = readAll (*AudioEdits::reverseRegions (*rampSnap, { { 100, 200, "A" }, { 250, 100, "Over" }, { 500, 300, "B" },
+                                                                                         { 900, 1, "Tiny" }, { 950, 0, "Point" } },
+                                                                           reverseSkipped));
+        const auto rampIn = readAll (*rampSnap);
+        auto reversedRight = reversedRegions.getNumSamples() == rampIn.getNumSamples();
+
+        for (int i = 0; i < rampIn.getNumSamples() && reversedRight; ++i)
+        {
+            const auto from = i >= 100 && i < 300 ? 399 - i : (i >= 500 && i < 800 ? 1299 - i : i);
+            reversedRight = juce::exactlyEqual (reversedRegions.getSample (0, i), rampIn.getSample (0, from));
+        }
+
+        auto pastEndSkipped = 0, onlyOneSkipped = 0;
+        const auto total = (int) rampSnap->getNumFrames();
+        const auto pastEnd = readAll (*AudioEdits::reverseRegions (*rampSnap, { { total - 10, 50, "Tail" } }, pastEndSkipped));
+        auto tailRight = pastEnd.getNumSamples() == total;
+
+        for (int i = 0; i < total && tailRight; ++i)
+            tailRight = juce::exactlyEqual (pastEnd.getSample (0, i), rampIn.getSample (0, i >= total - 10 ? 2 * total - 11 - i : i));
+
+        check (reversedRight && reverseSkipped == 2 && tailRight && pastEndSkipped == 0
+                   && AudioEdits::reverseRegions (*rampSnap, { { 900, 1, "Tiny" } }, onlyOneSkipped) == nullptr && onlyOneSkipped == 1,
+               "reverse each region: each region turned round in place sample for sample, the rest untouched; overlapping and one-frame regions "
+               "skipped; a region running past the end reversed up to the end");
+
+        const auto panned = readAll (*AudioEdits::balanceRamp (*twoSnap, 100, 121, -1.0f, 1.0f));
+        const auto allLeft = readAll (*AudioEdits::balance (*twoSnap, 100, 121, -1.0f));
+        const auto panMiddle = readAll (*AudioEdits::balance (*twoSnap, 100, 121, 0.0f));
+        const auto allRight = readAll (*AudioEdits::balance (*twoSnap, 100, 121, 1.0f));
+        auto panRight = panned.getNumSamples() == 1000;
+
+        for (int ch = 0; ch < 2 && panRight; ++ch)
+            for (int i = 0; i < 1000 && panRight; ++i)
+                panRight = i < 100 || i >= 121 ? juce::exactlyEqual (panned.getSample (ch, i), twoRamps.getSample (ch, i))
+                         : i == 100            ? juce::exactlyEqual (panned.getSample (ch, i), allLeft.getSample (ch, i))
+                         : i == 110            ? juce::exactlyEqual (panned.getSample (ch, i), panMiddle.getSample (ch, i))
+                         : i == 120            ? juce::exactlyEqual (panned.getSample (ch, i), allRight.getSample (ch, i))
+                                               : true;
+
+        check (panRight && ! AudioEdits::balanceRamp (*rampSnap, 0, 1000, -1.0f, 1.0f),
+               "pan ramp: the first frame as Balance all left, the middle centred, the last all right, the rest untouched; mono refused");
+
+        const auto narrowed = readAll (*AudioEdits::stereoWidth (*twoSnap, 0, 500, 0.0f));
+        const auto kept = readAll (*AudioEdits::stereoWidth (*twoSnap, 0, 1000, 1.0f));
+        const auto widened = readAll (*AudioEdits::stereoWidth (*twoSnap, 0, 1000, 2.0f));
+        auto widthRight = narrowed.getNumSamples() == 1000;
+
+        for (int i = 0; i < 1000 && widthRight; ++i)
+        {
+            const auto l = twoRamps.getSample (0, i), r = twoRamps.getSample (1, i);
+            const auto mid = 0.5f * (l + r), side = 0.5f * (l - r);
+            widthRight = (i < 500 ? juce::exactlyEqual (narrowed.getSample (0, i), narrowed.getSample (1, i)) && std::abs (narrowed.getSample (0, i) - mid) < 1.0e-6f
+                                  : juce::exactlyEqual (narrowed.getSample (0, i), l) && juce::exactlyEqual (narrowed.getSample (1, i), r))
+                         && std::abs (kept.getSample (0, i) - l) < 1.0e-6f && std::abs (kept.getSample (1, i) - r) < 1.0e-6f
+                         && std::abs (widened.getSample (0, i) - (mid + 2.0f * side)) < 1.0e-6f && std::abs (widened.getSample (1, i) - (mid - 2.0f * side)) < 1.0e-6f;
+        }
+
+        check (widthRight && ! AudioEdits::stereoWidth (*rampSnap, 0, 1000, 0.5f) && ! AudioEdits::stereoWidth (*twoSnap, 0, 1000, -1.0f),
+               "stereo width: 0 makes both channels the mid, 1 keeps them, 2 doubles the side, only in the range; mono or a negative width refused");
+
+        // Silence 0..100, sound 100..300, a 50-frame gap, sound 350..500, a 20-frame gap, sound
+        // 520..800, silence to the end: with a 30-frame minimum the 20-frame gap doesn't split.
+        juce::AudioBuffer<float> takes (1, 1000);
+        takes.clear();
+
+        for (auto [from, to] : { std::pair { 100, 300 }, std::pair { 350, 500 }, std::pair { 520, 800 } })
+            for (int i = from; i < to; ++i)
+                takes.setSample (0, i, 0.5f);
+
+        const auto takesSnap = AudioEdits::fromBuffer (std::move (takes));
+        using Spans = std::vector<R>;
+        check (AudioEdits::soundsBetween (*takesSnap, 0.01f, 30, 100) == Spans { { 100, 300 }, { 350, 800 } }
+                   && AudioEdits::soundsBetween (*takesSnap, 0.01f, 10, 100) == Spans { { 100, 300 }, { 350, 500 }, { 520, 800 } }
+                   && AudioEdits::soundsBetween (*takesSnap, 0.01f, 10, 2).size() == 2
+                   && AudioEdits::soundsBetween (*takesSnap, 0.9f, 10, 100).empty()
+                   && AudioEdits::soundsBetween (*rampSnap, 0.0001f, 10, 100) == Spans { { 0, 1000 } },
+               "sounds between silences: each stretch of sound, short gaps not splitting, the silent ends left out, capped; none in silence, the whole file with no gap");
+        const auto soundFrom = [&takesSnap] (juce::int64 from) { return AudioEdits::nextSound (*takesSnap, from, 0.01f, 10); };
+        check (soundFrom (0) == R (100, 300) && soundFrom (300) == R (350, 500) && soundFrom (500) == R (520, 800) && soundFrom (150) == R (350, 500)
+                   && ! soundFrom (800) && AudioEdits::nextSound (*rampSnap, 0, 0.0001f, 10) == R (0, 1000) && ! AudioEdits::nextSound (*rampSnap, 5, 0.0001f, 10),
+               "next sound: the sound after the next silence, stepping on from each one's end; from 0 a file starting loud starts there; none after the last");
+        const auto soundBefore = [&takesSnap] (juce::int64 to) { return AudioEdits::previousSound (*takesSnap, to, 0.01f, 10); };
+        check (soundBefore (1000) == R (520, 800) && soundBefore (520) == R (350, 500) && soundBefore (350) == R (100, 300) && soundBefore (400) == R (100, 300)
+                   && ! soundBefore (100) && ! soundBefore (0) && AudioEdits::previousSound (*rampSnap, 1000, 0.0001f, 10) == R (0, 1000)
+                   && ! AudioEdits::previousSound (*rampSnap, 995, 0.0001f, 10),
+               "previous sound: the sound before the previous silence, stepping back from each one's start; at the end a file ending loud ends there; none before the first");
+
+        // Quiet stretches: in a full-level tone with gaps of 100 frames (too short), 200 frames on the
+        // left only (the right still sounds) and 70,000 frames across a block edge, only the last is quiet.
+        juce::AudioBuffer<float> gaps (2, 200000);
+
+        for (int i = 0; i < 200000; ++i)
+            for (int ch = 0; ch < 2; ++ch)
+                gaps.setSample (ch, i, (i % 2 == 0 ? 0.5f : -0.5f)
+                                           * ((i >= 1000 && i < 1100) || (ch == 0 && i >= 5000 && i < 5200) || (i >= 60000 && i < 130000) ? 0.0f : 1.0f));
+
+        const auto gapSnap = AudioEdits::fromBuffer (std::move (gaps));
+        const auto quietLevel = juce::Decibels::decibelsToGain (-60.0f);
+        check (AudioEdits::nextQuiet (*gapSnap, 0, quietLevel, 150) == juce::Range<juce::int64> (60000, 130000)
+                   && AudioEdits::nextQuiet (*gapSnap, 0, quietLevel, 100) == juce::Range<juce::int64> (1000, 1100)
+                   && ! AudioEdits::nextQuiet (*gapSnap, 130000, quietLevel, 150),
+               "find silence: the first stretch quiet on every channel for the time, across a block edge; shorter or one-sided gaps skipped");
+
+        // The middles of the pauses between sounds: of the 100-frame gap and the long one; silence
+        // leading or ending the file is no pause; the count is capped.
+        juce::AudioBuffer<float> framed (2, 300000);
+        framed.clear();
+        gapSnap->read (framed, 0, 0, 200000);
+        const auto withTail = AudioEdits::fromBuffer (std::move (framed));
+        const auto middles = AudioEdits::quietMiddles (*gapSnap, quietLevel, 100, 10);
+        const auto trailing = AudioEdits::quietMiddles (*withTail, quietLevel, 100, 10);
+        check (middles == std::vector<juce::int64> { 1050, 95000 } && trailing == middles
+                   && AudioEdits::quietMiddles (*gapSnap, quietLevel, 100, 1) == std::vector<juce::int64> { 1050 },
+               "markers at silences: the middle of each pause between sounds, none for silence ending the file, at most the count asked for");
+
+        // Shortening pauses to 60 frames: the 100-frame gap keeps 30 frames each side of the cut,
+        // the long one likewise; nothing else is cut, and the file is that much shorter.
+        const auto found = AudioEdits::pauses (*gapSnap, quietLevel, 61, 100);
+        const auto cuts = AudioEdits::pauseCuts (found, 60);
+        auto shortened = gapSnap;
+
+        for (auto cut = cuts.rbegin(); cut != cuts.rend(); ++cut)
+            shortened = AudioEdits::remove (*shortened, cut->getStart(), cut->getEnd());
+
+        const auto before = readAll (*gapSnap);
+        const auto after = readAll (*shortened);
+        const auto expected = concat ({ range (before, 0, 1030), range (before, 1070, 60030), range (before, 129970, 200000) });
+        check (cuts == std::vector<juce::Range<juce::int64>> { { 1030, 1070 }, { 60030, 129970 } } && identical (after, expected)
+                   && AudioEdits::pauseCuts (found, 1000000).empty() && AudioEdits::pauseCuts (found, 0).front() == juce::Range<juce::int64> (1000, 1100),
+               "shorten pauses: each pause longer than the time cut to it from its middle, keeping both ends; the rest untouched");
+
+        // Fitting regions: one from inside the long pause into the sound after it starts where the
+        // sound does; one inside the pause (nothing audible) and a point stay; one already tight stays.
+        Markers fitted { { 65000, 85000, "Over" }, { 70000, 1000, "Quiet" }, { 500, 0, "Point" }, { 0, 1000, "Tight" } };
+        const auto fitCount = AudioEdits::fitRegionsToSound (*gapSnap, fitted, quietLevel);
+        const auto over = std::find_if (fitted.begin(), fitted.end(), [] (const Marker& m) { return m.name == "Over"; });
+        const auto quiet = std::find_if (fitted.begin(), fitted.end(), [] (const Marker& m) { return m.name == "Quiet"; });
+        const auto tight = std::find_if (fitted.begin(), fitted.end(), [] (const Marker& m) { return m.name == "Tight"; });
+        check (fitCount == 1 && over->start == 130000 && over->getEnd() == 150000 && quiet->start == 70000 && quiet->length == 1000
+                   && tight->start == 0 && tight->length == 1000,
+               "fit regions: a region trimmed to the sound inside it; silent, point and already tight ones left alone ("
+                   + juce::String (over->start) + "+" + juce::String (over->length) + ")");
+
+        // Balance: half right lowers the left by 3 dB, the right untouched.
+        const auto balanced = readAll (*AudioEdits::balance (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (offset)), 100, 900, 0.5f));
+        const auto halfRight = SessionMixer::panGains (0.5f, 2);
+        auto balanceExact = juce::approximatelyEqual (halfRight.first, std::sqrt (0.5f)) && juce::exactlyEqual (halfRight.second, 1.0f);
+
+        for (int i = 0; i < 1000; ++i)
+        {
+            const auto inside = i >= 100 && i < 900;
+            balanceExact = balanceExact && juce::exactlyEqual (balanced.getSample (0, i), offset.getSample (0, i) * (inside ? halfRight.first : 1.0f))
+                           && juce::exactlyEqual (balanced.getSample (1, i), offset.getSample (1, i));
+        }
+
+        check (balanceExact, "balance: half right lowers the left by 3 dB inside the range, as the mixer pans a stereo clip");
+
+        juce::AudioBuffer<float> monoIn (1, 1000);
+        monoIn.copyFrom (0, 0, offset, 0, 0, 1000);
+        const auto monoOut = readAll (*AudioEdits::swapChannels (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (monoIn)), 0, 1000));
+        check (monoOut.getNumChannels() == 1 && identical (monoOut, monoIn), "swap channels: a mono file comes back unchanged");
+
+        // Inserting silence: 500 zero frames at 300, everything after moved on exactly.
+        const auto padded = readAll (*AudioEdits::insertSilence (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (offset)), 300, 500));
+        auto padExact = padded.getNumSamples() == 1500 && padded.getNumChannels() == 2;
+
+        for (int ch = 0; padExact && ch < 2; ++ch)
+            for (int i = 0; i < 1500; ++i)
+                padExact = padExact && juce::exactlyEqual (padded.getSample (ch, i), i < 300 ? offset.getSample (ch, i)
+                                                                                     : i < 800 ? 0.0f
+                                                                                               : offset.getSample (ch, i - 500));
+
+        check (padExact, "insert silence: the length of zeros at the frame, what was after it moved on exactly");
+
+        // Paste Mix: a mono clip of 0.125s added into stereo from frame 900 of 1000, the last
+        // 100 frames running past the end and lengthening the file; nothing before 900 moves.
+        juce::AudioBuffer<float> eighths (1, 200);
+
+        for (int i = 0; i < 200; ++i)
+            eighths.setSample (0, i, 0.125f);
+
+        const auto eighthClip = AudioEdits::copy (*AudioEdits::fromBuffer (std::move (eighths)), 0, 200, rate);
+        const auto mixedIn = readAll (*AudioEdits::mixClip (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (offset)), 900, eighthClip));
+        auto mixInExact = mixedIn.getNumSamples() == 1100 && mixedIn.getNumChannels() == 2;
+
+        for (int ch = 0; mixInExact && ch < 2; ++ch)
+            for (int i = 0; i < 1100; ++i)
+                mixInExact = mixInExact && juce::exactlyEqual (mixedIn.getSample (ch, i), i < 900  ? offset.getSample (ch, i)
+                                                                                         : i < 1000 ? offset.getSample (ch, i) + 0.125f
+                                                                                                    : 0.125f);
+
+        check (mixInExact, "paste mix: the clip added from the frame on, the file lengthened by what runs past its end");
+
+        // The audible span: zeros and a quiet 0.0005 hiss around frames 100k to 200k, found exactly
+        // across block boundaries; on the second channel only at the end; nothing in pure silence.
+        juce::AudioBuffer<float> padding (2, 300000);
+        padding.clear();
+
+        for (int i = 0; i < 300000; ++i)
+            padding.setSample (0, i, i % 2 == 0 ? 0.0005f : -0.0005f);
+
+        padding.setSample (0, 100000, 0.5f);
+        padding.setSample (1, 200000, -0.5f);
+        const auto threshold = juce::Decibels::decibelsToGain (-60.0f);
+        const auto span = AudioEdits::audibleRange (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (padding)), threshold);
+        check (span && span->getStart() == 100000 && span->getEnd() == 200001,
+               "audible range: the first and last frame above the level on any channel, across blocks");
+        const auto paddingSnap = AudioEdits::fromBuffer (juce::AudioBuffer<float> (padding));
+        check (AudioEdits::audibleRange (*paddingSnap, 150000, 250000, threshold) == juce::Range<juce::int64> (200000, 200001)
+                   && AudioEdits::audibleRange (*paddingSnap, 50000, 250000, threshold) == span
+                   && ! AudioEdits::audibleRange (*paddingSnap, 100001, 200000, threshold) && ! AudioEdits::audibleRange (*paddingSnap, 5, 5, threshold),
+               "audible range in a range: only the sound inside it, in document frames; none in a quiet or empty range");
+        check (AudioEdits::withMargins ({ 1000, 2000 }, 500, 10000) == juce::Range<juce::int64> (500, 2500)
+                   && AudioEdits::withMargins ({ 200, 9900 }, 500, 10000) == juce::Range<juce::int64> (0, 10000)
+                   && AudioEdits::withMargins ({ 1000, 2000 }, -5, 10000) == juce::Range<juce::int64> (1000, 2000),
+               "crop margins: the range widened either side, kept inside the file; a negative margin adds nothing");
+
+        juce::AudioBuffer<float> hush (2, 70000);
+        hush.clear();
+        check (! AudioEdits::audibleRange (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (hush)), threshold),
+               "audible range: nothing in pure silence");
+
+        // Channel conversion over more than one block: left 0.5 and right 0.25 average to 0.375,
+        // and mono copied to two channels is the same on both.
+        juce::AudioBuffer<float> pair (2, 70000);
+
+        for (int i = 0; i < 70000; ++i)
+        {
+            pair.setSample (0, i, 0.5f);
+            pair.setSample (1, i, 0.25f);
+        }
+
+        const auto mixed = AudioEdits::convertChannels (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (pair)), 1);
+        const auto mixedOut = readAll (*mixed);
+        auto mixExact = mixed->getNumChannels() == 1 && mixed->getNumFrames() == 70000;
+
+        for (int i = 0; mixExact && i < 70000; ++i)
+            mixExact = juce::exactlyEqual (mixedOut.getSample (0, i), 0.375f);
+
+        check (mixExact, "mix to mono: every frame the channels' average, over more than one block");
+
+        const auto spread = readAll (*AudioEdits::convertChannels (*mixed, 2));
+        auto spreadExact = spread.getNumChannels() == 2 && spread.getNumSamples() == 70000;
+
+        for (int i = 0; spreadExact && i < 70000; ++i)
+            spreadExact = juce::exactlyEqual (spread.getSample (0, i), 0.375f) && juce::exactlyEqual (spread.getSample (1, i), 0.375f);
+
+        check (spreadExact, "make stereo: the one channel on both");
+
+        AudioDocument converted;
+        converted.reset (AudioEdits::fromBuffer (juce::AudioBuffer<float> (pair)), rate, {}, 24);
+        converted.apply (AudioEdits::convertChannels (*converted.getSnapshot(), 1), "Mix to Mono");
+        const auto monoAfter = converted.getNumChannels() == 1;
+        converted.undo();
+        check (monoAfter && converted.getNumChannels() == 2 && identical (readAll (*converted.getSnapshot()), pair),
+               "mix to mono in a document: one channel, and undo brings both back bit-identically");
+
+        auto faded = readAll (*AudioEdits::fadeIn (*original, 1000, 2000));
+        check (faded.getSample (0, 1000) == 0.0f && faded.getSample (0, 1999) == signal.getSample (0, 1999)
+                   && faded.getSample (0, 999) == signal.getSample (0, 999),
+               "fade in starts at zero, ends at full level and leaves the rest alone");
+
+        // Shapes: five frames at full level, faded in linearly and out with a slow start.
+        juce::AudioBuffer<float> ones (1, 5);
+
+        for (int i = 0; i < 5; ++i)
+            ones.setSample (0, i, 1.0f);
+
+        const auto ramp = AudioEdits::fromBuffer (juce::AudioBuffer<float> (ones));
+        const auto linearIn = readAll (*AudioEdits::fadeIn (*ramp, 0, 5, FadeShape::linear));
+        const auto slowOut = readAll (*AudioEdits::fadeOut (*ramp, 0, 5, FadeShape::slow));
+        auto shapesExact = true;
+
+        for (int i = 0; i < 5; ++i)
+        {
+            const auto t = (float) i / 4.0f;
+            shapesExact = shapesExact && juce::exactlyEqual (linearIn.getSample (0, i), t)
+                          && juce::exactlyEqual (slowOut.getSample (0, i), (1.0f - t) * (1.0f - t));
+        }
+
+        check (shapesExact, "fade shapes: a linear fade in is 0, 0.25 ... 1 and a slow fade out 1, 0.5625 ... 0, exactly");
+
+        auto silenced = readAll (*AudioEdits::silence (*original, 10, 20));
+        check (silenced.getSample (1, 9) == signal.getSample (1, 9) && silenced.getSample (1, 10) == 0.0f
+                   && silenced.getSample (1, 19) == 0.0f && silenced.getSample (1, 20) == signal.getSample (1, 20),
+               "silence touches exactly its range");
+
+        // A mono clip pasted into stereo lands on both channels.
+        juce::AudioBuffer<float> mono (1, 100);
+        for (int i = 0; i < 100; ++i)
+            mono.setSample (0, i, (float) i / 100.0f);
+
+        AudioClip monoClip { 1, rate, AudioEdits::fromBuffer (juce::AudioBuffer<float> (mono))->getSegments() };
+        auto pasted = readAll (*AudioEdits::replaceWithClip (*original, 0, 0, monoClip));
+        check (pasted.getNumSamples() == n + 100 && pasted.getSample (0, 50) == 0.5f && pasted.getSample (1, 50) == 0.5f
+                   && pasted.getSample (0, 100) == signal.getSample (0, 0),
+               "mono paste into stereo goes to both channels");
+
+        auto down = AudioEdits::matchChannels (signal, 1);
+        check (std::abs (down.getSample (0, 7) - 0.5f * (signal.getSample (0, 7) + signal.getSample (1, 7))) < 1.0e-7f,
+               "stereo to mono averages the channels");
+    }
+
+    void testFiles (AudioEngine& engine)
+    {
+        const auto signal = makeSignal();
+        const auto snap = AudioEdits::fromBuffer (juce::AudioBuffer<float> (signal));
+        const juce::TemporaryFile wavFloat (".wav"), wav24 (".wav"), wav16 (".wav"), flac (".flac");
+
+        struct Case { const juce::TemporaryFile* file; int bits; float tolerance; };
+
+        // Float is exact. Integer formats allow 1 LSB of dither, half an LSB of rounding, and up to
+        // |sample| LSB because integers are written scaled by 2^(n-1) - 1 but read back as / 2^(n-1).
+        const auto peak = AudioEdits::peakLevel (*snap, 0, snap->getNumFrames());
+        auto lsbs = [peak] (int bits) { return (1.5f + peak) / (float) (1 << (bits - 1)); };
+
+        for (auto c : { Case { &wavFloat, 32, 0.0f },
+                        Case { &wav24, 24, lsbs (24) },
+                        Case { &wav16, 16, lsbs (16) },
+                        Case { &flac, 24, lsbs (24) } })
+        {
+            const auto& file = c.file->getFile();
+            const auto error = AudioFileIO::save (*snap, rate, file, c.bits, engine.formatManager);
+            const auto loaded = AudioFileIO::load (file, engine.formatManager);
+            const auto diff = loaded.snapshot != nullptr ? maxDifference (readAll (*loaded.snapshot), signal)
+                                                         : std::numeric_limits<float>::infinity();
+
+            check (error.isEmpty() && loaded.error.isEmpty() && loaded.sampleRate == rate && loaded.bitDepth == c.bits
+                       && diff <= c.tolerance,
+                   file.getFileExtension() + " " + juce::String (c.bits) + "-bit round trip (max error "
+                       + juce::String (diff * (c.bits == 32 ? 1.0f : (float) (1 << (c.bits - 1))), 2)
+                       + (c.bits == 32 ? "" : " LSB") + ")");
+        }
+
+        check (AudioFileIO::save (*snap, rate, wav16.getFile().withFileExtension ("xyz"), 16, engine.formatManager).isNotEmpty(),
+               "saving to an unknown extension reports an error");
+
+        // Files from Finder or a command line: every type offered has a reader, and only existing files by full path are taken.
+        {
+            auto everyTypeRead = true;
+
+            for (auto& ext : AudioFileIO::openedFromFinder)
+                everyTypeRead = everyTypeRead && engine.formatManager.findFormatForFileExtension (ext) != nullptr;
+
+            const juce::TemporaryFile spaced ("with space.wav");
+            spaced.getFile().replaceWithText ("x");
+            const auto path = spaced.getFile().getFullPathName();
+            const auto files = AudioFileIO::filesIn ("-psn_0_12345 \"" + path + "\" relative.wav /no/such/file.wav \"" + path + "\"");
+            check (everyTypeRead && files.size() == 1 && files[0] == spaced.getFile(),
+                   "opening from Finder: every audio type the app offers to open has a reader; an open request keeps only existing files named by "
+                   "full path (quoted, with spaces), once each");
+        }
+
+        // Saving a selection: only its frames, bit for bit as float, and its markers moved to start from 0.
+        const juce::TemporaryFile part (".wav");
+        const Markers marks { { 500, 0, "before" }, { 1500, 0, "inside" }, { 1800, 400, "across" } };
+        const auto partError = AudioFileIO::saveRange (*snap, rate, 1000, 2000, part.getFile(), 32, engine.formatManager, marks);
+        const auto partLoaded = AudioFileIO::load (part.getFile(), engine.formatManager);
+        const auto partMarks = partLoaded.markers;
+        check (partError.isEmpty() && partLoaded.snapshot != nullptr
+                   && identical (readAll (*partLoaded.snapshot), range (signal, 1000, 2000))
+                   && partMarks.size() == 2 && partMarks[0].start == 500 && partMarks[0].name == "inside"
+                   && partMarks[1].start == 800 && partMarks[1].length == 200 && partMarks[1].name == "across",
+               "save selection: only the selection's frames, and the markers in it from frame 0");
+    }
+
+    void testPlaybackSource()
+    {
+        AudioDocument doc;
+        juce::AudioBuffer<float> mono (1, 1000);
+
+        for (int i = 0; i < 1000; ++i)
+            mono.setSample (0, i, (float) (i + 1));
+
+        doc.reset (AudioEdits::fromBuffer (std::move (mono)), rate, {}, 24);
+        DocumentSource source (doc);
+        source.setNextReadPosition (100);
+        source.setStopFrame (150);
+
+        juce::AudioBuffer<float> out (2, 64);
+        source.getNextAudioBlock (juce::AudioSourceChannelInfo (&out, 0, 64));
+
+        check (out.getSample (0, 0) == 101.0f && out.getSample (1, 0) == 101.0f && out.getSample (0, 49) == 150.0f
+                   && out.getSample (0, 50) == 0.0f && out.getSample (1, 63) == 0.0f && source.getNextReadPosition() == 164,
+               "playback reads from the cursor, doubles mono and stops at the range end");
+
+        // An edit while playing is picked up on the next block.
+        doc.apply (AudioEdits::silence (*doc.getSnapshot(), 0, 1000), "Silence");
+        source.setNextReadPosition (0);
+        source.setStopFrame (-1);
+        source.getNextAudioBlock (juce::AudioSourceChannelInfo (&out, 0, 64));
+        check (out.getMagnitude (0, 64) == 0.0f, "playback follows edits");
+    }
+
+    void testReadPastEnd()
+    {
+        AudioDocument doc;
+        juce::AudioBuffer<float> stereo (2, 1000);
+
+        for (int i = 0; i < 1000; ++i)
+            for (int ch = 0; ch < 2; ++ch)
+                stereo.setSample (ch, i, (float) (i + 1));
+
+        doc.reset (AudioEdits::fromBuffer (std::move (stereo)), rate, {}, 24);
+        const auto snapshot = doc.getSnapshot();
+
+        // Only the frames asked for are written: the file's end, then silence; nothing before them.
+        const auto untouchedBefore = [] (const juce::AudioBuffer<float>& b, int end)
+        {
+            for (int ch = 0; ch < b.getNumChannels(); ++ch)
+                for (int i = 0; i < end; ++i)
+                    if (b.getSample (ch, i) != 7.0f)
+                        return false;
+            return true;
+        };
+
+        juce::AudioBuffer<float> out (2, 400);
+        for (int ch = 0; ch < 2; ++ch)
+            juce::FloatVectorOperations::fill (out.getWritePointer (ch), 7.0f, 400);
+        snapshot->read (out, 200, 1050, 100);
+        const auto pastEnd = untouchedBefore (out, 200) && out.getMagnitude (200, 100) == 0.0f && out.getSample (0, 300) == 7.0f;
+
+        for (int ch = 0; ch < 2; ++ch)
+            juce::FloatVectorOperations::fill (out.getWritePointer (ch), 7.0f, 400);
+        snapshot->read (out, 10, 950, 100);
+        const auto across = untouchedBefore (out, 10) && out.getSample (0, 10) == 951.0f && out.getSample (1, 59) == 1000.0f
+                            && out.getMagnitude (60, 50) == 0.0f && out.getSample (1, 110) == 7.0f;
+
+        DocumentSource source (doc);
+        source.setNextReadPosition (1200);
+        for (int ch = 0; ch < 2; ++ch)
+            juce::FloatVectorOperations::fill (out.getWritePointer (ch), 7.0f, 400);
+        source.getNextAudioBlock (juce::AudioSourceChannelInfo (&out, 100, 64));
+        const auto sourcePast = untouchedBefore (out, 100) && out.getMagnitude (100, 64) == 0.0f && out.getSample (0, 164) == 7.0f;
+
+        check (pastEnd && across && sourcePast,
+               "reading past a file's end writes silence only where asked: from past the end, across it, and from the playback source");
+
+        // Playing to the end through a transport that converts the rate, as the player does, its
+        // resampler asks for blocks that start past the end; they come back silent and in place.
+        struct Watched final : juce::PositionableAudioSource
+        {
+            explicit Watched (DocumentSource& s, juce::int64 total) : inner (s), length (total) {}
+            void prepareToPlay (int, double) override {}
+            void releaseResources() override {}
+            void getNextAudioBlock (const juce::AudioSourceChannelInfo& info) override
+            {
+                if (inner.getNextReadPosition() > length)
+                    ++pastEndReads;
+                inner.getNextAudioBlock (info);
+            }
+            void setNextReadPosition (juce::int64 p) override   { inner.setNextReadPosition (p); }
+            juce::int64 getNextReadPosition() const override     { return inner.getNextReadPosition(); }
+            juce::int64 getTotalLength() const override          { return inner.getTotalLength(); }
+            bool isLooping() const override                      { return false; }
+            DocumentSource& inner;
+            juce::int64 length;
+            int pastEndReads = 0;
+        };
+
+        int pastEndReads = 0, blocks = 0;
+        bool silentAfter = true;
+
+        for (const auto deviceRate : { 44100.0, 48000.0, 96000.0 })
+            for (const auto block : { 64, 100, 480, 512 })
+            {
+                DocumentSource played (doc);
+                Watched watched (played, 1000);
+                juce::AudioTransportSource transport;
+                transport.setSource (&watched, 0, nullptr, rate, 2);
+                transport.prepareToPlay (block, deviceRate);
+                transport.start();
+                juce::AudioBuffer<float> device (2, block);
+
+                for (int i = 0; i < 4000 / block + 8; ++i, ++blocks)
+                {
+                    transport.getNextAudioBlock (juce::AudioSourceChannelInfo (&device, 0, block));
+
+                    if (! transport.isPlaying() && device.getMagnitude (0, block) != 0.0f && i > 4000 / block)
+                        silentAfter = false;
+                }
+
+                pastEndReads += watched.pastEndReads;
+                transport.setSource (nullptr);
+            }
+
+        check (pastEndReads > 0 && silentAfter,
+               "playing a file to its end through the rate-converting transport reads past its end ("
+                   + juce::String (pastEndReads) + " of " + juce::String (blocks) + " blocks) and stays silent after");
+    }
+
+    void testOfflineRender (AudioEngine& engine)
+    {
+        const auto signal = makeSignal (48000);
+        juce::XmlElement emptyRack ("TORQWAVE_RACK");
+        auto audio = signal;
+        const auto error = OfflineRender::processThroughRack (emptyRack, engine.pluginFormatManager, rate, audio, {});
+        check (error.isEmpty() && identical (audio, signal), "rendering through an empty rack changes nothing");
+
+       #if ! JUCE_MAC
+        return;   // AUDelay is an Audio Unit, which only the Mac has
+       #endif
+
+        // Apple's AUDelay, created and run off the message thread as in the app.
+        juce::AudioPluginFormat* au = nullptr;
+
+        for (auto* f : engine.pluginFormatManager.getFormats())
+            if (f->getName() == "AudioUnit")
+                au = f;
+
+        juce::OwnedArray<juce::PluginDescription> types;
+
+        if (au != nullptr)
+            au->findAllTypesForFile (types, "AudioUnit:Effects/aufx,dely,appl");
+
+        if (types.isEmpty())
+        {
+            check (false, "Apple AUDelay is available for the render test");
+            return;
+        }
+
+        juce::XmlElement rack ("TORQWAVE_RACK");
+        auto* slot = rack.createNewChildElement ("SLOT");
+        slot->addChildElement (types[0]->createXml().release());
+
+        auto* bypassed = rack.createNewChildElement ("SLOT");
+        bypassed->setAttribute ("bypassed", true);
+        bypassed->addChildElement (types[0]->createXml().release());
+
+        audio = signal;
+        std::atomic<bool> done { false };
+        juce::String renderError;
+        float lastProgress = 0.0f;
+
+        std::thread worker ([&]
+        {
+            renderError = OfflineRender::processThroughRack (rack, engine.pluginFormatManager, rate, audio,
+                                                             [&] (float p) { lastProgress = p; return true; });
+            done = true;
+        });
+
+        TestUtils::runUntil ([&] { return done.load(); }, 60000);
+        worker.join();
+
+        bool finite = true;
+        for (int ch = 0; ch < audio.getNumChannels(); ++ch)
+            for (int i = 0; i < audio.getNumSamples(); ++i)
+                finite = finite && std::isfinite (audio.getSample (ch, i));
+
+        check (renderError.isEmpty() && audio.getNumSamples() == signal.getNumSamples() && audio.getNumChannels() == 2
+                   && finite && maxDifference (audio, signal) > 0.01f && lastProgress == 1.0f,
+               "rendering through AUDelay (bypassed slot skipped) keeps length and changes the sound"
+                   + (renderError.isEmpty() ? juce::String() : ": " + renderError));
+
+        // Let the instances be destroyed on the message thread.
+        TestUtils::runUntil ([] { return false; }, 200);
+    }
+}
+
+void runDocumentTests (AudioEngine& engine)
+{
+    testEditsAndUndo();
+    testEffects();
+    testFiles (engine);
+    testPlaybackSource();
+    testReadPastEnd();
+    testOfflineRender (engine);
+}

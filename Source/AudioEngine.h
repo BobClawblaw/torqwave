@@ -1,0 +1,611 @@
+#pragma once
+
+#include <JuceHeader.h>
+#include "Scrubber.h"
+#include "AudioDocument.h"
+#include "AudioFileIO.h"
+#include "Recorder.h"
+#include "Session.h"
+#include "TrackEffects.h"
+#include "MidiInput.h"
+
+//==============================================================================
+/** Reads the document's current snapshot for playback. Picks up edits on the fly. */
+class DocumentSource final : public juce::PositionableAudioSource
+{
+public:
+    explicit DocumentSource (AudioDocument& doc) : document (doc) {}
+
+    /** Frames from this one onwards play as silence (-1 = play to the end). */
+    void setStopFrame (juce::int64 frame)                     { stopFrame = frame; }
+
+    /** Plays [start, end) over and over once it gets there (end <= start: no loop). */
+    void setLoop (juce::int64 start, juce::int64 end)         { loopStart = start; loopEnd = end; }
+    std::pair<juce::int64, juce::int64> getLoop() const noexcept { return { loopStart.load(), loopEnd.load() }; }
+
+    /** Frames of silence played on past the end, so effects after the player with latency empty
+        out (DocumentPlayerProcessor::setOutputLatency). */
+    void setTail (juce::int64 frames)                         { tail = frames; }
+
+    /** A file with more than two channels: -1 folds 5.1 down to the first two channels (others play
+        their first two); otherwise its channels after the first two go to the buffer's channels from
+        this one on, one each, up to Surround::maxPlayedChannels in all. */
+    void setSeparateOutputs (int firstChannel)                { separateFirst = firstChannel; }
+
+    /** Plays this audio in place of the document's until set to nullptr (a rendered effect
+        preview: the document with part of it processed). Message thread. */
+    void setStandIn (AudioDocument::Snapshot);
+    bool hasStandIn() const noexcept                          { return standInSet.load(); }
+
+    void prepareToPlay (int blockSize, double) override;
+    void releaseResources() override                          {}
+    void getNextAudioBlock (const juce::AudioSourceChannelInfo&) override;
+
+    void setNextReadPosition (juce::int64 frame) override    { position = frame; }
+    juce::int64 getNextReadPosition() const override         { return position; }
+    juce::int64 getTotalLength() const override;
+    bool isLooping() const override                           { return false; }
+
+private:
+    AudioDocument& document;
+    AudioDocument::Snapshot snapshot;      // audio thread's own reference
+    juce::uint32 snapshotVersion = 0;
+    juce::SpinLock standInLock;
+    AudioDocument::Snapshot standIn;       // guarded by the lock
+    std::atomic<juce::uint32> standInVersion { 0 };
+    std::atomic<bool> standInSet { false };
+    juce::uint32 takenStandIn = 0;         // audio thread: the stand-in version taken
+    AudioDocument::Snapshot heldStandIn;   // audio thread's own reference to it
+    AudioDocument::Snapshot played;        // audio thread: what this block plays
+    std::atomic<juce::int64> position { 0 }, stopFrame { -1 }, loopStart { 0 }, loopEnd { 0 }, tail { 0 };
+    std::atomic<int> separateFirst { -1 };
+    juce::AudioBuffer<float> wide;         // a file past stereo is read through this
+
+    void readRun (juce::AudioBuffer<float>&, int destStart, juce::int64 start, int numFrames);
+    void readWide (juce::AudioBuffer<float>&, int destStart, juce::int64 start, int numFrames);
+};
+
+//==============================================================================
+/** Mixes the session for playback, through each track's effects. Picks up edits on the fly. */
+class SessionSource final : public juce::PositionableAudioSource
+{
+public:
+    static constexpr int scrubChunk = 4096;   // frames of the mix rendered at a time for scrubbing
+    static constexpr int scrubWarmUp = 4096;  // frames run through the effects before a window scrubbed backwards or jumped to
+
+    SessionSource (Session& s, SessionMixer::Inserts& i) : session (s), inserts (i) {}
+
+    /** Frames from this one onwards play as silence (-1 = play to the end). */
+    void setStopFrame (juce::int64 frame)                     { stopFrame = frame; }
+
+    /** Plays [start, end) over and over once it gets there (end <= start: no loop). */
+    void setLoop (juce::int64 start, juce::int64 end)         { loopStart = start; loopEnd = end; }
+
+    /** Frames of silence played on past the end (see DocumentSource::setTail). */
+    void setTail (juce::int64 frames)                         { tail = frames; }
+
+    /** Input monitoring, on the audio thread before each block: this cycle's input, its channels
+        going to the tracks the layout says (none: off). It is kept in order, so however the
+        transport's resampler splits its reads, the input plays through as one stream. */
+    void feedLive (const SessionMixer::Live& layout, const juce::AudioBuffer<float>& input, int numFrames);
+
+    /** While stopped: the live input alone (the clips silent) through the session at the cursor. */
+    void renderLive (const juce::AudioSourceChannelInfo&);
+
+    /** While stopped, with no live input: the clips silent through the session at the cursor, so
+        an instrument played live sounds. */
+    void renderIdle (const juce::AudioSourceChannelInfo&);
+
+    /** Scrubbing the stopped session: adds the scrubber's sound of the mix to the first two channels
+        of the buffer's first numFrames. The mix is the clips through their tracks' volume, pan,
+        polarity, mute and solo, buses and folders, and with effects true their track and bus
+        effects; a frozen track plays its frozen audio, effects and all; a surround master is
+        folded down.
+
+        With effects, the mix is rendered on from where it was last rendered while the head moves
+        forward, so the effects run through it unbroken, as when playing from where the scrub
+        started. Where the head goes back, or jumps more than scrubWarmUp frames ahead, the effects
+        are reset and run over the scrubWarmUp frames before it first: effects whose memory is
+        shorter than that (filters, short look-ahead) sound as when played, longer ones (reverb
+        tails, slow release) only with what that much of the mix leaves in them. Playing after
+        scrubbing starts them afresh. Audio thread. */
+    void scrub (Scrubber&, double deviceRate, juce::AudioBuffer<float>&, int numFrames, bool effects = true);
+
+    /** Meters the tracks and buses into these levels as it mixes. */
+    void setLevels (SessionMixer::Levels* levels)             { buffers.levels = levels; }
+
+    /** The channel a 5.1 master's C goes to, then LFE, Ls and Rs (see SessionMixer::Buffers),
+        or -1 to fold it down. */
+    void setSurroundChannel (int first)                       { surroundChannel = first; }
+
+    /** The loop set by setLoop (start, end; end <= start: none). */
+    std::pair<juce::int64, juce::int64> getLoop() const noexcept { return { loopStart.load(), loopEnd.load() }; }
+
+    /** Counts the blocks the transport has asked for (audio thread). */
+    int getBlocksRead() const noexcept                         { return blocksRead; }
+
+    void prepareToPlay (int blockSize, double) override;
+    void releaseResources() override                          {}
+    void getNextAudioBlock (const juce::AudioSourceChannelInfo&) override;
+
+    void setNextReadPosition (juce::int64 frame) override    { position = frame; }
+    juce::int64 getNextReadPosition() const override         { return position; }
+    /** The session's length, or the stop frame when that is later (recording past the end). */
+    juce::int64 getTotalLength() const override              { return juce::jmax (session.getState()->getLength(), stopFrame.load()) + tail.load(); }
+    bool isLooping() const override                           { return false; }
+
+private:
+    Session& session;
+    SessionMixer::Inserts& inserts;
+    Session::State state;                  // audio thread's own reference
+    juce::uint32 stateVersion = 0;
+    SessionMixer::Buffers buffers, scrubBuffers;
+    juce::AudioBuffer<float> scrubMix;          // the mix with effects rendered for scrubbing: frames [scrubFrom, scrubTo)
+    juce::int64 scrubFrom = 0, scrubTo = -1;    // scrubTo < scrubFrom: none, the effects to be primed
+    const SessionState* scrubState = nullptr;   // the state it was rendered from
+    juce::int64 nextFrame = -1;            // where the last block ended; anything else is a jump
+    std::atomic<juce::int64> position { 0 }, stopFrame { -1 }, loopStart { 0 }, loopEnd { 0 }, tail { 0 };
+    std::atomic<int> surroundChannel { -1 };
+
+    // Input monitoring (audio thread): a FIFO of input frames, and a block taken from it.
+    SessionMixer::Live live;
+    int liveRead = 0, liveCount = 0, blocksRead = 0;
+    juce::AudioBuffer<float> liveRing, liveBlock;
+
+    void refreshState();
+    const SessionMixer::Live* takeLive (int numFrames, bool clips);
+    void renderRun (juce::int64 start, const juce::AudioSourceChannelInfo&, int destStart, int numFrames);
+};
+
+//==============================================================================
+/** Plays the document, or the multitrack session, as the source node of the processing graph. */
+class DocumentPlayerProcessor final : public juce::AudioProcessor
+{
+public:
+    /** The live MIDI the session's instruments hear (the engine's); without one, its own, idle. */
+    DocumentPlayerProcessor (AudioDocument&, Session&, SessionMixer::Inserts&, MidiIn::Live* = nullptr);
+    ~DocumentPlayerProcessor() override;
+
+    enum class Mode { document, session };
+
+    /** Switches between playing the document and the session; stops and goes to the start. */
+    void setMode (Mode);
+    Mode getMode() const noexcept                 { return mode; }
+
+    /** A document past stereo plays its channels after the first two to these player channels
+        (see DocumentSource::setSeparateOutputs), and a session's 5.1 master its C, LFE, Ls and Rs;
+        or -1 to fold 5.1 down. Turning it on or off stops playback. */
+    void setSeparateOutputs (int firstChannel);
+
+    /** Call after the document or session is replaced (its sample rate may have changed). */
+    void resetSource();
+
+    /** The rate the player was last set up for. */
+    double getSourceRate() const noexcept         { return sourceRate; }
+
+    /** Plays from start; stops by itself at stopFrame (-1 = the end). */
+    void play (juce::int64 startFrame, juce::int64 stopFrame);
+
+    /** Moves where the play stops by itself (-1 = the end) while it goes on: a loop that follows
+        a selection moves the stop to the selection's new end, so the sound carries on past the old one. */
+    void setStopFrame (juce::int64 frame)         { stopAt = frame; source.setStopFrame (frame); sessionSource.setStopFrame (frame); }
+
+    /** Plays [start, end) of the document or session over and over once it gets there, until
+        clearLoop() or the mode changes. The played frame keeps counting on through each pass, so
+        frame f of pass k (from 0) is played frame f + k * (end - start). */
+    void setLoop (juce::int64 start, juce::int64 end)      { source.setLoop (start, end); sessionSource.setLoop (start, end); }
+
+    /** Plays this audio in place of the document (see DocumentSource::setStandIn); nullptr: the document. */
+    void setStandIn (AudioDocument::Snapshot s)            { source.setStandIn (std::move (s)); }
+    bool hasStandIn() const noexcept                       { return source.hasStandIn(); }
+    void clearLoop()                                       { setLoop (0, 0); }
+    void pause()                                  { transport.stop(); }
+    bool isPlaying() const                        { return transport.isPlaying(); }
+    juce::int64 getPositionFrames() const;
+    void setPositionFrames (juce::int64);
+    juce::int64 getStopFrame() const noexcept     { return stopAt; }
+
+    /** How late the sound leaves after the player, in device frames: the latency of the effects it
+        plays through (the preview and the rack), set by the engine as the graph reports it. The
+        sources then play silence on that much past the end, so the effects empty out before the
+        transport stops. */
+    void setOutputLatency (int deviceFrames);
+    int getOutputLatency() const noexcept         { return outputLatency.load(); }
+
+    /** How long the device holds the sound before it is heard, in device frames (set by the engine
+        when the device starts). Only the playhead allows for it: the tail doesn't need to. */
+    void setDeviceLatency (int deviceFrames)      { deviceLatency = juce::jmax (0, deviceFrames); }
+
+    /** The document or session frame sounding now: the frames played since play() began (round the
+        loop, like the played frame) less the output latency; the start itself while the effects
+        are still filling. What the playhead and the transport's time show. */
+    juce::int64 getHeardFrame() const;
+
+    /** The metronome: while the session plays, a click on each beat of its tempo (accented on the
+        first beat of each bar) goes out on the player's second output, Click (channels 2 and 3),
+        which skips the effects rack. It follows the loop. Needs the device at the session's rate. */
+    void setMetronome (bool on)                   { metronome = on; }
+    bool isMetronomeOn() const noexcept           { return metronome.load(); }
+
+    /** A count-in: clicks before this session frame even with the metronome off (-1: none). */
+    void setCountIn (juce::int64 endFrame)        { countInEnd = endFrame; }
+
+    /** Auditioning a file before it is opened: plays it once from its start, as it is (at its own
+        rate, converted to the device's), on the second output with the click, so it skips the
+        effects rack and leaves the document or session where it was. nullptr stops it. */
+    void audition (std::unique_ptr<juce::AudioFormatReader>);
+    bool isAuditioning() const                    { return auditioner.isPlaying(); }
+
+    /** Scrubbing the document, or the session (SessionSource::scrub), while it is stopped (see
+        Scrubber): its sound goes out as the mix, through the effects rack. Playing, it is silent. */
+    Scrubber& getScrubber() noexcept              { return scrubber; }
+
+    /** The session's tracks' and buses' levels as they play, by their place in the session. */
+    SessionMixer::Levels& getLevels() noexcept    { return levels; }
+
+    /** A track and the inputs it monitors: 1 or 2 from firstInput, numbered as the device
+        callback numbers its (active) inputs. */
+    struct MonitoredTrack
+    {
+        juce::uint32 trackId = 0;
+        int firstInput = 0, numInputs = 0;
+    };
+
+    /** Input monitoring: in session mode, each of these tracks plays its inputs (given each cycle
+        by setMonitorInput), joining its clips before its effects, while playing or stopped. Needs
+        the device at the session's rate. Up to SessionMixer::Live::maxTracks; none: off. */
+    void setMonitoredTracks (const std::vector<MonitoredTrack>&);
+
+    /** On the audio thread, before the block of the same device cycle is processed: the device
+        callback's inputs. */
+    void setMonitorInput (const float* const* inputs, int numInputs, int numFrames);
+
+    /** The document frame after the last one sent to the output while playing. The audio thread
+        advances it by each block it plays, so a recorder running later in the same device cycle can
+        tell which frames went out (the resampler reads a few frames ahead of the source position).
+        Counts device frames, which are document frames only when the two rates match. */
+    const std::atomic<juce::int64>& getPlayedFrame() const noexcept { return playedFrame; }
+
+    //==============================================================================
+    const juce::String getName() const override   { return "Document Player"; }
+    void prepareToPlay (double sampleRate, int blockSize) override;
+    void releaseResources() override;
+    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+
+    double getTailLengthSeconds() const override  { return 0.0; }
+    bool acceptsMidi() const override             { return false; }
+    bool producesMidi() const override            { return false; }
+    juce::AudioProcessorEditor* createEditor() override { return nullptr; }
+    bool hasEditor() const override               { return false; }
+    int getNumPrograms() override                 { return 1; }
+    int getCurrentProgram() override              { return 0; }
+    void setCurrentProgram (int) override         {}
+    const juce::String getProgramName (int) override { return {}; }
+    void changeProgramName (int, const juce::String&) override {}
+    void getStateInformation (juce::MemoryBlock&) override {}
+    void setStateInformation (const void*, int) override {}
+
+private:
+    double modeRate() const;
+    juce::int64 latencyFrames() const;   // the output latency in the source's frames
+    void updateTail();
+
+    AudioDocument& document;
+    Session& session;
+    SessionMixer::Inserts& inserts;
+    MidiIn::Live ownLive;                  // before liveMidi, which may refer to it
+    MidiIn::Live& liveMidi;
+    DocumentSource source { document };
+    SessionSource sessionSource;
+    Mode mode = Mode::document;
+    juce::MidiBuffer liveBlock;            // this block's live MIDI
+
+public:
+    /** The player's channels: the mix (0 and 1), then one for each interface output (from
+        firstInterfaceChannel), then the click and auditioned file (clickChannel and the next). */
+    static constexpr int firstInterfaceChannel = 2;
+    static constexpr int clickChannel = firstInterfaceChannel + SessionTrack::maxDeviceOutputs;
+
+private:
+    juce::AudioTransportSource transport;
+    juce::int64 stopAt = -1;
+    int separateOutputs = -1;   // see setSeparateOutputs
+    double sourceRate = 0.0;
+    std::atomic<juce::int64> playedFrame { 0 }, playStart { 0 };   // playStart: where play() or a seek began
+    std::atomic<int> outputLatency { 0 }, deviceLatency { 0 };
+    juce::TimeSliceThread auditionThread { "Audition" };
+    std::unique_ptr<juce::AudioFormatReaderSource> auditionSource;   // before the transport playing it
+    juce::AudioTransportSource auditioner;
+    juce::AudioBuffer<float> auditionBuffer;
+    SessionMixer::Levels levels;
+    Scrubber scrubber;
+    AudioDocument::Snapshot scrubSnapshot;     // audio thread's own reference
+    juce::uint32 scrubVersion = 0;
+    std::atomic<bool> metronome { false };
+    std::atomic<juce::int64> countInEnd { -1 };
+    Session::State clickState;                 // audio thread's own reference, for the tempo
+    juce::uint32 clickVersion = 0;
+    void addClicks (juce::AudioBuffer<float>&, juce::int64 firstFrame, int numFrames);
+
+    juce::SpinLock monitoredLock;
+    std::array<MonitoredTrack, SessionMixer::Live::maxTracks> monitored;   // guarded by the lock
+    int numMonitored = 0;
+    std::array<MonitoredTrack, SessionMixer::Live::maxTracks> monitorTracks;   // audio thread's copy
+    int numMonitorTracks = 0;
+    juce::AudioBuffer<float> monitorInput;     // audio thread: this cycle's input, two channels a track
+    SessionMixer::Live monitorLayout;
+    int monitorFrames = 0;
+    double deviceRate = 0.0;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DocumentPlayerProcessor)
+};
+
+//==============================================================================
+/** Owns the audio device, the plug-in formats and the processing graph:
+    document player -> effect rack (in order) -> master meter -> a chosen stereo pair of device outputs.
+
+    All public methods must be called on the message thread.
+*/
+class AudioEngine final : public juce::ChangeBroadcaster,
+                          private juce::ChangeListener,
+                          private juce::AudioProcessorListener,
+                          private juce::MidiInputCallback
+{
+public:
+    AudioEngine();
+    ~AudioEngine() override;
+
+    /** Opens the audio device, restoring the saved setup when there is one that names a device. */
+    juce::String openDevice (const juce::XmlElement* savedState);
+
+    /** A saved device setup, or null when it names no device, as one saved while none was open
+        does: restoring that would open nothing, where no setup opens the default device. */
+    static const juce::XmlElement* namingADevice (const juce::XmlElement* savedState);
+    bool isDeviceOpen() const noexcept            { return deviceOpen; }
+
+    /** Asks the audio system for the output device a saved setup names (or the default one), with
+        a device object of its own and from whatever thread calls it: the calls that wait when the
+        system's audio service doesn't answer, made where waiting holds nothing up, so openDevice
+        afterwards doesn't wait. Returns the device's name, or "" when there is none. */
+    static juce::String probeDevice (const juce::XmlElement* savedState);
+
+    juce::AudioDeviceManager deviceManager;
+    juce::AudioFormatManager formatManager;
+    juce::AudioPluginFormatManager pluginFormatManager;
+    juce::KnownPluginList knownPlugins;
+
+    AudioDocument document;
+    Session session;
+    DocumentPlayerProcessor& getPlayer()          { return *player; }
+
+    /** Loads a file into the document. Returns an error message, or empty on success. */
+    juce::String openFile (const juce::File& file);
+
+    /** Takes a file already read (by openFile, or on another thread) into the document. Returns
+        its error, or empty on success. */
+    juce::String adoptFile (const juce::File& file, AudioFileIO::Loaded);
+
+    /** A new, unsaved file of `frames` frames of silence takes the document's place: `channels`
+        channels at `sampleRate`, to be saved at `bitDepth` (16, 24 or 32 for float). */
+    void newDocument (int channels, double sampleRate, int bitDepth, juce::int64 frames);
+
+    /** Brings another document into the editor in place of the open one, which goes into
+        `other` (switching between open files). Playback pauses. */
+    void swapDocument (AudioDocument& other);
+
+    /** Plays a file once from its start without opening it (see DocumentPlayerProcessor::audition).
+        Returns false, with nothing playing, when it can't be read; an empty File stops it. */
+    bool auditionFile (const juce::File&);
+
+    //==============================================================================
+    /** Output routing: the rack's stereo output goes to device output channels
+        firstChannel and firstChannel + 1 (absolute channel indices of the device). */
+    int getOutputPair() const                     { return outputPairFirstChannel; }
+    void setOutputPair (int firstChannel);
+
+    /** The interface outputs a session's tracks and buses play out of, and a 5.1 master's C, LFE,
+        Ls and Rs from surroundFrom on (when not -1). */
+    static juce::BigInteger deviceOutputsOf (const SessionState&, int surroundFrom = -1);
+
+    /** A file with more than two channels: false folds 5.1 down to the output pair (other files play
+        their first two channels there); true plays the first two on the pair and the rest on the
+        outputs after it, one each (5.1: C, LFE, Ls and Rs), straight from the player, past the rack. */
+    void setSurroundOutputs (bool separate);
+    bool getSurroundOutputs() const noexcept      { return surroundOutputs; }
+
+    /** Connects the interface outputs that the session's tracks, or the file's channels past the
+        first two, play out of, turning them on in the device. Call after switching between file
+        and session. */
+    void useDeviceOutputs();
+
+    /** True when what the session plays out of this device output (from 0) is connected to it. */
+    bool playsOutOf (int deviceChannel) const;
+
+    /** True when this device output (from 0) is fed by the last of the rack's copies for its pair,
+        or by the last slot when that slot links the channels itself. */
+    bool playsThroughRack (int deviceChannel) const;
+    juce::StringArray getDeviceOutputChannelNames() const;
+
+    //==============================================================================
+    /** Recording input: numChannels (1 or 2) device inputs from firstChannel (absolute index),
+        or none when numChannels is 0. Turns those inputs on (and only those); macOS asks for
+        microphone access the first time. Returns an error message, or empty on success. */
+    juce::String setInput (int firstChannel, int numChannels);
+    int getInputFirstChannel() const              { return inputFirstChannel; }
+    int getInputNumChannels() const               { return inputNumChannels; }
+
+    /** The input channel names of the device in use, even before any input is on. */
+    juce::StringArray getDeviceInputChannelNames() const;
+
+    Recorder& getRecorder()                       { return *recorder; }
+
+    /** Several tracks at once: the inputs armed tracks record from. Each distinct one other than
+        the recording input gets a recorder of its own, run after the player like the first, and
+        its channels are turned on too. Call while not recording; does nothing when they are the
+        same as before. Returns an error message, or empty on success. */
+    juce::String setTrackInputs (const std::vector<TrackInput>&);
+
+    /** The recorder for a track's input: the first one for the default input (or its channels),
+        else one made by setTrackInputs; nullptr when there is none. */
+    Recorder* getRecorderFor (const TrackInput&);
+
+    /** Every recorder: the first, then one for each extra input. */
+    std::vector<Recorder*> getRecorders();
+
+    /** The peaks (left, right) of what went to the outputs since this reader's last call, after the
+        effects rack (without the metronome's click), for a master meter. Each reader (the mixer's,
+        the main window's) has its own, so neither takes the other's peaks. */
+    enum class MasterReader { mixer, mainWindow, levels };
+    std::pair<float, float> takeMasterPeaks (MasterReader = MasterReader::mixer);
+
+    /** The newest frames of what went to the outputs (stereo, up to 16,384 frames), oldest first,
+        for the analysis panels. */
+    void copyRecentOutput (juce::AudioBuffer<float>& dest) const;
+
+    /** The device's sample rate, or 0 with no device open. */
+    double getOutputSampleRate() const;
+
+    /** Input monitoring: these tracks play what comes in on their inputs (none: off). */
+    void setMonitoredTracks (const std::vector<std::pair<juce::uint32, TrackInput>>&);
+
+    /** Frames from a document frame leaving the player to the same moment arriving back at the
+        recorder: device output and input latency (each including a buffer) plus the rack's latency. */
+    int getRoundTripLatency() const;
+
+    /** How long the current device holds the sound before it is heard, in its frames: what the
+        playhead is drawn behind by (0 off Linux). */
+    int deviceOutputDelay() const;
+
+    /** The latency of the chain after the player (the preview effect and the rack), in device
+        frames, as the graph reports it; the player is told it as it changes (its heard frame). */
+    int getOutputLatency() const                  { return graph.getLatencySamples(); }
+
+    //==============================================================================
+    int getNumRackSlots() const                   { return (int) rack.size(); }
+    juce::AudioPluginInstance* getRackPlugin (int index) const;
+    bool isRackSlotBypassed (int index) const;
+    void setRackSlotBypassed (int index, bool shouldBeBypassed);
+    void moveRackSlot (int fromIndex, int toIndex);
+
+    /** Called before a plug-in is removed so its editor window can be closed first. */
+    std::function<void (juce::AudioProcessor*)> onPluginAboutToBeRemoved;
+
+    /** Called with the names of effects (a 5.1 track's, or the rack's) that couldn't be opened again
+        for the channels past L and R (which then play silence through them). */
+    std::function<void (const juce::StringArray&)> onEffectsNotCopied;
+
+    /** Gives the copies of this effect (a 5.1 track's, or the rack's for the channels past L and R)
+        its whole state again (after its window closes). */
+    void refreshEffectCopies (const juce::AudioProcessor&);
+
+    /** The rack's copies for the channels played to their own outputs past L and R (Play Surround to
+        Separate Outputs): one per slot for each further pair (two for 5.1). */
+    int getNumRackCopies() const;
+
+    /** The rack's slots that take those channels themselves, linked with L and R (the built-in
+        compressor and limiter, their main bus widened); they have no copies. */
+    int getNumRackSlotsLinking() const;
+
+    using AddCallback = std::function<void (const juce::String& error)>;
+    void addPlugin (const juce::PluginDescription& description, AddCallback onDone);
+
+    /** Makes a plug-in instance for use outside the rack (an instrument on the bench), its buses
+        enabled, calling back on the message thread with it or an error. Asynchronous, as AUv3 needs. */
+    void createPlugin (const juce::PluginDescription&, double rate,
+                       std::function<void (std::unique_ptr<juce::AudioPluginInstance>, const juce::String& error)>);
+    void removeRackSlot (int index);
+    void clearRack();
+
+    std::unique_ptr<juce::XmlElement> createRackXml() const;
+
+    /** Previewing an effect: the player goes through this one before the rack, until it is
+        replaced or cleared (nullptr). It is prepared at the device's rate. Not saved with the rack. */
+    void setPreviewEffect (std::unique_ptr<juce::AudioPluginInstance>);
+    juce::AudioPluginInstance* getPreviewEffect() const;
+
+    /** The preview effect left out (the audio plays as it is) or put back. */
+    void setPreviewBypassed (bool);
+    bool isPreviewBypassed() const;
+    void loadRackXml (const juce::XmlElement& xml, AddCallback onDone);
+
+    //==============================================================================
+    /** Each session track's effects. Read them here; change them through the methods below. */
+    const TrackEffects& getTrackEffects() const   { return trackEffects; }
+
+    /** MIDI played live (the MIDI inputs the audio settings turn on, and the on-screen keyboard),
+        heard by the instrument of the track set on it, and recorded by it. */
+    MidiIn::Live& getLiveMidi() noexcept       { return liveMidi; }
+
+    /** Turns on every MIDI input there is, unless the saved device state names any (then those). */
+    void enableMidiInputs (const juce::XmlElement* savedState);
+
+    /** Creates the plug-in at the session's rate and adds it to the end of the track's chain. */
+    void addTrackPlugin (juce::uint32 trackId, const juce::PluginDescription&, AddCallback onDone);
+    void removeTrackPlugin (juce::uint32 trackId, int slot);
+    void setTrackPluginBypassed (juce::uint32 trackId, int slot, bool);
+    void moveTrackPlugin (juce::uint32 trackId, int from, int to);
+
+    /** Removes every track's effects (for a new session). */
+    void clearTrackEffects();
+
+    /** Hears the track effects' parameters moved in their windows (TrackEffects::onParameterTouched),
+        and holds one off its envelope while it is touched. */
+    void setTrackEffectsListener (std::function<void (const TrackEffects::ParameterTouch&)> listener) { trackEffects.onParameterTouched = std::move (listener); }
+    void setTrackEffectTouched (juce::uint32 trackId, juce::uint32 slotId, const juce::String& parameterId, bool touched)
+    {
+        trackEffects.setTouched (trackId, slotId, parameterId, touched);
+    }
+
+    /** Restores track effects from session file EFFECTS elements, by track id, one after another. */
+    void loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects, AddCallback onDone);
+
+private:
+    using Node = juce::AudioProcessorGraph::Node;
+
+    void changeListenerCallback (juce::ChangeBroadcaster*) override;
+    void handleIncomingMidiMessage (juce::MidiInput*, const juce::MidiMessage&) override;
+    void audioProcessorParameterChanged (juce::AudioProcessor*, int, float) override {}
+    void audioProcessorChanged (juce::AudioProcessor*, const ChangeDetails&) override;
+    void rebuildConnections();
+    juce::String deviceSignature() const;   // the device in use, its rate, block size and channels
+    juce::String lastDeviceSignature;       // as of the last change handled
+    std::map<juce::uint32, int> wideTracks; // the 5.1 and 7.1 tracks (and their channels) the track effects were last told of
+
+    void updateWideTracks();
+    void addPluginsFromXml (std::shared_ptr<std::vector<std::unique_ptr<juce::XmlElement>>> slots,
+                            size_t next, juce::StringArray errors, AddCallback onDone);
+    double currentSampleRate() const;
+    juce::String inputDeviceNameFor (const juce::AudioDeviceManager::AudioDeviceSetup&) const;
+    int currentBlockSize() const;
+
+    TrackEffects trackEffects;   // before the graph: the player in it uses them
+    MidiIn::Live liveMidi;    // likewise
+    juce::AudioProcessorGraph graph;
+    juce::AudioProcessorPlayer graphPlayer;
+    DocumentPlayerProcessor* player = nullptr;
+    Node::Ptr playerNode, outputNode, meterNode, previewNode;
+    class MasterMeter;
+    std::vector<Node::Ptr> rack;
+    std::vector<std::vector<Node::Ptr>> rackCopies;   // for each pair of channels past L and R, a RackCopy per slot (null: couldn't be made), or the slot itself where it links them
+
+    /** Channels played to their own outputs past L and R, through rackCopies: 0 unless separate. */
+    int extraChannels() const;
+    void updateRackCopies();
+    int outputPairFirstChannel = 0;
+    juce::BigInteger usedDeviceOutputs;   // the interface outputs the session's tracks, or the file's extra channels, play out of
+    bool surroundOutputs = false;
+    int inputFirstChannel = 0, inputNumChannels = 0;
+    std::unique_ptr<Recorder> recorder;
+    std::vector<std::pair<TrackInput, std::unique_ptr<Recorder>>> extraRecorders;
+    std::vector<TrackInput> requestedInputs;   // the last setTrackInputs, and the recording input then
+    TrackInput requestedMain;
+    juce::BigInteger appliedInputs;            // the device's inputs on after they were last set
+    bool trackInputsCurrent = false;
+    bool deviceOpen = false;
+    juce::String applyInputChannels();
+    class MonitorTap;
+    std::unique_ptr<MonitorTap> monitorTap;
+    std::shared_ptr<bool> alive = std::make_shared<bool> (true);
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioEngine)
+};

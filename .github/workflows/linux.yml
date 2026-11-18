@@ -1,0 +1,64 @@
+# Builds the Linux tarball and keeps it as an artifact. When a release is published, it builds that
+# release's tag and attaches the tarball and its SHA-256 file to it, beside the Mac and Windows
+# packages. Running it by hand with a tag does the same for a release already out.
+# The tests aren't run here: they need an audio device and a desktop, which these runners don't
+# have. Run them on a Linux machine with Scripts/package-linux.sh (see docs/TESTING.md).
+name: Linux
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build and attach the Linux tarball to (blank builds the branch only)
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG || github.ref }}
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build pkg-config \
+            libasound2-dev libjack-jackd2-dev libfreetype-dev libfontconfig1-dev libx11-dev \
+            libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev libxcomposite-dev \
+            libxrender-dev libxi-dev libgl1-mesa-dev libsqlite3-dev
+
+      - name: Build and package
+        run: Scripts/package-linux.sh --jobs 4 --skip-tests
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Torqwave-linux-x86_64
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Attach to the release
+        if: env.RELEASE_TAG != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          files=("dist/Torqwave-$version-linux-x86_64.tar.gz" "dist/Torqwave-$version-linux-x86_64.tar.gz.sha256")
+          for f in "${files[@]}"; do
+            [ -f "$f" ] || { echo "$f is missing: does CMakeLists.txt's version match $RELEASE_TAG?" >&2; exit 1; }
+          done
+          gh release upload "$RELEASE_TAG" "${files[@]}" --clobber --repo "$GITHUB_REPOSITORY"

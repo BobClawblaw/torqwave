@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Torqwave
+GenericName=Audio Editor
+Comment=Waveform, spectral and multitrack audio editor
+Exec=Torqwave %F
+Icon=torqwave
+Terminal=false
+Categories=AudioVideo;Audio;AudioVideoEditing;
+MimeType=audio/x-wav;audio/wav;audio/x-aiff;audio/aiff;audio/flac;audio/x-flac;audio/ogg;audio/x-vorbis+ogg;audio/mpeg;audio/mp4;audio/x-m4a;
+StartupWMClass=Torqwave

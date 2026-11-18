@@ -1,0 +1,9 @@
+build/
+build-release/
+build-debug/
+build-asan/
+dist/
+.DS_Store
+build-win/
+build-release-win/
+build-release-linux/

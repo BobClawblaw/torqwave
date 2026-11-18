@@ -1,0 +1,258 @@
+#pragma once
+
+#include "Session.h"
+
+/** Mixes a session to stereo.
+
+    Each clip plays its audio with its gain and fades into the track: a mono clip into both
+    channels, a stereo clip as it is, one with more channels its first two. Then come the
+    track's effects (Inserts, an instrument among them), then its pan, then its volume, and the
+    track goes to the mix. The pan comes after the effects so that an instrument's output and
+    whatever a stereo effect spreads follow it: a track whose sources are all mono (its clips,
+    its live input, no instrument) is panned with a constant-power law (-3 dB each side at the
+    centre, so a mono clip at the centre plays at -3 dB each side, as before); a track with any
+    stereo source by balance, so the centre leaves it as it is. Its sends take the signal before
+    the volume (pre-fader) or after it, to buses, which play it through their effects, volume and
+    pan (balance) into the mix. A track whose output is a bus goes there, after its volume, in
+    place of the mix; so does a bus whose output is another bus. Each bus is mixed before the
+    buses it plays into.
+
+    A volume or pan envelope takes over from the setting, sample by sample: a track's pan and
+    volume envelopes where its pan and volume are applied (after its effects, so pre-fader sends
+    don't follow the volume), and a bus's at its output.
+    Envelopes on effect parameters are followed by the effects themselves (Inserts), given the
+    session frame of the audio they process.
+
+    Effects delay what passes through them. A track is read ahead by its effects' latency plus
+    the most latency of the paths it feeds (a bus's own, and that of the buses its output goes
+    through on the way to the mix), and each of its outputs is held back by what that path
+    lacks, so everything lines up without delaying the mix.
+
+    A track ducking under another comes down while that key track's output (after its volume) is
+    above the threshold, following the attack and release; it acts with the volume, so the
+    track's output and post-fader sends dip, not its pre-fader sends. Keys are mixed before the
+    tracks they duck. The key is lined up with the ducked track when the buses the key feeds
+    have at least as much latency as the ducked track's; otherwise it comes late by the
+    difference. A key that doesn't play (muted, or left out by a solo) ducks nothing.
+
+    In a 5.1 or 7.1 master (SessionState::surround, sevenOne) what goes to the mix is placed by each
+    track's and bus's surround pan (surroundGains) into six channels, L R C LFE Ls Rs, or eight, L R
+    C LFE Lrs Rrs Lss Rss; its stereo processing up to there is as in a stereo master. What plays
+    into a bus, or out of an interface pair, stays stereo. The master then goes to dest as
+    Buffers::surroundChannel says.
+
+    A 5.1 track (SessionTrack::fiveOne) plays its clips' six channels through its effects (as three
+    pairs: L R, C LFE, Ls Rs), polarity, volume and ducking, without pan, straight into a 5.1
+    master's channels (in a 7.1 master, its Ls and Rs into the side surrounds Lss and Rss, as 5.1's
+    surrounds are usually placed in 7.1, the rear ones left silent); everything else it
+    feeds (sends, a bus, an interface pair, keys, its meter, a stereo master) gets them folded
+    down to stereo (Surround::foldDown), after its polarity and, past its pre-fader sends, its
+    volume, as a stereo track's would.
+
+    A sidechain feeds a key track's output (after its volume, as ducking hears it) into an
+    effect's sidechain input on a track or bus. Keys are mixed first, and a key is read ahead far
+    enough that its output, held back, lines up with the audio going into that effect, whatever
+    latency comes before it; a key that doesn't play feeds silence.
+
+    Muted tracks and buses play nothing. When anything is soloed, only soloed tracks and buses
+    play, along with the buses a soloed track or bus feeds (by a send or an output, through any
+    buses between) and the tracks and buses that feed a soloed bus. A track or bus whose output
+    bus doesn't play is not heard. */
+namespace SessionMixer
+{
+    /** Left and right gains for a pan position and a source with this many channels. */
+    std::pair<float, float> panGains (float pan, int sourceChannels);
+
+    /** The gains from a track's or bus's two channels (left, right) into a 5.1 master's six
+        (L R C LFE Ls Rs), or with sevenOne a 7.1 master's eight (L R C LFE Lrs Rrs Lss Rss; a 5.1
+        master leaves the last two at 0), for this surround pan. Each channel has a point: the
+        pan's point, moved left (or right) by width * tan 30 degrees and kept inside the room. Its
+        direction from the middle is panned between the two speakers either side of it (5.1: at
+        -30, +30, 0, -110 and +110 degrees; 7.1: -30, +30, 0, -90 and +90 for the sides and -135
+        and +135 for the rears, as ITU-R BS.2051 places them), with constant power; its distance d
+        (up to 1) keeps d squared of that power there and spreads the rest evenly over all five (or
+        seven). A width under 1 brings the gains down to 0.7071
+        at 0, so a mono source (the same in both channels) keeps its level when both meet. The LFE
+        takes both channels at 0.7071 times the LFE share. The default pan gives exactly 1 from
+        left to L and right to R, nothing else. */
+    using SurroundGains = std::array<std::array<float, 8>, 2>;
+    SurroundGains surroundGains (const SurroundPan&, bool sevenOne = false);
+
+    /** A key's output for a block, lined up with the audio going into the effect slot whose
+        sidechain it feeds: two channels, frames from 0. */
+    struct KeyAudio
+    {
+        juce::uint32 slotId = 0;
+        const juce::AudioBuffer<float>* audio = nullptr;
+    };
+
+    /** Processing on each track between its pan and its volume: the track's effects. */
+    struct Inserts
+    {
+        virtual ~Inserts() = default;
+
+        /** True when the track has processing to run. */
+        virtual bool isActive (juce::uint32 trackId) = 0;
+
+        /** Frames by which the track's processing delays it. The mixer reads the track that far
+            ahead, so every track lines up without delaying the mix. */
+        virtual int getLatency (juce::uint32 trackId) = 0;
+
+        /** Clears the processing's memory (after a jump in time). */
+        virtual void reset (juce::uint32 trackId) = 0;
+
+        /** The latency of the processing before this slot on the track, where the slot is there,
+            not bypassed, and takes a sidechain; otherwise -1. */
+        virtual int getLatencyBefore (juce::uint32 trackId, juce::uint32 slotId) = 0;
+
+        /** Processes the first numFrames of the buffer in place: two channels, or six (L R C LFE
+            Ls Rs) for a 5.1 track. It is the track's audio from session frame `frame` on (what its
+            effects' automation follows), with the keys for the slots that take a sidechain (any
+            slot not given one hears silence there). */
+        virtual void process (const SessionTrack&, juce::int64 frame, juce::AudioBuffer<float>&, int numFrames,
+                              const std::vector<KeyAudio>& keys) = 0;
+
+        /** Which tracks are 5.1 or 7.1 tracks, and their channels (6 or 8), before they are
+            processed, so their processing can be readied for them. Called on the message thread,
+            or the thread rendering. */
+        virtual juce::StringArray setWideChannels (const std::map<juce::uint32, int>&)   { return {}; }
+
+        /** Audio thread, before a block is mixed: MIDI played live this block (frames from 0) for
+            this track's instrument, or null for none. The buffer must outlive the block. */
+        virtual void setLiveMidi (juce::uint32 /*trackId*/, const juce::MidiBuffer* /*midi*/)   {}
+
+        /** Whether the track's chain starts with an instrument (a stereo source, for its pan). */
+        virtual bool hasInstrument (juce::uint32 /*trackId*/)   { return false; }
+
+        /** setWideChannels with these tracks all 5.1. */
+        juce::StringArray setWideTracks (const std::set<juce::uint32>& tracks)
+        {
+            std::map<juce::uint32, int> channels;
+
+            for (const auto id : tracks)
+                channels[id] = 6;
+
+            return setWideChannels (channels);
+        }
+    };
+
+    /** Peak levels of the tracks and buses as they go into the mix (after their volume and pan),
+        by their place in the session, for meters. The audio thread raises them; the message
+        thread takes them, which starts them again from 0. Tracks past maxTracks aren't metered.
+        Each reader (0 the mixer, 1 the track headers) has its own, so neither takes the other's. */
+    class Levels
+    {
+    public:
+        static constexpr int maxTracks = 256, readers = 2;
+
+        void raise (int track, float left, float right) noexcept;
+
+        /** The left and right peaks since this reader's last take. */
+        std::pair<float, float> take (int track, int reader = 0) noexcept;
+
+        /** A 5.1 or 7.1 master's channels (L R C LFE Ls Rs, or L R C LFE Lrs Rrs Lss Rss) as mixed,
+            before the effects rack and any fold-down: raised by the audio thread, taken (and started
+            again from 0) per reader. */
+        void raiseMaster (int channel, float peak) noexcept;
+        std::array<float, 8> takeMaster (int reader = 0) noexcept;
+
+    private:
+        std::array<std::atomic<float>, 2 * maxTracks * readers> peaks {};
+        std::array<std::atomic<float>, 8 * readers> masterPeaks {};
+
+        static void raiseTo (std::atomic<float>&, float) noexcept;
+    };
+
+    /** Working buffers and the delay lines that line paths up, kept between blocks. Grown as
+        needed: give them room up front. A session change that adds a bus or a held-back path
+        allocates once, when it first plays. */
+    struct Buffers
+    {
+        juce::AudioBuffer<float> clip, track, held, discard;
+        juce::AudioBuffer<float> automation;   // pan, volume: envelope values for the block
+        juce::AudioBuffer<float> clipGains;    // a clip's gain envelope for the block, in dB then as gains
+        std::map<juce::uint32, juce::AudioBuffer<float>> buses;
+
+        struct Delay
+        {
+            juce::AudioBuffer<float> ring;
+            int frames = 0, write = 0;
+        };
+
+        std::map<std::pair<juce::uint32, juce::uint32>, Delay> delays;   // (track, destination: 0 = the mix or its output bus;
+                                                                          //  a key's, the track it ducks)
+        Levels* levels = nullptr;          // metered when set
+
+        /** Where a 5.1 or 7.1 master goes in dest: L and R in channels 0 and 1, and the rest (C, LFE,
+            Ls, Rs, or C to Rss) from this channel on (dest must have them); or folded down into 0
+            and 1 (Surround::foldDown) at -1. A mixdown sets 2, for them all in file order. */
+        int surroundChannel = -1;
+
+        /** The channel of dest that interface output 1 goes to, for tracks and buses playing out of
+            interface pairs (2 when playing), or -1 to leave them out (a mixdown). */
+        int interfaceChannel = 2;
+
+        juce::AudioBuffer<float> master, panIn;   // a 5.1 master, and what is panned into it
+        juce::AudioBuffer<float> wide, wideClip, wideHeld;   // a 5.1 or 7.1 track's channels, its clips', and held back
+
+        // Ducking: each key track's output for the block, and each ducked track's detector.
+        struct Duck
+        {
+            float held = 0.0f;             // the key's level, held over 20 ms
+            float gainDb = 0.0f;           // the ducking now
+        };
+
+        std::map<juce::uint32, juce::AudioBuffer<float>> keys;
+        std::map<juce::uint32, juce::AudioBuffer<float>> sidechains;   // by slot: each key lined up for its effect
+        std::vector<KeyAudio> keyAudio;
+        std::map<juce::uint32, Duck> ducks;
+        juce::AudioBuffer<float> keyHeld, duckGains;
+        std::vector<int> order;            // the tracks in the order they are mixed: keys first
+        std::vector<char> marks;
+        std::vector<std::pair<int, int>> busOrder;   // (minus depth, place): each bus before those it plays into
+
+        void reserve (int frames)
+        {
+            for (auto* b : { &clip, &track, &held, &discard, &automation, &clipGains, &keyHeld, &duckGains, &panIn })
+                b->setSize (2, frames);
+
+            for (auto* b : { &master, &wide, &wideClip, &wideHeld })
+                b->setSize (8, frames);
+
+            order.reserve (64);
+            keyAudio.reserve (16);
+            marks.reserve (64);
+            busOrder.reserve (64);
+        }
+    };
+
+    /** Audio coming in live on a track (input monitoring). It joins the track's clips, placed
+        as a clip with that many channels would be, and goes on through its effects, pan,
+        volume, sends and buses like them. */
+    struct LiveInput
+    {
+        juce::uint32 trackId = 0;
+        int firstChannel = 0, numChannels = 0;   // its channels in Live::audio: 1 or 2
+    };
+
+    /** The live inputs of a block, one per track at most. */
+    struct Live
+    {
+        static constexpr int maxTracks = 16;
+        std::array<LiveInput, maxTracks> inputs;
+        int count = 0;
+        const juce::AudioBuffer<float>* audio = nullptr;   // the block's frames, from frame 0
+        bool clips = true;                                 // false: the clips are silent (stopped)
+    };
+
+    /** Replaces frames [destStart, destStart + numFrames) of dest (two channels or more) with
+        session frames [start, start + numFrames), plus the live inputs: the mix in channels 0 and 1
+        (a 5.1 master as Buffers::surroundChannel says), and what plays out of an interface pair
+        from channel c in channels interfaceChannel + c and the next, when dest has them. */
+    void render (const SessionState&, juce::int64 start, juce::AudioBuffer<float>& dest, int destStart, int numFrames,
+                 Buffers&, Inserts* = nullptr, const Live* = nullptr);
+
+    /** Before playing from start after a jump: resets every effect and delay line, then mixes
+        the frames before start that the longest path needs, so the first block is already in time. */
+    void prime (const SessionState&, juce::int64 start, Buffers&, Inserts&);
+}

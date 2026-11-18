@@ -1,0 +1,303 @@
+#include <JuceHeader.h>
+#include "../Source/AudioEdits.h"
+#include "../Source/AudioEngine.h"
+#include "../Source/MultitrackView.h"
+#include "../Source/OpenFiles.h"
+#include "../Source/WaveformView.h"
+#include "TestUtils.h"
+#include "OpenFilesTests.h"
+
+namespace
+{
+    using TestUtils::check;
+
+    /** A mono file of `frames` frames, every sample `value`, at 48 kHz, as if read from `name`. */
+    void load (AudioEngine& engine, const juce::String& name, juce::int64 frames, float value)
+    {
+        juce::AudioBuffer<float> b (1, (int) frames);
+
+        for (int i = 0; i < b.getNumSamples(); ++i)
+            b.setSample (0, i, value);
+
+        AudioFileIO::Loaded loaded;
+        loaded.snapshot = AudioEdits::fromBuffer (std::move (b));
+        loaded.sampleRate = 48000.0;
+        loaded.bitDepth = 24;
+        engine.adoptFile (juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile (name), std::move (loaded));
+    }
+
+    float firstSample (const AudioDocument& doc)
+    {
+        juce::AudioBuffer<float> b (doc.getNumChannels(), 1);
+        doc.getSnapshot()->read (b, 0, 0, 1);
+        return b.getSample (0, 0);
+    }
+
+    juce::File fileNamed (const juce::String& name)
+    {
+        return juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile (name);
+    }
+
+    void testSwitching()
+    {
+        AudioEngine engine;
+        OpenFiles files (engine);
+        auto& doc = engine.document;
+
+        files.prepareForAnother ({});
+        check (files.size() == 1 && files.getActiveIndex() == 0, "open files: an empty editor takes the first file in place");
+
+        load (engine, "a.wav", 1000, 0.25f);
+        doc.apply (AudioEdits::gain (*doc.getSnapshot(), 0, 1000, 6.0f), "Gain");
+        const auto aSnapshot = doc.getSnapshot();
+        FilePlace aPlace { { 100, 200 }, 100, 50.0, 2.0, {}, {} };
+
+        files.prepareForAnother (aPlace);
+        const auto emptied = ! doc.hasAudio() && doc.getFile() == juce::File() && ! doc.canUndo();
+        load (engine, "b.wav", 2000, 0.5f);
+
+        check (emptied && files.size() == 2 && files.getActiveIndex() == 1 && files.indexOf (fileNamed ("a.wav")) == 0
+                   && files.indexOf (fileNamed ("b.wav")) == 1 && files.indexOf ({}) == -1,
+               "open files: another file opens beside the first, in an empty document, and each is found by its file");
+        check (files.documentAt (0).getSnapshot() == aSnapshot && files.documentAt (0).isDirty() && files.documentAt (0).canUndo()
+                   && doc.getNumFrames() == 2000 && ! doc.isDirty(),
+               "open files: the first is kept aside as it was, its edit and undo step included");
+        check (files.unsaved() == juce::Array<int> { 0 }, "open files: the one with unsaved changes is listed");
+
+        FilePlace bPlace { { 10, 20 }, 10, 0.0, 1.5, {}, {} };
+        const auto back = files.activate (0, bPlace);
+        check (back.has_value() && back->selection == aPlace.selection && juce::exactlyEqual (back->framesPerPixel, 2.0)
+                   && doc.getSnapshot() == aSnapshot && doc.getFile() == fileNamed ("a.wav") && doc.isDirty()
+                   && juce::approximatelyEqual (firstSample (doc), juce::Decibels::decibelsToGain (6.0f) * 0.25f),
+               "open files: switching back brings the first file's audio, edited, into the editor with its place");
+
+        doc.undo();
+        check (! doc.isDirty() && juce::exactlyEqual (firstSample (doc), 0.25f) && files.unsaved().isEmpty(),
+               "open files: and its undo history: undoing the edit there leaves it unchanged since it was opened");
+
+        check (! files.activate (0, {}).has_value() && ! files.activate (5, {}).has_value(),
+               "open files: switching to the file already shown, or one that isn't open, does nothing");
+
+        const auto toB = files.activate (1, {});
+        check (toB.has_value() && toB->selection == bPlace.selection && doc.getNumFrames() == 2000 && juce::exactlyEqual (firstSample (doc), 0.5f),
+               "open files: the second comes back with its own audio and place");
+
+        load (engine, "c.wav", 3000, 0.75f);   // as if read into the editor without making room: replaces b
+        files.prepareForAnother ({});
+        load (engine, "d.wav", 4000, 1.0f);
+        check (files.size() == 3 && files.getActiveIndex() == 2 && files.nameAt (1) == "c.wav" && files.nameAt (2) == "d.wav",
+               "open files: a new file goes in after the one it was opened from");
+
+        files.activate (1, {});
+        const auto afterClose = files.close (1);
+        check (afterClose.has_value() && files.size() == 2 && files.getActiveIndex() == 1 && doc.getFile() == fileNamed ("d.wav"),
+               "open files: closing the file shown brings in the one below it");
+
+        files.close (0);
+        check (files.size() == 1 && files.getActiveIndex() == 0 && doc.getFile() == fileNamed ("d.wav"),
+               "open files: closing one aside leaves the one shown as it was");
+
+        files.close (0);
+        check (files.size() == 1 && ! doc.hasAudio() && doc.getFile() == juce::File(),
+               "open files: closing the last leaves the editor empty");
+    }
+
+    void testViewPlaces()
+    {
+        AudioEngine engine;
+        OpenFiles files (engine);
+        WaveformView view (engine);
+        view.setBounds (0, 0, 1000, 400);
+        const auto settle = [] { TestUtils::runUntil ([] { return false; }, 60); };
+
+        load (engine, "first.wav", 480000, 0.1f);
+        settle();
+        view.zoomIn();
+        view.zoomIn();
+        view.setSelection ({ 12000, 24000 });
+        const auto kept = view.getPlace();
+
+        files.prepareForAnother (view.getPlace());
+        load (engine, "second.wav", 96000, 0.2f);
+        settle();
+        const auto secondFitted = view.getSelection().isEmpty() && view.getVisibleFrames().getLength() >= 96000.0 - 1.0;
+
+        if (const auto place = files.activate (0, view.getPlace()))
+            view.setPlace (*place);
+
+        settle();   // the change the switch sends must not fit it afterwards
+        const auto now = view.getPlace();
+        check (secondFitted && now.selection == kept.selection && juce::exactlyEqual (now.viewStart, kept.viewStart)
+                   && juce::exactlyEqual (now.framesPerPixel, kept.framesPerPixel),
+               "open files: a file opened is fitted to the view; switching back puts the first one's selection and zoom back");
+    }
+
+    void testPanel()
+    {
+        AudioEngine engine;
+        OpenFiles files (engine);
+        FilesPanel panel (files);
+        panel.setSize (300, 400);
+
+        load (engine, "song.wav", 48000 * 75, 0.1f);
+        files.prepareForAnother ({});
+        load (engine, "voice.wav", 24000, 0.1f);
+        engine.document.apply (AudioEdits::gain (*engine.document.getSnapshot(), 0, 100, 1.0f), "Gain");
+
+        check (panel.describeRow (0) == "song.wav - 1:15.000, 48 kHz, mono, 24-bit" && panel.describeRow (1) == "voice.wav * - 0:00.500, 48 kHz, mono, 24-bit",
+               "Files panel: each file with its length and format, an unsaved one starred (" + panel.describeRow (1) + ")");
+
+        int chosen = -1, closed = -1;
+        panel.onChoose = [&] (int i) { chosen = i; };
+        panel.onClose = [&] (int i) { closed = i; };
+        panel.clickRow (0, false);
+        panel.clickRow (1, true);
+        panel.clickRow (7, false);
+        check (chosen == 0 && closed == 1, "Files panel: clicking a row asks to show it, its x to close it; a row that isn't there does nothing");
+
+        // A row dragged into the multitrack view: the view takes a row's description, nothing else,
+        // and names the row, the track and the frame it was dropped at.
+        MultitrackView view (engine);
+        view.setSize (1000, 400);
+        view.setSnapping (false);
+        int droppedRow = -1, droppedTrack = -2;
+        juce::int64 droppedFrame = -1;
+        view.onOpenFileDropped = [&] (int row, int track, juce::int64 frame) { droppedRow = row; droppedTrack = track; droppedFrame = frame; };
+        const juce::DragAndDropTarget::SourceDetails rowDrag (FilesPanel::dragDescription (1), &panel, { MultitrackView::headerWidth + 300, 100 });
+        const juce::DragAndDropTarget::SourceDetails otherDrag ("something else", &panel, { 10, 10 });
+        const auto interested = view.isInterestedInDragSource (rowDrag) && ! view.isInterestedInDragSource (otherDrag)
+                                && FilesPanel::rowOfDrag ("openfile:x") == -1 && FilesPanel::rowOfDrag (juce::var (3)) == -1;
+        view.itemDropped (otherDrag);
+        const auto ignored = droppedRow == -1;
+        view.itemDropped (rowDrag);
+        check (interested && ignored && droppedRow == 1 && droppedTrack == 0 && droppedFrame > 0,
+               "Files panel: a row dragged into the multitrack view names the file, the track and the frame it lands on; other drags are not taken");
+
+        // The file goes in as it is in the editor: an empty session takes its rate; one at another
+        // rate converts it; the clip is named after the file, or Untitled for one never saved.
+        SessionState s;
+        const auto first = files.addToSession (s, 1, 0, 1000);
+        const auto& voice = s.tracks[0].clips[0];
+        const auto asEdited = first != 0 && juce::exactlyEqual (s.sampleRate, 48000.0) && voice.name == "voice" && voice.position == 1000
+                              && voice.length == 24000 && voice.audio == engine.document.getSnapshot() && voice.source == fileNamed ("voice.wav");
+
+        SessionState other;
+        other.sampleRate = 96000.0;
+        SessionEdits::addClip (other, -1, {}, AudioEdits::fromBuffer (juce::AudioBuffer<float> (1, 10)), 0);   // not empty, so the file is converted
+        files.addToSession (other, 1, -1, 0);
+        files.addToSession (other, 0, -1, 0);
+        const auto converted = other.tracks.size() == 3 && juce::exactlyEqual (other.sampleRate, 96000.0) && other.tracks[1].clips[0].length == 48000
+                               && other.tracks[2].clips[0].length == 48000 * 75 * 2 && other.tracks[2].clips[0].name == "song";
+
+        files.prepareForAnother ({});
+        const auto nothing = files.addToSession (s, 2, 0, 0) == 0 && files.addToSession (s, 9, 0, 0) == 0 && s.tracks[0].clips.size() == 1;
+        engine.document.reset (AudioEdits::fromBuffer (juce::AudioBuffer<float> (1, 500)), 48000.0, {}, 24);   // never saved
+        files.addToSession (s, 2, 0, 0);
+        check (asEdited && converted && nothing && s.tracks[0].clips.size() == 2 && s.tracks[0].clips[1].name == "Untitled" && s.tracks[0].clips[1].source == juce::File(),
+               "Files panel: a file added to a session goes in as it is in the editor, named after its file (Untitled for one never saved), converted to the session's rate; an empty file adds nothing");
+    }
+}
+
+namespace
+{
+    juce::MouseEvent press (juce::Component& c, juce::Point<int> at, juce::ModifierKeys mods = {})
+    {
+        const auto now = juce::Time::getCurrentTime();
+        return juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at.toFloat(), mods, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, &c, &c,
+                                 now, at.toFloat(), now, 1, false);
+    }
+
+    void testTabs()
+    {
+        AudioEngine engine;
+        OpenFiles files (engine);
+        FileTabs tabs (files);
+        tabs.setSize (900, FileTabs::height);
+        const auto empty = ! tabs.hasTabs();
+
+        load (engine, "Drums.wav", 1000, 0.1f);
+        files.prepareForAnother ({});
+        load (engine, "Bass.wav", 1000, 0.2f);
+        files.prepareForAnother ({});
+        load (engine, "A very long file name for the lead vocal take seven.wav", 1000, 0.3f);
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (20);
+
+        const auto first = tabs.getTabBounds (0), second = tabs.getTabBounds (1), third = tabs.getTabBounds (2);
+        check (empty && tabs.hasTabs() && first.getX() == 0 && second.getX() == first.getRight() && third.getX() == second.getRight()
+                   && third.getWidth() == FileTabs::widest && first.getWidth() < third.getWidth() && tabs.tabAt (second.getCentre()) == 1,
+               "file tabs: none while the editor is empty, then one per open file side by side, each as wide as its name needs up to a limit");
+
+        std::vector<int> chosen, closed;
+        tabs.onChoose = [&] (int i) { chosen.push_back (i); };
+        tabs.onClose = [&] (int i) { closed.push_back (i); };
+        tabs.mouseDown (press (tabs, first.getCentre().withX (first.getX() + 20)));
+        tabs.mouseUp (press (tabs, first.getCentre().withX (first.getX() + 20)));
+        const auto closeAt = tabs.getCloseBounds (1).getCentre();
+        tabs.mouseDown (press (tabs, closeAt));
+        tabs.mouseUp (press (tabs, closeAt));
+        tabs.mouseDown (press (tabs, tabs.getCloseBounds (2).getCentre()));
+        tabs.mouseUp (press (tabs, first.getCentre()));   // released away from the ×: nothing closes
+        check (chosen == std::vector<int> { 0 } && closed == std::vector<int> { 1 },
+               "file tabs: clicking a tab shows its file, and its close mark closes it only when released over it");
+
+        tabs.setSize (150, FileTabs::height);
+        const auto squeezed = tabs.getTabBounds (0).getWidth() == 50 && tabs.getTabBounds (2).getRight() == 150;
+        tabs.createComponentSnapshot (tabs.getLocalBounds());   // paints
+        check (squeezed, "file tabs: when they don't fit they share the width evenly");
+    }
+
+    void testDroppingSeveral()
+    {
+        AudioEngine engine;
+        WaveformView view (engine);
+        view.setBounds (0, 0, 800, 400);
+        juce::Array<juce::File> dropped;
+        view.onFilesDropped = [&] (const juce::Array<juce::File>& f) { dropped = f; };
+        view.filesDropped ({ "/tmp/one.wav", "/tmp/notes.txt", "/tmp/two.aiff", "/tmp/three.flac" }, 10, 10);
+        check (dropped.size() == 3 && dropped[0].getFileName() == "one.wav" && dropped[1].getFileName() == "two.aiff"
+                   && dropped[2].getFileName() == "three.flac",
+               "file tabs: dropping several files on the editor hands on every audio file, in order, leaving out the rest");
+    }
+}
+
+namespace
+{
+    void testNewFile()
+    {
+        // A blank: 200,000 frames of silence from one 65,536-frame block in four segments.
+        const auto blank = AudioEdits::blank (2, 200000);
+        juce::AudioBuffer<float> read (2, 200000);
+        blank->read (read, 0, 0, 200000);
+        const auto& segs = blank->getSegments();
+        check (blank->getNumChannels() == 2 && blank->getNumFrames() == 200000 && segs.size() == 4 && segs[0].block == segs[3].block
+                   && segs[3].length == 200000 - 3 * 65536 && read.getMagnitude (0, 200000) <= 0.0f
+                   && AudioEdits::blank (2, 0)->getNumFrames() == 0 && AudioEdits::blank (0, 100)->getNumFrames() == 0,
+               "new file: a blank of 200,000 frames reads as silence from four segments of one block; no frames or no channels gives an empty one");
+
+        // A new file beside an open one: its own entry, Untitled, with the frames, channels, rate
+        // and bit depth asked for, not dirty; closing it brings the other back.
+        AudioEngine engine;
+        OpenFiles files (engine);
+        auto& doc = engine.document;
+        files.prepareForAnother ({});
+        load (engine, "a.wav", 1000, 0.25f);
+        files.prepareForAnother ({});
+        engine.newDocument (2, 44100.0, 16, 441000);
+        const auto made = files.size() == 2 && files.getActiveIndex() == 1 && files.nameAt (1) == "Untitled" && doc.hasAudio()
+                          && doc.getNumFrames() == 441000 && doc.getNumChannels() == 2 && juce::exactlyEqual (doc.getSampleRate(), 44100.0)
+                          && doc.getSourceBitDepth() == 16 && doc.getFile() == juce::File() && ! doc.isDirty() && ! doc.canUndo();
+        files.close (1);
+        check (made && files.size() == 1 && files.getActiveIndex() == 0 && doc.getFile() == fileNamed ("a.wav") && doc.getNumFrames() == 1000,
+               "new file: a new stereo file of 10 s at 44.1 kHz for 16-bit opens beside a file already open, Untitled and not dirty, and closes back to it");
+    }
+}
+
+void runOpenFilesTests()
+{
+    testSwitching();
+    testNewFile();
+    testViewPlaces();
+    testPanel();
+    testTabs();
+    testDroppingSeveral();
+}
