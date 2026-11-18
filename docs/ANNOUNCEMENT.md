@@ -1,6 +1,6 @@
 # Announcing Torqwave on X
 
-A long post for x.com introducing Torqwave. The post itself is the plain text in the box below: copy it from there and paste it into X's composer. X does not render Markdown, so it uses plain line breaks, `•` bullets and capitals for headings, which survive pasting. It is about 3,200 characters, which needs X's long-post length (more than 280 characters).
+A long post for x.com introducing Torqwave. The post itself is the plain text in the box below: copy it from there and paste it into X's composer. X does not render Markdown, so it uses plain line breaks, `•` bullets and capitals for headings, which survive pasting. It is about 3,300 characters, which needs X's long-post length (more than 280 characters).
 
 ## The post
 
@@ -11,7 +11,7 @@ A free, open-source audio editor for macOS, Windows and Linux, growing into a re
 
 Audacity 4.0 shipped without its note tracks and its mixer. Torqwave has both, plus instrument plug-ins, buses and sends, automation, surround and video.
 
-github.com/BobClawblaw/torqwave
+https://github.com/BobClawblaw/torqwave
 
 FIRST, A NEW NAME
 
@@ -45,9 +45,11 @@ GET IT
 • Windows 10+, 64-bit
 • Linux, 64-bit x86
 
-Builds are on the GitHub Releases page. They aren't notarized or signed with a developer certificate yet, so your OS will ask you to confirm the first launch.
+Download: https://github.com/BobClawblaw/torqwave/releases/latest
 
-Try it on real work and tell me what breaks: issues and ideas are welcome on GitHub. 🙏
+The builds aren't notarized or signed with a developer certificate yet, so your OS will ask you to confirm the first launch.
+
+Try it on real work and tell me what breaks: issues and ideas are welcome at https://github.com/BobClawblaw/torqwave/issues 🙏
 
 — Torq 🐶
 ```
@@ -75,5 +77,5 @@ If you want a single 280-character post to go with it, or to start a thread:
 ```text
 Introducing Torqwave: a free, open-source audio editor for macOS, Windows and Linux, and a growing Audacity alternative (formerly SpectraBlade). Instrument plug-ins, piano roll, buses, automation, surround, video. Early, but ready for testers.
 
-github.com/BobClawblaw/torqwave
+https://github.com/BobClawblaw/torqwave
 ```
