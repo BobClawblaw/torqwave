@@ -4,6 +4,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+## Released
+
+**Release 0.16.3: The home screen first, Option-drag copies, selecting points, ripple for a time range, envelopes that show themselves**
+- `Torqwave-0.16.3.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.16.3-windows-x64-setup.exe` and `Torqwave-0.16.3-windows-x64.zip`) and the Linux tarball (`Torqwave-0.16.3-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the changes below on top of 0.16.2. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app for arm64 at the release's tag, signed it, and the whole suite (1,704 checks) passed with the signed app from the disk image as the plug-in scan worker; the disk image's SHA-256 matched its `.sha256`, its app verified (`codesign --verify --deep --strict`), reads 0.16.3 with the bundle ID `org.torqwave.editor` and holds arm64 alone, and it is stamped as a release build.
+- Checked on Linux (Ubuntu 24.04 in a container, x86_64, a virtual display with a window manager, no audio device): 1,669 checks passed, the new ones among them; the two that failed (ffmpeg reading a WAV's broadcast details, and the rack's device-list announcements) are the two that failed there for 0.16.2, from that setup.
+
 **Starting on the home screen**
 - Torqwave starts on the home screen. Before, it reopened the file that was open when it quit, so the home screen showed only after closing every file. Settings > Start > On start chooses between the home screen (the default) and Reopen the last file, which works as before.
 - A file or session you save goes on the recent list, so it shows on the home screen and in File > Open Recent: Save and Save As for audio files (through the rack too), and Save Session and Save Session As. Before, only opening one put it there, so a new recording or a session you had just built showed only after you opened it again.
@@ -18,8 +25,6 @@ Each milestone as it was built, newest first, with what the tests measured on th
 - Option-drag a clip in a session to copy it, as in other multitrack editors: the clip stays, a copy lands where it is dropped (on another track too), and every selected clip and note clip comes along. Option over a clip shows the copy cursor; pressing Option during a drag copies as well. The copies are selected afterwards, and the copy is one undo step ("Copy Clip", or "Copy N Clips"). Option on a clip's edge still stretches it.
 - Points on an envelope or a clip gain line can be selected: a click selects a point (it is drawn larger and white), a point you add or drag stays selected, and Shift-click adds or removes others on the same line. Delete or Backspace removes the selected points as one undo step, and Edit > Delete reads Delete Point. Selecting clips drops the points, and points on a line that is hidden are never deleted. Before, Option-click was the only way to remove a point.
 - With Option held over an envelope or clip-gain point, the pointer turns into a dot with a red minus, so you can see a click will remove it. Before, it stayed a hand. An Option-click that misses a point now does nothing; before, it added a point.
-
-## Released
 
 **Release 0.16.2: The guide in the app, a home screen, ripple and layered clips, workspace accents, LV2**
 - `Torqwave-0.16.2.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.16.2-windows-x64-setup.exe` and `Torqwave-0.16.2-windows-x64.zip`) and the Linux tarball (`Torqwave-0.16.2-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the changes below on top of 0.16.1. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.
