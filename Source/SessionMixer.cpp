@@ -542,60 +542,129 @@ namespace
             out.copyFrom (wideChannel (channels, ch, out.getNumChannels()), (int) (from - start), scratch, ch, 0, count);
     }
 
+    /** Calls heard (from, to) for each stretch of [from, to) where clip `index` of the track is
+        heard. Mixing, that is all of it. Layering, a clip later in the track's list (on top)
+        hides the part under it, except where the one on top fades in or out, so a crossfade
+        still sounds both; muted clips hide nothing. No allocation: it runs on the audio thread. */
+    template <typename Heard>
+    void forEachHeard (const SessionTrack& track, size_t index, bool layered, juce::int64 from, juce::int64 to, Heard&& heard)
+    {
+        if (to <= from)
+            return;
+
+        if (! layered)
+        {
+            heard (from, to);
+            return;
+        }
+
+        const auto covers = [&track, index] (juce::int64 frame, juce::int64& until, juce::int64& nextStart)
+        {
+            // Whether a clip above covers frame (and until where), and where the next cover starts.
+            auto covered = false;
+            until = frame;
+            nextStart = std::numeric_limits<juce::int64>::max();
+
+            for (auto i = index + 1; i < track.clips.size(); ++i)
+            {
+                const auto& above = track.clips[i];
+
+                if (above.muted || above.audio == nullptr)
+                    continue;
+
+                const auto start = above.position + above.fadeIn, end = above.getEnd() - above.fadeOut;
+
+                if (end <= start)
+                    continue;
+
+                if (start <= frame && frame < end)
+                {
+                    covered = true;
+                    until = juce::jmax (until, end);
+                }
+                else if (start > frame)
+                {
+                    nextStart = juce::jmin (nextStart, start);
+                }
+            }
+
+            return covered;
+        };
+
+        for (auto at = from; at < to;)
+        {
+            juce::int64 until = 0, nextStart = 0;
+
+            if (covers (at, until, nextStart))
+            {
+                at = until;   // past this cover; another may start inside it, so look again from there
+                continue;
+            }
+
+            const auto end = juce::jmin (to, nextStart);
+            heard (at, end);
+            at = end;
+        }
+    }
+
     /** A 5.1 or 7.1 track's clips, all out's channels (6 or 8), before its volume, into frames
         [0, numFrames) of out. */
     void renderWide (const SessionTrack& track, juce::int64 start, juce::AudioBuffer<float>& out, int numFrames,
-                     juce::AudioBuffer<float>& scratch, juce::AudioBuffer<float>& gains)
+                     juce::AudioBuffer<float>& scratch, juce::AudioBuffer<float>& gains, bool layered)
     {
         out.clear (0, numFrames);
         const auto end = start + numFrames;
 
-        for (auto& clip : track.clips)
+        for (size_t i = 0; i < track.clips.size(); ++i)
         {
-            const auto from = juce::jmax (start, clip.position);
-            const auto to = juce::jmin (end, clip.getEnd());
+            const auto& clip = track.clips[i];
 
-            if (to <= from || clip.audio == nullptr || clip.muted)
+            if (clip.audio == nullptr || clip.muted)
                 continue;
 
-            const auto count = (int) (to - from);
+            forEachHeard (track, i, layered, juce::jmax (start, clip.position), juce::jmin (end, clip.getEnd()), [&] (juce::int64 from, juce::int64 to)
+            {
+                const auto count = (int) (to - from);
 
-            if (scratch.getNumChannels() < 8 || scratch.getNumSamples() < count)
-                scratch.setSize (8, count, false, false, true);
+                if (scratch.getNumChannels() < 8 || scratch.getNumSamples() < count)
+                    scratch.setSize (8, count, false, false, true);
 
-            const auto channels = juce::jmin (out.getNumChannels(), readClip (clip, from, count, scratch, gains));
-            const auto clipGain = juce::Decibels::decibelsToGain (clip.gainDb, -150.0f);
+                const auto channels = juce::jmin (out.getNumChannels(), readClip (clip, from, count, scratch, gains));
+                const auto clipGain = juce::Decibels::decibelsToGain (clip.gainDb, -150.0f);
 
-            for (int ch = 0; ch < channels; ++ch)
-                out.addFrom (wideChannel (channels, ch, out.getNumChannels()), (int) (from - start), scratch, ch, 0, count, clipGain);
+                for (int ch = 0; ch < channels; ++ch)
+                    out.addFrom (wideChannel (channels, ch, out.getNumChannels()), (int) (from - start), scratch, ch, 0, count, clipGain);
+            });
         }
     }
 
     /** The track's clips, placed but not yet panned (a mono clip into both channels at
         monoPlace), before its effects, pan and volume, into frames [0, numFrames) of out. */
     void renderTrack (const SessionTrack& track, juce::int64 start, juce::AudioBuffer<float>& out, int numFrames,
-                      juce::AudioBuffer<float>& scratch, juce::AudioBuffer<float>& gains, float monoPlace)
+                      juce::AudioBuffer<float>& scratch, juce::AudioBuffer<float>& gains, float monoPlace, bool layered)
     {
         out.clear (0, 0, numFrames);
         out.clear (1, 0, numFrames);
         const auto end = start + numFrames;
 
-        for (auto& clip : track.clips)
+        for (size_t i = 0; i < track.clips.size(); ++i)
         {
-            const auto from = juce::jmax (start, clip.position);
-            const auto to = juce::jmin (end, clip.getEnd());
+            const auto& clip = track.clips[i];
 
-            if (to <= from || clip.audio == nullptr || clip.muted)
+            if (clip.audio == nullptr || clip.muted)
                 continue;
 
-            const auto count = (int) (to - from);
-            grow (scratch, count);
-            const auto channels = juce::jmin (2, readClip (clip, from, count, scratch, gains));
+            forEachHeard (track, i, layered, juce::jmax (start, clip.position), juce::jmin (end, clip.getEnd()), [&] (juce::int64 from, juce::int64 to)
+            {
+                const auto count = (int) (to - from);
+                grow (scratch, count);
+                const auto channels = juce::jmin (2, readClip (clip, from, count, scratch, gains));
 
-            const auto clipGain = juce::Decibels::decibelsToGain (clip.gainDb, -150.0f) * (channels == 1 ? monoPlace : 1.0f);
-            const auto offset = (int) (from - start);
-            out.addFrom (0, offset, scratch, 0, 0, count, clipGain);
-            out.addFrom (1, offset, scratch, channels - 1, 0, count, clipGain);
+                const auto clipGain = juce::Decibels::decibelsToGain (clip.gainDb, -150.0f) * (channels == 1 ? monoPlace : 1.0f);
+                const auto offset = (int) (from - start);
+                out.addFrom (0, offset, scratch, 0, 0, count, clipGain);
+                out.addFrom (1, offset, scratch, channels - 1, 0, count, clipGain);
+            });
         }
     }
 }
@@ -745,12 +814,12 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
         else if (fiveOne)
         {
             if (live == nullptr || live->clips)
-                renderWide (track, start + own + ahead, wide, numFrames, buffers.wideClip, buffers.clipGains);
+                renderWide (track, start + own + ahead, wide, numFrames, buffers.wideClip, buffers.clipGains, state.layerClips);
             else
                 wide.clear (0, numFrames);
         }
         else if (live == nullptr || live->clips)
-            renderTrack (track, start + own + ahead, buffers.track, numFrames, buffers.clip, buffers.clipGains, monoPlace);
+            renderTrack (track, start + own + ahead, buffers.track, numFrames, buffers.clip, buffers.clipGains, monoPlace, state.layerClips);
         else
             buffers.track.clear (0, numFrames);
 

@@ -47,10 +47,72 @@ namespace
     }
 
     bool near (float a, float b)                  { return std::abs (a - b) <= 1.0e-7f; }
+
+    /** Layered clips: over an overlap the clip on top is heard alone, but both through its fades;
+        a muted top clip hides nothing; restacking swaps which is heard; blocks of 7 give the
+        same samples as one; mixing (the default) sums both. */
+    void testLayering()
+    {
+        SessionState s;
+        s.sampleRate = rate;
+        auto& t = s.addTrack();
+        t.clips.push_back (clipOf (s, ramp (2, 1000), 0));     // A, under
+        auto top = clipOf (s, ramp (2, 300), 400);              // B, on top: 400 to 700
+        top.gainDb = 6.0f;
+        t.clips.push_back (top);
+        const auto aId = t.clips[0].id, bId = t.clips[1].id;
+        const auto a = [] (int i) { return (float) (i + 1) / 100000.0f; };
+        const auto b = [&] (int i) { return (float) (i - 400 + 1) / 100000.0f * juce::Decibels::decibelsToGain (6.0f); };
+        const auto heard = [&] (const juce::AudioBuffer<float>& out, int i, float wanted) { return near (out.getSample (0, i), wanted) && near (out.getSample (1, i), -wanted); };
+
+        auto mixed = mix (s, 0, 1000);
+        check (heard (mixed, 500, a (500) + b (500)), "layering: off, overlapping clips mix");
+
+        s.layerClips = true;
+        auto layered = mix (s, 0, 1000);
+        check (heard (layered, 399, a (399)) && heard (layered, 400, b (400)) && heard (layered, 699, b (699)) && heard (layered, 700, a (700)),
+               "layering: on, the clip on top is heard alone over the overlap, the one under on either side");
+
+        auto& fading = s.tracks[0].clips[1];
+        fading.fadeIn = 100;
+        fading.fadeInShape = FadeShape::linear;
+        layered = mix (s, 0, 1000);
+        const auto fadeAt = [&] (int i) { return b (i) * FadeShapes::level (FadeShape::linear, i - 400, 100); };
+        check (heard (layered, 450, a (450) + fadeAt (450)) && heard (layered, 550, b (550)),
+               "layering: over the top clip's fade in both sound (a crossfade); after it, the top clip alone");
+        s.tracks[0].clips[1].fadeIn = 0;
+
+        juce::AudioBuffer<float> pieces (2, 1000);
+        SessionMixer::Buffers scratch;
+
+        for (int p = 0; p < 1000; p += 7)
+            SessionMixer::render (s, p, pieces, p, juce::jmin (7, 1000 - p), scratch);
+
+        layered = mix (s, 0, 1000);
+        auto same = true;
+
+        for (int ch = 0; ch < 2; ++ch)
+            for (int i = 0; i < 1000; ++i)
+                same = same && layered.getSample (ch, i) == pieces.getSample (ch, i);
+
+        check (same, "layering: 7-frame blocks render bit for bit the same as one block");
+
+        s.tracks[0].clips[1].muted = true;
+        check (heard (mix (s, 0, 1000), 500, a (500)), "layering: a muted clip on top hides nothing");
+        s.tracks[0].clips[1].muted = false;
+
+        check (SessionEdits::sendClipsToBack (s, { bId }) && s.tracks[0].clips[0].id == bId && heard (mix (s, 0, 1000), 500, a (500)),
+               "layering: sent to the back, the shorter clip is hidden under the longer");
+        check (SessionEdits::bringClipsToFront (s, { bId }) && s.tracks[0].clips[1].id == bId && s.tracks[0].clips[0].id == aId
+                   && ! SessionEdits::bringClipsToFront (s, { bId }),
+               "layering: brought to the front again it is last; already there, nothing changes");
+    }
 }
 
 void runSessionTests (juce::AudioFormatManager& formats)
 {
+    testLayering();
+
     // A mono clip at the centre: -3 dB each side, starting at its position.
     {
         SessionState s;
@@ -352,6 +414,7 @@ void runSessionTests (juce::AudioFormatManager& formats)
         other.source = slow;
         u.clips.push_back (other);
 
+        s.layerClips = true;
         const auto sessionFile = dir.getChildFile ("song.tqsession");
         check (SessionFile::save (s, sessionFile).isEmpty(), "session file: saves");
 
@@ -361,6 +424,7 @@ void runSessionTests (juce::AudioFormatManager& formats)
         const auto loaded = SessionFile::load (moved.getChildFile ("song.tqsession"), formats);
         check (loaded.error.isEmpty() && loaded.missing.isEmpty() && loaded.state.tracks.size() == 2,
                "session file: loads after the folder moved");
+        check (loaded.state.layerClips, "session file: keeps whether overlapping clips layer");
 
         if (loaded.state.tracks.size() == 2 && loaded.state.tracks[0].clips.size() == 2)
         {

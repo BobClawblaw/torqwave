@@ -1152,6 +1152,9 @@ void MultitrackView::showClipMenu (juce::uint32 clipId)
     menu.addItem ("Lock", true, areSelectedClipsLocked(), [safe] { if (safe != nullptr) safe->setSelectedClipsLocked (! safe->areSelectedClipsLocked()); });
     menu.addItem ("Mute", true, areSelectedClipsMuted(), [safe] { if (safe != nullptr) safe->setSelectedClipsMuted (! safe->areSelectedClipsMuted()); });
     menu.addSeparator();
+    menu.addItem ("Bring to Front", true, false, [safe] { if (safe != nullptr) safe->restackSelectedClips (true); });
+    menu.addItem ("Send to Back", true, false, [safe] { if (safe != nullptr) safe->restackSelectedClips (false); });
+    menu.addSeparator();
     menu.addItem ("Group", canGroupSelectedClips(), false, [safe] { if (safe != nullptr) safe->groupSelectedClips(); });
     menu.addItem ("Ungroup", areSelectedClipsGrouped(), false, [safe] { if (safe != nullptr) safe->ungroupSelectedClips(); });
     menu.showMenuAsync (juce::PopupMenu::Options().withMousePosition());
@@ -4036,6 +4039,24 @@ namespace
 }
 
 bool MultitrackView::areSelectedClipsLocked() const   { return allSelected (shown(), getSelectedClips(), &SessionClip::locked); }
+void MultitrackView::restackSelectedClips (bool toFront)
+{
+    auto next = *engine.session.getState();
+
+    if (toFront ? SessionEdits::bringClipsToFront (next, getSelectedClips()) : SessionEdits::sendClipsToBack (next, getSelectedClips()))
+        engine.session.apply (std::move (next), toFront ? "Bring Clip to Front" : "Send Clip to Back");
+}
+
+void MultitrackView::setLayeringClips (bool on)
+{
+    if (on == isLayeringClips())
+        return;
+
+    auto next = *engine.session.getState();
+    next.layerClips = on;
+    engine.session.apply (std::move (next), on ? "Layer Overlapping Clips" : "Mix Overlapping Clips");
+}
+
 bool MultitrackView::areSelectedClipsMuted() const
 {
     const auto ids = getSelectedClips();

@@ -1873,6 +1873,36 @@ bool rippleRemoved (SessionState& s, const std::vector<RemovedSpan>& removed, Ri
     return changed;
 }
 
+namespace
+{
+    bool restack (SessionState& s, const std::vector<juce::uint32>& ids, bool toFront)
+    {
+        const std::set<juce::uint32> wanted (ids.begin(), ids.end());
+        auto changed = false;
+
+        for (auto& track : s.tracks)
+        {
+            std::vector<juce::uint32> before;
+
+            for (const auto& c : track.clips)
+                before.push_back (c.id);
+
+            std::stable_partition (track.clips.begin(), track.clips.end(), [&wanted, toFront] (const SessionClip& c)
+            {
+                return (wanted.count (c.id) > 0) != toFront;   // to the front: the others first
+            });
+
+            for (size_t i = 0; i < before.size(); ++i)
+                changed = changed || before[i] != track.clips[i].id;
+        }
+
+        return changed;
+    }
+}
+
+bool bringClipsToFront (SessionState& s, const std::vector<juce::uint32>& ids)   { return restack (s, ids, true); }
+bool sendClipsToBack (SessionState& s, const std::vector<juce::uint32>& ids)     { return restack (s, ids, false); }
+
 bool insertTime (SessionState& s, juce::int64 at, juce::int64 length)
 {
     if (at < 0 || length <= 0)
@@ -3354,6 +3384,9 @@ juce::String save (const SessionState& state, const juce::File& target,
     if (state.surround && state.sevenOne)
         root.setAttribute ("sevenOne", true);
 
+    if (state.layerClips)
+        root.setAttribute ("layerClips", true);
+
     // Sends name their bus by its place in the file, since ids are given out afresh on loading.
     std::map<juce::uint32, int> indexOf;
 
@@ -3637,6 +3670,7 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
     state.beatsPerBar = juce::jlimit (1, 16, root->getIntAttribute ("beatsPerBar", 4));
     state.surround = root->getBoolAttribute ("surround");
     state.sevenOne = state.surround && root->getBoolAttribute ("sevenOne");
+    state.layerClips = root->getBoolAttribute ("layerClips");
     std::map<juce::String, AudioDocument::Snapshot> audio;   // by full path: each file read once
     std::map<int, juce::uint32> groups;                      // a clip group's saved id, and its id now
     std::vector<std::pair<size_t, bool>> undecided;          // tracks saved before tracks had kinds: index, and whether an instrument heads the chain

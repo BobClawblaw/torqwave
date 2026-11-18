@@ -166,6 +166,7 @@ namespace
         cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute,   // one a MultitrackView::Tool, in its order
         cmdTimeWithBars, cmdMusicalTimebase, cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes, cmdTimeTool,
         cmdUserGuide, cmdShortcutList, cmdSplitAllTracks, cmdRippleOff, cmdRippleTrack, cmdRippleAll,
+        cmdLayerClips, cmdClipToFront, cmdClipToBack,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -2116,6 +2117,12 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.addDefaultKeypress ('w', 0); info.setTicked (multitrack.isWritingAutomation()); info.setActive (multitrackMode); break;
         case cmdCrossfade:  info.setInfo ("Crossfade Overlaps", "Crossfade a clip moved or trimmed over part of another", "Multitrack", 0);
                             info.addDefaultKeypress ('x', 0); info.setTicked (multitrack.isCrossfading()); info.setActive (multitrackMode); break;
+        case cmdLayerClips: info.setInfo ("Layer Overlapping Clips", "Where clips overlap on a track, hear the one on top rather than both (crossfades still sound both)", "Multitrack", 0);
+                            info.setTicked (multitrack.isLayeringClips()); info.setActive (multitrackMode && ! isRecording()); break;
+        case cmdClipToFront: info.setInfo ("Bring Clip to Front", "Put the selected clips on top of the clips they overlap", "Multitrack", 0);
+                            info.setActive (multitrackMode && multitrack.hasSelectedClip()); break;
+        case cmdClipToBack: info.setInfo ("Send Clip to Back", "Put the selected clips under the clips they overlap", "Multitrack", 0);
+                            info.setActive (multitrackMode && multitrack.hasSelectedClip()); break;
         case cmdRippleOff:  info.setInfo ("No Ripple", "Deleting or cutting clips leaves the time they played over empty", "Multitrack", 0);
                             info.setTicked (multitrack.getRipple() == SessionEdits::Ripple::off); info.setActive (multitrackMode); break;
         case cmdRippleTrack: info.setInfo ("Ripple Track", "Deleting or cutting clips moves the later clips on their tracks back to close the gap", "Multitrack", 0);
@@ -2789,6 +2796,9 @@ bool MainComponent::perform (const InvocationInfo& info)
             multitrack.setWritingAutomation (! multitrack.isWritingAutomation());
             commands.commandStatusChanged();
             break;
+        case cmdLayerClips: multitrack.setLayeringClips (! multitrack.isLayeringClips()); commands.commandStatusChanged(); break;
+        case cmdClipToFront: multitrack.restackSelectedClips (true); break;
+        case cmdClipToBack: multitrack.restackSelectedClips (false); break;
         case cmdRippleOff: case cmdRippleTrack: case cmdRippleAll:
             multitrack.setRipple (info.commandID == cmdRippleTrack ? SessionEdits::Ripple::track
                                   : info.commandID == cmdRippleAll ? SessionEdits::Ripple::allTracks : SessionEdits::Ripple::off);
@@ -3046,11 +3056,11 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdAddFromTemplate, cmdSaveTrackTemplate, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
                                0, cmdTrackAbove, cmdTrackBelow, 0, cmdUnsoloAll, cmdUnmuteAll });
             group ("Tools", { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute });
-            group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines });
+            group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines, 0, cmdClipToFront, cmdClipToBack });
             group ("Arrange", { cmdNudgeEarlier, cmdNudgeLater, cmdMoveClipsToCursor, cmdTrimStartToCursor, cmdTrimEndToCursor, cmdCloseGaps, cmdQuantize });
             group ("Notes", { cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes });
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
-            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdWriteAutomation, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes });
+            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdWriteAutomation, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes });
             group ("Tempo", { cmdMetronome, cmdCountIn, 0, cmdTempo, cmdTapTempo, cmdTempoChange, cmdBarsAndBeats, cmdTimeWithBars, 0, cmdMusicalTimebase });
             group ("Surround", { cmdSurroundMaster, cmdSevenOneMaster });
             group ("Render and Export", { cmdBounceTrack, cmdFreezeTrack, 0, cmdMixDown, cmdExportStems, cmdExportFolderStems, cmdExportRegions });

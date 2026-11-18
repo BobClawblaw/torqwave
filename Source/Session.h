@@ -456,6 +456,11 @@ struct SessionState
         than 5.1. */
     bool sevenOne = false;
 
+    /** Overlapping clips on a track layer, rather than mix: a clip later in its track's list (on
+        top) hides the part of the ones under it it covers, except over its own fades, so
+        crossfades still sound both. */
+    bool layerClips = false;
+
     /** The master's channels: 2, 6 for 5.1 or 8 for 7.1. */
     int masterChannels() const noexcept    { return ! surround ? 2 : sevenOne ? 8 : 6; }
 
@@ -790,6 +795,11 @@ namespace SessionEdits
         taken out of the session as deleteTime does, markers and all. Locked clips stay where
         they are. False when nothing moved. */
     bool rippleRemoved (SessionState&, const std::vector<RemovedSpan>&, Ripple);
+
+    /** Puts the clips on top of the others on their tracks (last in the list), or under them
+        (first), keeping their order among themselves. False when none moved. */
+    bool bringClipsToFront (SessionState&, const std::vector<juce::uint32>& clipIds);
+    bool sendClipsToBack (SessionState&, const std::vector<juce::uint32>& clipIds);
 
     /** Puts `length` frames of empty time into the session at `at`. On every track, hidden ones
         too, clips across it are split there, and the clips, envelope points and markers from it on

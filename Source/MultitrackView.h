@@ -278,6 +278,15 @@ public:
     /** True when there are selected clips and every one is muted. */
     bool areSelectedClipsMuted() const;
 
+    /** Puts the selected clips on top of the others on their tracks, or under them, as one undo
+        step: which part of an overlap is heard when the session layers its clips. */
+    void restackSelectedClips (bool toFront);
+
+    /** Whether the session layers overlapping clips (the top one heard) rather than mixing them;
+        changing it is an undo step. */
+    bool isLayeringClips() const                  { return shown().layerClips; }
+    void setLayeringClips (bool);
+
     /** Mutes (or unmutes) every selected clip as one undo step ("Mute Clip", "Unmute 2 Clips").
         A muted clip is drawn grey and isn't heard, but can be edited as usual. */
     void setSelectedClipsMuted (bool muted);
