@@ -2246,8 +2246,20 @@ void MultitrackView::drawClipGain (juce::Graphics& g, int track, const SessionCl
     {
         const auto x = xForFrame (c.position + p.frame - c.offset);
 
-        if (x >= left - 4.0f && x <= right + 4.0f)
-            g.fillEllipse (juce::Rectangle<float> (7.0f, 7.0f).withCentre ({ x, yForClipGain (area, p.value) }));
+        if (x < left - 4.0f || x > right + 4.0f)
+            continue;
+
+        // A selected point is larger, white with the line's colour round it.
+        const auto selected = isPointSelected (shown().tracks[(size_t) track].id, {}, c.id, p);
+        const auto dot = juce::Rectangle<float> (selected ? 9.0f : 7.0f, selected ? 9.0f : 7.0f).withCentre ({ x, yForClipGain (area, p.value) });
+        g.setColour (selected ? juce::Colours::white : colour);
+        g.fillEllipse (dot);
+
+        if (selected)
+        {
+            g.setColour (colour);
+            g.drawEllipse (dot, 2.0f);
+        }
     }
 }
 
@@ -2337,10 +2349,12 @@ void MultitrackView::drawEnvelope (juce::Graphics& g, int track, const Automatio
         if (x < left - 5.0f || x > right + 5.0f)
             continue;
 
-        const auto dot = juce::Rectangle<float> (7.0f, 7.0f).withCentre ({ x, yForValue (track, p, point.value) });
+        const auto selected = isPointSelected (t.id, p, 0, point);
+        const auto dot = juce::Rectangle<float> (selected ? 9.0f : 7.0f, selected ? 9.0f : 7.0f).withCentre ({ x, yForValue (track, p, point.value) });
+        g.setColour (selected ? juce::Colours::white : colour);
         g.fillEllipse (dot);
-        g.setColour (juce::Colours::black);
-        g.drawEllipse (dot, 1.0f);
+        g.setColour (selected ? colour : juce::Colours::black);
+        g.drawEllipse (dot, selected ? 2.0f : 1.0f);
         g.setColour (colour);
     }
 }
@@ -3406,6 +3420,8 @@ std::vector<juce::uint32> MultitrackView::getSelectedNoteClips() const
 
 void MultitrackView::selectNoteClip (juce::uint32 clipId, bool adding)
 {
+    selectedPoints.reset();   // clips and points aren't selected together, so Delete has one meaning
+
     if (! adding)
     {
         // One note clip alone (or none, leaving any audio clips selected).
@@ -3515,6 +3531,8 @@ void MultitrackView::gatherDragGroups (juce::uint32 exceptClip, juce::uint32 exc
 
 void MultitrackView::selectClip (juce::uint32 clipId, bool adding)
 {
+    selectedPoints.reset();
+
     // A clip in a group brings the rest of its group with it, into the selection or out of it.
     const auto group = SessionEdits::clipGroup (shown(), clipId);
 
@@ -3700,6 +3718,91 @@ void MultitrackView::deleteSelectedClip()
     selectNoteClip (0);
     engine.session.apply (std::move (next), removed + notesRemoved > 1 ? "Delete " + juce::String (removed + notesRemoved) + " Clips"
                                             : removed == 1 ? juce::String ("Delete Clip") : juce::String ("Remove Notes"));
+}
+
+void MultitrackView::selectPoint (PointSelection line, const AutomationPoint& point, bool adding)
+{
+    if (adding && selectedPoints.has_value() && selectedPoints->isOn (line.trackId, line.parameter, line.clipId))
+    {
+        auto& points = selectedPoints->points;
+
+        if (const auto found = std::find (points.begin(), points.end(), point); found != points.end())
+            points.erase (found);
+        else
+            points.push_back (point);
+
+        repaint();
+        return;
+    }
+
+    selectClip (0, false);
+    selectNoteClip (0);
+    line.points = { point };
+    selectedPoints = std::move (line);
+    repaint();
+}
+
+bool MultitrackView::isPointSelected (juce::uint32 trackId, const AutomationTarget& parameter, juce::uint32 clipId,
+                                      const AutomationPoint& point) const
+{
+    return ! hasSelectedClip() && selectedPoints.has_value() && selectedPoints->isOn (trackId, parameter, clipId)
+        && selectedPoints->contains (point);
+}
+
+bool MultitrackView::hasSelectedPoints() const
+{
+    // Selecting clips, by any means, drops the points: Delete then means the clips.
+    if (! selectedPoints.has_value() || selectedPoints->points.empty() || hasSelectedClip())
+        return false;
+
+    // Only points on a line that is showing: Delete never removes what can't be seen.
+    if (selectedPoints->clipId != 0)
+        return showClipGain && state->findClip (selectedPoints->clipId).has_value();
+
+    const auto parameter = getShownEnvelope (selectedPoints->trackId);
+    return parameter.has_value() && *parameter == selectedPoints->parameter;
+}
+
+int MultitrackView::getNumSelectedPoints() const
+{
+    return hasSelectedPoints() ? (int) selectedPoints->points.size() : 0;
+}
+
+bool MultitrackView::deleteSelectedPoints()
+{
+    if (! hasSelectedPoints())
+        return false;
+
+    const auto selection = *std::exchange (selectedPoints, std::nullopt);
+    auto next = *engine.session.getState();
+    const auto where = selection.clipId != 0 ? next.findClip (selection.clipId) : std::nullopt;
+    const auto* track = next.findTrack (selection.trackId);
+    auto envelope = where.has_value() ? next.tracks[(size_t) where->first].clips[(size_t) where->second].gainEnvelope
+                  : track != nullptr ? track->envelope (selection.parameter) : Envelope();
+    auto removed = 0;
+
+    for (auto i = (int) envelope.points.size(); --i >= 0;)
+        if (selection.contains (envelope.points[(size_t) i]))
+        {
+            envelope.remove (i);
+            ++removed;
+        }
+
+    repaint();
+
+    if (removed == 0)
+        return false;
+
+    const auto what = juce::String (selection.clipId != 0 ? "Clip Gain Point" : "Envelope Point");
+    const auto description = removed == 1 ? "Delete " + what : "Delete " + juce::String (removed) + " " + what + "s";
+
+    if (selection.clipId != 0)
+        SessionEdits::setClipGainEnvelope (next, selection.clipId, std::move (envelope));
+    else
+        SessionEdits::setEnvelope (next, selection.trackId, selection.parameter, std::move (envelope));
+
+    engine.session.apply (std::move (next), description);
+    return true;
 }
 
 bool MultitrackView::removeClipKeepingSpan (SessionState& s, juce::uint32 id, std::vector<SessionEdits::RemovedSpan>& spans)
@@ -5079,6 +5182,15 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
             return;
         }
 
+        const PointSelection line { track.id, 0, hit->parameter, {} };
+
+        // Shift-click adds a point to the selection or takes it out, without moving it.
+        if (e.mods.isShiftDown() && hit->point >= 0)
+        {
+            selectPoint (line, envelope.points[(size_t) hit->point], true);
+            return;
+        }
+
         dragEnvelope = *hit;
         dragDescription = "Move Envelope Point";
 
@@ -5093,6 +5205,9 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
             SessionEdits::setEnvelope (next, track.id, hit->parameter, envelope);
             preview = std::move (next);
         }
+
+        // The point clicked (or added) is the selection, and follows it while it is dragged.
+        selectPoint (line, envelope.points[(size_t) dragEnvelope.point], false);
 
         dragEnvelopeBase = std::move (envelope);
         drag = Drag::envelopePoint;
@@ -5120,6 +5235,14 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
             return;
         }
 
+        const PointSelection line { shown().tracks[(size_t) hit->track].id, clip.id, {}, {} };
+
+        if (e.mods.isShiftDown() && hit->point >= 0)
+        {
+            selectPoint (line, envelope.points[(size_t) hit->point], true);
+            return;
+        }
+
         dragClip = clip;
         dragClipGain = *hit;
         dragDescription = "Move Clip Gain Point";
@@ -5135,6 +5258,8 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
             SessionEdits::setClipGainEnvelope (next, clip.id, envelope);
             preview = std::move (next);
         }
+
+        selectPoint (line, envelope.points[(size_t) dragClipGain.point], false);
 
         dragEnvelopeBase = std::move (envelope);
         drag = Drag::clipGainPoint;
@@ -5415,15 +5540,24 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
         {
             // Kept within the part of the clip heard.
             auto envelope = dragEnvelopeBase;
-            envelope.move (dragClipGain.point, clipAudioFrameForX (dragClip, (float) p.x), clipGainForY (clipGainArea (dragClipGain.track, dragClip), (float) p.y));
+            const auto moved = envelope.move (dragClipGain.point, clipAudioFrameForX (dragClip, (float) p.x),
+                                              clipGainForY (clipGainArea (dragClipGain.track, dragClip), (float) p.y));
+
+            if (selectedPoints.has_value())
+                selectedPoints->points = { envelope.points[(size_t) moved] };
+
             SessionEdits::setClipGainEnvelope (next, dragClip.id, std::move (envelope));
             break;
         }
         case Drag::envelopePoint:
         {
             auto envelope = dragEnvelopeBase;
-            envelope.move (dragEnvelope.point, snapped (frameForX ((float) p.x)),
-                           valueForY (dragEnvelope.track, dragEnvelope.parameter, (float) p.y));
+            const auto moved = envelope.move (dragEnvelope.point, snapped (frameForX ((float) p.x)),
+                                              valueForY (dragEnvelope.track, dragEnvelope.parameter, (float) p.y));
+
+            if (selectedPoints.has_value())
+                selectedPoints->points = { envelope.points[(size_t) moved] };
+
             SessionEdits::setEnvelope (next, next.tracks[(size_t) dragEnvelope.track].id, dragEnvelope.parameter, std::move (envelope));
             break;
         }

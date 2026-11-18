@@ -796,6 +796,43 @@ void runMultitrackViewTests (AudioEngine& engine)
     check (engine.session.getState()->tracks[0].volumeEnvelope.points.size() == pointsBefore && engine.session.getUndoDescription() == undoBefore,
            "view: an Option-click on the line, off every point, adds nothing");
 
+    // Selecting points and deleting them: a click on the line adds a point and selects it alone,
+    // Shift-click adds the other, and Delete takes both out in one step.
+    {
+        const auto volumeCount = [&] { return engine.session.getState()->tracks[0].volumeEnvelope.points.size(); };
+        mouse.click ({ x (100000), lineAt });
+        const auto addedSelected = volumeCount() == pointsBefore + 1 && view.getNumSelectedPoints() == 1
+                                && engine.session.getUndoDescription() == "Add Envelope Point";
+        mouse.click ({ pointX, pointY }, juce::ModifierKeys::shiftModifier);
+        const auto shiftAdded = view.getNumSelectedPoints() == 2 && volumeCount() == pointsBefore + 1;
+        const auto deleted = view.deleteSelectedPoints() && volumeCount() == pointsBefore - 1
+                          && engine.session.getUndoDescription() == "Delete 2 Envelope Points" && ! view.hasSelectedPoints();
+        Mouse::settle();
+        engine.session.undo();
+        Mouse::settle();
+        const auto undone = volumeCount() == pointsBefore + 1;
+        engine.session.undo();
+        Mouse::settle();
+
+        // A click selects a point; Shift-clicking it again takes it out; a hidden line's points
+        // are never deleted.
+        mouse.click ({ pointX, pointY });
+        const auto clickSelects = view.getNumSelectedPoints() == 1 && volumeCount() == pointsBefore;
+        mouse.click ({ pointX, pointY }, juce::ModifierKeys::shiftModifier);
+        const auto shiftRemoves = ! view.hasSelectedPoints();
+        mouse.click ({ pointX, pointY });
+        view.showEnvelope (trackId, std::nullopt);
+        const auto hiddenKept = ! view.hasSelectedPoints() && ! view.deleteSelectedPoints() && volumeCount() == pointsBefore;
+        view.showEnvelope (trackId, AutomationParameter::volume);
+        view.selectAllClips();
+        const auto clipsClear = ! view.hasSelectedPoints();
+        Mouse::settle();
+
+        check (addedSelected && shiftAdded && deleted && undone && clickSelects && shiftRemoves && hiddenKept && clipsClear,
+               "view: a click selects a point (a new one too), Shift-click adds or removes one, and Delete removes the selected "
+               "points in one undo step; selecting clips drops them, and a hidden envelope's points stay");
+    }
+
     mouse.click ({ pointX, pointY }, optionHeld);
     check (engine.session.getState()->tracks[0].volumeEnvelope.isEmpty() && engine.session.getUndoDescription() == "Delete Envelope Point",
            "view: Option-click deletes the point");
@@ -2708,9 +2745,18 @@ void runMultitrackViewTests (AudioEngine& engine)
         gainMouse.click (gainPoint, juce::ModifierKeys::altModifier);
         const auto removed = linePoints().empty() && engine.session.getUndoDescription() == "Delete Clip Gain Point";
 
-        check (hiddenDoesNothing && added && dragged && deletePointer && removed,
+        // The point dragged stayed selected as it moved, so Delete removes it.
+        engine.session.undo();
+        Mouse::settle();
+        gainMouse.click (gainPoint);
+        const auto selectedDeleted = gainView.getNumSelectedPoints() == 1 && gainView.getSelectedClips().empty()
+                                  && gainView.deleteSelectedPoints() && linePoints().empty()
+                                  && engine.session.getUndoDescription() == "Delete Clip Gain Point";
+        Mouse::settle();
+
+        check (hiddenDoesNothing && added && dragged && deletePointer && removed && selectedDeleted,
                "clip gain line: with the lines shown, clicking a clip's line adds a point, dragging moves it (by its clip's audio frames), "
-               "and with Option held the point shows the delete pointer and a click removes it");
+               "with Option held the point shows the delete pointer and a click removes it, and a clicked point is selected for Delete");
     }
 
     {

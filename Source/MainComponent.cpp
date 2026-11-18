@@ -2296,7 +2296,9 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (session.canUndo()); break;
             case cmdRedo:   info.shortName = session.canRedo() ? "Redo " + session.getRedoDescription() : juce::String ("Redo");
                             info.setActive (session.canRedo()); break;
-            case cmdDelete: info.shortName = "Delete Clip"; info.setActive (multitrack.hasSelectedClip()); break;
+            case cmdDelete: info.shortName = multitrack.hasSelectedPoints() ? (multitrack.getNumSelectedPoints() > 1 ? "Delete Points" : "Delete Point")
+                                                                            : juce::String ("Delete Clip");
+                            info.setActive (multitrack.hasSelectedClip() || multitrack.hasSelectedPoints()); break;
             case cmdSelectAll: info.shortName = "Select All Clips"; info.setActive (hasClips); break;
             case cmdZoomSelection: info.shortName = "Zoom to Time Range"; info.setActive (! multitrack.getTimeSelection().isEmpty()); break;
             case cmdCut:    info.shortName = "Cut Clip"; info.setActive (multitrack.hasSelectedClip()); break;
@@ -2370,7 +2372,9 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdSaveRegions: chooseFileRegionsFolder (false); break;
         case cmdSavePieces: chooseFileRegionsFolder (true); break;
         case cmdDuplicateClip: multitrack.duplicateSelectedClip(); break;
-        case cmdDelete:     if (multitrackMode) multitrack.deleteSelectedClip(); else deleteSelection(); break;   // a spectral selection: its frequencies
+        case cmdDelete:     if (multitrackMode) { if (! multitrack.deleteSelectedPoints()) multitrack.deleteSelectedClip(); }
+                            else deleteSelection();
+                            break;   // a spectral selection: its frequencies
         case cmdSelectAll:  if (multitrackMode) multitrack.selectAllClips(); else waveform.selectAll(); break;
         case cmdCrop:       cropToSelection(); break;
         case cmdGain:       applyGain(); break;

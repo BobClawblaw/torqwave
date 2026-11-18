@@ -229,6 +229,14 @@ public:
 
     void deleteSelectedClip();     // every selected clip
 
+    /** True when points of a shown envelope, or of a shown clip gain line, are selected (a click
+        on a point selects it, Shift-click adds or removes one). */
+    bool hasSelectedPoints() const;
+    int getNumSelectedPoints() const;
+
+    /** Removes the selected points, as one undo step; false, changing nothing, when none are. */
+    bool deleteSelectedPoints();
+
     /** The selected clips, copied for pasting (their audio is shared, not duplicated), with
         where they are on the timeline and the tracks relative to each other. */
     bool copySelectedClip();
@@ -766,6 +774,32 @@ private:
         plays, otherwise the cursor. */
     juce::int64 controlFrame() const;
     std::map<juce::uint32, AutomationTarget> shownEnvelopes;
+
+    /** Selected points, all on one line: a track's envelope, or a clip's gain line (clipId set).
+        Kept by time and value, so a selection that no longer matches a point removes nothing. */
+    struct PointSelection
+    {
+        juce::uint32 trackId = 0, clipId = 0;
+        AutomationTarget parameter;
+        std::vector<AutomationPoint> points;
+
+        bool isOn (juce::uint32 track, const AutomationTarget& p, juce::uint32 clip) const
+        {
+            return clip != 0 ? clipId == clip : clipId == 0 && trackId == track && parameter == p;
+        }
+
+        bool contains (const AutomationPoint& point) const
+        {
+            return std::find (points.begin(), points.end(), point) != points.end();
+        }
+    };
+
+    std::optional<PointSelection> selectedPoints;
+
+    /** Selects one point (dropping the clip selection), or with adding, adds it to the points
+        selected on its line or takes it out. */
+    void selectPoint (PointSelection line, const AutomationPoint&, bool adding);
+    bool isPointSelected (juce::uint32 trackId, const AutomationTarget&, juce::uint32 clipId, const AutomationPoint&) const;
 
     juce::Component headerArea;
     std::vector<std::unique_ptr<TrackHeader>> headers;

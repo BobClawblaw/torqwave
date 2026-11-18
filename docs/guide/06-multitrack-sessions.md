@@ -99,6 +99,7 @@ Beside the tools are the tempo (click it to set it) and the **Bars** switch, whi
 
 - Click the line to add a point.
 - Drag a point to move it.
+- Click a point to select it (Shift-click adds or removes more), then press Delete or Backspace to remove them.
 - Option-click a point to remove it. With Option held, the pointer over a point turns into a dot with a red minus; over the line, Option-click adds nothing.
 
 **Clip Properties** (Shift-Cmd-I) shows the selected clip's name, start, length, gain and fades, for reading and typing.
@@ -157,7 +158,7 @@ The master meter is on the right.
 
 An envelope makes volume, pan or an effect parameter change over time.
 
-- **Draw it:** click a track's **A** button and choose the envelope to show: volume, pan, or a parameter of one of the track's effects. Click the line to add a point, drag points to shape it, and Option-click a point to remove it (with Option held, the pointer over a point shows a red minus; over the line, Option-click adds nothing).
+- **Draw it:** click a track's **A** button and choose the envelope to show: volume, pan, or a parameter of one of the track's effects. Click the line to add a point, drag points to shape it, Click a point to select it (Shift-click adds more) and press Delete or Backspace to remove the selected points, or Option-click a point to remove it (with Option held, the pointer over a point shows a red minus; over the line, Option-click adds nothing).
 - **Write it while playing:** turn on **Write Automation** (W) and play. Moving the track's volume or pan then writes into its envelope.
 
 ![The Keys track's volume envelope, shown with its A button: the line drops for the verse and rises into the chorus](../screenshots/guide-automation.png)
