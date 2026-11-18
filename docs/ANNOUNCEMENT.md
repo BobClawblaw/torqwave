@@ -37,7 +37,7 @@ STILL EARLY, AND THAT'S THE POINT
 
 Torqwave is still early in development, but I'm happy enough with it to put it into more hands for testing. Every release is a dogfooding release: what real use turns up gets fixed and shipped, and 1.0.0 comes once a round of use like that runs clean.
 
-The latest, 0.16.4, came straight out of that loop: a home screen with your recent work, ripple editing, Option-drag to copy clips, envelope points you can select and delete, automation that shows itself, and instrument parameters you can automate.
+The latest releases came straight out of that loop. Since 0.16.1: the user guide inside the app, a home screen with your recent work, ripple editing for clips and time ranges, Option-drag to copy clips, envelope points you can select and delete, and automation that shows itself, on instrument tracks too. 0.16.4 is the newest.
 
 GET IT
 
