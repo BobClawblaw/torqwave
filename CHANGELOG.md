@@ -4,6 +4,14 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+Nothing yet.
+
+## Released
+
+**Release 0.16.1: Instruments as you play them**
+- `Torqwave-0.16.1.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.16.1-windows-x64-setup.exe` and `Torqwave-0.16.1-windows-x64.zip`) and the Linux tarball (`Torqwave-0.16.1-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the changes below on top of 0.16.0, from a round of use of 0.16.0 with instrument tracks; in the [dogfooding log](docs/DOGFOODING.md) as rows 33 to 41. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app for arm64 at the release's tag, signed it, and the whole suite (1,634 checks) passed with the signed app as the plug-in scan worker; the disk image's SHA-256 matched its `.sha256`, its app verified (`codesign --verify --deep --strict`), reads 0.16.1 with the bundle ID `org.torqwave.editor` and holds arm64 alone, and its loading screen and About box show the plain version, as a release build should.
+
 **Instruments sound as you play and edit them**
 - The piano roll plays what you do: a click on its keyboard sounds the key until the mouse is let go, a drag along the keys plays each one it passes, and a note sounds while it is put in, clicked or dragged, at each pitch it moves to, through the clip's instrument. Before, nothing sounded until the session played.
 - Notes played live (the Keyboard panel and the MIDI inputs) go to the instrument of the track being worked on: the selected track when it is an instrument track, otherwise the track of the note clip in the piano roll. Before, they went to the selected track alone, so with an audio track or nothing selected they went nowhere.
@@ -34,8 +42,8 @@ Each milestone as it was built, newest first, with what the tests measured on th
 **No Open buttons**
 - The Open... button is gone from the toolbar and from the top of the Files panel: File > Open (Cmd+O) opens files, as before.
 
-**Checked on the development Mac (macOS 27)**
-- The whole suite passed, with new checks that:
+**Checked for these changes**
+- New checks in the suite:
   - a note played live into a stopped session sounds through the track's instrument (the built-in synth);
   - a new track takes over only once the held note is off;
   - the piano roll's keys and notes sound and end as the mouse goes down, moves and is let go;
@@ -46,10 +54,7 @@ Each milestone as it was built, newest first, with what the tests measured on th
   - the version shown is plain for a release build and stamped for a test build;
   - stopping playback in the middle of a clip's note sends the instrument that note's own off and every note off (the same check failed before the fix);
   - stopped, a note clip's note at the cursor is not played again block after block (before the fix it started in all 24 of 24 blocks).
-- The header menu's new items and the right-click on a track's name have no automated check; they are for checking by hand.
-- A plug-in's own keys sounding, and the stuck notes being gone, are for checking by hand.
-
-## Released
+- By hand in the app on the development Mac: the piano roll's keys and notes sound, its first note no longer sticks, and a stop ends a note on Native Instruments' Massive (VST3). A probe that loaded Massive, played a note clip and stopped in the middle of a note measured the output silent from 0.25 s after the stop on (the release fading before that). The header menu's new items, the right-click on a track's name, the track list's width, File > Open with sessions and the loading screen's version have their automated checks only.
 
 **Release 0.16.0: Torqwave**
 - `Torqwave-0.16.0.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.16.0-windows-x64-setup.exe` and `Torqwave-0.16.0-windows-x64.zip`) and the Linux tarball (`Torqwave-0.16.0-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the new name and artwork and the editor tab's name below, on top of 0.15.10, with nothing else changed. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.
