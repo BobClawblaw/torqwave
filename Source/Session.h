@@ -461,6 +461,15 @@ struct SessionState
         crossfades still sound both. */
     bool layerClips = false;
 
+    /** The loop: a range of session time that Loop Playback goes round (as a cycle between
+        locators), whatever is selected; empty for none. Kept with the session, but set outside
+        the undo steps (Session::setLoop). */
+    juce::Range<juce::int64> loop;
+
+    /** The ruler counts bars and beats of the tempo (and snaps to its beats). Kept with the
+        session, outside the undo steps (Session::setBarsAndBeats). */
+    bool barsAndBeats = false;
+
     /** The master's channels: 2, 6 for 5.1 or 8 for 7.1. */
     int masterChannels() const noexcept    { return ! surround ? 2 : sevenOne ? 8 : 6; }
 
@@ -1019,7 +1028,12 @@ public:
     /** Goes back or forward to a step in getHistory(), as that many undos or redos would. */
     void goTo (int step);
 
-    bool isDirty() const noexcept                 { return position != savedPosition || effectsChanged; }
+    bool isDirty() const noexcept                 { return position != savedPosition || effectsChanged || viewChanged; }
+
+    /** The loop and the ruler's bars and beats, as a transport's locators are: saved with the
+        session but not undo steps, and an undo or redo leaves them as they are. */
+    void setLoop (juce::Range<juce::int64>);
+    void setBarsAndBeats (bool);
     void markSaved (const juce::File& savedAs);
 
     /** Marks the session as having changes to save (a recovered copy, say), at every step. */
@@ -1040,6 +1054,10 @@ private:
 
     void setCurrent (const State&);
 
+    /** The state with this session's loop and bars and beats, as setLoop and setBarsAndBeats keep them. */
+    State withViewOf (State, const SessionState& now) const;
+    void replaceCurrent (SessionState);
+
     mutable juce::SpinLock lock;
     State current;
     std::atomic<juce::uint32> version { 0 };
@@ -1049,6 +1067,7 @@ private:
     int position = 0;
     int savedPosition = 0;
     bool effectsChanged = false;
+    bool viewChanged = false;   // the loop or bars and beats, since the last save
     std::vector<State> pendingRelease;
     juce::File file;
 

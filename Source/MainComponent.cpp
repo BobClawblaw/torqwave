@@ -171,6 +171,7 @@ namespace
         cmdTakeOutOfFolder,
         cmdAskTorqwave,
         cmdSaveInstrumentPreset,
+        cmdLoopToSelection, cmdClearLoop,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -1036,6 +1037,7 @@ MainComponent::MainComponent()
     multitrack.onFilesDropped = [this] (const juce::StringArray& files, int track, juce::int64 frame) { addFilesToSession (files, track, frame); };
     multitrack.onOpenFileDropped = [this] (int index, int track, juce::int64 frame) { addOpenFileToSession (index, track, frame); };
     multitrack.onSelectionChanged = [this] { commands.commandStatusChanged(); timerCallback(); };
+    multitrack.isLoopPlaybackOn = [this] { return loopPlayback; };
 
     // Option-dragging a clip's edge: the clip (selected by the drag) stretched to where it was let go.
     multitrack.onStretchClip = [this] (juce::uint32 clipId, double ratio, bool keepEnd)
@@ -1733,7 +1735,7 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
 
         case cmdPlayPause:  info.setInfo ("Play/Pause", "Play the selection (with a box, lasso or brush selection in the spectrogram, only what is inside it), or from the cursor", "Transport", 0);
                             info.addDefaultKeypress (juce::KeyPress::spaceKey, 0); info.setActive (hasAudio); break;
-        case cmdLoopPlayback: info.setInfo ("Loop Playback", "Play the selection or time range over and over, or the whole file or session with nothing selected", "Transport", 0);
+        case cmdLoopPlayback: info.setInfo ("Loop Playback", "Play the loop (in a session that has one), the selection or time range over and over, or the whole file or session with nothing selected", "Transport", 0);
                             info.addDefaultKeypress ('l', cmd); info.setTicked (loopPlayback); break;
         case cmdNextRegion: case cmdPreviousRegion:
         {
@@ -2236,6 +2238,12 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
         case cmdSaveTrackTemplate: info.setInfo ("Save Track as Template...", "Save the selected track's settings, sends, effects and automation to start new tracks from", "Multitrack", 0);
                             info.setActive (multitrackMode && multitrack.getSelectedTrack() >= 0
                                             && ! engine.session.getState()->tracks[(size_t) multitrack.getSelectedTrack()].isFolder); break;
+        case cmdLoopToSelection: info.setInfo ("Loop to Selection", "Make the session's loop the time range, or the selected clips' span: the band along the top of the ruler that Loop Playback goes round", "Transport", 0);
+                            info.addDefaultKeypress ('p', alt);
+                            info.setActive (multitrackMode && (! multitrack.getTimeSelection().isEmpty() || ! multitrack.getSelectedClips().empty()
+                                                               || ! multitrack.getSelectedNoteClips().empty())); break;
+        case cmdClearLoop: info.setInfo ("Clear Loop", "Remove the session's loop, so Loop Playback goes round the selection or the whole session", "Transport", 0);
+                            info.setActive (multitrackMode && ! engine.session.getState()->loop.isEmpty()); break;
         case cmdSaveInstrumentPreset: info.setInfo ("Save Instrument Preset...", "Save the selected track's instrument as it sounds now (a drum kit, say), to choose again by name, and for Ask Torq", "Multitrack", 0);
                             info.setActive (multitrackMode && selectedInstrument() != nullptr); break;
         case cmdAddFromTemplate: info.setInfo ("Add Track from Template...", "Add a track or bus made from a saved template", "Multitrack", 0);
@@ -2605,6 +2613,7 @@ bool MainComponent::perform (const InvocationInfo& info)
             loopPlayback = ! loopPlayback;
             appProperties.getUserSettings()->setValue (loopPlaybackKey, loopPlayback);
             updatePlaybackLoop();
+            multitrack.repaint();   // the loop band shows whether it is on
             commands.commandStatusChanged();
             break;
         case cmdLoopRegion: loopRegion(); break;
@@ -2816,6 +2825,8 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdSessionNotes: dock->toggle (Panels::notes); break;
         case cmdSaveTrackTemplate: chooseTrackTemplateToSave(); break;
         case cmdSaveInstrumentPreset: showSaveInstrumentPreset(); break;
+        case cmdLoopToSelection: multitrack.setLoopFromSelection(); updatePlaybackLoop(); break;
+        case cmdClearLoop: multitrack.clearLoop(); updatePlaybackLoop(); break;
         case cmdSaveCopyWithAudio: saveSessionCopyWithAudio(); break;
         case cmdAddFromTemplate: chooseTrackTemplateToAdd(); break;
         case cmdZeroCrossings:
@@ -3165,7 +3176,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             group ("Surround", { cmdSurroundMaster, cmdSevenOneMaster });
             group ("Render and Export", { cmdBounceTrack, cmdFreezeTrack, 0, cmdMixDown, cmdExportStems, cmdExportFolderStems, cmdExportRegions });
             break;
-        case 5: add ({ cmdPlayPause, cmdStop, cmdLoopPlayback, cmdLoopRegion, cmdRecord, cmdRecordingOptions, 0, cmdGoToStart, cmdGoToEnd, cmdPreviousEdge, cmdNextEdge, cmdGoToTime, 0, cmdSurroundFoldDown, cmdSurroundOutputs }); break;
+        case 5: add ({ cmdPlayPause, cmdStop, cmdLoopPlayback, cmdLoopRegion, cmdLoopToSelection, cmdClearLoop, cmdRecord, cmdRecordingOptions, 0, cmdGoToStart, cmdGoToEnd, cmdPreviousEdge, cmdNextEdge, cmdGoToTime, 0, cmdSurroundFoldDown, cmdSurroundOutputs }); break;
         case 6: add ({ cmdAddMarker, cmdRegionFromClips, cmdRegionsOverClips, cmdMarkersAtIntervals, cmdMarkersAtSilences, cmdRegionsOverSounds, cmdMarkClipping, cmdRegionsFromMarkers, cmdFitRegions, cmdRenameMarkers, 0, cmdPreviousMarker, cmdNextMarker, cmdSelectBetweenMarkers, cmdSelectRegion, cmdPreviousRegion, cmdNextRegion, cmdMarkersToZero, 0, cmdMoveMarkersInSelection, cmdDeleteMarkersInSelection, cmdDeleteAllMarkers }); break;
         case 7:
         {
@@ -12343,9 +12354,11 @@ void MainComponent::updatePlaybackLoop()
     if (isRecording() || previewOwner != PreviewOwner::none)
         return;
 
-    // The selection or time range; with none, the whole file or session.
+    // A session's loop; else the selection or time range; with none, the whole file or session.
+    const auto sessionLoop = multitrackMode ? engine.session.getState()->loop : juce::Range<juce::int64>();
     const auto range = playRange();
-    const auto whole = ! range.isEmpty() ? range
+    const auto whole = ! sessionLoop.isEmpty() ? sessionLoop
+                     : ! range.isEmpty() ? range
                      : juce::Range<juce::int64> (0, multitrackMode ? engine.session.getState()->getLength() : engine.document.getNumFrames());
     const auto wanted = loopPlayback && player.isPlaying() ? whole : juce::Range<juce::int64>();
 
@@ -12367,6 +12380,16 @@ void MainComponent::updatePlaybackLoop()
     // there is no stop: the loop goes round at the end, and with the loop turned off the play runs
     // on to the end. A play now outside the loop (the selection shortened behind it, or moved)
     // starts the loop again from its start.
+    //
+    // A session's loop works as a cycle between locators: the play goes on from where it is, into
+    // the loop and round it from its end, or past it when it starts after the loop; no stop.
+    if (! sessionLoop.isEmpty())
+    {
+        player.setStopFrame (-1);
+        player.setLoop (wanted.getStart(), wanted.getEnd());
+        return;
+    }
+
     player.setStopFrame (range.isEmpty() ? -1 : wanted.getEnd());
     player.setLoop (wanted.getStart(), wanted.getEnd());
 

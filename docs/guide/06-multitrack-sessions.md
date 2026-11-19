@@ -189,7 +189,13 @@ A parameter that has an envelope is marked "(automated)" in the menu.
   - **Multitrack > Tempo > Tempo...** sets the tempo and the beats in a bar.
   - **Tap Tempo** (T) sets it from your taps.
   - **Tempo Change at Cursor...** changes it from the bar the cursor is in.
-- **Count in bars:** **Bars and Beats** (B) counts the ruler in bars and beats and snaps to the beats. **Time with Bars** shows the time underneath as well.
+- **Count in bars:** **Bars and Beats** (B) counts the ruler in bars and beats and snaps to the beats. **Time with Bars** shows the time underneath as well. The session keeps the choice: it opens in bars next time.
+- **Loop a stretch of time:** a session has a loop of its own, as a cycle between locators, apart from what is selected.
+  - Drag along the thin strip at the top of the ruler to draw it. It snaps to the beats in bars and beats, and shows as a band.
+  - Drag inside the band to move it, or at an end to size it.
+  - **Transport > Loop to Selection** (Option-P) makes it the time range or the selected clips; **Clear Loop** removes it. Right-click the strip for both.
+  - **Loop Playback** (Cmd-L, or the loop button in the transport) goes round it. The band is brighter while it is on. Playing from before the loop runs into it, then goes round. Playing from after it plays on.
+  - The session keeps the loop. Setting it is not an undo step, and an undo leaves it where it is.
 - **Choose how each track follows the tempo:** right-click a track and choose **Musical Timebase**.
   - On a musical track, clips keep their place in bars and beats when the tempo changes.
   - On a track in time, clips stay where they are.

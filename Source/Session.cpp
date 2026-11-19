@@ -3198,7 +3198,7 @@ void Session::reset (SessionState initial, const juce::File& f)
     history.clear();
     history.push_back ({ std::make_shared<const SessionState> (std::move (initial)), {} });
     position = savedPosition = 0;
-    effectsChanged = false;
+    effectsChanged = viewChanged = false;
     file = f;
     setCurrent (history.back().state);
 }
@@ -3234,16 +3234,71 @@ juce::String Session::getRedoDescription() const
     return canRedo() ? history[(size_t) position + 1].description : juce::String();
 }
 
+Session::State Session::withViewOf (State s, const SessionState& now) const
+{
+    if (s->loop == now.loop && s->barsAndBeats == now.barsAndBeats)
+        return s;
+
+    auto copy = *s;
+    copy.loop = now.loop;
+    copy.barsAndBeats = now.barsAndBeats;
+    return std::make_shared<const SessionState> (std::move (copy));
+}
+
+void Session::replaceCurrent (SessionState next)
+{
+    // In place of the step's state, not as a step of its own.
+    auto state = std::make_shared<const SessionState> (std::move (next));
+    history[(size_t) position].state = state;
+    viewChanged = true;
+    setCurrent (state);
+}
+
+void Session::setLoop (juce::Range<juce::int64> loop)
+{
+    const auto now = getState();
+    loop = loop.getStart() < 0 || loop.isEmpty() ? juce::Range<juce::int64>() : loop;
+
+    if (now->loop != loop)
+    {
+        auto next = *now;
+        next.loop = loop;
+        replaceCurrent (std::move (next));
+    }
+}
+
+void Session::setBarsAndBeats (bool on)
+{
+    const auto now = getState();
+
+    if (now->barsAndBeats != on)
+    {
+        auto next = *now;
+        next.barsAndBeats = on;
+        replaceCurrent (std::move (next));
+    }
+}
+
 void Session::undo()
 {
     if (canUndo())
-        setCurrent (history[(size_t) --position].state);
+    {
+        const auto now = getState();
+        auto& step = history[(size_t) --position].state;
+        step = withViewOf (step, *now);
+        setCurrent (step);
+    }
 }
 
 void Session::redo()
 {
     if (canRedo())
-        setCurrent (history[(size_t) ++position].state);
+    {
+        const auto now = getState();
+        auto& step = history[(size_t) ++position].state;
+        step = withViewOf (step, *now);
+        setCurrent (step);
+    }
 }
 
 juce::StringArray Session::getHistory() const
@@ -3260,8 +3315,11 @@ void Session::goTo (int step)
 {
     if (juce::isPositiveAndBelow (step, (int) history.size()) && step != position)
     {
+        const auto now = getState();
         position = step;
-        setCurrent (history[(size_t) position].state);
+        auto& target = history[(size_t) position].state;
+        target = withViewOf (target, *now);
+        setCurrent (target);
     }
 }
 
@@ -3274,7 +3332,7 @@ void Session::markEffectsChanged()
 void Session::markSaved (const juce::File& savedAs)
 {
     savedPosition = position;
-    effectsChanged = false;
+    effectsChanged = viewChanged = false;
     file = savedAs;
     sendChangeMessage();
 }
@@ -3386,6 +3444,15 @@ juce::String save (const SessionState& state, const juce::File& target,
 
     if (state.layerClips)
         root.setAttribute ("layerClips", true);
+
+    if (! state.loop.isEmpty())
+    {
+        root.setAttribute ("loopStart", juce::String (state.loop.getStart()));
+        root.setAttribute ("loopEnd", juce::String (state.loop.getEnd()));
+    }
+
+    if (state.barsAndBeats)
+        root.setAttribute ("barsAndBeats", true);
 
     // Sends name their bus by its place in the file, since ids are given out afresh on loading.
     std::map<juce::uint32, int> indexOf;
@@ -3671,6 +3738,11 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
     state.surround = root->getBoolAttribute ("surround");
     state.sevenOne = state.surround && root->getBoolAttribute ("sevenOne");
     state.layerClips = root->getBoolAttribute ("layerClips");
+    state.barsAndBeats = root->getBoolAttribute ("barsAndBeats");
+
+    if (const auto loopStart = root->getStringAttribute ("loopStart").getLargeIntValue(), loopEnd = root->getStringAttribute ("loopEnd").getLargeIntValue();
+        loopStart >= 0 && loopEnd > loopStart)
+        state.loop = { loopStart, loopEnd };
     std::map<juce::String, AudioDocument::Snapshot> audio;   // by full path: each file read once
     std::map<int, juce::uint32> groups;                      // a clip group's saved id, and its id now
     std::vector<std::pair<size_t, bool>> undecided;          // tracks saved before tracks had kinds: index, and whether an instrument heads the chain

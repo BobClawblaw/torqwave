@@ -515,9 +515,23 @@ public:
 
     /** Bars and beats: the ruler counts bars and beats of the session's tempo, the lanes show
         its grid, and snapping goes to its beats (or bars, zoomed out) instead of the ruler's
-        seconds. */
-    void setShowBars (bool show)                  { showBars = show; repaint(); }
-    bool isShowingBars() const noexcept           { return showBars; }
+        seconds. Kept with the session (SessionState::barsAndBeats). */
+    void setShowBars (bool show);
+    bool isShowingBars() const noexcept           { return shown().barsAndBeats; }
+
+    /** The loop, drawn as a band along the top of the time ruler: a drag there draws a new one
+        (snapping as other drags do), a drag inside moves it, and a drag at either end moves that
+        end. Kept with the session (SessionState::loop). */
+    juce::Range<juce::int64> getLoop() const noexcept { return loopPreview.has_value() ? *loopPreview : shown().loop; }
+
+    /** Makes the loop the time range, or the selected clips' span when there is none; false,
+        changing nothing, with neither. */
+    bool setLoopFromSelection();
+    void clearLoop();
+
+    /** Whether Loop Playback is on, so the band shows it (brighter when it is). */
+    std::function<bool()> isLoopPlaybackOn;
+    static constexpr int loopStripHeight = 8;     // the band's strip, along the top of the time ruler
 
     /** With bars shown, the time as well, in a second row under the bar numbers. */
     void setShowTimeWithBars (bool show)          { timeWithBars = show; repaint(); }
@@ -626,7 +640,11 @@ private:
     class SendsPanel;
 
     enum class Drag { none, range, move, trimStart, trimEnd, fadeIn, fadeOut, envelopePoint, marker, clipGain, clipGainPoint, scrub,
-                      stretchStart, stretchEnd, moveNotes, trimNotesStart, trimNotesEnd, stretchNotesStart, stretchNotesEnd, drawNotes, rubberBand, listWidth };
+                      stretchStart, stretchEnd, moveNotes, trimNotesStart, trimNotesEnd, stretchNotesStart, stretchNotesEnd, drawNotes, rubberBand, listWidth,
+                      loopNew, loopMove, loopStart, loopEnd };
+
+    /** What a press at p in the loop strip does: a new loop, or moving the loop or one of its ends. */
+    Drag loopDragAt (juce::Point<int> p) const;
     int listWidth = headerWidth;
     bool overListEdge (juce::Point<int> p) const noexcept   { return p.x >= listWidth - 3 && p.x < listWidth + 4; }
     Tool tool = Tool::select;
@@ -765,7 +783,9 @@ private:
     double copiedRate = 0.0;               // the session rate the copied clips were at
     SessionTime copiedTime;
     std::set<juce::uint32> armed;
-    bool showBars = false, timeWithBars = false;
+    bool timeWithBars = false;
+    std::optional<juce::Range<juce::int64>> loopPreview;   // the loop as a drag in the strip has it
+    juce::int64 loopGrab = 0;                              // a moved loop: the frame grabbed, from its start
     bool showClipGain = false;
     juce::Range<juce::int64> timeSelection, recording;
 

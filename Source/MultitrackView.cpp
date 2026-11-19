@@ -2444,7 +2444,7 @@ SessionSnap::Targets MultitrackView::snapTargets (juce::uint32 ignoreClip, bool 
     SessionSnap::Targets targets;
     targets.ignoreClip = ignoreClip;
 
-    if (showBars)
+    if (isShowingBars())
         targets.beatGrid = rulerBeats().second;
     else
         targets.gridStep = (juce::int64) std::llround (rulerTick() * shown().sampleRate);
@@ -2549,15 +2549,32 @@ void MultitrackView::drawRuler (juce::Graphics& g, juce::Rectangle<int> area) co
     g.setColour (Theme::surface);
     g.fillRect (area);
 
+    // The loop: a band along the top, under the marks and numbers, brighter while Loop Playback is on.
+    if (const auto loop = getLoop(); ! loop.isEmpty())
+    {
+        const auto on = isLoopPlaybackOn != nullptr && isLoopPlaybackOn();
+        const auto x0 = juce::jmax ((float) area.getX(), xForFrame (loop.getStart()));
+        const auto x1 = juce::jmin ((float) area.getRight(), xForFrame (loop.getEnd()));
+
+        if (x1 > x0)
+        {
+            const auto band = juce::Rectangle<float> (x0, (float) area.getY(), x1 - x0, (float) loopStripHeight);
+            g.setColour (Theme::accent.withAlpha (on ? 0.85f : 0.35f));
+            g.fillRect (band);
+            g.setColour (Theme::accent.withAlpha (on ? 0.18f : 0.08f));
+            g.fillRect (band.withTop (band.getBottom()).withBottom ((float) area.getBottom()));
+        }
+    }
+
     // Bars and beats; with the time too, in a second, smaller row under them.
-    if (showBars && timeWithBars)
+    if (isShowingBars() && timeWithBars)
     {
         drawBarsRuler (g, area.removeFromTop (area.getHeight() * 7 / 12));
         drawTimeRuler (g, area);
         return;
     }
 
-    if (showBars)
+    if (isShowingBars())
     {
         drawBarsRuler (g, area);
         return;
@@ -2848,7 +2865,7 @@ void MultitrackView::paint (juce::Graphics& g)
         }
 
         // In bars and beats, the grid of the session's tempo.
-        if (showBars && ! s.tracks.empty())
+        if (isShowingBars() && ! s.tracks.empty())
         {
             const auto bottom = (float) juce::jmin (area.getBottom(), laneTop ((int) s.tracks.size()));
             const auto map = s.tempoMap();
@@ -4817,7 +4834,7 @@ juce::int64 MultitrackView::gridStepFrom (juce::int64 frame, bool later) const
 {
     const auto& s = shown();
 
-    if (showBars)
+    if (isShowingBars())
     {
         // The marks either side; one on the frame counts as before it.
         const auto map = s.tempoMap();
@@ -5137,6 +5154,70 @@ void MultitrackView::moveTrack (int from, int to)
 }
 
 //==============================================================================
+void MultitrackView::setShowBars (bool show)
+{
+    // Taken at once, rather than when the session's change message comes, so a drag right after snaps to the new grid.
+    engine.session.setBarsAndBeats (show);
+    changeListenerCallback (&engine.session);
+    repaint();
+}
+
+bool MultitrackView::setLoopFromSelection()
+{
+    auto range = timeSelection;
+
+    if (range.isEmpty())
+    {
+        // The selected clips' span, audio and note clips alike.
+        const auto& s = shown();
+
+        for (auto id : getSelectedClips())
+            if (const auto at = s.findClip (id))
+            {
+                const auto& c = s.tracks[(size_t) at->first].clips[(size_t) at->second];
+                range = range.isEmpty() ? juce::Range<juce::int64> (c.position, c.getEnd()) : range.getUnionWith ({ c.position, c.getEnd() });
+            }
+
+        for (auto id : getSelectedNoteClips())
+            if (const auto at = s.findNoteClip (id))
+            {
+                const auto& c = s.tracks[(size_t) at->first].noteClips[(size_t) at->second];
+                range = range.isEmpty() ? juce::Range<juce::int64> (c.position, c.getEnd()) : range.getUnionWith ({ c.position, c.getEnd() });
+            }
+    }
+
+    if (range.isEmpty())
+        return false;
+
+    engine.session.setLoop (range);
+    changeListenerCallback (&engine.session);
+    repaint();
+    return true;
+}
+
+void MultitrackView::clearLoop()
+{
+    engine.session.setLoop ({});
+    changeListenerCallback (&engine.session);
+    repaint();
+}
+
+MultitrackView::Drag MultitrackView::loopDragAt (juce::Point<int> p) const
+{
+    const auto loop = getLoop();
+
+    if (loop.isEmpty())
+        return Drag::loopNew;
+
+    const auto x0 = xForFrame (loop.getStart()), x1 = xForFrame (loop.getEnd());
+    const auto reach = juce::jmin (5.0f, (x1 - x0) / 3.0f);   // a short loop keeps a middle to grab
+
+    if (std::abs ((float) p.x - x0) <= reach)   return Drag::loopStart;
+    if (std::abs ((float) p.x - x1) <= reach)   return Drag::loopEnd;
+    if ((float) p.x > x0 && (float) p.x < x1)   return Drag::loopMove;
+    return Drag::loopNew;
+}
+
 void MultitrackView::mouseDown (const juce::MouseEvent& e)
 {
     const auto p = e.getPosition();
@@ -5188,6 +5269,28 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
             dragDescription = "Move " + m.name;
             return;
         }
+    }
+
+    // The loop strip, along the top of the time ruler: draw, move or size the loop.
+    if (p.y < loopStripHeight)
+    {
+        if (e.mods.isPopupMenu())
+        {
+            juce::PopupMenu menu;
+            menu.addItem ("Loop to Selection", ! timeSelection.isEmpty() || ! getSelectedClips().empty() || ! getSelectedNoteClips().empty(),
+                          false, [safe = juce::Component::SafePointer<MultitrackView> (this)] { if (safe != nullptr) safe->setLoopFromSelection(); });
+            menu.addItem ("Clear Loop", ! getLoop().isEmpty(), false,
+                          [safe = juce::Component::SafePointer<MultitrackView> (this)] { if (safe != nullptr) safe->clearLoop(); });
+            menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition());
+            return;
+        }
+
+        const auto frame = juce::jmax ((juce::int64) 0, snapped (frameForX ((float) p.x), 0, false));
+        drag = loopDragAt (p);
+        dragFrame = frame;
+        loopGrab = frameForX ((float) p.x) - getLoop().getStart();
+        loopPreview = drag == Drag::loopNew ? std::optional<juce::Range<juce::int64>> {} : std::optional<juce::Range<juce::int64>> (getLoop());
+        return;
     }
 
     // Dragging along the time ruler while stopped scrubs: the mix under the mouse is heard as it moves.
@@ -5534,6 +5637,28 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
     if (drag == Drag::listWidth)
     {
         setListWidth (p.x);
+        return;
+    }
+
+    if (drag == Drag::loopNew || drag == Drag::loopMove || drag == Drag::loopStart || drag == Drag::loopEnd)
+    {
+        const auto frame = juce::jmax ((juce::int64) 0, snapped (frameForX ((float) juce::jmax (listWidth, p.x)), 0, false));
+        const auto loop = shown().loop;
+
+        if (drag == Drag::loopNew)
+            loopPreview = juce::Range<juce::int64>::between (dragFrame, frame);
+        else if (drag == Drag::loopStart)
+            loopPreview = juce::Range<juce::int64>::between (frame, loop.getEnd());
+        else if (drag == Drag::loopEnd)
+            loopPreview = juce::Range<juce::int64>::between (loop.getStart(), frame);
+        else
+        {
+            // Moved whole, its start snapping as the mouse goes.
+            const auto start = juce::jmax ((juce::int64) 0, snapped (frameForX ((float) juce::jmax (listWidth, p.x)) - loopGrab, 0, false));
+            loopPreview = loop.movedToStartAt (start);
+        }
+
+        repaint();
         return;
     }
 
@@ -5891,6 +6016,20 @@ void MultitrackView::mouseUp (const juce::MouseEvent&)
     if (drag == Drag::scrub)
         engine.getPlayer().getScrubber().stop();
 
+    if (drag == Drag::loopNew || drag == Drag::loopMove || drag == Drag::loopStart || drag == Drag::loopEnd)
+    {
+        // A click without a drag leaves the loop as it was; an end dragged onto the other clears it.
+        if (const auto to = std::exchange (loopPreview, std::nullopt); to.has_value() && (drag != Drag::loopNew || ! to->isEmpty()))
+        {
+            engine.session.setLoop (*to);
+            changeListenerCallback (&engine.session);
+        }
+
+        drag = Drag::none;
+        repaint();
+        return;
+    }
+
     if ((drag == Drag::stretchStart || drag == Drag::stretchEnd) && ! stretchTo.isEmpty())
     {
         const auto to = std::exchange (stretchTo, {});
@@ -6037,6 +6176,15 @@ void MultitrackView::mouseMove (const juce::MouseEvent& e)
         setMouseCursor (juce::MouseCursor::LeftRightResizeCursor);
         return;
     }
+
+    if (p.x >= listWidth && p.y < loopStripHeight)
+    {
+        const auto at = loopDragAt (p);
+        setMouseCursor (at == Drag::loopStart || at == Drag::loopEnd ? juce::MouseCursor::LeftRightResizeCursor
+                        : at == Drag::loopMove ? juce::MouseCursor::DraggingHandCursor : juce::MouseCursor::NormalCursor);
+        return;
+    }
+
     const auto overNotes = noteClipAt (p).has_value() && ! clipAt (p).has_value();
     const auto t = trackAt (p.y);
     const auto overLane = p.x >= listWidth && p.y >= rulerHeight && (t >= (int) shown().tracks.size() || (t >= 0 && shown().tracks[(size_t) t].takesNoteClips()));

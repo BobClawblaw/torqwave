@@ -460,6 +460,91 @@ namespace
 
 namespace
 {
+    /** The loop, as Cubase's cycle: drawn, sized and moved along the top of the ruler (snapping to
+        the beats in bars and beats), set from the selection, kept with the session, and never an
+        undo step: an undo or redo leaves it, and Bars and Beats, as they are. */
+    void testLoop (AudioEngine& engine)
+    {
+        constexpr double r = 48000.0;
+        SessionState s;
+        s.sampleRate = r;
+        s.addTrack();
+        SessionEdits::addClip (s, 0, juce::File ("/tmp/loop.wav"), silence (480000), 0);
+        engine.session.reset (s, {});
+        MultitrackView view (engine);
+        view.setSize (1200, MultitrackView::rulerHeight + 2 * MultitrackView::trackHeight + 12);
+        view.zoomToFit();
+        Mouse mouse { view };
+        Mouse::settle();
+        const auto state = [&engine] { return engine.session.getState(); };
+        // zoomToFit shows the 10 s and a 5% margin across the lanes.
+        const auto lanes = 1200.0 - MultitrackView::headerWidth - 12.0;
+        const auto x = [lanes] (double seconds) { return (float) (MultitrackView::headerWidth + seconds / (10.0 * 1.05) * lanes); };
+        const auto onBeat = [] (juce::int64 f) { return f % 24000 == 0; };   // 120 a minute: a beat each 0.5 s
+        const float y = 3.0f;
+
+        view.setShowBars (true);
+        const auto barsKept = state()->barsAndBeats && view.isShowingBars() && ! engine.session.canUndo() && engine.session.isDirty();
+
+        mouse.drag ({ x (1.04), y }, { x (3.03), y });
+        const auto drawn = view.getLoop();
+        const auto drawnOk = drawn == state()->loop && onBeat (drawn.getStart()) && onBeat (drawn.getEnd())
+                             && std::abs (drawn.getStart() - 48000) <= 24000 && std::abs (drawn.getEnd() - 144000) <= 24000 && ! engine.session.canUndo();
+
+        const auto edgeCursor = mouse.cursorAt ({ x ((double) drawn.getEnd() / r), y }) == juce::MouseCursor (juce::MouseCursor::LeftRightResizeCursor);
+        mouse.drag ({ x ((double) drawn.getEnd() / r), y }, { x (5.01), y });
+        const auto sized = state()->loop.getStart() == drawn.getStart() && onBeat (state()->loop.getEnd()) && std::abs (state()->loop.getEnd() - 240000) <= 24000;
+
+        const auto before = state()->loop;
+        const auto middle = (double) (before.getStart() + before.getLength() / 2) / r;
+        mouse.drag ({ x (middle), y }, { x (middle + 1.0), y });
+        const auto moved = state()->loop.getLength() == before.getLength() && onBeat (state()->loop.getStart())
+                           && std::abs (state()->loop.getStart() - (before.getStart() + 48000)) <= 24000;
+
+        const auto kept = state()->loop;
+        mouse.click ({ x (8.0), y });
+        const auto clickKeeps = state()->loop == kept;
+
+        // An edit, then a new loop: undo and redo change the edit, not the loop or the bars.
+        auto next = *state();
+        SessionEdits::setTempo (next, 90.0, 3);
+        engine.session.apply (next, "Tempo");
+        view.setTimeSelection ({ 96000, 192000 });
+        const auto fromSelection = view.setLoopFromSelection() && state()->loop == juce::Range<juce::int64> (96000, 192000);
+        engine.session.undo();
+        const auto undoKeeps = juce::exactlyEqual (state()->tempo, 120.0) && state()->loop == juce::Range<juce::int64> (96000, 192000) && state()->barsAndBeats;
+        engine.session.redo();
+        const auto redoKeeps = juce::exactlyEqual (state()->tempo, 90.0) && state()->loop == juce::Range<juce::int64> (96000, 192000)
+                               && engine.session.getHistory().size() == 2;
+
+        // Kept in the file.
+        const auto file = juce::File::createTempFile (".tqsession");
+        juce::AudioFormatManager formats;
+        formats.registerBasicFormats();
+        auto plain = *state();
+        plain.tracks.clear();
+        const auto saveError = SessionFile::save (plain, file);
+        const auto loaded = SessionFile::load (file, formats);
+        plain.loop = {};
+        plain.barsAndBeats = false;
+        const auto saveError2 = SessionFile::save (plain, file);
+        const auto loadedOff = SessionFile::load (file, formats);
+        file.deleteFile();
+        const auto filed = saveError.isEmpty() && saveError2.isEmpty() && loaded.state.loop == juce::Range<juce::int64> (96000, 192000) && loaded.state.barsAndBeats
+                           && loadedOff.state.loop.isEmpty() && ! loadedOff.state.barsAndBeats;
+
+        view.clearLoop();
+        const auto cleared = state()->loop.isEmpty() && engine.session.getHistory().size() == 2;
+        view.setShowBars (false);
+
+        check (barsKept && drawnOk && edgeCursor && sized && moved && clickKeeps,
+               "loop: Bars and Beats kept with the session, not an undo step; a loop drawn along the top of the ruler snaps to the beats ("
+                   + juce::String ((double) drawn.getStart() / r, 2) + " s to " + juce::String ((double) drawn.getEnd() / r, 2)
+                   + " s), its end dragged, the whole moved, a click beside it changing nothing, none of it an undo step");
+        check (fromSelection && undoKeeps && redoKeeps && filed && cleared,
+               "loop: set from the time range; an undo and a redo leave the loop and the bars as they are; kept in the session file, and cleared");
+    }
+
     void testListWidth (AudioEngine& engine)
     {
         // The edge between the track list and the lanes drags the list wider (the headers and the
@@ -733,6 +818,7 @@ void runMultitrackViewTests (AudioEngine& engine)
     testSplitting (engine);
     testTrackTools (engine);
     testListWidth (engine);
+    testLoop (engine);
     testNoteClipSelection (engine);
     testRangeAndRubberBand (engine);
     // Two clips on one track: A from 1 s to 3 s, B from 5 s to 6 s, in a 10 s view.
