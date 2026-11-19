@@ -280,27 +280,6 @@ static KeyShortcuts::KeySet auditionStyleKeys()
     return set;
 }
 
-class MainComponent::KeyShortcutsWindow final : public juce::DocumentWindow
-{
-public:
-    KeyShortcutsWindow (juce::ApplicationCommandManager& commandManager, std::function<void()> onClose)
-        : DocumentWindow ("Keyboard Shortcuts", Theme::surface, DocumentWindow::closeButton),
-          closeCallback (std::move (onClose))
-    {
-        setUsingNativeTitleBar (true);
-        setContentOwned (new KeyShortcuts::Editor (commandManager, { auditionStyleKeys() }), true);
-        setResizable (true, false);
-        setResizeLimits (520, 420, 3000, 3000);
-        centreWithSize (680, 640);
-        setVisible (true);
-    }
-
-    void closeButtonPressed() override              { closeCallback(); }
-
-private:
-    std::function<void()> closeCallback;
-};
-
 //==============================================================================
 /** File > Settings: every setting of the app, sections down the left. */
 class MainComponent::SettingsWindow final : public juce::DocumentWindow
@@ -314,8 +293,8 @@ public:
         panel = new Settings::Panel (std::move (model));
         setContentOwned (panel, true);
         setResizable (true, false);
-        setResizeLimits (640, 420, 3000, 3000);
-        centreWithSize (780, 600);
+        setResizeLimits (720, 480, 3000, 3000);   // Keys holds the shortcut list, which needs about 520 wide
+        centreWithSize (860, 660);
         setVisible (true);
     }
 
@@ -1372,7 +1351,6 @@ MainComponent::~MainComponent()
     engine.removeChangeListener (this);
     engine.knownPlugins.removeChangeListener (this);
     commands.getKeyMappings()->removeChangeListener (this);
-    keyShortcutsWindow = nullptr;
     editorWindows.clear();
     pluginListWindow = nullptr;
     dock = nullptr;
@@ -12693,7 +12671,10 @@ Settings::Model MainComponent::makeSettingsModel()
                            }) } });
 
     model.push_back ({ "Keys", "Every command's keys, to change, export and import, or to take from another key set.",
-        { Item::button ("Keyboard Shortcuts...", "See and change the keys for every command", [this] { showKeyShortcuts(); }) } });
+        { Item::component ({}, Item::fillPage, [this]() -> std::unique_ptr<juce::Component>
+                           {
+                               return std::make_unique<KeyShortcuts::Editor> (commands, std::vector<KeyShortcuts::KeySet> { auditionStyleKeys() });
+                           }) } });
 
     Settings::Section library { "Sound Library", "The folders the Sound Library indexes are chosen in its own window (F5). Its list shows WAV "
                                                  "files to start with, so the same sounds as WAV and AIFF show once; add the other formats here, "
@@ -13216,23 +13197,7 @@ void MainComponent::showAudioSettings()
 
 void MainComponent::showKeyShortcuts()
 {
-    // Deleted later, not inside its own close button's callback.
-    if (keyShortcutsWindow == nullptr)
-    {
-        keyShortcutsWindow = std::make_unique<KeyShortcutsWindow> (commands, [this]
-        {
-            juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<MainComponent> (this)]
-            {
-                if (safe != nullptr)
-                    safe->keyShortcutsWindow = nullptr;
-            });
-        });
-        places->watch (*keyShortcutsWindow, "Keyboard Shortcuts");
-    }
-    else
-    {
-        keyShortcutsWindow->toFront (true);
-    }
+    showSettings ("Keys");
 }
 
 void MainComponent::showGuide (const juce::String& page)

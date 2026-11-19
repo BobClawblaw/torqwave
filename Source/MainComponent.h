@@ -115,7 +115,6 @@ public:
 private:
     class PluginEditorWindow;
     class EditorPanel;
-    class KeyShortcutsWindow;
     class SettingsWindow;
     class AskWindow;
     class EqWindow;
@@ -677,7 +676,6 @@ private:
     AuditionPreview* makeOpenPreview();
     juce::OwnedArray<PluginEditorWindow> editorWindows;
     std::unique_ptr<PluginListWindow> pluginListWindow;
-    std::unique_ptr<KeyShortcutsWindow> keyShortcutsWindow;
     std::unique_ptr<Guide::Window> guideWindow;
     std::unique_ptr<Home::Pictures> homePictures;   // the pictures on the home screen's cards
     std::unique_ptr<SettingsWindow> settingsWindow;
