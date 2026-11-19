@@ -904,6 +904,11 @@ MainComponent::MainComponent()
     for (auto* b : { &editorButton, &multitrackButton, &pluginsButton, &audioButton })
         addAndMakeVisible (b);
 
+    addChildComponent (askButton);
+    askButton.setButtonText (Ai::askName());
+    askButton.setTooltip ("Experimental: describe an edit in words, for the language model on your own server to plan");
+    askButton.onClick = [this] { showAskTorqwave(); };
+
     // The mode switch: the side in use is lit, the other is where a click goes.
     editorButton.setTooltip (Platform::keys ("Edit the file; the lit side is the mode in use (Cmd+4 switches)"));
     multitrackButton.setTooltip (Platform::keys ("Work in the multitrack session; the lit side is the mode in use (Cmd+4 switches)"));
@@ -1412,6 +1417,13 @@ void MainComponent::resized()
     audioButton.setBounds (toolbar.removeFromRight (124).reduced (0, 2));
     toolbar.removeFromRight (6);
     pluginsButton.setBounds (toolbar.removeFromRight (96).reduced (0, 2));
+
+    if (askButton.isVisible())
+    {
+        toolbar.removeFromRight (6);
+        askButton.setBounds (toolbar.removeFromRight (104).reduced (0, 2));
+    }
+
     toolbar.removeFromRight (12);
     toolbar.removeFromLeft (12);
     const auto barWidth = juce::jmin (toolbar.getWidth(), transportBar->getIdealWidth());
@@ -3419,8 +3431,21 @@ void MainComponent::stopTransport()
     multitrack.repaint();
 }
 
+void MainComponent::refreshAskButton()
+{
+    const auto shown = Ai::Settings::load (*appProperties.getUserSettings()).enabled;
+    askButton.setEnabled (engine.document.hasAudio() && ! multitrackMode);
+
+    if (shown != askButton.isVisible())
+    {
+        askButton.setVisible (shown);
+        resized();
+    }
+}
+
 void MainComponent::refreshTitle()
 {
+    refreshAskButton();
     editorButton.setToggleState (! multitrackMode, juce::dontSendNotification);
     multitrackButton.setToggleState (multitrackMode, juce::dontSendNotification);
 
@@ -12546,7 +12571,7 @@ Settings::Model MainComponent::makeSettingsModel()
 {
     using Item = Settings::Item;
     auto* settings = appProperties.getUserSettings();
-    const auto changed = [this] { commands.commandStatusChanged(); };
+    const auto changed = [this] { commands.commandStatusChanged(); refreshAskButton(); };
 
     // Look: the theme, its accent and waveform colour, the time format and the editor's display.
     const auto themes = Theme::themeNames(), accents = Theme::accentNames(), waveforms = Theme::waveformNames();
@@ -12656,7 +12681,7 @@ Settings::Model MainComponent::makeSettingsModel()
     model.push_back ({ "Plug-ins", Platform::pluginFormats() + " effects are found by a scan and listed in the Plug-ins window, where one that fails can be checked again.",
         { Item::button ("Plug-ins...", "Scan for plug-ins and manage the list", [this] { showPluginList(); }) } });
 
-    model.push_back ({ "AI", "Experimental. Ask Torq (Edit menu) sends your words, never audio, to a language model on a server "
+    model.push_back ({ "AI", "Experimental. Ask Torq (its button at the top, or the Edit menu) sends your words, never audio, to a language model on a server "
                              "you run, on this computer or your network, and shows its plan before anything changes. Torqwave ships no model.",
         { Item::toggle (Ai::askName(), "Use the language model on the server below",
                         [settings] { return Ai::Settings::load (*settings).enabled; },

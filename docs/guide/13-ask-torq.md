@@ -24,7 +24,7 @@ What goes to the server: your sentence, the file's name, and the numbers Torqwav
 
 ## Asking
 
-With an audio file open, choose **Edit > Ask Torq 🐶...**. Type what you want and press Return or **Ask**.
+With an audio file open, click **Ask Torq 🐶** at the top of the window (it shows while Ask Torq is turned on), or choose **Edit > Ask Torq 🐶...**. Type what you want and press Return or **Ask**.
 
 The window shows the model at work: its thinking (for a model that shows it), each tool it calls, and each step it adds to the plan. When it's finished, the plan is listed. **Apply** makes the changes as one undo step, named after your request; **Discard** throws the plan away. If the file changes while the model works, the plan isn't applied: ask again.
 
