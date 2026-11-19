@@ -71,6 +71,7 @@ void Agent::run()
 {
     juce::Array<juce::var> messages { message ("system", Workspace::instructions()), message ("user", request) };
     const auto tools = Workspace::toolDefinitions();
+    std::map<juce::String, int> callsMade;   // each tool and its arguments, how often called
 
     for (int round = 0; round < maxRounds; ++round)
     {
@@ -125,7 +126,13 @@ void Agent::run()
                 return;
             }
 
-            const auto result = workspace.run (c.name, c.arguments);
+            // A model in a loop asks the same thing again and again. Counted with the plan's length,
+            // so a call after a change is a new one: the third time with nothing changed in between,
+            // it is told so instead.
+            const auto times = ++callsMade[juce::String (workspace.getSteps().size()) + " " + c.name + " " + c.arguments.trim()];
+            const auto result = times > 2
+                                    ? juce::String ("{\"ok\": false, \"error\": \"This exact call was already made twice and its result has not changed. Use what it returned, try something else, or finish.\"}")
+                                    : workspace.run (c.name, c.arguments);
             post ({ Event::Kind::tool, c.name, c.arguments, result });
 
             auto answer = std::make_unique<juce::DynamicObject>();
@@ -136,7 +143,18 @@ void Agent::run()
         }
     }
 
-    post ({ Event::Kind::done, {}, "The model was still calling tools after " + juce::String (maxRounds) + " rounds, so it was stopped.", {} });
+    // Out of rounds: the model gets one last turn, without tools, to say what it planned, and
+    // the plan so far is offered as it stands rather than thrown away.
+    post ({ Event::Kind::text, "\n\n[It used all " + juce::String (maxRounds) + " rounds of tool calls, so it was asked to finish. The plan may be incomplete.]\n", {}, {} });
+    messages.add (message ("user", "You have used every round of tool calls; no more can be made. Say in a few sentences what the plan "
+                                   "you made does, and what of the request it leaves undone."));
+
+    const auto reply = client.chat (messages, juce::var (juce::Array<juce::var>()), [this] (const juce::String& text, bool reasoning)
+    {
+        post ({ reasoning ? Event::Kind::reasoning : Event::Kind::text, text, {}, {} });
+    });
+
+    post ({ Event::Kind::done, reply.content, threadShouldExit() ? juce::String ("Cancelled.") : juce::String(), {} });
 }
 
 void Agent::handleAsyncUpdate()
