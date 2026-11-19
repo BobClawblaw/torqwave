@@ -45,6 +45,10 @@ The **Multitrack > Tracks** menu adds tracks, buses and folders, and also:
 - saves a track as a template and adds tracks from templates;
 - clears every solo and mute at once.
 
+Right-click a track's header, or an empty part of a lane, for the same additions, and on a header for what applies to that track: its folder, group, colour, note, hiding and deleting it.
+
+Drag a track's header to move the track. Where it lands also decides its folder: dropped on a folder's header, it goes into that folder; dropped on a track, it takes that track's folder, or none. Drop it on its own folder's header to take it out, just above the folder.
+
 **Up** and **Down** select the track above or below.
 
 ## Clips
@@ -152,7 +156,7 @@ The same **Sends** panel holds the rest of a track's routing:
 - **Duck under:** the track comes down while another track is heard. Use it to keep music under a voice.
 
 **Sidechain:** a plug-in with a sidechain input can take a key track, chosen in the track's **FX** menu. For example, a compressor on the bass can be keyed from the kick.
-- **Folders:** **Add Folder** puts the selected track into a folder. A folder's mute and solo act on all its tracks, and it can be collapsed. **Export Folder Stems...** writes each folder as one file.
+- **Folders:** **Add Folder** puts the selected track into a new folder (from a track's right-click menu, that track). A folder's mute and solo act on all its tracks, and it can be collapsed. A track leaves its folder by **Take Out of Folder** (in the Tracks menu and its right-click menu) or by dragging, as above. Deleting a folder keeps its tracks, out of it; its right-click menu can also delete them with it. **Export Folder Stems...** writes each folder as one file.
 
 ## The mixer
 

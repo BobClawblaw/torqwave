@@ -4,6 +4,11 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Folders in sessions**
+- **Right-click menus:** an empty part of a lane and a track's header now offer Add Folder (around the track right-clicked), beside Add Track, Add Instrument Track and Add Bus. A track's header adds Take Out of Folder and Delete Track (or Delete Bus); a folder's header, Delete Folder, Keep Its Tracks and Delete Folder and Its Tracks. The Folder submenu gains New Folder.
+- **Dragging out of a folder:** where a dragged track lands now decides its folder. Dropped on a track it takes that track's folder, or none, so a track is dragged out of a folder by dropping it among tracks outside, or on its own folder's header (it lands just above the folder). Before, only dropping on a folder's header changed a track's folder, so a track could be dragged in but not out.
+- **Multitrack > Tracks > Take Out of Folder** takes the selected track out of its folder. Delete Track says it deletes a folder too; a folder's tracks stay, out of it.
+
 ## Released
 
 **Release 0.16.4: Automation on instrument tracks**
