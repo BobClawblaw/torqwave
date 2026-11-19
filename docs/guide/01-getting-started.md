@@ -145,6 +145,6 @@ To come back later to everything you have open (files, effects rack and session)
   - decimal seconds;
   - samples;
   - SMPTE timecode at 24, 25, 29.97 (drop or non-drop) or 30 fps.
-- **Window > Keyboard Shortcuts...** lists every command and its keys. You can search them, change them, and export or import them. **Key Sets... > Audition-Style Keys** switches to keys like Adobe Audition's.
+- **Settings > Keys** (or **Window > Keyboard Shortcuts...**) lists every command and its keys. You can search them, change them, and export or import them. **Key Sets... > Audition-Style Keys** switches to keys like Adobe Audition's.
 
 Next: [Editing audio](02-editing-audio.md).

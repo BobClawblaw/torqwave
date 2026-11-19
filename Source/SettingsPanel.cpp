@@ -124,10 +124,14 @@ namespace Settings
         int getWantedHeight() const
         {
             if (item.kind == Item::Kind::component)
-                return (label != nullptr ? rowHeight : 0) + item.componentHeight + 8;
+                return (label != nullptr ? rowHeight : 0) + (fillsPage() ? minimumFill : item.componentHeight) + 8;
 
             return rowHeight + (helpBelow() ? 18 : 0);
         }
+
+        bool fillsPage() const noexcept     { return item.kind == Item::Kind::component && item.componentHeight == Item::fillPage; }
+
+        static constexpr int minimumFill = 300;
 
         /** Reads the setting again; the control is only touched when it differs. */
         void refresh()
@@ -312,8 +316,11 @@ namespace Settings
 
         for (auto* row : rows)
         {
-            row->setBounds (0, y, width, row->getWantedHeight());
-            y += row->getWantedHeight() + 4;
+            // A row that fills the page takes what the rows before it leave, so a list such as the
+            // keys scrolls inside itself rather than with the page.
+            const auto height = row->fillsPage() ? juce::jmax (row->getWantedHeight(), r.getHeight() - y) : row->getWantedHeight();
+            row->setBounds (0, y, width, height);
+            y += height + 4;
         }
 
         page.setSize (width, y);

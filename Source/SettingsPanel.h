@@ -27,7 +27,9 @@ namespace Settings
         juce::String unit;                           // after a number
         std::function<void()> onClick;               // button
         std::function<std::unique_ptr<juce::Component>()> makeComponent;   // component: made when the page shows
-        int componentHeight = 0;
+        int componentHeight = 0;                     // fillPage: the rest of the page
+
+        static constexpr int fillPage = -1;
 
         static Item toggle (juce::String label, juce::String help, std::function<bool()> get, std::function<void (bool)> set);
         static Item choice (juce::String label, juce::String help, juce::StringArray choices, std::function<int()> get, std::function<void (int)> set);
