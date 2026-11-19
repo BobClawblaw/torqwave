@@ -1,6 +1,6 @@
 # AI assistance: the plan
 
-Planned, not built. This is what Torqwave would do with a language model, in the order it would be built. It is on the [roadmap](../ROADMAP.md) behind the dogfooding work there.
+**Experimental, being built for 0.17.0.** This is what Torqwave does, or will do, with a language model, in the order it is being built. It is on the [roadmap](../ROADMAP.md). The first version is a test: expect rough edges, check every plan before you apply it, and [tell us](https://github.com/BobClawblaw/torqwave/issues) what it got wrong.
 
 ## The first step: a language model through the OpenAI API
 
@@ -21,6 +21,45 @@ The plan is to build and tune it against an open-weights model on a local server
 - **A plan before anything changes.** The steps are shown first. Preview plays the result through the rack; Apply makes the whole plan one undo step.
 - **Results are ordinary.** A plan's edits, presets, markers and metadata are what you'd have made by hand, saved like anything else. Nothing stays tied to the model, and turning AI off changes nothing you have.
 - **Tested without a network.** A mock server in the test suite answers with recorded replies, to check requests, tool calls, streamed answers, errors and cancelling.
+
+## What the model can work
+
+The model works Torqwave through tools: functions with typed settings that Torqwave checks, runs and reports back on. Each tool calls the same code as the menu command. There are four kinds:
+
+- **Look** tools read and change nothing: the file and selection, loudness, true peak, levels per channel, the spectrum and tonal balance, sounds, silences and clipping, markers, the session's tracks, clips, notes and automation, the plug-ins and their parameters, presets, and the user guide.
+- **Try** tools render a range into a scratch copy and measure it, so the model can hear in numbers. It changes a setting, renders, and reads the loudness, peaks, spectrum and width back before it proposes anything. You can audition the same render against the original.
+- **Change** tools edit. They go into the plan you see, and Apply makes the plan one undo step.
+- **Ask** steps hand a choice back to you, such as picking the sound in a plug-in's own window.
+
+### Plug-ins
+
+Plug-ins are driven through what every host can see: their parameters and their saved state. So this works for any AU, VST3 or LV2 plug-in you have, not only Torqwave's built-in effects.
+
+- **Find:** list the built-in effects and instruments and every scanned plug-in, with maker, category and format.
+- **Build a chain:** add a plug-in to the effects rack, a track, a bus, or a track's instrument slot, then reorder, bypass or remove it.
+- **Set it:** read a plug-in's parameters as it shows them ("-6.0 dB", "Hall"), with their ranges and choices, and set them by name with a value written the same way. Torqwave reads each value back and reports what the plug-in actually took, so a clamped or refused value is never hidden.
+- **Presets:** load and save presets and a plug-in's own programs, and save and load whole racks.
+- **Use it:** render the selection through the rack, or write automation for any parameter on a track.
+
+What the model can't do: anything a plug-in keeps only in its own window and doesn't expose as a parameter, such as loading samples into many samplers. The plan then asks you to do that step, and opens the plug-in's window for it. Plug-ins with unhelpful parameter names ("Param 12") are taken as they are named.
+
+### Everything else
+
+- **The file:** selections by time, marker or sound; cut, copy, paste, crop, delete and insert; gain, normalize, loudness matching, fades and trimming; channel work; every repair tool (noise, hum, clicks, clipping, reverb, plosives, breaths); stretch and pitch; the built-in effects with their settings; tones and noise; markers, regions and metadata.
+- **The session:** tracks, buses and folders; volume, pan, mute, solo and routing; importing, moving, trimming, splitting, fading and stretching clips; time edits and tempo; notes in note clips; automation; bouncing, mixdowns and stems.
+- **Files:** saving and exporting in any format Torqwave writes, and batch jobs you read before they run.
+- **Any other command** by name from the command table. A command that needs a dialog opens it for you.
+
+### In 0.17.0
+
+The first release gets the loop right on a small set of tools:
+
+- **Look:** the file, measurements, the spectrum, finders, markers, plug-ins and their parameters.
+- **Change:** selections, gain, normalize, loudness matching, fades, trimming silence, DC, silence, reverse, insert silence, crop and delete, markers and regions.
+- **Plug-ins:** adding plug-ins to the effects rack, setting their parameters, bypassing and removing them, and applying the rack.
+- **Commands:** any menu command that needs no dialog.
+
+The session, notes, automation, Try and batch tools follow in 0.17.x, each measured against its own set of test sentences first.
 
 ## What the language model would do
 
