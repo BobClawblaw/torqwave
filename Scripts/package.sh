@@ -7,6 +7,12 @@
 #
 # Without a Developer ID the app is signed ad hoc: it runs on any Mac, but Gatekeeper asks the
 # first time it is opened (see README, "Installing").
+#
+# TORQWAVE_SIGN_IDENTITY names a code-signing identity in the keychain to sign with instead, such
+# as a self-signed certificate made for development (Keychain Access > Certificate Assistant >
+# Create a Certificate..., type Code Signing). Builds signed by one identity keep macOS's
+# permissions (the microphone, the local network) from one build to the next; ad hoc builds are
+# a new app to macOS each time, so it asks again.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -36,8 +42,9 @@ cmake --build "$build" --config Release -j "$jobs"
 app="$build/Torqwave_artefacts/Release/Torqwave.app"
 tester="$build/TorqwaveTests_artefacts/Release/TorqwaveTests"
 
-echo "== Signing (ad hoc)"
-codesign --force --deep --sign - "$app"
+identity="${TORQWAVE_SIGN_IDENTITY:-}"
+echo "== Signing (${identity:-ad hoc})"
+codesign --force --deep --sign "${identity:--}" "$app"
 codesign --verify --deep --strict "$app"
 archs="$(lipo -archs "$app/Contents/MacOS/Torqwave")"
 [ "$archs" = arm64 ] || { echo "expected an arm64-only app, got: $archs" >&2; exit 1; }
