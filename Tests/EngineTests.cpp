@@ -589,7 +589,7 @@ int main (int argc, char* argv[])
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
     //   --ai                    only the AI assistance tests (a mock server; no network)
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
-    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on
+    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, or session
     juce::StringArray args;
 
     for (int i = 1; i < argc; ++i)

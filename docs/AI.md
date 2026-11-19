@@ -60,6 +60,15 @@ The first release gets the loop right on a small set of tools:
 
 It works on audio files. The session, notes, automation, Try, batch and other-command tools follow in 0.17.x, each measured against its own set of test sentences first.
 
+### Next: the multitrack view
+
+Ask Torq on a session works as it does on a file: the model gets a copy of the session's state, changes it with tools, and the plan is applied as one undo step (`Session::apply`).
+
+- **The tools** (`Source/AiSession.*`): `get_session` and `list_clips` look; 14 change tools cover tracks, buses and folders (add, remove, move, put in a folder), each track's volume, pan, mute, solo, output and sends, clips' places, trims, splits, gains, fades and mutes, markers and regions, and the tempo. Each one calls the `SessionEdits` function the multitrack view's own command uses, with the same ranges and refusals. Tracks are named by number or name, clips by id. The plug-in look tools (`list_plugins`, `describe_plugin`) come along so the model can say what is there.
+- **Not yet:** a track's effects (they live in `TrackEffects`, outside the state, so they need their own plan step), notes in note clips, automation, importing audio, bouncing and stems. A request for one of these gets no plan and a sentence saying so.
+- **The UI, still to do:** the Ask button in the multitrack toolbar starts a workspace on `session.getState()`. Apply passes the plan's state to `Session::apply` as "Ask Torq: <request>", and only when the session hasn't changed since the request started, as the file view checks with its version.
+- **Measured first:** `--ai-eval-set session` runs 12 requests on a test session (drums, bass, vocals and a reverb bus), each checked against the resulting state. Qwen3.8-27B got 12 of 12 in three runs out of three, before any change to the session wording.
+
 ## What the language model would do
 
 All of these need only text in and text out, plus pictures for a model with vision.

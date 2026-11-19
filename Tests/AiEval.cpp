@@ -44,26 +44,34 @@ namespace
         return AudioEdits::fromBuffer (std::move (b));
     }
 
-    /** The level in dBFS of one frequency in a channel over a range, by correlation. */
+    /** The level in dBFS of one frequency in a channel over a range, by correlation in 0.1 s
+        blocks (a whole number of cycles of each test frequency), averaged. Blocks keep a phase
+        that drifts slowly, as a pitch shifter's may, from cancelling itself out. */
     double toneDb (const Ai::Workspace& w, double hz, double from, double to, int channel = 0)
     {
         const auto& audio = *w.getAudio();
+        const auto block = (int) (rate / 10.0);
         const auto start = (juce::int64) (from * rate), end = juce::jmin ((juce::int64) (to * rate), audio.getNumFrames());
-        const auto n = (int) juce::jmax ((juce::int64) 0, end - start);
-        juce::AudioBuffer<float> samples (audio.getNumChannels(), juce::jmax (1, n));
-        samples.clear();
-        audio.read (samples, 0, start, n);
-        double re = 0.0, im = 0.0;
+        juce::AudioBuffer<float> samples (audio.getNumChannels(), block);
+        double sum = 0.0;
+        int blocks = 0;
 
-        for (int i = 0; i < n; ++i)
+        for (auto at = start; at + block <= end; at += block, ++blocks)
         {
-            const auto phase = juce::MathConstants<double>::twoPi * hz * (double) i / rate;
-            re += samples.getSample (channel, i) * std::cos (phase);
-            im += samples.getSample (channel, i) * std::sin (phase);
+            audio.read (samples, 0, at, block);
+            double re = 0.0, im = 0.0;
+
+            for (int i = 0; i < block; ++i)
+            {
+                const auto phase = juce::MathConstants<double>::twoPi * hz * (double) i / rate;
+                re += samples.getSample (channel, i) * std::cos (phase);
+                im += samples.getSample (channel, i) * std::sin (phase);
+            }
+
+            sum += 2.0 * std::sqrt (re * re + im * im) / (double) block;
         }
 
-        const auto amplitude = n == 0 ? 0.0 : 2.0 * std::sqrt (re * re + im * im) / (double) n;
-        return juce::Decibels::gainToDecibels (amplitude, -200.0);
+        return juce::Decibels::gainToDecibels (blocks == 0 ? 0.0 : sum / blocks, -200.0);
     }
 
     double seconds (const Ai::Workspace& w)     { return (double) w.getAudio()->getNumFrames() / rate; }
@@ -101,7 +109,30 @@ namespace
         std::function<juce::String (Ai::Workspace&)> check;   // empty when the plan is right, else what is wrong
         TestFile file = TestFile::tone;
         std::function<juce::String (const juce::String&)> checkAnswer = {};   // when what it says matters too
+        bool session = false;                                                  // works on testSession() rather than a file
     };
+
+    /** The session test: Drums and Bass with a clip each over 0 to 4 s, Vocals with one over 1 to
+        3 s, and a bus, Reverb. */
+    SessionState testSession()
+    {
+        SessionState s;
+        s.sampleRate = rate;
+        const auto folder = juce::File::getSpecialLocation (juce::File::tempDirectory);
+        SessionEdits::addClip (s, 0, folder.getChildFile ("drums.wav"), testFile (TestFile::steady), 0);
+        SessionEdits::addClip (s, 1, folder.getChildFile ("bass.wav"), testFile (TestFile::steady), 0);
+        SessionEdits::addClip (s, 2, folder.getChildFile ("vocals.wav"), testFile (TestFile::steady), (juce::int64) rate);
+
+        s.tracks[0].name = "Drums";
+        s.tracks[1].name = "Bass";
+        s.tracks[2].name = "Vocals";
+
+        SessionEdits::trimClip (s, s.tracks[0].clips[0].id, 0, (juce::int64) (4 * rate));
+        SessionEdits::trimClip (s, s.tracks[1].clips[0].id, 0, (juce::int64) (4 * rate));
+        SessionEdits::trimClip (s, s.tracks[2].clips[0].id, (juce::int64) rate, (juce::int64) (3 * rate));
+        s.addBus().name = "Reverb";
+        return s;
+    }
 
     juce::String unchangedLength (const Ai::Workspace& w, double expected)
     {
@@ -132,6 +163,106 @@ namespace
     {
         const auto m = Loudness::measure (*w.getAudio(), 0, w.getAudio()->getNumFrames(), rate);
         return m ? m->integrated : -200.0;
+    }
+
+    const SessionTrack* trackNamed (const Ai::Workspace& w, const juce::String& name)
+    {
+        for (auto& t : w.getSession()->tracks)
+            if (t.name.equalsIgnoreCase (name))
+                return &t;
+
+        return nullptr;
+    }
+
+    /** Requests on a session (testSession), for Ask Torq in the multitrack view. */
+    std::vector<Case> sessionCases()
+    {
+        const auto onSession = [] (juce::String request, std::function<juce::String (Ai::Workspace&)> check)
+        {
+            Case c { std::move (request), std::move (check) };
+            c.session = true;
+            return c;
+        };
+
+        return {
+            onSession ("Make a folder called Rhythm and put the drums and bass in it.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* folder = trackNamed (w, "Rhythm");
+                const auto* drums = trackNamed (w, "Drums");
+                const auto* bass = trackNamed (w, "Bass");
+                const auto* vocals = trackNamed (w, "Vocals");
+                return folder != nullptr && folder->isFolder && drums != nullptr && bass != nullptr && vocals != nullptr
+                           && drums->folderId == folder->id && bass->folderId == folder->id && vocals->folderId == 0
+                           ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("Send the vocals to the reverb bus at -8 dB.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* vocals = trackNamed (w, "Vocals");
+                const auto* reverb = trackNamed (w, "Reverb");
+                return vocals != nullptr && reverb != nullptr && vocals->sends.size() == 1 && vocals->sends[0].busId == reverb->id
+                           && near (vocals->sends[0].gainDb, -8.0, 0.01) ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("Turn the bass down 4 dB.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* bass = trackNamed (w, "Bass");
+                return bass != nullptr && near (bass->gainDb, -4.0, 0.01) && near (bass->clips[0].gainDb, 0.0, 0.01)
+                           ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("Pan the drums a little to the left.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* drums = trackNamed (w, "Drums");
+                return drums != nullptr && drums->pan <= -0.1f && drums->pan >= -0.6f ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("I only want to hear the vocals.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto& s = *w.getSession();
+                const auto* vocals = trackNamed (w, "Vocals");
+                const auto heard = [&s] (const SessionTrack* t) { return t != nullptr && ! s.isMuted (*t) && (! s.anySolo() || s.isSoloed (*t)); };
+                return heard (vocals) && ! heard (trackNamed (w, "Drums")) && ! heard (trackNamed (w, "Bass")) && s.tracks.size() == 4
+                           ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("Move the vocal clip so it starts at 2 seconds.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* vocals = trackNamed (w, "Vocals");
+                return vocals != nullptr && vocals->clips.size() == 1 && vocals->clips[0].position == (juce::int64) (2 * rate)
+                           && vocals->clips[0].length == (juce::int64) (2 * rate) ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("Give every clip a half-second fade in.", [] (Ai::Workspace& w) -> juce::String
+            {
+                for (auto& t : w.getSession()->tracks)
+                    for (auto& c : t.clips)
+                        if (c.fadeIn != (juce::int64) (rate / 2))
+                            return t.name + "'s clip fades in over " + juce::String ((double) c.fadeIn / rate, 3) + " s";
+
+                return {};
+            }),
+            onSession ("Set the tempo to 128 BPM.", [] (Ai::Workspace& w) -> juce::String
+            {
+                return near (w.getSession()->tempo, 128.0, 0.001) ? juce::String() : "tempo " + juce::String (w.getSession()->tempo);
+            }),
+            onSession ("Add a region named Chorus from 4 to 8 seconds.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto& m = w.getSession()->markers;
+                return m.size() == 1 && m[0].name == "Chorus" && m[0].start == (juce::int64) (4 * rate) && m[0].getEnd() == (juce::int64) (8 * rate)
+                           ? juce::String() : "markers: " + juce::String ((int) m.size());
+            }),
+            onSession ("Put a compressor on the vocal track.", [] (Ai::Workspace& w) -> juce::String
+            {
+                // A track's effects aren't in the session tools yet: the right plan is none, said so.
+                return w.getSteps().isEmpty() ? juce::String() : "it planned changes: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("Delete the bass track.", [] (Ai::Workspace& w) -> juce::String
+            {
+                return trackNamed (w, "Bass") == nullptr && w.getSession()->tracks.size() == 3 ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("Make a new bus called FX Master and have the reverb bus play into it.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* master = trackNamed (w, "FX Master");
+                const auto* reverb = trackNamed (w, "Reverb");
+                return master != nullptr && master->isBus && reverb != nullptr && reverb->outputBusId == master->id
+                           ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+        };
     }
 
     /** Requests written after the model's instructions were last changed, and never used to
@@ -347,7 +478,7 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
     int failed = 0, n = 0;
     double totalSeconds = 0.0;
 
-    auto chosen = set == "unseen" ? unseenCases() : cases();
+    auto chosen = set == "unseen" ? unseenCases() : set == "session" ? sessionCases() : cases();
 
     if (set == "all")
         for (auto& c : unseenCases())
@@ -357,7 +488,15 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
     {
         ++n;
         Ai::Workspace::Start start;
-        start.audio = testFile (c.file);
+
+        if (c.session)
+        {
+            start.session = testSession();
+            start.sessionName = "Song";
+        }
+        else
+            start.audio = testFile (c.file);
+
         start.sampleRate = rate;
         start.fileName = "test tone.wav";
         start.plugins = BuiltInEffects::getDescriptions();
