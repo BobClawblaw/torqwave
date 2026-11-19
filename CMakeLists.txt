@@ -146,7 +146,12 @@ juce_add_gui_app(Torqwave
     # Finder's Open With and double-clicks: the audio types AudioFileIO::openedFromFinder names, and sessions.
     DOCUMENT_EXTENSIONS          wav aif aiff aifc flac ogg mp3 m4a caf tqsession tqproject sbsession sbproject
     NEEDS_WEB_BROWSER            FALSE
-    NEEDS_CURL                   FALSE)
+    # The only requests the app makes are to the AI server named in Settings > AI, most often a
+    # model server on the user's own network over plain HTTP, which App Transport Security
+    # would otherwise refuse unless it is a .local name.
+    PLIST_TO_MERGE               "<plist><dict><key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict></dict></plist>"
+    # Linux: HTTP and HTTPS to an AI server through libcurl (JUCE_LOAD_CURL_SYMBOLS_LAZILY below).
+    NEEDS_CURL                   TRUE)
 
 juce_generate_juce_header(Torqwave)
 
@@ -279,6 +284,10 @@ target_sources(Torqwave PRIVATE
     Source/MultitrackView.cpp
     Source/RackView.cpp
     Source/Guide.cpp
+    Source/AiClient.cpp
+    Source/AiKeychain.cpp
+    Source/AiWorkspace.cpp
+    Source/AiAssistant.cpp
     Source/GuideView.cpp
     Source/Home.cpp)
 
@@ -292,7 +301,9 @@ target_compile_definitions(Torqwave PRIVATE
     JUCE_USE_OGGVORBIS=1
     JUCE_USE_MP3AUDIOFORMAT=1
     JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=0
+    # Linux: libcurl (NEEDS_CURL) is loaded when an AI server is first asked, so the app still
+    # starts on a system without it. Elsewhere the system's own networking is used.
+    JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
     JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:Torqwave,JUCE_PRODUCT_NAME>"
     JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:Torqwave,JUCE_VERSION>")
 
@@ -338,7 +349,7 @@ if(WIN32)
 endif()
 
 # Integration checks: plug-in scanning, device routing and rack restore on this machine.
-juce_add_console_app(TorqwaveTests PRODUCT_NAME "TorqwaveTests" PLUGINHOST_AU TRUE)
+juce_add_console_app(TorqwaveTests PRODUCT_NAME "TorqwaveTests" PLUGINHOST_AU TRUE NEEDS_CURL TRUE)
 juce_generate_juce_header(TorqwaveTests)
 target_sources(TorqwaveTests PRIVATE
     Tests/EngineTests.cpp
@@ -434,6 +445,12 @@ target_sources(TorqwaveTests PRIVATE
     Tests/FadeHandleTests.cpp
     Tests/GuideTests.cpp
     Tests/HomeTests.cpp
+    Tests/AiTests.cpp
+    Tests/AiEval.cpp
+    Source/AiClient.cpp
+    Source/AiKeychain.cpp
+    Source/AiWorkspace.cpp
+    Source/AiAssistant.cpp
     Source/AudioDocument.cpp
     Source/Markers.cpp
     Source/Metronome.cpp

@@ -2,23 +2,23 @@
 
 **Experimental, being built for 0.17.0.** This is what Torqwave does, or will do, with a language model, in the order it is being built. It is on the [roadmap](../ROADMAP.md). The first version is a test: expect rough edges, check every plan before you apply it, and [tell us](https://github.com/BobClawblaw/torqwave/issues) what it got wrong.
 
-## The first step: a language model through the OpenAI API
+## The first step: a language model you run yourself
 
-Torqwave gets one new setting, **Settings > AI**, off by default:
+Torqwave talks to a language model on a server that speaks the OpenAI-compatible API (Chat Completions with tools), the API that local model servers share: Ollama, LM Studio, llama.cpp, vLLM, TensorFold and the like. It is made for a model you run on your own computer or your own network. Torqwave gets one new setting, **Settings > AI**, off by default:
 
-- **Provider:** Off, OpenAI, or a server of your own (a base URL). Anything that speaks the OpenAI API works: OpenAI itself with your key, or a model on your own computer or network through Ollama, LM Studio, llama.cpp, vLLM, TensorFold and the like.
-- **Key:** kept in the system's keychain (Keychain on the Mac, Credential Manager on Windows, Secret Service on Linux), never in a settings file.
+- **Server:** the server's address, such as `http://localhost:11434/v1`.
+- **Key:** only for a server that asks for one. It is kept in the Mac's keychain or Windows' Credential Manager, never in a settings file. On Linux this release reads it from the `TORQWAVE_AI_KEY` environment variable.
 - **Model:** chosen from the list the server gives (`/v1/models`). No model names are built into the app.
 - **Test:** one short request, showing the answer and how long it took.
 
-Torqwave ships no model. It sends text (and pictures, for a model that reads them) to the server you choose and reads back the answer. So it carries no model's licence, and with a local server nothing leaves your computer or network. No audio is sent in this first step at all.
+Torqwave ships no model and depends on no AI company. It sends text to the server you name and reads back the answer, so it carries no model's licence, and with a server on your computer or network nothing leaves it. No audio is sent at all.
 
-The plan is to build and tune it against an open-weights model on a local server first, then check it against OpenAI.
+It is being built and tuned against open-weights models on local servers.
 
 ### How answers become edits
 
-- **Commands as tools.** The model is given Torqwave's commands as tools. Torqwave already keeps a table of its 340 commands, each with a description, checked by `Scripts/check_commands.py`. The model answers with calls to those commands and their settings, and each call is checked against the table.
-- **A plan before anything changes.** The steps are shown first. Preview plays the result through the rack; Apply makes the whole plan one undo step.
+- **Tools, not free text.** The model is given Torqwave's edits as tools with typed settings and ranges (below). Each call is checked before it runs, and a bad one goes back to the model with the reason.
+- **A plan before anything changes.** The model works on a copy. Its steps are shown first, and Apply makes the whole plan one undo step.
 - **Results are ordinary.** A plan's edits, presets, markers and metadata are what you'd have made by hand, saved like anything else. Nothing stays tied to the model, and turning AI off changes nothing you have.
 - **Tested without a network.** A mock server in the test suite answers with recorded replies, to check requests, tool calls, streamed answers, errors and cancelling.
 
@@ -55,17 +55,16 @@ What the model can't do: anything a plug-in keeps only in its own window and doe
 The first release gets the loop right on a small set of tools:
 
 - **Look:** the file, measurements, the spectrum, finders, markers, plug-ins and their parameters.
-- **Change:** selections, gain, normalize, loudness matching, fades, trimming silence, DC, silence, reverse, insert silence, crop and delete, markers and regions.
-- **Plug-ins:** adding plug-ins to the effects rack, setting their parameters, bypassing and removing them, and applying the rack.
-- **Commands:** any menu command that needs no dialog.
+- **Change:** selections; 30 of the Effects menu's edits with their settings (gain, normalize, loudness, EQ, compressor, limiter, de-esser, reverb, speech levelling and the rest); fades, trimming silence, silence, insert silence, crop and delete; markers and regions.
+- **Plug-ins:** adding plug-ins to the effects rack, reading and setting their parameters, bypassing, moving and removing them, and rendering the rack into the audio.
 
-The session, notes, automation, Try and batch tools follow in 0.17.x, each measured against its own set of test sentences first.
+It works on audio files. The session, notes, automation, Try, batch and other-command tools follow in 0.17.x, each measured against its own set of test sentences first.
 
 ## What the language model would do
 
 All of these need only text in and text out, plus pictures for a model with vision.
 
-1. **Ask Torqwave.** A sentence becomes a plan of commands, with settings taken from the file's own analysis. For example, "take out the hum, bring it to -16 LUFS and trim the silence at both ends".
+1. **Ask Torq.** A sentence becomes a plan of commands, with settings taken from the file's own analysis. For example, "take out the hum, bring it to -16 LUFS and trim the silence at both ends".
 2. **Batch from a description.** "Every file in this folder to 48 kHz WAV at -23 LUFS, with a 10 ms fade at each end" becomes a batch job you can read and change before it runs.
 3. **An effect chain from a description.** "Warmer and closer", "a telephone", "a radio in the next room". The model chooses built-in effects and their settings from the file's spectrum and loudness, and saves them as a rack preset that works with AI off afterwards.
 4. **Ask the guide.** Questions answered from the user guide built into the app, with a link to the page and an offer to run the command.

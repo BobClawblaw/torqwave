@@ -168,6 +168,7 @@ namespace
         cmdUserGuide, cmdShortcutList, cmdSplitAllTracks, cmdRippleOff, cmdRippleTrack, cmdRippleAll,
         cmdLayerClips, cmdClipToFront, cmdClipToBack,
         cmdTakeOutOfFolder,
+        cmdAskTorqwave,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -323,6 +324,29 @@ public:
 
 private:
     Settings::Panel* panel = nullptr;
+    std::function<void()> closeCallback;
+};
+
+//==============================================================================
+/** Ask Torq (experimental): the request, the model's work and its plan. */
+class MainComponent::AskWindow final : public juce::DocumentWindow
+{
+public:
+    AskWindow (std::unique_ptr<Ai::AskPanel> content, std::function<void()> onClose)
+        : DocumentWindow (Ai::askName() + " (Experimental)", Theme::surface, DocumentWindow::closeButton),
+          closeCallback (std::move (onClose))
+    {
+        setUsingNativeTitleBar (true);
+        setContentOwned (content.release(), true);
+        setResizable (true, false);
+        setResizeLimits (480, 420, 3000, 3000);
+        centreWithSize (640, 600);
+        setVisible (true);
+    }
+
+    void closeButtonPressed() override              { closeCallback(); }
+
+private:
     std::function<void()> closeCallback;
 };
 
@@ -2191,6 +2215,8 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (multitrackMode && ! isRecording()); break;
         case cmdSessionNotes: info.setInfo ("Session Notes", "A panel of free text kept with the session: lyrics, takes, things to do", "Multitrack", 0);
                             info.setTicked (dock->isShown (Panels::notes)); break;
+        case cmdAskTorqwave: info.setInfo (Ai::askName() + "...", "Experimental: describe an edit in words, for a language model on your own server to plan; set it up in Settings > AI", "Edit", 0);
+                            info.setActive (hasAudio && ! multitrackMode); break;
         case cmdUndoHistory: info.setInfo ("Undo History", "A panel listing the undo steps of the file or the session showing; click one to go back or forward to it", "Edit", 0);
                             info.setTicked (dock->isShown (Panels::history)); break;
         case cmdShiftPitch: info.setInfo ("Shift Clip Pitch...", "Raise or lower the selected clip's pitch without changing its length", "Multitrack", 0);
@@ -2759,6 +2785,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdStretchClip: askToStretchSelectedClip(); break;
         case cmdShiftPitch: askToShiftSelectedClip(); break;
         case cmdUndoHistory: dock->toggle (Panels::history); break;
+        case cmdAskTorqwave: showAskTorqwave(); break;
         case cmdSessionNotes: dock->toggle (Panels::notes); break;
         case cmdSaveTrackTemplate: chooseTrackTemplateToSave(); break;
         case cmdSaveCopyWithAudio: saveSessionCopyWithAudio(); break;
@@ -3032,7 +3059,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             add ({ cmdNewFile, cmdOpen });
             menu.addSubMenu ("Open Recent", RecentFiles::createMenu (recentFiles, recentBaseId, [this] (const juce::File& f) { return isThere (f); }), recentFiles.getNumFiles() > 0 && ! isRecording());
             add ({ cmdCloseFile, cmdNextFile, cmdPreviousFile, 0, cmdSave, cmdSaveAs, cmdSaveSelection, cmdSaveRegions, cmdSavePieces, cmdSaveChannels, cmdExportLossy, cmdExportFfmpeg, 0, cmdAttachVideo, cmdVideoStart, cmdDetachVideo, cmdSaveIntoVideo, 0, cmdBatchProcess, cmdNewFromChannels, 0, cmdFileInfo, cmdSettings, 0, cmdOpenProject, cmdSaveProject, cmdSaveProjectAs, cmdKeepProjectHistory, 0, cmdNewSession, cmdOpenSession, cmdSaveCopyWithAudio, 0, cmdExportMarkers, cmdImportMarkers, cmdExportClips }); break;
-        case 1: add ({ cmdUndo, cmdRedo, cmdUndoHistory, cmdRepeatLast, 0, cmdCut, cmdCopy, cmdPaste, cmdPasteMix, cmdPasteFill, cmdDelete, cmdRepeatSelection, 0, cmdSelectAll, cmdSelectAudible, cmdSetSelection, cmdStepSelectionEarlier, cmdStepSelectionLater, cmdDoubleSelection, cmdHalveSelection, cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectionToZero, cmdSelectZeroCrossings, cmdCopySelectionTime, cmdFindClipping, cmdFindSilence, cmdNextSound, cmdPreviousSound, cmdSelectTrackClips, cmdSelectClipsAfter, cmdSelectClipsInRange, cmdSelectClipsInRegion, cmdNextClip, cmdPreviousClip, cmdCrop, cmdCropMargins, 0, cmdTimeTool, cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdBrushLarger, cmdBrushSmaller, cmdBrushLighter, cmdBrushHeavier, 0, cmdConvertRate }); break;
+        case 1: add ({ cmdUndo, cmdRedo, cmdUndoHistory, cmdRepeatLast, 0, cmdCut, cmdCopy, cmdPaste, cmdPasteMix, cmdPasteFill, cmdDelete, cmdRepeatSelection, 0, cmdSelectAll, cmdSelectAudible, cmdSetSelection, cmdStepSelectionEarlier, cmdStepSelectionLater, cmdDoubleSelection, cmdHalveSelection, cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectionToZero, cmdSelectZeroCrossings, cmdCopySelectionTime, cmdFindClipping, cmdFindSilence, cmdNextSound, cmdPreviousSound, cmdSelectTrackClips, cmdSelectClipsAfter, cmdSelectClipsInRange, cmdSelectClipsInRegion, cmdNextClip, cmdPreviousClip, cmdCrop, cmdCropMargins, 0, cmdTimeTool, cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdBrushLarger, cmdBrushSmaller, cmdBrushLighter, cmdBrushHeavier, 0, cmdConvertRate, 0, cmdAskTorqwave }); break;
         case 2:
         {
             juce::PopupMenu shapes;
@@ -12437,6 +12464,84 @@ void MainComponent::showSettings (const juce::String& section)
     settingsWindow->toFront (true);
 }
 
+void MainComponent::showAskTorqwave()
+{
+    const auto settings = Ai::Settings::load (*appProperties.getUserSettings());
+
+    if (! settings.isOn() || settings.model.isEmpty())
+    {
+        showSettings ("AI");
+        return;
+    }
+
+    // A window made with the settings it was opened with: a change in Settings > AI takes effect
+    // the next time it opens.
+    if (askWindow == nullptr)
+        askWindow = std::make_unique<AskWindow> (std::make_unique<Ai::AskPanel> (settings, [this] { return startAiPlan(); },
+                                                                                  [this] (Ai::Workspace& w, const juce::String& request) { return applyAiPlan (w, request); }),
+                                                 [this]
+                                                 {
+                                                     juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<MainComponent> (this)]
+                                                     {
+                                                         if (safe != nullptr)
+                                                             safe->askWindow = nullptr;
+                                                     });
+                                                 });
+
+    askWindow->setVisible (true);
+    askWindow->toFront (true);
+}
+
+std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
+{
+    auto& doc = engine.document;
+
+    if (multitrackMode || ! doc.hasAudio())
+        return std::nullopt;
+
+    aiStartVersion = doc.getVersion();
+    aiStartReset = doc.getResetCount();
+
+    Ai::Workspace::Start start;
+    start.audio = doc.getSnapshot();
+    start.sampleRate = doc.getSampleRate();
+    start.selection = waveform.getSelection();
+    start.markers = doc.getMarkers();
+    start.fileName = doc.getFile().getFileName();
+    start.plugins = engine.knownPlugins.getTypes();
+    start.rack = engine.createRackXml();
+    start.formats = &engine.pluginFormatManager;
+    return start;
+}
+
+juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& request)
+{
+    auto& doc = engine.document;
+
+    if (multitrackMode || doc.getVersion() != aiStartVersion || doc.getResetCount() != aiStartReset)
+        return "The file changed while the plan was made, so it wasn't applied. Ask again.";
+
+    if (w.audioChanged() || w.markersChanged())
+    {
+        const auto words = request.length() > 40 ? request.substring (0, 40).trimEnd() + "..." : request;
+        applyEdit (w.getAudio(), "Ask Torq: " + words, w.getSelection(), w.getMarkers());
+
+        // A chain rendered into the audio comes back to the rack when the step is undone, as after Apply Effects Rack.
+        if (const auto rendered = w.getRackRendered())
+            doc.setRackApplied (rendered);
+    }
+
+    if (w.rackChanged())
+    {
+        if (const auto rack = w.createRackXml(); rack != nullptr && rack->getNumChildElements() > 0)
+            restoreRack (*rack);
+        else
+            engine.clearRack();
+    }
+
+    return {};
+}
+
 Settings::Model MainComponent::makeSettingsModel()
 {
     using Item = Settings::Item;
@@ -12550,6 +12655,17 @@ Settings::Model MainComponent::makeSettingsModel()
 
     model.push_back ({ "Plug-ins", Platform::pluginFormats() + " effects are found by a scan and listed in the Plug-ins window, where one that fails can be checked again.",
         { Item::button ("Plug-ins...", "Scan for plug-ins and manage the list", [this] { showPluginList(); }) } });
+
+    model.push_back ({ "AI", "Experimental. Ask Torq (Edit menu) sends your words, never audio, to a language model on a server "
+                             "you run, on this computer or your network, and shows its plan before anything changes. Torqwave ships no model.",
+        { Item::toggle (Ai::askName(), "Use the language model on the server below",
+                        [settings] { return Ai::Settings::load (*settings).enabled; },
+                        [settings, changed] (bool on) { auto s = Ai::Settings::load (*settings); s.enabled = on; s.save (*settings); changed(); }),
+          Item::component ({}, Ai::SettingsView::preferredHeight, [settings, changed] () -> std::unique_ptr<juce::Component>
+                           {
+                               return std::make_unique<Ai::SettingsView> ([settings] { return Ai::Settings::load (*settings); },
+                                                                          [settings, changed] (const Ai::Settings& s) { s.save (*settings); changed(); });
+                           }) } });
 
     model.push_back ({ "Keys", "Every command's keys, to change, export and import, or to take from another key set.",
         { Item::button ("Keyboard Shortcuts...", "See and change the keys for every command", [this] { showKeyShortcuts(); }) } });

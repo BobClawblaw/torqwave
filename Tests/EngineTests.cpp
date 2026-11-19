@@ -63,6 +63,8 @@
 #include "AzimuthTests.h"
 #include "GuideTests.h"
 #include "HomeTests.h"
+#include "AiTests.h"
+#include "AiEval.h"
 #include "CodecPreviewTests.h"
 #include "BuiltInEffectsTests.h"
 #include "EffectPreviewTests.h"
@@ -585,6 +587,8 @@ int main (int argc, char* argv[])
     //   --library <folder>      only scan this folder of sounds into a new Sound Library index, and time it
     //   --write-check <folder>  only write categories and tags into copies of WAV files from this folder, and check them
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
+    //   --ai                    only the AI assistance tests (a mock server; no network)
+    //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY)
     juce::StringArray args;
 
     for (int i = 1; i < argc; ++i)
@@ -598,6 +602,16 @@ int main (int argc, char* argv[])
 
     juce::ScopedJuceInitialiser_GUI juceInit;
     juce::Array<juce::PluginDescription> found;
+
+    if (const auto i = args.indexOf ("--ai-eval"); i >= 0)
+        return runAiEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {})) == 0 ? 0 : 1;
+
+    if (args.contains ("--ai"))
+    {
+        runAiTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
 
     // A page per theme, to look at: the editor with a lasso in hand, its strip, a session, the
     // statistics, the tonal balance and the marker list. Anything a component leaves unpainted
@@ -740,6 +754,7 @@ int main (int argc, char* argv[])
         runAzimuthTests();
         runGuideTests();
         runHomeTests();
+        runAiTests();
         runCodecPreviewTests();
         runDynamicsTests();
         runModulationTests();
