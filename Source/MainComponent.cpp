@@ -12564,6 +12564,11 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
         start.sessionName = engine.session.getFile() != juce::File() ? engine.session.getFile().getFileNameWithoutExtension() : juce::String ("Untitled");
         start.sampleRate = engine.session.getSampleRate();
         start.plugins = engine.knownPlugins.getTypes();
+
+        for (auto& t : aiStartSession->tracks)
+            if (auto* instrument = t.isInstrument ? engine.getTrackEffects().getInstrument (t.id) : nullptr)
+                start.instruments[t.id] = instrument->getName();
+
         start.catalogue = pluginCatalogue.get();
         return start;
     }
@@ -12601,6 +12606,13 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
             const auto words = request.length() > 40 ? request.substring (0, 40).trimEnd() + "..." : request;
             engine.session.apply (*w.getSession(), "Ask Torq: " + words);
         }
+
+        for (auto& load : w.getInstrumentLoads())
+            engine.addTrackPlugin (load.trackId, load.plugin, [name = load.plugin.name] (const juce::String& error)
+            {
+                if (error.isNotEmpty())
+                    showError ("Ask Torq", name + " couldn't be loaded: " + error);
+            });
 
         return {};
     }

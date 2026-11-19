@@ -56,6 +56,16 @@ namespace
     "parameters": { "type": "object", "properties": { CLIP }, "required": ["clip"] } },
   { "name": "add_marker", "description": "Add a marker at a time, or a region from start to end, in seconds on the session's time.",
     "parameters": { "type": "object", "properties": { "start": { "type": "number" }, "end": { "type": "number" }, "name": { "type": "string" } }, "required": ["start"] } },
+  { "name": "add_note_clip", "description": "Add a note clip to an instrument track, with its notes. Note times are seconds from the clip's start. With loop_length the notes repeat every that many seconds to the clip's end, so a one-bar pattern can fill many bars; notes must then start inside the first loop.",
+    "parameters": { "type": "object", "properties": { TRACK, "start": { "type": "number", "description": "Seconds, where the clip starts in the session." },
+                    "length": { "type": "number", "description": "Seconds the clip lasts." }, "loop_length": { "type": "number", "description": "Seconds; leave out to play the notes once." },
+                    "name": { "type": "string" },
+                    "notes": { "type": "array", "items": { "type": "object", "properties": { "pitch": { "type": "integer", "description": "MIDI note, 0 to 127: 60 is middle C, C4 (so C2 is 36)" },
+                               "start": { "type": "number" }, "length": { "type": "number" }, "velocity": { "type": "integer", "description": "1 to 127; 100 when left out" } },
+                               "required": ["pitch", "start", "length"] } } },
+                    "required": ["track", "start", "length", "notes"] } },
+  { "name": "set_instrument", "description": "Choose an instrument track's instrument: an instrument plug-in by its id or name from list_plugins with instruments: true. It is loaded when the plan is applied.",
+    "parameters": { "type": "object", "properties": { TRACK, "plugin": { "type": "string" } }, "required": ["track", "plugin"] } },
   { "name": "set_tempo", "description": "Set the session's tempo (20 to 400 beats a minute) and beats in a bar (1 to 16) from the start.",
     "parameters": { "type": "object", "properties": { "bpm": { "type": "number" }, "beats_per_bar": { "type": "integer" } }, "required": ["bpm"] } }
 ])JSON";
@@ -63,9 +73,22 @@ namespace
 
 namespace Ai
 {
-    SessionTools::SessionTools (SessionState s, juce::String name, juce::StringArray& planSteps)
-        : state (std::move (s)), sessionName (std::move (name)), steps (planSteps)
+    SessionTools::SessionTools (SessionState s, juce::String name, juce::StringArray& planSteps,
+                                std::map<juce::uint32, juce::String> trackInstruments, FindInstrument find)
+        : state (std::move (s)), sessionName (std::move (name)), steps (planSteps),
+          instruments (std::move (trackInstruments)), findInstrument (std::move (find))
     {
+    }
+
+    std::vector<SessionTools::InstrumentLoad> SessionTools::getInstrumentLoads() const
+    {
+        std::vector<InstrumentLoad> kept;
+
+        for (auto& l : loads)
+            if (const auto* t = state.findTrack (l.trackId); t != nullptr && t->takesNoteClips())
+                kept.push_back (l);
+
+        return kept;
     }
 
     juce::Array<juce::var> SessionTools::toolDefinitions()
@@ -79,7 +102,7 @@ namespace Ai
             for (auto& t : *list)
                 tools.add (object ({ { "type", "function" }, { "function", t } }));
 
-        jassert (tools.size() == 16);
+        jassert (tools.size() == 18);
         return tools;
     }
 
@@ -89,9 +112,11 @@ namespace Ai
                "or play into, and folders that gather tracks. Times are seconds from the session's start. Tracks are named by their "
                "number in get_session's list or by their name; numbers change when tracks are added, moved or removed, so call "
                "get_session again after that. Clips are named by their id from list_clips. Each change adds a step to the plan; "
-               "nothing reaches the session until the user applies it. What these tools can't do yet: a track's effects, an "
-               "instrument track's instrument, the notes in note clips, automation, recording, and changing the audio inside a "
-               "clip. Say so when a request needs them, rather than doing something else.";
+               "nothing reaches the session until the user applies it. Notes go in note clips on instrument tracks; a beat lasts "
+               "60 / tempo seconds. Drum instruments mostly follow General MIDI: kick 36, snare 38, clap 39, closed hi-hat 42, "
+               "open hi-hat 46, crash 49, ride 51. What these tools can't do yet: a track's effects (other than its instrument), "
+               "an instrument's settings and presets, automation, recording, and changing the audio inside a clip. Say so when "
+               "a request needs them, rather than doing something else.";
     }
 
     std::optional<juce::var> SessionTools::run (const juce::String& tool, const juce::var& args)
@@ -114,6 +139,8 @@ namespace Ai
         else if (tool == "remove_clip")    result = removeClip (args);
         else if (tool == "add_marker")     result = addMarker (args);
         else if (tool == "set_tempo")      result = setTempo (args);
+        else if (tool == "add_note_clip")  result = addNoteClip (args);
+        else if (tool == "set_instrument") result = setInstrument (args);
         else return std::nullopt;
 
         return result;
@@ -237,6 +264,14 @@ namespace Ai
                 }
             }
 
+            if (t.isInstrument)
+            {
+                const auto pending = std::find_if (loads.rbegin(), loads.rend(), [&t] (const InstrumentLoad& l) { return l.trackId == t.id; });
+                const auto current = instruments.find (t.id);
+                o->setProperty ("instrument", pending != loads.rend() ? juce::var (pending->plugin.name + " (when the plan is applied)")
+                                              : current != instruments.end() ? juce::var (current->second) : juce::var ("none"));
+            }
+
             if (t.isFrozen())
                 o->setProperty ("frozen", true);
 
@@ -279,6 +314,7 @@ namespace Ai
         for (auto& c : t.noteClips)
             clips.add (object ({ { "id", (int) c.id }, { "name", c.name }, { "notes", (int) c.notes.size() },
                                  { "start", seconds (c.position).getDoubleValue() }, { "end", seconds (c.getEnd()).getDoubleValue() },
+                                 { "loop_length", c.loopLength > 0 ? juce::var (seconds (c.loopLength).getDoubleValue()) : juce::var() },
                                  { "muted", c.muted } }));
 
         return object ({ { "track", t.name }, { "clips", clips } });
@@ -761,5 +797,117 @@ namespace Ai
 
         return done ("Set the tempo to " + juce::String (bpm, 2).trimCharactersAtEnd ("0").trimCharactersAtEnd (".") + " bpm, "
                      + juce::String (beats) + " beats a bar");
+    }
+
+    //==============================================================================
+    juce::var SessionTools::addNoteClip (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+
+        if (! t.takesNoteClips())
+            return refused (t.name.quoted() + " is not an instrument track: notes go on one (add_track with kind \"instrument\")");
+
+        const auto start = frameOf (a["start"]), length = frameOf (a["length"]);
+
+        if (! start || ! length || *length <= 0)
+            return refused ("start and length are seconds, the length more than 0");
+
+        NoteClip clip;
+        clip.name = a["name"].toString().trim();
+        clip.position = *start;
+        clip.length = *length;
+
+        if (! a["loop_length"].isVoid())
+        {
+            const auto loop = frameOf (a["loop_length"]);
+
+            if (! loop || *loop <= 0 || *loop > *length)
+                return refused ("loop_length is seconds, more than 0 and no longer than the clip");
+
+            clip.loopLength = *loop;
+        }
+
+        const auto* notes = a["notes"].getArray();
+
+        if (notes == nullptr || notes->isEmpty() || notes->size() > 4096)
+            return refused ("notes is a list of 1 to 4096 notes, each with pitch, start and length");
+
+        const auto room = clip.loopLength > 0 ? clip.loopLength : clip.length;
+
+        for (int i = 0; i < notes->size(); ++i)
+        {
+            const auto& n = (*notes)[i];
+            const auto& pitch = n["pitch"];
+            const auto noteStart = frameOf (n["start"]), noteLength = frameOf (n["length"]);
+            const auto velocity = n["velocity"].isVoid() ? 100.0 : (double) n["velocity"];
+            const auto which = "note " + juce::String (i + 1) + ": ";
+
+            if (! (pitch.isInt() || pitch.isInt64() || pitch.isDouble()) || (int) pitch < 0 || (int) pitch > 127
+                || ! juce::exactlyEqual ((double) (int) pitch, (double) pitch))
+                return refused (which + "pitch is a whole number from 0 to 127");
+
+            if (! noteStart || ! noteLength || *noteLength <= 0)
+                return refused (which + "start and length are seconds from the clip's start, the length more than 0");
+
+            if (*noteStart >= room)
+                return refused (which + "starts at " + seconds (*noteStart) + " s, past the " + (clip.loopLength > 0 ? "loop's" : "clip's")
+                                + " length of " + seconds (room) + " s, so it would never play");
+
+            if (! std::isfinite (velocity) || velocity < 1.0 || velocity > 127.0)
+                return refused (which + "velocity is 1 to 127");
+
+            clip.notes.push_back ({ (int) pitch, *noteStart, *noteLength, (float) (velocity / 127.0) });
+        }
+
+        const auto count = (int) clip.notes.size();
+        const auto id = SessionEdits::addNoteClip (state, t.id, std::move (clip));
+
+        if (id == 0)
+            return refused ("the clip couldn't be added to " + t.name.quoted());
+
+        auto result = done ("Add a note clip to " + t.name.quoted() + ", " + seconds (*start) + " s to " + seconds (*start + *length) + " s, "
+                            + juce::String (count) + (count == 1 ? " note" : " notes")
+                            + (! a["loop_length"].isVoid() ? ", repeating every " + seconds (frameOf (a["loop_length"]).value_or (0)) + " s" : juce::String()));
+        result.getDynamicObject()->setProperty ("clip", (int) id);
+        return result;
+    }
+
+    juce::var SessionTools::setInstrument (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+
+        if (! t.takesNoteClips())
+            return refused (t.name.quoted() + " is not an instrument track (add_track with kind \"instrument\" makes one)");
+
+        if (const auto current = instruments.find (t.id); current != instruments.end())
+            return refused (t.name.quoted() + " already plays " + current->second + "; replacing an instrument isn't in these tools yet");
+
+        if (findInstrument == nullptr)
+            return refused ("no plug-ins are known here");
+
+        const auto plugin = findInstrument (a["plugin"].toString().trim(), error);
+
+        if (! plugin)
+            return refused (error);
+
+        if (! plugin->isInstrument)
+            return refused (plugin->name + " is an effect, not an instrument; list_plugins with instruments: true lists those");
+
+        loads.erase (std::remove_if (loads.begin(), loads.end(), [&t] (const InstrumentLoad& l) { return l.trackId == t.id; }), loads.end());
+        loads.push_back ({ t.id, *plugin });
+        steps.add ("Load " + plugin->name + " on " + t.name.quoted());
+        return object ({ { "ok", true }, { "step", steps[steps.size() - 1] } });
     }
 }

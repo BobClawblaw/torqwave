@@ -645,7 +645,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 18 && names.contains ("get_session") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 20 && names.contains ("get_session") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -692,6 +692,67 @@ namespace
                    && (bool) removed["ok"] && state.tracks.size() == 2 && state.tracks[0].folderId == 0
                    && ! (bool) fileTool["ok"] && w.sessionChanged() && w.getSteps().size() == 10 && s.tracks.size() == 2 && s.tracks[0].clips.size() == 1,
                "Ask Torq sessions: markers, the tempo and removing a folder (its track left out of any); a file's tool refused; ten steps, and the session itself untouched");
+    }
+
+    void testSessionNotes()
+    {
+        // An audio track, and an instrument track already playing a piano.
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.addTrack().name = "Guitar";
+        s.addInstrumentTrack().name = "Keys";
+        const auto keysId = s.tracks[1].id;
+
+        juce::PluginDescription drumKit;
+        drumKit.name = "Test Drums";
+        drumKit.manufacturerName = "Torqwave";
+        drumKit.pluginFormatName = "VST3";
+        drumKit.fileOrIdentifier = "/Library/Audio/Plug-Ins/VST3/Test Drums.vst3";
+        drumKit.isInstrument = true;
+
+        Ai::Workspace::Start start;
+        start.session = s;
+        start.sessionName = "Song";
+        start.plugins = BuiltInEffects::getDescriptions();
+        start.plugins.add (drumKit);
+        start.instruments[keysId] = "Piano";
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+        const auto& state = *w.getSession();
+
+        const auto added = call ("add_track", R"({"kind": "instrument", "name": "Drums"})");
+        const auto loaded = call ("set_instrument", R"({"track": "Drums", "plugin": "Test Drums"})");
+        const auto onAudio = call ("set_instrument", R"({"track": "Guitar", "plugin": "Test Drums"})");
+        const auto effect = call ("set_instrument", R"({"track": "Drums", "plugin": "Compressor"})");
+        const auto taken = call ("set_instrument", R"({"track": "Keys", "plugin": "Test Drums"})");
+        const auto session = call ("get_session", "{}");
+        const auto loads = w.getInstrumentLoads();
+        const auto drumsId = state.tracks.back().id;
+        check ((bool) added["ok"] && (bool) loaded["ok"] && ! (bool) onAudio["ok"] && ! (bool) effect["ok"] && effect["error"].toString().contains ("effect")
+                   && ! (bool) taken["ok"] && taken["error"].toString().contains ("Piano")
+                   && session["tracks"][1]["instrument"] == juce::var ("Piano") && session["tracks"][2]["instrument"].toString().startsWith ("Test Drums")
+                   && loads.size() == 1 && loads[0].trackId == drumsId && loads[0].plugin.name == "Test Drums",
+               "Ask Torq sessions: an instrument chosen for a new instrument track, loaded after the plan; an audio track, an effect and a track that has one refused");
+
+        const auto pattern = call ("add_note_clip", R"({"track": "Drums", "start": 0, "length": 4, "loop_length": 2, "name": "Kick",
+            "notes": [ { "pitch": 36, "start": 0, "length": 0.1, "velocity": 110 }, { "pitch": 36, "start": 0.5, "length": 0.1 },
+                       { "pitch": 36, "start": 1, "length": 0.1 }, { "pitch": 36, "start": 1.5, "length": 0.1 } ]})");
+        const auto pastLoop = call ("add_note_clip", R"({"track": "Drums", "start": 4, "length": 4, "loop_length": 2, "notes": [ { "pitch": 36, "start": 2, "length": 0.1 } ]})");
+        const auto badPitch = call ("add_note_clip", R"({"track": "Drums", "start": 4, "length": 4, "notes": [ { "pitch": 128, "start": 0, "length": 0.1 } ]})");
+        const auto audioTrack = call ("add_note_clip", R"({"track": "Guitar", "start": 0, "length": 4, "notes": [ { "pitch": 60, "start": 0, "length": 1 } ]})");
+        const auto listed = call ("list_clips", R"({"track": "Drums"})");
+        const auto& drums = state.tracks.back();
+        const auto& clip = drums.noteClips.empty() ? NoteClip() : drums.noteClips[0];
+        check ((bool) pattern["ok"] && ! (bool) pastLoop["ok"] && ! (bool) badPitch["ok"] && ! (bool) audioTrack["ok"]
+                   && drums.noteClips.size() == 1 && clip.name == "Kick" && clip.position == 0 && clip.length == 192000 && clip.loopLength == 96000
+                   && clip.notes.size() == 4 && clip.notes[1].start == 24000 && clip.notes[1].length == 4800 && clip.notes[0].pitch == 36
+                   && juce::approximatelyEqual (clip.notes[0].velocity, 110.0f / 127.0f) && juce::approximatelyEqual (clip.notes[1].velocity, 100.0f / 127.0f)
+                   && (int) listed["clips"][0]["notes"] == 4 && juce::approximatelyEqual ((double) listed["clips"][0]["loop_length"], 2.0),
+               "Ask Torq sessions: a looping note clip of a kick pattern on the new track; a note past the loop, a pitch over 127 and an audio track refused");
+
+        const auto removed = call ("remove_track", R"({"track": "Drums"})");
+        check ((bool) removed["ok"] && w.getInstrumentLoads().empty() && w.getSteps().size() == 4 && s.tracks.size() == 2 && s.tracks[1].noteClips.empty(),
+               "Ask Torq sessions: removing the track drops its instrument load; four steps, and the session itself untouched");
     }
 
     void testCatalogueLearner()
@@ -871,6 +932,7 @@ void runAiTests()
     testCatalogueWorker();
     testCatalogueTools();
     testSessionTools();
+    testSessionNotes();
     testCatalogueLearner();
     testAskPanel();
     testName();

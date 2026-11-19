@@ -10,15 +10,22 @@
 
     This first set covers the session's layout and mix: tracks, buses and folders, their volume,
     pan, mute, solo, outputs and sends; clips' places, trims, splits, gains and fades; markers
-    and regions; and the tempo. A track's effects, notes in note clips and automation are not
-    yet in it: they live outside the state, or need their own checks first. */
+    and regions; the tempo; note clips with their notes; and an instrument track's instrument.
+    An instrument lives outside the state (in the track's chain, TrackEffects), so choosing one
+    is planned as a load for the caller to make once the plan is applied (getInstrumentLoads).
+    A track's other effects and automation are not yet in it. */
 namespace Ai
 {
     class SessionTools
     {
     public:
-        /** steps: the plan, which change tools add their lines to. */
-        SessionTools (SessionState, juce::String sessionName, juce::StringArray& steps);
+        /** An instrument plug-in by its id or name, or nothing with the reason in error. */
+        using FindInstrument = std::function<std::optional<juce::PluginDescription> (const juce::String&, juce::String& error)>;
+
+        /** steps: the plan, which change tools add their lines to. instruments: the name of the
+            instrument on each instrument track that has one, by track id. */
+        SessionTools (SessionState, juce::String sessionName, juce::StringArray& steps,
+                      std::map<juce::uint32, juce::String> instruments = {}, FindInstrument findInstrument = nullptr);
 
         /** The tools, as entries for the Chat Completions "tools" array. */
         static juce::Array<juce::var> toolDefinitions();
@@ -32,6 +39,17 @@ namespace Ai
 
         const SessionState& getState() const noexcept     { return state; }
         bool changed() const noexcept                       { return edited; }
+
+        /** An instrument to load onto a track once the plan is applied. */
+        struct InstrumentLoad
+        {
+            juce::uint32 trackId = 0;
+            juce::PluginDescription plugin;
+        };
+
+        /** The loads the plan makes, for tracks still in it (a track added and then removed in
+            the same plan loads nothing). */
+        std::vector<InstrumentLoad> getInstrumentLoads() const;
 
     private:
         juce::var getSession();
@@ -51,6 +69,8 @@ namespace Ai
         juce::var removeClip (const juce::var&);
         juce::var addMarker (const juce::var&);
         juce::var setTempo (const juce::var&);
+        juce::var addNoteClip (const juce::var&);
+        juce::var setInstrument (const juce::var&);
 
         /** The track a call names by its number (from 1, in get_session's order) or its name;
             sets error when there is none. */
@@ -64,6 +84,9 @@ namespace Ai
         SessionState state;
         juce::String sessionName;
         juce::StringArray& steps;
+        std::map<juce::uint32, juce::String> instruments;
+        FindInstrument findInstrument;
+        std::vector<InstrumentLoad> loads;
         bool edited = false;
     };
 }

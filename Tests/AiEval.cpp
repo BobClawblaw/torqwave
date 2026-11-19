@@ -255,6 +255,62 @@ namespace
             {
                 return trackNamed (w, "Bass") == nullptr && w.getSession()->tracks.size() == 3 ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
             }),
+            onSession ("Add a drum track playing Test Drums with a four-on-the-floor kick for the first two bars.", [] (Ai::Workspace& w) -> juce::String
+            {
+                // At the session's 120 BPM in 4/4: a kick (36) on every beat, 0 to 3.5 s.
+                const auto loads = w.getInstrumentLoads();
+                const auto& s = *w.getSession();
+                const SessionTrack* drums = nullptr;
+
+                for (auto& t : s.tracks)
+                    if (! loads.empty() && t.id == loads[0].trackId)
+                        drums = &t;
+
+                if (loads.size() != 1 || drums == nullptr || loads[0].plugin.name != "Test Drums")
+                    return "plan: " + w.getSteps().joinIntoString (" | ");
+
+                std::set<juce::int64> kicks;
+
+                for (auto& c : drums->noteClips)
+                    for (juce::int64 pass = 0; pass < (c.loopLength > 0 ? c.length / c.loopLength + 1 : 1); ++pass)
+                        for (auto& n : c.notes)
+                            if (const auto at = c.position - c.offset + pass * c.loopLength + n.start;
+                                n.pitch == 36 && at >= c.position && at < c.getEnd() && (c.loopLength == 0 || n.start < c.loopLength))
+                                kicks.insert (at);
+
+                std::set<juce::int64> wanted;
+
+                for (int beat = 0; beat < 8; ++beat)
+                    wanted.insert ((juce::int64) (beat * rate / 2));
+
+                return kicks == wanted ? juce::String() : "kicks at " + juce::String ((int) kicks.size()) + " places; plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("On a new instrument track called Bass, write a bass line of C2, C2, G2, F2 as quarter notes in the first bar.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const SessionTrack* bass = nullptr;
+
+                for (auto& t : w.getSession()->tracks)
+                    if (t.name.equalsIgnoreCase ("Bass") && t.isInstrument)
+                        bass = &t;
+
+                if (bass == nullptr || ! bass->isInstrument || bass->noteClips.size() != 1)
+                    return "plan: " + w.getSteps().joinIntoString (" | ");
+
+                const auto& c = bass->noteClips[0];
+                std::vector<std::pair<juce::int64, int>> heard;
+
+                for (auto& n : c.notes)
+                    heard.push_back ({ c.position - c.offset + n.start, n.pitch });
+
+                std::sort (heard.begin(), heard.end());
+                const std::vector<std::pair<juce::int64, int>> wanted { { 0, 36 }, { 24000, 36 }, { 48000, 43 }, { 72000, 41 } };
+                juce::StringArray got;
+
+                for (auto& [at, pitch] : heard)
+                    got.add (juce::String (pitch) + " at " + juce::String ((double) at / rate, 3) + " s");
+
+                return heard == wanted ? juce::String() : "notes " + got.joinIntoString (", ") + "; wanted 36, 36, 43, 41 a quarter note apart";
+            }),
             onSession ("Make a new bus called FX Master and have the reverb bus play into it.", [] (Ai::Workspace& w) -> juce::String
             {
                 const auto* master = trackNamed (w, "FX Master");
@@ -500,6 +556,16 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
         start.sampleRate = rate;
         start.fileName = "test tone.wav";
         start.plugins = BuiltInEffects::getDescriptions();
+
+        // An instrument for the session requests to choose (it is never loaded here).
+        juce::PluginDescription drumKit;
+        drumKit.name = "Test Drums";
+        drumKit.manufacturerName = "Torqwave";
+        drumKit.pluginFormatName = "VST3";
+        drumKit.fileOrIdentifier = "/Library/Audio/Plug-Ins/VST3/Test Drums.vst3";
+        drumKit.category = "Drum";
+        drumKit.isInstrument = true;
+        start.plugins.add (drumKit);
         start.formats = &formats;
 
         Ai::Agent agent (settings, key, std::move (start), c.request);

@@ -38,6 +38,7 @@ namespace Ai
                 and the plug-in look tools, with no audio. */
             std::optional<SessionState> session;
             juce::String sessionName;
+            std::map<juce::uint32, juce::String> instruments;   // the instrument each instrument track plays, by track id
         };
 
         explicit Workspace (Start);
@@ -57,6 +58,12 @@ namespace Ai
         bool isSession() const noexcept                             { return sessionTools != nullptr; }
         const SessionState* getSession() const noexcept             { return sessionTools != nullptr ? &sessionTools->getState() : nullptr; }
         bool sessionChanged() const noexcept                        { return sessionTools != nullptr && sessionTools->changed(); }
+
+        /** The instruments the plan loads onto tracks once it is applied (not part of its undo step). */
+        std::vector<SessionTools::InstrumentLoad> getInstrumentLoads() const
+        {
+            return sessionTools != nullptr ? sessionTools->getInstrumentLoads() : std::vector<SessionTools::InstrumentLoad>();
+        }
 
         /** Runs one tool call and returns its result for the model, as JSON text. Never throws:
             a bad call comes back as {"ok": false, "error": ...} for the model to correct. */
