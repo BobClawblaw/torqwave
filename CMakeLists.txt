@@ -320,8 +320,9 @@ add_custom_target(TorqwaveBuildStamp ALL
 add_dependencies(Torqwave TorqwaveBuildStamp)
 target_include_directories(Torqwave PRIVATE ${TORQWAVE_STAMP_DIR})
 
-# The logo on the loading screen.
-juce_add_binary_data(TorqwaveArt SOURCES Art/torqwave-banner.png ThirdParty/UCS/ucs_v8_2_1.tsv)
+# The logo on the loading screen, the UCS category list, and the plug-in descriptions Torqwave
+# ships for Ask Torq (PluginCatalogue).
+juce_add_binary_data(TorqwaveArt SOURCES Art/torqwave-banner.png ThirdParty/UCS/ucs_v8_2_1.tsv Data/plugin-knowledge.json)
 
 # The user guide, read inside the app (Help > User Guide): its pages, the shortcut list and the
 # screenshots they show. Source/Guide.cpp finds each by its file name.

@@ -129,13 +129,20 @@ juce::Array<juce::var> CatalogueLearner::requestFor (const juce::PluginDescripti
     shown->setProperty ("parameterCount", facts["parameterCount"]);
     shown->setProperty ("parameters", parameters);
 
+    if (facts.hasProperty ("programs"))
+    {
+        shown->setProperty ("presets", facts["programs"]);
+        shown->setProperty ("presetCount", facts["programCount"]);
+    }
+
     return { message ("system",
                       "You write entries for the plug-in catalogue of Torqwave, an audio editor. An assistant reads them to choose "
                       "an effect for a job and to set it through its parameters. Write from the facts given and from what you know "
                       "of this plug-in. Plain text, no headings or markdown, at most 150 words: first one sentence on what it is and "
                       "what it does to the sound; then what it is good for; then the parameters that matter most for common jobs, by "
-                      "their names here, with useful settings. If neither the facts nor what you know make clear what it does, say "
-                      "so in the first sentence instead of guessing."),
+                      "their names here, with useful settings, and any presets that suit common jobs. If neither the facts nor what "
+                      "you know make clear what the plug-in does to the sound, write only \"" + juce::String (PluginCatalogue::notKnown)
+                      + "\" and one sentence on what can be told from the facts, with no settings: a guess would mislead."),
              message ("user", juce::JSON::toString (juce::var (shown.release()), true)) };
 }
 
@@ -341,8 +348,8 @@ void CatalogueView::rebuild()
 
 juce::String CatalogueView::stateOf (const Row& r) const
 {
-    if (catalogue.getUnderstanding (r.description))
-        return "described";
+    if (const auto u = catalogue.getUnderstanding (r.description))
+        return u->text.startsWith (PluginCatalogue::notKnown) ? "not known" : u->shipped ? "from Torqwave" : "described";
 
     const auto facts = catalogue.getFacts (r.description);
 
@@ -364,7 +371,8 @@ void CatalogueView::paintListBoxItem (int row, juce::Graphics& g, int width, int
 
     const auto state = stateOf (r);
     g.setFont (juce::FontOptions (13.0f));
-    g.setColour (state == "described" ? Theme::good : state == "couldn't be opened" ? Theme::danger : Theme::dimText);
+    g.setColour (state == "described" || state == "from Torqwave" ? Theme::good : state == "couldn't be opened" ? Theme::danger
+               : state == "not known" ? Theme::warn : Theme::dimText);
     g.drawText (state, width - 130, 0, 122, height, juce::Justification::centredRight, true);
 
     g.setColour (Theme::textStrong);
@@ -409,7 +417,9 @@ void CatalogueView::showEntry()
     const auto facts = catalogue.getFacts (r.description);
     juce::String line;
 
-    if (u)
+    if (u && u->shipped)
+        line << "From Torqwave's catalogue: written by " << u->model << ", reviewed " << u->when.toString (true, false) << "; Save keeps your own. ";
+    else if (u)
         line << (u->model == "you" ? juce::String ("Written by you") : "Written by " + u->model) << ", " << u->when.toString (true, false) << ". ";
 
     if (facts.hasProperty ("error"))
@@ -429,7 +439,13 @@ void CatalogueView::timerCallback()
     learnButton.setEnabled (! running);
     stopButton.setEnabled (running);
 
-    const auto counts = juce::String (catalogue.getNumFacts()) + " plug-ins read, " + juce::String (catalogue.getNumUnderstood()) + " described.";
+    int described = 0;
+
+    for (auto& r : rows)
+        described += catalogue.getUnderstanding (r.description) ? 1 : 0;
+
+    const auto counts = juce::String (catalogue.getNumFacts()) + " plug-ins read, " + juce::String (described) + " of " + juce::String ((int) rows.size())
+                        + " described.";
     const auto s = getSettings();
     juce::String text;
 

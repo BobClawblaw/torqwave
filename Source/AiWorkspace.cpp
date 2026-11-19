@@ -201,7 +201,7 @@ juce::var Workspace::toolDefinitions()
     "parameters": { "type": "object", "properties": { "number": { "type": "integer" } }, "required": ["number"] } },
   { "name": "list_plugins", "description": "The plug-ins Torqwave knows: its built-in effects and the AU, VST3 and LV2 plug-ins on this computer, with a summary of what each does when the plug-in catalogue has one. Search by name, maker, category or summary.",
     "parameters": { "type": "object", "properties": { "search": { "type": "string" }, "instruments": { "type": "boolean", "description": "true for instruments only; default effects only" } } } },
-  { "name": "describe_plugin", "description": "What the plug-in catalogue knows of a plug-in, without opening it: what it does and is for, and its parameters (name, unit, range or choices, default). Use it to choose a plug-in before adding one.",
+  { "name": "describe_plugin", "description": "What the plug-in catalogue knows of a plug-in, without opening it: what it does and is for, its parameters (name, unit, range or choices, default) and its presets' names. Use it to choose a plug-in before adding one.",
     "parameters": { "type": "object", "properties": { "plugin": { "type": "string", "description": "its id or name from list_plugins" } }, "required": ["plugin"] } },
   { "name": "list_chain", "description": "The effect chain (the effects rack): each slot's number, plug-in and whether it is bypassed.",
     "parameters": { "type": "object", "properties": {} } },
@@ -261,7 +261,8 @@ juce::String Workspace::instructions()
            "is unclear or can't be done with these tools, make no changes and say so. Plug-ins are set through their "
            "parameters; you can't see or use their windows, so say when a plug-in needs something only its window offers. To "
            "choose a plug-in, read the summaries list_plugins gives and describe_plugin, and add only the one you will use, "
-           "rather than adding plug-ins to look at them.";
+           "rather than adding plug-ins to look at them. A summary that begins \"Not known:\" means the catalogue doesn't know "
+           "what that plug-in does.";
 }
 
 //==============================================================================
@@ -870,7 +871,7 @@ juce::var Workspace::describePlugin (const juce::var& a)
         result.getDynamicObject()->setProperty ("about", understanding->text);
 
     if (facts.isObject() && ! facts.hasProperty ("error"))
-        for (auto* field : { "parameters", "parameterCount", "inputs", "outputs", "latency" })
+        for (auto* field : { "parameters", "parameterCount", "inputs", "outputs", "latency", "programs", "programCount" })
             result.getDynamicObject()->setProperty (field, facts[field]);
     else
         result.getDynamicObject()->setProperty ("note", "Its parameters haven't been read; add it and use get_parameters.");

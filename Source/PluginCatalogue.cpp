@@ -11,10 +11,15 @@ namespace
     juce::var newObject()    { return juce::var (new juce::DynamicObject()); }
 }
 
-PluginCatalogue::PluginCatalogue (juce::File storeFile)
+PluginCatalogue::PluginCatalogue (juce::File storeFile, const juce::var& knowledge)
     : file (std::move (storeFile))
 {
     load();
+
+    if (auto* list = knowledge["plugins"].getDynamicObject())
+        for (auto& p : list->getProperties())
+            if (const auto text = p.value["about"].toString().trim(); text.isNotEmpty())
+                shipped[p.name.toString()] = { text, p.value["written"].toString(), {}, juce::Time::fromISO8601 (p.value["reviewed"].toString()), true };
 }
 
 PluginCatalogue::~PluginCatalogue()
@@ -76,6 +81,21 @@ juce::var PluginCatalogue::factsOf (juce::AudioPluginInstance& plugin)
     set (result, "inputs", plugin.getTotalNumInputChannels());
     set (result, "outputs", plugin.getTotalNumOutputChannels());
     set (result, "latency", plugin.getLatencySamples());
+
+    // Its presets, as the host sees them; a plug-in with one unnamed program has none to list.
+    juce::Array<juce::var> programs;
+    const auto programCount = plugin.getNumPrograms();
+
+    for (int i = 0; i < juce::jmin (programCount, maxPrograms); ++i)
+        if (const auto name = plugin.getProgramName (i).trim(); name.isNotEmpty())
+            programs.add (name);
+
+    if (programCount > 1 || ! programs.isEmpty())
+    {
+        set (result, "programs", programs);
+        set (result, "programCount", programCount);
+    }
+
     return result;
 }
 
@@ -99,6 +119,7 @@ void PluginCatalogue::setFacts (const juce::PluginDescription& d, const juce::va
     set (entry, "category", d.category);
     set (entry, "version", d.version);
     set (entry, "read", juce::Time::getCurrentTime().toISO8601 (true));
+    set (entry, "factsVersion", factsVersion);
 
     if (auto* from = known.getDynamicObject())
         for (auto& p : from->getProperties())
@@ -123,7 +144,7 @@ bool PluginCatalogue::hasCurrentFacts (const juce::PluginDescription& d) const
 {
     const juce::ScopedLock sl (lock);
     const auto f = facts.find (factsKey (d));
-    return f != facts.end() && f->second["version"].toString() == d.version;
+    return f != facts.end() && f->second["version"].toString() == d.version && (int) f->second["factsVersion"] >= factsVersion;
 }
 
 juce::var PluginCatalogue::getFacts (const juce::PluginDescription& d) const
@@ -137,8 +158,15 @@ juce::var PluginCatalogue::getFacts (const juce::PluginDescription& d) const
 std::optional<PluginCatalogue::Understanding> PluginCatalogue::getUnderstanding (const juce::PluginDescription& d) const
 {
     const juce::ScopedLock sl (lock);
-    const auto u = understandings.find (understandingKey (d));
-    return u != understandings.end() ? std::optional<Understanding> (u->second) : std::nullopt;
+    const auto key = understandingKey (d);
+
+    if (const auto u = understandings.find (key); u != understandings.end())
+        return u->second;
+
+    if (const auto s = shipped.find (key); s != shipped.end())
+        return s->second;
+
+    return std::nullopt;
 }
 
 void PluginCatalogue::setUnderstanding (const juce::PluginDescription& d, Understanding u)
