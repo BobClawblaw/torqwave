@@ -3411,8 +3411,9 @@ void MainComponent::stopTransport()
 
 void MainComponent::refreshAskButton()
 {
-    const auto shown = Ai::Settings::load (*appProperties.getUserSettings()).enabled;
-    askButton.setEnabled (engine.document.hasAudio() && ! multitrackMode);
+    // Ask Torq works on the file in the editor, so the multitrack view doesn't show it.
+    const auto shown = Ai::Settings::load (*appProperties.getUserSettings()).enabled && ! multitrackMode;
+    askButton.setEnabled (engine.document.hasAudio());
 
     if (shown != askButton.isVisible())
     {
