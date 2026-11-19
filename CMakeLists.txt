@@ -149,7 +149,7 @@ juce_add_gui_app(Torqwave
     # The only requests the app makes are to the AI server named in Settings > AI, most often a
     # model server on the user's own network over plain HTTP, which App Transport Security
     # would otherwise refuse unless it is a .local name.
-    PLIST_TO_MERGE               "<plist><dict><key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict></dict></plist>"
+    PLIST_TO_MERGE               "<plist><dict><key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict><key>NSLocalNetworkUsageDescription</key><string>Ask Torq connects to the language model server you name in Settings, which may be on your local network.</string></dict></plist>"
     # Linux: HTTP and HTTPS to an AI server through libcurl (JUCE_LOAD_CURL_SYMBOLS_LAZILY below).
     NEEDS_CURL                   TRUE)
 

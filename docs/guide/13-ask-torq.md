@@ -54,7 +54,7 @@ Changes to the effects rack are applied with the plan but aren't part of its und
 
 ## When it goes wrong
 
-- **"Couldn't reach" the server:** check the address and that the server is running. From another computer, the server must listen on the network, not only on `localhost` (Ollama: `OLLAMA_HOST=0.0.0.0`).
+- **"Couldn't reach" the server:** check the address and that the server is running. From another computer, the server must listen on the network, not only on `localhost` (Ollama: `OLLAMA_HOST=0.0.0.0`). On the Mac, a server on another computer also needs Torqwave allowed under System Settings > Privacy & Security > Local Network; macOS asks the first time.
 - **It answers but never edits:** the model may not support tool calls, or the server may need tool calling turned on (llama.cpp: `--jinja`).
 - **It stops partway or keeps calling tools:** it gives up after 24 rounds. Ask for less at once, or try a larger model.
 - **It's slow:** a model that thinks before it answers can take a minute or more for each step. The window shows the thinking as it goes.
