@@ -274,6 +274,7 @@ target_sources(Torqwave PRIVATE
     Source/MarkerTable.cpp
     Source/ClipProperties.cpp
     Source/PluginScanner.cpp
+    Source/PluginCatalogue.cpp
     Source/MainComponent.cpp
     Source/PitchEditor.cpp
     Source/NoteEditor.cpp
@@ -287,6 +288,7 @@ target_sources(Torqwave PRIVATE
     Source/AiClient.cpp
     Source/AiKeychain.cpp
     Source/AiWorkspace.cpp
+    Source/AiCatalogue.cpp
     Source/AiAssistant.cpp
     Source/GuideView.cpp
     Source/Home.cpp)
@@ -450,6 +452,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/AiClient.cpp
     Source/AiKeychain.cpp
     Source/AiWorkspace.cpp
+    Source/AiCatalogue.cpp
     Source/AiAssistant.cpp
     Source/AudioDocument.cpp
     Source/Markers.cpp
@@ -572,6 +575,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/MarkerTable.cpp
     Source/ClipProperties.cpp
     Source/PluginScanner.cpp
+    Source/PluginCatalogue.cpp
     Source/MixerView.cpp
     Source/SurroundPad.cpp
     Source/RackView.cpp

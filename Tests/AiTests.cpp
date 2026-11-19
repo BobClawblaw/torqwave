@@ -1,5 +1,8 @@
 #include <JuceHeader.h>
 #include "../Source/AiAssistant.h"
+#include "../Source/AiCatalogue.h"
+#include "../Source/PluginCatalogue.h"
+#include "../Source/PluginScanner.h"
 #include "../Source/AiClient.h"
 #include "../Source/AiWorkspace.h"
 #include "../Source/AudioEdits.h"
@@ -362,7 +365,7 @@ namespace
         for (auto& t : *tools.getArray())
             named += t["type"] == juce::var ("function") && t["function"]["name"].toString().isNotEmpty() && t["function"]["parameters"].isObject() ? 1 : 0;
 
-        check (tools.size() == 25 && named == tools.size(), "AI tools: 25 tools, each a function with parameters");
+        check (tools.size() == 26 && named == tools.size(), "AI tools: 26 tools, each a function with parameters");
     }
 
     //==============================================================================
@@ -442,6 +445,209 @@ namespace
         bare.audio = tone (rate, 3);
         Ai::Workspace none (std::move (bare));
         check (! (bool) parse (none.run ("add_plugin", R"({"plugin": "Limiter"})"))["ok"], "AI plug-ins: refused where there's no plug-in host");
+    }
+
+    //==============================================================================
+    juce::PluginDescription builtIn (const juce::String& name)
+    {
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.name == name)
+                return d;
+
+        return {};
+    }
+
+    void testCatalogueStore()
+    {
+        const juce::TemporaryFile temp (".json");
+        const auto file = temp.getFile();
+        juce::AudioPluginFormatManager formats;
+        formats.addFormat (BuiltInEffects::createFormat());
+        const auto limiter = builtIn ("Limiter");
+        juce::String error;
+        auto plugin = formats.createPluginInstance (limiter, 48000.0, 512, error);
+        const auto facts = PluginCatalogue::factsOf (*plugin);
+
+        juce::var ceiling;
+
+        for (auto& p : *facts["parameters"].getArray())
+            if (p["name"] == juce::var ("Ceiling"))
+                ceiling = p;
+
+        check ((int) facts["parameterCount"] == plugin->getParameters().size() && (int) facts["inputs"] == plugin->getTotalNumInputChannels()
+                   && ceiling["lowest"].toString().isNotEmpty() && ceiling["highest"].toString().isNotEmpty() && ceiling["default"].toString().isNotEmpty()
+                   && ! ceiling.hasProperty ("value"),
+               "plug-in catalogue: a plug-in's facts are its parameters with their ranges and defaults, and its channels ("
+                   + juce::JSON::toString (ceiling, true) + ")");
+
+        {
+            PluginCatalogue catalogue (file);
+            catalogue.setFacts (limiter, facts);
+            auto compressor = builtIn ("Compressor");
+            catalogue.setFactsFailed (compressor, "it crashed while opening");
+            catalogue.setUnderstanding (limiter, { "A brickwall limiter that holds peaks under a ceiling. Good for the last stage.", "test-model", limiter.version, juce::Time::getCurrentTime() });
+            check (catalogue.summaryOf (limiter) == "A brickwall limiter that holds peaks under a ceiling." && ! catalogue.needsUnderstanding (limiter)
+                       && catalogue.needsUnderstanding (compressor) && catalogue.getNumFacts() == 1 && catalogue.getNumUnderstood() == 1,
+                   "plug-in catalogue: facts, a failure and an understanding are kept; the summary is the first sentence");
+            check (catalogue.saveIfNeeded() && file.existsAsFile(), "plug-in catalogue: written to its file");
+        }
+
+        PluginCatalogue again (file);
+        auto newer = limiter;
+        newer.version = "99.0";
+        const auto otherFormat = [&] { auto d = limiter; d.pluginFormatName = "VST3"; d.fileOrIdentifier = "/elsewhere/Limiter.vst3"; return d; }();
+        check (again.hasCurrentFacts (limiter) && ! again.hasCurrentFacts (newer) && again.hasCurrentFacts (builtIn ("Compressor"))
+                   && again.getFacts (builtIn ("Compressor"))["error"] == juce::var ("it crashed while opening")
+                   && again.getUnderstanding (otherFormat).has_value() && ! again.hasCurrentFacts (otherFormat),
+               "plug-in catalogue: read back from its file; facts are per format and version (a new version is read again), the understanding is shared by formats");
+
+        again.forget (limiter);
+        check (! again.getUnderstanding (limiter) && ! again.hasCurrentFacts (limiter) && again.hasCurrentFacts (builtIn ("Compressor")),
+               "plug-in catalogue: forgetting a plug-in drops its facts and understanding, nothing else");
+    }
+
+    void testCatalogueWorker()
+    {
+        // Third-party plug-ins are read in the scanner's worker process.
+        juce::String reason;
+        juce::var facts;
+        juce::String crashReason;
+        juce::var crashed;
+        const auto crashing = juce::File (TORQWAVE_TEST_BUNDLES).getChildFile ("CrashingBundle.vst3");
+
+        std::thread ([&]
+        {
+            OutOfProcessScanner::Describer describer (TestUtils::appExecutable, 20000);
+           #if JUCE_MAC
+            juce::PluginDescription delay;
+            delay.name = "AUDelay";
+            delay.pluginFormatName = "AudioUnit";
+            delay.fileOrIdentifier = "AudioUnit:Effects/aufx,dely,appl";
+            facts = describer.describe (delay, reason, [] { return false; });
+           #endif
+
+            if (crashing.exists())
+            {
+                juce::PluginDescription bad;
+                bad.name = "Crashing";
+                bad.pluginFormatName = "VST3";
+                bad.fileOrIdentifier = crashing.getFullPathName();
+                crashed = describer.describe (bad, crashReason, [] { return false; });
+            }
+        }).join();
+
+       #if JUCE_MAC
+        juce::StringArray names;
+
+        if (auto* list = facts["parameters"].getArray())
+            for (auto& p : *list)
+                names.add (p["name"].toString());
+
+        check (facts.isObject() && names.contains ("Delay Time") && (int) facts["parameterCount"] == names.size(),
+               "plug-in catalogue: Apple's AUDelay is read in the worker process (" + names.joinIntoString (", ") + reason + ")");
+       #endif
+
+        if (crashing.exists())
+            check (crashed.isVoid() && crashReason.isNotEmpty(),
+                   "plug-in catalogue: a plug-in that crashes as it opens takes only the worker with it (" + crashReason + ")");
+    }
+
+    void testCatalogueTools()
+    {
+        const juce::TemporaryFile temp (".json");
+        PluginCatalogue catalogue (temp.getFile());
+        juce::AudioPluginFormatManager formats;
+        formats.addFormat (BuiltInEffects::createFormat());
+        const auto limiter = builtIn ("Limiter");
+        catalogue.setUnderstanding (limiter, { "Holds peaks under a ceiling, transparently. Use Ceiling for the most it lets through.", "test-model", {}, {} });
+
+        Ai::Workspace::Start start;
+        start.audio = tone (48000.0, 2);
+        start.plugins = BuiltInEffects::getDescriptions();
+        start.formats = &formats;
+        start.catalogue = &catalogue;
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+
+        const auto found = call ("list_plugins", R"({"search": "ceiling"})");
+        check ((int) found["count"] == 1 && found["plugins"][0]["name"] == juce::var ("Limiter")
+                   && found["plugins"][0]["summary"] == juce::var ("Holds peaks under a ceiling, transparently."),
+               "plug-in catalogue: list_plugins shows each one's summary and searches it");
+
+        const auto nothing = call ("describe_plugin", R"({"plugin": "Compressor"})");
+        check (! (bool) nothing["ok"] && nothing["error"].toString().contains ("nothing"), "plug-in catalogue: describe_plugin says when it knows nothing");
+
+        const auto added = call ("add_plugin", R"({"plugin": "Compressor"})");
+        const auto compressor = builtIn ("Compressor");
+        check ((bool) added["ok"] && catalogue.hasCurrentFacts (compressor) && (int) catalogue.getFacts (compressor)["parameterCount"] > 0,
+               "plug-in catalogue: a plug-in Ask Torq opens has its facts kept");
+
+        const auto steps = w.getSteps().size();
+        const auto described = call ("describe_plugin", R"({"plugin": "Compressor"})");
+        const auto about = call ("describe_plugin", R"({"plugin": "Limiter"})");
+        check ((bool) described["ok"] && described["parameters"].size() > 0 && (bool) about["ok"] && about["about"].toString().startsWith ("Holds peaks")
+                   && about.hasProperty ("note") && w.getSteps().size() == steps && w.createRackXml()->getNumChildElements() == 1,
+               "plug-in catalogue: describe_plugin gives the entry and the parameters without opening the plug-in or changing the plan");
+    }
+
+    void testCatalogueLearner()
+    {
+        juce::AudioPluginFormatManager formats;
+        formats.addFormat (BuiltInEffects::createFormat());
+        juce::Array<juce::PluginDescription> effects;
+
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (Ai::CatalogueLearner::isLearnt (d))
+                effects.add (d);
+
+        std::vector<MockServer::Reply> replies;
+
+        for (int i = 0; i < effects.size(); ++i)
+            replies.push_back ({ 200, "application/json", R"({"choices":[{"message":{"content":"Entry )" + juce::String (i) + R"(. More."},"finish_reason":"stop"}]})" });
+
+        MockServer server (replies);
+        const juce::TemporaryFile temp (".json");
+        PluginCatalogue catalogue (temp.getFile());
+        auto settings = settingsFor (server.url());
+        Ai::CatalogueLearner learner (catalogue, formats, [] { return BuiltInEffects::getDescriptions(); }, [&] { return settings; });
+
+        learner.start();
+        TestUtils::runUntil ([&] { return ! learner.isRunning(); }, 120000);
+        const auto p = learner.getProgress();
+        const auto requests = server.requests();
+        auto allLearnt = true;
+
+        for (auto& d : effects)
+            allLearnt = allLearnt && catalogue.hasCurrentFacts (d) && catalogue.getUnderstanding (d).has_value()
+                        && catalogue.getUnderstanding (d)->model == "test-model";
+
+        check (p.done == effects.size() && p.read == effects.size() && p.written == effects.size() && allLearnt
+                   && ! catalogue.getUnderstanding (builtIn ("Basic Synth")).has_value() && ! catalogue.hasCurrentFacts (builtIn ("Basic Synth")),
+               "plug-in catalogue: Learn All reads and describes every built-in effect, and leaves instruments for later (" + p.message + ")");
+        check ((int) requests.size() == effects.size() && requests[0].body.contains ("parameterCount") && ! requests[0].body.contains ("\"tools\""),
+               "plug-in catalogue: the model is sent each plug-in's facts, with no tools");
+        check (catalogue.saveIfNeeded() && PluginCatalogue (temp.getFile()).getNumUnderstood() == effects.size(), "plug-in catalogue: what was learnt is on disk");
+
+        // A second run has nothing left to do; a server that can't be reached stops a run at once.
+        settings.serverUrl = "http://127.0.0.1:1/v1";
+        learner.start();
+        TestUtils::runUntil ([&] { return ! learner.isRunning(); }, 30000);
+        check (learner.getProgress().done == effects.size() && learner.getProgress().written == 0 && learner.getProgress().read == 0,
+               "plug-in catalogue: a second run skips what is known");
+
+        catalogue.forget (builtIn ("Limiter"));
+        catalogue.forget (builtIn ("Compressor"));
+        learner.start();
+        TestUtils::runUntil ([&] { return ! learner.isRunning(); }, 30000);
+        check (learner.getProgress().message.contains ("Learning stopped") && learner.getProgress().written == 0 && learner.getProgress().done < 2,
+               "plug-in catalogue: an unreachable server stops learning at once (" + learner.getProgress().message + ")");
+
+        // The window lists one row a plug-in and shows the selected one's entry.
+        Ai::CatalogueView view (catalogue, learner, [] { return BuiltInEffects::getDescriptions(); }, [&] { return settings; });
+        view.setSize (700, 600);
+        view.select (0);
+        check (view.getNumShown() == effects.size() && view.getEntryText().startsWith ("Entry"),
+               "plug-in catalogue: the window lists each effect and shows its entry");
     }
 
     //==============================================================================
@@ -539,6 +745,10 @@ void runAiTests()
     testLookAndChange();
     testParameters();
     testPlugins();
+    testCatalogueStore();
+    testCatalogueWorker();
+    testCatalogueTools();
+    testCatalogueLearner();
     testAskPanel();
     testName();
 }
