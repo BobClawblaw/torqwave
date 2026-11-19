@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <map>
 #include "AiClient.h"
 #include "AiWorkspace.h"
 
@@ -37,7 +38,7 @@ namespace Ai
         std::function<void (const juce::String& answer, const juce::String& error)> onDone;
 
         /** The most rounds of tool calls in one request. */
-        static constexpr int maxRounds = 24;
+        static constexpr int maxRounds = 60;
 
     private:
         struct Event

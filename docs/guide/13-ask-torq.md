@@ -56,7 +56,7 @@ Changes to the effects rack are applied with the plan but aren't part of its und
 
 - **"Couldn't reach" the server:** check the address and that the server is running. From another computer, the server must listen on the network, not only on `localhost` (Ollama: `OLLAMA_HOST=0.0.0.0`). On the Mac, a server on another computer also needs Torqwave allowed under System Settings > Privacy & Security > Local Network; macOS asks the first time.
 - **It answers but never edits:** the model may not support tool calls, or the server may need tool calling turned on (llama.cpp: `--jinja`).
-- **It stops partway or keeps calling tools:** it gives up after 24 rounds. Ask for less at once, or try a larger model.
+- **It stops partway or keeps calling tools:** after 60 rounds of tool calls it is asked to finish, and the plan it made so far is shown, marked as possibly incomplete; you can still apply or discard it. Asking for the same thing a third time with nothing changed is refused, which breaks most loops. For a long job, ask for it in parts, or try a larger model.
 - **It's slow:** a model that thinks before it answers can take a minute or more for each step. The window shows the thinking as it goes.
 
 The plan for what comes next, including sessions and models that hear, is in [AI assistance](../AI.md).
