@@ -688,6 +688,7 @@ private:
     std::unique_ptr<CatalogueWindow> catalogueWindow;
     juce::uint32 aiStartVersion = 0;        // the file as the latest Ask Torq request found it
     int aiStartReset = -1;
+    Session::State aiStartSession;          // the session as the latest Ask Torq request on it found it
     std::unique_ptr<EqWindow> eqWindow;
     std::unique_ptr<RackRenderJob> renderJob;
     std::unique_ptr<InstrumentRenderJob> instrumentJob;

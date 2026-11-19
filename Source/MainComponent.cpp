@@ -3444,9 +3444,9 @@ void MainComponent::stopTransport()
 
 void MainComponent::refreshAskButton()
 {
-    // Ask Torq works on the file in the editor, so the multitrack view doesn't show it.
-    const auto shown = Ai::Settings::load (*appProperties.getUserSettings()).enabled && ! multitrackMode;
-    askButton.setEnabled (engine.document.hasAudio());
+    // Ask Torq works on the file in the editor, or on the session in the multitrack view.
+    const auto shown = Ai::Settings::load (*appProperties.getUserSettings()).enabled;
+    askButton.setEnabled (multitrackMode || engine.document.hasAudio());
 
     if (shown != askButton.isVisible())
     {
@@ -12555,7 +12555,20 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
 {
     auto& doc = engine.document;
 
-    if (multitrackMode || ! doc.hasAudio())
+    if (multitrackMode)
+    {
+        aiStartSession = engine.session.getState();
+
+        Ai::Workspace::Start start;
+        start.session = *aiStartSession;
+        start.sessionName = engine.session.getFile() != juce::File() ? engine.session.getFile().getFileNameWithoutExtension() : juce::String ("Untitled");
+        start.sampleRate = engine.session.getSampleRate();
+        start.plugins = engine.knownPlugins.getTypes();
+        start.catalogue = pluginCatalogue.get();
+        return start;
+    }
+
+    if (! doc.hasAudio())
         return std::nullopt;
 
     aiStartVersion = doc.getVersion();
@@ -12577,6 +12590,20 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
 juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& request)
 {
     auto& doc = engine.document;
+
+    if (w.isSession())
+    {
+        if (engine.session.getState() != aiStartSession)
+            return "The session changed while the plan was made, so it wasn't applied. Ask again.";
+
+        if (w.sessionChanged())
+        {
+            const auto words = request.length() > 40 ? request.substring (0, 40).trimEnd() + "..." : request;
+            engine.session.apply (*w.getSession(), "Ask Torq: " + words);
+        }
+
+        return {};
+    }
 
     if (multitrackMode || doc.getVersion() != aiStartVersion || doc.getResetCount() != aiStartReset)
         return "The file changed while the plan was made, so it wasn't applied. Ask again.";

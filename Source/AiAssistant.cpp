@@ -193,7 +193,7 @@ AskPanel::AskPanel (Settings s, std::function<std::optional<Workspace::Start>()>
                     std::function<juce::String (Workspace&, const juce::String&)> apply)
     : settings (std::move (s)), makeStart (std::move (start)), applyPlan (std::move (apply))
 {
-    banner.setText ("Experimental. Describe an edit to the open file. The model on your server (" + settings.model + ") "
+    banner.setText ("Experimental. Describe an edit to the open file, or to the session in the multitrack view. The model on your server (" + settings.model + ") "
                     "works on a copy: nothing changes until you read its plan and press Apply, and Apply is one undo step.",
                     juce::dontSendNotification);
     banner.setColour (juce::Label::textColourId, Theme::warn);
@@ -315,7 +315,7 @@ void AskPanel::ask()
 
     if (! start)
     {
-        addLog ("Open an audio file first. In 0.17 the model works on audio files, not sessions.\n", Theme::danger);
+        addLog ("Open an audio file, or a session in the multitrack view, first.\n", Theme::danger);
         return;
     }
 

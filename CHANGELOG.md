@@ -4,6 +4,11 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+- Ask Torq works in the multitrack view (experimental). The model gets a copy of the session and 16 tools for it: tracks, buses and folders, volume, pan, mute, solo, outputs and sends; moving, trimming, splitting and fading clips and setting their gain; markers and regions; and the tempo. Apply makes the plan one undo step, and only when the session hasn't changed since the request. A track's effects, notes, automation, importing and bouncing aren't in its tools yet; it says so and plans nothing.
+- Measured: with Qwen3.8-27B, 12 session requests (`--ai-eval-set session`) were all right in three runs out of three. On 25 file requests written after its instructions were last changed and never used to tune them (`--ai-eval-set unseen`), it was right 66 times in 75 over three runs; one request (flipping one channel's polarity) has no tool to do it, and the model said so each time.
+- The evaluation measures a tone's level in 0.1 s blocks, so a pitch shifter's slowly drifting phase no longer reads as a quieter tone.
+- `Scripts/package.sh` signs with the identity in `TORQWAVE_SIGN_IDENTITY` when it is set (a self-signed code-signing certificate will do), so macOS keeps the app's permissions from one build to the next.
+
 ## Released
 
 **Release 0.17.0: Ask Torq, the plug-in catalogue and folders**
