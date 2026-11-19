@@ -504,6 +504,37 @@ namespace
         again.forget (limiter);
         check (! again.getUnderstanding (limiter) && ! again.hasCurrentFacts (limiter) && again.hasCurrentFacts (builtIn ("Compressor")),
                "plug-in catalogue: forgetting a plug-in drops its facts and understanding, nothing else");
+
+        // Facts read by an older catalogue (before presets were listed) are read again.
+        {
+            auto old = juce::JSON::parse (file);
+            auto* entries = old["facts"].getDynamicObject();
+
+            for (auto& p : entries->getProperties())
+                p.value.getDynamicObject()->removeProperty ("factsVersion");
+
+            file.replaceWithText (juce::JSON::toString (old));
+        }
+
+        check (! PluginCatalogue (file).hasCurrentFacts (builtIn ("Compressor")), "plug-in catalogue: facts from an older version of it are read again");
+
+        // What Torqwave ships is used where this computer has written nothing of its own.
+        const auto shipped = juce::JSON::parse (R"({"version": 1, "plugins": {"torqwave|limiter": {"name": "Limiter", "maker": "Torqwave",
+            "about": "Shipped: holds peaks under a ceiling.", "written": "test-model", "reviewed": "2026-11-18T00:00:00Z"}}})");
+        const juce::TemporaryFile other (".json");
+        PluginCatalogue withShipped (other.getFile(), shipped);
+        auto limiterHere = limiter;
+        limiterHere.manufacturerName = "Torqwave";
+        const auto fromShip = withShipped.getUnderstanding (limiterHere);
+        const auto shippedUsed = fromShip && fromShip->shipped && fromShip->model == "test-model" && ! withShipped.needsUnderstanding (limiterHere)
+                                 && withShipped.summaryOf (limiterHere) == "Shipped: holds peaks under a ceiling.";
+        withShipped.setUnderstanding (limiterHere, { "Mine.", "you", {}, juce::Time::getCurrentTime() });
+        const auto mineWins = withShipped.getUnderstanding (limiterHere)->text == "Mine." && ! withShipped.getUnderstanding (limiterHere)->shipped;
+        withShipped.forget (limiterHere);
+        const auto backToShipped = withShipped.getUnderstanding (limiterHere).has_value() && withShipped.getUnderstanding (limiterHere)->shipped
+                                   && withShipped.getNumUnderstood() == 0 && withShipped.getNumShipped() == 1;
+        check (shippedUsed && mineWins && backToShipped,
+               "plug-in catalogue: a shipped description is used where none was written here; one written here wins, and forgetting it brings the shipped one back");
     }
 
     void testCatalogueWorker()
@@ -627,6 +658,24 @@ namespace
         check ((int) requests.size() == effects.size() && requests[0].body.contains ("parameterCount") && ! requests[0].body.contains ("\"tools\""),
                "plug-in catalogue: the model is sent each plug-in's facts, with no tools");
         check (catalogue.saveIfNeeded() && PluginCatalogue (temp.getFile()).getNumUnderstood() == effects.size(), "plug-in catalogue: what was learnt is on disk");
+
+        {
+            // A plug-in Torqwave ships a description of is read, not described again.
+            const auto limiter = builtIn ("Limiter");
+            const auto knowledge = juce::JSON::parse ("{\"plugins\": {\"" + (limiter.manufacturerName + "|" + limiter.name).toLowerCase()
+                                                      + "\": {\"about\": \"Shipped.\", \"written\": \"m\", \"reviewed\": \"2026-11-18T00:00:00Z\"}}}");
+            MockServer one ({ { 200, "application/json", R"({"choices":[{"message":{"content":"Written."},"finish_reason":"stop"}]})" } });
+            const juce::TemporaryFile fresh (".json");
+            PluginCatalogue shippedCatalogue (fresh.getFile(), knowledge);
+            auto oneSettings = settingsFor (one.url());
+            Ai::CatalogueLearner two (shippedCatalogue, formats,
+                                      [&] { return juce::Array<juce::PluginDescription> { limiter, builtIn ("Compressor") }; }, [&] { return oneSettings; });
+            two.start();
+            TestUtils::runUntil ([&] { return ! two.isRunning(); }, 60000);
+            check (two.getProgress().read == 2 && two.getProgress().written == 1 && one.requests().size() == 1
+                       && shippedCatalogue.getUnderstanding (limiter)->text == "Shipped." && shippedCatalogue.getUnderstanding (builtIn ("Compressor"))->text == "Written.",
+                   "plug-in catalogue: Learn All reads a shipped plug-in's parameters but asks the model only about the rest");
+        }
 
         // A second run has nothing left to do; a server that can't be reached stops a run at once.
         settings.serverUrl = "http://127.0.0.1:1/v1";

@@ -52,13 +52,15 @@ Plug-ins are set through their parameters, the way automation sees them, so any 
 
 ### The plug-in catalogue
 
-So that it can choose a plug-in without opening each one to look, Ask Torq keeps a catalogue of your effects: each one's parameters (names, units, ranges, choices and defaults), and a short description of what it does, what it's good for and which settings matter, written by your model. The plug-in list it reads shows each description's first sentence, and it can read a whole entry before adding anything.
+So that it can choose a plug-in without opening each one to look, Ask Torq keeps a catalogue of your effects: each one's parameters (names, units, ranges, choices and defaults) and presets' names, and a short description of what it does, what it's good for and which settings matter, written by your model. The plug-in list it reads shows each description's first sentence, and it can read a whole entry before adding anything.
 
 **Settings > AI > Plug-in Catalogue...** opens it:
 
 - **Learn All** goes through every effect Torqwave knows. It reads each one's parameters in the same separate process as the plug-in scan, so a plug-in that crashes or hangs takes only that process with it and is marked as couldn't be opened. Then the model describes it from those parameters and what it knows of the plug-in. An AU and a VST3 of the same plug-in share one description. Learning goes on in the background with the window closed, and **Stop** halts it; the next Learn All goes on from where it stopped. Without a model set up, it only reads the parameters.
-- How long it takes depends on the model: each description is one request, and a model that thinks first can take a minute or more for each.
-- **Choose a plug-in** to read its entry. Edit it and **Save** to keep your own text, which learning never replaces. **Forget** drops what is known of the plug-in, so the next Learn All reads and describes it again.
+- **Torqwave ships descriptions** of several hundred plug-ins, written by a model and then reviewed, so many of yours are described before you learn anything. Learn All then only reads their parameters and asks your model about the rest. A description you write or learn yourself is used instead of the shipped one.
+- How long it takes depends on the model: each description is one request. Qwen3.8-27B on a local server took about 10 seconds each.
+- A plug-in the model doesn't know is marked **not known** rather than guessed at, and Ask Torq is told so.
+- **Choose a plug-in** to read its entry. Edit it and **Save** to keep your own text, which learning never replaces. **Forget** drops what is known of the plug-in, so the next Learn All reads and describes it again (or, for one Torqwave ships a description of, brings that back).
 - The catalogue is kept as `Plug-in Catalogue.json` in the Torqwave folder of your user library (on the Mac, `~/Library/Torqwave`), beside the Sound Library's index. A plug-in's parameters are read again when it is updated; its description is kept.
 - Instruments aren't learnt yet; they will be when Ask Torq works on sessions.
 

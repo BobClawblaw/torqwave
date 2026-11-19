@@ -897,7 +897,9 @@ MainComponent::MainComponent()
     deadMansPedalFile = settings->getFile().getSiblingFile ("RecentlyCrashedPluginsList");
     places = std::make_unique<WindowPlaces> (*settings);
 
-    pluginCatalogue = std::make_unique<PluginCatalogue> (PluginCatalogue::defaultFile());
+    pluginCatalogue = std::make_unique<PluginCatalogue> (PluginCatalogue::defaultFile(),
+                                                         juce::JSON::parse (juce::String::fromUTF8 (BinaryData::pluginknowledge_json,
+                                                                                                    BinaryData::pluginknowledge_jsonSize)));
     catalogueLearner = std::make_unique<Ai::CatalogueLearner> (*pluginCatalogue, engine.pluginFormatManager,
                                                                [this] { return engine.knownPlugins.getTypes(); },
                                                                [this] { return Ai::Settings::load (*appProperties.getUserSettings()); });
