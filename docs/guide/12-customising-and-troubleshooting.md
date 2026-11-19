@@ -31,7 +31,7 @@ Each change takes effect at once, and the menus' own switches stay in step with 
 **View > Theme** sets three things:
 
 - **The theme:**
-  - dark: Dark, Darker, Slate, Charcoal, Midnight;
+  - dark: Dark, Darker, Slate, Charcoal, Studio, Midnight;
   - light: Light, Paper, Fog;
   - High Contrast.
 - **Accent:** the colour that marks what is selected or on. Blue, Teal, Orange or Violet.

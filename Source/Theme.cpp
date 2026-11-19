@@ -75,6 +75,21 @@ namespace
         return p;
     }
 
+    /** A mid-grey studio theme, lighter than Charcoal: grey panels and buttons over darker lanes,
+        the waveform silver, as many recording programs look. Goes well with the Violet accent. */
+    Palette studio()
+    {
+        auto p = dark();
+        p.name = "Studio";
+        p.inset = c (0xff1c1c1c); p.base = c (0xff2d2d2d); p.surface = c (0xff353535); p.raised = c (0xff424242);
+        p.hover = c (0xff4a4a4a); p.line = c (0xff4c4c4c); p.lineStrong = c (0xff757575);
+        p.textStrong = c (0xffffffff); p.text = c (0xfff2f2f2); p.dimText = c (0xffb4b4b4); p.faintText = c (0xff8c8c8c);
+        p.danger = c (0xffef5b5f); p.clipOff = c (0xff4a2a2a);
+        p.canvas = c (0xff262626); p.lane = c (0xff2b2b2b); p.laneAlternate = c (0xff303030);
+        p.waveform = c (0xffc9c9c9);
+        return p;
+    }
+
     /** A deep navy dark theme, the waveform sky blue. */
     Palette midnight()
     {
@@ -175,7 +190,7 @@ namespace
 
 juce::StringArray themeNames()
 {
-    return { "Dark", "Darker", "Slate", "Charcoal", "Midnight", "Light", "Paper", "Fog", "High Contrast" };
+    return { "Dark", "Darker", "Slate", "Charcoal", "Studio", "Midnight", "Light", "Paper", "Fog", "High Contrast" };
 }
 
 juce::StringArray waveformNames()
@@ -201,7 +216,7 @@ juce::StringArray accentNames()
 Palette make (const juce::String& theme, const juce::String& accentName, const juce::String& waveformName)
 {
     auto p = theme == "Darker" ? darker() : theme == "Slate" ? slate() : theme == "Charcoal" ? charcoal() : theme == "Midnight" ? midnight()
-           : theme == "Light" ? light() : theme == "Paper" ? paper() : theme == "Fog" ? fog() : theme == "High Contrast" ? highContrast() : dark();
+           : theme == "Studio" ? studio() : theme == "Light" ? light() : theme == "Paper" ? paper() : theme == "Fog" ? fog() : theme == "High Contrast" ? highContrast() : dark();
     const auto* tones = &accents[0];
 
     for (auto& a : accents)
