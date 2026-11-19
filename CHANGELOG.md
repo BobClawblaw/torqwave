@@ -4,6 +4,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+## Released
+
+**Release 0.17.0: Ask Torq, the plug-in catalogue and folders**
+- `Torqwave-0.17.0.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.17.0-windows-x64-setup.exe` and `Torqwave-0.17.0-windows-x64.zip`) and the Linux tarball (`Torqwave-0.17.0-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the changes below on top of 0.16.4. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there. Ask Torq is experimental and off by default.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app for arm64 at the release's tag, signed it, and the whole suite (1,790 checks) passed with the signed app from the disk image as the plug-in scan worker; the disk image's SHA-256 matched its `.sha256`, its app verified (`codesign --verify --deep --strict`), reads 0.17.0 with the bundle ID `org.torqwave.editor` and holds arm64 alone, and it is stamped as a release build.
+- Checked on Linux (Ubuntu 24.04 in a container, x86_64, a virtual display with a window manager, no audio device): 1,754 checks passed, the new ones among them; the two that failed (ffmpeg reading a WAV's broadcast details, and the rack's device-list announcements) are the two that failed there for 0.16.2 to 0.16.4, from that setup.
+
 **Folders in sessions**
 - **Right-click menus:** an empty part of a lane and a track's header now offer Add Folder (around the track right-clicked), beside Add Track, Add Instrument Track and Add Bus. A track's header adds Take Out of Folder and Delete Track (or Delete Bus); a folder's header, Delete Folder, Keep Its Tracks and Delete Folder and Its Tracks. The Folder submenu gains New Folder.
 - **Dragging out of a folder:** where a dragged track lands now decides its folder. Dropped on a track it takes that track's folder, or none, so a track is dragged out of a folder by dropping it among tracks outside, or on its own folder's header (it lands just above the folder). Before, only dropping on a folder's header changed a track's folder, so a track could be dragged in but not out.
@@ -24,8 +31,6 @@ Each milestone as it was built, newest first, with what the tests measured on th
 **Keys in Settings**
 - **Settings > Keys** now holds the keyboard shortcut list itself, filling the page, instead of a button that opened it in a window of its own. **Window > Keyboard Shortcuts...** opens that page. The Settings window opens larger (860 by 660) to fit it.
 - The Keys, Plug-ins and AI pages no longer leave an empty line's height above their panel, and a page that fits its window no longer shows a scroll bar.
-
-## Released
 
 **Release 0.16.4: Automation on instrument tracks**
 - `Torqwave-0.16.4.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.16.4-windows-x64-setup.exe` and `Torqwave-0.16.4-windows-x64.zip`) and the Linux tarball (`Torqwave-0.16.4-linux-x86_64.tar.gz`), each with its SHA-256 file, built from the release's tag and attached by the Windows and Linux workflows: the changes below on top of 0.16.3. A dogfooding release: built for Apple silicon only on the Mac, signed ad hoc, not notarized (see [Download and install](README.md#download-and-install)); the Windows and Linux packages are built on runners without an audio device, so untested there.
