@@ -360,6 +360,10 @@ public:
     int getScrollY() const noexcept    { return scrollY; }
     void deleteSelectedTrack();
 
+    /** Deletes a track, bus or folder as an undo step. A folder's tracks stay, out of any folder,
+        unless withItsTracks. */
+    void deleteTrack (juce::uint32 trackId, bool withItsTracks = false);
+
     /** Duplicates the selected track as one undo step ("Duplicate Track") and selects the copy.
         Returns the copy's id (0 with none selected); its effects are the caller's to copy. */
     juce::uint32 duplicateSelectedTrack();
@@ -428,6 +432,9 @@ public:
         inside, or at the end when a folder or nothing is selected. Returns its id. */
     juce::uint32 addFolder();
 
+    /** The same with this track or bus inside (0: an empty one at the end). */
+    juce::uint32 addFolderAround (juce::uint32 trackId);
+
     /** Collapses a folder, leaving its members out of the lanes (they still play), or expands
         it, as an undo step. A click on a folder header's triangle does this. */
     void setFolderCollapsed (juce::uint32 folderId, bool collapsed);
@@ -484,8 +491,11 @@ public:
     bool hasHeaderClipped (juce::uint32 trackId) const;
     bool isHeaderShowingInput (juce::uint32 trackId) const;
 
-    /** Where a header dragged from `from` lands on the track at `to`: onto a folder, a track or
-        bus goes in it, just below it ("Move to Folder"); otherwise it moves there (moveTrack). */
+    /** Where a header dragged from `from` lands on the track at `to`, which also decides its
+        folder. Onto a folder's header, a track or bus goes in it, just below it ("Move to
+        Folder"); onto its own folder's header, it comes out, just above it ("Take Out of
+        Folder"). Onto a track, it moves there and takes that track's folder, or none, so it can
+        be dragged out of a folder or into one by its tracks. A folder just moves (moveTrack). */
     void dropTrack (int from, int to);
     bool dropsIntoFolder (int from, int to) const;
 
@@ -726,7 +736,9 @@ private:
     void showInputMenu (juce::uint32 trackId, juce::Component& target);
     void showEffectsMenu (juce::uint32 trackId, juce::Component& target);
     juce::PopupMenu instrumentMenuFor (juce::uint32 trackId);   // choose, swap, open or remove the track's instrument
-    void addTrackItems (juce::PopupMenu&);   // Add Track, Add Instrument Track (a submenu of instruments), Add Bus
+    /** Add Track, Add Instrument Track (a submenu of instruments), Add Bus, Add Folder (with
+        trackId inside, when it is a track or bus). */
+    void addTrackItems (juce::PopupMenu&, juce::uint32 trackId = 0);
     void showSends (juce::uint32 trackId, juce::Component& target);
     void showAutomationMenu (juce::uint32 trackId, juce::Component& target);
     void showClipMenu (juce::uint32 clipId);

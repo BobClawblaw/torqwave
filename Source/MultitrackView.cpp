@@ -539,7 +539,12 @@ public:
                 if (f.isFolder)
                     folders.addItem (f.name, true, t->folderId == f.id, [this, id = f.id] { view.setTrackFolder (trackId, id); });
 
+            folders.addSeparator();
+            folders.addItem ("New Folder", [this] { view.addFolderAround (trackId); });
             menu.addSubMenu ("Folder", folders);
+
+            if (t->folderId != 0)
+                menu.addItem ("Take Out of Folder", [this] { view.setTrackFolder (trackId, 0); });
         }
         else
         {
@@ -577,7 +582,19 @@ public:
         menu.addItem ("Note...", [this] { view.askForTrackNote (trackId); });
         menu.addItem ("Hide", [this] { view.setTrackHidden (trackId, true); });
         menu.addSeparator();
-        view.addTrackItems (menu);
+
+        if (t->isFolder)
+        {
+            menu.addItem ("Delete Folder, Keep Its Tracks", [this] { view.deleteTrack (trackId); });
+            menu.addItem ("Delete Folder and Its Tracks", [this] { view.deleteTrack (trackId, true); });
+        }
+        else
+        {
+            menu.addItem (t->isBus ? "Delete Bus" : "Delete Track", [this] { view.deleteTrack (trackId); });
+        }
+
+        menu.addSeparator();
+        view.addTrackItems (menu, trackId);
         menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition());
     }
 
@@ -1425,7 +1442,7 @@ void MultitrackView::showInstrumentWindow (juce::uint32 trackId)
         onEditPlugin (*instrument);
 }
 
-void MultitrackView::addTrackItems (juce::PopupMenu& menu)
+void MultitrackView::addTrackItems (juce::PopupMenu& menu, juce::uint32 trackId)
 {
     const juce::Component::SafePointer<MultitrackView> safe (this);
     menu.addItem ("Add Track", [safe]
@@ -1455,6 +1472,12 @@ void MultitrackView::addTrackItems (juce::PopupMenu& menu)
         next.addBus();
         safe->engine.session.apply (std::move (next), "Add Bus");
     });
+
+    // Around the track the menu was opened on, as Multitrack > Add Folder does the selected one.
+    const auto* track = engine.session.getState()->findTrack (trackId);
+    const auto around = track != nullptr && ! track->isFolder ? trackId : 0u;
+    menu.addItem (around != 0 ? "Add Folder Around " + track->name : juce::String ("Add Folder"),
+                  [safe, around] { if (safe != nullptr) safe->addFolderAround (around); });
 }
 
 juce::PopupMenu MultitrackView::laneMenuAt (juce::Point<int> p)
@@ -1479,7 +1502,7 @@ juce::PopupMenu MultitrackView::laneMenuAt (juce::Point<int> p)
     };
 
     juce::PopupMenu menu;
-    addTrackItems (menu);
+    addTrackItems (menu, trackId);
 
     if (track != nullptr && track->takesNoteClips())
     {
@@ -4442,14 +4465,19 @@ void MultitrackView::setTrackHidden (juce::uint32 trackId, bool hidden)
 
 juce::uint32 MultitrackView::addFolder()
 {
+    return addFolderAround (selectedTrackId);
+}
+
+juce::uint32 MultitrackView::addFolderAround (juce::uint32 trackId)
+{
     auto next = *engine.session.getState();
     const auto folderId = next.addFolder().id;
-    const auto selected = std::find_if (next.tracks.begin(), next.tracks.end(), [this] (auto& t) { return t.id == selectedTrackId; });
+    const auto inside = std::find_if (next.tracks.begin(), next.tracks.end(), [trackId] (auto& t) { return trackId != 0 && t.id == trackId; });
 
-    if (selected != next.tracks.end() && ! selected->isFolder)
+    if (inside != next.tracks.end() && ! inside->isFolder)
     {
-        const auto to = (int) std::distance (next.tracks.begin(), selected);
-        SessionEdits::setTrackFolder (next, selectedTrackId, folderId);
+        const auto to = (int) std::distance (next.tracks.begin(), inside);
+        SessionEdits::setTrackFolder (next, trackId, folderId);
         SessionEdits::moveTrack (next, (int) next.tracks.size() - 1, to);
     }
 
@@ -4754,13 +4782,35 @@ juce::uint32 MultitrackView::duplicateSelectedTrack()
 
 void MultitrackView::deleteSelectedTrack()
 {
-    auto next = *engine.session.getState();
+    deleteTrack (selectedTrackId);
+}
 
-    if (SessionEdits::removeTrack (next, getSelectedTrack()))
-    {
+void MultitrackView::deleteTrack (juce::uint32 trackId, bool withItsTracks)
+{
+    auto next = *engine.session.getState();
+    const auto* track = next.findTrack (trackId);
+
+    if (track == nullptr)
+        return;
+
+    const auto description = track->isFolder ? juce::String (withItsTracks ? "Delete Folder and Its Tracks" : "Delete Folder")
+                           : track->isBus ? juce::String ("Delete Bus") : juce::String ("Delete Track");
+    std::vector<juce::uint32> gone { trackId };
+
+    if (track->isFolder && withItsTracks)
+        for (auto& t : next.tracks)
+            if (t.folderId == trackId)
+                gone.push_back (t.id);
+
+    for (auto id : gone)
+        for (int i = 0; i < (int) next.tracks.size(); ++i)
+            if (next.tracks[(size_t) i].id == id)
+                SessionEdits::removeTrack (next, i);
+
+    if (std::find (gone.begin(), gone.end(), selectedTrackId) != gone.end())
         selectedTrackId = 0;
-        engine.session.apply (std::move (next), "Delete Track");
-    }
+
+    engine.session.apply (std::move (next), description);
 }
 
 juce::int64 MultitrackView::gridStepFrom (juce::int64 frame, bool later) const
@@ -5035,7 +5085,7 @@ bool MultitrackView::dropsIntoFolder (int from, int to) const
 {
     const auto& tracks = shown().tracks;
     return juce::isPositiveAndBelow (from, (int) tracks.size()) && juce::isPositiveAndBelow (to, (int) tracks.size())
-        && tracks[(size_t) to].isFolder && ! tracks[(size_t) from].isFolder;
+        && tracks[(size_t) to].isFolder && ! tracks[(size_t) from].isFolder && tracks[(size_t) from].folderId != tracks[(size_t) to].id;
 }
 
 void MultitrackView::dropTrack (int from, int to)
@@ -5043,24 +5093,36 @@ void MultitrackView::dropTrack (int from, int to)
     auto next = *engine.session.getState();
     const auto count = (int) next.tracks.size();
 
-    if (! juce::isPositiveAndBelow (from, count) || ! juce::isPositiveAndBelow (to, count)
-        || ! next.tracks[(size_t) to].isFolder || next.tracks[(size_t) from].isFolder)
+    if (! juce::isPositiveAndBelow (from, count) || ! juce::isPositiveAndBelow (to, count) || next.tracks[(size_t) from].isFolder)
     {
         moveTrack (from, to);
         return;
     }
 
-    // Just below the folder: where it is now, once the track has left its place above it.
     const auto trackId = next.tracks[(size_t) from].id;
-    const auto joined = SessionEdits::setTrackFolder (next, trackId, next.tracks[(size_t) to].id);
-    const auto below = from < to ? to : to + 1;
-    const auto moved = SessionEdits::moveTrack (next, from, below);
+    const auto& target = next.tracks[(size_t) to];
+    juce::uint32 folderId = target.folderId;
+    auto at = to;
+
+    if (target.isFolder && next.tracks[(size_t) from].folderId != target.id)
+    {
+        folderId = target.id;               // in, just below the folder
+        at = from < to ? to : to + 1;
+    }
+    else if (target.isFolder)
+    {
+        folderId = 0;                       // out of its own folder, just above it
+        at = from < to ? to - 1 : to;
+    }
+
+    const auto joined = SessionEdits::setTrackFolder (next, trackId, folderId);
+    const auto moved = SessionEdits::moveTrack (next, from, at);
 
     if (! joined && ! moved)
         return;
 
     selectedTrackId = trackId;
-    engine.session.apply (std::move (next), "Move to Folder");
+    engine.session.apply (std::move (next), ! joined ? "Move Track" : folderId != 0 ? "Move to Folder" : "Take Out of Folder");
 }
 
 void MultitrackView::moveTrack (int from, int to)

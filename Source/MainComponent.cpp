@@ -167,6 +167,7 @@ namespace
         cmdTimeWithBars, cmdMusicalTimebase, cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes, cmdTimeTool,
         cmdUserGuide, cmdShortcutList, cmdSplitAllTracks, cmdRippleOff, cmdRippleTrack, cmdRippleAll,
         cmdLayerClips, cmdClipToFront, cmdClipToBack,
+        cmdTakeOutOfFolder,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -2148,7 +2149,15 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (multitrackMode && backgroundJob == nullptr
                                             && (engine.session.getState()->getLength() > 0 || ! multitrack.getTimeSelection().isEmpty()));
                             break;
-        case cmdDeleteTrack: info.setInfo ("Delete Track", "Delete the selected track or bus", "Multitrack", 0);
+        case cmdTakeOutOfFolder:
+        {
+            info.setInfo ("Take Out of Folder", "Take the selected track or bus out of its folder (or drag its header onto its folder's)", "Multitrack", 0);
+            const auto t = multitrack.getSelectedTrack();
+            const auto& tracks = engine.session.getState()->tracks;
+            info.setActive (multitrackMode && juce::isPositiveAndBelow (t, (int) tracks.size()) && tracks[(size_t) t].folderId != 0);
+            break;
+        }
+        case cmdDeleteTrack: info.setInfo ("Delete Track", "Delete the selected track, bus or folder (a folder's tracks stay, out of it)", "Multitrack", 0);
                             info.setActive (multitrackMode && multitrack.getSelectedTrack() >= 0); break;
         case cmdSelectTrackClips: info.setInfo ("Select Clips on Track", "Select every clip on the selected track", "Edit", 0);
                             info.setActive (multitrackMode && multitrack.getSelectedTrack() >= 0); break;
@@ -2715,6 +2724,10 @@ bool MainComponent::perform (const InvocationInfo& info)
         }
         case cmdAddFolder: multitrack.addFolder(); break;
         case cmdDeleteTrack: multitrack.deleteSelectedTrack(); break;
+        case cmdTakeOutOfFolder:
+            if (const auto t = multitrack.getSelectedTrack(); juce::isPositiveAndBelow (t, (int) engine.session.getState()->tracks.size()))
+                multitrack.setTrackFolder (engine.session.getState()->tracks[(size_t) t].id, 0);
+            break;
         case cmdDuplicateTrack: duplicateTrack(); break;
         case cmdHideTrack:
             if (const auto index = multitrack.getSelectedTrack(); juce::isPositiveAndBelow (index, (int) engine.session.getState()->tracks.size()))
@@ -3085,7 +3098,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         case 4:
             // The panels and Import at the top; the rest in groups by what they do.
             add ({ cmdMixer, cmdClipProperties, cmdClipList, cmdMarkerList, cmdSessionNotes, 0, cmdImportToSession, cmdImportMidi, 0 });
-            group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdAddFromTemplate, cmdSaveTrackTemplate, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
+            group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdTakeOutOfFolder, cmdAddFromTemplate, cmdSaveTrackTemplate, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
                                0, cmdTrackAbove, cmdTrackBelow, 0, cmdUnsoloAll, cmdUnmuteAll });
             group ("Tools", { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute });
             group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines, 0, cmdClipToFront, cmdClipToBack });

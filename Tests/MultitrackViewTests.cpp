@@ -2959,6 +2959,40 @@ void runMultitrackViewTests (AudioEngine& engine)
         const auto plainMove = engine.session.getUndoDescription() == "Move Track" && st().tracks[2].name == "B" && st().tracks[2].folderId == folderId;
         check (intoFolder && fromBelow && fromAbove && plainMove,
                "folders: a header dropped on a folder's puts its track in, just below the folder, as an undo step; dropped elsewhere it just moves");
+
+        // Out by dragging: onto its own folder's header (just above it), or onto a track in no folder.
+        const auto bId = st().tracks[2].id;
+        const auto notBackIn = ! folderView.dropsIntoFolder (3, 0);
+        folderView.dropTrack (1, 0);
+        Mouse::settle();
+        const auto outAbove = engine.session.getUndoDescription() == "Take Out of Folder" && st().tracks[0].id == aId && st().tracks[0].folderId == 0
+                              && st().tracks[1].id == folderId;
+        folderView.dropTrack (3, 0);
+        Mouse::settle();
+        const auto outOntoTrack = engine.session.getUndoDescription() == "Take Out of Folder" && st().tracks[0].id == cId && st().tracks[0].folderId == 0
+                                  && st().tracks[1].id == aId && st().tracks[2].id == folderId && st().tracks[3].id == bId;
+        folderView.dropTrack (0, 3);
+        Mouse::settle();
+        const auto inOntoTrack = engine.session.getUndoDescription() == "Move to Folder" && st().tracks[3].id == cId && st().tracks[3].folderId == folderId;
+        check (notBackIn && outAbove && outOntoTrack && inOntoTrack,
+               "folders: a track is dragged out of its folder onto the folder's header or a track in none, and into one onto any of its tracks");
+
+        // Deleting a folder keeps its tracks, out of any folder, or takes them with it.
+        folderView.deleteTrack (folderId);
+        Mouse::settle();
+        const auto kept = engine.session.getUndoDescription() == "Delete Folder" && st().tracks.size() == 3
+                          && std::all_of (st().tracks.begin(), st().tracks.end(), [] (auto& t) { return t.folderId == 0 && ! t.isFolder; });
+        engine.session.undo();
+        Mouse::settle();
+        folderView.deleteTrack (folderId, true);
+        Mouse::settle();
+        const auto withTracks = engine.session.getUndoDescription() == "Delete Folder and Its Tracks" && st().tracks.size() == 1 && st().tracks[0].id == aId;
+        check (kept && withTracks, "folders: deleting a folder keeps its tracks out of it, or deletes them too, as an undo step");
+
+        const auto around = folderView.addFolderAround (aId);
+        Mouse::settle();
+        check (st().tracks.size() == 2 && st().tracks[0].id == around && st().tracks[1].folderId == around && engine.session.getUndoDescription() == "Add Folder",
+               "folders: Add Folder from a track's menu puts that track in the new folder");
     }
 
     {
