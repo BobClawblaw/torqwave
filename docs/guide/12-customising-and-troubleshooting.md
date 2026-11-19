@@ -18,6 +18,7 @@
 | Recording | Pre-roll, post-roll, count-in, metronome, input monitoring and loop recording |
 | Audio | The audio interface |
 | Plug-ins | Plug-in scanning |
+| AI | Experimental: the model server Ask Torq uses, its key and model. See [Ask Torq](13-ask-torq.md) |
 | Keys | Keyboard shortcuts |
 | Sound Library | The library's folders and the folders left out of its list |
 

@@ -2,6 +2,7 @@
 
 #include "AudioEdits.h"
 #include "AudioEngine.h"
+#include "AiAssistant.h"
 #include "AuditionPreview.h"
 #include "WindowPlaces.h"
 #include "FileChecks.h"
@@ -116,6 +117,7 @@ private:
     class EditorPanel;
     class KeyShortcutsWindow;
     class SettingsWindow;
+    class AskWindow;
     class EqWindow;
     class PluginListWindow;
     class RackRenderJob;
@@ -186,6 +188,9 @@ private:
     /** File > Settings...: every setting of the app in one window, opened on a section by name
         (the one last shown when empty). The model lists each setting with how to read and set it. */
     void showSettings (const juce::String& section = {});
+    void showAskTorqwave();
+    std::optional<Ai::Workspace::Start> startAiPlan();
+    juce::String applyAiPlan (Ai::Workspace&, const juce::String& request);
     Settings::Model makeSettingsModel();
     void askToNewFile();   // File > New File...: a file of silence at a chosen rate, channels, bit depth and length
     void newFile (double sampleRate, int channels, int bitDepth, double seconds);
@@ -674,6 +679,9 @@ private:
     std::unique_ptr<Guide::Window> guideWindow;
     std::unique_ptr<Home::Pictures> homePictures;   // the pictures on the home screen's cards
     std::unique_ptr<SettingsWindow> settingsWindow;
+    std::unique_ptr<AskWindow> askWindow;
+    juce::uint32 aiStartVersion = 0;        // the file as the latest Ask Torq request found it
+    int aiStartReset = -1;
     std::unique_ptr<EqWindow> eqWindow;
     std::unique_ptr<RackRenderJob> renderJob;
     std::unique_ptr<InstrumentRenderJob> instrumentJob;

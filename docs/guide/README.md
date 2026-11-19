@@ -18,5 +18,6 @@ Keys are written for the Mac. On Windows and Linux, read Ctrl for Cmd and Alt fo
 10. [The Sound Library](10-sound-library.md): indexing, searching, auditioning and organising a sound collection.
 11. [Projects and file types](11-projects-and-file-types.md): what each of Torqwave's files keeps, projects, and the audio formats.
 12. [Customising and troubleshooting](12-customising-and-troubleshooting.md): settings, themes, keys, fixing common problems, and reporting one.
+13. [Ask Torq 🐶 (experimental)](13-ask-torq.md): edits from a sentence, planned by a language model you run yourself.
 
 Something here wrong, or missing? [Open an issue](https://github.com/BobClawblaw/torqwave/issues).
