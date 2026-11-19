@@ -46,9 +46,23 @@ It works on the audio file that's open (not on sessions yet).
 
 - **Look:** the file's length, rate and channels, the selection and markers; loudness, true peak and each channel's levels; the spectrum in octave bands; where the sounds, silences and clipping are.
 - **Edit:** select; 30 of the Effects menu's edits, with their settings checked against the same ranges as their dialogs (gain, normalize, Match Loudness, EQ band, compressor, limiter, maximizer, de-esser, de-plosive, breath control, Level Speech, Reduce Reverb, reverb, echo, chorus, flanger, phaser, tremolo, stereo width, balance, stretch, pitch and more); fades; trimming silence; silence, delete, crop and insert silence; adding, renaming and deleting markers and regions.
-- **Plug-ins:** list the built-in effects and the plug-ins Torqwave found on your computer, add them to the effects rack, read and set their parameters, bypass, move and remove them, and render the rack into the audio.
+- **Plug-ins:** list the built-in effects and the plug-ins Torqwave found on your computer, read what the plug-in catalogue knows of them, add them to the effects rack, read and set their parameters, bypass, move and remove them, and render the rack into the audio.
 
 Plug-ins are set through their parameters, the way automation sees them, so any AU, VST3 or LV2 effect works, not only Torqwave's own. The model writes values the way the plug-in shows them ("-12 dB", "4:1", "Hall"), and Torqwave reports back what the plug-in actually took. What a plug-in keeps only in its own window (loading samples, some routing) is out of the model's reach.
+
+### The plug-in catalogue
+
+So that it can choose a plug-in without opening each one to look, Ask Torq keeps a catalogue of your effects: each one's parameters (names, units, ranges, choices and defaults), and a short description of what it does, what it's good for and which settings matter, written by your model. The plug-in list it reads shows each description's first sentence, and it can read a whole entry before adding anything.
+
+**Settings > AI > Plug-in Catalogue...** opens it:
+
+- **Learn All** goes through every effect Torqwave knows. It reads each one's parameters in the same separate process as the plug-in scan, so a plug-in that crashes or hangs takes only that process with it and is marked as couldn't be opened. Then the model describes it from those parameters and what it knows of the plug-in. An AU and a VST3 of the same plug-in share one description. Learning goes on in the background with the window closed, and **Stop** halts it; the next Learn All goes on from where it stopped. Without a model set up, it only reads the parameters.
+- How long it takes depends on the model: each description is one request, and a model that thinks first can take a minute or more for each.
+- **Choose a plug-in** to read its entry. Edit it and **Save** to keep your own text, which learning never replaces. **Forget** drops what is known of the plug-in, so the next Learn All reads and describes it again.
+- The catalogue is kept as `Plug-in Catalogue.json` in the Torqwave folder of your user library (on the Mac, `~/Library/Torqwave`), beside the Sound Library's index. A plug-in's parameters are read again when it is updated; its description is kept.
+- Instruments aren't learnt yet; they will be when Ask Torq works on sessions.
+
+The model's descriptions can be wrong, as anything it writes can, especially for a plug-in it doesn't know. Reading a few is worth it, and a wrong one is easily edited or forgotten.
 
 Changes to the effects rack are applied with the plan but aren't part of its undo step, as rack changes never are. A rack the plan rendered into the audio comes back to the rack when you undo, as after Apply Effects Rack.
 

@@ -330,6 +330,29 @@ private:
 };
 
 //==============================================================================
+/** Settings > AI > Plug-in Catalogue: what Ask Torq knows of each effect, and learning it. */
+class MainComponent::CatalogueWindow final : public juce::DocumentWindow
+{
+public:
+    CatalogueWindow (std::unique_ptr<Ai::CatalogueView> content, std::function<void()> onClose)
+        : DocumentWindow ("Plug-in Catalogue (Experimental)", Theme::surface, DocumentWindow::closeButton),
+          closeCallback (std::move (onClose))
+    {
+        setUsingNativeTitleBar (true);
+        setContentOwned (content.release(), true);
+        setResizable (true, false);
+        setResizeLimits (560, 480, 3000, 3000);
+        centreWithSize (760, 680);
+        setVisible (true);
+    }
+
+    void closeButtonPressed() override              { closeCallback(); }
+
+private:
+    std::function<void()> closeCallback;
+};
+
+//==============================================================================
 /** The parametric EQ: its bands and curve, with Apply to filter the selection (or the whole file)
     and Flat to set every band back to 0 dB. It stays open, so it can be applied again. */
 class MainComponent::EqWindow final : public juce::DocumentWindow
@@ -874,6 +897,11 @@ MainComponent::MainComponent()
     deadMansPedalFile = settings->getFile().getSiblingFile ("RecentlyCrashedPluginsList");
     places = std::make_unique<WindowPlaces> (*settings);
 
+    pluginCatalogue = std::make_unique<PluginCatalogue> (PluginCatalogue::defaultFile());
+    catalogueLearner = std::make_unique<Ai::CatalogueLearner> (*pluginCatalogue, engine.pluginFormatManager,
+                                                               [this] { return engine.knownPlugins.getTypes(); },
+                                                               [this] { return Ai::Settings::load (*appProperties.getUserSettings()); });
+
     engine.knownPlugins.setCustomScanner (std::make_unique<OutOfProcessScanner>());
     engine.knownPlugins.addChangeListener (this);
     engine.addChangeListener (this);
@@ -1353,6 +1381,9 @@ MainComponent::~MainComponent()
     commands.getKeyMappings()->removeChangeListener (this);
     editorWindows.clear();
     pluginListWindow = nullptr;
+    catalogueWindow = nullptr;
+    catalogueLearner = nullptr;   // stops learning and saves what it learnt
+    pluginCatalogue = nullptr;
     dock = nullptr;
     madePanels.clear();
     eqWindow = nullptr;
@@ -12468,6 +12499,28 @@ void MainComponent::showSettings (const juce::String& section)
     settingsWindow->toFront (true);
 }
 
+void MainComponent::showPluginCatalogue()
+{
+    // Deleted later, not inside its own close button's callback; learning goes on without it.
+    if (catalogueWindow == nullptr)
+    {
+        catalogueWindow = std::make_unique<CatalogueWindow> (std::make_unique<Ai::CatalogueView> (*pluginCatalogue, *catalogueLearner,
+                                                                                                  [this] { return engine.knownPlugins.getTypes(); },
+                                                                                                  [this] { return Ai::Settings::load (*appProperties.getUserSettings()); }),
+                                                             [this]
+                                                             {
+                                                                 juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<MainComponent> (this)]
+                                                                 {
+                                                                     if (safe != nullptr)
+                                                                         safe->catalogueWindow = nullptr;
+                                                                 });
+                                                             });
+        places->watch (*catalogueWindow, "Plug-in Catalogue");
+    }
+
+    catalogueWindow->toFront (true);
+}
+
 void MainComponent::showAskTorqwave()
 {
     const auto settings = Ai::Settings::load (*appProperties.getUserSettings());
@@ -12515,6 +12568,7 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
     start.plugins = engine.knownPlugins.getTypes();
     start.rack = engine.createRackXml();
     start.formats = &engine.pluginFormatManager;
+    start.catalogue = pluginCatalogue.get();
     return start;
 }
 
@@ -12669,7 +12723,9 @@ Settings::Model MainComponent::makeSettingsModel()
                            {
                                return std::make_unique<Ai::SettingsView> ([settings] { return Ai::Settings::load (*settings); },
                                                                           [settings, changed] (const Ai::Settings& s) { s.save (*settings); changed(); });
-                           }) } });
+                           }),
+          Item::button ("Plug-in Catalogue...", "What Ask Torq knows of each effect: have the model learn them all, and read or edit what it wrote",
+                        [this] { showPluginCatalogue(); }) } });
 
     model.push_back ({ "Keys", "Every command's keys, to change, export and import, or to take from another key set.",
         { Item::component ({}, Item::fillPage, [this]() -> std::unique_ptr<juce::Component>

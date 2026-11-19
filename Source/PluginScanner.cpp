@@ -11,6 +11,7 @@
 #endif
 
 #include "PluginScanner.h"
+#include "PluginCatalogue.h"
 
 #include <csignal>
 #include <cstdlib>
@@ -346,15 +347,31 @@ void ScannerWorker::handleAsyncUpdate()
         const auto formatName = in.readString();
         const auto identifier = in.readString();
 
+        // A third part, a plug-in's description, asks for its facts instead of a scan.
+        const auto wanted = in.isExhausted() ? nullptr : juce::parseXML (in.readString());
+        bool handled = false;
+
         for (auto* format : formatManager.getFormats())
         {
             if (format->getName() != formatName)
                 continue;
 
-            if (formatName == "AudioUnit")
+            handled = true;
+            juce::PluginDescription description;
+
+            if (wanted != nullptr && description.loadFromXml (*wanted))
+                describe (*format, description);
+            else if (formatName == "AudioUnit")
                 scanAudioUnit (*format, identifier);
             else
                 reply (scan (*format, identifier));
+        }
+
+        if (! handled)
+        {
+            juce::XmlElement xml (wanted != nullptr ? "FACTS" : "LIST");
+            xml.setAttribute ("reason", "this build can't open " + formatName + " plug-ins");
+            reply (xml);
         }
     }
 }
@@ -453,6 +470,42 @@ void ScannerWorker::scanAudioUnit (juce::AudioPluginFormat& format, const juce::
     });
 }
 
+void ScannerWorker::describe (juce::AudioPluginFormat& format, const juce::PluginDescription& description)
+{
+    // Created the way a host does it, asynchronously, as Audio Units need; requests wait.
+    {
+        const std::lock_guard<std::mutex> lock (mutex);
+        waitingForAudioUnit = true;
+    }
+
+    format.createPluginInstanceAsync (description, checkRate, checkBlock,
+                                      [this, formatName = format.getName(), identifier = description.fileOrIdentifier]
+                                      (std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String& error)
+    {
+        juce::XmlElement xml ("FACTS");
+
+        if (instance == nullptr)
+        {
+            const auto missing = missingCodeReason (formatName, identifier);
+            xml.setAttribute ("reason", missing.isNotEmpty() ? missing : error.isNotEmpty() ? error : juce::String ("it could not be created"));
+        }
+        else
+        {
+            xml.addTextElement (juce::JSON::toString (PluginCatalogue::factsOf (*instance), true));
+        }
+
+        instance = nullptr;
+        reply (xml);
+
+        {
+            const std::lock_guard<std::mutex> lock (mutex);
+            waitingForAudioUnit = false;
+        }
+
+        triggerAsyncUpdate();
+    });
+}
+
 //==============================================================================
 class OutOfProcessScanner::Coordinator final : private juce::ChildProcessCoordinator
 {
@@ -497,48 +550,10 @@ public:
             return Result::failed;
         }
 
-        {
-            const std::lock_guard<std::mutex> lock (mutex);
-            reply.reset();
-            gotReply = false;
-        }
+        if (const auto sent = ask ({ formatName, identifier }, timeout, reason, shouldExit, "load and run", "while loading or playing"); sent != Result::ok)
+            return sent;
 
-        juce::MemoryBlock request;
-        {
-            juce::MemoryOutputStream out (request, false);
-            out.writeString (formatName);
-            out.writeString (identifier);
-        }
-
-        if (! sendMessageToWorker (request))
-        {
-            reason = "the scanner process did not respond";
-            return Result::failed;
-        }
-
-        const auto deadline = juce::Time::getMillisecondCounter() + (juce::uint32) timeout;
         std::unique_lock<std::mutex> lock (mutex);
-
-        while (! gotReply && ! connectionLost)
-        {
-            if (shouldExit())
-                return Result::cancelled;
-
-            if (juce::Time::getMillisecondCounter() > deadline)
-            {
-                reason = "it took longer than " + (timeout % 1000 == 0 ? juce::String (timeout / 1000) : juce::String (timeout / 1000.0, 1))
-                         + " s to load and run";
-                return Result::failed;
-            }
-
-            condition.wait_for (lock, std::chrono::milliseconds (50));
-        }
-
-        if (! gotReply)
-        {
-            reason = "it crashed while loading or playing";
-            return Result::failed;
-        }
 
         if (reply != nullptr)
         {
@@ -568,7 +583,96 @@ public:
         return Result::ok;
     }
 
+    /** A plug-in's facts, read by the worker; void with the reason on failure. */
+    Result describe (const juce::PluginDescription& d, int timeout, juce::var& facts, juce::String& reason, const std::function<bool()>& shouldExit)
+    {
+        if (! launched)
+        {
+            reason = "the scanner process did not start";
+            return Result::failed;
+        }
+
+        if (const auto sent = ask ({ d.pluginFormatName, d.fileOrIdentifier, d.createXml()->toString() }, timeout, reason, shouldExit, "open", "while opening");
+            sent != Result::ok)
+            return sent;
+
+        std::unique_lock<std::mutex> lock (mutex);
+
+        if (reply == nullptr || ! reply->hasTagName ("FACTS"))
+        {
+            reason = "the scanner process answered something else";
+            return Result::failed;
+        }
+
+        if (reply->hasAttribute ("reason"))
+        {
+            reason = reply->getStringAttribute ("reason");
+            return Result::failed;
+        }
+
+        facts = juce::JSON::parse (reply->getAllSubText());
+
+        if (! facts.isObject())
+        {
+            reason = "its facts couldn't be read";
+            return Result::failed;
+        }
+
+        return Result::ok;
+    }
+
 private:
+    /** Sends a request and waits for its reply, the worker's end or the timeout. */
+    Result ask (const juce::StringArray& parts, int timeout, juce::String& reason, const std::function<bool()>& shouldExit,
+                const juce::String& doing, const juce::String& whileDoing)
+    {
+        {
+            const std::lock_guard<std::mutex> lock (mutex);
+            reply.reset();
+            gotReply = false;
+        }
+
+        juce::MemoryBlock request;
+        {
+            juce::MemoryOutputStream out (request, false);
+
+            for (auto& part : parts)
+                out.writeString (part);
+        }
+
+        if (! sendMessageToWorker (request))
+        {
+            reason = "the scanner process did not respond";
+            return Result::failed;
+        }
+
+        const auto deadline = juce::Time::getMillisecondCounter() + (juce::uint32) timeout;
+        std::unique_lock<std::mutex> lock (mutex);
+
+        while (! gotReply && ! connectionLost)
+        {
+            if (shouldExit())
+                return Result::cancelled;
+
+            if (juce::Time::getMillisecondCounter() > deadline)
+            {
+                reason = "it took longer than " + (timeout % 1000 == 0 ? juce::String (timeout / 1000) : juce::String (timeout / 1000.0, 1))
+                         + " s to " + doing;
+                return Result::failed;
+            }
+
+            condition.wait_for (lock, std::chrono::milliseconds (50));
+        }
+
+        if (! gotReply)
+        {
+            reason = "it crashed " + whileDoing;
+            return Result::failed;
+        }
+
+        return Result::ok;
+    }
+
     void handleMessageFromWorker (const juce::MemoryBlock& message) override
     {
         auto xml = juce::parseXML (message.toString());
@@ -660,6 +764,34 @@ void OutOfProcessScanner::scanFinished()
 {
     const std::lock_guard<std::mutex> lock (coordinatorsLock);
     coordinators.clear();
+}
+
+//==============================================================================
+OutOfProcessScanner::Describer::Describer (const juce::File& executable, int timeout)
+    : workerExecutable (executable == juce::File() ? juce::File::getSpecialLocation (juce::File::currentExecutableFile) : executable),
+      timeoutMs (timeout)
+{
+}
+
+OutOfProcessScanner::Describer::~Describer() = default;
+
+juce::var OutOfProcessScanner::Describer::describe (const juce::PluginDescription& d, juce::String& reason, const std::function<bool()>& shouldExit)
+{
+    if (coordinator == nullptr)
+        coordinator = std::make_unique<Coordinator> (workerExecutable);
+
+    juce::var facts;
+    const auto outcome = coordinator->describe (d, timeoutMs, facts, reason, shouldExit);
+
+    // After a crash, a hang or a cancel, a fresh worker for the next one, so a late reply can't
+    // be taken for the next plug-in's.
+    if (outcome != Coordinator::Result::ok)
+    {
+        coordinator = nullptr;
+        return {};
+    }
+
+    return facts;
 }
 
 //==============================================================================

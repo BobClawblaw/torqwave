@@ -199,8 +199,10 @@ juce::var Workspace::toolDefinitions()
     "parameters": { "type": "object", "properties": { "number": { "type": "integer" }, "name": { "type": "string" } }, "required": ["number", "name"] } },
   { "name": "delete_marker", "description": "Delete a marker or region by its number from list_markers.",
     "parameters": { "type": "object", "properties": { "number": { "type": "integer" } }, "required": ["number"] } },
-  { "name": "list_plugins", "description": "The plug-ins Torqwave knows: its built-in effects and the AU, VST3 and LV2 plug-ins on this computer. Search by name, maker or category.",
+  { "name": "list_plugins", "description": "The plug-ins Torqwave knows: its built-in effects and the AU, VST3 and LV2 plug-ins on this computer, with a summary of what each does when the plug-in catalogue has one. Search by name, maker, category or summary.",
     "parameters": { "type": "object", "properties": { "search": { "type": "string" }, "instruments": { "type": "boolean", "description": "true for instruments only; default effects only" } } } },
+  { "name": "describe_plugin", "description": "What the plug-in catalogue knows of a plug-in, without opening it: what it does and is for, and its parameters (name, unit, range or choices, default). Use it to choose a plug-in before adding one.",
+    "parameters": { "type": "object", "properties": { "plugin": { "type": "string", "description": "its id or name from list_plugins" } }, "required": ["plugin"] } },
   { "name": "list_chain", "description": "The effect chain (the effects rack): each slot's number, plug-in and whether it is bypassed.",
     "parameters": { "type": "object", "properties": {} } },
   { "name": "add_plugin", "description": "Add an effect plug-in to the chain, by its id or name from list_plugins. Returns its slot number.",
@@ -257,13 +259,16 @@ juce::String Workspace::instructions()
            "the request speaks of the sound (its start, its end, its last second), find where the sound is first. Change only "
            "what was asked. If the request "
            "is unclear or can't be done with these tools, make no changes and say so. Plug-ins are set through their "
-           "parameters; you can't see or use their windows, so say when a plug-in needs something only its window offers.";
+           "parameters; you can't see or use their windows, so say when a plug-in needs something only its window offers. To "
+           "choose a plug-in, read the summaries list_plugins gives and describe_plugin, and add only the one you will use, "
+           "rather than adding plug-ins to look at them.";
 }
 
 //==============================================================================
 Workspace::Workspace (Start s)
     : original (s.audio), audio (s.audio), sampleRate (s.sampleRate), selection (s.selection), markers (std::move (s.markers)),
-      fileName (std::move (s.fileName)), plugins (std::move (s.plugins)), rackXml (std::move (s.rack)), formats (s.formats)
+      fileName (std::move (s.fileName)), plugins (std::move (s.plugins)), rackXml (std::move (s.rack)), formats (s.formats),
+      catalogue (s.catalogue)
 {
 }
 
@@ -371,6 +376,7 @@ juce::var Workspace::dispatch (const juce::String& tool, const juce::var& a)
     if (tool == "rename_marker")    return renameMarker (a);
     if (tool == "delete_marker")    return deleteMarker (a);
     if (tool == "list_plugins")     return listPlugins (a);
+    if (tool == "describe_plugin")  return describePlugin (a);
     if (tool == "list_chain")       return listChain();
     if (tool == "add_plugin")       return addPlugin (a);
     if (tool == "get_parameters")   return getParameters (a);
@@ -826,17 +832,50 @@ juce::var Workspace::listPlugins (const juce::var& a)
         if (d.isInstrument != instruments)
             continue;
 
+        const auto summary = catalogue != nullptr ? catalogue->summaryOf (d) : juce::String();
+
         if (search.isNotEmpty() && ! (d.name.containsIgnoreCase (search) || d.manufacturerName.containsIgnoreCase (search)
-                                      || d.category.containsIgnoreCase (search) || d.descriptiveName.containsIgnoreCase (search)))
+                                      || d.category.containsIgnoreCase (search) || d.descriptiveName.containsIgnoreCase (search)
+                                      || summary.containsIgnoreCase (search)))
             continue;
 
         if (++matched <= most)
             list.add (object ({ { "name", d.name }, { "maker", d.manufacturerName }, { "format", d.pluginFormatName },
-                                { "category", d.category }, { "id", d.createIdentifierString() } }));
+                                { "category", d.category }, { "id", d.createIdentifierString() },
+                                { "summary", summary.isNotEmpty() ? juce::var (summary) : juce::var() } }));
     }
 
     return object ({ { "ok", true }, { "plugins", list }, { "count", matched },
                      { "note", matched > most ? juce::var ("only the first " + juce::String (most) + " are listed; search to narrow it") : juce::var() } });
+}
+
+juce::var Workspace::describePlugin (const juce::var& a)
+{
+    juce::String error;
+    const auto d = findPlugin (a["plugin"].toString().trim(), error, true);
+
+    if (! d)
+        return failure (error);
+
+    const auto facts = catalogue != nullptr ? catalogue->getFacts (*d) : juce::var();
+    const auto understanding = catalogue != nullptr ? catalogue->getUnderstanding (*d) : std::nullopt;
+
+    if (! understanding && (facts.isVoid() || facts.hasProperty ("error")))
+        return failure ("The plug-in catalogue has nothing on " + d->name + " yet. Add it and use get_parameters to see its parameters.");
+
+    auto result = object ({ { "ok", true }, { "plugin", d->name }, { "maker", d->manufacturerName }, { "format", d->pluginFormatName },
+                            { "category", d->category }, { "id", d->createIdentifierString() } });
+
+    if (understanding)
+        result.getDynamicObject()->setProperty ("about", understanding->text);
+
+    if (facts.isObject() && ! facts.hasProperty ("error"))
+        for (auto* field : { "parameters", "parameterCount", "inputs", "outputs", "latency" })
+            result.getDynamicObject()->setProperty (field, facts[field]);
+    else
+        result.getDynamicObject()->setProperty ("note", "Its parameters haven't been read; add it and use get_parameters.");
+
+    return result;
 }
 
 juce::String Workspace::loadChain()
@@ -934,7 +973,7 @@ juce::var Workspace::listChain()
     return object ({ { "ok", true }, { "chain", list }, { "note", note.isNotEmpty() ? juce::var (note) : juce::var() } });
 }
 
-std::optional<juce::PluginDescription> Workspace::findPlugin (const juce::String& wanted, juce::String& error) const
+std::optional<juce::PluginDescription> Workspace::findPlugin (const juce::String& wanted, juce::String& error, bool instrumentsToo) const
 {
     for (auto& d : plugins)
         if (d.createIdentifierString() == wanted)
@@ -944,7 +983,7 @@ std::optional<juce::PluginDescription> Workspace::findPlugin (const juce::String
 
     for (auto& d : plugins)
     {
-        if (d.isInstrument)
+        if (d.isInstrument && ! instrumentsToo)
             continue;
 
         if (d.name.equalsIgnoreCase (wanted))
@@ -970,7 +1009,7 @@ std::optional<juce::PluginDescription> Workspace::findPlugin (const juce::String
     }
 
     if (matches.isEmpty())
-        error = "No effect plug-in is called " + wanted.quoted() + "; list_plugins shows them.";
+        error = (instrumentsToo ? "No plug-in is called " : "No effect plug-in is called ") + wanted.quoted() + "; list_plugins shows them.";
     else
     {
         juce::StringArray names;
@@ -1003,6 +1042,10 @@ juce::var Workspace::addPlugin (const juce::var& a)
 
     if (plugin == nullptr)
         return failure (d->name + " couldn't be opened: " + error);
+
+    // Opened anyway, so its facts go into the catalogue for next time.
+    if (catalogue != nullptr && ! catalogue->hasCurrentFacts (*d))
+        catalogue->setFacts (*d, PluginCatalogue::factsOf (*plugin));
 
     const auto position = a.hasProperty ("position") ? juce::jlimit (1, (int) chain.size() + 1, (int) a["position"]) : (int) chain.size() + 1;
     const auto parameters = plugin->getParameters().size();
@@ -1037,27 +1080,7 @@ juce::var Workspace::getParameters (const juce::var& a)
         if (++matched > most)
             continue;
 
-        auto entry = object ({ { "name", name }, { "value", p->getCurrentValueAsText() } });
-
-        if (const auto label = p->getLabel(); label.isNotEmpty())
-            entry.getDynamicObject()->setProperty ("unit", label);
-
-        if (const auto choices = p->getAllValueStrings(); ! choices.isEmpty() && choices.size() <= 64)
-        {
-            juce::Array<juce::var> c;
-
-            for (auto& s : choices)
-                c.add (s);
-
-            entry.getDynamicObject()->setProperty ("choices", c);
-        }
-        else
-        {
-            entry.getDynamicObject()->setProperty ("lowest", p->getText (0.0f, 40));
-            entry.getDynamicObject()->setProperty ("highest", p->getText (1.0f, 40));
-        }
-
-        list.add (entry);
+        list.add (PluginCatalogue::parameterFacts (*p, true));
     }
 
     return object ({ { "ok", true }, { "plugin", slot->plugin->getName() }, { "parameters", list }, { "count", matched },

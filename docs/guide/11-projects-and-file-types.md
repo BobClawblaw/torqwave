@@ -46,7 +46,8 @@ While a session has unsaved changes, Torqwave writes a copy of it every two minu
 | Effect presets | **Save...** beside a dialog's Presets list |
 | Track templates | **Multitrack > Tracks > Save Track as Template...**, used with **Add Track from Template...** |
 | Workspaces | **Window > Workspace > Save Workspace As...** |
-| Keyboard shortcuts | **Window > Keyboard Shortcuts...**: export and import |
+| Keyboard shortcuts | **Settings > Keys** (or **Window > Keyboard Shortcuts...**): export and import |
+| Plug-in catalogue (Ask Torq) | `Plug-in Catalogue.json` in the Torqwave folder of your user library (on the Mac, `~/Library/Torqwave`): copy it |
 | Recorded sequences | **Effects > Record Sequence**, played with **Play Sequence...** |
 | Markers and regions | **File > Export Markers as CSV...** and **Import Markers from CSV...** |
 

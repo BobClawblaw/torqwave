@@ -3,6 +3,7 @@
 #include "AudioEdits.h"
 #include "AudioEngine.h"
 #include "AiAssistant.h"
+#include "AiCatalogue.h"
 #include "AuditionPreview.h"
 #include "WindowPlaces.h"
 #include "FileChecks.h"
@@ -117,6 +118,7 @@ private:
     class EditorPanel;
     class SettingsWindow;
     class AskWindow;
+    class CatalogueWindow;
     class EqWindow;
     class PluginListWindow;
     class RackRenderJob;
@@ -188,6 +190,7 @@ private:
         (the one last shown when empty). The model lists each setting with how to read and set it. */
     void showSettings (const juce::String& section = {});
     void showAskTorqwave();
+    void showPluginCatalogue();
     std::optional<Ai::Workspace::Start> startAiPlan();
     juce::String applyAiPlan (Ai::Workspace&, const juce::String& request);
     Settings::Model makeSettingsModel();
@@ -680,6 +683,9 @@ private:
     std::unique_ptr<Home::Pictures> homePictures;   // the pictures on the home screen's cards
     std::unique_ptr<SettingsWindow> settingsWindow;
     std::unique_ptr<AskWindow> askWindow;
+    std::unique_ptr<PluginCatalogue> pluginCatalogue;           // what Ask Torq knows of the plug-ins
+    std::unique_ptr<Ai::CatalogueLearner> catalogueLearner;     // fills it, in the background
+    std::unique_ptr<CatalogueWindow> catalogueWindow;
     juce::uint32 aiStartVersion = 0;        // the file as the latest Ask Torq request found it
     int aiStartReset = -1;
     std::unique_ptr<EqWindow> eqWindow;

@@ -35,10 +35,13 @@ private:
     /** Finds the types in a plug-in file and checks each. */
     juce::XmlElement scan (juce::AudioPluginFormat&, const juce::String& identifier);
     void scanAudioUnit (juce::AudioPluginFormat&, const juce::String& identifier);
+
+    /** Opens one plug-in type and replies with its facts for the plug-in catalogue. */
+    void describe (juce::AudioPluginFormat&, const juce::PluginDescription&);
     void reply (const juce::XmlElement&);
     static juce::String missingCodeReason (const juce::String& formatName, const juce::String& identifier);
 
-    bool waitingForAudioUnit = false;   // guarded by mutex
+    bool waitingForAudioUnit = false;   // a plug-in being created asynchronously; guarded by mutex
     std::mutex mutex;
     std::queue<juce::MemoryBlock> pending;
     juce::AudioPluginFormatManager formatManager;
@@ -52,6 +55,8 @@ private:
     failure is written to the log with its reason; nothing is asked. */
 class OutOfProcessScanner final : public juce::KnownPluginList::CustomScanner
 {
+    class Coordinator;   // one worker process
+
 public:
     /** By default the worker is this app itself, started with the scanner token. A plug-in that
         takes longer than timeoutMs to load and play counts as hung. */
@@ -69,10 +74,27 @@ public:
     /** How long one plug-in may take to load before it counts as hung, by default. */
     static constexpr int perPluginTimeoutMs = 60000;
 
+    /** Reads plug-ins' facts for the plug-in catalogue (PluginCatalogue::factsOf) in a worker
+        process, so one that crashes or hangs takes only the worker with it. One worker serves
+        one plug-in after another and is replaced after a failure. Use from one thread. */
+    class Describer
+    {
+    public:
+        explicit Describer (const juce::File& workerExecutable = {}, int timeoutMs = perPluginTimeoutMs);
+        ~Describer();
+
+        /** The facts, or void with the reason it failed (or nothing when shouldExit stopped it). */
+        juce::var describe (const juce::PluginDescription&, juce::String& reason, const std::function<bool()>& shouldExit);
+
+    private:
+        const juce::File workerExecutable;
+        const int timeoutMs;
+        std::unique_ptr<Coordinator> coordinator;
+    };
+
 private:
     const juce::File workerExecutable;
     const int timeoutMs;
-    class Coordinator;
     std::mutex coordinatorsLock;
     std::map<std::thread::id, std::unique_ptr<Coordinator>> coordinators;
     std::atomic<int> working { 0 }, notWorking { 0 };

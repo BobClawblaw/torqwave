@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "AudioDocument.h"
 #include "Markers.h"
+#include "PluginCatalogue.h"
 
 /** Experimental: the tools a language model works Torqwave with, run on a working copy.
 
@@ -30,6 +31,7 @@ namespace Ai
             juce::Array<juce::PluginDescription> plugins;      // the plug-ins Torqwave knows
             std::unique_ptr<juce::XmlElement> rack;           // AudioEngine::createRackXml(); none: empty
             juce::AudioPluginFormatManager* formats = nullptr; // none: no plug-in tools
+            PluginCatalogue* catalogue = nullptr;              // what is known of the plug-ins; none: nothing
         };
 
         explicit Workspace (Start);
@@ -84,6 +86,7 @@ namespace Ai
         juce::var find (const juce::var&);
         juce::var listMarkers();
         juce::var listPlugins (const juce::var&);
+        juce::var describePlugin (const juce::var&);
         juce::var listChain();
         juce::var getParameters (const juce::var&);
 
@@ -114,7 +117,7 @@ namespace Ai
 
         juce::String loadChain();
         Slot* slotOf (const juce::var& args, juce::String& error);
-        std::optional<juce::PluginDescription> findPlugin (const juce::String& nameOrId, juce::String& error) const;
+        std::optional<juce::PluginDescription> findPlugin (const juce::String& nameOrId, juce::String& error, bool instrumentsToo = false) const;
 
         AudioDocument::Snapshot original, audio;
         double sampleRate;
@@ -124,6 +127,7 @@ namespace Ai
         juce::Array<juce::PluginDescription> plugins;
         std::unique_ptr<juce::XmlElement> rackXml;
         juce::AudioPluginFormatManager* formats;
+        PluginCatalogue* catalogue;
 
         std::vector<Slot> chain;
         bool chainLoaded = false, chainEdited = false, markersEdited = false;
