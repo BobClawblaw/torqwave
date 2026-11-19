@@ -616,6 +616,7 @@ private:
     void refreshOutputChoices();
     void refreshInputChoices();
     void refreshTitle();
+    void refreshAskButton();
     void saveSettings();
 
     juce::ApplicationProperties appProperties;
@@ -630,6 +631,7 @@ private:
 
     juce::TextButton editorButton { "Editor" }, multitrackButton { "Multitrack" };   // a two-part switch, lit on the side in use
     juce::TextButton pluginsButton { "Plug-ins..." }, audioButton { "Audio Settings..." };
+    juce::TextButton askButton;   // Ask Torq, shown while it is turned on in Settings > AI
     std::unique_ptr<TransportBar::Bar> transportBar;   // made once the commands are registered
     TransportBar::SelectionPanel selectionPanel;
     void stopTransport();
