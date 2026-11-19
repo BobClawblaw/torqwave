@@ -45,6 +45,7 @@ While a session has unsaved changes, Torqwave writes a copy of it every two minu
 |---|---|
 | Effect presets | **Save...** beside a dialog's Presets list |
 | Track templates | **Multitrack > Tracks > Save Track as Template...**, used with **Add Track from Template...** |
+| Instrument presets (a drum kit, a sound) | **Multitrack > Tracks > Save Instrument Preset...** with the instrument track selected; one `.tqinstrument` file each in `Instrument Presets` in the Torqwave folder of your user library (on the Mac, `~/Library/Torqwave`): copy them. Ask Torq chooses among them by name |
 | Workspaces | **Window > Workspace > Save Workspace As...** |
 | Keyboard shortcuts | **Settings > Keys** (or **Window > Keyboard Shortcuts...**): export and import |
 | Plug-in catalogue (Ask Torq) | `Plug-in Catalogue.json` in the Torqwave folder of your user library (on the Mac, `~/Library/Torqwave`): copy it |

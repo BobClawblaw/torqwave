@@ -22,10 +22,14 @@ namespace Ai
         /** An instrument plug-in by its id or name, or nothing with the reason in error. */
         using FindInstrument = std::function<std::optional<juce::PluginDescription> (const juce::String&, juce::String& error)>;
 
-        /** steps: the plan, which change tools add their lines to. instruments: the name of the
-            instrument on each instrument track that has one, by track id. */
+        /** The presets saved for an instrument (InstrumentPresets). */
+        using PresetsOf = std::function<juce::StringArray (const juce::PluginDescription&)>;
+
+        /** steps: the plan, which change tools add their lines to. instruments: the instrument on
+            each instrument track that has one, by track id. */
         SessionTools (SessionState, juce::String sessionName, juce::StringArray& steps,
-                      std::map<juce::uint32, juce::String> instruments = {}, FindInstrument findInstrument = nullptr);
+                      std::map<juce::uint32, juce::PluginDescription> instruments = {}, FindInstrument findInstrument = nullptr,
+                      PresetsOf presetsOf = nullptr);
 
         /** The tools, as entries for the Chat Completions "tools" array. */
         static juce::Array<juce::var> toolDefinitions();
@@ -40,11 +44,15 @@ namespace Ai
         const SessionState& getState() const noexcept     { return state; }
         bool changed() const noexcept                       { return edited; }
 
-        /** An instrument to load onto a track once the plan is applied. */
+        /** An instrument to load onto a track once the plan is applied, with a saved preset or
+            none; or, with onlyPreset, a preset for the instrument the track already plays. */
         struct InstrumentLoad
         {
             juce::uint32 trackId = 0;
             juce::PluginDescription plugin;
+            juce::String preset;
+            bool onlyPreset = false;
+            juce::String step;          // its line in the plan, taken out again if a later call replaces it
         };
 
         /** The loads the plan makes, for tracks still in it (a track added and then removed in
@@ -71,6 +79,11 @@ namespace Ai
         juce::var setTempo (const juce::var&);
         juce::var addNoteClip (const juce::var&);
         juce::var setInstrument (const juce::var&);
+        juce::var listInstrumentPresets (const juce::var&);
+
+        /** The instrument a track plays, or will once the plan is applied; nothing for none. */
+        std::optional<juce::PluginDescription> instrumentOf (juce::uint32 trackId) const;
+        juce::StringArray presetsFor (const juce::PluginDescription&) const;
 
         /** The track a call names by its number (from 1, in get_session's order) or its name;
             sets error when there is none. */
@@ -84,8 +97,9 @@ namespace Ai
         SessionState state;
         juce::String sessionName;
         juce::StringArray& steps;
-        std::map<juce::uint32, juce::String> instruments;
+        std::map<juce::uint32, juce::PluginDescription> instruments;
         FindInstrument findInstrument;
+        PresetsOf presetsOf;
         std::vector<InstrumentLoad> loads;
         bool edited = false;
     };

@@ -2019,6 +2019,19 @@ void AudioEngine::addTrackPlugin (juce::uint32 trackId, const juce::PluginDescri
                   });
 }
 
+bool AudioEngine::setInstrumentState (juce::uint32 trackId, const juce::MemoryBlock& state)
+{
+    auto* plugin = trackEffects.getInstrument (trackId);
+
+    if (plugin == nullptr)
+        return false;
+
+    plugin->setStateInformation (state.getData(), (int) state.getSize());
+    trackEffects.refreshCopies (*plugin);
+    session.markEffectsChanged();
+    return true;
+}
+
 void AudioEngine::removeTrackPlugin (juce::uint32 trackId, int slot)
 {
     auto* plugin = trackEffects.getPlugin (trackId, slot);

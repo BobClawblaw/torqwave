@@ -1,4 +1,5 @@
 #include "MainComponent.h"
+#include "InstrumentPresets.h"
 #include "BuildStamp.h"
 #include "CopyLine.h"
 #include "Platform.h"
@@ -169,6 +170,7 @@ namespace
         cmdLayerClips, cmdClipToFront, cmdClipToBack,
         cmdTakeOutOfFolder,
         cmdAskTorqwave,
+        cmdSaveInstrumentPreset,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -2234,6 +2236,8 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
         case cmdSaveTrackTemplate: info.setInfo ("Save Track as Template...", "Save the selected track's settings, sends, effects and automation to start new tracks from", "Multitrack", 0);
                             info.setActive (multitrackMode && multitrack.getSelectedTrack() >= 0
                                             && ! engine.session.getState()->tracks[(size_t) multitrack.getSelectedTrack()].isFolder); break;
+        case cmdSaveInstrumentPreset: info.setInfo ("Save Instrument Preset...", "Save the selected track's instrument as it sounds now (a drum kit, say), to choose again by name, and for Ask Torq", "Multitrack", 0);
+                            info.setActive (multitrackMode && selectedInstrument() != nullptr); break;
         case cmdAddFromTemplate: info.setInfo ("Add Track from Template...", "Add a track or bus made from a saved template", "Multitrack", 0);
                             info.setActive (multitrackMode && ! isRecording()); break;
         case cmdSessionNotes: info.setInfo ("Session Notes", "A panel of free text kept with the session: lyrics, takes, things to do", "Multitrack", 0);
@@ -2811,6 +2815,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdAskTorqwave: showAskTorqwave(); break;
         case cmdSessionNotes: dock->toggle (Panels::notes); break;
         case cmdSaveTrackTemplate: chooseTrackTemplateToSave(); break;
+        case cmdSaveInstrumentPreset: showSaveInstrumentPreset(); break;
         case cmdSaveCopyWithAudio: saveSessionCopyWithAudio(); break;
         case cmdAddFromTemplate: chooseTrackTemplateToAdd(); break;
         case cmdZeroCrossings:
@@ -3148,7 +3153,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         case 4:
             // The panels and Import at the top; the rest in groups by what they do.
             add ({ cmdMixer, cmdClipProperties, cmdClipList, cmdMarkerList, cmdSessionNotes, 0, cmdImportToSession, cmdImportMidi, 0 });
-            group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdTakeOutOfFolder, cmdAddFromTemplate, cmdSaveTrackTemplate, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
+            group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdTakeOutOfFolder, cmdAddFromTemplate, cmdSaveTrackTemplate, cmdSaveInstrumentPreset, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
                                0, cmdTrackAbove, cmdTrackBelow, 0, cmdUnsoloAll, cmdUnmuteAll });
             group ("Tools", { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute });
             group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines, 0, cmdClipToFront, cmdClipToBack });
@@ -3845,6 +3850,63 @@ void MainComponent::chooseTrackTemplateToSave()
                               if (xml == nullptr || ! xml->writeTo (file))
                                   showError ("Save Track as Template", "Could not write " + file.getFullPathName());
                           });
+}
+
+juce::AudioPluginInstance* MainComponent::selectedInstrument() const
+{
+    const auto state = engine.session.getState();
+    const auto index = multitrack.getSelectedTrack();
+
+    if (! juce::isPositiveAndBelow (index, (int) state->tracks.size()) || ! state->tracks[(size_t) index].isInstrument)
+        return nullptr;
+
+    return engine.getTrackEffects().getInstrument (state->tracks[(size_t) index].id);
+}
+
+void MainComponent::showSaveInstrumentPreset()
+{
+    auto* instrument = selectedInstrument();
+
+    if (instrument == nullptr)
+        return;
+
+    const auto description = instrument->getPluginDescription();
+    const auto saved = InstrumentPresets::userStore().getNames (description);
+    auto* box = new juce::AlertWindow ("Save Instrument Preset",
+                                       "Save " + description.name + " as it sounds now, kit and settings, to choose again by name. "
+                                       + (saved.isEmpty() ? juce::String ("No presets are saved for it yet.")
+                                                          : "Saved: " + saved.joinIntoString (", ") + ". The same name replaces one."),
+                                       juce::MessageBoxIconType::NoIcon);
+    box->addTextEditor ("name", "", "Name");
+    box->addButton ("Save", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([this, box, description] (int result)
+    {
+        if (result != 1)
+            return;
+
+        const auto name = box->getTextEditorContents ("name").trim();
+        auto* instrument = selectedInstrument();
+
+        if (name.isEmpty())
+        {
+            showError ("Save Instrument Preset", "The preset needs a name.");
+            return;
+        }
+
+        if (instrument == nullptr || instrument->getPluginDescription().createIdentifierString() != description.createIdentifierString())
+        {
+            showError ("Save Instrument Preset", "The selected track no longer plays " + description.name + ".");
+            return;
+        }
+
+        juce::MemoryBlock state;
+        instrument->getStateInformation (state);
+
+        if (! InstrumentPresets::userStore().save (description, name, state))
+            showError ("Save Instrument Preset", "Couldn't write the preset into " + InstrumentPresets::userStore().getFolder().getFullPathName() + ".");
+    }), true);
 }
 
 void MainComponent::chooseTrackTemplateToAdd()
@@ -12567,7 +12629,9 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
 
         for (auto& t : aiStartSession->tracks)
             if (auto* instrument = t.isInstrument ? engine.getTrackEffects().getInstrument (t.id) : nullptr)
-                start.instruments[t.id] = instrument->getName();
+                start.instruments[t.id] = instrument->getPluginDescription();
+
+        start.instrumentPresets = [] (const juce::PluginDescription& d) { return InstrumentPresets::userStore().getNames (d); };
 
         start.catalogue = pluginCatalogue.get();
         return start;
@@ -12608,11 +12672,40 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
         }
 
         for (auto& load : w.getInstrumentLoads())
-            engine.addTrackPlugin (load.trackId, load.plugin, [name = load.plugin.name] (const juce::String& error)
+        {
+            const auto state = load.preset.isNotEmpty() ? InstrumentPresets::userStore().load (load.plugin, load.preset) : std::nullopt;
+
+            if (load.preset.isNotEmpty() && ! state)
             {
-                if (error.isNotEmpty())
-                    showError ("Ask Torq", name + " couldn't be loaded: " + error);
+                showError ("Ask Torq", "The preset " + load.preset.quoted() + " for " + load.plugin.name + " couldn't be read.");
+                continue;
+            }
+
+            if (load.onlyPreset)
+            {
+                if (! engine.setInstrumentState (load.trackId, *state))
+                    showError ("Ask Torq", "The track no longer plays " + load.plugin.name + ", so the preset wasn't loaded.");
+
+                continue;
+            }
+
+            // As a track's effects load: the plug-in, then its saved state.
+            auto effects = std::make_shared<juce::XmlElement> ("EFFECTS");
+            auto* slot = effects->createNewChildElement ("SLOT");
+            slot->addChildElement (load.plugin.createXml().release());
+
+            if (state)
+                slot->createNewChildElement ("STATE")->addTextElement (state->toBase64Encoding());
+
+            engine.session.markEffectsChanged();
+            engine.loadTrackEffects ({ { load.trackId, effects } }, [this, name = load.plugin.name] (const juce::String& errors)
+            {
+                engine.session.sendChangeMessage();   // the track headers show the instrument
+
+                if (errors.isNotEmpty())
+                    showError ("Ask Torq", name + " couldn't be loaded:\n\n" + errors);
             });
+        }
 
         return {};
     }

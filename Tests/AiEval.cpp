@@ -177,9 +177,11 @@ namespace
     /** Requests on a session (testSession), for Ask Torq in the multitrack view. */
     std::vector<Case> sessionCases()
     {
-        const auto onSession = [] (juce::String request, std::function<juce::String (Ai::Workspace&)> check)
+        const auto onSession = [] (juce::String request, std::function<juce::String (Ai::Workspace&)> check,
+                                   std::function<juce::String (const juce::String&)> checkAnswer = {})
         {
             Case c { std::move (request), std::move (check) };
+            c.checkAnswer = std::move (checkAnswer);
             c.session = true;
             return c;
         };
@@ -284,6 +286,33 @@ namespace
                     wanted.insert ((juce::int64) (beat * rate / 2));
 
                 return kicks == wanted ? juce::String() : "kicks at " + juce::String ((int) kicks.size()) + " places; plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("Add a drum track on Test Drums with its vintage rock kit, and a snare on beats 2 and 4 of the first bar.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto loads = w.getInstrumentLoads();
+
+                if (loads.size() != 1 || loads[0].plugin.name != "Test Drums" || loads[0].preset != "Vintage Rock Kit")
+                    return "plan: " + w.getSteps().joinIntoString (" | ");
+
+                const auto* drums = w.getSession()->findTrack (loads[0].trackId);
+                std::set<juce::int64> snares;
+
+                for (auto& c : drums->noteClips)
+                    for (auto& n : c.notes)
+                        if (n.pitch == 38 && (c.loopLength == 0 || n.start < c.loopLength))
+                            snares.insert (c.position - c.offset + n.start);
+
+                return snares == std::set<juce::int64> { (juce::int64) (rate / 2), (juce::int64) (3 * rate / 2) }
+                           ? juce::String() : "snares at " + juce::String ((int) snares.size()) + " places; plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("Add a drum track on Test Drums with its trap kit.", [] (Ai::Workspace& w) -> juce::String
+            {
+                // There is no trap kit among the saved ones: the right plan is none, saying which there are.
+                return w.getInstrumentLoads().empty() && w.getSteps().isEmpty() ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
+            }, [] (const juce::String& said) -> juce::String
+            {
+                return said.containsIgnoreCase ("Vintage Rock") || said.containsIgnoreCase ("Deep House") || said.containsIgnoreCase ("Brushes")
+                           ? juce::String() : "it didn't say which kits there are";
             }),
             onSession ("On a new instrument track called Bass, write a bass line of C2, C2, G2, F2 as quarter notes in the first bar.", [] (Ai::Workspace& w) -> juce::String
             {
@@ -566,6 +595,10 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
         drumKit.category = "Drum";
         drumKit.isInstrument = true;
         start.plugins.add (drumKit);
+        start.instrumentPresets = [] (const juce::PluginDescription& d)
+        {
+            return d.name == "Test Drums" ? juce::StringArray { "Deep House Kit", "Vintage Rock Kit", "Brushes" } : juce::StringArray();
+        };
         start.formats = &formats;
 
         Ai::Agent agent (settings, key, std::move (start), c.request);

@@ -38,7 +38,8 @@ namespace Ai
                 and the plug-in look tools, with no audio. */
             std::optional<SessionState> session;
             juce::String sessionName;
-            std::map<juce::uint32, juce::String> instruments;   // the instrument each instrument track plays, by track id
+            std::map<juce::uint32, juce::PluginDescription> instruments;   // the instrument each instrument track plays, by track id
+            SessionTools::PresetsOf instrumentPresets;                       // the presets saved for an instrument; none: no presets
         };
 
         explicit Workspace (Start);

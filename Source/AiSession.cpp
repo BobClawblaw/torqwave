@@ -64,8 +64,10 @@ namespace
                                "start": { "type": "number" }, "length": { "type": "number" }, "velocity": { "type": "integer", "description": "1 to 127; 100 when left out" } },
                                "required": ["pitch", "start", "length"] } } },
                     "required": ["track", "start", "length", "notes"] } },
-  { "name": "set_instrument", "description": "Choose an instrument track's instrument: an instrument plug-in by its id or name from list_plugins with instruments: true. It is loaded when the plan is applied.",
-    "parameters": { "type": "object", "properties": { TRACK, "plugin": { "type": "string" } }, "required": ["track", "plugin"] } },
+  { "name": "set_instrument", "description": "Choose an instrument track's instrument: an instrument plug-in by its id or name from list_plugins with instruments: true, and one of its saved presets (a drum sampler's kit, say) from list_instrument_presets. It is loaded when the plan is applied. On a track that already plays that instrument, give the preset alone to change to it.",
+    "parameters": { "type": "object", "properties": { TRACK, "plugin": { "type": "string" }, "preset": { "type": "string", "description": "A saved preset's name; leave out for the instrument's own start" } }, "required": ["track"] } },
+  { "name": "list_instrument_presets", "description": "The presets the user has saved for an instrument (the plug-in by id or name, or the instrument a track plays). Many instruments, drum samplers above all, keep their kits and sounds in their own browsers: those can be chosen here only once the user has saved them with Save Instrument Preset.",
+    "parameters": { "type": "object", "properties": { "plugin": { "type": "string" }, TRACK } } },
   { "name": "set_tempo", "description": "Set the session's tempo (20 to 400 beats a minute) and beats in a bar (1 to 16) from the start.",
     "parameters": { "type": "object", "properties": { "bpm": { "type": "number" }, "beats_per_bar": { "type": "integer" } }, "required": ["bpm"] } }
 ])JSON";
@@ -74,9 +76,9 @@ namespace
 namespace Ai
 {
     SessionTools::SessionTools (SessionState s, juce::String name, juce::StringArray& planSteps,
-                                std::map<juce::uint32, juce::String> trackInstruments, FindInstrument find)
+                                std::map<juce::uint32, juce::PluginDescription> trackInstruments, FindInstrument find, PresetsOf presets)
         : state (std::move (s)), sessionName (std::move (name)), steps (planSteps),
-          instruments (std::move (trackInstruments)), findInstrument (std::move (find))
+          instruments (std::move (trackInstruments)), findInstrument (std::move (find)), presetsOf (std::move (presets))
     {
     }
 
@@ -102,7 +104,7 @@ namespace Ai
             for (auto& t : *list)
                 tools.add (object ({ { "type", "function" }, { "function", t } }));
 
-        jassert (tools.size() == 18);
+        jassert (tools.size() == 19);
         return tools;
     }
 
@@ -114,9 +116,11 @@ namespace Ai
                "get_session again after that. Clips are named by their id from list_clips. Each change adds a step to the plan; "
                "nothing reaches the session until the user applies it. Notes go in note clips on instrument tracks; a beat lasts "
                "60 / tempo seconds. Drum instruments mostly follow General MIDI: kick 36, snare 38, clap 39, closed hi-hat 42, "
-               "open hi-hat 46, crash 49, ride 51. What these tools can't do yet: a track's effects (other than its instrument), "
-               "an instrument's settings and presets, automation, recording, and changing the audio inside a clip. Say so when "
-               "a request needs them, rather than doing something else.";
+               "open hi-hat 46, crash 49, ride 51. An instrument's sounds and kits are the presets the user saved for it "
+               "(list_instrument_presets); when a request names a sound that isn't among them, say which there are rather than "
+               "guessing. What these tools can't do yet: a track's effects (other than its instrument), an instrument's own "
+               "settings, automation, recording, and changing the audio inside a clip. Say so when a request needs them, rather "
+               "than doing something else.";
     }
 
     std::optional<juce::var> SessionTools::run (const juce::String& tool, const juce::var& args)
@@ -141,6 +145,7 @@ namespace Ai
         else if (tool == "set_tempo")      result = setTempo (args);
         else if (tool == "add_note_clip")  result = addNoteClip (args);
         else if (tool == "set_instrument") result = setInstrument (args);
+        else if (tool == "list_instrument_presets") result = listInstrumentPresets (args);
         else return std::nullopt;
 
         return result;
@@ -268,8 +273,9 @@ namespace Ai
             {
                 const auto pending = std::find_if (loads.rbegin(), loads.rend(), [&t] (const InstrumentLoad& l) { return l.trackId == t.id; });
                 const auto current = instruments.find (t.id);
-                o->setProperty ("instrument", pending != loads.rend() ? juce::var (pending->plugin.name + " (when the plan is applied)")
-                                              : current != instruments.end() ? juce::var (current->second) : juce::var ("none"));
+                o->setProperty ("instrument", pending != loads.rend() ? juce::var (pending->plugin.name + (pending->preset.isNotEmpty() ? ", preset " + pending->preset.quoted() : juce::String())
+                                                                                  + " (when the plan is applied)")
+                                              : current != instruments.end() ? juce::var (current->second.name) : juce::var ("none"));
             }
 
             if (t.isFrozen())
@@ -878,6 +884,23 @@ namespace Ai
         return result;
     }
 
+    std::optional<juce::PluginDescription> SessionTools::instrumentOf (juce::uint32 trackId) const
+    {
+        for (auto l = loads.rbegin(); l != loads.rend(); ++l)
+            if (l->trackId == trackId)
+                return l->plugin;
+
+        if (const auto current = instruments.find (trackId); current != instruments.end())
+            return current->second;
+
+        return std::nullopt;
+    }
+
+    juce::StringArray SessionTools::presetsFor (const juce::PluginDescription& d) const
+    {
+        return presetsOf != nullptr ? presetsOf (d) : juce::StringArray();
+    }
+
     juce::var SessionTools::setInstrument (const juce::var& a)
     {
         juce::String error;
@@ -891,23 +914,101 @@ namespace Ai
         if (! t.takesNoteClips())
             return refused (t.name.quoted() + " is not an instrument track (add_track with kind \"instrument\" makes one)");
 
-        if (const auto current = instruments.find (t.id); current != instruments.end())
-            return refused (t.name.quoted() + " already plays " + current->second + "; replacing an instrument isn't in these tools yet");
+        const auto wanted = a["plugin"].toString().trim();
+        const auto preset = a["preset"].toString().trim();
+        const auto playing = instrumentOf (t.id);
+        const auto current = instruments.find (t.id);
+        const auto alreadyLoaded = current != instruments.end();
+        std::optional<juce::PluginDescription> plugin;
 
-        if (findInstrument == nullptr)
-            return refused ("no plug-ins are known here");
+        if (wanted.isEmpty())
+        {
+            if (! playing)
+                return refused (t.name.quoted() + " has no instrument yet: name the plug-in");
 
-        const auto plugin = findInstrument (a["plugin"].toString().trim(), error);
+            plugin = playing;
+        }
+        else
+        {
+            if (findInstrument == nullptr)
+                return refused ("no plug-ins are known here");
 
-        if (! plugin)
-            return refused (error);
+            plugin = findInstrument (wanted, error);
 
-        if (! plugin->isInstrument)
-            return refused (plugin->name + " is an effect, not an instrument; list_plugins with instruments: true lists those");
+            if (! plugin)
+                return refused (error);
+
+            if (! plugin->isInstrument)
+                return refused (plugin->name + " is an effect, not an instrument; list_plugins with instruments: true lists those");
+        }
+
+        if (alreadyLoaded && current->second.createIdentifierString() != plugin->createIdentifierString())
+            return refused (t.name.quoted() + " already plays " + current->second.name + "; replacing an instrument isn't in these tools yet");
+
+        if (alreadyLoaded && preset.isEmpty())
+            return refused (t.name.quoted() + " already plays " + plugin->name + "; give a preset to change its sound");
+
+        juce::String presetName;
+
+        if (preset.isNotEmpty())
+        {
+            const auto saved = presetsFor (*plugin);
+
+            for (auto& n : saved)
+                if (n.equalsIgnoreCase (preset))
+                    presetName = n;
+
+            if (presetName.isEmpty())
+                return refused (plugin->name + " has no saved preset called " + preset.quoted() + "; "
+                                + (saved.isEmpty() ? juce::String ("none are saved for it (the user saves them with Save Instrument Preset)")
+                                                   : "its presets are " + saved.joinIntoString (", ")));
+        }
+
+        // A later choice for the same track replaces the earlier one, in the plan too.
+        for (auto& l : loads)
+            if (l.trackId == t.id)
+                steps.removeString (l.step);
 
         loads.erase (std::remove_if (loads.begin(), loads.end(), [&t] (const InstrumentLoad& l) { return l.trackId == t.id; }), loads.end());
-        loads.push_back ({ t.id, *plugin });
-        steps.add ("Load " + plugin->name + " on " + t.name.quoted());
-        return object ({ { "ok", true }, { "step", steps[steps.size() - 1] } });
+
+        const auto step = alreadyLoaded ? "Load the preset " + presetName.quoted() + " on " + t.name.quoted() + "'s " + plugin->name
+                                        : "Load " + plugin->name + (presetName.isNotEmpty() ? " with the preset " + presetName.quoted() : juce::String())
+                                              + " on " + t.name.quoted();
+        loads.push_back ({ t.id, *plugin, presetName, alreadyLoaded, step });
+        steps.add (step);
+        return object ({ { "ok", true }, { "step", step } });
+    }
+
+    juce::var SessionTools::listInstrumentPresets (const juce::var& a)
+    {
+        juce::String error;
+        std::optional<juce::PluginDescription> plugin;
+
+        if (a["plugin"].toString().trim().isNotEmpty())
+        {
+            if (findInstrument == nullptr)
+                return refused ("no plug-ins are known here");
+
+            plugin = findInstrument (a["plugin"].toString().trim(), error);
+        }
+        else if (const auto index = trackOf (a["track"], error))
+        {
+            plugin = instrumentOf (state.tracks[(size_t) *index].id);
+
+            if (! plugin)
+                error = state.tracks[(size_t) *index].name.quoted() + " has no instrument";
+        }
+
+        if (! plugin)
+            return refused (error.isNotEmpty() ? error : juce::String ("give a plugin or a track"));
+
+        juce::Array<juce::var> names;
+
+        for (auto& n : presetsFor (*plugin))
+            names.add (n);
+
+        return object ({ { "ok", true }, { "plugin", plugin->name }, { "presets", names },
+                         { "note", names.isEmpty() ? juce::var ("None are saved for it. The user can load a sound in the instrument and save it with Save Instrument Preset.")
+                                                   : juce::var() } });
     }
 }

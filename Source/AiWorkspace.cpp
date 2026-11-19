@@ -303,7 +303,8 @@ Workspace::Workspace (Start s)
 {
     if (s.session)
         sessionTools = std::make_unique<SessionTools> (std::move (*s.session), std::move (s.sessionName), steps, std::move (s.instruments),
-                                                       [this] (const juce::String& wanted, juce::String& error) { return findPlugin (wanted, error, true); });
+                                                       [this] (const juce::String& wanted, juce::String& error) { return findPlugin (wanted, error, true); },
+                                                       std::move (s.instrumentPresets));
 }
 
 Workspace::~Workspace() = default;

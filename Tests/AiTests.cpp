@@ -1,5 +1,6 @@
 #include <JuceHeader.h>
 #include "../Source/AiAssistant.h"
+#include "../Source/InstrumentPresets.h"
 #include "../Source/AiCatalogue.h"
 #include "../Source/PluginCatalogue.h"
 #include "../Source/PluginScanner.h"
@@ -645,7 +646,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 20 && names.contains ("get_session") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 21 && names.contains ("get_session") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -694,6 +695,29 @@ namespace
                "Ask Torq sessions: markers, the tempo and removing a folder (its track left out of any); a file's tool refused; ten steps, and the session itself untouched");
     }
 
+    void testInstrumentPresets()
+    {
+        const auto folder = juce::File::createTempFile ("instrument-presets");
+        InstrumentPresets::Store store (folder);
+        juce::PluginDescription vst3, au;
+        vst3.name = au.name = "Battery 4";
+        vst3.manufacturerName = au.manufacturerName = "Native Instruments";
+        vst3.pluginFormatName = "VST3";
+        au.pluginFormatName = "AudioUnit";
+        const juce::MemoryBlock kitA ("kit a \0 with a zero", 20), kitB ("kit b", 5);
+
+        const auto saved = store.save (vst3, "Deep House: Kit", kitA) && store.save (vst3, "Acoustic", kitB) && ! store.save (vst3, "  ", kitA);
+        const auto names = store.getNames (vst3);
+        const auto loaded = store.load (vst3, "deep house: kit");
+        const auto replaced = store.save (vst3, "ACOUSTIC", kitA) && store.getNames (vst3).size() == 2 && store.load (vst3, "Acoustic") == kitA;
+        const auto otherFormat = store.getNames (au).isEmpty() && ! store.load (au, "Acoustic");
+        const auto removed = store.remove (vst3, "Acoustic") && store.getNames (vst3) == juce::StringArray { "Deep House: Kit" } && ! store.remove (vst3, "Acoustic");
+        folder.deleteRecursively();
+
+        check (saved && names == juce::StringArray { "Acoustic", "Deep House: Kit" } && loaded == kitA && replaced && otherFormat && removed,
+               "instrument presets: a plug-in's state saved and read back byte for byte by name (any case, any characters), a name replaced, kept apart by format, removed; an empty name refused");
+    }
+
     void testSessionNotes()
     {
         // An audio track, and an instrument track already playing a piano.
@@ -715,7 +739,18 @@ namespace
         start.sessionName = "Song";
         start.plugins = BuiltInEffects::getDescriptions();
         start.plugins.add (drumKit);
-        start.instruments[keysId] = "Piano";
+        juce::PluginDescription piano;
+        piano.name = "Test Piano";
+        piano.pluginFormatName = "VST3";
+        piano.fileOrIdentifier = "/Library/Audio/Plug-Ins/VST3/Test Piano.vst3";
+        piano.isInstrument = true;
+        start.plugins.add (piano);
+        start.instruments[keysId] = piano;
+        start.instrumentPresets = [] (const juce::PluginDescription& d)
+        {
+            return d.name == "Test Drums" ? juce::StringArray { "Deep House Kit", "Vintage Rock Kit" }
+                 : d.name == "Test Piano" ? juce::StringArray { "Bright Grand" } : juce::StringArray();
+        };
         Ai::Workspace w (std::move (start));
         const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
         const auto& state = *w.getSession();
@@ -729,8 +764,8 @@ namespace
         const auto loads = w.getInstrumentLoads();
         const auto drumsId = state.tracks.back().id;
         check ((bool) added["ok"] && (bool) loaded["ok"] && ! (bool) onAudio["ok"] && ! (bool) effect["ok"] && effect["error"].toString().contains ("effect")
-                   && ! (bool) taken["ok"] && taken["error"].toString().contains ("Piano")
-                   && session["tracks"][1]["instrument"] == juce::var ("Piano") && session["tracks"][2]["instrument"].toString().startsWith ("Test Drums")
+                   && ! (bool) taken["ok"] && taken["error"].toString().contains ("Test Piano")
+                   && session["tracks"][1]["instrument"] == juce::var ("Test Piano") && session["tracks"][2]["instrument"].toString().startsWith ("Test Drums")
                    && loads.size() == 1 && loads[0].trackId == drumsId && loads[0].plugin.name == "Test Drums",
                "Ask Torq sessions: an instrument chosen for a new instrument track, loaded after the plan; an audio track, an effect and a track that has one refused");
 
@@ -750,9 +785,22 @@ namespace
                    && (int) listed["clips"][0]["notes"] == 4 && juce::approximatelyEqual ((double) listed["clips"][0]["loop_length"], 2.0),
                "Ask Torq sessions: a looping note clip of a kick pattern on the new track; a note past the loop, a pitch over 127 and an audio track refused");
 
+        const auto kits = call ("list_instrument_presets", R"({"track": "Drums"})");
+        const auto rock = call ("set_instrument", R"({"track": "Drums", "preset": "vintage rock kit"})");
+        const auto missing = call ("set_instrument", R"({"track": "Drums", "preset": "Trap Kit"})");
+        const auto grand = call ("set_instrument", R"({"track": "Keys", "preset": "Bright Grand"})");
+        const auto noPreset = call ("set_instrument", R"({"track": "Keys", "plugin": "Test Piano"})");
+        const auto withPreset = w.getInstrumentLoads();
+        check ((bool) kits["ok"] && kits["presets"].size() == 2 && (bool) rock["ok"] && ! (bool) missing["ok"] && missing["error"].toString().contains ("Deep House Kit")
+                   && (bool) grand["ok"] && ! (bool) noPreset["ok"] && withPreset.size() == 2
+                   && withPreset[0].trackId == drumsId && withPreset[0].preset == "Vintage Rock Kit" && ! withPreset[0].onlyPreset
+                   && withPreset[1].trackId == keysId && withPreset[1].preset == "Bright Grand" && withPreset[1].onlyPreset && withPreset[1].plugin.name == "Test Piano",
+               "Ask Torq sessions: instrument presets listed and chosen (in any case), for a new instrument and for one a track already plays; a preset not saved refused, naming those there are");
+
         const auto removed = call ("remove_track", R"({"track": "Drums"})");
-        check ((bool) removed["ok"] && w.getInstrumentLoads().empty() && w.getSteps().size() == 4 && s.tracks.size() == 2 && s.tracks[1].noteClips.empty(),
-               "Ask Torq sessions: removing the track drops its instrument load; four steps, and the session itself untouched");
+        check ((bool) removed["ok"] && w.getInstrumentLoads().size() == 1 && w.getSteps().size() == 5
+                   && ! w.getSteps().contains ("Load Test Drums on \"Drums\"") && s.tracks.size() == 2 && s.tracks[1].noteClips.empty(),
+               "Ask Torq sessions: removing the track drops its instrument load; a replaced choice leaves the plan; five steps, and the session itself untouched");
     }
 
     void testCatalogueLearner()
@@ -933,6 +981,7 @@ void runAiTests()
     testCatalogueTools();
     testSessionTools();
     testSessionNotes();
+    testInstrumentPresets();
     testCatalogueLearner();
     testAskPanel();
     testName();

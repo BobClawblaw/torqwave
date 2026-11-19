@@ -542,6 +542,9 @@ public:
 
     /** Creates the plug-in at the session's rate and adds it to the end of the track's chain. */
     void addTrackPlugin (juce::uint32 trackId, const juce::PluginDescription&, AddCallback onDone);
+
+    /** Gives the track's instrument a saved state (an instrument preset); false when it has none. */
+    bool setInstrumentState (juce::uint32 trackId, const juce::MemoryBlock& state);
     void removeTrackPlugin (juce::uint32 trackId, int slot);
     void setTrackPluginBypassed (juce::uint32 trackId, int slot, bool);
     void moveTrackPlugin (juce::uint32 trackId, int from, int to);
