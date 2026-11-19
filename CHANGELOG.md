@@ -23,6 +23,7 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 **Keys in Settings**
 - **Settings > Keys** now holds the keyboard shortcut list itself, filling the page, instead of a button that opened it in a window of its own. **Window > Keyboard Shortcuts...** opens that page. The Settings window opens larger (860 by 660) to fit it.
+- The Keys, Plug-ins and AI pages no longer leave an empty line's height above their panel, and a page that fits its window no longer shows a scroll bar.
 
 ## Released
 

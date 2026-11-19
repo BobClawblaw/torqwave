@@ -108,7 +108,8 @@ namespace Settings
                     break;
 
                 case Item::Kind::component:
-                    makeLabel();
+                    if (item.label.isNotEmpty())
+                        makeLabel();
 
                     if (item.makeComponent != nullptr)
                         made = item.makeComponent();
@@ -323,7 +324,7 @@ namespace Settings
             y += height + 4;
         }
 
-        page.setSize (width, y);
+        page.setSize (width, juce::jmax (0, y - 4));   // no gap after the last row, so a page that fits doesn't scroll
     }
 
     void Panel::paintListBoxItem (int rowNumber, juce::Graphics& g, int width, int height, bool selected)
