@@ -69,8 +69,8 @@ void Agent::post (Event e)
 
 void Agent::run()
 {
-    juce::Array<juce::var> messages { message ("system", Workspace::instructions()), message ("user", request) };
-    const auto tools = Workspace::toolDefinitions();
+    juce::Array<juce::var> messages { message ("system", workspace.systemMessage()), message ("user", request) };
+    const auto tools = workspace.tools();
     std::map<juce::String, int> callsMade;   // each tool and its arguments, how often called
 
     for (int round = 0; round < maxRounds; ++round)

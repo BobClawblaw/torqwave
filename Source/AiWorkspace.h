@@ -4,6 +4,7 @@
 #include "AudioDocument.h"
 #include "Markers.h"
 #include "PluginCatalogue.h"
+#include "AiSession.h"
 
 /** Experimental: the tools a language model works Torqwave with, run on a working copy.
 
@@ -32,16 +33,30 @@ namespace Ai
             std::unique_ptr<juce::XmlElement> rack;           // AudioEngine::createRackXml(); none: empty
             juce::AudioPluginFormatManager* formats = nullptr; // none: no plug-in tools
             PluginCatalogue* catalogue = nullptr;              // what is known of the plug-ins; none: nothing
+
+            /** A multitrack session to work on in place of a file: the session tools (AiSession)
+                and the plug-in look tools, with no audio. */
+            std::optional<SessionState> session;
+            juce::String sessionName;
         };
 
         explicit Workspace (Start);
         ~Workspace();
 
-        /** The tools, as the Chat Completions "tools" array. */
+        /** The tools for a file, as the Chat Completions "tools" array. */
         static juce::var toolDefinitions();
 
-        /** What the model is told about Torqwave and the working copy (the system message). */
+        /** What the model is told about Torqwave and a file (the system message). */
         static juce::String instructions();
+
+        /** This workspace's tools and system message: the file's, or the session's. */
+        juce::var tools() const;
+        juce::String systemMessage() const;
+
+        /** Working on a session rather than a file; its working copy, and whether it changed. */
+        bool isSession() const noexcept                             { return sessionTools != nullptr; }
+        const SessionState* getSession() const noexcept             { return sessionTools != nullptr ? &sessionTools->getState() : nullptr; }
+        bool sessionChanged() const noexcept                        { return sessionTools != nullptr && sessionTools->changed(); }
 
         /** Runs one tool call and returns its result for the model, as JSON text. Never throws:
             a bad call comes back as {"ok": false, "error": ...} for the model to correct. */
@@ -133,6 +148,7 @@ namespace Ai
         bool chainLoaded = false, chainEdited = false, markersEdited = false;
         std::shared_ptr<const juce::XmlElement> rendered;
         juce::StringArray steps;
+        std::unique_ptr<SessionTools> sessionTools;
     };
 
     /** Plug-in parameters set from text, as a model writes them. Public for the tests. */

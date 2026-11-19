@@ -621,6 +621,79 @@ namespace
                "plug-in catalogue: describe_plugin gives the entry and the parameters without opening the plug-in or changing the plan");
     }
 
+    void testSessionTools()
+    {
+        // A session of one audio track with a 4 s clip at 1 s, and a bus.
+        SessionState s;
+        s.sampleRate = 48000.0;
+        const auto clipId = SessionEdits::addClip (s, 0, juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("drums.wav"), tone (48000.0, 4), 48000);
+        s.tracks[0].name = "Drums";
+        s.addBus().name = "Reverb";
+
+        Ai::Workspace::Start start;
+        start.session = s;
+        start.sessionName = "Song";
+        start.plugins = BuiltInEffects::getDescriptions();
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+        const auto& state = *w.getSession();
+
+        juce::StringArray names;
+
+        const auto tools = w.tools();
+
+        for (auto& tool : *tools.getArray())
+            names.add (tool["function"]["name"].toString());
+
+        check (w.isSession() && names.size() == 18 && names.contains ("get_session") && names.contains ("list_plugins") && ! names.contains ("get_state")
+                   && w.systemMessage().contains ("multitrack session"),
+               "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
+
+        const auto session = call ("get_session", "{}");
+        check (session["name"] == juce::var ("Song") && session["tracks"].size() == 2 && session["tracks"][0]["kind"] == juce::var ("audio")
+                   && (int) session["tracks"][0]["clips"] == 1 && juce::exactlyEqual ((double) session["tracks"][0]["from"], 1.0)
+                   && session["tracks"][1]["kind"] == juce::var ("bus") && ! w.sessionChanged(),
+               "Ask Torq sessions: get_session lists the tracks with their kinds and clips, changing nothing");
+
+        const auto folder = call ("add_track", R"({"kind": "folder", "name": "Rhythm", "after": 1})");
+        const auto inFolder = call ("set_folder", R"({"track": "drums", "folder": "Rhythm"})");
+        check ((bool) folder["ok"] && (int) folder["number"] == 2 && state.tracks[1].isFolder && state.tracks[1].name == "Rhythm"
+                   && (bool) inFolder["ok"] && state.tracks[0].folderId == state.tracks[1].id,
+               "Ask Torq sessions: a folder added after a track, and a track named in any case put in it");
+
+        const auto send = call ("set_send", R"({"track": 1, "bus": "Reverb", "level": -6})");
+        const auto loop = call ("set_output", R"({"track": "Reverb", "bus": "Reverb"})");
+        const auto mix = call ("set_track", R"({"track": "Drums", "volume": -3, "pan": -0.5})");
+        const auto loud = call ("set_track", R"({"track": "Drums", "volume": 20})");
+        const auto nobody = call ("set_track", R"({"track": "Bass", "mute": true})");
+        check ((bool) send["ok"] && state.tracks[0].sends.size() == 1 && juce::exactlyEqual (state.tracks[0].sends[0].gainDb, -6.0f)
+                   && ! (bool) loop["ok"] && (bool) mix["ok"] && juce::exactlyEqual (state.tracks[0].gainDb, -3.0f) && juce::exactlyEqual (state.tracks[0].pan, -0.5f)
+                   && ! (bool) loud["ok"] && ! (bool) nobody["ok"] && nobody["error"].toString().contains ("Bass"),
+               "Ask Torq sessions: sends, outputs and the mix set through the session's own edits; a bus into itself, a volume out of range and a track that isn't there refused");
+
+        const auto clips = call ("list_clips", R"({"track": "Drums"})");
+        const auto id = juce::String ((int) clipId);
+        const auto moved = call ("move_clip", "{\"clip\": " + id + ", \"start\": 2}");
+        const auto split = call ("split_clip", "{\"clip\": " + id + ", \"at\": 4}");
+        const auto outside = call ("split_clip", "{\"clip\": " + id + ", \"at\": 30}");
+        const auto set = call ("set_clip", "{\"clip\": " + id + ", \"gain\": -4, \"fade_in\": 0.1, \"fade_out\": 0.2}");
+        const auto& drums = state.tracks[0];
+        check (clips["clips"].size() == 1 && (int) clips["clips"][0]["id"] == (int) clipId && (bool) moved["ok"] && (bool) split["ok"] && ! (bool) outside["ok"]
+                   && (bool) set["ok"] && drums.clips.size() == 2 && drums.clips[0].position == 96000 && drums.clips[0].getEnd() == 192000
+                   && juce::exactlyEqual (drums.clips[0].gainDb, -4.0f) && drums.clips[0].fadeIn == 4800 && drums.clips[0].fadeOut == 9600,
+               "Ask Torq sessions: a clip moved, split, given a gain and fades; a split outside it refused");
+
+        const auto region = call ("add_marker", R"({"start": 2, "end": 6, "name": "Verse"})");
+        const auto tempo = call ("set_tempo", R"({"bpm": 90, "beats_per_bar": 3})");
+        const auto removed = call ("remove_track", R"({"track": "Rhythm"})");
+        const auto fileTool = call ("get_state", "{}");
+        check ((bool) region["ok"] && state.markers.size() == 1 && state.markers[0].name == "Verse" && state.markers[0].length == 4 * 48000
+                   && (bool) tempo["ok"] && juce::exactlyEqual (state.tempo, 90.0) && state.beatsPerBar == 3
+                   && (bool) removed["ok"] && state.tracks.size() == 2 && state.tracks[0].folderId == 0
+                   && ! (bool) fileTool["ok"] && w.sessionChanged() && w.getSteps().size() == 10 && s.tracks.size() == 2 && s.tracks[0].clips.size() == 1,
+               "Ask Torq sessions: markers, the tempo and removing a folder (its track left out of any); a file's tool refused; ten steps, and the session itself untouched");
+    }
+
     void testCatalogueLearner()
     {
         juce::AudioPluginFormatManager formats;
@@ -797,6 +870,7 @@ void runAiTests()
     testCatalogueStore();
     testCatalogueWorker();
     testCatalogueTools();
+    testSessionTools();
     testCatalogueLearner();
     testAskPanel();
     testName();

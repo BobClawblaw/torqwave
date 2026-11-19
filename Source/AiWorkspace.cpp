@@ -265,12 +265,44 @@ juce::String Workspace::instructions()
            "what that plug-in does.";
 }
 
+juce::var Workspace::tools() const
+{
+    if (! isSession())
+        return toolDefinitions();
+
+    // The session's tools, and the plug-in look tools so it can say what is there.
+    auto list = SessionTools::toolDefinitions();
+    const auto fileTools = toolDefinitions();
+
+    if (auto* file = fileTools.getArray())
+        for (auto& t : *file)
+            if (const auto name = t["function"]["name"].toString(); name == "list_plugins" || name == "describe_plugin")
+                list.add (t);
+
+    return juce::var (list);
+}
+
+juce::String Workspace::systemMessage() const
+{
+    if (! isSession())
+        return instructions();
+
+    return "You are the assistant inside Torqwave, an audio editor. The user asks for changes to the multitrack session open in it, "
+           "and you make them with the tools. You work on a copy: the user sees your changes as a plan and decides whether to "
+           "apply it, as one undo step. So make the changes asked for, then stop and say in a sentence or two what the plan does. "
+           "Look before you change: call get_session first. Change only what was asked. If the request is unclear or can't be "
+           "done with these tools, make no changes and say so. "
+           + SessionTools::instructions();
+}
+
 //==============================================================================
 Workspace::Workspace (Start s)
     : original (s.audio), audio (s.audio), sampleRate (s.sampleRate), selection (s.selection), markers (std::move (s.markers)),
       fileName (std::move (s.fileName)), plugins (std::move (s.plugins)), rackXml (std::move (s.rack)), formats (s.formats),
       catalogue (s.catalogue)
 {
+    if (s.session)
+        sessionTools = std::make_unique<SessionTools> (std::move (*s.session), std::move (s.sessionName), steps);
 }
 
 Workspace::~Workspace() = default;
@@ -357,6 +389,17 @@ juce::String Workspace::run (const juce::String& tool, const juce::String& argum
 
 juce::var Workspace::dispatch (const juce::String& tool, const juce::var& a)
 {
+    if (sessionTools != nullptr)
+    {
+        if (const auto result = sessionTools->run (tool, a))
+            return *result;
+
+        if (tool == "list_plugins")     return listPlugins (a);
+        if (tool == "describe_plugin")  return describePlugin (a);
+
+        return failure ("There is no tool called " + tool.quoted() + " for a session.");
+    }
+
     if (audio == nullptr || audio->getNumFrames() == 0)
         return failure ("There is no audio open.");
 
