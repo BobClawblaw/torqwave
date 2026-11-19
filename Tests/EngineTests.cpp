@@ -588,7 +588,8 @@ int main (int argc, char* argv[])
     //   --write-check <folder>  only write categories and tags into copies of WAV files from this folder, and check them
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
     //   --ai                    only the AI assistance tests (a mock server; no network)
-    //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY)
+    //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
+    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on
     juce::StringArray args;
 
     for (int i = 1; i < argc; ++i)
@@ -604,7 +605,7 @@ int main (int argc, char* argv[])
     juce::Array<juce::PluginDescription> found;
 
     if (const auto i = args.indexOf ("--ai-eval"); i >= 0)
-        return runAiEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {})) == 0 ? 0 : 1;
+        return runAiEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {}), valueOf ("--ai-eval-set")) == 0 ? 0 : 1;
 
     if (args.contains ("--ai"))
     {
