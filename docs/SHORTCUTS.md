@@ -160,7 +160,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Paint over frequencies (brush tool) | Drag in the spectrogram; Shift-drag adds |
 | Select several clips, audio or notes, to move, nudge, quantize, mute, copy, duplicate or delete together | Shift-click each clip in the multitrack view (a drag on one of them moves them all) |
 | Select the clips a band crosses, audio or notes (Select tool) | Drag across empty lane space in the multitrack view; Shift-drag adds them to the selection |
-| Draw a session's loop, or move it or size it | Drag along the top strip of the multitrack ruler: across empty strip for a new loop, inside the band to move it, at an end to size it (right-click it for Loop to Selection and Clear Loop) |
+| Draw a session's loop, or move it or size it | Drag along the top half of the multitrack time ruler: across empty strip for a new loop, inside the band to move it, at an end to size it (right-click it for Loop to Selection and Clear Loop) |
 | Select a time range (Range tool) | Drag across the lanes in the multitrack view (with any tool, drag along the marker lane under the ruler) |
 | Mute a clip, audio or notes, or let it be heard again (Mute tool) | Click the clip in the multitrack view |
 | Draw a note clip (Draw tool) | Drag along an instrument track's lane in the multitrack view (below the tracks makes a track) |

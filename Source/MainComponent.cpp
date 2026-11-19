@@ -3157,7 +3157,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
 
             menu.addSeparator();
             menu.addSubMenu ("Theme", themeMenu);
-            group ("Time Format", { cmdTimeMinutesSeconds, cmdTimeDecimalSeconds, cmdTimeSamples, 0,
+            group ("Time Format", { cmdBarsAndBeats, cmdTimeWithBars, 0, cmdTimeMinutesSeconds, cmdTimeDecimalSeconds, cmdTimeSamples, 0,
                                     cmdTimeSmpte24, cmdTimeSmpte25, cmdTimeSmpte2997Drop, cmdTimeSmpte2997, cmdTimeSmpte30 });
             break;
         }
@@ -3898,7 +3898,7 @@ void MainComponent::showSaveInstrumentPreset()
             return;
 
         const auto name = box->getTextEditorContents ("name").trim();
-        auto* instrument = selectedInstrument();
+        auto* current = selectedInstrument();
 
         if (name.isEmpty())
         {
@@ -3906,14 +3906,14 @@ void MainComponent::showSaveInstrumentPreset()
             return;
         }
 
-        if (instrument == nullptr || instrument->getPluginDescription().createIdentifierString() != description.createIdentifierString())
+        if (current == nullptr || current->getPluginDescription().createIdentifierString() != description.createIdentifierString())
         {
             showError ("Save Instrument Preset", "The selected track no longer plays " + description.name + ".");
             return;
         }
 
         juce::MemoryBlock state;
-        instrument->getStateInformation (state);
+        current->getStateInformation (state);
 
         if (! InstrumentPresets::userStore().save (description, name, state))
             showError ("Save Instrument Preset", "Couldn't write the preset into " + InstrumentPresets::userStore().getFolder().getFullPathName() + ".");

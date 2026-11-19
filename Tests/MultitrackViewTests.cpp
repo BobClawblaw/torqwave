@@ -486,7 +486,8 @@ namespace
         view.setShowBars (true);
         const auto barsKept = state()->barsAndBeats && view.isShowingBars() && ! engine.session.canUndo() && engine.session.isDirty();
 
-        mouse.drag ({ x (1.04), y }, { x (3.03), y });
+        // Counting in bars the ends go onto the grid, however far from a line the mouse is (as in Cubase).
+        mouse.drag ({ x (1.22), y }, { x (3.2), y });
         const auto drawn = view.getLoop();
         const auto drawnOk = drawn == state()->loop && onBeat (drawn.getStart()) && onBeat (drawn.getEnd())
                              && std::abs (drawn.getStart() - 48000) <= 24000 && std::abs (drawn.getEnd() - 144000) <= 24000 && ! engine.session.canUndo();

@@ -2463,6 +2463,16 @@ SessionSnap::Targets MultitrackView::snapTargets (juce::uint32 ignoreClip, bool 
     return targets;
 }
 
+juce::int64 MultitrackView::snappedToGrid (juce::int64 frame) const
+{
+    if (! snapping || ! isShowingBars())
+        return snapped (frame, 0, false);
+
+    auto targets = snapTargets (0, false);
+    targets.toGrid = true;
+    return SessionSnap::snap (*state, frame, snapTolerance(), targets);
+}
+
 juce::int64 MultitrackView::snapTolerance() const
 {
     return (juce::int64) std::llround (8.0 * framesPerPixel);
@@ -2559,7 +2569,7 @@ void MultitrackView::drawRuler (juce::Graphics& g, juce::Rectangle<int> area) co
         if (x1 > x0)
         {
             const auto band = juce::Rectangle<float> (x0, (float) area.getY(), x1 - x0, (float) loopStripHeight);
-            g.setColour (Theme::accent.withAlpha (on ? 0.85f : 0.35f));
+            g.setColour (Theme::accent.withAlpha (on ? 0.6f : 0.3f));
             g.fillRect (band);
             g.setColour (Theme::accent.withAlpha (on ? 0.18f : 0.08f));
             g.fillRect (band.withTop (band.getBottom()).withBottom ((float) area.getBottom()));
@@ -5285,7 +5295,7 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
             return;
         }
 
-        const auto frame = juce::jmax ((juce::int64) 0, snapped (frameForX ((float) p.x), 0, false));
+        const auto frame = juce::jmax ((juce::int64) 0, snappedToGrid (frameForX ((float) p.x)));
         drag = loopDragAt (p);
         dragFrame = frame;
         loopGrab = frameForX ((float) p.x) - getLoop().getStart();
@@ -5308,7 +5318,7 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
     if (p.y < rulerHeight && ! e.mods.isPopupMenu())
     {
         drag = Drag::range;
-        dragFrame = snapped (frameForX ((float) p.x), 0, false);
+        dragFrame = snappedToGrid (frameForX ((float) p.x));
         setCursor (dragFrame);
         setTimeSelection ({});
         return;
@@ -5339,7 +5349,7 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
     if (! e.mods.isPopupMenu() && tool == Tool::range)
     {
         drag = Drag::range;
-        dragFrame = snapped (frameForX ((float) p.x), 0, false);
+        dragFrame = snappedToGrid (frameForX ((float) p.x));
         setCursor (dragFrame);
         setTimeSelection ({});
         selectTrack (trackAt (p.y));
@@ -5642,7 +5652,7 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
 
     if (drag == Drag::loopNew || drag == Drag::loopMove || drag == Drag::loopStart || drag == Drag::loopEnd)
     {
-        const auto frame = juce::jmax ((juce::int64) 0, snapped (frameForX ((float) juce::jmax (listWidth, p.x)), 0, false));
+        const auto frame = juce::jmax ((juce::int64) 0, snappedToGrid (frameForX ((float) juce::jmax (listWidth, p.x))));
         const auto loop = shown().loop;
 
         if (drag == Drag::loopNew)
@@ -5654,7 +5664,7 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
         else
         {
             // Moved whole, its start snapping as the mouse goes.
-            const auto start = juce::jmax ((juce::int64) 0, snapped (frameForX ((float) juce::jmax (listWidth, p.x)) - loopGrab, 0, false));
+            const auto start = juce::jmax ((juce::int64) 0, snappedToGrid (frameForX ((float) juce::jmax (listWidth, p.x)) - loopGrab));
             loopPreview = loop.movedToStartAt (start);
         }
 
@@ -5714,7 +5724,7 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
     {
         // Dragging selects the range between where the mouse went down and where it is now; the
         // cursor follows the range's start.
-        const auto frame = snapped (frameForX ((float) juce::jmax (listWidth, p.x)), 0, false);
+        const auto frame = snappedToGrid (frameForX ((float) juce::jmax (listWidth, p.x)));
         const auto range = juce::Range<juce::int64>::between (dragFrame, frame);
         setCursor (range.getStart());
         setTimeSelection (range);
@@ -5929,6 +5939,10 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
         case Drag::stretchNotesEnd:
         case Drag::drawNotes:
         case Drag::listWidth:
+        case Drag::loopNew:
+        case Drag::loopMove:
+        case Drag::loopStart:
+        case Drag::loopEnd:
             break;
     }
 

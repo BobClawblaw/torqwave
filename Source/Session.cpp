@@ -3121,6 +3121,8 @@ namespace
             }
         }
 
+        std::optional<juce::int64> gridLine;
+
         if (targets.beatGrid.has_value())
         {
             // The grid lines either side of the frame.
@@ -3128,12 +3130,21 @@ namespace
 
             for (auto line : { below, above })
                 if (line >= 0)
+                {
                     consider (line);
+
+                    if (! gridLine.has_value() || std::abs (line - frame) < std::abs (*gridLine - frame))
+                        gridLine = line;
+                }
         }
         else if (targets.gridStep > 0)
         {
-            consider (juce::jmax ((juce::int64) 0, (juce::int64) std::llround ((double) frame / (double) targets.gridStep) * targets.gridStep));
+            gridLine = juce::jmax ((juce::int64) 0, (juce::int64) std::llround ((double) frame / (double) targets.gridStep) * targets.gridStep);
+            consider (*gridLine);
         }
+
+        if (! best.has_value() && targets.toGrid)
+            return gridLine;
 
         return best;
     }

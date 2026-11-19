@@ -200,6 +200,13 @@ namespace
         SessionSnap::Targets grid;
         grid.gridStep = 4800;
         check (SessionSnap::snap (s, 9603, 10, grid) == 9600, "snapping: the ruler's marks are targets");
+        check (SessionSnap::snap (s, 11000, 10, grid) == 11000, "snapping: a mark further than the tolerance is not a target");
+
+        auto hardGrid = grid;
+        hardGrid.toGrid = true;
+        check (SessionSnap::snap (s, 11000, 10, hardGrid) == 9600 && SessionSnap::snap (s, 12500, 10, hardGrid) == 14400
+                   && SessionSnap::snap (s, 1005, 10, hardGrid) == 1000,
+               "snapping: on the grid, the nearest mark however far, or a clip edge within the tolerance");
 
         SessionSnap::Targets cursor;
         cursor.extra = { 15000, 1008 };

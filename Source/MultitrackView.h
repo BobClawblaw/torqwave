@@ -531,7 +531,7 @@ public:
 
     /** Whether Loop Playback is on, so the band shows it (brighter when it is). */
     std::function<bool()> isLoopPlaybackOn;
-    static constexpr int loopStripHeight = 8;     // the band's strip, along the top of the time ruler
+    static constexpr int loopStripHeight = 12;    // the loop's half of the time ruler, its top
 
     /** With bars shown, the time as well, in a second row under the bar numbers. */
     void setShowTimeWithBars (bool show)          { timeWithBars = show; repaint(); }
@@ -645,6 +645,10 @@ private:
 
     /** What a press at p in the loop strip does: a new loop, or moving the loop or one of its ends. */
     Drag loopDragAt (juce::Point<int> p) const;
+
+    /** Where a time range's or the loop's edge goes for the mouse at frame: counting in bars, onto
+        the grid (the nearest line, as in Cubase), or a nearby clip edge or marker; else as snapped(). */
+    juce::int64 snappedToGrid (juce::int64 frame) const;
     int listWidth = headerWidth;
     bool overListEdge (juce::Point<int> p) const noexcept   { return p.x >= listWidth - 3 && p.x < listWidth + 4; }
     Tool tool = Tool::select;

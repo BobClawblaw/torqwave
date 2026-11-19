@@ -980,9 +980,11 @@ namespace SessionSnap
         int ignoreMarker = -1;             // the index of a marker being dragged
         juce::int64 gridStep = 0;
         std::optional<Metronome::Grid> beatGrid;
+        bool toGrid = false;               // with nothing within tolerance, the nearest grid line anyway
     };
 
-    /** The target nearest frame, when one is within tolerance frames; otherwise frame. */
+    /** The target nearest frame, when one is within tolerance frames; otherwise, with toGrid,
+        the nearest grid line; otherwise frame. */
     juce::int64 snap (const SessionState&, juce::int64 frame, juce::int64 tolerance, const Targets&);
 
     /** For a span being moved: how far to shift it so that its start or its end (whichever is
