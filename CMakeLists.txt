@@ -450,6 +450,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/MidiOutTests.cpp
     Tests/ControlSurfaceTests.cpp
     Tests/TempoFollowTests.cpp
+    Tests/StressTests.cpp
     Tests/SequenceTests.cpp
     Tests/SoundDesignTests.cpp
     Tests/PictureTests.cpp

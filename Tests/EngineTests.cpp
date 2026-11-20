@@ -100,6 +100,7 @@
 #include "MidiOutTests.h"
 #include "ControlSurfaceTests.h"
 #include "TempoFollowTests.h"
+#include "StressTests.h"
 #include "SequenceTests.h"
 #include "SoundDesignTests.h"
 #include "PictureTests.h"
@@ -603,6 +604,7 @@ int main (int argc, char* argv[])
     //   --sequences             only the tests of sequences and the Sequence Library
     //   --sounddesign           only the tests of sound design in the session (edit in place, clip effects, layering)
     //   --picture               only the tests of working to picture
+    //   --stress                only the stress test: how many tracks the mix keeps up with (minutes; not in the suite)
     //   --small                 only the tests of mixer scenes, channel strips and hardware inserts
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
     //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, or session
@@ -629,6 +631,13 @@ int main (int argc, char* argv[])
         runSequenceTests (engine);
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (args.contains ("--stress"))
+    {
+        AudioEngine engine;
+        runStressTests (engine);
+        return 0;
     }
 
     if (args.contains ("--tempo"))
