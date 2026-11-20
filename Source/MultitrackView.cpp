@@ -6043,6 +6043,10 @@ bool MultitrackView::moveSelectedClips (juce::int64 delta, const juce::String& d
         SessionEdits::moveNoteClip (next, id, where->first, next.tracks[(size_t) where->first].noteClips[(size_t) where->second].position + delta);
     }
 
+    auto moved = ids;
+    moved.insert (moved.end(), noteIds.begin(), noteIds.end());
+    SessionEdits::carryAutomation (next, *engine.session.getState(), moved);
+
     engine.session.apply (std::move (next), description, merge);
     return true;
 }
@@ -7184,6 +7188,20 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
     if (crossfading && drag == Drag::moveNotes)
         for (auto& c : dragGroup)
             SessionEdits::crossfade (next, c.id);
+
+    // The automation under the moved clips goes with them (a copy leaves it where it was).
+    if (drag == Drag::move || drag == Drag::moveNotes)
+    {
+        std::vector<juce::uint32> moved { drag == Drag::move ? dragClip.id : dragNoteClip.id };
+
+        for (auto& c : dragGroup)
+            moved.push_back (c.id);
+
+        for (auto& c : dragNoteGroup)
+            moved.push_back (c.id);
+
+        SessionEdits::carryAutomation (next, *engine.session.getState(), moved);
+    }
 
     // With Option held (pressed before the drag or during it), the clips are copied: they stay
     // where they were, and copies go where the drag has taken them.

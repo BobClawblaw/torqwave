@@ -90,7 +90,10 @@ void ClipProperties::apply (Field f)
                 break;
             case Field::start:
                 if (const auto to = startFrom(); to.has_value() && *to >= 0 && *to != c.position)
+                {
                     changed = SessionEdits::moveNoteClip (next, c.id, notes->first, *to);
+                    SessionEdits::carryAutomation (next, *engine.session.getState(), { c.id });
+                }
 
                 description = "Move Notes";
                 break;
@@ -143,7 +146,10 @@ void ClipProperties::apply (Field f)
             break;
         case Field::start:
             if (const auto to = startFrom(); to.has_value() && *to >= 0 && *to != c.position)
+            {
                 changed = SessionEdits::moveClip (next, c.id, where->first, *to);
+                SessionEdits::carryAutomation (next, *engine.session.getState(), { c.id });
+            }
 
             description = "Move Clip";
             break;

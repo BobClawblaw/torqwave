@@ -882,6 +882,14 @@ namespace SessionEdits
         Onto a bus, it only moves in time. */
     bool moveClip (SessionState&, juce::uint32 clipId, int toTrack, juce::int64 position);
 
+    /** Automation follows the clips (after moveClip or moveNoteClip in `s`, from `before`): for each
+        of these clips (audio or note) that moved in time and stayed on its track, the points of that
+        track's envelopes (volume, pan, surround pan, effect parameters) under where it was move
+        with it, the line across it kept as it was, replacing what was under where it went. An
+        envelope with no point under the clip is left alone, and so are clips moved to another
+        track. True when an envelope changed. */
+    bool carryAutomation (SessionState& s, const SessionState& before, const std::vector<juce::uint32>& clipIds);
+
     /** Sets where a clip starts and ends in the session, showing more or less of its audio, which
         stays where it is in time. Limited to the audio there is; at least one frame long. */
     bool trimClip (SessionState&, juce::uint32 clipId, juce::int64 start, juce::int64 end);

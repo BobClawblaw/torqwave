@@ -189,6 +189,12 @@ The same **Sends** panel holds the rest of a track's routing:
 **Sidechain:** a plug-in with a sidechain input can take a key track, chosen in the track's **FX** menu. For example, a compressor on the bass can be keyed from the kick.
 - **Folders:** **Add Folder** puts the selected track into a new folder (from a track's right-click menu, that track). A folder's mute and solo act on all its tracks, and it can be collapsed. A track leaves its folder by **Take Out of Folder** (in the Tracks menu and its right-click menu) or by dragging, as above. Deleting a folder keeps its tracks, out of it; its right-click menu can also delete them with it. **Export Folder Stems...** writes each folder as one file.
 
+### Master bus effects
+
+In a session, the effects rack is the **Master Bus Effects** panel (Window > Master Bus Effects, Option-Cmd-E). The whole mix goes through it once, after every track and bus, and Mix Down writes through it, so a limiter or EQ there is on the finished file. It is one chain on the sum, not one on each track: a compressor there reacts to the whole mix. A track's own effects are on its **FX** button. Tracks sent straight to a pair of the interface's outputs, and the metronome, don't go through it.
+
+The master bus effects are the editor's effects rack, so they are kept with a [project](11-projects-and-file-types.md), not in the session file.
+
 ## The mixer
 
 **Window > Mixer** (Shift-Cmd-M) shows a strip for each track and bus, with:
@@ -286,6 +292,8 @@ The modes are saved with the session but are not undo steps: an undo leaves ever
 *The Keys track's volume envelope, from -4 dB down to -11 dB for the verse and up to -2 dB for the chorus. The A button is lit because the track has automation.*
 
 A parameter that has an envelope is marked "(automated)" in the menu.
+
+**Automation follows the clips.** Moving clips in time on their track (dragging them, nudging them, or typing a new start in Clip Properties) takes the envelope points under them along, so a fade or a filter sweep drawn under a clip stays with it. Where they land, they replace the points that were there; where they were, a straight line joins the two sides. An envelope with no point under the clip stays as it is, and so does the automation when a clip moves to another track or is copied with Option.
 
 ## Tempo and bars
 
@@ -386,12 +394,14 @@ Ask Torq can set a clip's pitch shift and add effects to it (`set_clip_effects`)
 
 | Command | What it writes |
 |---|---|
-| Mix Down... (Shift-Cmd-E) | The session, or its time range, to one file. It can be delivered to a [loudness spec](05-loudness-and-mastering.md#meet-delivery-spec) |
+| Mix Down... (Shift-Cmd-E) | The session, or its time range, to one file, through the master bus effects. It can be delivered to a [loudness spec](05-loudness-and-mastering.md#meet-delivery-spec) |
 | Export Stems... | One file for each track, through its own effects |
 | Export Folder Stems... | One file for each folder |
 | Export Regions... | One mixed file for each region |
 | Bounce Track | Renders a track through its effects onto a new track, and mutes the original |
 | Freeze Track | Renders a track's effects so they stop using the processor while you work |
+
+Stems, regions, Bounce and Freeze leave the master bus effects out.
 
 A session can also be mixed in 5.1 or 7.1 (**Multitrack > Surround**). See [Video and surround](09-video-and-surround.md#surround-sessions).
 

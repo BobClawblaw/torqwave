@@ -3902,6 +3902,149 @@ bool replaceNoteClip (SessionState& s, juce::uint32 clipId, const NoteClip& valu
     return true;
 }
 
+namespace
+{
+    /** e with [at, at + length) holding `line` (from lineAcross, frames from 0) and the rest as it was. */
+    Envelope withLineOver (const Envelope& e, const Envelope& line, juce::int64 at, juce::int64 length)
+    {
+        Envelope out;
+
+        for (auto& p : e.points)
+            if (p.frame < at)
+                out.points.push_back (p);
+
+        if (at > 0 && ! out.points.empty() && out.points.back().frame < at - 1)
+            out.points.push_back ({ at - 1, e.valueAt (at - 1) });
+
+        for (auto& p : line.points)
+            out.points.push_back ({ p.frame + at, p.value });
+
+        const auto end = at + length;
+
+        if (std::none_of (e.points.begin(), e.points.end(), [end] (auto& p) { return p.frame == end; })
+            && e.points.back().frame > end - 1)
+            out.points.push_back ({ end, e.valueAt (end) });
+
+        for (auto& p : e.points)
+            if (p.frame >= end)
+                out.points.push_back (p);
+
+        return out;
+    }
+
+    /** e without its points in [start, end): a straight line joins the two sides there, each side
+        kept as it was (held by a point at start - 1 and one at end). */
+    Envelope withoutPoints (const Envelope& e, juce::int64 start, juce::int64 end)
+    {
+        Envelope out;
+
+        for (auto& p : e.points)
+            if (p.frame < start - 1)
+                out.points.push_back (p);
+
+        if (start > 0)
+            out.points.push_back ({ start - 1, e.valueAt (start - 1) });
+
+        if (std::none_of (e.points.begin(), e.points.end(), [end] (auto& p) { return p.frame == end; }))
+            out.points.push_back ({ end, e.valueAt (end) });
+
+        for (auto& p : e.points)
+            if (p.frame >= end)
+                out.points.push_back (p);
+
+        return out;
+    }
+
+    bool hasPointIn (const Envelope& e, juce::int64 start, juce::int64 end)
+    {
+        return std::any_of (e.points.begin(), e.points.end(), [=] (auto& p) { return p.frame >= start && p.frame < end; });
+    }
+}
+
+bool carryAutomation (SessionState& s, const SessionState& before, const std::vector<juce::uint32>& clipIds)
+{
+    struct Move { juce::int64 from, to, length; };
+    std::map<juce::uint32, std::vector<Move>> moves;   // by track id
+
+    const auto spanOf = [] (const SessionState& state, juce::uint32 id) -> std::optional<std::pair<juce::uint32, juce::Range<juce::int64>>>
+    {
+        if (const auto w = state.findClip (id))
+        {
+            auto& t = state.tracks[(size_t) w->first];
+            auto& c = t.clips[(size_t) w->second];
+            return std::make_pair (t.id, juce::Range<juce::int64> (c.position, c.getEnd()));
+        }
+
+        if (const auto w = state.findNoteClip (id))
+        {
+            auto& t = state.tracks[(size_t) w->first];
+            auto& c = t.noteClips[(size_t) w->second];
+            return std::make_pair (t.id, juce::Range<juce::int64> (c.position, c.getEnd()));
+        }
+
+        return std::nullopt;
+    };
+
+    for (auto id : clipIds)
+    {
+        const auto was = spanOf (before, id), now = spanOf (s, id);
+
+        if (was.has_value() && now.has_value() && was->first == now->first && was->second.getStart() != now->second.getStart()
+            && ! was->second.isEmpty())
+            moves[was->first].push_back ({ was->second.getStart(), now->second.getStart(), was->second.getLength() });
+    }
+
+    auto changed = false;
+
+    for (auto& [trackId, list] : moves)
+    {
+        const auto* old = before.findTrack (trackId);
+        const auto at = std::find_if (s.tracks.begin(), s.tracks.end(), [id = trackId] (auto& t) { return t.id == id; });
+        auto* track = at != s.tracks.end() ? &*at : nullptr;
+
+        if (old == nullptr || track == nullptr)
+            continue;
+
+        const auto carry = [&] (const Envelope& was, Envelope& e)
+        {
+            std::vector<std::pair<const Move*, Envelope>> lines;
+
+            for (auto& m : list)
+                if (hasPointIn (was, m.from, m.from + m.length))
+                    lines.emplace_back (&m, lineAcross (was, m.from, m.from + m.length));
+
+            if (lines.empty())
+                return;
+
+            auto next = e;
+
+            for (auto& [m, line] : lines)
+                next = withoutPoints (next, m->from, m->from + m->length);
+
+            for (auto& [m, line] : lines)
+            {
+                next = withLineOver (next, line, m->to, m->length);
+            }
+
+            changed = changed || next != e;
+            e = std::move (next);
+        };
+
+        carry (old->volumeEnvelope, track->volumeEnvelope);
+        carry (old->panEnvelope, track->panEnvelope);
+
+        for (size_t i = 0; i < track->surroundEnvelopes.size(); ++i)
+            carry (old->surroundEnvelopes[i], track->surroundEnvelopes[i]);
+
+        for (auto& effect : track->effectEnvelopes)
+            for (auto& was : old->effectEnvelopes)
+                if (was.slotId == effect.slotId && was.parameterId == effect.parameterId)
+                    carry (was.envelope, effect.envelope);
+    }
+
+    return changed;
+}
+
 bool moveNoteClip (SessionState& s, juce::uint32 clipId, int toTrack, juce::int64 position)
 {
     const auto where = s.findNoteClip (clipId);

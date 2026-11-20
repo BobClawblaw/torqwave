@@ -470,8 +470,92 @@ namespace
     }
 }
 
+namespace
+{
+    /** Moving clips takes the automation under them along. */
+    void testCarry()
+    {
+        SessionState s;
+        s.sampleRate = rate;
+        auto& t = s.addTrack();
+        addClip (s, t, 1, 10000, 5000, 1);   // 10000 to 15000
+        addClip (s, t, 1, 30000, 2000, 2);   // 30000 to 32000, no points under it
+        const auto moving = t.clips[0].id, still = t.clips[1].id;
+        const auto trackId = t.id;
+        // Volume: flat at -6 before, a dip under the clip, back to 0 after.
+        t.volumeEnvelope.points = { { 0, -6.0f }, { 11000, -20.0f }, { 13000, -3.0f }, { 20000, 0.0f } };
+        // An effect parameter, a ramp with no point under the clip.
+        t.effectEnvelopes.push_back ({ 7, "cutoff", Envelope { { { 0, 0.0f }, { 40000, 1.0f } } } });
+        const auto before = s;
+
+        SessionEdits::moveClip (s, moving, 0, 2000);   // 8000 earlier: now 2000 to 7000
+        const auto changed = SessionEdits::carryAutomation (s, before, { moving, still });
+        const auto& e = s.findTrack (trackId)->volumeEnvelope;
+        const auto& old = before.findTrack (trackId)->volumeEnvelope;
+
+        auto shapeKept = true;
+
+        for (juce::int64 f = 10000; f < 15000; f += 50)
+            shapeKept = shapeKept && std::abs (e.valueAt (f - 8000) - old.valueAt (f)) < 1.0e-4f;
+
+        auto outsideKept = true;   // before the new place and after where the line came back
+
+        for (juce::int64 f = 0; f < 2000; f += 50)
+            outsideKept = outsideKept && std::abs (e.valueAt (f) - old.valueAt (f)) < 1.0e-4f;
+
+        for (juce::int64 f = 20000; f < 40000; f += 50)
+            outsideKept = outsideKept && std::abs (e.valueAt (f) - old.valueAt (f)) < 1.0e-4f;
+
+        const auto noneLeft = std::none_of (e.points.begin(), e.points.end(), [] (auto& p) { return p.frame >= 10000 && p.frame < 15000; });
+        const auto rampAlone = s.findTrack (trackId)->effectEnvelopes[0].envelope == before.findTrack (trackId)->effectEnvelopes[0].envelope;
+
+        check (changed && shapeKept && outsideKept && noneLeft && rampAlone,
+               "automation: a clip moved 8000 frames earlier takes the volume points under it along, the line across it as it was, and leaves none behind; "
+               "the line before its new place and after its old one stays as it was, and an envelope with no point under the clip (an effect's ramp) is left alone");
+
+        // To another track: the automation stays where it was. Moved there and back as one edit, nothing changes.
+        auto other = before;
+        other.addTrack();
+        const auto otherBefore = other;
+        SessionEdits::moveClip (other, moving, 1, 2000);
+        const auto crossed = SessionEdits::carryAutomation (other, otherBefore, { moving });
+        auto still2 = before;
+        const auto same = ! SessionEdits::carryAutomation (still2, before, { moving, still });
+
+        check (! crossed && other.findTrack (trackId)->volumeEnvelope == old && same && still2.findTrack (trackId)->volumeEnvelope == old,
+               "automation: a clip moved to another track leaves its track's automation where it was; clips that didn't move change nothing");
+
+        // A note clip, later on its track, with two selected clips moving together.
+        SessionState n;
+        n.sampleRate = rate;
+        const auto inst = n.addTrack().id;
+        NoteClip a, b;
+        a.position = 0;     a.length = 4000;
+        b.position = 4000;  b.length = 4000;
+        a.id = n.nextId++;  b.id = n.nextId++;
+        n.tracks[0].noteClips = { a, b };
+        n.tracks[0].panEnvelope.points = { { 1000, -1.0f }, { 3000, 1.0f }, { 5000, -0.5f }, { 7000, 0.5f } };
+        const auto nBefore = n;
+
+        for (auto id : { a.id, b.id })
+            if (const auto w = n.findNoteClip (id))
+                SessionEdits::moveNoteClip (n, id, w->first, n.tracks[(size_t) w->first].noteClips[(size_t) w->second].position + 6000);
+
+        SessionEdits::carryAutomation (n, nBefore, { a.id, b.id });
+        const auto& pe = n.findTrack (inst)->panEnvelope;
+        const auto& pOld = nBefore.findTrack (inst)->panEnvelope;
+        auto together = true;
+
+        for (juce::int64 f = 0; f < 8000; f += 25)
+            together = together && std::abs (pe.valueAt (f + 6000) - pOld.valueAt (f)) < 1.0e-4f;
+
+        check (together, "automation: two note clips moved 6000 frames later together take all the pan points under them, each where it was against its clip");
+    }
+}
+
 void runAutomationTests (juce::AudioFormatManager& formats)
 {
+    testCarry();
     testEnvelopes();
     testFades();
     testSnapping();
