@@ -168,6 +168,43 @@ bool SequenceLibrary::isFixed (const juce::StringArray& path)
     return false;
 }
 
+juce::File SequenceLibrary::moveInto (const juce::File& sequence, const juce::StringArray& path, bool copy, juce::String& error) const
+{
+    const auto dir = folderAt (path);
+
+    if (sequence.getParentDirectory() == dir && ! copy)
+        return sequence;
+
+    auto q = SequenceFile::load (sequence, error);
+
+    if (! q.has_value())
+        return {};
+
+    const auto known = ! path.isEmpty() && std::any_of (roles().begin(), roles().end(), [&] (auto& r) { return r.name == path[0]; });
+    q->role = known ? path[0] : juce::String ("Inbox");
+    q->subRole = known && path.size() > 1 ? path[1] : juce::String();
+
+    if (! dir.isDirectory() && ! dir.createDirectory())
+    {
+        error = "The folder " + dir.getFileName() + " could not be made.";
+        return {};
+    }
+
+    const auto target = newFileIn (dir, sequence.getFileNameWithoutExtension());
+
+    if (error = SequenceFile::save (*q, target); error.isNotEmpty())
+        return {};
+
+    if (! copy && ! sequence.deleteFile())
+    {
+        target.deleteFile();
+        error = sequence.getFileName() + " could not be moved.";
+        return {};
+    }
+
+    return target;
+}
+
 juce::String SequenceLibrary::makeFolder (const juce::StringArray& parent, const juce::String& name) const
 {
     const auto legal = juce::File::createLegalFileName (name.trim());

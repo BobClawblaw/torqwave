@@ -160,6 +160,29 @@ public:
             setOpen (! isOpen());
     }
 
+    // Sequences dragged here from the panel move here (with Option, a copy); .tqseq files from the
+    // Finder are copied here.
+    bool isInterestedInDragSource (const juce::DragAndDropTarget::SourceDetails& details) override
+    {
+        return ! path().isEmpty() && fileOfDrag (details.description).existsAsFile();
+    }
+
+    void itemDropped (const juce::DragAndDropTarget::SourceDetails& details, int) override
+    {
+        view.dropInto (path(), { fileOfDrag (details.description).getFullPathName() },
+                       juce::ModifierKeys::currentModifiers.isAltDown());
+    }
+
+    bool isInterestedInFileDrag (const juce::StringArray& files) override
+    {
+        return ! path().isEmpty() && std::any_of (files.begin(), files.end(), [] (auto& f) { return f.endsWithIgnoreCase (SequenceFile::extension); });
+    }
+
+    void filesDropped (const juce::StringArray& files, int) override
+    {
+        view.dropInto (path(), files, true);
+    }
+
     /** The folders from the library down to this one (empty for the library itself). */
     juce::StringArray path() const
     {
@@ -569,4 +592,69 @@ void SequenceLibraryView::folderMenu (const juce::StringArray& path)
             }), true);
         }
     });
+}
+
+void SequenceLibraryView::dropInto (const juce::StringArray& path, const juce::StringArray& files, bool copy)
+{
+    juce::StringArray errors;
+    juce::File first;
+
+    for (auto& f : files)
+    {
+        const juce::File file (f);
+
+        if (! file.hasFileExtension (SequenceFile::extension))
+            continue;
+
+        // From outside the library it is always a copy, so the Finder's file stays where it is.
+        const auto inLibrary = file.isAChildOf (library.getFolder());
+
+        if (preview != nullptr && preview->getFile() == file && ! copy && inLibrary)
+            preview->stop();
+
+        juce::String error;
+        const auto moved = library.moveInto (file, path, copy || ! inLibrary, error);
+
+        if (error.isNotEmpty())
+            errors.add (file.getFileName() + ": " + error);
+        else if (first == juce::File())
+            first = moved;
+    }
+
+    refresh();
+
+    if (first != juce::File())
+        select (first);
+
+    if (! errors.isEmpty())
+        juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, copy ? "Copy Sequence" : "Move Sequence", errors.joinIntoString ("\n"));
+}
+
+void SequenceLibraryView::select (const juce::File& file)
+{
+    std::function<bool (juce::TreeViewItem&)> find = [&] (juce::TreeViewItem& item)
+    {
+        for (int i = 0; i < item.getNumSubItems(); ++i)
+        {
+            auto* sub = item.getSubItem (i);
+
+            if (auto* s = dynamic_cast<SequenceItem*> (sub); s != nullptr && s->getEntry().file == file)
+            {
+                for (auto* p = sub->getParentItem(); p != nullptr; p = p->getParentItem())
+                    p->setOpen (true);
+
+                sub->setSelected (true, true, juce::dontSendNotification);
+                tree.scrollToKeepItemVisible (sub);
+                return true;
+            }
+
+            if (find (*sub))
+                return true;
+        }
+
+        return false;
+    };
+
+    if (root != nullptr)
+        find (*root);
 }

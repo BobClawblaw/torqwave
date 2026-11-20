@@ -270,6 +270,27 @@ void runSequenceTests (AudioEngine& engine)
                    "sequence library panel: shows the three sequences, a search for \"my hats\" leaves the one in that folder, cleared all three again; a drag names its file");
         }
 
+        // Moving and copying between folders: the role follows the folder, a clash gets a new name.
+        {
+            juce::String moveError, copyError, sameError;
+            const auto inbox = folder.getChildFile ("Inbox").getChildFile ("Groove" + juce::String (SequenceFile::extension));
+            SequenceFile::save (q, inbox);
+            const auto moved = library.moveInto (inbox, { "Drums", "Hats & Tops" }, false, moveError);
+            const auto movedBack = SequenceFile::load (moved, moveError);
+            const auto copied = library.moveInto (moved, { "Pads" }, true, copyError);
+            const auto same = library.moveInto (copied, { "Pads" }, false, sameError);
+            const auto copyLoaded = SequenceFile::load (copied, copyError);
+            check (moveError.isEmpty() && ! inbox.exists() && moved.getFileName() == "Groove 3.tqseq" && moved.getParentDirectory() == folder.getChildFile ("Drums").getChildFile ("Hats & Tops")
+                       && movedBack.has_value() && movedBack->role == "Drums" && movedBack->subRole == "Hats & Tops" && movedBack->notes == q.notes
+                       && copyError.isEmpty() && moved.existsAsFile() && copied.getParentDirectory() == folder.getChildFile ("Pads")
+                       && copyLoaded.has_value() && copyLoaded->role == "Pads" && copyLoaded->subRole.isEmpty()
+                       && same == copied && sameError.isEmpty(),
+                   "sequence library: a sequence moved to another folder leaves the old one, takes that folder's role and sub-role and a free name (Groove 3), "
+                   "and keeps its notes; copied, the original stays; moved where it is, it stays as it is");
+            moved.deleteFile();
+            copied.deleteFile();
+        }
+
         // Folders: every fixed one shows, empty or not, with the user's own under their parents.
         {
             const auto nightFolder = library.makeFolder ({ "Pads", "Evolving" }, "Night");

@@ -34,6 +34,13 @@ public:
         own folders Rename and Move to Trash. */
     void folderMenu (const juce::StringArray& path);
 
+    /** Moves the sequence files into the folder at path (copy: copies them, as from the Finder
+        or with Option), then shows the first where it went. Errors are shown. */
+    void dropInto (const juce::StringArray& path, const juce::StringArray& files, bool copy);
+
+    /** Opens the folders down to a sequence and selects it (without playing it). */
+    void select (const juce::File&);
+
     /** The player for clicks (not owned); none leaves clicks silent. */
     void setPreview (SequencePreview*);
 

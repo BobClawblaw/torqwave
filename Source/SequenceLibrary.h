@@ -52,6 +52,11 @@ public:
     /** Whether a path is one of the fixed roles or sub-roles, which can't be renamed or removed. */
     static bool isFixed (const juce::StringArray& path);
 
+    /** Moves (or with copy, copies) a sequence file into the folder at `path`, its role and
+        sub-role set to that folder's, under a name not used there ("Name 2" and on). Returns the
+        new file, or none with an error. A sequence already there stays as it is. */
+    juce::File moveInto (const juce::File& sequence, const juce::StringArray& path, bool copy, juce::String& error) const;
+
     /** Makes a folder of this name in the folder at `parent`. Returns an error, or empty. */
     juce::String makeFolder (const juce::StringArray& parent, const juce::String& name) const;
 
