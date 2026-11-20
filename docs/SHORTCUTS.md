@@ -207,6 +207,8 @@ Keys a panel handles itself while it has the focus. They are not commands: they 
 | Piano Roll: move the selected notes an octave up or down | `Shift-Up` / `Shift-Down` |
 | Piano Roll: move the selected notes a grid step earlier or later | `Left` / `Right` |
 | Piano Roll: move the selected notes a quarter of a grid step | `Shift-Left` / `Shift-Right` |
+| Piano Roll: the selected notes a grid step shorter or longer | `Option-Left` / `Option-Right` |
+| Piano Roll: the selected notes a quarter of a grid step shorter or longer | `Option-Shift-Left` / `Option-Shift-Right` |
 | Piano Roll: remove the selected notes | `Delete` / `Forward Delete` |
 | Piano Roll: select every note | `Cmd-A` |
 | Sound Library: insert the selected sound at the cursor | `Return` |

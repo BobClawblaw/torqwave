@@ -431,6 +431,11 @@ struct NoteClip
     /** The frames the notes span on their timeline, from the first start to the last end, within offset + length. */
     juce::Range<juce::int64> notesRange() const noexcept;
 
+    /** Notes of one pitch starting together are one note (the longest, at the loudest velocity
+        and most likely probability): an instrument given the same note twice at once plays it
+        twice over, much louder. Returns how many went. */
+    int mergeDuplicateNotes();
+
     bool operator== (const NoteClip& o) const noexcept
     {
         return id == o.id && name == o.name && position == o.position && offset == o.offset && length == o.length && loopLength == o.loopLength

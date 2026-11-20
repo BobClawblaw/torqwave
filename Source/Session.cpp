@@ -427,6 +427,33 @@ juce::String ControllerLane::nameOf (int controller)
     }
 }
 
+int NoteClip::mergeDuplicateNotes()
+{
+    std::map<std::pair<int, juce::int64>, size_t> first;
+    std::vector<ClipNote> kept;
+    kept.reserve (notes.size());
+
+    for (auto& n : notes)
+    {
+        const auto [it, isNew] = first.try_emplace ({ n.pitch, n.start }, kept.size());
+
+        if (isNew)
+        {
+            kept.push_back (n);
+            continue;
+        }
+
+        auto& k = kept[it->second];
+        k.length = juce::jmax (k.length, n.length);
+        k.velocity = juce::jmax (k.velocity, n.velocity);
+        k.probability = juce::jmax (k.probability, n.probability);
+    }
+
+    const auto removed = (int) (notes.size() - kept.size());
+    notes = std::move (kept);
+    return removed;
+}
+
 const ControllerLane* NoteClip::findLane (int controller) const noexcept
 {
     for (auto& l : lanes)

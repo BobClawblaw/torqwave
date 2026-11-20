@@ -1487,6 +1487,15 @@ void runSequenceTests (AudioEngine& engine)
             fromFinder.filesDropped ({ file.getFullPathName() }, 10, 10);
             check (takes && refusesKit && openedByDrop && takesFile && fromFinder.getDocument().getFile() == file,
                    "sequencer: a sequence dropped from the Sequence Library opens in it, and one from the Finder too; a kit or a folder is refused");
+
+            // A sequence saved with one note five times over (as one was) plays it once.
+            SequenceFile::Sequence stacked;
+            stacked.length = 4 * SequenceFile::ticksPerBeat;
+            stacked.notes = { { 66, 4560, 240, 0.79f }, { 67, 4560, 240, 0.79f }, { 66, 4560, 240, 0.79f }, { 66, 4560, 240, 0.79f }, { 66, 4560, 240, 0.79f },
+                              { 66, 4560, 240, 0.79f }, { 68, 4560, 240, 0.79f }, { 72, 0, 240, 0.25f } };
+            const auto asClip = SequenceFile::toClip (stacked, sessionAt (120.0), 0);
+            check (asClip.notes.size() == 4,
+                   "sequences: a note saved five times over at one start plays once (" + juce::String ((int) asClip.notes.size()) + " notes of 8)");
             juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
             folder.deleteRecursively();
         }

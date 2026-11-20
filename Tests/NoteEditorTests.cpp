@@ -108,6 +108,35 @@ void runNoteEditorTests()
                && std::abs (rig.notes()[0].velocity - 64.0f / 127.0f) < 1.0e-6f && std::abs (rig.notes()[1].velocity - 64.0f / 127.0f) < 1.0e-6f,
            "piano roll: Shift-click adds a note to the selection, and the velocity slider sets every selected note");
 
+    // The slider itself: a value typed in is kept at once; a drag is kept at its end, the clip not
+    // read again while it lasts (the timer's re-read used to put the old velocity back).
+    {
+        juce::Slider* slider = nullptr;
+
+        for (auto* child : e.getChildren())
+            if (auto* sl = dynamic_cast<juce::Slider*> (child); sl != nullptr && juce::exactlyEqual (sl->getMaximum(), 127.0))
+                slider = sl;
+
+        rig.click (rig.at (60, 36500));   // one note chosen
+        const auto chosen = *e.getSelectedNotes().begin();
+        slider->setValue (30.0, juce::sendNotificationSync);
+        const auto typed = rig.notes()[(size_t) chosen].velocity;
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (250);
+        const auto typedKept = rig.notes()[(size_t) chosen].velocity;
+
+        slider->onDragStart();
+        slider->setValue (90.0, juce::sendNotificationSync);
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (250);   // the timer runs meanwhile
+        const auto midDrag = e.getShown()->clip.notes[(size_t) chosen].velocity;
+        slider->onDragEnd();
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (150);
+
+        check (slider != nullptr && std::abs (typed - 30.0f / 127.0f) < 1.0e-6f && std::abs (typedKept - 30.0f / 127.0f) < 1.0e-6f
+                   && std::abs (midDrag - 90.0f / 127.0f) < 1.0e-6f && std::abs (rig.notes()[(size_t) chosen].velocity - 90.0f / 127.0f) < 1.0e-6f
+                   && rig.last() == "Note Velocity",
+               "piano roll: a velocity typed into the slider is kept at once and stays; dragged, it stays while the timer runs and is kept when the drag ends");
+    }
+
     // The arrow keys move the selection: up a semitone, right a grid step, Shift-up an octave.
     e.keyPressed (juce::KeyPress (juce::KeyPress::upKey));
     e.keyPressed (juce::KeyPress (juce::KeyPress::rightKey));
@@ -300,4 +329,65 @@ void runNoteEditorTests()
     }
 
     check (painted, "piano roll: drawn in every theme");
+
+    // Selecting by dragging, a note's length by its end or Option-arrows, notes on one another, the wheel.
+    {
+        Rig gestures;
+        auto& ed = gestures.editor;
+        gestures.click (gestures.at (60, 0));
+        gestures.click (gestures.at (64, 12000));
+        gestures.click (gestures.at (67, 24000));
+        const auto addedThree = gestures.notes().size() == 3 && gestures.last() == "Add Note";
+
+        // A drag on empty grid boxes notes in, adding none.
+        const auto topLeft = gestures.at (68, 6000).translated (0.0f, -20.0f), bottomRight = gestures.at (63, 30000).translated (0.0f, 20.0f);
+        gestures.drag (topLeft, bottomRight);
+        const auto boxedIn = gestures.notes().size() == 3 && ed.getSelectedNotes() == std::set<int> { 1, 2 };
+
+        // Cmd-drag adds a note and drags its length; a plain click adds one a grid step long.
+        const auto from = gestures.at (72, 0).translated (2.0f, 0.0f);
+        gestures.drag (from, gestures.at (72, 18000).translated (2.0f, 0.0f), juce::ModifierKeys::leftButtonModifier | juce::ModifierKeys::commandModifier);
+        const auto drawnLong = gestures.notes().size() == 4 && gestures.notes()[3].pitch == 72 && gestures.notes()[3].length == 24000;
+
+        // Option-right lengthens the chosen notes a grid step, Option-left shortens them.
+        ed.selectAll();
+        const auto lengthsBefore = gestures.notes();
+        ed.keyPressed (juce::KeyPress (juce::KeyPress::rightKey, juce::ModifierKeys::altModifier, 0));
+        const auto madeLonger = gestures.notes()[0].length == lengthsBefore[0].length + 6000 && gestures.notes()[1].length == lengthsBefore[1].length + 6000 && gestures.last() == "Note Length";
+        ed.keyPressed (juce::KeyPress (juce::KeyPress::leftKey, juce::ModifierKeys::altModifier, 0));
+        ed.keyPressed (juce::KeyPress (juce::KeyPress::leftKey, juce::ModifierKeys::altModifier, 0));
+        const auto madeShorter = gestures.notes()[3].length == lengthsBefore[3].length - 6000;
+
+        // Grabbing just past a note's end drags its length.
+        const auto end = ed.noteBounds (gestures.notes()[1]);
+        const auto grab = juce::Point<float> (end.getRight() + 2.0f, end.getCentreY());
+        const auto was = gestures.notes()[1].length;
+        gestures.drag (grab, grab.translated (ed.noteBounds ({ 64, 0, 12000, 1.0f }).getWidth(), 0.0f));
+        const auto endDragged = gestures.notes()[1].length > was && gestures.notes()[1].start == 12000 && gestures.last() == "Note Length";
+
+        // Notes on one another are one: moved onto the same pitch and start, they merge, the loudest kept.
+        gestures.shown.clip.notes = { { 66, 4560, 240, 0.5f }, { 66, 4560, 480, 0.8f }, { 66, 4560, 240, 0.3f }, { 67, 4560, 240, 0.8f } };
+        ed.refresh();
+        ed.selectAll();
+        ed.keyPressed (juce::KeyPress (juce::KeyPress::upKey));
+        const auto mergedOnto = gestures.notes().size() == 2 && gestures.notes()[0].pitch == 67 && gestures.notes()[0].length == 480 && std::abs (gestures.notes()[0].velocity - 0.8f) < 1.0e-6f
+                                && gestures.notes()[1].pitch == 68 && ed.getSelectedNotes().size() == 2;
+
+        // A trackpad's small wheel steps add up to rows.
+        const auto y0 = ed.noteBounds ({ 60, 0, 1, 1.0f }).getY();
+        juce::MouseWheelDetails tiny {};
+        tiny.deltaY = 0.03f;
+
+        for (int i = 0; i < 10; ++i)
+            ed.mouseWheelMove (eventAt (ed, { 300.0f, 200.0f }, { 300.0f, 200.0f }), tiny);
+
+        const auto wheelScrolled = ! juce::exactlyEqual (ed.noteBounds ({ 60, 0, 1, 1.0f }).getY(), y0);
+
+        check (addedThree && boxedIn && drawnLong && madeLonger && madeShorter && endDragged && mergedOnto && wheelScrolled,
+               "piano roll: a drag on empty grid boxes notes in (adding none), a click adds a note, Cmd-drag draws one's length; Option-right and -left lengthen "
+               "and shorten the chosen notes a grid step; a grab just past a note's end drags its length; notes moved onto one another merge (the longest, "
+               "loudest kept, still chosen); and a trackpad's small wheel steps add up to rows"
+                   + juce::String (addedThree ? "" : " [added]") + (boxedIn ? "" : " [boxed]") + (drawnLong ? "" : " [drawn]") + (madeLonger ? "" : " [longer]")
+                   + (madeShorter ? "" : " [shorter]") + (endDragged ? "" : " [stretched]") + (mergedOnto ? "" : " [merged]") + (wheelScrolled ? "" : " [scrolled]"));
+    }
 }

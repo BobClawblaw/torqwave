@@ -114,10 +114,18 @@ NoteEditor::NoteEditor()
             if (juce::isPositiveAndBelow (i, (int) shown->clip.notes.size()))
                 shown->clip.notes[(size_t) i].velocity = getVelocity();
 
-        repaint();
+        // Typed, stepped or scrolled: kept at once. Dragged: kept when the drag ends (the clip
+        // isn't read again meanwhile, which would undo it).
+        if (velocityDragging)
+            repaint();
+        else
+            commit ("Note Velocity");
     };
+    velocitySlider.onDragStart = [this] { velocityDragging = true; };
     velocitySlider.onDragEnd = [this]
     {
+        velocityDragging = false;
+
         if (shown.has_value() && ! selected.empty())
             commit ("Note Velocity");
     };
@@ -187,7 +195,7 @@ void NoteEditor::timerCallback()
         repaint();
     }
 
-    if (++ticks % 3 == 0 && drag == Drag::none)
+    if (++ticks % 3 == 0 && drag == Drag::none && ! velocityDragging)
         refresh();
 }
 
@@ -282,10 +290,13 @@ juce::int64 NoteEditor::gridStepFrames() const noexcept
 
 void NoteEditor::setVelocity (float velocity)
 {
-    velocitySlider.setValue (juce::jlimit (1.0, 127.0, (double) std::round (velocity * 127.0f)), juce::sendNotificationSync);
+    const auto value = juce::jlimit (1.0, 127.0, (double) std::round (velocity * 127.0f));
 
-    if (shown.has_value() && ! selected.empty())
-        commit ("Note Velocity");
+    // The slider keeps a change itself (onValueChange); at its value already, the chosen notes still take it.
+    if (! juce::exactlyEqual (velocitySlider.getValue(), value))
+        velocitySlider.setValue (value, juce::sendNotificationSync);
+    else if (velocitySlider.onValueChange != nullptr)
+        velocitySlider.onValueChange();
 }
 
 juce::int64 NoteEditor::snapped (juce::int64 frame) const
@@ -957,6 +968,10 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
         {
             g.setColour (Theme::textStrong);
             g.drawRoundedRectangle (r.getIntersection (area.toFloat()), 2.0f, 1.5f);
+
+            // Its end's grip: drag it for the length (or Option-left and right).
+            if (r.getWidth() >= 8.0f)
+                g.fillRect (juce::Rectangle<float> (r.getRight() - 4.0f, r.getY() + 1.0f, 3.0f, r.getHeight() - 2.0f).getIntersection (area.toFloat()));
         }
     }
 
@@ -1172,7 +1187,8 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
         return;
 
     const auto p = e.position;
-    const auto hit = noteAt (p);
+    const auto past = noteAt (p.translated (-3.0f, 0.0f));
+    const auto hit = noteAt (p) >= 0 ? noteAt (p) : past >= 0 && onNoteEnd (past, p) ? past : -1;
     base = shown;
     dragStart = p;
 
@@ -1216,8 +1232,7 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
             selected = { hit };
 
         const auto& n = shown->clip.notes[(size_t) hit];
-        const auto r = noteBounds (n);
-        drag = p.x >= r.getRight() - juce::jmin (6.0f, r.getWidth() / 3.0f) ? Drag::resize : Drag::move;
+        drag = onNoteEnd (hit, p) ? Drag::resize : Drag::move;
         dragNote = hit;
         dragFrame = frameAt (p.x);
         dragPitch = pitchAt (p.y);
@@ -1241,7 +1256,8 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
-    // Empty grid: a note here, or with Shift (or a drag) a box of notes.
+    // Empty grid: Shift-drag, or a drag, a box of notes; Cmd a note at once, dragging on for its
+    // length; a click a note.
     if (e.mods.isShiftDown())
     {
         drag = Drag::box;
@@ -1249,6 +1265,17 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
+    if (e.mods.isCommandDown())
+    {
+        addNoteAt (p);
+        return;
+    }
+
+    drag = Drag::pending;
+}
+
+void NoteEditor::addNoteAt (juce::Point<float> p)
+{
     const auto step = gridStepFrames();
     ClipNote n;
     n.pitch = scaleLock ? getKey().snap (pitchAt (p.y)) : pitchAt (p.y);
@@ -1270,6 +1297,32 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
     base = shown;
     commit ("Add Note");
     base = shown;
+}
+
+bool NoteEditor::onNoteEnd (int note, juce::Point<float> p) const
+{
+    if (! shown.has_value() || ! juce::isPositiveAndBelow (note, (int) shown->clip.notes.size()))
+        return false;
+
+    // The last third of a short note, the last 10 pixels of a long one, and 3 pixels past its end.
+    const auto r = noteBounds (shown->clip.notes[(size_t) note]);
+    return p.y >= r.getY() && p.y < r.getBottom() && p.x >= r.getRight() - juce::jlimit (3.0f, 10.0f, r.getWidth() / 3.0f) && p.x <= r.getRight() + 3.0f;
+}
+
+void NoteEditor::mouseMove (const juce::MouseEvent& e)
+{
+    auto cursor = juce::MouseCursor::NormalCursor;
+
+    if (shown.has_value() && ! showingDrums() && rollArea().contains (e.getPosition()))
+    {
+        const auto hit = noteAt (e.position);
+        const auto near = hit >= 0 ? hit : noteAt (e.position.translated (-3.0f, 0.0f));
+
+        if (near >= 0 && onNoteEnd (near, e.position))
+            cursor = juce::MouseCursor::LeftRightResizeCursor;
+    }
+
+    setMouseCursor (cursor);
 }
 
 void NoteEditor::drumMouseDown (const juce::MouseEvent& e)
@@ -1383,6 +1436,15 @@ void NoteEditor::mouseDrag (const juce::MouseEvent& e)
         return;
 
     const auto p = e.position;
+
+    // Dragged from empty grid: a box of notes.
+    if (drag == Drag::pending)
+    {
+        if (p.getDistanceFrom (dragStart) < 4.0f)
+            return;
+
+        drag = Drag::box;
+    }
 
     // A drum step's velocity: up louder, down softer, 100 pixels from silent to full.
     if (drag == Drag::velocity)
@@ -1505,6 +1567,18 @@ void NoteEditor::mouseUp (const juce::MouseEvent&)
         return;
     }
 
+    // A click on empty grid: a note there.
+    if (was == Drag::pending && shown.has_value())
+    {
+        addNoteAt (dragStart);
+        drag = Drag::none;
+        silence();
+        base.reset();
+        refreshControls();
+        repaint();
+        return;
+    }
+
     // A click on a set drum step (not one this click set) takes it away; a drag set its velocity.
     if (was == Drag::velocity && shown.has_value() && juce::isPositiveAndBelow (dragNote, (int) shown->clip.notes.size()))
     {
@@ -1561,8 +1635,12 @@ void NoteEditor::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWhe
         return;
     }
 
+    // A trackpad's small steps add up to whole rows.
+    rowScroll += wheel.deltaY * 12.0f;
+    const auto whole = (int) rowScroll;
+    rowScroll -= (float) whole;
     const auto rows = juce::jmax (1, rollArea().getHeight() / rowPixels);
-    lowPitch = juce::jlimit (0, juce::jmax (0, 128 - rows), lowPitch + (int) std::round (wheel.deltaY * 12.0f));
+    lowPitch = juce::jlimit (0, juce::jmax (0, 128 - rows), lowPitch + whole);
     repaint();
 }
 
@@ -1592,6 +1670,14 @@ bool NoteEditor::keyPressed (const juce::KeyPress& key)
     const auto step = gridStepFrames() > 0 ? gridStepFrames() : juce::jmax ((juce::int64) 1, (juce::int64) std::llround (0.05 * shown->sampleRate));
     const auto shift = key.getModifiers().isShiftDown();
 
+    // Option with left and right: the chosen notes shorter or longer by a grid step (a quarter with Shift).
+    if (key.getModifiers().isAltDown() && (key.getKeyCode() == juce::KeyPress::leftKey || key.getKeyCode() == juce::KeyPress::rightKey))
+    {
+        const auto by = shift ? juce::jmax ((juce::int64) 1, step / 4) : step;
+        resizeSelected (key.getKeyCode() == juce::KeyPress::rightKey ? by : -by);
+        return true;
+    }
+
     if (key.getKeyCode() == juce::KeyPress::upKey)         moveSelected (shift ? 12 : 1, 0);
     else if (key.getKeyCode() == juce::KeyPress::downKey)  moveSelected (shift ? -12 : -1, 0);
     else if (key.getKeyCode() == juce::KeyPress::leftKey)  moveSelected (0, shift ? -juce::jmax ((juce::int64) 1, step / 4) : -step);
@@ -1600,6 +1686,23 @@ bool NoteEditor::keyPressed (const juce::KeyPress& key)
         return false;
 
     return true;
+}
+
+void NoteEditor::resizeSelected (juce::int64 frames)
+{
+    if (! shown.has_value() || selected.empty())
+        return;
+
+    const auto whole = wholeLength();
+
+    for (auto i : selected)
+        if (juce::isPositiveAndBelow (i, (int) shown->clip.notes.size()))
+        {
+            auto& n = shown->clip.notes[(size_t) i];
+            n.length = juce::jlimit ((juce::int64) 1, juce::jmax ((juce::int64) 1, whole - n.start), n.length + frames);
+        }
+
+    commit ("Note Length");
 }
 
 void NoteEditor::moveSelected (int semitones, juce::int64 frames)
@@ -1668,6 +1771,26 @@ void NoteEditor::removeSelected()
 
 void NoteEditor::commit (const juce::String& description)
 {
+    // Notes landing on one another (moved, snapped to a key, pasted) are one note: the selection
+    // is kept by the notes' places, not their indices.
+    if (shown.has_value())
+    {
+        std::set<std::pair<int, juce::int64>> chosen;
+
+        for (auto i : selected)
+            if (juce::isPositiveAndBelow (i, (int) shown->clip.notes.size()))
+                chosen.insert ({ shown->clip.notes[(size_t) i].pitch, shown->clip.notes[(size_t) i].start });
+
+        if (shown->clip.mergeDuplicateNotes() > 0)
+        {
+            selected.clear();
+
+            for (int i = 0; i < (int) shown->clip.notes.size(); ++i)
+                if (chosen.count ({ shown->clip.notes[(size_t) i].pitch, shown->clip.notes[(size_t) i].start }) > 0)
+                    selected.insert (i);
+        }
+    }
+
     if (shown.has_value() && apply != nullptr)
         apply (shown->clip, description);
 

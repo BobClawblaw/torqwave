@@ -47,10 +47,11 @@ Double-click a note clip, or choose **Window > Piano Roll**, to edit the clip's 
 
 | To | Do |
 |---|---|
-| Add a note | Click empty grid. It lands on the grid line at or before the mouse, one grid step long, at the velocity the slider shows |
+| Add a note | Click empty grid. It lands on the grid line at or before the mouse, one grid step long, at the velocity the slider shows. Cmd-drag on empty grid draws a note and its length in one go |
 | Move a note | Drag it: up and down for pitch, sideways for time (snapped to the grid) |
-| Change its length | Drag its right edge |
+| Change its length | Drag its right end: the pointer becomes a left-right arrow there (a selected note shows a grip at its end). Or select notes and press Option-Right or Option-Left: a grid step longer or shorter (Shift: a quarter step) |
 | Select notes | Click one; Shift-click adds or takes away; drag across empty grid for a box; Cmd-A for all |
+| Notes on one another | Two notes of one pitch starting together are one note (the longest and loudest): moving, snapping or pasting notes onto one another merges them |
 | Remove notes | Option-click one, or press Delete for the selected |
 | Nudge the selected notes | Up and Down move a semitone (Shift: an octave). Left and Right move a grid step (Shift: a quarter step) |
 | Set velocity | Select the notes and move the velocity slider, or right-click one and choose from **Velocity** |
@@ -60,7 +61,7 @@ Double-click a note clip, or choose **Window > Piano Roll**, to edit the clip's 
 | Zoom in or out on time | Cmd-scroll or pinch, around the mouse; or **-** and **+** at the top right. **Fit** shows the whole clip |
 | Move along in time | The scroll bar under the notes, a sideways scroll, or Shift-scroll |
 | Make the rows taller or shorter | Option-scroll |
-| Move up and down the keys | Scroll |
+| Move up and down the keys | Scroll (a trackpad's two-finger scroll too) |
 
 A clip whose pattern repeats opens on its first repeat, so a one-bar loop in a nine-bar clip fills the width; **Fit** shows all nine bars.
 

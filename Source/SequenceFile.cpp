@@ -107,6 +107,7 @@ NoteClip toClip (const Sequence& q, const SessionState& s, juce::int64 position)
         c.lanes.push_back (std::move (lane));
     }
 
+    c.mergeDuplicateNotes();
     return c;
 }
 

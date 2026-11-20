@@ -182,6 +182,7 @@ public:
     void mouseDown (const juce::MouseEvent&) override;
     void mouseDrag (const juce::MouseEvent&) override;
     void mouseUp (const juce::MouseEvent&) override;
+    void mouseMove (const juce::MouseEvent&) override;   // the resize cursor over a note's end
     void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
     void mouseMagnify (const juce::MouseEvent&, float scaleFactor) override;
     bool keyPressed (const juce::KeyPress&) override;
@@ -191,7 +192,7 @@ public:
     static constexpr int minRowHeight = 6, maxRowHeight = 32, scrollHeight = 10;
 
 private:
-    enum class Drag { none, move, resize, box, loop, lanePoint, keys, velocity, nothing };
+    enum class Drag { none, move, resize, box, loop, lanePoint, keys, velocity, pending, nothing };   // pending: on empty grid, a note on release, a box once dragged
 
     void timerCallback() override;
     void scrollBarMoved (juce::ScrollBar*, double newRangeStart) override;
@@ -210,8 +211,13 @@ private:
     float xOf (juce::int64 frame) const;
     std::optional<juce::int64> playhead;   // on the notes' timeline, as last read
     int ticks = 0;
+    bool velocityDragging = false;
+    float rowScroll = 0.0f;          // the wheel's scrolling not yet a whole row (a trackpad's small steps add up)   // the velocity slider is being dragged: its change is kept at the end
     void scrollToNotes();
     void moveSelected (int semitones, juce::int64 frames);
+    void resizeSelected (juce::int64 frames);            // longer or shorter, each at least a frame and inside the timeline
+    void addNoteAt (juce::Point<float>);                 // a note where the mouse is, then dragging on sets its length
+    bool onNoteEnd (int note, juce::Point<float>) const; // the mouse is on the note's right end, to drag its length
     void refreshControls();
     void sound (int pitch, float velocity);   // the note heard now, ending the one before
     void showToolsMenu();
