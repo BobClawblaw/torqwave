@@ -99,6 +99,7 @@
 #include "DrumGridTests.h"
 #include "MidiOutTests.h"
 #include "ControlSurfaceTests.h"
+#include "TempoFollowTests.h"
 #include "MetronomeTests.h"
 #include "MixerTests.h"
 #include "BounceTests.h"
@@ -594,6 +595,7 @@ int main (int argc, char* argv[])
     //   --write-check <folder>  only write categories and tags into copies of WAV files from this folder, and check them
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
     //   --ai                    only the AI assistance tests (a mock server; no network)
+    //   --tempo                 only the tests of audio that follows the tempo
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
     //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, or session
     juce::StringArray args;
@@ -612,6 +614,13 @@ int main (int argc, char* argv[])
 
     if (const auto i = args.indexOf ("--ai-eval"); i >= 0)
         return runAiEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {}), valueOf ("--ai-eval-set")) == 0 ? 0 : 1;
+
+    if (args.contains ("--tempo"))
+    {
+        runTempoFollowTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
 
     if (args.contains ("--ai"))
     {
@@ -801,6 +810,7 @@ int main (int argc, char* argv[])
         runDrumGridTests (engine.formatManager);
         runMidiOutTests();
         runControlSurfaceTests (engine);
+        runTempoFollowTests();
         runMetronomeTests (engine.formatManager);
         runMixerTests (engine);
         runBounceTests();

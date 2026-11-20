@@ -717,7 +717,20 @@ private:
 
     enum class Drag { none, range, move, trimStart, trimEnd, fadeIn, fadeOut, envelopePoint, marker, clipGain, clipGainPoint, scrub,
                       stretchStart, stretchEnd, moveNotes, trimNotesStart, trimNotesEnd, stretchNotesStart, stretchNotesEnd, drawNotes, rubberBand, listWidth,
-                      loopNew, loopMove, loopStart, loopEnd, compTake, sectionNew, sectionMove, sectionStart, sectionEnd };
+                      loopNew, loopMove, loopStart, loopEnd, compTake, sectionNew, sectionMove, sectionStart, sectionEnd, warpMarker };
+
+    /** A following clip's warp marker under p (its handle, just under the title bar): the clip and the marker's place. */
+    std::optional<std::pair<juce::uint32, int>> warpMarkerAt (juce::Point<int> p) const;
+
+    /** Where a following clip's warp marker plays, as a session frame. */
+    juce::int64 warpMarkerFrame (const SessionClip&, const SessionClip::WarpMarker&) const;
+
+    /** The clip menu's Tempo submenu, for a clip that follows the tempo or could. */
+    juce::PopupMenu tempoMenu (const SessionClip&);
+    void askClipTempo (juce::uint32 clipId);   // Set Clip Tempo...: typed, from its name or the audio
+    juce::uint32 dragWarpClip = 0;             // the clip whose marker is being dragged, which marker, and the clip's anchor (beats)
+    int dragWarp = -1;
+    double dragWarpAnchor = 0.0;
 
     /** What a press at p in the loop strip does: a new loop, or moving the loop or one of its ends. */
     Drag loopDragAt (juce::Point<int> p) const;

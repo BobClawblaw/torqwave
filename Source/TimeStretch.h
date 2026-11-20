@@ -23,6 +23,23 @@ namespace TimeStretch
     juce::AudioBuffer<float> stretch (const juce::AudioBuffer<float>& input, double ratio, double sampleRate,
                                       const std::function<bool (float)>& progress = {}, Method = Method::signalsmith);
 
+    /** A point on a stretch's map: where an input position comes out. */
+    struct MapPoint
+    {
+        double in = 0.0, out = 0.0;
+    };
+
+    /** The input stretched along a map, at its pitch, every channel in step: each input position
+        on the map comes out at its output position, and those between them in proportion. The map
+        starts at (0, 0) and ends at the input's length, both sides increasing, each part's ratio
+        (output over input) more than 0; the output is round (the last output position) long. Each
+        part is stretched with Signalsmith Stretch at its one ratio, from a quarter second of the
+        audio either side of it, and the parts crossfaded over the joinSeconds before each meeting point, so what starts
+        on a point is heard whole from the part it starts.
+        progress as for stretch; empty when it stops, or the map is unusable. */
+    juce::AudioBuffer<float> stretchAlong (const juce::AudioBuffer<float>& input, const std::vector<MapPoint>& map, double sampleRate,
+                                           const std::function<bool (float)>& progress = {});
+
     /** Semitones a pitch shift can go up or down: as far as stretching can go. */
     inline constexpr double widestShift = 12.0;
 

@@ -117,6 +117,32 @@ struct SessionClip
     }
 
     juce::int64 getEnd() const noexcept    { return position + length; }
+
+    /** Audio that follows the tempo (see TempoFollow.h). The clip's audio is then `original`
+        stretched to the session's tempo map, from the beat where the original's first frame
+        plays, so that its beats land on the session's: `audio`, `offset` and `length` are of that
+        stretched audio, as for any clip, so playback and mixdowns read it as they read any other.
+        It is stretched again, outside the undo steps, whenever the tempo map, the clip's tempo or
+        its warp markers no longer match what it was stretched for (`renderedFor`). */
+    struct WarpMarker
+    {
+        juce::int64 frame = 0;             // a frame of the original audio
+        double beat = 0.0;                 // the beat it plays on, counted from where the original's first frame plays
+
+        bool operator== (const WarpMarker& o) const noexcept { return frame == o.frame && juce::exactlyEqual (beat, o.beat); }
+    };
+
+    struct TempoFollow
+    {
+        double bpm = 0.0;                  // the audio's own tempo; 0: the clip plays at its own speed
+        AudioDocument::Snapshot original;  // the audio as it is in its file (`source`)
+        std::vector<WarpMarker> warps;     // sorted, frames and beats each increasing; the first frame is pinned to beat 0
+        juce::String renderedFor;          // what `audio` was stretched for (TempoFollow::key); empty: not stretched yet
+
+        bool follows() const noexcept      { return bpm > 0.0 && original != nullptr; }
+    };
+
+    TempoFollow tempoFollow;
 };
 
 namespace Comp
@@ -789,6 +815,21 @@ namespace SessionEdits
         in, the second the fade out. */
     bool splitClip (SessionState&, juce::uint32 clipId, juce::int64 frame);
 
+    /** An audio clip follows the tempo at its own tempo `bpm` (20 to 400), or with 0 plays at its own
+        speed again (see TempoFollow.h). It keeps where it starts and the part of its audio it plays,
+        so its length changes with the stretch; its track becomes musical. False for a clip with
+        takes, a locked one, a tempo out of range, or no change. */
+    bool setClipTempo (SessionState&, juce::uint32 clipId, double bpm);
+
+    /** A following clip's warp markers (frames of its original pinned to beats from where its first
+        frame plays), sorted by frame; frames and beats must each increase, from after the first
+        frame. Keeps where it starts and the part it plays. False for a clip that doesn't follow, a
+        locked one, markers out of order, or no change. */
+    bool setWarpMarkers (SessionState&, juce::uint32 clipId, std::vector<SessionClip::WarpMarker>);
+
+    /** Splits a clip at each of these session frames inside it (Slice at Transients); how many it made. */
+    int sliceClip (SessionState&, juce::uint32 clipId, std::vector<juce::int64> frames);
+
     /** Sets a clip's gain, limited to SessionClip::minGainDb to maxGainDb. */
     bool setClipGain (SessionState&, juce::uint32 clipId, float gainDb);
 
@@ -1348,6 +1389,10 @@ public:
 
     /** Track effects live outside the undoable state; changing them still needs saving. */
     void markEffectsChanged();
+
+    /** Puts in a state that only brings the current one up to date (audio stretched to the tempo,
+        TempoFollow::Renderer): in its place, not a step of its own, and not a change to save. */
+    void refresh (SessionState);
 
     /** Frees states dropped from history once the audio thread has let go of them. */
     void releaseUnusedStates();

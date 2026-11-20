@@ -17,6 +17,7 @@
 #include "RecentFiles.h"
 #include "Loudness.h"
 #include "ControlSurface.h"
+#include "TempoFollow.h"
 #include "MultitrackView.h"
 #include "NoiseReduction.h"
 #include "ParametricEq.h"
@@ -843,6 +844,7 @@ private:
     std::map<juce::String, std::unique_ptr<juce::Component>> madePanels;   // the panels made when shown
     std::unique_ptr<ControlSurface> surface;   // a Mackie Control surface, when one is set up
     std::unique_ptr<MidiLearn> midiLearn;
+    std::unique_ptr<TempoFollow::Renderer> tempoRenderer;   // stretches clips that follow the tempo, in the background
     void transportFromController (ControlSurface::Transport);
     void addMidiLearnMenu (juce::PopupMenu&, juce::uint32 trackId);
     void startMidiLearn (const MidiBinding::Target&, const juce::String& what);

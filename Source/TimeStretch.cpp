@@ -130,6 +130,87 @@ juce::AudioBuffer<float> stretch (const juce::AudioBuffer<float>& input, double 
     return run (stretcher, input, ratio, progress);
 }
 
+juce::AudioBuffer<float> stretchAlong (const juce::AudioBuffer<float>& input, const std::vector<MapPoint>& map, double sampleRate,
+                                       const std::function<bool (float)>& progress)
+{
+    const auto channels = input.getNumChannels();
+    const auto length = input.getNumSamples();
+
+    if (map.size() < 2 || channels == 0 || length == 0 || std::abs (map.front().in) > 0.0 || std::abs (map.front().out) > 0.0
+        || std::abs (map.back().in - (double) length) > 0.5)
+        return {};
+
+    for (size_t i = 1; i < map.size(); ++i)
+        if (map[i].in - map[i - 1].in <= 0.0 || map[i].out - map[i - 1].out <= 0.0)
+            return {};
+
+    // Each part of the map stretched on its own at its one ratio (which puts every moment where
+    // it should be), from a quarter second of the audio either side of it so it carries on into
+    // its neighbours, and the parts crossfaded over joinSeconds where they meet.
+    const auto outLength = (int) std::llround (map.back().out);
+    const auto context = (int) std::llround (0.25 * sampleRate);
+    const auto half = juce::jmax (1, (int) std::llround (joinSeconds * sampleRate) / 2);
+    const auto parts = map.size() - 1;
+    juce::AudioBuffer<float> out (channels, outLength);
+    out.clear();
+
+    for (size_t i = 1; i < map.size(); ++i)
+    {
+        const auto& a = map[i - 1];
+        const auto& b = map[i];
+        const auto ratio = (b.out - a.out) / (b.in - a.in);
+        const auto from = juce::jmax (0, (int) std::floor (a.in) - context);
+        const auto to = juce::jmin (length, (int) std::ceil (b.in) + context);
+
+        juce::AudioBuffer<float> piece (channels, to - from);
+
+        for (int ch = 0; ch < channels; ++ch)
+            piece.copyFrom (ch, 0, input, ch, from, to - from);
+
+        const auto share = [&progress, i, parts] (float p)
+        {
+            return progress == nullptr || progress (((float) (i - 1) + p) / (float) parts);
+        };
+
+        Stretcher stretcher;
+        setUp (stretcher, channels, sampleRate);
+        const auto stretched = run (stretcher, piece, ratio, share);
+
+        if (stretched.getNumSamples() == 0)
+            return {};
+
+        // Output o of this part is the piece's stretched sample at o - a.out + (a.in - from) * ratio.
+        // It fades in over the joinSeconds before its own start and out over those before the next
+        // part's, so whatever starts on a point of the map (most often an attack: a marker's, or a
+        // beat's where the tempo changes) is heard whole from the part it starts.
+        const auto outA = (int) std::llround (a.out), outB = (int) std::llround (b.out);
+        const auto first = i > 1 ? outA - 2 * half : 0;
+        const auto last = i < map.size() - 1 ? outB : outLength;
+        const auto shift = (a.in - (double) from) * ratio - a.out;
+
+        for (int o = juce::jmax (0, first); o < juce::jmin (outLength, last); ++o)
+        {
+            const auto at = (int) std::llround ((double) o + shift);
+
+            if (! juce::isPositiveAndBelow (at, stretched.getNumSamples()))
+                continue;
+
+            auto weight = 1.0f;
+
+            if (i > 1 && o < outA)
+                weight *= (float) (o - first) / (float) (2 * half);
+
+            if (i < map.size() - 1 && o >= outB - 2 * half)
+                weight *= 1.0f - (float) (o - (outB - 2 * half)) / (float) (2 * half);
+
+            for (int ch = 0; ch < channels; ++ch)
+                out.addSample (ch, o, weight * stretched.getSample (ch, at));
+        }
+    }
+
+    return out;
+}
+
 juce::AudioBuffer<float> shiftPitch (const juce::AudioBuffer<float>& input, double semitones, double sampleRate,
                                      const std::function<bool (float)>& progress, Method method)
 {

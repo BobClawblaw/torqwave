@@ -1129,6 +1129,7 @@ MainComponent::MainComponent()
     engine.setMidiClockPort (settings->getValue (midiClockKey));
 
     // Controllers: a Mackie Control surface, and MIDI learn for any knob.
+    tempoRenderer = std::make_unique<TempoFollow::Renderer> (engine.session);
     surface = std::make_unique<ControlSurface> (engine, [this] { return &multitrack; });
     surface->onTransport = [this] (ControlSurface::Transport t) { transportFromController (t); };
     surface->selectedTrack = [this] { return multitrack.getSelectedTrackId(); };
@@ -1444,6 +1445,7 @@ MainComponent::~MainComponent()
     multitrack.addMidiLearnMenu = nullptr;
     midiLearn = nullptr;
     surface = nullptr;
+    tempoRenderer = nullptr;
     engine.document.removeChangeListener (this);
     engine.session.removeChangeListener (this);
     engine.removeChangeListener (this);
@@ -2543,6 +2545,20 @@ bool MainComponent::perform (const InvocationInfo& info)
 
         if (described.categoryName == "Effects")
             lastRepeatable = info.commandID;
+    }
+
+    // What mixes the session to a file waits for clips still being stretched to the tempo, then goes ahead.
+    if (multitrackMode && tempoRenderer != nullptr && ! tempoRenderer->isUpToDate()
+        && (info.commandID == cmdMixDown || info.commandID == cmdBounceTrack || info.commandID == cmdFreezeTrack || info.commandID == cmdExportStems
+            || info.commandID == cmdExportFolderStems || info.commandID == cmdExportRegions))
+    {
+        showNote ("Following the Tempo", "Clips are being stretched to the tempo. This goes ahead as soon as they are done.");
+        tempoRenderer->whenDone ([safe = juce::Component::SafePointer<MainComponent> (this), id = info.commandID]
+        {
+            if (safe != nullptr)
+                safe->commands.invokeDirectly (id, false);
+        });
+        return true;
     }
 
     switch (info.commandID)

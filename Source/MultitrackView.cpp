@@ -5,6 +5,7 @@
 #include "TimeFormat.h"
 #include "Surround.h"
 #include "TimeStretch.h"
+#include "TempoFollow.h"
 #include "PluginMenu.h"
 #include <map>
 #include "Metronome.h"
@@ -1192,6 +1193,12 @@ void MultitrackView::showClipMenu (juce::uint32 clipId)
         menu.addSeparator();
     }
 
+    if (clip.takes.empty())
+    {
+        menu.addSubMenu ("Tempo", tempoMenu (clip));
+        menu.addSeparator();
+    }
+
     juce::PopupMenu colours;
     colours.addItem ("Track's", true, clip.colour < 0, [safe] { if (safe != nullptr) safe->setSelectedClipsColour (-1); });
 
@@ -1227,6 +1234,233 @@ void MultitrackView::showClipMenu (juce::uint32 clipId)
     menu.addItem ("Group", canGroupSelectedClips(), false, [safe] { if (safe != nullptr) safe->groupSelectedClips(); });
     menu.addItem ("Ungroup", areSelectedClipsGrouped(), false, [safe] { if (safe != nullptr) safe->ungroupSelectedClips(); });
     menu.showMenuAsync (juce::PopupMenu::Options().withMousePosition());
+}
+
+juce::PopupMenu MultitrackView::tempoMenu (const SessionClip& clip)
+{
+    const juce::Component::SafePointer<MultitrackView> safe (this);
+    const auto id = clip.id;
+    const auto editable = ! clip.locked && clip.audio != nullptr;
+    const auto& tf = clip.tempoFollow;
+    const auto rate = shown().sampleRate;
+    juce::PopupMenu menu;
+
+    if (tf.follows())
+    {
+        menu.addItem ("Follows the Tempo at " + juce::String (tf.bpm, 1) + " BPM", false, true, nullptr);
+        menu.addItem ("Set Clip Tempo...", editable, false, [safe, id] { if (safe != nullptr) safe->askClipTempo (id); });
+        menu.addItem ("Play at Its Own Speed", editable, false, [safe, id]
+        {
+            if (safe != nullptr)
+                safe->editSession ("Play at Its Own Speed", [id] (SessionState& n) { return SessionEdits::setClipTempo (n, id, 0.0); });
+        });
+        menu.addSeparator();
+
+        // Markers where its attacks are, each on the beat it plays on now (nothing heard changes).
+        menu.addItem ("Warp Markers at Transients", editable, false, [safe, id, rate]
+        {
+            if (safe == nullptr)
+                return;
+
+            safe->editSession ("Warp Markers at Transients", [id, rate] (SessionState& n)
+            {
+                const auto where = n.findClip (id);
+
+                if (! where.has_value())
+                    return false;
+
+                const auto& c = n.tracks[(size_t) where->first].clips[(size_t) where->second];
+                const auto span = TempoFollow::spanOf (n, c);
+                auto warps = c.tempoFollow.warps;
+                const auto apart = (juce::int64) (0.01 * rate);
+
+                for (const auto f : TempoFollow::transients (*c.tempoFollow.original, (juce::int64) span.start, (juce::int64) span.end, rate))
+                    if (f > apart && std::none_of (warps.begin(), warps.end(), [&] (auto& w) { return std::abs (w.frame - f) < apart; }))
+                        warps.push_back ({ f, TempoFollow::beatOf (c.tempoFollow, (double) f, rate) });
+
+                std::sort (warps.begin(), warps.end(), [] (auto& x, auto& y) { return x.frame < y.frame; });
+                return SessionEdits::setWarpMarkers (n, id, warps);
+            });
+        });
+
+        // Each marker onto the nearest line of the grid: the performance tightened to it.
+        menu.addItem ("Quantize Warp Markers", editable && ! tf.warps.empty(), false, [safe, id]
+        {
+            if (safe == nullptr)
+                return;
+
+            const auto map = safe->shown().tempoMap();
+            safe->editSession ("Quantize Warp Markers", [safe, id, map] (SessionState& n)
+            {
+                const auto where = n.findClip (id);
+
+                if (! where.has_value())
+                    return false;
+
+                const auto& c = n.tracks[(size_t) where->first].clips[(size_t) where->second];
+                const auto anchor = TempoFollow::anchorBeat (n, c);
+                std::vector<SessionClip::WarpMarker> warps;
+
+                for (auto w : c.tempoFollow.warps)
+                {
+                    const auto line = safe->timeWithBars ? safe->snappedToGrid (map.frameAtBeatPosition (anchor + w.beat))
+                                                         : map.beatFrame (std::llround (anchor + w.beat));
+                    w.beat = map.beatPosition (line) - anchor;
+
+                    if (w.beat > (warps.empty() ? 0.0 : warps.back().beat) + 1.0e-6)
+                        warps.push_back (w);
+                }
+
+                return SessionEdits::setWarpMarkers (n, id, warps);
+            });
+        });
+
+        menu.addItem ("Add Warp Marker at Cursor", editable && cursor > clip.position && cursor < clip.getEnd(), false, [safe, id, rate]
+        {
+            if (safe == nullptr)
+                return;
+
+            const auto at = safe->cursor;
+            safe->editSession ("Add Warp Marker", [id, rate, at] (SessionState& n)
+            {
+                const auto where = n.findClip (id);
+
+                if (! where.has_value())
+                    return false;
+
+                const auto& c = n.tracks[(size_t) where->first].clips[(size_t) where->second];
+                const auto beat = n.tempoMap().beatPosition (at) - TempoFollow::anchorBeat (n, c);
+                const auto frame = (juce::int64) std::llround (TempoFollow::frameOf (c.tempoFollow, beat, rate));
+                auto warps = c.tempoFollow.warps;
+                warps.push_back ({ frame, beat });
+                std::sort (warps.begin(), warps.end(), [] (auto& x, auto& y) { return x.frame < y.frame; });
+                return SessionEdits::setWarpMarkers (n, id, warps);
+            });
+        });
+
+        menu.addItem ("Clear Warp Markers", editable && ! tf.warps.empty(), false, [safe, id]
+        {
+            if (safe != nullptr)
+                safe->editSession ("Clear Warp Markers", [id] (SessionState& n) { return SessionEdits::setWarpMarkers (n, id, {}); });
+        });
+    }
+    else
+    {
+        if (const auto named = TempoFollow::tempoFromName (clip.source.getFileNameWithoutExtension()))
+            menu.addItem ("Follow Tempo at " + juce::String (*named, 1) + " BPM (from its name)", editable, false, [safe, id, bpm = *named]
+            {
+                if (safe != nullptr)
+                    safe->editSession ("Follow Tempo", [id, bpm] (SessionState& n) { return SessionEdits::setClipTempo (n, id, bpm); });
+            });
+
+        menu.addItem ("Follow Tempo...", editable, false, [safe, id] { if (safe != nullptr) safe->askClipTempo (id); });
+    }
+
+    menu.addSeparator();
+    menu.addItem ("Slice at Transients", editable, false, [safe, id, rate]
+    {
+        if (safe == nullptr)
+            return;
+
+        safe->editSession ("Slice at Transients", [id, rate] (SessionState& n)
+        {
+            const auto where = n.findClip (id);
+
+            if (! where.has_value())
+                return false;
+
+            const auto& c = n.tracks[(size_t) where->first].clips[(size_t) where->second];
+            const auto span = TempoFollow::spanOf (n, c);
+            const auto& audio = c.tempoFollow.follows() ? *c.tempoFollow.original : *c.audio;
+            const auto anchor = TempoFollow::anchorBeat (n, c);
+            const auto map = n.tempoMap();
+            std::vector<juce::int64> cuts;
+
+            for (const auto f : TempoFollow::transients (audio, (juce::int64) span.start, (juce::int64) span.end, rate))
+                cuts.push_back (c.tempoFollow.follows() ? map.frameAtBeatPosition (anchor + TempoFollow::beatOf (c.tempoFollow, (double) f, rate))
+                                                        : c.position + (f - c.offset));
+
+            return SessionEdits::sliceClip (n, id, cuts) > 0;
+        });
+    });
+
+    return menu;
+}
+
+void MultitrackView::askClipTempo (juce::uint32 clipId)
+{
+    const auto where = shown().findClip (clipId);
+
+    if (! where.has_value())
+        return;
+
+    const auto& c = shown().tracks[(size_t) where->first].clips[(size_t) where->second];
+    const auto& audio = c.tempoFollow.follows() ? c.tempoFollow.original : c.audio;
+
+    if (audio == nullptr)
+        return;
+
+    // What it might be: its own tempo set before, its name's, what its attacks keep to (in the
+    // first minute it plays), else the session's.
+    const auto rate = shown().sampleRate;
+    const auto span = TempoFollow::spanOf (shown(), c);
+    const auto named = TempoFollow::tempoFromName (c.source.getFileNameWithoutExtension());
+    const auto detected = TempoFollow::detectTempo (*audio, (juce::int64) span.start, juce::jmin ((juce::int64) span.end, (juce::int64) span.start + (juce::int64) (60.0 * rate)), rate);
+    const auto guess = c.tempoFollow.follows() ? c.tempoFollow.bpm : named.has_value() ? *named : detected.has_value() ? *detected : shown().tempo;
+
+    juce::String message ("The clip's own tempo, in beats a minute (20 to 400). It is then stretched to the session's tempo, and follows it.");
+
+    if (named.has_value())
+        message << "\nFrom its name: " << juce::String (*named, 1) << ".";
+
+    message << (detected.has_value() ? "\nDetected in the audio: " + juce::String (*detected, 1) + "." : juce::String ("\nNo steady beat was detected in the audio."));
+
+    auto* window = new juce::AlertWindow ("Clip Tempo", message, juce::MessageBoxIconType::NoIcon);
+    window->addTextEditor ("bpm", juce::String (guess, 1), "Tempo (BPM)");
+    window->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    window->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+    const juce::Component::SafePointer<MultitrackView> safe (this);
+    window->enterModalState (true, juce::ModalCallbackFunction::create ([safe, window, clipId] (int result)
+    {
+        if (result != 1 || safe == nullptr)
+            return;
+
+        const auto bpm = window->getTextEditorContents ("bpm").trim().getDoubleValue();
+
+        if (bpm < 20.0 || bpm > 400.0)
+        {
+            juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Clip Tempo", "A clip's tempo is from 20 to 400 BPM.");
+            return;
+        }
+
+        safe->editSession ("Follow Tempo", [clipId, bpm] (SessionState& n) { return SessionEdits::setClipTempo (n, clipId, bpm); });
+    }), true);
+}
+
+juce::int64 MultitrackView::warpMarkerFrame (const SessionClip& c, const SessionClip::WarpMarker& w) const
+{
+    return shown().tempoMap().frameAtBeatPosition (TempoFollow::anchorBeat (shown(), c) + w.beat);
+}
+
+std::optional<std::pair<juce::uint32, int>> MultitrackView::warpMarkerAt (juce::Point<int> p) const
+{
+    for (size_t t = 0; t < shown().tracks.size(); ++t)
+        for (auto& c : shown().tracks[t].clips)
+        {
+            if (! c.tempoFollow.follows() || c.tempoFollow.warps.empty())
+                continue;
+
+            const auto r = clipBounds ((int) t, c);
+
+            if (! r.contains (p) || p.y < r.getY() + 16 || p.y > r.getY() + 30)
+                continue;
+
+            for (size_t i = 0; i < c.tempoFollow.warps.size(); ++i)
+                if (std::abs ((float) p.x - xForFrame (warpMarkerFrame (c, c.tempoFollow.warps[i]))) <= 5.0f)
+                    return std::pair<juce::uint32, int> { c.id, (int) i };
+        }
+
+    return std::nullopt;
 }
 
 void MultitrackView::setTakeLanesShown (juce::uint32 trackId, bool show)
@@ -3056,6 +3290,10 @@ void MultitrackView::drawClip (juce::Graphics& g, int track, const SessionClip& 
 
     if (c.muted)
         name << "  (muted)";
+
+    if (c.tempoFollow.follows())
+        name << "  " << juce::String (c.tempoFollow.bpm, 1) << " BPM" << (TempoFollow::isStale (shown(), c) ? " (stretching...)" : "");
+
     const auto badges = (c.locked ? 20 : 0) + (c.groupId != 0 ? 20 : 0);
     g.drawText (name, title.withTrimmedLeft (12).withTrimmedRight (badges > 0 ? badges + 4 : 10), juce::Justification::centredLeft, true);   // clear of the fade handles
 
@@ -3080,6 +3318,27 @@ void MultitrackView::drawClip (juce::Graphics& g, int track, const SessionClip& 
     }
 
     drawWaveform (g, body, track, c, -1, colour);
+
+    // Warp markers: a handle under the title bar and a faint line down, where each plays.
+    if (c.tempoFollow.follows())
+    {
+        for (size_t i = 0; i < c.tempoFollow.warps.size(); ++i)
+        {
+            const auto at = warpMarkerFrame (c, c.tempoFollow.warps[i]);
+
+            if (at <= c.position || at >= c.getEnd())
+                continue;
+
+            const auto x = xForFrame (at);
+            const auto active = drag == Drag::warpMarker && dragWarpClip == c.id && dragWarp == (int) i;
+            g.setColour (Theme::accent.withAlpha (active ? 0.9f : 0.45f));
+            g.drawVerticalLine (juce::roundToInt (x), (float) body.getY(), (float) body.getBottom());
+            juce::Path handle;
+            handle.addTriangle (x - 5.0f, (float) body.getY(), x + 5.0f, (float) body.getY(), x, (float) body.getY() + 9.0f);
+            g.setColour (Theme::accent.withAlpha (active ? 1.0f : 0.85f));
+            g.fillPath (handle);
+        }
+    }
 
     // A comp's joins: a tick down from the title bar at each one.
     if (c.comp.size() > 1)
@@ -6158,6 +6417,32 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
+    // A warp marker's handle: dragged to the beat its sound should play on; Option-click removes it.
+    if (! e.mods.isPopupMenu() && tool == Tool::select)
+        if (const auto hit = warpMarkerAt (p))
+        {
+            const auto where = shown().findClip (hit->first);
+            const auto& c = shown().tracks[(size_t) where->first].clips[(size_t) where->second];
+
+            if (! c.locked)
+            {
+                if (e.mods.isAltDown())
+                {
+                    auto warps = c.tempoFollow.warps;
+                    warps.erase (warps.begin() + hit->second);
+                    editSession ("Remove Warp Marker", [id = c.id, warps] (SessionState& n) { return SessionEdits::setWarpMarkers (n, id, warps); });
+                    return;
+                }
+
+                drag = Drag::warpMarker;
+                dragWarpClip = c.id;
+                dragWarp = hit->second;
+                dragWarpAnchor = TempoFollow::anchorBeat (shown(), c);
+                repaint();
+                return;
+            }
+        }
+
     // The Split tool cuts the clip under the mouse (with Shift, every track's there); Glue joins a
     // note clip with the next.
     if (! e.mods.isPopupMenu() && tool == Tool::split)
@@ -6534,6 +6819,39 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
         return;
     }
 
+    if (drag == Drag::warpMarker)
+    {
+        // The marker's sound onto the beat under the mouse (the grid's line, snapping), between its neighbours.
+        const auto now = engine.session.getState();
+        const auto where = now->findClip (dragWarpClip);
+
+        if (! where.has_value())
+            return;
+
+        const auto& c = now->tracks[(size_t) where->first].clips[(size_t) where->second];
+
+        if (! juce::isPositiveAndBelow (dragWarp, (int) c.tempoFollow.warps.size()))
+            return;
+
+        auto warps = c.tempoFollow.warps;
+        const auto frame = juce::jmax ((juce::int64) 0, snapping ? snappedToGrid (frameForX ((float) juce::jmax (listWidth, p.x))) : frameForX ((float) p.x));
+        const auto low = dragWarp > 0 ? warps[(size_t) dragWarp - 1].beat : 0.0;
+        const auto high = dragWarp + 1 < (int) warps.size() ? warps[(size_t) dragWarp + 1].beat : std::numeric_limits<double>::max();
+        const auto room = 1.0e-3;
+        warps[(size_t) dragWarp].beat = juce::jlimit (low + room, high - room, now->tempoMap().beatPosition (frame) - dragWarpAnchor);
+
+        if (warps != c.tempoFollow.warps)
+        {
+            auto next = *now;
+
+            if (SessionEdits::setWarpMarkers (next, dragWarpClip, warps))
+                engine.session.apply (std::move (next), "Move Warp Marker", true);
+        }
+
+        repaint();
+        return;
+    }
+
     if (drag == Drag::loopNew || drag == Drag::loopMove || drag == Drag::loopStart || drag == Drag::loopEnd)
     {
         const auto frame = juce::jmax ((juce::int64) 0, snappedToGrid (frameForX ((float) juce::jmax (listWidth, p.x))));
@@ -6837,6 +7155,7 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
         case Drag::sectionMove:
         case Drag::sectionStart:
         case Drag::sectionEnd:
+        case Drag::warpMarker:
             break;
     }
 
@@ -6911,6 +7230,15 @@ SessionState MultitrackView::withDragCopies (const SessionState& moved)
 
 void MultitrackView::mouseUp (const juce::MouseEvent&)
 {
+    if (drag == Drag::warpMarker)
+    {
+        drag = Drag::none;
+        dragWarpClip = 0;
+        dragWarp = -1;
+        repaint();
+        return;
+    }
+
     if (drag == Drag::sectionNew || drag == Drag::sectionMove || drag == Drag::sectionStart || drag == Drag::sectionEnd)
     {
         const auto to = std::exchange (sectionPreview, std::nullopt);

@@ -1,6 +1,7 @@
 #include "Session.h"
 #include "PreviousName.h"
 #include "Surround.h"
+#include "TempoFollow.h"
 
 #include <numeric>
 #include <map>
@@ -941,7 +942,14 @@ bool moveClip (SessionState& s, juce::uint32 clipId, int toTrack, juce::int64 po
 
     auto& from = s.tracks[(size_t) where->first].clips;
     auto clip = from[(size_t) where->second];
+
+    // A clip that follows the tempo plays the same part of its original from its new beat, at
+    // the tempo there (stretched anew).
+    const auto span = clip.tempoFollow.follows() ? std::optional<TempoFollow::Span> (TempoFollow::spanOf (s, clip)) : std::nullopt;
     clip.position = juce::jmax ((juce::int64) 0, position);
+
+    if (span.has_value())
+        TempoFollow::place (s, clip, *span, s.tempoMap().beatPosition (clip.position));
 
     if (toTrack < (int) s.tracks.size() && ! s.tracks[(size_t) toTrack].takesAudioClips())
         toTrack = where->first;
@@ -1010,6 +1018,77 @@ bool splitClip (SessionState& s, juce::uint32 clipId, juce::int64 frame)
     clips[(size_t) where->second] = std::move (first);
     clips.push_back (std::move (second));
     return true;
+}
+
+bool setClipTempo (SessionState& s, juce::uint32 clipId, double bpm)
+{
+    const auto where = s.findClip (clipId);
+    auto* c = findUnlocked (s, clipId);
+
+    if (c == nullptr || ! where.has_value() || ! c->takes.empty() || c->audio == nullptr || bpm < 0.0 || (bpm > 0.0 && (bpm < 20.0 || bpm > 400.0))
+        || (bpm > 0.0 && c->tempoFollow.follows() && juce::exactlyEqual (bpm, c->tempoFollow.bpm)) || (bpm <= 0.0 && ! c->tempoFollow.follows()))
+        return false;
+
+    const auto span = TempoFollow::spanOf (s, *c);
+
+    if (bpm <= 0.0)
+    {
+        // At its own speed again: its original, the same part of it, from where it starts.
+        c->audio = c->tempoFollow.original;
+        c->offset = juce::jmax ((juce::int64) 0, (juce::int64) std::llround (span.start));
+        c->length = juce::jmax ((juce::int64) 1, (juce::int64) std::llround (span.end) - c->offset);
+
+        for (size_t i = 0; i < c->gainEnvelope.points.size() && i < span.gainFrames.size(); ++i)
+            c->gainEnvelope.points[i].frame = (juce::int64) std::llround (span.gainFrames[i]);
+
+        c->tempoFollow = {};
+        limitFades (*c);
+        return true;
+    }
+
+    if (! c->tempoFollow.follows())
+        c->tempoFollow.original = c->audio;
+
+    c->tempoFollow.bpm = bpm;
+    c->tempoFollow.renderedFor = {};
+    TempoFollow::place (s, *c, span, s.tempoMap().beatPosition (c->position));
+    s.tracks[(size_t) where->first].musical = true;
+    return true;
+}
+
+bool setWarpMarkers (SessionState& s, juce::uint32 clipId, std::vector<SessionClip::WarpMarker> warps)
+{
+    auto* c = findUnlocked (s, clipId);
+
+    if (c == nullptr || ! c->tempoFollow.follows() || warps == c->tempoFollow.warps)
+        return false;
+
+    std::sort (warps.begin(), warps.end(), [] (auto& a, auto& b) { return a.frame < b.frame; });
+    const auto ordered = std::adjacent_find (warps.begin(), warps.end(), [] (auto& a, auto& b) { return b.frame <= a.frame || b.beat <= a.beat; }) == warps.end();
+
+    if (! ordered || (! warps.empty() && (warps.front().frame <= 0 || warps.front().beat <= 0.0 || warps.back().frame >= c->tempoFollow.original->getNumFrames())))
+        return false;
+
+    // The original's first frame stays on its beat; the clip plays the same part of it.
+    const auto span = TempoFollow::spanOf (s, *c);
+    const auto anchor = TempoFollow::anchorBeat (s, *c);
+    c->tempoFollow.warps = std::move (warps);
+    c->tempoFollow.renderedFor = {};
+    TempoFollow::place (s, *c, span, anchor + TempoFollow::beatOf (c->tempoFollow, span.start, s.sampleRate));
+    return true;
+}
+
+int sliceClip (SessionState& s, juce::uint32 clipId, std::vector<juce::int64> frames)
+{
+    // From the last cut back, so the clip keeps its id and the part before each cut.
+    std::sort (frames.begin(), frames.end(), std::greater<>());
+    frames.erase (std::unique (frames.begin(), frames.end()), frames.end());
+    auto made = 0;
+
+    for (const auto f : frames)
+        made += splitClip (s, clipId, f) ? 1 : 0;
+
+    return made;
 }
 
 bool chooseTake (SessionState& s, juce::uint32 clipId, int index)
@@ -1609,6 +1688,8 @@ bool reverseClip (SessionState& s, juce::uint32 clipId, const juce::File& file, 
     if (c == nullptr || reversed == nullptr || ! takesMatch (*c, takes, reversed->getNumFrames()))
         return false;
 
+    c->tempoFollow = {};   // the new audio is what was heard, and plays at its own speed from now on
+
     if (! takes.empty())
         remapComp (*c, c->takeZeroFrame (c->position), c->length, 1.0, true);
 
@@ -1732,6 +1813,8 @@ bool stretchClip (SessionState& s, juce::uint32 clipId, const juce::File& file, 
 
     if (! takesMatch (*c, takes, stretched->getNumFrames()))
         return false;
+
+    c->tempoFollow = {};   // the new audio is what was heard, and plays at its own speed from now on
 
     if (! takes.empty())
         remapComp (*c, c->takeZeroFrame (c->position), c->length, (double) stretched->getNumFrames() / (double) c->length, false);
@@ -3023,6 +3106,7 @@ namespace
         juce::uint32 id = 0;
         bool notes = false;
         double start = 0.0, end = 0.0;     // beats
+        std::optional<TempoFollow::Span> span;   // an audio clip following the tempo: the part of its original it plays
     };
 
     std::vector<MusicalPlace> musicalPlaces (const SessionState& s)
@@ -3032,14 +3116,20 @@ namespace
 
         for (auto& t : s.tracks)
         {
+            // A clip following the tempo keeps its beats on any track.
+            for (auto& c : t.clips)
+                if (c.tempoFollow.follows())
+                    places.push_back ({ c.id, false, map.beatPosition (c.position), 0.0, TempoFollow::spanOf (s, c) });
+
             if (! t.musical)
                 continue;
 
             for (auto& c : t.clips)
-                places.push_back ({ c.id, false, map.beatPosition (c.position), 0.0 });
+                if (! c.tempoFollow.follows())
+                    places.push_back ({ c.id, false, map.beatPosition (c.position), 0.0, std::nullopt });
 
             for (auto& c : t.noteClips)
-                places.push_back ({ c.id, true, map.beatPosition (c.position), map.beatPosition (c.getEnd()) });
+                places.push_back ({ c.id, true, map.beatPosition (c.position), map.beatPosition (c.getEnd()), std::nullopt });
         }
 
         return places;
@@ -3058,7 +3148,9 @@ namespace
             if (! p.notes)
             {
                 if (const auto where = s.findClip (p.id))
-                    moveClip (s, p.id, where->first, start);
+                    if (moveClip (s, p.id, where->first, start) && p.span.has_value())
+                        if (auto* c = findUnlocked (s, p.id))
+                            TempoFollow::place (s, *c, *p.span, p.start);
 
                 continue;
             }
@@ -4346,6 +4438,13 @@ void Session::setAutomationMode (juce::uint32 trackId, AutomationMode mode)
         replaceCurrent (std::move (next));
 }
 
+void Session::refresh (SessionState next)
+{
+    auto state = std::make_shared<const SessionState> (std::move (next));
+    history[(size_t) position].state = state;
+    setCurrent (state);
+}
+
 void Session::replaceCurrent (SessionState next)
 {
     // In place of the step's state, not as a step of its own.
@@ -4747,6 +4846,20 @@ juce::String save (const SessionState& state, const juce::File& target,
             if (c.note.isNotEmpty())
                 clip->setAttribute ("note", c.note);
 
+            // Following the tempo: its own tempo and warp markers (the file is the original; the
+            // offset and length are of it stretched, which is done again on opening).
+            if (c.tempoFollow.follows())
+            {
+                clip->setAttribute ("tempo", juce::String (c.tempoFollow.bpm, 6));
+
+                for (auto& w : c.tempoFollow.warps)
+                {
+                    auto* warpXml = clip->createNewChildElement ("WARP");
+                    warpXml->setAttribute ("frame", juce::String (w.frame));
+                    warpXml->setAttribute ("beat", juce::String (w.beat, 9));
+                }
+            }
+
             if (! c.gainEnvelope.isEmpty())
             {
                 auto* gainXml = clip->createNewChildElement ("GAIN");
@@ -5089,9 +5202,33 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
             clip.source = source;
             clip.audio = clipAudio;
             clip.position = juce::jmax ((juce::int64) 0, clipXml->getStringAttribute ("position").getLargeIntValue());
-            clip.offset = juce::jlimit ((juce::int64) 0, clip.audio->getNumFrames(), clipXml->getStringAttribute ("offset").getLargeIntValue());
-            clip.length = juce::jlimit ((juce::int64) 0, clip.audio->getNumFrames() - clip.offset,
-                                        clipXml->getStringAttribute ("length").getLargeIntValue());
+
+            // A clip following the tempo: its offset and length are of its audio stretched, to be
+            // stretched again (TempoFollow::Renderer); its markers kept only when in order.
+            if (const auto tempo = clipXml->getDoubleAttribute ("tempo"); tempo >= 20.0 && tempo <= 400.0)
+            {
+                clip.tempoFollow.bpm = tempo;
+                clip.tempoFollow.original = clipAudio;
+
+                for (auto* warpXml : clipXml->getChildWithTagNameIterator ("WARP"))
+                    clip.tempoFollow.warps.push_back ({ warpXml->getStringAttribute ("frame").getLargeIntValue(), warpXml->getDoubleAttribute ("beat") });
+
+                const auto& w = clip.tempoFollow.warps;
+                const auto ordered = std::adjacent_find (w.begin(), w.end(), [] (auto& a, auto& b) { return b.frame <= a.frame || b.beat <= a.beat; }) == w.end()
+                                     && (w.empty() || (w.front().frame > 0 && w.front().beat > 0.0 && w.back().frame < clipAudio->getNumFrames()));
+
+                if (! ordered)
+                    clip.tempoFollow.warps.clear();
+
+                clip.offset = juce::jmax ((juce::int64) 0, clipXml->getStringAttribute ("offset").getLargeIntValue());
+                clip.length = juce::jmax ((juce::int64) 0, clipXml->getStringAttribute ("length").getLargeIntValue());
+            }
+            else
+            {
+                clip.offset = juce::jlimit ((juce::int64) 0, clip.audio->getNumFrames(), clipXml->getStringAttribute ("offset").getLargeIntValue());
+                clip.length = juce::jlimit ((juce::int64) 0, clip.audio->getNumFrames() - clip.offset,
+                                            clipXml->getStringAttribute ("length").getLargeIntValue());
+            }
             clip.gainDb = (float) clipXml->getDoubleAttribute ("gainDb");
             clip.fadeIn = juce::jlimit ((juce::int64) 0, clip.length, clipXml->getStringAttribute ("fadeIn").getLargeIntValue());
             clip.fadeOut = juce::jlimit ((juce::int64) 0, clip.length, clipXml->getStringAttribute ("fadeOut").getLargeIntValue());

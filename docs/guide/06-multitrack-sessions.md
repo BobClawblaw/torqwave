@@ -267,9 +267,29 @@ A parameter that has an envelope is marked "(automated)" in the menu.
   - **Loop Playback** (Cmd-L, or the loop button in the transport) goes round it. The band is brighter while it is on. Playing from before the loop runs into it, then goes round. Playing from after it plays on.
   - The session keeps the loop. Setting it is not an undo step, and an undo leaves it where it is.
 - **Choose how each track follows the tempo:** right-click a track and choose **Musical Timebase**.
-  - On a musical track, clips keep their place in bars and beats when the tempo changes.
+  - On a musical track, clips keep their place in bars and beats when the tempo changes. An audio clip still plays at its own speed unless it follows the tempo (below).
   - On a track in time, clips stay where they are.
 - **Hear the beat:** the **Metronome** (C) clicks on each beat while the session plays.
+
+## Audio that follows the tempo
+
+An audio clip can follow the session's tempo: a drum loop at 100 BPM, in a session at 120, then plays at 120 and stays on the beat through tempo changes, at its own pitch.
+
+- **Give it its tempo:** right-click the clip and open **Tempo**.
+  - **Follow Tempo at 120 BPM (from its name)** shows when the file's name carries one, such as `loop 120bpm` or `drums_92_BPM`.
+  - **Follow Tempo...** asks for its tempo. It offers the clip's tempo from its name, else the one detected in its audio (from its attacks), else the session's. It also tells you what it detected.
+  - The clip then keeps its start and plays the same part of its audio, stretched so its beats land on the session's. Its length changes with the stretch. The clip's name shows its tempo, and its track becomes musical.
+- **The tempo changes:** clips that follow it keep their beats and are stretched again, through tempo changes inside a clip too. The stretching runs in the background: the clip's name shows "(stretching...)" until it is done, a few seconds for a long clip. Mix Down, Bounce, Freeze, and exporting stems or regions wait for it.
+- **Warp markers** pin a moment of the audio to a beat, to tighten a performance. They show as handles under a clip's title bar.
+  - **Tempo > Warp Markers at Transients** puts one on each attack, where it plays now, so nothing changes yet.
+  - Drag a handle to the beat its sound should play on. It goes onto the grid while snapping is on, and the audio between it and the markers either side (or the clip's start) stretches to fit; past the last marker the clip plays at its own tempo. So to move one hit alone, put markers on the hits either side of it first, as Warp Markers at Transients does. Option-click a handle to remove it.
+  - **Quantize Warp Markers** moves every marker onto the nearest line of the grid. **Add Warp Marker at Cursor** and **Clear Warp Markers** do what they say.
+- **Play at Its Own Speed** turns following off: the clip plays its file as it is again, the same part of it from the same start.
+- **Slice at Transients** splits a clip at each attack, a clip for each hit of a drum loop, followed or not.
+
+Each of these is an undo step. Undo a tempo change and the clips are back as they were at once. The clips' tempos and markers are saved with the session; the stretched audio isn't, and is made again on opening.
+
+A clip with takes can't follow the tempo: flatten its comp first. Reversing, stretching or replacing a following clip's audio keeps what was heard, which then plays at its own speed.
 
 ## Getting the mix out
 
