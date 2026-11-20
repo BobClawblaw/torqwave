@@ -139,7 +139,7 @@ private:
 class SequenceLibraryView::FolderItem final : public juce::TreeViewItem
 {
 public:
-    explicit FolderItem (juce::String n) : name (std::move (n)) {}
+    FolderItem (SequenceLibraryView& v, juce::String n) : view (v), name (std::move (n)) {}
 
     bool mightContainSubItems() override              { return true; }
     juce::String getUniqueName() const override       { return name; }
@@ -154,8 +154,21 @@ public:
 
     void itemClicked (const juce::MouseEvent& e) override
     {
-        if (! e.mods.isPopupMenu())
+        if (e.mods.isPopupMenu())
+            view.folderMenu (path());
+        else
             setOpen (! isOpen());
+    }
+
+    /** The folders from the library down to this one (empty for the library itself). */
+    juce::StringArray path() const
+    {
+        juce::StringArray names;
+
+        for (const juce::TreeViewItem* item = this; item != nullptr && item->getParentItem() != nullptr; item = item->getParentItem())
+            names.insert (0, item->getUniqueName());
+
+        return names;
     }
 
     /** The child folder with this name, made when missing. */
@@ -165,11 +178,12 @@ public:
             if (auto* f = dynamic_cast<FolderItem*> (getSubItem (i)); f != nullptr && f->name == child)
                 return *f;
 
-        auto* f = new FolderItem (child);
+        auto* f = new FolderItem (view, child);
         addSubItem (f);
         return *f;
     }
 
+    SequenceLibraryView& view;
     const juce::String name;
     int count = 0;   // sequences in it and below
 };
@@ -306,6 +320,7 @@ void SequenceLibraryView::refresh()
 {
     stamp = folderStamp();
     entries = library.scan();
+    folderPaths = library.folders();
     rebuild();
 }
 
@@ -322,13 +337,22 @@ void SequenceLibraryView::rebuild()
         openness = root->getOpennessState();
 
     tree.setRootItem (nullptr);
-    root = std::make_unique<FolderItem> ("Sequences");
+    root = std::make_unique<FolderItem> (*this, "Sequences");
+    const auto text = search.getText().trim();
 
-    // The roles first, in their order, then the folders the user made beside them.
+    // Every folder, empty ones too: the roles and their sub-roles in their order, then the user's
+    // own below them. A search shows the roles and the folders holding what it finds.
+    for (auto& path : text.isEmpty() ? folderPaths : std::vector<juce::StringArray> {})
+    {
+        auto* at = root.get();
+
+        for (auto& part : path)
+            at = &at->folder (part);
+    }
+
     for (auto& role : SequenceLibrary::roles())
         root->folder (role.name);
 
-    const auto text = search.getText().trim();
     shownSearch = text;
     int shown = 0;
 
@@ -372,6 +396,26 @@ void SequenceLibraryView::rebuild()
     countText = text.isEmpty() ? juce::String (shown) + (shown == 1 ? " sequence" : " sequences")
                                : juce::String (shown) + " of " + juce::String ((int) entries.size()) + " match";
     previewChanged();
+}
+
+juce::StringArray SequenceLibraryView::shownFolders() const
+{
+    juce::StringArray names;
+
+    std::function<void (const juce::TreeViewItem&)> walk = [&] (const juce::TreeViewItem& item)
+    {
+        for (int i = 0; i < item.getNumSubItems(); ++i)
+            if (auto* f = dynamic_cast<const FolderItem*> (item.getSubItem (i)))
+            {
+                names.add (SequenceLibrary::nameOf (f->path()));
+                walk (*f);
+            }
+    };
+
+    if (root != nullptr)
+        walk (*root);
+
+    return names;
 }
 
 std::vector<juce::File> SequenceLibraryView::shownFiles() const
@@ -443,20 +487,86 @@ juce::String SequenceLibraryView::selectedFolder() const
     if (item != nullptr && dynamic_cast<FolderItem*> (item) == nullptr)
         item = item->getParentItem();
 
-    juce::StringArray names;
+    if (auto* folder = dynamic_cast<FolderItem*> (item))
+        return SequenceLibrary::nameOf (folder->path());
 
-    for (; item != nullptr && item->getParentItem() != nullptr; item = item->getParentItem())
-        names.insert (0, item->getUniqueName());
+    return {};
+}
 
-    // The roles and their sub-roles only: a folder of the user's below them is in its sub-role.
-    if (names.isEmpty())
-        return {};
+void SequenceLibraryView::folderMenu (const juce::StringArray& path)
+{
+    if (path.isEmpty())
+        return;
 
-    const auto& roles = SequenceLibrary::roles();
-    const auto role = std::find_if (roles.begin(), roles.end(), [&] (auto& r) { return r.name == names[0]; });
+    const auto fixed = SequenceLibrary::isFixed (path);
+    const auto dir = library.folderAt (path);
+    juce::PopupMenu menu;
+    menu.addItem (1, "New Sequence Here...", onNew != nullptr);
+    menu.addItem (2, "New Folder...");
+    menu.addSeparator();
+    menu.addItem (3, "Show in Finder");
+    menu.addItem (4, "Rename...", ! fixed);
+    menu.addItem (5, "Move to Trash", ! fixed);
 
-    if (role == roles.end())
-        return {};
+    const juce::Component::SafePointer<SequenceLibraryView> safe (this);
+    menu.showMenuAsync (juce::PopupMenu::Options(), [safe, path, dir] (int result)
+    {
+        if (safe == nullptr || result == 0)
+            return;
 
-    return names.size() > 1 && role->subRoles.contains (names[1]) ? names[0] + " > " + names[1] : names[0];
+        if (result == 1)
+        {
+            if (safe->onNew != nullptr)
+                safe->onNew (SequenceLibrary::nameOf (path));
+        }
+        else if (result == 3)
+        {
+            dir.revealToUser();
+        }
+        else if (result == 5)
+        {
+            if (dir.moveToTrash())
+                safe->refresh();
+        }
+        else
+        {
+            const auto renaming = result == 4;
+            auto* box = new juce::AlertWindow (renaming ? "Rename Folder" : "New Folder",
+                                               renaming ? juce::String() : "In " + SequenceLibrary::nameOf (path) + ".",
+                                               juce::MessageBoxIconType::NoIcon, safe.getComponent());
+            box->addTextEditor ("name", renaming ? path[path.size() - 1] : juce::String ("New Folder"), "Name");
+            box->addButton (renaming ? "Rename" : "Make", 1, juce::KeyPress (juce::KeyPress::returnKey));
+            box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+            box->enterModalState (true, juce::ModalCallbackFunction::create ([safe, path, dir, box, renaming] (int chosen)
+            {
+                if (chosen != 1 || safe == nullptr)
+                    return;
+
+                const auto name = box->getTextEditorContents ("name").trim();
+                juce::String error;
+
+                if (renaming)
+                {
+                    const auto legal = juce::File::createLegalFileName (name);
+                    const auto target = dir.getSiblingFile (legal);
+
+                    if (legal.isEmpty())
+                        error = "A folder needs a name.";
+                    else if (target.exists() && target != dir)
+                        error = "There is already a folder called " + legal + " there.";
+                    else if (target != dir && ! dir.moveFileTo (target))
+                        error = "The folder could not be renamed.";
+                }
+                else
+                {
+                    error = safe->library.makeFolder (path, name);
+                }
+
+                if (error.isNotEmpty())
+                    juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, renaming ? "Rename Folder" : "New Folder", error);
+
+                safe->refresh();
+            }), true);
+        }
+    });
 }

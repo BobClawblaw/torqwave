@@ -270,6 +270,32 @@ void runSequenceTests (AudioEngine& engine)
                    "sequence library panel: shows the three sequences, a search for \"my hats\" leaves the one in that folder, cleared all three again; a drag names its file");
         }
 
+        // Folders: every fixed one shows, empty or not, with the user's own under their parents.
+        {
+            const auto nightFolder = library.makeFolder ({ "Pads", "Evolving" }, "Night");
+            const auto again = library.makeFolder ({ "Pads", "Evolving" }, "Night");
+            const auto names = library.folderNames();
+            SequenceLibraryView view (folder);
+            const auto shown = view.shownFolders();
+            int fixedCount = 0;
+
+            for (auto& r : roles)
+                fixedCount += 1 + r.subRoles.size();
+
+            check (nightFolder.isEmpty() && again.isNotEmpty() && library.folderAt ({ "Pads", "Evolving", "Night" }).isDirectory()
+                       && names[0] == "Inbox" && names.contains ("Drums > Kick") && names.contains ("Drums > Hats & Tops > My Hats")
+                       && names.indexOf ("Pads > Evolving > Night") == names.indexOf ("Pads > Evolving") + 1
+                       && names.size() == fixedCount + 2,
+                   "sequence library: lists every role and sub-role and the user's folders right under their parents; a new folder is made once, then refused");
+            check (shown.contains ("Bass > Sub") && shown.contains ("SFX > Risers") && shown.contains ("Pads > Evolving > Night")
+                       && shown.contains ("Drums > Hats & Tops > My Hats") && shown.size() == fixedCount + 2,
+                   "sequence library panel: shows every sub-role folder, the empty ones too, and the user's own");
+            check (SequenceLibrary::isFixed ({ "Drums", "Kick" }) && SequenceLibrary::isFixed ({ "Kits" }) && ! SequenceLibrary::isFixed ({ "Pads", "Evolving", "Night" })
+                       && SequenceLibrary::pathOf ("Drums > Hats & Tops > My Hats") == juce::StringArray { "Drums", "Hats & Tops", "My Hats" }
+                       && library.folderAt ({ "Polka" }) == folder.getChildFile ("Inbox"),
+                   "sequence library: the fixed folders can't be renamed or removed, the user's can; a folder's name gives its path; an unknown role is the Inbox");
+        }
+
         folder.deleteRecursively();
     }
 

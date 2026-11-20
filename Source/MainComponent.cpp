@@ -5249,19 +5249,9 @@ void MainComponent::askToAddToSequenceLibrary (juce::uint32 noteClipId)
     const auto& track = state->tracks[(size_t) where->first];
     const auto& clip = track.noteClips[(size_t) where->second];
 
-    // Every role, and each of its sub-roles, as "Drums > Kick"; the Inbox first.
-    juce::StringArray folders { "Inbox" };
-
-    for (auto& role : SequenceLibrary::roles())
-    {
-        if (role.name == "Inbox")
-            continue;
-
-        folders.add (role.name);
-
-        for (auto& sub : role.subRoles)
-            folders.add (role.name + " > " + sub);
-    }
+    // Every folder, as "Drums > Kick > Mine"; the Inbox first.
+    SequenceLibrary{}.makeFolders();
+    const auto folders = SequenceLibrary{}.folderNames();
 
     // A clip made by New Sequence, or saved before, offers what it was given and saves over its file.
     const auto link = sequenceLinks.find (noteClipId);
@@ -5297,8 +5287,9 @@ void MainComponent::askToAddToSequenceLibrary (juce::uint32 noteClipId)
         }
 
         const auto folder = folders[box->getComboBoxComponent ("folder")->getSelectedItemIndex()];
-        q->role = folder.upToFirstOccurrenceOf (" > ", false, false);
-        q->subRole = folder.fromFirstOccurrenceOf (" > ", false, false);
+        const auto path = SequenceLibrary::pathOf (folder);
+        q->role = path[0];
+        q->subRole = path[1];
         q->name = box->getTextEditorContents ("name").trim().isNotEmpty() ? box->getTextEditorContents ("name").trim() : q->name;
         q->key = box->getTextEditorContents ("key").trim();
         q->tags.addTokens (box->getTextEditorContents ("tags"), ",", {});
@@ -5308,7 +5299,8 @@ void MainComponent::askToAddToSequenceLibrary (juce::uint32 noteClipId)
         SequenceLibrary library;
         library.makeFolders();
         const auto same = linked.has_value() && linked->file != juce::File() && linked->name == q->name && linked->folder == folder;
-        const auto file = same ? linked->file : library.newFileFor (q->role, q->subRole, q->name);
+        library.folderAt (path).createDirectory();
+        const auto file = same ? linked->file : SequenceLibrary::newFileIn (library.folderAt (path), q->name);
 
         if (const auto error = SequenceFile::save (*q, file); error.isNotEmpty())
         {
@@ -5332,19 +5324,8 @@ void MainComponent::askToAddToSequenceLibrary (juce::uint32 noteClipId)
 
 void MainComponent::askForNewSequence (const juce::String& folder)
 {
-    juce::StringArray folders { "Inbox" };
-
-    for (auto& role : SequenceLibrary::roles())
-    {
-        if (role.name == "Inbox")
-            continue;
-
-        folders.add (role.name);
-
-        for (auto& sub : role.subRoles)
-            folders.add (role.name + " > " + sub);
-    }
-
+    SequenceLibrary{}.makeFolders();
+    const auto folders = SequenceLibrary{}.folderNames();
     const auto instruments = Instrument::known (engine.knownPlugins);
     juce::StringArray names;
 

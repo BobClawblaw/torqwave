@@ -167,7 +167,7 @@ The Sequence Library keeps MIDI parts with the instrument that plays them, to dr
 
 Show it with **Window > Sequence Library**. In the Multitrack workspace it is a tab beside the Track Inspector.
 
-**Start a new one.** Click **New...** at the top of the Sequence Library. Give it a name, a folder (the one selected in the library is chosen for you), an instrument, a length (1, 2, 4, 8 or 16 bars) and optionally a key, then click **Make**. Torqwave adds an instrument track with that instrument and an empty clip of that length, starting at the bar the cursor is in, and opens the clip in the Piano Roll. Write the notes there, or with any of the [ways to put notes in](#put-notes-in) above, then save it with **Add to Sequence Library...**: the dialog already holds its name, folder and key. Save the same clip again with the same name and folder and it replaces the file it saved before, so you can keep working on a part and saving it. Torqwave remembers which file a clip saves to until you quit; after that, saving makes a new file.
+**Start a new one.** Click **New...** at the top of the Sequence Library. Or right-click a folder and choose **New Sequence Here...**. Give it a name, a folder (the one selected in the library is chosen for you), an instrument, a length (1, 2, 4, 8 or 16 bars) and optionally a key, then click **Make**. Torqwave adds an instrument track with that instrument and an empty clip of that length, starting at the bar the cursor is in, and opens the clip in the Piano Roll. Write the notes there, or with any of the [ways to put notes in](#put-notes-in) above, then save it with **Add to Sequence Library...**: the dialog already holds its name, folder and key. Save the same clip again with the same name and folder and it replaces the file it saved before, so you can keep working on a part and saving it. Torqwave remembers which file a clip saves to until you quit; after that, saving makes a new file.
 
 **Save a part.** Right-click a note clip and choose **Add to Sequence Library...** (or select it and use **Multitrack > Clips > Add to Sequence Library...**). Give it a name, a folder, and optionally a key and tags. Its loop and controller lanes go with it. The track's sends, output and automation stay in the session.
 
@@ -184,6 +184,8 @@ Show it with **Window > Sequence Library**. In the Multitrack workspace it is a 
 | SFX | Risers, Downlifters, Impacts, Sweeps, Transitions, Hits |
 | Kits | Parts meant to play together |
 | Inbox | New sketches, not yet sorted |
+
+Every folder shows, empty ones too. Make folders of your own under any role or sub-role: right-click a folder and choose **New Folder...**. The same menu has **New Sequence Here...**, **Show in Finder**, and, for your own folders, **Rename...** and **Move to Trash**. The roles and sub-roles themselves can't be renamed or removed. Your folders appear in the Folder list of the New Sequence and Add to Sequence Library dialogs.
 
 Each sequence shows its length in bars and its key. Type in the search box to see only the sequences that match every word, in their names, keys, tags or folders.
 

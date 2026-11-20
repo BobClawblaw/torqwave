@@ -32,6 +32,28 @@ public:
 
     /** A file for a new sequence of this name there, not one already used ("Name 2" and on). */
     juce::File newFileFor (const juce::String& role, const juce::String& subRole, const juce::String& name) const;
+    static juce::File newFileIn (const juce::File& dir, const juce::String& name);
+
+    /** Every folder, as the folders from the library down to it: each role, then its sub-roles in
+        their order, then the user's folders on disk (by name) below them, each after its parent.
+        Folders not under a role are left out. */
+    std::vector<juce::StringArray> folders() const;
+
+    /** The folders as the dialogs list them, "Drums > Hats & Tops > My Hats", the Inbox first. */
+    juce::StringArray folderNames() const;
+
+    /** A folder's path from such a name, and back. */
+    static juce::StringArray pathOf (const juce::String& folderName);
+    static juce::String nameOf (const juce::StringArray& path);
+
+    /** The folder at a path (the Inbox when its first part is not a role). */
+    juce::File folderAt (const juce::StringArray& path) const;
+
+    /** Whether a path is one of the fixed roles or sub-roles, which can't be renamed or removed. */
+    static bool isFixed (const juce::StringArray& path);
+
+    /** Makes a folder of this name in the folder at `parent`. Returns an error, or empty. */
+    juce::String makeFolder (const juce::StringArray& parent, const juce::String& name) const;
 
     struct Entry
     {

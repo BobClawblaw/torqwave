@@ -9,7 +9,8 @@
     session's next bar while it plays), and moving through the list with the arrow keys plays each
     in turn; a second click or Stop stops it. A sequence is dragged into the multitrack view (or to
     the Finder); a double-click puts it in the session at the cursor. Right-click for Show in
-    Finder, Rename and Move to Trash. New... starts a new one. */
+    Finder, Rename and Move to Trash; right-click a folder to make a folder or a sequence in it.
+    Every folder shows, empty ones too. New... starts a new sequence. */
 class SequenceLibraryView final : public juce::Component,
                                   public juce::DragAndDropContainer,
                                   private juce::Timer
@@ -22,11 +23,16 @@ public:
     std::function<void (const juce::File&)> onUse;
 
     /** Asked by New: start a new sequence, in this folder ("Drums > Kick", "Pads", or empty for
-        the Inbox): the folder selected in the tree, or the one holding the selected sequence. */
+        the Inbox): the folder selected in the tree, or the one holding the selected sequence, or
+        the folder right-clicked for New Sequence Here. */
     std::function<void (const juce::String& folder)> onNew;
 
-    /** The role and sub-role of what is selected, as onNew gives them. */
+    /** The folder of what is selected, as onNew gives it ("Drums > Kick > Mine"), or empty. */
     juce::String selectedFolder() const;
+
+    /** Right-click on a folder: New Sequence Here, New Folder, Show in Finder, and for the user's
+        own folders Rename and Move to Trash. */
+    void folderMenu (const juce::StringArray& path);
 
     /** The player for clicks (not owned); none leaves clicks silent. */
     void setPreview (SequencePreview*);
@@ -40,6 +46,8 @@ public:
 
     /** For tests: the sequences shown, in order. */
     std::vector<juce::File> shownFiles() const;
+    juce::StringArray shownFolders() const;   // every folder in the tree, as "Drums > Kick"
+
     void setSearch (const juce::String&);
 
     void resized() override;
@@ -62,6 +70,7 @@ private:
 
     SequenceLibrary library;
     std::vector<SequenceLibrary::Entry> entries;
+    std::vector<juce::StringArray> folderPaths;
     juce::int64 stamp = 0;
     juce::TextEditor search;
     juce::TextButton newButton { "New..." }, folderButton { "Folder" }, stopButton { "Stop" };
