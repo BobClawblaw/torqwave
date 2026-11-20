@@ -5,6 +5,7 @@
 namespace
 {
     constexpr int divisions[] = { 1, 2, 4, 8, 16, 32 };
+    constexpr int swings[] = { 50, 54, 58, 62, 66, 70, 75 };   // percent
 
     bool isBlackKey (int pitch)
     {
@@ -32,6 +33,41 @@ NoteEditor::NoteEditor()
         const auto id = gridBox.getSelectedId();
         gridDivision = juce::isPositiveAndBelow (id - 1, (int) std::size (divisions)) ? divisions[id - 1] : 0;
         repaint();
+    };
+
+    addAndMakeVisible (swingBox);
+    swingBox.setTooltip ("Swing: each pair's second grid line moved later (on a grid of 1/2 or 1/4 beat)");
+
+    for (auto percent : swings)
+        swingBox.addItem (percent == 50 ? juce::String ("Straight") : "Swing " + juce::String (percent) + " %", percent);
+
+    swingBox.setSelectedId (50, juce::dontSendNotification);
+    swingBox.onChange = [this]
+    {
+        swing = juce::jlimit (0.5, NoteQuantize::maxSwing, swingBox.getSelectedId() / 100.0);
+        repaint();
+    };
+
+    addAndMakeVisible (channelBox);
+    channelBox.setTooltip ("The MIDI channel the clip's notes and lanes go out on");
+
+    for (int c = 1; c <= 16; ++c)
+        channelBox.addItem ("Ch " + juce::String (c), c);
+
+    channelBox.setSelectedId (1, juce::dontSendNotification);
+    channelBox.onChange = [this] { setChannel (channelBox.getSelectedId()); };
+
+    addAndMakeVisible (drumsButton);
+    drumsButton.setClickingTogglesState (false);
+    drumsButton.setTooltip ("Show the track's note clips as a drum grid: a row for each sound, a column for each step");
+    drumsButton.onClick = [this]
+    {
+        if (shown.has_value() && showDrums != nullptr)
+        {
+            showDrums (! shown->drums);
+            refresh();
+            resized();
+        }
     };
 
     addAndMakeVisible (laneLabel);
@@ -143,6 +179,7 @@ void NoteEditor::refresh()
     if (other)
     {
         selected.clear();
+        firstRow = 0;
         scrollToNotes();
     }
 
@@ -155,6 +192,13 @@ void NoteEditor::refreshControls()
     const auto on = shown.has_value();
     gridBox.setEnabled (on);
     velocitySlider.setEnabled (on);
+    swingBox.setEnabled (on);
+    channelBox.setEnabled (on);
+    drumsButton.setEnabled (on);
+    drumsButton.setToggleState (showingDrums(), juce::dontSendNotification);
+
+    if (on)
+        channelBox.setSelectedId (juce::jlimit (1, 16, shown->clip.channel), juce::dontSendNotification);
 
     if (! on)
     {
@@ -202,13 +246,255 @@ void NoteEditor::setVelocity (float velocity)
 juce::int64 NoteEditor::snapped (juce::int64 frame) const
 {
     const auto step = gridStepFrames();
-    return step > 0 ? (frame / step) * step : frame;
+
+    if (step <= 0)
+        return frame;
+
+    // The line at or before the frame: swing only moves lines later.
+    auto k = frame / step;
+
+    while (k > 0 && lineFrame (k) > frame)
+        --k;
+
+    return lineFrame (k);
+}
+
+void NoteEditor::setSwing (double s)
+{
+    const auto percent = (int) std::lround (juce::jlimit (0.5, NoteQuantize::maxSwing, s) * 100.0);
+    auto best = swings[0];
+
+    for (auto p : swings)
+        if (std::abs (p - percent) < std::abs (best - percent))
+            best = p;
+
+    swingBox.setSelectedId (best, juce::sendNotificationSync);
+}
+
+juce::int64 NoteEditor::straightStep() const noexcept
+{
+    if (! shown.has_value())
+        return 0;
+
+    const auto division = gridDivision > 0 ? gridDivision : 4;
+    return juce::jmax ((juce::int64) 1, (juce::int64) std::llround (shown->beatSeconds * shown->sampleRate / division));
+}
+
+juce::int64 NoteEditor::lineFrame (juce::int64 k) const
+{
+    if (! shown.has_value())
+        return 0;
+
+    NoteQuantize q;
+    q.division = drumDivision();
+    q.swing = swing;
+    return (juce::int64) std::llround (q.lineBeat (k) * shown->beatSeconds * shown->sampleRate);
+}
+
+void NoteEditor::setChannel (int channel)
+{
+    channel = juce::jlimit (1, 16, channel);
+    channelBox.setSelectedId (channel, juce::dontSendNotification);
+
+    if (! shown.has_value() || shown->clip.channel == channel)
+        return;
+
+    shown->clip.channel = channel;
+    commit ("MIDI Channel");
+}
+
+int NoteEditor::leftWidth() const noexcept
+{
+    return showingDrums() ? drumNamesWidth : keyboardWidth;
+}
+
+//==============================================================================
+std::vector<DrumSound> NoteEditor::drumRows() const
+{
+    if (! shown.has_value())
+        return {};
+
+    auto rows = shown->drumMap;
+    std::set<int> others;
+
+    for (auto& n : shown->clip.notes)
+        if (std::none_of (rows.begin(), rows.end(), [&] (const DrumSound& d) { return d.pitch == n.pitch; }))
+            others.insert (n.pitch);
+
+    for (auto pitch : others)
+        rows.push_back ({ pitch, DrumSound::nameIn ({}, pitch) });
+
+    return rows;
+}
+
+int NoteEditor::stepCount() const
+{
+    if (! shown.has_value())
+        return 0;
+
+    const auto whole = wholeLength();
+    int k = 0;
+
+    while (lineFrame (k) < whole)
+        ++k;
+
+    return k;
+}
+
+juce::Rectangle<float> NoteEditor::cellBounds (int row, int step) const
+{
+    const auto area = rollArea();
+    const auto x0 = xOf (lineFrame (step)), x1 = xOf (juce::jmin (wholeLength(), lineFrame (step + 1)));
+    return { x0, (float) area.getY() + (float) ((row - firstRow) * drumRowHeight), juce::jmax (2.0f, x1 - x0), (float) drumRowHeight };
+}
+
+std::pair<int, int> NoteEditor::cellAt (juce::Point<float> p) const
+{
+    if (! showingDrums() || ! rollArea().toFloat().contains (p))
+        return { -1, -1 };
+
+    const auto row = firstRow + (int) std::floor ((p.y - (float) rollArea().getY()) / (float) drumRowHeight);
+
+    if (! juce::isPositiveAndBelow (row, (int) drumRows().size()))
+        return { -1, -1 };
+
+    const auto frame = frameAt (p.x);
+    const auto steps = stepCount();
+
+    for (int k = 0; k < steps; ++k)
+        if (frame < lineFrame (k + 1))
+            return { row, k };
+
+    return { -1, -1 };
+}
+
+int NoteEditor::noteInCell (int row, int step) const
+{
+    const auto rows = drumRows();
+
+    if (! shown.has_value() || ! juce::isPositiveAndBelow (row, (int) rows.size()))
+        return -1;
+
+    const auto from = lineFrame (step), to = lineFrame (step + 1);
+
+    for (size_t i = 0; i < shown->clip.notes.size(); ++i)
+    {
+        const auto& n = shown->clip.notes[i];
+
+        if (n.pitch == rows[(size_t) row].pitch && n.start >= from && n.start < to)
+            return (int) i;
+    }
+
+    return -1;
+}
+
+void NoteEditor::setDrumMap (const std::vector<DrumSound>& map, const juce::String& description)
+{
+    if (! shown.has_value())
+        return;
+
+    shown->drumMap = map.empty() ? DrumSound::generalMidi() : map;
+
+    if (applyDrumMap != nullptr)
+        applyDrumMap (map == DrumSound::generalMidi() ? std::vector<DrumSound>() : map, description);
+
+    repaint();
+}
+
+void NoteEditor::drumMapMenu (int row)
+{
+    const auto rows = drumRows();
+
+    if (! shown.has_value() || ! juce::isPositiveAndBelow (row, (int) rows.size()))
+        return;
+
+    const auto inMap = row < (int) shown->drumMap.size();
+    juce::PopupMenu menu;
+    menu.addSectionHeader (rows[(size_t) row].name + " (" + DrumSound::nameIn ({}, rows[(size_t) row].pitch) + ")");
+    menu.addItem (1, inMap ? "Edit Sound..." : "Add to the Map...");
+    menu.addItem (2, "Add Sound...");
+    menu.addItem (3, "Remove from the Map", inMap);
+    menu.addItem (4, "Move Up", inMap && row > 0);
+    menu.addItem (5, "Move Down", inMap && row + 1 < (int) shown->drumMap.size());
+    menu.addSeparator();
+    menu.addItem (6, "General MIDI Map", ! (shown->drumMap == DrumSound::generalMidi()));
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition(),
+                        [safe = juce::Component::SafePointer<NoteEditor> (this), row, inMap] (int choice)
+    {
+        if (safe == nullptr || ! safe->shown.has_value())
+            return;
+
+        auto map = safe->shown->drumMap;
+
+        switch (choice)
+        {
+            case 1: safe->editDrumSound (row, ! inMap); break;
+            case 2: safe->editDrumSound (row, true); break;
+            case 3:
+                if (juce::isPositiveAndBelow (row, (int) map.size()))
+                {
+                    map.erase (map.begin() + row);
+                    safe->setDrumMap (map, "Remove Drum Sound");
+                }
+                break;
+            case 4:
+            case 5:
+                if (const auto other = choice == 4 ? row - 1 : row + 1; juce::isPositiveAndBelow (row, (int) map.size()) && juce::isPositiveAndBelow (other, (int) map.size()))
+                {
+                    std::swap (map[(size_t) row], map[(size_t) other]);
+                    safe->setDrumMap (map, "Move Drum Sound");
+                }
+                break;
+            case 6: safe->setDrumMap ({}, "General MIDI Drum Map"); break;
+            default: break;
+        }
+    });
+}
+
+void NoteEditor::editDrumSound (int row, bool adding)
+{
+    const auto rows = drumRows();
+
+    if (! shown.has_value() || ! juce::isPositiveAndBelow (row, (int) rows.size()))
+        return;
+
+    const auto& was = rows[(size_t) row];
+    const auto extra = row >= (int) shown->drumMap.size();   // a note outside the map: added as it is
+    auto* window = new juce::AlertWindow (adding ? "Add a Drum Sound" : "Edit the Drum Sound", "Its name, and the note (0 to 127) it plays.", juce::MessageBoxIconType::NoIcon);
+    window->addTextEditor ("name", adding && ! extra ? juce::String() : was.name, "Name");
+    window->addTextEditor ("note", juce::String (adding && ! extra ? juce::jmin (127, was.pitch + 1) : was.pitch), "Note");
+    window->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    window->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    window->enterModalState (true, juce::ModalCallbackFunction::create (
+        [safe = juce::Component::SafePointer<NoteEditor> (this), window, row, adding, extra] (int result)
+    {
+        if (result != 1 || safe == nullptr || ! safe->shown.has_value())
+            return;
+
+        const auto name = window->getTextEditorContents ("name").trim();
+        const auto pitch = window->getTextEditorContents ("note").trim().getIntValue();
+
+        if (! juce::isPositiveAndBelow (pitch, 128))
+            return;
+
+        auto map = safe->shown->drumMap;
+        const DrumSound sound { pitch, name.isNotEmpty() ? name : DrumSound::nameIn ({}, pitch) };
+
+        if (adding)
+            map.insert (map.begin() + (extra ? (int) map.size() : juce::jmin (row + 1, (int) map.size())), sound);
+        else if (juce::isPositiveAndBelow (row, (int) map.size()))
+            map[(size_t) row] = sound;
+
+        safe->setDrumMap (map, adding ? "Add Drum Sound" : "Edit Drum Sound");
+    }), true);
 }
 
 //==============================================================================
 juce::Rectangle<int> NoteEditor::rollArea() const
 {
-    return getLocalBounds().withTrimmedTop (topBar).withTrimmedLeft (keyboardWidth).withTrimmedBottom (laneController >= 0 ? laneHeight : 0);
+    return getLocalBounds().withTrimmedTop (topBar).withTrimmedLeft (leftWidth()).withTrimmedBottom (laneController >= 0 ? laneHeight : 0);
 }
 
 juce::Rectangle<int> NoteEditor::laneArea() const
@@ -216,7 +502,7 @@ juce::Rectangle<int> NoteEditor::laneArea() const
     if (laneController < 0)
         return {};
 
-    return getLocalBounds().withTrimmedLeft (keyboardWidth).removeFromBottom (laneHeight);
+    return getLocalBounds().withTrimmedLeft (leftWidth()).removeFromBottom (laneHeight);
 }
 
 void NoteEditor::setLane (int controller)
@@ -342,6 +628,67 @@ void NoteEditor::paint (juce::Graphics& g)
         return;
     }
 
+    if (showingDrums())
+        paintDrums (g, area);
+    else
+        paintRoll (g, area);
+
+    g.setColour (Theme::line);
+    g.drawRect (area);
+
+    const auto& c = shown->clip;
+
+    // The lane: its line over the timeline (the rest value, dashed, without points), its points.
+    if (laneController >= 0)
+    {
+        const auto strip = laneArea();
+        g.setColour (Theme::inset);
+        g.fillRect (strip);
+        g.setColour (Theme::line);
+        g.drawRect (strip);
+        g.setFont (11.0f);
+        g.setColour (Theme::dimText);
+        g.drawText (ControllerLane::nameOf (laneController), strip.reduced (6, 2), juce::Justification::topLeft);
+
+        const auto* lane = c.findLane (laneController);
+        const auto rest = laneController == ControllerLane::pitchBend ? 0.5f : 0.0f;
+
+        if (lane == nullptr || lane->envelope.isEmpty())
+        {
+            const float dashes[] = { 4.0f, 4.0f };
+            g.setColour (Theme::dimText);
+            g.drawDashedLine ({ (float) strip.getX(), yForLaneValue (rest), (float) strip.getRight(), yForLaneValue (rest) }, dashes, 2, 1.0f);
+        }
+        else
+        {
+            juce::Path line;
+            const auto left = (float) strip.getX(), right = (float) strip.getRight();
+
+            for (auto x = left; ; x = juce::jmin (right, x + 2.0f))
+            {
+                const auto y = yForLaneValue (lane->envelope.valueAt (frameAt (x)));
+
+                if (line.isEmpty())
+                    line.startNewSubPath (x, y);
+                else
+                    line.lineTo (x, y);
+
+                if (x >= right)
+                    break;
+            }
+
+            g.setColour (Theme::accentLight);
+            g.strokePath (line, juce::PathStrokeType (1.5f));
+
+            for (auto& point : lane->envelope.points)
+                g.fillEllipse (juce::Rectangle<float> (7.0f, 7.0f).withCentre ({ xOf (point.frame), yForLaneValue (point.value) }));
+        }
+    }
+}
+
+void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
+{
+    const auto keys = juce::Rectangle<int> (0, area.getY(), keyboardWidth, area.getHeight());
     const auto& c = shown->clip;
     const auto rows = area.getHeight() / rowHeight + 1;
 
@@ -382,14 +729,13 @@ void NoteEditor::paint (juce::Graphics& g)
 
     // The grid: a line each step, stronger each beat; the repeats of the pattern.
     const auto step = gridStepFrames();
-    const auto beat = juce::jmax ((juce::int64) 1, (juce::int64) std::llround (shown->beatSeconds * shown->sampleRate));
     const auto whole = wholeLength();
     const auto period = juce::jmax ((juce::int64) 1, c.getPeriod());
 
     if (step > 0 && xOf (step) - xOf (0) >= 3.0f)
-        for (juce::int64 f = 0; f <= whole; f += step)
+        for (juce::int64 k = 0, f = 0; f <= whole; f = lineFrame (++k))
         {
-            g.setColour (f % beat == 0 ? Theme::lineStrong : Theme::line);
+            g.setColour (k % gridDivision == 0 ? Theme::lineStrong : Theme::line);
             g.drawVerticalLine ((int) xOf (f), (float) area.getY(), (float) area.getBottom());
         }
 
@@ -442,66 +788,109 @@ void NoteEditor::paint (juce::Graphics& g)
         g.setColour (Theme::selection);
         g.drawRect (box, 1.0f);
     }
+}
+
+void NoteEditor::paintDrums (juce::Graphics& g, juce::Rectangle<int> area)
+{
+    const auto& c = shown->clip;
+    const auto rows = drumRows();
+    const auto steps = stepCount();
+    const auto names = juce::Rectangle<int> (0, area.getY(), drumNamesWidth, area.getHeight());
+    const auto period = juce::jmax ((juce::int64) 1, c.getPeriod());
+    const auto whole = wholeLength();
+    g.setColour (Theme::surface);
+    g.fillRect (names);
+
+    // Rows: alternate shades, each sound named down the left (notes outside the map dimmed).
+    for (int row = firstRow; row < (int) rows.size(); ++row)
+    {
+        const auto r = juce::Rectangle<float> ((float) area.getX(), (float) area.getY() + (float) ((row - firstRow) * drumRowHeight),
+                                               (float) area.getWidth(), (float) drumRowHeight);
+
+        if (r.getY() >= (float) area.getBottom())
+            break;
+
+        g.setColour (row % 2 == 0 ? Theme::lane : Theme::laneAlternate);
+        g.fillRect (r.getIntersection (area.toFloat()));
+        g.setColour (Theme::line);
+        g.drawHorizontalLine ((int) r.getBottom(), 0.0f, (float) area.getRight());
+
+        const auto name = juce::Rectangle<int> (4, (int) r.getY(), drumNamesWidth - 8, drumRowHeight).getIntersection (names);
+        g.setFont (11.0f);
+        g.setColour (row < (int) shown->drumMap.size() ? Theme::text : Theme::dimText);
+        g.drawText (rows[(size_t) row].name, name, juce::Justification::centredLeft, true);
+    }
 
     g.setColour (Theme::line);
-    g.drawRect (area);
+    g.drawVerticalLine (drumNamesWidth - 1, (float) area.getY(), (float) area.getBottom());
 
-    // The lane: its line over the timeline (the rest value, dashed, without points), its points.
-    if (laneController >= 0)
+    // The steps: a line at each, stronger at each beat; the pattern's repeats.
+    for (int k = 0; k <= steps; ++k)
     {
-        const auto strip = laneArea();
-        g.setColour (Theme::inset);
-        g.fillRect (strip);
-        g.setColour (Theme::line);
-        g.drawRect (strip);
-        g.setFont (11.0f);
-        g.setColour (Theme::dimText);
-        g.drawText (ControllerLane::nameOf (laneController), strip.reduced (6, 2), juce::Justification::topLeft);
+        g.setColour (k % drumDivision() == 0 ? Theme::lineStrong : Theme::line);
+        g.drawVerticalLine ((int) xOf (juce::jmin (whole, lineFrame (k))), (float) area.getY(), (float) area.getBottom());
+    }
 
-        const auto* lane = c.findLane (laneController);
-        const auto rest = laneController == ControllerLane::pitchBend ? 0.5f : 0.0f;
-
-        if (lane == nullptr || lane->envelope.isEmpty())
+    if (period < whole)
+        for (auto f = period; f < whole; f += period)
         {
-            const float dashes[] = { 4.0f, 4.0f };
-            g.setColour (Theme::dimText);
-            g.drawDashedLine ({ (float) strip.getX(), yForLaneValue (rest), (float) strip.getRight(), yForLaneValue (rest) }, dashes, 2, 1.0f);
+            g.setColour (Theme::accent.withAlpha (f == period ? 0.9f : 0.6f));
+            g.drawVerticalLine ((int) xOf (f), (float) area.getY(), (float) area.getBottom());
         }
-        else
+
+    // The set steps: velocity as depth of colour and as a bar's height, the selected outlined.
+    for (size_t i = 0; i < c.notes.size(); ++i)
+    {
+        const auto& n = c.notes[i];
+        const auto row = (int) (std::find_if (rows.begin(), rows.end(), [&] (const DrumSound& d) { return d.pitch == n.pitch; }) - rows.begin());
+        int step = 0;
+
+        while (step + 1 < steps && lineFrame (step + 1) <= n.start)
+            ++step;
+
+        const auto cell = cellBounds (row, step).reduced (1.5f);
+
+        if (row < firstRow || cell.getY() >= (float) area.getBottom())
+            continue;
+
+        const auto playing = n.start < period && n.start >= c.offset && shown->hasInstrument;
+        const auto v = juce::jlimit (0.0f, 1.0f, n.velocity);
+        g.setColour ((playing ? Theme::accent : Theme::dimText).withAlpha (0.25f + 0.35f * v));
+        g.fillRoundedRectangle (cell, 2.0f);
+        g.setColour (playing ? Theme::accent : Theme::dimText);
+        g.fillRect (cell.withTrimmedTop (cell.getHeight() * (1.0f - v)).reduced (2.0f, 0.0f).withTrimmedBottom (1.0f));
+
+        if (selected.count ((int) i) > 0)
         {
-            juce::Path line;
-            const auto left = (float) strip.getX(), right = (float) strip.getRight();
-
-            for (auto x = left; ; x = juce::jmin (right, x + 2.0f))
-            {
-                const auto y = yForLaneValue (lane->envelope.valueAt (frameAt (x)));
-
-                if (line.isEmpty())
-                    line.startNewSubPath (x, y);
-                else
-                    line.lineTo (x, y);
-
-                if (x >= right)
-                    break;
-            }
-
-            g.setColour (Theme::accentLight);
-            g.strokePath (line, juce::PathStrokeType (1.5f));
-
-            for (auto& point : lane->envelope.points)
-                g.fillEllipse (juce::Rectangle<float> (7.0f, 7.0f).withCentre ({ xOf (point.frame), yForLaneValue (point.value) }));
+            g.setColour (Theme::textStrong);
+            g.drawRoundedRectangle (cell, 2.0f, 1.5f);
         }
     }
+
+    // Before the clip's start, and past the pattern, nothing plays: washed out.
+    g.setColour (Theme::overlay.withAlpha (0.25f));
+
+    if (c.offset > 0)
+        g.fillRect (juce::Rectangle<float> (xOf (0), (float) area.getY(), xOf (c.offset) - xOf (0), (float) area.getHeight()));
+
+    if (period < whole)
+        g.fillRect (juce::Rectangle<float> (xOf (period), (float) area.getY(), xOf (whole) - xOf (period), (float) area.getHeight()));
 }
 
 void NoteEditor::resized()
 {
     auto bar = getLocalBounds().removeFromTop (topBar).reduced (6, 4);
+    drumsButton.setBounds (bar.removeFromLeft (56));
+    bar.removeFromLeft (8);
     gridLabel.setBounds (bar.removeFromLeft (34));
     gridBox.setBounds (bar.removeFromLeft (96));
+    bar.removeFromLeft (4);
+    swingBox.setBounds (bar.removeFromLeft (108));
     bar.removeFromLeft (12);
     velocityLabel.setBounds (bar.removeFromLeft (56));
-    velocitySlider.setBounds (bar.removeFromLeft (juce::jmin (180, bar.getWidth())));
+    velocitySlider.setBounds (bar.removeFromLeft (juce::jmin (160, bar.getWidth())));
+    bar.removeFromLeft (12);
+    channelBox.setBounds (bar.removeFromLeft (juce::jmin (70, bar.getWidth())));
     bar.removeFromLeft (12);
     laneLabel.setBounds (bar.removeFromLeft (34));
     laneBox.setBounds (bar.removeFromLeft (juce::jmin (150, juce::jmax (60, bar.getWidth() / 3))));
@@ -557,6 +946,12 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
         drag = Drag::lanePoint;
         commit ("Lane Point");
         base = shown;
+        return;
+    }
+
+    if (showingDrums())
+    {
+        drumMouseDown (e);
         return;
     }
 
@@ -660,8 +1055,90 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
     base = shown;
 }
 
+void NoteEditor::drumMouseDown (const juce::MouseEvent& e)
+{
+    const auto roll = rollArea();
+    const auto rows = drumRows();
+
+    // The names: a click sounds the row's drum, a right-click edits the map.
+    if (juce::Rectangle<int> (0, roll.getY(), drumNamesWidth, roll.getHeight()).contains (e.getPosition()))
+    {
+        const auto row = firstRow + (int) std::floor ((e.position.y - (float) roll.getY()) / (float) drumRowHeight);
+
+        if (! juce::isPositiveAndBelow (row, (int) rows.size()))
+            return;
+
+        if (e.mods.isPopupMenu())
+        {
+            drag = Drag::nothing;
+            drumMapMenu (row);
+            return;
+        }
+
+        drag = Drag::keys;
+        sound (rows[(size_t) row].pitch, getVelocity());
+        return;
+    }
+
+    const auto [row, step] = cellAt (e.position);
+
+    if (row < 0 || e.mods.isPopupMenu())
+    {
+        drag = Drag::nothing;
+        return;
+    }
+
+    auto hit = noteInCell (row, step);
+    addedNow = false;
+
+    if (hit >= 0 && e.mods.isAltDown())
+    {
+        shown->clip.notes.erase (shown->clip.notes.begin() + hit);
+        selected.clear();
+        commit ("Remove Note");
+        drag = Drag::nothing;
+        return;
+    }
+
+    if (hit < 0)
+    {
+        ClipNote n;
+        n.pitch = rows[(size_t) row].pitch;
+        n.start = lineFrame (step);
+        n.length = juce::jmax ((juce::int64) 1, juce::jmin (straightStep(), wholeLength() - n.start));
+        n.velocity = getVelocity();
+        shown->clip.notes.push_back (n);
+        hit = (int) shown->clip.notes.size() - 1;
+        addedNow = true;
+        commit ("Add Note");
+    }
+
+    const auto& n = shown->clip.notes[(size_t) hit];
+    selected = { hit };
+    dragNote = hit;
+    dragStart = e.position;
+    base = shown;
+    drag = Drag::velocity;
+    sound (n.pitch, n.velocity);
+    velocitySlider.setValue (std::round (n.velocity * 127.0f), juce::dontSendNotification);
+    refreshControls();
+    repaint();
+}
+
 void NoteEditor::mouseDrag (const juce::MouseEvent& e)
 {
+    if (drag == Drag::keys && showingDrums())
+    {
+        const auto roll = rollArea();
+        const auto rows = drumRows();
+        const auto row = firstRow + (int) std::floor ((juce::jlimit ((float) roll.getY(), (float) roll.getBottom() - 1.0f, e.position.y) - (float) roll.getY()) / (float) drumRowHeight);
+
+        if (juce::isPositiveAndBelow (row, (int) rows.size()))
+            sound (rows[(size_t) row].pitch, getVelocity());
+
+        return;
+    }
+
     if (drag == Drag::keys)
     {
         const auto roll = rollArea();
@@ -673,6 +1150,23 @@ void NoteEditor::mouseDrag (const juce::MouseEvent& e)
         return;
 
     const auto p = e.position;
+
+    // A drum step's velocity: up louder, down softer, 100 pixels from silent to full.
+    if (drag == Drag::velocity)
+    {
+        if (! juce::isPositiveAndBelow (dragNote, (int) shown->clip.notes.size()) || ! juce::isPositiveAndBelow (dragNote, (int) base->clip.notes.size()))
+            return;
+
+        if (! dragged && std::abs (p.y - dragStart.y) < 3.0f)
+            return;
+
+        dragged = true;
+        const auto v = juce::jlimit (1.0f / 127.0f, 1.0f, base->clip.notes[(size_t) dragNote].velocity + (dragStart.y - p.y) / 100.0f);
+        shown->clip.notes[(size_t) dragNote].velocity = v;
+        velocitySlider.setValue (std::round (v * 127.0f), juce::dontSendNotification);
+        repaint();
+        return;
+    }
 
     if (drag == Drag::loop)
     {
@@ -774,6 +1268,24 @@ void NoteEditor::mouseUp (const juce::MouseEvent&)
         return;
     }
 
+    // A click on a set drum step (not one this click set) takes it away; a drag set its velocity.
+    if (was == Drag::velocity && shown.has_value() && juce::isPositiveAndBelow (dragNote, (int) shown->clip.notes.size()))
+    {
+        if (dragged)
+            commit ("Note Velocity");
+        else if (! addedNow)
+        {
+            shown->clip.notes.erase (shown->clip.notes.begin() + dragNote);
+            selected.clear();
+            commit ("Remove Note");
+        }
+
+        base.reset();
+        refreshControls();
+        repaint();
+        return;
+    }
+
     if ((was == Drag::move || was == Drag::resize || was == Drag::loop || was == Drag::lanePoint) && dragged && shown.has_value() && base.has_value() && ! (shown->clip == base->clip))
         commit (was == Drag::move ? "Move Notes" : was == Drag::loop ? "Loop Length" : was == Drag::lanePoint ? "Lane Point" : "Note Length");
 
@@ -784,6 +1296,14 @@ void NoteEditor::mouseUp (const juce::MouseEvent&)
 
 void NoteEditor::mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails& wheel)
 {
+    if (showingDrums())
+    {
+        const auto visible = juce::jmax (1, rollArea().getHeight() / drumRowHeight);
+        firstRow = juce::jlimit (0, juce::jmax (0, (int) drumRows().size() - visible), firstRow - (int) std::round (wheel.deltaY * 12.0f));
+        repaint();
+        return;
+    }
+
     const auto rows = juce::jmax (1, rollArea().getHeight() / rowHeight);
     lowPitch = juce::jlimit (0, juce::jmax (0, 128 - rows), lowPitch + (int) std::round (wheel.deltaY * 12.0f));
     repaint();

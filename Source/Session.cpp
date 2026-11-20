@@ -55,6 +55,42 @@ const SessionTrack* SessionState::vcaOf (const SessionTrack& t) const
     return vca != nullptr && vca->isVca ? vca : nullptr;
 }
 
+const std::vector<DrumSound>& DrumSound::generalMidi()
+{
+    static const std::vector<DrumSound> map = []
+    {
+        static const char* const names[] = {
+            "Acoustic Bass Drum", "Bass Drum", "Side Stick", "Acoustic Snare", "Hand Clap", "Electric Snare",
+            "Low Floor Tom", "Closed Hi-Hat", "High Floor Tom", "Pedal Hi-Hat", "Low Tom", "Open Hi-Hat",
+            "Low-Mid Tom", "Hi-Mid Tom", "Crash Cymbal 1", "High Tom", "Ride Cymbal 1", "Chinese Cymbal",
+            "Ride Bell", "Tambourine", "Splash Cymbal", "Cowbell", "Crash Cymbal 2", "Vibraslap",
+            "Ride Cymbal 2", "Hi Bongo", "Low Bongo", "Mute Hi Conga", "Open Hi Conga", "Low Conga",
+            "High Timbale", "Low Timbale", "High Agogo", "Low Agogo", "Cabasa", "Maracas",
+            "Short Whistle", "Long Whistle", "Short Guiro", "Long Guiro", "Claves", "Hi Wood Block",
+            "Low Wood Block", "Mute Cuica", "Open Cuica", "Mute Triangle", "Open Triangle" };
+
+        std::vector<DrumSound> sounds;
+
+        for (int i = 0; i < (int) std::size (names); ++i)
+            sounds.push_back ({ 35 + i, names[i] });
+
+        return sounds;
+    }();
+
+    return map;
+}
+
+juce::String DrumSound::nameIn (const std::vector<DrumSound>& map, int pitch)
+{
+    for (auto& d : map)
+        if (d.pitch == pitch)
+            return d.name;
+
+    static const char* const names[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+    const auto p = juce::jlimit (0, 127, pitch);
+    return juce::String (names[p % 12]) + juce::String (p / 12 - 1);
+}
+
 juce::String automationModeName (AutomationMode m)
 {
     switch (m)
@@ -323,14 +359,44 @@ std::optional<float> NoteClip::laneValueAt (const ControllerLane& lane, juce::in
     return juce::jlimit (0.0f, 1.0f, lane.envelope.valueAt ((frame - getOrigin()) % period));
 }
 
-juce::MidiMessage NoteClip::laneMessage (int controller, float value)
+double NoteQuantize::lineBeat (juce::int64 k) const noexcept
+{
+    const auto d = (double) juce::jmax (1, division);
+
+    if (! swings() || k % 2 == 0)
+        return (double) k / d;
+
+    const auto pair = (k >= 0 ? k / 2 : (k - 1) / 2);
+    return ((double) pair * 2.0 + juce::jlimit (0.5, maxSwing, swing) * 2.0) / d;
+}
+
+double NoteQuantize::nearestLine (double beat) const noexcept
+{
+    const auto d = (double) juce::jmax (1, division);
+
+    if (! swings())
+        return std::round (beat * d) / d;
+
+    // The pair the beat is in: its first line, its swung second, and the next pair's first.
+    const auto pair = (juce::int64) std::floor (beat * d / 2.0);
+    auto best = lineBeat (2 * pair);
+
+    for (auto k : { 2 * pair + 1, 2 * pair + 2 })
+        if (std::abs (lineBeat (k) - beat) < std::abs (best - beat))
+            best = lineBeat (k);
+
+    return best;
+}
+
+juce::MidiMessage NoteClip::laneMessage (int controller, float value, int channel)
 {
     const auto v = juce::jlimit (0.0f, 1.0f, value);
+    channel = juce::jlimit (1, 16, channel);
 
     if (controller == ControllerLane::pitchBend)
-        return juce::MidiMessage::pitchWheel (1, juce::jlimit (0, 16383, (int) std::lround (v * 16383.0f)));
+        return juce::MidiMessage::pitchWheel (channel, juce::jlimit (0, 16383, (int) std::lround (v * 16383.0f)));
 
-    return juce::MidiMessage::controllerEvent (1, juce::jlimit (0, 127, controller), juce::jlimit (0, 127, (int) std::lround (v * 127.0f)));
+    return juce::MidiMessage::controllerEvent (channel, juce::jlimit (0, 127, controller), juce::jlimit (0, 127, (int) std::lround (v * 127.0f)));
 }
 
 void NoteClip::addMidi (juce::int64 from, int count, juce::MidiBuffer& midi) const
@@ -363,7 +429,7 @@ void NoteClip::addMidi (juce::int64 from, int count, juce::MidiBuffer& midi) con
 
         // The latest of the clip's start and the pass starts at or before a frame.
         const auto anchorBefore = [&] (juce::int64 frame) { return juce::jmax (position, origin + ((frame - origin) / period) * period); };
-        const auto send = [&] (juce::int64 frame) { midi.addEvent (laneMessage (lane.controller, *laneValueAt (lane, frame)), (int) (frame - from)); };
+        const auto send = [&] (juce::int64 frame) { midi.addEvent (laneMessage (lane.controller, *laneValueAt (lane, frame), channel), (int) (frame - from)); };
 
         if (position >= from && position < to)
             send (position);
@@ -397,7 +463,7 @@ void NoteClip::addMidi (juce::int64 from, int count, juce::MidiBuffer& midi) con
                 continue;
 
             if (off >= from && off < to)
-                midi.addEvent (juce::MidiMessage::noteOff (1, juce::jlimit (0, 127, n.pitch)), (int) (off - from));
+                midi.addEvent (juce::MidiMessage::noteOff (juce::jlimit (1, 16, channel), juce::jlimit (0, 127, n.pitch)), (int) (off - from));
         }
 
         for (auto& n : notes)
@@ -405,7 +471,7 @@ void NoteClip::addMidi (juce::int64 from, int count, juce::MidiBuffer& midi) con
             const auto on = passStart + n.start;
 
             if (n.start < period && on >= position && on < end && on >= from && on < to)
-                midi.addEvent (juce::MidiMessage::noteOn (1, juce::jlimit (0, 127, n.pitch), juce::jlimit (0.0f, 1.0f, n.velocity)), (int) (on - from));
+                midi.addEvent (juce::MidiMessage::noteOn (juce::jlimit (1, 16, channel), juce::jlimit (0, 127, n.pitch), juce::jlimit (0.0f, 1.0f, n.velocity)), (int) (on - from));
         }
     }
 }
@@ -3761,6 +3827,47 @@ int quantizeNotes (SessionState& s, const std::vector<juce::uint32>& clipIds, co
     return changed;
 }
 
+int quantizeNotes (SessionState& s, const std::vector<juce::uint32>& clipIds, const NoteQuantize& q)
+{
+    const auto map = s.tempoMap();
+    const auto strength = juce::jlimit (0.0, 1.0, q.strength);
+    const auto toward = [strength] (juce::int64 from, juce::int64 to) { return from + (juce::int64) std::llround (strength * (double) (to - from)); };
+    const auto lineFrame = [&] (juce::int64 frame) { return map.frameAtBeatPosition (q.nearestLine (map.beatPosition (frame))); };
+    auto changed = 0;
+
+    for (auto id : clipIds)
+    {
+        const auto where = s.findNoteClip (id);
+
+        if (! where.has_value())
+            continue;
+
+        auto& c = s.tracks[(size_t) where->first].noteClips[(size_t) where->second];
+        const auto origin = c.getOrigin();
+        const auto before = c.notes;
+
+        for (auto& n : c.notes)
+        {
+            const auto onFrame = origin + n.start, offFrame = onFrame + n.length;
+            const auto start = juce::jmax (origin, toward (onFrame, lineFrame (onFrame)));
+
+            if (q.lengths)
+            {
+                // At least one step: the line after the start's.
+                const auto beat = map.beatPosition (start);
+                const auto step = map.frameAtBeatPosition (beat + 1.0 / (double) juce::jmax (1, q.division)) - start;
+                n.length = juce::jmax (juce::jmax ((juce::int64) 1, step), toward (offFrame, lineFrame (offFrame)) - start);
+            }
+
+            n.start = start - origin;
+        }
+
+        changed += c.notes != before ? 1 : 0;
+    }
+
+    return changed;
+}
+
 NoteClip flattenedNoteClip (const NoteClip& c)
 {
     auto flat = c;
@@ -4396,6 +4503,21 @@ juce::String save (const SessionState& state, const juce::File& target,
         if (t.vcaId != 0 && indexOf.count (t.vcaId) > 0)
             track->setAttribute ("inVca", indexOf[t.vcaId]);
 
+        if (t.drumGrid)
+            track->setAttribute ("drumGrid", true);
+
+        if (! t.drumMap.empty())
+        {
+            auto* map = track->createNewChildElement ("DRUMMAP");
+
+            for (auto& d : t.drumMap)
+            {
+                auto* sound = map->createNewChildElement ("SOUND");
+                sound->setAttribute ("pitch", d.pitch);
+                sound->setAttribute ("name", d.name);
+            }
+        }
+
         if (t.outputBusId != 0 && indexOf.count (t.outputBusId) > 0)
             track->setAttribute ("output", indexOf[t.outputBusId]);
         else if (t.deviceOutput >= 0)
@@ -4573,6 +4695,9 @@ juce::String save (const SessionState& state, const juce::File& target,
             if (c.muted)
                 clip->setAttribute ("muted", true);
 
+            if (c.channel != 1)
+                clip->setAttribute ("channel", c.channel);
+
             if (c.colour >= 0)
                 clip->setAttribute ("colour", c.colour);
 
@@ -4745,6 +4870,17 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
 
         if (const auto mode = automationModeNamed (trackXml->getStringAttribute ("automation", "Read")); mode && ! track.isFolder)
             track.automationMode = *mode;
+
+        if (! track.isBus && ! track.isControl())
+        {
+            track.drumGrid = trackXml->getBoolAttribute ("drumGrid");
+
+            if (auto* map = trackXml->getChildByName ("DRUMMAP"))
+                for (auto* sound : map->getChildWithTagNameIterator ("SOUND"))
+                    if (const auto pitch = sound->getIntAttribute ("pitch", -1); juce::isPositiveAndBelow (pitch, 128))
+                        track.drumMap.push_back ({ pitch, sound->getStringAttribute ("name") });
+        }
+
         track.outputBusId = (juce::uint32) trackXml->getIntAttribute ("output", -1);   // likewise
 
         if (const auto pair = trackXml->getIntAttribute ("deviceOutput", -1); ! track.isControl() && pair >= 0 && pair < SessionTrack::maxDeviceOutputs - 1)
@@ -4904,6 +5040,7 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
             clip.loopLength = clipXml->getStringAttribute ("loop").getLargeIntValue();
             clip.muted = clipXml->getBoolAttribute ("muted");
             clip.colour = clipXml->getIntAttribute ("colour", -1);
+            clip.channel = juce::jlimit (1, 16, clipXml->getIntAttribute ("channel", 1));
 
             for (auto* noteXml : clipXml->getChildWithTagNameIterator ("NOTE"))
                 clip.notes.push_back ({ noteXml->getIntAttribute ("pitch"), noteXml->getStringAttribute ("start").getLargeIntValue(),

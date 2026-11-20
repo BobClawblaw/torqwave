@@ -574,6 +574,7 @@ private:
         the selected track's instrument, until stopped, as a note clip there. */
     void toggleRecordNotes();
     void finishRecordingNotes();
+    void captureMidi();
     bool recordingNotes = false;
     juce::uint32 auditionTrack = 0;   // the track a note from the piano roll is sounding on, or 0
     void routeLiveMidi();

@@ -81,6 +81,25 @@ namespace MidiIn
         /** How long an instrument is kept running after the last message, in seconds. */
         static constexpr double tailSeconds = 10.0;
 
+        /** Retrospective record: the notes and controller moves of every block taken in the last
+            retroSeconds are kept, whether the session plays or not, for Capture MIDI. Audio
+            thread, every block: sessionFrame is where the block plays in the session, or -1 when
+            the session isn't playing (or plays at another rate than the device). */
+        static constexpr double retroSeconds = 60.0;
+        void rememberBlock (const juce::MidiBuffer&, int numFrames, juce::int64 sessionFrame);
+
+        /** What was kept, and forgets it. Played while the session played: those notes, at their
+            session frames. Otherwise the notes played while stopped, their frames counted at the
+            device's rate from the first note (0). Notes still held end at the last message. */
+        struct Recent
+        {
+            Capture capture;
+            bool whilePlaying = false;
+            double rate = 48000.0;         // the device's, for frames played while stopped
+        };
+
+        Recent takeRecent();
+
     private:
         juce::MidiMessageCollector collector;
         double rate = 48000.0;
@@ -94,6 +113,17 @@ namespace MidiIn
         std::vector<CapturedController> controllers;     // under the lock
         std::array<juce::int64, 128> held;               // under the lock: each pitch's on frame, or -1
         std::array<float, 128> heldVelocity;
+
+        struct Remembered
+        {
+            juce::int64 clock = 0, sessionFrame = -1;
+            juce::uint8 bytes[3] {};
+        };
+
+        static constexpr size_t rememberedSize = 16384;
+        std::vector<Remembered> remembered;              // under the lock: a ring, oldest at rememberedNext once full
+        size_t rememberedNext = 0, rememberedCount = 0;
+        std::atomic<juce::int64> clock { 0 };            // device frames taken
     };
 
     /** A clip of a capture: at the first note's frame (or `from`, when earlier and not before
@@ -101,6 +131,11 @@ namespace MidiIn
         and each controller's moves as a lane. No notes give a clip of no notes and no length
         (nothing to add). */
     NoteClip clipOf (const Capture&, juce::int64 from);
+
+    /** Capture MIDI's clip of what a live input kept (Live::takeRecent), named "Captured": played
+        while the session played, where it was played; played while stopped, from `cursor`, its
+        frames brought from the device's rate to the session's. */
+    NoteClip clipOfRecent (const Live::Recent&, juce::int64 cursor, double sessionRate);
 
     /** A Standard MIDI File's tracks as note clips, one for each track with notes, each named by
         the track's name (or "Track n"), its notes at frames of the session rate from the file's

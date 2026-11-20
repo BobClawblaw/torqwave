@@ -5281,13 +5281,15 @@ int MultitrackView::setSelectedNotesVelocity (int to, double scale)
 
 int MultitrackView::quantizeSelectedNotes (int division)
 {
+    NoteQuantize q;
+    q.division = division;
+    return quantizeSelectedNotes (q);
+}
+
+int MultitrackView::quantizeSelectedNotes (const NoteQuantize& q)
+{
     auto next = *engine.session.getState();
-    const auto map = next.tempoMap();
-    const auto steps = (double) juce::jmax (1, division);
-    const auto changed = SessionEdits::quantizeNotes (next, getSelectedNoteClips(), [&map, steps] (juce::int64 frame)
-    {
-        return map.frameAtBeatPosition (std::round (map.beatPosition (frame) * steps) / steps);
-    });
+    const auto changed = SessionEdits::quantizeNotes (next, getSelectedNoteClips(), q);
 
     if (changed > 0)
         engine.session.apply (std::move (next), "Quantize Notes");

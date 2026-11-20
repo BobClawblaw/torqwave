@@ -7,6 +7,7 @@ namespace MidiIn
     {
         held.fill (-1);
         heldVelocity.fill (0.0f);
+        remembered.resize (rememberedSize);
         collector.reset (rate);
     }
 
@@ -88,31 +89,22 @@ namespace MidiIn
         return { std::exchange (captured, {}), std::exchange (controllers, {}) };
     }
 
-    void Live::captureBlock (const juce::MidiBuffer& block, juce::int64 blockFrame)
+    namespace
     {
-        if (! capturing || block.isEmpty())
-            return;
-
-        // The message thread holds the lock only briefly (start, stop); a block that finds it held is lost.
-        const juce::SpinLock::ScopedTryLockType sl (captureLock);
-
-        if (! sl.isLocked())
-            return;
-
-        for (const auto meta : block)
+        /** A message into a capture at a frame: a note-on starts a note (ending one held at that
+            pitch), a note-off or All Notes Off ends it, a controller or the pitch bend is a move. */
+        void addToCapture (const juce::MidiMessage& m, juce::int64 frame, std::vector<CapturedNote>& notes,
+                           std::vector<CapturedController>& controllers, std::array<juce::int64, 128>& held, std::array<float, 128>& velocity)
         {
-            const auto m = meta.getMessage();
-            const auto frame = blockFrame + meta.samplePosition;
-
             if (m.isNoteOn())
             {
                 const auto pitch = (size_t) m.getNoteNumber();
 
                 if (held[pitch] >= 0 && frame > held[pitch])
-                    captured.push_back ({ (int) pitch, held[pitch], frame, heldVelocity[pitch] });
+                    notes.push_back ({ (int) pitch, held[pitch], frame, velocity[pitch] });
 
                 held[pitch] = frame;
-                heldVelocity[pitch] = m.getFloatVelocity();
+                velocity[pitch] = m.getFloatVelocity();
             }
             else if (m.isController())
             {
@@ -130,12 +122,110 @@ namespace MidiIn
                         continue;
 
                     if (frame > held[(size_t) pitch])
-                        captured.push_back ({ pitch, held[(size_t) pitch], frame, heldVelocity[(size_t) pitch] });
+                        notes.push_back ({ pitch, held[(size_t) pitch], frame, velocity[(size_t) pitch] });
 
                     held[(size_t) pitch] = -1;
                 }
             }
         }
+    }
+
+    void Live::captureBlock (const juce::MidiBuffer& block, juce::int64 blockFrame)
+    {
+        if (! capturing || block.isEmpty())
+            return;
+
+        // The message thread holds the lock only briefly (start, stop); a block that finds it held is lost.
+        const juce::SpinLock::ScopedTryLockType sl (captureLock);
+
+        if (! sl.isLocked())
+            return;
+
+        for (const auto meta : block)
+            addToCapture (meta.getMessage(), blockFrame + meta.samplePosition, captured, controllers, held, heldVelocity);
+    }
+
+    void Live::rememberBlock (const juce::MidiBuffer& block, int numFrames, juce::int64 sessionFrame)
+    {
+        const auto at = clock.load();
+        clock = at + numFrames;
+
+        if (block.isEmpty())
+            return;
+
+        const juce::SpinLock::ScopedTryLockType sl (captureLock);
+
+        if (! sl.isLocked() || remembered.empty())
+            return;
+
+        for (const auto meta : block)
+        {
+            const auto m = meta.getMessage();
+
+            if (! (m.isNoteOnOrOff() || m.isAllNotesOff() || m.isController() || m.isPitchWheel()) || m.getRawDataSize() > 3)
+                continue;
+
+            auto& r = remembered[rememberedNext];
+            r.clock = at + meta.samplePosition;
+            r.sessionFrame = sessionFrame >= 0 ? sessionFrame + meta.samplePosition : -1;
+            std::memcpy (r.bytes, m.getRawData(), (size_t) m.getRawDataSize());
+            rememberedNext = (rememberedNext + 1) % rememberedSize;
+            rememberedCount = juce::jmin (rememberedSize, rememberedCount + 1);
+        }
+    }
+
+    Live::Recent Live::takeRecent()
+    {
+        std::vector<Remembered> events;
+
+        {
+            const juce::SpinLock::ScopedLockType sl (captureLock);
+            const auto oldest = clock.load() - (juce::int64) (retroSeconds * rate);
+
+            for (size_t i = 0; i < rememberedCount; ++i)
+            {
+                const auto& r = remembered[(rememberedNext + rememberedSize - rememberedCount + i) % rememberedSize];
+
+                if (r.clock >= oldest)
+                    events.push_back (r);
+            }
+
+            rememberedCount = 0;
+        }
+
+        Recent recent;
+        recent.rate = rate;
+
+        if (events.empty())
+            return recent;
+
+        // Played while the session played, or else while it was stopped: the last message says which.
+        recent.whilePlaying = events.back().sessionFrame >= 0;
+        std::array<juce::int64, 128> on;
+        std::array<float, 128> velocity {};
+        on.fill (-1);
+        juce::int64 first = -1, last = 0;
+
+        for (auto& r : events)
+        {
+            if ((r.sessionFrame >= 0) != recent.whilePlaying)
+                continue;
+
+            if (first < 0)
+                first = r.clock;
+
+            const auto frame = recent.whilePlaying ? r.sessionFrame : r.clock - first;
+            const juce::MidiMessage m (r.bytes, juce::MidiMessage::getMessageLengthFromFirstByte (r.bytes[0]), 0.0);
+            addToCapture (m, frame, recent.capture.notes, recent.capture.controllers, on, velocity);
+            last = juce::jmax (last, frame);
+        }
+
+        for (int pitch = 0; pitch < 128; ++pitch)
+            if (on[(size_t) pitch] >= 0)
+                recent.capture.notes.push_back ({ pitch, on[(size_t) pitch], juce::jmax (on[(size_t) pitch] + 1, last), velocity[(size_t) pitch] });
+
+        std::sort (recent.capture.notes.begin(), recent.capture.notes.end(), [] (auto& a, auto& b) { return a.on < b.on; });
+        return recent;
     }
 
     //==============================================================================
@@ -182,6 +272,30 @@ namespace MidiIn
             lane->envelope.add (juce::jmax ((juce::int64) 0, c.frame - clip.position), juce::jlimit (0.0f, 1.0f, c.value));
         }
 
+        return clip;
+    }
+
+    NoteClip clipOfRecent (const Live::Recent& recent, juce::int64 cursor, double sessionRate)
+    {
+        auto capture = recent.capture;
+
+        if (! recent.whilePlaying)
+        {
+            const auto scale = sessionRate / recent.rate;
+            const auto at = [&] (juce::int64 frame) { return juce::jmax ((juce::int64) 0, cursor) + (juce::int64) std::llround ((double) frame * scale); };
+
+            for (auto& n : capture.notes)
+            {
+                n.on = at (n.on);
+                n.off = juce::jmax (n.on + 1, at (n.off));
+            }
+
+            for (auto& c : capture.controllers)
+                c.frame = at (c.frame);
+        }
+
+        auto clip = clipOf (capture, std::numeric_limits<juce::int64>::max());
+        clip.name = "Captured";
         return clip;
     }
 

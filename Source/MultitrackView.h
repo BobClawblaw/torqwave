@@ -410,6 +410,7 @@ public:
     int transposeSelectedNotes (int semitones);
     int setSelectedNotesVelocity (int to, double scale);
     int quantizeSelectedNotes (int division);
+    int quantizeSelectedNotes (const NoteQuantize&);   ///< with swing, strength and lengths
 
     /** Clears the time range on every track (SessionEdits::clearTime) as one undo step ("Clear
         Range"). False with no range or nothing there. */

@@ -167,7 +167,7 @@ namespace
         cmdSevenOneMaster, cmdMeetDeliverySpec, cmdShowSoundLibrary, cmdDynamicEq, cmdMultibandWidth, cmdExciter, cmdMaximizer, cmdTransientShaper, cmdCaptureMatchReference, cmdCaptureMatchReferenceFromFile, cmdMatchEq, cmdShowTonalBalance, cmdDither, cmdDialogueIsolation, cmdAdaptiveDenoise, cmdMouthDeClick, cmdDeCrackle, cmdDePlosive, cmdBreathControl, cmdSpill, cmdWowFlutter, cmdSpectralRecovery, cmdRebalance, cmdCaptureAmbience, cmdAmbienceMatch, cmdDialogueContour, cmdAzimuth, cmdCodecPreview,
         cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectZeroCrossings, cmdBrushLighter, cmdBrushHeavier, cmdShowStatistics,
         cmdTimeMinutesSeconds, cmdTimeDecimalSeconds, cmdTimeSamples, cmdTimeSmpte24, cmdTimeSmpte25, cmdTimeSmpte2997Drop, cmdTimeSmpte2997, cmdTimeSmpte30,   // one a TimeFormat::Kind, in its order
-        cmdExtremeStretch, cmdNewFile, cmdSettings, cmdGenerateInstrument, cmdShowPianoRoll, cmdShowKeyboard, cmdRecordNotes, cmdImportMidi, cmdAddInstrumentTrack,
+        cmdExtremeStretch, cmdNewFile, cmdSettings, cmdGenerateInstrument, cmdShowPianoRoll, cmdShowKeyboard, cmdRecordNotes, cmdCaptureMidi, cmdImportMidi, cmdAddInstrumentTrack,
         cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute,   // one a MultitrackView::Tool, in its order
         cmdTimeWithBars, cmdMusicalTimebase, cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes, cmdTimeTool,
         cmdUserGuide, cmdShortcutList, cmdSplitAllTracks, cmdRippleOff, cmdRippleTrack, cmdRippleAll,
@@ -1918,6 +1918,10 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                            info.setTicked (dock->isShown (Panels::pianoRoll)); break;
         case cmdShowKeyboard: info.setInfo ("Keyboard", "Show or hide the on-screen keyboard, which plays the selected track's instrument", "Window", 0);
                            info.setTicked (dock->isShown (Panels::keyboard)); break;
+        case cmdCaptureMidi: info.setInfo ("Capture MIDI", "Make a note clip of what was played live in the last minute without recording: "
+                                           "where it was played if the session was playing, else at the cursor", "Multitrack", 0);
+                           info.addDefaultKeypress ('r', juce::ModifierKeys::altModifier | juce::ModifierKeys::shiftModifier);
+                           info.setActive (multitrackMode && ! recordingNotes); break;
         case cmdRecordNotes: info.setInfo (recordingNotes ? "Stop Recording Notes" : "Record Notes",
                                            "Play (from the cursor) and keep the notes played live, from a MIDI input or the keyboard, into the selected track's instrument as a note clip",
                                            "Multitrack", 0);
@@ -3051,6 +3055,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdShowPianoRoll: dock->toggle (Panels::pianoRoll); break;
         case cmdShowKeyboard: dock->toggle (Panels::keyboard); break;
         case cmdRecordNotes: toggleRecordNotes(); break;
+        case cmdCaptureMidi: captureMidi(); break;
         case cmdImportMidi: chooseMidiFiles(); break;
         case cmdOpenProject: chooseProject(); break;
         case cmdSaveProject: saveProject (false); break;
@@ -3264,7 +3269,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
                                 0, cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement });
             group ("Notes", { cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes });
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
-            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes });
+            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes, cmdCaptureMidi });
             group ("Automation", { cmdWriteAutomation, 0, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite });
             group ("Tempo", { cmdMetronome, cmdCountIn, 0, cmdTempo, cmdTapTempo, cmdTempoChange, cmdBarsAndBeats, cmdTimeWithBars, 0, cmdMusicalTimebase });
             {
@@ -4218,10 +4223,15 @@ void MainComponent::showNoteVelocityDialog()
 
 void MainComponent::showQuantizeNotesDialog()
 {
-    auto* box = new juce::AlertWindow ("Quantize Notes", "Move the selected note clips' notes to the nearest line of a grid of the beat.",
+    auto* box = new juce::AlertWindow ("Quantize Notes", "Move the selected note clips' notes toward the nearest line of a grid of the beat. "
+                                       "Swing moves every second line of a 1/2 or 1/4 beat grid later; strength sets how far notes go.",
                                        juce::MessageBoxIconType::NoIcon);
     box->addComboBox ("grid", { "1 beat", "1/2 beat", "1/3 beat", "1/4 beat", "1/6 beat", "1/8 beat", "1/12 beat", "1/16 beat" }, "Grid");
     box->getComboBoxComponent ("grid")->setSelectedItemIndex (3);
+    box->addTextEditor ("swing", "50", "Swing (50 to 75 %)");
+    box->addTextEditor ("strength", "100", "Strength (0 to 100 %)");
+    box->addComboBox ("lengths", { "Starts only", "Starts and ends" }, "Move");
+    box->getComboBoxComponent ("lengths")->setSelectedItemIndex (0);
     box->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
     box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
 
@@ -4231,8 +4241,13 @@ void MainComponent::showQuantizeNotesDialog()
             return;
 
         static constexpr int divisions[] = { 1, 2, 3, 4, 6, 8, 12, 16 };
-        const auto chosen = juce::jlimit (0, 7, box->getComboBoxComponent ("grid")->getSelectedItemIndex());
-        multitrack.quantizeSelectedNotes (divisions[chosen]);
+        NoteQuantize q;
+        q.division = divisions[juce::jlimit (0, 7, box->getComboBoxComponent ("grid")->getSelectedItemIndex())];
+        q.swing = juce::jlimit (50.0, NoteQuantize::maxSwing * 100.0, box->getTextEditorContents ("swing").getDoubleValue()) / 100.0;
+        q.strength = juce::jlimit (0.0, 100.0, box->getTextEditorContents ("strength").trim().isEmpty() ? 100.0
+                                                                                                       : box->getTextEditorContents ("strength").getDoubleValue()) / 100.0;
+        q.lengths = box->getComboBoxComponent ("lengths")->getSelectedItemIndex() == 1;
+        multitrack.quantizeSelectedNotes (q);
     }), true);
 }
 
@@ -5190,6 +5205,31 @@ void MainComponent::finishRecordingNotes()
     if (const auto id = SessionEdits::addNoteClip (next, engine.getLiveMidi().getTrack(), std::move (clip)); id != 0)
     {
         engine.session.apply (std::move (next), "Record Notes");
+        multitrack.selectNoteClip (id);
+    }
+}
+
+void MainComponent::captureMidi()
+{
+    auto& live = engine.getLiveMidi();
+    const auto recent = live.takeRecent();
+    const auto state = engine.session.getState();
+    const auto clip = MidiIn::clipOfRecent (recent, multitrack.getCursor(), state->sampleRate);
+
+    if (clip.notes.empty())
+    {
+        showNote ("Capture MIDI", "No notes were played in the last minute, so no clip was made.");
+        return;
+    }
+
+    // Onto the track the notes played (the selected one's instrument), or a new instrument track.
+    auto next = *state;
+    const auto* track = next.findTrack (live.getTrack());
+    const auto trackId = track != nullptr && track->takesNoteClips() ? track->id : next.addInstrumentTrack().id;
+
+    if (const auto id = SessionEdits::addNoteClip (next, trackId, clip); id != 0)
+    {
+        engine.session.apply (std::move (next), "Capture MIDI");
         multitrack.selectNoteClip (id);
     }
 }
@@ -13841,7 +13881,28 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
             shown.beatSeconds = 60.0 / juce::jmax (1.0, state->tempoMap().tempoAt (clip.position));
             shown.trackName = track.name;
             shown.hasInstrument = engine.getTrackEffects().getInstrument (track.id) != nullptr;
+            shown.drums = track.drumGrid;
+            shown.drumMap = track.drumSounds();
             return shown;
+        };
+        // The drum grid and its map belong to the clip's track.
+        const auto changeTrack = [this] (const juce::String& description, std::function<void (SessionTrack&)> change)
+        {
+            auto next = *engine.session.getState();
+
+            if (const auto where = next.findNoteClip (multitrack.getSelectedNoteClip()); where.has_value() && multitrackMode)
+            {
+                change (next.tracks[(size_t) where->first]);
+                engine.session.apply (std::move (next), description);
+            }
+        };
+        panel->showDrums = [changeTrack] (bool drums)
+        {
+            changeTrack (drums ? "Drum Grid" : "Piano Roll", [drums] (SessionTrack& t) { t.drumGrid = drums; });
+        };
+        panel->applyDrumMap = [changeTrack] (const std::vector<DrumSound>& map, const juce::String& description)
+        {
+            changeTrack (description, [map] (SessionTrack& t) { t.drumMap = map; });
         };
         panel->apply = [this] (const NoteClip& clip, const juce::String& description)
         {

@@ -123,6 +123,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Input Monitoring | `I` |
 | Loop Recording | `L` |
 | Record Notes | `Option-R` |
+| Capture MIDI | `Option-Shift-R` |
 | Write Automation | `W` |
 | Crossfade Overlaps | `X` |
 | Mix Down... | `Shift-Cmd-E` |

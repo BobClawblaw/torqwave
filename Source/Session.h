@@ -277,6 +277,26 @@ struct ClipNote
     }
 };
 
+/** How Quantize Notes and the drum grid place notes: on a grid of the beat, swung or straight. */
+struct NoteQuantize
+{
+    int division = 4;              // grid lines in a beat: 4 is 1/16 notes in 4/4
+    double swing = 0.5;            // where each pair's second line falls in it: 0.5 straight, up to 0.75
+    double strength = 1.0;         // how far a note moves to its line, 0 to 1
+    bool lengths = false;          // the notes' ends too
+
+    static constexpr double maxSwing = 0.75;
+
+    /** Swing applies on a grid of 2 or 4 lines a beat (1/8 or 1/16 notes in 4/4); others are straight. */
+    bool swings() const noexcept   { return swing > 0.5 && (division == 2 || division == 4); }
+
+    /** Grid line k's beat position from beat 0: the second line of each pair moved later by the swing. */
+    double lineBeat (juce::int64 k) const noexcept;
+
+    /** The line nearest a beat position. */
+    double nearestLine (double beat) const noexcept;
+};
+
 /** A controller's course over a note clip's timeline: a CC (0 to 127) or the pitch bend
     (pitchBend), as an envelope of values from 0 to 1 at frames of the timeline (a CC's 0 to 127;
     the bend from all the way down to all the way up, 0.5 at rest), repeating with the pattern.
@@ -317,6 +337,7 @@ struct NoteClip
     std::vector<ControllerLane> lanes;     // at most one a controller
     bool muted = false;                    // stays in place but plays nothing
     int colour = -1;                       // a place in TrackColours::palette, or -1 for its track's colour
+    int channel = 1;                       // the MIDI channel its notes and lanes go out on, 1 to 16
 
     juce::int64 getEnd() const noexcept    { return position + length; }
 
@@ -327,8 +348,8 @@ struct NoteClip
         with the pattern), or nothing outside the clip or without points. */
     std::optional<float> laneValueAt (const ControllerLane&, juce::int64 frame) const noexcept;
 
-    /** The MIDI message for a lane's value: a controller change or a pitch wheel move. */
-    static juce::MidiMessage laneMessage (int controller, float value);
+    /** The MIDI message for a lane's value: a controller change or a pitch wheel move, on a channel (1 to 16). */
+    static juce::MidiMessage laneMessage (int controller, float value, int channel = 1);
 
     /** The session frame the notes' timeline starts at. */
     juce::int64 getOrigin() const noexcept { return position - offset; }
@@ -337,7 +358,7 @@ struct NoteClip
     juce::int64 getPeriod() const noexcept { return loopLength > 0 ? loopLength : offset + length; }
 
     /** The MIDI the clip plays in session frames [from, from + count): each note's note-on at its
-        frame and note-off where it ends (or at the clip's end), as frames from 0, on channel 1.
+        frame and note-off where it ends (or at the clip's end), as frames from 0, on its channel.
         At one frame note-offs come before note-ons, so a note taking over from another doesn't
         lose its voice. The same whatever the blocks: a note's events fall in whichever block has
         their frame. */
@@ -349,8 +370,23 @@ struct NoteClip
     bool operator== (const NoteClip& o) const noexcept
     {
         return id == o.id && name == o.name && position == o.position && offset == o.offset && length == o.length && loopLength == o.loopLength
-            && notes == o.notes && lanes == o.lanes && muted == o.muted && colour == o.colour;
+            && notes == o.notes && lanes == o.lanes && muted == o.muted && colour == o.colour && channel == o.channel;
     }
+};
+
+/** A drum sound: a row of the piano roll's drum grid, the note it plays and its name. */
+struct DrumSound
+{
+    int pitch = 36;
+    juce::String name;
+
+    bool operator== (const DrumSound& o) const noexcept { return pitch == o.pitch && name == o.name; }
+
+    /** General MIDI's percussion sounds, notes 35 to 81, the kick first. */
+    static const std::vector<DrumSound>& generalMidi();
+
+    /** The name of a note in a map, or its pitch name (C1, D#2...) when the map doesn't have it. */
+    static juce::String nameIn (const std::vector<DrumSound>& map, int pitch);
 };
 
 struct SessionTrack
@@ -391,6 +427,15 @@ struct SessionTrack
     /** Touch, Latch or Write: moving a control while playing writes automation. */
     bool writesAutomation() const noexcept        { return automationMode >= AutomationMode::touch; }
     juce::String note;                     // free text, shown in the header's tooltip
+
+    /** How the piano roll shows its note clips: as a drum grid (one row a sound), and the sounds,
+        top to bottom. An empty map is General MIDI's. */
+    bool drumGrid = false;
+    std::vector<DrumSound> drumMap;
+
+    /** The drum map in use: its own, or General MIDI's. */
+    const std::vector<DrumSound>& drumSounds() const noexcept { return drumMap.empty() ? DrumSound::generalMidi() : drumMap; }
+
     TrackInput input;                      // what it records from (tracks only)
 
     /** Where a track's or bus's output goes: 0 for the mix, or a bus it plays into in place of
@@ -1139,6 +1184,11 @@ namespace SessionEdits
         session frame out), its length kept, never before the clip's timeline start. Returns how
         many clips changed. */
     int quantizeNotes (SessionState&, const std::vector<juce::uint32>& clipIds, const std::function<juce::int64 (juce::int64)>& nearestLine);
+
+    /** Quantize Notes on the session's tempo map, by `q`: each note's start goes `strength` of
+        the way to the nearest line of the (swung) grid, never before the clip's timeline start;
+        with `lengths`, its end does too, at least one grid step after its start. */
+    int quantizeNotes (SessionState&, const std::vector<juce::uint32>& clipIds, const NoteQuantize& q);
 
     /** The notes and lane points a clip plays, laid out once from its start (every pass of a
         repeating clip written out, notes cut at its end, each lane starting with its value at the

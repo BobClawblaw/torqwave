@@ -749,8 +749,13 @@ void DocumentPlayerProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     const auto blockFrame = sessionSource.getNextReadPosition();
     inserts.setLiveMidi (liveMidi.getPlayingTrack(), mode == Mode::session ? &liveBlock : nullptr);
 
-    if (liveAny && playing && mode == Mode::session && juce::exactlyEqual (sourceRate, deviceRate))
+    const auto atSessionFrames = playing && mode == Mode::session && juce::exactlyEqual (sourceRate, deviceRate);
+
+    if (liveAny && atSessionFrames)
         liveMidi.captureBlock (liveBlock, blockFrame);
+
+    // Kept for Capture MIDI, played or not.
+    liveMidi.rememberBlock (liveBlock, numFrames, atSessionFrames ? blockFrame : -1);
 
     transport.getNextAudioBlock (info);
 

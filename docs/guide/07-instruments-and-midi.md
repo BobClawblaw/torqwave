@@ -21,6 +21,7 @@ New instrument tracks follow the tempo ([musical timebase](06-multitrack-session
 | Type the notes | Right-click the track's header and choose **Add Notes...**. Type note names (C4, F#3, Bb2; C4 is middle C) or MIDI numbers (60), separated by commas. Choose whether they play together or one after another, how long each is held, and whether the pattern repeats |
 | A single hit | **Add Trigger** in the same menu puts a one-note clip (C4, a tenth of a second) at the cursor. Use it for a sampler or drum instrument |
 | Play them in | Turn on **Record Notes** (Option-R), play, and stop: what you played becomes a note clip |
+| Keep what you just played | **Capture MIDI** (Option-Shift-R, in **Multitrack > Editing and Recording**) turns the last 60 seconds of MIDI you played into a note clip, even with Record Notes off (see below) |
 | Import a MIDI file | **Multitrack > Import MIDI File...** adds each track of a Standard MIDI File that has notes as a note clip on a new track, at the cursor |
 
 Right-clicking a lane offers **Add Notes Here...** and **Add Trigger Here** at that spot.
@@ -56,9 +57,27 @@ Double-click a note clip, or choose **Window > Piano Roll**, to edit the clip's 
 
 Notes sound as you put them in, click them or drag them. The **grid** choice divides the beat into 1, 2, 4, 8, 16 or 32 steps, or turns the grid off.
 
+**Swing**, beside it, moves the second line of each pair later, from Straight (50 %) to 75 %. It acts on a grid of 2 or 4 steps a beat (1/8 or 1/16 notes in 4/4), for the grid lines, snapping and the drum grid's steps.
+
+**Ch** sets the MIDI channel the clip's notes and lanes go out on, 1 to 16, for an instrument that plays a different sound on each channel.
+
 ![The Piano Roll under the multitrack view, showing the Lead clip's 12 notes, with the Grid, Velocity and Lane controls along its top](../screenshots/guide-pianoroll.png)
 
 *The Lead clip's notes in the Piano Roll. Clip Properties, at the right, shows the clip's name, start and length.*
+
+### The drum grid
+
+**Drums**, at the left of the top bar, shows the clip as a step grid instead: a row for each drum sound, a column for each grid step (quarter beats with the grid off). The choice is the track's, so all its clips open that way.
+
+| To | Do |
+|---|---|
+| Set a step | Click it. The note is one step long, at the slider's velocity |
+| Clear a step | Click it again, or Option-click it |
+| Set a step's velocity | Drag up (louder) or down (softer) from it. The bar inside the step shows the velocity |
+| Hear a sound | Click its name |
+| Edit the map | Right-click a name: **Edit Sound...** (its name and note), **Add Sound...**, **Remove from the Map**, **Move Up**, **Move Down**, or back to the **General MIDI Map** |
+
+The rows come from the track's drum map, General MIDI's (notes 35 to 81) unless you change it. The map is saved with the session. Notes not in the map get rows of their own at the bottom, named by pitch; **Add to the Map...** names one.
 
 ### Controller lanes
 
@@ -87,7 +106,16 @@ For the selected note clips, **Multitrack > Notes** has:
 
 - **Transpose Notes...**: by semitones.
 - **Note Velocity...**: set the velocity, or scale it.
-- **Quantize Notes...**: move the notes to the nearest line of a grid of the beat.
+- **Quantize Notes...**: move the notes to the nearest line of a grid of the beat. **Swing** (50 to 75 %, on a 1/8 or 1/16 grid) moves the off-beat lines later. **Strength** moves each note only part of the way (100 % is all the way). **Starts and ends** puts the ends of the notes on lines too, keeping each at least a step long.
+
+### Capture MIDI
+
+Torqwave keeps the last 60 seconds of MIDI coming in from your keyboard, whether the session plays or not. **Capture MIDI** (Option-Shift-R) turns it into a note clip named "Captured":
+
+- **Played while the session played:** the notes land where you played them.
+- **Played while stopped:** the notes start at the cursor, at the times you played them.
+
+The clip goes on the track you played into, or on a new instrument track. What was captured is then forgotten, so a second Capture MIDI has only what you played since.
 
 Shift-click selects several clips, note and audio together, to move, nudge, quantize, mute, copy, duplicate or delete at once.
 

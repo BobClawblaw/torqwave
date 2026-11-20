@@ -20,6 +20,20 @@ Each milestone as it was built, newest first, with what the tests measured on th
 - A value written where a held one ends now steps there, rather than ramping from where the hold began.
 - Tested: Off plays the setting, sample for sample; Touch, Latch and Write each write what they should over a scripted pass, Write from where playback began; two tracks write at once, and each pass undoes on its own; an undo, or an older state applied, leaves the modes; the mixer's fader writes while playing in Touch; a member of a VCA fader at -3 dB plays sample for sample as at -9 dB, its envelope moves its members within 1e-6, a bus joins one, mute and solo follow it, and membership and modes come back from a session file. Not yet tried by hand on a mix.
 
+**Drum grid, swing, Capture MIDI and MIDI channels**
+- A **drum grid** in the Piano Roll (the **Drums** button): a row for each drum sound and a column for each grid step. Click a step to set or clear it, and drag up or down from it for velocity. The rows come from the track's drum map: General MIDI's, or the track's own, edited by right-clicking a name and saved with the session. Notes outside the map get rows of their own.
+- **Swing**, 50 to 75 %, on a 1/8 or 1/16 grid: in the Piano Roll (its lines, snapping and the drum grid's steps) and in **Quantize Notes...**, which also gains **Strength** and **Starts and ends**.
+- **Capture MIDI** (Option-Shift-R): the last 60 seconds of MIDI played in, while playing or stopped, become a note clip. Notes played while the session played land where they were played. Notes played while stopped start at the cursor.
+- **MIDI channels:** a note clip's notes and controller lanes go out on its channel, 1 to 16, set by the Piano Roll's **Ch** choice and saved with the session.
+- Tested:
+  - The grid puts in exactly the notes a clicked pattern means; clicking, Option-clicking and dragging change steps as they should.
+  - Swing at 66 % puts the off-beat line at 66 % of its pair, in the drum grid, in the Piano Roll's snapping and in Quantize Notes; strength and lengths move notes by what they should.
+  - A capture of notes played while stopped keeps their times from the cursor, at the session's rate; one played while playing keeps their session frames.
+  - A clip's notes and lane values go out on its channel.
+  - Drum maps, the drum grid choice and channels come back from a session file.
+  - The grid was driven by the tests' mouse.
+  - Not yet tried by hand with a drum instrument or a keyboard.
+
 ## Released
 
 **Release 0.18.0: Cubase-style sessions, Ask Torq on sessions, ASIO and Intel Macs**
