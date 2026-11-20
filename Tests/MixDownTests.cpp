@@ -120,43 +120,103 @@ void runMixDownTests (AudioEngine& engine)
                "mixdown: the whole session (" + juce::String (length) + " frames) is playback's mix bit for bit");
     }
 
-    // Through the master bus's effects: none leaves the mix as it is; a limiter there holds the whole
-    // mix under its ceiling, as one chain on the sum, not one on each track.
+    // The master track: the whole mix through its effects, then its volume, in playback and the
+    // mixdown alike. At 0 dB without effects it changes nothing.
     {
-        juce::AudioBuffer<float> plain, none, limited;
+        juce::AudioBuffer<float> plain;
         OfflineRender::mixSession (s, { 0, length }, plain, nullptr, {});
-        none.makeCopyOf (plain);
-        limited.makeCopyOf (plain);
+        const auto peakOf = [] (const juce::AudioBuffer<float>& b)
+        {
+            return juce::jmax (b.getMagnitude (0, 0, b.getNumSamples()), b.getMagnitude (1, 0, b.getNumSamples()));
+        };
 
-        const auto emptyRack = std::make_unique<juce::XmlElement> ("TORQWAVE_RACK");
-        const auto noneError = OfflineRender::throughMasterBus (emptyRack.get(), engine.pluginFormatManager, rate, none, {})
-                             + OfflineRender::throughMasterBus (nullptr, engine.pluginFormatManager, rate, none, {});
+        auto withMaster = s;
+        const auto masterId = withMaster.addMaster().id;
+        juce::AudioBuffer<float> unity;
+        OfflineRender::mixSession (withMaster, { 0, length }, unity, nullptr, {});
 
-        BuiltInEffects::LimiterProcessor limiter;
+        auto quieter = withMaster;
+        quieter.tracks.back().gainDb = -6.0f;
+        juce::AudioBuffer<float> down, wantDown;
+        OfflineRender::mixSession (quieter, { 0, length }, down, nullptr, {});
+        wantDown.makeCopyOf (plain);
+        wantDown.applyGain (juce::Decibels::decibelsToGain (-6.0f, -150.0f));
+
+        check (same (unity, plain) && same (down, wantDown),
+               "master track: at 0 dB with no effects the mix is as it was, bit for bit; at -6 dB it is the mix times that gain, bit for bit");
+
+        // Its volume envelope: a dip in the middle, the same in playback (blocks of 256) and the mixdown.
+        auto faded = withMaster;
+        SessionEdits::setEnvelope (faded, masterId, AutomationParameter::volume, { { { 3000, 0.0f }, { 4000, -30.0f }, { 6000, -30.0f }, { 7000, 0.0f } } });
+        juce::AudioBuffer<float> fadedMix;
+        OfflineRender::mixSession (faded, { 0, length }, fadedMix, nullptr, {});
+        const auto dip = juce::jmax (fadedMix.getMagnitude (0, 4200, 1600), fadedMix.getMagnitude (1, 4200, 1600));
+        const auto plainDip = juce::jmax (plain.getMagnitude (0, 4200, 1600), plain.getMagnitude (1, 4200, 1600));
+        check (same (fadedMix, play (faded, 0, (int) length, 256, nullptr)) && std::abs (juce::Decibels::gainToDecibels (dip / plainDip) + 30.0f) < 0.01f
+                   && fadedMix.getSample (0, 1000) == plain.getSample (0, 1000),
+               "master track: its volume envelope plays and mixes down sample for sample alike, 30 dB down in the dip and untouched before it");
+
+        // A limiter on it, then -6 dB: the volume comes after the effects, so the peak is 6 dB under the ceiling.
+        auto limited = quieter;
+        TrackEffects effects;
+        effects.prepare (rate);
+        auto limiter = std::make_unique<BuiltInEffects::LimiterProcessor>();
         Dynamics::Limiter settings;
         settings.ceilingDb = -12.0;
-        limiter.setSettings (settings);
-        juce::MemoryBlock state;
-        limiter.getStateInformation (state);
-        juce::XmlElement rack ("TORQWAVE_RACK");
-        auto* slot = rack.createNewChildElement ("SLOT");
-        slot->setAttribute ("bypassed", false);
-        for (auto& d : BuiltInEffects::getDescriptions())
-            if (d.name == "Limiter")
-                slot->addChildElement (d.createXml().release());
+        limiter->setSettings (settings);
+        effects.add (masterId, std::move (limiter));
+        juce::AudioBuffer<float> limitedMix;
+        OfflineRender::mixSession (limited, { 0, length }, limitedMix, &effects, {});
+        const auto ceiling = juce::Decibels::decibelsToGain (-18.0f) * 1.0001f;
+        check (peakOf (plain) > juce::Decibels::decibelsToGain (-12.0f) && peakOf (limitedMix) <= ceiling && peakOf (limitedMix) > juce::Decibels::decibelsToGain (-19.0f),
+               "master track: a limiter at -12 dB and the volume at -6 dB bring the mix's peak from " + juce::String (juce::Decibels::gainToDecibels (peakOf (plain)), 1)
+                   + " to " + juce::String (juce::Decibels::gainToDecibels (peakOf (limitedMix)), 1) + " dB: the volume comes after the effects");
 
-        slot->createNewChildElement ("STATE")->addTextElement (state.toBase64Encoding());
+        // Latency on it is made up: a pure 700-frame delay leaves the mix as it was, from the start
+        // and from part way in, and so does one on a bus feeding it.
+        TrackEffects delayed;
+        delayed.prepare (rate);
+        delayed.add (masterId, std::make_unique<DelayPlugin> (700, 1.0f));
+        delayed.add (s.tracks[2].id, std::make_unique<DelayPlugin> (300, 1.0f));
+        juce::AudioBuffer<float> delayedMix, part;
+        OfflineRender::mixSession (withMaster, { 0, length }, delayedMix, &delayed, {});
+        OfflineRender::mixSession (withMaster, { 2345, length }, part, &delayed, {});
+        juce::AudioBuffer<float> plainPart (2, (int) length - 2345);
 
-        juce::String limitError;
-        inBackground ([&] { limitError = OfflineRender::throughMasterBus (&rack, engine.pluginFormatManager, rate, limited, {}); });
+        for (int ch = 0; ch < 2; ++ch)
+            plainPart.copyFrom (ch, 0, plain, ch, 2345, (int) length - 2345);
 
-        const auto ceiling = juce::Decibels::decibelsToGain (-12.0f) * 1.0001f;
-        const auto plainPeak = juce::jmax (plain.getMagnitude (0, 0, plain.getNumSamples()), plain.getMagnitude (1, 0, plain.getNumSamples()));
-        const auto limitedPeak = juce::jmax (limited.getMagnitude (0, 0, limited.getNumSamples()), limited.getMagnitude (1, 0, limited.getNumSamples()));
-        check (noneError.isEmpty() && same (none, plain) && limitError.isEmpty() && plainPeak > ceiling && limitedPeak <= ceiling
-                   && limited.getNumSamples() == plain.getNumSamples(),
-               "mixdown: with no master bus effects the mix is as it was, bit for bit; a limiter on the master bus (-12 dB) brings the mix's peak from "
-               + juce::String (juce::Decibels::gainToDecibels (plainPeak), 1) + " to " + juce::String (juce::Decibels::gainToDecibels (limitedPeak), 1) + " dB");
+        check (same (delayedMix, plain) && same (part, plainPart) && same (play (withMaster, 0, (int) length, 333, &delayed), plain),
+               "master track: 700 frames of latency on it (and 300 on a bus) are made up, in playback and the mixdown, from the start and part way in");
+
+        // An effect's parameter automated on it: the same in playback and the mixdown, and heard.
+        TrackEffects gained, gainedLive;
+        juce::uint32 slot = 0;
+
+        for (auto* e : { &gained, &gainedLive })
+        {
+            e->prepare (rate);
+            slot = e->add (masterId, std::make_unique<TestPlugins::GainPlugin>());
+        }
+
+        auto automated = withMaster;
+        SessionEdits::setEnvelope (automated, masterId, AutomationTarget::effect (slot, "gain"), { { { 500, 0.1f }, { 8000, 0.9f } } });
+        juce::AudioBuffer<float> automatedMix;
+        OfflineRender::mixSession (automated, { 0, length }, automatedMix, &gained, {});
+        check (same (automatedMix, play (automated, 0, (int) length, 256, &gainedLive)) && ! same (automatedMix, plain),
+               "master track: an automated effect parameter on it plays and mixes down sample for sample alike");
+
+        // A 5.1 session: the master's volume acts on all six channels.
+        auto wide = withMaster;
+        wide.surround = true;
+        auto wideDown = wide;
+        wideDown.tracks.back().gainDb = -6.0f;
+        juce::AudioBuffer<float> widePlain, wideMix;
+        OfflineRender::mixSession (wide, { 0, length }, widePlain, nullptr, {});
+        OfflineRender::mixSession (wideDown, { 0, length }, wideMix, nullptr, {});
+        widePlain.applyGain (juce::Decibels::decibelsToGain (-6.0f, -150.0f));
+        check (wideMix.getNumChannels() == 6 && same (wideMix, widePlain),
+               "master track: in a 5.1 session its volume acts on all six channels, bit for bit");
     }
 
     // With latent effects on a track and the bus, from part way in: primed, so it is in time.

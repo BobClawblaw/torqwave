@@ -52,7 +52,7 @@ Some effects can't be heard live, because they work out their result from the au
 
 ## The effects rack
 
-The rack is the **Effects Rack** panel beside the editor. Window > Effects Rack (Option-Cmd-E) shows or hides it. In a multitrack session the same panel is the **Master Bus Effects**: the session's whole mix plays through it, and Mix Down writes through it (see [Master bus effects](06-multitrack-sessions.md#master-bus-effects)).
+The rack is the **Effects Rack** panel beside the editor. Window > Effects Rack (Option-Cmd-E) shows or hides it. In a multitrack session the same panel shows the **Master Bus Effects**, the session's master track's effects, which are saved in the session: the whole mix plays through them, and Mix Down writes through them (see [The master track](06-multitrack-sessions.md#the-master-track)). The editor's rack is not played on a session.
 
 ### Build a chain
 

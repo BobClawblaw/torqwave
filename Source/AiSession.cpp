@@ -232,7 +232,7 @@ namespace Ai
 
     juce::String SessionTools::kindOf (const SessionTrack& t) const
     {
-        return t.isFolder ? "folder" : t.isVca ? "vca" : t.isBus ? "bus" : t.isInstrument ? "instrument" : "audio";
+        return t.isFolder ? "folder" : t.isVca ? "vca" : t.isMaster ? "master" : t.isBus ? "bus" : t.isInstrument ? "instrument" : "audio";
     }
 
     juce::String SessionTools::nameOf (juce::uint32 trackId) const
@@ -655,8 +655,8 @@ namespace Ai
             if (! bus)
                 return refused (error);
 
-            if (! state.tracks[(size_t) *bus].isBus)
-                return refused (state.tracks[(size_t) *bus].name.quoted() + " isn't a bus");
+            if (! state.tracks[(size_t) *bus].takesBusInput())
+                return refused (state.tracks[(size_t) *bus].name.quoted() + " isn't a bus (the master takes the mix: use \"mix\")");
 
             busId = state.tracks[(size_t) *bus].id;
             busName = state.tracks[(size_t) *bus].name.quoted();
@@ -681,8 +681,8 @@ namespace Ai
         if (! bus)
             return refused (error);
 
-        if (! state.tracks[(size_t) *bus].isBus)
-            return refused (state.tracks[(size_t) *bus].name.quoted() + " isn't a bus");
+        if (! state.tracks[(size_t) *bus].takesBusInput())
+            return refused (state.tracks[(size_t) *bus].name.quoted() + " isn't a bus (the master takes no sends)");
 
         const auto name = state.tracks[(size_t) *index].name, busName = state.tracks[(size_t) *bus].name;
         const auto trackId = state.tracks[(size_t) *index].id, busId = state.tracks[(size_t) *bus].id;

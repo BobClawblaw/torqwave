@@ -189,11 +189,18 @@ The same **Sends** panel holds the rest of a track's routing:
 **Sidechain:** a plug-in with a sidechain input can take a key track, chosen in the track's **FX** menu. For example, a compressor on the bass can be keyed from the kick.
 - **Folders:** **Add Folder** puts the selected track into a new folder (from a track's right-click menu, that track). A folder's mute and solo act on all its tracks, and it can be collapsed. A track leaves its folder by **Take Out of Folder** (in the Tracks menu and its right-click menu) or by dragging, as above. Deleting a folder keeps its tracks, out of it; its right-click menu can also delete them with it. **Export Folder Stems...** writes each folder as one file.
 
-### Master bus effects
+### The master track
 
-In a session, the effects rack is the **Master Bus Effects** panel (Window > Master Bus Effects, Option-Cmd-E). The whole mix goes through it once, after every track and bus, and Mix Down writes through it, so a limiter or EQ there is on the finished file. It is one chain on the sum, not one on each track: a compressor there reacts to the whole mix. A track's own effects are on its **FX** button. Tracks sent straight to a pair of the interface's outputs, and the metronome, don't go through it.
+Every session has a **Master** track, always the last one. The whole mix plays through it: first through its effects, then its volume. A limiter or EQ there is on the finished mix, and a fade on its volume fades everything, effects tails included.
 
-The master bus effects are the editor's effects rack, so they are kept with a [project](11-projects-and-file-types.md), not in the session file.
+- **Its effects** are on its **FX** button, and in the **Master Bus Effects** panel (Window > Master Bus Effects, Option-Cmd-E), which shows the same chain. They are one chain on the sum, not one on each track: a compressor there reacts to the whole mix. They are saved in the session file. Their latency is made up, so the session stays in time.
+- **Its volume** is its fader, in its header and in the mixer, where its strip is the last one. Its meter shows what leaves the master.
+- **Automation:** click its **A** button for its volume envelope and its effects' parameters, and its automation mode, as on any track. Its envelopes are drawn on its lane.
+- It has no pan, solo, sends or output, and it can't be moved, hidden, deleted or put in a folder or VCA. Nothing sends to it: tracks and buses whose output is **Master** (the first choice in the Output menu) play into it.
+
+Tracks sent straight to a pair of the interface's outputs, and the metronome, don't go through it.
+
+**Sessions from before master tracks** open with a master at 0 dB whose effects are the effects rack's, which played on their whole mix until then, so they sound the same; save the session to keep them. In the editor the effects rack stays the editor's own and is no longer played on a session.
 
 ## The mixer
 
@@ -203,7 +210,7 @@ The master bus effects are the editor's effects rack, so they are kept with a [p
 - mute, polarity and solo;
 - the fader and the meter.
 
-A folder's or VCA fader's strip has only its fader, mute and solo. The master meter is on the right. In a track's Touch, Latch or Write mode, its fader and pan write automation while the session plays, as its header's controls do.
+A folder's or VCA fader's strip has only its fader, mute and solo. The master track's strip is the last one, with its fader, meter, mute and polarity. In a track's Touch, Latch or Write mode, its fader and pan write automation while the session plays, as its header's controls do.
 
 ### Mixer scenes
 
@@ -254,7 +261,7 @@ Things to know:
 - **Play, Stop and Record** run the transport. **Rewind** and **Fast Forward** go to the start and the end.
 - **The scribble strips** show each track's name and its volume, or its pan while you turn its V-pot.
 
-The surface has no master fader here: the session has no master volume to move.
+The master track is the last strip, so its fader moves the master volume.
 
 **MIDI learn for any controller.** Any knob, fader or button that sends a MIDI controller (CC) can move a track's volume, pan, mute or solo, or play, stop and record:
 
@@ -394,14 +401,14 @@ Ask Torq can set a clip's pitch shift and add effects to it (`set_clip_effects`)
 
 | Command | What it writes |
 |---|---|
-| Mix Down... (Shift-Cmd-E) | The session, or its time range, to one file, through the master bus effects. It can be delivered to a [loudness spec](05-loudness-and-mastering.md#meet-delivery-spec) |
+| Mix Down... (Shift-Cmd-E) | The session, or its time range, to one file, through the master track's effects and volume. It can be delivered to a [loudness spec](05-loudness-and-mastering.md#meet-delivery-spec) |
 | Export Stems... | One file for each track, through its own effects |
 | Export Folder Stems... | One file for each folder |
 | Export Regions... | One mixed file for each region |
 | Bounce Track | Renders a track through its effects onto a new track, and mutes the original |
 | Freeze Track | Renders a track's effects so they stop using the processor while you work |
 
-Stems, regions, Bounce and Freeze leave the master bus effects out.
+Stems, Bounce and Freeze leave the master track out: they are each track's own sound. Export Regions, a stems export's loudness spec, and a video's sound go through it, as Mix Down does.
 
 A session can also be mixed in 5.1 or 7.1 (**Multitrack > Surround**). See [Video and surround](09-video-and-surround.md#surround-sessions).
 

@@ -256,10 +256,16 @@ namespace SessionMixer
         bool clips = true;                                 // false: the clips are silent (stopped)
     };
 
+    /** The tracks whose effects take more than two channels, and how many: 5.1 and 7.1 tracks
+        (not frozen), and the master in a 5.1 or 7.1 session. For Inserts::setWideChannels. */
+    std::map<juce::uint32, int> wideChannels (const SessionState&);
+
     /** Replaces frames [destStart, destStart + numFrames) of dest (two channels or more) with
         session frames [start, start + numFrames), plus the live inputs: the mix in channels 0 and 1
         (a 5.1 master as Buffers::surroundChannel says), and what plays out of an interface pair
-        from channel c in channels interfaceChannel + c and the next, when dest has them. */
+        from channel c in channels interfaceChannel + c and the next, when dest has them. The mix
+        (and a 5.1 or 7.1 master) goes through the master track's effects and then its volume,
+        when the session has one; what plays into it is read that much ahead, so it lines up. */
     void render (const SessionState&, juce::int64 start, juce::AudioBuffer<float>& dest, int destStart, int numFrames,
                  Buffers&, Inserts* = nullptr, const Live* = nullptr);
 

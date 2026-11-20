@@ -1094,6 +1094,7 @@ MainComponent::MainComponent()
     multitrack.onClipEffects = [this] (juce::uint32 clipId) { showClipEffects (clipId); };
     multitrack.onCombineClips = [this] (const std::vector<juce::uint32>& clipIds) { combineClips (clipIds); };
     multitrack.onAddToLibrary = [this] (juce::uint32 clipId) { askToAddToLibrary (clipId); };
+    engine.session.ensureMaster();   // every session has a master track
     multitrack.onAddToSequenceLibrary = [this] (juce::uint32 clipId) { askToAddToSequenceLibrary (clipId); };
     multitrack.onSequenceDropped = [this] (const juce::File& file, int track, juce::int64 frame, bool onTrack) { addSequenceToSession (file, track, frame, onTrack); };
     multitrack.onFilesDropped = [this] (const juce::StringArray& files, int track, juce::int64 frame) { addFilesToSession (files, track, frame); };
@@ -1151,6 +1152,7 @@ MainComponent::MainComponent()
                                  : action == A::openProject ? cmdOpenProject : cmdUserGuide, true);
     };
     rackView.onEditSlot = [this] (int index) { showEditor (index); };
+    rackView.onEditPlugin = [this] (juce::AudioPluginInstance& p) { showEditor (p); };
     rackView.onApply = [this] { commands.invokeDirectly (cmdApplyRack, true); };
     engine.onPluginAboutToBeRemoved = [this] (juce::AudioProcessor* p) { closeEditorFor (p); };
     engine.onMidiPortsFailed = [] (const juce::StringArray& names)
@@ -1351,6 +1353,7 @@ void MainComponent::finishOpeningDevice (const juce::XmlElement* savedDevice)
         empty.sampleRate = device->getCurrentSampleRate();
         engine.clearTrackEffects();
         engine.session.reset (std::move (empty), {});
+        engine.session.ensureMaster();   // every session has a master track
     }
 
     refreshOutputChoices();
@@ -3990,6 +3993,7 @@ void MainComponent::setMultitrack (bool on)
     engine.getPlayer().pause();
     multitrackMode = on;
     engine.getPlayer().setMode (on ? DocumentPlayerProcessor::Mode::session : DocumentPlayerProcessor::Mode::document);
+    engine.setRackInChain (! on);   // a session's master track has its master effects
     engine.useDeviceOutputs();
     waveform.setVisible (! on);
     multitrack.setVisible (on);
@@ -4039,6 +4043,7 @@ void MainComponent::newSession()
                            : engine.session.getSampleRate();
     engine.clearTrackEffects();
     engine.session.reset (std::move (empty), {});
+    engine.session.ensureMaster();   // every session has a master track
     multitrack.setCursor (0);
     setMultitrack (true);
     refreshTitle();
@@ -4055,7 +4060,7 @@ void MainComponent::chooseSession()
                           });
 }
 
-void MainComponent::openSession (const juce::File& file, std::optional<juce::File> as)
+void MainComponent::openSession (const juce::File& file, std::optional<juce::File> as, const juce::XmlElement* rack)
 {
     auto loaded = SessionFile::load (file, engine.formatManager);
 
@@ -4065,11 +4070,25 @@ void MainComponent::openSession (const juce::File& file, std::optional<juce::Fil
         return;
     }
 
+    // A session from before master tracks: its master gets the rack's effects, which played on
+    // its whole mix until now, and 0 dB.
+    auto movedRack = false;
+
+    if (loaded.state.findMaster() == nullptr)
+        if (auto effects = rack != nullptr ? std::make_unique<juce::XmlElement> (*rack) : engine.createRackXml();
+            effects != nullptr && effects->getNumChildElements() > 0)
+        {
+            effects->setTagName ("EFFECTS");
+            loaded.effects[loaded.state.addMaster().id] = std::move (effects);
+            movedRack = true;
+        }
+
     engine.getPlayer().pause();
     engine.clearTrackEffects();
     engine.session.reset (std::move (loaded.state), as.value_or (file));
+    engine.session.ensureMaster();   // every session has a master track
 
-    if (as.has_value())
+    if (as.has_value() || movedRack)
         engine.session.markUnsaved();
 
     multitrack.setCursor (0);
@@ -4675,39 +4694,23 @@ void MainComponent::mixDown (const juce::File& file, int bitDepth, juce::Range<j
         if (auto xml = engine.getTrackEffects().createXml (track.id))
             (*effects)[track.id] = std::move (xml);
 
-    // The master bus's effects (the rack), which the mix goes through as it plays.
-    std::shared_ptr<const juce::XmlElement> master = engine.createRackXml();
-
     // Fresh plug-ins, made and run on the job's thread. The job is deleted on the message thread,
-    // and these with it, as some plug-ins require.
+    // and these with it, as some plug-ins require. The master track's effects are among them: the
+    // mix goes through them and the master volume as it plays.
     auto inserts = std::make_shared<TrackEffects>();
     auto error = std::make_shared<juce::String>();
     auto warnings = std::make_shared<juce::String>();
     auto report = std::make_shared<juce::String>();
 
     backgroundJob = std::make_unique<BackgroundJob> (*this, "Mixing down...",
-        [this, state, rate, effects, master, inserts, error, warnings, report, file, bitDepth, range, spec] (const std::function<bool (float)>& progress)
+        [this, state, rate, effects, inserts, error, warnings, report, file, bitDepth, range, spec] (const std::function<bool (float)>& progress)
         {
             *warnings = OfflineRender::loadTrackEffects (*effects, engine.pluginFormatManager, rate, *inserts);
             juce::AudioBuffer<float> mix;
-            const auto share = spec.has_value() ? 0.5f : 1.0f;
-            const auto mixShare = master->getChildByName ("SLOT") != nullptr ? 0.5f * share : share;
+            const auto mixShare = spec.has_value() ? 0.5f : 1.0f;
 
             if (! OfflineRender::mixSession (*state, range, mix, inserts.get(), [&progress, mixShare] (float p) { return progress (mixShare * p); }))
                 return false;
-
-            auto cancelled = false;
-            const auto failed = OfflineRender::throughMasterBus (master.get(), engine.pluginFormatManager, rate, mix,
-                [&progress, &cancelled, mixShare] (float p) { cancelled = ! progress (mixShare + mixShare * p); return ! cancelled; });
-
-            if (cancelled)
-                return false;
-
-            if (failed.isNotEmpty())
-            {
-                *error = "The master bus effects couldn't be run: " + failed;
-                return true;
-            }
 
             auto audio = AudioEdits::fromBuffer (std::move (mix));
 
@@ -8203,7 +8206,7 @@ void MainComponent::restoreProject (const juce::File& file)
 
     if (loaded.state.session != juce::File())
     {
-        openSession (loaded.state.session);
+        openSession (loaded.state.session, std::nullopt, loaded.state.rack.get());
     }
     else
     {
@@ -8214,6 +8217,7 @@ void MainComponent::restoreProject (const juce::File& file)
                                : engine.session.getSampleRate();
         engine.clearTrackEffects();
         engine.session.reset (std::move (empty), {});
+        engine.session.ensureMaster();   // every session has a master track
         multitrack.setCursor (0);
     }
 

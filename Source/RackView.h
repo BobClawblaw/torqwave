@@ -12,6 +12,9 @@ public:
 
     std::function<void (int slotIndex)> onEditSlot;
 
+    /** In a session: asked to show a master effect's window. */
+    std::function<void (juce::AudioPluginInstance&)> onEditPlugin;
+
     /** Asked by the Apply button: render the rack into the audio, as Effects > Apply Effects Rack does. */
     std::function<void()> onApply;
 
@@ -23,9 +26,10 @@ public:
         failure to load is shown. */
     void addEffect (const juce::PluginDescription&);
 
-    /** In a session the rack is the master bus's effects: the whole mix goes through it once,
-        after the tracks and buses, and Mix Down writes through it. It is named for that, and its
-        Apply button (which renders into the open file) is hidden. */
+    /** In a session the panel shows the master bus's effects: the Master track's chain, which the
+        whole mix goes through once, after the tracks and buses and before the master volume (the
+        editor's rack is left out of a session's playback). It is named for that, and its Apply
+        button (which renders into the open file) is hidden. */
     void setMasterBus (bool);
 
     /** The name over the rows: "Effects Rack", or "Master Bus Effects" in a session. */
@@ -40,6 +44,16 @@ private:
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
     void rebuildRows();
     void showAddMenu();
+
+    // The chain shown: the session's master track's in a session that has one, else the rack.
+    juce::uint32 masterId() const;
+    int numSlots() const;
+    juce::AudioPluginInstance* pluginAt (int) const;
+    bool isBypassed (int) const;
+    void setBypassed (int, bool);
+    void move (int from, int to);
+    void remove (int);
+    void edit (int);
 
     AudioEngine& engine;
     juce::Label title { {}, "Effects Rack" };

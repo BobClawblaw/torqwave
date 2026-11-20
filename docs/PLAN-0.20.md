@@ -70,7 +70,9 @@ On disk it is the same tree, by default under `~/Music/Torqwave/Sequences/`, as 
 - **Tests:** frames to the next bar; a render's length at two tempos and that it sounds; the player renders, plays, stops, plays again from what was kept, and says why a sequence with no instrument is silent.
 - **Later:** transposing to the session's key, once a session has a key (step 6's "fits the session" filter needs it too).
 
-## Step 2b: a master track (M)
+## Step 2b: a master track (M) — done
+
+Built as planned. The master is a bus flagged as the master, kept last. Its latency is made up by reading what plays into it ahead, as for a bus. Every session in the app gets one in all its undo steps. A session saved before it opens with the rack's effects on its master.
 
 The session has no master track today: no master volume or its automation, and the master bus effects are the editor's rack, kept outside the session. A DAW lists the master with the tracks for automation, so it becomes one:
 

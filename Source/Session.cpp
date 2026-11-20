@@ -156,7 +156,7 @@ float SessionState::folderGain (const SessionTrack& t) const
 const SessionTrack* SessionState::outputBusOf (const SessionTrack& t) const
 {
     const auto* bus = t.isControl() || t.outputBusId == 0 || t.outputBusId == t.id ? nullptr : findTrack (t.outputBusId);
-    return bus != nullptr && bus->isBus ? bus : nullptr;
+    return bus != nullptr && bus->takesBusInput() ? bus : nullptr;
 }
 
 juce::uint32 SessionTrack::sidechainKey (juce::uint32 slotId) const
@@ -219,7 +219,7 @@ bool SessionState::feeds (const SessionTrack& from, juce::uint32 busId) const
     return std::any_of (from.sends.begin(), from.sends.end(), [&] (auto& send)
     {
         const auto* bus = findTrack (send.busId);
-        return bus != nullptr && bus->isBus && reaches (bus);
+        return bus != nullptr && bus->takesBusInput() && reaches (bus);
     });
 }
 
@@ -288,9 +288,67 @@ SessionTrack& SessionState::addBus()
     SessionTrack t;
     t.id = nextId++;
     t.isBus = true;
-    t.name = freeName (*this, "Bus ", (int) std::count_if (tracks.begin(), tracks.end(), [] (auto& x) { return x.isBus; }) + 1);
+    t.name = freeName (*this, "Bus ", (int) std::count_if (tracks.begin(), tracks.end(), [] (auto& x) { return x.takesBusInput(); }) + 1);
     tracks.push_back (std::move (t));
     return tracks.back();
+}
+
+SessionTrack& SessionState::addMaster()
+{
+    for (auto& t : tracks)
+        if (t.isMaster)
+            return t;
+
+    SessionTrack t;
+    t.id = nextId++;
+    t.isBus = true;
+    t.isMaster = true;
+    t.name = "Master";
+    tracks.push_back (std::move (t));
+    return tracks.back();
+}
+
+const SessionTrack* SessionState::findMaster() const
+{
+    for (auto it = tracks.rbegin(); it != tracks.rend(); ++it)
+        if (it->isMaster)
+            return &*it;
+
+    return nullptr;
+}
+
+void SessionState::tidyMaster()
+{
+    const auto first = std::find_if (tracks.begin(), tracks.end(), [] (auto& t) { return t.isMaster; });
+
+    if (first == tracks.end())
+        return;
+
+    // One master: any other is an ordinary bus.
+    for (auto it = std::next (first); it != tracks.end(); ++it)
+        it->isMaster = false;
+
+    if (std::next (first) != tracks.end())
+        std::rotate (first, std::next (first), tracks.end());
+
+    auto& m = tracks.back();
+    m.isBus = true;
+    m.folderId = m.vcaId = m.outputBusId = 0;
+    m.sends.clear();
+    m.solo = false;
+    m.soloSafe = false;
+    m.pan = 0.0f;
+    m.panEnvelope = {};
+    m.hidden = false;
+
+    // Nothing sends or plays into it.
+    for (auto& t : tracks)
+    {
+        if (t.outputBusId == m.id)
+            t.outputBusId = 0;
+
+        t.sends.erase (std::remove_if (t.sends.begin(), t.sends.end(), [&m] (auto& send) { return send.busId == m.id; }), t.sends.end());
+    }
 }
 
 const ArrangerSection* SessionState::findSection (juce::uint32 id) const
@@ -2102,7 +2160,8 @@ bool moveTrack (SessionState& s, int from, int to)
 {
     const auto count = (int) s.tracks.size();
 
-    if (! juce::isPositiveAndBelow (from, count) || ! juce::isPositiveAndBelow (to, count) || from == to)
+    if (! juce::isPositiveAndBelow (from, count) || ! juce::isPositiveAndBelow (to, count) || from == to
+        || s.tracks[(size_t) from].isMaster)
         return false;
 
     const auto first = s.tracks.begin();
@@ -3441,7 +3500,7 @@ juce::uint32 duplicateTrack (SessionState& s, int track)
 
 bool removeTrack (SessionState& s, int track)
 {
-    if (! juce::isPositiveAndBelow (track, (int) s.tracks.size()))
+    if (! juce::isPositiveAndBelow (track, (int) s.tracks.size()) || s.tracks[(size_t) track].isMaster)
         return false;
 
     const auto removed = s.tracks[(size_t) track].id;
@@ -3481,7 +3540,7 @@ bool setTrackFolder (SessionState& s, juce::uint32 trackId, juce::uint32 folderI
     const auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
     const auto* folder = folderId != 0 ? s.findTrack (folderId) : nullptr;
 
-    if (track == s.tracks.end() || track->isFolder || track->folderId == folderId || (folderId != 0 && (folder == nullptr || ! folder->isFolder)))
+    if (track == s.tracks.end() || track->isFolder || track->isMaster || track->folderId == folderId || (folderId != 0 && (folder == nullptr || ! folder->isFolder)))
         return false;
 
     track->folderId = folderId;
@@ -3552,7 +3611,7 @@ bool setTrackVca (SessionState& s, juce::uint32 trackId, juce::uint32 vcaId)
     const auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
     const auto* vca = vcaId != 0 ? s.findTrack (vcaId) : nullptr;
 
-    if (track == s.tracks.end() || track->isControl() || track->vcaId == vcaId || (vcaId != 0 && (vca == nullptr || ! vca->isVca)))
+    if (track == s.tracks.end() || track->isControl() || track->isMaster || track->vcaId == vcaId || (vcaId != 0 && (vca == nullptr || ! vca->isVca)))
         return false;
 
     track->vcaId = vcaId;
@@ -3576,7 +3635,7 @@ bool setTrackOutput (SessionState& s, juce::uint32 trackId, juce::uint32 busId)
     auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
 
     if (track == s.tracks.end() || track->isControl() || (track->outputBusId == busId && track->deviceOutput < 0)
-        || (busId != 0 && (bus == nullptr || ! bus->isBus)))
+        || (busId != 0 && (bus == nullptr || ! bus->takesBusInput() || track->isMaster)))
         return false;
 
     // A bus may not play into itself, nor into a bus whose output leads back to it.
@@ -3711,7 +3770,7 @@ bool setSend (SessionState& s, juce::uint32 trackId, const SessionSend& send)
     const auto* bus = s.findTrack (send.busId);
     auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
 
-    if (bus == nullptr || ! bus->isBus || track == s.tracks.end() || track->isBus || track->isControl())
+    if (bus == nullptr || ! bus->takesBusInput() || track == s.tracks.end() || track->isBus || track->isControl())
         return false;
 
     for (auto& existing : track->sends)
@@ -4599,6 +4658,7 @@ void Session::reset (SessionState initial, const juce::File& f)
             pendingRelease.push_back (e.state);
 
     history.clear();
+    initial.tidyMaster();
     ClipEffects::dropStale (initial);
     history.push_back ({ std::make_shared<const SessionState> (std::move (initial)), {} });
     position = savedPosition = 0;
@@ -4614,6 +4674,8 @@ void Session::apply (SessionState next, const juce::String& description, bool me
         for (auto& t : next.tracks)
             if (const auto* there = now->findTrack (t.id))
                 t.automationMode = there->automationMode;
+
+    next.tidyMaster();
 
     // A clip whose audio or effects changed lets go of its old render (ClipEffects::Renderer makes another).
     ClipEffects::dropStale (next);
@@ -4687,6 +4749,34 @@ void Session::refresh (SessionState next)
     auto state = std::make_shared<const SessionState> (std::move (next));
     history[(size_t) position].state = state;
     setCurrent (state);
+}
+
+juce::uint32 Session::ensureMaster()
+{
+    if (const auto* master = getState()->findMaster())
+        return master->id;
+
+    // The same master in every step, so undo and redo keep it: an id no step has used.
+    juce::uint32 id = 0;
+
+    for (auto& e : history)
+        id = juce::jmax (id, e.state->nextId);
+
+    for (auto& e : history)
+    {
+        auto withMaster = *e.state;
+        withMaster.nextId = id;
+        withMaster.addMaster();
+        withMaster.nextId = id + 1;
+
+        if (std::find (pendingRelease.begin(), pendingRelease.end(), e.state) == pendingRelease.end())
+            pendingRelease.push_back (e.state);
+
+        e.state = std::make_shared<const SessionState> (std::move (withMaster));
+    }
+
+    setCurrent (history[(size_t) position].state);
+    return id;
 }
 
 void Session::replaceCurrent (SessionState next)
@@ -4911,6 +5001,9 @@ juce::String save (const SessionState& state, const juce::File& target,
 
         if (t.isBus)
             track->setAttribute ("bus", true);
+
+        if (t.isMaster)
+            track->setAttribute ("master", true);
 
         if (t.isFolder)
             track->setAttribute ("folder", true);
@@ -5403,7 +5496,7 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
 
     for (auto* trackXml : root->getChildWithTagNameIterator ("TRACK"))
     {
-        auto& track = trackXml->getBoolAttribute ("bus") ? state.addBus() : trackXml->getBoolAttribute ("folder") ? state.addFolder()
+        auto& track = trackXml->getBoolAttribute ("master") ? state.addMaster() : trackXml->getBoolAttribute ("bus") ? state.addBus() : trackXml->getBoolAttribute ("folder") ? state.addFolder()
                     : trackXml->getBoolAttribute ("vca") ? state.addVca() : state.addTrack();
         track.collapsed = track.isFolder && trackXml->getBoolAttribute ("collapsed");
         track.folderId = (juce::uint32) trackXml->getIntAttribute ("inFolder", -1);   // an index until every track is read
@@ -5759,7 +5852,7 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
                                   (float) stripXml->getDoubleAttribute ("surroundWidth", 1.0), (float) stripXml->getDoubleAttribute ("lfeDb", SurroundPan::lfeOff) };
 
             for (auto* sendXml : stripXml->getChildWithTagNameIterator ("SEND"))
-                if (const auto* bus = trackAt (sendXml->getIntAttribute ("bus", -1)); bus != nullptr && bus->isBus)
+                if (const auto* bus = trackAt (sendXml->getIntAttribute ("bus", -1)); bus != nullptr && bus->takesBusInput())
                     strip.sends.push_back ({ bus->id, (float) sendXml->getDoubleAttribute ("gainDb"), sendXml->getBoolAttribute ("preFader") });
 
             scene.strips.push_back (std::move (strip));
@@ -5832,6 +5925,7 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
                 SessionEdits::setSidechain (state, state.tracks[i].id, chain.slotId, pending[chain.keyTrackId].id);
 
     SessionEdits::separateClipKinds (state);
+    state.tidyMaster();
     return result;
 }
 }

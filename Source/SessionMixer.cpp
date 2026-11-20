@@ -234,17 +234,31 @@ namespace
         return state.outputBusOf (track);
     }
 
-    /** The latency from a bus's input to the mix: its own and that of the buses its output
-        goes through. Its input is the audio at start + this. */
+    /** The master's latency: what goes into the mix is read this far ahead, so the master's
+        effects bring it back to the time it plays. */
+    int mixLatency (const SessionState& state, Inserts* inserts)
+    {
+        const auto* master = state.findMaster();
+        return master != nullptr ? latencyOf (inserts, master->id) : 0;
+    }
+
+    /** The latency from a bus's input to the master's output: its own, that of the buses its
+        output goes through, and the master's when it ends in the mix. Its input is the audio at
+        start + this. */
     int pathLatency (const SessionState& state, const SessionTrack& bus, Inserts* inserts)
     {
         int total = 0;
+        const auto* last = &bus;
         const auto* b = &bus;
 
         for (size_t steps = 0; b != nullptr && steps <= state.tracks.size(); ++steps, b = outputBus (state, *b))
+        {
             total += latencyOf (inserts, b->id);
+            last = b;
+        }
 
-        return total;
+        // Into the mix: the master's effects come after.
+        return total + (last->deviceOutput < 0 ? mixLatency (state, inserts) : 0);
     }
 
     /** How many buses a bus's output passes through to the mix: 0 when it plays into the mix.
@@ -266,9 +280,11 @@ namespace
 
         if (const auto* bus = outputBus (state, track))
             most = pathLatency (state, *bus, inserts);
+        else if (track.deviceOutput < 0)
+            most = mixLatency (state, inserts);
 
         for (auto& send : track.sends)
-            if (const auto* bus = state.findTrack (send.busId); bus != nullptr && bus->isBus)
+            if (const auto* bus = state.findTrack (send.busId); bus != nullptr && bus->takesBusInput())
                 most = juce::jmax (most, pathLatency (state, *bus, inserts));
 
         return most;
@@ -932,7 +948,7 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
         {
             const auto* bus = state.findTrack (s.busId);
 
-            if (bus == nullptr || ! bus->isBus || ! plays (state, *bus))
+            if (bus == nullptr || ! bus->takesBusInput() || ! plays (state, *bus))
                 return;
 
             const auto gain = juce::Decibels::decibelsToGain (s.gainDb, -150.0f) * (s.preFader ? 1.0f : volume);
@@ -1019,6 +1035,8 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
         }
         else if (state.surround && track.deviceOutput < 0)
         {
+            const auto held = ahead - mixLatency (state, inserts);   // to the master's input
+
             // A 5.1 or 7.1 track's channels go to their own: a 5.1 track's surrounds to a 7.1
             // master's sides, a 7.1 track's rears and sides both to a 5.1 master's surrounds at
             // -3 dB. As it starts, a pan is left to L and right to R: straight there, as in a stereo master.
@@ -1028,22 +1046,23 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
                 static constexpr float sevenIntoFiveGains[] { 1.0f, 1.0f, 1.0f, 1.0f, Surround::foldGain, Surround::foldGain,
                                                               Surround::foldGain, Surround::foldGain };
                 const auto fiveToSeven = width == 6 && state.sevenOne, sevenToFive = width == 8 && ! state.sevenOne;
-                addHeld (buffers, { track.id, 0 }, ahead, wide, numFrames, buffers.master, 0, volume, 0, width,
+                addHeld (buffers, { track.id, 0 }, held, wide, numFrames, buffers.master, 0, volume, 0, width,
                          fiveToSeven ? fiveIntoSeven : sevenToFive ? sevenIntoFive : nullptr, sevenToFive ? sevenIntoFiveGains : nullptr);
             }
             else if (plainSurround (track))
             {
-                addHeld (buffers, { track.id, 0 }, ahead, buffers.track, numFrames, buffers.master, 0, volume);
+                addHeld (buffers, { track.id, 0 }, held, buffers.track, numFrames, buffers.master, 0, volume);
             }
             else
             {
-                addHeld (buffers, { track.id, 0 }, ahead, buffers.track, numFrames, buffers.panIn, 0, volume);
-                addPanned (buffers, state, track, start, numFrames);
+                addHeld (buffers, { track.id, 0 }, held, buffers.track, numFrames, buffers.panIn, 0, volume);
+                addPanned (buffers, state, track, start + ahead - held, numFrames);
             }
         }
         else if (const auto channel = outputChannel (track, dest, buffers); channel >= 0)
         {
-            addHeld (buffers, { track.id, 0 }, ahead, buffers.track, numFrames, dest, destStart, volume, channel);
+            addHeld (buffers, { track.id, 0 }, ahead - (track.deviceOutput < 0 ? mixLatency (state, inserts) : 0), buffers.track, numFrames,
+                     dest, destStart, volume, channel);
         }
 
         for (auto& s : track.sends)
@@ -1056,7 +1075,7 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
     buffers.busOrder.clear();
 
     for (size_t i = 0; i < state.tracks.size(); ++i)
-        if (state.tracks[i].isBus)
+        if (state.tracks[i].takesBusInput())
             buffers.busOrder.emplace_back (-depthOf (state, state.tracks[i]), (int) i);
 
     std::sort (buffers.busOrder.begin(), buffers.busOrder.end());
@@ -1070,6 +1089,10 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
             continue;
 
         auto& input = buffers.buses[bus.id];
+
+        // Its output is the audio at this frame, where its envelopes are read: its input's, less
+        // its own latency.
+        const auto outAt = start + pathLatency (state, bus, inserts) - latencyOf (inserts, bus.id);
 
         if (inserts != nullptr && inserts->isActive (bus.id))
             inserts->process (bus, start + pathLatency (state, bus, inserts), input, numFrames,
@@ -1122,7 +1145,7 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
                 buffers.levels->raise (index, peakOf (input, 0, numFrames) * (volume * left), peakOf (input, 1, numFrames) * (volume * right));
 
             if (panned)
-                addPanned (buffers, state, bus, start, numFrames);
+                addPanned (buffers, state, bus, outAt, numFrames);
 
             continue;
         }
@@ -1130,13 +1153,13 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
         for (auto [parameter, values] : { std::pair { AutomationParameter::volume, volumes }, std::pair { AutomationParameter::pan, pans } })
         {
             if (bus.follows (parameter))
-                bus.envelope (parameter).fill (start, values, numFrames);
+                bus.envelope (parameter).fill (outAt, values, numFrames);
             else
                 juce::FloatVectorOperations::fill (values, parameter == AutomationParameter::volume ? bus.gainDb : bus.pan, numFrames);
         }
 
         if (vca != nullptr)
-            addVca (*vca, start, volumes, vcaVolumes, numFrames);
+            addVca (*vca, outAt, volumes, vcaVolumes, numFrames);
 
         const auto* inLeft = input.getReadPointer (0);
         const auto* inRight = input.getReadPointer (1);
@@ -1164,7 +1187,44 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
             buffers.levels->raise (index, peakLeft, peakRight);
 
         if (panned)
-            addPanned (buffers, state, bus, start, numFrames);
+            addPanned (buffers, state, bus, outAt, numFrames);
+    }
+
+    // The master: the mix (or the 5.1 or 7.1 master's channels) through its effects, then its volume.
+    if (const auto* master = state.findMaster())
+    {
+        const auto latency = mixLatency (state, inserts);
+        juce::AudioBuffer<float> mix (state.surround ? buffers.master.getArrayOfWritePointers() : dest.getArrayOfWritePointers(),
+                                      state.surround ? state.masterChannels() : 2, state.surround ? 0 : destStart, numFrames);
+
+        if (inserts != nullptr && inserts->isActive (master->id))
+            inserts->process (*master, start + latency, mix, numFrames, sidechainKeys (state, *master, latency, numFrames, buffers, inserts));
+
+        if (master->invertPolarity)
+            for (int ch = 0; ch < mix.getNumChannels(); ++ch)
+                juce::FloatVectorOperations::negate (mix.getWritePointer (ch), mix.getReadPointer (ch), numFrames);
+
+        if (master->mute)
+        {
+            mix.clear();
+        }
+        else if (master->follows (AutomationParameter::volume))
+        {
+            master->volumeEnvelope.fill (start, volumes, numFrames);
+
+            for (int i = 0; i < numFrames; ++i)
+                volumes[i] = juce::Decibels::decibelsToGain (volumes[i], -150.0f);
+
+            for (int ch = 0; ch < mix.getNumChannels(); ++ch)
+                juce::FloatVectorOperations::multiply (mix.getWritePointer (ch), volumes, numFrames);
+        }
+        else if (! juce::exactlyEqual (master->gainDb, 0.0f))
+        {
+            mix.applyGain (juce::Decibels::decibelsToGain (master->gainDb, -150.0f));
+        }
+
+        if (buffers.levels != nullptr)
+            buffers.levels->raise ((int) (master - state.tracks.data()), peakOf (mix, 0, numFrames), peakOf (mix, 1, numFrames));
     }
 
     // A 5.1 or 7.1 master: metered, then L and R to the mix, and the rest to their channels, or all folded down.
@@ -1188,6 +1248,20 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
                                 dest.getWritePointer (1, destStart), numFrames);
         }
     }
+}
+
+std::map<juce::uint32, int> wideChannels (const SessionState& state)
+{
+    std::map<juce::uint32, int> wide;
+
+    for (auto& t : state.tracks)
+        if (t.isWide() && ! t.isFrozen())
+            wide[t.id] = t.wideChannels();
+
+    if (const auto* master = state.findMaster(); master != nullptr && state.surround)
+        wide[master->id] = state.masterChannels();
+
+    return wide;
 }
 
 void prime (const SessionState& state, juce::int64 start, Buffers& buffers, Inserts& inserts)

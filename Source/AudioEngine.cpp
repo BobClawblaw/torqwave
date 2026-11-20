@@ -1692,11 +1692,7 @@ void AudioEngine::updateMidiOut()
 
 void AudioEngine::updateWideTracks()
 {
-    std::map<juce::uint32, int> now;
-
-    for (auto& t : session.getState()->tracks)
-        if (t.isWide() && ! t.isFrozen())
-            now[t.id] = t.wideChannels();
+    const auto now = SessionMixer::wideChannels (*session.getState());
 
     if (now == wideTracks)
         return;
@@ -1846,8 +1842,8 @@ void AudioEngine::rebuildConnections()
 
     updateRackCopies();
 
-    // Chain: player -> the effect being previewed, if any -> each rack slot in order -> master
-    // meter -> output. Bypassed slots stay in the chain; the graph calls their bypass processing
+    // Chain: player -> the effect being previewed, if any -> each rack slot in order (not for a
+    // session, whose master track has its effects) -> master meter -> output. Bypassed slots stay in the chain; the graph calls their bypass processing
     // so latency compensation keeps working.
     auto* source = playerNode.get();
 
@@ -1873,11 +1869,12 @@ void AudioEngine::rebuildConnections()
         source = previewNode.get();
     }
 
-    for (auto& slot : rack)
-    {
-        connectStereo (source, slot.get(), 0);
-        source = slot.get();
-    }
+    if (rackInChain)
+        for (auto& slot : rack)
+        {
+            connectStereo (source, slot.get(), 0);
+            source = slot.get();
+        }
 
     // Then the master meter, which passes the mix on as it is.
     connectStereo (source, meterNode.get(), 0);
@@ -1915,7 +1912,7 @@ void AudioEngine::rebuildConnections()
         // copies, or through a slot that links them (its channels after L and R), in the rack's
         // order (an empty rack: straight there); a pair one of whose copies couldn't be made is silent.
         const auto extra = extraChannels();
-        const auto throughRack = ! rack.empty();
+        const auto throughRack = rackInChain && ! rack.empty();
 
         for (int pair = 0; throughRack && pair < (int) rackCopies.size(); ++pair)
         {
@@ -2122,6 +2119,15 @@ void AudioEngine::clearRack()
 }
 
 //==============================================================================
+void AudioEngine::setRackInChain (bool on)
+{
+    if (on == rackInChain)
+        return;
+
+    rackInChain = on;
+    rebuildConnections();
+}
+
 std::unique_ptr<juce::XmlElement> AudioEngine::createRackXml() const
 {
     auto xml = std::make_unique<juce::XmlElement> ("TORQWAVE_RACK");

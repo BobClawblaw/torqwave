@@ -276,6 +276,10 @@ public:
             polarity.setVisible (! isFolder);
         }
 
+        // The master's strip: no pan or solo (the whole mix goes through it).
+        pan.setVisible (! isFolder && ! t.isMaster);
+        solo.setVisible (! t.isMaster);
+
         colour = TrackColours::of (t, index);
         name.setText (t.name, juce::dontSendNotification);
         mute.setToggleState (t.mute, juce::dontSendNotification);

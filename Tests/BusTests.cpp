@@ -649,4 +649,84 @@ void runBusTests()
                "interface outputs: a track's bounce and stem are its own sound, bit for bit; the bounced track plays out of the source's pair "
                "(or into its bus); a folder stem takes in what plays out of a pair");
     }
+
+    // The master track: always last, a bus nothing plays or sends into, never deleted, moved or put
+    // in a folder; kept in the session file and through undo; a session without one gets one.
+    {
+        Session session;
+        SessionState start;
+        start.sampleRate = rate;
+        start.addTrack();
+        session.reset (start, {});
+        const auto noneAtFirst = session.getState()->findMaster() == nullptr;
+        auto first = *session.getState();
+        first.addTrack();
+        session.apply (std::move (first), "Add Track");
+
+        // Given one after a step: every step has it, so undo keeps it, and it isn't a change to save.
+        const auto masterId = session.ensureMaster();
+        const auto* master = session.getState()->findMaster();
+        session.undo();
+        const auto keptByUndo = session.getState()->findMaster() != nullptr && session.getState()->findMaster()->id == masterId
+                                && session.getState()->tracks.size() == 2 && ! session.isDirty();
+        session.redo();
+        const auto again = session.ensureMaster() == masterId && session.getState()->tracks.size() == 3;
+
+        auto next = *session.getState();
+        next.addBus();
+        session.apply (std::move (next), "Add");
+        const auto& tracks = session.getState()->tracks;
+        const auto last = tracks.size() == 4 && tracks.back().isMaster && tracks.back().isBus && tracks.back().id == masterId
+                          && tracks.back().name == "Master";
+
+        auto edits = *session.getState();
+        const auto trackId = edits.tracks[0].id, busId = edits.tracks[2].id;
+        const auto masterIndex = (int) edits.tracks.size() - 1;
+        auto& folder = edits.addFolder();
+        const auto folderId = folder.id;
+        const auto refused = ! SessionEdits::setTrackOutput (edits, trackId, masterId) && ! SessionEdits::setSend (edits, trackId, { masterId, 0.0f, false })
+                             && ! SessionEdits::setTrackOutput (edits, masterId, busId) && ! SessionEdits::removeTrack (edits, masterIndex)
+                             && ! SessionEdits::moveTrack (edits, masterIndex, 0) && ! SessionEdits::setTrackFolder (edits, masterId, folderId)
+                             && SessionEdits::setSend (edits, trackId, { busId, 0.0f, false });
+        check (noneAtFirst && master != nullptr && keptByUndo && again,
+               "master track: a session without one is given one in every step, so undo keeps it, as no change to save; asked again, it is the same one");
+        check (last && refused && edits.tracks[2].takesBusInput() && ! edits.findMaster()->takesBusInput(),
+               "master track: named Master, it stays last as tracks and buses are added; nothing sends or plays into it, "
+               "and it can't be deleted, moved, put in a folder or played into a bus");
+
+        // Put first or soloed or panned, it is put back as it must be.
+        auto wrong = *session.getState();
+        std::rotate (wrong.tracks.begin(), wrong.tracks.end() - 1, wrong.tracks.end());
+        wrong.tracks[0].solo = true;
+        wrong.tracks[0].pan = 0.5f;
+        wrong.tracks[1].outputBusId = masterId;
+        session.apply (std::move (wrong), "Wrong");
+        const auto& tidied = *session.getState();
+        check (tidied.tracks.back().isMaster && ! tidied.tracks.back().solo && juce::exactlyEqual (tidied.tracks.back().pan, 0.0f)
+                   && tidied.tracks[0].outputBusId == 0,
+               "master track: a step that puts it elsewhere, solos or pans it, or plays into it is tidied: last, unsoloed, centred, nothing into it");
+
+        // Its volume and envelope, saved and read back; and undone.
+        auto set = *session.getState();
+        set.tracks.back().gainDb = -4.5f;
+        SessionEdits::setEnvelope (set, masterId, AutomationParameter::volume, { { { 100, 0.0f }, { 900, -12.0f } } });
+        session.apply (std::move (set), "Master Volume");
+        auto dir = juce::File::createTempFile ("master");
+        dir.createDirectory();
+        juce::AudioFormatManager formats;
+        AudioFileIO::registerFormats (formats);
+        const auto target = dir.getChildFile ("master.tqsession");
+        const auto saved = SessionFile::save (*session.getState(), target).isEmpty();
+        const auto loaded = SessionFile::load (target, formats);
+        const auto* back = loaded.state.findMaster();
+        dir.deleteRecursively();
+        check (saved && back != nullptr && &loaded.state.tracks.back() == back && juce::exactlyEqual (back->gainDb, -4.5f)
+                   && back->volumeEnvelope == session.getState()->findMaster()->volumeEnvelope
+                   && std::count_if (loaded.state.tracks.begin(), loaded.state.tracks.end(), [] (auto& t) { return t.isMaster; }) == 1,
+               "master track: its volume and envelope are kept in the session file, and it is read back as the one master, last");
+
+        session.undo();
+        check (session.getState()->findMaster() != nullptr && juce::exactlyEqual (session.getState()->findMaster()->gainDb, 0.0f),
+               "master track: undo takes back its volume and keeps it");
+    }
 }

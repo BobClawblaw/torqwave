@@ -186,11 +186,12 @@ public:
         members = (int) std::count_if (view.shown().tracks.begin(), view.shown().tracks.end(), [&t] (auto& m) { return m.folderId == t.id; });
 
         // A folder has only its name, mute, solo and volume; a VCA fader those and its automation.
-        for (auto* c : std::initializer_list<juce::Component*> { &effectsButton, &pan })
-            c->setVisible (! t.isControl());
-
+        // The master has no pan, solo or output: the whole mix goes through it to the outputs.
+        effectsButton.setVisible (! t.isControl());
+        pan.setVisible (! t.isControl() && ! t.isMaster);
+        solo.setVisible (! t.isMaster);
         automationButton.setVisible (! isFolder);
-        sendsButton.setVisible (! t.isControl());
+        sendsButton.setVisible (! t.isControl() && ! t.isMaster);
         // An instrument track plays its instrument, so it has no input to record or monitor; an
         // audio track has no instrument.
         arm.setVisible (! isBus && ! t.isControl() && ! isInstrument);
@@ -205,7 +206,8 @@ public:
         sendsButton.setTooltip (isBus ? "Play this bus into the mix, into another bus, or out of a pair of the interface's outputs"
                                       : "Send this track to buses, play it into one or out of a pair of the interface's outputs in place of the mix, "
                                         "or duck it under another track");
-        effectsButton.setTooltip (isBus ? "This bus's effects" : "This track's effects");
+        effectsButton.setTooltip (t.isMaster ? "The master bus's effects: the whole mix goes through them, before the master volume"
+                                  : isBus ? "This bus's effects" : "This track's effects");
         resized();
 
         if (! name.isBeingEdited())
@@ -544,6 +546,22 @@ public:
 
         juce::PopupMenu menu;
 
+        // The master: no folder, VCA, group, solo, hiding or deleting; it is always there, last.
+        if (t->isMaster)
+        {
+            menu.addItem ("Invert Polarity", true, t->invertPolarity, [this, on = t->invertPolarity] { view.setTrackPolarityInverted (trackId, ! on); });
+
+            if (view.addMidiLearnMenu != nullptr)
+                view.addMidiLearnMenu (menu, trackId);
+
+            menu.addSubMenu ("Colour", colours);
+            menu.addItem ("Note...", [this] { view.askForTrackNote (trackId); });
+            menu.addSeparator();
+            view.addTrackItems (menu, trackId);
+            menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition());
+            return;
+        }
+
         // Folders hold tracks and buses, not other folders.
         if (! t->isFolder)
         {
@@ -846,12 +864,12 @@ private:
         std::vector<const SessionTrack*> buses;
 
         for (auto& t : current->tracks)
-            if (t.isBus)
+            if (t.takesBusInput())
                 buses.push_back (&t);
 
         output.clear (juce::dontSendNotification);
         outputChoices.assign (1, { 0u, -1 });
-        output.addItem ("Mix", 1);
+        output.addItem (current->findMaster() != nullptr ? "Master" : "Mix", 1);
 
         // A bus can't play into itself, nor into a bus that plays into it.
         for (auto* bus : buses)
@@ -3577,12 +3595,14 @@ void MultitrackView::paint (juce::Graphics& g)
                 g.setColour (Theme::dimText);
                 g.setFont (13.0f);
                 const auto* into = s.outputBusOf (track);
-                g.drawText ((feeders.isEmpty() ? juce::String ("Bus: nothing plays here yet. Use a track's Sends button.")
-                                               : "Bus: from " + feeders.joinIntoString (", "))
-                                + (into != nullptr ? "; plays into " + into->name
-                                   : track.deviceOutput >= 0 ? "; plays out of interface outputs " + juce::String (track.deviceOutput + 1) + "/" + juce::String (track.deviceOutput + 2)
-                                                             : juce::String()),
-                            lane.reduced (12, 0), juce::Justification::centredLeft);
+
+                const auto text = track.isMaster ? juce::String ("Master: the whole mix plays through its effects, then its volume.")
+                                : (feeders.isEmpty() ? juce::String ("Bus: nothing plays here yet. Use a track's Sends button.")
+                                                     : "Bus: from " + feeders.joinIntoString (", "))
+                                      + (into != nullptr ? "; plays into " + into->name
+                                         : track.deviceOutput >= 0 ? "; plays out of interface outputs " + juce::String (track.deviceOutput + 1) + "/" + juce::String (track.deviceOutput + 2)
+                                                                   : juce::String());
+                g.drawText (text, lane.reduced (12, 0), juce::Justification::centredLeft);
             }
 
             // A folder's lane: where its members have clips, one thin bar per member.
@@ -5890,7 +5910,7 @@ void MultitrackView::deleteTrack (juce::uint32 trackId, bool withItsTracks)
     auto next = *engine.session.getState();
     const auto* track = next.findTrack (trackId);
 
-    if (track == nullptr)
+    if (track == nullptr || track->isMaster)
         return;
 
     const auto description = track->isFolder ? juce::String (withItsTracks ? "Delete Folder and Its Tracks" : "Delete Folder")

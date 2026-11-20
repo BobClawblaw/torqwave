@@ -541,6 +541,11 @@ public:
 
     std::unique_ptr<juce::XmlElement> createRackXml() const;
 
+    /** Whether the rack's effects play after the player: in the editor, yes; for a session, no,
+        since its master track's effects take their place. */
+    void setRackInChain (bool);
+    bool isRackInChain() const noexcept          { return rackInChain; }
+
     /** Previewing an effect: the player goes through this one before the rack, until it is
         replaced or cleared (nullptr). It is prepared at the device's rate. Not saved with the rack. */
     void setPreviewEffect (std::unique_ptr<juce::AudioPluginInstance>);
@@ -645,6 +650,7 @@ private:
     Node::Ptr playerNode, outputNode, meterNode, previewNode;
     class MasterMeter;
     std::vector<Node::Ptr> rack;
+    bool rackInChain = true;
     std::vector<std::vector<Node::Ptr>> rackCopies;   // for each pair of channels past L and R, a RackCopy per slot (null: couldn't be made), or the slot itself where it links them
 
     /** Channels played to their own outputs past L and R, through rackCopies: 0 unless separate. */

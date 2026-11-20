@@ -477,6 +477,15 @@ struct SessionTrack
     juce::uint32 id = 0;
     juce::String name;
     bool isBus = false;
+
+    /** The session's master track (a bus too): the whole mix plays through its effects, then its
+        volume. It is always the last track, takes no sends or outputs, sits in no folder or VCA,
+        and has no pan or solo. */
+    bool isMaster = false;
+
+    /** A bus that tracks and buses can send or play into: any bus but the master. */
+    bool takesBusInput() const noexcept           { return isBus && ! isMaster; }
+
     float gainDb = 0.0f;
     float pan = 0.0f;                      // -1 (left) to +1 (right)
     bool mute = false, solo = false;
@@ -806,6 +815,16 @@ struct SessionState
     /** Adds an empty, open folder named "Folder n" and returns it. */
     SessionTrack& addFolder();
     SessionTrack& addVca();
+
+    /** Adds the master track ("Master") when there is none, and returns it. */
+    SessionTrack& addMaster();
+
+    /** The master track, or null for a session without one (one from before it, until opened). */
+    const SessionTrack* findMaster() const;
+
+    /** Keeps the master as it must be: one, the last track, out of folders and VCAs, without
+        sends, an output, pan or solo. Session::apply does it to every step. */
+    void tidyMaster();
 
     /** The track (or bus) with this id, or null. */
     const SessionTrack* findTrack (juce::uint32 trackId) const;
@@ -1471,6 +1490,11 @@ public:
 
     /** Replaces everything (a new or loaded session); clears undo history. */
     void reset (SessionState initial, const juce::File& file);
+
+    /** Gives the session a master track when it has none (one from before them, or a new one),
+        in every step of its history alike, so undo and redo keep it; not a step of its own.
+        Returns its id. */
+    juce::uint32 ensureMaster();
 
     State getState() const;
     juce::uint32 getVersion() const noexcept      { return version.load(); }

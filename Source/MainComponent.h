@@ -514,8 +514,10 @@ private:
     void newSession();
     void chooseSession();
     /** Opens a session file. With `as`, the session takes that file as its own (none for an
-        unsaved one) and starts with changes to save: a recovered copy. */
-    void openSession (const juce::File&, std::optional<juce::File> as = std::nullopt);
+        unsaved one) and starts with changes to save: a recovered copy. A session from before
+        master tracks gets one with the rack's effects (or those of `rack`, a project's), which
+        played on its whole mix until then. */
+    void openSession (const juce::File&, std::optional<juce::File> as = std::nullopt, const juce::XmlElement* rack = nullptr);
 
     /** Writes a recovery copy of the session when it has changes made since the last copy, at
         most every SessionRecovery::intervalSeconds; removes it as soon as there is nothing

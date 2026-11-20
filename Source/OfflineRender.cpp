@@ -345,15 +345,6 @@ juce::String loadTrackEffects (const std::map<juce::uint32, std::unique_ptr<juce
     return errors.joinIntoString ("\n");
 }
 
-juce::String throughMasterBus (const juce::XmlElement* master, juce::AudioPluginFormatManager& formats,
-                               double sampleRate, juce::AudioBuffer<float>& mix, const std::function<bool (float)>& progress)
-{
-    if (master == nullptr || master->getChildByName ("SLOT") == nullptr)
-        return {};
-
-    return processThroughRack (*master, formats, sampleRate, mix, progress);
-}
-
 bool mixSession (const SessionState& state, juce::Range<juce::int64> range, juce::AudioBuffer<float>& dest,
                  SessionMixer::Inserts* inserts, const std::function<bool (float)>& progress)
 {
@@ -367,13 +358,7 @@ bool mixSession (const SessionState& state, juce::Range<juce::int64> range, juce
 
     if (inserts != nullptr)
     {
-        std::map<juce::uint32, int> wide;
-
-        for (auto& t : state.tracks)
-            if (t.isWide() && ! t.isFrozen())
-                wide[t.id] = t.wideChannels();
-
-        inserts->setWideChannels (wide);
+        inserts->setWideChannels (SessionMixer::wideChannels (state));
         SessionMixer::prime (state, range.getStart(), buffers, *inserts);
     }
 

@@ -14,7 +14,7 @@ namespace
 
     juce::String kindOf (const SessionTrack& t)
     {
-        return t.isFolder ? "Folder" : t.isVca ? "VCA fader" : t.isBus ? "Bus" : t.isInstrument ? "Instrument track" : "Audio track";
+        return t.isFolder ? "Folder" : t.isVca ? "VCA fader" : t.isMaster ? "Master" : t.isBus ? "Bus" : t.isInstrument ? "Instrument track" : "Audio track";
     }
 }
 
@@ -206,7 +206,7 @@ void TrackInspector::refresh()
 
         for (auto& t : state->tracks)
         {
-            if (t.isBus && t.id != track->id)
+            if (t.takesBusInput() && t.id != track->id)
             {
                 outputIds.push_back (t.id);
                 output.addItem (t.name, (int) outputIds.size());

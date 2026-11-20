@@ -97,7 +97,7 @@ Added add (SessionState& s, const juce::XmlElement& xml)
         for (auto* sendXml : xml.getChildWithTagNameIterator ("SEND"))
         {
             const auto busName = sendXml->getStringAttribute ("bus");
-            const auto bus = std::find_if (s.tracks.begin(), s.tracks.end(), [&busName] (auto& b) { return b.isBus && b.name == busName; });
+            const auto bus = std::find_if (s.tracks.begin(), s.tracks.end(), [&busName] (auto& b) { return b.takesBusInput() && b.name == busName; });
 
             if (bus == s.tracks.end())
             {
@@ -112,7 +112,7 @@ Added add (SessionState& s, const juce::XmlElement& xml)
     // The output, by the bus's name (a bus template's own new bus isn't one to play into).
     if (const auto outName = xml.getStringAttribute ("output"); outName.isNotEmpty())
     {
-        const auto bus = std::find_if (s.tracks.begin(), s.tracks.end(), [&outName, id] (auto& b) { return b.isBus && b.name == outName && b.id != id; });
+        const auto bus = std::find_if (s.tracks.begin(), s.tracks.end(), [&outName, id] (auto& b) { return b.takesBusInput() && b.name == outName && b.id != id; });
 
         if (bus == s.tracks.end())
             added.missingBuses.addIfNotAlreadyThere (outName);
@@ -163,7 +163,7 @@ Applied apply (SessionState& s, juce::uint32 trackId, const juce::XmlElement& xm
         for (auto* sendXml : xml.getChildWithTagNameIterator ("SEND"))
         {
             const auto busName = sendXml->getStringAttribute ("bus");
-            const auto bus = std::find_if (s.tracks.begin(), s.tracks.end(), [&busName] (auto& b) { return b.isBus && b.name == busName; });
+            const auto bus = std::find_if (s.tracks.begin(), s.tracks.end(), [&busName] (auto& b) { return b.takesBusInput() && b.name == busName; });
 
             if (bus == s.tracks.end())
                 applied.missingBuses.addIfNotAlreadyThere (busName);
@@ -179,7 +179,7 @@ Applied apply (SessionState& s, juce::uint32 trackId, const juce::XmlElement& xm
 
     if (const auto outName = xml.getStringAttribute ("output"); outName.isNotEmpty())
     {
-        const auto bus = std::find_if (s.tracks.begin(), s.tracks.end(), [&outName, trackId] (auto& b) { return b.isBus && b.name == outName && b.id != trackId; });
+        const auto bus = std::find_if (s.tracks.begin(), s.tracks.end(), [&outName, trackId] (auto& b) { return b.takesBusInput() && b.name == outName && b.id != trackId; });
 
         if (bus == s.tracks.end() || ! SessionEdits::setTrackOutput (s, trackId, bus->id))
             applied.missingBuses.addIfNotAlreadyThere (outName);
