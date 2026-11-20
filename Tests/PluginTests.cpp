@@ -120,6 +120,11 @@ namespace
                 const auto intelOnly = scanner.findPluginTypesFor (*vst3, results, bundles.getChildFile ("IntelOnlyBundle.vst3").getFullPathName());
                 check (! intelOnly && log.find ("IntelOnlyBundle").contains ("no code for Apple silicon"),
                        "plug-in scan: a VST3 built only for Intel is reported as having no code for Apple silicon");
+               #elif JUCE_MAC
+                results.clear();
+                const auto armOnly = scanner.findPluginTypesFor (*vst3, results, bundles.getChildFile ("ArmOnlyBundle.vst3").getFullPathName());
+                check (! armOnly && log.find ("ArmOnlyBundle").contains ("no code for Intel Macs"),
+                       "plug-in scan: a VST3 built only for Apple silicon is reported as having no code for Intel Macs");
                #elif JUCE_WINDOWS
                 results.clear();
                 const auto only32 = scanner.findPluginTypesFor (*vst3, results, bundles.getChildFile ("IntelOnlyBundle.vst3").getFullPathName());

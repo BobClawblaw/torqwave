@@ -1,6 +1,7 @@
 #!/bin/bash
-# Builds Torqwave for Apple silicon (arm64 only), signs it, runs the tests with the signed app
-# as the plug-in scan worker, and packs it into a disk image:
+# Builds Torqwave as a universal app (Apple silicon and Intel), signs it, runs the tests with the
+# signed app as the plug-in scan worker (each half: the Intel one under Rosetta), and packs it into
+# a disk image:
 #   dist/Torqwave-<version>.dmg (the app and the licence) and its .sha256
 #
 # Usage: Scripts/package.sh [--juce <JUCE checkout>] [--jobs <n>] [--skip-tests]
@@ -34,9 +35,9 @@ done
 version="$(sed -n 's/^project(Torqwave VERSION \([0-9.]*\).*/\1/p' "$root/CMakeLists.txt")"
 [ -n "$version" ] || { echo "no version in CMakeLists.txt" >&2; exit 1; }
 
-echo "== Building Torqwave $version (arm64)"
+echo "== Building Torqwave $version (arm64 and x86_64)"
 cmake -S "$root" -B "$build" -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_OSX_ARCHITECTURES=arm64 ${juce:+-DTORQWAVE_JUCE_DIR="$juce"}
+      "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" ${juce:+-DTORQWAVE_JUCE_DIR="$juce"}
 cmake --build "$build" --config Release -j "$jobs"
 
 app="$build/Torqwave_artefacts/Release/Torqwave.app"
@@ -47,17 +48,22 @@ echo "== Signing (${identity:-ad hoc})"
 codesign --force --deep --sign "${identity:--}" "$app"
 codesign --verify --deep --strict "$app"
 archs="$(lipo -archs "$app/Contents/MacOS/Torqwave")"
-[ "$archs" = arm64 ] || { echo "expected an arm64-only app, got: $archs" >&2; exit 1; }
+[ "$archs" = "x86_64 arm64" ] || { echo "expected a universal app (x86_64 arm64), got: $archs" >&2; exit 1; }
 echo "$archs"
 
 if [ "$tests" = 1 ]; then
-    echo "== Tests, with the signed app as the scan worker"
-    if ! "$tester" --app "$app/Contents/MacOS/Torqwave" > "$build/tests.log" 2>&1; then
-        grep FAIL "$build/tests.log" >&2 || true
-        echo "tests failed; the full output is in $build/tests.log" >&2
-        exit 1
-    fi
-    tail -n 1 "$build/tests.log"
+    arch -x86_64 /usr/bin/true 2>/dev/null || { echo "the Intel half's tests need Rosetta (softwareupdate --install-rosetta)" >&2; exit 1; }
+
+    for half in arm64 x86_64; do
+        echo "== Tests ($half), with the signed app as the scan worker"
+        log="$build/tests-$half.log"
+        if ! arch "-$half" "$tester" --app "$app/Contents/MacOS/Torqwave" > "$log" 2>&1; then
+            grep FAIL "$log" >&2 || true
+            echo "tests failed; the full output is in $log" >&2
+            exit 1
+        fi
+        tail -n 1 "$log"
+    done
 fi
 
 echo "== Disk image"

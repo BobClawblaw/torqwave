@@ -11170,7 +11170,7 @@ void MainComponent::showAbout()
     const juce::String address ("bc1qtxtm7jquj97c9lcsvcm47kfcfszya47f6vueu5");
     auto* text = new CopyLine ("Torqwave " + version + "\n"
               "Copyright (C) 2026 BobClawblaw\n\n"
-              "An audio editor for macOS 13 or later on Apple silicon, 64-bit Windows 10 or later and 64-bit Linux. There is no Intel Mac build.\n\n"
+              "An audio editor for macOS 13 or later (Apple silicon and Intel), 64-bit Windows 10 or later and 64-bit Linux.\n\n"
               "This program is free software: you can redistribute it and/or modify it under the terms of the "
               "GNU Affero General Public License, version 3, as published by the Free Software Foundation.\n\n"
               "It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied "

@@ -593,7 +593,12 @@ target_sources(TorqwaveTests PRIVATE
 # Plug-in bundles that misbehave on purpose, for the scan tests (see Tests/TestBundle.cpp).
 # On Windows each is a .vst3 DLL; the generator expression keeps multi-config builds from adding a
 # configuration folder. IntelOnlyBundle there is a bundle folder holding only 32-bit (x86-win) code.
-foreach(bundle IntelOnlyBundle HangingBundle CrashingBundle)
+# On the Mac, ArmOnlyBundle is the Intel half's counterpart of IntelOnlyBundle.
+set(torqwave_test_bundles IntelOnlyBundle HangingBundle CrashingBundle)
+if(APPLE)
+    list(APPEND torqwave_test_bundles ArmOnlyBundle)
+endif()
+foreach(bundle ${torqwave_test_bundles})
     add_library(${bundle} MODULE Tests/TestBundle.cpp)
 
     if(APPLE)
@@ -613,6 +618,7 @@ endforeach()
 
 if(APPLE)
     set_target_properties(IntelOnlyBundle PROPERTIES OSX_ARCHITECTURES x86_64)
+    set_target_properties(ArmOnlyBundle PROPERTIES OSX_ARCHITECTURES arm64)
 elseif(WIN32)
     set_target_properties(IntelOnlyBundle PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/TestBundles/IntelOnlyBundle.vst3/Contents/x86-win>")

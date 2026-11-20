@@ -6,6 +6,8 @@ Torqwave's checks are one console program, built with the app, that runs against
 ./build/TorqwaveTests_artefacts/Release/TorqwaveTests
 ```
 
+The Mac app is universal, and the tests are too: `Scripts/package.sh` runs them once for each half, the Intel one under Rosetta (`arch -x86_64 TorqwaveTests --app ...`). In the Intel half, a bundle built only for Apple silicon (ArmOnlyBundle) takes the Intel-only bundle's place and is reported as having no code for Intel Macs.
+
 On Windows it is `build\TorqwaveTests_artefacts\Release\TorqwaveTests.exe`, and the same checks run, with these differences:
 - What only the Mac has is left out: Apple's AUDelay (an Audio Unit) in the render, mixdown and rack checks, and the Intel-only bundle; a bundle holding only 32-bit Windows code stands in for the last, reported as having no 64-bit code.
 - VST3 bundles are looked for in `C:\Program Files\Common Files\VST3` (and `%LOCALAPPDATA%\Programs\Common\VST3`). With none installed, the scan of installed bundles is skipped, and the plug-in menu and the rack are checked with Torqwave's built-in effects.

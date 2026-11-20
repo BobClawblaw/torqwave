@@ -63,7 +63,8 @@ namespace
         Ref ref;
     };
 
-    /** True when the bundle's executable has code for Apple silicon, the only Macs Torqwave is built for. */
+    /** True when the bundle's executable has code for the processor this copy of Torqwave runs on
+        (the app is universal: Apple silicon runs its arm64 half, an Intel Mac its x86_64 half). */
     bool hasCodeForThisMac (const juce::File& bundleFile)
     {
         const auto path = bundleFile.getFullPathName();
@@ -79,7 +80,11 @@ namespace
         if (archs.ref == nullptr)
             return true;
 
+       #if JUCE_ARM
         const SInt32 wanted = kCFBundleExecutableArchitectureARM64;
+       #else
+        const SInt32 wanted = kCFBundleExecutableArchitectureX86_64;
+       #endif
 
         for (CFIndex i = 0; i < CFArrayGetCount (archs.ref); ++i)
         {
@@ -207,8 +212,10 @@ namespace
     {
        #if defined (_WIN32)
         return "it has no 64-bit code (it is built only for 32-bit Windows)";
-       #else
+       #elif JUCE_ARM
         return "it has no code for Apple silicon (it is built only for Intel Macs)";
+       #else
+        return "it has no code for Intel Macs (it is built only for Apple silicon)";
        #endif
     }
 }
