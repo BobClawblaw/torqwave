@@ -172,6 +172,120 @@ namespace
         check (! p.getAllProperties().getAllValues().joinIntoString (" ").containsIgnoreCase ("key"), "AI: no key in the settings");
     }
 
+    void testEndpoints()
+    {
+        // Saved before the list: that server comes back as a list of one.
+        juce::PropertySet old;
+        old.setValue ("aiEnabled", true);
+        old.setValue ("aiServerUrl", "http://box.lan:8080/v1");
+        old.setValue ("aiModel", "qwen");
+        auto s = Ai::Settings::load (old);
+        check (s.endpoints == std::vector<Ai::Endpoint> { { "Server 1", "http://box.lan:8080/v1", "qwen" } } && s.current == 0
+                   && s.serverUrl == "http://box.lan:8080/v1" && s.model == "qwen" && s.isOn(),
+               "AI endpoints: a server saved before the list comes back as the list's one endpoint, in use");
+
+        // Adding: each new one is in use, the old keeps its address and model.
+        s.addEndpoint ("Studio", "localhost:1234");
+        s.model = "mistral";
+        s.addEndpoint();
+        s.serverUrl = "http://gpu.lan:8000/v1";
+        s.model = "llama";
+        const auto three = s.listed();
+        check (three.size() == 3 && s.current == 2 && three[0] == Ai::Endpoint { "Server 1", "http://box.lan:8080/v1", "qwen" }
+                   && three[1] == Ai::Endpoint { "Studio", "localhost:1234", "mistral" } && three[2] == Ai::Endpoint { "Server 3", "http://gpu.lan:8000/v1", "llama" },
+               "AI endpoints: added servers each keep their own address and model, the new one in use and named in turn");
+
+        // Choosing one puts its address and model in use; the requests go there.
+        s.choose (1);
+        check (s.current == 1 && s.baseUrl() == "http://localhost:1234/v1" && s.model == "mistral" && s.keyAccount() == "http://localhost:1234/v1",
+               "AI endpoints: choosing a server uses its address, model and key");
+
+        // Saved and loaded, as it was.
+        juce::PropertySet p;
+        s.save (p);
+        const auto back = Ai::Settings::load (p);
+        check (back.listed() == s.listed() && back.current == 1 && back.serverUrl == "localhost:1234" && back.model == "mistral" && back.enabled,
+               "AI endpoints: the list and the one in use come back from the settings");
+
+        // Deleting: one before the one in use, the one in use, and the last.
+        s.removeEndpoint (0);
+        const auto before = s.current == 0 && s.serverUrl == "localhost:1234" && s.listed().size() == 2;
+        s.removeEndpoint (0);
+        const auto inUse = s.current == 0 && s.serverUrl == "http://gpu.lan:8000/v1" && s.model == "llama" && s.listed().size() == 1;
+        s.removeEndpoint (0);
+        check (before && inUse && s.listed().empty() && s.serverUrl.isEmpty() && s.model.isEmpty() && ! s.isOn(),
+               "AI endpoints: deleting one keeps the one in use; deleting the one in use moves to the next; deleting the last leaves none, and AI off");
+
+        juce::PropertySet none;
+        s.save (none);
+        const auto empty = Ai::Settings::load (none);
+        s.addEndpoint ({}, "http://first.lan:8000/v1");
+        check (empty.listed().empty() && ! empty.isOn() && s.listed() == std::vector<Ai::Endpoint> { { "Server 1", "http://first.lan:8000/v1", {} } }
+                   && s.serverUrl == "http://first.lan:8000/v1",
+               "AI endpoints: an empty list stays empty, and a server added to it is the first, with its address");
+    }
+
+    /** Settings > AI's list, driven as a person would: Add, a name and address typed, choosing, Delete. */
+    void testEndpointsView()
+    {
+        juce::PropertySet p;
+        Ai::Settings start;
+        start.enabled = true;
+        start.addEndpoint ("Here", "http://127.0.0.1:9/v1");
+        start.save (p);
+        Ai::SettingsView view ([&p] { return Ai::Settings::load (p); }, [&p] (const Ai::Settings& x) { x.save (p); });
+        view.setSize (600, Ai::SettingsView::preferredHeight);
+
+        juce::TextButton* add = nullptr;
+        juce::TextButton* remove = nullptr;
+        juce::ComboBox* list = nullptr;
+        std::vector<juce::TextEditor*> boxes;
+
+        for (auto* c : view.getChildren())
+        {
+            if (auto* b = dynamic_cast<juce::TextButton*> (c); b != nullptr && b->getButtonText() == "Add")
+                add = b;
+            else if (b != nullptr && b->getButtonText() == "Delete")
+                remove = b;
+            else if (auto* box = dynamic_cast<juce::ComboBox*> (c); box != nullptr && list == nullptr)
+                list = box;
+            else if (auto* e = dynamic_cast<juce::TextEditor*> (c))
+                boxes.push_back (e);
+        }
+
+        if (add == nullptr || remove == nullptr || list == nullptr || boxes.size() < 2)
+        {
+            check (false, "AI endpoints: the settings page has an endpoint list with Add and Delete");
+            return;
+        }
+
+        auto* name = boxes[0];
+        auto* url = boxes[1];
+        const auto shownFirst = list->getNumItems() == 1 && list->getText() == "Here" && name->getText() == "Here" && url->getText() == "http://127.0.0.1:9/v1";
+
+        add->onClick();
+        name->setText ("Rack");
+        url->setText ("rack.lan:8000");
+        name->onFocusLost();
+        const auto added = Ai::Settings::load (p);
+        const auto addedOk = added.listed().size() == 2 && added.current == 1 && added.listed()[1] == Ai::Endpoint { "Rack", "rack.lan:8000", {} }
+                             && list->getNumItems() == 2 && list->getText() == "Rack";
+
+        list->setSelectedItemIndex (0, juce::sendNotificationSync);
+        const auto chosen = Ai::Settings::load (p).current == 0 && url->getText() == "http://127.0.0.1:9/v1" && name->getText() == "Here";
+
+        remove->onClick();
+        const auto left = Ai::Settings::load (p);
+        const auto deleted = left.listed() == std::vector<Ai::Endpoint> { { "Rack", "rack.lan:8000", {} } } && left.serverUrl == "rack.lan:8000"
+                             && list->getNumItems() == 1 && url->getText() == "rack.lan:8000";
+
+        remove->onClick();
+        const auto gone = Ai::Settings::load (p).listed().empty() && list->getNumItems() == 0 && ! remove->isEnabled() && url->getText().isEmpty();
+
+        check (shownFirst && addedOk && chosen && deleted && gone,
+               "AI endpoints: on the settings page, Add makes a server to name and address, the list chooses which is used, and Delete removes it, down to none");
+    }
+
     void testReadingAnswers()
     {
         // A streamed answer: text, thinking, and a tool call split over several events.
@@ -1162,6 +1276,8 @@ namespace
 void runAiTests()
 {
     testSettings();
+    testEndpoints();
+    testEndpointsView();
     testReadingAnswers();
     testServer();
     testCancelling();

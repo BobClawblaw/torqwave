@@ -7,6 +7,8 @@ namespace
     constexpr const char* enabledKey = "aiEnabled";
     constexpr const char* serverUrlKey = "aiServerUrl";
     constexpr const char* modelKey = "aiModel";
+    constexpr const char* endpointsKey = "aiEndpoints";
+    constexpr const char* currentKey = "aiEndpoint";
 
     juce::var parse (const juce::String& json)
     {
@@ -36,12 +38,89 @@ juce::String Settings::baseUrl() const
     return url;
 }
 
+std::vector<Endpoint> Settings::listed() const
+{
+    auto list = endpoints;
+
+    if (list.empty() && (serverUrl.isNotEmpty() || model.isNotEmpty()))
+        list.push_back ({ "Server 1", {}, {} });
+
+    if (juce::isPositiveAndBelow (current, (int) list.size()))
+    {
+        list[(size_t) current].serverUrl = serverUrl;
+        list[(size_t) current].model = model;
+    }
+
+    return list;
+}
+
+void Settings::choose (int index)
+{
+    endpoints = listed();
+
+    if (! juce::isPositiveAndBelow (index, (int) endpoints.size()))
+        return;
+
+    current = index;
+    serverUrl = endpoints[(size_t) index].serverUrl;
+    model = endpoints[(size_t) index].model;
+}
+
+void Settings::addEndpoint (const juce::String& name, const juce::String& url)
+{
+    endpoints = listed();
+    auto n = (int) endpoints.size() + 1;
+    auto taken = [this] (const juce::String& x) { return std::any_of (endpoints.begin(), endpoints.end(), [&] (auto& e) { return e.name == x; }); };
+
+    while (name.isEmpty() && taken ("Server " + juce::String (n)))
+        ++n;
+
+    endpoints.push_back ({ name.isNotEmpty() ? name : "Server " + juce::String (n), url, {} });
+    current = -1;   // the one in use was written back above: nothing more to keep from the fields
+    choose ((int) endpoints.size() - 1);
+}
+
+void Settings::removeEndpoint (int index)
+{
+    endpoints = listed();
+
+    if (! juce::isPositiveAndBelow (index, (int) endpoints.size()))
+        return;
+
+    endpoints.erase (endpoints.begin() + index);
+
+    if (endpoints.empty())
+    {
+        current = 0;
+        serverUrl = model = {};
+        return;
+    }
+
+    // The one in use stays in use; if it went, the one after it (or the last) takes its place.
+    const auto next = index < current ? current - 1 : juce::jmin (current, (int) endpoints.size() - 1);
+    current = -1;
+    choose (next);
+}
+
 Settings Settings::load (const juce::PropertySet& p)
 {
     Settings s;
     s.enabled = p.getBoolValue (enabledKey, false);
     s.serverUrl = p.getValue (serverUrlKey);
     s.model = p.getValue (modelKey);
+
+    if (const auto list = juce::JSON::parse (p.getValue (endpointsKey)); list.isArray())
+        for (auto& e : *list.getArray())
+            s.endpoints.push_back ({ e["name"].toString(), e["url"].toString(), e["model"].toString() });
+
+    s.current = juce::jlimit (0, juce::jmax (0, (int) s.endpoints.size() - 1), p.getIntValue (currentKey, 0));
+
+    // Saved before the list: that server is the list. Otherwise the one in use is the list's.
+    if (s.endpoints.empty())
+        s.endpoints = s.listed();
+    else
+        s.choose (s.current);
+
     return s;
 }
 
@@ -50,6 +129,20 @@ void Settings::save (juce::PropertySet& p) const
     p.setValue (enabledKey, enabled);
     p.setValue (serverUrlKey, serverUrl);
     p.setValue (modelKey, model);
+
+    juce::Array<juce::var> list;
+
+    for (auto& e : listed())
+    {
+        auto* o = new juce::DynamicObject();
+        o->setProperty ("name", e.name);
+        o->setProperty ("url", e.serverUrl);
+        o->setProperty ("model", e.model);
+        list.add (juce::var (o));
+    }
+
+    p.setValue (endpointsKey, juce::JSON::toString (juce::var (list), true));
+    p.setValue (currentKey, current);
 }
 
 //==============================================================================

@@ -16,11 +16,13 @@ What goes to the server: your sentence, the file's name, and the numbers Torqwav
 
 1. Start your model server and load a model that supports tools.
 2. Open **Settings > AI**.
-3. Under **Server**, type the server's address, such as `http://localhost:11434/v1` for Ollama on this computer, or `http://studio-pc.local:8000/v1` for a server elsewhere on your network. An address without a path gets `/v1`.
+3. Press **Add** beside **Endpoint**, and give the server a **Name** you'll know it by. Then, under **Server**, type its address, such as `http://localhost:11434/v1` for Ollama on this computer, or `http://studio-pc.local:8000/v1` for a server elsewhere on your network. An address without a path gets `/v1`.
 4. **Key:** leave it empty unless your server asks for one. A key you save is kept in the Mac's keychain or Windows' Credential Manager, never in Torqwave's settings. On Linux, this release reads it from the `TORQWAVE_AI_KEY` environment variable instead. After you install a new version on the Mac, macOS may ask whether Torqwave may use the key it saved: choose Always Allow.
 5. Press **List Models** and choose the model.
 6. Press **Test**. Torqwave asks the model for a short reply and shows it, with how long it took.
 7. Turn on **Ask Torq**.
+
+**More than one server.** Settings > AI keeps a list of endpoints: a model on this computer, say, and a bigger one on another machine on your network. Each keeps its own name, address, model and key. Choose one under **Endpoint** to use it; Ask Torq and the plug-in catalogue use the one chosen. **Add** puts another in the list. **Delete** removes the one shown, with its saved key unless another endpoint in the list has the same address. Settings from an earlier version come back as an endpoint named "Server 1".
 
 ## Asking
 

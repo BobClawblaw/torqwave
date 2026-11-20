@@ -63,6 +63,10 @@ Each milestone as it was built, newest first, with what the tests measured on th
   - MIDI learn: binding, volume and pan scales, buttons toggling at each press, the transport, which CCs are taken, one CC per control, the session file, and removing a track dropping its bindings.
   - Not tested: that the surface's input stops playing the instruments. Not yet tried by hand with a hardware surface or controller. The surface tests run on macOS and Linux only.
 
+**Ask Torq: a list of servers**
+- **Settings > AI** keeps a list of endpoints, any servers that speak the OpenAI-compatible API, each with its own name, address, model and key. Choose one under **Endpoint** to use it, **Add** another, or **Delete** the one shown (its saved key goes with it unless another endpoint shares its address). The server set in an earlier version comes back as the first endpoint, "Server 1".
+- Tested: the earlier setting comes back as a list of one; added servers keep their own address and model; choosing one uses its address, model and key; the list and the one in use come back from the settings; deleting before, at and after the one in use, down to none, which turns AI off; on the settings page, Add, typing a name and address, choosing and Delete, driven by the tests. Not yet tried by hand against two real servers.
+
 ## Released
 
 **Release 0.18.0: Cubase-style sessions, Ask Torq on sessions, ASIO and Intel Macs**

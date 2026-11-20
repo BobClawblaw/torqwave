@@ -9,12 +9,37 @@
     Torqwave ships no model and sends no audio: requests carry text only. */
 namespace Ai
 {
+    /** A server kept in Settings > AI's list: a name to choose it by, its URL and the model used on it. */
+    struct Endpoint
+    {
+        juce::String name, serverUrl, model;
+
+        bool operator== (const Endpoint& o) const noexcept { return name == o.name && serverUrl == o.serverUrl && model == o.model; }
+    };
+
     /** Settings > AI. Off by default. The key is never here: it lives in AiKeychain. */
     struct Settings
     {
         bool enabled = false;
-        juce::String serverUrl;       // the server's base URL, e.g. "http://localhost:11434/v1"
+        juce::String serverUrl;       // the server in use: its base URL, e.g. "http://localhost:11434/v1"
         juce::String model;           // as the server names it in /v1/models
+
+        /** The servers kept to choose from, and which is in use: serverUrl and model are its. A
+            setting saved before there was a list comes back as a list of that one server. */
+        std::vector<Endpoint> endpoints;
+        int current = 0;
+
+        /** Makes endpoint `index` the one in use. */
+        void choose (int index);
+
+        /** Adds a server to the list, named (or "Server N"), and makes it the one in use. */
+        void addEndpoint (const juce::String& name = {}, const juce::String& url = {});
+
+        /** Removes endpoint `index`; the one after it (or the last) is then in use, or none. */
+        void removeEndpoint (int index);
+
+        /** The list with serverUrl and model written into the endpoint in use (a first one made for them if there is none). */
+        std::vector<Endpoint> listed() const;
 
         bool isOn() const             { return enabled && baseUrl().isNotEmpty(); }
 

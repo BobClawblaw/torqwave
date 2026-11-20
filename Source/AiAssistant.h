@@ -111,20 +111,24 @@ namespace Ai
 
         void resized() override;
 
-        static constexpr int preferredHeight = 250;
+        static constexpr int preferredHeight = 314;
 
     private:
         void run() override;
         void startJob (bool test);
         void saveFromFields();
+        void showEndpoint();            // the list, and the fields of the endpoint in use
+        void addEndpoint();
+        void deleteEndpoint();
         juce::String keyFor (const Settings&) const;
 
         std::function<Settings()> getSettings;
         std::function<void (const Settings&)> setSettings;
 
-        juce::Label urlLabel, keyLabel, modelLabel, keyNote, status;
-        juce::TextEditor urlBox, keyBox;
-        juce::ComboBox modelBox;
+        juce::Label endpointLabel, nameLabel, urlLabel, keyLabel, modelLabel, keyNote, status;
+        juce::TextEditor nameBox, urlBox, keyBox;
+        juce::ComboBox endpointBox, modelBox;
+        juce::TextButton addButton { "Add" }, deleteButton { "Delete" };
         juce::TextButton saveKeyButton { "Save Key" }, forgetKeyButton { "Forget Key" }, refreshButton { "List Models" }, testButton { "Test" };
 
         // The background job: listing models, or a test request.

@@ -407,20 +407,42 @@ void AskPanel::finish (const juce::String&, const juce::String& error)
 SettingsView::SettingsView (std::function<Settings()> get, std::function<void (const Settings&)> set)
     : juce::Thread ("AI settings"), getSettings (std::move (get)), setSettings (std::move (set))
 {
-    const auto s = getSettings();
-
+    endpointLabel.setText ("Endpoint", juce::dontSendNotification);
+    nameLabel.setText ("Name", juce::dontSendNotification);
     urlLabel.setText ("Server", juce::dontSendNotification);
     keyLabel.setText ("Key", juce::dontSendNotification);
     modelLabel.setText ("Model", juce::dontSendNotification);
 
-    for (auto* l : { &urlLabel, &keyLabel, &modelLabel, &keyNote, &status })
+    for (auto* l : { &endpointLabel, &nameLabel, &urlLabel, &keyLabel, &modelLabel, &keyNote, &status })
         addAndMakeVisible (l);
+
+    // The list of servers: choose one to use, add one, delete the one shown.
+    endpointBox.setTextWhenNothingSelected ("Add a server");
+    endpointBox.setTextWhenNoChoicesAvailable ("Add a server");
+    endpointBox.onChange = [this]
+    {
+        if (const auto index = endpointBox.getSelectedItemIndex(); index >= 0)
+        {
+            saveFromFields();
+            auto s = getSettings();
+            s.choose (index);
+            setSettings (s);
+            showEndpoint();
+        }
+    };
+    addButton.onClick = [this] { addEndpoint(); };
+    deleteButton.onClick = [this] { deleteEndpoint(); };
+    nameBox.setTextToShowWhenEmpty ("a name for this server", Theme::faintText);
+    nameBox.onReturnKey = [this] { saveFromFields(); };
+    nameBox.onFocusLost = [this] { saveFromFields(); };
+
+    for (auto* c : std::initializer_list<juce::Component*> { &endpointBox, &addButton, &deleteButton, &nameBox })
+        addAndMakeVisible (c);
 
     keyNote.setColour (juce::Label::textColourId, Theme::dimText);
     status.setColour (juce::Label::textColourId, Theme::dimText);
     status.setJustificationType (juce::Justification::topLeft);
 
-    urlBox.setText (s.serverUrl, false);
     urlBox.setTextToShowWhenEmpty ("http://localhost:11434/v1", Theme::faintText);
     urlBox.onReturnKey = [this] { saveFromFields(); };
     urlBox.onFocusLost = [this] { saveFromFields(); };
@@ -459,12 +481,6 @@ SettingsView::SettingsView (std::function<Settings()> get, std::function<void (c
     modelBox.setTextWhenNothingSelected ("List the server's models");
     modelBox.setEditableText (true);
 
-    if (s.model.isNotEmpty())
-    {
-        modelBox.addItem (s.model, 1);
-        modelBox.setSelectedId (1, juce::dontSendNotification);
-    }
-
     modelBox.onChange = [this]
     {
         auto changed = getSettings();
@@ -482,6 +498,74 @@ SettingsView::SettingsView (std::function<Settings()> get, std::function<void (c
                                             : "Read from " + juce::String (AiKeychain::whereKept()) + ".",
                      juce::dontSendNotification);
     status.setText ("Any server that speaks the OpenAI-compatible API: Ollama, LM Studio, llama.cpp, vLLM and the like.", juce::dontSendNotification);
+    showEndpoint();
+}
+
+void SettingsView::showEndpoint()
+{
+    const auto s = getSettings();
+    const auto list = s.listed();
+    endpointBox.clear (juce::dontSendNotification);
+
+    for (size_t i = 0; i < list.size(); ++i)
+        endpointBox.addItem (list[i].name.isNotEmpty() ? list[i].name : "Server " + juce::String ((int) i + 1), (int) i + 1);
+
+    if (juce::isPositiveAndBelow (s.current, (int) list.size()))
+        endpointBox.setSelectedItemIndex (s.current, juce::dontSendNotification);
+
+    const auto any = ! list.empty();
+    const auto* shown = any && juce::isPositiveAndBelow (s.current, (int) list.size()) ? &list[(size_t) s.current] : nullptr;
+    nameBox.setText (shown != nullptr ? shown->name : juce::String(), false);
+    urlBox.setText (s.serverUrl, false);
+    modelBox.clear (juce::dontSendNotification);
+
+    if (s.model.isNotEmpty())
+    {
+        modelBox.addItem (s.model, 1);
+        modelBox.setSelectedId (1, juce::dontSendNotification);
+    }
+
+    deleteButton.setEnabled (any);
+    nameBox.setEnabled (any);
+}
+
+void SettingsView::addEndpoint()
+{
+    saveFromFields();
+    auto s = getSettings();
+    s.addEndpoint();
+    setSettings (s);
+    showEndpoint();
+    status.setText ("Give the new server's address, then list its models.", juce::dontSendNotification);
+    urlBox.grabKeyboardFocus();
+}
+
+void SettingsView::deleteEndpoint()
+{
+    auto s = getSettings();
+    const auto list = s.listed();
+
+    if (! juce::isPositiveAndBelow (s.current, (int) list.size()))
+        return;
+
+    // Its key goes too, unless another server in the list has the same address.
+    const auto account = s.keyAccount();
+    const auto name = list[(size_t) s.current].name;
+    s.removeEndpoint (s.current);
+    const auto shared = std::any_of (s.endpoints.begin(), s.endpoints.end(), [&] (auto& e)
+    {
+        Settings other;
+        other.serverUrl = e.serverUrl;
+        return other.keyAccount() == account;
+    });
+
+    if (account.isNotEmpty() && ! shared && AiKeychain::canStore())
+        AiKeychain::erase (account.toStdString());
+
+    setSettings (s);
+    showEndpoint();
+    status.setText (name.quoted() + " is deleted" + (account.isNotEmpty() && ! shared && AiKeychain::canStore() ? ", with its key." : "."),
+                    juce::dontSendNotification);
 }
 
 SettingsView::~SettingsView()
@@ -505,6 +589,18 @@ void SettingsView::resized()
         r.removeFromTop (6);
         return line;
     };
+
+    auto endpoint = row();
+    endpointLabel.setBounds (endpoint.removeFromLeft (70));
+    deleteButton.setBounds (endpoint.removeFromRight (70));
+    endpoint.removeFromRight (6);
+    addButton.setBounds (endpoint.removeFromRight (60));
+    endpoint.removeFromRight (6);
+    endpointBox.setBounds (endpoint);
+
+    auto name = row();
+    nameLabel.setBounds (name.removeFromLeft (70));
+    nameBox.setBounds (name);
 
     auto url = row();
     urlLabel.setBounds (url.removeFromLeft (70));
@@ -539,7 +635,27 @@ void SettingsView::saveFromFields()
 {
     auto s = getSettings();
     s.serverUrl = urlBox.getText().trim();
+
+    // The fields edit the endpoint in use; with none yet, typing an address makes the first.
+    s.endpoints = s.listed();
+    auto renamed = false;
+
+    if (juce::isPositiveAndBelow (s.current, (int) s.endpoints.size()))
+    {
+        const auto name = nameBox.getText().trim();
+        auto& e = s.endpoints[(size_t) s.current];
+
+        renamed = name.isNotEmpty() && name != e.name;
+
+        if (renamed)
+            e.name = name;
+    }
+
+    const auto first = endpointBox.getNumItems() == 0 && ! s.endpoints.empty();
     setSettings (s);
+
+    if (first || renamed)
+        showEndpoint();
 }
 
 juce::String SettingsView::keyFor (const Settings& s) const
