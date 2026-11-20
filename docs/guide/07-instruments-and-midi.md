@@ -290,7 +290,7 @@ The Sequencer is a window for one sequence from the library, open by itself to w
 
 Opening another sequence, or New, asks first whether to save changes. Duplicate and Make Variation copy what is in the window, edits included; the original file keeps what was last saved.
 
-**Ask Torq about it (experimental).** The **Ask Torq 🐶** button at the right of the transport row opens [Ask Torq](13-ask-torq.md#in-the-sequencer) on the sequence in this window (or Settings > AI, while Ask Torq isn't set up). Ask it to write a part ("two bars of broken-beat hats in A minor") or to look at the one here ("how could this groove more?"). It knows the sequence's role, key and length, the voice's instrument and, when a session is open, the session's tempo.
+**Ask Torq about it (experimental).** The **Ask Torq 🐶** button at the right of the transport row opens [Ask Torq](13-ask-torq.md#in-the-sequencer) on the sequence in this window (or Settings > AI, while Ask Torq isn't set up). Ask it to write a part ("two bars of broken-beat hats in A minor") or to look at the one here ("how could this groove more?"). It knows the sequence's role, key and length, the voice's instrument and, when a session is open, the session's tempo and key.
 
 - What it writes is shown as a plan; **Apply** puts the notes and lanes into this window as one undo step, exactly as written. **Undo** here takes it back.
 - A review lists suggestions, each with its own **Apply**, and **Apply All**. Each Apply is one undo step in this window, and Apply All is one step for all of them. A suggestion that adds an effect to the voice is an undo step too, unlike an effect you add with **+ Effect**: Undo takes the effect out again, and Redo puts it back.

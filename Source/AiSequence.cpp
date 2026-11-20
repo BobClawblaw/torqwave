@@ -292,6 +292,9 @@ namespace Ai
         if (c.sessionTempo > 0.0)
             o->setProperty ("session_tempo", c.sessionTempo);
 
+        if (c.sessionKey.isNotEmpty())
+            o->setProperty ("session_key", c.sessionKey);
+
         if (q.note.isNotEmpty())
             o->setProperty ("note", q.note);
 
@@ -763,12 +766,13 @@ namespace Ai
     //==============================================================================
     namespace SequencerLink
     {
-        SequenceTools::Context contextFor (SequencerView& view, const PluginCatalogue* catalogue, double sessionTempo)
+        SequenceTools::Context contextFor (SequencerView& view, const PluginCatalogue* catalogue, double sessionTempo, const juce::String& sessionKey)
         {
             SequenceTools::Context c;
             c.sequence = view.currentSequence();
             c.tempo = view.getTempo();
             c.sessionTempo = sessionTempo;
+            c.sessionKey = sessionKey;
 
             const auto& chain = view.getPlayer().getEffects();
             const auto track = view.getTrackId();

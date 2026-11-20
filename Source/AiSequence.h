@@ -32,6 +32,7 @@ namespace Ai
             juce::StringArray effects;                // the voice's effects, in order
             double tempo = 120.0;                     // the Sequencer's tempo
             double sessionTempo = 0.0;                // the open session's, or 0 with none
+            juce::String sessionKey;                  // the open session's key, when it has one
         };
 
         /** A suggestion from a review: one kind of change, with its title and reason. */
@@ -131,7 +132,7 @@ namespace Ai
     {
         /** What Ask Torq is told: the Sequencer's sequence, its voice, and the session's tempo
             (0 with no session open). */
-        SequenceTools::Context contextFor (SequencerView&, const PluginCatalogue*, double sessionTempo);
+        SequenceTools::Context contextFor (SequencerView&, const PluginCatalogue*, double sessionTempo, const juce::String& sessionKey);
 
         /** The written sequence into the Sequencer as one undo step. An error when the sequence
             there changed since the request was made, or it is another one now. */

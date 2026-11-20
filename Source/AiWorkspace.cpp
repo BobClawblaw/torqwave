@@ -392,7 +392,8 @@ juce::String Workspace::systemMessage() const
              << ", played on " << (c.instrument.isNotEmpty() ? c.instrument : juce::String ("no instrument yet"))
              << (c.instrumentAbout.isNotEmpty() ? " (" + c.instrumentAbout.trimCharactersAtEnd (".") + ")" : juce::String())
              << " at " << c.tempo << " BPM"
-             << (c.sessionTempo > 0.0 ? "; the open session's tempo is " + juce::String (c.sessionTempo) + " BPM" : juce::String()) << ". ";
+             << (c.sessionTempo > 0.0 ? "; the open session's tempo is " + juce::String (c.sessionTempo) + " BPM" : juce::String())
+             << (c.sessionKey.isNotEmpty() ? "; the session is in " + c.sessionKey : juce::String()) << ". ";
 
         return "You are the assistant inside Torqwave, an audio editor with a Sequencer. The user asks you to write or look at the "
                "sequence open in it. You work on a copy: what you write is shown as a plan and goes in only when the user applies it, as "

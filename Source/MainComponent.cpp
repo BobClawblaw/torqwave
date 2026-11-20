@@ -14098,12 +14098,12 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
         if (sequencer == nullptr)
             return std::nullopt;
 
-        // The session's tempo at its playhead, when a session is open.
+        // The session's tempo at its playhead and its key, when a session is open.
         const auto session = engine.session.getState();
         const auto sessionTempo = session->tracks.empty() ? 0.0 : session->tempoMap().tempoAt (engine.getPlayer().getPositionFrames());
 
         Ai::Workspace::Start start;
-        start.sequence = Ai::SequencerLink::contextFor (*sequencer, pluginCatalogue.get(), sessionTempo);
+        start.sequence = Ai::SequencerLink::contextFor (*sequencer, pluginCatalogue.get(), sessionTempo, session->tracks.empty() ? juce::String() : session->musicalKey);
         start.plugins = engine.knownPlugins.getTypes();
         start.catalogue = pluginCatalogue.get();
         return start;

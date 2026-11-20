@@ -1282,6 +1282,7 @@ namespace
         context.instrumentParameters = { "Cutoff", "Resonance" };
         context.tempo = 96.0;
         context.sessionTempo = 128.0;
+        context.sessionKey = "E minor";
         start.sequence = context;
         start.plugins = BuiltInEffects::getDescriptions();
         Ai::Workspace w (std::move (start));
@@ -1297,14 +1298,14 @@ namespace
         const auto system = w.systemMessage();
         check (w.isSequence() && names == juce::StringArray { "get_sequence", "write_sequence", "suggest_for_sequence", "list_plugins", "describe_plugin" }
                    && system.contains ("\"Night Bass\" open: a Bass part") && system.contains ("in A minor") && system.contains ("Basic Synth (A simple subtractive synth)")
-                   && system.contains ("96 BPM") && system.contains ("session's tempo is 128 BPM"),
-               "Ask Torq sequences: five tools (" + names.joinIntoString (", ") + "), and the system message gives the part's role, key, instrument and the tempos");
+                   && system.contains ("96 BPM") && system.contains ("session's tempo is 128 BPM") && system.contains ("the session is in E minor"),
+               "Ask Torq sequences: five tools (" + names.joinIntoString (", ") + "), and the system message gives the part's role, key, instrument, the tempos and the session's key");
 
         const auto got = call ("get_sequence", "{}");
         check ((bool) got["ok"] && got["role"] == juce::var ("Bass") && got["key"] == juce::var ("A minor") && (int) got["length"] == 7680 && (int) got["ticks_per_beat"] == 960
                    && got["notes"].size() == 4 && (int) got["notes"][1]["velocity"] == 90 && got["notes"][2]["name"] == juce::var ("F#3")
                    && got["instrument"] == juce::var ("Basic Synth") && got["instrument_about"] == juce::var ("A simple subtractive synth.")
-                   && got["instrument_parameters"].size() == 2 && (double) got["session_tempo"] == 128.0
+                   && got["instrument_parameters"].size() == 2 && (double) got["session_tempo"] == 128.0 && got["session_key"] == juce::var ("E minor")
                    && got["outside_key"].size() == 2 && got["outside_key"][0] == juce::var ("F#3 at bar 1, beat 3") && got["outside_key"][1] == juce::var ("G#2 at bar 1, beat 4"),
                "Ask Torq sequences: get_sequence gives the notes in ticks with their names, the instrument and what it is, and names the notes outside the key ("
                    + juce::JSON::toString (got["outside_key"], true) + ")");
@@ -1415,7 +1416,7 @@ namespace
                             [&view]
                             {
                                 Ai::Workspace::Start s;
-                                s.sequence = Ai::SequencerLink::contextFor (view, nullptr, 0.0);
+                                s.sequence = Ai::SequencerLink::contextFor (view, nullptr, 0.0, {});
                                 s.plugins = BuiltInEffects::getDescriptions();
                                 return std::optional<Ai::Workspace::Start> (std::move (s));
                             },
