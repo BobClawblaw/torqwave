@@ -59,12 +59,13 @@ public:
         std::vector<DrumSound> drumMap = DrumSound::generalMidi();   // the track's sounds, top to bottom
         int beatsPerBar = 4;               // at the clip's start
         juce::String key;                  // the part's key ("A minor"), or empty: the tools guess it from the notes
+        bool holdOver = false;             // notes may end up to a pass past the loop's end, held into the next (the Sequencer looping)
 
         bool operator== (const Shown& o) const noexcept
         {
             return clip == o.clip && juce::exactlyEqual (sampleRate, o.sampleRate) && juce::exactlyEqual (beatSeconds, o.beatSeconds)
                 && trackName == o.trackName && hasInstrument == o.hasInstrument && drums == o.drums && drumMap == o.drumMap
-                && beatsPerBar == o.beatsPerBar && key == o.key;
+                && beatsPerBar == o.beatsPerBar && key == o.key && holdOver == o.holdOver;
         }
     };
 
@@ -173,6 +174,7 @@ public:
     void setLane (int controller);
     int getLane() const noexcept                                   { return laneController; }
     juce::Rectangle<int> laneArea() const;                         // empty without a lane
+    juce::int64 noteEndLimit() const noexcept;                     // the latest a note may end: the timeline's end, or a pass past it held over
     int lanePointAt (juce::Point<float>) const;                    // a point of the shown lane, or -1
     float laneValueAt (float y) const;
     float yForLaneValue (float value) const;

@@ -1474,6 +1474,46 @@ void runSequenceTests (AudioEngine& engine)
                    "sequencer: looping, a note ending on the loop's end rings on into the next pass (its release: " + juce::String (after / juce::jmax (1.0e-9f, before), 2)
                    + " of its level in the first 10 ms), not cut off");
 
+            // Looping, a note crossing the loop's end sounds on into the next pass until its own end.
+            auto over = tail;
+            over.notes = { { 69, 3 * SequenceFile::ticksPerBeat, 2 * SequenceFile::ticksPerBeat, 1.0f } };
+            const auto overFile = folder.getChildFile (juce::String ("Over") + SequenceFile::extension);
+            SequenceFile::save (over, overFile);
+            SequencerView crossing (engine);
+            crossing.openFile (overFile);
+            auto& cp = crossing.getPlayer();
+
+            for (int i = 0; i < 100 && cp.getEffects().getInstrument (crossing.getTrackId()) == nullptr; ++i)
+                juce::MessageManager::getInstance()->runDispatchLoopUntil (20);
+
+            crossing.setTempo (120.0);
+            cp.prepareToPlay (512, rate);
+            cp.play();
+            juce::AudioBuffer<float> overAudio (2, 2 * 96000);
+            overAudio.clear();
+
+            for (int done = 0; done < overAudio.getNumSamples(); done += 512)
+            {
+                const auto n = juce::jmin (512, overAudio.getNumSamples() - done);
+                b.clear();
+                cp.getNextAudioBlock ({ &b, 0, n });
+                overAudio.copyFrom (0, done, b, 0, 0, n);
+            }
+
+            const auto firstPass = overAudio.getRMSLevel (0, 96000 - 4800, 2400), carried = overAudio.getRMSLevel (0, 96000 + 12000, 2400),
+                       ended = overAudio.getRMSLevel (0, 144000 - 2400, 2400);
+            const auto heldPlayhead = crossing.getPlayer().getPosition() > 96000;
+            check (firstPass > 0.01f && carried > 0.6f * firstPass && ended < 0.1f * firstPass && heldPlayhead,
+                   "sequencer: looping, a note crossing the loop's end sounds on into the next pass (" + juce::String (carried / juce::jmax (1.0e-9f, firstPass), 2)
+                   + " of its level a quarter beat in) and ends where it ends (" + juce::String (ended / juce::jmax (1.0e-9f, firstPass), 3) + " a beat after)");
+
+            auto offsetState = sessionAt (120.0);
+            auto offsetSequence = over;
+            offsetSequence.offset = SequenceFile::ticksPerBeat;
+            const auto placedOffset = SequenceFile::place (offsetState, offsetSequence, -1, 0, false);
+            check (! SequencerDocument::heldOver (offsetState, placedOffset.clipId).has_value(),
+                   "sequencer: a sequence starting partway through its notes loops as before, cut at the loop's end");
+
             // A sequence dragged from the library, or from the Finder, opens in the Sequencer; a kit doesn't.
             SequencerView dropped (engine);
             juce::Component source;

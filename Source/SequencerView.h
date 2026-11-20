@@ -100,6 +100,7 @@ private:
     void showOpenChooser();
     juce::StringArray folderOf (const juce::File&) const;
     double rate() const;
+    juce::int64 passLength() const;        // the frames of a pass of the loop
 
     AudioEngine& engine;
     SequencerDocument doc;
@@ -109,6 +110,7 @@ private:
 
     SequencerDocument::Built built;
     std::shared_ptr<const SessionState> shown;
+    bool holdOver = false;                 // the loop plays SequencerDocument::heldOver
     std::shared_ptr<bool> loadAlive;
     bool loading = false, voiceIncomplete = false, drums = false, followSession = false, dropping = false;
     double tempo = 120.0;

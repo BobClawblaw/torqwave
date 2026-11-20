@@ -104,6 +104,26 @@ SessionState SequencerDocument::withSequence (const Built& b, const SequenceFile
     return s;
 }
 
+std::optional<SessionState> SequencerDocument::heldOver (const SessionState& state, juce::uint32 clipId)
+{
+    const auto found = state.findNoteClip (clipId);
+
+    if (! found.has_value())
+        return std::nullopt;
+
+    auto s = state;
+    auto& c = s.tracks[(size_t) found->first].noteClips[(size_t) found->second];
+    const auto period = c.loopLength > 0 ? c.loopLength : c.length;
+
+    if (c.offset != 0 || period <= 0 || c.length % period != 0)
+        return std::nullopt;
+
+    c.loopLength = period;
+    c.length = juce::jmax (c.length, (juce::int64) (4.0 * 3600.0 * s.sampleRate));
+    c.length -= c.length % period;
+    return s;
+}
+
 SequenceFile::Sequence SequencerDocument::withClip (const SequenceFile::Sequence& q, const SessionState& s, juce::uint32 clipId)
 {
     const auto read = SequenceFile::fromClip (s, clipId, nullptr);

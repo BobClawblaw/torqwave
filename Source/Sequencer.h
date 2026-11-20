@@ -55,6 +55,12 @@ public:
     /** The same session with the sequence (an edited one) in place of the clip, its ids kept. */
     static SessionState withSequence (const Built&, const SequenceFile::Sequence&, double tempo);
 
+    /** The session the Sequencer's loop plays: the sequence's clip repeating for hours, a pass
+        its length, so a note crossing the loop's end sounds on into the next pass (until its own
+        end). Nothing when the clip can't repeat that way: notes before its start, or a loop
+        inside it that doesn't divide it. */
+    static std::optional<SessionState> heldOver (const SessionState&, juce::uint32 clipId);
+
     /** The sequence with the notes, lanes, lengths and channel of the clip as edited in such a
         session (read in ticks through its tempo); its name, folder, key, tags and voice kept. */
     static SequenceFile::Sequence withClip (const SequenceFile::Sequence&, const SessionState&, juce::uint32 clipId);

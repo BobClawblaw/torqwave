@@ -678,6 +678,14 @@ juce::int64 NoteEditor::wholeLength() const noexcept
     return shown.has_value() ? juce::jmax ((juce::int64) 1, shown->clip.offset + shown->clip.length) : (juce::int64) 1;
 }
 
+juce::int64 NoteEditor::noteEndLimit() const noexcept
+{
+    if (! shown.has_value() || ! shown->holdOver)
+        return wholeLength();
+
+    return wholeLength() + juce::jmax ((juce::int64) 1, shown->clip.getPeriod());
+}
+
 float NoteEditor::xOf (juce::int64 frame) const
 {
     const auto area = rollArea();
@@ -954,6 +962,15 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
             continue;
 
         const auto playing = n.start < period && n.start >= c.offset && shown->hasInstrument;
+
+        // Held over the loop's end: what sounds into the next pass, faint at the start.
+        if (shown->holdOver && n.start < period && n.start + n.length > period)
+        {
+            const auto carried = juce::jmin (period, n.start + n.length - period);
+            g.setColour (Theme::accent.withAlpha (0.25f));
+            g.fillRoundedRectangle (juce::Rectangle<float> (xOf (0), r.getY(), xOf (carried) - xOf (0), r.getHeight()).getIntersection (area.toFloat()), 2.0f);
+        }
+
         g.setColour ((playing ? Theme::accent : Theme::dimText).withAlpha (0.45f + 0.55f * juce::jlimit (0.0f, 1.0f, n.velocity)));
         g.fillRoundedRectangle (r.getIntersection (area.toFloat()), 2.0f);
 
@@ -1509,14 +1526,15 @@ void NoteEditor::mouseDrag (const juce::MouseEvent& e)
     {
         // The dragged note's end goes to the mouse (snapped); the other selected notes' lengths change by as much.
         const auto& was = base->clip.notes[(size_t) dragNote];
-        const auto end = juce::jmax (was.start + 1, juce::jmin (length, snapped (frameAt (p.x) + (gridStepFrames() > 0 ? gridStepFrames() : 0))));
+        const auto limit = noteEndLimit();
+        const auto end = juce::jmax (was.start + 1, juce::jmin (limit, snapped (frameAt (p.x) + (gridStepFrames() > 0 ? gridStepFrames() : 0))));
         const auto delta = (end - was.start) - was.length;
 
         for (auto i : selected)
             if (juce::isPositiveAndBelow (i, (int) shown->clip.notes.size()))
             {
                 auto& n = shown->clip.notes[(size_t) i];
-                n.length = juce::jlimit ((juce::int64) 1, length - n.start, n.length + delta);
+                n.length = juce::jlimit ((juce::int64) 1, juce::jmax ((juce::int64) 1, limit - n.start), n.length + delta);
             }
 
         lastLength = shown->clip.notes[(size_t) dragNote].length;
@@ -1693,13 +1711,13 @@ void NoteEditor::resizeSelected (juce::int64 frames)
     if (! shown.has_value() || selected.empty())
         return;
 
-    const auto whole = wholeLength();
+    const auto limit = noteEndLimit();
 
     for (auto i : selected)
         if (juce::isPositiveAndBelow (i, (int) shown->clip.notes.size()))
         {
             auto& n = shown->clip.notes[(size_t) i];
-            n.length = juce::jlimit ((juce::int64) 1, juce::jmax ((juce::int64) 1, whole - n.start), n.length + frames);
+            n.length = juce::jlimit ((juce::int64) 1, juce::jmax ((juce::int64) 1, limit - n.start), n.length + frames);
         }
 
     commit ("Note Length");

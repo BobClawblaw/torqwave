@@ -86,7 +86,11 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
 
         refreshControls();
     };
-    loopButton.onClick = [this] { player.setLooping (loopButton.getToggleState()); };
+    loopButton.onClick = [this]
+    {
+        player.setLooping (loopButton.getToggleState());
+        refreshState();
+    };
     clickButton.onClick = [this] { player.setClick (clickButton.getToggleState()); };
     sessionTempoButton.onClick = [this]
     {
@@ -124,11 +128,18 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
         s.drums = drums;
         s.beatsPerBar = doc.get().beatsPerBar;
         s.key = doc.get().key;
+        s.holdOver = holdOver;
         return s;
     };
     editor.readPlayhead = [this]() -> std::optional<juce::int64>
     {
-        return player.isPlaying() ? std::optional<juce::int64> (player.getPosition()) : std::nullopt;
+        if (! player.isPlaying())
+            return std::nullopt;
+
+        // Held over, the loop runs on: its place in the pass.
+        const auto position = player.getPosition();
+        const auto pass = shown != nullptr && holdOver ? passLength() : 0;
+        return pass > 0 ? position % pass : position;
     };
     editor.apply = [this] (const NoteClip& clip, const juce::String& description)
     {
@@ -311,9 +322,23 @@ void SequencerView::loadVoice()
 void SequencerView::refreshState()
 {
     shown = std::make_shared<const SessionState> (SequencerDocument::withSequence (built, doc.get(), tempo));
-    player.setState (shown, built.trackId);
+
+    // Looping, the notes crossing the loop's end sound on into the next pass.
+    auto looped = loopButton.getToggleState() ? SequencerDocument::heldOver (*shown, built.clipId) : std::nullopt;
+    holdOver = looped.has_value();
+    player.setFreeRunning (holdOver);
+    player.setState (holdOver ? std::make_shared<const SessionState> (std::move (*looped)) : shown, built.trackId);
     editor.refresh();
     refreshControls();
+}
+
+juce::int64 SequencerView::passLength() const
+{
+    if (shown != nullptr)
+        if (const auto found = shown->findNoteClip (built.clipId))
+            return shown->tracks[(size_t) found->first].noteClips[(size_t) found->second].length;
+
+    return 0;
 }
 
 void SequencerView::refreshControls()
