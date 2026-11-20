@@ -229,6 +229,14 @@ namespace
                    && map.linesAround (300000, Metronome::Grid { 2 }) == std::pair<juce::int64, juce::int64> (192000, 384000),
                "tempo map: grid lines every beat or every two bars across the changes");
 
+        std::vector<juce::int64> eighths, eighthBeats;
+        map.forEachLine (190000, 210000, Metronome::Grid { 0, 2 }, [&] (juce::int64 frame, juce::int64 beat) { eighths.push_back (frame); eighthBeats.push_back (beat); });
+        check (eighths == std::vector<juce::int64> { 192000, 208000 } && eighthBeats == std::vector<juce::int64> { 8, 8 }
+                   && map.linesAround (200000, Metronome::Grid { 0, 2 }) == std::pair<juce::int64, juce::int64> (192000, 208000)
+                   && map.linesAround (192000, Metronome::Grid { 0, 4 }) == std::pair<juce::int64, juce::int64> (192000, 200000)
+                   && map.linesAround (200000, Metronome::Grid { 0, 6 }) == std::pair<juce::int64, juce::int64> (197333, 202667),
+               "tempo map: grid lines between the beats, in eighths, sixteenths and triplets, at each beat's own length");
+
         // Beats between frames: every frame lies in the beat beatAt gives, and with no changes the
         // beats are the plain grid's.
         SessionState odd;

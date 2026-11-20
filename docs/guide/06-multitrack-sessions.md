@@ -190,9 +190,13 @@ A parameter that has an envelope is marked "(automated)" in the menu.
   - **Tap Tempo** (T) sets it from your taps.
   - **Tempo Change at Cursor...** changes it from the bar the cursor is in.
 - **Count in bars:** **Bars and Beats** (B; in **Multitrack > Tempo** and **View > Time Format**) counts the ruler in bars and beats. With snapping on, a time range and the loop then go onto the grid as you drag: the nearest line of the ruler's grid (beats, or bars when zoomed out) however far the mouse is, or a clip edge or marker close by. Clips still snap only near a line. **Time with Bars** shows the time underneath as well. The session keeps the choice: it opens in bars next time.
+- **The grid:** the toolbar under the tracks has **Snap** (snapping on or off) and a **Grid** box, also in **Multitrack > Grid**: Auto follows the zoom (beats, or bars zoomed out); Bar, 1/4, 1/8, 1/16, 1/32, 1/8 Triplet and 1/16 Triplet hold at any zoom, as Cubase's grid does. It applies in bars and beats, and the lanes draw it (bar lines strongest) while its lines are far enough apart to see. The choice is kept for next time.
+- **Bars in the transport:** in bars and beats the clock reads bar, beat, sixteenth and ticks (120 to a sixteenth), e.g. `5.2.3.60`. **Tap**, beside the tempo in the toolbar, sets the tempo from your taps (Tap Tempo, T).
 - **Loop a stretch of time:** a session has a loop of its own, as a cycle between locators, apart from what is selected.
   - Drag along the top half of the time ruler to draw it, as in Cubase (the lower half scrubs). In bars and beats its ends go onto the grid wherever you let go. It shows as a band.
   - Drag inside the band to move it, or at an end to size it.
+  - Or type it: the two locator fields in the toolbar show its start and end (in bars while counting bars, else in the time format). Double-click one and type a place, such as `9` or `9.1.1.0`. With no loop yet, the other end goes a bar away.
+  - The loop is lit down every lane as well as in the ruler, so what will go round shows on every track.
   - **Transport > Loop to Selection** (Option-P) makes it the time range or the selected clips; **Clear Loop** removes it. Right-click the strip for both.
   - **Loop Playback** (Cmd-L, or the loop button in the transport) goes round it. The band is brighter while it is on. Playing from before the loop runs into it, then goes round. Playing from after it plays on.
   - The session keeps the loop. Setting it is not an undo step, and an undo leaves it where it is.

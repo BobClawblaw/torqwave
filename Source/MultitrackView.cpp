@@ -2445,7 +2445,7 @@ SessionSnap::Targets MultitrackView::snapTargets (juce::uint32 ignoreClip, bool 
     targets.ignoreClip = ignoreClip;
 
     if (isShowingBars())
-        targets.beatGrid = rulerBeats().second;
+        targets.beatGrid = snapGrid();
     else
         targets.gridStep = (juce::int64) std::llround (rulerTick() * shown().sampleRate);
 
@@ -2485,6 +2485,34 @@ juce::int64 MultitrackView::snapped (juce::int64 frame, juce::uint32 ignoreClip,
 
     // Snap against the session as it was before the drag, so a dragged clip can't snap to itself.
     return SessionSnap::snap (*state, frame, snapTolerance(), snapTargets (ignoreClip, toCursorAndRange));
+}
+
+juce::StringArray MultitrackView::gridSizeNames()
+{
+    return { "Auto", "Bar", "1/4", "1/8", "1/16", "1/32", "1/8 Triplet", "1/16 Triplet" };
+}
+
+void MultitrackView::setGridSize (GridSize g)
+{
+    gridSize = g;
+    repaint();
+}
+
+Metronome::Grid MultitrackView::snapGrid() const
+{
+    switch (gridSize)
+    {
+        case GridSize::automatic:         return rulerBeats().second;
+        case GridSize::bar:               return { 1, 1 };
+        case GridSize::beat:              return { 0, 1 };
+        case GridSize::eighth:            return { 0, 2 };
+        case GridSize::sixteenth:         return { 0, 4 };
+        case GridSize::thirtySecond:      return { 0, 8 };
+        case GridSize::eighthTriplet:     return { 0, 3 };
+        case GridSize::sixteenthTriplet:  return { 0, 6 };
+    }
+
+    return rulerBeats().second;
 }
 
 std::pair<Metronome::Grid, Metronome::Grid> MultitrackView::rulerBeats() const
@@ -2880,12 +2908,37 @@ void MultitrackView::paint (juce::Graphics& g)
             const auto bottom = (float) juce::jmin (area.getBottom(), laneTop ((int) s.tracks.size()));
             const auto map = s.tempoMap();
 
-            map.forEachLine (juce::jmax ((juce::int64) 0, frameForX ((float) area.getX())), frameForX ((float) area.getRight()), rulerBeats().second,
+            // The snap grid while its lines are 6 pixels apart or more, else the ruler's marks:
+            // a bar's line strongest, then a beat's, then the lines between beats.
+            auto grid = snapGrid();
+
+            if ((grid.bars > 0 ? map.shortestBar() * grid.bars : map.shortestBeat() / juce::jmax (1, grid.division)) / framesPerPixel < 6.0)
+                grid = rulerBeats().second;
+
+            map.forEachLine (juce::jmax ((juce::int64) 0, frameForX ((float) area.getX())), frameForX ((float) area.getRight()), grid,
                              [&] (juce::int64 frame, juce::int64 beat)
                              {
-                                 g.setColour (Theme::overlay.withAlpha (map.barAndBeat (beat).second == 0 ? 0.12f : 0.05f));
+                                 const auto onBeat = frame == map.beatFrame (beat);
+                                 g.setColour (Theme::overlay.withAlpha (onBeat && map.barAndBeat (beat).second == 0 ? 0.16f : onBeat ? 0.07f : 0.035f));
                                  g.drawVerticalLine ((int) xForFrame (frame), (float) area.getY(), bottom);
                              });
+        }
+
+        // The loop, lit down the lanes as in the ruler (brighter while Loop Playback is on), so what
+        // will go round shows on every track.
+        if (const auto loop = getLoop(); ! loop.isEmpty())
+        {
+            const auto on = isLoopPlaybackOn != nullptr && isLoopPlaybackOn();
+            const auto x0 = juce::jmax ((float) area.getX(), xForFrame (loop.getStart())), x1 = juce::jmin ((float) area.getRight(), xForFrame (loop.getEnd()));
+
+            if (x1 > x0)
+            {
+                g.setColour (Theme::accent.withAlpha (on ? 0.10f : 0.05f));
+                g.fillRect (juce::Rectangle<float> (x0, (float) area.getY(), x1 - x0, (float) area.getHeight()));
+                g.setColour (Theme::accent.withAlpha (on ? 0.5f : 0.25f));
+                g.drawVerticalLine ((int) x0, (float) area.getY(), (float) area.getBottom());
+                g.drawVerticalLine ((int) x1, (float) area.getY(), (float) area.getBottom());
+            }
         }
 
         if (! timeSelection.isEmpty())
@@ -4848,7 +4901,7 @@ juce::int64 MultitrackView::gridStepFrom (juce::int64 frame, bool later) const
     {
         // The marks either side; one on the frame counts as before it.
         const auto map = s.tempoMap();
-        const auto grid = rulerBeats().second;
+        const auto grid = snapGrid();
         const auto [below, above] = map.linesAround (frame, grid);
         return juce::jmax ((juce::int64) 0, later ? above : below < frame ? below : map.linesAround (below - 1, grid).first);
     }

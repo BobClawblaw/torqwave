@@ -57,6 +57,7 @@ namespace
     constexpr const char* displayKey      = "display";
     constexpr const char* fadeShapeKey    = "editorFadeShape";
     constexpr const char* snappingKey     = "snapping";
+    constexpr const char* gridSizeKey     = "gridSize";
     constexpr const char* crossfadingKey  = "crossfading";
     constexpr const char* rippleKey       = "ripple";   // 0 off, 1 the clip's track, 2 every track
     constexpr const char* zeroCrossingsKey = "zeroCrossings";
@@ -1013,11 +1014,13 @@ MainComponent::MainComponent()
                                                                    cmdTimeTool, cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdSpectralHeal });
     trackTools = std::make_unique<TrackTools> (commands, multitrack, engine,
                                                TrackTools::Commands { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue,
-                                                                      cmdTrackToolRange, cmdTrackToolMute, cmdTempo, cmdBarsAndBeats });
+                                                                      cmdTrackToolRange, cmdTrackToolMute, cmdTempo, cmdBarsAndBeats, cmdSnapping, cmdTapTempo });
     editorPanel = std::make_unique<EditorPanel> (fileTabs, waveform, *editorBar, overview, multitrack, *trackTools);
     fileTabs.onChoose = [this] (int index) { switchToFile (index); };
     fileTabs.onClose = [this] (int index) { closeFile (index); };
     multitrack.setSnapping (settings->getBoolValue (snappingKey, true));
+    multitrack.setGridSize ((MultitrackView::GridSize) juce::jlimit (0, MultitrackView::gridSizeNames().size() - 1, settings->getIntValue (gridSizeKey, 0)));
+    trackTools->onGridSize = [this] (MultitrackView::GridSize g) { appProperties.getUserSettings()->setValue (gridSizeKey, (int) g); };
     multitrack.setCrossfading (settings->getBoolValue (crossfadingKey, true));
     multitrack.setRipple ((SessionEdits::Ripple) juce::jlimit (0, 2, settings->getIntValue (rippleKey, 0)));
     multitrack.setFindingZeroCrossings (settings->getBoolValue (zeroCrossingsKey, false));
@@ -3173,6 +3176,16 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
             group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdWriteAutomation, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes });
             group ("Tempo", { cmdMetronome, cmdCountIn, 0, cmdTempo, cmdTapTempo, cmdTempoChange, cmdBarsAndBeats, cmdTimeWithBars, 0, cmdMusicalTimebase });
+            {
+                // What snapping goes to in bars and beats, as the toolbar's Grid box.
+                juce::PopupMenu grid;
+                const auto names = MultitrackView::gridSizeNames();
+
+                for (int i = 0; i < names.size(); ++i)
+                    grid.addItem (gridSizeBaseId + i, names[i], multitrackMode && multitrack.isShowingBars(), (int) multitrack.getGridSize() == i);
+
+                menu.addSubMenu ("Grid", grid);
+            }
             group ("Surround", { cmdSurroundMaster, cmdSevenOneMaster });
             group ("Render and Export", { cmdBounceTrack, cmdFreezeTrack, 0, cmdMixDown, cmdExportStems, cmdExportFolderStems, cmdExportRegions });
             break;
@@ -3401,7 +3414,9 @@ void MainComponent::timerCallback()
         }
 
         const auto pos = player.isPlaying() ? player.getHeardFrame() : multitrack.getCursor();
-        transportBar->update (player.isPlaying(), isRecording(), loopPlayback, (isRecording() ? "REC " : "") + formatTime (pos, rate));
+        // Counting bars, the clock does too, as Cubase's (bar.beat.16th.tick).
+        const auto clock = multitrack.isShowingBars() ? Metronome::positionText (engine.session.getState()->tempoMap(), pos) : formatTime (pos, rate);
+        transportBar->update (player.isPlaying(), isRecording(), loopPlayback, (isRecording() ? "REC " : "") + clock);
         const auto visible = multitrack.getVisibleFrames();
         selectionPanel.set (multitrack.getTimeSelection(), { (juce::int64) juce::jmax (0.0, visible.getStart()), (juce::int64) visible.getEnd() }, rate);
 
@@ -5438,6 +5453,13 @@ void MainComponent::menuItemSelected (int menuItemId, int)
     if (const auto waveforms = Theme::waveformNames(); juce::isPositiveAndBelow (menuItemId - waveformColourBaseId, waveforms.size()))
     {
         setTheme (Theme::current().name, appProperties.getUserSettings()->getValue (accentKey, "Blue"), waveforms[menuItemId - waveformColourBaseId]);
+        return;
+    }
+
+    if (juce::isPositiveAndBelow (menuItemId - gridSizeBaseId, MultitrackView::gridSizeNames().size()))
+    {
+        multitrack.setGridSize ((MultitrackView::GridSize) (menuItemId - gridSizeBaseId));
+        appProperties.getUserSettings()->setValue (gridSizeKey, menuItemId - gridSizeBaseId);
         return;
     }
 

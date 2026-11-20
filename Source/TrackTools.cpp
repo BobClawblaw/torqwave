@@ -1,5 +1,7 @@
 #include "TrackTools.h"
 #include "Theme.h"
+#include "Metronome.h"
+#include "TimeFormat.h"
 
 using Tool = MultitrackView::Tool;
 
@@ -155,7 +157,7 @@ TrackTools::TrackTools (juce::ApplicationCommandManager& c, MultitrackView& v, A
         addAndMakeVisible (b);
     }
 
-    for (auto* b : { &tempoButton, &barsButton })
+    for (auto* b : { &tempoButton, &barsButton, &snapButton, &tapButton })
     {
         Theme::follow (*b, juce::TextButton::buttonOnColourId, Theme::accentDeep);
         addAndMakeVisible (b);
@@ -166,6 +168,40 @@ TrackTools::TrackTools (juce::ApplicationCommandManager& c, MultitrackView& v, A
     barsButton.setClickingTogglesState (false);
     barsButton.setTooltip ("Count the ruler in bars and beats of the tempo, and snap to its beats (Bars and Beats)");
     barsButton.onClick = [this] { if (run) run (ids.barsAndBeats); update(); };
+    snapButton.setClickingTogglesState (false);
+    snapButton.setTooltip ("Snap dragged clips, edges and ranges to the grid, clip edges and markers (Snapping)");
+    snapButton.onClick = [this] { if (run) run (ids.snapping); update(); };
+
+    gridBox.addItemList (MultitrackView::gridSizeNames(), 1);
+    gridBox.setTooltip ("The grid snapping uses in bars and beats; Auto follows the zoom");
+    gridBox.onChange = [this]
+    {
+        if (const auto id = gridBox.getSelectedId(); id > 0)
+        {
+            view.setGridSize ((MultitrackView::GridSize) (id - 1));
+
+            if (onGridSize)
+                onGridSize (view.getGridSize());
+        }
+    };
+    addAndMakeVisible (gridBox);
+
+    tapButton.setTooltip ("Tap in time to set the session's tempo (Tap Tempo)");
+    tapButton.onClick = [this] { if (run) run (ids.tapTempo); update(); };
+
+    for (auto [field, start] : { std::pair (&loopStartField, true), std::pair (&loopEndField, false) })
+    {
+        field->setEditable (false, true, false);
+        field->setJustificationType (juce::Justification::centred);
+        field->setFont (juce::FontOptions (12.0f));
+        Theme::follow (*field, juce::Label::backgroundColourId, Theme::inset);
+        Theme::follow (*field, juce::Label::textColourId, Theme::text);
+        Theme::follow (*field, juce::Label::outlineColourId, Theme::line);
+        field->setTooltip (start ? "Where the loop starts; double-click to type a place (bar.beat.16th.tick in bars and beats)"
+                                   : "Where the loop ends; double-click to type a place (bar.beat.16th.tick in bars and beats)");
+        field->onTextChange = [this, isStart = start] { locatorTyped (isStart); };
+        addAndMakeVisible (field);
+    }
     update();
     startTimerHz (10);
 }
@@ -226,12 +262,56 @@ void TrackTools::update()
         tempoButton.setButtonText (tempo);
 
     barsButton.setToggleState (view.isShowingBars(), juce::dontSendNotification);
+    snapButton.setToggleState (view.isSnapping(), juce::dontSendNotification);
+
+    const auto loop = view.getLoop();
+
+    for (auto [field, frame] : { std::pair (&loopStartField, loop.getStart()), std::pair (&loopEndField, loop.getEnd()) })
+        if (! field->isBeingEdited())
+            if (const auto text = loop.isEmpty() ? juce::String ("-") : locatorText (frame); field->getText() != text)
+                field->setText (text, juce::dontSendNotification);
+    gridBox.setSelectedId ((int) view.getGridSize() + 1, juce::dontSendNotification);
+    gridBox.setEnabled (view.isShowingBars());
 
     if (shownTool != tool)
     {
         shownTool = tool;
         repaint();
     }
+}
+
+juce::String TrackTools::locatorText (juce::int64 frame) const
+{
+    const auto state = engine.session.getState();
+    return view.isShowingBars() ? Metronome::positionText (state->tempoMap(), frame) : TimeFormat::format (frame, juce::jmax (1.0, state->sampleRate));
+}
+
+std::optional<juce::int64> TrackTools::parseLocator (const juce::String& text) const
+{
+    const auto state = engine.session.getState();
+    return view.isShowingBars() ? Metronome::parsePosition (state->tempoMap(), text) : TimeFormat::parse (text, juce::jmax (1.0, state->sampleRate));
+}
+
+void TrackTools::locatorTyped (bool isStart)
+{
+    const auto typed = parseLocator ((isStart ? loopStartField : loopEndField).getText());
+    const auto loop = engine.session.getState()->loop;   // the session's now: the view takes it up a moment later
+
+    if (typed.has_value() && *typed >= 0)
+    {
+        // With no loop yet, the other end goes a bar away (four beats at the tempo there).
+        const auto state = engine.session.getState();
+        const auto map = state->tempoMap();
+        const auto barAfter = [&map] (juce::int64 f) { return map.frameAtBeatPosition (map.beatPosition (f) + map.beatsPerBarAt (f)); };
+        const auto barBefore = [&map] (juce::int64 f) { return map.frameAtBeatPosition (juce::jmax (0.0, map.beatPosition (f) - map.beatsPerBarAt (f))); };
+        const auto start = isStart ? *typed : loop.isEmpty() ? barBefore (*typed) : loop.getStart();
+        const auto end = isStart ? (loop.isEmpty() ? barAfter (*typed) : loop.getEnd()) : *typed;
+
+        if (end > start)
+            engine.session.setLoop ({ start, end });
+    }
+
+    update();
 }
 
 void TrackTools::paint (juce::Graphics& g)
@@ -241,9 +321,9 @@ void TrackTools::paint (juce::Graphics& g)
     g.fillRect (0, 0, getWidth(), 1);
     g.fillRect (tools.getLast()->getRight() + 6, 5, 1, getHeight() - 9);
 
-    // What the tool in hand does, between the tools and the tempo.
+    // What the tool in hand does, between the tools and the snap switch.
     const auto left = tools.getLast()->getRight() + 14;
-    const auto right = tempoButton.getX() - 10;
+    const auto right = snapButton.getX() - 10;
 
     if (right > left + 40)
     {
@@ -265,5 +345,15 @@ void TrackTools::resized()
 
     barsButton.setBounds (r.removeFromRight (44));
     r.removeFromRight (4);
+    tapButton.setBounds (r.removeFromRight (36));
+    r.removeFromRight (4);
     tempoButton.setBounds (r.removeFromRight (110));
+    r.removeFromRight (8);
+    loopEndField.setBounds (r.removeFromRight (78));
+    r.removeFromRight (2);
+    loopStartField.setBounds (r.removeFromRight (78));
+    r.removeFromRight (8);
+    gridBox.setBounds (r.removeFromRight (104));
+    r.removeFromRight (4);
+    snapButton.setBounds (r.removeFromRight (44));
 }

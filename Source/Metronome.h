@@ -31,10 +31,13 @@ namespace Metronome
         }
     };
 
-    /** Grid lines on the beat grid: every beat (bars 0), or the start of every bars-th bar. */
+    /** Grid lines on the beat grid: the start of every bars-th bar; or, with bars 0, every beat
+        cut into division equal parts (1: quarter notes, 2: eighths, 4: sixteenths, 3: eighth-note
+        triplets, 6: sixteenth-note triplets). */
     struct Grid
     {
         int bars = 0;
+        int division = 1;
     };
 
     /** A session's beats: its tempo and time signature from the start, then each change from its
@@ -73,7 +76,7 @@ namespace Metronome
         std::pair<juce::int64, juce::int64> linesAround (juce::int64 frame, Grid) const;
 
         /** Calls back with the frame of every grid line from first to last (frames), in order,
-            and its beat. */
+            and its beat (for a line between beats, the beat it is in). */
         void forEachLine (juce::int64 first, juce::int64 last, Grid, const std::function<void (juce::int64 frame, juce::int64 beat)>&) const;
 
     private:
@@ -97,6 +100,14 @@ namespace Metronome
         const std::vector<TempoChange>& changes;
         double rate;
     };
+
+    /** A frame as a place in bars, as Cubase shows it: bar, beat, sixteenth (each from 1) and
+        ticks (0 to 119, 120 to a sixteenth), e.g. "1.3.4.116". A beat is a quarter note. */
+    juce::String positionText (const TempoMap&, juce::int64 frame);
+
+    /** A place typed as positionText shows one, or shorter ("5", "5.2", "5.2.3"; spaces around
+        the parts are fine), as a frame; nothing when it isn't one (a beat past the bar's, say). */
+    std::optional<juce::int64> parsePosition (const TempoMap&, const juce::String& text);
 
     /** The click, `offset` frames after its beat starts (0 once it has ended): a short sine that
         dies away, higher and louder on the first beat of a bar. */

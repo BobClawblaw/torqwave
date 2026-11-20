@@ -147,6 +147,17 @@ double TempoMap::shortestBar() const
 
 std::pair<juce::int64, juce::int64> TempoMap::linesAround (juce::int64 frame, Grid grid) const
 {
+    if (grid.bars <= 0 && grid.division > 1)
+    {
+        const auto div = (double) grid.division;
+        auto k = (juce::int64) std::floor (beatPosition (frame) * div);
+
+        while (k > 0 && frameAtBeatPosition ((double) k / div) > frame)   // rounding: the line at or before
+            --k;
+
+        return { frameAtBeatPosition ((double) k / div), frameAtBeatPosition ((double) (k + 1) / div) };
+    }
+
     if (grid.bars <= 0)
     {
         const auto beat = beatAt (frame);
@@ -160,6 +171,24 @@ std::pair<juce::int64, juce::int64> TempoMap::linesAround (juce::int64 frame, Gr
 void TempoMap::forEachLine (juce::int64 first, juce::int64 last, Grid grid,
                             const std::function<void (juce::int64, juce::int64)>& line) const
 {
+    if (grid.bars <= 0 && grid.division > 1)
+    {
+        const auto div = (double) grid.division;
+
+        for (auto k = (juce::int64) std::floor (beatPosition (juce::jmax ((juce::int64) 0, first)) * div); ; ++k)
+        {
+            const auto frame = frameAtBeatPosition ((double) k / div);
+
+            if (frame > last)
+                break;
+
+            if (frame >= first)
+                line (frame, floorDiv (k, (juce::int64) grid.division));
+        }
+
+        return;
+    }
+
     if (grid.bars <= 0)
     {
         for (auto beat = beatAt (first); beatFrame (beat) <= last; ++beat)
@@ -172,6 +201,46 @@ void TempoMap::forEachLine (juce::int64 first, juce::int64 last, Grid grid,
     for (auto bar = floorDiv (barAt (first), grid.bars) * grid.bars; barFrame (bar) <= last; bar += grid.bars)
         if (barFrame (bar) >= first)
             line (barFrame (bar), barStartBeat (bar));
+}
+
+juce::String positionText (const TempoMap& map, juce::int64 frame)
+{
+    const auto position = map.beatPosition (juce::jmax ((juce::int64) 0, frame));
+    const auto beat = (juce::int64) std::floor (position);
+    const auto ticks = juce::jlimit (0, 479, (int) std::floor ((position - (double) beat) * 480.0 + 1.0e-6));
+    const auto [bar, inBar] = map.barAndBeat (beat);
+    return juce::String (bar + 1) + "." + juce::String (inBar + 1) + "." + juce::String (ticks / 120 + 1) + "." + juce::String (ticks % 120);
+}
+
+std::optional<juce::int64> parsePosition (const TempoMap& map, const juce::String& text)
+{
+    auto parts = juce::StringArray::fromTokens (text.trim(), ".", {});
+    parts.trim();
+
+    if (parts.isEmpty() || parts.size() > 4)
+        return std::nullopt;
+
+    int values[4] { 0, 1, 1, 0 };
+
+    for (int i = 0; i < parts.size(); ++i)
+    {
+        if (parts[i].isEmpty() || ! parts[i].containsOnly ("0123456789") || parts[i].length() > 7)
+            return std::nullopt;
+
+        values[i] = parts[i].getIntValue();
+    }
+
+    const auto [bar, beat, sixteenth, ticks] = values;
+
+    if (bar < 1 || beat < 1 || sixteenth < 1 || sixteenth > 4 || ticks > 119)
+        return std::nullopt;
+
+    const auto barStart = map.barStartBeat (bar - 1);
+
+    if (beat > map.beatsPerBarAt (map.beatFrame (barStart)))
+        return std::nullopt;
+
+    return map.frameAtBeatPosition ((double) (barStart + beat - 1) + (double) ((sixteenth - 1) * 120 + ticks) / 480.0);
 }
 
 float sample (juce::int64 offset, bool accent, double rate)

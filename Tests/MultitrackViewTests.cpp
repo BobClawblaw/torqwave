@@ -423,7 +423,7 @@ namespace
         // The toolbar: a button a tool, the one in hand lit, each running its command; the tempo
         // shown (a click runs Tempo...); Bars lit while the ruler counts bars.
         juce::ApplicationCommandManager commands;
-        TrackTools strip (commands, view, engine, { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+        TrackTools strip (commands, view, engine, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 });
         juce::Array<int> ran;
         strip.run = [&ran] (int id) { ran.add (id); };
         strip.setSize (900, TrackTools::height);
@@ -437,6 +437,8 @@ namespace
 
         strip.getTempoButton().triggerClick();
         strip.getBarsButton().triggerClick();
+        strip.getSnapButton().triggerClick();
+        strip.getTapButton().triggerClick();
         auto tempoSession = *state();
         tempoSession.tempo = 98.5;
         tempoSession.beatsPerBar = 3;
@@ -447,10 +449,39 @@ namespace
                                  && strip.getToolButton (Tool::glue).getRight() < strip.getToolButton (Tool::range).getX()
                                  && strip.getToolButton (Tool::range).getRight() < strip.getToolButton (Tool::mute).getX()
                                  && strip.getToolButton (Tool::mute).getRight() < strip.getTempoButton().getX() && strip.getTempoButton().getRight() < strip.getBarsButton().getX();
-        check (drawLit == "0100000" && ran == juce::Array<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9 } && leftToRight && strip.getTempoButton().getButtonText() == "98.5 bpm, 3/4"
+        check (drawLit == "0100000" && ran == juce::Array<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } && leftToRight && strip.getTempoButton().getButtonText() == "98.5 bpm, 3/4"
                    && strip.getBarsButton().getToggleState() && TrackTools::tempoText (120.0, 4) == "120 bpm, 4/4" && TrackTools::hintFor (Tool::draw).startsWith ("Draw:"),
                "toolbar: a button a tool, left to right, the one in hand lit, each running its command, then the tempo (" + strip.getTempoButton().getButtonText() + ") and Bars, lit while the ruler counts bars");
 
+        // The grid box sets the view's grid and says so; the locators show the loop in bars and
+        // move it when one is typed (with no loop, the other end a bar away).
+        juce::Array<int> kept;
+        strip.onGridSize = [&kept] (MultitrackView::GridSize g) { kept.add ((int) g); };
+        strip.getGridBox().setSelectedId ((int) MultitrackView::GridSize::sixteenth + 1, juce::sendNotificationSync);
+        const auto gridSet = view.getGridSize() == MultitrackView::GridSize::sixteenth && kept == juce::Array<int> { (int) MultitrackView::GridSize::sixteenth }
+                             && strip.getGridBox().isEnabled();
+        const auto tempoState = state();   // kept: the map refers to its tempo changes
+        const auto map = tempoState->tempoMap();
+        const auto noLoop = strip.getLoopStartField().getText() == "-";
+        strip.getLoopStartField().setText ("3.1.1.0", juce::sendNotificationSync);
+        const auto fromStart = state()->loop == juce::Range<juce::int64> (map.barFrame (2), map.barFrame (3));
+        strip.getLoopEndField().setText (" 5 ", juce::sendNotificationSync);
+        const auto toEnd = state()->loop == juce::Range<juce::int64> (map.barFrame (2), map.barFrame (4));
+        strip.getLoopEndField().setText ("2.1", juce::sendNotificationSync);       // before the start: refused
+        strip.getLoopStartField().setText ("4.9.1.0", juce::sendNotificationSync); // no ninth beat in 3/4: refused
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (150);
+        const auto refused = state()->loop == juce::Range<juce::int64> (map.barFrame (2), map.barFrame (4));
+        const auto shown = strip.getLoopStartField().getText() == "3.1.1.0" && strip.getLoopEndField().getText() == "5.1.1.0";
+        const auto sixteenth = map.frameAtBeatPosition (6.25);
+        const auto text = Metronome::positionText (map, sixteenth + 1) == "3.1.2.0" && Metronome::positionText (map, 0) == "1.1.1.0"
+                          && Metronome::parsePosition (map, "3.1.2.0") == sixteenth && Metronome::parsePosition (map, "3. 1. 2. 60") == map.frameAtBeatPosition (6.375)
+                          && ! Metronome::parsePosition (map, "0.1").has_value() && ! Metronome::parsePosition (map, "1.1.5").has_value()
+                          && ! Metronome::parsePosition (map, "1.1.1.120").has_value() && ! Metronome::parsePosition (map, "x").has_value();
+        check (gridSet && noLoop && fromStart && toEnd && refused && shown && text,
+               "toolbar: the grid box sets the snap grid; the loop locators show it in bars (" + strip.getLoopStartField().getText() + " to "
+                   + strip.getLoopEndField().getText() + ") and move it when typed, refusing what isn't a place after the start");
+
+        view.setGridSize (MultitrackView::GridSize::automatic);
         view.setTool (Tool::select);
         view.setShowBars (false);
         engine.session.reset ({}, {});
@@ -506,6 +537,15 @@ namespace
         mouse.click ({ x (8.0), y });
         const auto clickKeeps = state()->loop == kept;
 
+        // A grid of sixteenths holds at this zoom: a new loop's ends go onto it, not only onto beats.
+        view.setGridSize (MultitrackView::GridSize::sixteenth);
+        mouse.drag ({ x (6.07), y }, { x (7.19), y });
+        const auto sixteenths = state()->loop;
+        const auto onSixteenths = sixteenths != kept && sixteenths.getStart() % 6000 == 0 && sixteenths.getEnd() % 6000 == 0
+                                  && (! onBeat (sixteenths.getStart()) || ! onBeat (sixteenths.getEnd()))
+                                  && view.snapGrid().division == 4 && view.snapGrid().bars == 0;
+        view.setGridSize (MultitrackView::GridSize::automatic);
+
         // An edit, then a new loop: undo and redo change the edit, not the loop or the bars.
         auto next = *state();
         SessionEdits::setTempo (next, 90.0, 3);
@@ -538,8 +578,8 @@ namespace
         const auto cleared = state()->loop.isEmpty() && engine.session.getHistory().size() == 2;
         view.setShowBars (false);
 
-        check (barsKept && drawnOk && edgeCursor && sized && moved && clickKeeps,
-               "loop: Bars and Beats kept with the session, not an undo step; a loop drawn along the top of the ruler snaps to the beats ("
+        check (barsKept && drawnOk && edgeCursor && sized && moved && clickKeeps && onSixteenths,
+               "loop: Bars and Beats kept with the session, not an undo step; a loop drawn along the top of the ruler snaps to the beats, or with a 1/16 grid to sixteenths ("
                    + juce::String ((double) drawn.getStart() / r, 2) + " s to " + juce::String ((double) drawn.getEnd() / r, 2)
                    + " s), its end dragged, the whole moved, a click beside it changing nothing, none of it an undo step");
         check (fromSelection && undoKeeps && redoKeeps && filed && cleared,

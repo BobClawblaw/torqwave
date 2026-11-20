@@ -519,6 +519,17 @@ public:
     void setShowBars (bool show);
     bool isShowingBars() const noexcept           { return shown().barsAndBeats; }
 
+    /** The grid snapping uses in bars and beats, as Cubase's: Auto follows the zoom (beats, or
+        bars when zoomed out), the others hold at any zoom. The lanes draw it while its lines are
+        far enough apart to see. */
+    enum class GridSize { automatic, bar, beat, eighth, sixteenth, thirtySecond, eighthTriplet, sixteenthTriplet };
+    static juce::StringArray gridSizeNames();     // in GridSize order: "Auto", "Bar", "1/4", ...
+    void setGridSize (GridSize);
+    GridSize getGridSize() const noexcept         { return gridSize; }
+
+    /** The grid snapping goes to in bars and beats: the grid size's, or Auto's at this zoom. */
+    Metronome::Grid snapGrid() const;
+
     /** The loop, drawn as a band along the top of the time ruler: a drag there draws a new one
         (snapping as other drags do), a drag inside moves it, and a drag at either end moves that
         end. Kept with the session (SessionState::loop). */
@@ -812,6 +823,7 @@ private:
         them; fills copiedByDrag and copiedNotesByDrag with their ids. */
     SessionState withDragCopies (const SessionState& moved);
 
+    GridSize gridSize = GridSize::automatic;
     bool snapping = true, crossfading = true, writingAutomation = false, zeroCrossings = false;
     juce::int64 toZeroCrossing (const SessionClip&, juce::int64 frame) const;
 
