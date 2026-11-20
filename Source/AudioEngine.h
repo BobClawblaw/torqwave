@@ -170,6 +170,8 @@ private:
 
 //==============================================================================
 /** Plays the document, or the multitrack session, as the source node of the processing graph. */
+class MidiLearn;
+
 class DocumentPlayerProcessor final : public juce::AudioProcessor
 {
 public:
@@ -584,6 +586,12 @@ public:
     void setMidiClockPort (const juce::String& identifier);
     juce::String getMidiClockPort() const         { return midiPlayer.getClockPort(); }
 
+    /** MIDI learn: offered each message from the MIDI inputs first; what it takes doesn't reach the instruments (null: none). */
+    void setMidiLearn (MidiLearn* l)              { midiLearn = l; }
+
+    /** A MIDI input whose messages don't play the instruments (a control surface's), by identifier; empty for none. */
+    void setControlSurfaceInput (const juce::String& identifier);
+
     /** Told the names of MIDI output ports that could not be opened (message thread). */
     std::function<void (const juce::StringArray&)> onMidiPortsFailed;
 
@@ -616,6 +624,9 @@ private:
     MidiOut::Sender midiSender;                   // likewise
     MidiOut::Player midiPlayer { midiSender };
     juce::StringArray midiPortsUsed;              // the ports last opened
+    std::atomic<MidiLearn*> midiLearn { nullptr };
+    juce::SpinLock surfaceInputLock;
+    juce::String surfaceInput;                     // under the lock
     std::set<juce::uint32> midiSources;           // the tracks whose plug-ins' MIDI another plays, as last told
     juce::AudioProcessorGraph graph;
     juce::AudioProcessorPlayer graphPlayer;

@@ -91,6 +91,31 @@ juce::String DrumSound::nameIn (const std::vector<DrumSound>& map, int pitch)
     return juce::String (names[p % 12]) + juce::String (p / 12 - 1);
 }
 
+juce::String MidiBinding::kindName (Kind k)
+{
+    switch (k)
+    {
+        case Kind::volume: return "volume";
+        case Kind::pan:    return "pan";
+        case Kind::mute:   return "mute";
+        case Kind::solo:   return "solo";
+        case Kind::play:   return "play";
+        case Kind::stop:   return "stop";
+        case Kind::record: return "record";
+    }
+
+    return "volume";
+}
+
+std::optional<MidiBinding::Kind> MidiBinding::kindNamed (const juce::String& name)
+{
+    for (auto k : { Kind::volume, Kind::pan, Kind::mute, Kind::solo, Kind::play, Kind::stop, Kind::record })
+        if (kindName (k) == name)
+            return k;
+
+    return std::nullopt;
+}
+
 juce::String automationModeName (AutomationMode m)
 {
     switch (m)
@@ -3232,6 +3257,8 @@ bool removeTrack (SessionState& s, int track)
 
     const auto removed = s.tracks[(size_t) track].id;
     s.tracks.erase (s.tracks.begin() + track);
+    s.midiBindings.erase (std::remove_if (s.midiBindings.begin(), s.midiBindings.end(), [removed] (auto& b) { return b.target.trackId == removed; }),
+                          s.midiBindings.end());
 
     for (auto& t : s.tracks)
     {
@@ -3270,6 +3297,31 @@ bool setTrackFolder (SessionState& s, juce::uint32 trackId, juce::uint32 folderI
 
     track->folderId = folderId;
     return true;
+}
+
+bool bindMidi (SessionState& s, const MidiBinding& binding)
+{
+    if (binding.target.isTrack() && s.findTrack (binding.target.trackId) == nullptr)
+        return false;
+
+    const auto before = s.midiBindings;
+    auto& b = s.midiBindings;
+    b.erase (std::remove_if (b.begin(), b.end(), [&] (auto& o)
+    {
+        return (o.channel == binding.channel && o.controller == binding.controller) || o.target == binding.target;
+    }), b.end());
+    b.push_back (binding);
+    return b != before;
+}
+
+int unbindMidi (SessionState& s, juce::uint32 trackId)
+{
+    const auto before = s.midiBindings.size();
+    s.midiBindings.erase (std::remove_if (s.midiBindings.begin(), s.midiBindings.end(), [trackId] (auto& b)
+    {
+        return trackId == 0 || b.target.trackId == trackId;
+    }), s.midiBindings.end());
+    return (int) (before - s.midiBindings.size());
 }
 
 bool setMidiFrom (SessionState& s, juce::uint32 trackId, juce::uint32 fromId)
@@ -4829,6 +4881,20 @@ juce::String save (const SessionState& state, const juce::File& target,
             if (state.sections[i].id == id)
                 chain.add (juce::String ((int) i));
 
+    for (auto& b : state.midiBindings)
+    {
+        if (b.target.isTrack() && indexOf.count (b.target.trackId) == 0)
+            continue;
+
+        auto* learned = root.createNewChildElement ("MIDILEARN");
+        learned->setAttribute ("channel", b.channel);
+        learned->setAttribute ("controller", b.controller);
+        learned->setAttribute ("target", MidiBinding::kindName (b.target.kind));
+
+        if (b.target.isTrack())
+            learned->setAttribute ("track", indexOf[b.target.trackId]);
+    }
+
     if (! chain.isEmpty())
     {
         auto* arrangement = root.createNewChildElement ("ARRANGEMENT");
@@ -5176,6 +5242,30 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
     }
 
     state.sections.erase (std::remove_if (state.sections.begin(), state.sections.end(), [] (auto& sec) { return sec.id == 0; }), state.sections.end());
+
+    for (auto* learned : root->getChildWithTagNameIterator ("MIDILEARN"))
+    {
+        MidiBinding b;
+        b.channel = juce::jlimit (1, 16, learned->getIntAttribute ("channel", 1));
+        b.controller = juce::jlimit (0, 127, learned->getIntAttribute ("controller"));
+        const auto kind = MidiBinding::kindNamed (learned->getStringAttribute ("target"));
+        const auto track = learned->getIntAttribute ("track", -1);
+
+        if (! kind.has_value())
+            continue;
+
+        b.target.kind = *kind;
+
+        if (b.target.isTrack())
+        {
+            if (! juce::isPositiveAndBelow (track, (int) state.tracks.size()))
+                continue;
+
+            b.target.trackId = state.tracks[(size_t) track].id;
+        }
+
+        SessionEdits::bindMidi (state, b);
+    }
 
     for (auto* changeXml : root->getChildWithTagNameIterator ("TEMPO"))
         SessionEdits::setTempoChange (state, { changeXml->getStringAttribute ("bar").getLargeIntValue(),

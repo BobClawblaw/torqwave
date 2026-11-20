@@ -55,6 +55,9 @@ public:
     /** Asks for the note clip dialog: for a new clip on the track (clipId 0), or to change this one. */
     std::function<void (juce::uint32 trackId, juce::uint32 clipId)> onEditNotes;
 
+    /** Adds MIDI learn's items for a track to its header's menu (the app's MidiLearn). */
+    std::function<void (juce::PopupMenu&, juce::uint32 trackId)> addMidiLearnMenu;
+
     /** A note clip double-clicked: asks for it in the piano roll. */
     std::function<void (juce::uint32 clipId)> onOpenNotes;
 
@@ -204,6 +207,9 @@ public:
 
     /** The selected track's id, or 0. */
     juce::uint32 getSelectedTrackId() const noexcept { return selectedTrackId; }
+
+    /** Selects the track or bus with this id (as a click on its header does). */
+    void selectTrackWithId (juce::uint32 trackId);
     juce::uint32 getSelectedClip() const noexcept { return selectedClip; }
 
     /** Puts one of a clip's takes in use (from loop recording), as one undo step. A right-click

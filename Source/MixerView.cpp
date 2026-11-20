@@ -403,6 +403,10 @@ public:
         }
 
         menu.addSubMenu ("Colour", colours);
+
+        if (view.addMidiLearnMenu != nullptr)
+            view.addMidiLearnMenu (menu, trackId);
+
         return menu;
     }
 

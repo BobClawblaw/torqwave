@@ -584,6 +584,9 @@ public:
         if (! t->isControl())
             menu.addItem ("Invert Polarity", true, t->invertPolarity, [this, on = t->invertPolarity] { view.setTrackPolarityInverted (trackId, ! on); });
 
+        if (view.addMidiLearnMenu != nullptr)
+            view.addMidiLearnMenu (menu, trackId);
+
         if (! t->isControl() && ! t->isBus)
         {
             // An instrument track holds note clips alone, an audio track audio clips alone: one
@@ -4239,6 +4242,15 @@ void MultitrackView::selectTrack (int track)
 
     if (onSelectionChanged != nullptr)
         onSelectionChanged();
+}
+
+void MultitrackView::selectTrackWithId (juce::uint32 trackId)
+{
+    const auto& tracks = shown().tracks;
+
+    for (size_t i = 0; i < tracks.size(); ++i)
+        if (tracks[i].id == trackId)
+            selectTrack ((int) i);
 }
 
 void MultitrackView::editTrack (juce::uint32 trackId, const juce::String& description, bool merge,

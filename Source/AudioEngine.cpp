@@ -9,6 +9,7 @@
 #endif
 
 #include "AudioEngine.h"
+#include "ControlSurface.h"
 #include "PreviousName.h"
 #include "RackCopy.h"
 #include "Surround.h"
@@ -1036,8 +1037,29 @@ void AudioEngine::enableMidiInputs (const juce::XmlElement* savedState)
         deviceManager.setMidiInputDeviceEnabled (input.identifier, true);
 }
 
-void AudioEngine::handleIncomingMidiMessage (juce::MidiInput*, const juce::MidiMessage& m)
+void AudioEngine::setControlSurfaceInput (const juce::String& identifier)
 {
+    // Its own port is opened apart (on Windows, a port opens once): the live inputs let it go.
+    if (identifier.isNotEmpty())
+        deviceManager.setMidiInputDeviceEnabled (identifier, false);
+
+    const juce::SpinLock::ScopedLockType sl (surfaceInputLock);
+    surfaceInput = identifier;
+}
+
+void AudioEngine::handleIncomingMidiMessage (juce::MidiInput* source, const juce::MidiMessage& m)
+{
+    if (source != nullptr)
+    {
+        const juce::SpinLock::ScopedLockType sl (surfaceInputLock);
+
+        if (surfaceInput.isNotEmpty() && source->getIdentifier() == surfaceInput)
+            return;
+    }
+
+    if (auto* learn = midiLearn.load(); learn != nullptr && learn->offer (m))
+        return;
+
     liveMidi.addMessage (m);
 }
 

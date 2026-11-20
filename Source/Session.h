@@ -374,6 +374,32 @@ struct NoteClip
     }
 };
 
+/** MIDI learn: a controller's CC on a channel moving a control in the session. Volume and pan
+    take the CC's value across their range (the volume on the mixer fader's taper); mute, solo and
+    the transport act when it goes to 64 or over (a button pressed). */
+struct MidiBinding
+{
+    enum class Kind { volume, pan, mute, solo, play, stop, record };
+
+    struct Target
+    {
+        Kind kind = Kind::volume;
+        juce::uint32 trackId = 0;          // for a track's control; 0 for the transport
+
+        bool operator== (const Target& o) const noexcept { return kind == o.kind && trackId == o.trackId; }
+        bool isTrack() const noexcept    { return kind == Kind::volume || kind == Kind::pan || kind == Kind::mute || kind == Kind::solo; }
+    };
+
+    int channel = 1;                       // 1 to 16
+    int controller = 0;                    // 0 to 127
+    Target target;
+
+    bool operator== (const MidiBinding& o) const noexcept { return channel == o.channel && controller == o.controller && target == o.target; }
+
+    static juce::String kindName (Kind);
+    static std::optional<Kind> kindNamed (const juce::String&);
+};
+
 /** A drum sound: a row of the piano roll's drum grid, the note it plays and its name. */
 struct DrumSound
 {
@@ -613,6 +639,9 @@ struct SessionState
         next, and past the last plays on. Flatten Arrangement makes it the session's own time. */
     std::vector<juce::uint32> arrangement;
     bool playArrangement = false;
+
+    /** MIDI-learned controllers (MidiLearn): one binding a controller, one a target. */
+    std::vector<MidiBinding> midiBindings;
 
     const ArrangerSection* findSection (juce::uint32 id) const;
 
@@ -943,6 +972,12 @@ namespace SessionEdits
     /** Has a track play the MIDI another track's plug-ins put out (0: none). False for a bus or a
         folder, the track itself, or no change. */
     bool setMidiFrom (SessionState&, juce::uint32 trackId, juce::uint32 fromId);
+
+    /** Binds a controller to a target, replacing what either was bound to (MIDI learn). False when nothing changed. */
+    bool bindMidi (SessionState&, const MidiBinding&);
+
+    /** Drops the bindings to a track's controls (all of them with trackId 0, the transport's too). Returns how many. */
+    int unbindMidi (SessionState&, juce::uint32 trackId);
 
     /** Makes a track or bus join a VCA fader, or with vcaId 0 leave it. False for a folder or a
         VCA, or for something that isn't a VCA. */

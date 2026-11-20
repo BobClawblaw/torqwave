@@ -60,6 +60,8 @@ namespace
     constexpr const char* snappingKey     = "snapping";
     constexpr const char* gridSizeKey     = "gridSize";
     constexpr const char* midiClockKey    = "midiClockPort";
+    constexpr const char* surfaceInKey    = "controlSurfaceIn";
+    constexpr const char* surfaceOutKey   = "controlSurfaceOut";
     constexpr const char* crossfadingKey  = "crossfading";
     constexpr const char* rippleKey       = "ripple";   // 0 off, 1 the clip's track, 2 every track
     constexpr const char* zeroCrossingsKey = "zeroCrossings";
@@ -180,6 +182,7 @@ namespace
         cmdShowTakes, cmdFlattenComp,
         cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement,
         cmdAddVca, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite,
+        cmdControlSurface, cmdLearnPlay, cmdLearnStop, cmdLearnRecord, cmdForgetMidiLearn,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -1120,6 +1123,27 @@ MainComponent::MainComponent()
                                   + " Connect it and choose it again in the track's MIDI Out menu.");
     };
     engine.setMidiClockPort (settings->getValue (midiClockKey));
+
+    // Controllers: a Mackie Control surface, and MIDI learn for any knob.
+    surface = std::make_unique<ControlSurface> (engine, [this] { return &multitrack; });
+    surface->onTransport = [this] (ControlSurface::Transport t) { transportFromController (t); };
+    surface->selectedTrack = [this] { return multitrack.getSelectedTrackId(); };
+    surface->onSelect = [this] (juce::uint32 id) { multitrack.selectTrackWithId (id); };
+    surface->isArmed = [this] (juce::uint32 id) { return multitrack.isArmed (id); };
+    surface->setArmed = [this] (juce::uint32 id, bool on) { multitrack.setArmed (id, on); };
+
+    if (const auto in = settings->getValue (surfaceInKey), out = settings->getValue (surfaceOutKey); in.isNotEmpty() || out.isNotEmpty())
+        if (const auto error = surface->open (in, out); error.isNotEmpty())
+            juce::Logger::writeToLog (error);
+
+    midiLearn = std::make_unique<MidiLearn> (engine, [this] { return &multitrack; });
+    midiLearn->onTransport = [this] (ControlSurface::Transport t) { transportFromController (t); };
+    midiLearn->onLearned = [] (const MidiBinding& b)
+    {
+        showNote ("MIDI Learn", "Controller " + juce::String (b.controller) + " on channel " + juce::String (b.channel) + " is learned.");
+    };
+    engine.setMidiLearn (midiLearn.get());
+    multitrack.addMidiLearnMenu = [this] (juce::PopupMenu& menu, juce::uint32 id) { addMidiLearnMenu (menu, id); };
     engine.onEffectsNotCopied = [] (const juce::StringArray& names)
     {
         showNote ("Surround Effects", names.joinIntoString (", ") + (names.size() == 1 ? " couldn't" : " couldn't each")
@@ -1412,6 +1436,10 @@ MainComponent::~MainComponent()
     engine.onPluginAboutToBeRemoved = nullptr;
     engine.onEffectsNotCopied = nullptr;
     engine.onMidiPortsFailed = nullptr;
+    engine.setMidiLearn (nullptr);
+    multitrack.addMidiLearnMenu = nullptr;
+    midiLearn = nullptr;
+    surface = nullptr;
     engine.document.removeChangeListener (this);
     engine.session.removeChangeListener (this);
     engine.removeChangeListener (this);
@@ -2257,6 +2285,13 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
             info.setActive (multitrackMode);
             break;
         }
+        case cmdControlSurface: info.setInfo ("Control Surface...", "Choose the MIDI ports of a Mackie Control surface: its faders, V-pots, buttons and scribble strips work the session's tracks", "Multitrack", 0);
+                            info.setTicked (surface != nullptr && surface->isOpen()); break;
+        case cmdLearnPlay:   info.setInfo ("MIDI Learn Play", "The next controller button moved plays", "Multitrack", 0); info.setActive (multitrackMode); break;
+        case cmdLearnStop:   info.setInfo ("MIDI Learn Stop", "The next controller button moved stops", "Multitrack", 0); info.setActive (multitrackMode); break;
+        case cmdLearnRecord: info.setInfo ("MIDI Learn Record", "The next controller button moved starts or stops recording", "Multitrack", 0); info.setActive (multitrackMode); break;
+        case cmdForgetMidiLearn: info.setInfo ("Forget All MIDI Learn", "Unbind every learned controller in the session", "Multitrack", 0);
+                            info.setActive (multitrackMode && ! engine.session.getState()->midiBindings.empty()); break;
         case cmdAddVca:     info.setInfo ("Add VCA Fader", "Add a VCA fader, with the selected track joining it: its volume is added to each member's, and its mute and solo act on them", "Multitrack", 0);
                             info.setActive (multitrackMode); break;
         case cmdCrossfade:  info.setInfo ("Crossfade Overlaps", "Crossfade a clip moved or trimmed over part of another", "Multitrack", 0);
@@ -2886,6 +2921,19 @@ bool MainComponent::perform (const InvocationInfo& info)
             multitrack.addVca (t != nullptr && ! t->isControl() ? t->id : 0u);
             break;
         }
+        case cmdControlSurface: showControlSurfaceDialog(); break;
+        case cmdLearnPlay:   startMidiLearn ({ MidiBinding::Kind::play, 0 }, "Play"); break;
+        case cmdLearnStop:   startMidiLearn ({ MidiBinding::Kind::stop, 0 }, "Stop"); break;
+        case cmdLearnRecord: startMidiLearn ({ MidiBinding::Kind::record, 0 }, "Record"); break;
+        case cmdForgetMidiLearn:
+        {
+            auto next = *engine.session.getState();
+
+            if (SessionEdits::unbindMidi (next, 0) > 0)
+                engine.session.apply (std::move (next), "Forget MIDI Learn");
+
+            break;
+        }
         case cmdAllAutomationOff: case cmdAllAutomationRead: case cmdAllAutomationTouch: case cmdAllAutomationLatch: case cmdAllAutomationWrite:
             multitrack.setAutomationMode (0, (AutomationMode) ((int) AutomationMode::off + (info.commandID - cmdAllAutomationOff)));
             commands.commandStatusChanged();
@@ -3280,6 +3328,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
             group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes, cmdCaptureMidi });
             group ("Automation", { cmdWriteAutomation, 0, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite });
+            group ("Controllers", { cmdControlSurface, 0, cmdLearnPlay, cmdLearnStop, cmdLearnRecord, cmdForgetMidiLearn });
             group ("Tempo", { cmdMetronome, cmdCountIn, 0, cmdTempo, cmdTapTempo, cmdTempoChange, cmdBarsAndBeats, cmdTimeWithBars, 0, cmdMusicalTimebase });
             {
                 // What snapping goes to in bars and beats, as the toolbar's Grid box.
@@ -5227,6 +5276,121 @@ void MainComponent::finishRecordingNotes()
         engine.session.apply (std::move (next), "Record Notes");
         multitrack.selectNoteClip (id);
     }
+}
+
+void MainComponent::transportFromController (ControlSurface::Transport t)
+{
+    switch (t)
+    {
+        case ControlSurface::Transport::play:    if (! engine.getPlayer().isPlaying()) togglePlay(); break;
+        case ControlSurface::Transport::stop:    stopTransport(); break;
+        case ControlSurface::Transport::record:  toggleRecord(); break;
+        case ControlSurface::Transport::rewind:  commands.invokeDirectly (cmdGoToStart, true); break;
+        case ControlSurface::Transport::forward: commands.invokeDirectly (cmdGoToEnd, true); break;
+    }
+}
+
+void MainComponent::addMidiLearnMenu (juce::PopupMenu& menu, juce::uint32 trackId)
+{
+    const auto state = engine.session.getState();
+    const auto* t = state->findTrack (trackId);
+
+    if (t == nullptr || midiLearn == nullptr)
+        return;
+
+    juce::PopupMenu learn;
+    auto any = false;
+
+    for (auto [kind, name] : { std::pair { MidiBinding::Kind::volume, "Volume" }, std::pair { MidiBinding::Kind::pan, "Pan" },
+                               std::pair { MidiBinding::Kind::mute, "Mute" }, std::pair { MidiBinding::Kind::solo, "Solo" } })
+    {
+        if (kind == MidiBinding::Kind::pan && t->isControl())
+            continue;
+
+        const MidiBinding::Target target { kind, trackId };
+        juce::String text (name);
+
+        for (auto& b : state->midiBindings)
+            if (b.target == target)
+            {
+                text << " (CC " << b.controller << ", channel " << b.channel << ")";
+                any = true;
+            }
+
+        learn.addItem (text + "...", [this, target, what = t->name + "'s " + juce::String (name).toLowerCase()] { startMidiLearn (target, what); });
+    }
+
+    learn.addSeparator();
+    learn.addItem ("Forget", any, false, [this, trackId]
+    {
+        auto next = *engine.session.getState();
+
+        if (SessionEdits::unbindMidi (next, trackId) > 0)
+            engine.session.apply (std::move (next), "Forget MIDI Learn");
+    });
+
+    menu.addSubMenu ("MIDI Learn", learn);
+}
+
+void MainComponent::startMidiLearn (const MidiBinding::Target& target, const juce::String& what)
+{
+    if (midiLearn == nullptr)
+        return;
+
+    midiLearn->learn (target);
+    showNote ("MIDI Learn", "Move a knob, fader or button on your controller (an input turned on in Audio Settings...): it will move " + what + ".");
+}
+
+void MainComponent::showControlSurfaceDialog()
+{
+    const auto inputs = juce::MidiInput::getAvailableDevices();
+    const auto outputs = juce::MidiOutput::getAvailableDevices();
+    auto* settings = appProperties.getUserSettings();
+    const auto in = settings->getValue (surfaceInKey), out = settings->getValue (surfaceOutKey);
+
+    juce::StringArray inNames { "None" }, outNames { "None" };
+    int inIndex = 0, outIndex = 0;
+
+    for (int i = 0; i < inputs.size(); ++i)
+    {
+        inNames.add (inputs[i].name);
+        inIndex = inputs[i].identifier == in ? i + 1 : inIndex;
+    }
+
+    for (int i = 0; i < outputs.size(); ++i)
+    {
+        outNames.add (outputs[i].name);
+        outIndex = outputs[i].identifier == out ? i + 1 : outIndex;
+    }
+
+    auto* window = new juce::AlertWindow ("Control Surface", "A Mackie Control surface, or one in its Mackie Control (MCU) mode: the MIDI port it "
+                                                             "sends on, and the one it listens on.", juce::MessageBoxIconType::NoIcon);
+    window->addComboBox ("in", inNames, "From the surface");
+    window->addComboBox ("out", outNames, "To the surface");
+    window->getComboBoxComponent ("in")->setSelectedItemIndex (inIndex, juce::dontSendNotification);
+    window->getComboBoxComponent ("out")->setSelectedItemIndex (outIndex, juce::dontSendNotification);
+    window->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    window->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+    const juce::Component::SafePointer<MainComponent> safe (this);
+
+    window->enterModalState (true, juce::ModalCallbackFunction::create ([safe, window, inputs, outputs] (int result)
+    {
+        if (result != 1 || safe == nullptr || safe->surface == nullptr)
+            return;
+
+        const auto i = window->getComboBoxComponent ("in")->getSelectedItemIndex() - 1;
+        const auto o = window->getComboBoxComponent ("out")->getSelectedItemIndex() - 1;
+        const auto inId = juce::isPositiveAndBelow (i, inputs.size()) ? inputs[i].identifier : juce::String();
+        const auto outId = juce::isPositiveAndBelow (o, outputs.size()) ? outputs[o].identifier : juce::String();
+        auto* s = safe->appProperties.getUserSettings();
+        s->setValue (surfaceInKey, inId);
+        s->setValue (surfaceOutKey, outId);
+
+        if (const auto error = safe->surface->open (inId, outId); error.isNotEmpty())
+            showNote ("Control Surface", error);
+
+        safe->commands.commandStatusChanged();
+    }), true);
 }
 
 void MainComponent::captureMidi()
@@ -13805,6 +13969,7 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
     {
         auto mixer = std::make_unique<MixerView> (engine);
         mixer->setAutomationWriter (&multitrack);
+        mixer->addMidiLearnMenu = [this] (juce::PopupMenu& menu, juce::uint32 trackId) { addMidiLearnMenu (menu, trackId); };
         made = std::move (mixer);
     }
     else if (id == Panels::clipProperties)

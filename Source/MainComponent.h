@@ -16,6 +16,7 @@
 #include "TimeEntry.h"
 #include "RecentFiles.h"
 #include "Loudness.h"
+#include "ControlSurface.h"
 #include "MultitrackView.h"
 #include "NoiseReduction.h"
 #include "ParametricEq.h"
@@ -840,6 +841,12 @@ private:
     std::unique_ptr<EditorPanel> editorPanel;
     juce::File projectFile;   // the project last opened or saved (Save Project writes it)
     std::map<juce::String, std::unique_ptr<juce::Component>> madePanels;   // the panels made when shown
+    std::unique_ptr<ControlSurface> surface;   // a Mackie Control surface, when one is set up
+    std::unique_ptr<MidiLearn> midiLearn;
+    void transportFromController (ControlSurface::Transport);
+    void addMidiLearnMenu (juce::PopupMenu&, juce::uint32 trackId);
+    void startMidiLearn (const MidiBinding::Target&, const juce::String& what);
+    void showControlSurfaceDialog();
     std::unique_ptr<Dock::Workspaces> workspaces;
     std::unique_ptr<Dock::Area> dock;   // last, so it lets go of the panels before they go
 

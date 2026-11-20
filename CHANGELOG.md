@@ -47,6 +47,22 @@ Each milestone as it was built, newest first, with what the tests measured on th
   - Ports, channels, offsets and MIDI From come back from a session file.
   - Not yet tried by hand with a hardware synth or a real arpeggiator plug-in. The virtual-port tests run on macOS and Linux only.
 
+**Control surfaces and MIDI learn**
+- **Mackie Control** (**Multitrack > Controllers > Control Surface...**): a Mackie Control Universal, or a surface in its MCU mode, works the session's tracks and buses in banks of eight.
+  - Its motorised faders set and follow the volume, and its envelope as the session plays. Its V-pots pan.
+  - Its mute, solo, select and record-arm buttons act on their strips, and their lights stay in step.
+  - Bank and channel buttons move the strips. The transport buttons play, stop and record; rewind and fast forward go to the start and end.
+  - The scribble strips show each track's name and its volume, or its pan while a V-pot turns.
+  - The surface's input no longer plays the instruments: it is turned off among the live MIDI inputs, and stays off if the surface is later dropped (Settings turns it back on).
+  - Unlike the plan, HUI is not supported, and the master fader does nothing, as the session has no master volume.
+- **MIDI learn:** any controller's CC can move a track's volume, pan, mute or solo (**MIDI Learn** in a track header's or mixer strip's menu), or play, stop and record (**Multitrack > Controllers**). Each control has one CC and each CC one control. Bindings are saved with the session, each learned one is an undo step, and a learned CC no longer reaches the instruments. Relative (endless-encoder) knobs are not supported.
+- Both write automation as the mixer's controls do: in Touch, Latch or Write, a held fader writes; a learned knob ends its pass half a second after it last moved.
+- Tested:
+  - The Mackie messages, byte for byte: 14-bit faders on the mixer's taper (there and back within 0.001 dB), buttons and LEDs, V-pots and their rings, the scribble SysEx.
+  - A simulated surface on virtual MIDI ports, both ways: what it shows on opening; a fader moving the volume as one undo step; mute, solo, select and arm, and their LEDs; banks; the transport; a V-pot panning, shown on its ring and strip, and centred when pushed; a motorised fader following an envelope but not while touched; writing a volume envelope in Touch; and everything left dark and down on closing.
+  - MIDI learn: binding, volume and pan scales, buttons toggling at each press, the transport, which CCs are taken, one CC per control, the session file, and removing a track dropping its bindings.
+  - Not tested: that the surface's input stops playing the instruments. Not yet tried by hand with a hardware surface or controller. The surface tests run on macOS and Linux only.
+
 ## Released
 
 **Release 0.18.0: Cubase-style sessions, Ask Torq on sessions, ASIO and Intel Macs**

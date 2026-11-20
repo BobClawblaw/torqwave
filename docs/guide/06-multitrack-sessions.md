@@ -197,6 +197,29 @@ The same **Sends** panel holds the rest of a track's routing:
 
 A folder's or VCA fader's strip has only its fader, mute and solo. The master meter is on the right. In a track's Touch, Latch or Write mode, its fader and pan write automation while the session plays, as its header's controls do.
 
+## Control surfaces and MIDI learn
+
+**A Mackie Control surface.** **Multitrack > Controllers > Control Surface...** takes a Mackie Control Universal, or any surface in its Mackie Control (MCU) mode: choose the MIDI port it sends on and the one it listens on. The choice is kept with Torqwave's settings. HUI mode is not supported. The surface's input is turned off among the MIDI inputs that play instruments, so its buttons don't play notes. If you stop using the surface, turn that input back on in Settings to play through it.
+
+- **Faders** set the volume of the tracks and buses on their strips, in the mixer's order, on the mixer fader's scale. They are motorised: they follow the volume, and its envelope as the session plays, except while you hold one.
+- **V-pots** pan, and pushing one centres it. Its ring shows the pan.
+- **Mute, Solo, Select and Rec** act on the strip's track. Their lights follow the session.
+- **Bank** moves the strips eight tracks along, and **Channel** one.
+- **Play, Stop and Record** run the transport. **Rewind** and **Fast Forward** go to the start and the end.
+- **The scribble strips** show each track's name and its volume, or its pan while you turn its V-pot.
+
+The surface has no master fader here: the session has no master volume to move.
+
+**MIDI learn for any controller.** Any knob, fader or button that sends a MIDI controller (CC) can move a track's volume, pan, mute or solo, or play, stop and record:
+
+- For a track, right-click its header (or its strip in the mixer) and choose **MIDI Learn > Volume...** (or Pan, Mute, Solo), then move the control. **MIDI Learn > Forget** unbinds the track's controls.
+- For the transport, choose **Multitrack > Controllers > MIDI Learn Play** (or Stop, or Record), then press the button.
+- **Forget All MIDI Learn** unbinds every one.
+
+Each control takes one CC, and each CC moves one control: learning again replaces the old binding. A knob covers the fader's whole scale, and pan from hard left to hard right with 64 the centre. A button acts each time it sends 64 or more. The bindings are saved with the session, and each one learned is an undo step. A learned CC no longer reaches the instruments. Knobs that send relative values (endless encoders) are not supported.
+
+Both the surface and learned knobs write automation as the mixer's controls do. In Touch, Latch or Write, a fader writes while you hold it. A knob, which can't tell when you let go, ends its pass half a second after it stops moving.
+
 ## Automation
 
 An envelope makes volume, pan, an effect parameter or, on an instrument track, an instrument parameter change over time.
