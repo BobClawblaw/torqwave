@@ -11,7 +11,7 @@
 ![Plug-ins: VST3, AU and LV2](https://img.shields.io/badge/plug--ins-VST3%20%7C%20AU%20%7C%20LV2-orange)
 [![Last commit](https://img.shields.io/github/last-commit/BobClawblaw/torqwave)](https://github.com/BobClawblaw/torqwave/commits/main)
 
-A free, open-source audio editor for macOS, Windows and Linux, and an alternative to Audacity: waveform and spectral editing, repair and loudness tools, built-in effects, multitrack sessions with automation and mixdown, and VST3 plug-ins (with Audio Units on the Mac, and LV2 on the Mac and Linux). Clean-room, built on JUCE 9.0.4.
+A free, open-source audio editor and DAW in one, for macOS, Windows and Linux: for sound designers, for writing and producing music, and for working to picture. Waveform and spectral editing, repair and mastering suites, built-in effects, multitrack sessions with instruments, a piano roll, automation and mixdown, a Sound Library for large effects collections, video, and VST3 plug-ins (with Audio Units on the Mac, and LV2 on the Mac and Linux). It is also a free alternative to Audacity for everyday editing. Clean-room, built on JUCE 9.0.4.
 
 Torqwave was briefly called SpectraBlade, up to 0.15.10, and was renamed in 0.16.0 because another audio product already used a similar name. It opens SpectraBlade's sessions, projects and racks (`.sbsession`, `.sbproject`, `.sbrack`) and presets, and copies its settings, presets and Sound Library across the first time it starts.
 
