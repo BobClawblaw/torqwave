@@ -40,4 +40,13 @@ namespace OfflineRender
         left out. Returns false if progress cancelled it. */
     bool mixSession (const SessionState&, juce::Range<juce::int64> range, juce::AudioBuffer<float>& dest,
                      SessionMixer::Inserts*, const std::function<bool (float progress)>& progress);
+
+    /** Runs a session's mix through the master bus's effects (the rack, as AudioEngine::createRackXml()
+        gives it), as playback does: once, on the whole mix, after the tracks and buses. Null, or a
+        rack with no effects, leaves the mix as it is. Call from a background thread, as for
+        processThroughRack(). Returns an error message ("Cancelled." if progress cancelled it), or
+        empty on success. */
+    juce::String throughMasterBus (const juce::XmlElement* master, juce::AudioPluginFormatManager& formats,
+                                   double sampleRate, juce::AudioBuffer<float>& mix,
+                                   const std::function<bool (float progress)>& progress);
 }

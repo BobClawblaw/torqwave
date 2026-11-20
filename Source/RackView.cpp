@@ -76,6 +76,18 @@ RackView::RackView (AudioEngine& e) : engine (e)
     rebuildRows();
 }
 
+void RackView::setMasterBus (bool on)
+{
+    masterBus = on;
+    title.setText (on ? "Master Bus Effects" : "Effects Rack", juce::dontSendNotification);
+    title.setTooltip (on ? "The session's whole mix goes through these once, after the tracks and buses, and Mix Down writes through them. "
+                           "Each track's own effects are on its FX button."
+                         : juce::String());
+    applyButton.setVisible (! on);
+    resized();
+    repaint();
+}
+
 RackView::~RackView()
 {
     engine.removeChangeListener (this);
@@ -88,7 +100,8 @@ void RackView::paint (juce::Graphics& g)
     if (rows.isEmpty())
     {
         g.setColour (Theme::dimText);
-        g.drawFittedText ("No effects.\nScan your plug-ins, then add " + Platform::pluginFormats() + " effects here.",
+        g.drawFittedText (masterBus ? juce::String ("No effects on the master bus.\nWhat you add here plays on the whole mix, after the tracks and buses.")
+                                    : "No effects.\nScan your plug-ins, then add " + Platform::pluginFormats() + " effects here.",
                           getLocalBounds().reduced (16).withTrimmedTop (80), juce::Justification::centredTop, 4);
     }
 }
@@ -99,7 +112,9 @@ void RackView::resized()
     auto header = r.removeFromTop (28);
     addButton.setBounds (header.removeFromRight (110));
     header.removeFromRight (6);
-    applyButton.setBounds (header.removeFromRight (64));
+    if (applyButton.isVisible())
+        applyButton.setBounds (header.removeFromRight (64));
+
     title.setBounds (header);
     r.removeFromTop (8);
 

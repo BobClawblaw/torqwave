@@ -1913,7 +1913,9 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setTicked (editorPanel != nullptr && editorPanel->isInfoLineWanted()); break;
         case cmdShowFileTabs: info.setInfo ("File Tabs", "Show the open files as tabs over the editor as well as in the Files panel", "Window", 0);
                               info.setTicked (editorPanel != nullptr && editorPanel->areTabsWanted()); break;
-        case cmdShowRack:   info.setInfo ("Effects Rack", "Show or hide the effects rack panel", "Window", 0);
+        case cmdShowRack:   info.setInfo (multitrackMode ? "Master Bus Effects" : "Effects Rack",
+                                          multitrackMode ? "Show or hide the master bus's effects, which the whole session's mix goes through"
+                                                         : "Show or hide the effects rack panel", "Window", 0);
                             info.addDefaultKeypress ('e', cmd | alt); info.setTicked (dock->isShown (Panels::rack)); break;
         case cmdShowSpectrum: info.setInfo ("Frequency Analysis", "Show or hide the spectrum of what goes to the outputs", "Window", 0);
                             info.setTicked (dock->isShown (Panels::spectrum)); break;
@@ -3981,6 +3983,7 @@ void MainComponent::setMultitrack (bool on)
     multitrack.setVisible (on);
     overview.setVisible (on);
     editorPanel->resized();   // the file tabs show with the editor only
+    rackView.setMasterBus (on);
 
     if (auto it = madePanels.find (Panels::history); it != madePanels.end())
         if (auto* history = dynamic_cast<UndoHistory*> (it->second.get()))
@@ -4660,6 +4663,9 @@ void MainComponent::mixDown (const juce::File& file, int bitDepth, juce::Range<j
         if (auto xml = engine.getTrackEffects().createXml (track.id))
             (*effects)[track.id] = std::move (xml);
 
+    // The master bus's effects (the rack), which the mix goes through as it plays.
+    std::shared_ptr<const juce::XmlElement> master = engine.createRackXml();
+
     // Fresh plug-ins, made and run on the job's thread. The job is deleted on the message thread,
     // and these with it, as some plug-ins require.
     auto inserts = std::make_shared<TrackEffects>();
@@ -4668,14 +4674,28 @@ void MainComponent::mixDown (const juce::File& file, int bitDepth, juce::Range<j
     auto report = std::make_shared<juce::String>();
 
     backgroundJob = std::make_unique<BackgroundJob> (*this, "Mixing down...",
-        [this, state, rate, effects, inserts, error, warnings, report, file, bitDepth, range, spec] (const std::function<bool (float)>& progress)
+        [this, state, rate, effects, master, inserts, error, warnings, report, file, bitDepth, range, spec] (const std::function<bool (float)>& progress)
         {
             *warnings = OfflineRender::loadTrackEffects (*effects, engine.pluginFormatManager, rate, *inserts);
             juce::AudioBuffer<float> mix;
             const auto share = spec.has_value() ? 0.5f : 1.0f;
+            const auto mixShare = master->getChildByName ("SLOT") != nullptr ? 0.5f * share : share;
 
-            if (! OfflineRender::mixSession (*state, range, mix, inserts.get(), [&progress, share] (float p) { return progress (share * p); }))
+            if (! OfflineRender::mixSession (*state, range, mix, inserts.get(), [&progress, mixShare] (float p) { return progress (mixShare * p); }))
                 return false;
+
+            auto cancelled = false;
+            const auto failed = OfflineRender::throughMasterBus (master.get(), engine.pluginFormatManager, rate, mix,
+                [&progress, &cancelled, mixShare] (float p) { cancelled = ! progress (mixShare + mixShare * p); return ! cancelled; });
+
+            if (cancelled)
+                return false;
+
+            if (failed.isNotEmpty())
+            {
+                *error = "The master bus effects couldn't be run: " + failed;
+                return true;
+            }
 
             auto audio = AudioEdits::fromBuffer (std::move (mix));
 
@@ -14935,7 +14955,7 @@ void MainComponent::panelHidden (const juce::String& id)
 juce::String MainComponent::getTitle (const juce::String& id)
 {
     if (id == Panels::editor)          return multitrackMode ? "Multitrack" : "Editor";   // named for the side in use
-    if (id == Panels::rack)            return "Effects Rack";
+    if (id == Panels::rack)            return multitrackMode ? "Master Bus Effects" : "Effects Rack";   // the session's mix goes through it
     if (id == Panels::selection)       return "Selection/View";
     if (id == Panels::mixer)           return "Mixer";
     if (id == Panels::clipProperties)  return "Clip Properties";

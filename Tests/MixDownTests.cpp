@@ -3,6 +3,7 @@
 
 #include <JuceHeader.h>
 #include "../Source/AudioFileIO.h"
+#include "../Source/BuiltInEffects.h"
 #include "../Source/OfflineRender.h"
 #include "../Source/TrackEffects.h"
 #include "TestPlugins.h"
@@ -117,6 +118,45 @@ void runMixDownTests (AudioEngine& engine)
         const auto ok = OfflineRender::mixSession (s, { 0, length }, mix, nullptr, {});
         check (ok && mix.getNumChannels() == 2 && mix.getNumSamples() == (int) length && same (mix, play (s, 0, (int) length, 512, nullptr)),
                "mixdown: the whole session (" + juce::String (length) + " frames) is playback's mix bit for bit");
+    }
+
+    // Through the master bus's effects: none leaves the mix as it is; a limiter there holds the whole
+    // mix under its ceiling, as one chain on the sum, not one on each track.
+    {
+        juce::AudioBuffer<float> plain, none, limited;
+        OfflineRender::mixSession (s, { 0, length }, plain, nullptr, {});
+        none.makeCopyOf (plain);
+        limited.makeCopyOf (plain);
+
+        const auto emptyRack = std::make_unique<juce::XmlElement> ("TORQWAVE_RACK");
+        const auto noneError = OfflineRender::throughMasterBus (emptyRack.get(), engine.pluginFormatManager, rate, none, {})
+                             + OfflineRender::throughMasterBus (nullptr, engine.pluginFormatManager, rate, none, {});
+
+        BuiltInEffects::LimiterProcessor limiter;
+        Dynamics::Limiter settings;
+        settings.ceilingDb = -12.0;
+        limiter.setSettings (settings);
+        juce::MemoryBlock state;
+        limiter.getStateInformation (state);
+        juce::XmlElement rack ("TORQWAVE_RACK");
+        auto* slot = rack.createNewChildElement ("SLOT");
+        slot->setAttribute ("bypassed", false);
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.name == "Limiter")
+                slot->addChildElement (d.createXml().release());
+
+        slot->createNewChildElement ("STATE")->addTextElement (state.toBase64Encoding());
+
+        juce::String limitError;
+        inBackground ([&] { limitError = OfflineRender::throughMasterBus (&rack, engine.pluginFormatManager, rate, limited, {}); });
+
+        const auto ceiling = juce::Decibels::decibelsToGain (-12.0f) * 1.0001f;
+        const auto plainPeak = juce::jmax (plain.getMagnitude (0, 0, plain.getNumSamples()), plain.getMagnitude (1, 0, plain.getNumSamples()));
+        const auto limitedPeak = juce::jmax (limited.getMagnitude (0, 0, limited.getNumSamples()), limited.getMagnitude (1, 0, limited.getNumSamples()));
+        check (noneError.isEmpty() && same (none, plain) && limitError.isEmpty() && plainPeak > ceiling && limitedPeak <= ceiling
+                   && limited.getNumSamples() == plain.getNumSamples(),
+               "mixdown: with no master bus effects the mix is as it was, bit for bit; a limiter on the master bus (-12 dB) brings the mix's peak from "
+               + juce::String (juce::Decibels::gainToDecibels (plainPeak), 1) + " to " + juce::String (juce::Decibels::gainToDecibels (limitedPeak), 1) + " dB");
     }
 
     // With latent effects on a track and the bus, from part way in: primed, so it is in time.

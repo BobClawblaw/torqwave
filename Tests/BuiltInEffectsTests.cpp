@@ -429,6 +429,12 @@ void runBuiltInEffectsTests (AudioEngine& engine)
         check (applyOffEmpty && applyOnWithEffects && applied == 1,
                "the rack panel's Apply button is off with no effects, on once one is in, and a click asks to apply the rack");
 
+        rackView.setMasterBus (true);
+        const auto masterApplyHidden = ! rackView.getApplyButton().isVisible() && rackView.getHeading() == "Master Bus Effects";
+        rackView.setMasterBus (false);
+        check (masterApplyHidden && rackView.getApplyButton().isVisible() && rackView.getHeading() == "Effects Rack",
+               "in a session the rack is the master bus's effects, without the Apply button (which renders into the open file); back in the editor, Apply is there again");
+
         SessionState session;
         session.sampleRate = rate;
         const auto trackId = session.addTrack().id;

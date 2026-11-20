@@ -6,7 +6,7 @@
     its volume, pan, mute and solo, where it plays (the master or a bus), its instrument, its
     inserts and its sends with their levels and pre-fader switches. Changes are undo steps as in
     the mixer (a slider's drag one step) and follow the track's group. A click on the instrument
-    or an insert opens its window; effects are added and ordered in the Effects Rack.
+    or an insert opens its window; effects are added with the track's FX button.
 
     Follows the session and the selection, so undo and edits elsewhere show here at once. */
 class TrackInspector final : public juce::Component,
@@ -79,7 +79,7 @@ private:
     juce::Label instrumentLabel { {}, "Instrument" }, insertsLabel { {}, "Inserts" }, sendsLabel { {}, "Sends" };
     juce::TextButton instrument;
     juce::OwnedArray<juce::TextButton> inserts;
-    juce::Label noInserts { {}, "None (add them in the Effects Rack)" }, noSends { {}, "None" };
+    juce::Label noInserts { {}, "None (add them with the track's FX button)" }, noSends { {}, "None" };
     std::vector<std::unique_ptr<Send>> sends;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackInspector)
