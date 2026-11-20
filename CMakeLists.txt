@@ -302,6 +302,9 @@ target_compile_definitions(Torqwave PRIVATE
     JUCE_PLUGINHOST_VST=0
     JUCE_PLUGINHOST_LV2=$<IF:$<PLATFORM_ID:Windows>,0,1>
     JUCE_PLUGINHOST_ARA=0
+    # ASIO devices on Windows, from the ASIO SDK headers JUCE bundles. Steinberg licenses the SDK
+    # under GPLv3 as one of its two licences (since SDK 2.3.4), which combines with the AGPLv3.
+    JUCE_ASIO=$<IF:$<PLATFORM_ID:Windows>,1,0>
     JUCE_USE_FLAC=1
     JUCE_USE_OGGVORBIS=1
     JUCE_USE_MP3AUDIOFORMAT=1

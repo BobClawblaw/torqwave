@@ -67,6 +67,9 @@ Copy-Item (Join-Path $root "LICENSE") (Join-Path $stage "LICENSE.txt")
 Copy-Item (Join-Path $build "_deps\lame-src\COPYING") (Join-Path $stage "LAME-LICENSE.txt")
 Copy-Item (Join-Path $build "_deps\signalsmith_stretch-src\LICENSE.txt") (Join-Path $stage "SIGNALSMITH-STRETCH-LICENSE.txt")
 Copy-Item (Join-Path $build "_deps\signalsmith_linear-src\LICENSE.txt") (Join-Path $stage "SIGNALSMITH-LINEAR-LICENSE.txt")
+# The ASIO SDK's headers, as JUCE bundles them (built in for ASIO devices; GPLv3 or Steinberg's licence).
+$juceSrc = if ($Juce) { $Juce } else { Join-Path $build "_deps\juce-src" }
+Copy-Item (Join-Path $juceSrc "modules\juce_audio_devices\native\asio\LICENSE.txt") (Join-Path $stage "ASIO-SDK-LICENSE.txt")
 New-Item -ItemType Directory -Force $dist | Out-Null
 
 function Write-Sha256 ([string] $file) {

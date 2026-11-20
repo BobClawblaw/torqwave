@@ -1094,8 +1094,14 @@ juce::StringArray AudioEngine::getDeviceInputChannelNames() const
         if (const auto names = device->getInputChannelNames(); ! names.isEmpty())
             return names;
 
-    // No input open yet: ask an unopened device object for its names.
+    // No input open yet: ask an unopened device object for its names. Not for ASIO: an open ASIO
+    // device already names every input it has, and a second object would load the driver again,
+    // which most drivers refuse (or worse) while the first one plays.
     auto* type = deviceManager.getCurrentDeviceTypeObject();
+
+    if (type != nullptr && type->getTypeName() == "ASIO" && deviceManager.getCurrentAudioDevice() != nullptr)
+        return {};
+
     const auto name = inputDeviceNameFor (deviceManager.getAudioDeviceSetup());
 
     if (type == nullptr || name.isEmpty())
