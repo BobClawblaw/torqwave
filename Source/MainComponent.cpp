@@ -14845,6 +14845,11 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
     else if (id == Panels::sequenceLibrary)
     {
         auto panel = std::make_unique<SequenceLibraryView>();
+
+        if (sequencePreview == nullptr)
+            sequencePreview = std::make_unique<SequencePreview> (engine);
+
+        panel->setPreview (sequencePreview.get());
         panel->onUse = [this] (const juce::File& file)
         {
             const auto state = engine.session.getState();

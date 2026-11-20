@@ -1,5 +1,8 @@
 #include <JuceHeader.h>
 #include "../Source/SequenceLibraryView.h"
+#include "../Source/AudioEngine.h"
+#include "../Source/BuiltInEffects.h"
+#include "../Source/TrackEffects.h"
 #include "TestUtils.h"
 #include "SequenceTests.h"
 
@@ -88,7 +91,7 @@ namespace
     }
 }
 
-void runSequenceTests()
+void runSequenceTests (AudioEngine& engine)
 {
     // In one session and back: every note, lane, the loop and the offset come back exactly.
     {
@@ -247,6 +250,85 @@ void runSequenceTests()
                    "sequence library panel: shows the three sequences, a search for \"my hats\" leaves the one in that folder, cleared all three again; a drag names its file");
         }
 
+        folder.deleteRecursively();
+    }
+
+    // Preview: the next bar, a render through the voice at a tempo, and the player.
+    {
+        const auto changing = sessionAt (120.0, { { 2, 60.0, 3 } });   // 4/4 at 120, then 3/4 at 60
+        const auto map = changing.tempoMap();   // it refers to the session's changes, so the session is kept
+        juce::int64 threeFour = -1;   // the first bar after the change: 3 beats at 60, 144000 frames
+
+        for (juce::int64 bar = 0; bar < 8 && threeFour < 0; ++bar)
+            if (map.barFrame (bar + 1) - map.barFrame (bar) == 144000)
+                threeFour = bar;
+
+        check (SequencePreview::framesToNextBar (map, 0) == 0 && SequencePreview::framesToNextBar (map, 1000) == 95000 && threeFour > 0
+                   && SequencePreview::framesToNextBar (map, map.barFrame (threeFour) + 10) == 144000 - 10
+                   && SequencePreview::framesToNextBar (map, map.barFrame (threeFour)) == 0,
+               "sequence preview: from a frame to the next bar's start, 0 on a bar line, through a change to 3/4 at 60 (a bar of 144000 frames)");
+
+        juce::PluginDescription synth;
+
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.fileOrIdentifier == BuiltInEffects::basicSynthId)
+                synth = d;
+
+        auto s = sessionAt (120.0);
+        const auto trackId = s.addInstrumentTrack().id;
+        const auto clipId = addPattern (s, trackId);
+        TrackEffects effects;
+        effects.prepare (rate);
+        juce::String error;
+        effects.add (trackId, engine.pluginFormatManager.createPluginInstance (synth, rate, 512, error));
+        const auto q = SequenceFile::fromClip (s, clipId, effects.createXml (trackId));
+        const auto silent = SequenceFile::fromClip (s, clipId, nullptr);
+
+        juce::AudioBuffer<float> at120, at60, none;
+        const auto e120 = SequencePreview::render (*q, 120.0, 4, rate, engine.pluginFormatManager, at120);
+        const auto e60 = SequencePreview::render (*q, 60.0, 4, rate, engine.pluginFormatManager, at60);
+        const auto eNone = SequencePreview::render (*silent, 120.0, 4, rate, engine.pluginFormatManager, none);
+        const auto level = [] (const juce::AudioBuffer<float>& b, int from, int n) { return b.getNumSamples() >= from + n ? b.getRMSLevel (0, from, n) : 0.0f; };
+
+        check (SequenceFile::instrumentOf (*q) == synth.name && e120.isEmpty() && at120.getNumChannels() == 2 && at120.getNumSamples() == 2 * 96000
+                   && e60.isEmpty() && at60.getNumSamples() == 4 * 96000 && level (at120, 0, 4800) > 0.001f && level (at60, 0, 9600) > 0.001f
+                   && eNone.contains ("no instrument") && none.getNumSamples() == 0,
+               "sequence preview: two bars through the basic synth render as 192000 frames at 120 BPM and 384000 at 60, sounding from the start; "
+               "with no instrument it says so (" + eNone + ")");
+
+        // The player: rendered on its thread, then looped; the same again plays from the cache at once.
+        const auto folder = juce::File::createTempFile ("preview");
+        const auto file = folder.getChildFile (juce::String ("Groove") + SequenceFile::extension);
+        const auto bare = folder.getChildFile (juce::String ("Bare") + SequenceFile::extension);
+        SequenceFile::save (*q, file);
+        SequenceFile::save (*silent, bare);
+
+        SequencePreview preview (engine);
+        preview.play (file);
+        const auto rendering = preview.getState() == SequencePreview::State::rendering && preview.describe() == "Rendering Groove...";
+        TestUtils::runUntil ([&] { return preview.getState() == SequencePreview::State::playing; }, 20000);
+        const auto playing = preview.getState() == SequencePreview::State::playing && preview.describe().startsWith ("Groove at ");
+
+        juce::AudioBuffer<float> pulled (2, 4800);
+        preview.getSource().getNextAudioBlock ({ &pulled, 0, pulled.getNumSamples() });
+        const auto heard = pulled.getRMSLevel (0, 0, pulled.getNumSamples()) > 0.001f;
+
+        preview.stop();
+        preview.getSource().getNextAudioBlock ({ &pulled, 0, pulled.getNumSamples() });
+        const auto stopped = juce::exactlyEqual (pulled.getMagnitude (0, pulled.getNumSamples()), 0.0f);
+
+        preview.play (file);
+        const auto cached = preview.getState() == SequencePreview::State::playing;
+
+        preview.play (bare);
+        TestUtils::runUntil ([&] { return preview.getState() == SequencePreview::State::stopped; }, 20000);
+        const auto refused = preview.getState() == SequencePreview::State::stopped && preview.describe().contains ("no instrument");
+
+        check (rendering && playing && heard && stopped && cached && refused,
+               "sequence preview: a click renders it on its own thread (\"Rendering Groove...\"), then it plays and is heard; Stop silences it; played again it starts at once "
+               "from what was rendered; one with no instrument stops and says why");
+
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (50);   // plug-ins handed to the message thread go
         folder.deleteRecursively();
     }
 }

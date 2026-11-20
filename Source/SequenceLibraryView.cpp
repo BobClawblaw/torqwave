@@ -49,7 +49,7 @@ public:
         g.drawText (details, r.removeFromRight (detailWidth), juce::Justification::centredRight, true);
         g.setColour (isSelected() ? Theme::textStrong : Theme::text);
         g.setFont (juce::FontOptions (13.0f));
-        g.drawText (entry.name, r, juce::Justification::centredLeft, true);
+        g.drawText ((view.isPlaying (entry.file) ? juce::String::fromUTF8 ("\xe2\x96\xb6 ") : juce::String()) + entry.name, r, juce::Justification::centredLeft, true);
     }
 
     void itemDoubleClicked (const juce::MouseEvent&) override
@@ -58,10 +58,19 @@ public:
             view.onUse (entry.file);
     }
 
+    void itemSelectionChanged (bool isNowSelected) override
+    {
+        if (isNowSelected)
+            view.selected (entry.file);
+    }
+
     void itemClicked (const juce::MouseEvent& e) override
     {
         if (! e.mods.isPopupMenu())
+        {
+            view.clicked (entry.file);
             return;
+        }
 
         juce::PopupMenu menu;
         menu.addItem (1, "Show in Finder");
@@ -178,6 +187,11 @@ SequenceLibraryView::SequenceLibraryView (juce::File folder) : library (std::mov
     folderButton.setTooltip ("Show the library's folder in the Finder: " + library.getFolder().getFullPathName());
     folderButton.onClick = [this] { library.getFolder().revealToUser(); };
 
+    addAndMakeVisible (stopButton);
+    stopButton.setTooltip ("Stop the sequence playing");
+    stopButton.onClick = [this] { if (preview != nullptr) preview->stop(); };
+    stopButton.setEnabled (false);
+
     addAndMakeVisible (tree);
     tree.setRootItemVisible (false);
     tree.setDefaultOpenness (false);
@@ -192,7 +206,60 @@ SequenceLibraryView::SequenceLibraryView (juce::File folder) : library (std::mov
 
 SequenceLibraryView::~SequenceLibraryView()
 {
+    setPreview (nullptr);
     tree.setRootItem (nullptr);
+}
+
+void SequenceLibraryView::setPreview (SequencePreview* p)
+{
+    if (preview != nullptr)
+        preview->onChange = nullptr;
+
+    preview = p;
+
+    if (preview != nullptr)
+        preview->onChange = [this] { previewChanged(); };
+
+    previewChanged();
+}
+
+bool SequenceLibraryView::isPlaying (const juce::File& file) const
+{
+    return preview != nullptr && preview->getState() != SequencePreview::State::stopped && preview->getFile() == file;
+}
+
+void SequenceLibraryView::clicked (const juce::File& file)
+{
+    if (preview == nullptr)
+        return;
+
+    // The click that selected it has already started it.
+    if (std::exchange (startedBySelecting, juce::File()) == file)
+        return;
+
+    // A second click on the one playing stops it.
+    if (isPlaying (file))
+        preview->stop();
+    else
+        preview->play (file);
+}
+
+void SequenceLibraryView::selected (const juce::File& file)
+{
+    // Moving through the list while one plays plays each in turn.
+    if (preview != nullptr && preview->getState() != SequencePreview::State::stopped && preview->getFile() != file)
+    {
+        preview->play (file);
+        startedBySelecting = file;
+    }
+}
+
+void SequenceLibraryView::previewChanged()
+{
+    const auto said = preview != nullptr ? preview->describe() : juce::String();
+    summary.setText (said.isNotEmpty() ? said : countText, juce::dontSendNotification);
+    stopButton.setEnabled (preview != nullptr && preview->getState() != SequencePreview::State::stopped);
+    tree.repaint();
 }
 
 juce::var SequenceLibraryView::dragDescriptionFor (const juce::File& file)
@@ -298,9 +365,9 @@ void SequenceLibraryView::rebuild()
         openAll (*root);
     }
 
-    summary.setText (text.isEmpty() ? juce::String (shown) + (shown == 1 ? " sequence" : " sequences")
-                                     : juce::String (shown) + " of " + juce::String ((int) entries.size()) + " match",
-                     juce::dontSendNotification);
+    countText = text.isEmpty() ? juce::String (shown) + (shown == 1 ? " sequence" : " sequences")
+                               : juce::String (shown) + " of " + juce::String ((int) entries.size()) + " match";
+    previewChanged();
 }
 
 std::vector<juce::File> SequenceLibraryView::shownFiles() const
@@ -336,7 +403,12 @@ void SequenceLibraryView::visibilityChanged()
         startTimer (3000);
     }
     else
+    {
         stopTimer();
+
+        if (preview != nullptr)
+            preview->stop();
+    }
 }
 
 void SequenceLibraryView::paint (juce::Graphics& g)
@@ -352,6 +424,8 @@ void SequenceLibraryView::resized()
     top.removeFromRight (6);
     search.setBounds (top);
     r.removeFromTop (6);
-    summary.setBounds (r.removeFromBottom (20));
+    auto bottom = r.removeFromBottom (24);
+    stopButton.setBounds (bottom.removeFromRight (56).reduced (0, 1));
+    summary.setBounds (bottom);
     tree.setBounds (r);
 }

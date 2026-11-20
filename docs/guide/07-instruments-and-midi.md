@@ -187,6 +187,8 @@ Each sequence shows its length in bars and its key. Type in the search box to se
 
 The library is a folder of plain files (`.tqseq`), under Music > Torqwave > Sequences. **Folder** shows it in the Finder. Make folders of your own inside the sub-folders, and move, copy or share the files there. The panel follows what you change. Right-click a sequence to show it in the Finder, rename it or move it to the Trash.
 
+**Hear one.** Click a sequence to hear it with its own instrument and effects at the session's tempo, looping. The first time takes a moment while it renders ("Rendering..." shows under the list); after that it plays at once. While the session plays, the sequence comes in on the session's next bar, in time with it. Press Up or Down to move through the list and hear each in turn. Click it again, or **Stop**, to stop. A sequence with no instrument of its own can't be heard here: dropped on an instrument track, it plays on that track's instrument.
+
 **Use one.** Drag a sequence into the multitrack view:
 
 - **onto empty space** below the tracks: a new instrument track with the sequence's instrument and effects, and the clip where you dropped it, on the grid;

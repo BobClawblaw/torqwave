@@ -625,7 +625,8 @@ int main (int argc, char* argv[])
 
     if (args.contains ("--sequences"))
     {
-        runSequenceTests();
+        AudioEngine engine;
+        runSequenceTests (engine);
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }
@@ -853,7 +854,7 @@ int main (int argc, char* argv[])
         runSoundDesignTests (engine);
         runPictureTests (engine);
         runSmallPiecesTests (engine);
-        runSequenceTests();
+        runSequenceTests (engine);
         runMetronomeTests (engine.formatManager);
         runMixerTests (engine);
         runBounceTests();

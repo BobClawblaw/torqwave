@@ -877,6 +877,9 @@ private:
     std::unique_ptr<TrackTools> trackTools; // the toolbar under the multitrack view, likewise
     std::unique_ptr<EditorPanel> editorPanel;
     juce::File projectFile;   // the project last opened or saved (Save Project writes it)
+    /** Plays sequences for the Sequence Library panel; made with the panel. After the engine it
+        uses and before the panels that use it, so it goes after them and before the engine. */
+    std::unique_ptr<SequencePreview> sequencePreview;
     std::map<juce::String, std::unique_ptr<juce::Component>> madePanels;   // the panels made when shown
     std::unique_ptr<ControlSurface> surface;   // a Mackie Control surface, when one is set up
     std::unique_ptr<MidiLearn> midiLearn;

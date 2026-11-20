@@ -64,10 +64,21 @@ On disk it is the same tree, by default under `~/Music/Torqwave/Sequences/`, as 
 
 ## Step 2: preview (M)
 
-- Click a sequence to hear it with its own instrument at the session's tempo; while the session plays, it starts on the next bar, so it is heard in context. Optionally transposed to the session's key.
-- Instruments load in the background and are kept (a few at a time), so moving through a list doesn't load the same synth again. Up and Down move through the list while it plays.
-- **Builds on:** the instrument's chain is a `TrackEffects` of its own, mixed into the output beside the session as the Sound Library's preview is.
-- **Tests:** the preview's notes fall on the session's beats at its tempo; a cached instrument is not loaded twice; stopping frees nothing still in use.
+- Click a sequence to hear it with its own instrument at the session's tempo; while the session plays, it starts on the next bar, so it is heard in context.
+- It is rendered on a thread of its own, through its voice, in a session of its own at that tempo, so it sounds as a drop would, and the renders are kept (the last eight) so going back to a sequence doesn't render it again. Up and Down move through the list while it plays.
+- **Builds on:** `OfflineRender` (fresh plug-ins and `mixSession`), and a player added to the audio device beside the session, as the Sound Library's preview is.
+- **Tests:** frames to the next bar; a render's length at two tempos and that it sounds; the player renders, plays, stops, plays again from what was kept, and says why a sequence with no instrument is silent.
+- **Later:** transposing to the session's key, once a session has a key (step 6's "fits the session" filter needs it too).
+
+## Step 2b: a master track (M)
+
+The session has no master track today: no master volume or its automation, and the master bus effects are the editor's rack, kept outside the session. A DAW lists the master with the tracks for automation, so it becomes one:
+
+- **A master track** at the bottom of the track list and on the right of the mixer: its volume (with a fader and meter), its envelope, and its automation modes like any track.
+- **The master bus effects move into the session:** its effects chain is the master track's, saved in the session file and in projects, with each effect's parameters automatable as a track's are. In the editor the rack stays the editor's own.
+- Mix Down goes through the master's effects and volume, as playback does. A session from before it opens with the rack's effects on its master and the volume at 0 dB.
+- **Builds on:** the track's automation (envelopes, modes, `TrackEffects` with an id of its own for the master) and the mixer strips.
+- **Tests:** the master's volume envelope and an automated effect parameter play and mix down sample for sample alike; an older session opens unchanged in sound; undo and the session file keep the master.
 
 ## Step 3: the Sequencer window (L)
 
