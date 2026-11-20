@@ -12,6 +12,8 @@ class AudioEngine;
     Save, Save As, Duplicate and Make Variation work on files in the Sequence Library; Undo and
     Redo (and Cmd-Z, Shift-Cmd-Z while it has the focus) step through its own edits. */
 class SequencerView final : public juce::Component,
+                            public juce::DragAndDropTarget,
+                            public juce::FileDragAndDropTarget,
                             private juce::Timer
 {
 public:
@@ -70,6 +72,17 @@ public:
 
     void resized() override;
     void paint (juce::Graphics&) override;
+    void paintOverChildren (juce::Graphics&) override;
+
+    /** A sequence dropped from the Sequence Library or the Finder opens here (asking about unsaved changes first). */
+    bool isInterestedInDragSource (const SourceDetails&) override;
+    void itemDragEnter (const SourceDetails&) override;
+    void itemDragExit (const SourceDetails&) override;
+    void itemDropped (const SourceDetails&) override;
+    bool isInterestedInFileDrag (const juce::StringArray&) override;
+    void fileDragEnter (const juce::StringArray&, int, int) override;
+    void fileDragExit (const juce::StringArray&) override;
+    void filesDropped (const juce::StringArray&, int, int) override;
     bool keyPressed (const juce::KeyPress&) override;
 
 private:
@@ -97,7 +110,7 @@ private:
     SequencerDocument::Built built;
     std::shared_ptr<const SessionState> shown;
     std::shared_ptr<bool> loadAlive;
-    bool loading = false, voiceIncomplete = false, drums = false, followSession = false;
+    bool loading = false, voiceIncomplete = false, drums = false, followSession = false, dropping = false;
     double tempo = 120.0;
     juce::String loadError;
 

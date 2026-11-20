@@ -637,7 +637,7 @@ void TrackEffects::endHeldNotes (juce::uint32 trackId)
 
     if (auto* chain = sl.isLocked() ? find (trackId) : nullptr)
         for (auto& slot : *chain)
-            slot->allOff = true;
+            slot->heldOff = true;
 }
 
 void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::AudioBuffer<float>& buffer, int numFrames,
@@ -709,6 +709,13 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
 
                 midi.addEvent (juce::MidiMessage::allNotesOff (1), 0);
                 midi.addEvent (juce::MidiMessage::allSoundOff (1), 0);
+            }
+            else if (s.heldOff.exchange (false))
+            {
+                for (int channel = 0; channel < 16; ++channel)
+                    for (int pitch = 0; pitch < 128; ++pitch)
+                        if (s.held[(size_t) channel][(size_t) pitch])
+                            midi.addEvent (juce::MidiMessage::noteOff (channel + 1, pitch), 0);
             }
 
             // The block the play stopped in starts no clip notes: their offs would never come.

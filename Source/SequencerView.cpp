@@ -3,6 +3,8 @@
 #include "Instrument.h"
 #include "PluginMenu.h"
 #include "SequenceLibrary.h"
+#include "SequenceLibraryView.h"
+#include "Theme.h"
 
 namespace
 {
@@ -856,6 +858,50 @@ bool SequencerView::keyPressed (const juce::KeyPress& key)
     }
 
     return false;
+}
+
+void SequencerView::paintOverChildren (juce::Graphics& g)
+{
+    if (! dropping)
+        return;
+
+    g.setColour (Theme::accent);
+    g.drawRect (getLocalBounds(), 3);
+}
+
+namespace
+{
+    bool isSequence (const juce::File& f) { return f.hasFileExtension (SequenceFile::extension); }
+}
+
+bool SequencerView::isInterestedInDragSource (const SourceDetails& details)
+{
+    return isSequence (SequenceLibraryView::fileOfDrag (details.description));
+}
+
+void SequencerView::itemDragEnter (const SourceDetails&)    { dropping = true; repaint(); }
+void SequencerView::itemDragExit (const SourceDetails&)     { dropping = false; repaint(); }
+
+void SequencerView::itemDropped (const SourceDetails& details)
+{
+    dropping = false;
+    repaint();
+    openFile (SequenceLibraryView::fileOfDrag (details.description));
+}
+
+bool SequencerView::isInterestedInFileDrag (const juce::StringArray& files)
+{
+    return files.size() == 1 && isSequence (juce::File (files[0]));
+}
+
+void SequencerView::fileDragEnter (const juce::StringArray&, int, int)   { dropping = true; repaint(); }
+void SequencerView::fileDragExit (const juce::StringArray&)               { dropping = false; repaint(); }
+
+void SequencerView::filesDropped (const juce::StringArray& files, int, int)
+{
+    dropping = false;
+    repaint();
+    openFile (juce::File (files[0]));
 }
 
 void SequencerView::paint (juce::Graphics& g)

@@ -202,6 +202,7 @@ private:
     int drumDivision() const noexcept              { return gridDivision > 0 ? gridDivision : 4; }
     void paintRoll (juce::Graphics&, juce::Rectangle<int> area);
     void paintDrums (juce::Graphics&, juce::Rectangle<int> area);
+    void paintBars (juce::Graphics&, juce::Rectangle<int> area);   // a line and a number at each bar
     void drumMouseDown (const juce::MouseEvent&);
     void drumMapMenu (int row);
     void editDrumSound (int row, bool adding);

@@ -1440,6 +1440,53 @@ void runSequenceTests (AudioEngine& engine)
                        && rounded.length == 2 * SequenceFile::ticksPerBeat && rounded.notes.size() == 2 && heard.getDocument().getUndoDescription() == "Length 0.50 bars",
                    "sequencer: Length sets the sequence's bars (2 bars: 8 beats, a clip of 192000 frames at 120 BPM), undo takes it back, a beat and a half "
                    "rounds to two beats (half a bar), and the notes past the end are kept");
+
+            // A last note ending on the loop's end rings on (its release) into the next pass.
+            auto tail = q;
+            tail.notes = { { 69, 3 * SequenceFile::ticksPerBeat, SequenceFile::ticksPerBeat, 1.0f } };
+            tail.lanes.clear();
+            const auto tailFile = folder.getChildFile (juce::String ("Tail") + SequenceFile::extension);
+            SequenceFile::save (tail, tailFile);
+            SequencerView looped (engine);   // a view of its own: the other has unsaved edits, so opening would ask first
+            looped.openFile (tailFile);
+            auto& lp = looped.getPlayer();
+
+            for (int i = 0; i < 100 && lp.getEffects().getInstrument (looped.getTrackId()) == nullptr; ++i)
+                juce::MessageManager::getInstance()->runDispatchLoopUntil (20);
+
+            looped.setTempo (120.0);
+            lp.setLooping (true);
+            lp.prepareToPlay (512, rate);
+            lp.play();
+            juce::AudioBuffer<float> rung (2, 96000 + 4800);
+            rung.clear();
+
+            for (int done = 0; done < rung.getNumSamples(); done += 512)
+            {
+                const auto n = juce::jmin (512, rung.getNumSamples() - done);
+                b.clear();
+                lp.getNextAudioBlock ({ &b, 0, n });
+                rung.copyFrom (0, done, b, 0, 0, n);
+            }
+
+            const auto before = rung.getRMSLevel (0, 96000 - 2400, 2400), after = rung.getRMSLevel (0, 96000, 480);
+            check (before > 0.01f && after > 0.3f * before,
+                   "sequencer: looping, a note ending on the loop's end rings on into the next pass (its release: " + juce::String (after / juce::jmax (1.0e-9f, before), 2)
+                   + " of its level in the first 10 ms), not cut off");
+
+            // A sequence dragged from the library, or from the Finder, opens in the Sequencer; a kit doesn't.
+            SequencerView dropped (engine);
+            juce::Component source;
+            const juce::DragAndDropTarget::SourceDetails fromLibrary (SequenceLibraryView::dragDescriptionFor (tailFile), &source, {});
+            const juce::DragAndDropTarget::SourceDetails kit (SequenceLibraryView::dragDescriptionFor (folder.getChildFile ("Some.tqkit")), &source, {});
+            const auto takes = dropped.isInterestedInDragSource (fromLibrary), refusesKit = ! dropped.isInterestedInDragSource (kit);
+            dropped.itemDropped (fromLibrary);
+            const auto openedByDrop = dropped.getDocument().getFile() == tailFile && dropped.getDocument().get().notes.size() == 1;
+            SequencerView fromFinder (engine);
+            const auto takesFile = fromFinder.isInterestedInFileDrag ({ file.getFullPathName() }) && ! fromFinder.isInterestedInFileDrag ({ folder.getFullPathName() });
+            fromFinder.filesDropped ({ file.getFullPathName() }, 10, 10);
+            check (takes && refusesKit && openedByDrop && takesFile && fromFinder.getDocument().getFile() == file,
+                   "sequencer: a sequence dropped from the Sequence Library opens in it, and one from the Finder too; a kit or a folder is refused");
             juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
             folder.deleteRecursively();
         }

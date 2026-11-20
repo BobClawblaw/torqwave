@@ -155,9 +155,10 @@ public:
     int getLatency (juce::uint32 trackId) override;
     void reset (juce::uint32 trackId) override;
 
-    /** Audio thread: the track's instruments get an off for every note they were given, at the
-        start of their next block, before that block's notes (unlike endNotes(), which starts
-        none in it). Never waits for the lock. */
+    /** Audio thread: the track's instruments get an off for every note they were given and
+        not yet ended, at the start of their next block, before that block's notes (unlike
+        endNotes(), which starts none in it), and nothing else: releases ring on. Never waits
+        for the lock. */
     void endHeldNotes (juce::uint32 trackId);
     int getLatencyBefore (juce::uint32 trackId, juce::uint32 slotId) override;
     void process (const SessionTrack&, juce::int64 frame, juce::AudioBuffer<float>&, int numFrames,
@@ -211,6 +212,7 @@ private:
         juce::uint32 id = 0;
         bool bypassed = false;
         std::atomic<bool> allOff { false };   // an instrument: every note off before its next block (after a reset)
+        std::atomic<bool> heldOff { false };  // an instrument: an off for each held note only, its sound left to ring out
         int notesEnded = 0;                    // the audio thread's: the endNotes() it has acted on
         std::array<std::bitset<128>, 16> held; // the audio thread's: an instrument's notes on and not yet off, by channel
         juce::AudioBuffer<float> work;

@@ -809,6 +809,43 @@ void NoteEditor::paint (juce::Graphics& g)
     }
 }
 
+void NoteEditor::paintBars (juce::Graphics& g, juce::Rectangle<int> area)
+{
+    // Each bar of the notes' timeline (from its start, in the clip's beats): a bold line and its number.
+    const auto barFrames = shown->beatSeconds * shown->sampleRate * juce::jmax (1, shown->beatsPerBar);
+
+    if (barFrames <= 0.0 || xOf ((juce::int64) barFrames) - xOf (0) < 12.0f)
+        return;
+
+    const auto whole = wholeLength();
+    g.setFont (10.0f);
+
+    for (int bar = 0; ; ++bar)
+    {
+        const auto f = (juce::int64) std::llround (bar * barFrames);
+
+        if (f > whole)
+            break;
+
+        const auto x = xOf (f);
+
+        if (x > (float) area.getRight())
+            break;
+
+        g.setColour (Theme::dimText);
+        g.fillRect (juce::Rectangle<float> (x - 1.0f, (float) area.getY(), 2.0f, (float) area.getHeight()));
+
+        if (f < whole && x >= (float) area.getX() - 30.0f)
+        {
+            const auto label = juce::Rectangle<float> (x + 3.0f, (float) area.getY() + 2.0f, 26.0f, 13.0f);
+            g.setColour (Theme::canvas.withAlpha (0.8f));
+            g.fillRoundedRectangle (label, 2.0f);
+            g.setColour (Theme::text);
+            g.drawText (juce::String (bar + 1), label, juce::Justification::centredLeft, false);
+        }
+    }
+}
+
 void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
 {
     const auto keys = juce::Rectangle<int> (0, area.getY(), keyboardWidth, area.getHeight());
@@ -871,6 +908,8 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
             g.setColour (k % gridDivision == 0 ? Theme::lineStrong : Theme::line);
             g.drawVerticalLine ((int) xOf (f), (float) area.getY(), (float) area.getBottom());
         }
+
+    paintBars (g, area);
 
     if (period < whole)
         for (auto f = period; f < whole; f += period)
@@ -974,6 +1013,8 @@ void NoteEditor::paintDrums (juce::Graphics& g, juce::Rectangle<int> area)
         g.setColour (k % drumDivision() == 0 ? Theme::lineStrong : Theme::line);
         g.drawVerticalLine ((int) xOf (juce::jmin (whole, lineFrame (k))), (float) area.getY(), (float) area.getBottom());
     }
+
+    paintBars (g, area);
 
     if (period < whole)
         for (auto f = period; f < whole; f += period)
