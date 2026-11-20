@@ -1303,7 +1303,7 @@ juce::String AudioEngine::setTrackInputs (const std::vector<TrackInput>& inputs)
 
     std::sort (requested.begin(), requested.end(), [] (auto& a, auto& b) { return std::tie (a.first, a.channels) < std::tie (b.first, b.channels); });
 
-    // After the device changed what is on (another device, Audio Settings), check them again.
+    // After the device changed what is on (another device, Settings > Audio), check them again.
     const auto stale = ! trackInputsCurrent;
     trackInputsCurrent = true;
 

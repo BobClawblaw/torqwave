@@ -30,7 +30,7 @@ Right-clicking a lane offers **Add Notes Here...** and **Add Trigger Here** at t
 
 The selected instrument track plays whatever comes in live:
 
-- **A MIDI keyboard.** Turn its input on in **Audio Settings...**.
+- **A MIDI keyboard.** Turn its input on in **Settings... > Audio**.
 - **Window > Keyboard**, the on-screen keyboard. Click its keys, or use your computer's keys. Its line at the top says which track it plays, or why nothing will sound.
 - **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**), and its keys sound even while the session is stopped.
 - **The Piano Roll's keyboard** (see below).

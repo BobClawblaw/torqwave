@@ -950,7 +950,7 @@ MainComponent::MainComponent()
     engine.document.addChangeListener (this);
     engine.session.addChangeListener (this);
 
-    for (auto* b : { &editorButton, &multitrackButton, &pluginsButton, &audioButton })
+    for (auto* b : { &editorButton, &multitrackButton, &pluginsButton, &settingsButton })
         addAndMakeVisible (b);
 
     addChildComponent (askButton);
@@ -974,7 +974,7 @@ MainComponent::MainComponent()
     backToClipButton.onClick = [this] { backToClip(); };
 
     pluginsButton.onClick  = [this] { showPluginList(); };
-    audioButton.onClick    = [this] { showSettings ("Audio"); };
+    settingsButton.onClick = [this] { showSettings(); };
     selectionPanel.onClick = [this] { commands.invokeDirectly (cmdSetSelection, true); };
 
     addAndMakeVisible (outputLabel);
@@ -1535,7 +1535,7 @@ void MainComponent::resized()
         toolbar.removeFromLeft (6);
         backToClipButton.setBounds (toolbar.removeFromLeft (100).reduced (0, 2));
     }
-    audioButton.setBounds (toolbar.removeFromRight (124).reduced (0, 2));
+    settingsButton.setBounds (toolbar.removeFromRight (124).reduced (0, 2));
     toolbar.removeFromRight (6);
     pluginsButton.setBounds (toolbar.removeFromRight (96).reduced (0, 2));
 
@@ -2558,7 +2558,7 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
 
         case cmdPlugins:    info.setInfo ("Plug-ins...", "Scan and manage plug-ins", "Window", 0); break;
         case cmdKeyShortcuts: info.setInfo ("Keyboard Shortcuts...", "See and change the keys for every command", "Window", 0); break;
-        case cmdAudioSettings: info.setInfo ("Audio Settings...", "Choose the audio interface (the Audio page of Settings)", "Window", 0); break;
+        case cmdAudioSettings: info.setInfo ("Audio Interface...", "Choose the audio interface (the Audio page of Settings)", "Window", 0); break;
         case cmdSettings:   info.setInfo ("Settings...", "Every setting of the app in one place: look, editing, playback, multitrack, recording, audio, plug-ins and keys", "File", 0);
                             info.addDefaultKeypress (',', cmd); break;
         case cmdSaveRack:   info.setInfo ("Save Rack...", "Save the effects rack", "Window", 0); break;
@@ -5850,7 +5850,7 @@ void MainComponent::startMidiLearn (const MidiBinding::Target& target, const juc
         return;
 
     midiLearn->learn (target);
-    showNote ("MIDI Learn", "Move a knob, fader or button on your controller (an input turned on in Audio Settings...): it will move " + what + ".");
+    showNote ("MIDI Learn", "Move a knob, fader or button on your controller (an input turned on in Settings > Audio): it will move " + what + ".");
 }
 
 void MainComponent::showControlSurfaceDialog()
@@ -14271,7 +14271,7 @@ void MainComponent::startRecording()
     else if (! juce::exactlyEqual (doc.getSampleRate(), deviceRate))
     {
         showError ("Record", "This file is " + juce::String (doc.getSampleRate()) + " Hz but the interface runs at "
-                               + juce::String (deviceRate) + " Hz. Set the interface to the file's rate in Audio Settings, "
+                               + juce::String (deviceRate) + " Hz. Set the interface to the file's rate in Settings > Audio, "
                                "or convert the file to " + juce::String (deviceRate) + " Hz (Edit > Convert Sample Rate).");
         return;
     }
@@ -14401,7 +14401,7 @@ void MainComponent::startSessionRecording()
     if (rateDiffers && session.getState()->getLength() > 0)
     {
         showError ("Record", "This session is " + juce::String (session.getSampleRate()) + " Hz but the interface runs at "
-                               + juce::String (deviceRate) + " Hz. Set the interface to the session's rate in Audio Settings.");
+                               + juce::String (deviceRate) + " Hz. Set the interface to the session's rate in Settings > Audio.");
         return;
     }
 

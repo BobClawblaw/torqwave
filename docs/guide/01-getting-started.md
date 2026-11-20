@@ -34,7 +34,7 @@ Some file types and the Video panel need [ffmpeg](https://ffmpeg.org) installed.
 
 Two things to do once:
 
-1. **Choose your audio interface.** Click **Audio Settings...** at the top right of the window. Pick the device, its outputs and inputs, the sample rate and the buffer size. MIDI inputs, for playing instruments from a keyboard, are turned on here too.
+1. **Choose your audio interface.** Click **Settings...** at the top right of the window and choose **Audio**. Pick the device, its outputs and inputs, the sample rate and the buffer size. MIDI inputs, for playing instruments from a keyboard, are turned on here too.
 2. **Scan your plug-ins** (if you use VST3, LV2, or Audio Units on the Mac). Click **Plug-ins...** and **Scan for Plug-ins**. The scan runs in the background and the window shows how far it has got. A big collection takes a while the first time. Each plug-in is tried in a separate worker, so one that crashes or hangs is marked as not working and Torqwave keeps running.
 
 If you used Torqwave under its old name, SpectraBlade, your settings, presets and Sound Library are copied across the first time it starts.
@@ -48,7 +48,7 @@ From the top:
 - **The toolbar.**
   - On the left is the **Editor | Multitrack** switch. It moves between the file you are editing and the multitrack session, and the side in use is lit.
   - In the middle is the **transport**: Go to Start, Play, Stop, Record, Loop, Go to End. Next to it is the time of the playhead, and then the zoom buttons: Zoom In, Zoom Out, Zoom to Selection and Zoom to Fit. Hold the mouse over a button to see its key.
-  - On the right are **Plug-ins...** and **Audio Settings...**.
+  - On the right are **Plug-ins...** and **Settings...** (every setting of the app: audio, look, editing, AI and the rest).
 - **The panels.** Everything else is a panel docked around the editor: Files, Effects Rack, Undo History, Selection/View, Levels and more.
   - Each panel has a tab. Close a panel with the × on its tab, and bring it back from the **Window** menu.
 - **The editor**, in the middle.

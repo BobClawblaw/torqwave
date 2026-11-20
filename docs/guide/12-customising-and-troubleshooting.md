@@ -80,7 +80,7 @@ See [the window](01-getting-started.md#the-window): docking, tabs, floating pane
 
 ### No sound
 
-1. Check **Audio Settings...**: the right device and outputs, and a sample rate the device supports.
+1. Check **Settings... > Audio**: the right device and outputs, and a sample rate the device supports.
 2. Check **Output** at the bottom of the window.
 3. Look for an effect in the rack, or on a track, that is silencing the sound. Bypass each in turn.
 4. In a session, check for mute or solo. **Multitrack > Tracks > Unsolo All** and **Unmute All** clear them all.
@@ -89,13 +89,13 @@ See [the window](01-getting-started.md#the-window): docking, tabs, floating pane
 
 The bottom right of the window counts **dropouts**: times the computer couldn't keep up with the audio.
 
-- Raise the buffer size in Audio Settings.
+- Raise the buffer size in Settings > Audio.
 - Freeze heavy tracks (**Multitrack > Render and Export > Freeze Track**).
 - Close other heavy apps.
 
 ### Recording says the rates don't match
 
-A recording must run at the file's or session's sample rate. Set the interface to that rate in Audio Settings, or convert the file with **Edit > Convert Sample Rate...**. See [Recording](08-recording.md#before-you-start).
+A recording must run at the file's or session's sample rate. Set the interface to that rate in Settings > Audio, or convert the file with **Edit > Convert Sample Rate...**. See [Recording](08-recording.md#before-you-start).
 
 ### "Choose an input to record from first"
 

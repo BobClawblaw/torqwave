@@ -6,10 +6,10 @@ Torqwave records into a file in the editor, or onto tracks in a session.
 
 ## Before you start
 
-1. **Choose the interface** in **Audio Settings...**, and choose the **Input** at the bottom of the window.
+1. **Choose the interface** in **Settings... > Audio**, and choose the **Input** at the bottom of the window.
    - On the Mac, macOS asks for microphone access the first time you do this.
 2. **Match the sample rate.** A recording has to run at the rate of the file or session it goes into.
-   - If the file or session is at another rate, Torqwave says so. Set the interface to that rate in Audio Settings, or convert the file (Edit > Convert Sample Rate...).
+   - If the file or session is at another rate, Torqwave says so. Set the interface to that rate in Settings > Audio, or convert the file (Edit > Convert Sample Rate...).
    - A new, empty file or session simply takes the interface's rate.
 3. **Set the pre-roll and post-roll:** how long playback runs before a punch-in and after a punch-out. Use **Transport > Recording Options...**, or the Recording page of **File > Settings...**.
 
