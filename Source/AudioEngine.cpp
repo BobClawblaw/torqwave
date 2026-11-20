@@ -411,8 +411,84 @@ void SessionSource::getNextAudioBlock (const juce::AudioSourceChannelInfo& info)
         return;
     }
 
+    if (playChain (info))
+        return;
+
     renderRun (start, info, info.startSample, info.numSamples);
     position = nextFrame = start + info.numSamples;
+}
+
+bool SessionSource::playChain (const juce::AudioSourceChannelInfo& info)
+{
+    const auto& s = *state;
+    auto start = position.load();
+
+    if (! s.playArrangement || s.arrangement.empty())
+    {
+        chainEntry = -1;
+        return false;
+    }
+
+    // After a jump, the first entry whose section holds the play position, if any.
+    if (start != nextFrame)
+    {
+        chainEntry = -1;
+        chainDone = false;
+    }
+
+    const auto sectionOf = [&s] (int entry) -> const ArrangerSection*
+    {
+        return juce::isPositiveAndBelow (entry, (int) s.arrangement.size()) ? s.findSection (s.arrangement[(size_t) entry]) : nullptr;
+    };
+
+    if (const auto* now = sectionOf (chainEntry); now == nullptr || start < now->start || start >= now->getEnd())
+    {
+        chainEntry = -1;
+
+        for (int i = 0; i < (int) s.arrangement.size() && ! chainDone; ++i)
+            if (const auto* sec = sectionOf (i); sec != nullptr && start >= sec->start && start < sec->getEnd())
+            {
+                chainEntry = i;
+                break;
+            }
+    }
+
+    if (chainEntry < 0)
+        return false;
+
+    // Up to the section's end, then on to the next entry's start, as often as the block needs;
+    // past the last entry, on through the session.
+    for (int done = 0; done < info.numSamples;)
+    {
+        const auto* sec = sectionOf (chainEntry);
+        const auto n = sec != nullptr ? (int) juce::jmin ((juce::int64) (info.numSamples - done), sec->getEnd() - start)
+                                      : info.numSamples - done;
+        renderRun (start, info, info.startSample + done, n);
+        done += n;
+        start += n;
+
+        if (sec != nullptr && start >= sec->getEnd())
+        {
+            // The next entry whose section is there (a removed one is skipped).
+            const auto* next = sectionOf (++chainEntry);
+
+            while (next == nullptr && chainEntry < (int) s.arrangement.size())
+                next = sectionOf (++chainEntry);
+
+            if (next != nullptr)
+            {
+                start = next->start;
+            }
+            else
+            {
+                chainEntry = -1;
+                chainDone = true;
+            }
+        }
+    }
+
+    position = nextFrame = start;
+    return true;
 }
 
 void SessionSource::renderRun (juce::int64 start, const juce::AudioSourceChannelInfo& info, int destStart, int numFrames)

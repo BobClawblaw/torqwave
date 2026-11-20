@@ -87,6 +87,12 @@ namespace Ai
         juce::var trimClip (const juce::var&);
         juce::var splitClip (const juce::var&);
         juce::var compTakes (const juce::var&);
+        juce::var addSection (const juce::var&);
+        juce::var moveSection (const juce::var&);
+        juce::var deleteSection (const juce::var&);
+        juce::var changeSectionBars (const juce::var&);
+        juce::var setArrangement (const juce::var&);
+        std::optional<juce::uint32> sectionOf (const juce::var& which, juce::String& error) const;
         juce::var setClip (const juce::var&);
         juce::var removeClip (const juce::var&);
         juce::var addMarker (const juce::var&);

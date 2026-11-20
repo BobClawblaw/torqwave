@@ -740,6 +740,60 @@ namespace
                "Ask Torq sessions: comp_takes with no range plays the take throughout; two steps");
     }
 
+    void testSessionSections()
+    {
+        // Four bars of 2 s at 120 BPM: an Intro (bars 1-2) and a Chorus (bars 3-4) with a clip in it.
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.tempo = 120.0;
+        SessionEdits::addClip (s, 0, juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("hook.wav"), tone (48000.0, 4), 4 * 48000);
+        s.tracks[0].name = "Hook";
+        Ai::Workspace::Start start;
+        start.session = s;
+        start.sessionName = "Song";
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+        const auto& state = *w.getSession();
+        constexpr juce::int64 bar = 2 * 48000;
+
+        const auto intro = call ("add_section", R"({"name": "Intro", "start": 0, "end": 4})");
+        const auto chorus = call ("add_section", R"({"name": "Chorus", "start": 4, "end": 8})");
+        const auto overlap = call ("add_section", R"({"name": "Bridge", "start": 6, "end": 10})");
+        const auto session = call ("get_session", "{}");
+        check ((bool) intro["ok"] && (bool) chorus["ok"] && ! (bool) overlap["ok"] && state.sections.size() == 2
+                   && session["sections"][1]["name"] == juce::var ("Chorus") && juce::exactlyEqual ((double) session["sections"][1]["end"], 8.0),
+               "Ask Torq sessions: add_section adds sections, refuses an overlap, and get_session lists them");
+
+        // Double the chorus: a copy at its own end, carrying the clip.
+        const auto doubled = call ("move_section", R"({"section": "chorus", "to": 8, "copy": true})");
+        check ((bool) doubled["ok"] && state.sections.size() == 3 && state.sections[2].start == 4 * bar && state.sections[2].length == 2 * bar
+                   && state.tracks[0].clips.size() == 2 && state.tracks[0].clips[1].position == 4 * bar,
+               "Ask Torq sessions: move_section with copy doubles the chorus, its clip with it");
+
+        // The intro two bars longer at its start, then one bar shorter at its end.
+        const auto longer = call ("change_section_bars", R"({"section": "Intro", "bars": 2, "at": "start"})");
+        check ((bool) longer["ok"] && state.sections[0].start == 0 && state.sections[0].length == 4 * bar && state.sections[1].start == 4 * bar
+                   && state.tracks[0].clips[0].position == 4 * bar,
+               "Ask Torq sessions: change_section_bars puts empty bars in at a section's start, and it takes them in");
+
+        const auto shorter = call ("change_section_bars", R"({"section": "Intro", "bars": -1, "at": "end"})");
+        const auto tooMany = call ("change_section_bars", R"({"section": "Intro", "bars": -3})");
+        check ((bool) shorter["ok"] && ! (bool) tooMany["ok"] && state.sections[0].length == 3 * bar && state.sections[1].start == 3 * bar
+                   && state.tracks[0].clips[0].position == 3 * bar,
+               "Ask Torq sessions: change_section_bars takes bars out of a section's end and closes up; not every bar of it");
+
+        const auto chain = call ("set_arrangement", R"({"sections": ["Intro", "Chorus", "Intro"], "play": true})");
+        const auto unknown = call ("set_arrangement", R"({"sections": ["Outro"]})");
+        check ((bool) chain["ok"] && ! (bool) unknown["ok"] && state.arrangement.size() == 3 && state.playArrangement
+                   && call ("get_session", "{}")["arrangement"].toString().startsWith ("Intro, Chorus, Intro"),
+               "Ask Torq sessions: set_arrangement sets the chain by name and plays it; an unknown name refused");
+
+        const auto gone = call ("delete_section", R"({"section": "Intro"})");
+        check ((bool) gone["ok"] && state.sections.size() == 2 && state.sections[0].start == 0 && state.tracks[0].clips[0].position == 0
+                   && state.arrangement.size() == 1 && w.getSteps().size() == 7,
+               "Ask Torq sessions: delete_section deletes it with its time; each edit one step");
+    }
+
     void testSessionTools()
     {
         // A session of one audio track with a 4 s clip at 1 s, and a bus.
@@ -764,7 +818,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 24 && names.contains ("get_session") && names.contains ("comp_takes") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 29 && names.contains ("get_session") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -1121,6 +1175,7 @@ void runAiTests()
     testCatalogueTools();
     testSessionTools();
     testSessionComp();
+    testSessionSections();
     testSessionNotes();
     testInstrumentPresets();
     testCatalogueLearner();

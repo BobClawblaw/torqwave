@@ -366,6 +366,15 @@ public:
     /** Asks for a marker's new name; renaming is an undo step. */
     void renameMarker (int index);
 
+    /** The Arranger strip, under the marker lane: drag along it to draw a section, drag a
+        section to move it with everything in it (with Option, a copy), drag its edges to size
+        it, double-click it to rename it; right-click for the rest. Each change is an undo step. */
+    void renameSection (juce::uint32 id);
+    void addSectionFromRange();               // a section over the time range
+    bool isPlayingArrangement() const          { return shown().playArrangement; }
+    void setPlayArrangement (bool on);
+    bool flattenArrangement();
+
     /** Gives a marker (found by value) a palette colour, or -1 for the default, as an undo step
         ("Colour <name>"). False when it is gone or already has that colour. */
     bool setMarkerColour (const Marker&, int colour);
@@ -660,8 +669,8 @@ public:
     /** How much a clip's gain changes for each pixel it is Command-dragged. */
     static constexpr float clipGainPerPixel = 0.25f;
 
-    static constexpr int headerWidth = 220, timeRulerHeight = 24, markerLaneHeight = 16,
-                         rulerHeight = timeRulerHeight + markerLaneHeight, trackHeight = 104;
+    static constexpr int headerWidth = 220, timeRulerHeight = 24, markerLaneHeight = 16, arrangerHeight = 18,
+                         arrangerTop = timeRulerHeight + markerLaneHeight, rulerHeight = arrangerTop + arrangerHeight, trackHeight = 104;
 
 private:
     class TrackHeader;
@@ -669,7 +678,7 @@ private:
 
     enum class Drag { none, range, move, trimStart, trimEnd, fadeIn, fadeOut, envelopePoint, marker, clipGain, clipGainPoint, scrub,
                       stretchStart, stretchEnd, moveNotes, trimNotesStart, trimNotesEnd, stretchNotesStart, stretchNotesEnd, drawNotes, rubberBand, listWidth,
-                      loopNew, loopMove, loopStart, loopEnd, compTake };
+                      loopNew, loopMove, loopStart, loopEnd, compTake, sectionNew, sectionMove, sectionStart, sectionEnd };
 
     /** What a press at p in the loop strip does: a new loop, or moving the loop or one of its ends. */
     Drag loopDragAt (juce::Point<int> p) const;
@@ -783,6 +792,12 @@ private:
     void drawMarkers (juce::Graphics&, juce::Rectangle<int> area) const;
     void askForTrackNote (juce::uint32 trackId);
     void showMarkerMenu (int index);
+    juce::uint32 sectionAt (juce::Point<int>) const;
+    void drawArranger (juce::Graphics&, juce::Rectangle<int> area) const;
+    void showSectionMenu (juce::uint32 id);
+    juce::PopupMenu arrangerMenu();   // the strip's items: a section from the range, the chain, playing and flattening it
+    void askToInsertBars (juce::uint32 id);
+    bool editSession (const juce::String& description, const std::function<bool (SessionState&)>& edit);
     void drawClip (juce::Graphics&, int track, const SessionClip&) const;
     void selectTrack (int track);
     void scrollToTrack (int track);    // its lane in view
@@ -826,6 +841,9 @@ private:
     bool timeWithBars = false;
     std::optional<juce::Range<juce::int64>> loopPreview;   // the loop as a drag in the strip has it
     juce::int64 loopGrab = 0;                              // a moved loop: the frame grabbed, from its start
+    juce::uint32 dragSection = 0;                          // the section being moved or sized
+    std::optional<juce::Range<juce::int64>> sectionPreview;   // a section being drawn or sized, or where a moved one lands
+    bool sectionCopy = false;                              // a section drag with Option: a copy
     bool showClipGain = false;
     std::set<juce::uint32> takeLanesShown;   // tracks showing their take lanes
     int dragTake = 0;                        // the take being swiped into a comp

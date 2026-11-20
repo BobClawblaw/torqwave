@@ -664,6 +664,55 @@ namespace
         check (view.getSelectedClip() == plain, "take lanes: hidden, the track below moves back up");
     }
 
+    void testArrangerStrip (AudioEngine& engine)
+    {
+        SessionState initial;
+        initial.sampleRate = rate;
+        initial.addTrack();
+        SessionEdits::addClip (initial, 0, juce::File ("/tmp/a.wav"), silence (96000), 0);
+        engine.session.reset (initial, {});
+
+        MultitrackView view (engine);
+        view.setSize (MultitrackView::headerWidth + timelineWidth + 12, MultitrackView::rulerHeight + 2 * MultitrackView::trackHeight + 12);
+        view.zoomToFit();
+        view.setSnapping (false);
+        Mouse mouse { view };
+        Mouse::settle();
+
+        const auto framesPerPixel = rate * 10.0 * 1.05 / timelineWidth;
+        const auto x = [&] (juce::int64 frame) { return (float) MultitrackView::headerWidth + (float) ((double) frame / framesPerPixel); };
+        const auto stripY = (float) (MultitrackView::arrangerTop + MultitrackView::arrangerHeight / 2);
+        const auto near = [&] (juce::int64 a, juce::int64 b) { return std::abs (a - b) <= (juce::int64) framesPerPixel; };
+        const auto& sections = [&]() -> const std::vector<ArrangerSection>& { return engine.session.getState()->sections; };
+
+        mouse.drag ({ x (48000), stripY }, { x (144000), stripY });
+        check (sections().size() == 1 && near (sections()[0].start, 48000) && near (sections()[0].getEnd(), 144000) && engine.session.getUndoDescription() == "Add Section",
+               "arranger strip: a drag across an empty part of it draws a section, as one step");
+
+        const auto id = sections()[0].id;
+        const auto start = sections()[0].start, length = sections()[0].length;
+        mouse.drag ({ x (start + length / 2), stripY }, { x (start + length / 2 + 2 * length), stripY });
+        check (sections().size() == 1 && sections()[0].id == id && near (sections()[0].start, start + length) && sections()[0].length == length
+                   && engine.session.getUndoDescription() == "Move Section",
+               "arranger strip: dragging a section moves it; the gap it left closes");
+
+        const auto moved = sections()[0].start;
+        mouse.drag ({ x (moved + length / 2), stripY }, { x (moved + length / 2 + length + 4800), stripY }, juce::ModifierKeys::altModifier);
+        check (sections().size() == 2 && sections()[0].id == id && sections()[0].start == moved && near (sections()[1].start, moved + length + 4800)
+                   && engine.session.getUndoDescription() == "Copy Section",
+               "arranger strip: Alt-dragging a section copies it, and it stays");
+
+        const auto end = sections()[1].getEnd();
+        mouse.drag ({ x (end) - 2.0f, stripY }, { x (end + 48000), stripY });
+        check (sections().size() == 2 && near (sections()[1].getEnd(), end + 48000) && engine.session.getUndoDescription() == "Size Section",
+               "arranger strip: dragging a section's end edge sizes it");
+
+        engine.session.undo();
+        engine.session.undo();
+        engine.session.undo();
+        check (sections().size() == 1 && sections()[0].start == start, "arranger strip: each drag undoes on its own");
+    }
+
     void testSplitting (AudioEngine& engine)
     {
         SessionState initial;
@@ -904,6 +953,7 @@ void runMultitrackViewTests (AudioEngine& engine)
 {
     testRipple (engine);
     testTakeLanes (engine);
+    testArrangerStrip (engine);
     testSplitting (engine);
     testTrackTools (engine);
     testListWidth (engine);

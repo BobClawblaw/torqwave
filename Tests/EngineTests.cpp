@@ -94,6 +94,7 @@
 #include "EffectAutomationTests.h"
 #include "TrackRecordingTests.h"
 #include "CompTests.h"
+#include "ArrangerTests.h"
 #include "MetronomeTests.h"
 #include "MixerTests.h"
 #include "BounceTests.h"
@@ -791,6 +792,7 @@ int main (int argc, char* argv[])
         runEffectAutomationTests (engine.formatManager);
         runTrackRecordingTests (engine.formatManager);
         runCompTests (engine.formatManager);
+        runArrangerTests (engine.formatManager);
         runMetronomeTests (engine.formatManager);
         runMixerTests (engine);
         runBounceTests();

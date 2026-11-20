@@ -141,6 +141,24 @@ Select a time range with the Range tool (6), or drag along the marker lane under
 
 This is how you take out a verse, or repeat a chorus, in every track at once.
 
+When the edges fall on bar lines, these commands carry the tempo too: deleting bars takes their tempo and time-signature changes with them, and pasted bars bring theirs, with the tempo after them put back as it was. Time that isn't whole bars leaves the tempo alone.
+
+## The arranger: sections across every track
+
+The **Arranger** strip, under the marker lane, holds the song's sections (Intro, Verse, Chorus...) as named, coloured spans across every track. A section is a handle on everything in its time: clips, notes, automation, markers, and its tempo and time-signature changes when it is whole bars.
+
+- **Make a section:** drag along an empty part of the strip, or select a time range and choose **Multitrack > Arrange > Add Section from Range**. With snapping on, its ends go onto the grid. Sections can't overlap.
+- **Rename it:** double-click it, or right-click it and choose **Rename**. **Colour** is in the same menu.
+- **Move it:** drag it along the strip. Everything in its time moves with it: the gap it leaves closes, and room opens where it lands. Locked clips stay where they are. A clip across the section's edge is split there, and the part inside moves.
+- **Copy it:** Option-drag (Alt on Windows and Linux), or right-click it and choose **Duplicate**, which puts the copy straight after it ("double the chorus").
+- **Size it:** drag its start or end edge. This changes only the section, not what is in its time.
+- **Make it longer or shorter:** **Insert Bars Before...** puts empty bars in before it, at the tempo there, and moves the rest of the session later. **Delete Section and Its Time** takes it out with everything in it, and the rest moves back. **Remove from Arranger** drops only the section and leaves its time.
+- **The arrangement chain:** a play order for the sections, such as Intro, Verse, Chorus, Verse, Chorus, where a section can come more than once. Right-click a section and choose **Add to Chain**; the strip's menu (right-click an empty part) lists the chain, where you can take an entry out or clear it. The header beside the strip shows the chain.
+  - **Play Arrangement** (in the strip's menu and **Multitrack > Arrange**) makes playback follow the chain: at the end of each section it jumps to the next entry's. Play from inside a section in the chain to follow it from there (from its first entry); after the last entry, playback goes on through the session.
+  - **Flatten Arrangement** lays the session out in the chain's order, as one undo step: each entry becomes a copy of its section, one after another, and playback goes back to plain time.
+- Every section edit is one undo step, and the session file keeps the sections and the chain.
+- The loop stays where it is through these edits, as it does through undo: it isn't an edit of the session.
+
 ## Buses, sends and routing
 
 A **bus** mixes what is sent to it, through its own effects. A reverb bus is the classic use: send several tracks to one reverb, instead of putting a reverb on each.

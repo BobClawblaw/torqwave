@@ -189,6 +189,12 @@ SessionTrack& SessionState::addBus()
     return tracks.back();
 }
 
+const ArrangerSection* SessionState::findSection (juce::uint32 id) const
+{
+    const auto found = std::find_if (sections.begin(), sections.end(), [id] (auto& sec) { return sec.id == id; });
+    return found != sections.end() ? &*found : nullptr;
+}
+
 const SessionTrack* SessionState::findTrack (juce::uint32 trackId) const
 {
     for (auto& t : tracks)
@@ -2001,6 +2007,158 @@ namespace
         s.markers = std::move (next);
         return changed;
     }
+
+    /** The sections once [start, end) is replaced by `length` frames: those after it move, those
+        across it are cut or stretched, those inside a removed span go. */
+    bool changeSections (SessionState& s, juce::int64 start, juce::int64 end, juce::int64 length)
+    {
+        const auto removed = end - start;
+        auto changed = false;
+        std::vector<ArrangerSection> kept;
+
+        for (auto sec : s.sections)
+        {
+            const auto a = sec.start < start ? sec.start : sec.start < end ? start : sec.start - removed + length;
+            const auto b = sec.getEnd() <= start ? sec.getEnd() : sec.getEnd() <= end ? start : sec.getEnd() - removed + length;
+            changed = changed || a != sec.start || b != sec.getEnd();
+
+            if (b > a)
+            {
+                sec.start = a;
+                sec.length = b - a;
+                kept.push_back (std::move (sec));
+            }
+            else
+            {
+                // Its time is gone, so it leaves the arrangement chain too.
+                s.arrangement.erase (std::remove (s.arrangement.begin(), s.arrangement.end(), sec.id), s.arrangement.end());
+                s.playArrangement = s.playArrangement && ! s.arrangement.empty();
+            }
+        }
+
+        s.sections = std::move (kept);
+        return changed;
+    }
+
+    /** The bar starting at frame, if one does. */
+    std::optional<juce::int64> barStarting (const SessionState& s, juce::int64 frame)
+    {
+        const auto map = s.tempoMap();
+        const auto bar = map.barAt (frame);
+        return map.barFrame (bar) == frame ? std::optional<juce::int64> (bar) : std::nullopt;
+    }
+
+    /** The tempo and time signature a bar plays at, as a change at that bar. */
+    Metronome::TempoChange tempoInEffect (const SessionState& s, juce::int64 bar)
+    {
+        Metronome::TempoChange now { bar, s.tempo, s.beatsPerBar };
+
+        for (auto& c : s.tempoChanges)
+            if (c.bar <= bar)
+                now = { bar, c.tempo, c.beatsPerBar };
+
+        return now;
+    }
+
+    /** The tempo changes sorted, one a bar (the last given for it), one at bar 0 or before made
+        the session's own, and none that changes nothing. */
+    void tidyTempo (SessionState& s)
+    {
+        auto& changes = s.tempoChanges;
+        std::stable_sort (changes.begin(), changes.end(), [] (auto& a, auto& b) { return a.bar < b.bar; });
+        std::vector<Metronome::TempoChange> tidy;
+
+        for (auto& c : changes)
+        {
+            if (c.bar <= 0)
+            {
+                s.tempo = c.tempo;
+                s.beatsPerBar = c.beatsPerBar;
+                continue;
+            }
+
+            if (! tidy.empty() && tidy.back().bar == c.bar)
+                tidy.back() = c;
+            else
+                tidy.push_back (c);
+        }
+
+        changes.clear();
+        auto tempo = s.tempo;
+        auto beats = s.beatsPerBar;
+
+        for (auto& c : tidy)
+        {
+            if (juce::exactlyEqual (c.tempo, tempo) && c.beatsPerBar == beats)
+                continue;
+
+            changes.push_back (c);
+            tempo = c.tempo;
+            beats = c.beatsPerBar;
+        }
+    }
+
+    /** Time put in at a bar's start, whole bars at the tempo there: the tempo changes from that
+        bar on move later by as many bars, the new bars playing at that tempo. */
+    bool tempoAfterInsert (SessionState& s, juce::int64 at, juce::int64 length)
+    {
+        const auto bar = barStarting (s, at);
+
+        if (! bar.has_value())
+            return false;
+
+        const auto now = tempoInEffect (s, *bar);
+        const auto barLength = (double) now.beatsPerBar * 60.0 / now.tempo * s.sampleRate;
+        const auto bars = (juce::int64) std::llround ((double) length / barLength);
+
+        if (bars < 1 || std::abs ((double) bars * barLength - (double) length) > (double) (bars * now.beatsPerBar))
+            return false;
+
+        const auto before = s.tempoChanges;
+
+        for (auto& c : s.tempoChanges)
+            if (c.bar >= *bar)
+                c.bar += bars;
+
+        s.tempoChanges.push_back (now);
+        tidyTempo (s);
+        return s.tempoChanges != before;
+    }
+
+    /** Time from a bar's start to a later bar's start taken out: the changes in it go, those
+        after it move back by as many bars, and the bar at its start plays as the one at its end did. */
+    bool tempoAfterDelete (SessionState& s, juce::int64 start, juce::int64 end)
+    {
+        const auto first = barStarting (s, start), last = barStarting (s, end);
+
+        if (! first.has_value() || ! last.has_value() || *last <= *first)
+            return false;
+
+        const auto after = tempoInEffect (s, *last);
+        const auto before = s.tempoChanges;
+        const auto tempo = s.tempo;
+        const auto beats = s.beatsPerBar;
+        std::vector<Metronome::TempoChange> kept;
+
+        for (auto c : s.tempoChanges)
+        {
+            if (c.bar >= *first && c.bar < *last)
+                continue;
+
+            if (c.bar >= *last)
+                c.bar -= *last - *first;
+
+            kept.push_back (c);
+        }
+
+        s.tempoChanges = std::move (kept);
+        s.tempoChanges.push_back ({ *first, after.tempo, after.beatsPerBar });
+
+        // Kept in order, so a change moved onto that bar (from the deleted span's end) wins.
+        std::stable_sort (s.tempoChanges.begin(), s.tempoChanges.end(), [] (auto& a, auto& b) { return a.bar < b.bar; });
+        tidyTempo (s);
+        return s.tempoChanges != before || ! juce::exactlyEqual (s.tempo, tempo) || s.beatsPerBar != beats;
+    }
 }
 
 bool deleteTime (SessionState& s, juce::int64 start, juce::int64 end)
@@ -2028,6 +2186,8 @@ bool deleteTime (SessionState& s, juce::int64 start, juce::int64 end)
             }
 
     changed = changeEnvelopes (s, [=] (const Envelope& e) { return withoutTime (e, start, end); }) || changed;
+    changed = changeSections (s, start, end, 0) || changed;
+    changed = tempoAfterDelete (s, start, end) || changed;
     return changeMarkers (s, MarkerEdits::afterReplace (s.markers, start, end, 0)) || changed;
 }
 
@@ -2196,7 +2356,24 @@ namespace
 bool bringClipsToFront (SessionState& s, const std::vector<juce::uint32>& ids)   { return restack (s, ids, true); }
 bool sendClipsToBack (SessionState& s, const std::vector<juce::uint32>& ids)     { return restack (s, ids, false); }
 
+namespace
+{
+    bool insertTimeKeepingTempo (SessionState& s, juce::int64 at, juce::int64 length);
+}
+
 bool insertTime (SessionState& s, juce::int64 at, juce::int64 length)
+{
+    if (at < 0 || length <= 0)
+        return false;
+
+    // The tempo first: whether the time is whole bars depends on the tempo at `at` as it was.
+    const auto tempo = tempoAfterInsert (s, at, length);
+    return insertTimeKeepingTempo (s, at, length) || tempo;
+}
+
+namespace
+{
+bool insertTimeKeepingTempo (SessionState& s, juce::int64 at, juce::int64 length)
 {
     if (at < 0 || length <= 0)
         return false;
@@ -2240,7 +2417,9 @@ bool insertTime (SessionState& s, juce::int64 at, juce::int64 length)
             }
 
     changed = changeEnvelopes (s, [=] (const Envelope& e) { return withTime (e, at, length); }) || changed;
+    changed = changeSections (s, at, at, length) || changed;
     return changeMarkers (s, MarkerEdits::afterReplace (s.markers, at, at, length)) || changed;
+}
 }
 
 namespace
@@ -2283,6 +2462,32 @@ SessionTime copyTime (const SessionState& s, juce::int64 start, juce::int64 end)
     t.length = end - start;
     t.sampleRate = s.sampleRate;
     t.markers = MarkerEdits::afterCrop (s.markers, start, end);
+
+    for (auto sec : s.sections)
+    {
+        const auto from = juce::jmax (sec.start, start), to = juce::jmin (sec.getEnd(), end);
+
+        if (from < to)
+        {
+            sec.start = from - start;
+            sec.length = to - from;
+            t.sections.push_back (std::move (sec));
+        }
+    }
+
+    // Whole bars: their tempo and time signature.
+    const auto first = barStarting (s, start), last = barStarting (s, end);
+
+    if (first.has_value() && last.has_value() && *last > *first)
+    {
+        t.bars = *last - *first;
+        t.tempo.push_back (tempoInEffect (s, *first));
+        t.tempo.back().bar = 0;
+
+        for (auto c : s.tempoChanges)
+            if (c.bar > *first && c.bar < *last)
+                t.tempo.push_back ({ c.bar - *first, c.tempo, c.beatsPerBar });
+    }
 
     for (auto& track : s.tracks)
     {
@@ -2337,7 +2542,61 @@ bool pasteTime (SessionState& s, const SessionTime& t, juce::int64 at)
         return false;
 
     const auto before = s.tracks;
-    insertTime (s, at, t.length);
+    const auto bar = barStarting (s, at);
+    const auto withTempo = t.bars > 0 && ! t.tempo.empty() && bar.has_value();
+    const auto after = withTempo ? tempoInEffect (s, *bar) : Metronome::TempoChange();
+
+    if (withTempo)
+        insertTimeKeepingTempo (s, at, t.length);
+    else
+        insertTime (s, at, t.length);
+
+    // The copy's bars bring their tempo; after them the session plays on as it did at `at`.
+    if (withTempo)
+    {
+        for (auto& c : s.tempoChanges)
+            if (c.bar >= *bar)
+                c.bar += t.bars;
+
+        for (auto& c : t.tempo)
+            s.tempoChanges.push_back ({ *bar + c.bar, c.tempo, c.beatsPerBar });
+
+        s.tempoChanges.push_back ({ *bar + t.bars, after.tempo, after.beatsPerBar });
+        tidyTempo (s);
+    }
+
+    // The copy's sections, cutting any section the new time went into.
+    if (! t.sections.empty())
+    {
+        std::vector<ArrangerSection> sections;
+
+        for (auto& sec : s.sections)
+        {
+            if (sec.start < at && sec.getEnd() > at + t.length)
+            {
+                auto later = sec;
+                later.id = s.nextId++;
+                later.start = at + t.length;
+                later.length = sec.getEnd() - later.start;
+                sections.push_back ({ sec.id, sec.name, sec.start, at - sec.start, sec.colour });
+                sections.push_back (later);
+            }
+            else
+            {
+                sections.push_back (sec);
+            }
+        }
+
+        for (auto sec : t.sections)
+        {
+            sec.id = s.nextId++;
+            sec.start += at;
+            sections.push_back (sec);
+        }
+
+        std::stable_sort (sections.begin(), sections.end(), [] (auto& a, auto& b) { return a.start < b.start; });
+        s.sections = std::move (sections);
+    }
 
     for (size_t i = 0; i < juce::jmin (s.tracks.size(), t.tracks.size()); ++i)
     {
@@ -2388,6 +2647,237 @@ bool pasteTime (SessionState& s, const SessionTime& t, juce::int64 at)
     }
 
     MarkerEdits::sort (s.markers);
+    return true;
+}
+
+namespace
+{
+    ArrangerSection* findSection (SessionState& s, juce::uint32 id)
+    {
+        const auto found = std::find_if (s.sections.begin(), s.sections.end(), [id] (auto& sec) { return sec.id == id; });
+        return found != s.sections.end() ? &*found : nullptr;
+    }
+
+    bool overlapsOther (const SessionState& s, juce::uint32 id, juce::int64 start, juce::int64 end)
+    {
+        return std::any_of (s.sections.begin(), s.sections.end(), [=] (auto& sec) { return sec.id != id && sec.start < end && start < sec.getEnd(); });
+    }
+
+    void sortSections (SessionState& s)
+    {
+        std::stable_sort (s.sections.begin(), s.sections.end(), [] (auto& a, auto& b) { return a.start < b.start; });
+    }
+}
+
+juce::uint32 addSection (SessionState& s, juce::int64 start, juce::int64 end, const juce::String& name)
+{
+    if (start < 0 || end <= start || overlapsOther (s, 0, start, end))
+        return 0;
+
+    ArrangerSection sec;
+    sec.id = s.nextId++;
+    sec.name = name.trim().isNotEmpty() ? name.trim() : "Section " + juce::String ((int) s.sections.size() + 1);
+    sec.start = start;
+    sec.length = end - start;
+    s.sections.push_back (sec);
+    sortSections (s);
+    return sec.id;
+}
+
+bool renameSection (SessionState& s, juce::uint32 id, const juce::String& name)
+{
+    auto* sec = findSection (s, id);
+
+    if (sec == nullptr || name.trim().isEmpty() || sec->name == name.trim())
+        return false;
+
+    sec->name = name.trim();
+    return true;
+}
+
+bool setSectionColour (SessionState& s, juce::uint32 id, int colour)
+{
+    auto* sec = findSection (s, id);
+    colour = juce::isPositiveAndBelow (colour, (int) TrackColours::palette.size()) ? colour : -1;
+
+    if (sec == nullptr || sec->colour == colour)
+        return false;
+
+    sec->colour = colour;
+    return true;
+}
+
+bool resizeSection (SessionState& s, juce::uint32 id, juce::int64 start, juce::int64 end)
+{
+    auto* sec = findSection (s, id);
+
+    if (sec == nullptr || start < 0 || end <= start || overlapsOther (s, id, start, end) || (sec->start == start && sec->getEnd() == end))
+        return false;
+
+    sec->start = start;
+    sec->length = end - start;
+    sortSections (s);
+    return true;
+}
+
+bool removeSection (SessionState& s, juce::uint32 id)
+{
+    if (findSection (s, id) == nullptr)
+        return false;
+
+    s.sections.erase (std::remove_if (s.sections.begin(), s.sections.end(), [id] (auto& sec) { return sec.id == id; }), s.sections.end());
+    s.arrangement.erase (std::remove (s.arrangement.begin(), s.arrangement.end(), id), s.arrangement.end());
+    return true;
+}
+
+bool moveSection (SessionState& s, juce::uint32 id, juce::int64 to, bool copy)
+{
+    const auto* found = findSection (s, id);
+
+    if (found == nullptr || to < 0 || (to > found->start && to < found->getEnd()) || (! copy && (to == found->start || to == found->getEnd())))
+        return false;
+
+    const auto sec = *found;
+    auto time = copyTime (s, sec.start, sec.getEnd());
+    const auto chain = s.arrangement;
+    const auto playing = s.playArrangement;
+
+    if (! copy)
+    {
+        // Locked clips stay where they are, so they aren't carried.
+        for (auto& track : time.tracks)
+            track.clips.erase (std::remove_if (track.clips.begin(), track.clips.end(), [&s] (auto& c)
+            {
+                const auto where = s.findClip (c.id);
+                return where.has_value() && s.tracks[(size_t) where->first].clips[(size_t) where->second].locked;
+            }), track.clips.end());
+
+        deleteTime (s, sec.start, sec.getEnd());
+
+        if (to >= sec.getEnd())
+            to -= sec.length;
+    }
+
+    const auto firstNew = s.nextId;
+
+    if (! pasteTime (s, time, to))
+        return false;
+
+    if (copy)
+        return true;
+
+    // Moved clips keep their ids where they moved whole (the part of a clip across the
+    // section's edge is a new clip): each pasted clip is found by its place.
+    for (size_t i = 0; i < juce::jmin (s.tracks.size(), time.tracks.size()); ++i)
+    {
+        auto& track = s.tracks[i];
+
+        for (auto& moved : time.tracks[i].clips)
+            if (! s.findClip (moved.id).has_value())
+                for (auto& c : track.clips)
+                    if (c.id >= firstNew && c.position == moved.position + to && c.length == moved.length && c.offset == moved.offset)
+                    {
+                        c.id = moved.id;
+                        break;
+                    }
+
+        for (auto& moved : time.tracks[i].noteClips)
+            if (! s.findNoteClip (moved.id).has_value())
+                for (auto& c : track.noteClips)
+                    if (c.id >= firstNew && c.position == moved.position + to && c.length == moved.length)
+                    {
+                        c.id = moved.id;
+                        break;
+                    }
+    }
+
+    // A moved section keeps its id, so the chain (which deleting its time dropped it from) still names it.
+    s.arrangement = chain;
+    s.playArrangement = playing;
+
+    if (! copy)
+        for (auto& placed : s.sections)
+            if (placed.start == to && placed.length == sec.length && placed.name == sec.name && placed.id > sec.id)
+            {
+                placed.id = sec.id;
+                break;
+            }
+
+    return true;
+}
+
+bool deleteSection (SessionState& s, juce::uint32 id)
+{
+    const auto* sec = findSection (s, id);
+    return sec != nullptr && deleteTime (s, sec->start, sec->getEnd());
+}
+
+juce::int64 insertBars (SessionState& s, juce::int64 at, int bars)
+{
+    if (at < 0 || bars < 1)
+        return 0;
+
+    const auto now = tempoInEffect (s, s.tempoMap().barAt (at));
+    const auto length = (juce::int64) std::llround ((double) bars * (double) now.beatsPerBar * 60.0 / now.tempo * s.sampleRate);
+    return insertTime (s, at, length) ? length : 0;
+}
+
+bool insertBarsBefore (SessionState& s, juce::uint32 id, int bars)
+{
+    const auto* sec = findSection (s, id);
+    return sec != nullptr && insertBars (s, sec->start, bars) > 0;
+}
+
+bool setArrangement (SessionState& s, std::vector<juce::uint32> chain)
+{
+    chain.erase (std::remove_if (chain.begin(), chain.end(), [&s] (auto id) { return s.findSection (id) == nullptr; }), chain.end());
+
+    if (chain == s.arrangement)
+        return false;
+
+    s.arrangement = std::move (chain);
+    return true;
+}
+
+bool setPlayArrangement (SessionState& s, bool on)
+{
+    if (s.playArrangement == on)
+        return false;
+
+    s.playArrangement = on;
+    return true;
+}
+
+bool flattenArrangement (SessionState& s)
+{
+    std::vector<SessionTime> parts;
+
+    for (auto id : s.arrangement)
+        if (const auto* sec = s.findSection (id))
+            parts.push_back (copyTime (s, sec->start, sec->getEnd()));
+
+    if (parts.empty() || s.sections.empty())
+        return false;
+
+    const auto from = s.sections.front().start, to = s.sections.back().getEnd();
+    deleteTime (s, from, to);
+    std::vector<juce::uint32> chain;
+    auto at = from;
+
+    for (auto& part : parts)
+    {
+        const auto before = s.nextId;
+        pasteTime (s, part, at);
+
+        for (auto& sec : s.sections)
+            if (sec.id >= before && sec.start == at)
+                chain.push_back (sec.id);
+
+        at += part.length;
+    }
+
+    s.arrangement = std::move (chain);
+    s.playArrangement = false;
     return true;
 }
 
@@ -4023,6 +4513,34 @@ juce::String save (const SessionState& state, const juce::File& target,
             marker->setAttribute ("colour", m.colour);
     }
 
+    // Sections, and the chain by their places in this list (ids are given out afresh on loading).
+    for (auto& sec : state.sections)
+    {
+        auto* section = root.createNewChildElement ("SECTION");
+        section->setAttribute ("name", sec.name);
+        section->setAttribute ("start", juce::String (sec.start));
+        section->setAttribute ("length", juce::String (sec.length));
+
+        if (sec.colour >= 0)
+            section->setAttribute ("colour", sec.colour);
+    }
+
+    juce::StringArray chain;
+
+    for (auto id : state.arrangement)
+        for (size_t i = 0; i < state.sections.size(); ++i)
+            if (state.sections[i].id == id)
+                chain.add (juce::String ((int) i));
+
+    if (! chain.isEmpty())
+    {
+        auto* arrangement = root.createNewChildElement ("ARRANGEMENT");
+        arrangement->setAttribute ("sections", chain.joinIntoString (","));
+
+        if (state.playArrangement)
+            arrangement->setAttribute ("play", true);
+    }
+
     juce::TemporaryFile temp (target);
 
     if (! root.writeTo (temp.getFile()))
@@ -4312,6 +4830,33 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
     }
 
     MarkerEdits::sort (state.markers);
+
+    // Sections, in order and not overlapping (one that would is dropped), and the chain.
+    for (auto* sectionXml : root->getChildWithTagNameIterator ("SECTION"))
+    {
+        const auto start = sectionXml->getStringAttribute ("start").getLargeIntValue();
+        const auto length = sectionXml->getStringAttribute ("length").getLargeIntValue();
+
+        if (start < 0 || length <= 0 || (! state.sections.empty() && start < state.sections.back().getEnd()))
+        {
+            state.sections.push_back ({});   // keeps the places the chain counts by; removed below
+            continue;
+        }
+
+        state.sections.push_back ({ state.nextId++, sectionXml->getStringAttribute ("name"), start, length,
+                                    juce::jlimit (-1, (int) TrackColours::palette.size() - 1, sectionXml->getIntAttribute ("colour", -1)) });
+    }
+
+    if (const auto* arrangementXml = root->getChildByName ("ARRANGEMENT"))
+    {
+        for (auto& place : juce::StringArray::fromTokens (arrangementXml->getStringAttribute ("sections"), ",", {}))
+            if (const auto i = place.getIntValue(); juce::isPositiveAndBelow (i, (int) state.sections.size()) && state.sections[(size_t) i].id != 0)
+                state.arrangement.push_back (state.sections[(size_t) i].id);
+
+        state.playArrangement = arrangementXml->getBoolAttribute ("play") && ! state.arrangement.empty();
+    }
+
+    state.sections.erase (std::remove_if (state.sections.begin(), state.sections.end(), [] (auto& sec) { return sec.id == 0; }), state.sections.end());
 
     for (auto* changeXml : root->getChildWithTagNameIterator ("TEMPO"))
         SessionEdits::setTempoChange (state, { changeXml->getStringAttribute ("bar").getLargeIntValue(),

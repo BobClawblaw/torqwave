@@ -144,6 +144,8 @@ private:
     juce::int64 scrubFrom = 0, scrubTo = -1;    // scrubTo < scrubFrom: none, the effects to be primed
     const SessionState* scrubState = nullptr;   // the state it was rendered from
     juce::int64 nextFrame = -1;            // where the last block ended; anything else is a jump
+    int chainEntry = -1;                   // the arrangement chain's entry playing (audio thread), or -1
+    bool chainDone = false;                // played past the chain's last entry, until a jump
     std::atomic<juce::int64> position { 0 }, stopFrame { -1 }, loopStart { 0 }, loopEnd { 0 }, tail { 0 };
     std::atomic<int> surroundChannel { -1 };
 
@@ -153,6 +155,7 @@ private:
     juce::AudioBuffer<float> liveRing, liveBlock;
 
     void refreshState();
+    bool playChain (const juce::AudioSourceChannelInfo&);
     const SessionMixer::Live* takeLive (int numFrames, bool clips);
     void renderRun (juce::int64 start, const juce::AudioSourceChannelInfo&, int destStart, int numFrames);
 };

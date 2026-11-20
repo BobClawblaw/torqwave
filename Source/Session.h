@@ -478,6 +478,23 @@ struct SessionTrack
     }
 };
 
+/** A section of the arrangement (Intro, Verse, Chorus...): a named, coloured span of session
+    time on the Arranger strip, holding everything on every track in it. */
+struct ArrangerSection
+{
+    juce::uint32 id = 0;
+    juce::String name;
+    juce::int64 start = 0, length = 0;     // frames
+    int colour = -1;                       // a place in TrackColours::palette, or -1 for the strip's own
+
+    juce::int64 getEnd() const noexcept    { return start + length; }
+
+    bool operator== (const ArrangerSection& o) const noexcept
+    {
+        return id == o.id && name == o.name && start == o.start && length == o.length && colour == o.colour;
+    }
+};
+
 /** One state of a session. Copies share the clips' audio. */
 struct SessionState
 {
@@ -494,6 +511,18 @@ struct SessionState
     std::vector<SessionTrack> tracks;
     Markers markers;                       // points and regions on the session's time, kept sorted
     juce::uint32 nextId = 1;
+
+    /** The arrangement's sections, sorted by start, none overlapping (ids from nextId). Time
+        edits move and cut them as they do regions. */
+    std::vector<ArrangerSection> sections;
+
+    /** The arrangement chain: sections by id, in the order to play them (one may come more than
+        once). With playArrangement, playback goes from the end of each to the start of the
+        next, and past the last plays on. Flatten Arrangement makes it the session's own time. */
+    std::vector<juce::uint32> arrangement;
+    bool playArrangement = false;
+
+    const ArrangerSection* findSection (juce::uint32 id) const;
 
     /** The master is 5.1 (L R C LFE Ls Rs) rather than stereo: what goes to the mix is placed by
         each track's and bus's surroundPan. */
@@ -591,6 +620,13 @@ struct SessionTime
     double sampleRate = 0.0;
     std::vector<Track> tracks;                     // in the session's order, buses included
     Markers markers;
+    std::vector<ArrangerSection> sections;         // the parts of sections in it, from 0
+
+    /** When the time was whole bars, from a bar's start: how many, and their tempo and time
+        signature, the first (bar 0) what played at its start, the rest the changes in it, from
+        0. Pasted at a bar's start, they come too. 0 and empty otherwise. */
+    juce::int64 bars = 0;
+    std::vector<Metronome::TempoChange> tempo;
 };
 
 //==============================================================================
@@ -910,6 +946,49 @@ namespace SessionEdits
         the envelope holds its value, as insertTime does. False when the time is empty or at
         another sample rate. */
     bool pasteTime (SessionState&, const SessionTime&, juce::int64 at);
+
+    //==============================================================================
+    // The arranger. Section edits that move time (move, copy, delete, insert bars) do it as the
+    // time edits above do, everything on every track with them: clips, note clips, envelopes,
+    // markers, sections, and tempo and time-signature changes when the section is whole bars.
+
+    /** Adds a section over [start, end), named so (or "Section n" when empty); it must overlap
+        no other. Returns its id, or 0. */
+    juce::uint32 addSection (SessionState&, juce::int64 start, juce::int64 end, const juce::String& name = {});
+
+    /** Renames a section, or gives it a colour (-1: the strip's). False when it is so already. */
+    bool renameSection (SessionState&, juce::uint32 id, const juce::String& name);
+    bool setSectionColour (SessionState&, juce::uint32 id, int colour);
+
+    /** Moves a section's edges, leaving what is in the session where it is; it must not overlap
+        another. */
+    bool resizeSection (SessionState&, juce::uint32 id, juce::int64 start, juce::int64 end);
+
+    /** Takes a section off the strip, leaving what was in it. Its places in the chain go. */
+    bool removeSection (SessionState&, juce::uint32 id);
+
+    /** Moves (or, with copy, copies) a section and everything in it so that it starts at `to` in
+        the session as it will be: the time it leaves closes up (a move) and the time at `to`
+        opens for it. `to` may not be inside the section; locked clips in it stay where they are.
+        A copy is a new section after it in the list, named as the section. */
+    bool moveSection (SessionState&, juce::uint32 id, juce::int64 to, bool copy);
+
+    /** Takes a section and its time out of the session, closing the gap (deleteTime). */
+    bool deleteSection (SessionState&, juce::uint32 id);
+
+    /** Puts `bars` empty bars in at a frame, at the tempo there (insertTime): a section starting
+        there moves later; one ending there stays. Or before a section (at its start). */
+    juce::int64 insertBars (SessionState&, juce::int64 at, int bars);   ///< The frames put in, 0 if none.
+    bool insertBarsBefore (SessionState&, juce::uint32 id, int bars);
+
+    /** Sets the arrangement chain (unknown ids dropped), and whether playback follows it. */
+    bool setArrangement (SessionState&, std::vector<juce::uint32> chain);
+    bool setPlayArrangement (SessionState&, bool on);
+
+    /** Makes the chain the session's time: from the first section's start to the last one's end,
+        the time is replaced by each section of the chain in order, as pasteTime puts them; the
+        chain is then each new section once, and playing it off. False with no chain. */
+    bool flattenArrangement (SessionState&);
 
     /** Sends a track's or bus's output to a bus in place of the mix, or with busId 0 back to the
         mix. False for a folder, a destination that isn't a bus, a bus into itself or into a bus

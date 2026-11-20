@@ -20,6 +20,7 @@ namespace
     // Shared pieces of the tools' parameter schemas.
     const char* trackParam = R"("track": { "description": "The track, bus or folder: its number from get_session, or its name." })";
     const char* clipParam = R"("clip": { "type": "integer", "description": "The clip's id from list_clips." })";
+    const char* sectionParam = R"("section": { "description": "The section's name from get_session." })";
 
     const char* toolsJson = R"JSON([
   { "name": "get_session", "description": "The session: its length, tempo, markers and regions, and every track, bus and folder in order with its number, kind, folder, volume, pan, mute, solo, output, sends and how many clips it holds and over what time. Call this first.",
@@ -77,6 +78,18 @@ namespace
       "required": ["track", "parameter", "points"] } },
   { "name": "add_track_effect", "description": "Add an effect plug-in, by its id or name from list_plugins, at the end of a track's or bus's effects (after its instrument on an instrument track). It is added when the plan is applied, with the plug-in's default settings; its settings can't be changed here.",
     "parameters": { "type": "object", "properties": { "plugin": { "type": "string" }, TRACK }, "required": ["plugin", "track"] } },
+ { "name": "add_section", "description": "Add a section (Intro, Verse, Chorus...) to the arranger over a span of the session, in seconds; best on bar lines. Sections may not overlap.",
+    "parameters": { "type": "object", "properties": { "name": { "type": "string" }, "start": { "type": "number" }, "end": { "type": "number" } }, "required": ["name", "start", "end"] } },
+  { "name": "move_section", "description": "Move a section, with everything on every track in it (clips, notes, automation, markers, and its tempo when it is whole bars), so it starts at a time in seconds in the session as it will be: the gap it leaves closes, and room opens where it goes. With copy, a copy goes there and the section stays (\"double the chorus\": copy it to its own end).",
+    "parameters": { "type": "object", "properties": { SECTION, "to": { "type": "number" }, "copy": { "type": "boolean" } }, "required": ["section", "to"] } },
+  { "name": "delete_section", "description": "Delete a section and everything in its time; what comes after moves back to close the gap.",
+    "parameters": { "type": "object", "properties": { SECTION }, "required": ["section"] } },
+  { "name": "change_section_bars", "description": "Make a section longer or shorter by whole bars, at its start or its end: more bars put empty bars in (at the tempo there) and the rest of the session moves later; fewer take those bars and what is in them out, and the rest moves back.",
+    "parameters": { "type": "object", "properties": { SECTION, "bars": { "type": "integer", "description": "Bars to add (positive) or take away (negative)." },
+                    "at": { "type": "string", "enum": ["start", "end"] } }, "required": ["section", "bars"] } },
+  { "name": "set_arrangement", "description": "Set the arrangement chain: the sections in the order to play them (a section may come more than once), and whether playback follows it. An empty list clears it.",
+    "parameters": { "type": "object", "properties": { "sections": { "type": "array", "items": { "type": "string" }, "description": "Section names, in order." },
+                    "play": { "type": "boolean" } }, "required": ["sections"] } },
   { "name": "set_tempo", "description": "Set the session's tempo (20 to 400 beats a minute) and beats in a bar (1 to 16) from the start.",
     "parameters": { "type": "object", "properties": { "bpm": { "type": "number" }, "beats_per_bar": { "type": "integer" } }, "required": ["bpm"] } }
 ])JSON";
@@ -117,7 +130,7 @@ namespace Ai
 
     juce::Array<juce::var> SessionTools::toolDefinitions()
     {
-        const auto text = juce::String (toolsJson).replace ("TRACK", trackParam).replace ("CLIP", clipParam);
+        const auto text = juce::String (toolsJson).replace ("TRACK", trackParam).replace ("CLIP", clipParam).replace ("SECTION", sectionParam);
         juce::Array<juce::var> tools;
 
         const auto parsed = juce::JSON::parse (text);
@@ -126,7 +139,7 @@ namespace Ai
             for (auto& t : *list)
                 tools.add (object ({ { "type", "function" }, { "function", t } }));
 
-        jassert (tools.size() == 22);
+        jassert (tools.size() == 27);
         return tools;
     }
 
@@ -164,6 +177,11 @@ namespace Ai
         else if (tool == "split_clip")     result = splitClip (args);
         else if (tool == "set_clip")       result = setClip (args);
         else if (tool == "comp_takes")     result = compTakes (args);
+        else if (tool == "add_section")    result = addSection (args);
+        else if (tool == "move_section")   result = moveSection (args);
+        else if (tool == "delete_section") result = deleteSection (args);
+        else if (tool == "change_section_bars") result = changeSectionBars (args);
+        else if (tool == "set_arrangement") result = setArrangement (args);
         else if (tool == "remove_clip")    result = removeClip (args);
         else if (tool == "add_marker")     result = addMarker (args);
         else if (tool == "set_tempo")      result = setTempo (args);
@@ -349,8 +367,36 @@ namespace Ai
             markers.add (entry);
         }
 
-        return object ({ { "name", sessionName }, { "sample_rate", state.sampleRate }, { "length", seconds (state.getLength()).getDoubleValue() },
-                         { "tempo", state.tempo }, { "beats_per_bar", state.beatsPerBar }, { "tracks", tracks }, { "markers", markers } });
+        juce::Array<juce::var> sections, changes;
+        const auto map = state.tempoMap();
+
+        for (auto& sec : state.sections)
+            sections.add (object ({ { "name", sec.name }, { "start", seconds (sec.start).getDoubleValue() }, { "end", seconds (sec.getEnd()).getDoubleValue() },
+                                    { "bars", Metronome::lengthText (map, sec.start, sec.length) } }));
+
+        for (auto& c : state.tempoChanges)
+            changes.add (object ({ { "bar", (int) c.bar + 1 }, { "time", seconds (map.barFrame (c.bar)).getDoubleValue() }, { "tempo", c.tempo },
+                                   { "beats_per_bar", c.beatsPerBar } }));
+
+        juce::StringArray chain;
+
+        for (auto id : state.arrangement)
+            if (const auto* sec = state.findSection (id))
+                chain.add (sec->name);
+
+        auto result = object ({ { "name", sessionName }, { "sample_rate", state.sampleRate }, { "length", seconds (state.getLength()).getDoubleValue() },
+                                { "tempo", state.tempo }, { "beats_per_bar", state.beatsPerBar }, { "tracks", tracks }, { "markers", markers } });
+
+        if (! changes.isEmpty())
+            result.getDynamicObject()->setProperty ("tempo_changes", changes);
+
+        if (! sections.isEmpty())
+            result.getDynamicObject()->setProperty ("sections", sections);
+
+        if (! chain.isEmpty())
+            result.getDynamicObject()->setProperty ("arrangement", chain.joinIntoString (", ") + (state.playArrangement ? " (playback follows it)" : ""));
+
+        return result;
     }
 
     juce::var SessionTools::listClips (const juce::var& a)
@@ -777,6 +823,146 @@ namespace Ai
 
         return done ("Comp take " + juce::String (take + 1) + " of clip " + name.quoted() + " from " + seconds (juce::jmax (start, clip.position))
                      + " s to " + seconds (juce::jmin (end, clip.getEnd())) + " s");
+    }
+
+    std::optional<juce::uint32> SessionTools::sectionOf (const juce::var& which, juce::String& error) const
+    {
+        const auto name = which.toString().trim();
+
+        for (auto& sec : state.sections)
+            if (sec.name.equalsIgnoreCase (name))
+                return sec.id;
+
+        juce::StringArray names;
+
+        for (auto& sec : state.sections)
+            names.add (sec.name);
+
+        error = "no section named " + name.quoted() + (names.isEmpty() ? juce::String (" (there are none)") : " (there are " + names.joinIntoString (", ") + ")");
+        return std::nullopt;
+    }
+
+    juce::var SessionTools::addSection (const juce::var& a)
+    {
+        const auto start = frameOf (a["start"]), end = frameOf (a["end"]);
+
+        if (! start || ! end || *end <= *start)
+            return refused ("start and end must be times in seconds, end after start");
+
+        const auto name = a["name"].toString().trim();
+
+        if (SessionEdits::addSection (state, *start, *end, name) == 0)
+            return refused ("it would overlap another section");
+
+        return done ("Add section " + name.quoted() + " from " + seconds (*start) + " s to " + seconds (*end) + " s");
+    }
+
+    juce::var SessionTools::moveSection (const juce::var& a)
+    {
+        juce::String error;
+        const auto id = sectionOf (a["section"], error);
+        const auto to = frameOf (a["to"]);
+
+        if (! id)
+            return refused (error);
+
+        if (! to)
+            return refused ("to must be a time in seconds");
+
+        const auto name = state.findSection (*id)->name;
+        const auto copy = (bool) a["copy"];
+
+        if (! SessionEdits::moveSection (state, *id, *to, copy))
+            return refused ("it can't go inside itself, or where it already is");
+
+        return done ((copy ? "Copy section " : "Move section ") + name.quoted() + " to " + seconds (*to) + " s");
+    }
+
+    juce::var SessionTools::deleteSection (const juce::var& a)
+    {
+        juce::String error;
+        const auto id = sectionOf (a["section"], error);
+
+        if (! id)
+            return refused (error);
+
+        const auto name = state.findSection (*id)->name;
+        SessionEdits::deleteSection (state, *id);
+        return done ("Delete section " + name.quoted() + " and its time");
+    }
+
+    juce::var SessionTools::changeSectionBars (const juce::var& a)
+    {
+        juce::String error;
+        const auto id = sectionOf (a["section"], error);
+        const auto bars = (int) a["bars"];
+        const auto atStart = a["at"].toString() == "start";
+
+        if (! id)
+            return refused (error);
+
+        if (bars == 0 || std::abs (bars) > 999)
+            return refused ("bars must be a number of bars to add or take away, not 0");
+
+        const auto sec = *state.findSection (*id);
+        const auto map = state.tempoMap();
+
+        if (bars > 0)
+        {
+            // Inserted at its start the section moves later, at its end it stays: either way it then
+            // spans its old start to its old end plus the new bars.
+            const auto added = SessionEdits::insertBars (state, atStart ? sec.start : sec.getEnd(), bars);
+
+            if (added == 0)
+                return refused ("no bars could go in there");
+
+            SessionEdits::resizeSection (state, *id, sec.start, sec.getEnd() + added);
+            return done ("Add " + juce::String (bars) + " bars at the " + (atStart ? "start" : "end") + " of section " + sec.name.quoted());
+        }
+
+        // Fewer: whole bars from the start or back from the end, inside the section.
+        const auto firstBar = map.barAt (sec.start), endBar = map.barAt (sec.getEnd() - 1) + 1;
+        const auto from = atStart ? sec.start : map.barFrame (endBar + bars);
+        const auto to = atStart ? map.barFrame (firstBar - bars) : sec.getEnd();
+
+        if (from < sec.start || to > sec.getEnd() || to - from >= sec.length)
+            return refused ("the section has fewer bars than that");
+
+        SessionEdits::deleteTime (state, from, to);
+        return done ("Take " + juce::String (-bars) + " bars from the " + (atStart ? "start" : "end") + " of section " + sec.name.quoted());
+    }
+
+    juce::var SessionTools::setArrangement (const juce::var& a)
+    {
+        std::vector<juce::uint32> chain;
+
+        if (const auto* names = a["sections"].getArray())
+        {
+            for (auto& name : *names)
+            {
+                juce::String error;
+                const auto id = sectionOf (name, error);
+
+                if (! id)
+                    return refused (error);
+
+                chain.push_back (*id);
+            }
+        }
+
+        const auto chainChanged = SessionEdits::setArrangement (state, chain);
+        const auto playChanged = SessionEdits::setPlayArrangement (state, (bool) a["play"] && ! chain.empty());
+
+        if (! chainChanged && ! playChanged)
+            return refused ("the arrangement is so already");
+
+        juce::StringArray names;
+
+        for (auto id : chain)
+            names.add (state.findSection (id)->name);
+
+        return done (chain.empty() ? juce::String ("Clear the arrangement chain")
+                                   : "Set the arrangement chain to " + names.joinIntoString (", ") + ((bool) a["play"] ? ", and play it" : ""));
     }
 
     juce::var SessionTools::setClip (const juce::var& a)

@@ -177,6 +177,7 @@ namespace
         cmdSaveInstrumentPreset,
         cmdLoopToSelection, cmdClearLoop, cmdInfoLine, cmdTrackInspector,
         cmdShowTakes, cmdFlattenComp,
+        cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -2112,6 +2113,13 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (multitrackMode && multitrack.getSelectedClip() != 0 && ! multitrack.getTimeSelection().isEmpty()); break;
         case cmdReverseClip: info.setInfo ("Reverse Clip", "Play the selected clip back to front, from a new file", "Multitrack", 0);
                             info.setActive (multitrackMode && multitrack.getSelectedClip() != 0); break;
+        case cmdAddSection: info.setInfo ("Add Section from Range", "Make the time range a section on the Arranger strip", "Multitrack", 0);
+                            info.setActive (multitrackMode && ! multitrack.getTimeSelection().isEmpty()); break;
+        case cmdPlayArrangement: info.setInfo ("Play Arrangement", "Play the sections in the arrangement chain's order", "Multitrack", 0);
+                            info.setTicked (multitrack.isPlayingArrangement());
+                            info.setActive (multitrackMode && ! engine.session.getState()->arrangement.empty()); break;
+        case cmdFlattenArrangement: info.setInfo ("Flatten Arrangement", "Lay the session out in the arrangement chain's order", "Multitrack", 0);
+                            info.setActive (multitrackMode && ! engine.session.getState()->arrangement.empty()); break;
         case cmdShowTakes:
         {
             info.setInfo ("Show Takes", "Show the selected track's take lanes, to comp its clips' takes: drag across a take to use that part of it", "Multitrack", 0);
@@ -2750,6 +2758,9 @@ bool MainComponent::perform (const InvocationInfo& info)
             commands.commandStatusChanged();
             break;
         case cmdFlattenComp: flattenComp (multitrack.getSelectedClip()); break;
+        case cmdAddSection: multitrack.addSectionFromRange(); break;
+        case cmdPlayArrangement: multitrack.setPlayArrangement (! multitrack.isPlayingArrangement()); commands.commandStatusChanged(); break;
+        case cmdFlattenArrangement: multitrack.flattenArrangement(); break;
         case cmdClipGainLines: multitrack.setShowClipGain (! multitrack.isShowingClipGain()); commands.commandStatusChanged(); break;
         case cmdGroupClips: multitrack.groupSelectedClips(); break;
         case cmdUngroupClips: multitrack.ungroupSelectedClips(); break;
@@ -3222,7 +3233,8 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
                                0, cmdTrackAbove, cmdTrackBelow, 0, cmdUnsoloAll, cmdUnmuteAll });
             group ("Tools", { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute });
             group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdShowTakes, cmdFlattenComp, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines, 0, cmdClipToFront, cmdClipToBack });
-            group ("Arrange", { cmdNudgeEarlier, cmdNudgeLater, cmdMoveClipsToCursor, cmdTrimStartToCursor, cmdTrimEndToCursor, cmdCloseGaps, cmdQuantize });
+            group ("Arrange", { cmdNudgeEarlier, cmdNudgeLater, cmdMoveClipsToCursor, cmdTrimStartToCursor, cmdTrimEndToCursor, cmdCloseGaps, cmdQuantize,
+                                0, cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement });
             group ("Notes", { cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes });
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
             group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdWriteAutomation, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes });

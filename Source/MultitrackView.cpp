@@ -3218,6 +3218,7 @@ void MultitrackView::paint (juce::Graphics& g)
 
     drawRuler (g, { area.getX(), 0, area.getWidth(), timeRulerHeight });
     drawMarkers (g, area);
+    drawArranger (g, area);
 
     if (! timeSelection.isEmpty())
     {
@@ -3284,12 +3285,227 @@ void MultitrackView::paint (juce::Graphics& g)
     g.setFont (12.0f);
     g.drawText (juce::String (s.sampleRate / 1000.0, 1) + " kHz session", juce::Rectangle<int> (8, 0, listWidth - 8, timeRulerHeight),
                 juce::Justification::centredLeft);
+
+    // The Arranger strip's label: its chain, when there is one.
+    juce::StringArray chain;
+
+    for (auto id : s.arrangement)
+        if (const auto* sec = s.findSection (id))
+            chain.add (sec->name);
+
+    g.setColour (s.playArrangement ? Theme::accentLight : Theme::dimText);
+    g.setFont (11.0f);
+    g.drawText (chain.isEmpty() ? juce::String ("Arranger") : (s.playArrangement ? "Playing: " : "Chain: ") + chain.joinIntoString (", "),
+                juce::Rectangle<int> (8, arrangerTop, listWidth - 12, arrangerHeight), juce::Justification::centredLeft, true);
+}
+
+//==============================================================================
+juce::uint32 MultitrackView::sectionAt (juce::Point<int> p) const
+{
+    if (p.x < listWidth || p.y < arrangerTop || p.y >= rulerHeight)
+        return 0;
+
+    for (auto& sec : shown().sections)
+        if ((float) p.x >= xForFrame (sec.start) && (float) p.x < xForFrame (sec.getEnd()))
+            return sec.id;
+
+    return 0;
+}
+
+void MultitrackView::drawArranger (juce::Graphics& g, juce::Rectangle<int> area) const
+{
+    const auto strip = juce::Rectangle<int> (area.getX(), arrangerTop, area.getWidth(), arrangerHeight);
+    g.setColour (Theme::surface);
+    g.fillRect (strip);
+
+    juce::Graphics::ScopedSaveState save (g);
+    g.reduceClipRegion (strip);
+    g.setFont (11.0f);
+
+    for (auto& sec : shown().sections)
+    {
+        const auto r = juce::Rectangle<float> (xForFrame (sec.start), (float) strip.getY() + 1.0f,
+                                               juce::jmax (2.0f, xForFrame (sec.getEnd()) - xForFrame (sec.start)), (float) strip.getHeight() - 2.0f);
+        const auto colour = sec.colour >= 0 ? juce::Colour (TrackColours::palette[(size_t) sec.colour].argb) : Theme::accent;
+        const auto moving = drag == Drag::sectionMove && dragSection == sec.id;
+        g.setColour (colour.withAlpha (moving ? 0.25f : 0.55f));
+        g.fillRoundedRectangle (r.reduced (0.5f, 0.0f), 3.0f);
+        g.setColour (colour);
+        g.drawRoundedRectangle (r.reduced (0.5f, 0.0f), 3.0f, 1.0f);
+        g.setColour (juce::Colours::white);
+        g.drawText (sec.name, r.reduced (5.0f, 0.0f), juce::Justification::centredLeft, true);
+    }
+
+    // A section being drawn, sized, or moved (where it would land).
+    if (sectionPreview.has_value() && ! sectionPreview->isEmpty())
+    {
+        const auto r = juce::Rectangle<float> (xForFrame (sectionPreview->getStart()), (float) strip.getY() + 1.0f,
+                                               juce::jmax (2.0f, xForFrame (sectionPreview->getEnd()) - xForFrame (sectionPreview->getStart())),
+                                               (float) strip.getHeight() - 2.0f);
+        g.setColour (cursorColour);
+        g.drawRoundedRectangle (r, 3.0f, 2.0f);
+    }
+}
+
+void MultitrackView::renameSection (juce::uint32 id)
+{
+    const auto* sec = engine.session.getState()->findSection (id);
+
+    if (sec == nullptr)
+        return;
+
+    auto* box = new juce::AlertWindow ("Rename Section", {}, juce::MessageBoxIconType::NoIcon, this);
+    box->addTextEditor ("name", sec->name);
+    box->addButton ("Rename", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([this, box, id] (int result)
+    {
+        const auto name = box->getTextEditorContents ("name");
+
+        if (result == 1)
+            editSession ("Rename Section", [&] (SessionState& next) { return SessionEdits::renameSection (next, id, name); });
+    }), true);
+}
+
+void MultitrackView::askToInsertBars (juce::uint32 id)
+{
+    auto* box = new juce::AlertWindow ("Insert Bars", "Empty bars to put in before the section, at the tempo there.", juce::MessageBoxIconType::NoIcon, this);
+    box->addTextEditor ("bars", "4", "Bars");
+    box->getTextEditor ("bars")->setInputRestrictions (3, "0123456789");
+    box->addButton ("Insert", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([this, box, id] (int result)
+    {
+        const auto bars = box->getTextEditorContents ("bars").getIntValue();
+
+        if (result == 1)
+            editSession ("Insert Bars", [&] (SessionState& next) { return SessionEdits::insertBarsBefore (next, id, bars); });
+    }), true);
+}
+
+bool MultitrackView::editSession (const juce::String& description, const std::function<bool (SessionState&)>& edit)
+{
+    auto next = *engine.session.getState();
+
+    if (! edit (next))
+        return false;
+
+    engine.session.apply (std::move (next), description);
+    return true;
+}
+
+void MultitrackView::addSectionFromRange()
+{
+    const auto range = timeSelection;
+
+    if (! range.isEmpty())
+        editSession ("Add Section", [range] (SessionState& next) { return SessionEdits::addSection (next, range.getStart(), range.getEnd()) != 0; });
+}
+
+void MultitrackView::setPlayArrangement (bool on)
+{
+    editSession (on ? "Play Arrangement" : "Stop Playing Arrangement", [on] (SessionState& next) { return SessionEdits::setPlayArrangement (next, on); });
+}
+
+bool MultitrackView::flattenArrangement()
+{
+    return editSession ("Flatten Arrangement", [] (SessionState& next) { return SessionEdits::flattenArrangement (next); });
+}
+
+void MultitrackView::showSectionMenu (juce::uint32 id)
+{
+    const auto* found = shown().findSection (id);
+
+    if (found == nullptr)
+        return;
+
+    const auto sec = *found;
+    const juce::Component::SafePointer<MultitrackView> safe (this);
+    juce::PopupMenu menu;
+    menu.addItem ("Rename...", [safe, id] { if (safe != nullptr) safe->renameSection (id); });
+
+    juce::PopupMenu colours;
+    colours.addItem ("Default", true, sec.colour < 0, [safe, id]
+                     { if (safe != nullptr) safe->editSession ("Colour Section", [id] (SessionState& n) { return SessionEdits::setSectionColour (n, id, -1); }); });
+
+    for (int c = 0; c < (int) TrackColours::palette.size(); ++c)
+    {
+        juce::PopupMenu::Item item (TrackColours::palette[(size_t) c].name);
+        item.setTicked (sec.colour == c);
+        item.setColour (juce::Colour (TrackColours::palette[(size_t) c].argb));
+        item.setAction ([safe, id, c]
+                        { if (safe != nullptr) safe->editSession ("Colour Section", [id, c] (SessionState& n) { return SessionEdits::setSectionColour (n, id, c); }); });
+        colours.addItem (std::move (item));
+    }
+
+    menu.addSubMenu ("Colour", colours);
+    menu.addSeparator();
+    menu.addItem ("Duplicate", [safe, id, end = sec.getEnd()]
+                  { if (safe != nullptr) safe->editSession ("Duplicate Section", [id, end] (SessionState& n) { return SessionEdits::moveSection (n, id, end, true); }); });
+    menu.addItem ("Insert Bars Before...", [safe, id] { if (safe != nullptr) safe->askToInsertBars (id); });
+    menu.addItem ("Delete Section and Its Time", [safe, id]
+                  { if (safe != nullptr) safe->editSession ("Delete Section", [id] (SessionState& n) { return SessionEdits::deleteSection (n, id); }); });
+    menu.addItem ("Remove from Arranger", [safe, id]
+                  { if (safe != nullptr) safe->editSession ("Remove Section", [id] (SessionState& n) { return SessionEdits::removeSection (n, id); }); });
+    menu.addSeparator();
+    menu.addItem ("Add to Chain", [safe, id]
+                  {
+                      if (safe != nullptr)
+                          safe->editSession ("Add to Chain", [id] (SessionState& n)
+                          {
+                              auto chain = n.arrangement;
+                              chain.push_back (id);
+                              return SessionEdits::setArrangement (n, std::move (chain));
+                          });
+                  });
+    menu.addSubMenu ("Arrangement", arrangerMenu());
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition());
+}
+
+juce::PopupMenu MultitrackView::arrangerMenu()
+{
+    const auto& s = shown();
+    const juce::Component::SafePointer<MultitrackView> safe (this);
+    juce::PopupMenu menu;
+    menu.addItem ("Add Section from Range", ! timeSelection.isEmpty(), false, [safe] { if (safe != nullptr) safe->addSectionFromRange(); });
+    menu.addSeparator();
+    menu.addItem ("Play Arrangement", ! s.arrangement.empty(), s.playArrangement,
+                  [safe, on = ! s.playArrangement] { if (safe != nullptr) safe->setPlayArrangement (on); });
+
+    // The chain, each entry with a click to take it out.
+    juce::PopupMenu chain;
+
+    for (size_t i = 0; i < s.arrangement.size(); ++i)
+        if (const auto* sec = s.findSection (s.arrangement[i]))
+            chain.addItem (juce::String ((int) i + 1) + ". " + sec->name + ": Remove", [safe, i]
+            {
+                if (safe != nullptr)
+                    safe->editSession ("Remove from Chain", [i] (SessionState& n)
+                    {
+                        auto entries = n.arrangement;
+
+                        if (i >= entries.size())
+                            return false;
+
+                        entries.erase (entries.begin() + (std::ptrdiff_t) i);
+                        return SessionEdits::setArrangement (n, std::move (entries));
+                    });
+            });
+
+    chain.addSeparator();
+    chain.addItem ("Clear Chain", ! s.arrangement.empty(), false,
+                   [safe] { if (safe != nullptr) safe->editSession ("Clear Chain", [] (SessionState& n) { n.playArrangement = false; return SessionEdits::setArrangement (n, {}); }); });
+    menu.addSubMenu ("Chain", chain, true);
+    menu.addItem ("Flatten Arrangement", ! s.arrangement.empty(), false, [safe] { if (safe != nullptr) safe->flattenArrangement(); });
+    return menu;
 }
 
 //==============================================================================
 int MultitrackView::markerAt (juce::Point<int> p) const
 {
-    if (p.x < listWidth || p.y < timeRulerHeight || p.y >= rulerHeight)
+    if (p.x < listWidth || p.y < timeRulerHeight || p.y >= arrangerTop)
         return -1;
 
     const auto& markers = shown().markers;
@@ -5523,6 +5739,42 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
+    // The Arranger strip: draw a section, move or size one, or its menus.
+    if (p.y >= arrangerTop && p.y < rulerHeight)
+    {
+        const auto id = sectionAt (p);
+
+        if (e.mods.isPopupMenu())
+        {
+            if (id != 0)
+                showSectionMenu (id);
+            else
+                arrangerMenu().showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition());
+
+            return;
+        }
+
+        const auto frame = juce::jmax ((juce::int64) 0, frameForX ((float) p.x));
+
+        if (const auto* sec = shown().findSection (id))
+        {
+            const auto x0 = xForFrame (sec->start), x1 = xForFrame (sec->getEnd());
+            dragSection = id;
+            drag = (float) p.x < x0 + (float) edgeGrab && x1 - x0 > 3.0f * (float) edgeGrab ? Drag::sectionStart
+                 : (float) p.x > x1 - (float) edgeGrab && x1 - x0 > 3.0f * (float) edgeGrab ? Drag::sectionEnd
+                 : Drag::sectionMove;
+            dragFrame = frame - sec->start;   // a moved section: the frame grabbed, from its start
+        }
+        else
+        {
+            drag = Drag::sectionNew;
+            dragFrame = snappedToGrid (frame);
+        }
+
+        sectionPreview.reset();
+        return;
+    }
+
     if (p.y >= timeRulerHeight && p.y < rulerHeight)
     {
         if (const auto index = markerAt (p); index >= 0)
@@ -5940,6 +6192,28 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
 {
     const auto p = e.getPosition();
 
+    if (drag == Drag::sectionNew || drag == Drag::sectionMove || drag == Drag::sectionStart || drag == Drag::sectionEnd)
+    {
+        const auto frame = juce::jmax ((juce::int64) 0, frameForX ((float) juce::jmax (listWidth, p.x)));
+        const auto* sec = shown().findSection (dragSection);
+
+        if (drag == Drag::sectionNew)
+            sectionPreview = juce::Range<juce::int64>::between (dragFrame, juce::jmax ((juce::int64) 0, snappedToGrid (frame)));
+        else if (sec == nullptr)
+            sectionPreview.reset();
+        else if (drag == Drag::sectionMove)
+            sectionPreview = juce::Range<juce::int64> (0, sec->length) + juce::jmax ((juce::int64) 0, snappedToGrid (frame - dragFrame));
+        else if (drag == Drag::sectionStart)
+            sectionPreview = juce::Range<juce::int64> (juce::jmin (sec->getEnd() - 1, juce::jmax ((juce::int64) 0, snappedToGrid (frame))), sec->getEnd());
+        else
+            sectionPreview = juce::Range<juce::int64> (sec->start, juce::jmax (sec->start + 1, snappedToGrid (frame)));
+
+        sectionCopy = e.mods.isAltDown();
+        setMouseCursor (drag == Drag::sectionMove && sectionCopy ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::NormalCursor);
+        repaint();
+        return;
+    }
+
     if (drag == Drag::listWidth)
     {
         setListWidth (p.x);
@@ -6245,6 +6519,10 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
         case Drag::loopMove:
         case Drag::loopStart:
         case Drag::loopEnd:
+        case Drag::sectionNew:
+        case Drag::sectionMove:
+        case Drag::sectionStart:
+        case Drag::sectionEnd:
             break;
     }
 
@@ -6319,6 +6597,27 @@ SessionState MultitrackView::withDragCopies (const SessionState& moved)
 
 void MultitrackView::mouseUp (const juce::MouseEvent&)
 {
+    if (drag == Drag::sectionNew || drag == Drag::sectionMove || drag == Drag::sectionStart || drag == Drag::sectionEnd)
+    {
+        const auto to = std::exchange (sectionPreview, std::nullopt);
+        const auto kind = std::exchange (drag, Drag::none);
+        const auto id = dragSection;
+        setMouseCursor (juce::MouseCursor::NormalCursor);
+
+        if (to.has_value() && ! to->isEmpty())
+        {
+            if (kind == Drag::sectionNew)
+                editSession ("Add Section", [to] (SessionState& n) { return SessionEdits::addSection (n, to->getStart(), to->getEnd()) != 0; });
+            else if (kind == Drag::sectionMove)
+                editSession (sectionCopy ? "Copy Section" : "Move Section", [id, to, copy = sectionCopy] (SessionState& n) { return SessionEdits::moveSection (n, id, to->getStart(), copy); });
+            else
+                editSession ("Size Section", [id, to] (SessionState& n) { return SessionEdits::resizeSection (n, id, to->getStart(), to->getEnd()); });
+        }
+
+        repaint();
+        return;
+    }
+
     if (drag == Drag::listWidth)
     {
         drag = Drag::none;
@@ -6661,8 +6960,14 @@ void MultitrackView::mouseDoubleClick (const juce::MouseEvent& e)
         return;
     }
 
+    if (const auto id = sectionAt (p); id != 0)
+    {
+        renameSection (id);
+        return;
+    }
+
     // An empty spot in the marker lane: a new marker there.
-    if (p.x >= listWidth && p.y >= timeRulerHeight && p.y < rulerHeight)
+    if (p.x >= listWidth && p.y >= timeRulerHeight && p.y < arrangerTop)
     {
         addMarkerAt (snapped (frameForX ((float) p.x), 0, true));
         return;
