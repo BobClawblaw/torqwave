@@ -631,6 +631,15 @@ void TrackEffects::reset (juce::uint32 trackId)
         }
 }
 
+void TrackEffects::endHeldNotes (juce::uint32 trackId)
+{
+    const juce::ScopedTryLock sl (lock);
+
+    if (auto* chain = sl.isLocked() ? find (trackId) : nullptr)
+        for (auto& slot : *chain)
+            slot->allOff = true;
+}
+
 void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::AudioBuffer<float>& buffer, int numFrames,
                             const std::vector<SessionMixer::KeyAudio>& keys)
 {

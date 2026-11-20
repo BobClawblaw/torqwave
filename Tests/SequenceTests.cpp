@@ -2,6 +2,7 @@
 #include "../Source/SequenceLibraryView.h"
 #include "../Source/SequenceMidi.h"
 #include "../Source/SequencerView.h"
+#include "../Source/NoteEditor.h"
 #include "../Source/IdeaBoard.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
@@ -1343,5 +1344,105 @@ void runSequenceTests (AudioEngine& engine)
 
         engine.session.reset (sessionAt (120.0), {});
         dir.deleteRecursively();
+    }
+
+    // The Piano Roll's playhead, and an instrument chosen in the Sequencer opening its window.
+    {
+        NoteClip clip;
+        clip.position = 1000;
+        clip.offset = 200;
+        clip.length = 2000;
+        clip.loopLength = 500;
+        const auto at = [&clip] (juce::int64 f) { return NoteEditor::timelineFrame (clip, f); };
+        auto once = clip;
+        once.loopLength = 0;
+        check (! at (999).has_value() && at (1000) == 200 && at (1300) == 0 && at (2999) == 199 && ! at (3000).has_value()
+                   && NoteEditor::timelineFrame (once, 1300) == 500,
+               "piano roll: the playhead falls on the notes' timeline: the clip's start at its offset (200), each pass of a 500-frame loop on the same frames, "
+               "none outside the clip; without a loop, straight on (500)");
+
+        juce::PluginDescription synth;
+
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.fileOrIdentifier == BuiltInEffects::basicSynthId)
+                synth = d;
+
+        SequencerView view (engine);
+        juce::AudioProcessor* opened = nullptr;
+        view.onEditPlugin = [&opened] (juce::AudioPluginInstance& p) { opened = &p; };
+        view.setInstrument (synth);
+
+        for (int i = 0; i < 100 && opened == nullptr; ++i)
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (20);
+
+        check (opened != nullptr && opened == view.getPlayer().getEffects().getInstrument (view.getTrackId()),
+               "sequencer: an instrument chosen from the menu opens its window at once");
+
+        // Velocity and a lane, heard through the Sequencer's player: a loud A4 on beat 1, a soft one
+        // on beat 2, and a Pan lane at 0 (hard left), through the Basic Synth.
+        {
+            const auto folder = juce::File::createTempFile ("heard");
+            folder.createDirectory();
+            SequenceFile::Sequence q;
+            q.name = "Heard";
+            q.length = 4 * SequenceFile::ticksPerBeat;
+            q.writtenTempo = 120.0;
+            q.notes = { { 69, 0, 480, 1.0f }, { 69, 960, 480, 0.25f } };
+            q.lanes = { { 10, { { 0, 0.0f } } } };
+            q.voice = std::shared_ptr<const juce::XmlElement> (SequenceFile::voiceFor (synth).release());
+            const auto file = folder.getChildFile (juce::String ("Heard") + SequenceFile::extension);
+            SequenceFile::save (q, file);
+
+            SequencerView heard (engine);
+            heard.openFile (file);
+            auto& p = heard.getPlayer();
+
+            for (int i = 0; i < 100 && p.getEffects().getInstrument (heard.getTrackId()) == nullptr; ++i)
+                juce::MessageManager::getInstance()->runDispatchLoopUntil (20);
+
+            heard.setTempo (120.0);
+            p.setLooping (true);
+            p.prepareToPlay (512, rate);
+            p.play();
+            constexpr int total = 96000 + 24000;   // the bar, and half of its second pass
+            juce::AudioBuffer<float> out (2, total), b (2, 512);
+            out.clear();
+
+            for (int done = 0; done < total; done += 512)
+            {
+                const auto n = juce::jmin (512, total - done);
+                b.clear();
+                p.getNextAudioBlock ({ &b, 0, n });
+
+                for (int ch = 0; ch < 2; ++ch)
+                    out.copyFrom (ch, done, b, ch, 0, n);
+            }
+
+            const auto loud = out.getRMSLevel (0, 2400, 7200), soft = out.getRMSLevel (0, 24000 + 2400, 7200);
+            const auto right = out.getMagnitude (1, 0, total);
+            const auto again = out.getRMSLevel (0, 96000 + 2400, 7200);
+            check (p.getEffects().getInstrument (heard.getTrackId()) != nullptr && loud > 0.01f && soft > 0.0f && std::abs (soft / loud - 0.25f) < 0.03f && right < 1.0e-6f
+                       && std::abs (again / loud - 1.0f) < 0.05f,
+                   "sequencer: velocity and a lane are heard through its player from the first frame: a note at velocity 0.25 plays at " + juce::String (soft / juce::jmax (1.0e-9f, loud), 3)
+                   + " of one at 1 on frame 0, a Pan lane at 0 leaves the right channel silent (" + juce::String (right) + "), and looping, the first note plays again on the second pass ("
+                   + juce::String (again / juce::jmax (1.0e-9f, loud), 3) + ")");
+
+            // Its length: two bars and back by undo; a beat and a half (0.375 bars) rounds to two beats.
+            heard.setLength (2.0);
+            const auto twoBars = heard.getDocument().get();
+            const auto twoBarSession = SequencerDocument::withSequence (SequencerDocument::sessionFor (twoBars, 120.0, rate), twoBars, 120.0);
+            const auto clipFrames = twoBarSession.tracks.empty() || twoBarSession.tracks[0].noteClips.empty() ? (juce::int64) 0 : twoBarSession.tracks[0].noteClips[0].length;
+            heard.undo();
+            const auto undone = heard.getDocument().get().length;
+            heard.setLength (0.375);
+            const auto rounded = heard.getDocument().get();
+            check (twoBars.length == 8 * SequenceFile::ticksPerBeat && clipFrames == 2 * 96000 && undone == 4 * SequenceFile::ticksPerBeat
+                       && rounded.length == 2 * SequenceFile::ticksPerBeat && rounded.notes.size() == 2 && heard.getDocument().getUndoDescription() == "Length 0.50 bars",
+                   "sequencer: Length sets the sequence's bars (2 bars: 8 beats, a clip of 192000 frames at 120 BPM), undo takes it back, a beat and a half "
+                   "rounds to two beats (half a bar), and the notes past the end are kept");
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+            folder.deleteRecursively();
+        }
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
     }
 }

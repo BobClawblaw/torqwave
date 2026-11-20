@@ -141,7 +141,7 @@ NoteEditor::NoteEditor()
     Theme::follow (status, juce::Label::textColourId, Theme::dimText);
 
     refreshControls();
-    startTimer (100);
+    startTimerHz (30);
 }
 
 NoteEditor::~NoteEditor()
@@ -174,8 +174,29 @@ void NoteEditor::silence()
 
 void NoteEditor::timerCallback()
 {
-    if (drag == Drag::none)
+    // The playhead every tick (30 a second), the clip every third.
+    std::optional<juce::int64> now;
+
+    if (readPlayhead != nullptr && shown.has_value())
+        if (const auto frame = readPlayhead())
+            now = timelineFrame (shown->clip, *frame);
+
+    if (now != playhead)
+    {
+        playhead = now;
+        repaint();
+    }
+
+    if (++ticks % 3 == 0 && drag == Drag::none)
         refresh();
+}
+
+std::optional<juce::int64> NoteEditor::timelineFrame (const NoteClip& clip, juce::int64 frame)
+{
+    if (frame < clip.position || frame >= clip.getEnd())
+        return std::nullopt;
+
+    return (frame - clip.getOrigin()) % juce::jmax ((juce::int64) 1, clip.getPeriod());
 }
 
 void NoteEditor::refresh()
@@ -725,6 +746,18 @@ void NoteEditor::paint (juce::Graphics& g)
     g.drawRect (area);
 
     const auto& c = shown->clip;
+
+    if (playhead.has_value())
+    {
+        const auto x = xOf (*playhead);
+        const auto bottom = laneController >= 0 ? laneArea().getBottom() : area.getBottom();
+
+        if (x >= (float) area.getX() && x <= (float) area.getRight())
+        {
+            g.setColour (Theme::textStrong);   // as the multitrack view's playhead
+            g.fillRect (juce::Rectangle<float> (x - 0.5f, (float) area.getY(), 1.5f, (float) (bottom - area.getY())));
+        }
+    }
 
     // The lane: its line over the timeline (the rest value, dashed, without points), its points.
     if (laneController >= 0)

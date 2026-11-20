@@ -880,12 +880,25 @@ namespace BuiltInEffects
             juce::ADSR envelope;
             juce::dsp::StateVariableTPTFilter<float> filter;
             juce::uint32 age = 0;
+            bool held = false;             // its key is up, the sustain pedal holding it
+        };
+
+        /** The controllers it answers, at their resting values. */
+        struct Controllers
+        {
+            float bend = 0.0f;             // semitones, -2 to 2
+            float modWheel = 0.0f;         // 0 to 1: vibrato up to half a semitone
+            float volume = 1.0f, expression = 1.0f, pan = 0.5f, brightness = 1.0f, resonance = 0.0f;
+            bool pedal = false;
         };
 
         void noteOn (int note, float velocity);
         void noteOff (int note);
         void allOff (bool atOnce);
-        void renderVoices (juce::AudioBuffer<float>&, int from, int count, bool filterOpen, float gain);
+        void controller (const juce::MidiMessage&);
+        void setFilter();
+        bool filterOpen() const;
+        void renderVoices (juce::AudioBuffer<float>&, int from, int count);
         float oscillate (Voice&, double increment) const;
 
         juce::AudioParameterChoice* wave = nullptr;
@@ -894,6 +907,8 @@ namespace BuiltInEffects
         std::array<Voice, numVoices> voices;
         juce::uint32 counter = 0;
         double rate = 48000.0;
+        Controllers controls;
+        double vibratoPhase = 0.0;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BasicSynthProcessor)
     };

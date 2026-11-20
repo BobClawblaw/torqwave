@@ -50,7 +50,13 @@ namespace Instrument
         if (scanned.isEmpty())
             return;
 
-        if (scanned.size() < groupFrom)
+        // Flat only when few and all of one format: otherwise a format can't be told at a glance.
+        const auto oneFormat = std::all_of (scanned.begin(), scanned.end(), [&scanned] (const juce::PluginDescription& d)
+        {
+            return d.pluginFormatName == scanned.getReference (0).pluginFormatName;
+        });
+
+        if (scanned.size() < groupFrom && oneFormat)
         {
             for (auto& d : scanned)
                 menu.addItem (title (d), true, isTicked (d), [choose, d] { choose (d); });

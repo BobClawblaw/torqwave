@@ -15215,6 +15215,11 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
     else if (id == Panels::pianoRoll)
     {
         auto panel = std::make_unique<NoteEditor>();
+        panel->readPlayhead = [this]() -> std::optional<juce::int64>
+        {
+            auto& p = engine.getPlayer();
+            return multitrackMode && p.isPlaying() ? std::optional<juce::int64> (p.getHeardFrame()) : std::nullopt;
+        };
         panel->readClip = [this]() -> std::optional<NoteEditor::Shown>
         {
             if (! multitrackMode)

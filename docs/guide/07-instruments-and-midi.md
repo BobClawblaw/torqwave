@@ -6,7 +6,7 @@ An **instrument track** plays a synthesizer: Torqwave's built-in Basic Synth, or
 
 ## Make an instrument track
 
-- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it.
+- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Basic Synth comes first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
 - **Turn an empty audio track into an instrument track:** right-click its header and choose **Instrument Track**. Choose it again to turn it back.
 
 The header's instrument button, which shows the instrument's name (or **Inst** when there is none), chooses, swaps or opens the instrument. It takes the place of the record button. Effects added with **FX** run after the instrument, as on any track.
@@ -39,9 +39,11 @@ The selected instrument track plays whatever comes in live:
 
 *The window of Basic Synth, the built-in instrument.*
 
+Basic Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way), **Mod wheel** (vibrato, up to half a semitone), **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
+
 ## Edit the notes: the Piano Roll
 
-Double-click a note clip, or choose **Window > Piano Roll**, to edit the clip's notes on a grid of pitch against time. A keyboard runs down the left, with middle C marked.
+Double-click a note clip, or choose **Window > Piano Roll**, to edit the clip's notes on a grid of pitch against time. A keyboard runs down the left, with middle C marked. While it plays, a line shows where the notes are playing, on each pass of a loop.
 
 | To | Do |
 |---|---|
@@ -110,7 +112,7 @@ The **Lane** choice shows a controller under the notes: the mod wheel, the pitch
 - Drag a point to move it.
 - Option-click a point to remove it.
 
-The lane's values are sent to the instrument along with the notes.
+The lane's values are sent to the instrument along with the notes, from the clip's first frame. What a controller does is up to the instrument (see [what Basic Synth answers](#play-it-live)).
 
 ## Work with note clips
 
@@ -270,9 +272,9 @@ The Sequencer is a window for one sequence from the library, open by itself to w
 
 **Edit the notes.** The middle of the window is the Piano Roll, with the drum grid, controller lanes and [writing tools](#writing-tools), as in [Edit the notes](#edit-the-notes-the-piano-roll), but it edits the sequence file itself, not a clip in the session. A sequence filed under Drums opens as a drum grid. A key set with **Tools > Key...** is saved as the sequence's key. **Undo** and **Redo** (Cmd-Z and Shift-Cmd-Z while the window has the focus) step through the window's own edits, apart from the session's.
 
-**Hear it.** **Play** (or Space while the window has the focus) plays the sequence from its start through its voice, beside whatever the session plays. With **Loop** on it goes round and round; off, it plays once. **Click** adds a click on every beat. The tempo is the window's own, starting at the tempo the sequence was written at; change it with the tempo box, or tick **Session tempo** to play at the session's tempo where its playhead is. The notes stay on their beats at any tempo, so nothing in the file changes. The clock beside it shows where it is playing, in bars and beats.
+**Hear it.** **Play** (or Space while the window has the focus) plays the sequence from its start through its voice, beside whatever the session plays. With **Loop** on it goes round and round; off, it plays once. **Click** adds a click on every beat. The tempo is the window's own, starting at the tempo the sequence was written at; change it with the tempo box, or tick **Session tempo** to play at the session's tempo where its playhead is. The notes stay on their beats at any tempo, so nothing in the file changes. The clock beside it shows where it is playing, in bars and beats, and a line in the notes follows it. **Length** sets how long the sequence is, in bars, by the beat (an undo step); a loop as long as the sequence follows it. Notes past the end are kept but don't play, until you make it longer again.
 
-**Change the voice.** Down the right are the instrument and the effects it plays through. **Instrument...** picks another instrument, and **Edit** opens its window. **+ Effect** adds an effect after the others and opens its window; click an effect's name to open its window, or **×** to take it out. Changes to the voice are not undo steps, as with a track's effects in a session, but they are saved with the sequence. If some of the voice didn't load (a plug-in that isn't on this Mac), the window says so, and saving keeps the voice as the file had it until you change it.
+**Change the voice.** Down the right are the instrument and the effects it plays through. **Instrument...** picks another instrument, from the built-in Basic Synth and your plug-ins under **Audio Units** and **VST3** by maker, and opens its window; **Edit** opens it again. **+ Effect** adds an effect after the others and opens its window; click an effect's name to open its window, or **×** to take it out. Changes to the voice are not undo steps, as with a track's effects in a session, but they are saved with the sequence. If some of the voice didn't load (a plug-in that isn't on this Mac), the window says so, and saving keeps the voice as the file had it until you change it.
 
 **Files.**
 

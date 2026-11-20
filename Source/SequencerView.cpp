@@ -29,6 +29,12 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
         addAndMakeVisible (l);
 
     addAndMakeVisible (tempoSlider);
+    addAndMakeVisible (lengthSlider);
+    lengthSlider.setTooltip ("The sequence's length in bars, by the beat (an undo step)");
+    lengthSlider.setTextBoxStyle (juce::Slider::TextBoxLeft, false, 80, 24);
+    lengthSlider.textFromValueFunction = [] (double bars) { return juce::String (bars, juce::exactlyEqual (bars, std::round (bars)) ? 0 : 2) + (juce::exactlyEqual (bars, 1.0) ? " bar" : " bars"); };
+    lengthSlider.valueFromTextFunction = [] (const juce::String& text) { return text.getDoubleValue(); };
+    lengthSlider.onValueChange = [this] { setLength (lengthSlider.getValue()); };
     addAndMakeVisible (editor);
 
     title.setFont (juce::FontOptions (15.0f, juce::Font::bold));
@@ -117,6 +123,10 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
         s.beatsPerBar = doc.get().beatsPerBar;
         s.key = doc.get().key;
         return s;
+    };
+    editor.readPlayhead = [this]() -> std::optional<juce::int64>
+    {
+        return player.isPlaying() ? std::optional<juce::int64> (player.getPosition()) : std::nullopt;
     };
     editor.apply = [this] (const NoteClip& clip, const juce::String& description)
     {
@@ -315,6 +325,27 @@ void SequencerView::refreshControls()
     redoButton.setTooltip (doc.canRedo() ? "Redo " + doc.getRedoDescription() : juce::String());
     playButton.setButtonText (player.isPlaying() ? "Stop" : "Play");
     tempoSlider.setEnabled (! followSession);
+
+    const auto beat = 1.0 / juce::jmax (1, q.beatsPerBar);
+    lengthSlider.setRange (beat, 256.0, beat);
+    lengthSlider.setValue (q.bars(), juce::dontSendNotification);
+}
+
+void SequencerView::setLength (double bars)
+{
+    auto q = doc.get();
+    const auto beats = juce::jmax ((juce::int64) 1, (juce::int64) std::llround (bars * juce::jmax (1, q.beatsPerBar)));
+    const auto length = beats * SequenceFile::ticksPerBeat;
+
+    if (length == q.length)
+        return;
+
+    if (q.loopLength > 0 && (q.loopLength == q.length || q.loopLength > length))
+        q.loopLength = length;
+
+    q.length = length;
+    doc.apply (q, "Length " + lengthSlider.getTextFromValue ((double) beats / juce::jmax (1, q.beatsPerBar)));
+    refreshState();
 }
 
 void SequencerView::rebuildVoice()
@@ -382,53 +413,59 @@ void SequencerView::rebuildVoice()
 void SequencerView::chooseInstrument()
 {
     const auto instruments = Instrument::known (engine.knownPlugins);
-    juce::PopupMenu menu;
+    std::optional<juce::PluginDescription> current;
 
-    for (int i = 0; i < instruments.size(); ++i)
-        menu.addItem (i + 1, Instrument::title (instruments.getReference (i)));
+    if (auto* p = player.getEffects().getInstrument (built.trackId))
+        current = p->getPluginDescription();
+
+    juce::PopupMenu menu;
+    Instrument::addMenu (menu, instruments, [safe = juce::WeakReference<SequencerView> (this)] (const juce::PluginDescription& d)
+    {
+        if (auto* self = safe.get())
+            self->setInstrument (d);
+    }, current.has_value() ? &*current : nullptr);
 
     if (instruments.isEmpty())
-        menu.addItem (-1, "No instruments are known: scan with Plug-ins... first", false);
+        menu.addItem ("No instruments are known: scan with Plug-ins... first", false, false, nullptr);
 
-    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (instrumentButton),
-                        [safe = juce::WeakReference<SequencerView> (this), instruments] (int result)
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (instrumentButton));
+}
+
+void SequencerView::setInstrument (const juce::PluginDescription& d)
+{
+    engine.createPlugin (d, rate(), [safe = juce::WeakReference<SequencerView> (this)] (std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String& error)
     {
-        auto* self = safe.get();
+        auto* view = safe.get();
 
-        if (self == nullptr || result <= 0 || result > instruments.size())
+        if (view == nullptr)
             return;
 
-        self->engine.createPlugin (instruments.getReference (result - 1), self->rate(),
-                                   [safe] (std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String& error)
+        if (instance == nullptr)
         {
-            auto* view = safe.get();
+            juce::AlertWindow::showAsync (juce::MessageBoxOptions().withIconType (juce::MessageBoxIconType::WarningIcon).withTitle ("Instrument").withMessage (error).withButton ("OK"), nullptr);
+            return;
+        }
 
-            if (view == nullptr)
-                return;
+        auto& effects = view->player.getEffects();
 
-            if (instance == nullptr)
-            {
-                juce::AlertWindow::showAsync (juce::MessageBoxOptions().withIconType (juce::MessageBoxIconType::WarningIcon).withTitle ("Instrument").withMessage (error).withButton ("OK"), nullptr);
-                return;
-            }
+        if (auto* old = effects.getInstrument (view->built.trackId))
+        {
+            if (view->onPluginRemoved != nullptr)
+                view->onPluginRemoved (old);
 
-            auto& effects = view->player.getEffects();
+            auto removed = effects.remove (view->built.trackId, 0);
+        }
 
-            if (auto* old = effects.getInstrument (view->built.trackId))
-            {
-                if (view->onPluginRemoved != nullptr)
-                    view->onPluginRemoved (old);
+        effects.add (view->built.trackId, std::move (instance));
+        view->doc.markVoiceChanged();
+        view->voiceIncomplete = false;
+        view->rebuildVoice();
+        view->refreshControls();
+        view->editor.refresh();
 
-                auto removed = effects.remove (view->built.trackId, 0);
-            }
-
-            effects.add (view->built.trackId, std::move (instance));
-            view->doc.markVoiceChanged();
-            view->voiceIncomplete = false;
-            view->rebuildVoice();
-            view->refreshControls();
-            view->editor.refresh();
-        });
+        // Its window, to hear and set it at once.
+        if (auto* p = effects.getInstrument (view->built.trackId); p != nullptr && view->onEditPlugin != nullptr)
+            view->onEditPlugin (*p);
     });
 }
 
@@ -854,6 +891,7 @@ void SequencerView::resized()
     place (transport, loopButton, 64);
     place (transport, clickButton, 64);
     place (transport, tempoSlider, 170);
+    place (transport, lengthSlider, 150);
     place (transport, sessionTempoButton, 124);
 
     if (askButton.isVisible())

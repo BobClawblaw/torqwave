@@ -74,6 +74,11 @@ public:
     std::function<void (bool drums)> showDrums;                  // the track's clips shown as a drum grid, or not
     std::function<void (const std::vector<DrumSound>&, const juce::String& description)> applyDrumMap;   // an empty map: General MIDI's
     std::function<void (const juce::String& key)> onKeyChosen;  // a key set in the Tools menu, for the part to keep
+    std::function<std::optional<juce::int64>()> readPlayhead;   // the frame playing (the clip's position's frames), none when stopped
+
+    /** Where a frame of the clip's position falls on its notes' timeline, each pass of a loop
+        on the same frames; none outside the clip. */
+    static std::optional<juce::int64> timelineFrame (const NoteClip&, juce::int64 frame);
 
     NoteEditor();
     ~NoteEditor() override;
@@ -202,6 +207,8 @@ private:
     void editDrumSound (int row, bool adding);
     float yOf (int pitch) const;
     float xOf (juce::int64 frame) const;
+    std::optional<juce::int64> playhead;   // on the notes' timeline, as last read
+    int ticks = 0;
     void scrollToNotes();
     void moveSelected (int semitones, juce::int64 frames);
     void refreshControls();

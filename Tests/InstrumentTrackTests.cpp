@@ -1130,8 +1130,9 @@ namespace
                "and a trigger on an instrument track's lane alone, and below the track headers; Add Track adds one (" + onInstrument.joinIntoString (", ") + ")");
 
         view.removeTrackInstrument (trackId);
-        // The menu: few scanned instruments flat with their format and maker in the name, many in
-        // submenus a format and a maker; the built-in always first and plain.
+        // The menu: a few scanned instruments of one format flat with their format and maker in the
+        // name; many, or a few in more than one format, in submenus a format and a maker; the
+        // built-in always first and plain.
         const auto fake = [] (const juce::String& name, const juce::String& format, const juce::String& maker)
         {
             juce::PluginDescription d;
@@ -1142,8 +1143,9 @@ namespace
             d.fileOrIdentifier = format + ":" + maker + ":" + name;
             return d;
         };
-        juce::Array<juce::PluginDescription> few { known[0], fake ("Zed", "VST3", "Acme"), fake ("Alpha", "AudioUnit", "Beta Labs") };
-        juce::PopupMenu fewMenu, manyMenu;
+        juce::Array<juce::PluginDescription> few { known[0], fake ("Zed", "VST3", "Acme"), fake ("Alpha", "VST3", "Beta Labs") };
+        juce::Array<juce::PluginDescription> mixed { known[0], fake ("Zed", "VST3", "Acme"), fake ("Alpha", "AudioUnit", "Beta Labs") };
+        juce::PopupMenu fewMenu, mixedMenu, manyMenu;
         juce::PluginDescription chosen;
         Instrument::addMenu (fewMenu, few, [&chosen] (const juce::PluginDescription& d) { chosen = d; });
         juce::StringArray fewTexts;
@@ -1155,7 +1157,13 @@ namespace
             fewSubmenus += it.getItem().subMenu != nullptr ? 1 : 0;
         }
 
-        auto many = few;
+        Instrument::addMenu (mixedMenu, mixed, [&chosen] (const juce::PluginDescription& d) { chosen = d; });
+        juce::StringArray mixedTexts;
+
+        for (juce::PopupMenu::MenuItemIterator it (mixedMenu); it.next();)
+            mixedTexts.add (it.getItem().text + (it.getItem().subMenu != nullptr ? " >" : ""));
+
+        auto many = mixed;
 
         for (int i = 0; i < Instrument::groupFrom; ++i)
             many.add (fake ("Synth " + juce::String (i), i % 2 == 0 ? "VST3" : "AudioUnit", i % 3 == 0 ? "Acme" : "Beta Labs"));
@@ -1166,10 +1174,12 @@ namespace
         for (juce::PopupMenu::MenuItemIterator it (manyMenu); it.next();)
             manyTexts.add (it.getItem().text + (it.getItem().subMenu != nullptr ? " >" : ""));
 
-        const auto flat = fewTexts.size() == 3 && fewTexts[0] == "Basic Synth (built in)" && fewTexts[1] == "Zed (VST3, Acme)" && fewTexts[2] == "Alpha (Audio Units, Beta Labs)" && fewSubmenus == 0;
+        const auto flat = fewTexts.size() == 3 && fewTexts[0] == "Basic Synth (built in)" && fewTexts[1] == "Zed (VST3, Acme)" && fewTexts[2] == "Alpha (VST3, Beta Labs)" && fewSubmenus == 0;
         const auto grouped = manyTexts.size() == 3 && manyTexts[0] == "Basic Synth (built in)" && manyTexts[1] == "Audio Units >" && manyTexts[2] == "VST3 >";
-        check (flat && grouped, "instrument tracks: the instrument menu lists a few scanned instruments flat with their format and maker, and many under a "
-                                "submenu a format and a maker, the built-in always first (" + fewTexts.joinIntoString (", ") + " / " + manyTexts.joinIntoString (", ") + ")");
+        const auto byFormat = mixedTexts == juce::StringArray { "Basic Synth (built in)", "Audio Units >", "VST3 >" };
+        check (flat && grouped && byFormat, "instrument tracks: the instrument menu lists a few scanned instruments of one format flat with their format and maker, and many, "
+                                            "or a few in two formats, under a submenu a format and a maker, the built-in always first ("
+                                            + fewTexts.joinIntoString (", ") + " / " + mixedTexts.joinIntoString (", ") + " / " + manyTexts.joinIntoString (", ") + ")");
 
         check (builtInFirst && added && loaded && engine.getTrackEffects().getInstrument (trackId) == nullptr,
                "instrument tracks: the known instruments start with the Basic Synth (built in); Add Instrument Track adds a track named after "

@@ -234,6 +234,62 @@ void runInstrumentTests (AudioEngine& engine)
                    && err5.isEmpty() && err6.isEmpty() && sawPeak > 0.9f && sawPeak < 1.2f && std::abs (sawFundamental - 2.0 / juce::MathConstants<double>::pi) < 0.03
                    && squarePeak > 0.9f && squarePeak < 1.3f && std::abs (squareFundamental - 4.0 / juce::MathConstants<double>::pi) < 0.04,
                "instrument: the synth's state restores its wave and cutoff; a sawtooth's and a square's fundamentals are 2/pi and 4/pi of their peaks");
+
+        // The controllers a lane draws: one second of A4 (a sawtooth for the filter) with a controller sent first.
+        const auto withController = [&] (std::function<void (juce::MidiBuffer&)> first, int wave, bool keyUp)
+        {
+            setBare (*synth);
+            setPlain (*synth, "wave", (float) wave);
+            synth->prepareToPlay (rate, 512);
+            juce::AudioBuffer<float> all (2, 48000), b (2, 512);
+
+            for (int at = 0; at < 48000; at += 512)
+            {
+                juce::MidiBuffer m;
+
+                if (at == 0)
+                {
+                    first (m);
+                    m.addEvent (juce::MidiMessage::noteOn (1, 69, 1.0f), 0);
+                }
+
+                if (keyUp && at == 512)
+                    m.addEvent (juce::MidiMessage::noteOff (1, 69), 0);
+
+                const auto n = juce::jmin (512, 48000 - at);
+                b.setSize (2, n, false, false, true);
+                synth->processBlock (b, m);
+
+                for (int ch = 0; ch < 2; ++ch)
+                    all.copyFrom (ch, at, b, ch, 0, n);
+            }
+
+            return all;
+        };
+        const auto cc = [] (int number, int value) { return [number, value] (juce::MidiBuffer& m) { m.addEvent (juce::MidiMessage::controllerEvent (1, number, value), 0); }; };
+        const auto none = [] (juce::MidiBuffer&) {};
+
+        const auto plain = withController (none, 0, false);
+        const auto bent = withController ([] (juce::MidiBuffer& m) { m.addEvent (juce::MidiMessage::pitchWheel (1, 16383), 0); }, 0, false);
+        const auto quiet = withController (cc (7, 64), 0, false);
+        const auto left = withController (cc (10, 0), 0, false);
+        const auto dark = withController (cc (74, 0), 2, false);
+        const auto bright = withController (none, 2, false);
+        const auto pedalled = withController (cc (64, 127), 0, true);
+        const auto unpedalled = withController (none, 0, true);
+        const auto wobbly = withController (cc (1, 127), 0, false);
+
+        const auto b4 = 440.0 * std::exp2 (2.0 / 12.0 - 1.0 / 8192.0 * 2.0 / 12.0);
+        const auto vibratoWide = amplitude (wobbly, 0, 440.0, 0, 48000) < 0.5;   // a steady A4 is 1: the vibrato spreads it
+        check (amplitude (bent, 0, b4, 0, 48000) > 0.95 && amplitude (bent, 0, 440.0, 0, 48000) < 0.05
+                   && std::abs (amplitude (quiet, 0, 440.0, 0, 48000) - std::pow (64.0 / 127.0, 2.0)) < 0.01
+                   && amplitude (left, 0, 440.0, 0, 48000) > 0.99 && left.getMagnitude (1, 0, 48000) == 0.0f
+                   && amplitude (dark, 0, 440.0 * 8, 0, 48000) < 0.1 * amplitude (bright, 0, 440.0 * 8, 0, 48000)
+                   && pedalled.getMagnitude (0, 24000, 24000) > 0.5f && unpedalled.getMagnitude (0, 24000, 24000) == 0.0f
+                   && vibratoWide && plain.getMagnitude (0, 0, 48000) > 0.99f,
+               "instrument: the synth answers its controllers: full pitch bend plays B4 for A4 (two semitones), Volume 64 plays at (64/127) squared, "
+               "Pan 0 plays on the left alone, Cutoff 0 takes a sawtooth's 8th harmonic down by more than 20 dB, Sustain holds a note past its key going up, "
+               "and the mod wheel's vibrato spreads A4 (under half of it left at 440 Hz)");
     }
 
     // Rendering through any instrument: latency dropped, a mono output on every channel, the notes delivered in order, stopping.

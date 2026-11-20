@@ -154,6 +154,11 @@ public:
     bool isActive (juce::uint32 trackId) override;
     int getLatency (juce::uint32 trackId) override;
     void reset (juce::uint32 trackId) override;
+
+    /** Audio thread: the track's instruments get an off for every note they were given, at the
+        start of their next block, before that block's notes (unlike endNotes(), which starts
+        none in it). Never waits for the lock. */
+    void endHeldNotes (juce::uint32 trackId);
     int getLatencyBefore (juce::uint32 trackId, juce::uint32 slotId) override;
     void process (const SessionTrack&, juce::int64 frame, juce::AudioBuffer<float>&, int numFrames,
                   const std::vector<SessionMixer::KeyAudio>& keys) override;

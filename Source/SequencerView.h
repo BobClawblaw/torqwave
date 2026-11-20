@@ -60,6 +60,14 @@ public:
     /** Shows the button that asks Ask Torq about this sequence, named so, calling onClick. */
     void showAskButton (const juce::String& name, std::function<void()> onClick);
 
+    /** The sequence's length, in bars (to the nearest beat, one at least), as an undo step. A
+        loop the length of the sequence follows it, and a longer loop is cut to it; notes past
+        the end are kept, silent, until it is made longer again. */
+    void setLength (double bars);
+
+    /** The instrument the menu chose: loaded in place of the one there, its window opened. */
+    void setInstrument (const juce::PluginDescription&);
+
     void resized() override;
     void paint (juce::Graphics&) override;
     bool keyPressed (const juce::KeyPress&) override;
@@ -71,7 +79,7 @@ private:
     void refreshControls();
     void rebuildVoice();
     void loadVoice();                        // the chain made again from the sequence's voice
-    void chooseInstrument();
+    void chooseInstrument();                 // the menu: the instruments by format and maker, as in the session
     void addEffect();
     void askForNew();
     void askToSaveAs();
@@ -97,7 +105,8 @@ private:
                      duplicateButton { "Duplicate" }, variationButton { "Make Variation" }, undoButton { "Undo" }, redoButton { "Redo" },
                      playButton { "Play" }, askButton;
     juce::ToggleButton loopButton { "Loop" }, clickButton { "Click" }, sessionTempoButton { "Session tempo" };
-    juce::Slider tempoSlider { juce::Slider::IncDecButtons, juce::Slider::TextBoxLeft };
+    juce::Slider tempoSlider { juce::Slider::IncDecButtons, juce::Slider::TextBoxLeft },
+                 lengthSlider { juce::Slider::IncDecButtons, juce::Slider::TextBoxLeft };
     juce::Label title, where;
 
     // The voice, down the right.

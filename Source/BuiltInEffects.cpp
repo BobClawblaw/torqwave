@@ -2225,6 +2225,8 @@ void BasicSynthProcessor::prepareToPlay (double sampleRate, int maximumBlockSize
 void BasicSynthProcessor::reset()
 {
     allOff (true);
+    controls = {};
+    vibratoPhase = 0.0;
 }
 
 double BasicSynthProcessor::getTailLengthSeconds() const
@@ -2259,6 +2261,7 @@ void BasicSynthProcessor::noteOn (int note, float velocity)
 
     voice->note = note;
     voice->velocity = velocity;
+    voice->held = false;
     voice->phase = 0.0;
     voice->filter.reset();
     voice->envelope.noteOn();
@@ -2269,13 +2272,78 @@ void BasicSynthProcessor::noteOff (int note)
 {
     for (auto& v : voices)
         if (v.note == note)
-            v.envelope.noteOff();
+        {
+            if (controls.pedal)
+                v.held = true;
+            else
+                v.envelope.noteOff();
+        }
+}
+
+void BasicSynthProcessor::controller (const juce::MidiMessage& m)
+{
+    if (m.isPitchWheel())
+    {
+        controls.bend = (float) (m.getPitchWheelValue() - 8192) / 8192.0f * 2.0f;
+        return;
+    }
+
+    const auto v = (float) m.getControllerValue() / 127.0f;
+
+    switch (m.getControllerNumber())
+    {
+        case 1:  controls.modWheel = v; break;
+        case 7:  controls.volume = v; break;
+        case 10: controls.pan = v; break;
+        case 11: controls.expression = v; break;
+        case 71: controls.resonance = v; setFilter(); break;
+        case 74: controls.brightness = v; setFilter(); break;
+        case 64:
+            controls.pedal = m.getControllerValue() >= 64;
+
+            if (! controls.pedal)
+                for (auto& voice : voices)
+                    if (std::exchange (voice.held, false))
+                        voice.envelope.noteOff();
+            break;
+        case 121:   // reset all controllers
+            controls = {};
+            setFilter();
+            for (auto& voice : voices)
+                if (std::exchange (voice.held, false))
+                    voice.envelope.noteOff();
+            break;
+        default: break;
+    }
+}
+
+bool BasicSynthProcessor::filterOpen() const
+{
+    return cutoff->get() >= 19999.0f && resonance->get() <= 0.0f && controls.brightness >= 1.0f && controls.resonance <= 0.0f;
+}
+
+void BasicSynthProcessor::setFilter()
+{
+    if (filterOpen())
+        return;
+
+    // Cutoff (CC 74) takes the cutoff down as far as eight octaves; Resonance (CC 71) takes it up toward the most.
+    const auto hz = juce::jlimit (20.0f, (float) (0.49 * rate), cutoff->get() * std::exp2 ((controls.brightness - 1.0f) * 8.0f));
+    const auto q = resonance->get() + controls.resonance * (100.0f - resonance->get());
+
+    for (auto& v : voices)
+    {
+        v.filter.setCutoffFrequency (hz);
+        v.filter.setResonance (juce::MathConstants<float>::sqrt2 * 0.5f + q * 0.01f * (20.0f - juce::MathConstants<float>::sqrt2 * 0.5f));
+    }
 }
 
 void BasicSynthProcessor::allOff (bool atOnce)
 {
     for (auto& v : voices)
     {
+        v.held = false;
+
         if (atOnce)
         {
             v.note = -1;
@@ -2328,41 +2396,63 @@ float BasicSynthProcessor::oscillate (Voice& v, double increment) const
     return (float) s;
 }
 
-void BasicSynthProcessor::renderVoices (juce::AudioBuffer<float>& buffer, int from, int count, bool filterOpen, float gain)
+void BasicSynthProcessor::renderVoices (juce::AudioBuffer<float>& buffer, int from, int count)
 {
     if (count <= 0 || buffer.getNumChannels() == 0)
         return;
 
     auto* out = buffer.getWritePointer (0);
+    const auto open = filterOpen();
+    constexpr int chunk = 16;   // the pitch (bend and vibrato) is taken afresh this often
+    constexpr double vibratoHz = 5.5;
 
-    for (auto& v : voices)
+    for (int start = from; start < from + count; start += chunk)
     {
-        if (v.note < 0)
-            continue;
+        const auto n = juce::jmin (chunk, from + count - start);
+        const auto vibrato = controls.modWheel * 0.5 * std::sin (juce::MathConstants<double>::twoPi * vibratoPhase);
+        const auto pitch = std::exp2 ((controls.bend + vibrato) / 12.0);
+        vibratoPhase = std::fmod (vibratoPhase + vibratoHz * n / rate, 1.0);
 
-        const auto increment = juce::MidiMessage::getMidiNoteInHertz (v.note) / rate;
-
-        for (int i = from; i < from + count; ++i)
+        for (auto& v : voices)
         {
-            if (! v.envelope.isActive())
+            if (v.note < 0)
+                continue;
+
+            const auto increment = juce::MidiMessage::getMidiNoteInHertz (v.note) / rate * pitch;
+
+            for (int i = start; i < start + n; ++i)
             {
-                v.note = -1;
-                break;
+                if (! v.envelope.isActive())
+                {
+                    v.note = -1;
+                    v.held = false;
+                    break;
+                }
+
+                auto s = oscillate (v, increment);
+
+                if (! open)
+                    s = v.filter.processSample (0, s);
+
+                out[i] += s * v.envelope.getNextSample() * v.velocity;
             }
-
-            auto s = oscillate (v, increment);
-
-            if (! filterOpen)
-                s = v.filter.processSample (0, s);
-
-            out[i] += s * v.envelope.getNextSample() * v.velocity;
         }
     }
 
+    // Level, then Volume (CC 7) and Expression (CC 11) on MIDI's usual curve (squared), and Pan (CC 10) as a balance.
+    const auto gain = juce::Decibels::decibelsToGain (level->get()) * controls.volume * controls.volume * controls.expression * controls.expression;
     buffer.applyGain (0, from, count, gain);
 
-    for (int ch = 1; ch < buffer.getNumChannels(); ++ch)
-        buffer.copyFrom (ch, from, buffer, 0, from, count);
+    if (buffer.getNumChannels() > 1)
+    {
+        const auto left = juce::jmin (1.0f, 2.0f * (1.0f - controls.pan)), right = juce::jmin (1.0f, 2.0f * controls.pan);
+        buffer.copyFrom (1, from, buffer, 0, from, count);
+        buffer.applyGain (0, from, count, left);
+        buffer.applyGain (1, from, count, right);
+
+        for (int ch = 2; ch < buffer.getNumChannels(); ++ch)
+            buffer.copyFrom (ch, from, buffer, 0, from, count);
+    }
 }
 
 void BasicSynthProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
@@ -2370,30 +2460,20 @@ void BasicSynthProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     const auto n = buffer.getNumSamples();
     buffer.clear();
 
-    // The settings, taken once a block.
+    // The settings, taken once a block; the controllers as they come.
     const juce::ADSR::Parameters envelope { attack->get() * 0.001f, decay->get() * 0.001f, sustain->get() * 0.01f, release->get() * 0.001f };
-    const auto hz = juce::jmin (cutoff->get(), (float) (0.49 * rate));
-    const auto q = resonance->get();
-    const auto open = cutoff->get() >= 19999.0f && q <= 0.0f;
-    const auto gain = juce::Decibels::decibelsToGain (level->get());
 
     for (auto& v : voices)
-    {
         v.envelope.setParameters (envelope);
 
-        if (! open)
-        {
-            v.filter.setCutoffFrequency (hz);
-            v.filter.setResonance (juce::MathConstants<float>::sqrt2 * 0.5f + q * 0.01f * (20.0f - juce::MathConstants<float>::sqrt2 * 0.5f));
-        }
-    }
+    setFilter();
 
     int done = 0;
 
     for (const auto meta : midi)
     {
         const auto at = juce::jlimit (done, n, meta.samplePosition);
-        renderVoices (buffer, done, at - done, open, gain);
+        renderVoices (buffer, done, at - done);
         done = at;
 
         const auto m = meta.getMessage();
@@ -2406,9 +2486,11 @@ void BasicSynthProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
             allOff (true);
         else if (m.isAllNotesOff())
             allOff (false);
+        else if (m.isController() || m.isPitchWheel())
+            controller (m);
     }
 
-    renderVoices (buffer, done, n - done, open, gain);
+    renderVoices (buffer, done, n - done);
     midi.clear();
 }
 }

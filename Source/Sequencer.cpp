@@ -227,14 +227,15 @@ void SequencerPlayer::getNextAudioBlock (const juce::AudioSourceChannelInfo& inf
     if (! liveBlock.isEmpty())
         idleFrames = (juce::int64) (3.0 * rate);
 
-    // Starting from the top, or stopping: the instrument's notes end.
+    // Stopping: the instruments' notes end. Starting from the top: they start afresh, the
+    // first block's notes played (endNotes would leave them out).
     if (now != std::exchange (wasPlaying, now))
     {
-        effects.endNotes();
-
         if (now)
             for (auto& t : s.tracks)
                 effects.reset (t.id);
+        else
+            effects.endNotes();
     }
 
     effects.setClipNotes (now);
@@ -257,7 +258,10 @@ void SequencerPlayer::getNextAudioBlock (const juce::AudioSourceChannelInfo& inf
                 }
 
                 at = 0;
-                effects.endNotes();   // the notes held over the end get no off
+
+                // The notes held over the end get their offs, then the pass plays from its start.
+                for (auto& t : s.tracks)
+                    effects.endHeldNotes (t.id);
             }
 
             const auto n = free ? info.numSamples - done : (int) juce::jmin ((juce::int64) (info.numSamples - done), end - at);
