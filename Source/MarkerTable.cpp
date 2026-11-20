@@ -152,14 +152,16 @@ juce::String MarkerTable::getText (int row, int column) const
         return {};
 
     const auto& m = s->markers[(size_t) index];
-    const auto seconds = [&s] (juce::int64 frames) { return TimeFormat::format (frames, s->sampleRate); };
+    // Times show the session's timecode when it has one, lengths as timecode from 0.
+    const auto at = [&s] (juce::int64 frames) { return TimeFormat::format (frames, s->sampleRate, s->timecode); };
+    const auto span = [&s] (juce::int64 frames) { return TimeFormat::format (frames, s->sampleRate, s->timecode.withoutStart()); };
 
     switch (column)
     {
         case name:   return m.name;
-        case start:  return seconds (m.start);
-        case end:    return m.isRegion() ? seconds (m.getEnd()) : juce::String();
-        case length: return m.isRegion() ? seconds (m.length) : juce::String();
+        case start:  return at (m.start);
+        case end:    return m.isRegion() ? at (m.getEnd()) : juce::String();
+        case length: return m.isRegion() ? span (m.length) : juce::String();
         default:     return {};
     }
 }

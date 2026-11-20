@@ -33,6 +33,48 @@ To give an audio file a video to go with it, use **File > Attach Video...**. **D
 
 To bring the video's own sound into the session, import the video as you would an audio file. The video and its start are saved in the session file.
 
+### Session timecode
+
+A session can count its time in the timecode of its picture. Choose **Multitrack > Picture > Session Timecode...** and set:
+
+- **the frame rate:** 23.976, 24, 25, 29.97 drop frame, 29.97 or 30 frames a second;
+- **the timecode at the session's start,** such as 01:00:00:00.
+
+**From Video** reads both from the session's video (it needs ffmpeg): the frame rate from its picture, drop frame when the video's own timecode is counted that way, and the start so that the video's first frame shows its own timecode. A video at 50, 59.94 or 60 frames a second is counted at 25, 29.97 or 30. When you attach a video to a session that has no timecode yet, the session takes the video's.
+
+With a timecode, the session's clock, its time ruler, the marker list, the clip list, the selection's times and **Go to Time** all show and take timecode, whatever **View > Time Format** says. Times run on through midnight back to 00:00:00:00. Choose **None** to go back to the app's time format. The timecode is saved with the session; sessions from before it open as they were. **View > Time Format** now has 23.976 too.
+
+### Cuts and hits
+
+- **Multitrack > Picture > Find Cuts** runs ffmpeg's scene detection over the session's video and puts a marker (Cut 01, Cut 02 and so on) at the first frame of each new shot. It finds hard cuts and leaves camera moves alone. Running it again adds only the cuts that have no marker yet.
+- **Mark Hit** (Shift-M) puts a marker (Hit 01 and on) where the session is playing, or at the cursor when it is stopped. Tap it along with the picture to mark the moments the music should catch.
+
+Both are ordinary point markers: move, rename or delete them as any other.
+
+### Fitting the tempo to hits
+
+**Multitrack > Picture > Fit Tempo to Hits...** finds the tempo that puts the hits on the beat.
+
+1. **Choose the hits.** Every point marker is listed with its time; click a row to leave it in or out. With a time range selected, the markers inside it start chosen; otherwise all of them do.
+2. **Choose what they land on:**
+   - **Beats** or **Bars:** one tempo for the whole session, from its start, that lands the most hits within a frame of a beat (or of a bar's first beat), with the farthest one as near as it can be. Any tempo changes in the session are replaced.
+   - **Bar lines:** a tempo map, with each hit on the first beat of a bar. Between two hits the tempo is as near the best one-tempo fit as a whole number of beats allows. Beats left over from whole bars go into a shorter bar just before the hit, so the first bar is a pickup when the first hit comes early.
+3. **Set the tempos to look between.** They start at 80 % and 125 % of the session's tempo.
+
+Each hit shows how far from its beat or bar it lands, in milliseconds and in frames; one more than a frame off shows in the warning colour. A frame is one of the session's timecode, or of 25 fps without one. The line under the list sums the fit up. **Apply** sets the tempo as one undo step. Clips on musical tracks keep their beats, as with any tempo change.
+
+Ask Torq can do the same with its `fit_tempo_to_hits` tool, given the markers' names.
+
+### Spotting sounds
+
+Drop a sound on a marker, from the Sound Library or from the Finder, and it lands with its **sync point** on the marker. A drop counts as on a marker when it is within a few pixels of the marker's line, in the track lanes or the marker lane. The sync point is:
+
+1. the sound's cue point named "Sync" (or any cue whose name holds the word);
+2. otherwise its first cue point;
+3. otherwise its loudest sample: the hit of an impact, the middle of a pass-by.
+
+A sound whose sync point is further into it than the marker is into the session starts at the session's start, with its head left out. Of several sounds dropped together, the first goes on the track it is dropped on and the others on new tracks, all synced on the marker.
+
 ### What shows the picture
 
 | System | How the picture is shown |

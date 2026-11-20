@@ -3069,7 +3069,7 @@ double MultitrackView::rulerTick() const
     // The finest spacing that leaves at least 100 pixels between marks, in the steps the time
     // format counts in.
     const auto rate = shown().sampleRate;
-    return TimeFormat::rulerTick (framesPerPixel / rate, rate);
+    return TimeFormat::rulerTick (framesPerPixel / rate, rate, shown().timecode);
 }
 
 SessionSnap::Targets MultitrackView::snapTargets (juce::uint32 ignoreClip, bool toCursorAndRange) const
@@ -3271,7 +3271,7 @@ void MultitrackView::drawTimeRuler (juce::Graphics& g, juce::Rectangle<int> area
         g.setColour (Theme::dimText);
         g.drawVerticalLine ((int) x, (float) area.getBottom() - (full ? 6.0f : 3.0f), (float) area.getBottom());
         g.setColour (Theme::text);
-        g.drawText (TimeFormat::rulerLabel (t, tick, rate), juce::Rectangle<float> (x + 3.0f, (float) area.getY(), 96.0f, (float) area.getHeight() - (full ? 4.0f : 1.0f)),
+        g.drawText (TimeFormat::rulerLabel (t, tick, rate, shown().timecode), juce::Rectangle<float> (x + 3.0f, (float) area.getY(), 96.0f, (float) area.getHeight() - (full ? 4.0f : 1.0f)),
                     juce::Justification::centredLeft, false);
     }
 }
@@ -7673,9 +7673,26 @@ bool MultitrackView::isInterestedInFileDrag (const juce::StringArray& files)
     return false;
 }
 
+std::optional<juce::int64> MultitrackView::pointMarkerNear (float x) const
+{
+    std::optional<juce::int64> nearest;
+    auto best = markerReach;
+
+    for (auto& m : shown().markers)
+        if (const auto off = std::abs (xForFrame (m.start) - x); ! m.isRegion() && off <= best)
+        {
+            best = off;
+            nearest = m.start;
+        }
+
+    return nearest;
+}
+
 void MultitrackView::filesDropped (const juce::StringArray& files, int x, int y)
 {
-    if (onFilesDropped != nullptr)
+    if (const auto marker = x >= listWidth ? pointMarkerNear ((float) x) : std::nullopt; marker.has_value() && onFilesSpotted != nullptr)
+        onFilesSpotted (files, trackAt (y), *marker);
+    else if (onFilesDropped != nullptr)
         onFilesDropped (files, trackAt (y), x < listWidth ? 0 : snapped (frameForX ((float) x)));
 }
 

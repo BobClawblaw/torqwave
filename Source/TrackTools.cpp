@@ -283,13 +283,13 @@ void TrackTools::update()
 juce::String TrackTools::locatorText (juce::int64 frame) const
 {
     const auto state = engine.session.getState();
-    return view.isShowingBars() ? Metronome::positionText (state->tempoMap(), frame) : TimeFormat::format (frame, juce::jmax (1.0, state->sampleRate));
+    return view.isShowingBars() ? Metronome::positionText (state->tempoMap(), frame) : TimeFormat::format (frame, juce::jmax (1.0, state->sampleRate), state->timecode);
 }
 
 std::optional<juce::int64> TrackTools::parseLocator (const juce::String& text) const
 {
     const auto state = engine.session.getState();
-    return view.isShowingBars() ? Metronome::parsePosition (state->tempoMap(), text) : TimeFormat::parse (text, juce::jmax (1.0, state->sampleRate));
+    return view.isShowingBars() ? Metronome::parsePosition (state->tempoMap(), text) : TimeFormat::parse (text, juce::jmax (1.0, state->sampleRate), state->timecode);
 }
 
 void TrackTools::locatorTyped (bool isStart)

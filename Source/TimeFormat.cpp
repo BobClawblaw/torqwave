@@ -4,6 +4,7 @@ namespace TimeFormat
 {
     namespace
     {
+        constexpr double fps23976 = 24000.0 / 1001.0;
         constexpr double fps2997 = 30000.0 / 1001.0;
         constexpr double epsilon = 1.0e-6;   // keeps a whole number of frames whole through the arithmetic
 
@@ -19,6 +20,7 @@ namespace TimeFormat
         {
             switch (kind)
             {
+                case Kind::smpte23976:
                 case Kind::smpte24: return 24;
                 case Kind::smpte25: return 25;
                 case Kind::smpte2997Drop:
@@ -85,12 +87,12 @@ namespace TimeFormat
 
     juce::StringArray names()
     {
-        return { "Minutes and Seconds", "Decimal Seconds", "Samples", "SMPTE 24 fps", "SMPTE 25 fps", "SMPTE 29.97 fps Drop", "SMPTE 29.97 fps", "SMPTE 30 fps" };
+        return { "Minutes and Seconds", "Decimal Seconds", "Samples", "SMPTE 23.976 fps", "SMPTE 24 fps", "SMPTE 25 fps", "SMPTE 29.97 fps Drop", "SMPTE 29.97 fps", "SMPTE 30 fps" };
     }
 
     juce::String key (Kind kind)
     {
-        static const juce::StringArray keys { "minutesSeconds", "decimalSeconds", "samples", "smpte24", "smpte25", "smpte2997drop", "smpte2997", "smpte30" };
+        static const juce::StringArray keys { "minutesSeconds", "decimalSeconds", "samples", "smpte23976", "smpte24", "smpte25", "smpte2997drop", "smpte2997", "smpte30" };
         return keys[juce::jlimit (0, keys.size() - 1, (int) kind)];
     }
 
@@ -107,6 +109,7 @@ namespace TimeFormat
     {
         switch (kind)
         {
+            case Kind::smpte23976: return fps23976;
             case Kind::smpte24: return 24.0;
             case Kind::smpte25: return 25.0;
             case Kind::smpte2997Drop:
@@ -162,6 +165,7 @@ namespace TimeFormat
             case Kind::samples:        return juce::String (frames);
             case Kind::minutesSeconds:
             case Kind::count:          return minutesSeconds (frames, sampleRate);
+            case Kind::smpte23976:
             case Kind::smpte24:
             case Kind::smpte25:
             case Kind::smpte2997Drop:
@@ -207,10 +211,27 @@ namespace TimeFormat
             return (juce::int64) std::llround (total * sampleRate);
         }
 
-        // Timecode: hh:mm:ss:ff, or mm:ss:ff; the frames may follow a semicolon.
-        const auto parts = juce::StringArray::fromTokens (text, ":;", {});
+        const auto counted = parseCounted (text, kind);
 
-        if (parts.size() < 3 || parts.size() > 4)
+        if (! counted.has_value())
+            return std::nullopt;
+
+        return sampleOfFrame (isDropFrame (kind) ? fromDropFrameCount (*counted) : *counted, sampleRate, kind);
+    }
+
+    int countedFps (Kind kind)   { return nominalFps (kind); }
+
+    juce::String countedText (juce::int64 counted, Kind kind)
+    {
+        return isSmpte (kind) ? timecode (juce::jmax ((juce::int64) 0, counted), kind, true) : juce::String();
+    }
+
+    std::optional<juce::int64> parseCounted (const juce::String& text, Kind kind)
+    {
+        // Timecode: hh:mm:ss:ff, or mm:ss:ff; the frames may follow a semicolon.
+        const auto parts = juce::StringArray::fromTokens (text.trim(), ":;", {});
+
+        if (! isSmpte (kind) || parts.size() < 3 || parts.size() > 4)
             return std::nullopt;
 
         std::array<juce::int64, 4> values { 0, 0, 0, 0 };   // hours, minutes, seconds, frames
@@ -230,18 +251,11 @@ namespace TimeFormat
         if (values[1] >= 60 || values[2] >= 60 || values[3] >= fps)
             return std::nullopt;
 
-        auto counted = ((values[0] * 60 + values[1]) * 60 + values[2]) * fps + values[3];
+        // 00 and 01 do not exist at the start of a minute that is not a tenth.
+        if (isDropFrame (kind) && values[2] == 0 && values[3] < 2 && values[1] % 10 != 0)
+            return std::nullopt;
 
-        if (isDropFrame (kind))
-        {
-            // 00 and 01 do not exist at the start of a minute that is not a tenth.
-            if (values[2] == 0 && values[3] < 2 && values[1] % 10 != 0)
-                return std::nullopt;
-
-            counted = fromDropFrameCount (counted);
-        }
-
-        return sampleOfFrame (counted, sampleRate, kind);
+        return ((values[0] * 60 + values[1]) * 60 + values[2]) * fps + values[3];
     }
 
     double rulerTick (double secondsPerPixel, double sampleRate, Kind kind, double minPixels)
@@ -287,6 +301,7 @@ namespace TimeFormat
                 const auto secs = seconds - mins * 60.0;
                 return juce::String (mins) + ":" + (secs < 10.0 ? "0" : "") + juce::String (secs, decimalsFor (secondsPerTick));
             }
+            case Kind::smpte23976:
             case Kind::smpte24:
             case Kind::smpte25:
             case Kind::smpte2997Drop:
@@ -296,5 +311,82 @@ namespace TimeFormat
 
         const auto frame = (juce::int64) std::floor (seconds * framesPerSecond (kind) + epsilon);
         return timecode (isDropFrame (kind) ? dropFrameCount (frame) : frame, kind, false);
+    }
+
+    //==============================================================================
+    namespace
+    {
+        /** Real frames from counted ones, and back, at a kind's rate. */
+        juce::int64 realOf (juce::int64 counted, Kind kind)   { return isDropFrame (kind) ? fromDropFrameCount (counted) : counted; }
+        juce::int64 countedOf (juce::int64 real, Kind kind)   { return isDropFrame (kind) ? dropFrameCount (real) : real; }
+
+        /** The real frames in a day of timecode. */
+        juce::int64 realPerDay (Kind kind)                    { return realOf ((juce::int64) 24 * 3600 * nominalFps (kind), kind); }
+
+        /** The timecode of the real frame `frame` frames on from the start, through midnight. */
+        juce::String fromStart (juce::int64 frame, const Timecode& tc, bool withHours)
+        {
+            const auto day = realPerDay (tc.rate);
+            const auto real = ((realOf (juce::jmax ((juce::int64) 0, tc.start), tc.rate) + frame) % day + day) % day;
+            return timecode (countedOf (real, tc.rate), tc.rate, withHours);
+        }
+    }
+
+    juce::String format (juce::int64 frames, double sampleRate, const Timecode& tc)
+    {
+        if (! tc.isSet())
+            return format (frames, sampleRate);
+
+        if (sampleRate <= 0.0)
+            return "-";
+
+        return fromStart (timecodeFrame (frames, sampleRate, tc.rate), tc, true);
+    }
+
+    std::optional<juce::int64> parse (const juce::String& text, double sampleRate, const Timecode& tc)
+    {
+        if (! tc.isSet())
+            return parse (text, sampleRate);
+
+        const auto counted = parseCounted (text, tc.rate);
+
+        if (! counted.has_value() || sampleRate <= 0.0)
+            return std::nullopt;
+
+        const auto day = realPerDay (tc.rate);
+        const auto real = ((realOf (*counted, tc.rate) - realOf (juce::jmax ((juce::int64) 0, tc.start), tc.rate)) % day + day) % day;
+        return sampleOfFrame (real, sampleRate, tc.rate);
+    }
+
+    double rulerTick (double secondsPerPixel, double sampleRate, const Timecode& tc, double minPixels)
+    {
+        return rulerTick (secondsPerPixel, sampleRate, tc.isSet() ? tc.rate : get(), minPixels);
+    }
+
+    juce::String rulerLabel (double seconds, double secondsPerTick, double sampleRate, const Timecode& tc)
+    {
+        if (! tc.isSet())
+            return rulerLabel (seconds, secondsPerTick, sampleRate);
+
+        return fromStart ((juce::int64) std::floor (juce::jmax (0.0, seconds) * framesPerSecond (tc.rate) + epsilon), tc, false);
+    }
+
+    std::optional<Kind> kindForFrameRate (double fps, bool dropFrame)
+    {
+        const auto ntsc = dropFrame ? Kind::smpte2997Drop : Kind::smpte2997;
+        const std::array<std::pair<double, Kind>, 8> rates { { { fps23976, Kind::smpte23976 }, { 24.0, Kind::smpte24 }, { 25.0, Kind::smpte25 },
+                                                               { fps2997, ntsc }, { 30.0, Kind::smpte30 },
+                                                               { 50.0, Kind::smpte25 }, { 2.0 * fps2997, ntsc }, { 60.0, Kind::smpte30 } } };
+        std::optional<Kind> nearest;
+        auto best = 0.005;   // within half a percent
+
+        for (auto& [rate, kind] : rates)
+            if (const auto off = std::abs (fps / rate - 1.0); off < best)
+            {
+                best = off;
+                nearest = kind;
+            }
+
+        return nearest;
     }
 }

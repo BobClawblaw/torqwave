@@ -3,6 +3,7 @@
 #include "AudioDocument.h"
 #include "FadeShape.h"
 #include "Metronome.h"
+#include "TimeFormat.h"
 
 /** A point on an envelope: the value at a frame (of the session, or for a clip's gain, of its audio). */
 struct AutomationPoint
@@ -677,6 +678,11 @@ struct SessionState
         seconds, 0 or later) its first frame plays. */
     juce::File video;
     double videoStart = 0.0;
+
+    /** The session's timecode, as its picture's: a frame rate and the timecode at time 0. With
+        one, the session's clock, ruler, markers and lists show it, whatever the app's time format;
+        without (rate not a SMPTE kind, as in sessions from before it), they show the app's. */
+    TimeFormat::Timecode timecode;
     std::vector<SessionTrack> tracks;
     Markers markers;                       // points and regions on the session's time, kept sorted
     juce::uint32 nextId = 1;
@@ -1161,6 +1167,12 @@ namespace SessionEdits
         outside those or when they are as given. The clips on musical tracks keep their bars and
         beats through this, setTempoChange and removeTempoChange (see SessionTrack::musical). */
     bool setTempo (SessionState&, double tempo, int beatsPerBar);
+
+    /** Replaces the tempo, time signature and every tempo change at once (as setTempo and
+        setTempoChange check them, changes sorted, one a bar, each after the first), keeping the
+        clips on musical tracks on their bars and beats. False when one is out of range or it is
+        all as given. */
+    bool setTempoMap (SessionState&, double tempo, int beatsPerBar, std::vector<Metronome::TempoChange>);
 
     /** Copies [start, end) from every track: the clips across it cut to it (losing their fades
         on the cut sides), each envelope's line across it, and the markers in it as

@@ -78,7 +78,7 @@ void runTimeFormatTests()
             }
         }
 
-        check (roundTrips == 400 * (int) Kind::count, "parse: every format's text parses back to a frame that shows the same, within half a millisecond for seconds and at or before it for the rest (" + juce::String (roundTrips) + " of 3200)");
+        check (roundTrips == 400 * (int) Kind::count, "parse: every format's text parses back to a frame that shows the same, within half a millisecond for seconds and at or before it for the rest (" + juce::String (roundTrips) + " of " + juce::String (400 * (int) Kind::count) + ")");
     }
 
     // Ruler marks and labels.

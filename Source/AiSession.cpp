@@ -1,5 +1,6 @@
 #include "AiSession.h"
 #include "ClipEffects.h"
+#include "Picture.h"
 
 namespace
 {
@@ -94,7 +95,10 @@ namespace
     "parameters": { "type": "object", "properties": { "sections": { "type": "array", "items": { "type": "string" }, "description": "Section names, in order." },
                     "play": { "type": "boolean" } }, "required": ["sections"] } },
   { "name": "set_tempo", "description": "Set the session's tempo (20 to 400 beats a minute) and beats in a bar (1 to 16) from the start.",
-    "parameters": { "type": "object", "properties": { "bpm": { "type": "number" }, "beats_per_bar": { "type": "integer" } }, "required": ["bpm"] } }
+    "parameters": { "type": "object", "properties": { "bpm": { "type": "number" }, "beats_per_bar": { "type": "integer" } }, "required": ["bpm"] } },
+  { "name": "fit_tempo_to_hits", "description": "Working to picture: find the tempo that puts hit markers (cuts and hits in the picture) on the beat, and set it. land_on: beats or bars give one tempo from the session's start, in place of any tempo changes; bar_lines gives a tempo map with each hit on the first beat of a bar, its tempo kept near the best fit. Looks between min_bpm and max_bpm (80 % to 125 % of the tempo now when left out). Returns the tempo and how far each hit lands from its beat or bar, in ms.",
+    "parameters": { "type": "object", "properties": { "markers": { "type": "array", "items": { "type": "string" }, "description": "The point markers' names from get_session; leave out for every point marker." },
+                    "land_on": { "type": "string", "enum": ["beats", "bars", "bar_lines"] }, "min_bpm": { "type": "number" }, "max_bpm": { "type": "number" } } } }
 ])JSON";
 }
 
@@ -142,7 +146,7 @@ namespace Ai
             for (auto& t : *list)
                 tools.add (object ({ { "type", "function" }, { "function", t } }));
 
-        jassert (tools.size() == 28);
+        jassert (tools.size() == 29);
         return tools;
     }
 
@@ -190,6 +194,7 @@ namespace Ai
         else if (tool == "remove_clip")    result = removeClip (args);
         else if (tool == "add_marker")     result = addMarker (args);
         else if (tool == "set_tempo")      result = setTempo (args);
+        else if (tool == "fit_tempo_to_hits") result = fitTempoToHits (args);
         else if (tool == "set_automation") result = setAutomation (args);
         else if (tool == "add_track_effect") result = addTrackEffect (args);
         else if (tool == "add_note_clip")  result = addNoteClip (args);
@@ -400,6 +405,10 @@ namespace Ai
 
         if (! changes.isEmpty())
             result.getDynamicObject()->setProperty ("tempo_changes", changes);
+
+        if (state.timecode.isSet())
+            result.getDynamicObject()->setProperty ("timecode", TimeFormat::names()[(int) state.timecode.rate].fromFirstOccurrenceOf ("SMPTE ", false, false)
+                                                                    + " from " + TimeFormat::countedText (state.timecode.start, state.timecode.rate));
 
         if (! sections.isEmpty())
             result.getDynamicObject()->setProperty ("sections", sections);
@@ -1163,6 +1172,73 @@ namespace Ai
 
         return done ("Set the tempo to " + juce::String (bpm, 2).trimCharactersAtEnd ("0").trimCharactersAtEnd (".") + " bpm, "
                      + juce::String (beats) + " beats a bar");
+    }
+
+    juce::var SessionTools::fitTempoToHits (const juce::var& a)
+    {
+        std::vector<juce::int64> hits;
+        juce::StringArray names;
+
+        if (const auto* wanted = a["markers"].getArray())
+        {
+            for (auto& name : *wanted)
+            {
+                const auto m = std::find_if (state.markers.begin(), state.markers.end(),
+                                             [n = name.toString().trim()] (const Marker& x) { return ! x.isRegion() && x.name.trim().equalsIgnoreCase (n); });
+
+                if (m == state.markers.end())
+                    return refused ("no point marker named " + name.toString().quoted() + "; get_session lists the markers");
+
+                hits.push_back (m->start);
+                names.add (m->name);
+            }
+        }
+        else
+        {
+            for (auto& m : state.markers)
+                if (! m.isRegion())
+                {
+                    hits.push_back (m.start);
+                    names.add (m.name);
+                }
+        }
+
+        if (hits.empty())
+            return refused ("the session has no point markers to fit the tempo to");
+
+        std::vector<size_t> order (hits.size());
+        std::iota (order.begin(), order.end(), (size_t) 0);
+        std::sort (order.begin(), order.end(), [&hits] (size_t x, size_t y) { return hits[x] < hits[y]; });
+        std::vector<juce::int64> sorted;
+
+        for (auto i : order)
+            sorted.push_back (hits[i]);
+
+        const auto landOnText = a["land_on"].toString();
+        const auto landOn = landOnText == "bars" ? Picture::LandOn::bars : landOnText == "bar_lines" ? Picture::LandOn::barLines : Picture::LandOn::beats;
+        const auto low = a.hasProperty ("min_bpm") ? (double) a["min_bpm"] : juce::jmax (20.0, std::floor (state.tempo * 0.8));
+        const auto high = a.hasProperty ("max_bpm") ? (double) a["max_bpm"] : juce::jmin (400.0, std::ceil (state.tempo * 1.25));
+        const auto frame = (juce::int64) std::llround (state.sampleRate / (state.timecode.isSet() ? TimeFormat::framesPerSecond (state.timecode.rate) : 25.0));
+        const auto fit = Picture::fitTempo (sorted, state.sampleRate, state.beatsPerBar, landOn, low, high, frame);
+
+        if (! std::isfinite (low) || ! std::isfinite (high) || ! fit.isValid())
+            return refused ("min_bpm and max_bpm must be 20 to 400, the lower first");
+
+        if (! SessionEdits::applyTempoFit (state, fit))
+            return refused ("the tempo is so already");
+
+        juce::Array<juce::var> landed;
+
+        for (size_t i = 0; i < order.size(); ++i)
+            landed.add (object ({ { "marker", names[(int) order[i]] }, { "off_ms", round1 (1000.0 * (double) fit.misses[i] / state.sampleRate) } }));
+
+        auto result = done ("Fit the tempo to " + juce::String ((int) hits.size()) + (hits.size() == 1 ? " hit" : " hits") + ": "
+                            + juce::String (fit.tempo, 2).trimCharactersAtEnd ("0").trimCharactersAtEnd (".") + " bpm"
+                            + (fit.changes.empty() ? juce::String() : " from the start, with " + juce::String ((int) fit.changes.size()) + " tempo changes"));
+        result.getDynamicObject()->setProperty ("tempo", round3 (fit.tempo));
+        result.getDynamicObject()->setProperty ("within_a_frame", fit.within);
+        result.getDynamicObject()->setProperty ("hits", landed);
+        return result;
     }
 
     juce::var SessionTools::addTrackEffect (const juce::var& a)

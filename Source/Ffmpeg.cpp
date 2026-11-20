@@ -4,8 +4,10 @@ namespace Ffmpeg
 {
 namespace
 {
-    /** Runs ffmpeg to the end; its last error line on failure, "Stopped." if keepGoing said so. */
-    juce::String run (const juce::File& ffmpeg, const juce::StringArray& arguments, const std::function<bool()>& keepGoing)
+    /** Runs ffmpeg to the end; its last error line on failure, "Stopped." if keepGoing said so.
+        What it printed goes in `printed`, when given. */
+    juce::String run (const juce::File& ffmpeg, const juce::StringArray& arguments, const std::function<bool()>& keepGoing,
+                      juce::String* printed = nullptr)
     {
         juce::StringArray command { ffmpeg.getFullPathName(), "-nostdin", "-hide_banner", "-v", "error", "-y" };
         command.addArray (arguments);
@@ -39,6 +41,9 @@ namespace
 
             juce::Thread::sleep (50);
         }
+
+        if (printed != nullptr)
+            *printed = output.toString();
 
         if (process.getExitCode() == 0)
             return {};
@@ -209,6 +214,9 @@ Picture probePicture (const juce::File& ffmpeg, const juce::File& video)
     {
         line = line.trim();
 
+        if (line.startsWith ("timecode") && line.contains (":") && p.timecode.isEmpty())
+            p.timecode = line.fromFirstOccurrenceOf (":", false, false).trim();
+
         if (line.startsWith ("Duration:") && p.duration <= 0.0)
         {
             const auto t = juce::StringArray::fromTokens (line.fromFirstOccurrenceOf ("Duration:", false, false).upToFirstOccurrenceOf (",", false, false).trim(), ":", {});
@@ -236,6 +244,39 @@ Picture probePicture (const juce::File& ffmpeg, const juce::File& video)
     }
 
     return p;
+}
+
+std::vector<double> sceneChangeTimes (const juce::String& printed)
+{
+    // metadata=print writes "frame:3 pts:120 pts_time:4.8", then the frame's scene score.
+    std::vector<double> times;
+
+    for (auto line : juce::StringArray::fromLines (printed))
+        if (line = line.trim(); line.startsWith ("frame:") && line.contains ("pts_time:"))
+        {
+            const auto time = line.fromFirstOccurrenceOf ("pts_time:", false, false).upToFirstOccurrenceOf (" ", false, false).trim();
+
+            if (time.containsOnly ("0123456789.") && time.isNotEmpty())
+                times.push_back (time.getDoubleValue());
+        }
+
+    std::sort (times.begin(), times.end());
+    return times;
+}
+
+juce::String findSceneChanges (const juce::File& ffmpeg, const juce::File& video, double threshold, std::vector<double>& times,
+                               const std::function<bool()>& keepGoing)
+{
+    times.clear();
+    juce::String printed;
+    const auto filter = "select='gt(scene," + juce::String (juce::jlimit (0.01, 0.99, threshold), 3) + ")',metadata=print:file=-";
+    const auto error = run (ffmpeg, { "-i", video.getFullPathName(), "-map", "0:v:0", "-an", "-sn", "-dn", "-vf", filter, "-f", "null", "-" },
+                            keepGoing, &printed);
+
+    if (error.isEmpty())
+        times = sceneChangeTimes (printed);
+
+    return error;
 }
 
 juce::String recutFilter (const PictureMap& map, double soundSeconds, const Picture& picture)

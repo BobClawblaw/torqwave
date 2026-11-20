@@ -543,6 +543,15 @@ private:
     juce::int64 addFilesToSession (const juce::StringArray& files, int track, juce::int64 frame);
     /** Adds an open file (a row of the Files panel) as a clip at the frame, on the track or a new one. */
     void addOpenFileToSession (int index, int track, juce::int64 frame);
+
+    // Working to picture
+    void askForSessionTimecode();
+    void findCuts();
+    void markHit();
+    void showFitTempoToHits();
+
+    /** Adds the files as Picture::spotFiles does, each sound's sync point on the marker, as one undo step. */
+    void spotFilesOnMarker (const juce::StringArray& files, int track, juce::int64 marker);
     void chooseMixDownFile();
     void askForMixDownFormat (const juce::File&);
     void mixDown (const juce::File&, int bitDepth, juce::Range<juce::int64>, std::optional<Delivery::Spec> spec = std::nullopt);

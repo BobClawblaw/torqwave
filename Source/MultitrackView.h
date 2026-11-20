@@ -9,8 +9,9 @@
     the editor; right-click it to choose among its takes; Command-drag it up or down to change its gain.
     Shift-click clips to select several: dragging any of them moves them all in time, and cut,
     copy, paste, duplicate and delete work on them together. Click to place the cursor, drag across the
-    timeline to select a time range; drop audio files to add them as clips. A track's R button
-    arms it for recording. Drag a track's header up or down (by its background) to move the track;
+    timeline to select a time range; drop audio files to add them as clips (on a marker, to spot them
+    there by their sync points). A track's R button arms it for recording. Drag a track's header up
+    or down (by its background) to move the track;
     right-click it to put the track in a group, whose volume, mute and solo changes go together.
 
     Under the ruler, the marker lane shows the session's markers and regions: click one to move
@@ -44,6 +45,15 @@ public:
     std::function<void (juce::uint32 clipId)> onEditClip, onClipEffects, onAddToLibrary;
     std::function<void (const std::vector<juce::uint32>& clipIds)> onCombineClips;
     std::function<void (const juce::StringArray& files, int track, juce::int64 frame)> onFilesDropped;
+
+    /** Files dropped on a point marker (within markerReach pixels of its line, in the lanes or the
+        marker lane): to spot there, each sound's sync point on the marker's frame. Without this
+        set, they go to onFilesDropped as anywhere else. */
+    std::function<void (const juce::StringArray& files, int track, juce::int64 marker)> onFilesSpotted;
+    static constexpr float markerReach = 6.0f;
+
+    /** The frame of the point marker whose line is nearest x within markerReach, if any. */
+    std::optional<juce::int64> pointMarkerNear (float x) const;
     /** A row of the Files panel dropped: that open file to add as a clip, on the track (or past the last) at the frame. */
     std::function<void (int openFile, int track, juce::int64 frame)> onOpenFileDropped;
     std::function<void()> onSelectionChanged;

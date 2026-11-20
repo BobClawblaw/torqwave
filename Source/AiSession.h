@@ -98,6 +98,7 @@ namespace Ai
         juce::var removeClip (const juce::var&);
         juce::var addMarker (const juce::var&);
         juce::var setTempo (const juce::var&);
+        juce::var fitTempoToHits (const juce::var&);
         juce::var setAutomation (const juce::var&);
         juce::var addNoteClip (const juce::var&);
         juce::var setInstrument (const juce::var&);

@@ -329,7 +329,7 @@ juce::String SelectionPanel::format (juce::int64 frames, double rate)
     return TimeFormat::format (frames, rate);
 }
 
-void SelectionPanel::set (juce::Range<juce::int64> selection, juce::Range<juce::int64> view, double rate)
+void SelectionPanel::set (juce::Range<juce::int64> selection, juce::Range<juce::int64> view, double rate, const TimeFormat::Timecode& timecode)
 {
     std::array<std::array<juce::String, 3>, 2> next;
     const std::array<juce::Range<juce::int64>, 2> ranges { selection, view };
@@ -338,8 +338,8 @@ void SelectionPanel::set (juce::Range<juce::int64> selection, juce::Range<juce::
     {
         const auto& range = ranges[row];
         const auto shown = ! range.isEmpty() && rate > 0.0;
-        next[row] = { shown ? format (range.getStart(), rate) : "-", shown ? format (range.getEnd(), rate) : "-",
-                      shown ? format (range.getLength(), rate) : "-" };
+        next[row] = { shown ? TimeFormat::format (range.getStart(), rate, timecode) : "-", shown ? TimeFormat::format (range.getEnd(), rate, timecode) : "-",
+                      shown ? TimeFormat::format (range.getLength(), rate, timecode.withoutStart()) : "-" };
     }
 
     if (next != cells)

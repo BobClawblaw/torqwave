@@ -82,6 +82,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Next Marker | `Option-Right Arrow` |
 | Previous Region, Next Region | `Shift-Cmd-[`, `Shift-Cmd-]` |
 | Add Marker (Add Region with a selection) | `M` |
+| Mark Hit (a hit marker where the session plays, for Fit Tempo to Hits) | `Shift-M` |
 
 ## Effects
 

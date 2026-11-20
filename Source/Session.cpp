@@ -3258,6 +3258,28 @@ bool setTempo (SessionState& s, double tempo, int beatsPerBar)
     return true;
 }
 
+bool setTempoMap (SessionState& s, double tempo, int beatsPerBar, std::vector<Metronome::TempoChange> changes)
+{
+    const auto inRange = [] (double bpm, int beats) { return bpm >= 20.0 && bpm <= 400.0 && beats >= 1 && beats <= 16; };
+
+    if (! inRange (tempo, beatsPerBar))
+        return false;
+
+    for (size_t i = 0; i < changes.size(); ++i)
+        if (! inRange (changes[i].tempo, changes[i].beatsPerBar) || changes[i].bar < 1 || (i > 0 && changes[i].bar <= changes[i - 1].bar))
+            return false;
+
+    if (juce::exactlyEqual (tempo, s.tempo) && beatsPerBar == s.beatsPerBar && changes == s.tempoChanges)
+        return false;
+
+    const auto places = musicalPlaces (s);
+    s.tempo = tempo;
+    s.beatsPerBar = beatsPerBar;
+    s.tempoChanges = std::move (changes);
+    keepMusicalPlaces (s, places);
+    return true;
+}
+
 bool setTempoChange (SessionState& s, Metronome::TempoChange change)
 {
     if (change.bar < 1 || change.tempo < 20.0 || change.tempo > 400.0 || change.beatsPerBar < 1 || change.beatsPerBar > 16)
@@ -5053,6 +5075,13 @@ juce::String save (const SessionState& state, const juce::File& target,
         video->setAttribute ("start", state.videoStart);
     }
 
+    if (state.timecode.isSet())
+    {
+        auto* timecode = root.createNewChildElement ("TIMECODE");
+        timecode->setAttribute ("rate", TimeFormat::key (state.timecode.rate));
+        timecode->setAttribute ("start", TimeFormat::countedText (state.timecode.start, state.timecode.rate));
+    }
+
     for (auto& m : state.markers)
     {
         auto* marker = root.createNewChildElement ("MARKER");
@@ -5441,6 +5470,15 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
             state.video = juce::File (videoXml->getStringAttribute ("absolute"));
 
         state.videoStart = juce::jmax (0.0, videoXml->getDoubleAttribute ("start"));
+    }
+
+    // A rate not known, or a start that doesn't read at it, leaves the session without a timecode.
+    if (auto* timecodeXml = root->getChildByName ("TIMECODE"))
+    {
+        const auto rate = TimeFormat::fromKey (timecodeXml->getStringAttribute ("rate"));
+
+        if (const auto start = TimeFormat::parseCounted (timecodeXml->getStringAttribute ("start"), rate))
+            state.timecode = { rate, *start };
     }
 
     for (auto* markerXml : root->getChildWithTagNameIterator ("MARKER"))

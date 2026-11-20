@@ -92,8 +92,8 @@ void ClipList::rebuild()
         if (c->muted)
             flags.add ("Muted");
 
-        rows.push_back ({ c->id, { tr.name, c->name, TimeFormat::format (c->position, s->sampleRate),
-                                   TimeFormat::format (c->length, s->sampleRate), c->source.getFileName(), flags.joinIntoString (", ") },
+        rows.push_back ({ c->id, { tr.name, c->name, TimeFormat::format (c->position, s->sampleRate, s->timecode),
+                                   TimeFormat::format (c->length, s->sampleRate, s->timecode.withoutStart()), c->source.getFileName(), flags.joinIntoString (", ") },
                           t, c->position, c->length });
     }
 

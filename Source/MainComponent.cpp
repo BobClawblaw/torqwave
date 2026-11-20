@@ -45,6 +45,8 @@
 #include "Analysis.h"
 #include "Surround.h"
 #include "Video.h"
+#include "Picture.h"
+#include "FitTempoPanel.h"
 #include "Project.h"
 #include "GuideView.h"
 
@@ -185,6 +187,7 @@ namespace
         cmdAddVca, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite,
         cmdControlSurface, cmdLearnPlay, cmdLearnStop, cmdLearnRecord, cmdForgetMidiLearn,
         cmdEditInPlace, cmdBackToClip, cmdClipEffects, cmdCombineSound, cmdAddToLibrary,
+        cmdTimeSmpte23976, cmdSessionTimecode, cmdFindCuts, cmdMarkHit, cmdFitTempoToHits,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -200,6 +203,17 @@ namespace
             || id == cmdRecordSequence || id == cmdPlaySequence || id == cmdSaveChannels
             || id == cmdStretch || id == cmdExtremeStretch || id == cmdPitch || id == cmdDereverb || id == cmdLevelSpeech || id == cmdCentreChannel || id == cmdPhaseCorrection || id == cmdGenerateTones || id == cmdPitchCorrection
             || id == cmdGenerateInstrument;
+    }
+
+    /** View > Time Format's command for each TimeFormat::Kind, in its order (23.976 came later, so its id is out of line). */
+    constexpr std::array<int, (size_t) TimeFormat::Kind::count> timeFormatCommands {
+        cmdTimeMinutesSeconds, cmdTimeDecimalSeconds, cmdTimeSamples, cmdTimeSmpte23976, cmdTimeSmpte24, cmdTimeSmpte25, cmdTimeSmpte2997Drop, cmdTimeSmpte2997, cmdTimeSmpte30
+    };
+
+    TimeFormat::Kind timeFormatOf (int commandId)
+    {
+        const auto i = std::find (timeFormatCommands.begin(), timeFormatCommands.end(), commandId) - timeFormatCommands.begin();
+        return (TimeFormat::Kind) juce::jlimit (0, (int) TimeFormat::Kind::count - 1, (int) i);
     }
 
     juce::String formatTime (juce::int64 frames, double sampleRate)
@@ -1076,6 +1090,7 @@ MainComponent::MainComponent()
     multitrack.onCombineClips = [this] (const std::vector<juce::uint32>& clipIds) { combineClips (clipIds); };
     multitrack.onAddToLibrary = [this] (juce::uint32 clipId) { askToAddToLibrary (clipId); };
     multitrack.onFilesDropped = [this] (const juce::StringArray& files, int track, juce::int64 frame) { addFilesToSession (files, track, frame); };
+    multitrack.onFilesSpotted = [this] (const juce::StringArray& files, int track, juce::int64 marker) { spotFilesOnMarker (files, track, marker); };
     multitrack.onOpenFileDropped = [this] (int index, int track, juce::int64 frame) { addOpenFileToSession (index, track, frame); };
     multitrack.onSelectionChanged = [this] { commands.commandStatusChanged(); timerCallback(); };
     multitrack.isLoopPlaybackOn = [this] { return loopPlayback; };
@@ -1903,10 +1918,10 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setTicked (dock->isShown (Panels::spectrum)); break;
         case cmdShowTonalBalance: info.setInfo ("Tonal Balance", "Show or hide the long-term spectrum of what goes to the outputs against a target range for a style", "Window", 0);
                             info.setTicked (dock->isShown (Panels::tonalBalance)); break;
-        case cmdTimeMinutesSeconds: case cmdTimeDecimalSeconds: case cmdTimeSamples: case cmdTimeSmpte24:
+        case cmdTimeMinutesSeconds: case cmdTimeDecimalSeconds: case cmdTimeSamples: case cmdTimeSmpte23976: case cmdTimeSmpte24:
         case cmdTimeSmpte25: case cmdTimeSmpte2997Drop: case cmdTimeSmpte2997: case cmdTimeSmpte30:
         {
-            const auto kind = (TimeFormat::Kind) (id - cmdTimeMinutesSeconds);
+            const auto kind = timeFormatOf (id);
             const auto name = TimeFormat::names()[(int) kind];
             info.setInfo (name, "Show every time as " + (TimeFormat::isSmpte (kind) ? name + " timecode" : name.toLowerCase()), "View", 0);
             info.setTicked (TimeFormat::get() == kind);
@@ -2197,6 +2212,17 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (multitrackMode && ! engine.session.getState()->arrangement.empty()); break;
         case cmdFlattenArrangement: info.setInfo ("Flatten Arrangement", "Lay the session out in the arrangement chain's order", "Multitrack", 0);
                             info.setActive (multitrackMode && ! engine.session.getState()->arrangement.empty()); break;
+        case cmdSessionTimecode: info.setInfo ("Session Timecode...", "Set the session's frame rate and the timecode at its start, or read them from its video: "
+                                                                      "its clock, ruler and markers then show that timecode", "Multitrack", 0);
+                            info.setActive (multitrackMode); break;
+        case cmdFindCuts:   info.setInfo ("Find Cuts", "Add a marker at each cut in the session's video, found by ffmpeg's scene detection", "Multitrack", 0);
+                            info.setActive (multitrackMode && engine.session.getState()->video.existsAsFile() && backgroundJob == nullptr && Ffmpeg::find() != juce::File()); break;
+        case cmdMarkHit:    info.setInfo ("Mark Hit", "Add a hit marker where the session is playing (or at the cursor while stopped), for Fit Tempo to Hits", "Multitrack", 0);
+                            info.addDefaultKeypress ('m', juce::ModifierKeys::shiftModifier);
+                            info.setActive (multitrackMode); break;
+        case cmdFitTempoToHits: info.setInfo ("Fit Tempo to Hits...", "Find the tempo, or a tempo map, that puts the markers chosen as hits on beats or bars, and show how far off each lands", "Multitrack", 0);
+                            info.setActive (multitrackMode && std::any_of (engine.session.getState()->markers.begin(), engine.session.getState()->markers.end(),
+                                                                           [] (const Marker& m) { return ! m.isRegion(); })); break;
         case cmdShowTakes:
         {
             info.setInfo ("Show Takes", "Show the selected track's take lanes, to comp its clips' takes: drag across a take to use that part of it", "Multitrack", 0);
@@ -2583,7 +2609,7 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
     }
 
     // While recording, the document must stay as it is so the take lands where it was started.
-    if (isRecording() && id != cmdRecord && id != cmdPlayPause && id != cmdAddMarker)
+    if (isRecording() && id != cmdRecord && id != cmdPlayPause && id != cmdAddMarker && id != cmdMarkHit)
         info.setActive (false);
 }
 
@@ -2912,6 +2938,10 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdCombineSound: combineClips (multitrack.getSelectedClips()); break;
         case cmdAddToLibrary: askToAddToLibrary (multitrack.getSelectedClip()); break;
         case cmdAddSection: multitrack.addSectionFromRange(); break;
+        case cmdSessionTimecode: askForSessionTimecode(); break;
+        case cmdFindCuts:   findCuts(); break;
+        case cmdMarkHit:    markHit(); break;
+        case cmdFitTempoToHits: showFitTempoToHits(); break;
         case cmdPlayArrangement: multitrack.setPlayArrangement (! multitrack.isPlayingArrangement()); commands.commandStatusChanged(); break;
         case cmdFlattenArrangement: multitrack.flattenArrangement(); break;
         case cmdClipGainLines: multitrack.setShowClipGain (! multitrack.isShowingClipGain()); commands.commandStatusChanged(); break;
@@ -2949,9 +2979,9 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdShowPhase:  dock->toggle (Panels::phase); break;
         case cmdShowTonalBalance: dock->toggle (Panels::tonalBalance); break;
         case cmdShowStatistics: dock->toggle (Panels::statistics); break;
-        case cmdTimeMinutesSeconds: case cmdTimeDecimalSeconds: case cmdTimeSamples: case cmdTimeSmpte24:
+        case cmdTimeMinutesSeconds: case cmdTimeDecimalSeconds: case cmdTimeSamples: case cmdTimeSmpte23976: case cmdTimeSmpte24:
         case cmdTimeSmpte25: case cmdTimeSmpte2997Drop: case cmdTimeSmpte2997: case cmdTimeSmpte30:
-            setTimeFormat ((TimeFormat::Kind) (info.commandID - cmdTimeMinutesSeconds));
+            setTimeFormat (timeFormatOf (info.commandID));
             break;
         case cmdMaximizeEditor:
             if (dock->getMaximised().isEmpty())
@@ -3401,7 +3431,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             menu.addSeparator();
             menu.addSubMenu ("Theme", themeMenu);
             group ("Time Format", { cmdBarsAndBeats, cmdTimeWithBars, 0, cmdTimeMinutesSeconds, cmdTimeDecimalSeconds, cmdTimeSamples, 0,
-                                    cmdTimeSmpte24, cmdTimeSmpte25, cmdTimeSmpte2997Drop, cmdTimeSmpte2997, cmdTimeSmpte30 });
+                                    cmdTimeSmpte23976, cmdTimeSmpte24, cmdTimeSmpte25, cmdTimeSmpte2997Drop, cmdTimeSmpte2997, cmdTimeSmpte30 });
             break;
         }
         case 4:
@@ -3419,6 +3449,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             group ("Automation", { cmdWriteAutomation, 0, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite });
             group ("Controllers", { cmdControlSurface, 0, cmdLearnPlay, cmdLearnStop, cmdLearnRecord, cmdForgetMidiLearn });
             group ("Tempo", { cmdMetronome, cmdCountIn, 0, cmdTempo, cmdTapTempo, cmdTempoChange, cmdBarsAndBeats, cmdTimeWithBars, 0, cmdMusicalTimebase });
+            group ("Picture", { cmdSessionTimecode, 0, cmdFindCuts, cmdMarkHit, cmdFitTempoToHits });
             {
                 // What snapping goes to in bars and beats, as the toolbar's Grid box.
                 juce::PopupMenu grid;
@@ -3669,19 +3700,21 @@ void MainComponent::timerCallback()
 
         const auto pos = player.isPlaying() ? player.getHeardFrame() : multitrack.getCursor();
         // Counting bars, the clock does too, as Cubase's (bar.beat.16th.tick).
-        const auto clock = multitrack.isShowingBars() ? Metronome::positionText (engine.session.getState()->tempoMap(), pos) : formatTime (pos, rate);
+        // The session's timecode, when it has one, in place of the app's time format.
+        const auto state = engine.session.getState();
+        const auto& timecode = state->timecode;
+        const auto clock = multitrack.isShowingBars() ? Metronome::positionText (state->tempoMap(), pos) : TimeFormat::format (pos, rate, timecode);
         transportBar->update (player.isPlaying(), isRecording(), loopPlayback, (isRecording() ? "REC " : "") + clock);
         const auto visible = multitrack.getVisibleFrames();
-        selectionPanel.set (multitrack.getTimeSelection(), { (juce::int64) juce::jmax (0.0, visible.getStart()), (juce::int64) visible.getEnd() }, rate);
+        selectionPanel.set (multitrack.getTimeSelection(), { (juce::int64) juce::jmax (0.0, visible.getStart()), (juce::int64) visible.getEnd() }, rate, timecode);
 
-        const auto state = engine.session.getState();
         juce::String clipText;
 
         if (const auto where = state->findClip (multitrack.getSelectedClip()))
         {
             const auto& clip = state->tracks[(size_t) where->first].clips[(size_t) where->second];
-            clipText = clip.name + "  " + formatTime (clip.position, rate) + " - " + formatTime (clip.getEnd(), rate)
-                       + "  (" + formatTime (clip.length, rate) + ")";
+            clipText = clip.name + "  " + TimeFormat::format (clip.position, rate, timecode) + " - " + TimeFormat::format (clip.getEnd(), rate, timecode)
+                       + "  (" + TimeFormat::format (clip.length, rate, timecode.withoutStart()) + ")";
         }
 
         selectionLabel.setText (clipText, juce::dontSendNotification);
@@ -8050,6 +8083,12 @@ void MainComponent::attachVideo()
             {
                 auto next = *engine.session.getState();
                 next.video = video;
+
+                // A session without a timecode takes the video's.
+                if (const auto ffmpeg = Ffmpeg::find(); ! next.timecode.isSet() && ffmpeg != juce::File())
+                    if (const auto tc = Picture::timecodeOf (Ffmpeg::probePicture (ffmpeg, video), next.videoStart))
+                        next.timecode = *tc;
+
                 engine.session.apply (std::move (next), "Attach Video");
                 showVideoPanel();
                 commands.commandStatusChanged();
@@ -8126,6 +8165,183 @@ void MainComponent::detachVideo()
         engine.document.setVideo ({});
 
     commands.commandStatusChanged();
+}
+
+void MainComponent::askForSessionTimecode()
+{
+    if (! multitrackMode)
+        return;
+
+    const auto state = engine.session.getState();
+    const auto& now = state->timecode;
+    const std::vector<TimeFormat::Kind> kinds { TimeFormat::Kind::smpte23976, TimeFormat::Kind::smpte24, TimeFormat::Kind::smpte25,
+                                                TimeFormat::Kind::smpte2997Drop, TimeFormat::Kind::smpte2997, TimeFormat::Kind::smpte30 };
+    juce::StringArray rates { "None (the app's time format)" };
+
+    for (auto k : kinds)
+        rates.add (TimeFormat::names()[(int) k].fromFirstOccurrenceOf ("SMPTE ", false, false));
+
+    const auto canRead = state->video.existsAsFile() && Ffmpeg::find() != juce::File();
+    auto* box = new juce::AlertWindow ("Session Timecode",
+                                       "The frame rate of the session's picture and the timecode at the session's start. With one, the clock, the ruler, "
+                                       "the markers and the lists show the session's times as that timecode."
+                                           + juce::String (canRead ? " From Video reads both from " + state->video.getFileName() + "." : ""),
+                                       juce::MessageBoxIconType::NoIcon, this);
+    box->addComboBox ("rate", rates, "Frame rate");
+    const auto chosen = std::find (kinds.begin(), kinds.end(), now.rate);
+    box->getComboBoxComponent ("rate")->setSelectedItemIndex (chosen == kinds.end() ? 0 : 1 + (int) (chosen - kinds.begin()), juce::dontSendNotification);
+    box->addTextEditor ("start", now.isSet() ? TimeFormat::countedText (now.start, now.rate) : juce::String ("00:00:00:00"), "Timecode at the start");
+    box->getTextEditor ("start")->setInputRestrictions (12, "0123456789:;");
+    box->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
+
+    if (canRead)
+        box->addButton ("From Video", 2);
+
+    box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([this, box, kinds] (int result)
+    {
+        if (result == 0)
+            return;
+
+        auto next = *engine.session.getState();
+        TimeFormat::Timecode timecode;
+
+        if (result == 2)
+        {
+            const auto picture = Ffmpeg::probePicture (Ffmpeg::find(), next.video);
+            const auto read = Picture::timecodeOf (picture, next.videoStart, next.timecode.start);
+
+            if (! read)
+            {
+                showError ("Session Timecode", "The frame rate of " + next.video.getFileName() + " ("
+                                                   + (picture.frameRate > 0.0 ? juce::String (picture.frameRate, 3) + " fps" : juce::String ("not read"))
+                                                   + ") is not one timecode counts: 23.976, 24, 25, 29.97 or 30 fps, or twice one of those.");
+                return;
+            }
+
+            timecode = *read;
+        }
+        else if (const auto index = box->getComboBoxComponent ("rate")->getSelectedItemIndex(); index > 0)
+        {
+            const auto kind = kinds[(size_t) index - 1];
+            const auto typed = box->getTextEditorContents ("start");
+            const auto start = TimeFormat::parseCounted (typed, kind);
+
+            if (! start)
+            {
+                showError ("Session Timecode", "\"" + typed.trim() + "\" is not a timecode at " + TimeFormat::names()[(int) kind].fromFirstOccurrenceOf ("SMPTE ", false, false)
+                                                   + ": hours, minutes, seconds and frames, as 01:00:00:00.");
+                return;
+            }
+
+            timecode = { kind, *start };
+        }
+
+        if (SessionEdits::setTimecode (next, timecode))
+            engine.session.apply (std::move (next), "Session Timecode");
+    }), true);
+}
+
+void MainComponent::findCuts()
+{
+    const auto video = engine.session.getState()->video;
+    const auto ffmpeg = Ffmpeg::find();
+
+    if (! multitrackMode || ! video.existsAsFile() || ffmpeg == juce::File() || backgroundJob != nullptr)
+        return;
+
+    auto times = std::make_shared<std::vector<double>>();
+    auto picture = std::make_shared<Ffmpeg::Picture>();
+    auto error = std::make_shared<juce::String>();
+
+    backgroundJob = std::make_unique<BackgroundJob> (*this, "Finding the cuts in " + video.getFileName() + "...",
+        [times, picture, error, ffmpeg, video] (const std::function<bool (float)>& progress)
+        {
+            progress (-1.0f);
+            *picture = Ffmpeg::probePicture (ffmpeg, video);
+            *error = Ffmpeg::findSceneChanges (ffmpeg, video, Picture::cutThreshold, *times, [&progress] { return progress (-1.0f); });
+            return *error != "Stopped.";
+        },
+        [this, times, picture, error, video]
+        {
+            if (error->isNotEmpty())
+            {
+                showError ("Find Cuts", *error);
+                return;
+            }
+
+            auto next = *engine.session.getState();
+
+            if (next.video != video)
+                return;
+
+            if (const auto added = SessionEdits::addCutMarkers (next, *times, picture->frameRate); added > 0)
+                engine.session.apply (std::move (next), added == 1 ? "Find Cuts: 1 Marker" : "Find Cuts: " + juce::String (added) + " Markers");
+            else
+                showNote ("Find Cuts", times->empty() ? "No cuts were found in " + video.getFileName() + "."
+                                                      : "Each cut found in " + video.getFileName() + " already has a marker.");
+        });
+    backgroundJob->launchThread();
+    commands.commandStatusChanged();
+}
+
+void MainComponent::markHit()
+{
+    if (! multitrackMode)
+        return;
+
+    auto& player = engine.getPlayer();
+    const auto playing = player.isPlaying() && player.getMode() == DocumentPlayerProcessor::Mode::session;
+    auto next = *engine.session.getState();
+    SessionEdits::addHitMarker (next, playing ? player.getHeardFrame() : multitrack.getCursor());
+    engine.session.apply (std::move (next), "Mark Hit");
+}
+
+void MainComponent::showFitTempoToHits()
+{
+    if (! multitrackMode)
+        return;
+
+    auto panel = std::make_shared<FitTempoPanel> (*engine.session.getState(), multitrack.getTimeSelection());
+    auto* box = new juce::AlertWindow ("Fit Tempo to Hits",
+                                       "Click the markers that should land on the beat, choose what they land on and the tempos to look between. "
+                                       "Each hit shows how far from its beat or bar it lands.",
+                                       juce::MessageBoxIconType::NoIcon, this);
+    box->addCustomComponent (panel.get());
+    box->addButton ("Apply", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([this, panel] (int result)
+    {
+        auto next = *engine.session.getState();
+
+        if (result == 1 && SessionEdits::applyTempoFit (next, panel->getFit()))
+            engine.session.apply (std::move (next), "Fit Tempo to Hits");
+    }), true);
+}
+
+void MainComponent::spotFilesOnMarker (const juce::StringArray& files, int track, juce::int64 marker)
+{
+    juce::StringArray sounds, midiFiles;
+
+    for (auto& path : files)
+        (juce::File (path).hasFileExtension ("mid;midi") ? midiFiles : sounds).add (path);
+
+    auto next = *engine.session.getState();
+    int added = 0;
+    const auto errors = Picture::spotFiles (next, sounds, track, marker, engine.formatManager, added);
+
+    if (added > 0)
+    {
+        engine.getPlayer().pause();
+        engine.session.apply (std::move (next), added == 1 ? "Spot Sound on Marker" : "Spot " + juce::String (added) + " Sounds on Marker");
+        setMultitrack (true);
+    }
+
+    if (! errors.isEmpty())
+        showError ("Spot on Marker", errors.joinIntoString ("\n"));
+
+    if (! midiFiles.isEmpty())
+        importMidiFiles (midiFiles, marker);
 }
 
 void MainComponent::saveMixIntoVideo()
@@ -8822,11 +9038,13 @@ void MainComponent::showGoToTime()
 {
     const auto rate = multitrackMode ? engine.session.getSampleRate() : engine.document.getSampleRate();
     const auto cursor = multitrackMode ? multitrack.getCursor() : waveform.getCursor();
+    const auto timecode = multitrackMode ? engine.session.getState()->timecode : TimeFormat::Timecode();
     auto* box = new juce::AlertWindow ("Go to Time",
-                                       multitrackMode ? "Seconds (83.5), minutes and seconds (1:23.5), or bar and beat (5|3)."
-                                                      : "Seconds (83.5) or minutes and seconds (1:23.5).",
+                                       juce::String (timecode.isSet() ? "The session's timecode (01:00:10:00), seconds" : "Seconds")
+                                           + (multitrackMode ? " (83.5), minutes and seconds (1:23.5), or bar and beat (5|3)."
+                                                             : " (83.5) or minutes and seconds (1:23.5)."),
                                        juce::MessageBoxIconType::NoIcon, this);
-    box->addTextEditor ("time", formatTime (cursor, rate));
+    box->addTextEditor ("time", TimeFormat::format (cursor, juce::jmax (1.0, rate), timecode));
     box->addButton ("Go", 1, juce::KeyPress (juce::KeyPress::returnKey));
     box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
 
@@ -8838,7 +9056,11 @@ void MainComponent::showGoToTime()
         const auto typed = box->getTextEditorContents ("time");
         const auto state = engine.session.getState();
         const auto map = state->tempoMap();
-        const auto frame = TimeEntry::parse (typed, rate, multitrackMode ? &map : nullptr);
+        // The session's timecode first, when it has one; then seconds, minutes and seconds, or bars and beats.
+        auto frame = multitrackMode && state->timecode.isSet() ? TimeFormat::parse (typed, rate, state->timecode) : std::nullopt;
+
+        if (! frame)
+            frame = TimeEntry::parse (typed, rate, multitrackMode ? &map : nullptr);
 
         if (! frame)
             showError ("Go to Time", "\"" + typed.trim() + "\" is not a time this can go to.");

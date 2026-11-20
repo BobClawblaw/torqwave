@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "TimeFormat.h"
 
 /** The main window's controls along the top: transport buttons, the time, zoom buttons; and the
     panel along the bottom that shows the selection's and the view's start, end and duration. */
@@ -93,8 +94,8 @@ namespace TransportBar
     public:
         SelectionPanel();
 
-        /** Empty ranges show dashes. */
-        void set (juce::Range<juce::int64> selection, juce::Range<juce::int64> view, double sampleRate);
+        /** Empty ranges show dashes. Times show a session's timecode when it has one. */
+        void set (juce::Range<juce::int64> selection, juce::Range<juce::int64> view, double sampleRate, const TimeFormat::Timecode& timecode = {});
 
         /** The text in a cell: row 0 is Selection, 1 View; column 0 Start, 1 End, 2 Duration. */
         juce::String getCell (int row, int column) const     { return cells[(size_t) row][(size_t) column]; }

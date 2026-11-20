@@ -62,14 +62,26 @@ namespace Ffmpeg
     juce::String replaceAudio (const juce::File& ffmpeg, const juce::File& video, const juce::File& wav, const juce::File& target,
                                const std::function<bool()>& keepGoing = {}, const PictureMap& picture = {}, double soundSeconds = 0.0);
 
-    /** A video's first picture stream: its size, frame rate and length (all 0 when it can't be read). */
+    /** A video's first picture stream: its size, frame rate and length (all 0 when it can't be read),
+        and the timecode of its first frame where the file has one ("01:00:00;00"; empty when not). */
     struct Picture
     {
         int width = 0, height = 0;
         double frameRate = 0.0, duration = 0.0;
+        juce::String timecode;
     };
 
     Picture probePicture (const juce::File& ffmpeg, const juce::File& video);
+
+    /** The times, in seconds from the video's start, of the frames of its first picture stream
+        where the picture changes from the frame before by more than threshold (ffmpeg's scene
+        score, 0 to 1: 0.3 finds hard cuts and leaves camera moves), found by ffmpeg's scene
+        detection. Returns an error message, or empty on success. */
+    juce::String findSceneChanges (const juce::File& ffmpeg, const juce::File& video, double threshold, std::vector<double>& times,
+                                   const std::function<bool()>& keepGoing = {});
+
+    /** The times in what findSceneChanges has ffmpeg print, in order. */
+    std::vector<double> sceneChangeTimes (const juce::String& printed);
 
     /** The filter graph that cuts a video's picture to follow a sound by its map, ending in [v]. */
     juce::String recutFilter (const PictureMap&, double soundSeconds, const Picture&);
