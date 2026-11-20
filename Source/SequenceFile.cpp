@@ -276,4 +276,23 @@ Placed place (SessionState& s, const Sequence& q, int trackIndex, juce::int64 po
     placed.clipId = SessionEdits::addNoteClip (s, placed.trackId, toClip (q, s, position));
     return placed;
 }
+
+Placed blank (SessionState& s, const juce::String& name, int bars, juce::int64 position)
+{
+    Placed placed;
+    auto& track = s.addInstrumentTrack();
+    track.name = name;
+    placed.trackId = track.id;
+
+    const auto session = s;   // the map refers to its tempo changes
+    const auto map = session.tempoMap();
+    const auto bar = map.barAt (juce::jmax ((juce::int64) 0, position));
+
+    NoteClip clip;
+    clip.name = name;
+    clip.position = map.barFrame (bar);
+    clip.length = map.barFrame (bar + juce::jmax (1, bars)) - clip.position;
+    placed.clipId = SessionEdits::addNoteClip (s, placed.trackId, std::move (clip));
+    return placed;
+}
 }

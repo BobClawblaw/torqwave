@@ -183,6 +183,10 @@ SequenceLibraryView::SequenceLibraryView (juce::File folder) : library (std::mov
     search.setTextToShowWhenEmpty ("Search names, keys, tags and folders", Theme::dimText);
     search.onTextChange = [this] { rebuild(); };
 
+    addAndMakeVisible (newButton);
+    newButton.setTooltip ("Start a new sequence: an instrument track with an empty clip to write the notes in, then save it here");
+    newButton.onClick = [this] { if (onNew != nullptr) onNew (selectedFolder()); };
+
     addAndMakeVisible (folderButton);
     folderButton.setTooltip ("Show the library's folder in the Finder: " + library.getFolder().getFullPathName());
     folderButton.onClick = [this] { library.getFolder().revealToUser(); };
@@ -421,6 +425,8 @@ void SequenceLibraryView::resized()
     auto r = getLocalBounds().reduced (6);
     auto top = r.removeFromTop (26);
     folderButton.setBounds (top.removeFromRight (64));
+    top.removeFromRight (4);
+    newButton.setBounds (top.removeFromRight (56));
     top.removeFromRight (6);
     search.setBounds (top);
     r.removeFromTop (6);
@@ -428,4 +434,29 @@ void SequenceLibraryView::resized()
     stopButton.setBounds (bottom.removeFromRight (56).reduced (0, 1));
     summary.setBounds (bottom);
     tree.setBounds (r);
+}
+
+juce::String SequenceLibraryView::selectedFolder() const
+{
+    auto* item = tree.getSelectedItem (0);
+
+    if (item != nullptr && dynamic_cast<FolderItem*> (item) == nullptr)
+        item = item->getParentItem();
+
+    juce::StringArray names;
+
+    for (; item != nullptr && item->getParentItem() != nullptr; item = item->getParentItem())
+        names.insert (0, item->getUniqueName());
+
+    // The roles and their sub-roles only: a folder of the user's below them is in its sub-role.
+    if (names.isEmpty())
+        return {};
+
+    const auto& roles = SequenceLibrary::roles();
+    const auto role = std::find_if (roles.begin(), roles.end(), [&] (auto& r) { return r.name == names[0]; });
+
+    if (role == roles.end())
+        return {};
+
+    return names.size() > 1 && role->subRoles.contains (names[1]) ? names[0] + " > " + names[1] : names[0];
 }

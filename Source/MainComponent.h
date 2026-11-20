@@ -579,6 +579,20 @@ private:
     /** Puts a sequence in the session at the frame: on the track when onTrack and it is an
         instrument track, else on a new track from its voice, whose plug-ins then load. */
     void addSequenceToSession (const juce::File&, int track, juce::int64 frame, bool onTrack);
+
+    /** New Sequence (the Sequence Library's New...): asks for a name, folder, instrument and length,
+        then makes an instrument track with an empty note clip that long at the cursor's bar and
+        opens it in the Piano Roll. Add to Sequence Library on that clip saves it back to its file. */
+    void askForNewSequence (const juce::String& folder);
+
+    /** The library file a note clip was made for or last saved to, with what the dialog was given,
+        so saving it again updates that file. Kept while the app is open. */
+    struct SequenceLink
+    {
+        juce::File file;
+        juce::String name, folder, key, tags;
+    };
+    std::map<juce::uint32, SequenceLink> sequenceLinks;
     juce::File libraryIndexFile() const;
     bool isEditingClip() const;                     // the file in the editor is linked to a clip
 

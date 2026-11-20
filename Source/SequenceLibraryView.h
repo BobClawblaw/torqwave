@@ -9,7 +9,7 @@
     session's next bar while it plays), and moving through the list with the arrow keys plays each
     in turn; a second click or Stop stops it. A sequence is dragged into the multitrack view (or to
     the Finder); a double-click puts it in the session at the cursor. Right-click for Show in
-    Finder, Rename and Move to Trash. */
+    Finder, Rename and Move to Trash. New... starts a new one. */
 class SequenceLibraryView final : public juce::Component,
                                   public juce::DragAndDropContainer,
                                   private juce::Timer
@@ -20,6 +20,13 @@ public:
 
     /** Asked by a double-click: put this sequence in the session at the cursor. */
     std::function<void (const juce::File&)> onUse;
+
+    /** Asked by New: start a new sequence, in this folder ("Drums > Kick", "Pads", or empty for
+        the Inbox): the folder selected in the tree, or the one holding the selected sequence. */
+    std::function<void (const juce::String& folder)> onNew;
+
+    /** The role and sub-role of what is selected, as onNew gives them. */
+    juce::String selectedFolder() const;
 
     /** The player for clicks (not owned); none leaves clicks silent. */
     void setPreview (SequencePreview*);
@@ -57,7 +64,7 @@ private:
     std::vector<SequenceLibrary::Entry> entries;
     juce::int64 stamp = 0;
     juce::TextEditor search;
-    juce::TextButton folderButton { "Folder" }, stopButton { "Stop" };
+    juce::TextButton newButton { "New..." }, folderButton { "Folder" }, stopButton { "Stop" };
     SequencePreview* preview = nullptr;
     juce::String countText;
     juce::File startedBySelecting;   // a click's selection started it, so the click doesn't stop it

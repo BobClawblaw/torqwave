@@ -106,7 +106,8 @@ namespace
     /** The workspaces Torqwave comes with: Classic, the editor with the effects rack and the
         selection beside it; Editing, with the open files on the left, the undo history among the rack's
         tabs and the levels along the bottom; Multitrack, with the mixer
-        under the editor and the clip panels beside it. */
+        under the editor, the clip panels beside it, and the Track Inspector and Sequence Library
+        as tabs on its left. */
     std::vector<std::pair<juce::String, Dock::Layout>> builtInWorkspaces()
     {
         using Dock::Side;
@@ -128,6 +129,8 @@ namespace
         multitrack.dock (Panels::clipProperties, Panels::rack, Side::top, 0.4);
         multitrack.dockAtEdge (Panels::mixer, Side::bottom, 0.3);
         multitrack.dock (Panels::inspector, Panels::editor, Side::left, 0.16);
+        multitrack.dock (Panels::sequenceLibrary, Panels::inspector, Side::centre);   // a tab beside the inspector
+        multitrack.bringToFront (Panels::inspector);
 
         auto analysis = Dock::Layout::single (Panels::editor);
         analysis.dock (Panels::rack, Panels::editor, Side::right, 0.26);
@@ -5260,18 +5263,26 @@ void MainComponent::askToAddToSequenceLibrary (juce::uint32 noteClipId)
             folders.add (role.name + " > " + sub);
     }
 
+    // A clip made by New Sequence, or saved before, offers what it was given and saves over its file.
+    const auto link = sequenceLinks.find (noteClipId);
+    const auto linked = link != sequenceLinks.end() ? std::optional<SequenceLink> (link->second) : std::nullopt;
+
     auto* box = new juce::AlertWindow ("Add to Sequence Library",
-                                       "Saves the notes with " + track.name + "'s instrument and effects, in beats, to drop into any session at its tempo.",
+                                       "Saves the notes with " + track.name + "'s instrument and effects, in beats, to drop into any session at its tempo."
+                                           + (linked.has_value() && linked->file.existsAsFile() ? "\n\nWith the same name and folder, it replaces " + linked->file.getFileName() + "." : juce::String()),
                                        juce::MessageBoxIconType::NoIcon, this);
-    box->addTextEditor ("name", clip.name.isNotEmpty() ? clip.name : track.name, "Name");
+    box->addTextEditor ("name", linked.has_value() ? linked->name : clip.name.isNotEmpty() ? clip.name : track.name, "Name");
     box->addComboBox ("folder", folders, "Folder");
-    box->addTextEditor ("key", {}, "Key (such as A minor; optional)");
-    box->addTextEditor ("tags", {}, "Tags (separated by commas; optional)");
+    box->addTextEditor ("key", linked.has_value() ? linked->key : juce::String(), "Key (such as A minor; optional)");
+    box->addTextEditor ("tags", linked.has_value() ? linked->tags : juce::String(), "Tags (separated by commas; optional)");
+
+    if (linked.has_value() && folders.contains (linked->folder))
+        box->getComboBoxComponent ("folder")->setSelectedItemIndex (folders.indexOf (linked->folder));
     box->addButton ("Save", 1, juce::KeyPress (juce::KeyPress::returnKey));
     box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
 
     const auto trackId = track.id;
-    box->enterModalState (true, juce::ModalCallbackFunction::create ([safe = juce::Component::SafePointer<MainComponent> (this), box, noteClipId, trackId, folders] (int result)
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([safe = juce::Component::SafePointer<MainComponent> (this), box, noteClipId, trackId, folders, linked] (int result)
     {
         if (result != 1 || safe == nullptr)
             return;
@@ -5296,13 +5307,16 @@ void MainComponent::askToAddToSequenceLibrary (juce::uint32 noteClipId)
 
         SequenceLibrary library;
         library.makeFolders();
-        const auto file = library.newFileFor (q->role, q->subRole, q->name);
+        const auto same = linked.has_value() && linked->file != juce::File() && linked->name == q->name && linked->folder == folder;
+        const auto file = same ? linked->file : library.newFileFor (q->role, q->subRole, q->name);
 
         if (const auto error = SequenceFile::save (*q, file); error.isNotEmpty())
         {
             showError ("Add to Sequence Library", error);
             return;
         }
+
+        self.sequenceLinks[noteClipId] = { file, q->name, folder, q->key, q->tags.joinIntoString (", ") };
 
         if (auto it = self.madePanels.find (Panels::sequenceLibrary); it != self.madePanels.end())
             if (auto* view = dynamic_cast<SequenceLibraryView*> (it->second.get()))
@@ -5313,6 +5327,81 @@ void MainComponent::askToAddToSequenceLibrary (juce::uint32 noteClipId)
             showNote ("Add to Sequence Library", "Saved " + q->name + " in " + folder + " (Window > Sequence Library shows it)."
                                                      + (SequenceFile::instrumentOf (*q).isEmpty() ? juce::String ("\n\nIts track has no instrument, so it will play on the instrument of the track it is dropped on.")
                                                                                                : juce::String()));
+    }), true);
+}
+
+void MainComponent::askForNewSequence (const juce::String& folder)
+{
+    juce::StringArray folders { "Inbox" };
+
+    for (auto& role : SequenceLibrary::roles())
+    {
+        if (role.name == "Inbox")
+            continue;
+
+        folders.add (role.name);
+
+        for (auto& sub : role.subRoles)
+            folders.add (role.name + " > " + sub);
+    }
+
+    const auto instruments = Instrument::known (engine.knownPlugins);
+    juce::StringArray names;
+
+    for (auto& d : instruments)
+        names.add (Instrument::title (d));
+
+    if (names.isEmpty())
+    {
+        showError ("New Sequence", "No instruments are known: scan with Plug-ins... first.");
+        return;
+    }
+
+    const juce::StringArray lengths { "1 bar", "2 bars", "4 bars", "8 bars", "16 bars" };
+    auto* box = new juce::AlertWindow ("New Sequence",
+                                       "Makes an instrument track with an empty clip at the cursor's bar and opens it in the Piano Roll. "
+                                       "Write the notes (draw them, type them, or play them in), then save it with Add to Sequence Library on the clip.",
+                                       juce::MessageBoxIconType::NoIcon, this);
+    box->addTextEditor ("name", "New Sequence", "Name");
+    box->addComboBox ("folder", folders, "Folder");
+    box->getComboBoxComponent ("folder")->setSelectedItemIndex (juce::jmax (0, folders.indexOf (folder)));
+    box->addComboBox ("instrument", names, "Instrument");
+    box->getComboBoxComponent ("instrument")->setSelectedItemIndex (0);
+    box->addComboBox ("bars", lengths, "Length");
+    box->getComboBoxComponent ("bars")->setSelectedItemIndex (2);
+    box->addTextEditor ("key", {}, "Key (such as A minor; optional)");
+    box->addButton ("Make", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([safe = juce::Component::SafePointer<MainComponent> (this), box, folders, instruments, lengths] (int result)
+    {
+        if (result != 1 || safe == nullptr)
+            return;
+
+        auto& self = *safe;
+        const auto name = box->getTextEditorContents ("name").trim().isNotEmpty() ? box->getTextEditorContents ("name").trim() : juce::String ("New Sequence");
+        const auto chosen = folders[box->getComboBoxComponent ("folder")->getSelectedItemIndex()];
+        const auto instrument = instruments[juce::jmax (0, box->getComboBoxComponent ("instrument")->getSelectedItemIndex())];
+        const auto bars = lengths[box->getComboBoxComponent ("bars")->getSelectedItemIndex()].getIntValue();
+
+        if (! self.multitrackMode)
+            self.setMultitrack (true);
+
+        auto next = *self.engine.session.getState();
+        const auto placed = SequenceFile::blank (next, name, bars, self.multitrack.getCursor());
+
+        if (placed.clipId == 0)
+            return;
+
+        self.engine.session.apply (std::move (next), "New Sequence " + name);
+        self.multitrack.chooseTrack (placed.trackId);
+        self.multitrack.setTrackInstrument (placed.trackId, instrument);
+        self.multitrack.selectNoteClip (placed.clipId);
+        self.sequenceLinks[placed.clipId] = { {}, name, chosen, box->getTextEditorContents ("key").trim(), {} };
+        self.dock->show (Panels::pianoRoll);
+
+        if (auto* panel = dynamic_cast<NoteEditor*> (self.getPanel (Panels::pianoRoll)))
+            panel->refresh();
     }), true);
 }
 
@@ -14861,6 +14950,7 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
 
             addSequenceToSession (file, track, multitrack.getCursor(), true);
         };
+        panel->onNew = [this] (const juce::String& folder) { askForNewSequence (folder); };
         made = std::move (panel);
     }
     else if (id == Panels::inspector)

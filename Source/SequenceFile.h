@@ -95,4 +95,9 @@ namespace SequenceFile
         instrument track made from the voice (or a plain one with none), named for the sequence,
         at the end of the session. clipId is 0 when nothing could be added. */
     Placed place (SessionState&, const Sequence&, int trackIndex, juce::int64 position, bool onTrack);
+
+    /** A new sequence to write: an instrument track named `name` at the end of the session, with
+        an empty note clip of that name `bars` bars long, starting on the bar at or before
+        `position`. effects is left null: the caller loads the instrument. */
+    Placed blank (SessionState&, const juce::String& name, int bars, juce::int64 position);
 }

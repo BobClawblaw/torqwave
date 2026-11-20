@@ -181,6 +181,26 @@ void runSequenceTests (AudioEngine& engine)
                "sequence: dropped on an audio track it goes on a new instrument track");
     }
 
+    // New Sequence: an instrument track with an empty clip of whole bars, from the cursor's bar.
+    {
+        auto s = sessionAt (120.0);
+        s.addTrack();
+        const auto map = s.tempoMap();
+        const auto placed = SequenceFile::blank (s, "Idea", 4, map.barFrame (2) + 1000);
+        const auto* track = s.findTrack (placed.trackId);
+        const auto& clip = noteClip (s, placed.clipId);
+        check (track != nullptr && track->isInstrument && track->name == "Idea" && s.tracks.size() == 2 && s.tracks[1].id == placed.trackId
+                   && clip.name == "Idea" && clip.notes.empty() && clip.position == map.barFrame (2) && clip.length == map.barFrame (6) - map.barFrame (2)
+                   && placed.effects == nullptr,
+               "sequence: New Sequence makes an instrument track with an empty clip four bars long from the start of the cursor's bar");
+
+        auto changing = sessionAt (120.0, { { 1, 60.0, 4 } });   // 60 from the second bar (bars count from 0)
+        const auto two = SequenceFile::blank (changing, "Slow", 2, 0);
+        const auto& both = noteClip (changing, two.clipId);
+        check (both.position == 0 && both.length == Metronome::barFrames (120.0, 4, changing.sampleRate) + Metronome::barFrames (60.0, 4, changing.sampleRate),
+               "sequence: its length follows the tempo map (a bar at 120 BPM, then one at 60)");
+    }
+
     // Read at another resolution, ticks come to ours.
     {
         juce::XmlElement xml ("TORQWAVE_SEQUENCE");
