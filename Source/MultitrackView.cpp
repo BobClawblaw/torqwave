@@ -6,6 +6,7 @@
 #include "Surround.h"
 #include "TimeStretch.h"
 #include "TempoFollow.h"
+#include "ClipEffects.h"
 #include "PluginMenu.h"
 #include <map>
 #include "Metronome.h"
@@ -1178,6 +1179,15 @@ void MultitrackView::showClipMenu (juce::uint32 clipId)
     const auto& clip = shown().tracks[(size_t) where->first].clips[(size_t) where->second];
     const juce::Component::SafePointer<MultitrackView> safe (this);
     juce::PopupMenu menu;
+
+    // Sound design: the clip's audio in the editor, its own effects, and layers made one sound.
+    const auto source = clip.source;
+    menu.addItem ("Edit in Place", ! clip.locked, false, [safe, clipId] { if (safe != nullptr && safe->onEditClip != nullptr) safe->onEditClip (clipId); });
+    menu.addItem ("Open Source File", source.existsAsFile(), false, [safe, source] { if (safe != nullptr && safe->onOpenInEditor != nullptr) safe->onOpenInEditor (source); });
+    menu.addItem ("Clip Effects...", ! clip.locked, clip.effects.isOn(), [safe, clipId] { if (safe != nullptr && safe->onClipEffects != nullptr) safe->onClipEffects (clipId); });
+    menu.addItem ("Combine to New Sound", true, false, [safe] { if (safe != nullptr && safe->onCombineClips != nullptr) safe->onCombineClips (safe->getSelectedClips()); });
+    menu.addItem ("Add to Library...", true, false, [safe, clipId] { if (safe != nullptr && safe->onAddToLibrary != nullptr) safe->onAddToLibrary (clipId); });
+    menu.addSeparator();
 
     if (clip.takes.size() > 1)
     {
@@ -3293,6 +3303,9 @@ void MultitrackView::drawClip (juce::Graphics& g, int track, const SessionClip& 
 
     if (c.tempoFollow.follows())
         name << "  " << juce::String (c.tempoFollow.bpm, 1) << " BPM" << (TempoFollow::isStale (shown(), c) ? " (stretching...)" : "");
+
+    if (c.effects.isOn())
+        name << "  FX: " << ClipEffects::describe (c.effects) << (ClipEffects::isStale (shown(), c) ? " (rendering...)" : "");
 
     const auto badges = (c.locked ? 20 : 0) + (c.groupId != 0 ? 20 : 0);
     g.drawText (name, title.withTrimmedLeft (12).withTrimmedRight (badges > 0 ? badges + 4 : 10), juce::Justification::centredLeft, true);   // clear of the fade handles
@@ -7625,12 +7638,12 @@ void MultitrackView::mouseDoubleClick (const juce::MouseEvent& e)
         return;
     }
 
-    if (const auto hit = clipAt (p); hit.has_value() && onOpenInEditor != nullptr)
+    if (const auto hit = clipAt (p); hit.has_value() && onEditClip != nullptr)
     {
         const auto& clip = shown().tracks[(size_t) hit->first].clips[(size_t) hit->second];
 
         if (fadeHandleAt (p, hit->first, clip) == Drag::none)
-            onOpenInEditor (clip.source);
+            onEditClip (clip.id);
     }
 }
 

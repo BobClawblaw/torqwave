@@ -143,6 +143,31 @@ struct SessionClip
     };
 
     TempoFollow tempoFollow;
+
+    /** Clip effects, as Cubase's: effects on this clip alone, changing nothing in its files. The
+        clip's audio (what it plays of its takes and comp) is shifted `semitones` (keeping its
+        length), then goes through `chain`, a rack of effects (a TORQWAVE_RACK element, as
+        AudioEngine::createRackXml() writes it, on one line), before its fades, gain line and gain.
+
+        That is rendered in the background (ClipEffects::Renderer) into `rendered`, as long as the
+        clip from its start, which playback, mixdowns and bounces read in place of the audio, so
+        they hear the same samples at any block size and nothing is processed on the audio thread.
+        A clip waiting for its render plays dry. `renderedFor` is the ClipEffects::key of what was
+        rendered: a Session drops a render that no longer matches its clip (ClipEffects::dropStale),
+        so a render of other audio is never heard. */
+    struct Effects
+    {
+        double semitones = 0.0;            // -maxSemitones to +maxSemitones
+        juce::String chain;                // empty: none
+        AudioDocument::Snapshot rendered;
+        juce::String renderedFor;
+
+        static constexpr double maxSemitones = 12.0;   // as far as TimeStretch::shiftPitch goes
+
+        bool isOn() const noexcept         { return ! juce::exactlyEqual (semitones, 0.0) || chain.isNotEmpty(); }
+    };
+
+    Effects effects;
 };
 
 namespace Comp
@@ -978,6 +1003,23 @@ namespace SessionEdits
         other takes as they were, lined up with it. False for a locked clip or audio of
         another length. */
     bool replaceActiveTake (SessionState&, juce::uint32 clipId, const juce::File&, AudioDocument::Snapshot audio);
+
+    /** Makes edited audio (Edit in Place: what the clip played, changed in the editor, saved as
+        file) a new take of the clip, in use, from where the clip starts; the clip becomes as long
+        as it. What it played before stays a take (a clip with no takes gets its audio as take 1);
+        a comp ends, its takes staying. False for a locked clip, one that follows the tempo (whose
+        original is edited instead: replaceOriginal), or no audio. */
+    bool addEditedTake (SessionState&, juce::uint32 clipId, const juce::File&, AudioDocument::Snapshot audio);
+
+    /** Gives a clip that follows the tempo a new original (its file edited, saved as file), as
+        long as the old one; it is stretched again (TempoFollow::Renderer). False for a clip that
+        doesn't follow, a locked one, or audio of another length. */
+    bool replaceOriginal (SessionState&, juce::uint32 clipId, const juce::File&, AudioDocument::Snapshot original);
+
+    /** Sets a clip's effects (SessionClip::Effects): its pitch shift in semitones and its chain
+        (a TORQWAVE_RACK element's text, or empty for none); the render waits for the renderer.
+        False for a locked clip, a shift out of range, a chain that isn't a rack, or no change. */
+    bool setClipEffects (SessionState&, juce::uint32 clipId, double semitones, const juce::String& chain);
 
     /** Clears [start, end) on a track: clips inside it go, clips across its edges are cut back
         (or split in two) and lose their fade on the cut side. False when nothing was there. */

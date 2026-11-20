@@ -18,6 +18,8 @@
 #include "Loudness.h"
 #include "ControlSurface.h"
 #include "TempoFollow.h"
+#include "ClipEffectsPanel.h"
+#include "SoundDesign.h"
 #include "MultitrackView.h"
 #include "NoiseReduction.h"
 #include "ParametricEq.h"
@@ -551,6 +553,20 @@ private:
     void chooseTrackTemplateToAdd();
     void reverseSelectedClip();
     void flattenComp (juce::uint32 clipId);
+
+    // Sound design in the session.
+    void editClipInPlace (juce::uint32 clipId);   // opens it in the editor, linked to it
+    void saveClipEdit (std::function<void (bool saved)> done);   // the linked file in the editor, back into its clip
+    void backToClip();                              // from a linked file to its clip in the session
+    void showClipEffects (juce::uint32 clipId);
+    void combineClips (const std::vector<juce::uint32>& clipIds);
+    void askToAddToLibrary (juce::uint32 clipId);
+    juce::File libraryIndexFile() const;
+    bool isEditingClip() const;                     // the file in the editor is linked to a clip
+
+    /** True when no clip waits to be stretched to the tempo or for its effects' render; otherwise
+        says so, and calls `again` once they are done. */
+    bool rendersReady (std::function<void()> again);
     void askToStretchSelectedClip();
     void askToShiftSelectedClip();
     void processSelectedClip (const juce::String& action, const juce::String& suffix,
@@ -637,6 +653,7 @@ private:
     AudioClip clipboard;
 
     juce::TextButton editorButton { "Editor" }, multitrackButton { "Multitrack" };   // a two-part switch, lit on the side in use
+    juce::TextButton backToClipButton { "Back to Clip" };   // shown while the editor holds a clip opened in place
     juce::TextButton pluginsButton { "Plug-ins..." }, audioButton { "Audio Settings..." };
     juce::TextButton askButton;   // Ask Torq, shown while it is turned on in Settings > AI
     std::unique_ptr<TransportBar::Bar> transportBar;   // made once the commands are registered
@@ -845,6 +862,8 @@ private:
     std::unique_ptr<ControlSurface> surface;   // a Mackie Control surface, when one is set up
     std::unique_ptr<MidiLearn> midiLearn;
     std::unique_ptr<TempoFollow::Renderer> tempoRenderer;   // stretches clips that follow the tempo, in the background
+    std::unique_ptr<ClipEffects::Renderer> clipEffectsRenderer;   // renders clips' effects, in the background
+    std::unique_ptr<juce::DocumentWindow> clipEffectsWindow;     // a clip's Clip Effects, when open
     void transportFromController (ControlSurface::Transport);
     void addMidiLearnMenu (juce::PopupMenu&, juce::uint32 trackId);
     void startMidiLearn (const MidiBinding::Target&, const juce::String& what);

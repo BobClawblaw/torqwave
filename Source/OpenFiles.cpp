@@ -35,6 +35,9 @@ void OpenFiles::closeAll()
 
 juce::String OpenFiles::nameAt (int index) const
 {
+    if (const auto link = linkAt (index))
+        return link->clipName + " (Clip)";
+
     const auto file = documentAt (index).getFile();
     return file == juce::File() ? juce::String ("Untitled") : file.getFileName();
 }
@@ -68,6 +71,29 @@ int OpenFiles::indexOf (const juce::File& file) const
 
     for (int i = 0; i < size(); ++i)
         if (documentAt (i).getFile() == file)
+            return i;
+
+    return -1;
+}
+
+void OpenFiles::setLink (int index, std::shared_ptr<const SoundDesign::ClipEdit> link)
+{
+    if (! juce::isPositiveAndBelow (index, size()))
+        return;
+
+    entries[(size_t) index].link = std::move (link);
+    sendChangeMessage();
+}
+
+std::shared_ptr<const SoundDesign::ClipEdit> OpenFiles::linkAt (int index) const
+{
+    return juce::isPositiveAndBelow (index, size()) ? entries[(size_t) index].link : nullptr;
+}
+
+int OpenFiles::indexOfClip (juce::uint32 clipId) const
+{
+    for (int i = 0; i < size(); ++i)
+        if (entries[(size_t) i].link != nullptr && entries[(size_t) i].link->clipId == clipId)
             return i;
 
     return -1;
@@ -127,6 +153,7 @@ std::optional<FilePlace> OpenFiles::close (int index)
         AudioDocument closed;
         engine.swapDocument (closed);   // the editor is left empty; the closed file goes with this
         entries[0].place = {};
+        entries[0].link = nullptr;
         sendChangeMessage();
         return FilePlace {};
     }

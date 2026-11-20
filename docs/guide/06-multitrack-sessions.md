@@ -69,6 +69,7 @@ Drag a track's header to move the track. Where it lands also decides its folder:
 - **Fade it:** drag the small squares at its top corners.
 - **Crossfade two clips:** with **Crossfade Overlaps** on (X), a clip dragged over part of another crossfades with it.
 - **Layer clips:** where clips overlap on a track you hear both, mixed. Turn on **Layer Overlapping Clips** (in Multitrack > Editing and Recording) and you hear only the clip on top, as the lanes show it; over a crossfade you still hear both. Right-click a clip and choose **Bring to Front** or **Send to Back** to change which is on top. The setting is kept with the session.
+- **Edit its audio:** double-click it. See [Sound design in the session](#sound-design-in-the-session).
 - **Line things up:** **Snapping** (S) lines dragged clips, edges, fades and points up with clip edges, the cursor and the ruler.
 
 Select several clips with Shift-click, or drag across empty lane space with the Select tool. They then move, nudge, copy, mute or delete together.
@@ -118,6 +119,7 @@ Beside the tools are the tempo (click it to set it) and the **Bars** switch, whi
 - Split Clip (Cmd-K: every selected clip the cursor crosses), Split All Tracks (Shift-Cmd-K: every clip under the cursor, on every track), Duplicate Clip (Cmd-D) and Repeat Clip to Range End;
 - Reverse Clip, Stretch Clip... and Shift Clip Pitch...;
 - Show Takes and Flatten Comp, for [comping](08-recording.md#comping-takes) a clip's takes;
+- Edit Clip in Place (Option-E), Clip Effects..., Combine to New Sound and Add to Library..., for [sound design](#sound-design-in-the-session);
 - Lock Clip, Mute Clip, and Group and Ungroup Clips.
 
 **Clip Gain Lines** shows a gain line on each clip:
@@ -290,6 +292,55 @@ An audio clip can follow the session's tempo: a drum loop at 100 BPM, in a sessi
 Each of these is an undo step. Undo a tempo change and the clips are back as they were at once. The clips' tempos and markers are saved with the session; the stretched audio isn't, and is made again on opening.
 
 A clip with takes can't follow the tempo: flatten its comp first. Reversing, stretching or replacing a following clip's audio keeps what was heard, which then plays at its own speed.
+
+## Sound design in the session
+
+A clip's sound can be worked on where it sits, without leaving the session or changing its file.
+
+### Edit a clip in place
+
+Double-click a clip, or right-click it and choose **Edit in Place** (Option-E). The part of its audio it plays opens in the editor as a file of its own, named after the clip with "(Clip)". Every editor tool works on it: the effects, the spectral tools, repair, the rack.
+
+- **Save** (Cmd-S), which reads **Save to Clip** here, puts the edit back. It is written as a new file in the session's recordings folder and becomes a new take of the clip, in use. What the clip played before stays a take, so right-click the clip and choose the take before (**Take 1** for a clip that had no takes) to hear the original again. Undo in the session takes the edit out in one step.
+- Other clips that use the same file are left alone: only this clip changes.
+- What opens is the clip's audio before its [clip effects](#clip-effects), fades and gain, which stay on the clip and apply to the edit.
+- The edit can be longer or shorter than the clip was. The clip keeps its start and takes the edit's length.
+- **Back to Clip** (Option-B, in the File menu, or the **Back to Clip** button on the toolbar) returns to the session with the clip selected and in view. The edit stays open among the files, and double-clicking the clip again goes back to it.
+- Closing the edit with changes asks whether to put them into the clip first.
+
+A few kinds of clip work differently:
+
+- **A clip with a comp** opens as it plays, comp and all. Saving makes the edit a new take, in use throughout, so the comp ends. Its takes stay.
+- **A clip that follows the tempo** opens the part of its original audio it plays, before stretching, because its warp markers and its place are frames of that audio. Saving puts the edit into the original, and the clip is stretched again. The edit must keep its length, so trim nothing out; to change the length, choose **Play at Its Own Speed** first.
+- A locked clip, or one on a frozen track, isn't opened: unlock it or unfreeze the track first.
+
+To open the whole file a clip comes from instead, right-click the clip and choose **Open Source File**.
+
+### Clip effects
+
+**Clip Effects...**, in a clip's menu or Multitrack > Clips, gives one clip its own pitch shift and chain of effects, as Cubase's clip effects do. They change that clip alone, and never its file.
+
+- **Pitch** shifts the clip up to an octave either way, keeping its length.
+- **Add Effect...** adds any effect plug-in, or a built-in one, at the end of the chain. Each row has **Edit** (its window), **On** (to bypass it), **Up** and **Down**, and **Remove**. What you change in an effect's window goes into the chain a moment after you stop.
+- Every change is an undo step, and the effects are saved with the session. Sessions from before open as they were.
+
+The clip is rendered with its effects in the background, a fraction of a second for a short clip, and then plays the render. Until the render is ready the clip plays without its effects, and its title shows "(rendering...)". The title shows what is on it ("FX: -3 st, Reverb"). Mix Down, Bounce, Freeze, exporting stems, Combine to New Sound and Add to Library wait for the render, so what they write is what you hear.
+
+The effects come before the clip's fades, gain line and gain, so those still shape the result. A reverb or delay tail stops at the clip's end: lengthen the clip, or use the track's effects, to let it ring.
+
+If an effect can't be loaded (a plug-in that has been removed, say), Torqwave says so once, and the clip plays without its effects.
+
+### Combine to New Sound
+
+Select clips stacked across tracks (Shift-click them) and choose **Combine to New Sound** (Multitrack > Clips, or a clip's menu). Torqwave renders those clips alone as they play together: each with its pitch shift and effects, fades and gain, through its track's volume, pan, automation and effects. Other clips, sends and buses are left out.
+
+The result is written to a new file in the recordings folder and placed on a new track under the layers, from where the first one starts. The layers are muted, not deleted, so you can unmute them and change them. One undo takes it all back.
+
+### Add to Library
+
+**Add to Library...** in a clip's menu files the clip's sound, as it plays (with its effects, fades and gain), in the [Sound Library](10-sound-library.md). Give it a name, a UCS category (guessed from the clip's name where it can be) and tags separated by commas, and choose the folder. The sound is written there as a 24-bit WAV file with its category and tags in the file, and is in the library at once, with them. A folder the library doesn't watch yet is added to it. To file a layered sound, combine the layers first and add the combined clip.
+
+Ask Torq can set a clip's pitch shift and add effects to it (`set_clip_effects`). It doesn't edit in place, combine or file sounds, since those write new files.
 
 ## Getting the mix out
 

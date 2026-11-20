@@ -5,8 +5,8 @@
 /** The multitrack session: a ruler, a header per track or bus (name, effects, mute, solo, gain,
     pan, and on tracks their sends) and the tracks' clips with their waveforms. Drag a clip to
     move it (onto another track, or below the last for a new one); drag its edges to trim it, and
-    the handles at its top corners to set its fades; double-click it to open its file in the
-    editor; right-click it to choose among its takes; Command-drag it up or down to change its gain.
+    the handles at its top corners to set its fades; double-click it to edit its audio in place in
+    the editor; right-click it to choose among its takes; Command-drag it up or down to change its gain.
     Shift-click clips to select several: dragging any of them moves them all in time, and cut,
     copy, paste, duplicate and delete work on them together. Click to place the cursor, drag across the
     timeline to select a time range; drop audio files to add them as clips. A track's R button
@@ -35,7 +35,14 @@ public:
     explicit MultitrackView (AudioEngine&);
     ~MultitrackView() override;
 
+    /** Asks for a clip's source file in the editor (a clip's menu: Open Source File). */
     std::function<void (const juce::File&)> onOpenInEditor;
+
+    /** Sound design, asked of the app: a clip opened in the editor linked to it (a double-click,
+        or its menu's Edit in Place), its Clip Effects window, the selected clips combined into
+        one sound, and a clip's sound filed in the Sound Library. */
+    std::function<void (juce::uint32 clipId)> onEditClip, onClipEffects, onAddToLibrary;
+    std::function<void (const std::vector<juce::uint32>& clipIds)> onCombineClips;
     std::function<void (const juce::StringArray& files, int track, juce::int64 frame)> onFilesDropped;
     /** A row of the Files panel dropped: that open file to add as a clip, on the track (or past the last) at the frame. */
     std::function<void (int openFile, int track, juce::int64 frame)> onOpenFileDropped;

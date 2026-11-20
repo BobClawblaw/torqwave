@@ -18,6 +18,8 @@ Nothing is scanned until you add a folder.
 2. The scan runs in the background. The list fills in as it goes, and a line under the table says how far it has got.
 3. Add more folders the same way.
 
+Sounds you make in a session go in from there: right-click a clip and choose **Add to Library...** to file what it plays, with its category and tags (see [Sound design in the session](06-multitrack-sessions.md#add-to-library)).
+
 The **Folders** menu lists your folders. Each one can be shown in Finder or removed from the Sound Library. **Rescan All Folders** at the top of the menu brings every folder up to date after you add or change files.
 
 ## Find a sound

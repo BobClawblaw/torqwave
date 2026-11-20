@@ -756,6 +756,38 @@ namespace
         std::optional<Sound> sound;
     };
 
+    /** The sound a file's header describes. */
+    Sound soundOf (const ToRead& f, const Header& header)
+    {
+        const auto& reader = header.reader;
+        Sound s;
+        s.file = f.file;
+        s.folder = f.folder;
+        s.name = f.file.getFileNameWithoutExtension();
+        s.size = f.size;
+        s.modified = f.modified;
+        s.frames = reader->lengthInSamples;
+        s.sampleRate = reader->sampleRate;
+        s.channels = (int) reader->numChannels;
+        s.bitDepth = (int) reader->bitsPerSample;
+        s.format = reader->getFormatName();
+        s.description = reader->metadataValues[juce::WavAudioFormat::bwavDescription];
+
+        // The category: from a UCS name, else from the iXML.
+        if (const auto* e = Ucs::fromName (s.name))
+        {
+            s.catId = e->catId;
+            s.categoryFrom = CategoryFrom::name;
+        }
+        else if (const auto* m = header.ixml.isNotEmpty() ? Ucs::fromIXml (header.ixml) : nullptr)
+        {
+            s.catId = m->catId;
+            s.categoryFrom = CategoryFrom::metadata;
+        }
+
+        return s;
+    }
+
     /** Reads the files' headers on several threads at once, so the disk has more than one read
         to get on with (the index itself is written on the scanning thread). */
     void readAll (juce::AudioFormatManager& formats, std::vector<ToRead>& files)
@@ -774,32 +806,7 @@ namespace
                 if (reader == nullptr)
                     continue;
 
-                Sound s;
-                s.file = f.file;
-                s.folder = f.folder;
-                s.name = f.file.getFileNameWithoutExtension();
-                s.size = f.size;
-                s.modified = f.modified;
-                s.frames = reader->lengthInSamples;
-                s.sampleRate = reader->sampleRate;
-                s.channels = (int) reader->numChannels;
-                s.bitDepth = (int) reader->bitsPerSample;
-                s.format = reader->getFormatName();
-                s.description = reader->metadataValues[juce::WavAudioFormat::bwavDescription];
-
-                // The category: from a UCS name, else from the iXML.
-                if (const auto* e = Ucs::fromName (s.name))
-                {
-                    s.catId = e->catId;
-                    s.categoryFrom = CategoryFrom::name;
-                }
-                else if (const auto* m = header.ixml.isNotEmpty() ? Ucs::fromIXml (header.ixml) : nullptr)
-                {
-                    s.catId = m->catId;
-                    s.categoryFrom = CategoryFrom::metadata;
-                }
-
-                f.sound = std::move (s);
+                f.sound = soundOf (f, header);
             }
         };
 
@@ -813,6 +820,33 @@ namespace
         for (auto& t : threads)
             t.join();
     }
+}
+
+std::optional<Sound> Index::addFile (const juce::File& file, juce::AudioFormatManager& formats)
+{
+    if (db == nullptr || ! file.existsAsFile())
+        return std::nullopt;
+
+    ToRead f;
+    f.file = file;
+    f.size = file.getSize();
+    f.modified = file.getLastModificationTime().toMilliseconds();
+
+    for (auto& folder : getFolders())
+        if (file.isAChildOf (folder))
+            f.folder = folder;
+
+    const auto header = readHeader (formats, file);
+
+    if (f.folder == juce::File() || header.reader == nullptr)
+        return std::nullopt;
+
+    auto sound = soundOf (f, header);
+
+    if (! put (sound))
+        return std::nullopt;
+
+    return sound;
 }
 
 ScanResult Index::scan (juce::AudioFormatManager& formats, const std::function<bool (int)>& progress)

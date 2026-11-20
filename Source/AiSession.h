@@ -9,7 +9,7 @@
     until the plan is applied (by the caller, as one undo step: Session::apply).
 
     This first set covers the session's layout and mix: tracks, buses and folders, their volume,
-    pan, mute, solo, outputs and sends; clips' places, trims, splits, gains and fades; markers
+    pan, mute, solo, outputs and sends; clips' places, trims, splits, gains, fades and own effects; markers
     and regions; the tempo; note clips with their notes; a track's volume and pan automation;
     and an instrument track's instrument.
     An instrument lives outside the state (in the track's chain, TrackEffects), so choosing one
@@ -87,6 +87,7 @@ namespace Ai
         juce::var trimClip (const juce::var&);
         juce::var splitClip (const juce::var&);
         juce::var compTakes (const juce::var&);
+        juce::var setClipEffects (const juce::var&);
         juce::var addSection (const juce::var&);
         juce::var moveSection (const juce::var&);
         juce::var deleteSection (const juce::var&);

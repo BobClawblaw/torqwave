@@ -13,6 +13,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Save | `Cmd-S` |
 | Save As... | `Shift-Cmd-S` |
 | Close File | `Cmd-W` |
+| Back to Clip | `Option-B` |
 | New Session | `Shift-Cmd-N` |
 | Open Session... | `Shift-Cmd-O` |
 
@@ -132,6 +133,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Duplicate Time | `Option-Cmd-D` |
 | Split Clip | `Cmd-K` |
 | Split All Tracks | `Shift-Cmd-K` |
+| Edit Clip in Place | `Option-E` |
 | Select Track Above | `Up Arrow` |
 | Select Track Below | `Down Arrow` |
 
@@ -167,6 +169,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Draw a note clip (Draw tool) | Drag along an instrument track's lane in the multitrack view (below the tracks makes a track) |
 | Cut a clip where it is clicked (Split tool) | Click the clip in the multitrack view |
 | Stretch a clip, audio or notes (Stretch tool) | Drag the clip's edge in the multitrack view (Option-drag does it with the Select tool, for audio) |
+| Edit a clip's audio in place, in the editor | Double-click the clip in the multitrack view (Open Source File, in its menu, opens the whole file instead) |
 | Join a note clip with the next on its track (Glue tool) | Click the clip in the multitrack view (or Merge with Next in its menu) |
 | Fade in or out | Drag the handle at the waveform's top-left or top-right corner; drag up or down to bend the curve |
 | Remove a fade | Double-click its handle |

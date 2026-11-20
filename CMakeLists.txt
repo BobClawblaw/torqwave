@@ -283,6 +283,9 @@ target_sources(Torqwave PRIVATE
     Source/MidiOut.cpp
     Source/ControlSurface.cpp
     Source/TempoFollow.cpp
+    Source/ClipEffects.cpp
+    Source/ClipEffectsPanel.cpp
+    Source/SoundDesign.cpp
     Source/WaveformView.cpp
     Source/MixerView.cpp
     Source/SurroundPad.cpp
@@ -439,6 +442,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/MidiOutTests.cpp
     Tests/ControlSurfaceTests.cpp
     Tests/TempoFollowTests.cpp
+    Tests/SoundDesignTests.cpp
     Tests/MetronomeTests.cpp
     Tests/MixerTests.cpp
     Tests/BounceTests.cpp
@@ -550,6 +554,9 @@ target_sources(TorqwaveTests PRIVATE
     Source/MidiOut.cpp
     Source/ControlSurface.cpp
     Source/TempoFollow.cpp
+    Source/ClipEffects.cpp
+    Source/ClipEffectsPanel.cpp
+    Source/SoundDesign.cpp
     Source/Leveller.cpp
     Source/Scrubber.cpp
     Source/ClickRepair.cpp

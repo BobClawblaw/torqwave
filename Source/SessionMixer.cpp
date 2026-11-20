@@ -494,7 +494,13 @@ namespace
     {
         auto channels = juce::jmin (scratch.getNumChannels(), clip.audio->getNumChannels());
 
-        if (clip.comp.empty() || clip.takes.empty())
+        // With its effects rendered, what they made, from the clip's start (a clip waiting for its render plays dry).
+        if (const auto& rendered = clip.effects.rendered; rendered != nullptr && rendered->getNumFrames() == clip.length)
+        {
+            channels = juce::jmin (scratch.getNumChannels(), rendered->getNumChannels());
+            rendered->read (scratch, 0, from - clip.position, count);
+        }
+        else if (clip.comp.empty() || clip.takes.empty())
         {
             clip.audio->read (scratch, 0, clip.offset + (from - clip.position), count);
         }

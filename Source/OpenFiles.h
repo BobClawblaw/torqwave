@@ -2,6 +2,7 @@
 
 #include "SpectralEdit.h"
 #include "AudioEngine.h"
+#include "SoundDesign.h"
 
 /** Where the editor was in a file: the selection, cursor, zoom and spectral band, put back when
     the file is shown again. A zero framesPerPixel means none was kept (the file is fitted). */
@@ -33,11 +34,20 @@ public:
     /** Where the editor was in a file kept aside (for the one shown, ask the editor). */
     const FilePlace& placeAt (int index) const          { return entries[(size_t) index].place; }
 
-    /** The name shown for a file: its file name, or "Untitled" for one never saved. */
+    /** The name shown for a file: its file name, "Untitled" for one never saved, or for one linked
+        to a clip the clip's name and "(Clip)". */
     juce::String nameAt (int index) const;
 
     /** The open file read from this file on disk, or -1. */
     int indexOf (const juce::File&) const;
+
+    /** A file opened from a session clip (Edit in Place), linked to it: what was opened, so that
+        saving puts it back into the clip; null for a file of its own. Its name is the clip's. */
+    void setLink (int index, std::shared_ptr<const SoundDesign::ClipEdit>);
+    std::shared_ptr<const SoundDesign::ClipEdit> linkAt (int index) const;
+
+    /** The open file linked to this clip, or -1. */
+    int indexOfClip (juce::uint32 clipId) const;
 
     /** Makes room for a file about to be loaded into the engine's document: the one there is kept
         aside behind a new entry, which becomes the active one, unless it is empty, untitled and
@@ -72,6 +82,7 @@ private:
     {
         std::unique_ptr<AudioDocument> aside;   // the file's document while another is active; an empty one while it is
         FilePlace place;
+        std::shared_ptr<const SoundDesign::ClipEdit> link {};
     };
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override   { sendChangeMessage(); }

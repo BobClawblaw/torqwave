@@ -21,6 +21,7 @@
 #include "BuiltInEffects.h"
 #include "AudioFileIO.h"
 #include "Bounce.h"
+#include "SoundCategories.h"
 #include "ClipList.h"
 #include "MarkerTable.h"
 #include "ClipProperties.h"
@@ -183,6 +184,7 @@ namespace
         cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement,
         cmdAddVca, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite,
         cmdControlSurface, cmdLearnPlay, cmdLearnStop, cmdLearnRecord, cmdForgetMidiLearn,
+        cmdEditInPlace, cmdBackToClip, cmdClipEffects, cmdCombineSound, cmdAddToLibrary,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -951,6 +953,11 @@ MainComponent::MainComponent()
     editorButton.onClick = [this] { setMultitrack (false); };
     multitrackButton.onClick = [this] { setMultitrack (true); };
 
+    // While the editor holds a clip opened in place: back to it in the session.
+    addChildComponent (backToClipButton);
+    backToClipButton.setTooltip (Platform::keys ("Back to the clip in the session (Option+B); Cmd+S puts the edit into it as a new take"));
+    backToClipButton.onClick = [this] { backToClip(); };
+
     pluginsButton.onClick  = [this] { showPluginList(); };
     audioButton.onClick    = [this] { showSettings ("Audio"); };
     selectionPanel.onClick = [this] { commands.invokeDirectly (cmdSetSelection, true); };
@@ -1064,6 +1071,10 @@ MainComponent::MainComponent()
     rolls.preroll = juce::jlimit (0.0, SessionRecording::Rolls::longest, settings->getDoubleValue (prerollKey, rolls.preroll));
     rolls.postroll = juce::jlimit (0.0, SessionRecording::Rolls::longest, settings->getDoubleValue (postrollKey, rolls.postroll));
     multitrack.onOpenInEditor = [this] (const juce::File& f) { openFile (f); };
+    multitrack.onEditClip = [this] (juce::uint32 clipId) { editClipInPlace (clipId); };
+    multitrack.onClipEffects = [this] (juce::uint32 clipId) { showClipEffects (clipId); };
+    multitrack.onCombineClips = [this] (const std::vector<juce::uint32>& clipIds) { combineClips (clipIds); };
+    multitrack.onAddToLibrary = [this] (juce::uint32 clipId) { askToAddToLibrary (clipId); };
     multitrack.onFilesDropped = [this] (const juce::StringArray& files, int track, juce::int64 frame) { addFilesToSession (files, track, frame); };
     multitrack.onOpenFileDropped = [this] (int index, int track, juce::int64 frame) { addOpenFileToSession (index, track, frame); };
     multitrack.onSelectionChanged = [this] { commands.commandStatusChanged(); timerCallback(); };
@@ -1130,6 +1141,11 @@ MainComponent::MainComponent()
 
     // Controllers: a Mackie Control surface, and MIDI learn for any knob.
     tempoRenderer = std::make_unique<TempoFollow::Renderer> (engine.session);
+    clipEffectsRenderer = std::make_unique<ClipEffects::Renderer> (engine.session, engine.pluginFormatManager);
+    clipEffectsRenderer->onFailed = [] (const juce::String& clipName, const juce::String& error)
+    {
+        showError ("Clip Effects", clipName + " plays without its effects, which could not be rendered:\n" + error);
+    };
     surface = std::make_unique<ControlSurface> (engine, [this] { return &multitrack; });
     surface->onTransport = [this] (ControlSurface::Transport t) { transportFromController (t); };
     surface->selectedTrack = [this] { return multitrack.getSelectedTrackId(); };
@@ -1220,7 +1236,7 @@ MainComponent::MainComponent()
 
             auto& doc = safe->engine.document;
 
-            if (doc.getFile() != juce::File() || doc.canUndo() || safe->isRecording())
+            if (doc.getFile() != juce::File() || doc.canUndo() || safe->isRecording() || safe->isEditingClip())
                 return;
 
             if (const auto error = safe->engine.adoptFile (last, std::move (loaded)); error.isNotEmpty())
@@ -1445,6 +1461,8 @@ MainComponent::~MainComponent()
     multitrack.addMidiLearnMenu = nullptr;
     midiLearn = nullptr;
     surface = nullptr;
+    clipEffectsWindow = nullptr;
+    clipEffectsRenderer = nullptr;
     tempoRenderer = nullptr;
     engine.document.removeChangeListener (this);
     engine.session.removeChangeListener (this);
@@ -1495,6 +1513,12 @@ void MainComponent::resized()
     auto toolbar = r.removeFromTop (30);
     editorButton.setBounds (toolbar.removeFromLeft (64).reduced (0, 2));
     multitrackButton.setBounds (toolbar.removeFromLeft (86).reduced (0, 2));
+
+    if (backToClipButton.isVisible())
+    {
+        toolbar.removeFromLeft (6);
+        backToClipButton.setBounds (toolbar.removeFromLeft (100).reduced (0, 2));
+    }
     audioButton.setBounds (toolbar.removeFromRight (124).reduced (0, 2));
     toolbar.removeFromRight (6);
     pluginsButton.setBounds (toolbar.removeFromRight (96).reduced (0, 2));
@@ -1564,7 +1588,12 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
     {
         case cmdOpen:       info.setInfo ("Open...", "Open an audio file", "File", 0); info.addDefaultKeypress ('o', cmd); break;
         case cmdSave:       info.setInfo ("Save", "Save the file", "File", 0); info.addDefaultKeypress ('s', cmd);
-                            info.setActive (hasAudio && doc.isDirty()); break;
+                            info.setActive (hasAudio && doc.isDirty());
+
+                            if (isEditingClip())
+                                info.shortName = "Save to Clip";
+
+                            break;
         case cmdSaveAs:     info.setInfo ("Save As...", "Save to a new file or format", "File", 0); info.addDefaultKeypress ('s', cmd | shift);
                             info.setActive (hasAudio); break;
 
@@ -2184,6 +2213,29 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
             info.setActive (multitrackMode && where.has_value() && ! state->tracks[(size_t) where->first].clips[(size_t) where->second].comp.empty());
             break;
         }
+        case cmdEditInPlace:
+        {
+            info.setInfo ("Edit Clip in Place", "Open the selected clip's audio in the editor, linked to it: saving puts the edit back as a new take", "Multitrack", 0);
+            info.addDefaultKeypress ('e', alt);
+            const auto state = engine.session.getState();
+            const auto where = state->findClip (multitrack.getSelectedClip());
+            info.setActive (multitrackMode && where.has_value() && ! state->tracks[(size_t) where->first].clips[(size_t) where->second].locked);
+            break;
+        }
+        case cmdBackToClip: info.setInfo ("Back to Clip", "Leave the clip opened in place and show it in the session", "File", 0);
+                            info.addDefaultKeypress ('b', alt); info.setActive (! multitrackMode && isEditingClip()); break;
+        case cmdClipEffects:
+        {
+            info.setInfo ("Clip Effects...", "Effects and a pitch shift on the selected clip alone, rendered in the background", "Multitrack", 0);
+            const auto state = engine.session.getState();
+            const auto where = state->findClip (multitrack.getSelectedClip());
+            info.setActive (multitrackMode && where.has_value());
+            break;
+        }
+        case cmdCombineSound: info.setInfo ("Combine to New Sound", "Render the selected clips, as they play together, into one new sound on a track of its own", "Multitrack", 0);
+                            info.setActive (multitrackMode && ! multitrack.getSelectedClips().empty() && backgroundJob == nullptr); break;
+        case cmdAddToLibrary: info.setInfo ("Add to Library...", "File the selected clip's sound in the Sound Library, with a category and tags", "Multitrack", 0);
+                            info.setActive (multitrackMode && multitrack.getSelectedClip() != 0); break;
         case cmdClipGainLines: info.setInfo ("Clip Gain Lines", "Show each clip's gain line to edit it: click the line to add a point, drag one, Alt-click to remove it", "Multitrack", 0);
                             info.setTicked (multitrack.isShowingClipGain()); info.setActive (multitrackMode); break;
         case cmdGroupClips: info.setInfo ("Group Clips", "Group the selected clips, so clicking one selects them all, to move or delete together", "Multitrack", 0);
@@ -2547,18 +2599,30 @@ bool MainComponent::perform (const InvocationInfo& info)
             lastRepeatable = info.commandID;
     }
 
-    // What mixes the session to a file waits for clips still being stretched to the tempo, then goes ahead.
-    if (multitrackMode && tempoRenderer != nullptr && ! tempoRenderer->isUpToDate()
-        && (info.commandID == cmdMixDown || info.commandID == cmdBounceTrack || info.commandID == cmdFreezeTrack || info.commandID == cmdExportStems
-            || info.commandID == cmdExportFolderStems || info.commandID == cmdExportRegions))
+    // What mixes the session to a file waits for clips still being stretched to the tempo, and
+    // then for clips' effects still being rendered (a new stretch renders them again), then goes ahead.
+    if (multitrackMode && (info.commandID == cmdMixDown || info.commandID == cmdBounceTrack || info.commandID == cmdFreezeTrack || info.commandID == cmdExportStems
+                           || info.commandID == cmdExportFolderStems || info.commandID == cmdExportRegions))
     {
-        showNote ("Following the Tempo", "Clips are being stretched to the tempo. This goes ahead as soon as they are done.");
-        tempoRenderer->whenDone ([safe = juce::Component::SafePointer<MainComponent> (this), id = info.commandID]
+        const auto again = [safe = juce::Component::SafePointer<MainComponent> (this), id = info.commandID]
         {
             if (safe != nullptr)
                 safe->commands.invokeDirectly (id, false);
-        });
-        return true;
+        };
+
+        if (tempoRenderer != nullptr && ! tempoRenderer->isUpToDate())
+        {
+            showNote ("Following the Tempo", "Clips are being stretched to the tempo. This goes ahead as soon as they are done.");
+            tempoRenderer->whenDone (again);
+            return true;
+        }
+
+        if (clipEffectsRenderer != nullptr && ! clipEffectsRenderer->isUpToDate())
+        {
+            showNote ("Clip Effects", "Clips' effects are being rendered. This goes ahead as soon as they are done.");
+            clipEffectsRenderer->whenDone (again);
+            return true;
+        }
     }
 
     switch (info.commandID)
@@ -2842,6 +2906,11 @@ bool MainComponent::perform (const InvocationInfo& info)
             commands.commandStatusChanged();
             break;
         case cmdFlattenComp: flattenComp (multitrack.getSelectedClip()); break;
+        case cmdEditInPlace: editClipInPlace (multitrack.getSelectedClip()); break;
+        case cmdBackToClip: backToClip(); break;
+        case cmdClipEffects: showClipEffects (multitrack.getSelectedClip()); break;
+        case cmdCombineSound: combineClips (multitrack.getSelectedClips()); break;
+        case cmdAddToLibrary: askToAddToLibrary (multitrack.getSelectedClip()); break;
         case cmdAddSection: multitrack.addSectionFromRange(); break;
         case cmdPlayArrangement: multitrack.setPlayArrangement (! multitrack.isPlayingArrangement()); commands.commandStatusChanged(); break;
         case cmdFlattenArrangement: multitrack.flattenArrangement(); break;
@@ -3271,7 +3340,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         case 0:
             add ({ cmdNewFile, cmdOpen });
             menu.addSubMenu ("Open Recent", RecentFiles::createMenu (recentFiles, recentBaseId, [this] (const juce::File& f) { return isThere (f); }), recentFiles.getNumFiles() > 0 && ! isRecording());
-            add ({ cmdCloseFile, cmdNextFile, cmdPreviousFile, 0, cmdSave, cmdSaveAs, cmdSaveSelection, cmdSaveRegions, cmdSavePieces, cmdSaveChannels, cmdExportLossy, cmdExportFfmpeg, 0, cmdAttachVideo, cmdVideoStart, cmdDetachVideo, cmdSaveIntoVideo, 0, cmdBatchProcess, cmdNewFromChannels, 0, cmdFileInfo, cmdSettings, 0, cmdOpenProject, cmdSaveProject, cmdSaveProjectAs, cmdKeepProjectHistory, 0, cmdNewSession, cmdOpenSession, cmdSaveCopyWithAudio, 0, cmdExportMarkers, cmdImportMarkers, cmdExportClips }); break;
+            add ({ cmdCloseFile, cmdBackToClip, cmdNextFile, cmdPreviousFile, 0, cmdSave, cmdSaveAs, cmdSaveSelection, cmdSaveRegions, cmdSavePieces, cmdSaveChannels, cmdExportLossy, cmdExportFfmpeg, 0, cmdAttachVideo, cmdVideoStart, cmdDetachVideo, cmdSaveIntoVideo, 0, cmdBatchProcess, cmdNewFromChannels, 0, cmdFileInfo, cmdSettings, 0, cmdOpenProject, cmdSaveProject, cmdSaveProjectAs, cmdKeepProjectHistory, 0, cmdNewSession, cmdOpenSession, cmdSaveCopyWithAudio, 0, cmdExportMarkers, cmdImportMarkers, cmdExportClips }); break;
         case 1: add ({ cmdUndo, cmdRedo, cmdUndoHistory, cmdRepeatLast, 0, cmdCut, cmdCopy, cmdPaste, cmdPasteMix, cmdPasteFill, cmdDelete, cmdRepeatSelection, 0, cmdSelectAll, cmdSelectAudible, cmdSetSelection, cmdStepSelectionEarlier, cmdStepSelectionLater, cmdDoubleSelection, cmdHalveSelection, cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectionToZero, cmdSelectZeroCrossings, cmdCopySelectionTime, cmdFindClipping, cmdFindSilence, cmdNextSound, cmdPreviousSound, cmdSelectTrackClips, cmdSelectClipsAfter, cmdSelectClipsInRange, cmdSelectClipsInRegion, cmdNextClip, cmdPreviousClip, cmdCrop, cmdCropMargins, 0, cmdTimeTool, cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdBrushLarger, cmdBrushSmaller, cmdBrushLighter, cmdBrushHeavier, 0, cmdConvertRate, 0, cmdAskTorqwave }); break;
         case 2:
         {
@@ -3341,7 +3410,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdTakeOutOfFolder, cmdAddVca, cmdAddFromTemplate, cmdSaveTrackTemplate, cmdSaveInstrumentPreset, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
                                0, cmdTrackAbove, cmdTrackBelow, 0, cmdUnsoloAll, cmdUnmuteAll });
             group ("Tools", { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute });
-            group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdShowTakes, cmdFlattenComp, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines, 0, cmdClipToFront, cmdClipToBack });
+            group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdShowTakes, cmdFlattenComp, 0, cmdEditInPlace, cmdClipEffects, cmdCombineSound, cmdAddToLibrary, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines, 0, cmdClipToFront, cmdClipToBack });
             group ("Arrange", { cmdNudgeEarlier, cmdNudgeLater, cmdMoveClipsToCursor, cmdTrimStartToCursor, cmdTrimEndToCursor, cmdCloseGaps, cmdQuantize,
                                 0, cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement });
             group ("Notes", { cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes });
@@ -3674,6 +3743,13 @@ void MainComponent::refreshAskButton()
 void MainComponent::refreshTitle()
 {
     refreshAskButton();
+
+    if (const auto showBack = ! multitrackMode && isEditingClip(); showBack != backToClipButton.isVisible())
+    {
+        backToClipButton.setVisible (showBack);
+        resized();
+    }
+
     editorButton.setToggleState (! multitrackMode, juce::dontSendNotification);
     multitrackButton.setToggleState (multitrackMode, juce::dontSendNotification);
 
@@ -3693,8 +3769,11 @@ void MainComponent::refreshTitle()
     }
 
     auto& doc = engine.document;
-    const auto name = doc.getFile() == juce::File() ? juce::String ("Untitled") : doc.getFile().getFileName();
-    fileLabel.setText (doc.hasAudio() ? "Editing file: " + name + "  |  " + juce::String (doc.getSampleRate() / 1000.0, 1) + " kHz, "
+    const auto editingClip = isEditingClip();
+    const auto name = editingClip ? openFiles.nameAt (openFiles.getActiveIndex())
+                    : doc.getFile() == juce::File() ? juce::String ("Untitled") : doc.getFile().getFileName();
+    fileLabel.setText (editingClip ? "Editing a clip in place: " + name + "  |  Save puts it into the clip as a new take"
+                     : doc.hasAudio() ? "Editing file: " + name + "  |  " + juce::String (doc.getSampleRate() / 1000.0, 1) + " kHz, "
                                           + juce::String (doc.getNumChannels()) + " ch, "
                                           + (doc.getSourceBitDepth() == 32 ? juce::String ("32-bit float")
                                                                             : juce::String (doc.getSourceBitDepth()) + "-bit")
@@ -3770,13 +3849,18 @@ void MainComponent::confirmDiscardChanges (std::function<void()> proceed)
     }
 
     askThreeWay ("Unsaved changes",
-                 "Save changes to " + engine.document.getFile().getFileName() + " first?",
+                 isEditingClip() ? "Put the changes to " + openFiles.nameAt (openFiles.getActiveIndex()) + " into the clip first, as a new take?"
+                                 : "Save changes to " + engine.document.getFile().getFileName() + " first?",
                  "Save", "Don't Save",
                  [this, then = std::move (proceed)] (int result)
                  {
                      if (result == 2)
                      {
                          then();
+                     }
+                     else if (result == 1 && isEditingClip())
+                     {
+                         saveClipEdit ([then] (bool saved) { if (saved) then(); });
                      }
                      else if (result == 1)
                      {
@@ -4789,6 +4873,328 @@ void MainComponent::flattenComp (juce::uint32 clipId)
 
     if (SessionEdits::flattenComp (next, clipId, file, audio))
         engine.session.apply (std::move (next), "Flatten Comp");
+}
+
+//==============================================================================
+bool MainComponent::isEditingClip() const
+{
+    return openFiles.linkAt (openFiles.getActiveIndex()) != nullptr;
+}
+
+bool MainComponent::rendersReady (std::function<void()> again)
+{
+    if (tempoRenderer != nullptr && ! tempoRenderer->isUpToDate())
+    {
+        showNote ("Following the Tempo", "Clips are being stretched to the tempo. This goes ahead as soon as they are done.");
+        tempoRenderer->whenDone (std::move (again));
+        return false;
+    }
+
+    if (clipEffectsRenderer != nullptr && ! clipEffectsRenderer->isUpToDate())
+    {
+        showNote ("Clip Effects", "Clips' effects are being rendered. This goes ahead as soon as they are done.");
+        clipEffectsRenderer->whenDone (std::move (again));
+        return false;
+    }
+
+    return true;
+}
+
+void MainComponent::editClipInPlace (juce::uint32 clipId)
+{
+    if (isRecording() || clipId == 0)
+        return;
+
+    // A clip already open in place is switched to.
+    if (const auto index = openFiles.indexOfClip (clipId); index >= 0)
+    {
+        switchToFile (index);
+        return;
+    }
+
+    const auto state = engine.session.getState();
+    auto edit = std::make_shared<SoundDesign::ClipEdit> (SoundDesign::editClip (*state, clipId));
+
+    if (edit->audio == nullptr)
+    {
+        showError ("Edit in Place", edit->error);
+        return;
+    }
+
+    // A file of its own beside the files open, at the session's rate, linked to the clip.
+    stopPreview();
+    AudioFileIO::Loaded loaded;
+    loaded.snapshot = edit->audio;
+    loaded.sampleRate = state->sampleRate;
+    loaded.bitDepth = 32;
+    openFiles.prepareForAnother (waveform.getPlace());
+    engine.adoptFile ({}, std::move (loaded));
+    openFiles.setLink (openFiles.getActiveIndex(), edit);
+    setMultitrack (false);
+    waveform.setPlace ({});
+    waveform.zoomToFit();
+    refreshTitle();
+    timerCallback();
+    commands.commandStatusChanged();
+}
+
+void MainComponent::saveClipEdit (std::function<void (bool)> done)
+{
+    const auto finish = [done] (bool saved) { if (done != nullptr) done (saved); };
+    const auto index = openFiles.getActiveIndex();
+    const auto link = openFiles.linkAt (index);
+
+    if (link == nullptr || ! engine.document.hasAudio())
+    {
+        finish (false);
+        return;
+    }
+
+    // Back at the session's rate, if the editor changed it.
+    auto& doc = engine.document;
+    const auto rate = engine.session.getSampleRate();
+    auto edited = doc.getSnapshot();
+
+    if (! juce::exactlyEqual (doc.getSampleRate(), rate))
+        edited = SampleRateConverter::convert (*edited, doc.getSampleRate(), rate);
+
+    juce::String error;
+    const auto audio = SoundDesign::toSave (*link, edited, error);
+    const auto folder = recordingsFolder();
+    const auto file = folder.getNonexistentChildFile (juce::File::createLegalFileName (link->clipName) + " Edit", ".wav", false);
+
+    if (error.isEmpty())
+        error = ! folder.createDirectory() ? "Could not make the folder " + folder.getFullPathName()
+                                           : AudioFileIO::save (*audio, rate, file, 32, engine.formatManager);
+
+    auto next = *engine.session.getState();
+
+    if (error.isEmpty())
+        SoundDesign::putBack (next, *link, file, audio, error);
+
+    if (error.isNotEmpty())
+    {
+        showError ("Edit in Place", error);
+        finish (false);
+        return;
+    }
+
+    engine.session.apply (std::move (next), "Edit in Place");
+    doc.markSaved ({}, doc.getSourceBitDepth());
+
+    // A following clip's original is now the one saved, which a later save edits again.
+    if (link->original)
+    {
+        auto now = std::make_shared<SoundDesign::ClipEdit> (*link);
+        now->from = audio;
+        openFiles.setLink (index, now);
+    }
+
+    refreshTitle();
+    commands.commandStatusChanged();
+    finish (true);
+}
+
+void MainComponent::backToClip()
+{
+    const auto link = openFiles.linkAt (openFiles.getActiveIndex());
+
+    if (link == nullptr)
+        return;
+
+    setMultitrack (true);
+
+    if (! multitrack.showClip (link->clipId))
+        showNote ("Back to Clip", link->clipName + " is no longer in the session.");
+}
+
+void MainComponent::showClipEffects (juce::uint32 clipId)
+{
+    if (! engine.session.getState()->findClip (clipId).has_value())
+        return;
+
+    // One window, for the clip asked for; closing it closes an effect's window opened from it.
+    struct Window final : public juce::DocumentWindow
+    {
+        explicit Window (std::function<void()> onClose)
+            : DocumentWindow ("Clip Effects", Theme::surface, DocumentWindow::closeButton), closed (std::move (onClose)) {}
+
+        void closeButtonPressed() override   { closed(); }
+        std::function<void()> closed;
+    };
+
+    auto* window = new Window ([safe = juce::Component::SafePointer<MainComponent> (this)]
+    {
+        juce::MessageManager::callAsync ([safe] { if (safe != nullptr) safe->clipEffectsWindow = nullptr; });
+    });
+    window->setUsingNativeTitleBar (true);
+    window->setContentOwned (new ClipEffectsPanel (engine, clipId), true);
+    window->setResizable (true, false);
+    window->centreWithSize (window->getWidth(), window->getHeight());
+    clipEffectsWindow.reset (window);
+    window->setVisible (true);
+    window->toFront (true);
+}
+
+void MainComponent::combineClips (const std::vector<juce::uint32>& clipIds)
+{
+    const auto state = engine.session.getState();
+    std::vector<juce::uint32> ids;
+
+    for (auto id : clipIds)
+        if (state->findClip (id).has_value())
+            ids.push_back (id);
+
+    if (ids.empty() || backgroundJob != nullptr)
+        return;
+
+    // Every clip heard as it plays: stretched to the tempo and through its effects.
+    if (! rendersReady ([safe = juce::Component::SafePointer<MainComponent> (this), ids] { if (safe != nullptr) safe->combineClips (ids); }))
+        return;
+
+    const auto range = SoundDesign::combineRange (*state, ids);
+    const auto rate = engine.session.getSampleRate();
+    const auto first = state->findClip (ids.front());
+    const auto name = state->tracks[(size_t) first->first].clips[(size_t) first->second].name + " Combined";
+    const auto file = recordingsFolder().getNonexistentChildFile (juce::File::createLegalFileName (name), ".wav", false);
+    auto alone = std::make_shared<SessionState> (SoundDesign::combineSource (*state, ids));
+    auto effects = std::make_shared<std::map<juce::uint32, std::unique_ptr<juce::XmlElement>>>();
+
+    for (auto& t : alone->tracks)   // the clips' tracks', and their keys'
+        if (auto xml = engine.getTrackEffects().createXml (t.id))
+            (*effects)[t.id] = std::move (xml);
+
+    auto inserts = std::make_shared<TrackEffects>();
+    auto audio = std::make_shared<AudioDocument::Snapshot>();
+    auto error = std::make_shared<juce::String>();
+    auto warnings = std::make_shared<juce::String>();
+
+    backgroundJob = std::make_unique<BackgroundJob> (*this, "Combining " + juce::String ((int) ids.size()) + (ids.size() == 1 ? " clip..." : " clips..."),
+        [this, alone, effects, inserts, audio, error, warnings, file, rate, range] (const std::function<bool (float)>& progress)
+        {
+            *warnings = OfflineRender::loadTrackEffects (*effects, engine.pluginFormatManager, rate, *inserts);
+            juce::AudioBuffer<float> mix;
+
+            if (! OfflineRender::mixSession (*alone, range, mix, inserts.get(), progress))
+                return false;
+
+            *audio = AudioEdits::fromBuffer (std::move (mix));
+
+            if (! file.getParentDirectory().createDirectory())
+                *error = "Could not make the folder " + file.getParentDirectory().getFullPathName();
+            else
+                *error = AudioFileIO::save (**audio, rate, file, 32, engine.formatManager);
+
+            return true;
+        },
+        [this, audio, error, warnings, file, ids, range, name]
+        {
+            if (error->isNotEmpty())
+            {
+                showError ("Combine to New Sound", *error);
+                return;
+            }
+
+            auto next = *engine.session.getState();
+            const auto clipId = SoundDesign::landCombined (next, ids, file, *audio, range.getStart(), name);
+
+            if (clipId == 0)
+            {
+                showError ("Combine to New Sound", "The clips were deleted while they were combined; the sound is in " + file.getFullPathName() + ".");
+                return;
+            }
+
+            engine.session.apply (std::move (next), "Combine to New Sound");
+            multitrack.showClip (clipId);
+
+            if (warnings->isNotEmpty())
+                showError ("Combine to New Sound", file.getFileName() + " was made without these effects, which could not be loaded:\n" + *warnings);
+        });
+    backgroundJob->launchThread();
+    commands.commandStatusChanged();
+}
+
+juce::File MainComponent::libraryIndexFile() const
+{
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+        .getChildFile ("Torqwave").getChildFile ("Sound Library").getChildFile ("Index.sqlite");
+}
+
+void MainComponent::askToAddToLibrary (juce::uint32 clipId)
+{
+    const auto state = engine.session.getState();
+    const auto where = state->findClip (clipId);
+
+    if (! where.has_value())
+        return;
+
+    // The sound as the clip plays it: through its effects, so their render must be there.
+    if (! rendersReady ([safe = juce::Component::SafePointer<MainComponent> (this), clipId] { if (safe != nullptr) safe->askToAddToLibrary (clipId); }))
+        return;
+
+    const auto clip = state->tracks[(size_t) where->first].clips[(size_t) where->second];
+    auto index = std::make_shared<SoundLibrary::Index> (libraryIndexFile());
+
+    // The folders: those the library watches, or else one of its own in the Music folder.
+    auto folders = index->getFolders();
+    const auto own = juce::File::getSpecialLocation (juce::File::userMusicDirectory).getChildFile ("Torqwave").getChildFile ("Sounds");
+
+    if (! folders.contains (own))
+        folders.add (own);
+
+    juce::StringArray folderNames, categoryNames { "None" };
+
+    for (auto& f : folders)
+        folderNames.add (f.getFullPathName());
+
+    for (auto& e : Ucs::list())
+        categoryNames.add (e.describe() + "  (" + e.catId + ")");
+
+    const auto guessed = Ucs::fromName (clip.name);
+    auto* box = new juce::AlertWindow ("Add to Library", "Files the clip's sound, as it plays (its effects, fades and gain), in the Sound Library: "
+                                                         "a WAV file in the folder, with its category and tags in the file and in the library.",
+                                       juce::MessageBoxIconType::NoIcon);
+    box->addTextEditor ("name", clip.name, "Name");
+    box->addComboBox ("category", categoryNames, "Category (UCS)");
+    box->getComboBoxComponent ("category")->setSelectedItemIndex (guessed != nullptr ? (int) (guessed - Ucs::list().data()) + 1 : 0);
+    box->addTextEditor ("tags", {}, "Tags (separated by commas)");
+    box->addComboBox ("folder", folderNames, "Folder");
+    box->getComboBoxComponent ("folder")->setSelectedItemIndex (0);
+    box->addButton ("Add", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([this, box, clip, index, folders] (int result)
+    {
+        if (result != 1)
+            return;
+
+        const auto category = box->getComboBoxComponent ("category")->getSelectedItemIndex();
+        const auto catId = category > 0 ? Ucs::list()[(size_t) category - 1].catId : juce::String();
+        const auto folder = folders[juce::jmax (0, box->getComboBoxComponent ("folder")->getSelectedItemIndex())];
+        const auto tags = SoundDesign::tagsFrom (box->getTextEditorContents ("tags"));
+        const auto sound = SoundDesign::clipSound (clip);
+
+        if (sound == nullptr)
+        {
+            showError ("Add to Library", "The clip plays no audio.");
+            return;
+        }
+
+        const auto filed = SoundDesign::addToLibrary (*index, *sound, engine.session.getSampleRate(), folder,
+                                                      box->getTextEditorContents ("name"), catId, tags, engine.formatManager);
+
+        if (filed.error.isNotEmpty())
+        {
+            showError ("Add to Library", filed.error);
+            return;
+        }
+
+        if (soundLibrary != nullptr)
+            soundLibrary->getView().rescan();
+
+        showNote ("Add to Library", filed.file.getFileName() + " is in the Sound Library"
+                                        + (catId.isNotEmpty() ? ", in " + Ucs::byCatId (catId)->describe() : juce::String())
+                                        + (tags.isEmpty() ? juce::String() : ", tagged " + tags.joinIntoString (", ")) + ".");
+    }), true);
 }
 
 void MainComponent::askToStretchSelectedClip()
@@ -5930,6 +6336,12 @@ void MainComponent::chooseFile()
 void MainComponent::save()
 {
     auto& doc = engine.document;
+
+    if (isEditingClip())
+    {
+        saveClipEdit ({});
+        return;
+    }
 
     // Formats we can't write (MP3, for example) or a depth the format can't hold go through Save As.
     if (doc.getFile().existsAsFile() && AudioFileIO::bitDepthsFor (doc.getFile(), engine.formatManager).contains (doc.getSourceBitDepth()))

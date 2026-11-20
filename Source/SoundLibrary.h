@@ -172,6 +172,10 @@ namespace SoundLibrary
         /** Puts many, in one transaction. */
         bool putAll (std::vector<Sound>&);
 
+        /** Reads one file in a watched folder (or deeper) and puts it in the index now, as a scan
+            would; nothing for a file outside the folders or one that can't be read. */
+        std::optional<Sound> addFile (const juce::File&, juce::AudioFormatManager&);
+
     private:
         sqlite3* db = nullptr;
         juce::String error;

@@ -1,4 +1,5 @@
 #include "AiSession.h"
+#include "ClipEffects.h"
 
 namespace
 {
@@ -53,6 +54,8 @@ namespace
   { "name": "comp_takes", "description": "Build a comp from a clip's takes (its loop-recording passes, counted in list_clips): play take 'take' from start to end, in seconds, the rest as it was; joins are crossfaded. Without start and end, the take plays throughout and the comp ends.",
     "parameters": { "type": "object", "properties": { CLIP, "take": { "type": "integer", "description": "From 1." }, "start": { "type": "number" }, "end": { "type": "number" } },
                     "required": ["clip", "take"] } },
+  { "name": "set_clip_effects", "description": "Change a clip's own effects, which change only that clip and none of its files: its pitch in semitones (-12 to +12, keeping its length; 0 for none), an effect plug-in to add at the end of its chain by its id or name from list_plugins (with the plug-in's default settings), or clear: true to take every effect off it. Give only what changes. The clip is rendered with them in the background.",
+    "parameters": { "type": "object", "properties": { CLIP, "pitch": { "type": "number" }, "add": { "type": "string" }, "clear": { "type": "boolean" } }, "required": ["clip"] } },
   { "name": "set_clip", "description": "Change a clip's gain (dB, -60 to +24), fade in and fade out (seconds), or mute it. Give only what changes.",
     "parameters": { "type": "object", "properties": { CLIP, "gain": { "type": "number" }, "fade_in": { "type": "number" }, "fade_out": { "type": "number" },
                     "mute": { "type": "boolean" } }, "required": ["clip"] } },
@@ -139,7 +142,7 @@ namespace Ai
             for (auto& t : *list)
                 tools.add (object ({ { "type", "function" }, { "function", t } }));
 
-        jassert (tools.size() == 27);
+        jassert (tools.size() == 28);
         return tools;
     }
 
@@ -155,7 +158,8 @@ namespace Ai
                "(list_instrument_presets); when a request names a sound that isn't among them, say which there are rather than "
                "guessing. A track's effects: get_session lists them, and add_track_effect adds one at the end "
                "of the chain with its default settings. What these tools can't do yet: an effect's or instrument's own settings, "
-               "removing or reordering effects, automation of an effect's parameters, bouncing or freezing a track, recording, and changing the audio inside a clip. Volume and pan automation (set_automation) take over from the track's setting while they have points. Say so when a request needs them, rather "
+               "removing or reordering effects, automation of an effect's parameters, bouncing or freezing a track, recording, and changing the audio inside a clip "
+               "(set_clip_effects puts a pitch shift and effects on a clip without changing its audio). Volume and pan automation (set_automation) take over from the track's setting while they have points. Say so when a request needs them, rather "
                "than doing something else.";
     }
 
@@ -177,6 +181,7 @@ namespace Ai
         else if (tool == "split_clip")     result = splitClip (args);
         else if (tool == "set_clip")       result = setClip (args);
         else if (tool == "comp_takes")     result = compTakes (args);
+        else if (tool == "set_clip_effects") result = setClipEffects (args);
         else if (tool == "add_section")    result = addSection (args);
         else if (tool == "move_section")   result = moveSection (args);
         else if (tool == "delete_section") result = deleteSection (args);
@@ -421,6 +426,7 @@ namespace Ai
                                  { "end", seconds (c.getEnd()).getDoubleValue() }, { "gain", round1 (c.gainDb) },
                                  { "fade_in", seconds (c.fadeIn).getDoubleValue() }, { "fade_out", seconds (c.fadeOut).getDoubleValue() },
                                  { "muted", c.muted }, { "locked", c.locked }, { "takes", (int) c.takes.size() },
+                                 { "effects", c.effects.isOn() ? juce::var (ClipEffects::describe (c.effects)) : juce::var() },
                                  { "playing", c.takes.size() < 2 ? juce::var() : c.comp.empty() ? juce::var ("take " + juce::String (c.activeTake + 1)) : juce::var ("a comp") } }));
 
         for (auto& c : t.noteClips)
@@ -780,6 +786,65 @@ namespace Ai
             return refused ("the time must be inside the clip, and the clip not locked");
 
         return done ("Split clip " + name.quoted() + " at " + seconds (*at) + " s");
+    }
+
+    juce::var SessionTools::setClipEffects (const juce::var& a)
+    {
+        const auto clipId = (juce::uint32) (int) a["clip"];
+        const auto where = state.findClip (clipId);
+
+        if (! where)
+            return refused ("no audio clip with id " + a["clip"].toString());
+
+        const auto& clip = state.tracks[(size_t) where->first].clips[(size_t) where->second];
+        const auto name = clip.name;
+        auto semitones = clip.effects.semitones;
+        auto chain = clip.effects.chain;
+        juce::StringArray what;
+
+        if (a.hasProperty ("pitch"))
+        {
+            const auto& v = a["pitch"];
+            semitones = v.isDouble() || v.isInt() || v.isInt64() ? (double) v : std::numeric_limits<double>::quiet_NaN();
+
+            if (! std::isfinite (semitones) || std::abs (semitones) > SessionClip::Effects::maxSemitones)
+                return refused ("pitch must be from -12 to +12 semitones");
+
+            what.add (juce::exactlyEqual (semitones, 0.0) ? juce::String ("no pitch shift")
+                                                          : "pitch " + juce::String (semitones > 0.0 ? "+" : "") + juce::String (round3 (semitones)) + " semitones");
+        }
+
+        if ((bool) a["clear"])
+        {
+            chain = {};
+            what.add ("no effects");
+        }
+
+        if (a.hasProperty ("add"))
+        {
+            if (findEffect == nullptr)
+                return refused ("no plug-ins are known here");
+
+            juce::String error;
+            const auto plugin = findEffect (a["add"].toString().trim(), error);
+
+            if (! plugin)
+                return refused (error);
+
+            if (plugin->isInstrument)
+                return refused (plugin->name + " is an instrument, not an effect");
+
+            chain = ClipEffects::withSlot (chain, *plugin);
+            what.add ("add " + plugin->name);
+        }
+
+        if (what.isEmpty())
+            return refused ("give pitch, add or clear");
+
+        if (! SessionEdits::setClipEffects (state, clipId, semitones, chain))
+            return refused ("the clip is locked or on a frozen track, or already has those effects");
+
+        return done ("Clip effects on " + name.quoted() + ": " + what.joinIntoString (", "));
     }
 
     juce::var SessionTools::compTakes (const juce::var& a)

@@ -8,6 +8,7 @@
 #include "../Source/AiWorkspace.h"
 #include "../Source/AudioEdits.h"
 #include "../Source/BuiltInEffects.h"
+#include "../Source/ClipEffects.h"
 #include "../Source/Loudness.h"
 #include "TestUtils.h"
 #include "AiTests.h"
@@ -932,7 +933,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 29 && names.contains ("get_session") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 30 && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -999,6 +1000,18 @@ namespace
                    && loads[0].trackId == state.tracks[1].id
                    && call ("get_session", "{}")["tracks"][1]["effects"].toString() == "Reverb (when the plan is applied)",
                "Ask Torq sessions: an effect planned for a bus, shown by get_session; an instrument and a plug-in that isn't there refused");
+
+        const auto shifted = call ("set_clip_effects", "{\"clip\": " + id + ", \"pitch\": -5, \"add\": \"Reverb\"}");
+        const auto tooFar = call ("set_clip_effects", "{\"clip\": " + id + ", \"pitch\": 13}");
+        const auto instrument = call ("set_clip_effects", "{\"clip\": " + id + ", \"add\": \"Basic Synth\"}");
+        const auto nothing = call ("set_clip_effects", "{\"clip\": " + id + "}");
+        const auto& fx = state.tracks[0].clips[0].effects;
+        const auto shown = call ("list_clips", R"({"track": "Drums"})")["clips"][0]["effects"].toString();
+        const auto withEffects = (bool) shifted["ok"] && juce::exactlyEqual (fx.semitones, -5.0) && ClipEffects::slotsOf (fx.chain).size() == 1
+                                 && ClipEffects::slotsOf (fx.chain)[0].plugin.name == "Reverb" && shown == ClipEffects::describe (fx) && shown.contains ("Reverb");
+        const auto clearedFx = (bool) call ("set_clip_effects", "{\"clip\": " + id + ", \"pitch\": 0, \"clear\": true}")["ok"] && ! state.tracks[0].clips[0].effects.isOn();
+        check (withEffects && ! (bool) tooFar["ok"] && ! (bool) instrument["ok"] && ! (bool) nothing["ok"] && clearedFx && state.tracks[0].clips[1].effects.chain.isEmpty(),
+               "Ask Torq sessions: set_clip_effects puts a pitch shift and an effect on one clip, shown by list_clips, and takes them off; a pitch past an octave, an instrument and no change refused");
     }
 
     void testInstrumentPresets()

@@ -2,6 +2,7 @@
 #include "PreviousName.h"
 #include "Surround.h"
 #include "TempoFollow.h"
+#include "ClipEffects.h"
 
 #include <numeric>
 #include <map>
@@ -1800,6 +1801,80 @@ bool replaceActiveTake (SessionState& s, juce::uint32 clipId, const juce::File& 
     c->source = file;
     c->audio = std::move (audio);
     c->offset = 0;
+    return true;
+}
+
+bool addEditedTake (SessionState& s, juce::uint32 clipId, const juce::File& file, AudioDocument::Snapshot audio)
+{
+    auto* c = findUnlocked (s, clipId);
+
+    if (c == nullptr || c->tempoFollow.follows() || audio == nullptr || audio->getNumFrames() <= 0)
+        return false;
+
+    // What it played stays one take away: a clip without takes gets its audio as its first.
+    if (c->takes.empty())
+        c->takes.push_back ({ c->source, c->audio, 0 });
+
+    // The new take starts where the clip does, as Flatten Comp's does.
+    const auto shift = -c->takeZeroFrame (c->position);
+    const auto oldShift = c->takes[(size_t) c->activeTake].shift;
+
+    for (auto& p : c->gainEnvelope.points)
+        p.frame += shift - oldShift;
+
+    c->takes.push_back ({ file, audio, shift });
+    c->activeTake = (int) c->takes.size() - 1;
+    c->source = file;
+    c->length = audio->getNumFrames();
+    c->audio = std::move (audio);
+    c->offset = 0;
+    c->comp.clear();
+    limitFades (*c);
+    return true;
+}
+
+bool replaceOriginal (SessionState& s, juce::uint32 clipId, const juce::File& file, AudioDocument::Snapshot original)
+{
+    auto* c = findUnlocked (s, clipId);
+
+    if (c == nullptr || ! c->tempoFollow.follows() || original == nullptr
+        || original->getNumFrames() != c->tempoFollow.original->getNumFrames())
+        return false;
+
+    c->source = file;
+    c->tempoFollow.original = std::move (original);
+    c->tempoFollow.renderedFor = {};
+    return true;
+}
+
+bool setClipEffects (SessionState& s, juce::uint32 clipId, double semitones, const juce::String& chain)
+{
+    auto* c = findUnlocked (s, clipId);
+
+    if (c == nullptr || ! std::isfinite (semitones) || std::abs (semitones) > SessionClip::Effects::maxSemitones)
+        return false;
+
+    // The chain kept as one line of its XML, so the same chain is always the same text.
+    juce::String tidy;
+
+    if (chain.isNotEmpty())
+    {
+        const auto xml = juce::parseXML (chain);
+
+        if (xml == nullptr || ! xml->hasTagName ("TORQWAVE_RACK"))
+            return false;
+
+        if (xml->getNumChildElements() > 0)
+            tidy = xml->toString (juce::XmlElement::TextFormat().singleLine().withoutHeader());
+    }
+
+    if (juce::exactlyEqual (semitones, c->effects.semitones) && tidy == c->effects.chain)
+        return false;
+
+    c->effects.semitones = semitones;
+    c->effects.chain = tidy;
+    c->effects.rendered = nullptr;
+    c->effects.renderedFor = {};
     return true;
 }
 
@@ -4359,6 +4434,7 @@ void Session::reset (SessionState initial, const juce::File& f)
             pendingRelease.push_back (e.state);
 
     history.clear();
+    ClipEffects::dropStale (initial);
     history.push_back ({ std::make_shared<const SessionState> (std::move (initial)), {} });
     position = savedPosition = 0;
     effectsChanged = viewChanged = false;
@@ -4374,6 +4450,8 @@ void Session::apply (SessionState next, const juce::String& description, bool me
             if (const auto* there = now->findTrack (t.id))
                 t.automationMode = there->automationMode;
 
+    // A clip whose audio or effects changed lets go of its old render (ClipEffects::Renderer makes another).
+    ClipEffects::dropStale (next);
     auto state = std::make_shared<const SessionState> (std::move (next));
     history.erase (history.begin() + position + 1, history.end());
 
@@ -4440,6 +4518,7 @@ void Session::setAutomationMode (juce::uint32 trackId, AutomationMode mode)
 
 void Session::refresh (SessionState next)
 {
+    ClipEffects::dropStale (next);
     auto state = std::make_shared<const SessionState> (std::move (next));
     history[(size_t) position].state = state;
     setCurrent (state);
@@ -4872,6 +4951,18 @@ juce::String save (const SessionState& state, const juce::File& target,
                 }
             }
 
+            // Its effects: the pitch shift and the chain (the render is made again on opening).
+            if (c.effects.isOn())
+            {
+                auto* effectsXml = clip->createNewChildElement ("CLIPEFFECTS");
+
+                if (! juce::exactlyEqual (c.effects.semitones, 0.0))
+                    effectsXml->setAttribute ("semitones", juce::String (c.effects.semitones, 6));
+
+                if (auto rack = juce::parseXML (c.effects.chain))
+                    effectsXml->addChildElement (rack.release());
+            }
+
             if (! c.takes.empty())
             {
                 clip->setAttribute ("activeTake", c.activeTake);
@@ -5255,6 +5346,17 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
                     clip.gainEnvelope.points.push_back ({ pointXml->getStringAttribute ("frame").getLargeIntValue(),
                                                          juce::jlimit (SessionClip::minGainDb, SessionClip::maxGainDb,
                                                                        (float) pointXml->getDoubleAttribute ("value")) });
+
+            if (auto* effectsXml = clipXml->getChildByName ("CLIPEFFECTS"))
+            {
+                const auto semitones = effectsXml->getDoubleAttribute ("semitones");
+
+                if (std::isfinite (semitones))
+                    clip.effects.semitones = juce::jlimit (-SessionClip::Effects::maxSemitones, SessionClip::Effects::maxSemitones, semitones);
+
+                if (auto* rack = effectsXml->getChildByName ("TORQWAVE_RACK"); rack != nullptr && rack->getNumChildElements() > 0)
+                    clip.effects.chain = rack->toString (juce::XmlElement::TextFormat().singleLine().withoutHeader());
+            }
 
             // Takes, kept only when every one's audio is there; otherwise the clip plays the one it had.
             std::vector<SessionClip::Take> takes;
