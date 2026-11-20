@@ -22,6 +22,7 @@
 #include "../Source/SessionRecovery.h"
 #include "../Source/TrackColours.h"
 #include "../Source/TrackEffects.h"
+#include "../Source/TrackInspector.h"
 #include "../Source/UndoHistory.h"
 #include "TestPlugins.h"
 #include "../Source/BuildStamp.h"
@@ -627,6 +628,64 @@ namespace
 
 namespace
 {
+    void testTrackInspector (AudioEngine& engine)
+    {
+        // An audio track with a send to a reverb bus (its inserts need real plug-ins, which the
+        // engine tests load; here it has none).
+        SessionState s;
+        s.sampleRate = rate;
+        auto& vocal = s.addTrack();
+        vocal.name = "Vocal";
+        const auto vocalId = vocal.id;
+        auto& reverb = s.addBus();
+        reverb.name = "Reverb";
+        const auto reverbId = reverb.id;
+        s.tracks[0].sends.push_back ({ reverbId, -10.0f, false });
+        engine.session.reset (s, {});
+
+        juce::uint32 selected = 0;
+        TrackInspector inspector (engine, [&selected] { return selected; });
+        juce::Array<juce::String> opened;
+        inspector.showEditor = [&opened] (juce::AudioProcessor& p) { opened.add (p.getName()); };
+        inspector.setSize (260, 500);
+        const auto settle = [] { juce::MessageManager::getInstance()->runDispatchLoopUntil (250); };
+        const auto track = [&engine] { return engine.session.getState()->tracks[0]; };
+
+        const auto none = inspector.getShownTrack() == 0 && ! inspector.getVolume().isVisible();
+        selected = vocalId;
+        settle();
+        const auto shown = inspector.getShownTrack() == vocalId && inspector.getNameEditor().getText() == "Vocal" && inspector.getKindText() == "Audio track"
+                           && inspector.getNumInserts() == 0
+                           && inspector.getNumSends() == 1 && std::abs (inspector.getSendLevel (0).getValue() + 10.0) < 1.0e-6
+                           && inspector.getOutput().getText() == "Master" && inspector.getOutput().getNumItems() == 2 && ! inspector.getInstrumentButton().isVisible();
+
+        inspector.getVolume().setValue (-6.0, juce::sendNotificationSync);
+        inspector.getPan().setValue (-50.0, juce::sendNotificationSync);
+        inspector.getMute().setToggleState (true, juce::sendNotificationSync);
+        inspector.getOutput().setSelectedItemIndex (1, juce::sendNotificationSync);
+        inspector.getSendLevel (0).setValue (-3.0, juce::sendNotificationSync);
+        inspector.getSendPre (0).setToggleState (true, juce::sendNotificationSync);
+        inspector.getNameEditor().setText ("Lead", false);
+        inspector.getNameEditor().onReturnKey();
+        settle();
+        const auto t = track();
+        const auto edited = juce::exactlyEqual (t.gainDb, -6.0f) && juce::exactlyEqual (t.pan, -0.5f) && t.mute && t.outputBusId == reverbId
+                            && t.sends.size() == 1 && std::abs (t.sends[0].gainDb + 3.0f) < 1.0e-4f && t.sends[0].preFader && t.name == "Lead"
+                            && opened.isEmpty() && engine.session.getUndoDescription() == "Rename Track";
+
+        engine.session.undo();
+        settle();
+        const auto followsUndo = inspector.getNameEditor().getText() == "Vocal";
+        selected = reverbId;
+        settle();
+        const auto bus = inspector.getKindText() == "Bus" && inspector.getNumInserts() == 0 && inspector.getNumSends() == 0
+                         && inspector.getOutput().getNumItems() == 1;
+        check (none && shown && edited && followsUndo && bus,
+               "track inspector: the selected track's name, kind, volume, pan, mute, output and sends, each edited as an undo step; follows undo and the selection");
+
+        engine.session.reset ({}, {});
+    }
+
     void testClipProperties (AudioEngine& engine)
     {
         SessionState s;
@@ -675,6 +734,24 @@ namespace
         settle();
         check (refused && clip().position == 120000 && text (Field::name) == "vocal",
                "clip properties: text that isn't a setting shows the clip's again, and undo shows here at once");
+
+        // As an info line: the fields in one row, left to right, in a strip the line's height;
+        // with nothing selected, only "No clip selected".
+        ClipProperties line (engine, [&selected] { return selected; });
+        line.setSize (1200, ClipProperties::lineHeight);
+        line.setLine (true);
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (200);
+        const auto& name = line.getEditor (Field::name);
+        const auto& note = line.getEditor (Field::note);
+        const auto inRow = line.isLine() && name.getY() == line.getEditor (Field::fadeOut).getY() && name.getRight() < line.getEditor (Field::start).getX()
+                           && line.getEditor (Field::fadeOut).getRight() < note.getX() && note.getRight() <= 1200 && name.getHeight() <= ClipProperties::lineHeight
+                           && line.getEditor (Field::start).getText() == "2.500";
+        selected = 0;
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (200);
+        const auto emptyLine = line.getEditor (Field::name).getWidth() == 0 && line.getEditor (Field::note).getWidth() == 0;
+        selected = id;
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (200);
+        check (inRow && emptyLine, "clip properties: as an info line the fields run in one row, and with nothing selected none show");
 
         // A note clip clicked last: its name, start, length and loop length, the other fields
         // put away; typing moves, trims, loops and renames it, each as an undo step.
@@ -2053,6 +2130,7 @@ void runMixerTests (AudioEngine& engine)
 {
     testPanAfterEffects();
     testClipProperties (engine);
+    testTrackInspector (engine);
     testLevels();
     testMixerView (engine);
     testGroups (engine);

@@ -64,6 +64,7 @@
 
 namespace Guide { class Window; }
 
+class ClipProperties;
 class MainComponent final : public juce::Component,
                             public juce::ApplicationCommandTarget,
                             public juce::MenuBarModel,
@@ -831,6 +832,7 @@ private:
 
     int lastRepeatable = 0;   // the last command from the Effects menu, for Repeat
     std::unique_ptr<EditorBar> editorBar;   // made once the commands are registered
+    std::unique_ptr<ClipProperties> infoLine;   // the selected clip's fields above the multitrack view, likewise
     std::unique_ptr<TrackTools> trackTools; // the toolbar under the multitrack view, likewise
     std::unique_ptr<EditorPanel> editorPanel;
     juce::File projectFile;   // the project last opened or saved (Save Project writes it)

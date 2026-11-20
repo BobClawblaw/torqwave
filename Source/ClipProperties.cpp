@@ -231,6 +231,10 @@ void ClipProperties::refresh()
         info.setText (juce::String ((int) c.notes.size()) + (c.notes.size() == 1 ? " note, " : " notes, ") + juce::String ((int) c.lanes.size()) + (c.lanes.size() == 1 ? " lane" : " lanes")
                           + (c.loopLength > 0 ? ", repeating every " + secondsText (c.loopLength, rate) + " s" : juce::String (", played once")) + (c.muted ? ", muted" : ""),
                       juce::dontSendNotification);
+
+        if (asLine)
+            resized();
+
         return;
     }
 
@@ -244,6 +248,9 @@ void ClipProperties::refresh()
             row.editor.setText ({}, false);
             row.editor.setEnabled (false);
         }
+
+        if (asLine)
+            resized();
 
         return;
     }
@@ -264,15 +271,65 @@ void ClipProperties::refresh()
 
     info.setText (c.source.getFileName() + (c.takes.size() > 1 ? ", take " + juce::String (c.activeTake + 1) + " of " + juce::String ((int) c.takes.size()) : juce::String()),
                   juce::dontSendNotification);
+
+    if (asLine)
+        resized();
+}
+
+void ClipProperties::setLine (bool on)
+{
+    asLine = on;
+    refresh();
+    resized();
+    repaint();
 }
 
 void ClipProperties::paint (juce::Graphics& g)
 {
-    g.fillAll (Theme::surface);
+    g.fillAll (asLine ? Theme::base : Theme::surface);
+
+    if (asLine)
+    {
+        g.setColour (Theme::line);
+        g.fillRect (0, getHeight() - 1, getWidth(), 1);
+    }
 }
 
 void ClipProperties::resized()
 {
+    if (asLine)
+    {
+        // Label and field after label and field, then what the clip plays; with nothing selected,
+        // just that, in the middle.
+        auto r = getLocalBounds().reduced (6, 4);
+        const auto any = rows[0].editor.isEnabled();
+        info.setJustificationType (any ? juce::Justification::centredLeft : juce::Justification::centred);
+
+        for (size_t i = 0; i < rows.size(); ++i)
+        {
+            auto& row = rows[i];
+            const auto shown = any && row.label.isVisible();
+            const auto font = row.label.getFont();
+            const auto labelWidth = juce::GlyphArrangement::getStringWidthInt (font, row.label.getText()) + 8;
+            const auto editorWidth = i == (size_t) Field::name ? 130 : i == (size_t) Field::note ? 150 : 64;
+
+            if (! shown || r.getWidth() < labelWidth + editorWidth)
+            {
+                row.label.setBounds ({});
+                row.editor.setBounds ({});
+                continue;
+            }
+
+            row.label.setBounds (r.removeFromLeft (labelWidth));
+            row.editor.setBounds (r.removeFromLeft (editorWidth));
+            r.removeFromLeft (10);
+        }
+
+        info.setBounds (any ? r : getLocalBounds().reduced (6, 4));
+        return;
+    }
+
+    info.setJustificationType (juce::Justification::centredLeft);
     auto r = getLocalBounds().reduced (10);
     info.setBounds (r.removeFromTop (22));
     r.removeFromTop (6);

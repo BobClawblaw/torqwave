@@ -273,6 +273,7 @@ target_sources(Torqwave PRIVATE
     Source/ClipList.cpp
     Source/MarkerTable.cpp
     Source/ClipProperties.cpp
+    Source/TrackInspector.cpp
     Source/PluginScanner.cpp
     Source/PluginCatalogue.cpp
     Source/MainComponent.cpp
@@ -579,6 +580,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/ClipList.cpp
     Source/MarkerTable.cpp
     Source/ClipProperties.cpp
+    Source/TrackInspector.cpp
     Source/PluginScanner.cpp
     Source/PluginCatalogue.cpp
     Source/MixerView.cpp

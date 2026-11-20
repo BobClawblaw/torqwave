@@ -32,10 +32,18 @@ public:
     /** Applies what a field holds now, as Return does. */
     void apply (Field);
 
+    /** As an info line, Cubase's: the fields in one row along a strip lineHeight high, and only
+        "No clip selected" while there is none. Otherwise (the panel) a field a row. */
+    void setLine (bool);
+    bool isLine() const noexcept                    { return asLine; }
+    static constexpr int lineHeight = 28;
+
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
+    bool asLine = false;
+
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
     void timerCallback() override;
     void refresh();

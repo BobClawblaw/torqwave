@@ -201,6 +201,9 @@ public:
 
     /** The selected track (the one last clicked), or -1. */
     int getSelectedTrack() const;
+
+    /** The selected track's id, or 0. */
+    juce::uint32 getSelectedTrackId() const noexcept { return selectedTrackId; }
     juce::uint32 getSelectedClip() const noexcept { return selectedClip; }
 
     /** Puts one of a clip's takes in use (from loop recording), as one undo step. A right-click

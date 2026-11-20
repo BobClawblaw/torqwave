@@ -24,6 +24,7 @@
 #include "ClipList.h"
 #include "MarkerTable.h"
 #include "ClipProperties.h"
+#include "TrackInspector.h"
 #include "Metronome.h"
 #include "MixerView.h"
 #include "OfflineRender.h"
@@ -68,6 +69,7 @@ namespace
     constexpr const char* trackListWidthKey = "trackListWidth";
     constexpr const char* loopPlaybackKey = "loopPlayback";
     constexpr const char* fileTabsKey = "fileTabs";
+    constexpr const char* infoLineKey = "infoLine";
     constexpr const char* projectHistoryKey = "projectHistory";
     constexpr const char* rackShownKey    = "rackShown";
     constexpr const char* openPreviewKey  = "previewInOpenPanel";
@@ -87,11 +89,11 @@ namespace
                            clipProperties { "clipProperties" }, clipList { "clipList" }, markers { "markers" },
                            history { "history" }, notes { "notes" }, files { "files" }, levels { "levels" },
                                 spectrum { "spectrum" }, phase { "phase" }, video { "video" }, pitch { "pitch" }, tonalBalance { "tonalBalance" }, statistics { "statistics" },
-                           pianoRoll { "pianoRoll" }, keyboard { "keyboard" };
+                           pianoRoll { "pianoRoll" }, keyboard { "keyboard" }, inspector { "inspector" };
 
         juce::StringArray all()
         {
-            return { editor, rack, selection, mixer, clipProperties, clipList, markers, history, notes, files, levels, spectrum, phase, video, pitch, tonalBalance, statistics, pianoRoll, keyboard };
+            return { editor, rack, selection, mixer, clipProperties, clipList, markers, history, notes, files, levels, spectrum, phase, video, pitch, tonalBalance, statistics, pianoRoll, keyboard, inspector };
         }
     }
 
@@ -119,6 +121,7 @@ namespace
         multitrack.bringToFront (Panels::rack);
         multitrack.dock (Panels::clipProperties, Panels::rack, Side::top, 0.4);
         multitrack.dockAtEdge (Panels::mixer, Side::bottom, 0.3);
+        multitrack.dock (Panels::inspector, Panels::editor, Side::left, 0.16);
 
         auto analysis = Dock::Layout::single (Panels::editor);
         analysis.dock (Panels::rack, Panels::editor, Side::right, 0.26);
@@ -172,7 +175,7 @@ namespace
         cmdTakeOutOfFolder,
         cmdAskTorqwave,
         cmdSaveInstrumentPreset,
-        cmdLoopToSelection, cmdClearLoop,
+        cmdLoopToSelection, cmdClearLoop, cmdInfoLine, cmdTrackInspector,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -840,9 +843,10 @@ private:
 class MainComponent::EditorPanel final : public juce::Component
 {
 public:
-    EditorPanel (FileTabs& t, WaveformView& w, EditorBar& b, SessionOverview& o, MultitrackView& m, TrackTools& tt)
-        : tabs (t), waveform (w), bar (b), overview (o), multitrack (m), trackTools (tt)
+    EditorPanel (FileTabs& t, WaveformView& w, EditorBar& b, SessionOverview& o, MultitrackView& m, TrackTools& tt, ClipProperties& il)
+        : tabs (t), waveform (w), bar (b), overview (o), multitrack (m), trackTools (tt), infoLine (il)
     {
+        addChildComponent (infoLine);
         addAndMakeVisible (tabs);
         addAndMakeVisible (waveform);
         addAndMakeVisible (bar);
@@ -854,6 +858,10 @@ public:
     /** Whether the open files show as tabs over the editor (the Files panel lists them either way). */
     void setTabsWanted (bool on)        { tabsWanted = on; resized(); }
     bool areTabsWanted() const          { return tabsWanted; }
+
+    /** Whether the info line shows over the tracks (in the multitrack view). */
+    void setInfoLineWanted (bool on)    { infoLineWanted = on; resized(); }
+    bool isInfoLineWanted() const       { return infoLineWanted; }
 
     void resized() override
     {
@@ -867,19 +875,23 @@ public:
         r = getLocalBounds();
         overview.setBounds (r.removeFromTop (SessionOverview::height));
         r.removeFromTop (4);
+        const auto showInfo = infoLineWanted && multitrack.isVisible();
+        infoLine.setVisible (showInfo);
+        infoLine.setBounds (showInfo ? r.removeFromTop (ClipProperties::lineHeight) : juce::Rectangle<int>());
         trackTools.setVisible (multitrack.isVisible());
         trackTools.setBounds (multitrack.isVisible() ? r.removeFromBottom (TrackTools::height) : juce::Rectangle<int>());
         multitrack.setBounds (r);
     }
 
 private:
-    bool tabsWanted = false;
+    bool tabsWanted = false, infoLineWanted = true;
     FileTabs& tabs;
     WaveformView& waveform;
     EditorBar& bar;
     SessionOverview& overview;
     MultitrackView& multitrack;
     TrackTools& trackTools;
+    ClipProperties& infoLine;
 };
 
 //==============================================================================
@@ -1015,7 +1027,10 @@ MainComponent::MainComponent()
     trackTools = std::make_unique<TrackTools> (commands, multitrack, engine,
                                                TrackTools::Commands { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue,
                                                                       cmdTrackToolRange, cmdTrackToolMute, cmdTempo, cmdBarsAndBeats, cmdSnapping, cmdTapTempo });
-    editorPanel = std::make_unique<EditorPanel> (fileTabs, waveform, *editorBar, overview, multitrack, *trackTools);
+    infoLine = std::make_unique<ClipProperties> (engine, [this] { return multitrack.isNoteClipLast() ? 0 : multitrack.getSelectedClip(); },
+                                                 [this] { return multitrack.isNoteClipLast() ? multitrack.getSelectedNoteClip() : 0; });
+    infoLine->setLine (true);
+    editorPanel = std::make_unique<EditorPanel> (fileTabs, waveform, *editorBar, overview, multitrack, *trackTools, *infoLine);
     fileTabs.onChoose = [this] (int index) { switchToFile (index); };
     fileTabs.onClose = [this] (int index) { closeFile (index); };
     multitrack.setSnapping (settings->getBoolValue (snappingKey, true));
@@ -1031,6 +1046,7 @@ MainComponent::MainComponent()
     };
     loopPlayback = settings->getBoolValue (loopPlaybackKey, false);
     editorPanel->setTabsWanted (settings->getBoolValue (fileTabsKey, false));
+    editorPanel->setInfoLineWanted (settings->getBoolValue (infoLineKey, true));
     multitrack.setLaneHeight (settings->getIntValue (laneHeightKey, MultitrackView::trackHeight));
     multitrack.setListWidth (settings->getIntValue (trackListWidthKey, MultitrackView::headerWidth));
     multitrack.onListWidthChanged = [this] (int width) { appProperties.getUserSettings()->setValue (trackListWidthKey, width); };
@@ -1799,6 +1815,10 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                                           "Record from the input", "Transport", 0);
                             info.addDefaultKeypress (juce::KeyPress::spaceKey, shift); break;
 
+        case cmdTrackInspector: info.setInfo ("Track Inspector", "A panel with the selected track's name, volume, pan, mute and solo, output, instrument, inserts and sends", "Window", 0);
+                            info.setTicked (dock->isShown (Panels::inspector)); break;
+        case cmdInfoLine:   info.setInfo ("Info Line", "Show the selected clip's name, start, length, gain and fades in a line over the tracks, to read and type", "Window", 0);
+                            info.setTicked (editorPanel != nullptr && editorPanel->isInfoLineWanted()); break;
         case cmdShowFileTabs: info.setInfo ("File Tabs", "Show the open files as tabs over the editor as well as in the Files panel", "Window", 0);
                               info.setTicked (editorPanel != nullptr && editorPanel->areTabsWanted()); break;
         case cmdShowRack:   info.setInfo ("Effects Rack", "Show or hide the effects rack panel", "Window", 0);
@@ -2723,6 +2743,12 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdRecord:     toggleRecord(); break;
         case cmdStop:       stopTransport(); break;
         case cmdShowRack:   dock->toggle (Panels::rack); break;
+        case cmdTrackInspector: dock->toggle (Panels::inspector); break;
+        case cmdInfoLine:
+            editorPanel->setInfoLineWanted (! editorPanel->isInfoLineWanted());
+            appProperties.getUserSettings()->setValue (infoLineKey, editorPanel->isInfoLineWanted());
+            commands.commandStatusChanged();
+            break;
         case cmdShowFileTabs:
             editorPanel->setTabsWanted (! editorPanel->areTabsWanted());
             appProperties.getUserSettings()->setValue (fileTabsKey, editorPanel->areTabsWanted());
@@ -3166,7 +3192,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         }
         case 4:
             // The panels and Import at the top; the rest in groups by what they do.
-            add ({ cmdMixer, cmdClipProperties, cmdClipList, cmdMarkerList, cmdSessionNotes, 0, cmdImportToSession, cmdImportMidi, 0 });
+            add ({ cmdMixer, cmdTrackInspector, cmdClipProperties, cmdClipList, cmdMarkerList, cmdSessionNotes, 0, cmdImportToSession, cmdImportMidi, 0 });
             group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdTakeOutOfFolder, cmdAddFromTemplate, cmdSaveTrackTemplate, cmdSaveInstrumentPreset, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
                                0, cmdTrackAbove, cmdTrackBelow, 0, cmdUnsoloAll, cmdUnmuteAll });
             group ("Tools", { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute });
@@ -3194,7 +3220,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         case 7:
         {
             add ({ cmdPlugins, cmdAudioSettings, cmdKeyShortcuts, 0, cmdSaveRack, cmdLoadRack, 0,
-                   cmdMaximizeEditor, 0, cmdShowFiles, cmdShowFileTabs, cmdShowRack, cmdShowSelectionPanel, cmdShowLevels, cmdShowSpectrum, cmdShowPhase, cmdShowTonalBalance, cmdShowStatistics, cmdShowVideo, cmdShowPitchEditor, cmdShowPianoRoll, cmdShowKeyboard, cmdUndoHistory, cmdMarkerList, cmdMixer, cmdClipProperties, cmdClipList, cmdSessionNotes, 0, cmdShowSoundLibrary });
+                   cmdMaximizeEditor, 0, cmdShowFiles, cmdShowFileTabs, cmdInfoLine, cmdTrackInspector, cmdShowRack, cmdShowSelectionPanel, cmdShowLevels, cmdShowSpectrum, cmdShowPhase, cmdShowTonalBalance, cmdShowStatistics, cmdShowVideo, cmdShowPitchEditor, cmdShowPianoRoll, cmdShowKeyboard, cmdUndoHistory, cmdMarkerList, cmdMixer, cmdClipProperties, cmdClipList, cmdSessionNotes, 0, cmdShowSoundLibrary });
 
             juce::PopupMenu workspaceMenu;
 
@@ -13582,6 +13608,12 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
     else if (id == Panels::clipProperties)
         made = std::make_unique<ClipProperties> (engine, [this] { return multitrack.isNoteClipLast() ? 0 : multitrack.getSelectedClip(); },
                                                  [this] { return multitrack.isNoteClipLast() ? multitrack.getSelectedNoteClip() : 0; });
+    else if (id == Panels::inspector)
+    {
+        auto inspector = std::make_unique<TrackInspector> (engine, [this] { return multitrack.getSelectedTrackId(); });
+        inspector->showEditor = [this] (juce::AudioProcessor& p) { showEditor (p); };
+        made = std::move (inspector);
+    }
     else if (id == Panels::clipList)
         made = std::make_unique<ClipList> (engine, selectedClip, [this] (juce::uint32 clip) { multitrack.showClip (clip); });
     else if (id == Panels::markers)
@@ -13801,6 +13833,7 @@ juce::String MainComponent::getTitle (const juce::String& id)
     if (id == Panels::selection)       return "Selection/View";
     if (id == Panels::mixer)           return "Mixer";
     if (id == Panels::clipProperties)  return "Clip Properties";
+    if (id == Panels::inspector)       return "Track Inspector";
     if (id == Panels::clipList)        return "Clip List";
     if (id == Panels::markers)         return "Markers";
     if (id == Panels::history)         return "Undo History";
