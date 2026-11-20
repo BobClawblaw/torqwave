@@ -22,7 +22,7 @@ What goes to the server: your sentence, the file's name, and the numbers Torqwav
 6. Press **Test**. Torqwave asks the model for a short reply and shows it, with how long it took.
 7. Turn on **Ask Torq**.
 
-**More than one server.** Settings > AI keeps a list of endpoints: a model on this computer, say, and a bigger one on another machine on your network. Each keeps its own name, address, model and key. Choose one under **Endpoint** to use it; Ask Torq and the plug-in catalogue use the one chosen. **Add** puts another in the list. **Delete** removes the one shown, with its saved key unless another endpoint in the list has the same address. Settings from an earlier version come back as an endpoint named "Server 1".
+**More than one server.** Settings > AI keeps a list of endpoints: a model on this computer, say, and a bigger one on another machine on your network. Each keeps its own name, address, model and key. Choose one under **Endpoint** to use it; Ask Torq and the plug-in catalogue use the one chosen. **Add** puts another in the list. **Delete** removes the one shown, with its saved key unless another endpoint in the list has the same address. Settings from an earlier version come back as an endpoint named "Server 1". A change to the name, address or model is saved as you make it; the line at the bottom of the page says what was saved, and when.
 
 ## Asking
 

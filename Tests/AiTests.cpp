@@ -265,12 +265,28 @@ namespace
         const auto shownFirst = list->getNumItems() == 1 && list->getText() == "Here" && name->getText() == "Here" && url->getText() == "http://127.0.0.1:9/v1";
 
         add->onClick();
-        name->setText ("Rack");
-        url->setText ("rack.lan:8000");
-        name->onFocusLost();
+        // Each is kept as it is typed, the list showing the name at once.
+        name->setText ("Rack", false);
+        name->onTextChange();
+        url->setText ("rack.lan:8000", false);
+        url->onTextChange();
+        const auto savedShown = [&view] (const juce::String& what)
+        {
+            for (auto* c : view.getChildren())
+                if (auto* l = dynamic_cast<juce::Label*> (c); l != nullptr && l->getText().startsWith ("Saved at ") && l->getText().endsWith (": " + what + "."))
+                    return true;
+
+            return false;
+        };
+        const auto noted = savedShown ("Rack's address");
+        name->setText ("Rack 2", false);
+        name->onTextChange();
+        const auto notedName = savedShown ("the name Rack 2") && list->getText() == "Rack 2";
+        name->setText ("Rack", false);
+        name->onTextChange();
         const auto added = Ai::Settings::load (p);
         const auto addedOk = added.listed().size() == 2 && added.current == 1 && added.listed()[1] == Ai::Endpoint { "Rack", "rack.lan:8000", {} }
-                             && list->getNumItems() == 2 && list->getText() == "Rack";
+                             && list->getNumItems() == 2 && list->getText() == "Rack" && noted && notedName;
 
         list->setSelectedItemIndex (0, juce::sendNotificationSync);
         const auto chosen = Ai::Settings::load (p).current == 0 && url->getText() == "http://127.0.0.1:9/v1" && name->getText() == "Here";
@@ -284,7 +300,7 @@ namespace
         const auto gone = Ai::Settings::load (p).listed().empty() && list->getNumItems() == 0 && ! remove->isEnabled() && url->getText().isEmpty();
 
         check (shownFirst && addedOk && chosen && deleted && gone,
-               "AI endpoints: on the settings page, Add makes a server to name and address, the list chooses which is used, and Delete removes it, down to none");
+               "AI endpoints: on the settings page, Add makes a server to name and address (each kept as it is typed, the list and a \"Saved at\" line showing it), the list chooses which is used, and Delete removes it, down to none");
     }
 
     void testReadingAnswers()

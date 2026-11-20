@@ -428,13 +428,13 @@ SettingsView::SettingsView (std::function<Settings()> get, std::function<void (c
             s.choose (index);
             setSettings (s);
             showEndpoint();
+            noteSaved ("Ask Torq uses " + endpointBox.getText());
         }
     };
     addButton.onClick = [this] { addEndpoint(); };
     deleteButton.onClick = [this] { deleteEndpoint(); };
     nameBox.setTextToShowWhenEmpty ("a name for this server", Theme::faintText);
-    nameBox.onReturnKey = [this] { saveFromFields(); };
-    nameBox.onFocusLost = [this] { saveFromFields(); };
+    nameBox.onTextChange = [this] { saveFromFields(); };   // kept as it is typed
 
     for (auto* c : std::initializer_list<juce::Component*> { &endpointBox, &addButton, &deleteButton, &nameBox })
         addAndMakeVisible (c);
@@ -444,8 +444,7 @@ SettingsView::SettingsView (std::function<Settings()> get, std::function<void (c
     status.setJustificationType (juce::Justification::topLeft);
 
     urlBox.setTextToShowWhenEmpty ("http://localhost:11434/v1", Theme::faintText);
-    urlBox.onReturnKey = [this] { saveFromFields(); };
-    urlBox.onFocusLost = [this] { saveFromFields(); };
+    urlBox.onTextChange = [this] { saveFromFields(); };    // kept as it is typed
     addAndMakeVisible (urlBox);
 
     keyBox.setPasswordCharacter ((juce::juce_wchar) 0x2022);
@@ -484,8 +483,14 @@ SettingsView::SettingsView (std::function<Settings()> get, std::function<void (c
     modelBox.onChange = [this]
     {
         auto changed = getSettings();
-        changed.model = modelBox.getText().trim();
+        const auto model = modelBox.getText().trim();
+
+        if (model == changed.model)
+            return;
+
+        changed.model = model;
         setSettings (changed);
+        noteSaved ("the model " + model);
     };
 
     refreshButton.onClick = [this] { startJob (false); };
@@ -498,6 +503,9 @@ SettingsView::SettingsView (std::function<Settings()> get, std::function<void (c
                                             : "Read from " + juce::String (AiKeychain::whereKept()) + ".",
                      juce::dontSendNotification);
     status.setText ("Any server that speaks the OpenAI-compatible API: Ollama, LM Studio, llama.cpp, vLLM and the like.", juce::dontSendNotification);
+    savedNote.setColour (juce::Label::textColourId, Theme::dimText);
+    savedNote.setText ("Changes here are saved as you make them.", juce::dontSendNotification);
+    addAndMakeVisible (savedNote);
     showEndpoint();
 }
 
@@ -536,6 +544,7 @@ void SettingsView::addEndpoint()
     s.addEndpoint();
     setSettings (s);
     showEndpoint();
+    noteSaved ("a new endpoint");
     status.setText ("Give the new server's address, then list its models.", juce::dontSendNotification);
     urlBox.grabKeyboardFocus();
 }
@@ -564,6 +573,7 @@ void SettingsView::deleteEndpoint()
 
     setSettings (s);
     showEndpoint();
+    noteSaved (name.quoted() + " deleted");
     status.setText (name.quoted() + " is deleted" + (account.isNotEmpty() && ! shared && AiKeychain::canStore() ? ", with its key." : "."),
                     juce::dontSendNotification);
 }
@@ -628,12 +638,19 @@ void SettingsView::resized()
     modelBox.setBounds (model);
 
     r.removeFromTop (4);
+    savedNote.setBounds (r.removeFromBottom (20).withTrimmedLeft (70));
     status.setBounds (r.withTrimmedLeft (70));
+}
+
+void SettingsView::noteSaved (const juce::String& what)
+{
+    savedNote.setText ("Saved at " + juce::Time::getCurrentTime().toString (false, true, true, true) + ": " + what + ".", juce::dontSendNotification);
 }
 
 void SettingsView::saveFromFields()
 {
     auto s = getSettings();
+    const auto oldUrl = s.serverUrl;
     s.serverUrl = urlBox.getText().trim();
 
     // The fields edit the endpoint in use; with none yet, typing an address makes the first.
@@ -653,9 +670,22 @@ void SettingsView::saveFromFields()
 
     const auto first = endpointBox.getNumItems() == 0 && ! s.endpoints.empty();
     setSettings (s);
+    const auto shownName = juce::isPositiveAndBelow (s.current, (int) s.endpoints.size()) && s.endpoints[(size_t) s.current].name.isNotEmpty()
+                               ? s.endpoints[(size_t) s.current].name : juce::String ("the server");
 
-    if (first || renamed)
+    if (renamed)
+        noteSaved ("the name " + shownName);
+    else if (s.serverUrl != oldUrl || first)
+        noteSaved (shownName + "'s address");
+
+    // Only the list changes with a new name, so the fields being typed in are left alone.
+    if (first)
         showEndpoint();
+    else if (renamed)
+    {
+        endpointBox.changeItemText (s.current + 1, s.endpoints[(size_t) s.current].name);
+        endpointBox.setSelectedId (s.current + 1, juce::dontSendNotification);   // shows the new text
+    }
 }
 
 juce::String SettingsView::keyFor (const Settings& s) const

@@ -54,6 +54,12 @@ Double-click a note clip, or choose **Window > Piano Roll**, to edit the clip's 
 | Set velocity | Select the notes and move the velocity slider |
 | Set the loop | Drag the first repeat line |
 | Hear a pitch | Click a key on the keyboard at the left; drag along it to play each key you pass |
+| Zoom in or out on time | Cmd-scroll or pinch, around the mouse; or **-** and **+** at the top right. **Fit** shows the whole clip |
+| Move along in time | The scroll bar under the notes, a sideways scroll, or Shift-scroll |
+| Make the rows taller or shorter | Option-scroll |
+| Move up and down the keys | Scroll |
+
+A clip whose pattern repeats opens on its first repeat, so a one-bar loop in a nine-bar clip fills the width; **Fit** shows all nine bars.
 
 Notes sound as you put them in, click them or drag them. The **grid** choice divides the beat into 1, 2, 4, 8, 16 or 32 steps, or turns the grid off.
 

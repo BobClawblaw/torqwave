@@ -111,7 +111,7 @@ namespace Ai
 
         void resized() override;
 
-        static constexpr int preferredHeight = 314;
+        static constexpr int preferredHeight = 340;
 
     private:
         void run() override;
@@ -126,6 +126,8 @@ namespace Ai
         std::function<void (const Settings&)> setSettings;
 
         juce::Label endpointLabel, nameLabel, urlLabel, keyLabel, modelLabel, keyNote, status;
+        juce::Label savedNote;                       // "Saved at 07:53:12: Qwen", after each change kept
+        void noteSaved (const juce::String& what);
         juce::TextEditor nameBox, urlBox, keyBox;
         juce::ComboBox endpointBox, modelBox;
         juce::TextButton addButton { "Add" }, deleteButton { "Delete" };

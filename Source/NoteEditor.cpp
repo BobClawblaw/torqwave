@@ -118,6 +118,20 @@ NoteEditor::NoteEditor()
             commit ("Note Velocity");
     };
 
+    for (auto* b : { &zoomOutButton, &zoomInButton, &fitButton })
+        addAndMakeVisible (*b);
+
+    zoomOutButton.setTooltip ("Zoom out (Cmd-scroll or pinch zooms around the mouse)");
+    zoomInButton.setTooltip ("Zoom in (Cmd-scroll or pinch zooms around the mouse)");
+    fitButton.setTooltip ("Show the whole timeline");
+    zoomOutButton.onClick = [this] { zoomAround ((float) rollArea().getCentreX(), 0.5); };
+    zoomInButton.onClick = [this] { zoomAround ((float) rollArea().getCentreX(), 2.0); };
+    fitButton.onClick = [this] { fitTime(); };
+
+    addAndMakeVisible (timeScroll);
+    timeScroll.setAutoHide (false);
+    timeScroll.addListener (this);
+
     addAndMakeVisible (status);
     status.setFont (juce::Font (juce::FontOptions (12.0f)));
     Theme::follow (status, juce::Label::textColourId, Theme::dimText);
@@ -181,6 +195,11 @@ void NoteEditor::refresh()
         selected.clear();
         firstRow = 0;
         scrollToNotes();
+        showPattern();
+    }
+    else
+    {
+        setView (viewStart, zoom);   // the timeline's length may have changed
     }
 
     refreshControls();
@@ -494,7 +513,71 @@ void NoteEditor::editDrumSound (int row, bool adding)
 //==============================================================================
 juce::Rectangle<int> NoteEditor::rollArea() const
 {
-    return getLocalBounds().withTrimmedTop (topBar).withTrimmedLeft (leftWidth()).withTrimmedBottom (laneController >= 0 ? laneHeight : 0);
+    return getLocalBounds().withTrimmedTop (topBar).withTrimmedLeft (leftWidth()).withTrimmedBottom ((laneController >= 0 ? laneHeight : 0) + scrollHeight);
+}
+
+juce::int64 NoteEditor::visibleLength() const noexcept
+{
+    return juce::jmax ((juce::int64) 1, (juce::int64) std::llround ((double) wholeLength() / zoom));
+}
+
+double NoteEditor::maxZoom() const noexcept
+{
+    // Down to a twentieth of a second across the roll.
+    const auto shortest = shown.has_value() ? shown->sampleRate * 0.05 : 2400.0;
+    return juce::jmax (1.0, (double) wholeLength() / shortest);
+}
+
+void NoteEditor::setView (juce::int64 start, double z)
+{
+    zoom = juce::jlimit (1.0, maxZoom(), z);
+    viewStart = juce::jlimit ((juce::int64) 0, juce::jmax ((juce::int64) 0, wholeLength() - visibleLength()), start);
+    updateScroll();
+    repaint();
+}
+
+void NoteEditor::zoomAround (float x, double factor)
+{
+    const auto area = rollArea();
+    const auto along = (double) juce::jlimit (0.0f, 1.0f, (x - (float) area.getX()) / (float) juce::jmax (1, area.getWidth() - 1));
+    const auto frame = (double) viewStart + along * (double) visibleLength();
+    const auto z = juce::jlimit (1.0, maxZoom(), zoom * factor);
+    const auto visible = (double) wholeLength() / z;
+    setView ((juce::int64) std::llround (frame - along * visible), z);
+}
+
+void NoteEditor::showPattern()
+{
+    if (! shown.has_value())
+        return;
+
+    const auto period = shown->clip.getPeriod();
+
+    if (period > 0 && period < wholeLength())
+        setView (0, (double) wholeLength() / (double) period);
+    else
+        fitTime();
+}
+
+void NoteEditor::setRowHeight (int pixels)
+{
+    const auto area = rollArea();
+    const auto middle = pitchAt ((float) area.getCentreY());
+    rowPixels = juce::jlimit (minRowHeight, maxRowHeight, pixels);
+    const auto rows = juce::jmax (1, rollArea().getHeight() / rowPixels);
+    lowPitch = juce::jlimit (0, juce::jmax (0, 128 - rows), middle - rows / 2);
+    repaint();
+}
+
+void NoteEditor::updateScroll()
+{
+    timeScroll.setRangeLimits (0.0, (double) wholeLength(), juce::dontSendNotification);
+    timeScroll.setCurrentRange ((double) viewStart, (double) visibleLength(), juce::dontSendNotification);
+}
+
+void NoteEditor::scrollBarMoved (juce::ScrollBar*, double newRangeStart)
+{
+    setView ((juce::int64) std::llround (newRangeStart), zoom);
 }
 
 juce::Rectangle<int> NoteEditor::laneArea() const
@@ -545,12 +628,12 @@ int NoteEditor::lanePointAt (juce::Point<float> p) const
 
 float NoteEditor::yOf (int pitch) const
 {
-    return (float) rollArea().getBottom() - (float) (pitch - lowPitch + 1) * rowHeight;
+    return (float) rollArea().getBottom() - (float) (pitch - lowPitch + 1) * (float) rowPixels;
 }
 
 int NoteEditor::pitchAt (float y) const
 {
-    return juce::jlimit (0, 127, lowPitch + (int) std::floor (((float) rollArea().getBottom() - y) / rowHeight));
+    return juce::jlimit (0, 127, lowPitch + (int) std::floor (((float) rollArea().getBottom() - y) / (float) rowPixels));
 }
 
 juce::int64 NoteEditor::wholeLength() const noexcept
@@ -561,20 +644,20 @@ juce::int64 NoteEditor::wholeLength() const noexcept
 float NoteEditor::xOf (juce::int64 frame) const
 {
     const auto area = rollArea();
-    return (float) area.getX() + (float) frame * (float) (area.getWidth() - 1) / (float) wholeLength();
+    return (float) area.getX() + (float) ((double) (frame - viewStart) * (double) (area.getWidth() - 1) / (double) visibleLength());
 }
 
 juce::int64 NoteEditor::frameAt (float x) const
 {
     const auto area = rollArea();
     const auto length = wholeLength();
-    return juce::jlimit ((juce::int64) 0, length, (juce::int64) std::llround ((x - (float) area.getX()) * (double) length / (double) juce::jmax (1, area.getWidth() - 1)));
+    return juce::jlimit ((juce::int64) 0, length, viewStart + (juce::int64) std::llround ((x - (float) area.getX()) * (double) visibleLength() / (double) juce::jmax (1, area.getWidth() - 1)));
 }
 
 juce::Rectangle<float> NoteEditor::noteBounds (const ClipNote& n) const
 {
     const auto x0 = xOf (n.start), x1 = xOf (n.start + n.length);
-    return { x0, yOf (n.pitch) + 1.0f, juce::jmax (3.0f, x1 - x0), (float) rowHeight - 2.0f };
+    return { x0, yOf (n.pitch) + 1.0f, juce::jmax (3.0f, x1 - x0), (float) rowPixels - 2.0f };
 }
 
 int NoteEditor::noteAt (juce::Point<float> p) const
@@ -594,7 +677,7 @@ void NoteEditor::scrollToNotes()
     if (! shown.has_value())
         return;
 
-    const auto rows = juce::jmax (1, rollArea().getHeight() / rowHeight);
+    const auto rows = juce::jmax (1, rollArea().getHeight() / rowPixels);
     int low = 128, high = -1;
 
     for (auto& n : shown->clip.notes)
@@ -679,6 +762,8 @@ void NoteEditor::paint (juce::Graphics& g)
 
             g.setColour (Theme::accentLight);
             g.strokePath (line, juce::PathStrokeType (1.5f));
+            const juce::Graphics::ScopedSaveState onlyShown (g);
+            g.reduceClipRegion (strip);
 
             for (auto& point : lane->envelope.points)
                 g.fillEllipse (juce::Rectangle<float> (7.0f, 7.0f).withCentre ({ xOf (point.frame), yForLaneValue (point.value) }));
@@ -690,7 +775,7 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
 {
     const auto keys = juce::Rectangle<int> (0, area.getY(), keyboardWidth, area.getHeight());
     const auto& c = shown->clip;
-    const auto rows = area.getHeight() / rowHeight + 1;
+    const auto rows = area.getHeight() / rowPixels + 1;
 
     // Rows: the black keys' rows darker, a line at each C.
     for (int row = 0; row < rows; ++row)
@@ -701,18 +786,18 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
             break;
 
         const auto y = yOf (pitch);
-        const juce::Rectangle<float> r ((float) area.getX(), y, (float) area.getWidth(), (float) rowHeight);
+        const juce::Rectangle<float> r ((float) area.getX(), y, (float) area.getWidth(), (float) rowPixels);
         g.setColour (isBlackKey (pitch) ? Theme::laneAlternate : Theme::lane);
         g.fillRect (r.getIntersection (area.toFloat()));
 
         if (pitch % 12 == 0)
         {
             g.setColour (Theme::lineStrong);
-            g.drawHorizontalLine ((int) (y + rowHeight), (float) area.getX(), (float) area.getRight());
+            g.drawHorizontalLine ((int) (y + (float) rowPixels), (float) area.getX(), (float) area.getRight());
         }
 
         // The keyboard: white keys light, black keys dark, each C named.
-        const juce::Rectangle<float> key (0.0f, y, (float) keyboardWidth - 1.0f, (float) rowHeight);
+        const juce::Rectangle<float> key (0.0f, y, (float) keyboardWidth - 1.0f, (float) rowPixels);
         g.setColour (isBlackKey (pitch) ? Theme::inset : Theme::raised);
         g.fillRect (key.getIntersection (keys.toFloat()));
 
@@ -726,6 +811,10 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
 
     g.setColour (Theme::line);
     g.drawVerticalLine (keyboardWidth - 1, (float) area.getY(), (float) area.getBottom());
+
+    // Past here, only what is in the time shown.
+    const juce::Graphics::ScopedSaveState onlyShown (g);
+    g.reduceClipRegion (area);
 
     // The grid: a line each step, stronger each beat; the repeats of the pattern.
     const auto step = gridStepFrames();
@@ -824,6 +913,10 @@ void NoteEditor::paintDrums (juce::Graphics& g, juce::Rectangle<int> area)
     g.setColour (Theme::line);
     g.drawVerticalLine (drumNamesWidth - 1, (float) area.getY(), (float) area.getBottom());
 
+    // Past here, only what is in the time shown.
+    const juce::Graphics::ScopedSaveState onlyShown (g);
+    g.reduceClipRegion (area);
+
     // The steps: a line at each, stronger at each beat; the pattern's repeats.
     for (int k = 0; k <= steps; ++k)
     {
@@ -895,7 +988,17 @@ void NoteEditor::resized()
     laneLabel.setBounds (bar.removeFromLeft (34));
     laneBox.setBounds (bar.removeFromLeft (juce::jmin (150, juce::jmax (60, bar.getWidth() / 3))));
     bar.removeFromLeft (12);
+    fitButton.setBounds (bar.removeFromRight (juce::jmin (40, bar.getWidth())));
+    bar.removeFromRight (2);
+    zoomInButton.setBounds (bar.removeFromRight (juce::jmin (26, bar.getWidth())));
+    bar.removeFromRight (2);
+    zoomOutButton.setBounds (bar.removeFromRight (juce::jmin (26, bar.getWidth())));
+    bar.removeFromRight (8);
     status.setBounds (bar);
+
+    const auto roll = rollArea();
+    timeScroll.setBounds (roll.getX(), roll.getBottom(), roll.getWidth(), scrollHeight);
+    setView (viewStart, zoom);
 }
 
 //==============================================================================
@@ -1294,8 +1397,28 @@ void NoteEditor::mouseUp (const juce::MouseEvent&)
     repaint();
 }
 
-void NoteEditor::mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails& wheel)
+void NoteEditor::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel)
 {
+    if (e.mods.isCommandDown())
+    {
+        zoomAround (e.position.x, std::pow (2.0, (double) wheel.deltaY * 2.0));
+        return;
+    }
+
+    const auto sideways = e.mods.isShiftDown() ? wheel.deltaY : wheel.deltaX;
+
+    if (std::abs (sideways) > 0.0f && (e.mods.isShiftDown() || std::abs (wheel.deltaX) > std::abs (wheel.deltaY)))
+    {
+        setView (viewStart - (juce::int64) std::llround ((double) sideways * (double) visibleLength() * 0.5), zoom);
+        return;
+    }
+
+    if (e.mods.isAltDown() && ! showingDrums())
+    {
+        setRowHeight (rowPixels + (int) std::round (wheel.deltaY * 16.0f));
+        return;
+    }
+
     if (showingDrums())
     {
         const auto visible = juce::jmax (1, rollArea().getHeight() / drumRowHeight);
@@ -1304,9 +1427,15 @@ void NoteEditor::mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheel
         return;
     }
 
-    const auto rows = juce::jmax (1, rollArea().getHeight() / rowHeight);
+    const auto rows = juce::jmax (1, rollArea().getHeight() / rowPixels);
     lowPitch = juce::jlimit (0, juce::jmax (0, 128 - rows), lowPitch + (int) std::round (wheel.deltaY * 12.0f));
     repaint();
+}
+
+void NoteEditor::mouseMagnify (const juce::MouseEvent& e, float scaleFactor)
+{
+    if (scaleFactor > 0.0f)
+        zoomAround (e.position.x, (double) scaleFactor);
 }
 
 bool NoteEditor::keyPressed (const juce::KeyPress& key)

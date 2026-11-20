@@ -21,6 +21,11 @@
     across is the notes' whole timeline: the part before the clip's start (its offset, after a
     trim or split) and the part past the pattern are washed out, as their notes don't play.
 
+    It opens on the pattern's first repeat (the whole timeline when it doesn't repeat). Cmd-scroll
+    or a pinch zooms the time around the mouse, the -, + and Fit buttons zoom it or show the whole
+    timeline again, and the scroll bar under the notes (or a sideways or Shift-scroll) moves along
+    it; Option-scroll makes the rows taller or shorter, and scrolling moves up and down the keys.
+
     The keyboard down the left plays: a click sounds its key until the mouse is let go, and a drag
     along it plays the keys it passes. A note sounds too while it is put in, clicked or dragged
     (at its new pitch as it moves).
@@ -36,7 +41,8 @@
     step; what sounds goes to `audition`. readClip gives what to show; the editor reads it ten
     times a second and redraws when it changed. */
 class NoteEditor final : public juce::Component,
-                         private juce::Timer
+                         private juce::Timer,
+                         private juce::ScrollBar::Listener
 {
 public:
     struct Shown
@@ -98,6 +104,22 @@ public:
     juce::Rectangle<float> noteBounds (const ClipNote&) const;
     juce::Rectangle<int> rollArea() const;
 
+    /** The time shown: zoom is how many times the whole timeline the roll's width would hold
+        (1: all of it, up to maxZoom), from viewStart, a frame of the notes' timeline. zoomAround
+        keeps the frame under x where it is; fitTime shows all of it, showPattern the first repeat. */
+    void zoomAround (float x, double factor);
+    void setView (juce::int64 start, double zoom);
+    void fitTime()                                                 { setView (0, 1.0); }
+    void showPattern();
+    double getZoom() const noexcept                                { return zoom; }
+    double maxZoom() const noexcept;
+    juce::int64 getViewStart() const noexcept                      { return viewStart; }
+    juce::int64 visibleLength() const noexcept;
+
+    /** The rows' height in pixels, from minRowHeight to maxRowHeight (rowHeight to begin with). */
+    void setRowHeight (int pixels);
+    int getRowHeight() const noexcept                              { return rowPixels; }
+
     /** The drum grid: whether it is shown, its rows (the map's sounds, then the clip's other
         notes), its steps, a cell's bounds, the cell under a point ({-1, -1}: none) and the note in
         a cell (-1: none). */
@@ -128,15 +150,18 @@ public:
     void mouseDrag (const juce::MouseEvent&) override;
     void mouseUp (const juce::MouseEvent&) override;
     void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
+    void mouseMagnify (const juce::MouseEvent&, float scaleFactor) override;
     bool keyPressed (const juce::KeyPress&) override;
 
     static constexpr int keyboardWidth = 44, rowHeight = 12, topBar = 30, laneHeight = 72;
     static constexpr int drumNamesWidth = 130, drumRowHeight = 18;
+    static constexpr int minRowHeight = 6, maxRowHeight = 32, scrollHeight = 10;
 
 private:
     enum class Drag { none, move, resize, box, loop, lanePoint, keys, velocity, nothing };
 
     void timerCallback() override;
+    void scrollBarMoved (juce::ScrollBar*, double newRangeStart) override;
     void commit (const juce::String& description);
     juce::int64 snapped (juce::int64 frame) const;
     int leftWidth() const noexcept;                // the keyboard's, or the drum names'
@@ -163,6 +188,9 @@ private:
     bool addedNow = false;                 // the drum step under the mouse was set by this click
     int lowPitch = 48;                     // the bottom row shown
     juce::int64 lastLength = 0;            // the length new notes take without a grid
+    double zoom = 1.0;                     // see zoomAround
+    juce::int64 viewStart = 0;
+    int rowPixels = rowHeight;
 
     Drag drag = Drag::none;
     int dragNote = -1;
@@ -175,6 +203,9 @@ private:
 
     juce::ComboBox gridBox, laneBox, swingBox, channelBox;
     juce::TextButton drumsButton { "Drums" };
+    juce::TextButton zoomOutButton { "-" }, zoomInButton { "+" }, fitButton { "Fit" };
+    juce::ScrollBar timeScroll { false };
+    void updateScroll();
     juce::Label laneLabel;
     int laneController = -1;
     int dragPoint = -1;

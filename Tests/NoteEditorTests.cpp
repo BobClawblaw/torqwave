@@ -225,6 +225,66 @@ void runNoteEditorTests()
                "piano roll: a note put in sounds while the mouse is down, and one dragged sounds at each pitch it moves to");
     }
 
+    // Zoom: a clip that repeats opens on its pattern; Cmd-scroll and the buttons zoom around a
+    // point, the scroll bar and a sideways scroll move along, Fit shows it all, and notes are
+    // put in where the zoomed grid shows them.
+    {
+        NoteEditor::Shown looped;
+        looped.clip.id = 9;
+        looped.clip.length = (juce::int64) (18.0 * rate);   // nine bars at 120
+        looped.clip.loopLength = (juce::int64) (2.0 * rate); // a bar's pattern
+        looped.sampleRate = rate;
+        looped.beatSeconds = 0.5;
+        Rig z;
+        z.shown = looped;
+        z.editor.refresh();
+        const auto area = z.editor.rollArea();
+        const auto opened = z.editor.getViewStart() == 0 && z.editor.visibleLength() == looped.clip.loopLength
+                            && std::abs (z.editor.frameAt ((float) area.getRight() - 1.0f) - looped.clip.loopLength) <= 1;
+
+        // Cmd-scroll in keeps the frame under the mouse where it is.
+        const auto x = (float) area.getX() + 300.0f;
+        const auto under = z.editor.frameAt (x);
+        juce::MouseWheelDetails wheel {};
+        wheel.deltaY = 0.5f;
+        z.editor.mouseWheelMove (eventAt (z.editor, { x, (float) area.getCentreY() }, { x, (float) area.getCentreY() }, false, juce::ModifierKeys::commandModifier), wheel);
+        const auto zoomedIn = z.editor.getZoom() > 9.0 * 1.9 && std::abs (z.editor.frameAt (x) - under) <= (juce::int64) (z.editor.visibleLength() / area.getWidth() + 1);
+
+        // A note clicked in at the zoomed grid lands on its line.
+        const auto line = z.editor.lineFrame (z.editor.frameAt (x) / z.editor.gridStepFrames() + 1);
+        z.click (z.at (60, line) + juce::Point<float> (2.0f, 0.0f));
+        const auto placed = z.notes().size() == 1 && z.notes()[0].start == line;
+
+        // Sideways: the view moves along, and stops at the ends.
+        const auto startedAt = z.editor.getViewStart();
+        wheel.deltaY = 0.0f;
+        wheel.deltaX = -0.5f;
+        z.editor.mouseWheelMove (eventAt (z.editor, { x, (float) area.getCentreY() }, { x, (float) area.getCentreY() }), wheel);
+        const auto movedAlong = z.editor.getViewStart() > startedAt;
+        z.editor.setView (std::numeric_limits<juce::int64>::max() / 2, z.editor.getZoom());
+        const auto atEnd = z.editor.getViewStart() + z.editor.visibleLength() == z.editor.wholeLength();
+
+        // The - button halves it, Fit shows all; zoom stays within its limits.
+        const auto was = z.editor.getZoom();
+        z.editor.zoomAround ((float) area.getCentreX(), 0.5);
+        const auto halved = std::abs (z.editor.getZoom() - was * 0.5) < 1e-9;
+        z.editor.fitTime();
+        const auto fitted = z.editor.getViewStart() == 0 && z.editor.visibleLength() == z.editor.wholeLength();
+        z.editor.zoomAround (0.0f, 1.0e9);
+        const auto limited = z.editor.visibleLength() >= (juce::int64) (0.05 * rate) - 1;
+
+        // Option-scroll makes the rows taller.
+        wheel.deltaX = 0.0f;
+        wheel.deltaY = 0.5f;
+        z.editor.mouseWheelMove (eventAt (z.editor, { x, (float) area.getCentreY() }, { x, (float) area.getCentreY() }, false, juce::ModifierKeys::altModifier), wheel);
+        const auto taller = z.editor.getRowHeight() > NoteEditor::rowHeight
+                            && std::abs (z.editor.noteBounds ({ 60, 0, 1, 1.0f }).getHeight() - (float) (z.editor.getRowHeight() - 2)) < 0.01f;
+
+        check (opened && zoomedIn && placed && movedAlong && atEnd && halved && fitted && limited && taller,
+               "piano roll: a repeating clip opens on its pattern; Cmd-scroll zooms around the mouse, a note clicked in lands on the zoomed grid's line, "
+               "a sideways scroll moves along and stops at the end, - halves the zoom, Fit shows all, and Option-scroll makes the rows taller");
+    }
+
     // Drawn in every theme without an unpainted spot.
     auto painted = true;
 
