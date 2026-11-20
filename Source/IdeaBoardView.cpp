@@ -608,7 +608,7 @@ void IdeaBoardView::showOpenChooser()
 //==============================================================================
 bool IdeaBoardView::isInterestedInDragSource (const SourceDetails& details)
 {
-    return SequenceLibraryView::fileOfDrag (details.description) != juce::File();
+    return SequenceLibraryView::fileOfDrag (details.description).hasFileExtension (SequenceFile::extension);   // a sequence, not a kit
 }
 
 void IdeaBoardView::itemDropped (const SourceDetails& details)
