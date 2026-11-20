@@ -12704,6 +12704,15 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
 
         start.instrumentPresets = [] (const juce::PluginDescription& d) { return InstrumentPresets::userStore().getNames (d); };
 
+        for (auto& t : aiStartSession->tracks)
+        {
+            const auto& chains = engine.getTrackEffects();
+
+            for (int i = 0; i < chains.getNumSlots (t.id); ++i)
+                if (auto* p = chains.getPlugin (t.id, i); p != nullptr && p != chains.getInstrument (t.id))
+                    start.effects[t.id].add (p->getName());
+        }
+
         start.catalogue = pluginCatalogue.get();
         return start;
     }
@@ -12775,6 +12784,31 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
 
                 if (errors.isNotEmpty())
                     showError ("Ask Torq", name + " couldn't be loaded:\n\n" + errors);
+            });
+        }
+
+        // Effects go on the end of their tracks' chains, in the plan's order.
+        std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects;
+
+        for (auto& load : w.getEffectLoads())
+        {
+            auto& chain = effects[load.trackId];
+
+            if (chain == nullptr)
+                chain = std::make_shared<juce::XmlElement> ("EFFECTS");
+
+            chain->createNewChildElement ("SLOT")->addChildElement (load.plugin.createXml().release());
+        }
+
+        if (! effects.empty())
+        {
+            engine.session.markEffectsChanged();
+            engine.loadTrackEffects (std::move (effects), [this] (const juce::String& errors)
+            {
+                engine.session.sendChangeMessage();
+
+                if (errors.isNotEmpty())
+                    showError ("Ask Torq", "Not every effect could be added:\n\n" + errors);
             });
         }
 

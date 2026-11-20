@@ -394,6 +394,9 @@ void AskPanel::finish (const juce::String&, const juce::String& error)
         if (! w.getInstrumentLoads().empty())
             addLog ("Instruments are loaded once the plan is applied; that isn't part of the undo step.\n", Theme::warn);
 
+        if (! w.getEffectLoads().empty())
+            addLog ("Effects are added to their tracks once the plan is applied; that isn't part of the undo step.\n", Theme::warn);
+
         addLog ("Apply to make these changes, or Discard.\n", Theme::dimText);
     }
 

@@ -40,6 +40,7 @@ namespace Ai
             juce::String sessionName;
             std::map<juce::uint32, juce::PluginDescription> instruments;   // the instrument each instrument track plays, by track id
             SessionTools::PresetsOf instrumentPresets;                       // the presets saved for an instrument; none: no presets
+            std::map<juce::uint32, juce::StringArray> effects;              // each track's effects in order (not its instrument), by track id
         };
 
         explicit Workspace (Start);
@@ -64,6 +65,12 @@ namespace Ai
         std::vector<SessionTools::InstrumentLoad> getInstrumentLoads() const
         {
             return sessionTools != nullptr ? sessionTools->getInstrumentLoads() : std::vector<SessionTools::InstrumentLoad>();
+        }
+
+        /** The effects the plan adds to tracks once it is applied (not part of its undo step). */
+        std::vector<SessionTools::EffectLoad> getEffectLoads() const
+        {
+            return sessionTools != nullptr ? sessionTools->getEffectLoads() : std::vector<SessionTools::EffectLoad>();
         }
 
         /** Runs one tool call and returns its result for the model, as JSON text. Never throws:

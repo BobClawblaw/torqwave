@@ -23,6 +23,22 @@
 #include "OfflineRender.h"
 #include "Reverb.h"
 #include "SampleRateConverter.h"
+#include "Restoration.h"
+#include "ClickRepair.h"
+#include "AdaptiveDenoise.h"
+#include "DialogueIsolation.h"
+#include "Spill.h"
+#include "WowFlutter.h"
+#include "SpectralRecovery.h"
+#include "Rebalance.h"
+#include "Azimuth.h"
+#include "DialogueContour.h"
+#include "GraphicEq.h"
+#include "NoiseReduction.h"
+#include "Ambience.h"
+#include "SpectralEdit.h"
+#include "Generator.h"
+#include "FadeShape.h"
 
 namespace Sequences
 {
@@ -90,6 +106,43 @@ namespace
             { "pitchCorrect", "Pitch Correction", { "key", "scale", "speed", "strength" } },
             { "convertRate", "Convert Sample Rate", { "rate" } },
             { "rack", "Apply Effects Rack", {} },
+
+            // Commands that run their own code rather than a recorded step; here so a plan (Ask
+            // Torq) can run them through the same functions. Times are in seconds.
+            { "removeHum", "Remove Hum", { "frequency", "harmonics", "q" } },
+            { "declip", "Repair Clipping", { "threshold", "keepPeak" } },
+            { "gainRamp", "Gain Ramp", { "from", "to" } },
+            { "panRamp", "Pan Ramp", { "from", "to" } },
+            { "fadeEdges", "Fade Selection Edges", { "ms", "shape" } },
+            { "noiseGate", "Noise Gate", { "level", "length" } },
+            { "silenceOutside", "Silence Outside", {} },
+            { "silenceLeft", "Silence Left Channel", {} },
+            { "silenceRight", "Silence Right Channel", {} },
+            { "crossfadeLoop", "Crossfade Loop", { "ms" } },
+            { "clickRepair", "Click Repair", { "threshold", "length", "voice" } },
+            { "adaptiveDenoise", "Adaptive Noise Reduction", { "reduction", "threshold", "tracking" } },
+            { "dialogueIsolation", "Dialogue Isolation", { "reduction", "sensitivity" } },
+            { "spill", "Wind, Rustle and Bleed", { "wind", "corner", "rustle", "bleed", "bleedThreshold" } },
+            { "wowFlutter", "Wow and Flutter", { "fastest", "amount" } },
+            { "spectralRecovery", "Spectral Recovery", { "cutoff", "level", "highest" } },
+            { "rebalance", "Rebalance", { "voice", "bass", "drums", "rest", "corner" } },
+            { "azimuth", "Azimuth Correction", { "most", "amount" } },
+            { "dialogueContour", "Dialogue Contour", { "semitones", "ending", "curve" } },
+            { "graphicEq10", "Graphic EQ (10 bands)", { "hz31", "hz63", "hz125", "hz250", "hz500", "hz1k", "hz2k", "hz4k", "hz8k", "hz16k" } },
+            { "multibandCompressor", "Multiband Compressor", { "lowCrossover", "highCrossover", "output",
+                                                              "lowThreshold", "lowRatio", "lowAttack", "lowRelease", "lowMakeup",
+                                                              "midThreshold", "midRatio", "midAttack", "midRelease", "midMakeup",
+                                                              "highThreshold", "highRatio", "highAttack", "highRelease", "highMakeup" } },
+            { "normalizeRegions", "Normalize Each Region", { "db" } },
+            { "fadeRegions", "Fade Each Region", { "ms", "shape" } },
+            { "reverseRegions", "Reverse Each Region", {} },
+            { "shortenPauses", "Shorten Pauses", { "level", "length" } },
+            { "noiseReduction", "Noise Reduction", { "printStart", "printEnd", "reduction", "threshold" } },
+            { "ambienceMatch", "Ambience Match", { "printStart", "printEnd", "level", "fillQuiet" } },
+            { "spectralAttenuate", "Spectral Attenuate", { "low", "high", "db" } },
+            { "spectralRemove", "Spectral Remove", { "low", "high" } },
+            { "generateTone", "Generate Tone", { "wave", "frequency", "endFrequency", "level", "length", "fade" } },
+            { "generateNoise", "Generate Noise", { "colour", "level", "length", "fade" } },
         };
         return list;
     }
@@ -308,6 +361,52 @@ juce::String Step::settingsText() const
     return parts.joinIntoString (", ");
 }
 
+namespace
+{
+    /** The ranges of the newer kinds' settings, as their dialogs allow. */
+    const std::map<juce::String, std::pair<double, double>>& rangesOf (const juce::String& kind)
+    {
+        using R = std::map<juce::String, std::pair<double, double>>;
+        static const std::map<juce::String, R> all {
+            { "removeHum", { { "frequency", { 20, 1000 } }, { "harmonics", { 1, 40 } }, { "q", { 5, 200 } } } },
+            { "declip", { { "threshold", { 50, 100 } }, { "keepPeak", { 0, 1 } } } },
+            { "gainRamp", { { "from", { -96, 24 } }, { "to", { -96, 24 } } } },
+            { "panRamp", { { "from", { -100, 100 } }, { "to", { -100, 100 } } } },
+            { "fadeEdges", { { "ms", { 0.1, 10000 } }, { "shape", { 0, 4 } } } },
+            { "noiseGate", { { "level", { -120, 0 } }, { "length", { 0.001, 600 } } } },
+            { "crossfadeLoop", { { "ms", { 0.1, 10000 } } } },
+            { "clickRepair", { { "threshold", { 3, 60 } }, { "length", { 0.1, 20 } }, { "voice", { 0, 1 } } } },
+            { "adaptiveDenoise", { { "reduction", { 0, 40 } }, { "threshold", { 0, 12 } }, { "tracking", { 0.5, 5 } } } },
+            { "dialogueIsolation", { { "reduction", { 0, 40 } }, { "sensitivity", { 0, 100 } } } },
+            { "spill", { { "wind", { 0, 40 } }, { "corner", { 60, 400 } }, { "rustle", { 0, 40 } }, { "bleed", { 0, 40 } }, { "bleedThreshold", { 6, 40 } } } },
+            { "wowFlutter", { { "fastest", { 0.5, 20 } }, { "amount", { 0, 100 } } } },
+            { "spectralRecovery", { { "cutoff", { 0, 16000 } }, { "level", { -24, 6 } }, { "highest", { 2000, 20000 } } } },
+            { "rebalance", { { "voice", { -40, 12 } }, { "bass", { -40, 12 } }, { "drums", { -40, 12 } }, { "rest", { -40, 12 } }, { "corner", { 60, 300 } } } },
+            { "azimuth", { { "most", { 0.5, 50 } }, { "amount", { 0, 100 } } } },
+            { "dialogueContour", { { "semitones", { -12, 12 } }, { "ending", { 0.1, 1.5 } }, { "curve", { -1, 1 } } } },
+            { "graphicEq10", { { "hz31", { -12, 12 } }, { "hz63", { -12, 12 } }, { "hz125", { -12, 12 } }, { "hz250", { -12, 12 } }, { "hz500", { -12, 12 } },
+                               { "hz1k", { -12, 12 } }, { "hz2k", { -12, 12 } }, { "hz4k", { -12, 12 } }, { "hz8k", { -12, 12 } }, { "hz16k", { -12, 12 } } } },
+            { "multibandCompressor", { { "lowCrossover", { 20, 20000 } }, { "highCrossover", { 20, 20000 } }, { "output", { -24, 24 } },
+                                       { "lowThreshold", { -80, 0 } }, { "lowRatio", { 1, 100 } }, { "lowAttack", { 0.01, 1000 } }, { "lowRelease", { 1, 5000 } }, { "lowMakeup", { -48, 48 } },
+                                       { "midThreshold", { -80, 0 } }, { "midRatio", { 1, 100 } }, { "midAttack", { 0.01, 1000 } }, { "midRelease", { 1, 5000 } }, { "midMakeup", { -48, 48 } },
+                                       { "highThreshold", { -80, 0 } }, { "highRatio", { 1, 100 } }, { "highAttack", { 0.01, 1000 } }, { "highRelease", { 1, 5000 } }, { "highMakeup", { -48, 48 } } } },
+            { "normalizeRegions", { { "db", { -48, 0 } } } },
+            { "fadeRegions", { { "ms", { 0.1, 10000 } }, { "shape", { 0, 4 } } } },
+            { "shortenPauses", { { "level", { -120, 0 } }, { "length", { 0.001, 600 } } } },
+            { "noiseReduction", { { "printStart", { 0, 1.0e7 } }, { "printEnd", { 0, 1.0e7 } }, { "reduction", { 0, 60 } }, { "threshold", { -10, 20 } } } },
+            { "ambienceMatch", { { "printStart", { 0, 1.0e7 } }, { "printEnd", { 0, 1.0e7 } }, { "level", { -24, 12 } }, { "fillQuiet", { 0, 1 } } } },
+            { "spectralAttenuate", { { "low", { 0, 96000 } }, { "high", { 0, 96000 } }, { "db", { -60, 24 } } } },
+            { "spectralRemove", { { "low", { 0, 96000 } }, { "high", { 0, 96000 } } } },
+            { "generateTone", { { "wave", { 0, 3 } }, { "frequency", { 1, 20000 } }, { "endFrequency", { 1, 20000 } }, { "level", { -96, 0 } },
+                                { "length", { 0.001, 600 } }, { "fade", { 0, 1000 } } } },
+            { "generateNoise", { { "colour", { 0, 2 } }, { "level", { -96, -6 } }, { "length", { 0.001, 600 } }, { "fade", { 0, 1000 } } } },
+        };
+        static const R none;
+        const auto it = all.find (kind);
+        return it != all.end() ? it->second : none;
+    }
+}
+
 juce::String problem (const Step& step, double rate)
 {
     const auto* k = find (step.kind);
@@ -321,6 +420,19 @@ juce::String problem (const Step& step, double rate)
 
     const auto& v = step.values;
     const auto bad = [] { return juce::String ("a setting is out of range."); };
+
+    for (const auto& [id, range] : rangesOf (step.kind))
+        if (get (v, id.toRawUTF8()) < range.first || get (v, id.toRawUTF8()) > range.second)
+            return bad();
+
+    if ((step.kind == "removeHum" && get (v, "frequency") * 2.0 >= rate)
+        || ((step.kind == "generateTone") && (get (v, "frequency") * 2.0 >= rate || get (v, "endFrequency") * 2.0 >= rate))
+        || ((step.kind == "spectralAttenuate" || step.kind == "spectralRemove") && get (v, "high") <= get (v, "low"))
+        || ((step.kind == "noiseReduction" || step.kind == "ambienceMatch") && get (v, "printEnd") <= get (v, "printStart"))
+        || (step.kind == "spectralRecovery" && get (v, "cutoff") > 0.0 && get (v, "cutoff") < 1000.0)
+        || (step.kind == "generateNoise"
+            && get (v, "level") > Generator::maxLevelDb ((Generator::Colour) juce::jlimit (0, 2, juce::roundToInt (get (v, "colour"))))))
+        return bad();
 
     if (step.kind == "rack" && step.rack == nullptr)
         return "it has no rack.";
@@ -391,7 +503,175 @@ Result apply (const Step& step, const Snapshot& audio, juce::int64 start, juce::
     const auto& v = step.values;
     const auto& k = step.kind;
 
-    if (k == "gain")                out.snapshot = AudioEdits::gain (s, start, end, (float) get (v, "db"));
+    const auto toFrames = [rate] (double seconds) { return (juce::int64) std::llround (seconds * rate); };
+    const auto keepGoing = [&progress] (float f) { return progress == nullptr || progress (f); };
+    const auto shapeOf = [&v] { return (FadeShape) juce::jlimit (0, 4, juce::roundToInt (get (v, "shape"))); };
+    int skipped = 0;
+
+    if (k == "removeHum")
+    {
+        out.snapshot = Restoration::removeHum (s, start, end, rate, { get (v, "frequency"), juce::roundToInt (get (v, "harmonics")), get (v, "q") });
+    }
+    else if (k == "declip")
+    {
+        const auto r = Restoration::declip (s, start, end, rate, { get (v, "threshold") / 100.0, get (v, "keepPeak") > 0.5 });
+        out.snapshot = r.audio;
+
+        if (r.audio == nullptr)
+            out.notes.add ("no clipping found to repair");
+        else if (r.tooLong > 0)
+            out.notes.add (juce::String (r.tooLong) + " clipped runs too long to rebuild");
+    }
+    else if (k == "gainRamp")       out.snapshot = AudioEdits::gainRamp (s, start, end, (float) get (v, "from"), (float) get (v, "to"));
+    else if (k == "panRamp")        out.snapshot = AudioEdits::balanceRamp (s, start, end, (float) (get (v, "from") / 100.0), (float) (get (v, "to") / 100.0));
+    else if (k == "fadeEdges")      out.snapshot = AudioEdits::fadeEdges (s, start, end, toFrames (get (v, "ms") / 1000.0), shapeOf());
+    else if (k == "noiseGate")      out.snapshot = AudioEdits::gateQuiet (s, start, end, juce::Decibels::decibelsToGain ((float) get (v, "level"), -200.0f),
+                                                                          toFrames (get (v, "length")), toFrames (0.01));
+    else if (k == "silenceOutside") out.snapshot = AudioEdits::silenceOutside (s, start, end);
+    else if (k == "silenceLeft")    out.snapshot = AudioEdits::silenceChannel (s, start, end, 0);
+    else if (k == "silenceRight")   out.snapshot = AudioEdits::silenceChannel (s, start, end, 1);
+    else if (k == "crossfadeLoop")  out.snapshot = AudioEdits::crossfadeLoop (s, start, end, toFrames (get (v, "ms") / 1000.0));
+    else if (k == "clickRepair")
+    {
+        const auto r = ClickRepair::repair (s, start, end, rate, { (float) get (v, "threshold"), (float) get (v, "length"), get (v, "voice") > 0.5 }, keepGoing);
+
+        if (! r.has_value())
+        {
+            out.error = "Stopped.";
+            return out;
+        }
+
+        out.snapshot = r->snapshot;
+        out.notes.add (juce::String (r->repaired) + " clicks repaired" + (r->skipped > 0 ? ", " + juce::String (r->skipped) + " left (too long)" : juce::String()));
+    }
+    else if (k == "adaptiveDenoise")
+        out.snapshot = AdaptiveDenoise::reduce (s, start, end, rate, { (float) get (v, "reduction"), (float) get (v, "threshold"), (float) get (v, "tracking") }, keepGoing);
+    else if (k == "dialogueIsolation")
+        out.snapshot = DialogueIsolation::isolate (s, start, end, rate, { (float) get (v, "reduction"), (float) get (v, "sensitivity") }, keepGoing);
+    else if (k == "spill")
+        out.snapshot = Spill::apply (s, start, end, rate, { get (v, "wind"), get (v, "corner"), get (v, "rustle"), get (v, "bleed"), get (v, "bleedThreshold") }, keepGoing);
+    else if (k == "wowFlutter")     out.snapshot = WowFlutter::correct (s, start, end, rate, { get (v, "fastest"), get (v, "amount") }, keepGoing);
+    else if (k == "spectralRecovery") out.snapshot = SpectralRecovery::recover (s, start, end, rate, { get (v, "cutoff"), get (v, "level"), get (v, "highest") }, keepGoing);
+    else if (k == "rebalance")
+        out.snapshot = Rebalance::apply (s, start, end, rate, { get (v, "voice"), get (v, "bass"), get (v, "drums"), get (v, "rest"), get (v, "corner") }, keepGoing);
+    else if (k == "azimuth")        out.snapshot = Azimuth::correct (s, start, end, rate, { get (v, "most"), get (v, "amount") }, keepGoing);
+    else if (k == "dialogueContour")
+        out.snapshot = DialogueContour::apply (s, start, end, rate, { (float) get (v, "semitones"), (float) get (v, "ending"), (float) get (v, "curve") }, keepGoing);
+    else if (k == "graphicEq10")
+    {
+        std::vector<double> gains;
+
+        for (auto* id : { "hz31", "hz63", "hz125", "hz250", "hz500", "hz1k", "hz2k", "hz4k", "hz8k", "hz16k" })
+            gains.push_back (get (v, id));
+
+        out.snapshot = GraphicEq::apply (s, start, end, rate, gains);
+    }
+    else if (k == "multibandCompressor")
+    {
+        Multiband::Compressor m;
+        m.lowCrossover = get (v, "lowCrossover");
+        m.highCrossover = get (v, "highCrossover");
+        m.outputDb = get (v, "output");
+        const std::array<const char*, 3> ids { "low", "mid", "high" };
+
+        for (size_t b = 0; b < 3; ++b)
+        {
+            const juce::String id (ids[b]);
+            auto& c = m.bands[b];
+            c.thresholdDb = get (v, (id + "Threshold").toRawUTF8());
+            c.ratio = get (v, (id + "Ratio").toRawUTF8());
+            c.attackMs = get (v, (id + "Attack").toRawUTF8());
+            c.releaseMs = get (v, (id + "Release").toRawUTF8());
+            c.makeupDb = get (v, (id + "Makeup").toRawUTF8());
+        }
+
+        m = Multiband::spaced (m, rate);
+
+        if (! Multiband::isValid (m, rate))
+        {
+            out.error = "a setting is out of range.";
+            return out;
+        }
+
+        out.snapshot = Multiband::compress (s, start, end, rate, m);
+    }
+    else if (k == "normalizeRegions" || k == "fadeRegions" || k == "reverseRegions")
+    {
+        out.snapshot = k == "normalizeRegions" ? AudioEdits::normalizeRegions (s, markers, (float) get (v, "db"), skipped)
+                     : k == "fadeRegions"      ? AudioEdits::fadeRegions (s, markers, toFrames (get (v, "ms") / 1000.0), shapeOf(), skipped)
+                                               : AudioEdits::reverseRegions (s, markers, skipped);
+
+        if (out.snapshot == nullptr)
+            out.notes.add ("there are no regions to work on");
+    }
+    else if (k == "shortenPauses")
+    {
+        const auto keep = toFrames (get (v, "length"));
+        const auto cuts = AudioEdits::pauseCuts (AudioEdits::pauses (s, juce::Decibels::decibelsToGain ((float) get (v, "level"), -200.0f),
+                                                                     keep + 1, std::numeric_limits<size_t>::max()), keep);
+        auto shortened = audio;
+
+        for (auto cut = cuts.rbegin(); cut != cuts.rend(); ++cut)
+        {
+            shortened = AudioEdits::remove (*shortened, cut->getStart(), cut->getEnd());
+            out.markers = MarkerEdits::afterReplace (out.markers, cut->getStart(), cut->getEnd(), 0);
+        }
+
+        if (cuts.empty())
+            out.notes.add ("no pause longer than that");
+        else
+            out.snapshot = shortened;
+
+        out.start = 0;
+        out.end = shortened->getNumFrames();
+    }
+    else if (k == "noiseReduction" || k == "ambienceMatch")
+    {
+        const auto printStart = juce::jlimit ((juce::int64) 0, s.getNumFrames(), toFrames (get (v, "printStart")));
+        const auto printEnd = juce::jlimit (printStart, s.getNumFrames(), toFrames (get (v, "printEnd")));
+
+        if (k == "noiseReduction")
+        {
+            if (const auto print = NoiseReduction::capture (s, printStart, printEnd, rate))
+                out.snapshot = NoiseReduction::reduce (s, start, end, rate, *print, { (float) get (v, "reduction"), (float) get (v, "threshold") }, keepGoing);
+            else
+                out.error = "the noise print's range is too short (it needs at least 4,096 frames of the noise alone).";
+        }
+        else
+        {
+            if (const auto print = Ambience::capture (s, printStart, printEnd, rate))
+                out.snapshot = Ambience::apply (s, start, end, rate, *print, { (float) get (v, "level"), get (v, "fillQuiet") > 0.5 });
+            else
+                out.error = "the room tone's range is too short (it needs at least 4,096 frames of the room alone).";
+        }
+
+        if (out.error.isNotEmpty())
+            return out;
+    }
+    else if (k == "spectralAttenuate" || k == "spectralRemove")
+    {
+        const auto db = k == "spectralRemove" ? -std::numeric_limits<float>::infinity() : (float) get (v, "db");
+        out.snapshot = SpectralEdit::changeBand (s, start, end, { get (v, "low"), juce::jmin (get (v, "high"), rate / 2.0) }, rate, db);
+    }
+    else if (k == "generateTone" || k == "generateNoise")
+    {
+        // Inserted at the range's start, pushing what follows later.
+        const auto length = (int) toFrames (get (v, "length"));
+        juce::AudioBuffer<float> made;
+
+        if (k == "generateTone")
+            made = Generator::tone ({ (Generator::Wave) juce::jlimit (0, 3, juce::roundToInt (get (v, "wave"))), get (v, "frequency"), get (v, "endFrequency"),
+                                      get (v, "level"), get (v, "fade") }, s.getNumChannels(), length, rate);
+        else
+            made = Generator::noise ({ (Generator::Colour) juce::jlimit (0, 2, juce::roundToInt (get (v, "colour"))), get (v, "level"), get (v, "fade"), 1 },
+                                     s.getNumChannels(), length, rate);
+
+        out.snapshot = Generator::insert (s, start, made);
+        out.markers = MarkerEdits::afterReplace (markers, start, start, (juce::int64) made.getNumSamples());
+        out.start = start;
+        out.end = start + made.getNumSamples();
+    }
+    else if (k == "gain")                out.snapshot = AudioEdits::gain (s, start, end, (float) get (v, "db"));
     else if (k == "invert")         out.snapshot = AudioEdits::invert (s, start, end);
     else if (k == "reverse")        out.snapshot = AudioEdits::reverse (s, start, end);
     else if (k == "removeDc")       out.snapshot = AudioEdits::removeDcOffset (s, start, end);

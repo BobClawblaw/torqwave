@@ -30,6 +30,22 @@
 #include "../Source/CentreChannel.h"
 #include "../Source/PhaseCorrection.h"
 #include "../Source/PitchCorrection.h"
+#include "../Source/Restoration.h"
+#include "../Source/ClickRepair.h"
+#include "../Source/AdaptiveDenoise.h"
+#include "../Source/DialogueIsolation.h"
+#include "../Source/Spill.h"
+#include "../Source/WowFlutter.h"
+#include "../Source/SpectralRecovery.h"
+#include "../Source/Rebalance.h"
+#include "../Source/Azimuth.h"
+#include "../Source/DialogueContour.h"
+#include "../Source/GraphicEq.h"
+#include "../Source/NoiseReduction.h"
+#include "../Source/Ambience.h"
+#include "../Source/SpectralEdit.h"
+#include "../Source/Generator.h"
+#include "../Source/Markers.h"
 #include "TestUtils.h"
 #include "SequencesTests.h"
 
@@ -129,6 +145,14 @@ void runSequencesTests (AudioEngine& engine)
         const Equalizer::Band band { Equalizer::BandType::highShelf, 4000.0, 3.5, 0.71 };
         const auto measured = Loudness::measure (s, a, b, rate);
         const auto wanted = -18.0 - measured->integrated;
+        int skipped = 0;
+        Multiband::Compressor multiband;
+        multiband.lowCrossover = 150.0;
+        multiband.highCrossover = 3000.0;
+        multiband.outputDb = 1.0;
+        multiband.bands[0] = { -20.0, 2.0, multiband.bands[0].kneeDb, 20.0, 200.0, 1.0 };
+        multiband.bands[1] = { -25.0, 3.0, multiband.bands[1].kneeDb, 10.0, 100.0, 2.0 };
+        multiband.bands[2] = { -30.0, 4.0, multiband.bands[2].kneeDb, 5.0, 50.0, 3.0 };
 
         struct Case { Step step; Snapshot expected; };
         const std::vector<Case> cases {
@@ -193,6 +217,51 @@ void runSequencesTests (AudioEngine& engine)
             { { "dereverb", { { "time", 1.5 }, { "reduction", 9.0 } }, nullptr }, Dereverb::reduce (s, a, b, rate, { 1.5f, 9.0f }) },
             { { "levelSpeech", { { "target", -18.0 }, { "boost", 9.0 }, { "cut", 6.0 }, { "silence", -55.0 } }, nullptr },
               Leveller::level (s, a, b, rate, { -18.0f, 9.0f, 6.0f, -55.0f }) },
+
+            // The commands that run their own code, steps since Ask Torq took them up.
+            { { "removeHum", { { "frequency", 60.0 }, { "harmonics", 5.0 }, { "q", 40.0 } }, nullptr }, Restoration::removeHum (s, a, b, rate, { 60.0, 5, 40.0 }) },
+            { { "gainRamp", { { "from", -2.0 }, { "to", -20.0 } }, nullptr }, AudioEdits::gainRamp (s, a, b, -2.0f, -20.0f) },
+            { { "panRamp", { { "from", -50.0 }, { "to", 75.0 } }, nullptr }, AudioEdits::balanceRamp (s, a, b, -0.5f, 0.75f) },
+            { { "fadeEdges", { { "ms", 20.0 }, { "shape", 2.0 } }, nullptr }, AudioEdits::fadeEdges (s, a, b, 960, FadeShape::equalPower) },
+            { { "silenceOutside", {}, nullptr }, AudioEdits::silenceOutside (s, a, b) },
+            { { "silenceLeft", {}, nullptr }, AudioEdits::silenceChannel (s, a, b, 0) },
+            { { "silenceRight", {}, nullptr }, AudioEdits::silenceChannel (s, a, b, 1) },
+            { { "crossfadeLoop", { { "ms", 15.0 } }, nullptr }, AudioEdits::crossfadeLoop (s, a, b, 720) },   // no longer than the 1,000 frames before a
+            { { "adaptiveDenoise", { { "reduction", 15.0 }, { "threshold", 4.0 }, { "tracking", 1.0 } }, nullptr },
+              AdaptiveDenoise::reduce (s, a, b, rate, { 15.0f, 4.0f, 1.0f }) },
+            { { "dialogueIsolation", { { "reduction", 18.0 }, { "sensitivity", 60.0 } }, nullptr }, DialogueIsolation::isolate (s, a, b, rate, { 18.0f, 60.0f }) },
+            { { "spill", { { "wind", 10.0 }, { "corner", 120.0 }, { "rustle", 8.0 }, { "bleed", 6.0 }, { "bleedThreshold", 15.0 } }, nullptr },
+              Spill::apply (s, a, b, rate, { 10.0, 120.0, 8.0, 6.0, 15.0 }) },
+            { { "wowFlutter", { { "fastest", 3.0 }, { "amount", 80.0 } }, nullptr }, WowFlutter::correct (s, a, b, rate, { 3.0, 80.0 }) },
+            { { "spectralRecovery", { { "cutoff", 8000.0 }, { "level", -6.0 }, { "highest", 14000.0 } }, nullptr },
+              SpectralRecovery::recover (s, a, b, rate, { 8000.0, -6.0, 14000.0 }) },
+            { { "rebalance", { { "voice", 3.0 }, { "bass", -6.0 }, { "drums", 2.0 }, { "rest", -1.0 }, { "corner", 140.0 } }, nullptr },
+              Rebalance::apply (s, a, b, rate, { 3.0, -6.0, 2.0, -1.0, 140.0 }) },
+            { { "dialogueContour", { { "semitones", -3.0 }, { "ending", 0.3 }, { "curve", 0.5 } }, nullptr },
+              DialogueContour::apply (s, a, b, rate, { -3.0f, 0.3f, 0.5f }) },
+            { { "graphicEq10", { { "hz31", 1.0 }, { "hz63", -2.0 }, { "hz125", 3.0 }, { "hz250", 0.0 }, { "hz500", -4.0 }, { "hz1k", 5.0 }, { "hz2k", 0.0 },
+                                 { "hz4k", -6.0 }, { "hz8k", 2.0 }, { "hz16k", 12.0 } }, nullptr },
+              GraphicEq::apply (s, a, b, rate, { 1.0, -2.0, 3.0, 0.0, -4.0, 5.0, 0.0, -6.0, 2.0, 12.0 }) },
+            { { "multibandCompressor", { { "lowCrossover", 150.0 }, { "highCrossover", 3000.0 }, { "output", 1.0 },
+                                         { "lowThreshold", -20.0 }, { "lowRatio", 2.0 }, { "lowAttack", 20.0 }, { "lowRelease", 200.0 }, { "lowMakeup", 1.0 },
+                                         { "midThreshold", -25.0 }, { "midRatio", 3.0 }, { "midAttack", 10.0 }, { "midRelease", 100.0 }, { "midMakeup", 2.0 },
+                                         { "highThreshold", -30.0 }, { "highRatio", 4.0 }, { "highAttack", 5.0 }, { "highRelease", 50.0 }, { "highMakeup", 3.0 } }, nullptr },
+              Multiband::compress (s, a, b, rate, Multiband::spaced (multiband, rate)) },
+            { { "normalizeRegions", { { "db", -3.0 } }, nullptr }, AudioEdits::normalizeRegions (s, markers, -3.0f, skipped) },
+            { { "fadeRegions", { { "ms", 10.0 }, { "shape", 1.0 } }, nullptr }, AudioEdits::fadeRegions (s, markers, 480, FadeShape::linear, skipped) },
+            { { "reverseRegions", {}, nullptr }, AudioEdits::reverseRegions (s, markers, skipped) },
+            { { "noiseReduction", { { "printStart", 0.0 }, { "printEnd", 0.1 }, { "reduction", 18.0 }, { "threshold", 2.0 } }, nullptr },
+              NoiseReduction::reduce (s, a, b, rate, *NoiseReduction::capture (s, 0, 4800, rate), { 18.0f, 2.0f }) },
+            { { "ambienceMatch", { { "printStart", 0.0 }, { "printEnd", 0.1 }, { "level", -3.0 }, { "fillQuiet", 0.0 } }, nullptr },
+              Ambience::apply (s, a, b, rate, *Ambience::capture (s, 0, 4800, rate), { -3.0f, false }) },
+            { { "spectralAttenuate", { { "low", 300.0 }, { "high", 900.0 }, { "db", -9.0 } }, nullptr },
+              SpectralEdit::changeBand (s, a, b, { 300.0, 900.0 }, rate, -9.0f) },
+            { { "spectralRemove", { { "low", 300.0 }, { "high", 900.0 } }, nullptr },
+              SpectralEdit::changeBand (s, a, b, { 300.0, 900.0 }, rate, -std::numeric_limits<float>::infinity()) },
+            { { "generateTone", { { "wave", 2.0 }, { "frequency", 440.0 }, { "endFrequency", 880.0 }, { "level", -10.0 }, { "length", 0.25 }, { "fade", 8.0 } }, nullptr },
+              Generator::insert (s, a, Generator::tone ({ Generator::Wave::triangle, 440.0, 880.0, -10.0, 8.0 }, 2, 12000, rate)) },
+            { { "generateNoise", { { "colour", 1.0 }, { "level", -30.0 }, { "length", 0.25 }, { "fade", 8.0 } }, nullptr },
+              Generator::insert (s, a, Generator::noise ({ Generator::Colour::pink, -30.0, 8.0, 1 }, 2, 12000, rate)) },
         };
 
         juce::StringArray wrong, covered;
@@ -240,6 +309,76 @@ void runSequencesTests (AudioEngine& engine)
         if (! lateFound.has_value() || ! identical (lined.snapshot, PhaseCorrection::correct (*late, a, b, rate, lateFound->offset, false)))
             wrong.add ("phase");
 
+        // Repair Clipping on a clipped copy; the noise gate and Shorten Pauses on a copy with a pause.
+        juce::AudioBuffer<float> hot = readAll (s), gapped = readAll (s);
+
+        for (int ch = 0; ch < 2; ++ch)
+        {
+            for (int i = 0; i < hot.getNumSamples(); ++i)
+                hot.setSample (ch, i, juce::jlimit (-0.6f, 0.6f, hot.getSample (ch, i) * 2.0f));
+
+            gapped.clear (ch, 10000, 14000);
+        }
+
+        const auto clipped = AudioEdits::fromBuffer (std::move (hot)), paused = AudioEdits::fromBuffer (std::move (gapped));
+        const auto declipped = Sequences::apply ({ "declip", { { "threshold", 98.0 }, { "keepPeak", 1.0 } }, nullptr }, clipped, a, b, rate, {}, nullptr);
+        const auto gated = Sequences::apply ({ "noiseGate", { { "level", -60.0 }, { "length", 0.05 } }, nullptr }, paused, a, b, rate, {}, nullptr);
+        const auto shortened = Sequences::apply ({ "shortenPauses", { { "level", -60.0 }, { "length", 0.02 } }, nullptr }, paused, a, b, rate, markers, nullptr);
+        // Click repair on a copy with clicks in it; azimuth on three seconds whose right channel
+        // is its left a few frames late (it needs two seconds and channels that match).
+        juce::AudioBuffer<float> clicky = readAll (s);
+
+        for (int at : { 5000, 12000, 21000 })
+            for (int ch = 0; ch < 2; ++ch)
+                clicky.setSample (ch, at, 0.95f);
+
+        juce::AudioBuffer<float> tape (2, 144000);
+        const auto tapeSource = readAll (*music (1, 144000, rate, 11));
+
+        for (int i = 0; i < 144000; ++i)
+        {
+            tape.setSample (0, i, tapeSource.getSample (0, i));
+            tape.setSample (1, i, i >= 7 ? tapeSource.getSample (0, i - 7) : 0.0f);
+        }
+
+        const auto clicks = AudioEdits::fromBuffer (std::move (clicky)), skewed = AudioEdits::fromBuffer (std::move (tape));
+        const auto repaired = Sequences::apply ({ "clickRepair", { { "threshold", 12.0 }, { "length", 2.0 }, { "voice", 1.0 } }, nullptr }, clicks, a, b, rate, {}, nullptr);
+        const auto expectedRepair = ClickRepair::repair (*clicks, a, b, rate, { 12.0f, 2.0f, true }, {});
+        const auto aligned = Sequences::apply ({ "azimuth", { { "most", 3.0 }, { "amount", 90.0 } }, nullptr }, skewed, 0, 144000, rate, {}, nullptr);
+        covered.add ("clickRepair");
+        covered.add ("azimuth");
+
+        if (! expectedRepair.has_value() || ! identical (repaired.snapshot, expectedRepair->snapshot))
+            wrong.add ("clickRepair");
+
+        if (! identical (aligned.snapshot, Azimuth::correct (*skewed, 0, 144000, rate, { 3.0, 90.0 })))
+            wrong.add ("azimuth");
+
+        covered.add ("declip");
+        covered.add ("noiseGate");
+        covered.add ("shortenPauses");
+
+        if (! identical (declipped.snapshot, Restoration::declip (*clipped, a, b, rate, { 0.98, true }).audio))
+            wrong.add ("declip");
+
+        if (! identical (gated.snapshot, AudioEdits::gateQuiet (*paused, a, b, juce::Decibels::decibelsToGain (-60.0f, -200.0f), 2400, 480)))
+            wrong.add ("noiseGate");
+
+        {
+            const auto cuts = AudioEdits::pauseCuts (AudioEdits::pauses (*paused, juce::Decibels::decibelsToGain (-60.0f, -200.0f), 961, std::numeric_limits<size_t>::max()), 960);
+            auto expected = paused;
+            auto moved = markers;
+
+            for (auto cut = cuts.rbegin(); cut != cuts.rend(); ++cut)
+            {
+                expected = AudioEdits::remove (*expected, cut->getStart(), cut->getEnd());
+                moved = MarkerEdits::afterReplace (moved, cut->getStart(), cut->getEnd(), 0);
+            }
+
+            if (cuts.empty() || ! identical (shortened.snapshot, expected) || shortened.markers != moved)
+                wrong.add ("shortenPauses");
+        }
+
         covered.add ("rack");
         auto rack = std::shared_ptr<const juce::XmlElement> (compressorRack());
         Sequences::Result racked;
@@ -262,8 +401,8 @@ void runSequencesTests (AudioEngine& engine)
             if (! covered.contains (k))
                 missing.add (k);
 
-        check (wrong.isEmpty() && missing.isEmpty() && Sequences::kinds().size() == 43,
-               "sequences: each of the 43 steps gives its command's own result bit for bit"
+        check (wrong.isEmpty() && missing.isEmpty() && Sequences::kinds().size() == 74,
+               "sequences: each of the 74 steps gives its command's own result bit for bit"
                    + (wrong.isEmpty() ? juce::String() : " (differs: " + wrong.joinIntoString (", ") + ")")
                    + (missing.isEmpty() ? juce::String() : " (not tried: " + missing.joinIntoString (", ") + ")"));
     }

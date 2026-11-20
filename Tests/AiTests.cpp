@@ -369,6 +369,94 @@ namespace
         check (tools.size() == 26 && named == tools.size(), "AI tools: 26 tools, each a function with parameters");
     }
 
+    void testChannelSteps()
+    {
+        // The steps the app has for one channel of a stereo file, and the band-split shapers.
+        constexpr double rate = 48000.0;
+        Ai::Workspace::Start start;
+        start.audio = tone (rate, 3);
+        start.sampleRate = rate;
+        start.fileName = "tone.wav";
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+        constexpr int at = 48012;   // a sample of the tone, well off zero
+        const auto sample = [&w] (int channel)
+        {
+            juce::AudioBuffer<float> b (2, 1);
+            w.getAudio()->read (b, 0, at, 1);
+            return b.getSample (channel, 0);
+        };
+        const auto before = sample (0);
+
+        const auto inverted = call ("edit", R"({"kind": "invertLeft"})");
+        const auto leftOnly = (bool) inverted["ok"] && std::abs (sample (0) + before) < 1.0e-6f && std::abs (sample (1) - before) < 1.0e-6f;
+        call ("edit", R"({"kind": "rightToLeft"})");
+        const auto copied = std::abs (sample (0) - before) < 1.0e-6f;
+        const auto shaped = (bool) call ("edit", R"({"kind": "transientShaper", "settings": {"midAttack": 6}})")["ok"]
+                            && (bool) call ("edit", R"({"kind": "exciter", "settings": {"highDrive": 12, "highCurve": 1}})")["ok"];
+        const auto refused = ! (bool) call ("edit", R"({"kind": "exciter", "settings": {"lowCurve": 3}})")["ok"];
+        const auto others = (bool) call ("edit", R"({"kind": "phase"})")["ok"] && (bool) call ("edit", R"({"kind": "centre", "settings": {"reduction": 12}})")["ok"]
+                            && (bool) call ("edit", R"({"kind": "dither", "settings": {"bits": 1}})")["ok"];
+        const auto longer = call ("edit", R"({"kind": "extremeStretch", "settings": {"factor": 2}})");
+        const auto stretched = (bool) longer["ok"] && std::abs ((double) w.getAudio()->getNumFrames() / rate - 6.0) < 0.5;
+        check (leftOnly && copied && shaped && refused && others && stretched,
+               "AI tools: one channel inverted or copied over the other, the transient shaper, exciter, phase correction, centre, dither and extreme stretch, as the app's own steps");
+    }
+
+    void testEffectsMenuSteps()
+    {
+        // The Effects menu's commands that run their own code, through Ask Torq's edit tool: each
+        // runs with its defaults, and a few are checked for what they do.
+        constexpr double rate = 48000.0;
+        const auto workspace = [] (int seconds)
+        {
+            Ai::Workspace::Start start;
+            start.audio = tone (rate, seconds);
+            start.sampleRate = rate;
+            start.fileName = "tone.wav";
+            return std::make_unique<Ai::Workspace> (std::move (start));
+        };
+
+        juce::StringArray failed;
+
+        for (auto* kind : { "removeHum", "declip", "clickRepair", "noiseReduction", "adaptiveDenoise", "dialogueIsolation", "spill", "ambienceMatch",
+                            "wowFlutter", "azimuth", "spectralRecovery", "rebalance", "dialogueContour", "spectralAttenuate", "spectralRemove", "graphicEq10",
+                            "multibandCompressor", "noiseGate", "gainRamp", "panRamp", "fadeEdges", "crossfadeLoop", "silenceOutside", "silenceLeft",
+                            "silenceRight", "normalizeRegions", "fadeRegions", "reverseRegions", "shortenPauses", "generateTone", "generateNoise" })
+        {
+            auto w = workspace (2);
+            const auto r = parse (w->run ("edit", juce::String (R"({"kind": "KIND", "start": 0.5, "end": 1.5})").replace ("KIND", kind)));
+
+            if (! (bool) r["ok"])
+                failed.add (juce::String (kind) + ": " + r["error"].toString());
+        }
+
+        check (failed.isEmpty(), "AI tools: every Effects menu step runs with its defaults" + (failed.isEmpty() ? juce::String() : " (" + failed.joinIntoString ("; ") + ")"));
+
+        const auto sampleAt = [] (Ai::Workspace& w, double seconds, int channel)
+        {
+            juce::AudioBuffer<float> b (2, 64);
+            w.getAudio()->read (b, 0, (juce::int64) (seconds * rate), 64);
+            return b.getMagnitude (channel, 0, 64);
+        };
+
+        auto w = workspace (5);   // the tone sounds from 1 s to 4 s
+        const auto peak = sampleAt (*w, 2.0, 0);
+        w->run ("edit", R"({"kind": "gainRamp", "start": 1, "end": 4, "settings": {"from": 0, "to": -96}})");
+        const auto ramped = peak > 0.2f && sampleAt (*w, 1.01, 0) > peak * 0.8f && sampleAt (*w, 3.99, 0) < peak * 0.01f;
+        w->run ("edit", R"({"kind": "silenceRight", "start": 1, "end": 4})");
+        const auto silenced = sampleAt (*w, 1.5, 1) == 0.0f && sampleAt (*w, 1.5, 0) > 0.01f;
+        const auto inserted = parse (w->run ("edit", R"({"kind": "generateTone", "start": 1, "settings": {"length": 1.5}})"));
+        const auto longer = (bool) inserted["ok"] && std::abs ((double) inserted["seconds_now"] - 6.5) < 0.01;
+        const auto badBand = ! (bool) parse (w->run ("edit", R"({"kind": "spectralRemove", "settings": {"low": 3000, "high": 2000}})"))["ok"];
+        const auto badPrint = ! (bool) parse (w->run ("edit", R"({"kind": "noiseReduction", "settings": {"printStart": 1, "printEnd": 1}})"))["ok"];
+        const auto badNoise = ! (bool) parse (w->run ("edit", R"({"kind": "generateNoise", "settings": {"colour": 1, "level": -10}})"))["ok"];
+        check (ramped, "AI tools: a gain ramp fades the file as Gain Ramp does");
+        check (silenced, "AI tools: one channel silenced, the other kept");
+        check (longer, "AI tools: a generated tone is inserted, making the file longer (" + inserted["seconds_now"].toString() + " s)");
+        check (badBand && badPrint && badNoise, "AI tools: impossible settings are refused (a band upside down, an empty noise print, pink noise too loud)");
+    }
+
     //==============================================================================
     /** A parameter whose plug-in can't read text back (as some can't): 0 to 100 "units", linear. */
     class Unreadable final : public juce::AudioProcessorParameter
@@ -646,7 +734,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 21 && names.contains ("get_session") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 23 && names.contains ("get_session") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -693,6 +781,26 @@ namespace
                    && (bool) removed["ok"] && state.tracks.size() == 2 && state.tracks[0].folderId == 0
                    && ! (bool) fileTool["ok"] && w.sessionChanged() && w.getSteps().size() == 10 && s.tracks.size() == 2 && s.tracks[0].clips.size() == 1,
                "Ask Torq sessions: markers, the tempo and removing a folder (its track left out of any); a file's tool refused; ten steps, and the session itself untouched");
+
+        const auto ramp = call ("set_automation", R"({"track": "Drums", "parameter": "volume", "points": [{"time": 4, "value": -20}, {"time": 2, "value": 0}]})");
+        const auto again = call ("set_automation", R"({"track": "Drums", "parameter": "volume", "points": [{"time": 2, "value": 0}, {"time": 4, "value": -20}]})");
+        const auto wide = call ("set_automation", R"({"track": "Drums", "parameter": "pan", "points": [{"time": 1, "value": 2}]})");
+        const auto listed = call ("get_session", "{}")["tracks"][0]["automation"].toString();
+        const auto& volume = state.tracks[0].volumeEnvelope;
+        const auto drawn = (bool) ramp["ok"] && volume.points.size() == 2 && volume.points[0].frame == 96000 && juce::exactlyEqual (volume.points[1].value, -20.0f)
+                           && juce::approximatelyEqual (state.tracks[0].valueAt (AutomationParameter::volume, 144000), -10.0f);
+        const auto cleared = (bool) call ("set_automation", R"({"track": "Drums", "parameter": "volume", "points": []})")["ok"] && volume.isEmpty();
+        check (drawn && ! (bool) again["ok"] && ! (bool) wide["ok"] && listed.startsWith ("volume (2 points, 2.000 to 4.000 s)") && cleared,
+               "Ask Torq sessions: volume automation drawn from points in any order, the same again and a pan out of range refused, listed by get_session, and removed");
+
+        const auto added = call ("add_track_effect", R"({"track": "Reverb", "plugin": "Reverb"})");
+        const auto synth = call ("add_track_effect", R"({"track": "Drums", "plugin": "Basic Synth"})");
+        const auto unknown = call ("add_track_effect", R"({"track": "Drums", "plugin": "Nothing Like It"})");
+        const auto loads = w.getEffectLoads();
+        check ((bool) added["ok"] && ! (bool) synth["ok"] && ! (bool) unknown["ok"] && loads.size() == 1 && loads[0].plugin.name == "Reverb"
+                   && loads[0].trackId == state.tracks[1].id
+                   && call ("get_session", "{}")["tracks"][1]["effects"].toString() == "Reverb (when the plan is applied)",
+               "Ask Torq sessions: an effect planned for a bus, shown by get_session; an instrument and a plug-in that isn't there refused");
     }
 
     void testInstrumentPresets()
@@ -974,6 +1082,8 @@ void runAiTests()
     testServer();
     testCancelling();
     testLookAndChange();
+    testChannelSteps();
+    testEffectsMenuSteps();
     testParameters();
     testPlugins();
     testCatalogueStore();

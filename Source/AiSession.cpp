@@ -68,6 +68,12 @@ namespace
     "parameters": { "type": "object", "properties": { TRACK, "plugin": { "type": "string" }, "preset": { "type": "string", "description": "A saved preset's name; leave out for the instrument's own start" } }, "required": ["track"] } },
   { "name": "list_instrument_presets", "description": "The presets the user has saved for an instrument (the plug-in by id or name, or the instrument a track plays). Many instruments, drum samplers above all, keep their kits and sounds in their own browsers: those can be chosen here only once the user has saved them with Save Instrument Preset.",
     "parameters": { "type": "object", "properties": { "plugin": { "type": "string" }, TRACK } } },
+  { "name": "set_automation", "description": "Draw a track's or bus's volume or pan automation: points joined by straight lines, held before the first and after the last. Volume points are dB (-60 to +12), pan points -1 (left) to +1 (right). The points replace the parameter's automation; no points remove it, giving the parameter back to the track's setting.",
+    "parameters": { "type": "object", "properties": { TRACK, "parameter": { "type": "string", "enum": ["volume", "pan"] },
+      "points": { "type": "array", "items": { "type": "object", "properties": { "time": { "type": "number", "description": "seconds" }, "value": { "type": "number" } }, "required": ["time", "value"] } } },
+      "required": ["track", "parameter", "points"] } },
+  { "name": "add_track_effect", "description": "Add an effect plug-in, by its id or name from list_plugins, at the end of a track's or bus's effects (after its instrument on an instrument track). It is added when the plan is applied, with the plug-in's default settings; its settings can't be changed here.",
+    "parameters": { "type": "object", "properties": { "plugin": { "type": "string" }, TRACK }, "required": ["plugin", "track"] } },
   { "name": "set_tempo", "description": "Set the session's tempo (20 to 400 beats a minute) and beats in a bar (1 to 16) from the start.",
     "parameters": { "type": "object", "properties": { "bpm": { "type": "number" }, "beats_per_bar": { "type": "integer" } }, "required": ["bpm"] } }
 ])JSON";
@@ -76,9 +82,11 @@ namespace
 namespace Ai
 {
     SessionTools::SessionTools (SessionState s, juce::String name, juce::StringArray& planSteps,
-                                std::map<juce::uint32, juce::PluginDescription> trackInstruments, FindInstrument find, PresetsOf presets)
+                                std::map<juce::uint32, juce::PluginDescription> trackInstruments, FindInstrument find, PresetsOf presets,
+                                std::map<juce::uint32, juce::StringArray> trackEffects, FindInstrument findEffectPlugin)
         : state (std::move (s)), sessionName (std::move (name)), steps (planSteps),
-          instruments (std::move (trackInstruments)), findInstrument (std::move (find)), presetsOf (std::move (presets))
+          instruments (std::move (trackInstruments)), findInstrument (std::move (find)), presetsOf (std::move (presets)),
+          effects (std::move (trackEffects)), findEffect (std::move (findEffectPlugin))
     {
     }
 
@@ -88,6 +96,17 @@ namespace Ai
 
         for (auto& l : loads)
             if (const auto* t = state.findTrack (l.trackId); t != nullptr && t->takesNoteClips())
+                kept.push_back (l);
+
+        return kept;
+    }
+
+    std::vector<SessionTools::EffectLoad> SessionTools::getEffectLoads() const
+    {
+        std::vector<EffectLoad> kept;
+
+        for (auto& l : effectLoads)
+            if (state.findTrack (l.trackId) != nullptr)
                 kept.push_back (l);
 
         return kept;
@@ -104,7 +123,7 @@ namespace Ai
             for (auto& t : *list)
                 tools.add (object ({ { "type", "function" }, { "function", t } }));
 
-        jassert (tools.size() == 19);
+        jassert (tools.size() == 21);
         return tools;
     }
 
@@ -118,8 +137,9 @@ namespace Ai
                "60 / tempo seconds. Drum instruments mostly follow General MIDI: kick 36, snare 38, clap 39, closed hi-hat 42, "
                "open hi-hat 46, crash 49, ride 51. An instrument's sounds and kits are the presets the user saved for it "
                "(list_instrument_presets); when a request names a sound that isn't among them, say which there are rather than "
-               "guessing. What these tools can't do yet: a track's effects (other than its instrument), an instrument's own "
-               "settings, automation, recording, and changing the audio inside a clip. Say so when a request needs them, rather "
+               "guessing. A track's effects: get_session lists them, and add_track_effect adds one at the end "
+               "of the chain with its default settings. What these tools can't do yet: an effect's or instrument's own settings, "
+               "removing or reordering effects, automation of an effect's parameters, bouncing or freezing a track, recording, and changing the audio inside a clip. Volume and pan automation (set_automation) take over from the track's setting while they have points. Say so when a request needs them, rather "
                "than doing something else.";
     }
 
@@ -143,6 +163,8 @@ namespace Ai
         else if (tool == "remove_clip")    result = removeClip (args);
         else if (tool == "add_marker")     result = addMarker (args);
         else if (tool == "set_tempo")      result = setTempo (args);
+        else if (tool == "set_automation") result = setAutomation (args);
+        else if (tool == "add_track_effect") result = addTrackEffect (args);
         else if (tool == "add_note_clip")  result = addNoteClip (args);
         else if (tool == "set_instrument") result = setInstrument (args);
         else if (tool == "list_instrument_presets") result = listInstrumentPresets (args);
@@ -280,6 +302,33 @@ namespace Ai
 
             if (t.isFrozen())
                 o->setProperty ("frozen", true);
+
+            {
+                juce::StringArray chain;
+
+                if (const auto current = effects.find (t.id); current != effects.end())
+                    chain = current->second;
+
+                for (auto& l : effectLoads)
+                    if (l.trackId == t.id)
+                        chain.add (l.plugin.name + " (when the plan is applied)");
+
+                if (! chain.isEmpty())
+                    o->setProperty ("effects", chain.joinIntoString (", "));
+            }
+
+            juce::StringArray automated;
+
+            for (const auto& [name, e] : { std::pair<const char*, const Envelope*> { "volume", &t.volumeEnvelope }, { "pan", &t.panEnvelope } })
+                if (! e->isEmpty())
+                    automated.add (juce::String (name) + " (" + juce::String ((int) e->points.size()) + " points, "
+                                   + seconds (e->points.front().frame) + " to " + seconds (e->points.back().frame) + " s)");
+
+            if (! t.effectEnvelopes.empty() || t.hasSurroundAutomation())
+                automated.add ("effect or surround parameters");
+
+            if (! automated.isEmpty())
+                o->setProperty ("automation", automated.joinIntoString ("; "));
 
             tracks.add (entry);
         }
@@ -803,6 +852,92 @@ namespace Ai
 
         return done ("Set the tempo to " + juce::String (bpm, 2).trimCharactersAtEnd ("0").trimCharactersAtEnd (".") + " bpm, "
                      + juce::String (beats) + " beats a bar");
+    }
+
+    juce::var SessionTools::addTrackEffect (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+
+        if (t.isFolder)
+            return refused ("a folder has no effects: add them to its tracks or a bus");
+
+        if (t.isFrozen())
+            return refused (t.name.quoted() + " is frozen: its effects can't change until it is unfrozen");
+
+        if (findEffect == nullptr)
+            return refused ("no plug-ins are known here");
+
+        const auto plugin = findEffect (a["plugin"].toString().trim(), error);
+
+        if (! plugin)
+            return refused (error);
+
+        if (plugin->isInstrument)
+            return refused (plugin->name + " is an instrument: an instrument track's instrument is chosen with set_instrument");
+
+        effectLoads.push_back ({ t.id, *plugin });
+        return done ("Add " + plugin->name + " to " + t.name.quoted() + "'s effects (when the plan is applied)");
+    }
+
+    juce::var SessionTools::setAutomation (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+        const auto which = a["parameter"].toString();
+
+        if (which != "volume" && which != "pan")
+            return refused ("parameter must be volume or pan");
+
+        if (t.isFolder)
+            return refused ("a folder has no " + which + " to automate");
+
+        const auto parameter = which == "volume" ? AutomationParameter::volume : AutomationParameter::pan;
+        const auto range = automationRange (parameter);
+        const auto* points = a["points"].getArray();
+
+        if (points == nullptr)
+            return refused ("points must be a list of {time, value}");
+
+        Envelope e;
+
+        for (auto& point : *points)
+        {
+            const auto frame = frameOf (point["time"]);
+            const auto& value = point["value"];
+
+            if (! frame || ! (value.isDouble() || value.isInt() || value.isInt64()))
+                return refused ("each point needs a time (seconds) and a value");
+
+            const auto v = (double) value;
+
+            if (! std::isfinite (v) || v < range.getStart() || v > range.getEnd())
+                return refused (which == "volume" ? "volume points must be -60 to +12 dB" : "pan points must be -1 to +1");
+
+            e.points.push_back ({ *frame, (float) v });
+        }
+
+        std::stable_sort (e.points.begin(), e.points.end(), [] (auto& x, auto& y) { return x.frame < y.frame; });
+
+        if (t.envelope (parameter) == e)
+            return refused ("the " + which + " automation is so already");
+
+        if (! SessionEdits::setEnvelope (state, t.id, parameter, std::move (e)))
+            return refused ("the " + which + " automation couldn't be set");
+
+        const auto count = (int) points->size();
+        return done (count == 0 ? "Remove " + t.name.quoted() + "'s " + which + " automation"
+                                : "Automate " + t.name.quoted() + "'s " + which + " with " + juce::String (count) + " point" + (count == 1 ? "" : "s"));
     }
 
     //==============================================================================

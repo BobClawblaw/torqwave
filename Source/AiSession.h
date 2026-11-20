@@ -10,10 +10,12 @@
 
     This first set covers the session's layout and mix: tracks, buses and folders, their volume,
     pan, mute, solo, outputs and sends; clips' places, trims, splits, gains and fades; markers
-    and regions; the tempo; note clips with their notes; and an instrument track's instrument.
+    and regions; the tempo; note clips with their notes; a track's volume and pan automation;
+    and an instrument track's instrument.
     An instrument lives outside the state (in the track's chain, TrackEffects), so choosing one
     is planned as a load for the caller to make once the plan is applied (getInstrumentLoads).
-    A track's other effects and automation are not yet in it. */
+    Effects are added to the end of a track's chain the same way, once the plan is applied
+    (getEffectLoads); their settings, order and automation are not yet in it. */
 namespace Ai
 {
     class SessionTools
@@ -29,7 +31,8 @@ namespace Ai
             each instrument track that has one, by track id. */
         SessionTools (SessionState, juce::String sessionName, juce::StringArray& steps,
                       std::map<juce::uint32, juce::PluginDescription> instruments = {}, FindInstrument findInstrument = nullptr,
-                      PresetsOf presetsOf = nullptr);
+                      PresetsOf presetsOf = nullptr, std::map<juce::uint32, juce::StringArray> effects = {},
+                      FindInstrument findEffect = nullptr);
 
         /** The tools, as entries for the Chat Completions "tools" array. */
         static juce::Array<juce::var> toolDefinitions();
@@ -59,6 +62,16 @@ namespace Ai
             the same plan loads nothing). */
         std::vector<InstrumentLoad> getInstrumentLoads() const;
 
+        /** An effect plug-in to add at the end of a track's chain once the plan is applied. */
+        struct EffectLoad
+        {
+            juce::uint32 trackId = 0;
+            juce::PluginDescription plugin;
+        };
+
+        /** The effects the plan adds, in order, for tracks still in it. */
+        std::vector<EffectLoad> getEffectLoads() const;
+
     private:
         juce::var getSession();
         juce::var listClips (const juce::var&);
@@ -77,9 +90,11 @@ namespace Ai
         juce::var removeClip (const juce::var&);
         juce::var addMarker (const juce::var&);
         juce::var setTempo (const juce::var&);
+        juce::var setAutomation (const juce::var&);
         juce::var addNoteClip (const juce::var&);
         juce::var setInstrument (const juce::var&);
         juce::var listInstrumentPresets (const juce::var&);
+        juce::var addTrackEffect (const juce::var&);
 
         /** The instrument a track plays, or will once the plan is applied; nothing for none. */
         std::optional<juce::PluginDescription> instrumentOf (juce::uint32 trackId) const;
@@ -101,6 +116,9 @@ namespace Ai
         FindInstrument findInstrument;
         PresetsOf presetsOf;
         std::vector<InstrumentLoad> loads;
+        std::map<juce::uint32, juce::StringArray> effects;
+        FindInstrument findEffect;
+        std::vector<EffectLoad> effectLoads;
         bool edited = false;
     };
 }
