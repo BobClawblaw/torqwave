@@ -753,6 +753,24 @@ namespace
         juce::MessageManager::getInstance()->runDispatchLoopUntil (200);
         check (inRow && emptyLine, "clip properties: as an info line the fields run in one row, and with nothing selected none show");
 
+        // Counting bars (120 a minute, 4/4: a beat is 0.5 s), the start is a place in bars and the
+        // length bars long, typed the same way; back in seconds afterwards.
+        engine.session.setBarsAndBeats (true);
+        settle();
+        const auto inBars = text (Field::start) == "2.2.1.0" && text (Field::length) == "0.2.2.0" && text (Field::fadeIn) == "0.100"
+                            && line.getEditor (Field::start).getText() == "2.2.1.0";
+        type (Field::start, "3");
+        type (Field::length, "0.2.3");   // two beats and three sixteenths: within the 2 s of audio
+        const auto typedBars = clip().position == 192000 && clip().length == 66000;
+        type (Field::length, "x.1");
+        const auto badBars = clip().length == 66000 && text (Field::length) == "0.2.3.0";
+        engine.session.undo();
+        engine.session.undo();
+        engine.session.setBarsAndBeats (false);
+        settle();
+        check (inBars && typedBars && badBars && clip().position == 120000 && text (Field::start) == "2.500",
+               "clip properties: counting bars, the start and length show and are typed in bars, beats, sixteenths and ticks (" + text (Field::start) + ")");
+
         // A note clip clicked last: its name, start, length and loop length, the other fields
         // put away; typing moves, trims, loops and renames it, each as an undo step.
         auto withNotes = *engine.session.getState();

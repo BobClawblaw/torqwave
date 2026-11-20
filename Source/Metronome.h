@@ -109,6 +109,14 @@ namespace Metronome
         the parts are fine), as a frame; nothing when it isn't one (a beat past the bar's, say). */
     std::optional<juce::int64> parsePosition (const TempoMap&, const juce::String& text);
 
+    /** A length from start, in whole bars, beats, sixteenths and ticks (each from 0), as Cubase
+        shows a length: "2.1.0.0" is two bars and a beat. The bar is the bar at start's. */
+    juce::String lengthText (const TempoMap&, juce::int64 start, juce::int64 length);
+
+    /** A length typed as lengthText shows one, or shorter ("2", "0.3"), as frames from start;
+        nothing when it isn't one. */
+    std::optional<juce::int64> parseLength (const TempoMap&, juce::int64 start, const juce::String& text);
+
     /** The click, `offset` frames after its beat starts (0 once it has ended): a short sine that
         dies away, higher and louder on the first beat of a bar. */
     float sample (juce::int64 offset, bool accent, double rate);

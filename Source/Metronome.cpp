@@ -243,6 +243,39 @@ std::optional<juce::int64> parsePosition (const TempoMap& map, const juce::Strin
     return map.frameAtBeatPosition ((double) (barStart + beat - 1) + (double) ((sixteenth - 1) * 120 + ticks) / 480.0);
 }
 
+juce::String lengthText (const TempoMap& map, juce::int64 start, juce::int64 length)
+{
+    const auto from = juce::jmax ((juce::int64) 0, start);
+    const auto beats = map.beatPosition (from + juce::jmax ((juce::int64) 0, length)) - map.beatPosition (from);
+    const auto ticks = (juce::int64) std::llround (beats * 480.0);
+    const auto perBar = (juce::int64) juce::jmax (1, map.beatsPerBarAt (from)) * 480;
+    const auto rest = ticks % perBar;
+    return juce::String (ticks / perBar) + "." + juce::String (rest / 480) + "." + juce::String ((rest % 480) / 120) + "." + juce::String (rest % 120);
+}
+
+std::optional<juce::int64> parseLength (const TempoMap& map, juce::int64 start, const juce::String& text)
+{
+    auto parts = juce::StringArray::fromTokens (text.trim(), ".", {});
+    parts.trim();
+
+    if (parts.isEmpty() || parts.size() > 4)
+        return std::nullopt;
+
+    juce::int64 values[4] { 0, 0, 0, 0 };
+
+    for (int i = 0; i < parts.size(); ++i)
+    {
+        if (parts[i].isEmpty() || ! parts[i].containsOnly ("0123456789") || parts[i].length() > 7)
+            return std::nullopt;
+
+        values[i] = parts[i].getLargeIntValue();
+    }
+
+    const auto from = juce::jmax ((juce::int64) 0, start);
+    const auto ticks = ((values[0] * juce::jmax (1, map.beatsPerBarAt (from)) + values[1]) * 4 + values[2]) * 120 + values[3];
+    return map.frameAtBeatPosition (map.beatPosition (from) + (double) ticks / 480.0) - from;
+}
+
 float sample (juce::int64 offset, bool accent, double rate)
 {
     const auto length = (juce::int64) std::llround (clickSeconds * rate);

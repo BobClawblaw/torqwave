@@ -1,5 +1,6 @@
 #include "ClipProperties.h"
 #include "Theme.h"
+#include "Metronome.h"
 
 namespace
 {
@@ -62,6 +63,13 @@ void ClipProperties::apply (Field f)
     const auto rate = next.sampleRate;
     const auto frames = framesFrom (text, rate);
     auto changed = false;
+
+    // Counting bars, a start is a place in bars and a length (or a note clip's loop) is bars long
+    // from the clip's start; the fades stay in seconds.
+    const auto bars = next.barsAndBeats;
+    const auto map = next.tempoMap();
+    const auto startFrom = [&] { return bars ? Metronome::parsePosition (map, text) : frames; };
+    const auto lengthFrom = [&] (juce::int64 start) { return bars ? Metronome::parseLength (map, start, text) : frames; };
     juce::String description;
 
     // A note clip: its name, start, length and loop length (0 plays the notes once).
@@ -81,18 +89,22 @@ void ClipProperties::apply (Field f)
                 }
                 break;
             case Field::start:
-                changed = frames.has_value() && *frames >= 0 && *frames != c.position && SessionEdits::moveNoteClip (next, c.id, notes->first, *frames);
+                if (const auto to = startFrom(); to.has_value() && *to >= 0 && *to != c.position)
+                    changed = SessionEdits::moveNoteClip (next, c.id, notes->first, *to);
+
                 description = "Move Notes";
                 break;
             case Field::length:
-                changed = frames.has_value() && *frames > 0 && *frames != c.length && SessionEdits::trimNoteClip (next, c.id, c.position, c.position + *frames);
+                if (const auto length = lengthFrom (c.position); length.has_value() && *length > 0 && *length != c.length)
+                    changed = SessionEdits::trimNoteClip (next, c.id, c.position, c.position + *length);
+
                 description = "Trim Notes";
                 break;
             case Field::gain:   // the loop's row
-                if (frames.has_value() && *frames >= 0 && *frames != c.loopLength)
+                if (const auto loop = lengthFrom (c.position); loop.has_value() && *loop >= 0 && *loop != c.loopLength)
                 {
                     auto looped = c;
-                    looped.loopLength = *frames;
+                    looped.loopLength = *loop;
                     changed = SessionEdits::replaceNoteClip (next, c.id, looped);
                 }
 
@@ -130,12 +142,15 @@ void ClipProperties::apply (Field f)
             }
             break;
         case Field::start:
-            changed = frames.has_value() && *frames >= 0 && *frames != c.position && SessionEdits::moveClip (next, c.id, where->first, *frames);
+            if (const auto to = startFrom(); to.has_value() && *to >= 0 && *to != c.position)
+                changed = SessionEdits::moveClip (next, c.id, where->first, *to);
+
             description = "Move Clip";
             break;
         case Field::length:
-            changed = frames.has_value() && *frames > 0 && *frames != c.length
-                      && SessionEdits::trimClip (next, c.id, c.position, c.position + *frames);
+            if (const auto length = lengthFrom (c.position); length.has_value() && *length > 0 && *length != c.length)
+                changed = SessionEdits::trimClip (next, c.id, c.position, c.position + *length);
+
             description = "Trim Clip";
             break;
         case Field::gain:
@@ -200,8 +215,13 @@ void ClipProperties::refresh()
         shownNoteClip = 0;
     }
 
-    static const char* const audioNames[] = { "Name", "Start (s)", "Length (s)", "Gain (dB)", "Fade in (s)", "Fade out (s)", "Note" };
-    static const char* const noteNames[] = { "Name", "Start (s)", "Length (s)", "Loop (s)" };
+    // Counting bars (Bars and Beats), the start, length and loop are in bars, beats, sixteenths and ticks.
+    const auto bars = state->barsAndBeats;
+    const auto map = state->tempoMap();
+    const auto startText = [&] (juce::int64 frame) { return bars ? Metronome::positionText (map, frame) : secondsText (frame, state->sampleRate); };
+    const auto lengthText = [&] (juce::int64 start, juce::int64 length) { return bars ? Metronome::lengthText (map, start, length) : secondsText (length, state->sampleRate); };
+    const char* const audioNames[] = { "Name", bars ? "Start" : "Start (s)", bars ? "Length" : "Length (s)", "Gain (dB)", "Fade in (s)", "Fade out (s)", "Note" };
+    const char* const noteNames[] = { "Name", bars ? "Start" : "Start (s)", bars ? "Length" : "Length (s)", bars ? "Loop" : "Loop (s)" };
     constexpr size_t noteRows = 4;
 
     for (size_t i = 0; i < rows.size(); ++i)
@@ -216,7 +236,7 @@ void ClipProperties::refresh()
     {
         const auto& c = state->tracks[(size_t) notes->first].noteClips[(size_t) notes->second];
         const auto rate = state->sampleRate;
-        const std::array<juce::String, noteRows> values { c.name, secondsText (c.position, rate), secondsText (c.length, rate), secondsText (c.loopLength, rate) };
+        const std::array<juce::String, noteRows> values { c.name, startText (c.position), lengthText (c.position, c.length), lengthText (c.position, c.loopLength) };
 
         for (size_t i = 0; i < rows.size(); ++i)
         {
@@ -257,7 +277,7 @@ void ClipProperties::refresh()
 
     const auto& c = state->tracks[(size_t) where->first].clips[(size_t) where->second];
     const auto rate = state->sampleRate;
-    const std::array<juce::String, 7> values { c.name, secondsText (c.position, rate), secondsText (c.length, rate),
+    const std::array<juce::String, 7> values { c.name, startText (c.position), lengthText (c.position, c.length),
                                                juce::String (c.gainDb, 1), secondsText (c.fadeIn, rate), secondsText (c.fadeOut, rate), c.note };
 
     for (size_t i = 0; i < rows.size(); ++i)
