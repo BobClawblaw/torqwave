@@ -83,6 +83,7 @@ void TrackEffects::handleAsyncUpdate()
 void TrackEffects::setTouched (juce::uint32 trackId, juce::uint32 slotId, const juce::String& parameterId, bool isTouched)
 {
     const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sr (readers);
 
     if (isTouched)
         touched.insert ({ trackId, slotId, parameterId });
@@ -152,6 +153,7 @@ void TrackEffects::install (juce::uint32 trackId, Slot* slot, Copies made)
 {
     {
         const juce::ScopedLock sl (lock);
+        const juce::ScopedLock sr (readers);
         const auto* chain = find (trackId);
 
         // Only if the slot is still there, on a 5.1 or 7.1 track as wide as the copies are made for.
@@ -172,6 +174,7 @@ juce::StringArray TrackEffects::setWideChannels (const std::map<juce::uint32, in
 
     {
         const juce::ScopedLock sl (lock);
+        const juce::ScopedLock sr (readers);
         wide = tracks;
 
         // A track whose width changed has its copies dropped and made again, as many as it needs.
@@ -215,7 +218,7 @@ void TrackEffects::refreshCopies (const juce::AudioProcessor& processor)
     int count = 0;
 
     {
-        const juce::ScopedLock sl (lock);
+        const juce::ScopedLock sl (readers);
 
         for (auto& [id, chain] : chains)
             for (auto& s : chain)
@@ -244,7 +247,7 @@ void TrackEffects::followParameters (juce::AudioPluginInstance& original, juce::
 
 int TrackEffects::getNumCopies (juce::uint32 trackId, int slot) const
 {
-    const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sl (readers);
     const auto* chain = find (trackId);
 
     if (chain == nullptr || ! juce::isPositiveAndBelow (slot, (int) chain->size()))
@@ -257,6 +260,7 @@ int TrackEffects::getNumCopies (juce::uint32 trackId, int slot) const
 void TrackEffects::prepare (double sampleRate)
 {
     const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sr (readers);
     rate = sampleRate;
     midi.ensureSize (256);
     missedLive.ensureSize (1024);
@@ -277,6 +281,7 @@ void TrackEffects::clear()
 
     {
         const juce::ScopedLock sl (lock);
+        const juce::ScopedLock sr (readers);
         std::swap (old, chains);
     }
 
@@ -302,28 +307,28 @@ const TrackEffects::Chain* TrackEffects::find (juce::uint32 trackId) const
 
 int TrackEffects::getNumSlots (juce::uint32 trackId) const
 {
-    const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sl (readers);
     const auto* chain = find (trackId);
     return chain != nullptr ? (int) chain->size() : 0;
 }
 
 juce::AudioPluginInstance* TrackEffects::getPlugin (juce::uint32 trackId, int slot) const
 {
-    const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sl (readers);
     const auto* chain = find (trackId);
     return chain != nullptr && juce::isPositiveAndBelow (slot, (int) chain->size()) ? (*chain)[(size_t) slot]->plugin.get() : nullptr;
 }
 
 bool TrackEffects::isBypassed (juce::uint32 trackId, int slot) const
 {
-    const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sl (readers);
     const auto* chain = find (trackId);
     return chain != nullptr && juce::isPositiveAndBelow (slot, (int) chain->size()) && (*chain)[(size_t) slot]->bypassed;
 }
 
 std::vector<juce::AudioPluginInstance*> TrackEffects::getAllPlugins() const
 {
-    const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sl (readers);
     std::vector<juce::AudioPluginInstance*> all;
 
     for (auto& [id, chain] : chains)
@@ -359,7 +364,7 @@ juce::uint32 TrackEffects::add (juce::uint32 trackId, std::unique_ptr<juce::Audi
     int count = 0;
 
     {
-        const juce::ScopedLock sl (lock);
+        const juce::ScopedLock sl (readers);
         count = copiesFor (trackId);
     }
 
@@ -369,6 +374,7 @@ juce::uint32 TrackEffects::add (juce::uint32 trackId, std::unique_ptr<juce::Audi
         slot->copies = copiesOf (*slot, count);
 
     const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sr (readers);
     slot->id = slotId != 0 ? slotId : nextSlotId;
     nextSlotId = juce::jmax (nextSlotId, slot->id + 1);
     slot->watcher = std::make_unique<Watcher> (*this, trackId, slot->id, slot->parameters);
@@ -391,6 +397,7 @@ bool TrackEffects::isInstrument (const juce::AudioPluginInstance& p)
 void TrackEffects::setMidiSources (const std::set<juce::uint32>& trackIds)
 {
     const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sr (readers);
 
     for (auto it = routes.begin(); it != routes.end();)
         it = trackIds.count (it->first) > 0 ? std::next (it) : routes.erase (it);
@@ -413,21 +420,21 @@ bool TrackEffects::hasInstrument (juce::uint32 trackId)
 
 juce::AudioPluginInstance* TrackEffects::getInstrument (juce::uint32 trackId) const
 {
-    const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sl (readers);
     const auto* chain = find (trackId);
     return chain != nullptr && ! chain->empty() && isInstrument (*chain->front()->plugin) ? chain->front()->plugin.get() : nullptr;
 }
 
 juce::uint32 TrackEffects::getSlotId (juce::uint32 trackId, int slot) const
 {
-    const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sl (readers);
     const auto* chain = find (trackId);
     return chain != nullptr && juce::isPositiveAndBelow (slot, (int) chain->size()) ? (*chain)[(size_t) slot]->id : 0;
 }
 
 juce::AudioPluginInstance* TrackEffects::findSlot (juce::uint32 trackId, juce::uint32 slotId) const
 {
-    const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sl (readers);
 
     if (const auto* chain = find (trackId))
         for (auto& s : *chain)
@@ -443,6 +450,7 @@ std::unique_ptr<juce::AudioPluginInstance> TrackEffects::remove (juce::uint32 tr
 
     {
         const juce::ScopedLock sl (lock);
+        const juce::ScopedLock sr (readers);
         auto* chain = find (trackId);
 
         if (chain == nullptr || ! juce::isPositiveAndBelow (index, (int) chain->size()))
@@ -463,6 +471,7 @@ std::unique_ptr<juce::AudioPluginInstance> TrackEffects::remove (juce::uint32 tr
 void TrackEffects::setBypassed (juce::uint32 trackId, int index, bool bypassed)
 {
     const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sr (readers);
 
     if (auto* chain = find (trackId); chain != nullptr && juce::isPositiveAndBelow (index, (int) chain->size()))
     {
@@ -485,6 +494,7 @@ void TrackEffects::setBypassed (juce::uint32 trackId, int index, bool bypassed)
 void TrackEffects::move (juce::uint32 trackId, int from, int to)
 {
     const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sr (readers);
     auto* chain = find (trackId);
 
     if (chain == nullptr || ! juce::isPositiveAndBelow (from, (int) chain->size()) || ! juce::isPositiveAndBelow (to, (int) chain->size()))
@@ -512,14 +522,16 @@ int TrackEffects::latencyOf (const Chain& chain) const
 
 int TrackEffects::getChainLatency (juce::uint32 trackId) const
 {
-    const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sl (readers);
     const auto* chain = find (trackId);
     return chain != nullptr ? latencyOf (*chain) : 0;
 }
 
 std::unique_ptr<juce::XmlElement> TrackEffects::createXml (juce::uint32 trackId) const
 {
+    // Not while the track plays: some plug-ins can't save their state in the middle of a block.
     const juce::ScopedLock sl (lock);
+    const juce::ScopedLock sr (readers);
     const auto* chain = find (trackId);
 
     if (chain == nullptr)
@@ -627,6 +639,9 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
 
     if (chain == nullptr)
     {
+        if (! sl.isLocked())
+            lockedOut.fetch_add (1, std::memory_order_relaxed);
+
         // Locked out: this block's live messages for the track wait for its next one.
         if (! sl.isLocked() && liveMidi != nullptr && track.id == liveTrack)
         {

@@ -3,7 +3,7 @@
 #include <JuceHeader.h>
 
 /** The audio callback's load and the dropouts counted since the readout was last clicked, in the
-    status line: "Load 12%  |  0 dropouts". It turns red while the load is over 80% or there have
+    status line: "Load 12%  |  0 dropouts" (the device's, and blocks a track's plug-ins were silent). It turns red while the load is over 80% or there have
     been dropouts; clicking it starts the count again. */
 class LoadReadout final : public juce::Component,
                           public juce::SettableTooltipClient,
@@ -14,6 +14,7 @@ public:
     {
         double load = 0.0;   // 0 to 1: the share of each callback's time spent processing
         int dropouts = 0;    // under- and overruns since the device was opened
+        int skipped = 0;     // blocks a track's plug-ins played silence, their chain being changed; counted as dropouts
     };
 
     explicit LoadReadout (std::function<Reading()> read);

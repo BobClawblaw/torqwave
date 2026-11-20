@@ -682,7 +682,7 @@ private:
     static constexpr int recentBaseId = 0x7000;   // menu ids for File > Open Recent, clear of the command ids
     static constexpr int fadeShapeBaseId = 0x7100;   // menu ids for Effects > Fade Shape
     void noteRecent (const juce::File&);
-    LoadReadout loadReadout { [this] { return LoadReadout::Reading { engine.deviceManager.getCpuUsage(), engine.deviceManager.getXRunCount() }; } };
+    LoadReadout loadReadout { [this] { return LoadReadout::Reading { engine.deviceManager.getCpuUsage(), engine.deviceManager.getXRunCount(), (int) engine.getTrackEffects().getLockedOutBlocks() }; } };
 
     WaveformView waveform { engine };
     MultitrackView multitrack { engine };

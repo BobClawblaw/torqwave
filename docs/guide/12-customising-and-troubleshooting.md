@@ -87,7 +87,7 @@ See [the window](01-getting-started.md#the-window): docking, tabs, floating pane
 
 ### Crackles and dropouts
 
-The bottom right of the window counts **dropouts**: times the computer couldn't keep up with the audio.
+The bottom right of the window counts **dropouts**: times the computer couldn't keep up with the audio, and blocks a track's plug-ins played silence because their chain was being changed (an effect added, removed, moved or bypassed, or the session saved).
 
 - Raise the buffer size in Settings > Audio.
 - Freeze heavy tracks (**Multitrack > Render and Export > Freeze Track**).

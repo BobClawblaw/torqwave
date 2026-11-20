@@ -113,6 +113,12 @@ public:
         source in the mix (later in the list), otherwise at the start of its next run. */
     void setMidiSources (const std::set<juce::uint32>& trackIds);
 
+    /** How many times a track's chain has been run silent because it was being changed. */
+    juce::uint32 getLockedOutBlocks() const noexcept               { return lockedOut.load (std::memory_order_relaxed); }
+
+    /** The lock a change to the chains holds the audio thread off with (for tests). */
+    const juce::CriticalSection& getChangeLockForTests() const noexcept { return lock; }
+
     /** The instrument first in the track's chain, or null. */
     juce::AudioPluginInstance* getInstrument (juce::uint32 trackId) const;
 
@@ -221,7 +227,13 @@ private:
     const Chain* find (juce::uint32 trackId) const;
     int latencyOf (const Chain&) const;
 
+    // The audio thread only tries `lock`, and plays silence for the block when it can't have it, so
+    // only changes to the chains (and saving a plug-in's state) take it, holding `readers` too. The
+    // message thread's other reads take `readers` alone: they can't stop a block, as the audio
+    // thread doesn't change the chains.
     juce::CriticalSection lock;
+    juce::CriticalSection readers;
+    std::atomic<juce::uint32> lockedOut { 0 };
     std::map<juce::uint32, Chain> chains;
     double rate = 48000.0;
     juce::uint32 nextSlotId = 1;

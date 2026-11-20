@@ -2,6 +2,7 @@
 #pragma clang diagnostic ignored "-Wfloat-equal"
 
 #include <JuceHeader.h>
+#include <thread>
 #include "../Source/AudioFileIO.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/SessionMixer.h"
@@ -84,6 +85,68 @@ namespace
 
 void runTrackEffectsTests()
 {
+    // The window asking about the chains while it plays (as it does on every repaint) never makes
+    // the audio thread run a track silent: only a change to a chain (or saving its state) may.
+    {
+        TrackEffects effects;
+        effects.prepare (rate);
+        effects.add (7, std::make_unique<TestPlugins::ClickInstrument> (0));
+        effects.add (7, std::make_unique<TestPlugins::GainPlugin>());
+        SessionTrack track;
+        track.id = 7;
+
+        std::atomic<bool> stop { false };
+        std::atomic<int> asked { 0 };
+        std::thread window ([&]
+        {
+            while (! stop.load())
+            {
+                const auto any = effects.getNumSlots (7) + (effects.getPlugin (7, 1) != nullptr ? 1 : 0) + (effects.getInstrument (7) != nullptr ? 1 : 0)
+                                 + (effects.isBypassed (7, 0) ? 1 : 0) + effects.getChainLatency (7) + (int) effects.getSlotId (7, 1);
+                juce::ignoreUnused (any);
+                asked.fetch_add (1);
+            }
+        });
+
+        juce::AudioBuffer<float> block (2, 512);
+        const auto started = juce::Time::getMillisecondCounterHiRes();
+        int blocks = 0;
+
+        while (juce::Time::getMillisecondCounterHiRes() - started < 400.0 || asked.load() < 1000)
+        {
+            block.clear();
+            effects.process (track, (juce::int64) blocks * 512, block, 512, {});
+            ++blocks;
+        }
+
+        stop = true;
+        window.join();
+        const auto quietWhileAsked = effects.getLockedOutBlocks();
+
+        // A change to the chain (here, held by another thread) still holds the audio thread off while it is made.
+        std::atomic<bool> held { false }, done { false };
+        std::thread changer ([&]
+        {
+            const juce::ScopedLock changing (effects.getChangeLockForTests());
+            held = true;
+
+            while (! done.load())
+                std::this_thread::yield();
+        });
+
+        while (! held.load())
+            std::this_thread::yield();
+
+        block.clear();
+        effects.process (track, 0, block, 512, {});
+        done = true;
+        changer.join();
+
+        check (quietWhileAsked == 0 && effects.getLockedOutBlocks() == 1,
+               "track effects: " + juce::String (blocks) + " blocks played while another thread asked about the chain " + juce::String (asked.load())
+                   + " times, none of them silent; a block during a change to the chain is (and counted)");
+    }
+
     const auto s = twoTracks();
     const auto first = s.tracks[0].id, second = s.tracks[1].id;
     const auto dry = play (s, 0, 8000, 8000, nullptr);

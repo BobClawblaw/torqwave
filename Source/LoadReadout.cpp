@@ -3,14 +3,15 @@
 
 LoadReadout::LoadReadout (std::function<Reading()> r) : read (std::move (r))
 {
-    setTooltip ("Audio load and dropouts; click to count dropouts from now");
+    setTooltip ("Audio load and dropouts (the device's, and blocks a track's plug-ins were silent); click to count dropouts from now");
     refresh();
     startTimerHz (4);
 }
 
 void LoadReadout::refresh()
 {
-    const auto reading = read != nullptr ? read() : Reading();
+    auto reading = read != nullptr ? read() : Reading();
+    reading.dropouts += reading.skipped;
 
     // A new device starts its count again from 0.
     if (reading.dropouts < lastCount)
