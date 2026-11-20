@@ -66,6 +66,7 @@
 #include "SoundLibraryView.h"
 #include "SequenceLibraryView.h"
 #include "SequencerView.h"
+#include "IdeaBoardView.h"
 #include "SettingsPanel.h"
 
 namespace Guide { class Window; }
@@ -582,6 +583,7 @@ private:
     /** Puts a sequence in the session at the frame: on the track when onTrack and it is an
         instrument track, else on a new track from its voice, whose plug-ins then load. */
     void editInSequencer (const juce::File&);   // shows the Sequencer with it open
+    void sendIdeaBoardToSession (const IdeaBoard&);
     void addSequenceToSession (const juce::File&, int track, juce::int64 frame, bool onTrack);
 
     /** New Sequence (the Sequence Library's New...): asks for a name, folder, instrument and length,

@@ -183,6 +183,8 @@ target_sources(Torqwave PRIVATE
     Source/SequenceLibrary.cpp
     Source/SequenceLibraryView.cpp
     Source/SequencePreview.cpp
+    Source/IdeaBoard.cpp
+    Source/IdeaBoardView.cpp
     Source/NoteTools.cpp
     Source/Sequencer.cpp
     Source/SequencerView.cpp
@@ -518,6 +520,8 @@ target_sources(TorqwaveTests PRIVATE
     Source/SequenceLibrary.cpp
     Source/SequenceLibraryView.cpp
     Source/SequencePreview.cpp
+    Source/IdeaBoard.cpp
+    Source/IdeaBoardView.cpp
     Source/NoteTools.cpp
     Source/Sequencer.cpp
     Source/SequencerView.cpp

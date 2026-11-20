@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "../Source/SequenceLibraryView.h"
 #include "../Source/SequencerView.h"
+#include "../Source/IdeaBoard.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/TrackEffects.h"
@@ -796,6 +797,191 @@ void runSequenceTests (AudioEngine& engine)
 
         check (fillError.isEmpty() && filled.has_value() && filled->notes.size() == 16 && onSixteenths && filled->variationOf == "Hats",
                "sequencer: Make Variation at a density of +1 fills every empty sixteenth of a two-hit bar of hats (16 notes, each on a sixteenth), naming Hats as its original");
+
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+        folder.deleteRecursively();
+    }
+
+    // The idea board (step 5).
+    {
+        const auto folder = juce::File::createTempFile ("board");
+        folder.createDirectory();
+        constexpr juce::int64 bar = 96000;   // 120 BPM in 4/4 at 48 kHz
+
+        const auto map120 = sessionAt (120.0);
+        const auto map = map120.tempoMap();
+        check (IdeaBoardLauncher::nextBar (map, 0, 0) == 0 && IdeaBoardLauncher::nextBar (map, 30000, 4096) == bar
+                   && IdeaBoardLauncher::nextBar (map, bar - 100, 4096) == 2 * bar && IdeaBoardLauncher::nextBar (map, bar, 0) == bar,
+               "idea board: the next bar from 0 is 0; from 30000 (with the launch margin) it is 96000 at 120 BPM; from 100 frames before a bar it is the bar after; on a bar line with no margin, that bar");
+
+        // Sequences: drums of a bar, a bass of two bars, a pad of a bar and a half with a voice of its own.
+        juce::PluginDescription synth;
+
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.fileOrIdentifier == BuiltInEffects::basicSynthId)
+                synth = d;
+
+        const auto make = [&] (const juce::String& name, int beats, std::vector<SequenceFile::Note> notes)
+        {
+            SequenceFile::Sequence q;
+            q.name = name;
+            q.length = beats * SequenceFile::ticksPerBeat;
+            q.notes = std::move (notes);
+            const auto f = folder.getChildFile (name + SequenceFile::extension);
+            SequenceFile::save (q, f);
+            return f;
+        };
+        const auto drums = make ("Drums", 4, { { 36, 0, 240, 1.0f } });
+        const auto bass = make ("Bass", 8, { { 40, 0, 960, 1.0f }, { 43, 4 * 960, 960, 1.0f } });
+        const auto bassB = make ("Bass B", 4, { { 45, 0, 960, 1.0f } });
+        const auto pad = make ("Pad", 6, { { 60, 0, 2880, 0.7f } });
+
+        IdeaBoard board;
+        board.parts = { "Drums", "Bass", "Pad" };
+        board.scenes = { "Verse", "Empty", "Chorus" };
+        board.set (0, 0, drums);
+        board.set (1, 0, bass);
+        board.set (0, 2, drums);
+        board.set (1, 2, bassB);
+        board.set (2, 2, pad);
+
+        // Saved and read back, cells relative to the library.
+        const auto boardFile = folder.getChildFile (juce::String ("Ideas") + IdeaBoard::extension);
+        const auto saveError = board.save (boardFile, folder);
+        juce::String error;
+        const auto read = IdeaBoard::load (boardFile, folder, error);
+        check (saveError.isEmpty() && read.has_value() && read->cells == board.cells && read->parts == board.parts && read->scenes == board.scenes
+                   && boardFile.loadFileAsString().contains ("Drums.tqseq") && ! boardFile.loadFileAsString().contains (folder.getFullPathName()),
+               "idea board: a board saved and opened again has its parts, scenes and cells; a cell in the library is written relative to it");
+
+        IdeaBoard moved = board;
+        moved.removePart (0);
+        moved.addScene ("Bridge");
+        check (moved.parts == juce::StringArray { "Bass", "Pad" } && moved.fileAt (0, 0) == bass && moved.fileAt (1, 2) == pad && moved.fileAt (0, 2) == bassB
+                   && moved.cells.size() == 3 && moved.scenes.size() == 4,
+               "idea board: removing the first part moves the cells below it up; a scene is added at the end");
+
+        // Launches: stopped, a cell starts at once; playing, on the next bar, its part's other cell stopping there.
+        IdeaBoardLauncher launcher;
+        const auto startsNow = launcher.launch ({ 1, 0 }, map, 0, false);
+        const auto laterStarts = launcher.launch ({ 1, 2 }, map, 30000, true);
+        const auto bassA = launcher.getLaunched().at ({ 1, 0 }), bassLater = launcher.getLaunched().at ({ 1, 2 });
+        const auto states = launcher.stateOf ({ 1, 0 }, 30000) == IdeaBoardLauncher::State::stopping && launcher.stateOf ({ 1, 2 }, 30000) == IdeaBoardLauncher::State::queued
+                                && launcher.stateOf ({ 1, 2 }, bar) == IdeaBoardLauncher::State::playing && launcher.stateOf ({ 1, 0 }, bar) == IdeaBoardLauncher::State::idle;
+        launcher.tidy (bar);
+        check (startsNow && ! laterStarts && bassA.start == 0 && bassA.stop == bar && bassLater.start == bar && bassLater.stop == -1 && states
+                   && launcher.getLaunched().size() == 1,
+               "idea board: with nothing playing a cell starts at once; launched at 30000 while playing, the part's other cell starts at 96000 (the next bar) and the first stops there; "
+               "the states read stopping and queued before it, idle and playing after, and the stopped launch is forgotten");
+
+        launcher.launchScene (0, board, map, bar + 10, true);
+        const auto scene = launcher.getLaunched();
+        check (scene.size() == 3 && scene.at ({ 0, 0 }).start == 2 * bar && scene.at ({ 1, 0 }).start == 2 * bar && scene.at ({ 1, 2 }).stop == 2 * bar,
+               "idea board: launching the Verse scene starts its drums and bass on the next bar (192000), and the playing chorus bass stops there");
+
+        launcher.stopPart (1, map, 2 * bar + 10);
+        check (launcher.getLaunched().at ({ 1, 0 }).stop == 3 * bar && launcher.getLaunched().at ({ 0, 0 }).stop == -1,
+               "idea board: stopping the bass part stops it on the next bar; the drums play on");
+
+        // Heard: the bass launched at 30000 is first heard on the bar, through the free-running player.
+        {
+            SessionState base = sessionAt (120.0);
+            const auto drumTrack = base.addInstrumentTrack().id, bassTrack = base.addInstrumentTrack().id;
+            std::map<IdeaBoard::Cell, juce::uint32> tracks { { { 0, 0 }, drumTrack }, { { 1, 2 }, bassTrack } };
+            std::map<IdeaBoard::Cell, SequenceFile::Sequence> sequences;
+            sequences[{ 0, 0 }] = *SequenceFile::load (drums, error);
+            sequences[{ 1, 2 }] = *SequenceFile::load (bassB, error);
+
+            SequencerPlayer player;
+            player.setFreeRunning (true);
+            player.getEffects().prepare (rate);
+            juce::String createError;
+            player.getEffects().add (bassTrack, engine.pluginFormatManager.createPluginInstance (synth, rate, 512, createError));
+            player.prepareToPlay (512, rate);
+
+            IdeaBoardLauncher live;
+            live.launch ({ 0, 0 }, map, 0, false);   // the drums (silent: no instrument) start the clock
+            player.setState (std::make_shared<const SessionState> (live.stateFor (base, tracks, sequences)), 0);
+            player.play();
+
+            juce::AudioBuffer<float> heard (2, (int) (2 * bar)), block (2, 512);
+            heard.clear();
+            bool launched = false;
+
+            for (int at = 0; at < 2 * bar; at += 512)
+            {
+                if (! launched && player.getPosition() >= 30000)
+                {
+                    live.launch ({ 1, 2 }, map, player.getPosition(), true);
+                    player.setState (std::make_shared<const SessionState> (live.stateFor (base, tracks, sequences)), 0);
+                    launched = true;
+                }
+
+                const auto n = juce::jmin (512, (int) (2 * bar) - at);
+                player.getNextAudioBlock ({ &block, 0, n });
+                heard.copyFrom (0, at, block, 0, 0, n);
+            }
+
+            juce::int64 first = -1;
+
+            for (int i = 0; i < heard.getNumSamples() && first < 0; ++i)
+                if (std::abs (heard.getSample (0, i)) > 1.0e-4f)
+                    first = i;
+
+            const auto running = player.isPlaying() && player.getPosition() >= 2 * bar;
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (20);
+
+            check (launched && first >= bar && first < bar + 32 && running,
+                   "idea board: a bass launched at frame 30000 while playing is first heard at frame " + juce::String (first) + " (the bar is 96000), "
+                   "and the board's clock runs on past its sequences' ends");
+        }
+
+        // Send to Session: a section per scene that has sequences, a track per part, one undo step.
+        Session session;
+        auto start = sessionAt (120.0);
+        start.addInstrumentTrack();
+        session.reset (start, {});
+        auto next = *session.getState();
+        const auto sent = IdeaBoard::sendToSession (board, next, 30000, [] (const juce::File& f)
+        {
+            juce::String e;
+            return SequenceFile::load (f, e);
+        });
+        session.apply (next, "Send Idea Board to Session");
+        const auto after = session.getState();
+
+        bool clipsFill = true;
+        int clips = 0;
+
+        for (auto& t : after->tracks)
+            for (auto& c : t.noteClips)
+            {
+                ++clips;
+                const auto inVerse = c.position == bar && c.length == 2 * bar;
+                const auto inChorus = c.position == 3 * bar && c.length == 2 * bar;
+                clipsFill = clipsFill && (inVerse || inChorus) && c.loopLength > 0;
+            }
+
+        const auto names = [&]
+        {
+            juce::StringArray n;
+
+            for (auto& t : after->tracks)
+                n.add (t.name);
+
+            return n;
+        }();
+
+        check (sent.sections == 2 && sent.tracks == 3 && sent.clips == 5 && sent.missing.isEmpty() && after->sections.size() == 2
+                   && after->sections[0].name == "Verse" && after->sections[0].start == bar && after->sections[0].length == 2 * bar
+                   && after->sections[1].name == "Chorus" && after->sections[1].start == 3 * bar && after->sections[1].length == 2 * bar
+                   && after->tracks.size() == 4 && names.contains ("Drums") && names.contains ("Bass") && names.contains ("Pad") && clips == 5 && clipsFill,
+               "idea board: Send to Session from frame 30000 lays Verse out from bar 2 (two bars, for its two-bar bass) and Chorus after it (two bars, for its bar and a half pad), "
+               "the empty scene left out; a track for each part named for it, each sequence a looping clip filling its section");
+
+        session.undo();
+        check (session.getState()->tracks.size() == 1 && session.getState()->sections.empty() && session.getUndoDescription().isEmpty(),
+               "idea board: one undo takes the whole of Send to Session away");
 
         juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
         folder.deleteRecursively();

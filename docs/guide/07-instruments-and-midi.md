@@ -220,7 +220,7 @@ Double-click a sequence to put it on the selected track at the cursor, the same 
 
 ## The Sequencer
 
-The Sequencer is a window for one sequence from the library, open by itself to write, hear and save. Show it with **Window > Sequencer**, or right-click a sequence in the Sequence Library and choose **Edit in Sequencer**. The **Sequencer** workspace (Window > Workspaces) puts it in front of the editor with the Sequence Library on its left.
+The Sequencer is a window for one sequence from the library, open by itself to write, hear and save. Show it with **Window > Sequencer**, or right-click a sequence in the Sequence Library and choose **Edit in Sequencer**. The **Sequencer** workspace (Window > Workspaces) puts it in front of the editor with the Sequence Library on its left and the [Idea Board](#the-idea-board) under it.
 
 **Edit the notes.** The middle of the window is the Piano Roll, with the drum grid, controller lanes and [writing tools](#writing-tools), as in [Edit the notes](#edit-the-notes-the-piano-roll), but it edits the sequence file itself, not a clip in the session. A sequence filed under Drums opens as a drum grid. A key set with **Tools > Key...** is saved as the sequence's key. **Undo** and **Redo** (Cmd-Z and Shift-Cmd-Z while the window has the focus) step through the window's own edits, apart from the session's.
 
@@ -243,6 +243,20 @@ The Sequencer is a window for one sequence from the library, open by itself to w
   Leave them at None and The same for a plain copy.
 
 Opening another sequence, or New, asks first whether to save changes. Duplicate and Make Variation copy what is in the window, edits included; the original file keeps what was last saved.
+
+## The Idea Board
+
+The Idea Board is a grid for trying sequences together before arranging them: **parts** down the side (drums, bass, pads...) and **scenes** across the top (verse, chorus...), each cell a sequence from the library. Show it with **Window > Idea Board**; the **Sequencer** workspace puts it under the Sequencer.
+
+**Fill it.** Drag a sequence from the Sequence Library, or a `.tqseq` file from the Finder, onto a cell (several files from the Finder fill the part's cells from that one on). Click an empty cell, or right-click one and choose **Choose Sequence...**, to pick a file. Right-click a filled cell to **Edit in Sequencer** (or double-click it) or **Clear** it. **+ Part** and **+ Scene** add up to eight of each; right-click a part's or a scene's name to rename or remove it. The board holds only the names of the files, so a sequence changed in the Sequencer plays as it is now.
+
+**Launch.** Click a cell to start it. With nothing playing it starts at once; while the board plays, it starts on the next bar, in place of whatever its part was playing, which stops there. A cell waiting for the bar is outlined and says "(next bar)". Click a playing cell to stop it on the next bar. Click a scene's name to launch the whole scene (its parts with nothing in that scene stop on the bar), and a part's name to stop that part. **Stop All** stops everything at once. Each sequence repeats: with its own loop when it has one, or the whole of it from its start. It plays through its own voice, beside whatever the session plays.
+
+**Tempo.** With **Session tempo** ticked the board plays at the session's tempo and time signature where its playhead is; untick it to set the board's own tempo (in 4/4) with the box beside it. The tempo is taken when the board starts and kept while it plays. The clock on the right shows the board's bars and beats.
+
+**Send to Session** lays the board out in the session, from the bar at or after the cursor: each scene that has sequences becomes an arranger section named for the scene, as many whole bars as its longest sequence, one after another. Each part becomes a track named for it, made from its first sequence's voice (a sequence with a different voice gets a track of its own beside it, named for the part and the sequence), and each sequence is a clip filling its scene's section, repeating. It is one undo step. Sequences that couldn't be read are left out and listed.
+
+**Boards** are saved as you change them, in the Boards folder beside the Sequence Library's folder. The board you used last opens when the Idea Board is first shown. **New...** makes an empty board with a name, and **Open...** opens another.
 
 ## Freeze, bounce and export
 

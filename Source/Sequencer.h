@@ -92,6 +92,10 @@ public:
     juce::int64 getPosition() const noexcept               { return position.load(); }
 
     void setLooping (bool on) noexcept                     { looping = on; }
+
+    /** Free running (the idea board's clock): it plays on from the start until stopped, with no
+        end or loop, whatever the state's clips. */
+    void setFreeRunning (bool on) noexcept                 { freeRunning = on; }
     void setClick (bool on) noexcept                       { click = on; }
     bool isLooping() const noexcept                        { return looping.load(); }
     bool isClicking() const noexcept                       { return click.load(); }
@@ -112,7 +116,7 @@ private:
     juce::uint32 trackId = 0;
     juce::int64 end = 0;
 
-    std::atomic<bool> playing { false }, looping { true }, click { false };
+    std::atomic<bool> playing { false }, looping { true }, click { false }, freeRunning { false };
     std::atomic<juce::int64> position { 0 };
     bool wasPlaying = false;
 

@@ -223,7 +223,8 @@ void SequencerPlayer::getNextAudioBlock (const juce::AudioSourceChannelInfo& inf
         effects.endNotes();
 
         if (now)
-            effects.reset (trackId);
+            for (auto& t : s.tracks)
+                effects.reset (t.id);
     }
 
     effects.setClipNotes (now);
@@ -232,10 +233,11 @@ void SequencerPlayer::getNextAudioBlock (const juce::AudioSourceChannelInfo& inf
     if (now)
     {
         auto at = position.load();
+        const auto free = freeRunning.load();
 
         for (int done = 0; done < info.numSamples;)
         {
-            if (end <= 0 || at >= end)
+            if (! free && (end <= 0 || at >= end))
             {
                 if (! looping.load() || end <= 0)
                 {
@@ -248,7 +250,7 @@ void SequencerPlayer::getNextAudioBlock (const juce::AudioSourceChannelInfo& inf
                 effects.endNotes();   // the notes held over the end get no off
             }
 
-            const auto n = (int) juce::jmin ((juce::int64) (info.numSamples - done), end - at);
+            const auto n = free ? info.numSamples - done : (int) juce::jmin ((juce::int64) (info.numSamples - done), end - at);
             renderRun (s, at, done, n, nullptr);
 
             if (click.load())

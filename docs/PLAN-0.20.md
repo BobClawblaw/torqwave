@@ -103,7 +103,10 @@ Built in `NoteTools` and the Piano Roll's Tools menu, so they work in the sessio
 - **Scale lock**, **humanize** (timing and velocity, by amounts), and **Make Variation** with changes (velocity, notes within the scale, density).
 - **Tests:** each tool's notes, checked against what it should write, and seeded where random.
 
-## Step 5: the idea board (L)
+## Step 5: the idea board (L) — done
+
+Built in `IdeaBoard` (the board file, its launches and Send to Session) and `IdeaBoardView`. A board is its own file (`.tqboard`, in a Boards folder beside the library) naming sequence files; it holds no notes. It plays through each cell's voice on a player of its own that runs free, so launches keep the bar however long the sequences are. A sequence without a loop repeats whole from its start, on the board and in the session.
+
 
 - A grid of parts (rows) and scenes (columns) of sequences, each cell launched on the bar, to hear what works together.
 - **Send to Session** lays the scenes out as arranger sections, with the tracks and clips filled in.
