@@ -13,8 +13,6 @@
 
 A free, open-source audio editor and DAW in one, for macOS, Windows and Linux: for sound designers, for writing and producing music, and for working to picture. Waveform and spectral editing, repair and mastering suites, built-in effects, multitrack sessions with instruments, a piano roll, automation and mixdown, a Sound Library for large effects collections, video, and VST3 plug-ins (with Audio Units on the Mac, and LV2 on the Mac and Linux). It is also a free alternative to Audacity for everyday editing. Clean-room, built on JUCE 9.0.4.
 
-Torqwave was briefly called SpectraBlade, up to 0.15.10, and was renamed in 0.16.0 because another audio product already used a similar name. It opens SpectraBlade's sessions, projects and racks (`.sbsession`, `.sbproject`, `.sbrack`) and presets, and copies its settings, presets and Sound Library across the first time it starts.
-
 ![Torqwave](Art/torqwave-banner.png)
 
 **[Download the latest release](https://github.com/BobClawblaw/torqwave/releases/latest)** (macOS 13 or later, Apple silicon or Intel; Windows 10 or later, 64-bit; Linux, 64-bit x86). Every build is on the [Releases](https://github.com/BobClawblaw/torqwave/releases) page.
@@ -97,6 +95,8 @@ The newest build is at [Releases > Latest](https://github.com/BobClawblaw/torqwa
 Open `Torqwave-<version>.dmg` and drag Torqwave to Applications; the licence is beside it as `LICENSE.txt`. The app is signed ad hoc, not with a Developer ID, so macOS blocks it the first time: open it once, then choose Open Anyway under System Settings > Privacy & Security. After that it opens normally. macOS asks for microphone access the first time you choose a recording input.
 
 Then choose Window > Plug-ins... and Scan for Plug-ins. The first scan of a large collection takes a while; it runs in the background, and the window shows how far it has got.
+
+**Coming from SpectraBlade:** Torqwave was briefly called SpectraBlade, up to 0.15.10, and was renamed in 0.16.0 because another audio product already used a similar name. It opens SpectraBlade's sessions, projects and racks (`.sbsession`, `.sbproject`, `.sbrack`) and presets, and copies its settings, presets and Sound Library across the first time it starts.
 
 ## Windows
 
