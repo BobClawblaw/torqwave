@@ -12,7 +12,7 @@ Keys are written for the Mac. On Windows and Linux, read Ctrl for Cmd and Alt fo
 4. [Effects and the rack](04-effects-and-the-rack.md): effects from the menu, presets, the live rack, plug-ins and recorded sequences.
 5. [Loudness and mastering](05-loudness-and-mastering.md): measuring, matching a loudness target, delivery specs and finishing a master.
 6. [Multitrack sessions](06-multitrack-sessions.md): tracks and clips, the tools, editing time, buses and sends, the mixer, automation, tempo and exporting.
-7. [Instruments and MIDI](07-instruments-and-midi.md): instrument tracks, note clips, playing live, the Piano Roll, controller lanes and the Sequence Library.
+7. [Instruments and MIDI](07-instruments-and-midi.md): instrument tracks, note clips, playing live, the Piano Roll, controller lanes, the Sequence Library and the Sequencer.
 8. [Recording](08-recording.md): into a file, onto tracks, punch-in, monitoring, the metronome and loop takes.
 9. [Video and surround](09-video-and-surround.md): editing to picture, writing sound back into video, 5.1 and 7.1 files and sessions.
 10. [The Sound Library](10-sound-library.md): indexing, searching, auditioning and organising a sound collection.

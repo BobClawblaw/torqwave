@@ -2294,6 +2294,18 @@ void AudioEngine::clearTrackEffects()
 
 void AudioEngine::loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects, AddCallback onDone)
 {
+    loadEffectsInto (trackEffects, session.getSampleRate(), std::move (effects), [this, onDone] (const juce::String& errors)
+    {
+        updateInsertChannels();
+
+        if (onDone != nullptr)
+            onDone (errors);
+    });
+}
+
+void AudioEngine::loadEffectsInto (TrackEffects& into, double rate, std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects, AddCallback onDone,
+                                   std::shared_ptr<const bool> intoAlive)
+{
     // Flattened to (track, slot) pairs, loaded one after another so each chain keeps its order.
     auto queue = std::make_shared<std::vector<std::pair<juce::uint32, std::shared_ptr<juce::XmlElement>>>>();
 
@@ -2304,16 +2316,14 @@ void AudioEngine::loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce:
 
     struct Loader
     {
-        static void next (AudioEngine& engine, std::shared_ptr<bool> isAlive, decltype (queue) q, size_t index,
-                          juce::StringArray errors, AddCallback done)
+        static void next (AudioEngine& engine, TrackEffects& into, double rate, std::shared_ptr<bool> isAlive, std::shared_ptr<const bool> intoAlive,
+                          decltype (queue) q, size_t index, juce::StringArray errors, AddCallback done)
         {
-            if (! *isAlive)
+            if (! *isAlive || (intoAlive != nullptr && ! *intoAlive))
                 return;
 
             if (index >= q->size())
             {
-                engine.updateInsertChannels();
-
                 if (done != nullptr)
                     done (errors.joinIntoString ("\n"));
                 return;
@@ -2325,16 +2335,19 @@ void AudioEngine::loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce:
             if (auto* descXml = slot->getChildByName ("PLUGIN"); descXml == nullptr || ! description.loadFromXml (*descXml))
             {
                 errors.add ("A track effect is missing its plug-in description.");
-                next (engine, isAlive, q, index + 1, errors, std::move (done));
+                next (engine, into, rate, isAlive, intoAlive, q, index + 1, errors, std::move (done));
                 return;
             }
 
             PreviousName::upgrade (description);
 
-            engine.createPlugin (description, engine.session.getSampleRate(),
-                [&engine, isAlive, q, index, errors, done, description, trackId, slot]
+            engine.createPlugin (description, rate,
+                [&engine, &into, rate, isAlive, intoAlive, q, index, errors, done, description, trackId, slot]
                 (std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String& error) mutable
                 {
+                    if (! *isAlive || (intoAlive != nullptr && ! *intoAlive))
+                        return;
+
                     if (instance == nullptr)
                     {
                         errors.add (description.name + ": " + error);
@@ -2343,9 +2356,9 @@ void AudioEngine::loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce:
                     {
                         // State after preparing, as the rack does it.
                         auto* plugin = instance.get();
-                        engine.trackEffects.add (trackId, std::move (instance), (juce::uint32) slot->getIntAttribute ("id"));
-                        const auto added = engine.trackEffects.getNumSlots (trackId) - 1;
-                        engine.trackEffects.setBypassed (trackId, added, slot->getBoolAttribute ("bypassed"));
+                        into.add (trackId, std::move (instance), (juce::uint32) slot->getIntAttribute ("id"));
+                        const auto added = into.getNumSlots (trackId) - 1;
+                        into.setBypassed (trackId, added, slot->getBoolAttribute ("bypassed"));
 
                         if (auto* stateXml = slot->getChildByName ("STATE"))
                         {
@@ -2355,15 +2368,15 @@ void AudioEngine::loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce:
                                 plugin->setStateInformation (state.getData(), (int) state.getSize());
                         }
 
-                        engine.trackEffects.refreshCopies (*plugin);
+                        into.refreshCopies (*plugin);
                     }
 
-                    next (engine, isAlive, q, index + 1, errors, std::move (done));
+                    next (engine, into, rate, isAlive, intoAlive, q, index + 1, errors, std::move (done));
                 });
         }
     };
 
-    Loader::next (*this, alive, queue, 0, {}, std::move (onDone));
+    Loader::next (*this, into, rate, alive, std::move (intoAlive), queue, 0, {}, std::move (onDone));
 }
 
 //==============================================================================

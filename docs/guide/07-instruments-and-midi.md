@@ -201,6 +201,27 @@ The library is a folder of plain files (`.tqseq`), under Music > Torqwave > Sequ
 
 Double-click a sequence to put it on the selected track at the cursor, the same way. A `.tqseq` file dragged from the Finder works too. Each drop is one undo step.
 
+## The Sequencer
+
+The Sequencer is a window for one sequence from the library, open by itself to write, hear and save. Show it with **Window > Sequencer**, or right-click a sequence in the Sequence Library and choose **Edit in Sequencer**. The **Sequencer** workspace (Window > Workspaces) puts it in front of the editor with the Sequence Library on its left.
+
+**Edit the notes.** The middle of the window is the Piano Roll, with the drum grid and controller lanes, as in [Edit the notes](#edit-the-notes-the-piano-roll), but it edits the sequence file itself, not a clip in the session. A sequence filed under Drums opens as a drum grid. **Undo** and **Redo** (Cmd-Z and Shift-Cmd-Z while the window has the focus) step through the window's own edits, apart from the session's.
+
+**Hear it.** **Play** (or Space while the window has the focus) plays the sequence from its start through its voice, beside whatever the session plays. With **Loop** on it goes round and round; off, it plays once. **Click** adds a click on every beat. The tempo is the window's own, starting at the tempo the sequence was written at; change it with the tempo box, or tick **Session tempo** to play at the session's tempo where its playhead is. The notes stay on their beats at any tempo, so nothing in the file changes. The clock beside it shows where it is playing, in bars and beats.
+
+**Change the voice.** Down the right are the instrument and the effects it plays through. **Instrument...** picks another instrument, and **Edit** opens its window. **+ Effect** adds an effect after the others and opens its window; click an effect's name to open its window, or **×** to take it out. Changes to the voice are not undo steps, as with a track's effects in a session, but they are saved with the sequence. If some of the voice didn't load (a plug-in that isn't on this Mac), the window says so, and saving keeps the voice as the file had it until you change it.
+
+**Files.**
+
+- **New...** asks for a name, a folder, an instrument and a length, and opens an empty sequence of that many bars. Nothing is written until you save it.
+- **Open...** opens a sequence file from the library.
+- **Save** writes it to its file, with its voice as it is now.
+- **Save As...** writes it under another name or in another folder, and goes on with that file. Its role follows the folder.
+- **Duplicate** saves a copy of what is in the window beside the file, with a number on its name, and opens the copy.
+- **Make Variation** does the same, naming the copy "Name Variation", and the copy says which sequence it is a variation of (the title shows "a variation of Groove").
+
+Opening another sequence, or New, asks first whether to save changes. Duplicate and Make Variation copy what is in the window, edits included; the original file keeps what was last saved.
+
 ## Freeze, bounce and export
 
 An instrument track freezes, bounces, mixes down and exports in stems like any other track. Bounce it when you want its sound as audio to edit further.

@@ -603,6 +603,12 @@ public:
     /** Restores track effects from session file EFFECTS elements, by track id, one after another. */
     void loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects, AddCallback onDone);
 
+    /** The same into other track effects (a Sequencer's own), made at this rate. The loading
+        stops (without calling back) when the engine goes, or when *intoAlive turns false, which
+        their owner sets before they go. */
+    void loadEffectsInto (TrackEffects&, double rate, std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects, AddCallback onDone,
+                          std::shared_ptr<const bool> intoAlive = nullptr);
+
     /** A channel-strip preset (TrackTemplate::apply) onto a track: its settings, sends and output
         as one undo step, "Apply Channel Strip", then its effects in place of the track's chain,
         outside the undo steps as every change of effects is. Calls back once the effects are in,

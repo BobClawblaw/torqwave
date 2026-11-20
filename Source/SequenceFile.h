@@ -45,6 +45,7 @@ namespace SequenceFile
     struct Sequence
     {
         juce::String name, role, subRole, key, note;   // key: a pitch name and scale, such as "A minor", or empty
+        juce::String variationOf;                      // the name of the sequence it is a variation of, or empty
         juce::StringArray tags;
         double writtenTempo = 120.0;                   // for reference: it plays at the session's
         int beatsPerBar = 4;

@@ -82,7 +82,10 @@ The session has no master track today: no master volume or its automation, and t
 - **Builds on:** the track's automation (envelopes, modes, `TrackEffects` with an id of its own for the master) and the mixer strips.
 - **Tests:** the master's volume envelope and an automated effect parameter play and mix down sample for sample alike; an older session opens unchanged in sound; undo and the session file keep the master.
 
-## Step 3: the Sequencer window (L)
+## Step 3: the Sequencer window (L) — done
+
+Built as planned, in `Sequencer` (the sequence with its own undo steps, and its player) and `SequencerView`. The voice's plug-ins are outside the undo steps, as a session's effects are. A sequence's drum map is not kept, so the window's drum grid uses General MIDI's.
+
 
 - Its own workspace: the library on the left, the Piano Roll, drum grid and controller lanes in the middle editing the sequence file itself, and the voice (instrument and effects) on the right.
 - Its own transport: tempo (its own, or the session's), loop and metronome.

@@ -95,11 +95,12 @@ namespace
                            clipProperties { "clipProperties" }, clipList { "clipList" }, markers { "markers" },
                            history { "history" }, notes { "notes" }, files { "files" }, levels { "levels" },
                                 spectrum { "spectrum" }, phase { "phase" }, video { "video" }, pitch { "pitch" }, tonalBalance { "tonalBalance" }, statistics { "statistics" },
-                           pianoRoll { "pianoRoll" }, keyboard { "keyboard" }, inspector { "inspector" }, sequenceLibrary { "sequenceLibrary" };
+                           pianoRoll { "pianoRoll" }, keyboard { "keyboard" }, inspector { "inspector" }, sequenceLibrary { "sequenceLibrary" },
+                           sequencer { "sequencer" };
 
         juce::StringArray all()
         {
-            return { editor, rack, selection, mixer, clipProperties, clipList, markers, history, notes, files, levels, spectrum, phase, video, pitch, tonalBalance, statistics, pianoRoll, keyboard, inspector, sequenceLibrary };
+            return { editor, rack, selection, mixer, clipProperties, clipList, markers, history, notes, files, levels, spectrum, phase, video, pitch, tonalBalance, statistics, pianoRoll, keyboard, inspector, sequenceLibrary, sequencer };
         }
     }
 
@@ -107,7 +108,8 @@ namespace
         selection beside it; Editing, with the open files on the left, the undo history among the rack's
         tabs and the levels along the bottom; Multitrack, with the mixer
         under the editor, the clip panels beside it, and the Track Inspector and Sequence Library
-        as tabs on its left. */
+        as tabs on its left; Sequencer, the Sequencer window in front of the editor with the
+        Sequence Library on its left. */
     std::vector<std::pair<juce::String, Dock::Layout>> builtInWorkspaces()
     {
         using Dock::Side;
@@ -138,7 +140,12 @@ namespace
         analysis.dock (Panels::phase, Panels::spectrum, Side::right, 0.22);
         analysis.dockAtEdge (Panels::levels, Side::bottom, 0.1);
 
-        return { { "Classic", classic }, { "Editing", editing }, { "Multitrack", multitrack }, { "Analysis", analysis } };
+        auto sequencer = Dock::Layout::single (Panels::editor);
+        sequencer.dock (Panels::sequencer, Panels::editor, Side::centre);   // a tab in front of the editor
+        sequencer.bringToFront (Panels::sequencer);
+        sequencer.dock (Panels::sequenceLibrary, Panels::sequencer, Side::left, 0.2);
+
+        return { { "Classic", classic }, { "Editing", editing }, { "Multitrack", multitrack }, { "Analysis", analysis }, { "Sequencer", sequencer } };
     }
 
     // Input choice IDs: none, a stereo pair from channel n, or mono channel n.
@@ -192,7 +199,7 @@ namespace
         cmdEditInPlace, cmdBackToClip, cmdClipEffects, cmdCombineSound, cmdAddToLibrary,
         cmdTimeSmpte23976, cmdSessionTimecode, cmdFindCuts, cmdMarkHit, cmdFitTempoToHits,
         cmdStoreScene, cmdSaveChannelStrip, cmdApplyChannelStrip,
-        cmdShowSequenceLibrary, cmdAddToSequenceLibrary,
+        cmdShowSequenceLibrary, cmdAddToSequenceLibrary, cmdShowSequencer,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -2278,6 +2285,8 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (multitrackMode && multitrack.isNoteClipLast() && multitrack.getSelectedNoteClip() != 0); break;
         case cmdShowSequenceLibrary: info.setInfo ("Sequence Library", "Show or hide the Sequence Library: MIDI parts with their instruments, to drop into the session", "Window", 0);
                             info.setTicked (dock->isShown (Panels::sequenceLibrary)); break;
+        case cmdShowSequencer: info.setInfo ("Sequencer", "Show or hide the Sequencer: a sequence from the library open by itself, to write, hear and save with its own tempo, loop and click", "Window", 0);
+                            info.setTicked (dock->isShown (Panels::sequencer)); break;
         case cmdClipGainLines: info.setInfo ("Clip Gain Lines", "Show each clip's gain line to edit it: click the line to add a point, drag one, Alt-click to remove it", "Multitrack", 0);
                             info.setTicked (multitrack.isShowingClipGain()); info.setActive (multitrackMode); break;
         case cmdGroupClips: info.setInfo ("Group Clips", "Group the selected clips, so clicking one selects them all, to move or delete together", "Multitrack", 0);
@@ -2970,6 +2979,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdAddToLibrary: askToAddToLibrary (multitrack.getSelectedClip()); break;
         case cmdAddToSequenceLibrary: askToAddToSequenceLibrary (multitrack.getSelectedNoteClip()); break;
         case cmdShowSequenceLibrary: dock->toggle (Panels::sequenceLibrary); break;
+        case cmdShowSequencer: dock->toggle (Panels::sequencer); break;
         case cmdAddSection: multitrack.addSectionFromRange(); break;
         case cmdSessionTimecode: askForSessionTimecode(); break;
         case cmdFindCuts:   findCuts(); break;
@@ -3549,7 +3559,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         case 7:
         {
             add ({ cmdPlugins, cmdAudioSettings, cmdKeyShortcuts, 0, cmdSaveRack, cmdLoadRack, 0,
-                   cmdMaximizeEditor, 0, cmdShowFiles, cmdShowFileTabs, cmdInfoLine, cmdTrackInspector, cmdShowRack, cmdShowSelectionPanel, cmdShowLevels, cmdShowSpectrum, cmdShowPhase, cmdShowTonalBalance, cmdShowStatistics, cmdShowVideo, cmdShowPitchEditor, cmdShowPianoRoll, cmdShowKeyboard, cmdUndoHistory, cmdMarkerList, cmdMixer, cmdClipProperties, cmdClipList, cmdSessionNotes, 0, cmdShowSoundLibrary, cmdShowSequenceLibrary });
+                   cmdMaximizeEditor, 0, cmdShowFiles, cmdShowFileTabs, cmdInfoLine, cmdTrackInspector, cmdShowRack, cmdShowSelectionPanel, cmdShowLevels, cmdShowSpectrum, cmdShowPhase, cmdShowTonalBalance, cmdShowStatistics, cmdShowVideo, cmdShowPitchEditor, cmdShowPianoRoll, cmdShowKeyboard, cmdUndoHistory, cmdMarkerList, cmdMixer, cmdClipProperties, cmdClipList, cmdSessionNotes, 0, cmdShowSoundLibrary, cmdShowSequenceLibrary, cmdShowSequencer });
 
             juce::PopupMenu workspaceMenu;
 
@@ -5387,6 +5397,14 @@ void MainComponent::askForNewSequence (const juce::String& folder)
         if (auto* panel = dynamic_cast<NoteEditor*> (self.getPanel (Panels::pianoRoll)))
             panel->refresh();
     }), true);
+}
+
+void MainComponent::editInSequencer (const juce::File& file)
+{
+    dock->show (Panels::sequencer);
+
+    if (auto* sequencer = dynamic_cast<SequencerView*> (getPanel (Panels::sequencer)))
+        sequencer->openFile (file);
 }
 
 void MainComponent::addSequenceToSession (const juce::File& file, int track, juce::int64 frame, bool onTrack)
@@ -14936,6 +14954,19 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
             addSequenceToSession (file, track, multitrack.getCursor(), true);
         };
         panel->onNew = [this] (const juce::String& folder) { askForNewSequence (folder); };
+        panel->onEdit = [this] (const juce::File& file) { editInSequencer (file); };
+        made = std::move (panel);
+    }
+    else if (id == Panels::sequencer)
+    {
+        auto panel = std::make_unique<SequencerView> (engine);
+        panel->onEditPlugin = [this] (juce::AudioPluginInstance& p) { showEditor (p); };
+        panel->onPluginRemoved = [this] (juce::AudioProcessor* p) { closeEditorFor (p); };
+        panel->onSaved = [this] (const juce::File&)
+        {
+            if (auto* library = dynamic_cast<SequenceLibraryView*> (getPanel (Panels::sequenceLibrary)))
+                library->refresh();
+        };
         made = std::move (panel);
     }
     else if (id == Panels::inspector)
@@ -15186,6 +15217,7 @@ juce::String MainComponent::getTitle (const juce::String& id)
     if (id == Panels::clipProperties)  return "Clip Properties";
     if (id == Panels::inspector)       return "Track Inspector";
     if (id == Panels::sequenceLibrary) return "Sequence Library";
+    if (id == Panels::sequencer)       return "Sequencer";
     if (id == Panels::clipList)        return "Clip List";
     if (id == Panels::markers)         return "Markers";
     if (id == Panels::history)         return "Undo History";
@@ -15230,6 +15262,7 @@ std::pair<juce::String, Dock::Side> MainComponent::defaultPlace (const juce::Str
     if (id == Panels::selection)   return { Panels::rack, Dock::Side::bottom };
     if (id == Panels::files)       return { Panels::editor, Dock::Side::left };
     if (id == Panels::sequenceLibrary) return { Panels::editor, Dock::Side::left };
+    if (id == Panels::sequencer)   return { Panels::editor, Dock::Side::centre };
     if (id == Panels::levels)      return { {}, Dock::Side::bottom };
     if (id == Panels::video)       return { Panels::rack, Dock::Side::top };
     if (id == Panels::spectrum)    return { Panels::editor, Dock::Side::bottom };

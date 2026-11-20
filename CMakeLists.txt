@@ -183,6 +183,8 @@ target_sources(Torqwave PRIVATE
     Source/SequenceLibrary.cpp
     Source/SequenceLibraryView.cpp
     Source/SequencePreview.cpp
+    Source/Sequencer.cpp
+    Source/SequencerView.cpp
     Source/UndoHistory.cpp
     Source/Spectrogram.cpp
     Source/SpectralEdit.cpp
@@ -515,6 +517,8 @@ target_sources(TorqwaveTests PRIVATE
     Source/SequenceLibrary.cpp
     Source/SequenceLibraryView.cpp
     Source/SequencePreview.cpp
+    Source/Sequencer.cpp
+    Source/SequencerView.cpp
     Source/UndoHistory.cpp
     Source/Spectrogram.cpp
     Source/SpectralEdit.cpp

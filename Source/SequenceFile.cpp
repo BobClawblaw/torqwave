@@ -133,6 +133,10 @@ std::unique_ptr<juce::XmlElement> toXml (const Sequence& q)
     xml->setAttribute ("key", q.key);
     xml->setAttribute ("tags", q.tags.joinIntoString (","));
     xml->setAttribute ("note", q.note);
+
+    if (q.variationOf.isNotEmpty())
+        xml->setAttribute ("variationOf", q.variationOf);
+
     xml->setAttribute ("ticksPerBeat", ticksPerBeat);
     xml->setAttribute ("writtenTempo", q.writtenTempo);
     xml->setAttribute ("beatsPerBar", q.beatsPerBar);
@@ -193,6 +197,7 @@ std::optional<Sequence> fromXml (const juce::XmlElement& xml)
     q.tags.trim();
     q.tags.removeEmptyStrings();
     q.note = xml.getStringAttribute ("note");
+    q.variationOf = xml.getStringAttribute ("variationOf");
     q.writtenTempo = xml.getDoubleAttribute ("writtenTempo", 120.0);
     q.beatsPerBar = juce::jlimit (1, 32, xml.getIntAttribute ("beatsPerBar", 4));
     q.channel = juce::jlimit (1, 16, xml.getIntAttribute ("channel", 1));

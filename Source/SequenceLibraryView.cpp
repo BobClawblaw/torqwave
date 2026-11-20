@@ -73,6 +73,8 @@ public:
         }
 
         juce::PopupMenu menu;
+        menu.addItem (4, "Edit in Sequencer", view.onEdit != nullptr);
+        menu.addSeparator();
         menu.addItem (1, "Show in Finder");
         menu.addItem (2, "Rename...");
         menu.addItem (3, "Move to Trash");
@@ -84,7 +86,9 @@ public:
             if (safe == nullptr)
                 return;
 
-            if (result == 1)
+            if (result == 4 && safe->onEdit != nullptr)
+                safe->onEdit (file);
+            else if (result == 1)
                 file.revealToUser();
             else if (result == 3 && file.moveToTrash())
                 safe->refresh();

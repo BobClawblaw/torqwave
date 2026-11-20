@@ -22,6 +22,9 @@ public:
     /** Asked by a double-click: put this sequence in the session at the cursor. */
     std::function<void (const juce::File&)> onUse;
 
+    /** Asked by Edit in Sequencer on a sequence's menu: open it in the Sequencer window. */
+    std::function<void (const juce::File&)> onEdit;
+
     /** Asked by New: start a new sequence, in this folder ("Drums > Kick", "Pads", or empty for
         the Inbox): the folder selected in the tree, or the one holding the selected sequence, or
         the folder right-clicked for New Sequence Here. */

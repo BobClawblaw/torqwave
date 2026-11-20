@@ -180,9 +180,7 @@ juce::File SequenceLibrary::moveInto (const juce::File& sequence, const juce::St
     if (! q.has_value())
         return {};
 
-    const auto known = ! path.isEmpty() && std::any_of (roles().begin(), roles().end(), [&] (auto& r) { return r.name == path[0]; });
-    q->role = known ? path[0] : juce::String ("Inbox");
-    q->subRole = known && path.size() > 1 ? path[1] : juce::String();
+    setRoleFrom (*q, path);
 
     if (! dir.isDirectory() && ! dir.createDirectory())
     {
@@ -203,6 +201,13 @@ juce::File SequenceLibrary::moveInto (const juce::File& sequence, const juce::St
     }
 
     return target;
+}
+
+void SequenceLibrary::setRoleFrom (SequenceFile::Sequence& q, const juce::StringArray& path)
+{
+    const auto known = ! path.isEmpty() && std::any_of (roles().begin(), roles().end(), [&] (auto& r) { return r.name == path[0]; });
+    q.role = known ? path[0] : juce::String ("Inbox");
+    q.subRole = known && path.size() > 1 ? path[1] : juce::String();
 }
 
 juce::String SequenceLibrary::makeFolder (const juce::StringArray& parent, const juce::String& name) const

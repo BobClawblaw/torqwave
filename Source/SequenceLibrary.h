@@ -49,6 +49,9 @@ public:
     /** The folder at a path (the Inbox when its first part is not a role). */
     juce::File folderAt (const juce::StringArray& path) const;
 
+    /** Sets a sequence's role and sub-role to those of the folder at a path (the Inbox when it is not under a role). */
+    static void setRoleFrom (SequenceFile::Sequence&, const juce::StringArray& path);
+
     /** Whether a path is one of the fixed roles or sub-roles, which can't be renamed or removed. */
     static bool isFixed (const juce::StringArray& path);
 

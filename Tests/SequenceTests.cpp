@@ -1,5 +1,6 @@
 #include <JuceHeader.h>
 #include "../Source/SequenceLibraryView.h"
+#include "../Source/SequencerView.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/TrackEffects.h"
@@ -396,6 +397,127 @@ void runSequenceTests (AudioEngine& engine)
                "from what was rendered; one with no instrument stops and says why");
 
         juce::MessageManager::getInstance()->runDispatchLoopUntil (50);   // plug-ins handed to the message thread go
+        folder.deleteRecursively();
+    }
+
+    // The Sequencer window.
+    {
+        auto s = sessionAt (120.0);
+        const auto trackId = s.addInstrumentTrack().id;
+        const auto q = *SequenceFile::fromClip (s, addPattern (s, trackId), fakeEffects());
+
+        // An edit at 128 BPM (23.4375 frames a tick), saved and read back, is exact in ticks.
+        SequencerDocument doc;
+        doc.open (q, {});
+        const auto built = SequencerDocument::sessionFor (q, 128.0, rate);
+        auto expected = q;
+        expected.notes.push_back ({ 72, 3360, 240, 0.7f });
+
+        auto edited = built.state;
+        auto clip = SequenceFile::toClip (expected, edited, 0);
+        clip.id = built.clipId;
+        SessionEdits::replaceNoteClip (edited, built.clipId, clip);
+        doc.apply (SequencerDocument::withClip (doc.get(), edited, built.clipId), "Add Note");
+
+        const auto folder = juce::File::createTempFile ("sequencer");
+        const auto file = folder.getChildFile (juce::String ("Groove") + SequenceFile::extension);
+        const auto dirty = doc.isDirty();
+        const auto saveError = doc.saveTo (file, nullptr);
+        juce::String error;
+        const auto back = SequenceFile::load (file, error);
+        const auto same = [] (const SequenceFile::Sequence& a, const SequenceFile::Sequence& b)
+        {
+            return SequenceFile::toXml (a)->isEquivalentTo (SequenceFile::toXml (b).get(), false);
+        };
+
+        const auto exact = back.has_value() && same (*back, expected) && back->voice != nullptr && back->voice->isEquivalentTo (q.voice.get(), false);
+        doc.undo();
+        const auto undone = same (doc.get(), q) && doc.isDirty();
+        doc.redo();
+        const auto redone = same (doc.get(), expected) && ! doc.isDirty();
+
+        check (dirty && saveError.isEmpty() && exact && undone && redone,
+               "sequencer: a note added at 128 BPM, saved and opened again, is exactly the sequence with that note in ticks, every other note, lane and its voice as they were; "
+               "undo and redo step through the edit, and the saved step is not dirty");
+
+        // Make Variation: a copy beside it that names its original.
+        SequencerView view (engine);
+        view.openFile (file);
+        const auto opened = view.getDocument().getFile() == file && view.getDocument().get().name == "Groove";
+        const auto variationError = view.duplicate (true);
+        const auto variationFile = folder.getChildFile (juce::String ("Groove Variation") + SequenceFile::extension);
+        const auto variation = SequenceFile::load (variationFile, error);
+        const auto goesOn = view.getDocument().getFile() == variationFile;
+        const auto copyError = view.duplicate (false);
+        const auto copy = SequenceFile::load (folder.getChildFile (juce::String ("Groove Variation 2") + SequenceFile::extension), error);
+
+        check (opened && variationError.isEmpty() && variation.has_value() && variation->variationOf == "Groove" && variation->name == "Groove Variation"
+                   && variation->notes == expected.notes && variation->voice != nullptr && goesOn
+                   && copyError.isEmpty() && copy.has_value() && copy->variationOf == "Groove" && copy->name == "Groove Variation",
+               "sequencer: Make Variation saves \"Groove Variation\" beside it, naming Groove as its original, with its notes and voice, and goes on with it; "
+               "Duplicate of that saves \"Groove Variation 2\", still a variation of Groove");
+
+        // The window's tempo: a note on beat 2 sounds on beat 2 at 90 and at 140 BPM, the click on each beat.
+        juce::PluginDescription synth;
+
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.fileOrIdentifier == BuiltInEffects::basicSynthId)
+                synth = d;
+
+        SequenceFile::Sequence beat;
+        beat.name = "Beat";
+        beat.length = 4 * SequenceFile::ticksPerBeat;
+        beat.notes.push_back ({ 60, 2 * SequenceFile::ticksPerBeat, 240, 1.0f });
+
+        const auto firstSound = [&] (double tempo, bool click, const SequenceFile::Sequence& sequence, juce::int64 frames, juce::int64& position)
+        {
+            SequencerPlayer player;
+            player.getEffects().prepare (rate);
+            const auto b = SequencerDocument::sessionFor (sequence, tempo, rate);
+            juce::String createError;
+            player.getEffects().add (b.trackId, engine.pluginFormatManager.createPluginInstance (synth, rate, 512, createError));
+            player.setState (std::make_shared<const SessionState> (SequencerDocument::withSequence (b, sequence, tempo)), b.trackId);
+            player.prepareToPlay (512, rate);
+            player.setClick (click);
+            player.play();
+
+            juce::AudioBuffer<float> heard (2, (int) frames), block (2, 512);
+            heard.clear();
+
+            for (int at = 0; at < (int) frames; at += 512)
+            {
+                const auto n = juce::jmin (512, (int) frames - at);
+                player.getNextAudioBlock ({ &block, 0, n });
+                heard.copyFrom (0, at, block, 0, 0, n);
+            }
+
+            position = player.getPosition();
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (20);
+
+            for (int i = 0; i < heard.getNumSamples(); ++i)
+                if (std::abs (heard.getSample (0, i)) > 1.0e-4f)
+                    return (juce::int64) i;
+
+            return (juce::int64) -1;
+        };
+
+        juce::int64 position = 0;
+        const auto on90 = firstSound (90.0, false, beat, 96000, position);
+        const auto on140 = firstSound (140.0, false, beat, 96000, position);
+        const auto beat90 = (juce::int64) std::llround (2 * 60.0 / 90.0 * rate), beat140 = (juce::int64) std::llround (2 * 60.0 / 140.0 * rate);
+        const auto bar140 = (juce::int64) std::llround (4 * 60.0 / 140.0 * rate);
+        const auto looped = position == 96000 - bar140;
+
+        auto clickOnly = beat;
+        clickOnly.notes.clear();
+        juce::int64 unused = 0;
+        const auto clickAt = firstSound (90.0, true, clickOnly, 1000, unused);
+
+        check (on90 >= beat90 && on90 < beat90 + 32 && on140 >= beat140 && on140 < beat140 + 32 && looped && clickAt >= 0 && clickAt <= 1,
+               "sequencer: a note on beat 2 is first heard at frame " + juce::String (on90) + " at 90 BPM (beat 2 is " + juce::String (beat90) + ") and "
+               + juce::String (on140) + " at 140 (" + juce::String (beat140) + "); looping, it is back at the start after its bar; the click sounds from the first beat (its sine starts at 0, so is heard from frame 1)");
+
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
         folder.deleteRecursively();
     }
 }
