@@ -571,6 +571,7 @@ private:
     void audioProcessorParameterChanged (juce::AudioProcessor*, int, float) override {}
     void audioProcessorChanged (juce::AudioProcessor*, const ChangeDetails&) override;
     void rebuildConnections();
+    bool turnOnOutputPair();                // true when the pair was off and is now asked for
     juce::String deviceSignature() const;   // the device in use, its rate, block size and channels
     juce::String lastDeviceSignature;       // as of the last change handled
     std::map<juce::uint32, int> wideTracks; // the 5.1 and 7.1 tracks (and their channels) the track effects were last told of

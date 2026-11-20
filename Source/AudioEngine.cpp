@@ -1300,7 +1300,18 @@ void AudioEngine::setOutputPair (int firstChannel)
     const auto numDeviceOutputs = getDeviceOutputChannelNames().size();
     outputPairFirstChannel = juce::isPositiveAndBelow (firstChannel, numDeviceOutputs) ? firstChannel : 0;
 
+    turnOnOutputPair();
+    useDeviceOutputs();   // a file's extra channels follow the pair
+    rebuildConnections();
+    sendChangeMessage();
+}
+
+bool AudioEngine::turnOnOutputPair()
+{
     // The device only delivers buffers for active channels, so make sure the chosen pair is on.
+    // A device opened with no outputs on (an ASIO driver chosen in Settings, whose outputs appear
+    // only once its own control panel turns hardware on) would otherwise play nothing.
+    const auto numDeviceOutputs = getDeviceOutputChannelNames().size();
     auto setup = deviceManager.getAudioDeviceSetup();
     auto changed = false;
 
@@ -1319,9 +1330,7 @@ void AudioEngine::setOutputPair (int firstChannel)
         deviceManager.setAudioDeviceSetup (setup, true);
     }
 
-    useDeviceOutputs();   // a file's extra channels follow the pair
-    rebuildConnections();
-    sendChangeMessage();
+    return changed;
 }
 
 juce::BigInteger AudioEngine::deviceOutputsOf (const SessionState& state, int surroundFrom)
@@ -1473,6 +1482,15 @@ void AudioEngine::changeListenerCallback (juce::ChangeBroadcaster* source)
     // ones last set, the track inputs are checked again.
     if (auto* device = deviceManager.getCurrentAudioDevice(); device == nullptr || device->getActiveInputChannels() != appliedInputs)
         trackInputsCurrent = false;
+
+    // A new device, or one whose outputs changed, keeps the output pair on, and the outputs the
+    // session or file uses.
+    if (deviceManager.getCurrentAudioDevice() != nullptr)
+    {
+        turnOnOutputPair();
+        usedDeviceOutputs = {};
+        useDeviceOutputs();
+    }
 
     player->setDeviceLatency (deviceOutputDelay());
     rebuildConnections();
