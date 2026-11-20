@@ -186,6 +186,11 @@ struct SessionSend
     juce::uint32 busId = 0;
     float gainDb = 0.0f;
     bool preFader = false;
+
+    bool operator== (const SessionSend& o) const noexcept
+    {
+        return busId == o.busId && juce::exactlyEqual (gainDb, o.gainDb) && preFader == o.preFader;
+    }
 };
 
 /** What an envelope automates: a track's volume or pan, or a parameter of one of its effects;
@@ -665,6 +670,41 @@ struct ArrangerSection
     }
 };
 
+/** A mixer scene (a snapshot of the mix, as Cubase's mix snapshots): every track's, bus's,
+    folder's and VCA fader's volume, pan, surround pan, mute, solo and polarity, and each track's
+    sends (bus, level, before or after the fader), as they were when it was stored. Recalling it
+    sets them back as one undo step: tracks added since keep their own mix, and sends to buses
+    deleted since are left out. It holds no effects (their settings live outside the undo steps; a
+    channel-strip preset carries them), automation, routing, groups or automation modes, and an
+    envelope still takes over from a recalled volume or pan while it has points. */
+struct MixScene
+{
+    struct Strip
+    {
+        juce::uint32 trackId = 0;
+        float gainDb = 0.0f, pan = 0.0f;
+        SurroundPan surroundPan;
+        bool mute = false, solo = false, invertPolarity = false;
+        std::vector<SessionSend> sends;
+
+        bool operator== (const Strip& o) const noexcept
+        {
+            return trackId == o.trackId && juce::exactlyEqual (gainDb, o.gainDb) && juce::exactlyEqual (pan, o.pan) && surroundPan == o.surroundPan
+                && mute == o.mute && solo == o.solo && invertPolarity == o.invertPolarity && sends == o.sends;
+        }
+    };
+
+    juce::uint32 id = 0;
+    juce::String name;
+    std::vector<Strip> strips;             // in the session's order when stored
+
+    /** The strip of the track with this id, or null. */
+    const Strip* find (juce::uint32 trackId) const;
+
+    /** A track's mix as a scene holds it. */
+    static Strip stripOf (const SessionTrack&);
+};
+
 /** One state of a session. Copies share the clips' audio. */
 struct SessionState
 {
@@ -699,6 +739,10 @@ struct SessionState
 
     /** MIDI-learned controllers (MidiLearn): one binding a controller, one a target. */
     std::vector<MidiBinding> midiBindings;
+
+    /** Mixer scenes, in the order they were stored (ids from nextId). */
+    std::vector<MixScene> scenes;
+    const MixScene* findScene (juce::uint32 id) const;
 
     const ArrangerSection* findSection (juce::uint32 id) const;
 
@@ -1231,6 +1275,25 @@ namespace SessionEdits
         the time is replaced by each section of the chain in order, as pasteTime puts them; the
         chain is then each new section once, and playing it off. False with no chain. */
     bool flattenArrangement (SessionState&);
+
+    //==============================================================================
+    // Mixer scenes (MixScene).
+
+    /** Stores the mix as it is now as a new scene, named so (or "Scene n" when empty). Returns its id. */
+    juce::uint32 storeScene (SessionState&, const juce::String& name = {});
+
+    /** Stores the mix as it is now into a scene, which keeps its name. False when there is no such
+        scene, or it holds this mix already. */
+    bool updateScene (SessionState&, juce::uint32 id);
+
+    /** Sets the mix of every track the scene holds that is still in the session to the scene's;
+        its sends to buses still there replace the track's sends. False when there is no such
+        scene, or the mix is the scene's already. */
+    bool recallScene (SessionState&, juce::uint32 id);
+
+    /** Renames a scene (not to nothing); false when it is so already. */
+    bool renameScene (SessionState&, juce::uint32 id, const juce::String& name);
+    bool removeScene (SessionState&, juce::uint32 id);
 
     /** Sends a track's or bus's output to a bus in place of the mix, or with busId 0 back to the
         mix. False for a folder, a destination that isn't a bus, a bus into itself or into a bus

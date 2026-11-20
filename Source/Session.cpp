@@ -5128,6 +5128,52 @@ juce::String save (const SessionState& state, const juce::File& target,
             learned->setAttribute ("track", indexOf[b.target.trackId]);
     }
 
+    // Mixer scenes: each strip and send names its track or bus by its place, as sends do.
+    for (auto& scene : state.scenes)
+    {
+        auto* sceneXml = root.createNewChildElement ("SCENE");
+        sceneXml->setAttribute ("name", scene.name);
+
+        for (auto& strip : scene.strips)
+        {
+            if (indexOf.count (strip.trackId) == 0)
+                continue;
+
+            auto* stripXml = sceneXml->createNewChildElement ("STRIP");
+            stripXml->setAttribute ("track", indexOf[strip.trackId]);
+            stripXml->setAttribute ("gainDb", strip.gainDb);
+            stripXml->setAttribute ("pan", strip.pan);
+
+            if (strip.mute)
+                stripXml->setAttribute ("mute", true);
+
+            if (strip.solo)
+                stripXml->setAttribute ("solo", true);
+
+            if (strip.invertPolarity)
+                stripXml->setAttribute ("invert", true);
+
+            if (! strip.surroundPan.isDefault())
+            {
+                stripXml->setAttribute ("surroundX", strip.surroundPan.x);
+                stripXml->setAttribute ("surroundY", strip.surroundPan.y);
+                stripXml->setAttribute ("surroundWidth", strip.surroundPan.width);
+                stripXml->setAttribute ("lfeDb", strip.surroundPan.lfeDb);
+            }
+
+            for (auto& send : strip.sends)
+            {
+                if (indexOf.count (send.busId) == 0)
+                    continue;
+
+                auto* sendXml = stripXml->createNewChildElement ("SEND");
+                sendXml->setAttribute ("bus", indexOf[send.busId]);
+                sendXml->setAttribute ("gainDb", send.gainDb);
+                sendXml->setAttribute ("preFader", send.preFader);
+            }
+        }
+    }
+
     if (! chain.isEmpty())
     {
         auto* arrangement = root.createNewChildElement ("ARRANGEMENT");
@@ -5542,6 +5588,41 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
         }
 
         SessionEdits::bindMidi (state, b);
+    }
+
+    // Mixer scenes, their tracks and buses by place; strips and sends naming none are left out.
+    for (auto* sceneXml : root->getChildWithTagNameIterator ("SCENE"))
+    {
+        MixScene scene;
+        scene.id = state.nextId++;
+        scene.name = sceneXml->getStringAttribute ("name", "Scene " + juce::String ((int) state.scenes.size() + 1));
+        const auto trackAt = [&state] (int place) { return juce::isPositiveAndBelow (place, (int) state.tracks.size()) ? &state.tracks[(size_t) place] : nullptr; };
+
+        for (auto* stripXml : sceneXml->getChildWithTagNameIterator ("STRIP"))
+        {
+            const auto* track = trackAt (stripXml->getIntAttribute ("track", -1));
+
+            if (track == nullptr || scene.find (track->id) != nullptr)
+                continue;
+
+            MixScene::Strip strip;
+            strip.trackId = track->id;
+            strip.gainDb = (float) stripXml->getDoubleAttribute ("gainDb");
+            strip.pan = juce::jlimit (-1.0f, 1.0f, (float) stripXml->getDoubleAttribute ("pan"));
+            strip.mute = stripXml->getBoolAttribute ("mute");
+            strip.solo = stripXml->getBoolAttribute ("solo");
+            strip.invertPolarity = stripXml->getBoolAttribute ("invert");
+            strip.surroundPan = { (float) stripXml->getDoubleAttribute ("surroundX", 0.0), (float) stripXml->getDoubleAttribute ("surroundY", 1.0),
+                                  (float) stripXml->getDoubleAttribute ("surroundWidth", 1.0), (float) stripXml->getDoubleAttribute ("lfeDb", SurroundPan::lfeOff) };
+
+            for (auto* sendXml : stripXml->getChildWithTagNameIterator ("SEND"))
+                if (const auto* bus = trackAt (sendXml->getIntAttribute ("bus", -1)); bus != nullptr && bus->isBus)
+                    strip.sends.push_back ({ bus->id, (float) sendXml->getDoubleAttribute ("gainDb"), sendXml->getBoolAttribute ("preFader") });
+
+            scene.strips.push_back (std::move (strip));
+        }
+
+        state.scenes.push_back (std::move (scene));
     }
 
     for (auto* changeXml : root->getChildWithTagNameIterator ("TEMPO"))

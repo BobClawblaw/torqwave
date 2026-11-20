@@ -598,6 +598,17 @@ public:
     /** Restores track effects from session file EFFECTS elements, by track id, one after another. */
     void loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects, AddCallback onDone);
 
+    /** A channel-strip preset (TrackTemplate::apply) onto a track: its settings, sends and output
+        as one undo step, "Apply Channel Strip", then its effects in place of the track's chain,
+        outside the undo steps as every change of effects is. Calls back once the effects are in,
+        with what couldn't be loaded and the buses not found (empty when all went). False, with
+        nothing done, when the preset can't apply to the track. */
+    bool applyChannelStrip (juce::uint32 trackId, const juce::XmlElement& strip, AddCallback onDone);
+
+    /** Turns on the interface outputs and inputs the hardware inserts use, on the tracks and in
+        the rack (called when effects are added or loaded and when an insert's pairs change). */
+    void updateInsertChannels();
+
 private:
     using Node = juce::AudioProcessorGraph::Node;
 
@@ -653,6 +664,8 @@ private:
     juce::String applyInputChannels();
     class MonitorTap;
     std::unique_ptr<MonitorTap> monitorTap;
+    std::unique_ptr<juce::AudioIODeviceCallback> insertCycle;   // the graph player inside the hardware inserts' cycle
+    juce::BigInteger insertOutputs, insertInputs;              // the pairs the hardware inserts use, as last turned on
     std::shared_ptr<bool> alive = std::make_shared<bool> (true);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioEngine)

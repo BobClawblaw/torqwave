@@ -188,6 +188,7 @@ namespace
         cmdControlSurface, cmdLearnPlay, cmdLearnStop, cmdLearnRecord, cmdForgetMidiLearn,
         cmdEditInPlace, cmdBackToClip, cmdClipEffects, cmdCombineSound, cmdAddToLibrary,
         cmdTimeSmpte23976, cmdSessionTimecode, cmdFindCuts, cmdMarkHit, cmdFitTempoToHits,
+        cmdStoreScene, cmdSaveChannelStrip, cmdApplyChannelStrip,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -2376,6 +2377,21 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
         case cmdLearnRecord: info.setInfo ("MIDI Learn Record", "The next controller button moved starts or stops recording", "Multitrack", 0); info.setActive (multitrackMode); break;
         case cmdForgetMidiLearn: info.setInfo ("Forget All MIDI Learn", "Unbind every learned controller in the session", "Multitrack", 0);
                             info.setActive (multitrackMode && ! engine.session.getState()->midiBindings.empty()); break;
+        case cmdStoreScene: info.setInfo ("Store Mixer Scene", "Keep the mix as it is now (every volume, pan, mute, solo, polarity and send) as a scene to recall later", "Multitrack", 0);
+                            info.setActive (multitrackMode && ! engine.session.getState()->tracks.empty()); break;
+        case cmdSaveChannelStrip:
+        case cmdApplyChannelStrip:
+        {
+            const auto* t = engine.session.getState()->findTrack (multitrack.getSelectedTrackId());
+
+            if (info.commandID == cmdSaveChannelStrip)
+                info.setInfo ("Save Channel Strip...", "Save the selected track's effects, sends, volume, pan and output as a preset to apply to any track", "Multitrack", 0);
+            else
+                info.setInfo ("Apply Channel Strip...", "Give the selected track a saved channel strip's effects, sends, volume, pan and output", "Multitrack", 0);
+
+            info.setActive (multitrackMode && t != nullptr && ! t->isFolder);
+            break;
+        }
         case cmdAddVca:     info.setInfo ("Add VCA Fader", "Add a VCA fader, with the selected track joining it: its volume is added to each member's, and its mute and solo act on them", "Multitrack", 0);
                             info.setActive (multitrackMode); break;
         case cmdCrossfade:  info.setInfo ("Crossfade Overlaps", "Crossfade a clip moved or trimmed over part of another", "Multitrack", 0);
@@ -3053,6 +3069,26 @@ bool MainComponent::perform (const InvocationInfo& info)
 
             break;
         }
+        case cmdStoreScene:
+        {
+            auto next = *engine.session.getState();
+            SessionEdits::storeScene (next);
+            engine.session.apply (std::move (next), "Store Mixer Scene");
+            break;
+        }
+        case cmdSaveChannelStrip: MixerView::askToSaveChannelStrip (engine, ChannelStrips::userStore(), multitrack.getSelectedTrackId()); break;
+        case cmdApplyChannelStrip:
+        {
+            // The strip menu's Apply Channel Strip submenu, on its own.
+            juce::PopupMenu items;
+            MixerView::addChannelStripItems (items, engine, ChannelStrips::userStore(), multitrack.getSelectedTrackId());
+
+            for (juce::PopupMenu::MenuItemIterator it (items); it.next();)
+                if (it.getItem().subMenu != nullptr)
+                    it.getItem().subMenu->showMenuAsync (juce::PopupMenu::Options());
+
+            break;
+        }
         case cmdAllAutomationOff: case cmdAllAutomationRead: case cmdAllAutomationTouch: case cmdAllAutomationLatch: case cmdAllAutomationWrite:
             multitrack.setAutomationMode (0, (AutomationMode) ((int) AutomationMode::off + (info.commandID - cmdAllAutomationOff)));
             commands.commandStatusChanged();
@@ -3447,6 +3483,23 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
             group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes, cmdCaptureMidi });
             group ("Automation", { cmdWriteAutomation, 0, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite });
+            {
+                // Mixer scenes: store one, or recall one of the session's.
+                juce::PopupMenu scenes;
+                scenes.addCommandItem (&commands, cmdStoreScene);
+                const auto state = engine.session.getState();
+
+                if (! state->scenes.empty())
+                    scenes.addSeparator();
+
+                for (int i = 0; i < juce::jmin (maxSceneItems, (int) state->scenes.size()); ++i)
+                    scenes.addItem (sceneBaseId + i, "Recall " + state->scenes[(size_t) i].name, multitrackMode);
+
+                scenes.addSeparator();
+                scenes.addCommandItem (&commands, cmdSaveChannelStrip);
+                scenes.addCommandItem (&commands, cmdApplyChannelStrip);
+                menu.addSubMenu ("Mixer Scenes and Channel Strips", scenes);
+            }
             group ("Controllers", { cmdControlSurface, 0, cmdLearnPlay, cmdLearnStop, cmdLearnRecord, cmdForgetMidiLearn });
             group ("Tempo", { cmdMetronome, cmdCountIn, 0, cmdTempo, cmdTapTempo, cmdTempoChange, cmdBarsAndBeats, cmdTimeWithBars, 0, cmdMusicalTimebase });
             group ("Picture", { cmdSessionTimecode, 0, cmdFindCuts, cmdMarkHit, cmdFitTempoToHits });
@@ -6270,6 +6323,17 @@ void MainComponent::menuItemSelected (int menuItemId, int)
         const auto port = juce::isPositiveAndBelow (index, outputs.size()) ? outputs[index].identifier : juce::String();
         engine.setMidiClockPort (port);
         appProperties.getUserSettings()->setValue (midiClockKey, port);
+        return;
+    }
+
+    if (juce::isPositiveAndBelow (menuItemId - sceneBaseId, maxSceneItems))
+    {
+        auto next = *engine.session.getState();
+        const auto index = (size_t) (menuItemId - sceneBaseId);
+
+        if (index < next.scenes.size() && SessionEdits::recallScene (next, next.scenes[index].id))
+            engine.session.apply (std::move (next), "Recall Mixer Scene");
+
         return;
     }
 

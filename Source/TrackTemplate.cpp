@@ -18,6 +18,9 @@ std::unique_ptr<juce::XmlElement> create (const SessionState& s, juce::uint32 tr
     xml->setAttribute ("gainDb", t->gainDb);
     xml->setAttribute ("pan", t->pan);
 
+    if (t->invertPolarity)
+        xml->setAttribute ("invert", true);
+
     if (t->fiveOne)
         xml->setAttribute ("fiveOne", true);
 
@@ -78,6 +81,7 @@ Added add (SessionState& s, const juce::XmlElement& xml)
     t.name = xml.getStringAttribute ("name", t.name);
     t.gainDb = (float) xml.getDoubleAttribute ("gainDb");
     t.pan = juce::jlimit (-1.0f, 1.0f, (float) xml.getDoubleAttribute ("pan"));
+    t.invertPolarity = xml.getBoolAttribute ("invert");
     t.colour = juce::jlimit (-1, (int) TrackColours::palette.size() - 1, xml.getIntAttribute ("colour", -1));
     t.note = xml.getStringAttribute ("note");
     t.input.first = xml.getIntAttribute ("inputFirst", t.input.first);
@@ -128,5 +132,130 @@ Added add (SessionState& s, const juce::XmlElement& xml)
 
     added.trackId = id;
     return added;
+}
+
+Applied apply (SessionState& s, juce::uint32 trackId, const juce::XmlElement& xml)
+{
+    Applied applied;
+    auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
+
+    if (! xml.hasTagName ("TRACKTEMPLATE") || track == s.tracks.end() || track->isFolder)
+        return applied;
+
+    auto& t = *track;
+    t.gainDb = (float) xml.getDoubleAttribute ("gainDb");
+    applied.applied = true;
+
+    if (t.isVca)
+        return applied;
+
+    t.pan = juce::jlimit (-1.0f, 1.0f, (float) xml.getDoubleAttribute ("pan"));
+    t.invertPolarity = xml.getBoolAttribute ("invert");
+    SessionEdits::setSurroundPan (s, trackId, { (float) xml.getDoubleAttribute ("surroundX", 0.0), (float) xml.getDoubleAttribute ("surroundY", 1.0),
+                                                (float) xml.getDoubleAttribute ("surroundWidth", 1.0),
+                                                (float) xml.getDoubleAttribute ("lfeDb", SurroundPan::lfeOff) });
+
+    // The template's sends in place of the track's, each to the first bus of its name here.
+    if (! track->isBus)
+    {
+        track->sends.clear();
+
+        for (auto* sendXml : xml.getChildWithTagNameIterator ("SEND"))
+        {
+            const auto busName = sendXml->getStringAttribute ("bus");
+            const auto bus = std::find_if (s.tracks.begin(), s.tracks.end(), [&busName] (auto& b) { return b.isBus && b.name == busName; });
+
+            if (bus == s.tracks.end())
+                applied.missingBuses.addIfNotAlreadyThere (busName);
+            else
+                SessionEdits::setSend (s, trackId, { bus->id, (float) sendXml->getDoubleAttribute ("gainDb"), sendXml->getBoolAttribute ("preFader") });
+        }
+    }
+
+    // The output: a bus by name (not itself, nor one that would play back into it), an interface
+    // pair, or the mix.
+    SessionEdits::setTrackOutput (s, trackId, 0);
+    SessionEdits::setTrackDeviceOutput (s, trackId, -1);
+
+    if (const auto outName = xml.getStringAttribute ("output"); outName.isNotEmpty())
+    {
+        const auto bus = std::find_if (s.tracks.begin(), s.tracks.end(), [&outName, trackId] (auto& b) { return b.isBus && b.name == outName && b.id != trackId; });
+
+        if (bus == s.tracks.end() || ! SessionEdits::setTrackOutput (s, trackId, bus->id))
+            applied.missingBuses.addIfNotAlreadyThere (outName);
+    }
+    else if (xml.hasAttribute ("deviceOutput"))
+    {
+        SessionEdits::setTrackDeviceOutput (s, trackId, xml.getIntAttribute ("deviceOutput", -1));
+    }
+
+    // The chain, its slots taking new ids here (the track's effect envelopes name its old ones).
+    const auto* target = s.findTrack (trackId);
+    auto effects = std::make_shared<juce::XmlElement> ("EFFECTS");
+    auto hasInstrument = false;
+
+    if (const auto* chain = xml.getChildByName ("EFFECTS"))
+    {
+        for (auto* slot : chain->getChildWithTagNameIterator ("SLOT"))
+        {
+            const auto* plugin = slot->getChildByName ("PLUGIN");
+            const auto instrument = plugin != nullptr && plugin->getBoolAttribute ("isInstrument");
+
+            if (instrument && ! target->isInstrument)
+                continue;
+
+            hasInstrument = hasInstrument || instrument;
+            auto* copy = new juce::XmlElement (*slot);
+            copy->removeAttribute ("id");
+            effects->addChildElement (copy);
+        }
+    }
+
+    applied.keepInstrument = target->isInstrument && ! hasInstrument;
+    applied.effects = std::move (effects);
+    return applied;
+}
+}
+
+namespace ChannelStrips
+{
+Store::Store (juce::File f) : folder (std::move (f)) {}
+
+juce::StringArray Store::getNames() const
+{
+    juce::StringArray names;
+
+    for (const auto& f : folder.findChildFiles (juce::File::findFiles, false, juce::String ("*") + TrackTemplate::extension))
+        names.add (f.getFileNameWithoutExtension());
+
+    names.sortNatural();
+    return names;
+}
+
+juce::File Store::fileFor (const juce::String& name) const
+{
+    return folder.getChildFile (juce::File::createLegalFileName (name.trim()) + TrackTemplate::extension);
+}
+
+bool Store::save (const juce::String& name, const juce::XmlElement& strip) const
+{
+    return name.trim().isNotEmpty() && folder.createDirectory().wasOk() && strip.writeTo (fileFor (name));
+}
+
+std::unique_ptr<juce::XmlElement> Store::load (const juce::String& name) const
+{
+    return juce::XmlDocument::parse (fileFor (name));
+}
+
+bool Store::remove (const juce::String& name) const
+{
+    return fileFor (name).deleteFile();
+}
+
+Store& userStore()
+{
+    static Store store (juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                            .getChildFile ("Torqwave").getChildFile ("Channel Strips"));
+    return store;
 }
 }

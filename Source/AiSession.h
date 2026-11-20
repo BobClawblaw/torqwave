@@ -104,6 +104,9 @@ namespace Ai
         juce::var setInstrument (const juce::var&);
         juce::var listInstrumentPresets (const juce::var&);
         juce::var addTrackEffect (const juce::var&);
+        juce::var storeScene (const juce::var&);
+        juce::var recallScene (const juce::var&);
+        std::optional<juce::uint32> sceneNamed (const juce::String&) const;
 
         /** The instrument a track plays, or will once the plan is applied; nothing for none. */
         std::optional<juce::PluginDescription> instrumentOf (juce::uint32 trackId) const;

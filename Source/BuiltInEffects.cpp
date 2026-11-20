@@ -1,4 +1,5 @@
 #include "BuiltInEffects.h"
+#include "HardwareInsert.h"
 #include "PreviousName.h"
 #include "AudioFileIO.h"
 #include "Theme.h"
@@ -147,6 +148,8 @@ namespace
                 effect = std::make_unique<TransientShaperProcessor>();
             else if (d.fileOrIdentifier == basicSynthId)
                 effect = std::make_unique<BasicSynthProcessor>();
+            else if (d.fileOrIdentifier == HardwareInsert::identifier)
+                effect = std::make_unique<HardwareInsert::Processor>();
 
             if (effect == nullptr)
             {
@@ -169,7 +172,7 @@ juce::Array<juce::PluginDescription> getDescriptions()
 {
     return { parametricEqDescription(), compressorDescription(), limiterDescription(), chorusDescription(), flangerDescription(), phaserDescription(), reverbDescription(), convolutionDescription(),
              graphicEqDescription (10), graphicEqDescription (31), multibandDescription(), deEsserDescription(), dynamicEqDescription(), multibandWidthDescription(), exciterDescription(), maximizerDescription(), transientShaperDescription(),
-             basicSynthDescription() };
+             basicSynthDescription(), HardwareInsert::Processor::description() };
 }
 
 void addTo (juce::KnownPluginList& list)

@@ -9,6 +9,8 @@
 #endif
 
 #include "AudioEngine.h"
+#include "HardwareInsert.h"
+#include "TrackTemplate.h"
 #include "ControlSurface.h"
 #include "PreviousName.h"
 #include "RackCopy.h"
@@ -979,6 +981,11 @@ AudioEngine::AudioEngine()
     recorder = std::make_unique<Recorder> (player->getPlayedFrame());
     monitorTap = std::make_unique<MonitorTap> (*player);
 
+    // The player runs inside the hardware inserts' cycle: their inputs taken before it, their
+    // sends put out after it.
+    insertCycle = HardwareInsert::Port::shared().wrap (graphPlayer);
+    HardwareInsert::Processor::onPairsChanged = [this, isAlive = alive] { if (*isAlive) updateInsertChannels(); };
+
     graphPlayer.setProcessor (&graph);
     deviceManager.addChangeListener (this);
     document.addChangeListener (this);
@@ -994,7 +1001,8 @@ AudioEngine::~AudioEngine()
     session.removeChangeListener (this);
     deviceManager.removeChangeListener (this);
     deviceManager.removeAudioCallback (recorder.get());
-    deviceManager.removeAudioCallback (&graphPlayer);
+    deviceManager.removeAudioCallback (insertCycle.get());
+    HardwareInsert::Processor::onPairsChanged = nullptr;
     deviceManager.removeAudioCallback (monitorTap.get());
 
     for (auto& [input, extra] : extraRecorders)
@@ -1013,7 +1021,7 @@ juce::String AudioEngine::openDevice (const juce::XmlElement* savedState)
     // The monitor tap runs before the player in each cycle, so the player hears this cycle's
     // input; the recorder runs after it, so it sees what the player just played.
     deviceManager.addAudioCallback (monitorTap.get());
-    deviceManager.addAudioCallback (&graphPlayer);
+    deviceManager.addAudioCallback (insertCycle.get());
     deviceManager.addAudioCallback (recorder.get());
 
     for (auto& [input, extra] : extraRecorders)
@@ -1259,6 +1267,7 @@ juce::String AudioEngine::applyInputChannels()
     for (auto& [input, extra] : extraRecorders)
         setup.inputChannels.setRange (input.first, input.channels, true);
 
+    setup.inputChannels |= insertInputs;   // what the hardware inserts return on
     setup.inputChannels.setRange (numDeviceInputs, juce::jmax (0, setup.inputChannels.getHighestBit() + 1 - numDeviceInputs), false);
 
     if (! setup.inputChannels.isZero())
@@ -1610,6 +1619,9 @@ void AudioEngine::changeListenerCallback (juce::ChangeBroadcaster* source)
         turnOnOutputPair();
         usedDeviceOutputs = {};
         useDeviceOutputs();
+        insertOutputs = {};
+        insertInputs = {};
+        updateInsertChannels();
     }
 
     player->setDeviceLatency (deviceOutputDelay());
@@ -2078,6 +2090,7 @@ void AudioEngine::addPlugin (const juce::PluginDescription& description, AddCall
                       {
                           rack.push_back (graph.addNode (std::move (instance)));
                           rebuildConnections();
+                          updateInsertChannels();
                           sendChangeMessage();
                       }
 
@@ -2212,6 +2225,7 @@ void AudioEngine::addTrackPlugin (juce::uint32 trackId, const juce::PluginDescri
                       {
                           const auto slotId = trackEffects.add (trackId, std::move (instance));
                           session.markEffectsChanged();
+                          updateInsertChannels();
 
                           if (const auto wide = wideTracks.find (trackId); wide != wideTracks.end() && onEffectsNotCopied != nullptr)
                               for (int i = 0; i < trackEffects.getNumSlots (trackId); ++i)
@@ -2292,6 +2306,8 @@ void AudioEngine::loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce:
 
             if (index >= q->size())
             {
+                engine.updateInsertChannels();
+
                 if (done != nullptr)
                     done (errors.joinIntoString ("\n"));
                 return;
@@ -2342,4 +2358,91 @@ void AudioEngine::loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce:
     };
 
     Loader::next (*this, alive, queue, 0, {}, std::move (onDone));
+}
+
+//==============================================================================
+void AudioEngine::updateInsertChannels()
+{
+    // The pairs every hardware insert uses, on the tracks and in the rack.
+    juce::BigInteger outputs, inputs;
+
+    const auto note = [&] (juce::AudioProcessor* p)
+    {
+        if (auto* insert = dynamic_cast<HardwareInsert::Processor*> (p))
+        {
+            outputs.setRange (insert->getOutputFirst(), 2, true);
+            inputs.setRange (insert->getInputFirst(), 2, true);
+        }
+    };
+
+    for (auto* plugin : trackEffects.getAllPlugins())
+        note (plugin);
+
+    for (auto& node : rack)
+        note (node->getProcessor());
+
+    if (! deviceOpen || (outputs == insertOutputs && inputs == insertInputs))
+        return;
+
+    insertOutputs = outputs;
+    insertInputs = inputs;
+
+    // Their outputs on (those no longer used stay on, as the session's do), then their inputs.
+    auto setup = deviceManager.getAudioDeviceSetup();
+    const auto numDeviceOutputs = getDeviceOutputChannelNames().size();
+    auto changed = false;
+
+    for (int ch = 0; ch < juce::jmin (numDeviceOutputs, HardwareInsert::maxChannels); ++ch)
+    {
+        if (outputs[ch] && ! setup.outputChannels[ch])
+        {
+            setup.outputChannels.setBit (ch);
+            changed = true;
+        }
+    }
+
+    if (changed)
+    {
+        setup.useDefaultOutputChannels = false;
+        deviceManager.setAudioDeviceSetup (setup, true);
+    }
+
+    if (! inputs.isZero())
+        applyInputChannels();
+}
+
+bool AudioEngine::applyChannelStrip (juce::uint32 trackId, const juce::XmlElement& strip, AddCallback onDone)
+{
+    auto next = *session.getState();
+    const auto applied = TrackTemplate::apply (next, trackId, strip);
+
+    if (! applied.applied)
+        return false;
+
+    session.apply (std::move (next), "Apply Channel Strip");
+    const auto missing = applied.missingBuses.isEmpty() ? juce::String()
+                                                       : "No bus here is called " + applied.missingBuses.joinIntoString (", ") + ", so the track doesn't play into it.";
+
+    if (applied.effects == nullptr)
+    {
+        if (onDone != nullptr)
+            onDone (missing);
+
+        return true;
+    }
+
+    // The preset's chain in place of the track's (its own instrument kept first when the preset has none).
+    const auto keep = applied.keepInstrument && trackEffects.getInstrument (trackId) != nullptr ? 1 : 0;
+
+    for (int slot = trackEffects.getNumSlots (trackId); --slot >= keep;)
+        removeTrackPlugin (trackId, slot);
+
+    session.markEffectsChanged();
+    loadTrackEffects ({ { trackId, applied.effects } }, [missing, done = std::move (onDone)] (const juce::String& errors)
+    {
+        if (done != nullptr)
+            done (juce::StringArray { errors, missing }.joinIntoString ("\n").trim());
+    });
+
+    return true;
 }

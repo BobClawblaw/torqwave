@@ -852,6 +852,7 @@ private:
     static constexpr int themeBaseId = 0x7300, accentBaseId = 0x7380, waveformColourBaseId = 0x73c0;   // menu ids for View > Theme
     static constexpr int gridSizeBaseId = 0x7400;   // menu ids for Multitrack > Grid
     static constexpr int midiClockBaseId = 0x7480;  // menu ids for Multitrack > MIDI Clock Out (0: none, then the ports)
+    static constexpr int sceneBaseId = 0x7500, maxSceneItems = 64;   // menu ids for Multitrack > Mixer Scenes: recall each
     static constexpr int workspaceAccentBaseId = 0x7280;   // menu ids for Window > Workspace > Accent (0: the app's own)
 
     /** The accent in use: the current workspace's own, or the one chosen in View > Theme. */

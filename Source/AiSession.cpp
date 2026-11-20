@@ -98,7 +98,11 @@ namespace
     "parameters": { "type": "object", "properties": { "bpm": { "type": "number" }, "beats_per_bar": { "type": "integer" } }, "required": ["bpm"] } },
   { "name": "fit_tempo_to_hits", "description": "Working to picture: find the tempo that puts hit markers (cuts and hits in the picture) on the beat, and set it. land_on: beats or bars give one tempo from the session's start, in place of any tempo changes; bar_lines gives a tempo map with each hit on the first beat of a bar, its tempo kept near the best fit. Looks between min_bpm and max_bpm (80 % to 125 % of the tempo now when left out). Returns the tempo and how far each hit lands from its beat or bar, in ms.",
     "parameters": { "type": "object", "properties": { "markers": { "type": "array", "items": { "type": "string" }, "description": "The point markers' names from get_session; leave out for every point marker." },
-                    "land_on": { "type": "string", "enum": ["beats", "bars", "bar_lines"] }, "min_bpm": { "type": "number" }, "max_bpm": { "type": "number" } } } }
+                    "land_on": { "type": "string", "enum": ["beats", "bars", "bar_lines"] }, "min_bpm": { "type": "number" }, "max_bpm": { "type": "number" } } } },
+  { "name": "store_scene", "description": "Keep the mix as it is now (every track's and bus's volume, pan, mute, solo, polarity and sends) as a mixer scene, by a name. A scene of that name is replaced by the mix now. get_session lists the scenes.",
+    "parameters": { "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"] } },
+  { "name": "recall_scene", "description": "Set the mix back to a mixer scene's (by its name from get_session): the volume, pan, mute, solo, polarity and sends of every track it holds. Tracks added since keep theirs.",
+    "parameters": { "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"] } }
 ])JSON";
 }
 
@@ -146,7 +150,7 @@ namespace Ai
             for (auto& t : *list)
                 tools.add (object ({ { "type", "function" }, { "function", t } }));
 
-        jassert (tools.size() == 29);
+        jassert (tools.size() == 31);
         return tools;
     }
 
@@ -200,6 +204,8 @@ namespace Ai
         else if (tool == "add_note_clip")  result = addNoteClip (args);
         else if (tool == "set_instrument") result = setInstrument (args);
         else if (tool == "list_instrument_presets") result = listInstrumentPresets (args);
+        else if (tool == "store_scene")    result = storeScene (args);
+        else if (tool == "recall_scene")   result = recallScene (args);
         else return std::nullopt;
 
         return result;
@@ -415,6 +421,14 @@ namespace Ai
 
         if (! chain.isEmpty())
             result.getDynamicObject()->setProperty ("arrangement", chain.joinIntoString (", ") + (state.playArrangement ? " (playback follows it)" : ""));
+
+        juce::StringArray scenes;
+
+        for (auto& scene : state.scenes)
+            scenes.add (scene.name);
+
+        if (! scenes.isEmpty())
+            result.getDynamicObject()->setProperty ("mixer_scenes", scenes.joinIntoString (", "));
 
         return result;
     }
@@ -1043,6 +1057,56 @@ namespace Ai
 
         return done (chain.empty() ? juce::String ("Clear the arrangement chain")
                                    : "Set the arrangement chain to " + names.joinIntoString (", ") + ((bool) a["play"] ? ", and play it" : ""));
+    }
+
+    std::optional<juce::uint32> SessionTools::sceneNamed (const juce::String& name) const
+    {
+        for (auto& scene : state.scenes)
+            if (scene.name.trim().equalsIgnoreCase (name.trim()))
+                return scene.id;
+
+        return std::nullopt;
+    }
+
+    juce::var SessionTools::storeScene (const juce::var& a)
+    {
+        const auto name = a["name"].toString().trim();
+
+        if (name.isEmpty())
+            return refused ("the scene needs a name");
+
+        if (const auto id = sceneNamed (name))
+        {
+            if (! SessionEdits::updateScene (state, *id))
+                return refused ("the scene " + name.quoted() + " holds this mix already");
+
+            return done ("Store the mix into the scene " + name.quoted());
+        }
+
+        SessionEdits::storeScene (state, name);
+        return done ("Store the mix as the scene " + name.quoted());
+    }
+
+    juce::var SessionTools::recallScene (const juce::var& a)
+    {
+        const auto name = a["name"].toString().trim();
+        const auto id = sceneNamed (name);
+
+        if (! id)
+        {
+            juce::StringArray names;
+
+            for (auto& scene : state.scenes)
+                names.add (scene.name);
+
+            return refused ("no mixer scene named " + name.quoted() + (names.isEmpty() ? juce::String ("; the session has none")
+                                                                                        : "; there are " + names.joinIntoString (", ")));
+        }
+
+        if (! SessionEdits::recallScene (state, *id))
+            return refused ("the mix is the scene " + name.quoted() + "'s already");
+
+        return done ("Recall the mixer scene " + name.quoted());
     }
 
     juce::var SessionTools::setClip (const juce::var& a)

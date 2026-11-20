@@ -403,6 +403,8 @@ public:
         }
 
         menu.addSubMenu ("Colour", colours);
+        menu.addSeparator();
+        addChannelStripItems (menu, view.engine, *view.channelStrips, trackId);
 
         if (view.addMidiLearnMenu != nullptr)
             view.addMidiLearnMenu (menu, trackId);
@@ -537,8 +539,40 @@ private:
 };
 
 //==============================================================================
+namespace
+{
+    /** A scene's button: a click recalls it, a right-click shows its menu. */
+    class SceneButton final : public juce::TextButton
+    {
+    public:
+        using TextButton::TextButton;
+        std::function<void()> onRightClick;
+
+        void mouseDown (const juce::MouseEvent& e) override
+        {
+            if (e.mods.isPopupMenu() && onRightClick != nullptr)
+                onRightClick();
+            else
+                TextButton::mouseDown (e);
+        }
+    };
+}
+
 MixerView::MixerView (AudioEngine& e) : engine (e)
 {
+    storeScene = std::make_unique<juce::TextButton> ("Store Scene");
+    storeScene->setTooltip ("Keep the mix as it is now (every volume, pan, mute, solo, polarity and send) as a scene to recall with one click");
+    storeScene->onClick = [this]
+    {
+        auto next = *engine.session.getState();
+        SessionEdits::storeScene (next);
+        engine.session.apply (std::move (next), "Store Mixer Scene");
+    };
+    addAndMakeVisible (*storeScene);
+    sceneViewport.setViewedComponent (&sceneList, false);
+    sceneViewport.setScrollBarsShown (true, false);
+    addAndMakeVisible (sceneViewport);
+
     master = std::make_unique<Strip> (*this, 0);
     addAndMakeVisible (*master);
     viewport.setViewedComponent (&content, false);
@@ -587,6 +621,8 @@ void MixerView::rebuild()
 
     for (size_t i = 0; i < strips.size(); ++i)
         strips[i]->update (state->tracks[i], (int) i, frame);
+
+    rebuildScenes (*state);
 
     // A 5.1 or 7.1 master's strips are wider, and its meter has six or eight channels.
     if (std::exchange (shownChannels, state->masterChannels()) != state->masterChannels())
@@ -717,9 +753,213 @@ void MixerView::paint (juce::Graphics& g)
     }
 }
 
+void MixerView::rebuildScenes (const SessionState& state)
+{
+    std::vector<std::pair<juce::uint32, juce::String>> scenes;
+
+    for (auto& scene : state.scenes)
+        scenes.emplace_back (scene.id, scene.name);
+
+    if (scenes == shownScenes)
+        return;
+
+    shownScenes = scenes;
+    sceneButtons.clear();
+
+    for (auto& [id, name] : scenes)
+    {
+        auto button = std::make_unique<SceneButton> (name);
+        button->setTooltip ("Recall " + name + ": its mix for every track it holds. Right-click to store the mix into it again, rename or delete it");
+        button->onClick = [this, sceneId = id]
+        {
+            auto next = *engine.session.getState();
+
+            if (SessionEdits::recallScene (next, sceneId))
+                engine.session.apply (std::move (next), "Recall Mixer Scene");
+        };
+        button->onRightClick = [this, sceneId = id, b = button.get()]
+        {
+            getSceneMenu (sceneId).showMenuAsync (juce::PopupMenu::Options().withTargetComponent (b));
+        };
+        sceneList.addAndMakeVisible (*button);
+        sceneButtons.emplace_back (id, std::move (button));
+    }
+
+    resized();
+}
+
+juce::Button* MixerView::findSceneButton (juce::uint32 sceneId) const
+{
+    for (auto& [id, button] : sceneButtons)
+        if (id == sceneId)
+            return button.get();
+
+    return nullptr;
+}
+
+juce::PopupMenu MixerView::getSceneMenu (juce::uint32 sceneId)
+{
+    juce::PopupMenu menu;
+    const auto* scene = engine.session.getState()->findScene (sceneId);
+
+    if (scene == nullptr)
+        return menu;
+
+    menu.addItem ("Update Scene", [this, sceneId]
+    {
+        auto next = *engine.session.getState();
+
+        if (SessionEdits::updateScene (next, sceneId))
+            engine.session.apply (std::move (next), "Update Mixer Scene");
+    });
+
+    menu.addItem ("Rename Scene...", [this, sceneId, name = scene->name]
+    {
+        auto* box = new juce::AlertWindow ("Rename Scene", "A new name for " + name + ":", juce::MessageBoxIconType::NoIcon);
+        box->addTextEditor ("name", name);
+        box->addButton ("Rename", 1, juce::KeyPress (juce::KeyPress::returnKey));
+        box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+        juce::Component::SafePointer<MixerView> safe (this);
+        box->enterModalState (true, juce::ModalCallbackFunction::create ([safe, box, sceneId] (int result)
+        {
+            if (result == 1 && safe != nullptr)
+                safe->renameScene (sceneId, box->getTextEditorContents ("name"));
+        }), true);
+    });
+
+    menu.addItem ("Delete Scene", [this, sceneId]
+    {
+        auto next = *engine.session.getState();
+
+        if (SessionEdits::removeScene (next, sceneId))
+            engine.session.apply (std::move (next), "Delete Mixer Scene");
+    });
+
+    return menu;
+}
+
+bool MixerView::renameScene (juce::uint32 sceneId, const juce::String& name)
+{
+    auto next = *engine.session.getState();
+
+    if (! SessionEdits::renameScene (next, sceneId, name))
+        return false;
+
+    engine.session.apply (std::move (next), "Rename Mixer Scene");
+    return true;
+}
+
+bool MixerView::saveChannelStrip (juce::uint32 trackId, const juce::String& name)
+{
+    const auto xml = TrackTemplate::create (*engine.session.getState(), trackId, engine.getTrackEffects().createXml (trackId));
+    return xml != nullptr && channelStrips->save (name, *xml);
+}
+
+void MixerView::addChannelStripItems (juce::PopupMenu& menu, AudioEngine& engine, ChannelStrips::Store& store, juce::uint32 trackId)
+{
+    const auto* t = engine.session.getState()->findTrack (trackId);
+
+    if (t == nullptr || t->isFolder)
+        return;
+
+    menu.addItem ("Save Channel Strip...", [&engine, &store, trackId] { askToSaveChannelStrip (engine, store, trackId); });
+
+    juce::PopupMenu apply;
+
+    for (auto& name : store.getNames())
+    {
+        apply.addItem (name, [&engine, &store, trackId, name]
+        {
+            if (const auto xml = store.load (name))
+                applyChannelStrip (engine, trackId, *xml, name);
+            else
+                juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Apply Channel Strip", "Couldn't read " + name + ".");
+        });
+    }
+
+    if (apply.getNumItems() > 0)
+        apply.addSeparator();
+
+    apply.addItem ("Other File...", [&engine, trackId]
+    {
+        auto chooser = std::make_shared<juce::FileChooser> ("Apply a channel strip or track template",
+                                                            juce::File::getSpecialLocation (juce::File::userMusicDirectory),
+                                                            juce::String ("*") + TrackTemplate::extension);
+        chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [&engine, trackId, chooser] (const juce::FileChooser& fc)
+        {
+            if (const auto file = fc.getResult(); file != juce::File())
+            {
+                if (const auto xml = juce::XmlDocument::parse (file))
+                    applyChannelStrip (engine, trackId, *xml, file.getFileNameWithoutExtension());
+                else
+                    juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Apply Channel Strip", file.getFileName() + " is not a channel strip.");
+            }
+        });
+    });
+
+    menu.addSubMenu ("Apply Channel Strip", apply);
+}
+
+void MixerView::askToSaveChannelStrip (AudioEngine& engine, ChannelStrips::Store& store, juce::uint32 trackId)
+{
+    const auto* t = engine.session.getState()->findTrack (trackId);
+
+    if (t == nullptr)
+        return;
+
+    const auto saved = store.getNames();
+    auto* box = new juce::AlertWindow ("Save Channel Strip",
+                                       "Save " + t->name + "'s effects, sends, volume, pan and output as a preset to apply to any track. "
+                                       + (saved.isEmpty() ? juce::String() : "The same name as a saved one replaces it."),
+                                       juce::MessageBoxIconType::NoIcon);
+    box->addTextEditor ("name", t->name, "Name");
+    box->addButton ("Save", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([&engine, &store, box, trackId] (int result)
+    {
+        if (result != 1)
+            return;
+
+        const auto name = box->getTextEditorContents ("name").trim();
+        const auto xml = TrackTemplate::create (*engine.session.getState(), trackId, engine.getTrackEffects().createXml (trackId));
+
+        if (name.isEmpty() || xml == nullptr || ! store.save (name, *xml))
+            juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Save Channel Strip",
+                                                    name.isEmpty() ? juce::String ("The preset needs a name.")
+                                                                   : "Couldn't write the preset into " + store.getFolder().getFullPathName() + ".");
+    }), true);
+}
+
+void MixerView::applyChannelStrip (AudioEngine& engine, juce::uint32 trackId, const juce::XmlElement& xml, const juce::String& presetName)
+{
+    const auto applied = engine.applyChannelStrip (trackId, xml, [&engine, presetName] (const juce::String& problems)
+    {
+        engine.session.sendChangeMessage();   // the strips and headers show the effects
+
+        if (problems.isNotEmpty())
+            juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Apply Channel Strip",
+                                                    "Some of " + presetName + " could not be applied:\n\n" + problems);
+    });
+
+    if (! applied)
+        juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Apply Channel Strip",
+                                                presetName + " is not a channel strip, or can't go on that track.");
+}
+
 void MixerView::resized()
 {
     auto r = getLocalBounds();
+    auto column = r.removeFromLeft (sceneColumnWidth).reduced (4);
+    storeScene->setBounds (column.removeFromTop (sceneButtonHeight));
+    column.removeFromTop (6);
+    sceneViewport.setBounds (column);
+
+    const auto listWidth = column.getWidth() - (sceneButtons.size() * (sceneButtonHeight + 3) > (size_t) column.getHeight() ? sceneViewport.getScrollBarThickness() : 0);
+    sceneList.setSize (juce::jmax (0, listWidth), (int) sceneButtons.size() * (sceneButtonHeight + 3));
+
+    for (size_t i = 0; i < sceneButtons.size(); ++i)
+        sceneButtons[i].second->setBounds (0, (int) i * (sceneButtonHeight + 3), sceneList.getWidth(), sceneButtonHeight);
+
     master->setBounds (r.removeFromRight ((shownChannels > 2 ? surroundStripWidth : stripWidth) + 12));
     viewport.setBounds (r);
     const auto each = shownChannels > 2 ? surroundStripWidth : stripWidth;
