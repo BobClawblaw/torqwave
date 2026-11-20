@@ -995,8 +995,12 @@ MainComponent::MainComponent()
         saveSettings();
     };
 
+    // The status line: text at its own width, cut with an ellipsis when it doesn't fit, never squeezed.
     for (auto* l : { &fileLabel, &deviceLabel, &selectionLabel })
+    {
+        l->setMinimumHorizontalScale (1.0f);
         addAndMakeVisible (l);
+    }
 
     addAndMakeVisible (loadReadout);
 
