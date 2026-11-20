@@ -3,6 +3,7 @@
 #include "Surround.h"
 #include "TempoFollow.h"
 #include "ClipEffects.h"
+#include "NoteTools.h"
 
 #include <numeric>
 #include <map>
@@ -3325,6 +3326,27 @@ namespace
     }
 }
 
+bool setKey (SessionState& s, const juce::String& key)
+{
+    juce::String name;
+
+    if (key.trim().isNotEmpty())
+    {
+        const auto scale = NoteTools::parseKey (key);
+
+        if (! scale.has_value())
+            return false;
+
+        name = scale->name();
+    }
+
+    if (name == s.musicalKey)
+        return false;
+
+    s.musicalKey = name;
+    return true;
+}
+
 bool setTempo (SessionState& s, double tempo, int beatsPerBar)
 {
     if (tempo < 20.0 || tempo > 400.0 || beatsPerBar < 1 || beatsPerBar > 16 || (juce::exactlyEqual (tempo, s.tempo) && beatsPerBar == s.beatsPerBar))
@@ -5008,6 +5030,9 @@ juce::String save (const SessionState& state, const juce::File& target,
     if (state.barsAndBeats)
         root.setAttribute ("barsAndBeats", true);
 
+    if (state.musicalKey.isNotEmpty())
+        root.setAttribute ("key", state.musicalKey);
+
     // Sends name their bus by its place in the file, since ids are given out afresh on loading.
     std::map<juce::uint32, int> indexOf;
 
@@ -5472,6 +5497,9 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
     state.sevenOne = state.surround && root->getBoolAttribute ("sevenOne");
     state.layerClips = root->getBoolAttribute ("layerClips");
     state.barsAndBeats = root->getBoolAttribute ("barsAndBeats");
+
+    if (const auto key = NoteTools::parseKey (root->getStringAttribute ("key")))
+        state.musicalKey = key->name();
 
     if (const auto loopStart = root->getStringAttribute ("loopStart").getLargeIntValue(), loopEnd = root->getStringAttribute ("loopEnd").getLargeIntValue();
         loopStart >= 0 && loopEnd > loopStart)

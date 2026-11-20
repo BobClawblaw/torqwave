@@ -1,21 +1,21 @@
 #pragma once
 
-#include "SequenceFile.h"
+#include "SequenceKit.h"
 
 class AudioEngine;
 
 /** Hearing a sequence before it goes into the session: it is rendered through its voice (its
     instrument and effects, as a drop would make them) at the session's tempo where it plays, on a
     thread of its own, then played in a loop beside whatever else plays. While the session plays,
-    it starts on the session's next bar, so it is heard in time with it. Renders are kept (a few),
-    so going back to a sequence plays it at once. */
+    it starts on the session's next bar, so it is heard in time with it. A kit plays every part
+    together. Renders are kept (a few), so going back to a sequence plays it at once. */
 class SequencePreview final : private juce::AsyncUpdater
 {
 public:
     explicit SequencePreview (AudioEngine&);
     ~SequencePreview() override;
 
-    /** Plays this sequence (rendering it first if it hasn't been at this tempo). */
+    /** Plays this sequence or kit (rendering it first if it hasn't been at this tempo). */
     void play (const juce::File&);
     void stop();
 
@@ -34,6 +34,11 @@ public:
         error when its voice has no instrument or the instrument can't load. Call off the message
         thread: plug-ins are made as offline rendering makes them. */
     static juce::String render (const SequenceFile::Sequence&, double tempo, int beatsPerBar, double sampleRate,
+                                juce::AudioPluginFormatManager&, juce::AudioBuffer<float>& out);
+
+    /** The same for a kit's parts played together, each through its own voice, a pass as long as
+        the longest; parts with no instrument are left out. An error when none has one. */
+    static juce::String render (const std::vector<SequenceFile::Sequence>& parts, double tempo, int beatsPerBar, double sampleRate,
                                 juce::AudioPluginFormatManager&, juce::AudioBuffer<float>& out);
 
     /** Frames from `frame` to the next bar's start in the map (0 on a bar's first frame). */

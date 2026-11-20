@@ -10,7 +10,11 @@
 namespace SequenceFile
 {
     inline constexpr const char* extension = ".tqseq";
+    inline constexpr const char* kitExtension = ".tqkit";   // a kit: sequences to play together (SequenceKit.h)
     inline constexpr int ticksPerBeat = 960;
+
+    /** A sequence or a kit: what the library holds and a drop puts into a session. */
+    inline bool isSequenceOrKit (const juce::File& f)   { return f.hasFileExtension (extension) || f.hasFileExtension (kitExtension); }
 
     struct Note
     {
@@ -49,6 +53,9 @@ namespace SequenceFile
         juce::String name, role, subRole, key, note;   // key: a pitch name and scale, such as "A minor", or empty
         juce::String variationOf;                      // the name of the sequence it is a variation of, or empty
         juce::StringArray tags;
+        int rating = 0;                                // 0 (none) to 5, set in the library
+        bool favourite = false;
+        juce::int64 added = 0;                         // when its file was first written, in ms since 1970; 0 until then
         double writtenTempo = 120.0;                   // for reference: it plays at the session's
         int beatsPerBar = 4;
         int channel = 1;
@@ -72,6 +79,10 @@ namespace SequenceFile
     /** The voice for a track: its template, without its sends, output, input or envelopes. */
     std::unique_ptr<juce::XmlElement> voiceOf (const SessionState&, juce::uint32 trackId, std::unique_ptr<juce::XmlElement> effects);
 
+    /** A voice of an instrument alone, at its default settings: what a part made without a track
+        (an imported MIDI file) plays on. */
+    std::unique_ptr<juce::XmlElement> voiceFor (const juce::PluginDescription&);
+
     /** The name of the instrument its voice plays it on, or empty with none. */
     juce::String instrumentOf (const Sequence&);
 
@@ -80,10 +91,16 @@ namespace SequenceFile
     /** Null when the XML is not a sequence. */
     std::optional<Sequence> fromXml (const juce::XmlElement&);
 
-    /** Writes it safely (to a temporary file, then in place). Returns an error, or empty. */
+    /** Writes it safely (to a temporary file, then in place). A new file (no file there yet), or
+        one with no `added` time, is stamped with the time now; one rewritten keeps its time.
+        Returns an error, or empty. */
     juce::String save (const Sequence&, const juce::File&);
 
-    /** Reads one, or gives an error. */
+    /** Writes XML safely, as save does (a sequence, a kit). Returns an error, or empty. */
+    juce::String writeXml (const juce::XmlElement&, const juce::File&);
+
+    /** Reads one, or gives an error. One saved before sequences kept their `added` time takes the
+        file's creation time. */
     std::optional<Sequence> load (const juce::File&, juce::String& error);
 
     /** Where a dropped sequence went. */

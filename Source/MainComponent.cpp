@@ -14,6 +14,7 @@
 #include "Leveller.h"
 #include "Generator.h"
 #include "Instrument.h"
+#include "NoteTools.h"
 #include "PluginMenu.h"
 #include "LossyFiles.h"
 #include "Ffmpeg.h"
@@ -87,6 +88,7 @@ namespace
     constexpr const char* timeFormatKey   = "timeFormat";
     constexpr const char* libraryShownFormatsKey = "libraryShownFormats";
     constexpr const char* libraryFoldersLeftOutKey = "libraryFoldersLeftOut";
+    constexpr const char* sequenceLibraryFolderKey = "sequenceLibraryFolder";
 
     // The dock's panels.
     namespace Panels
@@ -946,6 +948,10 @@ MainComponent::MainComponent()
     Theme::apply (Theme::make (settings->getValue (themeKey, "Dark"), settings->getValue (accentKey, "Blue"),
                                settings->getValue (waveformColourKey, "Theme")));
     TimeFormat::set (TimeFormat::fromKey (settings->getValue (timeFormatKey, TimeFormat::key (TimeFormat::Kind::minutesSeconds))));
+
+    if (const auto sequences = settings->getValue (sequenceLibraryFolderKey); juce::File::isAbsolutePath (sequences))
+        SequenceLibrary::setChosenFolder (juce::File (sequences));
+
     deadMansPedalFile = settings->getFile().getSiblingFile ("RecentlyCrashedPluginsList");
     places = std::make_unique<WindowPlaces> (*settings);
 
@@ -4610,6 +4616,10 @@ void MainComponent::showTempoDialog (bool atCursor)
     box->addTextEditor ("beats", juce::String (hasChange ? existing->beatsPerBar : map.beatsPerBarAt (barFrame)), "Beats in a bar (1 to 16)");
     box->getTextEditor ("tempo")->setInputRestrictions (7, ".0123456789");
     box->getTextEditor ("beats")->setInputRestrictions (2, "0123456789");
+
+    if (bar == 0)
+        box->addTextEditor ("key", state->musicalKey, "Key (such as A minor; empty for none)");
+
     box->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
 
     if (hasChange)
@@ -4652,8 +4662,20 @@ void MainComponent::showTempoDialog (bool atCursor)
                 return;
             }
 
-            if (SessionEdits::setTempo (next, tempo, beats))
-                engine.session.apply (std::move (next), "Tempo");
+            // The key goes in the same step as the tempo.
+            const auto key = box->getTextEditorContents ("key").trim();
+
+            if (key.isNotEmpty() && ! NoteTools::parseKey (key).has_value())
+            {
+                showError ("Tempo", key + " is not a key: write a note and a scale, such as A minor, F# dorian or Bb major.");
+                return;
+            }
+
+            const auto tempoChanged = SessionEdits::setTempo (next, tempo, beats);
+            const auto keyChanged = SessionEdits::setKey (next, key);
+
+            if (tempoChanged || keyChanged)
+                engine.session.apply (std::move (next), tempoChanged && keyChanged ? "Tempo and Key" : tempoChanged ? "Tempo" : "Key");
         }), true);
 }
 
@@ -5456,6 +5478,31 @@ void MainComponent::sendIdeaBoardToSession (const IdeaBoard& board)
 void MainComponent::addSequenceToSession (const juce::File& file, int track, juce::int64 frame, bool onTrack)
 {
     juce::String error;
+
+    // A kit: a track for each part under a folder track, wherever it is dropped.
+    if (file.hasFileExtension (SequenceKit::extension))
+    {
+        const auto kit = SequenceKit::load (file, error);
+
+        if (! kit.has_value())
+        {
+            showError ("Add Kit", error);
+            return;
+        }
+
+        if (! multitrackMode)
+            setMultitrack (true);
+
+        SequenceKit::addToSession (engine, *kit, frame, [this, name = kit->name] (const juce::String& errors)
+        {
+            engine.session.sendChangeMessage();   // the track headers show the instruments
+
+            if (errors.isNotEmpty())
+                showError ("Add Kit", "Some of " + name + "'s instruments and effects could not be loaded:\n\n" + errors);
+        });
+        return;
+    }
+
     const auto q = SequenceFile::load (file, error);
 
     if (! q.has_value())
@@ -14356,6 +14403,21 @@ Settings::Model MainComponent::makeSettingsModel()
     library.items.push_back (Item::button ("Sound Library...", "Show the Sound Library", [this] { showSoundLibrary(); }));
     model.push_back (std::move (library));
 
+    model.push_back ({ "Sequence Library", "The folder the Sequence Library keeps its sequences and kits in. Changing it doesn't move "
+                                           "the sequences already saved: copy them across in the Finder, or open a pack of them.",
+        { Item::component ("Folder", 30, [this]() -> std::unique_ptr<juce::Component>
+                           {
+                               return std::make_unique<SequenceLibraryView::FolderSetting> ([this] (const juce::File& folder)
+                               {
+                                   SequenceLibrary::setChosenFolder (folder);
+                                   appProperties.getUserSettings()->setValue (sequenceLibraryFolderKey, folder.getFullPathName());
+
+                                   if (auto it = madePanels.find (Panels::sequenceLibrary); it != madePanels.end())
+                                       if (auto* view = dynamic_cast<SequenceLibraryView*> (it->second.get()))
+                                           view->setFolder (SequenceLibrary::defaultFolder());
+                               });
+                           }) } });
+
     return model;
 }
 
@@ -15001,6 +15063,8 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
         };
         panel->onNew = [this] (const juce::String& folder) { askForNewSequence (folder); };
         panel->onEdit = [this] (const juce::File& file) { editInSequencer (file); };
+        panel->getSessionKey = [this] { return engine.session.getState()->musicalKey; };
+        panel->getInstruments = [this] { return Instrument::known (engine.knownPlugins); };
         made = std::move (panel);
     }
     else if (id == Panels::sequencer)

@@ -213,6 +213,8 @@ Keys a panel handles itself while it has the focus. They are not commands: they 
 | Sound Library: play or stop the selected sound | `Space` |
 | Sound Library: rate the selected sounds (0 clears the rating) | `0` to `5` |
 | Sound Library: mark the selected sounds as favourites, or unmark them | `F` |
+| Sequence Library: rate the selected sequences and kits (0 clears the rating) | `0` to `5` |
+| Sequence Library: mark the selected sequences and kits as favourites, or unmark them | `F` |
 | Keyboard: the white keys from C, an octave and a third | `A` to `L` and `;` |
 | Keyboard: the black keys between them | `W` `E` `T` `Y` `U` `O` `P` |
 | Marker List: rename the selected marker | `Return` |

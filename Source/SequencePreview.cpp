@@ -95,35 +95,59 @@ juce::int64 SequencePreview::framesToNextBar (const Metronome::TempoMap& map, ju
 juce::String SequencePreview::render (const SequenceFile::Sequence& q, double tempo, int beatsPerBar, double sampleRate,
                                       juce::AudioPluginFormatManager& formats, juce::AudioBuffer<float>& out)
 {
+    return render (std::vector<SequenceFile::Sequence> { q }, tempo, beatsPerBar, sampleRate, formats, out);
+}
+
+juce::String SequencePreview::render (const std::vector<SequenceFile::Sequence>& all, double tempo, int beatsPerBar, double sampleRate,
+                                      juce::AudioPluginFormatManager& formats, juce::AudioBuffer<float>& out)
+{
     out.setSize (0, 0);
+    std::vector<const SequenceFile::Sequence*> parts;
 
-    if (SequenceFile::instrumentOf (q).isEmpty())
-        return "It has no instrument of its own: dropped on an instrument track, it plays on that track's.";
+    for (auto& q : all)
+        if (SequenceFile::instrumentOf (q).isNotEmpty())
+            parts.push_back (&q);
 
-    // A session of its own at the tempo, the sequence twice in a row on a track made from its voice.
+    if (parts.empty())
+        return all.size() > 1 ? "None of its parts has an instrument of its own: dropped into the session, they go on instrument tracks without one."
+                              : "It has no instrument of its own: dropped on an instrument track, it plays on that track's.";
+
+    // A session of its own at the tempo, each part twice in a row on a track made from its voice.
     SessionState s;
     s.sampleRate = sampleRate;
     s.tempo = tempo;
     s.beatsPerBar = beatsPerBar;
-    const auto placed = SequenceFile::place (s, q, -1, 0, false);
-    const auto* track = s.findTrack (placed.trackId);
+    std::vector<SequenceFile::Placed> placed;
+    juce::int64 length = 0;
 
-    if (placed.clipId == 0 || track == nullptr || track->noteClips.empty() || placed.effects == nullptr)
-        return "It could not be placed.";
+    for (auto* q : parts)
+    {
+        const auto p = SequenceFile::place (s, *q, -1, 0, false);
+        const auto* track = s.findTrack (p.trackId);
 
-    const auto length = track->noteClips.front().length;
-    SessionEdits::addNoteClip (s, placed.trackId, SequenceFile::toClip (q, s, length));
+        if (p.clipId == 0 || track == nullptr || track->noteClips.empty() || p.effects == nullptr)
+            return "It could not be placed.";
+
+        length = juce::jmax (length, track->noteClips.front().length);
+        placed.push_back (p);
+    }
+
+    for (size_t i = 0; i < parts.size(); ++i)
+        SessionEdits::addNoteClip (s, placed[i].trackId, SequenceFile::toClip (*parts[i], s, length));
 
     std::map<juce::uint32, std::unique_ptr<juce::XmlElement>> chains;
-    chains[placed.trackId] = std::make_unique<juce::XmlElement> (*placed.effects);
+
+    for (auto& p : placed)
+        chains[p.trackId] = std::make_unique<juce::XmlElement> (*p.effects);
 
     // Some plug-ins must be deleted on the message thread, so they go there when done.
     auto inserts = std::make_shared<TrackEffects>();
     const juce::ScopeGuard release { [&inserts] { juce::MessageManager::callAsync ([doomed = std::move (inserts)] {}); } };
     const auto warnings = OfflineRender::loadTrackEffects (chains, formats, sampleRate, *inserts);
 
-    if (inserts->getInstrument (placed.trackId) == nullptr)
-        return SequenceFile::instrumentOf (q) + " could not be loaded" + (warnings.isNotEmpty() ? ": " + warnings.trim() : juce::String ("."));
+    for (size_t i = 0; i < parts.size(); ++i)
+        if (inserts->getInstrument (placed[i].trackId) == nullptr)
+            return SequenceFile::instrumentOf (*parts[i]) + " could not be loaded" + (warnings.isNotEmpty() ? ": " + warnings.trim() : juce::String ("."));
 
     juce::AudioBuffer<float> mix;
 
@@ -140,14 +164,14 @@ juce::String SequencePreview::render (const SequenceFile::Sequence& q, double te
 
 struct SequencePreview::Job final : public juce::ThreadPoolJob
 {
-    Job (SequencePreview& p, juce::File f, SequenceFile::Sequence s, juce::String k, double t, int b, double r)
+    Job (SequencePreview& p, juce::File f, std::vector<SequenceFile::Sequence> s, juce::String k, double t, int b, double r)
         : juce::ThreadPoolJob ("Sequence preview"), owner (&p), formats (p.engine.pluginFormatManager),
-          file (std::move (f)), q (std::move (s)), key (std::move (k)), tempo (t), beatsPerBar (b), rate (r) {}
+          file (std::move (f)), parts (std::move (s)), key (std::move (k)), tempo (t), beatsPerBar (b), rate (r) {}
 
     JobStatus runJob() override
     {
         auto audio = std::make_shared<juce::AudioBuffer<float>>();
-        const auto failed = render (q, tempo, beatsPerBar, rate, formats, *audio);
+        const auto failed = render (parts, tempo, beatsPerBar, rate, formats, *audio);
 
         if (auto* p = owner.get())
         {
@@ -166,7 +190,7 @@ struct SequencePreview::Job final : public juce::ThreadPoolJob
     juce::WeakReference<SequencePreview> owner;
     juce::AudioPluginFormatManager& formats;
     juce::File file;
-    SequenceFile::Sequence q;
+    std::vector<SequenceFile::Sequence> parts;
     juce::String key;
     double tempo;
     int beatsPerBar;
@@ -192,9 +216,22 @@ void SequencePreview::play (const juce::File& file)
     error.clear();
 
     juce::String loadError;
-    const auto q = SequenceFile::load (file, loadError);
+    std::vector<SequenceFile::Sequence> parts;
 
-    if (! q.has_value())
+    if (file.hasFileExtension (SequenceKit::extension))
+    {
+        if (auto kit = SequenceKit::load (file, loadError))
+            parts = std::move (kit->parts);
+
+        if (parts.empty() && loadError.isEmpty())
+            loadError = file.getFileName() + " has no parts.";
+    }
+    else if (auto q = SequenceFile::load (file, loadError))
+    {
+        parts.push_back (std::move (*q));
+    }
+
+    if (parts.empty())
     {
         error = loadError;
 
@@ -223,7 +260,7 @@ void SequencePreview::play (const juce::File& file)
         }
 
     state = State::rendering;
-    renderer.addJob (new Job (*this, file, *q, key, tempo, beatsPerBar, rate), true);
+    renderer.addJob (new Job (*this, file, std::move (parts), key, tempo, beatsPerBar, rate), true);
 
     if (onChange != nullptr)
         onChange();

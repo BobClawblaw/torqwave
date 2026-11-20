@@ -54,6 +54,8 @@ std::vector<PanelKey> panelKeys()
         { "Sound Library", "Space", "Play or stop the selected sound" },
         { "Sound Library", "0 to 5", "Rate the selected sounds (0 clears the rating)" },
         { "Sound Library", "F", "Mark the selected sounds as favourites, or unmark them" },
+        { "Sequence Library", "0 to 5", "Rate the selected sequences and kits (0 clears the rating)" },
+        { "Sequence Library", "F", "Mark the selected sequences and kits as favourites, or unmark them" },
         { "Keyboard", "A to L and ;", "The white keys from C, an octave and a third" },
         { "Keyboard", "W E T Y U O P", "The black keys between them" },
         { "Marker List", "Return", "Rename the selected marker" },

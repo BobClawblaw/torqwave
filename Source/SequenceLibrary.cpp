@@ -1,4 +1,41 @@
 #include "SequenceLibrary.h"
+#include "SequenceMidi.h"
+#include "NoteTools.h"
+
+namespace
+{
+    juce::File& chosenFolder()
+    {
+        static juce::File chosen;
+        return chosen;
+    }
+
+    bool isLibraryXml (const juce::XmlElement& xml)
+    {
+        return xml.hasTagName ("TORQWAVE_SEQUENCE") || xml.hasTagName ("TORQWAVE_KIT");
+    }
+
+    /** A file saved before sequences kept the time they were added keeps its file's creation
+        time from now on, so rewriting it doesn't make it the newest. */
+    void keepAdded (juce::XmlElement& xml, const juce::File& file)
+    {
+        if (xml.getStringAttribute ("added").getLargeIntValue() <= 0)
+            xml.setAttribute ("added", juce::String (file.getCreationTime().toMilliseconds()));
+    }
+
+    /** Reads a sequence or kit, changes its XML, and writes it to `target` (its own file when none). */
+    juce::String rewrite (const juce::File& file, const std::function<void (juce::XmlElement&)>& change, const juce::File& target = {})
+    {
+        const auto xml = juce::XmlDocument::parse (file);
+
+        if (xml == nullptr || ! isLibraryXml (*xml))
+            return file.getFileName() + " is not a sequence or a kit.";
+
+        keepAdded (*xml, file);
+        change (*xml);
+        return SequenceFile::writeXml (*xml, target != juce::File() ? target : file);
+    }
+}
 
 const std::vector<SequenceLibrary::Role>& SequenceLibrary::roles()
 {
@@ -19,7 +56,17 @@ const std::vector<SequenceLibrary::Role>& SequenceLibrary::roles()
 
 juce::File SequenceLibrary::defaultFolder()
 {
+    return chosenFolder() != juce::File() ? chosenFolder() : standardFolder();
+}
+
+juce::File SequenceLibrary::standardFolder()
+{
     return juce::File::getSpecialLocation (juce::File::userMusicDirectory).getChildFile ("Torqwave").getChildFile ("Sequences");
+}
+
+void SequenceLibrary::setChosenFolder (const juce::File& folder)
+{
+    chosenFolder() = folder;
 }
 
 SequenceLibrary::SequenceLibrary (juce::File f) : folder (std::move (f)) {}
@@ -55,13 +102,13 @@ juce::File SequenceLibrary::newFileFor (const juce::String& role, const juce::St
     return newFileIn (folderFor (role, subRole), name);
 }
 
-juce::File SequenceLibrary::newFileIn (const juce::File& dir, const juce::String& name)
+juce::File SequenceLibrary::newFileIn (const juce::File& dir, const juce::String& name, const char* extension)
 {
     const auto base = juce::File::createLegalFileName (name.trim().isNotEmpty() ? name.trim() : juce::String ("Sequence"));
-    auto file = dir.getChildFile (base + SequenceFile::extension);
+    auto file = dir.getChildFile (base + extension);
 
     for (int n = 2; file.exists(); ++n)
-        file = dir.getChildFile (base + " " + juce::String (n) + SequenceFile::extension);
+        file = dir.getChildFile (base + " " + juce::String (n) + extension);
 
     return file;
 }
@@ -175,12 +222,14 @@ juce::File SequenceLibrary::moveInto (const juce::File& sequence, const juce::St
     if (sequence.getParentDirectory() == dir && ! copy)
         return sequence;
 
-    auto q = SequenceFile::load (sequence, error);
+    const auto isKit = sequence.hasFileExtension (SequenceFile::kitExtension);
+    const auto xml = juce::XmlDocument::parse (sequence);
 
-    if (! q.has_value())
+    if (xml == nullptr || ! xml->hasTagName (isKit ? "TORQWAVE_KIT" : "TORQWAVE_SEQUENCE"))
+    {
+        error = sequence.getFileName() + (isKit ? " is not a kit." : " is not a sequence.");
         return {};
-
-    setRoleFrom (*q, path);
+    }
 
     if (! dir.isDirectory() && ! dir.createDirectory())
     {
@@ -188,9 +237,20 @@ juce::File SequenceLibrary::moveInto (const juce::File& sequence, const juce::St
         return {};
     }
 
-    const auto target = newFileIn (dir, sequence.getFileNameWithoutExtension());
+    const auto target = newFileIn (dir, sequence.getFileNameWithoutExtension(), isKit ? SequenceFile::kitExtension : SequenceFile::extension);
 
-    if (error = SequenceFile::save (*q, target); error.isNotEmpty())
+    error = rewrite (sequence, [&path, isKit] (juce::XmlElement& x)
+    {
+        if (isKit)
+            return;
+
+        SequenceFile::Sequence q;
+        setRoleFrom (q, path);
+        x.setAttribute ("role", q.role);
+        x.setAttribute ("subRole", q.subRole);
+    }, target);
+
+    if (error.isNotEmpty())
         return {};
 
     if (! copy && ! sequence.deleteFile())
@@ -228,35 +288,61 @@ juce::String SequenceLibrary::makeFolder (const juce::StringArray& parent, const
 std::vector<SequenceLibrary::Entry> SequenceLibrary::scan() const
 {
     std::vector<Entry> entries;
+    const auto wildcard = juce::String ("*") + SequenceFile::extension + ";*" + SequenceFile::kitExtension;
 
-    for (const auto& found : juce::RangedDirectoryIterator (folder, true, juce::String ("*") + SequenceFile::extension, juce::File::findFiles))
+    for (const auto& found : juce::RangedDirectoryIterator (folder, true, wildcard, juce::File::findFiles))
     {
         const auto file = found.getFile();
         const auto xml = juce::XmlDocument::parse (file);
-        const auto q = xml != nullptr ? SequenceFile::fromXml (*xml) : std::nullopt;
 
-        if (! q.has_value())
+        if (xml == nullptr)
             continue;
 
         Entry e;
         e.file = file;
-        e.name = q->name.isNotEmpty() ? q->name : file.getFileNameWithoutExtension();
-        e.key = q->key;
-        e.tags = q->tags;
-        e.bars = q->bars();
-        e.hasInstrument = SequenceFile::instrumentOf (*q).isNotEmpty();
+
+        if (const auto q = SequenceFile::fromXml (*xml))
+        {
+            e.name = q->name;
+            e.key = q->key;
+            e.tags = q->tags;
+            e.bars = q->bars();
+            e.hasInstrument = SequenceFile::instrumentOf (*q).isNotEmpty();
+            e.rating = q->rating;
+            e.favourite = q->favourite;
+            e.added = q->added;
+        }
+        else if (const auto kit = SequenceKit::fromXml (*xml))
+        {
+            e.isKit = true;
+            e.name = kit->name;
+            e.key = kit->key;
+            e.tags = kit->tags;
+            e.bars = kit->bars();
+            e.parts = (int) kit->parts.size();
+            e.hasInstrument = std::any_of (kit->parts.begin(), kit->parts.end(), [] (auto& p) { return SequenceFile::instrumentOf (p).isNotEmpty(); });
+            e.rating = kit->rating;
+            e.favourite = kit->favourite;
+            e.added = kit->added;
+        }
+        else
+        {
+            continue;
+        }
+
+        if (e.name.isEmpty())
+            e.name = file.getFileNameWithoutExtension();
+
+        if (e.added <= 0)
+            e.added = file.getCreationTime().toMilliseconds();
+
         e.path.addTokens (file.getParentDirectory().getRelativePathFrom (folder), juce::File::getSeparatorString(), {});
         e.path.removeString (".");
         e.path.removeEmptyStrings();
         entries.push_back (std::move (e));
     }
 
-    std::sort (entries.begin(), entries.end(), [] (const Entry& a, const Entry& b)
-    {
-        const auto pa = a.path.joinIntoString ("/"), pb = b.path.joinIntoString ("/");
-        return pa != pb ? pa.compareNatural (pb) < 0 : a.name.compareNatural (b.name) < 0;
-    });
-
+    sort (entries, Sort::name);
     return entries;
 }
 
@@ -272,4 +358,235 @@ bool SequenceLibrary::matches (const Entry& e, const juce::String& search)
             return false;
 
     return true;
+}
+
+juce::StringArray SequenceLibrary::sortNames()
+{
+    return { "Name", "Bars", "Rating", "Newest" };
+}
+
+void SequenceLibrary::sort (std::vector<Entry>& entries, Sort by)
+{
+    std::stable_sort (entries.begin(), entries.end(), [by] (const Entry& a, const Entry& b)
+    {
+        if (const auto pa = a.path.joinIntoString ("/"), pb = b.path.joinIntoString ("/"); pa != pb)
+            return pa.compareNatural (pb) < 0;
+
+        switch (by)
+        {
+            case Sort::bars:   if (! juce::exactlyEqual (a.bars, b.bars)) return a.bars < b.bars; break;
+            case Sort::rating: if (a.rating != b.rating) return a.rating > b.rating; break;
+            case Sort::newest: if (a.added != b.added) return a.added > b.added; break;
+            case Sort::name:   break;
+        }
+
+        return a.name.compareNatural (b.name) < 0;
+    });
+}
+
+bool SequenceLibrary::fitsKey (const Entry& e, const juce::String& sessionKey)
+{
+    const auto session = NoteTools::parseKey (sessionKey);
+
+    if (! session.has_value() || e.key.trim().isEmpty())
+        return true;
+
+    const auto own = NoteTools::parseKey (e.key);
+    return own.has_value() && *own == *session;
+}
+
+juce::String SequenceLibrary::setRating (const juce::File& file, int rating)
+{
+    return rewrite (file, [rating] (juce::XmlElement& x)
+    {
+        if (rating > 0)
+            x.setAttribute ("rating", juce::jlimit (1, 5, rating));
+        else
+            x.removeAttribute ("rating");
+    });
+}
+
+juce::String SequenceLibrary::setFavourite (const juce::File& file, bool favourite)
+{
+    return rewrite (file, [favourite] (juce::XmlElement& x)
+    {
+        if (favourite)
+            x.setAttribute ("favourite", true);
+        else
+            x.removeAttribute ("favourite");
+    });
+}
+
+juce::File SequenceLibrary::rename (const juce::File& file, const juce::String& name, juce::String& error)
+{
+    const auto legal = juce::File::createLegalFileName (name.trim());
+
+    if (legal.isEmpty())
+    {
+        error = "It needs a name.";
+        return {};
+    }
+
+    const auto target = file.getSiblingFile (legal + file.getFileExtension());
+
+    if (target.exists() && target != file)
+    {
+        error = "There is already one called " + legal + " there.";
+        return {};
+    }
+
+    if (error = rewrite (file, [&legal] (juce::XmlElement& x) { x.setAttribute ("name", legal); }, target); error.isNotEmpty())
+        return {};
+
+    if (target != file)
+        file.deleteFile();
+
+    return target;
+}
+
+juce::File SequenceLibrary::saveKit (const juce::String& name, const juce::Array<juce::File>& sequences, juce::String& error) const
+{
+    const auto kit = SequenceKit::fromFiles (name, sequences, error);
+
+    if (! kit.has_value())
+        return {};
+
+    const auto file = newFileIn (folderFor ("Kits", {}), kit->name, SequenceKit::extension);
+
+    if (error = SequenceKit::save (*kit, file); error.isNotEmpty())
+        return {};
+
+    return file;
+}
+
+juce::Array<juce::File> SequenceLibrary::sequencesIn (const juce::StringArray& path) const
+{
+    const auto dir = folderAt (path);
+    juce::Array<juce::File> files;
+
+    for (const auto& found : juce::RangedDirectoryIterator (dir, true, juce::String ("*") + SequenceFile::extension, juce::File::findFiles))
+        files.add (found.getFile());
+
+    std::sort (files.begin(), files.end(), [&dir] (const juce::File& a, const juce::File& b)
+    {
+        return a.getRelativePathFrom (dir).compareNatural (b.getRelativePathFrom (dir)) < 0;
+    });
+
+    return files;
+}
+
+juce::Array<juce::File> SequenceLibrary::importMidi (const juce::Array<juce::File>& files, const juce::StringArray& path,
+                                                     std::shared_ptr<const juce::XmlElement> voice, juce::StringArray& errors) const
+{
+    juce::Array<juce::File> made;
+    const auto dir = folderAt (path);
+
+    for (auto& f : files)
+    {
+        auto imported = SequenceMidi::importFile (f);
+
+        if (imported.error.isNotEmpty())
+        {
+            errors.add (imported.error);
+            continue;
+        }
+
+        for (auto& q : imported.sequences)
+        {
+            q.voice = voice;
+            setRoleFrom (q, path);
+            const auto target = newFileIn (dir, q.name);
+
+            if (const auto error = SequenceFile::save (q, target); error.isNotEmpty())
+                errors.add (error);
+            else
+                made.add (target);
+        }
+    }
+
+    return made;
+}
+
+juce::String SequenceLibrary::savePack (const juce::StringArray& path, const juce::File& pack, int& count) const
+{
+    const auto dir = folderAt (path);
+    const auto wildcard = juce::String ("*") + SequenceFile::extension + ";*" + SequenceFile::kitExtension;
+    juce::ZipFile::Builder zip;
+    count = 0;
+
+    for (const auto& found : juce::RangedDirectoryIterator (dir, true, wildcard, juce::File::findFiles))
+    {
+        const auto stored = found.getFile().getRelativePathFrom (folder).replaceCharacter ('\\', '/');
+        zip.addFile (found.getFile(), 9, stored);
+        ++count;
+    }
+
+    if (count == 0)
+        return "There are no sequences or kits in " + nameOf (path) + " to pack.";
+
+    juce::TemporaryFile temp (pack);
+
+    {
+        juce::FileOutputStream out (temp.getFile());
+
+        if (! out.openedOk() || ! zip.writeToStream (out, nullptr))
+            return "Couldn't write " + pack.getFullPathName() + ".";
+    }
+
+    if (! temp.overwriteTargetFileWithTemporary())
+        return "Couldn't write " + pack.getFullPathName() + ".";
+
+    return {};
+}
+
+juce::Array<juce::File> SequenceLibrary::openPack (const juce::File& pack, juce::StringArray& errors) const
+{
+    juce::Array<juce::File> made;
+    juce::ZipFile zip (pack);
+
+    if (zip.getNumEntries() == 0)
+    {
+        errors.add (pack.getFileName() + " is not a pack.");
+        return made;
+    }
+
+    constexpr juce::int64 largest = 64 * 1024 * 1024;   // no sequence is near this; anything bigger is not one
+
+    for (int i = 0; i < zip.getNumEntries(); ++i)
+    {
+        const auto* entry = zip.getEntry (i);
+        const auto stored = entry->filename.replaceCharacter ('\\', '/');
+        const auto fileName = stored.fromLastOccurrenceOf ("/", false, false);
+        const auto isKit = fileName.endsWithIgnoreCase (SequenceFile::kitExtension);
+
+        if (entry->isSymbolicLink || ! (isKit || fileName.endsWithIgnoreCase (SequenceFile::extension)))
+            continue;
+
+        if (entry->uncompressedSize > largest)
+        {
+            errors.add (stored + " is too large to be a sequence.");
+            continue;
+        }
+
+        std::unique_ptr<juce::InputStream> in (zip.createStreamForEntry (i));
+        const auto xml = in != nullptr ? juce::XmlDocument::parse (in->readEntireStreamAsString()) : nullptr;
+        const auto q = xml != nullptr && ! isKit ? SequenceFile::fromXml (*xml) : std::nullopt;
+
+        if (xml == nullptr || (isKit ? ! xml->hasTagName ("TORQWAVE_KIT") : ! q.has_value()))
+        {
+            errors.add (stored + (isKit ? " is not a kit." : " is not a sequence."));
+            continue;
+        }
+
+        const auto dir = isKit ? folderFor ("Kits", {}) : folderFor (q->role, q->role == "Inbox" ? juce::String() : q->subRole);
+        const auto base = fileName.upToLastOccurrenceOf (".", false, false);
+        const auto target = newFileIn (dir, base, isKit ? SequenceFile::kitExtension : SequenceFile::extension);
+
+        if (const auto error = SequenceFile::writeXml (*xml, target); error.isNotEmpty())
+            errors.add (error);
+        else
+            made.add (target);
+    }
+
+    return made;
 }

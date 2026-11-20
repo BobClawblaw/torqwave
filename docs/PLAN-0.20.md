@@ -112,7 +112,10 @@ Built in `IdeaBoard` (the board file, its launches and Send to Session) and `Ide
 - **Send to Session** lays the scenes out as arranger sections, with the tracks and clips filled in.
 - **Tests:** launches land on bars; Send to Session makes the tracks, clips and sections exactly as the board holds them, as one undo step.
 
-## Step 6: kits, MIDI files and packs (M)
+## Step 6: kits, MIDI files and packs (M) — done
+
+Built as planned, in `SequenceKit` (the `.tqkit` file and the drop), `SequenceMidi` (Standard MIDI Files at 960 ticks a beat) and `SequenceLibrary` (packs, ratings, sorting, the key filter, the chosen folder). A kit holds its parts whole rather than pointing at sequence files, so it moves and shares as one file. Ratings, favourites and the time a sequence was added are attributes of its own file, not an index, so they travel with it through the Finder, moves and packs. The session's key is a new session attribute set in the Tempo dialog (not the Track Inspector). Fits the Session also shows sequences with no key (drums), and a pack opens by each sequence's role and sub-role, so the user's own folders inside a sub-role are not recreated.
+
 
 - **Kits** (`.tqkit`): a set of sequences meant to play together, dropped as a track for each under a folder track.
 - **MIDI files:** export a sequence as a `.mid`, and import `.mid` files into the library, choosing a voice for them.

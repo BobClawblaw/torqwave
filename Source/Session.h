@@ -730,6 +730,11 @@ struct SessionState
     std::vector<Metronome::TempoChange> tempoChanges;   // at later bars, sorted by bar, one a bar
     juce::String notes;                                 // free text kept with the session
 
+    /** The session's key, as NoteTools::parseKey reads it and Scale::name writes it ("A minor"),
+        or empty for none (sessions from before it). The Sequence Library's Fits the Session
+        filter shows the sequences in it. Set with SessionEdits::setKey. */
+    juce::String musicalKey;
+
     /** The video the session goes with, shown in the Video panel, and where in the session (in
         seconds, 0 or later) its first frame plays. */
     juce::File video;
@@ -1251,6 +1256,10 @@ namespace SessionEdits
         clips on musical tracks on their bars and beats. False when one is out of range or it is
         all as given. */
     bool setTempoMap (SessionState&, double tempo, int beatsPerBar, std::vector<Metronome::TempoChange>);
+
+    /** Sets the session's key from a key as written ("A minor", "Am", "F# dorian"), stored as
+        its name ("A minor"); empty clears it. False when it isn't a key or it is already so. */
+    bool setKey (SessionState&, const juce::String& key);
 
     /** Copies [start, end) from every track: the clips across it cut to it (losing their fades
         on the cut sides), each envelope's line across it, and the markers in it as

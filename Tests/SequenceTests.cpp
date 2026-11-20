@@ -1,5 +1,6 @@
 #include <JuceHeader.h>
 #include "../Source/SequenceLibraryView.h"
+#include "../Source/SequenceMidi.h"
 #include "../Source/SequencerView.h"
 #include "../Source/IdeaBoard.h"
 #include "../Source/AudioEngine.h"
@@ -426,8 +427,10 @@ void runSequenceTests (AudioEngine& engine)
         const auto saveError = doc.saveTo (file, nullptr);
         juce::String error;
         const auto back = SequenceFile::load (file, error);
-        const auto same = [] (const SequenceFile::Sequence& a, const SequenceFile::Sequence& b)
+        // When the file was first written is the library's, not the sequence's: left out.
+        const auto same = [] (SequenceFile::Sequence a, SequenceFile::Sequence b)
         {
+            a.added = b.added = 0;
             return SequenceFile::toXml (a)->isEquivalentTo (SequenceFile::toXml (b).get(), false);
         };
 
@@ -985,5 +988,360 @@ void runSequenceTests (AudioEngine& engine)
 
         juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
         folder.deleteRecursively();
+    }
+
+    // Kits, MIDI files and packs (step 6).
+    {
+        juce::PluginDescription synth;
+
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.fileOrIdentifier == BuiltInEffects::basicSynthId)
+                synth = d;
+
+        const auto folder = juce::File::createTempFile ("kits");
+        SequenceLibrary library (folder);
+        library.makeFolders();
+        const std::shared_ptr<const juce::XmlElement> voice (SequenceFile::voiceFor (synth).release());
+
+        const auto part = [&] (const juce::String& name, int pitch, int bars, const juce::String& key)
+        {
+            SequenceFile::Sequence q;
+            q.name = name;
+            q.key = key;
+            q.length = bars * 4 * SequenceFile::ticksPerBeat;
+
+            for (int beat = 0; beat < bars * 4; ++beat)
+                q.notes.push_back ({ pitch, beat * SequenceFile::ticksPerBeat, 240, 100.0f / 127.0f });
+
+            q.voice = voice;
+            return q;
+        };
+
+        // A kit of three parts: made from the files, in Kits, and found by the scan.
+        const auto kick = library.newFileFor ("Drums", "Kick", "Kick");
+        const auto bass = library.newFileFor ("Bass", "Sub", "Bass");
+        const auto chords = library.newFileFor ("Harmony", "Progressions", "Chords");
+        SequenceFile::save (part ("Kick", 36, 1, {}), kick);
+        SequenceFile::save (part ("Bass", 40, 2, "E minor"), bass);
+        SequenceFile::save (part ("Chords", 64, 4, "Em"), chords);
+        juce::String error;
+        const auto kitFile = library.saveKit ("Night Drive", { kick, bass, chords }, error);
+        const auto kit = SequenceKit::load (kitFile, error);
+        const auto scanned = library.scan();
+        const auto kitEntry = std::find_if (scanned.begin(), scanned.end(), [] (auto& e) { return e.isKit; });
+
+        check (error.isEmpty() && kitFile == folder.getChildFile ("Kits").getChildFile (juce::String ("Night Drive") + SequenceKit::extension) && kit.has_value()
+                   && kit->parts.size() == 3 && kit->parts[1].name == "Bass" && kit->parts[2].notes.size() == 16 && kit->key == "E minor"
+                   && SequenceFile::instrumentOf (kit->parts[0]) == synth.name
+                   && kitEntry != scanned.end() && kitEntry->parts == 3 && kitEntry->path == juce::StringArray { "Kits" } && juce::exactlyEqual (kitEntry->bars, 4.0)
+                   && kitEntry->hasInstrument && scanned.size() == 4,
+               "kits: three sequences saved as a kit make one file in Kits holding every part with its notes and voice; the scan shows it as a kit of 3 parts, "
+               "4 bars (its longest); its key is E minor, the key of the bass (E minor) and the chords (Em), the kick having none");
+
+        juce::String keyError;
+        const auto lead = library.newFileFor ("Melody", "Leads", "Lead");
+        SequenceFile::save (part ("Lead", 67, 1, "G major"), lead);
+        const auto mixedKeys = SequenceKit::fromFiles ("Two Keys", { bass, lead }, keyError);
+        check (mixedKeys.has_value() && mixedKeys->key.isEmpty() && keyError.isEmpty() && ! SequenceKit::fromFiles ("None", {}, keyError).has_value() && keyError.isNotEmpty(),
+               "kits: parts in two keys (E minor, G major) give the kit no key; a kit of nothing is refused");
+        lead.deleteFile();
+
+        // Dropped into a session: a folder track named for it, every part on a track of its own
+        // in it, from the same frame, as one undo step, each part's instrument loaded.
+        {
+            engine.clearTrackEffects();
+            auto start = sessionAt (120.0);
+            start.addTrack();
+            engine.session.reset (start, {});
+            const auto before = engine.session.getState()->tracks.size();
+            const auto position = start.tempoMap().barFrame (2);
+            auto finished = false;
+            juce::String loadErrors;
+            const auto placed = SequenceKit::addToSession (engine, *kit, position, [&] (const juce::String& e) { loadErrors = e; finished = true; });
+            TestUtils::runUntil ([&] { return finished; }, 30000);
+
+            const auto state = engine.session.getState();
+            const auto* folderTrack = state->findTrack (placed.folderId);
+            auto inFolder = placed.parts.size() == 3;
+            auto loaded = finished && loadErrors.isEmpty();
+
+            for (size_t i = 0; i < placed.parts.size(); ++i)
+            {
+                const auto* t = state->findTrack (placed.parts[i].trackId);
+                inFolder = inFolder && t != nullptr && t->folderId == placed.folderId && t->isInstrument && t->name == kit->parts[i].name
+                           && t->noteClips.size() == 1 && t->noteClips[0].position == position;
+                loaded = loaded && engine.getTrackEffects().getInstrument (placed.parts[i].trackId) != nullptr;
+            }
+
+            const auto description = engine.session.getUndoDescription();
+            const auto after = state->tracks.size();
+            engine.session.undo();
+            const auto undone = engine.session.getState()->tracks.size();
+            engine.session.redo();
+            const auto redone = engine.session.getState()->tracks.size();
+
+            check (folderTrack != nullptr && folderTrack->isFolder && folderTrack->name == "Night Drive" && inFolder && after == before + 4
+                       && description == "Add Kit Night Drive" && undone == before && redone == after,
+                   "kits: dropped, Night Drive makes a folder track of its name and a track for each of its 3 parts in it, named for the part, each clip at bar 3; "
+                   "one undo step (\"Add Kit Night Drive\") takes all 4 tracks away and redo brings them back (" + juce::String ((int) before) + " tracks, then "
+                       + juce::String ((int) after) + ", " + juce::String ((int) undone) + " after undo)");
+            check (loaded, "kits: each part's voice (the basic synth) is loaded onto its track" + (loadErrors.isEmpty() ? juce::String() : " (" + loadErrors + ")"));
+
+            engine.clearTrackEffects();
+            engine.session.reset (sessionAt (120.0), {});
+        }
+
+        // The kit's preview plays its parts together.
+        {
+            juce::AudioBuffer<float> both, one;
+            const auto bothError = SequencePreview::render (kit->parts, 120.0, 4, rate, engine.pluginFormatManager, both);
+            const auto oneError = SequencePreview::render (kit->parts[0], 120.0, 4, rate, engine.pluginFormatManager, one);
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+            check (bothError.isEmpty() && oneError.isEmpty() && both.getNumSamples() == 4 * 96000 && one.getNumSamples() == 96000
+                       && both.getRMSLevel (0, 0, both.getNumSamples()) > one.getRMSLevel (0, 0, one.getNumSamples()) * 0.5f,
+                   "kits: the preview renders all three parts together for the longest part's 4 bars (384000 frames at 120 BPM; the kick alone is one bar, 96000)");
+        }
+
+        // MIDI files: exported and read back, the notes as they play, the tempo, time signature and key.
+        {
+            auto s = sessionAt (120.0);
+            const auto trackId = s.addInstrumentTrack().id;
+            auto groove = *SequenceFile::fromClip (s, addPattern (s, trackId), nullptr);
+            groove.writtenTempo = 96.0;
+            groove.beatsPerBar = 3;
+            groove.key = "Bb major";
+            groove.length = 6 * SequenceFile::ticksPerBeat;   // two bars of 3/4
+            const auto played = SequenceMidi::playedNotes (groove);
+            const auto mid = folder.getChildFile ("Groove.mid");
+            const auto exportError = SequenceMidi::exportFile ({ groove }, mid);
+            const auto back = SequenceMidi::importFile (mid);
+            const auto& got = back.sequences.empty() ? SequenceFile::Sequence {} : back.sequences.front();
+            auto same = got.notes.size() == played.size() && ! played.empty();
+
+            for (size_t i = 0; same && i < played.size(); ++i)
+                same = got.notes[i].pitch == played[i].pitch && got.notes[i].start == played[i].start && got.notes[i].length == played[i].length
+                       && std::abs (got.notes[i].velocity - played[i].velocity) <= 0.5f / 127.0f;
+
+            const auto* mod = got.lanes.empty() ? nullptr : &got.lanes.front();
+
+            check (exportError.isEmpty() && back.error.isEmpty() && back.sequences.size() == 1 && same && got.name == "Groove" && got.channel == 3
+                       && juce::exactlyEqual (got.writtenTempo, 96.0) && got.beatsPerBar == 3 && got.key == "Bb major" && got.length == 6 * SequenceFile::ticksPerBeat
+                       && mod != nullptr && mod->controller == 1,
+                   "midi files: a sequence exported as a .mid and imported again keeps its " + juce::String ((int) played.size())
+                       + " notes as they play (its loop of a bar unrolled, the half beat before its start left out), each to the tick, velocity within 1/127; "
+                         "its name, channel 3, 96 BPM, 3/4, Bb major and its mod wheel lane come back");
+
+            // A note that ends where the next of the same pitch starts stays two notes.
+            SequenceFile::Sequence repeated;
+            repeated.name = "Repeat";
+            repeated.length = 4 * SequenceFile::ticksPerBeat;
+            repeated.notes = { { 60, 0, 960, 0.8f }, { 60, 960, 960, 0.8f } };
+            const auto two = SequenceMidi::read (SequenceMidi::toMidiFile ({ repeated }), "Repeat.mid");
+            check (two.sequences.size() == 1 && two.sequences[0].notes.size() == 2 && two.sequences[0].notes[1].start == 960 && two.sequences[0].notes[0].length == 960,
+                   "midi files: a note ending where the next of the same pitch starts comes back as two notes");
+
+            // A kit's export: a track a part; imported into the library with a voice, each becomes a sequence there.
+            const auto kitMid = folder.getChildFile ("Night Drive.mid");
+            SequenceMidi::exportFile (kit->parts, kitMid);
+            juce::StringArray errors;
+            const auto made = library.importMidi ({ kitMid, folder.getChildFile ("missing.mid") }, { "Bass", "Sub" }, voice, errors);
+            const auto first = made.isEmpty() ? std::nullopt : SequenceFile::load (made[0], error);
+            check (made.size() == 3 && errors.size() == 1 && first.has_value() && first->role == "Bass" && first->subRole == "Sub" && first->name == "Kick"
+                       && first->notes.size() == 4 && SequenceFile::instrumentOf (*first) == synth.name
+                       && made[0].getParentDirectory() == folder.getChildFile ("Bass").getChildFile ("Sub") && made[1].getFileName() == "Bass 2.tqseq",
+                   "midi files: a kit's three parts export as three tracks; imported into Bass > Sub with the basic synth, each becomes a sequence there "
+                   "(Bass 2, as a Bass is there), playing on the synth; a file that can't be read is reported (" + errors.joinIntoString (" ") + ")");
+
+            for (auto& f : made)
+                f.deleteFile();
+        }
+
+        // Packs: a folder zipped, then opened into another library by each sequence's role and sub-role.
+        {
+            const auto mine = folder.getChildFile ("Drums").getChildFile ("Hats & Tops").getChildFile ("My Hats");
+            auto tick = part ("Tick", 42, 1, {});
+            tick.role = "Drums";
+            tick.subRole = "Hats & Tops";
+            SequenceFile::save (tick, mine.getChildFile (juce::String ("Tick") + SequenceFile::extension));
+            auto thump = SequenceFile::load (kick, error);
+            thump->role = "Drums";
+            thump->subRole = "Kick";
+            SequenceFile::save (*thump, kick);
+
+            const auto drumsPack = folder.getChildFile (juce::String ("Drums") + SequenceLibrary::packExtension);
+            const auto kitsPack = folder.getChildFile (juce::String ("Kits") + SequenceLibrary::packExtension);
+            int drumsCount = 0, kitsCount = 0, emptyCount = 0;
+            const auto drumsError = library.savePack ({ "Drums" }, drumsPack, drumsCount);
+            const auto kitsError = library.savePack ({ "Kits" }, kitsPack, kitsCount);
+            const auto emptyError = library.savePack ({ "SFX" }, folder.getChildFile ("Empty.tqpack"), emptyCount);
+
+            const auto other = juce::File::createTempFile ("kits-other");
+            SequenceLibrary into (other);
+            into.makeFolders();
+            SequenceFile::save (part ("Kick", 36, 1, {}), into.newFileFor ("Drums", "Kick", "Kick"));
+            juce::StringArray errors;
+            const auto opened = into.openPack (drumsPack, errors);
+            const auto openedKit = into.openPack (kitsPack, errors);
+
+            // One made by hand: a sequence of a role not known, and a file that is not a sequence.
+            const auto handMade = folder.getChildFile ("Mixed.zip");
+            {
+                auto polka = part ("Oompah", 50, 1, {});
+                polka.role = "Polka";
+                const auto polkaFile = folder.getChildFile (juce::String ("Oompah") + SequenceFile::extension);
+                SequenceFile::save (polka, polkaFile);
+                const auto text = folder.getChildFile ("read me.txt");
+                text.replaceWithText ("notes");
+                juce::ZipFile::Builder zip;
+                zip.addFile (polkaFile, 9, "Polka/Oompah.tqseq");
+                zip.addFile (text, 9, "read me.txt");
+                juce::FileOutputStream out (handMade);
+                zip.writeToStream (out, nullptr);
+            }
+
+            juce::StringArray mixedErrors;
+            const auto mixed = into.openPack (handMade, mixedErrors);
+            const auto thumpBack = SequenceFile::load (other.getChildFile ("Drums").getChildFile ("Kick").getChildFile ("Kick 2.tqseq"), error);
+
+            check (drumsError.isEmpty() && drumsCount == 2 && kitsError.isEmpty() && kitsCount == 1 && emptyError.isNotEmpty() && emptyCount == 0,
+                   "packs: Drums zips its 2 sequences (its own folders' too) and Kits its kit; a folder with none is refused (" + emptyError + ")");
+            check (opened.size() == 2 && errors.isEmpty() && other.getChildFile ("Drums").getChildFile ("Hats & Tops").getChildFile ("Tick.tqseq").existsAsFile()
+                       && thumpBack.has_value() && thumpBack->notes.size() == 4
+                       && openedKit.size() == 1 && openedKit[0] == other.getChildFile ("Kits").getChildFile ("Night Drive.tqkit")
+                       && mixed.size() == 1 && mixed[0] == other.getChildFile ("Inbox").getChildFile ("Oompah.tqseq") && mixedErrors.isEmpty(),
+                   "packs: opened into another library, each sequence goes to the folder of its role and sub-role (Tick to Drums > Hats & Tops), a name already "
+                   "there gets a number (Kick 2), the kit goes to Kits; a role not known goes to the Inbox, and a file that is not a sequence is skipped");
+            other.deleteRecursively();
+        }
+
+        // Ratings, favourites, sorting and the key filter.
+        {
+            const auto shelf = juce::File::createTempFile ("kits-sorting");
+            SequenceLibrary sorted (shelf);
+            sorted.makeFolders();
+            const auto put = [&] (const juce::String& name, int bars, const juce::String& key, juce::int64 added)
+            {
+                auto q = part (name, 60, bars, key);
+                q.role = "Melody";
+                q.subRole = "Leads";
+                q.added = added;
+                const auto file = sorted.newFileFor ("Melody", "Leads", name);
+                SequenceFile::writeXml (*SequenceFile::toXml (q), file);
+                return file;
+            };
+
+            const auto alpha = put ("Alpha", 2, "A minor", 1000);
+            const auto beta = put ("Beta", 1, "C major", 3000);
+            const auto gamma = put ("Gamma", 4, {}, 2000);
+            const auto before = SequenceFile::load (gamma, error);
+            const auto rated = SequenceLibrary::setRating (alpha, 2) + SequenceLibrary::setRating (beta, 5) + SequenceLibrary::setRating (gamma, 4)
+                               + SequenceLibrary::setFavourite (beta, true);
+            const auto after = SequenceFile::load (gamma, error);
+            const auto entries = sorted.scan();
+            const auto namesIn = [] (std::vector<SequenceLibrary::Entry> e, SequenceLibrary::Sort by)
+            {
+                SequenceLibrary::sort (e, by);
+                juce::StringArray names;
+
+                for (auto& x : e)
+                    names.add (x.name);
+
+                return names.joinIntoString (" ");
+            };
+
+            check (rated.isEmpty() && after.has_value() && after->rating == 4 && ! after->favourite && after->notes == before->notes && after->added == 2000
+                       && entries.size() == 3 && entries[1].favourite && entries[1].rating == 5,
+               "ratings: a rating and a favourite mark are written into the sequence's own file, its notes and the time it was added as they were");
+            check (namesIn (entries, SequenceLibrary::Sort::name) == "Alpha Beta Gamma" && namesIn (entries, SequenceLibrary::Sort::bars) == "Beta Alpha Gamma"
+                       && namesIn (entries, SequenceLibrary::Sort::rating) == "Beta Gamma Alpha" && namesIn (entries, SequenceLibrary::Sort::newest) == "Beta Gamma Alpha",
+                   "sorting: by name Alpha Beta Gamma; by bars (1, 2, 4) Beta Alpha Gamma; by rating (5, 4, 2) Beta Gamma Alpha; newest first Beta Gamma Alpha");
+            check (SequenceLibrary::fitsKey (entries[0], "Am") && ! SequenceLibrary::fitsKey (entries[1], "A minor") && SequenceLibrary::fitsKey (entries[2], "A minor")
+                       && SequenceLibrary::fitsKey (entries[1], {}) && ! SequenceLibrary::fitsKey (entries[0], "A dorian"),
+                   "key filter: Alpha (A minor) fits a session in Am, Beta (C major) doesn't, Gamma (no key) does; with no session key everything fits; A dorian is another key");
+
+            SequenceLibraryView view (shelf);
+            view.getSessionKey = [] { return juce::String ("A minor"); };
+            const auto files = [&view]
+            {
+                juce::StringArray names;
+
+                for (auto& f : view.shownFiles())
+                    names.add (f.getFileNameWithoutExtension());
+
+                return names.joinIntoString (" ");
+            };
+
+            view.setFitsSession (true);
+            const auto fitting = files();
+            view.setFitsSession (false);
+            view.setSort (SequenceLibrary::Sort::rating);
+            const auto byRating = files();
+            view.setFavouritesOnly (true);
+            const auto favourites = files();
+            view.setFavouritesOnly (false);
+            view.select (gamma);
+            const auto keyHandled = view.keyPressed (juce::KeyPress ('1')) && view.keyPressed (juce::KeyPress ('f'));
+            const auto pressed = SequenceFile::load (gamma, error);
+            const auto byRatingAfter = files();
+
+            check (fitting == "Alpha Gamma" && byRating == "Beta Gamma Alpha" && favourites == "Beta" && keyHandled && pressed.has_value() && pressed->rating == 1
+                       && pressed->favourite && byRatingAfter == "Beta Alpha Gamma" && view.selectedFiles() == juce::Array<juce::File> { gamma },
+                   "sequence library panel: Fits the Session in A minor shows Alpha and Gamma; by rating Beta Gamma Alpha; Favourites shows Beta; "
+                   "1 and F on the selected Gamma rate it 1 and mark it, it moves to the end by rating and stays selected");
+            shelf.deleteRecursively();
+        }
+
+        // The library's folder chosen in Settings.
+        {
+            const auto chosen = folder.getChildFile ("Elsewhere");
+            SequenceLibrary::setChosenFolder (chosen);
+            const auto used = SequenceLibrary::defaultFolder();
+            SequenceLibrary::setChosenFolder ({});
+            check (used == chosen && SequenceLibrary::defaultFolder() == SequenceLibrary::standardFolder(),
+                   "sequence library: the folder chosen in Settings is the library's; with none it is the standard one again");
+        }
+
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+        folder.deleteRecursively();
+    }
+
+    // The session's key: set as one undo step, kept in the session file, absent from older ones.
+    {
+        auto s = sessionAt (120.0);
+        const auto set = SessionEdits::setKey (s, "f# dorian");
+        const auto again = SessionEdits::setKey (s, "F# dorian");
+        const auto bad = SessionEdits::setKey (s, "H minor");
+        const auto named = s.musicalKey;
+
+        const auto dir = juce::File::createTempFile ("session-key");
+        dir.createDirectory();
+        const auto withKey = dir.getChildFile ("keyed.tqsession");
+        const auto withoutKey = dir.getChildFile ("plain.tqsession");
+        SessionFile::save (s, withKey);
+        SessionFile::save (sessionAt (120.0), withoutKey);
+        const auto loaded = SessionFile::load (withKey, engine.formatManager);
+        const auto plain = SessionFile::load (withoutKey, engine.formatManager);
+        const auto plainText = withoutKey.loadFileAsString();
+
+        engine.session.reset (sessionAt (120.0), {});
+        auto next = *engine.session.getState();
+        SessionEdits::setKey (next, "Am");
+        engine.session.apply (std::move (next), "Key");
+        const auto applied = engine.session.getState()->musicalKey;
+        engine.session.undo();
+        const auto undone = engine.session.getState()->musicalKey;
+        engine.session.redo();
+        const auto redone = engine.session.getState()->musicalKey;
+        auto cleared = *engine.session.getState();
+        const auto clears = SessionEdits::setKey (cleared, {});
+
+        check (set && ! again && ! bad && named == "F# dorian" && loaded.error.isEmpty() && loaded.state.musicalKey == "F# dorian"
+                   && plain.error.isEmpty() && plain.state.musicalKey.isEmpty() && ! plainText.contains ("key=")
+                   && applied == "A minor" && undone.isEmpty() && redone == "A minor" && clears && cleared.musicalKey.isEmpty(),
+               "session key: f# dorian is kept as F# dorian (the same again or H minor changes nothing), saved in the session file and read back; a session "
+               "without one writes no key and opens with none; set as one step, undo takes it away and redo brings it back; empty clears it");
+
+        engine.session.reset (sessionAt (120.0), {});
+        dir.deleteRecursively();
     }
 }

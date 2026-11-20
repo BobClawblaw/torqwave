@@ -7709,7 +7709,7 @@ bool MultitrackView::isInterestedInFileDrag (const juce::StringArray& files)
 {
     for (auto& path : files)
         if (engine.formatManager.findFormatForFileExtension (juce::File (path).getFileExtension()) != nullptr
-            || juce::File (path).hasFileExtension (SequenceFile::extension))
+            || SequenceFile::isSequenceOrKit (juce::File (path)))
             return true;
 
     return false;
@@ -7737,7 +7737,7 @@ void MultitrackView::filesDropped (const juce::StringArray& files, int x, int y)
 
     for (auto& path : files)
     {
-        if (juce::File (path).hasFileExtension (SequenceFile::extension))
+        if (SequenceFile::isSequenceOrKit (juce::File (path)))
         {
             if (onSequenceDropped != nullptr)
                 onSequenceDropped (juce::File (path), trackAt (y), x < listWidth ? 0 : snapped (frameForX ((float) x)), ! juce::ModifierKeys::currentModifiers.isAltDown());

@@ -204,9 +204,21 @@ Show it with **Window > Sequence Library**. In the Multitrack workspace it is a 
 
 Every folder shows, empty ones too. Make folders of your own under any role or sub-role: right-click a folder and choose **New Folder...**. The same menu has **New Sequence Here...**, **Show in Finder**, and, for your own folders, **Rename...** and **Move to Trash**. The roles and sub-roles themselves can't be renamed or removed. Your folders appear in the Folder list of the New Sequence and Add to Sequence Library dialogs. **Drag a sequence onto a folder** to move it there (hold Option to copy it instead); it takes that folder's role. Drag `.tqseq` files from the Finder onto a folder to copy them in. A name already used there gets a number (Groove 2).
 
-Each sequence shows its length in bars and its key. Type in the search box to see only the sequences that match every word, in their names, keys, tags or folders.
+Each sequence shows its length in bars and its key, and its rating (★) and a ♥ when it is a favourite. Type in the search box to see only the sequences that match every word, in their names, keys, tags or folders.
 
-The library is a folder of plain files (`.tqseq`), under Music > Torqwave > Sequences. **Folder** shows it in the Finder. Make folders of your own inside the sub-folders, and move, copy or share the files there. The panel follows what you change. Right-click a sequence to show it in the Finder, rename it or move it to the Trash.
+**Sort and filter.** The row under the search box sets what the list shows:
+
+- **The order menu** sorts the sequences in each folder by **Name** (A to Z), **Bars** (the shortest first), **Rating** (the highest first) or **Newest** (the last added first). A sequence counts as added when it was first saved: saving a new one, importing a MIDI file, or a duplicate or variation made in the Sequencer adds one now; renaming, moving or copying it between folders, rating it or saving it again keeps its time, and so do the sequences in a pack.
+- **Favourites** shows only the favourites.
+- **Fits the Session** shows only the sequences in the session's key (set in **Multitrack > Tempo > Tempo...**; see [Tempo and bars](06-multitrack-sessions.md#tempo-and-bars)) and those with no key, such as most drums and effects. Keys count as the same however they are written: `Am` is A minor. A different scale on the same note is a different key (A dorian is not A minor). When the session has no key, it shows everything and says so under the list.
+
+The search and both filters work together. Each folder holding a match opens.
+
+**Rate them.** Select sequences and press **1** to **5** to rate them, **0** to clear the rating, and **F** to mark them as favourites (or, when all of them are, unmark them). The right-click menu has the same: **Rating** and **Favourite**. Cmd-click or Shift-click selects more than one. The rating and the mark are kept in the sequence's own file, so they go wherever you copy, move or share it.
+
+The library is a folder of plain files (`.tqseq` for a sequence, `.tqkit` for a kit), under Music > Torqwave > Sequences unless you chose another in Settings. **Folder** shows it in the Finder. Make folders of your own inside the sub-folders, and move, copy or share the files there. The panel follows what you change. Right-click a sequence to edit it in the Sequencer, export it as a MIDI file, rate it, show it in the Finder, rename it or move it to the Trash.
+
+**Choose its folder.** **Settings > Sequence Library** shows the folder the library uses. **Choose...** picks another (the panel shows it at once); **Standard** goes back to Music > Torqwave > Sequences. The sequences already saved stay where they were: copy them across in the Finder, or save the old folders as packs and open them in the new one.
 
 **Hear one.** Click a sequence to hear it with its own instrument and effects at the session's tempo, looping. The first time takes a moment while it renders ("Rendering..." shows under the list); after that it plays at once. While the session plays, the sequence comes in on the session's next bar, in time with it. Press Up or Down to move through the list and hear each in turn. Click it again, or **Stop**, to stop. A sequence with no instrument of its own can't be heard here: dropped on an instrument track, it plays on that track's instrument.
 
@@ -217,6 +229,40 @@ The library is a folder of plain files (`.tqseq`), under Music > Torqwave > Sequ
 - **onto an audio track:** a new instrument track, as onto empty space.
 
 Double-click a sequence to put it on the selected track at the cursor, the same way. A `.tqseq` file dragged from the Finder works too. Each drop is one undo step.
+
+### Kits
+
+A **kit** is a set of sequences meant to play together: the parts of a groove, or a bass with its chords. It is one file that holds every part whole, with its notes and its voice, so moving or sharing a kit takes all of it.
+
+**Make one.** Either:
+
+- select two or more sequences (Cmd-click), right-click one of them and choose **Make Kit from Selected...**; or
+- right-click a folder and choose **Save as Kit...**, which takes every sequence in that folder and in the folders inside it.
+
+Give it a name and click **Save**. The kit goes in **Kits**, with a number on its name when one of that name is there. The sequences themselves stay where they were. A kit's key is the key its parts share (a part with no key, such as drums, leaves it alone); with parts in different keys, the kit has none.
+
+In the library a kit shows as "kit of 3 parts", with the bars of its longest part. Click it to hear every part together, each with its own instrument.
+
+**Use one.** Drag a kit into the multitrack view, from the library or from the Finder, or double-click it. Wherever you drop it, it makes a new **folder track** named for the kit at the end of the session, and a new instrument track for each part inside that folder, named for the part, each with its instrument and effects. Every part starts where you dropped it. The whole drop is one undo step.
+
+### MIDI files
+
+**Export one.** Right-click a sequence and choose **Export MIDI File...**, then choose where to save it. The file is a Standard MIDI File at the sequence's own resolution (960 ticks a beat), so every note keeps its place to the tick. It holds the notes as the sequence plays them (a loop written out for the sequence's whole length), its controller lanes, its channel, its name, and the tempo it was written at, its beats in a bar and its key (a major or minor key). The voice is not in it: a MIDI file holds notes, not sounds. Export a kit the same way: each part becomes a track of the file.
+
+**Import them.** Click **Import...** at the top right of the panel and choose **MIDI Files...**, or right-click a folder and choose **Import MIDI Files Here...**. Choose one or more `.mid` files. Then choose:
+
+- **Folder:** where the sequences go. Their role and sub-role follow the folder.
+- **Instrument:** what they play on. Pick one of the instruments Torqwave knows (the built-in ones and those you have scanned), at its default settings, or **None** to have them play on the instrument of the track you drop them on.
+
+Click **Import**. Each track of a file that has notes becomes a sequence, named for the track (or for the file when the track has no name), with the file's tempo, time signature and key, its notes on their ticks, and its controllers as lanes. It is as long as whole bars up to its last note. A file that can't be read is listed afterwards, and the rest are still imported.
+
+### Packs
+
+A **pack** is a folder of sequences and kits zipped into one file (`.tqpack`) to share.
+
+**Make one.** Right-click a folder and choose **Save as Pack...**, then choose where to save it. Every sequence and kit in that folder and in the folders inside it goes in. A folder with none can't be packed.
+
+**Open one.** Click **Import...** and choose **Pack...**, then choose a `.tqpack` file (an ordinary `.zip` of sequences works too). Or drag a pack from the Finder onto any folder in the library. Each sequence goes into the folder of its own role and sub-role (a sequence filed under Drums > Kick goes to Drums > Kick, whatever folder it was packed from), each kit into Kits, and a sequence with no role, or a role Torqwave doesn't know, into the Inbox. A name already used there gets a number (Groove 2). Anything in the pack that is not a sequence or a kit is skipped. The panel then selects the first one opened and says how many came in.
 
 ## The Sequencer
 

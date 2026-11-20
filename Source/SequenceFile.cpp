@@ -110,6 +110,23 @@ NoteClip toClip (const Sequence& q, const SessionState& s, juce::int64 position)
     return c;
 }
 
+std::unique_ptr<juce::XmlElement> voiceFor (const juce::PluginDescription& d)
+{
+    auto xml = std::make_unique<juce::XmlElement> ("TRACKTEMPLATE");
+    xml->setAttribute ("name", d.name);
+    xml->setAttribute ("bus", false);
+    xml->setAttribute ("instrument", true);
+    xml->setAttribute ("musical", true);
+    xml->setAttribute ("gainDb", 0.0);
+    xml->setAttribute ("pan", 0.0);
+    xml->setAttribute ("colour", -1);
+    auto* slot = xml->createNewChildElement ("EFFECTS")->createNewChildElement ("SLOT");
+    slot->setAttribute ("bypassed", false);
+    slot->setAttribute ("id", 0);
+    slot->addChildElement (d.createXml().release());
+    return xml;
+}
+
 juce::String instrumentOf (const Sequence& q)
 {
     if (q.voice == nullptr)
@@ -133,6 +150,15 @@ std::unique_ptr<juce::XmlElement> toXml (const Sequence& q)
     xml->setAttribute ("key", q.key);
     xml->setAttribute ("tags", q.tags.joinIntoString (","));
     xml->setAttribute ("note", q.note);
+
+    if (q.rating > 0)
+        xml->setAttribute ("rating", q.rating);
+
+    if (q.favourite)
+        xml->setAttribute ("favourite", true);
+
+    if (q.added > 0)
+        xml->setAttribute ("added", juce::String (q.added));
 
     if (q.variationOf.isNotEmpty())
         xml->setAttribute ("variationOf", q.variationOf);
@@ -201,6 +227,9 @@ std::optional<Sequence> fromXml (const juce::XmlElement& xml)
     q.tags.removeEmptyStrings();
     q.note = xml.getStringAttribute ("note");
     q.variationOf = xml.getStringAttribute ("variationOf");
+    q.rating = juce::jlimit (0, 5, xml.getIntAttribute ("rating"));
+    q.favourite = xml.getBoolAttribute ("favourite");
+    q.added = juce::jmax ((juce::int64) 0, xml.getStringAttribute ("added").getLargeIntValue());
     q.writtenTempo = xml.getDoubleAttribute ("writtenTempo", 120.0);
     q.beatsPerBar = juce::jlimit (1, 32, xml.getIntAttribute ("beatsPerBar", 4));
     q.channel = juce::jlimit (1, 16, xml.getIntAttribute ("channel", 1));
@@ -232,17 +261,28 @@ std::optional<Sequence> fromXml (const juce::XmlElement& xml)
     return q;
 }
 
-juce::String save (const Sequence& q, const juce::File& file)
+juce::String writeXml (const juce::XmlElement& xml, const juce::File& file)
 {
     if (! file.getParentDirectory().createDirectory())
         return "Couldn't make the folder " + file.getParentDirectory().getFullPathName() + ".";
 
     juce::TemporaryFile temp (file);
 
-    if (! toXml (q)->writeTo (temp.getFile()) || ! temp.overwriteTargetFileWithTemporary())
+    if (! xml.writeTo (temp.getFile()) || ! temp.overwriteTargetFileWithTemporary())
         return "Couldn't write " + file.getFullPathName() + ".";
 
     return {};
+}
+
+juce::String save (const Sequence& q, const juce::File& file)
+{
+    auto xml = toXml (q);
+
+    // A new file (a new sequence, a duplicate, a variation) is added now; one rewritten keeps its time.
+    if (q.added <= 0 || ! file.existsAsFile())
+        xml->setAttribute ("added", juce::String (juce::Time::currentTimeMillis()));
+
+    return writeXml (*xml, file);
 }
 
 std::optional<Sequence> load (const juce::File& file, juce::String& error)
@@ -252,6 +292,8 @@ std::optional<Sequence> load (const juce::File& file, juce::String& error)
 
     if (! q.has_value())
         error = file.getFileName() + " is not a sequence.";
+    else if (q->added <= 0)
+        q->added = file.getCreationTime().toMilliseconds();
 
     return q;
 }

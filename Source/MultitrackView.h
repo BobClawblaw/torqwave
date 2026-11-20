@@ -54,8 +54,9 @@ public:
 
     /** The frame of the point marker whose line is nearest x within markerReach, if any. */
     std::optional<juce::int64> pointMarkerNear (float x) const;
-    /** A sequence (.tqseq) dropped, from the Sequence Library or the Finder, on the track (or past
-        the last) at the frame: onTrack is false with Option held, for a new track from its voice. */
+    /** A sequence (.tqseq) or kit (.tqkit) dropped, from the Sequence Library or the Finder, on
+        the track (or past the last) at the frame: onTrack is false with Option held, for a new
+        track from its voice (a kit always makes tracks of its own). */
     std::function<void (const juce::File& sequence, int track, juce::int64 frame, bool onTrack)> onSequenceDropped;
 
     /** A note clip's menu's Add to Sequence Library... */

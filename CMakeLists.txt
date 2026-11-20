@@ -180,6 +180,8 @@ target_sources(Torqwave PRIVATE
     Source/PhaseVocoder.cpp
     Source/TrackTemplate.cpp
     Source/SequenceFile.cpp
+    Source/SequenceKit.cpp
+    Source/SequenceMidi.cpp
     Source/SequenceLibrary.cpp
     Source/SequenceLibraryView.cpp
     Source/SequencePreview.cpp
@@ -517,6 +519,8 @@ target_sources(TorqwaveTests PRIVATE
     Source/PhaseVocoder.cpp
     Source/TrackTemplate.cpp
     Source/SequenceFile.cpp
+    Source/SequenceKit.cpp
+    Source/SequenceMidi.cpp
     Source/SequenceLibrary.cpp
     Source/SequenceLibraryView.cpp
     Source/SequencePreview.cpp
