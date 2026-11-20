@@ -176,6 +176,7 @@ namespace
         cmdAskTorqwave,
         cmdSaveInstrumentPreset,
         cmdLoopToSelection, cmdClearLoop, cmdInfoLine, cmdTrackInspector,
+        cmdShowTakes, cmdFlattenComp,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -1069,6 +1070,7 @@ MainComponent::MainComponent()
             return SessionEdits::stretchedAudio (c, ratio, rate, progress);
         }, keepEnd);
     };
+    multitrack.onFlattenComp = [this] (juce::uint32 clipId) { flattenComp (clipId); };
     multitrack.onEditPlugin = [this] (juce::AudioPluginInstance& p) { showEditor (p); };
     multitrack.onEditNotes = [this] (juce::uint32 trackId, juce::uint32 clipId) { showNoteClipDialog (trackId, clipId); };
     multitrack.onOpenNotes = [this] (juce::uint32 clipId)
@@ -2110,6 +2112,22 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (multitrackMode && multitrack.getSelectedClip() != 0 && ! multitrack.getTimeSelection().isEmpty()); break;
         case cmdReverseClip: info.setInfo ("Reverse Clip", "Play the selected clip back to front, from a new file", "Multitrack", 0);
                             info.setActive (multitrackMode && multitrack.getSelectedClip() != 0); break;
+        case cmdShowTakes:
+        {
+            info.setInfo ("Show Takes", "Show the selected track's take lanes, to comp its clips' takes: drag across a take to use that part of it", "Multitrack", 0);
+            const auto trackId = multitrack.getSelectedTrackId();
+            info.setTicked (trackId != 0 && multitrack.areTakeLanesShown (trackId));
+            info.setActive (multitrackMode && trackId != 0);
+            break;
+        }
+        case cmdFlattenComp:
+        {
+            info.setInfo ("Flatten Comp", "Render the selected clip's comp into a new take, from a new file", "Multitrack", 0);
+            const auto state = engine.session.getState();
+            const auto where = state->findClip (multitrack.getSelectedClip());
+            info.setActive (multitrackMode && where.has_value() && ! state->tracks[(size_t) where->first].clips[(size_t) where->second].comp.empty());
+            break;
+        }
         case cmdClipGainLines: info.setInfo ("Clip Gain Lines", "Show each clip's gain line to edit it: click the line to add a point, drag one, Alt-click to remove it", "Multitrack", 0);
                             info.setTicked (multitrack.isShowingClipGain()); info.setActive (multitrackMode); break;
         case cmdGroupClips: info.setInfo ("Group Clips", "Group the selected clips, so clicking one selects them all, to move or delete together", "Multitrack", 0);
@@ -2725,6 +2743,13 @@ bool MainComponent::perform (const InvocationInfo& info)
             commands.commandStatusChanged();
             break;
         case cmdReverseClip: reverseSelectedClip(); break;
+        case cmdShowTakes:
+            if (const auto trackId = multitrack.getSelectedTrackId(); trackId != 0)
+                multitrack.setTakeLanesShown (trackId, ! multitrack.areTakeLanesShown (trackId));
+
+            commands.commandStatusChanged();
+            break;
+        case cmdFlattenComp: flattenComp (multitrack.getSelectedClip()); break;
         case cmdClipGainLines: multitrack.setShowClipGain (! multitrack.isShowingClipGain()); commands.commandStatusChanged(); break;
         case cmdGroupClips: multitrack.groupSelectedClips(); break;
         case cmdUngroupClips: multitrack.ungroupSelectedClips(); break;
@@ -3196,7 +3221,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdTakeOutOfFolder, cmdAddFromTemplate, cmdSaveTrackTemplate, cmdSaveInstrumentPreset, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
                                0, cmdTrackAbove, cmdTrackBelow, 0, cmdUnsoloAll, cmdUnmuteAll });
             group ("Tools", { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute });
-            group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines, 0, cmdClipToFront, cmdClipToBack });
+            group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdShowTakes, cmdFlattenComp, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines, 0, cmdClipToFront, cmdClipToBack });
             group ("Arrange", { cmdNudgeEarlier, cmdNudgeLater, cmdMoveClipsToCursor, cmdTrimStartToCursor, cmdTrimEndToCursor, cmdCloseGaps, cmdQuantize });
             group ("Notes", { cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes });
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
@@ -4587,6 +4612,39 @@ void MainComponent::reverseSelectedClip()
     auto next = *state;
     SessionEdits::reverseClip (next, clipId, file, reversed, std::move (takes));
     engine.session.apply (std::move (next), "Reverse Clip");
+}
+
+void MainComponent::flattenComp (juce::uint32 clipId)
+{
+    const auto state = engine.session.getState();
+    const auto where = state->findClip (clipId);
+
+    if (! where.has_value())
+        return;
+
+    // The comp is written to a file of its own, as a take, so the session can be saved and opened again.
+    const auto& clip = state->tracks[(size_t) where->first].clips[(size_t) where->second];
+
+    if (clip.locked || clip.comp.empty())
+        return;
+
+    const auto audio = SessionEdits::compAudio (clip);
+    const auto folder = recordingsFolder();
+    const auto file = folder.getNonexistentChildFile (juce::File::createLegalFileName (clip.name) + " Comp", ".wav", false);
+    const auto error = audio == nullptr ? juce::String ("The clip has no audio.")
+                                        : ! folder.createDirectory() ? "Could not make the folder " + folder.getFullPathName()
+                                                                     : AudioFileIO::save (*audio, state->sampleRate, file, 32, engine.formatManager);
+
+    if (error.isNotEmpty())
+    {
+        showError ("Flatten Comp", error);
+        return;
+    }
+
+    auto next = *state;
+
+    if (SessionEdits::flattenComp (next, clipId, file, audio))
+        engine.session.apply (std::move (next), "Flatten Comp");
 }
 
 void MainComponent::askToStretchSelectedClip()

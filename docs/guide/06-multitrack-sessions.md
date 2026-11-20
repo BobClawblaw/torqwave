@@ -107,6 +107,7 @@ Beside the tools are the tempo (click it to set it) and the **Bars** switch, whi
 
 - Split Clip (Cmd-K: every selected clip the cursor crosses), Split All Tracks (Shift-Cmd-K: every clip under the cursor, on every track), Duplicate Clip (Cmd-D) and Repeat Clip to Range End;
 - Reverse Clip, Stretch Clip... and Shift Clip Pitch...;
+- Show Takes and Flatten Comp, for [comping](08-recording.md#comping-takes) a clip's takes;
 - Lock Clip, Mute Clip, and Group and Ungroup Clips.
 
 **Clip Gain Lines** shows a gain line on each clip:

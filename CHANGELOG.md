@@ -4,6 +4,9 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Comping**
+- **Comping** takes, as in Cubase and Logic: **Show Takes** (Multitrack > Clips, or a clip's menu) opens a lane per take under a track, and a drag across a take's lane makes the clip play that take over that range, as one undo step. The clip plays a different take in each part, joined by an equal-power crossfade, 10 ms by default (shortened where joins are closer). A take's name plays it throughout. The comp stays with the sound through moving, trimming, splitting, reversing, stretching, pitch shifting and choosing another take, and is saved with the session; older sessions open unchanged. **Flatten Comp** renders it into a new take, from a new file. Ask Torq gains a `comp_takes` tool. Tested: a comp of three takes plays each take sample for sample over its part, at any block size, and the crossfades are the equal-power mix to within 1e-6; flattening plays exactly what the comp did, fades and gain line included; the comp comes back from a session file and undoes as one step; Normalize goes by the loudest part the comp plays; in the view, a drag across a take lane and a click on a take's name were driven by the tests' mouse. Not yet tried by hand with a loop recording.
+
 ## Released
 
 **Release 0.18.0: Cubase-style sessions, Ask Torq on sessions, ASIO and Intel Macs**

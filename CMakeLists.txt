@@ -429,6 +429,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/MixDownTests.cpp
     Tests/EffectAutomationTests.cpp
     Tests/TrackRecordingTests.cpp
+    Tests/CompTests.cpp
     Tests/MetronomeTests.cpp
     Tests/MixerTests.cpp
     Tests/BounceTests.cpp

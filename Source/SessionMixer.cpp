@@ -474,10 +474,26 @@ namespace
 
     /** Reads count frames of a clip from session frame from into scratch (as many channels as
         scratch has), with its fades and gain envelope; returns the channels it has there. */
-    int readClip (const SessionClip& clip, juce::int64 from, int count, juce::AudioBuffer<float>& scratch, juce::AudioBuffer<float>& gains)
+    int readClip (const SessionClip& clip, juce::int64 from, int count, juce::AudioBuffer<float>& scratch, juce::AudioBuffer<float>& gains,
+                  juce::AudioBuffer<float>& comp)
     {
-        const auto channels = juce::jmin (scratch.getNumChannels(), clip.audio->getNumChannels());
-        clip.audio->read (scratch, 0, clip.offset + (from - clip.position), count);
+        auto channels = juce::jmin (scratch.getNumChannels(), clip.audio->getNumChannels());
+
+        if (clip.comp.empty() || clip.takes.empty())
+        {
+            clip.audio->read (scratch, 0, clip.offset + (from - clip.position), count);
+        }
+        else
+        {
+            if (comp.getNumChannels() < scratch.getNumChannels() || comp.getNumSamples() < count)
+                comp.setSize (juce::jmax (comp.getNumChannels(), scratch.getNumChannels()), juce::jmax (comp.getNumSamples(), count), false, false, true);
+
+            Comp::read (clip, clip.takeZeroFrame (from), count, scratch, comp);
+
+            for (auto& t : clip.takes)
+                if (t.audio != nullptr)
+                    channels = juce::jmax (channels, juce::jmin (scratch.getNumChannels(), t.audio->getNumChannels()));
+        }
 
         if (clip.fadeIn > 0 || clip.fadeOut > 0)
         {
@@ -610,7 +626,7 @@ namespace
     /** A 5.1 or 7.1 track's clips, all out's channels (6 or 8), before its volume, into frames
         [0, numFrames) of out. */
     void renderWide (const SessionTrack& track, juce::int64 start, juce::AudioBuffer<float>& out, int numFrames,
-                     juce::AudioBuffer<float>& scratch, juce::AudioBuffer<float>& gains, bool layered)
+                     juce::AudioBuffer<float>& scratch, juce::AudioBuffer<float>& gains, juce::AudioBuffer<float>& comp, bool layered)
     {
         out.clear (0, numFrames);
         const auto end = start + numFrames;
@@ -629,7 +645,7 @@ namespace
                 if (scratch.getNumChannels() < 8 || scratch.getNumSamples() < count)
                     scratch.setSize (8, count, false, false, true);
 
-                const auto channels = juce::jmin (out.getNumChannels(), readClip (clip, from, count, scratch, gains));
+                const auto channels = juce::jmin (out.getNumChannels(), readClip (clip, from, count, scratch, gains, comp));
                 const auto clipGain = juce::Decibels::decibelsToGain (clip.gainDb, -150.0f);
 
                 for (int ch = 0; ch < channels; ++ch)
@@ -641,7 +657,7 @@ namespace
     /** The track's clips, placed but not yet panned (a mono clip into both channels at
         monoPlace), before its effects, pan and volume, into frames [0, numFrames) of out. */
     void renderTrack (const SessionTrack& track, juce::int64 start, juce::AudioBuffer<float>& out, int numFrames,
-                      juce::AudioBuffer<float>& scratch, juce::AudioBuffer<float>& gains, float monoPlace, bool layered)
+                      juce::AudioBuffer<float>& scratch, juce::AudioBuffer<float>& gains, juce::AudioBuffer<float>& comp, float monoPlace, bool layered)
     {
         out.clear (0, 0, numFrames);
         out.clear (1, 0, numFrames);
@@ -658,7 +674,7 @@ namespace
             {
                 const auto count = (int) (to - from);
                 grow (scratch, count);
-                const auto channels = juce::jmin (2, readClip (clip, from, count, scratch, gains));
+                const auto channels = juce::jmin (2, readClip (clip, from, count, scratch, gains, comp));
 
                 const auto clipGain = juce::Decibels::decibelsToGain (clip.gainDb, -150.0f) * (channels == 1 ? monoPlace : 1.0f);
                 const auto offset = (int) (from - start);
@@ -814,12 +830,12 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
         else if (fiveOne)
         {
             if (live == nullptr || live->clips)
-                renderWide (track, start + own + ahead, wide, numFrames, buffers.wideClip, buffers.clipGains, state.layerClips);
+                renderWide (track, start + own + ahead, wide, numFrames, buffers.wideClip, buffers.clipGains, buffers.comp, state.layerClips);
             else
                 wide.clear (0, numFrames);
         }
         else if (live == nullptr || live->clips)
-            renderTrack (track, start + own + ahead, buffers.track, numFrames, buffers.clip, buffers.clipGains, monoPlace, state.layerClips);
+            renderTrack (track, start + own + ahead, buffers.track, numFrames, buffers.clip, buffers.clipGains, buffers.comp, monoPlace, state.layerClips);
         else
             buffers.track.clear (0, numFrames);
 

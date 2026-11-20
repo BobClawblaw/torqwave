@@ -710,6 +710,36 @@ namespace
                "plug-in catalogue: describe_plugin gives the entry and the parameters without opening the plug-in or changing the plan");
     }
 
+    void testSessionComp()
+    {
+        // A 4 s clip at 1 s with three takes, the last in use.
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.addTrack().name = "Vocal";
+        const auto clipId = SessionEdits::recordTakes (s, 0, juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("vocal.wav"),
+                                                       tone (48000.0, 12), 48000, 4 * 48000, { 0, 4 * 48000, 8 * 48000 });
+        Ai::Workspace::Start start;
+        start.session = s;
+        start.sessionName = "Song";
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+        const auto& clip = w.getSession()->tracks[0].clips[0];
+        const auto id = juce::String ((int) clipId);
+
+        const auto listed = call ("list_clips", R"({"track": "Vocal"})")["clips"][0];
+        const auto part = call ("comp_takes", "{\"clip\": " + id + ", \"take\": 1, \"start\": 2, \"end\": 3}");
+        const auto none = call ("comp_takes", "{\"clip\": " + id + ", \"take\": 4, \"start\": 2, \"end\": 3}");
+        const auto outside = call ("comp_takes", "{\"clip\": " + id + ", \"take\": 1, \"start\": 8, \"end\": 9}");
+        check ((int) listed["takes"] == 3 && listed["playing"] == juce::var ("take 3") && (bool) part["ok"] && ! (bool) none["ok"] && ! (bool) outside["ok"]
+                   && clip.comp.size() == 3 && clip.takeAt (clip.takeZeroFrame (2 * 48000)) == 0 && clip.takeAt (clip.takeZeroFrame (3 * 48000)) == 2
+                   && call ("list_clips", R"({"track": "Vocal"})")["clips"][0]["playing"] == juce::var ("a comp"),
+               "Ask Torq sessions: comp_takes comps a take over a range; a take that isn't there or a range outside the clip refused");
+
+        const auto whole = call ("comp_takes", "{\"clip\": " + id + ", \"take\": 2}");
+        check ((bool) whole["ok"] && clip.comp.empty() && clip.activeTake == 1 && w.getSteps().size() == 2,
+               "Ask Torq sessions: comp_takes with no range plays the take throughout; two steps");
+    }
+
     void testSessionTools()
     {
         // A session of one audio track with a 4 s clip at 1 s, and a bus.
@@ -734,7 +764,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 23 && names.contains ("get_session") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 24 && names.contains ("get_session") && names.contains ("comp_takes") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -1090,6 +1120,7 @@ void runAiTests()
     testCatalogueWorker();
     testCatalogueTools();
     testSessionTools();
+    testSessionComp();
     testSessionNotes();
     testInstrumentPresets();
     testCatalogueLearner();

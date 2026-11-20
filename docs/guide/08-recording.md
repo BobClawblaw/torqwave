@@ -59,6 +59,21 @@ To try a part several times in a row:
 
 The clip then shows "(take 2 of 5)", or wherever it stands. Right-click it and choose **Take 1**, **Take 2** and so on to hear each one. The last take is chosen to begin with.
 
+### Comping takes
+
+A **comp** builds one performance from the best parts of several takes: the first verse line from take 2, the second from take 4, and so on.
+
+1. Select the track and choose **Multitrack > Clips > Show Takes**, or right-click the clip and choose **Show Takes**. A lane opens under the track for each take, its waveform drawn across the clip. The parts the clip plays are lit.
+2. Drag across a take's lane over the part you want. The clip plays that take there and the rest as it was. Each drag is one undo step.
+3. Go on, take by take, until the clip plays the parts you want.
+
+- The clip's title shows "(comp of 5 takes)", and a tick marks each join.
+- Each join is crossfaded over 10 ms, equal power, so the cut doesn't click. Where two joins are closer than that, the crossfades shorten so they don't meet.
+- Click a take's name at the left of its lane, or choose it from the clip's right-click menu, to play that take throughout. That ends the comp.
+- The comp stays with the sound when the clip is moved, trimmed, split or reversed, stretched or pitched, and when another take is chosen from the menu. It is saved with the session.
+- **Flatten Comp** (in **Multitrack > Clips** and the clip's menu) renders the comp into a new take, from a new file, and plays it. The other takes stay, so you can still go back to them.
+- Ask Torq can comp takes too: "use take 2 from 4 to 6 seconds".
+
 ### Recording notes
 
 On an instrument track, **Record Notes** (Option-R) records what you play on a MIDI keyboard or the on-screen keyboard as a note clip. See [Instruments and MIDI](07-instruments-and-midi.md#put-notes-in).

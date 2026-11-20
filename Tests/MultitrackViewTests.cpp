@@ -617,6 +617,53 @@ namespace
     /** Splitting several clips at once: Split Clip cuts every selected clip the cursor crosses,
         Split All Tracks every clip under it on every track (locked ones left whole), and the
         Split tool does that with Shift, each as one undo step. */
+    /** Take lanes: Show Takes opens a row per take under the track, moving the tracks below
+        down; a drag across a take lane comps that range, as one step; a take's name plays it
+        throughout. */
+    void testTakeLanes (AudioEngine& engine)
+    {
+        SessionState initial;
+        initial.sampleRate = rate;
+        initial.addTrack();
+        initial.addTrack();
+        const auto takes = SessionEdits::recordTakes (initial, 0, juce::File ("/tmp/takes.wav"), silence (288000), 48000, 96000, { 0, 96000, 192000 });
+        const auto plain = SessionEdits::addClip (initial, 1, juce::File ("/tmp/b.wav"), silence (96000), 48000);
+        const auto trackId = initial.tracks[0].id;
+        engine.session.reset (initial, {});
+
+        MultitrackView view (engine);
+        view.setSize (MultitrackView::headerWidth + timelineWidth + 12, MultitrackView::rulerHeight + 6 * MultitrackView::trackHeight + 12);
+        view.zoomToFit();
+        view.setSnapping (false);
+        Mouse mouse { view };
+        Mouse::settle();
+
+        const auto framesPerPixel = rate * 10.0 * 1.05 / timelineWidth;
+        const auto x = [&] (juce::int64 frame) { return (float) MultitrackView::headerWidth + (float) ((double) frame / framesPerPixel); };
+        const auto lane = MultitrackView::trackHeight / 2;
+        const auto takeY = [&] (int take) { return (float) (MultitrackView::rulerHeight + MultitrackView::trackHeight + take * lane + lane / 2 + 4); };
+        const auto& clip = [&]() -> const SessionClip& { return engine.session.getState()->tracks[0].clips[0]; };
+
+        view.setTakeLanesShown (trackId, true);
+        mouse.click ({ x (60000), (float) (MultitrackView::rulerHeight + MultitrackView::trackHeight + 3 * lane + 60) });
+        check (view.areTakeLanesShown (trackId) && view.getSelectedClip() == plain, "take lanes: shown, they move the track below down by three lanes");
+
+        mouse.drag ({ x (72000), takeY (0) }, { x (96000), takeY (0) });
+        const auto from = clip().takeZeroFrame (72000), to = clip().takeZeroFrame (96000);
+        check (clip().comp.size() == 3 && clip().takeAt ((from + to) / 2) == 0 && clip().takeAt (to + (juce::int64) framesPerPixel) == 2 && std::abs (clip().comp[1].from - from) <= (juce::int64) framesPerPixel
+                   && std::abs (clip().comp[2].from - to) <= (juce::int64) framesPerPixel && engine.session.getUndoDescription() == "Comp Take 1"
+                   && view.getSelectedClip() == takes,
+               "take lanes: a drag across take 1's lane comps that range of it into the clip, as one step");
+
+        mouse.click ({ x (48000) + 20.0f, takeY (1) - (float) lane / 2.0f + 8.0f });
+        check (clip().comp.empty() && clip().activeTake == 1 && engine.session.getUndoDescription() == "Choose Take 2",
+               "take lanes: clicking take 2's name plays it throughout");
+
+        view.setTakeLanesShown (trackId, false);
+        mouse.click ({ x (60000), (float) (MultitrackView::rulerHeight + MultitrackView::trackHeight + 60) });
+        check (view.getSelectedClip() == plain, "take lanes: hidden, the track below moves back up");
+    }
+
     void testSplitting (AudioEngine& engine)
     {
         SessionState initial;
@@ -856,6 +903,7 @@ namespace
 void runMultitrackViewTests (AudioEngine& engine)
 {
     testRipple (engine);
+    testTakeLanes (engine);
     testSplitting (engine);
     testTrackTools (engine);
     testListWidth (engine);

@@ -595,6 +595,91 @@ float SessionTrack::valueAt (const AutomationTarget& t, juce::int64 frame) const
 }
 
 //==============================================================================
+namespace Comp
+{
+void read (const SessionClip& c, juce::int64 takeZero, int count, juce::AudioBuffer<float>& dest, juce::AudioBuffer<float>& other)
+{
+    const auto end = takeZero + count;
+    constexpr auto lowest = std::numeric_limits<juce::int64>::min(), highest = std::numeric_limits<juce::int64>::max();
+
+    auto readTake = [&c] (int take, juce::AudioBuffer<float>& into, int at, juce::int64 from, int frames)
+    {
+        const auto* t = juce::isPositiveAndBelow (take, (int) c.takes.size()) ? &c.takes[(size_t) take] : nullptr;
+
+        if (t == nullptr || t->audio == nullptr)
+            into.clear (at, frames);
+        else
+            t->audio->read (into, at, from + t->shift, frames);
+    };
+
+    auto segmentStart = [&c] (size_t i) { return i == 0 ? lowest : c.comp[i].from; };
+    auto segmentEnd = [&c] (size_t i) { return i + 1 < c.comp.size() ? c.comp[i + 1].from : highest; };
+
+    // Each segment's take, where it plays.
+    for (size_t i = 0; i < c.comp.size(); ++i)
+    {
+        const auto from = juce::jmax (takeZero, segmentStart (i)), to = juce::jmin (end, segmentEnd (i));
+
+        if (from < to)
+            readTake (c.comp[i].take, dest, (int) (from - takeZero), from, (int) (to - from));
+    }
+
+    if (c.compFade <= 0)
+        return;
+
+    // Each join, crossfaded with equal power over compFade frames centred on it (less where a
+    // segment beside it is shorter, so no two crossfades meet).
+    for (size_t i = 1; i < c.comp.size(); ++i)
+    {
+        const auto join = c.comp[i].from;
+        auto limit = highest;
+
+        if (i > 1)
+            limit = juce::jmin (limit, (join - c.comp[i - 1].from) / 2);
+
+        if (i + 1 < c.comp.size())
+            limit = juce::jmin (limit, (c.comp[i + 1].from - join) / 2);
+
+        const auto before = juce::jmin (c.compFade / 2, limit), after = juce::jmin (c.compFade - c.compFade / 2, limit);
+
+        const auto width = before + after;
+        const auto from = juce::jmax (takeZero, join - before), to = juce::jmin (end, join + after);
+
+        if (width <= 0 || from >= to)
+            continue;
+
+        const auto outgoing = c.comp[i - 1].take, incoming = c.comp[i].take;
+        const auto at = (int) (from - takeZero), frames = (int) (to - from);
+
+        // dest holds the outgoing take before the join and the incoming after it; other gets
+        // the side that is missing.
+        if (from < join)
+            readTake (incoming, other, at, from, (int) (juce::jmin (to, join) - from));
+
+        if (to > join)
+        {
+            const auto start = juce::jmax (from, join);
+            readTake (outgoing, other, (int) (start - takeZero), start, (int) (to - start));
+        }
+
+        for (int ch = 0; ch < dest.getNumChannels(); ++ch)
+        {
+            auto* d = dest.getWritePointer (ch, at);
+            const auto* o = other.getReadPointer (ch, at);
+
+            for (int k = 0; k < frames; ++k)
+            {
+                const auto frame = from + k;
+                const auto x = ((double) (frame - (join - before)) + 0.5) / (double) width;
+                const auto gainOut = (float) std::cos (x * juce::MathConstants<double>::halfPi);
+                const auto gainIn = (float) std::sin (x * juce::MathConstants<double>::halfPi);
+                d[k] = frame < join ? d[k] * gainOut + o[k] * gainIn : o[k] * gainOut + d[k] * gainIn;
+            }
+        }
+    }
+}
+}
+
 namespace SessionEdits
 {
 namespace
@@ -821,6 +906,153 @@ bool chooseTake (SessionState& s, juce::uint32 clipId, int index)
     return true;
 }
 
+bool compTake (SessionState& s, juce::uint32 clipId, int index, juce::int64 start, juce::int64 end)
+{
+    auto* c = findUnlocked (s, clipId);
+    start = juce::jmax (start, c != nullptr ? c->position : 0);
+    end = juce::jmin (end, c != nullptr ? c->getEnd() : 0);
+
+    if (c == nullptr || ! juce::isPositiveAndBelow (index, (int) c->takes.size()) || end <= start)
+        return false;
+
+    const auto from = c->takeZeroFrame (start), to = c->takeZeroFrame (end);
+    const auto clipStart = c->takeZeroFrame (c->position);
+    auto old = c->comp.empty() ? std::vector<SessionClip::CompSegment> { { 0, c->activeTake } } : c->comp;
+    old.front().from = std::numeric_limits<juce::int64>::min();   // the first plays from the start, whatever its from
+    const auto after = c->takeAt (to);
+
+    std::vector<SessionClip::CompSegment> comp;
+
+    for (size_t i = 0; i < old.size(); ++i)
+        if (i == 0 || old[i].from < from)
+            comp.push_back (old[i]);
+
+    comp.push_back ({ from, index });
+
+    // A range reaching the clip's end plays on past it.
+    if (end < c->getEnd())
+    {
+        comp.push_back ({ to, after });
+
+        for (size_t i = 1; i < old.size(); ++i)
+            if (old[i].from > to)
+                comp.push_back (old[i]);
+    }
+
+    // Tidy: of segments starting together the last plays; a segment starting at or before the
+    // clip's start makes those before it unheard; neighbours alike join.
+    std::vector<SessionClip::CompSegment> tidy;
+
+    for (auto& seg : comp)
+    {
+        while (! tidy.empty() && (seg.from <= tidy.back().from || seg.from <= clipStart))
+            tidy.pop_back();
+
+        if (tidy.empty() || tidy.back().take != seg.take)
+            tidy.push_back (seg);
+    }
+
+    tidy.front().from = clipStart;
+
+    if (tidy.size() == 1 && tidy.front().take == c->activeTake)
+        tidy.clear();
+
+    auto current = c->comp;
+
+    if (! current.empty())
+        current.front().from = clipStart;
+
+    if (tidy == current)
+        return false;
+
+    c->comp = std::move (tidy);
+
+    if (c->compFade < 0)
+        c->compFade = (juce::int64) std::llround (s.sampleRate * 0.01);
+
+    return true;
+}
+
+bool playTakeThroughout (SessionState& s, juce::uint32 clipId, int index)
+{
+    auto* c = findUnlocked (s, clipId);
+
+    if (c == nullptr || ! juce::isPositiveAndBelow (index, (int) c->takes.size()))
+        return false;
+
+    if (index == c->activeTake)
+    {
+        if (c->comp.empty())
+            return false;
+
+        c->comp.clear();
+        return true;
+    }
+
+    const auto comp = std::move (c->comp);
+    c->comp.clear();
+
+    if (chooseTake (s, clipId, index))
+        return true;
+
+    c->comp = comp;
+    return false;
+}
+
+bool setCompFade (SessionState& s, juce::uint32 clipId, juce::int64 frames)
+{
+    auto* c = findUnlocked (s, clipId);
+    frames = juce::jlimit ((juce::int64) 0, (juce::int64) std::llround (s.sampleRate), frames);
+
+    if (c == nullptr || c->compFade == frames)
+        return false;
+
+    c->compFade = frames;
+    return true;
+}
+
+AudioDocument::Snapshot compAudio (const SessionClip& c)
+{
+    if (c.comp.empty() || c.takes.empty() || c.length <= 0 || c.length > std::numeric_limits<int>::max())
+        return nullptr;
+
+    auto channels = 0;
+
+    for (auto& t : c.takes)
+        if (t.audio != nullptr)
+            channels = juce::jmax (channels, t.audio->getNumChannels());
+
+    if (channels == 0)
+        return nullptr;
+
+    juce::AudioBuffer<float> out (channels, (int) c.length), other (channels, (int) c.length);
+    Comp::read (c, c.takeZeroFrame (c.position), (int) c.length, out, other);
+    return AudioEdits::fromBuffer (std::move (out));
+}
+
+bool flattenComp (SessionState& s, juce::uint32 clipId, const juce::File& file, AudioDocument::Snapshot audio)
+{
+    auto* c = findUnlocked (s, clipId);
+
+    if (c == nullptr || c->comp.empty() || c->takes.empty() || audio == nullptr || audio->getNumFrames() != c->length)
+        return false;
+
+    // The new take starts where the clip does: its frame 0 is take-0 frame takeZeroFrame (position).
+    const auto shift = -c->takeZeroFrame (c->position);
+    const auto oldShift = c->takes[(size_t) c->activeTake].shift;
+
+    for (auto& p : c->gainEnvelope.points)
+        p.frame += shift - oldShift;
+
+    c->takes.push_back ({ file, audio, shift });
+    c->activeTake = (int) c->takes.size() - 1;
+    c->source = file;
+    c->audio = std::move (audio);
+    c->offset = 0;
+    c->comp.clear();
+    return true;
+}
+
 bool removeClip (SessionState& s, juce::uint32 clipId)
 {
     const auto where = s.findClip (clipId);
@@ -936,6 +1168,18 @@ juce::int64 zeroCrossingNear (const SessionClip& c, juce::int64 frame, juce::int
     if (c.audio == nullptr || within <= 0)
         return frame;
 
+    // With a comp, the take it plays at that frame, as if it played it throughout.
+    if (! c.comp.empty() && ! c.takes.empty())
+    {
+        const auto& take = c.takes[(size_t) c.takeAt (c.takeZeroFrame (frame))];
+        auto as = c;
+        as.comp.clear();
+        as.takes.clear();
+        as.audio = take.audio;
+        as.offset = c.takeZeroFrame (c.position) + take.shift;
+        return zeroCrossingNear (as, frame, within);
+    }
+
     // Session frames [first, last] whose audio frame and the one before it exist.
     const auto audioStart = c.position - c.offset;
     const auto first = juce::jmax (frame - within, audioStart + 1);
@@ -1034,11 +1278,15 @@ bool normalizeClip (SessionState& s, juce::uint32 clipId, float peakDb)
     if (c == nullptr || c->audio == nullptr)
         return false;
 
+    // What the clip plays: its comp, rendered, or its audio from its offset.
+    const auto comp = compAudio (*c);
+    const auto& audio = comp != nullptr ? *comp : *c->audio;
+    const auto from = comp != nullptr ? 0 : c->offset;
     auto peak = 0.0f;
 
-    for (int ch = 0; ch < c->audio->getNumChannels(); ++ch)
+    for (int ch = 0; ch < audio.getNumChannels(); ++ch)
     {
-        const auto range = c->audio->getPeak (ch, c->offset, c->offset + c->length);
+        const auto range = audio.getPeak (ch, from, from + c->length);
         peak = juce::jmax (peak, std::abs (range.getStart()), std::abs (range.getEnd()));
     }
 
@@ -1165,6 +1413,7 @@ namespace
         {
             c.takes.clear();
             c.activeTake = 0;
+            c.comp.clear();
             return;
         }
 
@@ -1175,6 +1424,41 @@ namespace
 
         c.takes = std::move (takes);
     }
+
+    /** After the part a clip played (from take-0 frame base, length frames) is replaced by
+        processed takes that start at 0 and are scale times as long (back to front when
+        reversed): its comp, moved to match. */
+    void remapComp (SessionClip& c, juce::int64 base, juce::int64 length, double scale, bool reversed)
+    {
+        if (c.comp.size() < 2)
+        {
+            if (! c.comp.empty())
+                c.comp.front().from = 0;
+
+            return;
+        }
+
+        const auto newLength = (juce::int64) std::llround ((double) length * scale);
+        auto moved = [&] (juce::int64 from) { return (juce::int64) std::llround ((double) (from - base) * scale); };
+        std::vector<SessionClip::CompSegment> comp;
+
+        if (! reversed)
+        {
+            for (auto& seg : c.comp)
+                comp.push_back ({ moved (seg.from), seg.take });
+
+            comp.front().from = 0;
+        }
+        else
+        {
+            comp.push_back ({ 0, c.comp.back().take });
+
+            for (auto i = c.comp.size() - 1; i >= 1; --i)
+                comp.push_back ({ newLength - moved (c.comp[i].from), c.comp[i - 1].take });
+        }
+
+        c.comp = std::move (comp);
+    }
 }
 
 bool reverseClip (SessionState& s, juce::uint32 clipId, const juce::File& file, AudioDocument::Snapshot reversed,
@@ -1184,6 +1468,9 @@ bool reverseClip (SessionState& s, juce::uint32 clipId, const juce::File& file, 
 
     if (c == nullptr || reversed == nullptr || ! takesMatch (*c, takes, reversed->getNumFrames()))
         return false;
+
+    if (! takes.empty())
+        remapComp (*c, c->takeZeroFrame (c->position), c->length, 1.0, true);
 
     // The line across the part heard, back to front, as the new audio is.
     auto line = lineAcross (c->gainEnvelope, c->offset, c->offset + c->length);
@@ -1275,6 +1562,9 @@ bool replaceActiveTake (SessionState& s, juce::uint32 clipId, const juce::File& 
     // Each take read from where it was against the clip, now that the active one starts at 0.
     const auto activeShift = c->takes[(size_t) c->activeTake].shift;
 
+    for (auto& seg : c->comp)
+        seg.from -= c->offset - activeShift;
+
     for (auto& t : c->takes)
         t.shift = t.shift - activeShift + c->offset;
 
@@ -1302,6 +1592,9 @@ bool stretchClip (SessionState& s, juce::uint32 clipId, const juce::File& file, 
 
     if (! takesMatch (*c, takes, stretched->getNumFrames()))
         return false;
+
+    if (! takes.empty())
+        remapComp (*c, c->takeZeroFrame (c->position), c->length, (double) stretched->getNumFrames() / (double) c->length, false);
 
     if (keepEnd)
         c->position = c->getEnd() - stretched->getNumFrames();
@@ -3641,6 +3934,16 @@ juce::String save (const SessionState& state, const juce::File& target,
                     takeXml->setAttribute ("absolute", take.source.getFullPathName());
                     takeXml->setAttribute ("shift", juce::String (take.shift));
                 }
+
+                if (c.compFade >= 0)
+                    clip->setAttribute ("compFade", juce::String (c.compFade));
+
+                for (auto& seg : c.comp)
+                {
+                    auto* segXml = clip->createNewChildElement ("COMP");
+                    segXml->setAttribute ("from", juce::String (seg.from));
+                    segXml->setAttribute ("take", seg.take);
+                }
             }
         }
 
@@ -3931,6 +4234,19 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
             {
                 clip.takes = std::move (takes);
                 clip.activeTake = active;
+                clip.compFade = juce::jmax ((juce::int64) -1, clipXml->getStringAttribute ("compFade", "-1").getLargeIntValue());
+
+                // A comp, kept only when it is sorted and names takes there are.
+                std::vector<SessionClip::CompSegment> comp;
+
+                for (auto* segXml : clipXml->getChildWithTagNameIterator ("COMP"))
+                    comp.push_back ({ segXml->getStringAttribute ("from").getLargeIntValue(), segXml->getIntAttribute ("take", -1) });
+
+                const auto valid = std::all_of (comp.begin(), comp.end(), [&] (auto& seg) { return juce::isPositiveAndBelow (seg.take, (int) clip.takes.size()); })
+                                   && std::adjacent_find (comp.begin(), comp.end(), [] (auto& a, auto& b) { return b.from <= a.from || b.take == a.take; }) == comp.end();
+
+                if (valid)
+                    clip.comp = std::move (comp);
             }
 
             track.clips.push_back (std::move (clip));

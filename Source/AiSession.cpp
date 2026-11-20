@@ -49,6 +49,9 @@ namespace
     "parameters": { "type": "object", "properties": { CLIP, "start": { "type": "number" }, "end": { "type": "number" } }, "required": ["clip"] } },
   { "name": "split_clip", "description": "Split a clip in two at a time inside it, in seconds. The first part keeps the clip's id.",
     "parameters": { "type": "object", "properties": { CLIP, "at": { "type": "number" } }, "required": ["clip", "at"] } },
+  { "name": "comp_takes", "description": "Build a comp from a clip's takes (its loop-recording passes, counted in list_clips): play take 'take' from start to end, in seconds, the rest as it was; joins are crossfaded. Without start and end, the take plays throughout and the comp ends.",
+    "parameters": { "type": "object", "properties": { CLIP, "take": { "type": "integer", "description": "From 1." }, "start": { "type": "number" }, "end": { "type": "number" } },
+                    "required": ["clip", "take"] } },
   { "name": "set_clip", "description": "Change a clip's gain (dB, -60 to +24), fade in and fade out (seconds), or mute it. Give only what changes.",
     "parameters": { "type": "object", "properties": { CLIP, "gain": { "type": "number" }, "fade_in": { "type": "number" }, "fade_out": { "type": "number" },
                     "mute": { "type": "boolean" } }, "required": ["clip"] } },
@@ -123,7 +126,7 @@ namespace Ai
             for (auto& t : *list)
                 tools.add (object ({ { "type", "function" }, { "function", t } }));
 
-        jassert (tools.size() == 21);
+        jassert (tools.size() == 22);
         return tools;
     }
 
@@ -160,6 +163,7 @@ namespace Ai
         else if (tool == "trim_clip")      result = trimClip (args);
         else if (tool == "split_clip")     result = splitClip (args);
         else if (tool == "set_clip")       result = setClip (args);
+        else if (tool == "comp_takes")     result = compTakes (args);
         else if (tool == "remove_clip")    result = removeClip (args);
         else if (tool == "add_marker")     result = addMarker (args);
         else if (tool == "set_tempo")      result = setTempo (args);
@@ -364,7 +368,8 @@ namespace Ai
             clips.add (object ({ { "id", (int) c.id }, { "name", c.name }, { "start", seconds (c.position).getDoubleValue() },
                                  { "end", seconds (c.getEnd()).getDoubleValue() }, { "gain", round1 (c.gainDb) },
                                  { "fade_in", seconds (c.fadeIn).getDoubleValue() }, { "fade_out", seconds (c.fadeOut).getDoubleValue() },
-                                 { "muted", c.muted }, { "locked", c.locked } }));
+                                 { "muted", c.muted }, { "locked", c.locked }, { "takes", (int) c.takes.size() },
+                                 { "playing", c.takes.size() < 2 ? juce::var() : c.comp.empty() ? juce::var ("take " + juce::String (c.activeTake + 1)) : juce::var ("a comp") } }));
 
         for (auto& c : t.noteClips)
             clips.add (object ({ { "id", (int) c.id }, { "name", c.name }, { "notes", (int) c.notes.size() },
@@ -723,6 +728,55 @@ namespace Ai
             return refused ("the time must be inside the clip, and the clip not locked");
 
         return done ("Split clip " + name.quoted() + " at " + seconds (*at) + " s");
+    }
+
+    juce::var SessionTools::compTakes (const juce::var& a)
+    {
+        const auto clipId = (juce::uint32) (int) a["clip"];
+        const auto where = state.findClip (clipId);
+
+        if (! where)
+            return refused ("no audio clip with id " + a["clip"].toString());
+
+        const auto& clip = state.tracks[(size_t) where->first].clips[(size_t) where->second];
+        const auto name = clip.name;
+        const auto take = (int) a["take"] - 1;
+
+        if (! juce::isPositiveAndBelow (take, (int) clip.takes.size()))
+            return refused (clip.takes.size() < 2 ? "the clip has no takes" : "take must be from 1 to " + juce::String ((int) clip.takes.size()));
+
+        if (! a.hasProperty ("start") && ! a.hasProperty ("end"))
+        {
+            if (! SessionEdits::playTakeThroughout (state, clipId, take))
+                return refused ("the clip is locked, or plays that take throughout already");
+
+            return done ("Play take " + juce::String (take + 1) + " throughout clip " + name.quoted());
+        }
+
+        auto start = clip.position, end = clip.getEnd();
+
+        if (a.hasProperty ("start"))
+        {
+            const auto f = frameOf (a["start"]);
+            if (! f) return refused ("start must be a time in seconds");
+            start = *f;
+        }
+
+        if (a.hasProperty ("end"))
+        {
+            const auto f = frameOf (a["end"]);
+            if (! f) return refused ("end must be a time in seconds");
+            end = *f;
+        }
+
+        if (end <= start)
+            return refused ("end must be after start");
+
+        if (! SessionEdits::compTake (state, clipId, take, start, end))
+            return refused ("the range must be inside the clip, and the clip not locked or playing that take there already");
+
+        return done ("Comp take " + juce::String (take + 1) + " of clip " + name.quoted() + " from " + seconds (juce::jmax (start, clip.position))
+                     + " s to " + seconds (juce::jmin (end, clip.getEnd())) + " s");
     }
 
     juce::var SessionTools::setClip (const juce::var& a)

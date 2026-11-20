@@ -180,6 +180,7 @@ namespace SessionMixer
         juce::AudioBuffer<float> clip, track, held, discard;
         juce::AudioBuffer<float> automation;   // pan, volume: envelope values for the block
         juce::AudioBuffer<float> clipGains;    // a clip's gain envelope for the block, in dB then as gains
+        juce::AudioBuffer<float> comp;         // the other side of a comp's join (Comp::read)
         std::map<juce::uint32, juce::AudioBuffer<float>> buses;
 
         struct Delay
@@ -225,7 +226,7 @@ namespace SessionMixer
             for (auto* b : { &clip, &track, &held, &discard, &automation, &clipGains, &keyHeld, &duckGains, &panIn })
                 b->setSize (2, frames);
 
-            for (auto* b : { &master, &wide, &wideClip, &wideHeld })
+            for (auto* b : { &master, &wide, &wideClip, &wideHeld, &comp })
                 b->setSize (8, frames);
 
             order.reserve (64);

@@ -548,6 +548,7 @@ private:
     void chooseTrackTemplateToSave();
     void chooseTrackTemplateToAdd();
     void reverseSelectedClip();
+    void flattenComp (juce::uint32 clipId);
     void askToStretchSelectedClip();
     void askToShiftSelectedClip();
     void processSelectedClip (const juce::String& action, const juce::String& suffix,

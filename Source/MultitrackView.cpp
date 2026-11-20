@@ -1137,9 +1137,14 @@ void MultitrackView::showClipMenu (juce::uint32 clipId)
     if (clip.takes.size() > 1)
     {
         for (int i = 0; i < (int) clip.takes.size(); ++i)
-            menu.addItem ("Take " + juce::String (i + 1), ! clip.locked, i == clip.activeTake,
-                          [safe, clipId, i] { if (safe != nullptr) safe->chooseTake (clipId, i); });
+            menu.addItem ("Take " + juce::String (i + 1), ! clip.locked, clip.comp.empty() && i == clip.activeTake,
+                          [safe, clipId, i] { if (safe != nullptr) safe->playTakeThroughout (clipId, i); });
 
+        const auto trackId = shown().tracks[(size_t) where->first].id;
+        menu.addItem ("Show Takes", true, areTakeLanesShown (trackId),
+                      [safe, trackId] { if (safe != nullptr) safe->setTakeLanesShown (trackId, ! safe->areTakeLanesShown (trackId)); });
+        menu.addItem ("Flatten Comp", ! clip.locked && ! clip.comp.empty(), false,
+                      [safe, clipId] { if (safe != nullptr && safe->onFlattenComp != nullptr) safe->onFlattenComp (clipId); });
         menu.addSeparator();
     }
 
@@ -1178,6 +1183,33 @@ void MultitrackView::showClipMenu (juce::uint32 clipId)
     menu.addItem ("Group", canGroupSelectedClips(), false, [safe] { if (safe != nullptr) safe->groupSelectedClips(); });
     menu.addItem ("Ungroup", areSelectedClipsGrouped(), false, [safe] { if (safe != nullptr) safe->ungroupSelectedClips(); });
     menu.showMenuAsync (juce::PopupMenu::Options().withMousePosition());
+}
+
+void MultitrackView::setTakeLanesShown (juce::uint32 trackId, bool show)
+{
+    if (show)
+        takeLanesShown.insert (trackId);
+    else
+        takeLanesShown.erase (trackId);
+
+    updateScrollBars();   // lays the headers out too
+    repaint();
+}
+
+void MultitrackView::compTake (juce::uint32 clipId, int index, juce::int64 start, juce::int64 end)
+{
+    auto next = *engine.session.getState();
+
+    if (SessionEdits::compTake (next, clipId, index, start, end))
+        engine.session.apply (std::move (next), "Comp Take " + juce::String (index + 1));
+}
+
+void MultitrackView::playTakeThroughout (juce::uint32 clipId, int index)
+{
+    auto next = *engine.session.getState();
+
+    if (SessionEdits::playTakeThroughout (next, clipId, index))
+        engine.session.apply (std::move (next), "Choose Take " + juce::String (index + 1));
 }
 
 void MultitrackView::chooseTake (juce::uint32 clipId, int index)
@@ -1808,7 +1840,7 @@ void MultitrackView::layoutHeaders()
     {
         const auto hidden = i < tracks.size() && ! shown().isShown (tracks[i]);
         headers[i]->setVisible (! hidden);
-        headers[i]->setBounds (0, rowOf ((int) i) * laneHeight - scrollY, headerArea.getWidth(), hidden ? 0 : laneHeight);
+        headers[i]->setBounds (0, trackY ((int) i) - scrollY, headerArea.getWidth(), hidden ? 0 : laneHeight);
     }
 }
 
@@ -1840,9 +1872,70 @@ int MultitrackView::rowOf (int track) const
     return row + juce::jmax (0, track - (int) tracks.size());
 }
 
+int MultitrackView::trackY (int track) const
+{
+    // Past the last track, lanes go on as they would for new tracks.
+    const auto& tracks = shown().tracks;
+    auto y = 0;
+
+    for (int t = 0; t < juce::jmin (track, (int) tracks.size()); ++t)
+        if (shown().isShown (tracks[(size_t) t]))
+            y += laneHeight + takeLaneCount (t) * takeLaneHeight();
+
+    return y + juce::jmax (0, track - (int) tracks.size()) * laneHeight;
+}
+
+int MultitrackView::takeLaneCount (int track) const
+{
+    const auto& tracks = shown().tracks;
+
+    if (! juce::isPositiveAndBelow (track, (int) tracks.size()) || takeLanesShown.count (tracks[(size_t) track].id) == 0)
+        return 0;
+
+    size_t most = 0;
+
+    for (auto& c : tracks[(size_t) track].clips)
+        most = juce::jmax (most, c.takes.size());
+
+    return most > 1 ? (int) most : 0;
+}
+
+juce::Rectangle<int> MultitrackView::takeLaneBounds (int track, int take, const SessionClip& c) const
+{
+    const auto x0 = xForFrame (c.position), x1 = xForFrame (c.getEnd());
+    const auto top = laneTop (track) + laneHeight + take * takeLaneHeight();
+    return juce::Rectangle<float> (x0, (float) top + 2.0f, juce::jmax (2.0f, x1 - x0), (float) takeLaneHeight() - 4.0f).toNearestInt();
+}
+
+juce::Rectangle<int> MultitrackView::takeNameBounds (int track, int take, const SessionClip& c) const
+{
+    const auto lane = takeLaneBounds (track, take, c);
+    const auto left = juce::jmax (lane.getX(), listWidth);
+    return juce::Rectangle<int> (left + 2, lane.getY() + 2, juce::jmin (56, juce::jmax (0, lane.getRight() - left - 4)), 15);
+}
+
+std::optional<std::pair<std::pair<int, int>, int>> MultitrackView::takeLaneAt (juce::Point<int> p) const
+{
+    const auto t = trackAt (p.y);
+    const auto lanes = takeLaneCount (t);
+
+    if (lanes == 0 || p.y < laneTop (t) + laneHeight)
+        return std::nullopt;
+
+    const auto take = (p.y - laneTop (t) - laneHeight) / takeLaneHeight();
+    const auto& clips = shown().tracks[(size_t) t].clips;
+
+    // The topmost clip there (later clips are drawn over earlier ones) that has the take.
+    for (auto c = (int) clips.size(); --c >= 0;)
+        if (take < (int) clips[(size_t) c].takes.size() && takeLaneBounds (t, take, clips[(size_t) c]).contains (p))
+            return std::make_pair (std::make_pair (t, c), take);
+
+    return std::nullopt;
+}
+
 int MultitrackView::laneTop (int track) const
 {
-    return rulerHeight + rowOf (track) * laneHeight - scrollY;
+    return rulerHeight + trackY (track) - scrollY;
 }
 
 int MultitrackView::trackAt (int y) const
@@ -1850,15 +1943,25 @@ int MultitrackView::trackAt (int y) const
     if (y < rulerHeight)
         return -1;
 
-    // The track shown in that row; past the shown ones, the places new tracks would take.
+    // The track shown there, its take lanes included; past the shown ones, the places new
+    // tracks would take.
     const auto& tracks = shown().tracks;
-    auto row = (y - rulerHeight + scrollY) / laneHeight;
+    auto below = y - rulerHeight + scrollY;
 
     for (int t = 0; t < (int) tracks.size(); ++t)
-        if (shown().isShown (tracks[(size_t) t]) && row-- == 0)
+    {
+        if (! shown().isShown (tracks[(size_t) t]))
+            continue;
+
+        const auto span = laneHeight + takeLaneCount (t) * takeLaneHeight();
+
+        if (below < span)
             return t;
 
-    return (int) tracks.size() + row;
+        below -= span;
+    }
+
+    return (int) tracks.size() + below / laneHeight;
 }
 
 float MultitrackView::xForFrame (juce::int64 frame) const
@@ -2085,7 +2188,7 @@ void MultitrackView::updateScrollBars()
     hScroll.setCurrentRange (viewStart, width * framesPerPixel, juce::dontSendNotification);
 
     const auto visible = juce::jmax (1, timelineArea().getHeight());
-    const auto total = (rowOf ((int) shown().tracks.size()) + 1) * laneHeight;
+    const auto total = trackY ((int) shown().tracks.size()) + laneHeight;
     scrollY = juce::jlimit (0, juce::jmax (0, total - visible), scrollY);
     vScroll.setRangeLimits (0.0, (double) juce::jmax (total, visible), juce::dontSendNotification);
     vScroll.setCurrentRange ((double) scrollY, (double) visible, juce::dontSendNotification);
@@ -2658,8 +2761,9 @@ void MultitrackView::drawClip (juce::Graphics& g, int track, const SessionClip& 
     g.fillRect (title);
     g.setColour (juce::Colours::white);
     g.setFont (12.0f);
-    auto name = c.takes.size() > 1 ? c.name + "  (take " + juce::String (c.activeTake + 1) + " of " + juce::String ((int) c.takes.size()) + ")"
-                                    : c.name;
+    auto name = c.takes.size() > 1 && ! c.comp.empty() ? c.name + "  (comp of " + juce::String ((int) c.takes.size()) + " takes)"
+              : c.takes.size() > 1 ? c.name + "  (take " + juce::String (c.activeTake + 1) + " of " + juce::String ((int) c.takes.size()) + ")"
+                                   : c.name;
 
     if (! juce::exactlyEqual (c.gainDb, 0.0f))
         name << "  " << (c.gainDb > 0.0f ? "+" : "") << juce::String (c.gainDb, 1) << " dB";
@@ -2689,43 +2793,17 @@ void MultitrackView::drawClip (juce::Graphics& g, int track, const SessionClip& 
         g.drawRoundedRectangle (box.withTrimmedLeft (6.0f), 3.0f, 1.3f);
     }
 
-    // Waveform: one peak per pixel column, each channel in its own band; the channels that play
-    // (the first two, or up to six or eight on a 5.1 or 7.1 track, a 5.1 or 7.1 clip's named down the left).
-    if (c.audio != nullptr && body.getHeight() > 4)
+    drawWaveform (g, body, track, c, -1, colour);
+
+    // A comp's joins: a tick down from the title bar at each one.
+    if (c.comp.size() > 1)
     {
-        const auto wideChannels = shown().tracks[(size_t) track].wideChannels();
-        const auto channels = juce::jmin (wideChannels > 0 ? wideChannels : 2, c.audio->getNumChannels());
-        const auto clipGain = juce::Decibels::decibelsToGain (c.gainDb);
-        const auto left = juce::jmax (body.getX(), listWidth);
-        const auto right = juce::jmin (body.getRight(), timelineArea().getRight());
-        g.setColour (colour.withAlpha (0.9f));
+        g.setColour (juce::Colours::white.withAlpha (0.7f));
+        const auto base = c.takeZeroFrame (c.position);
 
-        for (int ch = 0; ch < channels; ++ch)
-        {
-            const auto bandHeight = (float) body.getHeight() / (float) channels;
-            const auto mid = (float) body.getY() + bandHeight * ((float) ch + 0.5f);
-
-            for (int x = left; x < right; ++x)
-            {
-                const auto f0 = juce::jlimit (c.position, c.getEnd(), frameForX ((float) x));
-                const auto f1 = juce::jlimit (c.position, c.getEnd(), frameForX ((float) x + 1.0f));
-                const auto a0 = c.offset + (f0 - c.position);
-                const auto a1 = juce::jmax (a0 + 1, c.offset + (f1 - c.position));
-                const auto peak = c.audio->getPeak (ch, a0, juce::jmin (a1, c.audio->getNumFrames()));
-                const auto top = mid - juce::jlimit (0.0f, 1.0f, peak.getEnd() * clipGain) * bandHeight * 0.5f;
-                const auto bottom = mid - juce::jlimit (-1.0f, 0.0f, peak.getStart() * clipGain) * bandHeight * 0.5f;
-                g.drawVerticalLine (x, top, juce::jmax (top + 1.0f, bottom));
-            }
-
-            if (Surround::isSurround (channels) && bandHeight >= 10.0f)
-            {
-                g.setColour (juce::Colours::white.withAlpha (0.6f));
-                g.setFont (9.0f);
-                g.drawText (Surround::channelName (channels, ch),
-                            juce::Rectangle<float> ((float) left + 3.0f, mid - bandHeight * 0.5f, 24.0f, bandHeight), juce::Justification::centredLeft, false);
-                g.setColour (colour.withAlpha (0.9f));
-            }
-        }
+        for (size_t i = 1; i < c.comp.size(); ++i)
+            if (const auto at = c.position + (c.comp[i].from - base); at > c.position && at < c.getEnd())
+                g.drawVerticalLine (juce::roundToInt (xForFrame (at)), (float) body.getY(), (float) body.getBottom());
     }
 
     // Fades as the curves they play, from silence up to full level.
@@ -2765,6 +2843,141 @@ void MultitrackView::drawClip (juce::Graphics& g, int track, const SessionClip& 
 
     g.setColour (selected ? cursorColour : colour.withAlpha (0.7f));
     g.drawRoundedRectangle (r.toFloat().reduced (0.5f), 3.0f, selected ? 2.0f : 1.0f);
+}
+
+void MultitrackView::drawWaveform (juce::Graphics& g, juce::Rectangle<int> body, int track, const SessionClip& c, int take, juce::Colour colour) const
+{
+    // One peak per pixel column, each channel in its own band; the channels that play (the
+    // first two, or up to six or eight on a 5.1 or 7.1 track, a 5.1 or 7.1 clip's named down the
+    // left). A take's audio, or with take -1 what the clip plays: its comp's take in each part.
+    if (c.audio == nullptr || body.getHeight() <= 4)
+        return;
+
+    const auto wideChannels = shown().tracks[(size_t) track].wideChannels();
+    const auto channels = juce::jmin (wideChannels > 0 ? wideChannels : 2, c.audio->getNumChannels());
+    const auto clipGain = juce::Decibels::decibelsToGain (c.gainDb);
+    const auto left = juce::jmax (body.getX(), listWidth);
+    const auto right = juce::jmin (body.getRight(), timelineArea().getRight());
+    const auto bandHeight = (float) body.getHeight() / (float) channels;
+    g.setColour (colour.withAlpha (0.9f));
+
+    // Where session frame f is in the audio drawn there: (audio, its frame).
+    const auto source = [&c, take] (juce::int64 f) -> std::pair<const AudioSnapshot*, juce::int64>
+    {
+        if (c.takes.empty() || (take < 0 && c.comp.empty()))
+            return { c.audio.get(), c.offset + (f - c.position) };
+
+        const auto zero = c.takeZeroFrame (f);
+        const auto& t = c.takes[(size_t) (take >= 0 ? take : c.takeAt (zero))];
+        return { t.audio.get(), zero + t.shift };
+    };
+
+    for (int x = left; x < right; ++x)
+    {
+        const auto f0 = juce::jlimit (c.position, c.getEnd(), frameForX ((float) x));
+        const auto f1 = juce::jlimit (c.position, c.getEnd(), frameForX ((float) x + 1.0f));
+        const auto [audio, a0] = source (f0);
+
+        if (audio == nullptr)
+            continue;
+
+        const auto start = juce::jmax ((juce::int64) 0, a0);
+        const auto end = juce::jmin (juce::jmax (a0 + 1, a0 + (f1 - f0)), audio->getNumFrames());
+
+        if (end <= start)
+            continue;
+
+        for (int ch = 0; ch < juce::jmin (channels, audio->getNumChannels()); ++ch)
+        {
+            const auto mid = (float) body.getY() + bandHeight * ((float) ch + 0.5f);
+            const auto peak = audio->getPeak (ch, start, end);
+            const auto top = mid - juce::jlimit (0.0f, 1.0f, peak.getEnd() * clipGain) * bandHeight * 0.5f;
+            const auto bottom = mid - juce::jlimit (-1.0f, 0.0f, peak.getStart() * clipGain) * bandHeight * 0.5f;
+            g.drawVerticalLine (x, top, juce::jmax (top + 1.0f, bottom));
+        }
+    }
+
+    if (Surround::isSurround (channels) && bandHeight >= 10.0f)
+    {
+        g.setColour (juce::Colours::white.withAlpha (0.6f));
+        g.setFont (9.0f);
+
+        for (int ch = 0; ch < channels; ++ch)
+        {
+            const auto mid = (float) body.getY() + bandHeight * ((float) ch + 0.5f);
+            g.drawText (Surround::channelName (channels, ch),
+                        juce::Rectangle<float> ((float) left + 3.0f, mid - bandHeight * 0.5f, 24.0f, bandHeight), juce::Justification::centredLeft, false);
+        }
+    }
+}
+
+void MultitrackView::drawTakeLanes (juce::Graphics& g, int track) const
+{
+    const auto lanes = takeLaneCount (track);
+
+    if (lanes == 0)
+        return;
+
+    const auto& t = shown().tracks[(size_t) track];
+    const auto area = timelineArea();
+
+    for (int k = 0; k < lanes; ++k)
+    {
+        const auto top = laneTop (track) + laneHeight + k * takeLaneHeight();
+        g.setColour (laneAlternate.darker (0.15f));
+        g.fillRect (area.getX(), top, area.getWidth(), takeLaneHeight());
+        g.setColour (laneLine);
+        g.drawHorizontalLine (top + takeLaneHeight() - 1, (float) area.getX(), (float) area.getRight());
+    }
+
+    for (auto& c : t.clips)
+    {
+        const auto colour = c.muted ? Theme::faintText : TrackColours::of (c, t, track);
+        const auto base = c.takeZeroFrame (c.position);
+
+        for (int k = 0; k < (int) c.takes.size() && c.takes.size() > 1; ++k)
+        {
+            const auto r = takeLaneBounds (track, k, c);
+            g.setColour (colour.withAlpha (0.1f));
+            g.fillRoundedRectangle (r.toFloat(), 3.0f);
+
+            // The parts the clip plays of this take, lit.
+            const auto playing = [&] (juce::int64 from, juce::int64 to)
+            {
+                const auto x0 = juce::jmax ((float) r.getX(), xForFrame (from)), x1 = juce::jmin ((float) r.getRight(), xForFrame (to));
+
+                if (x1 > x0)
+                {
+                    g.setColour (colour.withAlpha (0.3f));
+                    g.fillRect (juce::Rectangle<float> (x0, (float) r.getY(), x1 - x0, (float) r.getHeight()));
+                }
+            };
+
+            if (c.comp.empty())
+            {
+                if (k == c.activeTake)
+                    playing (c.position, c.getEnd());
+            }
+            else
+            {
+                for (size_t i = 0; i < c.comp.size(); ++i)
+                    if (c.comp[i].take == k)
+                        playing (i == 0 ? c.position : c.position + (c.comp[i].from - base),
+                                 i + 1 < c.comp.size() ? c.position + (c.comp[i + 1].from - base) : c.getEnd());
+            }
+
+            drawWaveform (g, r.reduced (0, 1), track, c, k, colour);
+
+            const auto name = takeNameBounds (track, k, c);
+            g.setColour (colour.withAlpha (0.6f));
+            g.fillRoundedRectangle (name.toFloat(), 3.0f);
+            g.setColour (juce::Colours::white);
+            g.setFont (11.0f);
+            g.drawText ("Take " + juce::String (k + 1), name, juce::Justification::centred, true);
+            g.setColour (colour.withAlpha (0.5f));
+            g.drawRoundedRectangle (r.toFloat().reduced (0.5f), 3.0f, 1.0f);
+        }
+    }
 }
 
 void MultitrackView::paint (juce::Graphics& g)
@@ -2855,6 +3068,8 @@ void MultitrackView::paint (juce::Graphics& g)
 
             for (auto& c : track.noteClips)
                 drawNoteClip (g, t, c);
+
+            drawTakeLanes (g, t);
 
             // Where clips overlap, a later clip covers the fade out under it: draw the fade outs
             // again on top, so a crossfade shows both its curves.
@@ -4466,7 +4681,7 @@ bool MultitrackView::showClip (juce::uint32 clipId)
 void MultitrackView::scrollToTrack (int track)
 {
     const auto visible = juce::jmax (1, timelineArea().getHeight());
-    const auto top = rowOf (track) * laneHeight;
+    const auto top = trackY (track);
 
     if (top < scrollY || top + laneHeight > scrollY + visible)
         scrollY = top;
@@ -5628,6 +5843,34 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
+    // A take lane: its name plays that take throughout; a drag across it comps that range.
+    if (const auto lane = takeLaneAt (p); lane.has_value() && ! e.mods.isPopupMenu())
+    {
+        const auto [track, index] = lane->first;
+        const auto& clip = shown().tracks[(size_t) track].clips[(size_t) index];
+        selectClip (clip.id, false);
+        selectedClip = clip.id;
+        selectTrack (track);
+
+        if (takeNameBounds (track, lane->second, clip).contains (p))
+        {
+            playTakeThroughout (clip.id, lane->second);
+            return;
+        }
+
+        if (! clip.locked)
+        {
+            dragClip = clip;
+            dragTrack = track;
+            dragTake = lane->second;
+            dragFrame = juce::jlimit (clip.position, clip.getEnd(), snapped (frameForX ((float) p.x), 0, false));
+            drag = Drag::compTake;
+            dragDescription = "Comp Take " + juce::String (dragTake + 1);
+        }
+
+        return;
+    }
+
     if (const auto hit = clipAt (p))
     {
         const auto& clip = shown().tracks[(size_t) hit->first].clips[(size_t) hit->second];
@@ -5952,6 +6195,12 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
                 selectedPoints->points = { envelope.points[(size_t) moved] };
 
             SessionEdits::setEnvelope (next, next.tracks[(size_t) dragEnvelope.track].id, dragEnvelope.parameter, std::move (envelope));
+            break;
+        }
+        case Drag::compTake:
+        {
+            const auto frame = juce::jlimit (dragClip.position, dragClip.getEnd(), snapped (frameForX ((float) p.x), 0, false));
+            SessionEdits::compTake (next, dragClip.id, dragTake, juce::jmin (dragFrame, frame), juce::jmax (dragFrame, frame));
             break;
         }
         case Drag::clipGain:

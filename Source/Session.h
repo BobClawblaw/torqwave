@@ -78,8 +78,55 @@ struct SessionClip
     std::vector<Take> takes;
     int activeTake = 0;
 
+    /** A comp: the clip plays a different take in each part. A segment plays its take from
+        `from` up to the next segment's `from`; the first plays from the clip's start whatever
+        its `from`. Frames are of take 0's audio (take k's frame is that plus its shift), so the
+        comp stays with the sound when the clip is moved, trimmed, split or another take chosen.
+        Sorted, no two neighbours alike. Empty: the active take throughout. */
+    struct CompSegment
+    {
+        juce::int64 from = 0;
+        int take = 0;
+
+        bool operator== (const CompSegment& o) const noexcept { return from == o.from && take == o.take; }
+    };
+
+    std::vector<CompSegment> comp;
+    juce::int64 compFade = -1;             // frames: the equal-power crossfade centred on each join (shorter
+                                           // where a segment beside it is); -1 until the first comp sets 10 ms
+
+    /** The take-0 frame the clip plays at session frame `frame` (its active take's audio frame
+        less that take's shift). */
+    juce::int64 takeZeroFrame (juce::int64 frame) const noexcept
+    {
+        return offset + (frame - position) - (takes.empty() ? 0 : takes[(size_t) activeTake].shift);
+    }
+
+    /** The take the comp plays at a take-0 frame: the active one without a comp. */
+    int takeAt (juce::int64 takeZero) const noexcept
+    {
+        if (comp.empty())
+            return activeTake;
+
+        auto take = comp.front().take;
+
+        for (size_t i = 1; i < comp.size() && comp[i].from <= takeZero; ++i)
+            take = comp[i].take;
+
+        return take;
+    }
+
     juce::int64 getEnd() const noexcept    { return position + length; }
 };
+
+namespace Comp
+{
+    /** Reads what a clip's comp plays from take-0 frame takeZero (see SessionClip::comp) into
+        [0, count) of dest, as many channels as dest has, joins crossfaded; a take with no audio
+        there is silent. `other` must have dest's channels and count frames: it holds the other
+        side of a join. Allocates nothing. The clip must have a comp. */
+    void read (const SessionClip&, juce::int64 takeZero, int count, juce::AudioBuffer<float>& dest, juce::AudioBuffer<float>& other);
+}
 
 /** Part of a track's signal sent to a bus, from before its volume (pre-fader) or after it. */
 struct SessionSend
@@ -641,6 +688,28 @@ namespace SessionEdits
     /** Puts take `index` of a clip in use. It keeps its place and length where the take's audio
         allows; otherwise it is cut back to what the take has. */
     bool chooseTake (SessionState&, juce::uint32 clipId, int index);
+
+    /** Makes a clip's comp play take `index` over session frames [start, end) (cut to the
+        clip), the rest as it was (its active take without a comp). False for a locked clip, a
+        take out of range or a range that misses the clip, or when it already plays so. */
+    bool compTake (SessionState&, juce::uint32 clipId, int index, juce::int64 start, juce::int64 end);
+
+    /** Ends a clip's comp, take `index` in use throughout (as chooseTake). False for a locked
+        clip or a take out of range, or when there is no comp and it is in use already. */
+    bool playTakeThroughout (SessionState&, juce::uint32 clipId, int index);
+
+    /** Sets the crossfade at a clip's comp joins, in frames (0 for a hard cut, at most a second
+        at the session's rate). False for a locked clip, or when it is so already. */
+    bool setCompFade (SessionState&, juce::uint32 clipId, juce::int64 frames);
+
+    /** What a clip plays of its takes with its comp, before its fades and gain: as long as the
+        clip, from its start; null with no comp or no audio. */
+    AudioDocument::Snapshot compAudio (const SessionClip&);
+
+    /** Makes a clip's comp (rendered by compAudio(), saved as file) a new take, in use, and ends
+        the comp; its other takes stay. False for a locked clip, no comp, or audio that isn't as
+        long as the clip. */
+    bool flattenComp (SessionState&, juce::uint32 clipId, const juce::File&, AudioDocument::Snapshot audio);
 
     /** Crossfades a clip with the clips it partly overlaps on its track: where another clip ends
         inside it, its fade in and the other's fade out both span the overlap; where another starts

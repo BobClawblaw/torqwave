@@ -86,6 +86,7 @@ namespace Ai
         juce::var moveClip (const juce::var&);
         juce::var trimClip (const juce::var&);
         juce::var splitClip (const juce::var&);
+        juce::var compTakes (const juce::var&);
         juce::var setClip (const juce::var&);
         juce::var removeClip (const juce::var&);
         juce::var addMarker (const juce::var&);

@@ -210,6 +210,20 @@ public:
         on a clip with takes offers them. */
     void chooseTake (juce::uint32 clipId, int index);
 
+    /** Shows or hides a track's take lanes: one row per take under its lane, each clip's takes
+        drawn there. Dragging across a take lane comps that range of the take into the clip
+        (SessionEdits::compTake); clicking a take's name plays it throughout. */
+    void setTakeLanesShown (juce::uint32 trackId, bool shown);
+    bool areTakeLanesShown (juce::uint32 trackId) const   { return takeLanesShown.count (trackId) > 0; }
+
+    /** Comps take `index` of a clip over session frames [start, end), or plays it throughout,
+        each as one undo step. */
+    void compTake (juce::uint32 clipId, int index, juce::int64 start, juce::int64 end);
+    void playTakeThroughout (juce::uint32 clipId, int index);
+
+    /** Asked to flatten a clip's comp into a take (MainComponent writes its file). */
+    std::function<void (juce::uint32 clipId)> onFlattenComp;
+
     /** Every selected clip, in the session's order. getSelectedClip() is the one clicked last,
         which commands for a single clip (split, gain, takes) work on. */
     std::vector<juce::uint32> getSelectedClips() const;
@@ -655,7 +669,7 @@ private:
 
     enum class Drag { none, range, move, trimStart, trimEnd, fadeIn, fadeOut, envelopePoint, marker, clipGain, clipGainPoint, scrub,
                       stretchStart, stretchEnd, moveNotes, trimNotesStart, trimNotesEnd, stretchNotesStart, stretchNotesEnd, drawNotes, rubberBand, listWidth,
-                      loopNew, loopMove, loopStart, loopEnd };
+                      loopNew, loopMove, loopStart, loopEnd, compTake };
 
     /** What a press at p in the loop strip does: a new loop, or moving the loop or one of its ends. */
     Drag loopDragAt (juce::Point<int> p) const;
@@ -711,6 +725,14 @@ private:
     int laneTop (int track) const;
     int trackAt (int y) const;
     int rowOf (int track) const;    // its lane's place among the shown tracks
+    int trackY (int track) const;   // the top of its lane below the ruler, unscrolled: the shown tracks above, with their take lanes
+    int takeLaneCount (int track) const;   // the take lanes shown under it: its most takes, when shown
+    int takeLaneHeight() const noexcept   { return juce::jmax (minLaneHeight / 2, laneHeight / 2); }
+    juce::Rectangle<int> takeLaneBounds (int track, int take, const SessionClip&) const;
+    juce::Rectangle<int> takeNameBounds (int track, int take, const SessionClip&) const;   // the take's name, at the left of its lane
+    std::optional<std::pair<std::pair<int, int>, int>> takeLaneAt (juce::Point<int>) const;   // (track, clip) and take under p
+    void drawTakeLanes (juce::Graphics&, int track) const;
+    void drawWaveform (juce::Graphics&, juce::Rectangle<int> body, int track, const SessionClip&, int take, juce::Colour) const;
     float xForFrame (juce::int64 frame) const;
     juce::int64 frameForX (float x) const;
     juce::Rectangle<int> clipBounds (int track, const SessionClip&) const;
@@ -805,6 +827,8 @@ private:
     std::optional<juce::Range<juce::int64>> loopPreview;   // the loop as a drag in the strip has it
     juce::int64 loopGrab = 0;                              // a moved loop: the frame grabbed, from its start
     bool showClipGain = false;
+    std::set<juce::uint32> takeLanesShown;   // tracks showing their take lanes
+    int dragTake = 0;                        // the take being swiped into a comp
     juce::Range<juce::int64> timeSelection, recording;
 
     Drag drag = Drag::none;
