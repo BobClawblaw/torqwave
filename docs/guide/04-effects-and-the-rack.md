@@ -57,7 +57,7 @@ The rack is the **Effects Rack** panel beside the editor. Window > Effects Rack 
 ### Build a chain
 
 1. Click **+ Add Effect**. The menu lists effects by format, then by maker:
-   - **Torqwave**: the built-in effects. These are Parametric EQ, Dynamic EQ, both Graphic EQs, Compressor, Multiband Compressor, Limiter, Maximizer, De-esser, Transient Shaper, Exciter, Multiband Stereo Width, Chorus, Flanger, Phaser, Reverb and Convolution Reverb.
+   - **Torqwave**: the built-in effects. These are Parametric EQ, Dynamic EQ, both Graphic EQs, Compressor, Multiband Compressor, Limiter, Maximizer, De-esser, Transient Shaper, Exciter, Multiband Stereo Width, Chorus, Flanger, Phaser, Reverb, Convolution Reverb and Hardware Insert (outboard gear through the interface; see [Hardware inserts](06-multitrack-sessions.md#hardware-inserts)).
    - **VST3**, **Audio Units** on the Mac and **LV2** on the Mac and Linux: the plug-ins your scan found.
 2. The new effect's window opens in front. Set it up while you play the file.
 3. Add more effects. They run from top to bottom.

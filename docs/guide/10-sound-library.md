@@ -46,7 +46,7 @@ Select a sound to see its whole waveform in the preview.
 
 ## Use it
 
-- **Return** inserts the selected sound at the cursor in the editor.
+- **Return** inserts the selected sound into the multitrack session, on the selected track at the cursor, and moves the cursor to its end.
 - **Drag** it into the multitrack view as a clip, into the editor, to Finder, or into another app.
 - **Spot it:** drop it on a marker in the multitrack view and its sync point lands on the marker (see [Spotting sounds](09-video-and-surround.md#spotting-sounds)).
 - **Use only part of it:** select that part in the preview first, then drag. Only that part goes.

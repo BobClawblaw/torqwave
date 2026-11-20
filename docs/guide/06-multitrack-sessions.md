@@ -42,7 +42,7 @@ The track list on the left holds a header for each track. Drag its right edge to
 The **Multitrack > Tracks** menu adds tracks, buses, folders and VCA faders, and also:
 
 - duplicates, deletes and moves tracks, and hides them (they still play);
-- saves a track as a template and adds tracks from templates;
+- saves a track as a template and adds tracks from templates (a template can also be applied to a track that is already there: see [Channel-strip presets](#channel-strip-presets));
 - clears every solo and mute at once.
 
 Right-click a track's header, or an empty part of a lane, for the same additions, and on a header for what applies to that track: its folder, VCA fader, group, colour, note, hiding and deleting it.
@@ -198,6 +198,44 @@ The same **Sends** panel holds the rest of a track's routing:
 - the fader and the meter.
 
 A folder's or VCA fader's strip has only its fader, mute and solo. The master meter is on the right. In a track's Touch, Latch or Write mode, its fader and pan write automation while the session plays, as its header's controls do.
+
+### Mixer scenes
+
+A **scene** is a snapshot of the whole mix, to go back to with one click: for example a verse mix and a chorus mix, or two versions to compare.
+
+- **Store Scene**, at the top of a column on the mixer's left, keeps the mix as it is now as a new scene ("Scene 1", "Scene 2"...). A button for it appears in the list under **Store Scene**, which scrolls when there are more than fit.
+- **Click a scene's button** to recall it. **Multitrack > Mixer Scenes and Channel Strips** also stores scenes and recalls them.
+- **Right-click a scene's button** to store the mix into it again (**Update Scene**), rename it or delete it.
+
+A scene holds every track's, bus's, folder's and VCA fader's volume, pan, surround pan, mute, solo and polarity, and each track's sends: which bus, the level, and pre or post fader. It does not hold effects or their settings, automation, routing (outputs), groups or automation modes. Recalling a scene is one undo step. Tracks added after the scene was stored keep their own mix, and sends to buses deleted since are left out. While a track's volume or pan has automation, the envelope still plays over the recalled setting. Scenes are saved with the session. Ask Torq can store and recall scenes by name.
+
+### Channel-strip presets
+
+A **channel strip** is a track's sound, saved to put onto another track: its effects with their settings, its sends, its volume, pan and polarity, and its output.
+
+- **Save:** right-click a mixer strip and choose **Save Channel Strip...**, or use **Multitrack > Mixer Scenes and Channel Strips > Save Channel Strip...** for the selected track. Give it a name. Presets are kept with the app, so every session can use them.
+- **Apply:** right-click the strip of the track that should get it and choose a preset from **Apply Channel Strip**, or use **Apply Channel Strip...** in the Multitrack menu. **Other File...** applies any track template (`.sbtrack`).
+
+Applying a preset replaces the track's effects with the preset's and its sends with the preset's. Sends and the output find their bus by its name; if no bus has that name, Torqwave says so. The track keeps its name, colour, input, clips and automation. On an instrument track, a preset without an instrument keeps the track's own instrument and puts the preset's effects after it; on an audio track or a bus, a preset's instrument is left out.
+
+The volume, pan, polarity, sends and output are one undo step. The effects are not: as with any change to a track's effects, undo doesn't bring the old effects back.
+
+### Hardware inserts
+
+A **hardware insert** puts outboard gear (a compressor, an EQ, a tape machine) in a track's effects, like a plug-in. It sends the track's audio out of a pair of the interface's outputs and brings it back in on a pair of its inputs.
+
+1. Cable an output pair of your interface to the gear, and the gear back to an input pair.
+2. In the track's **FX** menu, add **Hardware Insert** (one of Torqwave's own effects).
+3. In its window, choose the **Output** and **Input** pairs. Torqwave turns those channels on.
+4. Click **Ping**. Torqwave sends one click out of the output pair and times how long it takes to come back on the input pair: the round trip through the interface and the gear. Do this with the gear set to pass the sound, and with nothing else coming in on those inputs.
+
+The insert reports the round trip to delay compensation, so its track stays lined up with every other track, sample for sample. Until you ping, it uses the latency the interface reports, which is only an estimate. The round trip is saved with the insert and kept until the sample rate changes; ping again after you change the interface, its buffer size, or the gear. **Send Level** and **Return Level** set the levels to and from the gear.
+
+Things to know:
+
+- The insert plays through the gear only while the audio device runs at the session's sample rate. Otherwise, and in mixdowns, bounces, freezes and stems (which are rendered faster than real time), it passes the track's audio through untouched, as late as its latency. To print the gear's sound, record its return on another track while the session plays.
+- When playback starts or jumps, the return is silent for one round trip, until the gear's sound comes back.
+- Use it on stereo and mono tracks and buses. On a 5.1 or 7.1 track, each pair of channels would go to the same outputs.
 
 ## Control surfaces and MIDI learn
 
