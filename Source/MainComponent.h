@@ -64,6 +64,7 @@
 #include "NoteEditor.h"
 #include "Delivery.h"
 #include "SoundLibraryView.h"
+#include "SequenceLibraryView.h"
 #include "SettingsPanel.h"
 
 namespace Guide { class Window; }
@@ -570,6 +571,14 @@ private:
     void showClipEffects (juce::uint32 clipId);
     void combineClips (const std::vector<juce::uint32>& clipIds);
     void askToAddToLibrary (juce::uint32 clipId);
+
+    /** Add to Sequence Library...: asks for the sequence's name, folder, key and tags, then saves
+        the note clip with its track's instrument and effects. */
+    void askToAddToSequenceLibrary (juce::uint32 noteClipId);
+
+    /** Puts a sequence in the session at the frame: on the track when onTrack and it is an
+        instrument track, else on a new track from its voice, whose plug-ins then load. */
+    void addSequenceToSession (const juce::File&, int track, juce::int64 frame, bool onTrack);
     juce::File libraryIndexFile() const;
     bool isEditingClip() const;                     // the file in the editor is linked to a clip
 

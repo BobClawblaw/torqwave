@@ -161,6 +161,40 @@ Keep the track with the MIDI plug-in above the one it plays. Placed below, its n
 
 The choice is kept with Torqwave's settings, not the session.
 
+## The Sequence Library
+
+The Sequence Library keeps MIDI parts with the instrument that plays them, to drop into any session. A part is a **sequence**: its notes and controller lanes, kept in beats rather than seconds, and its **voice**, meaning the track's instrument with its settings, its effects, volume, pan and colour. Because the notes are in beats, a sequence lands on the same beats at whatever tempo the session is in, through tempo changes too. Nothing is stretched.
+
+Show it with **Window > Sequence Library**.
+
+**Save a part.** Right-click a note clip and choose **Add to Sequence Library...** (or select it and use **Multitrack > Clips > Add to Sequence Library...**). Give it a name, a folder, and optionally a key and tags. Its loop and controller lanes go with it. The track's sends, output and automation stay in the session.
+
+**Find one.** The library is sorted into folders by role:
+
+| Role | Sub-folders |
+|---|---|
+| Drums | Full Grooves, Kick, Snare & Clap, Hats & Tops, Percussion, Fills, Breaks |
+| Bass | Sub, Synth Bass, Arp Bass, Picked & Played |
+| Harmony | Progressions, Keys & Comping, Stabs, Strums |
+| Pads | Sustained, Evolving, Swells, Drones |
+| Arps | Up & Down, 16th Sequences, Plucks, Gated |
+| Melody | Leads, Hooks, Counter-lines, Bells & Mallets |
+| SFX | Risers, Downlifters, Impacts, Sweeps, Transitions, Hits |
+| Kits | Parts meant to play together |
+| Inbox | New sketches, not yet sorted |
+
+Each sequence shows its length in bars and its key. Type in the search box to see only the sequences that match every word, in their names, keys, tags or folders.
+
+The library is a folder of plain files (`.tqseq`), under Music > Torqwave > Sequences. **Folder** shows it in the Finder. Make folders of your own inside the sub-folders, and move, copy or share the files there. The panel follows what you change. Right-click a sequence to show it in the Finder, rename it or move it to the Trash.
+
+**Use one.** Drag a sequence into the multitrack view:
+
+- **onto empty space** below the tracks: a new instrument track with the sequence's instrument and effects, and the clip where you dropped it, on the grid;
+- **onto an instrument track:** only the notes, played by that track's instrument. Hold **Option** to put it on a new track with its own instrument instead;
+- **onto an audio track:** a new instrument track, as onto empty space.
+
+Double-click a sequence to put it on the selected track at the cursor, the same way. A `.tqseq` file dragged from the Finder works too. Each drop is one undo step.
+
 ## Freeze, bounce and export
 
 An instrument track freezes, bounces, mixes down and exports in stems like any other track. Bounce it when you want its sound as audio to edit further.

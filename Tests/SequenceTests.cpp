@@ -1,0 +1,252 @@
+#include <JuceHeader.h>
+#include "../Source/SequenceLibraryView.h"
+#include "TestUtils.h"
+#include "SequenceTests.h"
+
+namespace
+{
+    using TestUtils::check;
+
+    constexpr double rate = 48000.0;
+
+    SessionState sessionAt (double tempo, std::vector<Metronome::TempoChange> changes = {})
+    {
+        SessionState s;
+        s.sampleRate = rate;
+        s.tempo = tempo;
+        s.beatsPerBar = 4;
+        s.tempoChanges = std::move (changes);
+        return s;
+    }
+
+    /** A two-bar pattern at bar 2 (beat 4) of a session: notes on beats and sixteenths, one held
+        over a beat, a mod wheel lane, a loop of a bar, and the notes' timeline starting half a
+        beat before the clip. */
+    juce::uint32 addPattern (SessionState& s, juce::uint32 trackId)
+    {
+        const auto map = s.tempoMap();
+        const auto position = map.beatFrame (4);
+        const auto origin = map.frameAtBeatPosition (3.5);
+        const auto at = [&] (double beatsFromOrigin) { return map.frameAtBeatPosition (3.5 + beatsFromOrigin) - origin; };
+
+        NoteClip c;
+        c.name = "Groove";
+        c.position = position;
+        c.offset = position - origin;
+        c.length = map.beatFrame (12) - position;
+        c.loopLength = at (4.0);
+        c.channel = 3;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            const auto start = 0.5 + 0.25 * i;
+            c.notes.push_back ({ 36 + i, at (start), at (start + 0.25) - at (start), 0.5f + 0.05f * (float) i });
+        }
+
+        c.notes.push_back ({ 60, at (2.5), at (4.0) - at (2.5), 1.0f });
+
+        ControllerLane mod;
+        mod.controller = 1;
+        mod.envelope.points = { { at (0.5), 0.0f }, { at (2.5), 1.0f } };
+        c.lanes.push_back (mod);
+        return SessionEdits::addNoteClip (s, trackId, c);
+    }
+
+    /** How far, in frames, the clip's notes are from the beats the sequence gives them, the worst of them. */
+    juce::int64 worstOffBeat (const SessionState& s, const NoteClip& c, const SequenceFile::Sequence& q)
+    {
+        const auto map = s.tempoMap();
+        const auto originBeat = map.beatPosition (c.position) - (double) q.offset / SequenceFile::ticksPerBeat;
+        juce::int64 worst = c.notes.size() == q.notes.size() ? 0 : 1000000;
+
+        for (size_t i = 0; i < c.notes.size() && i < q.notes.size(); ++i)
+        {
+            const auto origin = c.getOrigin();
+            const auto start = map.frameAtBeatPosition (originBeat + (double) q.notes[i].start / SequenceFile::ticksPerBeat);
+            const auto end = map.frameAtBeatPosition (originBeat + (double) (q.notes[i].start + q.notes[i].length) / SequenceFile::ticksPerBeat);
+            worst = juce::jmax (worst, std::abs (origin + c.notes[i].start - start), std::abs (origin + c.notes[i].start + c.notes[i].length - end));
+        }
+
+        return worst;
+    }
+
+    const NoteClip& noteClip (const SessionState& s, juce::uint32 id)
+    {
+        const auto w = s.findNoteClip (id);
+        return s.tracks[(size_t) w->first].noteClips[(size_t) w->second];
+    }
+
+    std::unique_ptr<juce::XmlElement> fakeEffects()
+    {
+        auto effects = std::make_unique<juce::XmlElement> ("EFFECTS");
+        auto* slot = effects->createNewChildElement ("SLOT");
+        slot->setAttribute ("id", 1);
+        auto* plugin = slot->createNewChildElement ("PLUGIN");
+        plugin->setAttribute ("name", "Test Synth");
+        plugin->setAttribute ("isInstrument", true);
+        return effects;
+    }
+}
+
+void runSequenceTests()
+{
+    // In one session and back: every note, lane, the loop and the offset come back exactly.
+    {
+        auto s = sessionAt (120.0);
+        const auto trackId = s.addInstrumentTrack().id;
+        const auto id = addPattern (s, trackId);
+        const auto& clip = noteClip (s, id);
+        const auto q = SequenceFile::fromClip (s, id, nullptr);
+        const auto xml = q.has_value() ? SequenceFile::toXml (*q) : nullptr;
+        const auto back = xml != nullptr ? SequenceFile::fromXml (*xml) : std::nullopt;
+        auto again = back.has_value() ? SequenceFile::toClip (*back, s, clip.position) : NoteClip {};
+
+        check (q.has_value() && back.has_value() && back->notes == q->notes && back->lanes == q->lanes && back->offset == 480 && back->length == 8 * 960
+                   && back->loopLength == 4 * 960 && back->notes[0].start == 480 && back->notes[0].length == 240 && back->channel == 3 && back->name == "Groove"
+                   && juce::exactlyEqual (back->writtenTempo, 120.0) && juce::exactlyEqual (back->bars(), 2.0),
+               "sequence: a note clip is read in beats (its timeline half a beat before it, 480 ticks; two bars, 7680 ticks; a loop of a bar) and comes back from its XML the same");
+        check (again.notes == clip.notes && again.lanes == clip.lanes && again.length == clip.length && again.loopLength == clip.loopLength
+                   && again.offset == clip.offset && again.position == clip.position,
+               "sequence: put back where it came from, it is the clip it was, frame for frame");
+    }
+
+    // Written at 90 BPM, dropped into a session at 140 and one that changes tempo inside it: the same beats.
+    {
+        auto slow = sessionAt (90.0);
+        const auto trackId = slow.addInstrumentTrack().id;
+        const auto q = SequenceFile::fromClip (slow, addPattern (slow, trackId), nullptr);
+
+        auto fast = sessionAt (140.0);
+        const auto placed = SequenceFile::place (fast, *q, -1, fast.tempoMap().beatFrame (8), false);
+        const auto& atFast = noteClip (fast, placed.clipId);
+        const auto fastLength = fast.tempoMap().beatPosition (atFast.getEnd()) - fast.tempoMap().beatPosition (atFast.position);
+
+        auto changing = sessionAt (120.0, { { 3, 90.0, 4 } });   // 90 from the third bar, inside the clip
+        const auto placed2 = SequenceFile::place (changing, *q, -1, changing.tempoMap().beatFrame (6), false);
+        const auto& atChanging = noteClip (changing, placed2.clipId);
+        const auto changingLength = changing.tempoMap().beatPosition (atChanging.getEnd()) - changing.tempoMap().beatPosition (atChanging.position);
+
+        check (worstOffBeat (fast, atFast, *q) <= 1 && std::abs (fastLength - 8.0) < 1.0e-6 && atFast.position == fast.tempoMap().beatFrame (8),
+               "sequence: written at 90 BPM and dropped at bar 3 of a 140 BPM session, every note starts and ends on its beat (within a frame), and it is 8 beats long");
+        check (worstOffBeat (changing, atChanging, *q) <= 1 && std::abs (changingLength - 8.0) < 1.0e-6,
+               "sequence: dropped across a tempo change (120, then 90 from bar 3), every note is still on its beat, and it is 8 beats long");
+    }
+
+    // The voice: the track's instrument and effects, without its sends, output or automation.
+    {
+        auto s = sessionAt (120.0);
+        auto& bus = s.addBus();
+        bus.name = "Verb";
+        const auto busId = bus.id;
+        auto& t = s.addInstrumentTrack();
+        t.name = "Pad Track";
+        t.gainDb = -4.0f;
+        t.sends.push_back ({ busId, -6.0f, false });
+        t.outputBusId = busId;
+        t.volumeEnvelope.points = { { 0, -10.0f }, { 48000, 0.0f } };
+        const auto trackId = t.id;
+        const auto q = SequenceFile::fromClip (s, addPattern (s, trackId), fakeEffects());
+        const auto* voice = q.has_value() ? q->voice.get() : nullptr;
+
+        check (voice != nullptr && voice->getChildByName ("EFFECTS") != nullptr && voice->getChildByName ("SEND") == nullptr
+                   && ! voice->hasAttribute ("output") && voice->getNumChildElements() == 1 && voice->getBoolAttribute ("instrument")
+                   && juce::exactlyEqual ((float) voice->getDoubleAttribute ("gainDb"), -4.0f),
+               "sequence: its voice keeps the track's instrument and effects and its volume, and leaves out its sends, output and automation");
+
+        // Into another session: a new instrument track from the voice, named for the sequence, its effects to load.
+        auto other = sessionAt (100.0);
+        other.addTrack();
+        const auto placed = SequenceFile::place (other, *q, 0, 0, false);
+        const auto* made = other.findTrack (placed.trackId);
+        check (placed.clipId != 0 && made != nullptr && made->isInstrument && made->name == "Groove" && made->sends.empty() && other.tracks.size() == 2
+                   && placed.effects != nullptr && placed.effects->getChildByName ("SLOT") != nullptr && ! made->isAutomated(),
+               "sequence: dropped on empty space it makes an instrument track from its voice, named for it, with its effects to load and no sends or automation");
+
+        // On an instrument track: the notes only, played by that track's instrument.
+        auto withInstrument = sessionAt (100.0);
+        const auto keysId = withInstrument.addInstrumentTrack().id;
+        const auto onTrack = SequenceFile::place (withInstrument, *q, 0, 4800, true);
+        check (onTrack.trackId == keysId && onTrack.effects == nullptr && withInstrument.tracks.size() == 1 && withInstrument.tracks[0].noteClips.size() == 1
+                   && noteClip (withInstrument, onTrack.clipId).position == 4800,
+               "sequence: dropped on an instrument track it adds its notes there and keeps the track's instrument");
+
+        // On an audio track it can't go there: a new track instead.
+        auto withAudio = sessionAt (100.0);
+        withAudio.addTrack();
+        const auto onAudio = SequenceFile::place (withAudio, *q, 0, 0, true);
+        check (withAudio.tracks.size() == 2 && onAudio.trackId == withAudio.tracks[1].id && onAudio.clipId != 0,
+               "sequence: dropped on an audio track it goes on a new instrument track");
+    }
+
+    // Read at another resolution, ticks come to ours.
+    {
+        juce::XmlElement xml ("TORQWAVE_SEQUENCE");
+        xml.setAttribute ("ticksPerBeat", 480);
+        xml.setAttribute ("length", "1920");
+        auto* n = xml.createNewChildElement ("NOTES")->createNewChildElement ("N");
+        n->setAttribute ("p", 64);
+        n->setAttribute ("s", "240");
+        n->setAttribute ("l", "120");
+        const auto q = SequenceFile::fromXml (xml);
+        const auto notOne = SequenceFile::fromXml (juce::XmlElement ("TORQWAVE_SESSION"));
+        check (q.has_value() && q->length == 3840 && q->notes.size() == 1 && q->notes[0].start == 480 && q->notes[0].length == 240 && ! notOne.has_value(),
+               "sequence: one written at 480 ticks a beat is read at 960 (half a beat stays half a beat); other XML is not a sequence");
+    }
+
+    // The library: its roles' folders, saving, the scan and the search.
+    {
+        const auto folder = juce::File::createTempFile ("sequences");
+        SequenceLibrary library (folder);
+        const auto made = library.makeFolders();
+        const auto roles = SequenceLibrary::roles();
+        auto allThere = made;
+
+        for (auto& r : roles)
+            for (auto& sub : r.subRoles)
+                allThere = allThere && folder.getChildFile (r.name).getChildFile (sub).isDirectory();
+
+        auto s = sessionAt (120.0);
+        const auto trackId = s.addInstrumentTrack().id;
+        auto q = *SequenceFile::fromClip (s, addPattern (s, trackId), nullptr);
+        q.key = "A minor";
+        q.tags = { "four on the floor", "house" };
+        const auto first = library.newFileFor ("Drums", "Hats & Tops", "Groove");
+        const auto saved = SequenceFile::save (q, first);
+        const auto second = library.newFileFor ("Drums", "Hats & Tops", "Groove");
+        SequenceFile::save (q, second);
+        const auto mine = folder.getChildFile ("Drums").getChildFile ("Hats & Tops").getChildFile ("My Hats");
+        SequenceFile::save (q, mine.getChildFile ("Groove" + juce::String (SequenceFile::extension)));
+        folder.getChildFile ("Inbox").getChildFile (juce::String ("broken") + SequenceFile::extension).replaceWithText ("not a sequence");
+        const auto unknown = library.folderFor ("Polka", {});
+
+        const auto entries = library.scan();
+        juce::String error;
+        const auto loaded = SequenceFile::load (first, error);
+
+        check (allThere && saved.isEmpty() && first.getFileName() == "Groove.tqseq" && second.getFileName() == "Groove 2.tqseq"
+                   && unknown == folder.getChildFile ("Inbox"),
+               "sequence library: makes a folder for every role and sub-role (" + juce::String ((int) roles.size()) + " roles), saves a sequence where its role says, "
+               "names a second one Groove 2, and files an unknown role in the Inbox");
+        check (entries.size() == 3 && entries[0].path == juce::StringArray { "Drums", "Hats & Tops" } && entries[2].path == juce::StringArray { "Drums", "Hats & Tops", "My Hats" }
+                   && entries[0].key == "A minor" && juce::exactlyEqual (entries[0].bars, 2.0) && ! entries[0].hasInstrument,
+               "sequence library: the scan finds the three sequences with their folders (the user's own below the sub-role), key and bars, sees that their voice has no instrument, and skips a file that is not one");
+        check (loaded.has_value() && loaded->notes == q.notes && loaded->tags == q.tags
+                   && SequenceLibrary::matches (entries[0], "house hats") && SequenceLibrary::matches (entries[0], "A MINOR") && ! SequenceLibrary::matches (entries[0], "pads"),
+               "sequence library: a saved sequence loads as it was; search matches every word in the name, key, tags and folders, in any case");
+
+        // The panel: every sequence in the tree, a search narrowing it, a drag naming the file.
+        {
+            SequenceLibraryView view (folder);
+            const auto all = view.shownFiles().size();
+            view.setSearch ("my hats");
+            const auto narrowed = view.shownFiles();
+            view.setSearch ({});
+            const auto drag = SequenceLibraryView::dragDescriptionFor (first);
+            check (all == 3 && narrowed.size() == 1 && narrowed[0] == mine.getChildFile ("Groove" + juce::String (SequenceFile::extension))
+                       && view.shownFiles().size() == 3 && SequenceLibraryView::fileOfDrag (drag) == first && SequenceLibraryView::fileOfDrag (juce::var ("files:2")) == juce::File(),
+                   "sequence library panel: shows the three sequences, a search for \"my hats\" leaves the one in that folder, cleared all three again; a drag names its file");
+        }
+
+        folder.deleteRecursively();
+    }
+}

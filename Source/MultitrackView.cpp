@@ -8,6 +8,7 @@
 #include "TempoFollow.h"
 #include "ClipEffects.h"
 #include "PluginMenu.h"
+#include "SequenceLibraryView.h"
 #include <map>
 #include "Metronome.h"
 #include "TrackColours.h"
@@ -4638,6 +4639,8 @@ void MultitrackView::showNoteClipMenu (juce::uint32 clipId)
     menu.addItem ("Piano Roll", onOpenNotes != nullptr, false, [safe, clipId] { if (safe != nullptr && safe->onOpenNotes != nullptr) safe->onOpenNotes (clipId); });
     menu.addItem ("Edit Notes...", onEditNotes != nullptr, false, [safe, trackId, clipId] { if (safe != nullptr && safe->onEditNotes != nullptr) safe->onEditNotes (trackId, clipId); });
     menu.addItem ("Merge with Next", nextNoteClip (clipId) != 0, false, [safe, clipId] { if (safe != nullptr) safe->mergeWithNext (clipId); });
+    menu.addItem ("Add to Sequence Library...", onAddToSequenceLibrary != nullptr, false,
+                  [safe, clipId] { if (safe != nullptr && safe->onAddToSequenceLibrary != nullptr) safe->onAddToSequenceLibrary (clipId); });
     menu.addItem ("Mute", true, clip.muted, [safe, clipId, muted = clip.muted]
     {
         if (safe == nullptr)
@@ -7685,7 +7688,8 @@ void MultitrackView::mouseMagnify (const juce::MouseEvent& e, float scaleFactor)
 bool MultitrackView::isInterestedInFileDrag (const juce::StringArray& files)
 {
     for (auto& path : files)
-        if (engine.formatManager.findFormatForFileExtension (juce::File (path).getFileExtension()) != nullptr)
+        if (engine.formatManager.findFormatForFileExtension (juce::File (path).getFileExtension()) != nullptr
+            || juce::File (path).hasFileExtension (SequenceFile::extension))
             return true;
 
     return false;
@@ -7708,15 +7712,32 @@ std::optional<juce::int64> MultitrackView::pointMarkerNear (float x) const
 
 void MultitrackView::filesDropped (const juce::StringArray& files, int x, int y)
 {
+    // Sequences go in as note clips with their voices; the rest as before.
+    juce::StringArray rest;
+
+    for (auto& path : files)
+    {
+        if (juce::File (path).hasFileExtension (SequenceFile::extension))
+        {
+            if (onSequenceDropped != nullptr)
+                onSequenceDropped (juce::File (path), trackAt (y), x < listWidth ? 0 : snapped (frameForX ((float) x)), ! juce::ModifierKeys::currentModifiers.isAltDown());
+        }
+        else
+            rest.add (path);
+    }
+
+    if (rest.isEmpty())
+        return;
+
     if (const auto marker = x >= listWidth ? pointMarkerNear ((float) x) : std::nullopt; marker.has_value() && onFilesSpotted != nullptr)
-        onFilesSpotted (files, trackAt (y), *marker);
+        onFilesSpotted (rest, trackAt (y), *marker);
     else if (onFilesDropped != nullptr)
-        onFilesDropped (files, trackAt (y), x < listWidth ? 0 : snapped (frameForX ((float) x)));
+        onFilesDropped (rest, trackAt (y), x < listWidth ? 0 : snapped (frameForX ((float) x)));
 }
 
 bool MultitrackView::isInterestedInDragSource (const SourceDetails& details)
 {
-    return FilesPanel::rowOfDrag (details.description) >= 0;
+    return FilesPanel::rowOfDrag (details.description) >= 0 || SequenceLibraryView::fileOfDrag (details.description) != juce::File();
 }
 
 void MultitrackView::itemDropped (const SourceDetails& details)
@@ -7726,4 +7747,8 @@ void MultitrackView::itemDropped (const SourceDetails& details)
 
     if (row >= 0 && onOpenFileDropped != nullptr)
         onOpenFileDropped (row, trackAt (details.localPosition.y), x < listWidth ? 0 : snapped (frameForX ((float) x)));
+
+    if (const auto sequence = SequenceLibraryView::fileOfDrag (details.description); sequence != juce::File() && onSequenceDropped != nullptr)
+        onSequenceDropped (sequence, trackAt (details.localPosition.y), x < listWidth ? 0 : snapped (frameForX ((float) x)),
+                           ! juce::ModifierKeys::currentModifiers.isAltDown());
 }

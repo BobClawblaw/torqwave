@@ -100,6 +100,7 @@
 #include "MidiOutTests.h"
 #include "ControlSurfaceTests.h"
 #include "TempoFollowTests.h"
+#include "SequenceTests.h"
 #include "SoundDesignTests.h"
 #include "PictureTests.h"
 #include "SmallPiecesTests.h"
@@ -599,6 +600,7 @@ int main (int argc, char* argv[])
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
     //   --ai                    only the AI assistance tests (a mock server; no network)
     //   --tempo                 only the tests of audio that follows the tempo
+    //   --sequences             only the tests of sequences and the Sequence Library
     //   --sounddesign           only the tests of sound design in the session (edit in place, clip effects, layering)
     //   --picture               only the tests of working to picture
     //   --small                 only the tests of mixer scenes, channel strips and hardware inserts
@@ -620,6 +622,13 @@ int main (int argc, char* argv[])
 
     if (const auto i = args.indexOf ("--ai-eval"); i >= 0)
         return runAiEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {}), valueOf ("--ai-eval-set")) == 0 ? 0 : 1;
+
+    if (args.contains ("--sequences"))
+    {
+        runSequenceTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
 
     if (args.contains ("--tempo"))
     {
@@ -844,6 +853,7 @@ int main (int argc, char* argv[])
         runSoundDesignTests (engine);
         runPictureTests (engine);
         runSmallPiecesTests (engine);
+        runSequenceTests();
         runMetronomeTests (engine.formatManager);
         runMixerTests (engine);
         runBounceTests();

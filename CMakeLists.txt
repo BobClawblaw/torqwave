@@ -179,6 +179,9 @@ target_sources(Torqwave PRIVATE
     Source/ExtremeStretch.cpp
     Source/PhaseVocoder.cpp
     Source/TrackTemplate.cpp
+    Source/SequenceFile.cpp
+    Source/SequenceLibrary.cpp
+    Source/SequenceLibraryView.cpp
     Source/UndoHistory.cpp
     Source/Spectrogram.cpp
     Source/SpectralEdit.cpp
@@ -446,6 +449,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/MidiOutTests.cpp
     Tests/ControlSurfaceTests.cpp
     Tests/TempoFollowTests.cpp
+    Tests/SequenceTests.cpp
     Tests/SoundDesignTests.cpp
     Tests/PictureTests.cpp
     Tests/SmallPiecesTests.cpp
@@ -505,6 +509,9 @@ target_sources(TorqwaveTests PRIVATE
     Source/ExtremeStretch.cpp
     Source/PhaseVocoder.cpp
     Source/TrackTemplate.cpp
+    Source/SequenceFile.cpp
+    Source/SequenceLibrary.cpp
+    Source/SequenceLibraryView.cpp
     Source/UndoHistory.cpp
     Source/Spectrogram.cpp
     Source/SpectralEdit.cpp
