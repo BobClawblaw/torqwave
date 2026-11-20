@@ -17,10 +17,12 @@ namespace SequenceFile
         int pitch = 60;
         juce::int64 start = 0, length = 0;   // ticks
         float velocity = 0.8f;
+        float probability = 1.0f;            // as ClipNote's
 
         bool operator== (const Note& o) const noexcept
         {
-            return pitch == o.pitch && start == o.start && length == o.length && juce::exactlyEqual (velocity, o.velocity);
+            return pitch == o.pitch && start == o.start && length == o.length && juce::exactlyEqual (velocity, o.velocity)
+                && juce::exactlyEqual (probability, o.probability);
         }
     };
 

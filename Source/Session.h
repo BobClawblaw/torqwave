@@ -327,10 +327,12 @@ struct ClipNote
     int pitch = 60;
     juce::int64 start = 0, length = 0;
     float velocity = 0.8f;
+    float probability = 1.0f;   // the chance it plays on each pass, 0 to 1 (see NoteClip::plays)
 
     bool operator== (const ClipNote& o) const noexcept
     {
-        return pitch == o.pitch && start == o.start && length == o.length && juce::exactlyEqual (velocity, o.velocity);
+        return pitch == o.pitch && start == o.start && length == o.length && juce::exactlyEqual (velocity, o.velocity)
+            && juce::exactlyEqual (probability, o.probability);
     }
 };
 
@@ -420,6 +422,11 @@ struct NoteClip
         lose its voice. The same whatever the blocks: a note's events fall in whichever block has
         their frame. */
     void addMidi (juce::int64 from, int count, juce::MidiBuffer&) const;
+
+    /** Whether note `index` plays on pass `pass` (0: the first pass from the origin): always at
+        a probability of 1, otherwise as a fixed draw from the clip's id, the pass and the note's
+        place in the list, so playback, a mixdown and every block size agree. */
+    bool plays (size_t index, juce::int64 pass) const noexcept;
 
     /** The frames the notes span on their timeline, from the first start to the last end, within offset + length. */
     juce::Range<juce::int64> notesRange() const noexcept;

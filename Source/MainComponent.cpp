@@ -15072,6 +15072,11 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
             shown.hasInstrument = engine.getTrackEffects().getInstrument (track.id) != nullptr;
             shown.drums = track.drumGrid;
             shown.drumMap = track.drumSounds();
+            shown.beatsPerBar = state->tempoMap().beatsPerBarAt (clip.position);
+
+            if (const auto link = sequenceLinks.find (clip.id); link != sequenceLinks.end())
+                shown.key = link->second.key;
+
             return shown;
         };
         // The drum grid and its map belong to the clip's track.

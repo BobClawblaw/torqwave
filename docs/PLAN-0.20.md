@@ -92,7 +92,10 @@ Built as planned, in `Sequencer` (the sequence with its own undo steps, and its 
 - New, Save, Save As, Duplicate, and **Make Variation**, which saves a copy linked to the original ("variation of").
 - **Tests:** an edit saved and opened again is exact; a variation names its original; the window's tempo plays the notes on its beats.
 
-## Step 4: the writing tools (L)
+## Step 4: the writing tools (L) — done
+
+Built in `NoteTools` and the Piano Roll's Tools menu, so they work in the session as well as in the Sequencer. A note's probability is a new field of every note clip, drawn per pass from the clip's id, so a render and playback agree. Two changes from the plan: the arpeggiator arpeggiates drawn or recorded chords (not chords held live), and the step sequencer is the drum grid with probability added.
+
 
 - **Step sequencer** for drums: per-step velocity, probability and swing, on the drum grid.
 - **Arpeggiator:** an arp built from a held or drawn chord, written as notes (up, down, up and down, random, by octaves, a rate in the grid).

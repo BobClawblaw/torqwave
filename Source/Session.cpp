@@ -544,7 +544,7 @@ void NoteClip::addMidi (juce::int64 from, int count, juce::MidiBuffer& midi) con
             const auto on = passStart + n.start;
             const auto off = juce::jmin (on + juce::jmax ((juce::int64) 1, n.length), end);
 
-            if (n.start >= period || on < position || on >= end || off <= on)
+            if (n.start >= period || on < position || on >= end || off <= on || ! plays ((size_t) (&n - notes.data()), pass))
                 continue;
 
             if (off >= from && off < to)
@@ -555,10 +555,30 @@ void NoteClip::addMidi (juce::int64 from, int count, juce::MidiBuffer& midi) con
         {
             const auto on = passStart + n.start;
 
-            if (n.start < period && on >= position && on < end && on >= from && on < to)
+            if (n.start < period && on >= position && on < end && on >= from && on < to && plays ((size_t) (&n - notes.data()), pass))
                 midi.addEvent (juce::MidiMessage::noteOn (juce::jlimit (1, 16, channel), juce::jlimit (0, 127, n.pitch), juce::jlimit (0.0f, 1.0f, n.velocity)), (int) (on - from));
         }
     }
+}
+
+bool NoteClip::plays (size_t index, juce::int64 pass) const noexcept
+{
+    const auto& n = notes[index];
+
+    if (n.probability >= 1.0f)
+        return true;
+
+    if (n.probability <= 0.0f)
+        return false;
+
+    // A hash of the id, pass and place (MurmurHash3's finalizer), its top 24 bits as the draw.
+    auto h = (juce::uint64) id * 0x9E3779B97F4A7C15ull ^ (juce::uint64) pass * 0xC2B2AE3D27D4EB4Full ^ (juce::uint64) index * 0x165667B19E3779F9ull;
+    h ^= h >> 33;
+    h *= 0xFF51AFD7ED558CCDull;
+    h ^= h >> 33;
+    h *= 0xC4CEB9FE1A85EC53ull;
+    h ^= h >> 33;
+    return (float) (h >> 40) / (float) (1 << 24) < n.probability;
 }
 
 juce::Range<juce::int64> NoteClip::notesRange() const noexcept
@@ -5275,6 +5295,9 @@ juce::String save (const SessionState& state, const juce::File& target,
                 note->setAttribute ("start", juce::String (n.start));
                 note->setAttribute ("length", juce::String (n.length));
                 note->setAttribute ("velocity", n.velocity);
+
+                if (n.probability < 1.0f)
+                    note->setAttribute ("probability", n.probability);
             }
 
             for (auto& lane : c.lanes)
@@ -5718,7 +5741,8 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
 
             for (auto* noteXml : clipXml->getChildWithTagNameIterator ("NOTE"))
                 clip.notes.push_back ({ noteXml->getIntAttribute ("pitch"), noteXml->getStringAttribute ("start").getLargeIntValue(),
-                                        noteXml->getStringAttribute ("length").getLargeIntValue(), (float) noteXml->getDoubleAttribute ("velocity") });
+                                        noteXml->getStringAttribute ("length").getLargeIntValue(), (float) noteXml->getDoubleAttribute ("velocity"),
+                                        juce::jlimit (0.0f, 1.0f, (float) noteXml->getDoubleAttribute ("probability", 1.0)) });
 
             for (auto* laneXml : clipXml->getChildWithTagNameIterator ("LANE"))
             {

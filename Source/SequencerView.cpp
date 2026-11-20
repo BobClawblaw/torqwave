@@ -63,7 +63,7 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
     };
     saveAsButton.onClick = [this] { askToSaveAs(); };
     duplicateButton.onClick = [this] { duplicate (false); };
-    variationButton.onClick = [this] { duplicate (true); };
+    variationButton.onClick = [this] { askForVariation(); };
     undoButton.onClick = [this] { undo(); };
     redoButton.onClick = [this] { redo(); };
     playButton.onClick = [this]
@@ -111,6 +111,8 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
         s.trackName = doc.get().name;
         s.hasInstrument = player.getEffects().getInstrument (built.trackId) != nullptr;
         s.drums = drums;
+        s.beatsPerBar = doc.get().beatsPerBar;
+        s.key = doc.get().key;
         return s;
     };
     editor.apply = [this] (const NoteClip& clip, const juce::String& description)
@@ -125,6 +127,13 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
             doc.apply (SequencerDocument::withClip (doc.get(), s, built.clipId), description);
             refreshState();
         }
+    };
+    editor.onKeyChosen = [this] (const juce::String& key)
+    {
+        auto q = doc.get();
+        q.key = key;
+        doc.apply (q, "Key " + key);
+        refreshControls();
     };
     editor.audition = [this] (int pitch, float velocity) { player.audition (pitch, velocity); };
     editor.showDrums = [this] (bool on)
@@ -508,10 +517,23 @@ juce::String SequencerView::saveAs (const juce::String& name, const juce::String
     return error;
 }
 
-juce::String SequencerView::duplicate (bool variation)
+juce::String SequencerView::duplicate (bool variation, const NoteTools::Vary* changes)
 {
     SequenceLibrary library;
     auto q = variation ? SequencerDocument::variationOf (doc.get()) : doc.get();
+
+    // Its notes varied: as a clip of the window's session, then back into ticks.
+    if (changes != nullptr && shown != nullptr)
+        if (const auto found = shown->findNoteClip (built.clipId))
+        {
+            auto s = *shown;
+            auto clip = s.tracks[(size_t) found->first].noteClips[(size_t) found->second];
+            clip.notes = NoteTools::vary (clip.notes, *changes, clip.offset + clip.length);
+            SessionEdits::replaceNoteClip (s, clip.id, clip);
+            const auto varied = SequencerDocument::withClip (q, s, built.clipId);
+            q.notes = varied.notes;
+        }
+
     q.voice = currentVoice();
     const auto dir = doc.getFile() != juce::File() ? doc.getFile().getParentDirectory() : library.folderAt (folderOf (doc.getFile()));
     const auto target = SequenceLibrary::newFileIn (dir, q.name);
@@ -619,6 +641,46 @@ void SequencerView::askForNew()
             if (auto* self = safe.get())
                 self->newSequence (name, folder, bars, instrument.has_value() ? &*instrument : nullptr);
         });
+    }), true);
+}
+
+void SequencerView::askForVariation()
+{
+    const juce::StringArray amounts { "None", "A little", "Some", "A lot" };
+    const juce::StringArray densities { "Much thinner", "Thinner", "The same", "Denser", "Much denser" };
+    auto* dialog = new juce::AlertWindow ("Make Variation",
+                                          "Saves a copy named as a variation of " + doc.get().name + ", with its notes changed as chosen here "
+                                          "(by chance: each time is different), and opens it. Notes move within " + editor.getKey().name() + ".",
+                                          juce::MessageBoxIconType::NoIcon, this);
+    dialog->addComboBox ("velocity", amounts, "Velocity");
+    dialog->addComboBox ("pitch", amounts, "Notes in the key");
+    dialog->addComboBox ("density", densities, "Density");
+    dialog->getComboBoxComponent ("velocity")->setSelectedItemIndex (0);
+    dialog->getComboBoxComponent ("pitch")->setSelectedItemIndex (0);
+    dialog->getComboBoxComponent ("density")->setSelectedItemIndex (2);
+    dialog->addButton ("Make", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    dialog->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    dialog->enterModalState (true, juce::ModalCallbackFunction::create ([safe = juce::WeakReference<SequencerView> (this), dialog] (int result)
+    {
+        auto* self = safe.get();
+
+        if (result != 1 || self == nullptr)
+            return;
+
+        const float shares[] = { 0.0f, 0.1f, 0.25f, 0.5f };
+        const float density[] = { -0.5f, -0.25f, 0.0f, 0.25f, 0.5f };
+        NoteTools::Vary changes;
+        changes.velocity = shares[juce::jlimit (0, 3, dialog->getComboBoxComponent ("velocity")->getSelectedItemIndex())];
+        changes.pitch = shares[juce::jlimit (0, 3, dialog->getComboBoxComponent ("pitch")->getSelectedItemIndex())];
+        changes.density = density[juce::jlimit (0, 4, dialog->getComboBoxComponent ("density")->getSelectedItemIndex())];
+        changes.step = self->editor.gridStepFrames() > 0 ? self->editor.gridStepFrames()
+                                                         : (juce::int64) std::llround (15.0 / self->tempo * self->rate());   // a quarter beat
+        changes.scale = self->editor.getKey();
+        changes.seed = (juce::uint32) juce::Random::getSystemRandom().nextInt();
+
+        if (const auto error = self->duplicate (true, &changes); error.isNotEmpty())
+            juce::AlertWindow::showAsync (juce::MessageBoxOptions().withIconType (juce::MessageBoxIconType::WarningIcon).withTitle ("Make Variation").withMessage (error).withButton ("OK"), nullptr);
     }), true);
 }
 

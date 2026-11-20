@@ -51,7 +51,8 @@ Double-click a note clip, or choose **Window > Piano Roll**, to edit the clip's 
 | Select notes | Click one; Shift-click adds or takes away; drag across empty grid for a box; Cmd-A for all |
 | Remove notes | Option-click one, or press Delete for the selected |
 | Nudge the selected notes | Up and Down move a semitone (Shift: an octave). Left and Right move a grid step (Shift: a quarter step) |
-| Set velocity | Select the notes and move the velocity slider |
+| Set velocity | Select the notes and move the velocity slider, or right-click one and choose from **Velocity** |
+| Let a note play only sometimes | Right-click it and choose from **Probability** (see below) |
 | Set the loop | Drag the first repeat line |
 | Hear a pitch | Click a key on the keyboard at the left; drag along it to play each key you pass |
 | Zoom in or out on time | Cmd-scroll or pinch, around the mouse; or **-** and **+** at the top right. **Fit** shows the whole clip |
@@ -64,6 +65,8 @@ A clip whose pattern repeats opens on its first repeat, so a one-bar loop in a n
 Notes sound as you put them in, click them or drag them. The **grid** choice divides the beat into 1, 2, 4, 8, 16 or 32 steps, or turns the grid off.
 
 **Swing**, beside it, moves the second line of each pair later, from Straight (50 %) to 75 %. It acts on a grid of 2 or 4 steps a beat (1/8 or 1/16 notes in 4/4), for the grid lines, snapping and the drum grid's steps.
+
+**Probability** is the chance a note plays each time the pattern comes round: at 50 % it plays about every other pass, at 100 % (the usual) every time. Right-click a note, or a step in the drum grid, and choose from the **Probability** menu; it sets every selected note's. A note that may not play shows its chance on it, and in the drum grid its step is fainter. Which passes a note plays on is fixed for the clip, so playback, Mix Down and a bounce play the same ones. Probability is saved in the session and in sequences.
 
 **Ch** sets the MIDI channel the clip's notes and lanes go out on, 1 to 16, for an instrument that plays a different sound on each channel.
 
@@ -80,10 +83,24 @@ Notes sound as you put them in, click them or drag them. The **grid** choice div
 | Set a step | Click it. The note is one step long, at the slider's velocity |
 | Clear a step | Click it again, or Option-click it |
 | Set a step's velocity | Drag up (louder) or down (softer) from it. The bar inside the step shows the velocity |
+| Set a step's probability or velocity from a menu | Right-click it: **Probability** (100 % down to 10 %) and **Velocity**, for it or the selected steps |
 | Hear a sound | Click its name |
 | Edit the map | Right-click a name: **Edit Sound...** (its name and note), **Add Sound...**, **Remove from the Map**, **Move Up**, **Move Down**, or back to the **General MIDI Map** |
 
 The rows come from the track's drum map, General MIDI's (notes 35 to 81) unless you change it. The map is saved with the session. Notes not in the map get rows of their own at the bottom, named by pitch; **Add to the Map...** names one.
+
+With the drum grid's steps, its velocities, probability and swing, a drum clip is a step sequencer: set the grid to 1/4 beat for sixteenths, add swing, and give the ghost notes lower velocities and some steps less than 100 %.
+
+### Writing tools
+
+**Tools**, beside Drums, has tools that write and change notes. Each works on the selected notes, or on all of them with none selected, and each is one undo step.
+
+- **Chords...** writes a chord progression in Roman numerals from the clip's start: upper case for major (IV), lower case for minor (ii), with 7, maj7, dim or °, ø (or m7b5), aug or +, sus2 and sus4, and b or # before a numeral for a borrowed chord (bVII). Separate them with spaces or dashes: `i–VI–III–VII`, `ii7 V7 Imaj7`. Choose how long each chord lasts (a beat, two beats, a bar or two bars), the octave of the roots, and whether they replace the notes or are added to them. The chords are built on the key's scale degrees, in root position.
+- **Arpeggiate...** plays each chord (notes that start together) as an arpeggio over its length, in place of it: **Up**, **Down**, **Up and Down** or **Random**, over one to four octaves, at a rate from 1/2 to 1/8 beat, with notes from short (50 %) to legato. Draw or play the chords first, then arpeggiate them.
+- **Humanize...** moves each note by a random amount up to 5, 10, 20 or 40 ms either way, and changes its velocity up to 5 to 30 %.
+- **Fit to the Key** moves each note to the nearest note of the key.
+- **Scale Lock** keeps notes in the key while you write: a click puts the note on the nearest note of the key, a drag moves notes only onto the key's notes, and Up and Down move a step of the scale instead of a semitone. Rows outside the key are shaded.
+- **Key...** sets the key the tools use: a root and a scale (major, minor, harmonic and melodic minor, the modes, the pentatonics and blues). Until you set one, the tools use the part's key (a sequence's, or the key given when the clip was made with New Sequence), or guess one from the notes; the menu's first line says which, and "(guessed)" when it is a guess.
 
 ### Controller lanes
 
@@ -205,7 +222,7 @@ Double-click a sequence to put it on the selected track at the cursor, the same 
 
 The Sequencer is a window for one sequence from the library, open by itself to write, hear and save. Show it with **Window > Sequencer**, or right-click a sequence in the Sequence Library and choose **Edit in Sequencer**. The **Sequencer** workspace (Window > Workspaces) puts it in front of the editor with the Sequence Library on its left.
 
-**Edit the notes.** The middle of the window is the Piano Roll, with the drum grid and controller lanes, as in [Edit the notes](#edit-the-notes-the-piano-roll), but it edits the sequence file itself, not a clip in the session. A sequence filed under Drums opens as a drum grid. **Undo** and **Redo** (Cmd-Z and Shift-Cmd-Z while the window has the focus) step through the window's own edits, apart from the session's.
+**Edit the notes.** The middle of the window is the Piano Roll, with the drum grid, controller lanes and [writing tools](#writing-tools), as in [Edit the notes](#edit-the-notes-the-piano-roll), but it edits the sequence file itself, not a clip in the session. A sequence filed under Drums opens as a drum grid. A key set with **Tools > Key...** is saved as the sequence's key. **Undo** and **Redo** (Cmd-Z and Shift-Cmd-Z while the window has the focus) step through the window's own edits, apart from the session's.
 
 **Hear it.** **Play** (or Space while the window has the focus) plays the sequence from its start through its voice, beside whatever the session plays. With **Loop** on it goes round and round; off, it plays once. **Click** adds a click on every beat. The tempo is the window's own, starting at the tempo the sequence was written at; change it with the tempo box, or tick **Session tempo** to play at the session's tempo where its playhead is. The notes stay on their beats at any tempo, so nothing in the file changes. The clock beside it shows where it is playing, in bars and beats.
 
@@ -218,7 +235,12 @@ The Sequencer is a window for one sequence from the library, open by itself to w
 - **Save** writes it to its file, with its voice as it is now.
 - **Save As...** writes it under another name or in another folder, and goes on with that file. Its role follows the folder.
 - **Duplicate** saves a copy of what is in the window beside the file, with a number on its name, and opens the copy.
-- **Make Variation** does the same, naming the copy "Name Variation", and the copy says which sequence it is a variation of (the title shows "a variation of Groove").
+- **Make Variation...** does the same, naming the copy "Name Variation", and the copy says which sequence it is a variation of (the title shows "a variation of Groove"). It can change the copy's notes as it makes it, by chance, so each time is different:
+  - **Velocity**: each note's velocity changes by up to 10, 25 or 50 %;
+  - **Notes in the key**: each note has a 10, 25 or 50 % chance of moving a step up or down the key;
+  - **Density**: thinner leaves out a quarter or a half of the notes (one always stays); denser puts a softer copy of the note before into a quarter or a half of the empty grid steps (the grid chosen in the Piano Roll, or sixteenths with the grid off).
+
+  Leave them at None and The same for a plain copy.
 
 Opening another sequence, or New, asks first whether to save changes. Duplicate and Make Variation copy what is in the window, edits included; the original file keeps what was last saved.
 

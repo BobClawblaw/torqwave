@@ -38,7 +38,7 @@ public:
     void newSequence (const juce::String& name, const juce::StringArray& folder, int bars, const juce::PluginDescription* instrument);
     juce::String save();
     juce::String saveAs (const juce::String& name, const juce::StringArray& folder);
-    juce::String duplicate (bool variation);
+    juce::String duplicate (bool variation, const NoteTools::Vary* changes = nullptr);   // changes: the variation's notes varied
     void setTempo (double bpm);
     void undo();
     void redo();
@@ -60,6 +60,7 @@ private:
     void addEffect();
     void askForNew();
     void askToSaveAs();
+    void askForVariation();
     void showOpenChooser();
     juce::StringArray folderOf (const juce::File&) const;
     double rate() const;

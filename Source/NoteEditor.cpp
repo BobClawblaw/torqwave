@@ -70,6 +70,10 @@ NoteEditor::NoteEditor()
         }
     };
 
+    addAndMakeVisible (toolsButton);
+    toolsButton.setTooltip ("Writing tools: chords from Roman numerals, arpeggiate, humanize, fit to the key, scale lock");
+    toolsButton.onClick = [this] { showToolsMenu(); };
+
     addAndMakeVisible (laneLabel);
     laneLabel.setText ("Lane", juce::dontSendNotification);
     Theme::follow (laneLabel, juce::Label::textColourId, Theme::dimText);
@@ -214,6 +218,7 @@ void NoteEditor::refreshControls()
     swingBox.setEnabled (on);
     channelBox.setEnabled (on);
     drumsButton.setEnabled (on);
+    toolsButton.setEnabled (on);
     drumsButton.setToggleState (showingDrums(), juce::dontSendNotification);
 
     if (on)
@@ -790,6 +795,12 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
         g.setColour (isBlackKey (pitch) ? Theme::laneAlternate : Theme::lane);
         g.fillRect (r.getIntersection (area.toFloat()));
 
+        if (scaleLock && ! getKey().contains (pitch))
+        {
+            g.setColour (Theme::overlay.withAlpha (0.3f));
+            g.fillRect (r.getIntersection (area.toFloat()));
+        }
+
         if (pitch % 12 == 0)
         {
             g.setColour (Theme::lineStrong);
@@ -862,6 +873,13 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
         const auto playing = n.start < period && n.start >= c.offset && shown->hasInstrument;
         g.setColour ((playing ? Theme::accent : Theme::dimText).withAlpha (0.45f + 0.55f * juce::jlimit (0.0f, 1.0f, n.velocity)));
         g.fillRoundedRectangle (r.getIntersection (area.toFloat()), 2.0f);
+
+        if (n.probability < 1.0f && r.getWidth() >= 26.0f && r.getHeight() >= 9.0f)
+        {
+            g.setColour (Theme::textStrong);
+            g.setFont (juce::jmin (11.0f, r.getHeight() - 1.0f));
+            g.drawText (juce::String (juce::roundToInt (n.probability * 100.0f)) + "%", r.toNearestInt(), juce::Justification::centred, false);
+        }
 
         if (selected.count ((int) i) > 0)
         {
@@ -948,10 +966,18 @@ void NoteEditor::paintDrums (juce::Graphics& g, juce::Rectangle<int> area)
 
         const auto playing = n.start < period && n.start >= c.offset && shown->hasInstrument;
         const auto v = juce::jlimit (0.0f, 1.0f, n.velocity);
-        g.setColour ((playing ? Theme::accent : Theme::dimText).withAlpha (0.25f + 0.35f * v));
+        const auto chance = 0.35f + 0.65f * juce::jlimit (0.0f, 1.0f, n.probability);   // a step that may not play is fainter
+        g.setColour ((playing ? Theme::accent : Theme::dimText).withAlpha ((0.25f + 0.35f * v) * chance));
         g.fillRoundedRectangle (cell, 2.0f);
-        g.setColour (playing ? Theme::accent : Theme::dimText);
+        g.setColour ((playing ? Theme::accent : Theme::dimText).withMultipliedAlpha (chance));
         g.fillRect (cell.withTrimmedTop (cell.getHeight() * (1.0f - v)).reduced (2.0f, 0.0f).withTrimmedBottom (1.0f));
+
+        if (n.probability < 1.0f && cell.getWidth() >= 24.0f)
+        {
+            g.setColour (Theme::textStrong);
+            g.setFont (10.0f);
+            g.drawText (juce::String (juce::roundToInt (n.probability * 100.0f)) + "%", cell.toNearestInt(), juce::Justification::centredTop, false);
+        }
 
         if (selected.count ((int) i) > 0)
         {
@@ -974,6 +1000,8 @@ void NoteEditor::resized()
 {
     auto bar = getLocalBounds().removeFromTop (topBar).reduced (6, 4);
     drumsButton.setBounds (bar.removeFromLeft (56));
+    bar.removeFromLeft (4);
+    toolsButton.setBounds (bar.removeFromLeft (52));
     bar.removeFromLeft (8);
     gridLabel.setBounds (bar.removeFromLeft (34));
     gridBox.setBounds (bar.removeFromLeft (96));
@@ -1076,6 +1104,18 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
 
     if (hit >= 0)
     {
+        if (e.mods.isPopupMenu())
+        {
+            if (selected.count (hit) == 0)
+                selected = { hit };
+
+            drag = Drag::nothing;
+            refreshControls();
+            repaint();
+            noteMenu();
+            return;
+        }
+
         if (e.mods.isAltDown())
         {
             shown->clip.notes.erase (shown->clip.notes.begin() + hit);
@@ -1137,7 +1177,7 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
 
     const auto step = gridStepFrames();
     ClipNote n;
-    n.pitch = pitchAt (p.y);
+    n.pitch = scaleLock ? getKey().snap (pitchAt (p.y)) : pitchAt (p.y);
     n.start = snapped (frameAt (p.x));
     n.length = step > 0 ? step : lastLength > 0 ? lastLength : juce::jmax ((juce::int64) 1, (juce::int64) std::llround (0.25 * shown->sampleRate));
     n.velocity = getVelocity();
@@ -1185,7 +1225,23 @@ void NoteEditor::drumMouseDown (const juce::MouseEvent& e)
 
     const auto [row, step] = cellAt (e.position);
 
-    if (row < 0 || e.mods.isPopupMenu())
+    if (row >= 0 && e.mods.isPopupMenu())
+    {
+        drag = Drag::nothing;
+
+        if (const auto set = noteInCell (row, step); set >= 0)
+        {
+            if (selected.count (set) == 0)
+                selected = { set };
+
+            repaint();
+            noteMenu();
+        }
+
+        return;
+    }
+
+    if (row < 0)
     {
         drag = Drag::nothing;
         return;
@@ -1348,6 +1404,10 @@ void NoteEditor::mouseDrag (const juce::MouseEvent& e)
             {
                 auto& n = shown->clip.notes[(size_t) i];
                 n.pitch = juce::jlimit (0, 127, n.pitch + semitones);
+
+                if (scaleLock && semitones != 0)
+                    n.pitch = getKey().snap (n.pitch);
+
                 n.start += frames;
                 n.length = juce::jmin (n.length, length - n.start);
             }
@@ -1487,7 +1547,13 @@ void NoteEditor::moveSelected (int semitones, juce::int64 frames)
         if (juce::isPositiveAndBelow (i, (int) shown->clip.notes.size()))
         {
             auto& n = shown->clip.notes[(size_t) i];
-            n.pitch = juce::jlimit (0, 127, n.pitch + semitones);
+
+            // Locked to the key, a semitone up or down is a step of the scale.
+            if (scaleLock && std::abs (semitones) == 1)
+                n.pitch = getKey().step (n.pitch, semitones);
+            else
+                n.pitch = juce::jlimit (0, 127, n.pitch + semitones);
+
             n.start += frames;
             n.length = juce::jmin (n.length, length - n.start);
         }
@@ -1533,4 +1599,341 @@ void NoteEditor::commit (const juce::String& description)
 
     refreshControls();
     repaint();
+}
+
+//==============================================================================
+std::set<int> NoteEditor::chosenNotes() const
+{
+    if (! shown.has_value())
+        return {};
+
+    if (! selected.empty())
+        return selected;
+
+    std::set<int> all;
+
+    for (int i = 0; i < (int) shown->clip.notes.size(); ++i)
+        all.insert (i);
+
+    return all;
+}
+
+juce::int64 NoteEditor::beatFrames() const noexcept
+{
+    return shown.has_value() ? juce::jmax ((juce::int64) 1, (juce::int64) std::llround (shown->beatSeconds * shown->sampleRate)) : 1;
+}
+
+NoteTools::Scale NoteEditor::getKey() const
+{
+    if (chosenKey.has_value())
+        return *chosenKey;
+
+    if (shown.has_value())
+    {
+        if (const auto k = NoteTools::parseKey (shown->key))
+            return *k;
+
+        return NoteTools::guessKey (shown->clip.notes);
+    }
+
+    return {};
+}
+
+void NoteEditor::setKey (const NoteTools::Scale& key)
+{
+    chosenKey = key;
+
+    if (onKeyChosen != nullptr)
+        onKeyChosen (key.name());
+
+    repaint();
+}
+
+void NoteEditor::setScaleLock (bool on)
+{
+    scaleLock = on;
+    repaint();
+}
+
+juce::String NoteEditor::writeChords (const juce::String& progression, double beatsEach, int octave, bool replace)
+{
+    if (! shown.has_value())
+        return "There is no clip.";
+
+    juce::String error;
+    const auto chords = NoteTools::parseProgression (progression, getKey(), octave, error);
+
+    if (chords.empty())
+        return error;
+
+    auto& c = shown->clip;
+    const auto each = juce::jmax ((juce::int64) 1, (juce::int64) std::llround (beatsEach * (double) beatFrames()));
+    auto notes = NoteTools::chordNotes (chords, c.offset, each, getVelocity());
+
+    // Nothing past the timeline: the last chords are cut there, or left out.
+    notes.erase (std::remove_if (notes.begin(), notes.end(), [&] (const ClipNote& n) { return n.start >= wholeLength(); }), notes.end());
+
+    for (auto& n : notes)
+        n.length = juce::jmin (n.length, wholeLength() - n.start);
+
+    if (replace)
+        c.notes.clear();
+
+    selected.clear();
+
+    for (auto& n : notes)
+    {
+        c.notes.push_back (n);
+        selected.insert ((int) c.notes.size() - 1);
+    }
+
+    commit ("Chords");
+    return {};
+}
+
+void NoteEditor::arpeggiate (const NoteTools::Arp& arp)
+{
+    if (! shown.has_value() || shown->clip.notes.empty())
+        return;
+
+    const auto chosen = chosenNotes();
+    std::vector<ClipNote> chords, others;
+
+    for (int i = 0; i < (int) shown->clip.notes.size(); ++i)
+        (chosen.count (i) > 0 ? chords : others).push_back (shown->clip.notes[(size_t) i]);
+
+    const auto arpeggio = NoteTools::arpeggiate (chords, arp);
+    shown->clip.notes = others;
+    selected.clear();
+
+    for (auto& n : arpeggio)
+    {
+        shown->clip.notes.push_back (n);
+        selected.insert ((int) shown->clip.notes.size() - 1);
+    }
+
+    commit ("Arpeggiate");
+}
+
+void NoteEditor::humanize (const NoteTools::Humanize& h)
+{
+    if (! shown.has_value())
+        return;
+
+    NoteTools::humanize (shown->clip.notes, selected, h, wholeLength());
+    commit ("Humanize");
+}
+
+void NoteEditor::fitToScale()
+{
+    if (! shown.has_value())
+        return;
+
+    NoteTools::fitToScale (shown->clip.notes, selected, getKey());
+    commit ("Fit to Scale");
+}
+
+void NoteEditor::setProbability (float probability)
+{
+    if (! shown.has_value() || selected.empty())
+        return;
+
+    for (auto i : selected)
+        if (juce::isPositiveAndBelow (i, (int) shown->clip.notes.size()))
+            shown->clip.notes[(size_t) i].probability = juce::jlimit (0.0f, 1.0f, probability);
+
+    commit ("Note Probability");
+}
+
+void NoteEditor::noteMenu()
+{
+    if (! shown.has_value() || selected.empty())
+        return;
+
+    const auto first = shown->clip.notes[(size_t) *selected.begin()];
+    juce::PopupMenu chance, velocity;
+    const int percents[] = { 100, 90, 75, 50, 33, 25, 10 };
+
+    for (auto p : percents)
+        chance.addItem (1000 + p, juce::String (p) + " %", true, juce::roundToInt (first.probability * 100.0f) == p);
+
+    for (auto v : { 127, 110, 96, 80, 64, 48, 32 })
+        velocity.addItem (2000 + v, juce::String (v), true, juce::roundToInt (first.velocity * 127.0f) == v);
+
+    juce::PopupMenu menu;
+    menu.addSectionHeader (selected.size() == 1 ? juce::String ("Note") : juce::String ((int) selected.size()) + " notes");
+    menu.addSubMenu ("Probability", chance);
+    menu.addSubMenu ("Velocity", velocity);
+    menu.addItem (3, "Delete");
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withMousePosition(), [safe = juce::Component::SafePointer<NoteEditor> (this)] (int result)
+    {
+        if (safe == nullptr || result == 0)
+            return;
+
+        if (result == 3)
+            safe->removeSelected();
+        else if (result >= 2000)
+            safe->setVelocity ((float) (result - 2000) / 127.0f);   // an undo step of its own
+        else if (result >= 1000)
+            safe->setProbability ((float) (result - 1000) / 100.0f);
+    });
+}
+
+void NoteEditor::showToolsMenu()
+{
+    if (! shown.has_value())
+        return;
+
+    const auto some = selected.empty() ? juce::String ("all the notes") : juce::String ("the selected notes");
+    juce::PopupMenu menu;
+    menu.addSectionHeader ("Key: " + getKey().name() + (chosenKey.has_value() || NoteTools::parseKey (shown->key).has_value() ? juce::String() : juce::String (" (guessed)")));
+    menu.addItem (1, "Chords...");
+    menu.addItem (2, "Arpeggiate " + some + "...", ! shown->clip.notes.empty());
+    menu.addItem (3, "Humanize " + some + "...", ! shown->clip.notes.empty());
+    menu.addItem (4, "Fit " + some + " to the Key", ! shown->clip.notes.empty());
+    menu.addSeparator();
+    menu.addItem (5, "Scale Lock", true, scaleLock);
+    menu.addItem (6, "Key...");
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (toolsButton), [safe = juce::Component::SafePointer<NoteEditor> (this)] (int result)
+    {
+        if (safe == nullptr)
+            return;
+
+        switch (result)
+        {
+            case 1: safe->askForChords(); break;
+            case 2: safe->askToArpeggiate(); break;
+            case 3: safe->askToHumanize(); break;
+            case 4: safe->fitToScale(); break;
+            case 5: safe->setScaleLock (! safe->scaleLock); break;
+            case 6: safe->askForKey(); break;
+            default: break;
+        }
+    });
+}
+
+void NoteEditor::askForKey()
+{
+    const auto key = getKey();
+    const auto modes = NoteTools::modes();
+    const juce::StringArray roots { "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B" };
+    auto* dialog = new juce::AlertWindow ("Key", "The key the writing tools and Scale Lock use.", juce::MessageBoxIconType::NoIcon, this);
+    dialog->addComboBox ("root", roots, "Root");
+    dialog->getComboBoxComponent ("root")->setSelectedItemIndex (key.root);
+    dialog->addComboBox ("mode", modes, "Scale");
+    dialog->getComboBoxComponent ("mode")->setSelectedItemIndex (juce::jmax (0, modes.indexOf (key.mode)));
+    dialog->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    dialog->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+    dialog->enterModalState (true, juce::ModalCallbackFunction::create ([safe = juce::Component::SafePointer<NoteEditor> (this), dialog, roots, modes] (int result)
+    {
+        if (result != 1 || safe == nullptr)
+            return;
+
+        if (const auto k = NoteTools::parseKey (roots[dialog->getComboBoxComponent ("root")->getSelectedItemIndex()] + " " + modes[dialog->getComboBoxComponent ("mode")->getSelectedItemIndex()]))
+            safe->setKey (*k);
+    }), true);
+}
+
+void NoteEditor::askForChords()
+{
+    const auto key = getKey();
+    const auto minor = key.steps.size() > 2 && key.steps[2] == 3;
+    const juce::StringArray lengths { "1 beat", "2 beats", "A bar", "2 bars" };
+    const juce::StringArray octaves { "2", "3", "4", "5" };
+    auto* dialog = new juce::AlertWindow ("Chords",
+                                       "Roman numerals in " + key.name() + " (Key... in the Tools menu changes it): upper case major, lower case minor, "
+                                       + juce::String::fromUTF8 ("with 7, maj7, dim or \xc2\xb0, \xc3\xb8 or m7b5, aug or +, sus2, sus4, and b or # before for a borrowed root (bVII). ")
+                                       + "They are written from the clip's start, one after another.",
+                                       juce::MessageBoxIconType::NoIcon, this);
+    dialog->addTextEditor ("progression", minor ? "i VI III VII" : "I V vi IV", "Chords");
+    dialog->addComboBox ("each", lengths, "Each chord");
+    dialog->getComboBoxComponent ("each")->setSelectedItemIndex (2);
+    dialog->addComboBox ("octave", octaves, "Root octave");
+    dialog->getComboBoxComponent ("octave")->setSelectedItemIndex (1);
+    dialog->addComboBox ("replace", { "In place of the notes", "Added to the notes" }, "Notes");
+    dialog->getComboBoxComponent ("replace")->setSelectedItemIndex (shown.has_value() && ! shown->clip.notes.empty() ? 1 : 0);
+    dialog->addButton ("Write", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    dialog->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    dialog->enterModalState (true, juce::ModalCallbackFunction::create ([safe = juce::Component::SafePointer<NoteEditor> (this), dialog, octaves] (int result)
+    {
+        if (result != 1 || safe == nullptr || ! safe->shown.has_value())
+            return;
+
+        const auto bar = (double) safe->shown->beatsPerBar;
+        const double beats[] = { 1.0, 2.0, bar, 2.0 * bar };
+        const auto each = beats[juce::jlimit (0, 3, dialog->getComboBoxComponent ("each")->getSelectedItemIndex())];
+        const auto octave = octaves[dialog->getComboBoxComponent ("octave")->getSelectedItemIndex()].getIntValue();
+        const auto error = safe->writeChords (dialog->getTextEditorContents ("progression"), each, octave, dialog->getComboBoxComponent ("replace")->getSelectedItemIndex() == 0);
+
+        if (error.isNotEmpty())
+            juce::AlertWindow::showAsync (juce::MessageBoxOptions().withIconType (juce::MessageBoxIconType::WarningIcon).withTitle ("Chords").withMessage (error).withButton ("OK"), nullptr);
+    }), true);
+}
+
+void NoteEditor::askToArpeggiate()
+{
+    const juce::StringArray rates { "1/2 beat", "1/3 beat", "1/4 beat", "1/6 beat", "1/8 beat" };
+    const juce::StringArray gates { "Short (50 %)", "75 %", "90 %", "Legato (100 %)" };
+    auto* dialog = new juce::AlertWindow ("Arpeggiate",
+                                       "Plays each chord of " + juce::String (selected.empty() ? "the notes" : "the selected notes")
+                                       + " (notes starting together) as an arpeggio over its length, in place of it.",
+                                       juce::MessageBoxIconType::NoIcon, this);
+    dialog->addComboBox ("order", NoteTools::arpOrderNames(), "Order");
+    dialog->getComboBoxComponent ("order")->setSelectedItemIndex (0);
+    dialog->addComboBox ("octaves", { "1 octave", "2 octaves", "3 octaves", "4 octaves" }, "Range");
+    dialog->getComboBoxComponent ("octaves")->setSelectedItemIndex (0);
+    dialog->addComboBox ("rate", rates, "Rate");
+    dialog->getComboBoxComponent ("rate")->setSelectedItemIndex (2);
+    dialog->addComboBox ("gate", gates, "Note length");
+    dialog->getComboBoxComponent ("gate")->setSelectedItemIndex (2);
+    dialog->addButton ("Arpeggiate", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    dialog->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    dialog->enterModalState (true, juce::ModalCallbackFunction::create ([safe = juce::Component::SafePointer<NoteEditor> (this), dialog] (int result)
+    {
+        if (result != 1 || safe == nullptr)
+            return;
+
+        const int perBeat[] = { 2, 3, 4, 6, 8 };
+        const double gateShares[] = { 0.5, 0.75, 0.9, 1.0 };
+        NoteTools::Arp arp;
+        arp.order = (NoteTools::ArpOrder) juce::jlimit (0, 3, dialog->getComboBoxComponent ("order")->getSelectedItemIndex());
+        arp.octaves = dialog->getComboBoxComponent ("octaves")->getSelectedItemIndex() + 1;
+        arp.step = juce::jmax ((juce::int64) 1, safe->beatFrames() / perBeat[juce::jlimit (0, 4, dialog->getComboBoxComponent ("rate")->getSelectedItemIndex())]);
+        arp.gate = gateShares[juce::jlimit (0, 3, dialog->getComboBoxComponent ("gate")->getSelectedItemIndex())];
+        arp.seed = (juce::uint32) juce::Random::getSystemRandom().nextInt();
+        safe->arpeggiate (arp);
+    }), true);
+}
+
+void NoteEditor::askToHumanize()
+{
+    const juce::StringArray timings { "None", "5 ms", "10 ms", "20 ms", "40 ms" };
+    const juce::StringArray velocities { "None", "5 %", "10 %", "20 %", "30 %" };
+    auto* dialog = new juce::AlertWindow ("Humanize", "Moves each of " + juce::String (selected.empty() ? "the notes" : "the selected notes")
+                                       + " and changes its velocity by a random amount, up to these.",
+                                       juce::MessageBoxIconType::NoIcon, this);
+    dialog->addComboBox ("timing", timings, "Timing");
+    dialog->getComboBoxComponent ("timing")->setSelectedItemIndex (2);
+    dialog->addComboBox ("velocity", velocities, "Velocity");
+    dialog->getComboBoxComponent ("velocity")->setSelectedItemIndex (2);
+    dialog->addButton ("Humanize", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    dialog->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    dialog->enterModalState (true, juce::ModalCallbackFunction::create ([safe = juce::Component::SafePointer<NoteEditor> (this), dialog] (int result)
+    {
+        if (result != 1 || safe == nullptr || ! safe->shown.has_value())
+            return;
+
+        const double ms[] = { 0.0, 5.0, 10.0, 20.0, 40.0 };
+        const float shares[] = { 0.0f, 0.05f, 0.1f, 0.2f, 0.3f };
+        NoteTools::Humanize h;
+        h.timing = (juce::int64) std::llround (ms[juce::jlimit (0, 4, dialog->getComboBoxComponent ("timing")->getSelectedItemIndex())] * 0.001 * safe->shown->sampleRate);
+        h.velocity = shares[juce::jlimit (0, 4, dialog->getComboBoxComponent ("velocity")->getSelectedItemIndex())];
+        h.seed = (juce::uint32) juce::Random::getSystemRandom().nextInt();
+        safe->humanize (h);
+    }), true);
 }

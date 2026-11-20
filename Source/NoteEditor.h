@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "Session.h"
+#include "NoteTools.h"
 
 /** The piano roll: the selected note clip's notes on a grid of pitch (a keyboard down the left,
     middle C marked) against time (the clip's length, a line at each repeat), edited by hand.
@@ -37,7 +38,9 @@
     step takes its notes away, a drag sets their velocity. The names down the left play their
     sound, and right-clicking one edits the map. Swing (on a grid of 1/2 or 1/4 beat) moves each
     pair's second line later, in both views, for the grid lines, snapping and the steps. Channel
-    sets the MIDI channel the clip's notes and lanes go out on. Each change is handed back through `apply` as one undoable
+    sets the MIDI channel the clip's notes and lanes go out on. Tools has the writing tools
+    (chords, arpeggiate, humanize, fit to the key, scale lock, the key), and a right-click on a
+    note or a set step sets its probability or velocity. Each change is handed back through `apply` as one undoable
     step; what sounds goes to `audition`. readClip gives what to show; the editor reads it ten
     times a second and redraws when it changed. */
 class NoteEditor final : public juce::Component,
@@ -54,11 +57,14 @@ public:
         bool hasInstrument = true;         // the track can play it
         bool drums = false;                // shown as a drum grid
         std::vector<DrumSound> drumMap = DrumSound::generalMidi();   // the track's sounds, top to bottom
+        int beatsPerBar = 4;               // at the clip's start
+        juce::String key;                  // the part's key ("A minor"), or empty: the tools guess it from the notes
 
         bool operator== (const Shown& o) const noexcept
         {
             return clip == o.clip && juce::exactlyEqual (sampleRate, o.sampleRate) && juce::exactlyEqual (beatSeconds, o.beatSeconds)
-                && trackName == o.trackName && hasInstrument == o.hasInstrument && drums == o.drums && drumMap == o.drumMap;
+                && trackName == o.trackName && hasInstrument == o.hasInstrument && drums == o.drums && drumMap == o.drumMap
+                && beatsPerBar == o.beatsPerBar && key == o.key;
         }
     };
 
@@ -67,6 +73,7 @@ public:
     std::function<void (int pitch, float velocity)> audition;   // a velocity of 0 ends the note
     std::function<void (bool drums)> showDrums;                  // the track's clips shown as a drum grid, or not
     std::function<void (const std::vector<DrumSound>&, const juce::String& description)> applyDrumMap;   // an empty map: General MIDI's
+    std::function<void (const juce::String& key)> onKeyChosen;  // a key set in the Tools menu, for the part to keep
 
     NoteEditor();
     ~NoteEditor() override;
@@ -136,6 +143,27 @@ public:
     void selectAll();
     void removeSelected();
 
+    /** The writing tools (the Tools menu), each one undoable step on the selected notes (all of
+        them with none selected): chords written from Roman numerals from the clip's start (in
+        place of the notes, or added to them), the notes arpeggiated, humanized, or moved into
+        the key. */
+    juce::String writeChords (const juce::String& progression, double beatsEach, int octave, bool replace);
+    void arpeggiate (const NoteTools::Arp&);
+    void humanize (const NoteTools::Humanize&);
+    void fitToScale();
+
+    /** The chance each selected note plays on a pass (the right-click menu on a note or step). */
+    void setProbability (float);
+
+    /** The key the tools use: the one set, else the part's, else one guessed from the notes. */
+    NoteTools::Scale getKey() const;
+    void setKey (const NoteTools::Scale&);
+
+    /** With the scale locked, notes put in, dragged or moved with the arrows stay in the key
+        (the arrows step through it), and the rows outside it are shaded. */
+    void setScaleLock (bool);
+    bool isScaleLocked() const noexcept                            { return scaleLock; }
+
     /** The controller lane shown under the notes (ControllerLane::pitchBend, a CC, or -1 for none). */
     void setLane (int controller);
     int getLane() const noexcept                                   { return laneController; }
@@ -178,6 +206,14 @@ private:
     void moveSelected (int semitones, juce::int64 frames);
     void refreshControls();
     void sound (int pitch, float velocity);   // the note heard now, ending the one before
+    void showToolsMenu();
+    void noteMenu();
+    void askForChords();
+    void askToArpeggiate();
+    void askToHumanize();
+    void askForKey();
+    std::set<int> chosenNotes() const;        // the selected, or every note with none selected
+    juce::int64 beatFrames() const noexcept;
     void silence();
 
     std::optional<Shown> shown, base;      // what is shown, and as it was when a drag began
@@ -202,7 +238,9 @@ private:
     int heard = -1;                        // the pitch sounding through `audition`, or -1
 
     juce::ComboBox gridBox, laneBox, swingBox, channelBox;
-    juce::TextButton drumsButton { "Drums" };
+    juce::TextButton drumsButton { "Drums" }, toolsButton { "Tools" };
+    std::optional<NoteTools::Scale> chosenKey;
+    bool scaleLock = false;
     juce::TextButton zoomOutButton { "-" }, zoomInButton { "+" }, fitButton { "Fit" };
     juce::ScrollBar timeScroll { false };
     void updateScroll();

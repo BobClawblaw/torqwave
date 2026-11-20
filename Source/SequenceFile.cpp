@@ -55,7 +55,7 @@ std::optional<Sequence> fromClip (const SessionState& s, juce::uint32 clipId, st
     for (auto& n : clip.notes)
     {
         const auto start = tickAt (n.start);
-        q.notes.push_back ({ n.pitch, start, juce::jmax ((juce::int64) 1, tickAt (n.start + n.length) - start), n.velocity });
+        q.notes.push_back ({ n.pitch, start, juce::jmax ((juce::int64) 1, tickAt (n.start + n.length) - start), n.velocity, n.probability });
     }
 
     for (auto& lane : clip.lanes)
@@ -93,7 +93,7 @@ NoteClip toClip (const Sequence& q, const SessionState& s, juce::int64 position)
     for (auto& n : q.notes)
     {
         const auto start = frameOf (n.start);
-        c.notes.push_back ({ n.pitch, start, juce::jmax ((juce::int64) 1, frameOf (n.start + n.length) - start), n.velocity });
+        c.notes.push_back ({ n.pitch, start, juce::jmax ((juce::int64) 1, frameOf (n.start + n.length) - start), n.velocity, n.probability });
     }
 
     for (auto& l : q.lanes)
@@ -154,6 +154,9 @@ std::unique_ptr<juce::XmlElement> toXml (const Sequence& q)
         e->setAttribute ("s", juce::String (n.start));
         e->setAttribute ("l", juce::String (n.length));
         e->setAttribute ("v", juce::String (n.velocity, 6));
+
+        if (n.probability < 1.0f)
+            e->setAttribute ("pr", juce::String (n.probability, 6));
     }
 
     for (auto& l : q.lanes)
@@ -209,7 +212,8 @@ std::optional<Sequence> fromXml (const juce::XmlElement& xml)
         for (auto* e : notes->getChildWithTagNameIterator ("N"))
             q.notes.push_back ({ juce::jlimit (0, 127, e->getIntAttribute ("p", 60)), juce::jmax ((juce::int64) 0, tick (e->getStringAttribute ("s"))),
                                  juce::jmax ((juce::int64) 1, tick (e->getStringAttribute ("l"))),
-                                 juce::jlimit (0.0f, 1.0f, (float) e->getDoubleAttribute ("v", 0.8)) });
+                                 juce::jlimit (0.0f, 1.0f, (float) e->getDoubleAttribute ("v", 0.8)),
+                                 juce::jlimit (0.0f, 1.0f, (float) e->getDoubleAttribute ("pr", 1.0)) });
 
     for (auto* laneXml : xml.getChildWithTagNameIterator ("LANE"))
     {

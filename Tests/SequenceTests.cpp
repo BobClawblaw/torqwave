@@ -520,4 +520,284 @@ void runSequenceTests (AudioEngine& engine)
         juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
         folder.deleteRecursively();
     }
+
+    // The writing tools (step 4).
+    {
+        using namespace NoteTools;
+        constexpr juce::int64 beat = 24000;   // 120 BPM at 48 kHz
+
+        // Keys and scales.
+        const auto aMinor = parseKey ("A minor"), bFlat = parseKey ("Bb major"), fDorian = parseKey ("F# dorian"), am = parseKey ("Am"), c = parseKey ("C");
+        const auto cMajor = *c;
+        check (aMinor && aMinor->root == 9 && aMinor->mode == "minor" && bFlat && bFlat->root == 10 && fDorian && fDorian->root == 6 && fDorian->mode == "dorian"
+                   && am && *am == *aMinor && c->name() == "C major" && ! parseKey ("H minor") && ! parseKey ("C weird") && ! parseKey ("")
+                   && cMajor.snap (61) == 60 && cMajor.snap (66) == 65 && cMajor.step (64, 1) == 65 && cMajor.step (60, -1) == 59 && cMajor.step (72, 7) == 84
+                   && cMajor.step (61, 1) == 62 && cMajor.contains (71) && ! cMajor.contains (70),
+               "note tools: keys are read (A minor, Bb major, F# dorian, Am, C) and others refused; in C major 61 snaps to 60 (the lower on a tie), 66 to 65, "
+               "a step up from E is F, down from C is B, seven steps up an octave");
+
+        const auto line = [] (std::initializer_list<int> pitches)
+        {
+            std::vector<ClipNote> notes;
+            juce::int64 t = 0;
+
+            for (auto p : pitches)
+                notes.push_back ({ p, (t += 1000) - 1000, 1000, 0.8f });
+
+            return notes;
+        };
+        check (guessKey (line ({ 57, 60, 64, 67, 71, 62, 65 })).name() == "A minor" && guessKey (line ({ 60, 57, 64, 67, 71, 62, 65 })).name() == "C major"
+                   && guessKey (line ({ 62, 64, 66, 67, 69, 71, 73 })).name() == "D major" && guessKey ({}).name() == "C major",
+               "note tools: a key is guessed from the notes: the white keys starting on A are A minor, starting on C C major; D E F# G A B C# is D major");
+
+        // Chords from Roman numerals.
+        juce::String error;
+        const auto pitchesOf = [] (const std::vector<Chord>& chords)
+        {
+            std::vector<std::vector<int>> out;
+
+            for (auto& ch : chords)
+                out.push_back (ch.pitches);
+
+            return out;
+        };
+        const auto minorRun = pitchesOf (parseProgression (juce::String::fromUTF8 ("i\xe2\x80\x93VI\xe2\x80\x93III\xe2\x80\x93VII"), *aMinor, 3, error));
+        const auto jazz = pitchesOf (parseProgression (juce::String::fromUTF8 ("ii7 V7 Imaj7 vii\xc2\xb0 bVII Vsus4 vii\xc3\xb8" "7 viidim7 vii\xc2\xb0" "7"), cMajor, 4, error));
+        juce::String bad1, bad2, bad3;
+        const auto none1 = parseProgression ("I VIII", cMajor, 4, bad1).empty();
+        const auto none2 = parseProgression ("Vx", cMajor, 4, bad2).empty();
+        const auto none3 = parseProgression ("I IV", *parseKey ("C major pentatonic"), 4, bad3).empty();
+        const std::vector<std::vector<int>> wantMinor { { 57, 60, 64 }, { 65, 69, 72 }, { 60, 64, 67 }, { 67, 71, 74 } };
+        const std::vector<std::vector<int>> wantJazz { { 62, 65, 69, 72 }, { 67, 71, 74, 77 }, { 60, 64, 67, 71 }, { 71, 74, 77 }, { 70, 74, 77 }, { 67, 72, 74 }, { 71, 74, 77, 81 }, { 71, 74, 77, 80 }, { 71, 74, 77, 80 } };
+        const auto written = chordNotes (parseProgression ("I IV", cMajor, 4, error), 500, 4 * beat, 0.7f);
+
+        check (minorRun == wantMinor && jazz == wantJazz && none1 && bad1.contains ("VIII") && none2 && bad2.contains ("x") && none3 && bad3.contains ("seven")
+                   && written.size() == 6 && written[0].start == 500 && written[3].start == 500 + 4 * beat && written[5].pitch == 72 && written[0].length == 4 * beat,
+               "note tools: i-VI-III-VII (en dashes) in A minor from octave 3 is Am F C G in root position; ii7 V7 Imaj7 vii-diminished bVII Vsus4 vii-half-diminished-7 viidim7 vii-diminished-7 in C are "
+               "Dm7 G7 Cmaj7 Bdim Bb Gsus4 Bm7b5 Bdim7 Bdim7; VIII, an unknown suffix and a pentatonic key are refused with why; chords are written a bar each from the start");
+
+        // The arpeggiator.
+        const std::vector<ClipNote> chord { { 64, 0, 4 * beat, 0.6f }, { 60, 10, 4 * beat, 0.8f }, { 67, 0, 4 * beat, 0.7f } };
+        const auto pitches = [] (const std::vector<ClipNote>& notes)
+        {
+            std::vector<int> p;
+
+            for (auto& n : notes)
+                p.push_back (n.pitch);
+
+            return p;
+        };
+        Arp arp;
+        arp.step = beat / 4;
+        const auto up = arpeggiate (chord, arp);
+        arp.order = ArpOrder::down;
+        const auto down = arpeggiate (chord, arp);
+        arp.order = ArpOrder::upDown;
+        const auto upDown = arpeggiate (chord, arp);
+        arp.order = ArpOrder::up;
+        arp.octaves = 2;
+        const auto twoOctaves = arpeggiate (chord, arp);
+        arp.order = ArpOrder::random;
+        arp.seed = 7;
+        const auto random1 = arpeggiate (chord, arp), random2 = arpeggiate (chord, arp);
+        arp.seed = 8;
+        const auto random3 = arpeggiate (chord, arp);
+        auto noRepeats = true;
+
+        for (size_t i = 1; i < random1.size(); ++i)
+            noRepeats = noRepeats && random1[i].pitch != random1[i - 1].pitch;
+
+        const auto firstEight = [&] (const std::vector<ClipNote>& n) { auto p = pitches (n); p.resize (juce::jmin ((size_t) 8, p.size())); return p; };
+
+        check (up.size() == 16 && firstEight (up) == std::vector<int> { 60, 64, 67, 60, 64, 67, 60, 64 } && up[1].start == beat / 4 && up[0].length == 5400
+                   && std::abs (up[0].velocity - 0.7f) < 1.0e-6f && up.back().start == 15 * beat / 4
+                   && firstEight (down) == std::vector<int> { 67, 64, 60, 67, 64, 60, 67, 64 }
+                   && firstEight (upDown) == std::vector<int> { 60, 64, 67, 64, 60, 64, 67, 64 }
+                   && firstEight (twoOctaves) == std::vector<int> { 60, 64, 67, 72, 76, 79, 60, 64 }
+                   && random1 == random2 && random1 != random3 && noRepeats && random1.size() == 16,
+               "note tools: C E G held four beats, arpeggiated at a quarter beat, is 16 notes 0.9 of a step long at the chord's mean velocity: up C E G C..., down G E C..., "
+               "up and down C E G E C..., over two octaves C E G C' E' G'; random is the same for a seed, another for another seed, never one pitch twice running");
+
+        // Humanize and fit to the key.
+        auto loose = line ({ 60, 62, 64, 65, 67, 69, 71, 72 });
+
+        for (auto& n : loose)
+            n.start += 5000;
+
+        const auto before = loose;
+        auto again = loose;
+        Humanize h { 480, 0.2f, 11 };
+        humanize (loose, { 1, 2, 3, 4, 5, 6 }, h, 100000);
+        humanize (again, { 1, 2, 3, 4, 5, 6 }, h, 100000);
+        auto withinAmounts = loose[0] == before[0] && loose[7] == before[7];
+        auto anyMoved = false;
+
+        for (size_t i = 1; i < 7; ++i)
+        {
+            withinAmounts = withinAmounts && std::abs (loose[i].start - before[i].start) <= 480
+                         && std::abs (loose[i].velocity - before[i].velocity) <= 0.2f * before[i].velocity + 1.0e-6f && loose[i].pitch == before[i].pitch;
+            anyMoved = anyMoved || loose[i].start != before[i].start;
+        }
+
+        auto offKey = line ({ 61, 63, 66, 68, 70 });
+        fitToScale (offKey, {}, cMajor);
+
+        check (withinAmounts && anyMoved && loose == again && pitches (offKey) == std::vector<int> { 60, 62, 65, 67, 69 },
+               "note tools: humanize moves the chosen notes up to 10 ms and changes their velocity up to 20 %, the others untouched, the same for a seed; "
+               "fit to the key moves C# D# F# G# A# to C D F G A");
+
+        // Vary: velocity, pitch within the key, density.
+        const auto part = line ({ 60, 64, 67, 72 });   // four notes, a thousand frames apart
+        Vary v;
+        v.scale = cMajor;
+        v.step = 1000;
+        v.seed = 3;
+        v.velocity = 0.25f;
+        const auto softer = vary (part, v, 8000);
+        v.velocity = 0.0f;
+        v.pitch = 1.0f;
+        const auto moved = vary (part, v, 8000);
+        v.pitch = 0.0f;
+        v.density = 1.0f;
+        const auto denser = vary (part, v, 8000);
+        v.density = -1.0f;
+        const auto thinnest = vary (part, v, 8000);
+        v.density = -0.5f;
+        const auto thinner = vary (part, v, 8000), thinnerAgain = vary (part, v, 8000);
+
+        auto velocityOk = softer.size() == 4, pitchOk = moved.size() == 4;
+
+        for (size_t i = 0; i < 4 && velocityOk && pitchOk; ++i)
+        {
+            velocityOk = std::abs (softer[i].velocity - part[i].velocity) <= 0.25f * part[i].velocity + 1.0e-6f && softer[i].pitch == part[i].pitch;
+            pitchOk = (moved[i].pitch == cMajor.step (part[i].pitch, 1) || moved[i].pitch == cMajor.step (part[i].pitch, -1)) && moved[i].start == part[i].start;
+        }
+
+        check (velocityOk && pitchOk && denser.size() == 8 && denser[4].start == 4000 && denser[4].pitch == 72 && juce::exactlyEqual (denser[4].velocity, 0.8f * 0.6f)
+                   && thinnest.size() == 1 && thinner.size() < 4 && ! thinner.empty() && thinner == thinnerAgain,
+               "note tools: a variation changes velocities up to its share, moves every note a step up or down C major at a chance of 1, "
+               "fills each of 4 empty steps with a softer copy of the note before at a density of +1, keeps one note at -1, and is the same for a seed");
+
+        // Probability: a fixed draw for each pass, the same in any blocks, about the chance asked.
+        NoteClip loop;
+        loop.id = 7;
+        loop.length = 400 * beat;
+        loop.loopLength = beat;
+        loop.notes = { { 60, 0, 1000, 0.8f, 0.5f }, { 64, beat / 2, 1000, 0.8f, 1.0f }, { 67, beat / 4, 1000, 0.8f, 0.0f } };
+
+        const auto ons = [&loop] (int block)
+        {
+            std::map<int, std::vector<int>> byPitch;
+
+            for (juce::int64 from = 0; from < loop.length; from += block)
+            {
+                juce::MidiBuffer midi;
+                const auto n = (int) juce::jmin ((juce::int64) block, loop.length - from);
+                loop.addMidi (from, n, midi);
+
+                for (const auto m : midi)
+                    if (m.getMessage().isNoteOn())
+                        byPitch[m.getMessage().getNoteNumber()].push_back ((int) (from + m.samplePosition));
+            }
+
+            return byPitch;
+        };
+
+        const auto whole = ons (4096), odd = ons (333);
+        const auto halves = whole.count (60) > 0 ? (int) whole.at (60).size() : 0;
+
+        // Saved and read back: in a session and in a sequence.
+        SessionState saved = sessionAt (120.0);
+        const auto track = saved.addInstrumentTrack().id;
+        NoteClip small;
+        small.length = 4 * beat;
+        small.notes = { { 60, 0, 1000, 0.8f, 0.25f }, { 62, 1000, 1000, 0.8f, 1.0f } };
+        const auto smallId = SessionEdits::addNoteClip (saved, track, small);
+        const auto folder = juce::File::createTempFile ("probability");
+        folder.createDirectory();
+        const auto sessionFile = folder.getChildFile ("p.tqsession");
+        SessionFile::save (saved, sessionFile);
+        juce::AudioFormatManager formats;
+        formats.registerBasicFormats();
+        const auto loaded = SessionFile::load (sessionFile, formats);
+        const NoteClip* back = nullptr;
+
+        for (auto& t : loaded.state.tracks)
+            for (auto& nc : t.noteClips)
+                back = &nc;
+
+        const auto sequence = SequenceFile::fromXml (*SequenceFile::toXml (*SequenceFile::fromClip (saved, smallId, nullptr)));
+
+        check (whole == odd && halves > 160 && halves < 240 && whole.at (64).size() == 400 && whole.count (67) == 0
+                   && back != nullptr && back->notes.size() == 2 && juce::exactlyEqual (back->notes[0].probability, 0.25f) && juce::exactlyEqual (back->notes[1].probability, 1.0f)
+                   && sequence.has_value() && juce::exactlyEqual (sequence->notes[0].probability, 0.25f) && juce::exactlyEqual (sequence->notes[1].probability, 1.0f),
+               "note probability: over 400 passes a note at 50 % plays " + juce::String (halves) + " times, on the same passes in blocks of 4096 and of 333 frames; "
+               "one at 100 % plays all 400, one at 0 % none; a session file and a sequence keep 25 % and 100 %");
+
+        // The Piano Roll's tools, through its callbacks.
+        NoteClip edited;
+        edited.id = 3;
+        edited.length = 8 * beat;
+        NoteEditor editor;
+        editor.readClip = [&edited]() -> std::optional<NoteEditor::Shown>
+        {
+            NoteEditor::Shown shown;
+            shown.clip = edited;
+            shown.sampleRate = rate;
+            shown.beatSeconds = 0.5;
+            shown.key = "A minor";
+            return shown;
+        };
+        juce::StringArray steps;
+        editor.apply = [&edited, &steps] (const NoteClip& clip, const juce::String& description)
+        {
+            edited = clip;
+            steps.add (description);
+        };
+        editor.refresh();
+        const auto chordError = editor.writeChords ("i iv", 4.0, 3, true);
+        editor.refresh();
+        const auto chordPitches = pitches (edited.notes);
+        editor.selectAll();
+        editor.setProbability (0.5f);
+        editor.refresh();
+        const auto allHalf = std::all_of (edited.notes.begin(), edited.notes.end(), [] (const ClipNote& n) { return juce::exactlyEqual (n.probability, 0.5f); });
+        editor.setScaleLock (true);
+        editor.selectAll();
+        editor.arpeggiate (arp = Arp { ArpOrder::up, 1, beat / 2, 0.5, 1 });
+        editor.refresh();
+
+        check (chordError.isEmpty() && chordPitches == std::vector<int> { 57, 60, 64, 62, 65, 69 } && edited.notes.size() == 16 && allHalf
+                   && edited.notes[0].pitch == 57 && edited.notes[8].pitch == 62 && edited.notes[1].start == beat / 2
+                   && steps == juce::StringArray { "Chords", "Note Probability", "Arpeggiate" } && editor.getKey().name() == "A minor",
+               "piano roll tools: i iv in the part's key, A minor, writes Am and Dm a bar each; Probability sets every selected note's; Arpeggiate plays each chord "
+               "at a half beat (8 notes each); each is one undo step");
+
+        // Make Variation with changes, in the Sequencer.
+        SequencerView view (engine);
+        SequenceFile::Sequence groove;
+        groove.name = "Hats";
+        groove.length = 4 * SequenceFile::ticksPerBeat;
+        groove.notes = { { 42, 0, 240, 0.8f }, { 42, 1920, 240, 0.8f } };
+        const auto grooveFile = folder.getChildFile (juce::String ("Hats") + SequenceFile::extension);
+        SequenceFile::save (groove, grooveFile);
+        view.openFile (grooveFile);
+        Vary fill;
+        fill.density = 1.0f;
+        fill.step = (juce::int64) std::llround (60.0 / view.getTempo() / 4.0 * view.getPlayer().getEffects().getSampleRate());
+        fill.scale = cMajor;
+        const auto fillError = view.duplicate (true, &fill);
+        const auto filled = SequenceFile::load (folder.getChildFile (juce::String ("Hats Variation") + SequenceFile::extension), error);
+        auto onSixteenths = filled.has_value();
+
+        if (filled.has_value())
+            for (auto& n : filled->notes)
+                onSixteenths = onSixteenths && n.start % 240 == 0 && n.pitch == 42;
+
+        check (fillError.isEmpty() && filled.has_value() && filled->notes.size() == 16 && onSixteenths && filled->variationOf == "Hats",
+               "sequencer: Make Variation at a density of +1 fills every empty sixteenth of a two-hit bar of hats (16 notes, each on a sixteenth), naming Hats as its original");
+
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+        folder.deleteRecursively();
+    }
 }
