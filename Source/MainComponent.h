@@ -197,7 +197,7 @@ private:
     /** File > Settings...: every setting of the app in one window, opened on a section by name
         (the one last shown when empty). The model lists each setting with how to read and set it. */
     void showSettings (const juce::String& section = {});
-    void showAskTorqwave();
+    void showAskTorqwave (bool onSequence = false);   // onSequence: on the Sequencer's sequence, until opened without it
     void showPluginCatalogue();
     std::optional<Ai::Workspace::Start> startAiPlan();
     juce::String applyAiPlan (Ai::Workspace&, const juce::String& request);
@@ -749,6 +749,7 @@ private:
     juce::uint32 aiStartVersion = 0;        // the file as the latest Ask Torq request found it
     int aiStartReset = -1;
     Session::State aiStartSession;
+    bool askOnSequence = false;             // Ask Torq works on the Sequencer's sequence (opened from its button)
     juce::AudioPluginInstance* selectedInstrument() const;   // the instrument of the selected instrument track, or null
     void showSaveInstrumentPreset();          // the session as the latest Ask Torq request on it found it
     std::unique_ptr<EqWindow> eqWindow;

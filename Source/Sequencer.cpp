@@ -55,15 +55,25 @@ juce::String SequencerDocument::saveTo (const juce::File& target, std::shared_pt
     if (const auto error = SequenceFile::save (q, target); error.isNotEmpty())
         return error;
 
-    // The voice is outside the undo steps: every step has it now.
     if (voice != nullptr)
-        for (auto& step : history)
-            step.first.voice = voice;
+        keepVoice (voice);
 
     savedPosition = position;
     voiceChanged = false;
     file = target;
     return {};
+}
+
+void SequencerDocument::keepVoice (std::shared_ptr<const juce::XmlElement> voice)
+{
+    const auto old = get().voice;
+
+    if (voice == old)
+        return;
+
+    for (auto& step : history)
+        if (step.first.voice == old)
+            step.first.voice = voice;
 }
 
 SequencerDocument::Built SequencerDocument::sessionFor (const SequenceFile::Sequence& q, double tempo, double sampleRate)

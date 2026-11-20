@@ -363,11 +363,11 @@ juce::String Workspace::instructions()
 
 juce::var Workspace::tools() const
 {
-    if (! isSession())
+    if (! isSession() && ! isSequence())
         return toolDefinitions();
 
-    // The session's tools, and the plug-in look tools so it can say what is there.
-    auto list = SessionTools::toolDefinitions();
+    // The session's or sequence's tools, and the plug-in look tools so it can say what is there.
+    auto list = isSequence() ? SequenceTools::toolDefinitions() : SessionTools::toolDefinitions();
     const auto fileTools = toolDefinitions();
 
     if (auto* file = fileTools.getArray())
@@ -380,6 +380,27 @@ juce::var Workspace::tools() const
 
 juce::String Workspace::systemMessage() const
 {
+    if (isSequence())
+    {
+        const auto& c = sequenceTools->getContext();
+        const auto& q = c.sequence;
+        juce::String open;
+        open << "The Sequencer has " << q.name.quoted() << " open: " << (q.role.isNotEmpty() ? "a " + q.role + " part" : juce::String ("a part"))
+             << (q.subRole.isNotEmpty() ? " (" + q.subRole + ")" : juce::String()) << ", " << q.beatsPerBar << " beats to a bar, "
+             << juce::String (q.bars(), 2).trimCharactersAtEnd ("0").trimCharactersAtEnd (".") << " bars long"
+             << (q.key.isNotEmpty() ? ", in " + q.key : juce::String (", with no key set"))
+             << ", played on " << (c.instrument.isNotEmpty() ? c.instrument : juce::String ("no instrument yet"))
+             << (c.instrumentAbout.isNotEmpty() ? " (" + c.instrumentAbout.trimCharactersAtEnd (".") + ")" : juce::String())
+             << " at " << c.tempo << " BPM"
+             << (c.sessionTempo > 0.0 ? "; the open session's tempo is " + juce::String (c.sessionTempo) + " BPM" : juce::String()) << ". ";
+
+        return "You are the assistant inside Torqwave, an audio editor with a Sequencer. The user asks you to write or look at the "
+               "sequence open in it. You work on a copy: what you write is shown as a plan and goes in only when the user applies it, as "
+               "one undo step; suggestions are shown for the user to apply. Change only what was asked. If the request is unclear or "
+               "can't be done with these tools, make no changes and say so. "
+               + open + SequenceTools::instructions();
+    }
+
     if (! isSession())
         return instructions();
 
@@ -402,6 +423,10 @@ Workspace::Workspace (Start s)
                                                        [this] (const juce::String& wanted, juce::String& error) { return findPlugin (wanted, error, true); },
                                                        std::move (s.instrumentPresets), std::move (s.effects),
                                                        [this] (const juce::String& wanted, juce::String& error) { return findPlugin (wanted, error); });
+
+    if (s.sequence)
+        sequenceTools = std::make_unique<SequenceTools> (std::move (*s.sequence), steps,
+                                                         [this] (const juce::String& wanted, juce::String& error) { return findPlugin (wanted, error); });
 }
 
 Workspace::~Workspace() = default;
@@ -488,6 +513,17 @@ juce::String Workspace::run (const juce::String& tool, const juce::String& argum
 
 juce::var Workspace::dispatch (const juce::String& tool, const juce::var& a)
 {
+    if (sequenceTools != nullptr)
+    {
+        if (const auto result = sequenceTools->run (tool, a))
+            return *result;
+
+        if (tool == "list_plugins")     return listPlugins (a);
+        if (tool == "describe_plugin")  return describePlugin (a);
+
+        return failure ("There is no tool called " + tool.quoted() + " for a sequence.");
+    }
+
     if (sessionTools != nullptr)
     {
         if (const auto result = sessionTools->run (tool, a))

@@ -311,6 +311,7 @@ target_sources(Torqwave PRIVATE
     Source/AiKeychain.cpp
     Source/AiWorkspace.cpp
     Source/AiSession.cpp
+    Source/AiSequence.cpp
     Source/InstrumentPresets.cpp
     Source/AiCatalogue.cpp
     Source/AiAssistant.cpp
@@ -493,6 +494,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/AiKeychain.cpp
     Source/AiWorkspace.cpp
     Source/AiSession.cpp
+    Source/AiSequence.cpp
     Source/InstrumentPresets.cpp
     Source/AiCatalogue.cpp
     Source/AiAssistant.cpp

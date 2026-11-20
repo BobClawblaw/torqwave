@@ -193,7 +193,8 @@ AskPanel::AskPanel (Settings s, std::function<std::optional<Workspace::Start>()>
                     std::function<juce::String (Workspace&, const juce::String&)> apply)
     : settings (std::move (s)), makeStart (std::move (start)), applyPlan (std::move (apply))
 {
-    banner.setText ("Experimental. Describe an edit to the open file, or to the session in the multitrack view. The model on your server (" + settings.model + ") "
+    banner.setText ("Experimental. Describe an edit to the open file, to the session in the multitrack view, or (from the Sequencer's Ask Torq button) to "
+                    "the sequence in the Sequencer. The model on your server (" + settings.model + ") "
                     "works on a copy: nothing changes until you read its plan and press Apply, and Apply is one undo step.",
                     juce::dontSendNotification);
     banner.setColour (juce::Label::textColourId, Theme::warn);
@@ -229,14 +230,24 @@ AskPanel::AskPanel (Settings s, std::function<std::optional<Workspace::Start>()>
         }
 
         addLog ("\nApplied, as one undo step.\n", Theme::good);
-        agent.reset();
         planReady = false;
+
+        if (suggestionButtons.isEmpty())   // suggestions stay to apply
+            agent.reset();
+
         updateButtons();
     };
     discardButton.onClick = [this] { discard(); };
+    applyAllButton.onClick = [this] { applyAllSuggestions(); };
+    applyAllButton.setTooltip ("Applies every suggestion not yet applied, together as one undo step");
 
     for (auto* b : { &askButton, &stopButton, &applyButton, &discardButton })
         addAndMakeVisible (b);
+
+    addChildComponent (applyAllButton);
+    suggestionView.setViewedComponent (&suggestionRows, false);
+    suggestionView.setScrollBarsShown (true, false);
+    addChildComponent (suggestionView);
 
     updateButtons();
     setSize (620, 560);
@@ -269,9 +280,123 @@ void AskPanel::resized()
     discardButton.setBounds (bottom.removeFromRight (100));
     bottom.removeFromRight (8);
     applyButton.setBounds (bottom.removeFromRight (100));
+    applyAllButton.setBounds (bottom.removeFromLeft (100));
     r.removeFromBottom (8);
     r.removeFromTop (8);
+
+    // The suggestions, under the log: a row each, up to about half the room.
+    constexpr int rowHeight = 44;
+
+    if (! suggestionButtons.isEmpty())
+    {
+        suggestionView.setBounds (r.removeFromBottom (juce::jmin (suggestionButtons.size() * rowHeight, r.getHeight() / 2)));
+        r.removeFromBottom (8);
+        const auto width = suggestionView.getMaximumVisibleWidth();
+        suggestionRows.setSize (width, suggestionButtons.size() * rowHeight);
+
+        for (int i = 0; i < suggestionButtons.size(); ++i)
+        {
+            auto row = juce::Rectangle<int> (0, i * rowHeight, width, rowHeight).reduced (0, 2);
+            suggestionButtons[i]->setBounds (row.removeFromRight (90).withSizeKeepingCentre (90, 26));
+            suggestionLabels[i]->setBounds (row.withTrimmedRight (8));
+        }
+    }
+
     log.setBounds (r);
+}
+
+void AskPanel::setSubject (const juce::String& text, const juce::String& example)
+{
+    prompt.setText (text, juce::dontSendNotification);
+    requestBox.setTextToShowWhenEmpty (example, Theme::faintText);
+}
+
+void AskPanel::showSuggestions()
+{
+    suggestionLabels.clear();
+    suggestionButtons.clear();
+    applied.clear();
+
+    const auto* tools = agent != nullptr ? agent->getWorkspace().getSequenceTools() : nullptr;
+
+    if (tools != nullptr)
+    {
+        const auto beatsPerBar = tools->getSequence().beatsPerBar;
+
+        for (auto& suggestion : tools->getSuggestions())
+        {
+            const auto index = suggestionButtons.size();
+            auto* label = suggestionLabels.add (new juce::Label ({}, juce::String (index + 1) + ". " + suggestion.describe (beatsPerBar)));
+            label->setJustificationType (juce::Justification::centredLeft);
+            label->setFont (juce::FontOptions (13.0f));
+            label->setMinimumHorizontalScale (1.0f);
+            label->setTooltip (suggestion.describe (beatsPerBar));
+
+            auto* button = suggestionButtons.add (new juce::TextButton (suggestion.canApply() ? "Apply" : "Advice"));
+            button->setTooltip (suggestion.canApply() ? "Applies this suggestion by itself, as one undo step in the Sequencer"
+                                                      : "A sequence can't keep instrument automation: draw it on the track once the sequence is in a session");
+            button->onClick = [this, index] { applySuggestion (index); };
+            applied.push_back (false);
+
+            suggestionRows.addAndMakeVisible (label);
+            suggestionRows.addAndMakeVisible (button);
+        }
+    }
+
+    suggestionView.setVisible (! suggestionButtons.isEmpty());
+    applyAllButton.setVisible (! suggestionButtons.isEmpty());
+    resized();
+}
+
+void AskPanel::applySuggestion (int index)
+{
+    applyChosen ({ index });
+}
+
+void AskPanel::applyAllSuggestions()
+{
+    std::vector<int> left;
+
+    for (int i = 0; i < (int) applied.size(); ++i)
+        if (! applied[(size_t) i])
+            left.push_back (i);
+
+    applyChosen (left);
+}
+
+void AskPanel::applyChosen (const std::vector<int>& which)
+{
+    const auto* tools = agent != nullptr ? agent->getWorkspace().getSequenceTools() : nullptr;
+
+    if (tools == nullptr || applySuggestions == nullptr || agent->isWorking())
+        return;
+
+    std::vector<int> chosen;
+
+    for (auto i : which)
+        if (i >= 0 && i < (int) applied.size() && ! applied[(size_t) i] && tools->getSuggestions()[(size_t) i].canApply())
+            chosen.push_back (i);
+
+    if (chosen.empty())
+        return;
+
+    if (const auto error = applySuggestions (agent->getWorkspace(), chosen); error.isNotEmpty())
+    {
+        addLog ("\n" + error + "\n", Theme::danger);
+        return;
+    }
+
+    juce::StringArray numbers;
+
+    for (auto i : chosen)
+    {
+        applied[(size_t) i] = true;
+        numbers.add (juce::String (i + 1));
+    }
+
+    addLog ("\nApplied " + (chosen.size() == 1 ? "suggestion " : juce::String ("suggestions ")) + numbers.joinIntoString (", ")
+                + " as one undo step: the Sequencer's Undo takes it back.\n", Theme::good);
+    updateButtons();
 }
 
 void AskPanel::updateButtons()
@@ -280,8 +405,24 @@ void AskPanel::updateButtons()
     askButton.setEnabled (! working);
     stopButton.setEnabled (working);
     applyButton.setEnabled (! working && planReady);
-    discardButton.setEnabled (! working && planReady);
+    discardButton.setEnabled (! working && (planReady || ! suggestionButtons.isEmpty()));
     requestBox.setReadOnly (working);
+
+    auto anyLeft = false;
+
+    for (int i = 0; i < suggestionButtons.size(); ++i)
+    {
+        const auto* tools = agent != nullptr ? agent->getWorkspace().getSequenceTools() : nullptr;
+        const auto applies = tools != nullptr && applySuggestions != nullptr && tools->getSuggestions()[(size_t) i].canApply();
+        suggestionButtons[i]->setEnabled (! working && applies && ! applied[(size_t) i]);
+
+        if (applies && applied[(size_t) i])
+            suggestionButtons[i]->setButtonText ("Applied");
+
+        anyLeft = anyLeft || (applies && ! applied[(size_t) i]);
+    }
+
+    applyAllButton.setEnabled (! working && anyLeft);
 }
 
 void AskPanel::addLog (const juce::String& text, juce::Colour colour)
@@ -298,6 +439,7 @@ void AskPanel::discard()
 
     agent.reset();
     planReady = false;
+    showSuggestions();
     updateButtons();
 }
 
@@ -315,12 +457,13 @@ void AskPanel::ask()
 
     if (! start)
     {
-        addLog ("Open an audio file, or a session in the multitrack view, first.\n", Theme::danger);
+        addLog ("Open an audio file, a session in the multitrack view, or a sequence in the Sequencer, first.\n", Theme::danger);
         return;
     }
 
     agent.reset();
     planReady = false;
+    showSuggestions();
     reasoningShown = false;
     lastRequest = text;
     log.clear();
@@ -379,8 +522,30 @@ void AskPanel::finish (const juce::String&, const juce::String& error)
     const auto& steps = w.getSteps();
     planReady = ! steps.isEmpty();
 
+    // A review of a sequence: what it says, the notes outside the key, and its suggestions.
+    if (const auto* tools = w.getSequenceTools(); tools != nullptr && tools->getReview().isNotEmpty())
+    {
+        addLog ("\n\nReview: ", Theme::textStrong);
+        addLog (tools->getReview() + "\n", Theme::text);
+
+        if (const auto outside = tools->getOutsideKey(); ! outside.isEmpty())
+            addLog ("Outside " + tools->getSequence().key + ": " + outside.joinIntoString ("; ") + ".\n", Theme::warn);
+
+        if (tools->getSuggestions().empty())
+            addLog ("No suggestions.\n", Theme::dimText);
+        else
+            addLog (applySuggestions != nullptr ? "Apply a suggestion below by itself, or Apply All for every one as one undo step. The Sequencer's Undo takes each back.\n"
+                                                : "The suggestions are below.\n",
+                    Theme::dimText);
+    }
+
+    showSuggestions();
+
     if (! planReady)
-        addLog ("\n\nNo changes were planned.\n", Theme::dimText);
+    {
+        if (suggestionButtons.isEmpty())
+            addLog ("\n\nNo changes were planned.\n", Theme::dimText);
+    }
     else
     {
         addLog ("\n\nThe plan, applied as one undo step:\n", Theme::textStrong);

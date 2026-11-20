@@ -7,6 +7,9 @@
 #include "../Source/AiClient.h"
 #include "../Source/AiWorkspace.h"
 #include "../Source/AudioEdits.h"
+#include "../Source/AudioEngine.h"
+#include "../Source/AiSequence.h"
+#include "../Source/SequencerView.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/ClipEffects.h"
 #include "../Source/Loudness.h"
@@ -1217,6 +1220,312 @@ namespace
     }
 
     //==============================================================================
+    /** A bass line for the sequence tests: two bars of A minor, two of its four notes outside the
+        key (F#3 on beat 3, G#2 on beat 4). */
+    SequenceFile::Sequence bassLine()
+    {
+        SequenceFile::Sequence q;
+        q.name = "Night Bass";
+        q.role = "Bass";
+        q.key = "A minor";
+        q.beatsPerBar = 4;
+        q.length = 2 * 4 * SequenceFile::ticksPerBeat;
+        q.notes = { { 45, 0, 960, 100.0f / 127.0f }, { 48, 960, 960, 90.0f / 127.0f }, { 54, 1920, 960, 90.0f / 127.0f }, { 44, 2880, 960, 80.0f / 127.0f } };
+        return q;
+    }
+
+    /** One streamed answer that calls a tool with these arguments. */
+    juce::String toolCallAnswer (const juce::String& id, const juce::String& tool, const juce::String& argumentsJson)
+    {
+        auto function = std::make_unique<juce::DynamicObject>();
+        function->setProperty ("name", tool);
+        function->setProperty ("arguments", argumentsJson);
+        auto call = std::make_unique<juce::DynamicObject>();
+        call->setProperty ("index", 0);
+        call->setProperty ("id", id);
+        call->setProperty ("function", juce::var (function.release()));
+        auto delta = std::make_unique<juce::DynamicObject>();
+        delta->setProperty ("tool_calls", juce::Array<juce::var> { juce::var (call.release()) });
+        auto choice = std::make_unique<juce::DynamicObject>();
+        choice->setProperty ("delta", juce::var (delta.release()));
+        choice->setProperty ("finish_reason", "tool_calls");
+        auto root = std::make_unique<juce::DynamicObject>();
+        root->setProperty ("choices", juce::Array<juce::var> { juce::var (choice.release()) });
+        return "data: " + juce::JSON::toString (juce::var (root.release()), true) + "\n\ndata: [DONE]\n\n";
+    }
+
+    juce::String textAnswer (const juce::String& text)
+    {
+        return "data: {\"choices\":[{\"delta\":{\"content\":\"" + text + "\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n";
+    }
+
+    const char* writtenLine = R"({"notes": [ { "pitch": 45, "start": 0, "length": 480, "velocity": 110 }, { "pitch": 45, "start": 720, "length": 240, "velocity": 64, "probability": 0.5 },
+        { "pitch": 48, "start": 960, "length": 960, "velocity": 96 }, { "pitch": 54, "start": 1920, "length": 480, "velocity": 88 },
+        { "pitch": 52, "start": 2880, "length": 960, "velocity": 100 }, { "pitch": 57, "start": 3840, "length": 3840, "velocity": 72 } ],
+        "lanes": [ { "controller": 74, "points": [ { "tick": 0, "value": 0.25 }, { "tick": 7680, "value": 0.75 } ] } ] })";
+
+    const char* review = R"({"review": "A steady line; the F#3 on beat 3 is outside A minor and sounds borrowed.", "suggestions": [
+        { "title": "F#3 to G3", "why": "Keeps it in the key.", "kind": "notes", "change": [ { "pitch": 54, "start": 1920, "to": { "pitch": 55 } } ] },
+        { "title": "Mod wheel swell", "kind": "lanes", "lanes": [ { "controller": 1, "points": [ { "tick": 0, "value": 0 }, { "tick": 3840, "value": 1 } ] } ] },
+        { "title": "Chorus on the voice", "kind": "effect", "effect": "Chorus" },
+        { "title": "Open the filter", "kind": "automation", "parameter": "cutoff", "points": [ { "tick": 0, "value": 0.2 }, { "tick": 7680, "value": 0.9 } ] } ] })";
+
+    /** The sequence tools on a working copy: what get_sequence tells, write_sequence's checks
+        and exact notes, and suggest_for_sequence's checks and its suggestions applied. */
+    void testSequenceTools()
+    {
+        Ai::Workspace::Start start;
+        Ai::SequenceTools::Context context;
+        context.sequence = bassLine();
+        context.instrument = "Basic Synth";
+        context.instrumentAbout = "A simple subtractive synth.";
+        context.instrumentParameters = { "Cutoff", "Resonance" };
+        context.tempo = 96.0;
+        context.sessionTempo = 128.0;
+        start.sequence = context;
+        start.plugins = BuiltInEffects::getDescriptions();
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+
+        juce::StringArray names;
+        const auto tools = w.tools();
+
+        if (auto* list = tools.getArray())
+            for (auto& t : *list)
+                names.add (t["function"]["name"].toString());
+
+        const auto system = w.systemMessage();
+        check (w.isSequence() && names == juce::StringArray { "get_sequence", "write_sequence", "suggest_for_sequence", "list_plugins", "describe_plugin" }
+                   && system.contains ("\"Night Bass\" open: a Bass part") && system.contains ("in A minor") && system.contains ("Basic Synth (A simple subtractive synth)")
+                   && system.contains ("96 BPM") && system.contains ("session's tempo is 128 BPM"),
+               "Ask Torq sequences: five tools (" + names.joinIntoString (", ") + "), and the system message gives the part's role, key, instrument and the tempos");
+
+        const auto got = call ("get_sequence", "{}");
+        check ((bool) got["ok"] && got["role"] == juce::var ("Bass") && got["key"] == juce::var ("A minor") && (int) got["length"] == 7680 && (int) got["ticks_per_beat"] == 960
+                   && got["notes"].size() == 4 && (int) got["notes"][1]["velocity"] == 90 && got["notes"][2]["name"] == juce::var ("F#3")
+                   && got["instrument"] == juce::var ("Basic Synth") && got["instrument_about"] == juce::var ("A simple subtractive synth.")
+                   && got["instrument_parameters"].size() == 2 && (double) got["session_tempo"] == 128.0
+                   && got["outside_key"].size() == 2 && got["outside_key"][0] == juce::var ("F#3 at bar 1, beat 3") && got["outside_key"][1] == juce::var ("G#2 at bar 1, beat 4"),
+               "Ask Torq sequences: get_sequence gives the notes in ticks with their names, the instrument and what it is, and names the notes outside the key ("
+                   + juce::JSON::toString (got["outside_key"], true) + ")");
+
+        const auto refusedFor = [&] (const juce::String& args) { const auto r = call ("write_sequence", args); return ! (bool) r["ok"] ? r["error"].toString() : juce::String(); };
+        const auto badPitch = refusedFor (R"({"notes": [ { "pitch": 128, "start": 0, "length": 240 } ]})");
+        const auto pastEnd = refusedFor (R"({"notes": [ { "pitch": 45, "start": 7680, "length": 240 } ]})");
+        const auto overEnd = refusedFor (R"({"notes": [ { "pitch": 45, "start": 7600, "length": 240 } ]})");
+        const auto noLength = refusedFor (R"({"notes": [ { "pitch": 45, "start": 0, "length": 0 } ]})");
+        const auto loudness = refusedFor (R"({"notes": [ { "pitch": 45, "start": 0, "length": 240, "velocity": 0 } ]})");
+        const auto badLane = refusedFor (R"({"notes": [], "lanes": [ { "controller": 129, "points": [ { "tick": 0, "value": 0.5 } ] } ]})");
+        const auto badValue = refusedFor (R"({"notes": [], "lanes": [ { "controller": 1, "points": [ { "tick": 0, "value": 1.5 } ] } ]})");
+        const auto badKey = refusedFor (R"({"notes": [], "key": "H minor"})");
+        const auto badLength = refusedFor (R"({"notes": [], "length": 1000})");
+        check (badPitch.contains ("0 to 127") && pastEnd.contains ("never play") && overEnd.contains ("past the sequence's end") && noLength.contains ("at least 1")
+                   && loudness.contains ("velocity") && badLane.contains ("pitch bend") && badValue.contains ("0 to 1") && badKey.contains ("isn't a key")
+                   && badLength.contains ("whole number of beats") && w.getSteps().isEmpty() && ! w.getSequenceTools()->written(),
+               "Ask Torq sequences: write_sequence refuses, with a reason, a pitch past 127, a note past the end, no length, velocity 0, a bad controller or value, a key that isn't one and a length that isn't whole beats; nothing is written");
+
+        const auto wrote = call ("write_sequence", writtenLine);
+        const auto& q = w.getSequenceTools()->getSequence();
+        const std::vector<SequenceFile::Note> expected { { 45, 0, 480, (float) (110.0 / 127.0) }, { 45, 720, 240, (float) (64.0 / 127.0), 0.5f },
+                                                         { 48, 960, 960, (float) (96.0 / 127.0) }, { 54, 1920, 480, (float) (88.0 / 127.0) },
+                                                         { 52, 2880, 960, (float) (100.0 / 127.0) }, { 57, 3840, 3840, (float) (72.0 / 127.0) } };
+        check ((bool) wrote["ok"] && q.notes == expected && q.lanes == std::vector<SequenceFile::Lane> { { 74, { { 0, 0.25f }, { 7680, 0.75f } } } }
+                   && w.getSteps() == juce::StringArray { "Write 6 notes and 1 lane into \"Night Bass\", 8 beats in A minor" }
+                   && wrote["outside_key"].size() == 1 && wrote["outside_key"][0] == juce::var ("F#3 at bar 1, beat 3"),
+               "Ask Torq sequences: write_sequence writes the notes and lanes exactly as given (velocity n / 127, probability as given), as one step of the plan ("
+                   + w.getSteps().joinIntoString (" | ") + ")");
+
+        const auto suggestRefused = [&] (const juce::String& suggestion)
+        {
+            const auto r = call ("suggest_for_sequence", R"({"review": "Fine.", "suggestions": [ )" + suggestion + " ] }");
+            return ! (bool) r["ok"] ? r["error"].toString() : juce::String();
+        };
+        const auto noNote = suggestRefused (R"({ "title": "x", "kind": "notes", "remove": [ { "pitch": 60, "start": 0 } ] })");
+        const auto instrument = suggestRefused (R"({ "title": "x", "kind": "effect", "effect": "Basic Synth" })");
+        const auto noParameter = suggestRefused (R"({ "title": "x", "kind": "automation", "parameter": "Warmth", "points": [ { "tick": 0, "value": 0.5 } ] })");
+        const auto noKind = suggestRefused (R"({ "title": "x", "kind": "magic" })");
+        check (noNote.contains ("no note to take out") && instrument.contains ("No effect plug-in is called \"Basic Synth\"") && noParameter.contains ("no parameter called \"Warmth\"")
+                   && noKind.contains ("kind is") && w.getSequenceTools()->getSuggestions().empty(),
+               "Ask Torq sequences: suggest_for_sequence refuses a note that isn't there, an instrument as an effect, a parameter the instrument hasn't and an unknown kind");
+
+        const auto reviewed = call ("suggest_for_sequence", review);
+        const auto& suggestions = w.getSequenceTools()->getSuggestions();
+        check ((bool) reviewed["ok"] && suggestions.size() == 4 && w.getSequenceTools()->getReview().startsWith ("A steady line")
+                   && suggestions[2].effect.name == "Chorus" && suggestions[3].parameter == "Cutoff" && ! suggestions[3].canApply() && suggestions[0].canApply()
+                   && (bool) reviewed["suggestions"][2]["applies"] && ! (bool) reviewed["suggestions"][3]["applies"] && w.getSteps().size() == 1,
+               "Ask Torq sequences: a review keeps its suggestions (notes, a lane, an effect, and automation as advice only, its parameter named as the instrument names it); they aren't steps of the plan");
+
+        // Applied to the sequence one at a time, then all together.
+        auto withVoice = q;
+        withVoice.voice = std::make_shared<juce::XmlElement> ("TRACKTEMPLATE");
+        juce::String error;
+        const auto one = Ai::SequenceTools::apply (withVoice, { suggestions[0] }, error);
+        const auto all = Ai::SequenceTools::apply (withVoice, suggestions, error);
+        const auto again = one ? Ai::SequenceTools::apply (*one, { suggestions[0] }, error) : std::nullopt;
+        const auto* slot = all && all->voice != nullptr && all->voice->getChildByName ("EFFECTS") != nullptr ? all->voice->getChildByName ("EFFECTS")->getChildByName ("SLOT") : nullptr;
+        check (one && one->notes[3].pitch == 55 && one->notes[3].start == 1920 && juce::exactlyEqual (one->notes[3].velocity, q.notes[3].velocity) && one->lanes == q.lanes
+                   && all && all->notes == one->notes && all->lanes.size() == 2 && all->lanes[1].controller == 1 && slot != nullptr
+                   && slot->getChildByName ("PLUGIN") != nullptr && slot->getChildByName ("PLUGIN")->getStringAttribute ("name") == "Chorus"
+                   && ! again && error.contains ("isn't there now"),
+               "Ask Torq sequences: a suggestion applies by itself (F#3 to G3, its velocity kept exactly), all of them together (the note, the mod wheel lane, Chorus in the voice); applied twice, the note it changes isn't there");
+    }
+
+    /** Ask Torq on a sequence open in the Sequencer, from end to end through the window: a
+        written sequence lands as one undo step and is exact; a review names the notes outside the
+        key, and its suggestions apply one at a time and all together, each undone by the
+        Sequencer's Undo (an effect in the voice too). */
+    void testSequencerAsk()
+    {
+        const auto folder = juce::File::createTempFile ("ask-sequencer");
+        folder.createDirectory();
+        const auto file = folder.getChildFile (juce::String ("Night Bass") + SequenceFile::extension);
+        // Its voice: the Basic Synth.
+        auto line = bassLine();
+        {
+            SessionState s;
+            s.sampleRate = 48000.0;
+            const auto trackId = s.addInstrumentTrack().id;
+            auto effects = std::make_unique<juce::XmlElement> ("EFFECTS");
+
+            for (auto& d : BuiltInEffects::getDescriptions())
+                if (d.fileOrIdentifier == BuiltInEffects::basicSynthId)
+                    effects->createNewChildElement ("SLOT")->addChildElement (d.createXml().release());
+
+            line.voice = std::shared_ptr<const juce::XmlElement> (SequenceFile::voiceOf (s, trackId, std::move (effects)).release());
+        }
+
+        SequenceFile::save (line, file);
+
+        AudioEngine engine;
+        SequencerView view (engine);
+        view.openFile (file);
+        TestUtils::runUntil ([&] { return view.getPlayer().getEffects().getInstrument (view.getTrackId()) != nullptr; }, 5000);
+        const auto original = view.getDocument().get();
+
+        MockServer server ({ { 200, "text/event-stream", toolCallAnswer ("a", "get_sequence", "{}") },
+                             { 200, "text/event-stream", toolCallAnswer ("b", "write_sequence", writtenLine) },
+                             { 200, "text/event-stream", textAnswer ("Wrote two bars.") },
+                             { 200, "text/event-stream", toolCallAnswer ("c", "get_sequence", "{}") },
+                             { 200, "text/event-stream", toolCallAnswer ("d", "suggest_for_sequence", review) },
+                             { 200, "text/event-stream", textAnswer ("Four suggestions.") },
+                             { 200, "text/event-stream", toolCallAnswer ("e", "suggest_for_sequence", review) },
+                             { 200, "text/event-stream", textAnswer ("The same again.") } });
+
+        Ai::AskPanel panel (settingsFor (server.url()),
+                            [&view]
+                            {
+                                Ai::Workspace::Start s;
+                                s.sequence = Ai::SequencerLink::contextFor (view, nullptr, 0.0);
+                                s.plugins = BuiltInEffects::getDescriptions();
+                                return std::optional<Ai::Workspace::Start> (std::move (s));
+                            },
+                            [&view] (Ai::Workspace& w, const juce::String& request) { return Ai::SequencerLink::applyPlan (view, w, request); });
+        panel.applySuggestions = [&view] (Ai::Workspace& w, const std::vector<int>& which) { return Ai::SequencerLink::applySuggestions (view, w, which); };
+
+        const auto button = [&panel] (const juce::String& name) -> juce::TextButton*
+        {
+            for (auto* c : panel.getChildren())
+                if (auto* b = dynamic_cast<juce::TextButton*> (c); b != nullptr && b->getButtonText() == name)
+                    return b;
+
+            return nullptr;
+        };
+
+        // Writing: the plan, then Apply puts it in as one undo step, exactly.
+        panel.getRequestBox().setText ("Two bars of bass in A minor");
+        panel.ask();
+        TestUtils::runUntil ([&] { return panel.getLog().contains ("Apply to make these changes"); }, 10000);
+        const auto untouched = view.getDocument().get().notes == original.notes && ! view.getDocument().canUndo();
+        button ("Apply")->triggerClick();
+        const auto& doc = view.getDocument();
+        TestUtils::runUntil ([&] { return doc.canUndo(); }, 5000);
+        const std::vector<SequenceFile::Note> expected { { 45, 0, 480, (float) (110.0 / 127.0) }, { 45, 720, 240, (float) (64.0 / 127.0), 0.5f },
+                                                         { 48, 960, 960, (float) (96.0 / 127.0) }, { 54, 1920, 480, (float) (88.0 / 127.0) },
+                                                         { 52, 2880, 960, (float) (100.0 / 127.0) }, { 57, 3840, 3840, (float) (72.0 / 127.0) } };
+        const auto written = doc.get().notes == expected && doc.get().lanes == std::vector<SequenceFile::Lane> { { 74, { { 0, 0.25f }, { 7680, 0.75f } } } }
+                             && doc.get().name == "Night Bass" && doc.get().key == "A minor";
+        const auto described = doc.getUndoDescription();
+        view.undo();
+        const auto oneStep = doc.get().notes == original.notes && doc.get().lanes.empty() && ! doc.canUndo();
+        view.redo();
+        const auto shown = view.getEditor().getKey().name() == "A minor";
+        check (untouched && written && described == "Ask Torq: Two bars of bass in A minor" && oneStep && doc.get().notes == expected && shown
+                   && panel.getLog().contains ("Applied, as one undo step."),
+               "Ask Torq in the Sequencer: nothing changes until Apply; then the written notes and lane are in the Sequencer exactly as written, as one undo step (\""
+                   + described + "\"), which Undo takes back whole and Redo puts back");
+
+        // Reviewing: the notes outside the key named, the suggestions shown with Apply, automation as advice.
+        const auto beforeReview = doc.get();
+        panel.getRequestBox().setText ("How could this be better?");
+        panel.ask();
+        TestUtils::runUntil ([&] { return panel.getLog().contains ("Four suggestions."); }, 10000);
+        TestUtils::runUntil ([&] { return panel.getNumSuggestions() == 4; }, 2000);
+        const auto log = panel.getLog();
+        check (log.contains ("Review: A steady line") && log.contains ("Outside A minor: F#3 at bar 1, beat 3.") && panel.getNumSuggestions() == 4
+                   && button ("Apply All") != nullptr && button ("Apply All")->isVisible() && button ("Apply All")->isEnabled()
+                   && ! button ("Apply")->isEnabled() && doc.get().notes == beforeReview.notes,
+               "Ask Torq in the Sequencer: a review is shown with the notes outside the key named by the app, and its suggestions with Apply All; nothing changes yet");
+
+        // One at a time: each is one undo step of its own.
+        const auto chorusIn = [&]
+        {
+            const auto& chain = view.getPlayer().getEffects();
+
+            for (int i = 0; i < chain.getNumSlots (view.getTrackId()); ++i)
+                if (auto* p = chain.getPlugin (view.getTrackId(), i); p != nullptr && p->getName() == "Chorus")
+                    return true;
+
+            return false;
+        };
+        const auto steps = [&] { auto n = 0; for (auto& d = view.getDocument(); n < 300 && d.canUndo(); ++n) view.undo(); for (int i = 0; i < n; ++i) view.redo(); return n; };
+        const auto stepsBefore = steps();
+        panel.applySuggestion (0);
+        const auto noteChanged = doc.get().notes[3].pitch == 55 && doc.get().notes[3].start == 1920 && doc.getUndoDescription() == "Ask Torq: F#3 to G3";
+        panel.applySuggestion (1);
+        const auto laneAdded = doc.get().lanes.size() == 2 && doc.get().lanes[1].controller == 1;
+        panel.applySuggestion (2);
+        TestUtils::runUntil (chorusIn, 5000);
+        const auto effectAdded = chorusIn() && SequenceFile::toXml (doc.get())->toString().contains ("Chorus");
+        panel.applySuggestion (3);
+        const auto adviceOnly = ! panel.isSuggestionApplied (3) && panel.isSuggestionApplied (0) && panel.isSuggestionApplied (2) && ! button ("Apply All")->isEnabled();
+        const auto stepsAfter = steps();
+        TestUtils::runUntil (chorusIn, 5000);
+
+        view.undo();
+        TestUtils::runUntil ([&] { return ! chorusIn(); }, 5000);
+        const auto effectUndone = ! chorusIn() && doc.get().lanes.size() == 2;
+        view.undo();
+        const auto laneUndone = doc.get().lanes == beforeReview.lanes && doc.get().notes[3].pitch == 55;
+        view.undo();
+        const auto noteUndone = doc.get().notes == beforeReview.notes;
+        check (noteChanged && laneAdded && effectAdded && adviceOnly && stepsAfter == stepsBefore + 3 && effectUndone && laneUndone && noteUndone,
+               "Ask Torq in the Sequencer: suggestions apply one at a time, an undo step each (" + juce::String (stepsAfter - stepsBefore)
+                   + "): the note, the mod wheel lane, Chorus loaded into the voice; automation stays advice; Undo takes back each, Chorus too");
+
+        // All together: one step, and one Undo takes it all back.
+        panel.getRequestBox().setText ("And again");
+        panel.ask();
+        TestUtils::runUntil ([&] { return panel.getLog().contains ("The same again."); }, 10000);
+        TestUtils::runUntil ([&] { return panel.getNumSuggestions() == 4; }, 2000);
+        const auto beforeAll = steps();
+        panel.applyAllSuggestions();
+        TestUtils::runUntil (chorusIn, 5000);
+        const auto allIn = doc.get().notes[3].pitch == 55 && doc.get().lanes.size() == 2 && chorusIn() && steps() == beforeAll + 1
+                           && doc.getUndoDescription() == "Ask Torq: 3 suggestions" && ! panel.isSuggestionApplied (3) && panel.isSuggestionApplied (1);
+        view.undo();
+        TestUtils::runUntil ([&] { return ! chorusIn(); }, 5000);
+        const auto allOut = doc.get().notes == beforeReview.notes && doc.get().lanes == beforeReview.lanes && ! chorusIn();
+        view.redo();
+        TestUtils::runUntil (chorusIn, 5000);
+        const auto redone = chorusIn() && doc.get().lanes.size() == 2;
+        check (allIn && allOut && redone,
+               "Ask Torq in the Sequencer: Apply All puts the three suggestions in as one undo step (\"Ask Torq: 3 suggestions\"); one Undo takes them all back, Chorus too, and Redo brings them back");
+
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+        folder.deleteRecursively();
+    }
+
+    //==============================================================================
     /** The Ask window from end to end: a request, a model that calls one tool and then answers,
         the plan shown, and Apply handing the working copy over. */
     void testAskPanel()
@@ -1325,5 +1634,7 @@ void runAiTests()
     testInstrumentPresets();
     testCatalogueLearner();
     testAskPanel();
+    testSequenceTools();
+    testSequencerAsk();
     testName();
 }

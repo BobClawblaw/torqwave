@@ -5,6 +5,7 @@
 #include "Markers.h"
 #include "PluginCatalogue.h"
 #include "AiSession.h"
+#include "AiSequence.h"
 
 /** Experimental: the tools a language model works Torqwave with, run on a working copy.
 
@@ -41,6 +42,10 @@ namespace Ai
             std::map<juce::uint32, juce::PluginDescription> instruments;   // the instrument each instrument track plays, by track id
             SessionTools::PresetsOf instrumentPresets;                       // the presets saved for an instrument; none: no presets
             std::map<juce::uint32, juce::StringArray> effects;              // each track's effects in order (not its instrument), by track id
+
+            /** The Sequencer's sequence to write or review in place of a file or session: the
+                sequence tools (AiSequence) and the plug-in look tools, with no audio. */
+            std::optional<SequenceTools::Context> sequence;
         };
 
         explicit Workspace (Start);
@@ -60,6 +65,10 @@ namespace Ai
         bool isSession() const noexcept                             { return sessionTools != nullptr; }
         const SessionState* getSession() const noexcept             { return sessionTools != nullptr ? &sessionTools->getState() : nullptr; }
         bool sessionChanged() const noexcept                        { return sessionTools != nullptr && sessionTools->changed(); }
+
+        /** Working on the Sequencer's sequence; its tools (the written copy, the review and its suggestions). */
+        bool isSequence() const noexcept                            { return sequenceTools != nullptr; }
+        const SequenceTools* getSequenceTools() const noexcept      { return sequenceTools.get(); }
 
         /** The instruments the plan loads onto tracks once it is applied (not part of its undo step). */
         std::vector<SessionTools::InstrumentLoad> getInstrumentLoads() const
@@ -164,6 +173,7 @@ namespace Ai
         std::shared_ptr<const juce::XmlElement> rendered;
         juce::StringArray steps;
         std::unique_ptr<SessionTools> sessionTools;
+        std::unique_ptr<SequenceTools> sequenceTools;
     };
 
     /** Plug-in parameters set from text, as a model writes them. Public for the tests. */

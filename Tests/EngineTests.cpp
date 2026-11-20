@@ -607,7 +607,7 @@ int main (int argc, char* argv[])
     //   --stress                only the stress test: how many tracks the mix keeps up with (minutes; not in the suite)
     //   --small                 only the tests of mixer scenes, channel strips and hardware inserts
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
-    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, or session
+    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session or sequence
     juce::StringArray args;
 
     for (int i = 1; i < argc; ++i)

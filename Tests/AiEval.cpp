@@ -110,6 +110,7 @@ namespace
         TestFile file = TestFile::tone;
         std::function<juce::String (const juce::String&)> checkAnswer = {};   // when what it says matters too
         bool session = false;                                                  // works on testSession() rather than a file
+        std::function<Ai::SequenceTools::Context()> sequence = {};             // works on this sequence in the Sequencer rather than a file
     };
 
     /** The session test: Drums and Bass with a clip each over 0 to 4 s, Vocals with one over 1 to
@@ -350,6 +351,120 @@ namespace
         };
     }
 
+    /** A sequence open in the Sequencer: empty, or with these notes; for a part (role) played on an instrument. */
+    Ai::SequenceTools::Context sequenceFor (const juce::String& name, const juce::String& role, const juce::String& key, int bars,
+                                            const juce::String& instrument, std::vector<SequenceFile::Note> notes = {})
+    {
+        Ai::SequenceTools::Context c;
+        c.sequence.name = name;
+        c.sequence.role = role;
+        c.sequence.key = key;
+        c.sequence.beatsPerBar = 4;
+        c.sequence.length = (juce::int64) bars * 4 * SequenceFile::ticksPerBeat;
+        c.sequence.notes = std::move (notes);
+        c.instrument = instrument;
+        c.tempo = 120.0;
+        return c;
+    }
+
+    /** Requests for Ask Torq in the Sequencer: writing parts, and reviewing one. How good the
+        music is depends on the model; these check only that the request was understood. */
+    std::vector<Case> sequenceCases()
+    {
+        const auto onSequence = [] (juce::String request, std::function<Ai::SequenceTools::Context()> sequence,
+                                    std::function<juce::String (Ai::Workspace&)> check)
+        {
+            Case c { std::move (request), std::move (check) };
+            c.sequence = std::move (sequence);
+            return c;
+        };
+
+        const auto written = [] (Ai::Workspace& w) -> const SequenceFile::Sequence*
+        {
+            const auto* tools = w.getSequenceTools();
+            return tools != nullptr && tools->written() ? &tools->getSequence() : nullptr;
+        };
+
+        return {
+            onSequence ("Write two bars of broken-beat hats in A minor.",
+                        [] { return sequenceFor ("Hats", "Drums", "A minor", 2, "Test Drums"); },
+                        [written] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* q = written (w);
+
+                if (q == nullptr)
+                    return "nothing was written";
+
+                for (auto& n : q->notes)
+                    if (n.pitch != 42 && n.pitch != 44 && n.pitch != 46)
+                        return "a note at pitch " + juce::String (n.pitch) + " isn't a hi-hat";
+
+                return q->notes.size() >= 8 ? juce::String() : "only " + juce::String ((int) q->notes.size()) + " hats";
+            }),
+            onSequence ("Write a pad progression, i-VI-III-VII, a bar each.",
+                        [] { return sequenceFor ("Night Pad", "Pads", "A minor", 4, "Test Pad"); },
+                        [written] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* q = written (w);
+
+                if (q == nullptr)
+                    return "nothing was written";
+
+                // A minor: Am, F, C, G, one a bar, every pitch class of each chord in its bar.
+                const std::vector<std::set<int>> chords { { 9, 0, 4 }, { 5, 9, 0 }, { 0, 4, 7 }, { 7, 11, 2 } };
+
+                for (size_t bar = 0; bar < chords.size(); ++bar)
+                {
+                    std::set<int> heard;
+
+                    for (auto& n : q->notes)
+                        if (n.start / (4 * SequenceFile::ticksPerBeat) == (juce::int64) bar)
+                            heard.insert (n.pitch % 12);
+
+                    if (! std::includes (heard.begin(), heard.end(), chords[bar].begin(), chords[bar].end()))
+                        return "bar " + juce::String ((int) bar + 1) + " doesn't hold its chord";
+                }
+
+                return {};
+            }),
+            onSequence ("Look at this bass line and tell me how to make it better.",
+                        []
+                        {
+                            return sequenceFor ("Night Bass", "Bass", "A minor", 2, "Test Bass",
+                                                { { 45, 0, 960, 0.8f }, { 48, 960, 960, 0.8f }, { 54, 1920, 960, 0.8f }, { 45, 2880, 960, 0.8f },
+                                                  { 45, 3840, 960, 0.8f }, { 48, 4800, 960, 0.8f }, { 54, 5760, 960, 0.8f }, { 45, 6720, 960, 0.8f } });
+                        },
+                        [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* tools = w.getSequenceTools();
+
+                if (tools == nullptr || tools->written())
+                    return "it wrote the sequence instead of reviewing it";
+
+                if (tools->getSuggestions().empty())
+                    return "no suggestions";
+
+                return tools->getReview().contains ("F#") ? juce::String() : "the review doesn't name the F# outside the key: " + tools->getReview();
+            }),
+            onSequence ("Suggest an effect to give this arp some space.",
+                        []
+                        {
+                            return sequenceFor ("Glass Arp", "Arps", "C major", 1, "Test Synth",
+                                                { { 60, 0, 240, 0.8f }, { 64, 480, 240, 0.8f }, { 67, 960, 240, 0.8f }, { 72, 1440, 240, 0.8f },
+                                                  { 67, 1920, 240, 0.8f }, { 64, 2400, 240, 0.8f }, { 60, 2880, 240, 0.8f }, { 64, 3360, 240, 0.8f } });
+                        },
+                        [] (Ai::Workspace& w) -> juce::String
+            {
+                if (const auto* tools = w.getSequenceTools())
+                    for (auto& s : tools->getSuggestions())
+                        if (s.kind == Ai::SequenceTools::Suggestion::Kind::effect)
+                            return {};
+
+                return "no effect was suggested";
+            }),
+        };
+    }
+
     /** Requests written after the model's instructions were last changed, and never used to
         change them: what to expect from requests it hasn't been tuned on. */
     std::vector<Case> unseenCases()
@@ -563,7 +678,7 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
     int failed = 0, n = 0;
     double totalSeconds = 0.0;
 
-    auto chosen = set == "unseen" ? unseenCases() : set == "session" ? sessionCases() : cases();
+    auto chosen = set == "unseen" ? unseenCases() : set == "session" ? sessionCases() : set == "sequence" ? sequenceCases() : cases();
 
     if (set == "all")
         for (auto& c : unseenCases())
@@ -579,6 +694,8 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
             start.session = testSession();
             start.sessionName = "Song";
         }
+        else if (c.sequence != nullptr)
+            start.sequence = c.sequence();
         else
             start.audio = testFile (c.file);
 

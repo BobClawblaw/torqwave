@@ -22,6 +22,9 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
     for (auto* b : { &loopButton, &clickButton, &sessionTempoButton })
         addAndMakeVisible (b);
 
+    addChildComponent (askButton);
+    askButton.setTooltip ("Opens Ask Torq on this sequence: to write it, or to review it and suggest changes to apply");
+
     for (auto* l : { &title, &where, &voiceTitle, &instrumentName, &voiceNote })
         addAndMakeVisible (l);
 
@@ -240,18 +243,7 @@ void SequencerView::openFile (const juce::File& file)
 
 void SequencerView::opened()
 {
-    if (loadAlive != nullptr)
-        *loadAlive = false;   // a voice still loading for the sequence before goes no further
-
-    loadAlive = std::make_shared<bool> (true);
     player.stop();
-
-    if (onPluginRemoved != nullptr)
-        for (auto* p : player.getEffects().getAllPlugins())
-            onPluginRemoved (p);
-
-    player.getEffects().clear();
-
     const auto& q = doc.get();
 
     if (! followSession)
@@ -262,6 +254,24 @@ void SequencerView::opened()
 
     built = SequencerDocument::sessionFor (q, tempo, rate());
     drums = q.role == "Drums";
+    loadVoice();
+    refreshState();
+    editor.showPattern();
+}
+
+void SequencerView::loadVoice()
+{
+    if (loadAlive != nullptr)
+        *loadAlive = false;   // a voice still loading for the sequence before goes no further
+
+    loadAlive = std::make_shared<bool> (true);
+
+    if (onPluginRemoved != nullptr)
+        for (auto* p : player.getEffects().getAllPlugins())
+            onPluginRemoved (p);
+
+    player.getEffects().clear();
+    built.effects = SequencerDocument::sessionFor (doc.get(), tempo, rate()).effects;
     loading = built.effects != nullptr;
     voiceIncomplete = false;
     loadError.clear();
@@ -283,9 +293,7 @@ void SequencerView::opened()
                                 },
                                 loadAlive);
 
-    refreshState();
     rebuildVoice();
-    editor.showPattern();
 }
 
 void SequencerView::refreshState()
@@ -591,14 +599,59 @@ void SequencerView::setTempo (double bpm)
 
 void SequencerView::undo()
 {
+    doc.keepVoice (currentVoice());
+    const auto voice = doc.get().voice;
     doc.undo();
+
+    if (doc.get().voice != voice)
+        loadVoice();
+
     refreshState();
 }
 
 void SequencerView::redo()
 {
+    doc.keepVoice (currentVoice());
+    const auto voice = doc.get().voice;
     doc.redo();
+
+    if (doc.get().voice != voice)
+        loadVoice();
+
     refreshState();
+}
+
+SequenceFile::Sequence SequencerView::currentSequence() const
+{
+    auto q = doc.get();
+    q.voice = currentVoice();
+    return q;
+}
+
+void SequencerView::applyEdit (const SequenceFile::Sequence& edited, const juce::String& description)
+{
+    const auto live = currentVoice();
+    doc.keepVoice (live);
+    const auto voice = doc.get().voice;
+    auto q = edited;
+
+    if (q.voice == live || (q.voice != nullptr && live != nullptr && q.voice->isEquivalentTo (live.get(), false)))
+        q.voice = voice;
+
+    doc.apply (std::move (q), description);
+
+    if (doc.get().voice != voice)
+        loadVoice();
+
+    refreshState();
+}
+
+void SequencerView::showAskButton (const juce::String& name, std::function<void()> onClick)
+{
+    askButton.setButtonText (name);
+    askButton.onClick = std::move (onClick);
+    askButton.setVisible (true);
+    resized();
 }
 
 //==============================================================================
@@ -802,6 +855,10 @@ void SequencerView::resized()
     place (transport, clickButton, 64);
     place (transport, tempoSlider, 170);
     place (transport, sessionTempoButton, 124);
+
+    if (askButton.isVisible())
+        askButton.setBounds (transport.removeFromRight (120).reduced (2));
+
     where.setBounds (transport);
     area.removeFromTop (4);
 

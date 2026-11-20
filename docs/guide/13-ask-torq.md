@@ -52,6 +52,8 @@ It works on the audio file that's open and, in the multitrack view, on the sessi
 
 - **Sessions:** tracks, buses and folders, volume, pan, mute, solo, outputs and sends; moving, trimming, splitting and fading clips, their gain, and comping their takes; a clip's own pitch shift and effects ([clip effects](06-multitrack-sessions.md#clip-effects)); note clips with their notes; an instrument track's instrument and its saved presets; a track's effects, added at the end of its chain; volume and pan automation; markers and regions; the arranger's sections (adding them, moving, copying and deleting them with their time, making them whole bars longer or shorter, and the arrangement chain), so "double the chorus" or "make the intro 4 bars shorter" work; and the tempo. Apply makes the plan one undo step.
 
+- **Sequences:** in the [Sequencer](07-instruments-and-midi.md#the-sequencer), writing the sequence's notes and controller lanes, and reviewing it with suggestions to apply (see [In the Sequencer](#in-the-sequencer)).
+
 Plug-ins are set through their parameters, the way automation sees them, so any AU, VST3 or LV2 effect works, not only Torqwave's own. The model writes values the way the plug-in shows them ("-12 dB", "4:1", "Hall"), and Torqwave reports back what the plug-in actually took. What a plug-in keeps only in its own window (loading samples, some routing) is out of the model's reach.
 
 ### The plug-in catalogue
@@ -71,6 +73,23 @@ So that it can choose a plug-in without opening each one to look, Ask Torq keeps
 The model's descriptions can be wrong, as anything it writes can, especially for a plug-in it doesn't know. Reading a few is worth it, and a wrong one is easily edited or forgotten.
 
 Changes to the effects rack are applied with the plan but aren't part of its undo step, as rack changes never are. A rack the plan rendered into the audio comes back to the rack when you undo, as after Apply Effects Rack.
+
+## In the Sequencer
+
+In the [Sequencer](07-instruments-and-midi.md#the-sequencer), click **Ask Torq 🐶** at the right of the transport row. The Ask Torq window opens on the sequence in the Sequencer, and stays on it until you open Ask Torq from the Edit menu or the main window's button again. It is told the sequence's name, role (what the part is for: drums, a bass, a pad...), key, beats in a bar and length; the voice's instrument, what the plug-in catalogue says it is, its parameters and its effects; the Sequencer's tempo, and the session's tempo when a session is open. Notes go to the model in ticks, 960 to a beat, with their pitch, start, length, velocity (1 to 127) and probability, and the controller lanes with their points.
+
+**Writing.** Ask for a part: "two bars of broken-beat hats in A minor", "a pad progression, i-VI-III-VII, a bar each". The model writes the notes and lanes, and can set the length, the loop and the key. Torqwave checks what it writes (pitches 0 to 127, every note starting and ending inside the length, velocities 1 to 127, controllers 0 to 127 or pitch bend, lane values 0 to 1) and refuses anything else with the reason, for the model to correct. The plan names what it wrote: "Write 16 notes into "Hats", 8 beats in A minor". **Apply** puts it into the Sequencer as one undo step, exactly as written, in place of the notes and lanes there; the Sequencer's **Undo** takes it back. If you edit the sequence while the model works, the plan isn't applied: ask again.
+
+**Reviewing.** Ask it to look at the sequence ("how could this bass line be better?"). It gives a short review against the part's role: the rhythm and groove, timing that is too stiff or too loose, the spread of velocities, the voicing and range, crowding on a kit, repetition. Under the review, Torqwave itself names every note outside the sequence's key, with where it is ("Outside A minor: F#3 at bar 1, beat 3"), whatever the model says. Then come its suggestions, one row each:
+
+- **Notes:** notes to change, take out or add.
+- **Lanes:** controller lanes to write, such as a mod wheel swell or a filter sweep on CC 74. Each replaces the lane of its controller, or is added.
+- **Effect:** an effect for the voice, such as a delay on an arp, added after its other effects with its default settings. Open it from the voice to set it.
+- **Automation:** how to move one of the instrument's parameters. This one is advice only, marked **Advice**: a sequence keeps notes, lanes and a voice, but not automation, so draw it on the instrument's track once the sequence is in a session.
+
+**Apply** beside a suggestion applies it by itself; **Apply All** applies every one not yet applied, together. Each press is one undo step in the Sequencer, named "Ask Torq:" and the suggestion's title (or how many), so the Sequencer's **Undo** takes back each, an added effect included. A suggestion that changes a note you have since changed or deleted says so and changes nothing. **Discard**, or a new request, puts the suggestions away.
+
+**How good the music is depends on the model.** Torqwave checks that what the model writes fits the sequence; it can't tell whether it grooves. Larger models write better parts and more useful reviews. The AI eval set has four sequence requests (`--ai-eval-set sequence`) to try a model with.
 
 ## When it goes wrong
 

@@ -46,6 +46,20 @@ public:
     /** The voice to save: the track's chain as loaded, or the one it was opened with while that is still loading or didn't all load. */
     std::shared_ptr<const juce::XmlElement> currentVoice() const;
 
+    /** The sequence as it is now, with currentVoice() as its voice. */
+    SequenceFile::Sequence currentSequence() const;
+
+    /** The track the voice plays on, in getPlayer().getEffects(). */
+    juce::uint32 getTrackId() const noexcept              { return built.trackId; }
+
+    /** An edit made outside the window (Ask Torq's): the sequence as given, as one undo step. A
+        voice in it unlike the one playing (an effect added) is loaded, and undo or redo past the
+        step loads the voice before or after it. */
+    void applyEdit (const SequenceFile::Sequence&, const juce::String& description);
+
+    /** Shows the button that asks Ask Torq about this sequence, named so, calling onClick. */
+    void showAskButton (const juce::String& name, std::function<void()> onClick);
+
     void resized() override;
     void paint (juce::Graphics&) override;
     bool keyPressed (const juce::KeyPress&) override;
@@ -56,6 +70,7 @@ private:
     void refreshState();                     // an edit, undo or tempo: the session again from the sequence
     void refreshControls();
     void rebuildVoice();
+    void loadVoice();                        // the chain made again from the sequence's voice
     void chooseInstrument();
     void addEffect();
     void askForNew();
@@ -80,7 +95,7 @@ private:
 
     juce::TextButton newButton { "New..." }, openButton { "Open..." }, saveButton { "Save" }, saveAsButton { "Save As..." },
                      duplicateButton { "Duplicate" }, variationButton { "Make Variation" }, undoButton { "Undo" }, redoButton { "Redo" },
-                     playButton { "Play" };
+                     playButton { "Play" }, askButton;
     juce::ToggleButton loopButton { "Loop" }, clickButton { "Click" }, sessionTempoButton { "Session tempo" };
     juce::Slider tempoSlider { juce::Slider::IncDecButtons, juce::Slider::TextBoxLeft };
     juce::Label title, where;

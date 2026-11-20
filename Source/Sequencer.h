@@ -33,6 +33,11 @@ public:
     bool isDirty() const noexcept                                { return position != savedPosition || voiceChanged; }
     void markVoiceChanged() noexcept                             { voiceChanged = true; }
 
+    /** The voice as it plays now, in place of this step's in every step that has the same one:
+        changes to the voice are outside the undo steps, but an edit that changed the voice (an
+        effect Ask Torq added) still undoes to the voice before it. */
+    void keepVoice (std::shared_ptr<const juce::XmlElement>);
+
     /** Writes it to the file (with this voice, when given), then it is saved there. Returns an error, or empty. */
     juce::String saveTo (const juce::File&, std::shared_ptr<const juce::XmlElement> voice);
 

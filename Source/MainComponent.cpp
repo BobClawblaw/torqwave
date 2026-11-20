@@ -14040,7 +14040,7 @@ void MainComponent::showPluginCatalogue()
     catalogueWindow->toFront (true);
 }
 
-void MainComponent::showAskTorqwave()
+void MainComponent::showAskTorqwave (bool onSequence)
 {
     const auto settings = Ai::Settings::load (*appProperties.getUserSettings());
 
@@ -14064,6 +14064,25 @@ void MainComponent::showAskTorqwave()
                                                      });
                                                  });
 
+    askOnSequence = onSequence;
+
+    if (auto* panel = dynamic_cast<Ai::AskPanel*> (askWindow->getContentComponent()))
+    {
+        panel->applySuggestions = [this] (Ai::Workspace& w, const std::vector<int>& which) -> juce::String
+        {
+            if (auto* sequencer = dynamic_cast<SequencerView*> (getPanel (Panels::sequencer)))
+                return Ai::SequencerLink::applySuggestions (*sequencer, w, which);
+
+            return "The Sequencer isn't open.";
+        };
+
+        if (onSequence)
+            panel->setSubject ("What should it write, or look at, in the sequence in the Sequencer?",
+                               "e.g. two bars of broken-beat hats, or: review this and suggest how to make it groove");
+        else
+            panel->setSubject ("What should change?", "e.g. trim the silence at both ends, bring it to -16 LUFS and fade out the last second");
+    }
+
     askWindow->setVisible (true);
     askWindow->toFront (true);
 }
@@ -14071,6 +14090,24 @@ void MainComponent::showAskTorqwave()
 std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
 {
     auto& doc = engine.document;
+
+    if (askOnSequence)
+    {
+        auto* sequencer = dynamic_cast<SequencerView*> (getPanel (Panels::sequencer));
+
+        if (sequencer == nullptr)
+            return std::nullopt;
+
+        // The session's tempo at its playhead, when a session is open.
+        const auto session = engine.session.getState();
+        const auto sessionTempo = session->tracks.empty() ? 0.0 : session->tempoMap().tempoAt (engine.getPlayer().getPositionFrames());
+
+        Ai::Workspace::Start start;
+        start.sequence = Ai::SequencerLink::contextFor (*sequencer, pluginCatalogue.get(), sessionTempo);
+        start.plugins = engine.knownPlugins.getTypes();
+        start.catalogue = pluginCatalogue.get();
+        return start;
+    }
 
     if (multitrackMode)
     {
@@ -14123,6 +14160,14 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
 juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& request)
 {
     auto& doc = engine.document;
+
+    if (w.isSequence())
+    {
+        if (auto* sequencer = dynamic_cast<SequencerView*> (getPanel (Panels::sequencer)))
+            return Ai::SequencerLink::applyPlan (*sequencer, w, request);
+
+        return "The Sequencer isn't open, so the plan wasn't applied.";
+    }
 
     if (w.isSession())
     {
@@ -15072,6 +15117,7 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
         auto panel = std::make_unique<SequencerView> (engine);
         panel->onEditPlugin = [this] (juce::AudioPluginInstance& p) { showEditor (p); };
         panel->onPluginRemoved = [this] (juce::AudioProcessor* p) { closeEditorFor (p); };
+        panel->showAskButton (Ai::askName(), [this] { showAskTorqwave (true); });
         panel->onSaved = [this] (const juce::File&)
         {
             if (auto* library = dynamic_cast<SequenceLibraryView*> (getPanel (Panels::sequenceLibrary)))

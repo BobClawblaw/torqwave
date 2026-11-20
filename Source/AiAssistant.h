@@ -75,16 +75,31 @@ namespace Ai
         void paint (juce::Graphics&) override;
         void resized() override;
 
+        /** Applies suggestions from a review of a sequence (by their index in it), as one undo
+            step; returns an error, or empty. Without it, suggestions are shown with no Apply. */
+        std::function<juce::String (Workspace&, const std::vector<int>& which)> applySuggestions;
+
+        /** What the window asks about, and an example request ("What should change?" by default). */
+        void setSubject (const juce::String& prompt, const juce::String& example);
+
         /** For the tests: the request box, and the log as shown. */
         juce::TextEditor& getRequestBox() noexcept      { return requestBox; }
         juce::String getLog() const                     { return log.getText(); }
         void ask();
+
+        /** For the tests, as the buttons do: the suggestions shown, Apply on one, and Apply All. */
+        int getNumSuggestions() const noexcept          { return suggestionButtons.size(); }
+        bool isSuggestionApplied (int index) const      { return index >= 0 && index < (int) applied.size() && applied[(size_t) index]; }
+        void applySuggestion (int index);
+        void applyAllSuggestions();
 
     private:
         void addLog (const juce::String& text, juce::Colour);
         void finish (const juce::String& answer, const juce::String& error);
         void discard();
         void updateButtons();
+        void showSuggestions();             // the review's suggestions as rows, each with Apply
+        void applyChosen (const std::vector<int>&);
 
         Settings settings;
         std::function<std::optional<Workspace::Start>()> makeStart;
@@ -93,6 +108,12 @@ namespace Ai
         juce::Label banner, prompt;
         juce::TextEditor requestBox, log;
         juce::TextButton askButton { "Ask" }, stopButton { "Stop" }, applyButton { "Apply" }, discardButton { "Discard" };
+        juce::TextButton applyAllButton { "Apply All" };
+        juce::Component suggestionRows;
+        juce::OwnedArray<juce::Label> suggestionLabels;
+        juce::OwnedArray<juce::TextButton> suggestionButtons;
+        juce::Viewport suggestionView;      // shows suggestionRows; gone before them
+        std::vector<bool> applied;
         std::unique_ptr<Agent> agent;
         juce::String lastRequest;
         bool reasoningShown = false, planReady = false;
