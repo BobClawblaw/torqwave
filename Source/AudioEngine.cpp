@@ -601,6 +601,7 @@ void DocumentPlayerProcessor::play (juce::int64 startFrame, juce::int64 stopFram
     transport.stop();
     setStopFrame (stopFrame);
     setPositionFrames (startFrame);
+    startedAt = startFrame;
     transport.start();
 }
 
@@ -1417,7 +1418,7 @@ juce::BigInteger AudioEngine::deviceOutputsOf (const SessionState& state, int su
         used.setRange (surroundFrom, state.masterChannels() - 2, true);
 
     for (auto& t : state.tracks)
-        if (t.deviceOutput >= 0 && t.outputBusId == 0 && ! t.isFolder)
+        if (t.deviceOutput >= 0 && t.outputBusId == 0 && ! t.isControl())
             used.setRange (t.deviceOutput, 2, true);
 
     return used;

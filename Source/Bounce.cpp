@@ -3,6 +3,30 @@
 
 namespace Bounce
 {
+namespace
+{
+/** The VCA faders what is in `alone` has joined, added to it so it plays at the level it does
+    in the mix: not soloed, and unmuted too when asked. */
+void addVcas (const SessionState& s, SessionState& alone, bool unmute)
+{
+    std::vector<SessionTrack> vcas;
+
+    for (auto& t : alone.tracks)
+        if (const auto* vca = s.vcaOf (t); vca != nullptr && alone.findTrack (vca->id) == nullptr
+                                            && std::none_of (vcas.begin(), vcas.end(), [vca] (auto& v) { return v.id == vca->id; }))
+        {
+            auto copy = *vca;
+            copy.solo = false;
+            copy.mute = copy.mute && ! unmute;
+            copy.folderId = 0;
+            vcas.push_back (std::move (copy));
+        }
+
+    for (auto& v : vcas)
+        alone.tracks.push_back (std::move (v));
+}
+}
+
 SessionState isolate (const SessionState& s, juce::uint32 trackId)
 {
     auto alone = s;
@@ -18,6 +42,7 @@ SessionState isolate (const SessionState& s, juce::uint32 trackId)
         alone.tracks.push_back (std::move (t));
     }
 
+    addVcas (s, alone, true);
     SessionEdits::addKeys (s, alone);   // what it ducks under, and its effects' sidechains listen to
     return alone;
 }
@@ -86,6 +111,7 @@ SessionState isolateFolder (const SessionState& s, juce::uint32 folderId)
                        t.sends.end());
     }
 
+    addVcas (s, alone, false);
     SessionEdits::addKeys (s, alone);   // keys outside the folder
     return alone;
 }

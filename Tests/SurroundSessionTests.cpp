@@ -931,11 +931,11 @@ namespace
         view.setWritingAutomation (true);
         const std::vector<AutomationTarget> point { AutomationParameter::surroundX, AutomationParameter::surroundY };
         view.startAutomationPass (id, point, 48000, { -1.0f, 1.0f });
-        view.continueAutomationPass (60000, std::vector<float> { 0.0f, 0.0f });
-        view.continueAutomationPass (72000, std::vector<float> { 0.5f, -0.5f });
+        view.continueAutomationPass (id, point, 60000, std::vector<float> { 0.0f, 0.0f });
+        view.continueAutomationPass (id, point, 72000, std::vector<float> { 0.5f, -0.5f });
         const auto bothUnderWay = view.isAutomationPassUnderWay (id, AutomationParameter::surroundX)
                                   && view.isAutomationPassUnderWay (id, AutomationParameter::surroundY);
-        view.finishAutomationPass();
+        view.releaseAutomationPass (id, AutomationParameter::surroundX);
         const auto written = *engine.session.getState()->findTrack (id);
         const auto back = 72000 + (juce::int64) std::llround (MultitrackView::returnSeconds * rate);
         check (bothUnderWay && written.valueAt (AutomationParameter::surroundX, 60000) == 0.0f

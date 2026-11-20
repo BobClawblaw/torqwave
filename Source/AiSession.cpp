@@ -216,7 +216,7 @@ namespace Ai
 
     juce::String SessionTools::kindOf (const SessionTrack& t) const
     {
-        return t.isFolder ? "folder" : t.isBus ? "bus" : t.isInstrument ? "instrument" : "audio";
+        return t.isFolder ? "folder" : t.isVca ? "vca" : t.isBus ? "bus" : t.isInstrument ? "instrument" : "audio";
     }
 
     juce::String SessionTools::nameOf (juce::uint32 trackId) const
@@ -274,16 +274,22 @@ namespace Ai
             if (t.folderId != 0)
                 o->setProperty ("folder", nameOf (t.folderId));
 
+            if (t.vcaId != 0)
+                o->setProperty ("vca", nameOf (t.vcaId));
+
             o->setProperty ("volume", round1 (t.gainDb));
 
-            if (! t.isFolder)
+            if (! t.isControl())
                 o->setProperty ("pan", round3 (t.pan));
 
             o->setProperty ("mute", t.mute);
             o->setProperty ("solo", t.solo);
 
-            if (! t.isFolder)
+            if (! t.isControl())
                 o->setProperty ("output", t.outputBusId != 0 ? nameOf (t.outputBusId) : juce::String ("mix"));
+
+            if (t.automationMode != AutomationMode::read)
+                o->setProperty ("automation_mode", automationModeName (t.automationMode).toLowerCase());
 
             if (! t.sends.empty())
             {
@@ -499,8 +505,8 @@ namespace Ai
         {
             const auto p = (double) a["pan"];
 
-            if (t.isFolder)
-                return refused ("a folder has no pan");
+            if (t.isControl())
+                return refused (t.isFolder ? "a folder has no pan" : "a VCA fader has no pan");
 
             if (! std::isfinite (p) || p < -1.0 || p > 1.0)
                 return refused ("pan must be -1 (left) to +1 (right)");
@@ -1104,8 +1110,8 @@ namespace Ai
 
         const auto& t = state.tracks[(size_t) *index];
 
-        if (t.isFolder)
-            return refused ("a folder has no effects: add them to its tracks or a bus");
+        if (t.isControl())
+            return refused (juce::String (t.isFolder ? "a folder" : "a VCA fader") + " has no effects: add them to its tracks or a bus");
 
         if (t.isFrozen())
             return refused (t.name.quoted() + " is frozen: its effects can't change until it is unfrozen");
@@ -1139,8 +1145,8 @@ namespace Ai
         if (which != "volume" && which != "pan")
             return refused ("parameter must be volume or pan");
 
-        if (t.isFolder)
-            return refused ("a folder has no " + which + " to automate");
+        if (t.isFolder || (t.isVca && which == "pan"))
+            return refused (juce::String (t.isFolder ? "a folder" : "a VCA fader") + " has no " + which + " to automate");
 
         const auto parameter = which == "volume" ? AutomationParameter::volume : AutomationParameter::pan;
         const auto range = automationRange (parameter);

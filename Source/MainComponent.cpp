@@ -178,6 +178,7 @@ namespace
         cmdLoopToSelection, cmdClearLoop, cmdInfoLine, cmdTrackInspector,
         cmdShowTakes, cmdFlattenComp,
         cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement,
+        cmdAddVca, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -2214,7 +2215,7 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
             const auto index = multitrack.getSelectedTrack();
             const auto* t = multitrackMode && juce::isPositiveAndBelow (index, (int) state->tracks.size()) ? &state->tracks[(size_t) index] : nullptr;
             info.setTicked (t != nullptr && t->musical);
-            info.setActive (t != nullptr && ! t->isBus && ! t->isFolder && ! isRecording());
+            info.setActive (t != nullptr && ! t->isBus && ! t->isControl() && ! isRecording());
             break;
         }
         case cmdTempoChange: info.setInfo ("Tempo Change at Cursor...", "Change the tempo or beats in a bar from the bar the cursor is in, or remove a change there", "Multitrack", 0);
@@ -2228,8 +2229,23 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
         case cmdLoopRecording: info.setInfo ("Loop Recording", "Record over the time range again and again, keeping each pass as a take", "Multitrack", 0);
                             info.addDefaultKeypress ('l', 0); info.setTicked (loopRecording);
                             info.setActive (multitrackMode && ! isRecording()); break;
-        case cmdWriteAutomation: info.setInfo ("Write Automation", "While playing, dragging a track's volume or pan writes it into its envelope", "Multitrack", 0);
+        case cmdWriteAutomation: info.setInfo ("Write Automation", "Every track and bus to Touch (or those that write back to Read): while playing, moving a volume or pan writes its envelope", "Multitrack", 0);
                             info.addDefaultKeypress ('w', 0); info.setTicked (multitrack.isWritingAutomation()); info.setActive (multitrackMode); break;
+        case cmdAllAutomationOff: case cmdAllAutomationRead: case cmdAllAutomationTouch: case cmdAllAutomationLatch: case cmdAllAutomationWrite:
+        {
+            const auto mode = (AutomationMode) ((int) AutomationMode::off + (id - cmdAllAutomationOff));
+            const juce::String descriptions[] { "ignore their envelopes", "play their envelopes", "write while a control is held",
+                                                "write from when a control is moved until playback stops", "write their volume and pan from play to stop" };
+            info.setInfo ("All Tracks to " + automationModeName (mode), "Set every track and bus to " + automationModeName (mode) + ": "
+                              + descriptions[(int) mode], "Multitrack", 0);
+            const auto state = engine.session.getState();
+            info.setTicked (std::all_of (state->tracks.begin(), state->tracks.end(), [mode] (auto& t) { return t.isFolder || t.automationMode == mode; })
+                            && std::any_of (state->tracks.begin(), state->tracks.end(), [] (auto& t) { return ! t.isFolder; }));
+            info.setActive (multitrackMode);
+            break;
+        }
+        case cmdAddVca:     info.setInfo ("Add VCA Fader", "Add a VCA fader, with the selected track joining it: its volume is added to each member's, and its mute and solo act on them", "Multitrack", 0);
+                            info.setActive (multitrackMode); break;
         case cmdCrossfade:  info.setInfo ("Crossfade Overlaps", "Crossfade a clip moved or trimmed over part of another", "Multitrack", 0);
                             info.addDefaultKeypress ('x', 0); info.setTicked (multitrack.isCrossfading()); info.setActive (multitrackMode); break;
         case cmdLayerClips: info.setInfo ("Layer Overlapping Clips", "Where clips overlap on a track, hear the one on top rather than both (crossfades still sound both)", "Multitrack", 0);
@@ -2286,7 +2302,7 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (multitrackMode); break;
         case cmdSaveTrackTemplate: info.setInfo ("Save Track as Template...", "Save the selected track's settings, sends, effects and automation to start new tracks from", "Multitrack", 0);
                             info.setActive (multitrackMode && multitrack.getSelectedTrack() >= 0
-                                            && ! engine.session.getState()->tracks[(size_t) multitrack.getSelectedTrack()].isFolder); break;
+                                            && ! engine.session.getState()->tracks[(size_t) multitrack.getSelectedTrack()].isControl()); break;
         case cmdLoopToSelection: info.setInfo ("Loop to Selection", "Make the session's loop the time range, or the selected clips' span: the band along the top of the ruler that Loop Playback goes round", "Transport", 0);
                             info.addDefaultKeypress ('p', alt);
                             info.setActive (multitrackMode && (! multitrack.getTimeSelection().isEmpty() || ! multitrack.getSelectedClips().empty()
@@ -2850,6 +2866,17 @@ bool MainComponent::perform (const InvocationInfo& info)
             break;
         }
         case cmdAddFolder: multitrack.addFolder(); break;
+        case cmdAddVca:
+        {
+            const auto state = engine.session.getState();
+            const auto* t = state->findTrack (multitrack.getSelectedTrackId());
+            multitrack.addVca (t != nullptr && ! t->isControl() ? t->id : 0u);
+            break;
+        }
+        case cmdAllAutomationOff: case cmdAllAutomationRead: case cmdAllAutomationTouch: case cmdAllAutomationLatch: case cmdAllAutomationWrite:
+            multitrack.setAutomationMode (0, (AutomationMode) ((int) AutomationMode::off + (info.commandID - cmdAllAutomationOff)));
+            commands.commandStatusChanged();
+            break;
         case cmdDeleteTrack: multitrack.deleteSelectedTrack(); break;
         case cmdTakeOutOfFolder:
             if (const auto t = multitrack.getSelectedTrack(); juce::isPositiveAndBelow (t, (int) engine.session.getState()->tracks.size()))
@@ -3229,7 +3256,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         case 4:
             // The panels and Import at the top; the rest in groups by what they do.
             add ({ cmdMixer, cmdTrackInspector, cmdClipProperties, cmdClipList, cmdMarkerList, cmdSessionNotes, 0, cmdImportToSession, cmdImportMidi, 0 });
-            group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdTakeOutOfFolder, cmdAddFromTemplate, cmdSaveTrackTemplate, cmdSaveInstrumentPreset, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
+            group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdTakeOutOfFolder, cmdAddVca, cmdAddFromTemplate, cmdSaveTrackTemplate, cmdSaveInstrumentPreset, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
                                0, cmdTrackAbove, cmdTrackBelow, 0, cmdUnsoloAll, cmdUnmuteAll });
             group ("Tools", { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute });
             group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdShowTakes, cmdFlattenComp, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines, 0, cmdClipToFront, cmdClipToBack });
@@ -3237,7 +3264,8 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
                                 0, cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement });
             group ("Notes", { cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes });
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
-            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdWriteAutomation, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes });
+            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes });
+            group ("Automation", { cmdWriteAutomation, 0, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite });
             group ("Tempo", { cmdMetronome, cmdCountIn, 0, cmdTempo, cmdTapTempo, cmdTempoChange, cmdBarsAndBeats, cmdTimeWithBars, 0, cmdMusicalTimebase });
             {
                 // What snapping goes to in bars and beats, as the toolbar's Grid box.

@@ -158,12 +158,17 @@ public:
             readout.setText (juce::String (fader.getValue(), 1) + " dB", juce::dontSendNotification);
         };
 
+        // While its track writes automation and the session plays, the fader and pan write their
+        // envelopes, as the track header's controls do.
         fader.onValueChange = [this]
         {
             const auto db = (float) fader.getValue();
             readout.setText (juce::String (db, 1) + " dB", juce::dontSendNotification);
-            edit ("Track Volume", true, [db] (SessionTrack& t) { t.gainDb = db; });
+
+            if (! record ({ AutomationParameter::volume }, { db }))
+                edit ("Track Volume", true, [db] (SessionTrack& t) { t.gainDb = db; });
         };
+        fader.onDragEnd = [this] { finishRecording (AutomationParameter::volume); };
 
         pan.setSliderStyle (juce::Slider::LinearBar);
         pan.setRange (-100.0, 100.0, 1.0);
@@ -176,8 +181,11 @@ public:
         pan.onValueChange = [this]
         {
             const auto p = (float) pan.getValue() / 100.0f;
-            edit ("Track Pan", true, [p] (SessionTrack& t) { t.pan = p; });
+
+            if (! record ({ AutomationParameter::pan }, { p }))
+                edit ("Track Pan", true, [p] (SessionTrack& t) { t.pan = p; });
         };
+        pan.onDragEnd = [this] { finishRecording (AutomationParameter::pan); };
         pan.updateText();   // the text box was made before textFromValueFunction: show "C", not "0"
 
         // A 5.1 or 7.1 master's controls: the point, the width and the LFE's share.
@@ -261,7 +269,7 @@ public:
         isBus = t.isBus;
 
         // A folder's strip: its volume, mute and solo, which act on what is in it; no audio to meter.
-        if (std::exchange (isFolder, t.isFolder) != t.isFolder)
+        if (std::exchange (isFolder, t.isControl()) != t.isControl())   // a folder or VCA: no audio
         {
             pan.setVisible (! isFolder);
             meter.setVisible (! isFolder);
@@ -276,13 +284,17 @@ public:
         solo.setTooltip (t.soloSafe ? "Solo: play only soloed tracks (this one is solo safe: it plays anyway)" : "Solo: play only soloed tracks");
         soloSafe = t.soloSafe;
 
-        const auto volumeAutomated = ! t.volumeEnvelope.isEmpty(), panAutomated = ! t.panEnvelope.isEmpty();
-        fader.setEnabled (! volumeAutomated);
+        // An automated control follows its envelope, unless the track writes automation.
+        const auto volumeAutomated = t.follows (AutomationParameter::volume), panAutomated = t.follows (AutomationParameter::pan);
+        const auto writes = view.writer != nullptr && t.writesAutomation();
+        fader.setEnabled (! volumeAutomated || writes);
         readout.setEditable (false, trackId != 0 && ! volumeAutomated, false);
-        pan.setEnabled (! panAutomated);
-        fader.setTooltip (isFolder ? "Folder volume: added to the volume of each track and bus in it"
-                                   : volumeAutomated ? "Volume follows its envelope" : "Volume");
-        pan.setTooltip (panAutomated ? "Pan follows its envelope" : "Pan");
+        pan.setEnabled (! panAutomated || writes);
+        const juce::String writeTip = writes ? "; move it while playing to write automation (" + automationModeName (t.automationMode) + ")" : "";
+        fader.setTooltip ((t.isFolder ? juce::String ("Folder volume: added to the volume of each track and bus in it")
+                                    : t.isVca ? juce::String ("VCA volume: added to the volume of each track and bus that has joined it")
+                                    : volumeAutomated ? juce::String ("Volume follows its envelope") : juce::String ("Volume")) + writeTip);
+        pan.setTooltip ((panAutomated ? juce::String ("Pan follows its envelope") : juce::String ("Pan")) + writeTip);
 
         const auto db = t.valueAt (AutomationParameter::volume, frame);
 
@@ -297,7 +309,7 @@ public:
 
         // The surround controls, in a surround master; a 5.1 or 7.1 track has neither them nor a pan.
         const auto showSurround = view.engine.session.getState()->surround && ! isFolder && ! t.isWide();
-        pan.setEnabled (! panAutomated && ! t.isWide());
+        pan.setEnabled ((! panAutomated || writes) && ! t.isWide());
 
         if (t.isWide())
             pan.setTooltip (juce::String (t.sevenOne ? "A 7.1" : "A 5.1") + " track plays its channels to their own speakers: it has no pan");
@@ -312,12 +324,12 @@ public:
 
         // Each part that follows an envelope shows its value at the playhead and can't be set.
         const auto& envelopes = t.surroundEnvelopes;
-        const auto pointAutomated = ! envelopes[0].isEmpty() || ! envelopes[1].isEmpty();
-        const auto widthAutomated = ! envelopes[2].isEmpty(), lfeAutomated = ! envelopes[3].isEmpty();
+        const auto reads = t.readsAutomation();
+        const auto pointAutomated = reads && (! envelopes[0].isEmpty() || ! envelopes[1].isEmpty());
+        const auto widthAutomated = reads && ! envelopes[2].isEmpty(), lfeAutomated = reads && ! envelopes[3].isEmpty();
         // While automation is being written they stay live, to record into their envelopes.
         const auto now = t.surroundPanAt (frame);
-        const auto writing = view.writer != nullptr && view.writer->isWritingAutomation();
-        const juce::String writeTip = writing ? "; move it while playing to write automation" : "";
+        const auto writing = writes;
         surroundPad.setEnabled (! pointAutomated || writing);
         width.setEnabled (! widthAutomated || writing);
         lfe.setEnabled (! lfeAutomated || writing);
@@ -474,11 +486,11 @@ private:
         {
             if (w->isAutomationPassUnderWay (trackId, parameters.front()))
             {
-                w->continueAutomationPass (player.getPositionFrames(), values);
+                w->continueAutomationPass (trackId, parameters, player.getPositionFrames(), values);
                 return true;
             }
 
-            if (w->isWritingAutomation() && playing)
+            if (w->isWritingAutomation (trackId) && playing)
             {
                 w->startAutomationPass (trackId, parameters, player.getPositionFrames(), values);
                 return true;
@@ -486,14 +498,14 @@ private:
         }
 
         const auto* t = view.engine.session.getState()->findTrack (trackId);
-        return t != nullptr && std::any_of (parameters.begin(), parameters.end(), [t] (auto& p) { return ! t->envelope (p).isEmpty(); });
+        return t != nullptr && std::any_of (parameters.begin(), parameters.end(), [t] (auto& p) { return t->follows (p); });
     }
 
     /** The control was let go: its pass, if one is under way, ends. */
     void finishRecording (AutomationParameter p)
     {
-        if (view.writer != nullptr && view.writer->isAutomationPassUnderWay (trackId, p))
-            view.writer->finishAutomationPass();
+        if (view.writer != nullptr)
+            view.writer->releaseAutomationPass (trackId, p);
     }
 
     void edit (const juce::String& description, bool merge, const std::function<void (SessionTrack&)>& change)

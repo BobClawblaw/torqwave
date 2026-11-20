@@ -37,15 +37,25 @@ The track list on the left holds a header for each track. Drag its right edge to
 | Volume, pan | Drag them; they show a value and follow an envelope when one is drawn |
 | **In** | The input the track records from |
 | **Sends** | Sends to buses, the output and ducking (see below) |
-| **A** | The track's envelopes: volume, pan, and the parameters of its effects. It is lit when the track has automation |
+| **A** | The track's automation mode and envelopes: volume, pan, and the parameters of its effects. It reads **A** in Read, **Off**, **T**, **L** or **W** in the other modes (see [Automation](#automation)), and is lit when the track has automation or writes it |
 
-The **Multitrack > Tracks** menu adds tracks, buses and folders, and also:
+The **Multitrack > Tracks** menu adds tracks, buses, folders and VCA faders, and also:
 
 - duplicates, deletes and moves tracks, and hides them (they still play);
 - saves a track as a template and adds tracks from templates;
 - clears every solo and mute at once.
 
-Right-click a track's header, or an empty part of a lane, for the same additions, and on a header for what applies to that track: its folder, group, colour, note, hiding and deleting it.
+Right-click a track's header, or an empty part of a lane, for the same additions, and on a header for what applies to that track: its folder, VCA fader, group, colour, note, hiding and deleting it.
+
+### VCA faders
+
+A **VCA fader** controls the level of a set of tracks and buses without mixing them together, as on a large console. It has no audio, clips or effects of its own: only a volume, mute and solo, and a volume envelope.
+
+- **Add one:** **Multitrack > Tracks > Add VCA Fader** adds one with the selected track in it. Right-click any track's or bus's header and choose **VCA** to put it in a VCA fader, take it out, or make a **New VCA Fader** for it. A track or bus is in at most one, and folders and VCA faders can't join one.
+- **Its volume** is added to each member's own, in dB, as they are mixed: a member at -6 dB in a VCA fader at -3 dB plays at -9 dB, as its own fader would set it. Post-fader sends follow it; pre-fader sends don't. Its volume envelope moves its members in the same way, and plays and is written like any other (see [Automation](#automation)).
+- **Its mute and solo** act on its members as if they were their own.
+- Bouncing, freezing and exporting a stem keep a member at the level the VCA fader gives it.
+- A folder and a VCA fader can both act on one track: the folder's volume and the VCA fader's are both added.
 
 Drag a track's header to move the track. Where it lands also decides its folder: dropped on a folder's header, it goes into that folder; dropped on a track, it takes that track's folder, or none. Drop it on its own folder's header to take it out, just above the folder.
 
@@ -185,7 +195,7 @@ The same **Sends** panel holds the rest of a track's routing:
 - mute, polarity and solo;
 - the fader and the meter.
 
-The master meter is on the right.
+A folder's or VCA fader's strip has only its fader, mute and solo. The master meter is on the right. In a track's Touch, Latch or Write mode, its fader and pan write automation while the session plays, as its header's controls do.
 
 ## Automation
 
@@ -194,7 +204,19 @@ An envelope makes volume, pan, an effect parameter or, on an instrument track, a
 - **See it:** a track with automation shows its envelope over its lane: volume first, else pan, else the first effect parameter that has one. To see another, or none, click the track's **A** button and choose it, or **Hide Envelope**. A track you hide stays hidden.
 - **Draw it:** click the **A** button and choose the envelope to show: volume, pan, a parameter of the track's instrument (**Show <instrument> Envelope**, on an instrument track), or a parameter of one of its effects (**Show 1. <effect> Envelope** and on, numbered as in the FX menu). Click the line to add a point and drag points to shape it.
 - **Remove points:** click a point to select it (Shift-click adds more), then press Delete or Backspace. Or Option-click a point: with Option held, the pointer over a point shows a red minus, and an Option-click on the line adds nothing.
-- **Write it while playing:** turn on **Write Automation** (W) and play. Moving the track's volume or pan, or a control in its instrument's or an effect's own window, then writes into that envelope, and the envelope shows as it is written, unless you hid it.
+- **Write it while playing:** put the track in Touch, Latch or Write (below), or turn on **Write Automation** (W) to put every track in Touch, and play. Moving the track's volume or pan, in its header or the mixer, or a control in its instrument's or an effect's own window, then writes into that envelope, and the envelope shows as it is written, unless you hid it. Several tracks can write at once. Each pass that starts is an undo step.
+
+**Automation modes.** Each track and bus has its own mode, chosen from its **A** button's menu, or for all of them at once from **Multitrack > Automation**:
+
+| Mode | The A button | What it does |
+|---|---|---|
+| Off | Off | The envelopes don't play: the controls set the track's settings, and nothing is written |
+| Read | A | The envelopes play, and automated controls follow them. New tracks start in Read |
+| Touch | T | As Read, but a control moved while playing writes until you let it go, then goes back to the envelope over 0.1 s |
+| Latch | L | As Touch, but once moved a control goes on writing its last value until playback stops |
+| Write | W | From where playback starts to where it stops, the volume and pan are written as their controls stand, moved or not, over whatever was there |
+
+The modes are saved with the session but are not undo steps: an undo leaves every track in the mode it is in, as Cubase does. **Write Automation** (W) puts every track and bus in Touch, or those that write back to Read.
 
 ![The Keys track's volume envelope, shown with its A button: the line drops for the verse and rises into the chorus](../screenshots/guide-automation.png)
 

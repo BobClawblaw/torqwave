@@ -14,7 +14,7 @@ namespace
 
     juce::String kindOf (const SessionTrack& t)
     {
-        return t.isFolder ? "Folder" : t.isBus ? "Bus" : t.isInstrument ? "Instrument track" : "Audio track";
+        return t.isFolder ? "Folder" : t.isVca ? "VCA fader" : t.isBus ? "Bus" : t.isInstrument ? "Instrument track" : "Audio track";
     }
 }
 
@@ -179,9 +179,12 @@ void TrackInspector::refresh()
     mute.setToggleState (track->mute, juce::dontSendNotification);
     solo.setToggleState (track->solo, juce::dontSendNotification);
 
-    // A folder has no mix of its own to show.
-    for (auto* c : std::initializer_list<juce::Component*> { &volumeLabel, &volume, &panLabel, &pan, &outputLabel, &output, &insertsLabel, &sendsLabel })
+    // A folder has no mix of its own to show; a VCA fader only its volume.
+    for (auto* c : std::initializer_list<juce::Component*> { &volumeLabel, &volume })
         c->setVisible (! track->isFolder);
+
+    for (auto* c : std::initializer_list<juce::Component*> { &panLabel, &pan, &outputLabel, &output, &insertsLabel, &sendsLabel })
+        c->setVisible (! track->isControl());
 
     auto& effects = engine.getTrackEffects();
     auto* plays = effects.getInstrument (track->id);
@@ -290,8 +293,8 @@ void TrackInspector::refresh()
         }
     }
 
-    noInserts.setVisible (! track->isFolder && inserts.isEmpty());
-    noSends.setVisible (! track->isFolder && sends.empty());
+    noInserts.setVisible (! track->isControl() && inserts.isEmpty());
+    noSends.setVisible (! track->isControl() && sends.empty());
     resized();
 }
 

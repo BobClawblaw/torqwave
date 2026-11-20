@@ -149,7 +149,7 @@ namespace
     bool plays (const SessionState& state, const SessionTrack& track)
     {
         // A folder's mute and solo act on its members, as if their own.
-        if (track.isFolder || state.isMuted (track))
+        if (track.isControl() || state.isMuted (track))
             return false;
 
         // Solo safe: played whatever else is soloed (a bus still hears only what plays into it).
@@ -174,6 +174,21 @@ namespace
     {
         if (b.getNumChannels() < 2 || b.getNumSamples() < frames)
             b.setSize (2, frames, false, false, true);
+    }
+
+    /** Adds a VCA fader's volume to a block of volumes (dB): its envelope's, read from a session
+        frame, or its setting. */
+    void addVca (const SessionTrack& vca, juce::int64 from, float* volumes, float* scratch, int n)
+    {
+        if (vca.follows (AutomationParameter::volume))
+        {
+            vca.volumeEnvelope.fill (from, scratch, n);
+            juce::FloatVectorOperations::add (volumes, scratch, n);
+        }
+        else if (! juce::exactlyEqual (vca.gainDb, 0.0f))
+        {
+            juce::FloatVectorOperations::add (volumes, vca.gainDb, n);
+        }
     }
 
     int latencyOf (Inserts* inserts, juce::uint32 id)
@@ -271,7 +286,7 @@ namespace
 
         for (auto& t : state.tracks)
         {
-            if (t.isFolder || (! t.isBus && ! runsEffects (t)) || t.id == track.id)
+            if (t.isControl() || (! t.isBus && ! runsEffects (t)) || t.id == track.id)
                 continue;
 
             for (auto& chain : t.sidechains)
@@ -359,7 +374,7 @@ namespace
     /** True when a track's or bus's surround pan is as it starts, unautomated: left to L, right to R. */
     bool plainSurround (const SessionTrack& t)
     {
-        return t.surroundPan.isDefault() && ! t.hasSurroundAutomation();
+        return t.surroundPan.isDefault() && ! (t.readsAutomation() && t.hasSurroundAutomation());
     }
 
     /** Pans the first n frames of panIn (session frames from start) into the 5.1 or 7.1 master by the
@@ -370,7 +385,7 @@ namespace
     {
         const auto channels = state.masterChannels();
 
-        if (! t.hasSurroundAutomation())
+        if (! (t.readsAutomation() && t.hasSurroundAutomation()))
         {
             const auto gains = surroundGains (t.surroundPan, state.sevenOne);
 
@@ -701,7 +716,7 @@ namespace
         {
             const auto& other = state.tracks[k];
 
-            if (other.isBus || other.isFolder || other.id == t.id)
+            if (other.isBus || other.isControl() || other.id == t.id)
                 continue;
 
             const auto isKey = (! t.isBus && t.ducking.isOn() && other.id == t.ducking.keyTrackId)
@@ -761,6 +776,7 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
 
     grow (buffers.track, numFrames);
     grow (buffers.automation, numFrames);
+    grow (buffers.vca, numFrames);
 
     if (state.surround)
     {
@@ -774,6 +790,7 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
     }
     auto* pans = buffers.automation.getWritePointer (0);
     auto* volumes = buffers.automation.getWritePointer (1);
+    auto* vcaVolumes = buffers.vca.getWritePointer (0);
 
     for (auto& bus : state.tracks)
     {
@@ -810,7 +827,7 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
         const auto ahead = aheadOf (state, track, inserts);
         const auto fiveOne = track.isWide();   // a 5.1 or 7.1 track
         const auto width = track.wideChannels();
-        const auto panAutomated = ! track.panEnvelope.isEmpty() && ! fiveOne;
+        const auto panAutomated = track.follows (AutomationParameter::pan) && ! fiveOne;
         const auto panWidth = fiveOne ? 2 : sourceWidth (track, live, inserts);
         const auto monoPlace = panWidth == 1 ? 1.0f : panGains (0.0f, 1).first;   // a mono clip among stereo sources: at the centre's level
 
@@ -917,10 +934,13 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
                      buffers.buses[bus->id], 0, gain);
         };
 
-        auto volume = juce::Decibels::decibelsToGain (track.gainDb, -150.0f);
-        const auto volumeAutomated = ! track.volumeEnvelope.isEmpty();
+        // A VCA fader's volume is added to the track's, in dB.
+        const auto* vca = state.vcaOf (track);
+        const auto vcaAutomated = vca != nullptr && vca->follows (AutomationParameter::volume);
+        auto volume = juce::Decibels::decibelsToGain (track.gainDb + (vca != nullptr ? vca->gainDb : 0.0f), -150.0f);
+        const auto volumeAutomated = track.follows (AutomationParameter::volume) || vcaAutomated;
         const auto* key = track.ducking.isOn() ? state.findTrack (track.ducking.keyTrackId) : nullptr;
-        const auto ducked = key != nullptr && ! key->isBus && ! key->isFolder;
+        const auto ducked = key != nullptr && ! key->isBus && ! key->isControl();
 
         // Pre-fader sends take the signal before the envelope and the ducking, which then act in place.
         if (volumeAutomated || ducked)
@@ -930,7 +950,13 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
 
         if (volumeAutomated)
         {
-            track.volumeEnvelope.fill (start + ahead, volumes, numFrames);
+            if (track.follows (AutomationParameter::volume))
+                track.volumeEnvelope.fill (start + ahead, volumes, numFrames);
+            else
+                juce::FloatVectorOperations::fill (volumes, track.gainDb, numFrames);
+
+            if (vca != nullptr)
+                addVca (*vca, start + ahead, volumes, vcaVolumes, numFrames);
 
             for (int i = 0; i < numFrames; ++i)
                 volumes[i] = juce::Decibels::decibelsToGain (volumes[i], -150.0f);
@@ -1072,9 +1098,12 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
             outStart = outChannel = 0;
         }
 
-        if (bus.volumeEnvelope.isEmpty() && bus.panEnvelope.isEmpty())
+        const auto* vca = state.vcaOf (bus);
+
+        if (! bus.follows (AutomationParameter::volume) && ! bus.follows (AutomationParameter::pan)
+            && (vca == nullptr || ! vca->follows (AutomationParameter::volume)))
         {
-            const auto volume = juce::Decibels::decibelsToGain (bus.gainDb, -150.0f) * folder;
+            const auto volume = juce::Decibels::decibelsToGain (bus.gainDb + (vca != nullptr ? vca->gainDb : 0.0f), -150.0f) * folder;
             const auto [left, right] = panGains (bus.pan, 2);
 
             if (out != nullptr)
@@ -1094,11 +1123,14 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
 
         for (auto [parameter, values] : { std::pair { AutomationParameter::volume, volumes }, std::pair { AutomationParameter::pan, pans } })
         {
-            if (const auto& envelope = bus.envelope (parameter); ! envelope.isEmpty())
-                envelope.fill (start, values, numFrames);
+            if (bus.follows (parameter))
+                bus.envelope (parameter).fill (start, values, numFrames);
             else
                 juce::FloatVectorOperations::fill (values, parameter == AutomationParameter::volume ? bus.gainDb : bus.pan, numFrames);
         }
+
+        if (vca != nullptr)
+            addVca (*vca, start, volumes, vcaVolumes, numFrames);
 
         const auto* inLeft = input.getReadPointer (0);
         const auto* inRight = input.getReadPointer (1);

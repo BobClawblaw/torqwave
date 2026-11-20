@@ -38,13 +38,44 @@ bool SessionState::anySolo() const
 bool SessionState::isMuted (const SessionTrack& t) const
 {
     const auto* folder = t.folderId != 0 ? findTrack (t.folderId) : nullptr;
-    return t.mute || (folder != nullptr && folder->mute);
+    const auto* vca = vcaOf (t);
+    return t.mute || (folder != nullptr && folder->mute) || (vca != nullptr && vca->mute);
 }
 
 bool SessionState::isSoloed (const SessionTrack& t) const
 {
     const auto* folder = t.folderId != 0 ? findTrack (t.folderId) : nullptr;
-    return t.solo || (folder != nullptr && folder->solo);
+    const auto* vca = vcaOf (t);
+    return t.solo || (folder != nullptr && folder->solo) || (vca != nullptr && vca->solo);
+}
+
+const SessionTrack* SessionState::vcaOf (const SessionTrack& t) const
+{
+    const auto* vca = t.vcaId != 0 ? findTrack (t.vcaId) : nullptr;
+    return vca != nullptr && vca->isVca ? vca : nullptr;
+}
+
+juce::String automationModeName (AutomationMode m)
+{
+    switch (m)
+    {
+        case AutomationMode::off:   return "Off";
+        case AutomationMode::read:  return "Read";
+        case AutomationMode::touch: return "Touch";
+        case AutomationMode::latch: return "Latch";
+        case AutomationMode::write: return "Write";
+    }
+
+    return "Read";
+}
+
+std::optional<AutomationMode> automationModeNamed (const juce::String& name)
+{
+    for (auto m : { AutomationMode::off, AutomationMode::read, AutomationMode::touch, AutomationMode::latch, AutomationMode::write })
+        if (automationModeName (m).equalsIgnoreCase (name.trim()))
+            return m;
+
+    return std::nullopt;
 }
 
 bool SessionState::isSoloSafe (const SessionTrack& t) const
@@ -61,7 +92,7 @@ float SessionState::folderGain (const SessionTrack& t) const
 
 const SessionTrack* SessionState::outputBusOf (const SessionTrack& t) const
 {
-    const auto* bus = t.isFolder || t.outputBusId == 0 || t.outputBusId == t.id ? nullptr : findTrack (t.outputBusId);
+    const auto* bus = t.isControl() || t.outputBusId == 0 || t.outputBusId == t.id ? nullptr : findTrack (t.outputBusId);
     return bus != nullptr && bus->isBus ? bus : nullptr;
 }
 
@@ -156,7 +187,7 @@ SessionTrack& SessionState::addTrack()
 {
     SessionTrack t;
     t.id = nextId++;
-    t.name = freeName (*this, "Track ", (int) std::count_if (tracks.begin(), tracks.end(), [] (auto& x) { return ! x.isBus && ! x.isFolder; }) + 1);
+    t.name = freeName (*this, "Track ", (int) std::count_if (tracks.begin(), tracks.end(), [] (auto& x) { return ! x.isBus && ! x.isControl(); }) + 1);
     tracks.push_back (std::move (t));
     return tracks.back();
 }
@@ -175,6 +206,16 @@ SessionTrack& SessionState::addFolder()
     t.id = nextId++;
     t.isFolder = true;
     t.name = freeName (*this, "Folder ", (int) std::count_if (tracks.begin(), tracks.end(), [] (auto& x) { return x.isFolder; }) + 1);
+    tracks.push_back (std::move (t));
+    return tracks.back();
+}
+
+SessionTrack& SessionState::addVca()
+{
+    SessionTrack t;
+    t.id = nextId++;
+    t.isVca = true;
+    t.name = freeName (*this, "VCA ", (int) std::count_if (tracks.begin(), tracks.end(), [] (auto& x) { return x.isVca; }) + 1);
     tracks.push_back (std::move (t));
     return tracks.back();
 }
@@ -565,6 +606,10 @@ const Envelope& SessionTrack::envelope (const AutomationTarget& t) const
 SurroundPan SessionTrack::surroundPanAt (juce::int64 frame) const
 {
     auto p = surroundPan;
+
+    if (! readsAutomation())
+        return p;
+
     const auto at = [&] (int i, float setting) { return surroundEnvelopes[(size_t) i].isEmpty() ? setting : surroundEnvelopes[(size_t) i].valueAt (frame); };
     p.x = at (0, p.x);
     p.y = at (1, p.y);
@@ -581,10 +626,8 @@ SurroundPan SessionTrack::surroundPanAt (juce::int64 frame) const
 
 float SessionTrack::valueAt (const AutomationTarget& t, juce::int64 frame) const
 {
-    const auto& e = envelope (t);
-
-    if (! e.isEmpty())
-        return e.valueAt (frame);
+    if (follows (t))
+        return envelope (t).valueAt (frame);
 
     switch (t.parameter)
     {
@@ -757,7 +800,7 @@ bool setTrackMusical (SessionState& s, juce::uint32 trackId, bool musical)
 {
     const auto t = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& x) { return x.id == trackId; });
 
-    if (t == s.tracks.end() || t->isBus || t->isFolder || t->musical == musical)
+    if (t == s.tracks.end() || t->isBus || t->isControl() || t->musical == musical)
         return false;
 
     t->musical = musical;
@@ -772,7 +815,7 @@ int separateClipKinds (SessionState& s)
     {
         auto& t = s.tracks[i];
         const auto wrongAudio = t.isInstrument && ! t.clips.empty();
-        const auto wrongNotes = ! t.isInstrument && ! t.isBus && ! t.isFolder && ! t.noteClips.empty();
+        const auto wrongNotes = ! t.isInstrument && ! t.isBus && ! t.isControl() && ! t.noteClips.empty();
 
         if (! wrongAudio && ! wrongNotes)
             continue;
@@ -2998,7 +3041,7 @@ bool freezeTrack (SessionState& s, juce::uint32 trackId, const juce::File& file,
 {
     const auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
 
-    if (track == s.tracks.end() || track->isBus || track->isFolder || audio == nullptr)
+    if (track == s.tracks.end() || track->isBus || track->isControl() || audio == nullptr)
         return false;
 
     track->frozenAudio = std::move (audio);
@@ -3034,7 +3077,7 @@ void addKeys (const SessionState& from, SessionState& alone)
         {
             const auto* key = from.findTrack (k);
 
-            if (key == nullptr || key->isBus || key->isFolder || alone.findTrack (k) != nullptr)
+            if (key == nullptr || key->isBus || key->isControl() || alone.findTrack (k) != nullptr)
                 continue;
 
             auto copy = *key;
@@ -3049,7 +3092,14 @@ void addKeys (const SessionState& from, SessionState& alone)
                 copy.gainDb += folder->gainDb;
             }
 
+            if (const auto* vca = from.vcaOf (*key))
+            {
+                copy.mute = copy.mute || vca->mute;
+                copy.gainDb += vca->gainDb;
+            }
+
             copy.folderId = 0;
+            copy.vcaId = 0;
             alone.tracks.push_back (std::move (copy));
         }
     }
@@ -3124,6 +3174,9 @@ bool removeTrack (SessionState& s, int track)
         if (t.folderId == removed)
             t.folderId = 0;
 
+        if (t.vcaId == removed)
+            t.vcaId = 0;
+
         if (t.outputBusId == removed)
             t.outputBusId = 0;
 
@@ -3149,12 +3202,35 @@ bool setTrackFolder (SessionState& s, juce::uint32 trackId, juce::uint32 folderI
     return true;
 }
 
+bool setTrackVca (SessionState& s, juce::uint32 trackId, juce::uint32 vcaId)
+{
+    const auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
+    const auto* vca = vcaId != 0 ? s.findTrack (vcaId) : nullptr;
+
+    if (track == s.tracks.end() || track->isControl() || track->vcaId == vcaId || (vcaId != 0 && (vca == nullptr || ! vca->isVca)))
+        return false;
+
+    track->vcaId = vcaId;
+    return true;
+}
+
+bool setAutomationMode (SessionState& s, juce::uint32 trackId, AutomationMode mode)
+{
+    const auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
+
+    if (track == s.tracks.end() || track->isFolder || track->automationMode == mode)
+        return false;
+
+    track->automationMode = mode;
+    return true;
+}
+
 bool setTrackOutput (SessionState& s, juce::uint32 trackId, juce::uint32 busId)
 {
     const auto* bus = busId != 0 ? s.findTrack (busId) : nullptr;
     auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
 
-    if (track == s.tracks.end() || track->isFolder || (track->outputBusId == busId && track->deviceOutput < 0)
+    if (track == s.tracks.end() || track->isControl() || (track->outputBusId == busId && track->deviceOutput < 0)
         || (busId != 0 && (bus == nullptr || ! bus->isBus)))
         return false;
 
@@ -3171,7 +3247,7 @@ bool setTrackDeviceOutput (SessionState& s, juce::uint32 trackId, int firstChann
 {
     auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
 
-    if (track == s.tracks.end() || track->isFolder || firstChannel < -1 || firstChannel >= SessionTrack::maxDeviceOutputs - 1
+    if (track == s.tracks.end() || track->isControl() || firstChannel < -1 || firstChannel >= SessionTrack::maxDeviceOutputs - 1
         || (track->deviceOutput == firstChannel && track->outputBusId == 0))
         return false;
 
@@ -3189,7 +3265,7 @@ bool setTrackChannels (SessionState& s, juce::uint32 trackId, int channels)
 {
     auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
 
-    if ((channels != 2 && channels != 6 && channels != 8) || track == s.tracks.end() || track->isBus || track->isFolder
+    if ((channels != 2 && channels != 6 && channels != 8) || track == s.tracks.end() || track->isBus || track->isControl()
         || track->isFrozen() || juce::jmax (2, track->wideChannels()) == channels)
         return false;
 
@@ -3217,7 +3293,7 @@ bool setSurroundPan (SessionState& s, juce::uint32 trackId, SurroundPan pan)
 {
     auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
 
-    if (track == s.tracks.end() || track->isFolder)
+    if (track == s.tracks.end() || track->isControl())
         return false;
 
     pan.x = juce::jlimit (-1.0f, 1.0f, std::isfinite (pan.x) ? pan.x : 0.0f);
@@ -3236,14 +3312,14 @@ bool setDucking (SessionState& s, juce::uint32 trackId, const Ducking& ducking)
 {
     auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
 
-    if (track == s.tracks.end() || track->isBus || track->isFolder || ! ducking.isValid())
+    if (track == s.tracks.end() || track->isBus || track->isControl() || ! ducking.isValid())
         return false;
 
     if (ducking.isOn())
     {
         const auto* key = s.findTrack (ducking.keyTrackId);
 
-        if (key == nullptr || key->isBus || key->isFolder || key->id == trackId)
+        if (key == nullptr || key->isBus || key->isControl() || key->id == trackId)
             return false;
 
         // No loops: the key may not listen to this track, through ducking or sidechains.
@@ -3265,14 +3341,14 @@ bool setSidechain (SessionState& s, juce::uint32 trackId, juce::uint32 slotId, j
 {
     auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
 
-    if (track == s.tracks.end() || track->isFolder || slotId == 0 || track->sidechainKey (slotId) == keyTrackId)
+    if (track == s.tracks.end() || track->isControl() || slotId == 0 || track->sidechainKey (slotId) == keyTrackId)
         return false;
 
     if (keyTrackId != 0)
     {
         const auto* key = s.findTrack (keyTrackId);
 
-        if (key == nullptr || key->isBus || key->isFolder || key->id == trackId || s.listensTo (*key, trackId))
+        if (key == nullptr || key->isBus || key->isControl() || key->id == trackId || s.listensTo (*key, trackId))
             return false;
     }
 
@@ -3290,7 +3366,7 @@ bool setSend (SessionState& s, juce::uint32 trackId, const SessionSend& send)
     const auto* bus = s.findTrack (send.busId);
     auto track = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
 
-    if (bus == nullptr || ! bus->isBus || track == s.tracks.end() || track->isBus || track->isFolder)
+    if (bus == nullptr || ! bus->isBus || track == s.tracks.end() || track->isBus || track->isControl())
         return false;
 
     for (auto& existing : track->sends)
@@ -3338,6 +3414,10 @@ bool setEnvelope (SessionState& s, juce::uint32 trackId, const AutomationTarget&
     {
         if (t.id == trackId)
         {
+            // A VCA fader has only a volume.
+            if (t.isVca && target.parameter != AutomationParameter::volume)
+                return false;
+
             if (target.parameter == AutomationParameter::volume)
             {
                 t.volumeEnvelope = std::move (e);
@@ -3999,6 +4079,12 @@ void Session::reset (SessionState initial, const juce::File& f)
 
 void Session::apply (SessionState next, const juce::String& description, bool merge)
 {
+    // Automation modes are set apart from the steps (setAutomationMode): each track keeps its own.
+    if (const auto now = getState())
+        for (auto& t : next.tracks)
+            if (const auto* there = now->findTrack (t.id))
+                t.automationMode = there->automationMode;
+
     auto state = std::make_shared<const SessionState> (std::move (next));
     history.erase (history.begin() + position + 1, history.end());
 
@@ -4030,13 +4116,37 @@ juce::String Session::getRedoDescription() const
 
 Session::State Session::withViewOf (State s, const SessionState& now) const
 {
-    if (s->loop == now.loop && s->barsAndBeats == now.barsAndBeats)
+    const auto modeOf = [&now] (const SessionTrack& t)
+    {
+        const auto* there = now.findTrack (t.id);
+        return there != nullptr ? there->automationMode : t.automationMode;
+    };
+    const auto sameModes = std::all_of (s->tracks.begin(), s->tracks.end(), [&] (auto& t) { return modeOf (t) == t.automationMode; });
+
+    if (s->loop == now.loop && s->barsAndBeats == now.barsAndBeats && sameModes)
         return s;
 
     auto copy = *s;
     copy.loop = now.loop;
     copy.barsAndBeats = now.barsAndBeats;
+
+    for (auto& t : copy.tracks)
+        t.automationMode = modeOf (t);
+
     return std::make_shared<const SessionState> (std::move (copy));
+}
+
+void Session::setAutomationMode (juce::uint32 trackId, AutomationMode mode)
+{
+    auto next = *getState();
+    auto changed = false;
+
+    for (auto& t : next.tracks)
+        if (trackId == 0 || t.id == trackId)
+            changed = SessionEdits::setAutomationMode (next, t.id, mode) || changed;
+
+    if (changed)
+        replaceCurrent (std::move (next));
 }
 
 void Session::replaceCurrent (SessionState next)
@@ -4265,7 +4375,13 @@ juce::String save (const SessionState& state, const juce::File& target,
         if (t.isFolder)
             track->setAttribute ("folder", true);
 
-        if (! t.isBus && ! t.isFolder)
+        if (t.isVca)
+            track->setAttribute ("vca", true);
+
+        if (t.automationMode != AutomationMode::read)
+            track->setAttribute ("automation", automationModeName (t.automationMode));
+
+        if (! t.isBus && ! t.isControl())
         {
             track->setAttribute ("instrument", t.isInstrument);
             track->setAttribute ("musical", t.musical);
@@ -4276,6 +4392,9 @@ juce::String save (const SessionState& state, const juce::File& target,
 
         if (t.folderId != 0 && indexOf.count (t.folderId) > 0)
             track->setAttribute ("inFolder", indexOf[t.folderId]);
+
+        if (t.vcaId != 0 && indexOf.count (t.vcaId) > 0)
+            track->setAttribute ("inVca", indexOf[t.vcaId]);
 
         if (t.outputBusId != 0 && indexOf.count (t.outputBusId) > 0)
             track->setAttribute ("output", indexOf[t.outputBusId]);
@@ -4288,7 +4407,7 @@ juce::String save (const SessionState& state, const juce::File& target,
         if (t.sevenOne)
             track->setAttribute ("sevenOne", true);
 
-        if (! t.isFolder && ! t.surroundPan.isDefault())
+        if (! t.isControl() && ! t.surroundPan.isDefault())
         {
             track->setAttribute ("surroundX", t.surroundPan.x);
             track->setAttribute ("surroundY", t.surroundPan.y);
@@ -4618,23 +4737,28 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
 
     for (auto* trackXml : root->getChildWithTagNameIterator ("TRACK"))
     {
-        auto& track = trackXml->getBoolAttribute ("bus") ? state.addBus() : trackXml->getBoolAttribute ("folder") ? state.addFolder() : state.addTrack();
+        auto& track = trackXml->getBoolAttribute ("bus") ? state.addBus() : trackXml->getBoolAttribute ("folder") ? state.addFolder()
+                    : trackXml->getBoolAttribute ("vca") ? state.addVca() : state.addTrack();
         track.collapsed = track.isFolder && trackXml->getBoolAttribute ("collapsed");
         track.folderId = (juce::uint32) trackXml->getIntAttribute ("inFolder", -1);   // an index until every track is read
+        track.vcaId = (juce::uint32) trackXml->getIntAttribute ("inVca", -1);         // likewise
+
+        if (const auto mode = automationModeNamed (trackXml->getStringAttribute ("automation", "Read")); mode && ! track.isFolder)
+            track.automationMode = *mode;
         track.outputBusId = (juce::uint32) trackXml->getIntAttribute ("output", -1);   // likewise
 
-        if (const auto pair = trackXml->getIntAttribute ("deviceOutput", -1); ! track.isFolder && pair >= 0 && pair < SessionTrack::maxDeviceOutputs - 1)
+        if (const auto pair = trackXml->getIntAttribute ("deviceOutput", -1); ! track.isControl() && pair >= 0 && pair < SessionTrack::maxDeviceOutputs - 1)
             track.deviceOutput = pair;
 
-        track.fiveOne = ! track.isBus && ! track.isFolder && trackXml->getBoolAttribute ("fiveOne");
-        track.sevenOne = ! track.isBus && ! track.isFolder && ! track.fiveOne && trackXml->getBoolAttribute ("sevenOne");
-        track.isInstrument = ! track.isBus && ! track.isFolder && trackXml->getBoolAttribute ("instrument");
-        track.musical = ! track.isBus && ! track.isFolder && trackXml->getBoolAttribute ("musical");
+        track.fiveOne = ! track.isBus && ! track.isControl() && trackXml->getBoolAttribute ("fiveOne");
+        track.sevenOne = ! track.isBus && ! track.isControl() && ! track.fiveOne && trackXml->getBoolAttribute ("sevenOne");
+        track.isInstrument = ! track.isBus && ! track.isControl() && trackXml->getBoolAttribute ("instrument");
+        track.musical = ! track.isBus && ! track.isControl() && trackXml->getBoolAttribute ("musical");
 
-        if (! track.isBus && ! track.isFolder && ! trackXml->hasAttribute ("instrument"))
+        if (! track.isBus && ! track.isControl() && ! trackXml->hasAttribute ("instrument"))
             undecided.emplace_back (state.tracks.size() - 1, hasInstrumentPlugin (*trackXml));
 
-        if (! track.isFolder)
+        if (! track.isControl())
             SessionEdits::setSurroundPan (state, track.id, { (float) trackXml->getDoubleAttribute ("surroundX", 0.0),
                                                             (float) trackXml->getDoubleAttribute ("surroundY", 1.0),
                                                             (float) trackXml->getDoubleAttribute ("surroundWidth", 1.0),
@@ -4876,12 +5000,16 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
     {
         state.tracks[i].sends.clear();
         state.tracks[i].folderId = 0;
+        state.tracks[i].vcaId = 0;
         state.tracks[i].outputBusId = 0;
         state.tracks[i].ducking = {};
         state.tracks[i].sidechains.clear();
 
         if (pending[i].folderId < pending.size())
             SessionEdits::setTrackFolder (state, state.tracks[i].id, pending[pending[i].folderId].id);
+
+        if (pending[i].vcaId < pending.size())
+            SessionEdits::setTrackVca (state, state.tracks[i].id, pending[pending[i].vcaId].id);
 
         if (pending[i].outputBusId < pending.size())
             SessionEdits::setTrackOutput (state, state.tracks[i].id, pending[pending[i].outputBusId].id);

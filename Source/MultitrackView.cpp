@@ -127,9 +127,9 @@ public:
         {
             s->setSliderStyle (juce::Slider::LinearBar);
             Theme::follow (*s, juce::Slider::trackColourId, Theme::lineStrong);
-            s->onDragEnd = [this]
+            s->onDragEnd = [this, p = s == &gain ? AutomationParameter::volume : AutomationParameter::pan]
             {
-                view.finishAutomationPass();
+                view.releaseAutomationPass (trackId, p);
                 view.rebuildHeaders();   // an automated control that wrote nothing goes back to its envelope
             };
         }
@@ -154,18 +154,18 @@ public:
 
         if (view.isAutomationPassUnderWay (trackId, p))
         {
-            view.continueAutomationPass (player.getHeardFrame(), value);
+            view.continueAutomationPass (trackId, p, player.getHeardFrame(), value);
             return true;
         }
 
-        if (view.isWritingAutomation() && playing)
+        if (view.isWritingAutomation (trackId) && playing)
         {
             view.startAutomationPass (trackId, p, player.getHeardFrame(), value);
             return true;
         }
 
         const auto* t = view.shown().findTrack (trackId);
-        return t != nullptr && ! t->envelope (p).isEmpty();
+        return t != nullptr && t->follows (p);
     }
 
     void update (const SessionTrack& t, int index, bool selected)
@@ -176,21 +176,23 @@ public:
         isSelected = selected;
         isBus = t.isBus;
         isFolder = t.isFolder;
+        isVca = t.isVca;
         isInstrument = t.isInstrument;
         collapsed = t.collapsed;
         inFolder = t.folderId != 0;
         members = (int) std::count_if (view.shown().tracks.begin(), view.shown().tracks.end(), [&t] (auto& m) { return m.folderId == t.id; });
 
-        // A folder has only its name, mute, solo and volume.
-        for (auto* c : std::initializer_list<juce::Component*> { &effectsButton, &pan, &automationButton })
-            c->setVisible (! isFolder);
+        // A folder has only its name, mute, solo and volume; a VCA fader those and its automation.
+        for (auto* c : std::initializer_list<juce::Component*> { &effectsButton, &pan })
+            c->setVisible (! t.isControl());
 
-        sendsButton.setVisible (! isFolder);
+        automationButton.setVisible (! isFolder);
+        sendsButton.setVisible (! t.isControl());
         // An instrument track plays its instrument, so it has no input to record or monitor; an
         // audio track has no instrument.
-        arm.setVisible (! isBus && ! isFolder && ! isInstrument);
+        arm.setVisible (! isBus && ! t.isControl() && ! isInstrument);
         arm.setToggleState (view.isArmed (trackId), juce::dontSendNotification);
-        inputButton.setVisible (! isBus && ! isFolder && ! isInstrument);
+        inputButton.setVisible (! isBus && ! t.isControl() && ! isInstrument);
         instrumentButton.setVisible (isInstrument);
         inputButton.setButtonText (t.input.isDefault() ? juce::String ("In")
                                    : t.input.channels == 2 ? juce::String (t.input.first + 1) + "/" + juce::String (t.input.first + 2)
@@ -234,13 +236,19 @@ public:
         effectsButton.setToggleState (anyOn, juce::dontSendNotification);
 
         // An automated volume or pan follows its envelope; the control shows its value at the cursor.
-        const auto volumeAutomated = ! t.volumeEnvelope.isEmpty(), panAutomated = ! t.panEnvelope.isEmpty();
-        automationButton.setToggleState (view.hasLiveAutomation (t), juce::dontSendNotification);
-        const auto writing = view.isWritingAutomation();
+        // The A button shows the automation mode: A in Read, else its first letter (Off in Off).
+        const auto volumeAutomated = t.follows (AutomationParameter::volume), panAutomated = t.follows (AutomationParameter::pan);
+        automationButton.setToggleState (view.hasLiveAutomation (t) || t.writesAutomation(), juce::dontSendNotification);
+        automationButton.setButtonText (t.automationMode == AutomationMode::read ? juce::String ("A")
+                                        : t.automationMode == AutomationMode::off ? juce::String ("Off")
+                                                                                  : automationModeName (t.automationMode).substring (0, 1));
+        automationButton.setTooltip ("Automation: " + automationModeName (t.automationMode) + " (envelopes and mode)");
+        const auto writing = t.writesAutomation();
         gain.setEnabled (! volumeAutomated || writing);
         pan.setEnabled ((! panAutomated || writing) && ! t.isWide());
         const juce::String automatedTip = writing ? " follows its envelope; drag while playing to write it" : " follows its envelope (A to edit it)";
         gain.setTooltip (isFolder ? "Folder volume: added to the volume of each track and bus in it"
+                         : t.isVca ? (volumeAutomated ? "VCA volume" + automatedTip : "VCA volume: added to the volume of each track and bus that has joined it")
                          : volumeAutomated ? "Volume" + automatedTip : writing ? "Track volume; drag while playing to write automation" : "Track volume");
         pan.setTooltip (t.isWide() ? juce::String (t.sevenOne ? "A 7.1" : "A 5.1") + " track plays its channels to their own speakers: it has no pan"
                         : panAutomated ? "Pan" + automatedTip : writing ? "Pan; drag while playing to write automation" : "Pan");
@@ -326,12 +334,12 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        g.fillAll (isSelected ? Theme::hover : (isBus ? Theme::base : isFolder ? Theme::raised : Theme::surface));
+        g.fillAll (isSelected ? Theme::hover : (isBus ? Theme::base : isFolder || isVca ? Theme::raised : Theme::surface));
 
         // Two bars, left and right, -60 dB at the bottom to +6 dB at the top: red-tinted while
         // they show the input, each with a line at its held peak. A red light on top once
-        // either has reached 0 dB, until clicked.
-        if (! isFolder)
+        // either has reached 0 dB, until clicked. A folder or VCA has no audio to meter.
+        if (! isFolder && ! isVca)
         {
             auto area = meterArea().toFloat();
             g.setColour (clipped ? Theme::danger : Theme::line);
@@ -490,7 +498,7 @@ public:
 
         view.selectTrack (index());
 
-        if (! isFolder && ! e.mods.isPopupMenu() && meterArea().expanded (2).contains (e.getPosition()))
+        if (! isFolder && ! isVca && ! e.mods.isPopupMenu() && meterArea().expanded (2).contains (e.getPosition()))
             clearClip();
         else if (e.mods.isPopupMenu())
             showGroupMenu();
@@ -546,6 +554,21 @@ public:
             if (t->folderId != 0)
                 menu.addItem ("Take Out of Folder", [this] { view.setTrackFolder (trackId, 0); });
         }
+
+        // VCA faders take tracks and buses, not folders or other VCAs.
+        if (! t->isControl())
+        {
+            juce::PopupMenu vcas;
+            vcas.addItem ("None", true, t->vcaId == 0, [this] { view.setTrackVca (trackId, 0); });
+
+            for (auto& v : view.engine.session.getState()->tracks)
+                if (v.isVca)
+                    vcas.addItem (v.name, true, t->vcaId == v.id, [this, id = v.id] { view.setTrackVca (trackId, id); });
+
+            vcas.addSeparator();
+            vcas.addItem ("New VCA Fader", [this] { view.addVca (trackId); });
+            menu.addSubMenu ("VCA", vcas);
+        }
         else
         {
             menu.addItem (t->collapsed ? "Expand" : "Collapse", [this, c = t->collapsed] { view.setFolderCollapsed (trackId, ! c); });
@@ -554,10 +577,10 @@ public:
         menu.addSubMenu ("Group", groups);
         menu.addItem ("Solo Safe", true, t->soloSafe, [this, safe = t->soloSafe] { view.setTrackSoloSafe (trackId, ! safe); });
 
-        if (! t->isFolder)
+        if (! t->isControl())
             menu.addItem ("Invert Polarity", true, t->invertPolarity, [this, on = t->invertPolarity] { view.setTrackPolarityInverted (trackId, ! on); });
 
-        if (! t->isFolder && ! t->isBus)
+        if (! t->isControl() && ! t->isBus)
         {
             // An instrument track holds note clips alone, an audio track audio clips alone: one
             // with no clips of its own kind can become the other kind.
@@ -641,7 +664,7 @@ private:
     juce::TextButton effectsButton { "FX" }, instrumentButton { "Inst" }, arm { "R" }, mute { "M" }, solo { "S" }, sendsButton { "Sends" }, inputButton { "In" }, automationButton { "A" };
     juce::Slider gain, pan;
     juce::Colour colour;
-    bool isSelected = false, isBus = false, isFolder = false, isInstrument = false, collapsed = false, inFolder = false, soloSafe = false, inverted = false;
+    bool isSelected = false, isBus = false, isFolder = false, isVca = false, isInstrument = false, collapsed = false, inFolder = false, soloSafe = false, inverted = false;
     int members = 0;
     float levels[2] {}, holds[2] {};
     int holdLeft[2] {};
@@ -869,7 +892,7 @@ private:
 
         for (auto& t : current->tracks)
         {
-            if (! t.isBus && ! t.isFolder && t.id != trackId)
+            if (! t.isBus && ! t.isControl() && t.id != trackId)
             {
                 keyChoices.push_back (t.id);
                 duckKey.addItem (t.name, (int) keyChoices.size() + 1);
@@ -971,7 +994,7 @@ MultitrackView::MultitrackView (AudioEngine& e) : engine (e)
 MultitrackView::~MultitrackView()
 {
     engine.setTrackEffectsListener (nullptr);
-    finishAutomationPass();
+    finishAutomationPasses();
     engine.session.removeChangeListener (this);
 }
 
@@ -1004,16 +1027,24 @@ void MultitrackView::showAutomationMenu (juce::uint32 trackId, juce::Component& 
     if (track == nullptr)
         return;
 
-    enum { showVolume = 1, showPan, hide, clearVolume, clearPan, clearEffect, clearSurround, firstSurround = 100, firstEffect = 1000 };
+    enum { showVolume = 1, showPan, hide, clearVolume, clearPan, clearEffect, clearSurround, firstMode = 50, firstSurround = 100, firstEffect = 1000 };
     const auto showing = getShownEnvelope (trackId);
     const auto showingEffect = showing.has_value() && showing->parameter == AutomationParameter::effect;
     const auto showingSurround = showing.has_value() && isSurroundParameter (showing->parameter);
     juce::PopupMenu menu;
+    menu.addSectionHeader ("Mode");
+
+    for (auto m : { AutomationMode::off, AutomationMode::read, AutomationMode::touch, AutomationMode::latch, AutomationMode::write })
+        menu.addItem (firstMode + (int) m, automationModeName (m), true, track->automationMode == m);
+
+    menu.addSeparator();
     menu.addItem (showVolume, "Show Volume Envelope", true, showing == AutomationParameter::volume);
-    menu.addItem (showPan, "Show Pan Envelope", true, showing == AutomationParameter::pan);
+
+    if (! track->isVca)
+        menu.addItem (showPan, "Show Pan Envelope", true, showing == AutomationParameter::pan);
 
     // Where it plays in a surround master (or kept from one): a 5.1 or 7.1 track has no surround pan.
-    if ((shown().surround || track->hasSurroundAutomation()) && ! track->isFolder && ! track->isWide())
+    if ((shown().surround || track->hasSurroundAutomation()) && ! track->isControl() && ! track->isWide())
     {
         juce::PopupMenu surround;
 
@@ -1075,6 +1106,12 @@ void MultitrackView::showAutomationMenu (juce::uint32 trackId, juce::Component& 
             if (result >= firstEffect && result - firstEffect < (int) effectTargets.size())
             {
                 showEnvelope (trackId, effectTargets[(size_t) (result - firstEffect)]);
+                return;
+            }
+
+            if (result >= firstMode && result <= firstMode + (int) AutomationMode::write)
+            {
+                setAutomationMode (trackId, (AutomationMode) (result - firstMode));
                 return;
             }
 
@@ -1325,7 +1362,7 @@ void MultitrackView::showEffectsMenu (juce::uint32 trackId, juce::Component& tar
             {
                 const auto& t = state->tracks[k];
 
-                if (! t.isBus && ! t.isFolder && t.id != trackId)
+                if (! t.isBus && ! t.isControl() && t.id != trackId)
                     keys.addItem (sidechainBase + i * keyChoices + (int) k + 1, t.name, ! state->listensTo (t, trackId), t.id == keyId);
             }
 
@@ -1510,6 +1547,8 @@ void MultitrackView::addTrackItems (juce::PopupMenu& menu, juce::uint32 trackId)
     const auto around = track != nullptr && ! track->isFolder ? trackId : 0u;
     menu.addItem (around != 0 ? "Add Folder Around " + track->name : juce::String ("Add Folder"),
                   [safe, around] { if (safe != nullptr) safe->addFolderAround (around); });
+    menu.addItem ("Add VCA Fader", [safe, joining = track != nullptr && ! track->isControl() ? trackId : 0u]
+                  { if (safe != nullptr) safe->addVca (joining); });
 }
 
 juce::PopupMenu MultitrackView::laneMenuAt (juce::Point<int> p)
@@ -1649,16 +1688,9 @@ void MultitrackView::timerCallback()
         if (x > (float) area.getRight() - 20.0f)
             setView ((double) engine.getPlayer().getPositionFrames() - 20.0 * framesPerPixel, framesPerPixel);
 
-        // A control held still keeps writing its value as the play position moves on.
-        if (pass.has_value())
-        {
-            std::vector<float> held;
-
-            for (auto& points : pass->points)
-                held.push_back (points.back().value);
-
-            continueAutomationPass (engine.getPlayer().getPositionFrames(), held);
-        }
+        // Passes hold their controls' values on as the play position moves, and Write starts.
+        followPlay (engine.getPlayer().getPositionFrames(),
+                    std::exchange (wasPlaying, true) ? std::nullopt : std::optional<juce::int64> (engine.getPlayer().getStartFrame()));
 
         // Automated controls show their envelope's value as it plays.
         controlsFollowPlay = std::any_of (shown().tracks.begin(), shown().tracks.end(),
@@ -1671,7 +1703,8 @@ void MultitrackView::timerCallback()
     }
     else
     {
-        finishAutomationPass();
+        wasPlaying = false;
+        finishAutomationPasses();
 
         if (std::exchange (controlsFollowPlay, false))
             rebuildHeaders();   // back to the cursor's values
@@ -1684,13 +1717,46 @@ juce::int64 MultitrackView::controlFrame() const
     return player.isPlaying() && player.getMode() == DocumentPlayerProcessor::Mode::session ? player.getHeardFrame() : cursor;
 }
 
+bool MultitrackView::isWritingAutomation() const
+{
+    const auto now = engine.session.getState();
+    return std::any_of (now->tracks.begin(), now->tracks.end(), [] (auto& t) { return t.writesAutomation(); });
+}
+
+bool MultitrackView::isWritingAutomation (juce::uint32 trackId) const
+{
+    const auto now = engine.session.getState();
+    const auto* t = now->findTrack (trackId);
+    return t != nullptr && t->writesAutomation();
+}
+
 void MultitrackView::setWritingAutomation (bool on)
 {
-    if (! on)
-        finishAutomationPass();
+    const auto now = engine.session.getState();
 
-    writingAutomation = on;
+    for (auto& t : now->tracks)
+        if (t.writesAutomation() != on)
+            setAutomationMode (t.id, on ? AutomationMode::touch : AutomationMode::read);
+}
+
+void MultitrackView::setAutomationMode (juce::uint32 trackId, AutomationMode mode)
+{
+    // A pass on a track that stops writing ends.
+    for (size_t i = passes.size(); i-- > 0;)
+        if ((trackId == 0 || passes[i].trackId == trackId) && mode < AutomationMode::touch)
+            endPass (i);
+
+    engine.session.setAutomationMode (trackId, mode);
     rebuildHeaders();
+}
+
+const MultitrackView::AutomationPass* MultitrackView::findPass (juce::uint32 trackId, const AutomationTarget& p) const noexcept
+{
+    for (auto& pass : passes)
+        if (pass.trackId == trackId && std::find (pass.parameters.begin(), pass.parameters.end(), p) != pass.parameters.end())
+            return &pass;
+
+    return nullptr;
 }
 
 void MultitrackView::startAutomationPass (juce::uint32 trackId, const AutomationTarget& p, juce::int64 frame, float value)
@@ -1701,17 +1767,26 @@ void MultitrackView::startAutomationPass (juce::uint32 trackId, const Automation
 void MultitrackView::startAutomationPass (juce::uint32 trackId, const std::vector<AutomationTarget>& parameters, juce::int64 frame,
                                           const std::vector<float>& values)
 {
-    finishAutomationPass();
-
     const auto current = engine.session.getState();
+    const auto* track = current->findTrack (trackId);
 
-    if (current->findTrack (trackId) == nullptr || parameters.empty() || parameters.size() != values.size())
+    if (track == nullptr || ! track->writesAutomation() || parameters.empty() || parameters.size() != values.size())
         return;
 
-    pass = AutomationPass { trackId, parameters, *current, {} };
+    // A parameter already being written goes on in its pass (Write's, say) rather than in a new one.
+    if (std::any_of (parameters.begin(), parameters.end(), [&] (auto& p) { return findPass (trackId, p) != nullptr; }))
+    {
+        continueAutomationPass (trackId, parameters, frame, values);
+        return;
+    }
 
-    for (auto value : values)
-        pass->points.push_back ({ { juce::jmax ((juce::int64) 0, frame), value } });
+    AutomationPass pass { trackId, track->automationMode, parameters, {}, {} };
+
+    for (size_t i = 0; i < parameters.size(); ++i)
+    {
+        pass.before.push_back (track->envelope (parameters[i]));
+        pass.points.push_back ({ { juce::jmax ((juce::int64) 0, frame), values[i] } });
+    }
 
     const auto& p = parameters.front();
 
@@ -1722,7 +1797,10 @@ void MultitrackView::startAutomationPass (juce::uint32 trackId, const std::vecto
         showEnvelope (trackId, p);
     }
 
-    applyAutomationPass (true);
+    passes.push_back (std::move (pass));
+    applyAutomationPasses (p.parameter == AutomationParameter::volume ? "Write Volume Automation"
+                           : p.parameter == AutomationParameter::pan ? "Write Pan Automation"
+                           : p.parameter == AutomationParameter::effect ? "Write Effect Automation" : "Write Surround Automation");
 }
 
 void MultitrackView::effectParameterTouched (const TrackEffects::ParameterTouch& touch, std::optional<juce::int64> playFrame)
@@ -1731,40 +1809,61 @@ void MultitrackView::effectParameterTouched (const TrackEffects::ParameterTouch&
     const auto target = AutomationTarget::effect (touch.slotId, touch.parameterId);
     const auto underWay = isAutomationPassUnderWay (touch.trackId, target);
 
-    if (touch.kind == Kind::begin && writingAutomation && playFrame.has_value())
+    if (touch.kind == Kind::begin && ! underWay && isWritingAutomation (touch.trackId) && playFrame.has_value())
         startAutomationPass (touch.trackId, target, *playFrame, touch.value);
-    else if (touch.kind == Kind::change && underWay && playFrame.has_value())
-        continueAutomationPass (*playFrame, touch.value);
+    else if ((touch.kind == Kind::change || touch.kind == Kind::begin) && underWay && playFrame.has_value())
+        continueAutomationPass (touch.trackId, target, *playFrame, touch.value);
     else if (touch.kind == Kind::end && underWay)
-        finishAutomationPass();
+        releaseAutomationPass (touch.trackId, target);
 }
 
-void MultitrackView::continueAutomationPass (juce::int64 frame, float value)
+void MultitrackView::continueAutomationPass (juce::uint32 trackId, const AutomationTarget& p, juce::int64 frame, float value)
 {
-    continueAutomationPass (frame, std::vector<float> { value });
+    continueAutomationPass (trackId, std::vector<AutomationTarget> { p }, frame, { value });
 }
 
-void MultitrackView::continueAutomationPass (juce::int64 frame, const std::vector<float>& values)
+void MultitrackView::continueAutomationPass (juce::uint32 trackId, const std::vector<AutomationTarget>& parameters, juce::int64 frame,
+                                             const std::vector<float>& values)
 {
-    if (! pass.has_value() || values.size() != pass->points.size())
+    if (parameters.size() != values.size())
         return;
 
-    if (frame < pass->points.front().back().frame)
+    const auto found = std::find_if (passes.begin(), passes.end(), [&] (auto& pass)
     {
-        finishAutomationPass();
+        return pass.trackId == trackId && std::find (pass.parameters.begin(), pass.parameters.end(), parameters.front()) != pass.parameters.end();
+    });
+
+    if (found == passes.end())
+        return;
+
+    auto& pass = *found;
+
+    if (frame < pass.points.front().back().frame)
+    {
+        endPass ((size_t) (found - passes.begin()));
         return;
     }
 
     auto changed = false;
 
-    for (size_t i = 0; i < values.size(); ++i)
+    // The moved parameters take their new values; the pass's others hold theirs.
+    for (size_t i = 0; i < pass.parameters.size(); ++i)
     {
-        auto& points = pass->points[i];
-        const auto value = values[i];
+        auto& points = pass.points[i];
+        const auto moved = std::find (parameters.begin(), parameters.end(), pass.parameters[i]);
+        const auto value = moved != parameters.end() ? values[(size_t) (moved - parameters.begin())] : points.back().value;
         const auto held = points.size() >= 2 && juce::exactlyEqual (points[points.size() - 2].value, points.back().value)
                           && juce::exactlyEqual (points.back().value, value);
 
-        if (frame == points.back().frame || held)
+        // A new value where a held one ends steps there, keeping the hold.
+        const auto endsHold = points.size() >= 2 && points[points.size() - 2].frame < points.back().frame
+                              && juce::exactlyEqual (points[points.size() - 2].value, points.back().value);
+
+        if (frame == points.back().frame && endsHold && ! juce::exactlyEqual (points.back().value, value))
+        {
+            points.push_back ({ frame, value });
+        }
+        else if (frame == points.back().frame || held)
         {
             // The same frame, or a value held still: the last point moves rather than adding one.
             if (frame == points.back().frame && juce::exactlyEqual (points.back().value, value))
@@ -1781,33 +1880,110 @@ void MultitrackView::continueAutomationPass (juce::int64 frame, const std::vecto
     }
 
     if (changed)
-        applyAutomationPass (false);
+        applyAutomationPasses ({});
 }
 
-void MultitrackView::finishAutomationPass()
+void MultitrackView::releaseAutomationPass (juce::uint32 trackId, const AutomationTarget& p)
 {
-    if (pass.has_value() && pass->parameters.front().parameter == AutomationParameter::effect)
+    for (size_t i = 0; i < passes.size(); ++i)
     {
-        const auto& p = pass->parameters.front();
-        engine.setTrackEffectTouched (pass->trackId, p.slotId, p.parameterId, false);
+        auto& pass = passes[i];
+
+        if (pass.trackId != trackId || std::find (pass.parameters.begin(), pass.parameters.end(), p) == pass.parameters.end())
+            continue;
+
+        if (pass.mode == AutomationMode::touch)
+            endPass (i);
+
+        return;
+    }
+}
+
+void MultitrackView::finishAutomationPasses()
+{
+    while (! passes.empty())
+        endPass (passes.size() - 1);
+
+    passStep.clear();
+}
+
+void MultitrackView::endPass (size_t index)
+{
+    const auto& pass = passes[index];
+
+    if (pass.parameters.front().parameter == AutomationParameter::effect)
+    {
+        const auto& p = pass.parameters.front();
+        engine.setTrackEffectTouched (pass.trackId, p.slotId, p.parameterId, false);
     }
 
-    pass.reset();
+    passes.erase (passes.begin() + (std::ptrdiff_t) index);
 }
 
-void MultitrackView::applyAutomationPass (bool first)
+void MultitrackView::holdPasses (juce::int64 frame)
 {
-    auto next = pass->base;
+    // A control held still keeps writing its value as the play position moves on.
+    for (size_t i = passes.size(); i-- > 0;)
+    {
+        if (i >= passes.size())
+            continue;
+
+        std::vector<float> held;
+
+        for (auto& points : passes[i].points)
+            held.push_back (points.back().value);
+
+        continueAutomationPass (passes[i].trackId, passes[i].parameters, frame, held);
+    }
+}
+
+void MultitrackView::followPlay (juce::int64 frame, std::optional<juce::int64> startedAt)
+{
+    holdPasses (frame);
+
+    // Tracks in Write write their volume (and pan) from play to stop, as their controls stand.
+    const auto now = engine.session.getState();
+
+    for (auto& t : now->tracks)
+    {
+        if (t.automationMode != AutomationMode::write || t.isFolder || isAutomationPassUnderWay (t.id, AutomationParameter::volume))
+            continue;
+
+        const auto from = startedAt.value_or (frame);
+        std::vector<AutomationTarget> parameters { AutomationParameter::volume };
+        std::vector<float> values { t.valueAt (AutomationParameter::volume, from) };
+
+        if (! t.isVca && ! t.isWide())
+        {
+            parameters.push_back (AutomationParameter::pan);
+            values.push_back (t.valueAt (AutomationParameter::pan, from));
+        }
+
+        startAutomationPass (t.id, parameters, from, values);
+
+        if (frame > from)
+            continueAutomationPass (t.id, parameters, frame, values);
+    }
+}
+
+void MultitrackView::applyAutomationPasses (const juce::String& newStep)
+{
+    auto next = *engine.session.getState();
     const auto returnFrames = (juce::int64) std::llround (returnSeconds * next.sampleRate);
 
-    for (size_t i = 0; i < pass->parameters.size(); ++i)
-        SessionEdits::writeAutomation (next, pass->trackId, pass->parameters[i], pass->points[i], returnFrames);
+    // Each pass writes over its envelopes as they were when it began.
+    for (auto& pass : passes)
+        for (size_t i = 0; i < pass.parameters.size(); ++i)
+        {
+            SessionEdits::setEnvelope (next, pass.trackId, pass.parameters[i], pass.before[i]);
+            SessionEdits::writeAutomation (next, pass.trackId, pass.parameters[i], pass.points[i], returnFrames);
+        }
 
-    // The first write is a step of its own; the rest of the pass merges into it.
-    const auto kind = pass->parameters.front().parameter;
-    engine.session.apply (std::move (next), kind == AutomationParameter::volume ? "Write Volume Automation"
-                                          : kind == AutomationParameter::pan ? "Write Pan Automation"
-                                          : kind == AutomationParameter::effect ? "Write Effect Automation" : "Write Surround Automation", ! first);
+    // A pass that starts is an undo step of its own; the rest merge into the latest.
+    if (newStep.isNotEmpty())
+        passStep = newStep;
+
+    engine.session.apply (std::move (next), passStep, newStep.isEmpty());
 }
 
 void MultitrackView::rebuildHeaders()
@@ -5005,6 +5181,23 @@ void MultitrackView::setFolderCollapsed (juce::uint32 folderId, bool collapsed)
         editTrack (folderId, collapsed ? "Collapse Folder" : "Expand Folder", false, [collapsed] (SessionTrack& t) { t.collapsed = collapsed; });
 }
 
+juce::uint32 MultitrackView::addVca (juce::uint32 joining)
+{
+    auto next = *engine.session.getState();
+    const auto vcaId = next.addVca().id;
+    SessionEdits::setTrackVca (next, joining, vcaId);
+    engine.session.apply (std::move (next), "Add VCA Fader");
+    return vcaId;
+}
+
+void MultitrackView::setTrackVca (juce::uint32 trackId, juce::uint32 vcaId)
+{
+    auto next = *engine.session.getState();
+
+    if (SessionEdits::setTrackVca (next, trackId, vcaId))
+        engine.session.apply (std::move (next), vcaId != 0 ? "Join VCA Fader" : "Leave VCA Fader");
+}
+
 void MultitrackView::setTrackFolder (juce::uint32 trackId, juce::uint32 folderId)
 {
     auto next = *engine.session.getState();
@@ -5533,7 +5726,7 @@ void MultitrackView::updateHeaderMeters()
     {
         const auto& t = tracks[i];
 
-        if (t.isFolder)
+        if (t.isControl())
             continue;
 
         // The headers read their own copy of the peaks (reader 1), so the mixer's and the input

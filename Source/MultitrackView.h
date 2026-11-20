@@ -468,6 +468,10 @@ public:
     /** Puts a track or bus in a folder (0: out of any) as an undo step. Right-click a header. */
     void setTrackFolder (juce::uint32 trackId, juce::uint32 folderId);
 
+    /** Adds a VCA fader at the end, with a track or bus joining it (0: none), as one undo step. */
+    juce::uint32 addVca (juce::uint32 joining);
+    void setTrackVca (juce::uint32 trackId, juce::uint32 vcaId);
+
     /** Sets a track's or bus's note (empty to clear it) as an undo step ("Track Note"). Right-
         click a header and choose Note... to type one; the header shows it as its tooltip. */
     void setTrackNote (juce::uint32 trackId, const juce::String& note);
@@ -581,32 +585,50 @@ public:
     bool isShowingClipGain() const noexcept       { return showClipGain; }
     void setCrossfading (bool on)                 { crossfading = on; }
 
-    /** With automation writing on, a track's volume or pan control stays live while playing,
-        even when automated: dragging it records a pass into its envelope (startAutomationPass to
-        finishAutomationPass), heard as it is written and undone as one step. So does turning a
-        control in a track effect's own window, from when it is grabbed to when it is let go. */
-    bool isWritingAutomation() const noexcept     { return writingAutomation; }
-    void setWritingAutomation (bool);
+    /** Automation modes (AutomationMode), each track's and bus's own: set in its A menu, the
+        mixer or Multitrack > Automation, kept out of undo. In Touch, Latch or Write a track's
+        volume and pan controls stay live while playing, even when automated, and moving one
+        writes into its envelope (heard as it is written); so does turning a control in one of
+        its effects' windows. Several tracks write at once, a pass each. */
+    bool isWritingAutomation() const;                        ///< any track or bus writes
+    bool isWritingAutomation (juce::uint32 trackId) const;   ///< this one writes
 
-    /** A pass of automation: the control's value at play positions as it moves. Each call puts
-        the pass so far into the session; when the pass ends, the envelope goes back to what it
-        had over returnSeconds. A position before the last ends the pass (playback jumped). */
+    /** Write Automation: every track and bus to Touch, or those that write back to Read. */
+    void setWritingAutomation (bool);
+    void setAutomationMode (juce::uint32 trackId, AutomationMode);   ///< 0: every track and bus
+
+    /** A pass of automation: a control's values at play positions as it moves. Each call puts
+        the passes so far into the session; the first call of a pass is an undo step, and the
+        rest merge into it. When a pass ends, the envelope goes back to what it had over
+        returnSeconds. A position before the pass's last ends it (playback jumped). */
     static constexpr double returnSeconds = 0.1;
     void startAutomationPass (juce::uint32 trackId, const AutomationTarget&, juce::int64 frame, float value);
-    void continueAutomationPass (juce::int64 frame, float value);
-    void finishAutomationPass();
+    void continueAutomationPass (juce::uint32 trackId, const AutomationTarget&, juce::int64 frame, float value);
 
     /** A pass that writes several of a track's envelopes at once (the surround pad's x and y),
-        one value for each, in the same order; undone as one step. */
+        one value for each, in the same order; undone as one step. Continuing it with some of
+        them moves those, and the others hold. */
     void startAutomationPass (juce::uint32 trackId, const std::vector<AutomationTarget>&, juce::int64 frame, const std::vector<float>& values);
-    void continueAutomationPass (juce::int64 frame, const std::vector<float>& values);
+    void continueAutomationPass (juce::uint32 trackId, const std::vector<AutomationTarget>&, juce::int64 frame, const std::vector<float>& values);
+
+    /** The control was let go. In Touch its pass ends; in Latch and Write it goes on, holding the
+        last value, until playback stops. */
+    void releaseAutomationPass (juce::uint32 trackId, const AutomationTarget&);
+
+    /** Playback stopped: every pass ends. */
+    void finishAutomationPasses();
+
+    /** As the session plays, the frame heard: each pass holds its values on to here, and tracks
+        in Write that aren't writing yet start, from startedAt when playback has just begun. The
+        view's timer calls it. */
+    void followPlay (juce::int64 frame, std::optional<juce::int64> startedAt);
 
     /** A track effect's parameter touched in its window, with the play position when the
-        session is playing. Gestures start and finish passes; values continue them. */
+        session is playing. Gestures start and release passes; values continue them. */
     void effectParameterTouched (const TrackEffects::ParameterTouch&, std::optional<juce::int64> playFrame);
     bool isAutomationPassUnderWay (juce::uint32 trackId, const AutomationTarget& p) const noexcept
     {
-        return pass.has_value() && pass->trackId == trackId && std::find (pass->parameters.begin(), pass->parameters.end(), p) != pass->parameters.end();
+        return findPass (trackId, p) != nullptr;
     }
 
     /** The envelope shown over a track's lane, if any: volume, pan or an effect parameter. The
@@ -869,20 +891,26 @@ private:
     SessionState withDragCopies (const SessionState& moved);
 
     GridSize gridSize = GridSize::automatic;
-    bool snapping = true, crossfading = true, writingAutomation = false, zeroCrossings = false;
+    bool snapping = true, crossfading = true, zeroCrossings = false;
     juce::int64 toZeroCrossing (const SessionClip&, juce::int64 frame) const;
 
     struct AutomationPass
     {
         juce::uint32 trackId = 0;
+        AutomationMode mode = AutomationMode::touch;
         std::vector<AutomationTarget> parameters;
-        SessionState base;                              // the session as the pass began
+        std::vector<Envelope> before;                       // each parameter's envelope as the pass began
         std::vector<std::vector<AutomationPoint>> points;   // each parameter's
     };
 
-    std::optional<AutomationPass> pass;
-    bool controlsFollowPlay = false;
-    void applyAutomationPass (bool first);
+    std::vector<AutomationPass> passes;
+    juce::String passStep;                                  // the undo step the passes write into
+    bool controlsFollowPlay = false, wasPlaying = false;
+
+    const AutomationPass* findPass (juce::uint32 trackId, const AutomationTarget&) const noexcept;
+    void endPass (size_t index);
+    void applyAutomationPasses (const juce::String& newStep);
+    void holdPasses (juce::int64 frame);
 
     /** Where automated controls show their envelope's value: the play position while the session
         plays, otherwise the cursor. */

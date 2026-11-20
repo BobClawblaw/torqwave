@@ -140,6 +140,18 @@ struct SessionSend
     or where it plays in a 5.1 master: its surround pan's x, y and width, and its LFE share. */
 enum class AutomationParameter { volume, pan, effect, surroundX, surroundY, surroundWidth, lfe };
 
+/** How a track's or bus's automation plays and is written, as in Cubase:
+    - off: its envelopes are ignored, and its controls set its settings;
+    - read: its envelopes play, and its automated controls follow them;
+    - touch: as read, but a control moved while playing writes into its envelope until it is let
+      go, then the envelope takes over again;
+    - latch: as touch, but once moved a control goes on writing its last value until playback stops;
+    - write: from play to stop its volume and pan are written as their controls stand, moved or not. */
+enum class AutomationMode { off, read, touch, latch, write };
+
+juce::String automationModeName (AutomationMode);
+std::optional<AutomationMode> automationModeNamed (const juce::String&);
+
 /** The surround pan's parameters, in SessionTrack::surroundEnvelopes' order. */
 inline constexpr std::array<AutomationParameter, 4> surroundParameters { AutomationParameter::surroundX, AutomationParameter::surroundY,
                                                                          AutomationParameter::surroundWidth, AutomationParameter::lfe };
@@ -361,6 +373,23 @@ struct SessionTrack
     bool isFolder = false;
     bool collapsed = false;                // a folder's members out of the lanes
     juce::uint32 folderId = 0;             // the folder this track or bus is in, or 0
+
+    /** A VCA fader: no audio, clips or effects of its own. The tracks and buses that join it
+        (vcaId) have its volume, or its volume envelope, added to their own in dB as they are
+        mixed, without being summed together; its mute and solo act on them as if their own. */
+    bool isVca = false;
+    juce::uint32 vcaId = 0;                // the VCA fader this track or bus has joined, or 0
+
+    /** A folder or a VCA fader: a track with no audio of its own. */
+    bool isControl() const noexcept               { return isFolder || isVca; }
+
+    AutomationMode automationMode = AutomationMode::read;
+
+    /** False in Off: its envelopes don't play. */
+    bool readsAutomation() const noexcept         { return automationMode != AutomationMode::off; }
+
+    /** Touch, Latch or Write: moving a control while playing writes automation. */
+    bool writesAutomation() const noexcept        { return automationMode >= AutomationMode::touch; }
     juce::String note;                     // free text, shown in the header's tooltip
     TrackInput input;                      // what it records from (tracks only)
 
@@ -427,7 +456,7 @@ struct SessionTrack
     bool musical = false;
 
     /** False for a bus, a folder or a frozen track: clips meant for it go onto a new track instead. */
-    bool takesClips() const noexcept              { return ! isBus && ! isFolder && ! isFrozen(); }
+    bool takesClips() const noexcept              { return ! isBus && ! isControl() && ! isFrozen(); }
 
     /** Which clips the track takes: audio clips on an audio track, note clips on an instrument track. */
     bool takesAudioClips() const noexcept         { return takesClips() && ! isInstrument; }
@@ -465,6 +494,9 @@ struct SessionTrack
 
     /** The target's envelope; empty for an effect parameter with none. */
     const Envelope& envelope (const AutomationTarget&) const;
+
+    /** True when the target plays its envelope: it has one, and the mode isn't Off. */
+    bool follows (const AutomationTarget& t) const  { return readsAutomation() && ! envelope (t).isEmpty(); }
 
     /** The volume (dB) or pan at a session frame: the envelope's value, or the setting when
         there is no envelope. An effect parameter with no envelope has no setting here (its
@@ -566,6 +598,9 @@ struct SessionState
         out of any folder. */
     float folderGain (const SessionTrack&) const;
 
+    /** The VCA fader a track or bus has joined, or nullptr. */
+    const SessionTrack* vcaOf (const SessionTrack&) const;
+
     /** In the lanes: not hidden, nor in a collapsed folder. */
     bool isShown (const SessionTrack&) const;
 
@@ -580,6 +615,7 @@ struct SessionState
 
     /** Adds an empty, open folder named "Folder n" and returns it. */
     SessionTrack& addFolder();
+    SessionTrack& addVca();
 
     /** The track (or bus) with this id, or null. */
     const SessionTrack* findTrack (juce::uint32 trackId) const;
@@ -838,6 +874,13 @@ namespace SessionEdits
     /** Puts a track or bus in a folder, or with folderId 0 takes it out. False for a folder
         (they don't nest), or when it is already so. */
     bool setTrackFolder (SessionState&, juce::uint32 trackId, juce::uint32 folderId);
+
+    /** Makes a track or bus join a VCA fader, or with vcaId 0 leave it. False for a folder or a
+        VCA, or for something that isn't a VCA. */
+    bool setTrackVca (SessionState&, juce::uint32 trackId, juce::uint32 vcaId);
+
+    /** Sets a track's or bus's automation mode (a folder's is always Read). */
+    bool setAutomationMode (SessionState&, juce::uint32 trackId, AutomationMode);
 
     /** Removes a track, bus or folder; removing a bus removes the sends to it, and removing a
         folder leaves its members out of any. */
@@ -1184,6 +1227,11 @@ public:
         session but not undo steps, and an undo or redo leaves them as they are. */
     void setLoop (juce::Range<juce::int64>);
     void setBarsAndBeats (bool);
+
+    /** Tracks' automation modes, likewise kept out of the undo steps, as in Cubase: an undo
+        leaves every track in the mode it is in, and apply() keeps each existing track's mode
+        (a new track brings its own). trackId 0: every track and bus. */
+    void setAutomationMode (juce::uint32 trackId, AutomationMode);
     void markSaved (const juce::File& savedAs);
 
     /** Marks the session as having changes to save (a recovered copy, say), at every step. */
@@ -1204,7 +1252,8 @@ private:
 
     void setCurrent (const State&);
 
-    /** The state with this session's loop and bars and beats, as setLoop and setBarsAndBeats keep them. */
+    /** The state with this session's loop, bars and beats and automation modes, as setLoop,
+        setBarsAndBeats and setAutomationMode keep them. */
     State withViewOf (State, const SessionState& now) const;
     void replaceCurrent (SessionState);
 

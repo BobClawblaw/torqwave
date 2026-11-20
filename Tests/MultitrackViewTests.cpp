@@ -1174,12 +1174,12 @@ void runMultitrackViewTests (AudioEngine& engine)
     // moved again. It is one undo step, and a value held still makes no extra points.
     view.setWritingAutomation (true);
     view.startAutomationPass (trackId, AutomationParameter::volume, 50000, 0.0f);
-    view.continueAutomationPass (60000, -10.0f);
-    view.continueAutomationPass (60000, -12.0f);
-    view.continueAutomationPass (70000, -12.0f);
-    view.continueAutomationPass (80000, -12.0f);
-    view.continueAutomationPass (90000, -3.0f);
-    view.finishAutomationPass();
+    view.continueAutomationPass (trackId, AutomationParameter::volume, 60000, -10.0f);
+    view.continueAutomationPass (trackId, AutomationParameter::volume, 60000, -12.0f);
+    view.continueAutomationPass (trackId, AutomationParameter::volume, 70000, -12.0f);
+    view.continueAutomationPass (trackId, AutomationParameter::volume, 80000, -12.0f);
+    view.continueAutomationPass (trackId, AutomationParameter::volume, 90000, -3.0f);
+    view.releaseAutomationPass (trackId, AutomationParameter::volume);
     Mouse::settle();
     const auto volumePoints = [&]
     {
@@ -1191,8 +1191,8 @@ void runMultitrackViewTests (AudioEngine& engine)
            "view: a pass of automation is written as the play position moves (" + juce::String ((int) points.size()) + " points, 6 wanted)");
 
     view.startAutomationPass (trackId, AutomationParameter::volume, 120000, -6.0f);
-    view.continueAutomationPass (130000, -6.0f);
-    view.continueAutomationPass (125000, 6.0f);   // playback jumped back: the pass ends
+    view.continueAutomationPass (trackId, AutomationParameter::volume, 130000, -6.0f);
+    view.continueAutomationPass (trackId, AutomationParameter::volume, 125000, 6.0f);   // playback jumped back: the pass ends
     check (! view.isAutomationPassUnderWay (trackId, AutomationParameter::volume) && volumePoints().size() == 10,
            "view: a second pass adds to the envelope, and a jump back in time ends it");
 

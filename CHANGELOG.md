@@ -13,6 +13,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 - Ask Torq gains five session tools: `add_section`, `move_section` (with `copy`, "double the chorus"), `delete_section`, `change_section_bars` ("make the intro 4 bars shorter") and `set_arrangement`; `get_session` lists the sections, the chain and the tempo changes.
 - Tested: moving, copying and deleting a section carries clips, notes, envelopes, markers and tempo changes exactly, with undo, and locked clips stay; a chain plays the right frames of each section at any block size, jumping inside a block; flattening gives the chain's order with each section's tempo; sections and the chain come back from a session file; in the view, drawing, moving, copying and sizing sections were driven by the tests' mouse. Not yet tried by hand on a song.
 
+**Automation modes and VCA faders**
+- **Automation modes** for each track and bus, as in Cubase: Off, Read, Touch, Latch and Write, chosen from the track's **A** button (which shows the mode) or for every track at once from **Multitrack > Automation**. Off ignores the envelopes; Read plays them; Touch writes while a control is held; Latch goes on writing the last value until playback stops; Write writes the volume and pan from play to stop, moved or not. Several tracks write at once, each pass an undo step. The modes are saved with the session and, like the loop, are not undo steps. **Write Automation** (W) now puts every track in Touch, or back to Read.
+- The **mixer's** faders and pan knobs write automation too, as the track headers do.
+- **VCA faders:** a track kind with no audio that tracks and buses join (**Multitrack > Tracks > Add VCA Fader**, or a header's **VCA** menu). Its volume, and its volume envelope, are added to each member's in dB as they are mixed, without summing them; its mute and solo act on its members; bounces, freezes and stems keep its level. Ask Torq's `get_session` shows a track's VCA fader and mode.
+- A value written where a held one ends now steps there, rather than ramping from where the hold began.
+- Tested: Off plays the setting, sample for sample; Touch, Latch and Write each write what they should over a scripted pass, Write from where playback began; two tracks write at once, and each pass undoes on its own; an undo, or an older state applied, leaves the modes; the mixer's fader writes while playing in Touch; a member of a VCA fader at -3 dB plays sample for sample as at -9 dB, its envelope moves its members within 1e-6, a bus joins one, mute and solo follow it, and membership and modes come back from a session file. Not yet tried by hand on a mix.
+
 ## Released
 
 **Release 0.18.0: Cubase-style sessions, Ask Torq on sessions, ASIO and Intel Macs**

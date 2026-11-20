@@ -638,7 +638,8 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
     const auto pairs = track.isWide() && buffer.getNumChannels() >= track.wideChannels() ? track.wideChannels() / 2 : 1;
 
     // Steps line up with session time, so the result doesn't depend on how the mix is split into blocks.
-    const auto automated = std::any_of (track.effectEnvelopes.begin(), track.effectEnvelopes.end(), [chain] (const EffectEnvelope& e)
+    // In Off, the parameters keep their settings.
+    const auto automated = track.readsAutomation() && std::any_of (track.effectEnvelopes.begin(), track.effectEnvelopes.end(), [chain] (const EffectEnvelope& e)
     {
         return std::any_of (chain->begin(), chain->end(), [&e] (auto& s) { return s->id == e.slotId && ! s->bypassed; });
     });

@@ -208,6 +208,9 @@ public:
     void setPositionFrames (juce::int64);
     juce::int64 getStopFrame() const noexcept     { return stopAt; }
 
+    /** Where the last play() started. */
+    juce::int64 getStartFrame() const noexcept    { return startedAt; }
+
     /** How late the sound leaves after the player, in device frames: the latency of the effects it
         plays through (the preview and the rack), set by the engine as the graph reports it. The
         sources then play silence on that much past the end, so the effects empty out before the
@@ -312,7 +315,7 @@ public:
 
 private:
     juce::AudioTransportSource transport;
-    juce::int64 stopAt = -1;
+    juce::int64 stopAt = -1, startedAt = 0;
     int separateOutputs = -1;   // see setSeparateOutputs
     double sourceRate = 0.0;
     std::atomic<juce::int64> playedFrame { 0 }, playStart { 0 };   // playStart: where play() or a seek began
