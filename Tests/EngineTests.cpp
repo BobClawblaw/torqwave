@@ -97,6 +97,7 @@
 #include "ArrangerTests.h"
 #include "AutomationModeTests.h"
 #include "DrumGridTests.h"
+#include "MidiOutTests.h"
 #include "MetronomeTests.h"
 #include "MixerTests.h"
 #include "BounceTests.h"
@@ -797,6 +798,7 @@ int main (int argc, char* argv[])
         runArrangerTests (engine.formatManager);
         runAutomationModeTests (engine);
         runDrumGridTests (engine.formatManager);
+        runMidiOutTests();
         runMetronomeTests (engine.formatManager);
         runMixerTests (engine);
         runBounceTests();

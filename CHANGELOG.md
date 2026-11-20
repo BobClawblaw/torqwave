@@ -34,6 +34,19 @@ Each milestone as it was built, newest first, with what the tests measured on th
   - The grid was driven by the tests' mouse.
   - Not yet tried by hand with a drum instrument or a keyboard.
 
+**MIDI out**
+- **External instruments:** a track's **MIDI Out** (in its instrument button's menu) plays its note clips, controller lanes and live input on a hardware synth through a MIDI output port. Each clip goes on its own channel, or everything on one. An offset of up to 500 ms either way lines the synth up. The messages are timed to leave when their audio is heard, allowing for the rack's and the interface's output latency, from a thread of their own so the audio thread never waits on a port. Stopping, or a loop going round, ends the notes left on.
+- **MIDI from plug-ins:** **MIDI From** has a track's instrument play the MIDI another track's plug-in puts out (an arpeggiator, chord or MIDI effect plug-in), as well as its own notes. MIDI effect plug-ins now count as instruments.
+- **MIDI clock and transport out** (**Multitrack > MIDI Clock Out**): 24 clocks a beat on the tempo map, with Song Position, Start, Continue and Stop.
+- Tested:
+  - Through a virtual MIDI port, the port receives exactly a clip's messages on its channel, each within 5 ms of its time (1.4 ms on the development Mac).
+  - A track's channel and offset apply.
+  - Stopping and a loop jump end held notes; live input goes out while stopped; nothing goes out while the session is resampled.
+  - Clock: Song Position 0 and Start, then 24 clocks a beat within 5 ms (1.5 ms measured); a jump sends Stop, Song Position and Continue; stopping sends Stop.
+  - A chord plug-in's notes reach the track taking its MIDI at their frames, or a run late when that track is above its source.
+  - Ports, channels, offsets and MIDI From come back from a session file.
+  - Not yet tried by hand with a hardware synth or a real arpeggiator plug-in. The virtual-port tests run on macOS and Linux only.
+
 ## Released
 
 **Release 0.18.0: Cubase-style sessions, Ask Torq on sessions, ASIO and Intel Macs**

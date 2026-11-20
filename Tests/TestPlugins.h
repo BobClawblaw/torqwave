@@ -199,6 +199,62 @@ private:
     std::vector<int> pending;
 };
 
+/** A MIDI plug-in, as a chord or arpeggiator plug-in is: silent, it puts out each note it is
+    given and one a fifth above it, at the same frame. */
+class ChordInstrument final : public juce::AudioPluginInstance
+{
+public:
+    ChordInstrument() : AudioPluginInstance (BusesProperties().withOutput ("Out", juce::AudioChannelSet::stereo(), true)) {}
+
+    void fillInPluginDescription (juce::PluginDescription& d) const override
+    {
+        d.name = "Test Chord";
+        d.pluginFormatName = "Test";
+        d.fileOrIdentifier = "test-chord";
+        d.isInstrument = true;
+        d.numInputChannels = 0;
+        d.numOutputChannels = 2;
+    }
+
+    const juce::String getName() const override  { return "Test Chord"; }
+    void prepareToPlay (double, int) override    {}
+    void releaseResources() override             {}
+
+    void processBlock (juce::AudioBuffer<float>& b, juce::MidiBuffer& midi) override
+    {
+        b.clear();
+        juce::MidiBuffer out;
+
+        for (const auto meta : midi)
+        {
+            const auto m = meta.getMessage();
+            out.addEvent (m, meta.samplePosition);
+
+            if (m.isNoteOnOrOff() && m.getNoteNumber() + 7 < 128)
+            {
+                auto fifth = m;
+                fifth.setNoteNumber (m.getNoteNumber() + 7);
+                out.addEvent (fifth, meta.samplePosition);
+            }
+        }
+
+        midi.swapWith (out);
+    }
+
+    double getTailLengthSeconds() const override { return 0.0; }
+    bool acceptsMidi() const override            { return true; }
+    bool producesMidi() const override           { return true; }
+    juce::AudioProcessorEditor* createEditor() override { return nullptr; }
+    bool hasEditor() const override              { return false; }
+    int getNumPrograms() override                { return 1; }
+    int getCurrentProgram() override             { return 0; }
+    void setCurrentProgram (int) override        {}
+    const juce::String getProgramName (int) override { return {}; }
+    void changeProgramName (int, const juce::String&) override {}
+    void getStateInformation (juce::MemoryBlock&) override {}
+    void setStateInformation (const void*, int) override {}
+};
+
 /** Has a sidechain input (stereo, or mono when asked) and adds it to its input, both delayed by
     its latency: out[n] = in[n - latency] + key[n - latency], so a key out of line shows. */
 class SidechainPlugin final : public juce::AudioPluginInstance

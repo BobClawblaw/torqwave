@@ -433,6 +433,21 @@ struct SessionTrack
     bool drumGrid = false;
     std::vector<DrumSound> drumMap;
 
+    /** An external instrument (tracks only): its note clips, controller lanes and live input go
+        out of a MIDI output port (its device identifier, and the name it had), on their own
+        channels or all on one (1 to 16; 0 keeps theirs), sent offsetMs earlier (negative) or
+        later than the audio, to line up with what the synth sends back. */
+    juce::String midiOutPort, midiOutName;
+    int midiOutChannel = 0;
+    double midiOutOffsetMs = 0.0;
+    static constexpr double maxMidiOutOffsetMs = 500.0;
+
+    bool playsMidiOut() const noexcept            { return midiOutPort.isNotEmpty() && ! isBus && ! isControl(); }
+
+    /** An instrument track playing the MIDI another track's plug-ins put out (an arpeggiator,
+        a chord or MIDI effect plug-in), as well as its own notes; or 0. */
+    juce::uint32 midiFromTrackId = 0;
+
     /** The drum map in use: its own, or General MIDI's. */
     const std::vector<DrumSound>& drumSounds() const noexcept { return drumMap.empty() ? DrumSound::generalMidi() : drumMap; }
 
@@ -919,6 +934,15 @@ namespace SessionEdits
     /** Puts a track or bus in a folder, or with folderId 0 takes it out. False for a folder
         (they don't nest), or when it is already so. */
     bool setTrackFolder (SessionState&, juce::uint32 trackId, juce::uint32 folderId);
+
+    /** Makes a track an external instrument playing out of a MIDI port (an empty port: none),
+        on a channel (0: the clips' own) with an offset in ms; it becomes an instrument track.
+        False if nothing changed or it is a bus or a folder. */
+    bool setMidiOut (SessionState&, juce::uint32 trackId, const juce::String& port, const juce::String& name, int channel, double offsetMs);
+
+    /** Has a track play the MIDI another track's plug-ins put out (0: none). False for a bus or a
+        folder, the track itself, or no change. */
+    bool setMidiFrom (SessionState&, juce::uint32 trackId, juce::uint32 fromId);
 
     /** Makes a track or bus join a VCA fader, or with vcaId 0 leave it. False for a folder or a
         VCA, or for something that isn't a VCA. */

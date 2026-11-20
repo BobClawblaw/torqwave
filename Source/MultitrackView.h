@@ -473,6 +473,16 @@ public:
     juce::uint32 addVca (juce::uint32 joining);
     void setTrackVca (juce::uint32 trackId, juce::uint32 vcaId);
 
+    /** An external instrument: the track's notes out of a MIDI port (empty: none), on a channel
+        (0: the clips' own), sent offsetMs from the audio. Each an undo step. */
+    void setTrackMidiOut (juce::uint32 trackId, const juce::String& port, const juce::String& name);
+    void setTrackMidiOutChannel (juce::uint32 trackId, int channel);
+    void setTrackMidiOutOffset (juce::uint32 trackId, double offsetMs);
+    void askMidiOutOffset (juce::uint32 trackId);
+
+    /** The track plays the MIDI another track's plug-ins put out (0: none), as an undo step. */
+    void setTrackMidiFrom (juce::uint32 trackId, juce::uint32 fromId);
+
     /** Sets a track's or bus's note (empty to clear it) as an undo step ("Track Note"). Right-
         click a header and choose Note... to type one; the header shows it as its tooltip. */
     void setTrackNote (juce::uint32 trackId, const juce::String& note);

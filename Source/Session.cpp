@@ -3166,6 +3166,7 @@ void addKeys (const SessionState& from, SessionState& alone)
 
             copy.folderId = 0;
             copy.vcaId = 0;
+            copy.midiFromTrackId = 0;
             alone.tracks.push_back (std::move (copy));
         }
     }
@@ -3243,6 +3244,9 @@ bool removeTrack (SessionState& s, int track)
         if (t.vcaId == removed)
             t.vcaId = 0;
 
+        if (t.midiFromTrackId == removed)
+            t.midiFromTrackId = 0;
+
         if (t.outputBusId == removed)
             t.outputBusId = 0;
 
@@ -3266,6 +3270,40 @@ bool setTrackFolder (SessionState& s, juce::uint32 trackId, juce::uint32 folderI
 
     track->folderId = folderId;
     return true;
+}
+
+bool setMidiFrom (SessionState& s, juce::uint32 trackId, juce::uint32 fromId)
+{
+    const auto found = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
+    auto* track = found != s.tracks.end() ? &*found : nullptr;
+    const auto* from = fromId != 0 ? s.findTrack (fromId) : nullptr;
+
+    if (track == nullptr || track->isBus || track->isControl() || track->midiFromTrackId == fromId
+        || (fromId != 0 && (from == nullptr || from == track || from->isBus || from->isControl())))
+        return false;
+
+    track->midiFromTrackId = fromId;
+    return true;
+}
+
+bool setMidiOut (SessionState& s, juce::uint32 trackId, const juce::String& port, const juce::String& name, int channel, double offsetMs)
+{
+    const auto found = std::find_if (s.tracks.begin(), s.tracks.end(), [trackId] (auto& t) { return t.id == trackId; });
+    auto* track = found != s.tracks.end() ? &*found : nullptr;
+
+    if (track == nullptr || track->isBus || track->isControl())
+        return false;
+
+    const auto before = std::make_tuple (track->midiOutPort, track->midiOutName, track->midiOutChannel, track->midiOutOffsetMs);
+    track->midiOutPort = port;
+    track->midiOutName = port.isEmpty() ? juce::String() : name;
+    track->midiOutChannel = juce::jlimit (0, 16, channel);
+    track->midiOutOffsetMs = juce::jlimit (-SessionTrack::maxMidiOutOffsetMs, SessionTrack::maxMidiOutOffsetMs, offsetMs);
+
+    if (port.isNotEmpty())
+        track->isInstrument = true;
+
+    return before != std::make_tuple (track->midiOutPort, track->midiOutName, track->midiOutChannel, track->midiOutOffsetMs);
 }
 
 bool setTrackVca (SessionState& s, juce::uint32 trackId, juce::uint32 vcaId)
@@ -4506,6 +4544,21 @@ juce::String save (const SessionState& state, const juce::File& target,
         if (t.drumGrid)
             track->setAttribute ("drumGrid", true);
 
+        if (t.playsMidiOut())
+        {
+            track->setAttribute ("midiOut", t.midiOutPort);
+            track->setAttribute ("midiOutName", t.midiOutName);
+
+            if (t.midiOutChannel > 0)
+                track->setAttribute ("midiOutChannel", t.midiOutChannel);
+
+            if (! juce::exactlyEqual (t.midiOutOffsetMs, 0.0))
+                track->setAttribute ("midiOutOffset", t.midiOutOffsetMs);
+        }
+
+        if (t.midiFromTrackId != 0 && indexOf.count (t.midiFromTrackId) > 0)
+            track->setAttribute ("midiFrom", indexOf[t.midiFromTrackId]);
+
         if (! t.drumMap.empty())
         {
             auto* map = track->createNewChildElement ("DRUMMAP");
@@ -4874,6 +4927,11 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
         if (! track.isBus && ! track.isControl())
         {
             track.drumGrid = trackXml->getBoolAttribute ("drumGrid");
+            track.midiOutPort = trackXml->getStringAttribute ("midiOut");
+            track.midiOutName = trackXml->getStringAttribute ("midiOutName");
+            track.midiOutChannel = juce::jlimit (0, 16, trackXml->getIntAttribute ("midiOutChannel"));
+            track.midiOutOffsetMs = juce::jlimit (-SessionTrack::maxMidiOutOffsetMs, SessionTrack::maxMidiOutOffsetMs, trackXml->getDoubleAttribute ("midiOutOffset"));
+            track.midiFromTrackId = (juce::uint32) trackXml->getIntAttribute ("midiFrom", -1);   // an index until every track is read
 
             if (auto* map = trackXml->getChildByName ("DRUMMAP"))
                 for (auto* sound : map->getChildWithTagNameIterator ("SOUND"))
@@ -5138,6 +5196,7 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
         state.tracks[i].sends.clear();
         state.tracks[i].folderId = 0;
         state.tracks[i].vcaId = 0;
+        state.tracks[i].midiFromTrackId = 0;
         state.tracks[i].outputBusId = 0;
         state.tracks[i].ducking = {};
         state.tracks[i].sidechains.clear();
@@ -5147,6 +5206,9 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
 
         if (pending[i].vcaId < pending.size())
             SessionEdits::setTrackVca (state, state.tracks[i].id, pending[pending[i].vcaId].id);
+
+        if (pending[i].midiFromTrackId < pending.size())
+            SessionEdits::setMidiFrom (state, state.tracks[i].id, pending[pending[i].midiFromTrackId].id);
 
         if (pending[i].outputBusId < pending.size())
             SessionEdits::setTrackOutput (state, state.tracks[i].id, pending[pending[i].outputBusId].id);

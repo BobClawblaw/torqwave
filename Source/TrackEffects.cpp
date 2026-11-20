@@ -385,7 +385,19 @@ juce::uint32 TrackEffects::add (juce::uint32 trackId, std::unique_ptr<juce::Audi
 
 bool TrackEffects::isInstrument (const juce::AudioPluginInstance& p)
 {
-    return p.acceptsMidi() && p.getPluginDescription().isInstrument;
+    return p.acceptsMidi() && (p.getPluginDescription().isInstrument || p.isMidiEffect());
+}
+
+void TrackEffects::setMidiSources (const std::set<juce::uint32>& trackIds)
+{
+    const juce::ScopedLock sl (lock);
+
+    for (auto it = routes.begin(); it != routes.end();)
+        it = trackIds.count (it->first) > 0 ? std::next (it) : routes.erase (it);
+
+    for (auto id : trackIds)
+        if (routes.count (id) == 0)
+            routes[id].events.reserve (routedRoom);
 }
 
 bool TrackEffects::hasInstrument (juce::uint32 trackId)
@@ -700,6 +712,25 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
                 liveFrom += n;
             }
 
+            // MIDI another track's instrument put out: what falls in these frames at its place,
+            // what is late (its source mixed after this track) at the start; too late, dropped.
+            if (track.midiFromTrackId != 0)
+                if (const auto found = routes.find (track.midiFromTrackId); found != routes.end())
+                {
+                    auto& events = found->second.events;
+                    auto kept = events.begin();
+
+                    for (auto& e : events)
+                    {
+                        if (e.frame >= at + n)
+                            *kept++ = e;
+                        else if (e.frame >= at - routedLate)
+                            midi.addEvent (e.bytes, e.size, (int) juce::jmax ((juce::int64) 0, e.frame - at));
+                    }
+
+                    events.erase (kept, events.end());
+                }
+
             // The notes it is left holding, for ending them later.
             for (const auto meta : midi)
             {
@@ -716,6 +747,28 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
 
             p.processBlock (work, midi);
             const auto outs = p.getTotalNumOutputChannels();
+
+            // What it puts out, kept for the track that plays it (none kept across a jump).
+            if (p.producesMidi())
+                if (const auto found = routes.find (track.id); found != routes.end())
+                {
+                    auto& routed = found->second;
+
+                    if (at != routed.nextFrame)
+                        routed.events.clear();
+
+                    routed.nextFrame = at + n;
+
+                    for (const auto meta : midi)
+                        if (meta.numBytes <= 3 && routed.events.size() < routed.events.capacity())
+                        {
+                            Routed::Event e;
+                            e.frame = at + meta.samplePosition;
+                            e.size = meta.numBytes;
+                            std::memcpy (e.bytes, meta.data, (size_t) meta.numBytes);
+                            routed.events.push_back (e);
+                        }
+                }
 
             if (outs > 0)
             {

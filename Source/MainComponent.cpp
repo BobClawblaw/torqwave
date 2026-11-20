@@ -59,6 +59,7 @@ namespace
     constexpr const char* fadeShapeKey    = "editorFadeShape";
     constexpr const char* snappingKey     = "snapping";
     constexpr const char* gridSizeKey     = "gridSize";
+    constexpr const char* midiClockKey    = "midiClockPort";
     constexpr const char* crossfadingKey  = "crossfading";
     constexpr const char* rippleKey       = "ripple";   // 0 off, 1 the clip's track, 2 every track
     constexpr const char* zeroCrossingsKey = "zeroCrossings";
@@ -1112,6 +1113,13 @@ MainComponent::MainComponent()
     rackView.onEditSlot = [this] (int index) { showEditor (index); };
     rackView.onApply = [this] { commands.invokeDirectly (cmdApplyRack, true); };
     engine.onPluginAboutToBeRemoved = [this] (juce::AudioProcessor* p) { closeEditorFor (p); };
+    engine.onMidiPortsFailed = [] (const juce::StringArray& names)
+    {
+        showNote ("MIDI Out", names.joinIntoString (", ") + (names.size() == 1 ? " isn't" : " aren't")
+                                  + " connected, so nothing goes out of " + (names.size() == 1 ? "it." : "them.")
+                                  + " Connect it and choose it again in the track's MIDI Out menu.");
+    };
+    engine.setMidiClockPort (settings->getValue (midiClockKey));
     engine.onEffectsNotCopied = [] (const juce::StringArray& names)
     {
         showNote ("Surround Effects", names.joinIntoString (", ") + (names.size() == 1 ? " couldn't" : " couldn't each")
@@ -1403,6 +1411,7 @@ MainComponent::~MainComponent()
     backgroundJob = nullptr;
     engine.onPluginAboutToBeRemoved = nullptr;
     engine.onEffectsNotCopied = nullptr;
+    engine.onMidiPortsFailed = nullptr;
     engine.document.removeChangeListener (this);
     engine.session.removeChangeListener (this);
     engine.removeChangeListener (this);
@@ -3281,6 +3290,17 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
                     grid.addItem (gridSizeBaseId + i, names[i], multitrackMode && multitrack.isShowingBars(), (int) multitrack.getGridSize() == i);
 
                 menu.addSubMenu ("Grid", grid);
+
+                // MIDI clock and transport for other gear to follow (saved with the app's settings).
+                juce::PopupMenu clock;
+                const auto port = engine.getMidiClockPort();
+                const auto outputs = juce::MidiOutput::getAvailableDevices();
+                clock.addItem (midiClockBaseId, "None", true, port.isEmpty());
+
+                for (int i = 0; i < juce::jmin (64, outputs.size()); ++i)
+                    clock.addItem (midiClockBaseId + 1 + i, outputs[i].name, true, outputs[i].identifier == port);
+
+                menu.addSubMenu ("MIDI Clock Out", clock);
             }
             group ("Surround", { cmdSurroundMaster, cmdSevenOneMaster });
             group ("Render and Export", { cmdBounceTrack, cmdFreezeTrack, 0, cmdMixDown, cmdExportStems, cmdExportFolderStems, cmdExportRegions });
@@ -5617,6 +5637,16 @@ void MainComponent::menuItemSelected (int menuItemId, int)
     if (const auto waveforms = Theme::waveformNames(); juce::isPositiveAndBelow (menuItemId - waveformColourBaseId, waveforms.size()))
     {
         setTheme (Theme::current().name, appProperties.getUserSettings()->getValue (accentKey, "Blue"), waveforms[menuItemId - waveformColourBaseId]);
+        return;
+    }
+
+    if (juce::isPositiveAndBelow (menuItemId - midiClockBaseId, 65))
+    {
+        const auto outputs = juce::MidiOutput::getAvailableDevices();
+        const auto index = menuItemId - midiClockBaseId - 1;
+        const auto port = juce::isPositiveAndBelow (index, outputs.size()) ? outputs[index].identifier : juce::String();
+        engine.setMidiClockPort (port);
+        appProperties.getUserSettings()->setValue (midiClockKey, port);
         return;
     }
 

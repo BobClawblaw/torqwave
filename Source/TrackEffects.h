@@ -107,6 +107,12 @@ public:
         leaves it there. */
     static bool isInstrument (const juce::AudioPluginInstance&);
 
+    /** Message thread: the tracks whose plug-ins' MIDI out another track plays (its
+        midiFromTrackId). What their instruments put out each run is kept, at its session frames,
+        until the track playing it takes it: in the same block when that track comes after its
+        source in the mix (later in the list), otherwise at the start of its next run. */
+    void setMidiSources (const std::set<juce::uint32>& trackIds);
+
     /** The instrument first in the track's chain, or null. */
     juce::AudioPluginInstance* getInstrument (juce::uint32 trackId) const;
 
@@ -170,6 +176,23 @@ private:
 
     using Copies = std::array<std::unique_ptr<juce::AudioPluginInstance>, 3>;
 
+    /** MIDI a track's instrument put out, waiting for the track that plays it (audio thread). */
+    struct Routed
+    {
+        struct Event
+        {
+            juce::int64 frame = 0;
+            int size = 0;
+            juce::uint8 bytes[3] {};
+        };
+
+        std::vector<Event> events;          // room made on the message thread; never grown on the audio thread
+        juce::int64 nextFrame = -1;         // where the source's last run ended
+    };
+
+    static constexpr size_t routedRoom = 4096;
+    static constexpr juce::int64 routedLate = 8192;   // frames late after which kept MIDI is dropped
+
     struct Slot
     {
         std::unique_ptr<juce::AudioPluginInstance> plugin;
@@ -204,6 +227,7 @@ private:
     juce::uint32 nextSlotId = 1;
     std::set<std::tuple<juce::uint32, juce::uint32, juce::String>> touched;   // guarded by lock
     std::map<juce::uint32, int> wide;   // 5.1 and 7.1 tracks, and their channels; guarded by lock
+    std::map<juce::uint32, Routed> routes;   // by source track; guarded by lock
 
     juce::SpinLock touchesLock;
     std::vector<ParameterTouch> touches;   // waiting for the message thread

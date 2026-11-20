@@ -508,6 +508,9 @@ void SessionSource::renderRun (juce::int64 start, const juce::AudioSourceChannel
 
     SessionMixer::render (*state, start, *info.buffer, destStart, count, buffers, &inserts, takeLive (numFrames, true));
 
+    if (midiOut != nullptr)
+        midiOut->run (*state, start, destStart - info.startSample, count);
+
     if (count < numFrames)
         info.buffer->clear (destStart + count, numFrames - count);
 
@@ -751,6 +754,17 @@ void DocumentPlayerProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     const auto atSessionFrames = playing && mode == Mode::session && juce::exactlyEqual (sourceRate, deviceRate);
 
+    // MIDI out: each message leaves when the audio it goes with is heard.
+    if (midiOut != nullptr)
+    {
+        const auto heardIn = (double) (outputLatency.load() + midiOutDelay.load()) / juce::jmax (1.0, deviceRate);
+        midiOut->beginBlock (juce::Time::getMillisecondCounterHiRes() + 1000.0 * heardIn, deviceRate,
+                             playing && mode == Mode::session, juce::exactlyEqual (sourceRate, deviceRate));
+
+        if (mode == Mode::session && liveAny)
+            midiOut->playLive (sessionSource.currentState(), liveMidi.getPlayingTrack(), liveBlock);
+    }
+
     if (liveAny && atSessionFrames)
         liveMidi.captureBlock (liveBlock, blockFrame);
 
@@ -955,6 +969,7 @@ AudioEngine::AudioEngine()
     graph.addListener (this);
     auto playerProcessor = std::make_unique<DocumentPlayerProcessor> (document, session, trackEffects, &liveMidi);
     player = playerProcessor.get();
+    player->setMidiOut (&midiPlayer);
     playerNode = graph.addNode (std::move (playerProcessor));
 
     using IO = juce::AudioProcessorGraph::AudioGraphIOProcessor;
@@ -1550,6 +1565,7 @@ void AudioEngine::changeListenerCallback (juce::ChangeBroadcaster* source)
             trackEffects.prepare (session.getSampleRate());
 
         updateWideTracks();
+        updateMidiOut();
         return;
     }
 
@@ -1575,8 +1591,69 @@ void AudioEngine::changeListenerCallback (juce::ChangeBroadcaster* source)
     }
 
     player->setDeviceLatency (deviceOutputDelay());
+
+    if (auto* device = deviceManager.getCurrentAudioDevice())
+        player->setMidiOutDelay (device->getOutputLatencyInSamples());
     rebuildConnections();
     sendChangeMessage();
+}
+
+void AudioEngine::setMidiClockPort (const juce::String& identifier)
+{
+    midiPlayer.setClockPort (identifier);
+    updateMidiOut();
+}
+
+void AudioEngine::updateMidiOut()
+{
+    juce::StringArray ports;
+    std::set<juce::uint32> sources;
+    const auto state = session.getState();
+
+    for (auto& t : state->tracks)
+    {
+        if (t.playsMidiOut())
+            ports.addIfNotAlreadyThere (t.midiOutPort);
+
+        if (t.midiFromTrackId != 0)
+            sources.insert (t.midiFromTrackId);
+    }
+
+    ports.addIfNotAlreadyThere (midiPlayer.getClockPort());
+    ports.removeEmptyStrings();
+
+    if (sources != midiSources)
+    {
+        midiSources = sources;
+        trackEffects.setMidiSources (sources);
+    }
+
+    if (ports == midiPortsUsed)
+        return;
+
+    midiPortsUsed = ports;
+
+    if (const auto failed = midiSender.usePorts (ports); ! failed.isEmpty() && onMidiPortsFailed != nullptr)
+    {
+        juce::StringArray names;
+
+        for (auto& id : failed)
+        {
+            auto name = id;
+
+            for (auto& d : juce::MidiOutput::getAvailableDevices())
+                if (d.identifier == id)
+                    name = d.name;
+
+            for (auto& t : state->tracks)
+                if (t.midiOutPort == id && t.midiOutName.isNotEmpty())
+                    name = t.midiOutName;
+
+            names.add (name);
+        }
+
+        onMidiPortsFailed (names);
+    }
 }
 
 void AudioEngine::updateWideTracks()

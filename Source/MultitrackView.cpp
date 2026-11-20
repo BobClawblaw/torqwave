@@ -226,8 +226,12 @@ public:
         const auto* instrument = effects.getInstrument (trackId);
         const auto slots = effects.getNumSlots (trackId) - (instrument != nullptr ? 1 : 0);   // the effects, the instrument apart
         effectsButton.setButtonText (slots > 0 ? "FX " + juce::String (slots) : juce::String ("FX"));
-        instrumentButton.setButtonText (instrument != nullptr ? instrument->getName() : juce::String ("Inst"));
-        instrumentButton.setToggleState (instrument != nullptr, juce::dontSendNotification);
+        const auto* outTrack = view.engine.session.getState()->findTrack (trackId);
+        const auto external = outTrack != nullptr && outTrack->playsMidiOut();
+        instrumentButton.setButtonText (instrument != nullptr ? instrument->getName()
+                                        : external ? juce::String (outTrack->midiOutName.isNotEmpty() ? outTrack->midiOutName : "MIDI Out")
+                                        : juce::String ("Inst"));
+        instrumentButton.setToggleState (instrument != nullptr || external, juce::dontSendNotification);
         auto anyOn = false;
 
         for (int i = 0; i < slots; ++i)
@@ -1462,7 +1466,110 @@ juce::PopupMenu MultitrackView::instrumentMenuFor (juce::uint32 trackId)
     const auto ticked = current != nullptr ? current->getPluginDescription() : juce::PluginDescription();
     Instrument::addMenu (menu, instruments, [safe, trackId] (const juce::PluginDescription& d) { if (safe != nullptr) safe->setTrackInstrument (trackId, d); },
                          current != nullptr ? &ticked : nullptr);
+
+    // An external instrument: the notes go out of a MIDI port, to a hardware synth.
+    const auto now = engine.session.getState();
+
+    if (const auto* t = now->findTrack (trackId); t != nullptr && ! t->isBus && ! t->isControl())
+    {
+        menu.addSeparator();
+        juce::PopupMenu out;
+        out.addItem ("None", true, ! t->playsMidiOut(), [safe, trackId] { if (safe != nullptr) safe->setTrackMidiOut (trackId, {}, {}); });
+        auto listed = false;
+
+        for (auto& d : juce::MidiOutput::getAvailableDevices())
+        {
+            out.addItem (d.name, true, t->midiOutPort == d.identifier, [safe, trackId, d] { if (safe != nullptr) safe->setTrackMidiOut (trackId, d.identifier, d.name); });
+            listed = listed || t->midiOutPort == d.identifier;
+        }
+
+        if (t->playsMidiOut() && ! listed)
+            out.addItem ((t->midiOutName.isNotEmpty() ? t->midiOutName : t->midiOutPort) + " (not connected)", false, true, nullptr);
+
+        if (t->playsMidiOut())
+        {
+            out.addSeparator();
+            juce::PopupMenu channel;
+            channel.addItem ("Each Clip's Own", true, t->midiOutChannel == 0, [safe, trackId] { if (safe != nullptr) safe->setTrackMidiOutChannel (trackId, 0); });
+
+            for (int c = 1; c <= 16; ++c)
+                channel.addItem ("Channel " + juce::String (c), true, t->midiOutChannel == c, [safe, trackId, c] { if (safe != nullptr) safe->setTrackMidiOutChannel (trackId, c); });
+
+            out.addSubMenu ("Channel", channel);
+            out.addItem ("Offset (" + juce::String (t->midiOutOffsetMs, 1) + " ms)...", [safe, trackId] { if (safe != nullptr) safe->askMidiOutOffset (trackId); });
+        }
+
+        menu.addSubMenu ("MIDI Out", out);
+
+        // MIDI from another track's plug-ins (an arpeggiator or chord plug-in there).
+        juce::PopupMenu from;
+        from.addItem ("None", true, t->midiFromTrackId == 0, [safe, trackId] { if (safe != nullptr) safe->setTrackMidiFrom (trackId, 0); });
+
+        for (auto& other : now->tracks)
+            if (other.id != trackId && ! other.isBus && ! other.isControl() && other.isInstrument)
+                from.addItem (other.name, true, t->midiFromTrackId == other.id, [safe, trackId, id = other.id] { if (safe != nullptr) safe->setTrackMidiFrom (trackId, id); });
+
+        menu.addSubMenu ("MIDI From", from);
+    }
+
     return menu;
+}
+
+void MultitrackView::setTrackMidiOut (juce::uint32 trackId, const juce::String& port, const juce::String& name)
+{
+    auto next = *engine.session.getState();
+    const auto* t = next.findTrack (trackId);
+
+    if (t != nullptr && SessionEdits::setMidiOut (next, trackId, port, name, t->midiOutChannel, t->midiOutOffsetMs))
+        engine.session.apply (std::move (next), port.isNotEmpty() ? "MIDI Out" : "No MIDI Out");
+}
+
+void MultitrackView::setTrackMidiOutChannel (juce::uint32 trackId, int channel)
+{
+    auto next = *engine.session.getState();
+    const auto* t = next.findTrack (trackId);
+
+    if (t != nullptr && SessionEdits::setMidiOut (next, trackId, t->midiOutPort, t->midiOutName, channel, t->midiOutOffsetMs))
+        engine.session.apply (std::move (next), "MIDI Out Channel");
+}
+
+void MultitrackView::setTrackMidiOutOffset (juce::uint32 trackId, double offsetMs)
+{
+    auto next = *engine.session.getState();
+    const auto* t = next.findTrack (trackId);
+
+    if (t != nullptr && SessionEdits::setMidiOut (next, trackId, t->midiOutPort, t->midiOutName, t->midiOutChannel, offsetMs))
+        engine.session.apply (std::move (next), "MIDI Out Offset");
+}
+
+void MultitrackView::askMidiOutOffset (juce::uint32 trackId)
+{
+    const auto* t = engine.session.getState()->findTrack (trackId);
+
+    if (t == nullptr)
+        return;
+
+    auto* window = new juce::AlertWindow ("MIDI Out Offset",
+                                          "Milliseconds to send the notes earlier (negative) or later than the audio, so the synth lines up "
+                                          "with the session. From -" + juce::String (SessionTrack::maxMidiOutOffsetMs, 0) + " to "
+                                          + juce::String (SessionTrack::maxMidiOutOffsetMs, 0) + ".", juce::MessageBoxIconType::NoIcon);
+    window->addTextEditor ("ms", juce::String (t->midiOutOffsetMs, 1), "Offset (ms)");
+    window->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    window->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+    const juce::Component::SafePointer<MultitrackView> safe (this);
+    window->enterModalState (true, juce::ModalCallbackFunction::create ([safe, window, trackId] (int result)
+    {
+        if (result == 1 && safe != nullptr)
+            safe->setTrackMidiOutOffset (trackId, window->getTextEditorContents ("ms").trim().getDoubleValue());
+    }), true);
+}
+
+void MultitrackView::setTrackMidiFrom (juce::uint32 trackId, juce::uint32 fromId)
+{
+    auto next = *engine.session.getState();
+
+    if (SessionEdits::setMidiFrom (next, trackId, fromId))
+        engine.session.apply (std::move (next), fromId != 0 ? "MIDI From Track" : "No MIDI From Track");
 }
 
 void MultitrackView::showInstrumentMenu (juce::uint32 trackId, juce::Component& target)

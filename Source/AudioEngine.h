@@ -8,6 +8,7 @@
 #include "Session.h"
 #include "TrackEffects.h"
 #include "MidiInput.h"
+#include "MidiOut.h"
 
 //==============================================================================
 /** Reads the document's current snapshot for playback. Picks up edits on the fly. */
@@ -111,6 +112,12 @@ public:
         scrubbing starts them afresh. Audio thread. */
     void scrub (Scrubber&, double deviceRate, juce::AudioBuffer<float>&, int numFrames, bool effects = true);
 
+    /** Plays the session to MIDI out as it mixes (each run of frames that plays), or null. */
+    void setMidiOut (MidiOut::Player* p)                      { midiOut = p; }
+
+    /** The state the audio thread mixes, brought up to date (audio thread). */
+    const SessionState& currentState()                        { refreshState(); return *state; }
+
     /** Meters the tracks and buses into these levels as it mixes. */
     void setLevels (SessionMixer::Levels* levels)             { buffers.levels = levels; }
 
@@ -138,6 +145,7 @@ private:
     Session& session;
     SessionMixer::Inserts& inserts;
     Session::State state;                  // audio thread's own reference
+    MidiOut::Player* midiOut = nullptr;
     juce::uint32 stateVersion = 0;
     SessionMixer::Buffers buffers, scrubBuffers;
     juce::AudioBuffer<float> scrubMix;          // the mix with effects rendered for scrubbing: frames [scrubFrom, scrubTo)
@@ -221,6 +229,11 @@ public:
     /** How long the device holds the sound before it is heard, in device frames (set by the engine
         when the device starts). Only the playhead allows for it: the tail doesn't need to. */
     void setDeviceLatency (int deviceFrames)      { deviceLatency = juce::jmax (0, deviceFrames); }
+
+    /** Plays the session to MIDI out, or null; its messages leave when the audio they go with is
+        heard: after the rack's latency and the device's output latency (device frames). */
+    void setMidiOut (MidiOut::Player* p)          { midiOut = p; sessionSource.setMidiOut (p); }
+    void setMidiOutDelay (int deviceFrames)       { midiOutDelay = juce::jmax (0, deviceFrames); }
 
     /** The document or session frame sounding now: the frames played since play() began (round the
         loop, like the played frame) less the output latency; the start itself while the effects
@@ -319,7 +332,8 @@ private:
     int separateOutputs = -1;   // see setSeparateOutputs
     double sourceRate = 0.0;
     std::atomic<juce::int64> playedFrame { 0 }, playStart { 0 };   // playStart: where play() or a seek began
-    std::atomic<int> outputLatency { 0 }, deviceLatency { 0 };
+    std::atomic<int> outputLatency { 0 }, deviceLatency { 0 }, midiOutDelay { 0 };
+    MidiOut::Player* midiOut = nullptr;
     juce::TimeSliceThread auditionThread { "Audition" };
     std::unique_ptr<juce::AudioFormatReaderSource> auditionSource;   // before the transport playing it
     juce::AudioTransportSource auditioner;
@@ -566,6 +580,13 @@ public:
         trackEffects.setTouched (trackId, slotId, parameterId, touched);
     }
 
+    /** MIDI out: the port (a device identifier) that gets MIDI clock and transport, or empty for none. */
+    void setMidiClockPort (const juce::String& identifier);
+    juce::String getMidiClockPort() const         { return midiPlayer.getClockPort(); }
+
+    /** Told the names of MIDI output ports that could not be opened (message thread). */
+    std::function<void (const juce::StringArray&)> onMidiPortsFailed;
+
     /** Restores track effects from session file EFFECTS elements, by track id, one after another. */
     void loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects, AddCallback onDone);
 
@@ -583,6 +604,7 @@ private:
     std::map<juce::uint32, int> wideTracks; // the 5.1 and 7.1 tracks (and their channels) the track effects were last told of
 
     void updateWideTracks();
+    void updateMidiOut();
     void addPluginsFromXml (std::shared_ptr<std::vector<std::unique_ptr<juce::XmlElement>>> slots,
                             size_t next, juce::StringArray errors, AddCallback onDone);
     double currentSampleRate() const;
@@ -591,6 +613,10 @@ private:
 
     TrackEffects trackEffects;   // before the graph: the player in it uses them
     MidiIn::Live liveMidi;    // likewise
+    MidiOut::Sender midiSender;                   // likewise
+    MidiOut::Player midiPlayer { midiSender };
+    juce::StringArray midiPortsUsed;              // the ports last opened
+    std::set<juce::uint32> midiSources;           // the tracks whose plug-ins' MIDI another plays, as last told
     juce::AudioProcessorGraph graph;
     juce::AudioProcessorPlayer graphPlayer;
     DocumentPlayerProcessor* player = nullptr;
