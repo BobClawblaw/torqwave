@@ -485,6 +485,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/SequenceTests.cpp
     Tests/PresetTests.cpp
     Tests/LibraryFacetTests.cpp
+    Tests/PreviewOnTests.cpp
     Tests/CrossfadeTests.cpp
     Tests/SoundDesignTests.cpp
     Tests/PictureTests.cpp

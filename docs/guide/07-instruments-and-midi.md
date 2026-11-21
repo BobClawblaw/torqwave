@@ -308,6 +308,16 @@ The library is a folder of plain files (`.tqseq` for a sequence, `.tqkit` for a 
 
 **Hear one.** Click a sequence to hear it with its own instrument and effects at the session's tempo, looping. The first time takes a moment while it renders ("Rendering..." shows under the list); after that it plays at once. While the session plays, the sequence comes in on the session's next bar, in time with it. Press Up or Down to move through the list and hear each in turn. Click it again, or **Stop**, to stop. A sequence with no instrument of its own can't be heard here: dropped on an instrument track, it plays on that track's instrument.
 
+**Hear it on your own instruments.** The button beside **Stop** (**On: Own Voice** at first) sets what a click plays on:
+
+| Preview On | A click plays it on |
+|---|---|
+| Each One's Own Voice | its own instrument and effects; the built-in ones for presets |
+| The Selected Track's Instrument | the instrument and effects of the track selected in the multitrack view, as they are set now, so a drum preset plays through the drum plug-in on that track. With no instrument track selected, or for a kit (several parts), each plays on its own voice. |
+| A Plug-in for Each Role | the plug-in chosen for its role under **Choose the Plug-ins** (a drum plug-in for Drums, a bass synth for Bass, and so on), at its default settings; a role with none chosen plays on its own voice. A kit plays each part on its role's plug-in. |
+
+Choosing a plug-in for a role switches to A Plug-in for Each Role. Torqwave remembers the choice and the plug-ins. What a click plays on shows under the list ("Groove at 128 BPM on Basic Drums"), and changing the choice while one plays plays it again on the new one. It is still in time with the session, at its tempo, and looping; only what it plays on changes, never the file.
+
 **Use one.** Drag a sequence into the multitrack view:
 
 - **onto empty space** below the tracks: a new instrument track with the sequence's instrument and effects, and the clip where you dropped it, on the grid;

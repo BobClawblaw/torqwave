@@ -4,6 +4,10 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Preview sequences on your own instruments** (0.19.3, step 5 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md))
+- A **Preview On** button beside Stop in the Sequence Library: each sequence's own voice (as before; the built-in ones for presets), **the selected track's instrument** (with its effects, as set now), or **a plug-in for each role** (a drum plug-in for Drums, a bass synth for Bass), remembered with the plug-ins chosen. A role with none, a kit on the selected track, or no instrument track selected plays on its own voice. The list says what it plays on, and a new choice while one plays plays it again on that.
+- Tested (`--sequences`, 4 more checks): with Basic Drums chosen for Bass (the built-in instruments standing in for plug-ins), a bass sequence renders bit for bit as on that voice and unlike on its own, while a pad and the Own Voice choice keep their own; the player says "on Basic Drums" and renders again on a new choice; on the selected track's instrument it follows the selection, and a kit and no selection keep their own voices; the choice and its plug-ins come back from the settings. The whole suite: 2,269 checks.
+
 **The Sequence Library sorts, groups and filters by style, energy and character** (0.19.3, step 4 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md))
 - Sequences can carry a **style** (Techno/Dark), an **energy** (1 to 5), a **character** (Dark or Bright, Sparse or Dense, Straight or Swung, Clean or Distorted) and a one-line **description**, shown under the name; kits a style and description. All optional; older files read and save as they were.
 - **Sort** by Tempo, Key and Energy too. **Group** by Role (as before), Style, Key or Energy, each then by role. The plan's "Group by Kit" became Group by Energy, since a kit holds copies of its parts rather than grouping sequences.

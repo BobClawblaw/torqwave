@@ -447,6 +447,10 @@ SequenceLibraryView::SequenceLibraryView (juce::File folder) : library (std::mov
     importButton.setTooltip ("Import MIDI files into the library as sequences, or open a pack of sequences someone shared");
     importButton.onClick = [this] { showImportMenu(); };
 
+    addAndMakeVisible (playOnButton);
+    playOnButton.setTooltip ("What a click plays a sequence on: its own voice (the built-in ones for presets), the selected track's instrument, or a plug-in you choose for each role");
+    playOnButton.onClick = [this] { showPlayOnMenu(); };
+
     addAndMakeVisible (stopButton);
     stopButton.setTooltip ("Stop the sequence playing");
     stopButton.onClick = [this] { if (preview != nullptr) preview->stop(); };
@@ -515,11 +519,85 @@ void SequenceLibraryView::selected (const juce::File& file)
     }
 }
 
+void SequenceLibraryView::setPlayOn (const SequencePreview::PlayOn& on)
+{
+    if (preview != nullptr)
+        preview->setPlayOn (on);
+
+    if (onPlayOnChanged != nullptr)
+        onPlayOnChanged (on);
+
+    previewChanged();
+}
+
+void SequenceLibraryView::showPlayOnMenu()
+{
+    using Kind = SequencePreview::PlayOn::Kind;
+    const auto on = preview != nullptr ? preview->getPlayOn() : SequencePreview::PlayOn {};
+    const auto instruments = getInstruments != nullptr ? getInstruments() : juce::Array<juce::PluginDescription> {};
+    juce::PopupMenu menu, perRole;
+    juce::StringArray roleNames;
+
+    for (auto& role : SequenceLibrary::roles())
+        if (role.name != "Kits" && role.name != "Inbox")
+            roleNames.add (role.name);
+
+    // Each role: its own voice (1000 + 100 * role), or an instrument (+ 1 + its index).
+    for (int r = 0; r < roleNames.size(); ++r)
+    {
+        juce::PopupMenu choices;
+        const auto chosen = on.forRole.find (roleNames[r]);
+        choices.addItem (1000 + 100 * r, "Its Own Voice", true, chosen == on.forRole.end());
+
+        for (int i = 0; i < instruments.size() && i < 99; ++i)
+            choices.addItem (1001 + 100 * r + i, Instrument::title (instruments[i]), true, chosen != on.forRole.end() && chosen->second.isDuplicateOf (instruments[i]));
+
+        perRole.addSubMenu (roleNames[r] + (chosen != on.forRole.end() ? ": " + chosen->second.name : juce::String()), choices);
+    }
+
+    menu.addSectionHeader ("Preview On");
+    menu.addItem (1, "Each One's Own Voice", true, on.kind == Kind::own);
+    menu.addItem (2, "The Selected Track's Instrument", true, on.kind == Kind::selectedTrack);
+    menu.addItem (3, "A Plug-in for Each Role", true, on.kind == Kind::perRole);
+    menu.addSubMenu ("Choose the Plug-ins", perRole);
+
+    juce::Component::SafePointer<SequenceLibraryView> safe (this);
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (playOnButton), [safe, on, instruments, roleNames] (int result)
+    {
+        if (safe == nullptr || result == 0)
+            return;
+
+        auto next = on;
+
+        if (result >= 1 && result <= 3)
+            next.kind = result == 1 ? Kind::own : result == 2 ? Kind::selectedTrack : Kind::perRole;
+        else if (result >= 1000)
+        {
+            const auto role = roleNames[(result - 1000) / 100];
+            const auto index = (result - 1000) % 100 - 1;
+
+            if (index < 0)
+                next.forRole.erase (role);
+            else
+                next.forRole[role] = instruments[index];
+
+            next.kind = Kind::perRole;   // choosing one means using them
+        }
+
+        safe->setPlayOn (next);
+    });
+}
+
 void SequenceLibraryView::previewChanged()
 {
     const auto said = preview != nullptr ? preview->describe() : juce::String();
     summary.setText (said.isNotEmpty() ? said : countText, juce::dontSendNotification);
     stopButton.setEnabled (preview != nullptr && preview->getState() != SequencePreview::State::stopped);
+
+    using Kind = SequencePreview::PlayOn::Kind;
+    const auto kind = preview != nullptr ? preview->getPlayOn().kind : Kind::own;
+    playOnButton.setButtonText (kind == Kind::selectedTrack ? "On: Selected Track" : kind == Kind::perRole ? "On: Role Plug-ins" : "On: Own Voice");
     tree.repaint();
 }
 
@@ -1212,6 +1290,8 @@ void SequenceLibraryView::resized()
     r.removeFromTop (6);
     auto bottom = r.removeFromBottom (24);
     stopButton.setBounds (bottom.removeFromRight (56).reduced (0, 1));
+    bottom.removeFromRight (4);
+    playOnButton.setBounds (bottom.removeFromRight (124).reduced (0, 1));
     summary.setBounds (bottom);
     tree.setBounds (r);
 }

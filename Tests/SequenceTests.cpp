@@ -12,6 +12,7 @@
 #include "SequenceTests.h"
 #include "PresetTests.h"
 #include "LibraryFacetTests.h"
+#include "PreviewOnTests.h"
 
 namespace
 {
@@ -1549,4 +1550,5 @@ void runSequenceTests (AudioEngine& engine)
 
     runPresetTests (engine);
     runLibraryFacetTests();
+    runPreviewOnTests (engine);
 }

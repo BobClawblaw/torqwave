@@ -13,7 +13,8 @@
     under its name. A click plays a sequence (a
     kit: all its parts) through its instrument at the session's tempo (from the session's next bar
     while it plays), and moving through the list with the arrow keys plays each in turn; a second
-    click or Stop stops it. A sequence or kit is dragged into the multitrack view (or to the
+    click or Stop stops it. Preview On, beside Stop, plays them on their own voices, on the selected
+    track's instrument, or on a plug-in chosen for each role. A sequence or kit is dragged into the multitrack view (or to the
     Finder); a double-click puts it in the session at the cursor. 0 to 5 rate the selected ones and
     F marks them as favourites. Right-click for Similar, Properties..., Export MIDI File, Rating, Favourite, Make Kit from
     the selected sequences, Show in Finder, Rename and Move to Trash; right-click a folder to make
@@ -66,6 +67,11 @@ public:
 
     /** The player for clicks (not owned); none leaves clicks silent. */
     void setPreview (SequencePreview*);
+
+    /** Preview On: what clicks play on (each one's own voice, the selected track's instrument, or a
+        plug-in for each role), set on the player, then given to onPlayOnChanged to keep. */
+    void setPlayOn (const SequencePreview::PlayOn&);
+    std::function<void (const SequencePreview::PlayOn&)> onPlayOnChanged;
 
     /** Scans the folder again (also done every few seconds while shown, when it changed). */
     void refresh();
@@ -169,6 +175,7 @@ private:
     class SearchItem;
 
     void showFiltersMenu();
+    void showPlayOnMenu();
     bool groupedByRole() const noexcept       { return groupBy == SequenceLibrary::Group::role; }
 
     void rebuild();
@@ -190,7 +197,7 @@ private:
     std::vector<juce::StringArray> folderPaths;
     juce::int64 stamp = 0;
     juce::TextEditor search;
-    juce::TextButton newButton { "New..." }, folderButton { "Folder" }, stopButton { "Stop" };
+    juce::TextButton newButton { "New..." }, folderButton { "Folder" }, stopButton { "Stop" }, playOnButton;
     juce::ComboBox sortBox, groupBox;
     juce::TextButton favouritesButton { "Favourites" }, fitsButton { "Fits the Session" }, importButton { "Import..." }, filtersButton { "Filters" };
     SequenceLibrary::Sort sortBy = SequenceLibrary::Sort::name;

@@ -15222,9 +15222,23 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
         auto panel = std::make_unique<SequenceLibraryView>();
 
         if (sequencePreview == nullptr)
+        {
             sequencePreview = std::make_unique<SequencePreview> (engine);
+            sequencePreview->setPlayOn (SequencePreview::PlayOn::load (*appProperties.getUserSettings()));
+            sequencePreview->getSelectedTrackVoice = [this]() -> std::unique_ptr<juce::XmlElement>
+            {
+                const auto state = engine.session.getState();
+                const auto trackId = multitrack.getSelectedTrackId();
+
+                if (engine.getTrackEffects().getInstrument (trackId) == nullptr)
+                    return nullptr;
+
+                return SequenceFile::voiceOf (*state, trackId, engine.getTrackEffects().createXml (trackId));
+            };
+        }
 
         panel->setPreview (sequencePreview.get());
+        panel->onPlayOnChanged = [this] (const SequencePreview::PlayOn& on) { on.save (*appProperties.getUserSettings()); };
         panel->onUse = [this] (const juce::File& file)
         {
             const auto state = engine.session.getState();

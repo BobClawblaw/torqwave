@@ -23,7 +23,40 @@ public:
     State getState() const noexcept            { return state; }
     juce::File getFile() const                  { return current; }
 
-    /** What the panel says: "Rendering Groove...", "Groove at 128 BPM", or why it is silent. */
+    /** What a preview plays on: each sequence's own voice (the built-in voices for presets), the
+        selected track's instrument (with its effects, as set now), or a plug-in chosen for each
+        role (a role with none: its own voice). A kit plays each part on its role's plug-in; on the
+        selected track's instrument it keeps its own voices, being several parts. */
+    struct PlayOn
+    {
+        enum class Kind { own, selectedTrack, perRole };
+
+        Kind kind = Kind::own;
+        std::map<juce::String, juce::PluginDescription> forRole;
+
+        bool operator== (const PlayOn&) const;
+        std::unique_ptr<juce::XmlElement> toXml() const;
+        static PlayOn fromXml (const juce::XmlElement*);   // null: its own voice
+
+        /** Kept in the app's settings under this key. */
+        static constexpr const char* settingsKey = "sequencePreviewOn";
+        void save (juce::PropertySet&) const;
+        static PlayOn load (juce::PropertySet&);
+    };
+
+    void setPlayOn (const PlayOn&);
+    const PlayOn& getPlayOn() const noexcept   { return playOn; }
+
+    /** The selected track's voice (its instrument and effects, as SequenceFile::voiceOf gives
+        them), or null when no instrument track is selected. */
+    std::function<std::unique_ptr<juce::XmlElement>()> getSelectedTrackVoice;
+
+    /** The parts with the voices they play on (a file's own, or a kit's parts), and what that
+        is called ("Basic Drums", or empty for their own). */
+    static std::vector<SequenceFile::Sequence> voiced (std::vector<SequenceFile::Sequence> parts, bool kit, const PlayOn&,
+                                                       std::unique_ptr<juce::XmlElement> selectedTrackVoice, juce::String& playsOn);
+
+    /** What the panel says: "Rendering Groove...", "Groove at 128 BPM", "Groove at 128 BPM on Basic Drums", or why it is silent. */
     juce::String describe() const;
 
     /** Called on the message thread when the state, the file or the description changed. */
@@ -62,7 +95,8 @@ private:
 
     juce::File current;
     State state = State::stopped;
-    juce::String error, playingAt;
+    juce::String error, playingAt, playsOn;
+    PlayOn playOn;
     std::vector<std::pair<juce::String, std::shared_ptr<const juce::AudioBuffer<float>>>> cache;   // newest last
 
     juce::CriticalSection pendingLock;

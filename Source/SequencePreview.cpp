@@ -241,6 +241,13 @@ void SequencePreview::play (const juce::File& file)
         return;
     }
 
+    parts = voiced (std::move (parts), file.hasFileExtension (SequenceKit::extension), playOn,
+                    playOn.kind == PlayOn::Kind::selectedTrack && getSelectedTrackVoice != nullptr ? getSelectedTrackVoice() : nullptr, playsOn);
+    juce::String voices;
+
+    for (auto& part : parts)
+        voices << (part.voice != nullptr ? juce::String::toHexString (part.voice->toString().hashCode64()) : juce::String ("-")) << ",";
+
     const auto session = engine.session.getState();   // held: the map refers to its tempo changes
     const auto map = session->tempoMap();
     const auto rate = engine.getOutputSampleRate() > 0.0 ? engine.getOutputSampleRate() : session->sampleRate;
@@ -248,7 +255,7 @@ void SequencePreview::play (const juce::File& file)
     const auto tempo = map.tempoAt (frame);
     const auto beatsPerBar = map.beatsPerBarAt (frame);
     const auto key = file.getFullPathName() + "|" + juce::String (file.getLastModificationTime().toMilliseconds()) + "|"
-                     + juce::String (tempo, 4) + "|" + juce::String (beatsPerBar) + "|" + juce::String (rate);
+                     + juce::String (tempo, 4) + "|" + juce::String (beatsPerBar) + "|" + juce::String (rate) + "|" + voices;
 
     playingAt = juce::String (tempo, juce::exactlyEqual (tempo, std::round (tempo)) ? 0 : 2) + " BPM";
 
@@ -325,6 +332,103 @@ void SequencePreview::stop()
         onChange();
 }
 
+bool SequencePreview::PlayOn::operator== (const PlayOn& o) const
+{
+    if (kind != o.kind || forRole.size() != o.forRole.size())
+        return false;
+
+    for (auto& [role, d] : forRole)
+        if (const auto it = o.forRole.find (role); it == o.forRole.end() || ! d.isDuplicateOf (it->second))
+            return false;
+
+    return true;
+}
+
+std::unique_ptr<juce::XmlElement> SequencePreview::PlayOn::toXml() const
+{
+    auto xml = std::make_unique<juce::XmlElement> ("PREVIEWON");
+    xml->setAttribute ("kind", kind == Kind::selectedTrack ? "selectedTrack" : kind == Kind::perRole ? "perRole" : "own");
+
+    for (auto& [role, d] : forRole)
+    {
+        auto* e = xml->createNewChildElement ("ROLE");
+        e->setAttribute ("name", role);
+        e->addChildElement (d.createXml().release());
+    }
+
+    return xml;
+}
+
+SequencePreview::PlayOn SequencePreview::PlayOn::fromXml (const juce::XmlElement* xml)
+{
+    PlayOn on;
+
+    if (xml == nullptr || ! xml->hasTagName ("PREVIEWON"))
+        return on;
+
+    const auto kind = xml->getStringAttribute ("kind");
+    on.kind = kind == "selectedTrack" ? Kind::selectedTrack : kind == "perRole" ? Kind::perRole : Kind::own;
+
+    for (auto* e : xml->getChildWithTagNameIterator ("ROLE"))
+        if (auto* p = e->getChildElement (0); p != nullptr && e->getStringAttribute ("name").isNotEmpty())
+            if (juce::PluginDescription d; d.loadFromXml (*p))
+                on.forRole[e->getStringAttribute ("name")] = d;
+
+    return on;
+}
+
+void SequencePreview::PlayOn::save (juce::PropertySet& settings) const
+{
+    settings.setValue (settingsKey, toXml().get());
+}
+
+SequencePreview::PlayOn SequencePreview::PlayOn::load (juce::PropertySet& settings)
+{
+    const auto xml = settings.getXmlValue (settingsKey);
+    return fromXml (xml.get());
+}
+
+void SequencePreview::setPlayOn (const PlayOn& on)
+{
+    if (on == playOn)
+        return;
+
+    playOn = on;
+
+    // What plays now plays on the new choice.
+    if (state != State::stopped && current != juce::File())
+        play (current);
+}
+
+std::vector<SequenceFile::Sequence> SequencePreview::voiced (std::vector<SequenceFile::Sequence> parts, bool kit, const PlayOn& on,
+                                                            std::unique_ptr<juce::XmlElement> selectedTrackVoice, juce::String& playsOn)
+{
+    playsOn.clear();
+    juce::StringArray names;
+
+    if (on.kind == PlayOn::Kind::selectedTrack && ! kit && selectedTrackVoice != nullptr)
+    {
+        std::shared_ptr<const juce::XmlElement> voice (std::move (selectedTrackVoice));
+
+        for (auto& part : parts)
+            part.voice = voice;
+
+        playsOn = "the selected track's " + SequenceFile::instrumentOf (parts.front());
+        return parts;
+    }
+
+    if (on.kind == PlayOn::Kind::perRole)
+        for (auto& part : parts)
+            if (const auto it = on.forRole.find (part.role); it != on.forRole.end())
+            {
+                part.voice = std::shared_ptr<const juce::XmlElement> (SequenceFile::voiceFor (it->second));
+                names.addIfNotAlreadyThere (it->second.name);
+            }
+
+    playsOn = names.joinIntoString (", ");
+    return parts;
+}
+
 juce::String SequencePreview::describe() const
 {
     const auto name = current.getFileNameWithoutExtension();
@@ -332,7 +436,7 @@ juce::String SequencePreview::describe() const
     switch (state)
     {
         case State::rendering: return "Rendering " + name + "...";
-        case State::playing:   return name + " at " + playingAt;
+        case State::playing:   return name + " at " + playingAt + (playsOn.isNotEmpty() ? " on " + playsOn : juce::String());
         case State::stopped:   break;
     }
 
