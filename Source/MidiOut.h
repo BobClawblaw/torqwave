@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <bitset>
 #include "Session.h"
 
 /** MIDI out: note clips, controller lanes and live input played on hardware synths through
