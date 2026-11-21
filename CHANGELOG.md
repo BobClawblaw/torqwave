@@ -4,13 +4,20 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+## Released
+
+**Release 0.19.2: crossfading clips laid over each other**
+- `Torqwave-0.19.2.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.19.2-windows-x64-setup.exe` and `Torqwave-0.19.2-windows-x64.zip`) and the Linux tarball (`Torqwave-0.19.2-linux-x86_64.tar.gz`), each built by its workflow from the release's tag.
+- Fixes 0.19.1's crossfades for clips laid over each other by hand (fix log 65): they popped and could not be crossfaded where they lay. Tried by hand on the session it was found in, after the fix: the overlap crossfades and plays without a pop.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app universal (arm64 and x86_64) at the release's code, signed it, and the whole suite (2,231 checks) passed in each half, the Intel one under Rosetta, with the signed app as the plug-in scan worker. Not run on an Intel Mac itself.
+- Not checked on Windows or Linux by hand for this release: the workflows build both packages without running the tests.
+
 **Crossfading clips laid over each other** (fix log 65, [#39](https://github.com/BobClawblaw/torqwave/issues/39))
 - Two clips overlapping on a track without a crossfade: a double-click on their overlap makes the whole overlap a crossfade (S-curve both sides, one undo step, "Crossfade Clips"), selects both and opens it in the crossfade editor; before, it opened the clip on top in the editor. Their right-click menu starts with **Crossfade Clips** and **Crossfade and Edit...**.
 - **Crossfade Selected Clips** (Shift-X) keeps the whole overlap of clips that overlap; only clips that just touch get 10 ms. Before, it made 10 ms in the middle of any overlap, cutting the clips back.
 - Why it mattered: two clips laid over each other without a crossfade click where the upper one starts and pop where the lower one stops dead. Rendering the session it was found in, the stop was a step 184 times the largest the sound otherwise makes; crossfaded (the whole overlap or 10 ms, equal gain or equal power, mixed or layered, rendered at once or in 512-frame blocks), there was no step above the sound's own.
 - Tested (`--crossfades`, 7 more checks, 65 in all): on two clips of one file overlapping by 1.68 s, as in the session it was found in, Shift-X crossfades the whole overlap with the clips where they were; a double-click on the overlap makes the crossfade, selects both and opens the editor, not the clip in place, and once crossfaded opens the crossfade, while off the overlap it opens the clip in place; Crossfade Clips does the same without the editor; one clip inside the other is refused with a reason; a 220 Hz sine laid over itself out of phase clicks (a step 844 times the sine's own), and crossfaded, equal gain or power, mixed or layered, rendered in 512-frame blocks, its largest step is 1.38 times the sine's own (equal power on two copies of one sound adds up louder). The right-click menu's two items were not driven by the tests (the menu opens asynchronously); they call the same code as the double-click.
 
-## Released
 
 **Release 0.19.1: crossfades in a session**
 - `Torqwave-0.19.1.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.19.1-windows-x64-setup.exe` and `Torqwave-0.19.1-windows-x64.zip`) and the Linux tarball (`Torqwave-0.19.1-linux-x86_64.tar.gz`), each built by its workflow from the release's tag.
