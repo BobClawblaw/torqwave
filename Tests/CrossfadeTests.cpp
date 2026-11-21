@@ -692,8 +692,8 @@ namespace
                 juce::AudioBuffer<float> b (2, 30000);
                 SessionMixer::Buffers scratch;
 
-                for (int at = 0; at < b.getNumSamples(); at += 512)
-                    SessionMixer::render (s, 35000 + at, b, at, juce::jmin (512, b.getNumSamples() - at), scratch);
+                for (int pos = 0; pos < b.getNumSamples(); pos += 512)
+                    SessionMixer::render (s, 35000 + pos, b, pos, juce::jmin (512, b.getNumSamples() - pos), scratch);
 
                 auto worst = 0.0f;
 

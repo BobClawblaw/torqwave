@@ -4,6 +4,11 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Basic Drums, a built-in drum machine** (0.19.3, step 1 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md))
+- A second built-in instrument, offered after Basic Synth: simple synthesised drums on the General MIDI map (kick 35/36, rim 37, snare 38/40, clap 39, closed, pedal and open hat 42/44/46 with the closed and pedal hats choking the open one, toms 41 to 50, crash 49/57, ride 51/59, cowbell 56, shaker 69/70); other notes are silent. Each sound plays to its end whatever the note's length; velocity sets its level. Level, and Tune and Decay for the kick, snare, hats and toms. Kept basic on purpose: it is for hearing patterns; drum plug-ins play the same notes.
+- Its noise is seeded per hit, so a pattern renders bit-identically twice and at any block size.
+- Tested (`--instruments`, 8 more checks): made from its description as an instrument with no input and a stereo output; each of its 22 notes sounds, the same on both channels, and 9 unmapped notes are silent; velocity scales a kick exactly and a 10 ms note still sounds 100 ms on; a closed hat silences the open hat, which alone still rings 0.5 s on; a whole kit is silent within 6 s; a 16-step pattern renders bit-identically twice and in 37-sample blocks; Kick Tune changes the kick, and the parameters come back with the state; offered as "Basic Drums (built in)" right after Basic Synth. The whole suite: 2,239 checks.
+
 ## Released
 
 **Release 0.19.2: crossfading clips laid over each other**

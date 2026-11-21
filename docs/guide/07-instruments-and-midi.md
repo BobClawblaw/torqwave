@@ -2,11 +2,11 @@
 
 [Guide](README.md) › Instruments and MIDI
 
-An **instrument track** plays a synthesizer: Torqwave's built-in Basic Synth, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
+An **instrument track** plays a synthesizer: Torqwave's built-in Basic Synth or Basic Drums, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
 
 ## Make an instrument track
 
-- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Basic Synth comes first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
+- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Basic Synth and Basic Drums come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
 - **Turn an empty audio track into an instrument track:** right-click its header and choose **Instrument Track**. Choose it again to turn it back.
 
 The header's instrument button, which shows the instrument's name (or **Inst** when there is none), chooses, swaps or opens the instrument. It takes the place of the record button. Effects added with **FX** run after the instrument, as on any track.
@@ -40,6 +40,23 @@ The selected instrument track plays whatever comes in live:
 *The window of Basic Synth, the built-in instrument.*
 
 Basic Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way), **Mod wheel** (vibrato, up to half a semitone), **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
+
+**Basic Drums** is the built-in drum machine: simple synthesised sounds on the General MIDI drum map, the notes the drum grid writes and most drum plug-ins play. It is there to hear a pattern before you put your own drum instrument on the track, so it is kept plain.
+
+| Notes | Sound |
+|---|---|
+| 35, 36 | Kick |
+| 37 | Rim |
+| 38, 40 | Snare |
+| 39 | Clap |
+| 42, 44, 46 | Closed, pedal and open hat (a closed or pedal hat cuts the open one off) |
+| 41, 43 / 45, 47 / 48, 50 | Low, mid and high toms |
+| 49, 57 | Crash |
+| 51, 59 | Ride |
+| 56 | Cowbell |
+| 69, 70 | Shaker |
+
+Other notes are silent. Each sound plays to its end however long the note is, and velocity sets its level. Its window has **Level**, and **Tune** (up to an octave either way) and **Decay** (25 % to 400 %) for the kick, the snare, the hats and the toms. Its sounds are the same every time, so a pattern renders identically twice.
 
 ## Edit the notes: the Piano Roll
 

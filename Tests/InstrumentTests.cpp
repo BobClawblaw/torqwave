@@ -84,6 +84,157 @@ namespace
 
         return n;
     }
+
+    /** Plays notes on the drums (pitch, second, velocity; each note held 10 ms) for seconds, in blocks of blockSize. */
+    juce::AudioBuffer<float> drumsPlay (BuiltInEffects::BasicDrumsProcessor& drums, const std::vector<std::tuple<int, double, float>>& notes,
+                                        double seconds, int blockSize = 512)
+    {
+        drums.prepareToPlay (rate, blockSize);
+        const auto total = (int) (seconds * rate);
+        juce::AudioBuffer<float> out (2, total), block (2, blockSize);
+
+        for (int at = 0; at < total; at += blockSize)
+        {
+            const auto n = juce::jmin (blockSize, total - at);
+            juce::MidiBuffer midi;
+
+            for (auto [pitch, when, velocity] : notes)
+            {
+                const auto on = (int) (when * rate), off = on + (int) (0.01 * rate);
+
+                if (on >= at && on < at + n)
+                    midi.addEvent (juce::MidiMessage::noteOn (10, pitch, velocity), on - at);
+
+                if (off >= at && off < at + n)
+                    midi.addEvent (juce::MidiMessage::noteOff (10, pitch), off - at);
+            }
+
+            block.setSize (2, n, false, false, true);
+            drums.processBlock (block, midi);
+
+            for (int ch = 0; ch < 2; ++ch)
+                out.copyFrom (ch, at, block, ch, 0, n);
+        }
+
+        return out;
+    }
+
+    bool sameAudio (const juce::AudioBuffer<float>& a, const juce::AudioBuffer<float>& b)
+    {
+        if (a.getNumSamples() != b.getNumSamples() || a.getNumChannels() != b.getNumChannels())
+            return false;
+
+        for (int ch = 0; ch < a.getNumChannels(); ++ch)
+            for (int i = 0; i < a.getNumSamples(); ++i)
+                if (! juce::exactlyEqual (a.getSample (ch, i), b.getSample (ch, i)))
+                    return false;
+
+        return true;
+    }
+
+    void testBasicDrums (AudioEngine& engine)
+    {
+        juce::PluginDescription description;
+
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.fileOrIdentifier == BuiltInEffects::basicDrumsId)
+                description = d;
+
+        juce::String error;
+        auto instance = engine.pluginFormatManager.createPluginInstance (description, rate, 512, error);
+        auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (instance.get());
+        check (drums != nullptr && error.isEmpty() && description.isInstrument && description.numInputChannels == 0 && description.name == "Basic Drums"
+                   && drums->acceptsMidi() && drums->getTotalNumInputChannels() == 0 && drums->getTotalNumOutputChannels() == 2
+                   && drums->getParameters().size() == 9,
+               "drums: Basic Drums is made from its description, an instrument with no audio input, a stereo output and nine parameters");
+
+        if (drums == nullptr)
+            return;
+
+        // Every General MIDI drum it maps sounds, on both channels alike; other notes are silent.
+        const std::vector<int> mapped { 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 56, 57, 59, 69, 70 };
+        auto allSound = true, allSilent = true, stereo = true;
+
+        for (auto note : mapped)
+        {
+            const auto out = drumsPlay (*drums, { { note, 0.0, 1.0f } }, 0.5);
+            allSound = allSound && out.getMagnitude (0, 0, out.getNumSamples()) > 0.05f;
+            stereo = stereo && channelsSame (out);
+        }
+
+        for (auto note : { 0, 34, 52, 53, 55, 60, 64, 71, 127 })
+            allSilent = allSilent && drumsPlay (*drums, { { note, 0.0, 1.0f } }, 0.2).getMagnitude (0, 0, (int) (0.2 * rate)) == 0.0f;
+
+        check (allSound && allSilent && stereo && ! BuiltInEffects::BasicDrumsProcessor::soundFor (60).has_value(),
+               "drums: each mapped drum note sounds, the same on both channels, and unmapped notes are silent");
+
+        // Velocity scales it exactly (64 is 64/127 of 127); a note's length doesn't matter, the sound plays to its end.
+        const auto full = drumsPlay (*drums, { { 36, 0.0, 1.0f } }, 0.5);
+        const auto half = drumsPlay (*drums, { { 36, 0.0, 64.0f / 127.0f } }, 0.5);
+        auto scaled = true;
+
+        for (int i = 0; i < full.getNumSamples(); ++i)
+            scaled = scaled && std::abs (half.getSample (0, i) - 64.0f / 127.0f * full.getSample (0, i)) < 1e-6f;
+
+        check (scaled && full.getMagnitude (0, (int) (0.1 * rate), (int) (0.05 * rate)) > 0.05f,
+               "drums: velocity scales a sound exactly, and a kick held 10 ms still sounds 100 ms on");
+
+        // A closed hat chokes the open one; alone the open hat rings on.
+        const auto open = drumsPlay (*drums, { { 46, 0.0, 1.0f } }, 0.8);
+        const auto choked = drumsPlay (*drums, { { 46, 0.0, 1.0f }, { 42, 0.1, 1.0f } }, 0.8);
+        check (open.getMagnitude (0, (int) (0.5 * rate), (int) (0.3 * rate)) > 0.01f
+                   && choked.getMagnitude (0, (int) (0.5 * rate), (int) (0.3 * rate)) == 0.0f,
+               "drums: a closed hat chokes the open hat, which otherwise rings on");
+
+        // Everything stops: a full kit has ended and gone silent in six seconds.
+        std::vector<std::tuple<int, double, float>> kit;
+
+        for (auto note : mapped)
+            kit.push_back ({ note, 0.0, 1.0f });
+
+        const auto all = drumsPlay (*drums, kit, 6.0);
+        check (drums->getNumSounding() == 0 && all.getMagnitude (0, (int) (5.5 * rate), (int) (0.5 * rate)) == 0.0f,
+               "drums: every sound ends, a whole kit silent within six seconds");
+
+        // A pattern renders the same twice and at any block size.
+        std::vector<std::tuple<int, double, float>> pattern;
+
+        for (int step = 0; step < 16; ++step)
+        {
+            const auto at = step * 0.125;
+
+            if (step % 4 == 0) pattern.push_back ({ 36, at, 1.0f });
+            if (step % 8 == 4) pattern.push_back ({ 39, at, 0.9f });
+            pattern.push_back ({ step % 4 == 2 ? 46 : 42, at, step % 2 == 0 ? 0.8f : 0.6f });
+        }
+
+        const auto first = drumsPlay (*drums, pattern, 2.5), again = drumsPlay (*drums, pattern, 2.5), odd = drumsPlay (*drums, pattern, 2.5, 37);
+        check (sameAudio (first, again) && sameAudio (first, odd) && first.getMagnitude (0, 0, first.getNumSamples()) < 4.0f,
+               "drums: a pattern renders bit-identically twice and in 37-sample blocks");
+
+        // The parameters change the sound and come back with the state.
+        setPlain (*drums, "kickTune", -5.0f);
+        setPlain (*drums, "hatDecay", 250.0f);
+        const auto tuned = drumsPlay (*drums, { { 36, 0.0, 1.0f } }, 0.5);
+        juce::MemoryBlock state;
+        drums->getStateInformation (state);
+        auto another = engine.pluginFormatManager.createPluginInstance (description, rate, 512, error);
+
+        if (another != nullptr)
+            another->setStateInformation (state.getData(), (int) state.getSize());
+
+        check (another != nullptr && ! sameAudio (tuned, full) && std::abs (plainOf (*another, "kickTune") + 5.0f) < 1e-4f
+                   && std::abs (plainOf (*another, "hatDecay") - 250.0f) < 1e-3f && std::abs (plainOf (*another, "snareTune")) < 1e-4f,
+               "drums: tuning changes the kick, and the parameters come back with the state");
+
+        // It is offered with the instruments, after the synth.
+        BuiltInEffects::addTo (engine.knownPlugins);
+        const auto known = Instrument::known (engine.knownPlugins);
+        check (known.size() >= 2 && known[0].fileOrIdentifier == BuiltInEffects::basicSynthId && known[1].fileOrIdentifier == BuiltInEffects::basicDrumsId
+                   && Instrument::title (known[1]) == "Basic Drums (built in)",
+               "drums: offered as an instrument, Basic Drums (built in), after the synth");
+    }
+
 }
 
 void runInstrumentTests (AudioEngine& engine)
@@ -350,4 +501,6 @@ void runInstrumentTests (AudioEngine& engine)
                "instrument: a fresh instance from the description and state plays exactly what the instance plays, the defaults play otherwise, "
                "and an unknown instrument is an error");
     }
+
+    testBasicDrums (engine);
 }

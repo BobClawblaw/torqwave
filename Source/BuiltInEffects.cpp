@@ -62,6 +62,14 @@ namespace
         return d;
     }
 
+    juce::PluginDescription basicDrumsDescription()
+    {
+        auto d = describe ("Basic Drums", "Instrument", basicDrumsId, 0x53424452);   // "SBDR"
+        d.isInstrument = true;
+        d.numInputChannels = 0;
+        return d;
+    }
+
     juce::PluginDescription graphicEqDescription (int bands)
     {
         return bands == 31 ? describe ("Graphic EQ (31 Bands)", "EQ", graphicEq31Id, 0x53424733)    // "SBG3"
@@ -148,6 +156,8 @@ namespace
                 effect = std::make_unique<TransientShaperProcessor>();
             else if (d.fileOrIdentifier == basicSynthId)
                 effect = std::make_unique<BasicSynthProcessor>();
+            else if (d.fileOrIdentifier == basicDrumsId)
+                effect = std::make_unique<BasicDrumsProcessor>();
             else if (d.fileOrIdentifier == HardwareInsert::identifier)
                 effect = std::make_unique<HardwareInsert::Processor>();
 
@@ -172,7 +182,7 @@ juce::Array<juce::PluginDescription> getDescriptions()
 {
     return { parametricEqDescription(), compressorDescription(), limiterDescription(), chorusDescription(), flangerDescription(), phaserDescription(), reverbDescription(), convolutionDescription(),
              graphicEqDescription (10), graphicEqDescription (31), multibandDescription(), deEsserDescription(), dynamicEqDescription(), multibandWidthDescription(), exciterDescription(), maximizerDescription(), transientShaperDescription(),
-             basicSynthDescription(), HardwareInsert::Processor::description() };
+             basicSynthDescription(), basicDrumsDescription(), HardwareInsert::Processor::description() };
 }
 
 void addTo (juce::KnownPluginList& list)
@@ -2493,4 +2503,270 @@ void BasicSynthProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     renderVoices (buffer, done, n - done);
     midi.clear();
 }
+
+//==============================================================================
+BasicDrumsProcessor::BasicDrumsProcessor()
+    : BuiltInEffect (basicDrumsDescription(), "TORQWAVE_BASIC_DRUMS", false, true)
+{
+    level = addFloat ("level", "Level", { -40.0f, 6.0f }, -6.0f, "dB");
+    kickTune = addFloat ("kickTune", "Kick Tune", { -12.0f, 12.0f }, 0.0f, "st");
+    kickDecay = addFloat ("kickDecay", "Kick Decay", { 25.0f, 400.0f }, 100.0f, "%");
+    snareTune = addFloat ("snareTune", "Snare Tune", { -12.0f, 12.0f }, 0.0f, "st");
+    snareDecay = addFloat ("snareDecay", "Snare Decay", { 25.0f, 400.0f }, 100.0f, "%");
+    hatTune = addFloat ("hatTune", "Hat Tune", { -12.0f, 12.0f }, 0.0f, "st");
+    hatDecay = addFloat ("hatDecay", "Hat Decay", { 25.0f, 400.0f }, 100.0f, "%");
+    tomTune = addFloat ("tomTune", "Tom Tune", { -12.0f, 12.0f }, 0.0f, "st");
+    tomDecay = addFloat ("tomDecay", "Tom Decay", { 25.0f, 400.0f }, 100.0f, "%");
+}
+
+std::optional<BasicDrumsProcessor::Sound> BasicDrumsProcessor::soundFor (int note)
+{
+    switch (note)
+    {
+        case 35: case 36:                   return Sound::kick;
+        case 37:                            return Sound::rim;
+        case 38: case 40:                   return Sound::snare;
+        case 39:                            return Sound::clap;
+        case 42:                            return Sound::closedHat;
+        case 44:                            return Sound::pedalHat;
+        case 46:                            return Sound::openHat;
+        case 41: case 43:                   return Sound::lowTom;
+        case 45: case 47:                   return Sound::midTom;
+        case 48: case 50:                   return Sound::highTom;
+        case 49: case 57:                   return Sound::crash;
+        case 51: case 59:                   return Sound::ride;
+        case 56:                            return Sound::cowbell;
+        case 69: case 70:                   return Sound::shaker;
+        default:                            return std::nullopt;
+    }
+}
+
+void BasicDrumsProcessor::prepareToPlay (double sampleRate, int)
+{
+    rate = sampleRate;
+    reset();
+}
+
+void BasicDrumsProcessor::reset()
+{
+    for (auto& h : hits)
+        h = {};
+
+    volume = 1.0f;
+}
+
+int BasicDrumsProcessor::getNumSounding() const
+{
+    return (int) std::count_if (hits.begin(), hits.end(), [] (const Hit& h) { return h.active; });
+}
+
+void BasicDrumsProcessor::trigger (int note, float velocity)
+{
+    const auto sound = soundFor (note);
+
+    if (! sound.has_value())
+        return;
+
+    // A closed or pedal hat chokes the open one, as on the machines.
+    if (*sound == Sound::closedHat || *sound == Sound::pedalHat)
+        hits[(size_t) Sound::openHat].active = false;
+
+    auto& h = hits[(size_t) *sound];
+    h = {};
+    h.active = true;
+    h.note = note;
+    h.velocity = velocity;
+    h.noise = 0x9e3779b9u ^ ((juce::uint32) note * 2654435761u);   // the same noise each time
+}
+
+float BasicDrumsProcessor::noise (Hit& h) const
+{
+    h.noise = h.noise * 1664525u + 1013904223u;
+    return (float) (h.noise >> 8) / (float) (1u << 23) - 1.0f;
+}
+
+float BasicDrumsProcessor::next (Sound sound, Hit& h)
+{
+    const auto t = (double) h.age / rate;
+    const auto twoPi = juce::MathConstants<double>::twoPi;
+    const auto semis = [] (float st) { return std::exp2 (st / 12.0f); };
+    const auto decayOf = [] (juce::AudioParameterFloat* p) { return (double) p->get() * 0.01; };
+
+    // A one-pole high-pass at hz, and a band-pass at hz (state-variable, Q about 1.5).
+    const auto highPass = [this, &h] (float x, double hz)
+    {
+        const auto a = (float) std::exp (-juce::MathConstants<double>::twoPi * hz / rate);
+        h.hp = a * (h.hp + x - h.hpIn);
+        h.hpIn = x;
+        return h.hp;
+    };
+    const auto bandPass = [this, &h] (float x, double hz)
+    {
+        const auto f = (float) (2.0 * std::sin (juce::MathConstants<double>::pi * juce::jmin (hz, rate * 0.2) / rate));
+        const auto high = x - h.bp2 - 0.66f * h.bp1;
+        h.bp1 += f * high;
+        h.bp2 += f * h.bp1;
+        return h.bp1;
+    };
+    // Six squares at a cymbal's uneven ratios: the metallic part of hats, ride and crash.
+    const auto metal = [this, &h] (double scale)
+    {
+        static constexpr double ratios[] { 205.3, 304.4, 369.6, 522.7, 540.0, 800.0 };
+        float s = 0.0f;
+
+        for (size_t i = 0; i < 6; ++i)
+        {
+            s += h.metal[i] < 0.5 ? 1.0f : -1.0f;
+            h.metal[i] = std::fmod (h.metal[i] + ratios[i] * scale / rate, 1.0);
+        }
+
+        return s / 6.0f;
+    };
+    const auto sine = [&h, twoPi, this] (double hz)
+    {
+        const auto s = (float) std::sin (twoPi * h.phase);
+        h.phase = std::fmod (h.phase + hz / rate, 1.0);
+        return s;
+    };
+
+    double length = 0.0;   // where it stops, in seconds
+    float s = 0.0f;
+
+    switch (sound)
+    {
+        case Sound::kick:
+        {
+            const auto decay = 0.32 * decayOf (kickDecay);
+            const auto tune = (double) semis (kickTune->get());
+            const auto hz = tune * (46.0 + 114.0 * std::exp (-t / 0.035));
+            const auto click = t < 0.003 ? noise (h) * 0.35f * (float) (1.0 - t / 0.003) : 0.0f;
+            s = (float) std::tanh (1.4 * sine (hz) * std::exp (-t / decay)) + click;
+            length = decay * 7.0;
+            break;
+        }
+        case Sound::rim:
+            s = 0.6f * sine (1700.0) * (float) std::exp (-t / 0.008) + 0.4f * bandPass (noise (h), 3000.0) * (float) std::exp (-t / 0.004);
+            length = 0.08;
+            break;
+        case Sound::snare:
+        {
+            const auto decay = decayOf (snareDecay);
+            const auto tune = (double) semis (snareTune->get());
+            const auto tone = sine (tune * (180.0 + 60.0 * std::exp (-t / 0.01))) * (float) std::exp (-t / (0.06 * decay));
+            const auto rattle = highPass (noise (h), 1500.0 * tune) * (float) std::exp (-t / (0.14 * decay));
+            s = 0.55f * tone + 0.75f * rattle;
+            length = 0.14 * decay * 7.0;
+            break;
+        }
+        case Sound::clap:
+        {
+            // Three short bursts 10 ms apart, then a tail.
+            const auto burst = std::fmod (t, 0.010);
+            const auto env = t < 0.030 ? std::exp (-burst / 0.003) : 0.8 * std::exp (-(t - 0.030) / 0.11);
+            s = 1.6f * bandPass (noise (h), 1100.0) * (float) env;
+            length = 0.9;
+            break;
+        }
+        case Sound::closedHat: case Sound::pedalHat: case Sound::openHat:
+        {
+            const auto tune = semis (hatTune->get());
+            const auto decay = (sound == Sound::openHat ? 0.28 : sound == Sound::pedalHat ? 0.025 : 0.045) * decayOf (hatDecay);
+            const auto raw = 0.6f * metal (tune) + 0.4f * noise (h);
+            s = 0.8f * highPass (raw, 7000.0 * tune) * (float) std::exp (-t / decay);
+            length = decay * 7.0;
+            break;
+        }
+        case Sound::lowTom: case Sound::midTom: case Sound::highTom:
+        {
+            const auto base = (h.note == 41 ? 82.0 : h.note == 43 ? 98.0 : h.note == 45 ? 116.0 : h.note == 47 ? 138.0 : h.note == 48 ? 164.0 : 196.0)
+                            * semis (tomTune->get());
+            const auto decay = 0.22 * decayOf (tomDecay);
+            s = 0.9f * sine (base * (1.0 + 0.45 * std::exp (-t / 0.04))) * (float) std::exp (-t / decay);
+            length = decay * 7.0;
+            break;
+        }
+        case Sound::crash:
+            s = 0.5f * highPass (0.5f * metal (1.3) + 0.5f * noise (h), 5000.0) * (float) std::exp (-t / 0.9);
+            length = 5.0;
+            break;
+        case Sound::ride:
+            s = 0.35f * highPass (metal (1.6) + 0.15f * noise (h), 4000.0) * (float) std::exp (-t / 0.7);
+            length = 4.0;
+            break;
+        case Sound::cowbell:
+        {
+            const auto square = [&h, this] (size_t i, double hz) { const auto v = h.metal[i] < 0.5 ? 1.0f : -1.0f; h.metal[i] = std::fmod (h.metal[i] + hz / rate, 1.0); return v; };
+            s = 0.4f * bandPass (0.5f * (square (0, 540.0) + square (1, 800.0)), 2600.0) * (float) std::exp (-t / 0.09);
+            length = 0.6;
+            break;
+        }
+        case Sound::shaker:
+        {
+            const auto env = t < 0.006 ? t / 0.006 : std::exp (-(t - 0.006) / 0.045);
+            s = 0.5f * highPass (noise (h), 6000.0) * (float) env;
+            length = 0.35;
+            break;
+        }
+        case Sound::count: break;
+    }
+
+    if (++h.age > (juce::int64) (length * rate))
+        h.active = false;
+
+    return s * h.velocity;
+}
+
+void BasicDrumsProcessor::render (float* out, int from, int count)
+{
+    for (size_t i = 0; i < hits.size(); ++i)
+    {
+        auto& h = hits[i];
+
+        for (int n = from; n < from + count && h.active; ++n)
+            out[n] += next ((Sound) i, h);
+    }
+}
+
+void BasicDrumsProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
+{
+    const auto n = buffer.getNumSamples();
+    buffer.clear();
+
+    if (buffer.getNumChannels() == 0)
+    {
+        midi.clear();
+        return;
+    }
+
+    auto* out = buffer.getWritePointer (0);
+    int done = 0;
+
+    for (const auto meta : midi)
+    {
+        const auto at = juce::jlimit (done, n, meta.samplePosition);
+        render (out, done, at - done);
+        done = at;
+
+        const auto m = meta.getMessage();
+
+        if (m.isNoteOn())
+            trigger (m.getNoteNumber(), m.getFloatVelocity());
+        else if (m.isAllSoundOff())
+            for (auto& h : hits)
+                h.active = false;
+        else if (m.isController() && m.getControllerNumber() == 7)
+            volume = (float) m.getControllerValue() / 127.0f;
+        else if (m.isController() && m.getControllerNumber() == 121)
+            volume = 1.0f;
+    }
+
+    render (out, done, n - done);
+    buffer.applyGain (0, 0, n, juce::Decibels::decibelsToGain (level->get()) * volume * volume);
+
+    for (int ch = 1; ch < buffer.getNumChannels(); ++ch)
+        buffer.copyFrom (ch, 0, buffer, 0, 0, n);
+
+    midi.clear();
+}
+
 }
