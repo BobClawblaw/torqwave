@@ -3663,6 +3663,29 @@ void MultitrackView::paint (juce::Graphics& g)
                               juce::PathStrokeType (1.0f));
             }
 
+            // Crossfades: their area across the overlap, and while one is dragged, its length.
+            for (const auto& x : SessionEdits::crossfadesOn (shown(), t))
+            {
+                auto b = crossfadeBounds (x).toFloat();
+
+                if (b.getHeight() <= 0.0f)
+                    continue;
+
+                const auto dragged = (drag == Drag::crossfadeLength || drag == Drag::crossfadeMove) && x.in == dragCrossfade.in;
+                g.setColour (Theme::accent.withAlpha (dragged ? 0.22f : 0.10f));
+                g.fillRect (b);
+                g.setColour (Theme::accent.withAlpha (0.7f));
+                g.drawRect (b, 1.0f);
+
+                if (dragged && b.getWidth() >= 44.0f)
+                {
+                    const auto ms = (double) x.length() * 1000.0 / shown().sampleRate;
+                    g.setColour (juce::Colours::white);
+                    g.setFont (11.0f);
+                    g.drawText (juce::String (ms, ms < 10.0 ? 1 : 0) + " ms", b.removeFromBottom (14.0f), juce::Justification::centred, false);
+                }
+            }
+
             // A frozen track plays its rendered audio: an icy wash over the frames it covers, so
             // it is clear its clips can't be changed until it is unfrozen.
             if (track.isFrozen())
@@ -5586,6 +5609,87 @@ juce::String MultitrackView::crossfadeSelectedClips (double seconds)
     return {};
 }
 
+juce::Rectangle<int> MultitrackView::crossfadeBounds (const SessionEdits::Crossfade& x) const
+{
+    const auto where = shown().findClip (x.in);
+
+    if (! where.has_value() || shown().tracks[(size_t) where->first].hidden)
+        return {};
+
+    const auto r = clipBounds (where->first, shown().tracks[(size_t) where->first].clips[(size_t) where->second]);
+    return juce::Rectangle<int>::leftTopRightBottom (juce::roundToInt (xForFrame (x.start)), r.getY() + 16,
+                                                     juce::roundToInt (xForFrame (x.end)), r.getBottom());
+}
+
+std::optional<std::pair<SessionEdits::Crossfade, MultitrackView::Drag>> MultitrackView::crossfadeDragAt (juce::Point<int> p) const
+{
+    const auto t = trackAt (p.y);
+
+    if (tool != Tool::select || p.x < listWidth || ! juce::isPositiveAndBelow (t, (int) shown().tracks.size()))
+        return std::nullopt;
+
+    for (const auto& x : SessionEdits::crossfadesOn (shown(), t))
+    {
+        const auto b = crossfadeBounds (x);
+
+        if (b.getHeight() <= 0 || p.y < b.getY() || p.y >= b.getBottom() || p.x < b.getX() - 3 || p.x > b.getRight() + 3)
+            continue;
+
+        const auto locked = [this] (juce::uint32 id) { const auto w = shown().findClip (id); return shown().tracks[(size_t) w->first].clips[(size_t) w->second].locked; };
+
+        if (locked (x.out) || locked (x.in))
+            return std::nullopt;
+
+        const auto grab = juce::jmax (1, juce::jmin (4, b.getWidth() / 3));
+        const auto onEdge = std::abs (p.x - b.getX()) <= grab || std::abs (p.x - b.getRight()) <= grab;
+        return std::pair (x, onEdge ? Drag::crossfadeLength : Drag::crossfadeMove);
+    }
+
+    return std::nullopt;
+}
+
+juce::PopupMenu MultitrackView::crossfadeMenu (const SessionEdits::Crossfade& x)
+{
+    juce::PopupMenu menu;
+    const auto o = shown().findClip (x.out), i = shown().findClip (x.in);
+
+    if (! o.has_value() || ! i.has_value())
+        return menu;
+
+    const auto outShape = shown().tracks[(size_t) o->first].clips[(size_t) o->second].fadeOutShape;
+    const auto inShape = shown().tracks[(size_t) i->first].clips[(size_t) i->second].fadeInShape;
+    const juce::Component::SafePointer<MultitrackView> safe (this);
+    const auto shapes = [safe, x] (FadeShape out, FadeShape in)
+    {
+        return [safe, x, out, in]
+        {
+            if (safe != nullptr)
+                safe->editSession ("Crossfade Shape", [x, out, in] (SessionState& n) { return SessionEdits::setCrossfadeShapes (n, x.out, x.in, out, in); });
+        };
+    };
+
+    using SessionEdits::equalGainShape, SessionEdits::equalPowerShape;
+    menu.addItem ("Equal Gain (S-Curve)", true, outShape == equalGainShape && inShape == equalGainShape, shapes (equalGainShape, equalGainShape));
+    menu.addItem ("Equal Power", true, outShape == equalPowerShape && inShape == equalPowerShape, shapes (equalPowerShape, equalPowerShape));
+    juce::PopupMenu outSide, inSide;
+
+    for (auto shape : FadeShapes::all)
+    {
+        outSide.addItem (FadeShapes::displayName (shape), true, shape == outShape, shapes (shape, inShape));
+        inSide.addItem (FadeShapes::displayName (shape), true, shape == inShape, shapes (outShape, shape));
+    }
+
+    menu.addSubMenu ("Out Side", outSide);
+    menu.addSubMenu ("In Side", inSide);
+    menu.addSeparator();
+    menu.addItem ("Remove Crossfade", [safe, x]
+    {
+        if (safe != nullptr)
+            safe->editSession ("Remove Crossfade", [x] (SessionState& n) { return SessionEdits::removeCrossfade (n, x.out, x.in); });
+    });
+    return menu;
+}
+
 void MultitrackView::setSelectedClipsFlag (bool (*set) (SessionState&, juce::uint32, bool), bool on, const juce::String& verb)
 {
     auto next = *engine.session.getState();
@@ -6645,6 +6749,15 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
+    // A right-click on a crossfade: its shapes, or removing it.
+    if (e.mods.isPopupMenu())
+        if (const auto xf = crossfadeDragAt (p))
+        {
+            selectTrack (xf->first.track);
+            crossfadeMenu (xf->first).showMenuAsync (juce::PopupMenu::Options().withMousePosition());
+            return;
+        }
+
     // A right-click on a clip opens its menu: the take it plays, its colour, locking and muting.
     // It keeps a selection the clip is in, so the menu works on all of them.
     if (const auto hit = clipAt (p); hit.has_value() && e.mods.isPopupMenu())
@@ -6798,6 +6911,20 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
             dragDescription = "Comp Take " + juce::String (dragTake + 1);
         }
 
+        return;
+    }
+
+    // A crossfade, below the clips' title bars: an edge sets its length, the middle moves its join.
+    if (const auto xf = e.mods.isShiftDown() || e.mods.isCommandDown() ? std::nullopt : crossfadeDragAt (p))
+    {
+        dragCrossfade = xf->first;
+        drag = xf->second;
+        dragFrame = frameForX ((float) p.x);
+        dragDescription = drag == Drag::crossfadeLength ? "Crossfade Length" : "Move Crossfade";
+        selectClip (dragCrossfade.out, false);
+        selectClip (dragCrossfade.in, true);
+        selectedClip = dragCrossfade.in;
+        selectTrack (dragCrossfade.track);
         return;
     }
 
@@ -7150,6 +7277,17 @@ void MultitrackView::mouseDrag (const juce::MouseEvent& e)
             break;
         case Drag::trimEnd:
             SessionEdits::trimClip (next, dragClip.id, dragClip.position, toZeroCrossing (dragClip, snapped (dragClip.getEnd() + delta, dragClip.id)));
+            break;
+        case Drag::crossfadeLength:
+        {
+            // The edge follows the mouse and the other mirrors it about the join.
+            const auto at = snapped (frameForX ((float) p.x), dragCrossfade.in);
+            // Twice as far from the join as the mouse is, and never shorter than a crossfade can be.
+            SessionEdits::setCrossfadeLength (next, dragCrossfade.out, dragCrossfade.in, juce::jmax ((juce::int64) 2, 2 * std::abs (at - dragCrossfade.join())));
+            break;
+        }
+        case Drag::crossfadeMove:
+            SessionEdits::moveCrossfade (next, dragCrossfade.out, dragCrossfade.in, snapped (dragCrossfade.join() + delta, dragCrossfade.in));
             break;
         case Drag::fadeIn:
             SessionEdits::setClipFades (next, dragClip.id, snapped (frameForX ((float) p.x), dragClip.id) - dragClip.position, dragClip.fadeOut);
@@ -7571,6 +7709,10 @@ void MultitrackView::mouseMove (const juce::MouseEvent& e)
                           ? juce::MouseCursor::LeftRightResizeCursor
                       : optionHeld ? juce::MouseCursor::CopyingCursor   // Option-drag copies
                                  : juce::MouseCursor::DraggingHandCursor;
+    }
+    else if (const auto xf = crossfadeDragAt (p))
+    {
+        cursorShape = xf->second == Drag::crossfadeLength ? juce::MouseCursor::LeftRightResizeCursor : juce::MouseCursor::DraggingHandCursor;
     }
     else if (const auto hit = clipAt (p))
     {

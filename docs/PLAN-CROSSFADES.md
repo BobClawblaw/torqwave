@@ -43,12 +43,12 @@ Its **join** is the middle of the overlap. Its **length** is the overlap's lengt
   - a removed crossfade leaves a butt join with no fades;
   - a session written with crossfades reads back the same, and its file has no new fields.
 
-## Step 2: crossfades on the lane (M)
+## Step 2: crossfades on the lane (M) — done
 
 - Over a crossfade, the lane shows the overlap as one shaded region with both curves. The pointer changes over its edges and its middle.
 - **Drag an edge** to set the length (symmetric about the join), and **drag the middle** to move the join. Both snap like clip edges do, and the status line shows the length in ms (and in beats with bars and beats on).
-- **Right-click** a crossfade for each side's shape, Equal Gain, Equal Power, its presets, Edit Crossfade..., and Remove Crossfade.
-- **Double-click** it to open the editor (step 3). Over a crossfade this takes the place of Edit in Place, which still opens on the rest of the clip.
+- **Right-click** a crossfade for each side's shape, Equal Gain, Equal Power and Remove Crossfade. Its presets and Edit Crossfade... join the menu with the editor in step 3.
+- **Double-click** it to open the editor (step 3). Over a crossfade this takes the place of Edit in Place, which still opens on the rest of the clip. Until step 3, a double-click there still opens the clip in place.
 - Tested: the tests' mouse drags an edge and the middle and gets the frames step 1 gives; a right-click shape lands on both clips; a double-click over a crossfade opens the editor, and elsewhere on the clip opens the clip in place. Not driven by the tests: the look of the region and its pointers.
 
 ## Step 3: the crossfade editor (M)

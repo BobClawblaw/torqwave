@@ -342,10 +342,127 @@ namespace
     }
 }
 
+namespace
+{
+    // The view takes the session's changes from a change message: let it arrive.
+    void settle()
+    {
+        TestUtils::runUntil ([] { return false; }, 50);
+    }
+
+    juce::MouseEvent mouse (juce::Component& c, juce::Point<int> at, juce::Point<int> down, juce::ModifierKeys mods = {})
+    {
+        const auto now = juce::Time::getCurrentTime();
+        return juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at.toFloat(), mods, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, &c, &c,
+                                 now, down.toFloat(), now, 1, at != down);
+    }
+
+    void dragOn (juce::Component& c, juce::Point<int> from, juce::Point<int> to)
+    {
+        c.mouseDown (mouse (c, from, from));
+        c.mouseDrag (mouse (c, to, from));
+        c.mouseUp (mouse (c, to, from));
+        settle();
+    }
+
+    bool runItem (const juce::PopupMenu& menu, const juce::String& name)
+    {
+        for (juce::PopupMenu::MenuItemIterator i (menu, true); i.next();)
+            if (i.getItem().text == name && i.getItem().action != nullptr)
+            {
+                i.getItem().action();
+                settle();
+                return true;
+            }
+
+        return false;
+    }
+
+    /** Crossfades on the lane: the area over the overlap, its edges dragged for the length and its
+        middle for the join, the pointer over each, and its menu. */
+    void testLane (AudioEngine& engine)
+    {
+        auto h = halves (noise (48000, 12));
+        SessionEdits::crossfadeClips (h.s, h.out, h.in, 4800);
+        engine.session.reset (h.s, {});
+        MultitrackView view (engine);
+        view.setBounds (0, 0, 1400, 500);
+        view.setSnapping (false);
+        view.zoomToRange ({ 18000, 30000 });
+        const auto now = [&] { return *SessionEdits::crossfadeBetween (*engine.session.getState(), h.out, h.in); };
+        const auto b = view.crossfadeBounds (now());
+        const auto pixels = (double) b.getWidth() / 4800.0;   // per frame
+        check (b.getWidth() > 40 && b.getHeight() > 20, "crossfade lane: a 100 ms crossfade shows across its overlap");
+
+        view.mouseMove (mouse (view, { b.getRight(), b.getCentreY() }, { b.getRight(), b.getCentreY() }));
+        const auto edgeCursor = view.getMouseCursor() == juce::MouseCursor (juce::MouseCursor::LeftRightResizeCursor);
+        view.mouseMove (mouse (view, b.getCentre(), b.getCentre()));
+        check (edgeCursor && view.getMouseCursor() == juce::MouseCursor (juce::MouseCursor::DraggingHandCursor),
+               "crossfade lane: the pointer is a resize arrow over its edges and a hand over its middle");
+
+        // The right edge 20 pixels further: both edges move out about the join.
+        dragOn (view, { b.getRight(), b.getCentreY() }, { b.getRight() + 20, b.getCentreY() });
+        const auto longer = now();
+        const auto wider = view.crossfadeBounds (longer);
+        check (longer.join() == 24000 && longer.length() > 4800 && std::abs (wider.getRight() - (b.getRight() + 20)) <= 1
+                   && std::abs (wider.getX() - (b.getX() - 20)) <= 1 && engine.session.getUndoDescription() == "Crossfade Length",
+               "crossfade lane: an edge dragged out lengthens it about its join, both edges moving, as the Crossfade Length step");
+
+        // Its middle 30 pixels to the right: the join moves, the length stays.
+        const auto c = wider.getCentre();
+        dragOn (view, c, c.translated (30, 0));
+        const auto moved = now();
+        check (moved.length() == longer.length() && std::abs ((double) (moved.join() - 24000) * pixels - 30.0) <= 1.0
+                   && engine.session.getUndoDescription() == "Move Crossfade",
+               "crossfade lane: its middle dragged moves the join by as much, the length kept, as the Move Crossfade step");
+
+        // An edge dragged onto the join: as short as the pixel there allows, never none.
+        const auto still = view.crossfadeBounds (moved);
+        const auto joinX = juce::roundToInt (still.getX() + (double) moved.length() / 2.0 * pixels);
+        dragOn (view, { still.getRight(), still.getCentreY() }, { joinX, still.getCentreY() });
+        const auto shortest = SessionEdits::crossfadeBetween (*engine.session.getState(), h.out, h.in);
+        check (shortest.has_value() && shortest->length() >= 2 && (double) shortest->length() * pixels <= 3.0,
+               "crossfade lane: an edge dragged onto the join leaves a crossfade as short as a pixel or two, never none");
+        dragOn (view, { joinX, still.getCentreY() }, { still.getRight(), still.getCentreY() });
+
+        // The menu: equal power, one side's shape, removing it.
+        check (runItem (view.crossfadeMenu (now()), "Equal Power")
+                   && engine.session.getState()->tracks[0].clips[0].fadeOutShape == FadeShape::equalPower
+                   && engine.session.getState()->tracks[0].clips[1].fadeInShape == FadeShape::equalPower,
+               "crossfade lane: its menu's Equal Power gives both sides that shape");
+        auto menu = view.crossfadeMenu (now());
+        juce::PopupMenu::MenuItemIterator items (menu);
+        auto ticked = false;
+
+        while (items.next())
+            ticked = ticked || (items.getItem().text == "Equal Power" && items.getItem().isTicked);
+
+        check (ticked && runItem (view.crossfadeMenu (now()), "Linear") && engine.session.getState()->tracks[0].clips[0].fadeOutShape == FadeShape::linear
+                   && engine.session.getState()->tracks[0].clips[1].fadeInShape == FadeShape::equalPower,
+               "crossfade lane: the menu ticks the pair in use, and its Out Side submenu changes that side alone");
+        view.createComponentSnapshot (view.getLocalBounds());   // paints the crossfade's area
+        check (runItem (view.crossfadeMenu (now()), "Remove Crossfade") && SessionEdits::crossfadesOn (*engine.session.getState(), 0).empty()
+                   && engine.session.getUndoDescription() == "Remove Crossfade",
+               "crossfade lane: Remove Crossfade leaves the clips meeting at its join");
+
+        // Locked clips: the area is no handle, and a drag there moves nothing.
+        engine.session.undo();
+        auto locked = *engine.session.getState();
+        locked.tracks[0].clips[0].locked = locked.tracks[0].clips[1].locked = true;
+        engine.session.apply (locked, "Lock");
+        const auto before = now();
+        const auto l = view.crossfadeBounds (before);
+        dragOn (view, { l.getRight(), l.getCentreY() }, { l.getRight() + 25, l.getCentreY() });
+        check (now().start == before.start && now().end == before.end, "crossfade lane: with its clips locked, dragging its edge changes nothing");
+        engine.session.reset (SessionState(), {});
+    }
+}
+
 void runCrossfadeTests (AudioEngine& engine)
 {
     testCrossfadeClips();
     testLengthAndJoin();
     testLevels();
     testFilesAndView (engine);
+    testLane (engine);
 }

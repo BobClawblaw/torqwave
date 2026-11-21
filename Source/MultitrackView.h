@@ -376,6 +376,15 @@ public:
         why none could be, or an empty string. */
     juce::String crossfadeSelectedClips (double seconds);
 
+    /** Where a crossfade shows on its track's lane: across its overlap, below the clips' title
+        bars. Drag an edge to set its length about its join, the middle to move the join; empty
+        when its track is hidden. */
+    juce::Rectangle<int> crossfadeBounds (const SessionEdits::Crossfade&) const;
+
+    /** A crossfade's right-click menu: Equal Gain, Equal Power, each side's shape, and Remove
+        Crossfade, each one undo step. */
+    juce::PopupMenu crossfadeMenu (const SessionEdits::Crossfade&);
+
     /** Groups the selected clips, so a click on one selects them all (to move or delete them
         together), or breaks up the groups they are in. Each is one undo step. */
     bool canGroupSelectedClips() const;
@@ -748,7 +757,13 @@ private:
 
     enum class Drag { none, range, move, trimStart, trimEnd, fadeIn, fadeOut, envelopePoint, marker, clipGain, clipGainPoint, scrub,
                       stretchStart, stretchEnd, moveNotes, trimNotesStart, trimNotesEnd, stretchNotesStart, stretchNotesEnd, drawNotes, rubberBand, listWidth,
-                      loopNew, loopMove, loopStart, loopEnd, compTake, sectionNew, sectionMove, sectionStart, sectionEnd, warpMarker };
+                      loopNew, loopMove, loopStart, loopEnd, compTake, sectionNew, sectionMove, sectionStart, sectionEnd, warpMarker,
+                      crossfadeLength, crossfadeMove };
+
+    /** The crossfade under p with the Select tool, neither of its clips locked, and what a press
+        there does: near an edge it sets the length, elsewhere it moves the join. */
+    std::optional<std::pair<SessionEdits::Crossfade, Drag>> crossfadeDragAt (juce::Point<int> p) const;
+    SessionEdits::Crossfade dragCrossfade;     // the crossfade being dragged, as it was
 
     /** A following clip's warp marker under p (its handle, just under the title bar): the clip and the marker's place. */
     std::optional<std::pair<juce::uint32, int>> warpMarkerAt (juce::Point<int> p) const;
