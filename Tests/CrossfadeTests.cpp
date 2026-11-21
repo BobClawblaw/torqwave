@@ -608,6 +608,133 @@ namespace
     }
 }
 
+namespace
+{
+    // Clips laid over each other by hand, as in a session from use: two clips of one file on a track,
+    // overlapping by 1.68 s with no fades.
+    SessionState overlaid (juce::uint32& out, juce::uint32& in)
+    {
+        SessionState s;
+        s.sampleRate = rate;
+        const auto audio = noise (240000, 30);
+        auto& t = s.addTrack();
+        t.clips.push_back (clipOf (s, audio, 0, 16828, 52637));
+        t.clips.push_back (clipOf (s, audio, 44563, 16828, 60619));
+        out = t.clips[0].id;
+        in = t.clips[1].id;
+        return s;
+    }
+
+    void testOverlaid (AudioEngine& engine)
+    {
+        juce::uint32 out = 0, in = 0;
+        const auto start = overlaid (out, in);
+        const auto overlap = 52637 - 44563;
+
+        // Crossfade Selected Clips keeps the whole overlap; clips that only touch still get 10 ms.
+        engine.session.reset (start, {});
+        MultitrackView view (engine);
+        view.selectAllClips();
+        check (view.crossfadeSelectedClips (0.010).isEmpty(), "overlaid clips: Crossfade Selected Clips crossfades them");
+        auto made = SessionEdits::crossfadesOn (*engine.session.getState(), 0);
+        check (made.size() == 1 && made[0].start == 44563 && made[0].end == 52637 && made[0].length() == overlap
+                   && clip (*engine.session.getState(), out).getEnd() == 52637 && clip (*engine.session.getState(), in).position == 44563,
+               "overlaid clips: the crossfade is the whole overlap, the clips where they were");
+
+        // A double-click on the overlap makes it a crossfade and opens it in the editor.
+        engine.session.reset (start, {});
+        view.setBounds (0, 0, 1400, 500);
+        view.setSnapping (false);
+        view.zoomToRange ({ 30000, 70000 });
+        settle();
+        std::vector<SessionEdits::Crossfade> opened;
+        juce::uint32 openedInPlace = 0;
+        view.onEditCrossfades = [&] (std::vector<SessionEdits::Crossfade> c) { opened = std::move (c); };
+        view.onEditClip = [&] (juce::uint32 id) { openedInPlace = id; };
+        // Where frames lie on the lane, from the area a crossfade over them would take.
+        const auto at = [&] (juce::int64 from, juce::int64 to) { return view.crossfadeBounds ({ out, in, 0, from, to }); };
+        const auto mid = at (44563, 52637).getCentre();
+        view.mouseDoubleClick (mouse (view, mid, mid));
+        made = SessionEdits::crossfadesOn (*engine.session.getState(), 0);
+        check (made.size() == 1 && made[0].length() == overlap && opened.size() == 1 && opened[0].out == out && opened[0].in == in && openedInPlace == 0
+                   && engine.session.getUndoDescription() == "Crossfade Clips" && view.isClipSelected (out) && view.isClipSelected (in),
+               "overlaid clips: a double-click on their overlap makes it a crossfade (one undo step), selects both and opens the editor, not the clip in place");
+
+        // Then the same double-click opens the crossfade it now is; elsewhere on a clip, the clip in place.
+        settle();
+        opened.clear();
+        view.mouseDoubleClick (mouse (view, mid, mid));
+        const juce::Point<int> clear { at (35000, 35000).getX(), mid.y };
+        view.mouseDoubleClick (mouse (view, clear, clear));
+        check (opened.size() == 1 && SessionEdits::crossfadesOn (*engine.session.getState(), 0).size() == 1 && openedInPlace == out,
+               "overlaid clips: once crossfaded, a double-click opens the crossfade; off the overlap, the clip in place");
+
+        // From the menu's Crossfade Clips: the same, without the editor.
+        engine.session.reset (start, {});
+        opened.clear();
+        check (view.crossfadeOverlap (out, in, false).isEmpty() && opened.empty()
+                   && SessionEdits::crossfadesOn (*engine.session.getState(), 0)[0].length() == overlap,
+               "overlaid clips: Crossfade Clips makes the whole overlap a crossfade without opening the editor");
+
+        // No clicks: two clips of a 220 Hz sine laid over each other out of phase, as in the session
+        // it was found in, click where one starts and where the other stops; crossfaded, the sound's
+        // second difference stays within 1.5 times the sine's own (equal power on two copies of one
+        // sound adds up to as much as 3 dB louder), mixed or layered.
+        {
+            juce::AudioBuffer<float> sine (1, 240000);
+
+            for (int i = 0; i < sine.getNumSamples(); ++i)
+                sine.setSample (0, i, 0.5f * std::sin (juce::MathConstants<float>::twoPi * 220.0f * (float) i / (float) rate));
+
+            const auto audio = snapshotOf (std::move (sine));
+            const auto worstStep = [] (const SessionState& s)
+            {
+                juce::AudioBuffer<float> b (2, 30000);
+                SessionMixer::Buffers scratch;
+
+                for (int at = 0; at < b.getNumSamples(); at += 512)
+                    SessionMixer::render (s, 35000 + at, b, at, juce::jmin (512, b.getNumSamples() - at), scratch);
+
+                auto worst = 0.0f;
+
+                for (int i = 2; i < b.getNumSamples(); ++i)
+                    worst = juce::jmax (worst, std::abs (b.getSample (0, i) - 2 * b.getSample (0, i - 1) + b.getSample (0, i - 2)));
+
+                return worst / std::sqrt (0.5f);
+            };
+            const auto ownStep = 0.5f * std::pow (juce::MathConstants<float>::twoPi * 220.0f / (float) rate, 2.0f);
+            auto laid = start;
+
+            for (auto& c : laid.tracks[0].clips)
+                c.audio = audio;
+
+            laid.tracks[0].clips[1].offset = 16828 + 101;   // out of phase with the clip going out
+            auto worstLaid = worstStep (laid), worstMade = 0.0f;
+
+            for (auto layered : { false, true })
+                for (auto shape : { SessionEdits::equalGainShape, SessionEdits::equalPowerShape })
+                {
+                    auto s = laid;
+                    s.layerClips = layered;
+                    SessionEdits::crossfadeClips (s, out, in, overlap, shape, shape);
+                    worstMade = juce::jmax (worstMade, worstStep (s));
+                }
+
+            std::cout << "    sine laid over itself out of phase: worst step " << worstLaid / ownStep << "x the sine's own; crossfaded, " << worstMade / ownStep << "x" << std::endl;
+            check (worstLaid > 20 * ownStep && worstMade < 1.5f * ownStep,
+                   "overlaid clips: laid over each other they click; crossfaded (equal gain or power, mixed or layered) there is no click, in 512-frame blocks");
+        }
+
+        // One clip over the whole of the other is no crossfade; it says so.
+        auto covered = start;
+        covered.tracks[0].clips[1].length = 2000;
+        engine.session.reset (covered, {});
+        check (view.crossfadeOverlap (out, in, false).isNotEmpty() && SessionEdits::crossfadesOn (*engine.session.getState(), 0).empty(),
+               "overlaid clips: one clip inside the other is refused with a reason");
+        engine.session.reset (SessionState(), {});
+    }
+}
+
 void runCrossfadeTests (AudioEngine& engine)
 {
     testCrossfadeClips();
@@ -616,4 +743,5 @@ void runCrossfadeTests (AudioEngine& engine)
     testFilesAndView (engine);
     testLane (engine);
     testEditor (engine);
+    testOverlaid (engine);
 }

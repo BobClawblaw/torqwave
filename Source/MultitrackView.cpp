@@ -1188,7 +1188,7 @@ void MultitrackView::showAutomationMenu (juce::uint32 trackId, juce::Component& 
         });
 }
 
-void MultitrackView::showClipMenu (juce::uint32 clipId)
+void MultitrackView::showClipMenu (juce::uint32 clipId, juce::PopupMenu first)
 {
     const auto where = shown().findClip (clipId);
 
@@ -1197,7 +1197,10 @@ void MultitrackView::showClipMenu (juce::uint32 clipId)
 
     const auto& clip = shown().tracks[(size_t) where->first].clips[(size_t) where->second];
     const juce::Component::SafePointer<MultitrackView> safe (this);
-    juce::PopupMenu menu;
+    juce::PopupMenu menu (std::move (first));
+
+    if (menu.getNumItems() > 0)
+        menu.addSeparator();
 
     // Sound design: the clip's audio in the editor, its own effects, and layers made one sound.
     const auto source = clip.source;
@@ -5587,14 +5590,19 @@ juce::String MultitrackView::crossfadeSelectedClips (double seconds)
                 clips.push_back (&c);
 
         std::sort (clips.begin(), clips.end(), [] (auto* a, auto* b) { return a->position < b->position; });
-        std::vector<std::pair<juce::uint32, juce::uint32>> pairs;
+        // Clips that already overlap keep the whole overlap as their crossfade; clips that only
+        // touch get the length asked for.
+        std::vector<std::tuple<juce::uint32, juce::uint32, juce::int64>> pairs;
 
         for (size_t i = 1; i < clips.size(); ++i)
-            pairs.emplace_back (clips[i - 1]->id, clips[i]->id);
-
-        for (auto [a, b] : pairs)
         {
-            const auto why = SessionEdits::crossfadeClips (next, a, b, length);
+            const auto overlap = clips[i - 1]->getEnd() - clips[i]->position;
+            pairs.emplace_back (clips[i - 1]->id, clips[i]->id, overlap >= 2 ? overlap : length);
+        }
+
+        for (auto [a, b, pairLength] : pairs)
+        {
+            const auto why = SessionEdits::crossfadeClips (next, a, b, pairLength);
             made += why.isEmpty() ? 1 : 0;
 
             if (reason.isEmpty())
@@ -5646,6 +5654,69 @@ std::optional<std::pair<SessionEdits::Crossfade, MultitrackView::Drag>> Multitra
     }
 
     return std::nullopt;
+}
+
+std::optional<std::pair<juce::uint32, juce::uint32>> MultitrackView::overlapAt (juce::Point<int> p) const
+{
+    const auto t = trackAt (p.y);
+
+    if (tool != Tool::select || p.x < listWidth || ! juce::isPositiveAndBelow (t, (int) shown().tracks.size())
+        || shown().tracks[(size_t) t].hidden)
+        return std::nullopt;
+
+    const auto frame = (juce::int64) frameForX ((float) p.x);
+    std::vector<const SessionClip*> clips;
+
+    for (const auto& c : shown().tracks[(size_t) t].clips)
+        clips.push_back (&c);
+
+    std::sort (clips.begin(), clips.end(), [] (auto* a, auto* b) { return a->position < b->position; });
+
+    for (size_t i = 0; i < clips.size(); ++i)
+        for (size_t j = i + 1; j < clips.size(); ++j)
+        {
+            const auto& out = *clips[i];
+            const auto& in = *clips[j];
+
+            // Overlapping, neither over the whole of the other, the point inside the overlap.
+            if (! (out.position < in.position && in.position < out.getEnd() && out.getEnd() < in.getEnd())
+                || frame < in.position || frame >= out.getEnd() || out.locked || in.locked)
+                continue;
+
+            const auto r = clipBounds (t, in);
+
+            if (p.y < r.getY() || p.y >= r.getBottom() || SessionEdits::crossfadeBetween (shown(), out.id, in.id).has_value())
+                continue;
+
+            return std::pair (out.id, in.id);
+        }
+
+    return std::nullopt;
+}
+
+juce::String MultitrackView::crossfadeOverlap (juce::uint32 out, juce::uint32 in, bool thenEdit)
+{
+    auto next = *engine.session.getState();
+    const auto o = next.findClip (out), i = next.findClip (in);
+
+    if (! o.has_value() || ! i.has_value())
+        return "The clips have gone.";
+
+    const auto overlap = next.tracks[(size_t) o->first].clips[(size_t) o->second].getEnd()
+                       - next.tracks[(size_t) i->first].clips[(size_t) i->second].position;
+
+    if (const auto why = SessionEdits::crossfadeClips (next, out, in, juce::jmax ((juce::int64) 2, overlap)); why.isNotEmpty())
+        return why;
+
+    const auto made = SessionEdits::crossfadeBetween (next, out, in);
+    engine.session.apply (std::move (next), "Crossfade Clips");
+    selectClip (out, false);
+    selectClip (in, true);
+
+    if (thenEdit && made.has_value() && onEditCrossfades != nullptr)
+        onEditCrossfades ({ *made });
+
+    return {};
 }
 
 std::vector<SessionEdits::Crossfade> MultitrackView::selectedCrossfades() const
@@ -6798,7 +6869,28 @@ void MultitrackView::mouseDown (const juce::MouseEvent& e)
 
         selectedClip = clip.id;
         selectTrack (hit->first);
-        showClipMenu (clip.id);
+
+        // Over two clips that overlap without a crossfade: making one comes first.
+        juce::PopupMenu first;
+
+        if (const auto pair = overlapAt (p))
+        {
+            const juce::Component::SafePointer<MultitrackView> safe (this);
+            const auto make = [safe, pair] (bool edit)
+            {
+                return [safe, pair, edit]
+                {
+                    if (safe != nullptr)
+                        if (const auto why = safe->crossfadeOverlap (pair->first, pair->second, edit); why.isNotEmpty())
+                            juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Crossfade Clips", why);
+                };
+            };
+
+            first.addItem ("Crossfade Clips", make (false));
+            first.addItem ("Crossfade and Edit...", make (true));
+        }
+
+        showClipMenu (clip.id, std::move (first));
         return;
     }
 
@@ -7893,6 +7985,15 @@ void MultitrackView::mouseDoubleClick (const juce::MouseEvent& e)
     if (const auto xf = crossfadeDragAt (p); xf.has_value() && onEditCrossfades != nullptr)
     {
         onEditCrossfades ({ xf->first });
+        return;
+    }
+
+    // Two clips overlapping without a crossfade: a double-click there makes the overlap one and opens it.
+    if (const auto pair = overlapAt (p); pair.has_value() && onEditCrossfades != nullptr)
+    {
+        if (const auto why = crossfadeOverlap (pair->first, pair->second, true); why.isNotEmpty())
+            juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Crossfade Clips", why);
+
         return;
     }
 

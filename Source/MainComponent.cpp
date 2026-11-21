@@ -2435,7 +2435,7 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (multitrackMode); break;
         case cmdCrossfade:  info.setInfo ("Crossfade Overlaps", "Crossfade a clip moved or trimmed over part of another", "Multitrack", 0);
                             info.addDefaultKeypress ('x', 0); info.setTicked (multitrack.isCrossfading()); info.setActive (multitrackMode); break;
-        case cmdCrossfadeSelected: info.setInfo ("Crossfade Selected Clips", "Crossfade the selected clips that touch or overlap on a track, reaching into the audio past their ends", "Multitrack", 0);
+        case cmdCrossfadeSelected: info.setInfo ("Crossfade Selected Clips", "Crossfade the selected clips that touch or overlap on a track: overlapping clips over their whole overlap, touching ones over 10 ms", "Multitrack", 0);
                             info.addDefaultKeypress ('x', juce::ModifierKeys::shiftModifier);
                             info.setActive (multitrackMode && multitrack.getSelectedClips().size() >= 2); break;
         case cmdEditCrossfade: info.setInfo ("Edit Crossfade...", "Open the crossfades between the selected clips (or in the time selection) in the crossfade editor", "Multitrack", 0);

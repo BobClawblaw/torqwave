@@ -4,6 +4,12 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Crossfading clips laid over each other** (fix log 65, [#39](https://github.com/BobClawblaw/torqwave/issues/39))
+- Two clips overlapping on a track without a crossfade: a double-click on their overlap makes the whole overlap a crossfade (S-curve both sides, one undo step, "Crossfade Clips"), selects both and opens it in the crossfade editor; before, it opened the clip on top in the editor. Their right-click menu starts with **Crossfade Clips** and **Crossfade and Edit...**.
+- **Crossfade Selected Clips** (Shift-X) keeps the whole overlap of clips that overlap; only clips that just touch get 10 ms. Before, it made 10 ms in the middle of any overlap, cutting the clips back.
+- Why it mattered: two clips laid over each other without a crossfade click where the upper one starts and pop where the lower one stops dead. Rendering the session it was found in, the stop was a step 184 times the largest the sound otherwise makes; crossfaded (the whole overlap or 10 ms, equal gain or equal power, mixed or layered, rendered at once or in 512-frame blocks), there was no step above the sound's own.
+- Tested (`--crossfades`, 7 more checks, 65 in all): on two clips of one file overlapping by 1.68 s, as in the session it was found in, Shift-X crossfades the whole overlap with the clips where they were; a double-click on the overlap makes the crossfade, selects both and opens the editor, not the clip in place, and once crossfaded opens the crossfade, while off the overlap it opens the clip in place; Crossfade Clips does the same without the editor; one clip inside the other is refused with a reason; a 220 Hz sine laid over itself out of phase clicks (a step 844 times the sine's own), and crossfaded, equal gain or power, mixed or layered, rendered in 512-frame blocks, its largest step is 1.38 times the sine's own (equal power on two copies of one sound adds up louder). The right-click menu's two items were not driven by the tests (the menu opens asynchronously); they call the same code as the double-click.
+
 ## Released
 
 **Release 0.19.1: crossfades in a session**

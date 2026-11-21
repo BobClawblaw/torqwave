@@ -372,8 +372,8 @@ public:
     void setSelectedClipsFadeShape (bool fadeOut, FadeShape);
 
     /** Crossfades the selected audio clips (Crossfade Selected Clips): on each track, each selected
-        clip with the next selected one that touches or overlaps it, over `seconds` centred where
-        they meet, S-curve both sides (see SessionEdits::crossfadeClips), as one undo step. Returns
+        clip with the next selected one that touches or overlaps it: clips that overlap over their
+        whole overlap, clips that only touch over `seconds` centred where they meet; S-curve both sides (see SessionEdits::crossfadeClips), as one undo step. Returns
         why none could be, or an empty string. */
     juce::String crossfadeSelectedClips (double seconds);
 
@@ -385,6 +385,9 @@ public:
     /** A crossfade's right-click menu: Equal Gain, Equal Power, each side's shape, and Remove
         Crossfade, each one undo step. */
     juce::PopupMenu crossfadeMenu (const SessionEdits::Crossfade&);
+    /** Makes two overlapping clips' whole overlap a crossfade (equal gain), selects both, and with
+        thenEdit opens it in the crossfade editor; the reason it can't, or empty. */
+    juce::String crossfadeOverlap (juce::uint32 out, juce::uint32 in, bool thenEdit);
 
     /** The crossfades Edit Crossfade... opens: those whose two clips are both selected, else
         those in the time selection. */
@@ -768,6 +771,8 @@ private:
     /** The crossfade under p with the Select tool, neither of its clips locked, and what a press
         there does: near an edge it sets the length, elsewhere it moves the join. */
     std::optional<std::pair<SessionEdits::Crossfade, Drag>> crossfadeDragAt (juce::Point<int> p) const;
+    // Two clips overlapping under the point without a crossfade (Select tool), out and in.
+    std::optional<std::pair<juce::uint32, juce::uint32>> overlapAt (juce::Point<int> p) const;
     SessionEdits::Crossfade dragCrossfade;     // the crossfade being dragged, as it was
 
     /** A following clip's warp marker under p (its handle, just under the title bar): the clip and the marker's place. */
@@ -917,7 +922,7 @@ private:
     void addTrackItems (juce::PopupMenu&, juce::uint32 trackId = 0);
     void showSends (juce::uint32 trackId, juce::Component& target);
     void showAutomationMenu (juce::uint32 trackId, juce::Component& target);
-    void showClipMenu (juce::uint32 clipId);
+    void showClipMenu (juce::uint32 clipId, juce::PopupMenu first = {});   // first: items put at its top
     void editTrack (juce::uint32 trackId, const juce::String& description, bool merge,
                     const std::function<void (SessionTrack&)>& change);
 
