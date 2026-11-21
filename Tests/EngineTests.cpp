@@ -628,6 +628,7 @@ int main (int argc, char* argv[])
     const auto factoryPresets = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("TorqwaveTestFactoryPresets").getChildFile ("set");
     factoryPresets.getParentDirectory().deleteRecursively();
     SequenceLibrary::setFactoryFolder (factoryPresets);
+    SequenceLibrary::setSearchesFile (factoryPresets.getSiblingFile ("Sequence Searches.xml"));
 
     if (const auto i = args.indexOf ("--ai-eval"); i >= 0)
         return runAiEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {}), valueOf ("--ai-eval-set")) == 0 ? 0 : 1;

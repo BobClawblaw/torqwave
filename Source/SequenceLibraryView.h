@@ -5,13 +5,17 @@
 
 /** The Sequence Library panel: the library's roles, sub-roles and the user's folders as a tree,
     each sequence and kit with its bars, key and rating, and a search box that shows the ones
-    matching every word. Below it the order in each folder (name, bars, rating, newest) and two
-    filters: favourites only, and those that fit the session's key. A click plays a sequence (a
+    matching every word. Below it the order in each folder (name, bars, rating, newest, tempo,
+    key, energy), how they are grouped (by role, style, key or energy), the Filters menu (style,
+    energy, bars, key, character, presets or the user's own, and saved searches), and two
+    filters: favourites only, and those that fit the session's key. Saved Searches, above the
+    folders, shows each saved filter set again with a click. A sequence's description shows
+    under its name. A click plays a sequence (a
     kit: all its parts) through its instrument at the session's tempo (from the session's next bar
     while it plays), and moving through the list with the arrow keys plays each in turn; a second
     click or Stop stops it. A sequence or kit is dragged into the multitrack view (or to the
     Finder); a double-click puts it in the session at the cursor. 0 to 5 rate the selected ones and
-    F marks them as favourites. Right-click for Export MIDI File, Rating, Favourite, Make Kit from
+    F marks them as favourites. Right-click for Similar, Properties..., Export MIDI File, Rating, Favourite, Make Kit from
     the selected sequences, Show in Finder, Rename and Move to Trash; right-click a folder to make
     a folder, a sequence or a kit in it, import MIDI files into it or save it as a pack. Import...
     brings in MIDI files or opens a pack. Every folder shows, empty ones too. New... starts a new
@@ -78,6 +82,27 @@ public:
     void setSort (SequenceLibrary::Sort);
     void setFavouritesOnly (bool);
     void setFitsSession (bool);
+    void setGroup (SequenceLibrary::Group);
+
+    /** Everything that narrows the list: the search, the Filters menu's choices, Favourites and
+        Fits the Session. Setting it sets each control. */
+    SequenceLibrary::Filters getFilters() const;
+    void setFilters (const SequenceLibrary::Filters&);
+
+    /** Similar on a sequence's menu: the same role, style and key, the nearest energy first. */
+    void showSimilar (const juce::File&);
+
+    /** Saves the filters as they are now under this name (Save Search... asks for it), or shows
+        a saved one (a click on it under Saved Searches). Errors are shown. */
+    void saveSearch (const juce::String& name);
+    void applySearch (const juce::String& name);
+    juce::StringArray shownSearches() const;   // under Saved Searches
+
+    /** Properties... on a sequence's menu: Sequence Properties, then written to its file. */
+    void askForProperties (const juce::File&);
+
+    /** Asked when Transpose Drops to the Session's Key is switched (in the Filters menu), to keep it. */
+    std::function<void (bool)> onTransposeDropsChanged;
 
     /** Shows the library in another folder (the one chosen in Settings). */
     void setFolder (const juce::File&);
@@ -140,6 +165,11 @@ public:
 private:
     class FolderItem;
     class SequenceItem;
+    class SearchesItem;
+    class SearchItem;
+
+    void showFiltersMenu();
+    bool groupedByRole() const noexcept       { return groupBy == SequenceLibrary::Group::role; }
 
     void rebuild();
     void showImportMenu();
@@ -161,9 +191,11 @@ private:
     juce::int64 stamp = 0;
     juce::TextEditor search;
     juce::TextButton newButton { "New..." }, folderButton { "Folder" }, stopButton { "Stop" };
-    juce::ComboBox sortBox;
-    juce::TextButton favouritesButton { "Favourites" }, fitsButton { "Fits the Session" }, importButton { "Import..." };
+    juce::ComboBox sortBox, groupBox;
+    juce::TextButton favouritesButton { "Favourites" }, fitsButton { "Fits the Session" }, importButton { "Import..." }, filtersButton { "Filters" };
     SequenceLibrary::Sort sortBy = SequenceLibrary::Sort::name;
+    SequenceLibrary::Group groupBy = SequenceLibrary::Group::role;
+    SequenceLibrary::Filters picked;          // the Filters menu's part: style, key, role, energy, bars, character, source, nearest energy
     juce::String shownKey;                    // the session's key the list was filtered by
     std::unique_ptr<juce::FileChooser> chooser;
     SequencePreview* preview = nullptr;

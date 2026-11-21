@@ -105,22 +105,96 @@ public:
         bool favourite = false;
         juce::int64 added = 0;        // ms since 1970
         bool factory = false;         // a factory preset
+        juce::String style;           // "Techno/Dark", or empty
+        juce::String description;     // its note: one line on what it does
+        int energy = 0;               // 1 to 5, or 0
+        juce::StringArray character;  // poles of the character pairs
+        double tempo = 0.0;           // as written (a kit: its first part's)
     };
 
     /** Every sequence and kit under the folder, sorted by path and then name. Files that are
         not sequences or kits are skipped. */
     std::vector<Entry> scan() const;
 
-    /** Whether an entry matches a search: every word in its name, key, tags or folders. */
+    /** Whether an entry matches a search: every word in its name, key, tags, folders, style or description. */
     static bool matches (const Entry&, const juce::String& search);
 
     /** How the panel orders the sequences in each folder. */
-    enum class Sort { name, bars, rating, newest };
-    static juce::StringArray sortNames();   // in Sort's order: "Name", "Bars", "Rating", "Newest"
+    enum class Sort { name, bars, rating, newest, tempo, key, energy };
+    static juce::StringArray sortNames();   // in Sort's order: "Name", "Bars", "Rating", "Newest", "Tempo", "Key", "Energy"
 
     /** Orders entries by path, then within a folder by name (A to Z), bars (fewest first),
-        rating (highest first) or newest (the latest added first), then by name. */
-    static void sort (std::vector<Entry>&, Sort);
+        rating (highest first), newest (the latest added first), tempo (slowest first), key (by
+        its root from C, then its scale; none last) or energy (lowest first; none last), then by
+        name. With `nearEnergy` (1 to 5), the energies nearest it come first instead. */
+    static void sort (std::vector<Entry>&, Sort, int nearEnergy = 0);
+
+    /** How the panel groups them: in their folders (by role), by style, by key or by energy. */
+    enum class Group { role, style, key, energy };
+    static juce::StringArray groupNames();   // in Group's order: "Role", "Style", "Key", "Energy"
+
+    /** The folders an entry shows in when grouped: by role its own folders; otherwise the
+        style ("Techno › Dark", "No Style"), key ("A minor", "No Key") or energy ("Energy 4",
+        "No Energy") and then its role. */
+    static juce::StringArray groupPath (const Entry&, Group);
+
+    /** What the panel narrows the library to. Empty: everything. */
+    struct Filters
+    {
+        enum class Source { both, presets, mine };
+
+        juce::String search, style, key, role;   // a style "Techno/Dark" or a genre "Techno"; a key as written; a role
+        int energy = 0;                          // 1 to 5, or any
+        int bars = 0;                            // 1, 2, 4, 8, or any
+        juce::StringArray character;             // every one of these poles
+        Source source = Source::both;
+        bool favourites = false, fitsSession = false;
+        int nearEnergy = 0;                      // Similar: the energies nearest this first
+
+        bool isEmpty() const;
+        bool operator== (const Filters&) const;
+        std::unique_ptr<juce::XmlElement> toXml() const;
+        static Filters fromXml (const juce::XmlElement&);
+
+        /** What it narrows to, in words ("Techno › Dark · Energy 4 · Presets"), or empty. */
+        juce::String describe() const;
+    };
+
+    /** Whether an entry passes the filters (with the session's key for Fits the Session). */
+    static bool passes (const Entry&, const Filters&, const juce::String& sessionKey);
+
+    /** The styles the entries carry, sorted ("Industrial/EBM", "Techno/Dark"). */
+    static juce::StringArray stylesIn (const std::vector<Entry>&);
+
+    /** The keys they carry, as each names itself, from C ("A minor"). */
+    static juce::StringArray keysIn (const std::vector<Entry>&);
+
+    /** Similar: the same role, style and key, nearest energy first. */
+    static Filters similarTo (const Entry&);
+
+    /** Saved searches, by name, in the order saved, kept in searchesFile. */
+    static juce::File searchesFile();
+    static void setSearchesFile (const juce::File&);   // for tests; none goes back to the app's own
+    static std::vector<std::pair<juce::String, Filters>> savedSearches();
+    static juce::String saveSearch (const juce::String& name, const Filters&);   // replaces one of that name; an error, or empty
+    static juce::String removeSearch (const juce::String& name);
+
+    /** Whether a drop moves a sequence into the session's key (SequenceFile::transposedTo); off by default. */
+    static bool transposesDrops();
+    static void setTransposesDrops (bool);
+
+    /** What Sequence Properties sets on a sequence or kit (a kit's energy and character are left alone). */
+    struct Properties
+    {
+        juce::String style, key, description;
+        int energy = 0;
+        juce::StringArray character, tags;
+    };
+
+    static Properties propertiesOf (const Entry&);
+
+    /** Writes them into the file, everything else as it was. Refused for a factory preset. Returns an error, or empty. */
+    static juce::String setProperties (const juce::File&, const Properties&);
 
     /** Whether an entry fits a session in this key: its key is the same (the same root and
         scale, however written: "Am" is "A minor"), or it has no key (drums, effects). Everything

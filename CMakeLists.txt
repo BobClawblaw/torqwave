@@ -184,6 +184,7 @@ target_sources(Torqwave PRIVATE
     Source/SequenceMidi.cpp
     Source/SequenceLibrary.cpp
     Source/SequenceLibraryView.cpp
+    Source/SequencePropertiesDialog.cpp
     Source/SequencePreview.cpp
     Source/IdeaBoard.cpp
     Source/IdeaBoardView.cpp
@@ -483,6 +484,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/StressTests.cpp
     Tests/SequenceTests.cpp
     Tests/PresetTests.cpp
+    Tests/LibraryFacetTests.cpp
     Tests/CrossfadeTests.cpp
     Tests/SoundDesignTests.cpp
     Tests/PictureTests.cpp
@@ -549,6 +551,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/SequenceMidi.cpp
     Source/SequenceLibrary.cpp
     Source/SequenceLibraryView.cpp
+    Source/SequencePropertiesDialog.cpp
     Source/SequencePreview.cpp
     Source/IdeaBoard.cpp
     Source/IdeaBoardView.cpp

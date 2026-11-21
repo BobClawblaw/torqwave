@@ -221,7 +221,7 @@ Torqwave comes with 160 factory presets and 8 starter kits, under **Presets** at
 - on the **16th grid**, 1, 2, 4 or 8 bars long, a 4-bar one changing in its last bar;
 - for drums, on the **General MIDI drum map** (kick 36, snare 38, clap 39, closed hat 42, open hat 46, ride 51 and so on), so it plays any drum plug-in or kit that follows it;
 - for bass, **one note at a time**, except an acid slide, which overlaps the next note by a hair so the synth glides;
-- written with a **one-line description** of what it does, shown with its tags.
+- written with a **one-line description** of what it does, shown under its name, and a **style**, an **energy** and its **character**, so the [filters](#sort-group-and-filter) find it.
 
 Each one plays on a built-in voice so you can hear it at once: Basic Drums for drums, and Basic Synth set up for the part (a sub, a rolling bass, an acid line, a stab, a pad and so on). They are there to drive your own instruments:
 
@@ -237,9 +237,9 @@ Presets play, drag and drop like your own sequences, and you can rate them and m
 
 The **kits** in Presets > Kits are one per main style (dark, peak-time, percussive, hypnotic, industrial and acid techno, EBM and darkwave). Each holds a drum groove, a bass, a stab or chords, a lead or arp, a fill and a build at one tempo, so dropping one in gives you a track's worth of parts to replace with your own instruments.
 
-**Start a new one.** Click **New...** at the top of the Sequence Library. Or right-click a folder and choose **New Sequence Here...**. Give it a name, a folder (the one selected in the library is chosen for you), an instrument, a length (1, 2, 4, 8 or 16 bars) and optionally a key, then click **Make**. Torqwave adds an instrument track with that instrument and an empty clip of that length, starting at the bar the cursor is in, and opens the clip in the Piano Roll. Write the notes there, or with any of the [ways to put notes in](#put-notes-in) above, then save it with **Add to Sequence Library...**: the dialog already holds its name, folder and key. Save the same clip again with the same name and folder and it replaces the file it saved before, so you can keep working on a part and saving it. Torqwave remembers which file a clip saves to until you quit; after that, saving makes a new file.
+**Start a new one.** Click **New...** at the top of the Sequence Library. Or right-click a folder and choose **New Sequence Here...**. Give it a name, a folder (the one selected in the library is chosen for you), an instrument, a length (1, 2, 4, 8 or 16 bars) and optionally a key, then click **Make**. Torqwave adds an instrument track with that instrument and an empty clip of that length, starting at the bar the cursor is in, and opens the clip in the Piano Roll. Write the notes there, or with any of the [ways to put notes in](#put-notes-in) above, then save it with **Add to Sequence Library...**: the dialog already holds its name, folder and key, and whatever else you gave it. Save the same clip again with the same name and folder and it replaces the file it saved before, so you can keep working on a part and saving it. Torqwave remembers which file a clip saves to until you quit; after that, saving makes a new file.
 
-**Save a part.** Right-click a note clip and choose **Add to Sequence Library...** (or select it and use **Multitrack > Clips > Add to Sequence Library...**). Give it a name, a folder, and optionally a key and tags. Its loop and controller lanes go with it. The track's sends, output and automation stay in the session.
+**Save a part.** Right-click a note clip and choose **Add to Sequence Library...** (or select it and use **Multitrack > Clips > Add to Sequence Library...**). Give it a name and a folder, and if you like its [properties](#properties): a style, key, energy, character, a description and tags. Its loop and controller lanes go with it. The track's sends, output and automation stay in the session.
 
 **Find one.** The library is sorted into folders by role:
 
@@ -257,19 +257,52 @@ The **kits** in Presets > Kits are one per main style (dark, peak-time, percussi
 
 Every folder shows, empty ones too. Make folders of your own under any role or sub-role: right-click a folder and choose **New Folder...**. The same menu has **New Sequence Here...**, **Show in Finder**, and, for your own folders, **Rename...** and **Move to Trash**. The roles and sub-roles themselves can't be renamed or removed. Your folders appear in the Folder list of the New Sequence and Add to Sequence Library dialogs. **Drag a sequence onto a folder** to move it there (hold Option to copy it instead); it takes that folder's role. Drag `.tqseq` files from the Finder onto a folder to copy them in. A name already used there gets a number (Groove 2).
 
-Each sequence shows its length in bars and its key, and its rating (★) and a ♥ when it is a favourite. Type in the search box to see only the sequences that match every word, in their names, keys, tags or folders.
+Each sequence shows its length in bars, its key and its energy, and its rating (★) and a ♥ when it is a favourite; its description, when it has one, is a line under its name, and its style and character show when you hold the pointer over it. Type in the search box to see only the sequences that match every word, in their names, keys, tags, folders, styles or descriptions.
 
-**Sort and filter.** The row under the search box sets what the list shows:
+#### Sort, group and filter
 
-- **The order menu** sorts the sequences in each folder by **Name** (A to Z), **Bars** (the shortest first), **Rating** (the highest first) or **Newest** (the last added first). A sequence counts as added when it was first saved: saving a new one, importing a MIDI file, or a duplicate or variation made in the Sequencer adds one now; renaming, moving or copying it between folders, rating it or saving it again keeps its time, and so do the sequences in a pack.
+The two rows under the search box set what the list shows:
+
+- **The order menu** sorts the sequences in each folder by **Name** (A to Z), **Bars** (the shortest first), **Rating** (the highest first), **Newest** (the last added first), **Tempo** (the slowest first, as written), **Key** (from C, then by scale; those with no key last) or **Energy** (the lowest first; those with none last). A sequence counts as added when it was first saved: saving a new one, importing a MIDI file, or a duplicate or variation made in the Sequencer adds one now; renaming, moving or copying it between folders, rating it or saving it again keeps its time, and so do the sequences in a pack.
+- **The group menu** sets the folders. **By Role** is the library's own folders. **By Style** makes a folder for each style (Techno › Dark, Industrial › EBM, No Style) with the roles inside it, so Techno › Dark holds that style's Drums, Bass and so on, presets and your own together. **By Key** and **By Energy** do the same for keys and energies. While grouped by anything but role, the folders are for finding: dragging onto them, and their right-click menus, work only by role.
+- **Filters** narrows the list. Its menu has:
+  - **Style**: one style, or **All Techno** for a whole genre;
+  - **Energy**: 1 (an intro tool) to 5 (peak);
+  - **Bars**: 1, 2, 4 or 8;
+  - **Key**: the keys in the library;
+  - **Character**: Dark or Bright, Sparse or Dense, Straight or Swung, Clean or Distorted, any of them together;
+  - **Show**: Presets and Mine, Presets Only, or Mine Only.
+
+  A dot on a menu and on the button says it is narrowing, and what it narrows to shows under the list. **Clear Filters** takes them all off.
 - **Favourites** shows only the favourites.
 - **Fits the Session** shows only the sequences in the session's key (set in **Multitrack > Tempo > Tempo...**; see [Tempo and bars](06-multitrack-sessions.md#tempo-and-bars)) and those with no key, such as most drums and effects. Keys count as the same however they are written: `Am` is A minor. A different scale on the same note is a different key (A dorian is not A minor). When the session has no key, it shows everything and says so under the list.
 
-The search and both filters work together. Each folder holding a match opens.
+The search, the filters and both buttons work together. Each folder holding a match opens.
+
+**Saved searches.** **Filters > Save Search...** keeps the search and filters as they are now under a name. **Saved Searches**, above the folders, lists them with how many sequences each finds now; click one to show it again (or pick it under **Filters > Saved Searches**). Right-click one to save the filters as they are now in its place, or to remove it.
+
+**Similar.** Right-click a sequence and choose **Similar** for the others of its role, style and key, those nearest its energy first. **Filters** shows what Similar chose; take any of it off there.
+
+**Into the session's key.** With **Filters > Transpose Drops to the Session's Key** on, a sequence or kit you drop or double-click moves into the session's key: every note by the interval between its key and the session's, up or down whichever is nearer (no more than six semitones), and its key is renamed (A phrygian dropped into a D minor session becomes D phrygian). Drums, sequences with no key, and drops into a session with no key are left as they are. It is off at first and Torqwave remembers it. **Fits the Session** still shows only those already in the key.
+
+#### Properties
+
+A sequence's **properties** are what the library sorts, groups and filters by. Right-click one of your own sequences or kits and choose **Properties...**, or click **Properties...** in the [Sequencer](#the-sequencer), or set them when you **Add to Sequence Library**:
+
+| Property | What it is |
+|---|---|
+| Style | A genre and a style, such as Techno/Dark or Industrial/EBM. Pick one from the list or type your own. |
+| Key | Such as A minor or F# phrygian; none for drums. |
+| Energy | 1 (an intro tool) to 5 (peak). |
+| Character | Dark or Bright, Sparse or Dense, Straight or Swung, Clean or Distorted; each pair either way or neither. |
+| Description | One line on what it does, such as "16ths between the kicks, octave up on beat 4". It shows under the name. |
+| Tags | Words to search by, separated by commas. |
+
+A kit has a style, key, description and tags, but no energy or character of its own. Presets can't be changed: copy one to your library first. All of these are optional, and sequences saved before Torqwave had them read and save as they were.
 
 **Rate them.** Select sequences and press **1** to **5** to rate them, **0** to clear the rating, and **F** to mark them as favourites (or, when all of them are, unmark them). The right-click menu has the same: **Rating** and **Favourite**. Cmd-click or Shift-click selects more than one. The rating and the mark are kept in the sequence's own file, so they go wherever you copy, move or share it.
 
-The library is a folder of plain files (`.tqseq` for a sequence, `.tqkit` for a kit), under Music > Torqwave > Sequences unless you chose another in Settings. **Folder** shows it in the Finder. Make folders of your own inside the sub-folders, and move, copy or share the files there. The panel follows what you change. Right-click a sequence to edit it in the Sequencer, export it as a MIDI file, rate it, show it in the Finder, rename it or move it to the Trash.
+The library is a folder of plain files (`.tqseq` for a sequence, `.tqkit` for a kit), under Music > Torqwave > Sequences unless you chose another in Settings. **Folder** shows it in the Finder. Make folders of your own inside the sub-folders, and move, copy or share the files there. The panel follows what you change. Right-click a sequence to see similar ones, set its properties, edit it in the Sequencer, export it as a MIDI file, rate it, show it in the Finder, rename it or move it to the Trash.
 
 **Choose its folder.** **Settings > Sequence Library** shows the folder the library uses. **Choose...** picks another (the panel shows it at once); **Standard** goes back to Music > Torqwave > Sequences. The sequences already saved stay where they were: copy them across in the Finder, or save the old folders as packs and open them in the new one.
 
@@ -326,6 +359,8 @@ The Sequencer is a window for one sequence from the library, open by itself to w
 **Edit the notes.** The middle of the window is the Piano Roll, with the drum grid, controller lanes and [writing tools](#writing-tools), as in [Edit the notes](#edit-the-notes-the-piano-roll), but it edits the sequence file itself, not a clip in the session. A sequence filed under Drums opens as a drum grid. A key set with **Tools > Key...** is saved as the sequence's key. **Undo** and **Redo** (Cmd-Z and Shift-Cmd-Z while the window has the focus) step through the window's own edits, apart from the session's.
 
 **Hear it.** **Play** (or Space while the window has the focus) plays the sequence from its start through its voice, beside whatever the session plays. With **Loop** on it goes round and round, and a note running past the loop's end keeps sounding into the next pass until its own end (drag a note's end past the loop's end to write one; the part carried over shows faintly at the start); off, it plays once. A sequence starting partway through its notes is cut at the loop's end instead. **Click** adds a click on every beat. The tempo is the window's own, starting at the tempo the sequence was written at; change it with the tempo box, or tick **Session tempo** to play at the session's tempo where its playhead is. The notes stay on their beats at any tempo, so nothing in the file changes. The clock beside it shows where it is playing, in bars and beats, and a line in the notes follows it. **Length** sets how long the sequence is, in bars, by the beat (an undo step); a loop as long as the sequence follows it. Notes past the end are kept but don't play, until you make it longer again.
+
+**Its properties.** **Properties...** sets the sequence's style, key, energy, character, description and tags (see [Properties](#properties)), as one undo step; **Save** writes them with it.
 
 **Start from a preset.** **Presets** (beside **Open...**) lists the factory presets by role and sub-role. The one you choose opens as a new sequence of yours, not yet saved, so you can change it and **Save** it into your library; the preset itself stays as it was.
 

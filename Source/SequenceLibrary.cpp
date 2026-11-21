@@ -11,6 +11,18 @@ namespace
         return chosen;
     }
 
+    juce::File& chosenSearchesFile()
+    {
+        static juce::File chosen;
+        return chosen;
+    }
+
+    bool& transposeSetting()
+    {
+        static bool on = false;
+        return on;
+    }
+
     juce::File& chosenFactoryFolder()
     {
         static juce::File chosen;
@@ -428,6 +440,11 @@ std::vector<SequenceLibrary::Entry> SequenceLibrary::scan() const
             e.rating = q->rating;
             e.favourite = q->favourite;
             e.added = q->added;
+            e.style = q->style;
+            e.description = q->note;
+            e.energy = q->energy;
+            e.character = q->character;
+            e.tempo = q->writtenTempo;
         }
         else if (const auto kit = SequenceKit::fromXml (*xml))
         {
@@ -441,6 +458,9 @@ std::vector<SequenceLibrary::Entry> SequenceLibrary::scan() const
             e.rating = kit->rating;
             e.favourite = kit->favourite;
             e.added = kit->added;
+            e.style = kit->style;
+            e.description = kit->note;
+            e.tempo = kit->parts.empty() ? 0.0 : kit->parts.front().writtenTempo;
         }
         else
         {
@@ -476,7 +496,8 @@ std::vector<SequenceLibrary::Entry> SequenceLibrary::scan() const
 
 bool SequenceLibrary::matches (const Entry& e, const juce::String& search)
 {
-    const auto text = (e.name + " " + e.key + " " + e.tags.joinIntoString (" ") + " " + e.path.joinIntoString (" ")).toLowerCase();
+    const auto text = (e.name + " " + e.key + " " + e.tags.joinIntoString (" ") + " " + e.path.joinIntoString (" ") + " "
+                       + e.style.replaceCharacter ('/', ' ') + " " + e.description).toLowerCase();
     juce::StringArray words;
     words.addTokens (search.toLowerCase(), " ", "\"");
     words.removeEmptyStrings();
@@ -490,25 +511,345 @@ bool SequenceLibrary::matches (const Entry& e, const juce::String& search)
 
 juce::StringArray SequenceLibrary::sortNames()
 {
-    return { "Name", "Bars", "Rating", "Newest" };
+    return { "Name", "Bars", "Rating", "Newest", "Tempo", "Key", "Energy" };
 }
 
-void SequenceLibrary::sort (std::vector<Entry>& entries, Sort by)
+void SequenceLibrary::sort (std::vector<Entry>& entries, Sort by, int nearEnergy)
 {
-    std::stable_sort (entries.begin(), entries.end(), [by] (const Entry& a, const Entry& b)
+    // A key's place: its root from C, then its scale; none after every key.
+    const auto keyOrder = [] (const Entry& e)
+    {
+        const auto k = NoteTools::parseKey (e.key);
+        return k.has_value() ? k->root * 100 + NoteTools::modes().indexOf (k->mode) : 100000;
+    };
+
+    std::stable_sort (entries.begin(), entries.end(), [by, nearEnergy, keyOrder] (const Entry& a, const Entry& b)
     {
         if (const auto pa = a.path.joinIntoString ("/"), pb = b.path.joinIntoString ("/"); pa != pb)
             return pa.compareNatural (pb) < 0;
+
+        if (nearEnergy > 0)
+        {
+            const auto da = a.energy > 0 ? std::abs (a.energy - nearEnergy) : 10, db = b.energy > 0 ? std::abs (b.energy - nearEnergy) : 10;
+
+            if (da != db)
+                return da < db;
+        }
 
         switch (by)
         {
             case Sort::bars:   if (! juce::exactlyEqual (a.bars, b.bars)) return a.bars < b.bars; break;
             case Sort::rating: if (a.rating != b.rating) return a.rating > b.rating; break;
             case Sort::newest: if (a.added != b.added) return a.added > b.added; break;
+            case Sort::tempo:  if (! juce::exactlyEqual (a.tempo, b.tempo)) return a.tempo < b.tempo; break;
+            case Sort::key:    if (keyOrder (a) != keyOrder (b)) return keyOrder (a) < keyOrder (b); break;
+            case Sort::energy: if (a.energy != b.energy) return (a.energy > 0 ? a.energy : 10) < (b.energy > 0 ? b.energy : 10); break;
             case Sort::name:   break;
         }
 
         return a.name.compareNatural (b.name) < 0;
+    });
+}
+
+juce::StringArray SequenceLibrary::groupNames()
+{
+    return { "Role", "Style", "Key", "Energy" };
+}
+
+juce::StringArray SequenceLibrary::groupPath (const Entry& e, Group by)
+{
+    if (by == Group::role)
+        return e.path;
+
+    // Under Presets the role is the second folder.
+    const auto role = e.path[0] == factoryName ? e.path[1] : e.path[0];
+    juce::String group;
+
+    switch (by)
+    {
+        case Group::style:  group = e.style.isNotEmpty() ? SequenceFile::styleName (e.style) : juce::String ("No Style"); break;
+        case Group::key:    group = NoteTools::parseKey (e.key).has_value() ? NoteTools::parseKey (e.key)->name() : juce::String ("No Key"); break;
+        case Group::energy: group = e.energy > 0 ? "Energy " + juce::String (e.energy) : juce::String ("No Energy"); break;
+        case Group::role:   break;
+    }
+
+    return { group, role };
+}
+
+bool SequenceLibrary::Filters::isEmpty() const
+{
+    return *this == Filters {};
+}
+
+bool SequenceLibrary::Filters::operator== (const Filters& o) const
+{
+    return search == o.search && style == o.style && key == o.key && role == o.role && energy == o.energy && bars == o.bars
+        && character == o.character && source == o.source && favourites == o.favourites && fitsSession == o.fitsSession && nearEnergy == o.nearEnergy;
+}
+
+std::unique_ptr<juce::XmlElement> SequenceLibrary::Filters::toXml() const
+{
+    auto xml = std::make_unique<juce::XmlElement> ("FILTERS");
+    xml->setAttribute ("search", search);
+    xml->setAttribute ("style", style);
+    xml->setAttribute ("key", key);
+    xml->setAttribute ("role", role);
+    xml->setAttribute ("energy", energy);
+    xml->setAttribute ("bars", bars);
+    xml->setAttribute ("character", character.joinIntoString (","));
+    xml->setAttribute ("source", (int) source);
+    xml->setAttribute ("favourites", favourites);
+    xml->setAttribute ("fitsSession", fitsSession);
+    xml->setAttribute ("nearEnergy", nearEnergy);
+    return xml;
+}
+
+SequenceLibrary::Filters SequenceLibrary::Filters::fromXml (const juce::XmlElement& xml)
+{
+    Filters f;
+    f.search = xml.getStringAttribute ("search");
+    f.style = xml.getStringAttribute ("style");
+    f.key = xml.getStringAttribute ("key");
+    f.role = xml.getStringAttribute ("role");
+    f.energy = juce::jlimit (0, 5, xml.getIntAttribute ("energy"));
+    f.bars = juce::jlimit (0, 64, xml.getIntAttribute ("bars"));
+    f.character.addTokens (xml.getStringAttribute ("character"), ",", {});
+    f.character.removeEmptyStrings();
+    f.source = (Source) juce::jlimit (0, 2, xml.getIntAttribute ("source"));
+    f.favourites = xml.getBoolAttribute ("favourites");
+    f.fitsSession = xml.getBoolAttribute ("fitsSession");
+    f.nearEnergy = juce::jlimit (0, 5, xml.getIntAttribute ("nearEnergy"));
+    return f;
+}
+
+juce::String SequenceLibrary::Filters::describe() const
+{
+    juce::StringArray parts;
+
+    if (search.isNotEmpty())
+        parts.add ("\"" + search + "\"");
+
+    if (role.isNotEmpty())
+        parts.add (role);
+
+    if (style.isNotEmpty())
+        parts.add (SequenceFile::styleName (style));
+
+    if (key.isNotEmpty())
+        parts.add (key);
+
+    if (energy > 0)
+        parts.add ("Energy " + juce::String (energy));
+
+    if (nearEnergy > 0)
+        parts.add ("nearest energy " + juce::String (nearEnergy));
+
+    if (bars > 0)
+        parts.add (juce::String (bars) + (bars == 1 ? " bar" : " bars"));
+
+    parts.addArray (character);
+
+    if (source != Source::both)
+        parts.add (source == Source::presets ? "Presets" : "Mine");
+
+    if (favourites)
+        parts.add ("Favourites");
+
+    if (fitsSession)
+        parts.add ("Fits the Session");
+
+    return parts.joinIntoString (juce::String::fromUTF8 (" \xc2\xb7 "));
+}
+
+bool SequenceLibrary::passes (const Entry& e, const Filters& f, const juce::String& sessionKey)
+{
+    const auto role = e.path[0] == factoryName ? e.path[1] : e.path[0];
+
+    if (f.search.trim().isNotEmpty() && ! matches (e, f.search.trim()))
+        return false;
+
+    if (f.role.isNotEmpty() && role != f.role)
+        return false;
+
+    // A style, or a whole genre.
+    if (f.style.isNotEmpty() && e.style != f.style && ! (f.style.indexOfChar ('/') < 0 && SequenceFile::splitStyle (e.style).first == f.style))
+        return false;
+
+    if (f.key.isNotEmpty() && (! NoteTools::parseKey (e.key).has_value() || NoteTools::parseKey (e.key) != NoteTools::parseKey (f.key)))
+        return false;
+
+    if (f.energy > 0 && e.energy != f.energy)
+        return false;
+
+    if (f.bars > 0 && ! juce::exactlyEqual (e.bars, (double) f.bars))
+        return false;
+
+    for (auto& c : f.character)
+        if (! e.character.contains (c))
+            return false;
+
+    if ((f.source == Filters::Source::presets && ! e.factory) || (f.source == Filters::Source::mine && e.factory))
+        return false;
+
+    if (f.favourites && ! e.favourite)
+        return false;
+
+    return ! f.fitsSession || fitsKey (e, sessionKey);
+}
+
+juce::StringArray SequenceLibrary::stylesIn (const std::vector<Entry>& entries)
+{
+    juce::StringArray styles;
+
+    for (auto& e : entries)
+        if (e.style.isNotEmpty())
+            styles.addIfNotAlreadyThere (e.style);
+
+    styles.sortNatural();
+    return styles;
+}
+
+juce::StringArray SequenceLibrary::keysIn (const std::vector<Entry>& entries)
+{
+    std::vector<NoteTools::Scale> keys;
+
+    for (auto& e : entries)
+        if (const auto k = NoteTools::parseKey (e.key); k.has_value() && std::find (keys.begin(), keys.end(), *k) == keys.end())
+            keys.push_back (*k);
+
+    std::sort (keys.begin(), keys.end(), [] (auto& a, auto& b)
+    {
+        return a.root != b.root ? a.root < b.root : NoteTools::modes().indexOf (a.mode) < NoteTools::modes().indexOf (b.mode);
+    });
+
+    juce::StringArray names;
+
+    for (auto& k : keys)
+        names.add (k.name());
+
+    return names;
+}
+
+SequenceLibrary::Filters SequenceLibrary::similarTo (const Entry& e)
+{
+    Filters f;
+    f.role = e.path[0] == factoryName ? e.path[1] : e.path[0];
+    f.style = e.style;
+    f.key = e.key;
+    f.nearEnergy = e.energy;
+    return f;
+}
+
+juce::File SequenceLibrary::searchesFile()
+{
+    if (chosenSearchesFile() != juce::File())
+        return chosenSearchesFile();
+
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory).getChildFile ("Torqwave").getChildFile ("Sequence Searches.xml");
+}
+
+void SequenceLibrary::setSearchesFile (const juce::File& f)
+{
+    chosenSearchesFile() = f;
+}
+
+std::vector<std::pair<juce::String, SequenceLibrary::Filters>> SequenceLibrary::savedSearches()
+{
+    std::vector<std::pair<juce::String, Filters>> all;
+
+    if (const auto xml = juce::XmlDocument::parse (searchesFile()); xml != nullptr && xml->hasTagName ("TORQWAVE_SEQUENCE_SEARCHES"))
+        for (auto* e : xml->getChildWithTagNameIterator ("SEARCH"))
+            if (auto* filters = e->getChildByName ("FILTERS"); filters != nullptr && e->getStringAttribute ("name").isNotEmpty())
+                all.push_back ({ e->getStringAttribute ("name"), Filters::fromXml (*filters) });
+
+    return all;
+}
+
+namespace
+{
+    juce::String writeSearches (const std::vector<std::pair<juce::String, SequenceLibrary::Filters>>& all)
+    {
+        juce::XmlElement xml ("TORQWAVE_SEQUENCE_SEARCHES");
+
+        for (auto& [name, filters] : all)
+        {
+            auto* e = xml.createNewChildElement ("SEARCH");
+            e->setAttribute ("name", name);
+            e->addChildElement (filters.toXml().release());
+        }
+
+        SequenceLibrary::searchesFile().getParentDirectory().createDirectory();
+        return xml.writeTo (SequenceLibrary::searchesFile()) ? juce::String() : juce::String ("The saved searches could not be written.");
+    }
+}
+
+juce::String SequenceLibrary::saveSearch (const juce::String& name, const Filters& filters)
+{
+    if (name.trim().isEmpty())
+        return "A saved search needs a name.";
+
+    auto all = savedSearches();
+    const auto same = std::find_if (all.begin(), all.end(), [&name] (auto& s) { return s.first == name.trim(); });
+
+    if (same != all.end())
+        same->second = filters;
+    else
+        all.push_back ({ name.trim(), filters });
+
+    return writeSearches (all);
+}
+
+juce::String SequenceLibrary::removeSearch (const juce::String& name)
+{
+    auto all = savedSearches();
+    all.erase (std::remove_if (all.begin(), all.end(), [&name] (auto& s) { return s.first == name; }), all.end());
+    return writeSearches (all);
+}
+
+bool SequenceLibrary::transposesDrops()
+{
+    return transposeSetting();
+}
+
+void SequenceLibrary::setTransposesDrops (bool on)
+{
+    transposeSetting() = on;
+}
+
+SequenceLibrary::Properties SequenceLibrary::propertiesOf (const Entry& e)
+{
+    return { e.style, e.key, e.description, e.energy, e.character, e.tags };
+}
+
+juce::String SequenceLibrary::setProperties (const juce::File& file, const Properties& p)
+{
+    if (isFactory (file))
+        return "A preset can't be changed: copy it to your library first.";
+
+    return rewrite (file, [&p] (juce::XmlElement& x)
+    {
+        const auto set = [&x] (const char* name, const juce::String& value)
+        {
+            if (value.trim().isNotEmpty())
+                x.setAttribute (name, value.trim());
+            else
+                x.removeAttribute (name);
+        };
+
+        set ("style", p.style);
+        x.setAttribute ("key", p.key.trim());
+        x.setAttribute ("note", p.description.trim());
+        x.setAttribute ("tags", p.tags.joinIntoString (","));
+
+        if (x.hasTagName ("TORQWAVE_SEQUENCE"))
+        {
+            if (p.energy > 0)
+                x.setAttribute ("energy", juce::jlimit (1, 5, p.energy));
+            else
+                x.removeAttribute ("energy");
+
+            set ("character", p.character.joinIntoString (","));
+        }
     });
 }
 

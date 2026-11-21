@@ -1,4 +1,5 @@
 #include "SequencerView.h"
+#include "SequencePropertiesDialog.h"
 #include "AudioEngine.h"
 #include "Instrument.h"
 #include "PluginMenu.h"
@@ -17,7 +18,7 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
     devicePlayer.setSource (&player);
     engine.deviceManager.addAudioCallback (&devicePlayer);
 
-    for (auto* b : { &newButton, &openButton, &presetsButton, &saveButton, &saveAsButton, &duplicateButton, &variationButton, &undoButton, &redoButton, &playButton,
+    for (auto* b : { &newButton, &openButton, &presetsButton, &propertiesButton, &saveButton, &saveAsButton, &duplicateButton, &variationButton, &undoButton, &redoButton, &playButton,
                      &instrumentButton, &editInstrumentButton, &addEffectButton })
         addAndMakeVisible (b);
 
@@ -47,6 +48,7 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
 
     newButton.setTooltip ("A new sequence in a folder of the library, with an instrument to write it for");
     openButton.setTooltip ("Opens a sequence from the library (or double-click one there, or Edit in Sequencer on its menu)");
+    propertiesButton.setTooltip ("The sequence's style, energy, character, key, description and tags, as the library shows and filters them");
     presetsButton.setTooltip ("Opens one of the factory presets as a new copy, to change and save in your library");
     saveButton.setTooltip ("Writes the sequence to its file, with its voice as it is now");
     saveAsButton.setTooltip ("Writes it under another name or in another folder, and goes on with that file");
@@ -77,6 +79,7 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
                 self->openFile ((*files)[result - 1]);
         });
     };
+    propertiesButton.onClick = [this] { askForProperties(); };
     saveButton.onClick = [this]
     {
         if (doc.getFile() == juce::File())
@@ -769,6 +772,32 @@ void SequencerView::applyEdit (const SequenceFile::Sequence& edited, const juce:
     refreshState();
 }
 
+void SequencerView::askForProperties()
+{
+    const auto& q = doc.get();
+    SequenceLibrary::Properties p { q.style, q.key, q.note, q.energy, q.character, q.tags };
+    SequencePropertiesDialog::Options options;
+    options.intro = q.name;
+
+    SequencePropertiesDialog::show (this, options, p, [safe = juce::WeakReference<SequencerView> (this)] (const SequencePropertiesDialog::Result& r)
+    {
+        if (auto* self = safe.get())
+            self->setProperties (r.properties);
+    });
+}
+
+void SequencerView::setProperties (const SequenceLibrary::Properties& p)
+{
+    auto q = doc.get();
+    q.style = p.style;
+    q.key = p.key;
+    q.note = p.description;
+    q.energy = p.energy;
+    q.character = p.character;
+    q.tags = p.tags;
+    applyEdit (q, "Properties");
+}
+
 void SequencerView::showAskButton (const juce::String& name, std::function<void()> onClick)
 {
     askButton.setButtonText (name);
@@ -1007,6 +1036,7 @@ void SequencerView::resized()
     place (files, newButton, 64);
     place (files, openButton, 70);
     place (files, presetsButton, 70);
+    place (files, propertiesButton, 90);
     place (files, saveButton, 54);
     place (files, saveAsButton, 84);
     place (files, duplicateButton, 84);

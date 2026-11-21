@@ -23,6 +23,9 @@ std::unique_ptr<juce::XmlElement> toXml (const Kit& kit)
     xml->setAttribute ("tags", kit.tags.joinIntoString (","));
     xml->setAttribute ("note", kit.note);
 
+    if (kit.style.isNotEmpty())
+        xml->setAttribute ("style", kit.style);
+
     if (kit.rating > 0)
         xml->setAttribute ("rating", kit.rating);
 
@@ -50,6 +53,7 @@ std::optional<Kit> fromXml (const juce::XmlElement& xml)
     kit.tags.trim();
     kit.tags.removeEmptyStrings();
     kit.note = xml.getStringAttribute ("note");
+    kit.style = xml.getStringAttribute ("style").trim();
     kit.rating = juce::jlimit (0, 5, xml.getIntAttribute ("rating"));
     kit.favourite = xml.getBoolAttribute ("favourite");
     kit.added = juce::jmax ((juce::int64) 0, xml.getStringAttribute ("added").getLargeIntValue());

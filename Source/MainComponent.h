@@ -611,7 +611,8 @@ private:
     struct SequenceLink
     {
         juce::File file;
-        juce::String name, folder, key, tags;
+        juce::String name, folder;
+        SequenceLibrary::Properties properties;   // style, key, description and the rest, as given
     };
     std::map<juce::uint32, SequenceLink> sequenceLinks;
     juce::File libraryIndexFile() const;

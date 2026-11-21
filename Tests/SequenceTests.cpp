@@ -11,6 +11,7 @@
 #include "TestUtils.h"
 #include "SequenceTests.h"
 #include "PresetTests.h"
+#include "LibraryFacetTests.h"
 
 namespace
 {
@@ -1547,4 +1548,5 @@ void runSequenceTests (AudioEngine& engine)
     }
 
     runPresetTests (engine);
+    runLibraryFacetTests();
 }

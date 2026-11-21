@@ -15,6 +15,7 @@ namespace SequenceKit
     struct Kit
     {
         juce::String name, key, note;                  // key: the parts' key when they share one, or empty
+        juce::String style;                            // as a sequence's
         juce::StringArray tags;
         int rating = 0;                                // as a sequence's
         bool favourite = false;

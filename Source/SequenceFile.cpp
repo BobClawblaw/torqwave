@@ -1,4 +1,5 @@
 #include "SequenceFile.h"
+#include "NoteTools.h"
 #include "TrackTemplate.h"
 
 namespace SequenceFile
@@ -152,6 +153,15 @@ std::unique_ptr<juce::XmlElement> toXml (const Sequence& q)
     xml->setAttribute ("tags", q.tags.joinIntoString (","));
     xml->setAttribute ("note", q.note);
 
+    if (q.style.isNotEmpty())
+        xml->setAttribute ("style", q.style);
+
+    if (q.energy > 0)
+        xml->setAttribute ("energy", q.energy);
+
+    if (! q.character.isEmpty())
+        xml->setAttribute ("character", q.character.joinIntoString (","));
+
     if (q.rating > 0)
         xml->setAttribute ("rating", q.rating);
 
@@ -227,6 +237,11 @@ std::optional<Sequence> fromXml (const juce::XmlElement& xml)
     q.tags.trim();
     q.tags.removeEmptyStrings();
     q.note = xml.getStringAttribute ("note");
+    q.style = xml.getStringAttribute ("style").trim();
+    q.energy = juce::jlimit (0, 5, xml.getIntAttribute ("energy"));
+    q.character.addTokens (xml.getStringAttribute ("character"), ",", {});
+    q.character.trim();
+    q.character.removeEmptyStrings();
     q.variationOf = xml.getStringAttribute ("variationOf");
     q.rating = juce::jlimit (0, 5, xml.getIntAttribute ("rating"));
     q.favourite = xml.getBoolAttribute ("favourite");
@@ -346,5 +361,53 @@ Placed blank (SessionState& s, const juce::String& name, int bars, juce::int64 p
     clip.length = map.barFrame (bar + juce::jmax (1, bars)) - clip.position;
     placed.clipId = SessionEdits::addNoteClip (s, placed.trackId, std::move (clip));
     return placed;
+}
+
+const std::vector<std::pair<juce::String, juce::String>>& characterPairs()
+{
+    static const std::vector<std::pair<juce::String, juce::String>> pairs {
+        { "Dark", "Bright" }, { "Sparse", "Dense" }, { "Straight", "Swung" }, { "Clean", "Distorted" }
+    };
+
+    return pairs;
+}
+
+std::pair<juce::String, juce::String> splitStyle (const juce::String& style)
+{
+    const auto at = style.indexOfChar ('/');
+    return at < 0 ? std::pair { juce::String(), style.trim() } : std::pair { style.substring (0, at).trim(), style.substring (at + 1).trim() };
+}
+
+juce::String styleName (const juce::String& style)
+{
+    const auto [genre, name] = splitStyle (style);
+    return genre.isEmpty() ? name : genre + juce::String::fromUTF8 (" \xe2\x80\xba ") + name;
+}
+
+Sequence transposedTo (const Sequence& q, const juce::String& sessionKey)
+{
+    const auto own = NoteTools::parseKey (q.key);
+    const auto session = NoteTools::parseKey (sessionKey);
+
+    if (q.channel == 10 || q.role == "Drums" || ! own.has_value() || ! session.has_value())
+        return q;
+
+    auto shift = ((session->root - own->root) % 12 + 12) % 12;
+
+    if (shift > 5)
+        shift -= 12;
+
+    if (shift == 0)
+        return q;
+
+    auto moved = q;
+
+    for (auto& n : moved.notes)
+        n.pitch = juce::jlimit (0, 127, n.pitch + shift);
+
+    auto key = *own;
+    key.root = session->root;
+    moved.key = key.name();
+    return moved;
 }
 }

@@ -50,7 +50,10 @@ namespace SequenceFile
         it plays `length` ticks, and with a loop length the notes repeat every that many ticks. */
     struct Sequence
     {
-        juce::String name, role, subRole, key, note;   // key: a pitch name and scale, such as "A minor", or empty
+        juce::String name, role, subRole, key, note;   // key: a pitch name and scale, such as "A minor", or empty; note: its one-line description
+        juce::String style;                            // a genre and a style, "Techno/Dark", or empty
+        int energy = 0;                                // 1 (an intro tool) to 5 (peak), or 0 for none
+        juce::StringArray character;                   // poles of the character pairs it has: Dark or Bright, Sparse or Dense, Straight or Swung, Clean or Distorted
         juce::String variationOf;                      // the name of the sequence it is a variation of, or empty
         juce::StringArray tags;
         int rating = 0;                                // 0 (none) to 5, set in the library
@@ -90,6 +93,21 @@ namespace SequenceFile
 
     /** Null when the XML is not a sequence. */
     std::optional<Sequence> fromXml (const juce::XmlElement&);
+
+    /** The character pairs, each as its two poles ("Dark", "Bright"). */
+    const std::vector<std::pair<juce::String, juce::String>>& characterPairs();
+
+    /** A style's parts: "Techno/Dark" is { "Techno", "Dark" }; one with no genre is { "", style }. */
+    std::pair<juce::String, juce::String> splitStyle (const juce::String&);
+
+    /** How a style shows: "Techno › Dark". */
+    juce::String styleName (const juce::String&);
+
+    /** The sequence moved into a session's key: every note by the interval between its key's root
+        and the session's (the nearer way, -6 to +5 semitones), its key named for the new root in
+        its own scale. Drums (on channel 10, or in the Drums role), a sequence with no key and a
+        session with none are left as they are. */
+    Sequence transposedTo (const Sequence&, const juce::String& sessionKey);
 
     /** Writes it safely (to a temporary file, then in place). A new file (no file there yet), or
         one with no `added` time, is stamped with the time now; one rewritten keeps its time.

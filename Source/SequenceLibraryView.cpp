@@ -1,5 +1,6 @@
 #include "SequenceLibraryView.h"
 #include "SequenceMidi.h"
+#include "SequencePropertiesDialog.h"
 #include "NoteTools.h"
 #include "Instrument.h"
 #include "Theme.h"
@@ -23,6 +24,9 @@ namespace
         if (e.key.isNotEmpty())
             parts.add (e.key);
 
+        if (e.energy > 0)
+            parts.add ("energy " + juce::String (e.energy));
+
         if (! e.hasInstrument)
             parts.add ("no instrument");
 
@@ -44,9 +48,24 @@ public:
 
     bool mightContainSubItems() override              { return false; }
     juce::String getUniqueName() const override       { return entry.file.getFileName(); }
-    int getItemHeight() const override                { return 22; }
+    int getItemHeight() const override                { return entry.description.isNotEmpty() ? 36 : 22; }
     juce::var getDragSourceDescription() override     { return dragDescriptionFor (entry.file); }
-    juce::String getTooltip() override                { return entry.tags.joinIntoString (", "); }
+
+    juce::String getTooltip() override
+    {
+        juce::StringArray lines;
+
+        if (entry.style.isNotEmpty())
+            lines.add (SequenceFile::styleName (entry.style));
+
+        if (! entry.character.isEmpty())
+            lines.add (entry.character.joinIntoString (", "));
+
+        if (! entry.tags.isEmpty())
+            lines.add ("Tags: " + entry.tags.joinIntoString (", "));
+
+        return lines.joinIntoString ("\n");
+    }
 
     void paintItem (juce::Graphics& g, int width, int height) override
     {
@@ -54,6 +73,15 @@ public:
             g.fillAll (Theme::selection);
 
         auto r = juce::Rectangle<int> (0, 0, width, height).reduced (4, 0);
+
+        // The description, a line under the rest.
+        if (entry.description.isNotEmpty())
+        {
+            g.setColour (Theme::dimText);
+            g.setFont (juce::FontOptions (11.5f));
+            g.drawText (entry.description, r.removeFromBottom (height - 20).withTrimmedBottom (3), juce::Justification::topLeft, true);
+        }
+
         const auto details = detailsOf (entry);
         g.setFont (juce::FontOptions (12.0f));
         const auto detailWidth = juce::jmin (r.getWidth() / 2, juce::GlyphArrangement::getStringWidthInt (g.getCurrentFont(), details) + 8);
@@ -98,6 +126,9 @@ public:
             rating.addItem (20 + stars, stars == 0 ? juce::String ("No Rating") : juce::String::repeatedString (juce::String::fromUTF8 ("\xe2\x98\x85"), stars),
                             true, entry.rating == stars);
 
+        menu.addItem (9, "Similar");
+        menu.addItem (10, "Properties...", ! entry.factory);
+        menu.addSeparator();
         menu.addItem (4, "Edit in Sequencer", view.onEdit != nullptr && ! entry.isKit);
         menu.addItem (5, "Export MIDI File...");
         menu.addItem (6, "Make Kit from Selected...", sequences.size() >= 2);
@@ -126,6 +157,10 @@ public:
 
             if (result == 4 && safe->onEdit != nullptr)
                 safe->onEdit (file);
+            else if (result == 9)
+                safe->showSimilar (file);
+            else if (result == 10)
+                safe->askForProperties (file);
             else if (result == 5)
                 safe->askToExportMidi (file);
             else if (result == 6)
@@ -210,7 +245,10 @@ public:
     void itemClicked (const juce::MouseEvent& e) override
     {
         if (e.mods.isPopupMenu())
-            view.folderMenu (path());
+        {
+            if (view.groupedByRole())
+                view.folderMenu (path());
+        }
         else
             setOpen (! isOpen());
     }
@@ -219,7 +257,7 @@ public:
     // Finder are copied here.
     bool isInterestedInDragSource (const juce::DragAndDropTarget::SourceDetails& details) override
     {
-        return ! path().isEmpty() && ! isFactoryPath (path()) && fileOfDrag (details.description).existsAsFile();
+        return view.groupedByRole() && ! path().isEmpty() && ! isFactoryPath (path()) && fileOfDrag (details.description).existsAsFile();
     }
 
     void itemDropped (const juce::DragAndDropTarget::SourceDetails& details, int) override
@@ -230,7 +268,7 @@ public:
 
     bool isInterestedInFileDrag (const juce::StringArray& files) override
     {
-        return ! path().isEmpty() && ! isFactoryPath (path()) && std::any_of (files.begin(), files.end(), [] (auto& f)
+        return view.groupedByRole() && ! path().isEmpty() && ! isFactoryPath (path()) && std::any_of (files.begin(), files.end(), [] (auto& f)
         {
             return SequenceFile::isSequenceOrKit (juce::File (f)) || juce::File (f).hasFileExtension (SequenceLibrary::packExtension);
         });
@@ -275,6 +313,90 @@ public:
 };
 
 //==============================================================================
+class SequenceLibraryView::SearchItem final : public juce::TreeViewItem
+{
+public:
+    SearchItem (SequenceLibraryView& v, juce::String n, juce::String d, int c) : view (v), name (std::move (n)), described (std::move (d)), count (c) {}
+
+    bool mightContainSubItems() override              { return false; }
+    juce::String getUniqueName() const override       { return "search:" + name; }
+    int getItemHeight() const override                { return 22; }
+    juce::String getTooltip() override                { return described; }
+
+    void paintItem (juce::Graphics& g, int width, int height) override
+    {
+        if (isSelected())
+            g.fillAll (Theme::selection);
+
+        g.setColour (isSelected() ? Theme::textStrong : Theme::text);
+        g.setFont (juce::FontOptions (13.0f));
+        g.drawText (name + "  (" + juce::String (count) + ")", 4, 0, width - 8, height, juce::Justification::centredLeft, true);
+    }
+
+    void itemClicked (const juce::MouseEvent& e) override
+    {
+        if (! e.mods.isPopupMenu())
+        {
+            view.applySearch (name);
+            return;
+        }
+
+        juce::PopupMenu menu;
+        menu.addItem (1, "Show");
+        menu.addItem (2, "Save the Filters as They Are Now Here");
+        menu.addItem (3, "Remove");
+        juce::Component::SafePointer<SequenceLibraryView> safe (&view);
+        const auto searchName = name;
+
+        menu.showMenuAsync (juce::PopupMenu::Options(), [safe, searchName] (int result)
+        {
+            if (safe == nullptr)
+                return;
+
+            if (result == 1)
+                safe->applySearch (searchName);
+            else if (result == 2)
+                safe->saveSearch (searchName);
+            else if (result == 3)
+            {
+                if (const auto error = SequenceLibrary::removeSearch (searchName); error.isNotEmpty())
+                    juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Saved Searches", error);
+
+                safe->rebuild();
+            }
+        });
+    }
+
+    const juce::String& getName() const noexcept { return name; }
+
+private:
+    SequenceLibraryView& view;
+    const juce::String name, described;
+    const int count;
+};
+
+class SequenceLibraryView::SearchesItem final : public juce::TreeViewItem
+{
+public:
+    bool mightContainSubItems() override              { return true; }
+    juce::String getUniqueName() const override       { return "Saved Searches"; }
+    int getItemHeight() const override                { return 22; }
+
+    void paintItem (juce::Graphics& g, int width, int height) override
+    {
+        g.setColour (Theme::textStrong);
+        g.setFont (juce::FontOptions (13.0f, juce::Font::bold));
+        g.drawText ("Saved Searches", 4, 0, width - 8, height, juce::Justification::centredLeft, true);
+    }
+
+    void itemClicked (const juce::MouseEvent& e) override
+    {
+        if (! e.mods.isPopupMenu())
+            setOpen (! isOpen());
+    }
+};
+
+//==============================================================================
 SequenceLibraryView::SequenceLibraryView (juce::File folder) : library (std::move (folder))
 {
     library.makeFolders();
@@ -294,8 +416,22 @@ SequenceLibraryView::SequenceLibraryView (juce::File folder) : library (std::mov
     addAndMakeVisible (sortBox);
     sortBox.addItemList (SequenceLibrary::sortNames(), 1);
     sortBox.setSelectedItemIndex (0, juce::dontSendNotification);
-    sortBox.setTooltip ("The order in each folder: by name, by length (fewest bars first), by rating (highest first), or the newest first");
+    sortBox.setTooltip ("The order in each folder: by name, by length (fewest bars first), by rating (highest first), the newest first, "
+                        "by tempo (slowest first), by key (from C) or by energy (lowest first)");
     sortBox.onChange = [this] { setSort ((SequenceLibrary::Sort) juce::jmax (0, sortBox.getSelectedItemIndex())); };
+
+    addAndMakeVisible (groupBox);
+
+    for (int i = 0; i < SequenceLibrary::groupNames().size(); ++i)
+        groupBox.addItem ("By " + SequenceLibrary::groupNames()[i], i + 1);
+
+    groupBox.setSelectedItemIndex (0, juce::dontSendNotification);
+    groupBox.setTooltip ("How the folders are made: by role (the library's own folders), or by style, key or energy, each then by role");
+    groupBox.onChange = [this] { setGroup ((SequenceLibrary::Group) juce::jmax (0, groupBox.getSelectedItemIndex())); };
+
+    addAndMakeVisible (filtersButton);
+    filtersButton.setTooltip ("Narrow the list by style, energy, bars, key and character, show the presets or your own, and save or show searches");
+    filtersButton.onClick = [this] { showFiltersMenu(); };
 
     addAndMakeVisible (favouritesButton);
     favouritesButton.setClickingTogglesState (true);
@@ -415,6 +551,259 @@ void SequenceLibraryView::setFitsSession (bool on)
 {
     fitsButton.setToggleState (on, juce::dontSendNotification);
     rebuild();
+}
+
+void SequenceLibraryView::setGroup (SequenceLibrary::Group g)
+{
+    if (groupBy != g)
+        openness.reset();
+
+    groupBy = g;
+    groupBox.setSelectedItemIndex ((int) g, juce::dontSendNotification);
+    rebuild();
+}
+
+SequenceLibrary::Filters SequenceLibraryView::getFilters() const
+{
+    auto f = picked;
+    f.search = search.getText().trim();
+    f.favourites = favouritesButton.getToggleState();
+    f.fitsSession = fitsButton.getToggleState();
+    return f;
+}
+
+void SequenceLibraryView::setFilters (const SequenceLibrary::Filters& f)
+{
+    picked = f;
+    picked.search = {};
+    picked.favourites = picked.fitsSession = false;
+    search.setText (f.search, false);
+    favouritesButton.setToggleState (f.favourites, juce::dontSendNotification);
+    fitsButton.setToggleState (f.fitsSession, juce::dontSendNotification);
+    rebuild();
+}
+
+void SequenceLibraryView::showSimilar (const juce::File& file)
+{
+    const auto entry = std::find_if (entries.begin(), entries.end(), [&file] (auto& e) { return e.file == file; });
+
+    if (entry == entries.end())
+        return;
+
+    setFilters (SequenceLibrary::similarTo (*entry));
+    select (file);
+}
+
+void SequenceLibraryView::saveSearch (const juce::String& name)
+{
+    if (const auto error = SequenceLibrary::saveSearch (name, getFilters()); error.isNotEmpty())
+        juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Save Search", error);
+
+    rebuild();
+}
+
+void SequenceLibraryView::applySearch (const juce::String& name)
+{
+    for (auto& [saved, filters] : SequenceLibrary::savedSearches())
+        if (saved == name)
+        {
+            setFilters (filters);
+            return;
+        }
+}
+
+juce::StringArray SequenceLibraryView::shownSearches() const
+{
+    juce::StringArray names;
+
+    if (root != nullptr)
+        for (int i = 0; i < root->getNumSubItems(); ++i)
+            if (auto* searches = dynamic_cast<SearchesItem*> (root->getSubItem (i)))
+                for (int j = 0; j < searches->getNumSubItems(); ++j)
+                    if (auto* s = dynamic_cast<SearchItem*> (searches->getSubItem (j)))
+                        names.add (s->getName());
+
+    return names;
+}
+
+void SequenceLibraryView::askForProperties (const juce::File& file)
+{
+    const auto entry = std::find_if (entries.begin(), entries.end(), [&file] (auto& e) { return e.file == file; });
+
+    if (entry == entries.end() || entry->factory)
+        return;
+
+    SequencePropertiesDialog::Options options;
+    options.title = entry->isKit ? "Kit Properties" : "Sequence Properties";
+    options.intro = entry->name;
+    options.isKit = entry->isKit;
+    options.styles = SequenceLibrary::stylesIn (entries);
+    juce::Component::SafePointer<SequenceLibraryView> safe (this);
+
+    SequencePropertiesDialog::show (this, options, SequenceLibrary::propertiesOf (*entry), [safe, file] (const SequencePropertiesDialog::Result& r)
+    {
+        if (const auto error = SequenceLibrary::setProperties (file, r.properties); error.isNotEmpty())
+            juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Properties", error);
+
+        if (safe != nullptr)
+            safe->refresh();
+    });
+}
+
+void SequenceLibraryView::showFiltersMenu()
+{
+    juce::PopupMenu menu, styles, energies, bars, keys, character, show, searches;
+    const auto styleList = SequenceLibrary::stylesIn (entries);
+    const auto keyList = SequenceLibrary::keysIn (entries);
+    juce::StringArray genres;
+
+    for (auto& s : styleList)
+        genres.addIfNotAlreadyThere (SequenceFile::splitStyle (s).first);
+
+    // Styles: 1000 any; 1001 on, each genre's whole, then its styles.
+    juce::StringArray styleIds;
+    styles.addItem (1000, "Any Style", true, picked.style.isEmpty());
+
+    for (auto& genre : genres)
+    {
+        styles.addSeparator();
+        styleIds.add (genre);
+        styles.addItem (1000 + styleIds.size(), "All " + genre, true, picked.style == genre);
+
+        for (auto& s : styleList)
+            if (SequenceFile::splitStyle (s).first == genre)
+            {
+                styleIds.add (s);
+                styles.addItem (1000 + styleIds.size(), "    " + SequenceFile::splitStyle (s).second, true, picked.style == s);
+            }
+    }
+
+    energies.addItem (200, "Any Energy", true, picked.energy == 0);
+
+    for (int e = 1; e <= 5; ++e)
+        energies.addItem (200 + e, juce::String (e) + (e == 1 ? " (intro tool)" : e == 5 ? " (peak)" : ""), true, picked.energy == e);
+
+    bars.addItem (300, "Any Length", true, picked.bars == 0);
+
+    for (int b : { 1, 2, 4, 8 })
+        bars.addItem (300 + b, juce::String (b) + (b == 1 ? " bar" : " bars"), true, picked.bars == b);
+
+    keys.addItem (2000, "Any Key", true, picked.key.isEmpty());
+
+    for (int i = 0; i < keyList.size(); ++i)
+        keys.addItem (2001 + i, keyList[i], true, NoteTools::parseKey (picked.key).has_value() && NoteTools::parseKey (picked.key) == NoteTools::parseKey (keyList[i]));
+
+    const auto& pairs = SequenceFile::characterPairs();
+
+    for (size_t i = 0; i < pairs.size(); ++i)
+    {
+        character.addItem (400 + (int) i * 2, pairs[i].first, true, picked.character.contains (pairs[i].first));
+        character.addItem (401 + (int) i * 2, pairs[i].second, true, picked.character.contains (pairs[i].second));
+        character.addSeparator();
+    }
+
+    show.addItem (500, "Presets and Mine", true, picked.source == SequenceLibrary::Filters::Source::both);
+    show.addItem (501, "Presets Only", true, picked.source == SequenceLibrary::Filters::Source::presets);
+    show.addItem (502, "Mine Only", true, picked.source == SequenceLibrary::Filters::Source::mine);
+
+    const auto saved = SequenceLibrary::savedSearches();
+
+    for (size_t i = 0; i < saved.size(); ++i)
+        searches.addItem (3000 + (int) i, saved[i].first);
+
+    const auto ticked = [] (const juce::String& name, bool on) { return on ? name + juce::String::fromUTF8 (" \xe2\x80\xa2") : name; };
+    menu.addSubMenu (ticked ("Style", picked.style.isNotEmpty()), styles, ! styleList.isEmpty());
+    menu.addSubMenu (ticked ("Energy", picked.energy > 0), energies);
+    menu.addSubMenu (ticked ("Bars", picked.bars > 0), bars);
+    menu.addSubMenu (ticked ("Key", picked.key.isNotEmpty()), keys, ! keyList.isEmpty());
+    menu.addSubMenu (ticked ("Character", ! picked.character.isEmpty()), character);
+    menu.addSubMenu (ticked ("Show", picked.source != SequenceLibrary::Filters::Source::both), show);
+
+    if (picked.role.isNotEmpty())
+        menu.addItem (610, "Only " + picked.role, true, true);
+
+    if (picked.nearEnergy > 0)
+        menu.addItem (611, "Nearest Energy " + juce::String (picked.nearEnergy) + " First", true, true);
+
+    menu.addSeparator();
+    menu.addItem (600, "Save Search...", ! getFilters().isEmpty());
+    menu.addSubMenu ("Saved Searches", searches, ! saved.empty());
+    menu.addItem (601, "Clear Filters", ! getFilters().isEmpty());
+    menu.addSeparator();
+    menu.addItem (602, "Transpose Drops to the Session's Key", true, SequenceLibrary::transposesDrops());
+
+    juce::Component::SafePointer<SequenceLibraryView> safe (this);
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (filtersButton), [safe, styleIds, keyList, saved] (int result)
+    {
+        if (safe == nullptr || result == 0)
+            return;
+
+        auto& c = safe->picked;
+        const auto& pairList = SequenceFile::characterPairs();
+
+        if (result >= 1000 && result <= 1000 + styleIds.size())
+            c.style = result == 1000 ? juce::String() : styleIds[result - 1001];
+        else if (result >= 200 && result <= 205)
+            c.energy = result - 200;
+        else if (result >= 300 && result <= 308)
+            c.bars = result - 300;
+        else if (result >= 2000 && result <= 2000 + keyList.size())
+            c.key = result == 2000 ? juce::String() : keyList[result - 2001];
+        else if (result >= 400 && result < 400 + (int) pairList.size() * 2)
+        {
+            // A pole, ticked or not; its opposite goes.
+            const auto& pair = pairList[(size_t) (result - 400) / 2];
+            const auto pole = (result - 400) % 2 == 0 ? pair.first : pair.second;
+            const auto had = c.character.contains (pole);
+            c.character.removeString (pair.first);
+            c.character.removeString (pair.second);
+
+            if (! had)
+                c.character.add (pole);
+        }
+        else if (result >= 500 && result <= 502)
+            c.source = (SequenceLibrary::Filters::Source) (result - 500);
+        else if (result == 610)
+            c.role = {};
+        else if (result == 611)
+            c.nearEnergy = 0;
+        else if (result == 601)
+        {
+            safe->setFilters ({});
+            return;
+        }
+        else if (result == 602)
+        {
+            SequenceLibrary::setTransposesDrops (! SequenceLibrary::transposesDrops());
+
+            if (safe->onTransposeDropsChanged != nullptr)
+                safe->onTransposeDropsChanged (SequenceLibrary::transposesDrops());
+
+            return;
+        }
+        else if (result >= 3000 && result < 3000 + (int) saved.size())
+        {
+            safe->setFilters (saved[(size_t) result - 3000].second);
+            return;
+        }
+        else if (result == 600)
+        {
+            auto* box = new juce::AlertWindow ("Save Search", "Saves these filters by name, shown under Saved Searches above the folders:\n" + safe->getFilters().describe(),
+                                               juce::MessageBoxIconType::NoIcon, safe.getComponent());
+            box->addTextEditor ("name", safe->picked.style.isNotEmpty() ? SequenceFile::styleName (safe->picked.style) : juce::String(), "Name");
+            box->addButton ("Save", 1, juce::KeyPress (juce::KeyPress::returnKey));
+            box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+            box->enterModalState (true, juce::ModalCallbackFunction::create ([safe, box] (int chosenButton)
+            {
+                if (chosenButton == 1 && safe != nullptr)
+                    safe->saveSearch (box->getTextEditorContents ("name"));
+            }), true);
+            return;
+        }
+
+        safe->rebuild();
+    });
 }
 
 void SequenceLibraryView::setFolder (const juce::File& folder)
@@ -555,20 +944,63 @@ void SequenceLibraryView::rebuild()
 
     tree.setRootItem (nullptr);
     root = std::make_unique<FolderItem> (*this, "Sequences");
-    const auto text = search.getText().trim();
-    const auto favouritesOnly = favouritesButton.getToggleState();
-    const auto fits = fitsButton.getToggleState();
-    const auto narrowed = text.isNotEmpty() || favouritesOnly || fits;
+    const auto filters = getFilters();
+    const auto fits = filters.fitsSession;
+    const auto narrowed = ! filters.isEmpty();
     shownKey = getSessionKey != nullptr ? getSessionKey().trim() : juce::String();
 
     const auto passes = [&] (const SequenceLibrary::Entry& e)
     {
-        return ! ((text.isNotEmpty() && ! SequenceLibrary::matches (e, text)) || (favouritesOnly && ! e.favourite)
-                  || (fits && ! SequenceLibrary::fitsKey (e, shownKey)));
+        return SequenceLibrary::passes (e, filters, shownKey);
     };
 
+    // Saved Searches first, each with what it finds now.
+    if (const auto saved = SequenceLibrary::savedSearches(); ! saved.empty())
+    {
+        auto* searches = new SearchesItem();
+        root->addSubItem (searches);
+
+        for (auto& [name, f] : saved)
+            searches->addSubItem (new SearchItem (*this, name, f.describe(), (int) std::count_if (entries.begin(), entries.end(), [&] (auto& e)
+            {
+                return SequenceLibrary::passes (e, f, shownKey);
+            })));
+    }
+
+    // Grouped by style, key or energy: those groups in order, each with its roles in their order.
+    if (! groupedByRole())
+    {
+        std::vector<std::pair<juce::String, int>> groups;   // the group, and its place
+
+        for (auto& e : entries)
+        {
+            if (! passes (e))
+                continue;
+
+            const auto group = SequenceLibrary::groupPath (e, groupBy)[0];
+            int place = 0;
+
+            if (groupBy == SequenceLibrary::Group::key)
+                place = NoteTools::parseKey (e.key).has_value() ? NoteTools::parseKey (e.key)->root * 100 + NoteTools::modes().indexOf (NoteTools::parseKey (e.key)->mode) : 100000;
+            else if (groupBy == SequenceLibrary::Group::energy)
+                place = e.energy > 0 ? e.energy : 100;
+            else
+                place = e.style.isEmpty() ? 1 : 0;
+
+            if (std::none_of (groups.begin(), groups.end(), [&] (auto& g) { return g.first == group; }))
+                groups.push_back ({ group, place });
+        }
+
+        std::sort (groups.begin(), groups.end(), [] (auto& a, auto& b) { return a.second != b.second ? a.second < b.second : a.first.compareNatural (b.first) < 0; });
+
+        for (auto& [group, place] : groups)
+            for (auto& role : SequenceLibrary::roles())
+                if (std::any_of (entries.begin(), entries.end(), [&] (auto& e) { return passes (e) && SequenceLibrary::groupPath (e, groupBy) == juce::StringArray { group, role.name }; }))
+                    root->folder (group).folder (role.name);
+    }
+
     // Presets first, its roles and sub-roles in their order (those holding presets that are shown).
-    if (std::any_of (entries.begin(), entries.end(), [&] (auto& e) { return e.factory && passes (e); }))
+    if (groupedByRole() && std::any_of (entries.begin(), entries.end(), [&] (auto& e) { return e.factory && passes (e); }))
     {
         auto& presets = root->folder (SequenceLibrary::factoryName);
 
@@ -588,7 +1020,7 @@ void SequenceLibraryView::rebuild()
 
     // Every folder, empty ones too: the roles and their sub-roles in their order, then the user's
     // own below them. A search or filter shows the roles and the folders holding what it finds.
-    for (auto& path : narrowed ? std::vector<juce::StringArray> {} : folderPaths)
+    for (auto& path : narrowed || ! groupedByRole() ? std::vector<juce::StringArray> {} : folderPaths)
     {
         auto* at = root.get();
 
@@ -596,19 +1028,30 @@ void SequenceLibraryView::rebuild()
             at = &at->folder (part);
     }
 
-    for (auto& role : SequenceLibrary::roles())
-        root->folder (role.name);
+    if (groupedByRole())
+        for (auto& role : SequenceLibrary::roles())
+            root->folder (role.name);
 
     shownNarrowed = narrowed;
     int shown = 0;
-    auto ordered = entries;
-    SequenceLibrary::sort (ordered, sortBy);
+
+    // In the order of the folders they show in; each keeps its own entry (its own path).
+    std::vector<SequenceLibrary::Entry> ordered;
+    std::map<juce::String, const SequenceLibrary::Entry*> byFile;
+
+    for (auto& e : entries)
+        if (passes (e))
+        {
+            auto shownAt = e;
+            shownAt.path = SequenceLibrary::groupPath (e, groupBy);
+            ordered.push_back (std::move (shownAt));
+            byFile[e.file.getFullPathName()] = &e;
+        }
+
+    SequenceLibrary::sort (ordered, sortBy, filters.nearEnergy);
 
     for (auto& e : ordered)
     {
-        if (! passes (e))
-            continue;
-
         auto* at = root.get();
         ++at->count;
 
@@ -618,7 +1061,7 @@ void SequenceLibraryView::rebuild()
             ++at->count;
         }
 
-        at->addSubItem (new SequenceItem (*this, e));
+        at->addSubItem (new SequenceItem (*this, *byFile[e.file.getFullPathName()]));
         ++shown;
     }
 
@@ -628,7 +1071,7 @@ void SequenceLibraryView::rebuild()
         root->restoreOpennessState (*openness);
 
     // With a search or filter, every folder holding a match is open.
-    if (narrowed)
+    if (narrowed || (! groupedByRole() && openness == nullptr))
     {
         std::function<void (juce::TreeViewItem&)> openAll = [&] (juce::TreeViewItem& item)
         {
@@ -664,6 +1107,11 @@ void SequenceLibraryView::rebuild()
         countText << " (the session has no key)";
     else if (fits)
         countText << " in " << shownKey;
+
+    if (! picked.isEmpty())
+        countText << ": " << picked.describe();
+
+    filtersButton.setButtonText (picked.isEmpty() ? "Filters" : juce::String::fromUTF8 ("Filters \xe2\x80\xa2"));
 
     previewChanged();
 }
@@ -746,11 +1194,17 @@ void SequenceLibraryView::resized()
     top.removeFromRight (6);
     search.setBounds (top);
     r.removeFromTop (4);
+    auto order = r.removeFromTop (24);
+    const auto third = (order.getWidth() - 8) / 3;
+    sortBox.setBounds (order.removeFromLeft (third));
+    order.removeFromLeft (4);
+    groupBox.setBounds (order.removeFromLeft (third));
+    order.removeFromLeft (4);
+    filtersButton.setBounds (order);
+    r.removeFromTop (4);
     auto filters = r.removeFromTop (24);
     importButton.setBounds (filters.removeFromRight (70));
     filters.removeFromRight (6);
-    sortBox.setBounds (filters.removeFromLeft (juce::jmin (90, filters.getWidth() / 4)));
-    filters.removeFromLeft (4);
     const auto half = (filters.getWidth() - 4) / 2;
     favouritesButton.setBounds (filters.removeFromLeft (half));
     filters.removeFromLeft (4);
@@ -770,7 +1224,7 @@ juce::String SequenceLibraryView::selectedFolder() const
         item = item->getParentItem();
 
     if (auto* folder = dynamic_cast<FolderItem*> (item))
-        return SequenceLibrary::nameOf (ownPathFor (folder->path()));
+        return groupedByRole() ? SequenceLibrary::nameOf (ownPathFor (folder->path())) : folder->path()[1];
 
     return {};
 }
