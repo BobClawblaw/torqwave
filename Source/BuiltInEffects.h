@@ -850,9 +850,16 @@ namespace BuiltInEffects
     };
 
     /** The instrument built in, a basic synthesizer: an oscillator (sine, triangle, sawtooth or
-        square, the last two without aliasing) through a resonant low-pass filter and an ADSR
-        envelope, with sixteen voices (the oldest taken over when all are sounding) and each note's
-        level set by its velocity. Its parameters are hosted, so they can be automated and saved
+        square, the last two without aliasing), and two more at their own wave, octave, detune and
+        level, through a resonant low-pass filter and an ADSR envelope, with sixteen voices (the
+        oldest taken over when all are sounding) and each note's level set by its velocity.
+
+        Off by default, so it sounds as it did without them: oscillators 2 and 3 (at level 0), a
+        filter envelope (an amount, opening the cutoff up to six octaves at the note's start, and
+        its decay), velocity to filter (softer notes darker, by up to four octaves at the softest)
+        and glide (a note played while another is held slides to its pitch in the glide time
+        without starting its envelopes again, the 303's slide; with glide on, overlapping notes play
+        one at a time). Its parameters are hosted, so they can be automated and saved
         like any effect's. Mono, played the same on both channels; no audio input. With the cutoff
         at 20,000 Hz and no resonance the filter is out of the way, so a sine at 0 dB with attack,
         decay and release at 0 and sustain at 100 % plays at exactly the note's velocity. A note's
@@ -882,6 +889,11 @@ namespace BuiltInEffects
             juce::dsp::StateVariableTPTFilter<float> filter;
             juce::uint32 age = 0;
             bool held = false;             // its key is up, the sustain pedal holding it
+            bool down = false;             // its key is down
+            double phase2 = 0.0, phase3 = 0.0;
+            double pitch = 0.0;            // the note it sounds now, in semitones, gliding toward note
+            double glideStep = 0.0;        // semitones a sample
+            double filterEnvelope = 0.0;   // 1 at the note's start, decaying to 0
         };
 
         /** The controllers it answers, at their resting values. */
@@ -899,12 +911,22 @@ namespace BuiltInEffects
         void controller (const juce::MidiMessage&);
         void setFilter();
         bool filterOpen() const;
+        bool filterMoves() const;
+        float cutoffHz() const;
         void renderVoices (juce::AudioBuffer<float>&, int from, int count);
-        float oscillate (Voice&, double increment) const;
+        static float oscillate (double& phase, int wave, double increment);
+
+        struct Oscillator
+        {
+            juce::AudioParameterChoice* wave = nullptr;
+            juce::AudioParameterFloat *octave = nullptr, *detune = nullptr, *level = nullptr;
+        };
 
         juce::AudioParameterChoice* wave = nullptr;
         juce::AudioParameterFloat *level = nullptr, *attack = nullptr, *decay = nullptr, *sustain = nullptr, *release = nullptr,
-                                  *cutoff = nullptr, *resonance = nullptr;
+                                  *cutoff = nullptr, *resonance = nullptr, *filterAmount = nullptr, *filterDecay = nullptr,
+                                  *velocityToFilter = nullptr, *glide = nullptr;
+        Oscillator osc2, osc3;
         std::array<Voice, numVoices> voices;
         juce::uint32 counter = 0;
         double rate = 48000.0;

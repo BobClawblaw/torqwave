@@ -85,6 +85,211 @@ namespace
         return n;
     }
 
+
+    void testSynthAdditions (BuiltInEffects::BasicSynthProcessor& synth)
+    {
+        using namespace Instrument;
+        const auto reset = [&synth]
+        {
+            for (auto* p : synth.getParameters())
+                p->setValueNotifyingHost (p->getDefaultValue());
+
+            setBare (synth);
+        };
+
+        // Oscillators 2 and 3: each at its octave, detune and level, beside the first.
+        {
+            reset();
+            setPlain (synth, "osc2Wave", 0);
+            setPlain (synth, "osc2Octave", 1.0f);
+            setPlain (synth, "osc2Level", 50.0f);
+            setPlain (synth, "osc3Wave", 0);
+            setPlain (synth, "osc3Octave", -1.0f);
+            setPlain (synth, "osc3Detune", 50.0f);
+            setPlain (synth, "osc3Level", 25.0f);
+            juce::AudioBuffer<float> out;
+            const auto err = render (synth, together ({ 69 }, 1.0, 1.0, 1.0f), rate, 1, out);
+            const auto first = amplitude (out, 0, 440.0, 0, 48000), second = amplitude (out, 0, 880.0, 0, 48000);
+            const auto third = amplitude (out, 0, 220.0 * std::exp2 (50.0 / 1200.0), 0, 48000), plain220 = amplitude (out, 0, 220.0, 0, 48000);
+            check (err.isEmpty() && std::abs (first - 1.0) < 0.01 && std::abs (second - 0.5) < 0.01 && std::abs (third - 0.25) < 0.01 && plain220 < 0.05,
+                   "synth: oscillator 2 an octave up at 50 % and oscillator 3 an octave and 50 cents down at 25 % sound at those pitches and levels beside the first ("
+                       + juce::String (first, 3) + ", " + juce::String (second, 3) + ", " + juce::String (third, 3) + ")");
+        }
+
+        // The filter envelope opens a low cutoff at the note's start and closes over its decay.
+        {
+            reset();
+            setPlain (synth, "wave", 2);
+            setPlain (synth, "cutoff", 100.0f);
+            juce::AudioBuffer<float> out;
+            render (synth, together ({ 45 }, 1.0, 1.0, 1.0f), rate, 1, out);
+            const auto staticEarly = amplitude (out, 0, 880.0, 0, 4800), staticLate = amplitude (out, 0, 880.0, 24000, 4800);
+            setPlain (synth, "filterEnv", 100.0f);
+            setPlain (synth, "filterDecay", 100.0f);
+            render (synth, together ({ 45 }, 1.0, 1.0, 1.0f), rate, 1, out);
+            const auto early = amplitude (out, 0, 880.0, 0, 4800), late = amplitude (out, 0, 880.0, 24000, 4800);
+            check (early > 10.0 * late && early > 10.0 * staticEarly && std::abs (late - staticLate) < 0.1 * staticLate + 1e-4,
+                   "synth: with the filter envelope at 100 %, a sawtooth's 8th harmonic through a 100 Hz cutoff is "
+                       + juce::String (early / juce::jmax (1e-9, late), 0) + " times as loud at the note's start as half a second on, where it is as without it");
+        }
+
+        // Velocity to filter: a soft note is darker than a loud one, against the same note without it.
+        {
+            reset();
+            setPlain (synth, "wave", 2);
+            setPlain (synth, "cutoff", 2000.0f);
+            const auto brightness = [&synth] (float velocity)
+            {
+                juce::AudioBuffer<float> out;
+                render (synth, together ({ 45 }, 1.0, 1.0, velocity), rate, 1, out);
+                return amplitude (out, 0, 1760.0, 4800, 24000) / amplitude (out, 0, 110.0, 4800, 24000);
+            };
+            const auto softPlain = brightness (0.25f), loudPlain = brightness (1.0f);
+            setPlain (synth, "velocityToFilter", 100.0f);
+            const auto soft = brightness (0.25f), loud = brightness (1.0f);
+            check (std::abs (softPlain - loudPlain) < 1e-3 && std::abs (loud - loudPlain) < 1e-3 && soft < 0.2 * loud,
+                   "synth: velocity to filter makes a soft note darker (its 16th harmonic " + juce::String (soft / loud, 3)
+                       + " of a loud note's against its fundamental), a full-velocity note as without it, and without it velocity sets the level alone");
+        }
+
+        // Glide: a note played while another is held slides there in the glide time, its envelope going on.
+        {
+            reset();
+            setPlain (synth, "attack", 200.0f);
+            setPlain (synth, "glide", 100.0f);
+            auto phrase = together ({ 57 }, 1.0, 1.2, 1.0f);
+            phrase.notes.push_back ({ 69, 0.5, 0.5, 1.0f });
+            juce::AudioBuffer<float> out;
+            const auto err = render (synth, phrase, rate, 1, out);
+            const auto lowAfter = amplitude (out, 0, 220.0, 33600, 4800), highAfter = amplitude (out, 0, 440.0, 33600, 4800);
+            const auto midLow = amplitude (out, 0, 220.0, 24480, 960), midHigh = amplitude (out, 0, 440.0, 24480, 960);
+            const auto kept = out.getMagnitude (0, 24000, 480);
+            reset();
+            setPlain (synth, "attack", 200.0f);
+            render (synth, phrase, rate, 1, out);
+            const auto lowWithout = amplitude (out, 0, 220.0, 33600, 4800);
+            const auto restarted = out.getMagnitude (0, 24000, 480);
+            check (err.isEmpty() && highAfter > 0.95 && lowAfter < 0.02 && midLow < 0.8 && midHigh < 0.8 && kept > 0.95
+                       && lowWithout > 0.95 && restarted > 0.95,
+                   "synth: with a 100 ms glide, A4 played over a held A3 slides to it (neither pitch whole 10 ms in, A4 alone 200 ms on) and its 200 ms attack doesn't start again; "
+                   "without glide both sound");
+        }
+
+        // A synth saved before these existed loads with them off.
+        {
+            reset();
+            setPlain (synth, "osc2Level", 80.0f);
+            setPlain (synth, "glide", 50.0f);
+            juce::XmlElement old ("TORQWAVE_BASIC_SYNTH");
+            old.setAttribute ("version", 1);
+            old.setAttribute ("wave", 3);
+            old.setAttribute ("cutoff", 1200.0);
+            juce::MemoryBlock block;
+            juce::AudioProcessor::copyXmlToBinary (old, block);
+            BuiltInEffects::BasicSynthProcessor fresh;
+            fresh.setStateInformation (block.getData(), (int) block.getSize());
+            check (juce::exactlyEqual (plainOf (fresh, "wave"), 3.0f) && std::abs (plainOf (fresh, "cutoff") - 1200.0f) < 0.01f
+                       && juce::exactlyEqual (plainOf (fresh, "osc2Level"), 0.0f) && juce::exactlyEqual (plainOf (fresh, "osc3Level"), 0.0f)
+                       && juce::exactlyEqual (plainOf (fresh, "filterEnv"), 0.0f) && juce::exactlyEqual (plainOf (fresh, "velocityToFilter"), 0.0f)
+                       && juce::exactlyEqual (plainOf (fresh, "glide"), 0.0f),
+                   "synth: a synth saved before 0.19.3 loads its settings with oscillators 2 and 3, the filter envelope, velocity to filter and glide off");
+        }
+
+        reset();
+    }
+
+    void processInto (juce::AudioPluginInstance& p, juce::AudioBuffer<float>& block, juce::MidiBuffer& midi, juce::AudioBuffer<float>& out, int at)
+    {
+        p.processBlock (block, midi);
+
+        for (int ch = 0; ch < out.getNumChannels(); ++ch)
+            out.copyFrom (ch, at, block, ch, 0, block.getNumSamples());
+    }
+
+    /** A checksum of every sample (FNV-1a over the floats' bits). */
+    juce::uint64 checksum (const juce::AudioBuffer<float>& b)
+    {
+        juce::uint64 h = 14695981039346656037ull;
+
+        for (int ch = 0; ch < b.getNumChannels(); ++ch)
+            for (int i = 0; i < b.getNumSamples(); ++i)
+            {
+                juce::uint32 bits;
+                const auto s = b.getSample (ch, i);
+                std::memcpy (&bits, &s, sizeof bits);
+                h = (h ^ bits) * 1099511628211ull;
+            }
+
+        return h;
+    }
+
+    /** Basic Synth's sound as 0.19.2 made it: three settings (its defaults; a resonant square at
+        800 Hz with a slow envelope; a triangle with its filter swept by CC 74), each playing a
+        chord, a line, a bend, the mod wheel and the sustain pedal, in 100-sample blocks. */
+    juce::uint64 synthSoundChecksum (juce::AudioPluginInstance& synth)
+    {
+        juce::uint64 h = 0;
+
+        for (int setting = 0; setting < 3; ++setting)
+        {
+            for (auto* p : synth.getParameters())
+                p->setValueNotifyingHost (p->getDefaultValue());
+
+            if (setting == 1)
+            {
+                setPlain (synth, "wave", 3);
+                setPlain (synth, "cutoff", 800.0f);
+                setPlain (synth, "resonance", 40.0f);
+                setPlain (synth, "attack", 120.0f);
+                setPlain (synth, "release", 600.0f);
+            }
+            else if (setting == 2)
+            {
+                setPlain (synth, "wave", 1);
+                setPlain (synth, "cutoff", 5000.0f);
+            }
+
+            synth.prepareToPlay (rate, 100);
+            juce::AudioBuffer<float> out (2, 96000), block (2, 100);
+
+            for (int at = 0; at < out.getNumSamples(); at += 100)
+            {
+                juce::MidiBuffer midi;
+                const auto event = [&] (int frame, const juce::MidiMessage& m) { if (frame >= at && frame < at + 100) midi.addEvent (m, frame - at); };
+
+                for (auto note : { 48, 55, 60, 64 })
+                {
+                    event (0, juce::MidiMessage::noteOn (1, note, 0.8f));
+                    event (30000, juce::MidiMessage::noteOff (1, note));
+                }
+
+                for (int step = 0; step < 8; ++step)
+                {
+                    event (36000 + step * 6000, juce::MidiMessage::noteOn (1, 36 + step * 5, (float) (step + 2) / 10.0f));
+                    event (36000 + step * 6000 + 4000, juce::MidiMessage::noteOff (1, 36 + step * 5));
+                }
+
+                event (10000, juce::MidiMessage::pitchWheel (1, 12000));
+                event (20000, juce::MidiMessage::controllerEvent (1, 1, 100));
+                event (40000, juce::MidiMessage::controllerEvent (1, 64, 127));
+                event (60000, juce::MidiMessage::controllerEvent (1, 64, 0));
+
+                if (setting == 2)
+                    for (int k = 0; k < 16; ++k)
+                        event (k * 6000, juce::MidiMessage::controllerEvent (1, 74, 127 - k * 8));
+
+                processInto (synth, block, midi, out, at);
+            }
+
+            h = (h * 31) ^ checksum (out);
+        }
+
+        for (auto* p : synth.getParameters())
+            p->setValueNotifyingHost (p->getDefaultValue());
+
+        return h;
+    }
+
     /** Plays notes on the drums (pitch, second, velocity; each note held 10 ms) for seconds, in blocks of blockSize. */
     juce::AudioBuffer<float> drumsPlay (BuiltInEffects::BasicDrumsProcessor& drums, const std::vector<std::tuple<int, double, float>>& notes,
                                         double seconds, int blockSize = 512)
@@ -297,11 +502,26 @@ void runInstrumentTests (AudioEngine& engine)
     auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (instance.get());
     check (synth != nullptr && error.isEmpty() && synthDescription.isInstrument && synthDescription.numInputChannels == 0
                && synth->acceptsMidi() && ! synth->producesMidi() && synth->getTotalNumInputChannels() == 0 && synth->getTotalNumOutputChannels() == 2
-               && synth->getPluginDescription().isInstrument && synth->getParameters().size() == 8,
-           "instrument: the basic synth is made from its description, is an instrument that takes MIDI, has no audio input and a stereo output, and eight parameters");
+               && synth->getPluginDescription().isInstrument && synth->getParameters().size() == 20,
+           "instrument: the basic synth is made from its description, is an instrument that takes MIDI, has no audio input and a stereo output, and twenty parameters");
 
     if (synth == nullptr)
         return;
+
+    {
+        // Its sound as 0.19.2 made it, bit for bit, whatever was added since (checksums for each processor half,
+        // as their maths libraries round differently).
+        const auto sum = synthSoundChecksum (*synth);
+       #if JUCE_ARM || defined (__aarch64__)
+        constexpr juce::uint64 expected = 0x8330fed2ec4f2d73ull;
+       #else
+        constexpr juce::uint64 expected = 0x62848f0e381ec333ull;
+       #endif
+        check (sum == expected, "instrument: the synth at its 0.19.2 settings sounds as 0.19.2 made it, bit for bit (checksum "
+                                    + juce::String::toHexString ((juce::int64) sum) + ")");
+    }
+
+    testSynthAdditions (*synth);
 
     {
         // Bare, A4 for a second in a second and a half: a sine at exactly the velocity, from the start of its cycle, silent after its hold.

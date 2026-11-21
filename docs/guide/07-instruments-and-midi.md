@@ -35,9 +35,18 @@ The selected instrument track plays whatever comes in live:
 - **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**), and its keys sound even while the session is stopped.
 - **The Piano Roll's keyboard** (see below).
 
-<img src="../screenshots/guide-synth.png" width="430" alt="The Basic Synth window: Presets, Wave, Level, Attack, Decay, Sustain, Release, Cutoff and Resonance">
+<img src="../screenshots/guide-synth.png" width="430" alt="The Basic Synth window: Presets, Wave, Level, Attack, Decay, Sustain, Release, Cutoff and Resonance, and the extras below them">
 
 *The window of Basic Synth, the built-in instrument.*
+
+Besides its first oscillator, its filter and its envelope, Basic Synth has a few extras for basses, stabs and acid lines, each off until you turn it up:
+
+| Setting | What it does |
+|---|---|
+| **Osc 2** and **Osc 3**: Wave, Octave, Detune, Level | Two more oscillators beside the first, each at its own wave, octave (two down to two up), detune (50 cents either way) and level (0 %, off, to 100 %, as loud as the first). Detuned a few cents they thicken a sawtooth; an octave down gives a sub. |
+| **Filter Env** and **Filter Decay** | Opens the filter at the start of each note, by up to six octaves above the Cutoff at 100 %, and closes it again over the decay. With a low Cutoff and a short decay this is a plucked bass or a stab. |
+| **Velocity to Filter** | Softer notes are darker, by up to four octaves at the softest; a note at full velocity plays the Cutoff as set. Accented notes cut through. |
+| **Glide** | A note played while another is still held slides to its pitch in this time, without starting its envelopes again: the acid slide. Write a slide by overlapping the next note. With Glide on, overlapping notes play one at a time. |
 
 Basic Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way), **Mod wheel** (vibrato, up to half a semitone), **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
 

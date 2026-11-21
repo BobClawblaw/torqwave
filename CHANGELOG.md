@@ -4,6 +4,14 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Basic Synth: three oscillators, a filter envelope, velocity to filter and glide** (0.19.3, step 2 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md))
+- Oscillators 2 and 3, each with its own wave, octave (-2 to +2), detune (±50 cents) and level, for detuned stacks and subs (asked for by the user).
+- **Filter Env** (up to six octaves above the cutoff at the note's start) and **Filter Decay**, for plucks, stabs and acid.
+- **Velocity to Filter**: softer notes darker, by up to four octaves; full velocity plays the cutoff as set (the 303's accent).
+- **Glide**: a note played over a held one slides to it in the glide time without restarting its envelopes (the 303's slide); with it on, overlapping notes play one at a time.
+- All four are off by default, so every session and sequence sounds exactly as before, and a synth saved before them loads with them off. Twenty parameters, from eight.
+- Tested (`--instruments`, 6 more checks): the synth at its old settings (its defaults, a resonant square with a slow envelope, a triangle swept by CC 74, each playing a chord, a line, a bend, the mod wheel and the pedal) renders bit for bit as 0.19.2 did, checked by checksum in both the arm64 and the Intel halves; oscillator 2 an octave up at 50 % and 3 an octave and 50 cents down at 25 % sound at exactly those pitches and levels; with the filter envelope at 100 %, a sawtooth's 8th harmonic through a 100 Hz cutoff is 47 times as loud in the note's first 100 ms as half a second on, where it is as without it; with velocity to filter at 100 %, a note at velocity 0.25 has 0.026 of a loud note's 16th harmonic against its fundamental; a 100 ms glide slides A3 to A4 without restarting a 200 ms attack, where without glide both sound; an old synth's state loads with the additions off. The whole suite: 2,245 checks.
+
 **Basic Drums, a built-in drum machine** (0.19.3, step 1 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md))
 - A second built-in instrument, offered after Basic Synth: simple synthesised drums on the General MIDI map (kick 35/36, rim 37, snare 38/40, clap 39, closed, pedal and open hat 42/44/46 with the closed and pedal hats choking the open one, toms 41 to 50, crash 49/57, ride 51/59, cowbell 56, shaker 69/70); other notes are silent. Each sound plays to its end whatever the note's length; velocity sets its level. Level, and Tune and Decay for the kick, snare, hats and toms. Kept basic on purpose: it is for hearing patterns; drum plug-ins play the same notes.
 - Its noise is seeded per hit, so a pattern renders bit-identically twice and at any block size.
