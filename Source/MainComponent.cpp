@@ -864,6 +864,9 @@ public:
             {
                 safe->backgroundJob = nullptr;
                 safe->commands.commandStatusChanged();
+
+                if (auto next = std::exchange (safe->afterBackgroundJob, nullptr))
+                    next();
             }
         });
     }
@@ -4795,10 +4798,19 @@ void MainComponent::bounceTrack()
     if (! juce::isPositiveAndBelow (index, (int) state->tracks.size()) || state->tracks[(size_t) index].isBus)
         return;
 
+    bounceTrackById (state->tracks[(size_t) index].id, multitrack.getTimeSelection());
+}
+
+void MainComponent::bounceTrackById (juce::uint32 trackId, juce::Range<juce::int64> timeRange, std::function<void()> then)
+{
+    const auto state = engine.session.getState();
+    const auto* found = state->findTrack (trackId);
+
+    if (found == nullptr || found->isBus || found->isControl() || backgroundJob != nullptr)
+        return;
+
     // The time range if there is one, otherwise from the start to the track's last clip.
-    const auto& track = state->tracks[(size_t) index];
-    const auto trackId = track.id;
-    const auto timeRange = multitrack.getTimeSelection();
+    const auto& track = *found;
     const auto end = track.clipsEnd();
     const auto range = ! timeRange.isEmpty() ? timeRange : juce::Range<juce::int64> (0, end);
     const auto rate = engine.session.getSampleRate();
@@ -4839,8 +4851,10 @@ void MainComponent::bounceTrack()
 
             return true;
         },
-        [this, audio, error, warnings, file, trackId, range]
+        [this, audio, error, warnings, file, trackId, range, then]
         {
+            afterBackgroundJob = then;
+
             if (error->isNotEmpty())
             {
                 showError ("Bounce Track", *error);
@@ -4882,6 +4896,19 @@ void MainComponent::freezeOrUnfreezeTrack()
         engine.session.apply (std::move (next), "Unfreeze Track");
         return;
     }
+
+    freezeTrackById (trackId);
+}
+
+void MainComponent::freezeTrackById (juce::uint32 trackId, std::function<void()> then)
+{
+    const auto state = engine.session.getState();
+    const auto* found = state->findTrack (trackId);
+
+    if (found == nullptr || found->isBus || found->isControl() || found->isFrozen() || backgroundJob != nullptr)
+        return;
+
+    const auto& track = *found;
 
     // From frame 0, so the frozen audio lines up with the session, to the last clip's end (an
     // audio or a note clip) plus a tail for reverbs, delays and releases to ring out.
@@ -4925,8 +4952,10 @@ void MainComponent::freezeOrUnfreezeTrack()
 
             return true;
         },
-        [this, audio, error, warnings, file, trackId]
+        [this, audio, error, warnings, file, trackId, then]
         {
+            afterBackgroundJob = then;
+
             if (error->isNotEmpty())
             {
                 showError ("Freeze Track", *error);
@@ -14125,14 +14154,10 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
 
         start.instrumentPresets = [] (const juce::PluginDescription& d) { return InstrumentPresets::userStore().getNames (d); };
 
+        // Each chain as it stands, with its plug-ins' parameters read here, on the message thread.
         for (auto& t : aiStartSession->tracks)
-        {
-            const auto& chains = engine.getTrackEffects();
-
-            for (int i = 0; i < chains.getNumSlots (t.id); ++i)
-                if (auto* p = chains.getPlugin (t.id, i); p != nullptr && p != chains.getInstrument (t.id))
-                    start.effects[t.id].add (p->getName());
-        }
+            if (auto chain = Ai::readChain (engine.getTrackEffects(), t.id); ! chain.empty())
+                start.effects[t.id] = std::move (chain);
 
         start.catalogue = pluginCatalogue.get();
         return start;
@@ -14180,6 +14205,16 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
             engine.session.apply (*w.getSession(), "Ask Torq: " + words);
         }
 
+        // Instruments load and chains change; once every load is done, the freezes and bounces
+        // render one after another, so they hear the plan's plug-ins.
+        auto pending = std::make_shared<int> (1);
+        aiRenders = w.getRenders();
+        const auto oneDone = [this, pending]
+        {
+            if (--*pending == 0 && ! aiRenders.empty())
+                runNextAiRender();
+        };
+
         for (auto& load : w.getInstrumentLoads())
         {
             const auto state = load.preset.isNotEmpty() ? InstrumentPresets::userStore().load (load.plugin, load.preset) : std::nullopt;
@@ -14207,40 +14242,25 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
                 slot->createNewChildElement ("STATE")->addTextElement (state->toBase64Encoding());
 
             engine.session.markEffectsChanged();
-            engine.loadTrackEffects ({ { load.trackId, effects } }, [this, name = load.plugin.name] (const juce::String& errors)
+            ++*pending;
+            engine.loadTrackEffects ({ { load.trackId, effects } }, [this, name = load.plugin.name, oneDone] (const juce::String& errors)
             {
                 engine.session.sendChangeMessage();   // the track headers show the instrument
 
                 if (errors.isNotEmpty())
                     showError ("Ask Torq", name + " couldn't be loaded:\n\n" + errors);
+
+                oneDone();
             });
         }
 
-        // Effects go on the end of their tracks' chains, in the plan's order.
-        std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects;
-
-        for (auto& load : w.getEffectLoads())
+        for (auto& change : w.getChainChanges())
         {
-            auto& chain = effects[load.trackId];
-
-            if (chain == nullptr)
-                chain = std::make_shared<juce::XmlElement> ("EFFECTS");
-
-            chain->createNewChildElement ("SLOT")->addChildElement (load.plugin.createXml().release());
+            ++*pending;
+            applyAiChain (change, oneDone);
         }
 
-        if (! effects.empty())
-        {
-            engine.session.markEffectsChanged();
-            engine.loadTrackEffects (std::move (effects), [this] (const juce::String& errors)
-            {
-                engine.session.sendChangeMessage();
-
-                if (errors.isNotEmpty())
-                    showError ("Ask Torq", "Not every effect could be added:\n\n" + errors);
-            });
-        }
-
+        oneDone();
         return {};
     }
 
@@ -14266,6 +14286,44 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
     }
 
     return {};
+}
+
+void MainComponent::applyAiChain (const Ai::SessionTools::ChainChange& change, std::function<void()> done)
+{
+    Ai::applyChainChange (engine, change, [this, then = std::move (done)] (const juce::String& errors)
+    {
+        if (errors.isNotEmpty())
+            showError ("Ask Torq", "Not every change to the track's effects could be made:\n\n" + errors);
+
+        engine.session.sendChangeMessage();
+        then();
+    });
+}
+
+void MainComponent::runNextAiRender()
+{
+    if (aiRenders.empty())
+        return;
+
+    const auto render = aiRenders.front();
+    aiRenders.erase (aiRenders.begin());
+    const auto* track = engine.session.getState()->findTrack (render.trackId);
+    const auto what = juce::String (render.freeze ? "freeze " : "bounce ") + (track != nullptr ? track->name.quoted() : juce::String ("a track"));
+
+    if (track == nullptr || track->clipsEnd() == 0 || (render.freeze && track->isFrozen()) || backgroundJob != nullptr)
+    {
+        showError ("Ask Torq", "Couldn't " + what + (backgroundJob != nullptr ? juce::String (": another job is running") : juce::String (": the track has changed"))
+                                   + (aiRenders.empty() ? juce::String() : ", so the rest of the plan's renders weren't made either") + ".");
+        aiRenders.clear();
+        return;
+    }
+
+    const auto next = [this] { runNextAiRender(); };
+
+    if (render.freeze)
+        freezeTrackById (render.trackId, next);
+    else
+        bounceTrackById (render.trackId, render.range, next);
 }
 
 Settings::Model MainComponent::makeSettingsModel()

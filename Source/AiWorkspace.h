@@ -7,6 +7,9 @@
 #include "AiSession.h"
 #include "AiSequence.h"
 
+class AudioEngine;
+class TrackEffects;
+
 /** Experimental: the tools a language model works Torqwave with, run on a working copy.
 
     The working copy starts as the file (its audio, markers and selection) and the effects rack.
@@ -41,7 +44,7 @@ namespace Ai
             juce::String sessionName;
             std::map<juce::uint32, juce::PluginDescription> instruments;   // the instrument each instrument track plays, by track id
             SessionTools::PresetsOf instrumentPresets;                       // the presets saved for an instrument; none: no presets
-            std::map<juce::uint32, juce::StringArray> effects;              // each track's effects in order (not its instrument), by track id
+            SessionTools::Chains effects;                                   // each track's chain in order, its instrument first, by track id
 
             /** The Sequencer's sequence to write or review in place of a file or session: the
                 sequence tools (AiSequence) and the plug-in look tools, with no audio. */
@@ -76,10 +79,16 @@ namespace Ai
             return sessionTools != nullptr ? sessionTools->getInstrumentLoads() : std::vector<SessionTools::InstrumentLoad>();
         }
 
-        /** The effects the plan adds to tracks once it is applied (not part of its undo step). */
-        std::vector<SessionTools::EffectLoad> getEffectLoads() const
+        /** The track chains the plan changes, once it is applied (not part of its undo step). */
+        std::vector<SessionTools::ChainChange> getChainChanges() const
         {
-            return sessionTools != nullptr ? sessionTools->getEffectLoads() : std::vector<SessionTools::EffectLoad>();
+            return sessionTools != nullptr ? sessionTools->getChainChanges() : std::vector<SessionTools::ChainChange>();
+        }
+
+        /** The tracks the plan freezes or bounces once it is applied, each its own undo step. */
+        std::vector<SessionTools::Render> getRenders() const
+        {
+            return sessionTools != nullptr ? sessionTools->getRenders() : std::vector<SessionTools::Render>();
         }
 
         /** Runs one tool call and returns its result for the model, as JSON text. Never throws:
@@ -188,4 +197,14 @@ namespace Ai
             afterwards; error when the value couldn't be reached. */
         juce::String set (juce::AudioProcessorParameter&, const juce::String& value, juce::String& error);
     }
+
+    /** A track's chain as it stands, for SessionTools: each plug-in by its slot, with its
+        parameters read (on the message thread, as plug-ins expect). */
+    std::vector<SessionTools::Effect> readChain (const TrackEffects&, juce::uint32 trackId);
+
+    /** Makes a plan's chain change on the engine's live chain (message thread): the effects it
+        leaves out are taken off, the new ones loaded, then all are put in its order (an
+        instrument stays first), switched on or off and set. done gets the loads' errors once
+        it is all made, perhaps before this returns. */
+    void applyChainChange (AudioEngine&, const SessionTools::ChainChange&, std::function<void (const juce::String& errors)> done);
 }

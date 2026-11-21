@@ -1,4 +1,5 @@
 #include "AiWorkspace.h"
+#include "AudioEngine.h"
 #include "AudioEdits.h"
 #include "FadeShape.h"
 #include "Loudness.h"
@@ -1529,5 +1530,201 @@ juce::String set (juce::AudioProcessorParameter& p, const juce::String& value, j
 
     return now;
 }
+}
+
+//==============================================================================
+std::vector<SessionTools::Effect> readChain (const TrackEffects& chains, juce::uint32 trackId)
+{
+    std::vector<SessionTools::Effect> chain;
+
+    for (int i = 0; i < chains.getNumSlots (trackId); ++i)
+    {
+        auto* p = chains.getPlugin (trackId, i);
+
+        if (p == nullptr)
+            continue;
+
+        SessionTools::Effect effect;
+        effect.slotId = chains.getSlotId (trackId, i);
+        effect.plugin = p->getPluginDescription();
+        effect.instrument = p == chains.getInstrument (trackId);
+        effect.bypassed = chains.isBypassed (trackId, i);
+        std::map<const juce::AudioProcessorParameter*, juce::String> ids;
+
+        for (auto& [id, parameter] : TrackEffects::parametersById (*p))
+            ids[parameter] = id;
+
+        for (auto* parameter : p->getParameters())
+        {
+            const auto id = ids.find (parameter);
+
+            if (id == ids.end())
+                continue;
+
+            SessionTools::Parameter about;
+            about.id = id->second;
+            about.name = parameter->getName (64);
+            about.value = parameter->getValue();
+            const auto label = parameter->getLabel().trim();
+            const auto reads = [&] (float v)
+            {
+                const auto text = parameter->getText (v, 64).trim();
+                return label.isEmpty() || text.endsWith (label) ? text : text + " " + label;
+            };
+
+            about.text = reads (about.value);
+            about.lowest = reads (0.0f);
+            about.highest = reads (1.0f);
+
+            if (const auto steps = parameter->getNumSteps(); parameter->isDiscrete() && steps > 1 && steps <= 32)
+                for (int step = 0; step < steps; ++step)
+                    about.choices.add (reads ((float) step / (float) (steps - 1)));
+
+            effect.parameters.push_back (std::move (about));
+        }
+
+        chain.push_back (std::move (effect));
+    }
+
+    return chain;
+}
+
+void applyChainChange (AudioEngine& engine, const SessionTools::ChainChange& change, std::function<void (const juce::String&)> done)
+{
+    const auto& chains = engine.getTrackEffects();
+    const auto trackId = change.trackId;
+    std::set<juce::uint32> kept, before;
+
+    for (auto& slot : change.chain)
+        if (slot.slotId != 0)
+            kept.insert (slot.slotId);
+
+    // The effects the plan takes off (never the instrument), from the end so places hold.
+    for (int i = chains.getNumSlots (trackId); --i >= 0;)
+        if (chains.getPlugin (trackId, i) != chains.getInstrument (trackId) && kept.count (chains.getSlotId (trackId, i)) == 0)
+            engine.removeTrackPlugin (trackId, i);
+
+    for (int i = 0; i < chains.getNumSlots (trackId); ++i)
+        before.insert (chains.getSlotId (trackId, i));
+
+    // The ones it adds load at the end, in its order; then everything is put in place and set.
+    auto added = std::make_shared<juce::XmlElement> ("EFFECTS");
+
+    for (auto& slot : change.chain)
+    {
+        if (slot.slotId == 0)
+        {
+            auto* xml = added->createNewChildElement ("SLOT");
+            xml->setAttribute ("bypassed", slot.bypassed);
+            xml->addChildElement (slot.plugin.createXml().release());
+        }
+    }
+
+    const auto arrange = [&engine, change, before, done] (const juce::String& loadErrors)
+    {
+        const auto& fx = engine.getTrackEffects();
+        const auto id = change.trackId;
+        juce::StringArray errors;
+
+        if (loadErrors.isNotEmpty())
+            errors.add (loadErrors);
+
+        // The slots that loaded, in the order they were added; one that didn't is passed over.
+        std::vector<juce::uint32> fresh;
+
+        for (int i = 0; i < fx.getNumSlots (id); ++i)
+            if (before.count (fx.getSlotId (id, i)) == 0)
+                fresh.push_back (fx.getSlotId (id, i));
+
+        std::vector<std::pair<juce::uint32, const SessionTools::Slot*>> order;
+        size_t next = 0;
+
+        for (auto& slot : change.chain)
+        {
+            if (slot.slotId != 0)
+            {
+                if (fx.findSlot (id, slot.slotId) != nullptr)
+                    order.emplace_back (slot.slotId, &slot);
+            }
+            else if (next < fresh.size())
+            {
+                if (auto* p = fx.findSlot (id, fresh[next]); p != nullptr && p->getPluginDescription().isDuplicateOf (slot.plugin))
+                    order.emplace_back (fresh[next++], &slot);
+            }
+        }
+
+        const auto indexOf = [&fx, id] (juce::uint32 slotId)
+        {
+            for (int i = 0; i < fx.getNumSlots (id); ++i)
+                if (fx.getSlotId (id, i) == slotId)
+                    return i;
+
+            return -1;
+        };
+
+        // The instrument stays first, whether the chain names it or the plan loads it.
+        auto place = fx.getInstrument (id) != nullptr ? 1 : 0;
+
+        for (auto& [slotId, slot] : order)
+        {
+            if (slot->instrument)
+                continue;
+
+            if (const auto at = indexOf (slotId); at >= 0 && at != place)
+                engine.moveTrackPlugin (id, at, place);
+
+            ++place;
+        }
+
+        for (auto& [slotId, slot] : order)
+        {
+            const auto at = indexOf (slotId);
+
+            if (! slot->instrument && at >= 0 && fx.isBypassed (id, at) != slot->bypassed)
+                engine.setTrackPluginBypassed (id, at, slot->bypassed);
+
+            auto* plugin = slot->settings.empty() ? nullptr : fx.findSlot (id, slotId);
+
+            if (plugin == nullptr)
+                continue;
+
+            const auto parameters = TrackEffects::parametersById (*plugin);
+
+            for (auto& setting : slot->settings)
+            {
+                const auto p = parameters.find (setting.parameterId);
+
+                if (p == parameters.end())
+                {
+                    errors.add (plugin->getName() + " has no parameter " + setting.parameterId.quoted() + " now.");
+                }
+                else if (setting.value)
+                {
+                    p->second->setValueNotifyingHost (*setting.value);
+                }
+                else
+                {
+                    juce::String error;
+                    Parameters::set (*p->second, setting.text, error);
+
+                    if (error.isNotEmpty())
+                        errors.add (plugin->getName() + ": " + error);
+                }
+            }
+
+            engine.session.markEffectsChanged();
+        }
+
+        done (errors.joinIntoString ("\n"));
+    };
+
+    if (added->getNumChildElements() == 0)
+    {
+        arrange ({});
+        return;
+    }
+
+    engine.session.markEffectsChanged();
+    engine.loadTrackEffects ({ { trackId, added } }, arrange);
 }
 }

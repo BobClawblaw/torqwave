@@ -23,6 +23,7 @@ namespace
     const char* trackParam = R"("track": { "description": "The track, bus or folder: its number from get_session, or its name." })";
     const char* clipParam = R"("clip": { "type": "integer", "description": "The clip's id from list_clips." })";
     const char* sectionParam = R"("section": { "description": "The section's name from get_session." })";
+    const char* effectParam = R"("effect": { "description": "The plug-in in the track's chain: its number among the effects from get_session (from 1), its name, or \"instrument\" for an instrument track's instrument." })";
 
     const char* toolsJson = R"JSON([
   { "name": "get_session", "description": "The session: its length, tempo, markers and regions, and every track, bus and folder in order with its number, kind, folder, volume, pan, mute, solo, output, sends and how many clips it holds and over what time. Call this first.",
@@ -76,12 +77,26 @@ namespace
     "parameters": { "type": "object", "properties": { TRACK, "plugin": { "type": "string" }, "preset": { "type": "string", "description": "A saved preset's name; leave out for the instrument's own start" } }, "required": ["track"] } },
   { "name": "list_instrument_presets", "description": "The presets the user has saved for an instrument (the plug-in by id or name, or the instrument a track plays). Many instruments, drum samplers above all, keep their kits and sounds in their own browsers: those can be chosen here only once the user has saved them with Save Instrument Preset.",
     "parameters": { "type": "object", "properties": { "plugin": { "type": "string" }, TRACK } } },
-  { "name": "set_automation", "description": "Draw a track's or bus's volume or pan automation: points joined by straight lines, held before the first and after the last. Volume points are dB (-60 to +12), pan points -1 (left) to +1 (right). The points replace the parameter's automation; no points remove it, giving the parameter back to the track's setting.",
-    "parameters": { "type": "object", "properties": { TRACK, "parameter": { "type": "string", "enum": ["volume", "pan"] },
+  { "name": "set_automation", "description": "Draw automation of a track's or bus's volume or pan, or of a parameter of one of its effects or its instrument (give effect, and the parameter's name or id from list_effect_parameters): points joined by straight lines, held before the first and after the last. Volume points are dB (-60 to +12), pan points -1 (left) to +1 (right), an effect's parameter 0 to 1 (its whole range; list_effect_parameters says how the ends read). The points replace the parameter's automation; no points remove it, giving the parameter back to its setting. An effect added in this plan can be automated once the plan is applied.",
+    "parameters": { "type": "object", "properties": { TRACK, "parameter": { "type": "string", "description": "volume, pan, or with effect the effect's parameter" }, FXREF,
       "points": { "type": "array", "items": { "type": "object", "properties": { "time": { "type": "number", "description": "seconds" }, "value": { "type": "number" } }, "required": ["time", "value"] } } },
       "required": ["track", "parameter", "points"] } },
-  { "name": "add_track_effect", "description": "Add an effect plug-in, by its id or name from list_plugins, at the end of a track's or bus's effects (after its instrument on an instrument track). It is added when the plan is applied, with the plug-in's default settings; its settings can't be changed here.",
-    "parameters": { "type": "object", "properties": { "plugin": { "type": "string" }, TRACK }, "required": ["plugin", "track"] } },
+  { "name": "add_track_effect", "description": "Add an effect plug-in, by its id or name from list_plugins, to a track's or bus's effects: at the end, or at a place among them (from 1). It is added when the plan is applied, with the plug-in's default settings: its settings and automation can be changed once it is there, in a later request.",
+    "parameters": { "type": "object", "properties": { "plugin": { "type": "string" }, TRACK, "position": { "type": "integer", "description": "Its place among the effects, from 1; leave out for the end." } }, "required": ["plugin", "track"] } },
+  { "name": "remove_track_effect", "description": "Take an effect off a track's or bus's chain, with any automation of its parameters. An instrument track's instrument stays.",
+    "parameters": { "type": "object", "properties": { TRACK, FXREF }, "required": ["track", "effect"] } },
+  { "name": "move_track_effect", "description": "Move an effect to another place in a track's or bus's chain (from 1, among the effects; the instrument stays first). The sound goes through the effects in order.",
+    "parameters": { "type": "object", "properties": { TRACK, FXREF, "to": { "type": "integer" } }, "required": ["track", "effect", "to"] } },
+  { "name": "list_effect_parameters", "description": "The parameters of an effect on a track, or of its instrument: each one's id, name, value (0 to 1) and how it reads, how its lowest and highest values read, and for a parameter of a few steps what each reads. find narrows the list to names containing it.",
+    "parameters": { "type": "object", "properties": { TRACK, FXREF, "find": { "type": "string" } }, "required": ["track", "effect"] } },
+  { "name": "set_track_effect", "description": "Change an effect's or an instrument's settings: switch an effect off (bypass true) or on, and set parameters, each by its name or id from list_effect_parameters, to a value from 0 to 1 or to text as the plug-in reads it (\"-6 dB\", \"Hall\", one of a stepped parameter's choices). Made when the plan is applied, not part of its undo step. A parameter with automation follows its automation instead.",
+    "parameters": { "type": "object", "properties": { TRACK, FXREF, "bypass": { "type": "boolean" },
+      "parameters": { "type": "array", "items": { "type": "object", "properties": { "parameter": { "type": "string" }, "value": { "type": "number" }, "text": { "type": "string" } }, "required": ["parameter"] } } },
+      "required": ["track", "effect"] } },
+  { "name": "freeze_track", "description": "Freeze a track (freeze true, the default): its clips are rendered through its effects and instrument, from the session's start to its last clip's end and a 5 s tail, and it plays that render instead, sparing the computer; its clips and effects can't change until it is unfrozen. Or unfreeze it (freeze false). Freezing renders once the plan is applied, with the rest of the plan in place, as its own undo step.",
+    "parameters": { "type": "object", "properties": { TRACK, "freeze": { "type": "boolean" } }, "required": ["track"] } },
+  { "name": "bounce_track", "description": "Bounce a track: render it as it goes to the mix, through its effects, volume, pan and automation, onto a new track right after it (with its sends, output and folder) and mute it. Over start to end in seconds, or the whole track when left out. It renders once the plan is applied, with the rest of the plan in place, as its own undo step; the new track isn't in this plan.",
+    "parameters": { "type": "object", "properties": { TRACK, "start": { "type": "number" }, "end": { "type": "number" } }, "required": ["track"] } },
  { "name": "add_section", "description": "Add a section (Intro, Verse, Chorus...) to the arranger over a span of the session, in seconds; best on bar lines. Sections may not overlap.",
     "parameters": { "type": "object", "properties": { "name": { "type": "string" }, "start": { "type": "number" }, "end": { "type": "number" } }, "required": ["name", "start", "end"] } },
   { "name": "move_section", "description": "Move a section, with everything on every track in it (clips, notes, automation, markers, and its tempo when it is whole bars), so it starts at a time in seconds in the session as it will be: the gap it leaves closes, and room opens where it goes. With copy, a copy goes there and the section stays (\"double the chorus\": copy it to its own end).",
@@ -110,10 +125,10 @@ namespace Ai
 {
     SessionTools::SessionTools (SessionState s, juce::String name, juce::StringArray& planSteps,
                                 std::map<juce::uint32, juce::PluginDescription> trackInstruments, FindInstrument find, PresetsOf presets,
-                                std::map<juce::uint32, juce::StringArray> trackEffects, FindInstrument findEffectPlugin)
+                                Chains trackChains, FindInstrument findEffectPlugin)
         : state (std::move (s)), sessionName (std::move (name)), steps (planSteps),
           instruments (std::move (trackInstruments)), findInstrument (std::move (find)), presetsOf (std::move (presets)),
-          effects (std::move (trackEffects)), findEffect (std::move (findEffectPlugin))
+          chains (std::move (trackChains)), findEffect (std::move (findEffectPlugin))
     {
     }
 
@@ -128,20 +143,158 @@ namespace Ai
         return kept;
     }
 
-    std::vector<SessionTools::EffectLoad> SessionTools::getEffectLoads() const
+    std::vector<SessionTools::ChainChange> SessionTools::getChainChanges() const
     {
-        std::vector<EffectLoad> kept;
+        std::vector<ChainChange> kept;
 
-        for (auto& l : effectLoads)
-            if (state.findTrack (l.trackId) != nullptr)
-                kept.push_back (l);
+        for (auto& t : state.tracks)
+        {
+            if (const auto p = planned.find (t.id); p != planned.end())
+            {
+                ChainChange change { t.id, {} };
+
+                for (auto& slot : p->second)
+                    change.chain.push_back (slot);
+
+                kept.push_back (std::move (change));
+            }
+        }
 
         return kept;
     }
 
+    std::vector<SessionTools::Render> SessionTools::getRenders() const
+    {
+        std::vector<Render> kept;
+
+        for (auto& r : renders)
+            if (state.findTrack (r.trackId) != nullptr)
+                kept.push_back (r);
+
+        return kept;
+    }
+
+    std::vector<SessionTools::PlannedSlot>& SessionTools::chainOf (juce::uint32 trackId)
+    {
+        if (const auto p = planned.find (trackId); p != planned.end())
+            return p->second;
+
+        return planned[trackId] = viewOf (trackId);
+    }
+
+    std::vector<SessionTools::PlannedSlot> SessionTools::viewOf (juce::uint32 trackId) const
+    {
+        if (const auto p = planned.find (trackId); p != planned.end())
+            return p->second;
+
+        std::vector<PlannedSlot> chain;
+
+        if (const auto c = chains.find (trackId); c != chains.end())
+        {
+            for (auto& e : c->second)
+            {
+                PlannedSlot slot;
+                slot.slotId = e.slotId;
+                slot.plugin = e.plugin;
+                slot.instrument = e.instrument;
+                slot.bypassed = e.bypassed;
+                slot.was = &e;
+                chain.push_back (std::move (slot));
+            }
+        }
+
+        return chain;
+    }
+
+    std::optional<size_t> SessionTools::effectOf (juce::uint32 trackId, const juce::var& which, juce::String& error) const
+    {
+        const auto chain = viewOf (trackId);
+        const auto text = which.toString().trim();
+        const auto& t = *state.findTrack (trackId);
+        std::vector<size_t> effects;
+
+        for (size_t i = 0; i < chain.size(); ++i)
+            if (! chain[i].instrument)
+                effects.push_back (i);
+
+        if (text.isEmpty())
+        {
+            error = "say which effect: its number from get_session, its name, or \"instrument\"";
+            return std::nullopt;
+        }
+
+        if (text.equalsIgnoreCase ("instrument"))
+        {
+            if (! chain.empty() && chain.front().instrument)
+                return (size_t) 0;
+
+            error = t.name.quoted() + " has no instrument loaded" + (t.isInstrument ? juce::String (" yet: one chosen in this plan is set once it is there") : juce::String());
+            return std::nullopt;
+        }
+
+        if (which.isInt() || which.isInt64() || which.isDouble() || text.containsOnly ("0123456789"))
+        {
+            const auto n = text.getIntValue();
+
+            if (text.isNotEmpty() && juce::isPositiveAndNotGreaterThan (n, (int) effects.size()))
+                return effects[(size_t) n - 1];
+
+            error = t.name.quoted() + " has " + (effects.empty() ? juce::String ("no effects") : juce::String ((int) effects.size()) + " effect" + (effects.size() == 1 ? "" : "s"))
+                    + ": there is no effect " + text;
+            return std::nullopt;
+        }
+
+        std::vector<size_t> named;
+
+        for (size_t i = 0; i < chain.size(); ++i)
+            if (chain[i].plugin.name.equalsIgnoreCase (text))
+                named.push_back (i);
+
+        if (named.size() == 1)
+            return named.front();
+
+        error = named.empty() ? t.name.quoted() + " has no effect called " + text.quoted()
+                              : t.name.quoted() + " has " + juce::String ((int) named.size()) + " called " + text.quoted() + ": say which by its number";
+        return std::nullopt;
+    }
+
+    const SessionTools::Parameter* SessionTools::parameterOf (const Effect& e, const juce::String& which, juce::String& error)
+    {
+        const auto wanted = which.trim();
+
+        for (auto& p : e.parameters)
+            if (p.id == wanted)
+                return &p;
+
+        const Parameter* found = nullptr;
+        int count = 0;
+
+        for (auto& p : e.parameters)
+            if (p.name.trim().equalsIgnoreCase (wanted))
+                found = &p, ++count;
+
+        if (count == 1)
+            return found;
+
+        error = count > 1 ? e.plugin.name + " has " + juce::String (count) + " parameters called " + wanted.quoted() + ": give its id from list_effect_parameters"
+                          : e.plugin.name + " has no parameter called " + wanted.quoted() + " (list_effect_parameters lists them)";
+        return nullptr;
+    }
+
+    juce::String SessionTools::chainRefusal (const SessionTrack& t) const
+    {
+        if (t.isControl())
+            return juce::String (t.isFolder ? "a folder" : "a VCA fader") + " has no effects: they go on its tracks or a bus";
+
+        if (t.isFrozen())
+            return t.name.quoted() + " is frozen: its effects can't change until it is unfrozen (freeze_track with freeze false)";
+
+        return {};
+    }
+
     juce::Array<juce::var> SessionTools::toolDefinitions()
     {
-        const auto text = juce::String (toolsJson).replace ("TRACK", trackParam).replace ("CLIP", clipParam).replace ("SECTION", sectionParam);
+        const auto text = juce::String (toolsJson).replace ("TRACK", trackParam).replace ("CLIP", clipParam).replace ("SECTION", sectionParam).replace ("FXREF", effectParam);
         juce::Array<juce::var> tools;
 
         const auto parsed = juce::JSON::parse (text);
@@ -150,7 +303,7 @@ namespace Ai
             for (auto& t : *list)
                 tools.add (object ({ { "type", "function" }, { "function", t } }));
 
-        jassert (tools.size() == 31);
+        jassert (tools.size() == 37);
         return tools;
     }
 
@@ -164,11 +317,15 @@ namespace Ai
                "60 / tempo seconds. Drum instruments mostly follow General MIDI: kick 36, snare 38, clap 39, closed hi-hat 42, "
                "open hi-hat 46, crash 49, ride 51. An instrument's sounds and kits are the presets the user saved for it "
                "(list_instrument_presets); when a request names a sound that isn't among them, say which there are rather than "
-               "guessing. A track's effects: get_session lists them, and add_track_effect adds one at the end "
-               "of the chain with its default settings. What these tools can't do yet: an effect's or instrument's own settings, "
-               "removing or reordering effects, automation of an effect's parameters, bouncing or freezing a track, recording, and changing the audio inside a clip "
-               "(set_clip_effects puts a pitch shift and effects on a clip without changing its audio). Volume and pan automation (set_automation) take over from the track's setting while they have points. Say so when a request needs them, rather "
-               "than doing something else.";
+               "guessing. A track's effects: get_session lists them in order; add_track_effect, remove_track_effect and "
+               "move_track_effect change the chain; list_effect_parameters reads an effect's or instrument's parameters and "
+               "set_track_effect sets them or switches an effect off. Chain changes and settings are made once the plan is "
+               "applied and aren't undone with it, and an effect added in the plan can be set only in a later request. Automation "
+               "(set_automation) of volume, pan or an effect's parameter takes over from the setting while it has points. "
+               "freeze_track and bounce_track render once the plan is applied, after everything else in it. What these tools "
+               "can't do: recording, replacing an instrument, and changing the audio inside a clip (set_clip_effects puts a pitch "
+               "shift and effects on a clip without changing its audio). Say so when a request needs them, rather than doing "
+               "something else.";
     }
 
     std::optional<juce::var> SessionTools::run (const juce::String& tool, const juce::var& args)
@@ -201,6 +358,12 @@ namespace Ai
         else if (tool == "fit_tempo_to_hits") result = fitTempoToHits (args);
         else if (tool == "set_automation") result = setAutomation (args);
         else if (tool == "add_track_effect") result = addTrackEffect (args);
+        else if (tool == "remove_track_effect") result = removeTrackEffect (args);
+        else if (tool == "move_track_effect") result = moveTrackEffect (args);
+        else if (tool == "set_track_effect") result = setTrackEffect (args);
+        else if (tool == "list_effect_parameters") result = listEffectParameters (args);
+        else if (tool == "freeze_track")   result = freezeTrack (args);
+        else if (tool == "bounce_track")   result = bounceTrack (args);
         else if (tool == "add_note_clip")  result = addNoteClip (args);
         else if (tool == "set_instrument") result = setInstrument (args);
         else if (tool == "list_instrument_presets") result = listInstrumentPresets (args);
@@ -348,14 +511,13 @@ namespace Ai
                 o->setProperty ("frozen", true);
 
             {
+                // As the plan leaves it: numbered from 1, as the effect tools name them.
                 juce::StringArray chain;
 
-                if (const auto current = effects.find (t.id); current != effects.end())
-                    chain = current->second;
-
-                for (auto& l : effectLoads)
-                    if (l.trackId == t.id)
-                        chain.add (l.plugin.name + " (when the plan is applied)");
+                for (auto& slot : viewOf (t.id))
+                    if (! slot.instrument)
+                        chain.add (juce::String (chain.size() + 1) + ". " + slot.plugin.name + (slot.bypassed ? " (off)" : "")
+                                   + (slot.slotId == 0 ? " (when the plan is applied)" : ""));
 
                 if (! chain.isEmpty())
                     o->setProperty ("effects", chain.joinIntoString (", "));
@@ -368,8 +530,26 @@ namespace Ai
                     automated.add (juce::String (name) + " (" + juce::String ((int) e->points.size()) + " points, "
                                    + seconds (e->points.front().frame) + " to " + seconds (e->points.back().frame) + " s)");
 
-            if (! t.effectEnvelopes.empty() || t.hasSurroundAutomation())
-                automated.add ("effect or surround parameters");
+            for (auto& e : t.effectEnvelopes)
+            {
+                juce::String what = "a parameter of a plug-in no longer on the track";
+
+                if (const auto c = chains.find (t.id); c != chains.end())
+                    for (auto& slot : c->second)
+                        if (slot.slotId == e.slotId)
+                        {
+                            what = slot.plugin.name + "'s " + e.parameterId.quoted();
+
+                            for (auto& p : slot.parameters)
+                                if (p.id == e.parameterId)
+                                    what = slot.plugin.name + "'s " + p.name.quoted();
+                        }
+
+                automated.add (what + " (" + juce::String ((int) e.envelope.points.size()) + " points)");
+            }
+
+            if (t.hasSurroundAutomation())
+                automated.add ("surround pan");
 
             if (! automated.isEmpty())
                 o->setProperty ("automation", automated.joinIntoString ("; "));
@@ -1305,37 +1485,6 @@ namespace Ai
         return result;
     }
 
-    juce::var SessionTools::addTrackEffect (const juce::var& a)
-    {
-        juce::String error;
-        const auto index = trackOf (a["track"], error);
-
-        if (! index)
-            return refused (error);
-
-        const auto& t = state.tracks[(size_t) *index];
-
-        if (t.isControl())
-            return refused (juce::String (t.isFolder ? "a folder" : "a VCA fader") + " has no effects: add them to its tracks or a bus");
-
-        if (t.isFrozen())
-            return refused (t.name.quoted() + " is frozen: its effects can't change until it is unfrozen");
-
-        if (findEffect == nullptr)
-            return refused ("no plug-ins are known here");
-
-        const auto plugin = findEffect (a["plugin"].toString().trim(), error);
-
-        if (! plugin)
-            return refused (error);
-
-        if (plugin->isInstrument)
-            return refused (plugin->name + " is an instrument: an instrument track's instrument is chosen with set_instrument");
-
-        effectLoads.push_back ({ t.id, *plugin });
-        return done ("Add " + plugin->name + " to " + t.name.quoted() + "'s effects (when the plan is applied)");
-    }
-
     juce::var SessionTools::setAutomation (const juce::var& a)
     {
         juce::String error;
@@ -1345,16 +1494,47 @@ namespace Ai
             return refused (error);
 
         const auto& t = state.tracks[(size_t) *index];
-        const auto which = a["parameter"].toString();
+        const auto which = a["parameter"].toString().trim();
+        const auto onEffect = ! a["effect"].isVoid() && a["effect"].toString().isNotEmpty();
+        AutomationTarget target;
+        juce::String what;
 
-        if (which != "volume" && which != "pan")
-            return refused ("parameter must be volume or pan");
+        if (onEffect)
+        {
+            if (const auto refusal = chainRefusal (t); refusal.isNotEmpty())
+                return refused (refusal);
 
-        if (t.isFolder || (t.isVca && which == "pan"))
-            return refused (juce::String (t.isFolder ? "a folder" : "a VCA fader") + " has no " + which + " to automate");
+            const auto slot = effectOf (t.id, a["effect"], error);
 
-        const auto parameter = which == "volume" ? AutomationParameter::volume : AutomationParameter::pan;
-        const auto range = automationRange (parameter);
+            if (! slot)
+                return refused (error);
+
+            const auto s = viewOf (t.id)[*slot];
+
+            if (s.was == nullptr)
+                return refused (s.plugin.name + " is added in this plan, so its parameters can be automated only once it is there, in a later request");
+
+            const auto* parameter = parameterOf (*s.was, which, error);
+
+            if (parameter == nullptr)
+                return refused (error);
+
+            target = AutomationTarget::effect (s.slotId, parameter->id);
+            what = s.plugin.name + "'s " + parameter->name.quoted();
+        }
+        else
+        {
+            if (which != "volume" && which != "pan")
+                return refused ("parameter must be volume or pan, or give effect with one of its parameters");
+
+            if (t.isFolder || (t.isVca && which == "pan"))
+                return refused (juce::String (t.isFolder ? "a folder" : "a VCA fader") + " has no " + which + " to automate");
+
+            target = which == "volume" ? AutomationParameter::volume : AutomationParameter::pan;
+            what = which;
+        }
+
+        const auto range = automationRange (target.parameter);
         const auto* points = a["points"].getArray();
 
         if (points == nullptr)
@@ -1373,22 +1553,392 @@ namespace Ai
             const auto v = (double) value;
 
             if (! std::isfinite (v) || v < range.getStart() || v > range.getEnd())
-                return refused (which == "volume" ? "volume points must be -60 to +12 dB" : "pan points must be -1 to +1");
+                return refused (onEffect ? "an effect's parameter points must be 0 to 1"
+                                         : which == "volume" ? "volume points must be -60 to +12 dB" : "pan points must be -1 to +1");
 
             e.points.push_back ({ *frame, (float) v });
         }
 
         std::stable_sort (e.points.begin(), e.points.end(), [] (auto& x, auto& y) { return x.frame < y.frame; });
 
-        if (t.envelope (parameter) == e)
-            return refused ("the " + which + " automation is so already");
+        if (t.envelope (target) == e)
+            return refused ("the " + what + " automation is so already");
 
-        if (! SessionEdits::setEnvelope (state, t.id, parameter, std::move (e)))
-            return refused ("the " + which + " automation couldn't be set");
+        if (! SessionEdits::setEnvelope (state, t.id, target, std::move (e)))
+            return refused ("the " + what + " automation couldn't be set");
 
         const auto count = (int) points->size();
-        return done (count == 0 ? "Remove " + t.name.quoted() + "'s " + which + " automation"
-                                : "Automate " + t.name.quoted() + "'s " + which + " with " + juce::String (count) + " point" + (count == 1 ? "" : "s"));
+        return done (count == 0 ? "Remove " + t.name.quoted() + "'s " + what + " automation"
+                                : "Automate " + t.name.quoted() + "'s " + what + " with " + juce::String (count) + " point" + (count == 1 ? "" : "s"));
+    }
+
+    juce::var SessionTools::addTrackEffect (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+
+        if (const auto refusal = chainRefusal (t); refusal.isNotEmpty())
+            return refused (refusal);
+
+        if (findEffect == nullptr)
+            return refused ("no plug-ins are known here");
+
+        const auto plugin = findEffect (a["plugin"].toString().trim(), error);
+
+        if (! plugin)
+            return refused (error);
+
+        if (plugin->isInstrument)
+            return refused (plugin->name + " is an instrument: an instrument track's instrument is chosen with set_instrument");
+
+        auto& chain = chainOf (t.id);
+        const auto first = (int) (! chain.empty() && chain.front().instrument);
+        const auto count = (int) chain.size() - first;
+        auto at = (int) chain.size();
+
+        if (! a["position"].isVoid())
+        {
+            const auto position = (int) a["position"];
+
+            if (! juce::isPositiveAndNotGreaterThan (position, count + 1))
+                return refused ("position must be 1 to " + juce::String (count + 1));
+
+            at = first + position - 1;
+        }
+
+        PlannedSlot slot;
+        slot.plugin = *plugin;
+        chain.insert (chain.begin() + at, slot);
+        return done ("Add " + plugin->name + " to " + t.name.quoted() + "'s effects"
+                     + (at == (int) chain.size() - 1 ? juce::String() : ", as effect " + juce::String (at - first + 1)) + " (when the plan is applied)");
+    }
+
+    juce::var SessionTools::removeTrackEffect (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+
+        if (const auto refusal = chainRefusal (t); refusal.isNotEmpty())
+            return refused (refusal);
+
+        const auto slot = effectOf (t.id, a["effect"], error);
+
+        if (! slot)
+            return refused (error);
+
+        auto& chain = chainOf (t.id);
+
+        if (chain[*slot].instrument)
+            return refused ("an instrument track's instrument stays; only its effects can be taken off");
+
+        const auto removed = chain[*slot];
+        chain.erase (chain.begin() + (std::ptrdiff_t) *slot);
+
+        // Its automation goes with it, rather than staying behind unused.
+        if (removed.slotId != 0)
+        {
+            std::vector<juce::String> automated;
+
+            for (auto& e : t.effectEnvelopes)
+                if (e.slotId == removed.slotId)
+                    automated.push_back (e.parameterId);
+
+            for (auto& id : automated)
+                SessionEdits::setEnvelope (state, t.id, AutomationTarget::effect (removed.slotId, id), {});
+        }
+
+        return done ("Take " + removed.plugin.name + " off " + t.name.quoted() + "'s effects" + (removed.slotId == 0 ? juce::String() : " (when the plan is applied)"));
+    }
+
+    juce::var SessionTools::moveTrackEffect (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+
+        if (const auto refusal = chainRefusal (t); refusal.isNotEmpty())
+            return refused (refusal);
+
+        const auto slot = effectOf (t.id, a["effect"], error);
+
+        if (! slot)
+            return refused (error);
+
+        auto& chain = chainOf (t.id);
+
+        if (chain[*slot].instrument)
+            return refused ("an instrument track's instrument stays first in its chain");
+
+        const auto first = (int) chain.front().instrument;
+        const auto count = (int) chain.size() - first;
+        const auto to = a["to"].isVoid() ? 0 : (int) a["to"];
+
+        if (! juce::isPositiveAndNotGreaterThan (to, count))
+            return refused ("to must be 1 to " + juce::String (count));
+
+        const auto at = (size_t) (first + to - 1);
+
+        if (at == *slot)
+            return refused (chain[*slot].plugin.name + " is effect " + juce::String (to) + " already");
+
+        auto moving = chain[*slot];
+        chain.erase (chain.begin() + (std::ptrdiff_t) *slot);
+        chain.insert (chain.begin() + (std::ptrdiff_t) at, moving);
+        return done ("Move " + moving.plugin.name + " to effect " + juce::String (to) + " of " + t.name.quoted() + "'s (when the plan is applied)");
+    }
+
+    juce::var SessionTools::listEffectParameters (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+
+        if (t.isControl())
+            return refused (chainRefusal (t));
+
+        const auto slot = effectOf (t.id, a["effect"], error);
+
+        if (! slot)
+            return refused (error);
+
+        const auto s = viewOf (t.id)[*slot];
+
+        if (s.was == nullptr)
+            return refused (s.plugin.name + " is added in this plan: its parameters can be read once it is there, in a later request");
+
+        const auto find = a["find"].toString().trim();
+        constexpr int most = 150;
+        juce::Array<juce::var> list;
+        int matching = 0;
+
+        for (auto& p : s.was->parameters)
+        {
+            if (find.isNotEmpty() && ! p.name.containsIgnoreCase (find) && ! p.id.containsIgnoreCase (find))
+                continue;
+
+            if (++matching > most)
+                continue;
+
+            auto* o = new juce::DynamicObject();
+            o->setProperty ("id", p.id);
+            o->setProperty ("name", p.name);
+            o->setProperty ("value", round3 (p.value));
+            o->setProperty ("reads", p.text);
+            o->setProperty ("range", p.lowest + " to " + p.highest);
+
+            if (! p.choices.isEmpty())
+                o->setProperty ("choices", p.choices.joinIntoString (" | "));
+
+            // What the plan sets it to, if anything.
+            for (auto& setting : s.settings)
+                if (setting.parameterId == p.id)
+                    o->setProperty ("planned", setting.value ? juce::var (round3 (*setting.value)) : juce::var (setting.text));
+
+            list.add (juce::var (o));
+        }
+
+        auto result = object ({ { "plugin", s.plugin.name }, { "bypassed", s.bypassed }, { "parameters", list } });
+
+        if (matching > most)
+            result.getDynamicObject()->setProperty ("note", "the first " + juce::String (most) + " of " + juce::String (matching) + "; narrow with find");
+
+        return result;
+    }
+
+    juce::var SessionTools::setTrackEffect (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+
+        if (const auto refusal = chainRefusal (t); refusal.isNotEmpty())
+            return refused (refusal);
+
+        const auto slot = effectOf (t.id, a["effect"], error);
+
+        if (! slot)
+            return refused (error);
+
+        // Checked whole before anything changes, so a refused call leaves the plan as it was.
+        auto changed = viewOf (t.id)[*slot];
+        juce::StringArray what;
+
+        if (! a["bypass"].isVoid())
+        {
+            if (changed.instrument)
+                return refused ("an instrument can't be switched off; mute the track instead");
+
+            const auto bypass = (bool) a["bypass"];
+
+            if (bypass != changed.bypassed)
+                what.add (bypass ? "off" : "on");
+
+            changed.bypassed = bypass;
+        }
+
+        if (const auto* list = a["parameters"].getArray(); list != nullptr && ! list->isEmpty())
+        {
+            if (changed.was == nullptr)
+                return refused (changed.plugin.name + " is added in this plan, so its settings can be changed only once it is there, in a later request");
+
+            for (auto& item : *list)
+            {
+                const auto* p = parameterOf (*changed.was, item["parameter"].toString(), error);
+
+                if (p == nullptr)
+                    return refused (error);
+
+                Setting setting;
+                setting.parameterId = p->id;
+                const auto& value = item["value"];
+                const auto text = item["text"].toString().trim();
+
+                if (value.isDouble() || value.isInt() || value.isInt64())
+                {
+                    const auto v = (double) value;
+
+                    if (! std::isfinite (v) || v < 0.0 || v > 1.0)
+                        return refused (p->name.quoted() + ": a value is 0 to 1 (or give text, as it reads)");
+
+                    setting.value = (float) v;
+                    what.add (p->name.quoted() + " to " + juce::String (round3 (v)));
+                }
+                else if (text.isNotEmpty())
+                {
+                    // A stepped parameter's choice is its value; other text the plug-in reads when it is set.
+                    if (! p->choices.isEmpty())
+                    {
+                        const auto choice = p->choices.indexOf (text, true);
+
+                        if (choice < 0)
+                            return refused (p->name.quoted() + " is one of " + p->choices.joinIntoString (", "));
+
+                        setting.value = p->choices.size() > 1 ? (float) choice / (float) (p->choices.size() - 1) : 0.0f;
+                    }
+                    else
+                    {
+                        setting.text = text;
+                    }
+
+                    what.add (p->name.quoted() + " to " + text.quoted());
+                }
+                else
+                {
+                    return refused (p->name.quoted() + " needs a value (0 to 1) or text");
+                }
+
+                auto& settings = changed.settings;
+                settings.erase (std::remove_if (settings.begin(), settings.end(), [&setting] (const Setting& x) { return x.parameterId == setting.parameterId; }),
+                                settings.end());
+                settings.push_back (setting);
+            }
+        }
+
+        if (what.isEmpty())
+            return refused ("give bypass or parameters to change");
+
+        chainOf (t.id)[*slot] = changed;
+        return done ("Set " + t.name.quoted() + "'s " + changed.plugin.name + ": " + what.joinIntoString (", ") + " (when the plan is applied)");
+    }
+
+    juce::var SessionTools::freezeTrack (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+
+        if (t.isBus || t.isControl())
+            return refused ("only a track can be frozen, not a bus, folder or VCA fader");
+
+        const auto queued = std::find_if (renders.begin(), renders.end(), [&t] (const Render& r) { return r.trackId == t.id && r.freeze; });
+
+        if (! a["freeze"].isVoid() && ! (bool) a["freeze"])
+        {
+            if (queued != renders.end())
+            {
+                renders.erase (queued);
+                steps.removeString ("Freeze " + t.name.quoted() + " (rendered once the plan is applied)");
+                return object ({ { "ok", true }, { "note", "the freeze planned for " + t.name.quoted() + " is taken out of the plan" } });
+            }
+
+            if (! t.isFrozen())
+                return refused (t.name.quoted() + " isn't frozen");
+
+            if (! SessionEdits::unfreezeTrack (state, t.id))
+                return refused (t.name.quoted() + " couldn't be unfrozen");
+
+            return done ("Unfreeze " + t.name.quoted());
+        }
+
+        if (t.isFrozen() || queued != renders.end())
+            return refused (t.name.quoted() + " is frozen already" + juce::String (queued != renders.end() ? " in this plan" : ""));
+
+        if (t.clipsEnd() == 0)
+            return refused (t.name.quoted() + " has no clips to freeze");
+
+        renders.push_back ({ t.id, true, {} });
+        return done ("Freeze " + t.name.quoted() + " (rendered once the plan is applied)");
+    }
+
+    juce::var SessionTools::bounceTrack (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        const auto& t = state.tracks[(size_t) *index];
+
+        if (t.isBus || t.isControl())
+            return refused ("only a track can be bounced, not a bus, folder or VCA fader");
+
+        juce::Range<juce::int64> range;
+
+        if (! a["start"].isVoid() || ! a["end"].isVoid())
+        {
+            const auto start = a["start"].isVoid() ? std::optional<juce::int64> (0) : frameOf (a["start"]);
+            const auto end = a["end"].isVoid() ? std::optional<juce::int64> (t.clipsEnd()) : frameOf (a["end"]);
+
+            if (! start || ! end || *end <= *start)
+                return refused ("start and end are seconds, start before end");
+
+            range = { *start, *end };
+        }
+        else if (t.clipsEnd() == 0)
+        {
+            return refused (t.name.quoted() + " has no clips to bounce");
+        }
+
+        renders.push_back ({ t.id, false, range });
+        return done ("Bounce " + t.name.quoted() + (range.isEmpty() ? juce::String() : " from " + seconds (range.getStart()) + " to " + seconds (range.getEnd()) + " s")
+                     + " onto a new track (rendered once the plan is applied)");
     }
 
     //==============================================================================

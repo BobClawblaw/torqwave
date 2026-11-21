@@ -562,6 +562,20 @@ private:
     void mixDown (const juce::File&, int bitDepth, juce::Range<juce::int64>, std::optional<Delivery::Spec> spec = std::nullopt);
     void bounceTrack();
     void freezeOrUnfreezeTrack();
+
+    /** Bounce Track and Freeze Track on a track by its id: over range (empty for the whole
+        track) for a bounce. then runs once the job is over and gone, the render in the session
+        or its error shown; not if it is cancelled. */
+    void bounceTrackById (juce::uint32 trackId, juce::Range<juce::int64> range, std::function<void()> then = nullptr);
+    void freezeTrackById (juce::uint32 trackId, std::function<void()> then = nullptr);
+
+    /** Ask Torq's plan's chain changes for a track (Ai::SessionTools::getChainChanges), made on
+        the live chain; done runs when its effects are loaded and it is all set. */
+    void applyAiChain (const Ai::SessionTools::ChainChange&, std::function<void()> done);
+
+    /** Runs the next of aiRenders, the plan's freezes and bounces, one after another. */
+    void runNextAiRender();
+
     void duplicateTrack();
     void chooseTrackTemplateToSave();
     void chooseTrackTemplateToAdd();
@@ -756,6 +770,8 @@ private:
     std::unique_ptr<RackRenderJob> renderJob;
     std::unique_ptr<InstrumentRenderJob> instrumentJob;
     std::unique_ptr<BackgroundJob> backgroundJob;
+    std::function<void()> afterBackgroundJob;      // runs once the job is over and gone (a next job can start then)
+    std::vector<Ai::SessionTools::Render> aiRenders;
     std::optional<NoiseReduction::Print> noisePrint;
     juce::File deadMansPedalFile;
 

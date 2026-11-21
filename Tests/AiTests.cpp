@@ -952,7 +952,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 33 && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("fit_tempo_to_hits") && names.contains ("store_scene") && names.contains ("recall_scene") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 39 && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("fit_tempo_to_hits") && names.contains ("store_scene") && names.contains ("recall_scene") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -1014,10 +1014,10 @@ namespace
         const auto added = call ("add_track_effect", R"({"track": "Reverb", "plugin": "Reverb"})");
         const auto synth = call ("add_track_effect", R"({"track": "Drums", "plugin": "Basic Synth"})");
         const auto unknown = call ("add_track_effect", R"({"track": "Drums", "plugin": "Nothing Like It"})");
-        const auto loads = w.getEffectLoads();
-        check ((bool) added["ok"] && ! (bool) synth["ok"] && ! (bool) unknown["ok"] && loads.size() == 1 && loads[0].plugin.name == "Reverb"
-                   && loads[0].trackId == state.tracks[1].id
-                   && call ("get_session", "{}")["tracks"][1]["effects"].toString() == "Reverb (when the plan is applied)",
+        const auto loads = w.getChainChanges();
+        check ((bool) added["ok"] && ! (bool) synth["ok"] && ! (bool) unknown["ok"] && loads.size() == 1 && loads[0].chain.size() == 1
+                   && loads[0].chain[0].plugin.name == "Reverb" && loads[0].chain[0].slotId == 0 && loads[0].trackId == state.tracks[1].id
+                   && call ("get_session", "{}")["tracks"][1]["effects"].toString() == "1. Reverb (when the plan is applied)",
                "Ask Torq sessions: an effect planned for a bus, shown by get_session; an instrument and a plug-in that isn't there refused");
 
         const auto shifted = call ("set_clip_effects", "{\"clip\": " + id + ", \"pitch\": -5, \"add\": \"Reverb\"}");
@@ -1031,6 +1031,216 @@ namespace
         const auto clearedFx = (bool) call ("set_clip_effects", "{\"clip\": " + id + ", \"pitch\": 0, \"clear\": true}")["ok"] && ! state.tracks[0].clips[0].effects.isOn();
         check (withEffects && ! (bool) tooFar["ok"] && ! (bool) instrument["ok"] && ! (bool) nothing["ok"] && clearedFx && state.tracks[0].clips[1].effects.chain.isEmpty(),
                "Ask Torq sessions: set_clip_effects puts a pitch shift and an effect on one clip, shown by list_clips, and takes them off; a pitch past an octave, an instrument and no change refused");
+    }
+
+    void testSessionChains()
+    {
+        // Drums with a clip, a frozen Pad, and a bus whose chain is a compressor with two parameters.
+        SessionState s;
+        s.sampleRate = 48000.0;
+        const auto folder = juce::File::getSpecialLocation (juce::File::tempDirectory);
+        SessionEdits::addClip (s, 0, folder.getChildFile ("drums.wav"), tone (48000.0, 4), 48000);
+        s.tracks[0].name = "Drums";
+        SessionEdits::addClip (s, 1, folder.getChildFile ("pad.wav"), tone (48000.0, 2), 0);
+        s.tracks[1].name = "Pad";
+        SessionEdits::freezeTrack (s, s.tracks[1].id, folder.getChildFile ("pad frozen.wav"), tone (48000.0, 3));
+        auto& bus = s.addBus();
+        bus.name = "Verb Bus";
+        const auto busId = bus.id;
+
+        Ai::SessionTools::Effect compressor;
+        compressor.slotId = 7;
+        compressor.plugin.name = "Compressor";
+        compressor.parameters.push_back ({ "thr", "Threshold", "-20 dB", "-60 dB", "0 dB", 0.5f, {} });
+        compressor.parameters.push_back ({ "mode", "Mode", "Soft", "Soft", "Hard", 0.0f, juce::StringArray { "Soft", "Hard" } });
+
+        Ai::Workspace::Start start;
+        start.session = s;
+        start.sessionName = "Song";
+        start.plugins = BuiltInEffects::getDescriptions();
+        start.effects[busId] = { compressor };
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+        const auto& state = *w.getSession();
+
+        const auto listed = call ("list_effect_parameters", R"({"track": "Verb Bus", "effect": 1})");
+        const auto found = call ("list_effect_parameters", R"({"track": "Verb Bus", "effect": "compressor", "find": "mod"})");
+        const auto none = call ("list_effect_parameters", R"({"track": "Drums", "effect": 1})");
+        check (call ("get_session", "{}")["tracks"][2]["effects"] == juce::var ("1. Compressor") && listed["parameters"].size() == 2
+                   && listed["parameters"][0]["reads"] == juce::var ("-20 dB") && listed["parameters"][0]["range"] == juce::var ("-60 dB to 0 dB")
+                   && found["parameters"].size() == 1 && found["parameters"][0]["choices"] == juce::var ("Soft | Hard") && ! (bool) none["ok"],
+               "Ask Torq chains: get_session numbers a bus's effects, list_effect_parameters reads one's parameters (narrowed by find); a track without effects refused");
+
+        const auto set = call ("set_track_effect", R"({"track": "Verb Bus", "effect": 1, "bypass": true, "parameters": [{"parameter": "Threshold", "value": 0.25}, {"parameter": "mode", "text": "hard"}]})");
+        const auto tooHigh = call ("set_track_effect", R"({"track": "Verb Bus", "effect": 1, "parameters": [{"parameter": "Threshold", "value": 1.5}]})");
+        const auto badChoice = call ("set_track_effect", R"({"track": "Verb Bus", "effect": 1, "parameters": [{"parameter": "Mode", "text": "Medium"}]})");
+        const auto noParameter = call ("set_track_effect", R"({"track": "Verb Bus", "effect": 1, "parameters": [{"parameter": "Ratio", "value": 0.5}]})");
+        const auto planned = w.getChainChanges();
+        const auto settings = planned.size() == 1 ? planned[0].chain[0].settings : std::vector<Ai::SessionTools::Setting>();
+        check ((bool) set["ok"] && ! (bool) tooHigh["ok"] && ! (bool) badChoice["ok"] && badChoice["error"].toString().contains ("Soft, Hard") && ! (bool) noParameter["ok"]
+                   && planned.size() == 1 && planned[0].trackId == busId && planned[0].chain.size() == 1 && planned[0].chain[0].slotId == 7 && planned[0].chain[0].bypassed
+                   && settings.size() == 2 && settings[0].parameterId == "thr" && juce::exactlyEqual (settings[0].value.value_or (-1.0f), 0.25f)
+                   && settings[1].parameterId == "mode" && juce::exactlyEqual (settings[1].value.value_or (-1.0f), 1.0f),
+               "Ask Torq chains: an effect switched off and set by value and by a stepped parameter's choice; a value past 1, a choice it hasn't and a parameter it hasn't refused, leaving the plan as it was");
+
+        const auto added = call ("add_track_effect", R"({"track": "Verb Bus", "plugin": "Reverb", "position": 1})");
+        const auto shown = call ("get_session", "{}")["tracks"][2]["effects"].toString();
+        const auto setNew = call ("set_track_effect", R"({"track": "Verb Bus", "effect": "Reverb", "parameters": [{"parameter": "Mix", "value": 0.5}]})");
+        const auto automateNew = call ("set_automation", R"({"track": "Verb Bus", "effect": "Reverb", "parameter": "Mix", "points": [{"time": 0, "value": 0.5}]})");
+        const auto moved = call ("move_track_effect", R"({"track": "Verb Bus", "effect": "Compressor", "to": 1})");
+        const auto movedTooFar = call ("move_track_effect", R"({"track": "Verb Bus", "effect": "Compressor", "to": 3})");
+        const auto order = w.getChainChanges()[0].chain;
+        check ((bool) added["ok"] && shown == "1. Reverb (when the plan is applied), 2. Compressor (off)" && ! (bool) setNew["ok"] && ! (bool) automateNew["ok"]
+                   && (bool) moved["ok"] && ! (bool) movedTooFar["ok"] && order.size() == 2 && order[0].slotId == 7 && order[1].plugin.name == "Reverb",
+               "Ask Torq chains: an effect added at a place in the chain, listed as planned; its settings and automation wait for a later request; an effect moved, and a place past the end refused");
+
+        const auto automated = call ("set_automation", R"({"track": "Verb Bus", "effect": "Compressor", "parameter": "Threshold", "points": [{"time": 1, "value": 0.2}, {"time": 3, "value": 0.8}]})");
+        const auto outOfRange = call ("set_automation", R"({"track": "Verb Bus", "effect": 1, "parameter": "thr", "points": [{"time": 1, "value": 2}]})");
+        const auto& envelopes = state.tracks[2].effectEnvelopes;
+        const auto drawn = (bool) automated["ok"] && ! (bool) outOfRange["ok"] && envelopes.size() == 1 && envelopes[0].slotId == 7 && envelopes[0].parameterId == "thr"
+                           && envelopes[0].envelope.points.size() == 2 && call ("get_session", "{}")["tracks"][2]["automation"] == juce::var ("Compressor's \"Threshold\" (2 points)");
+        const auto removed = call ("remove_track_effect", R"({"track": "Verb Bus", "effect": 1})");
+        const auto after = w.getChainChanges()[0].chain;
+        check (drawn && (bool) removed["ok"] && envelopes.empty() && after.size() == 1 && after[0].slotId == 0 && after[0].plugin.name == "Reverb",
+               "Ask Torq chains: an effect's parameter automated from 0 to 1 and listed (a value past 1 refused); removing the effect takes its automation with it");
+
+        const auto frozenFx = call ("add_track_effect", R"({"track": "Pad", "plugin": "Reverb"})");
+        const auto freeze = call ("freeze_track", R"({"track": "Drums"})");
+        const auto twice = call ("freeze_track", R"({"track": "Drums", "freeze": true})");
+        const auto busFreeze = call ("freeze_track", R"({"track": "Verb Bus"})");
+        const auto cancel = call ("freeze_track", R"({"track": "Drums", "freeze": false})");
+        const auto unfreeze = call ("freeze_track", R"({"track": "Pad", "freeze": false})");
+        const auto bounce = call ("bounce_track", R"({"track": "Drums", "start": 1, "end": 3})");
+        const auto backwards = call ("bounce_track", R"({"track": "Drums", "start": 3, "end": 1})");
+        const auto padFreeze = call ("freeze_track", R"({"track": "Pad"})");
+        const auto renders = w.getRenders();
+        check (! (bool) frozenFx["ok"] && (bool) freeze["ok"] && ! (bool) twice["ok"] && ! (bool) busFreeze["ok"] && (bool) cancel["ok"]
+                   && (bool) unfreeze["ok"] && ! state.tracks[1].isFrozen() && (bool) bounce["ok"] && ! (bool) backwards["ok"] && (bool) padFreeze["ok"]
+                   && renders.size() == 2 && ! renders[0].freeze && renders[0].trackId == state.tracks[0].id && renders[0].range == juce::Range<juce::int64> (48000, 144000)
+                   && renders[1].freeze && renders[1].trackId == state.tracks[1].id && ! w.getSteps().contains ("Freeze \"Drums\" (rendered once the plan is applied)"),
+               "Ask Torq chains: a frozen track's effects refused; a freeze planned, taken back out and its step with it; a frozen track unfrozen in the plan, then frozen again; a bounce over a range; a bus and a backwards range refused");
+    }
+
+    void testChainOnEngine()
+    {
+        // A bus with a compressor and a reverb on the engine, read, planned and made.
+        AudioEngine engine;
+        SessionState s;
+        s.sampleRate = 48000.0;
+        auto& bus = s.addBus();
+        bus.name = "Verb Bus";
+        const auto busId = bus.id;
+        engine.session.reset (s, {});
+
+        for (auto& name : { "Compressor", "Reverb" })
+        {
+            juce::PluginDescription d;
+
+            for (auto& known : BuiltInEffects::getDescriptions())
+                if (known.name == name)
+                    d = known;
+
+            auto loaded = false;
+            engine.addTrackPlugin (busId, d, [&] (const juce::String&) { loaded = true; });
+            TestUtils::runUntil ([&] { return loaded; }, 5000);
+        }
+
+        const auto chain = Ai::readChain (engine.getTrackEffects(), busId);
+        const Ai::SessionTools::Parameter* threshold = nullptr;
+
+        if (! chain.empty())
+            for (auto& p : chain[0].parameters)
+                if (p.name.containsIgnoreCase ("threshold"))
+                    threshold = &p;
+
+        check (chain.size() == 2 && chain[0].plugin.name == "Compressor" && chain[1].plugin.name == "Reverb" && ! chain[0].instrument
+                   && chain[0].slotId == engine.getTrackEffects().getSlotId (busId, 0) && threshold != nullptr
+                   && threshold->text.isNotEmpty() && threshold->lowest != threshold->highest,
+               "Ask Torq chains: a track's chain read from the engine, each plug-in by its slot with its parameters and how they read");
+
+        if (chain.size() != 2 || threshold == nullptr)
+            return;
+
+        Ai::Workspace::Start start;
+        start.session = s;
+        start.sessionName = "Song";
+        start.plugins = BuiltInEffects::getDescriptions();
+        start.effects[busId] = chain;
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+        const auto calls = (bool) call ("add_track_effect", R"({"track": "Verb Bus", "plugin": "Limiter", "position": 1})")["ok"]
+                           && (bool) call ("remove_track_effect", R"({"track": "Verb Bus", "effect": "Reverb"})")["ok"]
+                           && (bool) call ("set_track_effect", "{\"track\": \"Verb Bus\", \"effect\": \"Compressor\", \"bypass\": true, \"parameters\": [{\"parameter\": \""
+                                                                   + threshold->id + "\", \"text\": \"-24 dB\"}]}")["ok"];
+        const auto changes = w.getChainChanges();
+        auto made = false;
+        juce::String errors;
+
+        if (changes.size() == 1)
+            Ai::applyChainChange (engine, changes[0], [&] (const juce::String& e) { errors = e; made = true; });
+
+        TestUtils::runUntil ([&] { return made; }, 5000);
+        const auto& fx = engine.getTrackEffects();
+        auto* compressor = fx.getNumSlots (busId) == 2 ? fx.getPlugin (busId, 1) : nullptr;
+        auto* set = compressor != nullptr ? TrackEffects::parametersById (*compressor)[threshold->id] : nullptr;
+        check (calls && made && errors.isEmpty() && fx.getNumSlots (busId) == 2 && fx.getPlugin (busId, 0)->getName() == "Limiter"
+                   && compressor != nullptr && fx.getSlotId (busId, 1) == chain[0].slotId && fx.isBypassed (busId, 1) && ! fx.isBypassed (busId, 0)
+                   && set != nullptr && set->getCurrentValueAsText().contains ("-24"),
+               "Ask Torq chains: the plan made on the engine's chain: an effect added first, one taken off, one switched off and set from text");
+        engine.clearTrackEffects();
+
+        // An instrument track: Basic Synth and a compressor; a reverb put first among the effects
+        // and a parameter of the synth set, the synth staying first in the chain.
+        SessionState withSynth;
+        withSynth.sampleRate = 48000.0;
+        auto& keys = withSynth.addTrack();
+        keys.name = "Keys";
+        keys.isInstrument = true;
+        const auto keysId = keys.id;
+        engine.session.reset (withSynth, {});
+
+        for (auto& name : { "Basic Synth", "Compressor" })
+        {
+            juce::PluginDescription d;
+
+            for (auto& known : BuiltInEffects::getDescriptions())
+                if (known.name == name)
+                    d = known;
+
+            auto loaded = false;
+            engine.addTrackPlugin (keysId, d, [&] (const juce::String&) { loaded = true; });
+            TestUtils::runUntil ([&] { return loaded; }, 5000);
+        }
+
+        const auto synthChain = Ai::readChain (engine.getTrackEffects(), keysId);
+        const auto synthReady = synthChain.size() == 2 && synthChain[0].instrument && ! synthChain[0].parameters.empty();
+        Ai::Workspace::Start keysStart;
+        keysStart.session = withSynth;
+        keysStart.plugins = BuiltInEffects::getDescriptions();
+        keysStart.effects[keysId] = synthChain;
+        Ai::Workspace kw (std::move (keysStart));
+        juce::String first;   // a parameter that isn't stepped, so it takes the value as it is
+
+        for (auto& p : synthReady ? synthChain[0].parameters : std::vector<Ai::SessionTools::Parameter>())
+            if (p.choices.isEmpty() && first.isEmpty())
+                first = p.id;
+
+        const auto planned = synthReady && (bool) parse (kw.run ("add_track_effect", R"({"track": "Keys", "plugin": "Reverb", "position": 1})"))["ok"]
+                             && (bool) parse (kw.run ("set_track_effect", "{\"track\": \"Keys\", \"effect\": \"instrument\", \"parameters\": [{\"parameter\": \"" + first + "\", \"value\": 0.75}]}"))["ok"]
+                             && ! (bool) parse (kw.run ("remove_track_effect", R"({"track": "Keys", "effect": "instrument"})"))["ok"]
+                             && parse (kw.run ("get_session", "{}"))["tracks"][0]["effects"] == juce::var ("1. Reverb (when the plan is applied), 2. Compressor");
+        made = false;
+
+        if (const auto keyChanges = kw.getChainChanges(); keyChanges.size() == 1)
+            Ai::applyChainChange (engine, keyChanges[0], [&] (const juce::String& e) { errors = e; made = true; });
+
+        TestUtils::runUntil ([&] { return made; }, 5000);
+        auto* synth = fx.getInstrument (keysId);
+        check (planned && made && errors.isEmpty() && fx.getNumSlots (keysId) == 3 && synth != nullptr && fx.getPlugin (keysId, 0) == synth
+                   && fx.getPlugin (keysId, 1)->getName() == "Reverb" && fx.getPlugin (keysId, 2)->getName() == "Compressor"
+                   && juce::approximatelyEqual (TrackEffects::parametersById (*synth)[first]->getValue(), 0.75f),
+               "Ask Torq chains: on an instrument track an effect goes first among the effects, after the instrument, whose parameter is set; the instrument can't be taken off");
+        engine.clearTrackEffects();
     }
 
     void testInstrumentPresets()
@@ -1629,6 +1839,8 @@ void runAiTests()
     testCatalogueWorker();
     testCatalogueTools();
     testSessionTools();
+    testSessionChains();
+    testChainOnEngine();
     testSessionComp();
     testSessionSections();
     testSessionNotes();
