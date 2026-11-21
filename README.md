@@ -218,7 +218,7 @@ This builds a Release program in `build-release-linux/`, runs the tests with it 
 To check a disk image's app on its own, mount it and point the tests at it:
 
 ```bash
-./build-release/TorqwaveTests_artefacts/Release/TorqwaveTests --app "/Volumes/Torqwave 0.19.0/Torqwave.app/Contents/MacOS/Torqwave"
+./build-release/TorqwaveTests_artefacts/Release/TorqwaveTests --app "/Volumes/Torqwave 0.19.1/Torqwave.app/Contents/MacOS/Torqwave"
 ```
 
 ## Tests
