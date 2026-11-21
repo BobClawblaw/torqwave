@@ -82,15 +82,16 @@ A built-in instrument, **Basic Drums**, that plays the General MIDI drum map wit
 
 ## Step 2: Basic Synth, enough for bass and acid (S)
 
-Three small additions to Basic Synth, each off by default, so every existing session and sequence sounds exactly as before (tested bit for bit):
+Four small additions to Basic Synth, each off by default, so every existing session and sequence sounds exactly as before (tested bit for bit):
 
 - **Filter envelope:** an amount and a decay. This gives the plucked bass, stab and acid sound the presets are written for.
 - **Glide and legato:** with Glide above 0, a note that starts before the last one ends slides to it without restarting its envelope. This is the 303 slide; the acid presets mark a slide by overlapping the next note.
 - **Velocity to filter:** loud notes open the filter further. This is the 303 accent.
+- **Three oscillators** (user, 2026-11-21): oscillators 2 and 3, each with its own wave, octave (-2 to +2), detune (±50 cents) and level, off (level at -inf) by default. Stacked and detuned they make the fat bass, stab and lead sounds; an octave down makes a sub.
 
-No second oscillator, no noise and no LFO beyond the mod wheel. Those belong to the user's own plug-ins.
+No noise and no LFO beyond the mod wheel. Those belong to the user's own plug-ins.
 
-**Tests:** at the old defaults, renders are bit-identical to 0.19.2. The filter envelope's decay shows in the spectrum. A legato note keeps its envelope and glides in the time set. Velocity changes the brightness only when it's switched on.
+**Tests:** at the old defaults, renders are bit-identical to 0.19.2. The filter envelope's decay shows in the spectrum. A legato note keeps its envelope and glides in the time set. Velocity changes the brightness only when it's switched on. Oscillators 2 and 3 add their partials at their octave and detune, and at their default levels add nothing.
 
 ## Step 3: the Presets section (M)
 
