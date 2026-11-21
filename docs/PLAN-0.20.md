@@ -1,5 +1,7 @@
 # 0.20 plan: the sequencer and the sequence library
 
+Done: every step below was built and shipped in 0.19.0.
+
 0.20 adds a sequencer to Torqwave: a library of MIDI parts, each with the instrument that plays it, to preview, edit, and drop into a session at its tempo. You build up drums, bass, pads, arps, harmony, melodies and effects as you work, then pull parts out of the library to try musical ideas and put a new song together quickly.
 
 Each piece below has:
@@ -50,7 +52,7 @@ Sequences/
 
 On disk it is the same tree, by default under `~/Music/Torqwave/Sequences/`, as plain files to copy, back up and share.
 
-## Step 1: the format, the library browser, saving and dropping (M)
+## Step 1: the format, the library browser, saving and dropping (M) — done
 
 - **`SequenceFile`:** writes and reads `.tqseq`; turns a note clip in a session into beats (through the session's tempo map, from where the clip starts) and back into a note clip at any frame of any session (through that session's map).
 - **`SequenceLibrary`:** the folder, its fixed roles and sub-roles (made when missing), and a scan of the `.tqseq` files under it, each with its name, role, path, key, bars and tags.
@@ -62,7 +64,7 @@ On disk it is the same tree, by default under `~/Music/Torqwave/Sequences/`, as 
   - from Finder too: a `.tqseq` file dropped on the session does the same.
 - **Tests:** a clip saved and read back keeps every note, lane and loop exactly in beats; one written at 90 BPM and dropped into a 140 BPM session lands on the same beats, and through a tempo change too; the voice comes back with its instrument and effects, without sends or automation; the scan finds the roles, sub-roles and the user's folders, and skips files that are not sequences; a drop on an instrument track adds notes only.
 
-## Step 2: preview (M)
+## Step 2: preview (M) — done
 
 - Click a sequence to hear it with its own instrument at the session's tempo; while the session plays, it starts on the next bar, so it is heard in context.
 - It is rendered on a thread of its own, through its voice, in a session of its own at that tempo, so it sounds as a drop would, and the renders are kept (the last eight) so going back to a sequence doesn't render it again. Up and Down move through the list while it plays.
