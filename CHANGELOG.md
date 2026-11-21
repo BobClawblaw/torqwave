@@ -4,6 +4,15 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+## Released
+
+**Release 0.19.1: crossfades in a session**
+- `Torqwave-0.19.1.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.19.1-windows-x64-setup.exe` and `Torqwave-0.19.1-windows-x64.zip`) and the Linux tarball (`Torqwave-0.19.1-linux-x86_64.tar.gz`), each built by its workflow from the release's tag.
+- Crossfades between overlapping clips on a track, as the first three steps of [docs/PLAN-CROSSFADES.md](docs/PLAN-CROSSFADES.md) built them: Crossfade Selected Clips (Shift-X), crossfades drawn, dragged and shaped on the lane, and the crossfade editor. Steps 4 (default crossfade settings) and 5 (Ask Torq) are still to come.
+- Fades now meet exactly: a fade-in is one step further along than before, so a matched pair of fades adds up to full level at every sample. Sessions sound a hair different where a clip fades in (each fade-in sample is one step louder); session files are unchanged.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app universal (arm64 and x86_64) at the release's code, signed it, and the whole suite (2,224 checks) passed in each half, the Intel one under Rosetta, with the signed app as the plug-in scan worker. Not run on an Intel Mac itself. The crossfade editor was looked at in the app on a session; its auditions were not heard, as the Mac's audio interface was not answering at the time.
+- Not checked on Windows or Linux by hand for this release: the workflows build both packages without running the tests.
+
 **Crossfades in a session, step 3: the crossfade editor**
 - **Edit Crossfade...** (a crossfade's right-click menu, Multitrack > Editing and Recording, or a double-click on a crossfade, which no longer opens the clip in place there) opens a window for one crossfade, or every crossfade whose clips are selected (else those in the time selection). It draws both clips' sound across the crossfade (out above, in below), both curves and their sum as a dashed line, and says the level at the middle in gain and in power.
 - It sets the length (ms), each side's shape, Symmetric, Equal Gain and Equal Power, and presets: four factory ones (Short 10 ms equal gain, Dialogue 40 ms equal power, Music 200 ms equal power, Long 2 s S-curve) and the user's, saved like effect presets. Every change reaches every crossfade it holds at once, and all of them are one undo step (Edit Crossfade); Cancel puts them back, Done or the close button keeps them.
@@ -23,8 +32,6 @@ Each milestone as it was built, newest first, with what the tests measured on th
 - **Fades meet exactly:** a session clip's fade in now starts one step above silence (the first frame of a 480-frame fade is at 1/480 of full level, not 0), as the editor's Crossfade Loop already did. The two sides of a crossfade used to sum to one step short of full level throughout, a dip of 0.02 dB for 10 ms at 48 kHz; matched pairs now sum to 1 (S-curve, linear, Fast Start out with Slow Start in) or to 1 in power (Equal Power). Every fade in plays one frame's step differently from before.
 - Tested (`--crossfades`, 37 checks): a file split in two and crossfaded into itself over 480 frames plays the file to within 6e-8 with S-curve, linear and Fast/Slow Start pairs, and after the crossfade is removed the two clips play bit for bit as before it; the gains of S-curve and linear pairs sum to 1 within 1.2e-7 at every frame, and equal power within 2.4e-7 in power; two unrelated noises crossfaded with equal power over 2 s are 0.003 dB from either side's level. Lengths keep the join (an odd length too), a move keeps the length and stops where the clips' audio and their own fades allow, 4,800 frames asked for with 100 frames of audio past one clip's end give 200 frames centred on the join, locked clips are left alone, and a session file reads back the crossfade's frames and shapes with nothing new in it. Crossfade Selected Clips was run on the multitrack view with three clips selected: two crossfades, one undo.
 - Not tried by hand: Shift-X in the running app.
-
-## Released
 
 **Release 0.19.0: sound design in the session, working to picture, the Sequencer and the Idea Board**
 - `Torqwave-0.19.0.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.19.0-windows-x64-setup.exe` and `Torqwave-0.19.0-windows-x64.zip`) and the Linux tarball (`Torqwave-0.19.0-linux-x86_64.tar.gz`), each built by its workflow from the release's tag.
