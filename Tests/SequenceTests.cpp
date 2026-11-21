@@ -4,6 +4,7 @@
 #include "../Source/SequencerView.h"
 #include "../Source/NoteEditor.h"
 #include "../Source/IdeaBoard.h"
+#include "../Source/IdeaBoardView.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/TrackEffects.h"
@@ -817,6 +818,8 @@ void runSequenceTests (AudioEngine& engine)
         check (IdeaBoardLauncher::nextBar (map, 0, 0) == 0 && IdeaBoardLauncher::nextBar (map, 30000, 4096) == bar
                    && IdeaBoardLauncher::nextBar (map, bar - 100, 4096) == 2 * bar && IdeaBoardLauncher::nextBar (map, bar, 0) == bar,
                "idea board: the next bar from 0 is 0; from 30000 (with the launch margin) it is 96000 at 120 BPM; from 100 frames before a bar it is the bar after; on a bar line with no margin, that bar");
+        check (IdeaBoardView::lengthText (1.0) == "1 bar" && IdeaBoardView::lengthText (2.0) == "2 bars" && IdeaBoardView::lengthText (1.5) == "1.50 bars",
+               "idea board: a cell reads 1 bar, 2 bars or 1.50 bars");
 
         // Sequences: drums of a bar, a bass of two bars, a pad of a bar and a half with a voice of its own.
         juce::PluginDescription synth;

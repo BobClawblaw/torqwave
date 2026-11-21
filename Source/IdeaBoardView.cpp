@@ -349,6 +349,12 @@ juce::Rectangle<int> IdeaBoardView::cellBounds (int part, int scene) const
     return { area.getX() + partWidth + scene * w, area.getY() + headerHeight + part * h, w, h };
 }
 
+juce::String IdeaBoardView::lengthText (double bars)
+{
+    const auto whole = juce::exactlyEqual (bars, std::round (bars));
+    return juce::String (bars, whole ? 0 : 2) + (juce::exactlyEqual (bars, 1.0) ? " bar" : " bars");
+}
+
 IdeaBoard::Cell IdeaBoardView::cellAt (juce::Point<int> p) const
 {
     for (int part = -1; part < board.parts.size(); ++part)
@@ -414,7 +420,7 @@ void IdeaBoardView::paint (juce::Graphics& g)
             g.setFont (12.0f);
             const auto bars = sequences.count ({ p, k }) > 0 ? sequences.at ({ p, k }).bars() : 0.0;
             const auto text = f == juce::File() ? juce::String ("Drop a sequence")
-                                                : f.getFileNameWithoutExtension() + (bars > 0.0 ? "  " + juce::String (bars, bars == std::round (bars) ? 0 : 2) + " bars" : juce::String());
+                                                : f.getFileNameWithoutExtension() + (bars > 0.0 ? "  " + lengthText (bars) : juce::String());
             g.drawFittedText (text + (state == IdeaBoardLauncher::State::queued ? "\n(next bar)" : juce::String()), cell.reduced (6, 2), juce::Justification::centredLeft, 2);
         }
     }

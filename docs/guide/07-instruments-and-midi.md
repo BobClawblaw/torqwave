@@ -73,7 +73,7 @@ Notes sound as you put them in, click them or drag them. The **grid** choice div
 
 **Ch** sets the MIDI channel the clip's notes and lanes go out on, 1 to 16, for an instrument that plays a different sound on each channel.
 
-![The Piano Roll under the multitrack view, showing the Lead clip's 12 notes, with the Grid, Velocity and Lane controls along its top](../screenshots/guide-pianoroll.png)
+![The Piano Roll under the multitrack view, showing the Lead clip's 12 notes in bars and beats, with the Drums and Tools buttons and the Grid, Velocity and Lane controls along its top](../screenshots/guide-pianoroll.png)
 
 *The Lead clip's notes in the Piano Roll. Clip Properties, at the right, shows the clip's name, start and length.*
 
@@ -268,6 +268,8 @@ A **pack** is a folder of sequences and kits zipped into one file (`.tqpack`) to
 **Open one.** Click **Import...** and choose **Pack...**, then choose a `.tqpack` file (an ordinary `.zip` of sequences works too). Or drag a pack from the Finder onto any folder in the library. Each sequence goes into the folder of its own role and sub-role (a sequence filed under Drums > Kick goes to Drums > Kick, whatever folder it was packed from), each kit into Kits, and a sequence with no role, or a role Torqwave doesn't know, into the Inbox. A name already used there gets a number (Groove 2). Anything in the pack that is not a sequence or a kit is skipped. The panel then selects the first one opened and says how many came in.
 
 ## The Sequencer
+
+![The Sequencer workspace: the Sequence Library on the left with a hook selected, the Sequencer showing the Lead Hook's notes over three bars with its Basic Synth voice on the right, and the Idea Board below with the Chorus scene playing on four parts](../screenshots/guide-sequencer.png)
 
 The Sequencer is a window for one sequence from the library, open by itself to write, hear and save. Show it with **Window > Sequencer**, right-click a sequence in the Sequence Library and choose **Edit in Sequencer**, or drag a sequence onto it from the library or the Finder. The **Sequencer** workspace (Window > Workspaces) puts it in front of the editor with the Sequence Library on its left and the [Idea Board](#the-idea-board) under it.
 

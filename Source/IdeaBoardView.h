@@ -38,6 +38,9 @@ public:
     void clickPart (int part);
     void stopAll();
 
+    /** A cell's length as it is shown: "1 bar", "2 bars", "1.50 bars". */
+    static juce::String lengthText (double bars);
+
     /** The cell under a point ({ -1, -1 } for none), and a cell's bounds. */
     IdeaBoard::Cell cellAt (juce::Point<int>) const;
     juce::Rectangle<int> cellBounds (int part, int scene) const;

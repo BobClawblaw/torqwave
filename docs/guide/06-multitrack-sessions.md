@@ -6,7 +6,7 @@ A session lays audio files out as clips on tracks, mixes them through buses and 
 
 Switch between the editor and the session with the **Editor | Multitrack** switch at the top left, or **View > Multitrack Session** (Cmd-4). The **Multitrack** workspace (Window > Workspace > Multitrack) puts the mixer underneath, the clip panels beside the lanes, and the Track Inspector and [Sequence Library](07-instruments-and-midi.md#the-sequence-library) as tabs on the left.
 
-![A multitrack session with three audio tracks, an instrument track, a reverb bus and the mixer](../screenshots/multitrack.png)
+![A multitrack session counted in bars and beats: the arranger's Intro, Verse and Chorus sections over three audio tracks and an instrument track, the selected clip in the info line, Track Inspector and Clip Properties, and the mixer with its reverb bus and Master](../screenshots/multitrack.png)
 
 ## Start a session
 

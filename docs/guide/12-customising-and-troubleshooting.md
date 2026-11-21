@@ -24,7 +24,7 @@
 
 Each change takes effect at once, and the menus' own switches stay in step with it.
 
-<img src="../screenshots/guide-settings.png" width="780" alt="The Settings window on its Look page: Theme, Accent, Waveform colour, Time format and Editor shows">
+<img src="../screenshots/guide-settings.png" width="860" alt="The Settings window on its Look page: Theme, Accent, Waveform colour, Time format and Editor shows">
 
 ### Themes
 
