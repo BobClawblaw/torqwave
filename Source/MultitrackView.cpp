@@ -5648,6 +5648,21 @@ std::optional<std::pair<SessionEdits::Crossfade, MultitrackView::Drag>> Multitra
     return std::nullopt;
 }
 
+std::vector<SessionEdits::Crossfade> MultitrackView::selectedCrossfades() const
+{
+    std::vector<SessionEdits::Crossfade> chosen;
+
+    for (int t = 0; t < (int) shown().tracks.size(); ++t)
+        for (const auto& x : SessionEdits::crossfadesOn (shown(), t))
+            if (isClipSelected (x.out) && isClipSelected (x.in))
+                chosen.push_back (x);
+
+    if (chosen.empty() && ! timeSelection.isEmpty())
+        chosen = SessionEdits::crossfadesIn (shown(), timeSelection.getStart(), timeSelection.getEnd());
+
+    return chosen;
+}
+
 juce::PopupMenu MultitrackView::crossfadeMenu (const SessionEdits::Crossfade& x)
 {
     juce::PopupMenu menu;
@@ -5668,6 +5683,20 @@ juce::PopupMenu MultitrackView::crossfadeMenu (const SessionEdits::Crossfade& x)
         };
     };
 
+    menu.addItem ("Edit Crossfade...", true, false, [safe, x]
+    {
+        if (safe != nullptr && safe->onEditCrossfades != nullptr)
+        {
+            // With both its clips among those selected, the other selected crossfades come too.
+            auto chosen = safe->selectedCrossfades();
+
+            if (std::none_of (chosen.begin(), chosen.end(), [&x] (const auto& c) { return c.out == x.out && c.in == x.in; }))
+                chosen = { x };
+
+            safe->onEditCrossfades (chosen);
+        }
+    });
+    menu.addSeparator();
     using SessionEdits::equalGainShape, SessionEdits::equalPowerShape;
     menu.addItem ("Equal Gain (S-Curve)", true, outShape == equalGainShape && inShape == equalGainShape, shapes (equalGainShape, equalGainShape));
     menu.addItem ("Equal Power", true, outShape == equalPowerShape && inShape == equalPowerShape, shapes (equalPowerShape, equalPowerShape));
@@ -7857,6 +7886,13 @@ void MultitrackView::mouseDoubleClick (const juce::MouseEvent& e)
     if (const auto hit = noteClipAt (p); hit.has_value() && ! clipAt (p).has_value() && onOpenNotes != nullptr)
     {
         onOpenNotes (shown().tracks[(size_t) hit->first].noteClips[(size_t) hit->second].id);
+        return;
+    }
+
+    // A crossfade opens in the crossfade editor; the rest of a clip, in place in the editor.
+    if (const auto xf = crossfadeDragAt (p); xf.has_value() && onEditCrossfades != nullptr)
+    {
+        onEditCrossfades ({ xf->first });
         return;
     }
 

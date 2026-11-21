@@ -43,6 +43,7 @@ public:
         or its menu's Edit in Place), its Clip Effects window, the selected clips combined into
         one sound, and a clip's sound filed in the Sound Library. */
     std::function<void (juce::uint32 clipId)> onEditClip, onClipEffects, onAddToLibrary;
+    std::function<void (std::vector<SessionEdits::Crossfade>)> onEditCrossfades;   // to open in the crossfade editor
     std::function<void (const std::vector<juce::uint32>& clipIds)> onCombineClips;
     std::function<void (const juce::StringArray& files, int track, juce::int64 frame)> onFilesDropped;
 
@@ -384,6 +385,10 @@ public:
     /** A crossfade's right-click menu: Equal Gain, Equal Power, each side's shape, and Remove
         Crossfade, each one undo step. */
     juce::PopupMenu crossfadeMenu (const SessionEdits::Crossfade&);
+
+    /** The crossfades Edit Crossfade... opens: those whose two clips are both selected, else
+        those in the time selection. */
+    std::vector<SessionEdits::Crossfade> selectedCrossfades() const;
 
     /** Groups the selected clips, so a click on one selects them all (to move or delete them
         together), or breaks up the groups they are in. Each is one undo step. */

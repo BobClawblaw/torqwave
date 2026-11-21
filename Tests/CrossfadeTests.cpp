@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "../Source/AudioEngine.h"
 #include "../Source/AudioFileIO.h"
+#include "../Source/CrossfadePanel.h"
 #include "../Source/MultitrackView.h"
 #include "../Source/SessionMixer.h"
 #include "TestUtils.h"
@@ -458,6 +459,155 @@ namespace
     }
 }
 
+namespace
+{
+    /** The crossfade editor: its changes reach every crossfade it holds as one undo step, Cancel
+        puts them back, presets, Symmetric and the matched pairs, what it says about the level, its
+        auditions, and how it is opened. */
+    void testEditor (AudioEngine& engine)
+    {
+        // Two joins on one track: three parts of one recording.
+        auto h = halves (noise (96000, 13));
+        auto& t = h.s.tracks[0];
+        t.clips[1].length = 48000;
+        t.clips.push_back (clipOf (h.s, h.audio, 72000, 72000, 24000));
+        const auto third = t.clips[2].id;
+        SessionEdits::crossfadeClips (h.s, h.out, h.in, 480);
+        SessionEdits::crossfadeClips (h.s, h.in, third, 480);
+        engine.session.reset (h.s, {});
+        const auto both = SessionEdits::crossfadesOn (*engine.session.getState(), 0);
+        const auto folder = juce::File::createTempFile ("tqxfpresets");
+        EffectPresets::Store store (folder);
+        const auto history = [&] { return engine.session.getHistory().size(); };
+
+        {
+            CrossfadePanel panel (engine, both, store);
+            const auto start = history();
+            const auto lengths = [&] { std::vector<juce::int64> v; for (auto& x : panel.getCrossfades()) v.push_back (x.length()); return v; };
+
+            check (panel.setLengthMs (50.0) && lengths() == std::vector<juce::int64> { 2400, 2400 } && engine.session.getUndoDescription() == "Edit Crossfade",
+                   "crossfade editor: a length reaches both crossfades it holds, as an Edit Crossfade step");
+            panel.setLengthMs (100.0);
+            panel.setSymmetric (true);
+            panel.setOutShape (FadeShape::linear);
+            const auto state = engine.session.getState();
+            check (lengths() == std::vector<juce::int64> { 4800, 4800 } && history() == start + 1
+                       && clip (*state, h.in).fadeInShape == FadeShape::linear && clip (*state, h.in).fadeOutShape == FadeShape::linear
+                       && clip (*state, third).fadeInShape == FadeShape::linear,
+                   "crossfade editor: with Symmetric, the out side's shape sets the in side too; every change stays one undo step");
+
+            panel.setSymmetric (false);
+            panel.setInShape (FadeShape::slow);
+            check (clip (*engine.session.getState(), h.out).fadeOutShape == FadeShape::linear && clip (*engine.session.getState(), h.in).fadeInShape == FadeShape::slow,
+                   "crossfade editor: without Symmetric, one side alone");
+
+            // What it says about the level at the middle.
+            panel.setShapes (SessionEdits::equalGainShape, SessionEdits::equalGainShape);
+            const auto gain = panel.middleLevelsDb();
+            panel.setShapes (SessionEdits::equalPowerShape, SessionEdits::equalPowerShape);
+            const auto power = panel.middleLevelsDb();
+            std::cout << "    at the middle, S-curve: " << gain.first << " dB in gain, " << gain.second << " in power; equal power: "
+                      << power.first << " in gain, " << power.second << " in power" << std::endl;
+            check (std::abs (gain.first) < 0.01f && std::abs (gain.second + 3.01f) < 0.05f && std::abs (power.second) < 0.01f && std::abs (power.first - 3.01f) < 0.05f
+                       && panel.getSummary().contains ("in gain"),
+                   "crossfade editor: S-curve both sides is 0 dB in gain at the middle and -3 in power; equal power the other way round");
+
+            // Presets: a factory one, one of the user's.
+            check (panel.applyValues (EffectPresets::factory (CrossfadePanel::presetKey)[2].values) && lengths() == std::vector<juce::int64> { 9600, 9600 }
+                       && clip (*engine.session.getState(), h.out).fadeOutShape == FadeShape::equalPower,
+                   "crossfade editor: the Music factory preset makes them 200 ms, equal power");
+            panel.setLengthMs (25.0);
+            store.save (CrossfadePanel::presetKey, "Mine", panel.currentValues());
+            panel.setLengthMs (300.0);
+            check (panel.applyValues (*store.load (CrossfadePanel::presetKey, "Mine")) && lengths() == std::vector<juce::int64> { 1200, 1200 },
+                   "crossfade editor: a preset saved from it gives the same crossfade back");
+
+            // Auditions: what they render is what the session plays there, of those clips alone.
+            panel.setPreRollMs (100.0);
+            panel.setPostRollMs (50.0);
+            const auto bothSides = panel.renderAudition (CrossfadePanel::Side::both);
+            const auto first = panel.getCrossfades().front();
+            juce::AudioBuffer<float> played (2, bothSides.getNumSamples());
+            SessionMixer::Buffers scratch;
+            auto onlyTwo = *engine.session.getState();
+            onlyTwo.tracks[0].clips.erase (std::remove_if (onlyTwo.tracks[0].clips.begin(), onlyTwo.tracks[0].clips.end(),
+                                                           [&] (const SessionClip& c) { return c.id == third; }), onlyTwo.tracks[0].clips.end());
+            SessionMixer::render (onlyTwo, first.start - 4800, played, 0, played.getNumSamples(), scratch);
+            auto worst = 0.0f;
+
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < played.getNumSamples(); ++i)
+                    worst = juce::jmax (worst, std::abs (played.getSample (ch, i) - bothSides.getSample (ch, i)));
+
+            const auto outOnly = panel.renderAudition (CrossfadePanel::Side::out), inOnly = panel.renderAudition (CrossfadePanel::Side::in);
+            auto summed = 0.0f;
+
+            for (int i = 0; i < outOnly.getNumSamples(); ++i)
+                summed = juce::jmax (summed, std::abs (outOnly.getSample (0, i) + inOnly.getSample (0, i) - bothSides.getSample (0, i)));
+
+            check (bothSides.getNumSamples() == 4800 + 1200 + 2400 && worst == 0.0f && summed < 1.0e-6f
+                       && outOnly.getSample (0, 4800 + 1200 + 100) == 0.0f && inOnly.getSample (0, 100) == 0.0f,
+                   "crossfade editor: Play Crossfade renders the pre-roll, the crossfade and the post-roll as the session plays them, and Play Out and Play In each side alone");
+            check (panel.audition (CrossfadePanel::Side::both), "crossfade editor: an audition goes to the player");
+            engine.auditionFile ({});
+
+            panel.setBounds (0, 0, CrossfadePanel::width, CrossfadePanel::height);
+            panel.createComponentSnapshot (panel.getLocalBounds());   // paints the waves and curves
+
+            // Cancel: everything back as it was when it opened, in one undo.
+            auto closed = false;
+            panel.onClose = [&] { closed = true; };
+            panel.cancel();
+            const auto back = SessionEdits::crossfadesOn (*engine.session.getState(), 0);
+            check (closed && history() == start + 1 && engine.session.getPosition() == start - 1 && back.size() == 2 && back[0].length() == 480
+                       && clip (*engine.session.getState(), h.out).fadeOutShape == FadeShape::sCurve,
+                   "crossfade editor: Cancel puts the crossfades back as they were and closes it");
+        }
+
+        // Done keeps the changes; a second panel's changes are a step of their own.
+        {
+            CrossfadePanel panel (engine, { both[0] }, store);
+            panel.setLengthMs (20.0);
+            panel.done();
+        }
+        {
+            CrossfadePanel panel (engine, { both[0] }, store);
+            panel.setLengthMs (30.0);
+            panel.done();
+        }
+
+        engine.session.undo();
+        check (SessionEdits::crossfadesOn (*engine.session.getState(), 0)[0].length() == 960
+                   && SessionEdits::crossfadesOn (*engine.session.getState(), 0)[1].length() == 480,
+               "crossfade editor: Done keeps the change to the one crossfade it held, and two openings are two undo steps");
+        folder.deleteRecursively();
+
+        // Opening it: a double-click on a crossfade, Edit Crossfade... in its menu (with the other
+        // selected crossfades), and the selection.
+        MultitrackView view (engine);
+        view.setBounds (0, 0, 1400, 500);
+        view.setSnapping (false);
+        view.zoomToRange ({ 18000, 30000 });
+        settle();
+        std::vector<SessionEdits::Crossfade> opened;
+        juce::uint32 openedInPlace = 0;
+        view.onEditCrossfades = [&] (std::vector<SessionEdits::Crossfade> c) { opened = std::move (c); };
+        view.onEditClip = [&] (juce::uint32 id) { openedInPlace = id; };
+        const auto now = SessionEdits::crossfadesOn (*engine.session.getState(), 0);
+        const auto b = view.crossfadeBounds (now[0]);
+        view.mouseDoubleClick (mouse (view, b.getCentre(), b.getCentre()));
+        view.mouseDoubleClick (mouse (view, { b.getX() - 60, b.getCentreY() }, { b.getX() - 60, b.getCentreY() }));
+        check (opened.size() == 1 && opened[0].out == h.out && openedInPlace == h.out,
+               "crossfade editor: a double-click on a crossfade opens it, elsewhere on a clip the clip in place");
+
+        view.selectAllClips();
+        opened.clear();
+        check (view.selectedCrossfades().size() == 2 && runItem (view.crossfadeMenu (now[0]), "Edit Crossfade...") && opened.size() == 2,
+               "crossfade editor: Edit Crossfade... with the clips selected opens every selected crossfade");
+        engine.session.reset (SessionState(), {});
+    }
+}
+
 void runCrossfadeTests (AudioEngine& engine)
 {
     testCrossfadeClips();
@@ -465,4 +615,5 @@ void runCrossfadeTests (AudioEngine& engine)
     testLevels();
     testFilesAndView (engine);
     testLane (engine);
+    testEditor (engine);
 }

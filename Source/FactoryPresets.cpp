@@ -365,6 +365,13 @@ namespace
             { "Subtle", { { "key", 0.0 }, { "scale", 0.0 }, { "speed", 120.0 }, { "strength", 50.0 } } },
             { "Tight", { { "key", 0.0 }, { "scale", 0.0 }, { "speed", 10.0 }, { "strength", 100.0 } } },
             { "Hard (robotic)", { { "key", 0.0 }, { "scale", 0.0 }, { "speed", 0.0 }, { "strength", 100.0 } } } };
+        // The crossfade editor: its length, and each side's shape as a place in FadeShapes::all
+        // (0 S-curve, 1 linear, 2 equal power).
+        t["torqwave:crossfade"] = {
+            { "Short (10 ms, equal gain)", { { "ms", 10.0 }, { "out", 0.0 }, { "in", 0.0 } } },
+            { "Dialogue (40 ms, equal power)", { { "ms", 40.0 }, { "out", 2.0 }, { "in", 2.0 } } },
+            { "Music (200 ms, equal power)", { { "ms", 200.0 }, { "out", 2.0 }, { "in", 2.0 } } },
+            { "Long (2 s, S-curve)", { { "ms", 2000.0 }, { "out", 0.0 }, { "in", 0.0 } } } };
         t["torqwave:crossfade-loop"] = {
             { "Tight (10 ms)", { { "ms", 10.0 } } }, { "Smooth (50 ms)", { { "ms", 50.0 } } }, { "Long (250 ms)", { { "ms", 250.0 } } } };
 

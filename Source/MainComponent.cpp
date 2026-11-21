@@ -48,6 +48,7 @@
 #include "Video.h"
 #include "Picture.h"
 #include "FitTempoPanel.h"
+#include "CrossfadePanel.h"
 #include "Project.h"
 #include "GuideView.h"
 
@@ -203,7 +204,7 @@ namespace
         cmdTimeSmpte23976, cmdSessionTimecode, cmdFindCuts, cmdMarkHit, cmdFitTempoToHits,
         cmdStoreScene, cmdSaveChannelStrip, cmdApplyChannelStrip,
         cmdShowSequenceLibrary, cmdAddToSequenceLibrary, cmdShowSequencer, cmdShowIdeaBoard,
-        cmdCrossfadeSelected,
+        cmdCrossfadeSelected, cmdEditCrossfade,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -1110,6 +1111,7 @@ MainComponent::MainComponent()
     multitrack.onOpenInEditor = [this] (const juce::File& f) { openFile (f); };
     multitrack.onEditClip = [this] (juce::uint32 clipId) { editClipInPlace (clipId); };
     multitrack.onClipEffects = [this] (juce::uint32 clipId) { showClipEffects (clipId); };
+    multitrack.onEditCrossfades = [this] (std::vector<SessionEdits::Crossfade> chosen) { showCrossfadeEditor (std::move (chosen)); };
     multitrack.onCombineClips = [this] (const std::vector<juce::uint32>& clipIds) { combineClips (clipIds); };
     multitrack.onAddToLibrary = [this] (juce::uint32 clipId) { askToAddToLibrary (clipId); };
     engine.session.ensureMaster();   // every session has a master track
@@ -2436,6 +2438,8 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
         case cmdCrossfadeSelected: info.setInfo ("Crossfade Selected Clips", "Crossfade the selected clips that touch or overlap on a track, reaching into the audio past their ends", "Multitrack", 0);
                             info.addDefaultKeypress ('x', juce::ModifierKeys::shiftModifier);
                             info.setActive (multitrackMode && multitrack.getSelectedClips().size() >= 2); break;
+        case cmdEditCrossfade: info.setInfo ("Edit Crossfade...", "Open the crossfades between the selected clips (or in the time selection) in the crossfade editor", "Multitrack", 0);
+                            info.setActive (multitrackMode && ! multitrack.selectedCrossfades().empty()); break;
         case cmdLayerClips: info.setInfo ("Layer Overlapping Clips", "Where clips overlap on a track, hear the one on top rather than both (crossfades still sound both)", "Multitrack", 0);
                             info.setTicked (multitrack.isLayeringClips()); info.setActive (multitrackMode && ! isRecording()); break;
         case cmdClipToFront: info.setInfo ("Bring Clip to Front", "Put the selected clips on top of the clips they overlap", "Multitrack", 0);
@@ -3263,6 +3267,7 @@ bool MainComponent::perform (const InvocationInfo& info)
             if (const auto why = multitrack.crossfadeSelectedClips (0.010); why.isNotEmpty())
                 showError ("Crossfade Selected Clips", why);
             break;
+        case cmdEditCrossfade: showCrossfadeEditor (multitrack.selectedCrossfades()); break;
         case cmdLayerClips: multitrack.setLayeringClips (! multitrack.isLayeringClips()); commands.commandStatusChanged(); break;
         case cmdClipToFront: multitrack.restackSelectedClips (true); break;
         case cmdClipToBack: multitrack.restackSelectedClips (false); break;
@@ -3529,7 +3534,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
                                 0, cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement });
             group ("Notes", { cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes });
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
-            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdCrossfadeSelected, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes, cmdCaptureMidi });
+            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdCrossfadeSelected, cmdEditCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes, cmdCaptureMidi });
             group ("Automation", { cmdWriteAutomation, 0, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite });
             {
                 // Mixer scenes: store one, or recall one of the session's.
@@ -5226,6 +5231,48 @@ void MainComponent::showClipEffects (juce::uint32 clipId)
     window->setResizable (true, false);
     window->centreWithSize (window->getWidth(), window->getHeight());
     clipEffectsWindow.reset (window);
+    window->setVisible (true);
+    window->toFront (true);
+}
+
+void MainComponent::showCrossfadeEditor (std::vector<SessionEdits::Crossfade> chosen)
+{
+    if (chosen.empty())
+        return;
+
+    struct Window final : public juce::DocumentWindow
+    {
+        explicit Window (CrossfadePanel& p)
+            : DocumentWindow ("Crossfade", Theme::surface, DocumentWindow::closeButton), panel (p) {}
+
+        void closeButtonPressed() override   { panel.done(); }
+        CrossfadePanel& panel;
+    };
+
+    // One open at a time: the one open is done with (its changes kept) and goes.
+    if (crossfadeWindow != nullptr)
+        if (auto* open = dynamic_cast<CrossfadePanel*> (crossfadeWindow->getContentComponent()))
+        {
+            open->onClose = nullptr;
+            open->done();
+        }
+
+    auto* panel = new CrossfadePanel (engine, std::move (chosen));
+    auto* window = new Window (*panel);
+
+    // Done or Cancel close it, after the click that did so has finished.
+    panel->onClose = [safe = juce::Component::SafePointer<MainComponent> (this), window]
+    {
+        juce::MessageManager::callAsync ([safe, window]
+        {
+            if (safe != nullptr && safe->crossfadeWindow.get() == window)
+                safe->crossfadeWindow = nullptr;
+        });
+    };
+    window->setUsingNativeTitleBar (true);
+    window->setContentOwned (panel, true);
+    window->centreWithSize (window->getWidth(), window->getHeight());
+    crossfadeWindow.reset (window);
     window->setVisible (true);
     window->toFront (true);
 }

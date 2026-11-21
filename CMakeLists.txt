@@ -296,6 +296,7 @@ target_sources(Torqwave PRIVATE
     Source/TempoFollow.cpp
     Source/ClipEffects.cpp
     Source/ClipEffectsPanel.cpp
+    Source/CrossfadePanel.cpp
     Source/SoundDesign.cpp
     Source/Picture.cpp
     Source/FitTempoPanel.cpp
@@ -589,6 +590,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/TempoFollow.cpp
     Source/ClipEffects.cpp
     Source/ClipEffectsPanel.cpp
+    Source/CrossfadePanel.cpp
     Source/SoundDesign.cpp
     Source/Picture.cpp
     Source/FitTempoPanel.cpp

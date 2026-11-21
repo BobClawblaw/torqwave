@@ -587,6 +587,7 @@ private:
     void saveClipEdit (std::function<void (bool saved)> done);   // the linked file in the editor, back into its clip
     void backToClip();                              // from a linked file to its clip in the session
     void showClipEffects (juce::uint32 clipId);
+    void showCrossfadeEditor (std::vector<SessionEdits::Crossfade>);   // a window of its own, replacing one open
     void combineClips (const std::vector<juce::uint32>& clipIds);
     void askToAddToLibrary (juce::uint32 clipId);
 
@@ -923,6 +924,7 @@ private:
     std::unique_ptr<TempoFollow::Renderer> tempoRenderer;   // stretches clips that follow the tempo, in the background
     std::unique_ptr<ClipEffects::Renderer> clipEffectsRenderer;   // renders clips' effects, in the background
     std::unique_ptr<juce::DocumentWindow> clipEffectsWindow;     // a clip's Clip Effects, when open
+    std::unique_ptr<juce::DocumentWindow> crossfadeWindow;       // the crossfade editor, when open
     void transportFromController (ControlSurface::Transport);
     void addMidiLearnMenu (juce::PopupMenu&, juce::uint32 trackId);
     void startMidiLearn (const MidiBinding::Target&, const juce::String& what);

@@ -51,13 +51,13 @@ Its **join** is the middle of the overlap. Its **length** is the overlap's lengt
 - **Double-click** it to open the editor (step 3). Over a crossfade this takes the place of Edit in Place, which still opens on the rest of the clip. Until step 3, a double-click there still opens the clip in place.
 - Tested: the tests' mouse drags an edge and the middle and gets the frames step 1 gives; a right-click shape lands on both clips; a double-click over a crossfade opens the editor, and elsewhere on the clip opens the clip in place. Not driven by the tests: the look of the region and its pointers.
 
-## Step 3: the crossfade editor (M)
+## Step 3: the crossfade editor (M) — done
 
 - A window (**Edit Crossfade...**, or a double-click) for one crossfade, or for every crossfade in the selection at once.
 - It draws both clips' waveforms across the overlap with both curves over them, and the sum (gain, or power) as a line, so a dip or bump in level shows.
 - Its controls: the **length** (ms, frames, or beats with bars and beats on), each side's **shape**, **Equal Gain** and **Equal Power**, and **Symmetric** (both sides take the shape you set on one).
 - **Presets:** the factory ones (Short 10 ms equal gain, Dialogue 40 ms equal power, Music 200 ms equal power, Long 2 s S-curve) and your own, saved and recalled by name like the effect presets.
-- **Audition:** **Play Out** (the outgoing clip alone, through the crossfade), **Play In** (the incoming one alone), and **Play Crossfade**, each with a **pre-roll** and **post-roll** in ms. It plays through the track's effects and the session's mix, and changes made while it plays are heard at once.
+- **Audition:** **Play Out** (the outgoing clip alone, through the crossfade), **Play In** (the incoming one alone), and **Play Crossfade**, each with a **pre-roll** and **post-roll** in ms. As built, an audition renders the clips as their track plays them (gain, fades, volume and pan) before its effects, and plays that as a file is auditioned; a change made while it plays is heard on the next press.
 - Changes apply as you make them, as one undo step when the window closes, and Cancel puts the crossfade back.
 - Tested: the editor's controls, driven by the tests, set what step 1's edits set; a preset saved and recalled gives the same crossfade; the audition renders exactly what the session plays over that range (worst difference reported); with several crossfades selected, one change reaches them all. Not driven by the tests: the waveform drawing and audition on a real device.
 
