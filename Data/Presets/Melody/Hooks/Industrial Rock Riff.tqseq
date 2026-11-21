@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Industrial Rock Riff" role="Melody" subRole="Hooks" key="A minor" tags="Phrygian,Chromatic" note="An 8th riff with the flat second and flat fifth" style="Industrial/Industrial rock" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <NOTES>
+    <N p="57" s="0" l="192" v="0.755906"/>
+    <N p="57" s="480" l="192" v="0.755906"/>
+    <N p="58" s="960" l="192" v="0.755906"/>
+    <N p="57" s="1440" l="192" v="0.755906"/>
+    <N p="63" s="1920" l="192" v="0.755906"/>
+    <N p="62" s="2400" l="192" v="0.755906"/>
+    <N p="60" s="2880" l="192" v="0.755906"/>
+    <N p="57" s="3360" l="192" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Saw" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>255.VMjLgXO....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBH2Elck0iHxHBHrUlckwVOhzRL13BLh.RXzQWXisVOhHiKvHBHjU1XgkWOhHCLv3BLh.xb0MGcgkla8HhMv3BLh.hbkwVYgMWY8HRLx.iKvHBHiUGcuYlY8HRMv.CLt.iHfHWYy8lag41Xk0iHwTiKvHBHuM2XxbUX1UVOhHiHf71biICQkQWctUVOhDiLt.iHf71biICSkYWYr0iH4.iKvHBHuM2XybUX1UVOhHiHf71biMCQkQWctUVOhzRLx3BLh.xayM1LLUlckwVOhjCLt.iHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

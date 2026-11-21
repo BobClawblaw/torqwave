@@ -2754,7 +2754,7 @@ float BasicDrumsProcessor::next (Sound sound, Hit& h)
             const auto tune = semis (hatTune->get());
             const auto decay = (sound == Sound::openHat ? 0.28 : sound == Sound::pedalHat ? 0.025 : 0.045) * decayOf (hatDecay);
             const auto raw = 0.6f * metal (tune) + 0.4f * noise (h);
-            s = 0.8f * highPass (raw, 7000.0 * tune) * (float) std::exp (-t / decay);
+            s = 1.8f * highPass (raw, 7000.0 * tune) * (float) std::exp (-t / decay);
             length = decay * 7.0;
             break;
         }
@@ -2768,24 +2768,24 @@ float BasicDrumsProcessor::next (Sound sound, Hit& h)
             break;
         }
         case Sound::crash:
-            s = 0.5f * highPass (0.5f * metal (1.3) + 0.5f * noise (h), 5000.0) * (float) std::exp (-t / 0.9);
+            s = 0.8f * highPass (0.5f * metal (1.3) + 0.5f * noise (h), 5000.0) * (float) std::exp (-t / 0.9);
             length = 5.0;
             break;
         case Sound::ride:
-            s = 0.35f * highPass (metal (1.6) + 0.15f * noise (h), 4000.0) * (float) std::exp (-t / 0.7);
+            s = 0.8f * highPass (metal (1.6) + 0.15f * noise (h), 4000.0) * (float) std::exp (-t / 0.7);
             length = 4.0;
             break;
         case Sound::cowbell:
         {
             const auto square = [&h, this] (size_t i, double hz) { const auto v = h.metal[i] < 0.5 ? 1.0f : -1.0f; h.metal[i] = std::fmod (h.metal[i] + hz / rate, 1.0); return v; };
-            s = 0.4f * bandPass (0.5f * (square (0, 540.0) + square (1, 800.0)), 2600.0) * (float) std::exp (-t / 0.09);
+            s = 0.7f * bandPass (0.5f * (square (0, 540.0) + square (1, 800.0)), 2600.0) * (float) std::exp (-t / 0.09);
             length = 0.6;
             break;
         }
         case Sound::shaker:
         {
             const auto env = t < 0.006 ? t / 0.006 : std::exp (-(t - 0.006) / 0.045);
-            s = 0.5f * highPass (noise (h), 6000.0) * (float) env;
+            s = 0.9f * highPass (noise (h), 6000.0) * (float) env;
             length = 0.35;
             break;
         }

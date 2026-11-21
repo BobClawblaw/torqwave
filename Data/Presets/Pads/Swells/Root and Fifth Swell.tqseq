@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Root and Fifth Swell" role="Pads" subRole="Swells" key="A minor" tags="" note="A and E swelling up over four bars" style="Techno/Dark" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="45" s="0" l="3800" v="0.566929"/>
+    <N p="52" s="0" l="3800" v="0.566929"/>
+    <N p="45" s="3840" l="3800" v="0.566929"/>
+    <N p="52" s="3840" l="3800" v="0.566929"/>
+    <N p="45" s="7680" l="3800" v="0.566929"/>
+    <N p="52" s="7680" l="3800" v="0.566929"/>
+    <N p="45" s="11520" l="3800" v="0.566929"/>
+    <N p="52" s="11520" l="3800" v="0.566929"/>
+  </NOTES>
+  <LANE controller="11">
+    <P t="0" v="0.000000"/>
+    <P t="1920" v="0.125000"/>
+    <P t="3840" v="0.250000"/>
+    <P t="5760" v="0.375000"/>
+    <P t="7680" v="0.500000"/>
+    <P t="9600" v="0.625000"/>
+    <P t="11520" v="0.750000"/>
+    <P t="13440" v="0.875000"/>
+    <P t="15360" v="1.000000"/>
+  </LANE>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Pad" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>257.VMjLgfO....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBH2Elck0iHxHBHrUlckwVOhzRL33BLh.RXzQWXisVOhfCLv3BLh.BYkMVX40iHw.CLv3BLh.xb0MGcgkla8HBNv3BLh.hbkwVYgMWY8HRL0.CLt.iHfLVcz8lYl0iHwfCLv3BLh.hbkM2atElaiUVOhDCLt.iHf71biIyUgYWY8HhLh.xayMlLDUFc04VY8HRNt.iHf71biICSkYWYr0iH3.iKvHBHuM2XybUX1UVOhDiHf71biMySiQWX1UVOhzRLt.iHf71biMCSkYWYr0iH0.iKvHxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

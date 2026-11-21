@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Rumble Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A low A drone with the filter breathing every bar" style="Techno/Hard" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="33" s="0" l="15320" v="0.708661"/>
+  </NOTES>
+  <LANE controller="74">
+    <P t="0" v="0.350000"/>
+    <P t="1920" v="0.600000"/>
+    <P t="3840" v="0.350000"/>
+    <P t="5760" v="0.600000"/>
+    <P t="7680" v="0.350000"/>
+    <P t="9600" v="0.600000"/>
+    <P t="11520" v="0.350000"/>
+    <P t="13440" v="0.600000"/>
+    <P t="15360" v="0.350000"/>
+  </LANE>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Drone" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>228.VMjLgrM....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBH2Elck0iHxHBHrUlckwVOhzRL13BLh.RXzQWXisVOhHCLv.iKvHBHjU1XgkWOhDCLv.iKvHBHyU2bzEVZt0iHw.CLt.iHfHWYrUVXyUVOhLCLv.iKvHBHiUGcuYlY8HxMv.iKvHBHxU1bu4VXtMVY8HxL03BLh.xayMlLWElck0iHxHBHuM2Xx7zXzElck0iHsDiKvHBHuM2XxPTYzUmak0iH13BLh.xayMlLLUlckwVOhbCLt.iHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

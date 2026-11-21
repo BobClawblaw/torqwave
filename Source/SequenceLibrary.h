@@ -28,6 +28,24 @@ public:
     /** The folder defaultFolder gives from now on (none: the standard one), as Settings sets it. */
     static void setChosenFolder (const juce::File&);
 
+    /** Factory presets: sequences and kits that ship inside the app, read-only, shown in the
+        library under Presets. They are unpacked from the app into a folder of their own, one for
+        each set of presets the app has shipped, so a later version replaces them without
+        touching the user's library. Their ratings and favourite marks are kept beside them, in
+        factoryRatingsFile, not in their files. */
+    static constexpr const char* factoryName = "Presets";
+    static juce::File factoryFolder();
+    static void setFactoryFolder (const juce::File&);   // for tests; none goes back to the app's own
+    static bool isFactory (const juce::File&);
+    static juce::File factoryRatingsFile();
+
+    /** Unpacks a zip of presets into `into` when they aren't there yet, their files made
+        read-only, and removes any other set beside it. Returns an error, or empty. */
+    static juce::String unpackPresets (const void* zip, size_t size, const juce::File& into);
+
+    /** Unpacks the presets the app ships into factoryFolder when needed. Returns an error, or empty. */
+    static juce::String unpackFactoryPresets();
+
     explicit SequenceLibrary (juce::File folder = defaultFolder());
 
     const juce::File& getFolder() const noexcept   { return folder; }
@@ -86,6 +104,7 @@ public:
         int rating = 0;               // 0 to 5
         bool favourite = false;
         juce::int64 added = 0;        // ms since 1970
+        bool factory = false;         // a factory preset
     };
 
     /** Every sequence and kit under the folder, sorted by path and then name. Files that are
@@ -109,7 +128,7 @@ public:
     static bool fitsKey (const Entry&, const juce::String& sessionKey);
 
     /** Sets a sequence's or kit's rating (0 to 5) or favourite mark in its file, everything else
-        in it as it was. Returns an error, or empty. */
+        in it as it was (a factory preset's in factoryRatingsFile). Returns an error, or empty. */
     static juce::String setRating (const juce::File&, int rating);
     static juce::String setFavourite (const juce::File&, bool favourite);
 

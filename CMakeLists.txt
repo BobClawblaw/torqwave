@@ -360,8 +360,29 @@ file(GLOB torqwave_guide_images CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/docs/scree
 juce_add_binary_data(TorqwaveGuide NAMESPACE GuideData HEADER_NAME GuideData.h
     SOURCES ${torqwave_guide_pages} docs/SHORTCUTS.md ${torqwave_guide_images})
 
+# The factory presets (Data/Presets, written by Scripts/make_presets.py), zipped into the app and
+# unpacked on first use (SequenceLibrary::unpackFactoryPresets). The zip is made from a sorted
+# list with fixed times, so the same presets make the same zip.
+file(GLOB_RECURSE torqwave_presets CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/Data/Presets/*.tqseq ${CMAKE_SOURCE_DIR}/Data/Presets/*.tqkit)
+list(SORT torqwave_presets)
+set(torqwave_preset_names)
+foreach(preset IN LISTS torqwave_presets)
+    file(RELATIVE_PATH name ${CMAKE_SOURCE_DIR}/Data/Presets ${preset})
+    list(APPEND torqwave_preset_names ${name})
+endforeach()
+set(torqwave_presets_zip ${CMAKE_BINARY_DIR}/factory-presets.zip)
+add_custom_command(OUTPUT ${torqwave_presets_zip}
+    COMMAND ${CMAKE_COMMAND} -E rm -f ${torqwave_presets_zip}
+    COMMAND ${CMAKE_COMMAND} -E tar cf ${torqwave_presets_zip} --format=zip --mtime=@1767225600 -- ${torqwave_preset_names}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Data/Presets
+    DEPENDS ${torqwave_presets}
+    COMMENT "Zipping the factory presets"
+    VERBATIM)
+juce_add_binary_data(TorqwavePresets NAMESPACE FactoryPresetData HEADER_NAME FactoryPresetData.h SOURCES ${torqwave_presets_zip})
+
 target_link_libraries(Torqwave PRIVATE
     TorqwaveArt
+    TorqwavePresets
     TorqwaveGuide
     TorqwaveLame
     TorqwaveStretch
@@ -461,6 +482,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/TempoFollowTests.cpp
     Tests/StressTests.cpp
     Tests/SequenceTests.cpp
+    Tests/PresetTests.cpp
     Tests/CrossfadeTests.cpp
     Tests/SoundDesignTests.cpp
     Tests/PictureTests.cpp
@@ -732,6 +754,7 @@ if(WIN32)
 endif()
 target_link_libraries(TorqwaveTests PRIVATE
     TorqwaveArt
+    TorqwavePresets
     TorqwaveGuide
     TorqwaveLame
     TorqwaveStretch

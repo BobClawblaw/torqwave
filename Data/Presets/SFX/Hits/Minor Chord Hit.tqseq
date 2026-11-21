@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Minor Chord Hit" role="SFX" subRole="Hits" key="A minor" tags="" note="One A minor stab with the octave" style="Techno/Peak-time" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <NOTES>
+    <N p="57" s="0" l="460" v="0.818898"/>
+    <N p="60" s="0" l="460" v="0.818898"/>
+    <N p="64" s="0" l="460" v="0.818898"/>
+    <N p="69" s="0" l="460" v="0.818898"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Stab" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>290.VMjLgjQ....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBH2Elck0iHxHBHrUlckwVOhzRL23BLh.RXzQWXisVOhHiKvHBHjU1XgkWOhHiLv3BLh.xb0MGcgkla8HBLt.iHfHWYrUVXyUVOhDCMv3BLh.xX0Q2alYVOhDCNv.iKvHBHxU1bu4VXtMVY8HxLv3BLh.xayMlLWElck0iHxHBHuM2XxPTYzUmak0iHsDiLt.iHf71biICSkYWYr0iH3.iKvHBHuM2XybUX1UVOhLiHf71biMySiQWX1UVOhDiKvHBHuM2XyvTY1UFa8HxLv3BLh.hYowFckIWQtYWOhTCLt.iHfXVZrQWYxQTYiEVd8HRLz.iKvHxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

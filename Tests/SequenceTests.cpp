@@ -10,6 +10,7 @@
 #include "../Source/TrackEffects.h"
 #include "TestUtils.h"
 #include "SequenceTests.h"
+#include "PresetTests.h"
 
 namespace
 {
@@ -1544,4 +1545,6 @@ void runSequenceTests (AudioEngine& engine)
         }
         juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
     }
+
+    runPresetTests (engine);
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Square Lead Phrase" role="Melody" subRole="Leads" key="A minor" tags="" note="A two-bar square lead in A minor" style="Industrial/Synth-EBM" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <NOTES>
+    <N p="69" s="0" l="720" v="0.755906"/>
+    <N p="72" s="960" l="480" v="0.755906"/>
+    <N p="76" s="1680" l="960" v="0.755906"/>
+    <N p="74" s="2880" l="480" v="0.755906"/>
+    <N p="72" s="3360" l="120" v="0.755906"/>
+    <N p="71" s="3840" l="720" v="0.755906"/>
+    <N p="69" s="4800" l="480" v="0.755906"/>
+    <N p="67" s="5520" l="960" v="0.755906"/>
+    <N p="69" s="6720" l="720" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Lead" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>205.VMjLgPL....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBH2Elck0iHyHBHrUlckwVOhzRL03BLh.RXzQWXisVOhTiKvHBHjU1XgkWOhLCLv3BLh.xb0MGcgkla8HxMv3BLh.hbkwVYgMWY8HhLv.iKvHBHiUGcuYlY8HBMv.CLt.iHfHWYy8lag41Xk0iHx.iKvHBHuM2XxbUX1UVOhHiHf71biICQkQWctUVOhTiKvHBHuM2XxvTY1UFa8HRMv3BLh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

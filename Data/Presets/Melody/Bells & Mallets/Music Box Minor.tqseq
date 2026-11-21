@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Music Box Minor" role="Melody" subRole="Bells &amp; Mallets" key="A minor" tags="" note="A small music-box tune in A minor" style="Industrial/Darkwave" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="108.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <NOTES>
+    <N p="81" s="0" l="120" v="0.755906"/>
+    <N p="84" s="480" l="120" v="0.755906"/>
+    <N p="88" s="960" l="120" v="0.755906"/>
+    <N p="84" s="1440" l="120" v="0.755906"/>
+    <N p="83" s="1920" l="120" v="0.755906"/>
+    <N p="81" s="2400" l="120" v="0.755906"/>
+    <N p="79" s="2880" l="120" v="0.755906"/>
+    <N p="81" s="3840" l="120" v="0.755906"/>
+    <N p="84" s="4320" l="120" v="0.755906"/>
+    <N p="88" s="4800" l="120" v="0.755906"/>
+    <N p="86" s="5280" l="120" v="0.755906"/>
+    <N p="84" s="5760" l="120" v="0.755906"/>
+    <N p="83" s="6240" l="120" v="0.755906"/>
+    <N p="81" s="6720" l="120" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Bell" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>235.VMjLgHN....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBH2Elck0iHvHBHrUlckwVOhzRLx3BLh.RXzQWXisVOhDiKvHBHjU1XgkWOhjCLv3BLh.xb0MGcgkla8HBLt.iHfHWYrUVXyUVOhjCLv3BLh.xayMlLWElck0iHvHBHuM2Xx7zXzElck0iHx3BLh.xayMlLLUlckwVOhPCLt.iHf71biMyUgYWY8HRLh.xayM1LOMFcgYWY8HRLt.iHf71biMCQkQWctUVOhbiKvHBHuM2XyvTY1UFa8HhL03BLh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

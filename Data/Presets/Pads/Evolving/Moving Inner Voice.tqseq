@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Moving Inner Voice" role="Pads" subRole="Evolving" key="A minor" tags="" note="A and E held while the top moves C, D, E and back" style="Techno/Melodic" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="57" s="0" l="3800" v="0.535433"/>
+    <N p="64" s="0" l="3800" v="0.535433"/>
+    <N p="72" s="0" l="3800" v="0.503937"/>
+    <N p="57" s="3840" l="3800" v="0.535433"/>
+    <N p="64" s="3840" l="3800" v="0.535433"/>
+    <N p="74" s="3840" l="3800" v="0.503937"/>
+    <N p="57" s="7680" l="3800" v="0.535433"/>
+    <N p="64" s="7680" l="3800" v="0.535433"/>
+    <N p="76" s="7680" l="3800" v="0.503937"/>
+    <N p="57" s="11520" l="3800" v="0.535433"/>
+    <N p="64" s="11520" l="3800" v="0.535433"/>
+    <N p="72" s="11520" l="3800" v="0.503937"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Pad" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>257.VMjLgfO....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBH2Elck0iHxHBHrUlckwVOhzRL33BLh.RXzQWXisVOhfCLv3BLh.BYkMVX40iHw.CLv3BLh.xb0MGcgkla8HBNv3BLh.hbkwVYgMWY8HRL0.CLt.iHfLVcz8lYl0iHwfCLv3BLh.hbkM2atElaiUVOhDCLt.iHf71biIyUgYWY8HhLh.xayMlLDUFc04VY8HRNt.iHf71biICSkYWYr0iH3.iKvHBHuM2XybUX1UVOhDiHf71biMySiQWX1UVOhzRLt.iHf71biMCSkYWYr0iH0.iKvHxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

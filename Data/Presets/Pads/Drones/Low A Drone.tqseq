@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Low A Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A1 held for eight bars" style="Techno/Dark" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
+  <NOTES>
+    <N p="33" s="0" l="30680" v="0.629921"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Drone" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>228.VMjLgrM....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBH2Elck0iHxHBHrUlckwVOhzRL13BLh.RXzQWXisVOhHCLv.iKvHBHjU1XgkWOhDCLv.iKvHBHyU2bzEVZt0iHw.CLt.iHfHWYrUVXyUVOhLCLv.iKvHBHiUGcuYlY8HxMv.iKvHBHxU1bu4VXtMVY8HxL03BLh.xayMlLWElck0iHxHBHuM2Xx7zXzElck0iHsDiKvHBHuM2XxPTYzUmak0iH13BLh.xayMlLLUlckwVOhbCLt.iHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

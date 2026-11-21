@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Melodic One-Bar Lead" role="Melody" subRole="Leads" key="A minor" tags="" note="A one-bar lead stated four times, the last time rising" style="Techno/Melodic" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="76" s="0" l="480" v="0.755906"/>
+    <N p="72" s="720" l="120" v="0.755906"/>
+    <N p="69" s="1200" l="120" v="0.755906"/>
+    <N p="72" s="1920" l="480" v="0.755906"/>
+    <N p="74" s="2640" l="120" v="0.755906"/>
+    <N p="76" s="3120" l="120" v="0.755906"/>
+    <N p="76" s="3840" l="480" v="0.755906"/>
+    <N p="72" s="4560" l="120" v="0.755906"/>
+    <N p="69" s="5040" l="120" v="0.755906"/>
+    <N p="72" s="5760" l="480" v="0.755906"/>
+    <N p="74" s="6480" l="120" v="0.755906"/>
+    <N p="76" s="6960" l="120" v="0.755906"/>
+    <N p="76" s="7680" l="480" v="0.755906"/>
+    <N p="72" s="8400" l="120" v="0.755906"/>
+    <N p="69" s="8880" l="120" v="0.755906"/>
+    <N p="72" s="9600" l="480" v="0.755906"/>
+    <N p="74" s="10320" l="120" v="0.755906"/>
+    <N p="76" s="10800" l="120" v="0.755906"/>
+    <N p="76" s="11520" l="480" v="0.755906"/>
+    <N p="72" s="12240" l="120" v="0.755906"/>
+    <N p="69" s="12720" l="120" v="0.755906"/>
+    <N p="72" s="13440" l="480" v="0.755906"/>
+    <N p="74" s="14160" l="120" v="0.755906"/>
+    <N p="79" s="14640" l="720" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Lead" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>205.VMjLgPL....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBH2Elck0iHyHBHrUlckwVOhzRL03BLh.RXzQWXisVOhTiKvHBHjU1XgkWOhLCLv3BLh.xb0MGcgkla8HxMv3BLh.hbkwVYgMWY8HhLv.iKvHBHiUGcuYlY8HBMv.CLt.iHfHWYy8lag41Xk0iHx.iKvHBHuM2XxbUX1UVOhHiHf71biICQkQWctUVOhTiKvHBHuM2XxvTY1UFa8HRMv3BLh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

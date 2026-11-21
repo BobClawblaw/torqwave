@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Rolling Sub Sixteenths" role="Bass" subRole="Sub" key="A minor" tags="" note="Kick-bass-bass-bass: the sub on the three 16ths after each kick" style="Techno/Peak-time" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="136.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <NOTES>
+    <N p="33" s="240" l="192" v="0.755906"/>
+    <N p="33" s="480" l="192" v="0.755906"/>
+    <N p="33" s="720" l="192" v="0.755906"/>
+    <N p="33" s="1200" l="192" v="0.755906"/>
+    <N p="33" s="1440" l="192" v="0.755906"/>
+    <N p="33" s="1680" l="192" v="0.755906"/>
+    <N p="33" s="2160" l="192" v="0.755906"/>
+    <N p="33" s="2400" l="192" v="0.755906"/>
+    <N p="33" s="2640" l="192" v="0.755906"/>
+    <N p="33" s="3120" l="192" v="0.755906"/>
+    <N p="33" s="3360" l="192" v="0.755906"/>
+    <N p="33" s="3600" l="192" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Sub" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>124.VMjLgLG....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBH2Elck0iHvHBHrUlckwVOhzRNt.iHfDFczE1Xq0iHx3BLh.BYkMVX40iHw.CLt.iHfLWcyQWXo4VOhDCLv3BLh.hbkwVYgMWY8HhMv3BLh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

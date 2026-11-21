@@ -3,6 +3,7 @@
 // The player is never started, so nothing is heard.
 
 #include <JuceHeader.h>
+#include "../Source/SequenceLibrary.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/PluginScanner.h"
 #include "../Source/AudioEdits.h"
@@ -622,6 +623,11 @@ int main (int argc, char* argv[])
 
     juce::ScopedJuceInitialiser_GUI juceInit;
     juce::Array<juce::PluginDescription> found;
+
+    // The factory presets stay out of the tests' libraries (and out of this Mac's own copy) unless a test unpacks them.
+    const auto factoryPresets = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("TorqwaveTestFactoryPresets").getChildFile ("set");
+    factoryPresets.getParentDirectory().deleteRecursively();
+    SequenceLibrary::setFactoryFolder (factoryPresets);
 
     if (const auto i = args.indexOf ("--ai-eval"); i >= 0)
         return runAiEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {}), valueOf ("--ai-eval-set")) == 0 ? 0 : 1;

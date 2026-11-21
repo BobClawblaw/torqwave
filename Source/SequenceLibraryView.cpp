@@ -105,9 +105,13 @@ public:
         menu.addSubMenu ("Rating", rating);
         menu.addItem (7, "Favourite", true, entry.favourite);
         menu.addSeparator();
+
+        if (entry.factory)
+            menu.addItem (8, "Copy to My Library");
+
         menu.addItem (1, "Show in Finder");
-        menu.addItem (2, "Rename...");
-        menu.addItem (3, "Move to Trash");
+        menu.addItem (2, "Rename...", ! entry.factory);
+        menu.addItem (3, "Move to Trash", ! entry.factory);
         const auto file = entry.file;
         const auto favourite = entry.favourite;
         juce::Component::SafePointer<SequenceLibraryView> safe (&view);
@@ -126,6 +130,8 @@ public:
                 safe->askToExportMidi (file);
             else if (result == 6)
                 safe->askToMakeKit (sequences, "Kit");
+            else if (result == 8)
+                safe->copyToLibrary (onSelection);
             else if (result >= 20 && result <= 25)
             {
                 for (auto& f : onSelection)
@@ -213,7 +219,7 @@ public:
     // Finder are copied here.
     bool isInterestedInDragSource (const juce::DragAndDropTarget::SourceDetails& details) override
     {
-        return ! path().isEmpty() && fileOfDrag (details.description).existsAsFile();
+        return ! path().isEmpty() && ! isFactoryPath (path()) && fileOfDrag (details.description).existsAsFile();
     }
 
     void itemDropped (const juce::DragAndDropTarget::SourceDetails& details, int) override
@@ -224,7 +230,7 @@ public:
 
     bool isInterestedInFileDrag (const juce::StringArray& files) override
     {
-        return ! path().isEmpty() && std::any_of (files.begin(), files.end(), [] (auto& f)
+        return ! path().isEmpty() && ! isFactoryPath (path()) && std::any_of (files.begin(), files.end(), [] (auto& f)
         {
             return SequenceFile::isSequenceOrKit (juce::File (f)) || juce::File (f).hasFileExtension (SequenceLibrary::packExtension);
         });
@@ -522,6 +528,14 @@ void SequenceLibraryView::refresh()
     stamp = folderStamp();
     entries = library.scan();
     folderPaths = library.folders();
+
+    // The factory presets, under Presets.
+    for (auto e : SequenceLibrary (SequenceLibrary::factoryFolder()).scan())
+    {
+        e.path.insert (0, SequenceLibrary::factoryName);
+        entries.push_back (std::move (e));
+    }
+
     rebuild();
 }
 
@@ -547,6 +561,31 @@ void SequenceLibraryView::rebuild()
     const auto narrowed = text.isNotEmpty() || favouritesOnly || fits;
     shownKey = getSessionKey != nullptr ? getSessionKey().trim() : juce::String();
 
+    const auto passes = [&] (const SequenceLibrary::Entry& e)
+    {
+        return ! ((text.isNotEmpty() && ! SequenceLibrary::matches (e, text)) || (favouritesOnly && ! e.favourite)
+                  || (fits && ! SequenceLibrary::fitsKey (e, shownKey)));
+    };
+
+    // Presets first, its roles and sub-roles in their order (those holding presets that are shown).
+    if (std::any_of (entries.begin(), entries.end(), [&] (auto& e) { return e.factory && passes (e); }))
+    {
+        auto& presets = root->folder (SequenceLibrary::factoryName);
+
+        for (auto& role : SequenceLibrary::roles())
+            for (auto& sub : juce::StringArray (role.subRoles).isEmpty() ? juce::StringArray { "" } : role.subRoles)
+                for (auto& e : entries)
+                    if (e.factory && passes (e) && e.path[1] == role.name && (sub.isEmpty() || e.path[2] == sub))
+                    {
+                        auto& r = presets.folder (role.name);
+
+                        if (sub.isNotEmpty())
+                            r.folder (sub);
+
+                        break;
+                    }
+    }
+
     // Every folder, empty ones too: the roles and their sub-roles in their order, then the user's
     // own below them. A search or filter shows the roles and the folders holding what it finds.
     for (auto& path : narrowed ? std::vector<juce::StringArray> {} : folderPaths)
@@ -567,8 +606,7 @@ void SequenceLibraryView::rebuild()
 
     for (auto& e : ordered)
     {
-        if ((text.isNotEmpty() && ! SequenceLibrary::matches (e, text)) || (favouritesOnly && ! e.favourite)
-            || (fits && ! SequenceLibrary::fitsKey (e, shownKey)))
+        if (! passes (e))
             continue;
 
         auto* at = root.get();
@@ -732,15 +770,90 @@ juce::String SequenceLibraryView::selectedFolder() const
         item = item->getParentItem();
 
     if (auto* folder = dynamic_cast<FolderItem*> (item))
-        return SequenceLibrary::nameOf (folder->path());
+        return SequenceLibrary::nameOf (ownPathFor (folder->path()));
 
     return {};
+}
+
+bool SequenceLibraryView::isFactoryPath (const juce::StringArray& path)
+{
+    return path[0] == SequenceLibrary::factoryName;
+}
+
+juce::StringArray SequenceLibraryView::ownPathFor (const juce::StringArray& path)
+{
+    if (! isFactoryPath (path))
+        return path;
+
+    auto own = path;
+    own.remove (0);
+    return own;
+}
+
+void SequenceLibraryView::copyToLibrary (const juce::Array<juce::File>& files)
+{
+    juce::StringArray errors;
+    juce::File first;
+
+    for (auto& file : files)
+    {
+        const auto entry = std::find_if (entries.begin(), entries.end(), [&file] (auto& e) { return e.file == file; });
+
+        if (entry == entries.end())
+            continue;
+
+        juce::String error;
+        const auto copied = library.moveInto (file, ownPathFor (entry->path), true, error);
+
+        if (error.isNotEmpty())
+            errors.add (file.getFileName() + ": " + error);
+        else if (first == juce::File())
+            first = copied;
+    }
+
+    refresh();
+
+    if (first != juce::File())
+        select (first);
+
+    if (! errors.isEmpty())
+        juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Copy to My Library", errors.joinIntoString ("\n"));
 }
 
 void SequenceLibraryView::folderMenu (const juce::StringArray& path)
 {
     if (path.isEmpty())
         return;
+
+    // Presets' folders: new sequences and copies go to the user's folder of the same role.
+    if (isFactoryPath (path))
+    {
+        juce::Array<juce::File> presets;
+
+        for (auto& e : entries)
+            if (e.factory && e.path.joinIntoString ("/").startsWith (path.joinIntoString ("/")) && ! e.isKit)
+                presets.add (e.file);
+
+        juce::PopupMenu menu;
+        menu.addItem (1, "New Sequence Here...", onNew != nullptr && path.size() > 1);
+        menu.addItem (2, "Copy to My Library", ! presets.isEmpty());
+        menu.addItem (3, "Save as Kit...", ! presets.isEmpty() && presets.size() <= 16);
+        const juce::Component::SafePointer<SequenceLibraryView> safe (this);
+        menu.showMenuAsync (juce::PopupMenu::Options(), [safe, path, presets] (int result)
+        {
+            if (safe == nullptr)
+                return;
+
+            if (result == 1 && safe->onNew != nullptr)
+                safe->onNew (SequenceLibrary::nameOf (ownPathFor (path)));
+            else if (result == 2)
+                safe->copyToLibrary (presets);
+            else if (result == 3)
+                safe->askToMakeKit (presets, path[path.size() - 1]);
+        });
+
+        return;
+    }
 
     const auto fixed = SequenceLibrary::isFixed (path);
     const auto dir = library.folderAt (path);

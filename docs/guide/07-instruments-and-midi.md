@@ -213,6 +213,30 @@ The Sequence Library keeps MIDI parts with the instrument that plays them, to dr
 
 Show it with **Window > Sequence Library**. In the Multitrack workspace it is a tab beside the Track Inspector.
 
+### Presets
+
+Torqwave comes with 160 factory presets and 8 starter kits, under **Presets** at the top of the library, sorted by the same roles and sub-roles as your own: at least 20 for each role. They lean towards driving and peak-time techno, dark and industrial techno and EBM, with smaller sets for hypnotic, minimal, melodic, acid and hard techno, electro-industrial, futurepop, aggrotech, synth-EBM, darkwave and industrial rock. Every preset is:
+
+- in **A minor** (a few use Phrygian's B♭ or harmonic minor's G♯, and say so in their tags), so any of them plays with any other;
+- on the **16th grid**, 1, 2, 4 or 8 bars long, a 4-bar one changing in its last bar;
+- for drums, on the **General MIDI drum map** (kick 36, snare 38, clap 39, closed hat 42, open hat 46, ride 51 and so on), so it plays any drum plug-in or kit that follows it;
+- for bass, **one note at a time**, except an acid slide, which overlaps the next note by a hair so the synth glides;
+- written with a **one-line description** of what it does, shown with its tags.
+
+Each one plays on a built-in voice so you can hear it at once: Basic Drums for drums, and Basic Synth set up for the part (a sub, a rolling bass, an acid line, a stab, a pad and so on). They are there to drive your own instruments:
+
+| Drop it on | It plays on |
+|---|---|
+| A track with an instrument | that track's instrument, as with any sequence |
+| Empty space or an audio track | a new instrument track with the preset's built-in voice |
+
+Presets play, drag and drop like your own sequences, and you can rate them and mark them as favourites (those marks are kept beside the presets, not in your library). You can't change, rename or move them, so a later version of Torqwave can bring new ones without touching anything of yours:
+
+- **Copy to My Library** (right-click a preset, or a Presets folder for all of it) copies it into your own folder of the same role and sub-role. Dragging it onto one of your folders copies it too.
+- **Edit in Sequencer** opens it as a new sequence of yours, not yet saved; **Save** puts it in your folder of the same role and sub-role, under the same name.
+
+The **kits** in Presets > Kits are one per main style (dark, peak-time, percussive, hypnotic, industrial and acid techno, EBM and darkwave). Each holds a drum groove, a bass, a stab or chords, a lead or arp, a fill and a build at one tempo, so dropping one in gives you a track's worth of parts to replace with your own instruments.
+
 **Start a new one.** Click **New...** at the top of the Sequence Library. Or right-click a folder and choose **New Sequence Here...**. Give it a name, a folder (the one selected in the library is chosen for you), an instrument, a length (1, 2, 4, 8 or 16 bars) and optionally a key, then click **Make**. Torqwave adds an instrument track with that instrument and an empty clip of that length, starting at the bar the cursor is in, and opens the clip in the Piano Roll. Write the notes there, or with any of the [ways to put notes in](#put-notes-in) above, then save it with **Add to Sequence Library...**: the dialog already holds its name, folder and key. Save the same clip again with the same name and folder and it replaces the file it saved before, so you can keep working on a part and saving it. Torqwave remembers which file a clip saves to until you quit; after that, saving makes a new file.
 
 **Save a part.** Right-click a note clip and choose **Add to Sequence Library...** (or select it and use **Multitrack > Clips > Add to Sequence Library...**). Give it a name, a folder, and optionally a key and tags. Its loop and controller lanes go with it. The track's sends, output and automation stay in the session.
@@ -302,6 +326,8 @@ The Sequencer is a window for one sequence from the library, open by itself to w
 **Edit the notes.** The middle of the window is the Piano Roll, with the drum grid, controller lanes and [writing tools](#writing-tools), as in [Edit the notes](#edit-the-notes-the-piano-roll), but it edits the sequence file itself, not a clip in the session. A sequence filed under Drums opens as a drum grid. A key set with **Tools > Key...** is saved as the sequence's key. **Undo** and **Redo** (Cmd-Z and Shift-Cmd-Z while the window has the focus) step through the window's own edits, apart from the session's.
 
 **Hear it.** **Play** (or Space while the window has the focus) plays the sequence from its start through its voice, beside whatever the session plays. With **Loop** on it goes round and round, and a note running past the loop's end keeps sounding into the next pass until its own end (drag a note's end past the loop's end to write one; the part carried over shows faintly at the start); off, it plays once. A sequence starting partway through its notes is cut at the loop's end instead. **Click** adds a click on every beat. The tempo is the window's own, starting at the tempo the sequence was written at; change it with the tempo box, or tick **Session tempo** to play at the session's tempo where its playhead is. The notes stay on their beats at any tempo, so nothing in the file changes. The clock beside it shows where it is playing, in bars and beats, and a line in the notes follows it. **Length** sets how long the sequence is, in bars, by the beat (an undo step); a loop as long as the sequence follows it. Notes past the end are kept but don't play, until you make it longer again.
+
+**Start from a preset.** **Presets** (beside **Open...**) lists the factory presets by role and sub-role. The one you choose opens as a new sequence of yours, not yet saved, so you can change it and **Save** it into your library; the preset itself stays as it was.
 
 **Change the voice.** Down the right are the instrument and the effects it plays through. **Instrument...** picks another instrument, from the built-in Basic Synth and your plug-ins under **Audio Units** and **VST3** by maker, and opens its window; **Edit** opens it again. **+ Effect** adds an effect after the others and opens its window; click an effect's name to open its window, or **×** to take it out. Changes to the voice are not undo steps, as with a track's effects in a session, but they are saved with the sequence. If some of the voice didn't load (a plug-in that isn't on this Mac), the window says so, and saving keeps the voice as the file had it until you change it.
 

@@ -9,7 +9,7 @@ class AudioEngine;
     Piano Roll (or the drum grid) and the controller lanes edit the sequence file itself; it plays
     with its own transport (Play, Loop, Click) at its own tempo or the session's; its voice (the
     instrument and the effects it plays through) is down the right, to change and edit. New, Open,
-    Save, Save As, Duplicate and Make Variation work on files in the Sequence Library; Undo and
+    Presets (a factory preset, opened as a new copy), Save, Save As, Duplicate and Make Variation work on files in the Sequence Library; Undo and
     Redo (and Cmd-Z, Shift-Cmd-Z while it has the focus) step through its own edits. */
 class SequencerView final : public juce::Component,
                             public juce::DragAndDropTarget,
@@ -20,8 +20,13 @@ public:
     explicit SequencerView (AudioEngine&);
     ~SequencerView() override;
 
-    /** Opens a sequence file, asking first about unsaved changes. */
+    /** Opens a sequence file, asking first about unsaved changes. A factory preset opens as a
+        new copy, not yet saved, to be saved in the user's library under its role, sub-role and name. */
     void openFile (const juce::File&);
+
+    /** The menu of the Presets button: the factory presets by role and sub-role, each item's ID
+        its index in `files` plus one. */
+    static juce::PopupMenu presetsMenu (juce::Array<juce::File>& files);
 
     /** Asks about unsaved changes, then calls `then` unless the asking was cancelled. */
     void whenSaved (std::function<void()> then);
@@ -116,7 +121,7 @@ private:
     double tempo = 120.0;
     juce::String loadError;
 
-    juce::TextButton newButton { "New..." }, openButton { "Open..." }, saveButton { "Save" }, saveAsButton { "Save As..." },
+    juce::TextButton newButton { "New..." }, openButton { "Open..." }, presetsButton { "Presets" }, saveButton { "Save" }, saveAsButton { "Save As..." },
                      duplicateButton { "Duplicate" }, variationButton { "Make Variation" }, undoButton { "Undo" }, redoButton { "Redo" },
                      playButton { "Play" }, askButton;
     juce::ToggleButton loopButton { "Loop" }, clickButton { "Click" }, sessionTempoButton { "Session tempo" };

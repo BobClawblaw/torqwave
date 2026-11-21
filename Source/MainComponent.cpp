@@ -957,6 +957,10 @@ MainComponent::MainComponent()
     if (const auto sequences = settings->getValue (sequenceLibraryFolderKey); juce::File::isAbsolutePath (sequences))
         SequenceLibrary::setChosenFolder (juce::File (sequences));
 
+    // The factory presets, unpacked the first time this version runs.
+    if (const auto error = SequenceLibrary::unpackFactoryPresets(); error.isNotEmpty())
+        DBG (error);
+
     deadMansPedalFile = settings->getFile().getSiblingFile ("RecentlyCrashedPluginsList");
     places = std::make_unique<WindowPlaces> (*settings);
 

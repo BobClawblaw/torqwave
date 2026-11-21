@@ -15,7 +15,12 @@
     the selected sequences, Show in Finder, Rename and Move to Trash; right-click a folder to make
     a folder, a sequence or a kit in it, import MIDI files into it or save it as a pack. Import...
     brings in MIDI files or opens a pack. Every folder shows, empty ones too. New... starts a new
-    sequence. */
+    sequence.
+
+    Above the user's folders, Presets holds the factory presets that ship with the app, by role
+    and sub-role. They play, drop and drag like the user's own and can be rated and marked as
+    favourites, but can't be moved, renamed or trashed: Copy to My Library or a drag onto one of
+    the user's folders makes a copy to change, and Edit in Sequencer opens a new copy. */
 class SequenceLibraryView final : public juce::Component,
                                   public juce::DragAndDropContainer,
                                   private juce::Timer
@@ -124,6 +129,10 @@ public:
     /** Asks where, then zips the folder at path into a pack. */
     void askToSavePack (const juce::StringArray& path);
 
+    /** Copies factory presets into the user's library, each in the folder of its role and
+        sub-role, then shows the first. Errors are shown. */
+    void copyToLibrary (const juce::Array<juce::File>&);
+
     /** Asks for a pack, or opens this one, into the library. */
     void askToOpenPack();
     void openPack (const juce::File&);
@@ -141,6 +150,10 @@ private:
     void timerCallback() override;
     void visibilityChanged() override;
     juce::int64 folderStamp() const;
+
+    /** Whether a path in the tree is under Presets, and the user's folder it matches (its role and sub-role). */
+    static bool isFactoryPath (const juce::StringArray&);
+    static juce::StringArray ownPathFor (const juce::StringArray&);
 
     SequenceLibrary library;
     std::vector<SequenceLibrary::Entry> entries;

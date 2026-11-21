@@ -1,6 +1,7 @@
 #include "SequenceLibrary.h"
 #include "SequenceMidi.h"
 #include "NoteTools.h"
+#include "FactoryPresetData.h"
 
 namespace
 {
@@ -8,6 +9,49 @@ namespace
     {
         static juce::File chosen;
         return chosen;
+    }
+
+    juce::File& chosenFactoryFolder()
+    {
+        static juce::File chosen;
+        return chosen;
+    }
+
+    /** A factory preset's place in factoryRatingsFile: its path below the presets' folder. */
+    juce::String factoryKey (const juce::File& file)
+    {
+        return file.getRelativePathFrom (SequenceLibrary::factoryFolder()).replaceCharacter ('\\', '/');
+    }
+
+    std::unique_ptr<juce::XmlElement> factoryRatings()
+    {
+        auto xml = juce::XmlDocument::parse (SequenceLibrary::factoryRatingsFile());
+        return xml != nullptr && xml->hasTagName ("TORQWAVE_PRESET_RATINGS") ? std::move (xml) : std::make_unique<juce::XmlElement> ("TORQWAVE_PRESET_RATINGS");
+    }
+
+    /** Changes a factory preset's line in factoryRatingsFile (dropping it when it says nothing). */
+    juce::String rewriteFactory (const juce::File& file, const std::function<void (juce::XmlElement&)>& change)
+    {
+        if (! file.existsAsFile())
+            return file.getFileName() + " is not there.";
+
+        auto xml = factoryRatings();
+        const auto key = factoryKey (file);
+        auto* line = xml->getChildByAttribute ("path", key);
+
+        if (line == nullptr)
+        {
+            line = xml->createNewChildElement ("PRESET");
+            line->setAttribute ("path", key);
+        }
+
+        change (*line);
+
+        if (! line->hasAttribute ("rating") && ! line->hasAttribute ("favourite"))
+            xml->removeChildElement (line, true);
+
+        SequenceLibrary::factoryRatingsFile().getParentDirectory().createDirectory();
+        return xml->writeTo (SequenceLibrary::factoryRatingsFile()) ? juce::String() : juce::String ("The presets' ratings could not be saved.");
     }
 
     bool isLibraryXml (const juce::XmlElement& xml)
@@ -67,6 +111,77 @@ juce::File SequenceLibrary::standardFolder()
 void SequenceLibrary::setChosenFolder (const juce::File& folder)
 {
     chosenFolder() = folder;
+}
+
+juce::File SequenceLibrary::factoryFolder()
+{
+    if (chosenFactoryFolder() != juce::File())
+        return chosenFactoryFolder();
+
+    // One folder for each set of presets shipped, named for its contents.
+    static const auto set = []
+    {
+        juce::uint64 h = 14695981039346656037ull;   // FNV-1a over the zip
+
+        for (int i = 0; i < FactoryPresetData::factorypresets_zipSize; ++i)
+            h = (h ^ (juce::uint8) FactoryPresetData::factorypresets_zip[i]) * 1099511628211ull;
+
+        return juce::String::toHexString ((juce::int64) h);
+    }();
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+        .getChildFile ("Torqwave").getChildFile ("Factory Presets").getChildFile (set);
+}
+
+void SequenceLibrary::setFactoryFolder (const juce::File& f)
+{
+    chosenFactoryFolder() = f;
+}
+
+bool SequenceLibrary::isFactory (const juce::File& f)
+{
+    return f.isAChildOf (factoryFolder());
+}
+
+juce::File SequenceLibrary::factoryRatingsFile()
+{
+    return factoryFolder().getSiblingFile ("Ratings.xml");
+}
+
+juce::String SequenceLibrary::unpackPresets (const void* zip, size_t size, const juce::File& into)
+{
+    const auto done = into.getChildFile (".complete");
+
+    if (done.existsAsFile())
+        return {};
+
+    // Another set beside it is the one an earlier version shipped.
+    for (const auto& other : into.getParentDirectory().findChildFiles (juce::File::findDirectories, false))
+        if (other != into)
+            other.deleteRecursively();
+
+    into.deleteRecursively();
+
+    if (! into.createDirectory())
+        return "The presets' folder could not be made: " + into.getFullPathName();
+
+    juce::MemoryInputStream stream (zip, size, false);
+    juce::ZipFile archive (stream);
+
+    if (archive.getNumEntries() == 0 && size > 0)
+        return "The presets the app ships could not be read.";
+
+    if (const auto result = archive.uncompressTo (into, true); result.failed())
+        return "The presets could not be unpacked: " + result.getErrorMessage();
+
+    for (const auto& found : juce::RangedDirectoryIterator (into, true, "*", juce::File::findFiles))
+        found.getFile().setReadOnly (true);
+
+    return done.create() ? juce::String() : juce::String ("The presets' folder could not be written.");
+}
+
+juce::String SequenceLibrary::unpackFactoryPresets()
+{
+    return unpackPresets (FactoryPresetData::factorypresets_zip, (size_t) FactoryPresetData::factorypresets_zipSize, factoryFolder());
 }
 
 SequenceLibrary::SequenceLibrary (juce::File f) : folder (std::move (f)) {}
@@ -289,6 +404,8 @@ std::vector<SequenceLibrary::Entry> SequenceLibrary::scan() const
 {
     std::vector<Entry> entries;
     const auto wildcard = juce::String ("*") + SequenceFile::extension + ";*" + SequenceFile::kitExtension;
+    const auto factory = folder == factoryFolder() || isFactory (folder);
+    const auto ratings = factory ? factoryRatings() : nullptr;
 
     for (const auto& found : juce::RangedDirectoryIterator (folder, true, wildcard, juce::File::findFiles))
     {
@@ -335,6 +452,17 @@ std::vector<SequenceLibrary::Entry> SequenceLibrary::scan() const
 
         if (e.added <= 0)
             e.added = file.getCreationTime().toMilliseconds();
+
+        if (factory)
+        {
+            e.factory = true;
+
+            if (auto* line = ratings->getChildByAttribute ("path", factoryKey (file)))
+            {
+                e.rating = juce::jlimit (0, 5, line->getIntAttribute ("rating"));
+                e.favourite = line->getBoolAttribute ("favourite");
+            }
+        }
 
         e.path.addTokens (file.getParentDirectory().getRelativePathFrom (folder), juce::File::getSeparatorString(), {});
         e.path.removeString (".");
@@ -397,24 +525,28 @@ bool SequenceLibrary::fitsKey (const Entry& e, const juce::String& sessionKey)
 
 juce::String SequenceLibrary::setRating (const juce::File& file, int rating)
 {
-    return rewrite (file, [rating] (juce::XmlElement& x)
+    const auto change = [rating] (juce::XmlElement& x)
     {
         if (rating > 0)
             x.setAttribute ("rating", juce::jlimit (1, 5, rating));
         else
             x.removeAttribute ("rating");
-    });
+    };
+
+    return isFactory (file) ? rewriteFactory (file, change) : rewrite (file, change);
 }
 
 juce::String SequenceLibrary::setFavourite (const juce::File& file, bool favourite)
 {
-    return rewrite (file, [favourite] (juce::XmlElement& x)
+    const auto change = [favourite] (juce::XmlElement& x)
     {
         if (favourite)
             x.setAttribute ("favourite", true);
         else
             x.removeAttribute ("favourite");
-    });
+    };
+
+    return isFactory (file) ? rewriteFactory (file, change) : rewrite (file, change);
 }
 
 juce::File SequenceLibrary::rename (const juce::File& file, const juce::String& name, juce::String& error)

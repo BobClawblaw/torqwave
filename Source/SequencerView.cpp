@@ -17,7 +17,7 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
     devicePlayer.setSource (&player);
     engine.deviceManager.addAudioCallback (&devicePlayer);
 
-    for (auto* b : { &newButton, &openButton, &saveButton, &saveAsButton, &duplicateButton, &variationButton, &undoButton, &redoButton, &playButton,
+    for (auto* b : { &newButton, &openButton, &presetsButton, &saveButton, &saveAsButton, &duplicateButton, &variationButton, &undoButton, &redoButton, &playButton,
                      &instrumentButton, &editInstrumentButton, &addEffectButton })
         addAndMakeVisible (b);
 
@@ -47,6 +47,7 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
 
     newButton.setTooltip ("A new sequence in a folder of the library, with an instrument to write it for");
     openButton.setTooltip ("Opens a sequence from the library (or double-click one there, or Edit in Sequencer on its menu)");
+    presetsButton.setTooltip ("Opens one of the factory presets as a new copy, to change and save in your library");
     saveButton.setTooltip ("Writes the sequence to its file, with its voice as it is now");
     saveAsButton.setTooltip ("Writes it under another name or in another folder, and goes on with that file");
     duplicateButton.setTooltip ("Saves a copy of what is here beside it and opens the copy");
@@ -65,6 +66,17 @@ SequencerView::SequencerView (AudioEngine& e) : engine (e)
 
     newButton.onClick = [this] { askForNew(); };
     openButton.onClick = [this] { showOpenChooser(); };
+    presetsButton.onClick = [this]
+    {
+        auto files = std::make_shared<juce::Array<juce::File>>();
+        auto menu = presetsMenu (*files);
+        menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (presetsButton),
+                            [safe = juce::WeakReference<SequencerView> (this), files] (int result)
+        {
+            if (auto* self = safe.get(); self != nullptr && result > 0 && result <= files->size())
+                self->openFile ((*files)[result - 1]);
+        });
+    };
     saveButton.onClick = [this]
     {
         if (doc.getFile() == juce::File())
@@ -259,9 +271,56 @@ void SequencerView::openFile (const juce::File& file)
             return;
         }
 
-        self->doc.open (std::move (*q), file);
+        // A factory preset becomes a new sequence of the user's, saved where its role and sub-role say.
+        if (SequenceLibrary::isFactory (file))
+        {
+            SequenceLibrary library;
+            library.makeFolders();
+            const auto target = library.newFileFor (q->role, q->subRole, q->name);
+            self->doc.open (std::move (*q), target);
+            self->doc.markVoiceChanged();   // nothing is on disk yet
+        }
+        else
+        {
+            self->doc.open (std::move (*q), file);
+        }
+
         self->opened();
     });
+}
+
+juce::PopupMenu SequencerView::presetsMenu (juce::Array<juce::File>& files)
+{
+    const auto entries = SequenceLibrary (SequenceLibrary::factoryFolder()).scan();
+    juce::PopupMenu menu;
+
+    for (auto& role : SequenceLibrary::roles())
+    {
+        juce::PopupMenu roleMenu;
+
+        for (auto& sub : role.subRoles)
+        {
+            juce::PopupMenu subMenu;
+
+            for (auto& e : entries)
+                if (! e.isKit && e.path[0] == role.name && e.path[1] == sub)
+                {
+                    files.add (e.file);
+                    subMenu.addItem (files.size(), e.name);
+                }
+
+            if (subMenu.getNumItems() > 0)
+                roleMenu.addSubMenu (sub, subMenu);
+        }
+
+        if (roleMenu.getNumItems() > 0)
+            menu.addSubMenu (role.name, roleMenu);
+    }
+
+    if (menu.getNumItems() == 0)
+        menu.addItem (-1, "No presets", false);
+
+    return menu;
 }
 
 void SequencerView::opened()
@@ -947,6 +1006,7 @@ void SequencerView::resized()
     auto files = area.removeFromTop (rowHeight);
     place (files, newButton, 64);
     place (files, openButton, 70);
+    place (files, presetsButton, 70);
     place (files, saveButton, 54);
     place (files, saveAsButton, 84);
     place (files, duplicateButton, 84);
