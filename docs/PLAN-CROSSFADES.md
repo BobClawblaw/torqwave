@@ -26,14 +26,15 @@ A crossfade is two clips on one track where the earlier clip's end overlaps the 
 
 Its **join** is the middle of the overlap. Its **length** is the overlap's length. A **handle** is the audio that a clip's file has beyond what the clip plays: before `offset`, and after `offset + length`. A crossfade can only grow as far as both clips' handles reach.
 
-## Step 1: crossfades in the session's edits (S)
+## Step 1: crossfades in the session's edits (S) — done
 
 - `SessionEdits::crossfadeAt (state, track, frame)` finds the crossfade at a frame, and `crossfadesIn (state, range)` finds every crossfade in a range.
 - **Set the length**, keeping the join where it is: the earlier clip ends half the change later and the later clip starts half the change earlier (its `offset` moving with it), each limited by its handle. Both fades follow.
 - **Move the join**: both clips' edges move together, and the length stays the same.
 - **Set the shapes**: each side's shape, or a matched pair. **Equal gain** pairs whose levels sum to 1 (S-curve with S-curve, linear with linear). **Equal power** pairs whose squares sum to 1 (equal power with equal power).
 - **Remove a crossfade**: the clips are cut back to a butt join at the old join.
-- **Crossfade Selected Clips** (`Shift-X`): two selected clips on one track that touch, or have a gap or overlap, get a crossfade of the default length centred on where they meet, reaching into their handles. Without handles it is as long as they allow, and refused with a reason when they allow none.
+- **Crossfade Selected Clips** (`Shift-X`): two selected clips on one track that touch or overlap get a crossfade of the default length (10 ms until step 4) centred on where they meet, reaching into their handles. Without handles it is as long as they allow, and refused with a reason when they allow none.
+- **Exact pairs:** a clip's fade in starts one step above silence, as the editor's Crossfade Loop does, so the two sides of an overlap sum to exactly 1 (or 1 in power). Before, they summed to one step short of 1 throughout, a dip of 1/length.
 - Each edit is one undo step, and locked clips are left alone.
 - Tested:
   - the edits above against hand-worked frame values, including at the handles' limits, for locked clips, and with the tempo map;

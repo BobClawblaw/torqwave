@@ -77,7 +77,7 @@ namespace
         fading.fadeIn = 100;
         fading.fadeInShape = FadeShape::linear;
         layered = mix (s, 0, 1000);
-        const auto fadeAt = [&] (int i) { return b (i) * FadeShapes::level (FadeShape::linear, i - 400, 100); };
+        const auto fadeAt = [&] (int i) { return b (i) * FadeShapes::level (FadeShape::linear, i - 400 + 1, 100); };
         check (heard (layered, 450, a (450) + fadeAt (450)) && heard (layered, 550, b (550)),
                "layering: over the top clip's fade in both sound (a crossfade); after it, the top clip alone");
         s.tracks[0].clips[1].fadeIn = 0;
@@ -191,9 +191,10 @@ void runSessionTests (juce::AudioFormatManager& formats)
         s.tracks[0].clips[0].fadeIn = 100;
         s.tracks[0].clips[0].fadeOut = 100;
         out = mix (s, 0, 1000);
-        check (out.getSample (0, 50) == 0.0f && near (out.getSample (0, 100), 0.5f * 251.0f / 100000.0f)
+        check (near (out.getSample (0, 50), FadeShapes::level (FadeShape::sCurve, 1, 100) * 201.0f / 100000.0f) && out.getSample (0, 50) > 0.0f
+                   && near (out.getSample (0, 99), 0.5f * 250.0f / 100000.0f)
                    && out.getSample (0, 150) == 301.0f / 100000.0f && out.getSample (0, 349) == 0.0f,
-               "mixer: raised-cosine fades start and end at silence, half level halfway");
+               "mixer: a raised-cosine fade in starts one step above silence, a fade out ends at silence, half level halfway");
     }
 
     // Rendering in small blocks gives exactly what one big block does.

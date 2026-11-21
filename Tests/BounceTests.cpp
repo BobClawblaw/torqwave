@@ -1521,7 +1521,7 @@ void runBounceTests()
             const auto full = out.getSample (0, 2000);
 
             for (int i = 0; i < 1000; i += 7)
-                followed = followed && std::abs (out.getSample (0, i) - full * FadeShapes::level (shape, i, 1000)) < 1.0e-6f
+                followed = followed && std::abs (out.getSample (0, i) - full * FadeShapes::level (shape, i + 1, 1000)) < 1.0e-6f
                            && std::abs (out.getSample (0, 3999 - i) - full * FadeShapes::level (shape, i, 1000)) < 1.0e-6f;
         }
 

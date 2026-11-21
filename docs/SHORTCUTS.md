@@ -128,6 +128,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Capture MIDI | `Option-Shift-R` |
 | Write Automation | `W` |
 | Crossfade Overlaps | `X` |
+| Crossfade Selected Clips | `Shift-X` |
 | Mix Down... | `Shift-Cmd-E` |
 | Trim Start to Cursor | `Option-[` |
 | Trim End to Cursor | `Option-]` |

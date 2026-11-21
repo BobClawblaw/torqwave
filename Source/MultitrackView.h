@@ -370,6 +370,12 @@ public:
         "Fade Out Shape"); locked clips keep theirs. Right-click a clip for its fade shape menus. */
     void setSelectedClipsFadeShape (bool fadeOut, FadeShape);
 
+    /** Crossfades the selected audio clips (Crossfade Selected Clips): on each track, each selected
+        clip with the next selected one that touches or overlaps it, over `seconds` centred where
+        they meet, S-curve both sides (see SessionEdits::crossfadeClips), as one undo step. Returns
+        why none could be, or an empty string. */
+    juce::String crossfadeSelectedClips (double seconds);
+
     /** Groups the selected clips, so a click on one selects them all (to move or delete them
         together), or breaks up the groups they are in. Each is one undo step. */
     bool canGroupSelectedClips() const;

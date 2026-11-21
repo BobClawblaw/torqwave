@@ -460,6 +460,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/TempoFollowTests.cpp
     Tests/StressTests.cpp
     Tests/SequenceTests.cpp
+    Tests/CrossfadeTests.cpp
     Tests/SoundDesignTests.cpp
     Tests/PictureTests.cpp
     Tests/SmallPiecesTests.cpp

@@ -316,8 +316,8 @@ namespace
         clip.audio->read (raw, 0, 0, raw.getNumSamples());
 
         for (int i = 0; i < raw.getNumSamples(); ++i)
-            source.setSample (0, (int) clip.position + i, raw.getSample (0, i) * FadeShapes::level (clip.fadeInShape, i, clip.fadeIn)
-                                                           * FadeShapes::level (clip.fadeOutShape, clip.length - 1 - i, clip.fadeOut));
+            source.setSample (0, (int) clip.position + i, raw.getSample (0, i) * FadeShapes::clipLevel (clip.fadeInShape, clip.fadeIn, clip.fadeOutShape,
+                                                                                                         clip.fadeOut, i, clip.length));
 
         check (worst (c, 2, source, 0) < 1.0e-6f && silent (c, 0) && silent (c, 1) && silent (c, 4) && silent (c, 5) && silent (c, 3),
                "5.1 master: a mono track in front at width 0 plays from C alone, at its own level");

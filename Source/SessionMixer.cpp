@@ -541,8 +541,7 @@ namespace
                 for (int i = 0; i < count; ++i)
                 {
                     const auto inClip = from - clip.position + i;
-                    s[i] *= FadeShapes::level (clip.fadeInShape, inClip, clip.fadeIn)
-                            * FadeShapes::level (clip.fadeOutShape, clip.length - 1 - inClip, clip.fadeOut);
+                    s[i] *= FadeShapes::clipLevel (clip.fadeInShape, clip.fadeIn, clip.fadeOutShape, clip.fadeOut, inClip, clip.length);
                 }
             }
         }

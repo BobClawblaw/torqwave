@@ -203,6 +203,7 @@ namespace
         cmdTimeSmpte23976, cmdSessionTimecode, cmdFindCuts, cmdMarkHit, cmdFitTempoToHits,
         cmdStoreScene, cmdSaveChannelStrip, cmdApplyChannelStrip,
         cmdShowSequenceLibrary, cmdAddToSequenceLibrary, cmdShowSequencer, cmdShowIdeaBoard,
+        cmdCrossfadeSelected,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -2432,6 +2433,9 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (multitrackMode); break;
         case cmdCrossfade:  info.setInfo ("Crossfade Overlaps", "Crossfade a clip moved or trimmed over part of another", "Multitrack", 0);
                             info.addDefaultKeypress ('x', 0); info.setTicked (multitrack.isCrossfading()); info.setActive (multitrackMode); break;
+        case cmdCrossfadeSelected: info.setInfo ("Crossfade Selected Clips", "Crossfade the selected clips that touch or overlap on a track, reaching into the audio past their ends", "Multitrack", 0);
+                            info.addDefaultKeypress ('x', juce::ModifierKeys::shiftModifier);
+                            info.setActive (multitrackMode && multitrack.getSelectedClips().size() >= 2); break;
         case cmdLayerClips: info.setInfo ("Layer Overlapping Clips", "Where clips overlap on a track, hear the one on top rather than both (crossfades still sound both)", "Multitrack", 0);
                             info.setTicked (multitrack.isLayeringClips()); info.setActive (multitrackMode && ! isRecording()); break;
         case cmdClipToFront: info.setInfo ("Bring Clip to Front", "Put the selected clips on top of the clips they overlap", "Multitrack", 0);
@@ -3255,6 +3259,10 @@ bool MainComponent::perform (const InvocationInfo& info)
             multitrack.setWritingAutomation (! multitrack.isWritingAutomation());
             commands.commandStatusChanged();
             break;
+        case cmdCrossfadeSelected:
+            if (const auto why = multitrack.crossfadeSelectedClips (0.010); why.isNotEmpty())
+                showError ("Crossfade Selected Clips", why);
+            break;
         case cmdLayerClips: multitrack.setLayeringClips (! multitrack.isLayeringClips()); commands.commandStatusChanged(); break;
         case cmdClipToFront: multitrack.restackSelectedClips (true); break;
         case cmdClipToBack: multitrack.restackSelectedClips (false); break;
@@ -3521,7 +3529,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
                                 0, cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement });
             group ("Notes", { cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes });
             group ("Time Range", { cmdClearRange, cmdDeleteTime, cmdInsertTime, 0, cmdCutTime, cmdCopyTime, cmdPasteTime, cmdDuplicateTime });
-            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes, cmdCaptureMidi });
+            group ("Editing and Recording", { cmdSnapping, cmdZeroCrossings, cmdCrossfade, cmdCrossfadeSelected, cmdLayerClips, 0, cmdRippleOff, cmdRippleTrack, cmdRippleAll, 0, cmdInputMonitoring, cmdLoopRecording, cmdRecordNotes, cmdCaptureMidi });
             group ("Automation", { cmdWriteAutomation, 0, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite });
             {
                 // Mixer scenes: store one, or recall one of the session's.

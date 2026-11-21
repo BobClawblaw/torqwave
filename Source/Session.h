@@ -963,6 +963,63 @@ namespace SessionEdits
     /** Sets the shape of a clip's fade in (or out). False for a locked clip or when it is so. */
     bool setClipFadeShape (SessionState&, juce::uint32 clipId, bool fadeOut, FadeShape);
 
+    /** A crossfade: two audio clips on one track, the earlier one ("out") ending over the start of
+        the later one ("in"), the out clip's fade out covering exactly the overlap and the in clip's
+        fade in too. It is found from the clips, not stored: sessions keep only the two fades. */
+    struct Crossfade
+    {
+        juce::uint32 out = 0, in = 0;
+        int track = -1;
+        juce::int64 start = 0, end = 0;        // session frames of the overlap
+
+        juce::int64 length() const noexcept    { return end - start; }
+        juce::int64 join() const noexcept      { return start + length() / 2; }   // its middle
+    };
+
+    /** A track's crossfades, earliest first. */
+    std::vector<Crossfade> crossfadesOn (const SessionState&, int track);
+
+    /** The crossfade on a track whose overlap holds this frame, if there is one. */
+    std::optional<Crossfade> crossfadeAt (const SessionState&, int track, juce::int64 frame);
+
+    /** The crossfades on every track that overlap [start, end), by track and then time. */
+    std::vector<Crossfade> crossfadesIn (const SessionState&, juce::int64 start, juce::int64 end);
+
+    /** The crossfade between these two clips, out first, if they make one. */
+    std::optional<Crossfade> crossfadeBetween (const SessionState&, juce::uint32 outId, juce::uint32 inId);
+
+    /** Sets a crossfade's length, its join staying where it is: the out clip ends half the change
+        later and the in clip starts half the change earlier, the audio it plays staying where it
+        is in time. Each side is limited to its clip's audio (its handle), so the crossfade is as
+        long as the shorter handle allows on both sides of the join. False for a locked clip, no
+        such crossfade, a length under 2 frames or no change. */
+    bool setCrossfadeLength (SessionState&, juce::uint32 outId, juce::uint32 inId, juce::int64 length);
+
+    /** Moves a crossfade's join to a session frame, keeping its length: the out clip's end and the
+        in clip's start move together, limited by their audio and so that neither clip ends inside
+        the crossfade. False for a locked clip, no such crossfade or no change. */
+    bool moveCrossfade (SessionState&, juce::uint32 outId, juce::uint32 inId, juce::int64 join);
+
+    /** Sets the shape of a crossfade's two sides. False for a locked clip, no such crossfade or no
+        change. */
+    bool setCrossfadeShapes (SessionState&, juce::uint32 outId, juce::uint32 inId, FadeShape outShape, FadeShape inShape);
+
+    /** The shape pairs that keep the level steady across a crossfade: S-curve both sides (equal
+        gain, for a sound crossfading into more of itself) or Equal Power both sides (for
+        different sounds). */
+    constexpr FadeShape equalGainShape = FadeShape::sCurve, equalPowerShape = FadeShape::equalPower;
+
+    /** Removes a crossfade: the clips meet at its join with no fades there. False for a locked
+        clip or no such crossfade. */
+    bool removeCrossfade (SessionState&, juce::uint32 outId, juce::uint32 inId);
+
+    /** Crossfades two audio clips on one track that touch or overlap (Crossfade Selected Clips):
+        they are first made to meet at the point where they touch, or the middle of their overlap,
+        then crossfaded over `length` frames centred there, as far as their audio reaches, with
+        these shapes. Returns why it can't, or an empty string when done. */
+    juce::String crossfadeClips (SessionState&, juce::uint32 a, juce::uint32 b, juce::int64 length,
+                                 FadeShape outShape = equalGainShape, FadeShape inShape = equalGainShape);
+
     /** Shrinks each region to the span of the clips overlapping it (muted ones too), on any track,
         within the region; regions overlapping no clip are left alone. Returns how many changed. */
     int fitRegionsToClips (SessionState&);

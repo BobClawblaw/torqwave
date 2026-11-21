@@ -674,6 +674,11 @@ float level (FadeShape shape, juce::int64 frame, juce::int64 length)
     }
 }
 
+float clipLevel (FadeShape inShape, juce::int64 fadeIn, FadeShape outShape, juce::int64 fadeOut, juce::int64 frame, juce::int64 length)
+{
+    return level (inShape, frame + 1, fadeIn) * level (outShape, length - 1 - frame, fadeOut);
+}
+
 juce::String displayName (FadeShape shape)
 {
     switch (shape)
@@ -2100,6 +2105,226 @@ bool setClipFadeShape (SessionState& s, juce::uint32 clipId, bool fadeOut, FadeS
 
     (fadeOut ? c->fadeOutShape : c->fadeInShape) = shape;
     return true;
+}
+
+namespace
+{
+    // The session frames a clip's audio reaches, from where its first frame plays (not before 0).
+    std::pair<juce::int64, juce::int64> audioReach (const SessionClip& c)
+    {
+        const auto first = c.position - c.offset;
+        return { juce::jmax ((juce::int64) 0, first), first + c.audio->getNumFrames() };
+    }
+
+    bool makesCrossfade (const SessionClip& out, const SessionClip& in)
+    {
+        const auto overlap = out.getEnd() - in.position;
+        return out.audio != nullptr && in.audio != nullptr && out.position < in.position && overlap > 0 && out.getEnd() < in.getEnd()
+               && out.fadeOut == overlap && in.fadeIn == overlap;
+    }
+
+    // How far a crossfade between these clips may reach: from the in clip's first audio, after the
+    // out clip's fade in and first frame, to the out clip's last audio, before the in clip's fade
+    // out and last frame.
+    std::pair<juce::int64, juce::int64> crossfadeLimits (const SessionClip& out, const SessionClip& in)
+    {
+        return { juce::jmax (audioReach (in).first, out.position + juce::jmax ((juce::int64) 1, out.fadeIn)),
+                 juce::jmin (audioReach (out).second, in.getEnd() - juce::jmax ((juce::int64) 1, in.fadeOut)) };
+    }
+
+    // The out clip ends at `end` and the in clip starts at `start`, its audio staying where it is in
+    // time, and both fade over [start, end).
+    void overlapAt (SessionClip& out, SessionClip& in, juce::int64 start, juce::int64 end)
+    {
+        out.length = end - out.position;
+        in.offset += start - in.position;
+        in.length -= start - in.position;
+        in.position = start;
+        out.fadeOut = in.fadeIn = end - start;
+        limitFades (out);
+        limitFades (in);
+    }
+
+    // Both clips of a crossfade, when neither is locked or on a frozen track.
+    std::pair<SessionClip*, SessionClip*> unlockedPair (SessionState& s, juce::uint32 outId, juce::uint32 inId)
+    {
+        auto* out = findUnlocked (s, outId);
+        auto* in = findUnlocked (s, inId);
+        return out != nullptr && in != nullptr ? std::pair (out, in) : std::pair<SessionClip*, SessionClip*> (nullptr, nullptr);
+    }
+}
+
+std::vector<Crossfade> crossfadesOn (const SessionState& s, int track)
+{
+    std::vector<Crossfade> found;
+
+    if (! juce::isPositiveAndBelow (track, (int) s.tracks.size()))
+        return found;
+
+    const auto& clips = s.tracks[(size_t) track].clips;
+
+    for (const auto& out : clips)
+        for (const auto& in : clips)
+            if (makesCrossfade (out, in))
+                found.push_back ({ out.id, in.id, track, in.position, out.getEnd() });
+
+    std::sort (found.begin(), found.end(), [] (const Crossfade& a, const Crossfade& b) { return a.start < b.start; });
+    return found;
+}
+
+std::optional<Crossfade> crossfadeAt (const SessionState& s, int track, juce::int64 frame)
+{
+    for (const auto& x : crossfadesOn (s, track))
+        if (frame >= x.start && frame < x.end)
+            return x;
+
+    return std::nullopt;
+}
+
+std::vector<Crossfade> crossfadesIn (const SessionState& s, juce::int64 start, juce::int64 end)
+{
+    std::vector<Crossfade> found;
+
+    for (int t = 0; t < (int) s.tracks.size(); ++t)
+        for (const auto& x : crossfadesOn (s, t))
+            if (x.start < end && x.end > start)
+                found.push_back (x);
+
+    return found;
+}
+
+std::optional<Crossfade> crossfadeBetween (const SessionState& s, juce::uint32 outId, juce::uint32 inId)
+{
+    const auto o = s.findClip (outId), i = s.findClip (inId);
+
+    if (! o.has_value() || ! i.has_value() || o->first != i->first)
+        return std::nullopt;
+
+    const auto& clips = s.tracks[(size_t) o->first].clips;
+    const auto& out = clips[(size_t) o->second];
+    const auto& in = clips[(size_t) i->second];
+
+    if (! makesCrossfade (out, in))
+        return std::nullopt;
+
+    return Crossfade { outId, inId, o->first, in.position, out.getEnd() };
+}
+
+bool setCrossfadeLength (SessionState& s, juce::uint32 outId, juce::uint32 inId, juce::int64 length)
+{
+    const auto x = crossfadeBetween (s, outId, inId);
+    const auto [out, in] = unlockedPair (s, outId, inId);
+
+    if (! x.has_value() || out == nullptr || length < 2)
+        return false;
+
+    // Half before the join and half after it, both shortened alike to what the shorter side allows.
+    const auto join = x->join();
+    const auto [from, to] = crossfadeLimits (*out, *in);
+    const auto room = juce::jmin (join - from, to - join);
+    const auto before = juce::jmin (length / 2, room), after = juce::jmin (length - length / 2, room);
+
+    if (before < 1 || after < 1 || (join - before == x->start && join + after == x->end))
+        return false;
+
+    overlapAt (*out, *in, join - before, join + after);
+    return true;
+}
+
+bool moveCrossfade (SessionState& s, juce::uint32 outId, juce::uint32 inId, juce::int64 join)
+{
+    const auto x = crossfadeBetween (s, outId, inId);
+    const auto [out, in] = unlockedPair (s, outId, inId);
+
+    if (! x.has_value() || out == nullptr)
+        return false;
+
+    const auto [from, to] = crossfadeLimits (*out, *in);
+    const auto length = x->length();
+
+    if (to - length < from)
+        return false;
+
+    const auto start = juce::jlimit (from, to - length, join - length / 2);
+
+    if (start == x->start)
+        return false;
+
+    overlapAt (*out, *in, start, start + length);
+    return true;
+}
+
+bool setCrossfadeShapes (SessionState& s, juce::uint32 outId, juce::uint32 inId, FadeShape outShape, FadeShape inShape)
+{
+    const auto [out, in] = unlockedPair (s, outId, inId);
+
+    if (! crossfadeBetween (s, outId, inId).has_value() || out == nullptr || (out->fadeOutShape == outShape && in->fadeInShape == inShape))
+        return false;
+
+    out->fadeOutShape = outShape;
+    in->fadeInShape = inShape;
+    return true;
+}
+
+bool removeCrossfade (SessionState& s, juce::uint32 outId, juce::uint32 inId)
+{
+    const auto x = crossfadeBetween (s, outId, inId);
+    const auto [out, in] = unlockedPair (s, outId, inId);
+
+    if (! x.has_value() || out == nullptr)
+        return false;
+
+    overlapAt (*out, *in, x->join(), x->join());
+    return true;
+}
+
+juce::String crossfadeClips (SessionState& s, juce::uint32 a, juce::uint32 b, juce::int64 length, FadeShape outShape, FadeShape inShape)
+{
+    const auto wa = s.findClip (a), wb = s.findClip (b);
+
+    if (a == b || ! wa.has_value() || ! wb.has_value())
+        return "Choose two audio clips.";
+
+    if (wa->first != wb->first)
+        return "The two clips must be on one track.";
+
+    auto* first = findUnlocked (s, a);
+    auto* second = findUnlocked (s, b);
+
+    if (first == nullptr || second == nullptr)
+        return "A locked clip, or one on a frozen track, can't be crossfaded.";
+
+    if (first->audio == nullptr || second->audio == nullptr)
+        return "Only audio clips crossfade.";
+
+    if (second->position < first->position)
+        std::swap (first, second);
+
+    auto& out = *first;
+    auto& in = *second;
+
+    if (out.position == in.position || in.getEnd() <= out.getEnd())
+        return "One clip lies over the whole of the other.";
+
+    if (out.getEnd() < in.position)
+        return "The clips must touch or overlap to be crossfaded.";
+
+    if (length < 2)
+        return "The crossfade must be at least 2 samples long.";
+
+    // Where they meet: where they touch, or the middle of their overlap.
+    const auto join = in.position + (out.getEnd() - in.position) / 2;
+    const auto [from, to] = crossfadeLimits (out, in);
+    const auto room = juce::jmin (join - from, to - join);
+
+    if (room < 1)
+        return "There is no audio beyond where the clips meet to crossfade with. Trim them shorter to make some.";
+
+    const auto before = juce::jmin (length / 2, room), after = juce::jmin (length - length / 2, room);
+    overlapAt (out, in, join - before, join + after);
+    out.fadeOutShape = outShape;
+    in.fadeInShape = inShape;
+    return {};
 }
 
 bool clearRange (SessionState& s, int track, juce::int64 start, juce::int64 end)

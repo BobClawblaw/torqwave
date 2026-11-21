@@ -4,6 +4,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Crossfades in a session, step 1** ([docs/PLAN-CROSSFADES.md](docs/PLAN-CROSSFADES.md))
+- **Crossfade Selected Clips** (Shift-X, Multitrack > Editing and Recording): selected clips that touch or overlap on a track are crossfaded, each with the next, over 10 ms centred where they meet, S-curve both sides, reaching into the audio past each clip's end, as one undo step. Two whole files that only touch have no audio past their ends to crossfade with, and it says so; clips with a gap, on two tracks, or one inside the other are refused with a reason.
+- Underneath, for the lane and the crossfade editor to come: a crossfade is found from the clips (two clips on a track where the out clip's fade out and the in clip's fade in both cover exactly their overlap), and can be lengthened or shortened about its join, moved, given a shape for each side, or removed (the clips then meet at its join), each limited by the clips' audio and their own fades. Sessions store only the two fades, as before.
+- **Fades meet exactly:** a session clip's fade in now starts one step above silence (the first frame of a 480-frame fade is at 1/480 of full level, not 0), as the editor's Crossfade Loop already did. The two sides of a crossfade used to sum to one step short of full level throughout, a dip of 0.02 dB for 10 ms at 48 kHz; matched pairs now sum to 1 (S-curve, linear, Fast Start out with Slow Start in) or to 1 in power (Equal Power). Every fade in plays one frame's step differently from before.
+- Tested (`--crossfades`, 37 checks): a file split in two and crossfaded into itself over 480 frames plays the file to within 6e-8 with S-curve, linear and Fast/Slow Start pairs, and after the crossfade is removed the two clips play bit for bit as before it; the gains of S-curve and linear pairs sum to 1 within 1.2e-7 at every frame, and equal power within 2.4e-7 in power; two unrelated noises crossfaded with equal power over 2 s are 0.003 dB from either side's level. Lengths keep the join (an odd length too), a move keeps the length and stops where the clips' audio and their own fades allow, 4,800 frames asked for with 100 frames of audio past one clip's end give 200 frames centred on the join, locked clips are left alone, and a session file reads back the crossfade's frames and shapes with nothing new in it. Crossfade Selected Clips was run on the multitrack view with three clips selected: two crossfades, one undo.
+- Not tried by hand: Shift-X in the running app.
+
 ## Released
 
 **Release 0.19.0: sound design in the session, working to picture, the Sequencer and the Idea Board**

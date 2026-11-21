@@ -183,7 +183,7 @@ AudioDocument::Snapshot clipSound (const SessionClip& c)
         for (int i = 0; i < count; ++i)
         {
             if (c.fadeIn > 0 || c.fadeOut > 0)
-                d[i] *= FadeShapes::level (c.fadeInShape, i, c.fadeIn) * FadeShapes::level (c.fadeOutShape, c.length - 1 - i, c.fadeOut);
+                d[i] *= FadeShapes::clipLevel (c.fadeInShape, c.fadeIn, c.fadeOutShape, c.fadeOut, i, c.length);
 
             if (! c.gainEnvelope.isEmpty())
                 d[i] *= line[(size_t) i];

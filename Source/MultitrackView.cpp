@@ -5547,6 +5547,45 @@ void MultitrackView::setSelectedClipsFadeShape (bool fadeOut, FadeShape shape)
         engine.session.apply (std::move (next), fadeOut ? "Fade Out Shape" : "Fade In Shape");
 }
 
+juce::String MultitrackView::crossfadeSelectedClips (double seconds)
+{
+    auto next = *engine.session.getState();
+    const auto selected = getSelectedClips();
+    const auto length = (juce::int64) std::llround (seconds * next.sampleRate);
+    juce::String reason = selected.size() < 2 ? "Select two clips that touch or overlap on one track." : "";
+    auto made = 0;
+
+    for (int t = 0; t < (int) next.tracks.size(); ++t)
+    {
+        std::vector<const SessionClip*> clips;
+
+        for (const auto& c : next.tracks[(size_t) t].clips)
+            if (std::find (selected.begin(), selected.end(), c.id) != selected.end())
+                clips.push_back (&c);
+
+        std::sort (clips.begin(), clips.end(), [] (auto* a, auto* b) { return a->position < b->position; });
+        std::vector<std::pair<juce::uint32, juce::uint32>> pairs;
+
+        for (size_t i = 1; i < clips.size(); ++i)
+            pairs.emplace_back (clips[i - 1]->id, clips[i]->id);
+
+        for (auto [a, b] : pairs)
+        {
+            const auto why = SessionEdits::crossfadeClips (next, a, b, length);
+            made += why.isEmpty() ? 1 : 0;
+
+            if (reason.isEmpty())
+                reason = why;
+        }
+    }
+
+    if (made == 0)
+        return reason.isNotEmpty() ? reason : "Select two clips that touch or overlap on one track.";
+
+    engine.session.apply (std::move (next), made > 1 ? "Crossfade " + juce::String (made) + " Joins" : juce::String ("Crossfade Clips"));
+    return {};
+}
+
 void MultitrackView::setSelectedClipsFlag (bool (*set) (SessionState&, juce::uint32, bool), bool on, const juce::String& verb)
 {
     auto next = *engine.session.getState();

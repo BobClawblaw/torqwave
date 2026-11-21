@@ -102,6 +102,7 @@
 #include "TempoFollowTests.h"
 #include "StressTests.h"
 #include "SequenceTests.h"
+#include "CrossfadeTests.h"
 #include "SoundDesignTests.h"
 #include "PictureTests.h"
 #include "SmallPiecesTests.h"
@@ -625,6 +626,14 @@ int main (int argc, char* argv[])
     if (const auto i = args.indexOf ("--ai-eval"); i >= 0)
         return runAiEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {}), valueOf ("--ai-eval-set")) == 0 ? 0 : 1;
 
+    if (args.contains ("--crossfades"))
+    {
+        AudioEngine engine;
+        runCrossfadeTests (engine);
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
     if (args.contains ("--sequences"))
     {
         AudioEngine engine;
@@ -864,6 +873,7 @@ int main (int argc, char* argv[])
         runPictureTests (engine);
         runSmallPiecesTests (engine);
         runSequenceTests (engine);
+        runCrossfadeTests (engine);
         runMetronomeTests (engine.formatManager);
         runMixerTests (engine);
         runBounceTests();
