@@ -57,10 +57,74 @@ namespace
     //==========================================================================
     /** An oscillator's wavetable: its frames drawn one behind another in depth, the frame it plays
         in front with a glow, moving as its Position is modulated. A string shows as a pluck dying away. */
-    class WavetableView final : public juce::Component
+    class WavetableView final : public juce::Component,
+                                public juce::FileDragAndDropTarget,
+                                public juce::SettableTooltipClient
     {
     public:
-        WavetableView (Synth& s, int index) : synth (s), osc (index) {}
+        WavetableView (Synth& s, int index) : synth (s), osc (index)
+        {
+            setTooltip ("Drop a sound here to make a table from it: Position then plays through its tone, start to end. Double-click to choose a file");
+        }
+
+        /** Makes a Sampled table from an audio file (its first 30 seconds, channels mixed) and gives it
+            to this oscillator; false if the file can't be read or is under a tenth of a second. */
+        bool loadSound (const juce::File& file)
+        {
+            juce::AudioFormatManager formats;
+            formats.registerBasicFormats();
+            const std::unique_ptr<juce::AudioFormatReader> reader (formats.createReaderFor (file));
+
+            if (reader == nullptr || reader->lengthInSamples <= 0)
+                return false;
+
+            const auto length = (int) juce::jmin (reader->lengthInSamples, (juce::int64) (reader->sampleRate * 30.0));
+            juce::AudioBuffer<float> audio ((int) reader->numChannels, length);
+            reader->read (&audio, 0, length, 0, true, true);
+
+            for (int ch = 1; ch < audio.getNumChannels(); ++ch)
+                audio.addFrom (0, 0, audio, ch, 0, length);
+
+            audio.applyGain (0, 0, length, 1.0f / (float) audio.getNumChannels());
+            const auto table = WaveTables::sampledFromAudio (audio.getReadPointer (0), length, reader->sampleRate, 0.0, file.getFileNameWithoutExtension());
+
+            if (table == nullptr)
+                return false;
+
+            synth.setSampledTable (osc, table);
+            auto* choice = param<juce::AudioParameterChoice> (synth, "osc" + juce::String (osc + 1) + "Table");
+            choice->beginChangeGesture();
+            choice->setValueNotifyingHost (choice->convertTo0to1 ((float) WaveTables::Table::sampled));
+            choice->endChangeGesture();
+            update();
+            return true;
+        }
+
+        bool isInterestedInFileDrag (const juce::StringArray& files) override
+        {
+            return files.size() == 1 && juce::File (files[0]).hasFileExtension ("wav;aif;aiff;flac;ogg;mp3;m4a;caf");
+        }
+
+        void fileDragEnter (const juce::StringArray&, int, int) override   { over = true; repaint(); }
+        void fileDragExit (const juce::StringArray&) override               { over = false; repaint(); }
+
+        void filesDropped (const juce::StringArray& files, int, int) override
+        {
+            over = false;
+            loadSound (juce::File (files[0]));
+            repaint();
+        }
+
+        void mouseDoubleClick (const juce::MouseEvent&) override
+        {
+            chooser = std::make_unique<juce::FileChooser> ("Choose a sound to make a table from", juce::File(), "*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3;*.m4a;*.caf");
+            chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                                  [safe = juce::Component::SafePointer<WavetableView> (this)] (const juce::FileChooser& c)
+                                  {
+                                      if (safe != nullptr && c.getResult().existsAsFile())
+                                          safe->loadSound (c.getResult());
+                                  });
+        }
 
         void update()
         {
@@ -74,6 +138,7 @@ namespace
             const auto live = synth.getReadings().destination[(size_t) (osc * 9)].load (std::memory_order_relaxed);
             now.live = live >= 0.0f ? live : now.position;
             now.live = std::round (now.live * 200.0f) / 200.0f;
+            now.own = now.table == (int) WaveTables::Table::sampled ? synth.getSampledTable (osc).get() : nullptr;
 
             if (now != state)
             {
@@ -111,7 +176,9 @@ namespace
                 return;
             }
 
-            const auto& level = WaveTables::get ((WaveTables::Table) state.table).levels[3];
+            // A sampled table is the synth's own; without one, the sawtooth it plays instead.
+            const auto own = state.table == (int) WaveTables::Table::sampled ? synth.getSampledTable (osc) : nullptr;
+            const auto& level = (own != nullptr ? own->bank : WaveTables::get ((WaveTables::Table) state.table)).levels[3];
             constexpr int layers = 9;
             const auto depthX = area.getWidth() * 0.16f, depthY = area.getHeight() * 0.26f;
             const auto front = area.withTrimmedRight (depthX).withTrimmedTop (depthY);
@@ -131,7 +198,14 @@ namespace
             const auto offset = juce::Point<float> (depthX * state.live, -depthY * state.live);
             const auto lit = framePath (level, state.live, front.translated (offset.x, offset.y), 160, 0.82f, true);
             drawGlowingCurve (g, lit, colour, front.translated (offset.x, offset.y), false);
-            label (g, r, WaveTables::names()[state.table], juce::String (juce::roundToInt (state.live * 100.0f)) + " %");
+            label (g, r, own != nullptr ? own->name : state.table == (int) WaveTables::Table::sampled ? juce::String ("Drop a sound here") : WaveTables::names()[state.table],
+                   juce::String (juce::roundToInt (state.live * 100.0f)) + " %");
+
+            if (over)
+            {
+                g.setColour (Theme::accent.withAlpha (0.8f));
+                g.drawRoundedRectangle (r.reduced (1.5f), 6.0f, 1.5f);
+            }
         }
 
     private:
@@ -140,7 +214,8 @@ namespace
             int table = -1, warp = 0;
             float amount = 0.0f, position = 0.0f, live = 0.0f;
             bool on = true;
-            bool operator!= (const State& o) const { return table != o.table || warp != o.warp || ! juce::exactlyEqual (amount, o.amount) || ! juce::exactlyEqual (live, o.live) || on != o.on || ! juce::exactlyEqual (position, o.position); }
+            const void* own = nullptr;   // the sampled table it shows
+            bool operator!= (const State& o) const { return own != o.own || table != o.table || warp != o.warp || ! juce::exactlyEqual (amount, o.amount) || ! juce::exactlyEqual (live, o.live) || on != o.on || ! juce::exactlyEqual (position, o.position); }
         };
 
         juce::Path framePath (const WaveTables::Level& level, float position, juce::Rectangle<float> box, int points, float height, bool warped = false) const
@@ -170,6 +245,8 @@ namespace
 
         Synth& synth;
         int osc;
+        bool over = false;   // a sound is being dragged over it
+        std::unique_ptr<juce::FileChooser> chooser;
         State state;
     };
 
@@ -635,6 +712,37 @@ namespace
         }
     };
 
+    /** A tab beside the sources' that opens a page and is no source itself. */
+    class PlainTab final : public juce::Component,
+                           public juce::SettableTooltipClient
+    {
+    public:
+        explicit PlainTab (const juce::String& t) : text (t)   { setMouseCursor (juce::MouseCursor::PointingHandCursor); }
+
+        std::function<void()> onClick;
+        void setHighlighted (bool h)                            { highlighted = h; repaint(); }
+
+        void paint (juce::Graphics& g) override
+        {
+            const auto r = getLocalBounds().toFloat().reduced (0.5f);
+            g.setColour (Theme::accent.withAlpha (hovered || highlighted ? 0.3f : 0.12f));
+            g.fillRoundedRectangle (r, r.getHeight() * 0.5f);
+            g.setColour (Theme::accent.withAlpha (hovered || highlighted ? 1.0f : 0.6f));
+            g.drawRoundedRectangle (r, r.getHeight() * 0.5f, 1.0f);
+            g.setColour (highlighted ? Theme::textStrong : Theme::dimText);
+            g.setFont (bold (10.5f));
+            g.drawText (text, r, juce::Justification::centred);
+        }
+
+        void mouseEnter (const juce::MouseEvent&) override    { hovered = true; repaint(); }
+        void mouseExit (const juce::MouseEvent&) override     { hovered = false; repaint(); }
+        void mouseUp (const juce::MouseEvent& e) override      { if (! e.mouseWasDraggedSinceMouseDown() && onClick != nullptr) onClick(); }
+
+    private:
+        juce::String text;
+        bool hovered = false, highlighted = false;
+    };
+
     /** Two or more page buttons drawn as a segmented switch. */
     class PageSwitch final : public juce::Component
     {
@@ -790,7 +898,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         : synth (s),
           presets (EffectPresets::userStore(), s.getPresetKey(), [&s] { return s.getPresetValues(); },
                    [&s] (const EffectPresets::Values& v) { s.setPresetValues (v); }),
-          browser (s), modPages ({ "Modulation", "Effects" }),
+          browser (s), modPages ({ "Slots 1-8", "Slots 9-16", "Effects" }),
           envelopeView (s), lfoView (s)
     {
         addAndMakeVisible (browser);
@@ -882,6 +990,24 @@ struct WaveSynthEditor::Content final : public juce::Component
             tab->onClick = [this, i] { showModulator (i); };
             modulatorPanel->addAndMakeVisible (*tab);
             tabs.push_back (std::move (tab));
+        }
+
+        levelsTab = std::make_unique<PlainTab> ("Osc Levels");
+        levelsTab->setTooltip ("Each oscillator's own level envelope: attack, hold, decay and sustain on its level, so layers come and go by themselves");
+        levelsTab->onClick = [this] { showModulator (6); };
+        modulatorPanel->addAndMakeVisible (*levelsTab);
+
+        for (int o = 0; o < WaveSynth::numOscillators; ++o)
+        {
+            const auto n = "osc" + juce::String (o + 1) + "Env";
+            LevelControls c;
+            c.on = toggle (*modulatorPanel, n + "On", "Osc " + juce::String (o + 1));
+            c.on->setTooltip ("Oscillator " + juce::String (o + 1) + "'s level envelope. Off: its level is the Level knob's, as before");
+
+            for (auto [id, label] : { std::pair { "Attack", "Attack" }, { "Hold", "Hold" }, { "Decay", "Decay" }, { "Sustain", "Sustain" } })
+                c.knobs.push_back (knob (*modulatorPanel, n + id, label, Knob::Size::small));
+
+            levels.push_back (c);
         }
 
         modulatorPanel->addAndMakeVisible (envelopeView);
@@ -1041,19 +1167,26 @@ struct WaveSynthEditor::Content final : public juce::Component
     //==========================================================================
     void showModulator (int index)
     {
-        modulator = juce::jlimit (0, 5, index);
+        modulator = juce::jlimit (0, 6, index);
 
         for (int i = 0; i < (int) tabs.size(); ++i)
             tabs[(size_t) i]->setHighlighted (i == modulator);
 
-        const auto isEnvelope = modulator < 4;
+        levelsTab->setHighlighted (modulator == 6);
+        const auto isEnvelope = modulator < 4, isLfo = modulator == 4 || modulator == 5;
         envelopeView.setVisible (isEnvelope);
-        lfoView.setVisible (! isEnvelope);
+        lfoView.setVisible (isLfo);
 
         if (isEnvelope)
             envelopeView.setEnvelope (modulator);
-        else
+        else if (isLfo)
             lfoView.setLfo (modulator - 4);
+
+        for (auto& l : levels)
+        {
+            l.on->setVisible (modulator == 6);
+            for (auto* k : l.knobs) k->setVisible (modulator == 6);
+        }
 
         for (int e = 0; e < (int) envelopeKnobs.size(); ++e)
             for (auto* k : envelopeKnobs[(size_t) e])
@@ -1072,14 +1205,14 @@ struct WaveSynthEditor::Content final : public juce::Component
         modPages.chosen = index;
         modPages.repaint();
 
-        for (auto& s : slots)
-            for (juce::Component* c : { (juce::Component*) s.source, (juce::Component*) s.destination, (juce::Component*) s.amount })
-                c->setVisible (index == 0);
+        for (int i = 0; i < (int) slots.size(); ++i)
+            for (juce::Component* c : { (juce::Component*) slots[(size_t) i].source, (juce::Component*) slots[(size_t) i].destination, (juce::Component*) slots[(size_t) i].amount })
+                c->setVisible (index == i / 8);
 
         for (auto& e : effects)
-            e.panel->setVisible (index == 1);
+            e.panel->setVisible (index == 2);
 
-        rightPanel->setTitle (index == 0 ? "Modulation Slots" : "Effects");
+        rightPanel->setTitle (index == 2 ? "Effects" : "Modulation Slots");
         rightPanel->repaint();
     }
 
@@ -1100,6 +1233,11 @@ struct WaveSynthEditor::Content final : public juce::Component
         for (auto& k : allKnobs) k->refresh();
         for (auto& s : allSelectors) s->refresh();
         for (auto& t : allToggles) t->refresh();
+
+        // A level envelope that is off has its knobs faint.
+        for (auto& l : levels)
+            for (auto* k : l.knobs)
+                k->setAlpha (l.on->isOn() ? 1.0f : 0.4f);
 
         // The rings: every slot's source, depth and slot on the knob it reaches, and where the newest note has it.
         std::vector<std::vector<ModRing>> rings ((size_t) WaveSynth::destinationIds().size());
@@ -1302,6 +1440,7 @@ struct WaveSynthEditor::Content final : public juce::Component
     void layoutOscillator (const Oscillator& osc)
     {
         auto header = osc.panel->getHeaderBounds();
+        header.removeFromLeft (10);   // clear of the title's last letter
         osc.on->setBounds (header.removeFromLeft (44).reduced (0, 1));
         osc.table->setBounds (header.removeFromRight (112).reduced (0, 1));
         auto c = osc.panel->getContentBounds();
@@ -1330,6 +1469,7 @@ struct WaveSynthEditor::Content final : public juce::Component
     {
         auto c = modulatorPanel->getContentBounds();
         auto tabRow = c.removeFromTop (22);
+        levelsTab->setBounds (tabRow.removeFromRight (78).reduced (2, 0));
         const auto tabWidth = tabRow.getWidth() / 6;
 
         for (auto& t : tabs)
@@ -1343,6 +1483,25 @@ struct WaveSynthEditor::Content final : public juce::Component
 
         c.removeFromTop (6);
         c.removeFromBottom (6);
+
+        if (modulator == 6)
+        {
+            // The oscillators' level envelopes: a row each, its switch and four knobs.
+            const auto h = c.getHeight() / (int) levels.size();
+
+            for (auto& l : levels)
+            {
+                auto row = c.removeFromTop (h);
+                l.on->setBounds (row.removeFromLeft (70).withSizeKeepingCentre (64, 20));
+                const auto w = row.getWidth() / (int) l.knobs.size();
+
+                for (auto* k : l.knobs)
+                    k->setBounds (row.removeFromLeft (w).withSizeKeepingCentre (w, juce::jmin (h, 52)));
+            }
+
+            return;
+        }
+
         auto display = c.removeFromLeft (296);
         envelopeView.setBounds (display);
         lfoView.setBounds (display);
@@ -1392,10 +1551,10 @@ struct WaveSynthEditor::Content final : public juce::Component
     void layoutRight()
     {
         auto header = rightPanel->getHeaderBounds();
-        modPages.setBounds (header.removeFromRight (190).reduced (0, 1));
+        modPages.setBounds (header.removeFromRight (236).reduced (0, 1));
         auto c = rightPanel->getContentBounds();
 
-        // The slots: two columns of four, each a source, a destination and an amount.
+        // The slots, eight to a page: two columns of four, each a source, a destination and an amount.
         {
             auto area = c;
             const auto columnWidth = (area.getWidth() - 12) / 2;
@@ -1403,7 +1562,7 @@ struct WaveSynthEditor::Content final : public juce::Component
 
             for (int s = 0; s < WaveSynth::numSlots; ++s)
             {
-                auto cell = juce::Rectangle<int> (area.getX() + (s / 4) * (columnWidth + 12), area.getY() + (s % 4) * rowHeight, columnWidth, rowHeight);
+                auto cell = juce::Rectangle<int> (area.getX() + (s % 8 / 4) * (columnWidth + 12), area.getY() + (s % 4) * rowHeight, columnWidth, rowHeight);
                 auto& slot = slots[(size_t) s];
                 slot.amount->setBounds (cell.removeFromRight (44).withSizeKeepingCentre (44, juce::jmin (44, rowHeight)));
                 auto lines = cell.withSizeKeepingCentre (cell.getWidth() - 4, 46);
@@ -1506,6 +1665,9 @@ struct WaveSynthEditor::Content final : public juce::Component
         std::vector<juce::Component*> all() const { return { shape, mode, division, sync, rate, phase, fade, smooth }; }
     };
     std::vector<LfoControls> lfos;
+    std::unique_ptr<PlainTab> levelsTab;
+    struct LevelControls { LedToggle* on = nullptr; std::vector<Knob*> knobs; };
+    std::vector<LevelControls> levels;
     std::vector<Knob*> macroKnobs;
 
     struct SlotControls { StepSelector *source = nullptr, *destination = nullptr; Knob* amount = nullptr; };

@@ -6,6 +6,7 @@
 #include "../Source/Theme.h"
 #include "TestUtils.h"
 #include "SwarmGuitarTests.h"
+#include "ClickCheck.h"
 
 namespace
 {
@@ -152,59 +153,6 @@ namespace
         }
 
         return alone > 0.0 ? together / alone : 0.0;
-    }
-
-    /** The worst click in a render: a jump between two samples of `floor` or more, three times the steps
-        either side, as a ratio to the largest step in the 30 ms around it (the millisecond beside it left
-        out). The same measure as the sequence presets' click check (Tests/PresetTests.cpp). */
-    struct Click
-    {
-        float ratio = 0.0f, step = 0.0f;
-        double seconds = 0.0;
-    };
-
-    Click worstClick (const juce::AudioBuffer<float>& b, float floor, const std::vector<int>& starts = {})
-    {
-        Click worst;
-        const auto size = juce::jmax (1, (int) (rate / 1000.0));
-        const auto blocks = b.getNumSamples() / size;
-
-        for (int ch = 0; ch < b.getNumChannels(); ++ch)
-        {
-            const auto* x = b.getReadPointer (ch);
-            std::vector<float> largest ((size_t) blocks, 0.0f);
-            std::vector<int> where ((size_t) blocks, 0);
-
-            for (int i = 1; i < blocks * size; ++i)
-                if (const auto step = std::abs (x[i] - x[i - 1]); step > largest[(size_t) (i / size)])
-                {
-                    largest[(size_t) (i / size)] = step;
-                    where[(size_t) (i / size)] = i;
-                }
-
-            for (int at = 0; at < blocks; ++at)
-            {
-                const auto i = where[(size_t) at];
-
-                if (largest[(size_t) at] < floor || i < 2 || i + 1 >= b.getNumSamples()
-                    || largest[(size_t) at] < 3.0f * juce::jmax (std::abs (x[i - 1] - x[i - 2]), std::abs (x[i + 1] - x[i])))
-                    continue;
-
-                if (std::any_of (starts.begin(), starts.end(), [&] (int start) { return i >= start && i < start + (int) (0.003 * rate); }))
-                    continue;
-
-                auto around = 0.0f;
-
-                for (int other = juce::jmax (0, at - 31); other < juce::jmin (blocks, at + 32); ++other)
-                    if (std::abs (other - at) > 1)
-                        around = juce::jmax (around, largest[(size_t) other]);
-
-                if (const auto ratio = largest[(size_t) at] / juce::jmax (around, 1.0e-6f); ratio > worst.ratio)
-                    worst = { ratio, largest[(size_t) at], (double) where[(size_t) at] / rate };
-            }
-        }
-
-        return worst;
     }
 
     /** As it comes, then playing a swarm: no amp, one guitar, the filter wide open, no drift. */
@@ -569,7 +517,7 @@ void runSwarmGuitarTests (AudioEngine& engine)
             defaults (*guitar);
             guitar->setPresetValues (p.values);
             const auto played = play (*guitar, part, 2.8);
-            const auto click = worstClick (played, 0.03f);
+            const auto click = ClickCheck::worst (played, rate, 0.03f);
 
             if (click.ratio > worstRatio) { worstRatio = click.ratio; worstName = p.name + " at " + juce::String (click.seconds, 3) + " s"; }
             if (click.ratio > 4.0f) clicks.add (p.name + " " + juce::String (click.step, 3) + " at " + juce::String (click.seconds, 3) + " s, " + juce::String (click.ratio, 1) + " times");

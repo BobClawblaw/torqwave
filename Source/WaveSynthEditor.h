@@ -6,7 +6,8 @@
 /** Torqwave Synth's window: the three oscillators with their wavetables drawn at the position they
     play, the sub and noise; the two filters with their response curves; the amp and voice; the
     envelopes (drag their points) and LFOs (draw their steps), each a modulation source to drag
-    onto any knob; the modulation slots; the macros; the effects; and a browser for the factory
+    onto any knob; the oscillators' level envelopes; the modulation slots; the macros; the effects;
+    a sound dropped on an oscillator made into its table; and a browser for the factory
     patches beside the user's own presets. Laid out at one size and scaled as the window is
     resized, so it stays sharp at any size and on any display. */
 class WaveSynthEditor final : public juce::AudioProcessorEditor,
@@ -28,8 +29,8 @@ public:
     /** The knob for a parameter (nullptr if it has none), for tests. */
     SoundControls::Knob* knobFor (const juce::String& id) const;
 
-    /** Shows a section of the lower half: 0 to 3 the envelopes, 4 and 5 the LFOs; and on the right
-        the modulation slots (0) or the effects (1). */
+    /** Shows a section of the lower half: 0 to 3 the envelopes, 4 and 5 the LFOs, 6 the oscillators'
+        level envelopes; and on the right modulation slots 1 to 8 (0), 9 to 16 (1) or the effects (2). */
     void showModulator (int index);
     void showRightPage (int index);
 

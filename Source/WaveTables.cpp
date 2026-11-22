@@ -91,6 +91,10 @@ namespace
                     s = saw (p);   // drawn only
                     break;
 
+                case Table::sampled:
+                    s = saw (p);   // what a synth without a table of its own plays
+                    break;
+
                 case Table::count:
                     break;
             }
@@ -283,7 +287,7 @@ namespace
 
 const juce::StringArray& names()
 {
-    static const juce::StringArray n { "Analog", "Pulse", "Vowel", "FM", "Metal", "Sub", "Additive", "Sync", "Growl", "String" };
+    static const juce::StringArray n { "Analog", "Pulse", "Vowel", "FM", "Metal", "Sub", "Additive", "Sync", "Growl", "String", "Sampled" };
     return n;
 }
 
@@ -296,12 +300,245 @@ const Bank& get (Table t)
 
 std::vector<float> drawFrame (Table table, float position, int points)
 {
-    const auto& level = get (table).levels[2];   // 256 harmonics: plenty for the eye
+    return drawFrame (get (table), position, points);
+}
+
+std::vector<float> drawFrame (const Bank& bank, float position, int points)
+{
+    const auto& level = bank.levels[2];   // 256 harmonics: plenty for the eye
     std::vector<float> out ((size_t) juce::jmax (2, points));
 
     for (int i = 0; i < (int) out.size(); ++i)
         out[(size_t) i] = read (level, position, (double) i / (double) out.size());
 
     return out;
+}
+
+//==============================================================================
+namespace
+{
+    constexpr float sampledRangeDb = 96.0f;
+
+    /** The levels of a sampled table's bank, from its strengths. */
+    void buildSampledBank (Sampled& t)
+    {
+        Builder builder;
+        std::vector<std::complex<float>> bins;
+
+        for (int L = 0; L < numLevels; ++L)
+        {
+            auto& level = t.bank.levels[(size_t) L];
+            level.harmonics = maxHarmonics >> L;
+            level.size = L <= 1 ? 2048 : juce::jmax (1024, level.harmonics * 4);
+            level.frames = t.frames;
+            level.samples.assign ((size_t) t.frames * (size_t) (level.size + 1), 0.0f);
+        }
+
+        for (int f = 0; f < t.frames; ++f)
+        {
+            bins.assign (maxHarmonics, {});
+
+            for (int h = 0; h < Sampled::harmonics; ++h)
+            {
+                const auto step = t.strengths[(size_t) f * Sampled::harmonics + (size_t) h];
+
+                if (step == 0)
+                    continue;
+
+                const auto amplitude = std::pow (10.0f, ((float) step / 65535.0f - 1.0f) * sampledRangeDb / 20.0f);
+                // Schroeder's phases: harmonic k at pi k (k - 1) / N, which spreads the peaks out.
+                const auto phase = juce::MathConstants<double>::pi * (double) h * (double) (h + 1) / (double) Sampled::harmonics;
+                bins[(size_t) h] = std::polar (amplitude, (float) std::fmod (phase, twoPi));
+            }
+
+            std::vector<float> full (2049);
+            builder.synthesise (bins, maxHarmonics, 2048, full.data());
+            auto peak = 0.0f;
+
+            for (int i = 0; i < 2048; ++i)
+                peak = juce::jmax (peak, std::abs (full[(size_t) i]));
+
+            const auto gain = peak > 1.0e-6f ? 1.0f / peak : 0.0f;
+
+            for (int L = 0; L < numLevels; ++L)
+            {
+                auto& level = t.bank.levels[(size_t) L];
+                auto* dest = level.samples.data() + (size_t) f * (size_t) (level.size + 1);
+                builder.synthesise (bins, level.harmonics, level.size, dest);
+                juce::FloatVectorOperations::multiply (dest, gain, level.size + 1);
+            }
+        }
+    }
+
+    std::shared_ptr<const Sampled> finish (std::shared_ptr<Sampled> t)
+    {
+        get (Table::analog);   // the shared FFT sizes and tables exist before a sampled one is built
+        buildSampledBank (*t);
+        return t;
+    }
+}
+
+std::shared_ptr<const Sampled> makeSampled (const std::vector<float>& amplitudes, int frames, double rootHz, const juce::String& name)
+{
+    if (frames < 1 || (int) amplitudes.size() < frames * Sampled::harmonics)
+        return nullptr;
+
+    auto t = std::make_shared<Sampled>();
+    const auto single = frames == 1;
+    t->frames = juce::jlimit (2, Sampled::maxFrames, frames);
+    t->rootHz = rootHz;
+    t->name = name;
+    t->strengths.assign ((size_t) t->frames * Sampled::harmonics, 0);
+
+    for (int f = 0; f < t->frames; ++f)
+    {
+        const auto* from = amplitudes.data() + (size_t) (single ? 0 : f) * Sampled::harmonics;
+        auto most = 0.0f;
+
+        for (int h = 0; h < Sampled::harmonics; ++h)
+            most = juce::jmax (most, std::abs (from[h]));
+
+        if (most <= 0.0f || ! std::isfinite (most))
+            continue;
+
+        for (int h = 0; h < Sampled::harmonics; ++h)
+        {
+            const auto db = juce::Decibels::gainToDecibels (std::abs (from[h]) / most, -200.0f);
+            const auto step = juce::roundToInt ((db + sampledRangeDb) / sampledRangeDb * 65535.0f);
+            t->strengths[(size_t) f * Sampled::harmonics + (size_t) h] = (juce::uint16) juce::jlimit (0, 65535, step);
+        }
+    }
+
+    return finish (std::move (t));
+}
+
+juce::String Sampled::toText() const
+{
+    juce::MemoryBlock block (strengths.size() * 2);
+    auto* bytes = static_cast<juce::uint8*> (block.getData());
+
+    for (size_t i = 0; i < strengths.size(); ++i)
+    {
+        bytes[i * 2] = (juce::uint8) (strengths[i] & 0xff);
+        bytes[i * 2 + 1] = (juce::uint8) (strengths[i] >> 8);
+    }
+
+    return block.toBase64Encoding();
+}
+
+std::shared_ptr<const Sampled> Sampled::fromText (const juce::String& text, int frames, double rootHz, const juce::String& name)
+{
+    juce::MemoryBlock block;
+
+    if (frames < 2 || frames > maxFrames || ! block.fromBase64Encoding (text) || block.getSize() != (size_t) frames * harmonics * 2)
+        return nullptr;
+
+    auto t = std::make_shared<Sampled>();
+    t->frames = frames;
+    t->rootHz = rootHz;
+    t->name = name;
+    t->strengths.resize ((size_t) frames * harmonics);
+    const auto* bytes = static_cast<const juce::uint8*> (block.getData());
+
+    for (size_t i = 0; i < t->strengths.size(); ++i)
+        t->strengths[i] = (juce::uint16) (bytes[i * 2] | (bytes[i * 2 + 1] << 8));
+
+    return finish (std::move (t));
+}
+
+double findPitch (const float* samples, int numSamples, double sampleRate)
+{
+    // The middle of the sound, up to 8,192 samples of it.
+    const auto length = juce::jmin (numSamples, 8192);
+    const auto* x = samples + (numSamples - length) / 2;
+    const auto shortest = juce::jmax (2, (int) (sampleRate / 2000.0)), longest = juce::jmin (length / 2, (int) (sampleRate / 30.0));
+
+    if (longest <= shortest + 2)
+        return 0.0;
+
+    std::vector<double> r ((size_t) longest + 2, 0.0);
+    auto best = 0.0;
+
+    for (int lag = shortest - 1; lag <= longest + 1; ++lag)
+    {
+        double sum = 0.0, a = 0.0, b = 0.0;
+
+        for (int i = 0; i + lag < length; ++i)
+        {
+            sum += (double) x[i] * x[i + lag];
+            a += (double) x[i] * x[i];
+            b += (double) x[i + lag] * x[i + lag];
+        }
+
+        r[(size_t) lag] = a > 0.0 && b > 0.0 ? sum / std::sqrt (a * b) : 0.0;
+        best = juce::jmax (best, r[(size_t) lag]);
+    }
+
+    if (best < 0.6)
+        return 0.0;
+
+    // The shortest lag that is a peak nearly as high as the highest: the period, not a multiple of it.
+    for (int lag = shortest; lag <= longest; ++lag)
+        if (r[(size_t) lag] >= 0.9 * best && r[(size_t) lag] >= r[(size_t) lag - 1] && r[(size_t) lag] >= r[(size_t) lag + 1])
+        {
+            const auto a = r[(size_t) lag - 1], b = r[(size_t) lag], c = r[(size_t) lag + 1];
+            const auto bend = a - 2.0 * b + c;
+            const auto offset = std::abs (bend) > 1.0e-12 ? 0.5 * (a - c) / bend : 0.0;
+            return sampleRate / ((double) lag + juce::jlimit (-0.5, 0.5, offset));
+        }
+
+    return 0.0;
+}
+
+std::shared_ptr<const Sampled> sampledFromAudio (const float* samples, int numSamples, double sampleRate, double rootHz, const juce::String& name)
+{
+    if (samples == nullptr || sampleRate <= 0.0 || numSamples < (int) (sampleRate * 0.1))
+        return nullptr;
+
+    if (rootHz <= 0.0)
+        rootHz = findPitch (samples, numSamples, sampleRate);
+
+    if (rootHz <= 0.0)
+        rootHz = sampleRate / 2048.0;
+
+    // A window two periods of the root long: a partial at a harmonic is read in full and its
+    // neighbours not at all, and one between two harmonics is shared between them.
+    constexpr int order = 14, size = 1 << order;
+    const auto window = juce::jlimit (64, juce::jmin (size, numSamples), juce::roundToInt (2.0 * sampleRate / rootHz));
+    const auto frames = juce::jlimit (2, Sampled::maxFrames, (numSamples - window) / juce::jmax (1, window / 4) + 1);
+    juce::dsp::FFT fft (order);
+    std::vector<std::complex<float>> in ((size_t) size), out ((size_t) size);
+    std::vector<float> amplitudes ((size_t) frames * Sampled::harmonics, 0.0f);
+
+    for (int f = 0; f < frames; ++f)
+    {
+        const auto start = (int) ((double) f / (double) (frames - 1) * (double) (numSamples - window));
+        std::fill (in.begin(), in.end(), std::complex<float>());
+        double weight = 0.0;
+
+        for (int i = 0; i < window; ++i)
+        {
+            const auto w = 0.5 - 0.5 * std::cos (twoPi * (i + 0.5) / window);
+            in[(size_t) i] = { (float) (samples[start + i] * w), 0.0f };
+            weight += w;
+        }
+
+        fft.perform (in.data(), out.data(), false);
+
+        for (int h = 0; h < Sampled::harmonics; ++h)
+        {
+            const auto bin = (double) (h + 1) * rootHz * size / sampleRate;
+
+            if (bin >= size / 2 - 1)
+                break;
+
+            const auto i = (int) bin;
+            const auto t = (float) (bin - i);
+            const auto magnitude = std::abs (out[(size_t) i]) + t * (std::abs (out[(size_t) i + 1]) - std::abs (out[(size_t) i]));
+            amplitudes[(size_t) f * Sampled::harmonics + (size_t) h] = (float) (2.0 * magnitude / weight);
+        }
+    }
+
+    return makeSampled (amplitudes, frames, rootHz, name);
 }
 }

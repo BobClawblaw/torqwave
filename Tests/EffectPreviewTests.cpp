@@ -404,6 +404,52 @@ namespace
         check (list->getNumItems() == factoryCount + 1 && list->getItemText (0) == echo[0].name && list->getItemText (factoryCount) == "Mine"
                    && firstApplied && mineApplied,
                "the presets menu lists the factory presets first, then the user's; choosing one applies it, and only the user's can be deleted");
+
+        // The arrows: next and previous through the menu's order, round its ends, each applied as it is chosen.
+        {
+            const auto order = bar.getOrder();
+            list->setSelectedId (0, juce::dontSendNotification);
+            const auto first = bar.step (1) && bar.getChosen() == order[0] && applied == echo[0].values;
+            const auto second = bar.step (1) && bar.getChosen() == order[1];
+            const auto back = bar.step (-1) && bar.getChosen() == order[0];
+            const auto roundToLast = bar.step (-1) && bar.getChosen() == "Mine" && applied.at ("delay") == 333.0;
+            const auto roundToFirst = bar.step (1) && bar.getChosen() == order[0];
+            const auto byKey = bar.keyPressed (juce::KeyPress (juce::KeyPress::rightKey)) && bar.getChosen() == order[1]
+                                   && bar.keyPressed (juce::KeyPress (juce::KeyPress::leftKey)) && bar.getChosen() == order[0];
+
+            // Swarm Guitar's presets are in sub-menus: the arrows go through each sub-menu in turn, every preset once.
+            EffectPresets::Bar swarm (store, "torqwave:swarm-guitar", [] { return EffectPresets::Values {}; }, [] (const EffectPresets::Values&) {});
+            const auto& made = EffectPresets::factory ("torqwave:swarm-guitar");
+            const auto swarmOrder = swarm.getOrder();
+            auto grouped = swarmOrder.size() == (int) made.size() && ! made.empty();
+            juce::StringArray seen, visited;
+
+            for (int i = 0; i < swarmOrder.size() && grouped; ++i)
+            {
+                juce::String category;
+
+                for (auto& f : made)
+                    if (f.name == swarmOrder[i])
+                        category = f.category;
+
+                if (seen.isEmpty() || seen[seen.size() - 1] != category)
+                {
+                    grouped = ! seen.contains (category);
+                    seen.add (category);
+                }
+
+                swarm.step (1);
+                visited.addIfNotAlreadyThere (swarm.getChosen());
+            }
+
+            EffectPresets::Bar none (store, "torqwave:no-such-effect", [] { return EffectPresets::Values {}; }, [] (const EffectPresets::Values&) {});
+
+            check (order.size() == factoryCount + 1 && first && second && back && roundToLast && roundToFirst && byKey
+                       && grouped && visited.size() == (int) made.size() && ! none.step (1),
+                   "the presets row's arrows (and the left and right keys) step to the next and previous preset in the menu's order, round its ends, each applied as chosen; "
+                   "Swarm Guitar's " + juce::String ((int) made.size()) + " go by one sub-menu after another, each once; with no presets the arrows do nothing");
+        }
+
         folder.deleteRecursively();
     }
 }
