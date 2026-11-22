@@ -1,5 +1,6 @@
 #include "EffectPresets.h"
 #include "GraphicEq.h"
+#include "SwarmGuitar.h"
 
 /* The presets that come with Torqwave: starting points for the jobs a restoration, mixing or
    mastering suite is used for (cleaning up dialogue, taming a vocal, finishing a master for its
@@ -470,6 +471,9 @@ namespace
         t["torqwave:convolution-reverb"] = {
             { "Subtle (15%)", { { "mix", 15.0 } } }, { "Medium (30%)", { { "mix", 30.0 } } },
             { "Wet (60%)", { { "mix", 60.0 } } }, { "All wet", { { "mix", 100.0 } } } };
+
+        // Instruments
+        t[BuiltInEffects::swarmGuitarId] = BuiltInEffects::swarmGuitarPresets();
 
         // Generators
         t["torqwave:generate-tone"] = {

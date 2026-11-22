@@ -175,8 +175,27 @@ void Bar::refresh()
     {
         list.addSectionHeading ("Factory");
 
+        // Those with a category in a sub-menu each, in the order the categories first come; the rest in the list.
+        juce::StringArray categories;
+
+        for (auto& f : made)
+            if (f.category.isNotEmpty())
+                categories.addIfNotAlreadyThere (f.category);
+
+        for (auto& c : categories)
+        {
+            juce::PopupMenu sub;
+
+            for (size_t i = 0; i < made.size(); ++i)
+                if (made[i].category == c)
+                    sub.addItem ((int) i + 1, made[i].name);
+
+            list.getRootMenu()->addSubMenu (c, sub);
+        }
+
         for (size_t i = 0; i < made.size(); ++i)
-            list.addItem (made[i].name, (int) i + 1);
+            if (made[i].category.isEmpty())
+                list.addItem (made[i].name, (int) i + 1);
     }
 
     if (! names.isEmpty())

@@ -303,7 +303,7 @@ SwarmGuitarEditor::SwarmGuitarEditor (SwarmGuitarProcessor& p)
 {
     setOpaque (true);
 
-    for (auto* panel : { &stringsPanel, &ampPanel, &strumPanel, &layersPanel })
+    for (auto* panel : { &stringsPanel, &ampPanel, &strumPanel, &layersPanel, &swarmPanel, &envelopePanel })
         addAndMakeVisible (*panel);
 
     strings = std::make_unique<Strings> (guitar);
@@ -333,6 +333,16 @@ SwarmGuitarEditor::SwarmGuitarEditor (SwarmGuitarProcessor& p)
     attach (release, strumPanel, "release", "How quickly a note is damped when it is let go");
     attach (layers, layersPanel, "layers", "How many guitars play at once, each tuned and timed a little apart, through its own amp");
     attach (width, layersPanel, "width", "How far the guitars are spread left and right");
+    attach (spread, swarmPanel, "spread", "How far apart the swarm's oscillators are fanned, evenly, around the note: a few cents beat, an octave is a cloud");
+    attach (converge, swarmPanel, "converge", "The swarm closing to one pitch over this time; below 0, opening from one pitch to the full Spread");
+    attach (glide, swarmPanel, "glide", "Each oscillator sliding from the last note to the new one, each at its own speed, so the swarm smears");
+    attach (drift, swarmPanel, "drift", "Each oscillator wandering on its own slow course, up to 30 cents either way");
+    attach (attack, envelopePanel, "attack", "How long a note takes to swell in");
+    attach (decay, envelopePanel, "decay", "How long it takes to fall to the sustain level, and the filter to close");
+    attach (hold, envelopePanel, "sustainLevel", "The level a held note stays at");
+    attach (cutoff, envelopePanel, "cutoff", "Where the swarm's low-pass sits (it follows the note by half)");
+    attach (resonance, envelopePanel, "resonance", "How much the low-pass rings at its cutoff");
+    attach (filterEnv, envelopePanel, "filterEnv", "How far the envelope opens the low-pass on each note, and on each Strum Rate pulse");
 
     const auto whole = [] (float v) { return juce::String (juce::roundToInt (v)); };
     count.setFormatter (whole);
@@ -343,11 +353,20 @@ SwarmGuitarEditor::SwarmGuitarEditor (SwarmGuitarProcessor& p)
     tuning.setTooltip ("Unison: every string on the note. Low Octave: the lowest third an octave down. Three Octaves: the top string an octave up as well. Fifths: root, fifth and octave");
     stringsPanel.addAndMakeVisible (tuning);
 
+    source.attach (guitar.sourceParameter());
+    source.setTooltip ("Strings: modelled strings, plucked. Swarm: a sawtooth oscillator for each string, fanned across Spread, through its own envelope and filter");
+    stringsPanel.addAndMakeVisible (source);
+
+    sync.attach (guitar.strumSyncParameter());
+    sync.setTooltip ("Off: Strum Rate's times a second. Otherwise the repeats in note values at the session's tempo, from each note's start");
+    strumPanel.addAndMakeVisible (sync);
+
     amp.attach (guitar.ampParameter());
     amp.setTooltip ("Fuzz (two stages), Crunch (one), or None: the strings alone, for your own amp after it");
     ampPanel.addAndMakeVisible (amp);
 
     addAndMakeVisible (presets);
+    showSource (guitar.isSwarm());
 
     setSize (windowWidth, windowHeight);
     startTimerHz (30);
@@ -360,11 +379,42 @@ SwarmGuitarEditor::~SwarmGuitarEditor()
 
 Knob* SwarmGuitarEditor::knob (const juce::String& name)
 {
-    for (auto* k : { &count, &detune, &pick, &brightness, &drive, &tone, &level, &strum, &strumRate, &sustain, &release, &layers, &width })
+    for (auto* k : allKnobs())
         if (k->getLabel() == name)
             return k;
 
     return nullptr;
+}
+
+std::vector<Knob*> SwarmGuitarEditor::allKnobs()
+{
+    return { &count, &detune, &pick, &brightness, &drive, &tone, &level, &strum, &strumRate, &sustain, &release, &layers, &width,
+             &spread, &converge, &glide, &drift, &attack, &decay, &hold, &cutoff, &resonance, &filterEnv };
+}
+
+void SwarmGuitarEditor::showSource (bool swarm)
+{
+    // What each plays: the swarm's knobs for the swarm, and the strings' own (the pick, how long they ring) for the strings.
+    swarmShown = swarm;
+    stringsPanel.setTitle (swarm ? "Oscillators" : "Strings");
+    count.setLabel (swarm ? "Oscillators" : "Strings");
+    count.setTooltip (swarm ? "How many oscillators each guitar's swarm has" : "How many strings each guitar has");
+    strum.setTooltip (swarm ? "The time between one oscillator's entry and the next" : "The time between one string and the next in a strum");
+    strumRate.setTooltip (swarm ? "Fires the envelope and filter again and again while the key is down; at 0, once"
+                                : "Strums again and again while the key is down, down and up strokes in turn; at 0, once");
+
+    for (auto* k : { &pick, &sustain })
+    {
+        k->setEnabled (! swarm);
+        k->setAlpha (swarm ? 0.35f : 1.0f);
+    }
+
+    for (auto* panel : { &swarmPanel, &envelopePanel })
+    {
+        panel->setDimmed (! swarm);
+        panel->setEnabled (swarm);
+        panel->setAlpha (swarm ? 1.0f : 0.45f);
+    }
 }
 
 int SwarmGuitarEditor::getStringsShown() const                        { return strings->shown(); }
@@ -374,9 +424,17 @@ void SwarmGuitarEditor::showRinging (float amount)                    { strings-
 
 void SwarmGuitarEditor::timerCallback()
 {
-    for (auto* k : { &count, &detune, &pick, &brightness, &drive, &tone, &level, &strum, &strumRate, &sustain, &release, &layers, &width })
+    for (auto* k : allKnobs())
         k->refresh();
 
+    if (guitar.isSwarm() != swarmShown)
+        showSource (guitar.isSwarm());
+
+    source.refresh();
+    sync.refresh();
+    const auto synced = guitar.strumSyncParameter()->getIndex() > 0;
+    strumRate.setAlpha (synced ? 0.35f : 1.0f);
+    strumRate.setEnabled (! synced);
     tuning.refresh();
     amp.refresh();
     strings->advance();
@@ -414,6 +472,7 @@ void SwarmGuitarEditor::resized()
     stringsPanel.setBounds (upper.removeFromLeft (580));
     upper.removeFromLeft (10);
     {
+        source.setBounds (stringsPanel.getHeaderBounds().removeFromRight (140).reduced (0, 1));
         auto c = stringsPanel.getContentBounds();
         strings->setBounds (c.removeFromTop (170));
         c.removeFromTop (6);
@@ -438,10 +497,34 @@ void SwarmGuitarEditor::resized()
         level.setBounds (c.reduced (0, 10));
     }
 
+    // The swarm, and its envelope and filter, along the bottom.
+    auto lower = r.removeFromBottom (140);
+    r.removeFromBottom (10);
+    swarmPanel.setBounds (lower.removeFromLeft (340));
+    lower.removeFromLeft (10);
+    envelopePanel.setBounds (lower);
+    {
+        auto c = swarmPanel.getContentBounds().reduced (6, 2);
+        spread.setBounds (c.removeFromLeft (c.getWidth() * 34 / 100));
+        const auto each = c.getWidth() / 3;
+        converge.setBounds (c.removeFromLeft (each).reduced (0, 8));
+        glide.setBounds (c.removeFromLeft (each).reduced (0, 8));
+        drift.setBounds (c.reduced (0, 8));
+    }
+    {
+        auto c = envelopePanel.getContentBounds().reduced (6, 2);
+        const auto each = c.getWidth() / 6;
+        cutoff.setBounds (c.removeFromLeft (each + 14));
+        for (auto* k : { &resonance, &filterEnv, &attack, &decay })
+            k->setBounds (c.removeFromLeft (each - 3).reduced (0, 8));
+        hold.setBounds (c.reduced (0, 8));
+    }
+
     // The strum, and the guitars across the field.
     strumPanel.setBounds (r.removeFromLeft (580));
     r.removeFromLeft (10);
     {
+        sync.setBounds (strumPanel.getHeaderBounds().removeFromRight (120).reduced (0, 1));
         auto c = strumPanel.getContentBounds().reduced (10, 4);
         const auto each = c.getWidth() / 4;
 

@@ -125,10 +125,54 @@ namespace
     {
         return audio.getRMSLevel (0, (int) (fromSeconds * rate), (int) (seconds * rate));
     }
+
+    /** How many times channel 0 rises through 0 over a stretch: a sawtooth's cycles. */
+    int risings (const juce::AudioBuffer<float>& audio, double fromSeconds, double seconds)
+    {
+        const auto* x = audio.getReadPointer (0);
+        int count = 0;
+
+        for (auto i = juce::jmax (1, (int) (fromSeconds * rate)); i < (int) ((fromSeconds + seconds) * rate); ++i)
+            count += x[i - 1] < 0.0f && x[i] >= 0.0f ? 1 : 0;
+
+        return count;
+    }
+
+    /** How alike channel 0 is to itself a period later (1 the same, near 0 nothing alike): how much one pitch it is. */
+    double periodicity (const juce::AudioBuffer<float>& audio, double fromSeconds, double seconds, double hz)
+    {
+        const auto* x = audio.getReadPointer (0) + (int) (fromSeconds * rate);
+        const auto length = (int) (seconds * rate), lag = juce::roundToInt (rate / hz);
+        double together = 0.0, alone = 0.0;
+
+        for (int i = 0; i + lag < length; ++i)
+        {
+            together += (double) x[i] * x[i + lag];
+            alone += (double) x[i] * x[i];
+        }
+
+        return alone > 0.0 ? together / alone : 0.0;
+    }
+
+    /** As it comes, then playing a swarm: no amp, one guitar, the filter wide open, no drift. */
+    void swarm (Swarm& guitar)
+    {
+        defaults (guitar);
+        set (guitar, "source", 1.0f);
+        set (guitar, "amp", 2.0f);
+        set (guitar, "layers", 1.0f);
+        set (guitar, "drift", 0.0f);
+        set (guitar, "detune", 0.0f);
+        set (guitar, "cutoff", 18000.0f);
+        set (guitar, "resonance", 0.0f);
+        set (guitar, "filterEnv", 0.0f);
+        set (guitar, "brightness", 100.0f);
+    }
 }
 
 void runSwarmGuitarTests (AudioEngine& engine)
 {
+
     juce::PluginDescription description;
 
     for (auto& d : BuiltInEffects::getDescriptions())
@@ -141,8 +185,8 @@ void runSwarmGuitarTests (AudioEngine& engine)
 
     check (guitar != nullptr && error.isEmpty() && description.isInstrument && description.numInputChannels == 0 && description.name == "Swarm Guitar"
                && guitar->acceptsMidi() && guitar->getTotalNumInputChannels() == 0 && guitar->getTotalNumOutputChannels() == 2
-               && guitar->getParameters().size() == 15,
-           "swarm guitar: made from its description, an instrument with no audio input, a stereo output and 15 parameters");
+               && guitar->getParameters().size() == 27,
+           "swarm guitar: made from its description, an instrument with no audio input, a stereo output and 27 parameters");
 
     if (guitar == nullptr)
         return;
@@ -291,6 +335,176 @@ void runSwarmGuitarTests (AudioEngine& engine)
                                               + " times from one 50 ms to the next; one string's only falls (" + juce::String (one, 3) + " at most)");
     }
 
+    // The swarm: oscillators in place of the strings.
+    {
+        swarm (*guitar);
+        set (*guitar, "strings", 1.0f);
+        set (*guitar, "tuning", 0.0f);
+        double worst = 0.0;
+
+        for (int note = 33; note <= 81; note += 12)
+        {
+            const auto hz = 440.0 * std::pow (2.0, (note - 69) / 12.0);
+            const auto out = play (*guitar, { on (0.0, note) }, 0.6);
+            worst = juce::jmax (worst, std::abs (centsOff (pitchOf (out, (int) (0.2 * rate), (int) (0.3 * rate), hz), hz)));
+        }
+
+        check (worst < 3.0, "swarm guitar: one swarm oscillator, no drift, is in tune from A1 to A5, within " + juce::String (worst, 2) + " cents");
+    }
+
+    {
+        // Everything moving at once: glide, converging, drift, Strum Rate, the filter's envelope, three guitars through the fuzz.
+        swarm (*guitar);
+        set (*guitar, "amp", 0.0f);
+        set (*guitar, "layers", 3.0f);
+        set (*guitar, "strings", 8.0f);
+        set (*guitar, "drift", 60.0f);
+        set (*guitar, "glide", 300.0f);
+        set (*guitar, "converge", 800.0f);
+        set (*guitar, "spread", 200.0f);
+        set (*guitar, "strumRate", 9.0f);
+        set (*guitar, "strum", 6.0f);
+        set (*guitar, "cutoff", 900.0f);
+        set (*guitar, "resonance", 50.0f);
+        set (*guitar, "filterEnv", 70.0f);
+        set (*guitar, "decay", 150.0f);
+        set (*guitar, "sustainLevel", 10.0f);
+        const std::vector<Event> part { on (0.0, 40), on (0.3, 47), off (0.6, 40), on (0.7, 43), off (1.1, 47), off (1.3, 43) };
+        const auto a = play (*guitar, part, 1.8), b = play (*guitar, part, 1.8), small = play (*guitar, part, 1.8, 64), odd = play (*guitar, part, 1.8, 37);
+        check (same (a, b) && same (a, small) && same (a, odd) && a.getMagnitude (0, a.getNumSamples()) > 0.01f,
+               "swarm guitar: a swarm part (glide, converging, drift, Strum Rate, three fuzzed guitars) renders the same twice and in blocks of 512, 64 and 37");
+    }
+
+    {
+        // Glide: a note an octave up starts from the last and gets there.
+        swarm (*guitar);
+        set (*guitar, "strings", 1.0f);
+        set (*guitar, "tuning", 0.0f);
+        set (*guitar, "glide", 1000.0f);
+        set (*guitar, "release", 20.0f);
+        const auto out = play (*guitar, { on (0.0, 45), off (0.4, 45), on (0.5, 57) }, 3.0);
+        const auto before = risings (out, 0.2, 0.2), early = risings (out, 0.505, 0.05), late = risings (out, 2.6, 0.2);
+        check (std::abs (before - 22) <= 1 && early <= 7 && std::abs (late - 44) <= 1,
+               "swarm guitar: Glide slides from A2 (" + juce::String (before) + " cycles in 0.2 s) towards A3: " + juce::String (early)
+                   + " cycles in the 50 ms after the new note, " + juce::String (late) + " two seconds on");
+    }
+
+    {
+        // Converge closes a wide fan to one pitch; below 0 it opens one pitch to the fan.
+        const auto alike = [&] (float time, double at)
+        {
+            swarm (*guitar);
+            set (*guitar, "strings", 8.0f);
+            set (*guitar, "tuning", 0.0f);
+            set (*guitar, "spread", 600.0f);
+            set (*guitar, "converge", time);
+            const auto out = play (*guitar, { on (0.0, 45) }, 2.5);
+            return periodicity (out, at, at < 1.0 ? 0.05 : 0.2, 110.0);
+        };
+
+        const auto closingEarly = alike (300.0f, 0.02), closingLate = alike (300.0f, 2.2), openingEarly = alike (-300.0f, 0.02), openingLate = alike (-300.0f, 2.2);
+        check (closingEarly < 0.85 && closingLate > 0.95 && openingEarly > 0.9 && openingLate < 0.6,
+               "swarm guitar: a 600-cent fan converging over 300 ms is one pitch 2 s on (alike a period later " + juce::String (closingEarly, 2) + " at first, "
+                   + juce::String (closingLate, 2) + " then), and below 0 opens from one (" + juce::String (openingEarly, 2) + ", then " + juce::String (openingLate, 2) + ")");
+    }
+
+    {
+        // Strum Rate fires the envelope again: a held note with nothing to sustain pulses.
+        swarm (*guitar);
+        set (*guitar, "strumRate", 8.0f);
+        set (*guitar, "decay", 100.0f);
+        set (*guitar, "sustainLevel", 0.0f);
+        const auto out = play (*guitar, { on (0.0, 45) }, 1.3);
+        const auto pulse = rms (out, 1.0, 0.02), between = rms (out, 1.1, 0.02);
+        check (pulse > 0.02f && between < pulse * 0.1f, "swarm guitar: Strum Rate at 8 /s fires a swarm's envelope again, " + juce::String (pulse, 3)
+                                                             + " RMS as a pulse begins, " + juce::String (between, 4) + " 100 ms on");
+    }
+
+    {
+        // Strum Sync: the pulses in note values at the session's tempo, from the note's start.
+        struct Head final : juce::AudioPlayHead
+        {
+            juce::Optional<PositionInfo> getPosition() const override  { PositionInfo p; p.setBpm (90.0); return p; }
+        } head;
+
+        swarm (*guitar);
+        set (*guitar, "strumRate", 3.0f);
+        set (*guitar, "strumSync", 4.0f);
+        set (*guitar, "decay", 60.0f);
+        set (*guitar, "sustainLevel", 0.0f);
+        guitar->setPlayHead (&head);
+        const auto out = play (*guitar, { on (0.0, 45) }, 1.3);
+        guitar->setPlayHead (nullptr);
+        const auto sixteenth = 60.0 / 90.0 / 4.0;
+        const auto pulse = rms (out, 6.0 * sixteenth, 0.015), between = rms (out, 6.6 * sixteenth, 0.015);
+        check (pulse > 0.02f && between < pulse * 0.1f, "swarm guitar: Strum Sync at 1/16 pulses every 16th at the session's 90 BPM, not Strum Rate's 3 /s ("
+                                                             + juce::String (pulse, 3) + " RMS as the 7th begins, " + juce::String (between, 4) + " 60 % of the way to the 8th)");
+    }
+
+    {
+        // Nothing stops dead: the attack from silence, a release, a steal and All Sound Off move the output no more than playing does.
+        swarm (*guitar);
+        set (*guitar, "strings", 8.0f);
+        set (*guitar, "amp", 0.0f);
+        set (*guitar, "attack", 0.0f);
+        set (*guitar, "release", 20.0f);
+        std::vector<Event> events;
+
+        for (int i = 0; i < 7; ++i)
+            events.push_back (on (0.2 * i, 40 + 3 * i));
+
+        events.push_back (off (1.5, 40 + 18));
+        events.push_back ({ 1.8, juce::MidiMessage::allSoundOff (1) });
+        const auto out = play (*guitar, events, 2.2);
+        const auto playing = largestJump (out, (int) (1.0 * rate), (int) (0.2 * rate));
+        const auto starting = largestJump (out, 0, (int) (0.01 * rate)), stealing = largestJump (out, (int) (1.2 * rate), (int) (0.03 * rate));
+        const auto releasing = largestJump (out, (int) (1.5 * rate), (int) (0.05 * rate)), stopping = largestJump (out, (int) (1.8 * rate), (int) (0.03 * rate));
+        const auto after = out.getMagnitude ((int) (1.9 * rate), (int) (0.2 * rate));
+        check (starting <= playing && stealing <= playing * 1.5f && releasing <= playing * 1.5f && stopping <= playing * 1.5f && after < 1.0e-4f
+                   && guitar->getNumSounding() == 0,
+               "swarm guitar: a fuzzed swarm moves the output at most " + juce::String (playing, 3) + " a sample playing, " + juce::String (starting, 3) + " starting, "
+                   + juce::String (stealing, 3) + " as a seventh note steals, " + juce::String (releasing, 3) + " let go and " + juce::String (stopping, 3)
+                   + " at All Sound Off, then silence and every voice free");
+    }
+
+    {
+        // The factory presets: at least 250, each in a category, named once, setting every parameter, and each at a level that sits.
+        const auto& presets = EffectPresets::factory (BuiltInEffects::swarmGuitarId);
+        juce::StringArray names, categories;
+        auto whole = true;
+
+        for (auto& p : presets)
+        {
+            names.addIfNotAlreadyThere (p.name);
+            categories.addIfNotAlreadyThere (p.category);
+            whole = whole && p.category.isNotEmpty() && (int) p.values.size() == guitar->getParameters().size();
+
+            for (auto* param : guitar->getParameters())
+                whole = whole && p.values.count (dynamic_cast<juce::AudioProcessorParameterWithID*> (param)->paramID) == 1;
+        }
+
+        check (presets.size() >= 250 && names.size() == (int) presets.size() && whole && categories.contains ("Swarm Sequences"),
+               "swarm guitar: " + juce::String ((int) presets.size()) + " factory presets in " + juce::String (categories.size()) + " categories ("
+                   + categories.joinIntoString (", ") + "), each named once and setting every parameter");
+
+        float loudest = -100.0f, quietest = 0.0f;
+        juce::String loud, quiet;
+
+        for (auto& p : presets)
+        {
+            defaults (*guitar);
+            guitar->setPresetValues (p.values);
+            const auto out = play (*guitar, { on (0.0, 40, 0.9f), on (0.0, 47, 0.9f), off (2.0, 40), off (2.0, 47) }, 2.5);
+            const auto peak = juce::Decibels::gainToDecibels (out.getMagnitude (0, out.getNumSamples()), -100.0f);
+
+            if (peak > loudest) { loudest = peak; loud = p.name; }
+            if (peak < quietest) { quietest = peak; quiet = p.name; }
+        }
+
+        check (loudest < -1.0f && quietest > -24.0f, "swarm guitar: every factory preset plays a held E2 and B2 between -24 and -1 dB (the loudest " + loud + " at "
+                                                         + juce::String (loudest, 1) + " dB, the quietest " + quiet + " at " + juce::String (quietest, 1) + " dB)");
+    }
+
     // Its window: knobs in real units, the strings drawn with what each is tuned to, the guitars across the field.
     {
         // A new one, so no note has been played on it yet.
@@ -330,9 +544,18 @@ void runSwarmGuitarTests (AudioEngine& engine)
             const auto follows = fresh.parameterFor ("drive")->getValue() == 0.0f && window->getStringsShown() == 12 && window->getGuitarsShown() == 4
                                      && text ("Rate") == "8.0 /s" && text ("Drive") == "0 %";
 
-            check (sized && readings && before && named && follows,
-                   "swarm guitar window: 900 by 540, its knobs reading 70 %, 4.50 kHz, 6 strings, Once, 6.00 s, -12.0 dB, 2 guitars and +7 ct as it comes; the strings "
-                   "labelled by their place (oct down, note, oct up) and, once a D is played, D1, D2 and D3; a knob turned sets its parameter and 12 strings and 4 guitars are drawn when set");
+            // The swarm chosen: the strings' knob counts oscillators, and the swarm's knobs read.
+            set (fresh, "source", 1.0f);
+            window->refreshNow();
+            const auto swarmed = window->knob ("Oscillators") != nullptr && window->knob ("Strings") == nullptr && text ("Spread").contains ("30")
+                                     && text ("Cutoff") == "5.00 kHz";
+            set (fresh, "source", 0.0f);
+            window->refreshNow();
+
+            check (sized && readings && before && named && follows && swarmed,
+                   "swarm guitar window: 900 by 690, its knobs reading 70 %, 4.50 kHz, 6 strings, Once, 6.00 s, -12.0 dB, 2 guitars and +7 ct as it comes; the strings "
+                   "labelled by their place (oct down, note, oct up) and, once a D is played, D1, D2 and D3; a knob turned sets its parameter and 12 strings and 4 guitars are drawn when set; "
+                   "with the swarm chosen its strings knob counts Oscillators and its swarm knobs read (30 ct, 5.00 kHz)");
         }
         else
         {
