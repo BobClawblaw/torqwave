@@ -381,6 +381,44 @@ void runPresetTests (AudioEngine& engine)
                "presets: Edit in Sequencer opens a preset as a new copy, not yet saved, that Save writes to the user's Melody > Hooks with its notes, the preset untouched; "
                "the Presets button lists all " + juce::String (files.size()) + " by their seven roles");
         target.deleteFile();
+
+        // Opened while it had no room (as at start-up, from the Finder), then laid out, and opened
+        // after a sequence pitched far above it: each time all its notes are in view.
+        const auto inView = [] (SequencerView& v, const juce::File& f)
+        {
+            juce::String e;
+            const auto q = SequenceFile::load (f, e);
+
+            if (! q.has_value())
+                return false;
+
+            const auto low = v.getEditor().getLowPitch(), high = v.getEditor().getHighPitch();
+            auto lowest = 127, highest = 0;
+
+            for (auto& n : q->notes)
+            {
+                lowest = juce::jmin (lowest, n.pitch);
+                highest = juce::jmax (highest, n.pitch);
+            }
+
+            return lowest >= low && highest <= high;
+        };
+
+        const auto bass = presets.getChildFile ("Bass/Arp Bass/Acid Slide Rider.tqseq");
+        SequencerView fresh (engine);
+        fresh.openFile (bass);
+        fresh.setSize (1200, 700);
+        const auto bassLow = fresh.getEditor().getLowPitch();
+        const juce::TemporaryFile users (".tqseq");   // the user's own, so it opens unchanged and the next opens without asking to save
+        lead.copyFileTo (users.getFile());
+        SequencerView laidOut (engine);
+        laidOut.setSize (1200, 700);
+        laidOut.openFile (users.getFile());
+        const auto leadShown = inView (laidOut, lead) && ! laidOut.getDocument().isDirty();
+        laidOut.openFile (bass);
+        check (leadShown && inView (laidOut, bass) && inView (fresh, bass) && laidOut.getDocument().get().name == "Acid Slide Rider",
+               "presets: a sequence opened before the Sequencer is laid out, and one opened after another far above it, show their notes "
+               "(the bass from " + juce::MidiMessage::getMidiNoteName (bassLow, true, true, 4) + ")");
     }
 
     // Dropped: on an instrument track the notes play on its instrument; on empty space a new track plays the preview voice.

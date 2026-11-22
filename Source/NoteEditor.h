@@ -125,6 +125,17 @@ public:
     void fitTime()                                                 { setView (0, 1.0); }
     void showPattern();
     double getZoom() const noexcept                                { return zoom; }
+
+    /** The bottom row of the pitch roll. A clip shown anew (refresh() after showAnew()) is
+        scrolled so its notes sit in the middle, again once the roll is laid out if it had no
+        room when the clip came. */
+    int getLowPitch() const noexcept                               { return lowPitch; }
+    int getHighPitch() const;   // the top row shown
+
+    /** The next refresh() shows its clip as a new one (scrolled to its notes, its first repeat,
+        nothing selected), even when it has the same id as the one shown now: the Sequencer's
+        clip keeps its id from one sequence to the next. */
+    void showAnew()                                                { shown.reset(); }
     double maxZoom() const noexcept;
     juce::int64 getViewStart() const noexcept                      { return viewStart; }
     juce::int64 visibleLength() const noexcept;
@@ -239,6 +250,7 @@ private:
     int firstRow = 0;                      // the drum grid's top row shown
     bool addedNow = false;                 // the drum step under the mouse was set by this click
     int lowPitch = 48;                     // the bottom row shown
+    int placedRows = 0;                    // the rows the roll had when scrolled to the notes
     juce::int64 lastLength = 0;            // the length new notes take without a grid
     double zoom = 1.0;                     // see zoomAround
     juce::int64 viewStart = 0;

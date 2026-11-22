@@ -55,7 +55,7 @@ namespace
     void everyPage()
     {
         const auto pages = Guide::pages();
-        check (pages.size() == 15, "the guide has its contents, thirteen pages and the shortcut list");
+        check (pages.size() == 16, "the guide has its contents, fourteen pages and the shortcut list");
         check (pages[0] == "docs/guide/README.md" && pages[pages.size() - 1] == "docs/SHORTCUTS.md", "the contents come first, the shortcuts last");
 
         juce::StringArray problems;

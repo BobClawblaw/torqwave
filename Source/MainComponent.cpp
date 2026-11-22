@@ -6525,6 +6525,7 @@ void MainComponent::openDocument (const juce::File& file)
 void MainComponent::openDocuments (const juce::Array<juce::File>& chosen)
 {
     juce::Array<juce::File> audio;
+    juce::File sequence;
 
     for (auto& file : chosen)
     {
@@ -6537,8 +6538,21 @@ void MainComponent::openDocuments (const juce::Array<juce::File>& chosen)
             return;
         }
 
-        audio.add (file);
+        if (file.hasFileExtension (SequenceFile::extension))
+            sequence = file;   // the Sequencer holds one: the last one named opens
+        else if (file.hasFileExtension (SequenceKit::extension))
+        {
+            addSequenceToSession (file, (int) engine.session.getState()->tracks.size(), multitrack.getCursor(), true);
+            dock->show (Panels::editor);   // the session it went into, in front of the Sequencer
+        }
+        else
+            audio.add (file);
     }
+
+    // A sequence opens in the Sequencer (a factory preset as a new copy), as Edit in Sequencer
+    // does; a kit goes into the session at the cursor, as a double-click in the library puts it.
+    if (sequence != juce::File())
+        editInSequencer (sequence);
 
     if (audio.isEmpty())
         return;

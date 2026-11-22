@@ -340,6 +340,7 @@ void SequencerView::opened()
     built = SequencerDocument::sessionFor (q, tempo, rate());
     drums = q.role == "Drums";
     loadVoice();
+    editor.showAnew();   // the new sequence's notes in view, not where the last one's were
     refreshState();
     editor.showPattern();
 }

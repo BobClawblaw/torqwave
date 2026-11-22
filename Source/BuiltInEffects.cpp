@@ -340,7 +340,17 @@ namespace
         {
             addAndMakeVisible (presets);
             addAndMakeVisible (parameters);
-            setSize (juce::jmax (400, parameters.getWidth()), parameters.getHeight() + 40 + (reading != nullptr ? stripHeight : 0));
+            // JUCE's generic editor stops at 400 points and scrolls; one with more parameters (the
+            // synth's twenty) grows to show them all, as far as the screen has room under its title
+            // bar (and never past 1,000 points), scrolling only beyond that.
+            auto room = 1000;
+
+            if (const auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay())
+                room = juce::jmin (room, (int) display->userBounds.getHeight() - 40 - 60);
+
+            const auto shown = juce::jlimit (parameters.getHeight(), juce::jmax (parameters.getHeight(), room),
+                                             (int) e.getParameters().size() * 40);
+            setSize (juce::jmax (400, parameters.getWidth()), shown + 40 + (reading != nullptr ? stripHeight : 0));
 
             if (reading != nullptr)
                 startTimerHz (20);

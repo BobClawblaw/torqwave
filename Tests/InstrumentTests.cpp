@@ -524,6 +524,33 @@ void runInstrumentTests (AudioEngine& engine)
     testSynthAdditions (*synth);
 
     {
+        // Its window shows all twenty parameters without scrolling, where JUCE's own editor stops at
+        // 400 points; Basic Drums' nine keep the height JUCE gives them (380, and the presets bar's 40).
+        std::unique_ptr<juce::AudioProcessorEditor> synthEditor (synth->createEditorAndMakeActive());
+        juce::String drumsError;
+        juce::PluginDescription drumsDescription;
+
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.fileOrIdentifier == BuiltInEffects::basicDrumsId)
+                drumsDescription = d;
+
+        auto drumsInstance = engine.pluginFormatManager.createPluginInstance (drumsDescription, rate, 512, drumsError);
+        std::unique_ptr<juce::AudioProcessorEditor> drumsEditor (drumsInstance != nullptr ? drumsInstance->createEditorAndMakeActive() : nullptr);
+
+        // All twenty rows (40 points each) where the screen has room, as on any Mac with 900 points under the menu bar.
+        auto room = 1000;
+
+        if (const auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay())
+            room = juce::jmin (room, (int) display->userBounds.getHeight() - 100);
+
+        check (synthEditor != nullptr && synthEditor->getHeight() == juce::jmin (20 * 40, room) + 40 && drumsEditor != nullptr && drumsEditor->getHeight() == 380 + 40,
+               "instrument: the synth's window is tall enough for its twenty parameters, as far as the screen allows (" + juce::String (synthEditor != nullptr ? synthEditor->getHeight() : 0)
+                   + " points), Basic Drums' as before (" + juce::String (drumsEditor != nullptr ? drumsEditor->getHeight() : 0) + ")");
+        drumsEditor.reset();
+        synthEditor.reset();
+    }
+
+    {
         // Bare, A4 for a second in a second and a half: a sine at exactly the velocity, from the start of its cycle, silent after its hold.
         setBare (*synth);
         juce::AudioBuffer<float> out;

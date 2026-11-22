@@ -35,7 +35,7 @@ The selected instrument track plays whatever comes in live:
 - **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**), and its keys sound even while the session is stopped.
 - **The Piano Roll's keyboard** (see below).
 
-<img src="../screenshots/guide-synth.png" width="430" alt="The Basic Synth window: Presets, Wave, Level, Attack, Decay, Sustain, Release, Cutoff and Resonance, and the extras below them">
+<img src="../screenshots/guide-synth.png" width="430" alt="The Basic Synth window with Acid Slide Rider's settings: Presets, Wave, Level, Attack, Decay, Sustain, Release, Cutoff and Resonance, the wave, octave, detune and level of oscillators 2 and 3, Filter Env, Filter Decay, Velocity to Filter and Glide">
 
 *The window of Basic Synth, the built-in instrument.*
 
@@ -215,7 +215,9 @@ Show it with **Window > Sequence Library**. In the Multitrack workspace it is a 
 
 ### Presets
 
-Torqwave comes with 160 factory presets and 8 starter kits, under **Presets** at the top of the library, sorted by the same roles and sub-roles as your own: at least 20 for each role. They lean towards driving and peak-time techno, dark and industrial techno and EBM, with smaller sets for hypnotic, minimal, melodic, acid and hard techno, electro-industrial, futurepop, aggrotech, synth-EBM, darkwave and industrial rock. Every preset is:
+![The Sequencer workspace: the Sequence Library on the left grouped by style and searched for "techno dark", showing Techno › Dark's drums, bass, harmony, pads, melody and SFX presets with a line under each saying what it does; the Sequencer showing the Rumble Roller preset, a bar of kicks with a quieter rumble between them, claps on 2 and 4, an open hat on the offbeats and a ride in 8ths, on Basic Drums](../screenshots/guide-presets.png)
+
+Torqwave comes with 160 factory presets and 8 starter kits, under **Presets** at the top of the library, sorted by the same roles and sub-roles as your own: at least 20 for each role. They lean towards driving and peak-time techno, dark and industrial techno and EBM, with smaller sets for hypnotic, minimal, melodic, acid and hard techno, electro-industrial, futurepop, aggrotech, synth-EBM, darkwave and industrial rock. [Styles](14-styles.md) says what defines each one. Every preset is:
 
 - in **A minor** (a few use Phrygian's B♭ or harmonic minor's G♯, and say so in their tags), so any of them plays with any other;
 - on the **16th grid**, 1, 2, 4 or 8 bars long, a 4-bar one changing in its last bar;
@@ -339,7 +341,7 @@ Give it a name and click **Save**. The kit goes in **Kits**, with a number on it
 
 In the library a kit shows as "kit of 3 parts", with the bars of its longest part. Click it to hear every part together, each with its own instrument.
 
-**Use one.** Drag a kit into the multitrack view, from the library or from the Finder, or double-click it. Wherever you drop it, it makes a new **folder track** named for the kit at the end of the session, and a new instrument track for each part inside that folder, named for the part, each with its instrument and effects. Every part starts where you dropped it. The whole drop is one undo step.
+**Use one.** Drag a kit into the multitrack view, from the library or from the Finder, or double-click it, in the library or as a `.tqkit` file in the Finder (a kit opened from the Finder goes in at the cursor). Wherever you drop it, it makes a new **folder track** named for the kit at the end of the session, and a new instrument track for each part inside that folder, named for the part, each with its instrument and effects. Every part starts where you dropped it. The whole drop is one undo step.
 
 ### MIDI files
 
@@ -364,7 +366,7 @@ A **pack** is a folder of sequences and kits zipped into one file (`.tqpack`) to
 
 ![The Sequencer workspace: the Sequence Library on the left with a hook selected, the Sequencer showing the Lead Hook's notes over three bars with its Basic Synth voice on the right, and the Idea Board below with the Chorus scene playing on four parts](../screenshots/guide-sequencer.png)
 
-The Sequencer is a window for one sequence from the library, open by itself to write, hear and save. Show it with **Window > Sequencer**, right-click a sequence in the Sequence Library and choose **Edit in Sequencer**, or drag a sequence onto it from the library or the Finder. The **Sequencer** workspace (Window > Workspaces) puts it in front of the editor with the Sequence Library on its left and the [Idea Board](#the-idea-board) under it.
+The Sequencer is a window for one sequence from the library, open by itself to write, hear and save. Show it with **Window > Sequencer**, right-click a sequence in the Sequence Library and choose **Edit in Sequencer**, or drag a sequence onto it from the library or the Finder. Double-clicking a `.tqseq` file in the Finder opens it here too (a preset as a new copy of yours). The **Sequencer** workspace (Window > Workspaces) puts it in front of the editor with the Sequence Library on its left and the [Idea Board](#the-idea-board) under it.
 
 **Edit the notes.** The middle of the window is the Piano Roll, with the drum grid, controller lanes and [writing tools](#writing-tools), as in [Edit the notes](#edit-the-notes-the-piano-roll), but it edits the sequence file itself, not a clip in the session. A sequence filed under Drums opens as a drum grid. A key set with **Tools > Key...** is saved as the sequence's key. **Undo** and **Redo** (Cmd-Z and Shift-Cmd-Z while the window has the focus) step through the window's own edits, apart from the session's.
 

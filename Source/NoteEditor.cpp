@@ -717,6 +717,11 @@ int NoteEditor::noteAt (juce::Point<float> p) const
     return -1;
 }
 
+int NoteEditor::getHighPitch() const
+{
+    return juce::jmin (127, lowPitch + juce::jmax (1, rollArea().getHeight() / rowPixels) - 1);
+}
+
 void NoteEditor::scrollToNotes()
 {
     if (! shown.has_value())
@@ -738,6 +743,7 @@ void NoteEditor::scrollToNotes()
     }
 
     lowPitch = juce::jlimit (0, juce::jmax (0, 128 - rows), (low + high) / 2 - rows / 2);
+    placedRows = rows;
 }
 
 //==============================================================================
@@ -1133,6 +1139,10 @@ void NoteEditor::resized()
     const auto roll = rollArea();
     timeScroll.setBounds (roll.getX(), roll.getBottom(), roll.getWidth(), scrollHeight);
     setView (viewStart, zoom);
+
+    // Shown before it had room for a row (a window opening with a file): put its notes in the middle now.
+    if (placedRows <= 1 && roll.getHeight() / rowPixels > 1)
+        scrollToNotes();
 }
 
 //==============================================================================

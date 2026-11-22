@@ -94,7 +94,8 @@ public:
     void openDocument (const juce::File&);
 
     /** Opens several files at once, each beside the others (the last shows); a session among them
-        is opened instead of the audio files. */
+        is opened instead of the audio files. A sequence opens in the Sequencer and a kit goes into
+        the session at the cursor. */
     void openDocuments (const juce::Array<juce::File>&);
 
     std::function<void (const juce::String& title)> onTitleChanged;

@@ -53,7 +53,7 @@ CloseApplications=yes
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "associate"; Description: "Open Torqwave sessions and projects (.tqsession, .tqproject, and SpectraBlade's .sbsession, .sbproject) with Torqwave"; GroupDescription: "File types:"
+Name: "associate"; Description: "Open Torqwave sessions, projects, sequences and kits (.tqsession, .tqproject, .tqseq, .tqkit, and SpectraBlade's .sbsession, .sbproject) with Torqwave"; GroupDescription: "File types:"
 
 [InstallDelete]
 Type: filesandordirs; Name: "{autopf}\SpectraBlade"
@@ -76,11 +76,19 @@ Root: HKA; Subkey: "Software\Classes\Torqwave.Session\shell\open\command"; Value
 Root: HKA; Subkey: "Software\Classes\Torqwave.Project"; ValueType: string; ValueData: "Torqwave Project"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Torqwave.Project\DefaultIcon"; ValueType: string; ValueData: "{app}\{#AppExe},0"
 Root: HKA; Subkey: "Software\Classes\Torqwave.Project\shell\open\command"; ValueType: string; ValueData: """{app}\{#AppExe}"" ""%1"""
+Root: HKA; Subkey: "Software\Classes\Torqwave.Sequence"; ValueType: string; ValueData: "Torqwave Sequence"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\Torqwave.Sequence\DefaultIcon"; ValueType: string; ValueData: "{app}\{#AppExe},0"
+Root: HKA; Subkey: "Software\Classes\Torqwave.Sequence\shell\open\command"; ValueType: string; ValueData: """{app}\{#AppExe}"" ""%1"""
+Root: HKA; Subkey: "Software\Classes\Torqwave.Kit"; ValueType: string; ValueData: "Torqwave Kit"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\Torqwave.Kit\DefaultIcon"; ValueType: string; ValueData: "{app}\{#AppExe},0"
+Root: HKA; Subkey: "Software\Classes\Torqwave.Kit\shell\open\command"; ValueType: string; ValueData: """{app}\{#AppExe}"" ""%1"""
 
 ; The extensions' keys: taken away on uninstalling only if nothing else is left in them (another
 ; program's entries keep them). Listed before what goes in them, as uninstalling works last first.
 Root: HKA; Subkey: "Software\Classes\.tqsession"; Flags: uninsdeletekeyifempty
 Root: HKA; Subkey: "Software\Classes\.tqproject"; Flags: uninsdeletekeyifempty
+Root: HKA; Subkey: "Software\Classes\.tqseq"; Flags: uninsdeletekeyifempty
+Root: HKA; Subkey: "Software\Classes\.tqkit"; Flags: uninsdeletekeyifempty
 Root: HKA; Subkey: "Software\Classes\.sbsession"; Flags: uninsdeletekeyifempty
 Root: HKA; Subkey: "Software\Classes\.sbproject"; Flags: uninsdeletekeyifempty
 Root: HKA; Subkey: "Software\Classes\.wav"; Flags: uninsdeletekeyifempty
@@ -91,11 +99,15 @@ Root: HKA; Subkey: "Software\Classes\.ogg"; Flags: uninsdeletekeyifempty
 Root: HKA; Subkey: "Software\Classes\.mp3"; Flags: uninsdeletekeyifempty
 Root: HKA; Subkey: "Software\Classes\.m4a"; Flags: uninsdeletekeyifempty
 
-; Sessions and projects open with Torqwave, if chosen; it is in their Open With list either way.
+; Sessions, projects, sequences and kits open with Torqwave, if chosen; it is in their Open With list either way.
 Root: HKA; Subkey: "Software\Classes\.tqsession"; ValueType: string; ValueName: ""; ValueData: "Torqwave.Session"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.tqproject"; ValueType: string; ValueName: ""; ValueData: "Torqwave.Project"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.tqsession\OpenWithProgids"; ValueType: string; ValueName: "Torqwave.Session"; ValueData: ""; Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKA; Subkey: "Software\Classes\.tqproject\OpenWithProgids"; ValueType: string; ValueName: "Torqwave.Project"; ValueData: ""; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKA; Subkey: "Software\Classes\.tqseq"; ValueType: string; ValueName: ""; ValueData: "Torqwave.Sequence"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.tqkit"; ValueType: string; ValueName: ""; ValueData: "Torqwave.Kit"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.tqseq\OpenWithProgids"; ValueType: string; ValueName: "Torqwave.Sequence"; ValueData: ""; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKA; Subkey: "Software\Classes\.tqkit\OpenWithProgids"; ValueType: string; ValueName: "Torqwave.Kit"; ValueData: ""; Flags: uninsdeletevalue uninsdeletekeyifempty
 
 ; SpectraBlade's sessions and projects open with Torqwave too.
 Root: HKA; Subkey: "Software\Classes\.sbsession"; ValueType: string; ValueName: ""; ValueData: "Torqwave.Session"; Flags: uninsdeletevalue; Tasks: associate
@@ -133,6 +145,8 @@ Root: HKA; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; Val
 Root: HKA; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".tqproject"; ValueData: ""
 Root: HKA; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".sbsession"; ValueData: ""
 Root: HKA; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".sbproject"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".tqseq"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".tqkit"; ValueData: ""
 Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#AppExe}"; ValueType: string; ValueData: "{app}\{#AppExe}"; Flags: uninsdeletekey
 
 [Run]
