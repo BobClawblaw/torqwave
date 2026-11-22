@@ -2,6 +2,7 @@
 #include "AudioEngine.h"
 #include "AudioEdits.h"
 #include "FadeShape.h"
+#include "InstrumentPresets.h"
 #include "Loudness.h"
 #include "MatchEq.h"
 #include "Sequences.h"
@@ -425,6 +426,9 @@ Workspace::Workspace (Start s)
                                                        [this] (const juce::String& wanted, juce::String& error) { return findPlugin (wanted, error, true); },
                                                        std::move (s.instrumentPresets), std::move (s.effects),
                                                        [this] (const juce::String& wanted, juce::String& error) { return findPlugin (wanted, error); });
+
+    if (sessionTools != nullptr)
+        sessionTools->setLibrary (std::move (s.library));
 
     if (s.sequence)
         sequenceTools = std::make_unique<SequenceTools> (std::move (*s.sequence), steps,
@@ -1587,6 +1591,40 @@ std::vector<SessionTools::Effect> readChain (const TrackEffects& chains, juce::u
     }
 
     return chain;
+}
+
+std::optional<juce::MemoryBlock> stateFor (const SessionTools::InstrumentLoad& load, juce::String& error)
+{
+    if (load.preset.isEmpty())
+        return std::nullopt;
+
+    auto state = load.factory ? FactorySounds::stateOf (load.plugin, load.preset) : InstrumentPresets::userStore().load (load.plugin, load.preset);
+
+    if (! state)
+        error = "The " + juce::String (load.factory ? "factory sound " : "preset ") + load.preset.quoted() + " for " + load.plugin.name + " couldn't be read.";
+
+    return state;
+}
+
+void loadVoices (AudioEngine& engine, const std::vector<SessionTools::VoiceLoad>& voices, std::function<void (const juce::String&)> done)
+{
+    std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> chains;
+
+    for (auto& v : voices)
+        if (v.effects != nullptr)
+            chains[v.trackId] = v.effects;
+
+    if (chains.empty())
+    {
+        if (done != nullptr)
+            done ({});
+
+        return;
+    }
+
+    // As SequenceKit::addToSession and a dropped sequence load theirs.
+    engine.session.markEffectsChanged();
+    engine.loadTrackEffects (std::move (chains), std::move (done));
 }
 
 void applyChainChange (AudioEngine& engine, const SessionTools::ChainChange& change, std::function<void (const juce::String&)> done)

@@ -19,6 +19,31 @@ namespace
     double round3 (double v)                          { return std::round (v * 1000.0) / 1000.0; }
     double round1 (double v)                          { return std::round (v * 10.0) / 10.0; }
 
+    /** A factory sequence's or kit's path as the tools name it: its folders and file from the presets' folder, "Drums/Kick/Thump.tqseq". */
+    juce::String pathOf (const SequenceLibrary::Entry& e)
+    {
+        return e.path.joinIntoString ("/") + (e.path.isEmpty() ? "" : "/") + e.file.getFileName();
+    }
+
+    /** The instrument a chain to load starts with (a track's EFFECTS), named as SequenceFile::instrumentOf names a voice's; empty with none. */
+    juce::String instrumentIn (const std::shared_ptr<juce::XmlElement>& effects)
+    {
+        if (effects == nullptr)
+            return {};
+
+        SequenceFile::Sequence q;
+        auto voice = std::make_shared<juce::XmlElement> ("TRACKTEMPLATE");
+        voice->addChildElement (new juce::XmlElement (*effects));
+        q.voice = voice;
+        return SequenceFile::instrumentOf (q);
+    }
+
+    juce::String barsText (double bars)
+    {
+        const auto whole = juce::approximatelyEqual (bars, std::round (bars));
+        return (whole ? juce::String ((int) std::round (bars)) : juce::String (bars, 2)) + (juce::approximatelyEqual (bars, 1.0) ? " bar" : " bars");
+    }
+
     // Shared pieces of the tools' parameter schemas.
     const char* trackParam = R"("track": { "description": "The track, bus or folder: its number from get_session, or its name." })";
     const char* clipParam = R"("clip": { "type": "integer", "description": "The clip's id from list_clips." })";
@@ -73,10 +98,31 @@ namespace
                                "start": { "type": "number" }, "length": { "type": "number" }, "velocity": { "type": "integer", "description": "1 to 127; 100 when left out" } },
                                "required": ["pitch", "start", "length"] } } },
                     "required": ["track", "start", "length", "notes"] } },
-  { "name": "set_instrument", "description": "Choose an instrument track's instrument: an instrument plug-in by its id or name from list_plugins with instruments: true, and one of its saved presets (a drum sampler's kit, say) from list_instrument_presets. It is loaded when the plan is applied. On a track that already plays that instrument, give the preset alone to change to it.",
-    "parameters": { "type": "object", "properties": { TRACK, "plugin": { "type": "string" }, "preset": { "type": "string", "description": "A saved preset's name; leave out for the instrument's own start" } }, "required": ["track"] } },
-  { "name": "list_instrument_presets", "description": "The presets the user has saved for an instrument (the plug-in by id or name, or the instrument a track plays). Many instruments, drum samplers above all, keep their kits and sounds in their own browsers: those can be chosen here only once the user has saved them with Save Instrument Preset.",
-    "parameters": { "type": "object", "properties": { "plugin": { "type": "string" }, TRACK } } },
+  { "name": "set_instrument", "description": "Choose an instrument track's instrument: an instrument plug-in by its id or name from list_plugins with instruments: true, and one of its sounds from list_instrument_presets: a preset the user saved (a drum sampler's kit, say), or a factory sound of one of Torqwave's own instruments (a Torqwave Synth patch, a Basic Drums kit, a Swarm Guitar preset), by its name as listed. It is loaded when the plan is applied. On a track that already plays that instrument, give the preset alone to change to it.",
+    "parameters": { "type": "object", "properties": { TRACK, "plugin": { "type": "string" }, "preset": { "type": "string", "description": "A saved preset's or a factory sound's name; leave out for the instrument's own start" } }, "required": ["track"] } },
+  { "name": "list_instrument_presets", "description": "The sounds an instrument can be given (the plug-in by id or name, or the instrument a track plays): the presets the user has saved for it, and for Torqwave's own instruments their factory sounds (Torqwave Synth's patches, Basic Drums' kits, Swarm Guitar's presets). Torqwave Synth has over a thousand patches: narrow them with category (the result names the categories) and search (words in the name); at most 60 come back, with how many more there are. Other instruments, drum samplers above all, keep their kits and sounds in their own browsers: those can be chosen here only once the user has saved them with Save Instrument Preset.",
+    "parameters": { "type": "object", "properties": { "plugin": { "type": "string" }, TRACK,
+                    "category": { "type": "string", "description": "One of the factory sounds' categories, as the result names them." },
+                    "search": { "type": "string", "description": "Words that must all be in a factory sound's name, category or description." } } } },
+  { "name": "find_sequence_presets", "description": "Find factory sequences and kits (the Sequence Library's Presets) by role, style, energy, character and search words. At most 40 come back, with how many more match; each has its name, path, role, bars, the tempo it was written at, key, style, energy, character, whether it brings an instrument, and what it does. With nothing to narrow by, the result also names the roles and styles there are.",
+    "parameters": { "type": "object", "properties": {
+                    "role": { "type": "string", "description": "Drums, Bass, Harmony, Pads, Arps, Melody, SFX, or Kits for whole kits." },
+                    "style": { "type": "string", "description": "A genre (\"Techno\") or a genre and style (\"Techno/Dark\"), as the result names them." },
+                    "energy": { "type": "integer", "description": "1 (an intro tool) to 5 (peak)." },
+                    "character": { "type": "array", "items": { "type": "string" }, "description": "Any of Dark, Bright, Sparse, Dense, Straight, Swung, Clean, Distorted; a preset must have every one given." },
+                    "search": { "type": "string", "description": "Words that must all be in its name, key, tags, folders, style or description." } } } },
+  { "name": "add_sequence_preset", "description": "Put a factory sequence into the session at a bar, as dropping it from the Sequence Library does. Without a track it goes on a new instrument track named for it, with the instrument and effects it brings (loaded when the plan is applied, not part of its undo step). With a track it goes on that instrument track: its notes only, played by the track's instrument, a drum part on the keys of the track's drum map. It plays on the same beats at the session's tempo.",
+    "parameters": { "type": "object", "properties": { "preset": { "type": "string", "description": "Its name or path from find_sequence_presets." }, TRACK,
+                    "bar": { "type": "integer", "description": "The bar it starts on, from 1; bar 1 when left out." } }, "required": ["preset"] } },
+  { "name": "add_kit", "description": "Put a factory kit (sequences made to play together: a groove's kick, snare and hats, or a bass with its chords) into the session at a bar, as dropping it does: a folder track named for it and a new track in it for each part, each with the instrument it brings (loaded when the plan is applied, not part of its undo step).",
+    "parameters": { "type": "object", "properties": { "kit": { "type": "string", "description": "Its name or path from find_sequence_presets with role Kits." },
+                    "bar": { "type": "integer", "description": "The bar it starts on, from 1; bar 1 when left out." } }, "required": ["kit"] } },
+  { "name": "list_drum_maps", "description": "The drum maps the user has saved, by name: each is a kit's sounds, the key each is on and the General MIDI drum it stands for. With a track, also the map that track has now.",
+    "parameters": { "type": "object", "properties": { TRACK } } },
+  { "name": "set_drum_map", "description": "Give an instrument track a saved drum map by its name from list_drum_maps, or \"General MIDI\" for the standard layout. The map names the drum grid's rows and says which key of the kit each General MIDI drum is on. Notes already on the track stay where they are until remap_clip_notes moves them.",
+    "parameters": { "type": "object", "properties": { TRACK, "map": { "type": "string" } }, "required": ["track", "map"] } },
+  { "name": "remap_clip_notes", "description": "Move a note clip's notes between General MIDI's keys and the keys of its track's drum map: to \"map\" puts a General MIDI pattern on the kit's keys, to \"general_midi\" brings it back. Each note moves once, from where it was.",
+    "parameters": { "type": "object", "properties": { CLIP, "to": { "type": "string", "enum": ["map", "general_midi"] } }, "required": ["clip", "to"] } },
   { "name": "set_automation", "description": "Draw automation of a track's or bus's volume or pan, or of a parameter of one of its effects or its instrument (give effect, and the parameter's name or id from list_effect_parameters): points joined by straight lines, held before the first and after the last. Volume points are dB (-60 to +12), pan points -1 (left) to +1 (right), an effect's parameter 0 to 1 (its whole range; list_effect_parameters says how the ends read). The points replace the parameter's automation; no points remove it, giving the parameter back to its setting. An effect added in this plan can be automated once the plan is applied.",
     "parameters": { "type": "object", "properties": { TRACK, "parameter": { "type": "string", "description": "volume, pan, or with effect the effect's parameter" }, FXREF,
       "points": { "type": "array", "items": { "type": "object", "properties": { "time": { "type": "number", "description": "seconds" }, "value": { "type": "number" } }, "required": ["time", "value"] } } },
@@ -141,6 +187,26 @@ namespace Ai
                 kept.push_back (l);
 
         return kept;
+    }
+
+    std::vector<SessionTools::VoiceLoad> SessionTools::getVoiceLoads() const
+    {
+        std::vector<VoiceLoad> kept;
+
+        for (auto& v : voices)
+            if (state.findTrack (v.trackId) != nullptr)
+                kept.push_back (v);
+
+        return kept;
+    }
+
+    const SessionTools::VoiceLoad* SessionTools::voiceOf (juce::uint32 trackId) const
+    {
+        for (auto& v : voices)
+            if (v.trackId == trackId)
+                return &v;
+
+        return nullptr;
     }
 
     std::vector<SessionTools::ChainChange> SessionTools::getChainChanges() const
@@ -289,6 +355,9 @@ namespace Ai
         if (t.isFrozen())
             return t.name.quoted() + " is frozen: its effects can't change until it is unfrozen (freeze_track with freeze false)";
 
+        if (voiceOf (t.id) != nullptr)
+            return t.name.quoted() + "'s instrument and effects arrive with its sequence when the plan is applied: they can be changed in a later request";
+
         return {};
     }
 
@@ -303,7 +372,7 @@ namespace Ai
             for (auto& t : *list)
                 tools.add (object ({ { "type", "function" }, { "function", t } }));
 
-        jassert (tools.size() == 37);
+        jassert (tools.size() == 43);
         return tools;
     }
 
@@ -315,9 +384,16 @@ namespace Ai
                "get_session again after that. Clips are named by their id from list_clips. Each change adds a step to the plan; "
                "nothing reaches the session until the user applies it. Notes go in note clips on instrument tracks; a beat lasts "
                "60 / tempo seconds. Drum instruments mostly follow General MIDI: kick 36, snare 38, clap 39, closed hi-hat 42, "
-               "open hi-hat 46, crash 49, ride 51. An instrument's sounds and kits are the presets the user saved for it "
-               "(list_instrument_presets); when a request names a sound that isn't among them, say which there are rather than "
-               "guessing. A track's effects: get_session lists them in order; add_track_effect, remove_track_effect and "
+               "open hi-hat 46, crash 49, ride 51. An instrument's sounds are the presets the user saved for it and, for "
+               "Torqwave's own instruments (Torqwave Synth, Basic Drums, Swarm Guitar), their factory sounds: look them up with "
+               "list_instrument_presets (with category and search for Torqwave Synth's many patches) and give set_instrument a "
+               "name from the list. When a request names a sound that isn't there, choose among the nearest names or say which "
+               "there are rather than guessing. Factory sequences and kits: find_sequence_presets finds them by role, style, "
+               "energy and character; add_sequence_preset and add_kit put one at a bar, on the session's beats at its tempo "
+               "(set_tempo first when the request names a tempo). The instruments they bring are loaded once the plan is "
+               "applied, aren't undone with it, and can be changed only in a later request. Drum maps (a kit whose drums are "
+               "not on General MIDI's keys): list_drum_maps, set_drum_map, and remap_clip_notes to move a clip's notes to the "
+               "map's keys or back. A track's effects: get_session lists them in order; add_track_effect, remove_track_effect and "
                "move_track_effect change the chain; list_effect_parameters reads an effect's or instrument's parameters and "
                "set_track_effect sets them or switches an effect off. Chain changes and settings are made once the plan is "
                "applied and aren't undone with it, and an effect added in the plan can be set only in a later request. Automation "
@@ -367,6 +443,12 @@ namespace Ai
         else if (tool == "add_note_clip")  result = addNoteClip (args);
         else if (tool == "set_instrument") result = setInstrument (args);
         else if (tool == "list_instrument_presets") result = listInstrumentPresets (args);
+        else if (tool == "find_sequence_presets") result = findSequencePresets (args);
+        else if (tool == "add_sequence_preset") result = addSequencePreset (args);
+        else if (tool == "add_kit")        result = addKit (args);
+        else if (tool == "list_drum_maps") result = listDrumMaps (args);
+        else if (tool == "set_drum_map")   result = setDrumMap (args);
+        else if (tool == "remap_clip_notes") result = remapClipNotes (args);
         else if (tool == "store_scene")    result = storeScene (args);
         else if (tool == "recall_scene")   result = recallScene (args);
         else return std::nullopt;
@@ -502,7 +584,9 @@ namespace Ai
             {
                 const auto pending = std::find_if (loads.rbegin(), loads.rend(), [&t] (const InstrumentLoad& l) { return l.trackId == t.id; });
                 const auto current = instruments.find (t.id);
-                o->setProperty ("instrument", pending != loads.rend() ? juce::var (pending->plugin.name + (pending->preset.isNotEmpty() ? ", preset " + pending->preset.quoted() : juce::String())
+                const auto* voice = voiceOf (t.id);
+                o->setProperty ("instrument", voice != nullptr ? juce::var ((voice->instrument.isNotEmpty() ? voice->instrument : juce::String ("its sequence's effects")) + " (when the plan is applied)")
+                                              : pending != loads.rend() ? juce::var (pending->plugin.name + (pending->preset.isNotEmpty() ? ", preset " + pending->preset.quoted() : juce::String())
                                                                                   + " (when the plan is applied)")
                                               : current != instruments.end() ? juce::var (current->second.name) : juce::var ("none"));
             }
@@ -2050,6 +2134,9 @@ namespace Ai
         if (! t.takesNoteClips())
             return refused (t.name.quoted() + " is not an instrument track (add_track with kind \"instrument\" makes one)");
 
+        if (voiceOf (t.id) != nullptr)
+            return refused (chainRefusal (t));
+
         const auto wanted = a["plugin"].toString().trim();
         const auto preset = a["preset"].toString().trim();
         const auto playing = instrumentOf (t.id);
@@ -2085,14 +2172,36 @@ namespace Ai
             return refused (t.name.quoted() + " already plays " + plugin->name + "; give a preset to change its sound");
 
         juce::String presetName;
+        auto factory = false;
 
         if (preset.isNotEmpty())
         {
+            // One the user saved comes before a factory sound of the same name.
             const auto saved = presetsFor (*plugin);
+            const auto sounds = factorySoundsOf (*plugin);
 
             for (auto& n : saved)
                 if (n.equalsIgnoreCase (preset))
                     presetName = n;
+
+            if (presetName.isEmpty())
+                for (auto& sound : sounds)
+                    if (presetName.isEmpty() && sound.name.equalsIgnoreCase (preset))
+                    {
+                        presetName = sound.name;
+                        factory = true;
+                    }
+
+            if (presetName.isEmpty() && ! sounds.empty())
+            {
+                auto names = saved;
+
+                for (auto& sound : sounds)
+                    names.add (sound.name);
+
+                return refused (plugin->name + " has no sound called " + preset.quoted() + "; the nearest are "
+                                + nearestNames (names, preset).joinIntoString (", ") + " (list_instrument_presets with search finds others)");
+            }
 
             if (presetName.isEmpty())
                 return refused (plugin->name + " has no saved preset called " + preset.quoted() + "; "
@@ -2107,10 +2216,11 @@ namespace Ai
 
         loads.erase (std::remove_if (loads.begin(), loads.end(), [&t] (const InstrumentLoad& l) { return l.trackId == t.id; }), loads.end());
 
-        const auto step = alreadyLoaded ? "Load the preset " + presetName.quoted() + " in " + plugin->name + " on " + t.name.quoted()
-                                        : "Load " + plugin->name + (presetName.isNotEmpty() ? " with the preset " + presetName.quoted() : juce::String())
+        const auto kind = factory ? juce::String ("factory sound ") : juce::String ("preset ");
+        const auto step = alreadyLoaded ? "Load the " + kind + presetName.quoted() + " in " + plugin->name + " on " + t.name.quoted()
+                                        : "Load " + plugin->name + (presetName.isNotEmpty() ? " with the " + kind + presetName.quoted() : juce::String())
                                               + " on " + t.name.quoted();
-        loads.push_back ({ t.id, *plugin, presetName, alreadyLoaded, step });
+        loads.push_back ({ t.id, *plugin, presetName, factory, alreadyLoaded, step });
         steps.add (step);
         return object ({ { "ok", true }, { "step", step } });
     }
@@ -2132,7 +2242,9 @@ namespace Ai
             plugin = instrumentOf (state.tracks[(size_t) *index].id);
 
             if (! plugin)
-                error = state.tracks[(size_t) *index].name.quoted() + " has no instrument";
+                error = voiceOf (state.tracks[(size_t) *index].id) != nullptr
+                            ? state.tracks[(size_t) *index].name.quoted() + "'s instrument arrives with its sequence when the plan is applied: name the plugin instead"
+                            : state.tracks[(size_t) *index].name.quoted() + " has no instrument";
         }
 
         if (! plugin)
@@ -2143,8 +2255,623 @@ namespace Ai
         for (auto& n : presetsFor (*plugin))
             names.add (n);
 
-        return object ({ { "ok", true }, { "plugin", plugin->name }, { "presets", names },
-                         { "note", names.isEmpty() ? juce::var ("None are saved for it. The user can load a sound in the instrument and save it with Save Instrument Preset.")
-                                                   : juce::var() } });
+        const auto sounds = factorySoundsOf (*plugin);
+
+        if (sounds.empty())
+            return object ({ { "ok", true }, { "plugin", plugin->name }, { "presets", names },
+                             { "note", names.isEmpty() ? juce::var ("None are saved for it. The user can load a sound in the instrument and save it with Save Instrument Preset.")
+                                                       : juce::var() } });
+
+        // The factory sounds: their categories with how many each holds, and those the call narrows to.
+        juce::StringArray categories;
+        std::vector<int> counts;
+
+        for (auto& sound : sounds)
+            if (sound.category.isNotEmpty())
+            {
+                auto at = categories.indexOf (sound.category);
+
+                if (at < 0)
+                {
+                    at = categories.size();
+                    categories.add (sound.category);
+                    counts.push_back (0);
+                }
+
+                ++counts[(size_t) at];
+            }
+
+        auto category = a["category"].toString().trim();
+        const auto search = a["search"].toString().trim();
+
+        if (category.isNotEmpty())
+        {
+            const auto at = categories.indexOf (category, true);
+
+            if (at < 0)
+                return refused (plugin->name + (categories.isEmpty() ? juce::String ("'s factory sounds have no categories; leave category out")
+                                                                       : " has no category " + category.quoted() + "; its categories are " + categories.joinIntoString (", ")));
+
+            category = categories[at];
+        }
+
+        constexpr int most = 60;
+        juce::Array<juce::var> factory;
+        int matching = 0;
+
+        for (auto& sound : sounds)
+        {
+            if ((category.isNotEmpty() && sound.category != category) || ! hasWords (sound.name + " " + sound.category + " " + sound.about, search))
+                continue;
+
+            if (++matching > most)
+                continue;
+
+            auto* o = new juce::DynamicObject();
+            o->setProperty ("name", sound.name);
+
+            if (sound.category.isNotEmpty())
+                o->setProperty ("category", sound.category);
+
+            if (sound.about.isNotEmpty())
+                o->setProperty ("about", sound.about);
+
+            factory.add (juce::var (o));
+        }
+
+        auto result = object ({ { "ok", true }, { "plugin", plugin->name }, { "presets", names }, { "factory", factory },
+                                { "factory_matching", matching }, { "factory_total", (int) sounds.size() } });
+        auto* o = result.getDynamicObject();
+
+        if (! categories.isEmpty())
+        {
+            juce::Array<juce::var> listed;
+
+            for (int i = 0; i < categories.size(); ++i)
+                listed.add (categories[i] + " (" + juce::String (counts[(size_t) i]) + ")");
+
+            o->setProperty ("categories", listed);
+        }
+
+        if (matching > most)
+        {
+            o->setProperty ("more", matching - most);
+            o->setProperty ("note", "the first " + juce::String (most) + " of " + juce::String (matching) + "; narrow with category or search");
+        }
+        else if (matching == 0)
+        {
+            o->setProperty ("note", "no factory sound matches; try fewer words or another category");
+        }
+
+        return result;
+    }
+
+    std::vector<FactorySound> SessionTools::factorySoundsOf (const juce::PluginDescription& d) const
+    {
+        return library.factorySounds != nullptr ? library.factorySounds (d) : std::vector<FactorySound>();
+    }
+
+    //==============================================================================
+    const std::vector<SequenceLibrary::Entry>& SessionTools::sequencePresets()
+    {
+        if (! factoryPresets)
+            factoryPresets = library.sequencePresets != nullptr ? library.sequencePresets() : std::vector<SequenceLibrary::Entry>();
+
+        return *factoryPresets;
+    }
+
+    const SequenceLibrary::Entry* SessionTools::presetOf (const juce::String& which, bool kit, juce::String& error)
+    {
+        const auto& all = sequencePresets();
+        const auto kindName = kit ? "kit" : "sequence";
+
+        if (which.isEmpty())
+        {
+            error = juce::String ("give the ") + kindName + "'s name or path from find_sequence_presets";
+            return nullptr;
+        }
+
+        std::vector<const SequenceLibrary::Entry*> found;
+
+        for (auto& e : all)
+            if (const auto path = pathOf (e); path.equalsIgnoreCase (which) || path.upToLastOccurrenceOf (".", false, false).equalsIgnoreCase (which))
+                found.push_back (&e);
+
+        if (found.empty())
+            for (auto& e : all)
+                if (e.name.equalsIgnoreCase (which))
+                    found.push_back (&e);
+
+        // Of the kind asked for, when both a sequence and a kit have the name.
+        if (std::any_of (found.begin(), found.end(), [kit] (auto* e) { return e->isKit == kit; }))
+            found.erase (std::remove_if (found.begin(), found.end(), [kit] (auto* e) { return e->isKit != kit; }), found.end());
+
+        if (found.size() == 1 && found[0]->isKit == kit)
+            return found[0];
+
+        if (found.size() == 1)
+        {
+            error = found[0]->name.quoted() + (kit ? " is one sequence, not a kit: add_sequence_preset puts it in" : " is a kit: add_kit puts it in");
+            return nullptr;
+        }
+
+        if (found.size() > 1)
+        {
+            juce::StringArray paths;
+
+            for (auto* e : found)
+                if (paths.size() < 8)
+                    paths.add (pathOf (*e));
+
+            error = juce::String ((int) found.size()) + " factory " + kindName + "s are called " + which.quoted() + ": give one's path (" + paths.joinIntoString (", ") + ")";
+            return nullptr;
+        }
+
+        juce::StringArray names;
+
+        for (auto& e : all)
+            if (e.isKit == kit)
+                names.add (e.name);
+
+        error = names.isEmpty() ? juce::String ("no factory ") + kindName + "s are known here"
+                                : juce::String ("no factory ") + kindName + " is called " + which.quoted() + "; the nearest are "
+                                      + nearestNames (names, which).joinIntoString (", ") + " (find_sequence_presets finds others)";
+        return nullptr;
+    }
+
+    std::optional<juce::int64> SessionTools::barFrameOf (const juce::var& bar, juce::String& error) const
+    {
+        if (bar.isVoid())
+            return state.tempoMap().barFrame (0);
+
+        if (! (bar.isInt() || bar.isInt64() || bar.isDouble()) || ! juce::exactlyEqual ((double) (int) bar, (double) bar) || (int) bar < 1 || (int) bar > 10000)
+        {
+            error = "bar is a whole number from 1 (the session's first bar) to 10000";
+            return std::nullopt;
+        }
+
+        return state.tempoMap().barFrame ((int) bar - 1);
+    }
+
+    juce::var SessionTools::findSequencePresets (const juce::var& a)
+    {
+        const auto& all = sequencePresets();
+
+        if (all.empty())
+            return refused ("no factory sequences are known here");
+
+        const auto styles = SequenceLibrary::stylesIn (all);
+        juce::StringArray roles, genres;
+
+        for (auto& e : all)
+            if (! e.path.isEmpty())
+                roles.addIfNotAlreadyThere (e.path[0]);
+
+        for (auto& style : styles)
+            if (const auto genre = SequenceFile::splitStyle (style).first; genre.isNotEmpty())
+                genres.addIfNotAlreadyThere (genre);
+
+        SequenceLibrary::Filters f;
+        f.search = a["search"].toString().trim();
+
+        if (const auto role = a["role"].toString().trim(); role.isNotEmpty())
+        {
+            const auto at = roles.indexOf (role, true);
+
+            if (at < 0)
+                return refused ("no role " + role.quoted() + "; the roles are " + roles.joinIntoString (", "));
+
+            f.role = roles[at];
+        }
+
+        if (const auto style = a["style"].toString().trim().replace (juce::String::fromUTF8 (" \xe2\x80\xba "), "/"); style.isNotEmpty())
+        {
+            if (const auto at = styles.indexOf (style, true); at >= 0)
+                f.style = styles[at];
+            else if (const auto genre = genres.indexOf (style, true); genre >= 0)
+                f.style = genres[genre];
+            else
+                return refused ("no style " + style.quoted() + "; the styles are " + styles.joinIntoString (", "));
+        }
+
+        if (! a["energy"].isVoid())
+        {
+            const auto& energy = a["energy"];
+
+            if (! (energy.isInt() || energy.isInt64() || energy.isDouble()) || (int) energy < 1 || (int) energy > 5 || ! juce::exactlyEqual ((double) (int) energy, (double) energy))
+                return refused ("energy is a whole number from 1 (an intro tool) to 5 (peak)");
+
+            f.energy = (int) energy;
+        }
+
+        if (! a["character"].isVoid())
+        {
+            juce::StringArray poles, wanted;
+
+            for (auto& pair : SequenceFile::characterPairs())
+            {
+                poles.add (pair.first);
+                poles.add (pair.second);
+            }
+
+            if (const auto* list = a["character"].getArray())
+                for (auto& c : *list)
+                    wanted.add (c.toString().trim());
+            else
+                wanted.addTokens (a["character"].toString(), ",", {});
+
+            wanted.trim();
+            wanted.removeEmptyStrings();
+
+            for (auto& c : wanted)
+            {
+                const auto at = poles.indexOf (c, true);
+
+                if (at < 0)
+                    return refused ("no character " + c.quoted() + "; they are " + poles.joinIntoString (", "));
+
+                f.character.addIfNotAlreadyThere (poles[at]);
+            }
+        }
+
+        constexpr int most = 40;
+        juce::Array<juce::var> list;
+        int matching = 0;
+
+        for (auto& e : all)
+        {
+            if (! SequenceLibrary::passes (e, f, {}))
+                continue;
+
+            if (++matching > most)
+                continue;
+
+            auto* o = new juce::DynamicObject();
+            o->setProperty ("name", e.name);
+            o->setProperty ("path", pathOf (e));
+            o->setProperty ("kind", e.isKit ? "kit" : "sequence");
+            o->setProperty ("role", e.path[0]);
+
+            if (e.path.size() > 1)
+                o->setProperty ("sub_role", e.path[1]);
+
+            if (e.isKit)
+                o->setProperty ("parts", e.parts);
+
+            o->setProperty ("bars", round3 (e.bars));
+
+            if (e.tempo > 0.0)
+                o->setProperty ("tempo", round1 (e.tempo));
+
+            if (e.key.isNotEmpty())
+                o->setProperty ("key", e.key);
+
+            if (e.style.isNotEmpty())
+                o->setProperty ("style", e.style);
+
+            if (e.energy > 0)
+                o->setProperty ("energy", e.energy);
+
+            if (! e.character.isEmpty())
+                o->setProperty ("character", e.character.joinIntoString (", "));
+
+            o->setProperty ("brings_instrument", e.hasInstrument);
+
+            if (e.description.isNotEmpty())
+                o->setProperty ("about", e.description);
+
+            list.add (juce::var (o));
+        }
+
+        auto result = object ({ { "ok", true }, { "presets", list }, { "matching", matching }, { "total", (int) all.size() } });
+        auto* o = result.getDynamicObject();
+
+        if (f.isEmpty() || matching == 0)
+        {
+            o->setProperty ("roles", roles.joinIntoString (", "));
+            o->setProperty ("styles", styles.joinIntoString (", "));
+        }
+
+        if (matching > most)
+        {
+            o->setProperty ("more", matching - most);
+            o->setProperty ("note", "the first " + juce::String (most) + " of " + juce::String (matching) + "; narrow with role, style, energy, character or search");
+        }
+        else if (matching == 0)
+        {
+            o->setProperty ("note", "nothing matches; try fewer words or leave one of the others out");
+        }
+
+        return result;
+    }
+
+    juce::var SessionTools::addSequencePreset (const juce::var& a)
+    {
+        juce::String error;
+        const auto* entry = presetOf (a["preset"].toString().trim(), false, error);
+
+        if (entry == nullptr)
+            return refused (error);
+
+        auto q = SequenceFile::load (entry->file, error);
+
+        if (! q)
+            return refused (entry->name.quoted() + " couldn't be read: " + error);
+
+        // As a drop: in the session's key, when the setting asks for it (drums stay as they are).
+        if (library.transposeDrops)
+            q = SequenceFile::transposedTo (*q, state.musicalKey);
+
+        const auto position = barFrameOf (a["bar"], error);
+
+        if (! position)
+            return refused (error);
+
+        auto trackIndex = -1;
+        auto remapped = false;
+
+        if (! a["track"].isVoid() && a["track"].toString().trim().isNotEmpty())
+        {
+            const auto index = trackOf (a["track"], error);
+
+            if (! index)
+                return refused (error);
+
+            const auto& t = state.tracks[(size_t) *index];
+
+            if (! t.takesNoteClips())
+                return refused (t.name.quoted() + " is not an instrument track that takes clips: leave track out to put " + q->name.quoted() + " on a new one");
+
+            trackIndex = *index;
+            remapped = (q->role == "Drums" || q->channel == 10) && DrumSound::remaps (t.drumMap);
+        }
+
+        auto next = state;
+        const auto placed = SequenceFile::place (next, *q, trackIndex, *position, trackIndex >= 0);
+
+        if (placed.clipId == 0)
+            return refused (q->name.quoted() + " couldn't be put there");
+
+        state = std::move (next);
+        const auto bar = a["bar"].isVoid() ? 1 : (int) a["bar"];
+        const auto where = state.findNoteClip (placed.clipId);
+        const auto notes = where ? (int) state.tracks[(size_t) where->first].noteClips[(size_t) where->second].notes.size() : 0;
+        const auto size = " (" + barsText (q->bars()) + ", " + juce::String (notes) + (notes == 1 ? " note)" : " notes)");
+        const auto instrument = instrumentIn (placed.effects);
+        juce::String step;
+
+        if (trackIndex >= 0)
+        {
+            step = "Add the sequence " + q->name.quoted() + " to " + nameOf (placed.trackId).quoted() + " at bar " + juce::String (bar) + size
+                 + (remapped ? ", its drums on the keys of the track's drum map" : "");
+        }
+        else
+        {
+            step = "Add the sequence " + q->name.quoted() + " at bar " + juce::String (bar) + " on a new track" + size
+                 + (placed.effects != nullptr ? ", playing " + (instrument.isNotEmpty() ? instrument : juce::String ("through its effects")) : juce::String (", with no instrument yet"));
+
+            if (placed.effects != nullptr)
+                voices.push_back ({ placed.trackId, placed.effects, instrument });
+        }
+
+        auto result = done (step);
+        auto* o = result.getDynamicObject();
+        o->setProperty ("clip", (int) placed.clipId);
+        o->setProperty ("track", where ? where->first + 1 : 0);
+
+        if (trackIndex < 0 && placed.effects == nullptr)
+            o->setProperty ("note", "it brings no instrument: choose one for the new track with set_instrument");
+
+        return result;
+    }
+
+    juce::var SessionTools::addKit (const juce::var& a)
+    {
+        juce::String error;
+        const auto* entry = presetOf (a["kit"].toString().trim(), true, error);
+
+        if (entry == nullptr)
+            return refused (error);
+
+        auto kit = SequenceKit::load (entry->file, error);
+
+        if (! kit)
+            return refused (entry->name.quoted() + " couldn't be read: " + error);
+
+        if (library.transposeDrops)
+            for (auto& part : kit->parts)
+                part = SequenceFile::transposedTo (part, state.musicalKey);
+
+        const auto position = barFrameOf (a["bar"], error);
+
+        if (! position)
+            return refused (error);
+
+        auto next = state;
+        const auto placed = SequenceKit::place (next, *kit, *position);
+
+        if (placed.parts.empty())
+            return refused (kit->name.quoted() + " has no parts to add");
+
+        state = std::move (next);
+        juce::Array<juce::var> tracks;
+        juce::StringArray names;
+
+        for (auto& part : placed.parts)
+        {
+            const auto where = state.findNoteClip (part.clipId);
+            const auto instrument = instrumentIn (part.effects);
+
+            if (part.effects != nullptr)
+                voices.push_back ({ part.trackId, part.effects, instrument });
+
+            names.add (nameOf (part.trackId));
+            tracks.add (object ({ { "track", where ? where->first + 1 : 0 }, { "name", nameOf (part.trackId) }, { "clip", (int) part.clipId },
+                                  { "instrument", instrument.isNotEmpty() ? juce::var (instrument) : juce::var() } }));
+        }
+
+        const auto count = (int) placed.parts.size();
+        auto result = done ("Add the kit " + kit->name.quoted() + " at bar " + juce::String (a["bar"].isVoid() ? 1 : (int) a["bar"]) + ": a folder with "
+                            + juce::String (count) + (count == 1 ? " track (" : " tracks (") + names.joinIntoString (", ") + "), " + barsText (kit->bars()));
+        result.getDynamicObject()->setProperty ("tracks", tracks);
+        return result;
+    }
+
+    //==============================================================================
+    juce::var SessionTools::listDrumMaps (const juce::var& a)
+    {
+        const auto names = library.drumMapNames != nullptr ? library.drumMapNames() : juce::StringArray();
+        juce::Array<juce::var> maps;
+        std::vector<std::vector<DrumSound>> loaded;
+
+        for (auto& name : names)
+        {
+            loaded.push_back (library.drumMap != nullptr ? library.drumMap (name) : std::vector<DrumSound>());
+            const auto& map = loaded.back();
+            const auto moved = (int) std::count_if (map.begin(), map.end(), [] (const DrumSound& d) { return d.standsFor >= 0 && d.standsFor != d.pitch; });
+            maps.add (object ({ { "name", name }, { "sounds", (int) map.size() }, { "off_general_midi_keys", moved } }));
+        }
+
+        auto result = object ({ { "ok", true }, { "maps", maps } });
+        auto* o = result.getDynamicObject();
+
+        if (names.isEmpty())
+            o->setProperty ("note", "None are saved. The user saves a kit's map from the piano roll's drum grid (Save Map As).");
+
+        if (! a["track"].isVoid() && a["track"].toString().trim().isNotEmpty())
+        {
+            juce::String error;
+            const auto index = trackOf (a["track"], error);
+
+            if (! index)
+                return refused (error);
+
+            const auto& t = state.tracks[(size_t) *index];
+            o->setProperty ("track", t.name);
+
+            if (t.drumMap.empty())
+            {
+                o->setProperty ("track_map", "General MIDI");
+            }
+            else
+            {
+                for (size_t i = 0; i < loaded.size(); ++i)
+                    if (loaded[i] == t.drumMap)
+                        o->setProperty ("track_map", names[(int) i]);
+
+                juce::Array<juce::var> sounds;
+
+                for (auto& d : t.drumMap)
+                    if (sounds.size() < 128)
+                        sounds.add (juce::String (d.pitch) + " " + d.name + (d.standsFor >= 0 && d.standsFor != d.pitch ? " (stands for " + juce::String (d.standsFor) + ")" : juce::String()));
+
+                o->setProperty ("track_sounds", sounds);
+            }
+        }
+
+        return result;
+    }
+
+    juce::var SessionTools::setDrumMap (const juce::var& a)
+    {
+        juce::String error;
+        const auto index = trackOf (a["track"], error);
+
+        if (! index)
+            return refused (error);
+
+        auto& t = state.tracks[(size_t) *index];
+
+        if (! t.isInstrument || t.isControl())
+            return refused (t.name.quoted() + " is not an instrument track: a drum map goes on one");
+
+        const auto wanted = a["map"].toString().trim();
+        const auto names = library.drumMapNames != nullptr ? library.drumMapNames() : juce::StringArray();
+        const auto at = names.indexOf (wanted, true);
+
+        if (at < 0 && wanted.equalsIgnoreCase ("General MIDI"))
+        {
+            if (t.drumMap.empty())
+                return refused (t.name.quoted() + " already has General MIDI's layout");
+
+            t.drumMap.clear();
+            return done ("Give " + t.name.quoted() + " General MIDI's drum map");
+        }
+
+        if (at < 0)
+            return refused (wanted.isEmpty() ? juce::String ("give the map's name from list_drum_maps")
+                                : names.isEmpty() ? "no drum map is called " + wanted.quoted() + ": none are saved (the user saves a kit's map from the piano roll's drum grid, Save Map As)"
+                                                  : "no drum map is called " + wanted.quoted() + "; the nearest are " + nearestNames (names, wanted).joinIntoString (", "));
+
+        const auto map = library.drumMap != nullptr ? library.drumMap (names[at]) : std::vector<DrumSound>();
+
+        if (map.empty())
+            return refused ("the drum map " + names[at].quoted() + " couldn't be read");
+
+        if (t.drumMap == map)
+            return refused (t.name.quoted() + " already has the drum map " + names[at].quoted());
+
+        t.drumMap = map;
+        int toMove = 0;
+
+        for (auto& clip : t.noteClips)
+            toMove += (int) std::count_if (clip.notes.begin(), clip.notes.end(), [&map] (const ClipNote& n) { return DrumSound::toKit (map, n.pitch) != n.pitch; });
+
+        auto result = done ("Give " + t.name.quoted() + " the drum map " + names[at].quoted() + " (" + juce::String ((int) map.size()) + (map.size() == 1 ? " sound)" : " sounds)"));
+        auto* o = result.getDynamicObject();
+        o->setProperty ("remaps", DrumSound::remaps (map));
+
+        if (toMove > 0)
+            o->setProperty ("note", juce::String (toMove) + (toMove == 1 ? " note" : " notes") + " on the track " + (toMove == 1 ? "is" : "are")
+                                        + " on General MIDI keys the map moves: remap_clip_notes with to \"map\" moves a clip's notes to the kit's keys");
+
+        return result;
+    }
+
+    juce::var SessionTools::remapClipNotes (const juce::var& a)
+    {
+        const auto& id = a["clip"];
+
+        if (! (id.isInt() || id.isInt64() || id.isDouble()) || (double) id < 1.0)
+            return refused ("clip is a note clip's id from list_clips");
+
+        const auto where = state.findNoteClip ((juce::uint32) (juce::int64) id);
+
+        if (! where)
+            return refused (state.findClip ((juce::uint32) (juce::int64) id).has_value() ? juce::String ("that is an audio clip: only a note clip's notes can be remapped")
+                                                                                          : "no clip has the id " + id.toString() + "; list_clips gives them");
+
+        const auto to = a["to"].toString().trim();
+
+        if (to != "map" && to != "general_midi")
+            return refused ("to is \"map\" (onto the keys of the track's drum map) or \"general_midi\" (back)");
+
+        auto& t = state.tracks[(size_t) where->first];
+        auto& clip = t.noteClips[(size_t) where->second];
+        const auto toKit = to == "map";
+
+        if (! DrumSound::remaps (t.drumMap))
+            return refused (t.name.quoted() + "'s drum map has every drum on its General MIDI key, so there is nothing to move (set_drum_map gives it a kit's map)");
+
+        // As the piano roll's Remap Notes: every note from where it was, so two sounds that trade keys each move once.
+        const auto target = [&] (int pitch) { return toKit ? DrumSound::toKit (t.drumMap, pitch) : DrumSound::toGeneralMidi (t.drumMap, pitch); };
+        const auto moving = (int) std::count_if (clip.notes.begin(), clip.notes.end(), [&] (const ClipNote& n) { return target (n.pitch) != n.pitch; });
+
+        if (moving == 0)
+            return refused (juce::String ("none of the clip's notes would move: they are ") + (toKit ? "not on General MIDI keys the map moves" : "not on keys of the map that stand for other General MIDI notes"));
+
+        for (auto& n : clip.notes)
+            n.pitch = target (n.pitch);
+
+        const auto merged = clip.mergeDuplicateNotes();
+        auto result = done ("Remap " + juce::String (moving) + (moving == 1 ? " note" : " notes") + " of the clip " + clip.name.quoted() + " on " + t.name.quoted()
+                            + (toKit ? " to the keys of its drum map" : " to General MIDI's keys"));
+        auto* o = result.getDynamicObject();
+        o->setProperty ("moved", moving);
+
+        if (merged > 0)
+            o->setProperty ("merged", merged);
+
+        return result;
     }
 }

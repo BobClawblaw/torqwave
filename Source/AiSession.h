@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "Session.h"
+#include "AiLibrary.h"
 
 /** Experimental: the tools a language model works a multitrack session with, on a working copy
     of its state. Look tools read the copy; change tools edit it through SessionEdits, as the
@@ -20,7 +21,14 @@
     parameters read beforehand, as the tools run away from the message thread. Automation of an
     effect's or instrument's parameters is in the state, so in the undo step. Bouncing and
     freezing render through the plug-ins, so they too are planned (getRenders), each its own
-    undo step after the plan's; unfreezing is a change to the state. */
+    undo step after the plan's; unfreezing is a change to the state.
+
+    Since 0.20.0 the tools also reach what ships with Torqwave and what the user saved (Library):
+    the built-in instruments' factory sounds, by name, category and a search word; the factory
+    sequences and kits, found by their facets and put into the copy by the code a drop from the
+    Sequence Library runs (SequenceFile::place, SequenceKit::place), the voices they bring being
+    loaded by the caller once the plan is applied (getVoiceLoads), outside its undo step; and
+    the saved drum maps, a track's map and a clip's notes moved to it or back, all in the state. */
 namespace Ai
 {
     class SessionTools
@@ -60,6 +68,10 @@ namespace Ai
                       std::map<juce::uint32, juce::PluginDescription> instruments = {}, FindInstrument findInstrument = nullptr,
                       PresetsOf presetsOf = nullptr, Chains chains = {}, FindInstrument findEffect = nullptr);
 
+        /** The factory sounds, sequences and kits and the drum maps the tools can reach; without
+            one they know of none. */
+        void setLibrary (Library l)                         { library = std::move (l); }
+
         /** The tools, as entries for the Chat Completions "tools" array. */
         static juce::Array<juce::var> toolDefinitions();
 
@@ -80,6 +92,7 @@ namespace Ai
             juce::uint32 trackId = 0;
             juce::PluginDescription plugin;
             juce::String preset;
+            bool factory = false;       // the preset is one of the instrument's factory sounds (FactorySounds::stateOf), not one saved
             bool onlyPreset = false;
             juce::String step;          // its line in the plan, taken out again if a later call replaces it
         };
@@ -87,6 +100,19 @@ namespace Ai
         /** The loads the plan makes, for tracks still in it (a track added and then removed in
             the same plan loads nothing). */
         std::vector<InstrumentLoad> getInstrumentLoads() const;
+
+        /** The voice a factory sequence or a kit's part brought for the new track it made: the
+            chain to load onto it (a track's EFFECTS, as SequenceFile::place gives it) once the
+            plan is applied, as a drop loads it. */
+        struct VoiceLoad
+        {
+            juce::uint32 trackId = 0;
+            std::shared_ptr<juce::XmlElement> effects;
+            juce::String instrument;    // the instrument's name, or empty when the chain has none
+        };
+
+        /** The voices the plan loads, for tracks still in it. */
+        std::vector<VoiceLoad> getVoiceLoads() const;
 
         /** A parameter to set: to a value from 0 to 1, or else to the text given, as the plug-in reads it. */
         struct Setting
@@ -160,6 +186,12 @@ namespace Ai
         juce::var addNoteClip (const juce::var&);
         juce::var setInstrument (const juce::var&);
         juce::var listInstrumentPresets (const juce::var&);
+        juce::var findSequencePresets (const juce::var&);
+        juce::var addSequencePreset (const juce::var&);
+        juce::var addKit (const juce::var&);
+        juce::var listDrumMaps (const juce::var&);
+        juce::var setDrumMap (const juce::var&);
+        juce::var remapClipNotes (const juce::var&);
         juce::var addTrackEffect (const juce::var&);
         juce::var removeTrackEffect (const juce::var&);
         juce::var moveTrackEffect (const juce::var&);
@@ -194,6 +226,21 @@ namespace Ai
         /** The instrument a track plays, or will once the plan is applied; nothing for none. */
         std::optional<juce::PluginDescription> instrumentOf (juce::uint32 trackId) const;
         juce::StringArray presetsFor (const juce::PluginDescription&) const;
+        std::vector<FactorySound> factorySoundsOf (const juce::PluginDescription&) const;
+
+        /** The factory sequences and kits, read once. */
+        const std::vector<SequenceLibrary::Entry>& sequencePresets();
+
+        /** The factory sequence (or with kit, the kit) a call names by its name or its path from
+            find_sequence_presets; sets error, with the nearest names, when there is none or
+            several share the name. */
+        const SequenceLibrary::Entry* presetOf (const juce::String& which, bool kit, juce::String& error);
+
+        /** A bar's frame from a call's "bar" (from 1; bar 1 when left out), or nothing with the error. */
+        std::optional<juce::int64> barFrameOf (const juce::var& bar, juce::String& error) const;
+
+        /** The voice the plan brings for a track, or null. */
+        const VoiceLoad* voiceOf (juce::uint32 trackId) const;
 
         /** The track a call names by its number (from 1, in get_session's order) or its name;
             sets error when there is none. */
@@ -211,6 +258,9 @@ namespace Ai
         FindInstrument findInstrument;
         PresetsOf presetsOf;
         std::vector<InstrumentLoad> loads;
+        Library library;
+        std::optional<std::vector<SequenceLibrary::Entry>> factoryPresets;   // the factory sequences and kits, once read
+        std::vector<VoiceLoad> voices;
         Chains chains;
         FindInstrument findEffect;
         std::map<juce::uint32, std::vector<PlannedSlot>> planned;   // the chains the plan changes

@@ -14236,6 +14236,7 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
                 start.instruments[t.id] = instrument->getPluginDescription();
 
         start.instrumentPresets = [] (const juce::PluginDescription& d) { return InstrumentPresets::userStore().getNames (d); };
+        start.library = Ai::Library::standard();
 
         // Each chain as it stands, with its plug-ins' parameters read here, on the message thread.
         for (auto& t : aiStartSession->tracks)
@@ -14300,11 +14301,12 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
 
         for (auto& load : w.getInstrumentLoads())
         {
-            const auto state = load.preset.isNotEmpty() ? InstrumentPresets::userStore().load (load.plugin, load.preset) : std::nullopt;
+            juce::String unread;
+            const auto state = Ai::stateFor (load, unread);
 
-            if (load.preset.isNotEmpty() && ! state)
+            if (unread.isNotEmpty())
             {
-                showError ("Ask Torq", "The preset " + load.preset.quoted() + " for " + load.plugin.name + " couldn't be read.");
+                showError ("Ask Torq", unread);
                 continue;
             }
 
@@ -14332,6 +14334,21 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
 
                 if (errors.isNotEmpty())
                     showError ("Ask Torq", name + " couldn't be loaded:\n\n" + errors);
+
+                oneDone();
+            });
+        }
+
+        // The voices that factory sequences and kits brought, as a drop loads them.
+        if (const auto voices = w.getVoiceLoads(); ! voices.empty())
+        {
+            ++*pending;
+            Ai::loadVoices (engine, voices, [this, oneDone] (const juce::String& errors)
+            {
+                engine.session.sendChangeMessage();   // the track headers show the instruments
+
+                if (errors.isNotEmpty())
+                    showError ("Ask Torq", "Some of the sequences' instruments and effects could not be loaded:\n\n" + errors);
 
                 oneDone();
             });

@@ -45,6 +45,7 @@ namespace Ai
             std::map<juce::uint32, juce::PluginDescription> instruments;   // the instrument each instrument track plays, by track id
             SessionTools::PresetsOf instrumentPresets;                       // the presets saved for an instrument; none: no presets
             SessionTools::Chains effects;                                   // each track's chain in order, its instrument first, by track id
+            Library library;                                                // the factory sounds, sequences and kits and the drum maps the tools reach; empty: none
 
             /** The Sequencer's sequence to write or review in place of a file or session: the
                 sequence tools (AiSequence) and the plug-in look tools, with no audio. */
@@ -77,6 +78,13 @@ namespace Ai
         std::vector<SessionTools::InstrumentLoad> getInstrumentLoads() const
         {
             return sessionTools != nullptr ? sessionTools->getInstrumentLoads() : std::vector<SessionTools::InstrumentLoad>();
+        }
+
+        /** The voices that factory sequences and kits bring for the tracks they made, loaded once
+            the plan is applied (not part of its undo step). */
+        std::vector<SessionTools::VoiceLoad> getVoiceLoads() const
+        {
+            return sessionTools != nullptr ? sessionTools->getVoiceLoads() : std::vector<SessionTools::VoiceLoad>();
         }
 
         /** The track chains the plan changes, once it is applied (not part of its undo step). */
@@ -207,4 +215,14 @@ namespace Ai
         instrument stays first), switched on or off and set. done gets the loads' errors once
         it is all made, perhaps before this returns. */
     void applyChainChange (AudioEngine&, const SessionTools::ChainChange&, std::function<void (const juce::String& errors)> done);
+
+    /** The state a planned instrument load sets: its saved preset's (from the user's instrument
+        presets), or its factory sound's; nothing with no preset. error says when one was named
+        and couldn't be read. Message thread. */
+    std::optional<juce::MemoryBlock> stateFor (const SessionTools::InstrumentLoad&, juce::String& error);
+
+    /** Loads the voices a plan's factory sequences and kits bring onto their tracks, as a drop
+        from the Sequence Library does (message thread, after the plan is applied). done gets the
+        loads' errors, at once when there is nothing to load. */
+    void loadVoices (AudioEngine&, const std::vector<SessionTools::VoiceLoad>&, std::function<void (const juce::String& errors)> done);
 }

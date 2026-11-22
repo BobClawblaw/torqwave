@@ -34,7 +34,7 @@ namespace
         are made after it, outside that step. */
     bool allInOneStep (const Workspace& w)
     {
-        return ! w.rackChanged() && w.getInstrumentLoads().empty() && w.getChainChanges().empty() && w.getRenders().empty();
+        return ! w.rackChanged() && w.getInstrumentLoads().empty() && w.getVoiceLoads().empty() && w.getChainChanges().empty() && w.getRenders().empty();
     }
 }
 
@@ -565,7 +565,7 @@ void AskPanel::finish (const juce::String&, const juce::String& error)
         if (w.rackChanged())
             addLog ("The effects rack is changed too; that isn't part of the undo step.\n", Theme::warn);
 
-        if (! w.getInstrumentLoads().empty())
+        if (! w.getInstrumentLoads().empty() || ! w.getVoiceLoads().empty())
             addLog ("Instruments are loaded once the plan is applied; that isn't part of the undo step.\n", Theme::warn);
 
         if (! w.getChainChanges().empty())
