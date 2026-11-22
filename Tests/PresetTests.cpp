@@ -347,11 +347,18 @@ void runPresetTests (AudioEngine& engine)
         juce::StringArray problems;
         float loudest = 0.0f, quietest = 1.0f;
         juce::String loudestName, quietestName;
+        juce::StringArray loudKits;
+        float loudestKit = 0.0f;
+        juce::String loudestKitName;
         juce::StringArray clicks;
         Click worstOfAll;
         juce::String worstName;
 
         for (auto& f : all)
+        {
+            // A kit's parts added up as they start together, each at its track gain.
+            juce::AudioBuffer<float> together;
+
             for (auto* x : f.xml != nullptr ? sequencesOf (*f.xml) : std::vector<const juce::XmlElement*> {})
             {
                 const auto q = SequenceFile::fromXml (*x);
@@ -403,7 +410,10 @@ void runPresetTests (AudioEngine& engine)
                 if (const auto levels = juce::SystemStats::getEnvironmentVariable ("TQ_PRESET_LEVELS", {}); levels.isNotEmpty() && error.isEmpty())
                     juce::File (levels).appendText (q->name + "|" + juce::String (juce::Decibels::gainToDecibels (peak, -200.0f), 2) + "\n");
 
-                if (error.isNotEmpty() || peak * gain < juce::Decibels::decibelsToGain (-24.0f) || peak * gain > juce::Decibels::decibelsToGain (-1.0f))
+                // A part in a kit sits 6 dB lower than it does alone, since six play together.
+                const auto least = f.file.hasFileExtension (SequenceFile::kitExtension) ? -30.0f : -24.0f;
+
+                if (error.isNotEmpty() || peak * gain < juce::Decibels::decibelsToGain (least) || peak * gain > juce::Decibels::decibelsToGain (-1.0f))
                     problems.add (q->name + ": " + (error.isNotEmpty() ? error : "peak " + juce::String (juce::Decibels::gainToDecibels (peak * gain), 1) + " dB"));
 
                 // No clicks: no jump in one sample standing alone, four times anything in the 30 ms either side.
@@ -429,15 +439,41 @@ void runPresetTests (AudioEngine& engine)
                 if (peak * gain > loudest)
                     loudest = peak * gain, loudestName = q->name;
 
-                if (peak * gain < quietest)
+                if (peak * gain < quietest && ! f.file.hasFileExtension (SequenceFile::kitExtension))
                     quietest = peak * gain, quietestName = q->name;
+
+                if (f.file.hasFileExtension (SequenceFile::kitExtension) && error.isEmpty())
+                {
+                    if (out.getNumSamples() > together.getNumSamples())
+                        together.setSize (2, out.getNumSamples(), true, true, false);
+
+                    for (int ch = 0; ch < 2; ++ch)
+                        together.addFrom (ch, 0, out, juce::jmin (ch, out.getNumChannels() - 1), 0, out.getNumSamples(), gain);
+                }
             }
 
+            if (together.getNumSamples() > 0)
+            {
+                const auto kitPeak = together.getMagnitude (0, together.getNumSamples());
+
+                if (kitPeak > loudestKit)
+                    loudestKit = kitPeak, loudestKitName = f.file.getFileNameWithoutExtension();
+
+                if (kitPeak > juce::Decibels::decibelsToGain (-1.0f))
+                    loudKits.add (f.file.getFileNameWithoutExtension() + " " + juce::String (juce::Decibels::gainToDecibels (kitPeak), 1) + " dB");
+            }
+        }
+
         check (problems.isEmpty(),
-               "presets: every one names a factory patch or kit and sounds on it (its notes at its tempo), peaking between -24 and -1 dB (the loudest " + loudestName + " at "
+               "presets: every one names a factory patch or kit and sounds on it (its notes at its tempo), peaking between -24 and -1 dB, a kit's parts 6 dB lower (the loudest " + loudestName + " at "
                    + juce::String (juce::Decibels::gainToDecibels (loudest), 1) + " dB, the quietest " + quietestName + " at "
                    + juce::String (juce::Decibels::gainToDecibels (quietest), 1) + " dB)"
                    + (problems.isEmpty() ? juce::String() : " (" + problems.joinIntoString ("; ").substring (0, 800) + ")"));
+
+        check (loudKits.isEmpty(),
+               "presets: a kit's parts played together stay under the master's top, peaking below -1 dB (the loudest, " + loudestKitName + ", at "
+                   + juce::String (juce::Decibels::gainToDecibels (loudestKit), 1) + " dB)"
+                   + (loudKits.isEmpty() ? juce::String() : " (" + juce::String (loudKits.size()) + ": " + loudKits.joinIntoString ("; ").substring (0, 600) + ")"));
 
         if (const auto list = juce::SystemStats::getEnvironmentVariable ("TQ_PRESET_CLICKS", {}); list.isNotEmpty())
             juce::File (list).replaceWithText (clicks.joinIntoString ("\n") + "\n");

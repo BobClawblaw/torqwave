@@ -3170,6 +3170,55 @@ Metronome::Grid MultitrackView::snapGrid() const
     return rulerBeats().second;
 }
 
+std::vector<std::pair<float, MultitrackView::GridLine>> MultitrackView::laneGrid() const
+{
+    std::vector<std::pair<float, GridLine>> lines;
+    const auto& s = shown();
+    const auto area = timelineArea();
+    const auto first = juce::jmax ((juce::int64) 0, frameForX ((float) area.getX())), last = frameForX ((float) area.getRight());
+
+    if (isShowingBars())
+    {
+        // The snap grid while its lines are 6 pixels apart or more, else the ruler's marks.
+        const auto map = s.tempoMap();
+        auto grid = snapGrid();
+
+        if ((grid.bars > 0 ? map.shortestBar() * grid.bars : map.shortestBeat() / juce::jmax (1, grid.division)) / framesPerPixel < 6.0)
+            grid = rulerBeats().second;
+
+        map.forEachLine (first, last, grid, [&] (juce::int64 frame, juce::int64 beat)
+        {
+            const auto onBeat = frame == map.beatFrame (beat);
+            lines.emplace_back (xForFrame (frame), onBeat && map.barAndBeat (beat).second == 0 ? GridLine::bar : onBeat ? GridLine::beat : GridLine::division);
+        });
+
+        return lines;
+    }
+
+    // In time, the ruler's ticks, so the lanes are never bare.
+    const auto rate = s.sampleRate, tick = rulerTick();
+
+    for (auto i = (juce::int64) std::floor ((double) first / rate / tick); (double) i * tick * rate <= (double) last; ++i)
+        lines.emplace_back (xForFrame ((juce::int64) std::llround ((double) i * tick * rate)), GridLine::time);
+
+    return lines;
+}
+
+float MultitrackView::gridAlpha (GridLine line) noexcept
+{
+    // A bar's line strongest, then a beat's, then the lines between beats; the ruler's ticks in
+    // time a little fainter than a beat's.
+    switch (line)
+    {
+        case GridLine::bar:       return 0.30f;
+        case GridLine::beat:      return 0.15f;
+        case GridLine::division:  return 0.07f;
+        case GridLine::time:      return 0.12f;
+    }
+
+    return 0.0f;
+}
+
 std::pair<Metronome::Grid, Metronome::Grid> MultitrackView::rulerBeats() const
 {
     // Labels at least 50 pixels apart: every beat, or every 1, 2, 4... bars. Marks (and the snap
@@ -3570,6 +3619,8 @@ void MultitrackView::paint (juce::Graphics& g)
         juce::Graphics::ScopedSaveState save (g);
         g.reduceClipRegion (area);
 
+        const auto grid = laneGrid();
+
         for (int t = 0; t < (int) s.tracks.size(); ++t)
         {
             if (! s.isShown (s.tracks[(size_t) t]))
@@ -3578,6 +3629,14 @@ void MultitrackView::paint (juce::Graphics& g)
             const auto lane = juce::Rectangle<int> (area.getX(), laneTop (t), area.getWidth(), laneHeight);
             g.setColour (s.tracks[(size_t) t].id == selectedTrackId ? Theme::hover : (rowOf (t) % 2 == 0 ? laneColour : laneAlternate));
             g.fillRect (lane);
+
+            // The grid, behind the clips.
+            for (auto [x, line] : grid)
+            {
+                g.setColour (Theme::overlay.withAlpha (gridAlpha (line)));
+                g.drawVerticalLine ((int) x, (float) lane.getY(), (float) lane.getBottom() - 1.0f);
+            }
+
             g.setColour (laneLine);
             g.drawHorizontalLine (lane.getBottom() - 1, (float) lane.getX(), (float) lane.getRight());
 
@@ -3720,28 +3779,6 @@ void MultitrackView::paint (juce::Graphics& g)
             g.setColour (Theme::dimText);
             g.setFont (15.0f);
             g.drawText ("Drop audio files here, or choose Multitrack > Import Audio", area, juce::Justification::centred);
-        }
-
-        // In bars and beats, the grid of the session's tempo.
-        if (isShowingBars() && ! s.tracks.empty())
-        {
-            const auto bottom = (float) juce::jmin (area.getBottom(), laneTop ((int) s.tracks.size()));
-            const auto map = s.tempoMap();
-
-            // The snap grid while its lines are 6 pixels apart or more, else the ruler's marks:
-            // a bar's line strongest, then a beat's, then the lines between beats.
-            auto grid = snapGrid();
-
-            if ((grid.bars > 0 ? map.shortestBar() * grid.bars : map.shortestBeat() / juce::jmax (1, grid.division)) / framesPerPixel < 6.0)
-                grid = rulerBeats().second;
-
-            map.forEachLine (juce::jmax ((juce::int64) 0, frameForX ((float) area.getX())), frameForX ((float) area.getRight()), grid,
-                             [&] (juce::int64 frame, juce::int64 beat)
-                             {
-                                 const auto onBeat = frame == map.beatFrame (beat);
-                                 g.setColour (Theme::overlay.withAlpha (onBeat && map.barAndBeat (beat).second == 0 ? 0.16f : onBeat ? 0.07f : 0.035f));
-                                 g.drawVerticalLine ((int) xForFrame (frame), (float) area.getY(), bottom);
-                             });
         }
 
         // The loop, lit down the lanes as in the ruler (brighter while Loop Playback is on), so what

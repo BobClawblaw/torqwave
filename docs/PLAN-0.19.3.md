@@ -281,7 +281,7 @@ Steps 1 to 7 are done. Using them showed that the built-in voices aren't good en
 
 ### Step 9: Basic Synth becomes a real synth (L, the largest piece, done)
 
-The aim is a lighter Massive: rich, wide sounds from a few panels. It is not a copy of Massive's look or names.
+The aim when this step was written was a lighter take on a classic wavetable synth: rich, wide sounds from a few panels, in its own look and names. It has since grown well past "lighter": by 0.20.0 it is a full synth in its own right (parts two and three), and is no longer described as a lite version of anything.
 
 **As built:** a hybrid of the two classic wavetable synths' ideas, in its own look and words. From the Massive side: three wavetable oscillators with Position, serial or parallel filters, macros and a step LFO. From the Serum side: a warp mode on each oscillator, a sub and a noise oscillator, a large wavetable view, drag-to-modulate rings and an effects rack. Added at the user's request: a plucked **String** table (each unison voice a string tuned to the note, with Strum and Drift on unison), and Fuzz in the drive, for the fuzzed string sounds. The factory patches are all for dark techno, industrial and EBM, with no keys or brass: 97 made by hand (Init among them), from basses and reeses to impacts and textures, and, at the user's later request for at least a thousand, a bank of 970 more drawn from 24 kinds of sound, with two more categories (Perc and Vox): 1,067 in all. At the user's request it is renamed **Torqwave Synth** (the plug-in ID stays `torqwave:basic-synth`), and the lead first called Swarm Guitar is **Wailing Fuzz Lead**, so it doesn't share a name with the built-in Swarm Guitar instrument.
 
@@ -370,3 +370,108 @@ A guitar with every string tuned to the played note, through a fuzz, as a third 
 5. Step 13's window after step 9's control kit lands.
 
 The Levels panel standing upright when docked at a side (a fix from use) and double-clicking sequences and kits in the Finder go in with them.
+
+## Part three: sounds from sounds
+
+Added on 2026-11-22, for the same release (0.20.0). Everything here is inside Torqwave Synth: no new instrument.
+
+**It is our own design.** Other synths find patches by variation and from recordings; none of their ideas for showing it are used here. No seeds, plants, DNA, genes, breeding, parents or children, in the look or in the words. Ours is a **signal console**: futuristic, cyber, a hacker's map of a network of sounds. A patch is a **node**; the sounds near it are nodes it can reach; moving through them leaves a **route**; a recording is a **signal to crack**.
+
+Two things are still to be decided, and the steps say where: the names (written **Trace** for the map and **Decrypt** for matching until they are chosen), and whether a trained model gives the search its first guess (step 17 is search alone, which needs no model).
+
+### Step 14: groundwork in the synth (M)
+
+Three additions that matter more to reproducing a sound than more oscillators would. The oscillators stay at three: each already has up to 8 unison voices, and seven more would add about 80 settings for a search to wander in, at three times the CPU.
+
+- **A wavetable from audio.** A new table type, "Sampled", whose frames are made from a clip: its spectrum taken at steps through the sound, each written as one band-limited frame, so Position plays through the clip's tone from start to end. Made by dropping a clip on an oscillator, or by Decrypt (step 17). The frames are saved in the patch's state, so a patch with one plays anywhere. 64 frames at most.
+- **A level envelope for each oscillator.** Attack, hold, decay and sustain on the oscillator's level, off by default (level as now), so layers come and go on their own without spending modulation slots.
+- **16 modulation slots** in place of 8. Patches and sessions saved with 8 load as they are.
+- Nothing changes for patches that use none of this: every factory patch renders the same as before, checked sample for sample.
+- **Tested:** a sine swept from 200 Hz to 2 kHz, made into a table, plays back within 1 dB of the clip's spectrum at five positions; a table saved in a patch comes back the same; an oscillator with its level envelope at 200 ms attack reaches half level when the envelope says it should, while the amp envelope is open; slot 16 modulates as slot 1 does; every factory patch renders the same as before this step; no clicks (the step 8 check) with a Sampled table and a level envelope retriggered.
+
+### Step 15: Trace, a map of the sounds within reach (M)
+
+- **The Trace view** in the synth's window, beside the knobs. In the middle the node you hold: the patch as it is. Around it twelve nodes within reach, each the patch with some of its settings moved. Click a node to hear it, double-click to **jump** to it, and the map redraws round where you are now.
+- **The route** is where you have been: a line of the nodes you jumped through, along the bottom. Click any of them to go back there. Nothing is lost by exploring.
+- **Reach** sets how far away the twelve nodes are: near (small changes) to far (a different sound).
+- **Firewalls** keep a part of the patch as it is while you move: oscillators, filters, envelopes, modulation or effects. A firewalled part is the same in every node.
+- **Bridge** links to a second patch (any factory or saved patch) and lays the twelve nodes along the line between the two.
+- **Nodes on keys:** with the view open, the octave from C3 plays the twelve nodes, one a key, so a keyboard or a clip auditions them; the other keys play the node you hold.
+- **The reach map:** a table in the code of which settings move, how far, and which firewall holds them. Choices (a table, a filter type) change rarely; levels never move so far that a node is silent or clips: each node is rendered for a moment and levelled to the one you hold.
+- Every node is an ordinary patch: jumping to it sets the knobs, and it saves as a preset like any other.
+- **Tested:** the same node, Reach and seed give the same twelve nodes; a firewalled part's settings are unchanged in every node; at Reach 0 every node is the one you hold; every node round 50 factory patches sounds (peaks above -40 dB) and none clips; a click on the route returns those settings exactly; C3 to B3 play nodes 1 to 12 and C4 the node you hold.
+
+### Step 16: the console's look (M to L: this is the part people will remember)
+
+The look is the feature's identity, so it gets its own step and a mock-up the user sees before it is built.
+
+- **A network map, not a menu.** The node you hold glows in the middle; links run out to the twelve within reach; the route trails behind as a dimmer line. Jumping animates along the link, and the map re-forms round the new node (under 250 ms, and not at all when the system's Reduce Motion is on).
+- **Each node is its sound's signature:** a small ring drawn from its spectrum over the first second (bright where it is bright, wide where it is loud), so nodes look as different as they sound. Under it a short hex address made from the patch's settings (the same patch always has the same address), in a monospaced face.
+- **Console details that carry information, not decoration:** a scan line sweeps a node while it sounds; a firewall is drawn as a barrier across the links of the part it holds; Reach is a ring that widens round the middle node; the route shows each jump's address.
+- **In the theme's colours**, with the accent as the glow, in light themes as well as dark (dark is where it looks its best, and the guide's pictures use it). Drawn with the control kit (`Source/SoundControls.*`), sharp at 70 % to 160 %.
+- **Plain to use:** every control has an ordinary tooltip ("Reach: how far the nearby sounds are from this one"), so the vocabulary never has to be learnt to be used.
+- **Chosen: Sweep** (2026-11-22), the third of three mock-ups (`docs/design/signal-console-mockups.html`, mock-up C; open it in a browser). It replaces the plain ring described above wherever the two differ:
+  - **A scope.** Round the node you hold, five sectors: oscillators, filter, envelopes, modulation, effects. A node sits in the sector of the part that changed most, and its distance from the middle is how far it is from the node you hold: near rings small changes, far rings large ones. Reach sets how far out the twelve are spread. A sweep line turns slowly; it is the only motion at rest.
+  - **A firewall closes its sector**: hatched, with a barrier arc at its inner edge, and no node lands there.
+  - **The side panel** shows the node under the pointer: its signature large, its address and key, which part changed, and the three or four settings that moved most with their amounts in units ("amp attack -40 ms"); **Hear** and **Jump**; the route as a list beneath; and the line to type in when Ask Torq is on.
+  - **In Decrypt the same scope reads as lock:** the signal's signature sits in the middle with the best candidate's laid over it, the rings are 75, 50 and 25 % lock, and candidates drift inward as theirs rises. The side panel shows the best lock as a large figure, a bar for each part as it settles, what the model proposed and whether it was kept, and **Stop** and **Take**.
+  - The mock-up's colours stand for the theme's: the accent for nodes, a second colour for the signal, the theme's warning colour for firewalls.
+- **Tested:** the view draws at 70 % to 160 % as the rest of the window does; a node's signature and address change when its settings do and are the same for the same settings; with Reduce Motion on, a jump redraws without animation; a guide screenshot of the real window.
+
+### Step 17: Decrypt, a patch from a recording (L)
+
+- **Drop a clip on the console** (or choose **Decrypt a Sound...**): one note, held or plucked, up to 4 seconds. Its pitch is found, it is trimmed to the note and levelled. Its signature is drawn in the middle as the target.
+- **A search, on background threads:** candidates are rendered through the synth itself at the clip's pitch and length, and scored against the clip on its spectrum over time (on a mel scale, at three window sizes) and its loudness envelope. It starts from the factory patches nearest the clip, moves outward from the best, and repeats. The console shows the best twelve as its nodes, with a **lock** figure for each (how much of the signal that node accounts for), rising as the search goes; jump to one at any time.
+- **How it looks while it works:** the target's signature in the middle with each candidate's laid over it, the parts that agree lighting up; the lock figures counting up; the patch's parts (oscillators, filter, envelopes) marked as each settles. It should feel like watching a signal being cracked, and every moving thing on it is a real number from the search.
+- **With step 14's table:** the search may give oscillator 1 the clip's own Sampled table, and then has only the envelopes, filter and movement to find. This can be turned off (**Tables only from the factory**), for a patch made of the synth's own waves.
+- **Dry in this version:** the effects are left off while matching, and a clip with heavy reverb or delay is matched as if it were dry. Chords and riffs are not matched: one note.
+- **What a lock means,** said in the guide as it is: a sound the synth made is found again; a recording of something else gives a patch in its spirit, close for synth sounds, loose for voices, real drums and samples.
+- No model is trained or shipped in this step. If the search's first guess needs to be faster, a network trained on the synth's own random patches can give it one later; that is a decision for after this is measured.
+- **Tested:** ten factory patches of different kinds, each rendered and decrypted with their own names left out of the starting set, come back within a set spectral distance of the original (the distance is fixed when the search exists, from what a listener cannot tell apart in the renders); the same clip and seed give the same result; a search runs to its end without a dropout in a session that is playing (the audio thread's load measured before and during); the time it takes is measured on the development Mac and written in the guide; stopping it leaves the patch as it was.
+
+### Step 18: the guide, the changelog and patches (S)
+
+- The guide's synth section gains the Sampled table, the level envelopes, Trace and Decrypt, with screenshots of the real window, and says what a lock can and cannot do.
+- A changelog entry for each step, with what was not tried by hand.
+
+### Step 19: Ask Torq reaches all of it (M)
+
+Ask Torq already chooses an instrument and a saved preset for a track (`set_instrument`, `list_instrument_presets`), sets its parameters, and writes sequences. It does not yet know the factory sounds or anything in part three. Each line below is a tool or an addition to one, with the plan step it writes shown to the user before Apply, in the one undo step where the session's state holds it.
+
+- **Factory sounds by name and kind.** `list_instrument_presets` also lists Torqwave Synth's factory patches (by category, with a search word, since there are over a thousand), Basic Drums' kits and Swarm Guitar's presets; `set_instrument` takes one. "Put a dark reese on the bass track" picks from what is really there.
+- **Factory sequences and kits.** A tool to find factory sequence presets by role, style, energy and character, and one to drop a preset or a whole kit on the session at a bar. "Give me an EBM kit at 124" lands a real kit.
+- **Trace by words.** A tool that reads the node held and the twelve within reach as numbers (how bright, how loud over time, how noisy, how wide: the same measures the signatures are drawn from) and jumps to one, or sets Reach, a firewall or a Bridge. The model cannot hear; "darker, less attack" becomes a choice among measured nodes, and the plan says which measure it went by.
+- **Decrypt from the session.** A tool that takes a clip in the session (or the selection in the editor), runs Decrypt on a track's synth, and reports the lock figure when it ends; the search runs in the background as it does from the window, and the result is one undo step.
+- **A table from a clip.** A tool that gives an oscillator a Sampled table made from a clip.
+- **Drum maps.** A tool that lists the saved drum maps, sets a track's map, and remaps a clip's notes to it or back to General MIDI.
+- **The new parameters** (the level envelopes, slots 9 to 16, Swarm Guitar's Swarm source and Strum Sync) are told to the model as the others are.
+- **What it says about limits:** Ask Torq's instructions carry the same plain statement as the guide: Decrypt matches one dry note, and a lock on a recording of something that is not a synth is loose.
+- **Tested** (`--ai`, against a made-up model as the other tools are): each tool's plan step and its result; a patch asked for by a word that matches nothing is refused with the nearest names; a preset dropped by Ask Torq is the same as one dragged in; a jump made by Ask Torq equals a click on that node; Decrypt started by a tool can be stopped and leaves the patch as it was; Remap by a tool and its undo give the notes back exactly. With a real local model: three requests tried by hand and what happened written in the changelog.
+
+### Step 20: a local model helps, when Ask Torq is on (M, optional at every point)
+
+Trace and Decrypt work in full with Ask Torq off. With it on, the model the user runs (the server chosen in Ask Torq's settings) is asked for help at four points. It never decides anything by itself: whatever it proposes is rendered and scored by the same measure as everything else, and kept only if it scores better. A slow or absent model costs nothing: each request has a time limit, and the search never waits for one.
+
+- **Structure, which a search is poor at.** A search moves knobs well and makes choices badly (which table, which filter type, whether a second oscillator an octave up or a noise layer is needed). Between rounds of Decrypt, the model is given the target's measures, the best candidate's settings and where the two differ (which bands, which part of the note), and proposes up to five changes of structure. Each is tried; the search carries on from any that raise the lock. This is where a model is expected to help most, and it is measured: the same ten clips decrypted with and without it, lock and time written down.
+- **Where to start.** From the target's measures (and the user's words, if they typed any: "it's a reese", "match the body, not the click"), the model picks categories and patches to start from and which parts to firewall, in addition to the nearest patches the search finds itself.
+- **A model that hears, if the user has one.** If the server's model accepts audio, the clip itself is sent for a description, which joins the starting hints. If it does not, nothing is sent and nothing changes.
+- **Names and notes.** A decrypted or traced patch is offered a name, a category, a line of description and names for its four macros, to accept or change. Without a model, it gets a plain name from its address ("Node 7F3A").
+- **Trace by words** is step 19's tool; with a model on, the console has a line to type in ("darker", "more metallic, same envelope"), which calls it.
+- **Private and local:** only the server already set in Ask Torq is used; a clip's audio goes to it only when its model takes audio and the user has turned on "Let the model hear clips" (off by default).
+- **Tested** (with a made-up model): a proposal that scores worse is dropped and one that scores better is kept; a model that answers nonsense, late or not at all leaves the result the same as with Ask Torq off; nothing is sent when Ask Torq is off, and no audio is sent with "Let the model hear clips" off; the names offered can be refused. With a real local model: the ten-clip comparison above, and what it found, in the changelog.
+
+### Order for part three
+
+1. Step 14 first: 15 and 17 both write patches that may use it.
+2. Step 16's look is chosen (Sweep).
+3. Steps 15 and 16 together.
+4. Step 17.
+5. Step 19: the factory sounds, sequences, kits and drum maps can be done at once (they need nothing from part three); the Trace, Decrypt and table tools after steps 15 and 17.
+6. Step 20 after step 17, since it is measured against it.
+7. Step 18 as each lands.
+
+Steps 14 to 17 all change `Source/WaveSynth*` and the synth's window, so they are one writer's work, one after another, after Swarm Guitar's update is merged.
+
+## At release
+
+- After 0.20.0 is on `main`: turn on GitHub Pages for the repository (source `main`, folder `/docs`), as the user asked on 2026-11-22, and check that the Sounds page (`docs/sounds/`) loads and plays there.

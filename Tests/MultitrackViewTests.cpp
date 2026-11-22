@@ -586,6 +586,79 @@ namespace
                "loop: set from the time range; an undo and a redo leave the loop and the bars as they are; kept in the session file, and cleared");
     }
 
+    /** A new session counts in bars and beats, and the lanes draw the grid plainly in the Dark,
+        Light and High Contrast themes: a bar's line strongest, then a beat's, then the lines
+        between beats. In time they draw the ruler's ticks, so the lanes are never bare. */
+    void testLaneGrid (AudioEngine& engine)
+    {
+        const Session fresh;
+        const auto newInBars = SessionState::newEmpty (44100.0).barsAndBeats && juce::exactlyEqual (SessionState::newEmpty (44100.0).sampleRate, 44100.0)
+                               && fresh.getState()->barsAndBeats && ! SessionState().barsAndBeats;
+
+        // An empty track over one with a clip, 10 s at 120 a minute in 4/4, eighths on the grid.
+        auto s = SessionState::newEmpty (rate);
+        s.addTrack();
+        s.addTrack();
+        SessionEdits::addClip (s, 1, juce::File ("/tmp/grid.wav"), silence (480000), 0);
+        engine.session.reset (s, {});
+        MultitrackView view (engine);
+        view.setSize (MultitrackView::headerWidth + timelineWidth + 12, MultitrackView::rulerHeight + 2 * MultitrackView::trackHeight + 12);
+        view.zoomToFit();
+        view.setGridSize (MultitrackView::GridSize::eighth);
+        Mouse::settle();
+
+        const auto grid = view.laneGrid();
+        const auto count = [&grid] (MultitrackView::GridLine kind)
+        {
+            return (int) std::count_if (grid.begin(), grid.end(), [kind] (auto& l) { return l.second == kind; });
+        };
+        // The first line of a kind past the start, where the edit cursor is drawn.
+        const auto first = [&grid] (MultitrackView::GridLine kind)
+        {
+            return std::find_if (grid.begin(), grid.end(), [kind] (auto& l) { return l.second == kind && l.first > (float) MultitrackView::headerWidth + 20.0f; })->first;
+        };
+        // 10.5 s shown: 5 or 6 bars, 3 more beats in each, a line between each two beats.
+        const auto lines = count (MultitrackView::GridLine::bar) >= 5 && count (MultitrackView::GridLine::beat) >= 15
+                           && count (MultitrackView::GridLine::division) >= 20 && count (MultitrackView::GridLine::time) == 0;
+
+        // On a 2x render, each kind of line against the empty lane beside it.
+        const auto before = Theme::current();
+        const auto y = 2 * (MultitrackView::rulerHeight + MultitrackView::trackHeight / 2);
+        auto plain = true;
+        juce::String contrasts;
+
+        for (const auto* name : { "Dark", "Light", "High Contrast" })
+        {
+            Theme::apply (Theme::make (name, "Blue"));
+            const auto image = view.createComponentSnapshot (view.getLocalBounds(), true, 2.0f);
+            const auto against = [&] (MultitrackView::GridLine kind)
+            {
+                const auto x = (int) first (kind);
+                return Theme::contrast (image.getPixelAt (2 * x, y), image.getPixelAt (2 * x + 10, y));
+            };
+            const auto bar = against (MultitrackView::GridLine::bar), beat = against (MultitrackView::GridLine::beat),
+                       division = against (MultitrackView::GridLine::division);
+            plain = plain && bar >= 1.8 && beat >= 1.3 && division >= 1.1 && bar > beat && beat > division;
+            contrasts << name << " " << juce::String (bar, 2) << "/" << juce::String (beat, 2) << "/" << juce::String (division, 2) << "; ";
+        }
+
+        Theme::apply (before);
+
+        // In time, the ruler's ticks.
+        view.setShowBars (false);
+        const auto timeGrid = view.laneGrid();
+        const auto ticks = timeGrid.size() >= 5
+                           && std::all_of (timeGrid.begin(), timeGrid.end(), [] (auto& l) { return l.second == MultitrackView::GridLine::time; });
+        const auto image = view.createComponentSnapshot (view.getLocalBounds(), true, 2.0f);
+        const auto tickX = (int) timeGrid[1].first;
+        const auto tickContrast = Theme::contrast (image.getPixelAt (2 * tickX, y), image.getPixelAt (2 * tickX + 10, y));
+        view.setGridSize (MultitrackView::GridSize::automatic);
+
+        check (newInBars, "grid: a new session counts in bars and beats; a state built in code, or a file without the setting, in time");
+        check (lines && plain, "grid: the lanes draw bars, beats and the lines between, bars strongest, plainly in each theme (contrast bar/beat/between: " + contrasts + ")");
+        check (ticks && tickContrast >= 1.2, "grid: in time the lanes draw the ruler's ticks (contrast " + juce::String (tickContrast, 2) + ")");
+    }
+
     void testListWidth (AudioEngine& engine)
     {
         // The edge between the track list and the lanes drags the list wider (the headers and the
@@ -958,6 +1031,7 @@ void runMultitrackViewTests (AudioEngine& engine)
     testTrackTools (engine);
     testListWidth (engine);
     testLoop (engine);
+    testLaneGrid (engine);
     testNoteClipSelection (engine);
     testRangeAndRubberBand (engine);
     // Two clips on one track: A from 1 s to 3 s, B from 5 s to 6 s, in a 10 s view.

@@ -1377,8 +1377,7 @@ void MainComponent::finishOpeningDevice (const juce::XmlElement* savedDevice)
     if (auto* device = engine.deviceManager.getCurrentAudioDevice();
         device != nullptr && ! engine.session.canUndo() && engine.session.getFile() == juce::File())
     {
-        SessionState empty;
-        empty.sampleRate = device->getCurrentSampleRate();
+        auto empty = SessionState::newEmpty (device->getCurrentSampleRate());
         engine.clearTrackEffects();
         engine.session.reset (std::move (empty), {});
         engine.session.ensureMaster();   // every session has a master track
@@ -4081,10 +4080,9 @@ void MainComponent::confirmDiscardSession (std::function<void()> proceed)
 void MainComponent::newSession()
 {
     engine.getPlayer().pause();
-    SessionState empty;
-    empty.sampleRate = engine.deviceManager.getCurrentAudioDevice() != nullptr
-                           ? engine.deviceManager.getCurrentAudioDevice()->getCurrentSampleRate()
-                           : engine.session.getSampleRate();
+    auto empty = SessionState::newEmpty (engine.deviceManager.getCurrentAudioDevice() != nullptr
+                                             ? engine.deviceManager.getCurrentAudioDevice()->getCurrentSampleRate()
+                                             : engine.session.getSampleRate());
     engine.clearTrackEffects();
     engine.session.reset (std::move (empty), {});
     engine.session.ensureMaster();   // every session has a master track
@@ -8437,10 +8435,9 @@ void MainComponent::restoreProject (const juce::File& file)
     else
     {
         // No session in the project: an empty one, as New Session leaves.
-        SessionState empty;
-        empty.sampleRate = engine.deviceManager.getCurrentAudioDevice() != nullptr
-                               ? engine.deviceManager.getCurrentAudioDevice()->getCurrentSampleRate()
-                               : engine.session.getSampleRate();
+        auto empty = SessionState::newEmpty (engine.deviceManager.getCurrentAudioDevice() != nullptr
+                                                 ? engine.deviceManager.getCurrentAudioDevice()->getCurrentSampleRate()
+                                                 : engine.session.getSampleRate());
         engine.clearTrackEffects();
         engine.session.reset (std::move (empty), {});
         engine.session.ensureMaster();   // every session has a master track

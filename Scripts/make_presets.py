@@ -257,7 +257,7 @@ class Preset:
         self.part, self.tempo, self.voice, self.tags = part, tempo, voice, list(tags)
         self.key = key if voice[0] != "drums" else ""
 
-    def xml(self, indent=""):
+    def xml(self, indent="", trim_db=0.0):
         p = self.part
         tags = ",".join(self.tags)
         out = [f'{indent}<TORQWAVE_SEQUENCE version="1" name={quoteattr(self.name)} role={quoteattr(self.role)} subRole={quoteattr(self.sub)} '
@@ -290,7 +290,7 @@ class Preset:
             patch = patch_for(sound, self.name)
             label, instrument, settings = f"Torqwave Synth: {patch}", SYNTH, {"factoryPatch": patch}
 
-        out.append(f"{indent}  <VOICE>{voice_xml(label, instrument, settings, GAINS.get(self.name, 0.0))}</VOICE>")
+        out.append(f"{indent}  <VOICE>{voice_xml(label, instrument, settings, GAINS.get(self.name, 0.0) + trim_db)}</VOICE>")
         out.append(f"{indent}</TORQWAVE_SEQUENCE>")
         return "\n".join(out)
 
@@ -321,34 +321,46 @@ def read_voices():
 
 FACTORY_PATCHES, FACTORY_KITS = read_voices()
 
-# Each kind of part: the patches it may play on, as (category, how many from its start) or names.
-# The patches made by hand come first in each category.
+# Each kind of part: the patches it may play on, by name. The lists are fixed: a patch added to the synth
+# later changes no preset (a preset picks from its list by its own name, so the list must not move).
+# To put presets on a new patch, add its name here, run the script, and calibrate again.
 VOICE_PATCHES = {
-    "sub":      ["Warehouse Sub", "Iron Sub"],
-    "roll":     ["Rolling Offbeat", "Rumble Floor", "Bunker Kick Bass"],
-    "ebm":      ["Pressure Bass", "Grinder", ("Bass", 14)],
-    "acid":     [("Acid", 10)],
-    "dark":     [("Bass", 14), ("Reese", 4)],
-    "reese":    [("Reese", 10)],
-    "psy":      ["Rubber Acid", "Pressure Bass", "Rolling Offbeat"],
+    "sub": ["Warehouse Sub", "Iron Sub"],
+    "roll": ["Rolling Offbeat", "Rumble Floor", "Bunker Kick Bass"],
+    "ebm": ["Pressure Bass", "Grinder", "Warehouse Sub", "Rumble Floor", "Bunker Kick Bass", "Rolling Offbeat", "Iron Sub", "Pulse Bunker",
+        "Distorted 909 Bass", "FM Basement", "EBM Sequence Bass", "Body Music", "Abandoned Piston", "Abandoned Pump"],
+    "acid": ["Acid Corrosion", "Square Acid", "Acid Scream", "Rubber Acid", "Acid Drip", "Abandoned Drip", "Basalt Sting", "Bitter Squeal", "Bleach Bite",
+        "Bleak Sting"],
+    "dark": ["Warehouse Sub", "Rumble Floor", "Pressure Bass", "Bunker Kick Bass", "Rolling Offbeat", "Iron Sub", "Grinder", "Pulse Bunker",
+        "Distorted 909 Bass", "FM Basement", "EBM Sequence Bass", "Body Music", "Abandoned Piston", "Abandoned Pump", "Abyss Reese", "Tar Reese",
+        "Corroded Reese", "Wormhole"],
+    "reese": ["Abyss Reese", "Tar Reese", "Corroded Reese", "Wormhole", "Pipe Reese", "Acid Helix", "Ash Swell", "Ash Wire", "Basalt Rope",
+        "Bitter Current"],
+    "psy": ["Rubber Acid", "Pressure Bass", "Rolling Offbeat"],
     "chipbass": ["Square Acid", "Iron Sub"],
-    "stab":     [("Stab", 10)],
-    "chord":    ["Dub Chord Stab", "Minor Stab", "Organ Stab", "Pump Chord"],
-    "organ":    ["Organ Stab"],
-    "brass":    ["Rave Hoover Stab", "Factory Hit", "Minor Stab"],
-    "pad":      [("Pad", 12)],
-    "warm":     ["Grey Sky", "Sodium Lamp", "Low Ceiling"],
-    "drone":    [("Drone", 10)],
-    "arp":      [("Pluck", 8), "Clockwork"],
-    "pluck":    [("Pluck", 10)],
-    "glass":    ["Glass Shard", "Dark Kalimba", "Cold Bell"],
-    "bell":     [("Bell", 8)],
-    "lead":     [("Lead", 10)],
-    "saw":      ["Cold Saw Lead", "Rust Lead", "Mercury Lead"],
-    "chip":     ["Bit Pluck", "Industrial Whistle"],
-    "sweep":    ["Tension Riser", "Siren Climb", "Machine Spin Up"],
-    "noise":    ["Downlifter Noise", "Radio Static", "Ventilation"],
+    "stab": ["Dub Chord Stab", "Minor Stab", "Metal Stab", "Rave Hoover Stab", "Strobe Stab", "Factory Hit", "Organ Stab", "Abandoned Clamp",
+        "Abandoned Crack", "Abandoned Jab"],
+    "chord": ["Dub Chord Stab", "Minor Stab", "Organ Stab", "Pump Chord"],
+    "organ": ["Organ Stab"],
+    "brass": ["Rave Hoover Stab", "Factory Hit", "Minor Stab"],
+    "pad": ["Concrete Pad", "Ashfall", "Cathedral Of Rust", "Low Ceiling", "Grey Sky", "Sodium Lamp", "Tension Choir", "Fog Machine", "Acid Embers",
+        "Acid Field", "Acid Smoke", "Ash Haze"],
+    "warm": ["Grey Sky", "Sodium Lamp", "Low Ceiling"],
+    "drone": ["Reactor Drone", "Turbine", "Substation", "Engine Room", "Void Hum", "Power Line", "Abandoned Mains", "Abandoned Reactor", "Acid Furnace",
+        "Acid Grid"],
+    "arp": ["Black Pluck", "Glass Shard", "Wire Pluck", "Rubber Pluck", "Bit Pluck", "Dark Kalimba", "Acid Shard", "Basalt Wire", "Clockwork"],
+    "pluck": ["Black Pluck", "Glass Shard", "Wire Pluck", "Rubber Pluck", "Bit Pluck", "Dark Kalimba", "Acid Shard", "Basalt Wire", "Black Pin",
+        "Black Tick"],
+    "glass": ["Glass Shard", "Dark Kalimba", "Cold Bell"],
+    "bell": ["Cold Bell", "Prison Bell", "Rusted Chime", "FM Toll", "Dead Glockenspiel", "Minor Bell Motif", "Gamelan Machine", "Abandoned Chime"],
+    "lead": ["Siren Burn", "Mercury Lead", "Feedback Wire", "Industrial Whistle", "Rust Lead", "Cold Saw Lead", "Vowel Scream", "Abandoned Cutter",
+        "Acid Signal", "Bitter Arc"],
+    "saw": ["Cold Saw Lead", "Rust Lead", "Mercury Lead"],
+    "chip": ["Bit Pluck", "Industrial Whistle"],
+    "sweep": ["Tension Riser", "Siren Climb", "Machine Spin Up"],
+    "noise": ["Downlifter Noise", "Radio Static", "Ventilation"],
 }
+
 
 VOICE_KITS = {
     "standard": ["Standard"],
@@ -2041,6 +2053,11 @@ def generate():
 generate()
 
 
+# A kit's six parts play together, so each sits lower in a kit than it does alone: alone a preset peaks
+# near -9 dB, and six of them added up reached +4.7 dB (Terror Kit). At -6 dB each, the loudest kit peaks at -1.3 dB.
+KIT_TRIM_DB = -6.0
+
+
 def kit_xml(name, tempo, style, parts):
     by_name = {p.name: p for p in PRESETS}
     out = [f'<TORQWAVE_KIT version="1" name={quoteattr(name)} key="{KEY}" tags="Starter kit" '
@@ -2051,7 +2068,7 @@ def kit_xml(name, tempo, style, parts):
         p = by_name[part_name]
         tempo_before = p.tempo
         p.tempo = tempo
-        out.append(p.xml("  "))
+        out.append(p.xml("  ", KIT_TRIM_DB))
         p.tempo = tempo_before
 
     out.append("</TORQWAVE_KIT>")
