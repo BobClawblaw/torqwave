@@ -34,6 +34,7 @@
 #include "RestorationTests.h"
 #include "GeneratorTests.h"
 #include "InstrumentTests.h"
+#include "SoundControlsTests.h"
 #include "InstrumentTrackTests.h"
 #include "NoteEditorTests.h"
 #include "MidiInputTests.h"
@@ -601,6 +602,7 @@ int main (int argc, char* argv[])
     //   --library <folder>      only scan this folder of sounds into a new Sound Library index, and time it
     //   --write-check <folder>  only write categories and tags into copies of WAV files from this folder, and check them
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
+    //   --instruments           only the tests of the built-in instruments and their controls
     //   --ai                    only the AI assistance tests (a mock server; no network)
     //   --tempo                 only the tests of audio that follows the tempo
     //   --sequences             only the tests of sequences and the Sequence Library
@@ -683,6 +685,15 @@ int main (int argc, char* argv[])
     {
         AudioEngine engine;
         runSmallPiecesTests (engine);
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (args.contains ("--instruments"))
+    {
+        AudioEngine engine;
+        runSoundControlsTests();
+        runInstrumentTests (engine);
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }
@@ -895,6 +906,7 @@ int main (int argc, char* argv[])
         runRestorationTests();
         runGeneratorTests();
         runInstrumentTests (engine);
+        runSoundControlsTests();
         runInstrumentTrackTests (engine);
         runNoteEditorTests();
         runMidiInputTests();

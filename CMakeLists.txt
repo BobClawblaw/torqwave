@@ -276,6 +276,7 @@ target_sources(Torqwave PRIVATE
     Source/LevelsPanel.cpp
     Source/Analysis.cpp
     Source/Theme.cpp
+    Source/SoundControls.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp
     Source/LoadingScreen.cpp
@@ -505,6 +506,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/RestorationTests.cpp
     Tests/GeneratorTests.cpp
     Tests/InstrumentTests.cpp
+    Tests/SoundControlsTests.cpp
     Tests/InstrumentTrackTests.cpp
     Tests/NoteEditorTests.cpp
     Tests/MidiInputTests.cpp
@@ -658,6 +660,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/LevelsPanel.cpp
     Source/Analysis.cpp
     Source/Theme.cpp
+    Source/SoundControls.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp
     Source/LoadingScreen.cpp
