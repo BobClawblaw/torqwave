@@ -428,7 +428,20 @@ The look is the feature's identity, so it gets its own step and a mock-up the us
 
 - The guide's synth section gains the Sampled table, the level envelopes, Trace and Decrypt, with screenshots of the real window, and says what a lock can and cannot do.
 - A changelog entry for each step, with what was not tried by hand.
-- Ask Torq is told the new parameters, as it is told the others.
+
+### Step 19: Ask Torq reaches all of it (M)
+
+Ask Torq already chooses an instrument and a saved preset for a track (`set_instrument`, `list_instrument_presets`), sets its parameters, and writes sequences. It does not yet know the factory sounds or anything in part three. Each line below is a tool or an addition to one, with the plan step it writes shown to the user before Apply, in the one undo step where the session's state holds it.
+
+- **Factory sounds by name and kind.** `list_instrument_presets` also lists Torqwave Synth's factory patches (by category, with a search word, since there are over a thousand), Basic Drums' kits and Swarm Guitar's presets; `set_instrument` takes one. "Put a dark reese on the bass track" picks from what is really there.
+- **Factory sequences and kits.** A tool to find factory sequence presets by role, style, energy and character, and one to drop a preset or a whole kit on the session at a bar. "Give me an EBM kit at 124" lands a real kit.
+- **Trace by words.** A tool that reads the node held and the twelve within reach as numbers (how bright, how loud over time, how noisy, how wide: the same measures the signatures are drawn from) and jumps to one, or sets Reach, a firewall or a Bridge. The model cannot hear; "darker, less attack" becomes a choice among measured nodes, and the plan says which measure it went by.
+- **Decrypt from the session.** A tool that takes a clip in the session (or the selection in the editor), runs Decrypt on a track's synth, and reports the lock figure when it ends; the search runs in the background as it does from the window, and the result is one undo step.
+- **A table from a clip.** A tool that gives an oscillator a Sampled table made from a clip.
+- **Drum maps.** A tool that lists the saved drum maps, sets a track's map, and remaps a clip's notes to it or back to General MIDI.
+- **The new parameters** (the level envelopes, slots 9 to 16, Swarm Guitar's Swarm source and Strum Sync) are told to the model as the others are.
+- **What it says about limits:** Ask Torq's instructions carry the same plain statement as the guide: Decrypt matches one dry note, and a lock on a recording of something that is not a synth is loose.
+- **Tested** (`--ai`, against a made-up model as the other tools are): each tool's plan step and its result; a patch asked for by a word that matches nothing is refused with the nearest names; a preset dropped by Ask Torq is the same as one dragged in; a jump made by Ask Torq equals a click on that node; Decrypt started by a tool can be stopped and leaves the patch as it was; Remap by a tool and its undo give the notes back exactly. With a real local model: three requests tried by hand and what happened written in the changelog.
 
 ### Order for part three
 
@@ -436,6 +449,7 @@ The look is the feature's identity, so it gets its own step and a mock-up the us
 2. Step 16's mock-ups, for the user to choose from, while step 14 is built.
 3. Steps 15 and 16 together.
 4. Step 17.
-5. Step 18 as each lands.
+5. Step 19: the factory sounds, sequences, kits and drum maps can be done at once (they need nothing from part three); the Trace, Decrypt and table tools after steps 15 and 17.
+6. Step 18 as each lands.
 
 Steps 14 to 17 all change `Source/WaveSynth*` and the synth's window, so they are one writer's work, one after another, after Swarm Guitar's update is merged.
