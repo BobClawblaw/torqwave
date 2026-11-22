@@ -9,6 +9,7 @@
 #include "TestUtils.h"
 #include "WaveSynthTests.h"
 #include "ClickCheck.h"
+#include "../Source/WaveSynthPatchBuilder.h"
 
 namespace
 {
@@ -929,6 +930,107 @@ namespace
                    + juce::String (click.ratio, 1) + " times the steps around it" + (click.ratio > 0.0f ? " at " + juce::String (click.seconds, 3) + " s" : juce::String()) + ")");
     }
 
+    //==========================================================================
+    // Faults found in the engine and the first patches, each kept fixed.
+    void testFaults()
+    {
+        const auto sameSamples = [] (const juce::AudioBuffer<float>& a, const juce::AudioBuffer<float>& b)
+        {
+            for (int ch = 0; ch < a.getNumChannels(); ++ch)
+                if (std::memcmp (a.getReadPointer (ch), b.getReadPointer (ch), sizeof (float) * (size_t) a.getNumSamples()) != 0)
+                    return false;
+
+            return a.getNumSamples() == b.getNumSamples();
+        };
+
+        // Pitch modulation is smooth: an LFO to an oscillator's Pitch by 1 % (half a semitone either way) is a vibrato.
+        Synth synth;
+        bare (synth);
+        const auto steady = play (synth, held ({ 69 }, 1.0), 48000);
+        set (synth, "lfo1Rate", 5.0f);
+        set (synth, "mod1Source", (float) WaveSynth::lfo1);
+        set (synth, "mod1Destination", (float) (WaveSynth::destinationIds().indexOf ("osc1Pitch") + 1));
+        set (synth, "mod1Amount", 1.0f);
+        const auto vibrato = play (synth, held ({ 69 }, 1.0), 48000);
+        // The pitch over each 20 ms, from the zero crossings: it swings where the steady note doesn't.
+        const auto swing = [] (const juce::AudioBuffer<float>& b)
+        {
+            double lowest = 1.0e9, highest = 0.0;
+
+            for (int from = 9600; from + 960 <= 43200; from += 960)
+            {
+                int crossings = 0;
+                double first = -1.0, last = -1.0;
+
+                for (int i = from + 1; i < from + 960; ++i)
+                    if (b.getSample (0, i - 1) < 0.0f && b.getSample (0, i) >= 0.0f)
+                    {
+                        const auto at = (double) (i - 1) + (double) -b.getSample (0, i - 1) / (double) (b.getSample (0, i) - b.getSample (0, i - 1));
+                        if (first < 0.0) first = at;
+                        last = at;
+                        ++crossings;
+                    }
+
+                if (crossings > 1)
+                {
+                    const auto hz = (crossings - 1) * rate / (last - first);
+                    lowest = juce::jmin (lowest, hz);
+                    highest = juce::jmax (highest, hz);
+                }
+            }
+
+            return 1200.0 * std::log2 (highest / lowest);
+        };
+        const auto cents = swing (vibrato), still = swing (steady);
+        check (! sameSamples (steady, vibrato) && cents > 70.0 && cents < 100.0 && still < 1.0,
+               "synth: an LFO to an oscillator's Pitch at 1 % is a vibrato " + juce::String (cents, 0) + " cents from its lowest to its highest (96 in full; " + juce::String (still, 2)
+                   + " without it): pitch modulation moves smoothly, not in whole semitones");
+
+        // A Steps LFO synced to the tempo plays its sixteen steps over a bar or more, in the hand-made patches
+        // and the first bank (the second bank sets its own, some of them faster on purpose).
+        juce::StringArray fast;
+        int stepped = 0;
+        const std::set<juce::String> secondBank (WaveSynthPatchBuilder::secondBankNames().begin(), WaveSynthPatchBuilder::secondBankNames().end());
+
+        for (auto& p : WaveSynth::factoryPatches())
+            for (int l = 1; l <= WaveSynth::numLfos && secondBank.count (p.name) == 0; ++l)
+            {
+                const auto n = "lfo" + juce::String (l);
+                const auto value = [&p] (const juce::String& id, double otherwise) { const auto f = p.values.find (id); return f != p.values.end() ? f->second : otherwise; };
+
+                if ((int) value (n + "Shape", 0.0) == 7 && value (n + "Sync", 0.0) > 0.5)
+                {
+                    ++stepped;
+
+                    if (WaveSynth::divisionBeats ((int) value (n + "Division", 7.0)) < 4.0)
+                        fast.add (p.name);
+                }
+            }
+
+        check (fast.isEmpty() && stepped >= 80,
+               "synth: each of the " + juce::String (stepped) + " synced Steps LFOs in the hand-made patches and the first bank takes a bar or more over its sixteen steps (a step a sixteenth note or longer), not a buzz"
+                   + (fast.isEmpty() ? juce::String() : " (" + juce::String (fast.size()) + ": " + fast.joinIntoString (", ").substring (0, 400) + ")"));
+
+        // A macro named Rate changes the sound: Wobble Press's wobble is free, so its rate can move.
+        synth.loadPatch ("Wobble Press");
+        const auto slow = play (synth, held ({ 36 }, 1.0), 48000);
+        set (synth, "macro1", 100.0f);
+        const auto quick = play (synth, held ({ 36 }, 1.0), 48000);
+        check (! sameSamples (slow, quick), "synth: Wobble Press's Rate macro changes its wobble (it did nothing while the LFO was synced to the tempo)");
+
+        // The same note renders the same whatever the synth played before: coloured noise starts from nothing.
+        bare (synth);
+        set (synth, "osc1On", 0.0f);
+        set (synth, "noiseLevel", 80.0f);
+        set (synth, "noiseType", 1.0f);
+        const auto first = play (synth, held ({ 60 }, 0.3), 24000);
+        set (synth, "noiseType", 2.0f);
+        play (synth, held ({ 72, 76, 79 }, 0.3, 1.0f), 24000);
+        set (synth, "noiseType", 1.0f);
+        const auto again = play (synth, held ({ 60 }, 0.3), 24000);
+        check (sameSamples (first, again) && first.getMagnitude (0, 24000) > 0.01f, "synth: a note of pink noise renders the same, sample for sample, after the synth has played other noise in between");
+    }
+
     void testBlockSizes (Synth& synth)
     {
         // Patches with moving parts sound the same, sample for sample, whatever the blocks.
@@ -1016,6 +1118,7 @@ void runWaveSynthTests (AudioEngine& engine)
     testFilters (synth);
     testModulation (synth);
     testGroundwork();
+    testFaults();
     testBlockSizes (synth);
     testCpu (synth);
 }

@@ -782,6 +782,10 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         v.dcL = v.dcR = v.dcInL = v.dcInR = 0.0f;
         v.noiseL.state = 0x9e3779b9u ^ (v.serial * 2654435761u);
         v.noiseR.state = 0x7f4a7c15u ^ (v.serial * 40503u);
+        // The noise's colouring starts from nothing too, so the same note renders the same whatever the voice played before.
+        std::fill (std::begin (v.pinkL), std::end (v.pinkL), 0.0f);
+        std::fill (std::begin (v.pinkR), std::end (v.pinkR), 0.0f);
+        v.tiltL = v.tiltR = v.crackle = v.holdL = v.holdR = 0.0f;
         v.lfoSmoothed.fill (0.0f);
 
         // Each oscillator's unison voices: their start phases, fixed or spread at random (the same
@@ -1216,7 +1220,10 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         {
             auto& os = v.osc[(size_t) o];
             const auto n = shared.unison[(size_t) o];
-            const auto semis = plain (oscDest (o, fPitch), value[(size_t) oscDest (o, fPitch)]);
+            // The Pitch knob steps in semitones; modulation moves it smoothly between them (a vibrato of less
+            // than a semitone, a slide), so only a value nothing modulates is read in steps.
+            const auto pitchAt = (size_t) oscDest (o, fPitch);
+            const auto semis = juce::exactlyEqual (value[pitchAt], shared.base[pitchAt]) ? plain ((int) pitchAt, value[pitchAt]) : -24.0f + 48.0f * value[pitchAt];
             const auto cents = plain (oscDest (o, fFine), value[(size_t) oscDest (o, fFine)]);
             const auto detune = plain (oscDest (o, fDetune), value[(size_t) oscDest (o, fDetune)]);
             const auto spread = value[(size_t) oscDest (o, fSpread)];

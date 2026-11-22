@@ -749,6 +749,28 @@ void runWaveSynthBankTests()
         }
     }
 
+    // Four first-bank patches that failed these measures: Concrete Debris clicked, and three bells were near silent up at C6.
+    {
+        juce::StringArray still;
+        auto seen = 0;
+
+        for (size_t i = 0; i < all.size(); ++i)
+        {
+            const auto& name = all[i].name;
+
+            if (name == "Concrete Debris" || name == "Rotten Chime" || name == "Toxic Chime" || name == "Oily Gong")
+            {
+                ++seen;
+
+                if (measured[i].click.ratio > clickRatio || measured[i].noteDb < silentDb)
+                    still.add (name + " " + juce::String (measured[i].noteDb, 1) + " dB, click " + juce::String (measured[i].click.ratio, 1));
+            }
+        }
+
+        check (seen == 4 && still.isEmpty(), "synth bank: Concrete Debris no longer clicks on the click phrase, and Rotten Chime, Toxic Chime and Oily Gong sound in the bells' register (above "
+                                                 + juce::String (silentDb, 0) + " dB)" + (still.isEmpty() ? juce::String() : " (" + still.joinIntoString ("; ") + ")"));
+    }
+
     const auto listed = [] (const juce::StringArray& names) { return names.isEmpty() ? juce::String() : " (" + juce::String (names.size()) + ": " + names.joinIntoString ("; ").substring (0, 600) + ")"; };
 
     check (silent.isEmpty(), "synth bank: each of the second bank's patches sounds in its category's register: a note held two seconds peaks above "

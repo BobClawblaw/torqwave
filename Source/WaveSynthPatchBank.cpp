@@ -500,7 +500,7 @@ namespace WaveSynthPatchBuilder
             .mod (env2, "filter1Cutoff", 35).mod (velocity, "filter1Cutoff", 16).mono (40).amp (1, 270, 75, 60).drive (hard, 30, 5500).level (-12)
             .standardMacros (34).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Basalt Sting", "Acid").osc (1, analog, squarePos).filter (1, ladder12, 440, 67, 15, 30).env (2, 0, 130, 0, 120, 85)
-            .mod (env2, "filter1Cutoff", 37).mod (velocity, "filter1Cutoff", 11).mono (70).amp (1, 160, 70, 60).lfoSync (1, steps, sixteenth, 0)
+            .mod (env2, "filter1Cutoff", 37).mod (velocity, "filter1Cutoff", 11).mono (70).amp (1, 160, 70, 60).lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { -100, 60, -100, 100, 40, -100, -100, 100, -100, 60, -100, 100, -100, -100, 80, 100 }).mod (lfo1, "filter1Cutoff", 14)
             .delay (eighthT, 50, 23, 4500).level (-8).standardMacros (32).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Bitter Squeal", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 320, 78, 30, 30).env (2, 0, 240, 0, 120, 75)
@@ -514,7 +514,7 @@ namespace WaveSynthPatchBuilder
             .delay (sixteenthD, 30, 24, 5000).level (-13).standardMacros (34).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Brutal Hiss", "Acid").osc (1, analog, squarePos).filter (1, ladder24, 570, 69, 45, 30).env (2, 0, 190, 0, 120, 75)
             .mod (env2, "filter1Cutoff", 35).mod (velocity, "filter1Cutoff", 14).mono (80).amp (1, 260, 80, 60).drive (tube, 50, 4500)
-            .lfoSync (1, steps, sixteenth, 0)
+            .lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { -100, 100, -100, 100, 100, -100, 100, -100, -100, 100, 100, 100, -100, 100, -100, -100 })
             .mod (lfo1, "filter1Cutoff", 13).level (-15).standardMacros (34).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Brutal Rain", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 270, 73, 45, 30).env (2, 0, 210, 10, 120, 80)
@@ -522,14 +522,14 @@ namespace WaveSynthPatchBuilder
             .level (-4).standardMacros (31).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Buried Leak", "Acid").osc (1, analog, 80).filter (1, ladder24, 580, 71, 30, 30).env (2, 0, 250, 0, 120, 80)
             .mod (env2, "filter1Cutoff", 41).mod (velocity, "filter1Cutoff", 11).mono (70).amp (1, 170, 70, 60).drive (hard, 25, 6500)
-            .lfoSync (1, steps, sixteenth, 0).stepPattern (1, { -50, 0, 100, 0, -100, 0, 100, 0, -100, 0, 100, 0, -100, 0, 50, 0 })
+            .lfoSync (1, steps, bar1, 0).stepPattern (1, { -50, 0, 100, 0, -100, 0, 100, 0, -100, 0, 100, 0, -100, 0, 50, 0 })
             .mod (lfo1, "filter1Cutoff", 13).level (-10).standardMacros (32).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Carbon Burn", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 570, 77, 10, 30).env (2, 0, 230, 0, 120, 75)
             .mod (env2, "filter1Cutoff", 37).mod (velocity, "filter1Cutoff", 16).mono (60).amp (1, 270, 65, 60).delay (sixteenthD, 30, 15, 4000)
             .level (-4).standardMacros (33).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Carbon Rain", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 270, 75, 15, 30).env (2, 0, 270, 0, 120, 80)
             .mod (env2, "filter1Cutoff", 31).mod (velocity, "filter1Cutoff", 11).mono (70).amp (1, 180, 70, 60).drive (soft, 35, 6500)
-            .lfoSync (1, steps, sixteenth, 0)
+            .lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { -100, -100, 60, -100, -100, -100, 100, -100, -100, 60, -100, -100, 60, -100, 100, -100 })
             .mod (lfo1, "filter1Cutoff", 9).delay (eighthT, 45, 24, 3000).level (-13).standardMacros (30).macro (4, "Resonance")
             .mod (macro4, "filter1Resonance", 20);
@@ -537,7 +537,7 @@ namespace WaveSynthPatchBuilder
             .mod (env2, "filter1Cutoff", 44).mod (velocity, "filter1Cutoff", 14).mono (60).amp (1, 210, 70, 60).drive (tube, 50, 6000).level (-18)
             .standardMacros (30).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Choked Spill", "Acid").osc (1, analog, 80).filter (1, ladder12, 240, 67, 35, 30).env (2, 0, 190, 0, 120, 80)
-            .mod (env2, "filter1Cutoff", 36).mod (velocity, "filter1Cutoff", 11).mono (30).amp (1, 170, 70, 60).lfoSync (1, steps, sixteenth, 0)
+            .mod (env2, "filter1Cutoff", 36).mod (velocity, "filter1Cutoff", 11).mono (30).amp (1, 170, 70, 60).lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { 0, 50, 0, -50, 0, 100, 0, -100, 0, 100, 0, -100, 0, 100, 0, -100 }).mod (lfo1, "filter1Cutoff", 14).level (-7)
             .standardMacros (33).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Choked Squeal", "Acid").osc (1, analog, 80).filter (1, ladder12, 510, 87, 35, 30).env (2, 0, 220, 10, 120, 65)
@@ -550,11 +550,11 @@ namespace WaveSynthPatchBuilder
             .mod (env2, "filter1Cutoff", 31).mod (velocity, "filter1Cutoff", 17).mono (60).amp (1, 260, 70, 60).level (-5).standardMacros (32)
             .macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Concrete Bath", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 580, 80, 15, 30).env (2, 0, 180, 0, 120, 70)
-            .mod (env2, "filter1Cutoff", 45).mod (velocity, "filter1Cutoff", 14).mono (70).amp (1, 280, 75, 60).lfoSync (1, steps, sixteenth, 0)
+            .mod (env2, "filter1Cutoff", 45).mod (velocity, "filter1Cutoff", 14).mono (70).amp (1, 280, 75, 60).lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { 100, -100, -100, 80, 100, -100, 60, -100, 100, 40, -100, -100, 100, -100, 60, -100 }).mod (lfo1, "filter1Cutoff", 9)
             .level (-5).standardMacros (34).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Corrosive Burn", "Acid").osc (1, analog, squarePos).filter (1, ladder24, 500, 73, 15, 30).env (2, 0, 210, 0, 120, 80)
-            .mod (env2, "filter1Cutoff", 34).mod (velocity, "filter1Cutoff", 16).mono (60).amp (1, 240, 75, 60).lfoSync (1, steps, sixteenth, 0)
+            .mod (env2, "filter1Cutoff", 34).mod (velocity, "filter1Cutoff", 16).mono (60).amp (1, 240, 75, 60).lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100 })
             .mod (lfo1, "filter1Cutoff", 11).delay (sixteenthD, 40, 18, 3500).level (-5).standardMacros (33).macro (4, "Resonance")
             .mod (macro4, "filter1Resonance", 20);
@@ -569,16 +569,16 @@ namespace WaveSynthPatchBuilder
             .standardMacros (35).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Derelict Line", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 370, 75, 35, 30).env (2, 0, 140, 10, 120, 85)
             .mod (env2, "filter1Cutoff", 33).mod (velocity, "filter1Cutoff", 17).mono (50).amp (1, 210, 75, 60).drive (soft, 35, 6500)
-            .lfoSync (1, steps, sixteenth, 0).stepPattern (1, { 100, -100, 50, 100, -100, 50, -100, -100, 100, 25, -100, 100, -100, 50, -100, -100 })
+            .lfoSync (1, steps, bar1, 0).stepPattern (1, { 100, -100, 50, 100, -100, 50, -100, -100, 100, 25, -100, 100, -100, 50, -100, -100 })
             .mod (lfo1, "filter1Cutoff", 14).level (-13).standardMacros (30).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Etched Vat", "Acid").osc (1, analog, 80).filter (1, ladder24, 600, 72, 20, 30).env (2, 0, 160, 10, 120, 85)
             .mod (env2, "filter1Cutoff", 32).mod (velocity, "filter1Cutoff", 13).mono (60).amp (1, 190, 55, 60).drive (fuzz, 40, 4500)
-            .lfoSync (1, steps, sixteenth, 0).stepPattern (1, { 100, 40, -100, -100, 100, -100, 60, -100, 100, -100, -100, 80, 100, -100, 60, -100 })
+            .lfoSync (1, steps, bar1, 0).stepPattern (1, { 100, 40, -100, -100, 100, -100, 60, -100, 100, -100, -100, 80, 100, -100, 60, -100 })
             .mod (lfo1, "filter1Cutoff", 9).delay (eighthD, 35, 14, 3500).level (-21).standardMacros (33).macro (4, "Resonance")
             .mod (macro4, "filter1Resonance", 20);
         add ("Feral Bite", "Acid").osc (1, analog, 80).filter (1, ladder24, 360, 68, 20, 30).env (2, 0, 300, 0, 120, 75)
             .mod (env2, "filter1Cutoff", 43).mod (velocity, "filter1Cutoff", 11).mono (80).amp (1, 250, 55, 60).drive (fuzz, 35, 4000)
-            .lfoSync (1, steps, sixteenth, 0).stepPattern (1, { -100, 100, -100, 50, -100, -100, 100, -100, 50, 100, -100, 50, -100, -100, 100, 25 })
+            .lfoSync (1, steps, bar1, 0).stepPattern (1, { -100, 100, -100, 50, -100, -100, 100, -100, 50, 100, -100, 50, -100, -100, 100, 25 })
             .mod (lfo1, "filter1Cutoff", 12).delay (eighthD, 45, 22, 4000).level (-21).standardMacros (34).macro (4, "Resonance")
             .mod (macro4, "filter1Resonance", 20);
         add ("Feral Fizz", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 410, 66, 30, 30).env (2, 0, 310, 0, 120, 80)
@@ -592,7 +592,7 @@ namespace WaveSynthPatchBuilder
             .macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Hollow Bath", "Acid").osc (1, analog, sawPos).filter (1, ladder12, 310, 76, 30, 30).env (2, 0, 190, 0, 120, 75)
             .mod (env2, "filter1Cutoff", 38).mod (velocity, "filter1Cutoff", 16).mono (30).amp (1, 280, 50, 60).drive (hard, 25, 5500)
-            .lfoSync (1, steps, sixteenth, 0)
+            .lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100 })
             .mod (lfo1, "filter1Cutoff", 8).level (-14).standardMacros (30).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Hollow Rain", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 260, 79, 30, 30).env (2, 0, 160, 0, 120, 80)
@@ -615,15 +615,15 @@ namespace WaveSynthPatchBuilder
             .delay (sixteenthD, 45, 20, 3000).level (-22).standardMacros (35).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Leaking Burn", "Acid").osc (1, analog, 80).filter (1, ladder24, 220, 80, 25, 30).env (2, 0, 200, 0, 120, 65)
             .mod (env2, "filter1Cutoff", 32).mod (velocity, "filter1Cutoff", 13).mono (30).amp (1, 270, 60, 60).drive (soft, 25, 5000)
-            .lfoSync (1, steps, sixteenth, 0).stepPattern (1, { 60, -100, 100, -100, -100, 80, 100, -100, 60, -100, 100, 40, -100, -100, 100, -100 })
+            .lfoSync (1, steps, bar1, 0).stepPattern (1, { 60, -100, 100, -100, -100, 80, 100, -100, 60, -100, 100, 40, -100, -100, 100, -100 })
             .mod (lfo1, "filter1Cutoff", 9).delay (sixteenthD, 50, 20, 3000).level (-10).standardMacros (30).macro (4, "Resonance")
             .mod (macro4, "filter1Resonance", 20);
         add ("Leaking Smear", "Acid").osc (1, analog, 80).filter (1, ladder24, 530, 81, 30, 30).env (2, 0, 190, 10, 120, 80)
-            .mod (env2, "filter1Cutoff", 33).mod (velocity, "filter1Cutoff", 17).mono (40).amp (1, 290, 60, 60).lfoSync (1, steps, sixteenth, 0)
+            .mod (env2, "filter1Cutoff", 33).mod (velocity, "filter1Cutoff", 17).mono (40).amp (1, 290, 60, 60).lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { 0, -50, 0, 100, 0, -100, 0, 100, 0, -100, 0, 100, 0, -100, 0, 50 }).mod (lfo1, "filter1Cutoff", 14).level (-5)
             .standardMacros (34).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Nickel Sizzle", "Acid").osc (1, analog, squarePos).filter (1, ladder24, 210, 77, 45, 30).env (2, 0, 300, 10, 120, 80)
-            .mod (env2, "filter1Cutoff", 36).mod (velocity, "filter1Cutoff", 17).mono (30).amp (1, 190, 55, 60).lfoSync (1, steps, sixteenth, 0)
+            .mod (env2, "filter1Cutoff", 36).mod (velocity, "filter1Cutoff", 17).mono (30).amp (1, 190, 55, 60).lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { 60, -10, 20, -90, 100, -40, 30, -60, 80, -20, 0, -80, 100, -30, 40, -70 }).mod (lfo1, "filter1Cutoff", 9)
             .delay (sixteenthD, 30, 25, 3500).level (-4).standardMacros (35).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Nickel Wail", "Acid").osc (1, analog, 80).filter (1, ladder24, 300, 82, 40, 30).env (2, 0, 260, 0, 120, 75)
@@ -637,7 +637,7 @@ namespace WaveSynthPatchBuilder
             .level (-7).standardMacros (34).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Null Line", "Acid").osc (1, analog, squarePos).filter (1, ladder24, 320, 87, 15, 30).env (2, 0, 140, 0, 120, 70)
             .mod (env2, "filter1Cutoff", 35).mod (velocity, "filter1Cutoff", 17).mono (50).amp (1, 230, 65, 60).drive (hard, 45, 6000)
-            .lfoSync (1, steps, sixteenth, 0).stepPattern (1, { -50, 0, 100, 0, -100, 0, 100, 0, -100, 0, 100, 0, -100, 0, 50, 0 })
+            .lfoSync (1, steps, bar1, 0).stepPattern (1, { -50, 0, 100, 0, -100, 0, 100, 0, -100, 0, 100, 0, -100, 0, 50, 0 })
             .mod (lfo1, "filter1Cutoff", 11).level (-18).standardMacros (35).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Obsidian Spill", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 270, 71, 35, 30).env (2, 0, 280, 0, 120, 70)
             .mod (env2, "filter1Cutoff", 37).mod (velocity, "filter1Cutoff", 16).mono (40).amp (1, 250, 75, 60).drive (tube, 40, 6500)
@@ -662,7 +662,7 @@ namespace WaveSynthPatchBuilder
             .level (-7).standardMacros (32).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Severed Drip", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 560, 80, 15, 30).env (2, 0, 210, 0, 120, 85)
             .mod (env2, "filter1Cutoff", 35).mod (velocity, "filter1Cutoff", 12).mono (30).amp (1, 160, 50, 60).drive (soft, 35, 5500)
-            .lfoSync (1, steps, sixteenth, 0).stepPattern (1, { -100, 50, 100, -100, 50, -100, -100, 100, 25, -100, 100, -100, 50, -100, -100, 100 })
+            .lfoSync (1, steps, bar1, 0).stepPattern (1, { -100, 50, 100, -100, 50, -100, -100, 100, 25, -100, 100, -100, 50, -100, -100, 100 })
             .mod (lfo1, "filter1Cutoff", 9).delay (eighthT, 30, 13, 4000).level (-12).standardMacros (31).macro (4, "Resonance")
             .mod (macro4, "filter1Resonance", 20);
         add ("Severed Gnaw", "Acid").osc (1, analog, 80).filter (1, ladder24, 520, 75, 40, 30).env (2, 0, 310, 10, 120, 75)
@@ -672,7 +672,7 @@ namespace WaveSynthPatchBuilder
             .mod (env2, "filter1Cutoff", 40).mod (velocity, "filter1Cutoff", 14).mono (60).amp (1, 240, 50, 60).drive (tube, 40, 6500).level (-16)
             .standardMacros (35).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Sodium Smear", "Acid").osc (1, analog, sawPos).filter (1, ladder12, 290, 86, 25, 30).env (2, 0, 170, 0, 120, 85)
-            .mod (env2, "filter1Cutoff", 40).mod (velocity, "filter1Cutoff", 11).mono (80).amp (1, 190, 55, 60).lfoSync (1, steps, sixteenth, 0)
+            .mod (env2, "filter1Cutoff", 40).mod (velocity, "filter1Cutoff", 11).mono (80).amp (1, 190, 55, 60).lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { -100, 100, -100, -100, 100, -100, -100, 100, -100, 100, -100, -100, 100, -100, 100, -100 })
             .mod (lfo1, "filter1Cutoff", 10).delay (sixteenthD, 45, 14, 3500).level (-8).standardMacros (30).macro (4, "Resonance")
             .mod (macro4, "filter1Resonance", 20);
@@ -690,7 +690,7 @@ namespace WaveSynthPatchBuilder
             .delay (sixteenthD, 35, 20, 4500).level (-13).standardMacros (34).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Sullen Smear", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 250, 80, 25, 30).env (2, 0, 310, 10, 120, 75)
             .mod (env2, "filter1Cutoff", 36).mod (velocity, "filter1Cutoff", 16).mono (60).amp (1, 190, 65, 60).drive (fuzz, 25, 4000)
-            .lfoSync (1, steps, sixteenth, 0)
+            .lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { 100, -100, -100, 100, -100, -100, 100, -100, 100, -100, -100, 100, -100, 100, -100, -100 })
             .mod (lfo1, "filter1Cutoff", 12).delay (eighthD, 40, 23, 3000).level (-20).standardMacros (30).macro (4, "Resonance")
             .mod (macro4, "filter1Resonance", 20);
@@ -699,12 +699,12 @@ namespace WaveSynthPatchBuilder
             .standardMacros (32).macro (4, "Resonance").mod (macro4, "filter1Resonance", 20);
         add ("Venom Bath", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 580, 86, 45, 30).env (2, 0, 250, 10, 120, 70)
             .mod (env2, "filter1Cutoff", 43).mod (velocity, "filter1Cutoff", 14).mono (70).amp (1, 280, 50, 60).drive (hard, 30, 4000)
-            .lfoSync (1, steps, sixteenth, 0).stepPattern (1, { 70, 40, 10, -20, -50, -80, -100, 100, 70, 40, 10, -20, -50, -80, -100, 100 })
+            .lfoSync (1, steps, bar1, 0).stepPattern (1, { 70, 40, 10, -20, -50, -80, -100, 100, 70, 40, 10, -20, -50, -80, -100, 100 })
             .mod (lfo1, "filter1Cutoff", 9).delay (sixteenthD, 35, 15, 4000).level (-10).standardMacros (32).macro (4, "Resonance")
             .mod (macro4, "filter1Resonance", 20);
         add ("Venom Sizzle", "Acid").osc (1, analog, squarePos).filter (1, ladder12, 490, 83, 30, 30).env (2, 0, 190, 10, 120, 85)
             .mod (env2, "filter1Cutoff", 39).mod (velocity, "filter1Cutoff", 10).mono (30).amp (1, 230, 60, 60).drive (soft, 30, 6500)
-            .lfoSync (1, steps, sixteenth, 0)
+            .lfoSync (1, steps, bar1, 0)
             .stepPattern (1, { -100, 60, -100, -100, -100, 100, -100, -100, 60, -100, -100, 60, -100, 100, -100, -100 })
             .mod (lfo1, "filter1Cutoff", 12).delay (eighthT, 45, 21, 4000).level (-14).standardMacros (30).macro (4, "Resonance")
             .mod (macro4, "filter1Resonance", 20);
@@ -2013,7 +2013,7 @@ namespace WaveSynthPatchBuilder
             .mod (env2, "osc1Position", 30).filter (1, svfHigh, 1300, 10).amp (0, 1700, 0, 1500, 70).delay (quarterD, 40, 22, 4000)
             .reverb (45, 80, 7, 45).level (-10).standardMacros (25);
         add ("Oily Gong", "Bell").osc (1, metal, 55).osc (2, fm, 60, 40).pitch (2, 7).env (2, 0, 1700, 0, 1500, 70).mod (env2, "osc1Position", 30)
-            .filter (1, ladder12, 900, 20).amp (0, 3400, 0, 2400, 70).delay (quarterD, 40, 20, 4000).reverb (40, 80, 4.5f, 45).level (-4)
+            .filter (1, ladder12, 900, 20, 0, 100).amp (0, 3400, 0, 2400, 70).delay (quarterD, 40, 20, 4000).reverb (40, 80, 4.5f, 45).level (-4)
             .standardMacros (25);
         add ("Oily Toll", "Bell").osc (1, metal, 50).filter (1, svfHigh, 1700, 15).amp (0, 2100, 0, 2100, 70).delay (eighthD, 35, 21, 4000)
             .reverb (40, 75, 3, 45).level (-8).standardMacros (25);
@@ -2022,7 +2022,7 @@ namespace WaveSynthPatchBuilder
         add ("Prison Mallet", "Bell").osc (1, metal, 15).osc (2, metal, 40, 50).pitch (2, 19).env (2, 0, 1900, 0, 1500, 70)
             .mod (env2, "osc1Position", 35).filter (1, svfBand, 2100, 10).amp (0, 1300, 0, 1100, 70).delay (eighthD, 45, 26, 4000)
             .reverb (45, 85, 4, 45).level (-5).standardMacros (25);
-        add ("Rotten Chime", "Bell").osc (1, metal, 15).env (2, 0, 800, 0, 1500, 70).mod (env2, "osc1Position", 50).filter (1, ladder12, 400, 25)
+        add ("Rotten Chime", "Bell").osc (1, metal, 15).env (2, 0, 800, 0, 1500, 70).mod (env2, "osc1Position", 50).filter (1, ladder12, 400, 25, 0, 100)
             .amp (0, 3900, 0, 3000, 70).delay (eighthD, 45, 25, 4000).reverb (50, 95, 6, 45).level (5).standardMacros (25);
         add ("Ruined Knell", "Bell").osc (1, fm, 50).osc (2, fm, 40, 60).pitch (2, 12).env (2, 0, 1100, 0, 1500, 70).mod (env2, "osc1Position", 50)
             .warp (1, wFm, 30).filter (1, ladder12, 1300, 25).amp (0, 1500, 0, 1400, 70).delay (eighthD, 30, 19, 4000).reverb (35, 90, 7, 45)
@@ -2048,7 +2048,7 @@ namespace WaveSynthPatchBuilder
             .reverb (40, 90, 3.5f, 45).level (-2).standardMacros (25);
         add ("Tolling Anvil", "Bell").osc (1, additive, 75).osc (2, fm, 40, 60).pitch (2, 19).warp (1, wFold, 25).filter (1, svfHigh, 1500, 20)
             .amp (0, 1600, 0, 2700, 70).delay (eighthD, 40, 24, 4000).reverb (45, 75, 3.5f, 45).level (-5).standardMacros (25);
-        add ("Toxic Chime", "Bell").osc (1, metal, 85).osc (2, analog, 60, 45).pitch (2, 24).filter (1, svfBand, 400, 20).amp (0, 1700, 0, 1300, 70)
+        add ("Toxic Chime", "Bell").osc (1, metal, 85).osc (2, analog, 60, 45).pitch (2, 24).filter (1, svfBand, 400, 20, 0, 100).amp (0, 1700, 0, 1300, 70)
             .reverb (40, 80, 7, 45).level (-3).standardMacros (25);
         add ("Toxic Resonator", "Bell").osc (1, fm, 70).env (2, 0, 1000, 0, 1500, 70).mod (env2, "osc1Position", 45).filter (1, ladder12, 400, 10)
             .amp (0, 2500, 0, 1200, 70).delay (eighthD, 35, 25, 4000).reverb (45, 80, 4, 45).level (-3).standardMacros (25);
@@ -2057,39 +2057,39 @@ namespace WaveSynthPatchBuilder
         add ("Abandoned Pattern", "Sequence").osc (1, pulse, 35).unison (1, 3, 12, 70).filter (1, svfBand, 1300, 45)
             .lfoSync (1, square, sixteenth, 1, 15).mod (lfo1, "ampLevel", 33).amp (2, 300, 90, 200).delay (sixteenthD, 25, 16, 4000).level (-23)
             .standardMacros (25);
-        add ("Abandoned Sequence", "Sequence").osc (1, metal, 30).filter (1, svfBand, 2400, 25).lfoSync (1, steps, sixteenth, 1)
+        add ("Abandoned Sequence", "Sequence").osc (1, metal, 30).filter (1, svfBand, 2400, 25).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100 }).mod (lfo1, "ampLevel", 36)
             .mod (lfo1, "filter1Cutoff", 8).amp (2, 300, 90, 200).delay (eighthT, 35, 19, 4000).drive (crush, 30).level (-22).standardMacros (25);
-        add ("Abandoned Shuttle", "Sequence").osc (1, sync, 60).filter (1, ladder24, 900, 25).lfoSync (1, steps, sixteenth, 1)
+        add ("Abandoned Shuttle", "Sequence").osc (1, sync, 60).filter (1, ladder24, 900, 25).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100 })
             .mod (lfo1, "osc1Position", 24).amp (2, 300, 90, 200).delay (eighthD, 30, 23, 4000).level (-5).standardMacros (25);
         add ("Abandoned Signal", "Sequence").osc (1, pulse, 40).filter (1, ladder24, 2500, 35).lfoSync (1, square, eighth, 1, 15)
             .mod (lfo1, "ampLevel", 34).amp (2, 300, 90, 200).delay (eighthT, 45, 20, 4000).drive (crush, 25).level (-28).standardMacros (25);
-        add ("Basalt Metronome", "Sequence").osc (1, sync, 65).filter (1, svfBand, 2100, 30).lfoSync (1, steps, sixteenth, 1)
+        add ("Basalt Metronome", "Sequence").osc (1, sync, 65).filter (1, svfBand, 2100, 30).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 20, -90, 100, -40, 30, -60, 80, -20, 0, -80, 100, -30, 40, -70, 60, -10 }).mod (lfo1, "osc1Position", 38)
             .amp (2, 300, 90, 200).delay (sixteenthD, 30, 16, 4000).drive (hard, 25).level (-18).standardMacros (25);
-        add ("Bitter Assembly", "Sequence").osc (1, analog, sawPos).filter (1, ladder24, 2300, 30).lfoSync (1, steps, eighth, 1)
+        add ("Bitter Assembly", "Sequence").osc (1, analog, sawPos).filter (1, ladder24, 2300, 30).lfoSync (1, steps, bars2, 1)
             .stepPattern (1, { 100, -100, 50, -100, -100, 100, -100, 50, 100, -100, 50, -100, -100, 100, 25, -100 }).mod (lfo1, "ampLevel", 37)
             .mod (lfo1, "filter1Cutoff", 11).amp (2, 300, 90, 200).delay (eighthT, 30, 22, 4000).level (-26).standardMacros (25);
         add ("Black Pattern", "Sequence").osc (1, sync, 20).unison (1, 2, 11, 70).filter (1, ladder12, 2100, 40)
             .lfoSync (1, sawDown, sixteenth, 1, 15).mod (lfo1, "ampLevel", 39).amp (2, 300, 90, 200).delay (eighthT, 40, 24, 4000).level (-26)
             .standardMacros (25);
-        add ("Buried Relay", "Sequence").osc (1, sync, 25).filter (1, ladder24, 1300, 40).lfoSync (1, steps, sixteenth, 1)
+        add ("Buried Relay", "Sequence").osc (1, sync, 25).filter (1, ladder24, 1300, 40).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 60, -100, 100, 40, -100, -100, 100, -100, 60, -100, 100, -100, -100, 80, 100, -100 }).mod (lfo1, "ampLevel", 36)
             .mod (lfo1, "filter1Cutoff", 13).amp (2, 300, 90, 200).delay (eighthD, 40, 22, 4000).drive (crush, 30).level (-27).standardMacros (25);
-        add ("Burnt Shuttle", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 2200, 30).lfoSync (1, steps, sixteenth, 1)
+        add ("Burnt Shuttle", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 2200, 30).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 60, -100, 100, -100, -100, -100, 60, -100, -100, -100, 100, -100, -100, 60, -100 })
             .mod (lfo1, "filter1Cutoff", 38).amp (2, 300, 90, 200).delay (sixteenthD, 30, 16, 4000).level (-12).standardMacros (25);
-        add ("Carbon Loom", "Sequence").osc (1, metal, 60).filter (1, ladder24, 2200, 30).lfoSync (1, steps, sixteenthT, 1)
+        add ("Carbon Loom", "Sequence").osc (1, metal, 60).filter (1, ladder24, 2200, 30).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, -100, 100, 100, 100, -100, 100, -100, -100, -100, 100, -100, 100, 100, -100, 100 }).mod (lfo1, "ampLevel", 36)
             .mod (lfo1, "filter1Cutoff", 10).amp (2, 300, 90, 200).delay (sixteenthD, 25, 19, 4000).level (-17).standardMacros (25);
-        add ("Choked Press", "Sequence").osc (1, pulse, 40).filter (1, ladder12, 1400, 45).lfoSync (1, steps, sixteenth, 1)
+        add ("Choked Press", "Sequence").osc (1, pulse, 40).filter (1, ladder12, 1400, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, -100, 60, -100, 100, -100, -100, -100, 60, -100, -100, -100, 100, -100, -100, 60 }).mod (lfo1, "ampLevel", 37)
             .mod (lfo1, "filter1Cutoff", 14).amp (2, 300, 90, 200).delay (sixteenthD, 30, 23, 4000).drive (crush, 35).level (-30).standardMacros (25);
-        add ("Choked Ratchet", "Sequence").osc (1, pulse, 35).filter (1, ladder12, 1600, 35).lfoSync (1, steps, sixteenth, 1)
+        add ("Choked Ratchet", "Sequence").osc (1, pulse, 35).filter (1, ladder12, 1600, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 0, -100, 0, 100, 0, -100, 0, 50, 0, -50, 0, 100, 0, -100, 0, 100 }).mod (lfo1, "osc1Position", 31)
             .amp (2, 300, 90, 200).delay (eighthD, 35, 20, 4000).drive (crush, 30).level (-14).standardMacros (25);
-        add ("Chopped Ratchet", "Sequence").osc (1, growl, 30).filter (1, ladder24, 2000, 40).lfoSync (1, steps, sixteenth, 1)
+        add ("Chopped Ratchet", "Sequence").osc (1, growl, 30).filter (1, ladder24, 2000, 40).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -60, 100, -60, 20, -60, 60, -20, -60, -100, 100, -60, 20, -60, 80, -60, 40 }).mod (lfo1, "ampLevel", 35)
             .mod (lfo1, "filter1Cutoff", 9).amp (2, 300, 90, 200).delay (eighthD, 30, 22, 4000).drive (hard, 25).level (-29).standardMacros (25);
         add ("Chrome Assembly", "Sequence").osc (1, pulse, 50).filter (1, ladder24, 2100, 25).lfoSync (1, square, sixteenth, 1, 15)
@@ -2098,174 +2098,174 @@ namespace WaveSynthPatchBuilder
             .mod (lfo1, "ampLevel", 37).amp (2, 300, 90, 200).delay (sixteenthD, 35, 24, 4000).drive (crush, 30).level (-29).standardMacros (25);
         add ("Cinder Cog", "Sequence").osc (1, growl, 65).filter (1, ladder24, 1700, 50).lfoSync (1, square, sixteenth, 1, 15)
             .mod (lfo1, "ampLevel", 34).amp (2, 300, 90, 200).delay (eighthT, 35, 17, 4000).drive (hard, 15).level (-31).standardMacros (25);
-        add ("Clocked Conveyor", "Sequence").osc (1, pulse, 25).unison (1, 2, 9, 70).filter (1, svfBand, 1400, 35).lfoSync (1, steps, sixteenthT, 1)
+        add ("Clocked Conveyor", "Sequence").osc (1, pulse, 25).unison (1, 2, 9, 70).filter (1, svfBand, 1400, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 0, -100, 0, 50, 0, -50, 0, 100, 0, -100, 0, 100, 0, -100, 0, 100 }).mod (lfo1, "ampLevel", 38)
             .mod (lfo1, "filter1Cutoff", 11).amp (2, 300, 90, 200).delay (eighthD, 40, 17, 4000).drive (hard, 30).level (-27).standardMacros (25);
-        add ("Clocked Relay", "Sequence").osc (1, sync, 30).filter (1, ladder12, 2400, 25).lfoSync (1, steps, sixteenth, 1)
+        add ("Clocked Relay", "Sequence").osc (1, sync, 30).filter (1, ladder12, 2400, 25).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -20, -50, -80, -100, 100, 70, 40, 10, -20, -50, -80, -100, 100, 70, 40, 10 }).mod (lfo1, "ampLevel", 34)
             .mod (lfo1, "filter1Cutoff", 12).amp (2, 300, 90, 200).delay (eighthD, 40, 18, 4000).level (-23).standardMacros (25);
-        add ("Cobalt Metronome", "Sequence").osc (1, analog, sawPos).filter (1, ladder24, 1500, 30).lfoSync (1, steps, sixteenth, 1)
+        add ("Cobalt Metronome", "Sequence").osc (1, analog, sawPos).filter (1, ladder24, 1500, 30).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, 100, -100, 100, -100, -100, 100, 100, 100, -100, 100, -100, -100, -100, 100 })
             .mod (lfo1, "filter1Cutoff", 24).amp (2, 300, 90, 200).delay (sixteenthD, 30, 17, 4000).level (-10).standardMacros (25);
-        add ("Cold Circuit", "Sequence").osc (1, sync, 25).unison (1, 3, 13, 70).filter (1, ladder24, 2300, 40).lfoSync (1, steps, sixteenth, 1)
+        add ("Cold Circuit", "Sequence").osc (1, sync, 25).unison (1, 3, 13, 70).filter (1, ladder24, 2300, 40).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -30, 40, -70, 60, -10, 20, -90, 100, -40, 30, -60, 80, -20, 0, -80 }).mod (lfo1, "ampLevel", 39)
             .mod (lfo1, "filter1Cutoff", 12).amp (2, 300, 90, 200).delay (eighthT, 30, 23, 4000).drive (crush, 20).level (-26).standardMacros (25);
-        add ("Cold Line", "Sequence").osc (1, analog, sawPos).filter (1, ladder12, 1700, 25).lfoSync (1, steps, sixteenth, 1)
+        add ("Cold Line", "Sequence").osc (1, analog, sawPos).filter (1, ladder12, 1700, 25).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100 })
             .mod (lfo1, "filter1Cutoff", 32).amp (2, 300, 90, 200).delay (eighthD, 30, 21, 4000).drive (crush, 25).level (-12).standardMacros (25);
         add ("Concrete Press", "Sequence").osc (1, analog, sawPos).unison (1, 3, 13, 70).filter (1, ladder12, 2400, 30)
             .lfoSync (1, square, sixteenth, 1, 15).mod (lfo1, "ampLevel", 31).amp (2, 300, 90, 200).delay (eighthD, 30, 19, 4000).level (-26)
             .standardMacros (25);
-        add ("Concrete Shuttle", "Sequence").osc (1, pulse, 55).unison (1, 2, 9, 70).filter (1, ladder24, 1800, 50).lfoSync (1, steps, sixteenth, 1)
+        add ("Concrete Shuttle", "Sequence").osc (1, pulse, 55).unison (1, 2, 9, 70).filter (1, ladder24, 1800, 50).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, 60, -100, 100, -100, -100, 80, 100, -100, 60, -100, 100, 40, -100 }).mod (lfo1, "osc1Position", 24)
             .amp (2, 300, 90, 200).delay (eighthD, 45, 22, 4000).level (-12).standardMacros (25);
         add ("Corroded Circuit", "Sequence").osc (1, growl, 50).filter (1, svfBand, 2100, 50).lfoSync (1, sawDown, eighth, 1, 15)
             .mod (lfo1, "ampLevel", 32).amp (2, 300, 90, 200).delay (eighthD, 25, 20, 4000).drive (hard, 30).level (-24).standardMacros (25);
-        add ("Dead Circuit", "Sequence").osc (1, sync, 70).filter (1, svfBand, 2200, 35).lfoSync (1, steps, sixteenth, 1)
+        add ("Dead Circuit", "Sequence").osc (1, sync, 70).filter (1, svfBand, 2200, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 0, -100, 0, 100, 0, -100, 0, 100, 0, -100, 0, 50, 0, -50, 0, 100 }).mod (lfo1, "osc1Position", 36)
             .amp (2, 300, 90, 200).delay (sixteenthD, 40, 25, 4000).drive (crush, 20).level (-12).standardMacros (25);
         add ("Derelict Metronome", "Sequence").osc (1, analog, sawPos).filter (1, ladder12, 2100, 40).lfoSync (1, sawDown, sixteenth, 1, 15)
             .mod (lfo1, "ampLevel", 27).amp (2, 300, 90, 200).delay (eighthD, 35, 21, 4000).level (-22).standardMacros (25);
-        add ("Derelict Sequence", "Sequence").osc (1, growl, 70).filter (1, svfBand, 1900, 35).lfoSync (1, steps, eighth, 1)
+        add ("Derelict Sequence", "Sequence").osc (1, growl, 70).filter (1, svfBand, 1900, 35).lfoSync (1, steps, bars2, 1)
             .stepPattern (1, { 60, -20, -60, -100, 100, -60, 20, -60, 80, -60, 40, -60, 100, -60, 20, -60 }).mod (lfo1, "ampLevel", 31)
             .mod (lfo1, "filter1Cutoff", 9).amp (2, 300, 90, 200).delay (eighthT, 45, 24, 4000).level (-16).standardMacros (25);
-        add ("Feral Conveyor", "Sequence").osc (1, pulse, 25).filter (1, ladder24, 2400, 30).lfoSync (1, steps, sixteenth, 1)
+        add ("Feral Conveyor", "Sequence").osc (1, pulse, 25).filter (1, ladder24, 2400, 30).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -100, -100, 100, -100, 100, -100, -100, 100, -100, 100, -100, -100, 100, -100, -100 }).mod (lfo1, "ampLevel", 38)
             .mod (lfo1, "filter1Cutoff", 13).amp (2, 300, 90, 200).delay (eighthD, 25, 19, 4000).drive (hard, 20).level (-31).standardMacros (25);
-        add ("Feral Relay", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 2400, 35).lfoSync (1, steps, sixteenth, 1)
+        add ("Feral Relay", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 2400, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, 100, -100, -100, 100, -100, -100, 100, -100, -100, 100, -100, 100, -100 }).mod (lfo1, "ampLevel", 36)
             .mod (lfo1, "filter1Cutoff", 12).amp (2, 300, 90, 200).delay (sixteenthD, 25, 16, 4000).drive (crush, 30).level (-28).standardMacros (25);
-        add ("Feral Signal", "Sequence").osc (1, metal, 20).filter (1, ladder12, 1300, 30).lfoSync (1, steps, sixteenth, 1)
+        add ("Feral Signal", "Sequence").osc (1, metal, 20).filter (1, ladder12, 1300, 30).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -100, -100, -100, 60, -100, -100, -100, 100, -100, -100, 60, -100, -100, 60, -100 })
             .mod (lfo1, "osc1Position", 30).amp (2, 300, 90, 200).delay (eighthT, 35, 19, 4000).level (-6).standardMacros (25);
-        add ("Frozen Counter", "Sequence").osc (1, growl, 20).filter (1, svfBand, 1500, 40).lfoSync (1, steps, sixteenth, 1)
+        add ("Frozen Counter", "Sequence").osc (1, growl, 20).filter (1, svfBand, 1500, 40).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100 })
             .mod (lfo1, "osc1Position", 23).amp (2, 300, 90, 200).delay (sixteenthD, 35, 24, 4000).level (-6).standardMacros (25);
-        add ("Gated Metronome", "Sequence").osc (1, sync, 30).filter (1, ladder24, 2200, 35).lfoSync (1, steps, sixteenth, 1)
+        add ("Gated Metronome", "Sequence").osc (1, sync, 30).filter (1, ladder24, 2200, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, -100, 100, -100, 100, 100, -100, 100, -100, -100, 100, 100, 100, -100, 100, -100 }).mod (lfo1, "ampLevel", 35)
             .mod (lfo1, "filter1Cutoff", 10).amp (2, 300, 90, 200).delay (eighthT, 35, 21, 4000).level (-24).standardMacros (25);
-        add ("Grey Loom", "Sequence").osc (1, metal, 35).unison (1, 2, 11, 70).filter (1, svfBand, 2000, 45).lfoSync (1, steps, sixteenth, 1)
+        add ("Grey Loom", "Sequence").osc (1, metal, 35).unison (1, 2, 11, 70).filter (1, svfBand, 2000, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, -100, 100, -100, -100, 100, -100, -100, 100, -100, 100, -100, -100, 100 }).mod (lfo1, "ampLevel", 33)
             .mod (lfo1, "filter1Cutoff", 13).amp (2, 300, 90, 200).delay (eighthD, 35, 21, 4000).level (-20).standardMacros (25);
-        add ("Grey Machine", "Sequence").osc (1, pulse, 70).unison (1, 2, 10, 70).filter (1, ladder24, 2100, 25).lfoSync (1, steps, eighth, 1)
+        add ("Grey Machine", "Sequence").osc (1, pulse, 70).unison (1, 2, 10, 70).filter (1, ladder24, 2100, 25).lfoSync (1, steps, bars2, 1)
             .stepPattern (1, { 50, 0, -50, 0, 100, 0, -100, 0, 100, 0, -100, 0, 100, 0, -100, 0 }).mod (lfo1, "ampLevel", 39)
             .mod (lfo1, "filter1Cutoff", 15).amp (2, 300, 90, 200).delay (eighthD, 35, 22, 4000).level (-27).standardMacros (25);
-        add ("Heavy Gate", "Sequence").osc (1, analog, sawPos).filter (1, ladder24, 2200, 45).lfoSync (1, steps, sixteenth, 1)
+        add ("Heavy Gate", "Sequence").osc (1, analog, sawPos).filter (1, ladder24, 2200, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 50, -100, -100, 100, 25, -100, 100, -100, 50, -100, -100, 100, -100, 50, 100 }).mod (lfo1, "filter1Cutoff", 31)
             .amp (2, 300, 90, 200).delay (eighthD, 35, 23, 4000).level (-10).standardMacros (25);
-        add ("Hollow Counter", "Sequence").osc (1, analog, sawPos).filter (1, ladder24, 1500, 35).lfoSync (1, steps, sixteenth, 1)
+        add ("Hollow Counter", "Sequence").osc (1, analog, sawPos).filter (1, ladder24, 1500, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, -100, 100, -100, 100, -100, -100, 100, -100, -100, 100, -100, -100, 100, -100, 100 }).mod (lfo1, "ampLevel", 34)
             .mod (lfo1, "filter1Cutoff", 11).amp (2, 300, 90, 200).delay (sixteenthD, 35, 17, 4000).level (-25).standardMacros (25);
-        add ("Hollow Loom", "Sequence").osc (1, pulse, 45).unison (1, 3, 13, 70).filter (1, svfBand, 2200, 25).lfoSync (1, steps, sixteenth, 1)
+        add ("Hollow Loom", "Sequence").osc (1, pulse, 45).unison (1, 3, 13, 70).filter (1, svfBand, 2200, 25).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -100, 50, -100, -100, 100, 25, -100, 100, -100, 50, -100, -100, 100, -100, 50 }).mod (lfo1, "ampLevel", 33)
             .mod (lfo1, "filter1Cutoff", 9).amp (2, 300, 90, 200).delay (eighthT, 25, 25, 4000).level (-20).standardMacros (25);
-        add ("Iron Machine", "Sequence").osc (1, analog, sawPos).unison (1, 2, 9, 70).filter (1, ladder12, 1900, 45).lfoSync (1, steps, sixteenth, 1)
+        add ("Iron Machine", "Sequence").osc (1, analog, sawPos).unison (1, 2, 9, 70).filter (1, ladder12, 1900, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -10, 20, -90, 100, -40, 30, -60, 80, -20, 0, -80, 100, -30, 40, -70, 60 }).mod (lfo1, "ampLevel", 36)
             .mod (lfo1, "filter1Cutoff", 15).amp (2, 300, 90, 200).delay (sixteenthD, 30, 25, 4000).level (-27).standardMacros (25);
-        add ("Leaden Assembly", "Sequence").osc (1, sync, 30).filter (1, ladder24, 900, 35).lfoSync (1, steps, sixteenth, 1)
+        add ("Leaden Assembly", "Sequence").osc (1, sync, 30).filter (1, ladder24, 900, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, 100, -100, -100, 100, -100, 100, -100, -100, 100, -100, -100, 100, -100 })
             .mod (lfo1, "osc1Position", 24).amp (2, 300, 90, 200).delay (sixteenthD, 25, 20, 4000).level (-7).standardMacros (25);
-        add ("Looping Pump", "Sequence").osc (1, metal, 25).filter (1, svfBand, 1600, 45).lfoSync (1, steps, sixteenth, 1)
+        add ("Looping Pump", "Sequence").osc (1, metal, 25).filter (1, svfBand, 1600, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, 25, -100, 100, -100, 50, -100, -100, 100, -100, 50, 100, -100, 50, -100 }).mod (lfo1, "ampLevel", 37)
             .mod (lfo1, "filter1Cutoff", 11).amp (2, 300, 90, 200).delay (sixteenthD, 40, 17, 4000).level (-20).standardMacros (25);
         add ("Mechanical Conveyor", "Sequence").osc (1, analog, sawPos).unison (1, 2, 13, 70).filter (1, ladder12, 1300, 45)
-            .lfoSync (1, steps, sixteenth, 1)
+            .lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, -100, 60, -100, -100, 60, -100, 100, -100, -100, -100, 60, -100, -100 })
             .mod (lfo1, "filter1Cutoff", 34).amp (2, 300, 90, 200).delay (eighthT, 30, 20, 4000).level (-12).standardMacros (25);
-        add ("Molten Machine", "Sequence").osc (1, metal, 50).filter (1, ladder12, 2300, 45).lfoSync (1, steps, sixteenth, 1)
+        add ("Molten Machine", "Sequence").osc (1, metal, 50).filter (1, ladder12, 2300, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -60, 20, -60, 60, -20, -60, -100, 100, -60, 20, -60, 80, -60, 40, -60 }).mod (lfo1, "osc1Position", 31)
             .amp (2, 300, 90, 200).delay (sixteenthD, 25, 21, 4000).level (-6).standardMacros (25);
         add ("Nickel Conveyor", "Sequence").osc (1, analog, sawPos).filter (1, ladder24, 1500, 25).lfoSync (1, square, eighth, 1, 15)
             .mod (lfo1, "ampLevel", 27).amp (2, 300, 90, 200).delay (eighthD, 30, 21, 4000).drive (crush, 15).level (-24).standardMacros (25);
         add ("Nickel Pattern", "Sequence").osc (1, analog, sawPos).filter (1, ladder24, 2200, 50).lfoSync (1, sawDown, eighth, 1, 15)
             .mod (lfo1, "ampLevel", 28).amp (2, 300, 90, 200).delay (sixteenthD, 40, 16, 4000).level (-21).standardMacros (25);
-        add ("Nickel Sequence", "Sequence").osc (1, sync, 65).filter (1, svfBand, 800, 30).lfoSync (1, steps, sixteenth, 1)
+        add ("Nickel Sequence", "Sequence").osc (1, sync, 65).filter (1, svfBand, 800, 30).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 10, -20, -50, -80, -100, 100, 70, 40, 10, -20, -50, -80, -100, 100, 70, 40 }).mod (lfo1, "osc1Position", 23)
             .amp (2, 300, 90, 200).delay (eighthT, 35, 20, 4000).level (-10).standardMacros (25);
-        add ("Night Clock", "Sequence").osc (1, analog, sawPos).unison (1, 2, 13, 70).filter (1, ladder12, 1600, 40).lfoSync (1, steps, sixteenth, 1)
+        add ("Night Clock", "Sequence").osc (1, analog, sawPos).unison (1, 2, 13, 70).filter (1, ladder12, 1600, 40).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, 100, 100, -100, 100, -100, -100, -100, 100, -100, 100, 100, -100, 100, -100 })
             .mod (lfo1, "filter1Cutoff", 27).amp (2, 300, 90, 200).delay (eighthT, 35, 23, 4000).drive (hard, 15).level (-17).standardMacros (25);
-        add ("Night Cog", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 2100, 40).lfoSync (1, steps, sixteenth, 1)
+        add ("Night Cog", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 2100, 40).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, -100, 100, -100, 50, 100, -100, 50, -100, -100, 100, 25, -100, 100, -100, 50 }).mod (lfo1, "filter1Cutoff", 33)
             .amp (2, 300, 90, 200).delay (eighthT, 30, 19, 4000).level (-12).standardMacros (25);
-        add ("Night Gear", "Sequence").osc (1, analog, sawPos).unison (1, 2, 12, 70).filter (1, svfBand, 1100, 35).lfoSync (1, steps, sixteenth, 1)
+        add ("Night Gear", "Sequence").osc (1, analog, sawPos).unison (1, 2, 12, 70).filter (1, svfBand, 1100, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, -100, 100, -100, 100, -100, -100, 100, -100, -100, 100, -100, -100, 100 }).mod (lfo1, "ampLevel", 32)
             .mod (lfo1, "filter1Cutoff", 10).amp (2, 300, 90, 200).delay (eighthD, 45, 22, 4000).level (-26).standardMacros (25);
         add ("Null Conveyor", "Sequence").osc (1, growl, 40).filter (1, svfBand, 1200, 45).lfoSync (1, sawDown, eighth, 1, 15)
             .mod (lfo1, "ampLevel", 36).amp (2, 300, 90, 200).delay (eighthD, 40, 19, 4000).level (-19).standardMacros (25);
-        add ("Null Gear", "Sequence").osc (1, metal, 60).filter (1, ladder24, 1600, 45).lfoSync (1, steps, sixteenth, 1)
+        add ("Null Gear", "Sequence").osc (1, metal, 60).filter (1, ladder24, 1600, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 0, -50, 0, 100, 0, -100, 0, 100, 0, -100, 0, 100, 0, -100, 0, 50 }).mod (lfo1, "osc1Position", 27)
             .amp (2, 300, 90, 200).delay (eighthD, 35, 20, 4000).level (-1).standardMacros (25);
-        add ("Obsidian Assembly", "Sequence").osc (1, pulse, 45).unison (1, 2, 8, 70).filter (1, svfBand, 1000, 30).lfoSync (1, steps, eighth, 1)
+        add ("Obsidian Assembly", "Sequence").osc (1, pulse, 45).unison (1, 2, 8, 70).filter (1, svfBand, 1000, 30).lfoSync (1, steps, bars2, 1)
             .stepPattern (1, { 100, -100, -100, -100, 100, -100, 100, 100, -100, 100, -100, -100, 100, 100, 100, -100 }).mod (lfo1, "ampLevel", 31)
             .mod (lfo1, "filter1Cutoff", 11).amp (2, 300, 90, 200).delay (eighthT, 30, 21, 4000).drive (crush, 35).level (-22).standardMacros (25);
-        add ("Obsidian Pump", "Sequence").osc (1, growl, 50).filter (1, ladder12, 900, 45).lfoSync (1, steps, sixteenthT, 1)
+        add ("Obsidian Pump", "Sequence").osc (1, growl, 50).filter (1, ladder12, 900, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, 40, -100, -100, 100, -100, 60, -100, 100, -100, -100, 80, 100, -100, 60, -100 }).mod (lfo1, "ampLevel", 31)
             .mod (lfo1, "filter1Cutoff", 10).amp (2, 300, 90, 200).delay (eighthT, 45, 21, 4000).level (-25).standardMacros (25);
-        add ("Oily Pattern", "Sequence").osc (1, growl, 55).filter (1, ladder12, 1700, 45).lfoSync (1, steps, sixteenthT, 1)
+        add ("Oily Pattern", "Sequence").osc (1, growl, 55).filter (1, ladder12, 1700, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, -100, 100, -100, 100, -100, -100, 100, -100, 100, -100, -100, 100, -100, -100, 100 }).mod (lfo1, "ampLevel", 32)
             .mod (lfo1, "filter1Cutoff", 15).amp (2, 300, 90, 200).delay (eighthT, 30, 23, 4000).level (-24).standardMacros (25);
-        add ("Pressed Ratchet", "Sequence").osc (1, metal, 50).unison (1, 3, 13, 70).filter (1, ladder12, 1400, 30).lfoSync (1, steps, sixteenth, 1)
+        add ("Pressed Ratchet", "Sequence").osc (1, metal, 50).unison (1, 3, 13, 70).filter (1, ladder12, 1400, 30).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 50, -100, -100, 100, -100, 50, 100, -100, 50, -100, -100, 100, 25, -100, 100 }).mod (lfo1, "osc1Position", 31)
             .amp (2, 300, 90, 200).delay (eighthT, 45, 16, 4000).level (-6).standardMacros (25);
-        add ("Repeating Machine", "Sequence").osc (1, pulse, 45).filter (1, ladder12, 900, 50).lfoSync (1, steps, sixteenthT, 1)
+        add ("Repeating Machine", "Sequence").osc (1, pulse, 45).filter (1, ladder12, 900, 50).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 20, -60, 60, -20, -60, -100, 100, -60, 20, -60, 80, -60, 40, -60, 100, -60 }).mod (lfo1, "ampLevel", 32)
             .mod (lfo1, "filter1Cutoff", 14).amp (2, 300, 90, 200).delay (sixteenthD, 35, 25, 4000).level (-26).standardMacros (25);
         add ("Repeating Signal", "Sequence").osc (1, analog, sawPos).unison (1, 3, 14, 70).filter (1, ladder24, 1400, 40)
             .lfoSync (1, sawDown, eighth, 1, 15).mod (lfo1, "ampLevel", 33).amp (2, 300, 90, 200).delay (eighthT, 40, 16, 4000).level (-23)
             .standardMacros (25);
-        add ("Ruined Circuit", "Sequence").osc (1, growl, 60).filter (1, ladder12, 1500, 35).lfoSync (1, steps, eighth, 1)
+        add ("Ruined Circuit", "Sequence").osc (1, growl, 60).filter (1, ladder12, 1500, 35).lfoSync (1, steps, bars2, 1)
             .stepPattern (1, { 50, -100, -100, 100, 25, -100, 100, -100, 50, -100, -100, 100, -100, 50, 100, -100 }).mod (lfo1, "ampLevel", 31)
             .mod (lfo1, "filter1Cutoff", 9).amp (2, 300, 90, 200).delay (eighthT, 45, 23, 4000).drive (crush, 35).level (-26).standardMacros (25);
-        add ("Ruined Clock", "Sequence").osc (1, growl, 50).unison (1, 3, 8, 70).filter (1, ladder24, 2000, 40).lfoSync (1, steps, sixteenth, 1)
+        add ("Ruined Clock", "Sequence").osc (1, growl, 50).unison (1, 3, 8, 70).filter (1, ladder24, 2000, 40).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, 70, 40, 10, -20, -50, -80, -100, 100, 70, 40, 10, -20, -50, -80 }).mod (lfo1, "osc1Position", 33)
             .amp (2, 300, 90, 200).delay (sixteenthD, 45, 17, 4000).drive (crush, 30).level (-12).standardMacros (25);
-        add ("Ruined Shuttle", "Sequence").osc (1, pulse, 40).filter (1, svfBand, 2300, 45).lfoSync (1, steps, sixteenth, 1)
+        add ("Ruined Shuttle", "Sequence").osc (1, pulse, 40).filter (1, svfBand, 2300, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, -100, 100, -100, 100, -100, -100, 100, -100, 100, -100, -100, 100, -100 }).mod (lfo1, "ampLevel", 38)
             .mod (lfo1, "filter1Cutoff", 10).amp (2, 300, 90, 200).delay (eighthT, 35, 21, 4000).level (-25).standardMacros (25);
-        add ("Scorched Assembly", "Sequence").osc (1, pulse, 25).filter (1, svfBand, 1200, 50).lfoSync (1, steps, sixteenth, 1)
+        add ("Scorched Assembly", "Sequence").osc (1, pulse, 25).filter (1, svfBand, 1200, 50).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 60, -100, -100, 60, -100, 100, -100, -100, -100, 60, -100, -100, -100, 100, -100, -100 }).mod (lfo1, "ampLevel", 39)
             .mod (lfo1, "filter1Cutoff", 14).amp (2, 300, 90, 200).delay (sixteenthD, 25, 23, 4000).level (-19).standardMacros (25);
-        add ("Scorched Counter", "Sequence").osc (1, sync, 55).filter (1, svfBand, 1400, 30).lfoSync (1, steps, sixteenth, 1)
+        add ("Scorched Counter", "Sequence").osc (1, sync, 55).filter (1, svfBand, 1400, 30).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, 100, -100, 100, -100, -100, 100, -100, -100, 100, -100, -100, 100, -100, 100, -100 }).mod (lfo1, "ampLevel", 37)
             .mod (lfo1, "filter1Cutoff", 11).amp (2, 300, 90, 200).delay (eighthT, 35, 17, 4000).level (-27).standardMacros (25);
-        add ("Scorched Machine", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 1200, 35).lfoSync (1, steps, sixteenth, 1)
+        add ("Scorched Machine", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 1200, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100, 100, -100 })
             .mod (lfo1, "filter1Cutoff", 23).amp (2, 300, 90, 200).delay (sixteenthD, 40, 17, 4000).level (-12).standardMacros (25);
-        add ("Shadow Pattern", "Sequence").osc (1, pulse, 25).unison (1, 2, 10, 70).filter (1, ladder12, 1100, 35).lfoSync (1, steps, sixteenth, 1)
+        add ("Shadow Pattern", "Sequence").osc (1, pulse, 25).unison (1, 2, 10, 70).filter (1, ladder12, 1100, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -100, -100, 80, 100, -100, 60, -100, 100, 40, -100, -100, 100, -100, 60, -100, 100 }).mod (lfo1, "osc1Position", 36)
             .amp (2, 300, 90, 200).delay (eighthT, 45, 20, 4000).drive (hard, 25).level (-20).standardMacros (25);
-        add ("Soot Assembly", "Sequence").osc (1, metal, 25).filter (1, svfBand, 900, 35).lfoSync (1, steps, sixteenth, 1)
+        add ("Soot Assembly", "Sequence").osc (1, metal, 25).filter (1, svfBand, 900, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { -80, -100, 100, 70, 40, 10, -20, -50, -80, -100, 100, 70, 40, 10, -20, -50 }).mod (lfo1, "osc1Position", 34)
             .amp (2, 300, 90, 200).delay (eighthT, 30, 18, 4000).drive (crush, 15).level (-6).standardMacros (25);
-        add ("Soot Clock", "Sequence").osc (1, metal, 40).filter (1, svfBand, 1400, 35).lfoSync (1, steps, sixteenthT, 1)
+        add ("Soot Clock", "Sequence").osc (1, metal, 40).filter (1, svfBand, 1400, 35).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -100, 100, 100, -100, 100, -100, -100, 100, 100, 100, -100, 100, -100, -100, -100 }).mod (lfo1, "ampLevel", 33)
             .mod (lfo1, "filter1Cutoff", 10).amp (2, 300, 90, 200).delay (sixteenthD, 40, 19, 4000).drive (hard, 20).level (-27).standardMacros (25);
-        add ("Steel Line", "Sequence").osc (1, growl, 25).unison (1, 3, 9, 70).filter (1, ladder12, 1500, 45).lfoSync (1, steps, sixteenth, 1)
+        add ("Steel Line", "Sequence").osc (1, growl, 25).unison (1, 3, 9, 70).filter (1, ladder12, 1500, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -100, 100, -100, -100, 100, 100, 100, -100, 100, -100, -100, -100, 100, -100, 100 })
             .mod (lfo1, "osc1Position", 36).amp (2, 300, 90, 200).delay (sixteenthD, 35, 19, 4000).level (-14).standardMacros (25);
-        add ("Steel Ratchet", "Sequence").osc (1, pulse, 50).unison (1, 2, 14, 70).filter (1, ladder12, 1000, 50).lfoSync (1, steps, sixteenth, 1)
+        add ("Steel Ratchet", "Sequence").osc (1, pulse, 50).unison (1, 2, 14, 70).filter (1, ladder12, 1000, 50).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 80, -60, 40, -60, 100, -60, 20, -60, 60, -20, -60, -100, 100, -60, 20, -60 }).mod (lfo1, "osc1Position", 33)
             .amp (2, 300, 90, 200).delay (sixteenthD, 45, 17, 4000).level (-14).standardMacros (25);
-        add ("Sullen Metronome", "Sequence").osc (1, analog, sawPos).filter (1, ladder12, 1000, 40).lfoSync (1, steps, sixteenth, 1)
+        add ("Sullen Metronome", "Sequence").osc (1, analog, sawPos).filter (1, ladder12, 1000, 40).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 0, -100, 0, 100, 0, -100, 0, 50, 0, -50, 0, 100, 0, -100, 0, 100 }).mod (lfo1, "filter1Cutoff", 25)
             .amp (2, 300, 90, 200).delay (eighthT, 35, 17, 4000).level (-14).standardMacros (25);
         add ("Sunken Loom", "Sequence").osc (1, growl, 25).filter (1, ladder24, 2300, 35).lfoSync (1, sawDown, eighth, 1, 15)
             .mod (lfo1, "ampLevel", 34).amp (2, 300, 90, 200).delay (eighthD, 30, 16, 4000).level (-23).standardMacros (25);
-        add ("Sunken Ratchet", "Sequence").osc (1, sync, 35).filter (1, ladder24, 2400, 45).lfoSync (1, steps, sixteenth, 1)
+        add ("Sunken Ratchet", "Sequence").osc (1, sync, 35).filter (1, ladder24, 2400, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -100, -100, 100, 100, 100, -100, 100, -100, -100, -100, 100, -100, 100, 100, -100 }).mod (lfo1, "ampLevel", 31)
             .mod (lfo1, "filter1Cutoff", 12).amp (2, 300, 90, 200).delay (eighthT, 35, 23, 4000).level (-23).standardMacros (25);
         add ("Vacant Sequence", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 1200, 40).lfoSync (1, sawDown, eighth, 1, 15)
             .mod (lfo1, "ampLevel", 37).amp (2, 300, 90, 200).delay (sixteenthD, 25, 25, 4000).drive (hard, 30).level (-28).standardMacros (25);
         add ("Vacant Shuttle", "Sequence").osc (1, metal, 25).filter (1, ladder12, 1600, 35).lfoSync (1, square, eighth, 1, 15)
             .mod (lfo1, "ampLevel", 35).amp (2, 300, 90, 200).delay (eighthT, 45, 21, 4000).level (-18).standardMacros (25);
-        add ("Void Clock", "Sequence").osc (1, sync, 30).filter (1, ladder24, 2400, 50).lfoSync (1, steps, sixteenth, 1)
+        add ("Void Clock", "Sequence").osc (1, sync, 30).filter (1, ladder24, 2400, 50).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 40, 10, -20, -50, -80, -100, 100, 70, 40, 10, -20, -50, -80, -100, 100, 70 }).mod (lfo1, "osc1Position", 20)
             .amp (2, 300, 90, 200).delay (sixteenthD, 25, 24, 4000).level (-10).standardMacros (25);
-        add ("Void Metronome", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 2300, 45).lfoSync (1, steps, sixteenthT, 1)
+        add ("Void Metronome", "Sequence").osc (1, analog, sawPos).filter (1, svfBand, 2300, 45).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 0, -80, 100, -30, 40, -70, 60, -10, 20, -90, 100, -40, 30, -60, 80, -20 }).mod (lfo1, "ampLevel", 35)
             .mod (lfo1, "filter1Cutoff", 10).amp (2, 300, 90, 200).delay (sixteenthD, 30, 16, 4000).level (-23).standardMacros (25);
-        add ("Void Pattern", "Sequence").osc (1, sync, 30).filter (1, ladder12, 1100, 50).lfoSync (1, steps, sixteenth, 1)
+        add ("Void Pattern", "Sequence").osc (1, sync, 30).filter (1, ladder12, 1100, 50).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -100, 100, -100, -100, -100, 100, -100, 100, 100, -100, 100, -100, -100, 100, 100 })
             .mod (lfo1, "osc1Position", 34).amp (2, 300, 90, 200).delay (eighthD, 40, 24, 4000).level (-12).standardMacros (25);
 
@@ -2544,7 +2544,7 @@ namespace WaveSynthPatchBuilder
             .mod (lfo1, "filter1Cutoff", 25).amp (1300, 1000, 100, 2000).drive (crush, 40).delay (sixteenthT, 50, 25, 3500).reverb (35, 90, 4.5f, 45)
             .level (0).standardMacros (25);
         add ("Concrete Debris", "Texture").osc (1, growl, 35).warp (1, wFm, 45).noise (15, 3).filter (1, svfHigh, 3600, 25)
-            .lfo (1, randomShape, 10.7f, 0, 50).mod (lfo1, "filter1Cutoff", 19).mod (lfo1, "osc1Position", 30).amp (550, 1000, 100, 900)
+            .lfo (1, randomShape, 10.7f, 0, 85).mod (lfo1, "filter1Cutoff", 19).mod (lfo1, "osc1Position", 30).amp (550, 1000, 100, 900)
             .drive (crush, 30).reverb (45, 90, 5, 45).level (-3).standardMacros (25);
         add ("Corroded Dust", "Texture").set ("osc1On", 0).noise (90, 3).filter (1, svfHigh, 1400, 45).lfo (1, randomShape, 5.6f, 0)
             .mod (lfo1, "filter1Cutoff", 13).amp (900, 1000, 100, 1200).delay (sixteenthD, 40, 20, 3500).reverb (45, 90, 5.5f, 45).level (-6)
