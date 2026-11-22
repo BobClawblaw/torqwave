@@ -4,6 +4,12 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Every General MIDI drum, no drum clicks, and levels that stand up** (0.19.3, step 8 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md), and fixes from use)
+- **Basic Drums plays all 47 General MIDI drums** (35 to 81), adding Chinese cymbal, ride bell, tambourine, splash, vibraslap, high and low bongo, muted, open and low conga, high and low timbale, high and low agogo, short and long whistle, short and long guiro, claves, high and low wood block, muted and open cuica, and muted and open triangle. Before, the Sequencer's rows for them were silent. ([#43](https://github.com/BobClawblaw/torqwave/issues/43))
+- A drum struck again while it rings, or an open hat choked, fades out over 3 ms instead of stopping dead, which clicked. ([#44](https://github.com/BobClawblaw/torqwave/issues/44))
+- **The Levels panel stands up when docked at a side**: taller than wide, its bars stand side by side and fill from the bottom, with the scale beside them. ([#42](https://github.com/BobClawblaw/torqwave/issues/42))
+- Tested (3 more checks): all 47 drums sound on both channels alike, peaking from 0.17 to 0.70 at full velocity, and notes outside them are silent; a conga struck again while it rings moves at most 0.038 a sample where it is struck (0.322 without the fade); a tall Levels panel fills a channel at -6 dB from the bottom and leaves it empty near the top.
+
 **Styles in the guide, and sequences and kits open from Finder** (0.19.3, step 7 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md))
 - A **Styles** page in the guide: the techno and industrial styles the presets cover, what marks each, and what every preset keeps. The instruments page starts from a preset, covers Basic Drums and the Basic Synth's additions, and shows the Presets section and a style kit in the Sequencer.
 - A built-in instrument's window grows to show all its parameters as far as the screen has room (the synth's twenty no longer scroll on a screen with 900 points under the menu bar); Basic Drums' stays as it was.

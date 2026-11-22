@@ -2,9 +2,10 @@
 
 #include <JuceHeader.h>
 
-/** The Levels panel: what goes to the outputs as two long bars across the panel on a dB scale from
-    -60 to 0, each with a falling peak hold, the highest peak since the last reset in numbers, and
-    a clip light. Click to reset the peaks and lights. */
+/** The Levels panel: what goes to the outputs as two long bars on a dB scale from -60 to 0, each
+    with a falling peak hold, the highest peak since the last reset in numbers, and a clip light.
+    The bars run across a wide panel and up a tall one (docked at a side). Click to reset the
+    peaks and lights. */
 class LevelsPanel final : public juce::Component,
                           public juce::SettableTooltipClient,
                           private juce::Timer
@@ -28,11 +29,16 @@ public:
 
     static constexpr float floorDb = -60.0f;
 
+    /** Taller than wide: the bars stand side by side and fill upwards. */
+    bool isVertical() const noexcept                    { return getHeight() > getWidth(); }
+
     void paint (juce::Graphics&) override;
     void mouseDown (const juce::MouseEvent&) override   { reset(); }
 
 private:
     void timerCallback() override;
+    void paintAcross (juce::Graphics&);
+    void paintUp (juce::Graphics&);
 
     float level[2] {}, hold[2] {}, highest[2] {};
     int holdTicks[2] {};

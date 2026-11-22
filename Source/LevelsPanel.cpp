@@ -72,6 +72,93 @@ void LevelsPanel::timerCallback()
 void LevelsPanel::paint (juce::Graphics& g)
 {
     g.fillAll (Theme::base);
+
+    if (isVertical())
+        paintUp (g);
+    else
+        paintAcross (g);
+}
+
+void LevelsPanel::paintUp (juce::Graphics& g)
+{
+    auto r = getLocalBounds().reduced (6, 8);
+    auto numbers = r.removeFromTop (16);
+    r.removeFromTop (4);
+    auto lights = r.removeFromTop (8);
+    r.removeFromTop (8);
+    auto names = r.removeFromBottom (16);
+    // The scale goes on the left when there is width for it beside the bars.
+    const auto showScale = r.getWidth() >= 60;
+    auto scale = showScale ? r.removeFromLeft (26) : juce::Rectangle<int>();
+
+    const auto gap = 6;
+    const auto barWidth = juce::jlimit (4, 36, (r.getWidth() - gap) / 2);
+    const auto groupX = r.getCentreX() - (2 * barWidth + gap) / 2;
+    const auto height = (float) r.getHeight();
+    const auto bottom = (float) r.getBottom();
+    const auto dbAt = [] (float gain) { return juce::Decibels::gainToDecibels (gain, -200.0f); };
+
+    for (int ch = 0; ch < 2; ++ch)
+    {
+        const auto x = (float) (groupX + ch * (barWidth + gap));
+        const juce::Rectangle<float> bar (x, (float) r.getY(), (float) barWidth, height);
+        g.setColour (Theme::inset);
+        g.fillRoundedRectangle (bar, 2.0f);
+
+        const auto filled = xFor (dbAt (level[ch]), height);
+        const auto toMid = xFor (-6.0f, height);
+        g.setGradientFill (juce::ColourGradient::vertical (Theme::meterLow, bottom, Theme::meterMid, bottom - toMid));
+        g.fillRect (x, bottom - juce::jmin (filled, toMid), (float) barWidth, juce::jmin (filled, toMid));
+
+        if (filled > toMid)
+        {
+            g.setColour (Theme::meterHigh);
+            g.fillRect (x, bottom - filled, (float) barWidth, filled - toMid);
+        }
+
+        if (hold[ch] > 0.0f)
+        {
+            g.setColour (Theme::textStrong);
+            g.fillRect (x, bottom - xFor (dbAt (hold[ch]), height) - 1.0f, (float) barWidth, 2.0f);
+        }
+
+        // Each bar's name under it, its clip light and highest peak over it (the peak given at least
+        // 40 points, since a number is wider than a narrow bar).
+        const auto column = juce::Rectangle<int> (0, 0, juce::jmax (40, barWidth + gap), 0).withCentre ({ (int) x + barWidth / 2, 0 });
+        g.setColour (Theme::dimText);
+        g.setFont (juce::FontOptions (Theme::smallText));
+        g.drawText (ch == 0 ? "L" : "R", column.getX(), names.getY(), column.getWidth(), names.getHeight(), juce::Justification::centred);
+
+        g.setColour (clipped[ch] ? Theme::danger : Theme::clipOff);
+        g.fillRoundedRectangle (x, (float) lights.getY(), (float) barWidth, (float) lights.getHeight(), 2.0f);
+
+        g.setColour (clipped[ch] ? Theme::danger.brighter (0.3f) : Theme::text);
+        g.setFont (juce::FontOptions (juce::Font::getDefaultMonospacedFontName(), 11.0f, juce::Font::plain));
+        g.drawText (readout (ch), column.getX(), numbers.getY(), column.getWidth(), numbers.getHeight(), juce::Justification::centred);
+    }
+
+    if (! showScale)
+        return;
+
+    g.setFont (juce::FontOptions (Theme::smallText - 1.0f));
+
+    for (auto db : { -60, -48, -36, -24, -18, -12, -9, -6, -3, 0 })
+    {
+        const auto y = bottom - xFor ((float) db, height);
+
+        // In a short panel the labels would crowd: -18, -9 and -3 are left out.
+        if (height < 240.0f && (db == -9 || db == -3 || db == -18))
+            continue;
+
+        g.setColour (Theme::lineStrong);
+        g.fillRect ((float) scale.getRight() - 3.0f, y, 3.0f, 1.0f);
+        g.setColour (Theme::dimText);
+        g.drawText (juce::String (db), scale.getX(), juce::roundToInt (y) - 7, scale.getWidth() - 5, 14, juce::Justification::centredRight);
+    }
+}
+
+void LevelsPanel::paintAcross (juce::Graphics& g)
+{
     auto r = getLocalBounds().reduced (10, 3);
     auto names = r.removeFromLeft (16);
     auto numbers = r.removeFromRight (64);

@@ -2629,6 +2629,22 @@ std::optional<BasicDrumsProcessor::Sound> BasicDrumsProcessor::soundFor (int not
         case 51: case 59:                   return Sound::ride;
         case 56:                            return Sound::cowbell;
         case 69: case 70:                   return Sound::shaker;
+        case 52:                            return Sound::china;
+        case 53:                            return Sound::rideBell;
+        case 54:                            return Sound::tambourine;
+        case 55:                            return Sound::splash;
+        case 58:                            return Sound::vibraslap;
+        case 60: case 61:                   return Sound::bongo;
+        case 62:                            return Sound::muteConga;
+        case 63: case 64:                   return Sound::openConga;
+        case 65: case 66:                   return Sound::timbale;
+        case 67: case 68:                   return Sound::agogo;
+        case 71: case 72:                   return Sound::whistle;
+        case 73: case 74:                   return Sound::guiro;
+        case 75:                            return Sound::claves;
+        case 76: case 77:                   return Sound::woodBlock;
+        case 78: case 79:                   return Sound::cuica;
+        case 80: case 81:                   return Sound::triangle;
         default:                            return std::nullopt;
     }
 }
@@ -2642,6 +2658,9 @@ void BasicDrumsProcessor::prepareToPlay (double sampleRate, int)
 void BasicDrumsProcessor::reset()
 {
     for (auto& h : hits)
+        h = {};
+
+    for (auto& h : fading)
         h = {};
 
     volume = 1.0f;
@@ -2659,16 +2678,31 @@ void BasicDrumsProcessor::trigger (int note, float velocity)
     if (! sound.has_value())
         return;
 
-    // A closed or pedal hat chokes the open one, as on the machines.
+    // A closed or pedal hat chokes the open one, as on the machines, and a mute triangle or cuica
+    // the open one; a sound struck again cuts the hit before. Each goes in a quick fade, not at
+    // once, which would click.
     if (*sound == Sound::closedHat || *sound == Sound::pedalHat)
-        hits[(size_t) Sound::openHat].active = false;
+        cut (Sound::openHat);
 
+    cut (*sound);
     auto& h = hits[(size_t) *sound];
     h = {};
     h.active = true;
     h.note = note;
     h.velocity = velocity;
     h.noise = 0x9e3779b9u ^ ((juce::uint32) note * 2654435761u);   // the same noise each time
+}
+
+void BasicDrumsProcessor::cut (Sound sound)
+{
+    auto& h = hits[(size_t) sound];
+
+    if (! h.active)
+        return;
+
+    fading[(size_t) sound] = h;
+    fading[(size_t) sound].fade = juce::jmax (1, juce::roundToInt (0.003 * rate));
+    h.active = false;
 }
 
 float BasicDrumsProcessor::noise (Hit& h) const
@@ -2718,6 +2752,13 @@ float BasicDrumsProcessor::next (Sound sound, Hit& h)
     {
         const auto s = (float) std::sin (twoPi * h.phase);
         h.phase = std::fmod (h.phase + hz / rate, 1.0);
+        return s;
+    };
+    // Another sine, on one of the metal phases, for sounds of two partials.
+    const auto partial = [&h, twoPi, this] (size_t i, double hz)
+    {
+        const auto s = (float) std::sin (twoPi * h.metal[i]);
+        h.metal[i] = std::fmod (h.metal[i] + hz / rate, 1.0);
         return s;
     };
 
@@ -2799,6 +2840,116 @@ float BasicDrumsProcessor::next (Sound sound, Hit& h)
             length = 0.35;
             break;
         }
+        case Sound::china:
+            s = 0.75f * highPass (0.55f * metal (1.07) + 0.45f * noise (h), 2800.0) * (float) std::exp (-t / 1.0);
+            length = 5.0;
+            break;
+        case Sound::rideBell:
+            s = 0.55f * highPass (metal (2.1), 2200.0) * (float) std::exp (-t / 1.1) + 0.35f * partial (0, 1180.0) * (float) std::exp (-t / 0.7);
+            length = 5.0;
+            break;
+        case Sound::splash:
+            s = 0.8f * highPass (0.5f * metal (1.8) + 0.5f * noise (h), 6000.0) * (float) std::exp (-t / 0.32);
+            length = 2.5;
+            break;
+        case Sound::tambourine:
+        {
+            const auto env = t < 0.002 ? t / 0.002 : std::exp (-(t - 0.002) / 0.11);
+            s = 1.3f * highPass (0.55f * metal (3.1) + 0.45f * noise (h), 6500.0) * (float) env;
+            length = 0.8;
+            break;
+        }
+        case Sound::vibraslap:
+        {
+            // A rattle: noise beating 28 times a second as it dies away.
+            const auto beat = 0.5 + 0.5 * std::sin (twoPi * 28.0 * t);
+            s = 1.4f * bandPass (noise (h), 2400.0) * (float) (beat * beat * std::exp (-t / 0.35));
+            length = 2.0;
+            break;
+        }
+        case Sound::bongo:
+        {
+            const auto base = h.note == 60 ? 420.0 : 310.0;
+            s = 0.8f * sine (base * (1.0 + 0.2 * std::exp (-t / 0.015))) * (float) std::exp (-t / 0.085)
+              + 0.25f * bandPass (noise (h), 2500.0) * (float) std::exp (-t / 0.006);
+            length = 0.6;
+            break;
+        }
+        case Sound::muteConga:
+            s = 0.8f * sine (340.0 * (1.0 + 0.15 * std::exp (-t / 0.01))) * (float) std::exp (-t / 0.035)
+              + 0.3f * bandPass (noise (h), 1800.0) * (float) std::exp (-t / 0.008);
+            length = 0.25;
+            break;
+        case Sound::openConga:
+        {
+            const auto base = h.note == 63 ? 330.0 : 225.0;
+            s = 0.85f * sine (base * (1.0 + 0.12 * std::exp (-t / 0.02))) * (float) std::exp (-t / 0.2)
+              + 0.2f * bandPass (noise (h), 1500.0) * (float) std::exp (-t / 0.006);
+            length = 1.4;
+            break;
+        }
+        case Sound::timbale:
+        {
+            const auto base = h.note == 65 ? 520.0 : 390.0;
+            s = 0.6f * sine (base) * (float) std::exp (-t / 0.22) + 0.25f * partial (0, base * 2.7) * (float) std::exp (-t / 0.12)
+              + 0.35f * highPass (noise (h), 3000.0) * (float) std::exp (-t / 0.02);
+            length = 1.6;
+            break;
+        }
+        case Sound::agogo:
+        {
+            const auto base = h.note == 67 ? 950.0 : 700.0;
+            s = 0.55f * sine (base) * (float) std::exp (-t / 0.28) + 0.3f * partial (0, base * 2.65) * (float) std::exp (-t / 0.12);
+            length = 2.0;
+            break;
+        }
+        case Sound::whistle:
+        {
+            // A short or a long blow, with the pea's warble.
+            const auto blow = h.note == 71 ? 0.09 : 0.45;
+            const auto env = t < 0.01 ? t / 0.01 : (t < blow ? 1.0 : std::exp (-(t - blow) / 0.02));
+            s = 0.5f * sine (2600.0 * (1.0 + 0.02 * std::sin (twoPi * 18.0 * t))) * (float) env;
+            length = blow + 0.15;
+            break;
+        }
+        case Sound::guiro:
+        {
+            // A scrape: bursts of noise 45 times a second, short or long.
+            const auto scrape = h.note == 73 ? 0.11 : 0.38;
+            const auto teeth = std::fmod (t * 45.0, 1.0);
+            const auto env = t < scrape ? (1.0 - teeth) * (1.0 - teeth) : 0.0;
+            s = 1.5f * bandPass (noise (h), 3200.0) * (float) env;
+            length = scrape + 0.02;
+            break;
+        }
+        case Sound::claves:
+            s = 0.8f * sine (2500.0) * (float) std::exp (-t / 0.025);
+            length = 0.2;
+            break;
+        case Sound::woodBlock:
+        {
+            const auto base = h.note == 76 ? 1850.0 : 1300.0;
+            s = 0.75f * sine (base) * (float) std::exp (-t / 0.035) + 0.3f * bandPass (noise (h), base) * (float) std::exp (-t / 0.004);
+            length = 0.3;
+            break;
+        }
+        case Sound::cuica:
+        {
+            // The friction drum's moan: a muted one falls, an open one rises.
+            const auto open = h.note == 79;
+            const auto hz = open ? 300.0 + 420.0 * (1.0 - std::exp (-t / 0.06)) : 620.0 - 140.0 * (1.0 - std::exp (-t / 0.03));
+            const auto env = t < 0.008 ? t / 0.008 : std::exp (-(t - 0.008) / (open ? 0.16 : 0.06));
+            s = 0.7f * sine (hz) * (float) env;
+            length = open ? 1.2 : 0.45;
+            break;
+        }
+        case Sound::triangle:
+        {
+            const auto decay = h.note == 80 ? 0.07 : 0.8;
+            s = 0.45f * sine (4200.0) * (float) std::exp (-t / decay) + 0.2f * partial (0, 4200.0 * 2.76) * (float) std::exp (-t / (decay * 0.6));
+            length = decay * 6.0;
+            break;
+        }
         case Sound::count: break;
     }
 
@@ -2816,6 +2967,18 @@ void BasicDrumsProcessor::render (float* out, int from, int count)
 
         for (int n = from; n < from + count && h.active; ++n)
             out[n] += next ((Sound) i, h);
+
+        // A hit cut off by the next one (or choked) goes on under it for 3 ms, fading to nothing.
+        auto& f = fading[i];
+        const auto fadeLength = (float) juce::jmax (1, juce::roundToInt (0.003 * rate));
+
+        for (int n = from; n < from + count && f.active && f.fade > 0; ++n)
+        {
+            out[n] += next ((Sound) i, f) * (float) f.fade / fadeLength;
+
+            if (--f.fade == 0)
+                f.active = false;
+        }
     }
 }
 
@@ -2844,8 +3007,13 @@ void BasicDrumsProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
         if (m.isNoteOn())
             trigger (m.getNoteNumber(), m.getFloatVelocity());
         else if (m.isAllSoundOff())
+        {
             for (auto& h : hits)
+                h.active = false;   // at once, as it says
+
+            for (auto& h : fading)
                 h.active = false;
+        }
         else if (m.isController() && m.getControllerNumber() == 7)
             volume = (float) m.getControllerValue() / 127.0f;
         else if (m.isController() && m.getControllerNumber() == 121)

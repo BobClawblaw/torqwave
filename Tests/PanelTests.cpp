@@ -85,6 +85,21 @@ namespace
         levels.take (1.122f, 0.0f);
         const auto over = levels.readout (0) == "+1.0" && levels.isClipped (0) && ! levels.isClipped (1);
         levels.createComponentSnapshot (levels.getLocalBounds());   // paints
+        const auto across = ! levels.isVertical();
+
+        // Docked at a side, tall and narrow: the left bar (x 32 to 55 here) fills from the bottom,
+        // up to -6 dB's 90 % of its height, and is empty above that.
+        {
+            LevelsPanel tall;
+            tall.setSize (90, 600);
+            tall.take (0.5f, 0.0f);
+            const auto image = tall.createComponentSnapshot (tall.getLocalBounds(), true, 1.0f);
+            const auto empty = image.getPixelAt (43, 50), low = image.getPixelAt (43, 570), right = image.getPixelAt (66, 570);
+            check (across && tall.isVertical() && low != empty && right == empty,
+                   "levels: docked at a side (taller than wide) the bars stand up, a channel at -6 dB filled from the bottom and empty near the top, "
+                   "a silent one empty");
+        }
+
         levels.reset();
         const auto cleared = levels.readout (0) == "-inf" && ! levels.isClipped (0);
         check (silent && peaks && over && cleared,

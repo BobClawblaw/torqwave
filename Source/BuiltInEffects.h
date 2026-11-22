@@ -957,8 +957,12 @@ namespace BuiltInEffects
         void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
         double getTailLengthSeconds() const override              { return 3.0; }
 
-        /** The sounds, one voice each; a note's sound, or none for a note it doesn't play. */
-        enum class Sound { kick, rim, snare, clap, closedHat, pedalHat, openHat, lowTom, midTom, highTom, crash, ride, cowbell, shaker, count };
+        /** The sounds, one voice each; a note's sound, or none for a note it doesn't play. Every
+            General MIDI drum, 35 to 81, has one; pairs on one sound (two bongos, the high and low
+            agogo) share its voice, as the toms do. */
+        enum class Sound { kick, rim, snare, clap, closedHat, pedalHat, openHat, lowTom, midTom, highTom, crash, ride, cowbell, shaker,
+                           china, rideBell, tambourine, splash, vibraslap, bongo, muteConga, openConga, timbale, agogo, whistle, guiro,
+                           claves, woodBlock, cuica, triangle, count };
         static std::optional<Sound> soundFor (int note);
 
         /** How many sounds are playing. */
@@ -976,16 +980,18 @@ namespace BuiltInEffects
             juce::uint32 noise = 1;               // its noise generator's state
             float hp = 0.0f, hpIn = 0.0f;         // a one-pole high-pass
             float bp1 = 0.0f, bp2 = 0.0f;         // a state-variable band-pass
+            int fade = 0;                         // a cut-off hit: samples left of its 3 ms fade
         };
 
         void trigger (int note, float velocity);
+        void cut (Sound);   // a sounding hit fades out over 3 ms instead of stopping dead
         void render (float* out, int from, int count);
         float next (Sound, Hit&);
         float noise (Hit&) const;
 
         juce::AudioParameterFloat *level = nullptr, *kickTune = nullptr, *kickDecay = nullptr, *snareTune = nullptr, *snareDecay = nullptr,
                                   *hatTune = nullptr, *hatDecay = nullptr, *tomTune = nullptr, *tomDecay = nullptr;
-        std::array<Hit, (size_t) Sound::count> hits;
+        std::array<Hit, (size_t) Sound::count> hits, fading;
         double rate = 48000.0;
         float volume = 1.0f;   // CC 7, squared as MIDI's volume usually is
 

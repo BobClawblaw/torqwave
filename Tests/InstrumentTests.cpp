@@ -356,22 +356,43 @@ namespace
         if (drums == nullptr)
             return;
 
-        // Every General MIDI drum it maps sounds, on both channels alike; other notes are silent.
-        const std::vector<int> mapped { 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 56, 57, 59, 69, 70 };
+        // Every General MIDI drum (35 to 81) sounds, on both channels alike, none too loud; other notes are silent.
         auto allSound = true, allSilent = true, stereo = true;
+        float loudest = 0.0f, quietest = 1.0f;
+        juce::StringArray silent;
 
-        for (auto note : mapped)
+        for (int note = 35; note <= 81; ++note)
         {
             const auto out = drumsPlay (*drums, { { note, 0.0, 1.0f } }, 0.5);
-            allSound = allSound && out.getMagnitude (0, 0, out.getNumSamples()) > 0.05f;
+            const auto peak = out.getMagnitude (0, 0, out.getNumSamples());
+            allSound = allSound && peak > 0.05f && peak < 1.0f;
+            loudest = juce::jmax (loudest, peak);
+            quietest = juce::jmin (quietest, peak);
             stereo = stereo && channelsSame (out);
+
+            if (peak <= 0.05f)
+                silent.add (juce::String (note));
         }
 
-        for (auto note : { 0, 34, 52, 53, 55, 60, 64, 71, 127 })
+        for (auto note : { 0, 34, 82, 127 })
             allSilent = allSilent && drumsPlay (*drums, { { note, 0.0, 1.0f } }, 0.2).getMagnitude (0, 0, (int) (0.2 * rate)) == 0.0f;
 
-        check (allSound && allSilent && stereo && ! BuiltInEffects::BasicDrumsProcessor::soundFor (60).has_value(),
-               "drums: each mapped drum note sounds, the same on both channels, and unmapped notes are silent");
+        check (allSound && allSilent && stereo && ! BuiltInEffects::BasicDrumsProcessor::soundFor (82).has_value(),
+               "drums: all 47 General MIDI drums (35 to 81) sound, the same on both channels, peaking from " + juce::String (quietest, 2) + " to "
+                   + juce::String (loudest, 2) + " at full velocity; notes outside them are silent" + (silent.isEmpty() ? juce::String() : " (silent: " + silent.joinIntoString (", ") + ")"));
+
+        // A sound struck again while it rings (an open conga, 50 ms on) doesn't click: the hit before
+        // fades out over 3 ms under the new one instead of stopping dead.
+        {
+            const auto out = drumsPlay (*drums, { { 64, 0.0, 1.0f }, { 64, 0.05, 1.0f } }, 0.2);
+            const auto at = (int) (0.05 * rate);
+            float jump = 0.0f;
+
+            for (int n = at - 2; n < at + (int) (0.004 * rate); ++n)
+                jump = juce::jmax (jump, std::abs (out.getSample (0, n) - out.getSample (0, n - 1)));
+
+            check (jump < 0.1f, "drums: a conga struck again while it rings moves at most " + juce::String (jump, 3) + " a sample where it is struck (no click)");
+        }
 
         // Velocity scales it exactly (64 is 64/127 of 127); a note's length doesn't matter, the sound plays to its end.
         const auto full = drumsPlay (*drums, { { 36, 0.0, 1.0f } }, 0.5);
@@ -394,7 +415,7 @@ namespace
         // Everything stops: a full kit has ended and gone silent in six seconds.
         std::vector<std::tuple<int, double, float>> kit;
 
-        for (auto note : mapped)
+        for (int note = 35; note <= 81; ++note)
             kit.push_back ({ note, 0.0, 1.0f });
 
         const auto all = drumsPlay (*drums, kit, 6.0);

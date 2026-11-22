@@ -259,3 +259,99 @@ A note on history: Front 242 made "Electronic Body Music" known with their 1984 
 Steps 1 and 2 can run beside each other; they touch different code. Step 6's script can be written beside steps 3 to 5, but its tests need step 4's file fields.
 
 That is more than a patch usually holds. If 0.19.3 should ship sooner, steps 1, 2, 3 and 6 (the drum machine, the synth additions and the presets) can go first, and steps 4 and 5 can follow as 0.19.4.
+
+## Part two: sounds worth keeping
+
+Steps 1 to 7 are done. Using them showed that the built-in voices aren't good enough. Basic Synth sounds thin and cheap. Basic Drums played only 22 of the 47 General MIDI drums, so many of the Sequencer's drum rows were silent. Both clicked: when a note was cut off, struck again, or stopped by the transport, and on short attacks. The user's call (2026-11-21): the built-in voices should sound good enough to keep, not just to preview. Basic Synth is replaced in place by a synth in the spirit of a lighter Massive. Older sessions using it will sound different, by the user's choice. Basic Drums gets better sounds. 0.19.3 waits for all of it, with about 1,000 presets written for the new voices.
+
+### Step 8: no clicks (S, partly done)
+
+- **Basic Drums:**
+  - Every General MIDI drum from 35 to 81 now has a sound. **Done.**
+  - A sound struck again, or a hat choked, fades out over 3 ms instead of stopping dead. **Done.** The test measures the jump where a ringing conga is struck again: 0.038 a sample with the fade, 0.322 without.
+- **Basic Synth, the same rules, carried into the new engine:**
+  - A note struck again while it sounds keeps its wave's phase and its filter state.
+  - A stolen voice, and All Sound Off from a stop, a loop or a seek, fade over 3 to 5 ms.
+  - The attack is never shorter than about 1.5 ms.
+  - Today, each of these restarts the wave or cuts it at full level. That is the pop the user heard on every note of Falling Note Ramp, at the end of Minor Bell Motif's loop, and when Low Boom plays.
+- **Tested:** a click check that renders every factory preset through its voice, as a loop, stopped and restarted. It fails when a sample jumps further than the sound itself can move.
+
+### Step 9: Basic Synth becomes a real synth (L, the largest piece)
+
+The aim is a lighter Massive: rich, wide sounds from a few panels. It is not a copy of Massive's look or names.
+
+- **Three wavetable oscillators:**
+  - Each has a table and a **Position** that morphs through it.
+  - The tables: analogue (sine, triangle, saw and square shapes), PWM, formant or vowel, digital or FM, metallic, and a sub.
+  - Each table is band-limited for every octave, so high notes don't alias.
+  - Each oscillator has pitch, fine tune and level, plus a noise source.
+- **Unison:** up to 8 voices an oscillator, with detune and stereo spread. The synth becomes stereo; today it is mono.
+- **Two filters**, in series or in parallel, each with drive and key tracking:
+  - a 24 dB ladder low-pass, for warm, resonant bass and acid;
+  - a state-variable filter: low, band and high pass, and notch.
+- **Modulation:**
+  - Four envelopes: one for the amp, three free.
+  - Two LFOs, with shapes, tempo sync and retrigger.
+  - Eight modulation slots, each a source, a destination and an amount.
+  - The sources: envelopes, LFOs, velocity, the mod wheel, aftertouch and the key.
+  - The destinations: nearly any knob.
+  - Four **macros** for presets and automation.
+- **Voices:** poly, mono or legato with glide (the 303 slide stays), and the declicking from step 8.
+- **Effects inside the synth:** drive or saturation, chorus or ensemble, a tempo-synced delay and a reverb, each with a mix.
+- **Its own window** instead of JUCE's parameter list, in Torqwave's look:
+  - the oscillators, the filters, the envelopes and LFOs, and the effects and modulation slots;
+  - the waveform drawn at its position;
+  - a patch browser.
+- **Factory patches:** about 100 named sounds (bass, reese, acid, lead, pad, pluck, keys, bell, brass, FX). The presets use them by name.
+- **Old sessions:** the old parameter IDs load into the new engine as the nearest equivalent sound. Sessions load, but don't sound bit for bit as before. The changelog says so.
+- **Tested:**
+  - each table measured for aliasing;
+  - unison measured for width;
+  - the ladder filter's resonance and cutoff measured against their settings;
+  - every modulation route shown to move its target;
+  - renders the same at any block size;
+  - CPU at 16 voices with 8-voice unison, measured on the Mac;
+  - the click check from step 8;
+  - old sessions loading.
+
+### Step 10: Basic Drums sounds good (M to L)
+
+- **Better synthesis for each sound:**
+  - The kick: a two-stage pitch envelope, a click layer and drive. A choice of three characters: boom, punch and hard.
+  - The snare: two tuned body modes and filtered noise with its own transient.
+  - The clap: more bursts and a short room.
+  - Hats and cymbals: six metallic oscillators through tuned band-pass and high-pass filters. Cymbals are ring-modulated, with longer noise.
+  - Toms and hand drums: pitch drops and a strike.
+- **Every sound:** tune, decay, level, pan and tone. Choke groups (hats, triangle and cuica). Stereo out.
+- **Kit-wide controls:** drive, a glue compressor and the level.
+- **Several kits from the same engine:** dark techno, industrial, EBM machine, electro, breaks and acoustic-ish. Each sequence preset names its kit.
+- **Its own window:** a pad for each sound, click to hear it, with that sound's settings beside it.
+- **Tested:**
+  - all 47 notes sound, none clipping;
+  - each sound's settings change it;
+  - chokes, renders identical at any block size, and the click check.
+
+### Step 11: drum patterns on any drum plug-in (M)
+
+Dropped on a track with a drum plug-in (Battery, for one), a drum preset plays its General MIDI notes. That is right for a kit laid out on General MIDI, and wrong for one that isn't. Today the track's drum map only renames the rows; it doesn't move notes.
+
+- **Remap Notes**, on the drum map, moves the clip's notes from General MIDI to the kit's own layout (snare 38 to the kit's snare key, and so on). It is one undo step.
+- **Maps are saved by name:** for example, "Battery: Dark Kit". A map is chosen per track, and every drum preset dropped on that track is remapped as it lands.
+- **Learn:** pick a General MIDI sound, then hit the matching pad on the plug-in or a MIDI controller.
+- **Tested:** a preset dropped on a track with a saved map lands on the map's notes. Remap Notes and its undo give the notes back exactly.
+
+### Step 12: the presets again, for the new voices (L)
+
+- About 1,000 sequences and about 100 kits across 36 styles, including game audio's UI sounds and stingers. The generator for them is in `Scripts/make_presets.py`.
+- Each preset plays on a named synth patch or drum kit from steps 9 and 10.
+- Each preset keeps the step 6 rules, peaks between -24 and -1 dB, and passes the click check.
+- The guide's Styles page grows to cover all 36 styles.
+
+### Order
+
+1. Step 8's synth half, inside step 9's voice code.
+2. Steps 9 and 10. They can run side by side, since they touch different code.
+3. Step 11.
+4. Step 12, last, because it needs the new patches and kits.
+
+The Levels panel standing upright when docked at a side (a fix from use) and double-clicking sequences and kits in the Finder go in with them.
