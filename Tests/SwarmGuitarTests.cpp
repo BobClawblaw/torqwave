@@ -154,6 +154,59 @@ namespace
         return alone > 0.0 ? together / alone : 0.0;
     }
 
+    /** The worst click in a render: a jump between two samples of `floor` or more, three times the steps
+        either side, as a ratio to the largest step in the 30 ms around it (the millisecond beside it left
+        out). The same measure as the sequence presets' click check (Tests/PresetTests.cpp). */
+    struct Click
+    {
+        float ratio = 0.0f, step = 0.0f;
+        double seconds = 0.0;
+    };
+
+    Click worstClick (const juce::AudioBuffer<float>& b, float floor, const std::vector<int>& starts = {})
+    {
+        Click worst;
+        const auto size = juce::jmax (1, (int) (rate / 1000.0));
+        const auto blocks = b.getNumSamples() / size;
+
+        for (int ch = 0; ch < b.getNumChannels(); ++ch)
+        {
+            const auto* x = b.getReadPointer (ch);
+            std::vector<float> largest ((size_t) blocks, 0.0f);
+            std::vector<int> where ((size_t) blocks, 0);
+
+            for (int i = 1; i < blocks * size; ++i)
+                if (const auto step = std::abs (x[i] - x[i - 1]); step > largest[(size_t) (i / size)])
+                {
+                    largest[(size_t) (i / size)] = step;
+                    where[(size_t) (i / size)] = i;
+                }
+
+            for (int at = 0; at < blocks; ++at)
+            {
+                const auto i = where[(size_t) at];
+
+                if (largest[(size_t) at] < floor || i < 2 || i + 1 >= b.getNumSamples()
+                    || largest[(size_t) at] < 3.0f * juce::jmax (std::abs (x[i - 1] - x[i - 2]), std::abs (x[i + 1] - x[i])))
+                    continue;
+
+                if (std::any_of (starts.begin(), starts.end(), [&] (int start) { return i >= start && i < start + (int) (0.003 * rate); }))
+                    continue;
+
+                auto around = 0.0f;
+
+                for (int other = juce::jmax (0, at - 31); other < juce::jmin (blocks, at + 32); ++other)
+                    if (std::abs (other - at) > 1)
+                        around = juce::jmax (around, largest[(size_t) other]);
+
+                if (const auto ratio = largest[(size_t) at] / juce::jmax (around, 1.0e-6f); ratio > worst.ratio)
+                    worst = { ratio, largest[(size_t) at], (double) where[(size_t) at] / rate };
+            }
+        }
+
+        return worst;
+    }
+
     /** As it comes, then playing a swarm: no amp, one guitar, the filter wide open, no drift. */
     void swarm (Swarm& guitar)
     {
@@ -487,8 +540,21 @@ void runSwarmGuitarTests (AudioEngine& engine)
                "swarm guitar: " + juce::String ((int) presets.size()) + " factory presets in " + juce::String (categories.size()) + " categories ("
                    + categories.joinIntoString (", ") + "), each named once and setting every parameter");
 
-        float loudest = -100.0f, quietest = 0.0f;
-        juce::String loud, quiet;
+        float loudest = -100.0f, quietest = 0.0f, worstRatio = 0.0f;
+        juce::String loud, quiet, worstName;
+        juce::StringArray clicks;
+
+        // A part that strikes, restrikes, steals and lets go: a chord, then 16ths over it, then All Sound Off.
+        std::vector<Event> part { on (0.0, 40, 0.9f), on (0.0, 47, 0.9f), off (0.9, 40), off (0.9, 47) };
+
+        for (int i = 0; i < 12; ++i)
+        {
+            const auto n = std::array<int, 4> { 45, 48, 52, 43 }[(size_t) (i % 4)];
+            part.push_back (on (1.0 + 0.125 * i, n, i % 4 == 0 ? 1.0f : 0.75f));
+            part.push_back (off (1.0 + 0.125 * i + 0.1, n));
+        }
+
+        part.push_back ({ 2.6, juce::MidiMessage::allSoundOff (1) });
 
         for (auto& p : presets)
         {
@@ -499,7 +565,19 @@ void runSwarmGuitarTests (AudioEngine& engine)
 
             if (peak > loudest) { loudest = peak; loud = p.name; }
             if (peak < quietest) { quietest = peak; quiet = p.name; }
+
+            defaults (*guitar);
+            guitar->setPresetValues (p.values);
+            const auto played = play (*guitar, part, 2.8);
+            const auto click = worstClick (played, 0.03f);
+
+            if (click.ratio > worstRatio) { worstRatio = click.ratio; worstName = p.name + " at " + juce::String (click.seconds, 3) + " s"; }
+            if (click.ratio > 4.0f) clicks.add (p.name + " " + juce::String (click.step, 3) + " at " + juce::String (click.seconds, 3) + " s, " + juce::String (click.ratio, 1) + " times");
         }
+
+        check (clicks.isEmpty(), "swarm guitar: no factory preset clicks through a chord, 16ths over it, restrikes, steals, releases and All Sound Off: no jump in one sample of 0.03 "
+                                 "or more stands alone, four times the largest step in the 30 ms either side (the nearest, " + worstName + ", "
+                                     + juce::String (worstRatio, 1) + " times)" + (clicks.isEmpty() ? juce::String() : " (" + clicks.joinIntoString ("; ").substring (0, 600) + ")"));
 
         check (loudest < -1.0f && quietest > -24.0f, "swarm guitar: every factory preset plays a held E2 and B2 between -24 and -1 dB (the loudest " + loud + " at "
                                                          + juce::String (loudest, 1) + " dB, the quietest " + quiet + " at " + juce::String (quietest, 1) + " dB)");

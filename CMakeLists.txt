@@ -518,6 +518,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/GeneratorTests.cpp
     Tests/InstrumentTests.cpp
     Tests/SwarmGuitarTests.cpp
+    Tests/SoundDemos.cpp
     Tests/DrumMachineTests.cpp
     Tests/SoundControlsTests.cpp
     Tests/WaveSynthTests.cpp

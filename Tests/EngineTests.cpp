@@ -37,6 +37,7 @@
 #include "../Source/WaveSynth.h"
 #include "../Source/DrumMachine.h"
 #include "SwarmGuitarTests.h"
+#include "SoundDemos.h"
 #include "DrumMachineTests.h"
 #include "SoundControlsTests.h"
 #include "InstrumentTrackTests.h"
@@ -606,6 +607,7 @@ int main (int argc, char* argv[])
     //   --library <folder>      only scan this folder of sounds into a new Sound Library index, and time it
     //   --write-check <folder>  only write categories and tags into copies of WAV files from this folder, and check them
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
+    //   --sound-demos <folder>  only write the Sounds page's demos (synth patches and Swarm Guitar presets at 120 BPM) as MP3s
     //   --instruments           only the tests of the built-in instruments and their controls
     //   --ai                    only the AI assistance tests (a mock server; no network)
     //   --tempo                 only the tests of audio that follows the tempo
@@ -673,6 +675,12 @@ int main (int argc, char* argv[])
         runSequenceTests (engine);
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (const auto folder = valueOf ("--sound-demos"); folder.isNotEmpty())
+    {
+        writeSoundDemos (juce::File (folder));
+        return 0;
     }
 
     if (const auto folder = valueOf ("--swarm-window"); folder.isNotEmpty())

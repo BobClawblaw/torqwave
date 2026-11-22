@@ -11,6 +11,7 @@ patch|Bass|Distorted 909 Bass
 patch|Bass|FM Basement
 patch|Bass|EBM Sequence Bass
 patch|Bass|Body Music
+patch|Bass|Target Lock Bass
 patch|Bass|Abandoned Piston
 patch|Bass|Abandoned Pump
 patch|Bass|Acid Press
