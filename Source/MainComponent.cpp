@@ -645,6 +645,12 @@ private:
             // The switch is one for every window.
             if (auto* row = InstrumentKeys::presetsRow (*editor))
                 row->setAudition (InstrumentKeys::getAudition());
+
+            // Audition gives way to the session playing, and stops when it is turned off.
+            if (strip.isAuditioning() && (! InstrumentKeys::getAudition() || (busy != nullptr && busy())))
+                strip.stopAudition();
+
+            strip.showAudition();
         }
 
         ~Holder() override
@@ -710,6 +716,7 @@ private:
         std::function<bool()> busy;
         juce::String patch;
         bool laying = false;
+        juce::TooltipWindow tooltips { this };     // an instrument's window shows its controls' tooltips
     };
 
     juce::AudioProcessorEditor* editor = nullptr;
@@ -1457,7 +1464,12 @@ MainComponent::MainComponent()
     addKeyListener (liveKeys.get());               // added after the shortcuts, so heard before them
     InstrumentKeys::setLayout (InstrumentKeys::layoutOf (settings->getValue ("playingKeys", "q")));
     InstrumentKeys::setAudition (settings->getBoolValue ("auditionOnBrowse", true));
-    InstrumentKeys::auditionChanged = [this] { appProperties.getUserSettings()->setValue ("auditionOnBrowse", InstrumentKeys::getAudition()); };
+    InstrumentKeys::setAuditionLoop (settings->getBoolValue ("auditionLoop", false));
+    InstrumentKeys::auditionChanged = [this]
+    {
+        appProperties.getUserSettings()->setValue ("auditionOnBrowse", InstrumentKeys::getAudition());
+        appProperties.getUserSettings()->setValue ("auditionLoop", InstrumentKeys::getAuditionLoop());
+    };
     InstrumentKeys::layoutChanged = [this] { appProperties.getUserSettings()->setValue ("playingKeys", InstrumentKeys::keyOf (InstrumentKeys::getLayout())); };
     setApplicationCommandManagerToWatch (&commands);   // menus refresh when command state changes
    #if JUCE_MAC

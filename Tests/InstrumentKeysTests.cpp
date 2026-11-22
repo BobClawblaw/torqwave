@@ -160,6 +160,37 @@ void runInstrumentKeysTests()
         const auto byHand = ! strip.isAuditioning() && sent.size() == 3 && sent[1].isNoteOff() && sent[1].getNoteNumber() == 48 && sent[2].isNoteOn();
         strip.keyUp ('a');
 
+        // Looping: the phrase goes round, each round two beats at least and a whole number of beats, until it is stopped.
+        heard.clear();
+        player.start ({ { 60, 0.0, 100.0, 0.8f }, { 64, 300.0, 100.0, 0.8f } }, true);
+        const auto roundLength = juce::exactlyEqual (player.getLoopLengthMs(), 960.0);
+        player.advance (500.0);
+        const auto firstRound = heard.size() == 3 && heard[2] == "on 64" && player.isLooping();
+        player.advance (460.0);
+        const auto again = heard.size() == 5 && heard[4] == "on 60";
+        player.advance (960.0);
+        const auto third = heard.size() == 9 && heard[8] == "on 60" && player.isPlaying();
+        player.stop();
+        const auto loopStopped = heard.size() == 10 && heard[9] == "off 60" && ! player.isPlaying() && ! player.isLooping();
+        player.start ({ { 48, 0.0, 1700.0, 0.8f } }, true);
+        const auto longRound = juce::exactlyEqual (player.getLoopLengthMs(), 1920.0);
+        player.stop();
+
+        // On the strip: with Loop on a key played by hand does not end the phrase; Stop does.
+        setAuditionLoop (true);
+        sent.clear();
+        strip.audition ({ { 48, 0.0, 300.0, 0.8f } });
+        strip.keyDown ('a');
+        strip.keyUp ('a');
+        const auto playedOver = strip.isAuditioning();
+        strip.stopAudition();
+        const auto stoppedByHand = ! strip.isAuditioning();
+        setAuditionLoop (false);
+
+        check (roundLength && firstRound && again && third && loopStopped && longRound && playedOver && stoppedByHand,
+               "audition: looping, a phrase goes round every 960 ms (1,920 for a long one: whole beats at 125 BPM) until stopped; "
+               "a key played by hand leaves a looping phrase going, and Stop ends it");
+
         const auto wasOn = getAudition();
         setAudition (false);
         const auto off = ! getAudition();

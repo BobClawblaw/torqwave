@@ -44,6 +44,11 @@ namespace InstrumentKeys
         instrument, kept in the settings. */
     bool getAudition();
     void setAudition (bool);
+
+    /** Loop: with it on, an audition phrase goes round until Stop is pressed, the sound is changed
+        (the new sound's phrase takes over), or Audition or Loop is turned off. Kept in the settings. */
+    bool getAuditionLoop();
+    void setAuditionLoop (bool);
     extern std::function<void()> auditionChanged;
 
     /** A note of an audition phrase: when it starts and how long it is held, in milliseconds. */
@@ -70,8 +75,12 @@ namespace InstrumentKeys
         std::function<void (int note, float velocity)> on;
         std::function<void (int note)> off;
 
-        void start (std::vector<PhraseNote>);
+        /** `loop`: the phrase goes round until stopped, each round as long as the phrase and a
+            breath after it, to the next whole beat at 125 BPM (two beats at least). */
+        void start (std::vector<PhraseNote>, bool loop = false);
         void stop();
+        bool isLooping() const noexcept         { return looping && ! phrase.empty(); }
+        double getLoopLengthMs() const noexcept { return loopLength; }
         void advance (double milliseconds);
         bool isPlaying() const noexcept         { return ! phrase.empty(); }
 
@@ -83,7 +92,8 @@ namespace InstrumentKeys
         };
 
         std::vector<Playing> phrase;
-        double at = 0.0;
+        double at = 0.0, loopLength = 0.0;
+        bool looping = false;
     };
 
     /** The strip along the bottom of an instrument's window: five octaves of keys to click, what
@@ -119,7 +129,11 @@ namespace InstrumentKeys
         /** Plays a phrase on the strip's keys (they light as it goes): a sound just chosen. Ends
             the one before, and is ended by a key played by hand. */
         void audition (std::vector<PhraseNote>);
+        void stopAudition();
         bool isAuditioning() const noexcept     { return auditioner.isPlaying(); }
+
+        /** Shows the Loop switch as it is set, and Stop lit while a phrase plays: for a window's timer. */
+        void showAudition();
 
         /** The keys' state: what is played into it (noteOn, noteOff) is sent on like a key's note. */
         juce::MidiKeyboardState& getState() noexcept   { return state; }
@@ -143,6 +157,7 @@ namespace InstrumentKeys
         juce::MidiKeyboardComponent keyboard { state, juce::MidiKeyboardComponent::horizontalKeyboard };
         juce::Label settings, hint;
         juce::TextButton layoutButton;
+        juce::TextButton loopButton { "Loop" }, stopButton { "Stop" };
         Auditioner auditioner;
         double lastTick = 0.0;
         std::array<int, maxKeys> sounding;      // the note each playing key sounds, or -1

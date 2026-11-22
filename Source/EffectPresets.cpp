@@ -170,7 +170,7 @@ Bar::Bar (Store& s, juce::String effectKey, std::function<Values()> current, std
     addAndMakeVisible (next);
     audition.setClickingTogglesState (true);
     audition.setWantsKeyboardFocus (false);
-    audition.setTooltip ("Audition: play each sound as you go through them (the arrows, the list, the left and right keys)");
+    audition.setTooltip ("Audition: with this on, each sound plays as you choose it (the arrows, the list, the left and right keys). Loop and Stop are beside the keys at the bottom of the window.");
     audition.onClick = [this]
     {
         if (auditionChanged != nullptr)
@@ -381,8 +381,11 @@ void Bar::resized()
 
     if (audition.isVisible())
     {
+        // By name where there is room for it, by its note alone where there is not.
+        const auto named = getWidth() >= 460;
+        audition.setButtonText (named ? juce::String::fromUTF8 ("\xe2\x99\xaa Audition") : juce::String::fromUTF8 ("\xe2\x99\xaa"));
         r.removeFromLeft (2);
-        audition.setBounds (r.removeFromLeft (26));
+        audition.setBounds (r.removeFromLeft (named ? 84 : 26));
     }
 
     r.removeFromLeft (6);

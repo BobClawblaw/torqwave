@@ -15,6 +15,7 @@ namespace
 {
     Layout layout = Layout::qRow;
     bool auditionOn = true;
+    bool auditionLoop = false;
 
     int indexOfKey (juce::juce_wchar key)
     {
@@ -42,6 +43,8 @@ juce::String playingKeys()                      { return layout == Layout::aRow 
 
 bool getAudition()                              { return auditionOn; }
 void setAudition (bool on)                      { auditionOn = on; }
+bool getAuditionLoop()                          { return auditionLoop; }
+void setAuditionLoop (bool on)                  { auditionLoop = on; }
 
 std::vector<PhraseNote> phraseFor (juce::AudioProcessor& p)
 {
@@ -107,13 +110,21 @@ std::vector<PhraseNote> phraseFor (juce::AudioProcessor& p)
 }
 
 //==============================================================================
-void Auditioner::start (std::vector<PhraseNote> notes)
+void Auditioner::start (std::vector<PhraseNote> notes, bool loop)
 {
     stop();
+    auto end = 0.0;
 
     for (auto& n : notes)
+    {
         phrase.push_back ({ n, false, false });
+        end = juce::jmax (end, n.startMs + n.lengthMs);
+    }
 
+    // A round: the phrase and a breath, to the next whole beat at 125 BPM, two beats at least.
+    constexpr double beat = 480.0;
+    loopLength = juce::jmax (2.0 * beat, std::ceil ((end + 200.0) / beat) * beat);
+    looping = loop;
     at = 0.0;
     advance (0.0);
 }
@@ -125,6 +136,7 @@ void Auditioner::stop()
             off (p.note.note);
 
     phrase.clear();
+    looping = false;
 }
 
 void Auditioner::advance (double milliseconds)
@@ -133,33 +145,60 @@ void Auditioner::advance (double milliseconds)
         return;
 
     at += milliseconds;
-    auto left = false;
 
     // Ends before starts, so a note repeated at the moment the one before ends is heard as two.
-    for (auto& p : phrase)
-        if (p.started && ! p.ended && at >= p.note.startMs + p.note.lengthMs)
-        {
-            p.ended = true;
-
-            if (off != nullptr)
-                off (p.note.note);
-        }
-
-    for (auto& p : phrase)
+    const auto play = [this]
     {
-        if (! p.started && at >= p.note.startMs)
-        {
-            p.started = true;
+        auto left = false;
 
-            if (on != nullptr)
-                on (p.note.note, p.note.velocity);
+        for (auto& p : phrase)
+            if (p.started && ! p.ended && at >= p.note.startMs + p.note.lengthMs)
+            {
+                p.ended = true;
+
+                if (off != nullptr)
+                    off (p.note.note);
+            }
+
+        for (auto& p : phrase)
+        {
+            if (! p.started && at >= p.note.startMs)
+            {
+                p.started = true;
+
+                if (on != nullptr)
+                    on (p.note.note, p.note.velocity);
+            }
+
+            left = left || ! p.ended;
         }
 
-        left = left || ! p.ended;
-    }
+        return left;
+    };
 
-    if (! left)
+    const auto left = play();
+
+    if (looping)
+    {
+        // Round again: everything of this round ended, the next begun from where the round's length falls.
+        if (at >= loopLength)
+        {
+            for (auto& p : phrase)
+            {
+                if (p.started && ! p.ended && off != nullptr)
+                    off (p.note.note);
+
+                p.started = p.ended = false;
+            }
+
+            at = std::fmod (at, loopLength);
+            play();
+        }
+    }
+    else if (! left)
+    {
         phrase.clear();
+    }
 }
 
 int noteFor (juce::juce_wchar key, int octave)
@@ -239,6 +278,29 @@ Strip::Strip (std::function<void (const juce::MidiMessage&)> send) : sendMessage
         showSettings();
     };
     addAndMakeVisible (layoutButton);
+
+    loopButton.setClickingTogglesState (true);
+    loopButton.setTooltip ("Loop the audition: the phrase goes round until you press Stop or choose another sound");
+    stopButton.setTooltip ("Stop the audition that is playing");
+
+    for (auto* b : { &loopButton, &stopButton })
+    {
+        b->setWantsKeyboardFocus (false);
+        addAndMakeVisible (*b);
+    }
+
+    loopButton.onClick = [this]
+    {
+        setAuditionLoop (loopButton.getToggleState());
+
+        if (auditionChanged != nullptr)
+            auditionChanged();
+
+        if (! getAuditionLoop())
+            stopAudition();
+    };
+    stopButton.onClick = [this] { stopAudition(); };
+    showAudition();
     showSettings();
     setSize (600, height);
 }
@@ -306,7 +368,8 @@ bool Strip::keyDown (juce::juce_wchar key)
     if (sounding[(size_t) index] < 0)
         if (const auto note = noteFor (key, octave); note >= 0)
         {
-            auditioner.stop();
+            if (! auditioner.isLooping())
+                auditioner.stop();
             sounding[(size_t) index] = note;
             state.noteOn (1, note, (float) velocity / 127.0f);
             lastTick = juce::Time::getMillisecondCounterHiRes();
@@ -354,9 +417,22 @@ bool Strip::readKeys (bool enabled)
     return any;
 }
 
+void Strip::stopAudition()
+{
+    auditioner.stop();
+    showAudition();
+}
+
+void Strip::showAudition()
+{
+    loopButton.setToggleState (getAuditionLoop(), juce::dontSendNotification);
+    stopButton.setEnabled (auditioner.isPlaying());
+}
+
 void Strip::audition (std::vector<PhraseNote> notes)
 {
-    auditioner.start (std::move (notes));
+    auditioner.start (std::move (notes), getAuditionLoop());
+    showAudition();
     lastTick = juce::Time::getMillisecondCounterHiRes();
     startTimerHz (60);
 }
@@ -367,6 +443,7 @@ void Strip::timerCallback()
     const auto now = juce::Time::getMillisecondCounterHiRes();
     auditioner.advance (now - lastTick);
     lastTick = now;
+    stopButton.setEnabled (auditioner.isPlaying());
     // A key's release can go unheard (the window losing the keyboard mid-note): a key no longer down lets go of its note.
     auto any = false;
 
@@ -414,6 +491,10 @@ void Strip::resized()
     auto top = area.removeFromTop (18);
     settings.setBounds (top.removeFromLeft (juce::jmin (220, top.getWidth() / 2)));
     layoutButton.setBounds (top.removeFromLeft (52).reduced (0, 1));
+    top.removeFromLeft (10);
+    loopButton.setBounds (top.removeFromLeft (46).reduced (0, 1));
+    top.removeFromLeft (2);
+    stopButton.setBounds (top.removeFromLeft (44).reduced (0, 1));
     hint.setBounds (top);
     keyboard.setKeyWidth ((float) area.getWidth() / 50.0f);    // C1 to C8: fifty white keys across the window
     keyboard.setBounds (area.withTrimmedTop (2));
