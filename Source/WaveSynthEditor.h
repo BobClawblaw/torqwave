@@ -38,6 +38,13 @@ public:
     static constexpr int mostInAPage = 40;
     static std::vector<MenuPage> menuPages (const juce::String& category);
 
+    /** The patch browser's Favourites sub-menu: a sub-menu for each category that holds a favourite,
+        in the tree's order, each listing its favourites as the tree does (the order the arrows go
+        through them). An item's ID is `firstId` plus the patch's index in the factory list; the
+        patch named `current` is ticked, with its category, when the favourites are being browsed.
+        `ticked` says whether any is. */
+    static juce::PopupMenu favouritesMenu (const juce::String& current, bool browsing, int firstId, bool& ticked);
+
     /** Reads every control's parameter, the modulation and the displays again. */
     void refresh();
 
