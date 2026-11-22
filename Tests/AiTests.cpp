@@ -13,6 +13,12 @@
 #include "../Source/BuiltInEffects.h"
 #include "../Source/ClipEffects.h"
 #include "../Source/Loudness.h"
+#include "../Source/DrumMachine.h"
+#include "../Source/DrumMaps.h"
+#include "../Source/NoteEditor.h"
+#include "../Source/SequenceLibrary.h"
+#include "../Source/SwarmGuitar.h"
+#include "../Source/WaveSynth.h"
 #include "TestUtils.h"
 #include "AiTests.h"
 
@@ -952,7 +958,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 39 && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("fit_tempo_to_hits") && names.contains ("store_scene") && names.contains ("recall_scene") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 45 && names.contains ("find_sequence_presets") && names.contains ("add_sequence_preset") && names.contains ("add_kit") && names.contains ("list_drum_maps") && names.contains ("set_drum_map") && names.contains ("remap_clip_notes") && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("fit_tempo_to_hits") && names.contains ("store_scene") && names.contains ("recall_scene") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -1349,6 +1355,909 @@ namespace
         check ((bool) removed["ok"] && w.getInstrumentLoads().size() == 1 && w.getSteps().size() == 5
                    && ! w.getSteps().contains ("Load Test Drums on \"Drums\"") && s.tracks.size() == 2 && s.tracks[1].noteClips.empty(),
                "Ask Torq sessions: removing the track drops its instrument load; a replaced choice leaves the plan; five steps, and the session itself untouched");
+    }
+
+    //==============================================================================
+    // Step 19: factory sounds, sequences, kits and drum maps.
+
+    /** A session as its file's text, to compare two states whole. */
+    juce::String sessionText (const SessionState& s)
+    {
+        const auto file = juce::File::createTempFile ("tqsession");
+        SessionFile::save (s, file);
+        const auto text = file.loadFileAsString();
+        file.deleteFile();
+        return text;
+    }
+
+    /** The same session: the same file text, and the same tracks, folders and note clips by id. */
+    bool sameSession (const SessionState& a, const SessionState& b)
+    {
+        if (a.tracks.size() != b.tracks.size() || sessionText (a) != sessionText (b))
+            return false;
+
+        for (size_t i = 0; i < a.tracks.size(); ++i)
+            if (a.tracks[i].id != b.tracks[i].id || a.tracks[i].name != b.tracks[i].name || a.tracks[i].folderId != b.tracks[i].folderId
+                || ! (a.tracks[i].noteClips == b.tracks[i].noteClips) || ! (a.tracks[i].drumMap == b.tracks[i].drumMap))
+                return false;
+
+        return true;
+    }
+
+    bool sameXml (const std::shared_ptr<juce::XmlElement>& a, const std::shared_ptr<juce::XmlElement>& b)
+    {
+        return (a == nullptr && b == nullptr) || (a != nullptr && b != nullptr && a->isEquivalentTo (b.get(), false));
+    }
+
+    void testFactorySounds()
+    {
+        // The closeness the refusals name the nearest by: shared words first, then fewest letters away, then the order given.
+        const juce::StringArray names { "Sub Sine", "Reese Growl", "Acid Line", "Dark Reese", "Dark Reeds" };
+        check (Ai::nearestNames (names, "dark reese bass", 3) == juce::StringArray { "Dark Reese", "Dark Reeds", "Reese Growl" }
+                   && Ai::nearestNames (names, "sub sin", 1) == juce::StringArray { "Sub Sine" }
+                   && Ai::nearestNames (names, "zzz", 2) == Ai::nearestNames (names, "zzz", 2) && Ai::nearestNames (names, "zzz", 9).size() == 5
+                   && Ai::hasWords ("Dark Reese Bass", "bass dark") && ! Ai::hasWords ("Dark Reese", "dark lead") && Ai::hasWords ("anything", "  "),
+               "Ask Torq factory sounds: the nearest names share the most words, then are the fewest letters away, the same every time; a search needs every word");
+
+        const auto synth = builtIn ("Torqwave Synth"), drums = builtIn ("Basic Drums"), guitar = builtIn ("Swarm Guitar");
+        const auto& patches = WaveSynth::factoryPatches();
+        const auto& kits = DrumMachine::kits();
+        const auto& guitarPresets = EffectPresets::factory (BuiltInEffects::swarmGuitarId);
+        juce::PluginDescription other;
+        other.name = "Test Piano";
+        other.pluginFormatName = "VST3";
+        other.isInstrument = true;
+        check (synth.isInstrument && drums.isInstrument && guitar.isInstrument && patches.size() > 1000 && Ai::FactorySounds::of (synth).size() == patches.size()
+                   && Ai::FactorySounds::of (drums).size() == kits.size() && Ai::FactorySounds::of (guitar).size() == guitarPresets.size() && ! guitarPresets.empty()
+                   && Ai::FactorySounds::of (other).empty() && Ai::FactorySounds::of (builtIn ("Compressor")).empty(),
+               "Ask Torq factory sounds: Torqwave Synth's " + juce::String ((int) patches.size()) + " patches, Basic Drums' " + juce::String ((int) kits.size())
+                   + " kits and Swarm Guitar's " + juce::String ((int) guitarPresets.size()) + " presets are known; an effect and another maker's instrument have none");
+
+        if (patches.size() < 100 || kits.size() < 2 || guitarPresets.empty())
+            return;
+
+        // Three instrument tracks without an instrument, and one that already plays the synth.
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.addInstrumentTrack().name = "Bass";
+        s.addInstrumentTrack().name = "Drums";
+        s.addInstrumentTrack().name = "Guitar";
+        s.addInstrumentTrack().name = "Lead";
+        const auto leadId = s.tracks[3].id;
+        const auto savedName = patches[5].name;   // the user has saved a preset under a factory patch's name
+
+        Ai::Workspace::Start start;
+        start.session = s;
+        start.sessionName = "Song";
+        start.plugins = BuiltInEffects::getDescriptions();
+        start.instruments[leadId] = synth;
+        start.instrumentPresets = [savedName] (const juce::PluginDescription& d) { return d.name == "Torqwave Synth" ? juce::StringArray { savedName } : juce::StringArray(); };
+        start.library.factorySounds = [] (const juce::PluginDescription& d) { return Ai::FactorySounds::of (d); };
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+        const auto quoted = [] (const juce::String& text) { return juce::JSON::toString (juce::var (text)); };
+
+        // Everything: capped at 60, with how many more and the categories.
+        const auto all = call ("list_instrument_presets", R"({"plugin": "Torqwave Synth"})");
+        check ((bool) all["ok"] && all["factory"].size() == 60 && (int) all["factory_total"] == (int) patches.size() && (int) all["factory_matching"] == (int) patches.size()
+                   && (int) all["more"] == (int) patches.size() - 60 && all["categories"].size() == WaveSynth::patchCategories().size()
+                   && all["factory"][0]["name"] == juce::var (patches[0].name) && all["factory"][0]["category"] == juce::var (patches[0].category)
+                   && all["presets"].size() == 1 && all["note"].toString().contains ("narrow with category or search"),
+               "Ask Torq factory sounds: list_instrument_presets lists Torqwave Synth's patches 60 at a time, says how many more there are (" + all["more"].toString()
+                   + ") and names its " + juce::String (all["categories"].size()) + " categories, beside the presets the user saved");
+
+        // A category and a search word: only the matches, and how many more.
+        // The largest category, and the first word of a name in it that some but not all of its patches have.
+        juce::String category, word;
+        int inCategory = 0, expected = 0;
+
+        for (auto& name : WaveSynth::patchCategories())
+            if (const auto count = (int) std::count_if (patches.begin(), patches.end(), [&name] (auto& patch) { return patch.category == name; }); count > inCategory)
+            {
+                category = name;
+                inCategory = count;
+            }
+
+        const auto having = [&] (const juce::String& text)
+        {
+            return (int) std::count_if (patches.begin(), patches.end(), [&] (auto& patch) { return patch.category == category && (patch.name + " " + patch.category).containsIgnoreCase (text); });
+        };
+
+        for (auto& patch : patches)
+            if (const auto first = patch.name.upToFirstOccurrenceOf (" ", false, false); word.isEmpty() && patch.category == category && first.length() >= 3
+                                                                                           && having (first) >= 2 && having (first) < inCategory)
+                word = first;
+
+        expected = having (word);
+
+        const auto narrowed = call ("list_instrument_presets", "{\"plugin\": \"Torqwave Synth\", \"category\": " + quoted (category.toLowerCase()) + ", \"search\": " + quoted (word.toUpperCase()) + "}");
+        const auto byCategory = call ("list_instrument_presets", "{\"track\": \"Lead\", \"category\": " + quoted (category) + "}");
+        auto onlyMatches = narrowed["factory"].size() == juce::jmin (60, expected) && word.isNotEmpty() && expected >= 2 && expected < inCategory && inCategory > 60;
+
+        if (auto* list = narrowed["factory"].getArray())
+            for (auto& sound : *list)
+                onlyMatches = onlyMatches && sound["category"] == juce::var (category) && (sound["name"].toString() + " " + category).containsIgnoreCase (word);
+
+        const auto noCategory = call ("list_instrument_presets", R"({"plugin": "Torqwave Synth", "category": "Kazoos"})");
+        const auto noMatch = call ("list_instrument_presets", R"({"plugin": "Torqwave Synth", "search": "zzqx"})");
+        check (onlyMatches && (int) narrowed["factory_matching"] == expected && (expected > 60 ? (int) narrowed["more"] == expected - 60 : narrowed["more"].isVoid())
+                   && (int) byCategory["factory_matching"] == inCategory && (inCategory > 60 ? (int) byCategory["more"] == inCategory - 60 : byCategory["more"].isVoid())
+                   && ! (bool) noCategory["ok"] && noCategory["error"].toString().contains (category)
+                   && (bool) noMatch["ok"] && noMatch["factory"].size() == 0 && (int) noMatch["factory_matching"] == 0 && w.getSteps().isEmpty(),
+               "Ask Torq factory sounds: a category and a search word (in any case) list only the patches matching both (" + juce::String (expected) + " of " + juce::String (inCategory)
+                   + " in " + category + " have " + word.quoted() + "), and a category alone says how many more there are past 60 (" + byCategory["more"].toString()
+                   + "); a category it hasn't is refused naming them; listing plans nothing");
+
+        // A patch by name on a new instrument: a factory load, by the patch's own name.
+        const auto patch = patches[patches.size() / 2].name;
+        const auto loaded = call ("set_instrument", "{\"track\": \"Bass\", \"plugin\": \"Torqwave Synth\", \"preset\": " + quoted (patch.toLowerCase()) + "}");
+        const auto loads = w.getInstrumentLoads();
+        check ((bool) loaded["ok"] && loaded["step"] == juce::var ("Load Torqwave Synth with the factory sound " + patch.quoted() + " on \"Bass\"")
+                   && loads.size() == 1 && loads[0].factory && loads[0].preset == patch && ! loads[0].onlyPreset && loads[0].plugin.name == "Torqwave Synth"
+                   && w.getSteps().size() == 1 && call ("get_session", "{}")["tracks"][0]["instrument"].toString().contains (patch),
+               "Ask Torq factory sounds: set_instrument takes a factory patch by its name in any case: one plan step, a factory load of " + patch.quoted());
+
+        // A word that matches nothing: refused with the nearest names, the plan as it was.
+        juce::StringArray everyName { savedName };
+
+        for (auto& factoryPatch : patches)
+            everyName.add (factoryPatch.name);
+
+        const auto wanted = patches[7].name + " zzqx";
+        const auto nearest = Ai::nearestNames (everyName, wanted);
+        const auto refusedPatch = call ("set_instrument", "{\"track\": \"Drums\", \"plugin\": \"Torqwave Synth\", \"preset\": " + quoted (wanted) + "}");
+        check (! (bool) refusedPatch["ok"] && nearest.size() == 5 && nearest.contains (patches[7].name)
+                   && refusedPatch["error"].toString().contains ("the nearest are " + nearest.joinIntoString (", ")) && w.getSteps().size() == 1 && w.getInstrumentLoads().size() == 1
+                   && call ("get_session", "{}")["tracks"][1]["instrument"] == juce::var ("none"),
+               "Ask Torq factory sounds: a patch asked for by words that match none is refused with the five nearest names (" + nearest.joinIntoString (", ")
+                   + "), and the plan and the track are left as they were");
+
+        // A kit and a Swarm Guitar preset; on a track that plays the synth already, a patch alone; the user's own preset before a factory one of its name.
+        const auto kit = kits.back().name;
+        const auto preset = guitarPresets.front();
+        const auto kitsListed = call ("list_instrument_presets", R"({"plugin": "Basic Drums"})");
+        const auto kitLoaded = call ("set_instrument", "{\"track\": \"Drums\", \"plugin\": \"Basic Drums\", \"preset\": " + quoted (kit) + "}");
+        const auto guitarListed = call ("list_instrument_presets", "{\"plugin\": \"Swarm Guitar\", \"category\": " + quoted (preset.category) + "}");
+        const auto guitarLoaded = call ("set_instrument", "{\"track\": \"Guitar\", \"plugin\": \"Swarm Guitar\", \"preset\": " + quoted (preset.name) + "}");
+        const auto changed = call ("set_instrument", "{\"track\": \"Lead\", \"preset\": " + quoted (patches[9].name) + "}");
+        const auto after = w.getInstrumentLoads();
+        check ((bool) kitsListed["ok"] && kitsListed["factory"].size() == (int) kits.size() && kitsListed["categories"].isVoid() && kitsListed["factory"][0]["about"].toString().isNotEmpty()
+                   && (bool) kitLoaded["ok"] && (bool) guitarListed["ok"] && guitarListed["factory"].size() > 0 && guitarListed["factory"][0]["category"] == juce::var (preset.category)
+                   && (bool) guitarLoaded["ok"] && (bool) changed["ok"] && changed["step"] == juce::var ("Load the factory sound " + patches[9].name.quoted() + " in Torqwave Synth on \"Lead\"")
+                   && after.size() == 4 && after[1].factory && after[1].preset == kit && after[2].factory && after[2].preset == preset.name
+                   && after[3].factory && after[3].onlyPreset && after[3].trackId == leadId && w.getSteps().size() == 4,
+               "Ask Torq factory sounds: a Basic Drums kit and a Swarm Guitar preset are listed and chosen the same way, and a patch alone changes a synth a track already plays");
+
+        const auto own = call ("set_instrument", "{\"track\": \"Lead\", \"preset\": " + quoted (savedName) + "}");
+        const auto last = w.getInstrumentLoads();
+        check ((bool) own["ok"] && last.size() == 4 && ! last[3].factory && last[3].preset == savedName && w.getSteps().size() == 4
+                   && own["step"] == juce::var ("Load the preset " + savedName.quoted() + " in Torqwave Synth on \"Lead\""),
+               "Ask Torq factory sounds: a preset the user saved under a factory patch's name is the one chosen, and a later choice for a track replaces the earlier in the plan");
+
+        // The state each factory sound loads: the instrument's own, with the sound in it.
+        const auto synthState = Ai::FactorySounds::stateOf (synth, patch), kitState = Ai::FactorySounds::stateOf (drums, kit), guitarState = Ai::FactorySounds::stateOf (guitar, preset.name);
+        BuiltInEffects::BasicSynthProcessor synthNow, synthDirect;
+        BuiltInEffects::BasicDrumsProcessor drumsNow;
+        BuiltInEffects::SwarmGuitarProcessor guitarNow;
+        synthDirect.loadPatch (patch);
+
+        if (synthState)  synthNow.setStateInformation (synthState->getData(), (int) synthState->getSize());
+        if (kitState)    drumsNow.setStateInformation (kitState->getData(), (int) kitState->getSize());
+        if (guitarState) guitarNow.setStateInformation (guitarState->getData(), (int) guitarState->getSize());
+
+        auto guitarSame = guitarState.has_value();
+
+        for (auto& [id, value] : preset.values)
+            guitarSame = guitarSame && std::abs (guitarNow.getPresetValues()[id] - value) <= 1.0e-3 * juce::jmax (1.0, std::abs (value));
+
+        juce::String error;
+        const auto forLoad = Ai::stateFor (loads[0], error);
+        check (synthState && synthNow.getPatchName() == patch && synthNow.getPresetValues() == synthDirect.getPresetValues() && kitState && drumsNow.getKitName() == kit && ! drumsNow.kitModified()
+                   && guitarSame && ! Ai::FactorySounds::stateOf (synth, "zzqx") && ! Ai::FactorySounds::stateOf (drums, "zzqx") && ! Ai::FactorySounds::stateOf (guitar, "zzqx")
+                   && ! Ai::FactorySounds::stateOf (other, patch) && forLoad == synthState && error.isEmpty(),
+               "Ask Torq factory sounds: a factory load's state is the instrument's own with the sound in it (the synth's patch as Load Patch leaves it, the kit unmodified, "
+               "the guitar's preset values); a name it hasn't gives none");
+    }
+
+    void testFactorySoundsOnEngine()
+    {
+        // A track playing Torqwave Synth on the engine: a factory patch chosen by Ask Torq, and loaded as the plan's apply loads it.
+        const auto& patches = WaveSynth::factoryPatches();
+
+        if (patches.size() < 100)
+            return;
+
+        AudioEngine engine;
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.addInstrumentTrack().name = "Bass";
+        const auto trackId = s.tracks[0].id;
+        engine.session.reset (s, {});
+        auto ready = false;
+        engine.addTrackPlugin (trackId, builtIn ("Torqwave Synth"), [&] (const juce::String&) { ready = true; });
+        TestUtils::runUntil ([&] { return ready; }, 5000);
+        auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (engine.getTrackEffects().getInstrument (trackId));
+
+        if (synth == nullptr)
+        {
+            check (false, "Ask Torq factory sounds: Torqwave Synth loads onto a track");
+            return;
+        }
+
+        const auto patch = patches[patches.size() - 3].name;
+        const auto before = synth->getPatchName();
+        Ai::Workspace::Start start;
+        start.session = *engine.session.getState();
+        start.plugins = BuiltInEffects::getDescriptions();
+        start.instruments[trackId] = synth->getPluginDescription();
+        start.library = Ai::Library::standard();
+        Ai::Workspace w (std::move (start));
+        const auto planned = parse (w.run ("set_instrument", "{\"track\": \"Bass\", \"preset\": " + juce::JSON::toString (juce::var (patch)) + "}"));
+        const auto loads = w.getInstrumentLoads();
+        juce::String error;
+        const auto state = loads.size() == 1 ? Ai::stateFor (loads[0], error) : std::nullopt;
+        const auto untouched = synth->getPatchName() == before && ! w.sessionChanged();
+        const auto set = state && engine.setInstrumentState (trackId, *state);
+        BuiltInEffects::BasicSynthProcessor direct;
+        direct.loadPatch (patch);
+        check ((bool) planned["ok"] && loads.size() == 1 && loads[0].onlyPreset && loads[0].factory && untouched && set && before != patch
+                   && synth->getPatchName() == patch && synth->getPresetValues() == direct.getPresetValues(),
+               "Ask Torq factory sounds: on the engine, a patch planned for a track's Torqwave Synth changes nothing until applied; applied, the synth holds the patch as Load Patch gives it");
+    }
+
+    /** A made-up factory folder: four sequences, a kit of two of them, two sequences sharing a name, and 45 fillers to pass the cap. */
+    struct MadePresets
+    {
+        juce::File folder = juce::File::createTempFile ("ask-presets");
+        SequenceFile::Sequence kick, hats, reese, pluck;
+        SequenceKit::Kit kit;
+
+        static SequenceFile::Sequence sequence (const juce::String& name, const juce::String& role, const juce::String& subRole, const juce::String& style, int energy,
+                                                juce::StringArray character, std::vector<SequenceFile::Note> notes, const juce::String& instrument)
+        {
+            SequenceFile::Sequence q;
+            q.name = name;
+            q.role = role;
+            q.subRole = subRole;
+            q.style = style;
+            q.energy = energy;
+            q.character = std::move (character);
+            q.channel = role == "Drums" ? 10 : 1;
+            q.length = q.loopLength = 4 * 4 * SequenceFile::ticksPerBeat;
+            q.notes = std::move (notes);
+            q.added = 1000;
+
+            if (instrument.isNotEmpty())
+                q.voice = SequenceFile::voiceFor (builtIn (instrument));
+
+            return q;
+        }
+
+        juce::File fileFor (const SequenceFile::Sequence& q) const
+        {
+            auto dir = folder.getChildFile (q.role);
+
+            if (q.subRole.isNotEmpty())
+                dir = dir.getChildFile (q.subRole);
+
+            dir.createDirectory();
+            return dir.getChildFile (q.name + SequenceFile::extension);
+        }
+
+        MadePresets()
+        {
+            constexpr juce::int64 beat = SequenceFile::ticksPerBeat;
+            kick = sequence ("Iron Kick", "Drums", "Kick", "Industrial/EBM", 4, { "Dark", "Distorted" },
+                             { { 36, 0, 240, 0.9f }, { 36, beat, 240, 0.8f }, { 38, 2 * beat, 240, 0.7f }, { 36, 3 * beat, 240, 0.8f }, { 42, 3 * beat + 480, 240, 0.5f } }, "Basic Drums");
+            hats = sequence ("Thin Hats", "Drums", "Hats & Tops", "Techno/Dark", 2, { "Sparse" }, { { 42, 480, 120, 0.6f }, { 42, beat + 480, 120, 0.6f } }, "Basic Drums");
+            reese = sequence ("Slow Reese", "Bass", {}, "Techno/Dark", 4, { "Dark" }, { { 33, 0, 2 * beat, 0.8f }, { 36, 2 * beat, 2 * beat, 0.8f } }, "Torqwave Synth");
+            reese.key = "A minor";
+            reese.note = "A slow detuned bass under the kick";
+            pluck = sequence ("Bright Pluck", "Bass", {}, "House/Deep", 3, { "Bright" }, { { 45, 0, 240, 0.8f } }, {});
+            auto twin = sequence ("Thin Hats", "Drums", "Kick", "Techno/Dark", 2, {}, { { 42, 0, 120, 0.6f } }, {});
+            auto ok = true;
+
+            for (auto* q : { &kick, &hats, &reese, &pluck, &twin })
+                ok = SequenceFile::save (*q, fileFor (*q)).isEmpty() && ok;
+
+            for (int i = 1; i <= 45; ++i)
+            {
+                const auto filler = sequence ("Filler " + juce::String (i).paddedLeft ('0', 2), "Arps", {}, "Techno/Dark", 1, {}, { { 60, 0, 240, 0.8f } }, {});
+                ok = SequenceFile::save (filler, fileFor (filler)).isEmpty() && ok;
+            }
+
+            kit.name = "EBM Engine";
+            kit.style = "Industrial/EBM";
+            kit.note = "A kick and a bass made to play together";
+            kit.added = 1000;
+            kit.parts = { kick, reese };
+            folder.getChildFile ("Kits").createDirectory();
+            ok = SequenceKit::save (kit, folder.getChildFile ("Kits").getChildFile ("EBM Engine.tqkit")).isEmpty() && ok;
+            check (ok, "Ask Torq presets: the made-up factory folder is written");
+        }
+
+        ~MadePresets()    { folder.deleteRecursively(); }
+
+        Ai::Library library() const
+        {
+            Ai::Library l;
+            l.factorySounds = [] (const juce::PluginDescription& d) { return Ai::FactorySounds::of (d); };
+            l.sequencePresets = [f = folder] { return SequenceLibrary (f).scan(); };
+            return l;
+        }
+    };
+
+    /** General MIDI's map with the kick on key 60 and the snare on key 40, and the two that trade keys (as the drum grid's tests'). */
+    std::vector<DrumSound> askKitMap()
+    {
+        auto map = DrumSound::generalMidi();
+
+        for (auto& d : map)
+        {
+            if (d.pitch == 36) { d.pitch = 60; d.standsFor = 36; d.name = "Kit Kick"; }
+            else if (d.pitch == 38) { d.pitch = 40; d.standsFor = 38; d.name = "Kit Snare"; }
+            else if (d.pitch == 40) { d.pitch = 39; d.standsFor = 40; }
+            else if (d.pitch == 39) { d.pitch = 38; d.standsFor = 39; }
+        }
+
+        return map;
+    }
+
+    void testSequencePresetTools()
+    {
+        MadePresets made;
+
+        // 124 BPM: an audio track, a plain instrument track, and one whose kit has its own drum map.
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.tempo = 124.0;
+        s.addTrack().name = "Guitar";
+        s.addInstrumentTrack().name = "Keys";
+        s.addInstrumentTrack().name = "Kit";
+        s.tracks[2].drumMap = askKitMap();
+        const auto bar = [&s] (int number) { return s.tempoMap().barFrame (number - 1); };
+
+        const auto workspace = [&] (const SessionState& session, bool transpose = false)
+        {
+            Ai::Workspace::Start start;
+            start.session = session;
+            start.sessionName = "Song";
+            start.plugins = BuiltInEffects::getDescriptions();
+            start.library = made.library();
+            start.library.transposeDrops = transpose;
+            return std::make_unique<Ai::Workspace> (std::move (start));
+        };
+
+        auto w = workspace (s);
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w->run (tool, args)); };
+        const auto namesOf = [] (const juce::var& found)
+        {
+            juce::StringArray names;
+
+            if (auto* list = found["presets"].getArray())
+                for (auto& p : *list)
+                    names.add (p["name"].toString());
+
+            return names;
+        };
+
+        // Finding: by role, style (or its genre), energy, character and words; capped, with how many more.
+        const auto everything = call ("find_sequence_presets", "{}");
+        const auto drums = call ("find_sequence_presets", R"({"role": "drums"})");
+        const auto techno = call ("find_sequence_presets", R"({"style": "techno", "energy": 4})");
+        const auto ebm = call ("find_sequence_presets", R"({"style": "Industrial/EBM", "character": ["dark", "Distorted"]})");
+        const auto kits = call ("find_sequence_presets", R"({"role": "Kits"})");
+        const auto words = call ("find_sequence_presets", R"({"search": "detuned BASS"})");
+        const auto arps = call ("find_sequence_presets", R"({"role": "Arps", "search": "filler"})");
+        const auto nothing = call ("find_sequence_presets", R"({"role": "Bass", "energy": 1})");
+        check ((bool) everything["ok"] && (int) everything["total"] == 51 && (int) everything["matching"] == 51 && everything["presets"].size() == 40 && (int) everything["more"] == 11
+                   && everything["roles"] == juce::var ("Arps, Bass, Drums, Kits") && everything["styles"] == juce::var ("House/Deep, Industrial/EBM, Techno/Dark")
+                   && namesOf (drums) == juce::StringArray { "Thin Hats", "Iron Kick", "Thin Hats" } && drums["roles"].isVoid()
+                   && namesOf (techno) == juce::StringArray { "Slow Reese" } && namesOf (ebm) == juce::StringArray { "Iron Kick" }
+                   && namesOf (kits) == juce::StringArray { "EBM Engine" } && kits["presets"][0]["kind"] == juce::var ("kit") && (int) kits["presets"][0]["parts"] == 2
+                   && kits["presets"][0]["path"] == juce::var ("Kits/EBM Engine.tqkit") && (bool) kits["presets"][0]["brings_instrument"]
+                   && namesOf (words) == juce::StringArray { "Slow Reese" } && words["presets"][0]["path"] == juce::var ("Bass/Slow Reese.tqseq")
+                   && words["presets"][0]["key"] == juce::var ("A minor") && (int) words["presets"][0]["energy"] == 4 && juce::exactlyEqual ((double) words["presets"][0]["bars"], 4.0)
+                   && words["presets"][0]["character"] == juce::var ("Dark") && words["presets"][0]["about"].toString().startsWith ("A slow")
+                   && (int) arps["matching"] == 45 && arps["presets"].size() == 40 && (int) arps["more"] == 5
+                   && (bool) nothing["ok"] && nothing["presets"].size() == 0 && nothing["styles"].toString().isNotEmpty() && w->getSteps().isEmpty(),
+               "Ask Torq presets: find_sequence_presets narrows the factory sequences and kits by role, style or genre, energy, character and words (in any case), "
+               "40 at a time with how many more; with nothing to narrow by, or nothing found, it names the roles and styles; finding plans nothing");
+
+        const auto badRole = call ("find_sequence_presets", R"({"role": "Vocals"})");
+        const auto badStyle = call ("find_sequence_presets", R"({"style": "Polka"})");
+        const auto badEnergy = call ("find_sequence_presets", R"({"energy": 9})");
+        const auto badCharacter = call ("find_sequence_presets", R"({"character": ["Wet"]})");
+        check (! (bool) badRole["ok"] && badRole["error"].toString().contains ("Drums") && ! (bool) badStyle["ok"] && badStyle["error"].toString().contains ("Techno/Dark")
+                   && ! (bool) badEnergy["ok"] && ! (bool) badCharacter["ok"] && badCharacter["error"].toString().contains ("Swung"),
+               "Ask Torq presets: a role, style, energy or character there isn't is refused, naming those there are");
+
+        // A preset on a new track at bar 3: the same session as SequenceFile::place gives, and its voice to load.
+        const auto added = call ("add_sequence_preset", R"({"preset": "slow reese", "bar": 3})");
+        auto direct = s;
+        const auto placed = SequenceFile::place (direct, made.reese, -1, bar (3), false);
+        const auto voices = w->getVoiceLoads();
+        const auto session = call ("get_session", "{}");
+        check ((bool) added["ok"] && bar (3) == std::llround (2.0 * 4.0 * 60.0 / 124.0 * 48000.0) && placed.clipId != 0 && sameSession (*w->getSession(), direct) && ! sameSession (*w->getSession(), s)
+                   && (int) added["clip"] == (int) placed.clipId && (int) added["track"] == 4
+                   && added["step"] == juce::var ("Add the sequence \"Slow Reese\" at bar 3 on a new track (4 bars, 2 notes), playing Torqwave Synth")
+                   && voices.size() == 1 && voices[0].trackId == placed.trackId && sameXml (voices[0].effects, placed.effects) && voices[0].instrument == "Torqwave Synth"
+                   && session["tracks"][3]["instrument"] == juce::var ("Torqwave Synth (when the plan is applied)") && w->sessionChanged() && w->getSteps().size() == 1,
+               "Ask Torq presets: add_sequence_preset puts a factory sequence at a bar on a new track: the session is the same as SequenceFile::place makes it "
+               "(at 124 BPM, bar 3 at frame " + juce::String (bar (3)) + "), with the same voice to load; one plan step");
+
+        // Its instrument and effects arrive with it: they can't be chosen or changed in the same plan.
+        const auto instrument = call ("set_instrument", R"({"track": "Slow Reese", "plugin": "Basic Drums"})");
+        const auto effect = call ("add_track_effect", R"({"track": "Slow Reese", "plugin": "Compressor"})");
+        check (! (bool) instrument["ok"] && instrument["error"].toString().contains ("later request") && ! (bool) effect["ok"] && w->getSteps().size() == 1
+                   && w->getInstrumentLoads().empty() && w->getChainChanges().empty(),
+               "Ask Torq presets: the new track's instrument and effects arrive with the sequence, so choosing or changing them in the same plan is refused");
+
+        // A drum part by its path onto the track with a drum map: its notes only, on the kit's keys, as a drop there.
+        const auto onKit = call ("add_sequence_preset", R"({"preset": "Drums/Kick/Iron Kick.tqseq", "track": "Kit", "bar": 1})");
+        const auto placedOnKit = SequenceFile::place (direct, made.kick, 2, bar (1), true);
+        const auto& kitClips = w->getSession()->tracks[2].noteClips;
+        check ((bool) onKit["ok"] && sameSession (*w->getSession(), direct) && kitClips.size() == 1 && kitClips[0].id == placedOnKit.clipId && kitClips[0].notes.size() == 5
+                   && kitClips[0].notes[0].pitch == 60 && kitClips[0].notes[2].pitch == 40 && kitClips[0].notes[4].pitch == 42 && placedOnKit.effects == nullptr
+                   && w->getVoiceLoads().size() == 1 && (int) onKit["track"] == 3
+                   && onKit["step"] == juce::var ("Add the sequence \"Iron Kick\" to \"Kit\" at bar 1 (4 bars, 5 notes), its drums on the keys of the track's drum map"),
+               "Ask Torq presets: on a track with a drum map a factory drum part lands as a drop there does: its notes only, the kick on 60 and the snare on 40, no voice loaded");
+
+        // Refusals leave the plan and the session as they were.
+        const auto beforeRefusals = *w->getSession();
+        const auto unknown = call ("add_sequence_preset", R"({"preset": "slow rese"})");
+        const auto isKit = call ("add_sequence_preset", R"({"preset": "EBM Engine"})");
+        const auto twins = call ("add_sequence_preset", R"({"preset": "Thin Hats"})");
+        const auto onAudio = call ("add_sequence_preset", R"({"preset": "Slow Reese", "track": "Guitar"})");
+        const auto barZero = call ("add_sequence_preset", R"({"preset": "Slow Reese", "bar": 0})");
+        const auto notKit = call ("add_kit", R"({"kit": "Slow Reese"})");
+        const auto noKit = call ("add_kit", R"({"kit": "EBM Engin"})");
+        check (! (bool) unknown["ok"] && unknown["error"].toString().contains ("the nearest are Slow Reese") && ! (bool) isKit["ok"] && isKit["error"].toString().contains ("add_kit")
+                   && ! (bool) twins["ok"] && twins["error"].toString().contains ("Drums/Hats & Tops/Thin Hats.tqseq") && twins["error"].toString().contains ("Drums/Kick/Thin Hats.tqseq")
+                   && ! (bool) onAudio["ok"] && ! (bool) barZero["ok"] && ! (bool) notKit["ok"] && notKit["error"].toString().contains ("add_sequence_preset")
+                   && ! (bool) noKit["ok"] && noKit["error"].toString().contains ("the nearest are EBM Engine")
+                   && sameSession (*w->getSession(), beforeRefusals) && w->getSteps().size() == 2 && w->getVoiceLoads().size() == 1,
+               "Ask Torq presets: a name that matches nothing is refused with the nearest names, a name two presets share with their paths, a kit given as a sequence "
+               "(and a sequence as a kit), an audio track and bar 0 too; the plan and the session are left as they were");
+
+        // A kit at bar 5: the same session as a dropped kit's, and each part's voice to load.
+        const auto kitAdded = call ("add_kit", R"({"kit": "Kits/EBM Engine.tqkit", "bar": 5})");
+        const auto kitPlaced = SequenceKit::place (direct, made.kit, bar (5));
+        const auto kitVoices = w->getVoiceLoads();
+        auto sameVoices = kitVoices.size() == 3 && kitPlaced.parts.size() == 2;
+
+        for (size_t i = 0; sameVoices && i < kitPlaced.parts.size(); ++i)
+            sameVoices = kitVoices[i + 1].trackId == kitPlaced.parts[i].trackId && sameXml (kitVoices[i + 1].effects, kitPlaced.parts[i].effects);
+
+        check ((bool) kitAdded["ok"] && sameSession (*w->getSession(), direct) && sameVoices && kitVoices[1].instrument == "Basic Drums" && kitVoices[2].instrument == "Torqwave Synth"
+                   && kitAdded["tracks"].size() == 2 && kitAdded["tracks"][0]["name"] == juce::var ("Iron Kick") && (int) kitAdded["tracks"][1]["clip"] == (int) kitPlaced.parts[1].clipId
+                   && kitAdded["step"] == juce::var ("Add the kit \"EBM Engine\" at bar 5: a folder with 2 tracks (Iron Kick, Slow Reese), 4 bars")
+                   && w->getSession()->findTrack (kitPlaced.folderId) != nullptr && w->getSession()->findTrack (kitPlaced.folderId)->isFolder && w->getSteps().size() == 3,
+               "Ask Torq presets: add_kit puts a factory kit at a bar as a drop does: the session is the same as SequenceKit::place makes it (a folder, a track a part), "
+               "with each part's voice to load; one plan step");
+
+        // A part's track removed again in the same plan loads nothing.
+        const auto removed = call ("remove_track", R"({"track": "Iron Kick"})");
+        check ((bool) removed["ok"] && w->getVoiceLoads().size() == 2 && w->getVoiceLoads()[1].instrument == "Torqwave Synth",
+               "Ask Torq presets: a kit part's track removed in the same plan drops its voice");
+
+        // With drops moved into the session's key, the tool moves it as the drop does (A minor into C minor: three semitones up).
+        auto keyed = s;
+        keyed.musicalKey = "C minor";
+        w = workspace (keyed, true);
+        const auto moved = call ("add_sequence_preset", R"({"preset": "Slow Reese"})");
+        auto keyedDirect = keyed;
+        SequenceFile::place (keyedDirect, SequenceFile::transposedTo (made.reese, "C minor"), -1, 0, false);
+        const auto& movedNotes = w->getSession()->tracks.back().noteClips[0].notes;
+        check ((bool) moved["ok"] && sameSession (*w->getSession(), keyedDirect) && movedNotes.size() == 2 && movedNotes[0].pitch == 36 && movedNotes[1].pitch == 39
+                   && moved["step"].toString().contains ("at bar 1 on a new track"),
+               "Ask Torq presets: with drops set to move into the session's key, a preset added by the tool is moved as a dropped one is (A minor to C minor), at bar 1 when no bar is given");
+
+        // No library: the tools say so.
+        Ai::Workspace::Start bare;
+        bare.session = s;
+        Ai::Workspace none (std::move (bare));
+        check (! (bool) parse (none.run ("find_sequence_presets", "{}"))["ok"] && ! (bool) parse (none.run ("add_kit", R"({"kit": "EBM Engine"})"))["ok"]
+                   && (bool) parse (none.run ("list_drum_maps", "{}"))["ok"] && parse (none.run ("list_drum_maps", "{}"))["maps"].size() == 0 && none.getSteps().isEmpty(),
+               "Ask Torq presets: with no factory presets or drum maps to reach, the tools say there are none");
+    }
+
+    void testRealFactoryPresets()
+    {
+        // The presets the app ships, unpacked into a folder of their own, through the library the app hands Ask Torq.
+        const auto before = SequenceLibrary::factoryFolder();
+        const auto base = juce::File::createTempFile ("ask-factory");
+        SequenceLibrary::setFactoryFolder (base.getChildFile ("set"));
+        const auto unpackError = SequenceLibrary::unpackFactoryPresets();
+
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.tempo = 124.0;
+        Ai::Workspace::Start start;
+        start.session = s;
+        start.library = Ai::Library::standard();
+        start.library.transposeDrops = false;
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+
+        const auto began = juce::Time::getMillisecondCounterHiRes();
+        const auto everything = call ("find_sequence_presets", "{}");
+        const auto scanMs = juce::Time::getMillisecondCounterHiRes() - began;
+        const auto kits = call ("find_sequence_presets", R"({"role": "Kits", "style": "Industrial/EBM"})");
+        auto allKits = kits["presets"].size() > 0;
+
+        if (auto* list = kits["presets"].getArray())
+            for (auto& kit : *list)
+                allKits = allKits && kit["kind"] == juce::var ("kit") && kit["style"] == juce::var ("Industrial/EBM") && kit["path"].toString().startsWith ("Kits/");
+
+        check (unpackError.isEmpty() && (bool) everything["ok"] && (int) everything["total"] > 1000 && everything["presets"].size() == 40
+                   && (int) everything["more"] == (int) everything["total"] - 40 && everything["styles"].toString().contains ("Industrial/EBM") && allKits,
+               "Ask Torq presets: the app's own " + everything["total"].toString() + " factory sequences and kits are found through the library the app hands over (read in "
+                   + juce::String ((int) std::lround (scanMs)) + " ms); role Kits with style Industrial/EBM finds " + juce::String (kits["presets"].size()) + " kits, each of that style");
+
+        if (allKits)
+        {
+            const auto path = kits["presets"][0]["path"].toString();
+            juce::String error;
+            const auto kit = SequenceKit::load (SequenceLibrary::factoryFolder().getChildFile (path), error);
+            const auto added = call ("add_kit", "{\"kit\": " + juce::JSON::toString (juce::var (path)) + ", \"bar\": 9}");
+            auto direct = s;
+            const auto placed = kit ? SequenceKit::place (direct, *kit, s.tempoMap().barFrame (8)) : SequenceKit::Placed();
+            const auto voices = w.getVoiceLoads();
+            auto sameVoices = voices.size() == placed.parts.size();
+
+            for (size_t i = 0; sameVoices && i < voices.size(); ++i)
+                sameVoices = voices[i].trackId == placed.parts[i].trackId && sameXml (voices[i].effects, placed.parts[i].effects) && voices[i].instrument.isNotEmpty();
+
+            check ((bool) added["ok"] && kit.has_value() && ! placed.parts.empty() && sameSession (*w.getSession(), direct) && sameVoices && w.getSteps().size() == 1,
+                   "Ask Torq presets: the factory kit " + (kit ? kit->name.quoted() : juce::String ("?")) + " added at bar 9 by add_kit is the session SequenceKit::place makes, with its "
+                       + juce::String ((int) placed.parts.size()) + " parts' voices to load");
+        }
+
+        SequenceLibrary::setFactoryFolder (before);
+        base.deleteRecursively();
+    }
+
+    void testKitOnEngine()
+    {
+        // The same kit put in by Ask Torq and applied, and dropped the usual way, on two engines.
+        MadePresets made;
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.tempo = 124.0;
+        s.addTrack().name = "Guitar";
+        const auto frame = s.tempoMap().barFrame (2);
+
+        AudioEngine asked, dropped;
+        asked.session.reset (s, {});
+        dropped.session.reset (s, {});
+
+        Ai::Workspace::Start start;
+        start.session = *asked.session.getState();
+        start.library = made.library();
+        Ai::Workspace w (std::move (start));
+        const auto planned = parse (w.run ("add_kit", R"({"kit": "EBM Engine", "bar": 3})"));
+        const auto untouched = asked.session.getState()->tracks.size() == 1;
+        asked.session.apply (*w.getSession(), "Ask Torq: an EBM kit");
+        auto askedDone = false, droppedDone = false;
+        juce::String askedErrors, droppedErrors;
+        Ai::loadVoices (asked, w.getVoiceLoads(), [&] (const juce::String& e) { askedErrors = e; askedDone = true; });
+        const auto placed = SequenceKit::addToSession (dropped, made.kit, frame, [&] (const juce::String& e) { droppedErrors = e; droppedDone = true; });
+        TestUtils::runUntil ([&] { return askedDone && droppedDone; }, 10000);
+
+        const auto a = asked.session.getState(), d = dropped.session.getState();
+        auto sameInstruments = placed.parts.size() == 2;
+        juce::StringArray playing;
+
+        for (auto& part : placed.parts)
+        {
+            auto* one = asked.getTrackEffects().getInstrument (part.trackId);
+            auto* other = dropped.getTrackEffects().getInstrument (part.trackId);
+            juce::MemoryBlock oneState, otherState;
+
+            if (one != nullptr)   one->getStateInformation (oneState);
+            if (other != nullptr) other->getStateInformation (otherState);
+
+            sameInstruments = sameInstruments && one != nullptr && other != nullptr && one->getName() == other->getName() && oneState == otherState
+                                  && asked.getTrackEffects().getNumSlots (part.trackId) == dropped.getTrackEffects().getNumSlots (part.trackId);
+            playing.add (one != nullptr ? one->getName() : juce::String ("nothing"));
+        }
+
+        check ((bool) planned["ok"] && untouched && askedDone && droppedDone && askedErrors.isEmpty() && droppedErrors.isEmpty() && sameSession (*a, *d) && a->tracks.size() == 4
+                   && sameInstruments && playing == juce::StringArray { "Basic Drums", "Torqwave Synth" },
+               "Ask Torq presets: a kit added by Ask Torq and applied equals the kit dropped the usual way: the same session, and on each part's track the same instrument in the same state ("
+                   + playing.joinIntoString (", ") + ")");
+
+        asked.session.undo();
+        check (sameSession (*asked.session.getState(), s), "Ask Torq presets: one undo takes the applied kit out again, tracks and folder");
+    }
+
+    void testDrumMapTools()
+    {
+        const auto folder = juce::File::createTempFile ("ask-drum-maps");
+        DrumMaps::Store store (folder);
+        const auto kitMap = askKitMap();
+        auto plain = DrumSound::generalMidi();
+        plain.resize (8);
+        const auto saved = store.save ("Sampler: Dark Kit", kitMap).isEmpty() && store.save ("Short List", plain).isEmpty();
+
+        // The drum grid's own test pattern: kick, snare, hat, clap and electric snare on General MIDI's keys.
+        constexpr juce::int64 beat = 24000;
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.addInstrumentTrack().name = "Drums";
+        s.addTrack().name = "Guitar";
+        const auto drumsId = s.tracks[0].id;
+        NoteClip c;
+        c.name = "Beat";
+        c.length = 4 * beat;
+        c.channel = 10;
+        c.notes = { { 36, 0, 100, 0.9f }, { 38, beat, 100, 0.8f }, { 42, 2 * beat, 100, 0.7f }, { 39, 3 * beat, 100, 0.6f }, { 40, 3 * beat + 6000, 100, 0.5f } };
+        const auto clipId = SessionEdits::addNoteClip (s, drumsId, c);
+        const auto audioId = SessionEdits::addClip (s, 1, juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("riff.wav"), tone (48000.0, 2), 0);
+        const auto before = s.tracks[0].noteClips[0].notes;
+
+        Ai::Workspace::Start start;
+        start.session = s;
+        start.sessionName = "Song";
+        start.library.drumMapNames = [&store] { return store.names(); };
+        start.library.drumMap = [&store] (const juce::String& name) { return store.load (name); };
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+        const auto id = juce::String ((int) clipId);
+        const auto& notes = w.getSession()->tracks[0].noteClips[0].notes;
+
+        const auto listed = call ("list_drum_maps", R"({"track": "Drums"})");
+        const auto tooSoon = call ("remap_clip_notes", "{\"clip\": " + id + ", \"to\": \"map\"}");
+        check (saved && (bool) listed["ok"] && listed["maps"].size() == 2 && listed["maps"][0]["name"] == juce::var ("Sampler - Dark Kit") && (int) listed["maps"][0]["sounds"] == (int) kitMap.size()
+                   && (int) listed["maps"][0]["off_general_midi_keys"] == 4 && (int) listed["maps"][1]["off_general_midi_keys"] == 0 && listed["track_map"] == juce::var ("General MIDI")
+                   && ! (bool) tooSoon["ok"] && tooSoon["error"].toString().contains ("set_drum_map") && w.getSteps().isEmpty(),
+               "Ask Torq drum maps: list_drum_maps names the saved maps with how many sounds are off General MIDI's keys, and a track's map; on General MIDI's layout there is nothing to remap");
+
+        // The track's map from a saved one, by name in any case.
+        const auto set = call ("set_drum_map", R"({"track": "Drums", "map": "sampler - dark kit"})");
+        const auto again = call ("set_drum_map", R"({"track": "Drums", "map": "Sampler - Dark Kit"})");
+        const auto unknown = call ("set_drum_map", R"({"track": "Drums", "map": "Sampler Dark"})");
+        const auto onAudio = call ("set_drum_map", R"({"track": "Guitar", "map": "Short List"})");
+        const auto relisted = call ("list_drum_maps", R"({"track": "Drums"})");
+        check ((bool) set["ok"] && set["step"] == juce::var ("Give \"Drums\" the drum map \"Sampler - Dark Kit\" (" + juce::String ((int) kitMap.size()) + " sounds)")
+                   && (bool) set["remaps"] && set["note"].toString().startsWith ("4 notes on the track are on General MIDI keys the map moves") && w.getSession()->tracks[0].drumMap == kitMap && notes == before
+                   && ! (bool) again["ok"] && ! (bool) unknown["ok"] && unknown["error"].toString().contains ("the nearest are Sampler - Dark Kit, Short List") && ! (bool) onAudio["ok"]
+                   && relisted["track_map"] == juce::var ("Sampler - Dark Kit") && relisted["track_sounds"].size() == (int) kitMap.size()
+                   && relisted["track_sounds"][1] == juce::var ("60 Kit Kick (stands for 36)") && w.getSteps().size() == 1,
+               "Ask Torq drum maps: set_drum_map gives a track a saved map by name, the notes staying put; the same map again, a name there isn't (with the nearest) "
+               "and an audio track are refused, leaving the plan as it was");
+
+        // Remap: as the piano roll's Remap Notes moves them.
+        NoteEditor::Shown shown;
+        shown.clip = s.tracks[0].noteClips[0];
+        shown.trackName = "Drums";
+        shown.drums = true;
+        shown.drumMap = kitMap;
+        std::vector<juce::String> editorSteps;
+        NoteEditor editor;
+        editor.readClip = [&shown] { return std::optional<NoteEditor::Shown> (shown); };
+        editor.apply = [&] (const NoteClip& clip, const juce::String& description) { shown.clip = clip; editorSteps.push_back (description); };
+        editor.setBounds (0, 0, 1000, 600);
+        editor.refresh();
+        const auto editorMoved = editor.remapNotes (true);
+        const auto editorNotes = shown.clip.notes;
+
+        const auto remapped = call ("remap_clip_notes", "{\"clip\": " + id + ", \"to\": \"map\"}");
+        const auto toKit = notes;
+        check ((bool) remapped["ok"] && editorMoved == 4 && editorSteps.size() == 1 && (int) remapped["moved"] == editorMoved && toKit == editorNotes
+                   && toKit.size() == 5 && toKit[0].pitch == 60 && toKit[1].pitch == 40 && toKit[2].pitch == 42 && toKit[3].pitch == 38 && toKit[4].pitch == 39
+                   && remapped["step"] == juce::var ("Remap 4 notes of the clip \"Beat\" on \"Drums\" to the keys of its drum map") && w.getSteps().size() == 2,
+               "Ask Torq drum maps: remap_clip_notes moves a clip's notes as the piano roll's Remap Notes does (kick 36 to 60, snare 38 to 40, the two that trade keys each once, the hat staying)");
+
+        // Applied to a session and undone: the notes and the map come back exactly.
+        Ai::Workspace::Start fresh;
+        fresh.session = s;
+        fresh.library.drumMapNames = [&store] { return store.names(); };
+        fresh.library.drumMap = [&store] (const juce::String& name) { return store.load (name); };
+        Ai::Workspace plan (std::move (fresh));
+        const auto planned = (bool) parse (plan.run ("set_drum_map", R"({"track": "Drums", "map": "Sampler - Dark Kit"})"))["ok"]
+                                 && (bool) parse (plan.run ("remap_clip_notes", "{\"clip\": " + id + ", \"to\": \"map\"}"))["ok"];
+        AudioEngine engine;
+        engine.session.reset (s, {});
+        engine.session.apply (*plan.getSession(), "Ask Torq: onto the kit");
+        const auto applied = engine.session.getState();
+        const auto appliedRight = applied->tracks[0].noteClips[0].notes == editorNotes && applied->tracks[0].drumMap == kitMap;
+        engine.session.undo();
+        const auto undone = engine.session.getState();
+        check (planned && plan.getSteps().size() == 2 && appliedRight && undone->tracks[0].noteClips[0].notes == before && undone->tracks[0].drumMap.empty() && sameSession (*undone, s),
+               "Ask Torq drum maps: set_drum_map then remap_clip_notes, applied, is one undo step: undone, the notes and the map are back exactly");
+
+        // Back to General MIDI in the plan, as the piano roll's own command; then nothing left to move.
+        NoteEditor::Shown onKit;
+        onKit.clip = plan.getSession()->tracks[0].noteClips[0];
+        onKit.drumMap = kitMap;
+        shown = onKit;
+        editor.refresh();
+        const auto editorBack = editor.remapNotes (false);
+        const auto back = parse (plan.run ("remap_clip_notes", "{\"clip\": " + id + ", \"to\": \"general_midi\"}"));
+        const auto& planNotes = plan.getSession()->tracks[0].noteClips[0].notes;
+        const auto badTo = parse (plan.run ("remap_clip_notes", "{\"clip\": " + id + ", \"to\": \"kit\"}"));
+        const auto audio = parse (plan.run ("remap_clip_notes", "{\"clip\": " + juce::String ((int) audioId) + ", \"to\": \"map\"}"));
+        const auto noClip = parse (plan.run ("remap_clip_notes", R"({"clip": 9999, "to": "map"})"));
+        const auto general = parse (plan.run ("set_drum_map", R"({"track": "Drums", "map": "General MIDI"})"));
+        const auto generalAgain = parse (plan.run ("set_drum_map", R"({"track": "Drums", "map": "general midi"})"));
+        check ((bool) back["ok"] && editorBack == 4 && (int) back["moved"] == 4 && planNotes == before && shown.clip.notes == before
+                   && back["step"] == juce::var ("Remap 4 notes of the clip \"Beat\" on \"Drums\" to General MIDI's keys")
+                   && ! (bool) badTo["ok"] && ! (bool) audio["ok"] && audio["error"].toString().contains ("audio clip") && ! (bool) noClip["ok"]
+                   && (bool) general["ok"] && plan.getSession()->tracks[0].drumMap.empty() && ! (bool) generalAgain["ok"] && plan.getSteps().size() == 4,
+               "Ask Torq drum maps: remapping back to General MIDI gives the notes back exactly, as the piano roll's does; an audio clip, a clip that isn't there and another direction are refused; "
+               "\"General MIDI\" takes the map off");
+
+        folder.deleteRecursively();
+    }
+
+    void testSwarmGuitarParameters()
+    {
+        // Swarm Guitar on a track: its parameters reach the model as any instrument's do, the Swarm source and Strum Sync among them.
+        AudioEngine engine;
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.addInstrumentTrack().name = "Guitar";
+        s.addInstrumentTrack().name = "Synth";
+        const auto guitarId = s.tracks[0].id, synthId = s.tracks[1].id;
+        engine.session.reset (s, {});
+        int ready = 0;
+        engine.addTrackPlugin (guitarId, builtIn ("Swarm Guitar"), [&] (const juce::String&) { ++ready; });
+        engine.addTrackPlugin (synthId, builtIn ("Torqwave Synth"), [&] (const juce::String&) { ++ready; });
+        TestUtils::runUntil ([&] { return ready == 2; }, 5000);
+        auto* guitar = engine.getTrackEffects().getInstrument (guitarId);
+        auto* synth = engine.getTrackEffects().getInstrument (synthId);
+
+        if (guitar == nullptr || synth == nullptr)
+        {
+            check (false, "Ask Torq parameters: Swarm Guitar and Torqwave Synth load onto tracks");
+            return;
+        }
+
+        const auto chain = Ai::readChain (engine.getTrackEffects(), guitarId);
+        const auto synthChain = Ai::readChain (engine.getTrackEffects(), synthId);
+        const Ai::SessionTools::Parameter *source = nullptr, *sync = nullptr;
+
+        if (! chain.empty())
+            for (auto& p : chain[0].parameters)
+            {
+                if (p.id == "source")    source = &p;
+                if (p.id == "strumSync") sync = &p;
+            }
+
+        // Torqwave Synth's newest: each oscillator's level envelope, and modulation slots 9 to 16.
+        int levelEnvelopes = 0, lateSlots = 0;
+
+        if (! synthChain.empty())
+            for (auto& p : synthChain[0].parameters)
+            {
+                levelEnvelopes += p.name.endsWith ("Level Envelope") ? 1 : 0;
+                lateSlots += p.name.startsWith ("Mod 9 ") || p.name.startsWith ("Mod 16 ") ? 1 : 0;
+            }
+
+        const auto guitarCount = guitar->getParameters().size(), synthCount = synth->getParameters().size();
+        check (chain.size() == 1 && chain[0].instrument && (int) chain[0].parameters.size() == guitarCount && guitarCount == 27
+                   && source != nullptr && source->name == "Source" && source->choices.size() == 2 && sync != nullptr && sync->name == "Strum Sync" && sync->choices.size() > 2
+                   && synthChain.size() == 1 && (int) synthChain[0].parameters.size() == synthCount && levelEnvelopes == WaveSynth::numOscillators && lateSlots > 0,
+               "Ask Torq parameters: every one of Swarm Guitar's " + juce::String (guitarCount) + " parameters is read for the model, as Torqwave Synth's "
+                   + juce::String (synthCount) + " are, Source and Strum Sync with their choices, and the synth's level envelopes and slots 9 to 16");
+
+        // The Sequencer names an instrument's parameters to the model up to 256, the plug-in catalogue up to 300.
+        const auto facts = PluginCatalogue::factsOf (*guitar);
+        check (guitarCount <= 256 && synthCount <= 256 && synthCount <= PluginCatalogue::maxParameters && facts["parameters"].size() == guitarCount,
+               "Ask Torq parameters: both instruments' parameters fit under the 256 the Sequencer's tools name and the 300 the catalogue keeps (Swarm Guitar "
+                   + juce::String (guitarCount) + ", Torqwave Synth " + juce::String (synthCount) + ")");
+
+        if (source == nullptr || sync == nullptr)
+            return;
+
+        Ai::Workspace::Start start;
+        start.session = *engine.session.getState();
+        start.plugins = BuiltInEffects::getDescriptions();
+        start.instruments[guitarId] = guitar->getPluginDescription();
+        start.effects[guitarId] = chain;
+        start.instruments[synthId] = synth->getPluginDescription();
+        start.effects[synthId] = synthChain;
+        Ai::Workspace w (std::move (start));
+        const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
+        const auto all = call ("list_effect_parameters", R"({"track": "Guitar", "effect": "instrument"})");
+        const auto strum = call ("list_effect_parameters", R"({"track": "Guitar", "effect": "instrument", "find": "strum sync"})");
+        const auto swarm = source->choices[1], division = sync->choices[2];
+        const auto set = call ("set_track_effect", "{\"track\": \"Guitar\", \"effect\": \"instrument\", \"parameters\": [{\"parameter\": \"Source\", \"text\": "
+                                                       + juce::JSON::toString (juce::var (swarm)) + "}, {\"parameter\": \"Strum Sync\", \"text\": " + juce::JSON::toString (juce::var (division)) + "}]}");
+        const auto changes = w.getChainChanges();
+        auto made = false;
+
+        if (changes.size() == 1)
+            Ai::applyChainChange (engine, changes[0], [&] (const juce::String&) { made = true; });
+
+        TestUtils::runUntil ([&] { return made; }, 5000);
+        const auto ids = TrackEffects::parametersById (*guitar);
+        const auto sourceNow = ids.count ("source") > 0 ? ids.at ("source")->getCurrentValueAsText() : juce::String();
+        const auto syncNow = ids.count ("strumSync") > 0 ? ids.at ("strumSync")->getCurrentValueAsText() : juce::String();
+        const auto synthAll = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument"})");
+        const auto envelopes = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument", "find": "level envelope"})");
+        const auto slot16 = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument", "find": "Mod 16 "})");
+        check (synthAll["parameters"].size() == 150 && synthAll["note"].toString().contains ("of " + juce::String (synthCount)) && envelopes["parameters"].size() == WaveSynth::numOscillators
+                   && slot16["parameters"].size() > 0,
+               "Ask Torq parameters: Torqwave Synth's are listed 150 at a time, and find reaches the rest: the " + juce::String (envelopes["parameters"].size())
+                   + " level envelopes' switches and slot 16's " + juce::String (slot16["parameters"].size()) + " settings");
+        check (all["parameters"].size() == guitarCount && all["note"].isVoid() && strum["parameters"].size() == 1 && strum["parameters"][0]["choices"].toString().contains (division)
+                   && (bool) set["ok"] && made && sourceNow == swarm && syncNow == division,
+               "Ask Torq parameters: list_effect_parameters lists all of Swarm Guitar's, and set_track_effect sets Source to " + swarm.quoted() + " and Strum Sync to " + division.quoted()
+                   + " by their choices, made on the engine's instrument");
+    }
+
+    void testAskForFactoryThings()
+    {
+        // A made-up model asks for a factory patch on the bass track and a kit at bar 5; the window shows the plan and what is outside its undo step.
+        MadePresets made;
+        const auto patch = WaveSynth::factoryPatches().empty() ? juce::String ("Init") : WaveSynth::factoryPatches()[3].name;
+        const auto chunk = [] (const juce::String& json) { return "data: " + json + "\n\n"; };
+        const auto toolCall = [&chunk] (const juce::String& callId, const juce::String& tool, const juce::String& arguments)
+        {
+            return chunk ("{\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"" + callId + "\",\"function\":{\"name\":\"" + tool + "\",\"arguments\":"
+                              + juce::JSON::toString (juce::var (arguments)) + "}}]},\"finish_reason\":\"tool_calls\"}]}") + "data: [DONE]\n\n";
+        };
+        const auto last = chunk (R"({"choices":[{"delta":{"content":"A patch on the bass and a kit at bar 5."},"finish_reason":"stop"}]})") + "data: [DONE]\n\n";
+        MockServer server ({ { 200, "text/event-stream", toolCall ("a", "set_instrument", "{\"track\": \"Bass\", \"plugin\": \"Torqwave Synth\", \"preset\": " + juce::JSON::toString (juce::var (patch)) + "}") },
+                             { 200, "text/event-stream", toolCall ("b", "add_kit", R"({"kit": "EBM Engine", "bar": 5})") },
+                             { 200, "text/event-stream", last } });
+
+        SessionState s;
+        s.sampleRate = 48000.0;
+        s.addInstrumentTrack().name = "Bass";
+        std::optional<SessionState> applied;
+        size_t loads = 0, voices = 0;
+
+        Ai::AskPanel panel (settingsFor (server.url()),
+                            [&]
+                            {
+                                Ai::Workspace::Start start;
+                                start.session = s;
+                                start.sessionName = "Song";
+                                start.plugins = BuiltInEffects::getDescriptions();
+                                start.library = made.library();
+                                return std::optional<Ai::Workspace::Start> (std::move (start));
+                            },
+                            [&] (Ai::Workspace& w, const juce::String&)
+                            {
+                                applied = *w.getSession();
+                                loads = w.getInstrumentLoads().size();
+                                voices = w.getVoiceLoads().size();
+                                return juce::String();
+                            });
+
+        panel.getRequestBox().setText ("A dark patch on the bass, and an EBM kit at bar 5");
+        panel.ask();
+        TestUtils::runUntil ([&] { return panel.getLog().contains ("Apply to make these changes"); }, 10000);
+        const auto log = panel.getLog();
+        const auto requests = server.requests();
+        const auto body = requests.empty() ? juce::var() : parse (requests[0].body);
+        juce::StringArray tools;
+
+        if (auto* list = body["tools"].getArray())
+            for (auto& t : *list)
+                tools.add (t["function"]["name"].toString());
+
+        check (log.contains ("1. Load Torqwave Synth with the factory sound " + patch.quoted() + " on \"Bass\"")
+                   && log.contains ("2. Add the kit \"EBM Engine\" at bar 5: a folder with 2 tracks (Iron Kick, Slow Reese), 4 bars")
+                   && log.contains ("Instruments are loaded once the plan is applied; that isn't part of the undo step.") && ! log.contains ("applied as one undo step"),
+               "Ask Torq: asked by a made-up model for a factory patch and a kit, the window shows both plan steps and says the instruments load outside the undo step");
+        check (requests.size() == 3 && tools.size() == Ai::SessionTools::toolDefinitions().size() + 2 && tools.contains ("find_sequence_presets") && tools.contains ("add_sequence_preset")
+                   && tools.contains ("add_kit") && tools.contains ("list_drum_maps") && tools.contains ("set_drum_map") && tools.contains ("remap_clip_notes")
+                   && body["messages"][0]["content"].toString().contains ("find_sequence_presets") && body["messages"][0]["content"].toString().contains ("remap_clip_notes")
+                   && body["messages"][0]["content"].toString().contains ("list_instrument_presets (with category and search"),
+               "Ask Torq: the model is given the six new tools (" + juce::String (tools.size()) + " for a session) and told of them in its instructions");
+
+        for (auto* c : panel.getChildren())
+            if (auto* b = dynamic_cast<juce::TextButton*> (c); b != nullptr && b->getButtonText() == "Apply")
+                b->triggerClick();
+
+        TestUtils::runUntil ([&] { return applied.has_value(); }, 5000);
+        check (applied.has_value() && applied->tracks.size() == 4 && loads == 1 && voices == 2 && s.tracks.size() == 1,
+               "Ask Torq: Apply hands over the session with the kit's folder and tracks, the patch to load and the kit's two voices; the session itself is untouched until then");
     }
 
     void testCatalogueLearner()
@@ -1845,6 +2754,14 @@ void runAiTests()
     testSessionSections();
     testSessionNotes();
     testInstrumentPresets();
+    testFactorySounds();
+    testFactorySoundsOnEngine();
+    testSequencePresetTools();
+    testRealFactoryPresets();
+    testKitOnEngine();
+    testDrumMapTools();
+    testSwarmGuitarParameters();
+    testAskForFactoryThings();
     testCatalogueLearner();
     testAskPanel();
     testSequenceTools();

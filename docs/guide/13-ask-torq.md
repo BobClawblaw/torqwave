@@ -26,7 +26,7 @@ What goes to the server: your sentence, the file's name, and the numbers Torqwav
 
 ## Asking
 
-With an audio file open, click **Ask Torq 🐶** at the top of the window (it shows while Ask Torq is turned on, in the editor; the multitrack view has no Ask Torq yet), or choose **Edit > Ask Torq 🐶...**. Type what you want and press Return or **Ask**.
+With an audio file open, or a session in the multitrack view, click **Ask Torq 🐶** at the top of the window (it shows while Ask Torq is turned on), or choose **Edit > Ask Torq 🐶...**. Type what you want and press Return or **Ask**.
 
 The window shows the model at work: its thinking (for a model that shows it), each tool it calls, and each step it adds to the plan. When it's finished, the plan is listed. **Apply** makes the changes as one undo step, named after your request; **Discard** throws the plan away. If the file changes while the model works, the plan isn't applied: ask again.
 
@@ -50,11 +50,31 @@ It works on the audio file that's open and, in the multitrack view, on the sessi
 - **Edit:** select; 30 of the Effects menu's edits, with their settings checked against the same ranges as their dialogs (gain, normalize, Match Loudness, EQ band, compressor, limiter, maximizer, de-esser, de-plosive, breath control, Level Speech, Reduce Reverb, reverb, echo, chorus, flanger, phaser, tremolo, stereo width, balance, stretch, pitch and more); fades; trimming silence; silence, delete, crop and insert silence; adding, renaming and deleting markers and regions.
 - **Plug-ins:** list the built-in effects and the plug-ins Torqwave found on your computer, read what the plug-in catalogue knows of them, add them to the effects rack, read and set their parameters, bypass, move and remove them, and render the rack into the audio.
 
-- **Sessions:** tracks, buses and folders, volume, pan, mute, solo, outputs and sends; moving, trimming, splitting and fading clips, their gain, and comping their takes; a clip's own pitch shift and effects ([clip effects](06-multitrack-sessions.md#clip-effects)); note clips with their notes; an instrument track's instrument and its saved presets; a track's effects: adding, removing and reordering them, switching them off and changing their settings and the instrument's; automation of volume, pan and any effect's or instrument's parameter; freezing, unfreezing and bouncing tracks; markers and regions; the arranger's sections (adding them, moving, copying and deleting them with their time, making them whole bars longer or shorter, and the arrangement chain), so "double the chorus" or "make the intro 4 bars shorter" work; and the tempo. Apply makes the plan one undo step. Changes to a track's plug-ins (added, removed, moved, switched off or set) are made once it is applied and aren't part of that step, as when you change them by hand; freezes and bounces render after the rest of the plan, each its own undo step. An effect Ask Torq adds can be set in your next request, once it is on the track.
+- **Sessions:** tracks, buses and folders, volume, pan, mute, solo, outputs and sends; moving, trimming, splitting and fading clips, their gain, and comping their takes; a clip's own pitch shift and effects ([clip effects](06-multitrack-sessions.md#clip-effects)); note clips with their notes; an instrument track's instrument, its saved presets and, for Torqwave's own instruments, their factory sounds; factory sequences and kits; drum maps (see [Factory sounds, sequences, kits and drum maps](#factory-sounds-sequences-kits-and-drum-maps)); a track's effects: adding, removing and reordering them, switching them off and changing their settings and the instrument's; automation of volume, pan and any effect's or instrument's parameter; freezing, unfreezing and bouncing tracks; markers and regions; the arranger's sections (adding them, moving, copying and deleting them with their time, making them whole bars longer or shorter, and the arrangement chain), so "double the chorus" or "make the intro 4 bars shorter" work; and the tempo. Apply makes the plan one undo step. Changes to a track's plug-ins (added, removed, moved, switched off or set) are made once it is applied and aren't part of that step, as when you change them by hand; freezes and bounces render after the rest of the plan, each its own undo step. An effect Ask Torq adds can be set in your next request, once it is on the track.
 
 - **Sequences:** in the [Sequencer](07-instruments-and-midi.md#the-sequencer), writing the sequence's notes and controller lanes, and reviewing it with suggestions to apply (see [In the Sequencer](#in-the-sequencer)).
 
 Plug-ins are set through their parameters, the way automation sees them, so any AU, VST3 or LV2 effect works, not only Torqwave's own. The model writes values the way the plug-in shows them ("-12 dB", "4:1", "Hall"), and Torqwave reports back what the plug-in actually took. What a plug-in keeps only in its own window (loading samples, some routing) is out of the model's reach.
+
+### Factory sounds, sequences, kits and drum maps
+
+New in 0.20.0, in a session. Ask Torq picks from what is really there, by name, and says so when a name matches nothing.
+
+- **Factory sounds.** It can list Torqwave Synth's factory patches, Basic Drums' kits and Swarm Guitar's presets, and load one on an instrument track. Torqwave Synth has over a thousand patches, so it looks them up by category and by words in the name, 60 at a time. A name that matches nothing is refused, and the model is given the five nearest names to choose from. A preset you saved yourself comes before a factory sound of the same name.
+- **Factory sequences and kits.** It can search the Sequence Library's Presets by role, style, energy (1 to 5), character (Dark, Bright, Sparse, Dense, Straight, Swung, Clean, Distorted) and words, and put a sequence or a whole kit at a bar. This runs the same code as dragging it in from the [Sequence Library](07-instruments-and-midi.md): it lands on the session's beats at the session's tempo; a sequence makes a new track with the instrument it brings, or goes on a track you name with its notes only; a kit makes a folder with a track for each part. With the library's **Transpose Drops to the Session's Key** on, it is moved as a drop is. It finds factory presets only, not the sequences in your own library.
+- **Drum maps.** It can list the drum maps you saved, give a track one of them (or General MIDI's layout back), and move a clip's notes to the map's keys or back to General MIDI, as **Remap Notes** does in the piano roll. A factory drum part put on a track with a map goes to the kit's keys by itself.
+- **Swarm Guitar's settings**, its Source (strings or a swarm) and Strum Sync among them, are read and set like any instrument's. So are Torqwave Synth's, with each oscillator's level envelope and all sixteen modulation slots.
+
+The sequences, tracks, drum map and moved notes are part of the plan's one undo step. The instruments are not: a factory sound, and the instrument a sequence or kit brings, load once the plan is applied, as any instrument does, and undo does not unload them (undo does take out the tracks a sequence or kit made). An instrument that arrives with a sequence can be changed in your next request, once it is on its track.
+
+Things to try, with a session open:
+
+- "Put a dark reese bass patch on the Bass track."
+- "Set the tempo to 124 and give me an EBM kit at bar 1."
+- "Find a sparse hat pattern and put it on the Hats track at bar 9."
+- "Give the Drums track my sampler's drum map and move the Beat clip's notes onto it."
+
+The model cannot hear. It chooses a sound by its name, category and description, so "dark" finds patches named or filed that way, not patches that sound dark.
 
 ### The plug-in catalogue
 
