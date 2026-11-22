@@ -158,7 +158,7 @@ void runBuiltInEffectsTests (AudioEngine& engine)
     }();
     check (list.getNumTypes() == 21 && format != nullptr
                && ! format->canScanForPlugins() && format->searchPathsForPlugins ({}, true, false).isEmpty(),
-           "built-in effects: the twenty-one (the synth, the drums, the swarm guitar and the hardware insert among them) listed once each however often added; their format has nothing to scan");
+           "built-in effects: the twenty-one (the synth, the drums, StringSwarm and the hardware insert among them) listed once each however often added; their format has nothing to scan");
 
     // Its window: the EQ panel on the parameters, both ways.
     {

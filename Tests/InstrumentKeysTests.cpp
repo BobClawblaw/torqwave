@@ -114,7 +114,7 @@ void runInstrumentKeysTests()
                    && last == patches[patches.size() - 1].name && first == patches[0].name && synth.getPatchName() == patches[0].name
                    && known (one) && known (two) && one != two && backToOne == one && stepSound (guitar, nullptr, 1).isEmpty(),
                "instrument keys: the next and previous sound: Torqwave Synth's factory patches in order (" + next + ", " + again + ", back to " + previous
-                   + "), round from the first to the last (" + last + ") and on to the first; Swarm Guitar's presets through its window's presets row (" + one + ", " + two + ")");
+                   + "), round from the first to the last (" + last + ") and on to the first; StringSwarm's presets through its window's presets row (" + one + ", " + two + ")");
     }
 
     // Favourites: Torqwave Synth's patches marked by name in a file, listed by name, and what the arrows go through while they are browsed.
@@ -200,7 +200,7 @@ void runInstrumentKeysTests()
                    && lead.size() == 4 && together (lead) == 1 && lead[0].note == 60 && kit.size() == 6 && kit[0].note == 36 && kit[2].note == 38
                    && strum.size() == 1 && strum[0].note == 40 && strum[0].lengthMs >= 1000.0,
                "audition: a bass plays a line under C3, a pad a chord held over a second, a stab its chord twice, a lead a rising figure from middle C; "
-               "Basic Drums a kick, hat and snare; Swarm Guitar a low E held");
+               "Basic Drums a kick, hat and snare; StringSwarm a low E held");
 
         // Over time: each note starts and ends when it is due, a new phrase ends the one playing, and a key played by hand ends it.
         std::vector<juce::String> heard;
@@ -229,6 +229,37 @@ void runInstrumentKeysTests()
         strip.keyDown ('a');
         const auto byHand = ! strip.isAuditioning() && sent.size() == 3 && sent[1].isNoteOff() && sent[1].getNoteNumber() == 48 && sent[2].isNoteOn();
         strip.keyUp ('a');
+
+        // Looping: the phrase goes round, each round two beats at least and a whole number of beats, until it is stopped.
+        heard.clear();
+        player.start ({ { 60, 0.0, 100.0, 0.8f }, { 64, 300.0, 100.0, 0.8f } }, true);
+        const auto roundLength = juce::exactlyEqual (player.getLoopLengthMs(), 960.0);
+        player.advance (500.0);
+        const auto firstRound = heard.size() == 3 && heard[2] == "on 64" && player.isLooping();
+        player.advance (460.0);
+        const auto again = heard.size() == 5 && heard[4] == "on 60";
+        player.advance (960.0);
+        const auto third = heard.size() == 9 && heard[8] == "on 60" && player.isPlaying();
+        player.stop();
+        const auto loopStopped = heard.size() == 10 && heard[9] == "off 60" && ! player.isPlaying() && ! player.isLooping();
+        player.start ({ { 48, 0.0, 1700.0, 0.8f } }, true);
+        const auto longRound = juce::exactlyEqual (player.getLoopLengthMs(), 1920.0);
+        player.stop();
+
+        // On the strip: with Loop on a key played by hand does not end the phrase; Stop does.
+        setAuditionLoop (true);
+        sent.clear();
+        strip.audition ({ { 48, 0.0, 300.0, 0.8f } });
+        strip.keyDown ('a');
+        strip.keyUp ('a');
+        const auto playedOver = strip.isAuditioning();
+        strip.stopAudition();
+        const auto stoppedByHand = ! strip.isAuditioning();
+        setAuditionLoop (false);
+
+        check (roundLength && firstRound && again && third && loopStopped && longRound && playedOver && stoppedByHand,
+               "audition: looping, a phrase goes round every 960 ms (1,920 for a long one: whole beats at 125 BPM) until stopped; "
+               "a key played by hand leaves a looping phrase going, and Stop ends it");
 
         const auto wasOn = getAudition();
         setAudition (false);

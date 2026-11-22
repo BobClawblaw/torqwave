@@ -2,11 +2,11 @@
 
 [Guide](README.md) › Instruments and MIDI
 
-An **instrument track** plays a synthesizer: Torqwave's built-in Torqwave Synth, Basic Drums or Swarm Guitar, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
+An **instrument track** plays a synthesizer: Torqwave's built-in Torqwave Synth, Basic Drums or StringSwarm, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
 
 ## Make an instrument track
 
-- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Torqwave Synth, Basic Drums and Swarm Guitar come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
+- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Torqwave Synth, Basic Drums and StringSwarm come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
 - **Turn an empty audio track into an instrument track:** right-click its header and choose **Instrument Track**. Choose it again to turn it back.
 
 The header's instrument button, which shows the instrument's name (or **Inst** when there is none), chooses, swaps or opens the instrument. It takes the place of the record button. Effects added with **FX** run after the instrument, as on any track.
@@ -33,7 +33,7 @@ The selected instrument track plays whatever comes in live:
 - **A MIDI keyboard.** Turn its input on in **Settings... > Audio**.
 - **Window > On-Screen Keyboard** (Option-K). While it shows, docked or floating, your computer's keys play from any of Torqwave's windows, in place of the shortcuts on those keys: **Q W E R T Y U I O P** are the white keys from C and **2 3 5 6 7 9 0** the black ones. **Z** and **X** move the octave down and up, **C** and **V** the velocity. The button on the keyboard switches to the A row (**A S D F G H J K L**, with **W E T Y U** for the black keys). You can click its keys too. Its line at the top says which track it plays, or why nothing will sound.
 - **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**). The same keys play that instrument without the keyboard panel, a strip of keys along the bottom of the window plays by the mouse, and the **left and right arrows** load the previous and the next sound, so you can go through sounds while playing. A plug-in's own keys sound too, even while the session is stopped.
-- **Audition** (the ♪ button after the arrows in the presets row, on to begin with). With it on, each sound you choose in an instrument's window plays at once: a low line for a bass, a held chord for a pad, a rising figure for a lead, hits for percussion, a beat on Basic Drums. Play a key and it stops. It keeps quiet while the session plays, so you hear your own part on each sound. Turn it off for silence while you browse.
+- **Audition** (the ♪ button after the arrows in the presets row, on to begin with). With it on, each sound you choose in an instrument's window plays at once: a low line for a bass, a held chord for a pad, a rising figure for a lead, hits for percussion, a beat on Basic Drums. Play a key and it stops. It keeps quiet while the session plays, so you hear your own part on each sound. Turn it off for silence while you browse. **Loop**, beside the keys at the bottom of the window, makes the phrase go round until you press **Stop** or choose another sound, so you can turn knobs or play along while it repeats.
 - **The Piano Roll's keyboard** (see below).
 
 <img src="../screenshots/guide-synth.png" width="720" alt="The Torqwave Synth window playing the Bunker Kick Bass patch, one voice sounding: three oscillator panels with their wavetables drawn in depth, Sub and Noise, two filters with their response curves, Amp and Voice, the envelopes and LFOs, four macros and the modulation slots">
@@ -104,9 +104,9 @@ A session saved before 0.20.0 opens with its synth settings (from Basic Synth, a
 
 Each sound plays to its end however long the note is, and velocity sets its level. The hats cut each other off, as do the mute and open triangle and the mute and open cuica; a sound struck again, or cut off, fades out over 3 ms rather than clicking, and stopping or looping fades everything the same way, the reverb and delay too. Sessions from before 0.20.0 load with their tunings and decays carried over, though the sounds themselves are new.
 
-### Swarm Guitar
+### StringSwarm
 
-**Swarm Guitar** is a guitar with every string tuned to the note you play, through a fuzz: one note becomes a wall of strings beating against each other. Play single notes and slow lines; each note is a whole guitar. It is only in Torqwave.
+**StringSwarm** is a guitar with every string tuned to the note you play, through a fuzz: one note becomes a wall of strings beating against each other. Play single notes and slow lines; each note is a whole guitar. It is only in Torqwave.
 
 Each string is modelled (it is plucked, rings and dies away as a string does), so nothing is a sample and every part renders the same each time.
 

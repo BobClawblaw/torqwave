@@ -597,10 +597,10 @@ namespace
                 const auto problem = factoryLoadOn (w, "Drums", "Basic Drums", load);
                 return problem.isNotEmpty() ? problem : load.preset == kit && load.onlyPreset ? juce::String() : "it chose " + load.preset.quoted();
             }),
-            onLibrary ("Put Swarm Guitar on the Guitar track with its preset " + guitar + ".", [guitar] (Ai::Workspace& w) -> juce::String
+            onLibrary ("Put StringSwarm on the Guitar track with its preset " + guitar + ".", [guitar] (Ai::Workspace& w) -> juce::String
             {
                 Ai::SessionTools::InstrumentLoad load;
-                const auto problem = factoryLoadOn (w, "Guitar", "Swarm Guitar", load);
+                const auto problem = factoryLoadOn (w, "Guitar", "StringSwarm", load);
                 return problem.isNotEmpty() ? problem : load.preset == guitar && ! load.onlyPreset ? juce::String() : "it chose " + load.preset.quoted();
             }),
             onLibrary ("Give me an EBM kit at 124.", [ebm] (Ai::Workspace& w) { return kitLanded (w, 124.0, 1, ebm, {}); }),

@@ -4,7 +4,7 @@
 
 class AudioEngine;
 
-/** Swarm Guitar, the built-in guitar with every string on one note. */
+/** StringSwarm, the built-in guitar with every string on one note. */
 void runSwarmGuitarTests (AudioEngine&);
 
 /** Writes its window, drawn offscreen at twice its size in the dark and light themes, into the folder. */

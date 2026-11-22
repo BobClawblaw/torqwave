@@ -9,7 +9,7 @@
 namespace Ai
 {
     /** A sound an instrument ships with: one of Torqwave Synth's factory patches, Basic Drums'
-        kits or Swarm Guitar's presets. */
+        kits or StringSwarm's presets. */
     struct FactorySound
     {
         juce::String name, category, about;   // category and about: empty with none

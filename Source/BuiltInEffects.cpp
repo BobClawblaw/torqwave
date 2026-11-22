@@ -164,7 +164,7 @@ namespace
 
 juce::PluginDescription swarmGuitarDescription()
 {
-    auto d = describe ("Swarm Guitar", "Instrument", swarmGuitarId, 0x53425347);   // "SBSG"
+    auto d = describe ("StringSwarm", "Instrument", swarmGuitarId, 0x53425347);   // "SBSG"
     d.isInstrument = true;
     d.numInputChannels = 0;
     return d;

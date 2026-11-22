@@ -417,7 +417,7 @@ namespace
             const auto byKey = bar.keyPressed (juce::KeyPress (juce::KeyPress::rightKey)) && bar.getChosen() == order[1]
                                    && bar.keyPressed (juce::KeyPress (juce::KeyPress::leftKey)) && bar.getChosen() == order[0];
 
-            // Swarm Guitar's presets are in sub-menus: the arrows go through each sub-menu in turn, every preset once.
+            // StringSwarm's presets are in sub-menus: the arrows go through each sub-menu in turn, every preset once.
             EffectPresets::Bar swarm (store, "torqwave:swarm-guitar", [] { return EffectPresets::Values {}; }, [] (const EffectPresets::Values&) {});
             const auto& made = EffectPresets::factory ("torqwave:swarm-guitar");
             const auto swarmOrder = swarm.getOrder();
@@ -447,7 +447,7 @@ namespace
             check (order.size() == factoryCount + 1 && first && second && back && roundToLast && roundToFirst && byKey
                        && grouped && visited.size() == (int) made.size() && ! none.step (1),
                    "the presets row's arrows (and the left and right keys) step to the next and previous preset in the menu's order, round its ends, each applied as chosen; "
-                   "Swarm Guitar's " + juce::String ((int) made.size()) + " go by one sub-menu after another, each once; with no presets the arrows do nothing");
+                   "StringSwarm's " + juce::String ((int) made.size()) + " go by one sub-menu after another, each once; with no presets the arrows do nothing");
         }
 
         folder.deleteRecursively();
