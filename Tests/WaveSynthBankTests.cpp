@@ -3,6 +3,7 @@
 #include "../Source/WaveSynth.h"
 #include "../Source/WaveSynthEditor.h"
 #include "../Source/WaveSynthPatchBuilder.h"
+#include "ClickCheck.h"
 #include "TestUtils.h"
 #include "WaveSynthBankTests.h"
 
@@ -17,7 +18,7 @@ namespace
 
     // The limits the second bank's patches are held to.
     constexpr float silentDb = -30.0f;        // a note in the category's register peaks above this
-    constexpr float clickFloor = 0.03f;       // a click is a lone step of this or more...
+    constexpr float clickFloor = 0.03f;       // a click is a lone step of this or more (Tests/ClickCheck.h)...
     constexpr float clickRatio = 4.0f;        // ...this many times any step in the 30 ms either side
     constexpr float macroDb = 1.0f;           // a macro moves some band or stretch of the sound by this much
     constexpr float nearCopy = 3.0f;          // two patches of a category differ by this much (see distance)
@@ -105,57 +106,6 @@ namespace
     }
 
     //==========================================================================
-    /** A click: a jump between two samples that stands alone, as Tests/PresetTests.cpp measures it for
-        the sequence presets. Its measure is the step as a ratio to the largest step in the 30 ms either
-        side of it (the millisecond around it left out), for steps of `floor` or more that are also three
-        times the steps just before and after them. */
-    struct Click
-    {
-        float ratio = 0.0f, step = 0.0f;
-        double seconds = 0.0;
-    };
-
-    Click worstClick (const juce::AudioBuffer<float>& b, float floor)
-    {
-        Click worst;
-        const auto size = juce::jmax (1, (int) (rate / 1000.0));
-        const auto blocks = b.getNumSamples() / size;
-
-        for (int ch = 0; ch < b.getNumChannels(); ++ch)
-        {
-            const auto* x = b.getReadPointer (ch);
-            std::vector<float> largest ((size_t) blocks, 0.0f);
-            std::vector<int> where ((size_t) blocks, 0);
-
-            for (int i = 1; i < blocks * size; ++i)
-                if (const auto step = std::abs (x[i] - x[i - 1]); step > largest[(size_t) (i / size)])
-                {
-                    largest[(size_t) (i / size)] = step;
-                    where[(size_t) (i / size)] = i;
-                }
-
-            for (int at = 0; at < blocks; ++at)
-            {
-                const auto i = where[(size_t) at];
-
-                if (largest[(size_t) at] < floor || i < 2 || i + 1 >= b.getNumSamples()
-                    || largest[(size_t) at] < 3.0f * juce::jmax (std::abs (x[i - 1] - x[i - 2]), std::abs (x[i + 1] - x[i])))
-                    continue;
-
-                auto around = 0.0f;
-
-                for (int other = juce::jmax (0, at - 31); other < juce::jmin (blocks, at + 32); ++other)
-                    if (std::abs (other - at) > 1)
-                        around = juce::jmax (around, largest[(size_t) other]);
-
-                if (const auto ratio = largest[(size_t) at] / juce::jmax (around, 1.0e-6f); ratio > worst.ratio)
-                    worst = { ratio, largest[(size_t) at], (double) where[(size_t) at] / rate };
-            }
-        }
-
-        return worst;
-    }
-
     /** The phrase a patch is checked for clicks over: its note struck, struck again twice while it
         rings, and released; seventeen notes 10 ms apart, so the last takes the first one's voice, and
         one more; all released; a note released 1.3 ms into its attack. */
@@ -518,7 +468,7 @@ namespace
     struct Measured
     {
         float chordDb = 0.0f, noteDb = 0.0f, longDb = -100.0f;
-        Click click;
+        ClickCheck::Click click;
         std::array<float, WaveSynth::numMacros> macros {};
         Features features {};
         juce::uint64 chordHash = 0;
@@ -551,7 +501,7 @@ namespace
         if (rest)
         {
             load (s, p);
-            m.click = worstClick (clickPhrase (s, note), clickFloor);
+            m.click = ClickCheck::worst (clickPhrase (s, note), rate, clickFloor);
 
             for (int i = 0; i < WaveSynth::numMacros; ++i)
                 m.macros[(size_t) i] = macroChange (s, p, i, note);

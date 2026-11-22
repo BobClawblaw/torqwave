@@ -8,6 +8,7 @@
 #include "../Source/Theme.h"
 #include "TestUtils.h"
 #include "WaveSynthTests.h"
+#include "ClickCheck.h"
 
 namespace
 {
@@ -407,10 +408,10 @@ namespace
         {
             Theme::apply (Theme::make (theme, "Blue"));
 
-            for (int page = 0; page < 6; ++page)
+            for (int page = 0; page < 7; ++page)
             {
                 window->showModulator (page);
-                window->showRightPage (page % 2);
+                window->showRightPage (page % 3);
                 window->refresh();
                 const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
                 drawn = drawn && image.getWidth() == window->getWidth() * 2;
@@ -732,6 +733,202 @@ namespace
                    + " times in two seconds, and " + juce::String (fast) + " with the macro at 100 (8.6 Hz)");
     }
 
+    //==========================================================================
+    // The signal console's groundwork: a table from a sound, a level envelope for each oscillator, sixteen slots.
+    void testGroundwork()
+    {
+        using namespace WaveTables;
+        const auto sameSamples = [] (const juce::AudioBuffer<float>& a, const juce::AudioBuffer<float>& b)
+        {
+            if (a.getNumSamples() != b.getNumSamples() || a.getNumChannels() != b.getNumChannels())
+                return false;
+
+            for (int ch = 0; ch < a.getNumChannels(); ++ch)
+                if (std::memcmp (a.getReadPointer (ch), b.getReadPointer (ch), sizeof (float) * (size_t) a.getNumSamples()) != 0)
+                    return false;
+
+            return true;
+        };
+
+        // A sine swept from 220 Hz to 1,980 Hz over four seconds, made into a table on a root of 55 Hz (A1).
+        constexpr double root = 55.0, low = 220.0, high = 1980.0, seconds = 4.0;
+        const auto length = (int) (seconds * rate);
+        std::vector<float> sweep ((size_t) length);
+        double phase = 0.0;
+
+        for (int i = 0; i < length; ++i)
+        {
+            sweep[(size_t) i] = (float) (0.5 * std::sin (phase));
+            phase += juce::MathConstants<double>::twoPi * (low + (high - low) * i / length) / rate;
+        }
+
+        const auto table = sampledFromAudio (sweep.data(), length, rate, root, "Sweep");
+        const auto window = juce::roundToInt (2.0 * rate / root);
+        Synth synth;
+        bare (synth);
+        set (synth, "osc1Table", (float) Table::sampled);
+        synth.setSampledTable (0, table);
+
+        // Where the sweep is at a harmonic of the root, the table played at the root has its energy at
+        // that harmonic: the share of all 40 harmonics' power in it and its two neighbours, in dB.
+        float worstShare = 0.0f;
+        auto loudestRight = table != nullptr && table->frames == Sampled::maxFrames;
+        juce::String shares;
+
+        for (int harmonic : { 8, 14, 20, 26, 32 })
+        {
+            const auto centre = (harmonic * root - low) / (high - low) * length;
+            const auto position = (centre - window * 0.5) / (double) (length - window);
+            set (synth, "osc1Position", (float) (position * 100.0));
+            const auto out = play (synth, held ({ 33 }, 1.0), 48000);
+            double all = 0.0, there = 0.0, most = 0.0;
+            int loudest = 0;
+
+            for (int h = 1; h <= 40; ++h)
+            {
+                const auto a = amplitude (out, 0, h * root, 9600, 28800);
+                all += a * a;
+                if (std::abs (h - harmonic) <= 1) there += a * a;
+                if (a > most) { most = a; loudest = h; }
+            }
+
+            const auto share = (float) (10.0 * std::log10 (juce::jmax (1.0e-12, there / juce::jmax (1.0e-12, all))));
+            worstShare = juce::jmin (worstShare, share);
+            loudestRight = loudestRight && loudest == harmonic;
+            shares << (shares.isEmpty() ? "" : ", ") << juce::String (share, 2);
+        }
+
+        check (loudestRight && worstShare > -1.0f,
+               "synth: a sine swept from 220 Hz to 1.98 kHz made into a Sampled table (64 frames on a 55 Hz root) plays the sweep's own harmonic loudest at five positions (harmonics 8, 14, 20, 26 and 32), "
+               "with it and its neighbours holding all the power but " + shares + " dB");
+
+        // A patch's state holds the table: it comes back the same, and plays the same.
+        set (synth, "osc1Position", 37.0f);
+        juce::MemoryBlock state;
+        synth.getStateInformation (state);
+        Synth second;
+        second.setStateInformation (state.getData(), (int) state.getSize());
+        const auto back = second.getSampledTable (0);
+        const auto first = play (synth, held ({ 45, 52 }, 0.5), 36000), again = play (second, held ({ 45, 52 }, 0.5), 36000);
+        second.loadPatch (0);
+        check (back != nullptr && table != nullptr && back != table && back->frames == table->frames && back->strengths == table->strengths && back->name == "Sweep"
+                   && juce::exactlyEqual (back->rootHz, table->rootHz) && sameSamples (first, again) && first.getMagnitude (0, 36000) > 0.1f
+                   && second.getSampledTable (0) == nullptr && state.getSize() < 64 * 1024,
+               "synth: a Sampled table saved in a patch's state comes back the same (its frames, root and name) and plays the same sample for sample, in "
+                   + juce::String ((int) state.getSize() / 1024) + " KB; a factory patch loaded after it has none");
+
+        // A sound's own pitch is found, and a sound without one gets the low root.
+        std::vector<float> saw ((size_t) 24000), hiss ((size_t) 24000);
+        juce::Random random (7);
+
+        for (int i = 0; i < 24000; ++i)
+        {
+            const auto p = std::fmod (110.0 * i / rate, 1.0);
+            saw[(size_t) i] = (float) (0.5 - p);
+            hiss[(size_t) i] = random.nextFloat() - 0.5f;
+        }
+
+        const auto pitched = sampledFromAudio (saw.data(), 24000, rate, 0.0, "Saw"), unpitched = sampledFromAudio (hiss.data(), 24000, rate, 0.0, "Hiss");
+        check (pitched != nullptr && std::abs (pitched->rootHz - 110.0) < 0.5 && unpitched != nullptr && juce::approximatelyEqual (unpitched->rootHz, rate / 2048.0)
+                   && sampledFromAudio (saw.data(), 2400, rate, 0.0, "Short") == nullptr,
+               "synth: a table from a 110 Hz sawtooth takes its root from the sound (" + juce::String (pitched != nullptr ? pitched->rootHz : 0.0, 2)
+                   + " Hz), one from noise the low root of 23.4 Hz, and under a tenth of a second makes none");
+
+        // An oscillator's level envelope: a 200 ms attack is at half level 100 ms in, with the amp envelope open;
+        // then a 100 ms hold and a 300 ms decay to 25 % has covered 99 % of the way 300 ms after the hold.
+        bare (synth);
+        synth.setSampledTable (0, nullptr);
+        const auto plain = play (synth, held ({ 69 }, 1.0), 48000);
+        set (synth, "osc1EnvOn", 1.0f);
+        set (synth, "osc1EnvAttack", 200.0f);
+        set (synth, "osc1EnvHold", 100.0f);
+        set (synth, "osc1EnvDecay", 300.0f);
+        set (synth, "osc1EnvSustain", 25.0f);
+        const auto shaped = play (synth, held ({ 69 }, 1.0), 48000);
+        // Each measured over 1,200 samples: eleven whole cycles of the A.
+        const auto full = amplitude (plain, 0, 440.0, 24000, 1200);
+        const auto half = amplitude (shaped, 0, 440.0, 4800 - 600, 1200) / full, top = amplitude (shaped, 0, 440.0, 12000, 1200) / full,
+                   settled = amplitude (shaped, 0, 440.0, 28800 - 600, 1200) / full, later = amplitude (shaped, 0, 440.0, 43200, 1200) / full;
+        set (synth, "osc1EnvOn", 0.0f);
+        const auto off = play (synth, held ({ 69 }, 1.0), 48000);
+        check (std::abs (half - 0.5) < 0.01 && std::abs (top - 1.0) < 0.005 && std::abs (settled - 0.2575) < 0.01 && std::abs (later - 0.25) < 0.005 && sameSamples (plain, off),
+               "synth: an oscillator's level envelope with a 200 ms attack is at " + juce::String (half, 3) + " of its level 100 ms in and " + juce::String (top, 3)
+                   + " through its 100 ms hold, with the amp envelope open; its 300 ms decay to 25 % is at " + juce::String (settled, 4) + " 300 ms on and "
+                   + juce::String (later, 3) + " after; switched off, the oscillator plays as it did, sample for sample");
+
+        // Slot 16 does what slot 1 does.
+        const auto routed = [&synth] (int slot)
+        {
+            synth.loadPatch ("Warehouse Sub");
+            for (int i = 1; i <= WaveSynth::numSlots; ++i) set (synth, "mod" + juce::String (i) + "Source", 0.0f);
+            const auto n = "mod" + juce::String (slot);
+            set (synth, n + "Source", (float) WaveSynth::env2);
+            set (synth, n + "Destination", (float) (WaveSynth::destinationIds().indexOf ("filter1Cutoff") + 1));
+            set (synth, n + "Amount", 60.0f);
+            return play (synth, held ({ 36, 43 }, 0.5), 36000);
+        };
+        const auto none = [&synth] { synth.loadPatch ("Warehouse Sub"); for (int i = 1; i <= WaveSynth::numSlots; ++i) set (synth, "mod" + juce::String (i) + "Source", 0.0f); return play (synth, held ({ 36, 43 }, 0.5), 36000); }();
+        const auto one = routed (1), sixteen = routed (16);
+        check (WaveSynth::numSlots == 16 && synth.parameter ("mod16Amount") != nullptr && sameSamples (one, sixteen) && ! sameSamples (one, none),
+               "synth: sixteen modulation slots, and envelope 2 to the cutoff in slot 16 renders the same as in slot 1, sample for sample");
+
+        // A patch saved with eight slots (none of the new settings in its state) loads as it was.
+        synth.loadPatch ("Acid Corrosion");
+        const auto before = play (synth, held ({ 45 }, 0.5), 36000);
+        juce::MemoryBlock whole;
+        synth.getStateInformation (whole);
+        auto xml = juce::AudioProcessor::getXmlFromBinary (whole.getData(), (int) whole.getSize());
+        int removed = 0;
+
+        if (xml != nullptr)
+            for (int i = xml->getNumAttributes(); --i >= 0;)
+            {
+                const auto name = xml->getAttributeName (i);
+                const auto slot = name.startsWith ("mod") ? name.substring (3).getIntValue() : 0;
+
+                if (slot > 8 || (name.contains ("Env") && name.startsWith ("osc")))
+                {
+                    xml->removeAttribute (name);
+                    ++removed;
+                }
+            }
+
+        juce::MemoryBlock old;
+        if (xml != nullptr) juce::AudioProcessor::copyXmlToBinary (*xml, old);
+        Synth third;
+        set (third, "mod12Source", (float) WaveSynth::lfo1);   // set here, absent from the old state: must not survive a patch's defaults
+        third.loadPatch (0);
+        third.setStateInformation (old.getData(), (int) old.getSize());
+        check (removed == 8 * 3 + 3 * 5 && sameSamples (before, play (third, held ({ 45 }, 0.5), 36000)),
+               "synth: a state saved with eight slots and no level envelopes (the " + juce::String (removed) + " new settings taken out of it) loads and plays as it was, sample for sample");
+
+        // No clicks: a Sampled table with its level envelope struck again and again, a steal, and All Sound Off.
+        bare (synth);
+        set (synth, "osc1Table", (float) Table::sampled);
+        synth.setSampledTable (0, table);
+        set (synth, "osc1Position", 50.0f);
+        set (synth, "osc1EnvOn", 1.0f);
+        set (synth, "osc1EnvAttack", 0.0f);
+        set (synth, "osc1EnvDecay", 120.0f);
+        set (synth, "osc1EnvSustain", 10.0f);
+        set (synth, "voiceMode", 1.0f);
+        std::vector<Event> events;
+
+        for (int i = 0; i < 16; ++i)
+        {
+            const auto at = (int) (i * 0.125 * rate);
+            events.push_back ({ at, juce::MidiMessage::noteOn (1, i % 4 == 3 ? 52 : 45, 0.9f) });
+            if (i % 2 == 0) events.push_back ({ at + 4000, juce::MidiMessage::noteOff (1, 45) });
+        }
+
+        events.push_back ({ (int) (2.2 * rate), juce::MidiMessage::allSoundOff (1) });
+        const auto struck = play (synth, events, (int) (2.5 * rate));
+        const auto click = ClickCheck::worst (struck, rate, 0.03f);
+        check (click.ratio <= 4.0f && struck.getMagnitude (0, struck.getNumSamples()) > 0.1f,
+               "synth: no click with a Sampled table and its level envelope struck sixteen times, overlapping, in mono, then All Sound Off (the nearest a jump "
+                   + juce::String (click.ratio, 1) + " times the steps around it" + (click.ratio > 0.0f ? " at " + juce::String (click.seconds, 3) + " s" : juce::String()) + ")");
+    }
+
     void testBlockSizes (Synth& synth)
     {
         // Patches with moving parts sound the same, sample for sample, whatever the blocks.
@@ -818,6 +1015,88 @@ void runWaveSynthTests (AudioEngine& engine)
     testUnison (synth);
     testFilters (synth);
     testModulation (synth);
+    testGroundwork();
     testBlockSizes (synth);
     testCpu (synth);
+}
+
+void writePatchHashes (const juce::File& file)
+{
+    const auto& all = WaveSynth::factoryPatches();
+    juce::StringArray lines;
+
+    for (size_t i = 0; i < all.size(); ++i)
+    {
+        Synth synth;
+        synth.loadPatch ((int) i);
+        const auto out = play (synth, held ({ 48, 51, 55 }, 2.0, 0.8f), (int) (4.0 * rate));
+        juce::uint64 hash = 1469598103934665603ull;   // FNV-1a over the samples' bits
+
+        for (int ch = 0; ch < out.getNumChannels(); ++ch)
+            for (int n = 0; n < out.getNumSamples(); ++n)
+            {
+                juce::uint32 bits;
+                const auto sample = out.getSample (ch, n);
+                std::memcpy (&bits, &sample, sizeof (bits));
+                hash = (hash ^ bits) * 1099511628211ull;
+            }
+
+        lines.add (all[i].name + "|" + juce::String::toHexString ((juce::int64) hash));
+    }
+
+    file.replaceWithText (lines.joinIntoString ("\n") + "\n");
+    std::cout << lines.size() << " patches" << std::endl;
+}
+
+void saveSynthWindow (const juce::File& folder)
+{
+    folder.createDirectory();
+    Theme::apply (Theme::make ("Dark", "Blue"));
+    Synth synth;
+    synth.loadPatch ("Abyss Reese");
+    std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+    auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+
+    if (window == nullptr)
+        return;
+
+    const auto save = [&] (const juce::String& name)
+    {
+        window->refresh();
+        const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+        auto file = folder.getChildFile ("synth-" + name + ".png");
+        file.deleteFile();
+        juce::FileOutputStream out (file);
+        juce::PNGImageFormat().writeImageToStream (image, out);
+        std::cout << file.getFullPathName() << std::endl;
+    };
+
+    save ("patch");
+
+    // The oscillators' level envelopes, with slots 9 to 16 beside them.
+    set (synth, "osc2EnvOn", 1.0f);
+    set (synth, "osc2EnvAttack", 400.0f);
+    set (synth, "osc2EnvSustain", 60.0f);
+    window->showModulator (6);
+    window->showRightPage (1);
+    save ("levels");
+
+    // Oscillator 1 playing a table made from a sound: a sawtooth whose filter closes over two seconds.
+    std::vector<float> sound ((size_t) (2.0 * rate));
+    float low = 0.0f;
+
+    for (size_t i = 0; i < sound.size(); ++i)
+    {
+        const auto t = (float) i / (float) sound.size();
+        const auto saw = (float) (1.0 - 2.0 * std::fmod (110.0 * (double) i / rate, 1.0));
+        low += (0.9f * std::pow (1.0f - t, 3.0f) + 0.01f) * (saw - low);
+        sound[i] = low;
+    }
+
+    synth.setSampledTable (0, WaveTables::sampledFromAudio (sound.data(), (int) sound.size(), rate, 0.0, "Closing Saw"));
+    set (synth, "osc1Table", (float) WaveTables::Table::sampled);
+    set (synth, "osc1Position", 35.0f);
+    window->showModulator (0);
+    window->showRightPage (0);
+    save ("sampled");
 }

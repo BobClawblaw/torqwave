@@ -157,6 +157,16 @@ Bar::Bar (Store& s, juce::String effectKey, std::function<Values()> current, std
     addAndMakeVisible (list);
     addAndMakeVisible (save);
     addAndMakeVisible (remove);
+    previous.onClick = [this] { step (-1); };
+    next.onClick = [this] { step (1); };
+    previous.setTooltip ("Previous preset (left arrow key)");
+    next.setTooltip ("Next preset (right arrow key)");
+    previous.setWantsKeyboardFocus (false);
+    next.setWantsKeyboardFocus (false);
+    addAndMakeVisible (previous);
+    addAndMakeVisible (next);
+    list.addMouseListener (this, false);
+    setWantsKeyboardFocus (true);
     refresh();
     setSize (320, 28);
 }
@@ -214,6 +224,81 @@ void Bar::refresh()
         list.setSelectedId (userBase + names.indexOf (chosen) + 1, juce::dontSendNotification);
 
     remove.setEnabled (list.getSelectedId() > userBase);
+    const auto any = ! made.empty() || ! names.isEmpty();
+    previous.setEnabled (any);
+    next.setEnabled (any);
+}
+
+std::vector<int> Bar::orderedIds() const
+{
+    // As the menu shows them: each category's in turn, then the factory ones without one, then the user's.
+    std::vector<int> ids;
+    const auto& made = factory (key);
+    juce::StringArray categories;
+
+    for (auto& f : made)
+        if (f.category.isNotEmpty())
+            categories.addIfNotAlreadyThere (f.category);
+
+    for (auto& c : categories)
+        for (size_t i = 0; i < made.size(); ++i)
+            if (made[i].category == c)
+                ids.push_back ((int) i + 1);
+
+    for (size_t i = 0; i < made.size(); ++i)
+        if (made[i].category.isEmpty())
+            ids.push_back ((int) i + 1);
+
+    for (int i = 0; i < store.getNames (key).size(); ++i)
+        ids.push_back (userBase + i + 1);
+
+    return ids;
+}
+
+juce::StringArray Bar::getOrder() const
+{
+    juce::StringArray order;
+    const auto& made = factory (key);
+    const auto names = store.getNames (key);
+
+    for (auto id : orderedIds())
+        order.add (id > userBase ? names[id - userBase - 1] : made[(size_t) id - 1].name);
+
+    return order;
+}
+
+bool Bar::step (int by)
+{
+    const auto ids = orderedIds();
+
+    if (ids.empty() || by == 0)
+        return false;
+
+    const auto count = (int) ids.size();
+    const auto found = std::find (ids.begin(), ids.end(), list.getSelectedId());
+    const auto at = found != ids.end() ? (int) (found - ids.begin()) + by : (by > 0 ? 0 : count - 1);
+    list.setSelectedId (ids[(size_t) (((at % count) + count) % count)], juce::sendNotificationSync);
+    return true;
+}
+
+bool Bar::keyPressed (const juce::KeyPress& k)
+{
+    if (k == juce::KeyPress::leftKey || k == juce::KeyPress::rightKey)
+        return step (k == juce::KeyPress::rightKey ? 1 : -1);
+
+    return false;
+}
+
+void Bar::mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails& d)
+{
+    // A notch of a wheel, or a third of a line's worth of a trackpad's glide, is one preset.
+    wheel += d.deltaY;
+
+    while (std::abs (wheel) >= 0.3f)
+    {
+        step (wheel > 0.0f ? -1 : 1);
+        wheel -= wheel > 0.0f ? 0.3f : -0.3f;
+    }
 }
 
 void Bar::saveAs()
@@ -270,6 +355,10 @@ void Bar::resized()
     r.removeFromRight (4);
     save.setBounds (r.removeFromRight (70));
     r.removeFromRight (6);
+    previous.setBounds (r.removeFromLeft (24));
+    r.removeFromLeft (2);
+    next.setBounds (r.removeFromLeft (24));
+    r.removeFromLeft (6);
     list.setBounds (r);
 }
 }

@@ -209,7 +209,7 @@ class Patch:
         return self._call("stepPattern", str(n), "{ " + ", ".join(num(v) for v in steps) + " }")
 
     def mod(self, source, destination, amount):
-        assert self.slots < 8, (self.kind, "more than eight modulation slots")
+        assert self.slots < 8, (self.kind, "more than eight modulation slots")   # the bank keeps to the first page of slots
         assert amount != 0 and -100 <= amount <= 100
         self.slots += 1
         m = f"mod{self.slots}"

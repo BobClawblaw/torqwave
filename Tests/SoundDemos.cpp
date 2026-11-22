@@ -9,7 +9,7 @@
 
 namespace
 {
-    constexpr double rate = 48000.0, bpm = 120.0, beat = 60.0 / bpm, sixteenth = beat / 4.0, bar = beat * 4.0;
+    constexpr double rate = 48000.0, bpm = 120.0, beat = 60.0 / bpm, bar = beat * 4.0;
 
     struct Note { double at, length; int pitch; float velocity; };
     using Part = std::vector<Note>;

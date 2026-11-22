@@ -373,6 +373,8 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         juce::AudioParameterChoice *table, *warp;
         juce::AudioParameterFloat *phase, *unison, *strum, *drift;
         juce::AudioParameterBool* randomPhase;
+        juce::AudioParameterBool* envOn;
+        juce::AudioParameterFloat *envAttack, *envHold, *envDecay, *envSustain;
     };
 
     std::array<OscParams, numOscillators> oscP {};
@@ -414,7 +416,9 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
             const auto n = "osc" + juce::String (o + 1);
             oscP[(size_t) o] = { find<juce::AudioParameterBool> (n + "On"), find<juce::AudioParameterChoice> (n + "Table"), find<juce::AudioParameterChoice> (n + "Warp"),
                                  find<juce::AudioParameterFloat> (n + "Phase"), find<juce::AudioParameterFloat> (n + "Unison"), find<juce::AudioParameterFloat> (n + "UnisonStrum"),
-                                 find<juce::AudioParameterFloat> (n + "UnisonDrift"), find<juce::AudioParameterBool> (n + "RandomPhase") };
+                                 find<juce::AudioParameterFloat> (n + "UnisonDrift"), find<juce::AudioParameterBool> (n + "RandomPhase"),
+                                 find<juce::AudioParameterBool> (n + "EnvOn"), find<juce::AudioParameterFloat> (n + "EnvAttack"), find<juce::AudioParameterFloat> (n + "EnvHold"),
+                                 find<juce::AudioParameterFloat> (n + "EnvDecay"), find<juce::AudioParameterFloat> (n + "EnvSustain") };
         }
 
         subOctave = find<juce::AudioParameterChoice> ("subOctave");
@@ -499,6 +503,11 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         std::array<int, numOscillators> table {}, warp {}, unison {};
         std::array<float, numOscillators> strumSamples {}, drift {}, phase {};
         std::array<bool, numOscillators> randomPhase {};
+        // Each oscillator's own level envelope, when it is on: the attack's step a sample, the hold in
+        // samples, what the decay keeps of its way to the sustain level each sample, and that level.
+        std::array<bool, numOscillators> levelEnv {};
+        std::array<float, numOscillators> levelAttack {}, levelDecay {}, levelSustain {};
+        std::array<int, numOscillators> levelHold {};
         int subOctave = 1, subShape = 0, noiseType = 0, routing = 0, voiceMode = 0, glideMode = 0;
         bool subDirect = false;
         std::array<int, 2> filterType {};
@@ -533,6 +542,12 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
             s.drift[(size_t) o] = p.drift->get() * 0.01f;
             s.phase[(size_t) o] = p.phase->get() * 0.01f;
             s.randomPhase[(size_t) o] = p.randomPhase->get();
+            s.levelEnv[(size_t) o] = p.envOn->get();
+            s.levelAttack[(size_t) o] = (float) (1.0 / (juce::jmax (minimumAttackSeconds, (double) p.envAttack->get() * 0.001) * rate));
+            s.levelHold[(size_t) o] = (int) ((double) p.envHold->get() * 0.001 * rate);
+            // The decay covers 99 % of the way to the sustain level in its time.
+            s.levelDecay[(size_t) o] = (float) std::exp (-4.605170186 / (juce::jmax (0.001, (double) p.envDecay->get() * 0.001) * rate));
+            s.levelSustain[(size_t) o] = p.envSustain->get() * 0.01f;
         }
 
         s.subOctave = subOctave->getIndex() + 1;
@@ -618,6 +633,9 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         std::array<float, numLfos> lfoValue {}, lfoSmoothed {};
         juce::int64 sinceStart = 0;
         std::array<OscillatorState, numOscillators> osc;
+        // Each oscillator's level envelope: rising (0), held (1) or falling to its sustain level (2).
+        struct LevelEnvelope { int stage = 2, held = 0; float level = 1.0f; };
+        std::array<LevelEnvelope, numOscillators> levelEnv;
         double subPhase = 0.0, subIncrement = 0.0;
         Rng noiseL, noiseR;
         float pinkL[3] {}, pinkR[3] {}, tiltL = 0, tiltR = 0, crackle = 0, holdL = 0, holdR = 0;
@@ -634,6 +652,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     };
 
     std::array<Voice, numVoices + numFadingVoices> voices;
+    std::array<const WaveTables::Bank*, numOscillators> sampledBank {};   // each oscillator's own table, if it has one
     std::vector<float> stringMemory;
     juce::uint32 counter = 0, notesStarted = 0;
     double rate = 48000.0, bpm = 120.0;
@@ -816,6 +835,14 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 v.lfoPhase[(size_t) l] = shared.lfo[(size_t) l].phase;
 
         v.sinceStart = 0;
+
+        // The oscillators' level envelopes start again: from nothing on a fresh note, from where they are
+        // otherwise. One that is off waits at full level, so switching it on in a note falls from there.
+        for (int o = 0; o < numOscillators; ++o)
+        {
+            auto& e = v.levelEnv[(size_t) o];
+            e = shared.levelEnv[(size_t) o] ? Voice::LevelEnvelope { 0, 0, fresh ? 0.0f : e.level } : Voice::LevelEnvelope();
+        }
 
         for (int o = 0; o < numOscillators; ++o)
         {
@@ -1399,7 +1426,8 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
         for (int o = 0; o < numOscillators; ++o)
         {
-            levels[(size_t) o] = &WaveTables::get ((WaveTables::Table) s.table[(size_t) o]).levels[(size_t) v.osc[(size_t) o].level];
+            const auto* own = s.table[(size_t) o] == (int) WaveTables::Table::sampled ? sampledBank[(size_t) o] : nullptr;
+            levels[(size_t) o] = &(own != nullptr ? *own : WaveTables::get ((WaveTables::Table) s.table[(size_t) o])).levels[(size_t) v.osc[(size_t) o].level];
             positions[(size_t) o] = v.value[(size_t) oscDest (o, fPosition)];
             warpAmounts[(size_t) o] = v.value[(size_t) oscDest (o, fWarp)];
 
@@ -1430,16 +1458,36 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
             for (int o = 0; o < numOscillators; ++o)
             {
-                const auto gain = v.oscGain[(size_t) o].next();
+                auto gain = v.oscGain[(size_t) o].next();
                 const auto route = v.oscRoute[(size_t) o].next();
                 auto& os = v.osc[(size_t) o];
                 const auto n = s.unison[(size_t) o];
+
+                if (s.levelEnv[(size_t) o])
+                {
+                    auto& le = v.levelEnv[(size_t) o];
+
+                    if (le.stage == 0)
+                    {
+                        le.level += s.levelAttack[(size_t) o];
+                        if (le.level >= 1.0f) { le.level = 1.0f; le.stage = 1; le.held = 0; }
+                    }
+                    else if (le.stage == 1)
+                    {
+                        if (++le.held >= s.levelHold[(size_t) o]) le.stage = 2;
+                    }
+                    else
+                        le.level = s.levelSustain[(size_t) o] + (le.level - s.levelSustain[(size_t) o]) * s.levelDecay[(size_t) o];
+                }
 
                 if (gain <= 0.0f && v.oscGain[(size_t) o].step == 0.0f)
                 {
                     for (int u = 0; u < n; ++u) { os.unison[(size_t) u].gainL.next(); os.unison[(size_t) u].gainR.next(); }
                     continue;
                 }
+
+                if (s.levelEnv[(size_t) o])
+                    gain *= v.levelEnv[(size_t) o].level;
 
                 const auto string = s.table[(size_t) o] == (int) WaveTables::Table::string;
                 float sumL = 0.0f, sumR = 0.0f;
@@ -1911,6 +1959,20 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         const auto n = buffer.getNumSamples();
         buffer.clear();
 
+        // A sampled table set or taken away since the last block: taken up now, unless it is being swapped this instant.
+        if (const auto generation = owner.sampledGeneration.load (std::memory_order_acquire); generation != owner.sampledSeen.load (std::memory_order_relaxed))
+        {
+            const juce::SpinLock::ScopedTryLockType lock (owner.sampledLock);
+
+            if (lock.isLocked())
+            {
+                for (int o = 0; o < numOscillators; ++o)
+                    sampledBank[(size_t) o] = owner.sampled[(size_t) o] != nullptr ? &owner.sampled[(size_t) o]->bank : nullptr;
+
+                owner.sampledSeen.store (generation, std::memory_order_release);
+            }
+        }
+
         if (auto* head = owner.getPlayHead())
             if (const auto position = head->getPosition())
                 if (const auto b = position->getBpm())
@@ -2123,14 +2185,17 @@ BasicSynthProcessor::BasicSynthProcessor()
     juce::StringArray destinationChoices { "None" };
     destinationChoices.addArray (destinationNames());
 
-    for (int s = 1; s <= numSlots; ++s)
+    const auto addSlot = [&] (int s)
     {
         const auto id = "mod" + juce::String (s);
         const auto name = "Mod " + juce::String (s) + " ";
         keep (addChoice (id + "Source", name + "Source", sourceNames(), 0));
         keep (addChoice (id + "Destination", name + "Destination", destinationChoices, 0));
         keep (addFloat (id + "Amount", name + "Amount", bipolar, 0.0f, "+%"));
-    }
+    };
+
+    for (int s = 1; s <= 8; ++s)
+        addSlot (s);
 
     for (int m = 1; m <= numMacros; ++m)
         keep (addFloat ("macro" + juce::String (m), "Macro " + juce::String (m), percent, 0.0f, "%"));
@@ -2160,6 +2225,22 @@ BasicSynthProcessor::BasicSynthProcessor()
     keep (addFloat ("fxReverbDamping", "Reverb Damping", percent, 45.0f, "%"));
     keep (addFloat ("fxReverbMix", "Reverb Mix", percent, 25.0f, "%"));
 
+    // Added in 0.20.0's signal console, after the rest so every earlier parameter keeps its place:
+    // slots 9 to 16, and a level envelope for each oscillator (off: its level as the knob has it).
+    for (int s = 9; s <= numSlots; ++s)
+        addSlot (s);
+
+    for (int o = 1; o <= numOscillators; ++o)
+    {
+        const auto id = "osc" + juce::String (o) + "Env";
+        const auto name = "Osc " + juce::String (o) + " Level ";
+        keep (addBool (id + "On", name + "Envelope", false));
+        keep (addFloat (id + "Attack", name + "Attack", time (10000.0f), 0.0f, "ms"));
+        keep (addFloat (id + "Hold", name + "Hold", time (10000.0f), 0.0f, "ms"));
+        keep (addFloat (id + "Decay", name + "Decay", time (10000.0f), 400.0f, "ms"));
+        keep (addFloat (id + "Sustain", name + "Sustain", percent, 100.0f, "%"));
+    }
+
     engine = std::make_unique<Engine> (*this);
     engine->bind();
     WaveTables::get (WaveTables::Table::analog);   // the tables, built now rather than on the audio thread
@@ -2176,6 +2257,32 @@ juce::RangedAudioParameter* BasicSynthProcessor::parameter (const juce::String& 
 void BasicSynthProcessor::prepareToPlay (double sampleRate, int)
 {
     engine->prepare (sampleRate);
+}
+
+void BasicSynthProcessor::setSampledTable (int oscillator, std::shared_ptr<const WaveTables::Sampled> table)
+{
+    if (! juce::isPositiveAndBelow (oscillator, WaveSynth::numOscillators) || table == sampled[(size_t) oscillator])
+        return;
+
+    juce::uint32 generation;
+
+    {
+        const juce::SpinLock::ScopedLockType lock (sampledLock);
+        std::swap (sampled[(size_t) oscillator], table);
+        generation = sampledGeneration.fetch_add (1, std::memory_order_acq_rel) + 1;
+    }
+
+    // The one taken away lives until the voices have taken up this change or a later one.
+    const auto seen = sampledSeen.load (std::memory_order_acquire);
+    retired.erase (std::remove_if (retired.begin(), retired.end(), [seen] (const auto& r) { return (juce::int32) (seen - r.first) >= 0; }), retired.end());
+
+    if (table != nullptr)
+        retired.emplace_back (generation, std::move (table));
+}
+
+std::shared_ptr<const WaveTables::Sampled> BasicSynthProcessor::getSampledTable (int oscillator) const
+{
+    return juce::isPositiveAndBelow (oscillator, WaveSynth::numOscillators) ? sampled[(size_t) oscillator] : nullptr;
 }
 
 void BasicSynthProcessor::reset()
@@ -2220,6 +2327,9 @@ void BasicSynthProcessor::setAllToDefault()
 
     for (auto& m : macroNames)
         m = {};
+
+    for (int o = 0; o < WaveSynth::numOscillators; ++o)
+        setSampledTable (o, nullptr);
 }
 
 void BasicSynthProcessor::loadPatch (int index)
@@ -2448,6 +2558,17 @@ void BasicSynthProcessor::addToState (juce::XmlElement& xml) const
     for (int m = 0; m < WaveSynth::numMacros; ++m)
         if (macroNames[(size_t) m].isNotEmpty())
             xml.setAttribute ("macro" + juce::String (m + 1) + "Name", macroNames[(size_t) m]);
+
+    for (int o = 0; o < WaveSynth::numOscillators; ++o)
+        if (const auto table = sampled[(size_t) o])
+        {
+            auto* t = xml.createNewChildElement ("SampledTable");
+            t->setAttribute ("oscillator", o + 1);
+            t->setAttribute ("frames", table->frames);
+            t->setAttribute ("root", table->rootHz);
+            t->setAttribute ("name", table->name);
+            t->setAttribute ("strengths", table->toText());
+        }
 }
 
 void BasicSynthProcessor::readFromState (const juce::XmlElement& xml)
@@ -2480,5 +2601,17 @@ void BasicSynthProcessor::readFromState (const juce::XmlElement& xml)
 
     for (int m = 0; m < WaveSynth::numMacros; ++m)
         macroNames[(size_t) m] = xml.getStringAttribute ("macro" + juce::String (m + 1) + "Name");
+
+    for (int o = 0; o < WaveSynth::numOscillators; ++o)
+    {
+        std::shared_ptr<const WaveTables::Sampled> table;
+
+        for (auto* t : xml.getChildWithTagNameIterator ("SampledTable"))
+            if (t->getIntAttribute ("oscillator") == o + 1)
+                table = WaveTables::Sampled::fromText (t->getStringAttribute ("strengths"), t->getIntAttribute ("frames"),
+                                                       t->getDoubleAttribute ("root"), t->getStringAttribute ("name"));
+
+        setSampledTable (o, table);
+    }
 }
 }
