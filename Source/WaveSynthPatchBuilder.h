@@ -164,6 +164,9 @@ namespace WaveSynthPatchBuilder
     /** Adds the second bank's patches to the list (WaveSynthPatchBank2.cpp, written by Scripts/make_patch_bank.py). */
     void addBank2 (std::vector<Builder>&);
 
+    /** The layered patches (WaveSynthPatchesLayered.cpp): hand-made, first in their categories. */
+    void addLayered (std::vector<Builder>&);
+
     /** The second bank's patches by name: the ones Tests/WaveSynthBankTests.cpp holds to its limits. */
     const juce::StringArray& secondBankNames();
 }

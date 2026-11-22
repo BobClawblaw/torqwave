@@ -1,4 +1,44 @@
 Init|Init|18034492c25894ce
+Bass|Hydraulic Maw|d5c32894196c142a
+Bass|Ferrous Yawn|aedee3a8fb74b110
+Bass|Turbine Throat|2c12efc86fe0d3ac
+Bass|Slag Wobble|efe2f7b696876796
+Bass|Magma Pulley|1d2c98d5e5f5c879
+Bass|Rotor Gnash|1314bef08f5b68ec
+Bass|Sulphur Choke|67e5b91eb5c4fdd6
+Bass|Piston Howl|99529b1b95b525f4
+Bass|Tar Siren|e24e5b0cfaf4b73c
+Bass|Cinder Mandible|8c246a3046527360
+Bass|Riveted Snap|8ac33d9833667d50
+Bass|Torque Fang|9aa34120f35b7239
+Bass|Spark Gap|1cde538e809ba86c
+Bass|Clamp Jaw|e592095c48bd7fdc
+Bass|Hot Wire Bass|3f84ce6e986844b9
+Bass|Ratchet Bite|f673f3426bb19cb5
+Bass|Lockjaw Engine|8dfa4b5d7628c5aa
+Bass|Arc Furnace|3145bc1a8691dcce
+Bass|Tension Strap|68acec9011333f1d
+Bass|Bolt Cutter|e9006597a09ad2da
+Bass|Pylon Bloom|af2a6840a047326f
+Bass|Grid Pump|9629a60e0859fc10
+Bass|Strobe Saw Bass|b57a7e4643660d1f
+Bass|Concourse Throb|816532ebdcf2af3a
+Bass|Afterburn Unison|4b655888c132347f
+Bass|Velvet Piston|a4761e6931282e8c
+Bass|Neon Stack Bass|1670340652201294
+Bass|Treadmill Bass|62533a8473720597
+Bass|Bulkhead Swell|ed324dd772f1032d
+Bass|Ribbon Throb|4f6db951d5499095
+Bass|Mouth Of Iron|b4f1110a4396c280
+Bass|Yammer Bass|86ad804bda690e55
+Bass|Formant Furnace|2095f4ceac67cc70
+Bass|Chatter Valve|e6ae76bcaf815795
+Bass|Gargle Line|25a275053c25214b
+Bass|Vox Hammer Bass|d7c0cef191b3e730
+Bass|Tongue Twister|9217625a3f00c4e9
+Bass|Baritone Engine|1aadf445f1478885
+Bass|Wah Crane|0410dd8c3c4b3f11
+Bass|Larynx Press|2014add78fb5bf7c
 Bass|Warehouse Sub|2c4d06c22b150a02
 Bass|Rumble Floor|0bc38a026e95931b
 Bass|Pressure Bass|8fccecc46433659c
