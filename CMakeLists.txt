@@ -310,6 +310,7 @@ target_sources(Torqwave PRIVATE
     Source/NoteEditor.cpp
     Source/MidiInput.cpp
     Source/InstrumentKeys.cpp
+    Source/AuditionPatterns.cpp
     Source/MidiOut.cpp
     Source/ControlSurface.cpp
     Source/TempoFollow.cpp
@@ -647,6 +648,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/NoteEditor.cpp
     Source/MidiInput.cpp
     Source/InstrumentKeys.cpp
+    Source/AuditionPatterns.cpp
     Source/MidiOut.cpp
     Source/ControlSurface.cpp
     Source/TempoFollow.cpp

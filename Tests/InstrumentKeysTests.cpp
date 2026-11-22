@@ -202,6 +202,58 @@ void runInstrumentKeysTests()
                "audition: a bass plays a line under C3, a pad a chord held over a second, a stab its chord twice, a lead a rising figure from middle C; "
                "Basic Drums a kick, hat and snare; StringSwarm a low E held");
 
+        // The patterns: a dozen for basses, chords, stabs, leads and kits, eight for the rest; each plays, fits its round and is in range.
+        {
+            auto counts = true, fit = true, named = true;
+            int total = 0;
+
+            for (int k = 0; k <= (int) Kind::other; ++k)
+            {
+                const auto& list = patternsFor ((Kind) k);
+                const auto want = k <= (int) Kind::lead || (Kind) k == Kind::kit ? 12 : ((Kind) k == Kind::other ? 1 : 8);
+                counts = counts && (int) list.size() == want;
+                juce::StringArray names;
+
+                for (auto& pattern : list)
+                {
+                    auto end = 0.0;
+
+                    for (auto& n : pattern.notes)
+                    {
+                        end = juce::jmax (end, n.startMs + n.lengthMs);
+                        fit = fit && n.note >= 24 && n.note <= 96 && n.lengthMs > 0.0 && n.velocity > 0.0f && n.velocity <= 1.0f;
+                    }
+
+                    fit = fit && ! pattern.notes.empty() && (pattern.lengthMs <= 0.0 || (end <= pattern.lengthMs + 40.0 && std::fmod (pattern.lengthMs, 1920.0) < 0.001));
+                    named = named && pattern.name.isNotEmpty() && ! names.contains (pattern.name);
+                    names.add (pattern.name);
+                    ++total;
+                }
+            }
+
+            // A pattern chosen is what the sound plays, is kept by name, and an unknown name leaves the first.
+            setPattern (Kind::bass, 3);
+            const auto galloping = phraseOf ("Warehouse Sub").size() == patternsFor (Kind::bass)[3].notes.size() && patternFor (synth).name == "EBM Gallop";
+            const auto saved = getPatternChoices();
+            setPatternChoices ({});
+            const auto cleared = getPattern (Kind::bass) == 0;
+            setPatternChoices (saved);
+            const auto restored = getPattern (Kind::bass) == 3 && saved == "bass=EBM Gallop";
+            setPatternChoices ("bass=No Such Pattern;kit=Four on the Floor");
+            const auto unknown = getPattern (Kind::bass) == 0 && getPattern (Kind::kit) == 1;
+            setPatternChoices ({});
+
+            // A whole-bar pattern loops on its bars.
+            Auditioner looper;
+            looper.start (patternsFor (Kind::bass)[1].notes, true, patternsFor (Kind::bass)[1].lengthMs);
+            const auto onBars = juce::exactlyEqual (looper.getLoopLengthMs(), 1920.0);
+            looper.stop();
+
+            check (counts && fit && named && galloping && cleared && restored && unknown && onBars && kindFor (drums) == Kind::kit && kindFor (guitar) == Kind::strings,
+                   "audition patterns: " + juce::String (total) + " in all, a dozen for basses, chords, stabs, leads and kits and eight for held sounds, hits and strings, "
+                   "each named once, in range and inside its round of whole bars; the one chosen plays, is kept by name, and an unknown name falls back to the first");
+        }
+
         // Over time: each note starts and ends when it is due, a new phrase ends the one playing, and a key played by hand ends it.
         std::vector<juce::String> heard;
         Auditioner player;
@@ -255,7 +307,25 @@ void runInstrumentKeysTests()
         const auto playedOver = strip.isAuditioning();
         strip.stopAudition();
         const auto stoppedByHand = ! strip.isAuditioning();
+
+        // The octave: a phrase plays as far from octave 3 as the keys are, and moves with them while it plays; a kit's does not.
+        strip.setOctave (4);
+        sent.clear();
+        strip.audition ({ { 48, 0.0, 300.0, 0.8f } });
+        const auto up = sent.size() == 1 && sent[0].isNoteOn() && sent[0].getNoteNumber() == 60;
+        strip.setOctave (2);
+        const auto moved = sent.size() == 3 && sent[1].isNoteOff() && sent[1].getNoteNumber() == 60 && sent[2].isNoteOn() && sent[2].getNoteNumber() == 36;
+        strip.stopAudition();
+        sent.clear();
+        strip.audition ({ { 36, 0.0, 300.0, 0.8f } }, false);
+        strip.setOctave (5);
+        const auto kitStays = sent.size() == 1 && sent[0].getNoteNumber() == 36 && strip.isAuditioning();
+        strip.stopAudition();
+        strip.setOctave (3);
         setAuditionLoop (false);
+
+        check (up && moved && kitStays,
+               "audition: a phrase plays an octave up with the keys at octave 4, moves to octave 2 with them while it loops, and a kit's phrase stays where it is");
 
         check (roundLength && firstRound && again && third && loopStopped && longRound && playedOver && stoppedByHand,
                "audition: looping, a phrase goes round every 960 ms (1,920 for a long one: whole beats at 125 BPM) until stopped; "

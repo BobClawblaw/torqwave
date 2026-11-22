@@ -86,6 +86,17 @@ namespace EffectPresets
         void showAudition (bool on, std::function<void (bool)> changed);
         void setAudition (bool on)                  { audition.setToggleState (on, juce::dontSendNotification); }
 
+        /** Shows Loop (a toggle: the audition goes round until stopped) and Stop beside the
+            audition toggle; `loopChanged` is told when Loop is clicked, `stopNow` when Stop is. */
+        void showAuditionLoop (bool loop, std::function<void (bool)> loopChanged, std::function<void()> stopNow);
+
+        /** Shows the audition's pattern menu after Stop: `names` the patterns the instrument's
+            sound can be auditioned by, `chosen` the one it is on, `choose` told of a choice. */
+        void showPatterns (std::function<juce::StringArray()> names, std::function<int()> chosen, std::function<void (int)> choose);
+
+        /** Sets the audition toggle, Loop, and whether Stop has anything to stop. */
+        void setAuditionState (bool on, bool loop, bool playing);
+
         /** The chosen preset's name; empty with none chosen. */
         juce::String getChosen() const              { return list.getSelectedId() > 0 ? list.getText() : juce::String(); }
 
@@ -108,6 +119,13 @@ namespace EffectPresets
         juce::TextButton save { "Save..." }, remove { "Delete" };
         juce::TextButton audition { juce::String::fromUTF8 ("\xe2\x99\xaa") };
         std::function<void (bool)> auditionChanged;
+        juce::TextButton loop, stop, pattern;
+        std::function<juce::StringArray()> patternNames;
+        std::function<int()> patternChosen;
+        std::function<void (int)> choosePattern;
+        void showPatternName();
+        std::function<void (bool)> loopChanged;
+        std::function<void()> stopNow;
         juce::TextButton previous { juce::String::fromUTF8 ("\xe2\x80\xb9") }, next { juce::String::fromUTF8 ("\xe2\x80\xba") };
         float wheel = 0.0f;
 

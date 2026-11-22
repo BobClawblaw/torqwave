@@ -170,13 +170,57 @@ Bar::Bar (Store& s, juce::String effectKey, std::function<Values()> current, std
     addAndMakeVisible (next);
     audition.setClickingTogglesState (true);
     audition.setWantsKeyboardFocus (false);
-    audition.setTooltip ("Audition: with this on, each sound plays as you choose it (the arrows, the list, the left and right keys). Loop and Stop are beside the keys at the bottom of the window.");
+    audition.setTooltip ("Audition: with this on, each sound plays as you choose it (the arrows, the list, the left and right keys)");
     audition.onClick = [this]
     {
         if (auditionChanged != nullptr)
             auditionChanged (audition.getToggleState());
     };
     addChildComponent (audition);
+    loop.setClickingTogglesState (true);
+    loop.setTooltip ("Loop the audition: the phrase goes round until you press Stop or choose another sound");
+    stop.setTooltip ("Stop the audition that is playing");
+    loop.onClick = [this]
+    {
+        if (loopChanged != nullptr)
+            loopChanged (loop.getToggleState());
+    };
+    stop.onClick = [this]
+    {
+        if (stopNow != nullptr)
+            stopNow();
+    };
+
+    pattern.onClick = [this]
+    {
+        if (patternNames == nullptr)
+            return;
+
+        juce::PopupMenu menu;
+        menu.addSectionHeader ("Audition Pattern");
+        const auto names = patternNames();
+        const auto now = patternChosen != nullptr ? patternChosen() : 0;
+
+        for (int i = 0; i < names.size(); ++i)
+            menu.addItem (i + 1, names[i], true, i == now);
+
+        juce::Component::SafePointer<Bar> safe (this);
+        menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&pattern), [safe] (int id)
+        {
+            if (safe != nullptr && id > 0 && safe->choosePattern != nullptr)
+            {
+                safe->choosePattern (id - 1);
+                safe->showPatternName();
+            }
+        });
+    };
+
+    for (auto* b : { &loop, &stop, &pattern })
+    {
+        b->setWantsKeyboardFocus (false);
+        addChildComponent (*b);
+    }
+
     list.addMouseListener (this, false);
     setWantsKeyboardFocus (true);
     refresh();
@@ -247,6 +291,49 @@ void Bar::showAudition (bool on, std::function<void (bool)> changed)
     audition.setToggleState (on, juce::dontSendNotification);
     audition.setVisible (true);
     resized();
+}
+
+void Bar::showAuditionLoop (bool on, std::function<void (bool)> changed, std::function<void()> stopping)
+{
+    loopChanged = std::move (changed);
+    stopNow = std::move (stopping);
+    loop.setToggleState (on, juce::dontSendNotification);
+    loop.setVisible (true);
+    stop.setVisible (true);
+    stop.setEnabled (false);
+    resized();
+}
+
+void Bar::showPatterns (std::function<juce::StringArray()> names, std::function<int()> chosen, std::function<void (int)> choose)
+{
+    patternNames = std::move (names);
+    patternChosen = std::move (chosen);
+    choosePattern = std::move (choose);
+    pattern.setVisible (true);
+    showPatternName();
+    resized();
+}
+
+void Bar::showPatternName()
+{
+    if (patternNames == nullptr)
+        return;
+
+    const auto names = patternNames();
+    const auto name = names[patternChosen != nullptr ? patternChosen() : 0];
+    pattern.setTooltip ("Audition pattern: " + name + ". Click to choose what the audition plays (basses, leads, chords and kits have a dozen each)");
+
+    if (pattern.getWidth() >= 80)
+        pattern.setButtonText (name + juce::String::fromUTF8 (" \xe2\x96\xbe"));
+    else
+        pattern.setButtonText (juce::String::fromUTF8 ("\xe2\x96\xbe"));
+}
+
+void Bar::setAuditionState (bool on, bool looping, bool playing)
+{
+    audition.setToggleState (on, juce::dontSendNotification);
+    loop.setToggleState (looping, juce::dontSendNotification);
+    stop.setEnabled (playing);
 }
 
 std::vector<int> Bar::orderedIds() const
@@ -386,6 +473,25 @@ void Bar::resized()
         audition.setButtonText (named ? juce::String::fromUTF8 ("\xe2\x99\xaa Audition") : juce::String::fromUTF8 ("\xe2\x99\xaa"));
         r.removeFromLeft (2);
         audition.setBounds (r.removeFromLeft (named ? 84 : 26));
+
+        if (loop.isVisible())
+        {
+            // Loop and Stop by name where the menu still keeps room for a long name, by their signs where not.
+            const auto words = getWidth() >= 560;
+            loop.setButtonText (words ? juce::String ("Loop") : juce::String::fromUTF8 ("\xe2\x86\xbb"));
+            stop.setButtonText (words ? juce::String ("Stop") : juce::String::fromUTF8 ("\xe2\x96\xa0"));
+            r.removeFromLeft (2);
+            loop.setBounds (r.removeFromLeft (words ? 46 : 26));
+            r.removeFromLeft (2);
+            stop.setBounds (r.removeFromLeft (words ? 44 : 26));
+        }
+
+        if (pattern.isVisible())
+        {
+            r.removeFromLeft (2);
+            pattern.setBounds (r.removeFromLeft (getWidth() >= 560 ? 120 : 22));
+            showPatternName();
+        }
     }
 
     r.removeFromLeft (6);
