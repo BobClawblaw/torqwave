@@ -625,6 +625,15 @@ public:
     /** The grid snapping goes to in bars and beats: the grid size's, or Auto's at this zoom. */
     Metronome::Grid snapGrid() const;
 
+    /** The lines the lanes draw behind the clips across the shown time, left to right. In bars
+        and beats: each bar's, each beat's and the snap grid's lines between beats (the ruler's
+        marks while those would be closer than 6 pixels). In time: the ruler's ticks. */
+    enum class GridLine { bar, beat, division, time };
+    std::vector<std::pair<float, GridLine>> laneGrid() const;
+
+    /** How strongly a grid line is drawn: the alpha of Theme::overlay over a lane. */
+    static float gridAlpha (GridLine) noexcept;
+
     /** The loop, drawn as a band along the top of the time ruler: a drag there draws a new one
         (snapping as other drags do), a drag inside moves it, and a drag at either end moves that
         end. Kept with the session (SessionState::loop). */

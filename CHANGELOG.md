@@ -4,6 +4,12 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Sessions start in bars and beats, and the lanes show the grid** (0.20.0, fix log 72)
+- **A new session counts in bars and beats** (New Session, the session at start-up, a project without a session). A session saved before opens as it was saved: in time, unless it was saved in bars. A session for picture or sound design switches to time with B, as before. Attaching a video does not switch it, since scoring to picture counts in bars too.
+- **The lanes show the grid plainly** in every theme. It is drawn behind the clips: a bar's line strongest, then a beat's, then the lines between beats. Before, it was drawn over the clips, so faintly it hardly showed.
+- **Counting in time, the lanes draw a line at each of the ruler's labelled ticks**, following the zoom as the labels do; before, the lanes had no lines at all in time. There is no switch to hide either grid, as there was none before.
+- Tested (multitrack view, 3 more checks): a new session is in bars and beats and a file without the setting opens in time; on a 2x render the bar, beat and eighth lines stand out from the lane in Dark, Light and High Contrast, in that order (contrast against the lane, bar/beat/eighth: Dark 2.71/1.59/1.22, Light 2.08/1.40/1.17, High Contrast 2.57/1.48/1.15); in time the lanes draw the ruler's ticks (contrast 1.45 in Dark). The whole suite passed (2346 checks).
+
 **1,018 presets and 116 kits, on the new voices** (0.20.0, step 12 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md))
 - **1,018 factory sequence presets and 116 starter kits** (from 160 and 8) across 37 styles: techno and industrial deeper, electro, breakbeat, drum and bass, ambient, deep house, darksynth and psytrance, and game audio, with **UI Sounds** and **Stingers** as new SFX sub-roles. By role: Drums 254, Bass 177, Harmony 128, Arps 128, Pads 113, SFX 111, Melody 107.
 - **Each preset plays on a named factory patch or kit**: 103 different voices, 96 patches of Torqwave Synth and the seven Basic Drums kits. A voice names its patch or kit rather than carrying settings, so a preset follows the patch as it is improved.
