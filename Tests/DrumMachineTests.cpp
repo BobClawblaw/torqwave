@@ -134,9 +134,9 @@ namespace
         auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (instance.get());
         check (drums != nullptr && error.isEmpty() && description.isInstrument && description.numInputChannels == 0 && description.name == "Basic Drums"
                    && description.uniqueId == 0x53424452 && drums->acceptsMidi() && drums->getTotalNumInputChannels() == 0
-                   && drums->getTotalNumOutputChannels() == 2 && drums->getParameters().size() == DrumMachine::numSounds * 6 + 4,
+                   && drums->getTotalNumOutputChannels() == 2 && drums->getParameters().size() == DrumMachine::numSounds * 12 + 7,
                "drums: Basic Drums is made from its description (the same ID, so sessions find it), an instrument with no audio input, a stereo output and "
-                   + juce::String (drums != nullptr ? drums->getParameters().size() : 0) + " parameters (six for each of 30 sounds, the kick's character, the kit's drive, glue and level)");
+                   + juce::String (drums != nullptr ? drums->getParameters().size() : 0) + " parameters (twelve for each of 30 sounds, the kick's character, the kit's drive, glue, level, reverb size, delay time and feedback)");
 
         BuiltInEffects::addTo (engine.knownPlugins);
         const auto known = Instrument::known (engine.knownPlugins);
@@ -470,6 +470,111 @@ namespace
         check (std::abs (block.getMagnitude (0, 0, 4800) / peakOf (full, 0, 4800) - std::pow (64.0f / 127.0f, 2.0f)) < 1.0e-3f, "drums: CC 7 sets its volume, squared");
     }
 
+    void testEffects (BuiltInEffects::BasicDrumsProcessor& drums)
+    {
+        drums.applyKit (DrumMachine::kits()[0]);
+
+        // Each effect changes each sound: the filter (and, with it on, its cutoff and resonance),
+        // the crush, and the two sends.
+        const auto choose = [] (juce::AudioParameterChoice* p, int index) { p->setValueNotifyingHost (p->convertTo0to1 ((float) index)); };
+        juce::StringArray unchanged;
+
+        for (int i = 0; i < DrumMachine::numSounds; ++i)
+        {
+            const auto sound = (Sound) i;
+            const auto note = DrumMachine::padNote (sound);
+            const auto differs = [&] (const juce::String& what, auto&& change, auto&& undo)
+            {
+                const auto before = play (drums, { { note, 0.0, 1.0f } }, 0.6);
+                change();
+                const auto after = play (drums, { { note, 0.0, 1.0f } }, 0.6);
+                undo();
+
+                if (same (before, after))
+                    unchanged.add (DrumMachine::nameOf (sound) + " " + what);
+            };
+
+            auto* filter = drums.filterParameter (sound);
+            auto* cutoff = drums.parameterOf (sound, "cutoff");
+            auto* resonance = drums.parameterOf (sound, "resonance");
+
+            for (int type = 1; type <= 3; ++type)
+                differs (DrumMachine::filterNames()[type], [&] { choose (filter, type); }, [&] { choose (filter, 0); });
+
+            choose (filter, 2);
+            differs ("cutoff", [&] { set (cutoff, 600.0f); }, [&] { set (cutoff, 2000.0f); });
+            differs ("resonance", [&] { set (resonance, 80.0f); }, [&] { set (resonance, 20.0f); });
+            choose (filter, 0);
+
+            for (auto what : { "crush", "reverb", "delay" })
+            {
+                auto* p = drums.parameterOf (sound, what);
+                differs (what, [&] { set (p, 60.0f); }, [&] { set (p, 0.0f); });
+            }
+        }
+
+        check (unchanged.isEmpty(), "drums: the filter's three types, its cutoff and resonance, the crush and the reverb and delay sends each change every one of the 30 sounds"
+                                        + (unchanged.isEmpty() ? juce::String() : " (no change: " + unchanged.joinIntoString (", ") + ")"));
+
+        // The reverb rings on after the snare has ended, more in a bigger room.
+        const auto snare = play (drums, { { 38, 0.0, 1.0f } }, 2.0);
+        set (drums.parameterOf (Sound::snare, "reverb"), 50.0f);
+        const auto room = play (drums, { { 38, 0.0, 1.0f } }, 2.0);
+        set (drums.reverbSizeParameter(), 100.0f);
+        const auto hall = play (drums, { { 38, 0.0, 1.0f } }, 2.0);
+        set (drums.reverbSizeParameter(), DrumMachine::defaultKit().reverbSize);
+        set (drums.parameterOf (Sound::snare, "reverb"), 0.0f);
+        const auto after = (int) (0.6 * rate), lateFrom = (int) (1.2 * rate);
+        check (peakOf (snare, after) == 0.0f && peakOf (room, after) > 1.0e-3f && peakOf (hall, lateFrom) > peakOf (room, lateFrom) && peakOf (room) < 1.0f,
+               "drums: a snare's reverb send rings on after it ends (" + juce::String (juce::Decibels::gainToDecibels (peakOf (room, after) / peakOf (snare)), 1)
+                   + " dB at 0.6 s against its hit), longer in a bigger room");
+
+        // The delay echoes on the beat: at 120 bpm an eighth goes left at 0.25 s, then right at 0.5 s.
+        set (drums.parameterOf (Sound::rim, "delay"), 100.0f);
+        set (drums.feedbackParameter(), 50.0f);
+        choose (drums.delayTimeParameter(), 2);
+        const auto echoes = play (drums, { { 37, 0.0, 1.0f } }, 1.0);
+        choose (drums.delayTimeParameter(), 4);
+        const auto quarter = play (drums, { { 37, 0.0, 1.0f } }, 1.0);
+        choose (drums.delayTimeParameter(), DrumMachine::defaultKit().delayTime);
+        set (drums.feedbackParameter(), DrumMachine::defaultKit().feedback);
+        set (drums.parameterOf (Sound::rim, "delay"), 0.0f);
+        const auto within = [] (const juce::AudioBuffer<float>& b, int channel, double from, double to)
+        {
+            return b.getMagnitude (channel, (int) (from * rate), (int) ((to - from) * rate));
+        };
+        check (within (echoes, 0, 0.15, 0.24) < 1.0e-6f && within (echoes, 0, 0.25, 0.3) > 0.02f && within (echoes, 1, 0.25, 0.3) < 1.0e-6f
+                   && within (echoes, 1, 0.5, 0.55) > 0.01f && within (echoes, 0, 0.5, 0.55) < 1.0e-6f
+                   && within (quarter, 0, 0.25, 0.3) < 1.0e-6f && within (quarter, 0, 0.5, 0.55) > 0.02f,
+               "drums: the delay ping-pongs on the beat: an eighth at 120 bpm echoes left at 0.25 s and right at 0.5 s; a quarter at 0.5 s");
+
+        // All Sound Off fades the reverb and delay too, and they start again empty.
+        set (drums.parameterOf (Sound::snare, "reverb"), 80.0f);
+        set (drums.parameterOf (Sound::snare, "delay"), 80.0f);
+        const auto at = (int) std::round (0.4 * rate);
+        const auto stopped = play (drums, { { 38, 0.0, 1.0f } }, 1.0, 512, 0.4);
+        set (drums.parameterOf (Sound::snare, "reverb"), 0.0f);
+        set (drums.parameterOf (Sound::snare, "delay"), 0.0f);
+        juce::String why;
+        juce::AudioBuffer<float> left (1, stopped.getNumSamples());
+        left.copyFrom (0, 0, stopped, 0, 0, stopped.getNumSamples());
+        check (peakOf (stopped, at - 200, 200) > 1.0e-3f && fadesOut (left, at, why) && peakOf (stopped, at + (int) (0.004 * rate)) == 0.0f,
+               "drums: All Sound Off fades the reverb and delay over 3 ms with the hits (" + why + "), then they are silent");
+
+        // A crushed sound steps: from 16 bits down, held samples.
+        set (drums.parameterOf (Sound::snare, "crush"), 100.0f);
+        const auto crushed = play (drums, { { 38, 0.0, 1.0f } }, 0.2);
+        set (drums.parameterOf (Sound::snare, "crush"), 0.0f);
+        auto held = 0;
+        const auto from = (int) (0.02 * rate), to = (int) (0.03 * rate);
+
+        // At full crush a sample is held for 20, so the level ramp aside, runs of near-equal values.
+        for (int n = from + 1; n < to; ++n)
+            held += std::abs (crushed.getSample (0, n) - crushed.getSample (0, n - 1)) < 1.0e-4f ? 1 : 0;
+
+        check (held > (to - from) * 3 / 4, "drums: crush at 100 % holds each sample for 20 (" + juce::String (held) + " of " + juce::String (to - from) + " steps flat)");
+    }
+
     void testKitsAndState (BuiltInEffects::BasicDrumsProcessor& drums)
     {
         const auto& all = DrumMachine::kits();
@@ -567,7 +672,7 @@ namespace
         drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Industrial")]);
         const auto first = play (drums, pattern, 2.5), again = play (drums, pattern, 2.5), odd = play (drums, pattern, 2.5, 37), one = play (drums, pattern, 2.5, 1);
         check (same (first, again) && same (first, odd) && same (first, one) && peakOf (first) < 1.0f,
-               "drums: a pattern renders bit-identically twice, in 37-sample blocks and sample by sample, the Industrial kit's drive and glue on (peak "
+               "drums: a pattern renders bit-identically twice, in 37-sample blocks and sample by sample, the Industrial kit's crush, reverb, delay, drive and glue on (peak "
                    + juce::String (peakOf (first), 2) + ")");
 
         // A pad clicked in the window plays in the next block, and the engine counts the hit for its light.
@@ -722,6 +827,7 @@ void runDrumMachineTests (AudioEngine& engine, bool levels)
     testEverySound (drums);
     testNoClicks (drums);
     testSettings (drums);
+    testEffects (drums);
     testKitsAndState (drums);
     testRendering (drums);
 }

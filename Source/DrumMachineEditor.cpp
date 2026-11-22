@@ -5,7 +5,7 @@ using DrumMachine::Sound;
 
 namespace
 {
-    constexpr int windowWidth = 1000, windowHeight = 612;
+    constexpr int windowWidth = 1100, windowHeight = 720;
     constexpr double pictureRate = 32000.0;   // the picture's hit is rendered at this rate: plenty to draw, quick to make
 
     juce::String notesOf (Sound s)
@@ -372,7 +372,7 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
 {
     setOpaque (true);
 
-    for (auto* panel : { &padPanel, &soundPanel, &kitPanel })
+    for (auto* panel : { &padPanel, &soundPanel, &kitPanel, &busPanel, &spacePanel })
         addAndMakeVisible (*panel);
 
     for (auto s : padOrder())
@@ -384,7 +384,7 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     picture = std::make_unique<Picture>();
     soundPanel.addAndMakeVisible (*picture);
 
-    for (auto* k : { &tune, &decay, &tone, &level, &pan, &drive })
+    for (auto* k : soundKnobs())
         soundPanel.addAndMakeVisible (*k);
 
     for (auto& r : readouts)
@@ -401,6 +401,16 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     level.setTooltip ("The sound's level in the kit");
     pan.setTooltip ("Where it sits, left to right");
     drive.setTooltip ("Saturation on this sound alone");
+    cutoff.setTooltip ("Where the filter cuts, or the middle of its band");
+    resonance.setTooltip ("How far the filter rings at its cutoff");
+    crush.setTooltip ("Fewer bits and a lower sample rate: from a little grit to a broken toy");
+    reverb.setTooltip ("How much of the sound goes to the kit's reverb");
+    delay.setTooltip ("How much of the sound goes to the kit's delay");
+
+    filter.setChoices (DrumMachine::filterNames());
+    filter.setTooltip ("A filter on this sound alone: off, low-pass, band-pass or high-pass");
+    filter.onChange = [this] (int) { refreshFilterKnobs(); };
+    soundPanel.addAndMakeVisible (filter);
 
     character.setChoices (DrumMachine::kickCharacterNames());
     character.attach (drums.kickCharacterParameter());
@@ -420,7 +430,7 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
         refreshPicture (true);
         repaint();
     };
-    kits.setTooltip ("The factory kits: every sound's settings and the kit's drive, glue and level at once");
+    kits.setTooltip ("The factory kits: every sound's settings, its effects, and the bus and space at once");
     kitPanel.addAndMakeVisible (kits);
     kitPanel.addAndMakeVisible (presets);
 
@@ -432,11 +442,22 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     kitLevel.setTooltip ("The kit's output level");
 
     for (auto* k : { &kitDrive, &glue, &kitLevel })
-        kitPanel.addAndMakeVisible (*k);
+        busPanel.addAndMakeVisible (*k);
 
     glueMeter = std::make_unique<GlueMeter>();
     glueMeter->setTooltip ("How far the glue is turning the kit down");
-    kitPanel.addAndMakeVisible (*glueMeter);
+    busPanel.addAndMakeVisible (*glueMeter);
+
+    reverbSize.attach (drums.reverbSizeParameter());
+    feedback.attach (drums.feedbackParameter());
+    reverbSize.setTooltip ("The reverb's room, from small to a hall");
+    feedback.setTooltip ("How much of each echo comes round again");
+    delayTime.setChoices (DrumMachine::delayTimeNames());
+    delayTime.attach (drums.delayTimeParameter());
+    delayTime.setTooltip ("The delay's time in beats of the song's tempo; each echo goes left, then right");
+
+    for (juce::Component* c : { (juce::Component*) &reverbSize, (juce::Component*) &delayTime, (juce::Component*) &feedback })
+        spacePanel.addAndMakeVisible (*c);
 
     setSize (windowWidth, windowHeight);
     select (Sound::kick);
@@ -526,9 +547,18 @@ void DrumMachineEditor::showSelected()
     level.attach (drums.parameterOf (selected, "level"));
     pan.attach (drums.parameterOf (selected, "pan"));
     drive.attach (drums.parameterOf (selected, "drive"));
+    cutoff.attach (drums.parameterOf (selected, "cutoff"));
+    resonance.attach (drums.parameterOf (selected, "resonance"));
+    crush.attach (drums.parameterOf (selected, "crush"));
+    reverb.attach (drums.parameterOf (selected, "reverb"));
+    delay.attach (drums.parameterOf (selected, "delay"));
+    filter.attach (drums.filterParameter (selected));
+    filter.setColour (colour);
 
-    for (auto* k : { &tune, &decay, &tone, &level, &pan, &drive })
+    for (auto* k : soundKnobs())
         k->setColour (colour);
+
+    refreshFilterKnobs();
 
     character.setVisible (selected == Sound::kick);
     refreshReadouts();
@@ -537,9 +567,21 @@ void DrumMachineEditor::showSelected()
     repaint();
 }
 
+void DrumMachineEditor::refreshFilterKnobs()
+{
+    // Cutoff and resonance do nothing with the filter off, so they dim.
+    const auto on = filter.getIndex() > 0;
+
+    for (auto* k : { &cutoff, &resonance })
+        k->setAlpha (on ? 1.0f : 0.4f);
+
+    for (size_t i : { (size_t) 6, (size_t) 7 })
+        readouts[i].setAlpha (on ? 1.0f : 0.4f);
+}
+
 void DrumMachineEditor::refreshReadouts()
 {
-    const std::array<SoundControls::Knob*, 6> knobs { &tune, &decay, &tone, &level, &pan, &drive };
+    const auto knobs = soundKnobs();
 
     for (size_t i = 0; i < knobs.size(); ++i)
         if (const auto text = knobs[i]->getValueText(); text != readouts[i].getText())
@@ -569,21 +611,31 @@ juce::String DrumMachineEditor::getKitText() const
 
 juce::String DrumMachineEditor::getKnobText (const juce::String& what) const
 {
-    for (auto* k : { &tune, &decay, &tone, &level, &pan, &drive })
+    for (auto* k : const_cast<DrumMachineEditor*> (this)->soundKnobs())
         if (k->getLabel().equalsIgnoreCase (what))
             return k->getValueText();
+
+    if (what.equalsIgnoreCase ("Filter"))
+        return filter.getText();
 
     return {};
 }
 
 void DrumMachineEditor::timerCallback()
 {
-    for (auto* k : { &tune, &decay, &tone, &level, &pan, &drive, &kitDrive, &glue, &kitLevel })
+    for (auto* k : soundKnobs())
+        k->refresh();
+
+    for (auto* k : { &kitDrive, &glue, &kitLevel, &reverbSize, &feedback })
         k->refresh();
 
     refreshReadouts();
 
     character.refresh();
+    delayTime.refresh();
+
+    if (const auto was = filter.getIndex(); (filter.refresh(), filter.getIndex() != was))
+        refreshFilterKnobs();
 
     // The pads light at each new hit; the picture sweeps when its own sound plays.
     const auto& engine = drums.getEngine();
@@ -643,26 +695,39 @@ void DrumMachineEditor::resized()
 {
     auto r = getLocalBounds().reduced (12);
 
-    // The kit along the top: its selector and the user's presets, then drive, glue and level.
-    kitPanel.setBounds (r.removeFromTop (92));
+    // Along the top: the kit (its selector over the user's presets), the bus (drive, glue and
+    // level) and the space (the reverb's size, the delay's time and feedback).
+    auto top = r.removeFromTop (100);
+    spacePanel.setBounds (top.removeFromRight (300));
+    top.removeFromRight (10);
+    busPanel.setBounds (top.removeFromRight (300));
+    top.removeFromRight (10);
+    kitPanel.setBounds (top);
     {
         auto c = kitPanel.getContentBounds();
-        auto knobs = c.removeFromRight (250);
-        glueMeter->setBounds (knobs.removeFromRight (70).withSizeKeepingCentre (70, 24));
-        const auto w = knobs.getWidth() / 3;
-        kitDrive.setBounds (knobs.removeFromLeft (w));
-        glue.setBounds (knobs.removeFromLeft (w));
-        kitLevel.setBounds (knobs);
-        auto row = c.withSizeKeepingCentre (c.getWidth(), 30);
-        kits.setBounds (row.removeFromLeft (230));
-        row.removeFromLeft (64);   // "edited"
-        presets.setBounds (row.removeFromLeft (juce::jmin (360, row.getWidth() - 8)));
+        auto first = c.removeFromTop (c.getHeight() / 2).withSizeKeepingCentre (c.getWidth(), 28);
+        kits.setBounds (first.removeFromLeft (juce::jmin (260, first.getWidth() - 64)));
+        presets.setBounds (c.withSizeKeepingCentre (c.getWidth(), 28));
+    }
+    {
+        auto c = busPanel.getContentBounds();
+        glueMeter->setBounds (c.removeFromRight (70).withSizeKeepingCentre (70, 24));
+        const auto w = c.getWidth() / 3;
+        kitDrive.setBounds (c.removeFromLeft (w));
+        glue.setBounds (c.removeFromLeft (w));
+        kitLevel.setBounds (c);
+    }
+    {
+        auto c = spacePanel.getContentBounds();
+        reverbSize.setBounds (c.removeFromLeft (76));
+        feedback.setBounds (c.removeFromRight (76));
+        delayTime.setBounds (c.withSizeKeepingCentre (c.getWidth() - 8, 28));
     }
 
     r.removeFromTop (10);
 
     // The pads on the left, six across.
-    padPanel.setBounds (r.removeFromLeft (560));
+    padPanel.setBounds (r.removeFromLeft (600));
     {
         const auto area = padPanel.getContentBounds().reduced (2, 2);
         constexpr int columns = 6, rows = 5;
@@ -685,12 +750,22 @@ void DrumMachineEditor::resized()
         picture->setBounds (c.removeFromTop (170));
         c.removeFromTop (8);
         // Each knob with its value in a readout under it, in real units.
-        const std::array<SoundControls::Knob*, 6> knobs { &tune, &decay, &tone, &level, &pan, &drive };
+        const auto knobs = soundKnobs();
         const auto place = [this, &knobs] (size_t i, juce::Rectangle<int> cell, int inset)
         {
             readouts[i].setBounds (cell.removeFromBottom (20).withSizeKeepingCentre (76, 18));
             knobs[i]->setBounds (cell.reduced (inset, 0));
         };
+
+        // Below the sound's own six, its effects: the filter's type, then five small knobs.
+        auto fx = c.removeFromBottom (112);
+        c.removeFromBottom (4);
+        fxLine = fx.removeFromTop (14).translated (soundPanel.getX(), soundPanel.getY());
+        filter.setBounds (fx.removeFromTop (28).withSizeKeepingCentre (juce::jmin (200, fx.getWidth()), 26));
+        const auto fw = fx.getWidth() / 5;
+
+        for (size_t i = 6; i < 11; ++i)
+            place (i, (i < 10 ? fx.removeFromLeft (fw) : fx), 4);
 
         auto big = c.removeFromTop (c.getHeight() * 11 / 20);
         const auto bw = big.getWidth() / 3;
@@ -712,4 +787,11 @@ void DrumMachineEditor::paintOverChildren (juce::Graphics& g)
     g.setColour (Theme::dimText);
     g.setFont (juce::FontOptions (11.0f));
     g.drawText ("Notes " + notesOf (selected) + "    " + chokesOf (selected), line, juce::Justification::centredLeft);
+
+    // A rule and a heading over its effects.
+    g.setColour (Theme::dimText.withAlpha (0.35f));
+    g.drawHorizontalLine (fxLine.getCentreY(), (float) fxLine.getX() + 64.0f, (float) fxLine.getRight());
+    g.setColour (Theme::dimText);
+    g.setFont (juce::FontOptions (10.5f, juce::Font::bold));
+    g.drawText ("EFFECTS", fxLine.withWidth (60), juce::Justification::centredLeft);
 }

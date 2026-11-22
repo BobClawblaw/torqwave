@@ -197,6 +197,14 @@ int chokeGroup (int note)
 }
 
 juce::StringArray kickCharacterNames()   { return { "Boom", "Punch", "Hard" }; }
+juce::StringArray filterNames()          { return { "Off", "Low-pass", "Band-pass", "High-pass" }; }
+juce::StringArray delayTimeNames()       { return { "1/16", "1/8T", "1/8", "1/8 dotted", "1/4", "1/4 dotted" }; }
+
+double delayBeats (int index)
+{
+    static constexpr double beats[] { 0.25, 1.0 / 3.0, 0.5, 0.75, 1.0, 1.5 };
+    return beats[juce::jlimit (0, 5, index)];
+}
 
 Settings defaultsFor (Sound s)
 {
@@ -260,9 +268,17 @@ const std::vector<Kit>& kits()
             s (Sound::rim) = { -3.0f, 110.0f, 20.0f, -3.0f, -10.0f, 25.0f };
             for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
                 s (t) = { -4.0f, 900.0f, -20.0f, -2.0f, s (t).pan, 30.0f };
+            s (Sound::clap).reverb = 30.0f;
+            s (Sound::snare).reverb = 15.0f;
+            s (Sound::rim).delay = 25.0f;
+            s (Sound::openHat).reverb = 10.0f;
+            s (Sound::ride).reverb = 10.0f;
             k.drive = 25.0f;
             k.glue = 40.0f;
             k.level = -5.0f;
+            k.reverbSize = 60.0f;
+            k.delayTime = 3;
+            k.feedback = 45.0f;
         });
 
         make ("Industrial", "A hard, overdriven kick, noise snares, metal that bites: everything through drive.", [] (KitSettings& k, auto&& s)
@@ -279,9 +295,24 @@ const std::vector<Kit>& kits()
             s (Sound::tambourine).drive = 40.0f;
             for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
                 s (t) = { -5.0f, 800.0f, 20.0f, -1.0f, s (t).pan, 55.0f };
+            s (Sound::snare).crush = 30.0f;
+            s (Sound::snare).reverb = 20.0f;
+            s (Sound::clap).crush = 20.0f;
+            s (Sound::clap).reverb = 25.0f;
+            s (Sound::closedHat).crush = 25.0f;
+            s (Sound::openHat).crush = 25.0f;
+            s (Sound::cowbell).delay = 30.0f;
+            s (Sound::china).reverb = 20.0f;
+            s (Sound::rim).crush = 40.0f;
+            s (Sound::rim).delay = 30.0f;
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                s (t).reverb = 15.0f;
             k.drive = 55.0f;
             k.glue = 55.0f;
             k.level = -4.0f;
+            k.reverbSize = 45.0f;
+            k.delayTime = 0;
+            k.feedback = 40.0f;
         });
 
         make ("EBM Machine", "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.", [] (KitSettings& k, auto&& s)
@@ -294,9 +325,16 @@ const std::vector<Kit>& kits()
             s (Sound::openHat) = { 2.0f, 380.0f, 10.0f, -5.0f, 10.0f, 0.0f };
             for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
                 s (t) = { -2.0f, 600.0f, 0.0f, -2.0f, s (t).pan, 15.0f };
+            s (Sound::snare).reverb = 35.0f;
+            s (Sound::clap).reverb = 30.0f;
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                s (t).reverb = 20.0f;
             k.drive = 15.0f;
             k.glue = 50.0f;
             k.level = -7.0f;
+            k.reverbSize = 70.0f;
+            k.delayTime = 2;
+            k.feedback = 30.0f;
         });
 
         make ("Electro", "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.", [] (KitSettings& k, auto&& s)
@@ -310,9 +348,16 @@ const std::vector<Kit>& kits()
             s (Sound::cowbell) = { 0.0f, 700.0f, 0.0f, -2.0f, 10.0f, 0.0f };
             for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
                 s (t) = { 2.0f, 800.0f, -40.0f, -1.0f, s (t).pan, 0.0f };
+            s (Sound::clap).reverb = 20.0f;
+            s (Sound::cowbell).delay = 20.0f;
+            s (Sound::rim).delay = 20.0f;
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                s (t).reverb = 15.0f;
             k.drive = 10.0f;
             k.glue = 30.0f;
             k.level = -6.0f;
+            k.delayTime = 1;
+            k.feedback = 35.0f;
         });
 
         make ("Breaks", "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.", [] (KitSettings& k, auto&& s)
@@ -323,9 +368,17 @@ const std::vector<Kit>& kits()
             s (Sound::closedHat) = { 1.0f, 100.0f, 20.0f, -4.0f, 20.0f, 10.0f };
             s (Sound::openHat) = { 1.0f, 600.0f, 20.0f, -5.0f, 20.0f, 10.0f };
             s (Sound::ride) = { 0.0f, 2600.0f, 10.0f, -5.0f, -25.0f, 0.0f };
+            s (Sound::kick).crush = 15.0f;
+            s (Sound::snare).crush = 20.0f;
+            s (Sound::snare).reverb = 10.0f;
+            s (Sound::closedHat).crush = 20.0f;
+            s (Sound::openHat).crush = 20.0f;
             k.drive = 30.0f;
             k.glue = 70.0f;
             k.level = -5.0f;
+            k.reverbSize = 35.0f;
+            k.delayTime = 2;
+            k.feedback = 25.0f;
         });
 
         make ("Industrial Rock", "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.", [] (KitSettings& k, auto&& s)
@@ -342,9 +395,17 @@ const std::vector<Kit>& kits()
             s (Sound::crash) = { -1.0f, 3200.0f, 0.0f, -3.0f, 35.0f, 0.0f };
             s (Sound::china) = { -1.0f, 2400.0f, 0.0f, -3.0f, -30.0f, 20.0f };
             s (Sound::ride) = { -1.0f, 3600.0f, 0.0f, -4.0f, -35.0f, 0.0f };
+            s (Sound::snare).reverb = 30.0f;
+            s (Sound::crash).reverb = 15.0f;
+            s (Sound::kick).reverb = 5.0f;
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                s (t).reverb = 25.0f;
             k.drive = 20.0f;
             k.glue = 60.0f;
             k.level = -6.0f;
+            k.reverbSize = 65.0f;
+            k.delayTime = 4;
+            k.feedback = 25.0f;
         });
 
         return list;
@@ -373,6 +434,11 @@ struct Engine::Hit
     float gainL = 1.0f, gainR = 1.0f;     // level, pan and velocity
     float drive = 0.0f, driveNorm = 1.0f;
     float tilt = 0.0f, tiltK = 0.0f, tiltL = 0.0f, tiltR = 0.0f;
+    int filter = 0;                       // its effects: filter type, 0 off
+    float filterGain = 1.0f;
+    Svf filterL, filterR;
+    float crushStep = 0.0f, holdInc = 1.0f, holdPhase = 1.0f, heldL = 0.0f, heldR = 0.0f;   // crushStep 0: no crush
+    float sendReverb = 0.0f, sendDelay = 0.0f;
     juce::int64 age = 0, length = 0;
     int rise = 1, tail = 1;               // samples of its onset ramp and of its last fade
     int fade = 0, fadeLength = 0;         // when cut: samples left of its fade out
@@ -652,9 +718,15 @@ void Engine::prepare (double sampleRate)
     glueAttack = (float) std::exp (-1.0 / (0.010 * rate));
     glueRelease = (float) std::exp (-1.0 / (0.150 * rate));
 
-    for (auto* s : { &driveAmount, &glueAmount, &outputGain })
+    for (auto* s : { &driveAmount, &glueAmount, &outputGain, &feedbackAmount })
         s->reset (rate, 0.02);
 
+    reverb.setSampleRate (rate);
+    reverbSizeSet = -1.0f;
+    delayL.assign ((size_t) (3.1 * rate) + 4, 0.0f);
+    delayR.assign (delayL.size(), 0.0f);
+    delayGlide = (float) (1.0 - std::exp (-1.0 / (0.05 * rate)));
+    delayToneK = (float) (1.0 - std::exp (-twoPi * 3500.0 / rate));
     reset();
 }
 
@@ -671,6 +743,51 @@ void Engine::reset()
     outputGain.setCurrentAndTargetValue (juce::Decibels::decibelsToGain (settings.level, -100.0f));
     glueEnvelope = 0.0f;
     reductionDb = 0.0f;
+    clearEffects();
+    delaySamples = delayTarget();
+    feedbackAmount.setCurrentAndTargetValue (settings.feedback * 0.009f);
+}
+
+void Engine::clearEffects()
+{
+    setReverbSize();
+    reverb.reset();
+    std::fill (delayL.begin(), delayL.end(), 0.0f);
+    std::fill (delayR.begin(), delayR.end(), 0.0f);
+    delayWrite = 0;
+    delayToneL = delayToneR = 0.0f;
+    effectsFade = 0;
+}
+
+void Engine::setReverbSize()
+{
+    if (juce::exactlyEqual (reverbSizeSet, settings.reverbSize))
+        return;
+
+    reverbSizeSet = settings.reverbSize;
+    juce::Reverb::Parameters p;
+    p.roomSize = 0.35f + 0.6f * juce::jlimit (0.0f, 1.0f, settings.reverbSize * 0.01f);
+    p.damping = 0.45f;
+    p.wetLevel = 0.5f;
+    p.dryLevel = 0.0f;
+    p.width = 1.0f;
+    p.freezeMode = 0.0f;
+    reverb.setParameters (p);
+}
+
+float Engine::delayTarget() const
+{
+    if (delayL.size() < 8)
+        return 1.0f;
+
+    const auto samples = delayBeats (settings.delayTime) * 60.0 / juce::jlimit (20.0, 999.0, tempo) * rate;
+    return (float) juce::jlimit (1.0, (double) delayL.size() - 3.0, samples);
+}
+
+void Engine::setTempo (double bpm)
+{
+    if (bpm > 0.0)
+        tempo = bpm;
 }
 
 void Engine::setSettings (const KitSettings& s)
@@ -679,6 +796,8 @@ void Engine::setSettings (const KitSettings& s)
     driveAmount.setTargetValue (s.drive * 0.01f);
     glueAmount.setTargetValue (s.glue * 0.01f);
     outputGain.setTargetValue (juce::Decibels::decibelsToGain (s.level, -100.0f));
+    feedbackAmount.setTargetValue (s.feedback * 0.009f);
+    setReverbSize();
 }
 
 int Engine::getNumSounding() const
@@ -732,6 +851,8 @@ void Engine::allSoundOff()
 {
     for (int note = firstNote; note <= lastNote; ++note)
         cut (note);
+
+    effectsFade = fadeLength;
 }
 
 void Engine::start (Hit& h, int note, float velocity)
@@ -762,6 +883,27 @@ void Engine::start (Hit& h, int note, float velocity)
         h.drive = 1.0f + 0.09f * st.drive;
         h.driveNorm = 1.0f / std::tanh (h.drive);
     }
+
+    if (st.filter > 0)
+    {
+        // Up to a Q of about 12; the band-pass held to unity at its peak, the others let ring.
+        const auto q = 0.6 + juce::jlimit (0.0f, 100.0f, st.resonance) * 0.11;
+        h.filter = juce::jlimit (1, 3, st.filter);
+        h.filterL.set (juce::jlimit (20.0f, 20000.0f, st.cutoff), q, rate);
+        h.filterR = h.filterL;
+        h.filterGain = h.filter == 2 ? h.filterL.k : 1.0f;
+    }
+
+    if (st.crush > 0.0f)
+    {
+        // From 16 bits down to 4, and from every sample to one held for 20.
+        const auto c = juce::jlimit (0.0f, 1.0f, st.crush * 0.01f);
+        h.crushStep = std::exp2 (1.0f - (16.0f - 12.0f * c));
+        h.holdInc = 1.0f / (1.0f + 19.0f * c * c);
+    }
+
+    h.sendReverb = juce::jlimit (0.0f, 100.0f, st.reverb) * 0.01f;
+    h.sendDelay = juce::jlimit (0.0f, 100.0f, st.delay) * 0.01f;
 
     if (tilts (sound))
     {
@@ -1005,9 +1147,11 @@ void Engine::start (Hit& h, int note, float velocity)
     h.tail = (int) juce::jmin ((juce::int64) juce::roundToInt (0.005 * rate), h.length / 2);
 }
 
-void Engine::renderHits (float* left, float* right, int count)
+void Engine::renderHits (float* left, float* right, int count, float* toReverbL, float* toReverbR, float* toDelayL, float* toDelayR)
 {
-    const auto play = [left, right, count] (Hit& h, bool fadingOut)
+    const auto sends = toReverbL != nullptr && toReverbR != nullptr && toDelayL != nullptr && toDelayR != nullptr;
+
+    const auto play = [=] (Hit& h, bool fadingOut)
     {
         for (int n = 0; n < count && h.active; ++n)
         {
@@ -1028,6 +1172,27 @@ void Engine::renderHits (float* left, float* right, int count)
                 r = h.tiltR + h.tilt * (r - h.tiltR);
             }
 
+            if (h.filter > 0)
+            {
+                h.filterL.run (l);
+                h.filterR.run (r);
+                l = h.filter == 1 ? h.filterL.lp : h.filter == 2 ? h.filterL.bp * h.filterGain : h.filterL.hp;
+                r = h.filter == 1 ? h.filterR.lp : h.filter == 2 ? h.filterR.bp * h.filterGain : h.filterR.hp;
+            }
+
+            if (h.crushStep > 0.0f)
+            {
+                if ((h.holdPhase += h.holdInc) >= 1.0f)
+                {
+                    h.holdPhase -= 1.0f;
+                    h.heldL = std::round (l / h.crushStep) * h.crushStep;
+                    h.heldR = std::round (r / h.crushStep) * h.crushStep;
+                }
+
+                l = h.heldL;
+                r = h.heldR;
+            }
+
             // It rises from silence, and falls to nothing over its last 5 ms.
             auto g = 1.0f;
 
@@ -1040,8 +1205,18 @@ void Engine::renderHits (float* left, float* right, int count)
             if (fadingOut)
                 g *= (float) h.fade / (float) h.fadeLength;
 
-            left[n] += l * g * h.gainL;
-            right[n] += r * g * h.gainR;
+            l *= g * h.gainL;
+            r *= g * h.gainR;
+            left[n] += l;
+            right[n] += r;
+
+            if (sends)
+            {
+                toReverbL[n] += l * h.sendReverb;
+                toReverbR[n] += r * h.sendReverb;
+                toDelayL[n] += l * h.sendDelay;
+                toDelayR[n] += r * h.sendDelay;
+            }
 
             if (++h.age >= h.length || (fadingOut && --h.fade <= 0))
                 h.active = false;
@@ -1077,9 +1252,75 @@ void Engine::render (float* left, float* right, int count)
         return;
     }
 
+    for (int done = 0; done < count; done += chunk)
+        renderBlock (left + done, right + done, juce::jmin (chunk, count - done));
+}
+
+void Engine::renderEffects (float* left, float* right, int count)
+{
+    if (delayL.empty())
+        return;
+
+    const auto size = (int) delayL.size();
+    const auto target = delayTarget();
+
+    for (int n = 0; n < count; ++n)
+    {
+        // Ping-pong: what is sent goes into the left line; the left's echo feeds the right, the
+        // right's comes back round to the left, darker each time.
+        delaySamples += delayGlide * (target - delaySamples);
+        auto at = (float) delayWrite - delaySamples;
+
+        if (at < 0.0f)
+            at += (float) size;
+
+        const auto i0 = (int) at;
+        const auto i1 = i0 + 1 < size ? i0 + 1 : 0;
+        const auto frac = at - (float) i0;
+        const auto outL = delayL[(size_t) i0] + frac * (delayL[(size_t) i1] - delayL[(size_t) i0]);
+        const auto outR = delayR[(size_t) i0] + frac * (delayR[(size_t) i1] - delayR[(size_t) i0]);
+        delayToneL += delayToneK * (outL - delayToneL);
+        delayToneR += delayToneK * (outR - delayToneR);
+
+        const auto fb = feedbackAmount.getNextValue();
+        delayL[(size_t) delayWrite] = 0.5f * (sendDelayL[(size_t) n] + sendDelayR[(size_t) n]) + fb * delayToneR;
+        delayR[(size_t) delayWrite] = fb * delayToneL;
+
+        if (++delayWrite >= size)
+            delayWrite = 0;
+
+        // A sample at a time, so the reverb clears at the same sample whatever the block size.
+        auto wetL = sendReverbL[(size_t) n], wetR = sendReverbR[(size_t) n];
+        reverb.processStereo (&wetL, &wetR, 1);
+        auto l = wetL + outL;
+        auto r = wetR + outR;
+
+        // After All Sound Off the effects fade with the hits, then start again empty.
+        if (effectsFade > 0)
+        {
+            const auto g = (float) --effectsFade / (float) fadeLength;
+            l *= g;
+            r *= g;
+
+            if (effectsFade == 0)
+                clearEffects();
+        }
+
+        left[n] += l;
+        right[n] += r;
+    }
+}
+
+void Engine::renderBlock (float* left, float* right, int count)
+{
     std::fill (left, left + count, 0.0f);
     std::fill (right, right + count, 0.0f);
-    renderHits (left, right, count);
+
+    for (auto* send : { &sendReverbL, &sendReverbR, &sendDelayL, &sendDelayR })
+        std::fill (send->begin(), send->begin() + count, 0.0f);
+
+    renderHits (left, right, count, sendReverbL.data(), sendReverbR.data(), sendDelayL.data(), sendDelayR.data());
+    renderEffects (left, right, count);
 
     auto mostReduction = 0.0f;
 
@@ -1176,6 +1417,12 @@ BasicDrumsProcessor::BasicDrumsProcessor()
         p.level = addFloat (id + "_level", name + " Level", { -48.0f, 6.0f }, d.level, "dB");
         p.pan = addFloat (id + "_pan", name + " Pan", { -100.0f, 100.0f }, d.pan, "%");
         p.drive = addFloat (id + "_drive", name + " Drive", { 0.0f, 100.0f }, d.drive, "%");
+        p.filter = addChoice (id + "_filter", name + " Filter", filterNames(), d.filter);
+        p.cutoff = addFloat (id + "_cutoff", name + " Cutoff", { 20.0f, 20000.0f, 0.0f, 0.25f }, d.cutoff, "Hz");
+        p.resonance = addFloat (id + "_resonance", name + " Resonance", { 0.0f, 100.0f }, d.resonance, "%");
+        p.crush = addFloat (id + "_crush", name + " Crush", { 0.0f, 100.0f }, d.crush, "%");
+        p.reverb = addFloat (id + "_reverb", name + " Reverb", { 0.0f, 100.0f }, d.reverb, "%");
+        p.delay = addFloat (id + "_delay", name + " Delay", { 0.0f, 100.0f }, d.delay, "%");
     }
 
     const auto start = defaultKit();
@@ -1183,6 +1430,9 @@ BasicDrumsProcessor::BasicDrumsProcessor()
     kitDrive = addFloat ("drive", "Kit Drive", { 0.0f, 100.0f }, start.drive, "%");
     glue = addFloat ("glue", "Glue", { 0.0f, 100.0f }, start.glue, "%");
     level = addFloat ("level", "Level", { -48.0f, 6.0f }, start.level, "dB");
+    reverbSize = addFloat ("reverb_size", "Reverb Size", { 0.0f, 100.0f }, start.reverbSize, "%");
+    delayTime = addChoice ("delay_time", "Delay Time", delayTimeNames(), start.delayTime);
+    feedback = addFloat ("delay_feedback", "Delay Feedback", { 0.0f, 100.0f }, start.feedback, "%");
     auditions.reserve (64);
 }
 
@@ -1193,13 +1443,17 @@ KitSettings BasicDrumsProcessor::currentSettings() const
     for (size_t i = 0; i < sounds.size(); ++i)
     {
         const auto& p = sounds[i];
-        k.sounds[i] = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get() };
+        k.sounds[i] = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
+                        p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get() };
     }
 
     k.kick = (KickCharacter) kickCharacter->getIndex();
     k.drive = kitDrive->get();
     k.glue = glue->get();
     k.level = level->get();
+    k.reverbSize = reverbSize->get();
+    k.delayTime = delayTime->getIndex();
+    k.feedback = feedback->get();
     return k;
 }
 
@@ -1215,12 +1469,21 @@ void BasicDrumsProcessor::applySettings (const KitSettings& k)
         setExactly (*p.level, s.level);
         setExactly (*p.pan, s.pan);
         setExactly (*p.drive, s.drive);
+        p.filter->setValueNotifyingHost (p.filter->convertTo0to1 ((float) s.filter));
+        setExactly (*p.cutoff, s.cutoff);
+        setExactly (*p.resonance, s.resonance);
+        setExactly (*p.crush, s.crush);
+        setExactly (*p.reverb, s.reverb);
+        setExactly (*p.delay, s.delay);
     }
 
     kickCharacter->setValueNotifyingHost (kickCharacter->convertTo0to1 ((float) (int) k.kick));
     setExactly (*kitDrive, k.drive);
     setExactly (*glue, k.glue);
     setExactly (*level, k.level);
+    setExactly (*reverbSize, k.reverbSize);
+    delayTime->setValueNotifyingHost (delayTime->convertTo0to1 ((float) k.delayTime));
+    setExactly (*feedback, k.feedback);
 }
 
 void BasicDrumsProcessor::applyKit (const Kit& kit)
@@ -1244,18 +1507,23 @@ bool BasicDrumsProcessor::kitModified() const
     {
         const auto &a = now.sounds[i], &b = kit.sounds[i];
 
-        if (! (near (a.tune, b.tune) && near (a.decay, b.decay) && near (a.tone, b.tone) && near (a.level, b.level) && near (a.pan, b.pan) && near (a.drive, b.drive)))
+        if (! (near (a.tune, b.tune) && near (a.decay, b.decay) && near (a.tone, b.tone) && near (a.level, b.level) && near (a.pan, b.pan) && near (a.drive, b.drive)
+               && a.filter == b.filter && near (a.cutoff, b.cutoff) && near (a.resonance, b.resonance) && near (a.crush, b.crush)
+               && near (a.reverb, b.reverb) && near (a.delay, b.delay)))
             return true;
     }
 
-    return now.kick != kit.kick || ! near (now.drive, kit.drive) || ! near (now.glue, kit.glue) || ! near (now.level, kit.level);
+    return now.kick != kit.kick || ! near (now.drive, kit.drive) || ! near (now.glue, kit.glue) || ! near (now.level, kit.level)
+        || ! near (now.reverbSize, kit.reverbSize) || now.delayTime != kit.delayTime || ! near (now.feedback, kit.feedback);
 }
 
 juce::AudioParameterFloat* BasicDrumsProcessor::parameterOf (Sound sound, const juce::String& what) const
 {
     const auto& p = sounds[(size_t) sound];
     return what == "tune" ? p.tune : what == "decay" ? p.decay : what == "tone" ? p.tone
-         : what == "level" ? p.level : what == "pan" ? p.pan : what == "drive" ? p.drive : nullptr;
+         : what == "level" ? p.level : what == "pan" ? p.pan : what == "drive" ? p.drive
+         : what == "cutoff" ? p.cutoff : what == "resonance" ? p.resonance : what == "crush" ? p.crush
+         : what == "reverb" ? p.reverb : what == "delay" ? p.delay : nullptr;
 }
 
 void BasicDrumsProcessor::addToState (juce::XmlElement& xml) const
@@ -1328,6 +1596,11 @@ void BasicDrumsProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     }
 
     engine.setSettings (currentSettings());
+
+    if (auto* head = getPlayHead())
+        if (const auto position = head->getPosition())
+            if (const auto bpm = position->getBpm())
+                engine.setTempo (*bpm);
 
     if (const juce::SpinLock::ScopedTryLockType lock (auditionLock); lock.isLocked())
     {

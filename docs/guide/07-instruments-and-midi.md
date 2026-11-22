@@ -52,12 +52,14 @@ Basic Synth plays the velocity of each note and answers the controllers a lane d
 
 **Basic Drums** is the built-in drum machine: synthesised drums on the General MIDI drum map (notes 35 to 81), the notes the drum grid writes and most drum plug-ins play. Every one of the 47 notes has a sound, each note rings on its own voice (a tom fill rings over itself), and it plays in stereo.
 
-![The Basic Drums window in the Dark Techno kit: the kit selector, presets and the kit's Drive, Glue and Level along the top; 30 pads coloured by family on the left; on the right the kick selected, a picture of one hit with its level falling to -60 dB, and its Tune, Decay, Tone, Level, Pan and Drive knobs with their values, and its character, Punch](../screenshots/guide-drums.png)
+![The Basic Drums window in the Dark Techno kit: along the top the kit selector and presets, the bus's Drive, Glue and Level, and the space's reverb Size, delay time and Feedback; 30 pads coloured by family on the left; on the right the kick selected, a picture of one hit with its level falling to -60 dB, its Tune, Decay, Tone, Level, Pan and Drive knobs with their values, its effects (the filter, Cutoff, Reso, Crush, Reverb and Delay), and its character, Punch](../screenshots/guide-drums.png)
 
 - **Pads.** A pad for each of the 30 sounds, coloured by family (kick, snares and claps, hats, toms, cymbals, hand percussion). A pad lights as its sound plays. Click one to hear it and see its settings: nearer the top of the pad plays louder.
 - **The selected sound.** A picture of one hit (its waveform, its level falling to 60 dB down, a dashed line where its decay setting ends, and a line sweeping across as it plays), and six knobs: **Tune** (semitones, two octaves either way), **Decay** (milliseconds until it has fallen 60 dB), **Tone** (darker or brighter: the kick's click, the snare's wires, the hats' filter, a drum's strike), **Level** (dB), **Pan** and **Drive** (saturation on that sound alone). The kick also has a character: **Boom** (long and round), **Punch** (909-style) or **Hard** (an overdriven industrial kick). Drag a knob, Shift-drag for fine steps, double-click it for its default.
-- **The kit.** **Drive** puts the whole kit through a soft clipper, **Glue** is a bus compressor that holds it together (GR shows how far it turns the kit down), and **Level** sets its output.
-- **Kits.** **Standard**, **Dark Techno**, **Industrial**, **EBM Machine**, **Electro**, **Breaks** and **Industrial Rock** set every sound at once. Move a knob and the kit shows as *edited*; save your own with **Save...**.
+- **The sound's effects.** Under its knobs, each sound has its own **filter** (off, low-pass, band-pass or high-pass, with **Cutoff** in Hz and **Reso**, how far it rings at the cutoff), **Crush** (fewer bits and a lower sample rate, from grit to a broken toy), and two sends: **Reverb** and **Delay**, how much of it goes to the kit's reverb and delay. The sends come after its level and pan, so a hat panned right echoes from the right.
+- **The bus.** **Drive** puts the whole kit through a soft clipper, **Glue** is a bus compressor that holds it together (GR shows how far it turns the kit down), and **Level** sets its output. The reverb and delay go through them too.
+- **The space.** The reverb and delay the sounds send to, shared by the kit. **Size** takes the reverb from a small room to a hall. The delay's time is in beats of the session's tempo (1/16, 1/8 triplet, 1/8, dotted 1/8, 1/4, dotted 1/4), and it ping-pongs: the first echo on the left, the next on the right, each darker. **Feedback** sets how many come round.
+- **Kits.** **Standard**, **Dark Techno**, **Industrial**, **EBM Machine**, **Electro**, **Breaks** and **Industrial Rock** set every sound at once, with its effects, the bus and the space: Dark Techno's clap in a big room and its rim in dotted eighths, Industrial's crushed snares and hats, EBM Machine's big snare reverb, Breaks' crunch. Move a knob and the kit shows as *edited*; save your own with **Save...**.
 
 | Notes | Sound |
 |---|---|
@@ -72,7 +74,7 @@ Basic Synth plays the velocity of each note and answers the controllers a lane d
 | 60, 61 / 62 / 63, 64 / 65, 66 | Bongos, mute conga, congas, timbales |
 | 67, 68 / 71, 72 / 73, 74 / 75 / 76, 77 / 78, 79 / 80, 81 | Agogo, whistle, guiro, claves, wood block, cuica, triangle |
 
-Each sound plays to its end however long the note is, and velocity sets its level. The hats cut each other off, as do the mute and open triangle and the mute and open cuica; a sound struck again, or cut off, fades out over 3 ms rather than clicking, and stopping or looping fades everything the same way. Sessions from before 0.19.3 load with their tunings and decays carried over, though the sounds themselves are new.
+Each sound plays to its end however long the note is, and velocity sets its level. The hats cut each other off, as do the mute and open triangle and the mute and open cuica; a sound struck again, or cut off, fades out over 3 ms rather than clicking, and stopping or looping fades everything the same way, the reverb and delay too. Sessions from before 0.19.3 load with their tunings and decays carried over, though the sounds themselves are new.
 
 ### Swarm Guitar
 

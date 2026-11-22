@@ -42,16 +42,33 @@ namespace DrumMachine
         float pan = 0.0f;       // -100 (left) to 100 (right)
         float drive = 0.0f;     // %, 0 to 100
 
+        // Its effects: a resonant filter and a bitcrusher on it alone, then how much goes to the
+        // kit's reverb and delay (after its level and pan).
+        int filter = 0;              // 0 off, 1 low-pass, 2 band-pass, 3 high-pass
+        float cutoff = 2000.0f;      // Hz, 20 to 20,000
+        float resonance = 20.0f;     // %, 0 to 100
+        float crush = 0.0f;          // %, 0 (clean) to 100 (4 bits, a twentieth of the rate)
+        float reverb = 0.0f;         // %, 0 to 100, sent
+        float delay = 0.0f;          // %, 0 to 100, sent
+
         bool operator== (const Settings& o) const
         {
             return juce::exactlyEqual (tune, o.tune) && juce::exactlyEqual (decay, o.decay) && juce::exactlyEqual (tone, o.tone)
-                && juce::exactlyEqual (level, o.level) && juce::exactlyEqual (pan, o.pan) && juce::exactlyEqual (drive, o.drive);
+                && juce::exactlyEqual (level, o.level) && juce::exactlyEqual (pan, o.pan) && juce::exactlyEqual (drive, o.drive)
+                && filter == o.filter && juce::exactlyEqual (cutoff, o.cutoff) && juce::exactlyEqual (resonance, o.resonance)
+                && juce::exactlyEqual (crush, o.crush) && juce::exactlyEqual (reverb, o.reverb) && juce::exactlyEqual (delay, o.delay);
         }
     };
 
     /** The kick's three characters. */
     enum class KickCharacter { boom, punch, hard };
     juce::StringArray kickCharacterNames();
+
+    /** The filter's types ("Off", "Low-pass", "Band-pass", "High-pass") and the delay's times
+        ("1/16" to "1/4 dotted"), with each time's length in beats. */
+    juce::StringArray filterNames();
+    juce::StringArray delayTimeNames();
+    double delayBeats (int index);
 
     /** Everything a kit sets. */
     struct KitSettings
@@ -61,10 +78,14 @@ namespace DrumMachine
         float drive = 0.0f;     // %, 0 to 100: the whole kit through a soft clipper
         float glue = 0.0f;      // %, 0 to 100: a bus compressor, threshold and ratio together
         float level = -10.0f;   // dB, -48 to 6 (Standard's leaves a full kit struck at once under 0 dB)
+        float reverbSize = 50.0f;   // %, 0 (a small room) to 100 (a hall)
+        int delayTime = 2;          // an index into delayTimeNames(), 1/8 to start with
+        float feedback = 35.0f;     // %, 0 to 100: how much of each echo comes round again
 
         bool operator== (const KitSettings& o) const
         {
-            return sounds == o.sounds && kick == o.kick && juce::exactlyEqual (drive, o.drive) && juce::exactlyEqual (glue, o.glue) && juce::exactlyEqual (level, o.level);
+            return sounds == o.sounds && kick == o.kick && juce::exactlyEqual (drive, o.drive) && juce::exactlyEqual (glue, o.glue) && juce::exactlyEqual (level, o.level)
+                && juce::exactlyEqual (reverbSize, o.reverbSize) && delayTime == o.delayTime && juce::exactlyEqual (feedback, o.feedback);
         }
     };
 
@@ -104,15 +125,20 @@ namespace DrumMachine
 
         void noteOn (int note, float velocity);
 
-        /** Fades every hit out over 3 ms. */
+        /** The tempo the delay's times follow (120 until told). */
+        void setTempo (double bpm);
+
+        /** Fades every hit out over 3 ms, and the reverb and delay with them. */
         void allSoundOff();
 
         /** Writes count samples of the kit (replacing what is there). right may be null for mono:
             the two channels mixed. */
         void render (float* left, float* right, int count);
 
-        /** Renders count samples of the sounds alone, before the kit's drive, glue and level, added to what is there. */
-        void renderHits (float* left, float* right, int count);
+        /** Renders count samples of the sounds alone, before the kit's drive, glue and level, added to
+            what is there; with send buffers, what each sends to the reverb and delay added to those. */
+        void renderHits (float* left, float* right, int count, float* toReverbL = nullptr, float* toReverbR = nullptr,
+                         float* toDelayL = nullptr, float* toDelayR = nullptr);
 
         int getNumSounding() const;
 
@@ -132,7 +158,11 @@ namespace DrumMachine
     private:
         void start (Hit&, int note, float velocity);
         void cut (int note);
-        float masterGain (float in);
+        void renderBlock (float* left, float* right, int count);
+        void renderEffects (float* left, float* right, int count);
+        void clearEffects();
+        void setReverbSize();
+        float delayTarget() const;
 
         double rate = 48000.0;
         KitSettings settings;
@@ -142,6 +172,18 @@ namespace DrumMachine
         // The kit's bus: drive, glue and level, smoothed.
         juce::SmoothedValue<float> driveAmount, glueAmount, outputGain;
         float glueEnvelope = 0.0f, glueAttack = 0.0f, glueRelease = 0.0f;
+
+        // The sends' effects: a reverb, and a ping-pong delay timed to the tempo.
+        static constexpr int chunk = 256;
+        std::array<float, chunk> sendReverbL {}, sendReverbR {}, sendDelayL {}, sendDelayR {};
+        juce::Reverb reverb;
+        float reverbSizeSet = -1.0f;
+        std::vector<float> delayL, delayR;
+        int delayWrite = 0;
+        double tempo = 120.0;
+        float delaySamples = 0.0f, delayGlide = 0.0f, delayToneK = 0.0f, delayToneL = 0.0f, delayToneR = 0.0f;
+        int effectsFade = 0;    // samples left of the effects fading after All Sound Off
+        juce::SmoothedValue<float> feedbackAmount;
 
         std::array<std::atomic<juce::uint32>, (size_t) numSounds> hitCount {};
         std::array<std::atomic<float>, (size_t) numSounds> lastVelocity {};
@@ -168,7 +210,7 @@ namespace BuiltInEffects
         void prepareToPlay (double sampleRate, int maximumBlockSize) override;
         void reset() override;
         void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
-        double getTailLengthSeconds() const override              { return 6.5; }
+        double getTailLengthSeconds() const override              { return 10.0; }
         juce::AudioProcessorEditor* createEditor() override;
 
         using Sound = DrumMachine::Sound;
@@ -193,12 +235,17 @@ namespace BuiltInEffects
 
         const DrumMachine::Engine& getEngine() const noexcept      { return engine; }
 
-        /** A parameter of a sound, by its suffix: "tune", "decay", "tone", "level", "pan" or "drive". */
+        /** A parameter of a sound, by its suffix: "tune", "decay", "tone", "level", "pan", "drive",
+            "cutoff", "resonance", "crush", "reverb" or "delay"; and its filter's type. */
         juce::AudioParameterFloat* parameterOf (Sound, const juce::String& what) const;
+        juce::AudioParameterChoice* filterParameter (Sound s) const noexcept { return sounds[(size_t) s].filter; }
         juce::AudioParameterChoice* kickCharacterParameter() const noexcept   { return kickCharacter; }
         juce::AudioParameterFloat* kitDriveParameter() const noexcept         { return kitDrive; }
         juce::AudioParameterFloat* glueParameter() const noexcept             { return glue; }
         juce::AudioParameterFloat* levelParameter() const noexcept            { return level; }
+        juce::AudioParameterFloat* reverbSizeParameter() const noexcept       { return reverbSize; }
+        juce::AudioParameterChoice* delayTimeParameter() const noexcept       { return delayTime; }
+        juce::AudioParameterFloat* feedbackParameter() const noexcept         { return feedback; }
 
     private:
         void addToState (juce::XmlElement&) const override;
@@ -207,11 +254,14 @@ namespace BuiltInEffects
         struct SoundParameters
         {
             juce::AudioParameterFloat *tune = nullptr, *decay = nullptr, *tone = nullptr, *level = nullptr, *pan = nullptr, *drive = nullptr;
+            juce::AudioParameterChoice* filter = nullptr;
+            juce::AudioParameterFloat *cutoff = nullptr, *resonance = nullptr, *crush = nullptr, *reverb = nullptr, *delay = nullptr;
         };
 
         std::array<SoundParameters, (size_t) DrumMachine::numSounds> sounds;
         juce::AudioParameterChoice* kickCharacter = nullptr;
-        juce::AudioParameterFloat *kitDrive = nullptr, *glue = nullptr, *level = nullptr;
+        juce::AudioParameterFloat *kitDrive = nullptr, *glue = nullptr, *level = nullptr, *reverbSize = nullptr, *feedback = nullptr;
+        juce::AudioParameterChoice* delayTime = nullptr;
         DrumMachine::Engine engine;
         float volume = 1.0f;   // CC 7, squared as MIDI's volume usually is
         juce::String kitName { "Standard" };
