@@ -7,6 +7,7 @@
 #include "TestPlugins.h"
 #include "InstrumentTests.h"
 #include "WaveSynthTests.h"
+#include "InstrumentKeysTests.h"
 #include "SynthClickTests.h"
 
 namespace
@@ -121,6 +122,7 @@ void runInstrumentTests (AudioEngine& engine)
         return;
 
     // Torqwave Synth's engine, patches and window, and its clicks.
+    runInstrumentKeysTests();
     runWaveSynthTests (engine);
     runSynthClickTests (engine);
 

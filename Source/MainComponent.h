@@ -755,6 +755,8 @@ private:
     std::unique_ptr<juce::FileChooser> chooser;
     AuditionPreview* makeOpenPreview();
     juce::OwnedArray<PluginEditorWindow> editorWindows;
+    struct LiveKeys;                              // the on-screen keyboard's keys, heard from any window while it shows
+    std::unique_ptr<LiveKeys> liveKeys;
     std::unique_ptr<PluginListWindow> pluginListWindow;
     std::unique_ptr<Guide::Window> guideWindow;
     std::unique_ptr<Home::Pictures> homePictures;   // the pictures on the home screen's cards

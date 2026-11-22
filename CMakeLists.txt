@@ -305,6 +305,7 @@ target_sources(Torqwave PRIVATE
     Source/PitchEditor.cpp
     Source/NoteEditor.cpp
     Source/MidiInput.cpp
+    Source/InstrumentKeys.cpp
     Source/MidiOut.cpp
     Source/ControlSurface.cpp
     Source/TempoFollow.cpp
@@ -518,6 +519,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/GeneratorTests.cpp
     Tests/InstrumentTests.cpp
     Tests/SwarmGuitarTests.cpp
+    Tests/InstrumentKeysTests.cpp
     Tests/SoundDemos.cpp
     Tests/DrumMachineTests.cpp
     Tests/SoundControlsTests.cpp
@@ -636,6 +638,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/PitchEditor.cpp
     Source/NoteEditor.cpp
     Source/MidiInput.cpp
+    Source/InstrumentKeys.cpp
     Source/MidiOut.cpp
     Source/ControlSurface.cpp
     Source/TempoFollow.cpp

@@ -37,6 +37,7 @@
 #include "../Source/WaveSynth.h"
 #include "../Source/DrumMachine.h"
 #include "SwarmGuitarTests.h"
+#include "InstrumentKeysTests.h"
 #include "SoundDemos.h"
 #include "WaveSynthTests.h"
 #include "DrumMachineTests.h"
@@ -728,6 +729,13 @@ int main (int argc, char* argv[])
     {
         AudioEngine engine;
         runSwarmGuitarTests (engine);
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (args.contains ("--keys"))
+    {
+        runInstrumentKeysTests();
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }

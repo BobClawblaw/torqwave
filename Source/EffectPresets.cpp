@@ -151,6 +151,9 @@ Bar::Bar (Store& s, juce::String effectKey, std::function<Values()> current, std
             if (juce::isPositiveAndNotGreaterThan (id, (int) made.size()))
                 applyValues (made[(size_t) id - 1].values);
         }
+
+        if (id > 0 && onChosen != nullptr)
+            onChosen();
     };
     save.onClick = [this] { saveAs(); };
     remove.onClick = [this] { removeChosen(); };
@@ -165,6 +168,15 @@ Bar::Bar (Store& s, juce::String effectKey, std::function<Values()> current, std
     next.setWantsKeyboardFocus (false);
     addAndMakeVisible (previous);
     addAndMakeVisible (next);
+    audition.setClickingTogglesState (true);
+    audition.setWantsKeyboardFocus (false);
+    audition.setTooltip ("Audition: play each sound as you go through them (the arrows, the list, the left and right keys)");
+    audition.onClick = [this]
+    {
+        if (auditionChanged != nullptr)
+            auditionChanged (audition.getToggleState());
+    };
+    addChildComponent (audition);
     list.addMouseListener (this, false);
     setWantsKeyboardFocus (true);
     refresh();
@@ -227,6 +239,14 @@ void Bar::refresh()
     const auto any = ! made.empty() || ! names.isEmpty();
     previous.setEnabled (any);
     next.setEnabled (any);
+}
+
+void Bar::showAudition (bool on, std::function<void (bool)> changed)
+{
+    auditionChanged = std::move (changed);
+    audition.setToggleState (on, juce::dontSendNotification);
+    audition.setVisible (true);
+    resized();
 }
 
 std::vector<int> Bar::orderedIds() const
@@ -358,6 +378,13 @@ void Bar::resized()
     previous.setBounds (r.removeFromLeft (24));
     r.removeFromLeft (2);
     next.setBounds (r.removeFromLeft (24));
+
+    if (audition.isVisible())
+    {
+        r.removeFromLeft (2);
+        audition.setBounds (r.removeFromLeft (26));
+    }
+
     r.removeFromLeft (6);
     list.setBounds (r);
 }

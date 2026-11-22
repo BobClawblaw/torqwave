@@ -78,6 +78,14 @@ namespace EffectPresets
         /** The presets' names in the order the arrows go through them. */
         juce::StringArray getOrder() const;
 
+        /** Called after a preset is loaded, from the menu or by a step. */
+        std::function<void()> onChosen;
+
+        /** Shows a toggle after the arrows (an instrument's window: "play each sound as it is
+            chosen"), set to `on`; `changed` is told when it is clicked. */
+        void showAudition (bool on, std::function<void (bool)> changed);
+        void setAudition (bool on)                  { audition.setToggleState (on, juce::dontSendNotification); }
+
         /** The chosen preset's name; empty with none chosen. */
         juce::String getChosen() const              { return list.getSelectedId() > 0 ? list.getText() : juce::String(); }
 
@@ -98,6 +106,8 @@ namespace EffectPresets
         std::function<void (const Values&)> applyValues;
         juce::ComboBox list;
         juce::TextButton save { "Save..." }, remove { "Delete" };
+        juce::TextButton audition { juce::String::fromUTF8 ("\xe2\x99\xaa") };
+        std::function<void (bool)> auditionChanged;
         juce::TextButton previous { juce::String::fromUTF8 ("\xe2\x80\xb9") }, next { juce::String::fromUTF8 ("\xe2\x80\xba") };
         float wheel = 0.0f;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "InstrumentKeys.h"
 #include <bitset>
 #include "Session.h"
 
@@ -155,10 +156,11 @@ namespace MidiIn
     Imported importFile (const juce::File&, double sampleRate);
     Imported importFile (juce::InputStream&, double sampleRate);
 
-    /** The on-screen keyboard: five octaves, played by the mouse or the computer's keys (as the
-        JUCE keyboard has them), its messages given to the live input. */
-    class KeyboardPanel final : public juce::Component,
-                                private juce::MidiKeyboardState::Listener
+    /** The on-screen keyboard: seven octaves of keys to click, and the computer's keys as a piano
+        (InstrumentKeys::Strip: the Q row or the A row, Z and X the octave, C and V the velocity),
+        its messages given to the live input. While it is showing, the computer's keys play
+        from any of Torqwave's windows (MainComponent hands them to `keys()`). */
+    class KeyboardPanel final : public juce::Component
     {
     public:
         explicit KeyboardPanel (Live&);
@@ -168,18 +170,15 @@ namespace MidiIn
 
         /** The keys' state: what the mouse and the computer's keys press, and what notes played
             into it (noteOn, noteOff) are sent on to the live input. */
-        juce::MidiKeyboardState& getState() noexcept   { return state; }
+        juce::MidiKeyboardState& getState() noexcept   { return strip.getState(); }
+
+        InstrumentKeys::Strip& keys() noexcept         { return strip; }
 
         void resized() override;
         void paint (juce::Graphics&) override;
 
     private:
-        void handleNoteOn (juce::MidiKeyboardState*, int channel, int note, float velocity) override;
-        void handleNoteOff (juce::MidiKeyboardState*, int channel, int note, float velocity) override;
-
-        Live& live;
-        juce::MidiKeyboardState state;
-        juce::MidiKeyboardComponent keyboard { state, juce::MidiKeyboardComponent::horizontalKeyboard };
+        InstrumentKeys::Strip strip;
         juce::Label status;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KeyboardPanel)
