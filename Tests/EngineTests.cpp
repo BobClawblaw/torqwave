@@ -34,6 +34,7 @@
 #include "RestorationTests.h"
 #include "GeneratorTests.h"
 #include "InstrumentTests.h"
+#include "WaveSynthBankTests.h"
 #include "../Source/WaveSynth.h"
 #include "../Source/DrumMachine.h"
 #include "SwarmGuitarTests.h"
@@ -609,6 +610,9 @@ int main (int argc, char* argv[])
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
     //   --sound-demos <folder>  only write the Sounds page's demos (synth patches and Swarm Guitar presets at 120 BPM) as MP3s
     //   --instruments           only the tests of the built-in instruments and their controls
+    //   --patch-settings        only print the synth's factory patches with their settings' hashes (Scripts/patch_settings.txt)
+    //   --patch-measure <file>  only measure the synth's factory patches (or those in --patches <file>) into this file,
+    //                           for Scripts/make_patch_bank.py; --part k/n measures every nth, --wav <folder> writes each note
     //   --ai                    only the AI assistance tests (a mock server; no network)
     //   --tempo                 only the tests of audio that follows the tempo
     //   --sequences             only the tests of sequences and the Sequence Library
@@ -630,6 +634,11 @@ int main (int argc, char* argv[])
         TestUtils::appExecutable = juce::File::getCurrentWorkingDirectory().getChildFile (app);
 
     juce::ScopedJuceInitialiser_GUI juceInit;
+
+    // The patch tool reads and writes only what it is given: it runs before anything shared is touched.
+    if (int result = 0; runPatchTool (args, result))
+        return result;
+
     juce::Array<juce::PluginDescription> found;
 
     // The factory presets stay out of the tests' libraries (and out of this Mac's own copy) unless a test unpacks them.

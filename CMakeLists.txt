@@ -287,6 +287,7 @@ target_sources(Torqwave PRIVATE
     Source/WaveSynth.cpp
     Source/WaveSynthPatches.cpp
     Source/WaveSynthPatchBank.cpp
+    Source/WaveSynthPatchBank2.cpp
     Source/WaveSynthEditor.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp
@@ -523,6 +524,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/SoundControlsTests.cpp
     Tests/WaveSynthTests.cpp
     Tests/SynthClickTests.cpp
+    Tests/WaveSynthBankTests.cpp
     Tests/InstrumentTrackTests.cpp
     Tests/NoteEditorTests.cpp
     Tests/MidiInputTests.cpp
@@ -687,6 +689,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/WaveSynth.cpp
     Source/WaveSynthPatches.cpp
     Source/WaveSynthPatchBank.cpp
+    Source/WaveSynthPatchBank2.cpp
     Source/WaveSynthEditor.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp

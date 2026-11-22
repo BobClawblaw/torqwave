@@ -334,8 +334,10 @@ namespace WaveSynthPatchBuilder
             .lfo (2, randomShape, 3, 0, 60).mod (lfo2, "osc1Pitch", 1.0f).filter (1, svfBand, 1500, 40).amp (500, 1000, 100, 2000)
             .delay (quarterD, 55, 35, 3000).reverb (45, 100, 7.0f).level (-12).standardMacros (25);
 
-        // Then the bank, each category's patches after the hand-made ones in browser order.
+        // Then the banks, each category's patches after the hand-made ones in browser order: the first
+        // bank's, then the second's (the sequence presets take a category's first patches, so those stay).
         addBank (b);
+        addBank2 (b);
         std::stable_sort (b.begin(), b.end(), [] (const Builder& x, const Builder& y)
         {
             return patchCategories().indexOf (x.patch.category) < patchCategories().indexOf (y.patch.category);
@@ -361,7 +363,8 @@ namespace WaveSynth
 
     const juce::StringArray& patchCategories()
     {
-        static const juce::StringArray c { "Init", "Bass", "Reese", "Acid", "Lead", "Stab", "Pluck", "Guitar", "Pad", "Drone", "Bell", "Sequence", "Riser", "Impact", "Perc", "Texture", "Vox" };
+        static const juce::StringArray c { "Init", "Bass", "Sub", "Reese", "Acid", "Lead", "Stab", "Chord", "Pluck", "Arp", "Keys", "Organ", "Guitar", "Brass", "Strings",
+                                           "Pad", "Drone", "Bell", "Sequence", "Riser", "Impact", "Cinematic", "Perc", "Drum", "FX", "Glitch", "Game", "Chip", "Texture", "Vox" };
         return c;
     }
 }
