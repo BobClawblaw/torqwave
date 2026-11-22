@@ -652,7 +652,7 @@ namespace
         rig.cycle (256);
         const auto otherRate = ! slower.isLive();
 
-        check (delayed && otherRate && BuiltInEffects::getDescriptions().size() == 20,
+        check (delayed && otherRate && BuiltInEffects::getDescriptions().size() == 21,
                "hardware insert: away from the device's cycle (an offline render) or at another rate it passes the audio through, "
                "delayed by its latency (" + juce::String (latency) + " frames) sample for sample; it is among the built-in effects");
     }

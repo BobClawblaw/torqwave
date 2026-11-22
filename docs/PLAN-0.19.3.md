@@ -347,11 +347,19 @@ Dropped on a track with a drum plug-in (Battery, for one), a drum preset plays i
 - Each preset keeps the step 6 rules, peaks between -24 and -1 dB, and passes the click check.
 - The guide's Styles page grows to cover all 36 styles.
 
+### Step 13: Swarm Guitar (M)
+
+A guitar with every string tuned to the played note, through a fuzz, as a third built-in instrument (`Source/SwarmGuitar.*`), only in Torqwave: no plug-in of it for other hosts for now.
+
+- **Done:** the engine (modelled strings, tunings, detune, strum and Strum Rate, layers each through its own amp, fuzz, crunch and cabinet, no clicks), its 15 hosted parameters and its tests.
+- **To do:** a window of its own from the shared control kit of step 9 (knobs with value arcs, the strings drawn ringing, the tuning shown string by string), factory patches, and presets that play on it in step 12.
+
 ### Order
 
 1. Step 8's synth half, inside step 9's voice code.
 2. Steps 9 and 10. They can run side by side, since they touch different code.
 3. Step 11.
 4. Step 12, last, because it needs the new patches and kits.
+5. Step 13's window after step 9's control kit lands.
 
 The Levels panel standing upright when docked at a side (a fix from use) and double-clicking sequences and kits in the Finder go in with them.

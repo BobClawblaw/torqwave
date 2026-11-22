@@ -210,6 +210,7 @@ target_sources(Torqwave PRIVATE
     Source/Reverb.cpp
     Source/Convolver.cpp
     Source/BuiltInEffects.cpp
+    Source/SwarmGuitar.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
     Source/ParametricEq.cpp
@@ -505,6 +506,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/RestorationTests.cpp
     Tests/GeneratorTests.cpp
     Tests/InstrumentTests.cpp
+    Tests/SwarmGuitarTests.cpp
     Tests/InstrumentTrackTests.cpp
     Tests/NoteEditorTests.cpp
     Tests/MidiInputTests.cpp
@@ -578,6 +580,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/Reverb.cpp
     Source/Convolver.cpp
     Source/BuiltInEffects.cpp
+    Source/SwarmGuitar.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
     Source/ParametricEq.cpp

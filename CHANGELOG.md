@@ -4,6 +4,12 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Swarm Guitar: every string on one note, through a fuzz** (0.19.3)
+- **Swarm Guitar** is a third built-in instrument, only in Torqwave: each note is a guitar of 1 to 12 modelled strings all tuned to it (Unison, Low Octave, Three Octaves or Fifths), a few cents apart, strummed one after another, through a fuzz or crunch and a cabinet. **Layers** plays up to four guitars at once, each through its own amp, spread left and right. **Strum Rate** strums again and again while a key is down.
+- Nothing stops dead: a note let go is damped over Release, and a stolen note and All Sound Off fade over 20 ms.
+- Its window is the plain one every built-in effect has for now; a window of its own, with the new controls, comes with the synth's and the drums' ([docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md), step 13).
+- Tested (10 checks): one string with no amp is in tune from A1 to A5 within 0.1 cents; as it comes a D and A peak at -7.2 dB; a part renders the same twice and in blocks of 512, 64 and 37 with Strum Rate on; All Sound Off in a fuzzed chord moves the output at most 0.100 a sample (0.111 while it played) and leaves silence 100 ms on; six strings up to 25 cents apart beat, their level climbing up to 1.71 times from one 50 ms to the next, where one string's only falls.
+
 **Every General MIDI drum, no drum clicks, and levels that stand up** (0.19.3, step 8 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md), and fixes from use)
 - **Basic Drums plays all 47 General MIDI drums** (35 to 81), adding Chinese cymbal, ride bell, tambourine, splash, vibraslap, high and low bongo, muted, open and low conga, high and low timbale, high and low agogo, short and long whistle, short and long guiro, claves, high and low wood block, muted and open cuica, and muted and open triangle. Before, the Sequencer's rows for them were silent. ([#43](https://github.com/BobClawblaw/torqwave/issues/43))
 - A drum struck again while it rings, or an open hat choked, fades out over 3 ms instead of stopping dead, which clicked. ([#44](https://github.com/BobClawblaw/torqwave/issues/44))

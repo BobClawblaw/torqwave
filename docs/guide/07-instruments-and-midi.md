@@ -2,11 +2,11 @@
 
 [Guide](README.md) › Instruments and MIDI
 
-An **instrument track** plays a synthesizer: Torqwave's built-in Basic Synth or Basic Drums, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
+An **instrument track** plays a synthesizer: Torqwave's built-in Basic Synth, Basic Drums or Swarm Guitar, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
 
 ## Make an instrument track
 
-- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Basic Synth and Basic Drums come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
+- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Basic Synth, Basic Drums and Swarm Guitar come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
 - **Turn an empty audio track into an instrument track:** right-click its header and choose **Instrument Track**. Choose it again to turn it back.
 
 The header's instrument button, which shows the instrument's name (or **Inst** when there is none), chooses, swaps or opens the instrument. It takes the place of the record button. Effects added with **FX** run after the instrument, as on any track.
@@ -66,6 +66,32 @@ Basic Synth plays the velocity of each note and answers the controllers a lane d
 | 69, 70 | Shaker |
 
 Other notes are silent. Each sound plays to its end however long the note is, and velocity sets its level. Its window has **Level**, and **Tune** (up to an octave either way) and **Decay** (25 % to 400 %) for the kick, the snare, the hats and the toms. Its sounds are the same every time, so a pattern renders identically twice.
+
+### Swarm Guitar
+
+**Swarm Guitar** is a guitar with every string tuned to the note you play, through a fuzz: one note becomes a wall of strings beating against each other. Play single notes and slow lines; each note is a whole guitar. It is only in Torqwave.
+
+Each string is modelled (it is plucked, rings and dies away as a string does), so nothing is a sample and every part renders the same each time.
+
+| Setting | What it does |
+|---|---|
+| **Strings** | 1 to 12 strings on each guitar (6 as it comes). |
+| **Tuning** | **Unison**: every string on the note. **Low Octave**: the lowest third of the strings an octave down. **Three Octaves** (as it comes): the lowest third an octave down and the top string an octave up. **Fifths**: root, fifth and octave, a power chord from one key. |
+| **Detune** | How far apart the strings sit, up to 50 cents. More is a thicker, slower-turning swarm. |
+| **Strum** | The time between one string and the next in a strum, up to 80 ms. |
+| **Strum Rate** | Strums again and again while the key is down, down and up strokes in turn, up to 24 times a second. At 0 a note is strummed once. |
+| **Layers** | 1 to 4 guitars at once, each tuned and timed a little apart and through its own amp, like takes recorded one over another. |
+| **Width** | How far the guitars are spread left and right. |
+| **Pick Position** | Where along the string it is picked: near the bridge (5 %) is thin and bright, the middle (50 %) hollow. |
+| **Brightness** | How bright the strings are and how hard the pick sounds. |
+| **Sustain** | How long a held note rings, 0.3 to 20 seconds. |
+| **Release** | How quickly a note is damped when you let go. |
+| **Amp** | **Fuzz** (two stages), **Crunch** (one) or **None** (the strings alone, for your own amp plug-in after it). Fuzz and Crunch go through a cabinet. |
+| **Drive** | How hard the amp is driven. |
+| **Tone** | The cabinet's top, 800 Hz to 12 kHz. |
+| **Level** | The output level. |
+
+Six notes can sound at once; a seventh takes the oldest's place. It answers pitch bend (2 semitones), volume, expression and the sustain pedal. Nothing stops dead: a note let go is damped, and stopping playback fades it over 20 ms. Its settings can be automated and saved as presets like any effect's.
 
 ## Edit the notes: the Piano Roll
 
