@@ -312,6 +312,7 @@ namespace
             if (n < 4) return x;
             auto readPos = (float) write - juce::jlimit (1.0f, (float) n - 2.0f, period);
             if (readPos < 0.0f) readPos += (float) n;
+            if (readPos >= (float) n) readPos -= (float) n;   // a hair under 0 rounds up to n: that is the line's start
             const auto i = (int) readPos;
             const auto f = readPos - (float) i;
             const auto a = line[(size_t) i], b = line[(size_t) ((i + 1) % n)];
@@ -1347,6 +1348,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         const auto d = juce::jlimit (1.0f, (float) un.lineSize - 3.0f, un.period - (1.0f - c) / c);
         auto read = (float) un.write - d;
         if (read < 0.0f) read += (float) un.lineSize;
+        if (read >= (float) un.lineSize) read -= (float) un.lineSize;   // a hair under 0 rounds up to the size
         const auto i = (int) read;
         const auto f = read - (float) i;
         const auto a = un.line[i], b = un.line[i + 1 == un.lineSize ? 0 : i + 1];
@@ -1852,6 +1854,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 delaySamples += 0.001f * (delayTarget - delaySamples);   // a tempo change glides rather than jumps
                 auto read = (float) delayWrite - delaySamples;
                 if (read < 0.0f) read += (float) size;
+                if (read >= (float) size) read -= (float) size;   // a hair under 0 rounds up to the size
                 const auto j = (int) read;
                 const auto f = read - (float) j;
                 const auto j2 = j + 1 == size ? 0 : j + 1;
