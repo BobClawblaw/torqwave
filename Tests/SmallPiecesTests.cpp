@@ -251,7 +251,7 @@ namespace
         const auto recalledByAi = (bool) (*again.run ("recall_scene", juce::JSON::parse (R"({"name": "loud"})")))["ok"]
                                   && again.getState().tracks[0].gainDb == -3.5f;
         const auto unknown = ! (bool) (*again.run ("recall_scene", juce::JSON::parse (R"({"name": "Quiet"})")))["ok"];
-        check (storedByAi && listed && recalledByAi && unknown && Ai::SessionTools::toolDefinitions().size() == 37,
+        check (storedByAi && listed && recalledByAi && unknown && Ai::SessionTools::toolDefinitions().size() == 43,
                "mixer scenes in Ask Torq: store_scene and recall_scene by name, get_session lists them, and an unknown name is refused");
     }
 

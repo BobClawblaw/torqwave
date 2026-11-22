@@ -429,7 +429,7 @@ namespace
     }
 
     //==========================================================================
-    void testPatches (Synth& synth)
+    void testPatches()
     {
         const auto& all = WaveSynth::factoryPatches();
         std::set<juce::String> names;
@@ -444,16 +444,36 @@ namespace
         check (all.size() >= 1000 && names.size() == all.size() && categoriesKnown && names.count ("Wailing Fuzz Lead") == 1 && names.count ("Swarm Drone") == 1,
                "synth: " + juce::String ((int) all.size()) + " factory patches, each named once, in known categories, Wailing Fuzz Lead and Swarm Drone among them");
 
-        // Each plays a held minor chord (C3, E flat 3, G3 for two seconds) between -24 and -1 dB.
+        // Each plays a held minor chord (C3, E flat 3, G3 for two seconds) between -24 and -1 dB. Eight are
+        // played at a time, each on a synth of its own, so nothing the patch before left behind is heard.
+        std::vector<float> peaks (all.size(), 0.0f);
+        {
+            std::atomic<size_t> next { 0 };
+            std::vector<std::thread> threads;
+
+            for (int t = 0; t < 8; ++t)
+                threads.emplace_back ([&]
+                {
+                    for (auto i = next++; i < all.size(); i = next++)
+                    {
+                        Synth own;
+                        own.loadPatch ((int) i);
+                        const auto out = play (own, held ({ 48, 51, 55 }, 2.0, 0.8f), (int) (4.0 * rate));
+                        peaks[i] = juce::jmax (out.getMagnitude (0, 0, out.getNumSamples()), out.getMagnitude (1, 0, out.getNumSamples()));
+                    }
+                });
+
+            for (auto& t : threads)
+                t.join();
+        }
+
         juce::StringArray problems;
         float loudest = 0.0f, quietest = 1.0f;
         juce::String loudestName, quietestName;
 
         for (size_t i = 0; i < all.size(); ++i)
         {
-            synth.loadPatch ((int) i);
-            const auto out = play (synth, held ({ 48, 51, 55 }, 2.0, 0.8f), (int) (4.0 * rate));
-            const auto peak = juce::jmax (out.getMagnitude (0, 0, out.getNumSamples()), out.getMagnitude (1, 0, out.getNumSamples()));
+            const auto peak = peaks[i];
             const auto db = juce::Decibels::gainToDecibels (peak, -100.0f);
 
             if (db < -24.0f || db > -1.0f || ! std::isfinite (db))
@@ -681,6 +701,36 @@ namespace
 
         check (still.isEmpty(), "synth: every modulation source (envelopes, LFOs, velocity, wheel, pressure, key, macros, random) moves what a slot routes it to"
                                     + (still.isEmpty() ? juce::String() : " (not: " + still.joinIntoString (", ") + ")"));
+
+        // A free-running LFO's rate follows a macro, as a retriggered one's does: a 1 Hz square LFO on the
+        // level, its rate on macro 1, counted by how often the level crosses its mean in two seconds.
+        const auto crossings = [&synth] (float macro)
+        {
+            bare (synth);
+            set (synth, "lfo1Shape", 4.0f);
+            set (synth, "lfo1Mode", 0.0f);
+            set (synth, "lfo1Rate", 1.0f);
+            synth.addModulation (WaveSynth::lfo1, "ampLevel", 0.3f);
+            synth.addModulation (WaveSynth::macro1, "lfo1Rate", 0.3f);
+            set (synth, "macro1", macro);
+            const auto out = play (synth, held ({ 60 }, 2.0), (int) (2.0 * rate));
+            std::vector<float> level;
+
+            for (int i = 0; i + 480 <= out.getNumSamples(); i += 480)
+                level.push_back (out.getRMSLevel (0, i, 480));
+
+            const auto mean = std::accumulate (level.begin(), level.end(), 0.0f) / (float) level.size();
+            int count = 0;
+
+            for (size_t i = 1; i < level.size(); ++i)
+                count += (level[i] > mean) != (level[i - 1] > mean) ? 1 : 0;
+
+            return count;
+        };
+        const auto slow = crossings (0.0f), fast = crossings (100.0f);
+        check (slow >= 3 && slow <= 5 && fast >= 30 && fast <= 38,
+               "synth: a free-running LFO's rate follows a macro: a 1 Hz square LFO on the level crosses its mean " + juce::String (slow)
+                   + " times in two seconds, and " + juce::String (fast) + " with the macro at 100 (8.6 Hz)");
     }
 
     //==========================================================================
@@ -960,7 +1010,7 @@ void runWaveSynthTests (AudioEngine& engine)
     testControllers (synth);
     testState (engine, synth);
     testEditor (synth);
-    testPatches (synth);
+    testPatches();
     testAliasing (synth);
     testUnison (synth);
     testFilters (synth);

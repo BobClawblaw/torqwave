@@ -377,22 +377,16 @@ namespace MidiIn
     }
 
     //==============================================================================
-    KeyboardPanel::KeyboardPanel (Live& l) : live (l)
+    KeyboardPanel::KeyboardPanel (Live& l) : strip ([&l] (const juce::MidiMessage& m) { l.addMessage (m); })
     {
-        addAndMakeVisible (keyboard);
-        keyboard.setAvailableRange (36, 96);
-        keyboard.setOctaveForMiddleC (4);
-        state.addListener (this);
+        addAndMakeVisible (strip);
         addAndMakeVisible (status);
         status.setFont (juce::Font (juce::FontOptions (12.0f)));
         Theme::follow (status, juce::Label::textColourId, Theme::dimText);
         status.setText ("Plays the instrument of the track being worked on.", juce::dontSendNotification);
     }
 
-    KeyboardPanel::~KeyboardPanel()
-    {
-        state.removeListener (this);
-    }
+    KeyboardPanel::~KeyboardPanel() = default;
 
     void KeyboardPanel::setStatus (const juce::String& text)
     {
@@ -403,21 +397,11 @@ namespace MidiIn
     {
         auto area = getLocalBounds();
         status.setBounds (area.removeFromTop (22).reduced (6, 0));
-        keyboard.setBounds (area.reduced (4));
+        strip.setBounds (area);
     }
 
     void KeyboardPanel::paint (juce::Graphics& g)
     {
         g.fillAll (Theme::base);
-    }
-
-    void KeyboardPanel::handleNoteOn (juce::MidiKeyboardState*, int channel, int note, float velocity)
-    {
-        live.addMessage (juce::MidiMessage::noteOn (channel, note, velocity));
-    }
-
-    void KeyboardPanel::handleNoteOff (juce::MidiKeyboardState*, int channel, int note, float velocity)
-    {
-        live.addMessage (juce::MidiMessage::noteOff (channel, note, velocity));
     }
 }

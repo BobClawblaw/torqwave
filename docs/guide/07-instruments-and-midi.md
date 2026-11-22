@@ -31,8 +31,9 @@ Right-clicking a lane offers **Add Notes Here...** and **Add Trigger Here** at t
 The selected instrument track plays whatever comes in live:
 
 - **A MIDI keyboard.** Turn its input on in **Settings... > Audio**.
-- **Window > Keyboard**, the on-screen keyboard. Click its keys, or use your computer's keys. Its line at the top says which track it plays, or why nothing will sound.
-- **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**), and its keys sound even while the session is stopped.
+- **Window > On-Screen Keyboard** (Option-K). While it shows, docked or floating, your computer's keys play from any of Torqwave's windows, in place of the shortcuts on those keys: **Q W E R T Y U I O P** are the white keys from C and **2 3 5 6 7 9 0** the black ones. **Z** and **X** move the octave down and up, **C** and **V** the velocity. The button on the keyboard switches to the A row (**A S D F G H J K L**, with **W E T Y U** for the black keys). You can click its keys too. Its line at the top says which track it plays, or why nothing will sound.
+- **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**). The same keys play that instrument without the keyboard panel, a strip of keys along the bottom of the window plays by the mouse, and the **left and right arrows** load the previous and the next sound, so you can go through sounds while playing. A plug-in's own keys sound too, even while the session is stopped.
+- **Audition** (the ♪ button after the arrows in the presets row, on to begin with). With it on, each sound you choose in an instrument's window plays at once: a low line for a bass, a held chord for a pad, a rising figure for a lead, hits for percussion, a beat on Basic Drums. Play a key and it stops. It keeps quiet while the session plays, so you hear your own part on each sound. Turn it off for silence while you browse.
 - **The Piano Roll's keyboard** (see below).
 
 <img src="../screenshots/guide-synth.png" width="720" alt="The Torqwave Synth window playing the Bunker Kick Bass patch, one voice sounding: three oscillator panels with their wavetables drawn in depth, Sub and Noise, two filters with their response curves, Amp and Voice, the envelopes and LFOs, four macros and the modulation slots">
@@ -56,7 +57,20 @@ Torqwave Synth is a wavetable synth made for dark techno, industrial and EBM. It
 
 **To modulate anything**, drag a source (an envelope or LFO tab, a macro's number, or Velocity, Wheel, Pressure, Key or Random) onto a knob. A coloured ring shows how far it moves the knob; drag on the ring to change the depth, and right-click the knob to remove it. While a note plays, a dot on the ring shows where the knob is now. Knobs turn with a drag (Shift for fine), reset on a double-click or Alt-click, and take a typed value from their right-click menu; each reads in its unit.
 
-**Patches**: the name at the top steps through more than a thousand factory patches with its arrows, or lists them by category with a click: basses, reeses, acid, leads, stabs, plucks, guitars, pads, drones, bells, sequences, risers, impacts, percussion, textures and voices. In each category the hand-made patches come first, then the rest by name. Beside it, the presets bar saves your own.
+**Patches**: the name at the top steps through about 2,560 factory patches with its arrows, or lists them by category with a click. A category with more than 40 patches opens as pages by name ("Ab - Co"); a smaller one lists its patches as the arrows step through them. The arrows go through a category's hand-made patches first, then the first bank by name, then the second. Beside the name, the presets bar saves your own.
+
+| Categories | What is in them |
+|---|---|
+| **Bass, Sub, Reese, Acid** | The low end: sequencer and FM basses, pure and driven subs, detuned reeses, resonant acid lines. Mostly one note at a time. |
+| **Lead, Stab, Chord, Pluck** | Leads, short hits and plucks. A **Chord** patch plays a whole chord from one key (minor, suspended, fifths, stacked fourths). |
+| **Arp, Sequence** | Movement from one held note, in time with the song. An **Arp** steps through notes; a **Sequence** cuts the note into a rhythm, pumps it, or steps its filter or its wave. |
+| **Keys, Organ, Guitar, Brass, Strings** | Electric pianos, clavs, plucked-string pianos and harpsichords; drawbar, pipe and combo organs; the plucked String table's guitars; synth brass; string machines, pizzicato and bowed strings. They are synthesised, not sampled: a string machine, not an orchestra. |
+| **Pad, Drone, Bell, Vox, Texture** | Sounds to hold: pads, drones for a minute at a time, bells and gongs, formant voices and choirs, beds of noise. |
+| **Riser, Impact, Cinematic, FX** | For transitions and for picture: risers and falls, hits, braams, pulses, tension beds and stingers, alarms, zaps and fly-bys. |
+| **Perc, Drum** | Metal and found percussion, and kicks, snares, claps, hats, toms and cymbals made from the oscillators. C3 is each drum's own pitch; other keys tune it. |
+| **Glitch, Game, Chip** | Faults and stutters; game sounds (pickups, jumps, menus, fanfares that play a short tune from one key press); and the pulse, triangle and noise voices of old sound chips. |
+
+Every patch of the second bank has four macros that do something, named for what they do.
 
 Torqwave Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way, or the patch's Bend range), **Mod wheel**, **Aftertouch** (channel and poly) and the macros, each moving whatever a patch routes it to, **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
 

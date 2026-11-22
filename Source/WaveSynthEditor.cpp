@@ -851,15 +851,37 @@ namespace
                 return;
             }
 
+            // A sub-menu for each category; a large category's is a list of pages by name.
             juce::PopupMenu menu;
-            std::map<juce::String, juce::PopupMenu> byCategory;
-
-            for (size_t i = 0; i < all.size(); ++i)
-                byCategory[all[i].category].addItem ((int) i + 1, all[i].name, true, all[i].name == synth.getPatchName());
+            const auto current = synth.getPatchName();
 
             for (auto& c : WaveSynth::patchCategories())
-                if (byCategory.count (c) > 0)
-                    menu.addSubMenu (c, byCategory[c]);
+            {
+                const auto pages = WaveSynthEditor::menuPages (c);
+                juce::PopupMenu category;
+                auto holdsCurrent = false;
+
+                for (auto& page : pages)
+                {
+                    juce::PopupMenu items;
+                    auto ticked = false;
+
+                    for (auto i : page.patches)
+                    {
+                        const auto& name = all[(size_t) i].name;
+                        ticked = ticked || name == current;
+                        (pages.size() == 1 ? category : items).addItem (i + 1, name, true, name == current);
+                    }
+
+                    holdsCurrent = holdsCurrent || ticked;
+
+                    if (pages.size() > 1)
+                        category.addSubMenu (page.label, items, true, nullptr, ticked);
+                }
+
+                if (! pages.empty())
+                    menu.addSubMenu (c, category, true, nullptr, holdsCurrent);
+            }
 
             juce::Component::SafePointer<PatchBrowser> safe (this);
             menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this), [safe] (int chosen)
@@ -891,6 +913,37 @@ namespace
         Synth& synth;
         int hover = 2;
     };
+}
+
+//==============================================================================
+std::vector<WaveSynthEditor::MenuPage> WaveSynthEditor::menuPages (const juce::String& category)
+{
+    const auto& all = WaveSynth::factoryPatches();
+    std::vector<int> in;
+
+    for (size_t i = 0; i < all.size(); ++i)
+        if (all[i].category == category)
+            in.push_back ((int) i);
+
+    if (in.empty())
+        return {};
+
+    if ((int) in.size() <= mostInAPage)
+        return { { {}, in } };
+
+    std::sort (in.begin(), in.end(), [&all] (int a, int b) { return all[(size_t) a].name.compareIgnoreCase (all[(size_t) b].name) < 0; });
+    const auto count = ((int) in.size() + mostInAPage - 1) / mostInAPage;
+    std::vector<MenuPage> pages;
+
+    for (int p = 0; p < count; ++p)
+    {
+        const auto from = (int) in.size() * p / count, to = (int) in.size() * (p + 1) / count;
+        const auto& first = all[(size_t) in[(size_t) from]].name;
+        const auto& last = all[(size_t) in[(size_t) to - 1]].name;
+        pages.push_back ({ first.substring (0, 2) + " - " + last.substring (0, 2), std::vector<int> (in.begin() + from, in.begin() + to) });
+    }
+
+    return pages;
 }
 
 //==============================================================================

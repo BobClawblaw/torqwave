@@ -25,6 +25,19 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    /** The patch browser's menu: a category's patches as pages. A category of up to `mostInAPage`
+        patches is one page with no label, in the browser's order (hand-made first); a larger one is
+        sorted by name and cut into pages of about equal size, each labelled by the letters its names
+        run from and to ("Ab - Co"). The numbers are indices into WaveSynth::factoryPatches(). */
+    struct MenuPage
+    {
+        juce::String label;
+        std::vector<int> patches;
+    };
+
+    static constexpr int mostInAPage = 40;
+    static std::vector<MenuPage> menuPages (const juce::String& category);
+
     /** Reads every control's parameter, the modulation and the displays again. */
     void refresh();
 

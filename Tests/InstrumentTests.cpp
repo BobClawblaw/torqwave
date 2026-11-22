@@ -8,7 +8,9 @@
 #include "InstrumentTests.h"
 #include "WaveSynthTests.h"
 #include "SignalConsoleTests.h"
+#include "InstrumentKeysTests.h"
 #include "SynthClickTests.h"
+#include "WaveSynthBankTests.h"
 
 namespace
 {
@@ -122,9 +124,11 @@ void runInstrumentTests (AudioEngine& engine)
         return;
 
     // Torqwave Synth's engine, patches and window, and its clicks.
+    runInstrumentKeysTests();
     runWaveSynthTests (engine);
     runSignalConsoleTests();
     runSynthClickTests (engine);
+    runWaveSynthBankTests();
 
     // Rendering through any instrument: latency dropped, a mono output on every channel, the notes delivered in order, stopping.
     {

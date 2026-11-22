@@ -34,9 +34,11 @@
 #include "RestorationTests.h"
 #include "GeneratorTests.h"
 #include "InstrumentTests.h"
+#include "WaveSynthBankTests.h"
 #include "../Source/WaveSynth.h"
 #include "../Source/DrumMachine.h"
 #include "SwarmGuitarTests.h"
+#include "InstrumentKeysTests.h"
 #include "SoundDemos.h"
 #include "SignalConsoleTests.h"
 #include "WaveSynthTests.h"
@@ -615,6 +617,9 @@ int main (int argc, char* argv[])
     //   --console-window <folder> only save pictures of the synth's window showing the Trace view
     //   --console               only the signal console's tests (Trace: the nodes within reach of a patch)
     //   --instruments           only the tests of the built-in instruments and their controls
+    //   --patch-settings        only print the synth's factory patches with their settings' hashes (Scripts/patch_settings.txt)
+    //   --patch-measure <file>  only measure the synth's factory patches (or those in --patches <file>) into this file,
+    //                           for Scripts/make_patch_bank.py; --part k/n measures every nth, --wav <folder> writes each note
     //   --ai                    only the AI assistance tests (a mock server; no network)
     //   --tempo                 only the tests of audio that follows the tempo
     //   --sequences             only the tests of sequences and the Sequence Library
@@ -623,7 +628,7 @@ int main (int argc, char* argv[])
     //   --stress                only the stress test: how many tracks the mix keeps up with (minutes; not in the suite)
     //   --small                 only the tests of mixer scenes, channel strips and hardware inserts
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
-    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session or sequence
+    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session, sequence or library
     juce::StringArray args;
 
     for (int i = 1; i < argc; ++i)
@@ -636,6 +641,11 @@ int main (int argc, char* argv[])
         TestUtils::appExecutable = juce::File::getCurrentWorkingDirectory().getChildFile (app);
 
     juce::ScopedJuceInitialiser_GUI juceInit;
+
+    // The patch tool reads and writes only what it is given: it runs before anything shared is touched.
+    if (int result = 0; runPatchTool (args, result))
+        return result;
+
     juce::Array<juce::PluginDescription> found;
 
     // The factory presets stay out of the tests' libraries (and out of this Mac's own copy) unless a test unpacks them.
@@ -744,6 +754,21 @@ int main (int argc, char* argv[])
     {
         AudioEngine engine;
         runSwarmGuitarTests (engine);
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (args.contains ("--keys"))
+    {
+        runInstrumentKeysTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (args.contains ("--effect-previews"))
+    {
+        AudioEngine engine;
+        runEffectPreviewTests (engine);
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }

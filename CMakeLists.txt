@@ -289,6 +289,7 @@ target_sources(Torqwave PRIVATE
     Source/SignalConsoleView.cpp
     Source/WaveSynthPatches.cpp
     Source/WaveSynthPatchBank.cpp
+    Source/WaveSynthPatchBank2.cpp
     Source/WaveSynthEditor.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp
@@ -307,6 +308,7 @@ target_sources(Torqwave PRIVATE
     Source/PitchEditor.cpp
     Source/NoteEditor.cpp
     Source/MidiInput.cpp
+    Source/InstrumentKeys.cpp
     Source/MidiOut.cpp
     Source/ControlSurface.cpp
     Source/TempoFollow.cpp
@@ -328,6 +330,7 @@ target_sources(Torqwave PRIVATE
     Source/AiKeychain.cpp
     Source/AiWorkspace.cpp
     Source/AiSession.cpp
+    Source/AiLibrary.cpp
     Source/AiSequence.cpp
     Source/InstrumentPresets.cpp
     Source/AiCatalogue.cpp
@@ -520,12 +523,14 @@ target_sources(TorqwaveTests PRIVATE
     Tests/GeneratorTests.cpp
     Tests/InstrumentTests.cpp
     Tests/SwarmGuitarTests.cpp
+    Tests/InstrumentKeysTests.cpp
     Tests/SoundDemos.cpp
     Tests/SignalConsoleTests.cpp
     Tests/DrumMachineTests.cpp
     Tests/SoundControlsTests.cpp
     Tests/WaveSynthTests.cpp
     Tests/SynthClickTests.cpp
+    Tests/WaveSynthBankTests.cpp
     Tests/InstrumentTrackTests.cpp
     Tests/NoteEditorTests.cpp
     Tests/MidiInputTests.cpp
@@ -543,6 +548,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/AiKeychain.cpp
     Source/AiWorkspace.cpp
     Source/AiSession.cpp
+    Source/AiLibrary.cpp
     Source/AiSequence.cpp
     Source/InstrumentPresets.cpp
     Source/AiCatalogue.cpp
@@ -639,6 +645,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/PitchEditor.cpp
     Source/NoteEditor.cpp
     Source/MidiInput.cpp
+    Source/InstrumentKeys.cpp
     Source/MidiOut.cpp
     Source/ControlSurface.cpp
     Source/TempoFollow.cpp
@@ -692,6 +699,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/SignalConsoleView.cpp
     Source/WaveSynthPatches.cpp
     Source/WaveSynthPatchBank.cpp
+    Source/WaveSynthPatchBank2.cpp
     Source/WaveSynthEditor.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp

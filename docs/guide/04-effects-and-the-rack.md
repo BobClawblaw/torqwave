@@ -43,6 +43,8 @@ Most dialogs have a **Presets** list with two sections:
 - **Factory** holds 201 presets for common jobs, such as dialogue cleanup, vocals, mastering to a loudness target and vinyl repair. Use them as starting points, then adjust by ear.
 - **Yours** holds your own. **Save...** beside the list keeps the current settings under a name, and **Delete** removes one of yours.
 
+The two arrows before the list step to the **previous** and the **next** preset, in the list's order and round its ends, so you can try one after another without opening the list. The left and right arrow keys do the same once you have clicked the row, and so does the mouse wheel over the list. The built-in instruments' windows have the same row.
+
 ### Effects that need the whole sound
 
 Some effects can't be heard live, because they work out their result from the audio around each moment: noise reduction, stretch, pitch correction, and the repair effects. Their preview is worked out in the background before it plays.

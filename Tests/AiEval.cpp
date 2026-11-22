@@ -3,6 +3,11 @@
 #include "../Source/AudioEdits.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/Loudness.h"
+#include "../Source/DrumMachine.h"
+#include "../Source/DrumMaps.h"
+#include "../Source/SequenceLibrary.h"
+#include "../Source/SwarmGuitar.h"
+#include "../Source/WaveSynth.h"
 #include "TestUtils.h"
 
 namespace
@@ -111,6 +116,7 @@ namespace
         std::function<juce::String (const juce::String&)> checkAnswer = {};   // when what it says matters too
         bool session = false;                                                  // works on testSession() rather than a file
         std::function<Ai::SequenceTools::Context()> sequence = {};             // works on this sequence in the Sequencer rather than a file
+        std::function<SessionState()> library = {};                            // works on this session, with the factory sounds, sequences, kits and drum maps to reach
     };
 
     /** The session test: Drums and Bass with a clip each over 0 to 4 s, Vocals with one over 1 to
@@ -251,8 +257,12 @@ namespace
             }),
             onSession ("Put a compressor on the vocal track.", [] (Ai::Workspace& w) -> juce::String
             {
-                // A track's effects aren't in the session tools yet: the right plan is none, said so.
-                return w.getSteps().isEmpty() ? juce::String() : "it planned changes: " + w.getSteps().joinIntoString (" | ");
+                // The built-in Compressor added to the Vocals track's chain, and nothing else.
+                const auto changes = w.getChainChanges();
+                const auto* vocals = trackNamed (w, "Vocals");
+                return changes.size() == 1 && vocals != nullptr && changes[0].trackId == vocals->id && changes[0].chain.size() == 1
+                           && changes[0].chain[0].plugin.name.containsIgnoreCase ("Compressor") && w.getSession()->tracks.size() == 4
+                           ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
             }),
             onSession ("Delete the bass track.", [] (Ai::Workspace& w) -> juce::String
             {
@@ -303,8 +313,13 @@ namespace
                         if (n.pitch == 38 && (c.loopLength == 0 || n.start < c.loopLength))
                             snares.insert (c.position - c.offset + n.start);
 
+                juce::StringArray times;
+
+                for (auto at : snares)
+                    times.add (juce::String ((double) at / rate, 3) + " s");
+
                 return snares == std::set<juce::int64> { (juce::int64) (rate / 2), (juce::int64) (3 * rate / 2) }
-                           ? juce::String() : "snares at " + juce::String ((int) snares.size()) + " places; plan: " + w.getSteps().joinIntoString (" | ");
+                           ? juce::String() : "snares at " + times.joinIntoString (", ") + ", not 0.5 s and 1.5 s; plan: " + w.getSteps().joinIntoString (" | ");
             }),
             onSession ("Add a drum track on Test Drums with its trap kit.", [] (Ai::Workspace& w) -> juce::String
             {
@@ -348,6 +363,311 @@ namespace
                 return master != nullptr && master->isBus && reverb != nullptr && reverb->outputBusId == master->id
                            ? juce::String() : "plan: " + w.getSteps().joinIntoString (" | ");
             }),
+        };
+    }
+
+    //==============================================================================
+    // The library set: the factory sounds, sequences and kits and the saved drum maps.
+
+    const char* const savedMapName = "Sampler - Dark Kit";
+
+    /** A kit laid out its own way: the kick on key 60 and the snare on key 40, each standing for its General MIDI note. */
+    std::vector<DrumSound> samplerMap()
+    {
+        auto map = DrumSound::generalMidi();
+
+        for (auto& d : map)
+        {
+            if (d.pitch == 36)      { d.pitch = 60; d.standsFor = 36; d.name = "Kit Kick"; }
+            else if (d.pitch == 38) { d.pitch = 40; d.standsFor = 38; d.name = "Kit Snare"; }
+            else if (d.pitch == 40) { d.pitch = 39; d.standsFor = 40; }
+            else if (d.pitch == 39) { d.pitch = 38; d.standsFor = 39; }
+        }
+
+        return map;
+    }
+
+    /** The drum maps the library set reaches: one saved map, in a folder of its own. */
+    DrumMaps::Store& evalMaps()
+    {
+        static DrumMaps::Store store (juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("TorqwaveEvalDrumMaps"));
+        return store;
+    }
+
+    /** The library set's session, at 120 BPM: instrument tracks Bass, Drums (playing Basic Drums,
+        with a one-bar clip, Beat: kicks on the beats, snares on 2 and 4, on General MIDI's keys),
+        Guitar, Lead (playing Torqwave Synth) and Hats. With onKit, Drums has the saved map and
+        Beat's notes are on its keys. */
+    SessionState librarySession (bool onKit = false)
+    {
+        SessionState s;
+        s.sampleRate = rate;
+        s.tempo = 120.0;
+
+        for (auto* name : { "Bass", "Drums", "Guitar", "Lead", "Hats" })
+            s.addInstrumentTrack().name = name;
+
+        const auto beat = (juce::int64) (rate / 2);
+        NoteClip c;
+        c.name = "Beat";
+        c.length = 4 * beat;
+        c.channel = 10;
+
+        for (int i = 0; i < 4; ++i)
+        {
+            c.notes.push_back ({ 36, i * beat, beat / 4, 0.9f });
+
+            if (i % 2 == 1)
+                c.notes.push_back ({ 38, i * beat, beat / 4, 0.8f });
+        }
+
+        if (onKit)
+        {
+            s.tracks[1].drumMap = samplerMap();
+
+            for (auto& n : c.notes)
+                n.pitch = DrumSound::toKit (s.tracks[1].drumMap, n.pitch);
+        }
+
+        SessionEdits::addNoteClip (s, s.tracks[1].id, c);
+        return s;
+    }
+
+    const std::vector<SequenceLibrary::Entry>& factoryEntries()
+    {
+        static const auto entries = SequenceLibrary (SequenceLibrary::factoryFolder()).scan();
+        return entries;
+    }
+
+    juce::String planOf (const Ai::Workspace& w)     { return "plan: " + w.getSteps().joinIntoString (" | "); }
+
+    /** The one load the plan makes, when it is a factory sound of this instrument on this track; else what is wrong. */
+    juce::String factoryLoadOn (const Ai::Workspace& w, const juce::String& track, const juce::String& instrument, Ai::SessionTools::InstrumentLoad& load)
+    {
+        const auto loads = w.getInstrumentLoads();
+        const auto* t = trackNamed (w, track);
+
+        if (loads.size() != 1 || t == nullptr || loads[0].trackId != t->id)
+            return juce::String ((int) loads.size()) + " instrument loads; " + planOf (w);
+
+        if (loads[0].plugin.name != instrument || ! loads[0].factory)
+            return "it loads " + loads[0].plugin.name + " with " + (loads[0].factory ? "the factory sound " : "the saved preset ") + loads[0].preset.quoted();
+
+        load = loads[0];
+        return w.getSession()->tracks.size() == 5 ? juce::String() : "the tracks changed; " + planOf (w);
+    }
+
+    /** A factory kit landed at a bar as a drop there lands it: a folder named for a factory kit
+        (of this style, or of this name) and, in it, each part's track with the clip
+        SequenceKit::place makes at the session's tempo; and a voice to load for each part that
+        brings one. Empty when so, else what is wrong. */
+    juce::String kitLanded (const Ai::Workspace& w, double tempo, int bar, const juce::String& style, const juce::String& name)
+    {
+        const auto& state = *w.getSession();
+
+        if (! near (state.tempo, tempo, 0.001))
+            return "the tempo is " + juce::String (state.tempo, 2) + ", not " + juce::String (tempo, 2) + "; " + planOf (w);
+
+        const SessionTrack* folder = nullptr;
+        const SequenceLibrary::Entry* entry = nullptr;
+        int folders = 0;
+
+        for (auto& t : state.tracks)
+            if (t.isFolder)
+            {
+                ++folders;
+
+                for (auto& e : factoryEntries())
+                    if (e.isKit && e.name == t.name && (style.isEmpty() || e.style == style) && (name.isEmpty() || e.name == name))
+                    {
+                        folder = &t;
+                        entry = &e;
+                    }
+            }
+
+        if (folders != 1 || folder == nullptr)
+            return juce::String (folders) + " folders, " + (folder == nullptr ? "none" : "one") + " a factory kit's of the kind asked for; " + planOf (w);
+
+        juce::String error;
+        const auto kit = SequenceKit::load (entry->file, error);
+
+        if (! kit)
+            return "the kit couldn't be read: " + error;
+
+        auto expected = librarySession();
+        expected.tempo = tempo;
+        const auto placed = SequenceKit::place (expected, *kit, expected.tempoMap().barFrame (bar - 1));
+        int voices = 0;
+
+        for (auto& part : placed.parts)
+        {
+            const auto* want = expected.findTrack (part.trackId);
+            const SessionTrack* got = nullptr;
+
+            for (auto& t : state.tracks)
+                if (t.folderId == folder->id && t.name == want->name && t.noteClips.size() == 1)
+                    got = &t;
+
+            if (got == nullptr)
+                return "no track " + want->name.quoted() + " with one clip in the folder; " + planOf (w);
+
+            const auto &a = got->noteClips[0], &b = want->noteClips[0];
+
+            if (a.position != b.position || a.length != b.length || a.loopLength != b.loopLength || ! (a.notes == b.notes))
+                return want->name.quoted() + "'s clip is at " + juce::String ((double) a.position / rate, 3) + " s, " + juce::String ((double) a.length / rate, 3) + " s long, "
+                       + juce::String ((int) a.notes.size()) + " notes; a drop gives " + juce::String ((double) b.position / rate, 3) + " s, " + juce::String ((double) b.length / rate, 3) + " s, "
+                       + juce::String ((int) b.notes.size()) + " notes; " + planOf (w);
+
+            voices += part.effects != nullptr ? 1 : 0;
+        }
+
+        return (int) w.getVoiceLoads().size() == voices ? juce::String()
+                                                        : juce::String ((int) w.getVoiceLoads().size()) + " voices to load, not " + juce::String (voices) + "; " + planOf (w);
+    }
+
+    /** The Beat clip's pitches in order of time, as "36 38 ...". */
+    juce::String beatPitches (const Ai::Workspace& w)
+    {
+        const auto* drums = trackNamed (w, "Drums");
+        juce::StringArray pitches;
+
+        if (drums != nullptr && drums->noteClips.size() == 1)
+            for (auto& n : drums->noteClips[0].notes)
+                pitches.add (juce::String (n.pitch));
+
+        return pitches.joinIntoString (" ");
+    }
+
+    /** Requests that need the factory sounds, sequences and kits and the saved drum maps
+        (librarySession, the presets the app ships and one saved map), each checked against the
+        plan's session and loads. The names asked for are read from what ships, so they are there. */
+    std::vector<Case> libraryCases()
+    {
+        const auto onLibrary = [] (juce::String request, std::function<juce::String (Ai::Workspace&)> check,
+                                   std::function<juce::String (const juce::String&)> checkAnswer = {}, bool onKit = false)
+        {
+            Case c { std::move (request), std::move (check) };
+            c.checkAnswer = std::move (checkAnswer);
+            c.library = [onKit] { return librarySession (onKit); };
+            return c;
+        };
+
+        const auto& patches = WaveSynth::factoryPatches();
+        const auto patch = patches[patches.size() / 2].name;
+        const auto kit = DrumMachine::kits().back().name;
+        const auto guitar = EffectPresets::factory (BuiltInEffects::swarmGuitarId).front().name;
+        const juce::String ebm = "Industrial/EBM";
+        juce::String kitByName;
+
+        for (auto& e : factoryEntries())
+            if (e.isKit && e.style != ebm && kitByName.isEmpty())
+                kitByName = e.name;
+
+        const juce::String gmBeat = "36 36 38 36 36 38", kitBeat = "60 60 40 60 60 40";
+
+        return {
+            onLibrary ("Put a dark reese bass on the Bass track.", [] (Ai::Workspace& w) -> juce::String
+            {
+                Ai::SessionTools::InstrumentLoad load;
+
+                if (const auto problem = factoryLoadOn (w, "Bass", "Torqwave Synth", load); problem.isNotEmpty())
+                    return problem;
+
+                for (auto& p : WaveSynth::factoryPatches())
+                    if (p.name == load.preset)
+                        return p.category == "Reese" || p.name.containsIgnoreCase ("reese") ? juce::String() : "it chose " + p.name.quoted() + " (" + p.category + "), not a reese";
+
+                return "it chose " + load.preset.quoted() + ", which is no factory patch";
+            }),
+            onLibrary ("Load the Torqwave Synth patch " + patch + " on the Lead track.", [patch] (Ai::Workspace& w) -> juce::String
+            {
+                Ai::SessionTools::InstrumentLoad load;
+                const auto problem = factoryLoadOn (w, "Lead", "Torqwave Synth", load);
+                return problem.isNotEmpty() ? problem : load.preset == patch && load.onlyPreset ? juce::String() : "it chose " + load.preset.quoted();
+            }),
+            onLibrary ("Put the Torqwave Synth patch called Velvet Harpsichord 9000 on the Guitar track.", [] (Ai::Workspace& w) -> juce::String
+            {
+                // There is no such patch: the right plan loads nothing.
+                return w.getInstrumentLoads().empty() && w.getSession()->tracks.size() == 5 ? juce::String()
+                           : "it loads " + (w.getInstrumentLoads().empty() ? juce::String ("nothing") : w.getInstrumentLoads()[0].preset.quoted()) + "; " + planOf (w);
+            }),
+            onLibrary ("Change the Drums track's kit to " + kit + ".", [kit] (Ai::Workspace& w) -> juce::String
+            {
+                Ai::SessionTools::InstrumentLoad load;
+                const auto problem = factoryLoadOn (w, "Drums", "Basic Drums", load);
+                return problem.isNotEmpty() ? problem : load.preset == kit && load.onlyPreset ? juce::String() : "it chose " + load.preset.quoted();
+            }),
+            onLibrary ("Put Swarm Guitar on the Guitar track with its preset " + guitar + ".", [guitar] (Ai::Workspace& w) -> juce::String
+            {
+                Ai::SessionTools::InstrumentLoad load;
+                const auto problem = factoryLoadOn (w, "Guitar", "Swarm Guitar", load);
+                return problem.isNotEmpty() ? problem : load.preset == guitar && ! load.onlyPreset ? juce::String() : "it chose " + load.preset.quoted();
+            }),
+            onLibrary ("Give me an EBM kit at 124.", [ebm] (Ai::Workspace& w) { return kitLanded (w, 124.0, 1, ebm, {}); }),
+            onLibrary ("Add the factory kit called " + kitByName + " at bar 9.", [kitByName] (Ai::Workspace& w) { return kitLanded (w, 120.0, 9, {}, kitByName); }),
+            onLibrary ("Add the factory kit called Polka Wedding Kit.", [] (Ai::Workspace& w) -> juce::String
+            {
+                // There is no such kit: the right plan adds nothing.
+                return w.getSession()->tracks.size() == 5 && w.getVoiceLoads().empty() ? juce::String() : planOf (w);
+            }),
+            onLibrary ("Find a techno bass line among the factory sequences and put it on a new track at bar 5.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto& state = *w.getSession();
+
+                if (state.tracks.size() != 6 || ! state.tracks[5].isInstrument || state.tracks[5].noteClips.size() != 1)
+                    return juce::String ((int) state.tracks.size()) + " tracks; " + planOf (w);
+
+                const auto& t = state.tracks[5];
+
+                if (t.noteClips[0].position != (juce::int64) (8 * rate))
+                    return "the clip starts at " + juce::String ((double) t.noteClips[0].position / rate, 3) + " s, not bar 5's 8 s; " + planOf (w);
+
+                for (auto& e : factoryEntries())
+                    if (! e.isKit && e.name == t.name && e.path[0] == "Bass" && SequenceFile::splitStyle (e.style).first == "Techno")
+                        return w.getVoiceLoads().size() == 1 && w.getVoiceLoads()[0].trackId == t.id ? juce::String() : "no voice to load for it; " + planOf (w);
+
+                return t.name.quoted() + " is not a factory techno bass sequence; " + planOf (w);
+            }),
+            onLibrary ("Put a factory hi-hat pattern on the Hats track at bar 3.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto& state = *w.getSession();
+                const auto* hats = trackNamed (w, "Hats");
+
+                if (state.tracks.size() != 5 || hats == nullptr || hats->noteClips.size() != 1)
+                    return juce::String ((int) state.tracks.size()) + " tracks, " + juce::String (hats != nullptr ? (int) hats->noteClips.size() : 0) + " clips on Hats; " + planOf (w);
+
+                if (hats->noteClips[0].position != (juce::int64) (4 * rate))
+                    return "the clip starts at " + juce::String ((double) hats->noteClips[0].position / rate, 3) + " s, not bar 3's 4 s; " + planOf (w);
+
+                for (auto& e : factoryEntries())
+                    if (! e.isKit && e.name == hats->noteClips[0].name && e.path[0] == "Drums" && e.path[1] == "Hats & Tops")
+                        return w.getVoiceLoads().empty() ? juce::String() : "it loads a voice onto a track that has its own; " + planOf (w);
+
+                return hats->noteClips[0].name.quoted() + " is not one of the factory Hats & Tops; " + planOf (w);
+            }),
+            onLibrary ("Which drum maps have I saved?", [] (Ai::Workspace& w) { return noPlan (w); }, [] (const juce::String& said) -> juce::String
+            {
+                return said.containsIgnoreCase ("Dark Kit") ? juce::String() : "the answer doesn't name the saved map";
+            }),
+            onLibrary ("Give the Drums track the saved drum map " + juce::String (savedMapName) + ". Leave its notes where they are.", [gmBeat] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* drums = trackNamed (w, "Drums");
+                return drums != nullptr && drums->drumMap == samplerMap() && beatPitches (w) == gmBeat ? juce::String()
+                           : "the map " + juce::String (drums != nullptr && drums->drumMap == samplerMap() ? "is set" : "is not set") + ", Beat plays " + beatPitches (w) + "; " + planOf (w);
+            }),
+            onLibrary ("The Drums track is going to play a sampler laid out as my saved drum map: give the track that map and move the Beat clip's notes onto its keys.",
+                       [kitBeat] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* drums = trackNamed (w, "Drums");
+                return drums != nullptr && drums->drumMap == samplerMap() && beatPitches (w) == kitBeat ? juce::String()
+                           : "the map " + juce::String (drums != nullptr && drums->drumMap == samplerMap() ? "is set" : "is not set") + ", Beat plays " + beatPitches (w) + "; " + planOf (w);
+            }),
+            onLibrary ("Move the Beat clip's notes back to General MIDI's keys. Keep the track's drum map.", [gmBeat] (Ai::Workspace& w) -> juce::String
+            {
+                const auto* drums = trackNamed (w, "Drums");
+                return drums != nullptr && drums->drumMap == samplerMap() && beatPitches (w) == gmBeat ? juce::String()
+                           : "the map " + juce::String (drums != nullptr && drums->drumMap == samplerMap() ? "is kept" : "is gone") + ", Beat plays " + beatPitches (w) + "; " + planOf (w);
+            }, {}, true),
         };
     }
 
@@ -678,7 +998,20 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
     int failed = 0, n = 0;
     double totalSeconds = 0.0;
 
-    auto chosen = set == "unseen" ? unseenCases() : set == "session" ? sessionCases() : set == "sequence" ? sequenceCases() : cases();
+    if (set == "library")
+    {
+        // The presets the app ships, in the tests' own folder, and one saved drum map in a folder of its own.
+        if (const auto error = SequenceLibrary::unpackFactoryPresets(); error.isNotEmpty())
+        {
+            std::cout << "The factory presets could not be unpacked: " << error << std::endl;
+            return 1;
+        }
+
+        evalMaps().save (savedMapName, samplerMap());
+    }
+
+    auto chosen = set == "unseen" ? unseenCases() : set == "session" ? sessionCases() : set == "sequence" ? sequenceCases()
+                : set == "library" ? libraryCases() : cases();
 
     if (set == "all")
         for (auto& c : unseenCases())
@@ -689,7 +1022,24 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
         ++n;
         Ai::Workspace::Start start;
 
-        if (c.session)
+        if (c.library != nullptr)
+        {
+            start.session = c.library();
+            start.sessionName = "Song";
+
+            // Drums plays Basic Drums and Lead Torqwave Synth; the rest have no instrument yet.
+            for (auto& d : BuiltInEffects::getDescriptions())
+            {
+                if (d.name == "Basic Drums")    start.instruments[start.session->tracks[1].id] = d;
+                if (d.name == "Torqwave Synth") start.instruments[start.session->tracks[3].id] = d;
+            }
+
+            start.library = Ai::Library::standard();
+            start.library.transposeDrops = false;
+            start.library.drumMapNames = [] { return evalMaps().names(); };
+            start.library.drumMap = [] (const juce::String& name) { return evalMaps().load (name); };
+        }
+        else if (c.session)
         {
             start.session = testSession();
             start.sessionName = "Song";

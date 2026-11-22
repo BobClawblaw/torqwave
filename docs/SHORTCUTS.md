@@ -146,6 +146,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Effects Rack | `Option-Cmd-E` |
 | Sound Library (show, or hide when it is showing) | `F5` |
 | Settings... | `Cmd-,` |
+| On-Screen Keyboard (while it shows, the Q row and the digits above it play notes in place of their commands) | `Option-K` |
 | Maximize Editor, or Restore All Panels | `Shift-Cmd-F` |
 
 ## Help
@@ -218,8 +219,11 @@ Keys a panel handles itself while it has the focus. They are not commands: they 
 | Sound Library: mark the selected sounds as favourites, or unmark them | `F` |
 | Sequence Library: rate the selected sequences and kits (0 clears the rating) | `0` to `5` |
 | Sequence Library: mark the selected sequences and kits as favourites, or unmark them | `F` |
-| Keyboard: the white keys from C, an octave and a third | `A` to `L` and `;` |
-| Keyboard: the black keys between them | `W` `E` `T` `Y` `U` `O` `P` |
+| On-Screen Keyboard: the white keys from C, while the keyboard shows or in an instrument's window (the A row instead, if chosen on the keyboard) | `Q W E R T Y U I O P` |
+| On-Screen Keyboard: the black keys between them (W E T Y U O P with the A row) | `2 3 5 6 7 9 0` |
+| On-Screen Keyboard: an octave down and up | `Z and X` |
+| On-Screen Keyboard: softer and louder | `C and V` |
+| Instrument window: the previous and the next sound | `Left and right arrows` |
 | Marker List: rename the selected marker | `Return` |
 | Marker List: remove the selected marker | `Delete` |
 | Effect dialogs: start or stop the preview | `Space` |

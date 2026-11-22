@@ -1,4 +1,6 @@
 #include "MainComponent.h"
+#include "InstrumentKeys.h"
+#include "WaveSynth.h"
 #include "SequencePropertiesDialog.h"
 #include "InstrumentPresets.h"
 #include "BuildStamp.h"
@@ -529,20 +531,35 @@ private:
 class MainComponent::PluginEditorWindow final : public juce::DocumentWindow
 {
 public:
-    PluginEditorWindow (juce::AudioProcessor& p, std::function<void (PluginEditorWindow*)> onClose)
+    /** `send` given: an instrument's window, with the keys strip under the plug-in's own editor;
+        notes played there go to `send`, and `otherKey` gets the keys the window has no use for
+        (the transport's, for one). */
+    PluginEditorWindow (juce::AudioProcessor& p, std::function<void (PluginEditorWindow*)> onClose,
+                        std::function<void (const juce::MidiMessage&)> send = nullptr,
+                        std::function<bool (const juce::KeyPress&)> otherKey = nullptr,
+                        std::function<bool()> busy = nullptr)
         : DocumentWindow (p.getName(), Theme::surface, DocumentWindow::closeButton | DocumentWindow::minimiseButton),
           processor (p), closeCallback (std::move (onClose))
     {
-        juce::AudioProcessorEditor* editor = p.hasEditor() ? p.createEditorAndMakeActive() : nullptr;
+        editor = p.hasEditor() ? p.createEditorAndMakeActive() : nullptr;
 
         if (editor == nullptr)
             editor = new juce::GenericAudioProcessorEditor (p);
 
-        setContentOwned (editor, true);
-        setResizable (editor->isResizable(), false);
+        const auto resizable = editor->isResizable();
+
+        if (send != nullptr)
+            setContentOwned (new Holder (*this, editor, std::move (send), std::move (otherKey), std::move (busy)), true);
+        else
+            setContentOwned (editor, true);
+
+        setResizable (resizable, false);
         setUsingNativeTitleBar (true);
         centreWithSize (getWidth(), getHeight());
         setVisible (true);
+
+        if (auto* holder = dynamic_cast<Holder*> (getContentComponent()))
+            holder->grabKeyboardFocus();
     }
 
     ~PluginEditorWindow() override
@@ -550,18 +567,199 @@ public:
         // The editor must be deleted before the plug-in instance, and the plug-in told it has
         // gone: otherwise it keeps the editor as its active one and refuses to make another, and
         // the next window for it falls back to the generic parameter list.
-        if (auto* editor = dynamic_cast<juce::AudioProcessorEditor*> (getContentComponent()))
-            processor.editorBeingDeleted (editor);
-
+        processor.editorBeingDeleted (editor);
         clearContentComponent();
     }
 
     void closeButtonPressed() override  { closeCallback (this); }
 
+    /** The window in front or behind: behind, its keys let go of their notes. */
+    void activeWindowStatusChanged() override
+    {
+        DocumentWindow::activeWindowStatusChanged();
+
+        if (auto* holder = dynamic_cast<Holder*> (getContentComponent()); holder != nullptr && ! isActiveWindow())
+            holder->strip.allUp();
+    }
+
+    /** The keys strip of an instrument's window; nullptr for an effect's. */
+    InstrumentKeys::Strip* getKeys() const
+    {
+        auto* holder = dynamic_cast<Holder*> (getContentComponent());
+        return holder != nullptr ? &holder->strip : nullptr;
+    }
+
     juce::AudioProcessor& processor;
 
 private:
+    /** The plug-in's editor with the keys strip under it. The computer's keys reach it from
+        wherever the keyboard focus is in the window (except while a number is being typed). */
+    struct Holder final : public juce::Component,
+                          private juce::Timer
+    {
+        Holder (PluginEditorWindow& w, juce::AudioProcessorEditor* e, std::function<void (const juce::MidiMessage&)> send,
+                std::function<bool (const juce::KeyPress&)> other, std::function<bool()> busyNow)
+            : window (w), editor (e), strip (std::move (send)), otherKey (std::move (other)), busy (std::move (busyNow))
+        {
+            addAndMakeVisible (*editor);
+            addAndMakeVisible (strip);
+            setWantsKeyboardFocus (true);
+            setSize (editor->getWidth(), editor->getHeight() + InstrumentKeys::Strip::height);
+
+            // Audition: a sound chosen in this window is played at once. The switch sits in the presets row.
+            if (auto* row = InstrumentKeys::presetsRow (*editor))
+            {
+                row->showAudition (InstrumentKeys::getAudition(), [] (bool on)
+                {
+                    InstrumentKeys::setAudition (on);
+
+                    if (InstrumentKeys::auditionChanged != nullptr)
+                        InstrumentKeys::auditionChanged();
+                });
+                row->onChosen = [this] { chosen(); };
+            }
+
+            if (auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (&window.processor))
+                patch = synth->getPatchName();
+
+            startTimerHz (10);
+        }
+
+        /** A sound was chosen: with Audition on, and nothing else playing the instrument, its phrase. */
+        void chosen()
+        {
+            if (InstrumentKeys::getAudition() && (busy == nullptr || ! busy()))
+                strip.audition (InstrumentKeys::phraseFor (window.processor));
+        }
+
+        void timerCallback() override
+        {
+            // Torqwave Synth's patch changed (its browser, the arrow keys): that is a sound chosen too.
+            if (auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (&window.processor))
+                if (synth->getPatchName() != patch)
+                {
+                    patch = synth->getPatchName();
+                    chosen();
+                }
+
+            // The switch is one for every window.
+            if (auto* row = InstrumentKeys::presetsRow (*editor))
+                row->setAudition (InstrumentKeys::getAudition());
+        }
+
+        ~Holder() override
+        {
+            // The window deletes the editor's parent; the editor itself belongs to this, as the content did before.
+            delete editor;
+        }
+
+        void resized() override
+        {
+            auto area = getLocalBounds();
+            strip.setBounds (area.removeFromBottom (InstrumentKeys::Strip::height));
+            const juce::ScopedValueSetter<bool> setting (laying, true);
+            editor->setBounds (area);
+        }
+
+        void childBoundsChanged (juce::Component* child) override
+        {
+            // The editor resizing itself (a plug-in changing its size): the window follows.
+            if (child == editor && ! laying)
+                setSize (editor->getWidth(), editor->getHeight() + InstrumentKeys::Strip::height);
+        }
+
+        static bool typing()
+        {
+            return dynamic_cast<juce::TextEditor*> (juce::Component::getCurrentlyFocusedComponent()) != nullptr;
+        }
+
+        bool keyStateChanged (bool) override
+        {
+            const auto mods = juce::ModifierKeys::currentModifiers;
+            return strip.readKeys (window.isActiveWindow() && ! typing() && ! mods.isCommandDown() && ! mods.isCtrlDown() && ! mods.isAltDown());
+        }
+
+        bool keyPressed (const juce::KeyPress& k) override
+        {
+            if (typing())
+                return false;
+
+            const auto mods = k.getModifiers();
+
+            if (! mods.isCommandDown() && ! mods.isCtrlDown() && ! mods.isAltDown())
+            {
+                if (k.getKeyCode() == juce::KeyPress::leftKey || k.getKeyCode() == juce::KeyPress::rightKey)
+                {
+                    InstrumentKeys::stepSound (window.processor, editor, k.getKeyCode() == juce::KeyPress::rightKey ? 1 : -1);
+                    return true;
+                }
+
+                if (const auto c = k.getTextCharacter(); c != 0 && strip.keyDown (c))
+                    return true;
+            }
+
+            return otherKey != nullptr && otherKey (k);
+        }
+
+        void mouseDown (const juce::MouseEvent&) override   { grabKeyboardFocus(); }
+
+        PluginEditorWindow& window;
+        juce::AudioProcessorEditor* editor;
+        InstrumentKeys::Strip strip;
+        std::function<bool (const juce::KeyPress&)> otherKey;
+        std::function<bool()> busy;
+        juce::String patch;
+        bool laying = false;
+    };
+
+    juce::AudioProcessorEditor* editor = nullptr;
     std::function<void (PluginEditorWindow*)> closeCallback;
+};
+
+//==============================================================================
+/** The on-screen keyboard as Cubase has it: while the Keyboard panel is showing (docked or
+    floating), the computer's playing keys play notes from whichever of Torqwave's windows has the
+    keyboard, in place of the shortcuts on those keys. Not while a text is being typed, nor with
+    Command, Control or Option held (so the shortcuts with them stay). */
+struct MainComponent::LiveKeys final : public juce::KeyListener
+{
+    explicit LiveKeys (MainComponent& m) : main (m) {}
+
+    InstrumentKeys::Strip* strip() const
+    {
+        if (auto it = main.madePanels.find (Panels::keyboard); it != main.madePanels.end())
+            if (auto* panel = dynamic_cast<MidiIn::KeyboardPanel*> (it->second.get()); panel != nullptr && panel->isShowing())
+                return &panel->keys();
+
+        return nullptr;
+    }
+
+    static bool free()
+    {
+        const auto mods = juce::ModifierKeys::currentModifiers;
+        return dynamic_cast<juce::TextEditor*> (juce::Component::getCurrentlyFocusedComponent()) == nullptr
+                   && ! mods.isCommandDown() && ! mods.isCtrlDown() && ! mods.isAltDown();
+    }
+
+    bool keyPressed (const juce::KeyPress& k, juce::Component*) override
+    {
+        auto* keys = strip();
+        const auto c = k.getTextCharacter();
+
+        if (keys == nullptr || c == 0 || ! free())
+            return false;
+
+        main.routeLiveMidi();
+        return keys->keyDown (c);
+    }
+
+    bool keyStateChanged (bool, juce::Component*) override
+    {
+        auto* keys = strip();
+        return keys != nullptr && keys->readKeys (free());
+    }
+
+    MainComponent& main;
 };
 
 //==============================================================================
@@ -1255,6 +1453,12 @@ MainComponent::MainComponent()
     editorBar->refreshTooltips();
     commands.getKeyMappings()->addChangeListener (this);
     addKeyListener (commands.getKeyMappings());
+    liveKeys = std::make_unique<LiveKeys> (*this);
+    addKeyListener (liveKeys.get());               // added after the shortcuts, so heard before them
+    InstrumentKeys::setLayout (InstrumentKeys::layoutOf (settings->getValue ("playingKeys", "q")));
+    InstrumentKeys::setAudition (settings->getBoolValue ("auditionOnBrowse", true));
+    InstrumentKeys::auditionChanged = [this] { appProperties.getUserSettings()->setValue ("auditionOnBrowse", InstrumentKeys::getAudition()); };
+    InstrumentKeys::layoutChanged = [this] { appProperties.getUserSettings()->setValue ("playingKeys", InstrumentKeys::keyOf (InstrumentKeys::getLayout())); };
     setApplicationCommandManagerToWatch (&commands);   // menus refresh when command state changes
    #if JUCE_MAC
     juce::PopupMenu appMenu;   // at the top of the application menu
@@ -2042,7 +2246,8 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                            info.setTicked (dock->isShown (Panels::pitch)); break;
         case cmdShowPianoRoll: info.setInfo ("Piano Roll", "Show or hide the panel for editing the selected note clip's notes on a grid of pitch and time", "Window", 0);
                            info.setTicked (dock->isShown (Panels::pianoRoll)); break;
-        case cmdShowKeyboard: info.setInfo ("Keyboard", "Show or hide the on-screen keyboard, which plays the selected track's instrument", "Window", 0);
+        case cmdShowKeyboard: info.setInfo ("On-Screen Keyboard", "Show or hide the on-screen keyboard: while it shows, the computer's keys play the selected track's instrument from any window", "Window", 0);
+                           info.addDefaultKeypress ('k', juce::ModifierKeys::altModifier);
                            info.setTicked (dock->isShown (Panels::keyboard)); break;
         case cmdCaptureMidi: info.setInfo ("Capture MIDI", "Make a note clip of what was played live in the last minute without recording: "
                                            "where it was played if the session was playing, else at the cursor", "Multitrack", 0);
@@ -3737,6 +3942,15 @@ void MainComponent::routeLiveMidi()
         else if (const auto where = state->findNoteClip (multitrack.getSelectedNoteClip()); where.has_value())
             target = &state->tracks[(size_t) where->first];
     }
+
+    // An instrument's window in front: what is played is for that instrument's track, whichever is
+    // selected (not while a recording or a note from the piano roll holds its own).
+    if (multitrackMode && auditionTrack == 0 && ! recordingNotes)
+        for (auto* w : editorWindows)
+            if (w->getKeys() != nullptr && w->isActiveWindow())
+                for (auto& t : state->tracks)
+                    if (engine.getTrackEffects().getInstrument (t.id) == &w->processor)
+                        target = &t;
 
     engine.getLiveMidi().setTrack (target != nullptr ? target->id : 0u);
 
@@ -14236,6 +14450,7 @@ std::optional<Ai::Workspace::Start> MainComponent::startAiPlan()
                 start.instruments[t.id] = instrument->getPluginDescription();
 
         start.instrumentPresets = [] (const juce::PluginDescription& d) { return InstrumentPresets::userStore().getNames (d); };
+        start.library = Ai::Library::standard();
 
         // Each chain as it stands, with its plug-ins' parameters read here, on the message thread.
         for (auto& t : aiStartSession->tracks)
@@ -14300,11 +14515,12 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
 
         for (auto& load : w.getInstrumentLoads())
         {
-            const auto state = load.preset.isNotEmpty() ? InstrumentPresets::userStore().load (load.plugin, load.preset) : std::nullopt;
+            juce::String unread;
+            const auto state = Ai::stateFor (load, unread);
 
-            if (load.preset.isNotEmpty() && ! state)
+            if (unread.isNotEmpty())
             {
-                showError ("Ask Torq", "The preset " + load.preset.quoted() + " for " + load.plugin.name + " couldn't be read.");
+                showError ("Ask Torq", unread);
                 continue;
             }
 
@@ -14332,6 +14548,21 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
 
                 if (errors.isNotEmpty())
                     showError ("Ask Torq", name + " couldn't be loaded:\n\n" + errors);
+
+                oneDone();
+            });
+        }
+
+        // The voices that factory sequences and kits brought, as a drop loads them.
+        if (const auto voices = w.getVoiceLoads(); ! voices.empty())
+        {
+            ++*pending;
+            Ai::loadVoices (engine, voices, [this, oneDone] (const juce::String& errors)
+            {
+                engine.session.sendChangeMessage();   // the track headers show the instruments
+
+                if (errors.isNotEmpty())
+                    showError ("Ask Torq", "Some of the sequences' instruments and effects could not be loaded:\n\n" + errors);
 
                 oneDone();
             });
@@ -15134,6 +15365,10 @@ void MainComponent::showEditor (juce::AudioProcessor& p)
         }
     }
 
+    // An instrument's window has keys to play it by: the computer's, and a strip to click.
+    const auto* asInstance = dynamic_cast<juce::AudioPluginInstance*> (plugin);
+    const auto playable = asInstance != nullptr && TrackEffects::isInstrument (*asInstance);
+
     editorWindows.add (new PluginEditorWindow (*plugin, [this] (PluginEditorWindow* w)
     {
         juce::MessageManager::callAsync ([this, safe = juce::Component::SafePointer<PluginEditorWindow> (w)]
@@ -15145,7 +15380,13 @@ void MainComponent::showEditor (juce::AudioProcessor& p)
                 editorWindows.removeObject (safe.getComponent());
             }
         });
-    }));
+    },
+    playable ? std::function<void (const juce::MidiMessage&)> ([this] (const juce::MidiMessage& m) { engine.getLiveMidi().addMessage (m); }) : nullptr,
+    playable ? std::function<bool (const juce::KeyPress&)> ([this] (const juce::KeyPress& k) { return commands.getKeyMappings()->keyPressed (k, this); }) : nullptr,
+    playable ? std::function<bool()> ([this] { return engine.getPlayer().isPlaying() || isRecording(); }) : nullptr));
+
+    if (auto* keys = editorWindows.getLast()->getKeys())
+        keys->aboutToPlay = [this] { routeLiveMidi(); };
 
     const auto* instance = dynamic_cast<juce::AudioPluginInstance*> (plugin);
     places->watch (*editorWindows.getLast(), "Plug-in " + (instance != nullptr ? instance->getPluginDescription().createIdentifierString()
@@ -15614,6 +15855,9 @@ std::pair<juce::String, Dock::Side> MainComponent::defaultPlace (const juce::Str
 void MainComponent::windowCreated (juce::DocumentWindow& window)
 {
     window.addKeyListener (commands.getKeyMappings());   // the keys work with a floating panel in front
+
+    if (liveKeys != nullptr)
+        window.addKeyListener (liveKeys.get());
 }
 
 void MainComponent::setTimeFormat (TimeFormat::Kind kind)

@@ -57,7 +57,11 @@ namespace EffectPresets
 
     /** A row for a dialog or window: the effect's presets in a menu, the factory ones first, then
         the user's (choosing one loads it through `apply`), Save... (asks for a name and saves
-        `current()` as one of the user's) and Delete (asks, then removes the user's preset chosen). */
+        `current()` as one of the user's) and Delete (asks, then removes the user's preset chosen).
+        Two arrows before the menu step to the previous and the next preset in the menu's order
+        (through the factory ones' sub-menus in turn, then the user's), round from the last to the
+        first; so do the left and right arrow keys while the row has the keyboard, and the mouse
+        wheel over the menu. */
     class Bar final : public juce::Component
     {
     public:
@@ -67,9 +71,30 @@ namespace EffectPresets
         /** Reads the names again (another window may have saved one). */
         void refresh();
 
+        /** Loads the preset `by` places on in the menu's order (1 the next, -1 the previous), round
+            the ends; with none chosen, the first (or the last, going back). False with no presets. */
+        bool step (int by);
+
+        /** The presets' names in the order the arrows go through them. */
+        juce::StringArray getOrder() const;
+
+        /** Called after a preset is loaded, from the menu or by a step. */
+        std::function<void()> onChosen;
+
+        /** Shows a toggle after the arrows (an instrument's window: "play each sound as it is
+            chosen"), set to `on`; `changed` is told when it is clicked. */
+        void showAudition (bool on, std::function<void (bool)> changed);
+        void setAudition (bool on)                  { audition.setToggleState (on, juce::dontSendNotification); }
+
+        /** The chosen preset's name; empty with none chosen. */
+        juce::String getChosen() const              { return list.getSelectedId() > 0 ? list.getText() : juce::String(); }
+
         void resized() override;
+        bool keyPressed (const juce::KeyPress&) override;
+        void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
 
     private:
+        std::vector<int> orderedIds() const;
         void saveAs();
         void removeChosen();
 
@@ -81,6 +106,10 @@ namespace EffectPresets
         std::function<void (const Values&)> applyValues;
         juce::ComboBox list;
         juce::TextButton save { "Save..." }, remove { "Delete" };
+        juce::TextButton audition { juce::String::fromUTF8 ("\xe2\x99\xaa") };
+        std::function<void (bool)> auditionChanged;
+        juce::TextButton previous { juce::String::fromUTF8 ("\xe2\x80\xb9") }, next { juce::String::fromUTF8 ("\xe2\x80\xba") };
+        float wheel = 0.0f;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Bar)
     };
