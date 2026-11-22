@@ -289,178 +289,6 @@ namespace
 
         return h;
     }
-
-    /** Plays notes on the drums (pitch, second, velocity; each note held 10 ms) for seconds, in blocks of blockSize. */
-    juce::AudioBuffer<float> drumsPlay (BuiltInEffects::BasicDrumsProcessor& drums, const std::vector<std::tuple<int, double, float>>& notes,
-                                        double seconds, int blockSize = 512)
-    {
-        drums.prepareToPlay (rate, blockSize);
-        const auto total = (int) (seconds * rate);
-        juce::AudioBuffer<float> out (2, total), block (2, blockSize);
-
-        for (int at = 0; at < total; at += blockSize)
-        {
-            const auto n = juce::jmin (blockSize, total - at);
-            juce::MidiBuffer midi;
-
-            for (auto [pitch, when, velocity] : notes)
-            {
-                const auto on = (int) (when * rate), off = on + (int) (0.01 * rate);
-
-                if (on >= at && on < at + n)
-                    midi.addEvent (juce::MidiMessage::noteOn (10, pitch, velocity), on - at);
-
-                if (off >= at && off < at + n)
-                    midi.addEvent (juce::MidiMessage::noteOff (10, pitch), off - at);
-            }
-
-            block.setSize (2, n, false, false, true);
-            drums.processBlock (block, midi);
-
-            for (int ch = 0; ch < 2; ++ch)
-                out.copyFrom (ch, at, block, ch, 0, n);
-        }
-
-        return out;
-    }
-
-    bool sameAudio (const juce::AudioBuffer<float>& a, const juce::AudioBuffer<float>& b)
-    {
-        if (a.getNumSamples() != b.getNumSamples() || a.getNumChannels() != b.getNumChannels())
-            return false;
-
-        for (int ch = 0; ch < a.getNumChannels(); ++ch)
-            for (int i = 0; i < a.getNumSamples(); ++i)
-                if (! juce::exactlyEqual (a.getSample (ch, i), b.getSample (ch, i)))
-                    return false;
-
-        return true;
-    }
-
-    void testBasicDrums (AudioEngine& engine)
-    {
-        juce::PluginDescription description;
-
-        for (auto& d : BuiltInEffects::getDescriptions())
-            if (d.fileOrIdentifier == BuiltInEffects::basicDrumsId)
-                description = d;
-
-        juce::String error;
-        auto instance = engine.pluginFormatManager.createPluginInstance (description, rate, 512, error);
-        auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (instance.get());
-        check (drums != nullptr && error.isEmpty() && description.isInstrument && description.numInputChannels == 0 && description.name == "Basic Drums"
-                   && drums->acceptsMidi() && drums->getTotalNumInputChannels() == 0 && drums->getTotalNumOutputChannels() == 2
-                   && drums->getParameters().size() == 9,
-               "drums: Basic Drums is made from its description, an instrument with no audio input, a stereo output and nine parameters");
-
-        if (drums == nullptr)
-            return;
-
-        // Every General MIDI drum (35 to 81) sounds, on both channels alike, none too loud; other notes are silent.
-        auto allSound = true, allSilent = true, stereo = true;
-        float loudest = 0.0f, quietest = 1.0f;
-        juce::StringArray silent;
-
-        for (int note = 35; note <= 81; ++note)
-        {
-            const auto out = drumsPlay (*drums, { { note, 0.0, 1.0f } }, 0.5);
-            const auto peak = out.getMagnitude (0, 0, out.getNumSamples());
-            allSound = allSound && peak > 0.05f && peak < 1.0f;
-            loudest = juce::jmax (loudest, peak);
-            quietest = juce::jmin (quietest, peak);
-            stereo = stereo && channelsSame (out);
-
-            if (peak <= 0.05f)
-                silent.add (juce::String (note));
-        }
-
-        for (auto note : { 0, 34, 82, 127 })
-            allSilent = allSilent && drumsPlay (*drums, { { note, 0.0, 1.0f } }, 0.2).getMagnitude (0, 0, (int) (0.2 * rate)) == 0.0f;
-
-        check (allSound && allSilent && stereo && ! BuiltInEffects::BasicDrumsProcessor::soundFor (82).has_value(),
-               "drums: all 47 General MIDI drums (35 to 81) sound, the same on both channels, peaking from " + juce::String (quietest, 2) + " to "
-                   + juce::String (loudest, 2) + " at full velocity; notes outside them are silent" + (silent.isEmpty() ? juce::String() : " (silent: " + silent.joinIntoString (", ") + ")"));
-
-        // A sound struck again while it rings (an open conga, 50 ms on) doesn't click: the hit before
-        // fades out over 3 ms under the new one instead of stopping dead.
-        {
-            const auto out = drumsPlay (*drums, { { 64, 0.0, 1.0f }, { 64, 0.05, 1.0f } }, 0.2);
-            const auto at = (int) (0.05 * rate);
-            float jump = 0.0f;
-
-            for (int n = at - 2; n < at + (int) (0.004 * rate); ++n)
-                jump = juce::jmax (jump, std::abs (out.getSample (0, n) - out.getSample (0, n - 1)));
-
-            check (jump < 0.1f, "drums: a conga struck again while it rings moves at most " + juce::String (jump, 3) + " a sample where it is struck (no click)");
-        }
-
-        // Velocity scales it exactly (64 is 64/127 of 127); a note's length doesn't matter, the sound plays to its end.
-        const auto full = drumsPlay (*drums, { { 36, 0.0, 1.0f } }, 0.5);
-        const auto half = drumsPlay (*drums, { { 36, 0.0, 64.0f / 127.0f } }, 0.5);
-        auto scaled = true;
-
-        for (int i = 0; i < full.getNumSamples(); ++i)
-            scaled = scaled && std::abs (half.getSample (0, i) - 64.0f / 127.0f * full.getSample (0, i)) < 1e-6f;
-
-        check (scaled && full.getMagnitude (0, (int) (0.1 * rate), (int) (0.05 * rate)) > 0.05f,
-               "drums: velocity scales a sound exactly, and a kick held 10 ms still sounds 100 ms on");
-
-        // A closed hat chokes the open one; alone the open hat rings on.
-        const auto open = drumsPlay (*drums, { { 46, 0.0, 1.0f } }, 0.8);
-        const auto choked = drumsPlay (*drums, { { 46, 0.0, 1.0f }, { 42, 0.1, 1.0f } }, 0.8);
-        check (open.getMagnitude (0, (int) (0.5 * rate), (int) (0.3 * rate)) > 0.01f
-                   && choked.getMagnitude (0, (int) (0.5 * rate), (int) (0.3 * rate)) == 0.0f,
-               "drums: a closed hat chokes the open hat, which otherwise rings on");
-
-        // Everything stops: a full kit has ended and gone silent in six seconds.
-        std::vector<std::tuple<int, double, float>> kit;
-
-        for (int note = 35; note <= 81; ++note)
-            kit.push_back ({ note, 0.0, 1.0f });
-
-        const auto all = drumsPlay (*drums, kit, 6.0);
-        check (drums->getNumSounding() == 0 && all.getMagnitude (0, (int) (5.5 * rate), (int) (0.5 * rate)) == 0.0f,
-               "drums: every sound ends, a whole kit silent within six seconds");
-
-        // A pattern renders the same twice and at any block size.
-        std::vector<std::tuple<int, double, float>> pattern;
-
-        for (int step = 0; step < 16; ++step)
-        {
-            const auto at = step * 0.125;
-
-            if (step % 4 == 0) pattern.push_back ({ 36, at, 1.0f });
-            if (step % 8 == 4) pattern.push_back ({ 39, at, 0.9f });
-            pattern.push_back ({ step % 4 == 2 ? 46 : 42, at, step % 2 == 0 ? 0.8f : 0.6f });
-        }
-
-        const auto first = drumsPlay (*drums, pattern, 2.5), again = drumsPlay (*drums, pattern, 2.5), odd = drumsPlay (*drums, pattern, 2.5, 37);
-        check (sameAudio (first, again) && sameAudio (first, odd) && first.getMagnitude (0, 0, first.getNumSamples()) < 4.0f,
-               "drums: a pattern renders bit-identically twice and in 37-sample blocks");
-
-        // The parameters change the sound and come back with the state.
-        setPlain (*drums, "kickTune", -5.0f);
-        setPlain (*drums, "hatDecay", 250.0f);
-        const auto tuned = drumsPlay (*drums, { { 36, 0.0, 1.0f } }, 0.5);
-        juce::MemoryBlock state;
-        drums->getStateInformation (state);
-        auto another = engine.pluginFormatManager.createPluginInstance (description, rate, 512, error);
-
-        if (another != nullptr)
-            another->setStateInformation (state.getData(), (int) state.getSize());
-
-        check (another != nullptr && ! sameAudio (tuned, full) && std::abs (plainOf (*another, "kickTune") + 5.0f) < 1e-4f
-                   && std::abs (plainOf (*another, "hatDecay") - 250.0f) < 1e-3f && std::abs (plainOf (*another, "snareTune")) < 1e-4f,
-               "drums: tuning changes the kick, and the parameters come back with the state");
-
-        // It is offered with the instruments, after the synth.
-        BuiltInEffects::addTo (engine.knownPlugins);
-        const auto known = Instrument::known (engine.knownPlugins);
-        check (known.size() >= 2 && known[0].fileOrIdentifier == BuiltInEffects::basicSynthId && known[1].fileOrIdentifier == BuiltInEffects::basicDrumsId
-                   && Instrument::title (known[1]) == "Basic Drums (built in)",
-               "drums: offered as an instrument, Basic Drums (built in), after the synth");
-    }
-
 }
 
 void runInstrumentTests (AudioEngine& engine)
@@ -546,17 +374,8 @@ void runInstrumentTests (AudioEngine& engine)
 
     {
         // Its window shows all twenty parameters without scrolling, where JUCE's own editor stops at
-        // 400 points; Basic Drums' nine keep the height JUCE gives them (380, and the presets bar's 40).
+        // 400 points.
         std::unique_ptr<juce::AudioProcessorEditor> synthEditor (synth->createEditorAndMakeActive());
-        juce::String drumsError;
-        juce::PluginDescription drumsDescription;
-
-        for (auto& d : BuiltInEffects::getDescriptions())
-            if (d.fileOrIdentifier == BuiltInEffects::basicDrumsId)
-                drumsDescription = d;
-
-        auto drumsInstance = engine.pluginFormatManager.createPluginInstance (drumsDescription, rate, 512, drumsError);
-        std::unique_ptr<juce::AudioProcessorEditor> drumsEditor (drumsInstance != nullptr ? drumsInstance->createEditorAndMakeActive() : nullptr);
 
         // All twenty rows (40 points each) where the screen has room, as on any Mac with 900 points under the menu bar.
         auto room = 1000;
@@ -564,10 +383,9 @@ void runInstrumentTests (AudioEngine& engine)
         if (const auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay())
             room = juce::jmin (room, (int) display->userBounds.getHeight() - 100);
 
-        check (synthEditor != nullptr && synthEditor->getHeight() == juce::jmin (20 * 40, room) + 40 && drumsEditor != nullptr && drumsEditor->getHeight() == 380 + 40,
+        check (synthEditor != nullptr && synthEditor->getHeight() == juce::jmin (20 * 40, room) + 40,
                "instrument: the synth's window is tall enough for its twenty parameters, as far as the screen allows (" + juce::String (synthEditor != nullptr ? synthEditor->getHeight() : 0)
-                   + " points), Basic Drums' as before (" + juce::String (drumsEditor != nullptr ? drumsEditor->getHeight() : 0) + ")");
-        drumsEditor.reset();
+                   + " points)");
         synthEditor.reset();
     }
 
@@ -770,5 +588,4 @@ void runInstrumentTests (AudioEngine& engine)
                "and an unknown instrument is an error");
     }
 
-    testBasicDrums (engine);
 }

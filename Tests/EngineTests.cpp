@@ -34,6 +34,7 @@
 #include "RestorationTests.h"
 #include "GeneratorTests.h"
 #include "InstrumentTests.h"
+#include "DrumMachineTests.h"
 #include "InstrumentTrackTests.h"
 #include "NoteEditorTests.h"
 #include "MidiInputTests.h"
@@ -641,6 +642,14 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (args.contains ("--drums") || args.contains ("--drums-levels"))
+    {
+        AudioEngine engine;
+        runDrumMachineTests (engine, args.contains ("--drums-levels"));
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
     if (args.contains ("--sequences"))
     {
         AudioEngine engine;
@@ -895,6 +904,7 @@ int main (int argc, char* argv[])
         runRestorationTests();
         runGeneratorTests();
         runInstrumentTests (engine);
+        runDrumMachineTests (engine);
         runInstrumentTrackTests (engine);
         runNoteEditorTests();
         runMidiInputTests();
