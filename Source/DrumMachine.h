@@ -60,7 +60,7 @@ namespace DrumMachine
         KickCharacter kick = KickCharacter::punch;
         float drive = 0.0f;     // %, 0 to 100: the whole kit through a soft clipper
         float glue = 0.0f;      // %, 0 to 100: a bus compressor, threshold and ratio together
-        float level = -6.0f;    // dB, -48 to 6
+        float level = -10.0f;   // dB, -48 to 6 (Standard's leaves a full kit struck at once under 0 dB)
 
         bool operator== (const KitSettings& o) const
         {

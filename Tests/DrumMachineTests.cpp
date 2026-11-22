@@ -452,9 +452,10 @@ namespace
         drums.processBlock (hit, kickNow);
         const auto reduction = drums.getEngine().getReductionDb();
         set (drums.glueParameter(), 0.0f);
-        set (drums.levelParameter(), -12.0f);
+        const auto kitLevel = drums.levelParameter()->get();
+        set (drums.levelParameter(), kitLevel - 6.0f);
         const auto down = play (drums, groove, 0.6);
-        set (drums.levelParameter(), -6.0f);
+        set (drums.levelParameter(), kitLevel);
         check (scaled && ! same (dry, driven) && ! same (dry, glued) && reduction < -3.0f && std::abs (peakOf (down) / peakOf (dry) - juce::Decibels::decibelsToGain (-6.0f)) < 1.0e-3f,
                "drums: velocity scales a hit exactly; the kit's drive and glue change it (glue at 80 % last turning it down "
                    + juce::String (-reduction, 1) + " dB), its level is in dB");
@@ -582,9 +583,10 @@ namespace
 
         // The picture the window draws is the hit alone.
         const auto picture = DrumMachine::Engine::renderOne (drums.currentSettings(), Sound::kick, rate, 0.5);
+        const auto kitLevel = drums.levelParameter()->get();
         set (drums.levelParameter(), 0.0f);
         const auto played = play (drums, { { 36, 0.0, 1.0f } }, 0.5);
-        set (drums.levelParameter(), -6.0f);
+        set (drums.levelParameter(), kitLevel);
         check (same (picture, played), "drums: the window's picture of a sound is the sound exactly as it plays (at 0 dB)");
 
         // Mono: the two sides mixed.
