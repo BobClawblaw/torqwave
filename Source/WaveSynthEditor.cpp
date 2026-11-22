@@ -1168,11 +1168,11 @@ struct WaveSynthEditor::Content final : public juce::Component
             effects.back().knobs.push_back (knob (*effects.back().panel, id, label, Knob::Size::small));
 
         browser.onLoaded = [this] { refresh(); };
-        // The console (Trace) takes the place of the knobs when its page is chosen.
+        // The signal console's scope takes the place of the knobs when it is shown. It is not offered in the
+        // window yet: it is to be Decrypt's screen, and the switch to it stays hidden until Decrypt is here.
         consoleView = std::make_unique<SignalConsoleView> (synth);
         addChildComponent (*consoleView);
-        addAndMakeVisible (viewPages);
-        viewPages.setTooltip ("Knobs: the synth's controls. Trace: a map of the sounds within reach of this one, to hear and jump to");
+        addChildComponent (viewPages);
         viewPages.onChange = [this] (int i) { showView (i); };
 
         showModulator (0);
