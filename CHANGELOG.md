@@ -4,6 +4,10 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Ask Torq: a plan's undo steps said plainly**
+- A plan with instrument loads, track effect changes, a rack change or renders is headed "The plan:" rather than "The plan, applied as one undo step:", since those are made after Apply, outside its undo step (the notes under the plan say which); after Apply it says "Applied; the notes above say what isn't in its undo step." A plan of edits alone reads as before. The steps name the track after the change ("Add Reverb to the effects on \"Pad\"", "Set Compressor on \"Drums\": ...") instead of a possessive after its quoted name.
+- Tried by hand in the app (macOS 27, a local OpenAI-compatible server): on a copy of a session with two third-party instruments, one request added a Reverb to a track, froze another and bounced the first over bars 1 to 3. After Apply the Reverb was there, the freeze rendered (7 s, a 3 s clip and its tail), then the bounce (6 s) onto a new track with the original muted, and Undo History listed the plan, Freeze Track and Bounce Track as three steps.
+
 ## Released
 
 **Release 0.19.2: crossfading clips laid over each other**
