@@ -768,11 +768,12 @@ void saveDrumMachineDemos (const juce::File& folder)
                                   { 46, "..x...x...x...x." }, { 51, "x.x.x.x.x.x.x.x." }, { 37, ".......o.....o.." } },
                                 { { 36, "x...x...x...x..." }, { 39, "....x...x.x.x.xx" }, { 42, "xoxoxoxoxoxo...." }, { 45, "............x.x." } } },
         { "Industrial", 128.0, { { 36, "x...x...x...x..." }, { 43, "..x...x.....x.x." }, { 38, "....x.......x..." }, { 56, "x..x..x..x..x.x." },
-                                 { 42, "x.x.x.x.x.x.x.x." }, { 52, "........x......." } },
+                                 { 42, "x.x.x.x.x.x.x.x." }, { 52, "........x......." }, { 37, "...o.......o...." } },
                                { { 36, "x...x...x.x.xxxx" }, { 38, "....x.x.x.x.x.xx" }, { 41, "x.x.x.x........." } } },
-        { "EBM Machine", 120.0, { { 36, "x...x...x...x..." }, { 38, "....x.......x..." }, { 42, "x.x.x.x.x.x.x.x." }, { 46, "..x...x...x...x." } },
+        { "EBM Machine", 120.0, { { 36, "x...x...x...x..." }, { 38, "....x.......x..." }, { 39, "....x.......x..." }, { 42, "x.x.x.x.x.x.x.x." }, { 46, "..x...x...x...x." } },
                                 { { 36, "x...x...x...x..." }, { 38, "....x...xxxxxxxx" }, { 42, "x.x.x.x........." } } },
-        { "Electro", 116.0, { { 36, "x.....x...x....." }, { 38, "....x.......x..." }, { 42, "x.xxx.x.x.xxx.x." }, { 56, "...x.......x...." }, { 63, "......o......o.." } },
+        { "Electro", 116.0, { { 36, "x.....x...x....." }, { 38, "....x.......x..." }, { 42, "x.xxx.x.x.xxx.x." }, { 56, "...x.......x...." }, { 63, "......o......o.." },
+                              { 39, "....x.......x..." }, { 37, ".......o........" } },
                             { { 36, "x.....x...x....." }, { 38, "....x.......x..." }, { 50, "........x.x....." }, { 47, "..........x.x..." }, { 43, "............x.x." } } },
         { "Breaks", 168.0, { { 36, "x.x.......x....." }, { 38, "....x..o.o..x..o" }, { 42, "x.x.x.x.x.x.x.x." }, { 51, "x...x...x...x..." } },
                            { { 36, "x.x.......x....." }, { 38, "....x..o.oxxxxxx" }, { 42, "x.x.x.x.x......." } } },
@@ -784,7 +785,22 @@ void saveDrumMachineDemos (const juce::File& folder)
 
     for (auto& groove : grooves)
     {
+        // A playhead at the groove's tempo, so the delay echoes in time with it.
+        struct Tempo final : juce::AudioPlayHead
+        {
+            double bpm = 120.0;
+
+            juce::Optional<PositionInfo> getPosition() const override
+            {
+                PositionInfo info;
+                info.setBpm (bpm);
+                return info;
+            }
+        } tempo;
+
+        tempo.bpm = groove.bpm;
         BuiltInEffects::BasicDrumsProcessor drums;
+        drums.setPlayHead (&tempo);
         drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex (groove.kit)]);
         const auto step = 60.0 / groove.bpm / 4.0;
         Notes notes;
