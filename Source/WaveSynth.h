@@ -102,6 +102,17 @@ namespace BuiltInEffects
         /** Loads a factory patch (every parameter to its default, then the patch's), by index or name. */
         void loadPatch (int index);
         bool loadPatch (const juce::String& name);
+
+        /** What the next and previous arrows go through (the window's, and the arrow keys'): every
+            factory patch in the browser's order, or, while the favourites are being browsed and
+            there are some, the favourites by name. The factory list's indices. */
+        std::vector<int> browseList() const;
+        void setBrowsingFavourites (bool favourites) noexcept        { browsingFavourites = favourites; }
+        bool isBrowsingFavourites() const noexcept                   { return browsingFavourites; }
+        /** Loads the patch after (by 1) or before (by -1) the one it is on in that list, round its
+            ends; from a sound that isn't in the list, the first (or last). Its index, or -1 if
+            the list is empty. */
+        int stepPatch (int by);
         const juce::String& getPatchName() const noexcept            { return patchName; }
         void setPatchName (const juce::String& name)                  { patchName = name; }
         const juce::String& getMacroName (int i) const               { return macroNames[(size_t) i]; }
@@ -157,6 +168,7 @@ namespace BuiltInEffects
         juce::SpinLock sampledLock;
         std::atomic<juce::uint32> sampledGeneration { 0 }, sampledSeen { 0 };
 
+        bool browsingFavourites = false;
         std::unique_ptr<SignalConsole::Console> console;
         std::atomic<SignalConsole::Console*> consoleForAudio { nullptr };
         double preparedRate = 0.0;

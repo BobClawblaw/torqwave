@@ -1,6 +1,7 @@
 #include "WaveSynth.h"
 #include "WaveSynthEditor.h"
 #include "SignalConsole.h"
+#include "WaveSynthFavourites.h"
 
 namespace WaveSynth
 {
@@ -2398,6 +2399,37 @@ bool BasicSynthProcessor::loadPatch (const juce::String& name)
         }
 
     return false;
+}
+
+std::vector<int> BasicSynthProcessor::browseList() const
+{
+    if (browsingFavourites)
+        if (auto favourites = WaveSynth::Favourites::shared().indices(); ! favourites.empty())
+            return favourites;
+
+    std::vector<int> all (WaveSynth::factoryPatches().size());
+    std::iota (all.begin(), all.end(), 0);
+    return all;
+}
+
+int BasicSynthProcessor::stepPatch (int by)
+{
+    const auto list = browseList();
+
+    if (list.empty() || by == 0)
+        return -1;
+
+    const auto& patches = WaveSynth::factoryPatches();
+    const auto count = (int) list.size();
+    auto at = -1;
+
+    for (int i = 0; i < count; ++i)
+        if (patches[(size_t) list[(size_t) i]].name == patchName)
+            at = i;
+
+    const auto next = at < 0 ? (by > 0 ? 0 : count - 1) : (((at + by) % count) + count) % count;
+    loadPatch (list[(size_t) next]);
+    return list[(size_t) next];
 }
 
 int BasicSynthProcessor::addModulation (int source, const juce::String& destinationId, float amount)

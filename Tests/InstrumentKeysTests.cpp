@@ -5,6 +5,8 @@
 #include "../Source/WaveSynth.h"
 #include "../Source/SwarmGuitar.h"
 #include "../Source/DrumMachine.h"
+#include "../Source/WaveSynthFavourites.h"
+#include "../Source/WaveSynthEditor.h"
 #include "TestUtils.h"
 #include "InstrumentKeysTests.h"
 
@@ -113,6 +115,74 @@ void runInstrumentKeysTests()
                    && known (one) && known (two) && one != two && backToOne == one && stepSound (guitar, nullptr, 1).isEmpty(),
                "instrument keys: the next and previous sound: Torqwave Synth's factory patches in order (" + next + ", " + again + ", back to " + previous
                    + "), round from the first to the last (" + last + ") and on to the first; Swarm Guitar's presets through its window's presets row (" + one + ", " + two + ")");
+    }
+
+    // Favourites: Torqwave Synth's patches marked by name in a file, listed by name, and what the arrows go through while they are browsed.
+    {
+        const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-test-synth-favourites.txt");
+        file.deleteFile();
+        WaveSynth::Favourites::useFile (file);
+        auto& favourites = WaveSynth::Favourites::shared();
+        BuiltInEffects::BasicSynthProcessor synth;
+        synth.loadPatch ("Warehouse Sub");
+        auto handled = false;
+        const auto marked = toggleFavourite (synth, &handled) && handled && favourites.contains ("Warehouse Sub");
+        favourites.set ("Cold Bell", true);
+        favourites.set ("Abyss Reese", true);
+        favourites.set ("No Such Patch", true);
+        const auto listed = favourites.names() == juce::StringArray { "Abyss Reese", "Cold Bell", "Warehouse Sub" } && favourites.indices().size() == 3;
+
+        // The arrows: every patch until the favourites are browsed, then the favourites alone, by name, round their ends.
+        const auto& patches = WaveSynth::factoryPatches();
+        const auto everyPatch = synth.browseList().size() == patches.size();
+        synth.setBrowsingFavourites (true);
+        const auto one = stepSound (synth, nullptr, 1), two = stepSound (synth, nullptr, 1), three = stepSound (synth, nullptr, 1), before = stepSound (synth, nullptr, -1);
+        synth.loadPatch ("Acid Corrosion");   // not a favourite: the arrows start from the favourites' first, or last
+        const auto fromOutside = stepSound (synth, nullptr, 1), fromOutsideBack = (synth.loadPatch ("Acid Corrosion"), stepSound (synth, nullptr, -1));
+        const auto stepped = one == "Abyss Reese" && two == "Cold Bell" && three == "Warehouse Sub" && before == "Cold Bell" && fromOutside == "Abyss Reese" && fromOutsideBack == "Warehouse Sub";
+
+        // The file: read again it holds the same; a name that is no factory patch any more is dropped.
+        file.appendText ("A Patch That Was Renamed\n");
+        const WaveSynth::Favourites again (file);
+        const auto kept = again.names() == favourites.names() && file.loadFileAsString().contains ("A Patch That Was Renamed") && ! again.contains ("A Patch That Was Renamed");
+
+        // Unmarked, it leaves the list; with none left the arrows go through every patch again; a sound that is no factory patch has no heart.
+        synth.loadPatch ("Cold Bell");
+        const auto unmarked = ! toggleFavourite (synth) && favourites.names() == juce::StringArray { "Abyss Reese", "Warehouse Sub" };
+        favourites.set ("Abyss Reese", false);
+        favourites.set ("Warehouse Sub", false);
+        const auto noneLeft = favourites.names().isEmpty() && synth.browseList().size() == patches.size() && file.loadFileAsString().trim().isEmpty();
+        synth.setPatchName ("Something of My Own");
+        auto none = true;
+        const auto notMarked = ! toggleFavourite (synth, &none) && ! none && favourites.names().isEmpty();
+
+        // The window: its heart marks the patch it is on, and its arrows go through the same list as the keys.
+        synth.setBrowsingFavourites (false);
+        synth.loadPatch ("Minor Stab");
+        std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+        auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+        auto inWindow = window != nullptr;
+
+        if (window != nullptr)
+        {
+            window->toggleFavourite();
+            inWindow = favourites.contains ("Minor Stab") && window->getFavouriteBounds().getWidth() > 10 && window->getLocalBounds().contains (window->getFavouriteBounds());
+            window->toggleFavourite();
+            inWindow = inWindow && ! favourites.contains ("Minor Stab");
+            const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 1.0f);
+            inWindow = inWindow && image.isValid();
+        }
+
+        made.reset();
+        WaveSynth::Favourites::useFile (WaveSynth::Favourites::defaultFile());
+        file.deleteFile();
+
+        check (marked && listed && kept && unmarked && noneLeft && notMarked,
+               "synth favourites: a factory patch is marked and unmarked by name, listed by name, kept in a file that reads back the same and drops a name that is no patch any more; "
+               "a sound that is no factory patch can't be marked");
+        check (everyPatch && stepped && inWindow,
+               "synth favourites: the arrows go through every patch until the favourites are browsed, then through the favourites alone by name, round their ends ("
+                   + one + ", " + two + ", " + three + "); the window's heart marks the patch it is on");
     }
 
     // Audition: a phrase for each kind of sound, played over time on the keys.

@@ -59,6 +59,8 @@ Torqwave Synth is a wavetable synth made for dark techno, industrial and EBM. It
 
 **Patches**: the name at the top steps through about 2,560 factory patches with its arrows, or lists them by category with a click. A category with more than 40 patches opens as pages by name ("Ab - Co"); a smaller one lists its patches as the arrows step through them. The arrows go through a category's hand-made patches first, then the first bank by name, then the second. Beside the name, the presets bar saves your own.
 
+**Favourites**: click the **heart** beside a patch's name to mark it as a favourite (it fills in), and again to unmark it. **Favourites**, the first entry of the patch list, holds the ones you have marked, by name. Choose a patch from there and the arrows, and the left and right arrow keys, step through your favourites alone; choose one from a category and they go through every patch again. Favourites are kept by name in Torqwave's application data, so they are the same in every session.
+
 | Categories | What is in them |
 |---|---|
 | **Bass, Sub, Reese, Acid** | The low end: sequencer and FM basses, pure and driven subs, detuned reeses, resonant acid lines. Mostly one note at a time. |

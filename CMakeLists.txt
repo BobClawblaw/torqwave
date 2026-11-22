@@ -285,6 +285,7 @@ target_sources(Torqwave PRIVATE
     Source/SoundControls.cpp
     Source/WaveTables.cpp
     Source/WaveSynth.cpp
+    Source/WaveSynthFavourites.cpp
     Source/SignalConsole.cpp
     Source/SignalConsoleView.cpp
     Source/WaveSynthPatches.cpp
@@ -695,6 +696,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/SoundControls.cpp
     Source/WaveTables.cpp
     Source/WaveSynth.cpp
+    Source/WaveSynthFavourites.cpp
     Source/SignalConsole.cpp
     Source/SignalConsoleView.cpp
     Source/WaveSynthPatches.cpp

@@ -2,6 +2,7 @@
 #include "BuiltInEffects.h"
 #include "EffectPresets.h"
 #include "Theme.h"
+#include "WaveSynthFavourites.h"
 #include "WaveSynth.h"
 #include "DrumMachine.h"
 #include "SwarmGuitar.h"
@@ -171,29 +172,28 @@ int noteFor (juce::juce_wchar key, int octave)
 
 EffectPresets::Bar* presetsRow (juce::Component& editor)       { return presetsRowIn (editor); }
 
+bool toggleFavourite (juce::AudioProcessor& p, bool* handled)
+{
+    auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (&p);
+    const auto known = synth != nullptr && std::any_of (WaveSynth::factoryPatches().begin(), WaveSynth::factoryPatches().end(),
+                                                        [synth] (const WaveSynth::Patch& patch) { return patch.name == synth->getPatchName(); });
+
+    if (handled != nullptr)
+        *handled = known;
+
+    return known && WaveSynth::Favourites::shared().toggle (synth->getPatchName());
+}
+
 juce::String stepSound (juce::AudioProcessor& p, juce::Component* editor, int by)
 {
     if (by == 0)
         return {};
 
+    // Torqwave Synth: through what its own arrows go through (every factory patch, or the favourites while they are browsed).
     if (auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (&p))
     {
-        const auto& patches = WaveSynth::factoryPatches();
-        const auto count = (int) patches.size();
-
-        if (count == 0)
-            return {};
-
-        // From the patch it is on; a sound that is no factory patch (an old session's, a saved preset) from the list's start.
-        auto at = -1;
-
-        for (int i = 0; i < count; ++i)
-            if (patches[(size_t) i].name == synth->getPatchName())
-                at = i;
-
-        const auto next = at < 0 ? (by > 0 ? 0 : count - 1) : (((at + by) % count) + count) % count;
-        synth->loadPatch (next);
-        return patches[(size_t) next].name;
+        const auto loaded = synth->stepPatch (by);
+        return loaded >= 0 ? WaveSynth::factoryPatches()[(size_t) loaded].name : juce::String();
     }
 
     if (editor != nullptr)

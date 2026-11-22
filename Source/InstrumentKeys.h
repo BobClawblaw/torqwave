@@ -31,10 +31,16 @@ namespace InstrumentKeys
     int noteFor (juce::juce_wchar key, int octave);
 
     /** The next (by 1) or previous (by -1) sound of an instrument, loaded: Torqwave Synth's factory
-        patch after the one it is on (round the ends of the list), any other instrument's preset
+        patch after the one it is on (round the ends of the list; through its favourites alone
+        while its browser is on them, as its own arrows go), any other instrument's preset
         through the presets row in its window (`editor`). The name of what was loaded; empty if
         the instrument has nothing to step through. */
     juce::String stepSound (juce::AudioProcessor&, juce::Component* editor, int by);
+
+    /** Marks the sound an instrument is on as a favourite, or unmarks it: Torqwave Synth's factory
+        patch. True if it is a favourite now; nothing happens (false) for an instrument without
+        favourites or a sound that is no factory patch. `handled` says whether there was one to mark. */
+    bool toggleFavourite (juce::AudioProcessor&, bool* handled = nullptr);
 
     /** The presets row in an instrument's window, if it has one. */
     EffectPresets::Bar* presetsRow (juce::Component& editor);

@@ -1,5 +1,6 @@
 #include "WaveSynthEditor.h"
 #include "SignalConsoleView.h"
+#include "WaveSynthFavourites.h"
 #include "Theme.h"
 
 namespace
@@ -793,12 +794,42 @@ namespace
         juce::StringArray pages;
     };
 
-    /** The patch browser: the category and name, arrows for the one before and after, a click for
-        the whole list by category. */
-    class PatchBrowser final : public juce::Component
+    /** The patch browser: the category and name, arrows for the one before and after, a heart to mark
+        the patch as a favourite, and a click for the whole list: the favourites first, then by
+        category. A patch chosen from the favourites puts the arrows on the favourites alone. */
+    class PatchBrowser final : public juce::Component,
+                               public juce::SettableTooltipClient
     {
     public:
         explicit PatchBrowser (Synth& s) : synth (s) {}
+
+        /** Where the heart is. */
+        juce::Rectangle<float> heartBounds() const
+        {
+            return { (float) getWidth() - 24.0f - 26.0f, 0.0f, 24.0f, (float) getHeight() };
+        }
+
+        /** Marks the patch it is on as a favourite or unmarks it (a factory patch only). */
+        void toggleFavourite()
+        {
+            if (currentIndex() >= 0)
+            {
+                WaveSynth::Favourites::shared().toggle (synth.getPatchName());
+                repaint();
+            }
+        }
+
+        juce::String getTooltip() override
+        {
+            const auto x = (float) getMouseXYRelative().x;
+
+            if (x < 24.0f)                       return synth.isBrowsingFavourites() ? "The favourite before this one" : "The patch before this one";
+            if (x > (float) getWidth() - 24.0f)  return synth.isBrowsingFavourites() ? "The next favourite" : "The next patch";
+            if (heartBounds().contains (getMouseXYRelative().toFloat()))
+                return WaveSynth::Favourites::shared().contains (synth.getPatchName()) ? "A favourite: click to unmark it" : "Mark this patch as a favourite";
+
+            return "Click for all the patches: your favourites first, then by category";
+        }
 
         std::function<void()> onLoaded;
 
@@ -821,7 +852,34 @@ namespace
             arrow (r.removeFromLeft (24.0f), false, hover == -1);
             arrow (r.removeFromRight (24.0f), true, hover == 1);
             const auto index = currentIndex();
-            const auto category = index >= 0 ? WaveSynth::factoryPatches()[(size_t) index].category : juce::String ("Patch");
+            const auto favourite = index >= 0 && WaveSynth::Favourites::shared().contains (synth.getPatchName());
+            const auto category = favourite && synth.isBrowsingFavourites() ? juce::String ("Favourites")
+                                : index >= 0 ? WaveSynth::factoryPatches()[(size_t) index].category : juce::String ("Patch");
+
+            // The heart: filled when the patch is a favourite, an outline when it could be one.
+            if (index >= 0)
+            {
+                const auto box = heartBounds().withSizeKeepingCentre (14.0f, 13.0f);
+                juce::Path heart;
+                heart.startNewSubPath (box.getCentreX(), box.getBottom());
+                heart.cubicTo (box.getX() - 2.0f, box.getY() + box.getHeight() * 0.55f, box.getX() + 1.0f, box.getY() - 3.0f, box.getCentreX(), box.getY() + box.getHeight() * 0.3f);
+                heart.cubicTo (box.getRight() - 1.0f, box.getY() - 3.0f, box.getRight() + 2.0f, box.getY() + box.getHeight() * 0.55f, box.getCentreX(), box.getBottom());
+                heart.closeSubPath();
+
+                if (favourite)
+                {
+                    g.setColour (Theme::accent);
+                    g.fillPath (heart);
+                }
+                else
+                {
+                    g.setColour (hover == 3 ? Theme::accent : Theme::dimText.withAlpha (0.7f));
+                    g.strokePath (heart, juce::PathStrokeType (1.3f));
+                }
+
+                r.removeFromRight (26.0f);
+            }
+
             g.setFont (bold (9.0f).withExtraKerningFactor (0.1f));
             g.setColour (Theme::accentLight);
             g.drawText (category.toUpperCase(), r.removeFromLeft (juce::jmin (92.0f, r.getWidth() * 0.32f)), juce::Justification::centredLeft);
@@ -832,7 +890,7 @@ namespace
 
         void mouseMove (const juce::MouseEvent& e) override
         {
-            const auto h = e.position.x < 24.0f ? -1 : e.position.x > (float) getWidth() - 24.0f ? 1 : 0;
+            const auto h = e.position.x < 24.0f ? -1 : e.position.x > (float) getWidth() - 24.0f ? 1 : heartBounds().contains (e.position) ? 3 : 0;
             if (h != hover) { hover = h; repaint(); }
         }
 
@@ -842,18 +900,44 @@ namespace
         {
             const auto& all = WaveSynth::factoryPatches();
 
+            // The arrows: through what the arrow keys go through too (the synth's own list).
             if (e.position.x < 24.0f || e.position.x > (float) getWidth() - 24.0f)
             {
-                const auto step = e.position.x < 24.0f ? -1 : 1;
-                const auto n = (int) all.size();
-                const auto at = currentIndex();
-                load (at < 0 ? 0 : ((at + step) % n + n) % n);
+                synth.stepPatch (e.position.x < 24.0f ? -1 : 1);
+                repaint();
+                if (onLoaded != nullptr) onLoaded();
                 return;
             }
 
-            // A sub-menu for each category; a large category's is a list of pages by name.
+            if (heartBounds().contains (e.position) && currentIndex() >= 0)
+            {
+                toggleFavourite();
+                return;
+            }
+
+            // The favourites first, by name; then a sub-menu for each category, a large category's a list of pages by name.
             juce::PopupMenu menu;
             const auto current = synth.getPatchName();
+            constexpr int favouriteIds = 1000000;
+
+            {
+                juce::PopupMenu favourites;
+                const auto indices = WaveSynth::Favourites::shared().indices();
+                auto ticked = false;
+
+                for (auto i : indices)
+                {
+                    const auto& name = all[(size_t) i].name;
+                    ticked = ticked || (name == current && synth.isBrowsingFavourites());
+                    favourites.addItem (favouriteIds + i + 1, name, true, name == current && synth.isBrowsingFavourites());
+                }
+
+                if (indices.empty())
+                    favourites.addItem (-1, "None yet: click the heart beside a patch's name", false);
+
+                menu.addSubMenu ("Favourites", favourites, true, nullptr, ticked);
+                menu.addSeparator();
+            }
 
             for (auto& c : WaveSynth::patchCategories())
             {
@@ -886,8 +970,12 @@ namespace
             juce::Component::SafePointer<PatchBrowser> safe (this);
             menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this), [safe] (int chosen)
             {
-                if (safe != nullptr && chosen > 0)
-                    safe->load (chosen - 1);
+                if (safe == nullptr || chosen <= 0)
+                    return;
+
+                // A patch chosen from the favourites puts the arrows on the favourites; one from a category, on every patch.
+                safe->synth.setBrowsingFavourites (chosen > favouriteIds);
+                safe->load (chosen > favouriteIds ? chosen - favouriteIds - 1 : chosen - 1);
             });
         }
 
@@ -1423,9 +1511,9 @@ struct WaveSynthEditor::Content final : public juce::Component
         header.removeFromRight (100);
         browser.setBounds (header.removeFromLeft (380).withSizeKeepingCentre (380, 32));
         header.removeFromLeft (gap * 2);
-        presets.setBounds (header.removeFromLeft (360).withSizeKeepingCentre (360, 28));
-        header.removeFromLeft (gap * 2);
-        viewPages.setBounds (header.removeFromLeft (126).withSizeKeepingCentre (126, 24));
+        // The presets bar takes the room the hidden switch to the scope would have: wide enough for its Audition button to be named.
+        presets.setBounds (header.removeFromLeft (470).withSizeKeepingCentre (470, 28));
+        viewPages.setBounds (header.removeFromRight (126).withSizeKeepingCentre (126, 24));
         r.removeFromBottom (margin);
         consoleView->setBounds (r);
 
@@ -1830,6 +1918,16 @@ void WaveSynthEditor::showModulator (int index)
 void WaveSynthEditor::showRightPage (int index)
 {
     content->showRightPage (index);
+}
+
+void WaveSynthEditor::toggleFavourite()
+{
+    content->browser.toggleFavourite();
+}
+
+juce::Rectangle<int> WaveSynthEditor::getFavouriteBounds() const
+{
+    return getLocalArea (&content->browser, content->browser.heartBounds().toNearestInt());
 }
 
 void WaveSynthEditor::showView (int index)

@@ -4,6 +4,14 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Torqwave Synth: favourites** (0.20.0)
+- **A heart beside the patch's name** marks a factory patch as a favourite; click it again to unmark. **Favourites** is the first entry of the patch list, by name ("None yet: click the heart beside a patch's name" until there is one).
+- **The arrows follow what you are browsing**: a patch chosen from Favourites puts the window's arrows, and the left and right arrow keys, on the favourites alone, round their ends; one chosen from a category puts them back on every patch. The window's arrows and the keys go through one list (`BasicSynthProcessor::browseList`), so they cannot disagree.
+- Favourites are kept by name, a line each, in `Synth Favourites.txt` in Torqwave's application data: the same in every session, and a name that is no longer a factory patch is dropped when the file is read.
+- No key marks a favourite yet (`InstrumentKeys::toggleFavourite` is there for one).
+- Not tried by hand: the heart and the menu were not clicked in the running app (the heart's code, the list and the arrows are tested; the heart is in `--synth-window`'s pictures).
+- Tested (`--instruments`, 2 more checks): a patch is marked and unmarked by name, listed by name, kept in a file that reads back the same and drops a name that is no patch any more, and a sound that is no factory patch can't be marked; the arrows go through every patch until the favourites are browsed, then through the favourites alone (Abyss Reese, Cold Bell, Warehouse Sub), from a patch outside them to their first or last, and the window's heart marks the patch it is on.
+
 **Torqwave Synth: six faults in the engine and the first patches** (0.20.0; found by the second patch bank's checks)
 - **Pitch modulation moves smoothly.** An oscillator's Pitch knob steps in semitones, and modulation of it was rounded to those steps too: an LFO at 1 % or less did nothing at all, so 63 patches had a vibrato that was never heard (Siren Burn, Industrial Whistle, Ghost Signal and 60 of the first bank's leads), and every pitch envelope moved in stairs. Modulated pitch is now continuous; a Pitch nothing modulates reads as before. **This changes how 515 factory patches sound** (13 hand-made, 179 in the first bank, 323 in the second: everything that routes a source to an oscillator's Pitch): drops and slides glide, vibratos are heard.
 - **Step patterns play in time.** A synced Steps LFO plays its sixteen steps over its division, and 83 patches (4 hand-made, 79 in the first bank) had that set to a sixteenth or eighth note, so all sixteen steps went by inside one note: a buzz. They now take a bar (a step each sixteenth), or two bars where they were set to an eighth.

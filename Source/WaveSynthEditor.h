@@ -49,6 +49,11 @@ public:
     void showModulator (int index);
     void showRightPage (int index);
 
+    /** The heart in the patch browser: marks the patch it is on as a favourite, or unmarks it.
+        Where the heart is, in the window. */
+    void toggleFavourite();
+    juce::Rectangle<int> getFavouriteBounds() const;
+
     /** Shows the knobs (0) or the signal console's scope (1). Nothing in the window offers the scope
         yet (it is to be Decrypt's screen): this is for tests and for Decrypt when it is here. */
     void showView (int index);
