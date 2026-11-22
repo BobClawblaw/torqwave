@@ -116,6 +116,7 @@ namespace SoundControls
         void resetToDefault();
         juce::String getValueText() const;
         const juce::String& getLabel() const noexcept                { return label; }
+        void setLabel (const juce::String& l)                        { if (l != label) { label = l; setTitle (l); repaint(); } }
 
         /** Whether the readout shows the value (turning or hovered) rather than the name. */
         bool isShowingValue() const noexcept                         { return dragging || hovered; }
