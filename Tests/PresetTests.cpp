@@ -110,6 +110,63 @@ namespace
         }
     }
 
+    /** A click in a rendered preset: a jump between two samples that stands alone. Its measure is the
+        step as a ratio to the largest step in the 30 ms either side of it (the millisecond around it left
+        out), for steps of `floor` or more that are also three times the steps just before and after them.
+        A voice cut off, or a wave changed between two samples, puts one such step there with nothing like
+        it around; a bright sound's own edges, a drum's noise, a crushed sound's stairs and a fast attack
+        (several samples rising alike) have their like beside them. `starts` are sample positions whose
+        next 3 ms are left out: a drum's hit begins with a jump, which is the stick. */
+    struct Click
+    {
+        float ratio = 0.0f, step = 0.0f;
+        double seconds = 0.0;
+    };
+
+    Click worstClick (const juce::AudioBuffer<float>& b, double rate, float floor, const std::vector<int>& starts = {})
+    {
+        Click worst;
+        const auto size = juce::jmax (1, (int) (rate / 1000.0));
+        const auto blocks = b.getNumSamples() / size;
+
+        for (int ch = 0; ch < b.getNumChannels(); ++ch)
+        {
+            const auto* x = b.getReadPointer (ch);
+            std::vector<float> largest ((size_t) blocks, 0.0f);
+            std::vector<int> where ((size_t) blocks, 0);
+
+            for (int i = 1; i < blocks * size; ++i)
+                if (const auto step = std::abs (x[i] - x[i - 1]); step > largest[(size_t) (i / size)])
+                {
+                    largest[(size_t) (i / size)] = step;
+                    where[(size_t) (i / size)] = i;
+                }
+
+            for (int at = 0; at < blocks; ++at)
+            {
+                const auto i = where[(size_t) at];
+
+                if (largest[(size_t) at] < floor || i < 2 || i + 1 >= b.getNumSamples()
+                    || largest[(size_t) at] < 3.0f * juce::jmax (std::abs (x[i - 1] - x[i - 2]), std::abs (x[i + 1] - x[i])))
+                    continue;
+
+                if (std::any_of (starts.begin(), starts.end(), [&] (int start) { return i >= start && i < start + (int) (0.003 * rate); }))
+                    continue;
+
+                auto around = 0.0f;
+
+                for (int other = juce::jmax (0, at - 31); other < juce::jmin (blocks, at + 32); ++other)
+                    if (std::abs (other - at) > 1)
+                        around = juce::jmax (around, largest[(size_t) other]);
+
+                if (const auto ratio = largest[(size_t) at] / juce::jmax (around, 1.0e-6f); ratio > worst.ratio)
+                    worst = { ratio, largest[(size_t) at], (double) where[(size_t) at] / rate };
+            }
+        }
+
+        return worst;
+    }
+
     /** The instrument settings a voice carries, loaded into a fresh Torqwave Synth. */
     std::unique_ptr<BuiltInEffects::BasicSynthProcessor> synthFrom (const juce::XmlElement& voice)
     {
@@ -290,6 +347,9 @@ void runPresetTests (AudioEngine& engine)
         juce::StringArray problems;
         float loudest = 0.0f, quietest = 1.0f;
         juce::String loudestName, quietestName;
+        juce::StringArray clicks;
+        Click worstOfAll;
+        juce::String worstName;
 
         for (auto& f : all)
             for (auto* x : f.xml != nullptr ? sequencesOf (*f.xml) : std::vector<const juce::XmlElement*> {})
@@ -346,6 +406,26 @@ void runPresetTests (AudioEngine& engine)
                 if (error.isNotEmpty() || peak * gain < juce::Decibels::decibelsToGain (-24.0f) || peak * gain > juce::Decibels::decibelsToGain (-1.0f))
                     problems.add (q->name + ": " + (error.isNotEmpty() ? error : "peak " + juce::String (juce::Decibels::gainToDecibels (peak * gain), 1) + " dB"));
 
+                // No clicks: no jump in one sample standing alone, four times anything in the 30 ms either side.
+                if (error.isEmpty())
+                {
+                    // A drum's hit starts with a jump of its own; what is checked there is everything after it.
+                    std::vector<int> hits;
+
+                    if (description.fileOrIdentifier == BuiltInEffects::basicDrumsId)
+                        for (auto& n : phrase.notes)
+                            hits.push_back ((int) std::floor (n.start * 48000.0));
+
+                    const auto click = worstClick (out, 48000.0, 0.03f / juce::jmax (gain, 1.0e-6f), hits);
+
+                    if (click.ratio > worstOfAll.ratio)
+                        worstOfAll = click, worstName = q->name;
+
+                    if (click.ratio > 4.0f)
+                        clicks.add (q->name + " (" + q->voice->getStringAttribute ("name") + ") " + juce::String (click.step * gain, 3) + " at " + juce::String (click.seconds, 3)
+                                        + " s, " + juce::String (click.ratio, 1) + " times its surroundings");
+                }
+
                 if (peak * gain > loudest)
                     loudest = peak * gain, loudestName = q->name;
 
@@ -358,6 +438,14 @@ void runPresetTests (AudioEngine& engine)
                    + juce::String (juce::Decibels::gainToDecibels (loudest), 1) + " dB, the quietest " + quietestName + " at "
                    + juce::String (juce::Decibels::gainToDecibels (quietest), 1) + " dB)"
                    + (problems.isEmpty() ? juce::String() : " (" + problems.joinIntoString ("; ").substring (0, 800) + ")"));
+
+        if (const auto list = juce::SystemStats::getEnvironmentVariable ("TQ_PRESET_CLICKS", {}); list.isNotEmpty())
+            juce::File (list).replaceWithText (clicks.joinIntoString ("\n") + "\n");
+
+        check (clicks.isEmpty(),
+               "presets: none clicks on its voice: no jump in one sample of 0.03 or more (three times the steps beside it) stands alone, four times the largest step in the 30 ms either side, a drum hit's first 3 ms left out (the nearest, "
+                   + worstName + ", " + juce::String (worstOfAll.ratio, 1) + " times)"
+                   + (clicks.isEmpty() ? juce::String() : " (" + juce::String (clicks.size()) + ": " + clicks.joinIntoString ("; ").substring (0, 800) + ")"));
     }
 
     // In the library, under Presets above the user's own; the user's folder untouched.

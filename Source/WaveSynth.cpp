@@ -602,6 +602,11 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     //==========================================================================
     struct Voice
     {
+        // Where each oscillator's position and warp are now: they move toward their modulated values no
+        // faster than the amp may rise, so an envelope that jumps (a note struck again) doesn't change the
+        // wave between two samples. `settle` puts them there at once, for a voice starting from silence.
+        std::array<float, numOscillators> positionNow {}, warpNow {};
+        bool settle = true;
         bool active = false, fading = false, down = false, held = false;
         int note = -1;
         float velocity = 0.0f, randomValue = 0.0f;
@@ -737,6 +742,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
     void startFresh (Voice& v, int note, float velocity)
     {
+        v.settle = true;
         v.active = true;
         v.fading = false;
         v.fade = 1.0f;
@@ -1394,12 +1400,20 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
             levels[(size_t) o] = &WaveTables::get ((WaveTables::Table) s.table[(size_t) o]).levels[(size_t) v.osc[(size_t) o].level];
             positions[(size_t) o] = v.value[(size_t) oscDest (o, fPosition)];
             warpAmounts[(size_t) o] = v.value[(size_t) oscDest (o, fWarp)];
+
+            if (v.settle)
+            {
+                v.positionNow[(size_t) o] = positions[(size_t) o];
+                v.warpNow[(size_t) o] = warpAmounts[(size_t) o];
+            }
             // A string's warp is how long it rings: 0.15 s up to 15 s to fall 60 dB.
             const auto t60 = 0.15f * std::pow (100.0f, warpAmounts[(size_t) o]);
             const auto hz = (float) (v.osc[(size_t) o].unison[0].increment * rate);
             decays[(size_t) o] = std::pow (10.0f, -3.0f / juce::jmax (0.01f, t60 * juce::jmax (1.0f, hz)));
         }
 
+        v.settle = false;
+        const auto slew = (float) (1.0 / (minimumAttackSeconds * rate));
         const auto& subTable = WaveTables::get (s.subShape == 2 ? WaveTables::Table::sub : WaveTables::Table::analog);
         const auto subPosition = s.subShape == 0 ? 0.0f : s.subShape == 1 ? 1.0f / 3.0f : 1.0f;
         const auto& subLevel = subTable.levels[(size_t) WaveTables::levelFor (v.subIncrement)];
@@ -1427,6 +1441,8 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
                 const auto string = s.table[(size_t) o] == (int) WaveTables::Table::string;
                 float sumL = 0.0f, sumR = 0.0f;
+                const auto position = v.positionNow[(size_t) o] += juce::jlimit (-slew, slew, positions[(size_t) o] - v.positionNow[(size_t) o]);
+                const auto warpAmount = v.warpNow[(size_t) o] += juce::jlimit (-slew, slew, warpAmounts[(size_t) o] - v.warpNow[(size_t) o]);
 
                 for (int u = 0; u < n; ++u)
                 {
@@ -1440,7 +1456,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                         if (un.delay > 0 && --un.delay == 0)
                             un.exciting = -1;
 
-                        x = stringSample (un, positions[(size_t) o], decays[(size_t) o]);
+                        x = stringSample (un, position, decays[(size_t) o]);
                     }
                     else if (un.delay > 0)
                     {
@@ -1451,7 +1467,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                     }
                     else
                     {
-                        x = oscillatorSample (v, o, un, s.warp[(size_t) o], warpAmounts[(size_t) o], positions[(size_t) o], *levels[(size_t) o]);
+                        x = oscillatorSample (v, o, un, s.warp[(size_t) o], warpAmount, position, *levels[(size_t) o]);
                         un.phase += un.increment;
                         un.phase -= std::floor (un.phase);
                     }
