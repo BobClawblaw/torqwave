@@ -4,6 +4,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Next and previous preset, without the menu** (0.20.0; fix log 73)
+- The presets row (in Swarm Guitar, Basic Drums, Torqwave Synth and every built-in effect) has two arrows before its menu: **previous** and **next** preset, round from the last to the first. The **left and right arrow keys** do the same while the row has the keyboard, and so does the **mouse wheel** over the menu.
+- They go in the menu's order: each factory sub-menu in turn, then the factory presets without one, then your own. Swarm Guitar's 296 presets are one click each.
+- Torqwave Synth's factory patches already stepped with the arrows beside the patch's name; this is for its saved presets and for everything else.
+- Not tried by hand: the arrows, keys and wheel in the running app.
+- Tested (1 more check, `--effect-previews`): next, next, previous; back from the first to the last and on to the first again; each applied as it is chosen; by the left and right keys; Swarm Guitar's 296 by one sub-menu after another, each once; with no presets the arrows do nothing.
+
 **Basic Drums' delay no longer reads past its line** (0.20.0)
 - The kit's ping-pong delay could read one sample past the end of its delay line when its read position landed a hair under the start (the position plus the line's length rounds up to the length itself). What it read was whatever memory held, so an echo could carry a stray sample. The position is now wrapped again after the add. The same fault was found first in Torqwave Synth's comb filter, where it changed a patch's level by 30 dB under scribbled memory.
 - Tested: the drum checks (`--drums`, 44) pass the same plainly and with memory scribbled before and after use (`MallocPreScribble`, `MallocScribble`). No check reproduces the stray read itself; it was found by reading the code.

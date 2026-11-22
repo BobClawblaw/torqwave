@@ -717,6 +717,14 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (args.contains ("--effect-previews"))
+    {
+        AudioEngine engine;
+        runEffectPreviewTests (engine);
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
     if (args.contains ("--stress"))
     {
         AudioEngine engine;
