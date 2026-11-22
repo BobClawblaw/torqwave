@@ -1,4 +1,5 @@
 #include "WaveSynthEditor.h"
+#include "SignalConsoleView.h"
 #include "Theme.h"
 
 namespace
@@ -744,7 +745,8 @@ namespace
     };
 
     /** Two or more page buttons drawn as a segmented switch. */
-    class PageSwitch final : public juce::Component
+    class PageSwitch final : public juce::Component,
+                             public juce::SettableTooltipClient
     {
     public:
         explicit PageSwitch (juce::StringArray names) : pages (std::move (names)) {}
@@ -951,7 +953,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         : synth (s),
           presets (EffectPresets::userStore(), s.getPresetKey(), [&s] { return s.getPresetValues(); },
                    [&s] (const EffectPresets::Values& v) { s.setPresetValues (v); }),
-          browser (s), modPages ({ "Slots 1-8", "Slots 9-16", "Effects" }),
+          browser (s), modPages ({ "Slots 1-8", "Slots 9-16", "Effects" }), viewPages ({ "Knobs", "Trace" }),
           envelopeView (s), lfoView (s)
     {
         addAndMakeVisible (browser);
@@ -1166,6 +1168,13 @@ struct WaveSynthEditor::Content final : public juce::Component
             effects.back().knobs.push_back (knob (*effects.back().panel, id, label, Knob::Size::small));
 
         browser.onLoaded = [this] { refresh(); };
+        // The console (Trace) takes the place of the knobs when its page is chosen.
+        consoleView = std::make_unique<SignalConsoleView> (synth);
+        addChildComponent (*consoleView);
+        addAndMakeVisible (viewPages);
+        viewPages.setTooltip ("Knobs: the synth's controls. Trace: a map of the sounds within reach of this one, to hear and jump to");
+        viewPages.onChange = [this] (int i) { showView (i); };
+
         showModulator (0);
         showRightPage (0);
         setSize (designWidth, designHeight);
@@ -1252,6 +1261,29 @@ struct WaveSynthEditor::Content final : public juce::Component
         updateLfoVisibility();
         resized();
     }
+
+    /** The knobs (0) or the console's Trace view (1) under the header. */
+    void showView (int index)
+    {
+        const auto trace = index == 1;
+        viewPages.chosen = trace ? 1 : 0;
+        viewPages.repaint();
+
+        for (auto* c : getChildren())
+            if (c != &browser && c != &presets && c != &viewPages && c != consoleView.get())
+                c->setVisible (! trace);
+
+        consoleView->setVisible (trace);
+
+        if (! trace)
+        {
+            // The pages within the knobs show what they showed.
+            showModulator (modulator);
+            showRightPage (modPages.chosen);
+        }
+    }
+
+    bool showingTrace() const   { return viewPages.chosen == 1; }
 
     void showRightPage (int index)
     {
@@ -1392,7 +1424,10 @@ struct WaveSynthEditor::Content final : public juce::Component
         browser.setBounds (header.removeFromLeft (380).withSizeKeepingCentre (380, 32));
         header.removeFromLeft (gap * 2);
         presets.setBounds (header.removeFromLeft (360).withSizeKeepingCentre (360, 28));
+        header.removeFromLeft (gap * 2);
+        viewPages.setBounds (header.removeFromLeft (126).withSizeKeepingCentre (126, 24));
         r.removeFromBottom (margin);
+        consoleView->setBounds (r);
 
         // The oscillators and sources.
         auto row = r.removeFromTop (236);
@@ -1671,7 +1706,8 @@ struct WaveSynthEditor::Content final : public juce::Component
     Synth& synth;
     EffectPresets::Bar presets;
     PatchBrowser browser;
-    PageSwitch modPages;
+    PageSwitch modPages, viewPages;
+    std::unique_ptr<SignalConsoleView> consoleView;
     EnvelopeView envelopeView;
     LfoView lfoView;
 
@@ -1794,4 +1830,14 @@ void WaveSynthEditor::showModulator (int index)
 void WaveSynthEditor::showRightPage (int index)
 {
     content->showRightPage (index);
+}
+
+void WaveSynthEditor::showView (int index)
+{
+    content->showView (index);
+}
+
+SignalConsoleView* WaveSynthEditor::getConsoleView() const
+{
+    return content->consoleView.get();
 }

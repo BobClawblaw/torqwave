@@ -71,6 +71,8 @@ namespace WaveSynth
     };
 }
 
+namespace SignalConsole { class Console; }
+
 namespace BuiltInEffects
 {
     /** The instrument built in, under the plug-in ID it had as Torqwave Synth: WaveSynth's engine
@@ -101,6 +103,7 @@ namespace BuiltInEffects
         void loadPatch (int index);
         bool loadPatch (const juce::String& name);
         const juce::String& getPatchName() const noexcept            { return patchName; }
+        void setPatchName (const juce::String& name)                  { patchName = name; }
         const juce::String& getMacroName (int i) const               { return macroNames[(size_t) i]; }
         void setMacroName (int i, const juce::String& n)              { macroNames[(size_t) i] = n; }
 
@@ -121,6 +124,10 @@ namespace BuiltInEffects
             patch has none. Set from the message thread; the voices take it up at their next block. */
         void setSampledTable (int oscillator, std::shared_ptr<const WaveTables::Sampled>);
         std::shared_ptr<const WaveTables::Sampled> getSampledTable (int oscillator) const;
+
+        /** Its signal console (Trace: the sounds within reach of its patch), made when first asked
+            for, on the message thread. */
+        SignalConsole::Console& getConsole();
 
         /** The old (before 0.20.0) settings turned into the new engine's, every parameter given. */
         static EffectPresets::Values translateOldSettings (const EffectPresets::Values& old);
@@ -149,6 +156,11 @@ namespace BuiltInEffects
         std::vector<std::pair<juce::uint32, std::shared_ptr<const WaveTables::Sampled>>> retired;
         juce::SpinLock sampledLock;
         std::atomic<juce::uint32> sampledGeneration { 0 }, sampledSeen { 0 };
+
+        std::unique_ptr<SignalConsole::Console> console;
+        std::atomic<SignalConsole::Console*> consoleForAudio { nullptr };
+        double preparedRate = 0.0;
+        int preparedBlock = 512;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BasicSynthProcessor)
     };

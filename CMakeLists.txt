@@ -285,6 +285,8 @@ target_sources(Torqwave PRIVATE
     Source/SoundControls.cpp
     Source/WaveTables.cpp
     Source/WaveSynth.cpp
+    Source/SignalConsole.cpp
+    Source/SignalConsoleView.cpp
     Source/WaveSynthPatches.cpp
     Source/WaveSynthPatchBank.cpp
     Source/WaveSynthPatchBank2.cpp
@@ -523,6 +525,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/SwarmGuitarTests.cpp
     Tests/InstrumentKeysTests.cpp
     Tests/SoundDemos.cpp
+    Tests/SignalConsoleTests.cpp
     Tests/DrumMachineTests.cpp
     Tests/SoundControlsTests.cpp
     Tests/WaveSynthTests.cpp
@@ -692,6 +695,8 @@ target_sources(TorqwaveTests PRIVATE
     Source/SoundControls.cpp
     Source/WaveTables.cpp
     Source/WaveSynth.cpp
+    Source/SignalConsole.cpp
+    Source/SignalConsoleView.cpp
     Source/WaveSynthPatches.cpp
     Source/WaveSynthPatchBank.cpp
     Source/WaveSynthPatchBank2.cpp

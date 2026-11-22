@@ -7,6 +7,7 @@
 #include "TestPlugins.h"
 #include "InstrumentTests.h"
 #include "WaveSynthTests.h"
+#include "SignalConsoleTests.h"
 #include "InstrumentKeysTests.h"
 #include "SynthClickTests.h"
 #include "WaveSynthBankTests.h"
@@ -125,6 +126,7 @@ void runInstrumentTests (AudioEngine& engine)
     // Torqwave Synth's engine, patches and window, and its clicks.
     runInstrumentKeysTests();
     runWaveSynthTests (engine);
+    runSignalConsoleTests();
     runSynthClickTests (engine);
     runWaveSynthBankTests();
 

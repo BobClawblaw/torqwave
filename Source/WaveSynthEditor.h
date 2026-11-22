@@ -3,6 +3,8 @@
 #include "WaveSynth.h"
 #include "SoundControls.h"
 
+class SignalConsoleView;
+
 /** Torqwave Synth's window: the three oscillators with their wavetables drawn at the position they
     play, the sub and noise; the two filters with their response curves; the amp and voice; the
     envelopes (drag their points) and LFOs (draw their steps), each a modulation source to drag
@@ -46,6 +48,10 @@ public:
         level envelopes; and on the right modulation slots 1 to 8 (0), 9 to 16 (1) or the effects (2). */
     void showModulator (int index);
     void showRightPage (int index);
+
+    /** Shows the knobs (0) or the signal console's Trace view (1): the Knobs / Trace switch in the header. */
+    void showView (int index);
+    SignalConsoleView* getConsoleView() const;
 
     struct Content;
 
