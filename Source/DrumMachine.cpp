@@ -1274,6 +1274,10 @@ void Engine::renderEffects (float* left, float* right, int count)
         if (at < 0.0f)
             at += (float) size;
 
+        // A position a hair under 0 plus the size rounds up to the size itself: that is the line's start.
+        if (at >= (float) size)
+            at -= (float) size;
+
         const auto i0 = (int) at;
         const auto i1 = i0 + 1 < size ? i0 + 1 : 0;
         const auto frac = at - (float) i0;

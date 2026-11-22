@@ -4,6 +4,10 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Basic Drums' delay no longer reads past its line** (0.20.0)
+- The kit's ping-pong delay could read one sample past the end of its delay line when its read position landed a hair under the start (the position plus the line's length rounds up to the length itself). What it read was whatever memory held, so an echo could carry a stray sample. The position is now wrapped again after the add. The same fault was found first in Torqwave Synth's comb filter, where it changed a patch's level by 30 dB under scribbled memory.
+- Tested: the drum checks (`--drums`, 44) pass the same plainly and with memory scribbled before and after use (`MallocPreScribble`, `MallocScribble`). No check reproduces the stray read itself; it was found by reading the code.
+
 **Sessions start in bars and beats, and the lanes show the grid** (0.20.0, fix log 72)
 - **A new session counts in bars and beats** (New Session, the session at start-up, a project without a session). A session saved before opens as it was saved: in time, unless it was saved in bars. A session for picture or sound design switches to time with B, as before. Attaching a video does not switch it, since scoring to picture counts in bars too.
 - **The lanes show the grid plainly** in every theme. It is drawn behind the clips: a bar's line strongest, then a beat's, then the lines between beats. Before, it was drawn over the clips, so faintly it hardly showed.
