@@ -36,7 +36,8 @@ namespace
         return (juce::int64) d;
     }
 
-    constexpr int maxNotes = 4096, maxPoints = 2048, maxSuggestions = 12, maxParameters = 64;
+    // An instrument's parameters named to the model: all of Basic Synth's 196, with room.
+    constexpr int maxNotes = 4096, maxPoints = 2048, maxSuggestions = 12, maxParameters = 256;
 
     const char* notesSchema = R"JSON({ "type": "array", "items": { "type": "object", "properties": {
         "pitch": { "type": "integer", "description": "MIDI note, 0 to 127: 60 is middle C, C4 (so C2 is 36)" },

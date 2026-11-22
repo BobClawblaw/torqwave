@@ -264,7 +264,7 @@ That is more than a patch usually holds. If 0.19.3 should ship sooner, steps 1, 
 
 Steps 1 to 7 are done. Using them showed that the built-in voices aren't good enough. Basic Synth sounds thin and cheap. Basic Drums played only 22 of the 47 General MIDI drums, so many of the Sequencer's drum rows were silent. Both clicked: when a note was cut off, struck again, or stopped by the transport, and on short attacks. The user's call (2026-11-21): the built-in voices should sound good enough to keep, not just to preview. Basic Synth is replaced in place by a synth in the spirit of a lighter Massive. Older sessions using it will sound different, by the user's choice. Basic Drums gets better sounds. 0.19.3 waits for all of it, with about 1,000 presets written for the new voices.
 
-### Step 8: no clicks (S, partly done)
+### Step 8: no clicks (S, done)
 
 - **Basic Drums:**
   - Every General MIDI drum from 35 to 81 now has a sound. **Done.**
@@ -274,11 +274,14 @@ Steps 1 to 7 are done. Using them showed that the built-in voices aren't good en
   - A stolen voice, and All Sound Off from a stop, a loop or a seek, fade over 3 to 5 ms.
   - The attack is never shorter than about 1.5 ms.
   - Today, each of these restarts the wave or cuts it at full level. That is the pop the user heard on every note of Falling Note Ramp, at the end of Minor Bell Motif's loop, and when Low Boom plays.
+  - **Done** in the new engine (step 9): a stolen voice and All Sound Off fade over 4 ms, the amp takes at least 1.5 ms to rise or fall and 3 ms to release, and a voice ends at exactly nothing (its DC blocker sits before the amp, so no tail is cut). The click test renders Falling Note Ramp, Minor Bell Motif and Low Boom on their voices plus a retrigger, steal, release-in-the-attack and All Sound Off case: the largest step between samples is 0.081 (the bell's own sine), under the limit of 0.15; 0.19.2's synth makes 0.29, 0.25 and 0.27 there.
 - **Tested:** a click check that renders every factory preset through its voice, as a loop, stopped and restarted. It fails when a sample jumps further than the sound itself can move.
 
-### Step 9: Basic Synth becomes a real synth (L, the largest piece)
+### Step 9: Basic Synth becomes a real synth (L, the largest piece, done)
 
 The aim is a lighter Massive: rich, wide sounds from a few panels. It is not a copy of Massive's look or names.
+
+**As built:** a hybrid of the two classic wavetable synths' ideas, in its own look and words. From the Massive side: three wavetable oscillators with Position, serial or parallel filters, macros and a step LFO. From the Serum side: a warp mode on each oscillator, a sub and a noise oscillator, a large wavetable view, drag-to-modulate rings and an effects rack. Added at the user's request: a plucked **String** table (each unison voice a string tuned to the note, with Strum and Drift on unison), and Fuzz in the drive, for the Swarm Guitar sound. The factory patches are all for dark techno, industrial and EBM, with no keys or brass: 96 made by hand (Init among them), from basses and reeses to impacts and textures, and, at the user's later request for at least a thousand, a bank of 970 more drawn from 24 kinds of sound, with two more categories (Perc and Vox): 1,066 in all.
 
 - **Three wavetable oscillators:**
   - Each has a table and a **Position** that morphs through it.

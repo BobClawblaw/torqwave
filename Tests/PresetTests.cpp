@@ -3,6 +3,7 @@
 #include "../Source/SequencerView.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
+#include "../Source/WaveSynth.h"
 #include "../Source/NoteTools.h"
 #include "../Source/Instrument.h"
 #include "TestUtils.h"
@@ -243,16 +244,19 @@ void runPresetTests (AudioEngine& engine)
             std::cout << "SKIP  presets: python3 isn't here to run Scripts/make_presets.py again" << std::endl;
     }
 
-    // The voices carry their instrument's settings: the acid line's Basic Synth has its resonance and glide.
+    // The voices carry their instrument's settings: the acid line's Basic Synth (written in 0.19.2's terms) has its resonance and
+    // glide, its 320 Hz cutoff lowered 2.4 octaves for its velocity to open again (60 % velocity to filter).
     {
         juce::String error;
         const auto acid = SequenceFile::load (presets.getChildFile ("Bass/Arp Bass/Acid Root Jumper.tqseq"), error);
         const auto synth = acid.has_value() && acid->voice != nullptr ? synthFrom (*acid->voice) : nullptr;
         const auto groove = SequenceFile::load (presets.getChildFile ("Drums/Full Grooves/Peak Hour Driver.tqseq"), error);
-        check (synth != nullptr && std::abs (plainOf (*synth, "resonance") - 75.0f) < 0.01f && std::abs (plainOf (*synth, "glide") - 60.0f) < 0.01f
-                   && std::abs (plainOf (*synth, "cutoff") - 320.0f) < 0.01f && SequenceFile::instrumentOf (*acid) == "Basic Synth"
+        check (synth != nullptr && std::abs (plainOf (*synth, "filter1Resonance") - 75.0f) < 0.01f && std::abs (plainOf (*synth, "glideTime") - 60.0f) < 0.01f
+                   && juce::exactlyEqual (synth->parameter ("voiceMode")->getValue(), 1.0f)
+                   && std::abs (plainOf (*synth, "filter1Cutoff") * std::exp2 (2.4f) - 320.0f) < 0.5f && SequenceFile::instrumentOf (*acid) == "Basic Synth"
                    && groove.has_value() && SequenceFile::instrumentOf (*groove) == "Basic Drums" && groove->channel == 10,
-               "presets: a preset's voice carries its Basic Synth settings (the acid line's resonance 75 %, glide 60 ms, cutoff 320 Hz); a drum groove plays on Basic Drums, channel 10");
+               "presets: a preset's voice carries its Basic Synth settings (the acid line's resonance 75 %, glide 60 ms as legato, cutoff 320 Hz less its velocity's 2.4 octaves); "
+               "a drum groove plays on Basic Drums, channel 10");
     }
 
     // Every preset sounds on its own voice, neither silent nor clipping: its notes at its written tempo,

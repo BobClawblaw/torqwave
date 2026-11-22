@@ -1478,7 +1478,7 @@ namespace
         { "title": "F#3 to G3", "why": "Keeps it in the key.", "kind": "notes", "change": [ { "pitch": 54, "start": 1920, "to": { "pitch": 55 } } ] },
         { "title": "Mod wheel swell", "kind": "lanes", "lanes": [ { "controller": 1, "points": [ { "tick": 0, "value": 0 }, { "tick": 3840, "value": 1 } ] } ] },
         { "title": "Chorus on the voice", "kind": "effect", "effect": "Chorus" },
-        { "title": "Open the filter", "kind": "automation", "parameter": "cutoff", "points": [ { "tick": 0, "value": 0.2 }, { "tick": 7680, "value": 0.9 } ] } ] })";
+        { "title": "Open the filter", "kind": "automation", "parameter": "filter 1 cutoff", "points": [ { "tick": 0, "value": 0.2 }, { "tick": 7680, "value": 0.9 } ] } ] })";
 
     /** The sequence tools on a working copy: what get_sequence tells, write_sequence's checks
         and exact notes, and suggest_for_sequence's checks and its suggestions applied. */
@@ -1489,7 +1489,7 @@ namespace
         context.sequence = bassLine();
         context.instrument = "Basic Synth";
         context.instrumentAbout = "A simple subtractive synth.";
-        context.instrumentParameters = { "Cutoff", "Resonance" };
+        context.instrumentParameters = { "Filter 1 Cutoff", "Filter 1 Resonance" };
         context.tempo = 96.0;
         context.sessionTempo = 128.0;
         context.sessionKey = "E minor";
@@ -1562,7 +1562,7 @@ namespace
         const auto reviewed = call ("suggest_for_sequence", review);
         const auto& suggestions = w.getSequenceTools()->getSuggestions();
         check ((bool) reviewed["ok"] && suggestions.size() == 4 && w.getSequenceTools()->getReview().startsWith ("A steady line")
-                   && suggestions[2].effect.name == "Chorus" && suggestions[3].parameter == "Cutoff" && ! suggestions[3].canApply() && suggestions[0].canApply()
+                   && suggestions[2].effect.name == "Chorus" && suggestions[3].parameter == "Filter 1 Cutoff" && ! suggestions[3].canApply() && suggestions[0].canApply()
                    && (bool) reviewed["suggestions"][2]["applies"] && ! (bool) reviewed["suggestions"][3]["applies"] && w.getSteps().size() == 1,
                "Ask Torq sequences: a review keeps its suggestions (notes, a lane, an effect, and automation as advice only, its parameter named as the instrument names it); they aren't steps of the plan");
 

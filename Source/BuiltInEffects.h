@@ -84,7 +84,7 @@ namespace BuiltInEffects
 
         /** Sets the parameters a preset names (as host changes, each as near as it holds the
             value); ones it doesn't name, and names that aren't parameters, are left alone. */
-        void setPresetValues (const EffectPresets::Values&);
+        virtual void setPresetValues (const EffectPresets::Values&);
 
         /** Most channels processLinked takes. */
         static constexpr int mostLinkedChannels = 8;
@@ -849,92 +849,9 @@ namespace BuiltInEffects
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DynamicEqEditor)
     };
 
-    /** The instrument built in, a basic synthesizer: an oscillator (sine, triangle, sawtooth or
-        square, the last two without aliasing), and two more at their own wave, octave, detune and
-        level, through a resonant low-pass filter and an ADSR envelope, with sixteen voices (the
-        oldest taken over when all are sounding) and each note's level set by its velocity.
-
-        Off by default, so it sounds as it did without them: oscillators 2 and 3 (at level 0), a
-        filter envelope (an amount, opening the cutoff up to six octaves at the note's start, and
-        its decay), velocity to filter (softer notes darker, by up to four octaves at the softest)
-        and glide (a note played while another is held slides to its pitch in the glide time
-        without starting its envelopes again, the 303's slide; with glide on, overlapping notes play
-        one at a time). Its parameters are hosted, so they can be automated and saved
-        like any effect's. Mono, played the same on both channels; no audio input. With the cutoff
-        at 20,000 Hz and no resonance the filter is out of the way, so a sine at 0 dB with attack,
-        decay and release at 0 and sustain at 100 % plays at exactly the note's velocity. A note's
-        wave starts from the beginning of its cycle. */
-    class BasicSynthProcessor final : public BuiltInEffect
-    {
-    public:
-        static constexpr int numVoices = 16;
-
-        BasicSynthProcessor();
-
-        void prepareToPlay (double sampleRate, int maximumBlockSize) override;
-        void reset() override;
-        void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
-        double getTailLengthSeconds() const override;
-
-        /** How many notes are sounding (their envelopes still active). */
-        int getNumSounding() const;
-
-    private:
-        struct Voice
-        {
-            int note = -1;
-            float velocity = 0.0f;
-            double phase = 0.0;
-            juce::ADSR envelope;
-            juce::dsp::StateVariableTPTFilter<float> filter;
-            juce::uint32 age = 0;
-            bool held = false;             // its key is up, the sustain pedal holding it
-            bool down = false;             // its key is down
-            double phase2 = 0.0, phase3 = 0.0;
-            double pitch = 0.0;            // the note it sounds now, in semitones, gliding toward note
-            double glideStep = 0.0;        // semitones a sample
-            double filterEnvelope = 0.0;   // 1 at the note's start, decaying to 0
-        };
-
-        /** The controllers it answers, at their resting values. */
-        struct Controllers
-        {
-            float bend = 0.0f;             // semitones, -2 to 2
-            float modWheel = 0.0f;         // 0 to 1: vibrato up to half a semitone
-            float volume = 1.0f, expression = 1.0f, pan = 0.5f, brightness = 1.0f, resonance = 0.0f;
-            bool pedal = false;
-        };
-
-        void noteOn (int note, float velocity);
-        void noteOff (int note);
-        void allOff (bool atOnce);
-        void controller (const juce::MidiMessage&);
-        void setFilter();
-        bool filterOpen() const;
-        bool filterMoves() const;
-        float cutoffHz() const;
-        void renderVoices (juce::AudioBuffer<float>&, int from, int count);
-        static float oscillate (double& phase, int wave, double increment);
-
-        struct Oscillator
-        {
-            juce::AudioParameterChoice* wave = nullptr;
-            juce::AudioParameterFloat *octave = nullptr, *detune = nullptr, *level = nullptr;
-        };
-
-        juce::AudioParameterChoice* wave = nullptr;
-        juce::AudioParameterFloat *level = nullptr, *attack = nullptr, *decay = nullptr, *sustain = nullptr, *release = nullptr,
-                                  *cutoff = nullptr, *resonance = nullptr, *filterAmount = nullptr, *filterDecay = nullptr,
-                                  *velocityToFilter = nullptr, *glide = nullptr;
-        Oscillator osc2, osc3;
-        std::array<Voice, numVoices> voices;
-        juce::uint32 counter = 0;
-        double rate = 48000.0;
-        Controllers controls;
-        double vibratoPhase = 0.0;
-
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BasicSynthProcessor)
-    };
+    /** Basic Synth's description. The synth itself, BasicSynthProcessor, is in WaveSynth.h. */
+    juce::PluginDescription basicSynthDescription();
+    class BasicSynthProcessor;
 
     // Basic Drums, BasicDrumsProcessor, is in DrumMachine.h.
 }

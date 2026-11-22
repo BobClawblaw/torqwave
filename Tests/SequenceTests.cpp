@@ -1385,7 +1385,8 @@ void runSequenceTests (AudioEngine& engine)
                "sequencer: an instrument chosen from the menu opens its window at once");
 
         // Velocity and a lane, heard through the Sequencer's player: a loud A4 on beat 1, a soft one
-        // on beat 2, and a Pan lane at 0 (hard left), through the Basic Synth.
+        // on beat 2, and a Pan lane at 0 (hard left), through the Basic Synth (whose level follows
+        // velocity by 70 %: 1 - 0.7 + 0.7 v).
         {
             const auto folder = juce::File::createTempFile ("heard");
             folder.createDirectory();
@@ -1427,10 +1428,10 @@ void runSequenceTests (AudioEngine& engine)
             const auto loud = out.getRMSLevel (0, 2400, 7200), soft = out.getRMSLevel (0, 24000 + 2400, 7200);
             const auto right = out.getMagnitude (1, 0, total);
             const auto again = out.getRMSLevel (0, 96000 + 2400, 7200);
-            check (p.getEffects().getInstrument (heard.getTrackId()) != nullptr && loud > 0.01f && soft > 0.0f && std::abs (soft / loud - 0.25f) < 0.03f && right < 1.0e-6f
+            check (p.getEffects().getInstrument (heard.getTrackId()) != nullptr && loud > 0.01f && soft > 0.0f && std::abs (soft / loud - 0.475f) < 0.03f && right < 1.0e-6f
                        && std::abs (again / loud - 1.0f) < 0.05f,
                    "sequencer: velocity and a lane are heard through its player from the first frame: a note at velocity 0.25 plays at " + juce::String (soft / juce::jmax (1.0e-9f, loud), 3)
-                   + " of one at 1 on frame 0, a Pan lane at 0 leaves the right channel silent (" + juce::String (right) + "), and looping, the first note plays again on the second pass ("
+                   + " of one at 1 on frame 0 (0.475 at the synth's 70 % velocity), a Pan lane at 0 leaves the right channel silent (" + juce::String (right) + "), and looping, the first note plays again on the second pass ("
                    + juce::String (again / juce::jmax (1.0e-9f, loud), 3) + ")");
 
             // Its length: two bars and back by undo; a beat and a half (0.375 bars) rounds to two beats.
