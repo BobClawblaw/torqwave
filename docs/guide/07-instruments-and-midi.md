@@ -35,7 +35,7 @@ The selected instrument track plays whatever comes in live:
 - **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**), and its keys sound even while the session is stopped.
 - **The Piano Roll's keyboard** (see below).
 
-<img src="../screenshots/guide-synth.png" width="720" alt="The Torqwave Synth window with the Wailing Fuzz Lead patch: three oscillator panels with their wavetables drawn in depth, Sub and Noise, two filters with their response curves, Amp and Voice, the envelopes and LFOs, four macros and the modulation slots">
+<img src="../screenshots/guide-synth.png" width="720" alt="The Torqwave Synth window playing the Bunker Kick Bass patch, one voice sounding: three oscillator panels with their wavetables drawn in depth, Sub and Noise, two filters with their response curves, Amp and Voice, the envelopes and LFOs, four macros and the modulation slots">
 
 *The window of Torqwave Synth, the built-in instrument, playing Wailing Fuzz Lead.*
 
@@ -63,7 +63,7 @@ A session saved before 0.20.0 opens with its synth settings (from Basic Synth, a
 
 **Basic Drums** is the built-in drum machine: synthesised drums on the General MIDI drum map (notes 35 to 81), the notes the drum grid writes and most drum plug-ins play. Every one of the 47 notes has a sound, each note rings on its own voice (a tom fill rings over itself), and it plays in stereo.
 
-![The Basic Drums window in the Dark Techno kit: along the top the kit selector and presets, the bus's Drive, Glue and Level, and the space's reverb Size, delay time and Feedback; 30 pads coloured by family on the left; on the right the kick selected, a picture of one hit with its level falling to -60 dB, its Tune, Decay, Tone, Level, Pan and Drive knobs with their values, its effects (the filter, Cutoff, Reso, Crush, Reverb and Delay), and its character, Punch](../screenshots/guide-drums.png)
+![The Basic Drums window in the Dark Techno kit: along the top the kit selector and presets, the bus's Drive, Glue and Level, and the space's reverb Size, delay time and Feedback; 30 pads coloured by family on the left; on the right the kick selected, a picture of one hit with its level falling to -60 dB, its Tune, Decay, Tone, Level, Pan and Drive knobs with their values, its effects (the filter, Cutoff, Reso, Crush, Reverb and Delay), and its character, Punch; the kit is playing, with the kick, clap and cowbell pads lit and the bus's Glue turning it down 4.4 dB](../screenshots/guide-drums.png)
 
 - **Pads.** A pad for each of the 30 sounds, coloured by family (kick, snares and claps, hats, toms, cymbals, hand percussion). A pad lights as its sound plays. Click one to hear it and see its settings: nearer the top of the pad plays louder.
 - **The selected sound.** A picture of one hit (its waveform, its level falling to 60 dB down, a dashed line where its decay setting ends, and a line sweeping across as it plays), and six knobs: **Tune** (semitones, two octaves either way), **Decay** (milliseconds until it has fallen 60 dB), **Tone** (darker or brighter: the kick's click, the snare's wires, the hats' filter, a drum's strike), **Level** (dB), **Pan** and **Drive** (saturation on that sound alone). The kick also has a character: **Boom** (long and round), **Punch** (909-style) or **Hard** (an overdriven industrial kick). Drag a knob, Shift-drag for fine steps, double-click it for its default.
