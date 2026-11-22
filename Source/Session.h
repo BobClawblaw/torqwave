@@ -806,8 +806,18 @@ struct SessionState
     juce::Range<juce::int64> loop;
 
     /** The ruler counts bars and beats of the tempo (and snaps to its beats). Kept with the
-        session, outside the undo steps (Session::setBarsAndBeats). */
+        session, outside the undo steps (Session::setBarsAndBeats). A new session starts with it
+        on (newEmpty); a state built in code, or a file saved without it, counts in time. */
     bool barsAndBeats = false;
+
+    /** A new, empty session at a rate: in bars and beats, since sessions are made for music. */
+    static SessionState newEmpty (double rate)
+    {
+        SessionState s;
+        s.sampleRate = rate;
+        s.barsAndBeats = true;
+        return s;
+    }
 
     /** The master's channels: 2, 6 for 5.1 or 8 for 7.1. */
     int masterChannels() const noexcept    { return ! surround ? 2 : sevenOne ? 8 : 6; }

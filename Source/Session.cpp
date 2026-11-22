@@ -4965,7 +4965,7 @@ juce::int64 snapSpan (const SessionState& s, juce::Range<juce::int64> span, juce
 //==============================================================================
 Session::Session()
 {
-    reset ({}, {});
+    reset (SessionState::newEmpty (48000.0), {});
 }
 
 Session::State Session::getState() const
