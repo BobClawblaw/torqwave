@@ -6,10 +6,15 @@
     dB, ms, a percentage, a choice's index, 1 or 0 for on or off), kept under the effect's key in a
     file of its own. An effect's dialog and its live built-in effect use the same key and the same
     names for their settings (the live effect's parameter IDs), so a preset saved in one loads in
-    the other. Values round-trip exactly. */
+    the other. Values round-trip exactly.
+
+    A preset may also carry texts, named the same way: what isn't a number (Torqwave Synth's
+    Sampled tables and its macros' names). A preset saved without any has none, and one saved with
+    them reads the same as before where texts aren't asked for. */
 namespace EffectPresets
 {
     using Values = std::map<juce::String, double>;
+    using Texts = std::map<juce::String, juce::String>;
 
     class Store
     {
@@ -22,8 +27,11 @@ namespace EffectPresets
 
         std::optional<Values> load (const juce::String& effectKey, const juce::String& name) const;
 
+        /** The named preset's texts: empty if it has none (or there is no such preset). */
+        Texts loadTexts (const juce::String& effectKey, const juce::String& name) const;
+
         /** Saves (or replaces) the named preset; false if the file can't be written or the name is empty. */
-        bool save (const juce::String& effectKey, const juce::String& name, const Values&);
+        bool save (const juce::String& effectKey, const juce::String& name, const Values&, const Texts& = {});
 
         /** Removes the named preset; false if there was none or the file can't be written. */
         bool remove (const juce::String& effectKey, const juce::String& name);
@@ -78,6 +86,11 @@ namespace EffectPresets
         /** The presets' names in the order the arrows go through them. */
         juce::StringArray getOrder() const;
 
+        /** For an effect with texts in its presets: saving takes `current()`'s with the values, and
+            loading one of the user's presets hands its texts to `apply` after its values (empty for
+            one saved without them, and for a factory preset). */
+        void carryTexts (std::function<Texts()> current, std::function<void (const Texts&)> apply);
+
         /** Called after a preset is loaded, from the menu or by a step. */
         std::function<void()> onChosen;
 
@@ -104,6 +117,8 @@ namespace EffectPresets
         juce::String key;
         std::function<Values()> currentValues;
         std::function<void (const Values&)> applyValues;
+        std::function<Texts()> currentTexts;
+        std::function<void (const Texts&)> applyTexts;
         juce::ComboBox list;
         juce::TextButton save { "Save..." }, remove { "Delete" };
         juce::TextButton audition { juce::String::fromUTF8 ("\xe2\x99\xaa") };

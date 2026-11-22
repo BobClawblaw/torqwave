@@ -2632,15 +2632,69 @@ void BasicSynthProcessor::addToState (juce::XmlElement& xml) const
             xml.setAttribute ("macro" + juce::String (m + 1) + "Name", macroNames[(size_t) m]);
 
     for (int o = 0; o < WaveSynth::numOscillators; ++o)
-        if (const auto table = sampled[(size_t) o])
-        {
-            auto* t = xml.createNewChildElement ("SampledTable");
-            t->setAttribute ("oscillator", o + 1);
-            t->setAttribute ("frames", table->frames);
-            t->setAttribute ("root", table->rootHz);
-            t->setAttribute ("name", table->name);
-            t->setAttribute ("strengths", table->toText());
-        }
+        if (sampled[(size_t) o] != nullptr)
+            xml.addChildElement (sampledElement (o).release());
+}
+
+std::unique_ptr<juce::XmlElement> BasicSynthProcessor::sampledElement (int o) const
+{
+    const auto table = sampled[(size_t) o];
+    auto t = std::make_unique<juce::XmlElement> ("SampledTable");
+    t->setAttribute ("oscillator", o + 1);
+    t->setAttribute ("frames", table->frames);
+    char root[32];
+    std::snprintf (root, sizeof (root), "%.17g", table->rootHz);   // exactly: a double attribute keeps fewer digits
+    t->setAttribute ("root", juce::String (root));
+    t->setAttribute ("name", table->name);
+    t->setAttribute ("strengths", table->toText());
+    return t;
+}
+
+namespace
+{
+    std::shared_ptr<const WaveTables::Sampled> sampledFrom (const juce::XmlElement& t)
+    {
+        return WaveTables::Sampled::fromText (t.getStringAttribute ("strengths"), t.getIntAttribute ("frames"),
+                                              std::strtod (t.getStringAttribute ("root").toRawUTF8(), nullptr), t.getStringAttribute ("name"));
+    }
+}
+
+EffectPresets::Texts BasicSynthProcessor::getPresetTexts() const
+{
+    EffectPresets::Texts texts;
+    texts["patch"] = patchName;
+
+    for (int m = 0; m < WaveSynth::numMacros; ++m)
+        if (macroNames[(size_t) m].isNotEmpty())
+            texts["macro" + juce::String (m + 1) + "Name"] = macroNames[(size_t) m];
+
+    for (int o = 0; o < WaveSynth::numOscillators; ++o)
+        if (sampled[(size_t) o] != nullptr)
+            texts["osc" + juce::String (o + 1) + "Sampled"] = sampledElement (o)->toString (juce::XmlElement::TextFormat().singleLine().withoutHeader());
+
+    return texts;
+}
+
+void BasicSynthProcessor::setPresetTexts (const EffectPresets::Texts& texts)
+{
+    if (texts.empty())
+        return;
+
+    const auto text = [&texts] (const juce::String& id) { const auto t = texts.find (id); return t != texts.end() ? t->second : juce::String(); };
+    patchName = text ("patch");
+
+    for (int m = 0; m < WaveSynth::numMacros; ++m)
+        macroNames[(size_t) m] = text ("macro" + juce::String (m + 1) + "Name");
+
+    for (int o = 0; o < WaveSynth::numOscillators; ++o)
+    {
+        std::shared_ptr<const WaveTables::Sampled> table;
+
+        if (const auto xml = juce::parseXML (text ("osc" + juce::String (o + 1) + "Sampled")); xml != nullptr && xml->hasTagName ("SampledTable"))
+            table = sampledFrom (*xml);
+
+        setSampledTable (o, table);
+    }
 }
 
 void BasicSynthProcessor::readFromState (const juce::XmlElement& xml)
@@ -2680,8 +2734,7 @@ void BasicSynthProcessor::readFromState (const juce::XmlElement& xml)
 
         for (auto* t : xml.getChildWithTagNameIterator ("SampledTable"))
             if (t->getIntAttribute ("oscillator") == o + 1)
-                table = WaveTables::Sampled::fromText (t->getStringAttribute ("strengths"), t->getIntAttribute ("frames"),
-                                                       t->getDoubleAttribute ("root"), t->getStringAttribute ("name"));
+                table = sampledFrom (*t);
 
         setSampledTable (o, table);
     }

@@ -85,7 +85,24 @@ std::optional<Values> Store::load (const juce::String& effectKey, const juce::St
     return std::nullopt;
 }
 
-bool Store::save (const juce::String& effectKey, const juce::String& name, const Values& values)
+Texts Store::loadTexts (const juce::String& effectKey, const juce::String& name) const
+{
+    Texts t;
+    const auto xml = read (effectKey);
+
+    for (auto* p : xml->getChildWithTagNameIterator ("PRESET"))
+        if (p->getStringAttribute ("name") == name)
+        {
+            for (auto* text : p->getChildWithTagNameIterator ("TEXT"))
+                t[text->getStringAttribute ("id")] = text->getStringAttribute ("value");
+
+            break;
+        }
+
+    return t;
+}
+
+bool Store::save (const juce::String& effectKey, const juce::String& name, const Values& values, const Texts& texts)
 {
     if (name.trim().isEmpty())
         return false;
@@ -104,6 +121,13 @@ bool Store::save (const juce::String& effectKey, const juce::String& name, const
         auto* e = p->createNewChildElement ("VALUE");
         e->setAttribute ("id", id);
         e->setAttribute ("value", exactly (v));
+    }
+
+    for (auto& [id, text] : texts)
+    {
+        auto* e = p->createNewChildElement ("TEXT");
+        e->setAttribute ("id", id);
+        e->setAttribute ("value", text);
     }
 
     return folder.createDirectory().wasOk() && xml->writeTo (fileFor (effectKey));
@@ -142,14 +166,24 @@ Bar::Bar (Store& s, juce::String effectKey, std::function<Values()> current, std
         if (id > userBase)
         {
             if (const auto v = store.load (key, list.getText()))
+            {
                 applyValues (*v);
+
+                if (applyTexts != nullptr)
+                    applyTexts (store.loadTexts (key, list.getText()));
+            }
         }
         else if (id > 0)
         {
             const auto& made = factory (key);
 
             if (juce::isPositiveAndNotGreaterThan (id, (int) made.size()))
+            {
                 applyValues (made[(size_t) id - 1].values);
+
+                if (applyTexts != nullptr)
+                    applyTexts ({});
+            }
         }
 
         if (id > 0 && onChosen != nullptr)
@@ -321,6 +355,12 @@ void Bar::mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails
     }
 }
 
+void Bar::carryTexts (std::function<Texts()> current, std::function<void (const Texts&)> apply)
+{
+    currentTexts = std::move (current);
+    applyTexts = std::move (apply);
+}
+
 void Bar::saveAs()
 {
     auto* box = new juce::AlertWindow ("Save Preset", "A name for these settings (an existing name is replaced).", juce::MessageBoxIconType::NoIcon, this);
@@ -334,7 +374,7 @@ void Bar::saveAs()
         if (safe == nullptr || result != 1 || name.isEmpty())
             return;
 
-        if (! safe->store.save (safe->key, name, safe->currentValues()))
+        if (! safe->store.save (safe->key, name, safe->currentValues(), safe->currentTexts != nullptr ? safe->currentTexts() : Texts {}))
         {
             juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Save Preset",
                                                     "The preset couldn't be written to " + safe->store.getFolder().getFullPathName() + ".");

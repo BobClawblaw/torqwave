@@ -136,6 +136,14 @@ namespace BuiltInEffects
         void setSampledTable (int oscillator, std::shared_ptr<const WaveTables::Sampled>);
         std::shared_ptr<const WaveTables::Sampled> getSampledTable (int oscillator) const;
 
+        /** What a preset carries besides its values: the patch's name ("patch"), the macros' names
+            ("macro1Name" to "macro4Name", those named) and each Sampled table ("osc1Sampled" to
+            "osc3Sampled", as the state keeps it). Applying a preset's texts sets all of them, a
+            name or table it lacks to none; empty texts (a preset saved before 0.20.0, or by an
+            effect's dialog) leave them as they are. */
+        EffectPresets::Texts getPresetTexts() const;
+        void setPresetTexts (const EffectPresets::Texts&);
+
         /** Its signal console (Trace: the sounds within reach of its patch), made when first asked
             for, on the message thread. */
         SignalConsole::Console& getConsole();
@@ -153,6 +161,7 @@ namespace BuiltInEffects
         void readFromState (const juce::XmlElement&) override;
 
     private:
+        std::unique_ptr<juce::XmlElement> sampledElement (int oscillator) const;
         void setAllToDefault();
 
         std::unique_ptr<Engine> engine;

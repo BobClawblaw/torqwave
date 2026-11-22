@@ -4,6 +4,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Torqwave Synth: presets keep their tables and macro names** (0.20.0)
+- **A preset saved from the synth's window keeps everything that isn't a knob**: each oscillator's Sampled table (as a session keeps it), the four macros' names and the patch's name. Loading it puts them back with the knobs; one with no Sampled table takes away a table the synth had, so a preset sounds the same wherever it is loaded. Before, a preset was the knobs alone: a table made from a clip was lost, and the macros kept the names of whatever was loaded before.
+- Presets saved before this (and every effect's) are numbers alone; they load as before and leave the tables and macro names as they are. A preset file is read the same by an older Torqwave, which skips what it doesn't know.
+- A Sampled table's root note is now written to 17 digits in a session and a preset, so it comes back exactly (it was rounded).
+- Not tried by hand: no preset was saved and loaded in the running app (the presets bar is driven in the tests).
+- Tested (`--instruments`, 3 more checks): a preset with a Sampled table on oscillator 2 and named macros, saved and loaded into a synth on another patch, comes back whole (the table's 64 frames, its root and name, the names, and its render sample for sample); a preset file of values alone loads the same values with no texts and leaves the names and tables as they were; choosing a preset in the presets bar sets its table and names.
+
 **Torqwave Synth: 41 patches on all three oscillators** (0.20.0)
 - **41 hand-made patches that use every layer**: all three oscillators, each on its own table and most with its own level envelope, so a sound changes from layer to layer as it plays (a click layer that dies away under a body that swells, a sub that arrives late, an octave that fades in), with the sub and noise where they help. Six basses, six leads and six pads, four stabs and four plucks, three each of reeses, drones and bells, two each of acid lines, sequences and textures: Three Stage Bass, Triple Reese, Stacked Acid, Tri Blade Lead, Triad Engine Stab, Layer Pluck, Cathedral Stack Pad, Three Engine Drone, Layer Bell, Layer Gate Sequence, Three Layer Static and the rest. They come after the other hand-made patches of their category. Torqwave Synth now has 2,601 patches, 138 of them hand-made.
 - **A delay longer than its line**: a patch whose delay was set longer than the 4-second line (2, 4 or 8 bars at 120 BPM) read memory before the line's start on its first block, which could crash. It now starts at the line's length, as it already settled once playing.

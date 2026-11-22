@@ -1046,6 +1046,7 @@ struct WaveSynthEditor::Content final : public juce::Component
     {
         addAndMakeVisible (browser);
         addAndMakeVisible (presets);
+        presets.carryTexts ([&s] { return s.getPresetTexts(); }, [&s] (const EffectPresets::Texts& t) { s.setPresetTexts (t); });
 
         // The oscillators.
         for (int o = 0; o < WaveSynth::numOscillators; ++o)
