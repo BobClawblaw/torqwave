@@ -93,6 +93,10 @@ Each sound plays to its end however long the note is, and velocity sets its leve
 
 Each string is modelled (it is plucked, rings and dies away as a string does), so nothing is a sample and every part renders the same each time.
 
+**Source**, at the top of the Strings panel, swaps the strings for a **Swarm**: a sawtooth oscillator in place of each string, fanned evenly across Spread around the note, for the gliding, beating swarm of an eight-oscillator instrument. In a swarm the Strings knob counts **Oscillators**, Tuning and Detune place them as they place strings, and the Swarm and Envelope and Filter panels along the bottom come alive (Pick and Sustain, which only strings use, dim). Strum Rate fires the swarm's envelope and filter again and again while a key is down: hold a note for a pulsing swarm, or play a sequence through one of the Swarm Sequences presets.
+
+**Presets**: the menu at the top right holds 296 factory presets in sub-menus by category (Walls, Riffs, Strums, Clean and Drones for the strings; Swarm Sequences, Swarm Pads, Swarm Leads, Swarm Basses, Swarm Risers and Swarm Fuzz for the swarm), then your own. Each sets every setting. **Tremolo Swarm Wall** is the classic wall: twelve strings over three octaves of one note, picked 14 times a second through the fuzz.
+
 Its window draws the guitar: the strings with the lowest at the bottom, each named by the note it is tuned to (once you have played one) with how many cents off it sits, swinging as it rings, and a mark where the pick is. The knobs turn by dragging up and down (hold Shift for fine steps), by the mouse wheel, and go back to their setting as it comes with a double-click; hover over one to read its value.
 
 | Setting | What it does |
@@ -102,6 +106,7 @@ Its window draws the guitar: the strings with the lowest at the bottom, each nam
 | **Detune** | How far apart the strings sit, up to 50 cents. More is a thicker, slower-turning swarm. |
 | **Strum** | The time between one string and the next in a strum, up to 80 ms. |
 | **Strum Rate** | Strums again and again while the key is down, down and up strokes in turn, up to 24 times a second. At 0 a note is strummed once. |
+| **Strum Sync** | **Off** (as it comes): Strum Rate sets the repeats. **1/4** to **1/32** (and **1/8T**, **1/16T**): the repeats in note values at the session's tempo, counted from each note's start, so a part played on the grid strums (or pulses) on it. |
 | **Layers** | 1 to 4 guitars at once, each tuned and timed a little apart and through its own amp, like takes recorded one over another. |
 | **Width** | How far the guitars are spread left and right. |
 | **Pick Position** | Where along the string it is picked: near the bridge (5 %) is thin and bright, the middle (50 %) hollow. |
@@ -112,6 +117,13 @@ Its window draws the guitar: the strings with the lowest at the bottom, each nam
 | **Drive** | How hard the amp is driven. |
 | **Tone** | The cabinet's top, 800 Hz to 12 kHz. |
 | **Level** | The output level. |
+| **Source** | **Strings** (as it comes) or **Swarm**: a sawtooth oscillator in place of each string. The settings below are the swarm's. |
+| **Spread** | How far apart the swarm's oscillators are fanned, evenly around the note, up to an octave: a few cents beat slowly, an octave is a cloud. |
+| **Converge** | The fan closing to one pitch over this time (up to 5 s); below 0, opening from one pitch to the full Spread. |
+| **Glide** | Each oscillator sliding from the last note played to the new one over about this time, each at its own speed. |
+| **Drift** | Each oscillator wandering on its own slow course, up to 30 cents either way. |
+| **Cutoff**, **Reso**, **Env** | The swarm's resonant low-pass (it follows the note by half), how much it rings, and how far its envelope opens it on each note and each Strum Rate pulse. |
+| **Attack**, **Decay**, **Sustain Lvl** | The swarm's envelope: how long a note swells in, how long it falls to the sustain level (and the filter closes), and the level a held note stays at. Release lets it go. |
 
 Six notes can sound at once; a seventh takes the oldest's place. It answers pitch bend (2 semitones), volume, expression and the sustain pedal. Nothing stops dead: a note let go is damped, and stopping playback fades it over 20 ms. Its settings can be automated and saved as presets like any effect's.
 

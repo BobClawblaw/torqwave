@@ -78,6 +78,39 @@ SwarmGuitarProcessor::SwarmGuitarProcessor()
     drive = addFloat ("drive", "Drive", { 0.0f, 100.0f }, 70.0f, "%");
     tone = addFloat ("tone", "Tone", { 800.0f, 12000.0f, 0.0f, 0.4f }, 4500.0f, "Hz");
     level = addFloat ("level", "Level", { -40.0f, 0.0f }, -12.0f, "dB");
+
+    // The swarm, added after the strings' parameters so their order (and older sessions) stay as they were.
+    source = addChoice ("source", "Source", { "Strings", "Swarm" }, 0);
+    spread = addFloat ("spread", "Spread", { 0.0f, 1200.0f, 0.0f, 0.4f }, 30.0f, "ct");
+    converge = addFloat ("converge", "Converge", { -5000.0f, 5000.0f, 0.0f, 0.4f, true }, 0.0f, "ms");
+    glideTime = addFloat ("glide", "Glide", { 0.0f, 3000.0f, 0.0f, 0.4f }, 0.0f, "ms");
+    drift = addFloat ("drift", "Drift", { 0.0f, 100.0f }, 25.0f, "%");
+    attack = addFloat ("attack", "Attack", { 0.0f, 5000.0f, 0.0f, 0.3f }, 5.0f, "ms");
+    decay = addFloat ("decay", "Decay", { 10.0f, 8000.0f, 0.0f, 0.3f }, 600.0f, "ms");
+    sustainLevel = addFloat ("sustainLevel", "Sustain Level", { 0.0f, 100.0f }, 80.0f, "%");
+    cutoff = addFloat ("cutoff", "Cutoff", { 40.0f, 18000.0f, 0.0f, 0.25f }, 5000.0f, "Hz");
+    resonance = addFloat ("resonance", "Resonance", { 0.0f, 100.0f }, 15.0f, "%");
+    filterEnvelope = addFloat ("filterEnv", "Filter Envelope", { 0.0f, 100.0f }, 30.0f, "%");
+    strumSync = addChoice ("strumSync", "Strum Sync", { "Off", "1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32" }, 0);
+}
+
+double SwarmGuitarProcessor::repeatEvery() const
+{
+    // Off: Strum Rate's times a second (0, once). Otherwise a note value at the session's tempo.
+    static constexpr double beats[] = { 0.0, 1.0, 0.5, 1.0 / 3.0, 0.25, 1.0 / 6.0, 0.125 };
+    const auto sync = juce::jlimit (0, 6, strumSync->getIndex());
+
+    if (sync == 0)
+        return strumRate->get() > 0.0f ? rate / strumRate->get() : 0.0;
+
+    return beats[sync] * 60.0 / tempo * rate;
+}
+
+bool SwarmGuitarProcessor::isSwarm() const       { return source->getIndex() == 1; }
+
+float SwarmGuitarProcessor::fanOf (int oscillator, int count, float amount)
+{
+    return count < 2 ? 0.0f : amount * ((float) oscillator / (float) (count - 1) - 0.5f);
 }
 
 int SwarmGuitarProcessor::stringCount() const    { return juce::jlimit (1, maxStrings, juce::roundToInt (strings->get())); }
@@ -149,6 +182,8 @@ void SwarmGuitarProcessor::reset()
     }
 
     counter = 0;
+    glideFrom = -1.0f;
+    lastSource = -1;
     amps = {};
     bend = 0.0f;
     volume = expression = 1.0f;
@@ -158,7 +193,7 @@ void SwarmGuitarProcessor::reset()
 
 double SwarmGuitarProcessor::getTailLengthSeconds() const
 {
-    return sustain->get();
+    return isSwarm() ? 2.0 * release->get() * 0.001 + 0.05 : (double) sustain->get();
 }
 
 int SwarmGuitarProcessor::getNumSounding() const
@@ -179,6 +214,8 @@ void SwarmGuitarProcessor::free (Voice& v)
             s.lowpass = s.exciteLowpass = 0.0f;
             std::fill (s.line.begin(), s.line.end(), 0.0f);
         }
+
+    v.swarm = {};
 }
 
 void SwarmGuitarProcessor::tune (Voice& v)
@@ -219,8 +256,8 @@ void SwarmGuitarProcessor::strum (Voice& v, int startingIn, bool repeated)
     const auto count = stringCount();
     auto apart = strumTime->get() * 0.001 * rate;
 
-    if (repeated && strumRate->get() > 0.0f)
-        apart = juce::jmin (apart, 0.5 * rate / strumRate->get() / count);
+    if (repeated && repeatEvery() > 0.0)
+        apart = juce::jmin (apart, 0.5 * repeatEvery() / count);
 
     for (int l = 0; l < maxLayers; ++l)
     {
@@ -253,10 +290,19 @@ void SwarmGuitarProcessor::noteOn (int note, float velocity)
             v.held = false;
             v.age = ++counter;
             v.upstroke = false;
-            tune (v);
-            strum (v, 0, false);
             v.played = 0;
-            v.strumAt = strumRate->get() > 0.0f ? rate / strumRate->get() : 0.0;
+            v.strumAt = repeatEvery();
+
+            if (isSwarm())
+            {
+                startSwarm (v, false);
+            }
+            else
+            {
+                tune (v);
+                strum (v, 0, false);
+            }
+
             return;
         }
 
@@ -312,10 +358,18 @@ void SwarmGuitarProcessor::noteOn (int note, float velocity)
     v.gain = 1.0f;
     v.age = ++counter;
     v.upstroke = false;
-    tune (v);
-    strum (v, 0, false);
     v.played = 0;
-    v.strumAt = strumRate->get() > 0.0f ? rate / strumRate->get() : 0.0;
+    v.strumAt = repeatEvery();
+
+    if (isSwarm())
+    {
+        startSwarm (v, true);
+    }
+    else
+    {
+        tune (v);
+        strum (v, 0, false);
+    }
 }
 
 void SwarmGuitarProcessor::noteOff (int note)
@@ -455,13 +509,19 @@ void SwarmGuitarProcessor::renderStrings (int from, int count)
         if (v.note < 0)
             continue;
 
+        if (isSwarm())
+        {
+            renderSwarm (v, from, count, guitars, perGuitar, fade);
+            continue;
+        }
+
         // Strum Rate: strummed again and again while the key is down.
-        if (v.down && ! v.dying && strumRate->get() > 0.0f)
+        if (v.down && ! v.dying && repeatEvery() > 0.0)
         {
             while (v.strumAt - (double) v.played < (double) count)
             {
                 strum (v, juce::jmax (0, (int) (v.strumAt - (double) v.played)), true);
-                v.strumAt += rate / strumRate->get();
+                v.strumAt += repeatEvery();
             }
         }
 
@@ -522,6 +582,240 @@ void SwarmGuitarProcessor::renderStrings (int from, int count)
     }
 }
 
+//==============================================================================
+void SwarmGuitarProcessor::startSwarm (Voice& v, bool fresh)
+{
+    auto& w = v.swarm;
+    const auto count = stringCount();
+    const auto from = glideTime->get() > 0.0f && glideFrom >= 0.0f ? glideFrom : (float) v.note;
+    const auto apart = strumTime->get() * 0.001 * rate;
+
+    for (int l = 0; l < maxLayers; ++l)
+        for (int n = 0; n < maxStrings; ++n)
+        {
+            auto& o = w.oscillators[(size_t) l][(size_t) n];
+            const auto key = (juce::uint32) (l * 64 + n) * 104729u;
+
+            // Each oscillator glides at its own speed, between 0.55 and 1.45 of Glide, the same every time.
+            const auto seconds = glideTime->get() * 0.001 * (1.0 + 0.45 * scatter (key + 7u)) / 3.0;
+            o.glide = seconds <= 0.0 ? 1.0f : (float) (1.0 - std::exp (-32.0 / (seconds * rate)));
+
+            if (fresh)
+            {
+                // A fresh note: each oscillator from its own place in its cycle, the same for the same note and age,
+                // so the swarm doesn't start as one hard edge.
+                o.pitch = from;
+                o.phase = 0.5 + 0.5 * scatter (v.age * 7919u + key);
+                o.lowpass = 0.0f;
+                o.drift1 = 0.5f + 0.5f * scatter (key + 11u);
+                o.drift2 = 0.5f + 0.5f * scatter (key + 13u);
+                o.rate1 = (float) ((0.12 + 0.1 * scatter (key + 17u)) / rate);
+                o.rate2 = (float) ((0.45 + 0.25 * scatter (key + 19u)) / rate);
+
+                // Strum staggers the entries; an oscillator entering late does so at the middle of its ramp, where it is 0.
+                const auto order = n < count ? n : 0;
+                o.startIn = juce::roundToInt (apart * order);
+
+                if (o.startIn > 0)
+                    o.phase = 0.5;
+            }
+            else if (glideTime->get() > 0.0f)
+            {
+                o.pitch = from;
+            }
+        }
+
+    if (fresh)
+    {
+        w.filter = {};
+        w.envelope = w.opening = 0.0f;
+        const auto c = converge->get();
+        w.fan = c < 0.0f ? 0.0f : 1.0f;
+    }
+
+    glideFrom = (float) v.note;
+    fire (v);
+    v.sinceTouch = 0;
+    steerSwarm (v);
+}
+
+void SwarmGuitarProcessor::fire (Voice& v)
+{
+    v.swarm.attacking = true;
+    v.swarm.opened = false;
+}
+
+void SwarmGuitarProcessor::steerSwarm (Voice& v)
+{
+    // Once a grid step: where each oscillator's pitch is, and the filter.
+    auto& w = v.swarm;
+    const auto count = stringCount();
+    const auto tuningIndex = tuning->getIndex();
+    const auto amount = spread->get() * w.fan;
+    const auto wander = drift->get() * 0.3f;          // cents at 100%: up to 30 either way
+    const auto bright = brightness->get() * 0.01f;
+    const auto keyCut = 1.5 + 40.0 * bright * bright;
+    const auto target = (float) v.note + bend;
+
+    for (int l = 0; l < maxLayers; ++l)
+        for (int n = 0; n < count; ++n)
+        {
+            auto& o = w.oscillators[(size_t) l][(size_t) n];
+            o.pitch += (target - o.pitch) * o.glide;
+
+            const auto twoPi = juce::MathConstants<float>::twoPi;
+            const auto cents = fanOf (n, count, amount) + centsOf (l, n, detune->get())
+                             + wander * (std::sin (twoPi * o.drift1) + 0.5f * std::sin (twoPi * o.drift2)) / 1.5f;
+            auto hz = 440.0 * std::exp2 ((o.pitch + (float) octaveOf (tuningIndex, n, count) + cents * 0.01f - 69.0) / 12.0);
+            hz = juce::jlimit (lowestHz, rate * 0.45, hz);
+            o.step = hz / rate;
+
+            // Brightness: a gentle low-pass that follows each oscillator's pitch, from a soft ramp to the full saw.
+            const auto w0 = juce::MathConstants<double>::twoPi * juce::jmin (hz * keyCut, rate * 0.45) / rate;
+            o.coefficient = (float) (w0 / (1.0 + w0));
+        }
+
+    // The filter: Cutoff, opened by its envelope (up to 7 octaves, more for a harder note) and half following the note.
+    const auto octaves = filterEnvelope->get() * 0.07f * w.opening * (0.5f + 0.5f * v.velocity) + ((float) v.note - 60.0f) / 24.0f;
+    const auto hz = juce::jlimit (20.0, rate * 0.45, (double) cutoff->get() * std::exp2 ((double) octaves));
+    w.g = (float) std::tan (juce::MathConstants<double>::pi * hz / rate);
+    w.k = 2.0f - 1.94f * resonance->get() * 0.01f;
+}
+
+void SwarmGuitarProcessor::renderSwarm (Voice& v, int from, int count, int guitars, int perGuitar, float step)
+{
+    auto& w = v.swarm;
+    const auto sounding = v.down || v.held;
+    const auto attackStep = 1.0f / (float) juce::jmax (0.002 * rate, attack->get() * 0.001 * rate);
+    const auto decayStep = (float) std::pow (10.0, -3.0 / (decay->get() * 0.001 * rate));          // 60 dB over Decay
+    const auto releaseStep = (float) std::pow (10.0, -3.0 / (release->get() * 0.001 * rate));      // and over Release
+    const auto hold = sustainLevel->get() * 0.01f;
+    const auto c = converge->get();
+    const auto fanStep = c == 0.0f ? 0.0f : (float) (1.0 - std::exp (-1.0 / (std::abs (c) * 0.001 * rate)));
+    const auto fanTo = c < 0.0f ? 1.0f : c > 0.0f ? 0.0f : 1.0f;
+    const auto loudness = v.velocity * 0.9f / std::sqrt ((float) perGuitar);
+    const auto repeat = repeatEvery();
+    std::array<float, maxStrings> most {};
+    auto ends = false;
+
+    for (int i = 0; i < count; ++i)
+    {
+        // It ends 120 dB down, to the sample wherever the blocks fall: faded out, or let go and released.
+        if ((v.dying && v.gain < silent) || (! sounding && ! v.dying && w.envelope < silent))
+        {
+            ends = true;
+            break;
+        }
+
+        const auto at = v.played + i;
+
+        // Strum Rate fires the envelopes again while the key is down.
+        if (repeat > 0.0 && v.down && ! v.dying && (double) at >= v.strumAt)
+        {
+            fire (v);
+            v.strumAt += repeat;
+        }
+
+        if (at % 32 == 0)
+            steerSwarm (v);
+
+        // The envelopes, a sample at a time: the level's up over Attack, down to Sustain Level over Decay, out over
+        // Release; the filter's up with it and down to nothing.
+        if (sounding && w.attacking)
+        {
+            w.envelope += attackStep;
+            w.opening += attackStep;
+
+            if (w.envelope >= 1.0f)
+            {
+                w.envelope = 1.0f;
+                w.attacking = false;
+            }
+
+            w.opening = juce::jmin (w.opening, 1.0f);
+        }
+        else if (sounding)
+        {
+            w.envelope = hold + (w.envelope - hold) * decayStep;
+            w.opening *= decayStep;
+        }
+        else
+        {
+            w.envelope *= releaseStep;
+            w.opening *= releaseStep;
+        }
+
+        w.fan += (fanTo - w.fan) * fanStep;
+        const auto gain = v.gain * w.envelope * loudness;
+
+        for (int l = 0; l < guitars; ++l)
+        {
+            auto sum = 0.0f;
+
+            for (int n = 0; n < perGuitar; ++n)
+            {
+                auto& o = w.oscillators[(size_t) l][(size_t) n];
+                o.drift1 += o.rate1;
+                o.drift2 += o.rate2;
+                o.drift1 -= (float) (int) o.drift1;
+                o.drift2 -= (float) (int) o.drift2;
+
+                if (o.startIn > 0)
+                {
+                    --o.startIn;
+                    continue;
+                }
+
+                // A sawtooth, its jump smoothed over the samples either side (polyBLEP), then its low-pass.
+                auto y = (float) (2.0 * o.phase - 1.0);
+                const auto t = o.phase, dt = o.step;
+
+                if (t < dt)
+                {
+                    const auto x = t / dt;
+                    y -= (float) (x + x - x * x - 1.0);
+                }
+                else if (t > 1.0 - dt)
+                {
+                    const auto x = (t - 1.0) / dt;
+                    y -= (float) (x * x + x + x + 1.0);
+                }
+
+                o.phase += dt;
+
+                if (o.phase >= 1.0)
+                    o.phase -= 1.0;
+
+                o.lowpass += o.coefficient * (y - o.lowpass);
+                sum += o.lowpass;
+                most[(size_t) n] = juce::jmax (most[(size_t) n], std::abs (o.lowpass) * gain);
+            }
+
+            // The guitar's resonant low-pass (a state-variable filter, trapezoidal).
+            auto& f = w.filter[(size_t) l];
+            const auto v3 = sum - f[1];
+            const auto v1 = (w.g * v3 + f[0]) / (1.0f + w.g * (w.g + w.k));
+            const auto v2 = f[1] + w.g * v1;
+            f[0] = 2.0f * v1 - f[0];
+            f[1] = 2.0f * v2 - f[1];
+
+            buses[(size_t) l][(size_t) (from + i)] += v2 * gain;
+        }
+
+        if (v.dying)
+            v.gain *= step;
+    }
+
+    for (int n = 0; n < perGuitar; ++n)
+        blockPeaks[(size_t) n] = juce::jmax (blockPeaks[(size_t) n], most[(size_t) n]);
+
+    v.played += count;
+    v.sinceTouch += count;
+
+    if (ends || (v.dying && v.gain < silent) || (! sounding && ! v.dying && w.envelope < silent))
+        free (v);
+}
+
 double SwarmGuitarProcessor::shape (double x, double& before, double bias) noexcept
 {
     // tanh, anti-aliased by its antiderivative: the mean of the curve between the last sample and this one.
@@ -554,9 +848,25 @@ void SwarmGuitarProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
         if ((int) b.size() < n)
             b.resize ((size_t) n);
 
-    for (auto& v : voices)
-        if (v.note >= 0)
-            tune (v);
+    if (auto* head = getPlayHead())
+        if (const auto position = head->getPosition())
+            if (const auto bpm = position->getBpm(); bpm.hasValue() && *bpm > 0.0)
+                tempo = *bpm;
+
+    // A change of source starts afresh: what was sounding stops.
+    if (source->getIndex() != lastSource)
+    {
+        for (auto& v : voices)
+            if (v.note >= 0)
+                free (v);
+
+        lastSource = source->getIndex();
+    }
+
+    if (! isSwarm())
+        for (auto& v : voices)
+            if (v.note >= 0)
+                tune (v);
 
     setAmps();
     blockPeaks.fill (0.0f);

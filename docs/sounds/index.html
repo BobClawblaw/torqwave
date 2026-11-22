@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Torqwave Sounds</title>
+<meta name="description" content="Hear Torqwave's built-in instruments: Torqwave Synth patches and Swarm Guitar presets, rendered at 120 BPM.">
+<style>
+  :root {
+    --base: #f4f5f7; --panel: #ffffff; --line: #d9dde3; --text: #2a2f36; --strong: #0f1216; --dim: #67707c;
+    --accent: #2f7fd8; --accent-soft: rgba(47, 127, 216, 0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --base: #111418; --panel: #191d22; --line: #2a3038; --text: #c9cfd6; --strong: #f2f4f7; --dim: #828b96;
+            --accent: #4b9bf0; --accent-soft: rgba(75, 155, 240, 0.12); }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--base); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 16px 64px; }
+  header h1 { margin: 0; color: var(--strong); font-size: 30px; letter-spacing: 0.02em; }
+  header h1 span { color: var(--accent); }
+  header p { margin: 8px 0 0; color: var(--dim); max-width: 720px; }
+  nav { margin: 20px 0 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+  nav a { color: var(--text); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+  nav a:hover { border-color: var(--accent); color: var(--accent); }
+  h2 { margin: 40px 0 4px; color: var(--strong); font-size: 20px; display: flex; align-items: center; gap: 10px; }
+  h2::before { content: ""; width: 3px; height: 18px; border-radius: 2px; background: var(--accent); }
+  .lede { margin: 0 0 16px; color: var(--dim); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 14px 12px; }
+  .card h3 { margin: 0; color: var(--strong); font-size: 15px; }
+  .card .kind { color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .card p { margin: 4px 0 10px; font-size: 13px; color: var(--dim); min-height: 2.6em; }
+  audio { width: 100%; height: 36px; }
+  footer { margin-top: 48px; color: var(--dim); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+  footer a, header a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>TORQWAVE <span>SOUNDS</span></h1>
+    <p>Hear Torqwave's built-in instruments as they come: each clip is a factory patch or preset playing a short part at 120 BPM, rendered by Torqwave itself with nothing added after. Every one is in the app, in the instrument's own preset menu.</p>
+    <nav><a href="#swarm-strings">Swarm Guitar: strings</a><a href="#swarm-swarm">Swarm Guitar: swarm</a><a href="#synth">Torqwave Synth</a></nav>
+  </header>
+
+  <section id="swarm-strings">
+    <h2>Swarm Guitar: strings</h2>
+    <p class="lede">A guitar with every string tuned to the note you play, through a fuzz: one note becomes a wall of strings beating against each other.</p>
+    <div class="grid" data-instrument="Swarm Guitar">
+      <div class="card" data-name="Tremolo Swarm Wall" data-kind="Walls">Twelve strings over three octaves of one note, 30 cents apart, four guitars picked 14 times a second through the fuzz.</div>
+      <div class="card" data-name="Every String One Note" data-kind="Walls">Twelve strings in unison on four guitars: the plainest wall there is.</div>
+      <div class="card" data-name="Low Octave Roar" data-kind="Walls">The lowest strings an octave down, three guitars driven hard.</div>
+      <div class="card" data-name="Palm Muted Chug" data-kind="Riffs">Short, damped sixteenths through the fuzz.</div>
+      <div class="card" data-name="Crunch Riff" data-kind="Riffs">One stage of crunch, a low octave under the riff.</div>
+      <div class="card" data-name="Fifths Riff" data-kind="Riffs">Root, fifth and octave from one key: a power chord on every note.</div>
+      <div class="card" data-name="Tremolo Strum" data-kind="Strums">Strummed again and again while a chord is held.</div>
+      <div class="card" data-name="Clean Shimmer" data-kind="Clean">No amp: the strings alone, bright and ringing.</div>
+      <div class="card" data-name="Long Low Drone" data-kind="Drones">Twelve strings that ring for twenty seconds.</div>
+    </div>
+  </section>
+
+  <section id="swarm-swarm">
+    <h2>Swarm Guitar: swarm</h2>
+    <p class="lede">Source switched to Swarm: a sawtooth oscillator for each string, fanned across Spread, converging, gliding and drifting, through its own envelope and resonant filter. Strum Sync pulses it on the session's tempo.</p>
+    <div class="grid" data-instrument="Swarm Guitar">
+      <div class="card" data-name="Eight Voice Swarm Pulse" data-kind="Swarm Sequences">Eight oscillators, a resonant filter snapping open on each sixteenth of a sequence.</div>
+      <div class="card" data-name="Racing Swarm Sixteenths" data-kind="Swarm Sequences">A tight, crunchy swarm for fast sequences.</div>
+      <div class="card" data-name="Swarm Pulse Engine" data-kind="Swarm Sequences">One held note, pulsing in sixteenths synced to the tempo.</div>
+      <div class="card" data-name="Fuzzed Swarm Motor" data-kind="Swarm Sequences">A held note pulsing in sixteenth triplets through the fuzz.</div>
+      <div class="card" data-name="Converging Swarm" data-kind="Swarm Pads">Oscillators spread wide that close to one pitch over three seconds.</div>
+      <div class="card" data-name="Opening Swarm" data-kind="Swarm Pads">The other way: one pitch that opens into a cloud.</div>
+      <div class="card" data-name="Bruised Swarm" data-kind="Swarm Pads">A slow, dark swarm under minor chords.</div>
+      <div class="card" data-name="Gliding Swarm" data-kind="Swarm Leads">Every oscillator sliding to the next note at its own speed.</div>
+      <div class="card" data-name="Smeared Swarm Lead" data-kind="Swarm Leads">Long glides and a wide fan: the notes smear into each other.</div>
+      <div class="card" data-name="Swarm Bass" data-kind="Swarm Basses">A tight swarm an octave down, its filter plucked on every note.</div>
+      <div class="card" data-name="Swarm Opening Out" data-kind="Swarm Risers">Twelve oscillators opening over three octaves for a rise.</div>
+      <div class="card" data-name="Swarm Through Fuzz" data-kind="Swarm Fuzz">The swarm through the guitar's fuzz and cabinet.</div>
+      <div class="card" data-name="Wailing Swarm" data-kind="Swarm Fuzz">A gliding, fuzzed swarm lead.</div>
+    </div>
+  </section>
+
+  <section id="synth">
+    <h2>Torqwave Synth</h2>
+    <p class="lede">A wavetable synth with 1,067 patches for dark techno, industrial and EBM: three oscillators with warp modes, a plucked string table, two filters, macros, a modulation matrix and an effects rack.</p>
+    <div class="grid" data-instrument="Torqwave Synth">
+      <div class="card" data-name="Target Lock Bass" data-kind="Bass">A sequenced bass: a sawtooth through a resonant low-pass that rings on its third harmonic.</div>
+      <div class="card" data-name="EBM Sequence Bass" data-kind="Bass">A saw and a square 7 cents apart, the filter plucked on every note.</div>
+      <div class="card" data-name="Warehouse Sub" data-kind="Bass">A round, mono sub, its Grit macro left down.</div>
+      <div class="card" data-name="Abyss Reese" data-kind="Reese">Two pairs of detuned saws beating, under a slow filter sway.</div>
+      <div class="card" data-name="Acid Corrosion" data-kind="Acid">A squelching acid line with a dotted echo.</div>
+      <div class="card" data-name="Siren Burn" data-kind="Lead">Three saws through the fuzz, a vibrato fading in, and a dotted echo.</div>
+      <div class="card" data-name="Mercury Lead" data-kind="Lead">A hard-synced wave swept by its envelope, with an echo.</div>
+      <div class="card" data-name="Wailing Fuzz Lead" data-kind="Guitar">Strings ringing on over a sustained wave, fuzz, long slides and a late vibrato.</div>
+      <div class="card" data-name="Body Riff Power Chord" data-kind="Guitar">The early-90s EBM synth guitar: a power chord from one key, clipped hard.</div>
+      <div class="card" data-name="Swarm Drone" data-kind="Guitar">Strings all on one note, strummed, drifting and fuzzed.</div>
+      <div class="card" data-name="Minor Stab" data-kind="Stab">A minor triad from one key, three saws plucked by the filter.</div>
+      <div class="card" data-name="Glass Shard" data-kind="Pluck">A bright FM pluck with a dotted echo.</div>
+      <div class="card" data-name="Cold Bell" data-kind="Bell">A metallic bell ringing out under a reverb.</div>
+      <div class="card" data-name="Gated Machine" data-kind="Sequence">Three detuned saws chopped by a 16-step gate, with an echo.</div>
+      <div class="card" data-name="Concrete Pad" data-kind="Pad">Eight detuned saws, a slow filter sway, chorus and a long reverb.</div>
+      <div class="card" data-name="Reactor Drone" data-kind="Drone">A growling wave over a saw an octave down, slowly drifting.</div>
+      <div class="card" data-name="Tension Riser" data-kind="Riser">Noise and saws swept up through a band-pass over six seconds.</div>
+      <div class="card" data-name="Low Boom" data-kind="Impact">A sine dropping in pitch over a sub, into a long reverb.</div>
+    </div>
+  </section>
+
+  <footer>
+    Rendered with <code>TorqwaveTests --sound-demos docs/sounds/audio</code> from the source in this repository. Each part is four bars at 120 BPM.
+    <a href="https://github.com/BobClawblaw/torqwave">Torqwave on GitHub</a> ·
+    <a href="https://github.com/BobClawblaw/torqwave/blob/main/docs/guide/07-instruments-and-midi.md">Instruments in the guide</a>
+  </footer>
+</main>
+<script>
+  // Each card becomes its name, kind, description and a player for audio/<Instrument> - <Name>.mp3.
+  for (const grid of document.querySelectorAll(".grid")) {
+    const instrument = grid.dataset.instrument;
+    for (const card of grid.querySelectorAll(".card")) {
+      const text = card.textContent.trim();
+      const file = "audio/" + encodeURIComponent(instrument + " - " + card.dataset.name + ".mp3");
+      card.textContent = "";
+      const kind = document.createElement("div"); kind.className = "kind"; kind.textContent = card.dataset.kind;
+      const name = document.createElement("h3"); name.textContent = card.dataset.name;
+      const about = document.createElement("p"); about.textContent = text;
+      const player = document.createElement("audio"); player.controls = true; player.preload = "none"; player.src = file;
+      player.addEventListener("play", () => { for (const other of document.querySelectorAll("audio")) if (other !== player) other.pause(); });
+      card.append(kind, name, about, player);
+    }
+  }
+</script>
+</body>
+</html>

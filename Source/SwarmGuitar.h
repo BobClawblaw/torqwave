@@ -9,6 +9,9 @@ namespace BuiltInEffects
 
     juce::PluginDescription swarmGuitarDescription();
 
+    /** Its factory presets, each with its category (SwarmGuitarPresets.cpp). */
+    std::vector<EffectPresets::Factory> swarmGuitarPresets();
+
     /** A guitar with every string tuned to the played note, through a fuzz and a cabinet: the
         wall of unison strings beating against each other that a guitar tuned to one note makes.
 
@@ -29,7 +32,20 @@ namespace BuiltInEffects
         fade over 20 ms in decibels (so the fade stays gradual through the fuzz), and a string
         plucked again keeps ringing under the new pluck. Six notes at once, the oldest taken over.
         Pitch bend (2 semitones), volume (7), expression (11) and the sustain pedal (64) are
-        answered. Its parameters are hosted. No audio input; stereo out. */
+        answered. Its parameters are hosted. No audio input; stereo out.
+
+        Source switches the strings for a swarm: each guitar's strings become sawtooth oscillators,
+        one per string, fanned evenly across Spread around the note (and tuned, detuned and laid
+        out by octave as the strings are). Converge closes the fan to one pitch over its time, or,
+        below 0, opens it from one pitch; Glide slides every oscillator from the last note to the
+        new one, each at its own speed, so the swarm smears; Drift lets each wander on its own
+        slow course. A resonant low-pass after them is opened by an envelope (Attack, Decay,
+        Sustain Level, Release), which Strum Rate fires again and again while a key is down, for
+        pulsing swarms; Strum staggers the oscillators' entries. Strum Sync sets the repeats in note
+        values at the session's tempo in place of Strum Rate, counted from each note's start, so a
+        part played on the grid pulses on it. The amps, the layers and the
+        field are the strings'. The swarm's pitches move on a 32-sample grid counted from each
+        note's start, so it too renders the same at any block size. */
     class SwarmGuitarProcessor final : public BuiltInEffect
     {
     public:
@@ -51,6 +67,13 @@ namespace BuiltInEffects
         /** The cents a string of a guitar (layer 0 the first) sits off its pitch at a Detune setting. */
         static float centsOf (int layer, int string, float detune);
 
+        /** The cents an oscillator of a swarm of count sits off the note at a Spread setting: evenly
+            across the spread, the lowest at minus half. */
+        static float fanOf (int oscillator, int count, float spread);
+
+        /** Whether it plays strings (false) or a swarm of oscillators (true). */
+        bool isSwarm() const;
+
         juce::AudioProcessorEditor* createEditor() override;
 
         /** For its window: a parameter by its ID, the two choices, how hard each string (by its
@@ -59,6 +82,8 @@ namespace BuiltInEffects
         juce::RangedAudioParameter* parameterFor (const juce::String& id) const;
         juce::AudioParameterChoice* tuningParameter() const noexcept    { return tuning; }
         juce::AudioParameterChoice* ampParameter() const noexcept       { return amp; }
+        juce::AudioParameterChoice* sourceParameter() const noexcept    { return source; }
+        juce::AudioParameterChoice* strumSyncParameter() const noexcept { return strumSync; }
         float getStringLevel (int string) const noexcept                { return ringing[(size_t) juce::jlimit (0, maxStrings - 1, string)].load (std::memory_order_relaxed); }
         int getLastNote() const noexcept                                { return lastNote.load (std::memory_order_relaxed); }
 
@@ -77,6 +102,28 @@ namespace BuiltInEffects
             juce::uint32 seed = 0, plucks = 0;
         };
 
+        /** One oscillator of a swarm. */
+        struct Oscillator
+        {
+            double phase = 0.0, step = 0.0;    // where it is in its cycle, and how far it moves a sample
+            float pitch = 60.0f;               // where its glide has reached, in notes
+            float glide = 1.0f;                // how much of the way left it goes each grid step
+            float lowpass = 0.0f, coefficient = 1.0f;
+            float drift1 = 0.0f, drift2 = 0.0f, rate1 = 0.0f, rate2 = 0.0f;   // its wandering: two slow phases, in cycles
+            int startIn = 0;                   // samples until it enters
+        };
+
+        /** A swarm's state for one note: its oscillators, each guitar's filter, and the envelopes. */
+        struct Swarm
+        {
+            std::array<std::array<Oscillator, maxStrings>, maxLayers> oscillators;
+            std::array<std::array<float, 2>, maxLayers> filter {};          // each guitar's state-variable filter
+            float g = 0.5f, k = 1.4f;          // the filter's coefficients, for the grid step
+            float envelope = 0.0f, opening = 0.0f;    // the level envelope and the filter's
+            bool attacking = false, opened = false;
+            float fan = 1.0f;                  // how much of Spread the fan is open, Converge moving it
+        };
+
         struct Voice
         {
             int note = -1;
@@ -88,6 +135,7 @@ namespace BuiltInEffects
             juce::int64 played = 0;        // samples since the note began
             bool upstroke = false;
             std::array<std::array<String, maxStrings>, maxLayers> strings;
+            Swarm swarm;
         };
 
         struct Biquad
@@ -121,16 +169,23 @@ namespace BuiltInEffects
         void free (Voice&);
         void setAmps();
         void renderStrings (int from, int count);
+        void startSwarm (Voice&, bool fresh);
+        void fire (Voice&);
+        void steerSwarm (Voice&);
+        void renderSwarm (Voice&, int from, int count, int guitars, int perGuitar, float step);
         float tick (String&) noexcept;
         static double shape (double x, double& before, double bias) noexcept;
 
         int stringCount() const;
+        double repeatEvery() const;    // samples between repeated strums (or swarm pulses); 0, none
         int layerCount() const;
 
         juce::AudioParameterFloat *strings = nullptr, *detune = nullptr, *strumTime = nullptr, *strumRate = nullptr, *layers = nullptr,
                                   *width = nullptr, *pick = nullptr, *brightness = nullptr, *sustain = nullptr, *release = nullptr,
-                                  *drive = nullptr, *tone = nullptr, *level = nullptr;
-        juce::AudioParameterChoice *tuning = nullptr, *amp = nullptr;
+                                  *drive = nullptr, *tone = nullptr, *level = nullptr,
+                                  *spread = nullptr, *converge = nullptr, *glideTime = nullptr, *drift = nullptr, *attack = nullptr,
+                                  *decay = nullptr, *sustainLevel = nullptr, *cutoff = nullptr, *resonance = nullptr, *filterEnvelope = nullptr;
+        juce::AudioParameterChoice *tuning = nullptr, *amp = nullptr, *source = nullptr, *strumSync = nullptr;
 
         std::array<Voice, numVoices> voices;
         std::array<Amp, maxLayers> amps;
@@ -144,6 +199,9 @@ namespace BuiltInEffects
         std::atomic<int> lastNote { -1 };
         float lastGain = -1.0f;        // the output gain the last block ended on; below 0, none yet
         bool pedal = false;
+        int lastSource = -1;           // the source the last block played
+        double tempo = 120.0;          // the session's, for Strum Sync; 120 with no session playing it
+        float glideFrom = -1.0f;       // the note the next glides from; below 0, none yet
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SwarmGuitarProcessor)
     };
