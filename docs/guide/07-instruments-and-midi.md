@@ -35,20 +35,31 @@ The selected instrument track plays whatever comes in live:
 - **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**), and its keys sound even while the session is stopped.
 - **The Piano Roll's keyboard** (see below).
 
-<img src="../screenshots/guide-synth.png" width="430" alt="The Basic Synth window with Acid Slide Rider's settings: Presets, Wave, Level, Attack, Decay, Sustain, Release, Cutoff and Resonance, the wave, octave, detune and level of oscillators 2 and 3, Filter Env, Filter Decay, Velocity to Filter and Glide">
+<img src="../screenshots/guide-synth.png" width="720" alt="The Basic Synth window with the Swarm Guitar patch: three oscillator panels with their wavetables drawn in depth, Sub and Noise, two filters with their response curves, Amp and Voice, the envelopes and LFOs, four macros and the modulation slots">
 
-*The window of Basic Synth, the built-in instrument.*
+*The window of Basic Synth, the built-in instrument, playing Swarm Guitar.*
 
-Besides its first oscillator, its filter and its envelope, Basic Synth has a few extras for basses, stabs and acid lines, each off until you turn it up:
+Basic Synth is a wavetable synth made for dark techno, industrial and EBM. Its window is laid out the way the sound flows, left to right and top to bottom:
 
-| Setting | What it does |
+| Section | What it does |
 |---|---|
-| **Osc 2** and **Osc 3**: Wave, Octave, Detune, Level | Two more oscillators beside the first, each at its own wave, octave (two down to two up), detune (50 cents either way) and level (0 %, off, to 100 %, as loud as the first). Detuned a few cents they thicken a sawtooth; an octave down gives a sub. |
-| **Filter Env** and **Filter Decay** | Opens the filter at the start of each note, by up to six octaves above the Cutoff at 100 %, and closes it again over the decay. With a low Cutoff and a short decay this is a plucked bass or a stab. |
-| **Velocity to Filter** | Softer notes are darker, by up to four octaves at the softest; a note at full velocity plays the Cutoff as set. Accented notes cut through. |
-| **Glide** | A note played while another is still held slides to its pitch in this time, without starting its envelopes again: the acid slide. Write a slide by overlapping the next note. With Glide on, overlapping notes play one at a time. |
+| **Oscillators 1 to 3** | Each plays a **wavetable** (Analog, Pulse, Vowel, FM, Metal, Sub, Additive, Sync, Growl or String) at a **Position** through its frames, drawn in depth with the frame it plays in front. A **Warp** bends the wave (Sync, Bend, Squeeze, Mirror, FM from the oscillator before, Crush or Fold). **Unison** stacks up to 8 copies, **Detune**d apart and **Spread** across the stereo field; **Strum** starts them up to 60 ms apart, like a pick across strings, and **Drift** lets each wander slowly in pitch. **F1 > F2** sends the oscillator to filter 1, filter 2 or between. |
+| **String** | The String table is a plucked string rather than a wave: each unison voice is a string, all tuned to the note. Its Position reads as **Bright** (the pluck) and its Warp as **Decay** (how long it rings). Strings ringing over a sustained wave, fuzzed and played one note at a time with long slides, are Swarm Guitar. For the harsher synth guitar of early-90s EBM, Body Riff Power Chord and Palm Mute Chug play a root, fifth and octave from one key through hard clipping. |
+| **Sub + Noise** | A sub an octave or two down (sine, triangle or round square), straight to the output with **Direct** or through the filters, and noise (white, pink, crackle or digital), tilted dark or bright. |
+| **Filters 1 and 2** | Ladder (24 and 12 dB low-pass, high-pass, band-pass), SVF (low, band, high, notch) or Comb, each with Cutoff, Resonance, Drive and Key tracking; in series or side by side (**Route**). The curve shows the filter as it is now, modulation included. |
+| **Amp + Voice** | Level, pan, how much velocity matters, Poly, Mono or Legato, Glide (on overlapping notes, or always) and the pitch bend range. |
+| **Envelopes and LFOs** | Four envelopes (the first is the amp's) with a curve; drag their points. Two LFOs, free or synced to the tempo, eight shapes including Drift and 16 Steps you draw; retriggered, free or one-shot, with a fade-in. |
+| **Macros** | Four knobs a patch names (Cutoff, Grit, Space...), each routed to whatever the patch needs. |
+| **Modulation** | Eight slots: a source, a destination and an amount. |
+| **Effects** | Drive (Soft, Hard, Tube, Fuzz, Fold, Crush), Chorus, Phaser, a tempo-synced ping-pong Delay and Reverb, in that order. |
 
-Basic Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way), **Mod wheel** (vibrato, up to half a semitone), **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
+**To modulate anything**, drag a source (an envelope or LFO tab, a macro's number, or Velocity, Wheel, Pressure, Key or Random) onto a knob. A coloured ring shows how far it moves the knob; drag on the ring to change the depth, and right-click the knob to remove it. While a note plays, a dot on the ring shows where the knob is now. Knobs turn with a drag (Shift for fine), reset on a double-click or Alt-click, and take a typed value from their right-click menu; each reads in its unit.
+
+**Patches**: the name at the top steps through more than a thousand factory patches with its arrows, or lists them by category with a click: basses, reeses, acid, leads, stabs, plucks, guitars, pads, drones, bells, sequences, risers, impacts, percussion, textures and voices. In each category the hand-made patches come first, then the rest by name. Beside it, the presets bar saves your own.
+
+Basic Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way, or the patch's Bend range), **Mod wheel**, **Aftertouch** (channel and poly) and the macros, each moving whatever a patch routes it to, **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
+
+A session saved before 0.19.3 opens with its Basic Synth settings mapped to the nearest new ones (its wave as oscillator 1's position, its oscillators 2 and 3, its filter as an SVF, its filter envelope and velocity to filter as modulation slots, glide as legato). It sounds close, but not the same.
 
 **Basic Drums** is the built-in drum machine: simple synthesised sounds on the General MIDI drum map, the notes the drum grid writes and most drum plug-ins play. It is there to hear a pattern before you put your own drum instrument on the track, so it is kept plain.
 
