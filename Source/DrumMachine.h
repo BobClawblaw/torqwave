@@ -198,7 +198,7 @@ namespace BuiltInEffects
     /** Basic Drums, the drum machine built in (DrumMachine), as an instrument: each sound's tune,
         decay, tone, level, pan and drive, the kick's character and the kit's drive, glue and level
         are hosted parameters, so automation and sessions find them. Stereo out. A kit sets them all
-        at once; the state keeps the kit's name. Sessions saved before 0.19.3's step 10 (a kick,
+        at once; the state keeps the kit's name. Sessions saved before 0.20.0's step 10 (a kick,
         snare, hat and tom tune and decay in percent) load into the nearest settings: the same
         tunings, their decays scaled from the new sounds' own. MIDI: notes, CC 7 volume, CC 121 and
         All Sound Off, which fades rather than cuts. */

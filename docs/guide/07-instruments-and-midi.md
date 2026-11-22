@@ -59,7 +59,7 @@ Torqwave Synth is a wavetable synth made for dark techno, industrial and EBM. It
 
 Torqwave Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way, or the patch's Bend range), **Mod wheel**, **Aftertouch** (channel and poly) and the macros, each moving whatever a patch routes it to, **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
 
-A session saved before 0.19.3 opens with its synth settings (from Basic Synth, as it was called then) mapped to the nearest new ones (its wave as oscillator 1's position, its oscillators 2 and 3, its filter as an SVF, its filter envelope and velocity to filter as modulation slots, glide as legato). It sounds close, but not the same.
+A session saved before 0.20.0 opens with its synth settings (from Basic Synth, as it was called then) mapped to the nearest new ones (its wave as oscillator 1's position, its oscillators 2 and 3, its filter as an SVF, its filter envelope and velocity to filter as modulation slots, glide as legato). It sounds close, but not the same.
 
 **Basic Drums** is the built-in drum machine: synthesised drums on the General MIDI drum map (notes 35 to 81), the notes the drum grid writes and most drum plug-ins play. Every one of the 47 notes has a sound, each note rings on its own voice (a tom fill rings over itself), and it plays in stereo.
 
@@ -85,7 +85,7 @@ A session saved before 0.19.3 opens with its synth settings (from Basic Synth, a
 | 60, 61 / 62 / 63, 64 / 65, 66 | Bongos, mute conga, congas, timbales |
 | 67, 68 / 71, 72 / 73, 74 / 75 / 76, 77 / 78, 79 / 80, 81 | Agogo, whistle, guiro, claves, wood block, cuica, triangle |
 
-Each sound plays to its end however long the note is, and velocity sets its level. The hats cut each other off, as do the mute and open triangle and the mute and open cuica; a sound struck again, or cut off, fades out over 3 ms rather than clicking, and stopping or looping fades everything the same way, the reverb and delay too. Sessions from before 0.19.3 load with their tunings and decays carried over, though the sounds themselves are new.
+Each sound plays to its end however long the note is, and velocity sets its level. The hats cut each other off, as do the mute and open triangle and the mute and open cuica; a sound struck again, or cut off, fades out over 3 ms rather than clicking, and stopping or looping fades everything the same way, the reverb and delay too. Sessions from before 0.20.0 load with their tunings and decays carried over, though the sounds themselves are new.
 
 ### Swarm Guitar
 

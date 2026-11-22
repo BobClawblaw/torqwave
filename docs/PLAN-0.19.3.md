@@ -1,5 +1,7 @@
 # Plan 0.19.3: factory sequence presets, a basic drum machine, and a library that sorts by style
 
+This plan was released as **0.20.0**: it grew past a point release (a new synth, a new drum machine, Swarm Guitar, Remap Notes and 1,018 presets). The steps keep the number they were written under.
+
 Torqwave's Sequence Library starts empty, so a new user has nothing to drop, hear or learn from. Its drum sequences can only play on Basic Synth, which makes tones, not drums. And the library sorts by role alone (Drums, Bass, Harmony and so on), with no way to ask for "dark techno" or "EBM".
 
 This plan adds three things:

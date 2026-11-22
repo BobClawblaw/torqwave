@@ -73,7 +73,7 @@ namespace WaveSynth
 namespace BuiltInEffects
 {
     /** The instrument built in, under the plug-in ID it had as Torqwave Synth: WaveSynth's engine
-        (see above), stereo, with its own window. A session or preset saved before 0.19.3 loads
+        (see above), stereo, with its own window. A session or preset saved before 0.20.0 loads
         its old settings as the nearest sound the new engine makes: its wave as the Analog table's
         position, oscillators 2 and 3 at their octave, detune and level, its envelope, its
         low-pass filter, filter envelope and velocity to filter as modulation slots, and glide as
@@ -114,7 +114,7 @@ namespace BuiltInEffects
 
         WaveSynth::Readings& getReadings() noexcept                  { return readings; }
 
-        /** The old (before 0.19.3) settings turned into the new engine's, every parameter given. */
+        /** The old (before 0.20.0) settings turned into the new engine's, every parameter given. */
         static EffectPresets::Values translateOldSettings (const EffectPresets::Values& old);
 
         /** Settings applied as a preset: old ones are translated first. */

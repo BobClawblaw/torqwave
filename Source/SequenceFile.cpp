@@ -139,7 +139,7 @@ juce::String instrumentOf (const Sequence& q)
         if (auto* slot = effects->getChildByName ("SLOT"))
             if (auto* plugin = slot->getChildByName ("PLUGIN"); plugin != nullptr && plugin->getBoolAttribute ("isInstrument"))
             {
-                // A built-in instrument by the name it has now (Basic Synth is Torqwave Synth since 0.19.3).
+                // A built-in instrument by the name it has now (Basic Synth is Torqwave Synth since 0.20.0).
                 if (juce::PluginDescription d; d.loadFromXml (*plugin))
                     for (auto& builtIn : BuiltInEffects::getDescriptions())
                         if (builtIn.fileOrIdentifier == d.fileOrIdentifier && builtIn.pluginFormatName == d.pluginFormatName)

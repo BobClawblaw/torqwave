@@ -1988,7 +1988,7 @@ namespace
         return d;
     }
 
-    // The settings it had before 0.19.3, by ID.
+    // The settings it had before 0.20.0, by ID.
     const juce::StringArray oldIds { "wave", "level", "attack", "decay", "sustain", "release", "cutoff", "resonance",
                                      "osc2Wave", "osc2Octave", "osc2Detune", "osc2Level", "osc3Wave", "osc3Octave", "osc3Detune", "osc3Level",
                                      "filterEnv", "filterDecay", "velocityToFilter", "glide" };
@@ -2401,7 +2401,7 @@ EffectPresets::Values BasicSynthProcessor::translateOldSettings (const EffectPre
 
 void BasicSynthProcessor::setPresetValues (const EffectPresets::Values& values)
 {
-    // A preset saved before 0.19.3 names the old settings and none of the new.
+    // A preset saved before 0.20.0 names the old settings and none of the new.
     const auto old = std::any_of (oldIds.begin(), oldIds.end(), [&values] (const juce::String& id) { return values.count (id) > 0; })
                      && values.count ("osc1Table") == 0;
 
@@ -2439,7 +2439,7 @@ void BasicSynthProcessor::readFromState (const juce::XmlElement& xml)
 
     if (xml.getIntAttribute ("engine", 1) < 2)
     {
-        // Saved before 0.19.3: none of the new IDs were set from it. Its settings, translated.
+        // Saved before 0.20.0: none of the new IDs were set from it. Its settings, translated.
         EffectPresets::Values old;
 
         for (auto& id : oldIds)
