@@ -443,6 +443,18 @@ Ask Torq already chooses an instrument and a saved preset for a track (`set_inst
 - **What it says about limits:** Ask Torq's instructions carry the same plain statement as the guide: Decrypt matches one dry note, and a lock on a recording of something that is not a synth is loose.
 - **Tested** (`--ai`, against a made-up model as the other tools are): each tool's plan step and its result; a patch asked for by a word that matches nothing is refused with the nearest names; a preset dropped by Ask Torq is the same as one dragged in; a jump made by Ask Torq equals a click on that node; Decrypt started by a tool can be stopped and leaves the patch as it was; Remap by a tool and its undo give the notes back exactly. With a real local model: three requests tried by hand and what happened written in the changelog.
 
+### Step 20: a local model helps, when Ask Torq is on (M, optional at every point)
+
+Trace and Decrypt work in full with Ask Torq off. With it on, the model the user runs (the server chosen in Ask Torq's settings) is asked for help at four points. It never decides anything by itself: whatever it proposes is rendered and scored by the same measure as everything else, and kept only if it scores better. A slow or absent model costs nothing: each request has a time limit, and the search never waits for one.
+
+- **Structure, which a search is poor at.** A search moves knobs well and makes choices badly (which table, which filter type, whether a second oscillator an octave up or a noise layer is needed). Between rounds of Decrypt, the model is given the target's measures, the best candidate's settings and where the two differ (which bands, which part of the note), and proposes up to five changes of structure. Each is tried; the search carries on from any that raise the lock. This is where a model is expected to help most, and it is measured: the same ten clips decrypted with and without it, lock and time written down.
+- **Where to start.** From the target's measures (and the user's words, if they typed any: "it's a reese", "match the body, not the click"), the model picks categories and patches to start from and which parts to firewall, in addition to the nearest patches the search finds itself.
+- **A model that hears, if the user has one.** If the server's model accepts audio, the clip itself is sent for a description, which joins the starting hints. If it does not, nothing is sent and nothing changes.
+- **Names and notes.** A decrypted or traced patch is offered a name, a category, a line of description and names for its four macros, to accept or change. Without a model, it gets a plain name from its address ("Node 7F3A").
+- **Trace by words** is step 19's tool; with a model on, the console has a line to type in ("darker", "more metallic, same envelope"), which calls it.
+- **Private and local:** only the server already set in Ask Torq is used; a clip's audio goes to it only when its model takes audio and the user has turned on "Let the model hear clips" (off by default).
+- **Tested** (with a made-up model): a proposal that scores worse is dropped and one that scores better is kept; a model that answers nonsense, late or not at all leaves the result the same as with Ask Torq off; nothing is sent when Ask Torq is off, and no audio is sent with "Let the model hear clips" off; the names offered can be refused. With a real local model: the ten-clip comparison above, and what it found, in the changelog.
+
 ### Order for part three
 
 1. Step 14 first: 15 and 17 both write patches that may use it.
@@ -450,6 +462,7 @@ Ask Torq already chooses an instrument and a saved preset for a track (`set_inst
 3. Steps 15 and 16 together.
 4. Step 17.
 5. Step 19: the factory sounds, sequences, kits and drum maps can be done at once (they need nothing from part three); the Trace, Decrypt and table tools after steps 15 and 17.
-6. Step 18 as each lands.
+6. Step 20 after step 17, since it is measured against it.
+7. Step 18 as each lands.
 
 Steps 14 to 17 all change `Source/WaveSynth*` and the synth's window, so they are one writer's work, one after another, after Swarm Guitar's update is merged.
