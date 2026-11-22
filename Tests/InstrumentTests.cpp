@@ -9,6 +9,7 @@
 #include "WaveSynthTests.h"
 #include "InstrumentKeysTests.h"
 #include "SynthClickTests.h"
+#include "WaveSynthBankTests.h"
 
 namespace
 {
@@ -125,6 +126,7 @@ void runInstrumentTests (AudioEngine& engine)
     runInstrumentKeysTests();
     runWaveSynthTests (engine);
     runSynthClickTests (engine);
+    runWaveSynthBankTests();
 
     // Rendering through any instrument: latency dropped, a mono output on every channel, the notes delivered in order, stopping.
     {

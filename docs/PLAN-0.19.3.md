@@ -319,6 +319,17 @@ The aim when this step was written was a lighter take on a classic wavetable syn
   - the click check from step 8;
   - old sessions loading.
 
+### Step 9b: a second bank of patches (M, done)
+
+About 1,500 more factory patches, asked for after step 9 shipped with 1,067. Step 9 kept the factory patches to dark techno, industrial and EBM, with no keys or brass; this step keeps those first and adds what sound design, picture and game work reach for.
+
+- **1,493 patches** in `Source/WaveSynthPatchBank2.cpp`, making 2,560. More in the categories there were, and thirteen new ones: Sub, Chord, Arp, Keys, Organ, Brass, Strings, Cinematic, Drum, FX, Glitch, Game and Chip.
+- **Made by measurement.** `Scripts/make_patch_bank.py` draws each of 193 kinds of sound (`Scripts/patch_bank_kinds.py`) four times for every patch wanted, plays every candidate through the synth and keeps a patch only if it sounds in its register, does not click, has four macros that are heard, and is not a near-copy of a patch already in its category. The file it writes is plain settings, the same on every machine.
+- **The tests hold the bank to the same things** (`Tests/WaveSynthBankTests.cpp`), and `Scripts/patch_settings.txt` lists every patch with a hash of its settings, so a patch that changes shows.
+- **Existing patches are untouched**: they keep their names, settings and places, and a category's new patches come after its old ones, so the sequence presets pick the same voices.
+- **Tried and dropped:** a lead and a riser made from a filter at the edge of oscillating (the ladder's peak sits about a semitone under the key, and it hisses more than it whistles); band-pass filters rung by a click as percussion (40 dB too quiet; those sounds are made from sine partials instead); an overdriven acid kind (every candidate was too near the first bank's). Not attempted: an acoustic piano and solo bowed strings, which the engine has no way to make; Guitar, which another piece of work is changing.
+- **Not done:** nobody has listened to them. Everything above is measured.
+
 ### Step 10: Basic Drums sounds good (M to L)
 
 - **Better synthesis for each sound:**

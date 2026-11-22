@@ -57,7 +57,20 @@ Torqwave Synth is a wavetable synth made for dark techno, industrial and EBM. It
 
 **To modulate anything**, drag a source (an envelope or LFO tab, a macro's number, or Velocity, Wheel, Pressure, Key or Random) onto a knob. A coloured ring shows how far it moves the knob; drag on the ring to change the depth, and right-click the knob to remove it. While a note plays, a dot on the ring shows where the knob is now. Knobs turn with a drag (Shift for fine), reset on a double-click or Alt-click, and take a typed value from their right-click menu; each reads in its unit.
 
-**Patches**: the name at the top steps through more than a thousand factory patches with its arrows, or lists them by category with a click: basses, reeses, acid, leads, stabs, plucks, guitars, pads, drones, bells, sequences, risers, impacts, percussion, textures and voices. In each category the hand-made patches come first, then the rest by name. Beside it, the presets bar saves your own.
+**Patches**: the name at the top steps through about 2,560 factory patches with its arrows, or lists them by category with a click. A category with more than 40 patches opens as pages by name ("Ab - Co"); a smaller one lists its patches as the arrows step through them. The arrows go through a category's hand-made patches first, then the first bank by name, then the second. Beside the name, the presets bar saves your own.
+
+| Categories | What is in them |
+|---|---|
+| **Bass, Sub, Reese, Acid** | The low end: sequencer and FM basses, pure and driven subs, detuned reeses, resonant acid lines. Mostly one note at a time. |
+| **Lead, Stab, Chord, Pluck** | Leads, short hits and plucks. A **Chord** patch plays a whole chord from one key (minor, suspended, fifths, stacked fourths). |
+| **Arp, Sequence** | Movement from one held note, in time with the song. An **Arp** steps through notes; a **Sequence** cuts the note into a rhythm, pumps it, or steps its filter or its wave. |
+| **Keys, Organ, Guitar, Brass, Strings** | Electric pianos, clavs, plucked-string pianos and harpsichords; drawbar, pipe and combo organs; the plucked String table's guitars; synth brass; string machines, pizzicato and bowed strings. They are synthesised, not sampled: a string machine, not an orchestra. |
+| **Pad, Drone, Bell, Vox, Texture** | Sounds to hold: pads, drones for a minute at a time, bells and gongs, formant voices and choirs, beds of noise. |
+| **Riser, Impact, Cinematic, FX** | For transitions and for picture: risers and falls, hits, braams, pulses, tension beds and stingers, alarms, zaps and fly-bys. |
+| **Perc, Drum** | Metal and found percussion, and kicks, snares, claps, hats, toms and cymbals made from the oscillators. C3 is each drum's own pitch; other keys tune it. |
+| **Glitch, Game, Chip** | Faults and stutters; game sounds (pickups, jumps, menus, fanfares that play a short tune from one key press); and the pulse, triangle and noise voices of old sound chips. |
+
+Every patch of the second bank has four macros that do something, named for what they do.
 
 Torqwave Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way, or the patch's Bend range), **Mod wheel**, **Aftertouch** (channel and poly) and the macros, each moving whatever a patch routes it to, **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
 
