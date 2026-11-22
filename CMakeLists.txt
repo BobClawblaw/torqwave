@@ -211,6 +211,8 @@ target_sources(Torqwave PRIVATE
     Source/Convolver.cpp
     Source/BuiltInEffects.cpp
     Source/SwarmGuitar.cpp
+    Source/DrumMachine.cpp
+    Source/DrumMachineEditor.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
     Source/ParametricEq.cpp
@@ -277,6 +279,7 @@ target_sources(Torqwave PRIVATE
     Source/LevelsPanel.cpp
     Source/Analysis.cpp
     Source/Theme.cpp
+    Source/SoundControls.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp
     Source/LoadingScreen.cpp
@@ -507,6 +510,8 @@ target_sources(TorqwaveTests PRIVATE
     Tests/GeneratorTests.cpp
     Tests/InstrumentTests.cpp
     Tests/SwarmGuitarTests.cpp
+    Tests/DrumMachineTests.cpp
+    Tests/SoundControlsTests.cpp
     Tests/InstrumentTrackTests.cpp
     Tests/NoteEditorTests.cpp
     Tests/MidiInputTests.cpp
@@ -581,6 +586,8 @@ target_sources(TorqwaveTests PRIVATE
     Source/Convolver.cpp
     Source/BuiltInEffects.cpp
     Source/SwarmGuitar.cpp
+    Source/DrumMachine.cpp
+    Source/DrumMachineEditor.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
     Source/ParametricEq.cpp
@@ -661,6 +668,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/LevelsPanel.cpp
     Source/Analysis.cpp
     Source/Theme.cpp
+    Source/SoundControls.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp
     Source/LoadingScreen.cpp
