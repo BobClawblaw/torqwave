@@ -112,7 +112,7 @@ void runInstrumentKeysTests()
                    && last == patches[patches.size() - 1].name && first == patches[0].name && synth.getPatchName() == patches[0].name
                    && known (one) && known (two) && one != two && backToOne == one && stepSound (guitar, nullptr, 1).isEmpty(),
                "instrument keys: the next and previous sound: Torqwave Synth's factory patches in order (" + next + ", " + again + ", back to " + previous
-                   + "), round from the first to the last (" + last + ") and on to the first; Swarm Guitar's presets through its window's presets row (" + one + ", " + two + ")");
+                   + "), round from the first to the last (" + last + ") and on to the first; StringSwarm's presets through its window's presets row (" + one + ", " + two + ")");
     }
 
     // Audition: a phrase for each kind of sound, played over time on the keys.
@@ -130,7 +130,7 @@ void runInstrumentKeysTests()
                    && lead.size() == 4 && together (lead) == 1 && lead[0].note == 60 && kit.size() == 6 && kit[0].note == 36 && kit[2].note == 38
                    && strum.size() == 1 && strum[0].note == 40 && strum[0].lengthMs >= 1000.0,
                "audition: a bass plays a line under C3, a pad a chord held over a second, a stab its chord twice, a lead a rising figure from middle C; "
-               "Basic Drums a kick, hat and snare; Swarm Guitar a low E held");
+               "Basic Drums a kick, hat and snare; StringSwarm a low E held");
 
         // Over time: each note starts and ends when it is due, a new phrase ends the one playing, and a key played by hand ends it.
         std::vector<juce::String> heard;

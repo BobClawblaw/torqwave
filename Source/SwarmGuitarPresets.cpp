@@ -1,6 +1,6 @@
 #include "SwarmGuitar.h"
 
-/* Swarm Guitar's factory presets, by category: the strings (walls of unison strings, riffs, strums,
+/* StringSwarm's factory presets, by category: the strings (walls of unison strings, riffs, strums,
    clean strings and drones) and the swarm (pulsing sequences, pads, gliding leads, basses, risers,
    and swarms through the fuzz). Each sets every parameter, so one never keeps another's source or
    envelope, and each plays a held E2 and B2 at about -9 dB peak. Written by a script from hand-set

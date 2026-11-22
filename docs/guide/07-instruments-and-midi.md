@@ -2,11 +2,11 @@
 
 [Guide](README.md) › Instruments and MIDI
 
-An **instrument track** plays a synthesizer: Torqwave's built-in Torqwave Synth, Basic Drums or Swarm Guitar, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
+An **instrument track** plays a synthesizer: Torqwave's built-in Torqwave Synth, Basic Drums or StringSwarm, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
 
 ## Make an instrument track
 
-- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Torqwave Synth, Basic Drums and Swarm Guitar come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
+- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Torqwave Synth, Basic Drums and StringSwarm come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
 - **Turn an empty audio track into an instrument track:** right-click its header and choose **Instrument Track**. Choose it again to turn it back.
 
 The header's instrument button, which shows the instrument's name (or **Inst** when there is none), chooses, swaps or opens the instrument. It takes the place of the record button. Effects added with **FX** run after the instrument, as on any track.
@@ -102,9 +102,9 @@ A session saved before 0.20.0 opens with its synth settings (from Basic Synth, a
 
 Each sound plays to its end however long the note is, and velocity sets its level. The hats cut each other off, as do the mute and open triangle and the mute and open cuica; a sound struck again, or cut off, fades out over 3 ms rather than clicking, and stopping or looping fades everything the same way, the reverb and delay too. Sessions from before 0.20.0 load with their tunings and decays carried over, though the sounds themselves are new.
 
-### Swarm Guitar
+### StringSwarm
 
-**Swarm Guitar** is a guitar with every string tuned to the note you play, through a fuzz: one note becomes a wall of strings beating against each other. Play single notes and slow lines; each note is a whole guitar. It is only in Torqwave.
+**StringSwarm** is a guitar with every string tuned to the note you play, through a fuzz: one note becomes a wall of strings beating against each other. Play single notes and slow lines; each note is a whole guitar. It is only in Torqwave.
 
 Each string is modelled (it is plucked, rings and dies away as a string does), so nothing is a sample and every part renders the same each time.
 

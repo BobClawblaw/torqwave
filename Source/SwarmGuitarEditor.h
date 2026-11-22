@@ -4,7 +4,7 @@
 #include "SoundControls.h"
 #include "EffectPresets.h"
 
-/** Swarm Guitar's window. The guitar's strings are drawn across the top left, each with the note
+/** StringSwarm's window. The guitar's strings are drawn across the top left, each with the note
     it is tuned to (once a note has been played; before that, its place from the played note) and
     how many cents off it sits, swinging as it rings, with a mark where the pick is. Under them the
     knobs for the strings; beside them the amp, with the curve it bends the signal through; below,

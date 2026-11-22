@@ -451,7 +451,7 @@ void SwarmGuitarEditor::paint (juce::Graphics& g)
     g.fillRoundedRectangle ((float) top.getX(), (float) top.getY() + 7.0f, 3.0f, 16.0f, 1.5f);
     g.setColour (Theme::textStrong);
     g.setFont (juce::FontOptions (15.0f, juce::Font::bold));
-    g.drawText ("SWARM GUITAR", top.withTrimmedLeft (10), juce::Justification::centredLeft);
+    g.drawText ("STRINGSWARM", top.withTrimmedLeft (10), juce::Justification::centredLeft);
     g.setColour (Theme::dimText);
     g.setFont (juce::FontOptions (12.0f));
     g.drawText ("every string on one note", top.withTrimmedLeft (140), juce::Justification::centredLeft);

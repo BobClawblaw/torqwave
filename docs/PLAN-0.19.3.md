@@ -1,6 +1,6 @@
 # Plan 0.19.3: factory sequence presets, a basic drum machine, and a library that sorts by style
 
-This plan was released as **0.20.0**: it grew past a point release (a new synth, a new drum machine, Swarm Guitar, Remap Notes and 1,018 presets). The steps keep the number they were written under.
+This plan was released as **0.20.0**: it grew past a point release (a new synth, a new drum machine, StringSwarm, Remap Notes and 1,018 presets). The steps keep the number they were written under.
 
 Torqwave's Sequence Library starts empty, so a new user has nothing to drop, hear or learn from. Its drum sequences can only play on Basic Synth, which makes tones, not drums. And the library sorts by role alone (Drums, Bass, Harmony and so on), with no way to ask for "dark techno" or "EBM".
 
@@ -283,7 +283,7 @@ Steps 1 to 7 are done. Using them showed that the built-in voices aren't good en
 
 The aim when this step was written was a lighter take on a classic wavetable synth: rich, wide sounds from a few panels, in its own look and names. It has since grown well past "lighter": by 0.20.0 it is a full synth in its own right (parts two and three), and is no longer described as a lite version of anything.
 
-**As built:** a synth of its own, in its own look and words, that takes up the best ideas of the classic wavetable synths: three wavetable oscillators with Position, serial or parallel filters, macros and a step LFO; a warp mode on each oscillator, a sub and a noise oscillator, a large wavetable view, drag-to-modulate rings and an effects rack. Added at the user's request: a plucked **String** table (each unison voice a string tuned to the note, with Strum and Drift on unison), and Fuzz in the drive, for the fuzzed string sounds. The factory patches are all for dark techno, industrial and EBM, with no keys or brass: 97 made by hand (Init among them), from basses and reeses to impacts and textures, and, at the user's later request for at least a thousand, a bank of 970 more drawn from 24 kinds of sound, with two more categories (Perc and Vox): 1,067 in all. At the user's request it is renamed **Torqwave Synth** (the plug-in ID stays `torqwave:basic-synth`), and the lead first called Swarm Guitar is **Wailing Fuzz Lead**, so it doesn't share a name with the built-in Swarm Guitar instrument.
+**As built:** a synth of its own, in its own look and words, that takes up the best ideas of the classic wavetable synths: three wavetable oscillators with Position, serial or parallel filters, macros and a step LFO; a warp mode on each oscillator, a sub and a noise oscillator, a large wavetable view, drag-to-modulate rings and an effects rack. Added at the user's request: a plucked **String** table (each unison voice a string tuned to the note, with Strum and Drift on unison), and Fuzz in the drive, for the fuzzed string sounds. The factory patches are all for dark techno, industrial and EBM, with no keys or brass: 97 made by hand (Init among them), from basses and reeses to impacts and textures, and, at the user's later request for at least a thousand, a bank of 970 more drawn from 24 kinds of sound, with two more categories (Perc and Vox): 1,067 in all. At the user's request it is renamed **Torqwave Synth** (the plug-in ID stays `torqwave:basic-synth`), and the lead first called StringSwarm is **Wailing Fuzz Lead**, so it doesn't share a name with the built-in StringSwarm instrument.
 
 - **Three wavetable oscillators:**
   - Each has a table and a **Position** that morphs through it.
@@ -365,7 +365,7 @@ Dropped on a track with a drum plug-in (Battery, for one), a drum preset plays i
 - The guide's Styles page grows to cover all 36 styles.
 - **Done:** 1,018 sequences and 116 kits, each on a named patch or kit, levels calibrated from rendered peaks. The click check runs on every preset, played once through its voice (not looped, stopped and restarted, which the synth's own click tests cover). The Styles page covers all 37 styles.
 
-### Step 13: Swarm Guitar (M)
+### Step 13: StringSwarm (M)
 
 A guitar with every string tuned to the played note, through a fuzz, as a third built-in instrument (`Source/SwarmGuitar.*`), only in Torqwave: no plug-in of it for other hosts for now.
 
@@ -451,13 +451,13 @@ The look is the feature's identity, so it gets its own step and a mock-up the us
 
 Ask Torq already chooses an instrument and a saved preset for a track (`set_instrument`, `list_instrument_presets`), sets its parameters, and writes sequences. It does not yet know the factory sounds or anything in part three. Each line below is a tool or an addition to one, with the plan step it writes shown to the user before Apply, in the one undo step where the session's state holds it.
 
-- **Factory sounds by name and kind.** `list_instrument_presets` also lists Torqwave Synth's factory patches (by category, with a search word, since there are over a thousand), Basic Drums' kits and Swarm Guitar's presets; `set_instrument` takes one. "Put a dark reese on the bass track" picks from what is really there. **Done:** the list is 60 at a time with the categories and how many more; a name that matches nothing is refused with the five nearest.
+- **Factory sounds by name and kind.** `list_instrument_presets` also lists Torqwave Synth's factory patches (by category, with a search word, since there are over a thousand), Basic Drums' kits and StringSwarm's presets; `set_instrument` takes one. "Put a dark reese on the bass track" picks from what is really there. **Done:** the list is 60 at a time with the categories and how many more; a name that matches nothing is refused with the five nearest.
 - **Factory sequences and kits.** A tool to find factory sequence presets by role, style, energy and character, and one to drop a preset or a whole kit on the session at a bar. "Give me an EBM kit at 124" lands a real kit. **Done:** `find_sequence_presets`, `add_sequence_preset` and `add_kit`, through the code a drop runs. They reach the factory presets, not the user's own library.
 - **Trace by words** is not built in 0.20.0 (see step 15); what follows it in this list stands. As it was planned: **Trace by words.** A tool that reads the node held and the twelve within reach as numbers (how bright, how loud over time, how noisy, how wide: the same measures the signatures are drawn from) and jumps to one, or sets Reach, a firewall or a Bridge. The model cannot hear; "darker, less attack" becomes a choice among measured nodes, and the plan says which measure it went by.
 - **Decrypt from the session.** A tool that takes a clip in the session (or the selection in the editor), runs Decrypt on a track's synth, and reports the lock figure when it ends; the search runs in the background as it does from the window, and the result is one undo step.
 - **A table from a clip.** A tool that gives an oscillator a Sampled table made from a clip.
 - **Drum maps.** A tool that lists the saved drum maps, sets a track's map, and remaps a clip's notes to it or back to General MIDI. **Done:** `list_drum_maps`, `set_drum_map`, `remap_clip_notes`.
-- **The new parameters** (the level envelopes, slots 9 to 16, Swarm Guitar's Swarm source and Strum Sync) are told to the model as the others are. **Done:** nothing had to change, and it is now tested. All 27 of Swarm Guitar's are read and set, Source and Strum Sync among them; all 235 of Torqwave Synth's are read, the level envelopes and slots 9 to 16 among them (listed 150 at a time, the rest reached with `find`). The Sequencer's tools name up to 256 of an instrument's parameters, so 235 fits; a synth that grows past 256 needs that limit raised.
+- **The new parameters** (the level envelopes, slots 9 to 16, StringSwarm's Swarm source and Strum Sync) are told to the model as the others are. **Done:** nothing had to change, and it is now tested. All 27 of StringSwarm's are read and set, Source and Strum Sync among them; all 235 of Torqwave Synth's are read, the level envelopes and slots 9 to 16 among them (listed 150 at a time, the rest reached with `find`). The Sequencer's tools name up to 256 of an instrument's parameters, so 235 fits; a synth that grows past 256 needs that limit raised.
 - **What it says about limits:** Ask Torq's instructions carry the same plain statement as the guide: Decrypt matches one dry note, and a lock on a recording of something that is not a synth is loose.
 - **Tested** (`--ai`, against a made-up model as the other tools are): each tool's plan step and its result; a patch asked for by a word that matches nothing is refused with the nearest names; a preset dropped by Ask Torq is the same as one dragged in; a jump made by Ask Torq equals a click on that node; Decrypt started by a tool can be stopped and leaves the patch as it was; Remap by a tool and its undo give the notes back exactly. With a real local model: three requests tried by hand and what happened written in the changelog. The factory sounds, sequences, kits and drum maps are tested with the made-up model. **With a real local model: done** for these, as an evaluation set rather than three requests by hand (`--ai-eval-set library`, 14 requests checked against the session): Qwen3.8-27B got 14 of 14 twice, with no wording changed. The results are in the changelog.
 
@@ -483,7 +483,7 @@ Trace and Decrypt work in full with Ask Torq off. With it on, the model the user
 6. Step 20 after step 17, since it is measured against it.
 7. Step 18 as each lands.
 
-Steps 14 to 17 all change `Source/WaveSynth*` and the synth's window, so they are one writer's work, one after another, after Swarm Guitar's update is merged.
+Steps 14 to 17 all change `Source/WaveSynth*` and the synth's window, so they are one writer's work, one after another, after StringSwarm's update is merged.
 
 ## At release
 

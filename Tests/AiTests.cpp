@@ -1399,7 +1399,7 @@ namespace
                    && Ai::hasWords ("Dark Reese Bass", "bass dark") && ! Ai::hasWords ("Dark Reese", "dark lead") && Ai::hasWords ("anything", "  "),
                "Ask Torq factory sounds: the nearest names share the most words, then are the fewest letters away, the same every time; a search needs every word");
 
-        const auto synth = builtIn ("Torqwave Synth"), drums = builtIn ("Basic Drums"), guitar = builtIn ("Swarm Guitar");
+        const auto synth = builtIn ("Torqwave Synth"), drums = builtIn ("Basic Drums"), guitar = builtIn ("StringSwarm");
         const auto& patches = WaveSynth::factoryPatches();
         const auto& kits = DrumMachine::kits();
         const auto& guitarPresets = EffectPresets::factory (BuiltInEffects::swarmGuitarId);
@@ -1411,7 +1411,7 @@ namespace
                    && Ai::FactorySounds::of (drums).size() == kits.size() && Ai::FactorySounds::of (guitar).size() == guitarPresets.size() && ! guitarPresets.empty()
                    && Ai::FactorySounds::of (other).empty() && Ai::FactorySounds::of (builtIn ("Compressor")).empty(),
                "Ask Torq factory sounds: Torqwave Synth's " + juce::String ((int) patches.size()) + " patches, Basic Drums' " + juce::String ((int) kits.size())
-                   + " kits and Swarm Guitar's " + juce::String ((int) guitarPresets.size()) + " presets are known; an effect and another maker's instrument have none");
+                   + " kits and StringSwarm's " + juce::String ((int) guitarPresets.size()) + " presets are known; an effect and another maker's instrument have none");
 
         if (patches.size() < 100 || kits.size() < 2 || guitarPresets.empty())
             return;
@@ -1512,13 +1512,13 @@ namespace
                "Ask Torq factory sounds: a patch asked for by words that match none is refused with the five nearest names (" + nearest.joinIntoString (", ")
                    + "), and the plan and the track are left as they were");
 
-        // A kit and a Swarm Guitar preset; on a track that plays the synth already, a patch alone; the user's own preset before a factory one of its name.
+        // A kit and a StringSwarm preset; on a track that plays the synth already, a patch alone; the user's own preset before a factory one of its name.
         const auto kit = kits.back().name;
         const auto preset = guitarPresets.front();
         const auto kitsListed = call ("list_instrument_presets", R"({"plugin": "Basic Drums"})");
         const auto kitLoaded = call ("set_instrument", "{\"track\": \"Drums\", \"plugin\": \"Basic Drums\", \"preset\": " + quoted (kit) + "}");
-        const auto guitarListed = call ("list_instrument_presets", "{\"plugin\": \"Swarm Guitar\", \"category\": " + quoted (preset.category) + "}");
-        const auto guitarLoaded = call ("set_instrument", "{\"track\": \"Guitar\", \"plugin\": \"Swarm Guitar\", \"preset\": " + quoted (preset.name) + "}");
+        const auto guitarListed = call ("list_instrument_presets", "{\"plugin\": \"StringSwarm\", \"category\": " + quoted (preset.category) + "}");
+        const auto guitarLoaded = call ("set_instrument", "{\"track\": \"Guitar\", \"plugin\": \"StringSwarm\", \"preset\": " + quoted (preset.name) + "}");
         const auto changed = call ("set_instrument", "{\"track\": \"Lead\", \"preset\": " + quoted (patches[9].name) + "}");
         const auto after = w.getInstrumentLoads();
         check ((bool) kitsListed["ok"] && kitsListed["factory"].size() == (int) kits.size() && kitsListed["categories"].isVoid() && kitsListed["factory"][0]["about"].toString().isNotEmpty()
@@ -1526,7 +1526,7 @@ namespace
                    && (bool) guitarLoaded["ok"] && (bool) changed["ok"] && changed["step"] == juce::var ("Load the factory sound " + patches[9].name.quoted() + " in Torqwave Synth on \"Lead\"")
                    && after.size() == 4 && after[1].factory && after[1].preset == kit && after[2].factory && after[2].preset == preset.name
                    && after[3].factory && after[3].onlyPreset && after[3].trackId == leadId && w.getSteps().size() == 4,
-               "Ask Torq factory sounds: a Basic Drums kit and a Swarm Guitar preset are listed and chosen the same way, and a patch alone changes a synth a track already plays");
+               "Ask Torq factory sounds: a Basic Drums kit and a StringSwarm preset are listed and chosen the same way, and a patch alone changes a synth a track already plays");
 
         const auto own = call ("set_instrument", "{\"track\": \"Lead\", \"preset\": " + quoted (savedName) + "}");
         const auto last = w.getInstrumentLoads();
@@ -2094,7 +2094,7 @@ namespace
 
     void testSwarmGuitarParameters()
     {
-        // Swarm Guitar on a track: its parameters reach the model as any instrument's do, the Swarm source and Strum Sync among them.
+        // StringSwarm on a track: its parameters reach the model as any instrument's do, the Swarm source and Strum Sync among them.
         AudioEngine engine;
         SessionState s;
         s.sampleRate = 48000.0;
@@ -2103,7 +2103,7 @@ namespace
         const auto guitarId = s.tracks[0].id, synthId = s.tracks[1].id;
         engine.session.reset (s, {});
         int ready = 0;
-        engine.addTrackPlugin (guitarId, builtIn ("Swarm Guitar"), [&] (const juce::String&) { ++ready; });
+        engine.addTrackPlugin (guitarId, builtIn ("StringSwarm"), [&] (const juce::String&) { ++ready; });
         engine.addTrackPlugin (synthId, builtIn ("Torqwave Synth"), [&] (const juce::String&) { ++ready; });
         TestUtils::runUntil ([&] { return ready == 2; }, 5000);
         auto* guitar = engine.getTrackEffects().getInstrument (guitarId);
@@ -2111,7 +2111,7 @@ namespace
 
         if (guitar == nullptr || synth == nullptr)
         {
-            check (false, "Ask Torq parameters: Swarm Guitar and Torqwave Synth load onto tracks");
+            check (false, "Ask Torq parameters: StringSwarm and Torqwave Synth load onto tracks");
             return;
         }
 
@@ -2140,13 +2140,13 @@ namespace
         check (chain.size() == 1 && chain[0].instrument && (int) chain[0].parameters.size() == guitarCount && guitarCount == 27
                    && source != nullptr && source->name == "Source" && source->choices.size() == 2 && sync != nullptr && sync->name == "Strum Sync" && sync->choices.size() > 2
                    && synthChain.size() == 1 && (int) synthChain[0].parameters.size() == synthCount && levelEnvelopes == WaveSynth::numOscillators && lateSlots > 0,
-               "Ask Torq parameters: every one of Swarm Guitar's " + juce::String (guitarCount) + " parameters is read for the model, as Torqwave Synth's "
+               "Ask Torq parameters: every one of StringSwarm's " + juce::String (guitarCount) + " parameters is read for the model, as Torqwave Synth's "
                    + juce::String (synthCount) + " are, Source and Strum Sync with their choices, and the synth's level envelopes and slots 9 to 16");
 
         // The Sequencer names an instrument's parameters to the model up to 256, the plug-in catalogue up to 300.
         const auto facts = PluginCatalogue::factsOf (*guitar);
         check (guitarCount <= 256 && synthCount <= 256 && synthCount <= PluginCatalogue::maxParameters && facts["parameters"].size() == guitarCount,
-               "Ask Torq parameters: both instruments' parameters fit under the 256 the Sequencer's tools name and the 300 the catalogue keeps (Swarm Guitar "
+               "Ask Torq parameters: both instruments' parameters fit under the 256 the Sequencer's tools name and the 300 the catalogue keeps (StringSwarm "
                    + juce::String (guitarCount) + ", Torqwave Synth " + juce::String (synthCount) + ")");
 
         if (source == nullptr || sync == nullptr)
@@ -2185,7 +2185,7 @@ namespace
                    + " level envelopes' switches and slot 16's " + juce::String (slot16["parameters"].size()) + " settings");
         check (all["parameters"].size() == guitarCount && all["note"].isVoid() && strum["parameters"].size() == 1 && strum["parameters"][0]["choices"].toString().contains (division)
                    && (bool) set["ok"] && made && sourceNow == swarm && syncNow == division,
-               "Ask Torq parameters: list_effect_parameters lists all of Swarm Guitar's, and set_track_effect sets Source to " + swarm.quoted() + " and Strum Sync to " + division.quoted()
+               "Ask Torq parameters: list_effect_parameters lists all of StringSwarm's, and set_track_effect sets Source to " + swarm.quoted() + " and Strum Sync to " + division.quoted()
                    + " by their choices, made on the engine's instrument");
     }
 

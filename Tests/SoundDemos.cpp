@@ -157,7 +157,7 @@ void writeSoundDemos (const juce::File& folder)
             std::cout << "FAILED no patch " << name << std::endl;
     }
 
-    // Swarm Guitar: its strings and its swarm, from the factory presets.
+    // StringSwarm: its strings and its swarm, from the factory presets.
     const std::vector<std::pair<const char*, const Part*>> presets {
         { "Tremolo Swarm Wall", &held }, { "Every String One Note", &held }, { "Low Octave Roar", &power }, { "Palm Muted Chug", &chug },
         { "Crunch Riff", &power }, { "Fifths Riff", &power }, { "Tremolo Strum", &minorChords }, { "Clean Shimmer", &arpeggio },
@@ -180,6 +180,6 @@ void writeSoundDemos (const juce::File& folder)
 
         BuiltInEffects::SwarmGuitarProcessor guitar;
         guitar.setPresetValues (found->values);
-        save (folder, juce::String ("Swarm Guitar - ") + name, play (guitar, *part, length));
+        save (folder, juce::String ("StringSwarm - ") + name, play (guitar, *part, length));
     }
 }

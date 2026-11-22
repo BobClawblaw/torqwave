@@ -613,7 +613,7 @@ int main (int argc, char* argv[])
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
     //   --synth-window <folder> only save pictures of the synth's window (a patch, the level envelopes, a Sampled table)
     //   --patch-hashes <file>   only write a hash of each factory patch's render, to compare two builds sample for sample
-    //   --sound-demos <folder>  only write the Sounds page's demos (synth patches and Swarm Guitar presets at 120 BPM) as MP3s
+    //   --sound-demos <folder>  only write the Sounds page's demos (synth patches and StringSwarm presets at 120 BPM) as MP3s
     //   --console-window <folder> only save pictures of the synth's window showing the Trace view
     //   --console               only the signal console's tests (Trace: the nodes within reach of a patch)
     //   --instruments           only the tests of the built-in instruments and their controls
