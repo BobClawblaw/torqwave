@@ -1612,9 +1612,14 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     {
         readShared();
 
+        // A free-running LFO's rate takes the sources every voice shares (the macros, the wheel, pressure
+        // and the free-running LFOs themselves, a tick behind); a retriggered LFO's rate is each voice's own.
+        std::array<float, numDestinations> global;
+        modulate (nullptr, global);
+
         for (int l = 0; l < numLfos; ++l)
         {
-            const auto hz = lfoHz (l, shared.base[(size_t) (dLfo1Rate + l)]);
+            const auto hz = lfoHz (l, global[(size_t) (dLfo1Rate + l)]);
             globalLfoPhase[(size_t) l] += hz * controlInterval / rate;
             globalLfoValue[(size_t) l] = lfoShape (shared.lfo[(size_t) l].shape, globalLfoPhase[(size_t) l] + shared.lfo[(size_t) l].phase, shared.lfo[(size_t) l].steps);
         }
