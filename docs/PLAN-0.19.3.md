@@ -471,3 +471,7 @@ Trace and Decrypt work in full with Ask Torq off. With it on, the model the user
 7. Step 18 as each lands.
 
 Steps 14 to 17 all change `Source/WaveSynth*` and the synth's window, so they are one writer's work, one after another, after Swarm Guitar's update is merged.
+
+## At release
+
+- After 0.20.0 is on `main`: turn on GitHub Pages for the repository (source `main`, folder `/docs`), as the user asked on 2026-11-22, and check that the Sounds page (`docs/sounds/`) loads and plays there.
