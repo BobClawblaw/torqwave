@@ -1,6 +1,6 @@
 #include "WaveSynthPatchBuilder.h"
 
-// Basic Synth's factory patches: sounds for dark techno and industrial music. Each is written as
+// Torqwave Synth's factory patches: sounds for dark techno and industrial music. Each is written as
 // the settings it changes from the defaults (a patch loads onto a fresh synth), its modulation
 // slots and its macros. Their levels are checked by a test: every patch plays a held chord
 // between -24 and -1 dB.
@@ -144,11 +144,11 @@ namespace WaveSynthPatchBuilder
 
         //======================================================================
         // Guitar: strings tuned alike and played at once.
-        // Swarm Guitar: a slow, wailing fuzz lead, one note at a time, matched by ear and spectrum to
+        // Wailing Fuzz Lead: a slow, wailing fuzz lead, one note at a time, matched by ear and spectrum to
         // a 2017 industrial ballad's lead: strings that ring on over a sustained wave at the same
         // pitch, fuzz at nearly full, long slides between notes, and a vibrato of about 17 cents at
         // 4 Hz that comes in late, with a slower waver on top.
-        add ("Swarm Guitar", "Guitar").osc (1, string, 62, 90).warp (1, wOff, 100).unison (1, 3, 7, 45, 4, 40)
+        add ("Wailing Fuzz Lead", "Guitar").osc (1, string, 62, 90).warp (1, wOff, 100).unison (1, 3, 7, 45, 4, 40)
             .osc (2, analog, 50, 60).unison (2, 2, 6, 30)
             .filter (1, ladder24, 1800, 30, 35, 100).filter (2, svfHigh, 85, 10).drive (fuzz, 90, 9000)
             .amp (3, 600, 92, 350).mono (350).bend (2).lfo (1, sine, 4.0f, 1, 30).lfoFade (1, 450).lfo (2, drift, 1.5f, 0)

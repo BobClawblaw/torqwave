@@ -2,11 +2,11 @@
 
 [Guide](README.md) › Instruments and MIDI
 
-An **instrument track** plays a synthesizer: Torqwave's built-in Basic Synth, Basic Drums or Swarm Guitar, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
+An **instrument track** plays a synthesizer: Torqwave's built-in Torqwave Synth, Basic Drums or Swarm Guitar, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
 
 ## Make an instrument track
 
-- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Basic Synth, Basic Drums and Swarm Guitar come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
+- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Torqwave Synth, Basic Drums and Swarm Guitar come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
 - **Turn an empty audio track into an instrument track:** right-click its header and choose **Instrument Track**. Choose it again to turn it back.
 
 The header's instrument button, which shows the instrument's name (or **Inst** when there is none), chooses, swaps or opens the instrument. It takes the place of the record button. Effects added with **FX** run after the instrument, as on any track.
@@ -35,16 +35,16 @@ The selected instrument track plays whatever comes in live:
 - **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**), and its keys sound even while the session is stopped.
 - **The Piano Roll's keyboard** (see below).
 
-<img src="../screenshots/guide-synth.png" width="720" alt="The Basic Synth window with the Swarm Guitar patch: three oscillator panels with their wavetables drawn in depth, Sub and Noise, two filters with their response curves, Amp and Voice, the envelopes and LFOs, four macros and the modulation slots">
+<img src="../screenshots/guide-synth.png" width="720" alt="The Torqwave Synth window with the Wailing Fuzz Lead patch: three oscillator panels with their wavetables drawn in depth, Sub and Noise, two filters with their response curves, Amp and Voice, the envelopes and LFOs, four macros and the modulation slots">
 
-*The window of Basic Synth, the built-in instrument, playing Swarm Guitar.*
+*The window of Torqwave Synth, the built-in instrument, playing Wailing Fuzz Lead.*
 
-Basic Synth is a wavetable synth made for dark techno, industrial and EBM. Its window is laid out the way the sound flows, left to right and top to bottom:
+Torqwave Synth is a wavetable synth made for dark techno, industrial and EBM. Its window is laid out the way the sound flows, left to right and top to bottom:
 
 | Section | What it does |
 |---|---|
 | **Oscillators 1 to 3** | Each plays a **wavetable** (Analog, Pulse, Vowel, FM, Metal, Sub, Additive, Sync, Growl or String) at a **Position** through its frames, drawn in depth with the frame it plays in front. A **Warp** bends the wave (Sync, Bend, Squeeze, Mirror, FM from the oscillator before, Crush or Fold). **Unison** stacks up to 8 copies, **Detune**d apart and **Spread** across the stereo field; **Strum** starts them up to 60 ms apart, like a pick across strings, and **Drift** lets each wander slowly in pitch. **F1 > F2** sends the oscillator to filter 1, filter 2 or between. |
-| **String** | The String table is a plucked string rather than a wave: each unison voice is a string, all tuned to the note. Its Position reads as **Bright** (the pluck) and its Warp as **Decay** (how long it rings). Strings ringing over a sustained wave, fuzzed and played one note at a time with long slides, are Swarm Guitar. For the harsher synth guitar of early-90s EBM, Body Riff Power Chord and Palm Mute Chug play a root, fifth and octave from one key through hard clipping. |
+| **String** | The String table is a plucked string rather than a wave: each unison voice is a string, all tuned to the note. Its Position reads as **Bright** (the pluck) and its Warp as **Decay** (how long it rings). Strings ringing over a sustained wave, fuzzed and played one note at a time with long slides, are Wailing Fuzz Lead. For the harsher synth guitar of early-90s EBM, Body Riff Power Chord and Palm Mute Chug play a root, fifth and octave from one key through hard clipping. |
 | **Sub + Noise** | A sub an octave or two down (sine, triangle or round square), straight to the output with **Direct** or through the filters, and noise (white, pink, crackle or digital), tilted dark or bright. |
 | **Filters 1 and 2** | Ladder (24 and 12 dB low-pass, high-pass, band-pass), SVF (low, band, high, notch) or Comb, each with Cutoff, Resonance, Drive and Key tracking; in series or side by side (**Route**). The curve shows the filter as it is now, modulation included. |
 | **Amp + Voice** | Level, pan, how much velocity matters, Poly, Mono or Legato, Glide (on overlapping notes, or always) and the pitch bend range. |
@@ -57,9 +57,9 @@ Basic Synth is a wavetable synth made for dark techno, industrial and EBM. Its w
 
 **Patches**: the name at the top steps through more than a thousand factory patches with its arrows, or lists them by category with a click: basses, reeses, acid, leads, stabs, plucks, guitars, pads, drones, bells, sequences, risers, impacts, percussion, textures and voices. In each category the hand-made patches come first, then the rest by name. Beside it, the presets bar saves your own.
 
-Basic Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way, or the patch's Bend range), **Mod wheel**, **Aftertouch** (channel and poly) and the macros, each moving whatever a patch routes it to, **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
+Torqwave Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way, or the patch's Bend range), **Mod wheel**, **Aftertouch** (channel and poly) and the macros, each moving whatever a patch routes it to, **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
 
-A session saved before 0.19.3 opens with its Basic Synth settings mapped to the nearest new ones (its wave as oscillator 1's position, its oscillators 2 and 3, its filter as an SVF, its filter envelope and velocity to filter as modulation slots, glide as legato). It sounds close, but not the same.
+A session saved before 0.19.3 opens with its synth settings (from Basic Synth, as it was called then) mapped to the nearest new ones (its wave as oscillator 1's position, its oscillators 2 and 3, its filter as an SVF, its filter envelope and velocity to filter as modulation slots, glide as legato). It sounds close, but not the same.
 
 **Basic Drums** is the built-in drum machine: synthesised drums on the General MIDI drum map (notes 35 to 81), the notes the drum grid writes and most drum plug-ins play. Every one of the 47 notes has a sound, each note rings on its own voice (a tom fill rings over itself), and it plays in stereo.
 
@@ -203,7 +203,7 @@ The **Lane** choice shows a controller under the notes: the mod wheel, the pitch
 - Drag a point to move it.
 - Option-click a point to remove it.
 
-The lane's values are sent to the instrument along with the notes, from the clip's first frame. What a controller does is up to the instrument (see [what Basic Synth answers](#play-it-live)).
+The lane's values are sent to the instrument along with the notes, from the clip's first frame. What a controller does is up to the instrument (see [what Torqwave Synth answers](#play-it-live)).
 
 ## Work with note clips
 
@@ -289,7 +289,7 @@ Torqwave comes with 1,018 factory presets and 116 starter kits, under **Presets*
 - for bass, **one note at a time**, except an acid slide, which overlaps the next note by a hair so the synth glides;
 - written with a **one-line description** of what it does, shown under its name, and a **style**, an **energy** and its **character**, so the [filters](#sort-group-and-filter) find it.
 
-Each one plays on a built-in voice so you can hear it at once: Basic Drums for drums, and Basic Synth set up for the part (a sub, a rolling bass, an acid line, a stab, a pad and so on). They are there to drive your own instruments:
+Each one plays on a built-in voice so you can hear it at once: Basic Drums for drums, and Torqwave Synth set up for the part (a sub, a rolling bass, an acid line, a stab, a pad and so on). They are there to drive your own instruments:
 
 | Drop it on | It plays on |
 |---|---|
@@ -440,7 +440,7 @@ The Sequencer is a window for one sequence from the library, open by itself to w
 
 **Start from a preset.** **Presets** (beside **Open...**) lists the factory presets by role and sub-role. The one you choose opens as a new sequence of yours, not yet saved, so you can change it and **Save** it into your library; the preset itself stays as it was.
 
-**Change the voice.** Down the right are the instrument and the effects it plays through. **Instrument...** picks another instrument, from the built-in Basic Synth and your plug-ins under **Audio Units** and **VST3** by maker, and opens its window; **Edit** opens it again. **+ Effect** adds an effect after the others and opens its window; click an effect's name to open its window, or **×** to take it out. Changes to the voice are not undo steps, as with a track's effects in a session, but they are saved with the sequence. If some of the voice didn't load (a plug-in that isn't on this Mac), the window says so, and saving keeps the voice as the file had it until you change it.
+**Change the voice.** Down the right are the instrument and the effects it plays through. **Instrument...** picks another instrument, from the built-in Torqwave Synth and your plug-ins under **Audio Units** and **VST3** by maker, and opens its window; **Edit** opens it again. **+ Effect** adds an effect after the others and opens its window; click an effect's name to open its window, or **×** to take it out. Changes to the voice are not undo steps, as with a track's effects in a session, but they are saved with the sequence. If some of the voice didn't load (a plug-in that isn't on this Mac), the window says so, and saving keeps the voice as the file had it until you change it.
 
 **Files.**
 

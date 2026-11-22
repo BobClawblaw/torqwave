@@ -6,7 +6,7 @@
 #include "TestUtils.h"
 #include "SynthClickTests.h"
 
-// Basic Synth must not click: a note stolen, retriggered, released or silenced by All Sound Off
+// Torqwave Synth must not click: a note stolen, retriggered, released or silenced by All Sound Off
 // fades, and an oscillator starts where it is silent. Three presets that clicked in 0.19.2 are
 // played through the synth at the settings they carry, with their notes and lanes at their tempo,
 // and a torture case retriggers, steals and silences notes on top. The measure is the largest

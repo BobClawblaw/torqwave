@@ -1,6 +1,6 @@
 #include "WaveSynthPatchBuilder.h"
 
-// Basic Synth's patch bank: 970 more patches after the hand-made ones, in the same categories and
+// Torqwave Synth's patch bank: 970 more patches after the hand-made ones, in the same categories and
 // two more (Perc and Vox). Each kind of sound (an acid line, a reese, a strummed guitar) was set up
 // once and its settings drawn in the ranges that suit it, then every patch's level was set so a
 // held chord peaks near -9 dB.

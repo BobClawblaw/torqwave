@@ -1,4 +1,5 @@
 #include "SequenceFile.h"
+#include "BuiltInEffects.h"
 #include "NoteTools.h"
 #include "TrackTemplate.h"
 
@@ -137,7 +138,15 @@ juce::String instrumentOf (const Sequence& q)
     if (auto* effects = q.voice->getChildByName ("EFFECTS"))
         if (auto* slot = effects->getChildByName ("SLOT"))
             if (auto* plugin = slot->getChildByName ("PLUGIN"); plugin != nullptr && plugin->getBoolAttribute ("isInstrument"))
+            {
+                // A built-in instrument by the name it has now (Basic Synth is Torqwave Synth since 0.19.3).
+                if (juce::PluginDescription d; d.loadFromXml (*plugin))
+                    for (auto& builtIn : BuiltInEffects::getDescriptions())
+                        if (builtIn.fileOrIdentifier == d.fileOrIdentifier && builtIn.pluginFormatName == d.pluginFormatName)
+                            return builtIn.name;
+
                 return plugin->getStringAttribute ("name");
+            }
 
     return {};
 }

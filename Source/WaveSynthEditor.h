@@ -3,7 +3,7 @@
 #include "WaveSynth.h"
 #include "SoundControls.h"
 
-/** Basic Synth's window: the three oscillators with their wavetables drawn at the position they
+/** Torqwave Synth's window: the three oscillators with their wavetables drawn at the position they
     play, the sub and noise; the two filters with their response curves; the amp and voice; the
     envelopes (drag their points) and LFOs (draw their steps), each a modulation source to drag
     onto any knob; the modulation slots; the macros; the effects; and a browser for the factory

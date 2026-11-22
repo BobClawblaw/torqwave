@@ -418,9 +418,9 @@ namespace
         }
 
         Theme::apply (before);
-        synth.loadPatch ("Swarm Guitar");
+        synth.loadPatch ("Wailing Fuzz Lead");
         window->refresh();
-        synth.loadPatch ("Swarm Guitar");
+        synth.loadPatch ("Wailing Fuzz Lead");
         window->refresh();
         check (drawn && window->knobFor ("osc1Position") != nullptr && window->knobFor ("osc1Position")->getLabel() == "Bright",
                "synth: every page of its window draws in dark and light at 2x, and a string's Position reads as its brightness");
@@ -440,8 +440,8 @@ namespace
             categoriesKnown = categoriesKnown && WaveSynth::patchCategories().contains (p.category);
         }
 
-        check (all.size() >= 1000 && names.size() == all.size() && categoriesKnown && names.count ("Swarm Guitar") == 1 && names.count ("Swarm Drone") == 1,
-               "synth: " + juce::String ((int) all.size()) + " factory patches, each named once, in known categories, Swarm Guitar and Swarm Drone among them");
+        check (all.size() >= 1000 && names.size() == all.size() && categoriesKnown && names.count ("Wailing Fuzz Lead") == 1 && names.count ("Swarm Drone") == 1,
+               "synth: " + juce::String ((int) all.size()) + " factory patches, each named once, in known categories, Wailing Fuzz Lead and Swarm Drone among them");
 
         // Each plays a held minor chord (C3, E flat 3, G3 for two seconds) between -24 and -1 dB.
         juce::StringArray problems;
@@ -698,7 +698,7 @@ namespace
         phrase.push_back ({ 30011, juce::MidiMessage::pitchWheel (1, 12000) });
         juce::StringArray differ;
 
-        for (auto name : { "Acid Drip", "Swarm Guitar", "Gated Machine", "Ghost Signal", "Abyss Reese", "Concrete Pad" })
+        for (auto name : { "Acid Drip", "Wailing Fuzz Lead", "Gated Machine", "Ghost Signal", "Abyss Reese", "Concrete Pad" })
         {
             synth.loadPatch (name);
             const auto reference = play (synth, phrase, (int) (1.5 * rate), 512);

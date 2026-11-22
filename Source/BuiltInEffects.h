@@ -849,7 +849,7 @@ namespace BuiltInEffects
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DynamicEqEditor)
     };
 
-    /** Basic Synth's description. The synth itself, BasicSynthProcessor, is in WaveSynth.h. */
+    /** Torqwave Synth's description. The synth itself, BasicSynthProcessor, is in WaveSynth.h. */
     juce::PluginDescription basicSynthDescription();
     class BasicSynthProcessor;
 

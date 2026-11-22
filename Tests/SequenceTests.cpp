@@ -1385,7 +1385,7 @@ void runSequenceTests (AudioEngine& engine)
                "sequencer: an instrument chosen from the menu opens its window at once");
 
         // Velocity and a lane, heard through the Sequencer's player: a loud A4 on beat 1, a soft one
-        // on beat 2, and a Pan lane at 0 (hard left), through the Basic Synth (whose level follows
+        // on beat 2, and a Pan lane at 0 (hard left), through the Torqwave Synth (whose level follows
         // velocity by 70 %: 1 - 0.7 + 0.7 v).
         {
             const auto folder = juce::File::createTempFile ("heard");

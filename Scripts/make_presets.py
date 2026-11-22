@@ -79,10 +79,10 @@ def binary_state(tag, values):
     return (0x21324356).to_bytes(4, "little") + (len(text) - 1).to_bytes(4, "little") + text
 
 
-SYNTH = dict(name="Basic Synth", file="torqwave:basic-synth", uid="53425359", tag="TORQWAVE_BASIC_SYNTH")
+SYNTH = dict(name="Torqwave Synth", file="torqwave:basic-synth", uid="53425359", tag="TORQWAVE_BASIC_SYNTH")
 DRUMS = dict(name="Basic Drums", file="torqwave:basic-drums", uid="53424452", tag="TORQWAVE_BASIC_DRUMS")
 
-# Basic Synth settings for each kind of part (its parameters by ID; anything left out is its default).
+# Torqwave Synth settings for each kind of part (its parameters by ID; anything left out is its default).
 PATCHES = {
     "sub":    dict(wave=0, level=-9.0, attack=2.0, decay=100.0, sustain=100.0, release=60.0),
     "roll":   dict(wave=2, level=-12.0, attack=1.0, decay=160.0, sustain=55.0, release=40.0, cutoff=420.0, resonance=25.0,
@@ -288,7 +288,7 @@ class Preset:
             label, instrument, settings = f"Basic Drums: {kit}", DRUMS, {"factoryKit": kit}
         else:
             patch = patch_for(sound, self.name)
-            label, instrument, settings = f"Basic Synth: {patch}", SYNTH, {"factoryPatch": patch}
+            label, instrument, settings = f"Torqwave Synth: {patch}", SYNTH, {"factoryPatch": patch}
 
         out.append(f"{indent}  <VOICE>{voice_xml(label, instrument, settings, GAINS.get(self.name, 0.0))}</VOICE>")
         out.append(f"{indent}</TORQWAVE_SEQUENCE>")
@@ -1001,7 +1001,7 @@ MODES = {"minor": [9, 11, 0, 2, 4, 5, 7], "phrygian": [9, 10, 0, 2, 4, 5, 7], "h
 MODE_TAGS = {"minor": [], "phrygian": ["Phrygian"], "harmonic": ["Harmonic minor"]}
 LADDER = {m: [p for p in range(128) if p % 12 in pcs] for m, pcs in MODES.items()}
 
-# More Basic Synth settings for the styles the set reaches into.
+# More Torqwave Synth settings for the styles the set reaches into.
 PATCHES.update({
     "reese":  dict(wave=2, level=-14.0, attack=2.0, decay=300.0, sustain=90.0, release=80.0, cutoff=700.0, resonance=20.0,
                    osc2Wave=2, osc2Detune=22.0, osc2Level=100.0, osc3Wave=0, osc3Octave=-1.0, osc3Level=60.0),

@@ -1975,7 +1975,7 @@ namespace
     juce::PluginDescription synthDescription()
     {
         juce::PluginDescription d;
-        d.name = d.descriptiveName = "Basic Synth";
+        d.name = d.descriptiveName = "Torqwave Synth";
         d.pluginFormatName = formatName;
         d.category = "Instrument";
         d.manufacturerName = "Torqwave";

@@ -471,7 +471,7 @@ patch|Pluck|Void Shard
 patch|Pluck|Welded Pebble
 patch|Pluck|Welded Wire
 patch|Pluck|Zinc Hook
-patch|Guitar|Swarm Guitar
+patch|Guitar|Wailing Fuzz Lead
 patch|Guitar|Swarm Drone
 patch|Guitar|Downward Strum
 patch|Guitar|Broken Amp

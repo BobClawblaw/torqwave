@@ -1078,7 +1078,7 @@ namespace
         BuiltInEffects::addTo (engine.knownPlugins);
         const auto known = Instrument::known (engine.knownPlugins);
         const auto builtInFirst = ! known.isEmpty() && known[0].fileOrIdentifier == BuiltInEffects::basicSynthId
-                                  && Instrument::title (known[0]) == "Basic Synth (built in)"
+                                  && Instrument::title (known[0]) == "Torqwave Synth (built in)"
                                   && std::all_of (known.begin(), known.end(), [] (auto& d) { return d.isInstrument; });
 
         SessionState s;
@@ -1093,7 +1093,7 @@ namespace
 
         // The view hears of the new track by a change message, and the instrument is made asynchronously.
         const auto selected = TestUtils::runUntil ([&] { return view.getSelectedTrack() == 1; }, 5000);
-        const auto added = state->tracks.size() == 2 && state->tracks[1].name == "Basic Synth" && state->tracks[1].isInstrument && selected;
+        const auto added = state->tracks.size() == 2 && state->tracks[1].name == "Torqwave Synth" && state->tracks[1].isInstrument && selected;
         const auto loaded = TestUtils::runUntil ([&] { return engine.getTrackEffects().getInstrument (trackId) != nullptr; }, 10000);
 
         // A right-click on a lane away from the clips: adding tracks anywhere, notes on an
@@ -1178,15 +1178,15 @@ namespace
         for (juce::PopupMenu::MenuItemIterator it (manyMenu); it.next();)
             manyTexts.add (it.getItem().text + (it.getItem().subMenu != nullptr ? " >" : ""));
 
-        const auto flat = fewTexts.size() == 3 && fewTexts[0] == "Basic Synth (built in)" && fewTexts[1] == "Zed (VST3, Acme)" && fewTexts[2] == "Alpha (VST3, Beta Labs)" && fewSubmenus == 0;
-        const auto grouped = manyTexts.size() == 3 && manyTexts[0] == "Basic Synth (built in)" && manyTexts[1] == "Audio Units >" && manyTexts[2] == "VST3 >";
-        const auto byFormat = mixedTexts == juce::StringArray { "Basic Synth (built in)", "Audio Units >", "VST3 >" };
+        const auto flat = fewTexts.size() == 3 && fewTexts[0] == "Torqwave Synth (built in)" && fewTexts[1] == "Zed (VST3, Acme)" && fewTexts[2] == "Alpha (VST3, Beta Labs)" && fewSubmenus == 0;
+        const auto grouped = manyTexts.size() == 3 && manyTexts[0] == "Torqwave Synth (built in)" && manyTexts[1] == "Audio Units >" && manyTexts[2] == "VST3 >";
+        const auto byFormat = mixedTexts == juce::StringArray { "Torqwave Synth (built in)", "Audio Units >", "VST3 >" };
         check (flat && grouped && byFormat, "instrument tracks: the instrument menu lists a few scanned instruments of one format flat with their format and maker, and many, "
                                             "or a few in two formats, under a submenu a format and a maker, the built-in always first ("
                                             + fewTexts.joinIntoString (", ") + " / " + mixedTexts.joinIntoString (", ") + " / " + manyTexts.joinIntoString (", ") + ")");
 
         check (builtInFirst && added && loaded && engine.getTrackEffects().getInstrument (trackId) == nullptr,
-               "instrument tracks: the known instruments start with the Basic Synth (built in); Add Instrument Track adds a track named after "
+               "instrument tracks: the known instruments start with the Torqwave Synth (built in); Add Instrument Track adds a track named after "
                "it, selected, with the instrument first in its chain, and Remove Instrument takes it out"
                    + juce::String (builtInFirst ? "" : " [known]") + (added ? "" : " [added]") + (loaded ? "" : " [loaded]"));
         engine.clearTrackEffects();

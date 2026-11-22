@@ -110,7 +110,7 @@ namespace
         }
     }
 
-    /** The instrument settings a voice carries, loaded into a fresh Basic Synth. */
+    /** The instrument settings a voice carries, loaded into a fresh Torqwave Synth. */
     std::unique_ptr<BuiltInEffects::BasicSynthProcessor> synthFrom (const juce::XmlElement& voice)
     {
         auto* slot = voice.getChildByName ("EFFECTS") != nullptr ? voice.getChildByName ("EFFECTS")->getChildByName ("SLOT") : nullptr;
@@ -277,7 +277,7 @@ void runPresetTests (AudioEngine& engine)
                     kit = drums.getKitName();
                 }
 
-        check (category == "Acid" && acid->voice->getStringAttribute ("name") == "Basic Synth: " + patch && SequenceFile::instrumentOf (*acid) == "Basic Synth"
+        check (category == "Acid" && acid->voice->getStringAttribute ("name") == "Torqwave Synth: " + patch && SequenceFile::instrumentOf (*acid) == "Torqwave Synth"
                    && DrumMachine::kitIndex (kit) >= 0 && groove->voice->getStringAttribute ("name") == "Basic Drums: " + kit
                    && SequenceFile::instrumentOf (*groove) == "Basic Drums" && groove->channel == 10,
                "presets: a preset's voice names a factory patch or kit that the instrument loads (the acid line on " + patch + ", an Acid patch; the groove on the "
@@ -319,7 +319,7 @@ void runPresetTests (AudioEngine& engine)
 
                     if (label.startsWith ("Basic Drums: "))
                         known = DrumMachine::kitIndex (named) >= 0 && text.contains ("factoryKit=\"" + named + "\"");
-                    else if (label.startsWith ("Basic Synth: "))
+                    else if (label.startsWith ("Torqwave Synth: "))
                         known = text.contains ("factoryPatch=\"" + named + "\"")
                                     && std::any_of (WaveSynth::factoryPatches().begin(), WaveSynth::factoryPatches().end(), [&] (const WaveSynth::Patch& p) { return p.name == named; });
 
@@ -485,7 +485,7 @@ void runPresetTests (AudioEngine& engine)
         check (onTrack.clipId != 0 && onTrack.trackId == s.tracks[0].id && onTrack.effects == nullptr
                    && onEmpty.clipId != 0 && s.tracks.size() == tracksBefore + 1 && onEmpty.effects != nullptr
                    && onEmpty.effects->toString().contains (BuiltInEffects::basicSynthId),
-               "presets: dropped on an instrument track a preset's notes play on that track's instrument; on empty space it makes a track playing its Basic Synth voice");
+               "presets: dropped on an instrument track a preset's notes play on that track's instrument; on empty space it makes a track playing its Torqwave Synth voice");
     }
 
     SequenceLibrary::setChosenFolder ({});

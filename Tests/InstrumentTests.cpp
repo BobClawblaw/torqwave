@@ -120,7 +120,7 @@ void runInstrumentTests (AudioEngine& engine)
     if (synth == nullptr)
         return;
 
-    // Basic Synth's engine, patches and window, and its clicks.
+    // Torqwave Synth's engine, patches and window, and its clicks.
     runWaveSynthTests (engine);
     runSynthClickTests (engine);
 
