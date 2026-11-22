@@ -211,6 +211,7 @@ target_sources(Torqwave PRIVATE
     Source/Convolver.cpp
     Source/BuiltInEffects.cpp
     Source/SwarmGuitar.cpp
+    Source/DrumMaps.cpp
     Source/SwarmGuitarEditor.cpp
     Source/DrumMachine.cpp
     Source/DrumMachineEditor.cpp
@@ -594,6 +595,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/Convolver.cpp
     Source/BuiltInEffects.cpp
     Source/SwarmGuitar.cpp
+    Source/DrumMaps.cpp
     Source/SwarmGuitarEditor.cpp
     Source/DrumMachine.cpp
     Source/DrumMachineEditor.cpp

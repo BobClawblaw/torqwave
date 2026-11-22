@@ -48,6 +48,10 @@ namespace MidiIn
         /** A message from a device (timestamped by it) or the keyboard (now). */
         void addMessage (const juce::MidiMessage&);
 
+        /** How many notes have come in, and the last one's pitch (-1 before any): for learning a note. */
+        juce::uint32 getNotesIn() const noexcept              { return notesIn.load (std::memory_order_relaxed); }
+        int getLastNoteIn() const noexcept                    { return lastNoteIn.load (std::memory_order_relaxed); }
+
         /** The track whose instrument plays the messages (0: none). The blocks taken go on to it
             once no note is held, so a note's off reaches the instrument its on did. */
         void setTrack (juce::uint32 trackId) noexcept        { track = trackId; }
@@ -103,7 +107,8 @@ namespace MidiIn
     private:
         juce::MidiMessageCollector collector;
         double rate = 48000.0;
-        std::atomic<juce::uint32> track { 0 }, playing { 0 };
+        std::atomic<juce::uint32> track { 0 }, playing { 0 }, notesIn { 0 };
+        std::atomic<int> lastNoteIn { -1 };
         std::bitset<128> sounded;                         // the audio thread's: pitches taken on and not yet off
         std::atomic<bool> capturing { false };
         std::atomic<juce::int64> sounding { 0 };

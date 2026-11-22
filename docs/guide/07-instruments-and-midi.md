@@ -166,6 +166,22 @@ Notes sound as you put them in, click them or drag them. The **grid** choice div
 
 The rows come from the track's drum map, General MIDI's (notes 35 to 81) unless you change it. The map is saved with the session. Notes not in the map get rows of their own at the bottom, named by pitch; **Add to the Map...** names one.
 
+#### A kit that isn't laid out as General MIDI is
+
+Drum presets and the drum grid write General MIDI notes: kick 36, snare 38 and so on. A kit in a drum plug-in (a Battery kit, for one) often has its sounds on other keys. Tell the map where the kit's sounds are, and patterns follow:
+
+1. Put the plug-in on an instrument track, open a note clip on it and switch to **Drums**.
+2. For each sound the kit has, right-click its row and choose **Learn Its Note from MIDI**, then play that sound's key on your MIDI keyboard or pads. The row moves to that key and remembers which General MIDI drum it **stands for**. Without a MIDI input, use **Edit Sound...**: type the key in **Note**, and pick the drum in **Stands for**.
+3. Right-click any row and choose **Save Map As...** to keep the map by name ("Battery: Dark Kit"). **Maps** puts a saved map on any other track, in any session.
+
+Then:
+
+- **Remap Notes to This Map** moves the clip's General MIDI notes to the kit's keys, as one undo step. The menu says how many notes it will move.
+- **Remap Notes to General MIDI** moves them back.
+- **A drum preset dropped on the track** lands on the kit's keys by itself. Other parts dropped there, and presets dropped on empty space, keep their notes.
+
+Learning listens to MIDI inputs; clicking a pad in the plug-in's own window doesn't send a note Torqwave can hear.
+
 With the drum grid's steps, its velocities, probability and swing, a drum clip is a step sequencer: set the grid to 1/4 beat for sixteenths, add swing, and give the ghost notes lower velocities and some steps less than 100 %.
 
 ### Writing tools

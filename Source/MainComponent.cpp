@@ -15374,6 +15374,7 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
     else if (id == Panels::pianoRoll)
     {
         auto panel = std::make_unique<NoteEditor>();
+        panel->readNoteIn = [this] { return std::pair<juce::uint32, int> { engine.getLiveMidi().getNotesIn(), engine.getLiveMidi().getLastNoteIn() }; };
         panel->readPlayhead = [this]() -> std::optional<juce::int64>
         {
             auto& p = engine.getPlayer();

@@ -27,6 +27,12 @@ namespace MidiIn
             stamped.setTimeStamp (juce::Time::getMillisecondCounterHiRes() * 0.001);
 
         collector.addMessageToQueue (stamped);
+
+        if (m.isNoteOn())
+        {
+            lastNoteIn.store (m.getNoteNumber(), std::memory_order_relaxed);
+            notesIn.fetch_add (1, std::memory_order_relaxed);
+        }
     }
 
     bool Live::takeBlock (juce::MidiBuffer& into, int numFrames)

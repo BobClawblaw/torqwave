@@ -340,7 +340,20 @@ Placed place (SessionState& s, const Sequence& q, int trackIndex, juce::int64 po
                 t.name = q.name;
     }
 
-    placed.clipId = SessionEdits::addNoteClip (s, placed.trackId, toClip (q, s, position));
+    auto clip = toClip (q, s, position);
+
+    // A drum part landing on a track whose kit isn't laid out as General MIDI is goes to the kit's keys.
+    if (onTrack && (q.role == "Drums" || q.channel == 10))
+        for (auto& t : s.tracks)
+            if (t.id == placed.trackId && DrumSound::remaps (t.drumMap))
+            {
+                for (auto& n : clip.notes)
+                    n.pitch = DrumSound::toKit (t.drumMap, n.pitch);
+
+                clip.mergeDuplicateNotes();
+            }
+
+    placed.clipId = SessionEdits::addNoteClip (s, placed.trackId, std::move (clip));
     return placed;
 }
 

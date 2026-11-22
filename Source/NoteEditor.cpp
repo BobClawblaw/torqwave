@@ -195,6 +195,11 @@ void NoteEditor::timerCallback()
         repaint();
     }
 
+    // Learning a drum's key: the next note from a MIDI input.
+    if (learningRow >= 0 && readNoteIn != nullptr)
+        if (const auto [count, pitch] = readNoteIn(); count != notesInSeen)
+            learn (pitch);
+
     if (++ticks % 3 == 0 && drag == Drag::none && ! velocityDragging)
         refresh();
 }
@@ -473,15 +478,50 @@ void NoteEditor::drumMapMenu (int row)
     menu.addItem (4, "Move Up", inMap && row > 0);
     menu.addItem (5, "Move Down", inMap && row + 1 < (int) shown->drumMap.size());
     menu.addSeparator();
+    menu.addItem (9, learningRow == row ? "Stop Learning" : "Learn Its Note from MIDI", readNoteIn != nullptr);
+    menu.addSeparator();
+
+    // A kit laid out its own way: the clip's General MIDI notes moved to its keys, or back.
+    const auto toKit = notesToRemap (true), back = notesToRemap (false);
+    menu.addItem (7, toKit > 0 ? "Remap Notes to This Map (" + juce::String (toKit) + ")" : juce::String ("Remap Notes to This Map"), toKit > 0);
+    menu.addItem (8, back > 0 ? "Remap Notes to General MIDI (" + juce::String (back) + ")" : juce::String ("Remap Notes to General MIDI"), back > 0);
+    menu.addSeparator();
+
+    const auto saved = drumMaps().names();
+    juce::PopupMenu maps, remove;
+
+    for (int i = 0; i < saved.size(); ++i)
+    {
+        maps.addItem (100 + i, saved[i]);
+        remove.addItem (1000 + i, saved[i]);
+    }
+
+    menu.addSubMenu ("Maps", maps, ! saved.isEmpty());
+    menu.addItem (10, "Save Map As...");
+    menu.addSubMenu ("Delete a Saved Map", remove, ! saved.isEmpty());
     menu.addItem (6, "General MIDI Map", ! (shown->drumMap == DrumSound::generalMidi()));
 
     menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition(),
-                        [safe = juce::Component::SafePointer<NoteEditor> (this), row, inMap] (int choice)
+                        [safe = juce::Component::SafePointer<NoteEditor> (this), row, inMap, saved] (int choice)
     {
         if (safe == nullptr || ! safe->shown.has_value())
             return;
 
         auto map = safe->shown->drumMap;
+
+        if (choice >= 1000 && choice - 1000 < saved.size())
+        {
+            safe->drumMaps().remove (saved[choice - 1000]);
+            return;
+        }
+
+        if (choice >= 100 && choice - 100 < saved.size())
+        {
+            if (const auto loaded = safe->drumMaps().load (saved[choice - 100]); ! loaded.empty())
+                safe->setDrumMap (loaded, "Drum Map " + saved[choice - 100]);
+
+            return;
+        }
 
         switch (choice)
         {
@@ -503,9 +543,104 @@ void NoteEditor::drumMapMenu (int row)
                 }
                 break;
             case 6: safe->setDrumMap ({}, "General MIDI Drum Map"); break;
+            case 7: safe->remapNotes (true); break;
+            case 8: safe->remapNotes (false); break;
+            case 9:
+                if (safe->learningRow == row)
+                    safe->learningRow = -1;
+                else
+                    safe->startLearning (row);
+
+                safe->repaint();
+                break;
+            case 10: safe->saveDrumMapAs(); break;
             default: break;
         }
     });
+}
+
+DrumMaps::Store& NoteEditor::drumMaps() const
+{
+    return mapStore != nullptr ? *mapStore : DrumMaps::userStore();
+}
+
+void NoteEditor::saveDrumMapAs()
+{
+    if (! shown.has_value())
+        return;
+
+    auto* window = new juce::AlertWindow ("Save the Drum Map", "A name for this kit's map, to use on other tracks and in other sessions.", juce::MessageBoxIconType::NoIcon);
+    window->addTextEditor ("name", shown->trackName, "Name");
+    window->addButton ("Save", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    window->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    window->enterModalState (true, juce::ModalCallbackFunction::create (
+        [safe = juce::Component::SafePointer<NoteEditor> (this), window] (int result)
+    {
+        if (result != 1 || safe == nullptr || ! safe->shown.has_value())
+            return;
+
+        if (const auto error = safe->drumMaps().save (window->getTextEditorContents ("name"), safe->shown->drumMap); error.isNotEmpty())
+            juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Save the Drum Map", error);
+    }), true);
+}
+
+int NoteEditor::notesToRemap (bool toKit) const
+{
+    if (! shown.has_value() || ! DrumSound::remaps (shown->drumMap))
+        return 0;
+
+    return (int) std::count_if (shown->clip.notes.begin(), shown->clip.notes.end(), [&] (const ClipNote& n)
+    {
+        return (toKit ? DrumSound::toKit (shown->drumMap, n.pitch) : DrumSound::toGeneralMidi (shown->drumMap, n.pitch)) != n.pitch;
+    });
+}
+
+int NoteEditor::remapNotes (bool toKit)
+{
+    const auto moving = notesToRemap (toKit);
+
+    if (moving == 0)
+        return 0;
+
+    // Every note from where it was: a kit key that is also a General MIDI note isn't moved twice.
+    for (auto& n : shown->clip.notes)
+        n.pitch = toKit ? DrumSound::toKit (shown->drumMap, n.pitch) : DrumSound::toGeneralMidi (shown->drumMap, n.pitch);
+
+    selected.clear();
+    commit (toKit ? "Remap Notes to the Drum Map" : "Remap Notes to General MIDI");
+    return moving;
+}
+
+void NoteEditor::startLearning (int row)
+{
+    learningRow = row;
+    notesInSeen = readNoteIn != nullptr ? readNoteIn().first : 0u;
+}
+
+bool NoteEditor::learn (int pitch)
+{
+    const auto row = learningRow;
+    learningRow = -1;
+    const auto rows = drumRows();
+
+    if (! shown.has_value() || ! juce::isPositiveAndBelow (row, (int) rows.size()) || ! juce::isPositiveAndBelow (pitch, 128))
+        return false;
+
+    auto map = shown->drumMap;
+
+    if (row >= (int) map.size())
+        map.push_back (rows[(size_t) row]);   // a note outside the map joins it
+
+    auto& sound = map[(size_t) juce::jmin (row, (int) map.size() - 1)];
+
+    // A General MIDI sound given another key stands for the note it had, so patterns can follow it there.
+    if (sound.standsFor < 0 && sound.pitch != pitch && sound.pitch >= 35 && sound.pitch <= 81)
+        sound.standsFor = sound.pitch;
+
+    sound.pitch = pitch;
+    setDrumMap (map, "Learn Drum Note");
+    return true;
 }
 
 void NoteEditor::editDrumSound (int row, bool adding)
@@ -520,6 +655,16 @@ void NoteEditor::editDrumSound (int row, bool adding)
     auto* window = new juce::AlertWindow (adding ? "Add a Drum Sound" : "Edit the Drum Sound", "Its name, and the note (0 to 127) it plays.", juce::MessageBoxIconType::NoIcon);
     window->addTextEditor ("name", adding && ! extra ? juce::String() : was.name, "Name");
     window->addTextEditor ("note", juce::String (adding && ! extra ? juce::jmin (127, was.pitch + 1) : was.pitch), "Note");
+
+    // The General MIDI drum it stands for: what Remap Notes moves here.
+    juce::StringArray drums { "Its own note (nothing moved here)" };
+
+    for (auto& d : DrumSound::generalMidi())
+        drums.add (juce::String (d.pitch) + "  " + d.name);
+
+    window->addComboBox ("standsFor", drums, "Stands for");
+    const auto stoodFor = adding && ! extra ? -1 : was.standsFor;
+    window->getComboBoxComponent ("standsFor")->setSelectedItemIndex (stoodFor >= 35 && stoodFor <= 81 ? stoodFor - 34 : 0);
     window->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
     window->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
 
@@ -536,7 +681,15 @@ void NoteEditor::editDrumSound (int row, bool adding)
             return;
 
         auto map = safe->shown->drumMap;
-        const DrumSound sound { pitch, name.isNotEmpty() ? name : DrumSound::nameIn ({}, pitch) };
+        const auto chosen = window->getComboBoxComponent ("standsFor")->getSelectedItemIndex();
+        auto standsFor = chosen > 0 ? 34 + chosen : -1;
+
+        // A General MIDI sound given another key stands for the note it had, unless told otherwise.
+        if (standsFor < 0 && ! adding && juce::isPositiveAndBelow (row, (int) map.size()) && map[(size_t) row].standsFor < 0
+            && map[(size_t) row].pitch != pitch && map[(size_t) row].pitch >= 35 && map[(size_t) row].pitch <= 81)
+            standsFor = map[(size_t) row].pitch;
+
+        const DrumSound sound { pitch, name.isNotEmpty() ? name : DrumSound::nameIn ({}, pitch), standsFor };
 
         if (adding)
             map.insert (map.begin() + (extra ? (int) map.size() : juce::jmin (row + 1, (int) map.size())), sound);

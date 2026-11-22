@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "Session.h"
+#include "DrumMaps.h"
 #include "NoteTools.h"
 
 /** The piano roll: the selected note clip's notes on a grid of pitch (a keyboard down the left,
@@ -75,6 +76,7 @@ public:
     std::function<void (bool drums)> showDrums;                  // the track's clips shown as a drum grid, or not
     std::function<void (const std::vector<DrumSound>&, const juce::String& description)> applyDrumMap;   // an empty map: General MIDI's
     std::function<void (const juce::String& key)> onKeyChosen;  // a key set in the Tools menu, for the part to keep
+    std::function<std::pair<juce::uint32, int>()> readNoteIn;    // how many notes have come in from MIDI inputs, and the last one's pitch
     std::function<std::optional<juce::int64>()> readPlayhead;   // the frame playing (the clip's position's frames), none when stopped
 
     /** Where a frame of the clip's position falls on its notes' timeline, each pass of a loop
@@ -157,6 +159,22 @@ public:
     /** Changes the track's drum map as one undoable step (an empty map: General MIDI's). */
     void setDrumMap (const std::vector<DrumSound>&, const juce::String& description);
 
+    /** Moves the clip's notes from General MIDI's keys to the map's kit (each sound's own key for
+        the General MIDI drum it stands for), or back, as one undoable step; how many notes moved. */
+    int remapNotes (bool toKit);
+
+    /** How many of the clip's notes Remap Notes would move, to the kit or back. */
+    int notesToRemap (bool toKit) const;
+
+    /** Learning: the next note played on a MIDI input becomes a row's key. learn gives it one
+        (as the timer does from readNoteIn); true if a row took it. */
+    void startLearning (int row);
+    bool isLearning() const noexcept                               { return learningRow >= 0; }
+    bool learn (int pitch);
+
+    /** Where the saved drum maps are kept (the user's own unless set, for the tests). */
+    void setDrumMapStore (DrumMaps::Store* s)                      { mapStore = s; }
+
     void selectAll();
     void removeSelected();
 
@@ -220,6 +238,11 @@ private:
     void drumMouseDown (const juce::MouseEvent&);
     void drumMapMenu (int row);
     void editDrumSound (int row, bool adding);
+    DrumMaps::Store& drumMaps() const;
+    void saveDrumMapAs();
+    int learningRow = -1;                  // the map row waiting for a note from a MIDI input, or -1
+    juce::uint32 notesInSeen = 0;
+    DrumMaps::Store* mapStore = nullptr;
     float yOf (int pitch) const;
     float xOf (juce::int64 frame) const;
     std::optional<juce::int64> playhead;   // on the notes' timeline, as last read

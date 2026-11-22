@@ -342,6 +342,7 @@ Dropped on a track with a drum plug-in (Battery, for one), a drum preset plays i
 - **Maps are saved by name:** for example, "Battery: Dark Kit". A map is chosen per track, and every drum preset dropped on that track is remapped as it lands.
 - **Learn:** pick a General MIDI sound, then hit the matching pad on the plug-in or a MIDI controller.
 - **Tested:** a preset dropped on a track with a saved map lands on the map's notes. Remap Notes and its undo give the notes back exactly.
+- **Done**, as planned except that the map is the track's drum map itself (each sound saying which General MIDI drum it stands for) and Learn hears MIDI inputs only: a pad clicked in a plug-in's window sends no note to the host. Not yet tried by hand in the running app.
 
 ### Step 12: the presets again, for the new voices (L)
 

@@ -469,13 +469,28 @@ struct MidiBinding
     static std::optional<Kind> kindNamed (const juce::String&);
 };
 
-/** A drum sound: a row of the piano roll's drum grid, the note it plays and its name. */
+/** A drum sound: a row of the piano roll's drum grid, the note it plays and its name; and, for a
+    kit not laid out as General MIDI is, the General MIDI drum it stands for (a kit's snare on
+    key 40 stands for 38), which is what lets General MIDI patterns be moved onto the kit. */
 struct DrumSound
 {
     int pitch = 36;
     juce::String name;
+    int standsFor = -1;                    // the General MIDI note it stands for, or -1: none other than its own
 
-    bool operator== (const DrumSound& o) const noexcept { return pitch == o.pitch && name == o.name; }
+    bool operator== (const DrumSound& o) const noexcept { return pitch == o.pitch && name == o.name && standsFor == o.standsFor; }
+
+    /** Whether a map moves any General MIDI note to another key. */
+    static bool remaps (const std::vector<DrumSound>& map);
+
+    /** A General MIDI note's key on the map's kit (the first sound standing for it), or the note
+        itself; and back, a kit key's General MIDI note. */
+    static int toKit (const std::vector<DrumSound>& map, int generalMidiPitch);
+    static int toGeneralMidi (const std::vector<DrumSound>& map, int kitPitch);
+
+    /** A map as XML (a DRUMMAP of SOUNDs) and back; sounds with notes outside 0 to 127 are left out. */
+    static void write (const std::vector<DrumSound>& map, juce::XmlElement& into);
+    static std::vector<DrumSound> read (const juce::XmlElement& drumMap);
 
     /** General MIDI's percussion sounds, notes 35 to 81, the kick first. */
     static const std::vector<DrumSound>& generalMidi();

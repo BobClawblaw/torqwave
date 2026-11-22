@@ -2,6 +2,8 @@
 #include "../Source/NoteEditor.h"
 #include "../Source/MidiInput.h"
 #include "../Source/Session.h"
+#include "../Source/SequenceFile.h"
+#include "../Source/DrumMaps.h"
 #include "TestUtils.h"
 #include "DrumGridTests.h"
 
@@ -286,6 +288,126 @@ namespace
         file.deleteFile();
     }
 
+    /** General MIDI's map with the kick on key 60 and the snare on key 40, each standing for its General MIDI note. */
+    std::vector<DrumSound> kitMap()
+    {
+        auto map = DrumSound::generalMidi();
+
+        for (auto& d : map)
+        {
+            if (d.pitch == 36) { d.pitch = 60; d.standsFor = 36; d.name = "Kit Kick"; }
+            else if (d.pitch == 38) { d.pitch = 40; d.standsFor = 38; d.name = "Kit Snare"; }
+            else if (d.pitch == 40) { d.pitch = 39; d.standsFor = 40; }   // the electric snare gives up its key, onto the clap's
+            else if (d.pitch == 39) { d.pitch = 38; d.standsFor = 39; }   // and the clap onto the snare's old one
+        }
+
+        return map;
+    }
+
+    void testRemap()
+    {
+        // Remap Notes: the clip's General MIDI notes go to the kit's keys in one step, and back exactly.
+        {
+            Rig rig;
+            rig.shown.clip.notes = { { 36, 0, 100, 0.9f }, { 38, beat, 100, 0.8f }, { 42, 2 * beat, 100, 0.7f }, { 39, 3 * beat, 100, 0.6f }, { 40, 3 * beat + 6000, 100, 0.5f } };
+            rig.shown.drumMap = kitMap();
+            rig.editor.refresh();
+            const auto before = rig.shown.clip.notes;
+            const auto counted = rig.editor.notesToRemap (true);
+            const auto moved = rig.editor.remapNotes (true);
+            const auto steps = rig.applied.size();
+            const auto there = rig.shown.clip.notes;
+
+            // Each from where it was: the snare to 40 and the electric snare from 40 to 39, the clap from 39 to 38, none twice.
+            const auto toKit = there.size() == 5 && there[0].pitch == 60 && there[1].pitch == 40 && there[2].pitch == 42 && there[3].pitch == 38 && there[4].pitch == 39
+                                   && there[1].start == beat && juce::exactlyEqual (there[1].velocity, 0.8f);
+            rig.editor.refresh();
+            const auto back = rig.editor.remapNotes (false);
+            rig.editor.refresh();
+            check (counted == 4 && moved == 4 && steps == 1 && rig.applied[0].second == "Remap Notes to the Drum Map" && toKit && back == 4 && rig.applied.size() == 2
+                       && rig.applied[1].second == "Remap Notes to General MIDI" && rig.shown.clip.notes == before,
+                   "drum remap: Remap Notes moves a clip's four General MIDI notes to the kit's keys in one step (kick 36 to 60, snare 38 to 40, the two that trade keys "
+                   "each once), the hat staying; Remap Notes to General MIDI gives the notes back exactly");
+        }
+
+        // General MIDI's own map moves nothing.
+        {
+            Rig rig;
+            rig.shown.clip.notes = { { 36, 0, 100, 0.9f } };
+            rig.editor.refresh();
+            check (rig.editor.notesToRemap (true) == 0 && rig.editor.remapNotes (true) == 0 && rig.applied.empty() && ! DrumSound::remaps (DrumSound::generalMidi()) && DrumSound::remaps (kitMap()),
+                   "drum remap: General MIDI's own map moves nothing");
+        }
+
+        // Learn: the next note from a MIDI input becomes the sound's key, and the sound stands for the General MIDI note it had.
+        {
+            Rig rig;
+            juce::uint32 count = 5;
+            int last = 12;
+            rig.editor.readNoteIn = [&] { return std::pair<juce::uint32, int> { count, last }; };
+            rig.editor.startLearning (rig.rowOf (38));
+            const auto waiting = rig.editor.isLearning() && rig.maps.empty();
+            const auto took = rig.editor.learn (47);
+            const auto& map = rig.shown.drumMap;
+            const auto learned = std::any_of (map.begin(), map.end(), [] (const DrumSound& d) { return d.pitch == 47 && d.standsFor == 38 && d.name == "Acoustic Snare"; });
+            check (waiting && took && ! rig.editor.isLearning() && learned && rig.maps.size() == 1 && rig.maps[0].second == "Learn Drum Note" && DrumSound::toKit (map, 38) == 47
+                       && DrumSound::toGeneralMidi (map, 47) == 38 && ! rig.editor.learn (50),
+                   "drum remap: learning the snare's key from a played note (47) puts the Acoustic Snare on 47, standing for 38, as one step; nothing is learnt when not asked");
+        }
+
+        // Saved by name, and kept with what each sound stands for.
+        {
+            juce::TemporaryFile temp;
+            const auto folder = temp.getFile().getSiblingFile ("tq-drum-maps-" + juce::String::toHexString (juce::Random::getSystemRandom().nextInt()));
+            DrumMaps::Store store (folder);
+            const auto none = store.names().isEmpty() && store.load ("Battery: Dark Kit").empty();
+            const auto saved = store.save ("Battery: Dark Kit", kitMap()).isEmpty() && store.save ("  ", kitMap()).isNotEmpty();
+            const auto names = store.names();
+            const auto same = store.load ("Battery: Dark Kit") == kitMap();
+            const auto removed = store.remove ("Battery: Dark Kit") && store.names().isEmpty() && ! store.remove ("Battery: Dark Kit");
+            folder.deleteRecursively();
+            check (none && saved && names == juce::StringArray { "Battery - Dark Kit" } && same && removed,
+                   "drum remap: a map saved as \"Battery: Dark Kit\" is listed (as Battery - Dark Kit), comes back the same with what each sound stands for, and can be deleted; a map needs a name");
+        }
+
+        // Dropped on a track with a kit's map, a drum part lands on the kit's keys; other parts, and a part on a new track, don't move.
+        {
+            SessionState s;
+            s.sampleRate = rate;
+            s.addTrack();
+            SessionEdits::setTrackKind (s, s.tracks[0].id, true);
+            s.tracks[0].drumMap = kitMap();
+
+            SequenceFile::Sequence drums;
+            drums.name = "Beat";
+            drums.role = "Drums";
+            drums.channel = 10;
+            drums.length = 4 * 960;
+            drums.notes = { { 36, 0, 240, 0.9f }, { 38, 960, 240, 0.9f }, { 42, 1920, 240, 0.9f } };
+            auto bass = drums;
+            bass.role = "Bass";
+            bass.channel = 1;
+
+            const auto pitches = [&] (juce::uint32 clipId)
+            {
+                juce::Array<int> found;
+
+                if (const auto where = s.findNoteClip (clipId))
+                    for (auto& n : s.tracks[(size_t) where->first].noteClips[(size_t) where->second].notes)
+                        found.add (n.pitch);
+
+                found.sort();
+                return found;
+            };
+
+            const auto onKit = pitches (SequenceFile::place (s, drums, 0, 0, true).clipId);
+            const auto bassOnKit = pitches (SequenceFile::place (s, bass, 0, 4 * beat, true).clipId);
+            const auto onNew = pitches (SequenceFile::place (s, drums, -1, 0, false).clipId);
+            check (onKit == juce::Array<int> { 40, 42, 60 } && bassOnKit == juce::Array<int> { 36, 38, 42 } && onNew == juce::Array<int> { 36, 38, 42 },
+                   "drum remap: a drum preset dropped on a track with a kit's map lands on the kit's keys (36, 38, 42 as 60, 40, 42); a bass part there, and the drums on a track of their own, keep their notes");
+        }
+    }
+
     void testCapture()
     {
         // Played while stopped: kept with the device's clock, captured from the cursor at the session's rate.
@@ -334,4 +456,5 @@ void runDrumGridTests (juce::AudioFormatManager& formats)
     testSwing();
     testChannelsAndFile (formats);
     testCapture();
+    testRemap();
 }

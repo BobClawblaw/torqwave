@@ -83,6 +83,56 @@ const std::vector<DrumSound>& DrumSound::generalMidi()
     return map;
 }
 
+bool DrumSound::remaps (const std::vector<DrumSound>& map)
+{
+    return std::any_of (map.begin(), map.end(), [] (const DrumSound& d) { return d.standsFor >= 0 && d.standsFor != d.pitch; });
+}
+
+int DrumSound::toKit (const std::vector<DrumSound>& map, int generalMidiPitch)
+{
+    for (auto& d : map)
+        if (d.standsFor == generalMidiPitch)
+            return d.pitch;
+
+    return generalMidiPitch;
+}
+
+int DrumSound::toGeneralMidi (const std::vector<DrumSound>& map, int kitPitch)
+{
+    for (auto& d : map)
+        if (d.pitch == kitPitch && d.standsFor >= 0)
+            return d.standsFor;
+
+    return kitPitch;
+}
+
+void DrumSound::write (const std::vector<DrumSound>& map, juce::XmlElement& into)
+{
+    for (auto& d : map)
+    {
+        auto* sound = into.createNewChildElement ("SOUND");
+        sound->setAttribute ("pitch", d.pitch);
+        sound->setAttribute ("name", d.name);
+
+        if (d.standsFor >= 0)
+            sound->setAttribute ("gm", d.standsFor);
+    }
+}
+
+std::vector<DrumSound> DrumSound::read (const juce::XmlElement& drumMap)
+{
+    std::vector<DrumSound> map;
+
+    for (auto* sound : drumMap.getChildWithTagNameIterator ("SOUND"))
+        if (const auto pitch = sound->getIntAttribute ("pitch", -1); juce::isPositiveAndBelow (pitch, 128))
+        {
+            const auto gm = sound->getIntAttribute ("gm", -1);
+            map.push_back ({ pitch, sound->getStringAttribute ("name"), juce::isPositiveAndBelow (gm, 128) ? gm : -1 });
+        }
+
+    return map;
+}
+
 juce::String DrumSound::nameIn (const std::vector<DrumSound>& map, int pitch)
 {
     for (auto& d : map)
@@ -5346,14 +5396,7 @@ juce::String save (const SessionState& state, const juce::File& target,
 
         if (! t.drumMap.empty())
         {
-            auto* map = track->createNewChildElement ("DRUMMAP");
-
-            for (auto& d : t.drumMap)
-            {
-                auto* sound = map->createNewChildElement ("SOUND");
-                sound->setAttribute ("pitch", d.pitch);
-                sound->setAttribute ("name", d.name);
-            }
+            DrumSound::write (t.drumMap, *track->createNewChildElement ("DRUMMAP"));
         }
 
         if (t.outputBusId != 0 && indexOf.count (t.outputBusId) > 0)
@@ -5818,9 +5861,7 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
             track.midiFromTrackId = (juce::uint32) trackXml->getIntAttribute ("midiFrom", -1);   // an index until every track is read
 
             if (auto* map = trackXml->getChildByName ("DRUMMAP"))
-                for (auto* sound : map->getChildWithTagNameIterator ("SOUND"))
-                    if (const auto pitch = sound->getIntAttribute ("pitch", -1); juce::isPositiveAndBelow (pitch, 128))
-                        track.drumMap.push_back ({ pitch, sound->getStringAttribute ("name") });
+                track.drumMap = DrumSound::read (*map);
         }
 
         track.outputBusId = (juce::uint32) trackXml->getIntAttribute ("output", -1);   // likewise
