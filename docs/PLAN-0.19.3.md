@@ -373,57 +373,69 @@ The Levels panel standing upright when docked at a side (a fix from use) and dou
 
 ## Part three: sounds from sounds
 
-Added on 2026-11-22, for the same release (0.20.0). Everything here is inside Torqwave Synth: no new instrument. It is our own design in a known genre (patches bred by ear, and patches found from a recording); its name, look and patches are ours.
+Added on 2026-11-22, for the same release (0.20.0). Everything here is inside Torqwave Synth: no new instrument.
 
-Two things are still to be decided, and the steps say where: the name of the view (written "Evolve" below until it has one), and whether a trained model gives the search its first guess (step 17 is search alone, which needs no model).
+**It is our own design.** Other synths find patches by variation and from recordings; none of their ideas for showing it are used here. No seeds, plants, DNA, genes, breeding, parents or children, in the look or in the words. Ours is a **signal console**: futuristic, cyber, a hacker's map of a network of sounds. A patch is a **node**; the sounds near it are nodes it can reach; moving through them leaves a **route**; a recording is a **signal to crack**.
+
+Two things are still to be decided, and the steps say where: the names (written **Trace** for the map and **Decrypt** for matching until they are chosen), and whether a trained model gives the search its first guess (step 17 is search alone, which needs no model).
 
 ### Step 14: groundwork in the synth (M)
 
 Three additions that matter more to reproducing a sound than more oscillators would. The oscillators stay at three: each already has up to 8 unison voices, and seven more would add about 80 settings for a search to wander in, at three times the CPU.
 
-- **A wavetable from audio.** A new table type, "Sampled", whose frames are made from a clip: its spectrum taken at steps through the sound, each written as one band-limited frame, so Position plays through the clip's tone from start to end. Made by dropping a clip on an oscillator, or by Match (step 17). The frames are saved in the patch's state, so a patch with one plays anywhere. 64 frames at most.
+- **A wavetable from audio.** A new table type, "Sampled", whose frames are made from a clip: its spectrum taken at steps through the sound, each written as one band-limited frame, so Position plays through the clip's tone from start to end. Made by dropping a clip on an oscillator, or by Decrypt (step 17). The frames are saved in the patch's state, so a patch with one plays anywhere. 64 frames at most.
 - **A level envelope for each oscillator.** Attack, hold, decay and sustain on the oscillator's level, off by default (level as now), so layers come and go on their own without spending modulation slots.
 - **16 modulation slots** in place of 8. Patches and sessions saved with 8 load as they are.
 - Nothing changes for patches that use none of this: every factory patch renders the same as before, checked sample for sample.
 - **Tested:** a sine swept from 200 Hz to 2 kHz, made into a table, plays back within 1 dB of the clip's spectrum at five positions; a table saved in a patch comes back the same; an oscillator with its level envelope at 200 ms attack reaches half level when the envelope says it should, while the amp envelope is open; slot 16 modulates as slot 1 does; every factory patch renders the same as before this step; no clicks (the step 8 check) with a Sampled table and a level envelope retriggered.
 
-### Step 15: breeding patches by ear (M)
+### Step 15: Trace, a map of the sounds within reach (M)
 
-- **An Evolve view** in the synth's window, beside the knobs. In the middle the patch you have; around it twelve children, each the patch with some of its settings moved. Click a child to hear it, double-click to make it the parent, and go again. **Back** steps to the parent before.
-- **Amount** sets how far the children stray. **Locks** keep a group as it is: oscillators, filters, envelopes, modulation or effects.
-- **Cross** takes a second patch (any factory or saved patch) and makes children that are part one, part the other.
-- **Children on keys:** with the view open, the octave from C3 plays the twelve children, one a key, so a keyboard or a clip auditions them; the other keys play the parent.
-- **The gene map:** a table in the code of which settings move, how far, and in which group. Choices (a table, a filter type) change rarely; levels never move so far that a child is silent or clips: each child is rendered for a moment and levelled to its parent.
-- Every child is an ordinary patch: making it the parent sets the knobs, and it saves as a preset like any other.
-- **Tested:** the same parent, Amount and seed give the same twelve children; a locked group's settings are the parent's in every child; at Amount 0 every child is the parent; every child of 50 factory patches sounds (peaks above -40 dB) and none clips; Back returns the settings exactly; C3 to B3 play children 1 to 12 and C4 the parent.
+- **The Trace view** in the synth's window, beside the knobs. In the middle the node you hold: the patch as it is. Around it twelve nodes within reach, each the patch with some of its settings moved. Click a node to hear it, double-click to **jump** to it, and the map redraws round where you are now.
+- **The route** is where you have been: a line of the nodes you jumped through, along the bottom. Click any of them to go back there. Nothing is lost by exploring.
+- **Reach** sets how far away the twelve nodes are: near (small changes) to far (a different sound).
+- **Firewalls** keep a part of the patch as it is while you move: oscillators, filters, envelopes, modulation or effects. A firewalled part is the same in every node.
+- **Bridge** links to a second patch (any factory or saved patch) and lays the twelve nodes along the line between the two.
+- **Nodes on keys:** with the view open, the octave from C3 plays the twelve nodes, one a key, so a keyboard or a clip auditions them; the other keys play the node you hold.
+- **The reach map:** a table in the code of which settings move, how far, and which firewall holds them. Choices (a table, a filter type) change rarely; levels never move so far that a node is silent or clips: each node is rendered for a moment and levelled to the one you hold.
+- Every node is an ordinary patch: jumping to it sets the knobs, and it saves as a preset like any other.
+- **Tested:** the same node, Reach and seed give the same twelve nodes; a firewalled part's settings are unchanged in every node; at Reach 0 every node is the one you hold; every node round 50 factory patches sounds (peaks above -40 dB) and none clips; a click on the route returns those settings exactly; C3 to B3 play nodes 1 to 12 and C4 the node you hold.
 
-### Step 16: the Evolve view's look (M)
+### Step 16: the console's look (M to L: this is the part people will remember)
 
-- Drawn with the control kit (`Source/SoundControls.*`) in the theme's colours. Each child is a small picture of its sound (its spectrum over the first second), so different children look different before you hear them. The parent's picture is larger, in the middle.
-- Nothing plant-like, and no layout taken from another product: a ring of sound pictures round the parent, with Amount, the locks, Cross and Back beneath.
-- **Tested:** the view draws at 70 % to 160 % as the rest of the window does; a child's picture changes when its settings do; a guide screenshot of the real window.
+The look is the feature's identity, so it gets its own step and a mock-up the user sees before it is built.
 
-### Step 17: Match, a patch from a recording (L)
+- **A network map, not a menu.** The node you hold glows in the middle; links run out to the twelve within reach; the route trails behind as a dimmer line. Jumping animates along the link, and the map re-forms round the new node (under 250 ms, and not at all when the system's Reduce Motion is on).
+- **Each node is its sound's signature:** a small ring drawn from its spectrum over the first second (bright where it is bright, wide where it is loud), so nodes look as different as they sound. Under it a short hex address made from the patch's settings (the same patch always has the same address), in a monospaced face.
+- **Console details that carry information, not decoration:** a scan line sweeps a node while it sounds; a firewall is drawn as a barrier across the links of the part it holds; Reach is a ring that widens round the middle node; the route shows each jump's address.
+- **In the theme's colours**, with the accent as the glow, in light themes as well as dark (dark is where it looks its best, and the guide's pictures use it). Drawn with the control kit (`Source/SoundControls.*`), sharp at 70 % to 160 %.
+- **Plain to use:** every control has an ordinary tooltip ("Reach: how far the nearby sounds are from this one"), so the vocabulary never has to be learnt to be used.
+- **First, three mock-ups** of the view as pictures, for the user to choose from or mark up. Nothing is built before one is chosen.
+- **Tested:** the view draws at 70 % to 160 % as the rest of the window does; a node's signature and address change when its settings do and are the same for the same settings; with Reduce Motion on, a jump redraws without animation; a guide screenshot of the real window.
 
-- **Drop a clip on the Evolve view** (or choose **Match a Sound...**): one note, held or plucked, up to 4 seconds. Its pitch is found, it is trimmed to the note and levelled.
-- **A search, on background threads:** candidates are rendered through the synth itself at the clip's pitch and length, and scored against the clip on its spectrum over time (on a mel scale, at three window sizes) and its loudness envelope. It starts from the factory patches nearest the clip, breeds the best, and repeats. The view shows the best twelve as its children, improving, with a match figure for each; pick one at any time and it becomes the parent.
+### Step 17: Decrypt, a patch from a recording (L)
+
+- **Drop a clip on the console** (or choose **Decrypt a Sound...**): one note, held or plucked, up to 4 seconds. Its pitch is found, it is trimmed to the note and levelled. Its signature is drawn in the middle as the target.
+- **A search, on background threads:** candidates are rendered through the synth itself at the clip's pitch and length, and scored against the clip on its spectrum over time (on a mel scale, at three window sizes) and its loudness envelope. It starts from the factory patches nearest the clip, moves outward from the best, and repeats. The console shows the best twelve as its nodes, with a **lock** figure for each (how much of the signal that node accounts for), rising as the search goes; jump to one at any time.
+- **How it looks while it works:** the target's signature in the middle with each candidate's laid over it, the parts that agree lighting up; the lock figures counting up; the patch's parts (oscillators, filter, envelopes) marked as each settles. It should feel like watching a signal being cracked, and every moving thing on it is a real number from the search.
 - **With step 14's table:** the search may give oscillator 1 the clip's own Sampled table, and then has only the envelopes, filter and movement to find. This can be turned off (**Tables only from the factory**), for a patch made of the synth's own waves.
 - **Dry in this version:** the effects are left off while matching, and a clip with heavy reverb or delay is matched as if it were dry. Chords and riffs are not matched: one note.
-- **What a match means,** said in the guide as it is: a sound the synth made is found again; a recording of something else gives a patch in its spirit, close for synth sounds, loose for voices, real drums and samples.
+- **What a lock means,** said in the guide as it is: a sound the synth made is found again; a recording of something else gives a patch in its spirit, close for synth sounds, loose for voices, real drums and samples.
 - No model is trained or shipped in this step. If the search's first guess needs to be faster, a network trained on the synth's own random patches can give it one later; that is a decision for after this is measured.
-- **Tested:** ten factory patches of different kinds, each rendered and matched with their own names left out of the starting set, come back within a set spectral distance of the original (the distance is fixed when the search exists, from what a listener cannot tell apart in the renders); the same clip and seed give the same result; a match runs to its end without a dropout in a session that is playing (the audio thread's load measured before and during); the time a match takes is measured on the development Mac and written in the guide; stopping a match leaves the patch as it was.
+- **Tested:** ten factory patches of different kinds, each rendered and decrypted with their own names left out of the starting set, come back within a set spectral distance of the original (the distance is fixed when the search exists, from what a listener cannot tell apart in the renders); the same clip and seed give the same result; a search runs to its end without a dropout in a session that is playing (the audio thread's load measured before and during); the time it takes is measured on the development Mac and written in the guide; stopping it leaves the patch as it was.
 
 ### Step 18: the guide, the changelog and patches (S)
 
-- The guide's synth section gains the Sampled table, the level envelopes, the Evolve view and Match, with screenshots of the real window, and says what a match can and cannot do.
+- The guide's synth section gains the Sampled table, the level envelopes, Trace and Decrypt, with screenshots of the real window, and says what a lock can and cannot do.
 - A changelog entry for each step, with what was not tried by hand.
 - Ask Torq is told the new parameters, as it is told the others.
 
 ### Order for part three
 
 1. Step 14 first: 15 and 17 both write patches that may use it.
-2. Steps 15 and 16 together.
-3. Step 17.
-4. Step 18 as each lands.
+2. Step 16's mock-ups, for the user to choose from, while step 14 is built.
+3. Steps 15 and 16 together.
+4. Step 17.
+5. Step 18 as each lands.
 
 Steps 14 to 17 all change `Source/WaveSynth*` and the synth's window, so they are one writer's work, one after another, after Swarm Guitar's update is merged.
