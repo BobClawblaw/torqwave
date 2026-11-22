@@ -757,12 +757,14 @@ namespace
         }
 
         // A bare sine from the synth on a track, one note over the first half second.
-        setPlain (*synth, "wave", 0);
-        setPlain (*synth, "level", 0.0f);
-        setPlain (*synth, "attack", 0.0f);
-        setPlain (*synth, "decay", 0.0f);
-        setPlain (*synth, "sustain", 100.0f);
-        setPlain (*synth, "release", 0.0f);
+        setPlain (*synth, "osc1Position", 0.0f);
+        setPlain (*synth, "osc1RandomPhase", 0.0f);
+        setPlain (*synth, "filter1Type", 0.0f);
+        setPlain (*synth, "ampLevel", 0.0f);
+        setPlain (*synth, "env1Attack", 0.0f);
+        setPlain (*synth, "env1Decay", 0.0f);
+        setPlain (*synth, "env1Sustain", 100.0f);
+        setPlain (*synth, "env1Release", 0.0f);
 
         SessionState s;
         s.sampleRate = rate;
@@ -785,7 +787,7 @@ namespace
 
         // Its level automated down to the bottom of its range (-40 dB): a hundredth of the sound.
         auto automated = s;
-        automated.tracks[0].effectEnvelopes.push_back ({ slotId, "level", Envelope { { { 0, 0.0f }, { 47999, 0.0f } } } });
+        automated.tracks[0].effectEnvelopes.push_back ({ slotId, "ampLevel", Envelope { { { 0, 0.0f }, { 47999, 0.0f } } } });
         const auto low = play (automated, 0, 48000, 512, &effects);
         const auto ratio = rms (low, 2000, 20000) / sounding;
         check (std::abs (ratio - 0.01) < 0.0005,
@@ -808,13 +810,14 @@ namespace
                    "session's XML has the instrument first and mixes the same, bit for bit");
 
         // An envelope drawn on the instrument's own level (its slot first in the chain, as the A
-        // menu names it): -20 dB, then 0 dB from 12,032 (a step's start). Saved in a session file
+        // menu names it): -20 dB, then 0 dB from 12,032 (a step's start), in its range of -40 to +6 dB. Saved in a session file
         // with the chain, read back, its chain loaded afresh: the envelope is the same, the
         // instrument keeps its slot, and what plays follows the envelope.
         const auto instrumentSlot = effects.getSlotId (trackId, 0);
-        const Envelope drawn { { { 0, 0.5f }, { 12031, 0.5f }, { 12032, 1.0f }, { 47999, 1.0f } } };
+        constexpr auto minus20 = 20.0f / 46.0f, zero = 40.0f / 46.0f;
+        const Envelope drawn { { { 0, minus20 }, { 12031, minus20 }, { 12032, zero }, { 47999, zero } } };
         auto drawnOn = s;
-        const auto set = SessionEdits::setEnvelope (drawnOn, trackId, AutomationTarget::effect (instrumentSlot, "level"), drawn);
+        const auto set = SessionEdits::setEnvelope (drawnOn, trackId, AutomationTarget::effect (instrumentSlot, "ampLevel"), drawn);
         const auto file = juce::File::createTempFile (".tqsession");
         const auto saveError = SessionFile::save (drawnOn, file, [&effects] (juce::uint32 id) { return effects.createXml (id); });
         const auto loaded = SessionFile::load (file, engine.formatManager);
@@ -832,17 +835,17 @@ namespace
         const auto backId = back != nullptr ? back->id : 0u;
         auto* reloadedSynth = reloaded.getInstrument (backId);
         check (instrumentSlot == slotId && set && saveError.isEmpty() && loaded.error.isEmpty() && back != nullptr
-                   && back->effectEnvelopes == drawnOn.tracks[0].effectEnvelopes && back->envelope (AutomationTarget::effect (instrumentSlot, "level")) == drawn
+                   && back->effectEnvelopes == drawnOn.tracks[0].effectEnvelopes && back->envelope (AutomationTarget::effect (instrumentSlot, "ampLevel")) == drawn
                    && reloadErrors.isEmpty() && reloadedSynth != nullptr && reloaded.getSlotId (backId, 0) == instrumentSlot,
                "instrument tracks: an envelope drawn on the instrument's parameter comes back from the session file, its instrument in the same slot");
 
         if (back == nullptr || reloadedSynth == nullptr)
             return;
 
-        auto* level = TrackEffects::parametersById (*reloadedSynth)["level"];
+        auto* level = TrackEffects::parametersById (*reloadedSynth)["ampLevel"];
         const auto heard = play (loaded.state, 0, 48000, 512, &reloaded);
         const auto quiet = rms (heard, 2000, 8000), loud = rms (heard, 14000, 8000);
-        const auto followed = level != nullptr && juce::exactlyEqual (level->getValue(), 1.0f);
+        const auto followed = level != nullptr && std::abs (level->getValue() - zero) < 1.0e-6f;
         const auto liveHeard = play (drawnOn, 0, 48000, 512, &effects);
         check (followed && std::abs (quiet / loud - 0.1) < 0.0005 && std::abs (loud - sounding) < 0.001 * sounding && same (heard, liveHeard),
                "instrument tracks: reloaded, the instrument follows its envelope as it plays (" + juce::String (quiet / loud, 5)
@@ -868,10 +871,11 @@ namespace
             return;
         }
 
-        setPlain (*synth, "wave", 0);
-        setPlain (*synth, "level", 0.0f);
-        setPlain (*synth, "attack", 0.0f);
-        setPlain (*synth, "sustain", 100.0f);
+        setPlain (*synth, "osc1Position", 0.0f);
+        setPlain (*synth, "filter1Type", 0.0f);
+        setPlain (*synth, "ampLevel", 0.0f);
+        setPlain (*synth, "env1Attack", 0.0f);
+        setPlain (*synth, "env1Sustain", 100.0f);
 
         SessionState s;
         s.sampleRate = rate;
