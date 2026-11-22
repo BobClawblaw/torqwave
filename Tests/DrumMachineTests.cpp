@@ -636,6 +636,75 @@ void saveDrumMachineWindow (const juce::File& folder)
     }
 }
 
+/** A step pattern: each row a note and 16 steps ('x' loud, 'o' soft, '.' rest). */
+struct DemoRow
+{
+    int note;
+    const char* steps;
+};
+
+/** Renders four bars of a groove fitting each kit (a fill in the last bar, a crash on the first)
+    to <folder>/Basic Drums - <kit>.wav, 48 kHz, 24-bit, with the tail. */
+void saveDrumMachineDemos (const juce::File& folder)
+{
+    struct Groove
+    {
+        const char* kit;
+        double bpm;
+        std::vector<DemoRow> rows, fill;
+    };
+
+    const std::vector<DemoRow> fourFloor { { 36, "x...x...x...x..." }, { 39, "....x.......x..." }, { 42, "x.oxx.oxx.oxx.ox" }, { 46, "..x...x...x...x." } };
+    const std::vector<Groove> grooves {
+        { "Standard", 126.0, fourFloor, { { 36, "x...x...x...x..." }, { 38, "....x...x.x.xxxx" }, { 42, "x.oxx.oxx.ox...." } } },
+        { "Dark Techno", 132.0, { { 36, "x...x...x...x..." }, { 36, "..o...o...o..o.o" }, { 39, "....x.......x..." }, { 42, "xoxoxoxoxoxoxoxo" },
+                                  { 46, "..x...x...x...x." }, { 51, "x.x.x.x.x.x.x.x." }, { 37, ".......o.....o.." } },
+                                { { 36, "x...x...x...x..." }, { 39, "....x...x.x.x.xx" }, { 42, "xoxoxoxoxoxo...." }, { 45, "............x.x." } } },
+        { "Industrial", 128.0, { { 36, "x...x...x...x..." }, { 43, "..x...x.....x.x." }, { 38, "....x.......x..." }, { 56, "x..x..x..x..x.x." },
+                                 { 42, "x.x.x.x.x.x.x.x." }, { 52, "........x......." } },
+                               { { 36, "x...x...x.x.xxxx" }, { 38, "....x.x.x.x.x.xx" }, { 41, "x.x.x.x........." } } },
+        { "EBM Machine", 120.0, { { 36, "x...x...x...x..." }, { 38, "....x.......x..." }, { 42, "x.x.x.x.x.x.x.x." }, { 46, "..x...x...x...x." } },
+                                { { 36, "x...x...x...x..." }, { 38, "....x...xxxxxxxx" }, { 42, "x.x.x.x........." } } },
+        { "Electro", 116.0, { { 36, "x.....x...x....." }, { 38, "....x.......x..." }, { 42, "x.xxx.x.x.xxx.x." }, { 56, "...x.......x...." }, { 63, "......o......o.." } },
+                            { { 36, "x.....x...x....." }, { 38, "....x.......x..." }, { 50, "........x.x....." }, { 47, "..........x.x..." }, { 43, "............x.x." } } },
+        { "Breaks", 168.0, { { 36, "x.x.......x....." }, { 38, "....x..o.o..x..o" }, { 42, "x.x.x.x.x.x.x.x." }, { 51, "x...x...x...x..." } },
+                           { { 36, "x.x.......x....." }, { 38, "....x..o.oxxxxxx" }, { 42, "x.x.x.x.x......." } } },
+        { "Industrial Rock", 110.0, { { 36, "x.....x.x......." }, { 38, "....x.......x..." }, { 42, "x.x.x.x.x.x.x.x." } },
+                                    { { 36, "x.......x......." }, { 38, "....x..." }, { 48, "........xx......" }, { 45, "..........xx...." }, { 41, "............xxxx" } } },
+    };
+
+    folder.createDirectory();
+
+    for (auto& groove : grooves)
+    {
+        BuiltInEffects::BasicDrumsProcessor drums;
+        drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex (groove.kit)]);
+        const auto step = 60.0 / groove.bpm / 4.0;
+        Notes notes;
+
+        for (int bar = 0; bar < 4; ++bar)
+            for (auto& row : bar == 3 ? groove.fill : groove.rows)
+                for (int i = 0; row.steps[i] != 0 && i < 16; ++i)
+                    if (row.steps[i] != '.')
+                        notes.push_back ({ row.note, (bar * 16 + i) * step, row.steps[i] == 'x' ? 1.0f : 0.6f });
+
+        notes.push_back ({ 49, 0.0, 0.9f });
+        notes.push_back ({ 49, 64 * step, 0.9f });
+        notes.push_back ({ 36, 64 * step, 1.0f });
+        const auto audio = play (drums, notes, 64 * step + 3.0);
+        auto file = folder.getChildFile (juce::String ("Basic Drums - ") + groove.kit + ".wav");
+        file.deleteFile();
+
+        std::unique_ptr<juce::OutputStream> stream (new juce::FileOutputStream (file));
+        const auto options = juce::AudioFormatWriterOptions{}.withSampleRate (rate).withNumChannels (2).withBitsPerSample (24);
+
+        if (auto writer = juce::WavAudioFormat().createWriterFor (stream, options))
+            writer->writeFromAudioSampleBuffer (audio, 0, audio.getNumSamples());
+
+        std::cout << file.getFileName() << ": peak " << juce::Decibels::gainToDecibels (peakOf (audio)) << " dB" << std::endl;
+    }
+}
+
 void runDrumMachineTests (AudioEngine& engine, bool levels)
 {
     BuiltInEffects::BasicDrumsProcessor drums;
