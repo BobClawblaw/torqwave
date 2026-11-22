@@ -393,6 +393,14 @@ namespace
                    + juce::String (one.signature.brightness, 2) + " to " + juce::String (darker.signature.brightness, 2) + ")");
         window->showView (0);
         check (! shows (&view) && shows (window->knobFor ("filter1Cutoff")) && ! shows (window->knobFor ("osc1EnvAttack")), "console: Knobs brings the synth's controls back, each page showing what it showed");
+
+        // Nothing in the window offers the scope yet: the switch to it is hidden.
+        auto offered = false;
+
+        for (auto* c : window->getChildComponent (0)->getChildren())
+            offered = offered || (c->isVisible() && c->getBounds().getY() < 52 && c->getBounds().getX() > 1000 && c->getWidth() > 100 && c->getWidth() < 140);
+
+        check (! offered, "console: the synth's window has no switch to the scope showing (it waits to be Decrypt's screen)");
     }
 }
 

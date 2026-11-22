@@ -83,7 +83,7 @@ namespace WaveSynthPatchBuilder
         add ("Rubber Acid", "Acid").osc (1, analog, sawPos).filter (1, ladder12, 400, 70, 20, 30).env (2, 0, 150, 0, 120, 80)
             .mod (env2, "filter1Cutoff", 40).mono (40).amp (1, 180, 60, 60).level (-7).standardMacros (30);
         add ("Acid Drip", "Acid").osc (1, analog, sawPos).filter (1, ladder24, 350, 70, 20, 30).env (2, 0, 150, 0, 100, 80)
-            .mod (env2, "filter1Cutoff", 40).lfoSync (1, steps, sixteenth, 0).stepPattern (1, { 100, -40, 30, -60, 80, -20, 0, -80, 100, -30, 40, -70, 60, -10, 20, -90 })
+            .mod (env2, "filter1Cutoff", 40).lfoSync (1, steps, bar1, 0).stepPattern (1, { 100, -40, 30, -60, 80, -20, 0, -80, 100, -30, 40, -70, 60, -10, 20, -90 })
             .mod (lfo1, "filter1Cutoff", 12).mono (30).amp (1, 160, 60, 60).delay (eighthD, 40, 20).level (-4).standardMacros (30);
 
         //======================================================================
@@ -263,22 +263,22 @@ namespace WaveSynthPatchBuilder
         //======================================================================
         // Sequences: patches with motion built in, for one held note or a sparse pattern.
         add ("Gated Machine", "Sequence").osc (1, analog, sawPos).unison (1, 3, 12, 70).filter (1, ladder24, 1500, 40)
-            .lfoSync (1, steps, sixteenth, 1).stepPattern (1, { 100, -100, 60, -100, 100, -100, -100, 80, 100, -100, 60, -100, 100, 40, -100, -100 })
+            .lfoSync (1, steps, bar1, 1).stepPattern (1, { 100, -100, 60, -100, 100, -100, -100, 80, 100, -100, 60, -100, 100, 40, -100, -100 })
             .mod (lfo1, "ampLevel", 35).mod (lfo1, "filter1Cutoff", 10).amp (2, 300, 90, 200).delay (sixteenthD, 30, 15).level (-27)
             .standardMacros (25);
         add ("Trance Gate Industrial", "Sequence").osc (1, growl, 40).unison (1, 4, 16, 90).filter (1, ladder24, 1800, 35, 30)
             .lfoSync (1, square, sixteenth, 1, 15).mod (lfo1, "ampLevel", 35).amp (10, 300, 90, 300).reverb (25).level (-26).standardMacros (25);
-        add ("Clockwork", "Sequence").osc (1, metal, 50).lfoSync (1, steps, sixteenth, 1)
+        add ("Clockwork", "Sequence").osc (1, metal, 50).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, -60, 20, -60, 80, -60, 40, -60, 100, -60, 20, -60, 60, -20, -60, -100 }).mod (lfo1, "osc1Position", 40)
             .filter (1, svfBand, 2000, 40).mod (lfo1, "filter1Cutoff", 15).amp (0, 1000, 70, 300).delay (sixteenthD, 40, 20).level (-4)
             .standardMacros (25);
         add ("Wobble Press", "Sequence").osc (1, analog, sawPos).osc (2, growl, 50, 60).subOsc (40).filter (1, ladder24, 300, 50, 40)
-            .lfoSync (1, sine, eighth, 1).mod (lfo1, "filter1Cutoff", 25).mono().amp (2, 300, 90, 100).drive (hard, 30).level (-14)
+            .lfo (1, sine, 4.0f, 1).mod (lfo1, "filter1Cutoff", 25).mono().amp (2, 300, 90, 100).drive (hard, 30).level (-14)
             .macro (1, "Rate").mod (macro1, "lfo1Rate", 30).macro (2, "Depth").mod (macro2, "filter1Cutoff", 20);
         add ("Pump Chord", "Sequence").osc (1, analog, sawPos).osc (2, analog, sawPos).pitch (2, 7).unison (1, 3, 12, 80)
             .filter (1, ladder24, 1800, 20).lfoSync (1, sawUp, quarter, 1).mod (lfo1, "ampLevel", 25).amp (5, 300, 90, 300)
             .reverb (25).level (-22).standardMacros (25);
-        add ("Morse Code", "Sequence").osc (1, analog, squarePos).filter (1, svfBand, 1500, 50).lfoSync (1, steps, sixteenth, 1)
+        add ("Morse Code", "Sequence").osc (1, analog, squarePos).filter (1, svfBand, 1500, 50).lfoSync (1, steps, bar1, 1)
             .stepPattern (1, { 100, 100, -100, 100, -100, -100, 100, 100, 100, -100, 100, -100, -100, -100, 100, -100 })
             .mod (lfo1, "ampLevel", 40).amp (2, 300, 90, 100).delay (eighthD, 30, 20).level (-29).standardMacros (20);
 
