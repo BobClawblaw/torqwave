@@ -50,22 +50,29 @@ Besides its first oscillator, its filter and its envelope, Basic Synth has a few
 
 Basic Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way), **Mod wheel** (vibrato, up to half a semitone), **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
 
-**Basic Drums** is the built-in drum machine: simple synthesised sounds on the General MIDI drum map, the notes the drum grid writes and most drum plug-ins play. It is there to hear a pattern before you put your own drum instrument on the track, so it is kept plain.
+**Basic Drums** is the built-in drum machine: synthesised drums on the General MIDI drum map (notes 35 to 81), the notes the drum grid writes and most drum plug-ins play. Every one of the 47 notes has a sound, each note rings on its own voice (a tom fill rings over itself), and it plays in stereo.
+
+![The Basic Drums window in the Dark Techno kit: the kit selector, presets and the kit's Drive, Glue and Level along the top; 30 pads coloured by family on the left; on the right the kick selected, a picture of one hit with its level falling to -60 dB, and its Tune, Decay, Tone, Level, Pan and Drive knobs with their values, and its character, Punch](../screenshots/guide-drums.png)
+
+- **Pads.** A pad for each of the 30 sounds, coloured by family (kick, snares and claps, hats, toms, cymbals, hand percussion). A pad lights as its sound plays. Click one to hear it and see its settings: nearer the top of the pad plays louder.
+- **The selected sound.** A picture of one hit (its waveform, its level falling to 60 dB down, a dashed line where its decay setting ends, and a line sweeping across as it plays), and six knobs: **Tune** (semitones, two octaves either way), **Decay** (milliseconds until it has fallen 60 dB), **Tone** (darker or brighter: the kick's click, the snare's wires, the hats' filter, a drum's strike), **Level** (dB), **Pan** and **Drive** (saturation on that sound alone). The kick also has a character: **Boom** (long and round), **Punch** (909-style) or **Hard** (an overdriven industrial kick). Drag a knob, Shift-drag for fine steps, double-click it for its default.
+- **The kit.** **Drive** puts the whole kit through a soft clipper, **Glue** is a bus compressor that holds it together (GR shows how far it turns the kit down), and **Level** sets its output.
+- **Kits.** **Standard**, **Dark Techno**, **Industrial**, **EBM Machine**, **Electro**, **Breaks** and **Industrial Rock** set every sound at once. Move a knob and the kit shows as *edited*; save your own with **Save...**.
 
 | Notes | Sound |
 |---|---|
-| 35, 36 | Kick |
+| 35, 36 | Kick (35 a little lower and longer) |
 | 37 | Rim |
-| 38, 40 | Snare |
+| 38, 40 | Snare (40 brighter and higher) |
 | 39 | Clap |
-| 42, 44, 46 | Closed, pedal and open hat (a closed or pedal hat cuts the open one off) |
+| 42, 44, 46 | Closed, pedal and open hat |
 | 41, 43 / 45, 47 / 48, 50 | Low, mid and high toms |
-| 49, 57 | Crash |
-| 51, 59 | Ride |
-| 56 | Cowbell |
-| 69, 70 | Shaker |
+| 49, 57 / 51, 59 / 52 / 53 / 55 | Crash, ride, China, ride bell, splash |
+| 54 / 56 / 58 / 69, 70 | Tambourine, cowbell, vibraslap, shakers |
+| 60, 61 / 62 / 63, 64 / 65, 66 | Bongos, mute conga, congas, timbales |
+| 67, 68 / 71, 72 / 73, 74 / 75 / 76, 77 / 78, 79 / 80, 81 | Agogo, whistle, guiro, claves, wood block, cuica, triangle |
 
-Other notes are silent. Each sound plays to its end however long the note is, and velocity sets its level. Its window has **Level**, and **Tune** (up to an octave either way) and **Decay** (25 % to 400 %) for the kick, the snare, the hats and the toms. Its sounds are the same every time, so a pattern renders identically twice.
+Each sound plays to its end however long the note is, and velocity sets its level. The hats cut each other off, as do the mute and open triangle and the mute and open cuica; a sound struck again, or cut off, fades out over 3 ms rather than clicking, and stopping or looping fades everything the same way. Sessions from before 0.19.3 load with their tunings and decays carried over, though the sounds themselves are new.
 
 ## Edit the notes: the Piano Roll
 
