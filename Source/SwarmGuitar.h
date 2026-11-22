@@ -48,6 +48,20 @@ namespace BuiltInEffects
         /** The semitones string (0 the lowest) of a guitar of strings sits from the played note, without its detune. */
         static int octaveOf (int tuning, int string, int strings);
 
+        /** The cents a string of a guitar (layer 0 the first) sits off its pitch at a Detune setting. */
+        static float centsOf (int layer, int string, float detune);
+
+        juce::AudioProcessorEditor* createEditor() override;
+
+        /** For its window: a parameter by its ID, the two choices, how hard each string (by its
+            place on the guitar, 0 the lowest) rang in the last block, the loudest of every guitar's
+            and note's, and the note played last (-1 before any). Safe from the message thread. */
+        juce::RangedAudioParameter* parameterFor (const juce::String& id) const;
+        juce::AudioParameterChoice* tuningParameter() const noexcept    { return tuning; }
+        juce::AudioParameterChoice* ampParameter() const noexcept       { return amp; }
+        float getStringLevel (int string) const noexcept                { return ringing[(size_t) juce::jlimit (0, maxStrings - 1, string)].load (std::memory_order_relaxed); }
+        int getLastNote() const noexcept                                { return lastNote.load (std::memory_order_relaxed); }
+
     private:
         struct String
         {
@@ -125,6 +139,9 @@ namespace BuiltInEffects
         double rate = 48000.0;
         int mask = 0;
         float bend = 0.0f, volume = 1.0f, expression = 1.0f;
+        std::array<float, maxStrings> blockPeaks {};
+        std::array<std::atomic<float>, maxStrings> ringing {};
+        std::atomic<int> lastNote { -1 };
         float lastGain = -1.0f;        // the output gain the last block ended on; below 0, none yet
         bool pedal = false;
 

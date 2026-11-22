@@ -1,4 +1,5 @@
 #include "SwarmGuitar.h"
+#include "SwarmGuitarEditor.h"
 
 namespace BuiltInEffects
 {
@@ -96,6 +97,25 @@ int SwarmGuitarProcessor::octaveOf (int tuningIndex, int string, int count)
     }
 }
 
+float SwarmGuitarProcessor::centsOf (int layer, int string, float amount)
+{
+    return amount * (scatter ((juce::uint32) (layer * 31 + string + 1)) + 0.6f * scatter ((juce::uint32) (1000 + layer)));
+}
+
+juce::AudioProcessorEditor* SwarmGuitarProcessor::createEditor()
+{
+    return new SwarmGuitarEditor (*this);
+}
+
+juce::RangedAudioParameter* SwarmGuitarProcessor::parameterFor (const juce::String& id) const
+{
+    for (auto* p : getParameters())
+        if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*> (p); ranged != nullptr && ranged->paramID == id)
+            return ranged;
+
+    return nullptr;
+}
+
 void SwarmGuitarProcessor::prepareToPlay (double sampleRate, int maximumBlockSize)
 {
     rate = sampleRate;
@@ -164,8 +184,8 @@ void SwarmGuitarProcessor::free (Voice& v)
 void SwarmGuitarProcessor::tune (Voice& v)
 {
     const auto count = stringCount();
-    const auto ringing = v.down || v.held;
-    const auto seconds = ringing ? (double) sustain->get() : release->get() * 0.001;
+    const auto sounding = v.down || v.held;
+    const auto seconds = sounding ? (double) sustain->get() : release->get() * 0.001;
     const auto c = 0.3 + 0.0068 * brightness->get();
 
     for (int l = 0; l < maxLayers; ++l)
@@ -174,7 +194,7 @@ void SwarmGuitarProcessor::tune (Voice& v)
             auto& s = v.strings[(size_t) l][(size_t) n];
 
             // Each string a little off, each guitar a little off the others, the same every time.
-            const auto cents = detune->get() * (scatter ((juce::uint32) (l * 31 + n + 1)) + 0.6f * scatter ((juce::uint32) (1000 + l)));
+            const auto cents = centsOf (l, n, detune->get());
             auto hz = 440.0 * std::pow (2.0, ((double) v.note + bend + (double) octaveOf (tuning->getIndex(), juce::jmin (n, count - 1), count) + cents * 0.01 - 69.0) / 12.0);
 
             while (hz < lowestHz)
@@ -477,12 +497,17 @@ void SwarmGuitarProcessor::renderStrings (int from, int count)
             {
                 auto& s = v.strings[(size_t) l][(size_t) n];
                 auto gain = v.gain;
+                auto most = 0.0f;
 
                 for (int i = 0; i < mine; ++i)
                 {
-                    out[i] += tick (s) * gain;
+                    const auto y = tick (s) * gain;
+                    out[i] += y;
+                    most = juce::jmax (most, std::abs (y));
                     gain *= step;
                 }
+
+                blockPeaks[(size_t) n] = juce::jmax (blockPeaks[(size_t) n], most);
             }
         }
 
@@ -534,6 +559,7 @@ void SwarmGuitarProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
             tune (v);
 
     setAmps();
+    blockPeaks.fill (0.0f);
 
     int done = 0;
 
@@ -546,7 +572,10 @@ void SwarmGuitarProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
         const auto m = meta.getMessage();
 
         if (m.isNoteOn())
+        {
             noteOn (m.getNoteNumber(), m.getFloatVelocity());
+            lastNote.store (m.getNoteNumber(), std::memory_order_relaxed);
+        }
         else if (m.isNoteOff())
             noteOff (m.getNoteNumber());
         else if (m.isAllSoundOff())
@@ -559,6 +588,9 @@ void SwarmGuitarProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 
     renderStrings (done, n - done);
     midi.clear();
+
+    for (size_t i = 0; i < blockPeaks.size(); ++i)
+        ringing[i].store (blockPeaks[i], std::memory_order_relaxed);
 
     // Each guitar through its own amp, then to its place across the field.
     const auto guitars = layerCount();

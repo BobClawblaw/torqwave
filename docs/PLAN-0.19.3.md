@@ -351,8 +351,8 @@ Dropped on a track with a drum plug-in (Battery, for one), a drum preset plays i
 
 A guitar with every string tuned to the played note, through a fuzz, as a third built-in instrument (`Source/SwarmGuitar.*`), only in Torqwave: no plug-in of it for other hosts for now.
 
-- **Done:** the engine (modelled strings, tunings, detune, strum and Strum Rate, layers each through its own amp, fuzz, crunch and cabinet, no clicks), its 15 hosted parameters and its tests.
-- **To do:** a window of its own from the shared control kit of step 9 (knobs with value arcs, the strings drawn ringing, the tuning shown string by string), factory patches, and presets that play on it in step 12.
+- **Done:** the engine (modelled strings, tunings, detune, strum and Strum Rate, layers each through its own amp, fuzz, crunch and cabinet, no clicks), its 15 hosted parameters, its window from the shared control kit (`Source/SwarmGuitarEditor.*`: knobs with value arcs, the strings drawn ringing, the tuning shown string by string, the amp's curve, the guitars across the field) and its tests.
+- **To do:** factory patches, a guide screenshot, and presets that play on it in step 12.
 
 ### Order
 

@@ -80,6 +80,8 @@ Each sound plays to its end however long the note is, and velocity sets its leve
 
 Each string is modelled (it is plucked, rings and dies away as a string does), so nothing is a sample and every part renders the same each time.
 
+Its window draws the guitar: the strings with the lowest at the bottom, each named by the note it is tuned to (once you have played one) with how many cents off it sits, swinging as it rings, and a mark where the pick is. The knobs turn by dragging up and down (hold Shift for fine steps), by the mouse wheel, and go back to their setting as it comes with a double-click; hover over one to read its value.
+
 | Setting | What it does |
 |---|---|
 | **Strings** | 1 to 12 strings on each guitar (6 as it comes). |

@@ -2,6 +2,8 @@
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/SwarmGuitar.h"
+#include "../Source/SwarmGuitarEditor.h"
+#include "../Source/Theme.h"
 #include "TestUtils.h"
 #include "SwarmGuitarTests.h"
 
@@ -289,5 +291,79 @@ void runSwarmGuitarTests (AudioEngine& engine)
                                               + " times from one 50 ms to the next; one string's only falls (" + juce::String (one, 3) + " at most)");
     }
 
+    // Its window: knobs in real units, the strings drawn with what each is tuned to, the guitars across the field.
+    {
+        // A new one, so no note has been played on it yet.
+        Swarm fresh;
+        fresh.prepareToPlay (rate, 512);
+        std::unique_ptr<juce::AudioProcessorEditor> made (fresh.createEditorAndMakeActive());
+        auto* window = dynamic_cast<SwarmGuitarEditor*> (made.get());
+        const auto sized = window != nullptr && window->getWidth() == SwarmGuitarEditor::windowWidth && window->getHeight() == SwarmGuitarEditor::windowHeight;
+
+        if (window != nullptr)
+        {
+            const auto text = [&] (const char* name) { auto* k = window->knob (name); return k != nullptr ? k->getValueText() : juce::String ("none"); };
+            const auto readings = text ("Drive") == "70 %" && text ("Tone") == "4.50 kHz" && text ("Strings") == "6" && text ("Rate") == "Once"
+                                       && text ("Sustain") == "6.00 s" && text ("Level") == "-12.0 dB" && text ("Guitars") == "2" && text ("Detune") == "+7 ct";
+            const auto before = window->getStringsShown() == 6 && window->getGuitarsShown() == 2 && window->getStringLabel (0) == "oct down"
+                                    && window->getStringLabel (3) == "note" && window->getStringLabel (5) == "oct up";
+
+            // A D played: the strings are named, D1 for the low pair, D2 for the middle and D3 on top.
+            juce::AudioBuffer<float> block (2, 512);
+            juce::MidiBuffer midi;
+            midi.addEvent (juce::MidiMessage::noteOn (1, 38, 1.0f), 0);
+            fresh.processBlock (block, midi);
+            midi.clear();
+
+            for (int i = 0; i < 8; ++i)
+                fresh.processBlock (block, midi);
+
+            window->refreshNow();
+            const auto named = window->getStringLabel (0) == "D1" && window->getStringLabel (2) == "D2" && window->getStringLabel (5) == "D3" && fresh.getStringLevel (0) > 0.0f;
+
+            // Turning a knob sets its parameter; the pictures follow the parameters.
+            window->knob ("Drive")->setNormalised (0.0f);
+            set (fresh, "strings", 12.0f);
+            set (fresh, "layers", 4.0f);
+            set (fresh, "strumRate", 8.0f);
+            window->refreshNow();
+            const auto follows = fresh.parameterFor ("drive")->getValue() == 0.0f && window->getStringsShown() == 12 && window->getGuitarsShown() == 4
+                                     && text ("Rate") == "8.0 /s" && text ("Drive") == "0 %";
+
+            check (sized && readings && before && named && follows,
+                   "swarm guitar window: 900 by 540, its knobs reading 70 %, 4.50 kHz, 6 strings, Once, 6.00 s, -12.0 dB, 2 guitars and +7 ct as it comes; the strings "
+                   "labelled by their place (oct down, note, oct up) and, once a D is played, D1, D2 and D3; a knob turned sets its parameter and 12 strings and 4 guitars are drawn when set");
+        }
+        else
+        {
+            check (false, "swarm guitar window: it has one of its own");
+        }
+    }
+
     defaults (*guitar);
+}
+
+void saveSwarmGuitarWindow (const juce::File& folder)
+{
+    BuiltInEffects::SwarmGuitarProcessor guitar;
+    guitar.prepareToPlay (rate, 512);
+    juce::AudioBuffer<float> block (2, 512);
+    juce::MidiBuffer midi;
+    midi.addEvent (juce::MidiMessage::noteOn (1, 38, 1.0f), 0);
+    guitar.processBlock (block, midi);
+    std::unique_ptr<juce::AudioProcessorEditor> made (guitar.createEditorAndMakeActive());
+
+    if (auto* window = dynamic_cast<SwarmGuitarEditor*> (made.get()))
+        window->showRinging (0.8f);
+
+    for (auto theme : { "Dark", "Light" })
+    {
+        Theme::apply (Theme::make (theme, "Blue"));
+        const auto image = made->createComponentSnapshot (made->getLocalBounds(), true, 2.0f);
+        auto file = folder.getChildFile (juce::String ("swarm-") + theme + ".png");
+        file.deleteFile();
+        juce::FileOutputStream out (file);
+        juce::PNGImageFormat().writeImageToStream (image, out);
+        std::cout << file.getFullPathName() << std::endl;
+    }
 }

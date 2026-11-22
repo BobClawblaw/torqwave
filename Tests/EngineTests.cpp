@@ -667,6 +667,12 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (const auto folder = valueOf ("--swarm-window"); folder.isNotEmpty())
+    {
+        saveSwarmGuitarWindow (juce::File (folder));
+        return 0;
+    }
+
     if (args.contains ("--swarm"))
     {
         AudioEngine engine;
