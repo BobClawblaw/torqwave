@@ -612,6 +612,7 @@ int main (int argc, char* argv[])
     //   --write-check <folder>  only write categories and tags into copies of WAV files from this folder, and check them
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
     //   --synth-window <folder> only save pictures of the synth's window (a patch, the level envelopes, a Sampled table)
+    //   --patch-levels          only print each factory patch's level (name|category|dB of a held chord's peak)
     //   --patch-hashes <file>   only write a hash of each factory patch's render, to compare two builds sample for sample
     //   --sound-demos <folder>  only write the Sounds page's demos (synth patches and Swarm Guitar presets at 120 BPM) as MP3s
     //   --console-window <folder> only save pictures of the synth's window showing the Trace view
@@ -709,6 +710,12 @@ int main (int argc, char* argv[])
     if (const auto folder = valueOf ("--synth-window"); folder.isNotEmpty())
     {
         saveSynthWindow (juce::File (folder));
+        return 0;
+    }
+
+    if (args.contains ("--patch-levels"))
+    {
+        printPatchLevels();
         return 0;
     }
 

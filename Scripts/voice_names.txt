@@ -12,6 +12,12 @@ patch|Bass|FM Basement
 patch|Bass|EBM Sequence Bass
 patch|Bass|Body Music
 patch|Bass|Target Lock Bass
+patch|Bass|Three Stage Bass
+patch|Bass|Girder Bass
+patch|Bass|Undertow Bass
+patch|Bass|Detonator Bass
+patch|Bass|Rivet Bass
+patch|Bass|Slow Jaw Bass
 patch|Bass|Abandoned Piston
 patch|Bass|Abandoned Pump
 patch|Bass|Acid Press
@@ -253,6 +259,9 @@ patch|Reese|Tar Reese
 patch|Reese|Corroded Reese
 patch|Reese|Wormhole
 patch|Reese|Pipe Reese
+patch|Reese|Triple Reese
+patch|Reese|Vowel Reese
+patch|Reese|Metal Reese
 patch|Reese|Acid Helix
 patch|Reese|Ash Swell
 patch|Reese|Ash Wire
@@ -343,6 +352,8 @@ patch|Acid|Square Acid
 patch|Acid|Acid Scream
 patch|Acid|Rubber Acid
 patch|Acid|Acid Drip
+patch|Acid|Stacked Acid
+patch|Acid|Acid Choir
 patch|Acid|Abandoned Drip
 patch|Acid|Basalt Sting
 patch|Acid|Bitter Squeal
@@ -438,6 +449,12 @@ patch|Lead|Industrial Whistle
 patch|Lead|Rust Lead
 patch|Lead|Cold Saw Lead
 patch|Lead|Vowel Scream
+patch|Lead|Tri Blade Lead
+patch|Lead|Glass Engine Lead
+patch|Lead|Swell Lead
+patch|Lead|Split Field Lead
+patch|Lead|Howl Stack Lead
+patch|Lead|Wire Chorus Lead
 patch|Lead|Abandoned Cutter
 patch|Lead|Acid Signal
 patch|Lead|Bitter Arc
@@ -579,6 +596,10 @@ patch|Stab|Rave Hoover Stab
 patch|Stab|Strobe Stab
 patch|Stab|Factory Hit
 patch|Stab|Organ Stab
+patch|Stab|Triad Engine Stab
+patch|Stab|Fifth Hammer Stab
+patch|Stab|Minor Ninth Stab
+patch|Stab|Pipe Organ Hit
 patch|Stab|Abandoned Clamp
 patch|Stab|Abandoned Crack
 patch|Stab|Abandoned Jab
@@ -768,6 +789,10 @@ patch|Pluck|Wire Pluck
 patch|Pluck|Rubber Pluck
 patch|Pluck|Bit Pluck
 patch|Pluck|Dark Kalimba
+patch|Pluck|Layer Pluck
+patch|Pluck|Mallet Stack
+patch|Pluck|Wide Triple Pluck
+patch|Pluck|Glass Fork Pluck
 patch|Pluck|Acid Shard
 patch|Pluck|Basalt Wire
 patch|Pluck|Black Pin
@@ -1172,6 +1197,12 @@ patch|Pad|Grey Sky
 patch|Pad|Sodium Lamp
 patch|Pad|Tension Choir
 patch|Pad|Fog Machine
+patch|Pad|Three Tide Pad
+patch|Pad|Cathedral Stack Pad
+patch|Pad|Slow Bloom Pad
+patch|Pad|Frost Layers Pad
+patch|Pad|Dark Triad Pad
+patch|Pad|Breathing Layers Pad
 patch|Pad|Acid Embers
 patch|Pad|Acid Field
 patch|Pad|Acid Smoke
@@ -1318,6 +1349,9 @@ patch|Drone|Substation
 patch|Drone|Engine Room
 patch|Drone|Void Hum
 patch|Drone|Power Line
+patch|Drone|Three Engine Drone
+patch|Drone|Tidal Layers Drone
+patch|Drone|Harmonic Ladder Drone
 patch|Drone|Abandoned Mains
 patch|Drone|Abandoned Reactor
 patch|Drone|Acid Furnace
@@ -1432,6 +1466,9 @@ patch|Bell|FM Toll
 patch|Bell|Dead Glockenspiel
 patch|Bell|Minor Bell Motif
 patch|Bell|Gamelan Machine
+patch|Bell|Layer Bell
+patch|Bell|Glass Triad Bell
+patch|Bell|Deep Gong Stack
 patch|Bell|Abandoned Chime
 patch|Bell|Basalt Peal
 patch|Bell|Bitter Knell
@@ -1515,6 +1552,8 @@ patch|Sequence|Clockwork
 patch|Sequence|Wobble Press
 patch|Sequence|Pump Chord
 patch|Sequence|Morse Code
+patch|Sequence|Cascade Layers
+patch|Sequence|Layer Gate Sequence
 patch|Sequence|Abandoned Pattern
 patch|Sequence|Abandoned Sequence
 patch|Sequence|Abandoned Shuttle
@@ -2391,6 +2430,8 @@ patch|Texture|Ventilation
 patch|Texture|Circuit Bent
 patch|Texture|Geiger
 patch|Texture|Ghost Signal
+patch|Texture|Three Layer Static
+patch|Texture|Engine Room Layers
 patch|Texture|Abandoned Rubble
 patch|Texture|Acid Transmission
 patch|Texture|Ash Residue

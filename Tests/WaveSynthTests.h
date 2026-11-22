@@ -17,3 +17,7 @@ void writePatchHashes (const juce::File&);
     opens, the oscillators' level envelopes with slots 9 to 16, and an oscillator playing a Sampled
     table. Run with `TorqwaveTests --synth-window <folder>`. */
 void saveSynthWindow (const juce::File& folder);
+
+/** Prints `name|category|dB` for each factory patch: the peak of a held minor chord (C3, E flat 3, G3
+    for two seconds and its tail), the measure the level check uses. Run with `TorqwaveTests --patch-levels`. */
+void printPatchLevels();

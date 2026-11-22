@@ -1029,6 +1029,15 @@ namespace
         set (synth, "noiseType", 1.0f);
         const auto again = play (synth, held ({ 60 }, 0.3), 24000);
         check (sameSamples (first, again) && first.getMagnitude (0, 24000) > 0.01f, "synth: a note of pink noise renders the same, sample for sample, after the synth has played other noise in between");
+
+        // A delay longer than its line (8 bars at 120 BPM is 16 s, the line 4 s) starts at the line's length, not past its start.
+        Synth delayed;
+        bare (delayed);
+        set (delayed, "fxDelayOn", 1.0f);
+        set (delayed, "fxDelayMix", 100.0f);
+        set (delayed, "fxDelayDivision", 0.0f);
+        const auto echoed = play (delayed, held ({ 60 }, 0.3), 48000 * 5);
+        check (echoed.getMagnitude (0, 48000 * 5) < 4.0f, "synth: a delay of 8 bars, longer than its 4-second line, plays from the first block (it read before the line's start)");
     }
 
     void testBlockSizes (Synth& synth)
@@ -1202,4 +1211,18 @@ void saveSynthWindow (const juce::File& folder)
     window->showModulator (0);
     window->showRightPage (0);
     save ("sampled");
+}
+
+void printPatchLevels()
+{
+    const auto& all = WaveSynth::factoryPatches();
+    Synth synth;
+
+    for (size_t i = 0; i < all.size(); ++i)
+    {
+        synth.loadPatch ((int) i);
+        const auto out = play (synth, held ({ 48, 51, 55 }, 2.0, 0.8f), (int) (4.0 * rate));
+        const auto peak = juce::jmax (out.getMagnitude (0, 0, out.getNumSamples()), out.getMagnitude (1, 0, out.getNumSamples()));
+        std::cout << all[i].name << "|" << all[i].category << "|" << juce::String (juce::Decibels::gainToDecibels (peak, -100.0f), 1) << std::endl;
+    }
 }

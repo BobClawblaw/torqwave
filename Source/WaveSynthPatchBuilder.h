@@ -38,6 +38,11 @@ namespace WaveSynthPatchBuilder
         }
 
         Builder& pitch (int n, float semitones, float cents = 0.0f)    { return set (o (n, "Pitch"), semitones).set (o (n, "Fine"), cents); }
+        /** An oscillator's own level envelope: attack, hold and decay in ms, the level it settles at in %. */
+        Builder& levelEnv (int n, float attack, float hold, float decay, float sustain)
+        {
+            return set (o (n, "EnvOn"), 1).set (o (n, "EnvAttack"), attack).set (o (n, "EnvHold"), hold).set (o (n, "EnvDecay"), decay).set (o (n, "EnvSustain"), sustain);
+        }
         Builder& warp (int n, int type, float amount)                   { return set (o (n, "Warp"), type).set (o (n, "WarpAmount"), amount); }
         Builder& pan (int n, float p)                                   { return set (o (n, "Pan"), p); }
         Builder& route (int n, float r)                                 { return set (o (n, "Route"), r); }

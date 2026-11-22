@@ -4,6 +4,12 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Torqwave Synth: 41 patches on all three oscillators** (0.20.0)
+- **41 hand-made patches that use every layer**: all three oscillators, each on its own table and most with its own level envelope, so a sound changes from layer to layer as it plays (a click layer that dies away under a body that swells, a sub that arrives late, an octave that fades in), with the sub and noise where they help. Six basses, six leads and six pads, four stabs and four plucks, three each of reeses, drones and bells, two each of acid lines, sequences and textures: Three Stage Bass, Triple Reese, Stacked Acid, Tri Blade Lead, Triad Engine Stab, Layer Pluck, Cathedral Stack Pad, Three Engine Drone, Layer Bell, Layer Gate Sequence, Three Layer Static and the rest. They come after the other hand-made patches of their category. Torqwave Synth now has 2,601 patches, 138 of them hand-made.
+- **A delay longer than its line**: a patch whose delay was set longer than the 4-second line (2, 4 or 8 bars at 120 BPM) read memory before the line's start on its first block, which could crash. It now starts at the line's length, as it already settled once playing.
+- Not tried by hand: the 41 were measured, not played in the running app.
+- Tested (`--instruments`, 2 more checks): each of the 41 sounds in its register and passes the click phrase (the hand-made patches were not put through it before); every factory patch still plays a held chord between -24 and -1 dB (the 41 at -11.2 to -7.6 dB for one note) and none is a near-copy of another in its category; a delay of 8 bars plays from the first block.
+
 **Torqwave Synth: favourites** (0.20.0)
 - **A heart beside the patch's name** marks a factory patch as a favourite; click it again to unmark. **Favourites** is the first entry of the patch list, by name ("None yet: click the heart beside a patch's name" until there is one).
 - **The arrows follow what you are browsing**: a patch chosen from Favourites puts the window's arrows, and the left and right arrow keys, on the favourites alone, round their ends; one chosen from a category puts them back on every patch. The window's arrows and the keys go through one list (`BasicSynthProcessor::browseList`), so they cannot disagree.

@@ -334,6 +334,176 @@ namespace WaveSynthPatchBuilder
             .lfo (2, randomShape, 3, 0, 60).mod (lfo2, "osc1Pitch", 1.0f).filter (1, svfBand, 1500, 40).amp (500, 1000, 100, 2000)
             .delay (quarterD, 55, 35, 3000).reverb (45, 100, 7.0f).level (-12).standardMacros (25);
 
+        //======================================================================
+        // Three layers: every one of these plays all three oscillators, each a different wave with a level
+        // envelope of its own, so a layer strikes and falls away, or swells in late, under the others.
+        // Each comes after its category's other hand-made patches.
+        add ("Three Stage Bass", "Bass").osc (1, analog, sawPos, 85).osc (2, pulse, 35, 70).pitch (2, -12).osc (3, fm, 60, 60).pitch (3, 12)
+            .levelEnv (1, 0, 40, 500, 45).levelEnv (3, 0, 0, 70, 0).filter (1, ladder24, 420, 35, 25, 30).env (2, 0, 180, 0, 120, 70)
+            .mod (env2, "filter1Cutoff", 32).amp (0, 400, 80, 60).mono (0, false).level (-5).standardMacros (28).macro (4, "Bite").mod (macro4, "osc3Volume", 40);
+        add ("Girder Bass", "Bass").osc (1, growl, 40, 80).osc (2, analog, squarePos, 75).pitch (2, -12).osc (3, metal, 30, 55).pitch (3, 12)
+            .levelEnv (3, 0, 0, 110, 0).levelEnv (1, 0, 0, 700, 60).filter (1, ladder12, 600, 25, 35, 40).env (2, 0, 240, 0, 150, 70).mod (env2, "filter1Cutoff", 26)
+            .mod (env2, "osc1Position", 30).amp (0, 500, 75, 70).mono (0, false).drive (hard, 35, 5000).level (-15).standardMacros (25).macro (4, "Clang").mod (macro4, "osc3Volume", 45);
+        add ("Undertow Bass", "Bass").osc (1, sub, 30, 90).osc (2, analog, sawPos, 70).unison (2, 3, 14, 60).osc (3, vowel, 50, 60)
+            .levelEnv (3, 350, 0, 2000, 100).levelEnv (2, 0, 0, 900, 50).lfo (1, sine, 0.3f, 0).mod (lfo1, "osc3Position", 30).filter (1, ladder24, 500, 30, 20, 30)
+            .env (2, 0, 300, 20, 200, 60).mod (env2, "filter1Cutoff", 22).amp (2, 600, 85, 150).mono (60).level (-4).standardMacros (25).macro (4, "Voice").mod (macro4, "osc3Volume", 40);
+        add ("Detonator Bass", "Bass").osc (1, sync, 30, 80).warp (1, wSync, 40).osc (2, fm, 70, 70).osc (3, analog, sinePos, 90).pitch (3, -12)
+            .levelEnv (2, 0, 0, 120, 20).env (2, 0, 220, 0, 150, 75).mod (env2, "osc1WarpAmount", 45).filter (1, ladder24, 900, 20, 30, 30).mod (env2, "filter1Cutoff", 20)
+            .levelEnv (1, 0, 30, 600, 55).amp (0, 350, 80, 70).mono (0, false).drive (tube, 30, 6000).level (-12).standardMacros (25).macro (4, "Rip").mod (macro4, "osc1WarpAmount", 40);
+        add ("Rivet Bass", "Bass").osc (1, pulse, 20, 85).osc (2, pulse, 80, 60).pitch (2, 7).osc (3, additive, 40, 80).pitch (3, -12)
+            .levelEnv (2, 0, 0, 90, 0).levelEnv (3, 0, 0, 400, 70).filter (1, ladder24, 700, 30, 30, 40).env (2, 0, 110, 0, 90, 80).mod (env2, "filter1Cutoff", 30)
+            .amp (0, 200, 60, 50).mono (0, false).level (-4).standardMacros (28).macro (4, "Fifth").mod (macro4, "osc2Volume", 40);
+        add ("Slow Jaw Bass", "Bass").osc (1, growl, 20, 80).osc (2, vowel, 30, 60).osc (3, analog, sawPos, 80).pitch (3, -12)
+            .levelEnv (2, 500, 0, 3000, 100).levelEnv (3, 0, 0, 1200, 60).env (3, 400, 1500, 60, 400, 30).mod (env3, "osc1Position", 45).mod (env3, "osc2Position", 40)
+            .filter (1, ladder12, 800, 30, 30, 30).mod (env3, "filter1Cutoff", 14).amp (5, 800, 90, 200).mono (80).drive (tube, 25, 5000).level (-11)
+            .standardMacros (25).macro (4, "Chew").mod (macro4, "osc1Position", 40);
+
+        add ("Triple Reese", "Reese").osc (1, analog, sawPos, 80).pitch (1, 0, -19).osc (2, analog, sawPos, 80).pitch (2, 0, 19).osc (3, sync, 40, 70).warp (3, wSync, 30).pitch (3, -12)
+            .levelEnv (3, 400, 0, 3000, 100).lfo (1, sine, 0.15f, 0).mod (lfo1, "filter1Cutoff", 10).lfo (2, triangle, 0.09f, 0).mod (lfo2, "osc3WarpAmount", 45)
+            .filter (1, ladder24, 650, 28, 30).amp (4, 800, 95, 250).mono (70).phaser (35, 0.12f).level (-4).standardMacros (25).macro (4, "Beat").mod (macro4, "osc2Fine", 30);
+        add ("Vowel Reese", "Reese").osc (1, analog, sawPos, 80).pitch (1, 0, -14).osc (2, analog, sawPos, 80).pitch (2, 0, 14).osc (3, vowel, 20, 65)
+            .levelEnv (3, 700, 0, 4000, 100).lfo (1, triangle, 0.2f, 0).mod (lfo1, "osc3Position", 45).lfo (2, sine, 0.11f, 0).mod (lfo2, "filter1Cutoff", 9)
+            .filter (1, ladder24, 800, 25, 25).amp (10, 900, 95, 300).mono (90).level (-4).standardMacros (25).macro (4, "Talk").mod (macro4, "osc3Volume", 40);
+        add ("Metal Reese", "Reese").osc (1, growl, 35, 75).unison (1, 2, 22, 70).osc (2, analog, sawPos, 80).pitch (2, 0, 16).osc (3, metal, 40, 50).pitch (3, 12)
+            .levelEnv (3, 0, 0, 300, 15).levelEnv (1, 200, 0, 3000, 100).lfo (1, sine, 0.18f, 0).mod (lfo1, "osc1Position", 30).mod (lfo1, "filter1Cutoff", 8)
+            .filter (1, ladder12, 900, 25, 35).amp (3, 800, 95, 250).mono (60).drive (tube, 30, 5000).level (-13).standardMacros (25).macro (4, "Edge").mod (macro4, "osc3Volume", 45);
+
+        add ("Stacked Acid", "Acid").osc (1, analog, sawPos, 85).osc (2, pulse, 22, 65).pitch (2, 7).osc (3, sync, 50, 55).warp (3, wSync, 50)
+            .levelEnv (3, 0, 0, 140, 0).levelEnv (2, 0, 0, 260, 10).filter (1, ladder24, 380, 72, 40).env (2, 0, 200, 0, 130, 80).mod (env2, "filter1Cutoff", 42)
+            .mod (velocity, "filter1Cutoff", 14).mod (env2, "osc3WarpAmount", 40).amp (0, 300, 70, 60).mono (50).drive (tube, 35, 6000).delay (sixteenthD, 38, 22, 3500).level (-13)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 30).macro (2, "Reso").mod (macro2, "filter1Resonance", 25).macro (3, "Drive").mod (macro3, "fxDriveAmount", 40)
+            .macro (4, "Zap").mod (macro4, "osc3Volume", 45);
+        add ("Acid Choir", "Acid").osc (1, analog, sawPos, 80).osc (2, vowel, 60, 60).osc (3, fm, 40, 50).pitch (3, 12)
+            .levelEnv (3, 0, 0, 80, 0).levelEnv (2, 120, 0, 1500, 70).env (3, 0, 600, 20, 200, 50).mod (env3, "osc2Position", 45).filter (1, ladder24, 450, 68, 35)
+            .env (2, 0, 240, 0, 150, 80).mod (env2, "filter1Cutoff", 38).mod (velocity, "filter1Cutoff", 12).amp (0, 400, 70, 80).mono (40).delay (eighthD, 30, 18, 4000)
+            .level (-4).macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 30).macro (2, "Reso").mod (macro2, "filter1Resonance", 25).macro (3, "Voice").mod (macro3, "osc2Volume", 40)
+            .macro (4, "Echo").mod (macro4, "fxDelayMix", 40);
+
+        add ("Tri Blade Lead", "Lead").osc (1, sync, 40, 80).warp (1, wSync, 35).osc (2, analog, sawPos, 70).unison (2, 3, 12, 70).osc (3, pulse, 30, 55).pitch (3, 12)
+            .levelEnv (3, 0, 0, 250, 30).env (2, 0, 500, 30, 200, 60).mod (env2, "osc1WarpAmount", 35).lfo (1, sine, 5.5f, 1).lfoFade (1, 600).mod (lfo1, "osc1Fine", 8)
+            .mod (lfo1, "osc2Fine", 8).filter (1, ladder12, 2400, 20, 20, 50).amp (3, 500, 85, 180).mono (40).delay (eighthD, 30, 20, 5000).reverb (18)
+            .level (-5).standardMacros (25).macro (4, "Sync").mod (macro4, "osc1WarpAmount", 40);
+        add ("Glass Engine Lead", "Lead").osc (1, fm, 55, 80).osc (2, metal, 60, 50).pitch (2, 12).osc (3, analog, sinePos, 80).pitch (3, -12)
+            .levelEnv (2, 0, 0, 180, 10).levelEnv (1, 0, 60, 900, 65).env (2, 0, 700, 20, 300, 60).mod (env2, "osc1Position", 35).lfo (1, sine, 5.0f, 1).lfoFade (1, 500)
+            .mod (lfo1, "osc1Fine", 7).filter (1, svfLow, 4200, 15, 0, 50).amp (2, 600, 80, 220).mono (30).delay (quarter, 30, 22, 5000).reverb (22)
+            .level (-9).standardMacros (25).macro (4, "Glass").mod (macro4, "osc2Volume", 45);
+        add ("Swell Lead", "Lead").osc (1, analog, sawPos, 80).osc (2, vowel, 40, 70).osc (3, additive, 70, 60).pitch (3, 12)
+            .levelEnv (2, 600, 0, 4000, 100).levelEnv (3, 1200, 0, 4000, 100).levelEnv (1, 0, 0, 1800, 50).lfo (1, sine, 0.25f, 0).mod (lfo1, "osc2Position", 35)
+            .lfo (2, sine, 5.2f, 1).lfoFade (2, 900).mod (lfo2, "osc1Fine", 8).filter (1, ladder12, 3000, 18, 15, 40).amp (5, 700, 90, 300).mono (70)
+            .reverb (28, 70, 3.0f).level (-4).standardMacros (25).macro (4, "Bloom").mod (macro4, "osc3Volume", 40);
+        add ("Split Field Lead", "Lead").osc (1, pulse, 35, 75).pan (1, -70).osc (2, pulse, 65, 75).pan (2, 70).pitch (2, 0, 9).osc (3, growl, 30, 70)
+            .levelEnv (3, 0, 0, 400, 40).env (2, 0, 450, 30, 200, 60).mod (env2, "osc3Position", 40).lfo (1, triangle, 0.4f, 0).mod (lfo1, "osc1Position", 25)
+            .mod (lfo1, "osc2Position", -25).filter (1, ladder24, 2200, 25, 25, 50).mod (env2, "filter1Cutoff", 16).amp (2, 500, 85, 160).mono (35)
+            .delay (eighth, 28, 18, 5000).level (-4).standardMacros (25).macro (4, "Growl").mod (macro4, "osc3Volume", 40);
+        add ("Howl Stack Lead", "Lead").osc (1, growl, 60, 80).osc (2, sync, 30, 60).warp (2, wSync, 55).pitch (2, 7).osc (3, analog, sinePos, 75).pitch (3, -12)
+            .levelEnv (2, 0, 0, 350, 25).env (2, 30, 900, 40, 300, 50).mod (env2, "osc1Position", 35).mod (env2, "osc2WarpAmount", 30).lfo (1, sine, 5.8f, 1).lfoFade (1, 400)
+            .mod (lfo1, "osc1Fine", 10).filter (1, ladder24, 1800, 30, 35, 50).mod (env2, "filter1Cutoff", 14).amp (4, 700, 85, 250).mono (120)
+            .drive (fuzz, 35, 5000).reverb (20).level (-21).standardMacros (25).macro (4, "Howl").mod (macro4, "osc1Position", 35);
+        add ("Wire Chorus Lead", "Lead").osc (1, analog, sawPos, 75).unison (1, 2, 10, 60).osc (2, analog, squarePos, 55).pitch (2, 12).osc (3, fm, 30, 50).pitch (3, 19)
+            .levelEnv (3, 0, 0, 220, 0).levelEnv (2, 80, 0, 1200, 60).lfo (1, sine, 5.3f, 1).lfoFade (1, 700).mod (lfo1, "osc1Fine", 7).filter (1, ladder12, 2800, 20, 20, 60)
+            .env (2, 0, 400, 30, 200, 60).mod (env2, "filter1Cutoff", 14).amp (2, 500, 85, 200).mono (45).chorus (35).delay (eighthD, 30, 20, 5000)
+            .level (-2).standardMacros (25).macro (4, "Ping").mod (macro4, "osc3Volume", 45);
+
+        add ("Triad Engine Stab", "Stab").osc (1, analog, sawPos, 80).osc (2, pulse, 40, 75).pitch (2, 3).osc (3, fm, 50, 70).pitch (3, 7)
+            .levelEnv (1, 0, 0, 260, 0).levelEnv (2, 0, 30, 340, 0).levelEnv (3, 0, 60, 420, 0).filter (1, ladder24, 900, 30, 25).env (2, 0, 220, 0, 150, 70)
+            .mod (env2, "filter1Cutoff", 34).amp (0, 500, 0, 200).delay (eighthD, 30, 18, 4500).reverb (20).level (-10).standardMacros (28)
+            .macro (4, "Top").mod (macro4, "osc3Volume", 40);
+        add ("Fifth Hammer Stab", "Stab").osc (1, growl, 30, 80).osc (2, analog, sawPos, 75).pitch (2, 7).osc (3, metal, 45, 55).pitch (3, 12)
+            .levelEnv (3, 0, 0, 120, 0).levelEnv (2, 0, 0, 380, 0).levelEnv (1, 0, 0, 500, 0).filter (1, ladder12, 1400, 25, 35).env (2, 0, 180, 0, 150, 70)
+            .mod (env2, "filter1Cutoff", 30).amp (0, 600, 0, 220).drive (hard, 30, 6000).reverb (22, 60, 2.2f).level (-19).standardMacros (25)
+            .macro (4, "Anvil").mod (macro4, "osc3Volume", 45);
+        add ("Minor Ninth Stab", "Stab").osc (1, analog, sawPos, 80).unison (1, 2, 10, 60).osc (2, vowel, 55, 70).pitch (2, 3).osc (3, analog, squarePos, 60).pitch (3, 14)
+            .levelEnv (2, 0, 0, 450, 0).levelEnv (3, 0, 0, 200, 0).filter (1, ladder24, 1100, 28, 20).env (2, 0, 260, 0, 180, 70).mod (env2, "filter1Cutoff", 32)
+            .mod (env2, "osc2Position", 30).amp (0, 550, 0, 250).chorus (30).delay (eighthD, 32, 20, 4500).level (-8).standardMacros (28)
+            .macro (4, "Ninth").mod (macro4, "osc3Volume", 45);
+        add ("Pipe Organ Hit", "Stab").osc (1, additive, 60, 80).osc (2, additive, 30, 70).pitch (2, 12).osc (3, pulse, 50, 55).pitch (3, -12)
+            .levelEnv (2, 0, 0, 300, 20).levelEnv (3, 0, 0, 600, 50).env (2, 0, 300, 0, 200, 60).mod (env2, "osc1Position", 30).filter (1, svfLow, 3200, 15)
+            .amp (2, 700, 30, 300).reverb (30, 80, 3.5f).level (-12).standardMacros (25).macro (4, "Pedal").mod (macro4, "osc3Volume", 40);
+
+        add ("Layer Pluck", "Pluck").osc (1, fm, 50, 70).pitch (1, 12).osc (2, analog, sawPos, 80).osc (3, analog, sinePos, 80)
+            .levelEnv (1, 0, 0, 60, 0).levelEnv (2, 0, 0, 350, 0).levelEnv (3, 0, 0, 2400, 0).filter (1, ladder24, 1600, 22, 15, 50).env (2, 0, 200, 0, 200, 70)
+            .mod (env2, "filter1Cutoff", 30).amp (0, 2500, 0, 600).delay (eighthD, 32, 22, 5000).reverb (22).level (-11).standardMacros (28)
+            .macro (4, "Body").mod (macro4, "osc3Volume", 40);
+        add ("Mallet Stack", "Pluck").osc (1, metal, 20, 60).pitch (1, 12).osc (2, additive, 30, 80).osc (3, sub, 50, 75).pitch (3, -12)
+            .levelEnv (1, 0, 0, 140, 0).levelEnv (2, 0, 0, 700, 10).levelEnv (3, 0, 0, 500, 0).filter (1, svfLow, 3500, 12, 0, 60).env (2, 0, 300, 0, 200, 70)
+            .mod (env2, "filter1Cutoff", 16).mod (velocity, "osc1Volume", 30).amp (0, 1500, 0, 500).reverb (26, 65, 2.4f).level (-13).standardMacros (25)
+            .macro (4, "Strike").mod (macro4, "osc1Volume", 45);
+        add ("Wide Triple Pluck", "Pluck").osc (1, pulse, 30, 75).pan (1, -60).osc (2, pulse, 70, 75).pan (2, 60).pitch (2, 12).osc (3, growl, 25, 70)
+            .levelEnv (1, 0, 0, 300, 0).levelEnv (2, 0, 40, 260, 0).levelEnv (3, 0, 0, 500, 15).filter (1, ladder24, 1300, 30, 25, 40).env (2, 0, 160, 0, 150, 75)
+            .mod (env2, "filter1Cutoff", 34).mod (env2, "osc3Position", 30).amp (0, 900, 0, 350).delay (sixteenthD, 35, 22, 5000).level (-11).standardMacros (28)
+            .macro (4, "Octave").mod (macro4, "osc2Volume", 40);
+        add ("Glass Fork Pluck", "Pluck").osc (1, fm, 75, 75).osc (2, metal, 70, 45).pitch (2, 19).osc (3, analog, trianglePos, 80)
+            .levelEnv (2, 0, 0, 90, 0).levelEnv (1, 0, 0, 500, 0).levelEnv (3, 0, 0, 1800, 0).env (2, 0, 400, 0, 200, 70).mod (env2, "osc1Position", -35)
+            .filter (1, svfLow, 6000, 10, 0, 50).amp (0, 2000, 0, 800).delay (quarter, 30, 20, 6000).reverb (30, 75, 3.0f).level (-14).standardMacros (20)
+            .macro (4, "Tine").mod (macro4, "osc2Volume", 45);
+
+        add ("Three Tide Pad", "Pad").osc (1, analog, sawPos, 75).unison (1, 4, 16, 90).osc (2, vowel, 30, 70).osc (3, additive, 60, 60).pitch (3, 12)
+            .levelEnv (1, 200, 0, 5000, 60).levelEnv (2, 1500, 0, 6000, 100).levelEnv (3, 4000, 0, 6000, 100).lfo (1, sine, 0.12f, 0).mod (lfo1, "osc2Position", 40)
+            .lfo (2, sine, 0.07f, 0).mod (lfo2, "filter1Cutoff", 10).filter (1, ladder12, 1800, 15).amp (300, 1000, 100, 2500).chorus (35).reverb (40, 85, 5.0f)
+            .level (-11).standardMacros (25).macro (4, "Tide").mod (macro4, "osc3Volume", 40);
+        add ("Cathedral Stack Pad", "Pad").osc (1, additive, 50, 80).osc (2, vowel, 70, 65).pitch (2, 12).osc (3, analog, sinePos, 85).pitch (3, -12)
+            .levelEnv (2, 2500, 0, 6000, 100).levelEnv (1, 400, 0, 6000, 100).lfo (1, drift, 0.2f, 0).mod (lfo1, "osc1Position", 30).mod (lfo1, "osc2Position", 25)
+            .filter (1, svfLow, 2600, 12).amp (600, 1000, 100, 3500).reverb (50, 95, 7.0f).level (-19).standardMacros (22).macro (4, "Choir").mod (macro4, "osc2Volume", 40);
+        add ("Slow Bloom Pad", "Pad").osc (1, growl, 15, 65).unison (1, 2, 14, 80).osc (2, analog, sawPos, 70).unison (2, 3, 18, 90).pitch (2, 12).osc (3, metal, 30, 40).pitch (3, 24)
+            .levelEnv (1, 100, 0, 6000, 70).levelEnv (2, 3000, 0, 6000, 100).levelEnv (3, 6000, 0, 6000, 100).env (3, 5000, 4000, 80, 2000, 0).mod (env3, "filter1Cutoff", 22)
+            .mod (env3, "osc1Position", 40).filter (1, ladder24, 700, 20).amp (500, 1000, 100, 3000).chorus (30).reverb (45, 90, 6.0f).level (-9)
+            .standardMacros (25).macro (4, "Shine").mod (macro4, "osc3Volume", 45);
+        add ("Frost Layers Pad", "Pad").osc (1, analog, trianglePos, 80).unison (1, 4, 12, 100).osc (2, fm, 30, 55).pitch (2, 12).osc (3, metal, 75, 35).pitch (3, 19)
+            .levelEnv (2, 2000, 0, 6000, 100).levelEnv (3, 0, 0, 2500, 25).lfo (1, sine, 0.1f, 0).mod (lfo1, "osc2Position", 35).lfo (2, triangle, 0.23f, 0)
+            .mod (lfo2, "osc3Volume", 25).filter (1, svfLow, 5000, 10).filter (2, svfHigh, 180, 10).amp (800, 1000, 100, 4000).delay (quarterD, 40, 22, 6000)
+            .reverb (50, 95, 8.0f).level (-13).standardMacros (20).macro (4, "Frost").mod (macro4, "osc3Volume", 45);
+        add ("Dark Triad Pad", "Pad").osc (1, analog, sawPos, 75).unison (1, 3, 15, 80).osc (2, analog, sawPos, 70).unison (2, 3, 15, 80).pitch (2, 7).osc (3, vowel, 20, 65).pitch (3, 12)
+            .levelEnv (2, 1200, 0, 6000, 100).levelEnv (3, 3500, 0, 6000, 100).lfo (1, sine, 0.09f, 0).mod (lfo1, "filter1Cutoff", 12).mod (lfo1, "osc3Position", 35)
+            .filter (1, ladder24, 900, 22).amp (700, 1000, 100, 3500).phaser (30, 0.15f).reverb (42, 90, 6.0f).level (-13).standardMacros (25)
+            .macro (4, "Fifth").mod (macro4, "osc2Volume", 40);
+        add ("Breathing Layers Pad", "Pad").osc (1, vowel, 45, 75).unison (1, 2, 12, 70).osc (2, additive, 35, 65).pitch (2, -12).osc (3, growl, 20, 50).pitch (3, 12).noise (12, 1, -30)
+            .levelEnv (1, 800, 0, 6000, 100).levelEnv (3, 3000, 0, 6000, 60).lfo (1, sine, 0.16f, 0).mod (lfo1, "osc1Position", 40).mod (lfo1, "ampLevel", 8)
+            .lfo (2, drift, 0.3f, 0).mod (lfo2, "osc3Position", 30).filter (1, ladder12, 1500, 18).amp (900, 1000, 100, 3500).reverb (45, 90, 6.5f).level (-18)
+            .standardMacros (22).macro (4, "Breath").mod (macro4, "noiseLevel", 40);
+
+        add ("Three Engine Drone", "Drone").osc (1, growl, 30, 75).osc (2, fm, 35, 75).pitch (2, -12).osc (3, metal, 50, 40).pitch (3, 7)
+            .levelEnv (3, 5000, 0, 6000, 100).levelEnv (1, 1500, 0, 6000, 100).lfo (1, drift, 0.08f, 0).mod (lfo1, "osc1Position", 40).mod (lfo1, "filter1Cutoff", 12)
+            .lfo (2, sine, 0.05f, 0).mod (lfo2, "osc3Position", 40).mod (lfo2, "osc2Position", 35).mod (lfo2, "osc3Volume", 25).filter (1, ladder24, 600, 30, 25).amp (1500, 1000, 100, 4000)
+            .drive (tube, 25, 5000).phaser (40, 0.07f).reverb (40, 90, 6.0f).level (-20).standardMacros (25).macro (4, "Third Engine").mod (macro4, "osc3Volume", 45);
+        add ("Tidal Layers Drone", "Drone").osc (1, vowel, 20, 75).unison (1, 2, 16, 80).osc (2, additive, 50, 70).pitch (2, 12).osc (3, sub, 40, 85).pitch (3, -12)
+            .levelEnv (2, 6000, 0, 6000, 100).lfo (1, sine, 0.06f, 0).mod (lfo1, "osc1Position", 45).mod (lfo1, "osc2Volume", 30).lfo (2, sine, 0.04f, 0)
+            .mod (lfo2, "filter1Cutoff", 14).mod (lfo2, "osc3Volume", -20).filter (1, ladder12, 1200, 22).amp (2000, 1000, 100, 5000).phaser (25, 0.1f)
+            .reverb (50, 95, 8.0f).level (-15).standardMacros (22).macro (4, "Swell").mod (macro4, "osc2Volume", 40);
+        add ("Harmonic Ladder Drone", "Drone").osc (1, analog, sinePos, 85).osc (2, analog, trianglePos, 70).pitch (2, 7).osc (3, fm, 25, 50).pitch (3, 19)
+            .levelEnv (2, 3000, 0, 6000, 100).levelEnv (3, 7000, 0, 6000, 100).lfo (1, sine, 0.07f, 0).mod (lfo1, "osc3Position", 40).mod (lfo1, "osc2Position", 20)
+            .lfo (2, drift, 0.2f, 0).mod (lfo2, "osc1Fine", 6).filter (1, svfLow, 3500, 12).amp (2500, 1000, 100, 5000).delay (halfT, 45, 22, 5000)
+            .reverb (50, 95, 9.0f).level (-17).standardMacros (20).macro (4, "Rung").mod (macro4, "osc3Volume", 45);
+
+        add ("Layer Bell", "Bell").osc (1, metal, 40, 70).pitch (1, 12).osc (2, fm, 60, 75).osc (3, additive, 20, 80)
+            .levelEnv (1, 0, 0, 200, 0).levelEnv (2, 0, 0, 900, 0).levelEnv (3, 0, 0, 3500, 0).env (2, 0, 600, 0, 400, 70).mod (env2, "osc2Position", -35)
+            .filter (1, svfLow, 7000, 10, 0, 50).amp (0, 4000, 0, 2500).reverb (40, 85, 5.0f).level (-12).standardMacros (20).macro (4, "Hum").mod (macro4, "osc3Volume", 40);
+        add ("Glass Triad Bell", "Bell").osc (1, fm, 70, 75).osc (2, fm, 50, 65).pitch (2, 7).osc (3, metal, 80, 40).pitch (3, 24)
+            .levelEnv (3, 0, 0, 150, 0).levelEnv (2, 0, 200, 1500, 0).levelEnv (1, 0, 0, 2800, 0).filter (1, svfLow, 8000, 8, 0, 50).amp (0, 3500, 0, 2500)
+            .delay (quarterD, 35, 20, 6000).reverb (45, 90, 6.0f).level (-13).standardMacros (18).macro (4, "Sparkle").mod (macro4, "osc3Volume", 45);
+        add ("Deep Gong Stack", "Bell").osc (1, metal, 15, 80).pitch (1, -12).osc (2, metal, 55, 60).osc (3, growl, 30, 45).pitch (3, 7)
+            .levelEnv (2, 0, 0, 1200, 10).levelEnv (3, 300, 0, 4000, 30).levelEnv (1, 0, 0, 6000, 0).env (2, 0, 2500, 0, 1500, 60).mod (env2, "osc1Position", 40)
+            .mod (env2, "osc3Position", 30).filter (1, ladder12, 2400, 20, 15, 30).amp (0, 6000, 0, 3500).reverb (45, 95, 7.0f).level (-7).standardMacros (22)
+            .macro (4, "Shimmer").mod (macro4, "osc3Volume", 45);
+
+        add ("Cascade Layers", "Sequence").osc (1, analog, sawPos, 80).osc (2, pulse, 40, 75).pitch (2, 7).osc (3, fm, 50, 70).pitch (3, 12)
+            .levelEnv (1, 0, 0, 220, 0).levelEnv (2, 0, 125, 220, 0).levelEnv (3, 0, 250, 300, 0).filter (1, ladder24, 1200, 28, 20).env (2, 0, 400, 0, 200, 70)
+            .mod (env2, "filter1Cutoff", 26).amp (0, 900, 0, 250).delay (eighthD, 40, 28, 5000).reverb (20).level (-10).standardMacros (25)
+            .macro (4, "Top").mod (macro4, "osc3Volume", 40);
+        add ("Layer Gate Sequence", "Sequence").osc (1, growl, 35, 80).osc (2, analog, sawPos, 70).pitch (2, 12).osc (3, pulse, 25, 65).pitch (3, -12)
+            .levelEnv (2, 600, 0, 4000, 100).lfoSync (1, steps, bar1, 1, 88).stepPattern (1, { 0, -100, 0, 0, -100, 0, -100, 0, 0, -100, 0, 0, -100, 0, 0, -100 })
+            .mod (lfo1, "ampLevel", 75).lfoSync (2, triangle, bars2, 0).mod (lfo2, "osc1Position", 40).mod (lfo2, "filter1Cutoff", 14)
+            .filter (1, ladder24, 1100, 30, 30).amp (5, 500, 100, 250).delay (eighthD, 35, 20, 5000).level (-12).standardMacros (25)
+            .macro (4, "Top").mod (macro4, "osc2Volume", 40);
+
+        add ("Three Layer Static", "Texture").osc (1, metal, 60, 50).warp (1, wCrush, 50).osc (2, fm, 80, 45).pitch (2, 19).osc (3, growl, 70, 50).pitch (3, -12).noise (30, 2)
+            .levelEnv (2, 0, 0, 800, 20).levelEnv (3, 1500, 0, 6000, 100).lfo (1, randomShape, 9, 0, 60).mod (lfo1, "osc1Position", 45).mod (lfo1, "osc2Position", 40)
+            .lfo (2, drift, 0.3f, 0).mod (lfo2, "filter1Cutoff", 18).filter (1, svfBand, 1800, 35).amp (200, 1000, 100, 1500).delay (sixteenthD, 40, 25)
+            .reverb (30).level (-5).standardMacros (25).macro (4, "Crackle").mod (macro4, "noiseLevel", 40);
+        add ("Engine Room Layers", "Texture").osc (1, growl, 10, 70).pitch (1, -12).osc (2, sync, 40, 50).warp (2, wSync, 30).osc (3, metal, 20, 40).pitch (3, 7).noise (20, 1, -40)
+            .levelEnv (2, 2500, 0, 6000, 100).levelEnv (3, 5000, 0, 6000, 100).lfo (1, drift, 0.15f, 0).mod (lfo1, "osc1Position", 40).mod (lfo1, "osc2WarpAmount", 35)
+            .lfo (2, sine, 0.08f, 0).mod (lfo2, "filter1Cutoff", 16).filter (1, ladder12, 900, 30, 30).amp (1500, 1000, 100, 3000).drive (tube, 30, 4000)
+            .reverb (40, 90, 5.5f).level (-19).standardMacros (25).macro (4, "Machinery").mod (macro4, "osc2Volume", 45);
+
         // Then the banks, each category's patches after the hand-made ones in browser order: the first
         // bank's, then the second's (the sequence presets take a category's first patches, so those stay).
         addBank (b);

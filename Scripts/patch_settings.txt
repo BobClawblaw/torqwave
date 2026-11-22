@@ -12,6 +12,12 @@ Bass|FM Basement|fc27f11786423c47
 Bass|EBM Sequence Bass|667251ac8c6709f5
 Bass|Body Music|bee67b05610ac250
 Bass|Target Lock Bass|f9b4a69efe44d359
+Bass|Three Stage Bass|dd347f1720cfc8d9
+Bass|Girder Bass|4fdc5afee6e955a9
+Bass|Undertow Bass|94056068b183742b
+Bass|Detonator Bass|229e8b50e8bc2dcf
+Bass|Rivet Bass|fcefb4e170c7c97e
+Bass|Slow Jaw Bass|8c3f799543235d8c
 Bass|Abandoned Piston|d8de865d9df479cd
 Bass|Abandoned Pump|4a603d326d0c294e
 Bass|Acid Press|8d595304f6058290
@@ -253,6 +259,9 @@ Reese|Tar Reese|ae07611c922e8713
 Reese|Corroded Reese|801b015fe7ebf866
 Reese|Wormhole|6696bb0df467473c
 Reese|Pipe Reese|9b63872522e534aa
+Reese|Triple Reese|f6af460ca892dd95
+Reese|Vowel Reese|ee74a064d1c8efa7
+Reese|Metal Reese|a9421ed8a822921f
 Reese|Acid Helix|453c4285f0439998
 Reese|Ash Swell|a891fae5028d5a3b
 Reese|Ash Wire|4c651f559cecd9db
@@ -343,6 +352,8 @@ Acid|Square Acid|4814da6a5bcde317
 Acid|Acid Scream|a6cbbbc65fb828ac
 Acid|Rubber Acid|74df009ed8760cbe
 Acid|Acid Drip|69797f5d64ad698a
+Acid|Stacked Acid|a1323c0f5ec7ca5e
+Acid|Acid Choir|846a7852bcead0ec
 Acid|Abandoned Drip|e6980fc57cb934e8
 Acid|Basalt Sting|9c44c04606bb864d
 Acid|Bitter Squeal|eafe4e98c7fd74b0
@@ -438,6 +449,12 @@ Lead|Industrial Whistle|0ed43e4d68d8f189
 Lead|Rust Lead|e8862d58fd6a8104
 Lead|Cold Saw Lead|5c905bb770eaa3d9
 Lead|Vowel Scream|959b6b62753690f6
+Lead|Tri Blade Lead|483193d16134e6dc
+Lead|Glass Engine Lead|2624c6f681203fee
+Lead|Swell Lead|17c01bf45fb7a010
+Lead|Split Field Lead|a8cc95356419843c
+Lead|Howl Stack Lead|ef26be5607cca739
+Lead|Wire Chorus Lead|433a21da5bd953cf
 Lead|Abandoned Cutter|0a9fca30ac555c48
 Lead|Acid Signal|2d82cd1f59dee6e4
 Lead|Bitter Arc|4b9370a9e6e3bee8
@@ -579,6 +596,10 @@ Stab|Rave Hoover Stab|c66d74e33d9675c4
 Stab|Strobe Stab|b0509fe83d85eca2
 Stab|Factory Hit|df4010d9005aeb8e
 Stab|Organ Stab|3a4bbeba5dec6c6f
+Stab|Triad Engine Stab|930b50cc8dac01a6
+Stab|Fifth Hammer Stab|ea5ea056249d2d3a
+Stab|Minor Ninth Stab|6e5d7c9d1c840a55
+Stab|Pipe Organ Hit|9940e891886f110c
 Stab|Abandoned Clamp|3ea43e73c269865f
 Stab|Abandoned Crack|1973e70990346cb1
 Stab|Abandoned Jab|597005f753613f4c
@@ -768,6 +789,10 @@ Pluck|Wire Pluck|bfe33e40bf0534c8
 Pluck|Rubber Pluck|10a570767bcd57bf
 Pluck|Bit Pluck|86cc02e172fc674c
 Pluck|Dark Kalimba|76a689ab50e735eb
+Pluck|Layer Pluck|e371501e27d105e8
+Pluck|Mallet Stack|c06de0527ef9109b
+Pluck|Wide Triple Pluck|9da2d84208cf54dc
+Pluck|Glass Fork Pluck|6c49580289ba117e
 Pluck|Acid Shard|8c7231e17d4c2470
 Pluck|Basalt Wire|bea6c9e165556044
 Pluck|Black Pin|00c29d0bad1f57a0
@@ -1172,6 +1197,12 @@ Pad|Grey Sky|50dd001361bb03af
 Pad|Sodium Lamp|0f5f19bb781bd69b
 Pad|Tension Choir|76a9b952cc2b1052
 Pad|Fog Machine|7e8833fcb004efb8
+Pad|Three Tide Pad|812d92410eb309d5
+Pad|Cathedral Stack Pad|15a9a960f356b3e3
+Pad|Slow Bloom Pad|429563304b0774cc
+Pad|Frost Layers Pad|8e15fe1ecb09be80
+Pad|Dark Triad Pad|ed7388417f9de5a1
+Pad|Breathing Layers Pad|3a5a62ed00befb73
 Pad|Acid Embers|3ba6177d045d5df6
 Pad|Acid Field|9f7340bbb9b38c65
 Pad|Acid Smoke|b3af8655517f41c0
@@ -1318,6 +1349,9 @@ Drone|Substation|7ea55c1a8bdc3281
 Drone|Engine Room|152af422ee08849a
 Drone|Void Hum|756f276027ec927d
 Drone|Power Line|a8a5951839cc4090
+Drone|Three Engine Drone|444dd267c8fa1466
+Drone|Tidal Layers Drone|1afe7c4d0a678107
+Drone|Harmonic Ladder Drone|db30999628f3dd52
 Drone|Abandoned Mains|23f8ac0f0c58b6c5
 Drone|Abandoned Reactor|037515b73fb17348
 Drone|Acid Furnace|05a2583b9c726543
@@ -1432,6 +1466,9 @@ Bell|FM Toll|b2f066ac177b58a1
 Bell|Dead Glockenspiel|eacac1078c9d8850
 Bell|Minor Bell Motif|dbc965e8ea272ce3
 Bell|Gamelan Machine|cc751ad936d33cf2
+Bell|Layer Bell|164280fdc5d00866
+Bell|Glass Triad Bell|97ce0091beb88865
+Bell|Deep Gong Stack|043bd3616a9077f0
 Bell|Abandoned Chime|1f11c9b1536fb4f9
 Bell|Basalt Peal|73e7b4154142090c
 Bell|Bitter Knell|b6326353931fd54b
@@ -1515,6 +1552,8 @@ Sequence|Clockwork|5adf76e4df52bbb0
 Sequence|Wobble Press|abfe17de048f5b5f
 Sequence|Pump Chord|6d34c7d94019bd02
 Sequence|Morse Code|e8fc3622b993f493
+Sequence|Cascade Layers|e837757d6ab8f310
+Sequence|Layer Gate Sequence|9479e7df21d3d570
 Sequence|Abandoned Pattern|acb8a16d6d1d2138
 Sequence|Abandoned Sequence|2eac037ba4cc80d0
 Sequence|Abandoned Shuttle|6b370f606cc6c521
@@ -2391,6 +2430,8 @@ Texture|Ventilation|19bd1e472f8e358e
 Texture|Circuit Bent|a290f99a1a7a6bbb
 Texture|Geiger|efbd902c32873568
 Texture|Ghost Signal|bed7850a9058dd23
+Texture|Three Layer Static|c915b5bc7daa8c33
+Texture|Engine Room Layers|275841c28069b022
 Texture|Abandoned Rubble|1f68c779971766f5
 Texture|Acid Transmission|48c96f04f572c696
 Texture|Ash Residue|5c783e0ba35b58d1

@@ -1817,8 +1817,8 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         }
 
         const auto target = (float) (divisionBeats (delayDivision->getIndex()) * 60.0 / bpm * rate);
-        delaySamples = delaySamples < 0.0f ? target : delaySamples;
         delayTarget = juce::jlimit (1.0f, (float) delayL.size() - 4.0f, target);
+        delaySamples = delaySamples < 0.0f ? delayTarget : delaySamples;   // the line's length at most, from the first block
     }
 
     float delayTarget = 1.0f;

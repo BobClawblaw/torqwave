@@ -477,7 +477,15 @@ namespace
     /** A patch's measurements. Each is made on a synth of its own, new for the purpose, so nothing
         left by another patch (or by the chord, which only the tool plays) reaches it: the test and the
         tool measure the same numbers whatever they measured before. */
-    Measured measure (const WaveSynth::Patch& p, bool chord, bool rest)
+    /** A hand-made patch on all three oscillators with a level envelope on one or more. */
+    bool threeLayer (const WaveSynth::Patch& p)
+    {
+        const auto on = [&] (const char* id) { const auto f = p.values.find (id); return f != p.values.end() && f->second > 0.5; };
+        return on ("osc2On") && on ("osc3On") && (on ("osc1EnvOn") || on ("osc2EnvOn") || on ("osc3EnvOn"));
+    }
+
+    /** `rest` adds the macros and the long chord; `click` the click phrase (the second bank's and the three-layer patches'). */
+    Measured measure (const WaveSynth::Patch& p, bool chord, bool rest, bool click)
     {
         Measured m;
         const auto note = noteFor (p.category);
@@ -498,11 +506,14 @@ namespace
         m.noteDb = peakDb (out);
         m.features = featuresOf (out);
 
-        if (rest)
+        if (click)
         {
             load (s, p);
             m.click = ClickCheck::worst (clickPhrase (s, note), rate, clickFloor);
+        }
 
+        if (rest)
+        {
             for (int i = 0; i < WaveSynth::numMacros; ++i)
                 m.macros[(size_t) i] = macroChange (s, p, i, note);
 
@@ -575,7 +586,7 @@ bool runPatchTool (const juce::StringArray& args, int& result)
                 continue;
 
             const auto& p = patches[i];
-            const auto m = measure (p, true, true);
+            const auto m = measure (p, true, true, true);
 
             if (wavs.isNotEmpty())
             {
@@ -702,7 +713,7 @@ void runWaveSynthBankTests()
             threads.emplace_back ([&]
             {
                 for (auto at = next++; at < all.size(); at = next++)
-                    measured[at] = measure (all[at], false, second[at]);
+                    measured[at] = measure (all[at], false, second[at], second[at] || threeLayer (all[at]));
             });
 
         for (auto& t : threads)
@@ -769,6 +780,31 @@ void runWaveSynthBankTests()
 
         check (seen == 4 && still.isEmpty(), "synth bank: Concrete Debris no longer clicks on the click phrase, and Rotten Chime, Toxic Chime and Oily Gong sound in the bells' register (above "
                                                  + juce::String (silentDb, 0) + " dB)" + (still.isEmpty() ? juce::String() : " (" + still.joinIntoString ("; ") + ")"));
+    }
+
+    // The hand-made patches of three layers (every oscillator on, a level envelope on at least one): each sounds in
+    // its register and passes the click phrase, as the second bank's patches must.
+    {
+        juce::StringArray failing;
+        auto layered = 0;
+        auto worst = 0.0f;
+        juce::String worstName;
+
+        for (size_t i = 0; i < all.size(); ++i)
+        {
+            if (second[i] || ! threeLayer (all[i]))
+                continue;
+
+            ++layered;
+
+            if (measured[i].click.ratio > worst) { worst = measured[i].click.ratio; worstName = all[i].name; }
+
+            if (measured[i].click.ratio > clickRatio || measured[i].noteDb < silentDb)
+                failing.add (all[i].name + " " + juce::String (measured[i].noteDb, 1) + " dB, click " + juce::String (measured[i].click.ratio, 1));
+        }
+
+        check (layered >= 41 && failing.isEmpty(), "synth bank: each of the " + juce::String (layered) + " hand-made patches of three layers (all three oscillators, with level envelopes) sounds in its register and passes the click phrase ("
+                                                       + (worstName.isEmpty() ? juce::String ("none jumps") : "the nearest " + worstName + ", " + juce::String (worst, 1) + " times") + ")" + (failing.isEmpty() ? juce::String() : " (" + failing.joinIntoString ("; ").substring (0, 600) + ")"));
     }
 
     const auto listed = [] (const juce::StringArray& names) { return names.isEmpty() ? juce::String() : " (" + juce::String (names.size()) + ": " + names.joinIntoString ("; ").substring (0, 600) + ")"; };
