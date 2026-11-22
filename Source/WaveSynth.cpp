@@ -1,5 +1,6 @@
 #include "WaveSynth.h"
 #include "WaveSynthEditor.h"
+#include "SignalConsole.h"
 
 namespace WaveSynth
 {
@@ -2036,7 +2037,12 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     void handle (const juce::MidiMessage& m)
     {
         if (m.isNoteOn())
+        {
             noteOn (m.getNoteNumber(), m.getFloatVelocity());
+
+            if (auto* c = owner.consoleForAudio.load (std::memory_order_acquire))
+                c->notePlayed (m.getNoteNumber());
+        }
         else if (m.isNoteOff())
             noteOff (m.getNoteNumber());
         else if (m.isAllSoundOff())
@@ -2241,7 +2247,10 @@ BasicSynthProcessor::BasicSynthProcessor()
     WaveTables::get (WaveTables::Table::analog);   // the tables, built now rather than on the audio thread
 }
 
-BasicSynthProcessor::~BasicSynthProcessor() = default;
+BasicSynthProcessor::~BasicSynthProcessor()
+{
+    consoleForAudio.store (nullptr, std::memory_order_release);
+}
 
 juce::RangedAudioParameter* BasicSynthProcessor::parameter (const juce::String& id) const
 {
@@ -2249,9 +2258,29 @@ juce::RangedAudioParameter* BasicSynthProcessor::parameter (const juce::String& 
     return found != byId.end() ? found->second : nullptr;
 }
 
-void BasicSynthProcessor::prepareToPlay (double sampleRate, int)
+void BasicSynthProcessor::prepareToPlay (double sampleRate, int blockSize)
 {
     engine->prepare (sampleRate);
+    preparedRate = sampleRate;
+    preparedBlock = blockSize;
+
+    if (console != nullptr)
+        console->prepare (sampleRate, blockSize);
+}
+
+SignalConsole::Console& BasicSynthProcessor::getConsole()
+{
+    if (console == nullptr)
+    {
+        console = std::make_unique<SignalConsole::Console> (*this);
+
+        if (preparedRate > 0.0)
+            console->prepare (preparedRate, preparedBlock);
+
+        consoleForAudio.store (console.get(), std::memory_order_release);
+    }
+
+    return *console;
 }
 
 void BasicSynthProcessor::setSampledTable (int oscillator, std::shared_ptr<const WaveTables::Sampled> table)
@@ -2289,6 +2318,10 @@ void BasicSynthProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
 {
     juce::ScopedNoDenormals noDenormals;
     engine->process (buffer, midi);
+
+    // A node being heard in the console, on top.
+    if (auto* c = consoleForAudio.load (std::memory_order_acquire))
+        c->addAudition (buffer);
 }
 
 double BasicSynthProcessor::getTailLengthSeconds() const

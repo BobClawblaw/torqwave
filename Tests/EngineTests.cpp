@@ -38,6 +38,7 @@
 #include "../Source/DrumMachine.h"
 #include "SwarmGuitarTests.h"
 #include "SoundDemos.h"
+#include "SignalConsoleTests.h"
 #include "WaveSynthTests.h"
 #include "DrumMachineTests.h"
 #include "SoundControlsTests.h"
@@ -611,6 +612,8 @@ int main (int argc, char* argv[])
     //   --synth-window <folder> only save pictures of the synth's window (a patch, the level envelopes, a Sampled table)
     //   --patch-hashes <file>   only write a hash of each factory patch's render, to compare two builds sample for sample
     //   --sound-demos <folder>  only write the Sounds page's demos (synth patches and Swarm Guitar presets at 120 BPM) as MP3s
+    //   --console-window <folder> only save pictures of the synth's window showing the Trace view
+    //   --console               only the signal console's tests (Trace: the nodes within reach of a patch)
     //   --instruments           only the tests of the built-in instruments and their controls
     //   --ai                    only the AI assistance tests (a mock server; no network)
     //   --tempo                 only the tests of audio that follows the tempo
@@ -676,6 +679,19 @@ int main (int argc, char* argv[])
     {
         AudioEngine engine;
         runSequenceTests (engine);
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (const auto folder = valueOf ("--console-window"); folder.isNotEmpty())
+    {
+        saveSignalConsoleWindow (juce::File (folder));
+        return 0;
+    }
+
+    if (args.contains ("--console"))
+    {
+        runSignalConsoleTests();
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }
