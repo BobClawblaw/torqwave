@@ -118,7 +118,7 @@ namespace
         return std::numeric_limits<float>::quiet_NaN();
     }
 
-    /** The instrument settings a voice carries, loaded into a fresh Basic Synth. */
+    /** The instrument settings a voice carries, loaded into a fresh Torqwave Synth. */
     std::unique_ptr<BuiltInEffects::BasicSynthProcessor> synthFrom (const juce::XmlElement& voice)
     {
         auto* slot = voice.getChildByName ("EFFECTS") != nullptr ? voice.getChildByName ("EFFECTS")->getChildByName ("SLOT") : nullptr;
@@ -244,7 +244,7 @@ void runPresetTests (AudioEngine& engine)
             std::cout << "SKIP  presets: python3 isn't here to run Scripts/make_presets.py again" << std::endl;
     }
 
-    // The voices carry their instrument's settings: the acid line's Basic Synth (written in 0.19.2's terms) has its resonance and
+    // The voices carry their instrument's settings: the acid line's Torqwave Synth (written in 0.19.2's terms) has its resonance and
     // glide, its 320 Hz cutoff lowered 2.4 octaves for its velocity to open again (60 % velocity to filter).
     {
         juce::String error;
@@ -253,9 +253,9 @@ void runPresetTests (AudioEngine& engine)
         const auto groove = SequenceFile::load (presets.getChildFile ("Drums/Full Grooves/Peak Hour Driver.tqseq"), error);
         check (synth != nullptr && std::abs (plainOf (*synth, "filter1Resonance") - 75.0f) < 0.01f && std::abs (plainOf (*synth, "glideTime") - 60.0f) < 0.01f
                    && juce::exactlyEqual (synth->parameter ("voiceMode")->getValue(), 1.0f)
-                   && std::abs (plainOf (*synth, "filter1Cutoff") * std::exp2 (2.4f) - 320.0f) < 0.5f && SequenceFile::instrumentOf (*acid) == "Basic Synth"
+                   && std::abs (plainOf (*synth, "filter1Cutoff") * std::exp2 (2.4f) - 320.0f) < 0.5f && SequenceFile::instrumentOf (*acid) == "Torqwave Synth"
                    && groove.has_value() && SequenceFile::instrumentOf (*groove) == "Basic Drums" && groove->channel == 10,
-               "presets: a preset's voice carries its Basic Synth settings (the acid line's resonance 75 %, glide 60 ms as legato, cutoff 320 Hz less its velocity's 2.4 octaves); "
+               "presets: a preset's voice carries its Torqwave Synth settings (the acid line's resonance 75 %, glide 60 ms as legato, cutoff 320 Hz less its velocity's 2.4 octaves); "
                "a drum groove plays on Basic Drums, channel 10");
     }
 
@@ -439,7 +439,7 @@ void runPresetTests (AudioEngine& engine)
         check (onTrack.clipId != 0 && onTrack.trackId == s.tracks[0].id && onTrack.effects == nullptr
                    && onEmpty.clipId != 0 && s.tracks.size() == tracksBefore + 1 && onEmpty.effects != nullptr
                    && onEmpty.effects->toString().contains (BuiltInEffects::basicSynthId),
-               "presets: dropped on an instrument track a preset's notes play on that track's instrument; on empty space it makes a track playing its Basic Synth voice");
+               "presets: dropped on an instrument track a preset's notes play on that track's instrument; on empty space it makes a track playing its Torqwave Synth voice");
     }
 
     SequenceLibrary::setChosenFolder ({});

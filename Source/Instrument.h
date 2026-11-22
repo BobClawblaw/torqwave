@@ -34,7 +34,7 @@ namespace Instrument
         Unit instrument, by name (then format). */
     juce::Array<juce::PluginDescription> known (const juce::KnownPluginList&);
 
-    /** An instrument's name with where it is from: "Basic Synth (built in)", "Name (Audio Units, Maker)". */
+    /** An instrument's name with where it is from: "Torqwave Synth (built in)", "Name (Audio Units, Maker)". */
     juce::String title (const juce::PluginDescription&);
 
     /** Adds the instruments to a menu, each choosing itself: the built-in ones first, then the

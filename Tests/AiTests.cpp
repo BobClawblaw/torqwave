@@ -638,7 +638,7 @@ namespace
 
         const auto found = call ("list_plugins", R"({"search": "limit"})");
         check ((int) found["count"] == 1 && found["plugins"][0]["name"] == juce::var ("Limiter"), "AI plug-ins: list_plugins searches by name");
-        check (! (bool) call ("add_plugin", R"({"plugin": "Basic Synth"})")["ok"], "AI plug-ins: an instrument isn't put in the effect chain");
+        check (! (bool) call ("add_plugin", R"({"plugin": "Torqwave Synth"})")["ok"], "AI plug-ins: an instrument isn't put in the effect chain");
 
         const auto added = call ("add_plugin", R"({"plugin": "Limiter"})");
         check ((bool) added["ok"] && (int) added["slot"] == 1 && w.rackChanged(), "AI plug-ins: a plug-in is added by name");
@@ -1012,7 +1012,7 @@ namespace
                "Ask Torq sessions: volume automation drawn from points in any order, the same again and a pan out of range refused, listed by get_session, and removed");
 
         const auto added = call ("add_track_effect", R"({"track": "Reverb", "plugin": "Reverb"})");
-        const auto synth = call ("add_track_effect", R"({"track": "Drums", "plugin": "Basic Synth"})");
+        const auto synth = call ("add_track_effect", R"({"track": "Drums", "plugin": "Torqwave Synth"})");
         const auto unknown = call ("add_track_effect", R"({"track": "Drums", "plugin": "Nothing Like It"})");
         const auto loads = w.getChainChanges();
         check ((bool) added["ok"] && ! (bool) synth["ok"] && ! (bool) unknown["ok"] && loads.size() == 1 && loads[0].chain.size() == 1
@@ -1022,7 +1022,7 @@ namespace
 
         const auto shifted = call ("set_clip_effects", "{\"clip\": " + id + ", \"pitch\": -5, \"add\": \"Reverb\"}");
         const auto tooFar = call ("set_clip_effects", "{\"clip\": " + id + ", \"pitch\": 13}");
-        const auto instrument = call ("set_clip_effects", "{\"clip\": " + id + ", \"add\": \"Basic Synth\"}");
+        const auto instrument = call ("set_clip_effects", "{\"clip\": " + id + ", \"add\": \"Torqwave Synth\"}");
         const auto nothing = call ("set_clip_effects", "{\"clip\": " + id + "}");
         const auto& fx = state.tracks[0].clips[0].effects;
         const auto shown = call ("list_clips", R"({"track": "Drums"})")["clips"][0]["effects"].toString();
@@ -1189,7 +1189,7 @@ namespace
                "Ask Torq chains: the plan made on the engine's chain: an effect added first, one taken off, one switched off and set from text");
         engine.clearTrackEffects();
 
-        // An instrument track: Basic Synth and a compressor; a reverb put first among the effects
+        // An instrument track: Torqwave Synth and a compressor; a reverb put first among the effects
         // and a parameter of the synth set, the synth staying first in the chain.
         SessionState withSynth;
         withSynth.sampleRate = 48000.0;
@@ -1199,7 +1199,7 @@ namespace
         const auto keysId = keys.id;
         engine.session.reset (withSynth, {});
 
-        for (auto& name : { "Basic Synth", "Compressor" })
+        for (auto& name : { "Torqwave Synth", "Compressor" })
         {
             juce::PluginDescription d;
 
@@ -1383,7 +1383,7 @@ namespace
                         && catalogue.getUnderstanding (d)->model == "test-model";
 
         check (p.done == effects.size() && p.read == effects.size() && p.written == effects.size() && allLearnt
-                   && ! catalogue.getUnderstanding (builtIn ("Basic Synth")).has_value() && ! catalogue.hasCurrentFacts (builtIn ("Basic Synth")),
+                   && ! catalogue.getUnderstanding (builtIn ("Torqwave Synth")).has_value() && ! catalogue.hasCurrentFacts (builtIn ("Torqwave Synth")),
                "plug-in catalogue: Learn All reads and describes every built-in effect, and leaves instruments for later (" + p.message + ")");
         check ((int) requests.size() == effects.size() && requests[0].body.contains ("parameterCount") && ! requests[0].body.contains ("\"tools\""),
                "plug-in catalogue: the model is sent each plug-in's facts, with no tools");
@@ -1487,7 +1487,7 @@ namespace
         Ai::Workspace::Start start;
         Ai::SequenceTools::Context context;
         context.sequence = bassLine();
-        context.instrument = "Basic Synth";
+        context.instrument = "Torqwave Synth";
         context.instrumentAbout = "A simple subtractive synth.";
         context.instrumentParameters = { "Filter 1 Cutoff", "Filter 1 Resonance" };
         context.tempo = 96.0;
@@ -1507,14 +1507,14 @@ namespace
 
         const auto system = w.systemMessage();
         check (w.isSequence() && names == juce::StringArray { "get_sequence", "write_sequence", "suggest_for_sequence", "list_plugins", "describe_plugin" }
-                   && system.contains ("\"Night Bass\" open: a Bass part") && system.contains ("in A minor") && system.contains ("Basic Synth (A simple subtractive synth)")
+                   && system.contains ("\"Night Bass\" open: a Bass part") && system.contains ("in A minor") && system.contains ("Torqwave Synth (A simple subtractive synth)")
                    && system.contains ("96 BPM") && system.contains ("session's tempo is 128 BPM") && system.contains ("the session is in E minor"),
                "Ask Torq sequences: five tools (" + names.joinIntoString (", ") + "), and the system message gives the part's role, key, instrument, the tempos and the session's key");
 
         const auto got = call ("get_sequence", "{}");
         check ((bool) got["ok"] && got["role"] == juce::var ("Bass") && got["key"] == juce::var ("A minor") && (int) got["length"] == 7680 && (int) got["ticks_per_beat"] == 960
                    && got["notes"].size() == 4 && (int) got["notes"][1]["velocity"] == 90 && got["notes"][2]["name"] == juce::var ("F#3")
-                   && got["instrument"] == juce::var ("Basic Synth") && got["instrument_about"] == juce::var ("A simple subtractive synth.")
+                   && got["instrument"] == juce::var ("Torqwave Synth") && got["instrument_about"] == juce::var ("A simple subtractive synth.")
                    && got["instrument_parameters"].size() == 2 && (double) got["session_tempo"] == 128.0 && got["session_key"] == juce::var ("E minor")
                    && got["outside_key"].size() == 2 && got["outside_key"][0] == juce::var ("F#3 at bar 1, beat 3") && got["outside_key"][1] == juce::var ("G#2 at bar 1, beat 4"),
                "Ask Torq sequences: get_sequence gives the notes in ticks with their names, the instrument and what it is, and names the notes outside the key ("
@@ -1552,10 +1552,10 @@ namespace
             return ! (bool) r["ok"] ? r["error"].toString() : juce::String();
         };
         const auto noNote = suggestRefused (R"({ "title": "x", "kind": "notes", "remove": [ { "pitch": 60, "start": 0 } ] })");
-        const auto instrument = suggestRefused (R"({ "title": "x", "kind": "effect", "effect": "Basic Synth" })");
+        const auto instrument = suggestRefused (R"({ "title": "x", "kind": "effect", "effect": "Torqwave Synth" })");
         const auto noParameter = suggestRefused (R"({ "title": "x", "kind": "automation", "parameter": "Warmth", "points": [ { "tick": 0, "value": 0.5 } ] })");
         const auto noKind = suggestRefused (R"({ "title": "x", "kind": "magic" })");
-        check (noNote.contains ("no note to take out") && instrument.contains ("No effect plug-in is called \"Basic Synth\"") && noParameter.contains ("no parameter called \"Warmth\"")
+        check (noNote.contains ("no note to take out") && instrument.contains ("No effect plug-in is called \"Torqwave Synth\"") && noParameter.contains ("no parameter called \"Warmth\"")
                    && noKind.contains ("kind is") && w.getSequenceTools()->getSuggestions().empty(),
                "Ask Torq sequences: suggest_for_sequence refuses a note that isn't there, an instrument as an effect, a parameter the instrument hasn't and an unknown kind");
 
@@ -1590,7 +1590,7 @@ namespace
         const auto folder = juce::File::createTempFile ("ask-sequencer");
         folder.createDirectory();
         const auto file = folder.getChildFile (juce::String ("Night Bass") + SequenceFile::extension);
-        // Its voice: the Basic Synth.
+        // Its voice: the Torqwave Synth.
         auto line = bassLine();
         {
             SessionState s;

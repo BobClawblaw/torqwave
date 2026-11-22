@@ -330,7 +330,7 @@ void runInstrumentTests (AudioEngine& engine)
                "instrument: Basic Drums' window is as before (" + juce::String (drumsEditor != nullptr ? drumsEditor->getHeight() : 0) + ")");
     }
 
-    // Basic Synth's engine, patches and window, and its clicks.
+    // Torqwave Synth's engine, patches and window, and its clicks.
     runWaveSynthTests (engine);
     runSynthClickTests (engine);
 

@@ -2,7 +2,7 @@
 
 #include "WaveSynth.h"
 
-// What Basic Synth's factory patches are written with: a patch is the settings it changes from
+// What Torqwave Synth's factory patches are written with: a patch is the settings it changes from
 // the defaults, set through a Builder by name (the hand-made patches in WaveSynthPatches.cpp, the
 // bank in WaveSynthPatchBank.cpp).
 

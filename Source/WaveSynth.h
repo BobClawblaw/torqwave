@@ -72,7 +72,7 @@ namespace WaveSynth
 
 namespace BuiltInEffects
 {
-    /** The instrument built in, under the plug-in ID Basic Synth has always had: WaveSynth's engine
+    /** The instrument built in, under the plug-in ID it had as Torqwave Synth: WaveSynth's engine
         (see above), stereo, with its own window. A session or preset saved before 0.19.3 loads
         its old settings as the nearest sound the new engine makes: its wave as the Analog table's
         position, oscillators 2 and 3 at their octave, detune and level, its envelope, its
