@@ -211,6 +211,7 @@ target_sources(Torqwave PRIVATE
     Source/Convolver.cpp
     Source/BuiltInEffects.cpp
     Source/DrumMachine.cpp
+    Source/DrumMachineEditor.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
     Source/ParametricEq.cpp
@@ -583,6 +584,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/Convolver.cpp
     Source/BuiltInEffects.cpp
     Source/DrumMachine.cpp
+    Source/DrumMachineEditor.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
     Source/ParametricEq.cpp

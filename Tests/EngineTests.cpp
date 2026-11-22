@@ -644,6 +644,12 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (const auto folder = valueOf ("--drums-window"); folder.isNotEmpty())
+    {
+        saveDrumMachineWindow (juce::File (folder));
+        return 0;
+    }
+
     if (args.contains ("--drums") || args.contains ("--drums-levels"))
     {
         AudioEngine engine;

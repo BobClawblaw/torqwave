@@ -1,7 +1,9 @@
 #include <JuceHeader.h>
 #include "../Source/DrumMachine.h"
+#include "../Source/DrumMachineEditor.h"
 #include "../Source/Instrument.h"
 #include "../Source/AudioEngine.h"
+#include "../Source/Theme.h"
 #include "TestUtils.h"
 #include "DrumMachineTests.h"
 
@@ -141,6 +143,79 @@ namespace
         check (known.size() >= 2 && known[0].fileOrIdentifier == BuiltInEffects::basicSynthId && known[1].fileOrIdentifier == BuiltInEffects::basicDrumsId
                    && Instrument::title (known[1]) == "Basic Drums (built in)",
                "drums: offered as an instrument, Basic Drums (built in), after the synth");
+    }
+
+    void testWindow()
+    {
+        BuiltInEffects::BasicDrumsProcessor drums;
+        drums.prepareToPlay (rate, 512);
+        std::unique_ptr<juce::AudioProcessorEditor> made (drums.createEditorAndMakeActive());
+        auto* window = dynamic_cast<DrumMachineEditor*> (made.get());
+        check (window != nullptr && window->getWidth() >= 900 && window->getHeight() >= 560 && window->getSelected() == Sound::kick,
+               "drums window: opens on the kick (" + juce::String (made != nullptr ? made->getWidth() : 0) + " by " + juce::String (made != nullptr ? made->getHeight() : 0) + ")");
+
+        if (window == nullptr)
+            return;
+
+        // A pad for every sound, all inside the window and none overlapping.
+        auto inside = true, apart = true;
+
+        for (auto s : DrumMachineEditor::padOrder())
+        {
+            const auto b = window->padBounds (s);
+            inside = inside && ! b.isEmpty() && window->getLocalBounds().contains (b);
+
+            for (auto t : DrumMachineEditor::padOrder())
+                apart = apart && (s == t || ! b.reduced (1).intersects (window->padBounds (t).reduced (1)));
+        }
+
+        std::set<Sound> each (DrumMachineEditor::padOrder().begin(), DrumMachineEditor::padOrder().end());
+        check (inside && apart && each.size() == (size_t) DrumMachine::numSounds, "drums window: a pad for each of the 30 sounds, inside the window, none overlapping");
+
+        // Clicking a pad plays it (louder nearer its top) and selects it.
+        const auto hits = drums.getEngine().hitsOf (Sound::snare);
+        window->clickPad (Sound::snare, 0.02f);
+        juce::AudioBuffer<float> block (2, 512);
+        juce::MidiBuffer midi;
+        drums.processBlock (block, midi);
+        check (window->getSelected() == Sound::snare && drums.getEngine().hitsOf (Sound::snare) == hits + 1 && drums.getEngine().lastVelocityOf (Sound::snare) > 0.95f
+                   && block.getMagnitude (0, 512) > 0.05f && DrumMachineEditor::velocityAt (0.0f) > DrumMachineEditor::velocityAt (0.5f)
+                   && DrumMachineEditor::velocityAt (0.5f) > DrumMachineEditor::velocityAt (1.0f) && DrumMachineEditor::velocityAt (1.0f) >= 0.3f,
+               "drums window: clicking the snare's pad near its top plays it at full velocity and selects it; lower on a pad plays softer");
+
+        // The selected sound's knobs read in real units and follow it.
+        BuiltInEffects::setExactly (*drums.parameterOf (Sound::snare, "decay"), 640.0f);
+        BuiltInEffects::setExactly (*drums.parameterOf (Sound::snare, "pan"), -30.0f);
+        BuiltInEffects::setExactly (*drums.parameterOf (Sound::snare, "tune"), 3.0f);
+        BuiltInEffects::setExactly (*drums.parameterOf (Sound::snare, "level"), -4.5f);
+        check (window->getKnobText ("Decay") == "640 ms" && window->getKnobText ("Pan") == "L 30" && window->getKnobText ("Tune") == "+3 st"
+                   && window->getKnobText ("Level") == "-4.5 dB" && window->getKnobText ("Tone") == "0 %",
+               "drums window: the snare's knobs read 640 ms, L 30, +3 st, -4.5 dB and 0 % (read: " + window->getKnobText ("Decay") + ", " + window->getKnobText ("Pan") + ", "
+                   + window->getKnobText ("Tune") + ", " + window->getKnobText ("Level") + ", " + window->getKnobText ("Tone") + ")");
+
+        // Its picture is the hit, as long as the sound lasts: longer when the decay is.
+        window->select (Sound::snare);
+        const auto longPicture = window->getPictureSeconds();
+        BuiltInEffects::setExactly (*drums.parameterOf (Sound::snare, "decay"), 160.0f);
+        window->select (Sound::snare);
+        const auto shortPicture = window->getPictureSeconds();
+        check (longPicture > 0.6 && longPicture < 0.8 && shortPicture > 0.15 && shortPicture < 0.4,
+               "drums window: the picture shows the whole hit, " + juce::String (longPicture * 1000.0, 0) + " ms at a 640 ms decay and "
+                   + juce::String (shortPicture * 1000.0, 0) + " ms at 160 ms");
+
+        // The kits: choosing one sets every sound; a knob moved marks it edited.
+        drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Dark Techno")]);
+        const auto chosen = window->getKitText();
+        BuiltInEffects::setExactly (*drums.parameterOf (Sound::kick, "drive"), 90.0f);
+        check (chosen == "Dark Techno" && window->getKitText() == "Dark Techno (edited)", "drums window: shows the kit's name, and \"(edited)\" once a knob moves");
+
+        // It paints in a light and a dark theme.
+        for (auto theme : { "Light", "Dark" })
+        {
+            Theme::apply (Theme::make (theme, "Blue"));
+            const auto image = window->createComponentSnapshot (window->getLocalBounds());
+            check (image.isValid() && image.getWidth() == window->getWidth(), juce::String ("drums window: paints in the ") + theme + " theme");
+        }
     }
 
     void testEverySound (BuiltInEffects::BasicDrumsProcessor& drums)
@@ -424,7 +499,7 @@ namespace
         const auto modified = drums.kitModified();
 
         check (all.size() == 7 && names[0] == "Standard" && names.contains ("Dark Techno") && names.contains ("Industrial") && names.contains ("EBM Machine")
-                   && names.contains ("Electro") && names.contains ("Breaks") && names.contains ("Acoustic") && clean && distinct && modified,
+                   && names.contains ("Electro") && names.contains ("Breaks") && names.contains ("Industrial Rock") && clean && distinct && modified,
                "drums: seven kits (" + names.joinIntoString (", ") + "), each sounding different; a kit chosen reads as itself until a knob moves");
 
         // The state keeps the kit's name and every setting.
@@ -542,6 +617,25 @@ namespace
     }
 }
 
+void saveDrumMachineWindow (const juce::File& folder)
+{
+    BuiltInEffects::BasicDrumsProcessor drums;
+    drums.prepareToPlay (rate, 512);
+    drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Dark Techno")]);
+    std::unique_ptr<juce::AudioProcessorEditor> window (drums.createEditorAndMakeActive());
+
+    for (auto theme : { "Dark", "Light" })
+    {
+        Theme::apply (Theme::make (theme, "Blue"));
+        const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+        auto file = folder.getChildFile (juce::String ("drums-") + theme + ".png");
+        file.deleteFile();
+        juce::FileOutputStream out (file);
+        juce::PNGImageFormat().writeImageToStream (image, out);
+        std::cout << file.getFullPathName() << std::endl;
+    }
+}
+
 void runDrumMachineTests (AudioEngine& engine, bool levels)
 {
     BuiltInEffects::BasicDrumsProcessor drums;
@@ -553,6 +647,7 @@ void runDrumMachineTests (AudioEngine& engine, bool levels)
     }
 
     testMade (engine);
+    testWindow();
     testEverySound (drums);
     testNoClicks (drums);
     testSettings (drums);

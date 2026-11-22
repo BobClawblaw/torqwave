@@ -1,4 +1,5 @@
 #include "DrumMachine.h"
+#include "DrumMachineEditor.h"
 
 namespace DrumMachine
 {
@@ -327,20 +328,22 @@ const std::vector<Kit>& kits()
             k.level = -5.0f;
         });
 
-        make ("Acoustic", "Nearer a played kit: a beater on the kick, a ringing snare, toms that sing, cymbals spread wide.", [] (KitSettings& k, auto&& s)
+        make ("Industrial Rock", "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.", [] (KitSettings& k, auto&& s)
         {
             k.kick = KickCharacter::punch;
-            s (Sound::kick) = { 3.0f, 420.0f, 35.0f, 0.0f, 0.0f, 0.0f };
-            s (Sound::snare) = { 1.0f, 400.0f, 10.0f, -1.0f, 0.0f, 0.0f };
-            s (Sound::closedHat) = { -1.0f, 110.0f, 5.0f, -4.0f, 30.0f, 0.0f };
-            s (Sound::pedalHat) = { -1.0f, 80.0f, 0.0f, -4.0f, 30.0f, 0.0f };
-            s (Sound::openHat) = { -1.0f, 800.0f, 5.0f, -5.0f, 30.0f, 0.0f };
-            s (Sound::lowTom) = { 0.0f, 1100.0f, 30.0f, -1.0f, -35.0f, 0.0f };
-            s (Sound::midTom) = { 0.0f, 950.0f, 30.0f, -1.0f, 0.0f, 0.0f };
-            s (Sound::highTom) = { 0.0f, 850.0f, 30.0f, -1.0f, 25.0f, 0.0f };
+            s (Sound::kick) = { 3.0f, 420.0f, 35.0f, 0.0f, 0.0f, 25.0f };
+            s (Sound::snare) = { 1.0f, 420.0f, 15.0f, -1.0f, 0.0f, 30.0f };
+            s (Sound::closedHat) = { -1.0f, 110.0f, 5.0f, -4.0f, 30.0f, 10.0f };
+            s (Sound::pedalHat) = { -1.0f, 80.0f, 0.0f, -4.0f, 30.0f, 10.0f };
+            s (Sound::openHat) = { -1.0f, 800.0f, 5.0f, -5.0f, 30.0f, 10.0f };
+            s (Sound::lowTom) = { -2.0f, 1100.0f, 30.0f, -1.0f, -35.0f, 20.0f };
+            s (Sound::midTom) = { -2.0f, 950.0f, 30.0f, -1.0f, 0.0f, 20.0f };
+            s (Sound::highTom) = { -2.0f, 850.0f, 30.0f, -1.0f, 25.0f, 20.0f };
             s (Sound::crash) = { -1.0f, 3200.0f, 0.0f, -3.0f, 35.0f, 0.0f };
+            s (Sound::china) = { -1.0f, 2400.0f, 0.0f, -3.0f, -30.0f, 20.0f };
             s (Sound::ride) = { -1.0f, 3600.0f, 0.0f, -4.0f, -35.0f, 0.0f };
-            k.glue = 35.0f;
+            k.drive = 20.0f;
+            k.glue = 60.0f;
             k.level = -6.0f;
         });
 
@@ -1369,6 +1372,6 @@ void BasicDrumsProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
 
 juce::AudioProcessorEditor* BasicDrumsProcessor::createEditor()
 {
-    return BuiltInEffect::createEditor();
+    return new DrumMachineEditor (*this);
 }
 }
