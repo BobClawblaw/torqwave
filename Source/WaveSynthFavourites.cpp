@@ -100,4 +100,17 @@ std::vector<int> Favourites::indices() const
 
     return found;
 }
+
+std::vector<int> Favourites::inTreeOrder() const
+{
+    auto found = indices();
+    const auto& all = factoryPatches();
+    const auto& categories = patchCategories();
+    std::sort (found.begin(), found.end(), [&] (int a, int b)
+    {
+        const auto ca = categories.indexOf (all[(size_t) a].category), cb = categories.indexOf (all[(size_t) b].category);
+        return ca != cb ? ca < cb : a < b;
+    });
+    return found;
+}
 }

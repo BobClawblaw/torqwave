@@ -130,16 +130,44 @@ void runInstrumentKeysTests()
         favourites.set ("Cold Bell", true);
         favourites.set ("Abyss Reese", true);
         favourites.set ("No Such Patch", true);
-        const auto listed = favourites.names() == juce::StringArray { "Abyss Reese", "Cold Bell", "Warehouse Sub" } && favourites.indices().size() == 3;
-
-        // The arrows: every patch until the favourites are browsed, then the favourites alone, by name, round their ends.
         const auto& patches = WaveSynth::factoryPatches();
+        const auto treeIndexOf = [&patches] (const juce::String& name)
+        {
+            for (size_t i = 0; i < patches.size(); ++i)
+                if (patches[i].name == name)
+                    return (int) i;
+            return -1;
+        };
+        juce::StringArray treeOrder;
+        for (auto i : favourites.inTreeOrder())
+            treeOrder.add (patches[(size_t) i].name);
+        const auto listed = favourites.names() == juce::StringArray { "Abyss Reese", "Cold Bell", "Warehouse Sub" } && favourites.indices().size() == 3
+                            && treeOrder == juce::StringArray { "Warehouse Sub", "Abyss Reese", "Cold Bell" };
+
+        // The arrows: every patch until the favourites are browsed, then the favourites alone in the tree's order (Bass, Reese, Bell), round their ends.
         const auto everyPatch = synth.browseList().size() == patches.size();
         synth.setBrowsingFavourites (true);
         const auto one = stepSound (synth, nullptr, 1), two = stepSound (synth, nullptr, 1), three = stepSound (synth, nullptr, 1), before = stepSound (synth, nullptr, -1);
         synth.loadPatch ("Acid Corrosion");   // not a favourite: the arrows start from the favourites' first, or last
         const auto fromOutside = stepSound (synth, nullptr, 1), fromOutsideBack = (synth.loadPatch ("Acid Corrosion"), stepSound (synth, nullptr, -1));
-        const auto stepped = one == "Abyss Reese" && two == "Cold Bell" && three == "Warehouse Sub" && before == "Cold Bell" && fromOutside == "Abyss Reese" && fromOutsideBack == "Warehouse Sub";
+        const auto stepped = one == "Abyss Reese" && two == "Cold Bell" && three == "Warehouse Sub" && before == "Cold Bell" && fromOutside == "Warehouse Sub" && fromOutsideBack == "Cold Bell";
+
+        // The menu: a sub-menu for each category that holds a favourite, in the tree's order, the patch it is on ticked with its category.
+        auto anyTicked = false;
+        const auto menu = WaveSynthEditor::favouritesMenu ("Abyss Reese", true, 1, anyTicked);
+        juce::StringArray menuCategories, menuItems, tickedCategories;
+        for (juce::PopupMenu::MenuItemIterator it (menu); it.next();)
+        {
+            auto& item = it.getItem();
+            menuCategories.add (item.text);
+            if (item.isTicked) tickedCategories.add (item.text);
+            if (item.subMenu != nullptr)
+                for (juce::PopupMenu::MenuItemIterator sub (*item.subMenu); sub.next();)
+                    menuItems.add (sub.getItem().text + (sub.getItem().isTicked ? "*" : "") + "=" + juce::String (sub.getItem().itemID - 1));
+        }
+        const auto inTree = anyTicked && menuCategories == juce::StringArray { "Bass", "Reese", "Bell" } && tickedCategories == juce::StringArray { "Reese" }
+                            && menuItems == juce::StringArray { "Warehouse Sub=" + juce::String (treeIndexOf ("Warehouse Sub")), "Abyss Reese*=" + juce::String (treeIndexOf ("Abyss Reese")),
+                                                                "Cold Bell=" + juce::String (treeIndexOf ("Cold Bell")) };
 
         // The file: read again it holds the same; a name that is no factory patch any more is dropped.
         file.appendText ("A Patch That Was Renamed\n");
@@ -178,10 +206,12 @@ void runInstrumentKeysTests()
         file.deleteFile();
 
         check (marked && listed && kept && unmarked && noneLeft && notMarked,
-               "synth favourites: a factory patch is marked and unmarked by name, listed by name, kept in a file that reads back the same and drops a name that is no patch any more; "
+               "synth favourites: a factory patch is marked and unmarked by name, listed by name and in the patch tree's order (Warehouse Sub, Abyss Reese, Cold Bell: Bass, Reese, Bell), kept in a file that reads back the same and drops a name that is no patch any more; "
                "a sound that is no factory patch can't be marked");
+        check (inTree, "synth favourites: the Favourites menu shows them under their categories in the tree's order (" + menuCategories.joinIntoString (", ")
+                           + ": " + menuItems.joinIntoString (", ") + "), the patch it is on ticked with its category");
         check (everyPatch && stepped && inWindow,
-               "synth favourites: the arrows go through every patch until the favourites are browsed, then through the favourites alone by name, round their ends ("
+               "synth favourites: the arrows go through every patch until the favourites are browsed, then through the favourites alone in the tree's order, round their ends ("
                    + one + ", " + two + ", " + three + "); the window's heart marks the patch it is on");
     }
 

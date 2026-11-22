@@ -921,20 +921,8 @@ namespace
             constexpr int favouriteIds = 1000000;
 
             {
-                juce::PopupMenu favourites;
-                const auto indices = WaveSynth::Favourites::shared().indices();
                 auto ticked = false;
-
-                for (auto i : indices)
-                {
-                    const auto& name = all[(size_t) i].name;
-                    ticked = ticked || (name == current && synth.isBrowsingFavourites());
-                    favourites.addItem (favouriteIds + i + 1, name, true, name == current && synth.isBrowsingFavourites());
-                }
-
-                if (indices.empty())
-                    favourites.addItem (-1, "None yet: click the heart beside a patch's name", false);
-
+                const auto favourites = WaveSynthEditor::favouritesMenu (current, synth.isBrowsingFavourites(), favouriteIds + 1, ticked);
                 menu.addSubMenu ("Favourites", favourites, true, nullptr, ticked);
                 menu.addSeparator();
             }
@@ -1004,6 +992,40 @@ namespace
 }
 
 //==============================================================================
+juce::PopupMenu WaveSynthEditor::favouritesMenu (const juce::String& current, bool browsing, int firstId, bool& ticked)
+{
+    const auto& all = WaveSynth::factoryPatches();
+    const auto order = WaveSynth::Favourites::shared().inTreeOrder();
+    juce::PopupMenu favourites;
+    ticked = false;
+
+    // inTreeOrder keeps each category's favourites together, in the tree's order of categories.
+    for (size_t from = 0; from < order.size();)
+    {
+        const auto& category = all[(size_t) order[from]].category;
+        juce::PopupMenu items;
+        auto holdsCurrent = false;
+        auto to = from;
+
+        for (; to < order.size() && all[(size_t) order[to]].category == category; ++to)
+        {
+            const auto& name = all[(size_t) order[to]].name;
+            const auto isCurrent = browsing && name == current;
+            holdsCurrent = holdsCurrent || isCurrent;
+            items.addItem (firstId + order[to], name, true, isCurrent);
+        }
+
+        favourites.addSubMenu (category, items, true, nullptr, holdsCurrent);
+        ticked = ticked || holdsCurrent;
+        from = to;
+    }
+
+    if (order.empty())
+        favourites.addItem (-1, "None yet: click the heart beside a patch's name", false);
+
+    return favourites;
+}
+
 std::vector<WaveSynthEditor::MenuPage> WaveSynthEditor::menuPages (const juce::String& category)
 {
     const auto& all = WaveSynth::factoryPatches();
@@ -1046,6 +1068,7 @@ struct WaveSynthEditor::Content final : public juce::Component
     {
         addAndMakeVisible (browser);
         addAndMakeVisible (presets);
+        presets.carryTexts ([&s] { return s.getPresetTexts(); }, [&s] (const EffectPresets::Texts& t) { s.setPresetTexts (t); });
 
         // The oscillators.
         for (int o = 0; o < WaveSynth::numOscillators; ++o)

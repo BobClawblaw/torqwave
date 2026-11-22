@@ -1040,6 +1040,94 @@ namespace
         check (echoed.getMagnitude (0, 48000 * 5) < 4.0f, "synth: a delay of 8 bars, longer than its 4-second line, plays from the first block (it read before the line's start)");
     }
 
+    void testPresetTexts()
+    {
+        const auto sameSamples = [] (const juce::AudioBuffer<float>& a, const juce::AudioBuffer<float>& b)
+        {
+            for (int ch = 0; ch < a.getNumChannels(); ++ch)
+                if (std::memcmp (a.getReadPointer (ch), b.getReadPointer (ch), sizeof (float) * (size_t) a.getNumSamples()) != 0)
+                    return false;
+
+            return a.getNumSamples() == b.getNumSamples();
+        };
+
+        const auto folder = juce::File::createTempFile ("synthpresets");
+        EffectPresets::Store store (folder);
+        Synth synth;
+        const auto key = synth.getPresetKey();
+
+        // A synth preset with a Sampled table on oscillator 2 and named macros, saved and loaded into another synth.
+        std::vector<float> saw (24000);
+        for (size_t i = 0; i < saw.size(); ++i)
+            saw[i] = (float) (0.4 * (2.0 * std::fmod ((double) i * 110.0 / rate, 1.0) - 1.0));
+
+        synth.loadPatch ("Abyss Reese");
+        set (synth, "osc2Table", (float) WaveTables::Table::sampled);
+        synth.setSampledTable (1, WaveTables::sampledFromAudio (saw.data(), (int) saw.size(), rate, 0.0, "Saw"));
+        synth.setMacroName (0, "Grind");
+        synth.setMacroName (2, "Open");
+        synth.setPatchName ("Abyss Reese");
+        store.save (key, "Mine", synth.getPresetValues(), synth.getPresetTexts());
+        const auto original = play (synth, held ({ 45 }, 0.5), 24000);
+
+        Synth other;
+        other.loadPatch ("Cold Bell");
+        other.setPresetValues (*store.load (key, "Mine"));
+        other.setPresetTexts (store.loadTexts (key, "Mine"));
+        const auto table = other.getSampledTable (1);
+        const auto again = play (other, held ({ 45 }, 0.5), 24000);
+        check (table != nullptr && table->toText() == synth.getSampledTable (1)->toText() && table->frames == synth.getSampledTable (1)->frames
+                   && juce::exactlyEqual (table->rootHz, synth.getSampledTable (1)->rootHz) && table->name == "Saw"
+                   && other.getSampledTable (0) == nullptr && other.getMacroName (0) == "Grind" && other.getMacroName (1) == synth.getMacroName (1)
+                   && other.getMacroName (2) == "Open" && other.getPatchName() == "Abyss Reese" && sameSamples (original, again),
+               "synth: a preset saved with a Sampled table and named macros comes back whole in another synth (the table's "
+                   + juce::String (table != nullptr ? table->frames : 0) + " frames, its root and name, the macros' names, and its render sample for sample)");
+
+        // A preset file written before texts (values only) loads the same, and leaves the tables and macro names alone.
+        juce::XmlElement old ("TORQWAVE_PRESETS");
+        old.setAttribute ("effect", key);
+        auto* preset = old.createNewChildElement ("PRESET");
+        preset->setAttribute ("name", "Old");
+        const auto saved = *store.load (key, "Mine");
+        for (auto& [id, value] : saved)
+        {
+            auto* e = preset->createNewChildElement ("VALUE");
+            e->setAttribute ("id", id);
+            e->setAttribute ("value", juce::String (value, 17));
+        }
+
+        const auto oldFolder = juce::File::createTempFile ("oldsynthpresets");
+        oldFolder.createDirectory();
+        EffectPresets::Store oldStore (oldFolder);
+        const auto files = folder.findChildFiles (juce::File::findFiles, false);
+        if (! files.isEmpty())
+            old.writeTo (oldFolder.getChildFile (files[0].getFileName()));
+
+        const auto oldValues = oldStore.load (key, "Old");
+        Synth third;
+        third.loadPatch ("Abyss Reese");
+        third.setMacroName (0, "Kept");
+        third.setPresetValues (*oldValues);
+        third.setPresetTexts (oldStore.loadTexts (key, "Old"));
+        check (oldValues.has_value() && *oldValues == saved && oldStore.loadTexts (key, "Old").empty()
+                   && third.getMacroName (0) == "Kept" && third.getSampledTable (1) == nullptr,
+               "synth: a preset file of values alone (as saved before tables and macro names were kept) loads the same values, with no texts, and leaves the macros' names and tables as they were");
+
+        // Through the presets bar: choosing the saved preset brings its table and names with it.
+        EffectPresets::Bar bar (store, key, [&other] { return other.getPresetValues(); }, [&other] (const EffectPresets::Values& v) { other.setPresetValues (v); });
+        bar.carryTexts ([&other] { return other.getPresetTexts(); }, [&other] (const EffectPresets::Texts& t) { other.setPresetTexts (t); });
+        other.loadPatch ("Cold Bell");
+        const auto cleared = other.getSampledTable (1) == nullptr && other.getMacroName (0) != "Grind";
+        bar.refresh();
+        for (int i = 0; i < bar.getOrder().size() && bar.getChosen() != "Mine"; ++i)
+            bar.step (1);
+        check (cleared && other.getSampledTable (1) != nullptr && other.getMacroName (0) == "Grind",
+               "synth: choosing a preset in the window's presets bar sets its Sampled table and macro names too");
+
+        folder.deleteRecursively();
+        oldFolder.deleteRecursively();
+    }
+
     void testBlockSizes (Synth& synth)
     {
         // Patches with moving parts sound the same, sample for sample, whatever the blocks.
@@ -1128,6 +1216,7 @@ void runWaveSynthTests (AudioEngine& engine)
     testModulation (synth);
     testGroundwork();
     testFaults();
+    testPresetTexts();
     testBlockSizes (synth);
     testCpu (synth);
 }

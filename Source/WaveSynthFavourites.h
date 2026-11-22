@@ -27,6 +27,10 @@ namespace WaveSynth
         /** The favourites by name, and where each is in the factory list (in that same order). */
         juce::StringArray names() const                               { return marked; }
         std::vector<int> indices() const;
+        /** Where each is in the factory list, in the patch tree's order: by category as the tree
+            lists them, then as the tree's arrows go through a category. What the favourites menu
+            shows and its arrows step through. */
+        std::vector<int> inTreeOrder() const;
 
         juce::File getFile() const                                    { return file; }
 
