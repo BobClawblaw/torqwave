@@ -1,0 +1,204 @@
+<title>Torqwave Signal Console</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column; each mock-up is a full-width console canvas with a short brief above and three reading notes below. Single dark look by choice: these are pictures of a dark app window. */
+:root {
+  color-scheme: dark;
+  --bg: #080b11; --panel: #0e131c; --line: #1c2636; --fg: #d9e4f3; --dim: #74859c;
+  --accent: #39b4ff; --signal: #ffb14a; --wall: #ff5470;
+  --display: "Space Grotesk", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--display); font-size: 16px; line-height: 1.55;
+  padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px; }
+header p, .brief p { margin: 0; color: var(--dim); max-width: 66ch; }
+h1 { font-size: 30px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-size: 21px; font-weight: 600; margin: 0 0 4px; text-wrap: balance; }
+.tag { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+section { display: flex; flex-direction: column; gap: 14px; }
+.bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
+.brief { min-width: 0; flex: 1 1 320px; }
+.modes { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.modes button { font: 500 13px var(--mono); color: var(--dim); background: var(--panel); border: 0; padding: 8px 14px; cursor: pointer; }
+.modes button[aria-pressed="true"] { color: var(--bg); background: var(--accent); }
+.modes button:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
+.stage { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+canvas { display: block; width: 100%; min-width: 760px; aspect-ratio: 5 / 3; }
+ul { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 28px; }
+li { color: var(--dim); font-size: 15px; min-width: 0; }
+li b { color: var(--fg); font-weight: 500; }
+.pick { border-top: 1px solid var(--line); padding-top: 20px; color: var(--dim); max-width: 66ch; }
+.pick b { color: var(--fg); font-weight: 500; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="tag">Torqwave Synth · part three · step 16</div>
+    <h1>Three looks for the signal console</h1>
+    <p>Each picture shows the same patch, the same twelve sounds within reach and the same route. Switch each one between Trace (moving through sounds by ear) and Decrypt (cracking a recording into a patch). These are drawings to choose from, not the built window.</p>
+  </header>
+
+  <section>
+    <div class="bar">
+      <div class="brief"><div class="tag">A</div><h2>Orbit</h2><p>The patch you hold in the middle, twelve nodes in a ring, links between. The simplest to read at a glance.</p></div>
+      <div class="modes" role="group" aria-label="Orbit mode"><button id="a-trace" aria-pressed="true">Trace</button><button id="a-decrypt" aria-pressed="false">Decrypt</button></div>
+    </div>
+    <div class="stage"><canvas id="ca" width="1000" height="600" role="img" aria-label="Orbit mock-up: a central node with twelve nodes in a ring around it"></canvas></div>
+    <ul>
+      <li><b>Position means nothing.</b> Every node sits at the same distance, in key order from C3 to B3, so it maps straight onto an octave of keys.</li>
+      <li><b>Reach is the ring.</b> Turn Reach up and the ring widens.</li>
+      <li><b>Trade-off:</b> the calmest of the three, and the one that tells you least before you listen.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="bar">
+      <div class="brief"><div class="tag">B</div><h2>Lattice</h2><p>A hex grid with a live log beside it. Inner cells are near, outer cells are far. The most terminal-like.</p></div>
+      <div class="modes" role="group" aria-label="Lattice mode"><button id="b-trace" aria-pressed="true">Trace</button><button id="b-decrypt" aria-pressed="false">Decrypt</button></div>
+    </div>
+    <div class="stage"><canvas id="cb" width="1000" height="600" role="img" aria-label="Lattice mock-up: a hexagonal grid of sound cells beside a console log"></canvas></div>
+    <ul>
+      <li><b>Two distances at once.</b> Six near cells and six far ones, so one screen offers small and large moves.</li>
+      <li><b>The log is the route.</b> Every jump, firewall and typed request is a line you can click to return to.</li>
+      <li><b>Trade-off:</b> the densest; the log takes a third of the width from the map.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="bar">
+      <div class="brief"><div class="tag">C</div><h2>Sweep</h2><p>A scope. The direction of a node says which part of the sound changed; its distance says how much.</p></div>
+      <div class="modes" role="group" aria-label="Sweep mode"><button id="c-trace" aria-pressed="true">Trace</button><button id="c-decrypt" aria-pressed="false">Decrypt</button></div>
+    </div>
+    <div class="stage"><canvas id="cc" width="1000" height="600" role="img" aria-label="Sweep mock-up: a circular scope divided into five sectors with nodes placed by what changed and how far"></canvas></div>
+    <ul>
+      <li><b>You can aim.</b> Want a different filter and the same oscillators? Look in the filter sector. A firewall closes a sector off.</li>
+      <li><b>In Decrypt, the middle is the signal.</b> Candidates drift inward as their lock rises; the closest is the best match.</li>
+      <li><b>Trade-off:</b> the most to learn in the first minute, and the most it tells you after that.</li>
+    </ul>
+  </section>
+
+  <p class="pick"><b>My pick is C, Sweep.</b> It is the only one where the picture carries information the other two leave to your ears, and Decrypt reads the same way as Trace. A is the safe choice; B has the strongest hacker feel but the least room.</p>
+</div>
+
+<script>
+const TAU = Math.PI * 2, MONO = '"JetBrains Mono", ui-monospace, Menlo, monospace';
+const C = { bg: '#0e131c', line: '#1c2636', grid: '#152030', fg: '#d9e4f3', dim: '#74859c', faint: '#3a4a60', accent: '#39b4ff', signal: '#ffb14a', wall: '#ff5470', ok: '#55e0a6' };
+const KEYS = ['C3','C#3','D3','D#3','E3','F3','F#3','G3','G#3','A3','A#3','B3'];
+const LOCKS = [61, 74, 87, 52, 68, 44, 79, 58, 71, 49, 66, 55];
+const mode = { a: 'trace', b: 'trace', c: 'trace' };
+function rng(seed) { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+function addr(seed) { return ((Math.imul(seed, 2654435761)) >>> 0).toString(16).toUpperCase().padStart(8, '0').slice(0, 4); }
+function text(c, s, x, y, size, col, align, weight) { c.font = (weight || 400) + ' ' + size + 'px ' + MONO; c.fillStyle = col; c.textAlign = align || 'left'; c.textBaseline = 'middle'; c.shadowBlur = 0; c.fillText(s, x, y); }
+function sig(c, x, y, r, seed, col, alpha, glow) {
+  const rnd = rng(seed), n = Math.max(28, Math.round(r * 1.6)), k = [1 + Math.floor(rnd() * 3), 3 + Math.floor(rnd() * 4), 6 + Math.floor(rnd() * 7)], p = [rnd() * TAU, rnd() * TAU, rnd() * TAU], w = [0.2 + rnd() * 0.2, 0.1 + rnd() * 0.15, 0.05 + rnd() * 0.1];
+  c.save(); c.globalAlpha = alpha == null ? 1 : alpha; c.strokeStyle = col; c.lineWidth = r > 30 ? 2 : 1.3; c.lineCap = 'round';
+  if (glow) { c.shadowColor = col; c.shadowBlur = r * 0.5; }
+  c.beginPath();
+  for (let i = 0; i < n; i++) { const t = i / n * TAU, m = Math.max(0.06, Math.min(1, 0.5 + w[0] * Math.sin(k[0] * t + p[0]) + w[1] * Math.sin(k[1] * t + p[1]) + w[2] * Math.sin(k[2] * t + p[2]))), r0 = r * 0.5, r1 = r * (0.5 + 0.5 * m); c.moveTo(x + Math.cos(t) * r0, y + Math.sin(t) * r0); c.lineTo(x + Math.cos(t) * r1, y + Math.sin(t) * r1); }
+  c.stroke(); c.beginPath(); c.arc(x, y, r * 0.44, 0, TAU); c.lineWidth = 1; c.stroke(); c.restore();
+}
+function dots(c) { c.fillStyle = C.grid; for (let x = 20; x < 1000; x += 28) for (let y = 20; y < 600; y += 28) c.fillRect(x, y, 1.5, 1.5); }
+function chip(c, x, y, label, state) {
+  c.font = '500 12px ' + MONO; const w = c.measureText(label).width + 22, col = state === 'wall' ? C.wall : state === 'ok' ? C.ok : state === 'busy' ? C.signal : C.faint;
+  c.strokeStyle = col; c.lineWidth = 1; c.beginPath(); c.roundRect(x, y - 12, w, 24, 4); c.stroke();
+  if (state === 'wall') { c.fillStyle = 'rgba(255,84,112,0.14)'; c.fill(); }
+  text(c, label, x + 11, y + 1, 12, state ? col : C.dim, 'left', 500); return w + 8;
+}
+function knob(c, x, y, r, v, label, val) {
+  c.lineWidth = 3; c.lineCap = 'round'; c.strokeStyle = C.line; c.beginPath(); c.arc(x, y, r, TAU * 0.375, TAU * 1.125); c.stroke();
+  c.strokeStyle = C.accent; c.beginPath(); c.arc(x, y, r, TAU * 0.375, TAU * (0.375 + 0.75 * v)); c.stroke();
+  const a = TAU * (0.375 + 0.75 * v); c.strokeStyle = C.fg; c.lineWidth = 2; c.beginPath(); c.moveTo(x + Math.cos(a) * r * 0.35, y + Math.sin(a) * r * 0.35); c.lineTo(x + Math.cos(a) * r * 0.78, y + Math.sin(a) * r * 0.78); c.stroke();
+  text(c, label, x + r + 10, y - 7, 11, C.dim); text(c, val, x + r + 10, y + 9, 13, C.fg, 'left', 500);
+}
+function route(c, x, y, horizontal) {
+  const seeds = [41, 77, 12, 93, 7]; text(c, 'ROUTE', x, y - (horizontal ? 24 : 22), 11, C.dim);
+  seeds.forEach((s, i) => { const px = horizontal ? x + 14 + i * 74 : x + 14, py = horizontal ? y : y + i * 40, last = i === seeds.length - 1;
+    if (i) { c.strokeStyle = C.faint; c.lineWidth = 1; c.beginPath(); if (horizontal) { c.moveTo(px - 60, py); c.lineTo(px - 14, py); } else { c.moveTo(px, py - 27); c.lineTo(px, py - 13); } c.stroke(); }
+    sig(c, px, py, 12, s, last ? C.accent : C.dim, last ? 1 : 0.7, last);
+    if (horizontal) text(c, addr(s), px, py + 22, 11, last ? C.fg : C.dim, 'center'); else text(c, addr(s), px + 22, py, 12, last ? C.fg : C.dim); });
+}
+function prompt(c, x, y, t, s) { text(c, '>', x, y, 13, C.accent, 'left', 700); text(c, s + (Math.floor(t * 2) % 2 ? '▌' : ' '), x + 16, y, 13, C.fg); }
+function parts(c, x, y, dec) { let px = x; if (dec) { [['OSC', 'ok'], ['FILTER', 'ok'], ['ENV', 'busy'], ['MOD', 'busy'], ['FX off', '']].forEach(p => px += chip(c, px, y, p[0], p[1])); } else { [['OSC', ''], ['FILTER', 'wall'], ['ENV', ''], ['MOD', ''], ['FX', '']].forEach(p => px += chip(c, px, y, p[0], p[1])); } }
+
+function drawA(c, t) {
+  const dec = mode.a === 'decrypt', cx = 500, cy = 262, R = 186, sel = 2;
+  c.clearRect(0, 0, 1000, 600); dots(c);
+  c.setLineDash([3, 7]); c.strokeStyle = C.faint; c.lineWidth = 1; c.beginPath(); c.arc(cx, cy, R, 0, TAU); c.stroke(); c.setLineDash([]);
+  if (!dec) { c.strokeStyle = C.wall; c.globalAlpha = 0.8; c.beginPath(); c.arc(cx, cy, 72, 0, TAU); c.stroke(); c.globalAlpha = 1; text(c, 'firewall: filter', cx + 80, cy - 62, 11, C.wall); }
+  for (let i = 0; i < 12; i++) { const a = i / 12 * TAU - TAU / 4, x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R, on = i === sel;
+    c.strokeStyle = on ? C.accent : C.line; c.lineWidth = on ? 1.6 : 1; c.beginPath(); c.moveTo(cx + Math.cos(a) * 58, cy + Math.sin(a) * 58); c.lineTo(x - Math.cos(a) * 28, y - Math.sin(a) * 28); c.stroke();
+    sig(c, x, y, 22, 100 + i, on ? C.accent : '#8fb6d8', on ? 1 : 0.8, on);
+    if (on) { c.strokeStyle = C.fg; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 27, t * 2, t * 2 + 1.1); c.stroke(); }
+    const lx = x + Math.cos(a) * 44, ly = y + Math.sin(a) * 40;
+    if (dec) { c.strokeStyle = C.signal; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 27, -TAU / 4, -TAU / 4 + TAU * LOCKS[i] / 100); c.stroke(); text(c, LOCKS[i] + '%', lx, ly, 13, on ? C.signal : C.fg, 'center', 500); }
+    else { text(c, KEYS[i], lx, ly - 7, 11, C.dim, 'center'); text(c, addr(100 + i), lx, ly + 8, 12, on ? C.fg : C.dim, 'center'); } }
+  if (dec) { sig(c, cx, cy, 50, 999, C.signal, 1, true); sig(c, cx, cy, 50, 102, C.accent, 0.75, false); text(c, 'SIGNAL  A1  1.82 s', cx, cy + 70, 12, C.signal, 'center', 500); }
+  else { sig(c, cx, cy, 48, 7, C.accent, 1, true); text(c, 'Target Lock Bass', cx, cy + 68, 13, C.fg, 'center', 500); text(c, addr(7), cx, cy + 86, 12, C.dim, 'center'); }
+  if (dec) { text(c, 'DECRYPTING', 40, 34, 13, C.signal, 'left', 700); text(c, 'pass 14   best lock 87%   0:09', 140, 34, 13, C.fg); }
+  else { prompt(c, 40, 34, t, 'darker, same envelope'); text(c, 'D3  2C91   brighter +18%   attack -40 ms', 960, 34, 12, C.dim, 'right'); }
+  c.strokeStyle = C.line; c.beginPath(); c.moveTo(24, 492); c.lineTo(976, 492); c.stroke();
+  route(c, 40, 546, true); text(c, dec ? 'SETTLED' : 'FIREWALLS', 440, 522, 11, C.dim); parts(c, 440, 548, dec);
+  if (dec) { chip(c, 800, 548, 'Stop', ''); chip(c, 860, 548, 'Take 87%', 'ok'); } else { knob(c, 800, 546, 18, 0.35, 'REACH', '0.35'); chip(c, 896, 548, 'Bridge', ''); }
+}
+
+function hex(c, x, y, r, col, w, fill) { c.beginPath(); for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + TAU / 12; c[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * r, y + Math.sin(a) * r); } c.closePath(); if (fill) { c.fillStyle = fill; c.fill(); } c.strokeStyle = col; c.lineWidth = w; c.stroke(); }
+function bars(c, x, y, w, h, seed, col, lock) { const rnd = rng(seed), n = 11, bw = w / n; for (let i = 0; i < n; i++) { const v = 0.15 + 0.85 * Math.abs(Math.sin(i * (0.5 + rnd()) + rnd() * 6)) * (1 - i / n * 0.6 * rnd()); c.fillStyle = lock != null && i / n < lock / 100 ? C.signal : col; c.fillRect(x - w / 2 + i * bw + 1, y + h / 2 - v * h, bw - 2, v * h); } }
+function drawB(c, t) {
+  const dec = mode.b === 'decrypt', cx = 655, cy = 300, d = 104, hr = 54, sel = 3;
+  c.clearRect(0, 0, 1000, 600);
+  c.fillStyle = '#0a0f17'; c.fillRect(0, 0, 310, 600); c.strokeStyle = C.line; c.beginPath(); c.moveTo(310, 0); c.lineTo(310, 600); c.stroke();
+  text(c, dec ? 'DECRYPT  session 0x3F' : 'TRACE  session 0x3F', 24, 30, 12, dec ? C.signal : C.accent, 'left', 700);
+  const name = 'TARGET LOCK BASS', shown = Math.min(name.length, 6 + Math.floor((t * 3) % 11)), cipher = name.split('').map((ch, i) => ch === ' ' ? ' ' : (i * 7 % name.length) < shown ? ch : '▒').join('');
+  const log = dec ? [['$', 'decrypt clip "headhunter_a1.wav"', C.fg], ['', 'pitch A1   length 1.82 s   dry', C.dim], ['', 'start set: 24 patches (reese, acid)', C.dim], ['', 'pass 09   lock 0.61   A41C', C.dim], ['', 'pass 11   lock 0.74   09BE', C.dim], ['', 'model: try ladder 24, sub -1 oct', C.accent], ['', 'pass 12   lock 0.83   kept', C.ok], ['', 'pass 14   lock 0.87   2C91', C.signal], ['', 'osc settled   filter settled', C.ok], ['', 'env ...   mod ...', C.dim], ['', cipher, C.fg]]
+    : [['$', 'hold 7F3A  "Target Lock Bass"', C.fg], ['', 'reach 0.35   12 nodes', C.dim], ['$', 'firewall filter', C.fg], ['', 'filter held in all nodes', C.wall], ['$', 'jump A41C', C.fg], ['$', 'jump 09BE', C.fg], ['$', 'jump 7F3A', C.fg], ['>', 'darker, same envelope', C.accent], ['', 'by brightness: 5D20 (-21%)', C.dim], ['', 'near ring = small change', C.dim], ['', 'far ring  = large change', C.dim]];
+  log.forEach((l, i) => { text(c, l[0], 24, 70 + i * 28, 12, l[0] === '>' ? C.accent : C.dim, 'left', 700); text(c, l[1], 42, 70 + i * 28, 12, l[2]); });
+  prompt(c, 24, 566, t, dec ? '' : 'more metallic');
+  text(c, addr(41) + '  ›  ' + addr(77) + '  ›  ' + addr(12) + '  ›  ' + addr(93) + '  ›', 340, 30, 12, C.dim); text(c, addr(7), 340 + 37 * 7.25, 30, 12, C.fg, 'left', 700);
+  const cells = []; for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; cells.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d, 'near']); } for (let k = 0; k < 6; k++) { const a = k / 6 * TAU + TAU / 12; cells.push([cx + Math.cos(a) * d * 1.732, cy + Math.sin(a) * d * 1.732, 'far']); }
+  cells.forEach((p, i) => { const on = i === sel, far = p[2] === 'far'; hex(c, p[0], p[1], hr, on ? C.accent : far ? C.faint : '#35506e', on ? 2 : 1, on ? 'rgba(57,180,255,0.08)' : null);
+    bars(c, p[0], p[1] - 6, 56, 34, 200 + i, on ? C.accent : far ? '#55708e' : '#8fb6d8', dec ? LOCKS[i] : null);
+    text(c, dec ? LOCKS[i] + '%' : addr(200 + i), p[0], p[1] + 30, 12, on ? C.fg : C.dim, 'center', dec ? 700 : 400); text(c, KEYS[i], p[0], p[1] - 36, 10 + 1, C.faint, 'center'); });
+  hex(c, cx, cy, hr, dec ? C.signal : C.accent, 2.5, dec ? 'rgba(255,177,74,0.08)' : 'rgba(57,180,255,0.10)'); c.save(); c.shadowColor = dec ? C.signal : C.accent; c.shadowBlur = 14; bars(c, cx, cy - 6, 56, 34, 7, dec ? C.signal : C.accent, null); c.restore(); text(c, dec ? 'SIGNAL' : addr(7), cx, cy + 30, 12, C.fg, 'center', 700);
+  parts(c, 340, 566, dec); if (dec) chip(c, 880, 566, 'Take 87%', 'ok'); else { knob(c, 800, 564, 16, 0.35, 'REACH', '0.35'); chip(c, 892, 566, 'Bridge', ''); }
+}
+
+const SECT = ['OSC', 'FILTER', 'ENV', 'MOD', 'FX'];
+function drawC(c, t) {
+  const dec = mode.c === 'decrypt', cx = 372, cy = 292, R = 236, sel = 4;
+  c.clearRect(0, 0, 1000, 600); dots(c);
+  [0.3, 0.53, 0.77, 1].forEach((f, i) => { c.strokeStyle = i === 3 ? C.faint : C.line; c.lineWidth = 1; c.beginPath(); c.arc(cx, cy, R * f, 0, TAU); c.stroke(); });
+  const ringLabels = dec ? ['75%', '50%', '25%'] : ['near', '', 'far']; ringLabels.forEach((s, i) => text(c, s, cx + 6, cy - R * [0.3, 0.53, 0.77][i] - 9, 11, C.dim));
+  for (let s = 0; s < 5; s++) { const a = s / 5 * TAU - TAU / 4 - TAU / 10; c.strokeStyle = C.line; c.beginPath(); c.moveTo(cx + Math.cos(a) * 60, cy + Math.sin(a) * 60); c.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); c.stroke();
+    const m = s / 5 * TAU - TAU / 4, wall = !dec && s === 1; text(c, SECT[s], cx + Math.cos(m) * (R + 22), cy + Math.sin(m) * (R + 16), 12, wall ? C.wall : C.dim, 'center', 700);
+    if (wall) { c.save(); c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, R, a, a + TAU / 5); c.closePath(); c.clip(); c.strokeStyle = 'rgba(255,84,112,0.22)'; c.lineWidth = 1; for (let k = -600; k < 900; k += 12) { c.beginPath(); c.moveTo(k, 0); c.lineTo(k + 600, 600); c.stroke(); } c.restore(); c.strokeStyle = C.wall; c.lineWidth = 2; c.beginPath(); c.arc(cx, cy, 64, a, a + TAU / 5); c.stroke(); } }
+  const sw = t * 0.6; c.save(); c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, R, sw - 0.5, sw); c.closePath(); c.fillStyle = dec ? 'rgba(255,177,74,0.07)' : 'rgba(57,180,255,0.07)'; c.fill(); c.restore();
+  c.strokeStyle = dec ? C.signal : C.accent; c.globalAlpha = 0.6; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(sw) * R, cy + Math.sin(sw) * R); c.stroke(); c.globalAlpha = 1;
+  const sectOf = [0, 0, 0, 2, 2, 2, 3, 3, 4, 4, 0, 3], rnd = rng(5); let selXY = [0, 0];
+  for (let i = 0; i < 12; i++) { const s = sectOf[i], off = (rnd() - 0.5) * 0.9, a = s / 5 * TAU - TAU / 4 + off * TAU / 5 * 0.8 + (dec ? i * 0.5 : 0), far = dec ? 1 - LOCKS[i] / 100 : 0.34 + rnd() * 0.6, r = Math.max(74, R * (dec ? far * 1.55 : far)), x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r, on = dec ? LOCKS[i] === 87 : i === sel;
+    if (dec) { c.strokeStyle = 'rgba(255,177,74,0.35)'; c.setLineDash([2, 5]); c.beginPath(); c.moveTo(x + Math.cos(a) * 46, y + Math.sin(a) * 46); c.lineTo(x + Math.cos(a) * 16, y + Math.sin(a) * 16); c.stroke(); c.setLineDash([]); }
+    sig(c, x, y, 15, 300 + i, on ? (dec ? C.signal : C.accent) : '#8fb6d8', on ? 1 : 0.8, on);
+    if (on) { selXY = [x, y]; c.strokeStyle = C.fg; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 21, 0, TAU); c.stroke(); }
+    text(c, dec ? LOCKS[i] + '%' : KEYS[i], x, y + 27, 11, on ? C.fg : C.dim, 'center', on ? 700 : 400); }
+  sig(c, cx, cy, 40, dec ? 999 : 7, dec ? C.signal : C.accent, 1, true); if (dec) sig(c, cx, cy, 40, 302, C.accent, 0.7, false);
+  c.strokeStyle = C.faint; c.setLineDash([2, 4]); c.beginPath(); c.moveTo(selXY[0] + 22, selXY[1]); c.lineTo(700, 120); c.stroke(); c.setLineDash([]);
+  c.fillStyle = '#0a0f17'; c.strokeStyle = C.line; c.beginPath(); c.roundRect(700, 24, 276, 552, 8); c.fill(); c.stroke();
+  if (dec) { text(c, 'DECRYPTING', 720, 50, 12, C.signal, 'left', 700); text(c, 'pass 14  0:09', 956, 50, 12, C.dim, 'right'); sig(c, 760, 112, 34, 302, C.accent, 1, true); text(c, '87%', 812, 100, 30, C.fg, 'left', 700); text(c, 'lock   node ' + addr(302), 812, 128, 12, C.dim);
+    [['oscillators', 0.96, C.ok], ['filter', 0.91, C.ok], ['envelopes', 0.7, C.signal], ['modulation', 0.42, C.signal], ['effects (off while matching)', 0, C.faint]].forEach((p, i) => { const y = 184 + i * 42; text(c, p[0], 720, y, 12, C.fg); c.fillStyle = C.line; c.fillRect(720, y + 12, 236, 4); c.fillStyle = p[2]; c.fillRect(720, y + 12, 236 * p[1], 4); });
+    text(c, 'model: tried ladder 24, sub -1 oct', 720, 410, 11, C.accent); text(c, 'kept: lock 0.74 to 0.83', 720, 430, 11, C.ok); text(c, 'signal  A1  1.82 s  dry', 720, 470, 11, C.dim); chip(c, 720, 540, 'Stop', ''); chip(c, 784, 540, 'Take 87%', 'ok'); }
+  else { text(c, 'NODE ' + addr(304), 720, 50, 12, C.accent, 'left', 700); text(c, 'E3', 956, 50, 12, C.dim, 'right'); sig(c, 760, 112, 34, 304, C.accent, 1, true); text(c, 'envelopes', 812, 96, 13, C.fg, 'left', 500); text(c, 'reach 0.52', 812, 116, 12, C.dim); text(c, 'filter held', 812, 134, 12, C.wall);
+    [['amp attack', '-40 ms'], ['amp decay', '+180 ms'], ['env 2 to position', '+22 %'], ['brightness', '+18 %']].forEach((p, i) => { const y = 184 + i * 28; text(c, p[0], 720, y, 12, C.dim); text(c, p[1], 956, y, 12, C.fg, 'right', 500); });
+    chip(c, 720, 312, 'Hear', ''); chip(c, 780, 312, 'Jump', 'ok'); route(c, 720, 384, false); prompt(c, 720, 556, t, 'darker'); }
+  parts(c, 40, 566, dec); if (!dec) { knob(c, 400, 564, 16, 0.35, 'REACH', '0.35'); chip(c, 500, 566, 'Bridge', ''); }
+}
+
+const cv = { a: document.getElementById('ca'), b: document.getElementById('cb'), c: document.getElementById('cc') }, draw = { a: drawA, b: drawB, c: drawC }, ctx = {};
+for (const k in cv) { const dpr = Math.min(2, window.devicePixelRatio || 1); cv[k].width = 1000 * dpr; cv[k].height = 600 * dpr; ctx[k] = cv[k].getContext('2d'); ctx[k].scale(dpr, dpr); }
+function frame(ms) { const t = ms / 1000; for (const k in cv) draw[k](ctx[k], t); }
+['a', 'b', 'c'].forEach(k => ['trace', 'decrypt'].forEach(m => { const b = document.getElementById(k + '-' + m); b.addEventListener('click', () => { mode[k] = m; document.getElementById(k + '-trace').setAttribute('aria-pressed', m === 'trace'); document.getElementById(k + '-decrypt').setAttribute('aria-pressed', m === 'decrypt'); frame(performance.now()); }); }));
+const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function loop(ms) { frame(ms); if (!still) requestAnimationFrame(loop); }
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => still ? frame(2400) : requestAnimationFrame(loop));
+frame(2400);
+</script>

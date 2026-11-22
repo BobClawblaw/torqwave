@@ -410,7 +410,12 @@ The look is the feature's identity, so it gets its own step and a mock-up the us
 - **Console details that carry information, not decoration:** a scan line sweeps a node while it sounds; a firewall is drawn as a barrier across the links of the part it holds; Reach is a ring that widens round the middle node; the route shows each jump's address.
 - **In the theme's colours**, with the accent as the glow, in light themes as well as dark (dark is where it looks its best, and the guide's pictures use it). Drawn with the control kit (`Source/SoundControls.*`), sharp at 70 % to 160 %.
 - **Plain to use:** every control has an ordinary tooltip ("Reach: how far the nearby sounds are from this one"), so the vocabulary never has to be learnt to be used.
-- **First, three mock-ups** of the view as pictures, for the user to choose from or mark up. Nothing is built before one is chosen.
+- **Chosen: Sweep** (2026-11-22), the third of three mock-ups (`docs/design/signal-console-mockups.html`, mock-up C; open it in a browser). It replaces the plain ring described above wherever the two differ:
+  - **A scope.** Round the node you hold, five sectors: oscillators, filter, envelopes, modulation, effects. A node sits in the sector of the part that changed most, and its distance from the middle is how far it is from the node you hold: near rings small changes, far rings large ones. Reach sets how far out the twelve are spread. A sweep line turns slowly; it is the only motion at rest.
+  - **A firewall closes its sector**: hatched, with a barrier arc at its inner edge, and no node lands there.
+  - **The side panel** shows the node under the pointer: its signature large, its address and key, which part changed, and the three or four settings that moved most with their amounts in units ("amp attack -40 ms"); **Hear** and **Jump**; the route as a list beneath; and the line to type in when Ask Torq is on.
+  - **In Decrypt the same scope reads as lock:** the signal's signature sits in the middle with the best candidate's laid over it, the rings are 75, 50 and 25 % lock, and candidates drift inward as theirs rises. The side panel shows the best lock as a large figure, a bar for each part as it settles, what the model proposed and whether it was kept, and **Stop** and **Take**.
+  - The mock-up's colours stand for the theme's: the accent for nodes, a second colour for the signal, the theme's warning colour for firewalls.
 - **Tested:** the view draws at 70 % to 160 % as the rest of the window does; a node's signature and address change when its settings do and are the same for the same settings; with Reduce Motion on, a jump redraws without animation; a guide screenshot of the real window.
 
 ### Step 17: Decrypt, a patch from a recording (L)
@@ -458,7 +463,7 @@ Trace and Decrypt work in full with Ask Torq off. With it on, the model the user
 ### Order for part three
 
 1. Step 14 first: 15 and 17 both write patches that may use it.
-2. Step 16's mock-ups, for the user to choose from, while step 14 is built.
+2. Step 16's look is chosen (Sweep).
 3. Steps 15 and 16 together.
 4. Step 17.
 5. Step 19: the factory sounds, sequences, kits and drum maps can be done at once (they need nothing from part three); the Trace, Decrypt and table tools after steps 15 and 17.
