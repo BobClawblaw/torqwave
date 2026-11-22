@@ -1568,8 +1568,8 @@ namespace Ai
             return refused ("the " + what + " automation couldn't be set");
 
         const auto count = (int) points->size();
-        return done (count == 0 ? "Remove " + t.name.quoted() + "'s " + what + " automation"
-                                : "Automate " + t.name.quoted() + "'s " + what + " with " + juce::String (count) + " point" + (count == 1 ? "" : "s"));
+        return done (count == 0 ? "Remove the " + what + " automation on " + t.name.quoted()
+                                : "Automate the " + what + " on " + t.name.quoted() + " with " + juce::String (count) + " point" + (count == 1 ? "" : "s"));
     }
 
     juce::var SessionTools::addTrackEffect (const juce::var& a)
@@ -1614,7 +1614,7 @@ namespace Ai
         PlannedSlot slot;
         slot.plugin = *plugin;
         chain.insert (chain.begin() + at, slot);
-        return done ("Add " + plugin->name + " to " + t.name.quoted() + "'s effects"
+        return done ("Add " + plugin->name + " to the effects on " + t.name.quoted()
                      + (at == (int) chain.size() - 1 ? juce::String() : ", as effect " + juce::String (at - first + 1)) + " (when the plan is applied)");
     }
 
@@ -1657,7 +1657,7 @@ namespace Ai
                 SessionEdits::setEnvelope (state, t.id, AutomationTarget::effect (removed.slotId, id), {});
         }
 
-        return done ("Take " + removed.plugin.name + " off " + t.name.quoted() + "'s effects" + (removed.slotId == 0 ? juce::String() : " (when the plan is applied)"));
+        return done ("Take " + removed.plugin.name + " off " + t.name.quoted() + (removed.slotId == 0 ? juce::String() : " (when the plan is applied)"));
     }
 
     juce::var SessionTools::moveTrackEffect (const juce::var& a)
@@ -1698,7 +1698,7 @@ namespace Ai
         auto moving = chain[*slot];
         chain.erase (chain.begin() + (std::ptrdiff_t) *slot);
         chain.insert (chain.begin() + (std::ptrdiff_t) at, moving);
-        return done ("Move " + moving.plugin.name + " to effect " + juce::String (to) + " of " + t.name.quoted() + "'s (when the plan is applied)");
+        return done ("Move " + moving.plugin.name + " to effect " + juce::String (to) + " on " + t.name.quoted() + " (when the plan is applied)");
     }
 
     juce::var SessionTools::listEffectParameters (const juce::var& a)
@@ -1860,7 +1860,7 @@ namespace Ai
             return refused ("give bypass or parameters to change");
 
         chainOf (t.id)[*slot] = changed;
-        return done ("Set " + t.name.quoted() + "'s " + changed.plugin.name + ": " + what.joinIntoString (", ") + " (when the plan is applied)");
+        return done ("Set " + changed.plugin.name + " on " + t.name.quoted() + ": " + what.joinIntoString (", ") + " (when the plan is applied)");
     }
 
     juce::var SessionTools::freezeTrack (const juce::var& a)
@@ -2107,7 +2107,7 @@ namespace Ai
 
         loads.erase (std::remove_if (loads.begin(), loads.end(), [&t] (const InstrumentLoad& l) { return l.trackId == t.id; }), loads.end());
 
-        const auto step = alreadyLoaded ? "Load the preset " + presetName.quoted() + " on " + t.name.quoted() + "'s " + plugin->name
+        const auto step = alreadyLoaded ? "Load the preset " + presetName.quoted() + " in " + plugin->name + " on " + t.name.quoted()
                                         : "Load " + plugin->name + (presetName.isNotEmpty() ? " with the preset " + presetName.quoted() : juce::String())
                                               + " on " + t.name.quoted();
         loads.push_back ({ t.id, *plugin, presetName, alreadyLoaded, step });

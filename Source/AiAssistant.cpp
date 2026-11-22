@@ -29,6 +29,13 @@ namespace
                                                                                                     : " " + juce::JSON::toString (args, true);
         return tool + compact.substring (0, 300);
     }
+
+    /** Whether Apply makes the whole plan as one undo step: rack changes, instrument loads, track effects and renders
+        are made after it, outside that step. */
+    bool allInOneStep (const Workspace& w)
+    {
+        return ! w.rackChanged() && w.getInstrumentLoads().empty() && w.getChainChanges().empty() && w.getRenders().empty();
+    }
 }
 
 //==============================================================================
@@ -223,13 +230,15 @@ AskPanel::AskPanel (Settings s, std::function<std::optional<Workspace::Start>()>
         if (agent == nullptr || ! planReady)
             return;
 
+        const auto oneStep = allInOneStep (agent->getWorkspace());
+
         if (const auto error = applyPlan (agent->getWorkspace(), lastRequest); error.isNotEmpty())
         {
             addLog ("\n" + error + "\n", Theme::danger);
             return;
         }
 
-        addLog ("\nApplied, as one undo step.\n", Theme::good);
+        addLog (oneStep ? "\nApplied, as one undo step.\n" : "\nApplied; the notes above say what isn't in its undo step.\n", Theme::good);
         planReady = false;
 
         if (suggestionButtons.isEmpty())   // suggestions stay to apply
@@ -548,7 +557,7 @@ void AskPanel::finish (const juce::String&, const juce::String& error)
     }
     else
     {
-        addLog ("\n\nThe plan, applied as one undo step:\n", Theme::textStrong);
+        addLog (allInOneStep (w) ? "\n\nThe plan, applied as one undo step:\n" : "\n\nThe plan:\n", Theme::textStrong);
 
         for (int i = 0; i < steps.size(); ++i)
             addLog (juce::String (i + 1) + ". " + steps[i] + "\n", Theme::text);
