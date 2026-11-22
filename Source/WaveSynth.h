@@ -4,9 +4,10 @@
 #include "WaveTables.h"
 
 /** The built-in synth's engine: three wavetable oscillators (each with Position, a warp, and up to
-    eight unison voices with detune, stereo spread, strum and drift), a sub and a noise source, two
+    eight unison voices with detune, stereo spread, strum and drift, and a level envelope of its
+    own to switch on), a sub and a noise source, two
     filters in series or parallel (a 24 dB ladder and a state-variable filter among their types),
-    four envelopes, two LFOs, eight modulation slots, four macros, and drive, chorus, phaser, delay
+    four envelopes, two LFOs, sixteen modulation slots, four macros, and drive, chorus, phaser, delay
     and reverb after the voices. Sixteen voices, poly, mono or legato with glide.
 
     Nothing it does steps the sound: a note struck again keeps its waves' phases and its filters'
@@ -16,7 +17,7 @@
     ramped between, so it renders the same at any block size. */
 namespace WaveSynth
 {
-    constexpr int numOscillators = 3, numEnvelopes = 4, numLfos = 2, numSlots = 8, numMacros = 4, numSteps = 16;
+    constexpr int numOscillators = 3, numEnvelopes = 4, numLfos = 2, numSlots = 16, numMacros = 4, numSteps = 16;
     constexpr int maxUnison = 8, numVoices = 16, numFadingVoices = 8;
     constexpr int controlInterval = 16;
     constexpr double fadeSeconds = 0.004, minimumAttackSeconds = 0.0015;
@@ -104,7 +105,7 @@ namespace BuiltInEffects
         void setMacroName (int i, const juce::String& n)              { macroNames[(size_t) i] = n; }
 
         /** Routes a source to a destination parameter in the first free slot (or the slot already
-            joining them); the slot's index, or -1 when all eight are taken. */
+            joining them); the slot's index, or -1 when all sixteen are taken. */
         int addModulation (int source, const juce::String& destinationId, float amount = 0.25f);
         void removeModulation (int slot);
         void setModulationAmount (int slot, float amount);
@@ -113,6 +114,13 @@ namespace BuiltInEffects
         std::vector<std::tuple<int, int, float>> modulationOf (const juce::String& id) const;
 
         WaveSynth::Readings& getReadings() noexcept                  { return readings; }
+
+        /** The table an oscillator (0 to 2) plays when its Table is "Sampled": one made from a sound
+            (WaveTables::sampledFromAudio). Nullptr takes it away, and the oscillator plays a
+            sawtooth. Kept in the state, so a session or a patch with one plays anywhere; a factory
+            patch has none. Set from the message thread; the voices take it up at their next block. */
+        void setSampledTable (int oscillator, std::shared_ptr<const WaveTables::Sampled>);
+        std::shared_ptr<const WaveTables::Sampled> getSampledTable (int oscillator) const;
 
         /** The old (before 0.20.0) settings turned into the new engine's, every parameter given. */
         static EffectPresets::Values translateOldSettings (const EffectPresets::Values& old);
@@ -134,6 +142,13 @@ namespace BuiltInEffects
         juce::String patchName { "Init" };
         std::array<juce::String, WaveSynth::numMacros> macroNames;
         WaveSynth::Readings readings;
+
+        // The sampled tables: swapped under the lock, which the audio thread only tries. One taken
+        // away is kept until the voices have moved on from it.
+        std::array<std::shared_ptr<const WaveTables::Sampled>, WaveSynth::numOscillators> sampled;
+        std::vector<std::pair<juce::uint32, std::shared_ptr<const WaveTables::Sampled>>> retired;
+        juce::SpinLock sampledLock;
+        std::atomic<juce::uint32> sampledGeneration { 0 }, sampledSeen { 0 };
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BasicSynthProcessor)
     };

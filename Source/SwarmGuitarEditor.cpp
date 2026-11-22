@@ -269,7 +269,7 @@ public:
         SoundControls::drawDisplayWell (g, all, 0, 0);
         const auto area = all.reduced (26.0f, 6.0f);
         const auto n = shown();
-        const auto spread = plain (guitar, "width") * 0.01f;
+        const auto widthNow = plain (guitar, "width") * 0.01f;
 
         g.setColour (Theme::dimText);
         g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
@@ -281,7 +281,7 @@ public:
 
         for (int i = 0; i < n; ++i)
         {
-            const auto where = n == 1 ? 0.0f : (2.0f * (float) i / (float) (n - 1) - 1.0f) * spread;
+            const auto where = n == 1 ? 0.0f : (2.0f * (float) i / (float) (n - 1) - 1.0f) * widthNow;
             const auto x = area.getCentreX() + where * area.getWidth() * 0.5f;
             g.setColour (Theme::accent.withAlpha (0.25f));
             g.fillEllipse (x - 9.0f, area.getCentreY() - 9.0f, 18.0f, 18.0f);

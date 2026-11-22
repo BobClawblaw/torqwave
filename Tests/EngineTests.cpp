@@ -38,6 +38,7 @@
 #include "../Source/DrumMachine.h"
 #include "SwarmGuitarTests.h"
 #include "SoundDemos.h"
+#include "WaveSynthTests.h"
 #include "DrumMachineTests.h"
 #include "SoundControlsTests.h"
 #include "InstrumentTrackTests.h"
@@ -607,6 +608,8 @@ int main (int argc, char* argv[])
     //   --library <folder>      only scan this folder of sounds into a new Sound Library index, and time it
     //   --write-check <folder>  only write categories and tags into copies of WAV files from this folder, and check them
     //   --theme-sweep <folder>  only draw a page of the main panels in each theme into this folder, as <theme>.png
+    //   --synth-window <folder> only save pictures of the synth's window (a patch, the level envelopes, a Sampled table)
+    //   --patch-hashes <file>   only write a hash of each factory patch's render, to compare two builds sample for sample
     //   --sound-demos <folder>  only write the Sounds page's demos (synth patches and Swarm Guitar presets at 120 BPM) as MP3s
     //   --instruments           only the tests of the built-in instruments and their controls
     //   --ai                    only the AI assistance tests (a mock server; no network)
@@ -675,6 +678,18 @@ int main (int argc, char* argv[])
         runSequenceTests (engine);
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (const auto folder = valueOf ("--synth-window"); folder.isNotEmpty())
+    {
+        saveSynthWindow (juce::File (folder));
+        return 0;
+    }
+
+    if (const auto file = valueOf ("--patch-hashes"); file.isNotEmpty())
+    {
+        writePatchHashes (juce::File (file));
+        return 0;
     }
 
     if (const auto folder = valueOf ("--sound-demos"); folder.isNotEmpty())
