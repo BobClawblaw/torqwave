@@ -2126,12 +2126,22 @@ namespace
                 if (p.id == "strumSync") sync = &p;
             }
 
+        // Torqwave Synth's newest: each oscillator's level envelope, and modulation slots 9 to 16.
+        int levelEnvelopes = 0, lateSlots = 0;
+
+        if (! synthChain.empty())
+            for (auto& p : synthChain[0].parameters)
+            {
+                levelEnvelopes += p.name.endsWith ("Level Envelope") ? 1 : 0;
+                lateSlots += p.name.startsWith ("Mod 9 ") || p.name.startsWith ("Mod 16 ") ? 1 : 0;
+            }
+
         const auto guitarCount = guitar->getParameters().size(), synthCount = synth->getParameters().size();
         check (chain.size() == 1 && chain[0].instrument && (int) chain[0].parameters.size() == guitarCount && guitarCount == 27
                    && source != nullptr && source->name == "Source" && source->choices.size() == 2 && sync != nullptr && sync->name == "Strum Sync" && sync->choices.size() > 2
-                   && synthChain.size() == 1 && (int) synthChain[0].parameters.size() == synthCount,
+                   && synthChain.size() == 1 && (int) synthChain[0].parameters.size() == synthCount && levelEnvelopes == WaveSynth::numOscillators && lateSlots > 0,
                "Ask Torq parameters: every one of Swarm Guitar's " + juce::String (guitarCount) + " parameters is read for the model, as Torqwave Synth's "
-                   + juce::String (synthCount) + " are, Source and Strum Sync with their choices");
+                   + juce::String (synthCount) + " are, Source and Strum Sync with their choices, and the synth's level envelopes and slots 9 to 16");
 
         // The Sequencer names an instrument's parameters to the model up to 256, the plug-in catalogue up to 300.
         const auto facts = PluginCatalogue::factsOf (*guitar);
@@ -2147,6 +2157,8 @@ namespace
         start.plugins = BuiltInEffects::getDescriptions();
         start.instruments[guitarId] = guitar->getPluginDescription();
         start.effects[guitarId] = chain;
+        start.instruments[synthId] = synth->getPluginDescription();
+        start.effects[synthId] = synthChain;
         Ai::Workspace w (std::move (start));
         const auto call = [&w] (const juce::String& tool, const juce::String& args) { return parse (w.run (tool, args)); };
         const auto all = call ("list_effect_parameters", R"({"track": "Guitar", "effect": "instrument"})");
@@ -2164,6 +2176,13 @@ namespace
         const auto ids = TrackEffects::parametersById (*guitar);
         const auto sourceNow = ids.count ("source") > 0 ? ids.at ("source")->getCurrentValueAsText() : juce::String();
         const auto syncNow = ids.count ("strumSync") > 0 ? ids.at ("strumSync")->getCurrentValueAsText() : juce::String();
+        const auto synthAll = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument"})");
+        const auto envelopes = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument", "find": "level envelope"})");
+        const auto slot16 = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument", "find": "Mod 16 "})");
+        check (synthAll["parameters"].size() == 150 && synthAll["note"].toString().contains ("of " + juce::String (synthCount)) && envelopes["parameters"].size() == WaveSynth::numOscillators
+                   && slot16["parameters"].size() > 0,
+               "Ask Torq parameters: Torqwave Synth's are listed 150 at a time, and find reaches the rest: the " + juce::String (envelopes["parameters"].size())
+                   + " level envelopes' switches and slot 16's " + juce::String (slot16["parameters"].size()) + " settings");
         check (all["parameters"].size() == guitarCount && all["note"].isVoid() && strum["parameters"].size() == 1 && strum["parameters"][0]["choices"].toString().contains (division)
                    && (bool) set["ok"] && made && sourceNow == swarm && syncNow == division,
                "Ask Torq parameters: list_effect_parameters lists all of Swarm Guitar's, and set_track_effect sets Source to " + swarm.quoted() + " and Strum Sync to " + division.quoted()

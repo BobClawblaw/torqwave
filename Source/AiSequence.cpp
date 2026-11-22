@@ -36,7 +36,7 @@ namespace
         return (juce::int64) d;
     }
 
-    // An instrument's parameters named to the model: all of Torqwave Synth's 196, with room.
+    // An instrument's parameters named to the model: all of Torqwave Synth's 235, with room.
     constexpr int maxNotes = 4096, maxPoints = 2048, maxSuggestions = 12, maxParameters = 256;
 
     const char* notesSchema = R"JSON({ "type": "array", "items": { "type": "object", "properties": {
