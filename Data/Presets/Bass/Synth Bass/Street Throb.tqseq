@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Street Throb" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="A half-time line, held roots and a fifth, on A" style="Breakbeat/Breaks" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <NOTES>
+    <N p="33" s="0" l="720" v="0.755906"/>
+    <N p="33" s="1920" l="480" v="0.755906"/>
+    <N p="40" s="2880" l="480" v="0.755906"/>
+    <N p="33" s="3840" l="720" v="0.755906"/>
+    <N p="33" s="5760" l="480" v="0.755906"/>
+    <N p="40" s="6720" l="480" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Pipe Reese" bus="0" instrument="1" musical="1" gainDb="0.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBToAWYfHUYkMWYh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

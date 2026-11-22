@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Satellite Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="8th plucks on the chord's notes, through A minor, F" style="Industrial/Futurepop" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <NOTES>
+    <N p="69" s="0" l="120" v="0.755906"/>
+    <N p="76" s="480" l="120" v="0.755906"/>
+    <N p="72" s="960" l="120" v="0.755906"/>
+    <N p="81" s="1440" l="120" v="0.755906"/>
+    <N p="69" s="1920" l="120" v="0.755906"/>
+    <N p="76" s="2400" l="120" v="0.755906"/>
+    <N p="72" s="2880" l="120" v="0.755906"/>
+    <N p="76" s="3360" l="120" v="0.755906"/>
+    <N p="65" s="3840" l="120" v="0.755906"/>
+    <N p="72" s="4320" l="120" v="0.755906"/>
+    <N p="69" s="4800" l="120" v="0.755906"/>
+    <N p="77" s="5280" l="120" v="0.755906"/>
+    <N p="65" s="5760" l="120" v="0.755906"/>
+    <N p="72" s="6240" l="120" v="0.755906"/>
+    <N p="69" s="6720" l="120" v="0.755906"/>
+    <N p="72" s="7200" l="120" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Glass Shard" bus="0" instrument="1" musical="1" gainDb="6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxQrE1byAxTnElbjIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

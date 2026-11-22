@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Goa Motif" role="Melody" subRole="Hooks" key="A minor" tags="Harmonic minor" note="A dotted phrase stated twice, the second time ending another way in A harmonic minor" style="Trance/Psytrance" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="142.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="69" s="0" l="120" v="0.755906"/>
+    <N p="72" s="720" l="120" v="0.755906"/>
+    <N p="71" s="1440" l="120" v="0.755906"/>
+    <N p="72" s="2400" l="120" v="0.755906"/>
+    <N p="71" s="2880" l="120" v="0.755906"/>
+    <N p="84" s="3840" l="120" v="0.755906"/>
+    <N p="84" s="4560" l="120" v="0.755906"/>
+    <N p="84" s="5280" l="120" v="0.755906"/>
+    <N p="84" s="6240" l="120" v="0.755906"/>
+    <N p="83" s="6720" l="120" v="0.755906"/>
+    <N p="69" s="7680" l="120" v="0.755906"/>
+    <N p="72" s="8400" l="120" v="0.755906"/>
+    <N p="71" s="9120" l="120" v="0.755906"/>
+    <N p="72" s="10080" l="120" v="0.755906"/>
+    <N p="71" s="10560" l="120" v="0.755906"/>
+    <N p="69" s="11520" l="120" v="0.755906"/>
+    <N p="68" s="12240" l="120" v="0.755906"/>
+    <N p="69" s="12960" l="120" v="0.755906"/>
+    <N p="68" s="13920" l="120" v="0.755906"/>
+    <N p="65" s="14400" l="120" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Acid Signal" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPikFYfLUZm4VXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Low Lamp Roller" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="A deep line in dotted 8ths round the root, octave and fifth, moving through the roots of A minor, G, F, G" style="House/Deep house" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="33" s="0" l="144" v="0.755906"/>
+    <N p="33" s="720" l="144" v="0.755906"/>
+    <N p="45" s="1440" l="144" v="0.755906"/>
+    <N p="33" s="2160" l="144" v="0.755906"/>
+    <N p="40" s="2880" l="144" v="0.755906"/>
+    <N p="31" s="3840" l="144" v="0.755906"/>
+    <N p="31" s="4560" l="144" v="0.755906"/>
+    <N p="43" s="5280" l="144" v="0.755906"/>
+    <N p="31" s="6000" l="144" v="0.755906"/>
+    <N p="38" s="6720" l="144" v="0.755906"/>
+    <N p="29" s="7680" l="144" v="0.755906"/>
+    <N p="29" s="8400" l="144" v="0.755906"/>
+    <N p="41" s="9120" l="144" v="0.755906"/>
+    <N p="29" s="9840" l="144" v="0.755906"/>
+    <N p="36" s="10560" l="144" v="0.755906"/>
+    <N p="31" s="11520" l="144" v="0.755906"/>
+    <N p="31" s="12240" l="144" v="0.755906"/>
+    <N p="43" s="12960" l="144" v="0.755906"/>
+    <N p="31" s="13680" l="144" v="0.755906"/>
+    <N p="38" s="14400" l="144" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Iron Sub" bus="0" instrument="1" musical="1" gainDb="-1.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRRx8lafLUchIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

@@ -4,6 +4,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**1,018 presets and 116 kits, on the new voices** (0.19.3, step 12 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md))
+- **1,018 factory sequence presets and 116 starter kits** (from 160 and 8) across 37 styles: techno and industrial deeper, electro, breakbeat, drum and bass, ambient, deep house, darksynth and psytrance, and game audio, with **UI Sounds** and **Stingers** as new SFX sub-roles. By role: Drums 254, Bass 177, Harmony 128, Arps 128, Pads 113, SFX 111, Melody 107.
+- **Each preset plays on a named factory patch or kit**: 103 different voices, 96 patches of the new Basic Synth and the seven Basic Drums kits. A voice names its patch or kit rather than carrying settings, so a preset follows the patch as it is improved.
+- **Levels are measured, not guessed**: each preset's track gain comes from its rendered peak (`Scripts/make_presets.py --calibrate`, kept in `Scripts/preset_gains.txt`). Rendered on their voices the presets peak from -19.5 dB (Falling Note Ramp) to -8.7 dB.
+- Not done: the guide's Styles page still covers the techno and industrial styles only; a click check on every preset was not written (the synth's click tests cover retriggers, steals and stops, and the three presets that popped); the new presets were not listened to.
+- Tested (`--sequences`): 1,018 sequences and 116 kits unpack; every one keeps the preset rules; `Scripts/voice_names.txt` matches the instruments' patches and kits; every voice names a patch or kit there is and sounds on it between -24 and -1 dB; the script run again writes the same files byte for byte. The whole suite: 2,342 checks.
+
 **Drum patterns on any kit: Remap Notes** (0.19.3, step 11 of [docs/PLAN-0.19.3.md](docs/PLAN-0.19.3.md))
 - A drum map's sound can say which General MIDI drum it **stands for** (a kit's snare on key 40 stands for 38), in **Edit Sound...** or by **Learn Its Note from MIDI**: right-click a row, play the kit's key on a MIDI input, and the row moves there, standing for the note it had.
 - **Remap Notes to This Map** moves a clip's General MIDI notes to the kit's keys in one undo step, each from where it was (sounds that trade keys move once); **Remap Notes to General MIDI** moves them back.

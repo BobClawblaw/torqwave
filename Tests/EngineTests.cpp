@@ -34,6 +34,8 @@
 #include "RestorationTests.h"
 #include "GeneratorTests.h"
 #include "InstrumentTests.h"
+#include "../Source/WaveSynth.h"
+#include "../Source/DrumMachine.h"
 #include "SwarmGuitarTests.h"
 #include "DrumMachineTests.h"
 #include "SoundControlsTests.h"
@@ -676,6 +678,18 @@ int main (int argc, char* argv[])
     if (const auto folder = valueOf ("--swarm-window"); folder.isNotEmpty())
     {
         saveSwarmGuitarWindow (juce::File (folder));
+        return 0;
+    }
+
+    if (args.contains ("--voice-names"))
+    {
+        // The factory patches and kits a sequence preset's voice can name, for Scripts/make_presets.py.
+        for (auto& patch : WaveSynth::factoryPatches())
+            std::cout << "patch|" << patch.category << "|" << patch.name << std::endl;
+
+        for (auto& kit : DrumMachine::kits())
+            std::cout << "kit|" << kit.name << "|" << kit.description << std::endl;
+
         return 0;
     }
 

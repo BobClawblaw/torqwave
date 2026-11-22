@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Tribal Evolving Pad" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor seventh, A minor seventh, A minor seventh, F major seventh, the filter opening and closing again over four bars" style="Techno/Percussive" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="57" s="0" l="3800" v="0.614173"/>
+    <N p="60" s="0" l="3800" v="0.614173"/>
+    <N p="64" s="0" l="3800" v="0.614173"/>
+    <N p="67" s="0" l="3800" v="0.614173"/>
+    <N p="57" s="3840" l="3800" v="0.614173"/>
+    <N p="60" s="3840" l="3800" v="0.614173"/>
+    <N p="64" s="3840" l="3800" v="0.614173"/>
+    <N p="67" s="3840" l="3800" v="0.614173"/>
+    <N p="57" s="7680" l="3800" v="0.614173"/>
+    <N p="60" s="7680" l="3800" v="0.614173"/>
+    <N p="64" s="7680" l="3800" v="0.614173"/>
+    <N p="67" s="7680" l="3800" v="0.614173"/>
+    <N p="53" s="11520" l="3800" v="0.614173"/>
+    <N p="57" s="11520" l="3800" v="0.614173"/>
+    <N p="60" s="11520" l="3800" v="0.614173"/>
+    <N p="64" s="11520" l="3800" v="0.614173"/>
+  </NOTES>
+  <LANE controller="74">
+    <P t="0" v="0.200000"/>
+    <P t="7680" v="0.800000"/>
+    <P t="15359" v="0.300000"/>
+  </LANE>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Engine Room" bus="0" instrument="1" musical="1" gainDb="-0.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRQtcVZtUFHR81asIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

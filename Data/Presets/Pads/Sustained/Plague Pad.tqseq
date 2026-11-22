@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Plague Pad" role="Pads" subRole="Sustained" key="A minor" tags="Harmonic minor" note="A minor seventh, D minor seventh, E seventh, A minor seventh, held a bar each" style="Industrial/Dark electro" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="57" s="0" l="3800" v="0.629921"/>
+    <N p="60" s="0" l="3800" v="0.629921"/>
+    <N p="64" s="0" l="3800" v="0.629921"/>
+    <N p="68" s="0" l="3800" v="0.629921"/>
+    <N p="62" s="3840" l="3800" v="0.629921"/>
+    <N p="65" s="3840" l="3800" v="0.629921"/>
+    <N p="69" s="3840" l="3800" v="0.629921"/>
+    <N p="72" s="3840" l="3800" v="0.629921"/>
+    <N p="52" s="7680" l="3800" v="0.629921"/>
+    <N p="56" s="7680" l="3800" v="0.629921"/>
+    <N p="59" s="7680" l="3800" v="0.629921"/>
+    <N p="62" s="7680" l="3800" v="0.629921"/>
+    <N p="57" s="11520" l="3800" v="0.629921"/>
+    <N p="60" s="11520" l="3800" v="0.629921"/>
+    <N p="64" s="11520" l="3800" v="0.629921"/>
+    <N p="68" s="11520" l="3800" v="0.629921"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Ventilation" bus="0" instrument="1" musical="1" gainDb="1.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhUk4FcowVXzk1atIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

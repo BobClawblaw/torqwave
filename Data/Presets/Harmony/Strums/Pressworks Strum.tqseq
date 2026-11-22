@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Pressworks Strum" role="Harmony" subRole="Strums" key="A minor" tags="Phrygian" note="A minor, B flat, G minor, A minor, each strummed upwards a 16th a note" style="Techno/Industrial" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="57" s="0" l="3800" v="0.708661"/>
+    <N p="60" s="240" l="3560" v="0.661417"/>
+    <N p="64" s="480" l="3320" v="0.614173"/>
+    <N p="58" s="3840" l="3800" v="0.708661"/>
+    <N p="62" s="4080" l="3560" v="0.661417"/>
+    <N p="65" s="4320" l="3320" v="0.614173"/>
+    <N p="55" s="7680" l="3800" v="0.708661"/>
+    <N p="58" s="7920" l="3560" v="0.661417"/>
+    <N p="62" s="8160" l="3320" v="0.614173"/>
+    <N p="57" s="11520" l="3800" v="0.708661"/>
+    <N p="60" s="11760" l="3560" v="0.661417"/>
+    <N p="64" s="12000" l="3320" v="0.614173"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Minor Stab" bus="0" instrument="1" musical="1" gainDb="4.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRSo41axAxTzElXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

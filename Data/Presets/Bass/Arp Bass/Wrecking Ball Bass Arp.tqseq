@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Wrecking Ball Bass Arp" role="Bass" subRole="Arp Bass" key="A minor" tags="" note="A syncopated electro line round the root and fifth, moving through the roots of A minor, G minor, F, G minor" style="Industrial/Industrial rock" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="112.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="33" s="0" l="144" v="0.755906"/>
+    <N p="33" s="720" l="144" v="0.755906"/>
+    <N p="33" s="1440" l="144" v="0.755906"/>
+    <N p="33" s="2400" l="144" v="0.755906"/>
+    <N p="40" s="2880" l="144" v="0.755906"/>
+    <N p="33" s="3360" l="144" v="0.755906"/>
+    <N p="31" s="3840" l="144" v="0.755906"/>
+    <N p="31" s="4560" l="144" v="0.755906"/>
+    <N p="31" s="5280" l="144" v="0.755906"/>
+    <N p="31" s="6240" l="144" v="0.755906"/>
+    <N p="38" s="6720" l="144" v="0.755906"/>
+    <N p="31" s="7200" l="144" v="0.755906"/>
+    <N p="29" s="7680" l="144" v="0.755906"/>
+    <N p="29" s="8400" l="144" v="0.755906"/>
+    <N p="29" s="9120" l="144" v="0.755906"/>
+    <N p="29" s="10080" l="144" v="0.755906"/>
+    <N p="36" s="10560" l="144" v="0.755906"/>
+    <N p="29" s="11040" l="144" v="0.755906"/>
+    <N p="31" s="11520" l="144" v="0.755906"/>
+    <N p="31" s="12240" l="144" v="0.755906"/>
+    <N p="31" s="12960" l="144" v="0.755906"/>
+    <N p="31" s="13920" l="144" v="0.755906"/>
+    <N p="38" s="14400" l="144" v="0.755906"/>
+    <N p="31" s="14880" l="144" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Ash Swell" bus="0" instrument="1" musical="1" gainDb="2.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPygFHScWYrwlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

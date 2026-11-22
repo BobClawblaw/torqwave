@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Save Point Under-line" role="Melody" subRole="Counter-lines" key="A minor" tags="" note="A two-bar call-and-answer phrase in A minor" style="Game/Menu" energy="1" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="96.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <NOTES>
+    <N p="69" s="0" l="120" v="0.755906"/>
+    <N p="69" s="480" l="120" v="0.755906"/>
+    <N p="69" s="960" l="120" v="0.755906"/>
+    <N p="67" s="1920" l="120" v="0.755906"/>
+    <N p="65" s="2400" l="120" v="0.755906"/>
+    <N p="62" s="2880" l="960" v="0.755906"/>
+    <N p="57" s="3840" l="120" v="0.755906"/>
+    <N p="55" s="4320" l="120" v="0.755906"/>
+    <N p="59" s="4800" l="120" v="0.755906"/>
+    <N p="57" s="5760" l="120" v="0.755906"/>
+    <N p="55" s="6240" l="120" v="0.755906"/>
+    <N p="59" s="6720" l="960" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: FM Toll" bus="0" instrument="1" musical="1" gainDb="2.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>67.VMjLgnC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhQMABUuwFah7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

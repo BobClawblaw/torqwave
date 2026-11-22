@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Open Field Bassline" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="A walking line up through the chord, moving through the roots of A minor, C, G, D minor" style="Game/Exploration" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="33" s="0" l="144" v="0.755906"/>
+    <N p="33" s="960" l="144" v="0.755906"/>
+    <N p="36" s="1440" l="144" v="0.755906"/>
+    <N p="40" s="2400" l="144" v="0.755906"/>
+    <N p="36" s="3120" l="144" v="0.755906"/>
+    <N p="36" s="3840" l="144" v="0.755906"/>
+    <N p="36" s="4800" l="144" v="0.755906"/>
+    <N p="40" s="5280" l="144" v="0.755906"/>
+    <N p="43" s="6240" l="144" v="0.755906"/>
+    <N p="40" s="6960" l="144" v="0.755906"/>
+    <N p="31" s="7680" l="144" v="0.755906"/>
+    <N p="31" s="8640" l="144" v="0.755906"/>
+    <N p="35" s="9120" l="144" v="0.755906"/>
+    <N p="38" s="10080" l="144" v="0.755906"/>
+    <N p="35" s="10800" l="144" v="0.755906"/>
+    <N p="38" s="11520" l="144" v="0.755906"/>
+    <N p="38" s="12480" l="144" v="0.755906"/>
+    <N p="41" s="12960" l="144" v="0.755906"/>
+    <N p="45" s="13920" l="144" v="0.755906"/>
+    <N p="41" s="14640" l="144" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Low Ceiling" bus="0" instrument="1" musical="1" gainDb="14.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBSucGHCUVZrklamIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

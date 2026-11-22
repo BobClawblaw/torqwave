@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Machine Love Riser" role="SFX" subRole="Risers" key="A minor" tags="" note="16ths climbing the A minor scale for 2 bars, louder and brighter as they go" style="Industrial/Synth-EBM" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <NOTES>
+    <N p="45" s="0" l="120" v="0.393701"/>
+    <N p="45" s="240" l="120" v="0.409449"/>
+    <N p="45" s="480" l="120" v="0.425197"/>
+    <N p="47" s="720" l="120" v="0.440945"/>
+    <N p="47" s="960" l="120" v="0.456693"/>
+    <N p="48" s="1200" l="120" v="0.472441"/>
+    <N p="48" s="1440" l="120" v="0.496063"/>
+    <N p="50" s="1680" l="120" v="0.511811"/>
+    <N p="50" s="1920" l="120" v="0.527559"/>
+    <N p="50" s="2160" l="120" v="0.543307"/>
+    <N p="52" s="2400" l="120" v="0.559055"/>
+    <N p="52" s="2640" l="120" v="0.582677"/>
+    <N p="53" s="2880" l="120" v="0.598425"/>
+    <N p="53" s="3120" l="120" v="0.614173"/>
+    <N p="55" s="3360" l="120" v="0.629921"/>
+    <N p="55" s="3600" l="120" v="0.645669"/>
+    <N p="57" s="3840" l="120" v="0.669291"/>
+    <N p="57" s="4080" l="120" v="0.685039"/>
+    <N p="57" s="4320" l="120" v="0.700787"/>
+    <N p="59" s="4560" l="120" v="0.716535"/>
+    <N p="59" s="4800" l="120" v="0.732283"/>
+    <N p="60" s="5040" l="120" v="0.748031"/>
+    <N p="60" s="5280" l="120" v="0.771654"/>
+    <N p="62" s="5520" l="120" v="0.787402"/>
+    <N p="62" s="5760" l="120" v="0.803150"/>
+    <N p="62" s="6000" l="120" v="0.818898"/>
+    <N p="64" s="6240" l="120" v="0.834646"/>
+    <N p="64" s="6480" l="120" v="0.858268"/>
+    <N p="65" s="6720" l="120" v="0.874016"/>
+    <N p="65" s="6960" l="120" v="0.889764"/>
+    <N p="67" s="7200" l="120" v="0.905512"/>
+    <N p="67" s="7440" l="120" v="0.921260"/>
+  </NOTES>
+  <LANE controller="74">
+    <P t="0" v="0.150000"/>
+    <P t="7679" v="1.000000"/>
+  </LANE>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Siren Climb" bus="0" instrument="1" musical="1" gainDb="18.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxToIWYtAxPrkVahIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

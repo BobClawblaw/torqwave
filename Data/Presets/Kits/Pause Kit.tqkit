@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_KIT version="1" name="Pause Kit" key="A minor" tags="Starter kit" note="A starting point for Menu: one of each part, in A minor at 100 BPM" style="Game/Menu">
+  <TORQWAVE_SEQUENCE version="1" name="Hub Stomp" role="Drums" subRole="Full Grooves" key="" tags="" note="One kick a bar, a rimshot on 2 and 4 and a hat on 1 and 3" style="Game/Menu" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+    <NOTES>
+      <N p="36" s="0" l="120" v="0.944882"/>
+      <N p="42" s="0" l="120" v="0.771654"/>
+      <N p="37" s="960" l="120" v="0.771654"/>
+      <N p="42" s="1920" l="120" v="0.771654"/>
+      <N p="37" s="2880" l="120" v="0.771654"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Title Screen Bassline" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="The sub in half notes, moving through the roots of A minor, D minor, F, G" style="Game/Menu" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+    <NOTES>
+      <N p="33" s="0" l="1920" v="0.755906"/>
+      <N p="33" s="1920" l="1920" v="0.755906"/>
+      <N p="38" s="3840" l="1920" v="0.755906"/>
+      <N p="38" s="5760" l="1920" v="0.755906"/>
+      <N p="29" s="7680" l="1920" v="0.755906"/>
+      <N p="29" s="9600" l="1920" v="0.755906"/>
+      <N p="31" s="11520" l="1920" v="0.755906"/>
+      <N p="31" s="13440" l="1920" v="0.755906"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Synth: Warehouse Sub" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUgIWYn8VcyUFHSUmXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Lobby Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor stabs in a syncopated one-bar pattern" style="Game/Menu" energy="1" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+    <NOTES>
+      <N p="57" s="0" l="220" v="0.818898"/>
+      <N p="60" s="0" l="220" v="0.818898"/>
+      <N p="64" s="0" l="220" v="0.818898"/>
+      <N p="57" s="480" l="220" v="0.818898"/>
+      <N p="60" s="480" l="220" v="0.818898"/>
+      <N p="64" s="480" l="220" v="0.818898"/>
+      <N p="57" s="1440" l="220" v="0.818898"/>
+      <N p="60" s="1440" l="220" v="0.818898"/>
+      <N p="64" s="1440" l="220" v="0.818898"/>
+      <N p="57" s="2400" l="220" v="0.818898"/>
+      <N p="60" s="2400" l="220" v="0.818898"/>
+      <N p="64" s="2400" l="220" v="0.818898"/>
+      <N p="57" s="2880" l="220" v="0.818898"/>
+      <N p="60" s="2880" l="220" v="0.818898"/>
+      <N p="64" s="2880" l="220" v="0.818898"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Synth: Factory Hit" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhQgMFcuIWdffTZzIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Start Menu Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, through A minor, F, C, G" style="Game/Menu" energy="1" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+    <NOTES>
+      <N p="81" s="0" l="120" v="0.755906"/>
+      <N p="76" s="720" l="120" v="0.755906"/>
+      <N p="81" s="1440" l="120" v="0.755906"/>
+      <N p="72" s="2160" l="120" v="0.755906"/>
+      <N p="76" s="2880" l="120" v="0.755906"/>
+      <N p="77" s="3840" l="120" v="0.755906"/>
+      <N p="72" s="4560" l="120" v="0.755906"/>
+      <N p="77" s="5280" l="120" v="0.755906"/>
+      <N p="69" s="6000" l="120" v="0.755906"/>
+      <N p="72" s="6720" l="120" v="0.755906"/>
+      <N p="84" s="7680" l="120" v="0.755906"/>
+      <N p="79" s="8400" l="120" v="0.755906"/>
+      <N p="84" s="9120" l="120" v="0.755906"/>
+      <N p="76" s="9840" l="120" v="0.755906"/>
+      <N p="79" s="10560" l="120" v="0.755906"/>
+      <N p="79" s="11520" l="120" v="0.755906"/>
+      <N p="74" s="12240" l="120" v="0.755906"/>
+      <N p="79" s="12960" l="120" v="0.755906"/>
+      <N p="71" s="13680" l="120" v="0.755906"/>
+      <N p="74" s="14400" l="120" v="0.755906"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Synth: Basalt Wire" bus="0" instrument="1" musical="1" gainDb="6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPgMWXrQGHWklbkIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Loading Tom Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then toms falling high to low" style="Game/Menu" energy="1" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+    <NOTES>
+      <N p="36" s="0" l="120" v="0.944882"/>
+      <N p="48" s="1920" l="120" v="0.771654"/>
+      <N p="48" s="2160" l="120" v="0.771654"/>
+      <N p="45" s="2400" l="120" v="0.771654"/>
+      <N p="45" s="2640" l="120" v="0.771654"/>
+      <N p="41" s="2880" l="120" v="0.771654"/>
+      <N p="41" s="3120" l="120" v="0.771654"/>
+      <N p="41" s="3360" l="120" v="0.944882"/>
+      <N p="41" s="3600" l="120" v="0.944882"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: Standard" bus="0" instrument="1" musical="1" gainDb="2.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>66.VMjLgjC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHSQWXtQVXxQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Inventory Discovery Sting" role="SFX" subRole="Stingers" key="A minor" tags="" note="A discovery sting: an A minor ninth rising a note a 16th and held" style="Game/Menu" energy="1" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+    <NOTES>
+      <N p="57" s="0" l="7640" v="0.787402"/>
+      <N p="60" s="240" l="7400" v="0.787402"/>
+      <N p="64" s="480" l="7160" v="0.787402"/>
+      <N p="67" s="720" l="6920" v="0.787402"/>
+      <N p="71" s="960" l="6680" v="0.787402"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Synth: Abandoned Chime" bus="0" instrument="1" musical="1" gainDb="2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>75.VMjLgHD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhElaj8lakQFHCgVZsUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+</TORQWAVE_KIT>

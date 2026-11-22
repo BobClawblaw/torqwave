@@ -102,7 +102,7 @@ const std::vector<SequenceLibrary::Role>& SequenceLibrary::roles()
         { "Pads",    { "Sustained", "Evolving", "Swells", "Drones" } },
         { "Arps",    { "Up & Down", "16th Sequences", "Plucks", "Gated" } },
         { "Melody",  { "Leads", "Hooks", "Counter-lines", "Bells & Mallets" } },
-        { "SFX",     { "Risers", "Downlifters", "Impacts", "Sweeps", "Transitions", "Hits" } },
+        { "SFX",     { "Risers", "Downlifters", "Impacts", "Sweeps", "Transitions", "Hits", "UI Sounds", "Stingers" } },
         { "Kits",    {} },
         { "Inbox",   {} },
     };

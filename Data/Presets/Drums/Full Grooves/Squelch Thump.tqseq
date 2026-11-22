@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Squelch Thump" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap layered with a snare on 2 and 4, open hats on the offbeats and a shaker in 16ths" style="Techno/Acid" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <NOTES>
+    <N p="36" s="0" l="120" v="0.944882"/>
+    <N p="70" s="0" l="120" v="0.771654"/>
+    <N p="70" s="240" l="120" v="0.503937"/>
+    <N p="46" s="480" l="120" v="0.771654"/>
+    <N p="70" s="480" l="120" v="0.582677"/>
+    <N p="70" s="720" l="120" v="0.503937"/>
+    <N p="36" s="960" l="120" v="0.944882"/>
+    <N p="38" s="960" l="120" v="0.582677"/>
+    <N p="39" s="960" l="120" v="0.944882"/>
+    <N p="70" s="960" l="120" v="0.771654"/>
+    <N p="70" s="1200" l="120" v="0.503937"/>
+    <N p="46" s="1440" l="120" v="0.771654"/>
+    <N p="70" s="1440" l="120" v="0.582677"/>
+    <N p="70" s="1680" l="120" v="0.503937"/>
+    <N p="36" s="1920" l="120" v="0.944882"/>
+    <N p="70" s="1920" l="120" v="0.771654"/>
+    <N p="70" s="2160" l="120" v="0.503937"/>
+    <N p="46" s="2400" l="120" v="0.771654"/>
+    <N p="70" s="2400" l="120" v="0.582677"/>
+    <N p="70" s="2640" l="120" v="0.503937"/>
+    <N p="36" s="2880" l="120" v="0.944882"/>
+    <N p="38" s="2880" l="120" v="0.582677"/>
+    <N p="39" s="2880" l="120" v="0.944882"/>
+    <N p="70" s="2880" l="120" v="0.771654"/>
+    <N p="70" s="3120" l="120" v="0.503937"/>
+    <N p="46" s="3360" l="120" v="0.771654"/>
+    <N p="70" s="3360" l="120" v="0.582677"/>
+    <N p="70" s="3600" l="120" v="0.503937"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

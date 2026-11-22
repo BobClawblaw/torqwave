@@ -1533,6 +1533,14 @@ void BasicDrumsProcessor::addToState (juce::XmlElement& xml) const
 
 void BasicDrumsProcessor::readFromState (const juce::XmlElement& xml)
 {
+    // A state that only names a factory kit (the factory sequence presets' voices): the kit as it is now.
+    if (xml.hasAttribute ("factoryKit"))
+    {
+        const auto index = DrumMachine::kitIndex (xml.getStringAttribute ("factoryKit"));
+        applyKit (DrumMachine::kits()[(size_t) juce::jmax (0, index)]);
+        return;
+    }
+
     kitName = xml.getStringAttribute ("kit", "Standard");
 
     // Before step 10 there were a kick, snare, hat and tom tune (semitones, as now) and decay (in

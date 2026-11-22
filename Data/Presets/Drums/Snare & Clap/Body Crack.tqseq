@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Body Crack" role="Drums" subRole="Snare &amp; Clap" key="" tags="" note="A snare on 2 and 4, with a snare pickup ending bar 2" style="Industrial/EBM" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+  <NOTES>
+    <N p="38" s="960" l="120" v="0.944882"/>
+    <N p="38" s="2880" l="120" v="0.944882"/>
+    <N p="38" s="4800" l="120" v="0.944882"/>
+    <N p="38" s="6720" l="120" v="0.944882"/>
+    <N p="38" s="6720" l="120" v="0.314961"/>
+    <N p="38" s="6960" l="120" v="0.582677"/>
+    <N p="38" s="7200" l="120" v="0.314961"/>
+    <N p="38" s="7440" l="120" v="0.771654"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="1.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

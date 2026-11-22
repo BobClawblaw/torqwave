@@ -4,6 +4,7 @@
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/WaveSynth.h"
+#include "../Source/DrumMachine.h"
 #include "../Source/NoteTools.h"
 #include "../Source/Instrument.h"
 #include "TestUtils.h"
@@ -109,15 +110,6 @@ namespace
         }
     }
 
-    float plainOf (juce::AudioProcessor& p, const juce::String& id)
-    {
-        for (auto* param : p.getParameters())
-            if (auto* f = dynamic_cast<juce::AudioParameterFloat*> (param); f != nullptr && f->paramID == id)
-                return f->get();
-
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
     /** The instrument settings a voice carries, loaded into a fresh Basic Synth. */
     std::unique_ptr<BuiltInEffects::BasicSynthProcessor> synthFrom (const juce::XmlElement& voice)
     {
@@ -156,7 +148,7 @@ void runPresetTests (AudioEngine& engine)
     for (auto& f : all)
         (f.file.hasFileExtension (SequenceFile::kitExtension) ? kits : sequences) += 1;
 
-    check (unpackError.isEmpty() && again.isEmpty() && sequences >= 140 && kits == 8 && readOnly && ! older.exists()
+    check (unpackError.isEmpty() && again.isEmpty() && sequences >= 1000 && kits >= 100 && readOnly && ! older.exists()
                && presets.getChildFile (".complete").getLastModificationTime() == stampBefore,
            "presets: the app's presets unpack into a folder of their own (" + juce::String (sequences) + " sequences, " + juce::String (kits)
                + " kits), read-only, replacing an earlier set, and only once");
@@ -237,6 +229,20 @@ void runPresetTests (AudioEngine& engine)
         const auto started = python.start (juce::StringArray { "python3", source.getChildFile ("Scripts/make_presets.py").getFullPathName(), "--check" });
         const auto said = started ? python.readAllProcessOutput().trim() : juce::String();
 
+        // The list of patches and kits the script picks voices from is the instruments' own.
+        {
+            juce::String now;
+
+            for (auto& patch : WaveSynth::factoryPatches())
+                now << "patch|" << patch.category << "|" << patch.name << "\n";
+
+            for (auto& kit : DrumMachine::kits())
+                now << "kit|" << kit.name << "|" << kit.description << "\n";
+
+            check (source.getChildFile ("Scripts/voice_names.txt").loadFileAsString() == now,
+                   "presets: Scripts/voice_names.txt lists the synth's factory patches and the drum kits as they are (TorqwaveTests --voice-names writes it)");
+        }
+
         if (started)
             check (said == "same" && python.getExitCode() == 0,
                    "presets: Scripts/make_presets.py run again writes Data/Presets byte for byte (" + said + ")");
@@ -244,19 +250,38 @@ void runPresetTests (AudioEngine& engine)
             std::cout << "SKIP  presets: python3 isn't here to run Scripts/make_presets.py again" << std::endl;
     }
 
-    // The voices carry their instrument's settings: the acid line's Basic Synth (written in 0.19.2's terms) has its resonance and
-    // glide, its 320 Hz cutoff lowered 2.4 octaves for its velocity to open again (60 % velocity to filter).
+    // A voice names a factory patch or kit, and the instrument loads it as it is now: an acid line on one of
+    // the synth's Acid patches, a drum groove on one of Basic Drums' kits, channel 10.
     {
         juce::String error;
         const auto acid = SequenceFile::load (presets.getChildFile ("Bass/Arp Bass/Acid Root Jumper.tqseq"), error);
         const auto synth = acid.has_value() && acid->voice != nullptr ? synthFrom (*acid->voice) : nullptr;
         const auto groove = SequenceFile::load (presets.getChildFile ("Drums/Full Grooves/Peak Hour Driver.tqseq"), error);
-        check (synth != nullptr && std::abs (plainOf (*synth, "filter1Resonance") - 75.0f) < 0.01f && std::abs (plainOf (*synth, "glideTime") - 60.0f) < 0.01f
-                   && juce::exactlyEqual (synth->parameter ("voiceMode")->getValue(), 1.0f)
-                   && std::abs (plainOf (*synth, "filter1Cutoff") * std::exp2 (2.4f) - 320.0f) < 0.5f && SequenceFile::instrumentOf (*acid) == "Basic Synth"
-                   && groove.has_value() && SequenceFile::instrumentOf (*groove) == "Basic Drums" && groove->channel == 10,
-               "presets: a preset's voice carries its Basic Synth settings (the acid line's resonance 75 %, glide 60 ms as legato, cutoff 320 Hz less its velocity's 2.4 octaves); "
-               "a drum groove plays on Basic Drums, channel 10");
+        const auto patch = synth != nullptr ? synth->getPatchName() : juce::String();
+        juce::String category;
+
+        for (auto& p : WaveSynth::factoryPatches())
+            if (p.name == patch)
+                category = p.category;
+
+        juce::String kit;
+
+        if (groove.has_value() && groove->voice != nullptr)
+            if (auto* slot = groove->voice->getChildByName ("EFFECTS") != nullptr ? groove->voice->getChildByName ("EFFECTS")->getChildByName ("SLOT") : nullptr)
+                if (auto* state = slot->getChildByName ("STATE"))
+                {
+                    juce::MemoryBlock block;
+                    block.fromBase64Encoding (state->getAllSubText());
+                    BuiltInEffects::BasicDrumsProcessor drums;
+                    drums.setStateInformation (block.getData(), (int) block.getSize());
+                    kit = drums.getKitName();
+                }
+
+        check (category == "Acid" && acid->voice->getStringAttribute ("name") == "Basic Synth: " + patch && SequenceFile::instrumentOf (*acid) == "Basic Synth"
+                   && DrumMachine::kitIndex (kit) >= 0 && groove->voice->getStringAttribute ("name") == "Basic Drums: " + kit
+                   && SequenceFile::instrumentOf (*groove) == "Basic Drums" && groove->channel == 10,
+               "presets: a preset's voice names a factory patch or kit that the instrument loads (the acid line on " + patch + ", an Acid patch; the groove on the "
+                   + kit + " kit, channel 10)");
     }
 
     // Every preset sounds on its own voice, neither silent nor clipping: its notes at its written tempo,
@@ -285,6 +310,23 @@ void runPresetTests (AudioEngine& engine)
                 if (auto* s = slot->getChildByName ("STATE"))
                     state.fromBase64Encoding (s->getAllSubText());
 
+                // The voice names a factory patch or kit there is: its label says which, and its state asks for it.
+                {
+                    const auto label = q->voice->getStringAttribute ("name");
+                    const auto named = label.fromFirstOccurrenceOf (": ", false, false);
+                    const auto text = state.getSize() > 8 ? juce::String::fromUTF8 ((const char*) state.getData() + 8, (int) state.getSize() - 8) : juce::String();
+                    auto known = false;
+
+                    if (label.startsWith ("Basic Drums: "))
+                        known = DrumMachine::kitIndex (named) >= 0 && text.contains ("factoryKit=\"" + named + "\"");
+                    else if (label.startsWith ("Basic Synth: "))
+                        known = text.contains ("factoryPatch=\"" + named + "\"")
+                                    && std::any_of (WaveSynth::factoryPatches().begin(), WaveSynth::factoryPatches().end(), [&] (const WaveSynth::Patch& p) { return p.name == named; });
+
+                    if (! known)
+                        problems.add (q->name + ": its voice " + label.quoted() + " names no factory patch or kit");
+                }
+
                 const auto secondsPerTick = 60.0 / (q->writtenTempo * SequenceFile::ticksPerBeat);
                 Instrument::Phrase phrase;
                 phrase.lengthSeconds = (double) q->length * secondsPerTick + 1.0;
@@ -297,6 +339,10 @@ void runPresetTests (AudioEngine& engine)
                 const auto peak = out.getMagnitude (0, 0, out.getNumSamples());
                 const auto gain = juce::Decibels::decibelsToGain ((float) q->voice->getDoubleAttribute ("gainDb"));
 
+                // For Scripts/make_presets.py --calibrate: each preset's peak without its track gain.
+                if (const auto levels = juce::SystemStats::getEnvironmentVariable ("TQ_PRESET_LEVELS", {}); levels.isNotEmpty() && error.isEmpty())
+                    juce::File (levels).appendText (q->name + "|" + juce::String (juce::Decibels::gainToDecibels (peak, -200.0f), 2) + "\n");
+
                 if (error.isNotEmpty() || peak * gain < juce::Decibels::decibelsToGain (-24.0f) || peak * gain > juce::Decibels::decibelsToGain (-1.0f))
                     problems.add (q->name + ": " + (error.isNotEmpty() ? error : "peak " + juce::String (juce::Decibels::gainToDecibels (peak * gain), 1) + " dB"));
 
@@ -308,7 +354,7 @@ void runPresetTests (AudioEngine& engine)
             }
 
         check (problems.isEmpty(),
-               "presets: every one sounds on its voice (its notes at its tempo through its instrument and settings), peaking between -24 and -1 dB (the loudest " + loudestName + " at "
+               "presets: every one names a factory patch or kit and sounds on it (its notes at its tempo), peaking between -24 and -1 dB (the loudest " + loudestName + " at "
                    + juce::String (juce::Decibels::gainToDecibels (loudest), 1) + " dB, the quietest " + quietestName + " at "
                    + juce::String (juce::Decibels::gainToDecibels (quietest), 1) + " dB)"
                    + (problems.isEmpty() ? juce::String() : " (" + problems.joinIntoString ("; ").substring (0, 800) + ")"));

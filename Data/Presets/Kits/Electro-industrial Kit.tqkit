@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_KIT version="1" name="Electro-industrial Kit" key="A minor" tags="Starter kit" note="A starting point for Electro-industrial: one of each part, in A minor at 118 BPM" style="Industrial/Electro-industrial">
+  <TORQWAVE_SEQUENCE version="1" name="Static Pound" role="Drums" subRole="Full Grooves" key="" tags="" note="An electro kick on 1, the a of 2 and 3, a snare on 2 and 4, 16th hats with the offbeat lifted, metal struck in threes and a tom run ends bar 4" style="Industrial/Electro-industrial" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+    <NOTES>
+      <N p="36" s="0" l="120" v="0.944882"/>
+      <N p="42" s="0" l="120" v="0.503937"/>
+      <N p="56" s="0" l="120" v="0.771654"/>
+      <N p="42" s="240" l="120" v="0.503937"/>
+      <N p="42" s="480" l="120" v="0.771654"/>
+      <N p="42" s="720" l="120" v="0.503937"/>
+      <N p="56" s="720" l="120" v="0.771654"/>
+      <N p="38" s="960" l="120" v="0.944882"/>
+      <N p="42" s="960" l="120" v="0.503937"/>
+      <N p="42" s="1200" l="120" v="0.503937"/>
+      <N p="42" s="1440" l="120" v="0.771654"/>
+      <N p="56" s="1440" l="120" v="0.771654"/>
+      <N p="36" s="1680" l="120" v="0.771654"/>
+      <N p="42" s="1680" l="120" v="0.503937"/>
+      <N p="42" s="1920" l="120" v="0.503937"/>
+      <N p="42" s="2160" l="120" v="0.503937"/>
+      <N p="56" s="2160" l="120" v="0.771654"/>
+      <N p="36" s="2400" l="120" v="0.944882"/>
+      <N p="42" s="2400" l="120" v="0.771654"/>
+      <N p="42" s="2640" l="120" v="0.503937"/>
+      <N p="38" s="2880" l="120" v="0.944882"/>
+      <N p="42" s="2880" l="120" v="0.503937"/>
+      <N p="56" s="2880" l="120" v="0.771654"/>
+      <N p="42" s="3120" l="120" v="0.503937"/>
+      <N p="42" s="3360" l="120" v="0.771654"/>
+      <N p="42" s="3600" l="120" v="0.503937"/>
+      <N p="36" s="3840" l="120" v="0.944882"/>
+      <N p="42" s="3840" l="120" v="0.503937"/>
+      <N p="56" s="3840" l="120" v="0.771654"/>
+      <N p="42" s="4080" l="120" v="0.503937"/>
+      <N p="42" s="4320" l="120" v="0.771654"/>
+      <N p="42" s="4560" l="120" v="0.503937"/>
+      <N p="56" s="4560" l="120" v="0.771654"/>
+      <N p="38" s="4800" l="120" v="0.944882"/>
+      <N p="42" s="4800" l="120" v="0.503937"/>
+      <N p="42" s="5040" l="120" v="0.503937"/>
+      <N p="42" s="5280" l="120" v="0.771654"/>
+      <N p="56" s="5280" l="120" v="0.771654"/>
+      <N p="36" s="5520" l="120" v="0.771654"/>
+      <N p="42" s="5520" l="120" v="0.503937"/>
+      <N p="42" s="5760" l="120" v="0.503937"/>
+      <N p="42" s="6000" l="120" v="0.503937"/>
+      <N p="56" s="6000" l="120" v="0.771654"/>
+      <N p="36" s="6240" l="120" v="0.944882"/>
+      <N p="42" s="6240" l="120" v="0.771654"/>
+      <N p="42" s="6480" l="120" v="0.503937"/>
+      <N p="38" s="6720" l="120" v="0.944882"/>
+      <N p="42" s="6720" l="120" v="0.503937"/>
+      <N p="56" s="6720" l="120" v="0.771654"/>
+      <N p="42" s="6960" l="120" v="0.503937"/>
+      <N p="42" s="7200" l="120" v="0.771654"/>
+      <N p="42" s="7440" l="120" v="0.503937"/>
+      <N p="36" s="7680" l="120" v="0.944882"/>
+      <N p="42" s="7680" l="120" v="0.503937"/>
+      <N p="56" s="7680" l="120" v="0.771654"/>
+      <N p="42" s="7920" l="120" v="0.503937"/>
+      <N p="42" s="8160" l="120" v="0.771654"/>
+      <N p="42" s="8400" l="120" v="0.503937"/>
+      <N p="56" s="8400" l="120" v="0.771654"/>
+      <N p="38" s="8640" l="120" v="0.944882"/>
+      <N p="42" s="8640" l="120" v="0.503937"/>
+      <N p="42" s="8880" l="120" v="0.503937"/>
+      <N p="42" s="9120" l="120" v="0.771654"/>
+      <N p="56" s="9120" l="120" v="0.771654"/>
+      <N p="36" s="9360" l="120" v="0.771654"/>
+      <N p="42" s="9360" l="120" v="0.503937"/>
+      <N p="42" s="9600" l="120" v="0.503937"/>
+      <N p="42" s="9840" l="120" v="0.503937"/>
+      <N p="56" s="9840" l="120" v="0.771654"/>
+      <N p="36" s="10080" l="120" v="0.944882"/>
+      <N p="42" s="10080" l="120" v="0.771654"/>
+      <N p="42" s="10320" l="120" v="0.503937"/>
+      <N p="38" s="10560" l="120" v="0.944882"/>
+      <N p="42" s="10560" l="120" v="0.503937"/>
+      <N p="56" s="10560" l="120" v="0.771654"/>
+      <N p="42" s="10800" l="120" v="0.503937"/>
+      <N p="42" s="11040" l="120" v="0.771654"/>
+      <N p="42" s="11280" l="120" v="0.503937"/>
+      <N p="36" s="11520" l="120" v="0.944882"/>
+      <N p="42" s="11520" l="120" v="0.503937"/>
+      <N p="56" s="11520" l="120" v="0.771654"/>
+      <N p="42" s="11760" l="120" v="0.503937"/>
+      <N p="42" s="12000" l="120" v="0.771654"/>
+      <N p="42" s="12240" l="120" v="0.503937"/>
+      <N p="56" s="12240" l="120" v="0.771654"/>
+      <N p="38" s="12480" l="120" v="0.944882"/>
+      <N p="42" s="12480" l="120" v="0.503937"/>
+      <N p="42" s="12720" l="120" v="0.503937"/>
+      <N p="42" s="12960" l="120" v="0.771654"/>
+      <N p="56" s="12960" l="120" v="0.771654"/>
+      <N p="36" s="13200" l="120" v="0.771654"/>
+      <N p="42" s="13200" l="120" v="0.503937"/>
+      <N p="42" s="13440" l="120" v="0.503937"/>
+      <N p="48" s="13440" l="120" v="0.771654"/>
+      <N p="42" s="13680" l="120" v="0.503937"/>
+      <N p="48" s="13680" l="120" v="0.771654"/>
+      <N p="56" s="13680" l="120" v="0.771654"/>
+      <N p="36" s="13920" l="120" v="0.944882"/>
+      <N p="42" s="13920" l="120" v="0.771654"/>
+      <N p="48" s="13920" l="120" v="0.771654"/>
+      <N p="42" s="14160" l="120" v="0.503937"/>
+      <N p="45" s="14160" l="120" v="0.771654"/>
+      <N p="38" s="14400" l="120" v="0.944882"/>
+      <N p="42" s="14400" l="120" v="0.503937"/>
+      <N p="45" s="14400" l="120" v="0.771654"/>
+      <N p="56" s="14400" l="120" v="0.771654"/>
+      <N p="42" s="14640" l="120" v="0.503937"/>
+      <N p="45" s="14640" l="120" v="0.771654"/>
+      <N p="41" s="14880" l="120" v="0.771654"/>
+      <N p="42" s="14880" l="120" v="0.771654"/>
+      <N p="41" s="15120" l="120" v="0.771654"/>
+      <N p="42" s="15120" l="120" v="0.503937"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Wiretap Drive Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="Phrygian" note="Driving 16ths on the root, moving through the roots of A minor, B flat, A minor, G minor" style="Industrial/Electro-industrial" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+    <NOTES>
+      <N p="33" s="0" l="144" v="0.755906"/>
+      <N p="33" s="240" l="144" v="0.755906"/>
+      <N p="33" s="480" l="144" v="0.755906"/>
+      <N p="33" s="720" l="144" v="0.755906"/>
+      <N p="33" s="960" l="144" v="0.755906"/>
+      <N p="33" s="1200" l="144" v="0.755906"/>
+      <N p="33" s="1440" l="144" v="0.755906"/>
+      <N p="33" s="1680" l="144" v="0.755906"/>
+      <N p="33" s="1920" l="144" v="0.755906"/>
+      <N p="33" s="2160" l="144" v="0.755906"/>
+      <N p="33" s="2400" l="144" v="0.755906"/>
+      <N p="33" s="2640" l="144" v="0.755906"/>
+      <N p="33" s="2880" l="144" v="0.755906"/>
+      <N p="33" s="3120" l="144" v="0.755906"/>
+      <N p="33" s="3360" l="144" v="0.755906"/>
+      <N p="33" s="3600" l="144" v="0.755906"/>
+      <N p="34" s="3840" l="144" v="0.755906"/>
+      <N p="34" s="4080" l="144" v="0.755906"/>
+      <N p="34" s="4320" l="144" v="0.755906"/>
+      <N p="34" s="4560" l="144" v="0.755906"/>
+      <N p="34" s="4800" l="144" v="0.755906"/>
+      <N p="34" s="5040" l="144" v="0.755906"/>
+      <N p="34" s="5280" l="144" v="0.755906"/>
+      <N p="34" s="5520" l="144" v="0.755906"/>
+      <N p="34" s="5760" l="144" v="0.755906"/>
+      <N p="34" s="6000" l="144" v="0.755906"/>
+      <N p="34" s="6240" l="144" v="0.755906"/>
+      <N p="34" s="6480" l="144" v="0.755906"/>
+      <N p="34" s="6720" l="144" v="0.755906"/>
+      <N p="34" s="6960" l="144" v="0.755906"/>
+      <N p="34" s="7200" l="144" v="0.755906"/>
+      <N p="34" s="7440" l="144" v="0.755906"/>
+      <N p="33" s="7680" l="144" v="0.755906"/>
+      <N p="33" s="7920" l="144" v="0.755906"/>
+      <N p="33" s="8160" l="144" v="0.755906"/>
+      <N p="33" s="8400" l="144" v="0.755906"/>
+      <N p="33" s="8640" l="144" v="0.755906"/>
+      <N p="33" s="8880" l="144" v="0.755906"/>
+      <N p="33" s="9120" l="144" v="0.755906"/>
+      <N p="33" s="9360" l="144" v="0.755906"/>
+      <N p="33" s="9600" l="144" v="0.755906"/>
+      <N p="33" s="9840" l="144" v="0.755906"/>
+      <N p="33" s="10080" l="144" v="0.755906"/>
+      <N p="33" s="10320" l="144" v="0.755906"/>
+      <N p="33" s="10560" l="144" v="0.755906"/>
+      <N p="33" s="10800" l="144" v="0.755906"/>
+      <N p="33" s="11040" l="144" v="0.755906"/>
+      <N p="33" s="11280" l="144" v="0.755906"/>
+      <N p="31" s="11520" l="144" v="0.755906"/>
+      <N p="31" s="11760" l="144" v="0.755906"/>
+      <N p="31" s="12000" l="144" v="0.755906"/>
+      <N p="31" s="12240" l="144" v="0.755906"/>
+      <N p="31" s="12480" l="144" v="0.755906"/>
+      <N p="31" s="12720" l="144" v="0.755906"/>
+      <N p="31" s="12960" l="144" v="0.755906"/>
+      <N p="31" s="13200" l="144" v="0.755906"/>
+      <N p="31" s="13440" l="144" v="0.755906"/>
+      <N p="31" s="13680" l="144" v="0.755906"/>
+      <N p="31" s="13920" l="144" v="0.755906"/>
+      <N p="31" s="14160" l="144" v="0.755906"/>
+      <N p="31" s="14400" l="144" v="0.755906"/>
+      <N p="31" s="14640" l="144" v="0.755906"/>
+      <N p="31" s="14880" l="144" v="0.755906"/>
+      <N p="31" s="15120" l="144" v="0.755906"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Synth: Pulse Bunker" bus="0" instrument="1" musical="1" gainDb="-0.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBT0w1bkAhP041ZkImHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Signal Loss Chords" role="Harmony" subRole="Progressions" key="A minor" tags="Phrygian" note="A minor seventh, B flat major seventh, G minor seventh, A minor seventh, in half notes" style="Industrial/Electro-industrial" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+    <NOTES>
+      <N p="57" s="0" l="1900" v="0.677165"/>
+      <N p="60" s="0" l="1900" v="0.677165"/>
+      <N p="64" s="0" l="1900" v="0.677165"/>
+      <N p="67" s="0" l="1900" v="0.677165"/>
+      <N p="57" s="1920" l="1900" v="0.677165"/>
+      <N p="60" s="1920" l="1900" v="0.677165"/>
+      <N p="64" s="1920" l="1900" v="0.677165"/>
+      <N p="67" s="1920" l="1900" v="0.677165"/>
+      <N p="58" s="3840" l="1900" v="0.677165"/>
+      <N p="62" s="3840" l="1900" v="0.677165"/>
+      <N p="65" s="3840" l="1900" v="0.677165"/>
+      <N p="69" s="3840" l="1900" v="0.677165"/>
+      <N p="58" s="5760" l="1900" v="0.677165"/>
+      <N p="62" s="5760" l="1900" v="0.677165"/>
+      <N p="65" s="5760" l="1900" v="0.677165"/>
+      <N p="69" s="5760" l="1900" v="0.677165"/>
+      <N p="55" s="7680" l="1900" v="0.677165"/>
+      <N p="58" s="7680" l="1900" v="0.677165"/>
+      <N p="62" s="7680" l="1900" v="0.677165"/>
+      <N p="65" s="7680" l="1900" v="0.677165"/>
+      <N p="55" s="9600" l="1900" v="0.677165"/>
+      <N p="58" s="9600" l="1900" v="0.677165"/>
+      <N p="62" s="9600" l="1900" v="0.677165"/>
+      <N p="65" s="9600" l="1900" v="0.677165"/>
+      <N p="57" s="11520" l="1900" v="0.677165"/>
+      <N p="60" s="11520" l="1900" v="0.677165"/>
+      <N p="64" s="11520" l="1900" v="0.677165"/>
+      <N p="67" s="11520" l="1900" v="0.677165"/>
+      <N p="57" s="13440" l="1900" v="0.677165"/>
+      <N p="60" s="13440" l="1900" v="0.677165"/>
+      <N p="64" s="13440" l="1900" v="0.677165"/>
+      <N p="67" s="13440" l="1900" v="0.677165"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Synth: Dub Chord Stab" bus="0" instrument="1" musical="1" gainDb="-2.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>74.VMjLgDD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQ0IFHCg1axQFHSQWXhIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Transmission Pattern" role="Arps" subRole="16th Sequences" key="A minor" tags="Phrygian" note="Straight up the chord in 16ths, again and again, through A minor, B flat, G minor, A minor" style="Industrial/Electro-industrial" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+    <NOTES>
+      <N p="69" s="0" l="120" v="0.755906"/>
+      <N p="72" s="240" l="120" v="0.755906"/>
+      <N p="76" s="480" l="120" v="0.755906"/>
+      <N p="81" s="720" l="120" v="0.755906"/>
+      <N p="69" s="960" l="120" v="0.755906"/>
+      <N p="72" s="1200" l="120" v="0.755906"/>
+      <N p="76" s="1440" l="120" v="0.755906"/>
+      <N p="81" s="1680" l="120" v="0.755906"/>
+      <N p="69" s="1920" l="120" v="0.755906"/>
+      <N p="72" s="2160" l="120" v="0.755906"/>
+      <N p="76" s="2400" l="120" v="0.755906"/>
+      <N p="81" s="2640" l="120" v="0.755906"/>
+      <N p="69" s="2880" l="120" v="0.755906"/>
+      <N p="72" s="3120" l="120" v="0.755906"/>
+      <N p="76" s="3360" l="120" v="0.755906"/>
+      <N p="81" s="3600" l="120" v="0.755906"/>
+      <N p="70" s="3840" l="120" v="0.755906"/>
+      <N p="74" s="4080" l="120" v="0.755906"/>
+      <N p="77" s="4320" l="120" v="0.755906"/>
+      <N p="82" s="4560" l="120" v="0.755906"/>
+      <N p="70" s="4800" l="120" v="0.755906"/>
+      <N p="74" s="5040" l="120" v="0.755906"/>
+      <N p="77" s="5280" l="120" v="0.755906"/>
+      <N p="82" s="5520" l="120" v="0.755906"/>
+      <N p="70" s="5760" l="120" v="0.755906"/>
+      <N p="74" s="6000" l="120" v="0.755906"/>
+      <N p="77" s="6240" l="120" v="0.755906"/>
+      <N p="82" s="6480" l="120" v="0.755906"/>
+      <N p="70" s="6720" l="120" v="0.755906"/>
+      <N p="74" s="6960" l="120" v="0.755906"/>
+      <N p="77" s="7200" l="120" v="0.755906"/>
+      <N p="82" s="7440" l="120" v="0.755906"/>
+      <N p="67" s="7680" l="120" v="0.755906"/>
+      <N p="70" s="7920" l="120" v="0.755906"/>
+      <N p="74" s="8160" l="120" v="0.755906"/>
+      <N p="79" s="8400" l="120" v="0.755906"/>
+      <N p="67" s="8640" l="120" v="0.755906"/>
+      <N p="70" s="8880" l="120" v="0.755906"/>
+      <N p="74" s="9120" l="120" v="0.755906"/>
+      <N p="79" s="9360" l="120" v="0.755906"/>
+      <N p="67" s="9600" l="120" v="0.755906"/>
+      <N p="70" s="9840" l="120" v="0.755906"/>
+      <N p="74" s="10080" l="120" v="0.755906"/>
+      <N p="79" s="10320" l="120" v="0.755906"/>
+      <N p="67" s="10560" l="120" v="0.755906"/>
+      <N p="70" s="10800" l="120" v="0.755906"/>
+      <N p="74" s="11040" l="120" v="0.755906"/>
+      <N p="79" s="11280" l="120" v="0.755906"/>
+      <N p="69" s="11520" l="120" v="0.755906"/>
+      <N p="72" s="11760" l="120" v="0.755906"/>
+      <N p="76" s="12000" l="120" v="0.755906"/>
+      <N p="81" s="12240" l="120" v="0.755906"/>
+      <N p="69" s="12480" l="120" v="0.755906"/>
+      <N p="72" s="12720" l="120" v="0.755906"/>
+      <N p="76" s="12960" l="120" v="0.755906"/>
+      <N p="81" s="13200" l="120" v="0.755906"/>
+      <N p="69" s="13440" l="120" v="0.755906"/>
+      <N p="72" s="13680" l="120" v="0.755906"/>
+      <N p="76" s="13920" l="120" v="0.755906"/>
+      <N p="81" s="14160" l="120" v="0.755906"/>
+      <N p="69" s="14400" l="120" v="0.755906"/>
+      <N p="72" s="14640" l="120" v="0.755906"/>
+      <N p="76" s="14880" l="120" v="0.755906"/>
+      <N p="81" s="15120" l="120" v="0.755906"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Synth: Bit Pluck" bus="0" instrument="1" musical="1" gainDb="5.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPoQGHPwVcislHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Circuit Clap Stutter" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps stuttering into the next bar" style="Industrial/Electro-industrial" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+    <NOTES>
+      <N p="36" s="0" l="120" v="0.944882"/>
+      <N p="36" s="960" l="120" v="0.944882"/>
+      <N p="39" s="1920" l="120" v="0.771654"/>
+      <N p="39" s="2400" l="120" v="0.771654"/>
+      <N p="39" s="2880" l="120" v="0.771654"/>
+      <N p="39" s="3120" l="120" v="0.771654"/>
+      <N p="39" s="3360" l="120" v="0.771654"/>
+      <N p="39" s="3600" l="120" v="0.944882"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Interference Riser" role="SFX" subRole="Risers" key="A minor" tags="" note="16ths climbing the A minor scale for 2 bars, louder and brighter as they go" style="Industrial/Electro-industrial" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+    <NOTES>
+      <N p="45" s="0" l="120" v="0.393701"/>
+      <N p="45" s="240" l="120" v="0.409449"/>
+      <N p="45" s="480" l="120" v="0.425197"/>
+      <N p="47" s="720" l="120" v="0.440945"/>
+      <N p="47" s="960" l="120" v="0.456693"/>
+      <N p="48" s="1200" l="120" v="0.472441"/>
+      <N p="48" s="1440" l="120" v="0.496063"/>
+      <N p="50" s="1680" l="120" v="0.511811"/>
+      <N p="50" s="1920" l="120" v="0.527559"/>
+      <N p="50" s="2160" l="120" v="0.543307"/>
+      <N p="52" s="2400" l="120" v="0.559055"/>
+      <N p="52" s="2640" l="120" v="0.582677"/>
+      <N p="53" s="2880" l="120" v="0.598425"/>
+      <N p="53" s="3120" l="120" v="0.614173"/>
+      <N p="55" s="3360" l="120" v="0.629921"/>
+      <N p="55" s="3600" l="120" v="0.645669"/>
+      <N p="57" s="3840" l="120" v="0.669291"/>
+      <N p="57" s="4080" l="120" v="0.685039"/>
+      <N p="57" s="4320" l="120" v="0.700787"/>
+      <N p="59" s="4560" l="120" v="0.716535"/>
+      <N p="59" s="4800" l="120" v="0.732283"/>
+      <N p="60" s="5040" l="120" v="0.748031"/>
+      <N p="60" s="5280" l="120" v="0.771654"/>
+      <N p="62" s="5520" l="120" v="0.787402"/>
+      <N p="62" s="5760" l="120" v="0.803150"/>
+      <N p="62" s="6000" l="120" v="0.818898"/>
+      <N p="64" s="6240" l="120" v="0.834646"/>
+      <N p="64" s="6480" l="120" v="0.858268"/>
+      <N p="65" s="6720" l="120" v="0.874016"/>
+      <N p="65" s="6960" l="120" v="0.889764"/>
+      <N p="67" s="7200" l="120" v="0.905512"/>
+      <N p="67" s="7440" l="120" v="0.921260"/>
+    </NOTES>
+    <LANE controller="74">
+      <P t="0" v="0.150000"/>
+      <P t="7679" v="1.000000"/>
+    </LANE>
+    <VOICE><TRACKTEMPLATE name="Basic Synth: Machine Spin Up" bus="0" instrument="1" musical="1" gainDb="14.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>75.VMjLgHD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRSgMFZo4VYfLEbo4FHUAmHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+</TORQWAVE_KIT>

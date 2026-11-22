@@ -2428,6 +2428,15 @@ void BasicSynthProcessor::addToState (juce::XmlElement& xml) const
 
 void BasicSynthProcessor::readFromState (const juce::XmlElement& xml)
 {
+    // A state that only names a factory patch (the factory sequence presets' voices): the patch as it is now.
+    if (xml.hasAttribute ("factoryPatch"))
+    {
+        if (! loadPatch (xml.getStringAttribute ("factoryPatch")))
+            loadPatch (0);
+
+        return;
+    }
+
     if (xml.getIntAttribute ("engine", 1) < 2)
     {
         // Saved before 0.19.3: none of the new IDs were set from it. Its settings, translated.

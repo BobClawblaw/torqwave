@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Monochrome Climb" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Rolling 16ths with the octave on top, on A minor" style="Industrial/Coldwave" energy="1" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <NOTES>
+    <N p="69" s="0" l="120" v="0.755906"/>
+    <N p="72" s="240" l="120" v="0.755906"/>
+    <N p="76" s="480" l="120" v="0.755906"/>
+    <N p="72" s="720" l="120" v="0.755906"/>
+    <N p="81" s="960" l="120" v="0.755906"/>
+    <N p="72" s="1200" l="120" v="0.755906"/>
+    <N p="76" s="1440" l="120" v="0.755906"/>
+    <N p="72" s="1680" l="120" v="0.755906"/>
+    <N p="69" s="1920" l="120" v="0.755906"/>
+    <N p="72" s="2160" l="120" v="0.755906"/>
+    <N p="76" s="2400" l="120" v="0.755906"/>
+    <N p="72" s="2640" l="120" v="0.755906"/>
+    <N p="81" s="2880" l="120" v="0.755906"/>
+    <N p="76" s="3120" l="120" v="0.755906"/>
+    <N p="72" s="3360" l="120" v="0.755906"/>
+    <N p="76" s="3600" l="120" v="0.755906"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Black Pluck" bus="0" instrument="1" musical="1" gainDb="4.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPrE1XqABTrU2XqIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

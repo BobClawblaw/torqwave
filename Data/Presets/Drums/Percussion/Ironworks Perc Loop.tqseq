@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Ironworks Perc Loop" role="Drums" subRole="Percussion" key="" tags="" note="A rimshot every three 16ths, against the beat, with high and mid toms playing like congas joining in bars 3 and 4" style="Industrial/Techno-body" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+  <NOTES>
+    <N p="37" s="0" l="120" v="0.582677"/>
+    <N p="37" s="720" l="120" v="0.582677"/>
+    <N p="37" s="1440" l="120" v="0.582677"/>
+    <N p="37" s="2160" l="120" v="0.582677"/>
+    <N p="37" s="2880" l="120" v="0.582677"/>
+    <N p="37" s="3600" l="120" v="0.582677"/>
+    <N p="37" s="4320" l="120" v="0.582677"/>
+    <N p="37" s="5040" l="120" v="0.582677"/>
+    <N p="37" s="5760" l="120" v="0.582677"/>
+    <N p="37" s="6480" l="120" v="0.582677"/>
+    <N p="37" s="7200" l="120" v="0.582677"/>
+    <N p="45" s="7680" l="120" v="0.771654"/>
+    <N p="37" s="7920" l="120" v="0.582677"/>
+    <N p="48" s="8400" l="120" v="0.771654"/>
+    <N p="37" s="8640" l="120" v="0.582677"/>
+    <N p="45" s="9120" l="120" v="0.771654"/>
+    <N p="48" s="9120" l="120" v="0.771654"/>
+    <N p="37" s="9360" l="120" v="0.582677"/>
+    <N p="45" s="9600" l="120" v="0.771654"/>
+    <N p="37" s="10080" l="120" v="0.582677"/>
+    <N p="48" s="10320" l="120" v="0.771654"/>
+    <N p="37" s="10800" l="120" v="0.582677"/>
+    <N p="48" s="11040" l="120" v="0.771654"/>
+    <N p="37" s="11520" l="120" v="0.582677"/>
+    <N p="45" s="11520" l="120" v="0.771654"/>
+    <N p="37" s="12240" l="120" v="0.582677"/>
+    <N p="48" s="12240" l="120" v="0.771654"/>
+    <N p="37" s="12960" l="120" v="0.582677"/>
+    <N p="45" s="12960" l="120" v="0.771654"/>
+    <N p="48" s="12960" l="120" v="0.771654"/>
+    <N p="45" s="13440" l="120" v="0.771654"/>
+    <N p="37" s="13680" l="120" v="0.582677"/>
+    <N p="48" s="14160" l="120" v="0.771654"/>
+    <N p="37" s="14400" l="120" v="0.582677"/>
+    <N p="48" s="14880" l="120" v="0.771654"/>
+    <N p="37" s="15120" l="120" v="0.582677"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

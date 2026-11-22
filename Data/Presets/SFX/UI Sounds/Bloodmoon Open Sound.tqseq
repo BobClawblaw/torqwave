@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Bloodmoon Open Sound" role="SFX" subRole="UI Sounds" key="A minor" tags="" note="C, E and G rising quickly for opening a menu" style="Game/Horror" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <NOTES>
+    <N p="72" s="0" l="220" v="0.866142"/>
+    <N p="76" s="240" l="220" v="0.866142"/>
+    <N p="79" s="480" l="460" v="0.866142"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Synth: Industrial Whistle" bus="0" instrument="1" musical="1" gainDb="14.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Synth" descriptiveName="Basic Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>78.VMjLgTD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRRtQVcyQmboEFafbEZoMGcrUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>

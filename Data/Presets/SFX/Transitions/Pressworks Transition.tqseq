@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Pressworks Transition" role="SFX" subRole="Transitions" key="" tags="" note="Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th" style="Techno/Industrial" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+  <NOTES>
+    <N p="48" s="0" l="120" v="0.393701"/>
+    <N p="48" s="480" l="120" v="0.425197"/>
+    <N p="45" s="960" l="120" v="0.456693"/>
+    <N p="45" s="1440" l="120" v="0.488189"/>
+    <N p="41" s="1920" l="120" v="0.519685"/>
+    <N p="41" s="2400" l="120" v="0.551181"/>
+    <N p="48" s="2880" l="120" v="0.582677"/>
+    <N p="48" s="3360" l="120" v="0.614173"/>
+    <N p="45" s="3840" l="120" v="0.645669"/>
+    <N p="45" s="4080" l="120" v="0.661417"/>
+    <N p="45" s="4320" l="120" v="0.677165"/>
+    <N p="45" s="4560" l="120" v="0.692913"/>
+    <N p="41" s="4800" l="120" v="0.708661"/>
+    <N p="41" s="5040" l="120" v="0.724409"/>
+    <N p="41" s="5280" l="120" v="0.740157"/>
+    <N p="41" s="5520" l="120" v="0.755906"/>
+    <N p="48" s="5760" l="120" v="0.771654"/>
+    <N p="48" s="6000" l="120" v="0.787402"/>
+    <N p="48" s="6240" l="120" v="0.803150"/>
+    <N p="48" s="6480" l="120" v="0.818898"/>
+    <N p="45" s="6720" l="120" v="0.834646"/>
+    <N p="45" s="6960" l="120" v="0.850394"/>
+    <N p="45" s="7200" l="120" v="0.866142"/>
+    <N p="45" s="7440" l="120" v="0.881890"/>
+    <N p="49" s="7440" l="120" v="0.944882"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>
