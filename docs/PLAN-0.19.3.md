@@ -352,7 +352,7 @@ Dropped on a track with a drum plug-in (Battery, for one), a drum preset plays i
 - Each preset plays on a named synth patch or drum kit from steps 9 and 10.
 - Each preset keeps the step 6 rules, peaks between -24 and -1 dB, and passes the click check.
 - The guide's Styles page grows to cover all 36 styles.
-- **Done:** 1,018 sequences and 116 kits, each on a named patch or kit, levels calibrated from rendered peaks. **Not done:** the Styles page for the new styles, and a click check on every preset.
+- **Done:** 1,018 sequences and 116 kits, each on a named patch or kit, levels calibrated from rendered peaks. The click check runs on every preset, played once through its voice (not looped, stopped and restarted, which the synth's own click tests cover). **Not done:** the Styles page for the new styles.
 
 ### Step 13: Swarm Guitar (M)
 
