@@ -4,6 +4,10 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Torqwave Sampler: the docs brought together** (0.21.0, the last step of [the plan](docs/PLAN-0.21.md))
+- README (the instruments' features), the roadmap (0.21.0's line), guide page 11 (where a project keeps a sampler's samples), `docs/TESTING.md` (the `--sampler`, `--sampler-window` and `--sampler-content` flags) and the plan, each step marked as built with what changed from it.
+- **What 0.21.0 still needs before it is released:** someone to use it. Nothing of Torqwave Sampler has been tried by hand in the running app or heard: every claim in these entries is a measurement by the tests on rendered audio, on the window made without a screen, or on a session's state. Not covered by any test: the two commands and the clip menu in the running app, real drags, the system's file dialogs, the first unpacking of the factory samples, a project's copying, and Ask Torq with a model. The version number and the comparison data (`docs/compare/`, on another branch) are for the release.
+
 **Torqwave Sampler: factory content** (0.21.0, step 9 of [the plan](docs/PLAN-0.21.md))
 - **Eleven factory presets, and the set is small on purpose.** Seven played instruments: Hammer Tine (Keys), Concrete Pad (Pad), Iron Cello (Strings), Cold Bell (Bell), Warehouse Sub (Bass) and Dark Kalimba (Pluck), each notes of the Torqwave Synth patch of that name at three or four keys, and One Note Guitar, StringSwarm's Every String One Note at two. Four sliced kits: two bars of Basic Drums' Dark Techno, Industrial, EBM Machine and Breaks kits, cut at their hits (19 to 31 slices). 26 samples, 131 zones, 8.2 MB, which the app grows by.
 - **Nothing in it is anyone else's.** Every sample is rendered from Torqwave's own instruments by a tool in the repository (`TorqwaveTests --sampler-content Data/Samples`), which writes the FLAC files (24-bit, 48 kHz; mono but for the pad and the kits) and the manifest of presets, the same bytes each time. The loops in the pad, the cello and the sub are the ones Find Loop finds.

@@ -62,7 +62,9 @@ The user decided these on 2026-11-23, before any code:
 - **No interpolator for playing a sound at any speed, voice by voice.** The sample-rate converter works on whole files at one ratio, and the scrubber's four-point curve is not clean enough for an instrument. Step 1 adds one.
 - **No relinking of missing files.** A session with missing audio reports it and leaves the clips out. Sessions and projects also know nothing of files named inside an instrument's state. Step 4 covers the sampler's own files. Relinking a session's clips is not part of this plan.
 
-## Step 1: the engine, one sample across the keys (M to L)
+## Step 1: the engine, one sample across the keys (M to L, done)
+
+Built in `Source/Sampler.h/.cpp` as planned. The windowed sinc is 48 points, and at its own pitch and rate a sample plays frame for frame (both settled in step 3).
 
 A new instrument, **Torqwave Sampler** (`Source/Sampler.h/.cpp`, ID `torqwave:sampler`), listed after StringSwarm. As with Basic Drums, the engine knows nothing of plug-ins.
 
@@ -89,7 +91,9 @@ A new instrument, **Torqwave Sampler** (`Source/Sampler.h/.cpp`, ID `torqwave:sa
 - Bit-identical at block sizes from 1 to 4,096 and on a second run.
 - Its state saves and restores exactly. It is created by its description, and the count of built-ins goes from 21 to 22.
 
-## Step 2: zones, layers and loops (M)
+## Step 2: zones, layers and loops (M, done)
+
+Built as planned. One change: a loop's crossfade is a zone's setting, not a hosted parameter, and a change to it under a held note is taken up at the next place clear of the loop's turn.
 
 - **Zones:** up to 128 in one sampler. Each has a sample, a root note and fine tune, a key range, a velocity range, a level and a pan. Zones that overlap play together, so layers and velocity switches are zones.
 - **Start and end** within the sample, and **Reverse**.
@@ -102,7 +106,9 @@ A new instrument, **Torqwave Sampler** (`Source/Sampler.h/.cpp`, ID `torqwave:sa
 
 **Tests:** each key and velocity plays the zones that cover it, and only those. A looped tone stays continuous for ten seconds: no step at the turn, with and without a crossfade, forward and back-and-forth. A reversed sample is the sample backwards. A one-shot rings past its note-off, and a held one releases. A choked zone fades in 4 ms. Block sizes and second runs as in step 1. 128 zones save and restore.
 
-## Step 3: slices (M)
+## Step 3: slices (M, done)
+
+Built as planned. The slices start on C2 (key 36: Torqwave names middle C C4), which the plan first called C1. The drum map is made by the engine and put on a track by Slice to Sampler Track (step 6); there is no button for it in the window.
 
 The second way to play: **Slices** in place of **Keys**. One sample is cut into pieces and each piece plays on its own key, upward from C2 (36, where a kick sits), up to 64 slices.
 
@@ -120,7 +126,9 @@ The second way to play: **Slices** in place of **Keys**. One sample is cut into 
 
 **Tests:** a file with eight markers gives the slices between them, on keys from 36. Regions give one slice each. A rendered drum pattern with hits at known times is cut within a few milliseconds of each (the changelog gives the measured error). Equal parts are equal. Notes from Slices, played back through the sampler at the sample's tempo, rebuilds the sample to within the fades. The drum map names the slices, and Remap Notes moves General MIDI notes onto the slices that stand for them.
 
-## Step 4: files, pitch and loops found for you (M)
+## Step 4: files, pitch and loops found for you (M, done)
+
+Built as planned, with one narrowing: a project copies the samples into its Files folder only when its session is kept there (one never saved on its own); a session with a file of its own keeps naming them where they are, and Save a Copy with Audio is the way to gather them. A sound with no clear pitch gets C4 (key 60).
 
 - **Loading:** through `AudioFileIO::load`, so every format Torqwave opens, with its markers. A sample is loaded once and shared by every sampler that plays that file. The limits are those under "Not in 0.21.0", and a refused file says why.
 - **The WAV sampler chunk:** when a file has one, its root note and loop are taken from it.
@@ -137,7 +145,9 @@ The second way to play: **Slices** in place of **Keys**. One sample is cut into 
 
 Fresh copies of an instrument are made for mixdown, freeze and bounce, so a sampler's state loads its samples before it returns. With the live instrument holding them, a copy takes them from the shared store.
 
-## Step 5: the window (L)
+## Step 5: the window (L, done)
+
+Built in `Source/SamplerEditor.h/.cpp` as planned, 940 by 746.
 
 Laid out as the sound flows, with the same knobs and panels as the other instruments (`SoundControls`).
 
@@ -153,7 +163,9 @@ Laid out as the sound flows, with the same knobs and panels as the other instrum
 
 **Tests:** the window made without a screen, as the others are: its size, every knob reading its parameter in its unit, a handle dragged moving the zone's start, end and loop, a zone's edge dragged changing its range, a cut dragged, added and removed, the pads lighting. Pictures in the dark and light themes with `--sampler-window`. A preset saved from the row puts back the zones and their files.
 
-## Step 6: getting sound in (M)
+## Step 6: getting sound in (M, done)
+
+Built in `Source/SamplerTrack.h/.cpp` and the main window. New Sampler Track from Selection has no key of its own. A clip reaches the sampler by its menu, as the plan says; a part dragged from the Sound Library's preview arrives as a file.
 
 - **Drops on the window:** a file from the Finder or the Sound Library (a part of a sound dragged from the library's preview too), and an open file from the Files panel, saved or not. Dropped on the waveform, the sound replaces the selected zone's sample; dropped on the key map, it becomes a new zone at the key it lands on. Several files dropped together become zones on neighbouring keys, or, when each has a clear pitch, zones around their own notes.
 - **New Sampler Track from Selection** (in the editor's menus): the selection, or the whole file with none, becomes a sample; the session gets a new instrument track with Torqwave Sampler holding it, its root pitch found; and the window opens. Markers inside the selection go with it, so **Slices** has them. A saved, unchanged file is named where it is; anything else is written to the Samples folder first.
@@ -164,7 +176,9 @@ Laid out as the sound flows, with the same knobs and panels as the other instrum
 
 **Tests:** each drop on the window, with the hooks the tests can call. The command on a selection of a tone makes a track that plays the tone at its own pitch from its root key. Slice to Sampler Track on a rendered drum loop makes a track whose mixdown matches the clip it came from to within the fades (the difference is measured and given). Each is one undo step.
 
-## Step 7: the rest of the wiring (M)
+## Step 7: the rest of the wiring (M, done)
+
+Nothing had to change but Audition's choice of phrase: the sampler is an instrument like the others. The checks are in `Tests/InstrumentTrackTests.cpp`.
 
 - **Generate from Instrument**, **freeze**, **bounce** and **Mix Down** play it as any instrument. Tested: each against playback's own render.
 - **Presets and favourites:** factory presets in the presets row by category, the user's own beside them, and whole-state instrument presets (Save Instrument Preset). A preset carries its zones and the paths of its files.
@@ -175,7 +189,9 @@ Laid out as the sound flows, with the same knobs and panels as the other instrum
 
 **Tests:** in the style of the other instruments' (`InstrumentKeysTests`, `InstrumentTrackTests`, `EffectPreviewTests`): previous and next through the presets, the audition phrase for each kind, a frozen and a bounced sampler track bit for bit with playback, the LFO at two tempos, a sequence's voice round trip.
 
-## Step 8: Ask Torq (M)
+## Step 8: Ask Torq (M, done)
+
+Built as planned, except that the eval set has no sampler sentences yet, and no model has been asked for a sampler.
 
 - **`sampler_from_clip`:** makes a clip a sampler, on a new track or on a track that already has one, across the keys or sliced. It sits beside `table_from_clip`.
 - **`set_sampler`:** a zone's root, ranges, start, end, loop and one-shot; the mode; where the slices come from; Find Pitch and Find Loop.
@@ -186,7 +202,9 @@ Laid out as the sound flows, with the same knobs and panels as the other instrum
 
 **Tests:** against the mock server: each tool's plan and its result, refused calls with their reasons (no such clip, a track without a sampler), one undo step each. `docs/AI.md` and guide page 13 list the tools. The eval set gains a few sentences.
 
-## Step 9: factory content (M)
+## Step 9: factory content (M, done)
+
+Built: eleven presets over 26 samples, 8.2 MB, in `Data/Samples`, written by `TorqwaveTests --sampler-content`.
 
 Small, and said to be. Every sample is rendered by Torqwave from its own instruments, by a tool in the repository, so the set can be made again and nothing in it is anyone else's.
 
@@ -197,7 +215,9 @@ Small, and said to be. Every sample is rendered by Torqwave from its own instrum
 
 **Tests:** every factory preset loads all its samples, plays every zone, peaks under 0 dB and above a floor, and has no loop that clicks. The files in the repository are the ones the tool writes.
 
-## Last: the guide, screenshots and the changelog
+## Last: the guide, screenshots and the changelog (done)
+
+Done with each step. The two pictures of the window are drawn by the tests, not taken from the running app.
 
 - **Guide page 7:** a Torqwave Sampler section (the window, Keys and Slices, loops, the limits, what is not there), the commands on page 2 (editor) and page 6 (clips), projects on page 11, Ask Torq on page 13.
 - **README:** the features list and the instruments named.
@@ -218,6 +238,8 @@ Small, and said to be. Every sample is rendered by Torqwave from its own instrum
 8. Ask Torq (M)
 9. Factory content (M)
 10. Guide, screenshots, changelog
+
+All ten are built, each as its own commit, with the whole test suite passing at each. Nothing of it has been tried by hand in the running app: that is what is left before 0.21.0.
 
 Steps 1 to 4 are in order: each needs the one before. Step 5 needs 1 to 4, and 6 needs 5. Steps 7, 8 and 9 need 6 and can go in any order.
 
