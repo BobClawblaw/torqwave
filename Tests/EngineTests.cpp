@@ -42,6 +42,7 @@
 #include "SoundDemos.h"
 #include "SignalConsoleTests.h"
 #include "DecryptTests.h"
+#include "DecryptReal.h"
 #include "WaveSynthTests.h"
 #include "DrumMachineTests.h"
 #include "SoundControlsTests.h"
@@ -630,6 +631,7 @@ int main (int argc, char* argv[])
     //   --stress                only the stress test: how many tracks the mix keeps up with (minutes; not in the suite)
     //   --small                 only the tests of mixer scenes, channel strips and hardware inserts
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
+    //   --decrypt-real [files]  only Decrypt on recordings not from the synth: the files, some system sounds, wet patches
     //   --decrypt-measure       only Decrypt's two sets of ten, in 16 rounds and until settled, with times (minutes)
     //   --decrypt-eval <url> <model>  only Decrypt's ten clips, alone and helped by the model at that server
     //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session, sequence, library or decrypt
@@ -657,6 +659,16 @@ int main (int argc, char* argv[])
     factoryPresets.getParentDirectory().deleteRecursively();
     SequenceLibrary::setFactoryFolder (factoryPresets);
     SequenceLibrary::setSearchesFile (factoryPresets.getSiblingFile ("Sequence Searches.xml"));
+
+    if (const auto i = args.indexOf ("--decrypt-real"); i >= 0)
+    {
+        juce::StringArray files;
+
+        for (int f = i + 1; f < args.size() && ! args[f].startsWith ("--"); ++f)
+            files.add (args[f]);
+
+        return runDecryptReal (files);
+    }
 
     if (args.contains ("--decrypt-measure"))
         return runDecryptMeasure();

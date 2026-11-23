@@ -7,8 +7,9 @@ namespace
 {
     constexpr int block = 512;
     constexpr int firstRoundsLength = 48000;   // the factory patches are first compared over a second at most
-    constexpr int keptBest = 12, parents = 4, perParent = 12;
+    constexpr int keptBest = 12, parents = 4, perParent = 12, sweptPerRound = 3;
     constexpr float floorDb = -70.0f, loudnessFloorDb = -60.0f;
+    constexpr float maskedDb = 40.0f;   // a band this far under its frame's loudest (in either sound) is masked: unheard
 
     juce::uint32 mix (juce::uint32 x) noexcept
     {
@@ -295,21 +296,40 @@ Distance distance (const Measures& t, const Measures& c)
     double tone = 0.0, movement = 0.0, brightness = 0.0, loudness = 0.0;
 
     for (int s = 0; s < Measures::sizes; ++s)
+    {
+        // A band far under the frame's loudest (in the louder of the two) is masked: it counts as at that floor.
+        // Without it, faint noise 40 dB down measured farther than a low-pass at 2 kHz: the search spent its
+        // rounds on detail nobody hears.
+        const auto bandsOf = [&] (const Measures& m, int f, std::array<float, Measures::bands>& out)
+        {
+            for (int b = 0; b < Measures::bands; ++b)
+                out[(size_t) b] = bandOf (m, s, f, b);
+        };
+        const auto top = [] (const std::array<float, Measures::bands>& a) { return *std::max_element (a.begin(), a.end()); };
+        const auto apart = [] (const std::array<float, Measures::bands>& a, const std::array<float, Measures::bands>& b, float floor)
+        {
+            double sum = 0.0;
+            for (int i = 0; i < Measures::bands; ++i)
+                sum += std::abs (juce::jmax (floor, a[(size_t) i]) - juce::jmax (floor, b[(size_t) i]));
+            return sum / Measures::bands;
+        };
+        std::array<float, Measures::bands> tb {}, cb {};
+
         for (int f = 0; f < frames; ++f)
         {
-            double sum = 0.0, flux = 0.0;
+            double flux = 0.0;
 
             for (int b = 0; b < Measures::bands; ++b)
-            {
-                sum += std::abs (bandOf (t, s, f, b) - bandOf (c, s, f, b));
-
                 if (f > 0)
                     flux += std::abs (std::abs (bandOf (t, s, f, b) - bandOf (t, s, f - 1, b)) - std::abs (bandOf (c, s, f, b) - bandOf (c, s, f - 1, b)));
-            }
 
-            tone += weight[(size_t) f] * sum / Measures::bands;
+            bandsOf (t, f, tb);
+            bandsOf (c, f, cb);
+            const auto here = apart (tb, cb, juce::jmax (top (tb), top (cb)) - maskedDb);
+            tone += weight[(size_t) f] * here;
             movement += weight[(size_t) f] * flux / Measures::bands;
         }
+    }
 
     for (int f = 0; f < frames; ++f)
     {
@@ -329,7 +349,7 @@ Distance distance (const Measures& t, const Measures& c)
 
 float lockOf (float distanceDb)
 {
-    return juce::jlimit (0.0f, 100.0f, 100.0f * (1.0f - distanceDb / 24.0f));
+    return juce::jlimit (0.0f, 100.0f, 100.0f * (1.0f - distanceDb / 12.0f));
 }
 
 //==============================================================================
@@ -1236,6 +1256,8 @@ void Search::run (const std::function<bool()>& shouldStop)
         return options.untilSettled && round <= options.maxRounds && quietRounds < options.patience;
     };
 
+    int sweepAt = 0;
+
     for (int round = 1; goesOn (round) && ! shouldStop(); ++round)
     {
         // Carried on, the steps are smaller from the first: it is refining, not looking for somewhere to start.
@@ -1283,6 +1305,24 @@ void Search::run (const std::function<bool()>& shouldStop)
                 }
         }
 
+        // Fitted steps on the best: a few of its settings each taken across its whole range, the
+        // next few each round, round and round. A random step moves many settings a little; this
+        // finds the cutoff, level or envelope time that a recording needs, however far it is.
+        if (! best.empty())
+        {
+            int sweepable = 0;
+
+            for (auto& v : SignalConsole::sweeps (best.front().patch, *synth, firewall, sweepAt, sweptPerRound, 9, sweepable))
+            {
+                Candidate c;
+                c.patch = std::move (v);
+                c.from = best.front().from;
+                next.push_back (std::move (c));
+            }
+
+            sweepAt = sweepable > 0 ? (sweepAt + sweptPerRound) % sweepable : 0;
+        }
+
         // Those already scored keep their scores; the new ones are scored now.
         std::vector<Candidate> fresh (next.begin() + (std::ptrdiff_t) best.size(), next.end());
         fresh = score (std::move (fresh), target, shouldStop);
@@ -1298,7 +1338,7 @@ void Search::run (const std::function<bool()>& shouldStop)
 
         best = bestOf (std::move (next), keptBest);
         lastRound = round;
-        quietRounds = ! best.empty() && best.front().lock > lockBeforeRound + 0.05f ? 0 : quietRounds + 1;
+        quietRounds = ! best.empty() && best.front().lock > lockBeforeRound + 0.1f ? 0 : quietRounds + 1;
         noCloser = options.untilSettled && quietRounds >= options.patience;
 
         if (helper != nullptr)

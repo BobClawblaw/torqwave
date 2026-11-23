@@ -727,6 +727,99 @@ std::vector<Patch> variations (const Patch& held, Synth& rangesFrom, float reach
     return made;
 }
 
+std::vector<Patch> sweeps (const Patch& held, Synth& rangesFrom, const std::array<bool, numParts>& firewall, int first, int settings, int points, int& total)
+{
+    // The settings a sweep can take, the ones that shape the sound most first: the filters (an off
+    // one too, so a high-pass can come in), levels, the amp's envelope, tables and pitches; then the rest.
+    static const juce::StringArray firstOnes { "Type", "Cutoff", "Level", "Volume", "Table", "Position", "Pitch", "Resonance", "Attack", "Decay", "Sustain", "Release" };
+    std::vector<std::pair<int, juce::String>> order;
+
+    for (auto& [id, value] : held.values)
+    {
+        juce::ignoreUnused (value);
+        const auto part = partOf (id);
+
+        if (part < 0 || firewall[(size_t) part] || rangesFrom.parameter (id) == nullptr)
+            continue;
+
+        const auto filterType = id.startsWith ("filter") && id.endsWith ("Type") && id.length() == 11;
+
+        if (! filterType && ruleFor (id, held.values).kind == Kind::fixed)
+            continue;
+
+        int rank = firstOnes.size();
+
+        for (int k = 0; k < firstOnes.size(); ++k)
+            if (id.endsWith (firstOnes[k]))
+            {
+                rank = k;
+                break;
+            }
+
+        if (id.startsWith ("env") && ! id.startsWith ("env1"))
+            rank += firstOnes.size();   // the amp's envelope before the others
+
+        order.push_back ({ rank, id });
+    }
+
+    std::sort (order.begin(), order.end());
+    total = (int) order.size();
+    std::vector<Patch> made;
+
+    if (order.empty() || settings <= 0)
+        return made;
+
+    for (int k = 0; k < settings && k < total; ++k)
+    {
+        const auto& id = order[(size_t) ((first + k) % total)].second;
+        auto* p = rangesFrom.parameter (id);
+        const auto from = valueOf (held.values, id);
+        const auto range = p->getNormalisableRange();
+        std::vector<double> to;
+
+        if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (p))
+        {
+            for (int c = 0; c < choice->choices.size(); ++c)
+                if (c != (int) std::lround (from) && ! (id.endsWith ("Table") && c == (int) WaveTables::Table::sampled
+                                                        && held.tables[(size_t) juce::jlimit (0, 2, id.substring (3, 4).getIntValue() - 1)] == nullptr))
+                    to.push_back (c);
+        }
+        else if (dynamic_cast<juce::AudioParameterBool*> (p) != nullptr)
+            to.push_back (from > 0.5 ? 0.0 : 1.0);
+        else if (id.endsWith ("Pitch"))
+        {
+            for (auto by : { -24.0, -12.0, -7.0, -5.0, 5.0, 7.0, 12.0, 24.0 })
+                to.push_back (juce::jlimit ((double) range.start, (double) range.end, from + by));
+        }
+        else if (id.endsWith ("Unison"))
+        {
+            for (int u = (int) range.start; u <= (int) range.end; ++u)
+                to.push_back (u);
+        }
+        else
+        {
+            // Across its whole range, and a little either side of where it is.
+            const auto was = p->convertTo0to1 ((float) from);
+
+            for (int i = 0; i < points; ++i)
+                to.push_back (p->convertFrom0to1 ((float) i / (float) juce::jmax (1, points - 1)));
+
+            for (auto by : { -0.04f, 0.04f })
+                to.push_back (p->convertFrom0to1 (juce::jlimit (0.0f, 1.0f, was + by)));
+        }
+
+        for (auto value : to)
+            if (! juce::approximatelyEqual (value, from))
+            {
+                auto patch = held;
+                patch.values[id] = value;
+                made.push_back (std::move (patch));
+            }
+    }
+
+    return made;
+}
+
 std::vector<Patch> fewMoves (const Patch& held, Synth& rangesFrom, float reach, juce::uint32 seed, const std::array<bool, numParts>& firewall, int count)
 {
     const auto movable = movableIn (held, rangesFrom, firewall);

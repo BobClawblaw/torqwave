@@ -539,6 +539,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/SoundDemos.cpp
     Tests/SignalConsoleTests.cpp
     Tests/DecryptTests.cpp
+        Tests/DecryptReal.cpp
     Tests/DrumMachineTests.cpp
     Tests/SoundControlsTests.cpp
     Tests/WaveSynthTests.cpp

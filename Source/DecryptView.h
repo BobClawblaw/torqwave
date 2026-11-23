@@ -113,9 +113,9 @@ private:
     juce::Rectangle<float> panel, stopChip, takeChip, againChip, chooseChip, tablesChip, useChip, refuseChip;
     int passes = 0;                                  // searches run on this clip: 1 the first, more for each Again
     std::optional<SignalConsole::Patch> chosen;      // the candidate taken from the search shown, for Again to go on from
-    float chosenLock = 0.0f;
+    float chosenLock = 0.0f, chosenDb = 0.0f;
 
-    /** The chain: the best candidate each time the search came at least a point nearer the signal
+    /** The chain: the best candidate each time the search came a quarter of a dB nearer the signal
         (and whatever an Again went on from), oldest first: how the sound has come along. A click
         plays a step, Play plays them all in turn after the signal, and a double-click goes back to
         one: it is put on the keys, the steps after it are dropped, and Again goes on from it.
@@ -123,7 +123,7 @@ private:
     struct Link
     {
         SignalConsole::Patch patch;
-        float lock = 0.0f;
+        float lock = 0.0f, db = 0.0f;   // its lock, and its distance from the signal in dB
         juce::Rectangle<float> at;
     };
 
@@ -131,7 +131,10 @@ private:
     juce::Rectangle<float> playChip;
     void hearPatch (const SignalConsole::Patch&);
     void growChain();
-    void addLink (const SignalConsole::Patch&, float lock);
+    void addLink (const SignalConsole::Patch&, float lock, float db);
+
+    /** Where this pass began (its first best): how far it has come is shown against it. */
+    float passFromDb = -1.0f, passFromLock = 0.0f;
 
     /** Plays the signal, then each step of the chain, one after another. */
     struct ChainPlayer final : public juce::Timer

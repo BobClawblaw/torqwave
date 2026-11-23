@@ -103,9 +103,11 @@ namespace
         return std::any_of (all.begin(), all.end(), [name] (const WaveSynth::Patch& p) { return p.name == name; });
     }
 
-    /** Where a match counts as found: changes at or under the edge of hearing (3 cents of pitch, the
-        filters 3 % higher, the envelopes' times 5 % longer, a recording made at 44.1 kHz) measure under it. */
-    constexpr float foundWithin = 3.0f;
+    /** Where a simple patch's match counts as found: set from what the search measured on the simple
+        set in 16 rounds (the furthest 2.06 dB, Siren Burn), with a little room. Changes at or under the
+        edge of hearing (3 cents of pitch, the filters 3 % higher, the envelopes' times 5 % longer, a
+        recording made at 44.1 kHz) measure well under it (0.87 dB at most). */
+    constexpr float foundWithin = 2.5f;
 
     void testThreshold()
     {
@@ -195,10 +197,10 @@ namespace
     }
 
     /** Where a complex patch's match counts as found: set from what the search measured on the
-        complex set until settled (the furthest 4.75 dB, Furnace Clamp; the mean lock 89 %), with a
+        complex set until settled (the furthest 2.76 dB, Rivet Snarl; the mean lock 84 %), with a
         little room. It is wider than the simple set's: those patches move in ways a knob search
         reaches only in part. */
-    constexpr float complexWithin = 5.0f;
+    constexpr float complexWithin = 3.5f;
 
     void testSearch()
     {

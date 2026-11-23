@@ -40,7 +40,8 @@ namespace Decrypt
     Measures measure (const float* mono, int length);
 
     /** How far apart two sounds are, in dB on average: the spectra (weighted to where either is
-        loud) and the loudness; 0 for the same sound. Also by part, for showing. */
+        loud, each moment's bands more than 40 dB under its loudest counted as at that floor, as
+        unheard) and the loudness; 0 for the same sound. Also by part, for showing. */
     struct Distance
     {
         float total = 0.0f;
@@ -49,7 +50,7 @@ namespace Decrypt
 
     Distance distance (const Measures& target, const Measures& candidate);
 
-    /** A distance as a lock: 100 % for the same sound, falling to 0 at 24 dB. */
+    /** A distance as a lock: 100 % for the same sound, falling to 0 at 12 dB. */
     float lockOf (float distanceDb);
 
     /** A clip made ready to be matched. */
@@ -166,7 +167,7 @@ namespace Decrypt
         juce::StringArray leaveOut;         // factory patches not to start from (tests)
         int rounds = 16;
         /** Rounds go on past `rounds` for as long as they come closer: the search ends when `patience`
-            rounds in a row have raised the best lock by less than a twentieth of a point, or at
+            rounds in a row have raised the best lock by less than a tenth of a point (0.012 dB), or at
             `maxRounds`. Off (as tests and tools have it): exactly `rounds`. */
         bool untilSettled = false;
         int patience = 6, maxRounds = 64;

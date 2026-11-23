@@ -118,6 +118,13 @@ namespace SignalConsole
         modulation routes, step patterns) where moving all of a part at once rarely lands. */
     std::vector<Patch> fewMoves (const Patch& held, Synth& rangesFrom, float reach, juce::uint32 seed, const std::array<bool, numParts>& firewall, int count);
 
+    /** Fitted steps: `settings` of the held patch's settings, from the `first` in an order that puts
+        what shapes the sound most first (filter types, an off filter's too, cutoffs, levels, tables,
+        pitches, the amp's envelope), each taken to `points` places across its whole range and a
+        little either side of where it is (a choice to each of its others, a switch thrown, a pitch
+        by fifths and octaves). `total` is how many settings there are to sweep, to go round them. */
+    std::vector<Patch> sweeps (const Patch& held, Synth& rangesFrom, const std::array<bool, numParts>& firewall, int first, int settings, int points, int& total);
+
     /** A held node's own entry (distance 0), measured. */
     Node nodeOf (const Patch&, Renderer&);
 

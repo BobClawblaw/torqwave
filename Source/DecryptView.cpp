@@ -14,6 +14,9 @@ using namespace Decrypt;
 
 namespace
 {
+    constexpr float chainStepDb = 0.25f;   // the chain takes a step each time the best comes this much nearer
+    constexpr int longestChain = 40;
+
     const juce::StringArray& sectorLabels()
     {
         static const juce::StringArray n { "OSCILLATORS", "FILTER", "ENVELOPES", "MODULATION", "EFFECTS" };
@@ -165,23 +168,23 @@ bool DecryptView::again()
     if (chosen.has_value())
     {
         from.push_back (*chosen);
-        link = { *chosen, chosenLock, {} };
+        link = { *chosen, chosenLock, chosenDb, {} };
     }
     else if (juce::isPositiveAndBelow (onKeys, (int) progress.best.size()))
     {
         from.push_back (progress.best[(size_t) onKeys].patch);
-        link = { progress.best[(size_t) onKeys].patch, progress.best[(size_t) onKeys].lock, {} };
+        link = { progress.best[(size_t) onKeys].patch, progress.best[(size_t) onKeys].lock, progress.best[(size_t) onKeys].distance.total, {} };
     }
     else
     {
         for (auto& c : progress.best)
             from.push_back (c.patch);
 
-        link = { progress.best.front().patch, progress.best.front().lock, {} };
+        link = { progress.best.front().patch, progress.best.front().lock, progress.best.front().distance.total, {} };
     }
 
     // The chain keeps where this pass went on from, to hear beside what comes next.
-    addLink (link.patch, link.lock);
+    addLink (link.patch, link.lock, link.db);
 
     // Stop then gives back the patch from before the first pass, or the one taken (begin).
     auto target = search->getTarget();
@@ -213,6 +216,7 @@ void DecryptView::begin (Decrypt::Target target, std::vector<SignalConsole::Patc
     }
 
     ++passes;
+    passFromDb = -1.0f;
     Options options;
     options.factoryTablesOnly = tablesOnly;
     options.words = words.getText().trim();
@@ -262,6 +266,7 @@ void DecryptView::take()
     search->stop();
     chosen = c->patch;
     chosenLock = c->lock;
+    chosenDb = c->distance.total;
     auto patch = c->patch;
     patch.name = "Node " + SignalConsole::addressText (c->address);
     SignalConsole::apply (synth, patch);
@@ -353,24 +358,35 @@ void DecryptView::hear (int candidate)
         hearPatch (progress.best[(size_t) candidate].patch);
 }
 
-void DecryptView::addLink (const SignalConsole::Patch& patch, float lock)
+void DecryptView::addLink (const SignalConsole::Patch& patch, float lock, float db)
 {
     if (! chain.empty() && SignalConsole::addressOf (chain.back().patch) == SignalConsole::addressOf (patch))
         return;
 
-    chain.push_back ({ patch, lock, {} });
+    // At most so many steps: past that the newest takes the last place, so the chain still ends where the search is.
+    if (chain.size() >= (size_t) longestChain)
+        chain.pop_back();
+
+    chain.push_back ({ patch, lock, db, {} });
 }
 
 void DecryptView::growChain()
 {
-    // A step each time the best comes a point nearer (and the first best, and the last when it ends).
+    // A step each time the best comes a quarter of a dB nearer (and the first best, and the last when it ends).
     if (progress.best.empty())
         return;
 
     const auto& best = progress.best.front();
 
-    if (chain.empty() || best.lock >= chain.back().lock + 1.0f || (progress.finished && ! progress.stopped && best.lock > chain.back().lock))
-        addLink (best.patch, best.lock);
+    if (passFromDb < 0.0f)
+    {
+        passFromDb = best.distance.total;
+        passFromLock = best.lock;
+    }
+
+    if (chain.empty() || best.distance.total <= chain.back().db - chainStepDb
+        || (progress.finished && ! progress.stopped && best.distance.total < chain.back().db))
+        addLink (best.patch, best.lock, best.distance.total);
 }
 
 void DecryptView::playChain()
@@ -425,6 +441,7 @@ void DecryptView::goBackTo (int index)
     SignalConsole::apply (synth, patch);
     chosen = link.patch;
     chosenLock = link.lock;
+    chosenDb = link.db;
     restored = false;
     onKeys = -1;
     finish ("STEP " + juce::String (index + 1));
@@ -900,7 +917,7 @@ void DecryptView::drawPanel (juce::Graphics& g)
             "time and their loudness.",
             "",
             "The lock is how near: 100 % is",
-            "the same sound, 0 % 24 dB apart.",
+            "the same sound, 0 % 12 dB apart.",
             "A sound this synth made is",
             "found again; anything else",
             "gives a patch in its spirit:",
@@ -925,7 +942,29 @@ void DecryptView::drawPanel (juce::Graphics& g)
     const auto heading = running ? juce::String ("DECRYPTING") : ended.isNotEmpty() ? ended : juce::String ("LOCKED");
     text (g, heading, x, y, 12.0f, signal(), juce::Justification::centredLeft, true);
     text (g, progress.stage + "  " + timeText (progress.seconds), right, y, 11.0f, Theme::dimText, juce::Justification::centredRight);
-    y += 24.0f;
+    y += 20.0f;
+
+    // How far this pass has come, live; and when it settles, how far it got and where to go from there.
+    if (! progress.best.empty() && passFromDb >= 0.0f)
+    {
+        const auto& best = progress.best.front();
+        const auto gained = passFromDb - best.distance.total;
+        const auto line = (passes > 1 ? "pass " + juce::String (passes) + "  " : juce::String ("this pass  "))
+                        + juce::String (passFromDb, 2) + " to " + juce::String (best.distance.total, 2) + " dB"
+                        + (gained >= 0.005f ? ", " + juce::String (gained, 2) + " nearer" : juce::String (", no nearer yet"));
+        text (g, line, x, y, 10.5f, running ? Theme::accentLight : Theme::dimText);
+        y += 15.0f;
+
+        if (! running && progress.noCloser)
+        {
+            text (g, "No closer from here: choose a step or a", x, y, 10.5f, Theme::dimText);
+            y += 15.0f;
+            text (g, "candidate, and Again goes on from it.", x, y, 10.5f, Theme::dimText);
+            y += 15.0f;
+        }
+    }
+
+    y += 4.0f;
 
     // The candidate shown: its signature, lock, address and where it came from.
     if (c != nullptr)
