@@ -163,6 +163,8 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 |---|---|
 | Select the whole file | Double-click the waveform or spectrogram |
 | Scrub (hear the sound as you drag over it) | Drag along the ruler above the waveform, while stopped |
+| Move along a zoomed file | Drag the waveform with the Hand tool (`H`), or with the middle button and any tool; hold Shift and turn the mouse wheel |
+| Move or zoom on the time-view strip (over the editor's ruler and the multitrack lanes) | Drag inside its frame to move along, drag an edge of the frame to zoom, click elsewhere to jump there, double-click to show everything |
 | Select a band of frequencies | Option-drag in the spectrogram |
 | Draw round frequencies (lasso tool) | Drag in the spectrogram; Shift-drag adds |
 | Paint over frequencies (brush tool) | Drag in the spectrogram; Shift-drag adds |

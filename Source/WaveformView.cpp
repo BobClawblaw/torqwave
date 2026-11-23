@@ -207,6 +207,12 @@ void WaveformView::zoomAround (float x, double factor)
     setView (anchor - (double) x * fpp, fpp);
 }
 
+void WaveformView::showFrames (juce::Range<double> frames)
+{
+    if (frames.getLength() > 0.0)
+        setView (frames.getStart(), frames.getLength() / juce::jmax (1, getWidth()));
+}
+
 void WaveformView::zoomIn()        { zoomAround ((float) getWidth() * 0.5f, 0.5); }
 void WaveformView::zoomOut()       { zoomAround ((float) getWidth() * 0.5f, 2.0); }
 void WaveformView::zoomToFit()     { setView (0.0, 1.0e18); }

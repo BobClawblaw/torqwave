@@ -62,7 +62,7 @@ Plug-ins are set through their parameters, the way automation sees them, so any 
 
 New in 0.20.0, in a session. Ask Torq picks from what is really there, by name, and says so when a name matches nothing.
 
-- **Factory sounds.** It can list Torqwave Synth's factory patches, Basic Drums' kits and StringSwarm's presets, and load one on an instrument track. Torqwave Synth has over a thousand patches, so it looks them up by category and by words in the name, 60 at a time. A name that matches nothing is refused, and the model is given the five nearest names to choose from. A preset you saved yourself comes before a factory sound of the same name.
+- **Factory sounds.** It can list Torqwave Synth's factory patches, Basic Drums' kits and StringSwarm's presets, and load one on an instrument track. Torqwave Synth has thousands of patches, so it looks them up by category and by words in the name, 60 at a time. A name that matches nothing is refused, and the model is given the five nearest names to choose from. A preset you saved yourself comes before a factory sound of the same name.
 - **Factory sequences and kits.** It can search the Sequence Library's Presets by role, style, energy (1 to 5), character (Dark, Bright, Sparse, Dense, Straight, Swung, Clean, Distorted) and words, and put a sequence or a whole kit at a bar. This runs the same code as dragging it in from the [Sequence Library](07-instruments-and-midi.md): it lands on the session's beats at the session's tempo; a sequence makes a new track with the instrument it brings, or goes on a track you name with its notes only; a kit makes a folder with a track for each part. With the library's **Transpose Drops to the Session's Key** on, it is moved as a drop is. It finds factory presets only, not the sequences in your own library.
 - **Drum maps.** It can list the drum maps you saved, give a track one of them (or General MIDI's layout back), and move a clip's notes to the map's keys or back to General MIDI, as **Remap Notes** does in the piano roll. A factory drum part put on a track with a map goes to the kit's keys by itself.
 - **StringSwarm's settings**, its Source (strings or a swarm) and Strum Sync among them, are read and set like any instrument's. So are Torqwave Synth's, with each oscillator's level envelope and all sixteen modulation slots.
@@ -90,7 +90,7 @@ So that it can choose a plug-in without opening each one to look, Ask Torq keeps
 - A plug-in the model doesn't know is marked **not known** rather than guessed at, and Ask Torq is told so.
 - **Choose a plug-in** to read its entry. Edit it and **Save** to keep your own text, which learning never replaces. **Forget** drops what is known of the plug-in, so the next Learn All reads and describes it again (or, for one Torqwave ships a description of, brings that back).
 - The catalogue is kept as `Plug-in Catalogue.json` in the Torqwave folder of your user library (on the Mac, `~/Library/Torqwave`), beside the Sound Library's index. A plug-in's parameters are read again when it is updated; its description is kept.
-- Instruments aren't learnt yet; they will be when Ask Torq works on sessions.
+- Instruments aren't learnt yet.
 
 The model's descriptions can be wrong, as anything it writes can, especially for a plug-in it doesn't know. Reading a few is worth it, and a wrong one is easily edited or forgotten.
 
@@ -134,7 +134,7 @@ Every change the model proposes is played and scored like any other candidate, w
 
 **Let the model hear clips** (Settings > AI, off to begin with) sends the note Decrypt is matching to the server once, as a 16 kHz WAV, and asks for a one-line description to start from. Only a model that takes audio can use it; one that doesn't answers with an error and the search goes on as before. Turn it on only for a server you trust with your audio.
 
-**What it did, measured.** The ten factory patches of Decrypt's own test as it was before the 40 basses of 0.20.0 (Warehouse Sub as its bass), each recorded dry and decrypted without its own name, with and without a 27-billion-parameter model (Qwen3.8 27B, on a local server) told the patch's category in words:
+**What it did, measured.** The ten factory patches of Decrypt's own test as it was before the 40 basses of 0.20.0 (Warehouse Sub as its bass), each recorded dry and decrypted without its own name, with and without a 27-billion-parameter model (Qwen3.8 27B, on a local server) told the patch's category in words. The locks are on the scale of the time, 0 % at 24 dB apart; the lock now falls to 0 % at 12 dB, so the same matches read lower today:
 
 | | Without the model | With the model |
 |---|---|---|
