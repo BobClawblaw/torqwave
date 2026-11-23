@@ -71,6 +71,23 @@ namespace Decrypt
     /** A patch played as a target is: its effects off, the target's key held for as long, as long. */
     juce::AudioBuffer<float> render (Synth&, const Patch&, const Target&);
 
+    /** How loud the window auditions a candidate: its peak at -6 dB, as the target is levelled. */
+    constexpr float auditionDb = -6.0f;
+
+    /** A patch made ready for the keys. The search matches sounds at their peaks and never looks at a
+        patch's own level, so a patch put on the synth as found plays at whatever level it happens to
+        have. This one has its Amp Level trimmed so the target's note, played as the keys play it (its
+        effects on, velocity 100), peaks where the audition does; ranOut when the knob's range could
+        not bring it within a dB. */
+    struct Levelled
+    {
+        Patch patch;
+        float beforeDb = 0.0f, afterDb = 0.0f;    // the note's peak on the keys, before and after
+        bool ranOut = false;
+    };
+
+    Levelled levelForKeys (const Patch&, const Target&);
+
     /** A render measured as the search measures it: its channels as one, at its peak. */
     Measures measureRender (const juce::AudioBuffer<float>&);
 

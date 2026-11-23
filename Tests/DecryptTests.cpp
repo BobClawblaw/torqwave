@@ -53,6 +53,83 @@ namespace
         return out;
     }
 
+    /** Two patches the same but for Amp Level, which Decrypt trims when it puts one on the keys. */
+    bool alikeButLevel (SignalConsole::Patch a, SignalConsole::Patch b)
+    {
+        a.values.erase ("ampLevel");
+        b.values.erase ("ampLevel");
+        return SignalConsole::addressOf (a) == SignalConsole::addressOf (b);
+    }
+
+    /** The peak, in dB, of a synth playing the target's note as the keys do: velocity 100, its effects as they are, held as long. */
+    float peakOnKeys (Synth& synth, const Target& target)
+    {
+        synth.prepareToPlay (rate, 512);
+        const auto length = target.audio.getNumSamples();
+        juce::AudioBuffer<float> part (2, 512);
+        float peak = 0.0f;
+
+        for (int at = 0; at < length; at += 512)
+        {
+            const auto n = juce::jmin (512, length - at);
+            juce::MidiBuffer midi;
+            if (at == 0) midi.addEvent (juce::MidiMessage::noteOn (1, target.note, (juce::uint8) 100), 0);
+            if (target.held >= at && target.held < at + n) midi.addEvent (juce::MidiMessage::noteOff (1, target.note), target.held - at);
+            part.setSize (2, n, false, false, true);
+            part.clear();
+            synth.processBlock (part, midi);
+            peak = juce::jmax (peak, part.getMagnitude (0, n));
+        }
+
+        return juce::Decibels::gainToDecibels (peak, -100.0f);
+    }
+
+    void testLevel()
+    {
+        // Found patches on the keys: before, at whatever level the patch has (the search matches peaks, not levels);
+        // after, trimmed to where the window auditions them. Measured on a synth of their own, as the keys play them.
+        juce::StringArray lines;
+        auto within = true, flagged = true;
+        float furthestBefore = 0.0f, furthestAfter = 0.0f;
+
+        for (auto& [name, note] : std::vector<std::pair<juce::String, int>> { { "Warehouse Sub", 33 }, { "Abyss Reese", 45 }, { "Cold Bell", 57 }, { "Black Pluck", 60 },
+                                                                              { "Concrete Pad", 57 }, { "Abrasive Bray", 48 } })
+        {
+            const auto target = prepare (recordingOf (name, note, 0.8, 1.5), rate);
+            Options options;
+            options.threads = 4;
+            options.leaveOut.add (name);
+            Search search (target, options);
+            const auto best = search.runNow().best.front();
+            Synth keys;
+            keys.setPlayConfigDetails (0, 2, rate, 512);
+            keys.setNonRealtime (true);
+            SignalConsole::apply (keys, best.patch);
+            const auto before = peakOnKeys (keys, target);
+            const auto levelled = levelForKeys (best.patch, target);
+            SignalConsole::apply (keys, levelled.patch);
+            const auto after = peakOnKeys (keys, target);
+            const auto apartAfter = std::abs (after - auditionDb);
+            furthestBefore = juce::jmax (furthestBefore, std::abs (before - auditionDb));
+
+            if (levelled.ranOut)
+                flagged = flagged && apartAfter > 1.0f;
+            else
+            {
+                within = within && apartAfter <= 1.0f;
+                furthestAfter = juce::jmax (furthestAfter, apartAfter);
+            }
+
+            lines.add (name + " (as " + best.from + ") " + juce::String (before - auditionDb, 1) + " to " + juce::String (after - auditionDb, 1) + " dB"
+                       + (levelled.ranOut ? ", Amp Level at its end" : juce::String()));
+        }
+
+        std::cout << "DECRYPT-LEVEL against the audition: " << lines.joinIntoString ("; ") << std::endl;
+        check (within && flagged,
+               "decrypt: a found patch put on the keys plays the matched note at velocity 100 within 1 dB of its audition (the furthest " + juce::String (furthestAfter, 2)
+                   + " dB; " + juce::String (furthestBefore, 1) + " dB before it was trimmed), and where Amp Level's range runs out it is said: " + lines.joinIntoString ("; "));
+    }
+
     void testPrepare()
     {
         // A bell at A3 recorded at 44.1 kHz after a third of a second of silence: found at 220 Hz, from its start, at -6 dB.
@@ -497,6 +574,8 @@ namespace
         const auto placed = view.candidateCentre (3) != view.candidateCentre (-1);
         click (view.candidateCentre (3), 2);
         const auto onKeys = SignalConsole::addressOf (SignalConsole::capture (synth)) != before;
+        const auto keysDb = peakOnKeys (synth, view.getSearch()->getTarget());
+        const auto asHeard = std::abs (keysDb - auditionDb) <= 1.0f && std::abs (keysDb - view.lastKeysDb()) <= 0.1f;
         click (view.stopBounds().getCentre());
         TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 5000);
         const auto stoppedBack = SignalConsole::addressOf (SignalConsole::capture (synth)) == before;
@@ -508,11 +587,13 @@ namespace
         if (! onKeys)      failed.add ("the double-click put nothing on the keys (the search had " + juce::String ((int) searchHad)
                                        + " candidates, the view had candidate 3 " + (placed ? "placed" : "not placed yet") + ")");
         if (! stoppedBack) failed.add ("Stop did not give back the patch from before");
+        if (! asHeard)     failed.add ("the candidate on the keys peaks at " + juce::String (keysDb, 2) + " dB (the view measured " + juce::String (view.lastKeysDb(), 2)
+                                       + "), not within 1 dB of the audition's " + juce::String (auditionDb, 1));
         if (! drawn)       failed.add ("a snapshot was not drawn at its size");
         check (failed.isEmpty(),
                "decrypt: the window refuses a silent clip, switches Tables only from the factory, starts on a clip, puts a candidate on the keys with a double-click, "
-               "and Stop gives back the patch it had; it draws at 70 %, 100 % and 160 % before and during a search"
-                   + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
+               "as loud on the keys as its audition (" + juce::String (keysDb - auditionDb, 2) + " dB apart), and Stop gives back the patch it had; it draws at 70 %, 100 % and 160 % "
+                   "before and during a search" + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
 
         // Take keeps the best; a model's name for it can be refused, and used.
         const auto namer = std::make_shared<MadeUp> (MadeUp::Kind::namer);
@@ -521,7 +602,7 @@ namespace
         TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
         const auto best = view.getSearch()->getProgress().best;
         click (view.takeBounds().getCentre());
-        const auto taken = ! best.empty() && SignalConsole::addressOf (SignalConsole::capture (synth)) == best.front().address
+        const auto taken = ! best.empty() && alikeButLevel (SignalConsole::capture (synth), best.front().patch)
                            && synth.getPatchName() == "Node " + SignalConsole::addressText (best.front().address);
         TestUtils::runUntil ([&view] { return view.offeredName().name.isNotEmpty(); }, 5000);
         const auto offered = view.offeredName().name == "Rust Reese";
@@ -556,7 +637,7 @@ namespace
             const auto picked = view.getSearch()->getProgress().best[3];
             view.setHovered (3);
             view.take();
-            const auto tookIt = SignalConsole::addressOf (SignalConsole::capture (synth)) == picked.address && view.canGoAgain();
+            const auto tookIt = alikeButLevel (SignalConsole::capture (synth), picked.patch) && view.canGoAgain();
             view.again();
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto fromPicked = view.getSearch()->getProgress().best.front().lock >= picked.lock - 0.01f && view.getPasses() == 4;
@@ -661,7 +742,7 @@ namespace
             for (int i = 0; i < (int) shownBest.size(); ++i)
             {
                 click (view.candidateCentre (i), 2);
-                hits += SignalConsole::addressOf (SignalConsole::capture (synth)) == shownBest[(size_t) i].address ? 1 : 0;
+                hits += alikeButLevel (SignalConsole::capture (synth), shownBest[(size_t) i].patch) ? 1 : 0;
             }
 
             view.stop();
@@ -724,6 +805,7 @@ void runDecryptTests()
     testThreshold();
     testModel();
     testWindow();
+    testLevel();
     testPrepare();
     testRepeatable();
     testStopAndLoad();

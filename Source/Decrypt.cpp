@@ -432,6 +432,44 @@ Target prepare (const juce::AudioBuffer<float>& clip, double sampleRate)
     return t;
 }
 
+namespace
+{
+    /** A patch played on the target's key, held for as long as the target's is, at a velocity. */
+    juce::AudioBuffer<float> play (Synth& synth, const Patch& patch, const Target& target, float velocity)
+    {
+        SignalConsole::apply (synth, patch);
+        synth.prepareToPlay (rate, block);
+        const auto length = target.audio.getNumSamples();
+        juce::AudioBuffer<float> out (2, length), part (2, block);
+
+        for (int at = 0; at < length; at += block)
+        {
+            const auto count = juce::jmin (block, length - at);
+            juce::MidiBuffer midi;
+
+            if (at == 0)
+                midi.addEvent (juce::MidiMessage::noteOn (1, target.note, velocity), 0);
+
+            if (target.held >= at && target.held < at + count)
+                midi.addEvent (juce::MidiMessage::noteOff (1, target.note), target.held - at);
+
+            part.setSize (2, count, false, false, true);
+            part.clear();
+            synth.processBlock (part, midi);
+
+            for (int ch = 0; ch < 2; ++ch)
+                out.copyFrom (ch, at, part, ch, 0, count);
+        }
+
+        return out;
+    }
+
+    float peakDb (const juce::AudioBuffer<float>& audio)
+    {
+        return juce::Decibels::gainToDecibels (audio.getMagnitude (0, audio.getNumSamples()), -100.0f);
+    }
+}
+
 juce::AudioBuffer<float> render (Synth& synth, const Patch& patch, const Target& target)
 {
     auto dry = patch;
@@ -439,31 +477,43 @@ juce::AudioBuffer<float> render (Synth& synth, const Patch& patch, const Target&
     for (auto* effect : { "fxDriveOn", "fxChorusOn", "fxPhaserOn", "fxDelayOn", "fxReverbOn" })
         dry.values[effect] = 0.0;
 
-    SignalConsole::apply (synth, dry);
-    synth.prepareToPlay (rate, block);
-    const auto length = target.audio.getNumSamples();
-    juce::AudioBuffer<float> out (2, length), part (2, block);
+    return play (synth, dry, target, 0.8f);
+}
 
-    for (int at = 0; at < length; at += block)
+Levelled levelForKeys (const Patch& patch, const Target& target)
+{
+    // Played as the keys play it (its effects on, velocity 100), its Amp Level moved by what its peak
+    // misses the audition's by. The effects after the amp (drive above all) need not answer in step,
+    // so it is measured again after each move, three moves at most.
+    Synth player;
+    player.setPlayConfigDetails (0, 2, rate, block);
+    player.setNonRealtime (true);
+    const auto* knob = player.parameter ("ampLevel");
+    const auto range = knob != nullptr ? knob->getNormalisableRange() : juce::NormalisableRange<float> (-40.0f, 6.0f);
+    const auto velocity = 100.0f / 127.0f;
+
+    Levelled l;
+    l.patch = patch;
+    const auto it = patch.values.find ("ampLevel");
+    auto level = it != patch.values.end() ? (float) it->second : (knob != nullptr ? range.convertFrom0to1 (knob->getDefaultValue()) : -9.0f);
+    l.beforeDb = peakDb (play (player, patch, target, velocity));
+    l.afterDb = l.beforeDb;
+
+    for (int move = 0; move < 3 && std::abs (l.afterDb - auditionDb) > 0.25f && l.afterDb > -99.0f; ++move)
     {
-        const auto count = juce::jmin (block, length - at);
-        juce::MidiBuffer midi;
+        const auto next = juce::jlimit (range.start, range.end, level + (auditionDb - l.afterDb));
 
-        if (at == 0)
-            midi.addEvent (juce::MidiMessage::noteOn (1, target.note, 0.8f), 0);
+        if (std::abs (next - level) < 0.01f)
+            break;   // the knob is at the end of its range
 
-        if (target.held >= at && target.held < at + count)
-            midi.addEvent (juce::MidiMessage::noteOff (1, target.note), target.held - at);
-
-        part.setSize (2, count, false, false, true);
-        part.clear();
-        synth.processBlock (part, midi);
-
-        for (int ch = 0; ch < 2; ++ch)
-            out.copyFrom (ch, at, part, ch, 0, count);
+        level = next;
+        l.patch.values["ampLevel"] = level;
+        l.afterDb = peakDb (play (player, l.patch, target, velocity));
+        l.patch.values["ampLevel"] = SignalConsole::capture (player).values["ampLevel"];   // as the knob holds it, so the patch reads back the same
     }
 
-    return out;
+    l.ranOut = std::abs (l.afterDb - auditionDb) > 1.0f;
+    return l;
 }
 
 Measures measureRender (const juce::AudioBuffer<float>& audio)

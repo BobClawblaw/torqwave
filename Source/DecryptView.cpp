@@ -196,6 +196,7 @@ void DecryptView::begin (Decrypt::Target target, std::vector<SignalConsole::Patc
 {
     problem = {};
     ended = {};
+    levelNote = {};
     offer = {};
     onKeys = -1;
     hovered = -2;
@@ -258,18 +259,17 @@ void DecryptView::stop()
 
 void DecryptView::take()
 {
-    const auto* c = shown();
-
-    if (search == nullptr || c == nullptr)
+    if (search == nullptr || shown() == nullptr)
         return;
 
+    // A copy: finish() takes the search's progress again, which the candidate shown lives in.
+    const auto taken = *shown();
+    const auto* c = &taken;
     search->stop();
     chosen = c->patch;
     chosenLock = c->lock;
     chosenDb = c->distance.total;
-    auto patch = c->patch;
-    patch.name = "Node " + SignalConsole::addressText (c->address);
-    SignalConsole::apply (synth, patch);
+    putOnKeys (c->patch, "Node " + SignalConsole::addressText (c->address));
     restored = true;
     onKeys = -1;
     finish ("TAKEN");
@@ -279,7 +279,7 @@ void DecryptView::take()
     {
         Advisor::Brief brief;
         brief.target = describe (search->getTarget());
-        brief.best = describeSettings (synth, patch);
+        brief.best = describeSettings (synth, c->patch);
         brief.words = words.getText().trim();
         brief.lock = c->lock;
         offerFor = c->address;
@@ -436,15 +436,26 @@ void DecryptView::goBackTo (int index)
     if (restored)       // Stop or Take had settled it: what the synth holds now is what Stop gives back
         before = SignalConsole::capture (synth);
 
-    auto patch = link.patch;
-    patch.name = "Node " + SignalConsole::addressText (SignalConsole::addressOf (link.patch));
-    SignalConsole::apply (synth, patch);
+    putOnKeys (link.patch, "Node " + SignalConsole::addressText (SignalConsole::addressOf (link.patch)));
     chosen = link.patch;
     chosenLock = link.lock;
     chosenDb = link.db;
     restored = false;
     onKeys = -1;
     finish ("STEP " + juce::String (index + 1));
+}
+
+void DecryptView::putOnKeys (const SignalConsole::Patch& patch, const juce::String& name)
+{
+    // As loud on the keys as it was heard here: the search matched it at its peak, not at its level.
+    auto levelled = levelForKeys (patch, search->getTarget());
+    levelled.patch.name = name;
+    SignalConsole::apply (synth, levelled.patch);
+    keysDb = levelled.afterDb;
+    levelNote = levelled.ranOut ? "on the keys " + juce::String (std::abs (levelled.afterDb - auditionDb), 1) + " dB "
+                                      + (levelled.afterDb < auditionDb ? "quieter" : "louder") + " than heard: Amp Level at its end"
+                                : juce::String();
+    repaint();
 }
 
 void DecryptView::hearPatch (const SignalConsole::Patch& heard)
@@ -719,9 +730,7 @@ void DecryptView::mouseDoubleClick (const juce::MouseEvent& e)
     // On the keys: the synth plays the candidate until Stop gives the patch back or Take keeps it.
     if (search != nullptr && ! restored && juce::isPositiveAndBelow (at, (int) progress.best.size()))
     {
-        auto patch = progress.best[(size_t) at].patch;
-        patch.name = "Node " + SignalConsole::addressText (progress.best[(size_t) at].address);
-        SignalConsole::apply (synth, patch);
+        putOnKeys (progress.best[(size_t) at].patch, "Node " + SignalConsole::addressText (progress.best[(size_t) at].address));
         onKeys = at;
         repaint();
     }
@@ -1065,6 +1074,12 @@ void DecryptView::drawPanel (juce::Graphics& g)
         y += 96.0f;
         text (g, "tone " + juce::String (c->distance.tone, 1) + " dB   loudness " + juce::String (c->distance.loudness, 1) + " dB apart", x, y, 10.5f, Theme::dimText);
         y += 24.0f;
+
+        if (levelNote.isNotEmpty())
+        {
+            text (g, levelNote, x, y - 6.0f, 10.0f, Theme::danger);
+            y += 14.0f;
+        }
     }
     else
     {

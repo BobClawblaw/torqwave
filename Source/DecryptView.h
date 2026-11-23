@@ -81,6 +81,8 @@ public:
     void setMotion (bool allowed)                                 { motion = allowed; }
     bool isMoving() const noexcept                                { return motion && search != nullptr && search->isRunning(); }
     /** The search has ended and the view holds its last progress (it takes each on the message thread, after the search). */
+    /** For tests: the peak of the matched note, as the keys play the patch last put on them, in dB (Decrypt::auditionDb when levelled). */
+    float lastKeysDb() const noexcept                             { return keysDb; }
     bool hasEnded() const noexcept                                { return search != nullptr && progress.finished; }
     juce::Point<float> candidateCentre (int index) const;
     juce::Rectangle<float> stopBounds() const                     { return stopChip; }
@@ -155,6 +157,10 @@ private:
     std::vector<Link> chain;
     juce::Rectangle<float> playChip;
     void hearPatch (const SignalConsole::Patch&);
+    /** Puts a patch on the synth with its level trimmed to the audition's (Decrypt::levelForKeys). */
+    void putOnKeys (const SignalConsole::Patch&, const juce::String& name);
+    juce::String levelNote;                          // said when Amp Level's range could not bring it to the audition's level
+    float keysDb = 0.0f;
     void growChain();
     void addLink (const SignalConsole::Patch&, float lock, float db);
 
