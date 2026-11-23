@@ -69,10 +69,10 @@ Something to play on them: 1,018 sequence presets and 116 starter kits in 37 sty
 In the editor: a time-view strip over the ruler, a Hand tool, and Paste Clipboard as New File.
 ```
 
-**6 of 6**, with graphic 4 (`compare/graphics/4-where-torqwave-stands.png`), and graphics 2 and 3 if there is room for three images.
+**6 of 6**, with graphic 5 (`compare/graphics/5-where-torqwave-stands.png`), and graphics 2, 3 and 4 (the editors, and the DAWs in two parts) to fill the post's four images.
 
 ```text
-Where does it stand? We keep a feature comparison with ten other editors and DAWs, each cell read from that product's own documentation, and update it every release.
+Where does it stand? We keep a feature comparison with 15 other editors and DAWs, each cell read from that product's own documentation, and update it every release.
 
 It shows what Torqwave lacks too: no sampler, no audio to MIDI, no CLAP or ARA, and installers not yet notarized.
 ```
@@ -115,20 +115,24 @@ Torqwave's Sequencer workspace: the Sequence Library on the left, the Sequencer 
 Torqwave's editor: a stereo file as waveform and spectrogram, the time-view strip over the ruler showing the whole file with a frame round the part in view, the tool strip under the waveform with the Hand tool, and the Files, Effects Rack, Selection and Levels panels around it.
 ```
 
-For graphic 4, `4-where-torqwave-stands.png`:
+For graphic 5, `5-where-torqwave-stands.png`:
 
 ```alt
-A dark chart titled "Where Torqwave stands, area by area". A grid with a row for each of twelve products (Torqwave 0.20.0, Torqwave 0.19.2, Adobe Audition, Audacity, iZotope RX, Steinberg SpectraLayers, Steinberg WaveLab, FL Studio, REAPER, Ableton Live, Bitwig Studio, Ardour) and a column for each of eleven areas (editing, repair, loudness, multitrack, MIDI, instruments, plug-ins, picture, library, AI help, platforms). Each cell gives how many of the area's rows the product covers. A panel at the right shows Torqwave's rows covered by release, with empty slots for releases to come. A line under the title says it is a count of features, not of depth or maturity.
+A dark chart titled "Where Torqwave stands, area by area". A grid with a row for each of seventeen products (Torqwave 0.20.0, Torqwave 0.19.2, Adobe Audition, Audacity, iZotope RX, Steinberg SpectraLayers, Steinberg WaveLab, FL Studio, Ableton Live, Bitwig Studio, Reason, REAPER, Logic Pro, Cubase, Pro Tools, Fender Studio Pro, Ardour) and a column for each of eleven areas (editing, repair, loudness, multitrack, MIDI, instruments, plug-ins, picture, library, AI help, platforms). Each cell gives how many of the area's rows the product covers. A panel at the right shows Torqwave's rows covered by release, with empty slots for releases to come. A line under the title says it is a count of features, not of depth or maturity.
 ```
 
-For graphics 2 and 3, `2-against-the-editors.png` and `3-against-the-daws.png`:
+For graphics 2, 3 and 4, `2-against-the-editors.png`, `3-against-the-daws-1.png` and `4-against-the-daws-2.png`:
 
 ```alt
 A dark table titled "Torqwave 0.20.0 and the audio editors". Rows are features such as spectral selection, noise reduction, stem separation, loudness and delivery checks; columns are Torqwave 0.20.0, Torqwave 0.19.2, Adobe Audition, Audacity, iZotope RX, Steinberg SpectraLayers and Steinberg WaveLab. Each cell is marked yes, partial, no or not confirmed. Torqwave is marked partial for stem separation and for turning a typed request into edits.
 ```
 
 ```alt
-A dark table titled "Torqwave 0.20.0 and the DAWs". Rows are features such as comping, clip launching, a piano roll, built-in instruments, a sampler, audio to MIDI, CLAP and ARA 2; columns are Torqwave 0.20.0, Torqwave 0.19.2, FL Studio, REAPER, Ableton Live, Bitwig Studio and Ardour. Each cell is marked yes, partial, no or not confirmed. Torqwave is marked no for a built-in sampler, audio to MIDI, Dolby Atmos, ARA 2 and CLAP.
+A dark table titled "Torqwave 0.20.0 and the DAWs, 1 of 2". Rows are features such as comping, clip launching, a piano roll, built-in instruments, a sampler, audio to MIDI, CLAP and ARA 2; columns are Torqwave 0.20.0, Torqwave 0.19.2, FL Studio, Ableton Live, Bitwig Studio, Reason and REAPER. Each cell is marked yes, partial, no or not confirmed. Torqwave is marked no for a built-in sampler, audio to MIDI, Dolby Atmos, ARA 2 and CLAP.
+```
+
+```alt
+A dark table titled "Torqwave 0.20.0 and the DAWs, 2 of 2", with the same rows; columns are Torqwave 0.20.0, Torqwave 0.19.2, Logic Pro, Cubase, Pro Tools, Fender Studio Pro and Ardour. Each cell is marked yes, partial, no or not confirmed. Torqwave is marked no for a built-in sampler, audio to MIDI, Dolby Atmos, ARA 2 and CLAP, and partial for stem separation, where four of these five are marked yes.
 ```
 
 ## Notes for whoever posts it

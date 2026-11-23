@@ -166,11 +166,11 @@ def graphic_numbers(defs, snap):
     return s.save("1-release-by-the-numbers.svg")
 
 
-def graphic_matrix(defs, snap, tag, group, title, sub, name):
+def graphic_matrix(defs, snap, m):
     s = Svg()
-    s.frame(title, sub, snap)
-    rows = [r for r in all_rows(defs) if tag in r["graphics"]]
-    pids = ["torqwave", "torqwave_prev"] + [p["id"] for p in defs["products"] if p["group"] == group]
+    s.frame(m["title"].replace("{release}", snap["release"]), "What ships in each product, from its own documentation", snap)
+    rows = [r for r in all_rows(defs) if m["rows"] in r["graphics"]]
+    pids = ["torqwave", "torqwave_prev"] + [p["id"] for p in defs["products"] if p.get("matrix") == m["id"]]
     lx, cx0, top, bottom = 50, 440, 150, H - 70
     cw = (W - 50 - cx0) / len(pids)
     head = 70
@@ -196,7 +196,7 @@ def graphic_matrix(defs, snap, tag, group, title, sub, name):
         for i, pid in enumerate(pids):
             s.mark(cx0 + cw * (i + 0.5), y + rh / 2, snap["products"][pid]["cells"][r["id"]]["value"])
     s.legend(50, H - 28)
-    return s.save(name)
+    return s.save(m["file"] + ".svg")
 
 
 def trend_points(defs, snaps):
@@ -217,6 +217,7 @@ def graphic_standing(defs, snaps):
     lx, gx, top, bottom = 50, 285, 150, H - 70
     cw, head = 91, 62
     rh = (bottom - top - head) / len(pids)
+    fs = 20 if rh >= 44 else 18
     for j, g in enumerate(defs["groups"]):
         x = gx + j * cw
         s.text(x + cw / 2, top + 26, SHORT.get(g["id"], g["title"]), 15, TEXT, "middle", "bold")
@@ -226,12 +227,13 @@ def graphic_standing(defs, snaps):
         mine = pid.startswith("torqwave")
         if mine:
             s.rect(lx - 10, y, gx + len(defs["groups"]) * cw - lx + 14, rh, RAISED)
-        s.text(lx, y + rh / 2 + 7, label(defs, snap, pid), 20, WHITE if mine else TEXT, weight="bold" if mine else "normal")
+        s.text(lx, y + rh / 2 + 6, label(defs, snap, pid), fs, WHITE if mine else TEXT, weight="bold" if mine else "normal")
         for j, g in enumerate(defs["groups"]):
             c = coverage(snap["products"][pid]["cells"], g["rows"])
             n = len(g["rows"])
-            x, bw, bh = gx + j * cw + 6, cw - 12, rh - 14
-            by = y + 7
+            pad = 7 if rh >= 44 else 4
+            x, bw, bh = gx + j * cw + 6, cw - 12, rh - 2 * pad
+            by = y + pad
             s.rect(x, by, bw, bh, BG if mine else SURFACE, 4, LINE)
             wy, wp, wu = bw * c["yes"] / n, bw * c["partial"] / n, bw * c["not confirmed"] / n
             if wy:
@@ -240,7 +242,7 @@ def graphic_standing(defs, snaps):
                 s.rect(x + wy, by, wp, bh, "#8a7a2c", 0)
             if wu:
                 s.rect(x + bw - wu, by, wu, bh, LINE2, 0)
-            s.text(x + bw / 2, by + bh / 2 + 7, f'{c["yes"]}/{n}', 19, WHITE, "middle", "bold")
+            s.text(x + bw / 2, by + bh / 2 + 6, f'{c["yes"]}/{n}', fs - 1, WHITE, "middle", "bold")
     # the trend across releases
     pts, total = trend_points(defs, snaps)
     px = gx + len(defs["groups"]) * cw + 30
@@ -271,7 +273,7 @@ def graphic_standing(defs, snaps):
         s.rect(x, H - 42, 18, 18, col, 3, LINE)
         s.text(x + 26, H - 28, word, 17, DIM)
         x += 44 + len(word) * 9.5
-    return s.save("4-where-torqwave-stands.svg")
+    return s.save(f"{len(defs['matrices']) + 2}-where-torqwave-stands.svg")
 
 
 # ---------------------------------------------------------------- the Markdown matrix
@@ -309,15 +311,16 @@ def matrix_md(defs, snaps):
     for l in defs["left_out"]:
         o.append(f'- **{l["name"]}:** {l["why"]}')
     o.append("\n## Graphics\n")
-    for f, alt in (("1-release-by-the-numbers", "What the release adds over the one before, by the numbers"),
-                   ("2-against-the-editors", "The feature matrix against the audio editors"),
-                   ("3-against-the-daws", "The feature matrix against the DAWs"),
-                   ("4-where-torqwave-stands", "Rows covered in each area by each product, and Torqwave's trend by release")):
+    pics = [("1-release-by-the-numbers", "What the release adds over the one before, by the numbers")]
+    pics += [(m["file"], m["title"].replace("{release}", snap["release"])) for m in defs["matrices"]]
+    pics += [(f"{len(defs['matrices']) + 2}-where-torqwave-stands", "Rows covered in each area by each product, and Torqwave's trend by release")]
+    for f, alt in pics:
         o.append(f"![{alt}](graphics/{f}.png)\n")
     o.append("## Coverage by area\n")
     o.append("Rows that are yes, with partial rows after a plus sign and rows not confirmed after a question mark. Counts, not a score.\n")
-    o.append("| Area | Rows | " + " | ".join(label(defs, snap, p) for p in pids) + " |")
-    o.append("|---|---|" + "---|" * len(pids))
+    tq = ["torqwave", "torqwave_prev"]
+    sets = [("The editors", tq + [p["id"] for p in defs["products"] if p["group"] == "editor"]),
+            ("The DAWs", tq + [p["id"] for p in defs["products"] if p["group"] == "daw"])]
     def cov_text(c):
         t = str(c["yes"])
         if c["partial"]:
@@ -325,9 +328,13 @@ def matrix_md(defs, snaps):
         if c["not confirmed"]:
             t += f' ?{c["not confirmed"]}'
         return t
-    for g in defs["groups"]:
-        o.append(f'| {g["title"]} | {len(g["rows"])} | ' + " | ".join(cov_text(coverage(P[p]["cells"], g["rows"])) for p in pids) + " |")
-    o.append(f'| **All rows** | {len(rows)} | ' + " | ".join(cov_text(coverage(P[p]["cells"], rows)) for p in pids) + " |")
+    for name, cols in sets:
+        o.append(f"**{name}**\n")
+        o.append("| Area | Rows | " + " | ".join(label(defs, snap, p) for p in cols) + " |")
+        o.append("|---|---|" + "---|" * len(cols))
+        for g in defs["groups"]:
+            o.append(f'| {g["title"]} | {len(g["rows"])} | ' + " | ".join(cov_text(coverage(P[p]["cells"], g["rows"])) for p in cols) + " |")
+        o.append(f'| **All rows** | {len(rows)} | ' + " | ".join(cov_text(coverage(P[p]["cells"], rows)) for p in cols) + " |\n")
     pts, total = trend_points(defs, snaps)
     o.append("\n## Torqwave by release\n")
     o.append("| Release | Yes | Partial | No | Rows |")
@@ -372,11 +379,12 @@ def matrix_md(defs, snaps):
     o.append("\n## The matrix\n")
     for g in defs["groups"]:
         o.append(f'### {g["title"]}\n')
-        o.append("| | " + " | ".join(label(defs, snap, p) for p in pids) + " |")
-        o.append("|---|" + "---|" * len(pids))
-        for r in g["rows"]:
-            o.append(f'| {r["title"]} | ' + " | ".join(WORD[P[p]["cells"][r["id"]]["value"]] for p in pids) + " |")
-        o.append("")
+        for name, cols in sets:
+            o.append("| " + name + " | " + " | ".join(label(defs, snap, p) for p in cols) + " |")
+            o.append("|---|" + "---|" * len(cols))
+            for r in g["rows"]:
+                o.append(f'| {r["title"]} | ' + " | ".join(WORD[P[p]["cells"][r["id"]]["value"]] for p in cols) + " |")
+            o.append("")
     o.append("## Maturity and terms\n")
     o.append("Facts, not counted in any coverage figure. Prices are list prices on the date looked up, in the currency the vendor's page showed.\n")
     for r in defs["info_rows"]:
@@ -402,6 +410,11 @@ def matrix_md(defs, snaps):
         p = P[pid]
         o.append(f'### {label(defs, snap, pid)}\n')
         o.append(f'Version {md_escape(p["version"])}, {md_escape(p["edition"])}. Looked up {p["looked_up"]}.' + (f' {p["source_note"]}' if p.get("source_note") else "") + "\n")
+        for x in p.get("extra_notes", []):
+            src = f' ([source]({x["source"]}))' if x.get("source", "").startswith("http") else ""
+            o.append(f'- **{md_escape(x["topic"])}:** {md_escape(x["note"])}{src}')
+        if p.get("extra_notes"):
+            o.append("")
         o.append("| Row | Value | Note | Source | Evidence |")
         o.append("|---|---|---|---|---|")
         for r in rows + defs["info_rows"]:
@@ -458,14 +471,7 @@ def main():
         if missing:
             sys.exit(f"{pid} has no cell for: {', '.join(missing)}")
     os.makedirs(OUT, exist_ok=True)
-    svgs = [
-        graphic_numbers(defs, snap),
-        graphic_matrix(defs, snap, "editors", "editor", f'Torqwave {snap["release"]} and the audio editors',
-                       "What ships in each product, from its own documentation", "2-against-the-editors.svg"),
-        graphic_matrix(defs, snap, "daws", "daw", f'Torqwave {snap["release"]} and the DAWs',
-                       "What ships in each product, from its own documentation", "3-against-the-daws.svg"),
-        graphic_standing(defs, snaps),
-    ]
+    svgs = [graphic_numbers(defs, snap)] + [graphic_matrix(defs, snap, m) for m in defs["matrices"]] + [graphic_standing(defs, snaps)]
     print("wrote", os.path.relpath(matrix_md(defs, snaps)))
     conv = shutil.which("rsvg-convert")
     for svg in svgs:

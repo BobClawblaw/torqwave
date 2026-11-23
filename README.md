@@ -21,7 +21,7 @@ A free, open-source audio editor and DAW in one, for macOS, Windows and Linux: f
 
 **New to Torqwave?** The [user guide](docs/guide/README.md) shows how to do things, one job at a time. The app carries it too: **Help > User Guide** (`F1`) opens it in a window of its own, pictures and all.
 
-**How does it compare?** [docs/compare](docs/compare/README.md) keeps a feature matrix of Torqwave against ten other editors and DAWs, each cell read from that product's own documentation, with what Torqwave lacks shown as plainly as what it has. It is updated with every release.
+**How does it compare?** [docs/compare](docs/compare/README.md) keeps a feature matrix of Torqwave against fifteen other editors and DAWs, each cell read from that product's own documentation, with what Torqwave lacks shown as plainly as what it has. It is updated with every release.
 
 ## Features
 

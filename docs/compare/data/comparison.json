@@ -12,7 +12,7 @@
   "Every competitor cell was read from the product's own documentation, manual, feature or pricing page on the date in its snapshot, and keeps the page's address and a short quotation or a note of what was checked. Where no first-party page settled a cell it says 'not confirmed'.",
   "Torqwave's cells come from this repository's README, guide, roadmap and changelog at the commit the snapshot names.",
   "Only what ships in the product counts. Third-party plug-ins do not, and neither do separate downloads unless the note says so (those are 'partial').",
-  "Each product is assessed at the edition its snapshot names, usually the largest, so a cheaper edition may have less than its column shows.",
+  "Each product is assessed at the edition its snapshot names, usually the largest, so a cheaper edition may have less than its column shows. Where a vendor bundles a separate application with that edition (an editor or a spectral tool that opens from the DAW), the note says so.",
   "Coverage of an area is a count: how many of the area's rows are yes, and how many partial. Rows are not weighted, and no single score or rank is computed across areas, because any weighting would be arbitrary.",
   "The rows were chosen for what Torqwave aims at (sound design, writing music, work to picture, game audio), so they favour a product that is both an editor and a DAW. A product built for one job covers few rows outside it by design, which says nothing about how well it does that job.",
   "A yes says a feature exists. It says nothing of its depth, its quality or how long it has been in use. Torqwave's features are new and mostly tested by its own suite, not by years of users; the 'maturity' facts under the matrix are there to keep that in view."
@@ -530,61 +530,106 @@
    "id": "audition",
    "name": "Adobe Audition",
    "group": "editor",
-   "why": "The commercial reference for a waveform and spectral editor with a multitrack; named in the brief, and Torqwave ships an Audition-style key set."
+   "why": "The commercial reference for a waveform and spectral editor with a multitrack; named in the brief, and Torqwave ships an Audition-style key set.",
+   "matrix": "editors"
   },
   {
    "id": "audacity",
    "name": "Audacity",
    "group": "editor",
-   "why": "The free, open-source editor most people try first; named in the brief, and the README offers Torqwave as an alternative to it."
+   "why": "The free, open-source editor most people try first; named in the brief, and the README offers Torqwave as an alternative to it.",
+   "matrix": "editors"
   },
   {
    "id": "rx",
    "name": "iZotope RX",
    "group": "editor",
-   "why": "The reference for spectral repair and restoration, the job of Torqwave's repair suite."
+   "why": "The reference for spectral repair and restoration, the job of Torqwave's repair suite.",
+   "matrix": "editors"
   },
   {
    "id": "spectralayers",
    "name": "Steinberg SpectraLayers",
    "group": "editor",
-   "why": "The reference for spectral editing by layers and for unmixing."
+   "why": "The reference for spectral editing by layers and for unmixing.",
+   "matrix": "editors"
   },
   {
    "id": "wavelab",
    "name": "Steinberg WaveLab",
    "group": "editor",
-   "why": "The reference for mastering, loudness and delivery, the job of Torqwave's mastering suite."
+   "why": "The reference for mastering, loudness and delivery, the job of Torqwave's mastering suite.",
+   "matrix": "editors"
   },
   {
    "id": "flstudio",
    "name": "FL Studio",
    "group": "daw",
-   "why": "Named in the brief; pattern-based writing with many built-in instruments, the area 0.20.0 moves into."
-  },
-  {
-   "id": "reaper",
-   "name": "REAPER",
-   "group": "daw",
-   "why": "A low-cost DAW on all three systems, widely used for sound design and game audio."
+   "why": "Named in the brief; pattern-based writing with many built-in instruments, the area 0.20.0 moves into.",
+   "matrix": "daws-1"
   },
   {
    "id": "live",
    "name": "Ableton Live",
    "group": "daw",
-   "why": "The reference for clip launching and electronic music, the ground the Idea Board and the built-in instruments move into."
+   "why": "The reference for clip launching and electronic music, the ground the Idea Board and the built-in instruments move into.",
+   "matrix": "daws-1"
   },
   {
    "id": "bitwig",
    "name": "Bitwig Studio",
    "group": "daw",
-   "why": "A DAW on all three systems, Linux included, with a large set of built-in instruments."
+   "why": "A DAW on all three systems, Linux included, with a large set of built-in instruments.",
+   "matrix": "daws-1"
+  },
+  {
+   "id": "reason",
+   "name": "Reason",
+   "group": "daw",
+   "why": "A DAW built around a rack of its own instruments and effects, the ground 0.20.0 moves into.",
+   "matrix": "daws-1"
+  },
+  {
+   "id": "reaper",
+   "name": "REAPER",
+   "group": "daw",
+   "why": "A low-cost DAW on all three systems, widely used for sound design and game audio.",
+   "matrix": "daws-1"
+  },
+  {
+   "id": "logic",
+   "name": "Logic Pro",
+   "group": "daw",
+   "why": "One of the major DAWs, with a large set of built-in instruments; Mac only.",
+   "matrix": "daws-2"
+  },
+  {
+   "id": "cubase",
+   "name": "Cubase",
+   "group": "daw",
+   "why": "One of the major DAWs for writing and producing; Torqwave's sessions took their bar grid, info line and Track Inspector from its way of working. Its notes say how Nuendo differs for picture and game audio.",
+   "matrix": "daws-2"
+  },
+  {
+   "id": "protools",
+   "name": "Pro Tools",
+   "group": "daw",
+   "why": "The recording and post-production standard, and the reference for work to picture.",
+   "matrix": "daws-2"
+  },
+  {
+   "id": "studioone",
+   "name": "Fender Studio Pro",
+   "group": "daw",
+   "why": "One of the major DAWs, sold as PreSonus Studio One until 2026; it has an editor-like project page for mastering.",
+   "matrix": "daws-2"
   },
   {
    "id": "ardour",
    "name": "Ardour",
    "group": "daw",
-   "why": "The open-source DAW: the other free-software route to multitrack work on Linux, macOS and Windows."
+   "why": "The open-source DAW: the other free-software route to multitrack work on Linux, macOS and Windows.",
+   "matrix": "daws-2"
   }
  ],
  "left_out": [
@@ -597,8 +642,36 @@
    "why": "Windows only in its current Pro edition; WaveLab covers the mastering-editor place on more systems."
   },
   {
-   "name": "Logic Pro, Cubase/Nuendo, Pro Tools, Studio One",
-   "why": "Each would add a column much like Live's or REAPER's; Logic is Mac only. Add one when a release moves into its ground (Nuendo or Pro Tools for picture work)."
+   "name": "Nuendo",
+   "why": "Cubase's sibling for post-production and game audio. It would repeat the Cubase column except in the picture rows, so the Cubase notes in MATRIX.md say where it differs instead."
+  },
+  {
+   "name": "Cakewalk Sonar",
+   "why": "Windows only by its own page, with a free core version and paid membership features; its ground is covered by the Cubase and Fender Studio Pro columns. Cakewalk Next, its lighter sibling, runs on Windows and macOS. Add Sonar if Windows users ask for it."
+  },
+  {
+   "name": "Digital Performer, Samplitude, Waveform, LMMS, GarageBand",
+   "why": "Not researched. Each is a candidate when a release moves into its ground."
+  }
+ ],
+ "matrices": [
+  {
+   "id": "editors",
+   "rows": "editors",
+   "file": "2-against-the-editors",
+   "title": "Torqwave {release} and the audio editors"
+  },
+  {
+   "id": "daws-1",
+   "rows": "daws",
+   "file": "3-against-the-daws-1",
+   "title": "Torqwave {release} and the DAWs, 1 of 2"
+  },
+  {
+   "id": "daws-2",
+   "rows": "daws",
+   "file": "4-against-the-daws-2",
+   "title": "Torqwave {release} and the DAWs, 2 of 2"
   }
  ]
 }

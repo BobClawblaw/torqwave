@@ -103,7 +103,7 @@
 <path d="M 519.3 497.1 A 11 11 0 0 0 519.3 519.1 Z" fill="#e3c74f"/>
 <circle cx="677.9" cy="508.1" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
 <path d="M 677.9 497.1 A 11 11 0 0 0 677.9 519.1 Z" fill="#e3c74f"/>
-<text x="836.4" y="515.1" font-size="21" fill="#8b939e" text-anchor="middle" font-weight="bold">?</text>
+<line x1="828.4" y1="508.1" x2="844.4" y2="508.1" stroke="#434a54" stroke-width="3"/>
 <circle cx="995.0" cy="508.1" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
 <path d="M 995.0 497.1 A 11 11 0 0 0 995.0 519.1 Z" fill="#e3c74f"/>
 <circle cx="1153.6" cy="508.1" r="11" fill="#4cc38a"/>

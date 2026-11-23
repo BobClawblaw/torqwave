@@ -3,11 +3,11 @@
 A running comparison of Torqwave with the editors and DAWs that are real alternatives for what it does, kept so that each release shows where Torqwave stands: where it is behind as well as where it leads.
 
 - **[MATRIX.md](MATRIX.md):** the matrix, the coverage counts, where Torqwave is behind and ahead, prices and maturity facts, and every cell's note and source. Generated.
-- **[graphics/](graphics/):** four graphics at 1600 x 900, as SVG and PNG. Generated.
+- **[graphics/](graphics/):** five graphics at 1600 x 900, as SVG and PNG. Generated.
   1. `1-release-by-the-numbers`: what the release adds over the one before.
   2. `2-against-the-editors`: the feature matrix against the audio editors.
-  3. `3-against-the-daws`: the feature matrix against the DAWs.
-  4. `4-where-torqwave-stands`: rows covered in each area by each product, and Torqwave's trend by release.
+  3. `3-against-the-daws-1` and 4. `4-against-the-daws-2`: the feature matrix against the DAWs, five to a graphic so the columns stay legible at X's size.
+  5. `5-where-torqwave-stands`: rows covered in each area by each product, and Torqwave's trend by release.
 - **[data/comparison.json](data/comparison.json):** the rows and their definitions, the products and why each is here, and the method.
 - **[data/snapshots/](data/snapshots/):** one file per Torqwave release with every cell: its value, a note, the page it was read on, a short quotation or what was checked, the version assessed and the date looked up. The files together are the history the trend is drawn from.
 - **[generate.py](generate.py):** makes MATRIX.md and the graphics from the data. Python's standard library only.
@@ -20,7 +20,7 @@ The announcement for a release that uses these graphics is beside the other anno
 python3 docs/compare/generate.py
 ```
 
-It writes `MATRIX.md` and the four SVGs. The PNGs are written too when `rsvg-convert` is on the `PATH` (librsvg); without it, convert the SVGs with any tool you have. Nothing is installed by the script.
+It writes `MATRIX.md` and the five SVGs. The PNGs are written too when `rsvg-convert` is on the `PATH` (librsvg); without it, convert the SVGs with any tool you have. Nothing is installed by the script.
 
 ```bash
 python3 docs/compare/generate.py --posts docs/ANNOUNCEMENT-0.20.0.md
@@ -49,7 +49,7 @@ counts each post in an announcement as X counts it (a link is 23 characters) and
    - the rows where Torqwave changed in this release, since those are the ones the graphics will be read for;
    - any "no" that rests on a table of contents alone (its `evidence` says what was checked), when the product had a major version since.
    A product with no new version and no price change keeps its cells and gets the new `looked_up` date only for the cells actually reread.
-4. **Rows and products.** Add a row to `data/comparison.json` when a release gives Torqwave something the rows don't capture, or when a competitor's strength is missing from them; a new row needs a cell for every product in the newest snapshot (older snapshots are left as they were, so the trend's total can change: say so in the release's notes). To show a row in graphic 2 or 3, add `editors` or `daws` to its `graphics` list, and keep each graphic near twenty rows. To add or drop a product, change `products` and say why in `why` or `left_out`.
+4. **Rows and products.** Add a row to `data/comparison.json` when a release gives Torqwave something the rows don't capture, or when a competitor's strength is missing from them; a new row needs a cell for every product in the newest snapshot (older snapshots are left as they were, so the trend's total can change: say so in the release's notes). To show a row in the editors' graphic or the DAWs' graphics, add `editors` or `daws` to its `graphics` list, and keep each graphic near twenty rows. To add or drop a product, change `products` and say why in `why` or `left_out`; a product's `matrix` names the matrix graphic it is drawn in (`matrices` lists them, with their titles and file names), and a matrix graphic holds five products beside Torqwave's two columns. More than five means another entry in `matrices`; the last graphic's number follows by itself.
 5. **Run the script,** then look at each PNG: no text overlapping, nothing cut off, the date and the release's status right.
 6. **Read "Where Torqwave is behind"** in MATRIX.md before writing anything about the release. The announcement must not claim more than the data shows, and must not name another product as worse.
 7. **Check nothing private went in** (names, addresses of machines, home folder paths), then commit the data, MATRIX.md and the graphics together.
