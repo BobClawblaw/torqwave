@@ -327,6 +327,7 @@ SwarmGuitarEditor::SwarmGuitarEditor (SwarmGuitarProcessor& p)
     attach (drive, ampPanel, "drive", "How hard the amp is driven");
     attach (tone, ampPanel, "tone", "The cabinet's top end");
     attach (level, ampPanel, "level", "The output level");
+    attach (velocity, ampPanel, "velocity", "How much a note's velocity sets how loud it comes out of the Fuzz or Crunch amp (with None it always does)");
     attach (strum, strumPanel, "strum", "The time between one string and the next in a strum");
     attach (strumRate, strumPanel, "strumRate", "Strums again and again while the key is down, down and up strokes in turn; at 0, once");
     attach (sustain, strumPanel, "sustain", "How long a held note rings");
@@ -462,7 +463,7 @@ void SwarmGuitarEditor::resized()
     auto r = getLocalBounds().reduced (12);
 
     auto top = r.removeFromTop (30);
-    presets.setBounds (top.removeFromRight (360));
+    presets.setBounds (top.removeFromRight (juce::jmax (360, top.getWidth() - 300)));   // all but the title and its line
     r.removeFromTop (8);
 
     auto upper = r.removeFromTop (300);
@@ -492,9 +493,10 @@ void SwarmGuitarEditor::resized()
         auto c = ampPanel.getContentBounds();
         curve->setBounds (c.removeFromTop (110));
         c.removeFromTop (6);
-        drive.setBounds (c.removeFromLeft (c.getWidth() * 42 / 100));
-        tone.setBounds (c.removeFromLeft (c.getWidth() / 2).reduced (0, 10));
-        level.setBounds (c.reduced (0, 10));
+        drive.setBounds (c.removeFromLeft (c.getWidth() * 34 / 100));
+        tone.setBounds (c.removeFromLeft (c.getWidth() / 3).reduced (0, 10));
+        level.setBounds (c.removeFromLeft (c.getWidth() / 2).reduced (0, 10));
+        velocity.setBounds (c.reduced (0, 10));
     }
 
     // The swarm, and its envelope and filter, along the bottom.

@@ -92,6 +92,9 @@ SwarmGuitarProcessor::SwarmGuitarProcessor()
     resonance = addFloat ("resonance", "Resonance", { 0.0f, 100.0f }, 15.0f, "%");
     filterEnvelope = addFloat ("filterEnv", "Filter Envelope", { 0.0f, 100.0f }, 30.0f, "%");
     strumSync = addChoice ("strumSync", "Strum Sync", { "Off", "1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32" }, 0);
+
+    // How far a note's velocity sets its loudness after the amp (added last, so the order stays as it was).
+    velocitySense = addFloat ("velocity", "Velocity", { 0.0f, 100.0f }, 70.0f, "%");
 }
 
 double SwarmGuitarProcessor::repeatEvery() const
@@ -160,8 +163,9 @@ void SwarmGuitarProcessor::prepareToPlay (double sampleRate, int maximumBlockSiz
             for (auto& s : layer)
                 s.line.assign ((size_t) size, 0.0f);
 
-    for (auto& b : buses)
-        b.assign ((size_t) juce::jmax (1, maximumBlockSize), 0.0f);
+    for (auto* all : { &buses, &heard, &heardByVelocity })
+        for (auto& b : *all)
+            b.assign ((size_t) juce::jmax (1, maximumBlockSize), 0.0f);
 
     reset();
 }
@@ -189,6 +193,7 @@ void SwarmGuitarProcessor::reset()
     volume = expression = 1.0f;
     pedal = false;
     lastGain = -1.0f;
+    velocityFollow = {};
 }
 
 double SwarmGuitarProcessor::getTailLengthSeconds() const
@@ -502,7 +507,8 @@ void SwarmGuitarProcessor::renderStrings (int from, int count)
     const auto fade = (float) std::pow (10.0, -6.0 / (fadeSeconds * rate));
 
     for (int l = 0; l < maxLayers; ++l)
-        std::fill_n (buses[(size_t) l].begin() + from, count, 0.0f);
+        for (auto* all : { &buses, &heard, &heardByVelocity })
+            std::fill_n ((*all)[(size_t) l].begin() + from, count, 0.0f);
 
     for (auto& v : voices)
     {
@@ -552,6 +558,8 @@ void SwarmGuitarProcessor::renderStrings (int from, int count)
         for (int l = 0; l < guitars; ++l)
         {
             auto* out = buses[(size_t) l].data() + from;
+            auto* much = heard[(size_t) l].data() + from;
+            auto* byVelocity = heardByVelocity[(size_t) l].data() + from;
 
             for (int n = 0; n < perGuitar; ++n)
             {
@@ -564,6 +572,8 @@ void SwarmGuitarProcessor::renderStrings (int from, int count)
                     const auto y = tick (s) * gain;
                     out[i] += y;
                     most = juce::jmax (most, std::abs (y));
+                    much[i] += std::abs (y);
+                    byVelocity[i] += std::abs (y) * v.velocity;
                     gain *= step;
                 }
 
@@ -800,6 +810,8 @@ void SwarmGuitarProcessor::renderSwarm (Voice& v, int from, int count, int guita
             f[1] = 2.0f * v2 - f[1];
 
             buses[(size_t) l][(size_t) (from + i)] += v2 * gain;
+            heard[(size_t) l][(size_t) (from + i)] += std::abs (v2 * gain);
+            heardByVelocity[(size_t) l][(size_t) (from + i)] += std::abs (v2 * gain) * v.velocity;
         }
 
         if (v.dying)
@@ -844,9 +856,10 @@ void SwarmGuitarProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     const auto n = buffer.getNumSamples();
     buffer.clear();
 
-    for (auto& b : buses)
-        if ((int) b.size() < n)
-            b.resize ((size_t) n);
+    for (auto* all : { &buses, &heard, &heardByVelocity })
+        for (auto& b : *all)
+            if ((int) b.size() < n)
+                b.resize ((size_t) n);
 
     if (auto* head = getPlayHead())
         if (const auto position = head->getPosition())
@@ -913,6 +926,8 @@ void SwarmGuitarProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     const auto gain = juce::Decibels::decibelsToGain (level->get()) * volume * expression * std::sqrt (2.0f / (float) guitars);
     const auto gainFrom = lastGain < 0.0f ? gain : lastGain;
     const auto channels = buffer.getNumChannels();
+    const auto sense = kind == 2 ? 0.0f : velocitySense->get() * 0.01f;   // with no amp, velocity already sets the level
+    const auto followStep = (float) (1.0 - std::exp (-1.0 / (0.02 * rate)));
 
     for (int l = 0; l < guitars; ++l)
     {
@@ -921,6 +936,13 @@ void SwarmGuitarProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
         const auto place = guitars == 1 ? 0.0f : (2.0f * (float) l / (float) (guitars - 1) - 1.0f) * width->get() * 0.01f;
         const auto angle = (place + 1.0f) * juce::MathConstants<float>::pi * 0.25f;
         const auto left = std::cos (angle), right = std::sin (angle);
+
+        // Velocity after the amp: the guitar's notes' velocities, each weighed by how loud it is (smoothed over
+        // about 20 ms, sample by sample, so blocks of any size agree), so a soft note comes out quieter however
+        // hard the amp evens it out. Exact for one note; silence keeps the last weight, for the amp's own tail.
+        auto& follow = velocityFollow[(size_t) l];
+        const auto* much = heard[(size_t) l].data();
+        const auto* byVelocity = heardByVelocity[(size_t) l].data();
 
         for (int i = 0; i < n; ++i)
         {
@@ -941,7 +963,15 @@ void SwarmGuitarProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
                 y = a.tone2.process (a.tone1.process (a.presence.process (a.body.process (a.lowCut.process (y)))));
             }
 
-            y *= gainFrom + (gain - gainFrom) * (float) (i + 1) / (float) n;
+            follow.much += followStep * (much[i] - follow.much);
+            follow.byVelocity += followStep * (byVelocity[i] - follow.byVelocity);
+
+            if (follow.much > 1.0e-9f)
+                follow.weight = follow.byVelocity / follow.much;
+            else
+                follow.much = follow.byVelocity = 0.0f;   // silent: no denormals as they die away
+
+            y *= (gainFrom + (gain - gainFrom) * (float) (i + 1) / (float) n) * (1.0f - sense + sense * follow.weight);
 
             if (channels >= 2)
             {
