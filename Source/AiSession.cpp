@@ -1,6 +1,7 @@
 #include "AiSession.h"
 #include "ClipEffects.h"
 #include "Picture.h"
+#include "Decrypt.h"
 
 namespace
 {
@@ -117,6 +118,12 @@ namespace
   { "name": "add_kit", "description": "Put a factory kit (sequences made to play together: a groove's kick, snare and hats, or a bass with its chords) into the session at a bar, as dropping it does: a folder track named for it and a new track in it for each part, each with the instrument it brings (loaded when the plan is applied, not part of its undo step).",
     "parameters": { "type": "object", "properties": { "kit": { "type": "string", "description": "Its name or path from find_sequence_presets with role Kits." },
                     "bar": { "type": "integer", "description": "The bar it starts on, from 1; bar 1 when left out." } }, "required": ["kit"] } },
+  { "name": "decrypt_clip", "description": "Decrypt: find a Torqwave Synth patch that plays like a recording of one note in an audio clip, for an instrument track that plays Torqwave Synth already. The clip's first note (held or plucked; up to 4 s of it are matched) has its pitch found; a search renders thousands of patches at that note and keeps the nearest by their spectra over time and their loudness. It takes a few seconds and returns the lock: how near the patch sounds, 0 to 100 % (100 the same spectrum and loudness, 0 far apart). The effects are off while matching, and one note is matched (no chords or riffs). A sound the synth made is found again closely (a lock of 85 % or more); anything else gives a patch in its spirit: close for synth sounds, loose for voices, real drums and samples. The patch is put on the synth once the plan is applied.",
+    "parameters": { "type": "object", "properties": { CLIP, TRACK,
+                    "words": { "type": "string", "description": "What the user said the sound is (\"a reese\", \"match the body, not the click\"), when they said it." },
+                    "tables_only": { "type": "boolean", "description": "true: only the synth's own waves (never a table sampled from the clip). Leave out for either." } }, "required": ["clip", "track"] } },
+  { "name": "table_from_clip", "description": "Give one oscillator of the Torqwave Synth an instrument track plays a Sampled wavetable made from an audio clip (up to 30 s of it): the clip's tone at steps through it, so the oscillator's Position plays through the sound from start to end. The rest of the patch stays as it is. Made once the plan is applied.",
+    "parameters": { "type": "object", "properties": { CLIP, TRACK, "oscillator": { "type": "integer", "description": "1, 2 or 3." } }, "required": ["clip", "track", "oscillator"] } },
   { "name": "list_drum_maps", "description": "The drum maps the user has saved, by name: each is a kit's sounds, the key each is on and the General MIDI drum it stands for. With a track, also the map that track has now.",
     "parameters": { "type": "object", "properties": { TRACK } } },
   { "name": "set_drum_map", "description": "Give an instrument track a saved drum map by its name from list_drum_maps, or \"General MIDI\" for the standard layout. The map names the drum grid's rows and says which key of the kit each General MIDI drum is on. Notes already on the track stay where they are until remap_clip_notes moves them.",
@@ -185,6 +192,17 @@ namespace Ai
         for (auto& l : loads)
             if (const auto* t = state.findTrack (l.trackId); t != nullptr && t->takesNoteClips())
                 kept.push_back (l);
+
+        return kept;
+    }
+
+    std::vector<SessionTools::SynthChange> SessionTools::getSynthChanges() const
+    {
+        std::vector<SynthChange> kept;
+
+        for (auto& c : synthChanges)
+            if (const auto* t = state.findTrack (c.trackId); t != nullptr && t->takesNoteClips())
+                kept.push_back (c);
 
         return kept;
     }
@@ -399,6 +417,11 @@ namespace Ai
                "applied and aren't undone with it, and an effect added in the plan can be set only in a later request. Automation "
                "(set_automation) of volume, pan or an effect's parameter takes over from the setting while it has points. "
                "freeze_track and bounce_track render once the plan is applied, after everything else in it. What these tools "
+               "Torqwave Synth can also be made to sound like a recording: decrypt_clip finds a patch for one note in an audio "
+               "clip and says how close it came as a lock figure; it matches one dry note (effects off, no chords), and a lock on "
+               "a recording of something that is not a synth is loose, so say so rather than promising a copy. table_from_clip "
+               "makes an oscillator's wavetable from a clip. Both change the synth once the plan is applied, outside its undo "
+               "step, and need the track to play Torqwave Synth already. What these tools "
                "can't do: recording, replacing an instrument, and changing the audio inside a clip (set_clip_effects puts a pitch "
                "shift and effects on a clip without changing its audio). Say so when a request needs them, rather than doing "
                "something else.";
@@ -439,6 +462,8 @@ namespace Ai
         else if (tool == "set_track_effect") result = setTrackEffect (args);
         else if (tool == "list_effect_parameters") result = listEffectParameters (args);
         else if (tool == "freeze_track")   result = freezeTrack (args);
+        else if (tool == "decrypt_clip")   result = decryptClip (args);
+        else if (tool == "table_from_clip") result = tableFromClip (args);
         else if (tool == "bounce_track")   result = bounceTrack (args);
         else if (tool == "add_note_clip")  result = addNoteClip (args);
         else if (tool == "set_instrument") result = setInstrument (args);
@@ -2221,6 +2246,160 @@ namespace Ai
                                         : "Load " + plugin->name + (presetName.isNotEmpty() ? " with the " + kind + presetName.quoted() : juce::String())
                                               + " on " + t.name.quoted();
         loads.push_back ({ t.id, *plugin, presetName, factory, alreadyLoaded, step });
+        steps.add (step);
+        return object ({ { "ok", true }, { "step", step } });
+    }
+
+    //==============================================================================
+    const SessionClip* SessionTools::audioClipOf (const juce::var& which, juce::AudioBuffer<float>& audio, double seconds, juce::String& error) const
+    {
+        const auto where = state.findClip ((juce::uint32) (int) which);
+
+        if (! where)
+        {
+            error = "no audio clip with id " + which.toString() + "; list_clips gives the ids";
+            return nullptr;
+        }
+
+        const auto& clip = state.tracks[(size_t) where->first].clips[(size_t) where->second];
+
+        if (clip.audio == nullptr || clip.audio->getNumFrames() == 0 || clip.length <= 0)
+        {
+            error = "clip " + which.toString() + " has no audio";
+            return nullptr;
+        }
+
+        const auto frames = (int) juce::jmin (clip.length, (juce::int64) (seconds * state.sampleRate));
+        audio.setSize (juce::jmax (1, clip.audio->getNumChannels()), frames);
+        clip.audio->read (audio, 0, clip.offset, frames);
+        audio.applyGain (juce::Decibels::decibelsToGain (clip.gainDb));
+        return &clip;
+    }
+
+    const SessionTrack* SessionTools::synthTrackOf (const juce::var& which, juce::String& error) const
+    {
+        const auto index = trackOf (which, error);
+
+        if (! index)
+            return nullptr;
+
+        const auto& t = state.tracks[(size_t) *index];
+        const auto playing = instruments.find (t.id);
+        const auto isSynth = [] (const juce::PluginDescription& d) { return d.fileOrIdentifier == BuiltInEffects::basicSynthId && d.pluginFormatName == BuiltInEffects::formatName; };
+
+        for (auto& l : loads)
+            if (l.trackId == t.id && ! l.onlyPreset)
+            {
+                error = t.name.quoted() + "'s instrument is loaded by this plan; Decrypt and tables from clips work on it in a later request";
+                return nullptr;
+            }
+
+        if (! t.takesNoteClips() || playing == instruments.end() || ! isSynth (playing->second))
+        {
+            error = t.name.quoted() + " doesn't play Torqwave Synth" + (playing != instruments.end() ? " (it plays " + playing->second.name + ")" : juce::String())
+                    + "; set_instrument with Torqwave Synth gives a track one, in a request of its own";
+            return nullptr;
+        }
+
+        return &t;
+    }
+
+    juce::var SessionTools::decryptClip (const juce::var& a)
+    {
+        juce::String error;
+        const auto* t = synthTrackOf (a["track"], error);
+
+        if (t == nullptr)
+            return refused (error);
+
+        juce::AudioBuffer<float> audio;
+        const auto* clip = audioClipOf (a["clip"], audio, 10.0, error);
+
+        if (clip == nullptr)
+            return refused (error);
+
+        auto target = Decrypt::prepare (audio, state.sampleRate);
+
+        if (target.problem.isNotEmpty())
+            return refused ("clip " + clip->name.quoted() + " can't be decrypted: " + target.problem);
+
+        const auto note = target.pitchHz > 0.0 ? Decrypt::noteName (target.note) : juce::String ("no clear pitch (matched at C4)");
+        Decrypt::Options options;
+        options.factoryTablesOnly = (bool) a["tables_only"];
+        options.words = a["words"].toString().trim();
+        options.advisor = Decrypt::makeAdvisor();
+        Decrypt::Search search (std::move (target), options);
+        const auto progress = search.runNow (shouldStop);
+
+        if (progress.stopped || progress.best.empty())
+            return refused (progress.stopped ? "the search was stopped before it ended: nothing is planned, and the synth keeps its patch"
+                                             : "nothing the synth plays came near clip " + clip->name.quoted());
+
+        const auto& best = progress.best.front();
+        auto patch = std::make_shared<SignalConsole::Patch> (best.patch);
+        patch->name = "Node " + SignalConsole::addressText (best.address);
+        const auto from = best.from.startsWith ("model: ") ? best.from.fromFirstOccurrenceOf ("model: ", false, false) + " (proposed by the model)" : best.from;
+
+        // A later decrypt for the same track replaces the earlier one, in the plan too.
+        for (auto& c : synthChanges)
+            if (c.trackId == t->id && c.patch != nullptr)
+                steps.removeString (c.step);
+
+        synthChanges.erase (std::remove_if (synthChanges.begin(), synthChanges.end(), [t] (const SynthChange& c) { return c.trackId == t->id; }), synthChanges.end());
+
+        const auto lock = juce::String (best.lock, 0);
+        const auto step = "Give " + t->name.quoted() + "'s Torqwave Synth the patch Decrypt found for clip " + clip->name.quoted() + ": " + patch->name
+                          + ", lock " + lock + " %, grown from " + from;
+        synthChanges.push_back ({ t->id, patch, -1, nullptr, step });
+        steps.add (step);
+        auto result = object ({ { "ok", true }, { "step", step }, { "lock", (int) std::lround (best.lock) }, { "patch", patch->name }, { "grown_from", from },
+                                { "pitch", note }, { "seconds", round1 (progress.seconds) }, { "rendered", progress.rendered } });
+
+        if (! progress.model.isEmpty())
+            result.getDynamicObject()->setProperty ("model", progress.model.joinIntoString ("; "));
+
+        return result;
+    }
+
+    juce::var SessionTools::tableFromClip (const juce::var& a)
+    {
+        juce::String error;
+        const auto* t = synthTrackOf (a["track"], error);
+
+        if (t == nullptr)
+            return refused (error);
+
+        const auto oscillator = (int) a["oscillator"];
+
+        if (oscillator < 1 || oscillator > WaveSynth::numOscillators)
+            return refused ("oscillator must be 1, 2 or 3");
+
+        juce::AudioBuffer<float> audio;
+        const auto* clip = audioClipOf (a["clip"], audio, 30.0, error);
+
+        if (clip == nullptr)
+            return refused (error);
+
+        for (int ch = 1; ch < audio.getNumChannels(); ++ch)
+            audio.addFrom (0, 0, audio, ch, 0, audio.getNumSamples());
+
+        audio.applyGain (0, 0, audio.getNumSamples(), 1.0f / (float) audio.getNumChannels());
+        auto table = WaveTables::sampledFromAudio (audio.getReadPointer (0), audio.getNumSamples(), state.sampleRate, 0.0, clip->name);
+
+        if (table == nullptr)
+            return refused ("clip " + clip->name.quoted() + " is too short or silent to make a table from (a tenth of a second at least)");
+
+        // A later table for the same oscillator replaces the earlier one.
+        for (auto& c : synthChanges)
+            if (c.trackId == t->id && c.oscillator == oscillator - 1)
+                steps.removeString (c.step);
+
+        synthChanges.erase (std::remove_if (synthChanges.begin(), synthChanges.end(), [t, oscillator] (const SynthChange& c) { return c.trackId == t->id && c.oscillator == oscillator - 1; }),
+                            synthChanges.end());
+
+        const auto step = "Give oscillator " + juce::String (oscillator) + " of " + t->name.quoted() + "'s Torqwave Synth a Sampled table made from clip "
+                          + clip->name.quoted() + " (" + juce::String (table->frames) + " frames)";
+        synthChanges.push_back ({ t->id, nullptr, oscillator - 1, std::move (table), step });
         steps.add (step);
         return object ({ { "ok", true }, { "step", step } });
     }

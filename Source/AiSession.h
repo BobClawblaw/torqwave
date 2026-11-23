@@ -4,6 +4,9 @@
 #include "Session.h"
 #include "AiLibrary.h"
 
+namespace SignalConsole { struct Patch; }
+namespace WaveTables { struct Sampled; }
+
 /** Experimental: the tools a language model works a multitrack session with, on a working copy
     of its state. Look tools read the copy; change tools edit it through SessionEdits, as the
     multitrack view's own commands do, and add a step to the plan. Nothing reaches the session
@@ -155,6 +158,25 @@ namespace Ai
 
         std::vector<Render> getRenders() const;
 
+        /** A change to the Torqwave Synth an instrument track already plays, made once the plan is
+            applied (not part of its undo step), as a preset is loaded: the patch Decrypt found
+            for a clip (patch), or one oscillator given a Sampled table made from a clip
+            (oscillator, from 0, and table). */
+        struct SynthChange
+        {
+            juce::uint32 trackId = 0;
+            std::shared_ptr<const SignalConsole::Patch> patch;
+            int oscillator = -1;
+            std::shared_ptr<const WaveTables::Sampled> table;
+            juce::String step;
+        };
+
+        /** The synth changes the plan makes, in order, for tracks still in it. */
+        std::vector<SynthChange> getSynthChanges() const;
+
+        /** Asked during a long search (Decrypt); true stops it. */
+        std::function<bool()> shouldStop;
+
     private:
         juce::var getSession();
         juce::var listClips (const juce::var&);
@@ -198,6 +220,16 @@ namespace Ai
         juce::var setTrackEffect (const juce::var&);
         juce::var listEffectParameters (const juce::var&);
         juce::var freezeTrack (const juce::var&);
+        juce::var decryptClip (const juce::var&);
+        juce::var tableFromClip (const juce::var&);
+
+        /** The audio clip a call names, its track, and its sound (up to `seconds` from its start, its
+            channels at the session's rate); sets error when there is none. */
+        const SessionClip* audioClipOf (const juce::var& which, juce::AudioBuffer<float>& audio, double seconds, juce::String& error) const;
+
+        /** The instrument track a call names, when it plays Torqwave Synth already (not one the
+            plan loads); sets error otherwise. */
+        const SessionTrack* synthTrackOf (const juce::var& which, juce::String& error) const;
         juce::var bounceTrack (const juce::var&);
 
         /** A track's chain as planned so far: the start's, or the plan's once it has changed it. */
@@ -265,6 +297,7 @@ namespace Ai
         FindInstrument findEffect;
         std::map<juce::uint32, std::vector<PlannedSlot>> planned;   // the chains the plan changes
         std::vector<Render> renders;
+        std::vector<SynthChange> synthChanges;
         bool edited = false;
     };
 }

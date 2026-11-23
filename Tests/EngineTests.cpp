@@ -41,6 +41,7 @@
 #include "InstrumentKeysTests.h"
 #include "SoundDemos.h"
 #include "SignalConsoleTests.h"
+#include "DecryptTests.h"
 #include "WaveSynthTests.h"
 #include "DrumMachineTests.h"
 #include "SoundControlsTests.h"
@@ -629,7 +630,8 @@ int main (int argc, char* argv[])
     //   --stress                only the stress test: how many tracks the mix keeps up with (minutes; not in the suite)
     //   --small                 only the tests of mixer scenes, channel strips and hardware inserts
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
-    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session, sequence or library
+    //   --decrypt-eval <url> <model>  only Decrypt's ten clips, alone and helped by the model at that server
+    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session, sequence, library or decrypt
     juce::StringArray args;
 
     for (int i = 1; i < argc; ++i)
@@ -654,6 +656,9 @@ int main (int argc, char* argv[])
     factoryPresets.getParentDirectory().deleteRecursively();
     SequenceLibrary::setFactoryFolder (factoryPresets);
     SequenceLibrary::setSearchesFile (factoryPresets.getSiblingFile ("Sequence Searches.xml"));
+
+    if (const auto i = args.indexOf ("--decrypt-eval"); i >= 0)
+        return runDecryptEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {}));
 
     if (const auto i = args.indexOf ("--ai-eval"); i >= 0)
         return runAiEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {}), valueOf ("--ai-eval-set")) == 0 ? 0 : 1;
@@ -698,6 +703,13 @@ int main (int argc, char* argv[])
     {
         saveSignalConsoleWindow (juce::File (folder));
         return 0;
+    }
+
+    if (args.contains ("--decrypt"))
+    {
+        runDecryptTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
     }
 
     if (args.contains ("--console"))

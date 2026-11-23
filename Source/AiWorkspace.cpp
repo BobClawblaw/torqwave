@@ -1,4 +1,5 @@
 #include "AiWorkspace.h"
+#include "SignalConsole.h"
 #include "AudioEngine.h"
 #include "AudioEdits.h"
 #include "FadeShape.h"
@@ -532,6 +533,8 @@ juce::var Workspace::dispatch (const juce::String& tool, const juce::var& a)
 
     if (sessionTools != nullptr)
     {
+        sessionTools->shouldStop = shouldStop;
+
         if (const auto result = sessionTools->run (tool, a))
             return *result;
 
@@ -1604,6 +1607,30 @@ std::optional<juce::MemoryBlock> stateFor (const SessionTools::InstrumentLoad& l
         error = "The " + juce::String (load.factory ? "factory sound " : "preset ") + load.preset.quoted() + " for " + load.plugin.name + " couldn't be read.";
 
     return state;
+}
+
+bool applySynthChange (AudioEngine& engine, const SessionTools::SynthChange& change)
+{
+    return engine.changeInstrument (change.trackId, [&change] (juce::AudioPluginInstance& plugin)
+    {
+        auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (&plugin);
+
+        if (synth == nullptr || (change.table != nullptr && ! juce::isPositiveAndBelow (change.oscillator, WaveSynth::numOscillators)))
+            return false;
+
+        if (change.patch != nullptr)
+            SignalConsole::apply (*synth, *change.patch);
+
+        if (change.table != nullptr)
+        {
+            synth->setSampledTable (change.oscillator, change.table);
+
+            if (auto* table = synth->parameter ("osc" + juce::String (change.oscillator + 1) + "Table"))
+                table->setValueNotifyingHost (table->convertTo0to1 ((float) WaveTables::Table::sampled));
+        }
+
+        return true;
+    });
 }
 
 void loadVoices (AudioEngine& engine, const std::vector<SessionTools::VoiceLoad>& voices, std::function<void (const juce::String&)> done)

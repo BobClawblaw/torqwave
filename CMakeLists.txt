@@ -288,6 +288,8 @@ target_sources(Torqwave PRIVATE
     Source/WaveSynthFavourites.cpp
     Source/SignalConsole.cpp
     Source/SignalConsoleView.cpp
+    Source/Decrypt.cpp
+    Source/DecryptView.cpp
     Source/WaveSynthPatches.cpp
     Source/WaveSynthPatchBank.cpp
     Source/WaveSynthPatchBank2.cpp
@@ -331,6 +333,7 @@ target_sources(Torqwave PRIVATE
     Source/AiKeychain.cpp
     Source/AiWorkspace.cpp
     Source/AiSession.cpp
+    Source/AiDecrypt.cpp
     Source/AiLibrary.cpp
     Source/AiSequence.cpp
     Source/InstrumentPresets.cpp
@@ -527,6 +530,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/InstrumentKeysTests.cpp
     Tests/SoundDemos.cpp
     Tests/SignalConsoleTests.cpp
+    Tests/DecryptTests.cpp
     Tests/DrumMachineTests.cpp
     Tests/SoundControlsTests.cpp
     Tests/WaveSynthTests.cpp
@@ -549,6 +553,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/AiKeychain.cpp
     Source/AiWorkspace.cpp
     Source/AiSession.cpp
+    Source/AiDecrypt.cpp
     Source/AiLibrary.cpp
     Source/AiSequence.cpp
     Source/InstrumentPresets.cpp
@@ -699,6 +704,8 @@ target_sources(TorqwaveTests PRIVATE
     Source/WaveSynthFavourites.cpp
     Source/SignalConsole.cpp
     Source/SignalConsoleView.cpp
+    Source/Decrypt.cpp
+    Source/DecryptView.cpp
     Source/WaveSynthPatches.cpp
     Source/WaveSynthPatchBank.cpp
     Source/WaveSynthPatchBank2.cpp

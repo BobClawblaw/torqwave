@@ -34,7 +34,8 @@ namespace
         are made after it, outside that step. */
     bool allInOneStep (const Workspace& w)
     {
-        return ! w.rackChanged() && w.getInstrumentLoads().empty() && w.getVoiceLoads().empty() && w.getChainChanges().empty() && w.getRenders().empty();
+        return ! w.rackChanged() && w.getInstrumentLoads().empty() && w.getVoiceLoads().empty() && w.getChainChanges().empty() && w.getRenders().empty()
+               && w.getSynthChanges().empty();
     }
 }
 
@@ -570,6 +571,9 @@ void AskPanel::finish (const juce::String&, const juce::String& error)
 
         if (! w.getChainChanges().empty())
             addLog ("Track effects are changed once the plan is applied; that isn't part of the undo step.\n", Theme::warn);
+
+        if (! w.getSynthChanges().empty())
+            addLog ("Torqwave Synth's patch and tables are changed once the plan is applied; that isn't part of the undo step.\n", Theme::warn);
 
         if (! w.getRenders().empty())
             addLog ("Freezes and bounces render once the plan is applied, each as its own undo step.\n", Theme::warn);

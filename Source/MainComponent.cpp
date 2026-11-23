@@ -1,6 +1,7 @@
 #include "MainComponent.h"
 #include "InstrumentKeys.h"
 #include "WaveSynth.h"
+#include "AiDecrypt.h"
 #include "SequencePropertiesDialog.h"
 #include "InstrumentPresets.h"
 #include "BuildStamp.h"
@@ -1180,6 +1181,9 @@ MainComponent::MainComponent()
                                                                [this] { return engine.knownPlugins.getTypes(); },
                                                                [this] { return Ai::Settings::load (*appProperties.getUserSettings()); });
 
+    // Torqwave Synth's Decrypt asks Ask Torq's model for help when it is on, with the settings as they are then.
+    Decrypt::setAdvisorMaker ([props = appProperties.getUserSettings()] { return Ai::DecryptAdvisor::fromSettings (Ai::Settings::load (*props)); });
+
     engine.knownPlugins.setCustomScanner (std::make_unique<OutOfProcessScanner>());
     engine.knownPlugins.addChangeListener (this);
     engine.addChangeListener (this);
@@ -1708,6 +1712,7 @@ void MainComponent::offerRecoveredSession()
 
 MainComponent::~MainComponent()
 {
+    Decrypt::setAdvisorMaker (nullptr);
     waveform.setHomePictures (nullptr);
    #if JUCE_MAC
     juce::MenuBarModel::setMacMainMenu (nullptr);
@@ -14586,6 +14591,11 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
             applyAiChain (change, oneDone);
         }
 
+        // Torqwave Synth's patch (Decrypt) and tables made from clips, on the synths the tracks play now.
+        for (auto& change : w.getSynthChanges())
+            if (! Ai::applySynthChange (engine, change))
+                showError ("Ask Torq", "The track no longer plays Torqwave Synth, so this wasn't made: " + change.step);
+
         oneDone();
         return {};
     }
@@ -14766,8 +14776,9 @@ Settings::Model MainComponent::makeSettingsModel()
     model.push_back ({ "Plug-ins", Platform::pluginFormats() + " effects are found by a scan and listed in the Plug-ins window, where one that fails can be checked again.",
         { Item::button ("Plug-ins...", "Scan for plug-ins and manage the list", [this] { showPluginList(); }) } });
 
-    model.push_back ({ "AI", "Experimental. Ask Torq (its button at the top, or the Edit menu) sends your words, never audio, to a language model on a server "
-                             "you run, on this computer or your network, and shows its plan before anything changes. Torqwave ships no model.",
+    model.push_back ({ "AI", "Experimental. Ask Torq (its button at the top, or the Edit menu) sends your words, and audio only if you let it hear clips, "
+                             "to a language model on a server you run, on this computer or your network, and shows its plan before anything changes. "
+                             "With it on, the model also helps Torqwave Synth's Decrypt. Torqwave ships no model.",
         { Item::toggle (Ai::askName(), "Use the language model on the server below",
                         [settings] { return Ai::Settings::load (*settings).enabled; },
                         [settings, changed] (bool on) { auto s = Ai::Settings::load (*settings); s.enabled = on; s.save (*settings); changed(); }),
@@ -14776,6 +14787,10 @@ Settings::Model MainComponent::makeSettingsModel()
                                return std::make_unique<Ai::SettingsView> ([settings] { return Ai::Settings::load (*settings); },
                                                                           [settings, changed] (const Ai::Settings& s) { s.save (*settings); changed(); });
                            }),
+          Item::toggle ("Let the model hear clips", "Decrypt sends the note it is matching to the server once, for a model that takes audio to describe it. "
+                        "Off: nothing but text is sent",
+                        [settings] { return Ai::Settings::load (*settings).hearClips; },
+                        [settings, changed] (bool on) { auto s = Ai::Settings::load (*settings); s.hearClips = on; s.save (*settings); changed(); }),
           Item::button ("Plug-in Catalogue...", "What Ask Torq knows of each effect: have the model learn them all, and read or edit what it wrote",
                         [this] { showPluginCatalogue(); }) } });
 

@@ -2,6 +2,8 @@
 #include "../Source/AiAssistant.h"
 #include "../Source/AudioEdits.h"
 #include "../Source/BuiltInEffects.h"
+#include "../Source/AiWorkspace.h"
+#include "../Source/SignalConsole.h"
 #include "../Source/Loudness.h"
 #include "../Source/DrumMachine.h"
 #include "../Source/DrumMaps.h"
@@ -117,6 +119,7 @@ namespace
         bool session = false;                                                  // works on testSession() rather than a file
         std::function<Ai::SequenceTools::Context()> sequence = {};             // works on this sequence in the Sequencer rather than a file
         std::function<SessionState()> library = {};                            // works on this session, with the factory sounds, sequences, kits and drum maps to reach
+        bool decrypt = false;                                                  // works on decryptSession(), its Bass track playing Torqwave Synth
     };
 
     /** The session test: Drums and Bass with a clip each over 0 to 4 s, Vocals with one over 1 to
@@ -179,6 +182,107 @@ namespace
                 return &t;
 
         return nullptr;
+    }
+
+    /** One note of a factory patch, dry, as a recording of it would be. */
+    juce::AudioBuffer<float> synthNote (const juce::String& patch, int note, double hold, double length)
+    {
+        BuiltInEffects::BasicSynthProcessor synth;
+        synth.setPlayConfigDetails (0, 2, rate, 512);
+        synth.setNonRealtime (true);
+        synth.loadPatch (patch);
+
+        for (auto* effect : { "fxDriveOn", "fxChorusOn", "fxPhaserOn", "fxDelayOn", "fxReverbOn" })
+            if (auto* p = synth.parameter (effect))
+                p->setValueNotifyingHost (0.0f);
+
+        synth.prepareToPlay (rate, 512);
+        const auto total = (int) (length * rate), off = (int) (hold * rate);
+        juce::AudioBuffer<float> out (2, total), part (2, 512);
+
+        for (int at = 0; at < total; at += 512)
+        {
+            const auto n = juce::jmin (512, total - at);
+            juce::MidiBuffer midi;
+            if (at == 0) midi.addEvent (juce::MidiMessage::noteOn (1, note, 0.8f), 0);
+            if (off >= at && off < at + n) midi.addEvent (juce::MidiMessage::noteOff (1, note), off - at);
+            part.setSize (2, n, false, false, true);
+            part.clear();
+            synth.processBlock (part, midi);
+            for (int ch = 0; ch < 2; ++ch) out.copyFrom (ch, at, part, ch, 0, n);
+        }
+
+        return out;
+    }
+
+    /** The Decrypt test: Recording with two clips, "reese note" (Abyss Reese at A2) and "bell hit"
+        (Cold Bell at C5); Bass plays Torqwave Synth, Keys has no instrument. */
+    SessionState decryptSession()
+    {
+        SessionState s;
+        s.sampleRate = rate;
+        auto& recording = s.addTrack();
+        recording.name = "Recording";
+
+        const auto addNote = [&] (juce::String name, const juce::String& patch, int note, juce::int64 at)
+        {
+            SessionClip c;
+            c.id = (juce::uint32) (8001 + recording.clips.size());
+            c.name = std::move (name);
+            c.audio = AudioEdits::fromBuffer (synthNote (patch, note, 0.8, 1.5));
+            c.length = c.audio->getNumFrames();
+            c.position = at;
+            recording.clips.push_back (c);
+        };
+
+        addNote ("reese note", "Abyss Reese", 45, 0);
+        addNote ("bell hit", "Cold Bell", 72, (juce::int64) (2 * rate));
+        s.addInstrumentTrack().name = "Bass";
+        s.addInstrumentTrack().name = "Keys";
+        return s;
+    }
+
+    /** Requests for Torqwave Synth's Decrypt on decryptSession(). */
+    std::vector<Case> decryptCases()
+    {
+        const auto onSession = [] (juce::String request, std::function<juce::String (Ai::Workspace&)> check)
+        {
+            Case c { std::move (request), std::move (check) };
+            c.decrypt = true;
+            return c;
+        };
+
+        const auto patchFrom = [] (Ai::Workspace& w, bool factoryTablesOnly) -> juce::String
+        {
+            const auto changes = w.getSynthChanges();
+
+            if (changes.size() != 1 || changes[0].patch == nullptr)
+                return "not one patch for the Bass synth in the plan: " + w.getSteps().joinIntoString (" | ");
+
+            if (factoryTablesOnly)
+                for (auto& t : changes[0].patch->tables)
+                    if (t != nullptr)
+                        return "the patch has the clip's table, though it was asked for factory tables only: " + changes[0].step;
+
+            return planHas (w, "reese note");
+        };
+
+        return {
+            onSession ("Make the Bass synth sound like the clip called reese note.", [=] (Ai::Workspace& w) { return patchFrom (w, false); }),
+            onSession ("Decrypt the reese note clip onto the Bass track, with the synth's own tables only, not one made from the clip.",
+                       [=] (Ai::Workspace& w) { return patchFrom (w, true); }),
+            onSession ("Use the bell hit clip as a wavetable on oscillator 2 of the Bass synth.", [] (Ai::Workspace& w) -> juce::String
+            {
+                const auto changes = w.getSynthChanges();
+                return changes.size() == 1 && changes[0].table != nullptr && changes[0].oscillator == 1 && changes[0].patch == nullptr
+                           ? juce::String() : "not one table for oscillator 2 in the plan: " + w.getSteps().joinIntoString (" | ");
+            }),
+            onSession ("Make the Keys track sound like the bell hit clip.", [] (Ai::Workspace& w) -> juce::String
+            {
+                // Keys has no Torqwave Synth: nothing may be planned for it (loading one first, then a decrypt, is refused too).
+                return w.getSynthChanges().empty() ? juce::String() : "a synth change was planned for a track without Torqwave Synth: " + w.getSteps().joinIntoString (" | ");
+            }),
+        };
     }
 
     /** Requests on a session (testSession), for Ask Torq in the multitrack view. */
@@ -1011,7 +1115,7 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
     }
 
     auto chosen = set == "unseen" ? unseenCases() : set == "session" ? sessionCases() : set == "sequence" ? sequenceCases()
-                : set == "library" ? libraryCases() : cases();
+                : set == "library" ? libraryCases() : set == "decrypt" ? decryptCases() : cases();
 
     if (set == "all")
         for (auto& c : unseenCases())
@@ -1043,6 +1147,15 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
         {
             start.session = testSession();
             start.sessionName = "Song";
+        }
+        else if (c.decrypt)
+        {
+            start.session = decryptSession();
+            start.sessionName = "Song";
+
+            for (auto& d : BuiltInEffects::getDescriptions())
+                if (d.name == "Torqwave Synth")
+                    start.instruments[start.session->tracks[1].id] = d;
         }
         else if (c.sequence != nullptr)
             start.sequence = c.sequence();

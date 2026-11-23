@@ -214,6 +214,108 @@ namespace
                 node.changes.push_back ({ order[i].id, p->getName (64), deltaText (*p, order[i].from, order[i].to), order[i].share });
     }
 
+    /** A setting that can move, with its rule, part and parameter (for its range). */
+    struct Movable { juce::String id; Rule rule; int part; juce::RangedAudioParameter* parameter; };
+
+    /** The settings of a patch that can move, by part, leaving out firewalled parts. */
+    std::array<std::vector<Movable>, numParts> movableIn (const Patch& held, Synth& synth, const std::array<bool, numParts>& firewall)
+    {
+        std::array<std::vector<Movable>, numParts> movable;
+
+        for (auto& [id, value] : held.values)
+        {
+            juce::ignoreUnused (value);
+            const auto part = partOf (id);
+
+            if (part < 0 || firewall[(size_t) part])
+                continue;
+
+            if (auto* p = synth.parameter (id))
+                if (const auto rule = ruleFor (id, held.values); rule.kind != Kind::fixed)
+                    movable[(size_t) part].push_back ({ id, rule, part, p });
+        }
+
+        return movable;
+    }
+
+    /** Node i's moves from the patch held, at `scale` of the full reach: mostly one part (the next one in
+        turn), half the nodes a little of a second. Written into `patch`; what moved is returned. */
+    std::vector<Moved> moveSettings (Patch& patch, const Patch& held, const std::array<std::vector<Movable>, numParts>& movable,
+                                     const std::vector<int>& open, int firstPart, int i, int attempt, juce::uint32 seed, float scale)
+    {
+        std::vector<Moved> moved;
+
+        if (open.empty() || scale <= 0.0f)
+            return moved;
+
+        // Mostly one part (the next one, if the last try moved nothing in it); half the nodes a little of a second.
+        const auto first = open[(size_t) ((firstPart + i + attempt) % (int) open.size())];
+        const auto second = open.size() > 1 && uniform (seed, i, 0x5345434fu, 0) < 0.5f
+                                ? open[(size_t) ((firstPart + i + 1 + (int) (uniform (seed, i, 0x5345434fu, 1) * (float) (open.size() - 1))) % (int) open.size())] : -1;
+
+        for (auto part : { first, second })
+        {
+            if (part < 0)
+                continue;
+
+            const auto amount = part == first ? scale : scale * 0.35f;
+            // A part with nothing to slide (every effect off) has only its switches: they are thrown more readily.
+            const auto onlySwitches = std::none_of (movable[(size_t) part].begin(), movable[(size_t) part].end(), [] (const Movable& m) { return m.rule.kind == Kind::slide; });
+
+            for (auto& m : movable[(size_t) part])
+            {
+                const auto what = hashOf (m.id);
+                const auto from = valueOf (held.values, m.id);
+                auto to = from;
+                auto share = 0.0f;
+
+                if (m.rule.kind == Kind::slide)
+                {
+                    const auto was = m.parameter->convertTo0to1 ((float) from);
+                    const auto now = juce::jlimit (0.0f, 1.0f, was + amount * m.rule.amount * 1.6f * bell (seed, i, what));
+                    to = m.parameter->convertFrom0to1 (now);
+                    share = std::abs (now - was);
+                }
+                else if (uniform (seed, i, what, 4) < amount * m.rule.amount * (onlySwitches ? 12.0f : 2.5f))
+                {
+                    share = 1.0f / 3.0f;
+
+                    if (m.rule.kind == Kind::flip)
+                        to = from > 0.5 ? 0.0 : 1.0;
+                    else if (m.rule.kind == Kind::step)
+                    {
+                        // An oscillator's pitch moves by a fifth or an octave; its unison by a voice or two.
+                        const auto pitch = m.id.endsWith ("Pitch");
+                        const auto by = pitch ? (uniform (seed, i, what, 5) < 0.5f ? 12.0 : 7.0) : (uniform (seed, i, what, 5) < 0.6f ? 1.0 : 2.0);
+                        const auto range = m.parameter->getNormalisableRange();
+                        to = juce::jlimit ((double) range.start, (double) range.end, from + (uniform (seed, i, what, 6) < 0.5f ? -by : by));
+                    }
+                    else if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (m.parameter))
+                    {
+                        // Another of its choices: a filter never to Off, a table never to Sampled without one.
+                        juce::Array<int> others;
+
+                        for (int c = 0; c < choice->choices.size(); ++c)
+                            if (c != (int) from && ! (m.id.endsWith ("Type") && m.id.startsWith ("filter") && c == 0)
+                                && ! (m.id.endsWith ("Table") && c == (int) WaveTables::Table::sampled && held.tables[(size_t) (m.id.substring (3, 4).getIntValue() - 1)] == nullptr))
+                                others.add (c);
+
+                        if (! others.isEmpty())
+                            to = others[juce::jmin (others.size() - 1, (int) (uniform (seed, i, what, 5) * (float) others.size()))];
+                    }
+                }
+
+                if (! juce::exactlyEqual (to, from))
+                {
+                    patch.values[m.id] = to;
+                    moved.push_back ({ m.id, from, to, share, m.part });
+                }
+            }
+        }
+
+        return moved;
+    }
+
     /** The node's amp level set so it peaks where the held one does, then measured. False for a node that makes no sound
         in its first second, or far less than the one held. */
     bool levelAndMeasure (Node& node, float heldPeak, Renderer& renderer)
@@ -483,21 +585,7 @@ std::vector<Node> nodesAround (const Patch& held, const Settings& settings, Rend
     std::vector<Node> nodes;
 
     // The settings that can move, by part.
-    struct Movable { juce::String id; Rule rule; int part; juce::RangedAudioParameter* parameter; };
-    std::array<std::vector<Movable>, numParts> movable;
-
-    for (auto& [id, value] : held.values)
-    {
-        juce::ignoreUnused (value);
-        const auto part = partOf (id);
-
-        if (part < 0 || settings.firewall[(size_t) part])
-            continue;
-
-        if (auto* p = synth.parameter (id))
-            if (const auto rule = ruleFor (id, held.values); rule.kind != Kind::fixed)
-                movable[(size_t) part].push_back ({ id, rule, part, p });
-    }
+    const auto movable = movableIn (held, synth, settings.firewall);
 
     std::vector<int> open;
 
@@ -579,76 +667,8 @@ std::vector<Node> nodesAround (const Patch& held, const Settings& settings, Rend
             node = {};
             node.patch = held;
             node.distance = scale;
-            std::vector<Moved> moved;
             const auto seed = settings.seed + (juce::uint32) attempt * 0x51ed270bu;
-
-            if (! open.empty() && scale > 0.0f)
-            {
-                // Mostly one part (the next one, if the last try moved nothing in it); half the nodes a little of a second.
-                const auto first = open[(size_t) ((firstPart + i + attempt) % (int) open.size())];
-                const auto second = open.size() > 1 && uniform (seed, i, 0x5345434fu, 0) < 0.5f
-                                        ? open[(size_t) ((firstPart + i + 1 + (int) (uniform (seed, i, 0x5345434fu, 1) * (float) (open.size() - 1))) % (int) open.size())] : -1;
-
-                for (auto part : { first, second })
-                {
-                    if (part < 0)
-                        continue;
-
-                    const auto amount = part == first ? scale : scale * 0.35f;
-                    // A part with nothing to slide (every effect off) has only its switches: they are thrown more readily.
-                    const auto onlySwitches = std::none_of (movable[(size_t) part].begin(), movable[(size_t) part].end(), [] (const Movable& m) { return m.rule.kind == Kind::slide; });
-
-                    for (auto& m : movable[(size_t) part])
-                    {
-                        const auto what = hashOf (m.id);
-                        const auto from = valueOf (held.values, m.id);
-                        auto to = from;
-                        auto share = 0.0f;
-
-                        if (m.rule.kind == Kind::slide)
-                        {
-                            const auto was = m.parameter->convertTo0to1 ((float) from);
-                            const auto now = juce::jlimit (0.0f, 1.0f, was + amount * m.rule.amount * 1.6f * bell (seed, i, what));
-                            to = m.parameter->convertFrom0to1 (now);
-                            share = std::abs (now - was);
-                        }
-                        else if (uniform (seed, i, what, 4) < amount * m.rule.amount * (onlySwitches ? 12.0f : 2.5f))
-                        {
-                            share = 1.0f / 3.0f;
-
-                            if (m.rule.kind == Kind::flip)
-                                to = from > 0.5 ? 0.0 : 1.0;
-                            else if (m.rule.kind == Kind::step)
-                            {
-                                // An oscillator's pitch moves by a fifth or an octave; its unison by a voice or two.
-                                const auto pitch = m.id.endsWith ("Pitch");
-                                const auto by = pitch ? (uniform (seed, i, what, 5) < 0.5f ? 12.0 : 7.0) : (uniform (seed, i, what, 5) < 0.6f ? 1.0 : 2.0);
-                                const auto range = m.parameter->getNormalisableRange();
-                                to = juce::jlimit ((double) range.start, (double) range.end, from + (uniform (seed, i, what, 6) < 0.5f ? -by : by));
-                            }
-                            else if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (m.parameter))
-                            {
-                                // Another of its choices: a filter never to Off, a table never to Sampled without one.
-                                juce::Array<int> others;
-
-                                for (int c = 0; c < choice->choices.size(); ++c)
-                                    if (c != (int) from && ! (m.id.endsWith ("Type") && m.id.startsWith ("filter") && c == 0)
-                                        && ! (m.id.endsWith ("Table") && c == (int) WaveTables::Table::sampled && held.tables[(size_t) (m.id.substring (3, 4).getIntValue() - 1)] == nullptr))
-                                        others.add (c);
-
-                                if (! others.isEmpty())
-                                    to = others[juce::jmin (others.size() - 1, (int) (uniform (seed, i, what, 5) * (float) others.size()))];
-                            }
-                        }
-
-                        if (! juce::exactlyEqual (to, from))
-                        {
-                            node.patch.values[m.id] = to;
-                            moved.push_back ({ m.id, from, to, share, m.part });
-                        }
-                    }
-                }
-            }
+            const auto moved = moveSettings (node.patch, held, movable, open, firstPart, i, attempt, seed, scale);
 
             finish (node, moved, synth);
 
@@ -676,6 +696,35 @@ std::vector<Node> nodesAround (const Patch& held, const Settings& settings, Rend
     }
 
     return nodes;
+}
+
+std::vector<Patch> variations (const Patch& held, Synth& rangesFrom, float reach, juce::uint32 seed, const std::array<bool, numParts>& firewall, int count)
+{
+    const auto movable = movableIn (held, rangesFrom, firewall);
+    std::vector<int> open;
+
+    for (int part = 0; part < numParts; ++part)
+        if (! movable[(size_t) part].empty())
+            open.push_back (part);
+
+    std::vector<Patch> made;
+
+    if (open.empty() || count <= 0)
+        return made;
+
+    // As nodesAround moves its twelve, without rendering them: from a third of reach to all of it, each part in turn.
+    const auto firstPart = (int) (mix (seed) % (juce::uint32) open.size());
+
+    for (int i = 0; i < count; ++i)
+    {
+        const auto scale = juce::jlimit (0.0f, 1.0f, reach) * (0.3f + 0.7f * (float) i / (float) juce::jmax (1, count - 1));
+        auto patch = held;
+
+        if (! moveSettings (patch, held, movable, open, firstPart, i, 0, seed, scale).empty())
+            made.push_back (std::move (patch));
+    }
+
+    return made;
 }
 
 //==============================================================================
@@ -865,6 +914,29 @@ void Console::hear (int node)
     strike.store (lastNote.load (std::memory_order_relaxed), std::memory_order_release);
 }
 
+void Console::play (const juce::AudioBuffer<float>& audio, double sampleRate)
+{
+    int slot = 0;
+
+    while (slot == soundPlaying.load (std::memory_order_acquire) || slot == soundReady.load (std::memory_order_acquire))
+        ++slot;
+
+    // At the synth's rate, two channels.
+    const auto ratio = sampleRate / rate;
+    const auto length = juce::jmax (1, (int) (audio.getNumSamples() / ratio));
+    auto& out = sounds[(size_t) slot];
+    out.setSize (2, length);
+
+    for (int ch = 0; ch < 2; ++ch)
+    {
+        juce::LagrangeInterpolator interpolator;
+        interpolator.process (ratio, audio.getReadPointer (juce::jmin (ch, audio.getNumChannels() - 1)), out.getWritePointer (ch), length,
+                              audio.getNumSamples(), 0);
+    }
+
+    soundReady.store (slot, std::memory_order_release);
+}
+
 void Console::jump (int node)
 {
     if (! juce::isPositiveAndBelow (node, (int) nodes.size()))
@@ -927,6 +999,28 @@ void Console::prepare (double sampleRate, int blockSize)
 void Console::addAudition (juce::AudioBuffer<float>& out) noexcept
 {
     const auto n = out.getNumSamples();
+
+    // A sound played.
+    if (const auto ready = soundReady.exchange (-1, std::memory_order_acq_rel); ready >= 0)
+    {
+        soundPlaying.store (ready, std::memory_order_release);
+        soundAt = 0;
+    }
+
+    if (const auto playing = soundPlaying.load (std::memory_order_relaxed); playing >= 0)
+    {
+        const auto& sound = sounds[(size_t) playing];
+        const auto count = juce::jmin (n, sound.getNumSamples() - soundAt);
+
+        for (int ch = 0; ch < out.getNumChannels() && count > 0; ++ch)
+            out.addFrom (ch, 0, sound, ch % 2, soundAt, count);
+
+        soundAt += juce::jmax (0, count);
+
+        if (soundAt >= sound.getNumSamples())
+            soundPlaying.store (-1, std::memory_order_release);
+    }
+
     const auto note = strike.exchange (-1, std::memory_order_acq_rel);
 
     if ((note < 0 && sounding < 0 && tail <= 0) || n > scratch.getNumSamples() || out.getNumChannels() < 1)

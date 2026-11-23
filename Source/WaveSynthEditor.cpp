@@ -1,5 +1,6 @@
 #include "WaveSynthEditor.h"
 #include "SignalConsoleView.h"
+#include "DecryptView.h"
 #include "WaveSynthFavourites.h"
 #include "Theme.h"
 
@@ -1041,7 +1042,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         : synth (s),
           presets (EffectPresets::userStore(), s.getPresetKey(), [&s] { return s.getPresetValues(); },
                    [&s] (const EffectPresets::Values& v) { s.setPresetValues (v); }),
-          browser (s), modPages ({ "Slots 1-8", "Slots 9-16", "Effects" }), viewPages ({ "Knobs", "Trace" }),
+          browser (s), modPages ({ "Slots 1-8", "Slots 9-16", "Effects" }), viewPages ({ "Knobs", "Decrypt" }),
           envelopeView (s), lfoView (s)
     {
         addAndMakeVisible (browser);
@@ -1257,12 +1258,15 @@ struct WaveSynthEditor::Content final : public juce::Component
             effects.back().knobs.push_back (knob (*effects.back().panel, id, label, Knob::Size::small));
 
         browser.onLoaded = [this] { refresh(); };
-        // The signal console's scope takes the place of the knobs when it is shown. It is not offered in the
-        // window yet: it is to be Decrypt's screen, and the switch to it stays hidden until Decrypt is here.
+        // Decrypt takes the place of the knobs when its page is chosen. Trace's scope is not offered in the
+        // window (it was withdrawn from 0.20.0); it stays for its tests.
         consoleView = std::make_unique<SignalConsoleView> (synth);
         addChildComponent (*consoleView);
-        addChildComponent (viewPages);
-        viewPages.onChange = [this] (int i) { showView (i); };
+        decryptView = std::make_unique<DecryptView> (synth);
+        addChildComponent (*decryptView);
+        addAndMakeVisible (viewPages);
+        viewPages.setTooltip ("Knobs: the synth's controls. Decrypt: drop a recording of one note and find a patch that plays like it");
+        viewPages.onChange = [this] (int i) { showView (i == 1 ? 2 : 0); };
 
         showModulator (0);
         showRightPage (0);
@@ -1351,28 +1355,27 @@ struct WaveSynthEditor::Content final : public juce::Component
         resized();
     }
 
-    /** The knobs (0) or the console's Trace view (1) under the header. */
+    /** The knobs (0), Trace's scope (1, for its tests) or Decrypt (2) under the header. */
     void showView (int index)
     {
-        const auto trace = index == 1;
-        viewPages.chosen = trace ? 1 : 0;
+        const auto trace = index == 1, decrypt = index == 2;
+        viewPages.chosen = decrypt ? 1 : 0;
         viewPages.repaint();
 
         for (auto* c : getChildren())
-            if (c != &browser && c != &presets && c != &viewPages && c != consoleView.get())
-                c->setVisible (! trace);
+            if (c != &browser && c != &presets && c != &viewPages && c != consoleView.get() && c != decryptView.get())
+                c->setVisible (! trace && ! decrypt);
 
         consoleView->setVisible (trace);
+        decryptView->setVisible (decrypt);
 
-        if (! trace)
+        if (! trace && ! decrypt)
         {
             // The pages within the knobs show what they showed.
             showModulator (modulator);
             showRightPage (modPages.chosen);
         }
     }
-
-    bool showingTrace() const   { return viewPages.chosen == 1; }
 
     void showRightPage (int index)
     {
@@ -1512,11 +1515,12 @@ struct WaveSynthEditor::Content final : public juce::Component
         header.removeFromRight (100);
         browser.setBounds (header.removeFromLeft (380).withSizeKeepingCentre (380, 32));
         header.removeFromLeft (gap * 2);
-        // The presets bar takes the room the hidden switch to the scope would have: wide enough for its Audition button to be named.
-        presets.setBounds (header.removeFromLeft (470).withSizeKeepingCentre (470, 28));
-        viewPages.setBounds (header.removeFromRight (126).withSizeKeepingCentre (126, 24));
+        viewPages.setBounds (header.removeFromRight (136).withSizeKeepingCentre (136, 24));
+        header.removeFromRight (gap * 2);
+        presets.setBounds (header.withSizeKeepingCentre (header.getWidth(), 28));
         r.removeFromBottom (margin);
         consoleView->setBounds (r);
+        decryptView->setBounds (r);
 
         // The oscillators and sources.
         auto row = r.removeFromTop (236);
@@ -1797,6 +1801,7 @@ struct WaveSynthEditor::Content final : public juce::Component
     PatchBrowser browser;
     PageSwitch modPages, viewPages;
     std::unique_ptr<SignalConsoleView> consoleView;
+    std::unique_ptr<DecryptView> decryptView;
     EnvelopeView envelopeView;
     LfoView lfoView;
 
@@ -1939,4 +1944,9 @@ void WaveSynthEditor::showView (int index)
 SignalConsoleView* WaveSynthEditor::getConsoleView() const
 {
     return content->consoleView.get();
+}
+
+DecryptView* WaveSynthEditor::getDecryptView() const
+{
+    return content->decryptView.get();
 }

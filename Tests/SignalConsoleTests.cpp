@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "../Source/SignalConsole.h"
 #include "../Source/SignalConsoleView.h"
+#include "../Source/DecryptView.h"
 #include "../Source/WaveSynthEditor.h"
 #include "../Source/Theme.h"
 #include "TestUtils.h"
@@ -394,13 +395,11 @@ namespace
         window->showView (0);
         check (! shows (&view) && shows (window->knobFor ("filter1Cutoff")) && ! shows (window->knobFor ("osc1EnvAttack")), "console: Knobs brings the synth's controls back, each page showing what it showed");
 
-        // Nothing in the window offers the scope yet: the switch to it is hidden.
-        auto offered = false;
-
-        for (auto* c : window->getChildComponent (0)->getChildren())
-            offered = offered || (c->isVisible() && c->getBounds().getY() < 52 && c->getBounds().getX() > 1000 && c->getWidth() > 100 && c->getWidth() < 140);
-
-        check (! offered, "console: the synth's window has no switch to the scope showing (it waits to be Decrypt's screen)");
+        // The window offers Decrypt, not Trace: the header's second page shows Decrypt's screen and hides the scope.
+        window->showView (2);
+        const auto decryptShown = window->getDecryptView() != nullptr && shows (window->getDecryptView()) && ! shows (&view) && ! shows (window->knobFor ("filter1Cutoff"));
+        window->showView (0);
+        check (decryptShown, "console: the synth's window offers Decrypt in Trace's place (Trace's scope is not offered, as 0.20.0 withdrew it)");
     }
 }
 

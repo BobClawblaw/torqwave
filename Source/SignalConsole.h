@@ -106,6 +106,13 @@ namespace SignalConsole
     /** The twelve nodes round a patch. */
     std::vector<Node> nodesAround (const Patch& held, const Settings&, Renderer&);
 
+    /** Up to `count` patches moved from `held` as the twelve nodes are (by the reach map, firewalled
+        parts kept), at reach from a third of `reach` to all of it, without rendering or levelling them:
+        for a search that scores them itself (Decrypt). rangesFrom gives the parameters' ranges. The
+        same arguments give the same patches; a patch nothing could move in is left out. */
+    std::vector<Patch> variations (const Patch& held, Synth& rangesFrom, float reach, juce::uint32 seed,
+                                   const std::array<bool, numParts>& firewall, int count);
+
     /** A held node's own entry (distance 0), measured. */
     Node nodeOf (const Patch&, Renderer&);
 
@@ -144,6 +151,11 @@ namespace SignalConsole
 
         /** Plays a node for a moment (0 to 11, or -1 for the node held) at the last note played. */
         void hear (int node);
+        /** Plays a sound once (one or two channels, at its own rate), mixed into the synth's output as
+            a node heard is, the patch left alone: Decrypt's signal and its candidates. Another sound
+            played cuts it. */
+        void play (const juce::AudioBuffer<float>&, double sampleRate);
+
         /** Makes a node the synth's patch and the node held; the map is made again round it. */
         void jump (int node);
         /** Goes back (or forward) to a node on the route: its settings exactly. */
@@ -185,6 +197,11 @@ namespace SignalConsole
         std::atomic<int> lastNote { 60 }, strike { -1 };
         int sounding = -1, remaining = 0, tail = 0;
         double rate = 48000.0;
+
+        // Sounds played: three buffers, so the one being written is never the one playing or the one about to.
+        std::array<juce::AudioBuffer<float>, 3> sounds;
+        std::atomic<int> soundReady { -1 }, soundPlaying { -1 };
+        int soundAt = 0;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Console)
     };

@@ -9,6 +9,7 @@ namespace
     constexpr const char* modelKey = "aiModel";
     constexpr const char* endpointsKey = "aiEndpoints";
     constexpr const char* currentKey = "aiEndpoint";
+    constexpr const char* hearClipsKey = "aiHearClips";
 
     juce::var parse (const juce::String& json)
     {
@@ -114,6 +115,7 @@ Settings Settings::load (const juce::PropertySet& p)
             s.endpoints.push_back ({ e["name"].toString(), e["url"].toString(), e["model"].toString() });
 
     s.current = juce::jlimit (0, juce::jmax (0, (int) s.endpoints.size() - 1), p.getIntValue (currentKey, 0));
+    s.hearClips = p.getBoolValue (hearClipsKey, false);
 
     // Saved before the list: that server is the list. Otherwise the one in use is the list's.
     if (s.endpoints.empty())
@@ -143,6 +145,7 @@ void Settings::save (juce::PropertySet& p) const
 
     p.setValue (endpointsKey, juce::JSON::toString (juce::var (list), true));
     p.setValue (currentKey, current);
+    p.setValue (hearClipsKey, hearClips);
 }
 
 //==============================================================================
@@ -388,6 +391,9 @@ Reply Client::chat (const juce::var& messages, const juce::var& tools,
 
     if (tools.isArray() && tools.size() > 0)
         request->setProperty ("tools", tools);
+
+    for (auto& extra : requestExtras)
+        request->setProperty (extra.name, extra.value);
 
     const auto body = juce::JSON::toString (juce::var (request.release()), true);
     Reply r;

@@ -19,6 +19,8 @@
 #include "../Source/SequenceLibrary.h"
 #include "../Source/SwarmGuitar.h"
 #include "../Source/WaveSynth.h"
+#include "../Source/AiDecrypt.h"
+#include "../Source/SignalConsole.h"
 #include "TestUtils.h"
 #include "AiTests.h"
 
@@ -958,7 +960,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 45 && names.contains ("find_sequence_presets") && names.contains ("add_sequence_preset") && names.contains ("add_kit") && names.contains ("list_drum_maps") && names.contains ("set_drum_map") && names.contains ("remap_clip_notes") && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("fit_tempo_to_hits") && names.contains ("store_scene") && names.contains ("recall_scene") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 47 && names.contains ("decrypt_clip") && names.contains ("table_from_clip") && names.contains ("find_sequence_presets") && names.contains ("add_sequence_preset") && names.contains ("add_kit") && names.contains ("list_drum_maps") && names.contains ("set_drum_map") && names.contains ("remap_clip_notes") && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("fit_tempo_to_hits") && names.contains ("store_scene") && names.contains ("recall_scene") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -2729,6 +2731,207 @@ namespace
         check (Ai::askName().endsWith (juce::String (juce::CharPointer_UTF8 ("\xf0\x9f\x90\xb6"))) && coloured > 20,
                "Ask Torq: the puppy in its name draws in colour (" + juce::String (coloured) + " coloured pixels)");
     }
+    //==============================================================================
+    /** A factory patch played dry, one note, as a recording of it. */
+    juce::AudioBuffer<float> recordedNote (const juce::String& patch, int note, double hold, double length)
+    {
+        BuiltInEffects::BasicSynthProcessor synth;
+        synth.setPlayConfigDetails (0, 2, 48000.0, 512);
+        synth.setNonRealtime (true);
+        synth.loadPatch (patch);
+
+        for (auto* effect : { "fxDriveOn", "fxChorusOn", "fxPhaserOn", "fxDelayOn", "fxReverbOn" })
+            if (auto* p = synth.parameter (effect))
+                p->setValueNotifyingHost (0.0f);
+
+        synth.prepareToPlay (48000.0, 512);
+        const auto total = (int) (length * 48000.0), off = (int) (hold * 48000.0);
+        juce::AudioBuffer<float> out (2, total), part (2, 512);
+
+        for (int at = 0; at < total; at += 512)
+        {
+            const auto n = juce::jmin (512, total - at);
+            juce::MidiBuffer midi;
+            if (at == 0) midi.addEvent (juce::MidiMessage::noteOn (1, note, 0.8f), 0);
+            if (off >= at && off < at + n) midi.addEvent (juce::MidiMessage::noteOff (1, note), off - at);
+            part.setSize (2, n, false, false, true);
+            part.clear();
+            synth.processBlock (part, midi);
+            for (int ch = 0; ch < 2; ++ch) out.copyFrom (ch, at, part, ch, 0, n);
+        }
+
+        return out;
+    }
+
+    /** decrypt_clip and table_from_clip on a session on the engine: the plan step and result, nothing
+        changed until applied, applied as the app applies it; refusals with their reasons; a search
+        stopped plans nothing and leaves the patch as it was. */
+    void testDecryptTools()
+    {
+        AudioEngine engine;
+        SessionState s;
+        s.sampleRate = 48000.0;
+        auto& audioTrack = s.addTrack();
+        audioTrack.name = "Recording";
+        SessionClip clip;
+        clip.id = 7001;
+        clip.name = "reese note";
+        clip.audio = AudioEdits::fromBuffer (recordedNote ("Abyss Reese", 45, 0.8, 1.5));
+        clip.length = clip.audio->getNumFrames();
+        audioTrack.clips.push_back (clip);
+        SessionClip quiet = clip;
+        quiet.id = 7002;
+        quiet.name = "nothing";
+        juce::AudioBuffer<float> silence (2, 48000);
+        silence.clear();
+        quiet.audio = AudioEdits::fromBuffer (std::move (silence));
+        quiet.position = 96000;
+        quiet.length = 48000;
+        audioTrack.clips.push_back (quiet);
+        s.addInstrumentTrack().name = "Bass";
+        s.addInstrumentTrack().name = "Keys";
+        const auto bassId = s.tracks[1].id;
+        engine.session.reset (s, {});
+        auto ready = false;
+        engine.addTrackPlugin (bassId, builtIn ("Torqwave Synth"), [&] (const juce::String&) { ready = true; });
+        TestUtils::runUntil ([&] { return ready; }, 5000);
+        auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (engine.getTrackEffects().getInstrument (bassId));
+
+        if (synth == nullptr)
+        {
+            check (false, "Ask Torq Decrypt: Torqwave Synth loads onto a track");
+            return;
+        }
+
+        synth->loadPatch ("Cathedral Stack Pad");
+        const auto before = SignalConsole::addressOf (SignalConsole::capture (*synth));
+        const auto startFor = [&]
+        {
+            Ai::Workspace::Start start;
+            start.session = *engine.session.getState();
+            start.plugins = BuiltInEffects::getDescriptions();
+            start.instruments[bassId] = synth->getPluginDescription();
+            start.library = Ai::Library::standard();
+            return start;
+        };
+
+        // Decrypt from the session.
+        Ai::Workspace w (startFor());
+        const auto decrypted = parse (w.run ("decrypt_clip", "{\"clip\": 7001, \"track\": \"Bass\"}"));
+        const auto changes = w.getSynthChanges();
+        const auto untouched = SignalConsole::addressOf (SignalConsole::capture (*synth)) == before && ! w.sessionChanged();
+        const auto applied = changes.size() == 1 && Ai::applySynthChange (engine, changes[0]);
+        const auto holds = applied && changes[0].patch != nullptr && synth->getPresetValues() == changes[0].patch->values
+                           && synth->getPatchName() == decrypted["patch"].toString() && synth->getPatchName().startsWith ("Node ");
+        check ((bool) decrypted["ok"] && (double) decrypted["lock"] > 80.0 && decrypted["pitch"].toString() == "A2" && untouched && holds
+                   && w.getSteps().size() == 1 && w.getSteps()[0].contains ("lock") && w.getSteps()[0].contains ("reese note"),
+               "Ask Torq Decrypt: decrypt_clip finds a patch for a clip of a reese at A2 (lock " + decrypted["lock"].toString() + " %, grown from "
+                   + decrypted["grown_from"].toString() + ", " + decrypted["seconds"].toString() + " s), plans it as \"" + w.getSteps()[0] + "\", changes nothing until applied, and applied the synth holds it");
+
+        // A table from a clip.
+        Ai::Workspace t (startFor());
+        const auto tabled = parse (t.run ("table_from_clip", "{\"clip\": 7001, \"track\": \"Bass\", \"oscillator\": 2}"));
+        const auto tableChanges = t.getSynthChanges();
+        const auto noTableYet = synth->getSampledTable (1) == nullptr;
+        const auto tableApplied = tableChanges.size() == 1 && Ai::applySynthChange (engine, tableChanges[0]);
+        auto* osc2 = dynamic_cast<juce::AudioParameterChoice*> (synth->parameter ("osc2Table"));
+        check ((bool) tabled["ok"] && noTableYet && tableApplied && synth->getSampledTable (1) != nullptr && synth->getSampledTable (1)->name == "reese note"
+                   && osc2 != nullptr && osc2->getIndex() == (int) WaveTables::Table::sampled && synth->getPresetValues() != changes[0].patch->values,
+               "Ask Torq Decrypt: table_from_clip plans oscillator 2's table from the clip (\"" + t.getSteps().joinIntoString ("") + "\"); applied, oscillator 2 plays it and the rest of the patch stays");
+
+        // Refused, with the reason, and nothing planned.
+        Ai::Workspace r (startFor());
+        const auto noSynth = parse (r.run ("decrypt_clip", "{\"clip\": 7001, \"track\": \"Keys\"}"));
+        const auto noClip = parse (r.run ("decrypt_clip", "{\"clip\": 9999, \"track\": \"Bass\"}"));
+        const auto silent = parse (r.run ("decrypt_clip", "{\"clip\": 7002, \"track\": \"Bass\"}"));
+        const auto badOscillator = parse (r.run ("table_from_clip", "{\"clip\": 7001, \"track\": \"Bass\", \"oscillator\": 4}"));
+        check (! (bool) noSynth["ok"] && noSynth["error"].toString().contains ("doesn't play Torqwave Synth") && ! (bool) noClip["ok"] && ! (bool) silent["ok"]
+                   && silent["error"].toString().contains ("silent") && ! (bool) badOscillator["ok"] && r.getSynthChanges().empty() && r.getSteps().isEmpty(),
+               "Ask Torq Decrypt: a track without Torqwave Synth, a clip that isn't there, a silent clip and a fourth oscillator are refused with the reason (" + silent["error"].toString() + ")");
+
+        // Stopped (Ask Torq's Stop while it searches): nothing planned, the patch as it was.
+        synth->loadPatch ("Cathedral Stack Pad");
+        Ai::Workspace stopped (startFor());
+        std::atomic<int> asked { 0 };
+        stopped.shouldStop = [&asked] { return ++asked > 200; };
+        const auto stop = parse (stopped.run ("decrypt_clip", "{\"clip\": 7001, \"track\": \"Bass\"}"));
+        check (! (bool) stop["ok"] && stop["error"].toString().contains ("stopped") && stopped.getSynthChanges().empty() && stopped.getSteps().isEmpty()
+                   && SignalConsole::addressOf (SignalConsole::capture (*synth)) == before,
+               "Ask Torq Decrypt: a search stopped by Ask Torq's Stop plans nothing and the synth keeps its patch (" + stop["error"].toString() + ")");
+    }
+
+    juce::String jsonAnswer (const juce::String& text)
+    {
+        return "data: {\"choices\":[{\"delta\":{\"content\":" + juce::JSON::toString (juce::var (text)) + "},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n";
+    }
+
+    /** Ask Torq's model helping Decrypt, against made-up models: its answers read (choices by name,
+        nonsense left out), nothing sent with Ask Torq off, no audio without Let the model hear
+        clips, and the clip sent once with it on. */
+    void testDecryptAdvisor()
+    {
+        const auto changes = Ai::DecryptAdvisor::readChanges (
+            "<think>a reese wants a second saw</think>```json\n{\"changes\": [{\"what\": \"a second saw an octave up\", \"settings\": {\"osc2On\": \"on\", \"osc2Pitch\": 12, \"filter1Type\": \"nonsense type\"}},"
+            " {\"what\": \"nothing real\", \"settings\": {\"warpDrive\": 3}}, {\"what\": \"\", \"settings\": \"x\"}]}\n```");
+        BuiltInEffects::BasicSynthProcessor reader;
+        auto* table = dynamic_cast<juce::AudioParameterChoice*> (reader.parameter ("osc1Table"));
+        const auto tableName = table != nullptr ? table->choices[2] : juce::String();
+        const auto byName = Ai::DecryptAdvisor::readChanges ("{\"changes\": [{\"what\": \"t\", \"settings\": {\"osc1Table\": \"" + tableName.toLowerCase() + "\", \"osc1On\": false}}]}");
+        const auto first = changes.empty() ? Decrypt::Advisor::Change() : changes[0];
+        check (changes.size() == 2 && first.values.size() == 2 && juce::exactlyEqual (first.values.at ("osc2On"), 1.0) && juce::exactlyEqual (first.values.at ("osc2Pitch"), 12.0)
+                   && changes[1].values.size() == 1 && std::isnan (changes[1].values.at ("warpDrive")) && byName.size() == 1
+                   && juce::exactlyEqual (byName[0].values.at ("osc1Table"), 2.0) && juce::exactlyEqual (byName[0].values.at ("osc1On"), 0.0)
+                   && Ai::DecryptAdvisor::readChanges ("no JSON here").empty() && Ai::DecryptAdvisor::readStart ("{]").categories.isEmpty(),
+               "Ask Torq Decrypt: a model's changes are read through its thinking and fences (a switch as on, a choice by its name in any case); a choice it names "
+               "that isn't one is left out, a setting that isn't one is marked for the search to ignore, and nonsense reads as nothing");
+
+        const auto start = Ai::DecryptAdvisor::readStart ("{\"categories\": [\"Reese\", \"Bass\"], \"patches\": [\"Abyss Reese\"], \"hold\": [\"envelopes\", \"effects\", \"oscillator\"]}");
+        const auto name = Ai::DecryptAdvisor::readName ("{\"name\": \"Rust Reese\", \"category\": \"Reese\", \"description\": \"Two saws.\", \"macros\": [\"Grit\", \"Width\"]}");
+        check (start.categories == juce::StringArray { "Reese", "Bass" } && start.patches == juce::StringArray { "Abyss Reese" } && start.firewall[SignalConsole::envelopes]
+                   && start.firewall[SignalConsole::oscillators] && ! start.firewall[SignalConsole::effects] && name.name == "Rust Reese" && name.macros[1] == "Width" && name.macros[2].isEmpty(),
+               "Ask Torq Decrypt: where to start (categories, patches, parts to hold; never the effects) and a name with its macros are read from a model's answer");
+
+        Decrypt::Advisor::Brief brief;
+        brief.target = "A2 (110.0 Hz), 1.50 s";
+        juce::AudioBuffer<float> clip (1, 48000);
+        clip.clear();
+        brief.clip = &clip;
+
+        // Ask Torq off: no advisor, so nothing can be sent.
+        auto off = settingsFor ("http://127.0.0.1:9/v1");
+        off.enabled = false;
+        const auto none = Ai::DecryptAdvisor::fromSettings (off) == nullptr;
+
+        // On, without Let the model hear clips: one request, text only.
+        MockServer textOnly ({ { 200, "text/event-stream", jsonAnswer ("{\"categories\": [\"Reese\"]}") } });
+        Ai::DecryptAdvisor quiet (settingsFor (textOnly.url()), {});
+        const auto heardNothing = quiet.start (brief);
+        const auto textRequests = textOnly.requests();
+
+        // With it on: the clip goes once, as audio; a server that refuses audio changes nothing.
+        MockServer hearing ({ { 400, "application/json", "{\"error\": {\"message\": \"this model does not take audio\"}}" },
+                              { 200, "text/event-stream", jsonAnswer ("{\"categories\": [\"Reese\"]}") } });
+        auto hears = settingsFor (hearing.url());
+        hears.hearClips = true;
+        Ai::DecryptAdvisor listener (hears, {});
+        const auto refusedAudio = listener.start (brief);
+        const auto hearingRequests = hearing.requests();
+        // A server that refuses the request for thinking off, by name, is asked again without it.
+        MockServer strict ({ { 400, "application/json", "{\"error\": {\"message\": \"Unrecognized request argument supplied: chat_template_kwargs\"}}" },
+                             { 200, "text/event-stream", jsonAnswer ("{\"categories\": [\"Bass\"]}") } });
+        Ai::DecryptAdvisor plain (settingsFor (strict.url()), {});
+        const auto fromStrict = plain.start (brief);
+        const auto strictRequests = strict.requests();
+        check (strictRequests.size() == 2 && strictRequests[0].body.contains ("enable_thinking") && ! strictRequests[1].body.contains ("chat_template_kwargs")
+                   && fromStrict.categories == juce::StringArray { "Bass" },
+               "Ask Torq Decrypt: the model is asked to answer without thinking, and a server that refuses that field by name is asked again without it");
+
+        check (none && textRequests.size() == 1 && ! textRequests[0].body.contains ("input_audio") && textRequests[0].body.contains ("\"enable_thinking\": false") && heardNothing.categories == juce::StringArray { "Reese" }
+                   && hearingRequests.size() == 2 && hearingRequests[0].body.contains ("input_audio") && ! hearingRequests[1].body.contains ("input_audio")
+                   && refusedAudio.heard.isEmpty() && refusedAudio.categories == juce::StringArray { "Reese" },
+               "Ask Torq Decrypt: with Ask Torq off nothing is made to send; on, a clip's audio is sent only with Let the model hear clips (once, as audio), and a model that refuses audio changes nothing");
+    }
+
 }
 
 void runAiTests()
@@ -2766,5 +2969,7 @@ void runAiTests()
     testAskPanel();
     testSequenceTools();
     testSequencerAsk();
+    testDecryptTools();
+    testDecryptAdvisor();
     testName();
 }

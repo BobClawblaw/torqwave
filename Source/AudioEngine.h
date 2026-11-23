@@ -572,6 +572,10 @@ public:
 
     /** Gives the track's instrument a saved state (an instrument preset); false when it has none. */
     bool setInstrumentState (juce::uint32 trackId, const juce::MemoryBlock& state);
+
+    /** Changes a track's instrument in place (message thread) and keeps its copies in step: false when
+        the track has none or `change` didn't change it. */
+    bool changeInstrument (juce::uint32 trackId, const std::function<bool (juce::AudioPluginInstance&)>& change);
     void removeTrackPlugin (juce::uint32 trackId, int slot);
     void setTrackPluginBypassed (juce::uint32 trackId, int slot, bool);
     void moveTrackPlugin (juce::uint32 trackId, int from, int to);

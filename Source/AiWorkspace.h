@@ -99,6 +99,12 @@ namespace Ai
             return sessionTools != nullptr ? sessionTools->getRenders() : std::vector<SessionTools::Render>();
         }
 
+        /** The changes the plan makes to Torqwave Synths on tracks once it is applied (not part of its undo step). */
+        std::vector<SessionTools::SynthChange> getSynthChanges() const
+        {
+            return sessionTools != nullptr ? sessionTools->getSynthChanges() : std::vector<SessionTools::SynthChange>();
+        }
+
         /** Runs one tool call and returns its result for the model, as JSON text. Never throws:
             a bad call comes back as {"ok": false, "error": ...} for the model to correct. */
         juce::String run (const juce::String& tool, const juce::String& argumentsJson);
@@ -225,4 +231,8 @@ namespace Ai
         from the Sequence Library does (message thread, after the plan is applied). done gets the
         loads' errors, at once when there is nothing to load. */
     void loadVoices (AudioEngine&, const std::vector<SessionTools::VoiceLoad>&, std::function<void (const juce::String& errors)> done);
+
+    /** Makes a planned change to the Torqwave Synth a track plays (Decrypt's patch, or a table from
+        a clip), on the message thread; false when the track no longer plays it. */
+    bool applySynthChange (AudioEngine&, const SessionTools::SynthChange&);
 }

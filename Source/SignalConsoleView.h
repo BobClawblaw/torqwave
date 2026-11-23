@@ -2,6 +2,27 @@
 
 #include "SignalConsole.h"
 
+/** The console's drawing, shared by its views (Trace's scope and Decrypt's). */
+namespace SignalConsoleDrawing
+{
+    constexpr float tau = juce::MathConstants<float>::twoPi;
+
+    juce::Font mono (float size, bool bold = false);
+
+    /** Text in the monospaced face, placed by `where` round (x, y). */
+    void text (juce::Graphics&, const juce::String&, float x, float y, float size, juce::Colour,
+               juce::Justification where = juce::Justification::centredLeft, bool bold = false);
+
+    /** A sound's signature: a spoke for each band of its spectrum round a ring, longer where it is stronger. */
+    void drawSignature (juce::Graphics&, juce::Point<float> centre, float radius, const SignalConsole::Signature&, juce::Colour, float alpha, bool glow);
+
+    /** A chip: a label in a rounded box, tinted when it is on. */
+    void drawChip (juce::Graphics&, juce::Rectangle<float>, const juce::String& label, juce::Colour, bool filled, juce::Colour labelColour);
+
+    /** The angle of a part's sector's middle: oscillators at twelve o'clock, then clockwise. */
+    float sectorMiddle (int part);
+}
+
 /** The signal console's look, Trace: a scope round the node held. Five sectors, one for each part
     of a patch (oscillators, filter, envelopes, modulation, effects); each of the twelve nodes
     within reach sits in the sector of the part that changed most, as far from the middle as it is

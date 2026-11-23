@@ -2257,6 +2257,18 @@ bool AudioEngine::setInstrumentState (juce::uint32 trackId, const juce::MemoryBl
     return true;
 }
 
+bool AudioEngine::changeInstrument (juce::uint32 trackId, const std::function<bool (juce::AudioPluginInstance&)>& change)
+{
+    auto* plugin = trackEffects.getInstrument (trackId);
+
+    if (plugin == nullptr || ! change (*plugin))
+        return false;
+
+    trackEffects.refreshCopies (*plugin);
+    session.markEffectsChanged();
+    return true;
+}
+
 void AudioEngine::removeTrackPlugin (juce::uint32 trackId, int slot)
 {
     auto* plugin = trackEffects.getPlugin (trackId, slot);

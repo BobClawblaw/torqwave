@@ -6,7 +6,8 @@
     Completions with tools), meant for a model you run yourself, on this computer or your
     network: Ollama, LM Studio, llama.cpp, vLLM, TensorFold and the like.
 
-    Torqwave ships no model and sends no audio: requests carry text only. */
+    Torqwave ships no model. Requests carry text only, except one: with Let the model hear clips
+    on (off by default), Decrypt sends the note it is matching, once, for a description. */
 namespace Ai
 {
     /** A server kept in Settings > AI's list: a name to choose it by, its URL and the model used on it. */
@@ -28,6 +29,10 @@ namespace Ai
             setting saved before there was a list comes back as a list of that one server. */
         std::vector<Endpoint> endpoints;
         int current = 0;
+
+        /** Decrypt may send a clip's audio to the server, for a model that hears to describe it.
+            Off by default; with it off, nothing but text is ever sent. */
+        bool hearClips = false;
 
         /** Makes endpoint `index` the one in use. */
         void choose (int index);
@@ -84,6 +89,10 @@ namespace Ai
                     const std::function<void (const juce::String& text, bool reasoning)>& onText = {});
 
         void cancel();
+
+        /** Fields added to each chat request as they are, beside the model and messages (such as
+            chat_template_kwargs, which many local servers read). Empty to begin with. */
+        juce::NamedValueSet requestExtras;
 
         /** How long to wait for the server to connect or to send the next part of an answer. */
         static constexpr int timeoutMs = 180000;

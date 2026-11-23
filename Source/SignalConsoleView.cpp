@@ -3,18 +3,15 @@
 
 using namespace SignalConsole;
 
-namespace
+namespace SignalConsoleDrawing
 {
-    constexpr float tau = juce::MathConstants<float>::twoPi;
-    constexpr int hearMs = 600, jumpMs = 220;
-
-    juce::Font mono (float size, bool bold = false)
+    juce::Font mono (float size, bool bold)
     {
         return juce::FontOptions (juce::Font::getDefaultMonospacedFontName(), size, bold ? juce::Font::bold : juce::Font::plain);
     }
 
     void text (juce::Graphics& g, const juce::String& s, float x, float y, float size, juce::Colour colour,
-               juce::Justification where = juce::Justification::centredLeft, bool bold = false)
+               juce::Justification where, bool bold)
     {
         g.setColour (colour);
         g.setFont (mono (size, bold));
@@ -68,6 +65,15 @@ namespace
         g.drawText (label, r, juce::Justification::centred, false);
     }
 
+    float sectorMiddle (int part)   { return (float) part / (float) numParts * tau - tau * 0.25f; }
+}
+
+using namespace SignalConsoleDrawing;
+
+namespace
+{
+    constexpr int hearMs = 600, jumpMs = 220;
+
     const juce::StringArray& sectorLabels()
     {
         static const juce::StringArray n { "OSCILLATORS", "FILTER", "ENVELOPES", "MODULATION", "EFFECTS" };
@@ -79,8 +85,6 @@ namespace
         static const juce::StringArray n { "OSC", "FILTER", "ENV", "MOD", "FX" };
         return n;
     }
-
-    float sectorMiddle (int part)   { return (float) part / (float) numParts * tau - tau * 0.25f; }
 }
 
 //==============================================================================

@@ -10,7 +10,7 @@ Torqwave ships no model. It talks to a model server that speaks the OpenAI-compa
 
 The model has to support tool calling (function calling). Models that do it well are the larger open-weights instruct models; small ones tend to call the wrong edit or give up. It was built and measured with a 27-billion-parameter model (see the [changelog](../../CHANGELOG.md) for the results).
 
-What goes to the server: your sentence, the file's name, and the numbers Torqwave measures (lengths, levels, loudness, the plug-ins you have and their settings). **No audio is ever sent.** With a server on your own computer or network, nothing leaves it.
+What goes to the server: your sentence, the file's name, and the numbers Torqwave measures (lengths, levels, loudness, the plug-ins you have and their settings). **No audio is sent** unless you turn on **Let the model hear clips** in Settings > AI (off to begin with): then Torqwave Synth's [Decrypt](#decrypt-with-a-model) sends the one note it is matching, once, for a model that takes audio to describe. With a server on your own computer or network, nothing leaves it.
 
 ## Setting it up
 
@@ -51,6 +51,8 @@ It works on the audio file that's open and, in the multitrack view, on the sessi
 - **Plug-ins:** list the built-in effects and the plug-ins Torqwave found on your computer, read what the plug-in catalogue knows of them, add them to the effects rack, read and set their parameters, bypass, move and remove them, and render the rack into the audio.
 
 - **Sessions:** tracks, buses and folders, volume, pan, mute, solo, outputs and sends; moving, trimming, splitting and fading clips, their gain, and comping their takes; a clip's own pitch shift and effects ([clip effects](06-multitrack-sessions.md#clip-effects)); note clips with their notes; an instrument track's instrument, its saved presets and, for Torqwave's own instruments, their factory sounds; factory sequences and kits; drum maps (see [Factory sounds, sequences, kits and drum maps](#factory-sounds-sequences-kits-and-drum-maps)); a track's effects: adding, removing and reordering them, switching them off and changing their settings and the instrument's; automation of volume, pan and any effect's or instrument's parameter; freezing, unfreezing and bouncing tracks; markers and regions; the arranger's sections (adding them, moving, copying and deleting them with their time, making them whole bars longer or shorter, and the arrangement chain), so "double the chorus" or "make the intro 4 bars shorter" work; and the tempo. Apply makes the plan one undo step. Changes to a track's plug-ins (added, removed, moved, switched off or set) are made once it is applied and aren't part of that step, as when you change them by hand; freezes and bounces render after the rest of the plan, each its own undo step. An effect Ask Torq adds can be set in your next request, once it is on the track.
+
+- **Torqwave Synth:** on a track playing Torqwave Synth, Decrypt an audio clip of the session into a patch ("make the Bass track sound like the clip called Growl"), or make a clip into a Sampled table on one of its oscillators. See [Decrypt with a model](#decrypt-with-a-model).
 
 - **Sequences:** in the [Sequencer](07-instruments-and-midi.md#the-sequencer), writing the sequence's notes and controller lanes, and reviewing it with suggestions to apply (see [In the Sequencer](#in-the-sequencer)).
 
@@ -110,6 +112,39 @@ In the [Sequencer](07-instruments-and-midi.md#the-sequencer), click **Ask Torq ð
 **Apply** beside a suggestion applies it by itself; **Apply All** applies every one not yet applied, together. Each press is one undo step in the Sequencer, named "Ask Torq:" and the suggestion's title (or how many), so the Sequencer's **Undo** takes back each, an added effect included. A suggestion that changes a note you have since changed or deleted says so and changes nothing. **Discard**, or a new request, puts the suggestions away.
 
 **How good the music is depends on the model.** Torqwave checks that what the model writes fits the sequence; it can't tell whether it grooves. Larger models write better parts and more useful reviews. The AI eval set has four sequence requests (`--ai-eval-set sequence`) to try a model with.
+
+## Decrypt with a model
+
+Torqwave Synth's [Decrypt](07-instruments-and-midi.md#decrypt-a-patch-from-a-recording) finds a patch that plays like a recording of one note. Ask Torq takes part in two ways.
+
+**From a request.** Two tools work on a session's audio clips and a track playing Torqwave Synth:
+
+- **Decrypt from the session:** "give the Bass track the sound of the clip called Growl". Decrypt runs on the clip (its first note, up to 4 seconds) with the factory patches and the clip's own table, and the plan says what it found: "Give 'Bass''s Torqwave Synth the patch Decrypt found for clip 'Growl': Node 3F2A, lock 87 %, grown from Steel Rope". The model is told the lock, the pitch and what the patch grew from, and can say "tables only from the factory" or describe the sound in words for the search.
+- **A table from a clip:** "make the clip called Vowel a table on the Bass synth's oscillator 2". The clip's first 30 seconds, mixed to one channel, become a Sampled table on that oscillator, and the oscillator is set to play it.
+
+Both are refused, with the reason, for a track that isn't playing Torqwave Synth (or one whose instrument the same plan changes), a clip that isn't audio or is silent, and an oscillator other than 1 to 3. **Stop** stops a search under way, and nothing is changed. Like the plug-in changes above, the patch and the table are set once the plan is applied and aren't part of its undo step; to go back, choose the patch you had again, or undo by hand.
+
+**Helping the search.** With Ask Torq on, Decrypt in the synth's window (and the tool above) asks your model for help as it searches:
+
+- **Where to start:** the model is told the note's pitch, length and how its tone and loudness change, and any words you typed in the box under the scope, and names factory categories and patches to start from (and parts to leave alone, when your words call for it).
+- **Changes of structure:** as the search goes on, it is shown the best patch so far and where it differs from the recording, and proposes up to five changes the knob search makes badly: a different table, a filter type, a layer an octave up, a sub or noise.
+- **A name:** when you take a patch, it offers a name, a category, a line of description and names for the four macros. **Use** names the patch; **No** keeps the node address.
+
+Every change the model proposes is played and scored like any other candidate, with a few variations of its own, and kept only if it comes closer than the best so far; the panel lists what it tried and whether it was kept. Its starting points join the search as it goes, so they change its path: the result can end a little either side of the one without the model. A model that answers nonsense is ignored. Decrypt asks the model to answer without thinking first (`chat_template_kwargs`, which most local servers read; a server that refuses that field by name is asked again without it), since a thinking model took nearly two minutes over one answer. With a model, the search waits after its rounds for up to three more answers, 30 seconds at most in all, and drops an answer that takes longer.
+
+**Let the model hear clips** (Settings > AI, off to begin with) sends the note Decrypt is matching to the server once, as a 16 kHz WAV, and asks for a one-line description to start from. Only a model that takes audio can use it; one that doesn't answers with an error and the search goes on as before. Turn it on only for a server you trust with your audio.
+
+**What it did, measured.** The ten factory patches of Decrypt's own test, each recorded dry and decrypted without its own name, with and without a 27-billion-parameter model (Qwen3.8 27B, on a local server) told the patch's category in words:
+
+| | Without the model | With the model |
+|---|---|---|
+| Mean lock | 93.7 % | 93.7 % |
+| Better than without | | 5 of 10: Bare Shiver by 0.6 points (95.7 to 96.3 %), the others by 0.1 or less |
+| Worse than without | | 1 of 10, by 0.1 points (Abyss Reese 93.1 to 93.0 %) |
+| Proposals kept | | 13 of 143 |
+| Mean time | 2.0 s | 7.1 s |
+
+On these sounds the search finds the synth's own patches without help, so there was little for a model to add: take it as an experiment. Words that say what the search can't measure ("match the body, not the click") and sounds that are not this synth's are where it may help more; they were not measured.
 
 ## When it goes wrong
 
