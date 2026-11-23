@@ -1,5 +1,6 @@
 #include "Sampler.h"
 #include "AudioFileIO.h"
+#include "FadeShape.h"
 
 namespace Sampler
 {
@@ -272,6 +273,73 @@ SamplePtr loadSample (const juce::File& file, juce::AudioFormatManager& formats,
     return made;
 }
 
+ProgramPtr makeProgram (std::vector<Zone> zones, juce::uint32 generation)
+{
+    if ((int) zones.size() > maxZones)
+        zones.resize ((size_t) maxZones);
+
+    auto made = std::make_shared<Program>();
+    made->generation = generation;
+    made->prepared.resize (zones.size());
+
+    for (size_t i = 0; i < zones.size(); ++i)
+    {
+        const auto& z = zones[i];
+        auto& p = made->prepared[i];
+        const auto span = z.span();
+        p.first = span.getStart();
+        p.last = span.getEnd();
+        p.length = span.getLength();
+        p.reverse = z.reverse;
+        p.loopsInRelease = z.loopInRelease;
+
+        if (z.sample == nullptr || z.oneShot || z.loop == 0)
+            continue;
+
+        // The loop, held to the part, in frames along the way the part plays.
+        const auto from = juce::jlimit (p.first, p.last, z.loopStart);
+        const auto to = z.loopEnd < 0 ? p.last : juce::jlimit (from, p.last, z.loopEnd);
+        p.loopStart = z.reverse ? p.last - to : from - p.first;
+        p.loopEnd = z.reverse ? p.last - from : to - p.first;
+        const auto length = p.loopEnd - p.loopStart;
+
+        if (length < 4)
+            continue;
+
+        p.loop = z.loop;
+        p.period = z.loop == 2 ? 2 * (length - 1) : length;
+
+        if (z.loop != 1)
+            continue;
+
+        // A forward loop's turn: its last frames crossfaded into the frames before its start, as
+        // Crossfade Loop does, so going from its end back to its start carries on as the sound did.
+        p.fade = juce::jlimit ((juce::int64) 0, juce::jmin (p.loopStart, length / 2), (juce::int64) std::llround (z.crossfade * 0.001 * z.sample->rate));
+
+        if (p.fade <= 0)
+            continue;
+
+        const auto& audio = z.sample->audio;
+        p.turn.setSize (audio.getNumChannels(), (int) p.fade);
+
+        for (int ch = 0; ch < audio.getNumChannels(); ++ch)
+        {
+            const auto* x = audio.getReadPointer (ch);
+            auto at = [&] (juce::int64 along)    { return x[z.reverse ? p.last - 1 - along : p.first + along]; };
+
+            for (juce::int64 n = 0; n < p.fade; ++n)
+            {
+                const auto in = FadeShapes::level (FadeShape::equalPower, n + 1, p.fade);
+                const auto out = FadeShapes::level (FadeShape::equalPower, p.fade - 1 - n, p.fade);
+                p.turn.setSample (ch, (int) n, (float) (at (p.loopEnd - p.fade + n) * out + at (p.loopStart - p.fade + n) * in));
+            }
+        }
+    }
+
+    made->zones = std::move (zones);
+    return made;
+}
+
 float interpolate (const float* samples, int numSamples, double position, double ratio)
 {
     const auto& bank = banks()[(size_t) bankFor (ratio)];
@@ -298,9 +366,16 @@ struct Engine::Voice
 
     ProgramPtr program;
     const Zone* zone = nullptr;
-    juce::int64 first = 0, last = 0;     // the part of the sample it plays
+    const Program::Prepared* view = nullptr;
+    bool wrapped = false;                // its loop has gone round at least once
 
-    double position = 0.0, ratio = 1.0;
+    // Zones changed under it in a way that moves what it reads (a loop's points or crossfade, the
+    // part's ends): it goes over to them at a place both read alike, so nothing steps.
+    ProgramPtr nextProgram;
+    int nextZone = -1;
+    bool leaving = false;                // let go, it plays on past its loop to the end
+
+    double position = 0.0, ratio = 1.0;  // frames along the way it plays
     int bank = 0;
     juce::int64 played = 0;
     float glide = 0.0f;                  // semitones still to slide
@@ -343,6 +418,7 @@ void Engine::reset()
     {
         v.active = false;
         v.program = nullptr;
+        v.nextProgram = nullptr;
         v.zone = nullptr;
     }
 
@@ -367,20 +443,30 @@ void Engine::setProgram (ProgramPtr next)
         if (! v.active || v.zone == nullptr)
             continue;
 
-        const Zone* same = nullptr;
+        int same = -1;
 
-        if (next != nullptr)
-            for (auto& z : next->zones)
-                if (z.id == v.zone->id && z.sample == v.zone->sample)
-                    same = &z;
+        if (next != nullptr && next->prepared.size() == next->zones.size())
+            for (size_t i = 0; i < next->zones.size(); ++i)
+                if (next->zones[i].id == v.zone->id && next->zones[i].sample == v.zone->sample)
+                    same = (int) i;
 
-        if (same != nullptr)
+        const auto* to = same >= 0 ? &next->prepared[(size_t) same] : nullptr;
+        const auto& from = *v.view;
+
+        if (to != nullptr && to->reverse == from.reverse && to->first == from.first && to->last == from.last && to->loop == from.loop
+            && to->loopStart == from.loopStart && to->loopEnd == from.loopEnd && to->fade == from.fade)
         {
-            const auto span = same->span();
+            // What it reads is as it was: the zone's other settings are taken up at once.
             v.program = next;
-            v.zone = same;
-            v.first = span.getStart();
-            v.last = span.getEnd();
+            v.zone = &next->zones[(size_t) same];
+            v.view = to;
+            v.nextProgram = nullptr;
+            v.nextZone = -1;
+        }
+        else if (to != nullptr && to->reverse == from.reverse)
+        {
+            v.nextProgram = next;
+            v.nextZone = same;
         }
         else
         {
@@ -446,7 +532,6 @@ Engine::Voice* Engine::take()
 
 void Engine::start (Voice& v, const Zone& zone, int note, float velocity)
 {
-    const auto span = zone.span();
     const auto index = v.index;
     v = Voice();
     v.index = index;
@@ -457,9 +542,7 @@ void Engine::start (Voice& v, const Zone& zone, int note, float velocity)
     v.seed = hashed (counter * 2654435761u + (juce::uint32) note);
     v.program = program;
     v.zone = &zone;
-    v.first = span.getStart();
-    v.last = span.getEnd();
-    v.position = (double) v.first;
+    v.view = &program->prepared[(size_t) (&zone - program->zones.data())];
     v.glide = settings.glide > 0.0f && lastNote >= 0.0f ? lastNote - (float) note : 0.0f;
     v.amp.start();
     v.filterEnvelope.start();
@@ -480,7 +563,7 @@ void Engine::fade (Voice& v)
 
 void Engine::noteOn (int note, float velocity)
 {
-    if (program == nullptr)
+    if (program == nullptr || program->prepared.size() != program->zones.size())
         return;
 
     const auto key = juce::jlimit (0, 127, note);
@@ -493,8 +576,16 @@ void Engine::noteOn (int note, float velocity)
 
     for (auto& zone : program->zones)
         if (zone.plays (key, struck) && ! zone.span().isEmpty())
+        {
+            // A zone of a choke group cuts off the others of it, as a closed hat does an open one.
+            if (zone.choke != 0)
+                for (auto& v : voices)
+                    if (v.active && ! v.dying && v.zone->choke == zone.choke)
+                        fade (v);
+
             if (auto* v = take())
                 start (*v, zone, key, juce::jlimit (0.0f, 1.0f, velocity));
+        }
 
     lastNote = (float) key;
 }
@@ -502,7 +593,7 @@ void Engine::noteOn (int note, float velocity)
 void Engine::noteOff (int note)
 {
     for (auto& v : voices)
-        if (v.active && v.down && v.note == note)
+        if (v.active && v.down && v.note == note && ! v.zone->oneShot)
         {
             if (pedal)
             {
@@ -519,7 +610,7 @@ void Engine::noteOff (int note)
 void Engine::allNotesOff()
 {
     for (auto& v : voices)
-        if (v.active && (v.down || v.held))
+        if (v.active && (v.down || v.held) && ! v.zone->oneShot)
             letGo (v);
 }
 
@@ -644,10 +735,41 @@ void Engine::steer (Voice& v)
 void Engine::renderVoice (Voice& v, float* left, float* right, int count)
 {
     const auto& s = settings;
+
+    if (v.nextProgram != nullptr)
+    {
+        // Over to the changed zone where both read the sample as it lies: clear of either loop's
+        // turn and crossfade, the same frame of the sample under it.
+        const auto& from = *v.view;
+        const auto& to = v.nextProgram->prepared[(size_t) v.nextZone];
+        const auto moved = v.position + (double) (from.reverse ? to.last - from.last : from.first - to.first);
+        const auto half = banks()[(size_t) v.bank].half;
+
+        auto lies = [&] (const Program::Prepared& p, double position)
+        {
+            const auto first = (juce::int64) position - half + 1, last = first + 2 * half;
+            const auto loops = p.loop != 0 && ! v.leaving;
+            return position >= 0.0 && first >= (loops && v.wrapped ? p.loopStart : 0) && last <= (loops ? p.loopEnd - p.fade : p.length);
+        };
+
+        if (lies (from, v.position) && lies (to, moved))
+        {
+            v.position = moved;
+            v.program = std::move (v.nextProgram);
+            v.zone = &v.program->zones[(size_t) v.nextZone];
+            v.view = &to;
+            v.nextProgram = nullptr;
+            v.nextZone = -1;
+        }
+    }
     const auto& audio = v.zone->sample->audio;
+    const auto& view = *v.view;
     const auto stereo = audio.getNumChannels() > 1;
     const auto* sourceL = audio.getReadPointer (0);
     const auto* sourceR = audio.getReadPointer (stereo ? 1 : 0);
+    const auto* turnL = view.fade > 0 ? view.turn.getReadPointer (0) : nullptr;
+    const auto* turnR = view.fade > 0 ? view.turn.getReadPointer (view.turn.getNumChannels() > 1 ? 1 : 0) : nullptr;
+    const auto loopLength = view.loopEnd - view.loopStart;
 
     const auto rise = (float) (1.0 / juce::jmax (1.0, juce::jmax (minimumAttackSeconds, (double) s.attack * 0.001) * rate));
     const auto fall = fallOver (s.decay, rate), let = fallOver (s.release, rate);
@@ -670,29 +792,83 @@ void Engine::renderVoice (Voice& v, float* left, float* right, int count)
         const auto index = (juce::int64) v.position;
         const auto fraction = v.position - (double) index;
         const auto from = index - bank.half + 1;
+        auto looping = view.loop != 0 && ! v.leaving;
         float xl, xr;
 
-        if (from >= v.first && from + points <= v.last)
+        // Let go with a loop that ends with the note: once clear of the loop's turn (and on its way
+        // forward), it plays on to the end as if there were no loop.
+        if (looping && ! view.loopsInRelease && ! v.down && ! v.held
+            && from >= view.loopStart && from + points <= view.loopEnd - view.fade
+            && (view.loop == 1 || ! v.wrapped || v.position < (double) view.loopEnd))
         {
-            xl = readThrough (bank, sourceL + from, fraction);
-            xr = stereo ? readThrough (bank, sourceR + from, fraction) : xl;
+            v.leaving = true;
+            looping = false;
+        }
+
+        if (! view.reverse && from >= (looping && v.wrapped ? view.loopStart : 0)
+            && from + points <= (looping ? view.loopEnd - view.fade : view.length))
+        {
+            // Nothing in reach but the sample as it lies.
+            xl = readThrough (bank, sourceL + view.first + from, fraction);
+            xr = stereo ? readThrough (bank, sourceR + view.first + from, fraction) : xl;
         }
         else
         {
+            const auto loops = looping;
+
             for (int j = 0; j < points; ++j)
             {
-                const auto at = from + j;
-                const auto inside = at >= v.first && at < v.last;
-                windowL[(size_t) j] = inside ? sourceL[at] : 0.0f;
-                windowR[(size_t) j] = inside ? sourceR[at] : 0.0f;
+                auto at = from + j;
+                auto l = 0.0f, r = 0.0f;
+                auto found = false;
+
+                if (loops && (at >= view.loopEnd || (v.wrapped && at < view.loopStart)))
+                {
+                    // Past the loop's end, or before its start once it has gone round: where the loop puts it.
+                    auto along = (at - view.loopStart) % view.period;
+
+                    if (along < 0)
+                        along += view.period;
+
+                    at = view.loopStart + (along < loopLength ? along : view.period - along);
+                }
+
+                if (loops && view.fade > 0 && at >= view.loopEnd - view.fade && at < view.loopEnd)
+                {
+                    l = turnL[at - (view.loopEnd - view.fade)];
+                    r = turnR[at - (view.loopEnd - view.fade)];
+                    found = true;
+                }
+
+                if (! found && at >= 0 && at < view.length)
+                {
+                    const auto frame = view.reverse ? view.last - 1 - at : view.first + at;
+                    l = sourceL[frame];
+                    r = sourceR[frame];
+                }
+
+                windowL[(size_t) j] = l;
+                windowR[(size_t) j] = r;
             }
 
             xl = readThrough (bank, windowL.data(), fraction);
             xr = stereo ? readThrough (bank, windowR.data(), fraction) : xl;
         }
 
-        const auto ending = juce::jlimit (0.0f, 1.0f, (float) ((double) v.last - v.position) * v.endFade);
+        const auto goesRound = looping;
+        const auto ending = goesRound ? 1.0f : juce::jlimit (0.0f, 1.0f, (float) ((double) view.length - v.position) * v.endFade);
         v.position += v.ratio;
+
+        if (goesRound)
+        {
+            const auto turnsAt = view.loop == 1 ? view.loopEnd : view.loopStart + view.period;
+
+            while (v.position >= (double) turnsAt)
+            {
+                v.position -= (double) view.period;
+                v.wrapped = true;
+            }
+        }
 
         v.amp.tick (rise, fall, sustain, let);
         v.filterEnvelope.tick (filterRise, filterFall, filterSustain, filterLet);
@@ -732,8 +908,10 @@ void Engine::renderVoice (Voice& v, float* left, float* right, int count)
         if (v.dying)
             v.fadeGain -= fadeStep;
 
-        if (v.fadeGain <= 0.0f || v.amp.stage == Envelope::Stage::over || v.position >= (double) v.last)
+        if (v.fadeGain <= 0.0f || v.amp.stage == Envelope::Stage::over || (! goesRound && v.position >= (double) view.length))
         {
+            v.view = nullptr;
+            v.nextProgram = nullptr;
             v.active = false;
             v.program = nullptr;
             v.zone = nullptr;
@@ -943,9 +1121,7 @@ void SamplerProcessor::setZones (std::vector<Zone> zones)
             zoneIds = juce::jmax (zoneIds, z.id);
     }
 
-    auto next = std::make_shared<Program>();
-    next->zones = std::move (zones);
-    next->generation = ++generations;
+    auto next = makeProgram (std::move (zones), ++generations);
 
     const juce::SpinLock::ScopedLockType lock (programLock);
 
@@ -1043,6 +1219,14 @@ void SamplerProcessor::addToState (juce::XmlElement& xml) const
         e->setAttribute ("end", juce::String (z.end));
         e->setAttribute ("level", (double) z.level);
         e->setAttribute ("pan", (double) z.pan);
+        e->setAttribute ("reverse", z.reverse ? 1 : 0);
+        e->setAttribute ("oneShot", z.oneShot ? 1 : 0);
+        e->setAttribute ("loop", z.loop);
+        e->setAttribute ("loopStart", juce::String (z.loopStart));
+        e->setAttribute ("loopEnd", juce::String (z.loopEnd));
+        e->setAttribute ("crossfade", (double) z.crossfade);
+        e->setAttribute ("loopInRelease", z.loopInRelease ? 1 : 0);
+        e->setAttribute ("choke", z.choke);
     }
 }
 
@@ -1073,6 +1257,14 @@ void SamplerProcessor::readFromState (const juce::XmlElement& xml)
         z.end = e->getStringAttribute ("end", "-1").getLargeIntValue();
         z.level = (float) e->getDoubleAttribute ("level");
         z.pan = (float) e->getDoubleAttribute ("pan");
+        z.reverse = e->getIntAttribute ("reverse") != 0;
+        z.oneShot = e->getIntAttribute ("oneShot") != 0;
+        z.loop = juce::jlimit (0, 2, e->getIntAttribute ("loop"));
+        z.loopStart = e->getStringAttribute ("loopStart").getLargeIntValue();
+        z.loopEnd = e->getStringAttribute ("loopEnd", "-1").getLargeIntValue();
+        z.crossfade = (float) e->getDoubleAttribute ("crossfade");
+        z.loopInRelease = e->getIntAttribute ("loopInRelease", 1) != 0;
+        z.choke = e->getIntAttribute ("choke");
 
         if (const auto path = e->getStringAttribute ("file"); path.isNotEmpty())
         {

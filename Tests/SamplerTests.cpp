@@ -314,6 +314,363 @@ namespace
                    + juce::String (worstRest, 1) + " dB beside it at worst (" + restAt + ") and keeps its level within " + juce::String (worstGain, 3)
                    + " dB; played up, a tone the output can't hold comes through at " + juce::String (worstLeak, 1) + " dB at worst (" + leakAt + ")");
     }
+
+    /** How strong the tone at hz is in channel 0 over a stretch: its amplitude, by least squares. */
+    double toneAt (const juce::AudioBuffer<float>& audio, double fromSeconds, double seconds, double hz)
+    {
+        const auto* x = audio.getReadPointer (0) + (int) (fromSeconds * rate);
+        const auto n = (int) (seconds * rate);
+        double c = 0.0, s = 0.0;
+
+        for (int i = 0; i < n; ++i)
+        {
+            c += x[i] * std::cos (twoPi * hz * i / rate);
+            s += x[i] * std::sin (twoPi * hz * i / rate);
+        }
+
+        return 2.0 * std::sqrt (c * c + s * s) / n;
+    }
+
+    Sampler::Zone zoneOf (const juce::AudioBuffer<float>& audio, int root, const juce::String& name = "test")
+    {
+        Sampler::Zone z;
+        z.sample = Sampler::makeSample (audio, rate, name);
+        z.root = root;
+        return z;
+    }
+
+    /** Zones, layers, loops, reverse, one-shots and choke groups. */
+    void testZones (Processor& sampler)
+    {
+        // Each key and velocity plays the zones that cover it, and only those; zones that overlap play together.
+        {
+            plain (sampler);
+            auto low = zoneOf (sine (200.0, 1.0), 48);
+            low.highKey = 59;
+            auto soft = zoneOf (sine (500.0, 1.0), 72);
+            soft.lowKey = 60;
+            soft.highVelocity = 79;
+            auto hard = zoneOf (sine (800.0, 1.0), 72);
+            hard.lowKey = 60;
+            hard.lowVelocity = 80;
+            auto layer = zoneOf (sine (1300.0, 1.0), 72);
+            layer.lowKey = 60;
+            layer.level = -6.0f;
+            sampler.setZones ({ low, soft, hard, layer });
+
+            auto heard = [&] (int key, float velocity)
+            {
+                const auto out = play (sampler, { on (0.0, key, velocity) }, 0.5);
+                juce::String which;
+
+                for (const auto hz : { 200.0, 500.0, 800.0, 1300.0 })
+                    which << (toneAt (out, 0.1, 0.3, hz) > 0.05 ? "1" : "0");
+
+                return which;
+            };
+
+            const auto lowKey = heard (48, 1.0f), softKey = heard (72, 0.5f), hardKey = heard (72, 1.0f), edge = heard (72, 79.0f / 127.0f), over = heard (72, 80.0f / 127.0f);
+            const auto layered = play (sampler, { on (0.0, 72, 1.0f) }, 0.5);
+            const auto layerDb = db (toneAt (layered, 0.1, 0.3, 1300.0) / toneAt (layered, 0.1, 0.3, 800.0));
+
+            check (lowKey == "1000" && softKey == "0101" && hardKey == "0011" && edge == "0101" && over == "0011" && std::abs (layerDb + 6.0) < 0.1 && sampler.getNumSounding() == 2,
+                   "sampler: a key below C3 plays the low zone alone; above it a soft note plays the soft zone and a hard one the hard zone (velocity 79 the one, 80 the other), each with the layer over them, "
+                       + juce::String (-layerDb, 1) + " dB down as its level says");
+        }
+
+        // A loop: the sound goes on for as long as the key is down, with no step where it turns.
+        {
+            plain (sampler);
+            set (sampler, "release", 20.0f);
+            const auto tone = sine (220.0, 1.0);          // 2,400 frames are eleven of its cycles
+            auto z = zoneOf (tone, 57);
+            sampler.setZones ({ z });
+            const auto once = play (sampler, { on (0.0, 57) }, 2.0);
+
+            z.loop = 1;
+            z.loopStart = 9600;
+            z.loopEnd = 12000;
+            sampler.setZones ({ z });
+            const auto looped = play (sampler, { on (0.0, 57), off (10.0, 57) }, 10.5);
+            auto apart = 0.0f;
+
+            for (int i = 1000; i < (int) (10.0 * rate); ++i)
+                apart = juce::jmax (apart, std::abs (looped.getSample (0, i) - 0.5f * (float) std::sin (twoPi * 220.0 * i / rate)));
+
+            // A loop that doesn't meet itself: a step at the turn, which the crossfade takes away.
+            z.loopEnd = 12100;
+            sampler.setZones ({ z });
+            const auto stepped = ClickCheck::worst (play (sampler, { on (0.0, 57) }, 3.0), rate, 0.01f);
+            z.crossfade = 20.0f;
+            sampler.setZones ({ z });
+            const auto faded = play (sampler, { on (0.0, 57) }, 10.0);
+            const auto crossfaded = ClickCheck::worst (faded, rate, 0.01f);
+
+            // Forward and back: it turns round at each end.
+            z.crossfade = 0.0f;
+            z.loop = 2;
+            sampler.setZones ({ z });
+            const auto backAndForth = play (sampler, { on (0.0, 57) }, 10.0);
+            const auto turned = ClickCheck::worst (backAndForth, rate, 0.01f);
+
+            check (peak (once, 1.01, 0.9) == 0.0f && apart < 1.0e-3f && peak (looped, 10.2, 0.25) == 0.0f
+                       && stepped.ratio > 4.0f && crossfaded.ratio < 4.0f && rms (faded, 9.0, 0.9) > 0.2f
+                       && turned.ratio < 4.0f && rms (backAndForth, 9.0, 0.9) > 0.2f,
+                   "sampler: a one-second tone ends after its second; looped over eleven of its cycles it is the tone for ten seconds, within " + juce::String (db (apart), 1)
+                       + " dB, and ends when let go; a loop that doesn't meet itself steps at the turn (" + juce::String (stepped.ratio, 1) + " times its surroundings), and with a 20 ms crossfade doesn't ("
+                       + juce::String (crossfaded.ratio, 2) + "); forward and back turns without a step (" + juce::String (turned.ratio, 2) + ")");
+        }
+
+        // The crossfade is the one Crossfade Loop makes: the loop's end fading out as what comes before its start fades in.
+        {
+            auto z = zoneOf (noise (1.0, 3), 60);
+            z.loop = 1;
+            z.loopStart = 20000;
+            z.loopEnd = 30000;
+            z.crossfade = 10.0f;
+            const auto program = Sampler::makeProgram ({ z });
+            const auto& p = program->prepared[0];
+            const auto* x = z.sample->audio.getReadPointer (0);
+            auto worst = 0.0f;
+
+            for (int n = 0; n < (int) p.fade; ++n)
+            {
+                const auto in = std::sin (0.5 * juce::MathConstants<double>::pi * (n + 1) / (double) p.fade);
+                const auto out = std::cos (0.5 * juce::MathConstants<double>::pi * (n + 1) / (double) p.fade);
+                worst = juce::jmax (worst, std::abs (p.turn.getSample (0, n) - (float) (x[30000 - 480 + n] * out + x[20000 - 480 + n] * in)));
+            }
+
+            z.crossfade = 500.0f;
+            const auto longest = Sampler::makeProgram ({ z })->prepared[0].fade;
+            z.loopStart = 100;
+            const auto held = Sampler::makeProgram ({ z })->prepared[0].fade;
+
+            check (p.fade == 480 && worst < 1.0e-6f && juce::exactlyEqual (p.turn.getSample (0, 479), x[19999]) && longest == 5000 && held == 100,
+                   "sampler: a 10 ms crossfade is 480 frames of the loop's end fading out, equal power, under the frames before its start fading in, ending on the frame before the start; "
+                   "it is held to half the loop and to the audio there is before the start");
+        }
+
+        // Reversed, a sample is the sample backwards.
+        {
+            plain (sampler);
+            auto z = zoneOf (noise (0.5, 5), 60);
+            sampler.setZones ({ z });
+            const auto forwards = play (sampler, { on (0.0, 60) }, 0.6);
+            z.reverse = true;
+            sampler.setZones ({ z });
+            const auto backwards = play (sampler, { on (0.0, 60) }, 0.6);
+            const auto frames = (int) (0.5 * rate);
+            auto apart = 0.0f;
+
+            for (int i = 200; i < frames - 200; ++i)
+                apart = juce::jmax (apart, std::abs (backwards.getSample (0, i) - forwards.getSample (0, frames - 1 - i)));
+
+            // And its loop is the same stretch of the sample, played the other way.
+            auto tone = zoneOf (sine (220.0, 1.0), 57);
+            tone.reverse = true;
+            tone.loop = 1;
+            tone.loopStart = 9600;
+            tone.loopEnd = 12000;
+            sampler.setZones ({ tone });
+            const auto looped = play (sampler, { on (0.0, 57) }, 5.0);
+
+            check (apart < 1.0e-4f && ClickCheck::worst (looped, rate, 0.01f).ratio < 4.0f && rms (looped, 4.0, 0.9) > 0.3f,
+                   "sampler: half a second of noise reversed is the forward render backwards, within " + juce::String (db (apart), 1) + " dB; a reversed tone loops over the same eleven cycles without a step");
+        }
+
+        // One-shot plays to its end whatever the note's length; held, a note ends when let go. A loop can end with the note.
+        {
+            plain (sampler);
+            set (sampler, "release", 30.0f);
+            auto z = zoneOf (sine (220.0, 1.0), 57);
+            sampler.setZones ({ z });
+            const auto held = play (sampler, { on (0.0, 57), off (0.1, 57) }, 1.5);
+            z.oneShot = true;
+            z.loop = 1;            // a one-shot never loops
+            z.loopStart = 9600;
+            z.loopEnd = 12000;
+            sampler.setZones ({ z });
+            const auto shot = play (sampler, { on (0.0, 57), off (0.1, 57), { 0.2, juce::MidiMessage::allNotesOff (1) } }, 1.5);
+
+            z.oneShot = false;
+            z.loopInRelease = false;
+            sampler.setZones ({ z });
+            set (sampler, "release", 8000.0f);
+            const auto leaves = play (sampler, { on (0.0, 57), off (2.0, 57) }, 4.0);
+            z.loopInRelease = true;
+            sampler.setZones ({ z });
+            const auto stays = play (sampler, { on (0.0, 57), off (2.0, 57) }, 4.0);
+
+            check (peak (held, 0.3, 1.0) == 0.0f && rms (shot, 0.8, 0.15) > 0.3f && peak (shot, 1.01, 0.4) == 0.0f
+                       && rms (leaves, 2.3, 0.3) > 0.05f && peak (leaves, 2.85, 1.0) == 0.0f && ClickCheck::worst (leaves, rate, 0.01f).ratio < 4.0f
+                       && rms (stays, 3.5, 0.4) > 0.01f,
+                   "sampler: a held note ends when let go; a one-shot plays its whole second through note-off and All Notes Off, and doesn't loop; "
+                   "with the loop set to end with the note, a note let go plays on from the loop to the sample's end, and otherwise the loop goes on under the release");
+        }
+
+        // A choke group: one zone cuts the others of its group off, and leaves the rest.
+        {
+            plain (sampler);
+            auto open = zoneOf (sine (700.0, 2.0), 46);
+            open.lowKey = open.highKey = 46;
+            open.oneShot = true;
+            open.choke = 1;
+            auto closed = zoneOf (sine (1100.0, 0.2), 42);
+            closed.lowKey = closed.highKey = 42;
+            closed.oneShot = true;
+            closed.choke = 1;
+            auto other = zoneOf (sine (300.0, 2.0), 36);
+            other.lowKey = other.highKey = 36;
+            other.oneShot = true;
+            sampler.setZones ({ open, closed, other });
+            const auto out = play (sampler, { on (0.0, 46), on (0.0, 36), on (0.5, 42) }, 1.5);
+
+            check (toneAt (out, 0.2, 0.25, 700.0) > 0.4 && toneAt (out, 0.51, 0.3, 700.0) < 0.002 && toneAt (out, 0.8, 0.5, 300.0) > 0.4
+                       && ClickCheck::worst (out, rate, 0.01f, { 0, (int) (0.5 * rate) }).ratio < 4.0f,
+                   "sampler: an open hat's zone is cut off by the closed hat's of the same group, fading in 4 ms without a click, while a zone outside the group plays on");
+        }
+
+        // A loop's points and crossfade changed while its note sounds.
+        {
+            plain (sampler);
+            juce::AudioBuffer<float> rich (1, (int) rate);
+
+            for (int i = 0; i < rich.getNumSamples(); ++i)
+                rich.setSample (0, i, 0.3f * (float) (std::sin (twoPi * 110.0 * i / rate) + 0.5 * std::sin (twoPi * 220.0 * i / rate) + 0.3 * std::sin (twoPi * 330.0 * i / rate)));
+
+            auto z = zoneOf (rich, 45);
+            z.loop = 1;
+            z.loopStart = 9600;
+            z.loopEnd = 9600 + 4900;      // not a whole number of its cycles: only the crossfade makes the turn smooth
+            z.crossfade = 5.0f;
+            sampler.setZones ({ z });
+            z = sampler.getZones()[0];
+            sampler.prepareToPlay (rate, 256);
+            juce::AudioBuffer<float> out (2, 560 * 256), block (2, 256);   // just under three seconds, in whole blocks
+
+            for (int at = 0, step = 0; at + 256 <= out.getNumSamples(); at += 256, ++step)
+            {
+                juce::MidiBuffer midi;
+
+                if (at == 0)
+                    midi.addEvent (juce::MidiMessage::noteOn (1, 45, 1.0f), 0);
+
+                if (step % 40 == 39)
+                {
+                    z.crossfade = 5.0f + (float) (step % 7) * 6.0f;
+                    sampler.setZones ({ z });
+                }
+
+                sampler.processBlock (block, midi);
+                out.copyFrom (0, at, block, 0, 0, 256);
+                out.copyFrom (1, at, block, 1, 0, 256);
+            }
+
+            const auto click = ClickCheck::worst (out, rate, 0.01f);
+            check (click.ratio < 4.0f && sampler.getNumSounding() == 1 && rms (out, 2.5, 0.4) > 0.1f,
+                   "sampler: a loop's crossfade changed fourteen times under a held note leaves it sounding, the worst jump " + juce::String (click.ratio, 2) + " times its surroundings");
+        }
+
+        // The same twice and at any block size, with loops, a reversed zone, a one-shot and a choke group.
+        {
+            plain (sampler);
+            set (sampler, "level", -12.0f);
+            set (sampler, "release", 200.0f);
+            set (sampler, "lfoPitch", 20.0f);
+            auto a = zoneOf (sine (220.0, 1.0), 57);
+            a.highKey = 59;
+            a.loop = 1;
+            a.loopStart = 9000;
+            a.loopEnd = 12345;
+            a.crossfade = 15.0f;
+            auto b = zoneOf (noise (0.5, 9), 64);
+            b.lowKey = 60;
+            b.highKey = 71;
+            b.reverse = true;
+            b.loop = 2;
+            b.loopStart = 4000;
+            b.loopEnd = 9000;
+            auto c = zoneOf (sine (500.0, 0.7), 76);
+            c.lowKey = 72;
+            c.highKey = 80;
+            c.oneShot = true;
+            c.choke = 2;
+            auto d = zoneOf (sine (900.0, 0.3), 84);
+            d.lowKey = 81;
+            d.choke = 2;
+            d.loopInRelease = false;
+            d.loop = 1;
+            d.loopStart = 2000;
+            d.loopEnd = 6000;
+            sampler.setZones ({ a, b, c, d });
+
+            std::vector<Event> part;
+
+            for (int i = 0; i < 30; ++i)
+            {
+                const auto key = 48 + (i * 11) % 40;
+                part.push_back (on (0.07 * i, key, 0.5f + 0.01f * (float) i));
+                part.push_back (off (0.07 * i + 0.3, key));
+            }
+
+            std::sort (part.begin(), part.end(), [] (const Event& x, const Event& y) { return x.when < y.when; });
+            const auto first = play (sampler, part, 3.5, 512);
+            auto alike = same (first, play (sampler, part, 3.5, 512));
+
+            for (const auto size : { 1, 7, 64, 333, 4096 })
+                alike = alike && same (first, play (sampler, part, 3.5, size));
+
+            check (alike && first.getMagnitude (0, first.getNumSamples()) > 0.05f,
+                   "sampler: a part over a crossfaded loop, a reversed zone looping forward and back, a one-shot and a choke group renders the same twice and in blocks of 1, 7, 64, 333, 512 and 4,096 samples, bit for bit");
+        }
+
+        // As many as 128 zones, and every zone setting through the state.
+        {
+            const auto folder = juce::File::createTempFile ("samplerzones");
+            folder.createDirectory();
+            const auto file = writeWav (folder.getChildFile ("Zone.wav"), sine (330.0, 0.5), rate);
+            juce::AudioFormatManager formats;
+            formats.registerBasicFormats();
+            juce::String error;
+            const auto sample = Sampler::loadSample (file, formats, error);
+            std::vector<Sampler::Zone> many;
+
+            for (int i = 0; i < 130; ++i)
+            {
+                Sampler::Zone z;
+                z.sample = sample;
+                z.file = file;
+                z.root = z.lowKey = z.highKey = i % 128;
+                z.reverse = i % 2 == 1;
+                z.oneShot = i % 3 == 1;
+                z.loop = i % 3;
+                z.loopStart = 100 + i;
+                z.loopEnd = 20000 - i;
+                z.crossfade = (float) i * 0.5f;
+                z.loopInRelease = i % 4 != 0;
+                z.choke = i % 5;
+                many.push_back (z);
+            }
+
+            sampler.setZones (many);
+            const auto kept = sampler.getZones();
+            juce::MemoryBlock state;
+            sampler.getStateInformation (state);
+            Processor other;
+            other.setStateInformation (state.getData(), (int) state.getSize());
+            const auto back = other.getZones();
+            auto alike = kept.size() == back.size();
+
+            for (size_t i = 0; alike && i < kept.size(); ++i)
+                alike = back[i].sample != nullptr && back[i].id == kept[i].id && back[i].root == kept[i].root && back[i].reverse == kept[i].reverse && back[i].oneShot == kept[i].oneShot
+                        && back[i].loop == kept[i].loop && back[i].loopStart == kept[i].loopStart && back[i].loopEnd == kept[i].loopEnd
+                        && juce::exactlyEqual (back[i].crossfade, kept[i].crossfade) && back[i].loopInRelease == kept[i].loopInRelease && back[i].choke == kept[i].choke;
+
+            check (error.isEmpty() && kept.size() == 128 && alike,
+                   "sampler: of 130 zones given it keeps 128; each comes back from its state with its reverse, one-shot, loop, loop points, crossfade, release and choke settings");
+            folder.deleteRecursively();
+        }
+    }
 }
 
 void runSamplerTests (AudioEngine& engine)
@@ -473,11 +830,10 @@ void runSamplerTests (AudioEngine& engine)
     {
         Sampler::Engine bare;
         bare.prepare (rate);
-        auto program = std::make_shared<Sampler::Program>();
         Sampler::Zone z;
         z.sample = Sampler::makeSample (steady (5.0), rate, "steady");
         z.id = 1;
-        program->zones.push_back (z);
+        const auto program = Sampler::makeProgram ({ z });
         bare.setProgram (program);
 
         auto dips = [&] (Sampler::Settings s, double bpm)
@@ -839,6 +1195,8 @@ void runSamplerTests (AudioEngine& engine)
                "sampler: a zone's level changed while its note sounds is taken up by the note (" + juce::String (quieter, 1)
                    + " dB) without a click; the zones taken away, the note fades out");
     }
+
+    testZones (*sampler);
 
     defaults (*sampler);
     sampler->setZones ({});

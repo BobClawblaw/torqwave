@@ -16,7 +16,7 @@
     after prepare. */
 namespace Sampler
 {
-    constexpr int numVoices = 32, numFadingVoices = 8;
+    constexpr int numVoices = 32, numFadingVoices = 8, maxZones = 128;
     constexpr int controlInterval = 16;
     constexpr double fadeSeconds = 0.004, minimumAttackSeconds = 0.00025, endFadeSeconds = 0.0005;
 
@@ -54,6 +54,14 @@ namespace Sampler
         float level = 0.0f;            // dB, -48 to 12
         float pan = 0.0f;              // -100 (left) to 100 (right)
 
+        bool reverse = false;          // the part played backwards
+        bool oneShot = false;          // plays to its end whatever the note's length (and never loops)
+        int loop = 0;                  // 0 none, 1 forward, 2 forward and back
+        juce::int64 loopStart = 0, loopEnd = -1;   // in the sample's frames; an end below 0 is the part's
+        float crossfade = 0.0f;        // ms of the loop's end crossfaded into what comes before its start (forward loops)
+        bool loopInRelease = true;     // the loop goes on while the note dies away; off, a note let go plays on to the end
+        int choke = 0;                 // a group whose zones cut each other off; 0, none
+
         /** The part played, held to the sample: [first, last). Empty with no sample. */
         juce::Range<juce::int64> span() const;
 
@@ -66,11 +74,28 @@ namespace Sampler
     /** The zones a sampler plays, as the voices read them: never changed once made. */
     struct Program
     {
+        /** A zone as a voice reads it. A voice counts frames along the way it plays (from 0 at the
+            part's start, or at its end when reversed), and the loop is in those. */
+        struct Prepared
+        {
+            juce::int64 first = 0, last = 0, length = 0;   // the part, in the sample's frames
+            bool reverse = false, loopsInRelease = true;
+            int loop = 0;                                  // as the zone's, 0 when it can't loop
+            juce::int64 loopStart = 0, loopEnd = 0, period = 0, fade = 0;
+            juce::AudioBuffer<float> turn;                 // the last `fade` frames of a forward loop, crossfaded
+        };
+
         std::vector<Zone> zones;
+        std::vector<Prepared> prepared;                    // one for each zone
         juce::uint32 generation = 0;
     };
 
     using ProgramPtr = std::shared_ptr<const Program>;
+
+    /** The zones made ready to play (the first maxZones of them): each loop held to its part, and
+        a forward loop's crossfade worked out, with the same equal-power fade as Crossfade Loop,
+        into a buffer of its own, so the sample is never changed. */
+    ProgramPtr makeProgram (std::vector<Zone>, juce::uint32 generation = 0);
 
     enum class FilterType { off, lowPass12, lowPass24, bandPass, highPass };
     juce::StringArray filterNames();
