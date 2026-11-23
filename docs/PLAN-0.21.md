@@ -206,7 +206,7 @@ Built as planned, except that the eval set has no sampler sentences yet, and no 
 
 ## Step 9: factory content (M, done)
 
-Built: eleven presets over 26 samples, 8.2 MB, in `Data/Samples`, written by `TorqwaveTests --sampler-content`.
+Built: eleven presets over 26 samples, 8.6 MB, in `Data/Samples`, written by `TorqwaveTests --sampler-content`.
 
 Small, and said to be. Every sample is rendered by Torqwave from its own instruments, by a tool in the repository, so the set can be made again and nothing in it is anyone else's.
 
