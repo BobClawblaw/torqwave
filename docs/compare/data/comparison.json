@@ -1,0 +1,604 @@
+{
+ "schema": 1,
+ "about": "Torqwave against the products that are real alternatives for what it does. Definitions live here; the cells for each Torqwave release live in snapshots/<version>.json.",
+ "values": {
+  "yes": "Built into the product at the edition assessed, and documented.",
+  "partial": "A limited form; the note says how.",
+  "no": "The product's own documentation shows it absent, or its scope excludes it and its documentation has no mention.",
+  "not confirmed": "No first-party page was found that settles it. Counted as neither yes nor no.",
+  "info": "A fact, not a yes or no (price, licence, dates). Never counted."
+ },
+ "method": [
+  "Every competitor cell was read from the product's own documentation, manual, feature or pricing page on the date in its snapshot, and keeps the page's address and a short quotation or a note of what was checked. Where no first-party page settled a cell it says 'not confirmed'.",
+  "Torqwave's cells come from this repository's README, guide, roadmap and changelog at the commit the snapshot names.",
+  "Only what ships in the product counts. Third-party plug-ins do not, and neither do separate downloads unless the note says so (those are 'partial').",
+  "Each product is assessed at the edition its snapshot names, usually the largest, so a cheaper edition may have less than its column shows.",
+  "Coverage of an area is a count: how many of the area's rows are yes, and how many partial. Rows are not weighted, and no single score or rank is computed across areas, because any weighting would be arbitrary.",
+  "The rows were chosen for what Torqwave aims at (sound design, writing music, work to picture, game audio), so they favour a product that is both an editor and a DAW. A product built for one job covers few rows outside it by design, which says nothing about how well it does that job.",
+  "A yes says a feature exists. It says nothing of its depth, its quality or how long it has been in use. Torqwave's features are new and mostly tested by its own suite, not by years of users; the 'maturity' facts under the matrix are there to keep that in view."
+ ],
+ "groups": [
+  {
+   "id": "editing",
+   "title": "Editing a file",
+   "rows": [
+    {
+     "id": "wave_editor",
+     "title": "Edits a single audio file",
+     "definition": "A destructive, sample-level editor for one audio file: open it, cut and paste, save it back.",
+     "graphics": [
+      "editors",
+      "daws"
+     ]
+    },
+    {
+     "id": "spectrogram_view",
+     "title": "Spectrogram view",
+     "definition": "A spectrogram display of a file or clip.",
+     "graphics": []
+    },
+    {
+     "id": "spectral_selection",
+     "title": "Spectral selection and editing",
+     "definition": "Selecting and editing a region in time and frequency (box, lasso or brush) in the spectrogram.",
+     "graphics": [
+      "editors",
+      "daws"
+     ]
+    },
+    {
+     "id": "spectral_heal",
+     "title": "Spectral heal",
+     "definition": "Removing a sound in the spectrogram by filling from its surroundings.",
+     "graphics": [
+      "editors"
+     ]
+    },
+    {
+     "id": "batch_processing",
+     "title": "Batch processing",
+     "definition": "Putting many files through the same steps unattended.",
+     "graphics": [
+      "editors"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "repair",
+   "title": "Repair",
+   "rows": [
+    {
+     "id": "noise_reduction",
+     "title": "Noise reduction",
+     "definition": "Broadband noise reduction built in.",
+     "graphics": [
+      "editors"
+     ]
+    },
+    {
+     "id": "click_hum_declip",
+     "title": "Click, hum and clipping repair",
+     "definition": "Click or pop removal, hum removal and clipped-peak repair, all built in; partial if only one or two.",
+     "graphics": [
+      "editors"
+     ]
+    },
+    {
+     "id": "dereverb",
+     "title": "Reverb reduction",
+     "definition": "Reverb reduction built in.",
+     "graphics": [
+      "editors"
+     ]
+    },
+    {
+     "id": "dialogue_isolation",
+     "title": "Dialogue isolation",
+     "definition": "Separating speech from background noise, built in.",
+     "graphics": [
+      "editors"
+     ]
+    },
+    {
+     "id": "stem_separation",
+     "title": "Stem separation",
+     "definition": "Splitting a music mix into stems (vocals, drums, bass, other), built in.",
+     "graphics": [
+      "editors",
+      "daws"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "loudness_analysis",
+   "title": "Loudness and analysis",
+   "rows": [
+    {
+     "id": "loudness_lufs",
+     "title": "Loudness (LUFS) measure and match",
+     "definition": "Measuring integrated loudness (EBU R128 / ITU-R BS.1770) and matching a LUFS target, built in.",
+     "graphics": [
+      "editors",
+      "daws"
+     ]
+    },
+    {
+     "id": "true_peak_limiter",
+     "title": "True-peak limiting or metering",
+     "definition": "A true-peak limiter or true-peak meter built in.",
+     "graphics": []
+    },
+    {
+     "id": "delivery_check",
+     "title": "Delivery-spec check with a report",
+     "definition": "Checking or conforming a file against a named delivery spec (EBU R128, ATSC A/85, streaming targets) with a report.",
+     "graphics": [
+      "editors"
+     ]
+    },
+    {
+     "id": "analyzers",
+     "title": "Spectrum analyzer and phase meter",
+     "definition": "A spectrum analyzer and a stereo phase or correlation meter built in; partial if only one.",
+     "graphics": []
+    },
+    {
+     "id": "pitch_correction",
+     "title": "Pitch correction",
+     "definition": "Pitch correction of a voice or solo line built in, automatic or by dragging notes.",
+     "graphics": []
+    }
+   ]
+  },
+  {
+   "id": "multitrack",
+   "title": "Multitrack and mixing",
+   "rows": [
+    {
+     "id": "multitrack",
+     "title": "Multitrack sessions",
+     "definition": "Non-destructive multitrack sessions with audio clips on tracks.",
+     "graphics": [
+      "editors",
+      "daws"
+     ]
+    },
+    {
+     "id": "buses_sends",
+     "title": "Buses and sends",
+     "definition": "Buses and sends in a mixer.",
+     "graphics": []
+    },
+    {
+     "id": "automation",
+     "title": "Automation",
+     "definition": "Automation of volume, pan and effect or plug-in parameters.",
+     "graphics": []
+    },
+    {
+     "id": "comping",
+     "title": "Takes and comping",
+     "definition": "Recording takes and comping between them.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "tempo_follow_audio",
+     "title": "Audio follows the tempo",
+     "definition": "Audio clips that stretch to follow the project tempo.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "surround",
+     "title": "Surround mixing (5.1 or more)",
+     "definition": "5.1 or 7.1 surround mixing; yes also when the product mixes Dolby Atmos.",
+     "graphics": []
+    },
+    {
+     "id": "atmos",
+     "title": "Dolby Atmos mixing",
+     "definition": "Dolby Atmos (object-based) mixing built in.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "clip_launching",
+     "title": "Clip or scene launching",
+     "definition": "A grid for launching clips, patterns or scenes live.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "ara2",
+     "title": "ARA 2 plug-ins",
+     "definition": "ARA 2 plug-in support.",
+     "graphics": [
+      "daws"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "midi",
+   "title": "MIDI and writing music",
+   "rows": [
+    {
+     "id": "piano_roll",
+     "title": "Piano roll and MIDI recording",
+     "definition": "MIDI note clips with a piano roll and MIDI recording.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "drum_grid",
+     "title": "Step or drum grid",
+     "definition": "A step sequencer or drum grid for patterns.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "factory_patterns",
+     "title": "Factory MIDI patterns",
+     "definition": "Factory MIDI patterns, sequences or clips shipped with the product; the number when a first-party page states one.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "midi_out_surfaces",
+     "title": "MIDI out and control surfaces",
+     "definition": "MIDI output to hardware, and control-surface or MIDI-learn support.",
+     "graphics": []
+    },
+    {
+     "id": "audio_to_midi",
+     "title": "Audio to MIDI",
+     "definition": "Converting audio to MIDI notes, built in.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "notation",
+     "title": "Notation editor",
+     "definition": "A score or notation editor.",
+     "graphics": []
+    }
+   ]
+  },
+  {
+   "id": "instruments",
+   "title": "Built-in instruments",
+   "rows": [
+    {
+     "id": "builtin_synth",
+     "title": "Built-in synthesizer",
+     "definition": "At least one built-in synthesizer instrument.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "wavetable_user_tables",
+     "title": "Wavetable from your own audio",
+     "definition": "A built-in wavetable synth that makes a wavetable from the user's own audio.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "builtin_drums",
+     "title": "Built-in drum instrument",
+     "definition": "A built-in drum machine or drum sampler instrument.",
+     "graphics": []
+    },
+    {
+     "id": "builtin_sampler",
+     "title": "Built-in sampler",
+     "definition": "A built-in sampler instrument that plays the user's samples across the keys.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "factory_instrument_presets",
+     "title": "Factory instrument sounds",
+     "definition": "Built-in instruments with factory presets; numbers only where a first-party page states them.",
+     "graphics": []
+    },
+    {
+     "id": "patch_from_recording",
+     "title": "Synth patch from a recording",
+     "definition": "Building an editable synth patch that imitates a recording (resynthesis or sound matching), built in.",
+     "graphics": [
+      "daws"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "plugins",
+   "title": "Plug-in hosting",
+   "rows": [
+    {
+     "id": "vst3",
+     "title": "VST3",
+     "definition": "Hosts VST3 plug-ins.",
+     "graphics": [
+      "editors"
+     ]
+    },
+    {
+     "id": "au",
+     "title": "Audio Units (Mac)",
+     "definition": "Hosts Audio Units on macOS.",
+     "graphics": []
+    },
+    {
+     "id": "lv2",
+     "title": "LV2",
+     "definition": "Hosts LV2 plug-ins.",
+     "graphics": []
+    },
+    {
+     "id": "clap",
+     "title": "CLAP",
+     "definition": "Hosts CLAP plug-ins.",
+     "graphics": [
+      "daws"
+     ]
+    },
+    {
+     "id": "vst2",
+     "title": "VST2",
+     "definition": "Hosts VST2 plug-ins.",
+     "graphics": []
+    }
+   ]
+  },
+  {
+   "id": "picture",
+   "title": "Working to picture",
+   "rows": [
+    {
+     "id": "video_playback",
+     "title": "Video playback in sync",
+     "definition": "Plays a video in sync with the audio timeline.",
+     "graphics": [
+      "editors",
+      "daws"
+     ]
+    },
+    {
+     "id": "video_export",
+     "title": "Sound written back into video",
+     "definition": "Writes the edited sound or the mix into a video file.",
+     "graphics": []
+    },
+    {
+     "id": "timecode",
+     "title": "SMPTE timecode",
+     "definition": "SMPTE timecode display.",
+     "graphics": []
+    },
+    {
+     "id": "cut_detection",
+     "title": "Scene-cut detection",
+     "definition": "Detects scene cuts in the video.",
+     "graphics": []
+    }
+   ]
+  },
+  {
+   "id": "library",
+   "title": "Sound library",
+   "rows": [
+    {
+     "id": "sound_library",
+     "title": "Searchable sound library",
+     "definition": "A built-in searchable database or browser for the user's own sound-effects or sample collection, with tags or metadata search.",
+     "graphics": [
+      "editors"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ai",
+   "title": "AI help",
+   "rows": [
+    {
+     "id": "text_to_edits",
+     "title": "A typed request becomes edits",
+     "definition": "An assistant that turns a typed request into edits or actions in the product.",
+     "graphics": [
+      "editors",
+      "daws"
+     ]
+    },
+    {
+     "id": "ml_local",
+     "title": "Machine learning runs locally",
+     "definition": "The product's machine-learning features run on the user's computer or network, not a cloud service; partial if some are cloud; no if all are cloud or there are none.",
+     "graphics": []
+    },
+    {
+     "id": "own_model_server",
+     "title": "Uses a model server you choose",
+     "definition": "Lets the user point AI features at a model server of their own choice.",
+     "graphics": []
+    }
+   ]
+  },
+  {
+   "id": "platform",
+   "title": "Platforms and licence",
+   "rows": [
+    {
+     "id": "macos",
+     "title": "macOS",
+     "definition": "Officially supported on macOS.",
+     "graphics": []
+    },
+    {
+     "id": "windows",
+     "title": "Windows",
+     "definition": "Officially supported on Windows.",
+     "graphics": []
+    },
+    {
+     "id": "linux",
+     "title": "Linux",
+     "definition": "Officially supported on Linux.",
+     "graphics": [
+      "editors",
+      "daws"
+     ]
+    },
+    {
+     "id": "open_source",
+     "title": "Open source",
+     "definition": "Source code published under an open-source licence.",
+     "graphics": [
+      "editors",
+      "daws"
+     ]
+    }
+   ]
+  }
+ ],
+ "info_rows": [
+  {
+   "id": "price",
+   "title": "Price",
+   "definition": "Current list price from the vendor's own page, with currency, subscription or perpetual, and the date looked up."
+  },
+  {
+   "id": "licence",
+   "title": "Licence model",
+   "definition": "Free, perpetual, subscription or mixed, and upgrade terms."
+  },
+  {
+   "id": "first_release_year",
+   "title": "First public release",
+   "definition": "The year of the product's first public release."
+  },
+  {
+   "id": "current_version",
+   "title": "Version assessed",
+   "definition": "The version assessed and its release date."
+  },
+  {
+   "id": "signed_installers",
+   "title": "Signed or notarized installers",
+   "definition": "Installers are code-signed or notarized, where a first-party page says so."
+  },
+  {
+   "id": "scripting",
+   "title": "Scripting or extension API",
+   "definition": "A documented scripting or extension API."
+  },
+  {
+   "id": "manual_languages",
+   "title": "Manual and interface languages",
+   "definition": "Languages of the official manual or interface, where a first-party page lists them."
+  }
+ ],
+ "products": [
+  {
+   "id": "torqwave",
+   "name": "Torqwave",
+   "group": "torqwave",
+   "why": "The product this set tracks. The current column is the release the snapshot is made for."
+  },
+  {
+   "id": "torqwave_prev",
+   "name": "Torqwave (previous release)",
+   "group": "torqwave",
+   "why": "The release before, as its own column, so each release's gains show."
+  },
+  {
+   "id": "audition",
+   "name": "Adobe Audition",
+   "group": "editor",
+   "why": "The commercial reference for a waveform and spectral editor with a multitrack; named in the brief, and Torqwave ships an Audition-style key set."
+  },
+  {
+   "id": "audacity",
+   "name": "Audacity",
+   "group": "editor",
+   "why": "The free, open-source editor most people try first; named in the brief, and the README offers Torqwave as an alternative to it."
+  },
+  {
+   "id": "rx",
+   "name": "iZotope RX",
+   "group": "editor",
+   "why": "The reference for spectral repair and restoration, the job of Torqwave's repair suite."
+  },
+  {
+   "id": "spectralayers",
+   "name": "Steinberg SpectraLayers",
+   "group": "editor",
+   "why": "The reference for spectral editing by layers and for unmixing."
+  },
+  {
+   "id": "wavelab",
+   "name": "Steinberg WaveLab",
+   "group": "editor",
+   "why": "The reference for mastering, loudness and delivery, the job of Torqwave's mastering suite."
+  },
+  {
+   "id": "flstudio",
+   "name": "FL Studio",
+   "group": "daw",
+   "why": "Named in the brief; pattern-based writing with many built-in instruments, the area 0.20.0 moves into."
+  },
+  {
+   "id": "reaper",
+   "name": "REAPER",
+   "group": "daw",
+   "why": "A low-cost DAW on all three systems, widely used for sound design and game audio."
+  },
+  {
+   "id": "live",
+   "name": "Ableton Live",
+   "group": "daw",
+   "why": "The reference for clip launching and electronic music, the ground the Idea Board and the built-in instruments move into."
+  },
+  {
+   "id": "bitwig",
+   "name": "Bitwig Studio",
+   "group": "daw",
+   "why": "A DAW on all three systems, Linux included, with a large set of built-in instruments."
+  },
+  {
+   "id": "ardour",
+   "name": "Ardour",
+   "group": "daw",
+   "why": "The open-source DAW: the other free-software route to multitrack work on Linux, macOS and Windows."
+  }
+ ],
+ "left_out": [
+  {
+   "name": "ocenaudio",
+   "why": "A free editor for quick edits; without spectral editing or a multitrack it overlaps the Audacity column and adds no row where it differs."
+  },
+  {
+   "name": "Sound Forge",
+   "why": "Windows only in its current Pro edition; WaveLab covers the mastering-editor place on more systems."
+  },
+  {
+   "name": "Logic Pro, Cubase/Nuendo, Pro Tools, Studio One",
+   "why": "Each would add a column much like Live's or REAPER's; Logic is Mac only. Add one when a release moves into its ground (Nuendo or Pro Tools for picture work)."
+  }
+ ]
+}

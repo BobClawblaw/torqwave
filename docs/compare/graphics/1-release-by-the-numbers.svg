@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<rect width="1600" height="900" fill="#111317"/>
+<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.20.0: what it adds over 0.19.2</text>
+<text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">By the numbers, counted from the release&#x27;s own files and documentation</text>
+<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-23. Torqwave 0.20.0 is about to be released. Sources and method: docs/compare in the Torqwave repository.</text>
+<rect x="50.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
+<rect x="50.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
+<text x="74.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">3,743</text>
+<text x="74.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Synth patches</text>
+<text x="74.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
+<text x="74.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Torqwave Synth, in 29</text>
+<text x="74.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">categories; 1,280 hand-made</text>
+<rect x="390.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
+<rect x="390.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
+<text x="414.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">3</text>
+<text x="414.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Built-in instruments</text>
+<text x="414.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 1</text>
+<text x="414.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Torqwave Synth, StringSwarm,</text>
+<text x="414.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Basic Drums (Basic Synth</text>
+<text x="414.0" y="438.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">before)</text>
+<rect x="730.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
+<rect x="730.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
+<text x="754.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">1,018</text>
+<text x="754.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Sequence presets</text>
+<text x="754.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
+<text x="754.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">in 37 styles, with 116 starter</text>
+<text x="754.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">kits</text>
+<rect x="50.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
+<rect x="50.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
+<text x="74.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">296</text>
+<text x="74.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">StringSwarm presets</text>
+<text x="74.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
+<text x="74.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">strings on one note, or a</text>
+<text x="74.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">swarm of oscillators</text>
+<rect x="390.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
+<rect x="390.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
+<text x="414.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">30</text>
+<text x="414.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Drum sounds</text>
+<text x="414.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
+<text x="414.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Basic Drums: every General</text>
+<text x="414.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">MIDI drum note, seven kits</text>
+<rect x="730.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
+<rect x="730.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
+<text x="754.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">85</text>
+<text x="754.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Audition patterns</text>
+<text x="754.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
+<text x="754.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">each sound plays as it is</text>
+<text x="754.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">chosen</text>
+<rect x="1080.0" y="160.0" width="470.0" height="620.0" rx="10" fill="#1d2126" stroke="#2a2f36" stroke-width="1.5"/>
+<text x="1108.0" y="212.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Also new in 0.20.0</text>
+<rect x="1108.0" y="248.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="260.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Decrypt: a synth patch from a</text>
+<text x="1130.0" y="290.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">recording of one note</text>
+<rect x="1108.0" y="330.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="342.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">A wavetable from any sound dropped</text>
+<text x="1130.0" y="372.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">on an oscillator</text>
+<rect x="1108.0" y="412.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="424.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Instruments played from the</text>
+<text x="1130.0" y="454.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">computer&#x27;s keys</text>
+<rect x="1108.0" y="494.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="506.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Instruments and plug-ins follow</text>
+<text x="1130.0" y="536.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">the session&#x27;s tempo</text>
+<rect x="1108.0" y="576.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="588.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">A time-view strip, a Hand tool,</text>
+<text x="1130.0" y="618.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Paste Clipboard as New File</text>
+</svg>
