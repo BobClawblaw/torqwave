@@ -1,3 +1,4 @@
+#include "Sampler.h"
 #include "Project.h"
 #include "PreviousName.h"
 #include "AudioFileIO.h"
@@ -512,9 +513,27 @@ std::pair<juce::File, juce::String> saveSession (AudioEngine& engine, const juce
         file = folder.getChildFile (project.getFileNameWithoutExtension() + ".tqsession");
     }
 
-    if (const auto error = SessionFile::save (*state, file, [&engine] (juce::uint32 id) { return engine.getTrackEffects().createXml (id); });
-        error.isNotEmpty())
+    // A session kept in the project's folder takes its samplers' samples with it, into Samples there.
+    const auto inProject = file.isAChildOf (filesFolder (project));
+    juce::String sampleError;
+    std::vector<std::pair<juce::File, juce::File>> samples;
+    juce::StringArray missingSamples;
+
+    const auto effects = [&] (juce::uint32 id)
+    {
+        auto xml = engine.getTrackEffects().createXml (id);
+
+        if (xml != nullptr && inProject && sampleError.isEmpty())
+            sampleError = Sampler::collectFiles (*xml, file.getParentDirectory(), filesFolder (project).getChildFile ("Samples"), samples, missingSamples);
+
+        return xml;
+    };
+
+    if (const auto error = SessionFile::save (*state, file, effects); error.isNotEmpty())
         return { {}, error };
+
+    if (sampleError.isNotEmpty())
+        return { {}, sampleError };
 
     session.markSaved (file);
     return { file, {} };

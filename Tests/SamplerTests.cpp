@@ -4,6 +4,8 @@
 #include "../Source/Sampler.h"
 #include "../Source/DrumMachine.h"
 #include "../Source/Session.h"
+#include "../Source/SessionCollect.h"
+#include "../Source/WaveSynth.h"
 #include "TestUtils.h"
 #include "SamplerTests.h"
 #include "ClickCheck.h"
@@ -944,6 +946,320 @@ namespace
                    "sampler: its drum map has a row for each slice, named after it, on its key; with Cut Each Other a slice stops the last without a click; how it was sliced, and the slices' names, come back from its state (a sample made in memory, with no file, doesn't)");
         }
     }
+
+    /** A track's effects as a session keeps them, holding one sampler with this state. */
+    std::unique_ptr<juce::XmlElement> effectsOf (Processor& sampler)
+    {
+        auto xml = std::make_unique<juce::XmlElement> ("EFFECTS");
+        auto* slot = xml->createNewChildElement ("SLOT");
+        slot->setAttribute ("bypassed", false);
+        slot->setAttribute ("id", 1);
+        slot->addChildElement (sampler.getPluginDescription().createXml().release());
+        juce::MemoryBlock state;
+        sampler.getStateInformation (state);
+        slot->createNewChildElement ("STATE")->addTextElement (state.toBase64Encoding());
+        return xml;
+    }
+
+    /** The sampler's state out of a track's effects as a session gives them back. */
+    juce::MemoryBlock stateIn (const juce::XmlElement& effects)
+    {
+        juce::MemoryBlock state;
+
+        if (auto* slot = effects.getChildByName ("SLOT"))
+            if (auto* text = slot->getChildByName ("STATE"))
+                state.fromBase64Encoding (text->getAllSubText());
+
+        return state;
+    }
+
+    /** A harmonic tone: partials falling off as 1/n. */
+    juce::AudioBuffer<float> harmonic (double hz, double seconds, int partials = 8)
+    {
+        juce::AudioBuffer<float> b (1, (int) (seconds * rate));
+
+        for (int i = 0; i < b.getNumSamples(); ++i)
+        {
+            auto x = 0.0;
+
+            for (int n = 1; n <= partials && hz * n < 0.45 * rate; ++n)
+                x += std::sin (twoPi * hz * n * i / rate) / n;
+
+            b.setSample (0, i, (float) (0.3 * x));
+        }
+
+        return b;
+    }
+
+    /** Files: the sampler chunk, pitch and loops found, the shared store, the limits, sessions moved and copied, missing files. */
+    void testFiles (AudioEngine& engine, Processor& sampler)
+    {
+        const auto folder = juce::File::createTempFile ("samplerfiles");
+        folder.createDirectory();
+
+        // A WAV's sampler chunk gives the root and the loop.
+        {
+            const auto file = folder.getChildFile ("Chunk.wav");
+            std::unique_ptr<juce::OutputStream> stream = std::make_unique<juce::FileOutputStream> (file);
+            const auto tone = sine (220.0, 1.0);
+            auto writer = juce::WavAudioFormat().createWriterFor (stream, juce::AudioFormatWriterOptions().withSampleRate (rate).withNumChannels (1).withBitsPerSample (24)
+                              .withMetadataValues ({ { "MidiUnityNote", "57" }, { "MidiPitchFraction", "0" }, { "NumSampleLoops", "1" }, { "Loop0Type", "0" },
+                                                     { "Loop0Start", "9600" }, { "Loop0End", "11999" } }));
+            if (writer != nullptr)
+                writer->writeFromAudioSampleBuffer (tone, 0, tone.getNumSamples());
+
+            writer.reset();
+            juce::String error;
+            const auto chunked = Sampler::sharedSample (file, error);
+            const auto bare = Sampler::sharedSample (writeWav (folder.getChildFile ("Bare.wav"), tone, rate), error);
+
+            check (chunked != nullptr && chunked->fileRoot == 57 && chunked->fileLoop == 1 && chunked->fileLoopStart == 9600 && chunked->fileLoopEnd == 12000
+                       && bare != nullptr && bare->fileRoot == -1 && bare->fileLoop == 0,
+                   "sampler: a WAV file's sampler chunk gives its root note (A2) and its loop (frames 9,600 to 12,000, the chunk's last frame being the last played); a WAV without one gives neither");
+        }
+
+        // The pitch found: the key and the tuning, for tones in and between the keys; none for noise.
+        {
+            auto worst = 0.0;
+            juce::StringArray readings;
+
+            for (const auto hz : { 41.2, 55.0, 110.0, 222.0, 440.0, 452.0, 880.0, 1760.0 })
+            {
+                const auto pitch = Sampler::findPitch (*Sampler::makeSample (harmonic (hz, 1.0), rate, "tone"));
+                const auto wanted = 69.0 + 12.0 * std::log2 (hz / 440.0);
+                const auto cents = pitch.found ? 100.0 * ((double) pitch.root - pitch.tune * 0.01 - wanted) : 1.0e6;
+                worst = juce::jmax (worst, std::abs (cents));
+                readings.add (Instrument::pitchName (pitch.root) + (pitch.tune >= 0.0f ? " +" : " ") + juce::String (pitch.tune, 1));
+            }
+
+            const auto none = Sampler::findPitch (*Sampler::makeSample (noise (1.0), rate, "noise"));
+            const auto flat = Sampler::findPitch (*Sampler::makeSample (harmonic (452.0, 1.0), rate, "flat"));
+
+            check (worst < 3.0 && ! none.found && none.root == 60 && juce::exactlyEqual (none.tune, 0.0f) && flat.root == 69 && flat.tune < -40.0f && flat.tune > -52.0f,
+                   "sampler: the pitch of harmonic tones from 41 Hz to 1,760 Hz is found within " + juce::String (worst, 2) + " cents (" + readings.joinIntoString (", ")
+                       + "); a tone 47 cents above A4 gets A4 and " + juce::String (flat.tune, 1) + " cents of tuning; noise has no pitch and gets C3");
+        }
+
+        // Find Loop: on a held note of Torqwave Synth, on two detuned tones beating, and on noise.
+        {
+            BuiltInEffects::BasicSynthProcessor synth;
+            synth.prepareToPlay (rate, 512);
+            juce::AudioBuffer<float> note (2, (int) (3.0 * rate)), block (2, 512);
+            note.clear();
+
+            for (int at = 0; at + 512 <= note.getNumSamples(); at += 512)
+            {
+                juce::MidiBuffer midi;
+
+                if (at == 0)
+                    midi.addEvent (juce::MidiMessage::noteOn (1, 45, 0.8f), 0);
+
+                synth.processBlock (block, midi);
+                note.copyFrom (0, at, block, 0, 0, 512);
+                note.copyFrom (1, at, block, 1, 0, 512);
+            }
+
+            juce::AudioBuffer<float> beating (1, (int) (4.0 * rate));
+
+            for (int i = 0; i < beating.getNumSamples(); ++i)
+                beating.setSample (0, i, 0.25f * (float) (std::sin (twoPi * 110.0 * i / rate) + 0.5 * std::sin (twoPi * 220.0 * i / rate)
+                                                          + std::sin (twoPi * 110.7 * i / rate) + 0.5 * std::sin (twoPi * 221.4 * i / rate)));
+
+            juce::StringArray report;
+            auto good = true;
+
+            auto tryLoop = [&] (const juce::AudioBuffer<float>& audio, const juce::String& what, bool pitched)
+            {
+                const auto sample = Sampler::makeSample (audio, rate, what);
+                const auto pitch = Sampler::findPitch (*sample);
+                const auto loop = Sampler::findLoop (*sample, {}, pitch.hz);
+                auto z = zoneOf (audio, pitch.root, what);
+                z.sample = sample;
+                z.tune = 0.0f;
+                z.lowKey = 0;
+                z.loop = 1;
+                z.loopStart = loop.start;
+                z.loopEnd = loop.end;
+                z.crossfade = loop.crossfade;
+                plain (sampler);
+                sampler.setZones ({ z });
+                const auto out = play (sampler, { on (0.0, pitch.root) }, 12.0);
+                const auto click = ClickCheck::worst (out, rate, 0.005f);
+                auto quietest = 1.0e9f, loudest = 0.0f;
+
+                for (auto t = 3.0; t < 11.5; t += 0.25)
+                {
+                    quietest = juce::jmin (quietest, rms (out, t, 0.25));
+                    loudest = juce::jmax (loudest, rms (out, t, 0.25));
+                }
+
+                const auto seconds = (double) (loop.end - loop.start) / rate;
+                good = good && loop.found && pitch.found == pitched && click.ratio < 4.0f && quietest > 0.01f && seconds > 0.3 && loop.end <= audio.getNumSamples();
+                report.add (what + ": a loop of " + juce::String (seconds, 2) + " s with a " + juce::String (loop.crossfade, 0) + " ms crossfade, the worst jump over twelve seconds "
+                            + juce::String (click.ratio, 2) + " times its surroundings, the level moving " + juce::String (db (loudest / quietest), 1) + " dB");
+            };
+
+            tryLoop (note, "a three-second note of Torqwave Synth", true);
+            tryLoop (beating, "two tones 0.7 Hz apart", true);
+            tryLoop (noise (3.0, 21), "noise", false);
+
+            const auto tooShort = Sampler::findLoop (*Sampler::makeSample (sine (220.0, 0.1), rate, "short"), {}, 220.0);
+
+            check (good && ! tooShort.found, "sampler: Find Loop on " + report.joinIntoString ("; ") + "; a tenth of a second is too short to loop");
+        }
+
+        // One store: two samplers on a file hold it once, and a file that changes is read again.
+        // The limits: a sample's length, and what a sampler holds.
+        {
+            const auto file = writeWav (folder.getChildFile ("Shared.wav"), sine (330.0, 1.0), rate);
+            juce::String error;
+            const auto first = Sampler::sharedSample (file, error);
+            const auto second = Sampler::sharedSample (file, error);
+
+            Sampler::Zone z;
+            z.sample = first;
+            z.file = file;
+            sampler.setZones ({ z });
+            juce::MemoryBlock state;
+            sampler.getStateInformation (state);
+            Processor other;
+            other.setStateInformation (state.getData(), (int) state.getSize());
+            const auto once = other.getZones().size() == 1 && other.getZones()[0].sample == first && first == second;
+
+            juce::Thread::sleep (1100);    // so its modification time moves on
+            writeWav (file, sine (550.0, 2.0), rate);
+            const auto changed = Sampler::sharedSample (file, error);
+
+            // Eleven minutes at 8 kHz: too long.
+            juce::AudioBuffer<float> hours (1, 8000 * 660);
+            hours.clear();
+            juce::String tooLong;
+            const auto refused = Sampler::sharedSample (writeWav (folder.getChildFile ("Long.wav"), hours, 8000.0), tooLong);
+
+            // What a sampler may hold, made small for the test: 1 MB holds one of these and not two.
+            const auto a = writeWav (folder.getChildFile ("A.wav"), sine (220.0, 3.0), rate), b = writeWav (folder.getChildFile ("B.wav"), sine (330.0, 3.0), rate);
+            Sampler::Zone za, zb;
+            za.sample = Sampler::sharedSample (a, error);
+            za.file = a;
+            zb.sample = Sampler::sharedSample (b, error);
+            zb.file = b;
+            sampler.setZones ({ za, zb });
+            sampler.getStateInformation (state);
+            Processor small;
+            small.setMostBytes (1 << 20);
+            small.setStateInformation (state.getData(), (int) state.getSize());
+            const auto room = small.roomFor (zb.sample);
+
+            check (once && changed != nullptr && changed != first && changed->getNumFrames() == 96000
+                       && refused == nullptr && tooLong.contains ("11 minutes") && tooLong.contains ("up to 10 minutes")
+                       && sampler.bytesHeld() == 2 * 144000 * 4 && small.getZones()[0].sample != nullptr && small.getZones()[1].sample == nullptr
+                       && small.getMissing().size() == 1 && small.getMissing()[0].contains ("B.wav") && room.contains ("held in memory") && small.roomFor (za.sample).isEmpty(),
+                   "sampler: two samplers on one file hold one copy of it, and a file that has changed is read again; an eleven-minute file is refused (" + tooLong
+                       + "); a sampler allowed 1 MB keeps the first of two 576 KB samples and leaves out the second, saying why (" + small.getMissing().joinIntoString ("; ") + ")");
+        }
+
+        // A session with a sampler, saved, moved to another folder with its audio, and opened there.
+        {
+            const auto home = folder.getChildFile ("Song"), moved = folder.getChildFile ("Song Moved");
+            home.getChildFile ("Sounds").createDirectory();
+            const auto file = writeWav (home.getChildFile ("Sounds").getChildFile ("Lead.wav"), sine (440.0, 1.0), rate);
+            juce::String error;
+            Sampler::Zone z;
+            z.sample = Sampler::sharedSample (file, error);
+            z.file = file;
+            z.root = 69;
+            plain (sampler);
+            sampler.setZones ({ z });
+            const auto before = play (sampler, { on (0.0, 69) }, 0.5);
+
+            SessionState session;
+            session.sampleRate = rate;
+            const auto trackId = session.addInstrumentTrack().id;
+            const auto saved = SessionFile::save (session, home.getChildFile ("Song.tqsession"), [&] (juce::uint32 id) { return id == trackId ? effectsOf (sampler) : nullptr; });
+            const auto movedOk = home.moveFileTo (moved);
+
+            auto loaded = SessionFile::load (moved.getChildFile ("Song.tqsession"), engine.formatManager);
+            Processor there;
+            auto restored = false;
+
+            if (loaded.effects.size() == 1)
+            {
+                const auto state = stateIn (*loaded.effects.begin()->second);
+                there.setStateInformation (state.getData(), (int) state.getSize());
+                restored = true;
+            }
+
+            const auto zones = there.getZones();
+            const auto after = restored ? play (there, { on (0.0, 69) }, 0.5) : juce::AudioBuffer<float>();
+
+            check (saved.isEmpty() && movedOk && restored && zones.size() == 1 && zones[0].sample != nullptr
+                       && zones[0].file == moved.getChildFile ("Sounds").getChildFile ("Lead.wav") && there.getMissing().isEmpty() && same (before, after),
+                   "sampler: a session with a sampler, its folder moved with its audio, opens with the sample found beside it and plays the same");
+
+            // Save a Copy with Audio takes the samples with it.
+            const auto copy = folder.getChildFile ("Copy").getChildFile ("Copy.tqsession");
+            copy.getParentDirectory().createDirectory();
+            juce::StringArray missing;
+            const auto copied = SessionCollect::save (session, copy, [&] (juce::uint32 id) { return id == trackId ? effectsOf (there) : nullptr; }, missing);
+            const auto sampleCopy = copy.getParentDirectory().getChildFile ("Audio").getChildFile ("Samples").getChildFile ("Lead.wav");
+            const auto wasCopied = sampleCopy.existsAsFile();
+            moved.deleteRecursively();
+
+            loaded = SessionFile::load (copy, engine.formatManager);
+            Processor fromCopy;
+
+            if (loaded.effects.size() == 1)
+            {
+                const auto state = stateIn (*loaded.effects.begin()->second);
+                fromCopy.setStateInformation (state.getData(), (int) state.getSize());
+            }
+
+            const auto copyZones = fromCopy.getZones();
+
+            check (copied.isEmpty() && missing.isEmpty() && wasCopied && copyZones.size() == 1 && copyZones[0].sample != nullptr && copyZones[0].file == sampleCopy
+                       && same (before, play (fromCopy, { on (0.0, 69) }, 0.5)),
+                   "sampler: Save a Copy with Audio copies the sampler's sample into the copy's Audio/Samples folder, and the copy plays the same with the original deleted");
+
+            // A sample that has gone: reported, its zone silent, and found again where it is now.
+            juce::MemoryBlock state;
+            fromCopy.getStateInformation (state);
+            const auto elsewhere = folder.getChildFile ("Elsewhere");
+            elsewhere.createDirectory();
+            sampleCopy.moveFileTo (elsewhere.getChildFile ("Lead.wav"));
+            Processor lost;
+            lost.setStateInformation (state.getData(), (int) state.getSize());
+            const auto reported = lost.getMissing().size() == 1 && lost.getZones()[0].sample == nullptr;
+            const auto silent = play (lost, { on (0.0, 69) }, 0.3);
+            const auto notThere = lost.locate (folder);
+            const auto stillMissing = lost.getMissing().size();
+            const auto found = lost.locate (elsewhere);
+
+            check (reported && silent.getMagnitude (0, silent.getNumSamples()) == 0.0f && notThere == 0 && stillMissing == 1 && found == 1 && lost.getMissing().isEmpty()
+                       && lost.getZones()[0].file == elsewhere.getChildFile ("Lead.wav") && same (before, play (lost, { on (0.0, 69) }, 0.5)),
+                   "sampler: a sample moved away is reported and its zone silent; looked for in the wrong folder it stays missing, and in the right one it comes back and plays the same");
+        }
+
+        // A sound that is not a file, written to be sampled: a float WAV with its markers, under a name not yet used.
+        {
+            Markers markers { { 4800, 0, "One", -1 }, { 9600, 2400, "Two", -1 } };
+            juce::String error;
+            const auto tone = sine (300.0, 0.5, rate, 2);
+            const auto first = Sampler::writeSample (tone, rate, "From: Selection", markers, error, folder.getChildFile ("Samples"));
+            const auto second = Sampler::writeSample (tone, rate, "From: Selection", markers, error, folder.getChildFile ("Samples"));
+            const auto back = Sampler::sharedSample (first, error);
+            auto exact = back != nullptr && back->getNumFrames() == tone.getNumSamples() && back->audio.getNumChannels() == 2;
+
+            for (int i = 0; exact && i < tone.getNumSamples(); ++i)
+                exact = juce::exactlyEqual (back->audio.getSample (0, i), tone.getSample (0, i));
+
+            check (error.isEmpty() && first.existsAsFile() && second.existsAsFile() && first != second && second.getFileName().contains (" 2.wav") && exact
+                       && back->markers.size() == 2 && back->markers[0].name == "One" && back->markers[1].isRegion() && back->markers[1].length == 2400,
+                   "sampler: a sound written to be sampled is a WAV with every sample exact and its marker and region, named " + first.getFileName() + " and, the second time, " + second.getFileName());
+        }
+
+        sampler.setZones ({});
+        folder.deleteRecursively();
+    }
 }
 
 void runSamplerTests (AudioEngine& engine)
@@ -1471,6 +1787,7 @@ void runSamplerTests (AudioEngine& engine)
 
     testZones (*sampler);
     testSlices (*sampler);
+    testFiles (engine, *sampler);
 
     defaults (*sampler);
     sampler->setZones ({});

@@ -2,6 +2,7 @@
 #include "AudioFileIO.h"
 #include "FadeShape.h"
 #include "PhaseVocoder.h"
+#include "WaveTables.h"
 #include "Session.h"
 
 namespace Sampler
@@ -274,6 +275,32 @@ SamplePtr loadSample (const juce::File& file, juce::AudioFormatManager& formats,
     made->name = file.getFileNameWithoutExtension();
     made->file = file;
     made->markers = loaded.markers;
+
+    // A WAV file's sampler chunk: the key it was recorded at and its first loop.
+    if (file.hasFileExtension ("wav;wave;bwf"))
+        if (std::unique_ptr<juce::AudioFormatReader> reader { formats.createReaderFor (file) })
+        {
+            const auto& values = reader->metadataValues;
+
+            if (values.containsKey ("MidiUnityNote"))
+            {
+                made->fileRoot = juce::jlimit (0, 127, values["MidiUnityNote"].getIntValue());
+                made->fileTune = -100.0f * (float) ((double) (juce::uint32) values["MidiPitchFraction"].getLargeIntValue() / 4294967296.0);
+
+                if (values["NumSampleLoops"].getIntValue() > 0)
+                {
+                    const auto type = values["Loop0Type"].getIntValue();
+                    const auto start = values["Loop0Start"].getLargeIntValue(), end = values["Loop0End"].getLargeIntValue() + 1;   // its end is the last frame played
+
+                    if (start >= 0 && end > start && end <= frames)
+                    {
+                        made->fileLoop = type == 1 ? 2 : 1;
+                        made->fileLoopStart = start;
+                        made->fileLoopEnd = end;
+                    }
+                }
+            }
+        }
     return made;
 }
 
@@ -342,6 +369,380 @@ ProgramPtr makeProgram (std::vector<Zone> zones, juce::uint32 generation)
 
     made->zones = std::move (zones);
     return made;
+}
+
+//==============================================================================
+namespace
+{
+    struct Store
+    {
+        struct Held
+        {
+            std::weak_ptr<const Sample> sample;
+            juce::Time changed;
+            juce::int64 size = 0;
+        };
+
+        juce::CriticalSection lock;
+        std::map<juce::String, Held> held;
+        juce::AudioFormatManager formats;
+        juce::File sessionFolder, savingInto;
+
+        Store()     { AudioFileIO::registerFormats (formats); }
+    };
+
+    Store& store()
+    {
+        static Store s;
+        return s;
+    }
+}
+
+SamplePtr sharedSample (const juce::File& file, juce::String& error)
+{
+    auto& s = store();
+    const juce::ScopedLock sl (s.lock);
+    const auto key = file.getFullPathName();
+
+    if (const auto found = s.held.find (key); found != s.held.end())
+    {
+        if (auto sample = found->second.sample.lock(); sample != nullptr && found->second.changed == file.getLastModificationTime() && found->second.size == file.getSize())
+            return sample;
+
+        s.held.erase (found);
+    }
+
+    // Its length, before any of it is read.
+    if (file.existsAsFile())
+        if (std::unique_ptr<juce::AudioFormatReader> reader { s.formats.createReaderFor (file) })
+            if (reader->sampleRate > 0.0 && (double) reader->lengthInSamples / reader->sampleRate > longestSampleSeconds)
+            {
+                error = file.getFileName() + " is " + juce::String (juce::roundToInt ((double) reader->lengthInSamples / reader->sampleRate / 60.0))
+                        + " minutes long. A sample can be up to " + juce::String (juce::roundToInt (longestSampleSeconds / 60.0)) + " minutes: samples are held in memory, not played from disk.";
+                return {};
+            }
+
+    auto sample = loadSample (file, s.formats, error);
+
+    if (sample != nullptr && (double) sample->getNumFrames() / sample->rate > longestSampleSeconds)
+    {
+        error = file.getFileName() + " is longer than " + juce::String (juce::roundToInt (longestSampleSeconds / 60.0)) + " minutes, the most a sample can be.";
+        return {};
+    }
+
+    if (sample != nullptr)
+        s.held[key] = { sample, file.getLastModificationTime(), file.getSize() };
+
+    // Samples nobody holds any more are forgotten.
+    for (auto it = s.held.begin(); it != s.held.end();)
+        it = it->second.sample.expired() ? s.held.erase (it) : std::next (it);
+
+    return sample;
+}
+
+juce::File samplesFolder()
+{
+    return juce::File::getSpecialLocation (juce::File::userMusicDirectory).getChildFile ("Torqwave").getChildFile ("Samples");
+}
+
+juce::File writeSample (const juce::AudioBuffer<float>& audio, double rate, const juce::String& name, const Markers& markers, juce::String& error, juce::File folder)
+{
+    if (folder == juce::File())
+        folder = samplesFolder();
+
+    if (audio.getNumChannels() < 1 || audio.getNumSamples() < 1 || rate <= 0.0)
+    {
+        error = "There is no audio to sample.";
+        return {};
+    }
+
+    if (! folder.createDirectory())
+    {
+        error = "Could not make the folder " + folder.getFullPathName();
+        return {};
+    }
+
+    const auto base = juce::File::createLegalFileName (name.trim()).isNotEmpty() ? juce::File::createLegalFileName (name.trim()) : juce::String ("Sample");
+    auto file = folder.getChildFile (base + ".wav");
+
+    for (int n = 2; file.exists(); ++n)
+        file = folder.getChildFile (base + " " + juce::String (n) + ".wav");
+
+    std::unique_ptr<juce::OutputStream> stream = std::make_unique<juce::FileOutputStream> (file);
+    const auto options = juce::AudioFormatWriterOptions().withSampleRate (rate).withNumChannels (audio.getNumChannels()).withBitsPerSample (32)
+                             .withSampleFormat (juce::AudioFormatWriterOptions::SampleFormat::floatingPoint)
+                             .withMetadataValues (MarkerEdits::toMetadata (markers));
+    auto writer = juce::WavAudioFormat().createWriterFor (stream, options);
+
+    if (writer == nullptr || ! writer->writeFromAudioSampleBuffer (audio, 0, audio.getNumSamples()))
+    {
+        writer.reset();
+        file.deleteFile();
+        error = "Could not write " + file.getFullPathName();
+        return {};
+    }
+
+    return file;
+}
+
+void setSessionFolder (const juce::File& folder)
+{
+    const juce::ScopedLock sl (store().lock);
+    store().sessionFolder = folder;
+}
+
+juce::File getSessionFolder()
+{
+    const juce::ScopedLock sl (store().lock);
+    return store().sessionFolder;
+}
+
+SavingInto::SavingInto (const juce::File& sessionFolder)
+{
+    const juce::ScopedLock sl (store().lock);
+    before = store().savingInto;
+    store().savingInto = sessionFolder;
+}
+
+SavingInto::~SavingInto()
+{
+    const juce::ScopedLock sl (store().lock);
+    store().savingInto = before;
+}
+
+juce::String collectFiles (juce::XmlElement& effects, const juce::File& sessionFolder, const juce::File& folder,
+                           std::vector<std::pair<juce::File, juce::File>>& copies, juce::StringArray& missing)
+{
+    for (auto* slot : effects.getChildWithTagNameIterator ("SLOT"))
+    {
+        const auto* plugin = slot->getChildByName ("PLUGIN");
+        auto* stateXml = slot->getChildByName ("STATE");
+
+        if (plugin == nullptr || stateXml == nullptr || plugin->getStringAttribute ("file") != BuiltInEffects::samplerId)
+            continue;
+
+        juce::MemoryBlock block;
+
+        if (! block.fromBase64Encoding (stateXml->getAllSubText()))
+            continue;
+
+        auto state = juce::AudioProcessor::getXmlFromBinary (block.getData(), (int) block.getSize());
+        auto* zones = state != nullptr ? state->getChildByName ("ZONES") : nullptr;
+
+        if (zones == nullptr)
+            continue;
+
+        for (auto* zone : zones->getChildWithTagNameIterator ("ZONE"))
+        {
+            const auto path = zone->getStringAttribute ("file");
+
+            if (path.isEmpty())
+                continue;
+
+            const juce::File from (path);
+
+            if (! from.existsAsFile())
+            {
+                missing.addIfNotAlreadyThere (path);
+                continue;
+            }
+
+            juce::File to;
+
+            for (auto& [was, now] : copies)
+                if (was == from)
+                    to = now;
+
+            if (to == juce::File())
+            {
+                if (from.isAChildOf (folder))
+                {
+                    to = from;
+                }
+                else
+                {
+                    auto taken = [&] (const juce::File& f)
+                    {
+                        return f.exists() || std::any_of (copies.begin(), copies.end(), [&f] (const auto& c) { return c.second == f; });
+                    };
+
+                    to = folder.getChildFile (from.getFileName());
+
+                    for (int n = 2; taken (to); ++n)
+                        to = folder.getChildFile (from.getFileNameWithoutExtension() + " " + juce::String (n) + from.getFileExtension());
+
+                    if (! folder.createDirectory())
+                        return "Could not make the folder " + folder.getFullPathName();
+
+                    if (! from.copyFileTo (to))
+                        return "Could not copy " + from.getFullPathName() + " to " + to.getFullPathName();
+                }
+
+                copies.emplace_back (from, to);
+            }
+
+            zone->setAttribute ("file", to.getFullPathName());
+            zone->setAttribute ("relative", to.getRelativePathFrom (sessionFolder));
+        }
+
+        juce::MemoryBlock rewritten;
+        juce::AudioProcessor::copyXmlToBinary (*state, rewritten);
+        stateXml->deleteAllTextElements();
+        stateXml->addTextElement (rewritten.toBase64Encoding());
+    }
+
+    return {};
+}
+
+//==============================================================================
+Pitch findPitch (const Sample& sample, juce::Range<juce::int64> part)
+{
+    const auto frames = (juce::int64) sample.getNumFrames();
+    part = part.isEmpty() ? juce::Range<juce::int64> (0, frames) : part.getIntersectionWith ({ 0, frames });
+    const auto skip = (juce::int64) (0.02 * sample.rate), most = (juce::int64) (0.5 * sample.rate);
+    const auto from = part.getLength() > skip + most / 4 ? part.getStart() + skip : part.getStart();
+    const auto count = (int) juce::jmin (most, part.getEnd() - from);
+    Pitch pitch;
+
+    if (count < 256)
+        return pitch;
+
+    std::vector<float> mono ((size_t) count, 0.0f);
+
+    for (int c = 0; c < sample.audio.getNumChannels(); ++c)
+        juce::FloatVectorOperations::add (mono.data(), sample.audio.getReadPointer (c, (int) from), count);
+
+    pitch.hz = WaveTables::findPitch (mono.data(), count, sample.rate);
+
+    if (pitch.hz <= 0.0)
+        return pitch;
+
+    const auto note = 69.0 + 12.0 * std::log2 (pitch.hz / 440.0);
+    pitch.found = true;
+    pitch.root = juce::jlimit (0, 127, juce::roundToInt (note));
+    pitch.tune = (float) juce::jlimit (-100.0, 100.0, 100.0 * ((double) pitch.root - note));
+    return pitch;
+}
+
+LoopFound findLoop (const Sample& sample, juce::Range<juce::int64> part, double hz)
+{
+    const auto frames = (juce::int64) sample.getNumFrames();
+    part = part.isEmpty() ? juce::Range<juce::int64> (0, frames) : part.getIntersectionWith ({ 0, frames });
+    LoopFound loop;
+
+    if ((double) part.getLength() < 0.2 * sample.rate)
+        return loop;
+
+    const auto first = (int) part.getStart(), length = (int) part.getLength();
+    std::vector<float> x ((size_t) length, 0.0f);
+
+    for (int c = 0; c < sample.audio.getNumChannels(); ++c)
+        juce::FloatVectorOperations::add (x.data(), sample.audio.getReadPointer (c, first), length);
+
+    const auto period = hz > 0.0 ? sample.rate / hz : 0.0;
+
+    if (period < 2.0 || period * 8.0 > length)
+    {
+        // No pitch to line up: the later part of the sound, its end fading into what comes before it.
+        loop.found = true;
+        loop.start = first + (juce::int64) (0.4 * length);
+        loop.end = first + (juce::int64) (0.95 * length);
+        loop.crossfade = (float) juce::jmin (250.0, 1000.0 * 0.25 * (double) (loop.end - loop.start) / sample.rate);
+        return loop;
+    }
+
+    // The held part: from a little after the loudest moment (and no earlier than a quarter of the way in)
+    // to a little before the end.
+    const auto window = juce::jmax (64, (int) (0.02 * sample.rate));
+    auto loudestAt = 0;
+    auto loudest = 0.0;
+
+    for (int at = 0; at + window <= length; at += window)
+    {
+        auto energy = 0.0;
+
+        for (int i = 0; i < window; ++i)
+            energy += (double) x[(size_t) (at + i)] * x[(size_t) (at + i)];
+
+        if (energy > loudest)
+        {
+            loudest = energy;
+            loudestAt = at;
+        }
+    }
+
+    const auto reach = (int) std::ceil (2.0 * period);       // how far either side of the two places is compared
+    const auto from = juce::jmax (length / 4, loudestAt + (int) (0.05 * sample.rate), reach + 1);
+    const auto to = length - juce::jmax (reach + 1, length / 20);
+
+    if (to - from < (int) (4.0 * period))
+        return loop;
+
+    // How unlike the sound around two places is: the difference's energy against the sound's.
+    auto unlike = [&] (int a, int b)
+    {
+        auto difference = 0.0, energy = 1.0e-12;
+
+        for (int i = -reach; i < reach; ++i)
+        {
+            const auto p = x[(size_t) (a + i)], q = x[(size_t) (b + i)];
+            difference += (double) (p - q) * (p - q);
+            energy += (double) p * p + (double) q * q;
+        }
+
+        return difference / energy;
+    };
+
+    const auto mostCycles = (int) ((to - from) / period);
+    auto best = 1.0e30;
+    int bestStart = from, bestEnd = from + (int) std::lround (mostCycles * period);
+
+    for (int step = 0; step < 16; ++step)
+    {
+        const auto start = from + (int) ((to - from) * 0.5 * step / 16.0);
+        const auto cycles = (int) ((to - start) / period);
+
+        for (int n = cycles; n >= juce::jmax (2, cycles / 2); n -= juce::jmax (1, cycles / 24))
+        {
+            const auto centre = start + (int) std::lround (n * period);
+            const auto slack = juce::jmax (1, (int) (period / 8.0));
+
+            for (int end = centre - slack; end <= centre + slack; ++end)
+            {
+                if (end + reach >= length)
+                    continue;
+
+                // A longer loop is worth a little unlikeness: the sound moves less often.
+                const auto score = (unlike (start, end) + 1.0e-6) * (1.0 + 0.5 * (1.0 - (double) (end - start) / (double) (to - from)));
+
+                if (score < best)
+                {
+                    best = score;
+                    bestStart = start;
+                    bestEnd = end;
+                }
+            }
+        }
+    }
+
+    // Both to a rising zero crossing, the start's nearest and the end's nearest to as far on.
+    auto rising = [&] (int near, int within)
+    {
+        for (int d = 0; d <= within; ++d)
+            for (const auto at : { near - d, near + d })
+                if (at > 0 && at < length && x[(size_t) (at - 1)] <= 0.0f && x[(size_t) at] > 0.0f)
+                    return at;
+
+        return near;
+    };
+
+    const auto start = rising (bestStart, (int) period);
+    const auto end = rising (bestEnd + (start - bestStart), (int) (period / 4.0));
+    loop.found = end - start >= 4;
+    loop.start = first + start;
+    loop.end = first + end;
+    loop.crossfade = (float) juce::jmin (20.0, 1000.0 * (double) start / sample.rate, 1000.0 * 0.25 * (double) (end - start) / sample.rate);
+    return loop;
 }
 
 //==============================================================================
@@ -1446,6 +1847,7 @@ bool SamplerProcessor::slice (const SamplePtr& sample, const juce::File& file, j
 void SamplerProcessor::addToState (juce::XmlElement& xml) const
 {
     auto* all = xml.createNewChildElement ("ZONES");
+    const auto saving = [] { const juce::ScopedLock sl (store().lock); return store().savingInto; }();
     all->setAttribute ("slices", slicing.on ? 1 : 0);
     all->setAttribute ("sliceSource", (int) slicing.source);
     all->setAttribute ("sensitivity", (double) slicing.sensitivity);
@@ -1457,6 +1859,10 @@ void SamplerProcessor::addToState (juce::XmlElement& xml) const
         auto* e = all->createNewChildElement ("ZONE");
         e->setAttribute ("id", (int) z.id);
         e->setAttribute ("file", z.file.getFullPathName());
+
+        // Saved into a session: relative to its folder too, as its clips' audio is, so the folder can be moved.
+        if (saving != juce::File() && z.file != juce::File())
+            e->setAttribute ("relative", z.file.getRelativePathFrom (saving));
 
         if (z.name.isNotEmpty())
             e->setAttribute ("name", z.name);
@@ -1489,11 +1895,11 @@ void SamplerProcessor::readFromState (const juce::XmlElement& xml)
     if (all == nullptr)
         return;
 
-    juce::AudioFormatManager formats;
-    AudioFileIO::registerFormats (formats);
     std::map<juce::String, SamplePtr> read;
     std::vector<Zone> zones;
     missing.clear();
+    const auto sessionFolder = getSessionFolder();
+    juce::int64 held = 0;
 
     slicing = {};
     slicing.on = all->getIntAttribute ("slices") != 0;
@@ -1526,8 +1932,13 @@ void SamplerProcessor::readFromState (const juce::XmlElement& xml)
         z.loopInRelease = e->getIntAttribute ("loopInRelease", 1) != 0;
         z.choke = e->getIntAttribute ("choke");
 
-        if (const auto path = e->getStringAttribute ("file"); path.isNotEmpty())
+        if (auto path = e->getStringAttribute ("file"); path.isNotEmpty())
         {
+            // Beside its session first (where it is relative to the session's folder), then where it was.
+            if (const auto relative = e->getStringAttribute ("relative"); relative.isNotEmpty() && sessionFolder != juce::File())
+                if (const auto beside = sessionFolder.getChildFile (relative); beside.existsAsFile())
+                    path = beside.getFullPathName();
+
             z.file = juce::File (path);
 
             if (const auto found = read.find (path); found != read.end())
@@ -1537,11 +1948,20 @@ void SamplerProcessor::readFromState (const juce::XmlElement& xml)
             else
             {
                 juce::String error;
-                z.sample = loadSample (z.file, formats, error);
-                read[path] = z.sample;
+                z.sample = sharedSample (z.file, error);
 
-                if (z.sample == nullptr)
+                if (z.sample != nullptr && held + z.sample->bytes() > most)
+                {
+                    error = z.file.getFileName() + " was left out: with it the sampler would hold more than " + juce::File::descriptionOfSizeInBytes (most) + " of samples.";
+                    z.sample = nullptr;
+                }
+
+                if (z.sample != nullptr)
+                    held += z.sample->bytes();
+                else
                     missing.add (error);
+
+                read[path] = z.sample;
             }
         }
 
@@ -1549,5 +1969,80 @@ void SamplerProcessor::readFromState (const juce::XmlElement& xml)
     }
 
     setZones (std::move (zones));
+}
+}
+
+namespace BuiltInEffects
+{
+juce::Array<juce::File> SamplerProcessor::getFiles() const
+{
+    juce::Array<juce::File> files;
+
+    for (auto& z : getZones())
+        if (z.file != juce::File())
+            files.addIfNotAlreadyThere (z.file);
+
+    return files;
+}
+
+juce::int64 SamplerProcessor::bytesHeld() const
+{
+    std::set<const Sampler::Sample*> counted;
+    juce::int64 bytes = 0;
+
+    for (auto& z : getZones())
+        if (z.sample != nullptr && counted.insert (z.sample.get()).second)
+            bytes += z.sample->bytes();
+
+    return bytes;
+}
+
+juce::String SamplerProcessor::roomFor (const Sampler::SamplePtr& sample) const
+{
+    if (sample == nullptr)
+        return {};
+
+    for (auto& z : getZones())
+        if (z.sample == sample)
+            return {};
+
+    if (bytesHeld() + sample->bytes() <= most)
+        return {};
+
+    return sample->name + " takes " + juce::File::descriptionOfSizeInBytes (sample->bytes()) + ", and the sampler holds " + juce::File::descriptionOfSizeInBytes (bytesHeld())
+           + " already. One sampler can hold " + juce::File::descriptionOfSizeInBytes (most) + " of samples: they are held in memory, not played from disk.";
+}
+
+int SamplerProcessor::locate (const juce::File& found)
+{
+    auto zones = getZones();
+    const auto folder = found.isDirectory() ? found : found.getParentDirectory();
+    int back = 0;
+    juce::StringArray still;
+
+    for (auto& z : zones)
+    {
+        if (z.sample != nullptr || z.file == juce::File())
+            continue;
+
+        const auto candidate = ! found.isDirectory() && found.getFileName() == z.file.getFileName() ? found : folder.getChildFile (z.file.getFileName());
+        juce::String error;
+        auto sample = candidate.existsAsFile() ? Sampler::sharedSample (candidate, error) : nullptr;
+
+        if (sample != nullptr && roomFor (sample).isEmpty())
+        {
+            z.sample = sample;
+            z.file = candidate;
+            ++back;
+            setZones (zones);       // so the room left counts it
+        }
+        else
+        {
+            still.addIfNotAlreadyThere (error.isNotEmpty() ? error : z.file.getFileName() + " was not found.");
+        }
+    }
+
+    missing = still;
+    return back;
 }
 }

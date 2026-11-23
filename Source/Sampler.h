@@ -33,6 +33,15 @@ namespace Sampler
         juce::File file;               // where it was read from; none for one made in memory
         Markers markers;               // its file's markers and regions, in its frames
 
+        // What a WAV file's sampler chunk says, when it has one: the key it was recorded at (below
+        // 0, none), how many cents to tune it by, and its loop (0 none, 1 forward, 2 forward and back).
+        int fileRoot = -1;
+        float fileTune = 0.0f;
+        int fileLoop = 0;
+        juce::int64 fileLoopStart = 0, fileLoopEnd = 0;
+
+        juce::int64 bytes() const noexcept         { return (juce::int64) audio.getNumChannels() * audio.getNumSamples() * (juce::int64) sizeof (float); }
+
         int getNumFrames() const noexcept          { return audio.getNumSamples(); }
     };
 
@@ -44,6 +53,77 @@ namespace Sampler
     /** A sample read whole from a file (any type Torqwave opens): its first two channels. Nothing,
         with the reason in error, for a file that can't be read or holds no audio. */
     SamplePtr loadSample (const juce::File&, juce::AudioFormatManager&, juce::String& error);
+
+    //==============================================================================
+    // Samples are held whole in memory. The limits: one sample's length, and what one sampler holds.
+    constexpr double longestSampleSeconds = 600.0;
+    constexpr juce::int64 mostBytes = (juce::int64) 1 << 30;
+
+    /** A file's sample from the store every sampler shares, read (as loadSample does) when no
+        sampler holds it or the file has changed since: two samplers on one file hold it once.
+        Nothing, with the reason, for a file that can't be read or is longer than longestSampleSeconds. Any thread. */
+    SamplePtr sharedSample (const juce::File&, juce::String& error);
+
+    /** The folder sounds that are not files (an editor selection, an unsaved file) are written into
+        to be sampled: Music > Torqwave > Samples. */
+    juce::File samplesFolder();
+
+    /** Writes audio as a 32-bit float WAV with its markers into a folder (samplesFolder() by
+        default) under a name not yet used there, and gives the file; none, with the reason, if it can't. */
+    juce::File writeSample (const juce::AudioBuffer<float>&, double rate, const juce::String& name, const Markers&, juce::String& error,
+                            juce::File folder = {});
+
+    /** The folder of the session last opened (none before any): where a sample named relative to
+        its session is looked for first. Any thread. */
+    void setSessionFolder (const juce::File&);
+    juce::File getSessionFolder();
+
+    /** While one lives, a sampler's state names each sample relative to this folder as well as by
+        its full path: what saving a session wraps round the writing of its tracks' effects. */
+    class SavingInto
+    {
+    public:
+        explicit SavingInto (const juce::File& sessionFolder);
+        ~SavingInto();
+
+    private:
+        juce::File before;
+    };
+
+    /** In a track's effects (as TrackEffects::createXml gives them), copies every sample its
+        samplers name into `folder` (under its own name, numbered when another file has it), and
+        names the copies in their states, relative to sessionFolder too. The copies made are added
+        to `copies`, files that aren't there to `missing`. An error, or empty. */
+    juce::String collectFiles (juce::XmlElement& effects, const juce::File& sessionFolder, const juce::File& folder,
+                               std::vector<std::pair<juce::File, juce::File>>& copies, juce::StringArray& missing);
+
+    /** A sound's pitch as a zone needs it: the key it is nearest, and the cents to tune it by so
+        that key plays it in tune. Measured over half a second after the first 20 ms of the part
+        (all of a shorter one), as Decrypt measures a note. Not found for a sound with no clear
+        pitch between 30 Hz and 2 kHz: then the root is C3 (60). */
+    struct Pitch
+    {
+        bool found = false;
+        double hz = 0.0;
+        int root = 60;
+        float tune = 0.0f;
+    };
+
+    Pitch findPitch (const Sample&, juce::Range<juce::int64> part = {});
+
+    /** A loop suggested for a part of a sample (all of it, for an empty part). For a sound with a
+        pitch: in the held part of the note, a start and an end a whole number of its cycles apart
+        where the sound either side of the two is most alike, both on a rising zero crossing, with
+        a short crossfade. For one without: the later part of the sound under a long crossfade.
+        Not found for a part shorter than a fifth of a second. */
+    struct LoopFound
+    {
+        bool found = false;
+        juce::int64 start = 0, end = 0;
+        float crossfade = 0.0f;        // ms
+    };
+
+    LoopFound findLoop (const Sample&, juce::Range<juce::int64> part = {}, double hz = 0.0);
 
     /** Where a sample plays: the keys and velocities that play it, and the note it was recorded at. */
     struct Zone
@@ -316,6 +396,23 @@ namespace BuiltInEffects
         /** Samples named in its state that could not be read when it was last restored, with why. */
         juce::StringArray getMissing() const                         { return missing; }
 
+        /** The files its zones name, each once, those that are missing among them. */
+        juce::Array<juce::File> getFiles() const;
+
+        /** How much memory its samples take, each counted once. */
+        juce::int64 bytesHeld() const;
+
+        /** Why a sample can't be added (it would take the sampler past what it may hold), or empty. */
+        juce::String roomFor (const Sampler::SamplePtr&) const;
+
+        /** Looks for its missing samples: `found` is one of them where it is now, or a folder they
+            may be in. A file found is tried, by name, for the others missing from its folder too.
+            How many zones got their sample back. */
+        int locate (const juce::File& found);
+
+        /** For the tests: what it may hold, in place of Sampler::mostBytes. */
+        void setMostBytes (juce::int64 bytes)                         { most = bytes; }
+
     protected:
         void addToState (juce::XmlElement&) const override;
         void readFromState (const juce::XmlElement&) override;
@@ -336,6 +433,7 @@ namespace BuiltInEffects
         juce::uint32 generations = 0, zoneIds = 0;
         juce::StringArray missing;
         Sampler::Slicing slicing;
+        juce::int64 most = Sampler::mostBytes;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SamplerProcessor)
     };
