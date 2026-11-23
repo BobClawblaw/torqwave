@@ -369,6 +369,28 @@ namespace BuiltInEffects
         void reset() override;
         void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
         double getTailLengthSeconds() const override;
+        juce::AudioProcessorEditor* createEditor() override;
+
+        /** A sound added, as a drop on its window adds one. Playing slices, it is cut as the slicing
+            says (at its hits when it has no markers or regions to cut at) in place of what was
+            there. Otherwise it becomes a zone: in place of the zone `replace` (an id) keeping that
+            zone's keys, or a new zone over every key when it is the first, or over the octave from
+            `atKey`. Its root and tuning come from its file's sampler chunk or are found, and its
+            loop from the chunk. An error (no room for it), or empty. Message thread. */
+        juce::String addSample (const Sampler::SamplePtr&, const juce::File&, juce::uint32 replace = 0, int atKey = -1);
+
+        /** Plays a note now, as a click in its window does, and lets it go: added to the next block. Any thread. */
+        void play (int note, float velocity);
+        void stop (int note);
+
+        /** Counts up each time the zones are set, so a window knows to read them again. */
+        juce::uint32 getZonesVersion() const noexcept                { return version.load(); }
+
+        /** What a preset carries besides its values: the zones ("zones", as the state keeps them,
+            each sample named by its file) and how it is sliced. Applying texts with no zones
+            (a preset saved by a plain dialog) leaves them as they are. */
+        EffectPresets::Texts getPresetTexts() const;
+        void setPresetTexts (const EffectPresets::Texts&);
 
         /** The zones it plays. Set from the message thread; the voices take them up at their next
             block. A zone with an id of 0 is given one. */
@@ -419,6 +441,13 @@ namespace BuiltInEffects
 
     private:
         void retire();
+        void writeZones (juce::XmlElement& into) const;
+        void readZones (const juce::XmlElement& from);
+
+        // Notes from the window, waiting for the audio thread: a velocity below 0 lets the note go.
+        juce::SpinLock windowLock;
+        std::vector<std::pair<int, float>> windowNotes;
+        std::atomic<juce::uint32> version { 0 };
 
         std::map<juce::String, juce::RangedAudioParameter*> byId;
         Sampler::Engine engine;

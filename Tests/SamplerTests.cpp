@@ -2,6 +2,9 @@
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/Sampler.h"
+#include "../Source/SamplerEditor.h"
+#include "../Source/Theme.h"
+#include "../Source/InstrumentKeys.h"
 #include "../Source/DrumMachine.h"
 #include "../Source/Session.h"
 #include "../Source/SessionCollect.h"
@@ -1260,6 +1263,328 @@ namespace
         sampler.setZones ({});
         folder.deleteRecursively();
     }
+
+    void runBlock (Processor& sampler)
+    {
+        juce::AudioBuffer<float> block (2, 512);
+        juce::MidiBuffer midi;
+        sampler.processBlock (block, midi);
+    }
+
+    float rootRangeOf (int key)      { return (float) key / 127.0f; }
+
+    /** The window: its knobs, the waveform's handles, the key map, slices and their cuts. */
+    void testWindow (Processor& sampler)
+    {
+        const auto folder = juce::File::createTempFile ("samplerwindow");
+        folder.createDirectory();
+        const auto toneFile = writeWav (folder.getChildFile ("Held Note.wav"), harmonic (110.0, 2.0), rate);
+        const auto otherFile = writeWav (folder.getChildFile ("Other.wav"), harmonic (440.0, 1.0), rate);
+        std::vector<double> times;
+        const auto loopFile = writeWav (folder.getChildFile ("Break.wav"), drumLoop (times), rate);
+
+        defaults (sampler);
+        sampler.setZones ({});
+        sampler.setSlicing ({});
+        sampler.prepareToPlay (rate, 512);
+        std::unique_ptr<juce::AudioProcessorEditor> made (sampler.createEditorAndMakeActive());
+        auto* window = dynamic_cast<SamplerEditor*> (made.get());
+
+        if (window == nullptr)
+        {
+            check (false, "sampler window: it has one of its own");
+            return;
+        }
+
+        const auto text = [&] (const char* name)
+        {
+            auto* k = window->knob (name);
+            return k != nullptr ? k->getValueText() : juce::String ("?");
+        };
+
+        // Empty, then with a sound: a zone over every key, its pitch found.
+        const auto sized = window->getWidth() == SamplerEditor::windowWidth && window->getHeight() == SamplerEditor::windowHeight;
+        const auto empty = window->getZones().empty() && window->getSelected() == -1 && window->getStatus() == "No sample yet";
+        const auto loaded = window->loadFile (toneFile);
+        const auto first = window->getZones().size() == 1 && window->getSelected() == 0 && window->getZones()[0].root == 45 && window->getZones()[0].lowKey == 0
+                           && window->getZones()[0].highKey == 127 && window->getStatus().contains ("Held Note") && window->getStatus().contains ("root A2") && text ("Root") == "A2";
+        const auto named = window->getStatus().upToFirstOccurrenceOf ("  |", false, false);
+        const auto refused = ! window->loadFile (folder.getChildFile ("Nothing.wav")) && window->getStatus().contains ("was not found") && window->getZones().size() == 1;
+
+        check (sized && empty && loaded && first && refused,
+               "sampler window: 940 by 746; empty it says so; a sound given to it becomes a zone over every key with its root found (A2), named in its status ("
+                   + named + "); a file that isn't there is refused with the reason and nothing changes");
+
+        // Its knobs read the settings in their units, and turn them.
+        {
+            const auto readings = text ("Cutoff") + ", " + text ("Level") + ", " + text ("Attack") + ", " + text ("Release") + ", " + text ("Velocity") + ", " + text ("Rate")
+                                  + ", " + text ("Bend") + ", " + text ("Transpose") + ", " + text ("Crossfade") + ", " + text ("Tune");
+            auto* cutoff = window->knob ("Cutoff");
+            cutoff->setNormalised (0.5f);
+            const auto turned = sampler.parameter ("cutoff")->getValue();
+            set (sampler, "cutoff", 20000.0f);
+            window->refreshNow();
+            int found = 0;
+
+            for (const auto name : { "Root", "Tune", "Zone Level", "Zone Pan", "Crossfade", "Sensitivity", "Attack", "Decay", "Sustain", "Release", "Velocity", "Cutoff", "Reso", "Key", "Env",
+                                     "F Attack", "F Decay", "F Sustain", "F Release", "Vel", "Rate", "Fade In", "To Pitch", "To Filter", "To Level", "To Pan", "Level", "Pan",
+                                     "Transpose", "Fine", "Bend", "Glide", "Wheel" })
+                found += window->knob (name) != nullptr ? 1 : 0;
+
+            check (readings == "20.0 kHz, -6.0 dB, 0.00 ms, 100.0 ms, 80 %, 5.00 Hz, 2 st, 0 st, 0.00 ms, 0 ct" && std::abs (turned - 0.5f) < 1.0e-6f && found == 33
+                       && text ("Cutoff") == "20.0 kHz",
+                   "sampler window: its 33 knobs are there, reading as it comes " + readings + "; a knob turned sets its parameter, and follows it back");
+        }
+
+        // The zone's knobs and switches set the zone.
+        {
+            window->knob ("Root")->setNormalised (rootRangeOf (57));
+            window->knob ("Zone Level")->setNormalised (0.5f);
+            const auto z = sampler.getZones()[0];
+            check (z.root == 57 && std::abs (z.level - (-18.0f)) < 0.01f && text ("Root") == "A3",
+                   "sampler window: the Root knob sets the zone's root (A3) and Zone Level its level");
+        }
+
+        // The waveform's handles: the part's ends, the loop's, and the crossfade.
+        {
+            auto& wave = window->getWave();
+            using Handle = SamplerEditor::Wave::Handle;
+            wave.setBounds (wave.getBounds());
+            int cut = 0;
+            const auto whole = wave.getView().getStart() == 0.0 && wave.getView().getLength() == 96000.0 && std::abs (wave.xOf (48000) - (float) wave.getWidth() * 0.5f) < 1.0f
+                               && std::abs ((double) wave.frameAt ((float) wave.getWidth() * 0.25f) - 24000.0) < 200.0;
+            const auto atStart = wave.handleAt ({ wave.xOf (0) + 2.0f, 60.0f }, cut) == Handle::start, atEnd = wave.handleAt ({ wave.xOf (96000) - 2.0f, 60.0f }, cut) == Handle::end;
+            const auto nowhere = wave.handleAt ({ wave.xOf (48000), 60.0f }, cut) == Handle::none;
+
+            wave.dragTo (Handle::start, 0, 4800);
+            wave.dragTo (Handle::end, 0, 90000);
+            auto z = sampler.getZones()[0];
+            const auto ends = z.start == 4800 && z.end == 90000;
+            wave.dragTo (Handle::start, 0, 95000);       // not past the end
+            const auto held = sampler.getZones()[0].start == 90000 - 16;
+            wave.dragTo (Handle::start, 0, 4800);
+
+            window->findLoop();
+            z = sampler.getZones()[0];
+            const auto found = z.loop == 1 && z.loopStart > 4800 && z.loopEnd > z.loopStart && z.loopEnd <= 90000 && z.crossfade > 0.0f;
+            const auto onLoop = wave.handleAt ({ wave.xOf (z.loopStart), 60.0f }, cut) == Handle::loopStart && wave.handleAt ({ wave.xOf (z.loopEnd), 60.0f }, cut) == Handle::loopEnd
+                                && wave.handleAt ({ wave.xOf (z.loopEnd - (juce::int64) (z.crossfade * 0.001 * rate)), 8.0f }, cut) == Handle::crossfade;
+
+            wave.dragTo (Handle::loopStart, 0, 30000);
+            wave.dragTo (Handle::loopEnd, 0, 60000);
+            wave.dragTo (Handle::crossfade, 0, 60000 - 2400);
+            z = sampler.getZones()[0];
+            const auto moved = z.loopStart == 30000 && z.loopEnd == 60000 && std::abs (z.crossfade - 50.0f) < 0.01f && text ("Crossfade") == "50.0 ms";
+            wave.dragTo (Handle::loopStart, 0, 70000);   // not past the loop's end
+            const auto ordered = sampler.getZones()[0].loopStart == 60000 - 4;
+
+            // Zoomed in, the handles are where the frames are.
+            wave.setView ({ 20000.0, 40000.0 });
+            const auto zoomed = std::abs (wave.xOf (30000) - (float) wave.getWidth() * 0.5f) < 1.0f && wave.frameAt (0.0f) == 20000;
+            wave.showAll();
+
+            check (whole && atStart && atEnd && nowhere && ends && held && found && onLoop && moved && ordered && zoomed,
+                   "sampler window: the waveform shows the whole sample; its start and end handles are at the part's ends and drag them (not past each other); Find Loop sets a loop with a crossfade, "
+                   "whose handles sit at the loop's ends and, along the top, where the crossfade begins; dragged, they move the loop (kept in order) and set the crossfade (50 ms for 2,400 frames); zoomed in, frames are where they are drawn");
+        }
+
+        // The key map: a zone's edges set its keys and velocities; a sound on a key is a new zone there.
+        {
+            auto& keys = window->getKeyMap();
+            using Edge = SamplerEditor::KeyMap::Edge;
+            const auto all = keys.zoneBounds (0);
+            const auto across = std::abs (all.getX()) < 0.5f && std::abs (all.getRight() - (float) keys.getWidth()) < 0.5f && keys.keyAt (0.0f) == 0 && keys.keyAt ((float) keys.getWidth() - 1.0f) == 127
+                                && keys.keyAt ((float) keys.getWidth() * 60.5f / 128.0f) == 60;
+            keys.dragEdge (0, Edge::high, 71);
+            keys.dragEdge (0, Edge::low, 36);
+            keys.dragEdge (0, Edge::top, 100);
+            keys.dragEdge (0, Edge::bottom, 20);
+            auto z = sampler.getZones()[0];
+            const auto edges = z.lowKey == 36 && z.highKey == 71 && z.lowVelocity == 20 && z.highVelocity == 100;
+            keys.dragEdge (0, Edge::low, 90);
+            const auto ordered = sampler.getZones()[0].lowKey == 71;
+            keys.dragEdge (0, Edge::low, 36);
+            const auto drawn = keys.zoneBounds (0);
+            const auto placed = std::abs (drawn.getX() - (float) keys.getWidth() * 36.0f / 128.0f) < 0.5f && std::abs (drawn.getRight() - (float) keys.getWidth() * 72.0f / 128.0f) < 0.5f
+                                && drawn.getY() > all.getY() && drawn.getBottom() < all.getBottom();
+
+            const auto added = window->loadFile (otherFile, 72);
+            const auto zones = sampler.getZones();
+            const auto second = added && zones.size() == 2 && zones[1].lowKey == 72 && zones[1].highKey == 83 && zones[1].root == 69 && window->getSelected() == 1
+                                && keys.zoneAt (keys.zoneBounds (0).getCentre()) == 0 && keys.zoneAt (keys.zoneBounds (1).getCentre()) == 1 && keys.zoneAt ({ 2.0f, 5.0f }) == -1;
+            window->select (1);
+            window->removeZone();
+            const auto removed = sampler.getZones().size() == 1 && window->getSelected() == 0;
+
+            check (across && edges && ordered && placed && second && removed,
+                   "sampler window: a zone over every key is drawn across the whole key map; its edges dragged set its keys (C2 to B4) and velocities (20 to 100), kept in order, and it is drawn there; "
+                   "a sound given at C5 is a second zone over the octave from C5 with its own root (A4), selected; Remove Zone takes it away");
+        }
+
+        // Find Pitch, and what a preset carries: the zones with their files.
+        {
+            window->changeSelected ([] (Sampler::Zone& z) { z.root = 12; z.tune = 30.0f; });
+            window->findPitch();
+            const auto z = sampler.getZones()[0];
+            const auto texts = sampler.getPresetTexts();
+            Processor other;
+            other.setPresetTexts (texts);
+            const auto back = other.getZones();
+            other.setPresetTexts ({});
+
+            check (z.root == 45 && std::abs (z.tune) < 3.0f && back.size() == 1 && back[0].sample != nullptr && back[0].file == toneFile && back[0].loopStart == z.loopStart
+                       && back[0].lowKey == 36 && other.getZones().size() == 1,
+                   "sampler window: Find Pitch puts back the root (A2) and tuning; what a preset carries beside its values brings the zones back in another sampler, their samples read from their files, "
+                   "and a preset without zones leaves them as they are");
+        }
+
+        // Slices: the sample cut at its hits, a pad each; cuts dragged, added and taken away.
+        {
+            window->select (0);
+            window->changeSelected ([] (Sampler::Zone& z) { z.lowKey = 0; z.highKey = 127; });
+            const auto swapped = window->loadFile (loopFile);        // in place of the selected zone's sample
+            const auto one = sampler.getZones().size() == 1 && sampler.getZones()[0].file == loopFile;
+            window->setSlices (true);
+            auto zones = sampler.getZones();
+            const auto sliced = swapped && one && window->showsSlices() && zones.size() == times.size() && zones[0].lowKey == 36 && zones[0].oneShot;
+
+            auto& wave = window->getWave();
+            auto& keys = window->getKeyMap();
+            using Handle = SamplerEditor::Wave::Handle;
+            int cut = 0;
+            const auto onCut = wave.handleAt ({ wave.xOf (zones[3].start), 50.0f }, cut) == Handle::cut && cut == 3;
+            const auto was = zones[3].start;
+            wave.dragTo (Handle::cut, 3, was + 300);
+            zones = sampler.getZones();
+            const auto dragged = zones[3].start == was + 300 && zones[2].end == was + 300;
+            wave.dragTo (Handle::cut, 3, zones[4].end + 5000);          // not past the next slice's end
+            zones = sampler.getZones();
+            const auto held = zones[3].start == zones[3].end - 16 && zones[2].end == zones[3].start;
+            wave.dragTo (Handle::cut, 3, was);
+
+            const auto count = (int) sampler.getZones().size();
+            const auto middle = (sampler.getZones()[5].start + sampler.getZones()[5].end) / 2;
+            const auto added = wave.addCut (middle);
+            zones = sampler.getZones();
+            const auto split = added && (int) zones.size() == count + 1 && zones[5].end == middle && zones[6].start == middle && zones[6].lowKey == 42 && zones[7].lowKey == 43
+                               && zones[6].name == "Slice 7";
+            const auto taken = wave.removeCut (6);
+            zones = sampler.getZones();
+            const auto joined = taken && (int) zones.size() == count && zones[5].end > middle && zones[6].lowKey == 42 && ! wave.removeCut (0) && ! wave.removeCut (99);
+
+            // A pad lights while its slice plays.
+            const auto pads = keys.padBounds (0).getWidth() > 20.0f && keys.padBounds (count - 1).getBottom() <= (float) keys.getHeight() && keys.zoneAt (keys.padBounds (2).getCentre()) == 2;
+            sampler.play (38, 1.0f);
+            runBlock (sampler);
+            const auto lit = keys.isLit (2) && ! keys.isLit (1);
+            sampler.reset();
+
+            for (int i = 0; i < 4; ++i)
+                runBlock (sampler);
+
+            const auto dark = ! keys.isLit (2);
+
+            // Cut again in equal parts, and back to one zone across the keys.
+            auto how = sampler.getSlicing();
+            how.source = Sampler::SliceSource::equalParts;
+            how.parts = 8;
+            sampler.setSlicing (how);
+            window->sliceAgain();
+            const auto eight = sampler.getZones().size() == 8 && sampler.getZones()[7].end == 192000;
+            window->setSlices (false);
+            const auto whole = ! window->showsSlices() && sampler.getZones().size() == 1 && sampler.getZones()[0].lowKey == 0 && sampler.getZones()[0].highKey == 127 && ! sampler.getZones()[0].oneShot;
+
+            check (sliced && onCut && dragged && held && split && joined && pads && lit && dark && eight && whole,
+                   "sampler window: Slices cuts the selected zone's sample at its hits (" + juce::String (times.size()) + " slices from C1, a pad each); a cut is where its slice starts and drags it, "
+                   "not past the next slice; a cut added makes two slices of one and moves the keys after it up, and taken away joins them again; a pad lights while its slice plays; "
+                   "Slice Again in eight equal parts gives eight; back to Keys, the sample is one zone over every key");
+        }
+
+        // With everything an instrument's window adds to the presets row, the preset menu keeps room for a name.
+        {
+            int menuWidth = 0;
+
+            if (auto* row = InstrumentKeys::presetsRow (*window))
+            {
+                row->showAudition (true, [] (bool) {});
+                row->showAuditionLoop (false, [] (bool) {}, [] {});
+                row->showPatterns ([] { return juce::StringArray { "Low Riff", "Octave Run" }; }, [] { return 0; }, [] (int) {});
+                window->resized();
+
+                for (auto* c : row->getChildren())
+                    if (auto* menu = dynamic_cast<juce::ComboBox*> (c))
+                        menuWidth = menu->getWidth();
+            }
+
+            check (menuWidth >= 180, "sampler window: with Audition, Loop, Stop and the pattern menu showing, the preset menu is " + juce::String (menuWidth) + " px wide, room for a name");
+        }
+
+        made.reset();
+        sampler.setZones ({});
+        sampler.setSlicing ({});
+        folder.deleteRecursively();
+    }
+}
+
+void saveSamplerWindow (const juce::File& folder)
+{
+    const auto sounds = juce::File::createTempFile ("samplerpictures");
+    sounds.createDirectory();
+    std::vector<double> times;
+    const auto loopFile = writeWav (sounds.getChildFile ("Break.wav"), drumLoop (times), rate);
+
+    // A held note with its attack and a slow fall, looped.
+    auto note = harmonic (110.0, 3.0);
+
+    for (int i = 0; i < note.getNumSamples(); ++i)
+        note.setSample (0, i, note.getSample (0, i) * (float) (juce::jmin (1.0, i / 300.0) * (0.55 + 0.45 * std::exp (-i / (0.6 * rate)))));
+
+    const auto noteFile = writeWav (sounds.getChildFile ("Held Note.wav"), note, rate);
+
+    for (const auto slices : { false, true })
+    {
+        Processor sampler;
+        sampler.prepareToPlay (rate, 512);
+        std::unique_ptr<juce::AudioProcessorEditor> made (sampler.createEditorAndMakeActive());
+        auto* window = dynamic_cast<SamplerEditor*> (made.get());
+
+        if (window == nullptr)
+            return;
+
+        if (slices)
+        {
+            window->loadFile (loopFile);
+            window->setSlices (true);
+            window->select (4);
+            sampler.play (40, 1.0f);
+        }
+        else
+        {
+            window->loadFile (noteFile);
+            window->findLoop();
+            window->getKeyMap().dragEdge (0, SamplerEditor::KeyMap::Edge::low, 24);
+            window->getKeyMap().dragEdge (0, SamplerEditor::KeyMap::Edge::high, 84);
+            sampler.play (45, 1.0f);
+        }
+
+        for (int i = 0; i < (slices ? 4 : 60); ++i)
+            runBlock (sampler);
+
+        window->refreshNow();
+
+        for (auto theme : { "Dark", "Light" })
+        {
+            Theme::apply (Theme::make (theme, "Blue"));
+            const auto image = made->createComponentSnapshot (made->getLocalBounds(), true, 2.0f);
+            auto file = folder.getChildFile (juce::String ("sampler-") + (slices ? "slices-" : "keys-") + theme + ".png");
+            file.deleteFile();
+            juce::FileOutputStream out (file);
+            juce::PNGImageFormat().writeImageToStream (image, out);
+            std::cout << file.getFullPathName() << std::endl;
+        }
+    }
+
+    sounds.deleteRecursively();
 }
 
 void runSamplerTests (AudioEngine& engine)
@@ -1788,6 +2113,7 @@ void runSamplerTests (AudioEngine& engine)
     testZones (*sampler);
     testSlices (*sampler);
     testFiles (engine, *sampler);
+    testWindow (*sampler);
 
     defaults (*sampler);
     sampler->setZones ({});

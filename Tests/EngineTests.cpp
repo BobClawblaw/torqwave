@@ -778,6 +778,12 @@ int main (int argc, char* argv[])
         return 0;
     }
 
+    if (const auto folder = valueOf ("--sampler-window"); folder.isNotEmpty())
+    {
+        saveSamplerWindow (juce::File (folder));
+        return 0;
+    }
+
     if (args.contains ("--voice-names"))
     {
         // The factory patches and kits a sequence preset's voice can name, for Scripts/make_presets.py.

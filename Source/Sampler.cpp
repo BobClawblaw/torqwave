@@ -1760,6 +1760,7 @@ void SamplerProcessor::setZones (std::vector<Zone> zones)
     program = next;
     pending = std::move (next);
     programChanged.store (true);
+    version.fetch_add (1);
 }
 
 std::vector<Zone> SamplerProcessor::getZones() const
@@ -1791,6 +1792,23 @@ void SamplerProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
                 engine.setTempo (*bpm);
 
     engine.setSettings (currentSettings());
+
+    {
+        const juce::SpinLock::ScopedTryLockType lock (windowLock);
+
+        if (lock.isLocked() && ! windowNotes.empty())
+        {
+            for (auto& [note, velocity] : windowNotes)
+            {
+                if (velocity >= 0.0f)
+                    engine.noteOn (note, velocity);
+                else
+                    engine.noteOff (note);
+            }
+
+            windowNotes.clear();
+        }
+    }
 
     auto* left = buffer.getNumChannels() > 0 ? buffer.getWritePointer (0) : nullptr;
     auto* right = buffer.getNumChannels() > 1 ? buffer.getWritePointer (1) : nullptr;
@@ -1844,7 +1862,146 @@ bool SamplerProcessor::slice (const SamplePtr& sample, const juce::File& file, j
     return true;
 }
 
+void SamplerProcessor::play (int note, float velocity)
+{
+    const juce::SpinLock::ScopedLockType lock (windowLock);
+
+    if (windowNotes.size() < 256)
+        windowNotes.emplace_back (juce::jlimit (0, 127, note), juce::jlimit (0.0f, 1.0f, velocity));
+}
+
+void SamplerProcessor::stop (int note)
+{
+    const juce::SpinLock::ScopedLockType lock (windowLock);
+
+    if (windowNotes.size() < 256)
+        windowNotes.emplace_back (juce::jlimit (0, 127, note), -1.0f);
+}
+
+juce::String SamplerProcessor::addSample (const SamplePtr& sample, const juce::File& file, juce::uint32 replace, int atKey)
+{
+    if (sample == nullptr)
+        return "There is no sound to add.";
+
+    if (slicing.on)
+    {
+        // Slices take the place of what was there, so only the new sample has to fit.
+        if (sample->bytes() > most)
+            return sample->name + " takes " + juce::File::descriptionOfSizeInBytes (sample->bytes()) + ". One sampler can hold " + juce::File::descriptionOfSizeInBytes (most)
+                   + " of samples: they are held in memory, not played from disk.";
+
+        auto how = slicing;
+
+        if (findSlices (*sample, {}, how).empty())
+            how.source = SliceSource::hits;     // no markers or regions to cut at
+
+        return slice (sample, file, {}, how) ? juce::String() : sample->name + " is too short to slice.";
+    }
+
+    auto zones = getZones();
+    const auto old = std::find_if (zones.begin(), zones.end(), [replace] (const Zone& z) { return replace != 0 && z.id == replace; });
+
+    if (old == zones.end() && (int) zones.size() >= maxZones)
+        return "A sampler has at most " + juce::String (maxZones) + " zones.";
+
+    // Replacing a zone's sample frees the old one when no other zone plays it.
+    {
+        std::set<const Sample*> kept;
+        juce::int64 held = 0;
+
+        for (auto& z : zones)
+            if (z.sample != nullptr && &z != &*old && kept.insert (z.sample.get()).second)
+                held += z.sample->bytes();
+
+        if (kept.count (sample.get()) == 0 && held + sample->bytes() > most)
+            return roomFor (sample).isNotEmpty() ? roomFor (sample)
+                                                 : sample->name + " doesn't fit: one sampler can hold " + juce::File::descriptionOfSizeInBytes (most) + " of samples.";
+    }
+
+    Zone z;
+    z.sample = sample;
+    z.file = file;
+    z.name = sample->name;
+
+    if (sample->fileRoot >= 0)
+    {
+        z.root = sample->fileRoot;
+        z.tune = sample->fileTune;
+    }
+    else
+    {
+        const auto pitch = findPitch (*sample);
+        z.root = pitch.root;
+        z.tune = pitch.tune;
+    }
+
+    if (sample->fileLoop != 0)
+    {
+        z.loop = sample->fileLoop;
+        z.loopStart = sample->fileLoopStart;
+        z.loopEnd = sample->fileLoopEnd;
+    }
+
+    if (old != zones.end())
+    {
+        z.id = old->id;
+        z.lowKey = old->lowKey;
+        z.highKey = old->highKey;
+        z.lowVelocity = old->lowVelocity;
+        z.highVelocity = old->highVelocity;
+        z.level = old->level;
+        z.pan = old->pan;
+        z.choke = old->choke;
+        *old = std::move (z);
+    }
+    else
+    {
+        if (! zones.empty() && atKey >= 0)
+        {
+            z.lowKey = juce::jlimit (0, 127, atKey);
+            z.highKey = juce::jmin (127, z.lowKey + 11);
+        }
+
+        zones.push_back (std::move (z));
+    }
+
+    setZones (std::move (zones));
+    return {};
+}
+
+EffectPresets::Texts SamplerProcessor::getPresetTexts() const
+{
+    juce::XmlElement holder ("SAMPLER");
+    writeZones (holder);
+    return { { "zones", holder.getChildByName ("ZONES")->toString (juce::XmlElement::TextFormat().singleLine()) } };
+}
+
+void SamplerProcessor::setPresetTexts (const EffectPresets::Texts& texts)
+{
+    const auto found = texts.find ("zones");
+
+    if (found == texts.end() || found->second.isEmpty())
+        return;
+
+    if (auto zones = juce::XmlDocument::parse (found->second))
+    {
+        juce::XmlElement holder ("SAMPLER");
+        holder.addChildElement (zones.release());
+        readZones (holder);
+    }
+}
+
 void SamplerProcessor::addToState (juce::XmlElement& xml) const
+{
+    writeZones (xml);
+}
+
+void SamplerProcessor::readFromState (const juce::XmlElement& xml)
+{
+    readZones (xml);
+}
+
+void SamplerProcessor::writeZones (juce::XmlElement& xml) const
 {
     auto* all = xml.createNewChildElement ("ZONES");
     const auto saving = [] { const juce::ScopedLock sl (store().lock); return store().savingInto; }();
@@ -1888,7 +2045,7 @@ void SamplerProcessor::addToState (juce::XmlElement& xml) const
     }
 }
 
-void SamplerProcessor::readFromState (const juce::XmlElement& xml)
+void SamplerProcessor::readZones (const juce::XmlElement& xml)
 {
     const auto* all = xml.getChildByName ("ZONES");
 
