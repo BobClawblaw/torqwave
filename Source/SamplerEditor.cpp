@@ -1,5 +1,6 @@
 #include "SamplerEditor.h"
 #include "AudioFileIO.h"
+#include "SoundDrops.h"
 #include "Theme.h"
 
 using BuiltInEffects::SamplerProcessor;
@@ -1130,12 +1131,74 @@ void SamplerEditor::filesDropped (const juce::StringArray& files, int x, int y)
     const auto onKeys = keyMap->getScreenBounds().contains (localPointToGlobal (juce::Point<int> (x, y))) && ! showsSlices();
     const auto key = onKeys ? keyMap->keyAt ((float) (localPointToGlobal (juce::Point<int> (x, y)).x - keyMap->getScreenX())) : -1;
 
+    juce::Array<juce::File> sounds;
+
     for (auto& f : files)
         if (juce::File (f).hasFileExtension ("wav;wave;bwf;aif;aiff;aifc;flac;ogg;opus;mp3;m4a;caf"))
+            sounds.add (juce::File (f));
+
+    if (sounds.size() == 1)
+        loadFile (sounds[0], key);
+    else if (sounds.size() > 1)
+        loadFiles (sounds, key);
+}
+
+bool SamplerEditor::loadFiles (const juce::Array<juce::File>& files, int atKey)
+{
+    std::vector<std::pair<Sampler::SamplePtr, juce::File>> sounds;
+    juce::String error;
+
+    for (auto& f : files)
+        if (auto sample = Sampler::sharedSample (f, error))
+            sounds.emplace_back (sample, f);
+
+    if (sounds.empty())
+    {
+        say (error);
+        return false;
+    }
+
+    const auto refused = sampler.addSamples (sounds, atKey >= 0 ? atKey : Sampler::firstSliceKey);
+    readZones();
+    select ((int) zoneList.size() - 1);
+
+    if (refused.isNotEmpty() || error.isNotEmpty())
+        say (refused.isNotEmpty() ? refused : error);
+
+    return refused.isEmpty();
+}
+
+bool SamplerEditor::isInterestedInDragSource (const SourceDetails& details)
+{
+    return SoundDrops::accepts (details.description);
+}
+
+void SamplerEditor::itemDropped (const SourceDetails& details)
+{
+    const auto sound = SoundDrops::take (details.description, Sampler::longestSampleSeconds);
+
+    if (! sound.has_value())
+        return;
+
+    const auto onKeys = keyMap->getScreenBounds().contains (localPointToGlobal (details.localPosition)) && ! showsSlices();
+    const auto key = onKeys ? keyMap->keyAt ((float) (localPointToGlobal (details.localPosition).x - keyMap->getScreenX())) : -1;
+
+    // A saved file as it stands is sampled where it is; anything else is written to the Samples folder first.
+    auto file = sound->file;
+
+    if (file == juce::File())
+    {
+        juce::String error;
+        file = Sampler::writeSample (sound->audio, sound->sampleRate, sound->name, sound->markers, error);
+
+        if (file == juce::File())
         {
-            loadFile (juce::File (f), key);
-            break;
+            say (error);
+            return;
         }
+    }
+
+    loadFile (file, key);
 }
 
 void SamplerEditor::chooseFile()

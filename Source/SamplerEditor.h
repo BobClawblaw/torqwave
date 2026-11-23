@@ -14,6 +14,7 @@
     becomes the selected zone's sample, or the first zone, or the slices. */
 class SamplerEditor final : public juce::AudioProcessorEditor,
                             public juce::FileDragAndDropTarget,
+                            public juce::DragAndDropTarget,
                             private juce::Timer
 {
 public:
@@ -25,6 +26,13 @@ public:
 
     bool isInterestedInFileDrag (const juce::StringArray& files) override;
     void filesDropped (const juce::StringArray& files, int x, int y) override;
+
+    /** An open file dragged from the Files panel (SoundDrops). */
+    bool isInterestedInDragSource (const SourceDetails&) override;
+    void itemDropped (const SourceDetails&) override;
+
+    /** Gives it several files at once, as dropping them together does. */
+    bool loadFiles (const juce::Array<juce::File>&, int atKey = -1);
 
     static constexpr int windowWidth = 940, windowHeight = 746;
 

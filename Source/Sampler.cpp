@@ -1969,6 +1969,95 @@ juce::String SamplerProcessor::addSample (const SamplePtr& sample, const juce::F
     return {};
 }
 
+juce::String SamplerProcessor::addSamples (const std::vector<std::pair<SamplePtr, juce::File>>& sounds, int fromKey)
+{
+    if (sounds.empty())
+        return {};
+
+    if (slicing.on || sounds.size() == 1)
+        return addSample (sounds.front().first, sounds.front().second);
+
+    std::vector<Zone> added;
+    auto allPitched = true;
+
+    for (auto& [sample, file] : sounds)
+    {
+        if (sample == nullptr)
+            continue;
+
+        Zone z;
+        z.sample = sample;
+        z.file = file;
+        z.name = sample->name;
+
+        if (sample->fileRoot >= 0)
+        {
+            z.root = sample->fileRoot;
+            z.tune = sample->fileTune;
+        }
+        else
+        {
+            const auto pitch = findPitch (*sample);
+            z.root = pitch.root;
+            z.tune = pitch.tune;
+            allPitched = allPitched && pitch.found;
+        }
+
+        added.push_back (std::move (z));
+    }
+
+    if (allPitched)
+    {
+        // Around their own notes: each from half way down to the one below to half way up to the one above.
+        std::stable_sort (added.begin(), added.end(), [] (const Zone& a, const Zone& b) { return a.root < b.root; });
+
+        for (size_t i = 0; i < added.size(); ++i)
+        {
+            added[i].lowKey = i == 0 ? 0 : added[i - 1].highKey + 1;
+            added[i].highKey = i + 1 == added.size() ? 127 : juce::jmax (added[i].lowKey, (added[i].root + added[i + 1].root) / 2);
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < added.size(); ++i)
+        {
+            added[i].root = added[i].lowKey = added[i].highKey = juce::jlimit (0, 127, fromKey + (int) i);
+            added[i].tune = 0.0f;
+            added[i].oneShot = true;
+        }
+    }
+
+    auto zones = getZones();
+    juce::String error;
+
+    for (auto& z : added)
+    {
+        if ((int) zones.size() >= maxZones)
+        {
+            error = "A sampler has at most " + juce::String (maxZones) + " zones.";
+            break;
+        }
+
+        std::set<const Sample*> held;
+        juce::int64 bytes = 0;
+
+        for (auto& other : zones)
+            if (other.sample != nullptr && held.insert (other.sample.get()).second)
+                bytes += other.sample->bytes();
+
+        if (held.count (z.sample.get()) == 0 && bytes + z.sample->bytes() > most)
+        {
+            error = z.sample->name + " and what follows were left out: one sampler can hold " + juce::File::descriptionOfSizeInBytes (most) + " of samples.";
+            break;
+        }
+
+        zones.push_back (z);
+    }
+
+    setZones (std::move (zones));
+    return error;
+}
+
 EffectPresets::Texts SamplerProcessor::getPresetTexts() const
 {
     juce::XmlElement holder ("SAMPLER");

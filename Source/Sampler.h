@@ -379,6 +379,12 @@ namespace BuiltInEffects
             loop from the chunk. An error (no room for it), or empty. Message thread. */
         juce::String addSample (const Sampler::SamplePtr&, const juce::File&, juce::uint32 replace = 0, int atKey = -1);
 
+        /** Several sounds added at once, as files dropped together are (playing slices, the first
+            alone is cut). When each has a clear pitch they become zones around their own notes,
+            the keys between two shared half and half; otherwise each goes on a key of its own from
+            `fromKey` up, as a one-shot. The first error (no room), or empty. Message thread. */
+        juce::String addSamples (const std::vector<std::pair<Sampler::SamplePtr, juce::File>>&, int fromKey = Sampler::firstSliceKey);
+
         /** Plays a note now, as a click in its window does, and lets it go: added to the next block. Any thread. */
         void play (int note, float velocity);
         void stop (int note);

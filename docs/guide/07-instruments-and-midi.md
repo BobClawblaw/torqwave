@@ -192,9 +192,16 @@ Six notes can sound at once; a seventh takes the oldest's place. It answers pitc
 
 *Torqwave Sampler playing a looped note. The picture is drawn by Torqwave's tests, without the strip of playing keys the window has in the app.*
 
-**Give it a sound.** Drop an audio file on the window, click **Open...**, or double-click the empty waveform. Any type Torqwave opens will do. The sound becomes a **zone** over every key, and Torqwave measures its pitch to set the key that plays it as it was recorded (the **root**) and its tuning. A sound with no clear pitch gets C3. A WAV file that carries its own root note and loop (many sample libraries' files do) keeps those.
+**Give it a sound.** Drop an audio file on the window, click **Open...**, or double-click the empty waveform. Any type Torqwave opens will do. A file can come from the Finder, from the **Sound Library** (a whole sound, or the part you dragged out of its preview), or from the **Files** panel: an open file that is saved is sampled where it is, and one with unsaved changes, or never saved, is written into Music > Torqwave > Samples first. The sound becomes a **zone** over every key, and Torqwave measures its pitch to set the key that plays it as it was recorded (the **root**) and its tuning. A sound with no clear pitch gets C3. A WAV file that carries its own root note and loop (many sample libraries' files do) keeps those.
+
+**Straight from the editor or a clip**, without opening the window first:
+
+- In the editor, **File > New Sampler Track from Selection** makes the selection (the whole file with none) the sound of a new sampler track in the session, with its pitch found, and opens the window. Markers inside the selection go with it, so Slices can cut at them.
+- In a session, right-click an audio clip: **New Sampler Track from Clip** plays the clip's sound across the keys, and **Slice to Sampler Track** cuts it at its hits (or at the markers its file has there), writes the notes that play the slices where the clip is, and mutes the clip, so the session sounds the same and every hit is a note. The new track shows the drum grid, with a row named for each slice.
 
 **Zones.** A zone is a sample with the keys and velocities that play it. One sampler holds up to 128.
+
+- Drop **several files at once**: when each has a clear pitch they become zones around their own notes, sharing the keys between them; otherwise each goes on a key of its own, as a one-shot, from the key they land on (or from C1).
 
 - Drop another sound **on the key map** and it becomes a new zone over the octave from the key it lands on. Dropped anywhere else, a sound replaces the selected zone's sample and keeps its keys.
 - In the **Keys** panel each zone is drawn over its keys, and from bottom to top over the velocities that play it. Click a zone to select it. Drag its left or right edge to set its keys, and its top or bottom edge to set its velocities. Zones that overlap play together, so layers, and soft and hard samples of one sound, are zones.

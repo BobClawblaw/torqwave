@@ -216,6 +216,7 @@ target_sources(Torqwave PRIVATE
     Source/SwarmGuitarEditor.cpp
     Source/Sampler.cpp
     Source/SamplerEditor.cpp
+    Source/SamplerTrack.cpp
     Source/DrumMachine.cpp
     Source/DrumMachineEditor.cpp
     Source/EffectPresets.cpp
@@ -632,6 +633,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/SwarmGuitarEditor.cpp
     Source/Sampler.cpp
     Source/SamplerEditor.cpp
+    Source/SamplerTrack.cpp
     Source/DrumMachine.cpp
     Source/DrumMachineEditor.cpp
     Source/EffectPresets.cpp

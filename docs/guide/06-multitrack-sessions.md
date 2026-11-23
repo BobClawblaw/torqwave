@@ -347,6 +347,7 @@ An audio clip can follow the session's tempo: a drum loop at 100 BPM, in a sessi
   - **Quantize Warp Markers** moves every marker onto the nearest line of the grid. **Add Warp Marker at Cursor** and **Clear Warp Markers** do what they say.
 - **Play at Its Own Speed** turns following off: the clip plays its file as it is again, the same part of it from the same start.
 - **Slice at Transients** splits a clip at each attack, a clip for each hit of a drum loop, followed or not.
+- **New Sampler Track from Clip** makes a new instrument track with [Torqwave Sampler](07-instruments-and-midi.md#torqwave-sampler) playing the clip's sound across the keys, its pitch found. **Slice to Sampler Track** cuts the clip at its hits instead, puts each hit on a key, writes a note clip that plays them where the audio clip is, and mutes the audio clip: the session sounds the same, and every hit is now a note you can move. Both take the clip's part of its file as it is recorded, without the clip's gain, fades, effects or tempo-following.
 
 Each of these is an undo step. Undo a tempo change and the clips are back as they were at once. The clips' tempos and markers are saved with the session; the stretched audio isn't, and is made again on opening.
 

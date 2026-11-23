@@ -3,6 +3,8 @@
 #include "../Source/BuiltInEffects.h"
 #include "../Source/Sampler.h"
 #include "../Source/SamplerEditor.h"
+#include "../Source/SamplerTrack.h"
+#include "../Source/SoundDrops.h"
 #include "../Source/Theme.h"
 #include "../Source/InstrumentKeys.h"
 #include "../Source/DrumMachine.h"
@@ -1519,7 +1521,193 @@ namespace
             check (menuWidth >= 180, "sampler window: with Audition, Loop, Stop and the pattern menu showing, the preset menu is " + juce::String (menuWidth) + " px wide, room for a name");
         }
 
+        sampler.editorBeingDeleted (made.get());   // as its host tells it
         made.reset();
+        sampler.setZones ({});
+        sampler.setSlicing ({});
+        folder.deleteRecursively();
+    }
+
+    /** Getting sound in: several files at once, a sound from the Files panel, a clip and a selection as sampler tracks. */
+    void testGettingSoundIn (AudioEngine& engine, Processor& sampler)
+    {
+        const auto folder = juce::File::createTempFile ("samplersounds");
+        folder.createDirectory();
+
+        // Several sounds at once: around their own notes when each has a pitch, else a key each.
+        {
+            const auto low = writeWav (folder.getChildFile ("Low.wav"), harmonic (110.0, 1.0), rate), mid = writeWav (folder.getChildFile ("Mid.wav"), harmonic (220.0, 1.0), rate),
+                       high = writeWav (folder.getChildFile ("High.wav"), harmonic (440.0, 1.0), rate), hiss = writeWav (folder.getChildFile ("Hiss.wav"), noise (0.5), rate);
+            defaults (sampler);
+            sampler.setZones ({});
+            sampler.setSlicing ({});
+            std::unique_ptr<juce::AudioProcessorEditor> made (sampler.createEditorAndMakeActive());
+            auto* window = dynamic_cast<SamplerEditor*> (made.get());
+            const auto pitched = window != nullptr && window->loadFiles ({ high, low, mid });
+            auto zones = sampler.getZones();
+            const auto around = pitched && zones.size() == 3 && zones[0].root == 45 && zones[0].lowKey == 0 && zones[0].highKey == 51 && zones[1].root == 57 && zones[1].lowKey == 52
+                                && zones[1].highKey == 63 && zones[2].root == 69 && zones[2].lowKey == 64 && zones[2].highKey == 127 && ! zones[0].oneShot;
+
+            sampler.setZones ({});
+            const auto mixed = window != nullptr && window->loadFiles ({ low, hiss, mid }, 48);
+            zones = sampler.getZones();
+            const auto keys = mixed && zones.size() == 3 && zones[0].lowKey == 48 && zones[0].highKey == 48 && zones[0].root == 48 && zones[1].lowKey == 49 && zones[2].lowKey == 50
+                              && zones[0].oneShot && zones[2].oneShot;
+
+            // An open file from the Files panel: a saved one is sampled where it is, one with changes is written first.
+            sampler.setZones ({});
+            const auto samples = folder.getChildFile ("Samples");
+            auto asked = 0.0;
+            SoundDrops::isSound = [] (const juce::var& description) { return description.toString().startsWith ("openfile:"); };
+            SoundDrops::soundOf = [&] (const juce::var& description, double maxSeconds) -> std::optional<SoundDrops::Sound>
+            {
+                asked = maxSeconds;
+                SoundDrops::Sound sound;
+                sound.audio = harmonic (220.0, 1.0);
+                sound.sampleRate = rate;
+                sound.name = "Open File";
+
+                if (description.toString() == "openfile:0")
+                    sound.file = mid;
+
+                return sound;
+            };
+
+            auto savedOne = false, interested = false;
+
+            if (window != nullptr)
+            {
+                const juce::DragAndDropTarget::SourceDetails saved ("openfile:0", window, { 100, 100 });
+                interested = window->isInterestedInDragSource (saved) && ! window->isInterestedInDragSource ({ "dockPanel:3", window, { 100, 100 } });
+                window->itemDropped (saved);
+                savedOne = sampler.getZones().size() == 1 && sampler.getZones()[0].file == mid && sampler.getZones()[0].root == 57;
+            }
+
+            SoundDrops::isSound = nullptr;
+            SoundDrops::soundOf = nullptr;
+            sampler.editorBeingDeleted (made.get());
+            made.reset();
+
+            check (around && keys && interested && savedOne && juce::exactlyEqual (asked, Sampler::longestSampleSeconds),
+                   "sampler: three pitched sounds given together become zones around their own notes (A2 up to D#3, A3 from E3 to D#4, A4 from E4), the keys between two shared; with one unpitched among them "
+                   "each goes on a key of its own from the key they land on, as one-shots; an open file dragged from the Files panel that is saved as it stands is sampled where it is");
+        }
+
+        // A clip as a sampler track, across the keys and sliced.
+        {
+            std::vector<double> times;
+            const auto loop = drumLoop (times);
+            const auto loopFile = writeWav (folder.getChildFile ("Break.wav"), loop, rate);
+            const auto toneFile = writeWav (folder.getChildFile ("Tone.wav"), harmonic (220.0 * rate / 44100.0, 2.0), 44100.0);   // 220 Hz once it is read at 44.1 kHz
+
+            SessionState session;
+            session.sampleRate = rate;
+            auto& track = session.addTrack();
+            SessionClip tone;
+            tone.id = 501;
+            tone.name = "Tone";
+            tone.source = toneFile;
+            tone.position = 96000;
+            tone.offset = 24000;          // half a second in, at the session's 48 kHz
+            tone.length = 48000;
+            track.clips.push_back (tone);
+            SessionClip beat;
+            beat.id = 502;
+            beat.name = "Break";
+            beat.source = loopFile;
+            beat.position = 240000;
+            beat.offset = 0;
+            beat.length = loop.getNumSamples();
+            track.clips.push_back (beat);
+            SessionClip none;
+            none.id = 503;
+            none.length = 100;
+            track.clips.push_back (none);
+
+            juce::String error, noFile, noClip;
+            const auto sound = SamplerTrack::soundOf (session, 501, error);
+            const auto refused = ! SamplerTrack::soundOf (session, 503, noFile).has_value() && noFile.contains ("no file") && ! SamplerTrack::soundOf (session, 999, noClip).has_value();
+            const auto part = sound.has_value() && sound->file == toneFile && sound->part == juce::Range<juce::int64> (22050, 66150) && sound->name == "Tone";
+
+            auto made = sound.has_value() ? SamplerTrack::make (*sound, false) : SamplerTrack::Made();
+            auto next = session;
+            const auto placed = SamplerTrack::place (next, made, 0);
+            Processor fromClip;
+
+            if (made.effects != nullptr)
+            {
+                const auto state = stateIn (*made.effects);
+                fromClip.setStateInformation (state.getData(), (int) state.getSize());
+            }
+
+            const auto zones = fromClip.getZones();
+            const auto keysTrack = made.error.isEmpty() && placed.trackId != 0 && placed.clipId == 0 && next.tracks.size() == 2 && next.tracks[1].isInstrument && next.tracks[1].name == "Tone"
+                                   && ! next.tracks[1].drumGrid && zones.size() == 1 && zones[0].start == 22050 && zones[0].end == 66150 && zones[0].root == 57 && zones[0].lowKey == 0
+                                   && zones[0].highKey == 127 && ! fromClip.getSlicing().on;
+            const auto played = play (fromClip, { on (0.0, 57) }, 1.5);
+            const auto cents = centsOff (pitchOf (played, (int) (0.3 * rate), (int) (0.4 * rate), 220.0), 220.0);
+
+            check (part && refused && keysTrack && std::abs (cents) < 3.0 && peak (played, 1.01, 0.4) == 0.0f,
+                   "sampler: a clip playing the second half-second to a second and a half of a 44.1 kHz file in a 48 kHz session is that part of the file in the file's own frames (22,050 to 66,150); "
+                   "New Sampler Track from Clip makes an instrument track named after it whose sampler plays that part across the keys, its root found (A3, " + juce::String (cents, 1)
+                       + " cents off at that key); a clip with no file is refused with the reason");
+
+            // Sliced: the notes play the clip as it was, where it was, and the clip is muted.
+            error.clear();
+            const auto beatSound = SamplerTrack::soundOf (session, 502, error);
+            made = beatSound.has_value() ? SamplerTrack::make (*beatSound, true) : SamplerTrack::Made();
+            next = session;
+            const auto sliced = SamplerTrack::place (next, made, 240000, 502);
+            Processor slicer;
+
+            if (made.effects != nullptr)
+            {
+                const auto state = stateIn (*made.effects);
+                slicer.setStateInformation (state.getData(), (int) state.getSize());
+            }
+
+            const auto& newTrack = next.tracks.back();
+            const auto structure = made.error.isEmpty() && sliced.trackId == newTrack.id && sliced.clipId != 0 && newTrack.isInstrument && newTrack.drumGrid
+                                   && newTrack.drumMap.size() == times.size() && newTrack.drumMap[0].pitch == 36 && newTrack.noteClips.size() == 1
+                                   && newTrack.noteClips[0].position == 240000 && newTrack.noteClips[0].length == loop.getNumSamples() && newTrack.noteClips[0].notes.size() == times.size()
+                                   && next.tracks[0].clips[1].muted && ! next.tracks[0].clips[0].muted && ! session.tracks[0].clips[1].muted && slicer.getSlicing().on;
+
+            // The note clip's notes through the sampler, against the clip's audio.
+            std::vector<Event> part2;
+            std::vector<int> cuts;
+
+            if (structure)
+                for (auto& note : newTrack.noteClips[0].notes)
+                {
+                    part2.push_back (on (((double) note.start + 0.01) / rate, note.pitch, note.velocity));
+                    cuts.push_back ((int) note.start);
+                }
+
+            cuts.push_back (loop.getNumSamples());
+            const auto rebuilt = play (slicer, part2, 4.0);
+            auto apart = 0.0f;
+
+            for (int i = 0; i < loop.getNumSamples(); ++i)
+                if (std::none_of (cuts.begin(), cuts.end(), [i] (int cut) { return std::abs (i - cut) < 72; }))
+                    apart = juce::jmax (apart, std::abs (rebuilt.getSample (0, i) - loop.getSample (0, i)), std::abs (rebuilt.getSample (1, i) - loop.getSample (1, i)));
+
+            check (structure && apart < 1.0e-6f,
+                   "sampler: Slice to Sampler Track makes a track showing the drum grid with a row for each of the " + juce::String (times.size())
+                       + " slices and a note clip where the audio clip is and as long, and mutes the audio clip; the note clip's notes through the sampler are the clip's audio again, within "
+                       + juce::String (db (apart), 1) + " dB away from the cuts (1.5 ms either side of each)");
+
+            // A selection that is not a file as it stands: written with its markers, then sampled; sliced, it is cut at them.
+            Markers markers { { 24000, 0, "Two", -1 }, { 48000, 0, "Three", -1 } };
+            const auto selection = SamplerTrack::written (harmonic (330.0, 1.5), rate, "Untitled selection", markers, error, folder.getChildFile ("Samples"));
+            const auto fromSelection = selection.has_value() ? SamplerTrack::make (*selection, true) : SamplerTrack::Made();
+
+            check (selection.has_value() && selection->file.existsAsFile() && selection->file.getParentDirectory() == folder.getChildFile ("Samples") && fromSelection.error.isEmpty()
+                       && fromSelection.notes.size() == 3 && fromSelection.drumMap.size() == 3 && fromSelection.drumMap[1].name == "Two"
+                       && std::abs (fromSelection.notes[1].start - 0.5) < 1.0e-9 && std::abs (fromSelection.seconds - 1.5) < 1.0e-9,
+                   "sampler: a selection that is not a file as it stands is written into the Samples folder with its markers, and sliced it is cut at them (Start, Two, Three)");
+        }
+
+        juce::ignoreUnused (engine);
         sampler.setZones ({});
         sampler.setSlicing ({});
         folder.deleteRecursively();
@@ -1582,6 +1770,9 @@ void saveSamplerWindow (const juce::File& folder)
             juce::PNGImageFormat().writeImageToStream (image, out);
             std::cout << file.getFullPathName() << std::endl;
         }
+
+        sampler.editorBeingDeleted (made.get());
+        made.reset();
     }
 
     sounds.deleteRecursively();
@@ -2114,6 +2305,7 @@ void runSamplerTests (AudioEngine& engine)
     testSlices (*sampler);
     testFiles (engine, *sampler);
     testWindow (*sampler);
+    testGettingSoundIn (engine, *sampler);
 
     defaults (*sampler);
     sampler->setZones ({});
