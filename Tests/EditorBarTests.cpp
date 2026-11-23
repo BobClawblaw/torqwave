@@ -100,7 +100,7 @@ namespace
         WaveformView view (engine);
         view.setBounds (0, 0, 800, 300);
         juce::ApplicationCommandManager commands;
-        EditorBar bar (commands, view, engine.document, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 });
+        EditorBar bar (commands, view, engine.document, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 });
         juce::Array<int> ran;
         bar.run = [&] (int id) { ran.add (id); };
         bar.setBounds (0, 0, 800, EditorBar::height);
@@ -164,6 +164,38 @@ namespace
                    && bar.getToolButton (Tool::heal).isEnabled() && ! bar.getToolButton (Tool::heal).getToggleState(),
                "editor bar: the tool buttons sit left of the times in order (Time, Box, Lasso, Brush, then Heal), the tool in hand is lit (" + timeLit + " then "
                    + lassoLit + "), each runs its command, and Heal does nothing until there is a drawing");
+        // The hand: its button after Heal, lit when in hand; a drag moves the view along and selects nothing.
+        {
+            ran.clear();
+            bar.getToolButton (Tool::hand).triggerClick();
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (30);
+            const auto runs = ran == juce::Array<int> { 14 } && bar.getToolButton (Tool::heal).getRight() < bar.getToolButton (Tool::hand).getX();
+            view.setSpectralTool (WaveformView::SpectralTool::hand);
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (150);
+            const auto handLit = bar.getToolButton (Tool::hand).getToggleState() && lit() == "00000";
+            auto zoomed = view.getPlace();
+            zoomed.selection = {};
+            zoomed.shape = {};
+            view.setPlace (zoomed);
+            view.zoomToFit();
+            view.zoomIn();
+            view.zoomIn();
+            const auto mouse = [&view] (float x, float downX)
+            {
+                return juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), { x, 150.0f }, juce::ModifierKeys::leftButtonModifier, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                                         &view, &view, juce::Time::getCurrentTime(), { downX, 150.0f }, juce::Time::getCurrentTime(), 1, std::abs (x - downX) > 0.5f);
+            };
+            const auto before = view.getVisibleFrames();
+            view.mouseDown (mouse (400.0f, 400.0f));
+            view.mouseDrag (mouse (300.0f, 400.0f));
+            view.mouseUp (mouse (300.0f, 400.0f));
+            const auto after = view.getVisibleFrames();
+            const auto moved = std::abs ((after.getStart() - before.getStart()) - 100.0 * before.getLength() / 800.0) < 1.0 && view.getSelection().isEmpty();
+            view.setSpectralTool (WaveformView::SpectralTool::time);
+            check (runs && handLit && moved,
+                   "editor bar: the Hand button sits after Heal and runs its command; with the hand, a drag 100 pixels left moves the view 100 pixels along and selects nothing");
+        }
+
         check (EditorBar::verticalText (1.5) == "1.5x" && EditorBar::verticalText (2.0) == "2x" && EditorBar::verticalText (12.0) == "12x",
                "editor bar: zooms read 1.5x, 2x, 12x");
     }

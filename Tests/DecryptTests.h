@@ -14,6 +14,10 @@ void runDecryptTests();
     each lock, time and what the model proposed. Returns 0 when every search finished. */
 int runDecryptEval (const juce::String& url, const juce::String& model, const juce::String& key);
 
+/** `--decrypt-file <sound>`: decrypts a sound file as the window does (until it comes no closer)
+    and prints each round's best lock and distance; for looking at how a real recording goes. */
+int runDecryptFile (const juce::String& path);
+
 /** The search test's two sets, simple and complex, each in 16 rounds and until settled, with
     distances, the key each was heard at, rounds and times. */
 int runDecryptMeasure();

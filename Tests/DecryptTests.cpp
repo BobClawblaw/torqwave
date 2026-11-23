@@ -733,3 +733,49 @@ int runDecryptMeasure()
 
     return 0;
 }
+
+int runDecryptFile (const juce::String& path)
+{
+    juce::AudioFormatManager formats;
+    formats.registerBasicFormats();
+    const std::unique_ptr<juce::AudioFormatReader> reader (formats.createReaderFor (juce::File (path)));
+
+    if (reader == nullptr)
+    {
+        std::cout << "can't read " << path << std::endl;
+        return 1;
+    }
+
+    const auto length = (int) juce::jmin (reader->lengthInSamples, (juce::int64) (reader->sampleRate * 10.0));
+    juce::AudioBuffer<float> audio ((int) juce::jmin (2u, reader->numChannels), length);
+    reader->read (&audio, 0, length, 0, true, audio.getNumChannels() > 1);
+    auto target = Decrypt::prepare (audio, reader->sampleRate);
+
+    if (target.problem.isNotEmpty())
+    {
+        std::cout << "refused: " << target.problem << std::endl;
+        return 1;
+    }
+
+    std::cout << Decrypt::describe (target) << std::endl;
+    Decrypt::Options options;
+    options.untilSettled = true;
+    Decrypt::Search search (std::move (target), options);
+    int shown = -1;
+    const auto end = search.runNow ([&]
+    {
+        const auto p = search.getProgress();
+
+        if (p.round != shown && ! p.best.empty())
+        {
+            shown = p.round;
+            std::cout << "round " << p.round << ": lock " << juce::String (p.best.front().lock, 2) << " %, " << juce::String (p.best.front().distance.total, 2)
+                      << " dB, from " << p.best.front().from << "  [" << p.stage << "]" << std::endl;
+        }
+
+        return false;
+    });
+    std::cout << "ended: " << end.stage << ", lock " << juce::String (end.best.front().lock, 2) << " %, " << juce::String (end.best.front().distance.total, 2)
+              << " dB, " << juce::String (end.seconds, 1) << " s" << std::endl;
+    return 0;
+}

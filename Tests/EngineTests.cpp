@@ -670,6 +670,9 @@ int main (int argc, char* argv[])
         return runDecryptReal (files);
     }
 
+    if (const auto i = args.indexOf ("--decrypt-file"); i >= 0)
+        return runDecryptFile (args[i + 1]);
+
     if (args.contains ("--decrypt-measure"))
         return runDecryptMeasure();
 

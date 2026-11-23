@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
+#include "../Source/InstrumentKeys.h"
 #include "../Source/SwarmGuitar.h"
 #include "../Source/SwarmGuitarEditor.h"
 #include "../Source/Theme.h"
@@ -186,8 +187,8 @@ void runSwarmGuitarTests (AudioEngine& engine)
 
     check (guitar != nullptr && error.isEmpty() && description.isInstrument && description.numInputChannels == 0 && description.name == "StringSwarm"
                && guitar->acceptsMidi() && guitar->getTotalNumInputChannels() == 0 && guitar->getTotalNumOutputChannels() == 2
-               && guitar->getParameters().size() == 27,
-           "stringswarm: made from its description, an instrument with no audio input, a stereo output and 27 parameters");
+               && guitar->getParameters().size() == 28,
+           "stringswarm: made from its description, an instrument with no audio input, a stereo output and 28 parameters");
 
     if (guitar == nullptr)
         return;
@@ -531,6 +532,28 @@ void runSwarmGuitarTests (AudioEngine& engine)
                                                          + juce::String (loudest, 1) + " dB, the quietest " + quiet + " at " + juce::String (quietest, 1) + " dB)");
     }
 
+    // Velocity through the amp: Fuzz evens a soft note out to nearly a hard one's level, so Velocity (70 % as it
+    // comes) sets each note's loudness after the amp; with no amp, velocity already sets it and Velocity changes nothing.
+    {
+        const auto peakDb = [] (float velocity, float sense, int amp)
+        {
+            Swarm g;
+            set (g, "velocity", sense);
+            set (g, "amp", (float) amp);
+            const auto out = play (g, { on (0.0, 40, velocity) }, 1.0);
+            return juce::Decibels::gainToDecibels (out.getMagnitude (0, out.getNumSamples()));
+        };
+
+        const auto fuzzFlat = peakDb (1.0f, 0.0f, 0) - peakDb (0.25f, 0.0f, 0);
+        const auto fuzzSensed = peakDb (1.0f, 70.0f, 0) - peakDb (0.25f, 70.0f, 0);
+        const auto crunchSensed = peakDb (1.0f, 70.0f, 1) - peakDb (0.25f, 70.0f, 1);
+        const auto noneSoft = peakDb (0.25f, 0.0f, 2), noneSoftSensed = peakDb (0.25f, 70.0f, 2);
+        check (fuzzFlat < 3.0f && fuzzSensed > fuzzFlat + 5.0f && crunchSensed > 5.0f && juce::exactlyEqual (noneSoft, noneSoftSensed),
+               "stringswarm: a note at velocity 32 against one at 127 through the Fuzz amp is " + juce::String (fuzzSensed, 1) + " dB quieter with Velocity at 70 % ("
+                   + juce::String (fuzzFlat, 1) + " dB at 0 %, as the fuzz evens it out), " + juce::String (crunchSensed, 1)
+                   + " dB through Crunch, and with no amp Velocity changes nothing (velocity already sets the level)");
+    }
+
     // Its window: knobs in real units, the strings drawn with what each is tuned to, the guitars across the field.
     {
         // A new one, so no note has been played on it yet.
@@ -582,6 +605,25 @@ void runSwarmGuitarTests (AudioEngine& engine)
                    "stringswarm window: 900 by 690, its knobs reading 70 %, 4.50 kHz, 6 strings, Once, 6.00 s, -12.0 dB, 2 guitars and +7 ct as it comes; the strings "
                    "labelled by their place (oct down, note, oct up) and, once a D is played, D1, D2 and D3; a knob turned sets its parameter and 12 strings and 4 guitars are drawn when set; "
                    "with the swarm chosen its strings knob counts Oscillators and its swarm knobs read (30 ct, 5.00 kHz)");
+
+            // Its presets row with everything an instrument's window adds (Audition, Loop, Stop and the pattern menu)
+            // still leaves the preset menu room for a name: it was squeezed to "..." (fix log 87).
+            int menuWidth = 0;
+
+            if (auto* row = InstrumentKeys::presetsRow (*window))
+            {
+                row->showAudition (true, [] (bool) {});
+                row->showAuditionLoop (false, [] (bool) {}, [] {});
+                row->showPatterns ([] { return juce::StringArray { "Low Riff", "Octave Run" }; }, [] { return 0; }, [] (int) {});
+                window->resized();
+
+                for (auto* c : row->getChildren())
+                    if (auto* menu = dynamic_cast<juce::ComboBox*> (c))
+                        menuWidth = menu->getWidth();
+            }
+
+            check (menuWidth >= 180, "stringswarm window: with Audition, Loop, Stop and the pattern menu showing, the preset menu is " + juce::String (menuWidth)
+                                         + " px wide, room for a name");
         }
         else
         {

@@ -21,6 +21,8 @@ std::vector<EffectPresets::Factory> swarmGuitarPresets()
         for (auto x : values)
             v[ids[i++]] = x;
 
+        v["velocity"] = 70.0;   // added after the presets were written: each still sets every parameter
+
         return EffectPresets::Factory { name, v, category };
     };
 

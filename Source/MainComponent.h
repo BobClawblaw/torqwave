@@ -205,6 +205,7 @@ private:
     Settings::Model makeSettingsModel();
     void askToNewFile();   // File > New File...: a file of silence at a chosen rate, channels, bit depth and length
     void newFile (double sampleRate, int channels, int bitDepth, double seconds);
+    void newFileFromClipboard (int bitDepth);   // a new file holding the clipboard: its length, rate and channels
     void convertSampleRate (double newRate);
     void deleteSelection();
     void cropToSelection();
