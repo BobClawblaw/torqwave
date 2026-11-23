@@ -21,6 +21,8 @@ A free, open-source audio editor and DAW in one, for macOS, Windows and Linux: f
 
 **New to Torqwave?** The [user guide](docs/guide/README.md) shows how to do things, one job at a time. The app carries it too: **Help > User Guide** (`F1`) opens it in a window of its own, pictures and all.
 
+**How does it compare?** [docs/compare](docs/compare/README.md) keeps a feature matrix of Torqwave against fifteen other editors and DAWs, each cell read from that product's own documentation, with what Torqwave lacks shown as plainly as what it has. It is updated with every release.
+
 ## Features
 
 - **Editing audio files:** waveform and spectrogram views; cut, copy, paste, paste mix and paste to fill; silence, insert and trim silence, crop, reverse, invert, swap, copy or silence one channel, mix to mono and make stereo; gain, normalize (each channel or each region on its own), fades with shapes (or dragged straight from handles on the waveform, curve and all), gain and pan ramps, balance and stereo width; removing what is panned to the centre of a stereo mix, or keeping it alone; lining up channels a time offset apart (automatic phase correction); stretching and pitch shifting a selection or the whole file, and an extreme stretch (up to a thousand times) that smears a sound into a pad, keeping its pitch and colour and losing its timing; pitch correction of a voice or solo line, to a scale or by dragging its notes in the Pitch Editor, in pitch or in time (where notes can also be split and joined), in a file or a session clip; markers and regions, with lists, CSV import and export, and saving regions or the pieces between markers as files; file info (title, artist and so on, and broadcast-wave details); an undo history.
