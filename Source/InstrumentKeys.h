@@ -57,6 +57,13 @@ namespace InstrumentKeys
     void setAuditionLoop (bool);
     extern std::function<void()> auditionChanged;
 
+    /** The session's tempo where it stands, for auditions to play at (they are written at 125 BPM
+        and stretched to it); unset or 0, 125. Message thread. */
+    extern std::function<double()> sessionTempo;
+
+    /** How much faster than written an audition plays now: the session's tempo over 125. */
+    double auditionSpeed();
+
     /** A note of an audition phrase: when it starts and how long it is held, in milliseconds. */
     struct PhraseNote
     {
@@ -65,12 +72,39 @@ namespace InstrumentKeys
         float velocity = 0.8f;
     };
 
-    /** The phrase a sound is auditioned by. Torqwave Synth by its patch's category: a bass line low
-        down for basses, subs, reeses and acid; a held chord for pads, strings, organs and the like;
-        two short chords for stabs and brass; a rising figure for leads, plucks, bells and keys; a
-        long held note for sequences, arps, drones and risers (so they have time to move); single
-        hits for percussion, drums, impacts and effects. Basic Drums: kick, hat, snare, hat. Swarm
-        Guitar: a low E held. Any other instrument: middle C. */
+    /** The kinds of sound that have their own audition patterns. Torqwave Synth's patches by their
+        category: basses (bass, sub, reese, acid), chords (pads, strings, organs, chords, textures,
+        vox, cinematic), stabs (and brass), leads (and plucks, bells, keys, chip, anything else),
+        held sounds (sequences, arps, drones, risers: they need time to move) and hits (perc, drum,
+        impact, FX, glitch, game). Basic Drums is a kit, StringSwarm strings; any other instrument other. */
+    enum class Kind { bass, chord, stab, lead, held, hit, strings, kit, other };
+    Kind kindFor (juce::AudioProcessor&);
+
+    /** An audition pattern: its name in the menu, its notes, and how long a round is when it loops
+        (0: the phrase and a breath, to the next whole beat). */
+    struct Pattern
+    {
+        juce::String name;
+        std::vector<PhraseNote> notes;
+        double lengthMs = 0.0;
+    };
+
+    /** The patterns a kind of sound can be auditioned by, at 125 BPM and written for the keys at
+        octave 3 (AuditionPatterns.cpp): a dozen for basses, chords, stabs, leads and kits, eight for
+        held sounds, hits and strings. The first of each is the phrase it had before there was a choice. */
+    const std::vector<Pattern>& patternsFor (Kind);
+
+    /** The pattern chosen for a kind (an index into patternsFor), and choosing one: one choice per
+        kind for every window, kept in the settings as `getPatternChoices`' text. */
+    int getPattern (Kind);
+    void setPattern (Kind, int index);
+    juce::String getPatternChoices();
+    void setPatternChoices (const juce::String&);
+
+    /** The pattern a sound is auditioned by now: its kind's chosen one. */
+    const Pattern& patternFor (juce::AudioProcessor&);
+
+    /** Its notes. */
     std::vector<PhraseNote> phraseFor (juce::AudioProcessor&);
 
     /** Plays a phrase over time: `advance` moves it on by so many milliseconds, sending each note's
@@ -82,8 +116,9 @@ namespace InstrumentKeys
         std::function<void (int note)> off;
 
         /** `loop`: the phrase goes round until stopped, each round as long as the phrase and a
-            breath after it, to the next whole beat at 125 BPM (two beats at least). */
-        void start (std::vector<PhraseNote>, bool loop = false);
+            breath after it, to the next whole beat at 125 BPM (two beats at least), or `roundMs`
+            when it is given (a pattern of whole bars). */
+        void start (std::vector<PhraseNote>, bool loop = false, double roundMs = 0.0);
         void stop();
         bool isLooping() const noexcept         { return looping && ! phrase.empty(); }
         double getLoopLengthMs() const noexcept { return loopLength; }
@@ -133,13 +168,12 @@ namespace InstrumentKeys
         void allUp();
 
         /** Plays a phrase on the strip's keys (they light as it goes): a sound just chosen. Ends
-            the one before, and is ended by a key played by hand. */
-        void audition (std::vector<PhraseNote>);
+            the one before, and is ended by a key played by hand. It is written for octave 3 and
+            plays as many octaves up or down as the keys are set from it (Z and X), moving with them
+            while it plays; `followOctave` false keeps it where it is (a drum kit's notes). */
+        void audition (std::vector<PhraseNote>, bool followOctave = true, double roundMs = 0.0);
         void stopAudition();
         bool isAuditioning() const noexcept     { return auditioner.isPlaying(); }
-
-        /** Shows the Loop switch as it is set, and Stop lit while a phrase plays: for a window's timer. */
-        void showAudition();
 
         /** The keys' state: what is played into it (noteOn, noteOff) is sent on like a key's note. */
         juce::MidiKeyboardState& getState() noexcept   { return state; }
@@ -163,8 +197,10 @@ namespace InstrumentKeys
         juce::MidiKeyboardComponent keyboard { state, juce::MidiKeyboardComponent::horizontalKeyboard };
         juce::Label settings, hint;
         juce::TextButton layoutButton;
-        juce::TextButton loopButton { "Loop" }, stopButton { "Stop" };
         Auditioner auditioner;
+        std::vector<PhraseNote> phrase;         // the last phrase as written, before the octave moves it
+        bool phraseFollows = true;
+        double phraseRound = 0.0;
         double lastTick = 0.0;
         std::array<int, maxKeys> sounding;      // the note each playing key sounds, or -1
         int octave = 3, velocity = 100;

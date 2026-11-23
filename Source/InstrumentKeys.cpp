@@ -11,6 +11,13 @@ namespace InstrumentKeys
 {
 std::function<void()> layoutChanged;
 std::function<void()> auditionChanged;
+std::function<double()> sessionTempo;
+
+double auditionSpeed()
+{
+    const auto tempo = sessionTempo != nullptr ? sessionTempo() : 0.0;
+    return tempo > 0.0 ? juce::jlimit (20.0, 999.0, tempo) / 125.0 : 1.0;
+}
 
 namespace
 {
@@ -47,20 +54,8 @@ void setAudition (bool on)                      { auditionOn = on; }
 bool getAuditionLoop()                          { return auditionLoop; }
 void setAuditionLoop (bool on)                  { auditionLoop = on; }
 
-std::vector<PhraseNote> phraseFor (juce::AudioProcessor& p)
+Kind kindFor (juce::AudioProcessor& p)
 {
-    using Notes = std::vector<PhraseNote>;
-    const auto chord = [] (std::initializer_list<int> notes, double start, double length, float velocity = 0.8f)
-    {
-        Notes out;
-
-        for (auto n : notes)
-            out.push_back ({ n, start, length, velocity });
-
-        return out;
-    };
-    const auto join = [] (Notes a, const Notes& b) { a.insert (a.end(), b.begin(), b.end()); return a; };
-
     if (auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (&p))
     {
         juce::String category;
@@ -78,40 +73,83 @@ std::vector<PhraseNote> phraseFor (juce::AudioProcessor& p)
             return false;
         };
 
-        // A bass line: the root, the root, the octave, the root, in sixteenths at 125 BPM.
-        if (is ({ "Bass", "Sub", "Reese", "Acid" }))
-            return { { 36, 0.0, 100.0, 0.9f }, { 36, 120.0, 100.0, 0.7f }, { 48, 240.0, 100.0, 0.8f }, { 36, 360.0, 220.0, 0.9f } };
+        if (is ({ "Bass", "Sub", "Reese", "Acid" }))                                            return Kind::bass;
+        if (is ({ "Pad", "Strings", "Organ", "Chord", "Texture", "Vox", "Cinematic" }))        return Kind::chord;
+        if (is ({ "Stab", "Brass" }))                                                          return Kind::stab;
+        if (is ({ "Sequence", "Arp", "Drone", "Riser" }))                                      return Kind::held;
+        if (is ({ "Perc", "Drum", "Impact", "FX", "Glitch", "Game" }))                         return Kind::hit;
+        if (is ({ "Guitar" }))                                                                 return Kind::strings;
 
-        if (is ({ "Pad", "Strings", "Organ", "Chord", "Texture", "Vox", "Cinematic" }))
-            return chord ({ 48, 55, 60, 63 }, 0.0, 1600.0, 0.75f);
-
-        if (is ({ "Stab", "Brass" }))
-            return join (chord ({ 48, 60, 63, 67 }, 0.0, 160.0, 0.9f), chord ({ 48, 60, 63, 67 }, 360.0, 260.0, 0.8f));
-
-        if (is ({ "Sequence", "Arp", "Drone", "Riser" }))
-            return { { 48, 0.0, 2000.0, 0.85f } };
-
-        if (is ({ "Perc", "Drum", "Impact", "FX", "Glitch", "Game" }))
-            return { { 60, 0.0, 120.0, 0.9f }, { 60, 380.0, 120.0, 0.7f } };
-
-        if (is ({ "Guitar" }))
-            return { { 40, 0.0, 1200.0, 0.85f } };
-
-        // Leads, plucks, bells, keys, chip and anything else: a minor figure upward from middle C.
-        return { { 60, 0.0, 150.0, 0.85f }, { 63, 170.0, 150.0, 0.75f }, { 67, 340.0, 150.0, 0.8f }, { 72, 510.0, 420.0, 0.9f } };
+        return Kind::lead;
     }
 
     if (dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (&p) != nullptr)
-        return { { 36, 0.0, 60.0, 0.95f }, { 42, 125.0, 40.0, 0.6f }, { 38, 250.0, 60.0, 0.9f }, { 42, 375.0, 40.0, 0.6f }, { 36, 500.0, 60.0, 0.9f }, { 39, 750.0, 60.0, 0.85f } };
+        return Kind::kit;
 
     if (dynamic_cast<BuiltInEffects::SwarmGuitarProcessor*> (&p) != nullptr)
-        return { { 40, 0.0, 1500.0, 0.85f } };
+        return Kind::strings;
 
-    return { { 60, 0.0, 700.0, 0.8f } };
+    return Kind::other;
+}
+
+namespace
+{
+    constexpr std::array<const char*, 9> kindNames { "bass", "chord", "stab", "lead", "held", "hit", "strings", "kit", "other" };
+    std::array<int, kindNames.size()> chosenPatterns {};
+}
+
+int getPattern (Kind k)
+{
+    const auto i = chosenPatterns[(size_t) k];
+    return juce::isPositiveAndBelow (i, (int) patternsFor (k).size()) ? i : 0;
+}
+
+void setPattern (Kind k, int index)
+{
+    chosenPatterns[(size_t) k] = juce::jlimit (0, (int) patternsFor (k).size() - 1, index);
+}
+
+juce::String getPatternChoices()
+{
+    juce::StringArray out;
+
+    for (size_t i = 0; i < kindNames.size(); ++i)
+        if (chosenPatterns[i] > 0)
+            out.add (juce::String (kindNames[i]) + "=" + patternsFor ((Kind) i)[(size_t) getPattern ((Kind) i)].name);
+
+    return out.joinIntoString (";");
+}
+
+void setPatternChoices (const juce::String& text)
+{
+    // By name, so a pattern added or moved in a later version keeps the one chosen.
+    chosenPatterns.fill (0);
+
+    for (auto& item : juce::StringArray::fromTokens (text, ";", ""))
+        for (size_t i = 0; i < kindNames.size(); ++i)
+            if (item.upToFirstOccurrenceOf ("=", false, false) == kindNames[i])
+            {
+                const auto& list = patternsFor ((Kind) i);
+
+                for (size_t j = 0; j < list.size(); ++j)
+                    if (list[j].name == item.fromFirstOccurrenceOf ("=", false, false))
+                        chosenPatterns[i] = (int) j;
+            }
+}
+
+const Pattern& patternFor (juce::AudioProcessor& p)
+{
+    const auto kind = kindFor (p);
+    return patternsFor (kind)[(size_t) getPattern (kind)];
+}
+
+std::vector<PhraseNote> phraseFor (juce::AudioProcessor& p)
+{
+    return patternFor (p).notes;
 }
 
 //==============================================================================
-void Auditioner::start (std::vector<PhraseNote> notes, bool loop)
+void Auditioner::start (std::vector<PhraseNote> notes, bool loop, double roundMs)
 {
     stop();
     auto end = 0.0;
@@ -124,7 +162,7 @@ void Auditioner::start (std::vector<PhraseNote> notes, bool loop)
 
     // A round: the phrase and a breath, to the next whole beat at 125 BPM, two beats at least.
     constexpr double beat = 480.0;
-    loopLength = juce::jmax (2.0 * beat, std::ceil ((end + 200.0) / beat) * beat);
+    loopLength = roundMs > 0.0 ? roundMs : juce::jmax (2.0 * beat, std::ceil ((end + 200.0) / beat) * beat);
     looping = loop;
     at = 0.0;
     advance (0.0);
@@ -279,28 +317,6 @@ Strip::Strip (std::function<void (const juce::MidiMessage&)> send) : sendMessage
     };
     addAndMakeVisible (layoutButton);
 
-    loopButton.setClickingTogglesState (true);
-    loopButton.setTooltip ("Loop the audition: the phrase goes round until you press Stop or choose another sound");
-    stopButton.setTooltip ("Stop the audition that is playing");
-
-    for (auto* b : { &loopButton, &stopButton })
-    {
-        b->setWantsKeyboardFocus (false);
-        addAndMakeVisible (*b);
-    }
-
-    loopButton.onClick = [this]
-    {
-        setAuditionLoop (loopButton.getToggleState());
-
-        if (auditionChanged != nullptr)
-            auditionChanged();
-
-        if (! getAuditionLoop())
-            stopAudition();
-    };
-    stopButton.onClick = [this] { stopAudition(); };
-    showAudition();
     showSettings();
     setSize (600, height);
 }
@@ -321,8 +337,13 @@ void Strip::showSettings()
 
 void Strip::setOctave (int o)
 {
+    const auto before = octave;
     octave = juce::jlimit (lowestOctave, highestOctave, o);
     showSettings();
+
+    // A phrase playing moves with the keys: it starts again an octave up or down.
+    if (octave != before && phraseFollows && auditioner.isPlaying())
+        audition (phrase, true, phraseRound);
 }
 
 void Strip::setVelocity (int v)
@@ -420,19 +441,20 @@ bool Strip::readKeys (bool enabled)
 void Strip::stopAudition()
 {
     auditioner.stop();
-    showAudition();
 }
 
-void Strip::showAudition()
+void Strip::audition (std::vector<PhraseNote> notes, bool followOctave, double roundMs)
 {
-    loopButton.setToggleState (getAuditionLoop(), juce::dontSendNotification);
-    stopButton.setEnabled (auditioner.isPlaying());
-}
+    phrase = std::move (notes);
+    phraseFollows = followOctave;
+    phraseRound = roundMs;
+    auto shifted = phrase;
 
-void Strip::audition (std::vector<PhraseNote> notes)
-{
-    auditioner.start (std::move (notes), getAuditionLoop());
-    showAudition();
+    if (followOctave)
+        for (auto& n : shifted)
+            n.note = juce::jlimit (0, 127, n.note + 12 * (octave - 3));
+
+    auditioner.start (std::move (shifted), getAuditionLoop(), phraseRound);
     lastTick = juce::Time::getMillisecondCounterHiRes();
     startTimerHz (60);
 }
@@ -441,9 +463,8 @@ void Strip::timerCallback()
 {
     const auto keys = playingKeys();
     const auto now = juce::Time::getMillisecondCounterHiRes();
-    auditioner.advance (now - lastTick);
+    auditioner.advance ((now - lastTick) * auditionSpeed());    // the session's tempo, read as it goes
     lastTick = now;
-    stopButton.setEnabled (auditioner.isPlaying());
     // A key's release can go unheard (the window losing the keyboard mid-note): a key no longer down lets go of its note.
     auto any = false;
 
@@ -492,9 +513,6 @@ void Strip::resized()
     settings.setBounds (top.removeFromLeft (juce::jmin (220, top.getWidth() / 2)));
     layoutButton.setBounds (top.removeFromLeft (52).reduced (0, 1));
     top.removeFromLeft (10);
-    loopButton.setBounds (top.removeFromLeft (46).reduced (0, 1));
-    top.removeFromLeft (2);
-    stopButton.setBounds (top.removeFromLeft (44).reduced (0, 1));
     hint.setBounds (top);
     keyboard.setKeyWidth ((float) area.getWidth() / 50.0f);    // C1 to C8: fifty white keys across the window
     keyboard.setBounds (area.withTrimmedTop (2));

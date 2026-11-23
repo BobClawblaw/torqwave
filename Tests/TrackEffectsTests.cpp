@@ -207,6 +207,31 @@ void runTrackEffectsTests()
         muted.tracks[0].mute = muted.tracks[1].mute = true;
         check (play (muted, 0, 4000, 512, &effects).getMagnitude (0, 4000) == 0.0f, "track effects: muted tracks stay silent");
 
+        // The plug-ins' play head: the session's tempo, time signature and place at the frame they work on.
+        {
+            auto timed = s;
+            timed.tempo = 140.0;
+            timed.tempoChanges = { { 1, 90.0, 3 } };
+            const auto map = timed.tempoMap();
+            const auto barOne = map.barFrame (1);
+            juce::AudioBuffer<float> into (2, 512);
+            SessionMixer::Buffers b;
+            b.reserve (512);
+            SessionMixer::render (timed, 0, into, 0, 512, b, &effects);
+            const auto start = effects.getPlugin (first, 0)->getPlayHead()->getPosition();
+            const auto atStart = start.hasValue() && juce::exactlyEqual (start->getBpm().orFallback (0.0), 140.0)
+                                 && start->getTimeSignature().hasValue() && start->getTimeSignature()->numerator == 4 && start->getIsPlaying();
+            SessionMixer::render (timed, barOne + 1000, into, 0, 512, b, &effects);
+            const auto past = effects.getPlugin (first, 0)->getPlayHead()->getPosition();
+            const auto afterChange = past.hasValue() && juce::exactlyEqual (past->getBpm().orFallback (0.0), 90.0)
+                                     && past->getTimeSignature().hasValue() && past->getTimeSignature()->numerator == 3
+                                     && std::abs (past->getPpqPosition().orFallback (0.0) - map.beatPosition (barOne + 1000)) < 0.5   // the frame read ahead by the chains' latency
+                                     && juce::exactlyEqual (past->getPpqPositionOfLastBarStart().orFallback (-1.0), 4.0);
+
+            check (atStart && afterChange,
+                   "track effects: plug-ins are given the session's tempo (140 BPM in 4/4, then 90 in 3/4 after a change at bar 2), its place in beats and its bar's start");
+        }
+
         // Saved as rack-style slots.
         auto xml = effects.createXml (second);
         check (xml != nullptr && xml->getNumChildElements() == 1 && xml->getChildElement (0)->getChildByName ("PLUGIN") != nullptr

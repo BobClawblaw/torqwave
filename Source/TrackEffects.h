@@ -147,6 +147,7 @@ public:
     // SessionMixer::Inserts, for the audio thread
     void setLiveMidi (juce::uint32 trackId, const juce::MidiBuffer*) override;
     void setClipNotes (bool play) override   { clipNotes = play; }
+    void setTiming (const Metronome::TempoMap& map, bool playing) override;
     void endNotes() override                 { ++notesEnded; }
     /** Audio thread: never waits for the lock. While the chains are being changed or read, true
         (the track is silent for that block then, so its pan law doesn't matter). */
@@ -227,6 +228,25 @@ private:
 
     void prepareSlot (Slot&) const;
     void prepareInstance (juce::AudioPluginInstance&) const;
+
+    /** The plug-ins' play head: the session's tempo, time signature and place at the frame of the
+        audio each is working on, and whether the session plays; 120 BPM in 4/4 before any block.
+        Plain values, set on the audio thread before each plug-in runs, so a plug-in may read it
+        from any thread. */
+    struct SessionHead final : public juce::AudioPlayHead
+    {
+        juce::Optional<juce::AudioPlayHead::PositionInfo> getPosition() const override;
+        void set (const Metronome::TempoMap&, juce::int64 frame, bool playing) noexcept;
+
+        std::atomic<juce::int64> frame { 0 };
+        std::atomic<double> bpm { 120.0 }, beats { 0.0 }, barStart { 0.0 };
+        std::atomic<int> beatsPerBar { 4 };
+        std::atomic<bool> playing { false };
+    };
+
+    mutable SessionHead head;
+    std::optional<Metronome::TempoMap> timing;     // the block's, while it is mixed (audio thread)
+    bool timingPlays = false;
     Copies copiesOf (Slot&, int count) const;
     int copiesFor (juce::uint32 trackId) const;   // under the lock
     void install (juce::uint32 trackId, Slot*, Copies);

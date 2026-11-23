@@ -617,6 +617,37 @@ private:
                     if (InstrumentKeys::auditionChanged != nullptr)
                         InstrumentKeys::auditionChanged();
                 });
+                row->showAuditionLoop (InstrumentKeys::getAuditionLoop(), [this] (bool on)
+                {
+                    InstrumentKeys::setAuditionLoop (on);
+
+                    if (InstrumentKeys::auditionChanged != nullptr)
+                        InstrumentKeys::auditionChanged();
+
+                    if (! on)
+                        strip.stopAudition();
+                }, [this] { strip.stopAudition(); });
+                row->showPatterns ([this]
+                {
+                    juce::StringArray names;
+
+                    for (auto& p : InstrumentKeys::patternsFor (InstrumentKeys::kindFor (window.processor)))
+                        names.add (p.name);
+
+                    return names;
+                },
+                [this] { return InstrumentKeys::getPattern (InstrumentKeys::kindFor (window.processor)); },
+                [this] (int index)
+                {
+                    // A pattern chosen is heard at once, Audition on or off: choosing it is asking to hear it.
+                    InstrumentKeys::setPattern (InstrumentKeys::kindFor (window.processor), index);
+
+                    if (InstrumentKeys::auditionChanged != nullptr)
+                        InstrumentKeys::auditionChanged();
+
+                    if (busy == nullptr || ! busy())
+                        play();
+                });
                 row->onChosen = [this] { chosen(); };
             }
 
@@ -630,7 +661,14 @@ private:
         void chosen()
         {
             if (InstrumentKeys::getAudition() && (busy == nullptr || ! busy()))
-                strip.audition (InstrumentKeys::phraseFor (window.processor));
+                play();
+        }
+
+        /** Plays the sound's audition pattern; a kit's stays on its drums whatever the keys' octave. */
+        void play()
+        {
+            const auto& pattern = InstrumentKeys::patternFor (window.processor);
+            strip.audition (pattern.notes, InstrumentKeys::kindFor (window.processor) != InstrumentKeys::Kind::kit, pattern.lengthMs);
         }
 
         void timerCallback() override
@@ -643,15 +681,13 @@ private:
                     chosen();
                 }
 
-            // The switch is one for every window.
-            if (auto* row = InstrumentKeys::presetsRow (*editor))
-                row->setAudition (InstrumentKeys::getAudition());
-
             // Audition gives way to the session playing, and stops when it is turned off.
             if (strip.isAuditioning() && (! InstrumentKeys::getAudition() || (busy != nullptr && busy())))
                 strip.stopAudition();
 
-            strip.showAudition();
+            // The switches are one for every window; Stop is lit while a phrase plays.
+            if (auto* row = InstrumentKeys::presetsRow (*editor))
+                row->setAuditionState (InstrumentKeys::getAudition(), InstrumentKeys::getAuditionLoop(), strip.isAuditioning());
         }
 
         ~Holder() override
@@ -1469,10 +1505,17 @@ MainComponent::MainComponent()
     InstrumentKeys::setLayout (InstrumentKeys::layoutOf (settings->getValue ("playingKeys", "q")));
     InstrumentKeys::setAudition (settings->getBoolValue ("auditionOnBrowse", true));
     InstrumentKeys::setAuditionLoop (settings->getBoolValue ("auditionLoop", false));
+    InstrumentKeys::setPatternChoices (settings->getValue ("auditionPatterns"));
+    InstrumentKeys::sessionTempo = [this]
+    {
+        const auto session = engine.session.getState();
+        return session == nullptr || session->tracks.empty() ? 0.0 : session->tempoMap().tempoAt (engine.getPlayer().getPositionFrames());
+    };
     InstrumentKeys::auditionChanged = [this]
     {
         appProperties.getUserSettings()->setValue ("auditionOnBrowse", InstrumentKeys::getAudition());
         appProperties.getUserSettings()->setValue ("auditionLoop", InstrumentKeys::getAuditionLoop());
+        appProperties.getUserSettings()->setValue ("auditionPatterns", InstrumentKeys::getPatternChoices());
     };
     InstrumentKeys::layoutChanged = [this] { appProperties.getUserSettings()->setValue ("playingKeys", InstrumentKeys::keyOf (InstrumentKeys::getLayout())); };
     setApplicationCommandManagerToWatch (&commands);   // menus refresh when command state changes
