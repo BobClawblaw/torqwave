@@ -134,7 +134,7 @@ Every change the model proposes is played and scored like any other candidate, w
 
 **Let the model hear clips** (Settings > AI, off to begin with) sends the note Decrypt is matching to the server once, as a 16 kHz WAV, and asks for a one-line description to start from. Only a model that takes audio can use it; one that doesn't answers with an error and the search goes on as before. Turn it on only for a server you trust with your audio.
 
-**What it did, measured.** The ten factory patches of Decrypt's own test, each recorded dry and decrypted without its own name, with and without a 27-billion-parameter model (Qwen3.8 27B, on a local server) told the patch's category in words:
+**What it did, measured.** The ten factory patches of Decrypt's own test as it was before the 40 basses of 0.20.0 (Warehouse Sub as its bass), each recorded dry and decrypted without its own name, with and without a 27-billion-parameter model (Qwen3.8 27B, on a local server) told the patch's category in words:
 
 | | Without the model | With the model |
 |---|---|---|

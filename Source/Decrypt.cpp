@@ -524,7 +524,7 @@ juce::String describeDifference (const Measures& t, const Measures& c)
     static const juce::StringArray bandNames { "lows", "low mids", "high mids", "highs" };
     static const juce::StringArray sectionNames { "attack", "body", "tail" };
     const auto [peak, fall] = shapeOf (t);
-    const auto sectionOf = [peak = peak, fall = fall] (int f) { return f <= juce::jmax (peak, 5) ? 0 : f < fall ? 1 : 2; };
+    const auto sectionOf = [attackEnd = juce::jmax (peak, 5), tailStart = fall] (int f) { return f <= attackEnd ? 0 : f < tailStart ? 1 : 2; };
 
     struct Cell { double sum = 0.0; int count = 0; };
     std::array<std::array<Cell, 4>, 3> cells {};
