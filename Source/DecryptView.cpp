@@ -89,6 +89,16 @@ void DecryptView::askName()
     naming = true;
     replacing = false;
     namingNote = {};
+
+    // A guess at its category: the factory patch it grew from, if it grew from one.
+    category = {};
+    takenLock = chosen.has_value() ? chosen->lock : 0.0f;
+
+    if (chosen.has_value())
+        for (auto& p : WaveSynth::factoryPatches())
+            if (p.name == chosen->from)
+                category = p.category;
+
     nameBox.setText (synth.getPatchName(), false);
     layout();
     nameBox.setVisible (true);
@@ -117,7 +127,13 @@ bool DecryptView::saveName (bool replace)
         return false;
     }
 
-    if (const auto why = replace ? store.whyNot (name, name) : store.whyNot (name); why.isNotEmpty() || ! store.save (synth, name, replace))
+    DecryptedPatches::Entry facts;
+    facts.category = category;
+    facts.source = clipName;
+    facts.lock = takenLock;
+    facts.taken = juce::Time::getCurrentTime();
+
+    if (const auto why = replace ? store.whyNot (name, name) : store.whyNot (name); why.isNotEmpty() || ! store.save (synth, name, replace, facts))
     {
         replacing = false;
         namingNote = why.isNotEmpty() ? why : juce::String ("It couldn't be written to the presets folder.");
@@ -126,7 +142,7 @@ bool DecryptView::saveName (bool replace)
     }
 
     naming = replacing = false;
-    namingNote = "Saved as " + name.quoted() + ", under Decrypted in the patch list.";
+    namingNote = "Saved as " + name.quoted() + ": see the Decrypted page.";
     nameBox.setVisible (false);
     offer = {};
     offerFor = 0;
@@ -849,7 +865,7 @@ void DecryptView::layout()
     }
 
     // The offer of a name, under the panel's figures.
-    useChip = refuseChip = saveChip = laterChip = {};
+    useChip = refuseChip = saveChip = laterChip = categoryChip = {};
 
     if (offer.name.isNotEmpty())
     {
@@ -863,6 +879,7 @@ void DecryptView::layout()
         nameBox.setBounds (juce::Rectangle<float> (panel.getX() + 16.0f, panel.getBottom() - 158.0f, panel.getWidth() - 32.0f, 26.0f).toNearestInt());
         saveChip = { panel.getX() + 16.0f, panel.getBottom() - 106.0f, replacing ? 84.0f : 64.0f, 24.0f };
         laterChip = { saveChip.getRight() + 8.0f, saveChip.getY(), replacing ? 108.0f : 84.0f, 24.0f };
+        categoryChip = { laterChip.getRight() + 8.0f, saveChip.getY(), panel.getRight() - 16.0f - laterChip.getRight() - 8.0f, 24.0f };
     }
 
     // The chain's strip: Play, the signal, then every link, each as wide as the room allows. Past
@@ -977,6 +994,26 @@ void DecryptView::mouseDown (const juce::MouseEvent& e)
     if (naming && saveChip.contains (p))
     {
         saveName (replacing);
+        return;
+    }
+
+    if (naming && categoryChip.contains (p))
+    {
+        // The category it is saved under: none, or one of the synth's own.
+        juce::PopupMenu menu;
+        menu.addItem (1, "No category", true, category.isEmpty());
+        menu.addSeparator();
+        const auto& all = WaveSynth::patchCategories();
+
+        for (int i = 0; i < all.size(); ++i)
+            menu.addItem (2 + i, all[i], true, all[i] == category);
+
+        menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withTargetScreenArea (localAreaToGlobal (categoryChip.toNearestInt())),
+                            [safe = juce::Component::SafePointer<DecryptView> (this)] (int chosenItem)
+                            {
+                                if (safe != nullptr && chosenItem > 0)
+                                    safe->chooseCategory (chosenItem == 1 ? juce::String() : WaveSynth::patchCategories()[chosenItem - 2]);
+                            });
         return;
     }
 
@@ -1603,13 +1640,14 @@ void DecryptView::drawPanel (juce::Graphics& g)
     if (naming)
     {
         text (g, "KEEP IT", x, panel.getBottom() - 176.0f, 11.0f, Theme::good, juce::Justification::centredLeft, true);
-        text (g, "a name saves it under Decrypted", x + 62.0f, panel.getBottom() - 176.0f, 10.5f, Theme::dimText);
+        text (g, "a name saves it to Decrypted", x + 62.0f, panel.getBottom() - 176.0f, 10.5f, Theme::dimText);
 
         if (namingNote.isNotEmpty())
             text (g, namingNote.substring (0, 46), x, panel.getBottom() - 120.0f, 10.5f, replacing ? Theme::accentLight : Theme::danger);
 
         drawChip (g, saveChip, replacing ? "Replace" : "Save", Theme::good, true, Theme::textStrong);
         drawChip (g, laterChip, replacing ? "Keep Typing" : "Not Now", Theme::lineStrong, false, Theme::dimText);
+        drawChip (g, categoryChip, category.isEmpty() ? juce::String ("no category") : category, Theme::accent, false, category.isEmpty() ? Theme::dimText : Theme::text);
     }
     else if (namingNote.isNotEmpty())
         text (g, namingNote.substring (0, 46), x, panel.getBottom() - 88.0f, 10.5f, Theme::good);

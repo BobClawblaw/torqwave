@@ -5,6 +5,7 @@
 #include "../Source/DecryptView.h"
 #include "../Source/InstrumentKeys.h"
 #include "../Source/DecryptPatches.h"
+#include "../Source/DecryptedView.h"
 #include "../Source/SoundDrops.h"
 #include "../Source/WaveSynthEditor.h"
 #include "../Source/Theme.h"
@@ -1209,7 +1210,7 @@ namespace
         const auto auditionWas = InstrumentKeys::getAudition();
         InstrumentKeys::setAudition (false);
         const auto folder = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypted-" + juce::String (juce::Time::getMillisecondCounter()));
-        const auto list = folder.getChildFile ("Synth Decrypted.txt");
+        const auto list = folder.getChildFile ("Synth Decrypted.xml");
         auto presets = std::make_unique<EffectPresets::Store> (folder.getChildFile ("Presets"));
         DecryptedPatches::Store::use (presets.get(), list);
         auto& store = DecryptedPatches::Store::shared;
@@ -1253,6 +1254,8 @@ namespace
             synth.setMacroName (0, "Grit");
             synth.setSampledTable (1, WaveTables::makeSampled (std::vector<float> ((size_t) (4 * WaveTables::Sampled::harmonics), 0.5f), 4, 110.0, "a table"));
             const auto trimmed = synth.getPresetValues().at ("ampLevel");
+            const auto guessed = view.nameCategory();
+            const auto takenAt = view.getSearch()->getProgress().best.front().lock;
             view.typeName ("Night Reese");
             click (view.saveNameBounds().getCentre());
             const auto values = synth.getPresetValues();
@@ -1269,19 +1272,15 @@ namespace
             if (! recalled)
                 failed.add ("the patch recalled is not the patch saved");
 
-            // In the patch list: under Decrypted, ticked when the synth is on it, with Rename and Delete for it.
-            {
-                auto ticked = false;
-                const auto menu = WaveSynthEditor::decryptedMenu ("Night Reese", 100, 900, 901, ticked);
-                juce::StringArray items;
-                for (juce::PopupMenu::MenuItemIterator i (menu); i.next();)
-                    if (! i.getItem().isSeparator)
-                        items.add (i.getItem().text);
-                if (! (ticked && items.size() == 3 && items[0] == "Night Reese" && items[1].startsWith ("Rename") && items[2].startsWith ("Delete")))
-                    failed.add ("the Decrypted menu does not list it with Rename and Delete (" + items.joinIntoString (", ") + ")");
-            }
+            // What the list keeps of it: the category guessed from the factory patch it grew from, the lock, the recording's name, the date.
+            const auto kept = store().entry ("Night Reese");
+            if (! (kept.has_value() && kept->category == guessed && kept->source == "reese" && kept->lock > 50.0f && juce::exactlyEqual (kept->lock, takenAt)
+                   && (juce::Time::getCurrentTime() - kept->taken).inSeconds() < 120.0))
+                failed.add ("the list did not keep the category guessed (" + guessed + "), the lock, the recording's name and the date");
 
-            // A name taken asks before replacing; a factory patch's and an empty one are refused; Replace replaces.
+            // A name taken asks before replacing; a factory patch's and an empty one are refused; Replace replaces, with the category chosen.
+            const auto& categories = WaveSynth::patchCategories();
+            const auto first = categories[0], second = categories[1], third = categories[2];
             takeOne();
             view.typeName ("night reese");
             const auto asked = ! view.saveName() && view.isAskingToReplace() && view.isNaming() && store().names().size() == 1;
@@ -1291,50 +1290,164 @@ namespace
             const auto emptyRefused = ! view.saveName() && view.nameNote().isNotEmpty() && view.isNaming();
             synth.setMacroName (0, "Grit");
             synth.setSampledTable (1, WaveTables::makeSampled (std::vector<float> ((size_t) (4 * WaveTables::Sampled::harmonics), 0.5f), 4, 110.0, "a table"));
+            const auto takenAt2 = view.getSearch()->getProgress().best.front().lock;
             view.typeName ("Night Reese");
+            view.chooseCategory (second);
             click (view.saveNameBounds().getCentre());     // asks
             const auto asksAgain = view.isAskingToReplace();
             click (view.saveNameBounds().getCentre());     // Replace
-            if (! (asked && factoryRefused && emptyRefused && asksAgain && ! view.isNaming() && store().names().size() == 1))
-                failed.add ("a taken, a factory or an empty name was not asked about or refused as it should be");
+            if (! (asked && factoryRefused && emptyRefused && asksAgain && ! view.isNaming() && store().names().size() == 1 && store().entry ("Night Reese")->category == second))
+                failed.add ("a taken, a factory or an empty name was not asked about or refused as it should be, or the category chosen was not kept");
 
-            // A second one; the arrows step through the Decrypted patches when they are browsed, as the arrow keys do.
-            takeOne();
-            view.typeName ("Bell Thing");
-            view.saveName();
+            // Three more, in other categories and in none: the patch list's folder has a sub-menu for each category, then those with none.
+            for (auto& [name, category] : std::vector<std::pair<juce::String, juce::String>> { { "Bell Thing", first }, { "Ash Lead", second }, { "Loose One", {} } })
+            {
+                takeOne();
+                view.typeName (name);
+                view.chooseCategory (category);
+                view.saveName();
+            }
+
+            juce::StringArray folderOrder;
+
+            for (auto& e : store().inFolderOrder())
+                folderOrder.add (e.name);
+
+            {
+                auto ticked = false;
+                const auto menu = WaveSynthEditor::decryptedMenu ("Night Reese", 100, 900, 901, ticked);
+                juce::StringArray top, inSecond;
+                juce::Array<int> ids;
+
+                for (juce::PopupMenu::MenuItemIterator i (menu); i.next();)
+                {
+                    if (i.getItem().isSeparator)
+                        continue;
+
+                    top.add (i.getItem().text);
+
+                    if (i.getItem().subMenu != nullptr)
+                        for (juce::PopupMenu::MenuItemIterator j (*i.getItem().subMenu); j.next();)
+                        {
+                            ids.add (j.getItem().itemID);
+
+                            if (i.getItem().text == second)
+                                inSecond.add (j.getItem().text + (j.getItem().isTicked ? " (ticked)" : ""));
+                        }
+                    else if (i.getItem().itemID >= 100 && i.getItem().itemID < 900)
+                        ids.add (i.getItem().itemID);
+                }
+
+                if (! (ticked && folderOrder == juce::StringArray { "Bell Thing", "Ash Lead", "Night Reese", "Loose One" } && top[0] == first && top[1] == second && top[2] == "Loose One"
+                       && top[3].startsWith ("Rename") && top[4].startsWith ("Delete") && inSecond == juce::StringArray { "Ash Lead", "Night Reese (ticked)" }
+                       && ids == juce::Array<int> { 100, 101, 102, 103 }))
+                    failed.add ("the patch list's Decrypted folder is not by category, then those with none (" + top.joinIntoString (", ") + "; " + inSecond.joinIntoString (", ") + ")");
+            }
+
+            // The arrows, and the arrow keys, step through them in the folder's order.
+            synth.loadPatch ("Cold Bell");
             synth.setBrowsingDecrypted (true);
-            const auto firstStep = InstrumentKeys::stepSound (synth, window, 1);
-            const auto secondStep = InstrumentKeys::stepSound (synth, window, 1);
-            const auto back = InstrumentKeys::stepSound (synth, window, -1);
-            if (! (store().names() == juce::StringArray { "Bell Thing", "Night Reese" } && firstStep == "Night Reese" && secondStep == "Bell Thing" && back == "Night Reese"
-                   && synth.getPatchName() == "Night Reese"))
-                failed.add ("the arrows did not step through the Decrypted patches (" + firstStep + ", " + secondStep + ", " + back + ")");
+            juce::StringArray stepped;
 
-            // Rename: an empty, a taken and a factory name refused; a new one renames it, and the synth's patch with it.
-            const auto refusedNames = ! window->renameDecrypted ("Night Reese", "") && ! window->renameDecrypted ("Night Reese", "bell thing")
-                                      && ! window->renameDecrypted ("Night Reese", "Abyss Reese") && store().names().contains ("Night Reese");
-            const auto renamed = window->renameDecrypted ("Night Reese", "Dusk Reese") && store().names() == juce::StringArray { "Bell Thing", "Dusk Reese" }
-                                 && ! presets->getNames (key).contains ("Night Reese") && synth.getPatchName() == "Dusk Reese";
+            for (int i = 0; i < 5; ++i)
+                stepped.add (InstrumentKeys::stepSound (synth, window, 1));
+
+            const auto steppedBack = InstrumentKeys::stepSound (synth, window, -1);
+            if (! (stepped == juce::StringArray { "Bell Thing", "Ash Lead", "Night Reese", "Loose One", "Bell Thing" } && steppedBack == "Loose One" && synth.getPatchName() == "Loose One"))
+                failed.add ("the arrows did not step through the Decrypted patches in the folder's order (" + stepped.joinIntoString (", ") + ", back to " + steppedBack + ")");
+
+            // The Decrypted page: a row each, by name; a click puts one on the keys, a double-click loads it and shows the knobs.
+            window->showView (3);
+            auto& page = *window->getDecryptedView();
+            const auto pageClick = [&page] (juce::Point<float> at, int clicks = 1, juce::ModifierKeys mods = {})
+            {
+                const auto event = juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, mods, 0.5f, 0, 0, 0, 0, &page, &page, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), clicks, false);
+                if (clicks == 2) page.mouseDoubleClick (event); else page.mouseDown (event);
+            };
+            juce::StringArray listed;
+
+            for (int i = 0; i < page.getNumRows(); ++i)
+                listed.add (page.row (i).name + "/" + page.row (i).category);
+
+            synth.loadPatch ("Cold Bell");
+            pageClick (page.rowBounds (2).getCentre());
+            const auto heardRow = synth.getPatchName() == "Loose One" && page.selected() == juce::StringArray { "Loose One" } && page.isVisible() && synth.isBrowsingDecrypted();
+            pageClick (page.rowBounds (3).getCentre(), 2);
+            const auto opened = synth.getPatchName() == "Night Reese" && ! page.isVisible() && synth.getMacroName (0) == "Grit";
+            window->showView (3);
+            page.select (0);
+            page.step (1);
+            const auto steppedRow = page.selected() == juce::StringArray { "Bell Thing" } && synth.getPatchName() == "Bell Thing";
+            if (! (listed == juce::StringArray { "Ash Lead/" + second, "Bell Thing/" + first, "Loose One/", "Night Reese/" + second } && heardRow && opened && steppedRow))
+                failed.add ("the Decrypted page did not list them, put a row clicked on the keys, open one double-clicked, or step (" + listed.joinIntoString (", ") + ")");
+
+            // Sorted by a heading, and filtered.
+            pageClick (page.headingBounds (DecryptedView::Column::category).getCentre());
+            juce::StringArray byCategory;
+            auto inOrder = page.sortedBy() == DecryptedView::Column::category;      // by category's name, those with none last
+            for (int i = 0; i < page.getNumRows(); ++i)
+            {
+                byCategory.add (page.row (i).name + "/" + page.row (i).category);
+
+                if (i > 0)
+                {
+                    const auto& a = page.row (i - 1).category;
+                    const auto& b = page.row (i).category;
+                    inOrder = inOrder && (b.isEmpty() || (a.isNotEmpty() && a.compareIgnoreCase (b) <= 0));
+                }
+            }
+            page.setFilter ("bell");
+            const auto filtered = page.getNumRows() == 1 && page.row (0).name == "Bell Thing";
+            page.setFilter ({});
+            page.sortBy (DecryptedView::Column::name);
+            if (! (inOrder && byCategory.size() == 4 && filtered && page.getNumRows() == 4))
+                failed.add ("the page did not sort by category or filter (" + byCategory.joinIntoString (", ") + ")");
+
+            // Several rows selected and given a category at once; one given none.
+            page.select (2);                                   // Loose One
+            pageClick (page.rowBounds (0).getCentre(), 1, juce::ModifierKeys (juce::ModifierKeys::commandModifier));   // and Ash Lead
+            const auto two = page.selected().size() == 2 && page.categoriseSelected (third) == 2 && store().entry ("Loose One")->category == third && store().entry ("Ash Lead")->category == third;
+            page.select (1);
+            const auto none = page.categoriseSelected ({}) == 1 && store().entry ("Bell Thing")->category.isEmpty() && page.categoriseSelected ("Not A Category") == 0;
+            if (! (two && none))
+                failed.add ("rows selected were not given a category together, or one could not be given none");
+
+            // Rename on the page: an empty, a taken and a factory name refused; a new one renames it, and the synth's patch with it.
+            store().load (synth, "Night Reese");
+            page.select (3);
+            const auto refusedNames = ! page.renameSelected ("") && ! page.renameSelected ("bell thing") && ! page.renameSelected ("Abyss Reese") && store().names().contains ("Night Reese");
+            const auto renamed = page.renameSelected ("Dusk Reese") && store().names().contains ("Dusk Reese") && ! presets->getNames (key).contains ("Night Reese")
+                                 && synth.getPatchName() == "Dusk Reese" && store().entry ("Dusk Reese")->category == second && juce::exactlyEqual (store().entry ("Dusk Reese")->lock, takenAt2);
             synth.loadPatch ("Cold Bell");
             const auto renamedLoads = store().load (synth, "Dusk Reese") && synth.getPatchName() == "Dusk Reese" && synth.getMacroName (0) == "Grit";
-            if (! (refusedNames && renamed && renamedLoads))
-                failed.add ("rename did not refuse an empty, taken or factory name, or did not rename");
+            const auto fromBrowser = ! window->renameDecrypted ("Dusk Reese", "ash lead") && window->renameDecrypted ("Dusk Reese", "Dusk Reese II") && window->renameDecrypted ("Dusk Reese II", "Dusk Reese");
+            if (! (refusedNames && renamed && renamedLoads && fromBrowser))
+                failed.add ("rename did not refuse an empty, taken or factory name, or did not rename and keep what the list holds");
 
-            // The store read again, as after a restart: the same list, the same patch.
+            // The store read again, as after a restart: the same patches, categories, locks, recordings and dates, the same patch.
+            const auto before = store().entries();
             auto again = std::make_unique<EffectPresets::Store> (folder.getChildFile ("Presets"));
             DecryptedPatches::Store::use (again.get(), list);
             synth.loadPatch ("Cold Bell");
-            const auto survived = store().names() == juce::StringArray { "Bell Thing", "Dusk Reese" } && store().load (synth, "Dusk Reese") && synth.getMacroName (0) == "Grit"
-                                  && synth.getSampledTable (1) != nullptr;
-            if (! survived)
+            const auto after = store().entries();
+            auto same = before.size() == after.size() && after.size() == 4;
+
+            for (size_t i = 0; same && i < after.size(); ++i)
+                same = before[i].name == after[i].name && before[i].category == after[i].category && before[i].source == after[i].source
+                       && juce::exactlyEqual (before[i].lock, after[i].lock) && before[i].taken == after[i].taken;
+
+            if (! (same && store().load (synth, "Dusk Reese") && synth.getMacroName (0) == "Grit" && synth.getSampledTable (1) != nullptr))
                 failed.add ("the Decrypted patches did not survive the store being read again");
 
-            // Delete: gone from the list and from the presets; a preset deleted from the bar is no longer listed.
-            const auto deleted = window->deleteDecrypted ("Dusk Reese") && store().names() == juce::StringArray { "Bell Thing" } && ! again->getNames (key).contains ("Dusk Reese")
-                                 && ! window->deleteDecrypted ("Dusk Reese");
-            again->remove (key, "Bell Thing");
-            if (! (deleted && store().names().isEmpty()))
-                failed.add ("delete did not remove the patch, or a preset deleted from the bar was still listed");
+            // Delete on the page: gone from the list and from the presets; a preset deleted from the bar is no longer listed.
+            page.refresh();
+            page.select (1);    // Bell Thing
+            pageClick (page.rowBounds (2).getCentre(), 1, juce::ModifierKeys (juce::ModifierKeys::shiftModifier));   // to Dusk Reese
+            const auto deleted = page.selected().size() == 2 && page.deleteSelected() == 2 && store().names() == juce::StringArray { "Ash Lead", "Loose One" }
+                                 && ! again->getNames (key).contains ("Dusk Reese") && page.getNumRows() == 2 && ! window->deleteDecrypted ("Dusk Reese");
+            again->remove (key, "Ash Lead");
+            if (! (deleted && store().names() == juce::StringArray { "Loose One" }))
+                failed.add ("delete did not remove the patches, or a preset deleted from the bar was still listed");
 
             view.stop();
             DecryptedPatches::Store::use (nullptr, {});
@@ -1343,10 +1456,12 @@ namespace
         folder.deleteRecursively();
         InstrumentKeys::setAudition (auditionWas);
         check (failed.isEmpty(),
-               "decrypt: Take asks for a name with the Node name in it; Not Now leaves the patch on the keys unsaved; a name saves it as one of the user's presets and lists it under "
-               "Decrypted; recalled it is the same patch (settings, level trim, table, macro names, name); a taken name asks before replacing and a factory patch's or an empty one "
-               "is refused; the arrows step through the Decrypted patches; rename refuses an empty, taken or factory name; the list survives the store being read again; delete "
-               "removes it" + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
+               "decrypt: Take asks for a name with the Node name in it and a category guessed from the factory patch it grew from; Not Now leaves the patch on the keys unsaved; a name "
+               "saves it as one of the user's presets and a Decrypted patch, with its category, lock, recording and date; recalled it is the same patch (settings, level trim, table, "
+               "macro names, name); a taken name asks before replacing and a factory patch's or an empty one is refused; the patch list's Decrypted folder has them by category and the "
+               "arrows step in that order; the Decrypted page lists them, puts a row clicked on the keys, opens one double-clicked, sorts, filters, gives several a category at once, "
+               "renames (refusing an empty, taken or factory name) and deletes; the list survives the store being read again"
+                   + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
     }
 }
 
@@ -1383,7 +1498,10 @@ void saveDecryptWindow (const juce::File& folder)
     // The user's own presets are left alone: what is saved here goes to a folder of its own.
     const auto scratch = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypt-pictures-" + juce::String (juce::Time::getMillisecondCounter()));
     EffectPresets::Store scratchPresets (scratch.getChildFile ("Presets"));
-    DecryptedPatches::Store::use (&scratchPresets, scratch.getChildFile ("Synth Decrypted.txt"));
+    DecryptedPatches::Store::use (&scratchPresets, scratch.getChildFile ("Synth Decrypted.xml"));
+    window->showView (3);
+    save ("decrypted-empty");
+    window->showView (2);
 
     for (auto& [name, clip] : std::vector<std::pair<juce::String, juce::AudioBuffer<float>>> { { "reese", recordingOf ("Abyss Reese", 45, 0.8, 1.5) },
                                                                                                { "bell", recordingOf ("Cold Bell", 57, 0.6, 1.5) } })
@@ -1425,23 +1543,65 @@ void saveDecryptWindow (const juce::File& folder)
     view.saveName();
     save ("decrypt-name-saved");
 
-    // The patch list: one of the Decrypted patches loaded from it (the browser names its category), and what the Decrypted
-    // sub-menu lists. The menu itself is not put up as a window here, so it is printed.
-    synth.loadPatch ("Cold Bell");
-    DecryptedPatches::Store::shared().load (synth, "Glass Bell");
-    synth.setBrowsingDecrypted (true);
-    window->showView (0);
-    window->refresh();
-    save ("decrypt-patch-from-the-list");
+    // The Decrypted page: a dozen patches in several categories (ten more, made from factory patches for the picture), then one selected.
+    {
+        const auto& categories = WaveSynth::patchCategories();
+        const std::vector<std::tuple<const char*, const char*, int, float, const char*, int>> more {
+            { "Abyss Reese", "Low Tide", 1, 84.0f, "sub drone 03", 30 },        { "Warehouse Sub", "Cellar Floor", 0, 91.0f, "kick tail", 26 },
+            { "Acid Corrosion", "Rust Line", 0, 78.0f, "303 take 2", 21 },      { "Concrete Pad", "Grey Morning", 3, 73.0f, "choir note", 19 },
+            { "Black Pluck", "Koto Wire", 4, 88.0f, "koto", 15 },              { "Siren Burn", "Tower Call", 2, 69.0f, "alarm", 12 },
+            { "Dub Chord Stab", "Smoke Stab", 5, 82.0f, "dub chord", 9 },       { "Bare Shiver", "Thin Air", -1, 64.0f, "wine glass", 6 },
+            { "Abrasive Bray", "Horn Rasp", 2, 76.0f, "horn hit", 3 },            { "Cold Bell", "Frost Chime", -1, 93.0f, "music box", 1 },
+        };
+
+        for (auto& [factory, name, category, lock, source, daysAgo] : more)
+        {
+            synth.loadPatch (factory);
+            DecryptedPatches::Entry facts;
+            facts.category = category >= 0 && category < categories.size() ? categories[category] : juce::String();
+            facts.lock = lock;
+            facts.source = source;
+            facts.taken = juce::Time::getCurrentTime() - juce::RelativeTime::days (daysAgo);
+            DecryptedPatches::Store::shared().save (synth, name, false, facts);
+        }
+
+        window->ownPatchesChanged();
+        window->showView (3);
+        auto& page = *window->getDecryptedView();
+        save ("decrypted-list");
+        const auto at = page.rowBounds (4).getCentre();
+        page.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &page, &page, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+        page.select (6, true);
+        window->refresh();
+        save ("decrypted-selected");
+        page.sortBy (DecryptedView::Column::category);
+        save ("decrypted-by-category");
+    }
+
+    // The patch list's Decrypted folder is a menu, which is not put up as a window here: it is printed, a category's patches in brackets.
     {
         auto ticked = false;
         const auto menu = WaveSynthEditor::decryptedMenu (synth.getPatchName(), 1, 900, 901, ticked);
         juce::StringArray items;
 
         for (juce::PopupMenu::MenuItemIterator i (menu); i.next();)
-            items.add (i.getItem().isSeparator ? juce::String ("-") : i.getItem().text + (i.getItem().isTicked ? " (ticked)" : ""));
+        {
+            if (i.getItem().isSeparator)
+            {
+                items.add ("-");
+                continue;
+            }
 
-        std::cout << "the patch list's Decrypted menu: " << items.joinIntoString (" | ") << std::endl;
+            juce::StringArray inside;
+
+            if (i.getItem().subMenu != nullptr)
+                for (juce::PopupMenu::MenuItemIterator j (*i.getItem().subMenu); j.next();)
+                    inside.add (j.getItem().text + (j.getItem().isTicked ? " (ticked)" : ""));
+
+            items.add (i.getItem().text + (inside.isEmpty() ? juce::String (i.getItem().isTicked ? " (ticked)" : "") : " [" + inside.joinIntoString (", ") + "]"));
+        }
+
+        std::cout << "the patch list's Decrypted folder: " << items.joinIntoString (" | ") << std::endl;
     }
 
     DecryptedPatches::Store::use (nullptr, {});
@@ -1669,9 +1829,193 @@ namespace
     }
 }
 
+namespace
+{
+    /** The ways a second sound really arrives: a file of each kind the page takes, dropped; and what the app hands over
+        for a sound dragged from inside it (longer than ten seconds, one or two channels, 44.1 or 96 kHz, or nothing).
+        Each either starts a search of that sound, whose signal is then heard, or says why not. */
+    void testSecondSoundRoutes()
+    {
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (false);
+        const auto first = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
+        const auto folder = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypt-routes-" + juce::String (juce::Time::getMillisecondCounter()));
+        folder.createDirectory();
+
+        // The bell at a rate, with so many channels, after some seconds of silence, in a file of some seconds.
+        const auto bellAt = [] (double sampleRate, int channels, double silenceBefore, double seconds)
+        {
+            const auto bell = recordingOf ("Cold Bell", 69, 0.3, 0.9, sampleRate);
+            juce::AudioBuffer<float> out (channels, (int) (seconds * sampleRate));
+            out.clear();
+
+            for (int ch = 0; ch < channels; ++ch)
+                out.copyFrom (ch, (int) (silenceBefore * sampleRate), bell, juce::jmin (ch, bell.getNumChannels() - 1), 0,
+                              juce::jmin (bell.getNumSamples(), out.getNumSamples() - (int) (silenceBefore * sampleRate)));
+
+            return out;
+        };
+
+        const auto write = [&folder] (juce::AudioFormat& format, const juce::String& name, const juce::AudioBuffer<float>& audio, double sampleRate, int bits)
+        {
+            const auto file = folder.getChildFile (name);
+            std::unique_ptr<juce::OutputStream> stream = std::make_unique<juce::FileOutputStream> (file);
+            auto options = juce::AudioFormatWriterOptions{}.withSampleRate (sampleRate).withNumChannels (audio.getNumChannels()).withBitsPerSample (bits).withQualityOptionIndex (5);
+
+            if (auto writer = format.createWriterFor (stream, options))
+                writer->writeFromAudioSampleBuffer (audio, 0, audio.getNumSamples());
+
+            return file;
+        };
+
+        juce::WavAudioFormat wav;
+        juce::AiffAudioFormat aiff;
+        juce::FlacAudioFormat flac;
+        juce::OggVorbisAudioFormat ogg;
+        const auto plain = bellAt (48000.0, 2, 0.0, 0.9);
+        const auto wavFile = write (wav, "bell.wav", plain, 48000.0, 24);
+
+        struct Dropped
+        {
+            juce::String what;
+            juce::File file;
+            bool taken;         // it must start a search; otherwise it must be refused, with the reason
+        };
+
+        std::vector<Dropped> files {
+            { "wav", wavFile, true },
+            { "aif", write (aiff, "bell.aif", plain, 48000.0, 24), true },
+            { "aiff", write (aiff, "bell.aiff", plain, 48000.0, 16), true },
+            { "flac", write (flac, "bell.flac", plain, 48000.0, 24), true },
+            { "ogg", write (ogg, "bell.ogg", plain, 48000.0, 16), true },
+            { "wav at 44.1 kHz, one channel", write (wav, "bell-441-mono.wav", bellAt (44100.0, 1, 0.0, 0.9), 44100.0, 16), true },
+            { "wav at 96 kHz", write (wav, "bell-96.wav", bellAt (96000.0, 2, 0.0, 0.9), 96000.0, 24), true },
+            { "wav of 14 s, the note 3 s in", write (wav, "bell-long.wav", bellAt (48000.0, 2, 3.0, 14.0), 48000.0, 16), true },
+            { "wav of 14 s, the note 11 s in (past the ten seconds read)", write (wav, "bell-late.wav", bellAt (48000.0, 2, 11.0, 14.0), 48000.0, 16), false },
+        };
+
+        // The kinds the Mac reads: made from the wav by the system's converter, where it is there.
+        if (juce::File ("/usr/bin/afconvert").existsAsFile())
+            for (auto& [extension, arguments] : std::vector<std::pair<juce::String, juce::StringArray>> { { "m4a", { "-f", "m4af", "-d", "aac" } }, { "caf", { "-f", "caff", "-d", "LEI16" } } })
+            {
+                const auto out = folder.getChildFile ("bell." + extension);
+                juce::ChildProcess convert;
+                juce::StringArray command { "/usr/bin/afconvert" };
+                command.addArray (arguments);
+                command.add (wavFile.getFullPathName());
+                command.add (out.getFullPathName());
+
+                if (convert.start (command) && convert.waitForProcessToFinish (20000) && out.existsAsFile())
+                    files.push_back ({ extension, out, true });
+            }
+
+        // An mp3 cannot be made here: a file that is not audio under that name, which must be refused.
+        {
+            const auto fake = folder.getChildFile ("not-audio.mp3");
+            fake.replaceWithText ("this is not audio");
+            files.push_back ({ "mp3 that is not audio", fake, false });
+        }
+
+        juce::StringArray wrong, took, refused;
+
+        Synth synth;
+        synth.setPlayConfigDetails (0, 2, rate, 512);
+        synth.prepareToPlay (rate, 512);
+        synth.loadPatch ("Cathedral Stack Pad");
+        std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+        auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+        auto& view = *window->getDecryptView();
+        view.setMotion (false);
+        window->showView (2);
+        const auto click = [&view] (juce::Point<float> at)
+        {
+            view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+        };
+
+        {
+            Listener listener (synth);
+
+            // After the first sound is on the page: give it the second by `give`, and see that it took it and plays it, or refused it and says so.
+            const auto tryOne = [&] (const juce::String& what, bool mustTake, const std::function<void()>& give)
+            {
+                view.decrypt (first, rate, "first");
+                TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000);
+                give();
+                const auto& target = view.getSearch()->getTarget();
+                const auto isBell = target.note == 69 && target.audio.getNumSamples() < 60000;
+
+                if (isBell)
+                {
+                    TestUtils::runUntil ([] { return false; }, 200);
+                    const auto at = listener.now();
+                    click (view.candidateCentre (-1));
+                    TestUtils::runUntil ([] { return false; }, 900);
+                    const auto like = listener.likeness (at, target.audio);
+                    took.add (what);
+
+                    if (like < 0.9f || listener.peakFrom (at) < 0.1f)
+                        wrong.add (what + ": taken, but its signal was not heard (peak " + juce::String (listener.peakFrom (at), 2) + ", likeness " + juce::String (like, 2) + ")");
+
+                    if (! mustTake)
+                        wrong.add (what + ": taken, though it should have been refused");
+                }
+                else
+                {
+                    refused.add (what + " (\"" + view.refusal() + "\")");
+
+                    if (view.refusal().isEmpty())
+                        wrong.add (what + ": not taken, and nothing said why");
+
+                    if (mustTake)
+                        wrong.add (what + ": refused (\"" + view.refusal() + "\")");
+                }
+
+                view.stop();
+            };
+
+            for (auto& f : files)
+                tryOne ("a dropped " + f.what, f.taken, [&] { if (view.isInterestedInFileDrag ({ f.file.getFullPathName() })) view.filesDropped ({ f.file.getFullPathName() }, 0, 0); });
+
+            // From inside the app: what its Files panel hands over for an open file, the first ten seconds at the file's rate and channels.
+            const auto handOver = [&] (const juce::String& what, bool mustTake, std::optional<SoundDrops::Sound> sound)
+            {
+                tryOne ("dragged from inside the app, " + what, mustTake, [&]
+                {
+                    SoundDrops::isSound = [] (const juce::var& d) { return d.toString() == "openfile:0"; };
+                    SoundDrops::soundOf = [&sound] (const juce::var&, double) { return sound; };
+                    const juce::DragAndDropTarget::SourceDetails details ("openfile:0", nullptr, {});
+
+                    if (view.isInterestedInDragSource (details))
+                        view.itemDropped (details);
+
+                    SoundDrops::isSound = nullptr;
+                    SoundDrops::soundOf = nullptr;
+                });
+            };
+
+            handOver ("two channels at 48 kHz", true, SoundDrops::Sound { bellAt (48000.0, 2, 0.0, 0.9), 48000.0, "bell" });
+            handOver ("one channel at 44.1 kHz", true, SoundDrops::Sound { bellAt (44100.0, 1, 0.0, 0.9), 44100.0, "bell" });
+            handOver ("two channels at 96 kHz", true, SoundDrops::Sound { bellAt (96000.0, 2, 0.0, 0.9), 96000.0, "bell" });
+            handOver ("the first ten seconds of a longer file, the note 3 s in", true, SoundDrops::Sound { bellAt (48000.0, 2, 3.0, 10.0), 48000.0, "bell" });
+            handOver ("ten seconds of silence (the note comes later)", false, SoundDrops::Sound { bellAt (48000.0, 2, 9.99, 10.0), 48000.0, "bell" });
+            handOver ("a file with no audio yet (nothing handed over)", false, std::nullopt);
+        }
+
+        folder.deleteRecursively();
+        InstrumentKeys::setAudition (auditionWas);
+        std::cout << "DECRYPT-ROUTES taken: " << took.joinIntoString ("; ") << " | refused: " << refused.joinIntoString ("; ") << std::endl;
+        check (wrong.isEmpty(),
+               "decrypt: a second sound by each real way in either starts a search whose signal is heard or says why not: " + juce::String (took.size()) + " taken and heard ("
+                   + took.joinIntoString ("; ") + "), " + juce::String (refused.size()) + " refused with the reason (" + refused.joinIntoString ("; ") + ")"
+                   + (wrong.isEmpty() ? juce::String() : " (wrong: " + wrong.joinIntoString (" | ") + ")"));
+    }
+}
+
 void runDecryptHeardTests()
 {
     testSecondSoundHeard();
+    testSecondSoundRoutes();
 }
 
 void runDecryptWindowTests()

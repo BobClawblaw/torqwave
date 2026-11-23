@@ -114,6 +114,11 @@ public:
     void notNow();
     bool isAskingToReplace() const noexcept                       { return replacing; }
     const juce::String& nameNote() const noexcept                 { return namingNote; }
+    /** The category the patch will be saved under (one of the synth's factory categories, or empty:
+        none): guessed from the factory patch it grew from, and chosen from the menu on its chip. */
+    const juce::String& nameCategory() const noexcept             { return category; }
+    void chooseCategory (const juce::String& c)                   { category = WaveSynth::patchCategories().contains (c) ? c : juce::String(); repaint(); }
+    juce::Rectangle<float> categoryBounds() const                 { return categoryChip; }
     juce::Rectangle<float> saveNameBounds() const                 { return saveChip; }
     juce::Rectangle<float> notNowBounds() const                   { return laterChip; }
     /** Told when a patch has been saved (the presets bar and the patch list then show it). */
@@ -245,7 +250,9 @@ private:
     juce::TextEditor words, nameBox;
     bool naming = false, replacing = false;          // Take's name is being asked for; the name is taken, and Replace is asked
     juce::String namingNote;                         // why a name was refused, or where the patch was saved
-    juce::Rectangle<float> saveChip, laterChip;
+    juce::Rectangle<float> saveChip, laterChip, categoryChip;
+    juce::String category;                           // the category it will be saved under; empty: none
+    float takenLock = 0.0f;                          // the lock of the patch taken
     void askName();
     Decrypt::Advisor::Name offer;
     juce::uint32 offerFor = 0;

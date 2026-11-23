@@ -5,6 +5,7 @@
 
 class SignalConsoleView;
 class DecryptView;
+class DecryptedView;
 
 /** Torqwave Synth's window: the three oscillators with their wavetables drawn at the position they
     play, the sub and noise; the two filters with their response curves; the amp and voice; the
@@ -46,9 +47,11 @@ public:
         `ticked` says whether any is. */
     static juce::PopupMenu favouritesMenu (const juce::String& current, bool browsing, int firstId, bool& ticked);
 
-    /** The patch browser's Decrypted sub-menu: the patches taken from Decrypt and named
-        (DecryptedPatches), by name, an item's ID `firstId` plus its place in that list; the one
-        named `current` is ticked. With one of them on the synth, Rename and Delete for it follow
+    /** The patch browser's Decrypted folder: the patches taken from Decrypt and named
+        (DecryptedPatches), a sub-menu for each category that holds one, then those with no
+        category; an item's ID is `firstId` plus its place in the folder's order
+        (Store::inFolderOrder, which the arrows step through). The one named `current` is ticked,
+        with its category. With one of them on the synth, Rename and Delete for it follow
         (`renameId`, `deleteId`). `ticked` says whether any is ticked. */
     static juce::PopupMenu decryptedMenu (const juce::String& current, int firstId, int renameId, int deleteId, bool& ticked);
 
@@ -81,6 +84,7 @@ public:
     void showView (int index);
     SignalConsoleView* getConsoleView() const;
     DecryptView* getDecryptView() const;
+    DecryptedView* getDecryptedView() const;
 
     struct Content;
 
