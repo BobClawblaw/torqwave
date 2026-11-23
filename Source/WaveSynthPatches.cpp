@@ -14,6 +14,9 @@ namespace WaveSynthPatchBuilder
 
         add ("Init", "Init").osc (1, analog, sawPos).level (-12);
 
+        // The layered patches lead their categories.
+        addLayered (b);
+
         //======================================================================
         // Bass: the low end of a techno track, mostly mono and dry.
         add ("Warehouse Sub", "Bass").osc (1, sub, 20).subOsc (40).filter (1, ladder24, 600, 5).amp (1, 400, 90, 60).mono()
