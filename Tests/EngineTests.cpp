@@ -630,6 +630,7 @@ int main (int argc, char* argv[])
     //   --stress                only the stress test: how many tracks the mix keeps up with (minutes; not in the suite)
     //   --small                 only the tests of mixer scenes, channel strips and hardware inserts
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
+    //   --decrypt-measure       only Decrypt's two sets of ten, in 16 rounds and until settled, with times (minutes)
     //   --decrypt-eval <url> <model>  only Decrypt's ten clips, alone and helped by the model at that server
     //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session, sequence, library or decrypt
     juce::StringArray args;
@@ -656,6 +657,9 @@ int main (int argc, char* argv[])
     factoryPresets.getParentDirectory().deleteRecursively();
     SequenceLibrary::setFactoryFolder (factoryPresets);
     SequenceLibrary::setSearchesFile (factoryPresets.getSiblingFile ("Sequence Searches.xml"));
+
+    if (args.contains ("--decrypt-measure"))
+        return runDecryptMeasure();
 
     if (const auto i = args.indexOf ("--decrypt-eval"); i >= 0)
         return runDecryptEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {}));

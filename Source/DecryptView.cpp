@@ -183,7 +183,7 @@ bool DecryptView::again()
     // The chain keeps where this pass went on from, to hear beside what comes next.
     addLink (link.patch, link.lock);
 
-    // What the synth holds now (the patch it had, or one taken) is what Stop gives back.
+    // Stop then gives back the patch from before the first pass, or the one taken (begin).
     auto target = search->getTarget();
     begin (std::move (target), std::move (from));
     return true;
@@ -194,11 +194,16 @@ void DecryptView::begin (Decrypt::Target target, std::vector<SignalConsole::Patc
     problem = {};
     ended = {};
     offer = {};
-    before = SignalConsole::capture (synth);
-    restored = false;
     onKeys = -1;
     hovered = -2;
     chosen.reset();
+
+    // What Stop gives back: the patch the synth had before any of this. A pass carried on while a
+    // candidate is still on the keys (not taken) keeps the patch from before it.
+    if (search == nullptr || restored)
+        before = SignalConsole::capture (synth);
+
+    restored = false;
 
     if (resume.empty())
     {
@@ -432,7 +437,8 @@ void DecryptView::hearPatch (const SignalConsole::Patch& heard)
 
     // Rendered off the message thread, as the search renders it, then played.
     renders.removeAllJobs (false, 0);
-    renders.addJob ([patch = heard, target = &search->getTarget(), safe = juce::Component::SafePointer<DecryptView> (this),
+    // A copy of the target: Again or a new clip replaces the search while a render may still run.
+    renders.addJob ([patch = heard, target = std::make_shared<const Target> (search->getTarget()), safe = juce::Component::SafePointer<DecryptView> (this),
                      weak = std::weak_ptr<std::atomic<bool>> (alive)]
     {
         Synth player;

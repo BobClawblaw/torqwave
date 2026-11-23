@@ -84,10 +84,24 @@ namespace
                    + juce::String (lockOf (other), 0) + " %)");
     }
 
-    /** Ten factory patches of different kinds: the first of each category, at a note that suits it. */
-    struct Case { const char* category; int note; };
-    const Case cases[] = { { "Bass", 45 }, { "Reese", 45 }, { "Acid", 45 }, { "Sub", 33 }, { "Lead", 57 },
-                           { "Pad", 57 }, { "Pluck", 57 }, { "Bell", 69 }, { "Stab", 57 }, { "Brass", 57 } };
+    /** Ten factory patches of different kinds, by name so new patches never move them, at a note that
+        suits each: the simple set (a bass, reese, acid line, sub, lead, pad, pluck, bell, stab and brass,
+        mostly one or two layers and few modulation routes), and the complex set, the first of the same
+        categories since every category opened with patches that move (three layers with level
+        envelopes, step gates, 6 to 16 modulation routes). */
+    struct Case { const char* name; const char* category; int note; };
+    const Case simpleCases[] = { { "Warehouse Sub", "Bass", 45 }, { "Abyss Reese", "Reese", 45 }, { "Acid Corrosion", "Acid", 45 }, { "Bare Shiver", "Sub", 33 },
+                                 { "Siren Burn", "Lead", 57 }, { "Concrete Pad", "Pad", 57 }, { "Black Pluck", "Pluck", 57 }, { "Cold Bell", "Bell", 69 },
+                                 { "Dub Chord Stab", "Stab", 57 }, { "Abrasive Bray", "Brass", 57 } };
+    const Case complexCases[] = { { "Hydraulic Maw", "Bass", 45 }, { "Undertow Gnash", "Reese", 45 }, { "Caustic Gnaw", "Acid", 45 }, { "Bedrock Growl", "Sub", 33 },
+                                  { "Voltage Scream", "Lead", 57 }, { "Furnace Halo", "Pad", 57 }, { "Rivet Snarl", "Pluck", 57 }, { "Foundry Knell", "Bell", 69 },
+                                  { "Furnace Clamp", "Stab", 57 }, { "Foundry Horns", "Brass", 57 } };
+
+    bool isFactoryPatch (const char* name)
+    {
+        const auto& all = WaveSynth::factoryPatches();
+        return std::any_of (all.begin(), all.end(), [name] (const WaveSynth::Patch& p) { return p.name == name; });
+    }
 
     /** Where a match counts as found: changes at or under the edge of hearing (3 cents of pitch, the
         filters 3 % higher, the envelopes' times 5 % longer, a recording made at 44.1 kHz) measure under it. */
@@ -95,19 +109,18 @@ namespace
 
     void testThreshold()
     {
-        const auto& all = WaveSynth::factoryPatches();
         juce::StringArray lines;
         auto worst = 0.0f;
         int measured = 0;
 
-        for (auto& c : cases)
+        for (auto* set : { &simpleCases, &complexCases })
+        for (auto& c : *set)
         {
-            const auto it = std::find_if (all.begin(), all.end(), [&c] (const WaveSynth::Patch& p) { return p.category == c.category; });
-
-            if (it == all.end())
+            if (! isFactoryPatch (c.name))
                 continue;
 
-            const auto target = prepare (recordingOf (it->name, c.note, 0.8, 1.5), rate);
+            const juce::String name (c.name);
+            const auto target = prepare (recordingOf (name, c.note, 0.8, 1.5), rate);
             const auto scale = [] (Patch& p, const juce::String& id, double by) { if (auto v = p.values.find (id); v != p.values.end()) v->second *= by; };
             const std::pair<const char*, std::function<void (Patch&)>> changes[] = {
                 { "3 ct", [] (Patch& p) { for (auto* id : { "osc1Fine", "osc2Fine", "osc3Fine" }) p.values[id] += 3.0; } },
@@ -118,60 +131,91 @@ namespace
 
             for (auto& [what, change] : changes)
             {
-                const auto d = distance (target.measures, prepare (recordingOf (it->name, c.note, 0.8, 1.5, rate, 0.0, change), rate).measures).total;
+                const auto d = distance (target.measures, prepare (recordingOf (name, c.note, 0.8, 1.5, rate, 0.0, change), rate).measures).total;
                 worst = juce::jmax (worst, d);
                 here.add (juce::String (what) + " " + juce::String (d, 2));
             }
 
-            const auto resampled = distance (target.measures, prepare (recordingOf (it->name, c.note, 0.8, 1.5, 44100.0), 44100.0).measures).total;
+            const auto resampled = distance (target.measures, prepare (recordingOf (name, c.note, 0.8, 1.5, 44100.0), 44100.0).measures).total;
             worst = juce::jmax (worst, resampled);
             here.add ("44.1 kHz " + juce::String (resampled, 2));
-            lines.add (it->name + ": " + here.joinIntoString (", "));
+            lines.add (name + ": " + here.joinIntoString (", "));
             ++measured;
         }
 
         std::printf ("DECRYPT-EDGE %s\n", lines.joinIntoString ("; ").toRawUTF8());
-        check (measured == 10 && worst < foundWithin,
+        check (measured == 20 && worst < foundWithin,
                "decrypt: changes at the edge of hearing (3 cents, the filters 3 % up, the envelopes 5 % longer, a 44.1 kHz recording) measure under the "
-                   + juce::String (foundWithin, 1) + " dB a match must come within, on ten patches (the furthest " + juce::String (worst, 2) + " dB)");
+                   + juce::String (foundWithin, 1) + " dB a simple patch's match must come within, on the twenty patches of both sets (the furthest " + juce::String (worst, 2) + " dB)");
     }
 
-    void testSearch()
+    /** One set decrypted: each patch recorded dry and decrypted without its own name to start from.
+        Each line has the distance found, its lock, the key it was heard at for the key that played
+        it (a patch with a sub an octave down is heard an octave low: the patch found plays the
+        recording's pitch from that key), where it grew from, the rounds and the time. */
+    struct SetResult
     {
-        // Ten factory patches of different kinds, each recorded dry and decrypted without its own name to start from.
-        const auto& all = WaveSynth::factoryPatches();
         juce::StringArray lines;
-        auto worst = 0.0f;
-        auto longest = 0.0;
-        int found = 0, near = 0;
+        float worst = 0.0f, meanLock = 0.0f;
+        double longest = 0.0, meanSeconds = 0.0;
+        int found = 0, within = 0, mostRounds = 0;
+    };
 
-        for (auto& c : cases)
+    SetResult decryptSet (const Case (&set)[10], bool untilSettled, float within)
+    {
+        SetResult r;
+
+        for (auto& c : set)
         {
-            const auto it = std::find_if (all.begin(), all.end(), [&c] (const WaveSynth::Patch& p) { return p.category == c.category; });
-
-            if (it == all.end())
+            if (! isFactoryPatch (c.name))
                 continue;
 
-            const auto name = it->name;
+            const juce::String name (c.name);
             const auto target = prepare (recordingOf (name, c.note, 0.8, 1.5), rate);
             Options options;
             options.leaveOut.add (name);
+            options.untilSettled = untilSettled;
             Search search (target, options);
             const auto result = search.runNow();
             const auto best = result.best.empty() ? 1000.0f : result.best.front().distance.total;
-            worst = juce::jmax (worst, best);
-            longest = juce::jmax (longest, result.seconds);
-            ++found;
-            if (best < foundWithin) ++near;
-            lines.add (name + " " + juce::String (best, 1) + " dB (" + juce::String (result.best.empty() ? 0.0f : result.best.front().lock, 0) + " %, from "
-                       + (result.best.empty() ? juce::String ("nothing") : result.best.front().from) + ", " + juce::String (result.seconds, 1) + " s)");
+            const auto lock = result.best.empty() ? 0.0f : result.best.front().lock;
+            r.worst = juce::jmax (r.worst, best);
+            r.longest = juce::jmax (r.longest, result.seconds);
+            r.meanSeconds += result.seconds / 10.0;
+            r.meanLock += lock / 10.0f;
+            r.mostRounds = juce::jmax (r.mostRounds, result.round);
+            ++r.found;
+            r.within += best < within ? 1 : 0;
+            r.lines.add (name + " " + juce::String (best, 1) + " dB (" + juce::String (lock, 0) + " %, heard at " + noteName (target.note) + " for " + noteName (c.note) + ", from "
+                         + (result.best.empty() ? juce::String ("nothing") : result.best.front().from) + ", " + juce::String (result.round) + " rounds, "
+                         + juce::String (result.seconds, 1) + " s)");
         }
 
-        std::printf ("DECRYPT %s\n", lines.joinIntoString ("; ").toRawUTF8());
-        check (found == 10 && near == 10,
-               "decrypt: ten factory patches of different kinds, recorded dry and decrypted without their own names to start from, each come back within " + juce::String (foundWithin, 1) + " dB ("
-                   + juce::String (near) + " of " + juce::String (found) + ", the furthest " + juce::String (worst, 1) + " dB, the longest search "
-                   + juce::String (longest, 1) + " s: " + lines.joinIntoString ("; ").substring (0, 900) + ")");
+        return r;
+    }
+
+    /** Where a complex patch's match counts as found: set from what the search measured on the
+        complex set until settled (the furthest 4.75 dB, Furnace Clamp; the mean lock 89 %), with a
+        little room. It is wider than the simple set's: those patches move in ways a knob search
+        reaches only in part. */
+    constexpr float complexWithin = 5.0f;
+
+    void testSearch()
+    {
+        const auto simple = decryptSet (simpleCases, false, foundWithin);
+        std::printf ("DECRYPT simple %s\n", simple.lines.joinIntoString ("; ").toRawUTF8());
+        check (simple.found == 10 && simple.within == 10,
+               "decrypt: ten simple factory patches, recorded dry and decrypted in 16 rounds without their own names to start from, each come back within " + juce::String (foundWithin, 1) + " dB ("
+                   + juce::String (simple.within) + " of " + juce::String (simple.found) + ", the furthest " + juce::String (simple.worst, 1) + " dB, the longest search "
+                   + juce::String (simple.longest, 1) + " s: " + simple.lines.joinIntoString ("; ").substring (0, 900) + ")");
+
+        const auto complex = decryptSet (complexCases, true, complexWithin);
+        std::printf ("DECRYPT complex %s\n", complex.lines.joinIntoString ("; ").toRawUTF8());
+        check (complex.found == 10 && complex.within == 10,
+               "decrypt: ten complex factory patches (three layers, step gates, many modulation routes), decrypted until settled as the window does, each come back within "
+                   + juce::String (complexWithin, 1) + " dB (" + juce::String (complex.within) + " of " + juce::String (complex.found) + ", the furthest " + juce::String (complex.worst, 1)
+                   + " dB, mean lock " + juce::String (complex.meanLock, 1) + " %, at most " + juce::String (complex.mostRounds) + " rounds, the longest search "
+                   + juce::String (complex.longest, 1) + " s: " + complex.lines.joinIntoString ("; ").substring (0, 1200) + ")");
     }
 
     void testRepeatable()
@@ -380,7 +424,7 @@ namespace
         // unison drifts, so a render is never the recording sample for sample).
         Synth renderer;
         const auto own = render (renderer, original, target);
-        const auto ownLock = lockOf (distance (target.measures, measure (own.getReadPointer (0), own.getNumSamples())).total);
+        const auto ownLock = lockOf (distance (target.measures, measureRender (own)).total);
 
         const auto good = std::make_shared<MadeUp> (MadeUp::Kind::good, original);
         const auto bad = std::make_shared<MadeUp> (MadeUp::Kind::bad);
@@ -541,6 +585,19 @@ namespace
                        + juce::String (first, 1) + ", then " + juce::String (second, 1) + ", then " + juce::String (third, 1) + " %)");
         }
 
+        // Again with a candidate on the keys, not taken: Stop still gives back the patch from before the first pass.
+        {
+            const auto patchBefore = SignalConsole::addressOf (SignalConsole::capture (synth));
+            view.decrypt (clip, rate, "reese");
+            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            click (view.candidateCentre (2), 2);
+            const auto wasOnKeys = SignalConsole::addressOf (SignalConsole::capture (synth)) != patchBefore;
+            view.again();
+            view.stop();
+            check (wasOnKeys && SignalConsole::addressOf (SignalConsole::capture (synth)) == patchBefore,
+                   "decrypt: Again with a candidate on the keys but not taken, then Stop, gives back the patch the synth had before the search");
+        }
+
         // Until settled: the window's searches go on past 16 rounds while they come closer, and say when they no longer do.
         {
             Options settle;
@@ -600,18 +657,15 @@ int runDecryptEval (const juce::String& url, const juce::String& model, const ju
     settings.enabled = true;
     settings.serverUrl = url;
     settings.model = model;
-    const auto& all = WaveSynth::factoryPatches();
     double aloneLock = 0.0, helpedLock = 0.0, aloneSeconds = 0.0, helpedSeconds = 0.0;
     int n = 0, better = 0, worse = 0, kept = 0, proposed = 0, unfinished = 0;
 
-    for (auto& c : cases)
+    for (auto& c : simpleCases)
     {
-        const auto it = std::find_if (all.begin(), all.end(), [&c] (const WaveSynth::Patch& p) { return p.category == c.category; });
-
-        if (it == all.end())
+        if (! isFactoryPatch (c.name))
             continue;
 
-        const auto name = it->name;
+        const juce::String name (c.name);
         const auto target = prepare (recordingOf (name, c.note, 0.8, 1.5), rate);
         const auto run = [&] (std::shared_ptr<Advisor> advisor)
         {
@@ -658,4 +712,22 @@ int runDecryptEval (const juce::String& url, const juce::String& model, const ju
                      n, aloneLock / n, helpedLock / n, better, worse, kept, proposed, aloneSeconds / n, helpedSeconds / n);
 
     return unfinished == 0 ? 0 : 1;
+}
+
+int runDecryptMeasure()
+{
+    // The two sets of the search test, both ways, with their times: for tuning the search.
+    for (auto settled : { false, true })
+        for (auto* set : { &simpleCases, &complexCases })
+        {
+            const auto r = decryptSet (*set, settled, set == &simpleCases ? foundWithin : complexWithin);
+            std::printf ("%s, %s: furthest %.2f dB, mean lock %.1f %%, %d of 10 within, at most %d rounds, mean %.1f s, longest %.1f s\n",
+                         set == &simpleCases ? "simple" : "complex", settled ? "until settled" : "16 rounds", r.worst, r.meanLock, r.within,
+                         r.mostRounds, r.meanSeconds, r.longest);
+
+            for (auto& line : r.lines)
+                std::printf ("    %s\n", line.toRawUTF8());
+        }
+
+    return 0;
 }
