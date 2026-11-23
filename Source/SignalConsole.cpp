@@ -727,6 +727,45 @@ std::vector<Patch> variations (const Patch& held, Synth& rangesFrom, float reach
     return made;
 }
 
+std::vector<Patch> fewMoves (const Patch& held, Synth& rangesFrom, float reach, juce::uint32 seed, const std::array<bool, numParts>& firewall, int count)
+{
+    const auto movable = movableIn (held, rangesFrom, firewall);
+    std::vector<int> open;
+
+    for (int part = 0; part < numParts; ++part)
+        if (! movable[(size_t) part].empty())
+            open.push_back (part);
+
+    std::vector<Patch> made;
+
+    if (open.empty() || count <= 0)
+        return made;
+
+    const auto firstPart = (int) (mix (seed) % (juce::uint32) open.size());
+
+    for (int i = 0; i < count; ++i)
+    {
+        // One part in turn, and in it one, two or three of its settings, chosen at random.
+        const auto part = open[(size_t) ((firstPart + i) % (int) open.size())];
+        const auto& in = movable[(size_t) part];
+        std::array<std::vector<Movable>, numParts> chosen;
+        const auto many = juce::jmin ((int) in.size(), 1 + i % 3);
+
+        for (int k = 0; k < many; ++k)
+        {
+            const auto pick = juce::jmin ((int) in.size() - 1, (int) (uniform (seed, i, 0x4645574du, k) * (float) in.size()));
+            chosen[(size_t) part].push_back (in[(size_t) pick]);
+        }
+
+        auto patch = held;
+
+        if (! moveSettings (patch, held, chosen, { part }, 0, i, 0, mix (seed + (juce::uint32) i), juce::jlimit (0.0f, 1.0f, reach)).empty())
+            made.push_back (std::move (patch));
+    }
+
+    return made;
+}
+
 //==============================================================================
 bool reduceMotion()
 {

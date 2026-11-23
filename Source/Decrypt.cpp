@@ -446,6 +446,12 @@ juce::AudioBuffer<float> render (Synth& synth, const Patch& patch, const Target&
     return out;
 }
 
+Measures measureRender (const juce::AudioBuffer<float>& audio)
+{
+    const auto mono = monoOf (audio);
+    return measure (mono.data(), (int) mono.size());
+}
+
 //==============================================================================
 namespace
 {
@@ -1253,6 +1259,18 @@ void Search::run (const std::function<bool()>& shouldStop)
                 c.from = best[p].from;
                 next.push_back (std::move (c));
             }
+
+            // For the best two, steps that move only one to three settings: a patch with many settings
+            // (three layers, sixteen modulation routes, step patterns) is rarely improved by moving all
+            // of a part at once.
+            if (p < 2)
+                for (auto& v : SignalConsole::fewMoves (best[p].patch, *synth, juce::jmin (1.0f, reach * 1.5f), seed ^ 0x46455721u, firewall, perParent))
+                {
+                    Candidate c;
+                    c.patch = std::move (v);
+                    c.from = best[p].from;
+                    next.push_back (std::move (c));
+                }
 
             // The parts the advisor would hold: as many variations again of the best, with them held.
             if (p == 0 && haveModelFirewall)

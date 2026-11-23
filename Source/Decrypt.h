@@ -70,6 +70,9 @@ namespace Decrypt
     /** A patch played as a target is: its effects off, the target's key held for as long, as long. */
     juce::AudioBuffer<float> render (Synth&, const Patch&, const Target&);
 
+    /** A render measured as the search measures it: its channels as one, at its peak. */
+    Measures measureRender (const juce::AudioBuffer<float>&);
+
     /** A key's name, "A1". */
     juce::String noteName (int note);
 

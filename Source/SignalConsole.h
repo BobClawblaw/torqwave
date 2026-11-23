@@ -113,6 +113,11 @@ namespace SignalConsole
     std::vector<Patch> variations (const Patch& held, Synth& rangesFrom, float reach, juce::uint32 seed,
                                    const std::array<bool, numParts>& firewall, int count);
 
+    /** Like variations, but each moves only one to three settings of one part (each part in turn),
+        chosen at random: small, sparse steps that reach a patch with many settings (sixteen
+        modulation routes, step patterns) where moving all of a part at once rarely lands. */
+    std::vector<Patch> fewMoves (const Patch& held, Synth& rangesFrom, float reach, juce::uint32 seed, const std::array<bool, numParts>& firewall, int count);
+
     /** A held node's own entry (distance 0), measured. */
     Node nodeOf (const Patch&, Renderer&);
 
