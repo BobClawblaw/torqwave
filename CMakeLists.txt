@@ -292,6 +292,12 @@ target_sources(Torqwave PRIVATE
     Source/WaveSynthPatchBank.cpp
     Source/WaveSynthPatchBank2.cpp
     Source/WaveSynthPatchesLayered.cpp
+    Source/WaveSynthPatchesLayeredPads.cpp
+    Source/WaveSynthPatchesLayeredSequences.cpp
+    Source/WaveSynthPatchesLayeredStabs.cpp
+    Source/WaveSynthPatchesLayeredPlucks.cpp
+    Source/WaveSynthPatchesLayeredHits.cpp
+    Source/WaveSynthPatchesLayeredRisers.cpp
     Source/WaveSynthEditor.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp
@@ -704,6 +710,12 @@ target_sources(TorqwaveTests PRIVATE
     Source/WaveSynthPatchBank.cpp
     Source/WaveSynthPatchBank2.cpp
     Source/WaveSynthPatchesLayered.cpp
+    Source/WaveSynthPatchesLayeredPads.cpp
+    Source/WaveSynthPatchesLayeredSequences.cpp
+    Source/WaveSynthPatchesLayeredStabs.cpp
+    Source/WaveSynthPatchesLayeredPlucks.cpp
+    Source/WaveSynthPatchesLayeredHits.cpp
+    Source/WaveSynthPatchesLayeredRisers.cpp
     Source/WaveSynthEditor.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp

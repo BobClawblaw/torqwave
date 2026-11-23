@@ -16,6 +16,12 @@ namespace WaveSynthPatchBuilder
 
         // The layered patches lead their categories.
         addLayered (b);
+        addLayeredPads (b);
+        addLayeredSequences (b);
+        addLayeredStabs (b);
+        addLayeredPlucks (b);
+        addLayeredHits (b);
+        addLayeredRisers (b);
 
         //======================================================================
         // Bass: the low end of a techno track, mostly mono and dry.
