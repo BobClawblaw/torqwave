@@ -2,7 +2,7 @@
  "schema": 1,
  "release": "0.20.0",
  "previous": "0.19.2",
- "status": "about to be released",
+ "status": "released",
  "as_of": "2026-11-23",
  "release_numbers": [
   {
@@ -61,7 +61,7 @@
    "name": "Torqwave",
    "version": "0.20.0",
    "edition": "the only edition",
-   "version_date": "about to be released",
+   "version_date": "2026-11-23",
    "looked_up": "2026-11-23",
    "source_note": "This repository at commit 49ad967 (branch day/0.19), before the release tag.",
    "cells": {
@@ -232,7 +232,7 @@
     },
     "builtin_sampler": {
      "value": "yes",
-     "note": "Torqwave Sampler: the user's sounds across the keys in up to 128 zones with loops and crossfades, or cut into slices on keys. Samples are held in memory; no import of SFZ or SF2 libraries, no round robins. Measured by the tests; not yet tried by hand in the app.",
+     "note": "Torqwave Sampler: the user's sounds across the keys in up to 128 zones with loops and crossfades, or cut into slices on keys. Samples are held in memory; no import of SFZ or SF2 libraries, no round robins.",
      "source": "docs/guide/07-instruments-and-midi.md"
     },
     "factory_instrument_presets": {
@@ -347,7 +347,7 @@
     },
     "current_version": {
      "value": "info",
-     "note": "0.20.0, about to be released (not yet tagged on the snapshot date).",
+     "note": "0.20.0, released 2026-11-23.",
      "source": "CHANGELOG.md"
     },
     "signed_installers": {
