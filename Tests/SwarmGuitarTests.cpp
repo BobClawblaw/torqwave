@@ -607,7 +607,7 @@ void runSwarmGuitarTests (AudioEngine& engine)
                    "with the swarm chosen its strings knob counts Oscillators and its swarm knobs read (30 ct, 5.00 kHz)");
 
             // Its presets row with everything an instrument's window adds (Audition, Loop, Stop and the pattern menu)
-            // still leaves the preset menu room for a name: it was squeezed to "..." (fix log 85).
+            // still leaves the preset menu room for a name: it was squeezed to "..." (fix log 87).
             int menuWidth = 0;
 
             if (auto* row = InstrumentKeys::presetsRow (*window))
