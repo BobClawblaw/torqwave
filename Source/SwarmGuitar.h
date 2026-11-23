@@ -184,7 +184,8 @@ namespace BuiltInEffects
                                   *width = nullptr, *pick = nullptr, *brightness = nullptr, *sustain = nullptr, *release = nullptr,
                                   *drive = nullptr, *tone = nullptr, *level = nullptr,
                                   *spread = nullptr, *converge = nullptr, *glideTime = nullptr, *drift = nullptr, *attack = nullptr,
-                                  *decay = nullptr, *sustainLevel = nullptr, *cutoff = nullptr, *resonance = nullptr, *filterEnvelope = nullptr;
+                                  *decay = nullptr, *sustainLevel = nullptr, *cutoff = nullptr, *resonance = nullptr, *filterEnvelope = nullptr,
+                                  *velocitySense = nullptr;
         juce::AudioParameterChoice *tuning = nullptr, *amp = nullptr, *source = nullptr, *strumSync = nullptr;
 
         std::array<Voice, numVoices> voices;
@@ -198,6 +199,9 @@ namespace BuiltInEffects
         std::array<std::atomic<float>, maxStrings> ringing {};
         std::atomic<int> lastNote { -1 };
         float lastGain = -1.0f;        // the output gain the last block ended on; below 0, none yet
+        std::array<std::vector<float>, maxLayers> heard, heardByVelocity;   // each guitar's notes, sample by sample: how loud, and that by velocity
+        struct VelocityFollow { float much = 0.0f, byVelocity = 0.0f, weight = 1.0f; };
+        std::array<VelocityFollow, maxLayers> velocityFollow;   // each guitar's smoothed loudness, that by velocity, and the velocity they give
         bool pedal = false;
         int lastSource = -1;           // the source the last block played
         double tempo = 120.0;          // the session's, for Strum Sync; 120 with no session playing it

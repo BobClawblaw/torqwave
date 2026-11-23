@@ -2139,7 +2139,7 @@ namespace
             }
 
         const auto guitarCount = guitar->getParameters().size(), synthCount = synth->getParameters().size();
-        check (chain.size() == 1 && chain[0].instrument && (int) chain[0].parameters.size() == guitarCount && guitarCount == 27
+        check (chain.size() == 1 && chain[0].instrument && (int) chain[0].parameters.size() == guitarCount && guitarCount == 28
                    && source != nullptr && source->name == "Source" && source->choices.size() == 2 && sync != nullptr && sync->name == "Strum Sync" && sync->choices.size() > 2
                    && synthChain.size() == 1 && (int) synthChain[0].parameters.size() == synthCount && levelEnvelopes == WaveSynth::numOscillators && lateSlots > 0,
                "Ask Torq parameters: every one of StringSwarm's " + juce::String (guitarCount) + " parameters is read for the model, as Torqwave Synth's "

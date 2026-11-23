@@ -54,7 +54,7 @@ private:
 
     SoundControls::Knob count { "Strings" }, detune { "Detune" }, pick { "Pick" }, brightness { "Bright" };
     SoundControls::StepSelector tuning, amp, source, sync;
-    SoundControls::Knob drive { "Drive", SoundControls::Knob::Size::large }, tone { "Tone" }, level { "Level" };
+    SoundControls::Knob drive { "Drive", SoundControls::Knob::Size::large }, tone { "Tone" }, level { "Level" }, velocity { "Velocity" };
     SoundControls::Knob strum { "Strum", SoundControls::Knob::Size::large }, strumRate { "Rate", SoundControls::Knob::Size::large },
                         sustain { "Sustain", SoundControls::Knob::Size::large }, release { "Release", SoundControls::Knob::Size::large };
     SoundControls::Knob layers { "Guitars" }, width { "Width" };

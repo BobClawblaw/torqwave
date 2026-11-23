@@ -508,16 +508,20 @@ void Bar::resized()
 
     if (audition.isVisible())
     {
-        // By name where there is room for it, by its note alone where there is not.
-        const auto named = getWidth() >= 460;
+        // The buttons by name only while the preset menu keeps room for a long name (Loop, Stop and
+        // the pattern's name go to their signs first, then Audition): a fixed width would leave the
+        // menu showing "..." in a narrow bar such as StringSwarm's.
+        constexpr int menuRoom = 180;
+        const auto room = r.getWidth() - 6;
+        const auto rest = [this] (bool words) { return (loop.isVisible() ? (words ? 94 : 56) : 0) + (pattern.isVisible() ? (words ? 122 : 24) : 0); };
+        const auto words = room - 86 - rest (true) >= menuRoom;
+        const auto named = room - 86 - rest (words) >= menuRoom;
         audition.setButtonText (named ? juce::String::fromUTF8 ("\xe2\x99\xaa Audition") : juce::String::fromUTF8 ("\xe2\x99\xaa"));
         r.removeFromLeft (2);
         audition.setBounds (r.removeFromLeft (named ? 84 : 26));
 
         if (loop.isVisible())
         {
-            // Loop and Stop by name where the menu still keeps room for a long name, by their signs where not.
-            const auto words = getWidth() >= 560;
             loop.setButtonText (words ? juce::String ("Loop") : juce::String::fromUTF8 ("\xe2\x86\xbb"));
             stop.setButtonText (words ? juce::String ("Stop") : juce::String::fromUTF8 ("\xe2\x96\xa0"));
             r.removeFromLeft (2);
@@ -529,7 +533,7 @@ void Bar::resized()
         if (pattern.isVisible())
         {
             r.removeFromLeft (2);
-            pattern.setBounds (r.removeFromLeft (getWidth() >= 560 ? 120 : 22));
+            pattern.setBounds (r.removeFromLeft (words ? 120 : 22));
             showPatternName();
         }
     }

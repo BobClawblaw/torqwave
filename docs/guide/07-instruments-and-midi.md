@@ -165,6 +165,7 @@ Its window draws the guitar: the strings with the lowest at the bottom, each nam
 | **Drive** | How hard the amp is driven. |
 | **Tone** | The cabinet's top, 800 Hz to 12 kHz. |
 | **Level** | The output level. |
+| **Velocity** | How much a note's velocity sets how loud it comes out of the Fuzz or Crunch amp, 0 to 100 % (70 % as it comes). A fuzz evens a soft note out to nearly the level of a hard one; at 0 % it does, as a pedal would. With **None** velocity always sets the level. |
 | **Source** | **Strings** (as it comes) or **Swarm**: a sawtooth oscillator in place of each string. The settings below are the swarm's. |
 | **Spread** | How far apart the swarm's oscillators are fanned, evenly around the note, up to an octave: a few cents beat slowly, an octave is a cloud. |
 | **Converge** | The fan closing to one pitch over this time (up to 5 s); below 0, opening from one pitch to the full Spread. |
