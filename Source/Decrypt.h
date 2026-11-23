@@ -197,12 +197,35 @@ namespace Decrypt
         /** A search carried on: these patches (an earlier search's best) are where it starts, in place
             of the factory patches, and its rounds take smaller steps. Empty: a search from the start. */
         std::vector<Patch> resume;
+        /** The chain's last link, when this search carries a chain on: its first link must be nearer
+            the signal than this and sound different enough from it. */
+        std::optional<Patch> chainFrom;
     };
 
     /** Where a search is. */
+    /** How far apart, in dB as sounds are measured, two links of the chain are at least: enough to
+        hear one against the other (changes at the edge of hearing measure under 0.9 dB). */
+    constexpr float linkApartDb = 1.5f;
+
+    /** A link of the chain: the nearest patch at a moment of the search when it sounded different
+        enough from the link before. */
+    struct Link
+    {
+        Candidate candidate;
+        float movedDb = 0.0f;               // how far its sound is from the link before's (0 for the first)
+    };
+
     struct Progress
     {
         std::vector<Candidate> best;        // the best twelve, best first
+        /** The chain, oldest first: the nearest of a first look at a few factory patches, then of a
+            closer look, of them all, and of the rounds, each kept as a link only when it is nearer
+            the signal than the last link and at least linkApartDb from it in sound. The search's end
+            is always the last link: when it is too like the link before to be one of its own it
+            takes that link's place (so only the last link may be nearer than linkApartDb to the one
+            before it). In a search carried on (Options::chainFrom), the first link is heard against
+            the link it went on from, and its movedDb says how far it is from that. */
+        std::vector<Link> chain;
         int rendered = 0, round = 0, rounds = 0;
         double seconds = 0.0;
         bool finished = false, stopped = false;
@@ -242,6 +265,7 @@ namespace Decrypt
         void run (const std::function<bool()>& shouldStop);
         std::vector<Candidate> score (std::vector<Candidate> jobs, const Target&, const std::function<bool()>& shouldStop);
         void publish (std::vector<Candidate> merged, int round, const juce::String& stage, bool finished, bool stopped, Synth&, bool noCloser = false);
+        void growChain (const Candidate& best, bool last, Synth&);
         Advisor::Brief briefFor (const std::vector<Candidate>& best, int round, Synth&) const;
 
         const Target target;
@@ -250,6 +274,9 @@ namespace Decrypt
         mutable juce::CriticalSection lock;
         Progress progress;
         juce::StringArray modelLog;         // the search thread's; copied into progress
+        std::vector<Link> chain;            // the search thread's; copied into progress
+        std::vector<Measures> linkMeasures; // each link's sound, for the next to be heard against
+        std::optional<std::pair<Measures, float>> chainFrom;   // Options::chainFrom's sound and its distance from the signal
         std::atomic<int> rendered { 0 };
         std::atomic<bool> stopping { false }, notify { false };
         double started = 0.0;

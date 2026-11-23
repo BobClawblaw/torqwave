@@ -1101,6 +1101,43 @@ Advisor::Brief Search::briefFor (const std::vector<Candidate>& best, int round, 
     return b;
 }
 
+void Search::growChain (const Candidate& best, bool last, Synth& synth)
+{
+    if (! chain.empty() && chain.back().candidate.address == best.address)
+        return;
+
+    // What the next link is heard against: the last link, or the link this search goes on from.
+    if (chain.empty() && ! chainFrom.has_value() && options.chainFrom.has_value())
+    {
+        const auto m = measureRender (render (synth, *options.chainFrom, target));
+        chainFrom = { m, distance (target.measures, m).total };
+    }
+
+    const auto* against = ! linkMeasures.empty() ? &linkMeasures.back() : chainFrom.has_value() ? &chainFrom->first : nullptr;
+    const auto againstDb = ! chain.empty() ? chain.back().candidate.distance.total : chainFrom.has_value() ? chainFrom->second : 1000.0f;
+
+    if (against != nullptr && best.distance.total >= againstDb)
+        return;   // no nearer the signal than the last link
+
+    const auto m = measureRender (render (synth, best.patch, target));
+    const auto moved = against != nullptr ? distance (*against, m).total : 0.0f;
+
+    if (against == nullptr || moved >= linkApartDb || (last && chain.empty()))
+    {
+        // Far enough from the last link to hear (or the first link; or, where a search carried on came
+        // nearer by less, its end, which takes the place of the link it went on from).
+        chain.push_back ({ best, moved });
+        linkMeasures.push_back (m);
+    }
+    else if (last)
+    {
+        // The end is always the nearest found: it takes the last link's place when it is too like it to be a link of its own.
+        const auto* before = linkMeasures.size() > 1 ? &linkMeasures[linkMeasures.size() - 2] : chainFrom.has_value() ? &chainFrom->first : nullptr;
+        chain.back() = { best, before != nullptr ? distance (*before, m).total : 0.0f };
+        linkMeasures.back() = m;
+    }
+}
+
 void Search::publish (std::vector<Candidate> merged, int round, const juce::String& stage, bool finished, bool stopped, Synth& synth, bool noCloser)
 {
     // The best twelve's signatures, for drawing (each rendered again: twelve renders at most).
@@ -1141,8 +1178,12 @@ void Search::publish (std::vector<Candidate> merged, int round, const juce::Stri
             settled[(size_t) part] = count > 0 ? (float) juce::jlimit (0.0, 1.0, 1.0 - 3.0 * spread / count) : 1.0f;
         }
 
+    if (! merged.empty() && ! stopped)
+        growChain (merged.front(), finished, synth);
+
     {
         const juce::ScopedLock sl (lock);
+        progress.chain = chain;
         progress.best = std::move (merged);
         progress.round = round;
         progress.stage = stage;
@@ -1240,16 +1281,70 @@ void Search::run (const std::function<bool()>& shouldStop)
             if (startable (i))
                 jobs.push_back (factoryCandidate (*synth, i));
 
-        jobs = score (std::move (jobs), shortened (target, firstRoundsLength), shouldStop);
+        // A first look at one in 64 of them, a closer look at one in 8, then all: the best of each look
+        // is shown as it is found, so the chain starts with rough matches and not with the nearest of
+        // thousands. What is scored, and in what order it is ranked, is the same as scoring them at once.
+        const auto first = shortened (target, firstRoundsLength);
+        std::vector<Candidate> looks;   // the nearest of each look, over the whole note
+        size_t looked = 0;
+        std::vector<bool> done (jobs.size(), false);
 
-        if (shouldStop())
+        for (const auto stride : { size_t { 64 }, size_t { 8 }, size_t { 1 } })
         {
-            publish (bestOf (std::move (jobs), keptBest), 0, "Stopped", true, true, *synth);
-            return;
+            std::vector<size_t> at;
+            std::vector<Candidate> part;
+
+            for (size_t i = 0; i < jobs.size(); ++i)
+                if (i % stride == 0 && ! done[i])
+                {
+                    done[i] = true;
+                    at.push_back (i);
+                    part.push_back (std::move (jobs[i]));
+                }
+
+            part = score (std::move (part), first, shouldStop);
+
+            for (size_t k = 0; k < at.size(); ++k)
+                jobs[at[k]] = std::move (part[k]);
+
+            looked += at.size();
+
+            if (shouldStop())
+            {
+                publish (bestOf (std::move (jobs), keptBest), 0, "Stopped", true, true, *synth);
+                return;
+            }
+
+            if (stride > 1 && looked >= keptBest)
+            {
+                auto look = bestOf (jobs, keptBest);
+
+                for (auto& c : look)
+                    c.signature = {};
+
+                look = bestOf (score (std::move (look), target, shouldStop), keptBest);
+
+                if (shouldStop())
+                {
+                    publish (std::move (look), 0, "Stopped", true, true, *synth);
+                    return;
+                }
+
+                if (! look.empty())
+                {
+                    looks.push_back (look.front());
+                    publish (std::move (look), 0, stride == 64 ? "A first look" : "A closer look", false, false, *synth);
+                }
+            }
         }
 
         // The 48 nearest over the whole note, with the clip's own table tried on the best six.
         pool = bestOf (std::move (jobs), 48);
+
+        // The nearest of each look stays in, wherever its first second ranked it: the chain has shown it.
+        for (auto& l : looks)
+            if (std::none_of (pool.begin(), pool.end(), [&l] (const Candidate& c) { return c.address == l.address; }))
+                pool.push_back (l);
 
         for (auto& c : pool)
             c.signature = {};

@@ -634,6 +634,7 @@ int main (int argc, char* argv[])
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
     //   --decrypt-real [files]  only Decrypt on recordings not from the synth: the files, some system sounds, wet patches
     //   --decrypt-window        only Decrypt's window checks
+    //   --decrypt-pictures <folder>  only save pictures of the synth's window on Decrypt, and print each chain
     //   --decrypt-measure       only Decrypt's two sets of ten, in 16 rounds and until settled, with times (minutes)
     //   --decrypt-eval <url> <model>  only Decrypt's ten clips, alone and helped by the model at that server
     //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session, sequence, library or decrypt
@@ -718,6 +719,12 @@ int main (int argc, char* argv[])
         runSequenceTests (engine);
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (const auto folder = valueOf ("--decrypt-pictures"); folder.isNotEmpty())
+    {
+        saveDecryptWindow (juce::File (folder));
+        return 0;
     }
 
     if (const auto folder = valueOf ("--console-window"); folder.isNotEmpty())

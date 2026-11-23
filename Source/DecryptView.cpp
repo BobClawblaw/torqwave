@@ -2,6 +2,7 @@
 #include "SoundDrops.h"
 #include "SignalConsoleView.h"
 #include "Theme.h"
+#include "InstrumentKeys.h"
 
 namespace SoundDrops
 {
@@ -14,8 +15,6 @@ using namespace Decrypt;
 
 namespace
 {
-    constexpr float chainStepDb = 0.25f;   // the chain takes a step each time the best comes this much nearer
-    constexpr int longestChain = 40;
 
     const juce::StringArray& sectorLabels()
     {
@@ -163,28 +162,32 @@ bool DecryptView::again()
 
     // From the one chosen, if one was: taken, or on the keys. Otherwise from all twelve.
     std::vector<SignalConsole::Patch> from;
-    Link link;
+    std::optional<Link> picked;
 
     if (chosen.has_value())
     {
-        from.push_back (*chosen);
-        link = { *chosen, chosenLock, chosenDb, {} };
+        from.push_back (chosen->patch);
+        picked = chosen;
     }
     else if (juce::isPositiveAndBelow (onKeys, (int) progress.best.size()))
     {
         from.push_back (progress.best[(size_t) onKeys].patch);
-        link = { progress.best[(size_t) onKeys].patch, progress.best[(size_t) onKeys].lock, progress.best[(size_t) onKeys].distance.total, {} };
+        picked = linkOf (progress.best[(size_t) onKeys]);
     }
     else
     {
         for (auto& c : progress.best)
             from.push_back (c.patch);
-
-        link = { progress.best.front().patch, progress.best.front().lock, progress.best.front().distance.total, {} };
     }
 
-    // The chain keeps where this pass went on from, to hear beside what comes next.
-    addLink (link.patch, link.lock, link.db);
+    // A candidate picked to go on from becomes a link, to hear beside what comes next (the best is the last link already).
+    if (picked.has_value() && (chain.empty() || SignalConsole::addressOf (chain.back().patch) != SignalConsole::addressOf (picked->patch)))
+    {
+        picked->picked = true;
+        picked->movedDb = 0.0f;
+        chain.push_back (*picked);
+        setMoved (chain.size() - 1);
+    }
 
     // Stop then gives back the patch from before the first pass, or the one taken (begin).
     auto target = search->getTarget();
@@ -201,6 +204,10 @@ void DecryptView::begin (Decrypt::Target target, std::vector<SignalConsole::Patc
     onKeys = -1;
     hovered = -2;
     chosen.reset();
+    passBase = chain.size();
+    selectedLink = -1;
+    heardLink = -2;
+    keysLink = -1;
 
     // What Stop gives back: the patch the synth had before any of this. A pass carried on while a
     // candidate is still on the keys (not taken) keeps the patch from before it.
@@ -224,6 +231,10 @@ void DecryptView::begin (Decrypt::Target target, std::vector<SignalConsole::Patc
     options.advisor = makeAdvisor();
     options.seed = (SignalConsole::addressOf (before) + (juce::uint32) (passes - 1) * 0x9e3779b9u) | 1u;   // other variations each pass
     options.resume = std::move (resume);
+
+    if (! chain.empty())
+        options.chainFrom = chain.back().patch;   // this pass's links follow it: nearer, and different enough to hear
+
     options.untilSettled = true;        // it goes on while it comes closer, and says when it no longer does
     search = std::make_unique<Search> (std::move (target), std::move (options));
     progress = {};
@@ -262,13 +273,20 @@ void DecryptView::take()
     if (search == nullptr || shown() == nullptr)
         return;
 
+    // A link gone back to is on the keys already: Take keeps it.
+    if (juce::isPositiveAndBelow (keysLink, (int) chain.size()) && ! restored)
+    {
+        search->stop();
+        restored = true;
+        finish ("TAKEN");
+        return;
+    }
+
     // A copy: finish() takes the search's progress again, which the candidate shown lives in.
     const auto taken = *shown();
     const auto* c = &taken;
     search->stop();
-    chosen = c->patch;
-    chosenLock = c->lock;
-    chosenDb = c->distance.total;
+    chosen = linkOf (*c);
     putOnKeys (c->patch, "Node " + SignalConsole::addressText (c->address));
     restored = true;
     onKeys = -1;
@@ -347,6 +365,8 @@ void DecryptView::hear (int candidate)
         return;
 
     auto& console = synth.getConsole();
+    selectedLink = -1;
+    heardLink = candidate < 0 ? -1 : -2;
 
     if (candidate < 0)
     {
@@ -358,21 +378,82 @@ void DecryptView::hear (int candidate)
         hearPatch (progress.best[(size_t) candidate].patch);
 }
 
-void DecryptView::addLink (const SignalConsole::Patch& patch, float lock, float db)
+DecryptView::Link DecryptView::linkOf (const Decrypt::Candidate& c)
 {
-    if (! chain.empty() && SignalConsole::addressOf (chain.back().patch) == SignalConsole::addressOf (patch))
+    Link l;
+    l.patch = c.patch;
+    l.lock = c.lock;
+    l.db = c.distance.total;
+    l.distance = c.distance;
+    l.signature = c.signature;
+    l.from = c.from;
+    return l;
+}
+
+void DecryptView::setMoved (size_t index)
+{
+    // How far each part's settings moved from the link before: the mean change of its settings, a sixth of a setting's range filling the bar.
+    auto& link = chain[index];
+    link.moved = {};
+
+    if (index == 0)
         return;
 
-    // At most so many steps: past that the newest takes the last place, so the chain still ends where the search is.
-    if (chain.size() >= (size_t) longestChain)
-        chain.pop_back();
+    std::array<float, SignalConsole::numParts> sum {};
+    std::array<int, SignalConsole::numParts> count {};
 
-    chain.push_back ({ patch, lock, db, {} });
+    for (auto& [id, value] : link.patch.values)
+    {
+        const auto part = SignalConsole::partOf (id);
+        const auto other = chain[index - 1].patch.values.find (id);
+        auto* p = synth.parameter (id);
+
+        if (part < 0 || part == SignalConsole::effects || other == chain[index - 1].patch.values.end() || p == nullptr)
+            continue;
+
+        sum[(size_t) part] += std::abs (p->convertTo0to1 ((float) value) - p->convertTo0to1 ((float) other->second));
+        ++count[(size_t) part];
+    }
+
+    for (int part = 0; part < SignalConsole::effects; ++part)
+        link.moved[(size_t) part] = count[(size_t) part] > 0 ? juce::jlimit (0.0f, 1.0f, 6.0f * sum[(size_t) part] / (float) count[(size_t) part]) : 0.0f;
+}
+
+juce::String DecryptView::stepChange (int index) const
+{
+    if (! juce::isPositiveAndBelow (index, (int) chain.size()))
+        return {};
+
+    const auto& link = chain[(size_t) index];
+
+    if (index == 0)
+        return "the first rough match, from " + link.from;
+
+    // The parts that moved, most first: one, or two when the second moved at least half as far.
+    std::array<int, SignalConsole::effects> order {};
+    std::iota (order.begin(), order.end(), 0);
+    std::sort (order.begin(), order.end(), [&link] (int a, int b) { return link.moved[(size_t) a] > link.moved[(size_t) b]; });
+    const auto name = [] (int part) { return SignalConsole::partNames()[part].toLowerCase(); };
+    const auto most = link.moved[(size_t) order[0]], next = link.moved[(size_t) order[1]];
+    const auto since = "from step " + juce::String (index) + ": ";
+
+    if (most < 0.005f)
+        return since + "almost nothing moved";
+
+    return since + name (order[0]) + (next >= most * 0.5f ? " and " + name (order[1]) : juce::String()) + " moved most";
+}
+
+void DecryptView::addTestLinks (int count)
+{
+    for (int i = 0; i < count && ! chain.empty(); ++i)
+        chain.push_back (chain.back());
+
+    layout();
+    repaint();
 }
 
 void DecryptView::growChain()
 {
-    // A step each time the best comes a quarter of a dB nearer (and the first best, and the last when it ends).
     if (progress.best.empty())
         return;
 
@@ -384,9 +465,79 @@ void DecryptView::growChain()
         passFromLock = best.lock;
     }
 
-    if (chain.empty() || best.distance.total <= chain.back().db - chainStepDb
-        || (progress.finished && ! progress.stopped && best.distance.total < chain.back().db))
-        addLink (best.patch, best.lock, best.distance.total);
+    // This pass's links, after the passes before. A pass carried on that ended too near the link it
+    // went on from to be a link of its own: its end takes that link's place.
+    const auto& links = progress.chain;
+
+    if (links.empty() || progress.stopped)
+        return;
+
+    const auto base = passBase > 0 && links.front().movedDb < linkApartDb ? passBase - 1 : passBase;
+    auto landed = -1;
+
+    for (size_t i = 0; i < links.size(); ++i)
+    {
+        const auto at = base + i;
+
+        if (at < chain.size() && SignalConsole::addressOf (chain[at].patch) == links[i].candidate.address)
+            continue;
+
+        auto link = linkOf (links[i].candidate);
+        link.movedDb = links[i].movedDb;
+
+        if (at < chain.size())
+            chain[at] = link;
+        else
+            chain.push_back (link);
+
+        setMoved (at);
+        landed = (int) at;
+        stripScroll = 1.0e6f;   // the newest in view
+    }
+
+    // With Audition on, a link is heard as it lands.
+    if (landed >= 0 && InstrumentKeys::getAudition() && ! chainPlayer.isTimerRunning())
+    {
+        ++autoPlays;
+        hearLink (landed);
+    }
+}
+
+void DecryptView::hearLink (int index)
+{
+    if (! juce::isPositiveAndBelow (index, (int) chain.size()))
+        return;
+
+    heardLink = index;
+    hearPatch (chain[(size_t) index].patch);
+    repaint();
+}
+
+int DecryptView::linkAt (juce::Point<float> p) const
+{
+    for (int i = (int) chain.size(); --i >= 0;)
+        if (chain[(size_t) i].at.contains (p))
+            return i;
+
+    // The path's nodes on the scope, the nearest within reach.
+    const auto k = radius / 236.0f;
+    auto nearest = -1;
+    auto nearestDistance = 11.0f * k + 3.0f;
+
+    for (int i = 0; i < (int) chain.size(); ++i)
+        if (const auto d = p.getDistanceFrom (chain[(size_t) i].node); d < nearestDistance)
+        {
+            nearest = i;
+            nearestDistance = d;
+        }
+
+    // A candidate whose middle is nearer the pointer than the node is keeps the click: the path lies over the candidates.
+    if (nearest >= 0)
+        for (auto& place : places)
+            if (p.getDistanceFrom (place) < nearestDistance)
+                return -1;
+
+    return nearest;
 }
 
 void DecryptView::playChain()
@@ -394,11 +545,13 @@ void DecryptView::playChain()
     if (chainPlayer.isTimerRunning() || search == nullptr || chain.empty())
     {
         chainPlayer.stopTimer();
+        heardLink = -2;
         repaint();
         return;
     }
 
     chainPlayer.next = -1;
+    selectedLink = -1;
     chainPlayer.timerCallback();
     repaint();
 }
@@ -408,14 +561,18 @@ void DecryptView::ChainPlayer::timerCallback()
     if (view.search == nullptr || next >= (int) view.chain.size())
     {
         stopTimer();
+        view.heardLink = -2;
         view.repaint();
         return;
     }
 
     if (next < 0)
-        view.hear (-1);
+    {
+        view.synth.getConsole().play (view.search->getTarget().audio, rate);
+        view.heardLink = -1;
+    }
     else
-        view.hearPatch (view.chain[(size_t) next].patch);
+        view.hearLink (next);
 
     ++next;
     // Each for as long as the note, and a breath.
@@ -437,9 +594,9 @@ void DecryptView::goBackTo (int index)
         before = SignalConsole::capture (synth);
 
     putOnKeys (link.patch, "Node " + SignalConsole::addressText (SignalConsole::addressOf (link.patch)));
-    chosen = link.patch;
-    chosenLock = link.lock;
-    chosenDb = link.db;
+    chosen = link;
+    keysLink = index;
+    selectedLink = index;
     restored = false;
     onKeys = -1;
     finish ("STEP " + juce::String (index + 1));
@@ -522,7 +679,8 @@ void DecryptView::timerCallback()
 
 void DecryptView::resized()
 {
-    const auto b = getLocalBounds().toFloat();
+    auto b = getLocalBounds().toFloat();
+    strip = b.removeFromBottom (60.0f).reduced (8.0f, 5.0f);   // the chain, across the page
     panel = b.withTrimmedLeft (b.getWidth() - 320.0f).reduced (4.0f, 8.0f);
     const auto scope = b.withTrimmedRight (328.0f);
     radius = juce::jmin ((scope.getWidth() - 110.0f) * 0.5f, (scope.getHeight() - 54.0f - 64.0f - 24.0f) * 0.5f);
@@ -585,20 +743,33 @@ void DecryptView::layout()
         refuseChip = { useChip.getRight() + 8.0f, useChip.getY(), 64.0f, 24.0f };
     }
 
-    // The chain, above the buttons: its last seven links, oldest first.
+    // The chain's strip: Play, the signal, then every link, each as wide as the room allows. Past
+    // the narrowest a tile can be, the strip scrolls (the wheel), and the tiles out of view have no place.
     {
-        playChip = chain.empty() ? juce::Rectangle<float>() : juce::Rectangle<float> (panel.getX() + 16.0f, panel.getBottom() - 76.0f, 44.0f, 22.0f);
-        const auto shownLinks = juce::jmin (6, (int) chain.size());
-        const auto first = (int) chain.size() - shownLinks;
+        const auto inner = strip.reduced (12.0f, 9.0f);
+        const auto n = (int) chain.size();
+        playChip = n == 0 ? juce::Rectangle<float>() : juce::Rectangle<float> (inner.getX() + 58.0f, inner.getCentreY() - 12.0f, 46.0f, 24.0f);
+        signalTile = n == 0 ? juce::Rectangle<float>() : juce::Rectangle<float> (playChip.getRight() + 10.0f, inner.getY(), 60.0f, inner.getHeight());
+        const auto area = inner.withLeft (signalTile.getRight() + 8.0f);
+        const auto gap = 4.0f, narrowest = 24.0f;
+        const auto width = n > 0 ? juce::jlimit (narrowest, 64.0f, (area.getWidth() - gap * (float) (n - 1)) / (float) n) : 0.0f;
+        const auto total = (float) n * width + gap * (float) juce::jmax (0, n - 1);
+        stripScroll = juce::jlimit (0.0f, juce::jmax (0.0f, total - area.getWidth()), stripScroll);
 
-        for (int i = 0; i < (int) chain.size(); ++i)
-            chain[(size_t) i].at = i < first ? juce::Rectangle<float>()
-                                             : juce::Rectangle<float> (playChip.getRight() + 6.0f + (float) (i - first) * 39.0f, panel.getBottom() - 76.0f, 36.0f, 22.0f);
-
-        if (! chain.empty() && offer.name.isNotEmpty())
+        for (int i = 0; i < n; ++i)
         {
-            useChip.translate (0.0f, -34.0f);
-            refuseChip.translate (0.0f, -34.0f);
+            const juce::Rectangle<float> tile (area.getX() + (float) i * (width + gap) - stripScroll, area.getY(), width, area.getHeight());
+            chain[(size_t) i].at = tile.getX() >= area.getX() - 0.5f && tile.getRight() <= area.getRight() + 0.5f ? tile : juce::Rectangle<float>();
+        }
+
+        // The same links as a path on the scope: each as far out as its lock, a step round from the one before.
+        const auto step = juce::jmin (tau / 16.0f, tau * 0.7f / (float) juce::jmax (1, n - 1));
+
+        for (int i = 0; i < n; ++i)
+        {
+            const auto angle = tau * 0.39f + (float) i * step;
+            const auto r = juce::jmax (radius * reachOf (chain[(size_t) i].lock), 72.0f * k);
+            chain[(size_t) i].node = centre + juce::Point<float> (std::cos (angle), std::sin (angle)) * r;
         }
     }
 
@@ -684,13 +855,22 @@ void DecryptView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
-    for (auto& link : chain)
-        if (link.at.contains (p))
-        {
-            chainPlayer.stopTimer();
-            hearPatch (link.patch);
-            return;
-        }
+    if (signalTile.contains (p) && ! chain.empty())
+    {
+        chainPlayer.stopTimer();
+        hear (-1);
+        repaint();
+        return;
+    }
+
+    if (const auto link = linkAt (p); link >= 0)
+    {
+        // A link, by its tile or its node: heard, and shown in the panel.
+        chainPlayer.stopTimer();
+        selectedLink = link;
+        hearLink (link);
+        return;
+    }
 
     if (againChip.contains (p) && canGoAgain())
     {
@@ -713,17 +893,32 @@ void DecryptView::mouseDown (const juce::MouseEvent& e)
     const auto at = candidateAt (p);
 
     if (at >= -1)
+    {
         hear (at);
+        repaint();
+    }
+}
+
+void DecryptView::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel)
+{
+    if (! strip.contains (e.position))
+    {
+        Component::mouseWheelMove (e, wheel);
+        return;
+    }
+
+    stripScroll -= (std::abs (wheel.deltaX) > std::abs (wheel.deltaY) ? wheel.deltaX : wheel.deltaY) * 240.0f;
+    layout();
+    repaint();
 }
 
 void DecryptView::mouseDoubleClick (const juce::MouseEvent& e)
 {
-    for (int i = 0; i < (int) chain.size(); ++i)
-        if (chain[(size_t) i].at.contains (e.position))
-        {
-            goBackTo (i);
-            return;
-        }
+    if (const auto link = linkAt (e.position); link >= 0)
+    {
+        goBackTo (link);
+        return;
+    }
 
     const auto at = candidateAt (e.position);
 
@@ -742,10 +937,13 @@ juce::String DecryptView::getTooltip()
 
     if (chooseChip.contains (p))   return "Choose a recording of one note to decrypt";
     if (tablesChip.contains (p))   return "Tables only from the factory: the patch is made of the synth's own waves, never given the clip's own sampled table";
-    for (size_t i = 0; i < chain.size(); ++i)
-        if (chain[i].at.contains (p))
-            return "Step " + juce::String ((int) i + 1) + " of the chain, lock " + juce::String (juce::roundToInt (chain[i].lock))
-                   + " %: click to hear it, double-click to go back to it (it goes on the keys, and Again goes on from it)";
+    if (const auto link = linkAt (p); link >= 0)
+        return "Step " + juce::String (link + 1) + " of " + juce::String ((int) chain.size()) + ", lock " + juce::String (juce::roundToInt (chain[(size_t) link].lock))
+               + " %" + (chain[(size_t) link].picked ? ", picked to go on from" : "")
+               + ": click to hear it and see what changed, double-click to go back to it (it goes on the keys, and Again goes on from it)";
+
+    if (signalTile.contains (p) && ! chain.empty())
+        return "The signal: click to hear it";
 
     if (playChip.contains (p) && ! chain.empty())
         return "Play the chain: the signal, then each step in turn, to hear the patch closing in. Click again to stop";
@@ -777,8 +975,10 @@ void DecryptView::paint (juce::Graphics& g)
     text (g, "finds a Torqwave Synth patch that plays like a recording of one note. Drop the note on the scope.", 92.0f, 20.0f, 12.0f, Theme::dimText);
 
     drawScope (g);
+    drawPath (g);
     drawControls (g);
     drawPanel (g);
+    drawStrip (g);
 }
 
 void DecryptView::drawScope (juce::Graphics& g)
@@ -982,6 +1182,106 @@ std::vector<juce::Rectangle<float>> DecryptView::lockLabels() const
     return labels;
 }
 
+void DecryptView::drawPath (juce::Graphics& g)
+{
+    // The chain on the scope: a numbered path from the first rough match in to the nearest, drawn over
+    // the candidates so a pile of them never hides it.
+    if (search == nullptr || chain.empty())
+        return;
+
+    const auto k = radius / 236.0f;
+    const auto n = (int) chain.size();
+    juce::Path path;
+
+    for (int i = 0; i < n; ++i)
+    {
+        const auto p = chain[(size_t) i].node;
+        if (i == 0) path.startNewSubPath (p); else path.lineTo (p);
+    }
+
+    g.setColour (Theme::base.darker (0.25f).withAlpha (0.85f));
+    g.strokePath (path, juce::PathStrokeType (4.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    g.setColour (signal().withAlpha (0.8f));
+    g.strokePath (path, juce::PathStrokeType (1.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
+    // The nodes no wider than the path leaves room for.
+    const auto spacing = n > 1 ? chain[0].node.getDistanceFrom (chain[1].node) : 100.0f;
+    const auto r = juce::jlimit (5.0f * k, 9.0f * k, spacing * 0.45f);
+
+    for (int i = 0; i < n; ++i)
+    {
+        const auto p = chain[(size_t) i].node;
+        const auto heard = i == heardLink, keyed = i == keysLink, shown = i == selectedLink;
+        g.setColour (heard ? Theme::accent : Theme::base.darker (0.4f));
+        g.fillEllipse (p.x - r, p.y - r, r * 2.0f, r * 2.0f);
+        g.setColour (keyed ? Theme::good : shown ? Theme::textStrong : signal());
+        g.drawEllipse (p.x - r, p.y - r, r * 2.0f, r * 2.0f, shown || keyed ? 2.0f : 1.2f);
+        text (g, juce::String (i + 1), p.x, p.y, juce::jmin (9.5f, r * 1.25f), heard || shown ? Theme::textStrong : Theme::text, juce::Justification::centred, true);
+    }
+}
+
+void DecryptView::drawStrip (juce::Graphics& g)
+{
+    g.setColour (Theme::inset);
+    g.fillRoundedRectangle (strip, 8.0f);
+    g.setColour (Theme::line);
+    g.drawRoundedRectangle (strip, 8.0f, 1.0f);
+    const auto x = strip.getX() + 12.0f, y = strip.getCentreY();
+    text (g, "CHAIN", x, y, 11.0f, chain.empty() ? Theme::faintText : signal(), juce::Justification::centredLeft, true);
+
+    if (chain.empty())
+    {
+        text (g, "the signal, then each step the search takes toward it, from a rough first match to the nearest: click one to hear it",
+              x + 58.0f, y, 10.5f, Theme::faintText);
+        return;
+    }
+
+    const auto playing = chainPlayer.isTimerRunning();
+    drawChip (g, playChip, playing ? "Stop" : "Play", Theme::accent, playing, Theme::text);
+
+    const auto tile = [&g] (juce::Rectangle<float> at, const juce::String& top, const juce::String& main, float fill, bool heard, bool keyed, bool shown, bool dashed)
+    {
+        g.setColour (heard ? Theme::accent.withAlpha (0.35f) : Theme::base.darker (0.35f));
+        g.fillRoundedRectangle (at, 4.0f);
+
+        if (fill > 0.0f)   // its lock, as a bar along the foot
+        {
+            g.setColour ((keyed ? Theme::good : signal()).withAlpha (0.8f));
+            g.fillRect (at.getX() + 3.0f, at.getBottom() - 4.0f, (at.getWidth() - 6.0f) * fill, 2.0f);
+        }
+
+        g.setColour (keyed ? Theme::good : shown ? Theme::textStrong : heard ? Theme::accent : Theme::lineStrong);
+
+        if (dashed && ! keyed && ! shown)
+        {
+            juce::Path box, dashes;
+            box.addRoundedRectangle (at.reduced (0.5f), 4.0f);
+            const float pattern[] = { 3.0f, 3.0f };
+            juce::PathStrokeType (1.0f).createDashedStroke (dashes, box, pattern, 2);
+            g.fillPath (dashes);
+        }
+        else
+            g.drawRoundedRectangle (at.reduced (0.5f), 4.0f, keyed || shown ? 1.8f : 1.0f);
+
+        text (g, top, at.getCentreX(), at.getY() + 9.0f, 8.5f, keyed ? Theme::good : Theme::dimText, juce::Justification::centred);
+        text (g, main, at.getCentreX(), at.getY() + 21.0f, at.getWidth() < 34.0f ? 9.5f : 11.0f, heard || shown ? Theme::textStrong : Theme::text, juce::Justification::centred, true);
+    };
+
+    tile (signalTile, "the", "SIGNAL", 0.0f, heardLink == -1, false, false, false);
+
+    for (int i = 0; i < (int) chain.size(); ++i)
+    {
+        const auto& link = chain[(size_t) i];
+
+        if (link.at.isEmpty())
+            continue;
+
+        const auto lock = juce::String (juce::roundToInt (link.lock));
+        tile (link.at, i == keysLink && link.at.getWidth() >= 40.0f ? juce::String (i + 1) + " keys" : juce::String (i + 1),
+              link.at.getWidth() < 34.0f ? lock : lock + "%", link.lock / 100.0f, i == heardLink, i == keysLink, i == selectedLink, link.picked);
+    }
+}
+
 void DecryptView::drawControls (juce::Graphics& g)
 {
     drawChip (g, chooseChip, "Decrypt a Sound...", Theme::lineStrong, false, Theme::text);
@@ -1063,8 +1363,24 @@ void DecryptView::drawPanel (juce::Graphics& g)
 
     y += 4.0f;
 
+    // A link of the chain, when one is chosen: its lock and figures, and what changed to get there from the link before.
+    const auto* link = juce::isPositiveAndBelow (selectedLink, (int) chain.size()) ? &chain[(size_t) selectedLink] : nullptr;
+
+    if (link != nullptr)
+    {
+        drawSignature (g, { x + 34.0f, y + 40.0f }, 34.0f, link->signature, Theme::accent, 1.0f, true);
+        text (g, juce::String (juce::roundToInt (link->lock)) + "%", x + 80.0f, y + 26.0f, 30.0f, Theme::textStrong, juce::Justification::centredLeft, true);
+        text (g, "lock   step " + juce::String (selectedLink + 1) + " of " + juce::String ((int) chain.size())
+                 + (selectedLink == keysLink ? "   on the keys" : link->picked ? "   picked" : ""), x + 80.0f, y + 52.0f, 11.0f, Theme::dimText);
+        text (g, "from " + link->from, x + 80.0f, y + 68.0f, 10.5f, Theme::faintText);
+        y += 96.0f;
+        text (g, "tone " + juce::String (link->distance.tone, 1) + " dB   loudness " + juce::String (link->distance.loudness, 1) + " dB apart", x, y, 10.5f, Theme::dimText);
+        y += 18.0f;
+        text (g, stepChange (selectedLink).substring (0, 46), x, y, 10.5f, Theme::accentLight);
+        y += 22.0f;
+    }
     // The candidate shown: its signature, lock, address and where it came from.
-    if (c != nullptr)
+    else if (c != nullptr)
     {
         drawSignature (g, { x + 34.0f, y + 40.0f }, 34.0f, c->signature, Theme::accent, 1.0f, true);
         const auto lock = c == &progress.best.front() ? shownLock : c->lock;
@@ -1074,12 +1390,6 @@ void DecryptView::drawPanel (juce::Graphics& g)
         y += 96.0f;
         text (g, "tone " + juce::String (c->distance.tone, 1) + " dB   loudness " + juce::String (c->distance.loudness, 1) + " dB apart", x, y, 10.5f, Theme::dimText);
         y += 24.0f;
-
-        if (levelNote.isNotEmpty())
-        {
-            text (g, levelNote, x, y - 6.0f, 10.0f, Theme::danger);
-            y += 14.0f;
-        }
     }
     else
     {
@@ -1087,20 +1397,26 @@ void DecryptView::drawPanel (juce::Graphics& g)
         y += 120.0f;
     }
 
-    // A bar for each part as the search settles it.
+    if (levelNote.isNotEmpty() && (link != nullptr || c != nullptr))
+    {
+        text (g, levelNote, x, y - 6.0f, 10.0f, Theme::danger);
+        y += 14.0f;
+    }
+
+    // A bar for each part: as the search settles it, or, for a link, how far its settings moved from the link before.
     for (int part = 0; part < SignalConsole::numParts; ++part)
     {
         const auto off = part == SignalConsole::effects;
-        const auto settled = off ? 0.0f : progress.settled[(size_t) part];
+        const auto amount = off ? 0.0f : link != nullptr ? link->moved[(size_t) part] : progress.settled[(size_t) part];
         text (g, SignalConsole::partNames()[part].toLowerCase() + (off ? " (off while matching)" : ""), x, y, 11.5f, off ? Theme::faintText : Theme::text);
 
         if (! off)
-            text (g, juce::String (juce::roundToInt (settled * 100.0f)) + "%", right, y, 10.5f, Theme::dimText, juce::Justification::centredRight);
+            text (g, (link != nullptr ? "moved " : "") + juce::String (juce::roundToInt (amount * 100.0f)) + "%", right, y, 10.5f, Theme::dimText, juce::Justification::centredRight);
 
         g.setColour (Theme::line);
         g.fillRect (x, y + 10.0f, width, 4.0f);
-        g.setColour (settled > 0.85f ? Theme::good : signal());
-        g.fillRect (x, y + 10.0f, width * settled, 4.0f);
+        g.setColour (link != nullptr ? Theme::accent : amount > 0.85f ? Theme::good : signal());
+        g.fillRect (x, y + 10.0f, width * amount, 4.0f);
         y += 32.0f;
     }
 
@@ -1128,21 +1444,13 @@ void DecryptView::drawPanel (juce::Graphics& g)
     if (! restored)
     {
         drawChip (g, stopChip, "Stop", Theme::lineStrong, false, Theme::text);
-        drawChip (g, takeChip, c != nullptr ? "Take " + juce::String (juce::roundToInt (c->lock)) + "%" : juce::String ("Take"), Theme::good, true, Theme::textStrong);
+        const auto taking = juce::isPositiveAndBelow (keysLink, (int) chain.size()) ? chain[(size_t) keysLink].lock : c != nullptr ? c->lock : -1.0f;
+        drawChip (g, takeChip, taking >= 0.0f ? "Take " + juce::String (juce::roundToInt (taking)) + "%" : juce::String ("Take"), Theme::good, true, Theme::textStrong);
     }
 
     if (canGoAgain())
         drawChip (g, againChip, "Again", Theme::accent, true, Theme::textStrong);
 
-    for (size_t i = 0; i < chain.size(); ++i)
-        if (! chain[i].at.isEmpty())
-            drawChip (g, chain[i].at, juce::String (juce::roundToInt (chain[i].lock)) + "%",
-                      chainPlayer.isTimerRunning() && (int) i == chainPlayer.next - 1 ? Theme::accent : Theme::lineStrong, false, Theme::dimText);
-
     if (! chain.empty())
-    {
-        const auto playing = chainPlayer.isTimerRunning();
-        drawChip (g, playChip, playing ? "Stop" : "Play", Theme::accent, playing, Theme::text);
-        text (g, chainHint(), x, panel.getBottom() - 88.0f, 10.0f, Theme::faintText);
-    }
+        text (g, chainHint(), x, panel.getBottom() - 62.0f, 10.0f, Theme::faintText);
 }

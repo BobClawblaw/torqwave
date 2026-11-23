@@ -3,6 +3,7 @@
 #include "../Source/AiDecrypt.h"
 #include "TestUtils.h"
 #include "../Source/DecryptView.h"
+#include "../Source/InstrumentKeys.h"
 #include "../Source/SoundDrops.h"
 #include "../Source/WaveSynthEditor.h"
 #include "../Source/Theme.h"
@@ -611,6 +612,8 @@ namespace
         view.setMotion (false);
         window->showView (2);
         auto drawn = true;
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (false);   // no link played into the synth's output as it lands, while that output is measured
 
         const auto snapshots = [&]
         {
@@ -720,7 +723,7 @@ namespace
                 allFromIt = allFromIt && c.from == "the last search";
 
 
-            // The chain: a step each time the search came nearer, oldest first, never falling; Play goes through it, and a double-click goes back.
+            // The chain: a link each time the nearest sounded different enough, oldest first, never falling; Play goes through it, and a double-click goes back.
             // The locks rise along it, but for a candidate picked to go on from, which may be a little further away.
             int falls = 0;
 
@@ -744,7 +747,7 @@ namespace
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto onFromIt = view.getPasses() == passesBefore + 1 && view.getSearch()->getProgress().best.front().lock >= view.chainLock (0) - 0.01f;
             check (rising && playing && stoppedPlaying && heardOnly && wentBack && onFromIt,
-                   "decrypt: the chain gains a step each time the search comes nearer (" + juce::String (length) + " here); Play goes through it and stops, a click only plays a step, "
+                   "decrypt: the chain gains a link when the nearest patch sounds different enough from the last (" + juce::String (length) + " here); Play goes through it and stops, a click only plays a step, "
                    "and going back to the first drops the later ones, puts it on the keys and lets Again go on from it");
             view.stop();
             check (tookIt && fromPicked && allFromIt,
@@ -827,6 +830,111 @@ namespace
                        "a double-click on each candidate puts that one on the keys (" + juce::String (hits) + " of " + juce::String (candidates) + ")");
         }
 
+        // The chain: a strip of tiles across the page and the same links as a path on the scope; links that differ enough
+        // to hear, from a rough first match to the nearest; heard as they land when Audition is on.
+        {
+            const auto wasAudition = InstrumentKeys::getAudition();
+            InstrumentKeys::setAudition (false);
+            const auto playedBefore = view.linksPlayedAsTheyLanded();
+            view.decrypt (clip, rate, "reese");
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            const auto silent = view.linksPlayedAsTheyLanded() == playedBefore;
+            InstrumentKeys::setAudition (true);
+            view.decrypt (clip, rate, "reese");
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            const auto length = view.getChainLength();
+            const auto followed = view.linksPlayedAsTheyLanded() - playedBefore >= length && length >= 2;
+            InstrumentKeys::setAudition (wasAudition);
+
+            // Links differ by the threshold at least (the last may be nearer: the end always takes the last place), and the first is well under the last.
+            auto apartEnough = true;
+            juce::StringArray locks;
+
+            for (int i = 0; i < length; ++i)
+            {
+                apartEnough = apartEnough && (i == 0 || i == length - 1 || view.chainMoved (i) >= linkApartDb);
+                locks.add (juce::String (view.chainLock (i), 0));
+            }
+
+            const auto farToNear = length >= 2 && view.chainLock (0) <= view.chainLock (length - 1) - 5.0f;
+
+            // Every tile inside the strip, in order, and a node for each on the scope, at every size; with 20 links too.
+            const auto placedAt = [&] (int links)
+            {
+                auto ok = view.getChainLength() == links && view.stripBounds().contains (view.playChainBounds()) && view.stripBounds().contains (view.signalTileBounds());
+
+                for (auto scale : { 0.7f, 1.0f, 1.6f })
+                {
+                    window->setSize (juce::roundToInt (WaveSynthEditor::designWidth * scale), juce::roundToInt (WaveSynthEditor::designHeight * scale));
+
+                    for (int i = 0; i < links; ++i)
+                    {
+                        const auto tile = view.chainBounds (i);
+                        ok = ok && ! tile.isEmpty() && view.stripBounds().contains (tile) && tile.getWidth() >= 24.0f
+                             && (i == 0 ? tile.getX() >= view.signalTileBounds().getRight() : tile.getX() >= view.chainBounds (i - 1).getRight())
+                             && view.getLocalBounds().toFloat().contains (view.chainNode (i)) && ! view.stripBounds().contains (view.chainNode (i))
+                             && (i == 0 || view.chainNode (i).getDistanceFrom (view.chainNode (i - 1)) > 8.0f);
+                    }
+                }
+
+                window->setSize (WaveSynthEditor::designWidth, WaveSynthEditor::designHeight);
+                return ok;
+            };
+
+            const auto tilesPlaced = placedAt (length);
+
+            // A click on a tile or on its node plays that link, marks it and shows it in the panel; the signal's tile plays the signal.
+            click (view.chainBounds (0).getCentre());
+            const auto byTile = view.selectedStep() == 0 && view.heardStep() == 0 && view.stepChange (0).startsWith ("the first rough match");
+            click (view.chainNode (length - 1));
+            const auto byNode = view.selectedStep() == length - 1 && view.heardStep() == length - 1 && view.stepChange (length - 1).startsWith ("from step " + juce::String (length - 1));
+            const auto said = view.stepChange (length - 1);
+            click (view.signalTileBounds().getCentre());
+            const auto signalHeard = view.heardStep() == -1;
+
+            // Play marks the signal, then each link; a double-click on a node goes back to it: on the keys, the later links dropped, and Take keeps it.
+            click (view.playChainBounds().getCentre());
+            const auto playing = view.isPlayingChain() && view.heardStep() == -1;
+            click (view.playChainBounds().getCentre());
+            const auto stopped = ! view.isPlayingChain() && view.heardStep() == -2;
+            click (view.chainNode (0), 2);
+            const auto back = view.getChainLength() == 1 && view.keysStep() == 0 && view.selectedStep() == 0 && view.canGoAgain();
+            const auto onKeysNow = SignalConsole::capture (synth);
+            click (view.takeBounds().getCentre());
+            const auto kept = alikeButLevel (SignalConsole::capture (synth), onKeysNow) && SignalConsole::addressOf (SignalConsole::capture (synth)) == SignalConsole::addressOf (onKeysNow);
+
+            // Again's links follow on the same chain, each nearer than the one it went on from.
+            view.again();
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            auto appended = view.getChainLength() >= 1;
+
+            for (int i = 1; i < view.getChainLength(); ++i)
+                appended = appended && view.chainLock (i) > view.chainLock (i - 1);
+
+            const auto afterAgain = view.getChainLength();
+            view.addTestLinks (20 - view.getChainLength());
+            const auto twenty = placedAt (20);
+            view.stop();
+            juce::StringArray chainFailed;
+            if (! silent)                   chainFailed.add ("links were played as they landed with Audition off");
+            if (! followed)                 chainFailed.add ("links were not played as they landed with Audition on");
+            if (! apartEnough)              chainFailed.add ("two links were nearer than " + juce::String (linkApartDb, 1) + " dB in sound");
+            if (! farToNear)                chainFailed.add ("the first link was not well under the last");
+            if (! tilesPlaced || ! twenty)  chainFailed.add (juce::String ("a tile or a node was out of place") + (tilesPlaced ? " with 20 links" : ""));
+            if (! byTile || ! byNode)       chainFailed.add ("a click on a tile or a node did not play, mark and show its link");
+            if (! signalHeard)              chainFailed.add ("the signal's tile did not play the signal");
+            if (! playing || ! stopped)     chainFailed.add ("Play did not mark the signal first, or did not stop");
+            if (! back || ! kept)           chainFailed.add ("a double-click did not go back to the link, or Take did not keep it");
+            if (! appended)                 chainFailed.add ("Again's links did not follow on, each nearer");
+            check (chainFailed.isEmpty(),
+                   "decrypt: the chain is a strip across the page (Play, the signal, a tile for each link) and a numbered path on the scope, every tile and node in place at "
+                   "70 %, 100 % and 160 %, with 20 links too; its links run from a rough first match to the nearest (lock " + locks.joinIntoString (", ")
+                       + " %), each " + juce::String (linkApartDb, 1) + " dB or more in sound from the one before; a click on a tile or node plays, marks and describes the link (\""
+                       + said + "\"), a double-click goes back to it and Take keeps it, Again's links follow on (" + juce::String (afterAgain)
+                       + " after it), and links are heard as they land only with Audition on"
+                       + (chainFailed.isEmpty() ? juce::String() : " (failed: " + chainFailed.joinIntoString ("; ") + ")"));
+        }
+
         // Until settled: the window's searches go on past 16 rounds while they come closer, and say when they no longer do.
         {
             Options settle;
@@ -860,11 +968,64 @@ namespace
             view.stop();
             SoundDrops::isSound = nullptr;
             SoundDrops::soundOf = nullptr;
+            InstrumentKeys::setAudition (auditionWas);
             check (unhooked && wanted && searching,
                    "decrypt: an open file dragged from the Files panel is taken and searched for, as a file from the Finder is; any other drag is not");
         }
 
         window->showView (0);
+    }
+}
+
+void saveDecryptWindow (const juce::File& folder)
+{
+    folder.createDirectory();
+    Theme::apply (Theme::make ("Dark", "Blue"));
+    Synth synth;
+    synth.setPlayConfigDetails (0, 2, rate, 512);
+    synth.prepareToPlay (rate, 512);
+    synth.loadPatch ("Cathedral Stack Pad");
+    std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+    auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+
+    if (window == nullptr || window->getDecryptView() == nullptr)
+        return;
+
+    auto& view = *window->getDecryptView();
+    view.setMotion (false);
+    window->showView (2);
+
+    const auto save = [&] (const juce::String& name)
+    {
+        const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+        auto file = folder.getChildFile (name + ".png");
+        file.deleteFile();
+        juce::FileOutputStream out (file);
+        juce::PNGImageFormat().writeImageToStream (image, out);
+        std::cout << file.getFullPathName() << std::endl;
+    };
+
+    save ("decrypt-empty");
+
+    for (auto& [name, clip] : std::vector<std::pair<juce::String, juce::AudioBuffer<float>>> { { "reese", recordingOf ("Abyss Reese", 45, 0.8, 1.5) },
+                                                                                               { "bell", recordingOf ("Cold Bell", 57, 0.6, 1.5) } })
+    {
+        view.decrypt (clip, rate, name);
+        TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
+        juce::StringArray locks;
+
+        for (int i = 0; i < view.getChainLength(); ++i)
+            locks.add (juce::String (view.chainLock (i), 1) + (i > 0 ? " (" + juce::String (view.chainMoved (i), 1) + " dB from the last)" : juce::String()));
+
+        std::cout << name << ": " << view.getChainLength() << " links, lock " << locks.joinIntoString (", ") << std::endl;
+        save ("decrypt-" + name + "-settled");
+        const auto step = juce::jmax (0, view.getChainLength() - 2);
+        const auto at = view.chainBounds (step).getCentre();
+        view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+        save ("decrypt-" + name + "-step");
+        view.addTestLinks (20 - view.getChainLength());
+        save ("decrypt-" + name + "-20-links");
+        view.stop();
     }
 }
 
