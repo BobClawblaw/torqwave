@@ -2369,7 +2369,8 @@ namespace Ai
                                              : "nothing the synth plays came near clip " + clip->name.quoted());
 
         const auto& best = progress.best.front();
-        auto patch = std::make_shared<SignalConsole::Patch> (best.patch);
+        const auto levelled = Decrypt::levelForKeys (best.patch, search.getTarget());   // as loud on the keys as the clip is played
+        auto patch = std::make_shared<SignalConsole::Patch> (levelled.patch);
         patch->name = "Node " + SignalConsole::addressText (best.address);
         const auto from = best.from.startsWith ("model: ") ? best.from.fromFirstOccurrenceOf ("model: ", false, false) + " (proposed by the model)" : best.from;
 
@@ -2382,7 +2383,10 @@ namespace Ai
 
         const auto lock = juce::String (best.lock, 0);
         const auto step = "Give " + t->name.quoted() + "'s Torqwave Synth the patch Decrypt found for clip " + clip->name.quoted() + ": " + patch->name
-                          + ", lock " + lock + " %, grown from " + from;
+                          + ", lock " + lock + " %, grown from " + from
+                          + (levelled.ranOut ? " (" + juce::String (std::abs (levelled.afterDb - Decrypt::auditionDb), 1) + " dB "
+                                                   + (levelled.afterDb < Decrypt::auditionDb ? "quieter" : "louder") + " than the clip: Amp Level at its end)"
+                                             : juce::String());
         synthChanges.push_back ({ t->id, patch, -1, nullptr, step, {} });
         steps.add (step);
         auto result = object ({ { "ok", true }, { "step", step }, { "lock", (int) std::lround (best.lock) }, { "patch", patch->name }, { "grown_from", from },

@@ -23,6 +23,8 @@ namespace Decrypt
 
     constexpr double rate = 48000.0;
     constexpr double longest = 4.0;   // seconds of a clip that are matched
+    constexpr double silenceAfter = 0.25;   // seconds of silence after a note that dies away by itself, which a match must keep
+    constexpr int steadyFrames = 20;        // 10 ms frames a note holds a level for (within 3 dB) to count as held, not dying away (see prepare)
 
     /** A sound measured for matching: its mel spectrum over time at three window sizes (each band in
         dB under the loudest band of the whole sound, down to -70) and its loudness through it (each
@@ -59,7 +61,8 @@ namespace Decrypt
         juce::AudioBuffer<float> audio;     // one channel at 48 kHz, from just before the note starts, its peak at -6 dB
         double pitchHz = 0.0;               // 0: none found, matched at middle C
         int note = 60;                      // the key it is rendered on, the nearest to its pitch
-        int held = 0;                       // samples the key is held in a render (the note's loud part)
+        int held = 0;                       // samples the key is held in a render: the note's loud part, or all of it when it decays
+        bool decays = false;                // it dies away by itself: matched with the key held, and silence after it
         Measures measures;
         SignalConsole::Signature signature;
         juce::String problem;               // why it can't be matched; empty when it can
@@ -70,6 +73,23 @@ namespace Decrypt
 
     /** A patch played as a target is: its effects off, the target's key held for as long, as long. */
     juce::AudioBuffer<float> render (Synth&, const Patch&, const Target&);
+
+    /** How loud the window auditions a candidate: its peak at -6 dB, as the target is levelled. */
+    constexpr float auditionDb = -6.0f;
+
+    /** A patch made ready for the keys. The search matches sounds at their peaks and never looks at a
+        patch's own level, so a patch put on the synth as found plays at whatever level it happens to
+        have. This one has its Amp Level trimmed so the target's note, played as the keys play it (its
+        effects on, velocity 100), peaks where the audition does; ranOut when the knob's range could
+        not bring it within a dB. */
+    struct Levelled
+    {
+        Patch patch;
+        float beforeDb = 0.0f, afterDb = 0.0f;    // the note's peak on the keys, before and after
+        bool ranOut = false;
+    };
+
+    Levelled levelForKeys (const Patch&, const Target&);
 
     /** A render measured as the search measures it: its channels as one, at its peak. */
     Measures measureRender (const juce::AudioBuffer<float>&);
@@ -177,12 +197,35 @@ namespace Decrypt
         /** A search carried on: these patches (an earlier search's best) are where it starts, in place
             of the factory patches, and its rounds take smaller steps. Empty: a search from the start. */
         std::vector<Patch> resume;
+        /** The chain's last link, when this search carries a chain on: its first link must be nearer
+            the signal than this and sound different enough from it. */
+        std::optional<Patch> chainFrom;
     };
 
     /** Where a search is. */
+    /** How far apart, in dB as sounds are measured, two links of the chain are at least: enough to
+        hear one against the other (changes at the edge of hearing measure under 0.9 dB). */
+    constexpr float linkApartDb = 1.5f;
+
+    /** A link of the chain: the nearest patch at a moment of the search when it sounded different
+        enough from the link before. */
+    struct Link
+    {
+        Candidate candidate;
+        float movedDb = 0.0f;               // how far its sound is from the link before's (0 for the first)
+    };
+
     struct Progress
     {
         std::vector<Candidate> best;        // the best twelve, best first
+        /** The chain, oldest first: the nearest of a first look at a few factory patches, then of a
+            closer look, of them all, and of the rounds, each kept as a link only when it is nearer
+            the signal than the last link and at least linkApartDb from it in sound. The search's end
+            is always the last link: when it is too like the link before to be one of its own it
+            takes that link's place (so only the last link may be nearer than linkApartDb to the one
+            before it). In a search carried on (Options::chainFrom), the first link is heard against
+            the link it went on from, and its movedDb says how far it is from that. */
+        std::vector<Link> chain;
         int rendered = 0, round = 0, rounds = 0;
         double seconds = 0.0;
         bool finished = false, stopped = false;
@@ -222,6 +265,7 @@ namespace Decrypt
         void run (const std::function<bool()>& shouldStop);
         std::vector<Candidate> score (std::vector<Candidate> jobs, const Target&, const std::function<bool()>& shouldStop);
         void publish (std::vector<Candidate> merged, int round, const juce::String& stage, bool finished, bool stopped, Synth&, bool noCloser = false);
+        void growChain (const Candidate& best, bool last, Synth&);
         Advisor::Brief briefFor (const std::vector<Candidate>& best, int round, Synth&) const;
 
         const Target target;
@@ -230,6 +274,9 @@ namespace Decrypt
         mutable juce::CriticalSection lock;
         Progress progress;
         juce::StringArray modelLog;         // the search thread's; copied into progress
+        std::vector<Link> chain;            // the search thread's; copied into progress
+        std::vector<Measures> linkMeasures; // each link's sound, for the next to be heard against
+        std::optional<std::pair<Measures, float>> chainFrom;   // Options::chainFrom's sound and its distance from the signal
         std::atomic<int> rendered { 0 };
         std::atomic<bool> stopping { false }, notify { false };
         double started = 0.0;

@@ -5,6 +5,7 @@
 
 class SignalConsoleView;
 class DecryptView;
+class DecryptedView;
 
 /** Torqwave Synth's window: the three oscillators with their wavetables drawn at the position they
     play, the sub and noise; the two filters with their response curves; the amp and voice; the
@@ -46,6 +47,22 @@ public:
         `ticked` says whether any is. */
     static juce::PopupMenu favouritesMenu (const juce::String& current, bool browsing, int firstId, bool& ticked);
 
+    /** The patch browser's Decrypted folder: the patches taken from Decrypt and named
+        (DecryptedPatches), a sub-menu for each category that holds one, then those with no
+        category; an item's ID is `firstId` plus its place in the folder's order
+        (Store::inFolderOrder, which the arrows step through). The one named `current` is ticked,
+        with its category. With one of them on the synth, Rename and Delete for it follow
+        (`renameId`, `deleteId`). `ticked` says whether any is ticked. */
+    static juce::PopupMenu decryptedMenu (const juce::String& current, int firstId, int renameId, int deleteId, bool& ticked);
+
+    /** For Decrypt, and tests: the user's own patches have changed (one saved, renamed or deleted):
+        the presets bar reads its names again and the browser is drawn again. */
+    void ownPatchesChanged();
+    /** Renames or deletes one of the Decrypted patches as the browser's menu does, without asking:
+        false, with nothing changed, for a name that is empty or taken. For tests. */
+    bool renameDecrypted (const juce::String& from, const juce::String& to);
+    bool deleteDecrypted (const juce::String& name);
+
     /** Reads every control's parameter, the modulation and the displays again. */
     void refresh();
 
@@ -67,6 +84,7 @@ public:
     void showView (int index);
     SignalConsoleView* getConsoleView() const;
     DecryptView* getDecryptView() const;
+    DecryptedView* getDecryptedView() const;
 
     struct Content;
 

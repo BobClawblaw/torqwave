@@ -198,8 +198,6 @@ int runDecryptReal (const juce::StringArray& filesAndFlags)
         Search search (target, options);
         juce::StringArray rounds;
         int lastRound = -1;
-        std::vector<Patch> chain;
-        std::vector<float> chainDb;
         search.onChange = [&]
         {
             const auto p = search.getProgress();
@@ -208,12 +206,6 @@ int runDecryptReal (const juce::StringArray& filesAndFlags)
             {
                 lastRound = p.round;
                 rounds.add (juce::String (p.best.front().distance.total, 2));
-
-                if (chain.empty() || p.best.front().distance.total <= chainDb.back() - 0.25f)
-                {
-                    chain.push_back (p.best.front().patch);
-                    chainDb.push_back (p.best.front().distance.total);
-                }
             }
         };
         search.start();
@@ -227,11 +219,24 @@ int runDecryptReal (const juce::StringArray& filesAndFlags)
         const auto& best = end.best.front();
         Synth renderer;
 
-        // The chain as the window plays it: the signal, then each step, a breath apart.
+        // The chain, as the search made it: each link's lock, and how far its sound is from the link before's.
+        {
+            juce::StringArray links;
+
+            for (auto& l : end.chain)
+                links.add (juce::String (l.candidate.lock, 1) + " %" + (links.isEmpty() ? juce::String() : " (" + juce::String (l.movedDb, 1) + " dB on)"));
+
+            std::printf ("%s's chain, %d links: %s\n", r.name.toRawUTF8(), (int) end.chain.size(), links.joinIntoString (", ").toRawUTF8());
+        }
+
+        // The chain as the window plays it: the signal, then each link, a breath apart.
         if (wavDir != juce::File())
         {
-            if (chain.empty() || chainDb.back() > best.distance.total)
-                chain.push_back (best.patch), chainDb.push_back (best.distance.total);
+            std::vector<Patch> chain;
+            std::vector<float> chainDb;
+
+            for (auto& l : end.chain)
+                chain.push_back (l.candidate.patch), chainDb.push_back (l.candidate.distance.total);
 
             const auto gap = (int) (0.4 * rate), length = target.audio.getNumSamples();
             juce::AudioBuffer<float> out (1, (int) (chain.size() + 1) * (length + gap));

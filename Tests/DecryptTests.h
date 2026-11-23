@@ -10,6 +10,12 @@
 void runDecryptTests();
 /** Only the window's checks, quicker to repeat. */
 void runDecryptWindowTests();
+/** Only the check that a second sound is heard, with the synth's audio running (about three minutes). */
+void runDecryptHeardTests();
+/** Only the check that a model that is slow or hung never makes the page wait (part of --decrypt-heard). */
+void runDecryptModelTests();
+/** Saves pictures of the synth's window on Decrypt: empty, a search ended, a step chosen, a chain of 20. */
+void saveDecryptWindow (const juce::File& folder);
 
 /** The ten patches of the search test decrypted twice, alone and helped by the model at that
     OpenAI-compatible server (Ask Torq's DecryptAdvisor, told each patch's category in words), with

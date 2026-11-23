@@ -48,5 +48,6 @@ namespace Ai
         juce::CriticalSection lock;
         Client* current = nullptr;      // guarded by lock
         std::atomic<bool> cancelled { false };
+        std::atomic<bool> gaveUp { false };     // told to give up during a call: its remaining requests (a clip described, then the hints) are skipped
     };
 }

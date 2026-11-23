@@ -3,6 +3,9 @@
 #include "../Source/AiDecrypt.h"
 #include "TestUtils.h"
 #include "../Source/DecryptView.h"
+#include "../Source/InstrumentKeys.h"
+#include "../Source/DecryptPatches.h"
+#include "../Source/DecryptedView.h"
 #include "../Source/SoundDrops.h"
 #include "../Source/WaveSynthEditor.h"
 #include "../Source/Theme.h"
@@ -51,6 +54,156 @@ namespace
         }
 
         return out;
+    }
+
+    /** Two patches the same but for Amp Level, which Decrypt trims when it puts one on the keys. */
+    bool alikeButLevel (SignalConsole::Patch a, SignalConsole::Patch b)
+    {
+        a.values.erase ("ampLevel");
+        b.values.erase ("ampLevel");
+        return SignalConsole::addressOf (a) == SignalConsole::addressOf (b);
+    }
+
+    /** The peak, in dB, of a synth playing the target's note as the keys do: velocity 100, its effects as they are, held as long. */
+    float peakOnKeys (Synth& synth, const Target& target)
+    {
+        synth.prepareToPlay (rate, 512);
+        const auto length = target.audio.getNumSamples();
+        juce::AudioBuffer<float> part (2, 512);
+        float peak = 0.0f;
+
+        for (int at = 0; at < length; at += 512)
+        {
+            const auto n = juce::jmin (512, length - at);
+            juce::MidiBuffer midi;
+            if (at == 0) midi.addEvent (juce::MidiMessage::noteOn (1, target.note, (juce::uint8) 100), 0);
+            if (target.held >= at && target.held < at + n) midi.addEvent (juce::MidiMessage::noteOff (1, target.note), target.held - at);
+            part.setSize (2, n, false, false, true);
+            part.clear();
+            synth.processBlock (part, midi);
+            peak = juce::jmax (peak, part.getMagnitude (0, n));
+        }
+
+        return juce::Decibels::gainToDecibels (peak, -100.0f);
+    }
+
+    void testLevel()
+    {
+        // Found patches on the keys: before, at whatever level the patch has (the search matches peaks, not levels);
+        // after, trimmed to where the window auditions them. Measured on a synth of their own, as the keys play them.
+        juce::StringArray lines;
+        auto within = true, flagged = true;
+        float furthestBefore = 0.0f, furthestAfter = 0.0f;
+
+        for (auto& [name, note] : std::vector<std::pair<juce::String, int>> { { "Warehouse Sub", 33 }, { "Abyss Reese", 45 }, { "Cold Bell", 57 }, { "Black Pluck", 60 },
+                                                                              { "Concrete Pad", 57 }, { "Abrasive Bray", 48 } })
+        {
+            const auto target = prepare (recordingOf (name, note, 0.8, 1.5), rate);
+            Options options;
+            options.threads = 4;
+            options.leaveOut.add (name);
+            Search search (target, options);
+            const auto best = search.runNow().best.front();
+            Synth keys;
+            keys.setPlayConfigDetails (0, 2, rate, 512);
+            keys.setNonRealtime (true);
+            SignalConsole::apply (keys, best.patch);
+            const auto before = peakOnKeys (keys, target);
+            const auto levelled = levelForKeys (best.patch, target);
+            SignalConsole::apply (keys, levelled.patch);
+            const auto after = peakOnKeys (keys, target);
+            const auto apartAfter = std::abs (after - auditionDb);
+            furthestBefore = juce::jmax (furthestBefore, std::abs (before - auditionDb));
+
+            if (levelled.ranOut)
+                flagged = flagged && apartAfter > 1.0f;
+            else
+            {
+                within = within && apartAfter <= 1.0f;
+                furthestAfter = juce::jmax (furthestAfter, apartAfter);
+            }
+
+            lines.add (name + " (as " + best.from + ") " + juce::String (before - auditionDb, 1) + " to " + juce::String (after - auditionDb, 1) + " dB"
+                       + (levelled.ranOut ? ", Amp Level at its end" : juce::String()));
+        }
+
+        std::cout << "DECRYPT-LEVEL against the audition: " << lines.joinIntoString ("; ") << std::endl;
+        check (within && flagged,
+               "decrypt: a found patch put on the keys plays the matched note at velocity 100 within 1 dB of its audition (the furthest " + juce::String (furthestAfter, 2)
+                   + " dB; " + juce::String (furthestBefore, 1) + " dB before it was trimmed), and where Amp Level's range runs out it is said: " + lines.joinIntoString ("; "));
+    }
+
+    /** A patch played dry with the key held for `seconds`: its peak, and its peak from `after` seconds on, in dB. */
+    std::pair<float, float> heldFor (const Patch& patch, int note, double seconds, double after)
+    {
+        Target held;
+        held.audio.setSize (1, (int) (seconds * rate));
+        held.note = note;
+        held.held = held.audio.getNumSamples();
+        Synth synth;
+        synth.setPlayConfigDetails (0, 2, rate, 512);
+        synth.setNonRealtime (true);
+        const auto audio = render (synth, patch, held);
+        const auto from = juce::jmin (audio.getNumSamples() - 1, (int) (after * rate));
+        return { juce::Decibels::gainToDecibels (audio.getMagnitude (0, audio.getNumSamples()), -100.0f),
+                 juce::Decibels::gainToDecibels (audio.getMagnitude (from, audio.getNumSamples() - from), -100.0f) };
+    }
+
+    /** A target as it was matched before notes that die away were held: let go where it last falls 12 dB under its loudest, no silence after it. */
+    Target heldForItsLoudPart (Target t)
+    {
+        if (! t.decays)
+            return t;
+
+        const auto samples = t.audio.getNumSamples() - (int) (silenceAfter * rate);
+        t.audio.setSize (1, samples, true);
+        t.measures = measure (t.audio.getReadPointer (0), samples);
+        int last = 0;
+
+        for (int f = 0; f < t.measures.frames; ++f)
+            if (t.measures.loudness[(size_t) f] >= -12.0f)
+                last = f;
+
+        t.held = juce::jlimit (Measures::hop * 5, samples, (last + 1) * Measures::hop);
+        t.decays = false;
+        return t;
+    }
+
+    void testDecay()
+    {
+        // A stab: the reese with its amp falling to nothing in a quarter of a second, the key held all the way. The patch
+        // found must fall silent with the key held too, as the recording does; matched the old way, it could go on as a pad.
+        const auto stabClip = recordingOf ("Abyss Reese", 45, 1.5, 1.5, rate, 0.0, [] (Patch& p)
+        {
+            p.values["env1Attack"] = 2.0;
+            p.values["env1Decay"] = 250.0;
+            p.values["env1Sustain"] = 0.0;
+            p.values["env1Release"] = 600.0;
+        });
+        const auto stab = prepare (stabClip, rate);
+        const auto sourceEnds = (stab.audio.getNumSamples() - (stab.decays ? (int) (silenceAfter * rate) : 0)) / rate;
+        Options options;
+        options.threads = 4;
+        options.leaveOut.add ("Abyss Reese");
+        const auto found = Search (stab, options).runNow().best.front();
+        const auto [peak, after] = heldFor (found.patch, stab.note, 3.0, sourceEnds + 0.1);
+        const auto oldWay = Search (heldForItsLoudPart (stab), options).runNow().best.front();
+        const auto [oldPeak, oldAfter] = heldFor (oldWay.patch, stab.note, 3.0, sourceEnds + 0.1);
+
+        // A pad held for 0.8 s and let go: held for its loud part as before, and its patch still sounds while the key is down.
+        const auto pad = prepare (recordingOf ("Concrete Pad", 57, 0.8, 1.5), rate);
+        Options padOptions;
+        padOptions.threads = 4;
+        padOptions.leaveOut.add ("Concrete Pad");
+        const auto padFound = Search (pad, padOptions).runNow().best.front();
+        const auto [padPeak, padLate] = heldFor (padFound.patch, pad.note, 3.0, 2.5);
+
+        check (stab.decays && after <= peak - 40.0f && ! pad.decays && padLate >= padPeak - 20.0f,
+               "decrypt: a stab that dies away with the key held (" + juce::String (sourceEnds, 2) + " s) is matched with the key held, and its patch ("
+                   + found.from + ", lock " + juce::String (found.lock, 1) + " %) held for 3 s is " + juce::String (peak - after, 1)
+                   + " dB down from 0.1 s after the stab's end (matched the old way, " + oldWay.from + " at " + juce::String (oldWay.lock, 1) + " %, it was "
+                   + juce::String (oldPeak - oldAfter, 1) + " dB down); a pad held and let go is matched as before, and its patch ("
+                   + padFound.from + ", lock " + juce::String (padFound.lock, 1) + " %) still sounds at 2.5 s, " + juce::String (padPeak - padLate, 1) + " dB under its peak");
     }
 
     void testPrepare()
@@ -190,7 +343,7 @@ namespace
             r.within += best < within ? 1 : 0;
             r.lines.add (name + " " + juce::String (best, 1) + " dB (" + juce::String (lock, 0) + " %, heard at " + noteName (target.note) + " for " + noteName (c.note) + ", from "
                          + (result.best.empty() ? juce::String ("nothing") : result.best.front().from) + ", " + juce::String (result.round) + " rounds, "
-                         + juce::String (result.seconds, 1) + " s)");
+                         + juce::String (result.seconds, 1) + " s" + (target.decays ? ", dies away" : "") + ")");
         }
 
         return r;
@@ -461,6 +614,8 @@ namespace
         view.setMotion (false);
         window->showView (2);
         auto drawn = true;
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (false);   // no link played into the synth's output as it lands, while that output is measured
 
         const auto snapshots = [&]
         {
@@ -497,6 +652,8 @@ namespace
         const auto placed = view.candidateCentre (3) != view.candidateCentre (-1);
         click (view.candidateCentre (3), 2);
         const auto onKeys = SignalConsole::addressOf (SignalConsole::capture (synth)) != before;
+        const auto keysDb = peakOnKeys (synth, view.getSearch()->getTarget());
+        const auto asHeard = std::abs (keysDb - auditionDb) <= 1.0f && std::abs (keysDb - view.lastKeysDb()) <= 0.1f;
         click (view.stopBounds().getCentre());
         TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 5000);
         const auto stoppedBack = SignalConsole::addressOf (SignalConsole::capture (synth)) == before;
@@ -508,11 +665,13 @@ namespace
         if (! onKeys)      failed.add ("the double-click put nothing on the keys (the search had " + juce::String ((int) searchHad)
                                        + " candidates, the view had candidate 3 " + (placed ? "placed" : "not placed yet") + ")");
         if (! stoppedBack) failed.add ("Stop did not give back the patch from before");
+        if (! asHeard)     failed.add ("the candidate on the keys peaks at " + juce::String (keysDb, 2) + " dB (the view measured " + juce::String (view.lastKeysDb(), 2)
+                                       + "), not within 1 dB of the audition's " + juce::String (auditionDb, 1));
         if (! drawn)       failed.add ("a snapshot was not drawn at its size");
         check (failed.isEmpty(),
                "decrypt: the window refuses a silent clip, switches Tables only from the factory, starts on a clip, puts a candidate on the keys with a double-click, "
-               "and Stop gives back the patch it had; it draws at 70 %, 100 % and 160 % before and during a search"
-                   + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
+               "as loud on the keys as its audition (" + juce::String (keysDb - auditionDb, 2) + " dB apart), and Stop gives back the patch it had; it draws at 70 %, 100 % and 160 % "
+                   "before and during a search" + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
 
         // Take keeps the best; a model's name for it can be refused, and used.
         const auto namer = std::make_shared<MadeUp> (MadeUp::Kind::namer);
@@ -521,7 +680,7 @@ namespace
         TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
         const auto best = view.getSearch()->getProgress().best;
         click (view.takeBounds().getCentre());
-        const auto taken = ! best.empty() && SignalConsole::addressOf (SignalConsole::capture (synth)) == best.front().address
+        const auto taken = ! best.empty() && alikeButLevel (SignalConsole::capture (synth), best.front().patch)
                            && synth.getPatchName() == "Node " + SignalConsole::addressText (best.front().address);
         TestUtils::runUntil ([&view] { return view.offeredName().name.isNotEmpty(); }, 5000);
         const auto offered = view.offeredName().name == "Rust Reese";
@@ -556,7 +715,7 @@ namespace
             const auto picked = view.getSearch()->getProgress().best[3];
             view.setHovered (3);
             view.take();
-            const auto tookIt = SignalConsole::addressOf (SignalConsole::capture (synth)) == picked.address && view.canGoAgain();
+            const auto tookIt = alikeButLevel (SignalConsole::capture (synth), picked.patch) && view.canGoAgain();
             view.again();
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto fromPicked = view.getSearch()->getProgress().best.front().lock >= picked.lock - 0.01f && view.getPasses() == 4;
@@ -566,7 +725,7 @@ namespace
                 allFromIt = allFromIt && c.from == "the last search";
 
 
-            // The chain: a step each time the search came nearer, oldest first, never falling; Play goes through it, and a double-click goes back.
+            // The chain: a link each time the nearest sounded different enough, oldest first, never falling; Play goes through it, and a double-click goes back.
             // The locks rise along it, but for a candidate picked to go on from, which may be a little further away.
             int falls = 0;
 
@@ -590,7 +749,7 @@ namespace
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto onFromIt = view.getPasses() == passesBefore + 1 && view.getSearch()->getProgress().best.front().lock >= view.chainLock (0) - 0.01f;
             check (rising && playing && stoppedPlaying && heardOnly && wentBack && onFromIt,
-                   "decrypt: the chain gains a step each time the search comes nearer (" + juce::String (length) + " here); Play goes through it and stops, a click only plays a step, "
+                   "decrypt: the chain gains a link when the nearest patch sounds different enough from the last (" + juce::String (length) + " here); Play goes through it and stops, a click only plays a step, "
                    "and going back to the first drops the later ones, puts it on the keys and lets Again go on from it");
             view.stop();
             check (tookIt && fromPicked && allFromIt,
@@ -661,7 +820,7 @@ namespace
             for (int i = 0; i < (int) shownBest.size(); ++i)
             {
                 click (view.candidateCentre (i), 2);
-                hits += SignalConsole::addressOf (SignalConsole::capture (synth)) == shownBest[(size_t) i].address ? 1 : 0;
+                hits += alikeButLevel (SignalConsole::capture (synth), shownBest[(size_t) i].patch) ? 1 : 0;
             }
 
             view.stop();
@@ -671,6 +830,111 @@ namespace
                        + " the heading here), the chain's hint fits (" + juce::String (hint, 0) + " of " + juce::String (room, 0) + " points), and no lock label on the scope "
                        "prints over another, the one under the pointer always labelled (" + juce::String (labelled) + " of " + juce::String (candidates) + " labelled); "
                        "a double-click on each candidate puts that one on the keys (" + juce::String (hits) + " of " + juce::String (candidates) + ")");
+        }
+
+        // The chain: a strip of tiles across the page and the same links as a path on the scope; links that differ enough
+        // to hear, from a rough first match to the nearest; heard as they land when Audition is on.
+        {
+            const auto wasAudition = InstrumentKeys::getAudition();
+            InstrumentKeys::setAudition (false);
+            const auto playedBefore = view.linksPlayedAsTheyLanded();
+            view.decrypt (clip, rate, "reese");
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            const auto silent = view.linksPlayedAsTheyLanded() == playedBefore;
+            InstrumentKeys::setAudition (true);
+            view.decrypt (clip, rate, "reese");
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            const auto length = view.getChainLength();
+            const auto followed = view.linksPlayedAsTheyLanded() - playedBefore >= length && length >= 2;
+            InstrumentKeys::setAudition (wasAudition);
+
+            // Links differ by the threshold at least (the last may be nearer: the end always takes the last place), and the first is well under the last.
+            auto apartEnough = true;
+            juce::StringArray locks;
+
+            for (int i = 0; i < length; ++i)
+            {
+                apartEnough = apartEnough && (i == 0 || i == length - 1 || view.chainMoved (i) >= linkApartDb);
+                locks.add (juce::String (view.chainLock (i), 0));
+            }
+
+            const auto farToNear = length >= 2 && view.chainLock (0) <= view.chainLock (length - 1) - 5.0f;
+
+            // Every tile inside the strip, in order, and a node for each on the scope, at every size; with 20 links too.
+            const auto placedAt = [&] (int links)
+            {
+                auto ok = view.getChainLength() == links && view.stripBounds().contains (view.playChainBounds()) && view.stripBounds().contains (view.signalTileBounds());
+
+                for (auto scale : { 0.7f, 1.0f, 1.6f })
+                {
+                    window->setSize (juce::roundToInt (WaveSynthEditor::designWidth * scale), juce::roundToInt (WaveSynthEditor::designHeight * scale));
+
+                    for (int i = 0; i < links; ++i)
+                    {
+                        const auto tile = view.chainBounds (i);
+                        ok = ok && ! tile.isEmpty() && view.stripBounds().contains (tile) && tile.getWidth() >= 24.0f
+                             && (i == 0 ? tile.getX() >= view.signalTileBounds().getRight() : tile.getX() >= view.chainBounds (i - 1).getRight())
+                             && view.getLocalBounds().toFloat().contains (view.chainNode (i)) && ! view.stripBounds().contains (view.chainNode (i))
+                             && (i == 0 || view.chainNode (i).getDistanceFrom (view.chainNode (i - 1)) > 8.0f);
+                    }
+                }
+
+                window->setSize (WaveSynthEditor::designWidth, WaveSynthEditor::designHeight);
+                return ok;
+            };
+
+            const auto tilesPlaced = placedAt (length);
+
+            // A click on a tile or on its node plays that link, marks it and shows it in the panel; the signal's tile plays the signal.
+            click (view.chainBounds (0).getCentre());
+            const auto byTile = view.selectedStep() == 0 && view.heardStep() == 0 && view.stepChange (0).startsWith ("the first rough match");
+            click (view.chainNode (length - 1));
+            const auto byNode = view.selectedStep() == length - 1 && view.heardStep() == length - 1 && view.stepChange (length - 1).startsWith ("from step " + juce::String (length - 1));
+            const auto said = view.stepChange (length - 1);
+            click (view.signalTileBounds().getCentre());
+            const auto signalHeard = view.heardStep() == -1;
+
+            // Play marks the signal, then each link; a double-click on a node goes back to it: on the keys, the later links dropped, and Take keeps it.
+            click (view.playChainBounds().getCentre());
+            const auto playing = view.isPlayingChain() && view.heardStep() == -1;
+            click (view.playChainBounds().getCentre());
+            const auto stopped = ! view.isPlayingChain() && view.heardStep() == -2;
+            click (view.chainNode (0), 2);
+            const auto back = view.getChainLength() == 1 && view.keysStep() == 0 && view.selectedStep() == 0 && view.canGoAgain();
+            const auto onKeysNow = SignalConsole::capture (synth);
+            click (view.takeBounds().getCentre());
+            const auto kept = alikeButLevel (SignalConsole::capture (synth), onKeysNow) && SignalConsole::addressOf (SignalConsole::capture (synth)) == SignalConsole::addressOf (onKeysNow);
+
+            // Again's links follow on the same chain, each nearer than the one it went on from.
+            view.again();
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            auto appended = view.getChainLength() >= 1;
+
+            for (int i = 1; i < view.getChainLength(); ++i)
+                appended = appended && view.chainLock (i) > view.chainLock (i - 1);
+
+            const auto afterAgain = view.getChainLength();
+            view.addTestLinks (20 - view.getChainLength());
+            const auto twenty = placedAt (20);
+            view.stop();
+            juce::StringArray chainFailed;
+            if (! silent)                   chainFailed.add ("links were played as they landed with Audition off");
+            if (! followed)                 chainFailed.add ("links were not played as they landed with Audition on");
+            if (! apartEnough)              chainFailed.add ("two links were nearer than " + juce::String (linkApartDb, 1) + " dB in sound");
+            if (! farToNear)                chainFailed.add ("the first link was not well under the last");
+            if (! tilesPlaced || ! twenty)  chainFailed.add (juce::String ("a tile or a node was out of place") + (tilesPlaced ? " with 20 links" : ""));
+            if (! byTile || ! byNode)       chainFailed.add ("a click on a tile or a node did not play, mark and show its link");
+            if (! signalHeard)              chainFailed.add ("the signal's tile did not play the signal");
+            if (! playing || ! stopped)     chainFailed.add ("Play did not mark the signal first, or did not stop");
+            if (! back || ! kept)           chainFailed.add ("a double-click did not go back to the link, or Take did not keep it");
+            if (! appended)                 chainFailed.add ("Again's links did not follow on, each nearer");
+            check (chainFailed.isEmpty(),
+                   "decrypt: the chain is a strip across the page (Play, the signal, a tile for each link) and a numbered path on the scope, every tile and node in place at "
+                   "70 %, 100 % and 160 %, with 20 links too; its links run from a rough first match to the nearest (lock " + locks.joinIntoString (", ")
+                       + " %), each " + juce::String (linkApartDb, 1) + " dB or more in sound from the one before; a click on a tile or node plays, marks and describes the link (\""
+                       + said + "\"), a double-click goes back to it and Take keeps it, Again's links follow on (" + juce::String (afterAgain)
+                       + " after it), and links are heard as they land only with Audition on"
+                       + (chainFailed.isEmpty() ? juce::String() : " (failed: " + chainFailed.joinIntoString ("; ") + ")"));
         }
 
         // Until settled: the window's searches go on past 16 rounds while they come closer, and say when they no longer do.
@@ -706,6 +970,7 @@ namespace
             view.stop();
             SoundDrops::isSound = nullptr;
             SoundDrops::soundOf = nullptr;
+            InstrumentKeys::setAudition (auditionWas);
             check (unhooked && wanted && searching,
                    "decrypt: an open file dragged from the Files panel is taken and searched for, as a file from the Finder is; any other drag is not");
         }
@@ -714,9 +979,1265 @@ namespace
     }
 }
 
+namespace
+{
+    /** What a page holds once a search of a sound has ended: its target, its chain and its best. */
+    struct Ended
+    {
+        int note = 0, held = 0, samples = 0, passes = 0, shownStep = 0, keysStep = 0;
+        bool decays = false, playingChain = false;
+        std::vector<juce::uint32> chain, twelve;
+        juce::String heading;
+
+        bool operator== (const Ended& o) const
+        {
+            return note == o.note && held == o.held && samples == o.samples && passes == o.passes && shownStep == o.shownStep && keysStep == o.keysStep
+                   && decays == o.decays && playingChain == o.playingChain && chain == o.chain && twelve == o.twelve;
+        }
+
+        juce::String differsFrom (const Ended& o) const
+        {
+            juce::StringArray d;
+            if (note != o.note || held != o.held || samples != o.samples || decays != o.decays) d.add ("the target");
+            if (passes != o.passes)             d.add ("passes " + juce::String (passes) + " for " + juce::String (o.passes));
+            if (shownStep != o.shownStep)       d.add ("a link still chosen");
+            if (keysStep != o.keysStep)         d.add ("a link still on the keys");
+            if (playingChain != o.playingChain) d.add ("the chain still playing");
+            if (chain != o.chain)               d.add ("the chain (" + juce::String ((int) chain.size()) + " links for " + juce::String ((int) o.chain.size()) + ")");
+            if (twelve != o.twelve)             d.add ("the best twelve");
+            return d.joinIntoString (", ");
+        }
+    };
+
+    Ended endedOf (DecryptView& view)
+    {
+        Ended e;
+        const auto& t = view.getSearch()->getTarget();
+        e.note = t.note;
+        e.held = t.held;
+        e.samples = t.audio.getNumSamples();
+        e.decays = t.decays;
+        e.passes = view.getPasses();
+        e.shownStep = view.selectedStep();
+        e.keysStep = view.keysStep();
+        e.playingChain = view.isPlayingChain();
+
+        for (int i = 0; i < view.getChainLength(); ++i)
+            e.chain.push_back (view.chainAddress (i));
+
+        for (auto& c : view.getSearch()->getProgress().best)
+            e.twelve.push_back (c.address);
+
+        return e;
+    }
+
+    /** A second, very different sound given to the page in every state a first sound can leave it in, by each way a
+        sound arrives: the page must end as a fresh page given only the second sound does, and Stop must give back
+        the patch from before the first sound (or the one taken). */
+    void testSecondSound()
+    {
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (false);
+        const auto first = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
+        const auto second = recordingOf ("Cold Bell", 69, 0.3, 0.9);
+
+        // The second sound as a file, for the ways that read one (32-bit float, so it is the same sound).
+        const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypt-second-" + juce::String (juce::Time::getMillisecondCounter()) + ".wav");
+        {
+            juce::WavAudioFormat wav;
+            std::unique_ptr<juce::OutputStream> stream = std::make_unique<juce::FileOutputStream> (file);
+            if (auto writer = wav.createWriterFor (stream, juce::AudioFormatWriterOptions{}.withSampleRate (rate).withNumChannels (2).withBitsPerSample (32)
+                                                               .withSampleFormat (juce::AudioFormatWriterOptions::SampleFormat::floatingPoint)))
+                writer->writeFromAudioSampleBuffer (second, 0, second.getNumSamples());
+        }
+
+        struct Page
+        {
+            Page()
+            {
+                synth.setPlayConfigDetails (0, 2, rate, 512);
+                synth.prepareToPlay (rate, 512);
+                synth.loadPatch ("Cathedral Stack Pad");
+                made.reset (synth.createEditorAndMakeActive());
+                window = dynamic_cast<WaveSynthEditor*> (made.get());
+                view = window != nullptr ? window->getDecryptView() : nullptr;
+
+                if (view != nullptr)
+                {
+                    view->setMotion (false);
+                    window->showView (2);
+                }
+            }
+
+            Synth synth;
+            std::unique_ptr<juce::AudioProcessorEditor> made;
+            WaveSynthEditor* window = nullptr;
+            DecryptView* view = nullptr;
+        };
+
+        const auto click = [] (DecryptView& view, juce::Point<float> at, int clicks = 1)
+        {
+            const auto event = juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), clicks, false);
+            if (clicks == 2) view.mouseDoubleClick (event); else view.mouseDown (event);
+        };
+
+        const auto ended = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000); };
+        const auto candidates = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000); };
+
+        // A fresh page given only the second sound, from a patch: what every other page must end as.
+        const auto freshFrom = [&] (const Patch* held, bool tablesOnly)
+        {
+            Page page;
+
+            if (held != nullptr)
+                SignalConsole::apply (page.synth, *held);
+
+            if (tablesOnly)
+                click (*page.view, page.view->tablesBounds().getCentre());
+
+            page.view->decrypt (second, rate, "second");
+            ended (*page.view);
+            return endedOf (*page.view);
+        };
+
+        const auto fresh = freshFrom (nullptr, false);
+        const auto again = freshFrom (nullptr, false);
+        juce::StringArray wrong;
+
+        if (! (fresh == again))
+            wrong.add ("two fresh pages differ in " + again.differsFrom (fresh));
+
+        struct State
+        {
+            juce::String name;
+            std::function<void (Page&)> reach;
+            int way = 0;                // 0 a clip given, 1 a file dropped, 2 a sound dragged from inside the app
+            bool taken = false, tablesOnly = false;
+        };
+
+        const std::vector<State> states {
+            { "a search just started", [&] (Page& p) { p.view->decrypt (first, rate, "first"); }, 1 },
+            { "a search running with a candidate on the keys", [&] (Page& p) { p.view->decrypt (first, rate, "first"); candidates (*p.view); click (*p.view, p.view->candidateCentre (4), 2); }, 2 },
+            { "a search running with an audition being rendered", [&] (Page& p) { p.view->decrypt (first, rate, "first"); candidates (*p.view); click (*p.view, p.view->candidateCentre (2)); }, 0 },
+            { "a search ended", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); }, 1 },
+            { "a link chosen", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); click (*p.view, p.view->chainBounds (0).getCentre()); }, 2 },
+            { "a link gone back to, on the keys", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); click (*p.view, p.view->chainBounds (0).getCentre(), 2); }, 0 },
+            { "the chain playing", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); click (*p.view, p.view->playChainBounds().getCentre()); }, 1 },
+            { "after Stop", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); click (*p.view, p.view->stopBounds().getCentre()); }, 2 },
+            { "after Again", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); p.view->again(); ended (*p.view); }, 0 },
+            { "Again running", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); p.view->again(); }, 1 },
+            { "after Take", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); click (*p.view, p.view->takeBounds().getCentre()); }, 2, true },
+            { "Tables only from the factory on", [&] (Page& p) { click (*p.view, p.view->tablesBounds().getCentre()); p.view->decrypt (first, rate, "first"); ended (*p.view); }, 0, false, true },
+        };
+
+        const auto tablesFresh = freshFrom (nullptr, true);
+        int same = 0;
+
+        for (auto& state : states)
+        {
+            Page page;
+            const auto before = SignalConsole::capture (page.synth);
+            state.reach (page);
+            const auto held = state.taken ? SignalConsole::capture (page.synth) : before;   // what Stop must give back
+            const auto expected = state.taken ? freshFrom (&held, false) : state.tablesOnly ? tablesFresh : fresh;
+
+            if (state.way == 1)
+                page.view->filesDropped ({ file.getFullPathName() }, 0, 0);
+            else if (state.way == 2)
+            {
+                SoundDrops::isSound = [] (const juce::var& d) { return d.toString() == "openfile:0"; };
+                SoundDrops::soundOf = [&second] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { second, rate, "second" }; };
+                page.view->itemDropped (juce::DragAndDropTarget::SourceDetails ("openfile:0", nullptr, {}));
+                SoundDrops::isSound = nullptr;
+                SoundDrops::soundOf = nullptr;
+            }
+            else
+                page.view->decrypt (second, rate, "second");
+
+            // At once: nothing of the first sound's chain, links or passes is left.
+            const auto cleared = page.view->getPasses() == 1 && page.view->getChainLength() == 0 && page.view->selectedStep() == -1 && page.view->keysStep() == -1
+                                 && ! page.view->isPlayingChain() && page.view->heardStep() == -2;
+            ended (*page.view);
+            TestUtils::runUntil ([] { return false; }, 300);   // a render made for the first sound, had it still been on its way, has arrived by now
+            const auto got = endedOf (*page.view);
+            const auto quiet = page.view->playsSinceSound() == 0;   // Audition is off: nothing was played, of the first sound least of all
+            click (*page.view, page.view->stopBounds().getCentre());
+            const auto givenBack = SignalConsole::addressOf (SignalConsole::capture (page.synth)) == SignalConsole::addressOf (held);
+
+            if (got == expected && cleared && givenBack && quiet)
+                ++same;
+            else
+                wrong.add (state.name + ": " + (got == expected ? juce::String() : "differs from a fresh page in " + got.differsFrom (expected) + "; ")
+                           + (cleared ? "" : "the first sound's chain, links or passes were left when the second arrived; ")
+                           + (quiet ? "" : juce::String (page.view->playsSinceSound()) + " sounds were played after the second arrived; ") + (givenBack ? "" : "Stop gave back another patch"));
+        }
+
+        // A second sound that can't be matched (silence): the page stays on the first, as it was, and says why.
+        {
+            Page page;
+            page.view->decrypt (first, rate, "first");
+            ended (*page.view);
+            const auto was = endedOf (*page.view);
+            juce::AudioBuffer<float> silence (2, 48000);
+            silence.clear();
+            const auto refused = ! page.view->decrypt (silence, rate, "nothing");
+
+            if (! (refused && endedOf (*page.view) == was && page.view->refusal().contains ("nothing") && page.view->refusal().contains ("silent")))
+                wrong.add ("a silent second sound: the page did not stay as it was and say why (it says \"" + page.view->refusal() + "\")");
+
+            page.view->stop();
+        }
+
+        file.deleteFile();
+        InstrumentKeys::setAudition (auditionWas);
+        check (wrong.isEmpty(),
+               "decrypt: a second, very different sound given to the page in " + juce::String ((int) states.size()) + " states (a search just started, running with a candidate on the keys "
+               "or an audition being rendered, ended, a link chosen or gone back to, the chain playing, after Stop, after and during Again, after Take, Tables only on), as a clip, a "
+               "dropped file and a sound dragged from inside the app, ends as a fresh page given only that sound does: the same target, chain (" + juce::String ((int) fresh.chain.size())
+                   + " links) and best twelve, one pass, nothing chosen, and Stop gives back the patch from before the first sound, or the one taken (" + juce::String (same) + " of "
+                   + juce::String ((int) states.size()) + " the same)" + (wrong.isEmpty() ? juce::String() : " (wrong: " + wrong.joinIntoString (" | ") + ")"));
+    }
+}
+
+namespace
+{
+    /** Take, name, keep: the patch taken is saved under the name as one of the user's presets and listed under
+        Decrypted; recalled, it is the same patch; it can be renamed and deleted; a name taken or empty is refused. */
+    void testTakeAndName()
+    {
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (false);
+        const auto folder = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypted-" + juce::String (juce::Time::getMillisecondCounter()));
+        const auto list = folder.getChildFile ("Synth Decrypted.xml");
+        auto presets = std::make_unique<EffectPresets::Store> (folder.getChildFile ("Presets"));
+        DecryptedPatches::Store::use (presets.get(), list);
+        auto& store = DecryptedPatches::Store::shared;
+        const juce::String key = BuiltInEffects::basicSynthId;
+        juce::StringArray failed;
+
+        {
+            Synth synth;
+            synth.setPlayConfigDetails (0, 2, rate, 512);
+            synth.prepareToPlay (rate, 512);
+            synth.loadPatch ("Cathedral Stack Pad");
+            std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+            auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+            auto& view = *window->getDecryptView();
+            view.setMotion (false);
+            window->showView (2);
+            const auto click = [&view] (juce::Point<float> at)
+            {
+                view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+            };
+            const auto clip = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
+            const auto takeOne = [&]
+            {
+                view.decrypt (clip, rate, "reese");
+                TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
+                click (view.takeBounds().getCentre());
+            };
+
+            // Take asks for a name, the Node name there; Not Now leaves the patch on the keys, unsaved.
+            takeOne();
+            const auto node = synth.getPatchName();
+            if (! (view.isNaming() && node.startsWith ("Node ") && view.nameTyped() == node))
+                failed.add ("Take did not ask for a name with the Node name in it");
+            const auto unsaved = SignalConsole::addressOf (SignalConsole::capture (synth));
+            click (view.notNowBounds().getCentre());
+            if (view.isNaming() || ! store().names().isEmpty() || SignalConsole::addressOf (SignalConsole::capture (synth)) != unsaved || synth.getPatchName() != node)
+                failed.add ("Not Now did not leave the patch on the keys, unsaved");
+
+            // A name typed and saved: one of the user's presets, a Decrypted patch, and the synth's patch's name.
+            takeOne();
+            synth.setMacroName (0, "Grit");
+            synth.setSampledTable (1, WaveTables::makeSampled (std::vector<float> ((size_t) (4 * WaveTables::Sampled::harmonics), 0.5f), 4, 110.0, "a table"));
+            const auto trimmed = synth.getPresetValues().at ("ampLevel");
+            const auto guessed = view.nameCategory();
+            const auto takenAt = view.getSearch()->getProgress().best.front().lock;
+            view.typeName ("Night Reese");
+            click (view.saveNameBounds().getCentre());
+            const auto values = synth.getPresetValues();
+            const auto texts = synth.getPresetTexts();
+            if (! (! view.isNaming() && store().names() == juce::StringArray { "Night Reese" } && presets->getNames (key).contains ("Night Reese")
+                   && synth.getPatchName() == "Night Reese" && view.nameNote().contains ("Night Reese")))
+                failed.add ("a name saved did not make a preset and a Decrypted patch of that name");
+
+            // Recalled from another patch: the same settings (the level trim among them), tables, macro names and name.
+            synth.loadPatch ("Cold Bell");
+            const auto recalled = store().load (synth, "night reese") && synth.getPresetValues() == values && synth.getPresetTexts() == texts
+                                  && juce::exactlyEqual (synth.getPresetValues().at ("ampLevel"), trimmed) && synth.getMacroName (0) == "Grit"
+                                  && synth.getSampledTable (1) != nullptr && synth.getSampledTable (1)->name == "a table" && synth.getPatchName() == "Night Reese";
+            if (! recalled)
+                failed.add ("the patch recalled is not the patch saved");
+
+            // What the list keeps of it: the category guessed from the factory patch it grew from, the lock, the recording's name, the date.
+            const auto kept = store().entry ("Night Reese");
+            if (! (kept.has_value() && kept->category == guessed && kept->source == "reese" && kept->lock > 50.0f && juce::exactlyEqual (kept->lock, takenAt)
+                   && (juce::Time::getCurrentTime() - kept->taken).inSeconds() < 120.0))
+                failed.add ("the list did not keep the category guessed (" + guessed + "), the lock, the recording's name and the date");
+
+            // A name taken asks before replacing; a factory patch's and an empty one are refused; Replace replaces, with the category chosen.
+            const auto& categories = WaveSynth::patchCategories();
+            const auto first = categories[0], second = categories[1], third = categories[2];
+            takeOne();
+            view.typeName ("night reese");
+            const auto asked = ! view.saveName() && view.isAskingToReplace() && view.isNaming() && store().names().size() == 1;
+            view.typeName ("Abyss Reese");
+            const auto factoryRefused = ! view.saveName() && ! view.isAskingToReplace() && view.nameNote().contains ("factory");
+            view.typeName ("  ");
+            const auto emptyRefused = ! view.saveName() && view.nameNote().isNotEmpty() && view.isNaming();
+            synth.setMacroName (0, "Grit");
+            synth.setSampledTable (1, WaveTables::makeSampled (std::vector<float> ((size_t) (4 * WaveTables::Sampled::harmonics), 0.5f), 4, 110.0, "a table"));
+            const auto takenAt2 = view.getSearch()->getProgress().best.front().lock;
+            view.typeName ("Night Reese");
+            view.chooseCategory (second);
+            click (view.saveNameBounds().getCentre());     // asks
+            const auto asksAgain = view.isAskingToReplace();
+            click (view.saveNameBounds().getCentre());     // Replace
+            if (! (asked && factoryRefused && emptyRefused && asksAgain && ! view.isNaming() && store().names().size() == 1 && store().entry ("Night Reese")->category == second))
+                failed.add ("a taken, a factory or an empty name was not asked about or refused as it should be, or the category chosen was not kept");
+
+            // Three more, in other categories and in none: the patch list's folder has a sub-menu for each category, then those with none.
+            for (auto& [name, category] : std::vector<std::pair<juce::String, juce::String>> { { "Bell Thing", first }, { "Ash Lead", second }, { "Loose One", {} } })
+            {
+                takeOne();
+                view.typeName (name);
+                view.chooseCategory (category);
+                view.saveName();
+            }
+
+            juce::StringArray folderOrder;
+
+            for (auto& e : store().inFolderOrder())
+                folderOrder.add (e.name);
+
+            {
+                auto ticked = false;
+                const auto menu = WaveSynthEditor::decryptedMenu ("Night Reese", 100, 900, 901, ticked);
+                juce::StringArray top, inSecond;
+                juce::Array<int> ids;
+
+                for (juce::PopupMenu::MenuItemIterator i (menu); i.next();)
+                {
+                    if (i.getItem().isSeparator)
+                        continue;
+
+                    top.add (i.getItem().text);
+
+                    if (i.getItem().subMenu != nullptr)
+                        for (juce::PopupMenu::MenuItemIterator j (*i.getItem().subMenu); j.next();)
+                        {
+                            ids.add (j.getItem().itemID);
+
+                            if (i.getItem().text == second)
+                                inSecond.add (j.getItem().text + (j.getItem().isTicked ? " (ticked)" : ""));
+                        }
+                    else if (i.getItem().itemID >= 100 && i.getItem().itemID < 900)
+                        ids.add (i.getItem().itemID);
+                }
+
+                if (! (ticked && folderOrder == juce::StringArray { "Bell Thing", "Ash Lead", "Night Reese", "Loose One" } && top[0] == first && top[1] == second && top[2] == "Loose One"
+                       && top[3].startsWith ("Rename") && top[4].startsWith ("Delete") && inSecond == juce::StringArray { "Ash Lead", "Night Reese (ticked)" }
+                       && ids == juce::Array<int> { 100, 101, 102, 103 }))
+                    failed.add ("the patch list's Decrypted folder is not by category, then those with none (" + top.joinIntoString (", ") + "; " + inSecond.joinIntoString (", ") + ")");
+            }
+
+            // The arrows, and the arrow keys, step through them in the folder's order.
+            synth.loadPatch ("Cold Bell");
+            synth.setBrowsingDecrypted (true);
+            juce::StringArray stepped;
+
+            for (int i = 0; i < 5; ++i)
+                stepped.add (InstrumentKeys::stepSound (synth, window, 1));
+
+            const auto steppedBack = InstrumentKeys::stepSound (synth, window, -1);
+            if (! (stepped == juce::StringArray { "Bell Thing", "Ash Lead", "Night Reese", "Loose One", "Bell Thing" } && steppedBack == "Loose One" && synth.getPatchName() == "Loose One"))
+                failed.add ("the arrows did not step through the Decrypted patches in the folder's order (" + stepped.joinIntoString (", ") + ", back to " + steppedBack + ")");
+
+            // The Decrypted page: a row each, by name; a click puts one on the keys, a double-click loads it and shows the knobs.
+            window->showView (3);
+            auto& page = *window->getDecryptedView();
+            const auto pageClick = [&page] (juce::Point<float> at, int clicks = 1, juce::ModifierKeys mods = {})
+            {
+                const auto event = juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, mods, 0.5f, 0, 0, 0, 0, &page, &page, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), clicks, false);
+                if (clicks == 2) page.mouseDoubleClick (event); else page.mouseDown (event);
+            };
+            juce::StringArray listed;
+
+            for (int i = 0; i < page.getNumRows(); ++i)
+                listed.add (page.row (i).name + "/" + page.row (i).category);
+
+            synth.loadPatch ("Cold Bell");
+            pageClick (page.rowBounds (2).getCentre());
+            const auto heardRow = synth.getPatchName() == "Loose One" && page.selected() == juce::StringArray { "Loose One" } && page.isVisible() && synth.isBrowsingDecrypted();
+            pageClick (page.rowBounds (3).getCentre(), 2);
+            const auto opened = synth.getPatchName() == "Night Reese" && ! page.isVisible() && synth.getMacroName (0) == "Grit";
+            window->showView (3);
+            page.select (0);
+            page.step (1);
+            const auto steppedRow = page.selected() == juce::StringArray { "Bell Thing" } && synth.getPatchName() == "Bell Thing";
+            if (! (listed == juce::StringArray { "Ash Lead/" + second, "Bell Thing/" + first, "Loose One/", "Night Reese/" + second } && heardRow && opened && steppedRow))
+                failed.add ("the Decrypted page did not list them, put a row clicked on the keys, open one double-clicked, or step (" + listed.joinIntoString (", ") + ")");
+
+            // Sorted by a heading, and filtered.
+            pageClick (page.headingBounds (DecryptedView::Column::category).getCentre());
+            juce::StringArray byCategory;
+            auto inOrder = page.sortedBy() == DecryptedView::Column::category;      // by category's name, those with none last
+            for (int i = 0; i < page.getNumRows(); ++i)
+            {
+                byCategory.add (page.row (i).name + "/" + page.row (i).category);
+
+                if (i > 0)
+                {
+                    const auto& a = page.row (i - 1).category;
+                    const auto& b = page.row (i).category;
+                    inOrder = inOrder && (b.isEmpty() || (a.isNotEmpty() && a.compareIgnoreCase (b) <= 0));
+                }
+            }
+            page.setFilter ("bell");
+            const auto filtered = page.getNumRows() == 1 && page.row (0).name == "Bell Thing";
+            page.setFilter ({});
+            page.sortBy (DecryptedView::Column::name);
+            if (! (inOrder && byCategory.size() == 4 && filtered && page.getNumRows() == 4))
+                failed.add ("the page did not sort by category or filter (" + byCategory.joinIntoString (", ") + ")");
+
+            // Several rows selected and given a category at once; one given none.
+            page.select (2);                                   // Loose One
+            pageClick (page.rowBounds (0).getCentre(), 1, juce::ModifierKeys (juce::ModifierKeys::commandModifier));   // and Ash Lead
+            const auto two = page.selected().size() == 2 && page.categoriseSelected (third) == 2 && store().entry ("Loose One")->category == third && store().entry ("Ash Lead")->category == third;
+            page.select (1);
+            const auto none = page.categoriseSelected ({}) == 1 && store().entry ("Bell Thing")->category.isEmpty() && page.categoriseSelected ("Not A Category") == 0;
+            if (! (two && none))
+                failed.add ("rows selected were not given a category together, or one could not be given none");
+
+            // Rename on the page: an empty, a taken and a factory name refused; a new one renames it, and the synth's patch with it.
+            store().load (synth, "Night Reese");
+            page.select (3);
+            const auto refusedNames = ! page.renameSelected ("") && ! page.renameSelected ("bell thing") && ! page.renameSelected ("Abyss Reese") && store().names().contains ("Night Reese");
+            const auto renamed = page.renameSelected ("Dusk Reese") && store().names().contains ("Dusk Reese") && ! presets->getNames (key).contains ("Night Reese")
+                                 && synth.getPatchName() == "Dusk Reese" && store().entry ("Dusk Reese")->category == second && juce::exactlyEqual (store().entry ("Dusk Reese")->lock, takenAt2);
+            synth.loadPatch ("Cold Bell");
+            const auto renamedLoads = store().load (synth, "Dusk Reese") && synth.getPatchName() == "Dusk Reese" && synth.getMacroName (0) == "Grit";
+            const auto fromBrowser = ! window->renameDecrypted ("Dusk Reese", "ash lead") && window->renameDecrypted ("Dusk Reese", "Dusk Reese II") && window->renameDecrypted ("Dusk Reese II", "Dusk Reese");
+            if (! (refusedNames && renamed && renamedLoads && fromBrowser))
+                failed.add ("rename did not refuse an empty, taken or factory name, or did not rename and keep what the list holds");
+
+            // The store read again, as after a restart: the same patches, categories, locks, recordings and dates, the same patch.
+            const auto before = store().entries();
+            auto again = std::make_unique<EffectPresets::Store> (folder.getChildFile ("Presets"));
+            DecryptedPatches::Store::use (again.get(), list);
+            synth.loadPatch ("Cold Bell");
+            const auto after = store().entries();
+            auto same = before.size() == after.size() && after.size() == 4;
+
+            for (size_t i = 0; same && i < after.size(); ++i)
+                same = before[i].name == after[i].name && before[i].category == after[i].category && before[i].source == after[i].source
+                       && juce::exactlyEqual (before[i].lock, after[i].lock) && before[i].taken == after[i].taken;
+
+            if (! (same && store().load (synth, "Dusk Reese") && synth.getMacroName (0) == "Grit" && synth.getSampledTable (1) != nullptr))
+                failed.add ("the Decrypted patches did not survive the store being read again");
+
+            // Delete on the page: gone from the list and from the presets; a preset deleted from the bar is no longer listed.
+            page.refresh();
+            page.select (1);    // Bell Thing
+            pageClick (page.rowBounds (2).getCentre(), 1, juce::ModifierKeys (juce::ModifierKeys::shiftModifier));   // to Dusk Reese
+            const auto deleted = page.selected().size() == 2 && page.deleteSelected() == 2 && store().names() == juce::StringArray { "Ash Lead", "Loose One" }
+                                 && ! again->getNames (key).contains ("Dusk Reese") && page.getNumRows() == 2 && ! window->deleteDecrypted ("Dusk Reese");
+            again->remove (key, "Ash Lead");
+            if (! (deleted && store().names() == juce::StringArray { "Loose One" }))
+                failed.add ("delete did not remove the patches, or a preset deleted from the bar was still listed");
+
+            view.stop();
+            DecryptedPatches::Store::use (nullptr, {});
+        }
+
+        folder.deleteRecursively();
+        InstrumentKeys::setAudition (auditionWas);
+        check (failed.isEmpty(),
+               "decrypt: Take asks for a name with the Node name in it and a category guessed from the factory patch it grew from; Not Now leaves the patch on the keys unsaved; a name "
+               "saves it as one of the user's presets and a Decrypted patch, with its category, lock, recording and date; recalled it is the same patch (settings, level trim, table, "
+               "macro names, name); a taken name asks before replacing and a factory patch's or an empty one is refused; the patch list's Decrypted folder has them by category and the "
+               "arrows step in that order; the Decrypted page lists them, puts a row clicked on the keys, opens one double-clicked, sorts, filters, gives several a category at once, "
+               "renames (refusing an empty, taken or factory name) and deletes; the list survives the store being read again"
+                   + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
+    }
+}
+
+void saveDecryptWindow (const juce::File& folder)
+{
+    folder.createDirectory();
+    Theme::apply (Theme::make ("Dark", "Blue"));
+    Synth synth;
+    synth.setPlayConfigDetails (0, 2, rate, 512);
+    synth.prepareToPlay (rate, 512);
+    synth.loadPatch ("Cathedral Stack Pad");
+    std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+    auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+
+    if (window == nullptr || window->getDecryptView() == nullptr)
+        return;
+
+    auto& view = *window->getDecryptView();
+    view.setMotion (false);
+    window->showView (2);
+
+    const auto save = [&] (const juce::String& name)
+    {
+        const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+        auto file = folder.getChildFile (name + ".png");
+        file.deleteFile();
+        juce::FileOutputStream out (file);
+        juce::PNGImageFormat().writeImageToStream (image, out);
+        std::cout << file.getFullPathName() << std::endl;
+    };
+
+    save ("decrypt-empty");
+
+    // The user's own presets are left alone: what is saved here goes to a folder of its own.
+    const auto scratch = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypt-pictures-" + juce::String (juce::Time::getMillisecondCounter()));
+    EffectPresets::Store scratchPresets (scratch.getChildFile ("Presets"));
+    DecryptedPatches::Store::use (&scratchPresets, scratch.getChildFile ("Synth Decrypted.xml"));
+    window->showView (3);
+    save ("decrypted-empty");
+    window->showView (2);
+
+    for (auto& [name, clip] : std::vector<std::pair<juce::String, juce::AudioBuffer<float>>> { { "reese", recordingOf ("Abyss Reese", 45, 0.8, 1.5) },
+                                                                                               { "bell", recordingOf ("Cold Bell", 57, 0.6, 1.5) } })
+    {
+        view.decrypt (clip, rate, name);
+        TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
+        juce::StringArray locks;
+
+        for (int i = 0; i < view.getChainLength(); ++i)
+            locks.add (juce::String (view.chainLock (i), 1) + (i > 0 ? " (" + juce::String (view.chainMoved (i), 1) + " dB from the last)" : juce::String()));
+
+        std::cout << name << ": " << view.getChainLength() << " links, lock " << locks.joinIntoString (", ") << std::endl;
+        save ("decrypt-" + name + "-settled");
+        const auto step = juce::jmax (0, view.getChainLength() - 2);
+        const auto at = view.chainBounds (step).getCentre();
+        view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+        save ("decrypt-" + name + "-step");
+        view.addTestLinks (20 - view.getChainLength());
+        save ("decrypt-" + name + "-20-links");
+        view.stop();
+    }
+
+    // Take: the name asked for; then two patches taken and named, and the patch list open on Decrypted.
+    const auto clickAt = [&view] (juce::Point<float> at)
+    {
+        view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+    };
+
+    view.decrypt (recordingOf ("Cold Bell", 57, 0.6, 1.5), rate, "bell");
+    TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
+    clickAt (view.takeBounds().getCentre());
+    view.typeName ("Glass Bell");
+    view.saveName();
+    view.decrypt (recordingOf ("Abyss Reese", 45, 0.8, 1.5), rate, "reese");
+    TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
+    clickAt (view.takeBounds().getCentre());
+    save ("decrypt-name-prompt");
+    view.typeName ("Night Reese");
+    view.saveName();
+    save ("decrypt-name-saved");
+
+    // The Decrypted page: a dozen patches in several categories (ten more, made from factory patches for the picture), then one selected.
+    {
+        const auto& categories = WaveSynth::patchCategories();
+        const std::vector<std::tuple<const char*, const char*, int, float, const char*, int>> more {
+            { "Abyss Reese", "Low Tide", 1, 84.0f, "sub drone 03", 30 },        { "Warehouse Sub", "Cellar Floor", 0, 91.0f, "kick tail", 26 },
+            { "Acid Corrosion", "Rust Line", 0, 78.0f, "303 take 2", 21 },      { "Concrete Pad", "Grey Morning", 3, 73.0f, "choir note", 19 },
+            { "Black Pluck", "Koto Wire", 4, 88.0f, "koto", 15 },              { "Siren Burn", "Tower Call", 2, 69.0f, "alarm", 12 },
+            { "Dub Chord Stab", "Smoke Stab", 5, 82.0f, "dub chord", 9 },       { "Bare Shiver", "Thin Air", -1, 64.0f, "wine glass", 6 },
+            { "Abrasive Bray", "Horn Rasp", 2, 76.0f, "horn hit", 3 },            { "Cold Bell", "Frost Chime", -1, 93.0f, "music box", 1 },
+        };
+
+        for (auto& [factory, name, category, lock, source, daysAgo] : more)
+        {
+            synth.loadPatch (factory);
+            DecryptedPatches::Entry facts;
+            facts.category = category >= 0 && category < categories.size() ? categories[category] : juce::String();
+            facts.lock = lock;
+            facts.source = source;
+            facts.taken = juce::Time::getCurrentTime() - juce::RelativeTime::days (daysAgo);
+            DecryptedPatches::Store::shared().save (synth, name, false, facts);
+        }
+
+        window->ownPatchesChanged();
+        window->showView (3);
+        auto& page = *window->getDecryptedView();
+        save ("decrypted-list");
+        const auto at = page.rowBounds (4).getCentre();
+        page.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &page, &page, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+        page.select (6, true);
+        window->refresh();
+        save ("decrypted-selected");
+        page.sortBy (DecryptedView::Column::category);
+        save ("decrypted-by-category");
+    }
+
+    // The patch list's Decrypted folder is a menu, which is not put up as a window here: it is printed, a category's patches in brackets.
+    {
+        auto ticked = false;
+        const auto menu = WaveSynthEditor::decryptedMenu (synth.getPatchName(), 1, 900, 901, ticked);
+        juce::StringArray items;
+
+        for (juce::PopupMenu::MenuItemIterator i (menu); i.next();)
+        {
+            if (i.getItem().isSeparator)
+            {
+                items.add ("-");
+                continue;
+            }
+
+            juce::StringArray inside;
+
+            if (i.getItem().subMenu != nullptr)
+                for (juce::PopupMenu::MenuItemIterator j (*i.getItem().subMenu); j.next();)
+                    inside.add (j.getItem().text + (j.getItem().isTicked ? " (ticked)" : ""));
+
+            items.add (i.getItem().text + (inside.isEmpty() ? juce::String (i.getItem().isTicked ? " (ticked)" : "") : " [" + inside.joinIntoString (", ") + "]"));
+        }
+
+        std::cout << "the patch list's Decrypted folder: " << items.joinIntoString (" | ") << std::endl;
+    }
+
+    DecryptedPatches::Store::use (nullptr, {});
+    scratch.deleteRecursively();
+}
+
+namespace
+{
+    /** The synth's output as its audio thread makes it: blocks processed on a thread of their own, at the pace a
+        sound card asks for them, and kept. What the page plays (the signal, a link, a candidate) is mixed in there. */
+    struct Listener final : public juce::Thread
+    {
+        explicit Listener (Synth& s) : juce::Thread ("decrypt test audio"), synth (s)    { startThread(); }
+        ~Listener() override                                                              { stopThread (2000); }
+
+        void run() override
+        {
+            juce::AudioBuffer<float> block (2, 512);
+            auto next = juce::Time::getMillisecondCounterHiRes();
+
+            while (! threadShouldExit())
+            {
+                block.clear();
+                juce::MidiBuffer midi;
+                synth.processBlock (block, midi);
+                {
+                    const juce::ScopedLock sl (lock);
+                    const auto* l = block.getReadPointer (0);
+                    const auto* r = block.getReadPointer (1);
+
+                    for (int i = 0; i < 512; ++i)
+                        heard.push_back (0.5f * (l[i] + r[i]));
+                }
+
+                next += 512000.0 / rate;
+                const auto wait = (int) (next - juce::Time::getMillisecondCounterHiRes());
+
+                if (wait > 0)
+                    juce::Thread::sleep (wait);
+            }
+        }
+
+        size_t now() const                  { const juce::ScopedLock sl (lock); return heard.size(); }
+
+        /** The loudest sample from a moment on. */
+        float peakFrom (size_t from) const
+        {
+            const juce::ScopedLock sl (lock);
+            float peak = 0.0f;
+
+            for (auto i = from; i < heard.size(); ++i)
+                peak = juce::jmax (peak, std::abs (heard[i]));
+
+            return peak;
+        }
+
+        /** How like a sound what was heard from a moment on is, at its best within a fifth of a second: 1 the same. */
+        float likeness (size_t from, const juce::AudioBuffer<float>& sound) const
+        {
+            const juce::ScopedLock sl (lock);
+            const auto* s = sound.getReadPointer (0);
+            const auto n = juce::jmin (sound.getNumSamples(), 24000);
+            double energy = 0.0;
+
+            for (int i = 0; i < n; ++i)
+                energy += (double) s[i] * s[i];
+
+            double best = 0.0;
+
+            for (size_t lag = 0; lag < 9600 && from + lag + (size_t) n <= heard.size(); lag += 1)
+            {
+                double dot = 0.0, own = 0.0;
+
+                for (int i = 0; i < n; i += 4)
+                {
+                    dot += (double) heard[from + lag + (size_t) i] * s[i];
+                    own += (double) heard[from + lag + (size_t) i] * heard[from + lag + (size_t) i];
+                }
+
+                if (own > 1.0e-9)
+                    best = juce::jmax (best, dot / std::sqrt (own * energy / 4.0));
+            }
+
+            return (float) best;
+        }
+
+        Synth& synth;
+        mutable juce::CriticalSection lock;
+        std::vector<float> heard;
+    };
+
+    /** A second sound, heard: after it is given to the page in each state a first sound leaves it in, with Audition on
+        and the synth's audio running, its links are heard as they land, the middle of the scope plays the new signal
+        (not the old one, not silence), and a link and a candidate clicked are heard. */
+    void testSecondSoundHeard()
+    {
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (true);
+        const auto first = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
+        const auto second = recordingOf ("Cold Bell", 69, 0.3, 0.9);
+        const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypt-heard-" + juce::String (juce::Time::getMillisecondCounter()) + ".wav");
+        {
+            juce::WavAudioFormat wav;
+            std::unique_ptr<juce::OutputStream> stream = std::make_unique<juce::FileOutputStream> (file);
+            if (auto writer = wav.createWriterFor (stream, juce::AudioFormatWriterOptions{}.withSampleRate (rate).withNumChannels (2).withBitsPerSample (32)
+                                                               .withSampleFormat (juce::AudioFormatWriterOptions::SampleFormat::floatingPoint)))
+                writer->writeFromAudioSampleBuffer (second, 0, second.getNumSamples());
+        }
+
+        const auto pump = [] (int ms) { TestUtils::runUntil ([] { return false; }, ms); };
+        juce::StringArray wrong, figures;
+
+        struct State
+        {
+            juce::String name;
+            int way;        // 0 a clip given, 1 a file dropped, 2 a sound dragged from inside the app
+            std::function<void (DecryptView&, const std::function<void (juce::Point<float>, int)>&)> reach;
+        };
+
+        const auto ended = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000); };
+        const auto candidates = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000); };
+
+        const std::vector<State> states {
+            { "a search just started", 1, [&] (DecryptView& v, auto&) { v.decrypt (first, rate, "first"); } },
+            { "running, a candidate on the keys", 2, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); candidates (v); click (v.candidateCentre (4), 2); } },
+            { "running, an audition being rendered", 0, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); candidates (v); click (v.candidateCentre (2), 1); } },
+            { "a search ended", 1, [&] (DecryptView& v, auto&) { v.decrypt (first, rate, "first"); ended (v); } },
+            { "a link chosen", 2, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); ended (v); click (v.chainBounds (0).getCentre(), 1); } },
+            { "a link gone back to", 0, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); ended (v); click (v.chainBounds (0).getCentre(), 2); } },
+            { "the chain playing", 1, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); ended (v); click (v.playChainBounds().getCentre(), 1); pump (400); } },
+            { "after Stop", 2, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); ended (v); click (v.stopBounds().getCentre(), 1); } },
+            { "after Again", 0, [&] (DecryptView& v, auto&) { v.decrypt (first, rate, "first"); ended (v); v.again(); ended (v); } },
+            { "Again running", 1, [&] (DecryptView& v, auto&) { v.decrypt (first, rate, "first"); ended (v); v.again(); } },
+            { "after Take", 2, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); ended (v); click (v.takeBounds().getCentre(), 1); } },
+        };
+
+        for (auto& state : states)
+        {
+            Synth synth;
+            synth.setPlayConfigDetails (0, 2, rate, 512);
+            synth.prepareToPlay (rate, 512);
+            synth.loadPatch ("Cathedral Stack Pad");
+            std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+            auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+            auto& view = *window->getDecryptView();
+            view.setMotion (false);
+            window->showView (2);
+            const std::function<void (juce::Point<float>, int)> click = [&view] (juce::Point<float> at, int clicks)
+            {
+                const auto event = juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), clicks, false);
+                if (clicks == 2) view.mouseDoubleClick (event); else view.mouseDown (event);
+            };
+
+            {
+                Listener listener (synth);
+                state.reach (view, click);
+                pump (150);
+
+                // The second sound arrives.
+                const auto arrived = listener.now();
+
+                if (state.way == 1)
+                    view.filesDropped ({ file.getFullPathName() }, 0, 0);
+                else if (state.way == 2)
+                {
+                    SoundDrops::isSound = [] (const juce::var& d) { return d.toString() == "openfile:0"; };
+                    SoundDrops::soundOf = [&second] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { second, rate, "second" }; };
+                    view.itemDropped (juce::DragAndDropTarget::SourceDetails ("openfile:0", nullptr, {}));
+                    SoundDrops::isSound = nullptr;
+                    SoundDrops::soundOf = nullptr;
+                }
+                else
+                    view.decrypt (second, rate, "second");
+
+                const auto isSecond = view.getSearch() != nullptr && view.getSearch()->getTarget().audio.getNumSamples() < 48000;
+                ended (view);
+                pump (1300);
+                const auto landed = listener.peakFrom (arrived + 4800);          // links heard as they landed (the first tenth of a second may be the old sound's end)
+
+                // The middle of the scope: the signal.
+                pump (300);
+                const auto atSignal = listener.now();
+                click (view.candidateCentre (-1), 1);
+                pump (1300);
+                const auto& target = view.getSearch()->getTarget().audio;
+                const auto signalPeak = listener.peakFrom (atSignal);
+                const auto likeNew = listener.likeness (atSignal, target);
+
+                // A link, then a candidate.
+                const auto atLink = listener.now();
+                click (view.chainBounds (0).getCentre(), 1);
+                pump (1600);
+                const auto linkPeak = listener.peakFrom (atLink);
+                const auto atCandidate = listener.now();
+                click (view.candidateCentre (0), 1);
+                pump (1600);
+                const auto candidatePeak = listener.peakFrom (atCandidate);
+
+                figures.add (state.name + ": landing " + juce::String (landed, 2) + ", signal " + juce::String (signalPeak, 2) + " (like the new one " + juce::String (likeNew, 2)
+                             + "), a link " + juce::String (linkPeak, 2) + ", a candidate " + juce::String (candidatePeak, 2));
+
+                juce::StringArray silent;
+                if (! isSecond)             silent.add ("the page is not on the second sound");
+                if (landed < 0.1f)          silent.add ("no link was heard as it landed");
+                if (signalPeak < 0.1f)      silent.add ("the signal was silent");
+                else if (likeNew < 0.9f)    silent.add ("what the middle played was not the new signal (likeness " + juce::String (likeNew, 2) + ")");
+                if (linkPeak < 0.1f)        silent.add ("a link clicked was silent");
+                if (candidatePeak < 0.1f)   silent.add ("a candidate clicked was silent");
+
+                if (! silent.isEmpty())
+                    wrong.add (state.name + ": " + silent.joinIntoString (", "));
+
+                view.stop();
+            }
+        }
+
+        file.deleteFile();
+        InstrumentKeys::setAudition (auditionWas);
+        std::cout << "DECRYPT-HEARD " << figures.joinIntoString (" | ") << std::endl;
+        check (wrong.isEmpty(),
+               "decrypt: a second sound is heard: given to the page in " + juce::String ((int) states.size()) + " states with Audition on and the synth's audio running, its links are heard as they "
+               "land, the middle of the scope plays the new signal (not the first, not silence), and a link and a candidate clicked are heard"
+                   + (wrong.isEmpty() ? juce::String() : " (wrong: " + wrong.joinIntoString (" | ") + ")"));
+    }
+}
+
+namespace
+{
+    /** The ways a second sound really arrives: a file of each kind the page takes, dropped; and what the app hands over
+        for a sound dragged from inside it (longer than ten seconds, one or two channels, 44.1 or 96 kHz, or nothing).
+        Each either starts a search of that sound, whose signal is then heard, or says why not. */
+    void testSecondSoundRoutes()
+    {
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (false);
+        const auto first = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
+        const auto folder = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypt-routes-" + juce::String (juce::Time::getMillisecondCounter()));
+        folder.createDirectory();
+
+        // The bell at a rate, with so many channels, after some seconds of silence, in a file of some seconds.
+        const auto bellAt = [] (double sampleRate, int channels, double silenceBefore, double seconds)
+        {
+            const auto bell = recordingOf ("Cold Bell", 69, 0.3, 0.9, sampleRate);
+            juce::AudioBuffer<float> out (channels, (int) (seconds * sampleRate));
+            out.clear();
+
+            for (int ch = 0; ch < channels; ++ch)
+                out.copyFrom (ch, (int) (silenceBefore * sampleRate), bell, juce::jmin (ch, bell.getNumChannels() - 1), 0,
+                              juce::jmin (bell.getNumSamples(), out.getNumSamples() - (int) (silenceBefore * sampleRate)));
+
+            return out;
+        };
+
+        const auto write = [&folder] (juce::AudioFormat& format, const juce::String& name, const juce::AudioBuffer<float>& audio, double sampleRate, int bits)
+        {
+            const auto file = folder.getChildFile (name);
+            std::unique_ptr<juce::OutputStream> stream = std::make_unique<juce::FileOutputStream> (file);
+            auto options = juce::AudioFormatWriterOptions{}.withSampleRate (sampleRate).withNumChannels (audio.getNumChannels()).withBitsPerSample (bits).withQualityOptionIndex (5);
+
+            if (auto writer = format.createWriterFor (stream, options))
+                writer->writeFromAudioSampleBuffer (audio, 0, audio.getNumSamples());
+
+            return file;
+        };
+
+        juce::WavAudioFormat wav;
+        juce::AiffAudioFormat aiff;
+        juce::FlacAudioFormat flac;
+        juce::OggVorbisAudioFormat ogg;
+        const auto plain = bellAt (48000.0, 2, 0.0, 0.9);
+        const auto wavFile = write (wav, "bell.wav", plain, 48000.0, 24);
+
+        struct Dropped
+        {
+            juce::String what;
+            juce::File file;
+            bool taken;         // it must start a search; otherwise it must be refused, with the reason
+        };
+
+        std::vector<Dropped> files {
+            { "wav", wavFile, true },
+            { "aif", write (aiff, "bell.aif", plain, 48000.0, 24), true },
+            { "aiff", write (aiff, "bell.aiff", plain, 48000.0, 16), true },
+            { "flac", write (flac, "bell.flac", plain, 48000.0, 24), true },
+            { "ogg", write (ogg, "bell.ogg", plain, 48000.0, 16), true },
+            { "wav at 44.1 kHz, one channel", write (wav, "bell-441-mono.wav", bellAt (44100.0, 1, 0.0, 0.9), 44100.0, 16), true },
+            { "wav at 96 kHz", write (wav, "bell-96.wav", bellAt (96000.0, 2, 0.0, 0.9), 96000.0, 24), true },
+            { "wav of 14 s, the note 3 s in", write (wav, "bell-long.wav", bellAt (48000.0, 2, 3.0, 14.0), 48000.0, 16), true },
+            { "wav of 14 s, the note 11 s in (past the ten seconds read)", write (wav, "bell-late.wav", bellAt (48000.0, 2, 11.0, 14.0), 48000.0, 16), false },
+        };
+
+        // The kinds the Mac reads: made from the wav by the system's converter, where it is there.
+        if (juce::File ("/usr/bin/afconvert").existsAsFile())
+            for (auto& [extension, arguments] : std::vector<std::pair<juce::String, juce::StringArray>> { { "m4a", { "-f", "m4af", "-d", "aac" } }, { "caf", { "-f", "caff", "-d", "LEI16" } } })
+            {
+                const auto out = folder.getChildFile ("bell." + extension);
+                juce::ChildProcess convert;
+                juce::StringArray command { "/usr/bin/afconvert" };
+                command.addArray (arguments);
+                command.add (wavFile.getFullPathName());
+                command.add (out.getFullPathName());
+
+                if (convert.start (command) && convert.waitForProcessToFinish (20000) && out.existsAsFile())
+                    files.push_back ({ extension, out, true });
+            }
+
+        // An mp3 cannot be made here: a file that is not audio under that name, which must be refused.
+        {
+            const auto fake = folder.getChildFile ("not-audio.mp3");
+            fake.replaceWithText ("this is not audio");
+            files.push_back ({ "mp3 that is not audio", fake, false });
+        }
+
+        juce::StringArray wrong, took, refused;
+
+        Synth synth;
+        synth.setPlayConfigDetails (0, 2, rate, 512);
+        synth.prepareToPlay (rate, 512);
+        synth.loadPatch ("Cathedral Stack Pad");
+        std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+        auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+        auto& view = *window->getDecryptView();
+        view.setMotion (false);
+        window->showView (2);
+        const auto click = [&view] (juce::Point<float> at)
+        {
+            view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+        };
+
+        {
+            Listener listener (synth);
+
+            // After the first sound is on the page: give it the second by `give`, and see that it took it and plays it, or refused it and says so.
+            const auto tryOne = [&] (const juce::String& what, bool mustTake, const std::function<void()>& give)
+            {
+                view.decrypt (first, rate, "first");
+                TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000);
+                give();
+                const auto& target = view.getSearch()->getTarget();
+                const auto isBell = target.note == 69 && target.audio.getNumSamples() < 60000;
+
+                if (isBell)
+                {
+                    TestUtils::runUntil ([] { return false; }, 200);
+                    const auto at = listener.now();
+                    click (view.candidateCentre (-1));
+                    TestUtils::runUntil ([] { return false; }, 900);
+                    const auto like = listener.likeness (at, target.audio);
+                    took.add (what);
+
+                    if (like < 0.9f || listener.peakFrom (at) < 0.1f)
+                        wrong.add (what + ": taken, but its signal was not heard (peak " + juce::String (listener.peakFrom (at), 2) + ", likeness " + juce::String (like, 2) + ")");
+
+                    if (! mustTake)
+                        wrong.add (what + ": taken, though it should have been refused");
+                }
+                else
+                {
+                    refused.add (what + " (\"" + view.refusal() + "\")");
+
+                    if (view.refusal().isEmpty())
+                        wrong.add (what + ": not taken, and nothing said why");
+
+                    if (mustTake)
+                        wrong.add (what + ": refused (\"" + view.refusal() + "\")");
+                }
+
+                view.stop();
+            };
+
+            for (auto& f : files)
+                tryOne ("a dropped " + f.what, f.taken, [&] { if (view.isInterestedInFileDrag ({ f.file.getFullPathName() })) view.filesDropped ({ f.file.getFullPathName() }, 0, 0); });
+
+            // From inside the app: what its Files panel hands over for an open file, the first ten seconds at the file's rate and channels.
+            const auto handOver = [&] (const juce::String& what, bool mustTake, std::optional<SoundDrops::Sound> sound)
+            {
+                tryOne ("dragged from inside the app, " + what, mustTake, [&]
+                {
+                    SoundDrops::isSound = [] (const juce::var& d) { return d.toString() == "openfile:0"; };
+                    SoundDrops::soundOf = [&sound] (const juce::var&, double) { return sound; };
+                    const juce::DragAndDropTarget::SourceDetails details ("openfile:0", nullptr, {});
+
+                    if (view.isInterestedInDragSource (details))
+                        view.itemDropped (details);
+
+                    SoundDrops::isSound = nullptr;
+                    SoundDrops::soundOf = nullptr;
+                });
+            };
+
+            handOver ("two channels at 48 kHz", true, SoundDrops::Sound { bellAt (48000.0, 2, 0.0, 0.9), 48000.0, "bell" });
+            handOver ("one channel at 44.1 kHz", true, SoundDrops::Sound { bellAt (44100.0, 1, 0.0, 0.9), 44100.0, "bell" });
+            handOver ("two channels at 96 kHz", true, SoundDrops::Sound { bellAt (96000.0, 2, 0.0, 0.9), 96000.0, "bell" });
+            handOver ("the first ten seconds of a longer file, the note 3 s in", true, SoundDrops::Sound { bellAt (48000.0, 2, 3.0, 10.0), 48000.0, "bell" });
+            handOver ("ten seconds of silence (the note comes later)", false, SoundDrops::Sound { bellAt (48000.0, 2, 9.99, 10.0), 48000.0, "bell" });
+            handOver ("a file with no audio yet (nothing handed over)", false, std::nullopt);
+        }
+
+        folder.deleteRecursively();
+        InstrumentKeys::setAudition (auditionWas);
+        std::cout << "DECRYPT-ROUTES taken: " << took.joinIntoString ("; ") << " | refused: " << refused.joinIntoString ("; ") << std::endl;
+        check (wrong.isEmpty(),
+               "decrypt: a second sound by each real way in either starts a search whose signal is heard or says why not: " + juce::String (took.size()) + " taken and heard ("
+                   + took.joinIntoString ("; ") + "), " + juce::String (refused.size()) + " refused with the reason (" + refused.joinIntoString ("; ") + ")"
+                   + (wrong.isEmpty() ? juce::String() : " (wrong: " + wrong.joinIntoString (" | ") + ")"));
+    }
+}
+
+namespace
+{
+    /** A model that does not answer, and does not give up when told to: for `blockMs` (or for ever, -1). */
+    struct StuckModel final : public Advisor
+    {
+        explicit StuckModel (int ms) : blockMs (ms) {}
+
+        Start start (const Brief&) override                    { stick(); return {}; }
+        std::vector<Change> structure (const Brief&) override  { stick(); return {}; }
+        Name name (const Brief&) override                      { stick(); return {}; }
+        void cancel() override                                 { ++cancels; }
+
+        void stick()
+        {
+            ++asked;
+            release.wait (blockMs);
+        }
+
+        const int blockMs;
+        std::atomic<int> asked { 0 }, cancels { 0 };
+        juce::WaitableEvent release { true };
+    };
+
+    /** A server that takes a connection and a request and never answers. */
+    struct SilentServer final : public juce::Thread
+    {
+        SilentServer() : juce::Thread ("decrypt test server")
+        {
+            for (port = 47311; port < 47411 && ! listener.createListener (port, "127.0.0.1"); ++port) {}
+            startThread();
+        }
+
+        ~SilentServer() override
+        {
+            signalThreadShouldExit();
+            listener.close();
+            stopThread (2000);
+        }
+
+        void run() override
+        {
+            while (! threadShouldExit())
+                if (auto* c = listener.waitForNextConnection())
+                    held.add (c);       // kept open, never answered
+        }
+
+        int port = 0;
+        juce::StreamingSocket listener;
+        juce::OwnedArray<juce::StreamingSocket> held;
+    };
+
+    /** A model that is slow, down or hung never makes the page wait or go silent: a second and a third sound are
+        taken at once and heard, auditions play while a name is being asked for, and the window closes at once. */
+    void testModelStuck()
+    {
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (true);
+        juce::StringArray wrong, figures;
+        const auto say = [&figures] (const juce::String& line) { figures.add (line); std::cout << "DECRYPT-MODEL " << line << std::endl; };
+        const auto ms = [] (double from) { return juce::Time::getMillisecondCounterHiRes() - from; };
+
+        // Ask Torq's own advisor, its server taking the request and never answering: told to give up, how long until it has.
+        for (auto hears : { false, true })
+        {
+            SilentServer server;
+            Ai::Settings settings;
+            settings.enabled = true;
+            settings.serverUrl = "http://127.0.0.1:" + juce::String (server.port) + "/v1";
+            settings.model = "test";
+            settings.hearClips = hears;
+            const auto advisor = std::make_shared<Ai::DecryptAdvisor> (settings, juce::String());
+            const auto clip = recordingOf ("Cold Bell", 69, 0.3, 0.9);
+            juce::AudioBuffer<float> mono (1, clip.getNumSamples());
+            mono.copyFrom (0, 0, clip, 0, 0, clip.getNumSamples());
+            std::atomic<bool> done { false };
+            std::thread asking ([&]
+            {
+                Advisor::Brief brief;
+                brief.target = "a bell";
+                brief.clip = &mono;
+                advisor->start (brief);
+                done = true;
+            });
+            TestUtils::runUntil ([] { return false; }, 700);
+            const auto told = juce::Time::getMillisecondCounterHiRes();
+            advisor->cancel();
+            TestUtils::runUntil ([&done] { return done.load(); }, 6000);
+            const auto took = ms (told);
+            say (juce::String ("Ask Torq's advisor") + (hears ? ", hearing clips" : "") + ", its server silent: gave up " + (done ? juce::String (took, 0) + " ms after it was told to"
+                                                                                                                                   : juce::String ("not within 6 s of being told to")));
+
+            if (! done || took > 1500.0)
+                wrong.add (juce::String ("Ask Torq's advisor") + (hears ? ", hearing clips," : "") + " did not give up when told to");
+
+            server.signalThreadShouldExit();
+            server.listener.close();
+            server.held.clear();        // the request it may still have out ends
+            asking.join();
+        }
+
+        // The page, its model stuck: for a minute, then for ever.
+        const auto first = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
+        const auto second = recordingOf ("Cold Bell", 69, 0.3, 0.9);
+        const auto third = recordingOf ("Black Pluck", 57, 0.4, 1.0);
+
+        for (auto blockMs : { 60000, -1 })
+        {
+            const auto stuck = std::make_shared<StuckModel> (blockMs);
+            setAdvisorMaker ([stuck] { return stuck; });
+            const auto what = blockMs < 0 ? juce::String ("a model that never answers") : juce::String ("a model stuck for a minute");
+            auto synth = std::make_unique<Synth>();
+            synth->setPlayConfigDetails (0, 2, rate, 512);
+            synth->prepareToPlay (rate, 512);
+            synth->loadPatch ("Cathedral Stack Pad");
+            std::unique_ptr<juce::AudioProcessorEditor> made (synth->createEditorAndMakeActive());
+            auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+            auto& view = *window->getDecryptView();
+            view.setMotion (false);
+            window->showView (2);
+            const auto click = [&view] (juce::Point<float> at)
+            {
+                view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+            };
+            juce::StringArray times;
+            double slowest = 0.0, longestDrop = 0.0, closing = 0.0;
+
+            {
+                Listener listener (*synth);
+
+                // How long until something is heard, from a moment in what was heard: milliseconds, or -1 if nothing within the limit.
+                const auto heardAfter = [&] (size_t from, int limitMs)
+                {
+                    const auto began = juce::Time::getMillisecondCounterHiRes();
+                    TestUtils::runUntil ([&] { return listener.peakFrom (from) > 0.1f; }, limitMs);
+                    return listener.peakFrom (from) > 0.1f ? ms (began) : -1.0;
+                };
+
+                const auto note = [&] (const juce::String& name, double t)
+                {
+                    times.add (name + " " + (t < 0.0 ? juce::String ("never") : juce::String (t, 0) + " ms"));
+                    slowest = t < 0.0 ? 1.0e9 : juce::jmax (slowest, t);
+                };
+
+                view.decrypt (first, rate, "first");
+                TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000);
+
+                for (auto* sound : { &second, &third })
+                {
+                    TestUtils::runUntil ([] { return false; }, 400);
+                    const auto before = listener.now();
+                    const auto began = juce::Time::getMillisecondCounterHiRes();
+                    view.decrypt (*sound, rate, sound == &second ? "second" : "third");
+                    const auto drop = ms (began);
+                    longestDrop = juce::jmax (longestDrop, drop);
+                    times.add (juce::String (sound == &second ? "the second" : "the third") + " sound taken in " + juce::String (drop, 0) + " ms");
+                    note ("a link as it landed", heardAfter (before + 4800, 4000));
+                    TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1) && view.getChainLength() > 0; }, 20000);
+                    TestUtils::runUntil ([] { return false; }, 1200);
+                    auto at = listener.now();
+                    click (view.candidateCentre (-1));
+                    note ("the signal", heardAfter (at, 3000));
+                    TestUtils::runUntil ([] { return false; }, 1200);
+                    at = listener.now();
+                    click (view.chainBounds (0).getCentre());
+                    note ("a link clicked", heardAfter (at, 3000));
+                    TestUtils::runUntil ([] { return false; }, 1200);
+                    at = listener.now();
+                    click (view.candidateCentre (0));
+                    note ("a candidate clicked", heardAfter (at, 3000));
+                }
+
+                // Take: a name is asked of the model, which does not answer; a candidate clicked is heard all the same.
+                TestUtils::runUntil ([] { return false; }, 1200);
+                click (view.takeBounds().getCentre());
+                TestUtils::runUntil ([] { return false; }, 1200);
+                const auto at = listener.now();
+                click (view.candidateCentre (1));
+                note ("a candidate clicked while a name is asked for", heardAfter (at, 3000));
+            }
+
+            // The window closed with the model's answers still awaited.
+            {
+                const auto began = juce::Time::getMillisecondCounterHiRes();
+                made.reset();
+                synth.reset();
+                closing = ms (began);
+            }
+
+            say (what + ": " + times.joinIntoString (", ") + "; the window closed in " + juce::String (closing, 0) + " ms");
+
+            if (longestDrop > 1000.0)   wrong.add (what + ": a new sound took " + juce::String (longestDrop, 0) + " ms to be taken (the page waited on the model)");
+            if (slowest > 2000.0)       wrong.add (what + ": something was not heard within two seconds");
+            if (closing > 1500.0)       wrong.add (what + ": the window took " + juce::String (closing, 0) + " ms to close");
+
+            setAdvisorMaker (nullptr);
+
+            if (blockMs > 0)
+                stuck->release.signal();    // its calls end; one that never answers is left as it is
+        }
+
+        InstrumentKeys::setAudition (auditionWas);
+        check (wrong.isEmpty(),
+               "decrypt: a model that is slow, down or hung never makes the page wait or go silent: Ask Torq's advisor gives up when it is told to; with a model stuck for a minute and one "
+               "that never answers, a second and a third sound are taken at once, their links, signal, a link and a candidate clicked are heard within two seconds, auditions play while a "
+               "name is asked for, and the window closes at once" + (wrong.isEmpty() ? juce::String() : " (wrong: " + wrong.joinIntoString (" | ") + ")"));
+    }
+}
+
+void runDecryptHeardTests()
+{
+    testSecondSoundHeard();
+    testSecondSoundRoutes();
+    testModelStuck();
+}
+
+void runDecryptModelTests()
+{
+    testModelStuck();
+}
+
 void runDecryptWindowTests()
 {
     testWindow();
+    testSecondSound();
+    testTakeAndName();
 }
 
 void runDecryptTests()
@@ -724,6 +2245,10 @@ void runDecryptTests()
     testThreshold();
     testModel();
     testWindow();
+    testSecondSound();
+    testTakeAndName();
+    testLevel();
+    testDecay();
     testPrepare();
     testRepeatable();
     testStopAndLoad();

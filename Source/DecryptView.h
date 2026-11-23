@@ -33,6 +33,7 @@ public:
     void mouseExit (const juce::MouseEvent&) override;
     void mouseDown (const juce::MouseEvent&) override;
     void mouseDoubleClick (const juce::MouseEvent&) override;
+    void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
     juce::String getTooltip() override;
 
     bool isInterestedInFileDrag (const juce::StringArray&) override;
@@ -66,6 +67,23 @@ public:
     /** Goes back to a step: on the keys, the later steps dropped, Again to go on from it. */
     void goBackTo (int link);
     juce::Rectangle<float> playChainBounds() const                { return playChip; }
+    /** For tests: the chain's strip and its signal tile, a link's node on the scope's path, how far a
+        link's sound is from the one before, whether the search made it (or it was picked to go on
+        from), the link shown in the panel (-1 none), the one marked as heard (-1 the signal, -2 none)
+        and as on the keys, what the panel says of the link shown, how many links were played as they
+        landed, and a click on a link. addTestLinks appends copies of the last link, to try a long chain. */
+    juce::Rectangle<float> stripBounds() const                    { return strip; }
+    juce::Rectangle<float> signalTileBounds() const               { return signalTile; }
+    juce::Point<float> chainNode (int link) const                 { return juce::isPositiveAndBelow (link, (int) chain.size()) ? chain[(size_t) link].node : juce::Point<float>(); }
+    float chainMoved (int link) const                             { return juce::isPositiveAndBelow (link, (int) chain.size()) ? chain[(size_t) link].movedDb : 0.0f; }
+    juce::uint32 chainAddress (int link) const                    { return juce::isPositiveAndBelow (link, (int) chain.size()) ? SignalConsole::addressOf (chain[(size_t) link].patch) : 0; }
+    bool chainPicked (int link) const                             { return juce::isPositiveAndBelow (link, (int) chain.size()) && chain[(size_t) link].picked; }
+    int selectedStep() const noexcept                             { return selectedLink; }
+    int heardStep() const noexcept                                { return heardLink; }
+    int keysStep() const noexcept                                 { return keysLink; }
+    juce::String stepChange (int link) const;
+    int linksPlayedAsTheyLanded() const noexcept                  { return autoPlays; }
+    void addTestLinks (int count);
     juce::Rectangle<float> chainBounds (int link) const           { return juce::isPositiveAndBelow (link, (int) chain.size()) ? chain[(size_t) link].at : juce::Rectangle<float>(); }
     float chainLock (int link) const                              { return juce::isPositiveAndBelow (link, (int) chain.size()) ? chain[(size_t) link].lock : 0.0f; }
     void setHovered (int candidate)                               { hovered = candidate; }    // for tests: the pointer over a candidate
@@ -81,6 +99,34 @@ public:
     void setMotion (bool allowed)                                 { motion = allowed; }
     bool isMoving() const noexcept                                { return motion && search != nullptr && search->isRunning(); }
     /** The search has ended and the view holds its last progress (it takes each on the message thread, after the search). */
+    /** For tests: the peak of the matched note, as the keys play the patch last put on them, in dB (Decrypt::auditionDb when levelled). */
+    float lastKeysDb() const noexcept                             { return keysDb; }
+    /** Take's name: after Take the panel asks for a name, the patch's "Node" name there to type
+        over. Save (or Return) keeps the patch as one of the user's own presets under it, listed in
+        the synth's Decrypted category (DecryptedPatches); a name one of the presets has asks before
+        replacing it, and an empty name or a factory patch's is refused, with the reason. Not Now (or
+        Escape) leaves the patch on the keys, unsaved. Nothing waits on the answer. */
+    bool isNaming() const noexcept                                { return naming; }
+    juce::String nameTyped() const                                { return nameBox.getText(); }
+    void typeName (const juce::String& name)                      { nameBox.setText (name, false); }
+    /** Save: true once it is saved; false when it asks first (a taken name) or refuses (see nameNote). */
+    bool saveName (bool replace = false);
+    void notNow();
+    bool isAskingToReplace() const noexcept                       { return replacing; }
+    const juce::String& nameNote() const noexcept                 { return namingNote; }
+    /** The category the patch will be saved under (one of the synth's factory categories, or empty:
+        none): guessed from the factory patch it grew from, and chosen from the menu on its chip. */
+    const juce::String& nameCategory() const noexcept             { return category; }
+    void chooseCategory (const juce::String& c)                   { category = WaveSynth::patchCategories().contains (c) ? c : juce::String(); repaint(); }
+    juce::Rectangle<float> categoryBounds() const                 { return categoryChip; }
+    juce::Rectangle<float> saveNameBounds() const                 { return saveChip; }
+    juce::Rectangle<float> notNowBounds() const                   { return laterChip; }
+    /** Told when a patch has been saved (the presets bar and the patch list then show it). */
+    std::function<void()> onPatchSaved;
+
+    /** For tests: how many sounds the page has played since the sound on it arrived, and what it says of a sound it refused. */
+    int playsSinceSound() const noexcept                          { return plays; }
+    const juce::String& refusal() const noexcept                  { return problem; }
     bool hasEnded() const noexcept                                { return search != nullptr && progress.finished; }
     juce::Point<float> candidateCentre (int index) const;
     juce::Rectangle<float> stopBounds() const                     { return stopChip; }
@@ -109,6 +155,8 @@ private:
     void finish (const juce::String& how);
     void drawScope (juce::Graphics&);
     void drawPanel (juce::Graphics&);
+    void drawStrip (juce::Graphics&);
+    void drawPath (juce::Graphics&);
     void drawControls (juce::Graphics&);
     const Decrypt::Candidate* shown() const;
 
@@ -137,26 +185,49 @@ private:
     float radius = 100.0f;
     juce::Rectangle<float> panel, stopChip, takeChip, againChip, chooseChip, tablesChip, useChip, refuseChip;
     int passes = 0;                                  // searches run on this clip: 1 the first, more for each Again
-    std::optional<SignalConsole::Patch> chosen;      // the candidate taken from the search shown, for Again to go on from
-    float chosenLock = 0.0f, chosenDb = 0.0f;
 
-    /** The chain: the best candidate each time the search came a quarter of a dB nearer the signal
-        (and whatever an Again went on from), oldest first: how the sound has come along. A click
-        plays a step, Play plays them all in turn after the signal, and a double-click goes back to
-        one: it is put on the keys, the steps after it are dropped, and Again goes on from it.
-        Emptied by a new clip. */
+    /** The chain: how the sound came along, oldest first, from a rough first match to the nearest
+        found. The search makes its links (Decrypt::Progress::chain: a link only when the nearest
+        patch sounds different enough from the last link); each Again's links follow the last pass's,
+        and a candidate picked to go on from becomes a link too. It is shown twice: as a strip of
+        tiles across the bottom of the page (Play, the signal, then each link with its number and
+        lock) and as a numbered path on the scope. A click on a tile or a node plays the link and
+        shows it in the panel; a double-click goes back to it (on the keys, the later links dropped,
+        Again goes on from it). Emptied by a new clip. */
     struct Link
     {
         SignalConsole::Patch patch;
         float lock = 0.0f, db = 0.0f;   // its lock, and its distance from the signal in dB
-        juce::Rectangle<float> at;
+        Decrypt::Distance distance;
+        SignalConsole::Signature signature;
+        juce::String from;              // what it grew from
+        float movedDb = 0.0f;           // how far its sound is from the link before's
+        bool picked = false;            // a candidate chosen to go on from, not a link the search made
+        std::array<float, SignalConsole::numParts> moved {};   // how far each part's settings moved from the link before, 0 to 1
+        juce::Rectangle<float> at;      // its tile
+        juce::Point<float> node;        // its place on the scope's path
     };
 
     std::vector<Link> chain;
-    juce::Rectangle<float> playChip;
+    std::optional<Link> chosen;                      // the candidate taken from the search shown (or the link gone back to), for Again to go on from
+    static Link linkOf (const Decrypt::Candidate&);
+    juce::Rectangle<float> playChip, strip, signalTile;
+    size_t passBase = 0;                             // links before this pass's
+    int selectedLink = -1, heardLink = -2, keysLink = -1;   // heardLink: -1 the signal, -2 none
+    int autoPlays = 0, plays = 0;                    // plays: sounds played since the sound on the page arrived
+    juce::uint32 auditions = 0;                      // counts the auditions asked for: only the newest is played
+    std::shared_ptr<Decrypt::Advisor> namer;         // the model asked for a name, to tell to give up
+    juce::uint32 soundCount = 0;                     // counts the sounds given: a render made for an earlier one is not played
+    float stripScroll = 0.0f;                        // how far the tiles are scrolled, when there are too many to shrink
     void hearPatch (const SignalConsole::Patch&);
+    void hearLink (int link);
+    int linkAt (juce::Point<float>) const;
+    void setMoved (size_t link);
+    /** Puts a patch on the synth with its level trimmed to the audition's (Decrypt::levelForKeys). */
+    void putOnKeys (const SignalConsole::Patch&, const juce::String& name);
+    juce::String levelNote;                          // said when Amp Level's range could not bring it to the audition's level
+    float keysDb = 0.0f;
     void growChain();
-    void addLink (const SignalConsole::Patch&, float lock, float db);
 
     /** Where this pass began (its first best): how far it has come is shown against it. */
     float passFromDb = -1.0f, passFromLock = 0.0f;
@@ -178,7 +249,13 @@ private:
     int hovered = -2, onKeys = -1;                   // -2 nothing under the pointer, -1 the middle
     float sweep = 0.0f, shownLock = 0.0f;
     bool motion = true, dragOver = false, tablesOnly = false;
-    juce::TextEditor words;
+    juce::TextEditor words, nameBox;
+    bool naming = false, replacing = false;          // Take's name is being asked for; the name is taken, and Replace is asked
+    juce::String namingNote;                         // why a name was refused, or where the patch was saved
+    juce::Rectangle<float> saveChip, laterChip, categoryChip;
+    juce::String category;                           // the category it will be saved under; empty: none
+    float takenLock = 0.0f;                          // the lock of the patch taken
+    void askName();
     Decrypt::Advisor::Name offer;
     juce::uint32 offerFor = 0;
 

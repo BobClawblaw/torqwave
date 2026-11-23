@@ -57,6 +57,7 @@ std::shared_ptr<Decrypt::Advisor> DecryptAdvisor::fromSettings (const Settings& 
 
 void DecryptAdvisor::cancel()
 {
+    gaveUp = true;      // for whatever is left of the call in hand: its other requests are not made
     cancelled = true;
     const juce::ScopedLock sl (lock);
 
@@ -70,7 +71,7 @@ juce::String DecryptAdvisor::ask (const juce::String& system, const juce::String
     {
         const juce::ScopedLock sl (lock);
 
-        if (cancelled.exchange (false))
+        if (cancelled.exchange (false) || gaveUp)
             return {};
 
         current = &client;
@@ -123,6 +124,7 @@ juce::String DecryptAdvisor::ask (const juce::String& system, const juce::String
 Decrypt::Advisor::Start DecryptAdvisor::start (const Brief& b)
 {
     Start s;
+    gaveUp = false;
 
     // A model that hears is sent the clip, only when the user has allowed it.
     if (settings.hearClips && b.clip != nullptr && b.clip->getNumSamples() > 0)
@@ -153,6 +155,7 @@ Decrypt::Advisor::Start DecryptAdvisor::start (const Brief& b)
 
 std::vector<Decrypt::Advisor::Change> DecryptAdvisor::structure (const Brief& b)
 {
+    gaveUp = false;
     juce::String user;
     user << "The recording: " << b.target << ".\n";
 
@@ -172,6 +175,7 @@ std::vector<Decrypt::Advisor::Change> DecryptAdvisor::structure (const Brief& b)
 
 Decrypt::Advisor::Name DecryptAdvisor::name (const Brief& b)
 {
+    gaveUp = false;
     juce::String user;
     user << "Decrypt found this patch for a recording: " << b.target << " (lock " << juce::String (b.lock, 0) << " %).\n";
 
