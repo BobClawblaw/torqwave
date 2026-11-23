@@ -401,6 +401,7 @@ Target prepare (const juce::AudioBuffer<float>& clip, double sampleRate)
         --end;
 
     start = juce::jmax (0, start - 96);
+    const auto fadesInside = end + 480 < n && end + 480 <= start + (int) (longest * rate);   // silent before the clip (and the four seconds) end
     end = juce::jmin (n, end + 480, start + (int) (longest * rate));
 
     if (end - start < (int) (0.1 * rate))
@@ -419,8 +420,64 @@ Target prepare (const juce::AudioBuffer<float>& clip, double sampleRate)
     t.pitchHz = WaveTables::findPitch (x + from, juce::jmin (samples - from, (int) (0.5 * rate)), rate);
     t.note = t.pitchHz > 0.0 ? juce::jlimit (12, 108, (int) std::lround (69.0 + 12.0 * std::log2 (t.pitchHz / 440.0))) : 60;
 
-    // Held for its loud part: until it last falls under 12 dB below its loudest 10 ms.
     t.measures = measure (x, samples);
+    t.signature = SignalConsole::Renderer::measure (t.audio, rate);
+
+    // A note that dies away by itself (a stab, a pluck, a hit) is matched with the key held all the
+    // way and a quarter of a second of silence after it: the patch has to fall silent as the sound
+    // does with the key still down, and any sound it makes after the source has gone counts against
+    // it. Held for only the note's loud part, a patch that sustains and lets go in time matched as
+    // well, and on the keys went on for as long as a key was held.
+    //
+    // A note is taken as held and let go, and matched as before (the key down until it last falls
+    // 12 dB under its loudest 10 ms), when after its loudest moment its level, smoothed over 90 ms:
+    // stays within 3 dB for a fifth of a second (a pad, an organ); comes back up 3 dB after falling
+    // (a beating reese, a gate, a tremolo); or, 0.4 s or more into the note, starts falling three
+    // times as fast as it was, at 100 dB a second or more (a pluck let go). So does a note still
+    // sounding where the clip ends.
+    const auto frames = t.measures.frames;
+    std::vector<float> smooth ((size_t) frames, -100.0f);
+
+    for (int f = 0; f < frames; ++f)
+        for (int k = juce::jmax (0, f - 4); k <= juce::jmin (frames - 1, f + 4); ++k)
+            smooth[(size_t) f] = juce::jmax (smooth[(size_t) f], t.measures.loudness[(size_t) k]);
+
+    auto holds = false;
+    const auto loudest = (int) (std::max_element (smooth.begin(), smooth.end()) - smooth.begin());
+    auto lowest = frames > 0 ? smooth[(size_t) loudest] : 0.0f;
+
+    for (int f = loudest; f < frames && ! holds; ++f)
+    {
+        const auto now = smooth[(size_t) f];
+
+        if (f + steadyFrames <= frames)
+        {
+            const auto [low, high] = std::minmax_element (smooth.begin() + f, smooth.begin() + f + steadyFrames);
+            holds = *low > -24.0f && *high - *low < 3.0f;
+        }
+
+        lowest = juce::jmin (lowest, now);
+        holds = holds || (lowest > -40.0f && now > lowest + 3.0f);
+
+        if (f >= 40 && f - 15 >= loudest && f + 8 < frames && now > -20.0f)
+        {
+            const auto before = (now - smooth[(size_t) f - 15]) / 0.15f, after = (smooth[(size_t) f + 8] - now) / 0.08f;   // dB a second
+            holds = holds || (after <= -100.0f && after <= 3.0f * before);
+        }
+    }
+
+    t.decays = fadesInside && ! holds;
+
+    if (t.decays)
+    {
+        const auto tail = (int) (silenceAfter * rate);
+        t.audio.setSize (1, samples + tail, true, true);
+        t.audio.clear (0, samples, tail);
+        t.held = samples + tail;   // never let go inside the render
+        t.measures = measure (t.audio.getReadPointer (0), samples + tail);
+        return t;
+    }
+
     int last = 0;
 
     for (int f = 0; f < t.measures.frames; ++f)
@@ -428,7 +485,6 @@ Target prepare (const juce::AudioBuffer<float>& clip, double sampleRate)
             last = f;
 
     t.held = juce::jlimit (Measures::hop * 5, samples, (last + 1) * Measures::hop);
-    t.signature = SignalConsole::Renderer::measure (t.audio, rate);
     return t;
 }
 
@@ -484,7 +540,8 @@ Levelled levelForKeys (const Patch& patch, const Target& target)
 {
     // Played as the keys play it (its effects on, velocity 100), its Amp Level moved by what its peak
     // misses the audition's by. The effects after the amp (drive above all) need not answer in step,
-    // so it is measured again after each move, three moves at most.
+    // so it is measured again after each move, and the next move takes how far the last one got it:
+    // six moves at most.
     Synth player;
     player.setPlayConfigDetails (0, 2, rate, block);
     player.setNonRealtime (true);
@@ -498,18 +555,21 @@ Levelled levelForKeys (const Patch& patch, const Target& target)
     auto level = it != patch.values.end() ? (float) it->second : (knob != nullptr ? range.convertFrom0to1 (knob->getDefaultValue()) : -9.0f);
     l.beforeDb = peakDb (play (player, patch, target, velocity));
     l.afterDb = l.beforeDb;
+    auto perDb = 1.0f;   // how many dB the peak moves for a dB of Amp Level: 1 until it is measured (drive and a limiter give less)
 
-    for (int move = 0; move < 3 && std::abs (l.afterDb - auditionDb) > 0.25f && l.afterDb > -99.0f; ++move)
+    for (int move = 0; move < 6 && std::abs (l.afterDb - auditionDb) > 0.25f && l.afterDb > -99.0f; ++move)
     {
-        const auto next = juce::jlimit (range.start, range.end, level + (auditionDb - l.afterDb));
+        const auto next = juce::jlimit (range.start, range.end, level + (auditionDb - l.afterDb) / perDb);
 
         if (std::abs (next - level) < 0.01f)
             break;   // the knob is at the end of its range
 
-        level = next;
-        l.patch.values["ampLevel"] = level;
+        const auto was = l.afterDb;
+        l.patch.values["ampLevel"] = next;
         l.afterDb = peakDb (play (player, l.patch, target, velocity));
         l.patch.values["ampLevel"] = SignalConsole::capture (player).values["ampLevel"];   // as the knob holds it, so the patch reads back the same
+        perDb = juce::jlimit (0.2f, 2.0f, (l.afterDb - was) / (next - level));
+        level = next;
     }
 
     l.ranOut = std::abs (l.afterDb - auditionDb) > 1.0f;

@@ -130,6 +130,79 @@ namespace
                    + " dB; " + juce::String (furthestBefore, 1) + " dB before it was trimmed), and where Amp Level's range runs out it is said: " + lines.joinIntoString ("; "));
     }
 
+    /** A patch played dry with the key held for `seconds`: its peak, and its peak from `after` seconds on, in dB. */
+    std::pair<float, float> heldFor (const Patch& patch, int note, double seconds, double after)
+    {
+        Target held;
+        held.audio.setSize (1, (int) (seconds * rate));
+        held.note = note;
+        held.held = held.audio.getNumSamples();
+        Synth synth;
+        synth.setPlayConfigDetails (0, 2, rate, 512);
+        synth.setNonRealtime (true);
+        const auto audio = render (synth, patch, held);
+        const auto from = juce::jmin (audio.getNumSamples() - 1, (int) (after * rate));
+        return { juce::Decibels::gainToDecibels (audio.getMagnitude (0, audio.getNumSamples()), -100.0f),
+                 juce::Decibels::gainToDecibels (audio.getMagnitude (from, audio.getNumSamples() - from), -100.0f) };
+    }
+
+    /** A target as it was matched before notes that die away were held: let go where it last falls 12 dB under its loudest, no silence after it. */
+    Target heldForItsLoudPart (Target t)
+    {
+        if (! t.decays)
+            return t;
+
+        const auto samples = t.audio.getNumSamples() - (int) (silenceAfter * rate);
+        t.audio.setSize (1, samples, true);
+        t.measures = measure (t.audio.getReadPointer (0), samples);
+        int last = 0;
+
+        for (int f = 0; f < t.measures.frames; ++f)
+            if (t.measures.loudness[(size_t) f] >= -12.0f)
+                last = f;
+
+        t.held = juce::jlimit (Measures::hop * 5, samples, (last + 1) * Measures::hop);
+        t.decays = false;
+        return t;
+    }
+
+    void testDecay()
+    {
+        // A stab: the reese with its amp falling to nothing in a quarter of a second, the key held all the way. The patch
+        // found must fall silent with the key held too, as the recording does; matched the old way, it could go on as a pad.
+        const auto stabClip = recordingOf ("Abyss Reese", 45, 1.5, 1.5, rate, 0.0, [] (Patch& p)
+        {
+            p.values["env1Attack"] = 2.0;
+            p.values["env1Decay"] = 250.0;
+            p.values["env1Sustain"] = 0.0;
+            p.values["env1Release"] = 600.0;
+        });
+        const auto stab = prepare (stabClip, rate);
+        const auto sourceEnds = (stab.audio.getNumSamples() - (stab.decays ? (int) (silenceAfter * rate) : 0)) / rate;
+        Options options;
+        options.threads = 4;
+        options.leaveOut.add ("Abyss Reese");
+        const auto found = Search (stab, options).runNow().best.front();
+        const auto [peak, after] = heldFor (found.patch, stab.note, 3.0, sourceEnds + 0.1);
+        const auto oldWay = Search (heldForItsLoudPart (stab), options).runNow().best.front();
+        const auto [oldPeak, oldAfter] = heldFor (oldWay.patch, stab.note, 3.0, sourceEnds + 0.1);
+
+        // A pad held for 0.8 s and let go: held for its loud part as before, and its patch still sounds while the key is down.
+        const auto pad = prepare (recordingOf ("Concrete Pad", 57, 0.8, 1.5), rate);
+        Options padOptions;
+        padOptions.threads = 4;
+        padOptions.leaveOut.add ("Concrete Pad");
+        const auto padFound = Search (pad, padOptions).runNow().best.front();
+        const auto [padPeak, padLate] = heldFor (padFound.patch, pad.note, 3.0, 2.5);
+
+        check (stab.decays && after <= peak - 40.0f && ! pad.decays && padLate >= padPeak - 20.0f,
+               "decrypt: a stab that dies away with the key held (" + juce::String (sourceEnds, 2) + " s) is matched with the key held, and its patch ("
+                   + found.from + ", lock " + juce::String (found.lock, 1) + " %) held for 3 s is " + juce::String (peak - after, 1)
+                   + " dB down from 0.1 s after the stab's end (matched the old way, " + oldWay.from + " at " + juce::String (oldWay.lock, 1) + " %, it was "
+                   + juce::String (oldPeak - oldAfter, 1) + " dB down); a pad held and let go is matched as before, and its patch ("
+                   + padFound.from + ", lock " + juce::String (padFound.lock, 1) + " %) still sounds at 2.5 s, " + juce::String (padPeak - padLate, 1) + " dB under its peak");
+    }
+
     void testPrepare()
     {
         // A bell at A3 recorded at 44.1 kHz after a third of a second of silence: found at 220 Hz, from its start, at -6 dB.
@@ -267,7 +340,7 @@ namespace
             r.within += best < within ? 1 : 0;
             r.lines.add (name + " " + juce::String (best, 1) + " dB (" + juce::String (lock, 0) + " %, heard at " + noteName (target.note) + " for " + noteName (c.note) + ", from "
                          + (result.best.empty() ? juce::String ("nothing") : result.best.front().from) + ", " + juce::String (result.round) + " rounds, "
-                         + juce::String (result.seconds, 1) + " s)");
+                         + juce::String (result.seconds, 1) + " s" + (target.decays ? ", dies away" : "") + ")");
         }
 
         return r;
@@ -806,6 +879,7 @@ void runDecryptTests()
     testModel();
     testWindow();
     testLevel();
+    testDecay();
     testPrepare();
     testRepeatable();
     testStopAndLoad();

@@ -23,6 +23,8 @@ namespace Decrypt
 
     constexpr double rate = 48000.0;
     constexpr double longest = 4.0;   // seconds of a clip that are matched
+    constexpr double silenceAfter = 0.25;   // seconds of silence after a note that dies away by itself, which a match must keep
+    constexpr int steadyFrames = 20;        // 10 ms frames a note holds a level for (within 3 dB) to count as held, not dying away (see prepare)
 
     /** A sound measured for matching: its mel spectrum over time at three window sizes (each band in
         dB under the loudest band of the whole sound, down to -70) and its loudness through it (each
@@ -59,7 +61,8 @@ namespace Decrypt
         juce::AudioBuffer<float> audio;     // one channel at 48 kHz, from just before the note starts, its peak at -6 dB
         double pitchHz = 0.0;               // 0: none found, matched at middle C
         int note = 60;                      // the key it is rendered on, the nearest to its pitch
-        int held = 0;                       // samples the key is held in a render (the note's loud part)
+        int held = 0;                       // samples the key is held in a render: the note's loud part, or all of it when it decays
+        bool decays = false;                // it dies away by itself: matched with the key held, and silence after it
         Measures measures;
         SignalConsole::Signature signature;
         juce::String problem;               // why it can't be matched; empty when it can

@@ -1115,7 +1115,7 @@ void DecryptView::drawPanel (juce::Graphics& g)
     }
 
     const auto& t = search->getTarget();
-    text (g, "signal  " + (t.pitchHz > 0.0 ? noteName (t.note) : juce::String ("no pitch")) + "  " + juce::String (t.audio.getNumSamples() / rate, 2) + " s  dry"
+    text (g, "signal  " + (t.pitchHz > 0.0 ? noteName (t.note) : juce::String ("no pitch")) + "  " + juce::String (t.audio.getNumSamples() / rate - (t.decays ? silenceAfter : 0.0), 2) + " s  dry" + (t.decays ? "  dies away" : "")
              + (clipName.isNotEmpty() ? "  " + clipName.substring (0, 18) : juce::String()), x, juce::jmax (y + 8.0f, panel.getBottom() - 118.0f), 10.5f, Theme::dimText);
 
     if (offer.name.isNotEmpty())
