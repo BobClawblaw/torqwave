@@ -977,6 +977,227 @@ namespace
     }
 }
 
+namespace
+{
+    /** What a page holds once a search of a sound has ended: its target, its chain and its best. */
+    struct Ended
+    {
+        int note = 0, held = 0, samples = 0, passes = 0, shownStep = 0, keysStep = 0;
+        bool decays = false, playingChain = false;
+        std::vector<juce::uint32> chain, twelve;
+        juce::String heading;
+
+        bool operator== (const Ended& o) const
+        {
+            return note == o.note && held == o.held && samples == o.samples && passes == o.passes && shownStep == o.shownStep && keysStep == o.keysStep
+                   && decays == o.decays && playingChain == o.playingChain && chain == o.chain && twelve == o.twelve;
+        }
+
+        juce::String differsFrom (const Ended& o) const
+        {
+            juce::StringArray d;
+            if (note != o.note || held != o.held || samples != o.samples || decays != o.decays) d.add ("the target");
+            if (passes != o.passes)             d.add ("passes " + juce::String (passes) + " for " + juce::String (o.passes));
+            if (shownStep != o.shownStep)       d.add ("a link still chosen");
+            if (keysStep != o.keysStep)         d.add ("a link still on the keys");
+            if (playingChain != o.playingChain) d.add ("the chain still playing");
+            if (chain != o.chain)               d.add ("the chain (" + juce::String ((int) chain.size()) + " links for " + juce::String ((int) o.chain.size()) + ")");
+            if (twelve != o.twelve)             d.add ("the best twelve");
+            return d.joinIntoString (", ");
+        }
+    };
+
+    Ended endedOf (DecryptView& view)
+    {
+        Ended e;
+        const auto& t = view.getSearch()->getTarget();
+        e.note = t.note;
+        e.held = t.held;
+        e.samples = t.audio.getNumSamples();
+        e.decays = t.decays;
+        e.passes = view.getPasses();
+        e.shownStep = view.selectedStep();
+        e.keysStep = view.keysStep();
+        e.playingChain = view.isPlayingChain();
+
+        for (int i = 0; i < view.getChainLength(); ++i)
+            e.chain.push_back (view.chainAddress (i));
+
+        for (auto& c : view.getSearch()->getProgress().best)
+            e.twelve.push_back (c.address);
+
+        return e;
+    }
+
+    /** A second, very different sound given to the page in every state a first sound can leave it in, by each way a
+        sound arrives: the page must end as a fresh page given only the second sound does, and Stop must give back
+        the patch from before the first sound (or the one taken). */
+    void testSecondSound()
+    {
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (false);
+        const auto first = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
+        const auto second = recordingOf ("Cold Bell", 69, 0.3, 0.9);
+
+        // The second sound as a file, for the ways that read one (32-bit float, so it is the same sound).
+        const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypt-second-" + juce::String (juce::Time::getMillisecondCounter()) + ".wav");
+        {
+            juce::WavAudioFormat wav;
+            std::unique_ptr<juce::OutputStream> stream = std::make_unique<juce::FileOutputStream> (file);
+            if (auto writer = wav.createWriterFor (stream, juce::AudioFormatWriterOptions{}.withSampleRate (rate).withNumChannels (2).withBitsPerSample (32)
+                                                               .withSampleFormat (juce::AudioFormatWriterOptions::SampleFormat::floatingPoint)))
+                writer->writeFromAudioSampleBuffer (second, 0, second.getNumSamples());
+        }
+
+        struct Page
+        {
+            Page()
+            {
+                synth.setPlayConfigDetails (0, 2, rate, 512);
+                synth.prepareToPlay (rate, 512);
+                synth.loadPatch ("Cathedral Stack Pad");
+                made.reset (synth.createEditorAndMakeActive());
+                window = dynamic_cast<WaveSynthEditor*> (made.get());
+                view = window != nullptr ? window->getDecryptView() : nullptr;
+
+                if (view != nullptr)
+                {
+                    view->setMotion (false);
+                    window->showView (2);
+                }
+            }
+
+            Synth synth;
+            std::unique_ptr<juce::AudioProcessorEditor> made;
+            WaveSynthEditor* window = nullptr;
+            DecryptView* view = nullptr;
+        };
+
+        const auto click = [] (DecryptView& view, juce::Point<float> at, int clicks = 1)
+        {
+            const auto event = juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), clicks, false);
+            if (clicks == 2) view.mouseDoubleClick (event); else view.mouseDown (event);
+        };
+
+        const auto ended = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000); };
+        const auto candidates = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000); };
+
+        // A fresh page given only the second sound, from a patch: what every other page must end as.
+        const auto freshFrom = [&] (const Patch* held, bool tablesOnly)
+        {
+            Page page;
+
+            if (held != nullptr)
+                SignalConsole::apply (page.synth, *held);
+
+            if (tablesOnly)
+                click (*page.view, page.view->tablesBounds().getCentre());
+
+            page.view->decrypt (second, rate, "second");
+            ended (*page.view);
+            return endedOf (*page.view);
+        };
+
+        const auto fresh = freshFrom (nullptr, false);
+        const auto again = freshFrom (nullptr, false);
+        juce::StringArray wrong;
+
+        if (! (fresh == again))
+            wrong.add ("two fresh pages differ in " + again.differsFrom (fresh));
+
+        struct State
+        {
+            juce::String name;
+            std::function<void (Page&)> reach;
+            int way = 0;                // 0 a clip given, 1 a file dropped, 2 a sound dragged from inside the app
+            bool taken = false, tablesOnly = false;
+        };
+
+        const std::vector<State> states {
+            { "a search just started", [&] (Page& p) { p.view->decrypt (first, rate, "first"); }, 1 },
+            { "a search running with a candidate on the keys", [&] (Page& p) { p.view->decrypt (first, rate, "first"); candidates (*p.view); click (*p.view, p.view->candidateCentre (4), 2); }, 2 },
+            { "a search running with an audition being rendered", [&] (Page& p) { p.view->decrypt (first, rate, "first"); candidates (*p.view); click (*p.view, p.view->candidateCentre (2)); }, 0 },
+            { "a search ended", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); }, 1 },
+            { "a link chosen", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); click (*p.view, p.view->chainBounds (0).getCentre()); }, 2 },
+            { "a link gone back to, on the keys", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); click (*p.view, p.view->chainBounds (0).getCentre(), 2); }, 0 },
+            { "the chain playing", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); click (*p.view, p.view->playChainBounds().getCentre()); }, 1 },
+            { "after Stop", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); click (*p.view, p.view->stopBounds().getCentre()); }, 2 },
+            { "after Again", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); p.view->again(); ended (*p.view); }, 0 },
+            { "Again running", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); p.view->again(); }, 1 },
+            { "after Take", [&] (Page& p) { p.view->decrypt (first, rate, "first"); ended (*p.view); click (*p.view, p.view->takeBounds().getCentre()); }, 2, true },
+            { "Tables only from the factory on", [&] (Page& p) { click (*p.view, p.view->tablesBounds().getCentre()); p.view->decrypt (first, rate, "first"); ended (*p.view); }, 0, false, true },
+        };
+
+        const auto tablesFresh = freshFrom (nullptr, true);
+        int same = 0;
+
+        for (auto& state : states)
+        {
+            Page page;
+            const auto before = SignalConsole::capture (page.synth);
+            state.reach (page);
+            const auto held = state.taken ? SignalConsole::capture (page.synth) : before;   // what Stop must give back
+            const auto expected = state.taken ? freshFrom (&held, false) : state.tablesOnly ? tablesFresh : fresh;
+
+            if (state.way == 1)
+                page.view->filesDropped ({ file.getFullPathName() }, 0, 0);
+            else if (state.way == 2)
+            {
+                SoundDrops::isSound = [] (const juce::var& d) { return d.toString() == "openfile:0"; };
+                SoundDrops::soundOf = [&second] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { second, rate, "second" }; };
+                page.view->itemDropped (juce::DragAndDropTarget::SourceDetails ("openfile:0", nullptr, {}));
+                SoundDrops::isSound = nullptr;
+                SoundDrops::soundOf = nullptr;
+            }
+            else
+                page.view->decrypt (second, rate, "second");
+
+            // At once: nothing of the first sound's chain, links or passes is left.
+            const auto cleared = page.view->getPasses() == 1 && page.view->getChainLength() == 0 && page.view->selectedStep() == -1 && page.view->keysStep() == -1
+                                 && ! page.view->isPlayingChain() && page.view->heardStep() == -2;
+            ended (*page.view);
+            TestUtils::runUntil ([] { return false; }, 300);   // a render made for the first sound, had it still been on its way, has arrived by now
+            const auto got = endedOf (*page.view);
+            const auto quiet = page.view->playsSinceSound() == 0;   // Audition is off: nothing was played, of the first sound least of all
+            click (*page.view, page.view->stopBounds().getCentre());
+            const auto givenBack = SignalConsole::addressOf (SignalConsole::capture (page.synth)) == SignalConsole::addressOf (held);
+
+            if (got == expected && cleared && givenBack && quiet)
+                ++same;
+            else
+                wrong.add (state.name + ": " + (got == expected ? juce::String() : "differs from a fresh page in " + got.differsFrom (expected) + "; ")
+                           + (cleared ? "" : "the first sound's chain, links or passes were left when the second arrived; ")
+                           + (quiet ? "" : juce::String (page.view->playsSinceSound()) + " sounds were played after the second arrived; ") + (givenBack ? "" : "Stop gave back another patch"));
+        }
+
+        // A second sound that can't be matched (silence): the page stays on the first, as it was, and says why.
+        {
+            Page page;
+            page.view->decrypt (first, rate, "first");
+            ended (*page.view);
+            const auto was = endedOf (*page.view);
+            juce::AudioBuffer<float> silence (2, 48000);
+            silence.clear();
+            const auto refused = ! page.view->decrypt (silence, rate, "nothing");
+
+            if (! (refused && endedOf (*page.view) == was && page.view->refusal().contains ("nothing") && page.view->refusal().contains ("silent")))
+                wrong.add ("a silent second sound: the page did not stay as it was and say why (it says \"" + page.view->refusal() + "\")");
+
+            page.view->stop();
+        }
+
+        file.deleteFile();
+        InstrumentKeys::setAudition (auditionWas);
+        check (wrong.isEmpty(),
+               "decrypt: a second, very different sound given to the page in " + juce::String ((int) states.size()) + " states (a search just started, running with a candidate on the keys "
+               "or an audition being rendered, ended, a link chosen or gone back to, the chain playing, after Stop, after and during Again, after Take, Tables only on), as a clip, a "
+               "dropped file and a sound dragged from inside the app, ends as a fresh page given only that sound does: the same target, chain (" + juce::String ((int) fresh.chain.size())
+                   + " links) and best twelve, one pass, nothing chosen, and Stop gives back the patch from before the first sound, or the one taken (" + juce::String (same) + " of "
+                   + juce::String ((int) states.size()) + " the same)" + (wrong.isEmpty() ? juce::String() : " (wrong: " + wrong.joinIntoString (" | ") + ")"));
+    }
+}
+
 void saveDecryptWindow (const juce::File& folder)
 {
     folder.createDirectory();
@@ -1032,6 +1253,7 @@ void saveDecryptWindow (const juce::File& folder)
 void runDecryptWindowTests()
 {
     testWindow();
+    testSecondSound();
 }
 
 void runDecryptTests()
@@ -1039,6 +1261,7 @@ void runDecryptTests()
     testThreshold();
     testModel();
     testWindow();
+    testSecondSound();
     testLevel();
     testDecay();
     testPrepare();

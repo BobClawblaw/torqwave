@@ -103,7 +103,7 @@ void DecryptView::itemDropped (const SourceDetails& d)
     if (const auto sound = SoundDrops::take (d.description, 10.0))
         decrypt (sound->audio, sound->sampleRate, sound->name);
     else
-        problem = "That sound couldn't be read.";
+        problem = "That sound couldn't be read.";   // shown over the scope when a sound is on the page already
 
     repaint();
 }
@@ -134,7 +134,8 @@ bool DecryptView::decrypt (const juce::AudioBuffer<float>& audio, double sampleR
 
     if (target.problem.isNotEmpty())
     {
-        problem = target.problem;
+        // Refused: the page stays as it is, and says why (over the scope when a sound is on it already).
+        problem = search != nullptr ? name.quoted() + " can't be decrypted. " + target.problem : target.problem;
         repaint();
         return false;
     }
@@ -143,6 +144,22 @@ bool DecryptView::decrypt (const juce::AudioBuffer<float>& audio, double sampleR
     if (search != nullptr && ! restored)
         stop();
 
+    // A new sound starts from nothing: no link of the last one's chain, nothing of it still playing or still to play.
+    chainPlayer.stopTimer();
+    renders.removeAllJobs (false, 0);
+    ++soundCount;               // a render or a name still on its way for the last sound is dropped when it arrives
+    offerFor = 0;
+
+    if (plays > 0)
+    {
+        // A sound played cuts the one before: silence cuts the last sound's audition.
+        juce::AudioBuffer<float> silence (1, 64);
+        silence.clear();
+        synth.getConsole().play (silence, rate);
+    }
+
+    plays = 0;
+    stripScroll = 0.0f;
     clipName = name;
     passes = 0;
     chain.clear();
@@ -371,6 +388,7 @@ void DecryptView::hear (int candidate)
     if (candidate < 0)
     {
         console.play (search->getTarget().audio, rate);
+        ++plays;
         return;
     }
 
@@ -569,6 +587,7 @@ void DecryptView::ChainPlayer::timerCallback()
     if (next < 0)
     {
         view.synth.getConsole().play (view.search->getTarget().audio, rate);
+        ++view.plays;
         view.heardLink = -1;
     }
     else
@@ -624,7 +643,7 @@ void DecryptView::hearPatch (const SignalConsole::Patch& heard)
     renders.removeAllJobs (false, 0);
     // A copy of the target: Again or a new clip replaces the search while a render may still run.
     renders.addJob ([patch = heard, target = std::make_shared<const Target> (search->getTarget()), safe = juce::Component::SafePointer<DecryptView> (this),
-                     weak = std::weak_ptr<std::atomic<bool>> (alive)]
+                     weak = std::weak_ptr<std::atomic<bool>> (alive), of = soundCount]
     {
         Synth player;
         player.setPlayConfigDetails (0, 2, rate, 512);
@@ -635,10 +654,13 @@ void DecryptView::hearPatch (const SignalConsole::Patch& heard)
         if (peak > 1.0e-6f)
             audio->applyGain (0.5f / peak);   // as loud as the signal is played
 
-        juce::MessageManager::callAsync ([audio, safe, weak]
+        juce::MessageManager::callAsync ([audio, safe, weak, of]
         {
-            if (const auto a = weak.lock(); a != nullptr && a->load() && safe != nullptr)
+            if (const auto a = weak.lock(); a != nullptr && a->load() && safe != nullptr && safe->soundCount == of)   // not after another sound has arrived
+            {
                 safe->synth.getConsole().play (*audio, rate);
+                ++safe->plays;
+            }
         });
     });
 }
@@ -823,6 +845,9 @@ void DecryptView::mouseExit (const juce::MouseEvent&)
 void DecryptView::mouseDown (const juce::MouseEvent& e)
 {
     const auto p = e.position;
+
+    if (search != nullptr)
+        problem = {};   // a refusal has been read
 
     if (chooseChip.contains (p))
     {
@@ -1103,6 +1128,27 @@ void DecryptView::drawScope (juce::Graphics& g)
         g.setColour (Theme::good);
         g.strokePath (agree, juce::PathStrokeType (2.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
     }
+
+    // Another sound over the page: it will take this one's place. And why one was refused.
+    const auto notice = [this, &g] (const juce::String& said, juce::Colour colour)
+    {
+        const auto w = juce::GlyphArrangement::getStringWidth (mono (12.0f, true), said) + 28.0f;
+        const auto box = juce::Rectangle<float> (w, 28.0f).withCentre ({ centre.x, centre.y - radius * 0.62f });
+        g.setColour (Theme::base.darker (0.4f).withAlpha (0.92f));
+        g.fillRoundedRectangle (box, 6.0f);
+        g.setColour (colour);
+        g.drawRoundedRectangle (box, 6.0f, 1.2f);
+        text (g, said, box.getCentreX(), box.getCentreY(), 12.0f, colour, juce::Justification::centred, true);
+    };
+
+    if (dragOver)
+    {
+        g.setColour (signal());
+        g.drawEllipse (centre.x - radius * 1.04f, centre.y - radius * 1.04f, radius * 2.08f, radius * 2.08f, 2.0f);
+        notice ("RELEASE TO DECRYPT THIS SOUND IN ITS PLACE", signal());
+    }
+    else if (problem.isNotEmpty())
+        notice (problem, Theme::danger);
 }
 
 namespace

@@ -76,6 +76,7 @@ public:
     juce::Rectangle<float> signalTileBounds() const               { return signalTile; }
     juce::Point<float> chainNode (int link) const                 { return juce::isPositiveAndBelow (link, (int) chain.size()) ? chain[(size_t) link].node : juce::Point<float>(); }
     float chainMoved (int link) const                             { return juce::isPositiveAndBelow (link, (int) chain.size()) ? chain[(size_t) link].movedDb : 0.0f; }
+    juce::uint32 chainAddress (int link) const                    { return juce::isPositiveAndBelow (link, (int) chain.size()) ? SignalConsole::addressOf (chain[(size_t) link].patch) : 0; }
     bool chainPicked (int link) const                             { return juce::isPositiveAndBelow (link, (int) chain.size()) && chain[(size_t) link].picked; }
     int selectedStep() const noexcept                             { return selectedLink; }
     int heardStep() const noexcept                                { return heardLink; }
@@ -100,6 +101,9 @@ public:
     /** The search has ended and the view holds its last progress (it takes each on the message thread, after the search). */
     /** For tests: the peak of the matched note, as the keys play the patch last put on them, in dB (Decrypt::auditionDb when levelled). */
     float lastKeysDb() const noexcept                             { return keysDb; }
+    /** For tests: how many sounds the page has played since the sound on it arrived, and what it says of a sound it refused. */
+    int playsSinceSound() const noexcept                          { return plays; }
+    const juce::String& refusal() const noexcept                  { return problem; }
     bool hasEnded() const noexcept                                { return search != nullptr && progress.finished; }
     juce::Point<float> candidateCentre (int index) const;
     juce::Rectangle<float> stopBounds() const                     { return stopChip; }
@@ -187,7 +191,8 @@ private:
     juce::Rectangle<float> playChip, strip, signalTile;
     size_t passBase = 0;                             // links before this pass's
     int selectedLink = -1, heardLink = -2, keysLink = -1;   // heardLink: -1 the signal, -2 none
-    int autoPlays = 0;
+    int autoPlays = 0, plays = 0;                    // plays: sounds played since the sound on the page arrived
+    juce::uint32 soundCount = 0;                     // counts the sounds given: a render made for an earlier one is not played
     float stripScroll = 0.0f;                        // how far the tiles are scrolled, when there are too many to shrink
     void hearPatch (const SignalConsole::Patch&);
     void hearLink (int link);
