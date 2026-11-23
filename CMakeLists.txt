@@ -214,6 +214,9 @@ target_sources(Torqwave PRIVATE
     Source/SwarmGuitarPresets.cpp
     Source/DrumMaps.cpp
     Source/SwarmGuitarEditor.cpp
+    Source/Sampler.cpp
+    Source/SamplerEditor.cpp
+    Source/SamplerTrack.cpp
     Source/DrumMachine.cpp
     Source/DrumMachineEditor.cpp
     Source/EffectPresets.cpp
@@ -415,9 +418,30 @@ add_custom_command(OUTPUT ${torqwave_presets_zip}
     VERBATIM)
 juce_add_binary_data(TorqwavePresets NAMESPACE FactoryPresetData HEADER_NAME FactoryPresetData.h SOURCES ${torqwave_presets_zip})
 
+# Torqwave Sampler's factory samples and presets (Data/Samples, written by TorqwaveTests
+# --sampler-content from Torqwave's own instruments), zipped into the app and unpacked on first
+# use (Sampler::unpackFactorySamples). The same files make the same zip, as above.
+file(GLOB_RECURSE torqwave_samples CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/Data/Samples/*.flac ${CMAKE_SOURCE_DIR}/Data/Samples/*.xml)
+list(SORT torqwave_samples)
+set(torqwave_sample_names)
+foreach(sample IN LISTS torqwave_samples)
+    file(RELATIVE_PATH name ${CMAKE_SOURCE_DIR}/Data/Samples ${sample})
+    list(APPEND torqwave_sample_names ${name})
+endforeach()
+set(torqwave_samples_zip ${CMAKE_BINARY_DIR}/factory-samples.zip)
+add_custom_command(OUTPUT ${torqwave_samples_zip}
+    COMMAND ${CMAKE_COMMAND} -E rm -f ${torqwave_samples_zip}
+    COMMAND ${CMAKE_COMMAND} -E tar cf ${torqwave_samples_zip} --format=zip --mtime=@1767225600 -- ${torqwave_sample_names}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Data/Samples
+    DEPENDS ${torqwave_samples}
+    COMMENT "Zipping the sampler's factory samples"
+    VERBATIM)
+juce_add_binary_data(TorqwaveSamples NAMESPACE FactorySampleData HEADER_NAME FactorySampleData.h SOURCES ${torqwave_samples_zip})
+
 target_link_libraries(Torqwave PRIVATE
     TorqwaveArt
     TorqwavePresets
+    TorqwaveSamples
     TorqwaveGuide
     TorqwaveLame
     TorqwaveStretch
@@ -539,6 +563,8 @@ target_sources(TorqwaveTests PRIVATE
     Tests/GeneratorTests.cpp
     Tests/InstrumentTests.cpp
     Tests/SwarmGuitarTests.cpp
+    Tests/SamplerTests.cpp
+    Tests/SamplerContent.cpp
     Tests/InstrumentKeysTests.cpp
     Tests/SoundDemos.cpp
     Tests/SignalConsoleTests.cpp
@@ -629,6 +655,9 @@ target_sources(TorqwaveTests PRIVATE
     Source/SwarmGuitarPresets.cpp
     Source/DrumMaps.cpp
     Source/SwarmGuitarEditor.cpp
+    Source/Sampler.cpp
+    Source/SamplerEditor.cpp
+    Source/SamplerTrack.cpp
     Source/DrumMachine.cpp
     Source/DrumMachineEditor.cpp
     Source/EffectPresets.cpp
@@ -838,6 +867,7 @@ endif()
 target_link_libraries(TorqwaveTests PRIVATE
     TorqwaveArt
     TorqwavePresets
+    TorqwaveSamples
     TorqwaveGuide
     TorqwaveLame
     TorqwaveStretch

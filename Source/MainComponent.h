@@ -2,6 +2,7 @@
 
 #include "AudioEdits.h"
 #include "AudioEngine.h"
+#include "SamplerTrack.h"
 #include "AiAssistant.h"
 #include "AiCatalogue.h"
 #include "AuditionPreview.h"
@@ -148,6 +149,16 @@ private:
     void save();
     void saveAs (std::function<void (bool saved)> done = {});
     void saveSelectionAs();
+
+    /** New Sampler Track from Selection: the selection (the whole file with none) as the sound of
+        a new Torqwave Sampler track. A saved file as it stands is sampled where it is; anything
+        else is written into the Samples folder first. */
+    void samplerFromSelection();
+
+    /** A new instrument track with Torqwave Sampler playing the sound (sliced: cut at its markers or
+        hits, with a note clip at `position` playing the slices and the clip it came from muted),
+        and its window opened. One undo step. */
+    void addSamplerTrack (const SamplerTrack::Sound&, bool slices, juce::int64 position, juce::uint32 fromClip);
     void chooseFileRegionsFolder (bool betweenMarkers);
     void saveFileRegions (const juce::File& folder, bool betweenMarkers);   // through the rack when an effect is on in it
 

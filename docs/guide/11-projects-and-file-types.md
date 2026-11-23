@@ -22,6 +22,7 @@ A project brings everything back as you left it. Use **File > Save Project** and
 
 - Saving a project doesn't change the files you opened.
 - A file with unsaved changes, or one that was never saved, is written as a 32-bit float WAV into a folder beside the project, named "<project> Files". The open file then becomes that copy.
+- A session that was never saved on its own is kept in that folder too, and the samples its [Torqwave Sampler](07-instruments-and-midi.md#torqwave-sampler) tracks play are copied into "<project> Files/Samples" with it. A session with a file of its own keeps naming its samples where they are: **Save a Copy with Audio** gathers them. The sampler's factory samples are never copied; every Torqwave has them.
 - An untitled session with tracks is saved into the same folder.
 - **Keep the folder with the project.** Paths inside the project's own folder are stored relative to it, so you can move or copy the folder as a whole.
 

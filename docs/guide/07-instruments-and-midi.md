@@ -2,11 +2,11 @@
 
 [Guide](README.md) › Instruments and MIDI
 
-An **instrument track** plays a synthesizer: Torqwave's built-in Torqwave Synth, Basic Drums or StringSwarm, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
+An **instrument track** plays an instrument: Torqwave's built-in Torqwave Synth, Basic Drums, StringSwarm or Torqwave Sampler, or any VST3 instrument (Audio Unit too on the Mac, and LV2 on the Mac and Linux) that your [plug-in scan](04-effects-and-the-rack.md#plug-ins) found. It holds **note clips**, not audio. You put the notes in by drawing them, typing them, playing them on a MIDI keyboard, or importing a MIDI file.
 
 ## Make an instrument track
 
-- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Torqwave Synth, Basic Drums and StringSwarm come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
+- **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Torqwave Synth, Basic Drums, StringSwarm and Torqwave Sampler come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
 - **Turn an empty audio track into an instrument track:** right-click its header and choose **Instrument Track**. Choose it again to turn it back.
 
 The header's instrument button, which shows the instrument's name (or **Inst** when there is none), chooses, swaps or opens the instrument. It takes the place of the record button. Effects added with **FX** run after the instrument, as on any track.
@@ -33,7 +33,7 @@ The selected instrument track plays whatever comes in live:
 - **A MIDI keyboard.** Turn its input on in **Settings... > Audio**.
 - **Window > On-Screen Keyboard** (Option-K). While it shows, docked or floating, your computer's keys play from any of Torqwave's windows, in place of the shortcuts on those keys: **Q W E R T Y U I O P** are the white keys from C and **2 3 5 6 7 9 0** the black ones. **Z** and **X** move the octave down and up, **C** and **V** the velocity. The button on the keyboard switches to the A row (**A S D F G H J K L ; '**, with **W E T Y U O P** for the black keys), and the choice is kept. The keys play nothing while you type in a text box, or with Command, Control or Option held. You can click its keys too. Its line at the top says which track it plays, or why nothing will sound.
 - **The instrument's own window.** Open it from the instrument button's menu (**Instrument Window**). The same keys play that instrument without the keyboard panel, a strip of keys along the bottom of the window plays by the mouse, and the **left and right arrows** load the previous and the next sound, so you can go through sounds while playing. A plug-in's own keys sound too, even while the session is stopped.
-- **Audition** (the ♪ button after the arrows in the presets row, on to begin with). With it on, each sound you choose in an instrument's window plays at once: a low line for a bass, a held chord for a pad, a rising figure for a lead, hits for percussion, a beat on Basic Drums. Play a key and it stops. It keeps quiet while the session plays, so you hear your own part on each sound. Turn it off for silence while you browse. **Loop** (↻), right after it, makes the phrase go round until you press **Stop** (■, beside Loop) or choose another sound, so you can turn knobs or play along while it repeats. It plays in the keys' octave: press Z or X and it moves down or up with them, even while it loops (a drum kit's stays on its drums). It plays at the session's tempo where the playhead stands, and follows it when the tempo changes; with no session it plays at 125 BPM. The **▾** after Stop (it shows the pattern's name where the row is wide) chooses what the audition plays: a dozen patterns for basses, leads, chords, stabs and drum kits (rolling 16ths, an EBM gallop, an acid line with slides, long notes so wobbles have time to move, chord progressions, four on the floor and more), eight for drones, hits and StringSwarm. Each kind of sound keeps its own choice, so basses can roll while pads swell.
+- **Audition** (the ♪ button after the arrows in the presets row, on to begin with). With it on, each sound you choose in an instrument's window plays at once: a low line for a bass, a held chord for a pad, a rising figure for a lead, hits for percussion, a beat on Basic Drums. Torqwave Sampler gets a beat when it plays slices, hits when its zones are one-shots, a held chord when a zone loops, and a rising figure otherwise. Play a key and it stops. It keeps quiet while the session plays, so you hear your own part on each sound. Turn it off for silence while you browse. **Loop** (↻), right after it, makes the phrase go round until you press **Stop** (■, beside Loop) or choose another sound, so you can turn knobs or play along while it repeats. It plays in the keys' octave: press Z or X and it moves down or up with them, even while it loops (a drum kit's stays on its drums). It plays at the session's tempo where the playhead stands, and follows it when the tempo changes; with no session it plays at 125 BPM. The **▾** after Stop (it shows the pattern's name where the row is wide) chooses what the audition plays: a dozen patterns for basses, leads, chords, stabs and drum kits (rolling 16ths, an EBM gallop, an acid line with slides, long notes so wobbles have time to move, chord progressions, four on the floor and more), eight for drones, hits and StringSwarm. Each kind of sound keeps its own choice, so basses can roll while pads swell.
 - **The Piano Roll's keyboard** (see below).
 
 <img src="../screenshots/guide-synth.png" width="720" alt="The Torqwave Synth window playing the Turbine Throat bass, one voice sounding: the patch browser and the presets row with its arrows, Audition, Loop, Stop and pattern buttons and the Knobs / Decrypt switch along the top; three oscillator panels with their wavetables drawn in depth, Sub and Noise, two filters with their response curves, Amp and Voice, the envelopes and LFOs, four named macros and the modulation slots; and the playing keys along the bottom">
@@ -112,7 +112,7 @@ Every patch of the second bank has four macros that do something, named for what
 
 Torqwave Synth plays the velocity of each note and answers the controllers a lane draws: **Pitch bend** (two semitones either way, or the patch's Bend range), **Mod wheel**, **Aftertouch** (channel and poly) and the macros, each moving whatever a patch routes it to, **Volume** (CC 7) and **Expression** (CC 11), **Pan** (CC 10), **Sustain** (CC 64, holding notes while it is down), **Resonance** (CC 71, up toward the most) and **Cutoff** (CC 74, down as far as eight octaves below the Cutoff knob). Other instruments answer what their makers chose.
 
-The built-in instruments' tempo-synced settings run at the session's tempo, through tempo changes too: Torqwave Synth's delay, synced LFOs and step patterns, Basic Drums' delay and StringSwarm's Strum Sync. Stopped, they read the tempo where the playhead stands, so a tempo you type in is heard at once. Plug-ins are given the same (see [Tempo and bars](06-multitrack-sessions.md#tempo-and-bars)).
+The built-in instruments' tempo-synced settings run at the session's tempo, through tempo changes too: Torqwave Synth's delay, synced LFOs and step patterns, Basic Drums' delay, StringSwarm's Strum Sync and Torqwave Sampler's LFO Sync. Stopped, they read the tempo where the playhead stands, so a tempo you type in is heard at once. Plug-ins are given the same (see [Tempo and bars](06-multitrack-sessions.md#tempo-and-bars)).
 
 A session saved before 0.20.0 opens with its synth settings (from Basic Synth, as it was called then) mapped to the nearest new ones (its wave as oscillator 1's position, its oscillators 2 and 3, its filter as an SVF, its filter envelope and velocity to filter as modulation slots, glide as legato). It sounds close, but not the same.
 
@@ -186,6 +186,82 @@ Its window draws the guitar: the strings with the lowest at the bottom, each nam
 | **Attack**, **Decay**, **Sustain Lvl** | The swarm's envelope: how long a note swells in, how long it falls to the sustain level (and the filter closes), and the level a held note stays at. Release lets it go. |
 
 Six notes can sound at once; a seventh takes the oldest's place. It answers pitch bend (2 semitones), volume, expression and the sustain pedal. Nothing stops dead: a note let go is damped, and stopping playback fades it over 20 ms. Its settings can be automated and saved as presets like any effect's.
+
+### Torqwave Sampler
+
+**Torqwave Sampler** plays recordings: a sound of your own across the keys, or cut into slices with each piece on its own key. It is new in 0.20.0.
+
+<img src="../screenshots/guide-sampler.png" width="720" alt="The Torqwave Sampler window playing a held note across the keys: the Keys and Slices switch and the presets row along the top; the Sample panel with the waveform, the part's start and end, a loop shaded with its crossfade handle along the top and a line where the note is playing; the Keys panel with the zone drawn over two octaves either side of its root; the Zone panel with Root, Tune, Zone Level, Zone Pan and Crossfade, the loop and choke choices, Reverse, One-Shot and Loop in Release, and Find Pitch, Find Loop and Remove Zone; and the Amp, Filter, LFO and Voice panels">
+
+*Torqwave Sampler playing a looped note. The picture is drawn by Torqwave's tests, without the strip of playing keys the window has in the app.*
+
+**Give it a sound.** Drop an audio file on the window, click **Open...**, or double-click the empty waveform. Any type Torqwave opens will do. A file can come from the Finder, from the **Sound Library** (a whole sound, or the part you dragged out of its preview), or from the **Files** panel: an open file that is saved is sampled where it is, and one with unsaved changes, or never saved, is written into Music > Torqwave > Samples first. The sound becomes a **zone** over every key, and Torqwave measures its pitch to set the key that plays it as it was recorded (the **root**) and its tuning. A sound with no clear pitch gets C4. A WAV file that carries its own root note and loop (many sample libraries' files do) keeps those.
+
+**Straight from the editor or a clip**, without opening the window first:
+
+- In the editor, **File > New Sampler Track from Selection** makes the selection (the whole file with none) the sound of a new sampler track in the session, with its pitch found, and opens the window. Markers inside the selection go with it, so Slices can cut at them.
+- In a session, right-click an audio clip: **New Sampler Track from Clip** plays the clip's sound across the keys, and **Slice to Sampler Track** cuts it at its hits (or at the markers its file has there), writes the notes that play the slices where the clip is, and mutes the clip, so the session sounds the same and every hit is a note. The new track shows the drum grid, with a row named for each slice.
+
+**Zones.** A zone is a sample with the keys and velocities that play it. One sampler holds up to 128.
+
+- Drop **several files at once**: when each has a clear pitch they become zones around their own notes, sharing the keys between them; otherwise each goes on a key of its own, as a one-shot, from the key they land on (or from C2).
+
+- Drop another sound **on the key map** and it becomes a new zone over the octave from the key it lands on. Dropped anywhere else, a sound replaces the selected zone's sample and keeps its keys.
+- In the **Keys** panel each zone is drawn over its keys, and from bottom to top over the velocities that play it. Click a zone to select it. Drag its left or right edge to set its keys, and its top or bottom edge to set its velocities. Zones that overlap play together, so layers, and soft and hard samples of one sound, are zones.
+- The dot on the keys is the zone's root. Click the keys to hear a key.
+
+**The waveform** shows the selected zone's sample. The two white lines are where the part played **starts** and **ends**: drag them. Scroll to move along, and Cmd-scroll or pinch to zoom. A line shows where each sounding note is.
+
+**The zone's settings:**
+
+| Setting | What it does |
+|---|---|
+| **Root**, **Tune** | The key that plays the sample at its own pitch, and its tuning in cents. **Find Pitch** measures them again from the part played. |
+| **Zone Level**, **Zone Pan** | The zone's own level and place. |
+| **Loop** | **No Loop**, **Loop** (round and round between the two loop lines) or **Loop Back and Forth**. Drag the loop lines in the waveform. |
+| **Crossfade** | For a forward loop: how much of the loop's end fades into what comes before its start, so the turn can't be heard. Drag the dot along the top of the waveform, or turn the knob. The file is not changed. |
+| **Find Loop** | Looks for a loop in the held part of the sound, with a short crossfade. It is a suggestion: move the lines afterwards if you hear the turn. For a sound without a pitch it loops the later part under a long crossfade. |
+| **Loop in Release** | On: the loop goes on while the note dies away. Off: a note let go plays on from the loop to the sample's end. |
+| **Reverse** | Plays the part backwards. |
+| **One-Shot** | The sample plays to its end whatever the note's length, as a drum hit should. A one-shot doesn't loop. |
+| **Choke** | Zones in one choke group cut each other off, as a closed hat cuts an open one. |
+
+**The sound's settings** are for every zone: **Amp** (Attack, Decay, Sustain, Release, and how much Velocity sets the level), **Filter** (a low-pass at 12 or 24 dB an octave, a band-pass or a high-pass, with Cutoff, Reso, Key tracking, Vel for velocity to cutoff, and an envelope of its own: Env is how far it opens the filter), **LFO** (five shapes, a Rate in Hz or, with Sync, in note values at the session's tempo, a Fade In, and how far it moves the pitch, filter, level and pan) and **Voice** (Level, Pan, Transpose, Fine, the Bend range, Glide, the vibrato the mod Wheel adds, and Poly or Mono). These can be automated like any instrument's settings.
+
+#### Slices
+
+<img src="../screenshots/guide-sampler-slices.png" width="720" alt="The Torqwave Sampler window in Slices: a two-bar drum loop in the waveform with a cut at each of its 20 hits, each slice numbered, the fifth lit; the Slices panel with the source set to Hits, Cut Each Other, and 20 pads; the Slice panel with the slice's settings, One-Shot on, and Slice Again with its Sensitivity knob">
+
+*A drum loop cut at its hits: twenty slices, each a pad and a key.*
+
+Switch **Keys** to **Slices** at the top, and the sample is cut into pieces, each on its own key from C2 (where a kick sits) upward, up to 64. A break becomes a kit; a field recording becomes a set of hits.
+
+- **Where the cuts come from:** the choice in the Slices panel. **Hits** finds the attacks in the sound; **Markers** cuts at the file's markers; **Regions** makes a slice of each region; **Equal Parts** cuts it into 2 to 64 pieces of one length. Mark a file in the editor first and Markers or Regions cuts exactly where you chose. A file with no markers is cut at its hits.
+- **Sensitivity** is for hits: at 100 % every attack found is a cut, and lower only the louder ones. **Slice Again** cuts with the settings as they are now. It starts again from the whole sample, so cuts you moved or added by hand are lost.
+- **Move a cut** by dragging its line in the waveform. **Add** one with a double-click. **Remove** one with an Option-click: its two slices become one. The slices after it move to the next keys.
+- **The pads** play the slices: click one (nearer the top is louder). A pad lights while its slice plays, from a click or from the session.
+- **Cut Each Other** makes each slice stop the one before, as playing a break by hand needs.
+- Each slice has the zone's settings: its own level, pan, tuning and Reverse. Slices are one-shots to begin with.
+
+**Nothing stops dead.** A note taken over by a new one, a choked zone and everything on stop or loop fade over 4 ms; a note's start and a sample's end are faded over a fraction of a millisecond. At its own pitch a sample plays exactly as recorded. Up to 32 notes sound at once. It answers pitch bend, the mod wheel (vibrato), volume, pan, expression and the sustain pedal.
+
+**Everywhere an instrument goes.** Generate from Instrument, freeze, bounce and Mix Down play it as they play any instrument; a sequence saved with a sampler as its voice brings the sampler back with its samples; its settings can be drawn and written as automation.
+
+**Factory presets.** The presets row lists eleven, and the set is small on purpose: Torqwave Sampler is for your own sounds. Every sample in them was rendered by Torqwave from its own instruments, 26 samples and 8.2 MB in all.
+
+| Category | Presets | What they are |
+|---|---|---|
+| Keys, Pad, Strings, Bell, Bass, Pluck | Hammer Tine, Concrete Pad, Iron Cello, Cold Bell, Warehouse Sub, Dark Kalimba | Notes of the Torqwave Synth patches of those names, sampled at three or four keys an octave apart (a bass at E1, C2 and G2). The pad, the cello and the sub are looped; the others ring out. |
+| Guitar | One Note Guitar | StringSwarm's Every String One Note, at E2 and E3. |
+| Sliced Kits | Dark Techno Break, Industrial Break, EBM Machine Break, Breaks Break | Two bars of a Basic Drums kit each, at 120 to 135 BPM, cut at their hits: 19 to 31 slices from C2. They are there to show slices; any drum loop of yours does the same. |
+
+They play in the octave their source does: the sub and the cello sound an octave under the key, the kalimba an octave over. A session that uses one finds its samples on any computer with Torqwave.
+
+**Presets.** A preset saved from the presets row keeps the knobs and the zones. It names each sample's file where it is; it does not hold the audio. Move or rename the files and the preset's zones come up missing (see below).
+
+**What it holds, and what it doesn't do.** Samples are held whole in memory, not played from disk: one sample can be up to 10 minutes long, and one sampler holds up to 1 GB of samples (about 46 minutes of 48 kHz stereo). A file past either is refused, and the status line says why. Two samplers playing the same file hold it once. There is no import of sample libraries (SFZ, SF2 or others), no round robins, one stereo output, and a sample played higher is shorter, as on any sampler that plays by resampling.
+
+**In a session.** The session keeps the sampler's settings and zones, and names each sample by where it is beside the session as well as by its full path, as it does for clips' audio: move the session's folder with its audio and it still opens. **Save a Copy with Audio** copies the samples into the copy's Audio/Samples folder. A sample that can't be found leaves its zone silent and red in the key map, the rest playing; the session says which files are missing, and **Locate...** in the window finds one where it is now, and looks in the same folder for the others.
 
 ## Edit the notes: the Piano Roll
 

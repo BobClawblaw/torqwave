@@ -156,6 +156,7 @@ WAV files keep markers and regions inside the file; AIFF keeps markers.
 | Save Selection As... | Just the selection, as a new file |
 | Save Each Region As... | One file for each region |
 | Save Pieces Between Markers As... | One file for each piece between markers |
+| New Sampler Track from Selection | Nothing, for a saved file: the selection (the whole file with none) becomes the sound of a new [Torqwave Sampler](07-instruments-and-midi.md#torqwave-sampler) track in the session. A file with unsaved changes, or one never saved, has the selection written into Music > Torqwave > Samples first |
 | Save Channels as Mono Files... | One mono file for each channel |
 | Export as MP3 or AAC... | A compressed copy |
 | Export with ffmpeg... | Opus, WavPack, AC-3 and others (needs ffmpeg) |

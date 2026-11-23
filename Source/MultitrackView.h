@@ -65,6 +65,9 @@ public:
 
     /** A row of the Files panel dropped: that open file to add as a clip, on the track (or past the last) at the frame. */
     std::function<void (int openFile, int track, juce::int64 frame)> onOpenFileDropped;
+
+    /** A clip's menu: a new sampler track from the clip, across the keys or (slices) cut at its hits. */
+    std::function<void (juce::uint32 clipId, bool slices)> onSamplerFromClip;
     std::function<void()> onSelectionChanged;
 
     /** Option-dragging a clip's end (or start) and letting go: stretch the clip to this length, by

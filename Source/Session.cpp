@@ -15,6 +15,7 @@
 #include "SampleRateConverter.h"
 #include "TimeStretch.h"
 #include "TrackColours.h"
+#include "Sampler.h"
 
 //==============================================================================
 juce::int64 SessionState::getLength() const
@@ -5308,6 +5309,9 @@ void readEnvelopes (SessionState& state, juce::uint32 trackId, const juce::XmlEl
 juce::String save (const SessionState& state, const juce::File& target,
                    const std::function<std::unique_ptr<juce::XmlElement> (juce::uint32 trackId)>& trackEffects)
 {
+    // A sampler among the tracks' instruments names its samples relative to the session's folder too.
+    const Sampler::SavingInto saving (target.getParentDirectory());
+
     juce::XmlElement root ("TORQWAVE_SESSION");
     root.setAttribute ("version", 1);
     root.setAttribute ("sampleRate", state.sampleRate);
@@ -5783,6 +5787,9 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
         result.error = file.getFileName() + " is not a Torqwave session.";
         return result;
     }
+
+    // Where its samplers look first for samples named relative to it.
+    Sampler::setSessionFolder (file.getParentDirectory());
 
     auto& state = result.state;
     state.sampleRate = root->getDoubleAttribute ("sampleRate", 48000.0);

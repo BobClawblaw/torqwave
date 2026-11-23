@@ -3,6 +3,7 @@
 // The player is never started, so nothing is heard.
 
 #include <JuceHeader.h>
+#include "../Source/Sampler.h"
 #include "../Source/SequenceLibrary.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/PluginScanner.h"
@@ -38,6 +39,8 @@
 #include "../Source/WaveSynth.h"
 #include "../Source/DrumMachine.h"
 #include "SwarmGuitarTests.h"
+#include "SamplerTests.h"
+#include "SamplerContent.h"
 #include "InstrumentKeysTests.h"
 #include "SoundDemos.h"
 #include "SignalConsoleTests.h"
@@ -665,6 +668,20 @@ int main (int argc, char* argv[])
     SequenceLibrary::setFactoryFolder (factoryPresets);
     SequenceLibrary::setSearchesFile (factoryPresets.getSiblingFile ("Sequence Searches.xml"));
 
+    // The sampler's factory samples too: unpacked into a folder of this run's own, taken away when it ends.
+    struct FactorySamples
+    {
+        FactorySamples()
+        {
+            Sampler::unpackFactorySamples (folder);
+            Sampler::setFactoryFolder (folder);
+        }
+
+        ~FactorySamples()       { folder.deleteRecursively(); }
+
+        juce::File folder = juce::File::createTempFile ("factorysamples");
+    } factorySamples;
+
     if (const auto i = args.indexOf ("--decrypt-real"); i >= 0)
     {
         juce::StringArray files;
@@ -800,6 +817,18 @@ int main (int argc, char* argv[])
         return 0;
     }
 
+    if (const auto folder = valueOf ("--sampler-window"); folder.isNotEmpty())
+    {
+        saveSamplerWindow (juce::File (folder));
+        return 0;
+    }
+
+    if (const auto folder = valueOf ("--sampler-content"); folder.isNotEmpty())
+    {
+        writeSamplerContent (juce::File (folder));
+        return 0;
+    }
+
     if (args.contains ("--voice-names"))
     {
         // The factory patches and kits a sequence preset's voice can name, for Scripts/make_presets.py.
@@ -832,6 +861,15 @@ int main (int argc, char* argv[])
     {
         AudioEngine engine;
         runSwarmGuitarTests (engine);
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (args.contains ("--sampler"))
+    {
+        AudioEngine engine;
+        runSamplerTests (engine);
+        runSamplerTrackTests (engine);
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }
@@ -1107,6 +1145,7 @@ int main (int argc, char* argv[])
         runGeneratorTests();
         runInstrumentTests (engine);
         runSwarmGuitarTests (engine);
+        runSamplerTests (engine);
         runDrumMachineTests (engine);
         runSoundControlsTests();
         runInstrumentTrackTests (engine);

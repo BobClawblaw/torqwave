@@ -1,5 +1,6 @@
 #include "EffectPresets.h"
 #include "GraphicEq.h"
+#include "Sampler.h"
 #include "SwarmGuitar.h"
 
 /* The presets that come with Torqwave: starting points for the jobs a restoration, mixing or
@@ -474,6 +475,7 @@ namespace
 
         // Instruments
         t[BuiltInEffects::swarmGuitarId] = BuiltInEffects::swarmGuitarPresets();
+        t[BuiltInEffects::samplerId] = BuiltInEffects::samplerPresets();
 
         // Generators
         t["torqwave:generate-tone"] = {

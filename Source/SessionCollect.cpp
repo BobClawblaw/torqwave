@@ -1,4 +1,5 @@
 #include "SessionCollect.h"
+#include "Sampler.h"
 
 namespace SessionCollect
 {
@@ -69,6 +70,21 @@ juce::String save (const SessionState& s, const juce::File& sessionFile,
         if (from != to && ! from.copyFileTo (to))
             return "Could not copy " + from.getFullPathName() + " to " + to.getFullPathName();
 
-    return SessionFile::save (p.state, sessionFile, trackEffects);
+    // The samples its samplers play go with it too, into Audio/Samples, and the copy names those.
+    juce::String sampleError;
+    std::vector<std::pair<juce::File, juce::File>> samples;
+
+    const auto withSamples = [&] (juce::uint32 trackId)
+    {
+        auto effects = trackEffects ? trackEffects (trackId) : nullptr;
+
+        if (effects != nullptr && sampleError.isEmpty())
+            sampleError = Sampler::collectFiles (*effects, sessionFile.getParentDirectory(), folder.getChildFile ("Samples"), samples, missing);
+
+        return effects;
+    };
+
+    const auto error = SessionFile::save (p.state, sessionFile, withSamples);
+    return error.isNotEmpty() ? error : sampleError;
 }
 }

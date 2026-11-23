@@ -182,7 +182,7 @@ Bar::Bar (Store& s, juce::String effectKey, std::function<Values()> current, std
                 applyValues (made[(size_t) id - 1].values);
 
                 if (applyTexts != nullptr)
-                    applyTexts ({});
+                    applyTexts (made[(size_t) id - 1].texts);
             }
         }
 

@@ -963,7 +963,7 @@ namespace
             const juce::DragAndDropTarget::SourceDetails openFile ("openfile:0", nullptr, {}), other ("dockPanel:Files", nullptr, {});
             const auto unhooked = ! view.isInterestedInDragSource (openFile);
             SoundDrops::isSound = [] (const juce::var& d) { return d.toString() == "openfile:0"; };
-            SoundDrops::soundOf = [&clip] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { clip, rate, "Dropped" }; };
+            SoundDrops::soundOf = [&clip] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { clip, rate, "Dropped", {}, {} }; };
             const auto wanted = view.isInterestedInDragSource (openFile) && ! view.isInterestedInDragSource (other);
             view.itemDropped (openFile);
             const auto searching = view.getSearch() != nullptr;

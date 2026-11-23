@@ -55,6 +55,7 @@ namespace EffectPresets
         juce::String name;
         Values values;
         juce::String category = {};    // a sub-menu of the list to show it in; none, the list itself
+        Texts texts = {};              // what it carries besides its values (the sampler's zones), given to carryTexts' apply
     };
 
     /** The effect's factory presets, in the order they are listed (none for an effect without any). */

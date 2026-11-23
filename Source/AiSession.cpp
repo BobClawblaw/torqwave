@@ -1,3 +1,4 @@
+#include "SamplerTrack.h"
 #include "AiSession.h"
 #include "ClipEffects.h"
 #include "Picture.h"
@@ -124,6 +125,27 @@ namespace
                     "tables_only": { "type": "boolean", "description": "true: only the synth's own waves (never a table sampled from the clip). Leave out for either." } }, "required": ["clip", "track"] } },
   { "name": "table_from_clip", "description": "Give one oscillator of the Torqwave Synth an instrument track plays a Sampled wavetable made from an audio clip (up to 30 s of it): the clip's tone at steps through it, so the oscillator's Position plays through the sound from start to end. The rest of the patch stays as it is. Made once the plan is applied.",
     "parameters": { "type": "object", "properties": { CLIP, TRACK, "oscillator": { "type": "integer", "description": "1, 2 or 3." } }, "required": ["clip", "track", "oscillator"] } },
+  { "name": "sampler_from_clip", "description": "Make an audio clip the sound of a new instrument track playing Torqwave Sampler, the sampler built in. Across the keys (the default): the clip's part of its file plays at every key, its pitch found so the key it was recorded at plays it as it is. With slices: the clip is cut at its hits (or at the markers its file has there), each slice goes on its own key from C2 (36) up, a note clip that plays the slices as the sound was is put where the audio clip is, and the audio clip is muted, so the session sounds the same and every hit is a note to move with the note tools. It samples the file as recorded, without the clip's gain, fades or effects. The sampler is loaded once the plan is applied.",
+    "parameters": { "type": "object", "properties": { CLIP, "slices": { "type": "boolean", "description": "true: cut it into slices on keys, with the notes that play them. Leave out to play it across the keys." } }, "required": ["clip"] } },
+  { "name": "set_sampler", "description": "Change the Torqwave Sampler an instrument track already plays: a zone's keys, root, part, loop and switches, or how it plays (zones across the keys, or slices). Give only what should change. Times are seconds from the start of the sample. Made once the plan is applied, outside its undo step. get_session says what a sampler holds.",
+    "parameters": { "type": "object", "properties": { TRACK,
+                    "zone": { "type": "integer", "description": "Which zone (or slice), from 1; 1 when left out." },
+                    "root": { "type": "string", "description": "The key that plays the sample at its own pitch, as a note name (A2) or number." },
+                    "tune": { "type": "number", "description": "Cents, -100 to 100." },
+                    "low_key": { "type": "string" }, "high_key": { "type": "string" },
+                    "low_velocity": { "type": "integer", "description": "1 to 127." }, "high_velocity": { "type": "integer" },
+                    "start": { "type": "number", "description": "Where the part played starts." }, "end": { "type": "number" },
+                    "loop": { "type": "string", "enum": ["off", "forward", "back_and_forth"] },
+                    "loop_start": { "type": "number" }, "loop_end": { "type": "number" },
+                    "crossfade_ms": { "type": "number", "description": "For a forward loop: how much of its end fades into what comes before its start, 0 to 500." },
+                    "one_shot": { "type": "boolean", "description": "true: plays to its end whatever the note's length, and doesn't loop." },
+                    "reverse": { "type": "boolean" },
+                    "find_pitch": { "type": "boolean", "description": "true: measure the sample's pitch and set root and tune from it." },
+                    "find_loop": { "type": "boolean", "description": "true: look for a loop in the held part of the sound and set it, with a crossfade." },
+                    "mode": { "type": "string", "enum": ["keys", "slices"], "description": "slices: cut the first zone's sample into slices on keys. keys: the sample whole again, one zone over every key." },
+                    "slice_at": { "type": "string", "enum": ["hits", "markers", "regions", "equal_parts"], "description": "Where slices are cut; cuts again." },
+                    "parts": { "type": "integer", "description": "For equal_parts: 2 to 64." },
+                    "sensitivity": { "type": "number", "description": "For hits: 0 to 100; 100 cuts at every attack found, lower only at the louder ones." } }, "required": ["track"] } },
   { "name": "list_drum_maps", "description": "The drum maps the user has saved, by name: each is a kit's sounds, the key each is on and the General MIDI drum it stands for. With a track, also the map that track has now.",
     "parameters": { "type": "object", "properties": { TRACK } } },
   { "name": "set_drum_map", "description": "Give an instrument track a saved drum map by its name from list_drum_maps, or \"General MIDI\" for the standard layout. The map names the drum grid's rows and says which key of the kit each General MIDI drum is on. Notes already on the track stay where they are until remap_clip_notes moves them.",
@@ -421,7 +443,9 @@ namespace Ai
                "clip and says how close it came as a lock figure; it matches one dry note (effects off, no chords), and a lock on "
                "a recording of something that is not a synth is loose, so say so rather than promising a copy. table_from_clip "
                "makes an oscillator's wavetable from a clip. Both change the synth once the plan is applied, outside its undo "
-               "step, and need the track to play Torqwave Synth already. What these tools "
+               "step, and need the track to play Torqwave Synth already. Torqwave Sampler plays recordings: sampler_from_clip "
+               "makes a clip a sampler on a new track, across the keys or cut into slices with the notes that play them; "
+               "set_sampler changes a zone or how a sampler is sliced; get_session says what each sampler holds. What these tools "
                "can't do: recording, replacing an instrument, and changing the audio inside a clip (set_clip_effects puts a pitch "
                "shift and effects on a clip without changing its audio). Say so when a request needs them, rather than doing "
                "something else.";
@@ -464,6 +488,8 @@ namespace Ai
         else if (tool == "freeze_track")   result = freezeTrack (args);
         else if (tool == "decrypt_clip")   result = decryptClip (args);
         else if (tool == "table_from_clip") result = tableFromClip (args);
+        else if (tool == "sampler_from_clip") result = samplerFromClip (args);
+        else if (tool == "set_sampler") result = setSampler (args);
         else if (tool == "bounce_track")   result = bounceTrack (args);
         else if (tool == "add_note_clip")  result = addNoteClip (args);
         else if (tool == "set_instrument") result = setInstrument (args);
@@ -615,6 +641,13 @@ namespace Ai
                                                                                   + " (when the plan is applied)")
                                               : current != instruments.end() ? juce::var (current->second.name) : juce::var ("none"));
             }
+
+            // What a Torqwave Sampler on the track holds, as the session started.
+            if (t.isInstrument)
+                if (const auto c = chains.find (t.id); c != chains.end())
+                    for (auto& effect : c->second)
+                        if (effect.instrument && effect.about.isNotEmpty())
+                            o->setProperty ("sampler", effect.about);
 
             if (t.isFrozen())
                 o->setProperty ("frozen", true);
@@ -2354,7 +2387,7 @@ namespace Ai
                           + (levelled.ranOut ? " (" + juce::String (std::abs (levelled.afterDb - Decrypt::auditionDb), 1) + " dB "
                                                    + (levelled.afterDb < Decrypt::auditionDb ? "quieter" : "louder") + " than the clip: Amp Level at its end)"
                                              : juce::String());
-        synthChanges.push_back ({ t->id, patch, -1, nullptr, step });
+        synthChanges.push_back ({ t->id, patch, -1, nullptr, step, {} });
         steps.add (step);
         auto result = object ({ { "ok", true }, { "step", step }, { "lock", (int) std::lround (best.lock) }, { "patch", patch->name }, { "grown_from", from },
                                 { "pitch", note }, { "seconds", round1 (progress.seconds) }, { "rendered", progress.rendered } });
@@ -2403,7 +2436,289 @@ namespace Ai
 
         const auto step = "Give oscillator " + juce::String (oscillator) + " of " + t->name.quoted() + "'s Torqwave Synth a Sampled table made from clip "
                           + clip->name.quoted() + " (" + juce::String (table->frames) + " frames)";
-        synthChanges.push_back ({ t->id, nullptr, oscillator - 1, std::move (table), step });
+        synthChanges.push_back ({ t->id, nullptr, oscillator - 1, std::move (table), step, {} });
+        steps.add (step);
+        return object ({ { "ok", true }, { "step", step } });
+    }
+
+    const SessionTrack* SessionTools::samplerTrackOf (const juce::var& which, juce::String& error, int& zones) const
+    {
+        const auto index = trackOf (which, error);
+
+        if (! index)
+            return nullptr;
+
+        const auto& t = state.tracks[(size_t) *index];
+        const auto playing = instruments.find (t.id);
+        zones = 0;
+
+        for (auto& l : loads)
+            if (l.trackId == t.id && ! l.onlyPreset)
+            {
+                error = t.name.quoted() + "'s instrument is loaded by this plan; set_sampler works on it in a later request";
+                return nullptr;
+            }
+
+        if (voiceOf (t.id) != nullptr)
+        {
+            error = t.name.quoted() + "'s sampler is loaded when this plan is applied; set_sampler works on it in a later request";
+            return nullptr;
+        }
+
+        if (! t.takesNoteClips() || playing == instruments.end() || playing->second.fileOrIdentifier != BuiltInEffects::samplerId || playing->second.pluginFormatName != BuiltInEffects::formatName)
+        {
+            error = t.name.quoted() + " doesn't play Torqwave Sampler" + (playing != instruments.end() ? " (it plays " + playing->second.name + ")" : juce::String())
+                    + "; sampler_from_clip makes a sampler track from a clip";
+            return nullptr;
+        }
+
+        if (const auto c = chains.find (t.id); c != chains.end())
+            for (auto& effect : c->second)
+                if (effect.instrument)
+                    zones = effect.zones;
+
+        return &t;
+    }
+
+    juce::var SessionTools::samplerFromClip (const juce::var& a)
+    {
+        const auto id = (juce::uint32) (int) a["clip"];
+        const auto where = state.findClip (id);
+
+        if (! where)
+            return refused ("no audio clip with id " + a["clip"].toString() + "; list_clips gives the ids");
+
+        const auto& clip = state.tracks[(size_t) where->first].clips[(size_t) where->second];
+        const auto slices = (bool) a["slices"];
+        juce::String error;
+        const auto sound = SamplerTrack::soundOf (state, id, error);
+
+        if (! sound)
+            return refused (error);
+
+        const auto made = SamplerTrack::make (*sound, slices);
+
+        if (made.error.isNotEmpty() || made.effects == nullptr)
+            return refused (made.error.isNotEmpty() ? made.error : sound->name.quoted() + " could not be sampled");
+
+        const auto position = clip.position;
+        auto next = state;
+        const auto placed = SamplerTrack::place (next, made, position, slices ? id : 0);
+
+        if (placed.trackId == 0)
+            return refused (sound->name.quoted() + " could not be put on a track");
+
+        state = std::move (next);
+        voices.push_back ({ placed.trackId, made.effects, "Torqwave Sampler" });
+        const auto step = slices ? "Slice clip " + sound->name.quoted() + " onto a new Torqwave Sampler track: " + juce::String (made.notes.size()) + " slices on keys from C2, the notes that play them where the clip is, and the clip muted"
+                                 : "Make clip " + sound->name.quoted() + " the sound of a new Torqwave Sampler track, across the keys";
+        auto result = done (step);
+        auto* o = result.getDynamicObject();
+
+        for (size_t i = 0; i < state.tracks.size(); ++i)
+            if (state.tracks[i].id == placed.trackId)
+                o->setProperty ("track", (int) i + 1);
+
+        if (slices)
+        {
+            o->setProperty ("slices", (int) made.notes.size());
+            o->setProperty ("note_clip", (int) placed.clipId);
+        }
+
+        o->setProperty ("note", "the sampler is loaded when the plan is applied; set_sampler can change it in a later request");
+        return result;
+    }
+
+    juce::var SessionTools::setSampler (const juce::var& a)
+    {
+        juce::String error;
+        int zones = 0;
+        const auto* t = samplerTrackOf (a["track"], error, zones);
+
+        if (t == nullptr)
+            return refused (error);
+
+        const auto zone = a["zone"].isVoid() ? 1 : (int) a["zone"];
+        const auto mode = a["mode"].toString().trim().toLowerCase(), sliceAt = a["slice_at"].toString().trim().toLowerCase(), loop = a["loop"].toString().trim().toLowerCase();
+        const auto cutsAgain = mode.isNotEmpty() || sliceAt.isNotEmpty() || ! a["parts"].isVoid() || ! a["sensitivity"].isVoid();
+
+        if (zone < 1 || (zones > 0 && ! cutsAgain && zone > zones))
+            return refused (t->name.quoted() + "'s sampler has " + juce::String (zones) + (zones == 1 ? " zone" : " zones") + ": zone must be from 1 to " + juce::String (juce::jmax (1, zones)));
+
+        if (zones == 0 && chains.find (t->id) != chains.end())
+            return refused (t->name.quoted() + "'s sampler has no sample yet: sampler_from_clip makes a sampler from a clip");
+
+        if (mode.isNotEmpty() && mode != "keys" && mode != "slices")
+            return refused ("mode is keys or slices");
+
+        static const juce::StringArray sources { "markers", "regions", "hits", "equal_parts" }, loops { "off", "forward", "back_and_forth" };
+
+        if (sliceAt.isNotEmpty() && ! sources.contains (sliceAt))
+            return refused ("slice_at is hits, markers, regions or equal_parts");
+
+        if (loop.isNotEmpty() && ! loops.contains (loop))
+            return refused ("loop is off, forward or back_and_forth");
+
+        // Keys by name or number.
+        std::optional<int> root, lowKey, highKey;
+
+        for (auto [name, into] : { std::pair { "root", &root }, std::pair { "low_key", &lowKey }, std::pair { "high_key", &highKey } })
+            if (! a[name].isVoid())
+            {
+                *into = Instrument::parsePitch (a[name].toString());
+
+                if (! into->has_value())
+                    return refused (juce::String (name) + " must be a note name (C3, F#2) or a number from 0 to 127");
+            }
+
+        const auto number = [&a] (const char* name) -> std::optional<double>
+        {
+            return a[name].isVoid() ? std::nullopt : std::optional<double> ((double) a[name]);
+        };
+
+        const auto flag = [&a] (const char* name) -> std::optional<bool>
+        {
+            return a[name].isVoid() ? std::nullopt : std::optional<bool> ((bool) a[name]);
+        };
+
+        const auto tune = number ("tune"), start = number ("start"), end = number ("end"), loopStart = number ("loop_start"), loopEnd = number ("loop_end"),
+                   crossfade = number ("crossfade_ms"), sensitivity = number ("sensitivity"), lowVelocity = number ("low_velocity"), highVelocity = number ("high_velocity"),
+                   parts = number ("parts");
+        const auto oneShot = flag ("one_shot"), reverse = flag ("reverse");
+        const auto findPitch = (bool) a["find_pitch"], findLoop = (bool) a["find_loop"];
+
+        juce::StringArray what;
+
+        if (mode == "slices" || (mode.isEmpty() && cutsAgain))  what.add ("cut into slices" + (sliceAt.isNotEmpty() ? " at " + sliceAt.replace ("_", " ") : juce::String()));
+        if (mode == "keys")                                     what.add ("one zone across the keys again");
+        if (root)                                               what.add ("root " + Instrument::pitchName (*root));
+        if (tune)                                               what.add ("tuned " + juce::String (*tune, 1) + " cents");
+        if (lowKey || highKey)                                  what.add ("keys " + (lowKey ? Instrument::pitchName (*lowKey) : juce::String ("as they are")) + " to " + (highKey ? Instrument::pitchName (*highKey) : juce::String ("as they are")));
+        if (lowVelocity || highVelocity)                        what.add ("its velocities");
+        if (start || end)                                       what.add ("the part played");
+        if (findPitch)                                          what.add ("its pitch found");
+        if (findLoop)                                           what.add ("a loop found");
+        if (loop.isNotEmpty())                                  what.add (loop == "off" ? "no loop" : loop == "forward" ? "looped" : "looped back and forth");
+        if (loopStart || loopEnd)                               what.add ("the loop's ends");
+        if (crossfade)                                          what.add ("a " + juce::String (*crossfade, 0) + " ms crossfade");
+        if (oneShot)                                            what.add (*oneShot ? "one-shot" : "held");
+        if (reverse)                                            what.add (*reverse ? "reversed" : "forwards");
+
+        if (what.isEmpty())
+            return refused ("nothing to change: give at least one setting");
+
+        const auto step = "Set " + t->name.quoted() + "'s Torqwave Sampler" + (cutsAgain ? juce::String() : ", zone " + juce::String (zone)) + ": " + what.joinIntoString (", ");
+
+        SynthChange change;
+        change.trackId = t->id;
+        change.step = step;
+        change.apply = [=] (juce::AudioPluginInstance& plugin)
+        {
+            auto* sampler = dynamic_cast<BuiltInEffects::SamplerProcessor*> (&plugin);
+
+            if (sampler == nullptr)
+                return false;
+
+            auto all = sampler->getZones();
+
+            if (all.empty() || all[0].sample == nullptr)
+                return false;
+
+            if (cutsAgain)
+            {
+                const auto sample = all[0].sample;
+                const auto file = all[0].file;
+                auto how = sampler->getSlicing();
+
+                if (mode == "keys")
+                {
+                    how.on = false;
+                    sampler->setSlicing (how);
+                    sampler->setZones ({});
+
+                    if (sampler->addSample (sample, file).isNotEmpty())
+                        return false;
+                }
+                else
+                {
+                    if (sliceAt.isNotEmpty())
+                        how.source = (Sampler::SliceSource) sources.indexOf (sliceAt);
+
+                    if (parts)
+                        how.parts = juce::jlimit (2, Sampler::maxSlices, (int) *parts);
+
+                    if (sensitivity)
+                        how.sensitivity = (float) juce::jlimit (0.0, 100.0, *sensitivity);
+
+                    if (! sampler->slice (sample, file, {}, how))
+                        return false;
+                }
+
+                all = sampler->getZones();
+            }
+
+            if (zone > (int) all.size())
+                return false;
+
+            auto& z = all[(size_t) (zone - 1)];
+            const auto rate = z.sample != nullptr ? z.sample->rate : 48000.0;
+            const auto frames = [rate] (double seconds)      { return (juce::int64) std::llround (seconds * rate); };
+
+            if (root)           z.root = *root;
+            if (tune)           z.tune = (float) juce::jlimit (-100.0, 100.0, *tune);
+            if (lowKey)         z.lowKey = *lowKey;
+            if (highKey)        z.highKey = *highKey;
+            if (lowVelocity)    z.lowVelocity = juce::jlimit (1, 127, (int) *lowVelocity);
+            if (highVelocity)   z.highVelocity = juce::jlimit (1, 127, (int) *highVelocity);
+            if (start)          z.start = juce::jmax ((juce::int64) 0, frames (*start));
+            if (end)            z.end = frames (*end);
+            if (oneShot)        z.oneShot = *oneShot;
+            if (reverse)        z.reverse = *reverse;
+
+            if (z.highKey < z.lowKey)
+                std::swap (z.lowKey, z.highKey);
+
+            if (z.highVelocity < z.lowVelocity)
+                std::swap (z.lowVelocity, z.highVelocity);
+
+            if (findPitch && z.sample != nullptr)
+            {
+                const auto pitch = Sampler::findPitch (*z.sample, z.span());
+                z.root = pitch.root;
+                z.tune = pitch.tune;
+            }
+
+            if (findLoop && z.sample != nullptr)
+                if (const auto found = Sampler::findLoop (*z.sample, z.span(), Sampler::findPitch (*z.sample, z.span()).hz); found.found)
+                {
+                    z.loop = 1;
+                    z.oneShot = false;
+                    z.loopStart = found.start;
+                    z.loopEnd = found.end;
+                    z.crossfade = found.crossfade;
+                }
+
+            if (loop.isNotEmpty())
+            {
+                // A loop switched on with no ends given takes the second half of the part.
+                if (z.loop == 0 && loop != "off" && z.loopStart == 0 && z.loopEnd < 0 && ! loopStart && ! loopEnd)
+                    z.loopStart = z.span().getStart() + z.span().getLength() / 2;
+
+                z.loop = loops.indexOf (loop);
+
+                if (z.loop != 0)
+                    z.oneShot = false;
+            }
+
+            if (loopStart)      z.loopStart = juce::jmax ((juce::int64) 0, frames (*loopStart));
+            if (loopEnd)        z.loopEnd = frames (*loopEnd);
+            if (crossfade)      z.crossfade = (float) juce::jlimit (0.0, 500.0, *crossfade);
+
+            sampler->setZones (std::move (all));
+            return true;
+        };
+
+        synthChanges.push_back (std::move (change));
         steps.add (step);
         return object ({ { "ok", true }, { "step", step } });
     }

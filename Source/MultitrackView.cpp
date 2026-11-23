@@ -1416,6 +1416,18 @@ juce::PopupMenu MultitrackView::tempoMenu (const SessionClip& clip)
         });
     });
 
+    // The clip as an instrument: Torqwave Sampler playing its file.
+    menu.addItem ("New Sampler Track from Clip", clip.source != juce::File() && onSamplerFromClip != nullptr, false, [safe, id]
+    {
+        if (safe != nullptr && safe->onSamplerFromClip != nullptr)
+            safe->onSamplerFromClip (id, false);
+    });
+    menu.addItem ("Slice to Sampler Track", editable && clip.source != juce::File() && onSamplerFromClip != nullptr, false, [safe, id]
+    {
+        if (safe != nullptr && safe->onSamplerFromClip != nullptr)
+            safe->onSamplerFromClip (id, true);
+    });
+
     return menu;
 }
 

@@ -3,6 +3,7 @@
 #include "DrumMachine.h"
 #include "DrumMaps.h"
 #include "SwarmGuitar.h"
+#include "Sampler.h"
 #include "WaveSynth.h"
 
 namespace Ai
@@ -69,6 +70,11 @@ std::vector<FactorySound> FactorySounds::of (const juce::PluginDescription& d)
         for (auto& p : EffectPresets::factory (BuiltInEffects::swarmGuitarId))
             sounds.push_back ({ p.name, p.category, {} });
     }
+    else if (isBuiltIn (d, BuiltInEffects::samplerId))
+    {
+        for (auto& p : EffectPresets::factory (BuiltInEffects::samplerId))
+            sounds.push_back ({ p.name, p.category, {} });
+    }
 
     return sounds;
 }
@@ -110,6 +116,17 @@ std::optional<juce::MemoryBlock> FactorySounds::stateOf (const juce::PluginDescr
                 guitar.getStateInformation (state);
                 return state;
             }
+
+    if (isBuiltIn (d, BuiltInEffects::samplerId))
+    {
+        BuiltInEffects::SamplerProcessor sampler;
+
+        if (! sampler.loadFactory (name))
+            return std::nullopt;
+
+        sampler.getStateInformation (state);
+        return state;
+    }
 
     return std::nullopt;
 }

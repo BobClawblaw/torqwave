@@ -60,6 +60,11 @@ namespace Ai
             juce::PluginDescription plugin;
             bool instrument = false, bypassed = false;
             std::vector<Parameter> parameters;
+
+            // For Torqwave Sampler: what it holds, in a line (its zones or slices and their files),
+            // and how many zones that is.
+            juce::String about;
+            int zones = 0;
         };
 
         /** Each track's chain in order, its instrument first, by track id. */
@@ -169,6 +174,10 @@ namespace Ai
             int oscillator = -1;
             std::shared_ptr<const WaveTables::Sampled> table;
             juce::String step;
+
+            // Any other change to the track's instrument (set_sampler's, to a Torqwave Sampler): given
+            // the instrument, false when it can't be made. With one, patch and table are not used.
+            std::function<bool (juce::AudioPluginInstance&)> apply;
         };
 
         /** The synth changes the plan makes, in order, for tracks still in it. */
@@ -222,6 +231,12 @@ namespace Ai
         juce::var freezeTrack (const juce::var&);
         juce::var decryptClip (const juce::var&);
         juce::var tableFromClip (const juce::var&);
+        juce::var samplerFromClip (const juce::var&);
+        juce::var setSampler (const juce::var&);
+
+        /** The instrument track a call names, when it plays Torqwave Sampler already (not one the
+            plan loads); sets error otherwise. zones gets how many zones it has (0 when unknown). */
+        const SessionTrack* samplerTrackOf (const juce::var& which, juce::String& error, int& zones) const;
 
         /** The audio clip a call names, its track, and its sound (up to `seconds` from its start, its
             channels at the session's rate); sets error when there is none. */

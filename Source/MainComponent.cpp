@@ -1,6 +1,7 @@
 #include "MainComponent.h"
 #include "InstrumentKeys.h"
 #include "SoundDrops.h"
+#include "SamplerTrack.h"
 #include "WaveSynth.h"
 #include "AiDecrypt.h"
 #include "SequencePropertiesDialog.h"
@@ -212,6 +213,7 @@ namespace
         cmdShowSequenceLibrary, cmdAddToSequenceLibrary, cmdShowSequencer, cmdShowIdeaBoard,
         cmdCrossfadeSelected, cmdEditCrossfade,
         cmdNewFromClipboard, cmdHandTool,
+        cmdSamplerFromSelection,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -226,7 +228,7 @@ namespace
             || (id >= cmdBoxTool && id <= cmdExportLossy) || id == cmdTimeTool || id == cmdHandTool || id == cmdExportFfmpeg || id == cmdFileInfo
             || id == cmdRecordSequence || id == cmdPlaySequence || id == cmdSaveChannels
             || id == cmdStretch || id == cmdExtremeStretch || id == cmdPitch || id == cmdDereverb || id == cmdLevelSpeech || id == cmdCentreChannel || id == cmdPhaseCorrection || id == cmdGenerateTones || id == cmdPitchCorrection
-            || id == cmdGenerateInstrument;
+            || id == cmdGenerateInstrument || id == cmdSamplerFromSelection;
     }
 
     /** View > Time Format's command for each TimeFormat::Kind, in its order (23.976 came later, so its id is out of line). */
@@ -1388,6 +1390,21 @@ MainComponent::MainComponent()
     multitrack.onFilesDropped = [this] (const juce::StringArray& files, int track, juce::int64 frame) { addFilesToSession (files, track, frame); };
     multitrack.onFilesSpotted = [this] (const juce::StringArray& files, int track, juce::int64 marker) { spotFilesOnMarker (files, track, marker); };
     multitrack.onOpenFileDropped = [this] (int index, int track, juce::int64 frame) { addOpenFileToSession (index, track, frame); };
+    multitrack.onSamplerFromClip = [this] (juce::uint32 clipId, bool slices)
+    {
+        juce::String error;
+        const auto state = engine.session.getState();
+
+        if (const auto sound = SamplerTrack::soundOf (*state, clipId, error))
+        {
+            const auto where = state->findClip (clipId);
+            addSamplerTrack (*sound, slices, where.has_value() ? state->tracks[(size_t) where->first].clips[(size_t) where->second].position : 0, slices ? clipId : 0);
+        }
+        else
+        {
+            showError (slices ? "Slice to Sampler Track" : "New Sampler Track from Clip", error);
+        }
+    };
     multitrack.onSelectionChanged = [this] { commands.commandStatusChanged(); timerCallback(); };
     multitrack.isLoopPlaybackOn = [this] { return loopPlayback; };
 
@@ -1542,6 +1559,12 @@ MainComponent::MainComponent()
         const auto frames = (int) juce::jmin (snapshot->getNumFrames(), (juce::int64) (sound.sampleRate * maxSeconds));
         sound.audio.setSize (juce::jmin (2, snapshot->getNumChannels()), frames);
         snapshot->read (sound.audio, 0, 0, frames);
+        sound.markers = document.getMarkers();
+
+        // A saved file as it stands can be taken as the file it is (the sampler names its samples by their files).
+        if (document.getFile().existsAsFile() && ! document.isDirty())
+            sound.file = document.getFile();
+
         return sound;
     };
 
@@ -1971,6 +1994,8 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (! clipboard.isEmpty()); break;
         case cmdSaveSelection: info.setInfo ("Save Selection As...", "Save the selection, and the markers in it, to a new file", "File", 0);
                             info.setActive (! waveform.getSelection().isEmpty()); break;
+        case cmdSamplerFromSelection: info.setInfo ("New Sampler Track from Selection", "Make the selection (the whole file with none) the sound of a new Torqwave Sampler track in the session, its pitch found", "File", 0);
+                            info.setActive (hasAudio); break;
         case cmdSavePieces: info.setInfo ("Save Pieces Between Markers As...", "Split the file at its markers and save each piece to a file of its own, in a folder", "File", 0);
                             info.setActive (hasAudio && std::any_of (doc.getMarkers().begin(), doc.getMarkers().end(),
                                                                      [&doc] (const Marker& m) { return ! m.isRegion() && m.start < doc.getNumFrames(); })); break;
@@ -3052,6 +3077,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdPasteMix:   paste (PasteMode::mix); break;
         case cmdPasteFill:  paste (PasteMode::fill); break;
         case cmdSaveSelection: saveSelectionAs(); break;
+        case cmdSamplerFromSelection: samplerFromSelection(); break;
         case cmdSaveRegions: chooseFileRegionsFolder (false); break;
         case cmdSavePieces: chooseFileRegionsFolder (true); break;
         case cmdDuplicateClip: multitrack.duplicateSelectedClip(); break;
@@ -3783,7 +3809,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         case 0:
             add ({ cmdNewFile, cmdNewFromClipboard, cmdOpen });
             menu.addSubMenu ("Open Recent", RecentFiles::createMenu (recentFiles, recentBaseId, [this] (const juce::File& f) { return isThere (f); }), recentFiles.getNumFiles() > 0 && ! isRecording());
-            add ({ cmdCloseFile, cmdBackToClip, cmdNextFile, cmdPreviousFile, 0, cmdSave, cmdSaveAs, cmdSaveSelection, cmdSaveRegions, cmdSavePieces, cmdSaveChannels, cmdExportLossy, cmdExportFfmpeg, 0, cmdAttachVideo, cmdVideoStart, cmdDetachVideo, cmdSaveIntoVideo, 0, cmdBatchProcess, cmdNewFromChannels, 0, cmdFileInfo, cmdSettings, 0, cmdOpenProject, cmdSaveProject, cmdSaveProjectAs, cmdKeepProjectHistory, 0, cmdNewSession, cmdOpenSession, cmdSaveCopyWithAudio, 0, cmdExportMarkers, cmdImportMarkers, cmdExportClips }); break;
+            add ({ cmdCloseFile, cmdBackToClip, cmdNextFile, cmdPreviousFile, 0, cmdSave, cmdSaveAs, cmdSaveSelection, cmdSaveRegions, cmdSavePieces, cmdSaveChannels, cmdSamplerFromSelection, cmdExportLossy, cmdExportFfmpeg, 0, cmdAttachVideo, cmdVideoStart, cmdDetachVideo, cmdSaveIntoVideo, 0, cmdBatchProcess, cmdNewFromChannels, 0, cmdFileInfo, cmdSettings, 0, cmdOpenProject, cmdSaveProject, cmdSaveProjectAs, cmdKeepProjectHistory, 0, cmdNewSession, cmdOpenSession, cmdSaveCopyWithAudio, 0, cmdExportMarkers, cmdImportMarkers, cmdExportClips }); break;
         case 1: add ({ cmdUndo, cmdRedo, cmdUndoHistory, cmdRepeatLast, 0, cmdCut, cmdCopy, cmdPaste, cmdPasteMix, cmdPasteFill, cmdDelete, cmdRepeatSelection, 0, cmdSelectAll, cmdSelectAudible, cmdSetSelection, cmdStepSelectionEarlier, cmdStepSelectionLater, cmdDoubleSelection, cmdHalveSelection, cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectionToZero, cmdSelectZeroCrossings, cmdCopySelectionTime, cmdFindClipping, cmdFindSilence, cmdNextSound, cmdPreviousSound, cmdSelectTrackClips, cmdSelectClipsAfter, cmdSelectClipsInRange, cmdSelectClipsInRegion, cmdNextClip, cmdPreviousClip, cmdCrop, cmdCropMargins, 0, cmdTimeTool, cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdHandTool, cmdBrushLarger, cmdBrushSmaller, cmdBrushLighter, cmdBrushHeavier, 0, cmdConvertRate, 0, cmdAskTorqwave }); break;
         case 2:
         {
@@ -7266,6 +7292,86 @@ void MainComponent::saveSelectionAs()
                 showError ("Save failed", error);
         });
     }, isRackHeard() && renderJob == nullptr);
+}
+
+void MainComponent::samplerFromSelection()
+{
+    const auto& doc = engine.document;
+
+    if (! doc.hasAudio())
+        return;
+
+    const auto snapshot = doc.getSnapshot();
+    const auto sel = waveform.getSelection();
+    const auto part = sel.isEmpty() ? juce::Range<juce::int64> (0, snapshot->getNumFrames()) : sel;
+    const auto name = (doc.getFile() != juce::File() ? doc.getFile().getFileNameWithoutExtension() : juce::String ("Untitled")) + (sel.isEmpty() ? "" : " selection");
+
+    // A saved file as it stands is sampled where it is, the selection as the part played.
+    if (doc.getFile().existsAsFile() && ! doc.isDirty())
+    {
+        addSamplerTrack ({ doc.getFile(), sel.isEmpty() ? juce::Range<juce::int64>() : part, name }, false, 0, 0);
+        return;
+    }
+
+    if ((double) part.getLength() / doc.getSampleRate() > Sampler::longestSampleSeconds)
+    {
+        showError ("New Sampler Track from Selection", "A sample can be up to " + juce::String (juce::roundToInt (Sampler::longestSampleSeconds / 60.0))
+                                                           + " minutes long: samples are held in memory, not played from disk. Select less.");
+        return;
+    }
+
+    // Anything else is written into the Samples folder first, with the markers inside it.
+    juce::AudioBuffer<float> audio (juce::jmin (2, snapshot->getNumChannels()), (int) part.getLength());
+    snapshot->read (audio, 0, part.getStart(), (int) part.getLength());
+    Markers markers;
+
+    for (auto m : doc.getMarkers())
+        if (m.start >= part.getStart() && m.start < part.getEnd())
+        {
+            m.length = juce::jmin (m.length, part.getEnd() - m.start);
+            m.start -= part.getStart();
+            markers.push_back (m);
+        }
+
+    juce::String error;
+
+    if (const auto sound = SamplerTrack::written (audio, doc.getSampleRate(), name, markers, error))
+        addSamplerTrack (*sound, false, 0, 0);
+    else
+        showError ("New Sampler Track from Selection", error);
+}
+
+void MainComponent::addSamplerTrack (const SamplerTrack::Sound& sound, bool slices, juce::int64 position, juce::uint32 fromClip)
+{
+    const auto title = slices ? "Slice to Sampler Track" : "New Sampler Track";
+    const auto made = SamplerTrack::make (sound, slices);
+
+    if (made.error.isNotEmpty() || made.effects == nullptr)
+    {
+        showError (title, made.error.isNotEmpty() ? made.error : sound.name + " could not be sampled.");
+        return;
+    }
+
+    auto next = *engine.session.getState();
+    const auto placed = SamplerTrack::place (next, made, position, fromClip);
+
+    if (placed.trackId == 0)
+        return;
+
+    if (! multitrackMode)
+        setMultitrack (true);
+
+    engine.session.apply (std::move (next), title);
+    engine.session.markEffectsChanged();
+    engine.loadTrackEffects ({ { placed.trackId, made.effects } }, [this, trackId = placed.trackId, heading = juce::String (title)] (const juce::String& errors)
+    {
+        engine.session.sendChangeMessage();   // the track header shows the instrument
+
+        if (errors.isNotEmpty())
+            showError (heading, errors);
+        else
+            multitrack.showInstrumentWindow (trackId);
+    });
 }
 
 void MainComponent::chooseFileRegionsFolder (bool betweenMarkers)
