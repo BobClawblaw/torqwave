@@ -21,6 +21,7 @@ To zoom:
 - **Fill the view with the selection:** Cmd-E.
 - **Use the buttons:** the toolbar and the strip under the editor have them too.
 - **Use the time-view strip:** the thin strip over the ruler shows the whole file in miniature, with a frame around the part the editor shows. Drag inside the frame to move along the file; drag either edge of the frame to zoom (the other edge stays where it is); click anywhere else on the strip to jump there; double-click it to show the whole file. It follows every other way of zooming and scrolling, and shows the selection and the cursor (the playhead while playing), so a long recording can be crossed in one drag. The multitrack view has the same strip over its lanes.
+- **Move along a zoomed file:** choose the **Hand** tool (H, the hand button after Heal on the strip under the editor) and drag the waveform left or right; nothing is selected. With any tool in hand, drag with the middle mouse button, or hold Shift and turn the mouse wheel (the wheel alone zooms). A sideways scroll on a trackpad and the scroll bar work too.
 - **See quiet audio:** zoom in vertically with Option-Cmd-=, or Option-scroll over the waveform, up to 64 times. The level the lane's edges stand for is shown at its top left. Option-Cmd-0 goes back to full scale.
 
 ## Select

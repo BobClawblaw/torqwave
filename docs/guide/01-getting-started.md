@@ -8,7 +8,7 @@ This page gets Torqwave installed and running, takes you round the window, and s
 
 Download the newest build from [Releases > Latest](https://github.com/BobClawblaw/torqwave/releases/latest). Each file has a `.sha256` beside it, so you can check the download.
 
-**Mac** (Apple silicon, macOS 13 or later): `Torqwave-<version>.dmg`
+**Mac** (Apple silicon or Intel, macOS 13 or later): `Torqwave-<version>.dmg`
 
 1. Open the disk image and drag Torqwave to Applications.
 2. Open Torqwave. macOS blocks it the first time, because it is signed ad hoc rather than with a Developer ID.
@@ -53,7 +53,8 @@ From the top:
   - Each panel has a tab. Close a panel with the × on its tab, and bring it back from the **Window** menu.
 - **The editor**, in the middle.
   - It shows the file as a waveform, a spectrogram, or both.
-  - Under it is a strip with the selection tools, the cursor, selection and view times, and the zoom controls.
+  - Over its ruler is the time-view strip: the whole file in miniature, with a frame around the part showing.
+  - Under it is a strip with the selection tools and the Hand tool, the cursor, selection and view times, and the zoom controls.
 - **The bottom bar.**
   - **Output** and **Input** choose the interface's outputs and inputs.
   - The status line says what you are working on ("Editing file: ..." or "Multitrack session: ...").
@@ -141,7 +142,7 @@ To come back later to everything you have open (files, effects rack and session)
 ## Make it yours
 
 - **File > Settings...** (Cmd-,) holds every setting in one window: Start, Look, Editing, Playback, Multitrack, Recording, Audio, Plug-ins, Keys and the Sound Library. Changes take effect at once.
-- **View > Theme** picks one of nine themes, an accent colour and a waveform colour.
+- **View > Theme** picks one of ten themes, an accent colour and a waveform colour.
 - **View > Time Format** shows every time in the app as one of:
   - minutes and seconds;
   - decimal seconds;

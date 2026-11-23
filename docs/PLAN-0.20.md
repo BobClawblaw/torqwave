@@ -1,6 +1,6 @@
 # 0.20 plan: the sequencer and the sequence library
 
-Done: every step below was built and shipped in 0.19.0.
+Done: every step below was built and shipped in 0.19.0. The plan that became the 0.20.0 release is [PLAN-0.19.3.md](PLAN-0.19.3.md).
 
 0.20 adds a sequencer to Torqwave: a library of MIDI parts, each with the instrument that plays it, to preview, edit, and drop into a session at its tempo. You build up drums, bass, pads, arps, harmony, melodies and effects as you work, then pull parts out of the library to try musical ideas and put a new song together quickly.
 
