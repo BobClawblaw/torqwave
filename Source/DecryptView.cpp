@@ -828,6 +828,7 @@ void DecryptView::drawScope (juce::Graphics& g)
     // The twelve: a dashed line toward the middle, the signature, the lock under it.
     const auto nodeRadius = 15.0f * k;
     const auto* show = shown();
+    const auto labels = lockLabels();
 
     for (size_t i = 0; i < best.size() && i < places.size(); ++i)
     {
@@ -853,7 +854,8 @@ void DecryptView::drawScope (juce::Graphics& g)
         if ((int) i == onKeys)
             text (g, "ON KEYS", p.x, p.y - nodeRadius - 12.0f, 9.5f, Theme::accent, juce::Justification::centred, true);
 
-        text (g, juce::String (juce::roundToInt (best[i].lock)) + "%", p.x, p.y + nodeRadius + 12.0f, 11.0f, on ? Theme::textStrong : Theme::dimText, juce::Justification::centred, on);
+        if (i < labels.size() && ! labels[i].isEmpty())
+            text (g, juce::String (juce::roundToInt (best[i].lock)) + "%", p.x, labels[i].getCentreY(), 11.0f, on ? Theme::textStrong : Theme::dimText, juce::Justification::centred, on);
     }
 
     // The signal in the middle, the candidate shown laid over it, and the bands where they agree lit.
@@ -883,6 +885,83 @@ void DecryptView::drawScope (juce::Graphics& g)
         g.setColour (Theme::good);
         g.strokePath (agree, juce::PathStrokeType (2.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
     }
+}
+
+namespace
+{
+    float widthOf (const juce::String& s, float size, bool bold = false)
+    {
+        return juce::GlyphArrangement::getStringWidth (mono (size, bold), s);
+    }
+}
+
+DecryptView::TopLine DecryptView::topLine() const
+{
+    TopLine t;
+
+    if (search == nullptr)
+        return t;
+
+    const auto x = panel.getX() + 16.0f, right = panel.getRight() - 16.0f, y = panel.getY() + 22.0f;
+    t.heading = search->isRunning() ? juce::String ("DECRYPTING") : ended.isNotEmpty() ? ended : juce::String ("LOCKED");
+    t.status = progress.stage + "  " + timeText (progress.seconds);
+    const auto headingWidth = widthOf (t.heading, 12.0f, true), statusWidth = juce::jmin (widthOf (t.status, 11.0f), right - x);
+    t.headingAt = { x, y - 9.0f, headingWidth, 18.0f };
+    const auto beside = x + headingWidth + 12.0f + statusWidth <= right;
+    t.statusAt = { right - statusWidth, (beside ? y : y + 18.0f) - 8.5f, statusWidth, 17.0f };
+    return t;
+}
+
+juce::String DecryptView::chainHint() const
+{
+    return juce::String ((int) chain.size()) + (chain.size() == 1 ? " step" : " steps") + ": click to hear, double-click to return";
+}
+
+float DecryptView::chainHintWidth() const
+{
+    return widthOf (chainHint(), 10.0f);
+}
+
+std::vector<juce::Rectangle<float>> DecryptView::lockLabels() const
+{
+    const auto& best = progress.best;
+    const auto count = juce::jmin (best.size(), places.size());
+    std::vector<juce::Rectangle<float>> labels (count);
+    const auto nodeRadius = 15.0f * radius / 236.0f;
+    const auto* show = shown();
+
+    // Placed in turn, the candidate shown first, then the one under the pointer, then best first;
+    // one that would meet a label already placed is left without.
+    std::vector<size_t> order;
+
+    for (size_t i = 0; i < count; ++i)
+        if (&best[i] == show)
+            order.push_back (i);
+
+    if (juce::isPositiveAndBelow (hovered, (int) count) && &best[(size_t) hovered] != show)
+        order.push_back ((size_t) hovered);
+
+    for (size_t i = 0; i < count; ++i)
+        if (std::find (order.begin(), order.end(), i) == order.end())
+            order.push_back (i);
+
+    std::vector<juce::Rectangle<float>> placed;
+
+    for (auto i : order)
+    {
+        const auto label = juce::String (juce::roundToInt (best[i].lock)) + "%";
+        const auto w = widthOf (label, 11.0f, true) + 4.0f;
+        const auto at = juce::Rectangle<float> (w, 15.0f).withCentre (places[i] + juce::Point<float> (0.0f, nodeRadius + 12.0f));
+        const auto meets = std::any_of (placed.begin(), placed.end(), [&at] (auto& r) { return r.intersects (at); });
+
+        if (! meets)
+        {
+            labels[i] = at;
+            placed.push_back (at);
+        }
+    }
+
+    return labels;
 }
 
 void DecryptView::drawControls (juce::Graphics& g)
@@ -939,10 +1018,10 @@ void DecryptView::drawPanel (juce::Graphics& g)
 
     const auto running = search->isRunning();
     const auto* c = shown();
-    const auto heading = running ? juce::String ("DECRYPTING") : ended.isNotEmpty() ? ended : juce::String ("LOCKED");
-    text (g, heading, x, y, 12.0f, signal(), juce::Justification::centredLeft, true);
-    text (g, progress.stage + "  " + timeText (progress.seconds), right, y, 11.0f, Theme::dimText, juce::Justification::centredRight);
-    y += 20.0f;
+    const auto top = topLine();
+    text (g, top.heading, x, top.headingAt.getCentreY(), 12.0f, signal(), juce::Justification::centredLeft, true);
+    text (g, top.status, top.statusAt.getRight(), top.statusAt.getCentreY(), 11.0f, Theme::dimText, juce::Justification::centredRight);
+    y = top.statusAt.getCentreY() + 20.0f;
 
     // How far this pass has come, live; and when it settles, how far it got and where to go from there.
     if (! progress.best.empty() && passFromDb >= 0.0f)
@@ -1040,7 +1119,6 @@ void DecryptView::drawPanel (juce::Graphics& g)
     {
         const auto playing = chainPlayer.isTimerRunning();
         drawChip (g, playChip, playing ? "Stop" : "Play", Theme::accent, playing, Theme::text);
-        text (g, juce::String ((int) chain.size()) + (chain.size() == 1 ? " step" : " steps") + " so far: click one to hear it, double-click to go back to it",
-              x, panel.getBottom() - 88.0f, 10.0f, Theme::faintText);
+        text (g, chainHint(), x, panel.getBottom() - 88.0f, 10.0f, Theme::faintText);
     }
 }

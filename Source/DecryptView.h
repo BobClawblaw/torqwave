@@ -90,6 +90,15 @@ public:
     const Decrypt::Advisor::Name& offeredName() const noexcept    { return offer; }
     void useOfferedName (bool use);
 
+    /** For tests, the panel's text where it is crowded: its heading and the status beside it (or under
+        it, when the two would meet), the chain's hint and the room it has, and the candidates' lock
+        labels on the scope (an empty one left out, so as not to print over a neighbour's). */
+    juce::Rectangle<float> headingBounds() const                  { return topLine().headingAt; }
+    juce::Rectangle<float> statusBounds() const                   { return topLine().statusAt; }
+    float chainHintWidth() const;
+    float panelTextWidth() const noexcept                         { return panel.getWidth() - 32.0f; }
+    std::vector<juce::Rectangle<float>> lockLabelBounds() const   { return lockLabels(); }
+
 private:
     void timerCallback() override;
     void layout();
@@ -100,6 +109,20 @@ private:
     void drawPanel (juce::Graphics&);
     void drawControls (juce::Graphics&);
     const Decrypt::Candidate* shown() const;
+
+    /** The heading and the status, measured: the status at the right of the heading's line, or on
+        a line of its own under it when the two would meet. */
+    struct TopLine
+    {
+        juce::String heading, status;
+        juce::Rectangle<float> headingAt, statusAt;
+    };
+
+    TopLine topLine() const;
+    juce::String chainHint() const;
+    /** Each candidate's lock label, empty where it would print over one already placed: the candidate
+        shown first, then the one under the pointer, then the rest best first. */
+    std::vector<juce::Rectangle<float>> lockLabels() const;
 
     Decrypt::Synth& synth;
     std::unique_ptr<Decrypt::Search> search;
