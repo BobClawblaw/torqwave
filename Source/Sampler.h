@@ -1,15 +1,19 @@
 #pragma once
 
 #include "BuiltInEffects.h"
+#include "Instrument.h"
+#include "Markers.h"
+
+struct DrumSound;
 
 /** The engine behind Torqwave Sampler: samples played across the keys in zones, each at the played
     note's pitch by resampling from the sample's own rate, through an amp envelope, a filter with
     an envelope of its own and an LFO. It knows nothing of plug-ins, so the window can render with
     it and the tests can play it bare.
 
-    A sample is read through a windowed sinc (32 points at the sample's own pitch or below, more
+    A sample is read through a windowed sinc (48 points at the sample's own pitch or below, more
     above it, where the band is narrowed to what the output can hold), so playing up doesn't
-    alias. Nothing stops dead: a note taken for a new one, and All Sound Off, fade over 4 ms; a
+    alias. At its own pitch and rate a sample plays as it is, frame for frame. Nothing stops dead: a note taken for a new one, and All Sound Off, fade over 4 ms; a
     note rises over a quarter of a millisecond at least; a sample's end is faded over half a
     millisecond. A voice's controls are taken afresh every 16 samples counted from its note's
     start, so a part renders the same at any block size and the same twice. Allocates nothing
@@ -27,6 +31,7 @@ namespace Sampler
         double rate = 48000.0;
         juce::String name;
         juce::File file;               // where it was read from; none for one made in memory
+        Markers markers;               // its file's markers and regions, in its frames
 
         int getNumFrames() const noexcept          { return audio.getNumSamples(); }
     };
@@ -34,7 +39,7 @@ namespace Sampler
     using SamplePtr = std::shared_ptr<const Sample>;
 
     /** A sample from audio in memory: its first two channels. */
-    SamplePtr makeSample (const juce::AudioBuffer<float>&, double rate, const juce::String& name);
+    SamplePtr makeSample (const juce::AudioBuffer<float>&, double rate, const juce::String& name, const Markers& = {});
 
     /** A sample read whole from a file (any type Torqwave opens): its first two channels. Nothing,
         with the reason in error, for a file that can't be read or holds no audio. */
@@ -46,6 +51,7 @@ namespace Sampler
         SamplePtr sample;
         juce::File file;               // where its sample is from: kept when the file can't be read, so it can be found again
         juce::uint32 id = 0;           // its own, kept through edits (0: given one when it is set)
+        juce::String name;             // a slice's: its marker's or region's name, or "Slice 3"
         int root = 60;                 // the key that plays it at its own pitch
         float tune = 0.0f;             // cents, -100 to 100
         int lowKey = 0, highKey = 127;
@@ -96,6 +102,55 @@ namespace Sampler
         a forward loop's crossfade worked out, with the same equal-power fade as Crossfade Loop,
         into a buffer of its own, so the sample is never changed. */
     ProgramPtr makeProgram (std::vector<Zone>, juce::uint32 generation = 0);
+
+    //==============================================================================
+    // Slices: one sample cut into pieces, each on a key of its own from C1 (36) up.
+    constexpr int maxSlices = 64, firstSliceKey = 36;
+
+    enum class SliceSource { markers, regions, hits, equalParts };
+    juce::StringArray sliceSourceNames();
+
+    /** How a sampler playing slices was cut, kept so its window can cut again. */
+    struct Slicing
+    {
+        bool on = false;               // slices rather than zones across the keys
+        SliceSource source = SliceSource::hits;
+        float sensitivity = 70.0f;     // %, for hits: 100 keeps every attack found, less only the louder ones
+        int parts = 16;                // for equal parts: 2 to 64
+        bool cutEachOther = false;     // each slice stops the last
+
+        bool operator== (const Slicing& o) const noexcept
+        {
+            return on == o.on && source == o.source && juce::exactlyEqual (sensitivity, o.sensitivity) && parts == o.parts && cutEachOther == o.cutEachOther;
+        }
+    };
+
+    struct Slice
+    {
+        juce::int64 start = 0, end = 0;    // in the sample's frames
+        juce::String name;
+    };
+
+    /** The pieces a part of a sample is cut into, in order, at most maxSlices:
+        - markers: from each point marker in the part to the next (or the part's end), named after
+          it, with a piece named "Start" from the part's start to the first when that is later;
+        - regions: each region that lies in the part, named after it;
+        - hits: from the part's start and from each attack found in it (those too soft for the
+          sensitivity left out, and when there are too many, the softest), each cut moved to the
+          nearest zero crossing within 2 ms, named "Slice 1" on;
+        - equal parts: that many pieces of one length. */
+    std::vector<Slice> findSlices (const Sample&, juce::Range<juce::int64> part, const Slicing&);
+
+    /** A zone for each slice, on the keys from firstSliceKey: one-shot, at its own pitch on its
+        key, all in one choke group when they cut each other. */
+    std::vector<Zone> zonesFromSlices (const SamplePtr&, const juce::File&, const std::vector<Slice>&, bool cutEachOther);
+
+    /** The notes that play slices in order at the times they have in the sample (from the
+        earliest's start), each held for its slice's length: the sample as it was, as notes. */
+    std::vector<Instrument::Note> notesFromSlices (const std::vector<Zone>&);
+
+    /** A drum map with a row for each zone that sits on one key, named after it, lowest key first. */
+    std::vector<DrumSound> drumMapFor (const std::vector<Zone>&);
 
     enum class FilterType { off, lowPass12, lowPass24, bandPass, highPass };
     juce::StringArray filterNames();
@@ -240,6 +295,15 @@ namespace BuiltInEffects
         void setZones (std::vector<Sampler::Zone>);
         std::vector<Sampler::Zone> getZones() const;
 
+        /** Cuts a part of a sample (all of it, for an empty part) into slices as the slicing says and
+            plays them in place of its zones; the slicing is kept. False, with nothing changed, when
+            there is nothing to cut. */
+        bool slice (const Sampler::SamplePtr&, const juce::File&, juce::Range<juce::int64> part, Sampler::Slicing);
+
+        /** Whether it plays slices, and how they were cut. Setting it alone cuts nothing. */
+        Sampler::Slicing getSlicing() const                          { return slicing; }
+        void setSlicing (const Sampler::Slicing& s)                  { slicing = s; }
+
         /** The settings its parameters hold now. */
         Sampler::Settings currentSettings() const;
 
@@ -271,6 +335,7 @@ namespace BuiltInEffects
         std::atomic<juce::uint32> oldestInUse { 0 };
         juce::uint32 generations = 0, zoneIds = 0;
         juce::StringArray missing;
+        Sampler::Slicing slicing;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SamplerProcessor)
     };

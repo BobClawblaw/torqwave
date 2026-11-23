@@ -1,6 +1,8 @@
 #include "Sampler.h"
 #include "AudioFileIO.h"
 #include "FadeShape.h"
+#include "PhaseVocoder.h"
+#include "Session.h"
 
 namespace Sampler
 {
@@ -11,7 +13,7 @@ namespace
     // played above its own rate, up to two octaves: each narrows the band to what the output can
     // hold and is as much longer. A bank holds the points for 256 places between two frames (and
     // the next frame's, so a place between two of those is a blend of neighbouring rows).
-    constexpr int phases = 256, pointsEachSide = 16, banksPerOctave = 12, numBanks = 2 * banksPerOctave + 1;
+    constexpr int phases = 256, pointsEachSide = 24, banksPerOctave = 12, numBanks = 2 * banksPerOctave + 1;
     constexpr int mostPoints = 2 * pointsEachSide * 4;   // the longest bank's: two octaves up
 
     struct Bank
@@ -50,7 +52,7 @@ namespace
                 const auto band = std::pow (2.0, -(double) b / banksPerOctave);   // of the sample's own
                 bank.half = (int) std::ceil (pointsEachSide / band);
                 const auto count = 2 * bank.half;
-                const auto cutoff = 0.9 * band;
+                const auto cutoff = 0.93 * band;
                 bank.points.resize ((size_t) ((phases + 1) * count));
 
                 for (int p = 0; p <= phases; ++p)
@@ -223,7 +225,7 @@ double lfoSyncBeats (int index)
     return beats[juce::jlimit (0, (int) std::size (beats) - 1, index)];
 }
 
-SamplePtr makeSample (const juce::AudioBuffer<float>& audio, double rate, const juce::String& name)
+SamplePtr makeSample (const juce::AudioBuffer<float>& audio, double rate, const juce::String& name, const Markers& markers)
 {
     if (audio.getNumChannels() < 1 || audio.getNumSamples() < 1 || rate <= 0.0)
         return {};
@@ -237,6 +239,7 @@ SamplePtr makeSample (const juce::AudioBuffer<float>& audio, double rate, const 
 
     made->rate = rate;
     made->name = name;
+    made->markers = markers;
     return made;
 }
 
@@ -270,6 +273,7 @@ SamplePtr loadSample (const juce::File& file, juce::AudioFormatManager& formats,
     made->rate = loaded.sampleRate;
     made->name = file.getFileNameWithoutExtension();
     made->file = file;
+    made->markers = loaded.markers;
     return made;
 }
 
@@ -338,6 +342,225 @@ ProgramPtr makeProgram (std::vector<Zone> zones, juce::uint32 generation)
 
     made->zones = std::move (zones);
     return made;
+}
+
+//==============================================================================
+juce::StringArray sliceSourceNames()        { return { "Markers", "Regions", "Hits", "Equal Parts" }; }
+
+std::vector<Slice> findSlices (const Sample& sample, juce::Range<juce::int64> part, const Slicing& how)
+{
+    const auto frames = (juce::int64) sample.getNumFrames();
+    part = part.isEmpty() ? juce::Range<juce::int64> (0, frames) : part.getIntersectionWith ({ 0, frames });
+    std::vector<Slice> slices;
+
+    if (part.isEmpty())
+        return slices;
+
+    // Pieces from cuts: each from one cut to the next, the last to the part's end.
+    auto between = [&] (const std::vector<std::pair<juce::int64, juce::String>>& cuts)
+    {
+        for (size_t i = 0; i < cuts.size() && (int) slices.size() < maxSlices; ++i)
+        {
+            const auto end = i + 1 < cuts.size() ? cuts[i + 1].first : part.getEnd();
+
+            if (end > cuts[i].first)
+                slices.push_back ({ cuts[i].first, end, cuts[i].second });
+        }
+    };
+
+    switch (how.source)
+    {
+        case SliceSource::markers:
+        {
+            std::vector<std::pair<juce::int64, juce::String>> cuts;
+
+            for (auto& m : sample.markers)
+                if (! m.isRegion() && m.start >= part.getStart() && m.start < part.getEnd())
+                    cuts.push_back ({ m.start, m.name });
+
+            if (cuts.empty())
+                break;
+
+            if (cuts.front().first > part.getStart())
+                cuts.insert (cuts.begin(), { part.getStart(), "Start" });
+
+            for (size_t i = 0; i < cuts.size(); ++i)
+                if (cuts[i].second.isEmpty())
+                    cuts[i].second = "Slice " + juce::String (i + 1);
+
+            between (cuts);
+            break;
+        }
+
+        case SliceSource::regions:
+        {
+            for (auto& m : sample.markers)
+                if (m.isRegion() && m.start >= part.getStart() && m.getEnd() <= part.getEnd() && (int) slices.size() < maxSlices)
+                    slices.push_back ({ m.start, m.getEnd(), m.name.isNotEmpty() ? m.name : "Slice " + juce::String (slices.size() + 1) });
+
+            break;
+        }
+
+        case SliceSource::hits:
+        {
+            const auto& audio = sample.audio;
+            const auto channels = audio.getNumChannels();
+            const auto from = (int) part.getStart(), to = (int) part.getEnd();
+
+            auto sum = [&] (int i)
+            {
+                auto x = 0.0f;
+
+                for (int c = 0; c < channels; ++c)
+                    x += audio.getSample (c, i);
+
+                return x;
+            };
+
+            // Each attack with how loud the sound gets in the 30 ms after it.
+            struct Hit { int frame; float loud; };
+            std::vector<Hit> hits;
+            const auto after = (int) (0.03 * sample.rate), apart = (int) (0.02 * sample.rate);
+            auto loudest = 0.0f;
+
+            for (const auto at : PhaseVocoder::onsets (audio, from, to, sample.rate))
+            {
+                if (at < from + apart || at >= to || (! hits.empty() && at < hits.back().frame + apart))
+                    continue;
+
+                auto loud = 0.0f;
+
+                for (int i = at; i < juce::jmin (to, at + after); ++i)
+                    loud = juce::jmax (loud, std::abs (sum (i)));
+
+                hits.push_back ({ at, loud });
+                loudest = juce::jmax (loudest, loud);
+            }
+
+            // The sensitivity: at 100 % every attack counts, at 50 % those within 12 dB of the loudest, at 0 % that one alone.
+            const auto less = 1.0f - juce::jlimit (0.0f, 100.0f, how.sensitivity) * 0.01f;
+            const auto floor = loudest * less * less;
+            hits.erase (std::remove_if (hits.begin(), hits.end(), [floor] (const Hit& h) { return h.loud < floor; }), hits.end());
+
+            if ((int) hits.size() > maxSlices - 1)
+            {
+                auto byLoudness = hits;
+                std::sort (byLoudness.begin(), byLoudness.end(), [] (const Hit& a, const Hit& b) { return a.loud > b.loud; });
+                const auto least = byLoudness[(size_t) (maxSlices - 2)].loud;
+                hits.erase (std::remove_if (hits.begin(), hits.end(), [least] (const Hit& h) { return h.loud < least; }), hits.end());
+
+                if ((int) hits.size() > maxSlices - 1)
+                    hits.resize ((size_t) (maxSlices - 1));
+            }
+
+            // Each cut at the nearest zero crossing of the channels' sum within 2 ms, so a slice starts from nothing.
+            const auto reach = (int) (0.002 * sample.rate);
+            std::vector<std::pair<juce::int64, juce::String>> cuts { { part.getStart(), {} } };
+
+            for (auto& h : hits)
+            {
+                auto cut = h.frame;
+
+                for (int d = 0; d <= reach; ++d)
+                {
+                    auto crosses = [&] (int i)      { return i > from && i < to && (sum (i - 1) <= 0.0f) != (sum (i) <= 0.0f); };
+
+                    if (crosses (h.frame - d))
+                    {
+                        cut = h.frame - d;
+                        break;
+                    }
+
+                    if (crosses (h.frame + d))
+                    {
+                        cut = h.frame + d;
+                        break;
+                    }
+                }
+
+                if (cut > cuts.back().first)
+                    cuts.push_back ({ cut, {} });
+            }
+
+            for (size_t i = 0; i < cuts.size(); ++i)
+                cuts[i].second = "Slice " + juce::String (i + 1);
+
+            between (cuts);
+            break;
+        }
+
+        case SliceSource::equalParts:
+        {
+            const auto parts = juce::jlimit (1, maxSlices, how.parts);
+
+            for (int i = 0; i < parts; ++i)
+            {
+                const auto start = part.getStart() + part.getLength() * i / parts, end = part.getStart() + part.getLength() * (i + 1) / parts;
+
+                if (end > start)
+                    slices.push_back ({ start, end, "Slice " + juce::String (i + 1) });
+            }
+
+            break;
+        }
+    }
+
+    return slices;
+}
+
+std::vector<Zone> zonesFromSlices (const SamplePtr& sample, const juce::File& file, const std::vector<Slice>& slices, bool cutEachOther)
+{
+    std::vector<Zone> zones;
+
+    for (size_t i = 0; i < slices.size() && (int) i < maxSlices; ++i)
+    {
+        Zone z;
+        z.sample = sample;
+        z.file = file;
+        z.name = slices[i].name;
+        z.root = z.lowKey = z.highKey = firstSliceKey + (int) i;
+        z.start = slices[i].start;
+        z.end = slices[i].end;
+        z.oneShot = true;
+        z.choke = cutEachOther ? 1 : 0;
+        zones.push_back (std::move (z));
+    }
+
+    return zones;
+}
+
+std::vector<Instrument::Note> notesFromSlices (const std::vector<Zone>& zones)
+{
+    std::vector<Instrument::Note> notes;
+    auto first = std::numeric_limits<juce::int64>::max();
+
+    for (auto& z : zones)
+        if (z.sample != nullptr)
+            first = juce::jmin (first, z.span().getStart());
+
+    for (auto& z : zones)
+        if (z.sample != nullptr && ! z.span().isEmpty())
+            notes.push_back ({ z.lowKey, (double) (z.span().getStart() - first) / z.sample->rate, (double) z.span().getLength() / z.sample->rate, 1.0f });
+
+    std::sort (notes.begin(), notes.end(), [] (const Instrument::Note& a, const Instrument::Note& b) { return a.start < b.start; });
+    return notes;
+}
+
+std::vector<DrumSound> drumMapFor (const std::vector<Zone>& zones)
+{
+    std::vector<DrumSound> map;
+
+    for (auto& z : zones)
+        if (z.lowKey == z.highKey)
+        {
+            DrumSound sound;
+            sound.pitch = z.lowKey;
+            sound.name = z.name.isNotEmpty() ? z.name : Instrument::pitchName (z.lowKey);
+            map.push_back (std::move (sound));
+        }
+
+    std::sort (map.begin(), map.end(), [] (const DrumSound& a, const DrumSound& b) { return a.pitch < b.pitch; });
+    return map;
 }
 
 float interpolate (const float* samples, int numSamples, double position, double ratio)
@@ -805,8 +1028,46 @@ void Engine::renderVoice (Voice& v, float* left, float* right, int count)
             looping = false;
         }
 
-        if (! view.reverse && from >= (looping && v.wrapped ? view.loopStart : 0)
-            && from + points <= (looping ? view.loopEnd - view.fade : view.length))
+        const auto lies = ! view.reverse && from >= (looping && v.wrapped ? view.loopStart : 0)
+                          && from + points <= (looping ? view.loopEnd - view.fade : view.length);
+
+        // The frame `at` along the way it plays: through the loop, its crossfade and a reversed part.
+        auto frameAt = [&] (juce::int64 at, float& l, float& r)
+        {
+            if (looping && (at >= view.loopEnd || (v.wrapped && at < view.loopStart)))
+            {
+                // Past the loop's end, or before its start once it has gone round: where the loop puts it.
+                auto along = (at - view.loopStart) % view.period;
+
+                if (along < 0)
+                    along += view.period;
+
+                at = view.loopStart + (along < loopLength ? along : view.period - along);
+            }
+
+            if (looping && view.fade > 0 && at >= view.loopEnd - view.fade && at < view.loopEnd)
+            {
+                l = turnL[at - (view.loopEnd - view.fade)];
+                r = turnR[at - (view.loopEnd - view.fade)];
+            }
+            else if (at >= 0 && at < view.length)
+            {
+                const auto frame = view.reverse ? view.last - 1 - at : view.first + at;
+                l = sourceL[frame];
+                r = sourceR[frame];
+            }
+            else
+            {
+                l = r = 0.0f;
+            }
+        };
+
+        if (juce::exactlyEqual (v.ratio, 1.0) && juce::exactlyEqual (fraction, 0.0))
+        {
+            // At its own pitch and rate, on a frame: the sample itself.
+            frameAt (index, xl, xr);
+        }
+        else if (lies)
         {
             // Nothing in reach but the sample as it lies.
             xl = readThrough (bank, sourceL + view.first + from, fraction);
@@ -814,42 +1075,8 @@ void Engine::renderVoice (Voice& v, float* left, float* right, int count)
         }
         else
         {
-            const auto loops = looping;
-
             for (int j = 0; j < points; ++j)
-            {
-                auto at = from + j;
-                auto l = 0.0f, r = 0.0f;
-                auto found = false;
-
-                if (loops && (at >= view.loopEnd || (v.wrapped && at < view.loopStart)))
-                {
-                    // Past the loop's end, or before its start once it has gone round: where the loop puts it.
-                    auto along = (at - view.loopStart) % view.period;
-
-                    if (along < 0)
-                        along += view.period;
-
-                    at = view.loopStart + (along < loopLength ? along : view.period - along);
-                }
-
-                if (loops && view.fade > 0 && at >= view.loopEnd - view.fade && at < view.loopEnd)
-                {
-                    l = turnL[at - (view.loopEnd - view.fade)];
-                    r = turnR[at - (view.loopEnd - view.fade)];
-                    found = true;
-                }
-
-                if (! found && at >= 0 && at < view.length)
-                {
-                    const auto frame = view.reverse ? view.last - 1 - at : view.first + at;
-                    l = sourceL[frame];
-                    r = sourceR[frame];
-                }
-
-                windowL[(size_t) j] = l;
-                windowR[(size_t) j] = r;
-            }
+                frameAt (from + j, windowL[(size_t) j], windowR[(size_t) j]);
 
             xl = readThrough (bank, windowL.data(), fraction);
             xr = stereo ? readThrough (bank, windowR.data(), fraction) : xl;
@@ -1200,15 +1427,40 @@ void SamplerProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     oldestInUse.store (engine.oldestGenerationInUse());
 }
 
+bool SamplerProcessor::slice (const SamplePtr& sample, const juce::File& file, juce::Range<juce::int64> part, Slicing how)
+{
+    if (sample == nullptr)
+        return false;
+
+    const auto slices = findSlices (*sample, part, how);
+
+    if (slices.empty())
+        return false;
+
+    how.on = true;
+    slicing = how;
+    setZones (zonesFromSlices (sample, file, slices, how.cutEachOther));
+    return true;
+}
+
 void SamplerProcessor::addToState (juce::XmlElement& xml) const
 {
     auto* all = xml.createNewChildElement ("ZONES");
+    all->setAttribute ("slices", slicing.on ? 1 : 0);
+    all->setAttribute ("sliceSource", (int) slicing.source);
+    all->setAttribute ("sensitivity", (double) slicing.sensitivity);
+    all->setAttribute ("parts", slicing.parts);
+    all->setAttribute ("cutEachOther", slicing.cutEachOther ? 1 : 0);
 
     for (auto& z : getZones())
     {
         auto* e = all->createNewChildElement ("ZONE");
         e->setAttribute ("id", (int) z.id);
         e->setAttribute ("file", z.file.getFullPathName());
+
+        if (z.name.isNotEmpty())
+            e->setAttribute ("name", z.name);
+
         e->setAttribute ("root", z.root);
         e->setAttribute ("tune", (double) z.tune);
         e->setAttribute ("lowKey", z.lowKey);
@@ -1243,10 +1495,18 @@ void SamplerProcessor::readFromState (const juce::XmlElement& xml)
     std::vector<Zone> zones;
     missing.clear();
 
+    slicing = {};
+    slicing.on = all->getIntAttribute ("slices") != 0;
+    slicing.source = (SliceSource) juce::jlimit (0, 3, all->getIntAttribute ("sliceSource", (int) slicing.source));
+    slicing.sensitivity = (float) all->getDoubleAttribute ("sensitivity", slicing.sensitivity);
+    slicing.parts = juce::jlimit (2, maxSlices, all->getIntAttribute ("parts", slicing.parts));
+    slicing.cutEachOther = all->getIntAttribute ("cutEachOther") != 0;
+
     for (auto* e : all->getChildWithTagNameIterator ("ZONE"))
     {
         Zone z;
         z.id = (juce::uint32) e->getIntAttribute ("id");
+        z.name = e->getStringAttribute ("name");
         z.root = juce::jlimit (0, 127, e->getIntAttribute ("root", 60));
         z.tune = (float) e->getDoubleAttribute ("tune");
         z.lowKey = juce::jlimit (0, 127, e->getIntAttribute ("lowKey", 0));

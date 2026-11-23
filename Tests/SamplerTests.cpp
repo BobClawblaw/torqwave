@@ -2,6 +2,8 @@
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/Sampler.h"
+#include "../Source/DrumMachine.h"
+#include "../Source/Session.h"
 #include "TestUtils.h"
 #include "SamplerTests.h"
 #include "ClickCheck.h"
@@ -421,6 +423,44 @@ namespace
                        + juce::String (crossfaded.ratio, 2) + "); forward and back turns without a step (" + juce::String (turned.ratio, 2) + ")");
         }
 
+        // The same away from the sample's own pitch, where every frame is read between the sample's: loops forward,
+        // crossfaded, forward and back and reversed, a fifth up and a fourth down.
+        {
+            plain (sampler);
+            auto z = zoneOf (sine (220.0, 1.0), 57);
+            z.loop = 1;
+            z.loopStart = 9600;
+            z.loopEnd = 12000;
+            auto worst = 0.0f;
+            auto offPitch = 0.0;
+            auto sounding = true;
+
+            for (int kind = 0; kind < 4; ++kind)
+            {
+                auto zone = z;
+                zone.loopEnd = kind == 1 ? 12100 : 12000;
+                zone.crossfade = kind == 1 ? 20.0f : 0.0f;
+                zone.loop = kind == 2 ? 2 : 1;
+                zone.reverse = kind == 3;
+                sampler.setZones ({ zone });
+
+                for (const auto key : { 64, 52 })
+                {
+                    const auto out = play (sampler, { on (0.0, key) }, 5.0);
+                    const auto hz = 220.0 * std::pow (2.0, (key - 57) / 12.0);
+                    worst = juce::jmax (worst, ClickCheck::worst (out, rate, 0.01f).ratio);
+                    sounding = sounding && rms (out, 4.0, 0.9) > 0.2f;
+
+                    if (kind == 0)
+                        offPitch = juce::jmax (offPitch, std::abs (centsOff (pitchOf (out, (int) (3.0 * rate), (int) (0.5 * rate), hz), hz)));
+                }
+            }
+
+            check (worst < 4.0f && sounding && offPitch < 0.5,
+                   "sampler: played a fifth above and a fourth below its pitch, a loop goes round without a step forward, crossfaded, forward and back and reversed (the worst jump "
+                       + juce::String (worst, 2) + " times its surroundings), still sounding after five seconds and within " + juce::String (offPitch, 2) + " cents");
+        }
+
         // The crossfade is the one Crossfade Loop makes: the loop's end fading out as what comes before its start fades in.
         {
             auto z = zoneOf (noise (1.0, 3), 60);
@@ -669,6 +709,239 @@ namespace
             check (error.isEmpty() && kept.size() == 128 && alike,
                    "sampler: of 130 zones given it keeps 128; each comes back from its state with its reverse, one-shot, loop, loop points, crossfade, release and choke settings");
             folder.deleteRecursively();
+        }
+    }
+
+    /** Two bars of drums at 120 BPM from Basic Drums' engine, with the times its hits start at. */
+    juce::AudioBuffer<float> drumLoop (std::vector<double>& times)
+    {
+        DrumMachine::Engine drums;
+        drums.prepare (rate);
+        const auto step = 0.125;
+        juce::AudioBuffer<float> out (2, (int) (4.0 * rate));
+        out.clear();
+        int at = 0;
+
+        for (int i = 0; i < 32; ++i)
+        {
+            const auto frame = (int) std::lround (i * step * rate);
+            drums.render (out.getWritePointer (0, at), out.getWritePointer (1, at), frame - at);
+            at = frame;
+            const auto inBar = i % 16;
+            auto any = false;
+
+            if (inBar % 4 == 0)                     { drums.noteOn (36, 1.0f); any = true; }
+            if (inBar == 4 || inBar == 12)          { drums.noteOn (38, 0.9f); any = true; }
+            if (inBar % 2 == 0)                     { drums.noteOn (42, 0.7f); any = true; }
+            if (inBar == 7 || inBar == 15)          { drums.noteOn (36, 0.6f); any = true; }
+
+            if (any)
+                times.push_back (i * step);
+        }
+
+        drums.render (out.getWritePointer (0, at), out.getWritePointer (1, at), out.getNumSamples() - at);
+        return out;
+    }
+
+    /** Slices: a sample cut at its markers, its regions, its hits or into equal parts, each piece on a key. */
+    void testSlices (Processor& sampler)
+    {
+        // A tone that changes pitch every fifth of a second, with a marker at each change but the first.
+        juce::AudioBuffer<float> steps (1, (int) (1.8 * rate));
+        Markers markers;
+
+        for (int k = 0; k < 9; ++k)
+        {
+            for (int i = 0; i < 9600; ++i)
+                steps.setSample (0, k * 9600 + i, 0.5f * (float) std::sin (twoPi * (300.0 + 100.0 * k) * i / rate));
+
+            if (k > 0)
+                markers.push_back ({ (juce::int64) k * 9600, 0, k % 2 == 0 ? juce::String ("Hit ") + juce::String (k) : juce::String(), -1 });
+        }
+
+        markers.push_back ({ 4800, 9600, "Across", -1 });
+        markers.push_back ({ 40000, 20000, "Late", -1 });
+        markers.push_back ({ 70000, 5000, {}, -1 });
+        MarkerEdits::sort (markers);
+        const auto sample = Sampler::makeSample (steps, rate, "Steps", markers);
+
+        {
+            Sampler::Slicing how;
+            how.source = Sampler::SliceSource::markers;
+            const auto slices = Sampler::findSlices (*sample, {}, how);
+            auto cutRight = slices.size() == 9;
+            juce::StringArray names;
+
+            for (size_t i = 0; cutRight && i < slices.size(); ++i)
+            {
+                cutRight = slices[i].start == (juce::int64) i * 9600 && slices[i].end == (juce::int64) (i + 1) * 9600;
+                names.add (slices[i].name);
+            }
+
+            plain (sampler);
+            const auto sliced = sampler.slice (sample, {}, {}, how);
+            const auto zones = sampler.getZones();
+            auto played = sliced && zones.size() == 9 && sampler.getSlicing().on;
+
+            for (int k = 0; played && k < 9; ++k)
+            {
+                const auto out = play (sampler, { on (0.0, 36 + k), off (0.05, 36 + k) }, 0.4);
+                played = zones[(size_t) k].lowKey == 36 + k && zones[(size_t) k].highKey == 36 + k && zones[(size_t) k].oneShot
+                         && toneAt (out, 0.02, 0.15, 300.0 + 100.0 * k) > 0.45 && peak (out, 0.21, 0.15) == 0.0f;
+            }
+
+            const auto above = play (sampler, { on (0.0, 45) }, 0.3);
+            how.source = Sampler::SliceSource::regions;
+            const auto regions = Sampler::findSlices (*sample, {}, how);
+            const auto inPart = Sampler::findSlices (*sample, { 30000, 80000 }, how);
+            how.source = Sampler::SliceSource::markers;
+            const auto partOnly = Sampler::findSlices (*sample, { 20000, 50000 }, how);
+
+            check (cutRight && names.joinIntoString ("|") == "Start|Slice 2|Hit 2|Slice 4|Hit 4|Slice 6|Hit 6|Slice 8|Hit 8" && played && above.getMagnitude (0, above.getNumSamples()) == 0.0f
+                       && regions.size() == 3 && regions[0].name == "Across" && regions[0].start == 4800 && regions[0].end == 14400 && regions[2].name == "Slice 3"
+                       && inPart.size() == 2 && inPart[0].name == "Late"
+                       && partOnly.size() == 4 && partOnly[0].start == 20000 && partOnly[0].name == "Start" && partOnly[3].end == 50000,
+                   "sampler: a sample with eight markers is cut into the nine pieces between them, named after the markers (" + names.joinIntoString (", ")
+                       + "), each a one-shot on its own key from C1 playing its piece and nothing after it; its three regions give three slices; a part of it is cut at the markers and regions in that part alone");
+        }
+
+        // Equal parts, and no more than 64 of anything.
+        {
+            Sampler::Slicing how;
+            how.source = Sampler::SliceSource::equalParts;
+            how.parts = 16;
+            const auto sixteen = Sampler::findSlices (*sample, {}, how);
+            auto equal = sixteen.size() == 16;
+
+            for (size_t i = 0; equal && i < sixteen.size(); ++i)
+                equal = sixteen[i].end - sixteen[i].start == 5400 && sixteen[i].start == (juce::int64) i * 5400;
+
+            how.parts = 500;
+            Markers lots;
+
+            for (int i = 0; i < 100; ++i)
+                lots.push_back ({ (juce::int64) i * 800, 0, {}, -1 });
+
+            const auto crowded = Sampler::makeSample (steps, rate, "Crowded", lots);
+            auto byMarkers = how;
+            byMarkers.source = Sampler::SliceSource::markers;
+
+            check (equal && Sampler::findSlices (*sample, {}, how).size() == 64 && Sampler::findSlices (*crowded, {}, byMarkers).size() == 64
+                       && Sampler::zonesFromSlices (crowded, {}, Sampler::findSlices (*crowded, {}, byMarkers), false).back().highKey == 99,
+                   "sampler: sixteen equal parts of 86,400 frames are 5,400 frames each; 500 parts asked for, or a hundred markers, give 64 slices, the last on D#6");
+        }
+
+        // Hits: a drum loop from Basic Drums cut where its hits start.
+        std::vector<double> times;
+        const auto loop = drumLoop (times);
+        const auto drums = Sampler::makeSample (loop, rate, "Loop");
+
+        {
+            Sampler::Slicing how;
+            how.source = Sampler::SliceSource::hits;
+            how.sensitivity = 100.0f;
+            const auto slices = Sampler::findSlices (*drums, {}, how);
+            int found = 0, extra = 0;
+            auto worstMs = 0.0;
+
+            for (auto& slice : slices)
+            {
+                auto nearest = 1.0e9;
+
+                for (const auto t : times)
+                    if (std::abs ((double) slice.start / rate - t) < std::abs (nearest))
+                        nearest = (double) slice.start / rate - t;
+
+                if (std::abs (nearest) < 0.015)
+                {
+                    ++found;
+                    worstMs = juce::jmax (worstMs, std::abs (nearest) * 1000.0);
+                }
+                else
+                {
+                    ++extra;
+                }
+            }
+
+            how.sensitivity = 40.0f;
+            const auto fewer = Sampler::findSlices (*drums, {}, how).size();
+            how.sensitivity = 0.0f;
+            const auto fewest = Sampler::findSlices (*drums, {}, how).size();
+            auto covers = ! slices.empty() && slices.front().start == 0 && slices.back().end == loop.getNumSamples();
+
+            for (size_t i = 1; covers && i < slices.size(); ++i)
+                covers = slices[i].start == slices[i - 1].end;
+
+            check (found == (int) times.size() && extra == 0 && worstMs < 6.0 && covers && fewer < slices.size() && fewest >= 1 && fewest < fewer,
+                   "sampler: two bars of Basic Drums with " + juce::String (times.size()) + " hits are cut at " + juce::String (found) + " of them and nowhere else, each cut within "
+                       + juce::String (worstMs, 1) + " ms of its hit, the slices covering the loop end to end; at 40 % sensitivity there are " + juce::String (fewer)
+                       + " slices and at 0 % " + juce::String (fewest));
+
+            // Notes from Slices: the loop again, from the notes.
+            how.sensitivity = 100.0f;
+            plain (sampler);
+            sampler.slice (drums, {}, {}, how);
+            const auto zones = sampler.getZones();
+            const auto notes = Sampler::notesFromSlices (zones);
+            std::vector<Event> part;
+            std::vector<int> cuts;
+
+            for (auto& note : notes)
+            {
+                part.push_back (on (note.start + 1.0e-7, note.pitch, note.velocity));
+                part.push_back (off (note.start + note.hold * 0.5, note.pitch));
+                cuts.push_back ((int) std::lround (note.start * rate));
+            }
+
+            cuts.push_back (loop.getNumSamples());   // the last slice's end is faded as the others are
+            std::sort (part.begin(), part.end(), [] (const Event& a, const Event& b) { return a.when < b.when; });
+            const auto rebuilt = play (sampler, part, 4.0);
+            auto apart = 0.0f;
+            double difference = 0.0, whole = 0.0;
+
+            for (int i = 0; i < loop.getNumSamples(); ++i)
+            {
+                const auto d = rebuilt.getSample (0, i) - loop.getSample (0, i);
+                difference += (double) d * d;
+                whole += (double) loop.getSample (0, i) * loop.getSample (0, i);
+
+                if (std::none_of (cuts.begin(), cuts.end(), [i] (int cut) { return std::abs (i - cut) < 72; }))
+                    apart = juce::jmax (apart, std::abs (d));
+            }
+
+            const auto overall = 10.0 * std::log10 (difference / whole);
+            auto inOrder = notes.size() == zones.size();
+
+            for (size_t i = 0; inOrder && i < notes.size(); ++i)
+                inOrder = notes[i].pitch == 36 + (int) i && std::abs (notes[i].start - (double) zones[i].start / rate) < 1.0e-9
+                          && std::abs (notes[i].hold - (double) (zones[i].end - zones[i].start) / rate) < 1.0e-9;
+
+            check (inOrder && apart < 1.0e-6f && overall < -30.0,
+                   "sampler: Notes from Slices gives a note for each slice, at its time in the loop and as long; played back they are the loop again, within "
+                       + juce::String (db (apart), 1) + " dB away from the cuts (1.5 ms either side of each) and " + juce::String (overall, 1) + " dB different over all");
+        }
+
+        // The drum map names the slices, and slices that cut each other do.
+        {
+            Sampler::Slicing how;
+            how.source = Sampler::SliceSource::markers;
+            how.cutEachOther = true;
+            plain (sampler);
+            sampler.slice (sample, {}, {}, how);
+            const auto map = Sampler::drumMapFor (sampler.getZones());
+            const auto out = play (sampler, { on (0.0, 36), on (0.05, 37) }, 0.3);
+            const auto cut = toneAt (out, 0.06, 0.1, 300.0) < 0.01 && toneAt (out, 0.06, 0.1, 400.0) > 0.4;
+
+            juce::MemoryBlock state;
+            sampler.getStateInformation (state);
+            Processor other;
+            other.setStateInformation (state.getData(), (int) state.getSize());
+            const auto kept = other.getSlicing() == sampler.getSlicing() && other.getSlicing().on && other.getSlicing().cutEachOther
+                              && other.getSlicing().source == Sampler::SliceSource::markers && other.getZones().size() == 9 && other.getZones()[2].name == "Hit 2";
+
+            check (map.size() == 9 && map[0].pitch == 36 && map[0].name == "Start" && map[2].pitch == 38 && map[2].name == "Hit 2" && map[8].pitch == 44 && map[0].standsFor == -1
+                       && cut && ClickCheck::worst (out, rate, 0.01f, { 0, (int) (0.05 * rate) }).ratio < 4.0f && kept,
+                   "sampler: its drum map has a row for each slice, named after it, on its key; with Cut Each Other a slice stops the last without a click; how it was sliced, and the slices' names, come back from its state (a sample made in memory, with no file, doesn't)");
         }
     }
 }
@@ -1197,6 +1470,7 @@ void runSamplerTests (AudioEngine& engine)
     }
 
     testZones (*sampler);
+    testSlices (*sampler);
 
     defaults (*sampler);
     sampler->setZones ({});
