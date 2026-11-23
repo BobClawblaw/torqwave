@@ -78,6 +78,7 @@ DecryptView::DecryptView (Synth& s) : synth (s)
         {
             replacing = false;
             namingNote = {};
+            layout();
             repaint();
         }
     };
@@ -123,6 +124,7 @@ bool DecryptView::saveName (bool replace)
     {
         replacing = true;
         namingNote = "There is a preset called " + name.quoted() + ". Replace it?";
+        layout();
         repaint();
         return false;
     }
@@ -137,6 +139,7 @@ bool DecryptView::saveName (bool replace)
     {
         replacing = false;
         namingNote = why.isNotEmpty() ? why : juce::String ("It couldn't be written to the presets folder.");
+        layout();
         repaint();
         return false;
     }
@@ -467,11 +470,17 @@ void DecryptView::useOfferedName (bool use)
             if (offer.macros[(size_t) m].trim().isNotEmpty())
                 synth.setMacroName (m, offer.macros[(size_t) m].trim().substring (0, 16));
 
+        // While Take's name is asked for, the model's goes into the box (and its category onto the chip), to save or type over.
         if (naming)
         {
             nameBox.setText (synth.getPatchName(), false);
+
+            if (WaveSynth::patchCategories().contains (offer.category))
+                category = offer.category;
+
             replacing = false;
             namingNote = {};
+            nameBox.selectAll();
         }
     }
 
@@ -675,10 +684,11 @@ int DecryptView::linkAt (juce::Point<float> p) const
             nearestDistance = d;
         }
 
-    // A candidate whose middle is nearer the pointer than the node is keeps the click: the path lies over the candidates.
+    // A candidate whose middle is as near the pointer as the node is, or nearer, keeps the click: the path lies over the
+    // candidates, and a node can sit exactly on one (the step still has its tile on the strip).
     if (nearest >= 0)
         for (auto& place : places)
-            if (p.getDistanceFrom (place) < nearestDistance)
+            if (p.getDistanceFrom (place) <= nearestDistance)
                 return -1;
 
     return nearest;
@@ -883,24 +893,6 @@ void DecryptView::layout()
         places[i] = centre + juce::Point<float> (std::cos (angle), std::sin (angle)) * r;
     }
 
-    // The offer of a name, under the panel's figures.
-    useChip = refuseChip = saveChip = laterChip = categoryChip = {};
-
-    if (offer.name.isNotEmpty())
-    {
-        useChip = { panel.getX() + 16.0f, panel.getBottom() - (naming ? 214.0f : 92.0f), 64.0f, 24.0f };
-        refuseChip = { useChip.getRight() + 8.0f, useChip.getY(), 64.0f, 24.0f };
-    }
-
-    // Take's name: the box, then Save and Not Now (Replace and Keep Typing when the name is taken).
-    if (naming)
-    {
-        nameBox.setBounds (juce::Rectangle<float> (panel.getX() + 16.0f, panel.getBottom() - 158.0f, panel.getWidth() - 32.0f, 26.0f).toNearestInt());
-        saveChip = { panel.getX() + 16.0f, panel.getBottom() - 106.0f, replacing ? 84.0f : 64.0f, 24.0f };
-        laterChip = { saveChip.getRight() + 8.0f, saveChip.getY(), replacing ? 108.0f : 84.0f, 24.0f };
-        categoryChip = { laterChip.getRight() + 8.0f, saveChip.getY(), panel.getRight() - 16.0f - laterChip.getRight() - 8.0f, 24.0f };
-    }
-
     // The chain's strip: Play, the signal, then every link, each as wide as the room allows. Past
     // the narrowest a tile can be, the strip scrolls (the wheel), and the tiles out of view have no place.
     {
@@ -926,10 +918,27 @@ void DecryptView::layout()
         for (int i = 0; i < n; ++i)
         {
             const auto angle = tau * 0.39f + (float) i * step;
-            const auto r = juce::jmax (radius * reachOf (chain[(size_t) i].lock), 72.0f * k);
-            chain[(size_t) i].node = centre + juce::Point<float> (std::cos (angle), std::sin (angle)) * r;
+            auto r = juce::jmax (radius * reachOf (chain[(size_t) i].lock), 72.0f * k);
+            const auto at = [&] { return centre + juce::Point<float> (std::cos (angle), std::sin (angle)) * r; };
+
+            // Never on a candidate (both sit on the inner ring from 85 % up): a node there steps outward, to have a middle of its own to click.
+            for (int tries = 0; tries < 6 && std::any_of (places.begin(), places.end(), [&] (juce::Point<float> place) { return place.getDistanceFrom (at()) < 10.0f * k; }); ++tries)
+                r += 12.0f * k;
+
+            chain[(size_t) i].node = at();
         }
     }
+
+    // The panel's controls, where its plan puts them: Take's name box and chips, the model's name to use, the buttons.
+    const auto plan = planPanel();
+    useChip = plan.use;
+    refuseChip = plan.refuse;
+    saveChip = plan.save;
+    laterChip = plan.later;
+    categoryChip = plan.category;
+
+    if (naming)
+        nameBox.setBounds (plan.nameBox.toNearestInt());
 
     stopChip = { panel.getX() + 16.0f, panel.getBottom() - 44.0f, 84.0f, 26.0f };
     takeChip = { stopChip.getRight() + 8.0f, stopChip.getY(), 108.0f, 26.0f };
@@ -1335,6 +1344,20 @@ namespace
     {
         return juce::GlyphArrangement::getStringWidth (mono (size, bold), s);
     }
+
+    /** A line shortened to the room it has, ".." where it was cut. */
+    juce::String fitted (const juce::String& s, float size, bool bold, float room)
+    {
+        if (widthOf (s, size, bold) <= room)
+            return s;
+
+        auto cut = s;
+
+        while (cut.isNotEmpty() && widthOf (cut.trimEnd() + "..", size, bold) > room)
+            cut = cut.dropLastCharacters (1);
+
+        return cut.isEmpty() ? juce::String() : cut.trimEnd() + "..";
+    }
 }
 
 DecryptView::TopLine DecryptView::topLine() const
@@ -1513,17 +1536,280 @@ void DecryptView::drawControls (juce::Graphics& g)
               tablesOnly ? Theme::textStrong : Theme::dimText);
 }
 
+DecryptView::PanelPlan DecryptView::planPanel() const
+{
+    PanelPlan plan;
+
+    if (search == nullptr)
+        return plan;
+
+    const auto x = panel.getX() + 16.0f, right = panel.getRight() - 16.0f, width = right - x, bottom = panel.getBottom();
+
+    // A line of text, shortened to the room it has (to the panel's edge, unless told less) and measured.
+    const auto put = [&plan, x, right] (const char* what, const juce::String& s, float at, float y, float size, juce::Colour colour,
+                                        bool rightAligned = false, bool bold = false, float room = -1.0f)
+    {
+        const auto shown = fitted (s, size, bold, room >= 0.0f ? room : rightAligned ? at - x : right - at);
+
+        if (shown.isEmpty())
+            return;
+
+        const auto w = widthOf (shown, size, bold), h = size + 3.0f;
+        plan.texts.push_back ({ what, shown, { rightAligned ? at - w : at, y - h * 0.5f, w, h }, size, colour, bold, rightAligned });
+    };
+
+    const auto box = [&plan] (const char* what, juce::Rectangle<float> at)
+    {
+        plan.boxes.push_back ({ what, at });
+        return at;
+    };
+
+    const auto running = search->isRunning();
+    const auto* c = shown();
+    const auto* link = juce::isPositiveAndBelow (selectedLink, (int) chain.size()) ? &chain[(size_t) selectedLink] : nullptr;
+
+    // From the bottom up, what must be there: the buttons, the chain's hint, then Take's name (or the signal's line).
+    // Each has a row of its own; what is left above is the room the figures have.
+    plan.stop = { x, bottom - 44.0f, 84.0f, 26.0f };
+    plan.take = { plan.stop.getRight() + 8.0f, plan.stop.getY(), 108.0f, 26.0f };
+    plan.again = { plan.take.getRight() + 8.0f, plan.stop.getY(), 72.0f, 26.0f };
+
+    if (! restored)
+    {
+        box ("Stop", plan.stop);
+        box ("Take", plan.take);
+    }
+
+    if (canGoAgain())
+        box ("Again", plan.again);
+
+    auto floor = bottom - 52.0f;
+
+    if (! chain.empty())
+    {
+        put ("chain hint", chainHint(), x, floor - 9.0f, 10.0f, Theme::faintText);
+        floor -= 20.0f;
+    }
+
+    // What the model offers as a name, its category after it and never cut off.
+    const auto offered = [this] (float room)
+    {
+        const auto tail = offer.category.isNotEmpty() ? " (" + offer.category + ")" : juce::String();
+        return fitted ("model: " + offer.name.trim().quoted(), 10.5f, false, room - widthOf (tail, 10.5f)) + tail;
+    };
+
+    if (naming)
+    {
+        // KEEP IT, the box, the model's name to use (when it has one), what is said of the name typed, then Save.
+        plan.save = box (replacing ? "Replace" : "Save", { x, floor - 24.0f, replacing ? 84.0f : 64.0f, 24.0f });
+        plan.later = box (replacing ? "Keep Typing" : "Not Now", { plan.save.getRight() + 8.0f, plan.save.getY(), replacing ? 108.0f : 84.0f, 24.0f });
+        plan.category = box ("category", { plan.later.getRight() + 8.0f, plan.save.getY(), right - plan.later.getRight() - 8.0f, 24.0f });
+        floor -= 30.0f;
+        put ("name note", namingNote, x, floor - 8.0f, 10.5f, replacing ? Theme::accentLight : Theme::danger);
+        floor -= 18.0f;
+
+        if (offer.name.isNotEmpty())
+        {
+            plan.use = box ("Use", { right - 52.0f, floor - 24.0f, 52.0f, 22.0f });
+            put ("name offered", offered (width - 60.0f), x, plan.use.getCentreY(), 10.5f, Theme::accentLight, false, false, width - 60.0f);
+            floor -= 28.0f;
+        }
+
+        plan.nameBox = box ("name box", { x, floor - 26.0f, width, 26.0f });
+        floor -= 32.0f;
+        put ("KEEP IT", "KEEP IT", x, floor - 8.0f, 11.0f, Theme::good, false, true);
+        put ("keep it hint", "a name saves it to Decrypted", x + widthOf ("KEEP IT", 11.0f, true) + 12.0f, floor - 8.0f, 10.5f, Theme::dimText);
+        floor -= 20.0f;
+    }
+    else
+    {
+        if (offer.name.isNotEmpty())
+        {
+            plan.refuse = box ("No", { right - 44.0f, floor - 24.0f, 44.0f, 22.0f });
+            plan.use = box ("Use", { plan.refuse.getX() - 60.0f, plan.refuse.getY(), 52.0f, 22.0f });
+            put ("name offered", offered (width - 112.0f), x, plan.use.getCentreY(), 10.5f, Theme::accentLight, false, false, width - 112.0f);
+            floor -= 28.0f;
+        }
+
+        if (namingNote.isNotEmpty())
+        {
+            put ("name note", namingNote, x, floor - 8.0f, 10.5f, Theme::good);
+            floor -= 16.0f;
+        }
+
+        const auto& t = search->getTarget();
+        put ("signal", "signal  " + (t.pitchHz > 0.0 ? noteName (t.note) : juce::String ("no pitch")) + "  "
+                       + juce::String (t.audio.getNumSamples() / rate - (t.decays ? silenceAfter : 0.0), 2) + " s  dry" + (t.decays ? "  dies away" : "")
+                       + (clipName.isNotEmpty() ? "  " + clipName : juce::String()), x, floor - 8.0f, 10.5f, Theme::dimText);
+        floor -= 16.0f;
+    }
+
+    floor -= 8.0f;
+
+    // From the top down: the heading and status, how far this pass came, the figure, a bar for each part, what the model tried.
+    const auto top = topLine();
+    plan.texts.push_back ({ "heading", top.heading, top.headingAt, 12.0f, signal(), true, false });
+    put ("status", top.status, top.statusAt.getRight(), top.statusAt.getCentreY(), 11.0f, Theme::dimText, true, false, top.statusAt.getWidth() + 0.5f);
+    const auto start = top.statusAt.getBottom() + 6.0f;
+    const auto hasPass = ! progress.best.empty() && passFromDb >= 0.0f;
+    auto advice = hasPass && ! running && progress.noCloser;
+    const auto note = levelNote.isNotEmpty() && (link != nullptr || c != nullptr);
+    auto tried = juce::jmin (3, progress.model.size());
+    auto pitch = 32.0f;
+
+    const auto needed = [&]
+    {
+        return (hasPass ? 15.0f : 0.0f) + (advice ? 30.0f : 0.0f) + 6.0f + (link != nullptr ? 124.0f : 106.0f) + 8.0f + (note ? 14.0f : 0.0f)
+               + pitch * (float) (SignalConsole::numParts - 1) + 24.0f + (tried > 0 ? 22.0f + 15.0f * (float) tried : 0.0f);
+    };
+
+    // Where there is not the room: the model's oldest lines go first, then the bars close up, then the advice goes.
+    while (needed() > floor - start)
+    {
+        if (tried > 0)              --tried;
+        else if (pitch > 26.0f)     pitch -= 1.0f;
+        else if (advice)            advice = false;
+        else if (pitch > 22.0f)     pitch -= 1.0f;
+        else                        break;
+    }
+
+    auto y = start;
+
+    if (hasPass)
+    {
+        const auto& best = progress.best.front();
+        const auto gained = passFromDb - best.distance.total;
+        put ("pass", (passes > 1 ? "pass " + juce::String (passes) + "  " : juce::String ("this pass  "))
+                     + juce::String (passFromDb, 2) + " to " + juce::String (best.distance.total, 2) + " dB"
+                     + (gained >= 0.005f ? ", " + juce::String (gained, 2) + " nearer" : juce::String (", no nearer yet")),
+             x, y + 7.5f, 10.5f, running ? Theme::accentLight : Theme::dimText);
+        y += 15.0f;
+
+        if (advice)
+        {
+            put ("advice 1", "No closer from here: choose a step or a", x, y + 7.5f, 10.5f, Theme::dimText);
+            put ("advice 2", "candidate, and Again goes on from it.", x, y + 22.5f, 10.5f, Theme::dimText);
+            y += 30.0f;
+        }
+    }
+
+    y += 6.0f;
+
+    // A link of the chain, when one is chosen: its lock and figures, and what changed to get there from the link before.
+    // Otherwise the candidate shown: its signature, lock, address and where it came from.
+    if (link != nullptr || c != nullptr)
+    {
+        plan.signature = link != nullptr ? &link->signature : &c->signature;
+        plan.figure = box ("signature", { x, y + 6.0f, 68.0f, 68.0f });
+        const auto lock = link != nullptr ? link->lock : c == &progress.best.front() ? shownLock : c->lock;
+        const auto distance = link != nullptr ? link->distance : c->distance;
+        put ("lock", juce::String (juce::roundToInt (lock)) + "%", x + 80.0f, y + 26.0f, 30.0f, Theme::textStrong, false, true);
+        put ("lock line", link != nullptr ? "lock   step " + juce::String (selectedLink + 1) + " of " + juce::String ((int) chain.size())
+                                                + (selectedLink == keysLink ? "   on the keys" : link->picked ? "   picked" : "")
+                                          : "lock   node " + SignalConsole::addressText (c->address), x + 80.0f, y + 52.0f, 11.0f, Theme::dimText);
+        put ("from", "from " + (link != nullptr ? link->from : c->from), x + 80.0f, y + 68.0f, 10.5f, Theme::faintText);
+        put ("apart", "tone " + juce::String (distance.tone, 1) + " dB   loudness " + juce::String (distance.loudness, 1) + " dB apart", x, y + 96.0f, 10.5f, Theme::dimText);
+
+        if (link != nullptr)
+            put ("step change", stepChange (selectedLink), x, y + 114.0f, 10.5f, Theme::accentLight);
+    }
+    else
+        put ("rendering", "rendering the factory patches...", x, y + 20.0f, 11.0f, Theme::dimText);
+
+    y += (link != nullptr ? 124.0f : 106.0f) + 8.0f;
+
+    if (note)
+    {
+        put ("level note", levelNote, x, y + 6.0f, 10.0f, Theme::danger);
+        y += 14.0f;
+    }
+
+    // A bar for each part: as the search settles it, or, for a link, how far its settings moved from the link before.
+    static const char* const barNames[] { "bar 1", "bar 2", "bar 3", "bar 4", "bar 5" };
+    static const char* const partTexts[] { "part 1", "part 2", "part 3", "part 4", "part 5" };
+    static const char* const amountTexts[] { "amount 1", "amount 2", "amount 3", "amount 4", "amount 5" };
+    plan.ofLink = link != nullptr;
+
+    for (int part = 0; part < SignalConsole::numParts; ++part)
+    {
+        const auto off = part == SignalConsole::effects;
+        plan.amounts[(size_t) part] = off ? 0.0f : link != nullptr ? link->moved[(size_t) part] : progress.settled[(size_t) part];
+        put (partTexts[part], SignalConsole::partNames()[part].toLowerCase() + (off ? " (off while matching)" : ""), x, y + 8.0f, 11.5f, off ? Theme::faintText : Theme::text);
+
+        if (! off)
+            put (amountTexts[part], (link != nullptr ? "moved " : "") + juce::String (juce::roundToInt (plan.amounts[(size_t) part] * 100.0f)) + "%", right, y + 8.0f, 10.5f, Theme::dimText, true);
+
+        plan.bars[(size_t) part] = box (barNames[part], { x, y + 18.0f, width, 4.0f });
+        y += part + 1 < SignalConsole::numParts ? pitch : 24.0f;
+    }
+
+    // What the model proposed, the newest last: what was tried shortened to the room, how it went (kept or dropped, and
+    // the lock) always whole at the right.
+    if (tried > 0)
+    {
+        y += 8.0f;
+        put ("tried heading", "the model tried", x, y + 7.0f, 10.0f, Theme::faintText);
+        y += 14.0f;
+        static const char* const ideas[] { "tried 1", "tried 2", "tried 3" };
+        static const char* const outcomes[] { "outcome 1", "outcome 2", "outcome 3" };
+
+        for (int i = progress.model.size() - tried, n = 0; i < progress.model.size(); ++i, ++n)
+        {
+            const auto& line = progress.model[i];
+            const auto colour = line.contains (": kept") ? Theme::good : Theme::accentLight;
+            const auto split = line.lastIndexOf ("\": ");
+
+            if (split < 0)
+                put (ideas[n], line, x, y + 7.5f, 10.5f, colour);
+            else
+            {
+                const auto outcome = line.substring (split + 3).upToFirstOccurrenceOf (" against ", false, false);
+                const auto outcomeWidth = widthOf (outcome, 10.5f);
+                put (outcomes[n], outcome, right, y + 7.5f, 10.5f, colour, true);
+                put (ideas[n], line.substring (0, split).fromFirstOccurrenceOf ("\"", false, false), x, y + 7.5f, 10.5f, colour, false, false, width - outcomeWidth - 12.0f);
+            }
+
+            y += 15.0f;
+        }
+    }
+
+    plan.tried = tried;
+    return plan;
+}
+
+std::vector<std::pair<juce::String, juce::Rectangle<float>>> DecryptView::panelBlocks() const
+{
+    std::vector<std::pair<juce::String, juce::Rectangle<float>>> blocks;
+    const auto plan = planPanel();
+
+    for (auto& t : plan.texts)
+        blocks.push_back ({ juce::String (t.what) + " \"" + t.text + "\"", t.at });
+
+    for (auto& [what, at] : plan.boxes)
+        blocks.push_back ({ what, at });
+
+    return blocks;
+}
+
+void DecryptView::setTestModel (const juce::StringArray& tried, const Decrypt::Advisor::Name& name)
+{
+    progress.model = tried;
+    offer = name;
+    layout();
+    repaint();
+}
+
 void DecryptView::drawPanel (juce::Graphics& g)
 {
     g.setColour (Theme::inset);
     g.fillRoundedRectangle (panel, 8.0f);
     g.setColour (Theme::line);
     g.drawRoundedRectangle (panel, 8.0f, 1.0f);
-    const auto x = panel.getX() + 16.0f, right = panel.getRight() - 16.0f, width = right - x;
-    auto y = panel.getY() + 22.0f;
 
     if (search == nullptr)
     {
+        const auto x = panel.getX() + 16.0f;
+        auto y = panel.getY() + 22.0f;
         text (g, "DECRYPT", x, y, 12.0f, signal(), juce::Justification::centredLeft, true);
         y += 30.0f;
         const juce::StringArray lines {
@@ -1558,140 +1844,47 @@ void DecryptView::drawPanel (juce::Graphics& g)
         return;
     }
 
-    const auto running = search->isRunning();
-    const auto* c = shown();
-    const auto top = topLine();
-    text (g, top.heading, x, top.headingAt.getCentreY(), 12.0f, signal(), juce::Justification::centredLeft, true);
-    text (g, top.status, top.statusAt.getRight(), top.statusAt.getCentreY(), 11.0f, Theme::dimText, juce::Justification::centredRight);
-    y = top.statusAt.getCentreY() + 20.0f;
+    // Everything in the panel has a place of its own in the plan: nothing is drawn that it did not measure.
+    const auto plan = planPanel();
 
-    // How far this pass has come, live; and when it settles, how far it got and where to go from there.
-    if (! progress.best.empty() && passFromDb >= 0.0f)
-    {
-        const auto& best = progress.best.front();
-        const auto gained = passFromDb - best.distance.total;
-        const auto line = (passes > 1 ? "pass " + juce::String (passes) + "  " : juce::String ("this pass  "))
-                        + juce::String (passFromDb, 2) + " to " + juce::String (best.distance.total, 2) + " dB"
-                        + (gained >= 0.005f ? ", " + juce::String (gained, 2) + " nearer" : juce::String (", no nearer yet"));
-        text (g, line, x, y, 10.5f, running ? Theme::accentLight : Theme::dimText);
-        y += 15.0f;
+    for (auto& t : plan.texts)
+        text (g, t.text, t.rightAligned ? t.at.getRight() : t.at.getX(), t.at.getCentreY(), t.size, t.colour,
+              t.rightAligned ? juce::Justification::centredRight : juce::Justification::centredLeft, t.bold);
 
-        if (! running && progress.noCloser)
-        {
-            text (g, "No closer from here: choose a step or a", x, y, 10.5f, Theme::dimText);
-            y += 15.0f;
-            text (g, "candidate, and Again goes on from it.", x, y, 10.5f, Theme::dimText);
-            y += 15.0f;
-        }
-    }
+    if (plan.signature != nullptr)
+        drawSignature (g, plan.figure.getCentre(), 34.0f, *plan.signature, Theme::accent, 1.0f, true);
 
-    y += 4.0f;
-
-    // A link of the chain, when one is chosen: its lock and figures, and what changed to get there from the link before.
-    const auto* link = juce::isPositiveAndBelow (selectedLink, (int) chain.size()) ? &chain[(size_t) selectedLink] : nullptr;
-
-    if (link != nullptr)
-    {
-        drawSignature (g, { x + 34.0f, y + 40.0f }, 34.0f, link->signature, Theme::accent, 1.0f, true);
-        text (g, juce::String (juce::roundToInt (link->lock)) + "%", x + 80.0f, y + 26.0f, 30.0f, Theme::textStrong, juce::Justification::centredLeft, true);
-        text (g, "lock   step " + juce::String (selectedLink + 1) + " of " + juce::String ((int) chain.size())
-                 + (selectedLink == keysLink ? "   on the keys" : link->picked ? "   picked" : ""), x + 80.0f, y + 52.0f, 11.0f, Theme::dimText);
-        text (g, "from " + link->from, x + 80.0f, y + 68.0f, 10.5f, Theme::faintText);
-        y += 96.0f;
-        text (g, "tone " + juce::String (link->distance.tone, 1) + " dB   loudness " + juce::String (link->distance.loudness, 1) + " dB apart", x, y, 10.5f, Theme::dimText);
-        y += 18.0f;
-        text (g, stepChange (selectedLink).substring (0, 46), x, y, 10.5f, Theme::accentLight);
-        y += 22.0f;
-    }
-    // The candidate shown: its signature, lock, address and where it came from.
-    else if (c != nullptr)
-    {
-        drawSignature (g, { x + 34.0f, y + 40.0f }, 34.0f, c->signature, Theme::accent, 1.0f, true);
-        const auto lock = c == &progress.best.front() ? shownLock : c->lock;
-        text (g, juce::String (juce::roundToInt (lock)) + "%", x + 80.0f, y + 26.0f, 30.0f, Theme::textStrong, juce::Justification::centredLeft, true);
-        text (g, "lock   node " + SignalConsole::addressText (c->address), x + 80.0f, y + 52.0f, 11.0f, Theme::dimText);
-        text (g, "from " + c->from, x + 80.0f, y + 68.0f, 10.5f, Theme::faintText);
-        y += 96.0f;
-        text (g, "tone " + juce::String (c->distance.tone, 1) + " dB   loudness " + juce::String (c->distance.loudness, 1) + " dB apart", x, y, 10.5f, Theme::dimText);
-        y += 24.0f;
-    }
-    else
-    {
-        text (g, "rendering the factory patches...", x, y + 20.0f, 11.0f, Theme::dimText);
-        y += 120.0f;
-    }
-
-    if (levelNote.isNotEmpty() && (link != nullptr || c != nullptr))
-    {
-        text (g, levelNote, x, y - 6.0f, 10.0f, Theme::danger);
-        y += 14.0f;
-    }
-
-    // A bar for each part: as the search settles it, or, for a link, how far its settings moved from the link before.
     for (int part = 0; part < SignalConsole::numParts; ++part)
     {
-        const auto off = part == SignalConsole::effects;
-        const auto amount = off ? 0.0f : link != nullptr ? link->moved[(size_t) part] : progress.settled[(size_t) part];
-        text (g, SignalConsole::partNames()[part].toLowerCase() + (off ? " (off while matching)" : ""), x, y, 11.5f, off ? Theme::faintText : Theme::text);
-
-        if (! off)
-            text (g, (link != nullptr ? "moved " : "") + juce::String (juce::roundToInt (amount * 100.0f)) + "%", right, y, 10.5f, Theme::dimText, juce::Justification::centredRight);
-
+        const auto bar = plan.bars[(size_t) part];
+        const auto amount = plan.amounts[(size_t) part];
         g.setColour (Theme::line);
-        g.fillRect (x, y + 10.0f, width, 4.0f);
-        g.setColour (link != nullptr ? Theme::accent : amount > 0.85f ? Theme::good : signal());
-        g.fillRect (x, y + 10.0f, width * amount, 4.0f);
-        y += 32.0f;
+        g.fillRect (bar);
+        g.setColour (plan.ofLink ? Theme::accent : amount > 0.85f ? Theme::good : signal());
+        g.fillRect (bar.withWidth (bar.getWidth() * amount));
     }
-
-    // What the model proposed, the newest last.
-    y += 4.0f;
-
-    for (int i = juce::jmax (0, progress.model.size() - 3); i < progress.model.size(); ++i)
-    {
-        const auto& line = progress.model[i];
-        text (g, line.substring (0, 44), x, y, 10.5f, line.contains (": kept") ? Theme::good : Theme::accentLight);
-        y += 16.0f;
-    }
-
-    const auto& t = search->getTarget();
 
     if (naming)
     {
-        text (g, "KEEP IT", x, panel.getBottom() - 176.0f, 11.0f, Theme::good, juce::Justification::centredLeft, true);
-        text (g, "a name saves it to Decrypted", x + 62.0f, panel.getBottom() - 176.0f, 10.5f, Theme::dimText);
-
-        if (namingNote.isNotEmpty())
-            text (g, namingNote.substring (0, 46), x, panel.getBottom() - 120.0f, 10.5f, replacing ? Theme::accentLight : Theme::danger);
-
-        drawChip (g, saveChip, replacing ? "Replace" : "Save", Theme::good, true, Theme::textStrong);
-        drawChip (g, laterChip, replacing ? "Keep Typing" : "Not Now", Theme::lineStrong, false, Theme::dimText);
-        drawChip (g, categoryChip, category.isEmpty() ? juce::String ("no category") : category, Theme::accent, false, category.isEmpty() ? Theme::dimText : Theme::text);
+        drawChip (g, plan.save, replacing ? "Replace" : "Save", Theme::good, true, Theme::textStrong);
+        drawChip (g, plan.later, replacing ? "Keep Typing" : "Not Now", Theme::lineStrong, false, Theme::dimText);
+        drawChip (g, plan.category, category.isEmpty() ? juce::String ("no category") : category, Theme::accent, false, category.isEmpty() ? Theme::dimText : Theme::text);
     }
-    else if (namingNote.isNotEmpty())
-        text (g, namingNote.substring (0, 46), x, panel.getBottom() - 88.0f, 10.5f, Theme::good);
 
-    if (! naming)
-        text (g, "signal  " + (t.pitchHz > 0.0 ? noteName (t.note) : juce::String ("no pitch")) + "  " + juce::String (t.audio.getNumSamples() / rate - (t.decays ? silenceAfter : 0.0), 2) + " s  dry" + (t.decays ? "  dies away" : "")
-                 + (clipName.isNotEmpty() ? "  " + clipName.substring (0, 18) : juce::String()), x, juce::jmax (y + 8.0f, panel.getBottom() - 118.0f), 10.5f, Theme::dimText);
+    if (! plan.use.isEmpty())
+        drawChip (g, plan.use, "Use", Theme::good, false, Theme::text);
 
-    if (offer.name.isNotEmpty())
-    {
-        text (g, "Name it " + offer.name.quoted() + (offer.category.isNotEmpty() ? " (" + offer.category + ")?" : "?"), x, useChip.getY() - 22.0f, 11.0f, Theme::accentLight);
-        drawChip (g, useChip, "Use", Theme::good, false, Theme::text);
-        drawChip (g, refuseChip, "No", Theme::lineStrong, false, Theme::dimText);
-    }
+    if (! plan.refuse.isEmpty())
+        drawChip (g, plan.refuse, "No", Theme::lineStrong, false, Theme::dimText);
 
     if (! restored)
     {
-        drawChip (g, stopChip, "Stop", Theme::lineStrong, false, Theme::text);
+        const auto* c = shown();
+        drawChip (g, plan.stop, "Stop", Theme::lineStrong, false, Theme::text);
         const auto taking = juce::isPositiveAndBelow (keysLink, (int) chain.size()) ? chain[(size_t) keysLink].lock : c != nullptr ? c->lock : -1.0f;
-        drawChip (g, takeChip, taking >= 0.0f ? "Take " + juce::String (juce::roundToInt (taking)) + "%" : juce::String ("Take"), Theme::good, true, Theme::textStrong);
+        drawChip (g, plan.take, taking >= 0.0f ? "Take " + juce::String (juce::roundToInt (taking)) + "%" : juce::String ("Take"), Theme::good, true, Theme::textStrong);
     }
 
     if (canGoAgain())
-        drawChip (g, againChip, "Again", Theme::accent, true, Theme::textStrong);
-
-    if (! chain.empty())
-        text (g, chainHint(), x, panel.getBottom() - 62.0f, 10.0f, Theme::faintText);
+        drawChip (g, plan.again, "Again", Theme::accent, true, Theme::textStrong);
 }
