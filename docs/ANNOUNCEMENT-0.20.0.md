@@ -8,7 +8,7 @@ Check the lengths after any change:
 python3 docs/compare/generate.py --posts docs/ANNOUNCEMENT-0.20.0.md
 ```
 
-The graphics are in [compare/graphics/](compare/graphics/), made from the [comparison data](compare/README.md); the screenshots are in [screenshots/](screenshots/). Before posting, run the generator again so the graphics carry the day's date and say the release is out, and check that every number below still matches the release notes.
+The graphics are in [compare/graphics/](compare/graphics/), made from the [comparison data](compare/README.md); the screenshots are in [screenshots/](screenshots/). The graphics were regenerated for release day: they carry the date 2026-11-23 and say 0.20.0 is released. If the release goes out on another day, set `as_of` and Torqwave's `version_date` in `compare/data/snapshots/0.20.0.json` and run the generator again. Check that every number below still matches the release notes.
 
 ## The main post
 
@@ -53,7 +53,7 @@ Decrypt builds a synth patch from a recording of one note. It finds the pitch, p
 Close for sounds a synth made. Loose for voices, drums and samples: a patch in their spirit.
 ```
 
-**4 of 6**, with Torqwave Sampler's, StringSwarm's and Basic Drums' windows (`screenshots/guide-sampler.png`, `screenshots/guide-swarm.png`, `screenshots/guide-drums.png`). The sampler's picture comes with the sampler's branch and is drawn by the tests without the playing keys; retake it from the release build if there is time.
+**4 of 6**, with Torqwave Sampler's, StringSwarm's and Basic Drums' windows (`screenshots/guide-sampler.png`, `screenshots/guide-swarm.png`, `screenshots/guide-drums.png`). The sampler's picture is drawn by the tests without the playing keys; retake it from the release build if there is time.
 
 ```text
 Three more instruments. Torqwave Sampler: your own sounds across the keys, or cut into slices. StringSwarm: a guitar with every string tuned to the note you play, through a fuzz, or a swarm of oscillators. Basic Drums: 30 sounds on pads.
@@ -141,8 +141,8 @@ A dark table titled "Torqwave 0.20.0 and the DAWs, 2 of 2", with the same rows; 
 
 ## Notes for whoever posts it
 
-- It is written for the day of the release. Until then nothing here is posted, and "is out" is not yet true.
+- It is written for the day of the release. Nothing here is posted until the release is published: "is out" is true only then.
 - No other product is named in the posts, and none is called worse. The comparison is offered as a table to read, with what Torqwave lacks in the same post.
-- Torqwave Sampler is in the posts and the graphics on the understanding that it ships in 0.20.0. By its changelog it was measured by the tests and not yet tried by hand in the app: try it before posting, and take it out of the posts if it does not ship.
+- Torqwave Sampler ships in 0.20.0. By its changelog it was measured by the tests and not yet tried by hand in the app: try it before posting.
 - Two hashtags at most if any are added; the draft has none.
 - The Windows and Linux packages of 0.20.0 are built by the workflows and, by the release notes, were not tried by hand. If someone asks, say so.
