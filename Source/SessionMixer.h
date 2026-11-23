@@ -126,6 +126,10 @@ namespace SessionMixer
             block, so a note starting there would start again each one and never end). */
         virtual void setClipNotes (bool /*play*/)   {}
 
+        /** Audio thread, before a block is mixed: the session's tempo map (valid for the block) and
+            whether it is playing, for the plug-ins' play head (tempo-synced delays, LFOs, steps). */
+        virtual void setTiming (const Metronome::TempoMap& /*map*/, bool /*playing*/)   {}
+
         /** Audio thread: every instrument ends its notes before its next block (playback stopped
             with a clip's note sounding, whose off will now never come). */
         virtual void endNotes()   {}

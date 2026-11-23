@@ -11,6 +11,13 @@ namespace InstrumentKeys
 {
 std::function<void()> layoutChanged;
 std::function<void()> auditionChanged;
+std::function<double()> sessionTempo;
+
+double auditionSpeed()
+{
+    const auto tempo = sessionTempo != nullptr ? sessionTempo() : 0.0;
+    return tempo > 0.0 ? juce::jlimit (20.0, 999.0, tempo) / 125.0 : 1.0;
+}
 
 namespace
 {
@@ -456,7 +463,7 @@ void Strip::timerCallback()
 {
     const auto keys = playingKeys();
     const auto now = juce::Time::getMillisecondCounterHiRes();
-    auditioner.advance (now - lastTick);
+    auditioner.advance ((now - lastTick) * auditionSpeed());    // the session's tempo, read as it goes
     lastTick = now;
     // A key's release can go unheard (the window losing the keyboard mid-note): a key no longer down lets go of its note.
     auto any = false;

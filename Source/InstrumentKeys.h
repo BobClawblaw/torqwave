@@ -57,6 +57,13 @@ namespace InstrumentKeys
     void setAuditionLoop (bool);
     extern std::function<void()> auditionChanged;
 
+    /** The session's tempo where it stands, for auditions to play at (they are written at 125 BPM
+        and stretched to it); unset or 0, 125. Message thread. */
+    extern std::function<double()> sessionTempo;
+
+    /** How much faster than written an audition plays now: the session's tempo over 125. */
+    double auditionSpeed();
+
     /** A note of an audition phrase: when it starts and how long it is held, in milliseconds. */
     struct PhraseNote
     {

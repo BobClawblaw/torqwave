@@ -113,8 +113,37 @@ void TrackEffects::prepareInstance (juce::AudioPluginInstance& p) const
     if (p.getBusCount (false) > 0)
         p.setChannelLayoutOfBus (false, 0, juce::AudioChannelSet::stereo());
 
+    p.setPlayHead (&head);
     p.setRateAndBufferSizeDetails (rate, maxBlock);
     p.prepareToPlay (rate, maxBlock);
+}
+
+void TrackEffects::setTiming (const Metronome::TempoMap& map, bool playing)
+{
+    timing.emplace (map);
+    timingPlays = playing;
+}
+
+void TrackEffects::SessionHead::set (const Metronome::TempoMap& map, juce::int64 at, bool plays) noexcept
+{
+    frame.store (at, std::memory_order_relaxed);
+    bpm.store (map.tempoAt (at), std::memory_order_relaxed);
+    beatsPerBar.store (map.beatsPerBarAt (at), std::memory_order_relaxed);
+    beats.store (map.beatPosition (at), std::memory_order_relaxed);
+    barStart.store ((double) map.barStartBeat (map.barAt (at)), std::memory_order_relaxed);
+    playing.store (plays, std::memory_order_relaxed);
+}
+
+juce::Optional<juce::AudioPlayHead::PositionInfo> TrackEffects::SessionHead::getPosition() const
+{
+    PositionInfo info;
+    info.setTimeInSamples (frame.load (std::memory_order_relaxed));
+    info.setIsPlaying (playing.load (std::memory_order_relaxed));
+    info.setBpm (bpm.load (std::memory_order_relaxed));
+    info.setTimeSignature (TimeSignature { beatsPerBar.load (std::memory_order_relaxed), 4 });
+    info.setPpqPosition (beats.load (std::memory_order_relaxed));
+    info.setPpqPositionOfLastBarStart (barStart.load (std::memory_order_relaxed));
+    return info;
 }
 
 int TrackEffects::copiesFor (juce::uint32 trackId) const
@@ -684,6 +713,9 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
     // of the audio it is given (what its notes, if it is an instrument, are taken at).
     const auto run = [&] (juce::AudioPluginInstance& p, Slot& s, int first, int done, int n, juce::int64 at)
     {
+        if (timing.has_value())
+            head.set (*timing, at, timingPlays);
+
         juce::AudioBuffer<float> work (s.work.getArrayOfWritePointers(), s.work.getNumChannels(), n);
         work.clear();
         const auto ins = juce::jmin (2, juce::jmax (1, p.getBusCount (true) > 0 ? p.getChannelCountOfBus (true, 0) : 0));

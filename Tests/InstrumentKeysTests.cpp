@@ -354,6 +354,16 @@ void runInstrumentKeysTests()
         strip.setOctave (3);
         setAuditionLoop (false);
 
+        // The session's tempo: an audition plays at it (written at 125 BPM), 125 with no session.
+        const auto noSession = juce::exactlyEqual (auditionSpeed(), 1.0);
+        sessionTempo = [] { return 250.0; };
+        const auto doubled = juce::exactlyEqual (auditionSpeed(), 2.0);
+        sessionTempo = [] { return 0.0; };
+        const auto none = juce::exactlyEqual (auditionSpeed(), 1.0);
+        sessionTempo = nullptr;
+
+        check (noSession && doubled && none, "audition: it plays at the session's tempo (twice as fast at 250 BPM), at 125 BPM with no session");
+
         check (up && moved && kitStays,
                "audition: a phrase plays an octave up with the keys at octave 4, moves to octave 2 with them while it loops, and a kit's phrase stays where it is");
 

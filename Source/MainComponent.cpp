@@ -1502,6 +1502,11 @@ MainComponent::MainComponent()
     InstrumentKeys::setAudition (settings->getBoolValue ("auditionOnBrowse", true));
     InstrumentKeys::setAuditionLoop (settings->getBoolValue ("auditionLoop", false));
     InstrumentKeys::setPatternChoices (settings->getValue ("auditionPatterns"));
+    InstrumentKeys::sessionTempo = [this]
+    {
+        const auto session = engine.session.getState();
+        return session == nullptr || session->tracks.empty() ? 0.0 : session->tempoMap().tempoAt (engine.getPlayer().getPositionFrames());
+    };
     InstrumentKeys::auditionChanged = [this]
     {
         appProperties.getUserSettings()->setValue ("auditionOnBrowse", InstrumentKeys::getAudition());

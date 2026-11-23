@@ -793,7 +793,10 @@ void render (const SessionState& state, juce::int64 start, juce::AudioBuffer<flo
         dest.clear (ch, destStart, numFrames);
 
     if (inserts != nullptr)
+    {
         inserts->setClipNotes (live == nullptr || live->clips);
+        inserts->setTiming (state.tempoMap(), live == nullptr || live->clips);
+    }
 
     grow (buffers.track, numFrames);
     grow (buffers.automation, numFrames);
