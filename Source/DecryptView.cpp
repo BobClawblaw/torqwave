@@ -167,7 +167,11 @@ void DecryptView::notNow()
 DecryptView::~DecryptView()
 {
     alive->store (false);
-    renders.removeAllJobs (true, 4000);
+
+    if (namer != nullptr)
+        namer->cancel();    // its thread is its own: nothing waits for it
+
+    renders.removeAllJobs (true, 1000);     // an audition being rendered: a fraction of a second
 
     if (search != nullptr && ! restored)
         stop();
@@ -245,6 +249,11 @@ bool DecryptView::decrypt (const juce::AudioBuffer<float>& audio, double sampleR
     renders.removeAllJobs (false, 0);
     ++soundCount;               // a render or a name still on its way for the last sound is dropped when it arrives
     offerFor = 0;
+
+    if (namer != nullptr)
+        namer->cancel();
+
+    namer.reset();
 
     if (plays > 0)
     {
@@ -419,7 +428,16 @@ void DecryptView::take()
         brief.words = words.getText().trim();
         brief.lock = c->lock;
         offerFor = c->address;
-        renders.addJob ([advisor, brief, address = c->address, weak = std::weak_ptr<std::atomic<bool>> (alive), safe = juce::Component::SafePointer<DecryptView> (this)]
+
+        // On a thread of its own, let go: a model may take a minute over a name or never answer, and nothing here waits for it
+        // (auditions least of all: they are rendered on another thread). It is told to give up after half a minute, by a new
+        // sound, and when the page goes.
+        if (namer != nullptr)
+            namer->cancel();
+
+        namer = advisor;
+        juce::Timer::callAfterDelay (30000, [late = std::weak_ptr<Advisor> (advisor)] { if (auto a = late.lock()) a->cancel(); });
+        juce::Thread::launch (juce::Thread::Priority::low, [advisor, brief, address = c->address, weak = std::weak_ptr<std::atomic<bool>> (alive), safe = juce::Component::SafePointer<DecryptView> (this)]
         {
             auto name = advisor->name (brief);
 
@@ -750,8 +768,9 @@ void DecryptView::hearPatch (const SignalConsole::Patch& heard)
     // Rendered off the message thread, as the search renders it, then played.
     renders.removeAllJobs (false, 0);
     // A copy of the target: Again or a new clip replaces the search while a render may still run.
+    // The newest audition is the one heard: an older one still being rendered when it is asked for is dropped.
     renders.addJob ([patch = heard, target = std::make_shared<const Target> (search->getTarget()), safe = juce::Component::SafePointer<DecryptView> (this),
-                     weak = std::weak_ptr<std::atomic<bool>> (alive), of = soundCount]
+                     weak = std::weak_ptr<std::atomic<bool>> (alive), of = soundCount, asked = ++auditions]
     {
         Synth player;
         player.setPlayConfigDetails (0, 2, rate, 512);
@@ -762,9 +781,9 @@ void DecryptView::hearPatch (const SignalConsole::Patch& heard)
         if (peak > 1.0e-6f)
             audio->applyGain (0.5f / peak);   // as loud as the signal is played
 
-        juce::MessageManager::callAsync ([audio, safe, weak, of]
+        juce::MessageManager::callAsync ([audio, safe, weak, of, asked]
         {
-            if (const auto a = weak.lock(); a != nullptr && a->load() && safe != nullptr && safe->soundCount == of)   // not after another sound has arrived
+            if (const auto a = weak.lock(); a != nullptr && a->load() && safe != nullptr && safe->soundCount == of && safe->auditions == asked)   // not after another sound, or a newer audition
             {
                 safe->synth.getConsole().play (*audio, rate);
                 ++safe->plays;

@@ -777,33 +777,47 @@ private:
 
 /** The advisor's calls, one at a time on a thread of their own, so the search never waits for one.
     An answer later than the advisor's time limit is dropped, and the call cancelled. */
-class Search::Helper final : public juce::Thread
+/** The model, asked on a thread of its own that nothing ever waits for. A model can take a minute over
+    an answer, or never give one, and may not give up when told to: so the thread is let go, not
+    joined. When the helper goes (the search ended, or was replaced by a new sound's), the thread is
+    told to stop and the advisor to give up, and whatever it is still doing ends in its own time,
+    holding only what it shares with the helper (the advisor, a copy of the clip). */
+class Search::Helper final
 {
 public:
-    explicit Helper (std::shared_ptr<Advisor> a) : juce::Thread ("Torqwave Synth decrypt advisor"), advisor (std::move (a))
+    explicit Helper (std::shared_ptr<Advisor> a) : state (std::make_shared<State>())
     {
-        startThread (juce::Thread::Priority::low);
+        state->advisor = std::move (a);
+        juce::Thread::launch (juce::Thread::Priority::low, [s = state] { run (*s); });
     }
 
-    ~Helper() override
+    ~Helper()
     {
-        signalThreadShouldExit();
-        advisor->cancel();
-        wake.signal();
-        stopThread (-1);
+        state->leave.store (true);
+        state->advisor->cancel();
+        state->wake.signal();
     }
 
     /** Asks, unless a call is already out: false then. */
     bool ask (bool forStart, Advisor::Brief brief)
     {
-        const juce::ScopedLock sl (lock);
+        const juce::ScopedLock sl (state->lock);
 
-        if (busy)
+        if (state->busy)
             return false;
 
-        busy = true;
-        job = { forStart, std::move (brief), juce::Time::getMillisecondCounterHiRes(), ++generation };
-        wake.signal();
+        // The clip is the search's: the call may outlast the search, so it gets a copy.
+        std::shared_ptr<const juce::AudioBuffer<float>> clip;
+
+        if (brief.clip != nullptr)
+        {
+            clip = std::make_shared<const juce::AudioBuffer<float>> (*brief.clip);
+            brief.clip = clip.get();
+        }
+
+        state->busy = true;
+        state->job = { forStart, std::move (brief), std::move (clip), juce::Time::getMillisecondCounterHiRes(), ++state->generation };
+        state->wake.signal();
         return true;
     }
 
@@ -812,73 +826,35 @@ public:
     {
         bool late;
         {
-            const juce::ScopedLock sl (lock);
-            late = busy && juce::Time::getMillisecondCounterHiRes() - job.askedAt > advisor->timeLimitMs;
+            const juce::ScopedLock sl (state->lock);
+            late = state->busy && juce::Time::getMillisecondCounterHiRes() - state->job.askedAt > state->advisor->timeLimitMs;
 
             if (late)
-                ++generation;   // its answer, if it comes, is for nobody
+                ++state->generation;   // its answer, if it comes, is for nobody
         }
 
         if (late)
-            advisor->cancel();
+            state->advisor->cancel();
     }
 
     /** True while a call is out (an expired one until its advisor has given up). */
     bool isBusy()
     {
-        const juce::ScopedLock sl (lock);
-        return busy;
+        const juce::ScopedLock sl (state->lock);
+        return state->busy;
     }
 
     std::optional<Advisor::Start> takeStart()
     {
-        const juce::ScopedLock sl (lock);
-        return std::exchange (startAnswer, std::nullopt);
+        const juce::ScopedLock sl (state->lock);
+        return std::exchange (state->startAnswer, std::nullopt);
     }
 
     /** Changes proposed, with the lock of the candidate they were proposed for. */
     std::optional<std::pair<std::vector<Advisor::Change>, float>> takeStructure()
     {
-        const juce::ScopedLock sl (lock);
-        return std::exchange (structureAnswer, std::nullopt);
-    }
-
-    void run() override
-    {
-        while (! threadShouldExit())
-        {
-            wake.wait (100);
-            Job now;
-            {
-                const juce::ScopedLock sl (lock);
-
-                if (! busy || job.taken)
-                    continue;
-
-                job.taken = true;
-                now = job;
-            }
-
-            std::optional<Advisor::Start> start;
-            std::vector<Advisor::Change> changes;
-
-            if (now.forStart)
-                start = advisor->start (now.brief);
-            else
-                changes = advisor->structure (now.brief);
-
-            const juce::ScopedLock sl (lock);
-
-            if (now.generation == generation && juce::Time::getMillisecondCounterHiRes() - now.askedAt <= advisor->timeLimitMs)
-            {
-                if (now.forStart)
-                    startAnswer = std::move (start);
-                else if (! changes.empty())
-                    structureAnswer = std::make_pair (std::move (changes), now.brief.lock);
-            }
-
-            busy = false;
-        }
+        const juce::ScopedLock sl (state->lock);
+        return std::exchange (state->structureAnswer, std::nullopt);
     }
 
 private:
@@ -886,19 +862,64 @@ private:
     {
         bool forStart = false;
         Advisor::Brief brief;
+        std::shared_ptr<const juce::AudioBuffer<float>> clip;   // what brief.clip points at
         double askedAt = 0.0;
         juce::uint32 generation = 0;
         bool taken = false;
     };
 
-    std::shared_ptr<Advisor> advisor;
-    juce::CriticalSection lock;
-    juce::WaitableEvent wake;
-    Job job;
-    bool busy = false;
-    juce::uint32 generation = 0;
-    std::optional<Advisor::Start> startAnswer;
-    std::optional<std::pair<std::vector<Advisor::Change>, float>> structureAnswer;
+    struct State
+    {
+        std::shared_ptr<Advisor> advisor;
+        juce::CriticalSection lock;
+        juce::WaitableEvent wake;
+        std::atomic<bool> leave { false };
+        Job job;
+        bool busy = false;
+        juce::uint32 generation = 0;
+        std::optional<Advisor::Start> startAnswer;
+        std::optional<std::pair<std::vector<Advisor::Change>, float>> structureAnswer;
+    };
+
+    static void run (State& s)
+    {
+        while (! s.leave.load())
+        {
+            s.wake.wait (100);
+            Job now;
+            {
+                const juce::ScopedLock sl (s.lock);
+
+                if (! s.busy || s.job.taken)
+                    continue;
+
+                s.job.taken = true;
+                now = s.job;
+            }
+
+            std::optional<Advisor::Start> start;
+            std::vector<Advisor::Change> changes;
+
+            if (now.forStart)
+                start = s.advisor->start (now.brief);
+            else
+                changes = s.advisor->structure (now.brief);
+
+            const juce::ScopedLock sl (s.lock);
+
+            if (now.generation == s.generation && juce::Time::getMillisecondCounterHiRes() - now.askedAt <= s.advisor->timeLimitMs)
+            {
+                if (now.forStart)
+                    s.startAnswer = std::move (start);
+                else if (! changes.empty())
+                    s.structureAnswer = std::make_pair (std::move (changes), now.brief.lock);
+            }
+
+            s.busy = false;
+        }
+    }
+
+    std::shared_ptr<State> state;
 };
 
 namespace

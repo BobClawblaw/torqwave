@@ -2012,10 +2012,225 @@ namespace
     }
 }
 
+namespace
+{
+    /** A model that does not answer, and does not give up when told to: for `blockMs` (or for ever, -1). */
+    struct StuckModel final : public Advisor
+    {
+        explicit StuckModel (int ms) : blockMs (ms) {}
+
+        Start start (const Brief&) override                    { stick(); return {}; }
+        std::vector<Change> structure (const Brief&) override  { stick(); return {}; }
+        Name name (const Brief&) override                      { stick(); return {}; }
+        void cancel() override                                 { ++cancels; }
+
+        void stick()
+        {
+            ++asked;
+            release.wait (blockMs);
+        }
+
+        const int blockMs;
+        std::atomic<int> asked { 0 }, cancels { 0 };
+        juce::WaitableEvent release { true };
+    };
+
+    /** A server that takes a connection and a request and never answers. */
+    struct SilentServer final : public juce::Thread
+    {
+        SilentServer() : juce::Thread ("decrypt test server")
+        {
+            for (port = 47311; port < 47411 && ! listener.createListener (port, "127.0.0.1"); ++port) {}
+            startThread();
+        }
+
+        ~SilentServer() override
+        {
+            signalThreadShouldExit();
+            listener.close();
+            stopThread (2000);
+        }
+
+        void run() override
+        {
+            while (! threadShouldExit())
+                if (auto* c = listener.waitForNextConnection())
+                    held.add (c);       // kept open, never answered
+        }
+
+        int port = 0;
+        juce::StreamingSocket listener;
+        juce::OwnedArray<juce::StreamingSocket> held;
+    };
+
+    /** A model that is slow, down or hung never makes the page wait or go silent: a second and a third sound are
+        taken at once and heard, auditions play while a name is being asked for, and the window closes at once. */
+    void testModelStuck()
+    {
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (true);
+        juce::StringArray wrong, figures;
+        const auto say = [&figures] (const juce::String& line) { figures.add (line); std::cout << "DECRYPT-MODEL " << line << std::endl; };
+        const auto ms = [] (double from) { return juce::Time::getMillisecondCounterHiRes() - from; };
+
+        // Ask Torq's own advisor, its server taking the request and never answering: told to give up, how long until it has.
+        for (auto hears : { false, true })
+        {
+            SilentServer server;
+            Ai::Settings settings;
+            settings.enabled = true;
+            settings.serverUrl = "http://127.0.0.1:" + juce::String (server.port) + "/v1";
+            settings.model = "test";
+            settings.hearClips = hears;
+            const auto advisor = std::make_shared<Ai::DecryptAdvisor> (settings, juce::String());
+            const auto clip = recordingOf ("Cold Bell", 69, 0.3, 0.9);
+            juce::AudioBuffer<float> mono (1, clip.getNumSamples());
+            mono.copyFrom (0, 0, clip, 0, 0, clip.getNumSamples());
+            std::atomic<bool> done { false };
+            std::thread asking ([&]
+            {
+                Advisor::Brief brief;
+                brief.target = "a bell";
+                brief.clip = &mono;
+                advisor->start (brief);
+                done = true;
+            });
+            TestUtils::runUntil ([] { return false; }, 700);
+            const auto told = juce::Time::getMillisecondCounterHiRes();
+            advisor->cancel();
+            TestUtils::runUntil ([&done] { return done.load(); }, 6000);
+            const auto took = ms (told);
+            say (juce::String ("Ask Torq's advisor") + (hears ? ", hearing clips" : "") + ", its server silent: gave up " + (done ? juce::String (took, 0) + " ms after it was told to"
+                                                                                                                                   : juce::String ("not within 6 s of being told to")));
+
+            if (! done || took > 1500.0)
+                wrong.add (juce::String ("Ask Torq's advisor") + (hears ? ", hearing clips," : "") + " did not give up when told to");
+
+            server.signalThreadShouldExit();
+            server.listener.close();
+            server.held.clear();        // the request it may still have out ends
+            asking.join();
+        }
+
+        // The page, its model stuck: for a minute, then for ever.
+        const auto first = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
+        const auto second = recordingOf ("Cold Bell", 69, 0.3, 0.9);
+        const auto third = recordingOf ("Black Pluck", 57, 0.4, 1.0);
+
+        for (auto blockMs : { 60000, -1 })
+        {
+            const auto stuck = std::make_shared<StuckModel> (blockMs);
+            setAdvisorMaker ([stuck] { return stuck; });
+            const auto what = blockMs < 0 ? juce::String ("a model that never answers") : juce::String ("a model stuck for a minute");
+            auto synth = std::make_unique<Synth>();
+            synth->setPlayConfigDetails (0, 2, rate, 512);
+            synth->prepareToPlay (rate, 512);
+            synth->loadPatch ("Cathedral Stack Pad");
+            std::unique_ptr<juce::AudioProcessorEditor> made (synth->createEditorAndMakeActive());
+            auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+            auto& view = *window->getDecryptView();
+            view.setMotion (false);
+            window->showView (2);
+            const auto click = [&view] (juce::Point<float> at)
+            {
+                view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+            };
+            juce::StringArray times;
+            double slowest = 0.0, longestDrop = 0.0, closing = 0.0;
+
+            {
+                Listener listener (*synth);
+
+                // How long until something is heard, from a moment in what was heard: milliseconds, or -1 if nothing within the limit.
+                const auto heardAfter = [&] (size_t from, int limitMs)
+                {
+                    const auto began = juce::Time::getMillisecondCounterHiRes();
+                    TestUtils::runUntil ([&] { return listener.peakFrom (from) > 0.1f; }, limitMs);
+                    return listener.peakFrom (from) > 0.1f ? ms (began) : -1.0;
+                };
+
+                const auto note = [&] (const juce::String& name, double t)
+                {
+                    times.add (name + " " + (t < 0.0 ? juce::String ("never") : juce::String (t, 0) + " ms"));
+                    slowest = t < 0.0 ? 1.0e9 : juce::jmax (slowest, t);
+                };
+
+                view.decrypt (first, rate, "first");
+                TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000);
+
+                for (auto* sound : { &second, &third })
+                {
+                    TestUtils::runUntil ([] { return false; }, 400);
+                    const auto before = listener.now();
+                    const auto began = juce::Time::getMillisecondCounterHiRes();
+                    view.decrypt (*sound, rate, sound == &second ? "second" : "third");
+                    const auto drop = ms (began);
+                    longestDrop = juce::jmax (longestDrop, drop);
+                    times.add (juce::String (sound == &second ? "the second" : "the third") + " sound taken in " + juce::String (drop, 0) + " ms");
+                    note ("a link as it landed", heardAfter (before + 4800, 4000));
+                    TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1) && view.getChainLength() > 0; }, 20000);
+                    TestUtils::runUntil ([] { return false; }, 1200);
+                    auto at = listener.now();
+                    click (view.candidateCentre (-1));
+                    note ("the signal", heardAfter (at, 3000));
+                    TestUtils::runUntil ([] { return false; }, 1200);
+                    at = listener.now();
+                    click (view.chainBounds (0).getCentre());
+                    note ("a link clicked", heardAfter (at, 3000));
+                    TestUtils::runUntil ([] { return false; }, 1200);
+                    at = listener.now();
+                    click (view.candidateCentre (0));
+                    note ("a candidate clicked", heardAfter (at, 3000));
+                }
+
+                // Take: a name is asked of the model, which does not answer; a candidate clicked is heard all the same.
+                TestUtils::runUntil ([] { return false; }, 1200);
+                click (view.takeBounds().getCentre());
+                TestUtils::runUntil ([] { return false; }, 1200);
+                const auto at = listener.now();
+                click (view.candidateCentre (1));
+                note ("a candidate clicked while a name is asked for", heardAfter (at, 3000));
+            }
+
+            // The window closed with the model's answers still awaited.
+            {
+                const auto began = juce::Time::getMillisecondCounterHiRes();
+                made.reset();
+                synth.reset();
+                closing = ms (began);
+            }
+
+            say (what + ": " + times.joinIntoString (", ") + "; the window closed in " + juce::String (closing, 0) + " ms");
+
+            if (longestDrop > 1000.0)   wrong.add (what + ": a new sound took " + juce::String (longestDrop, 0) + " ms to be taken (the page waited on the model)");
+            if (slowest > 2000.0)       wrong.add (what + ": something was not heard within two seconds");
+            if (closing > 1500.0)       wrong.add (what + ": the window took " + juce::String (closing, 0) + " ms to close");
+
+            setAdvisorMaker (nullptr);
+
+            if (blockMs > 0)
+                stuck->release.signal();    // its calls end; one that never answers is left as it is
+        }
+
+        InstrumentKeys::setAudition (auditionWas);
+        check (wrong.isEmpty(),
+               "decrypt: a model that is slow, down or hung never makes the page wait or go silent: Ask Torq's advisor gives up when it is told to; with a model stuck for a minute and one "
+               "that never answers, a second and a third sound are taken at once, their links, signal, a link and a candidate clicked are heard within two seconds, auditions play while a "
+               "name is asked for, and the window closes at once" + (wrong.isEmpty() ? juce::String() : " (wrong: " + wrong.joinIntoString (" | ") + ")"));
+    }
+}
+
 void runDecryptHeardTests()
 {
     testSecondSoundHeard();
     testSecondSoundRoutes();
+    testModelStuck();
+}
+
+void runDecryptModelTests()
+{
+    testModelStuck();
 }
 
 void runDecryptWindowTests()

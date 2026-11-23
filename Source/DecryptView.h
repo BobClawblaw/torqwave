@@ -215,6 +215,8 @@ private:
     size_t passBase = 0;                             // links before this pass's
     int selectedLink = -1, heardLink = -2, keysLink = -1;   // heardLink: -1 the signal, -2 none
     int autoPlays = 0, plays = 0;                    // plays: sounds played since the sound on the page arrived
+    juce::uint32 auditions = 0;                      // counts the auditions asked for: only the newest is played
+    std::shared_ptr<Decrypt::Advisor> namer;         // the model asked for a name, to tell to give up
     juce::uint32 soundCount = 0;                     // counts the sounds given: a render made for an earlier one is not played
     float stripScroll = 0.0f;                        // how far the tiles are scrolled, when there are too many to shrink
     void hearPatch (const SignalConsole::Patch&);

@@ -12,6 +12,8 @@ void runDecryptTests();
 void runDecryptWindowTests();
 /** Only the check that a second sound is heard, with the synth's audio running (about three minutes). */
 void runDecryptHeardTests();
+/** Only the check that a model that is slow or hung never makes the page wait (part of --decrypt-heard). */
+void runDecryptModelTests();
 /** Saves pictures of the synth's window on Decrypt: empty, a search ended, a step chosen, a chain of 20. */
 void saveDecryptWindow (const juce::File& folder);
 
