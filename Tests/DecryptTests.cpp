@@ -3,6 +3,7 @@
 #include "../Source/AiDecrypt.h"
 #include "TestUtils.h"
 #include "../Source/DecryptView.h"
+#include "../Source/InstrumentKeys.h"
 #include "../Source/SoundDrops.h"
 #include "../Source/WaveSynthEditor.h"
 #include "../Source/Theme.h"
@@ -51,6 +52,156 @@ namespace
         }
 
         return out;
+    }
+
+    /** Two patches the same but for Amp Level, which Decrypt trims when it puts one on the keys. */
+    bool alikeButLevel (SignalConsole::Patch a, SignalConsole::Patch b)
+    {
+        a.values.erase ("ampLevel");
+        b.values.erase ("ampLevel");
+        return SignalConsole::addressOf (a) == SignalConsole::addressOf (b);
+    }
+
+    /** The peak, in dB, of a synth playing the target's note as the keys do: velocity 100, its effects as they are, held as long. */
+    float peakOnKeys (Synth& synth, const Target& target)
+    {
+        synth.prepareToPlay (rate, 512);
+        const auto length = target.audio.getNumSamples();
+        juce::AudioBuffer<float> part (2, 512);
+        float peak = 0.0f;
+
+        for (int at = 0; at < length; at += 512)
+        {
+            const auto n = juce::jmin (512, length - at);
+            juce::MidiBuffer midi;
+            if (at == 0) midi.addEvent (juce::MidiMessage::noteOn (1, target.note, (juce::uint8) 100), 0);
+            if (target.held >= at && target.held < at + n) midi.addEvent (juce::MidiMessage::noteOff (1, target.note), target.held - at);
+            part.setSize (2, n, false, false, true);
+            part.clear();
+            synth.processBlock (part, midi);
+            peak = juce::jmax (peak, part.getMagnitude (0, n));
+        }
+
+        return juce::Decibels::gainToDecibels (peak, -100.0f);
+    }
+
+    void testLevel()
+    {
+        // Found patches on the keys: before, at whatever level the patch has (the search matches peaks, not levels);
+        // after, trimmed to where the window auditions them. Measured on a synth of their own, as the keys play them.
+        juce::StringArray lines;
+        auto within = true, flagged = true;
+        float furthestBefore = 0.0f, furthestAfter = 0.0f;
+
+        for (auto& [name, note] : std::vector<std::pair<juce::String, int>> { { "Warehouse Sub", 33 }, { "Abyss Reese", 45 }, { "Cold Bell", 57 }, { "Black Pluck", 60 },
+                                                                              { "Concrete Pad", 57 }, { "Abrasive Bray", 48 } })
+        {
+            const auto target = prepare (recordingOf (name, note, 0.8, 1.5), rate);
+            Options options;
+            options.threads = 4;
+            options.leaveOut.add (name);
+            Search search (target, options);
+            const auto best = search.runNow().best.front();
+            Synth keys;
+            keys.setPlayConfigDetails (0, 2, rate, 512);
+            keys.setNonRealtime (true);
+            SignalConsole::apply (keys, best.patch);
+            const auto before = peakOnKeys (keys, target);
+            const auto levelled = levelForKeys (best.patch, target);
+            SignalConsole::apply (keys, levelled.patch);
+            const auto after = peakOnKeys (keys, target);
+            const auto apartAfter = std::abs (after - auditionDb);
+            furthestBefore = juce::jmax (furthestBefore, std::abs (before - auditionDb));
+
+            if (levelled.ranOut)
+                flagged = flagged && apartAfter > 1.0f;
+            else
+            {
+                within = within && apartAfter <= 1.0f;
+                furthestAfter = juce::jmax (furthestAfter, apartAfter);
+            }
+
+            lines.add (name + " (as " + best.from + ") " + juce::String (before - auditionDb, 1) + " to " + juce::String (after - auditionDb, 1) + " dB"
+                       + (levelled.ranOut ? ", Amp Level at its end" : juce::String()));
+        }
+
+        std::cout << "DECRYPT-LEVEL against the audition: " << lines.joinIntoString ("; ") << std::endl;
+        check (within && flagged,
+               "decrypt: a found patch put on the keys plays the matched note at velocity 100 within 1 dB of its audition (the furthest " + juce::String (furthestAfter, 2)
+                   + " dB; " + juce::String (furthestBefore, 1) + " dB before it was trimmed), and where Amp Level's range runs out it is said: " + lines.joinIntoString ("; "));
+    }
+
+    /** A patch played dry with the key held for `seconds`: its peak, and its peak from `after` seconds on, in dB. */
+    std::pair<float, float> heldFor (const Patch& patch, int note, double seconds, double after)
+    {
+        Target held;
+        held.audio.setSize (1, (int) (seconds * rate));
+        held.note = note;
+        held.held = held.audio.getNumSamples();
+        Synth synth;
+        synth.setPlayConfigDetails (0, 2, rate, 512);
+        synth.setNonRealtime (true);
+        const auto audio = render (synth, patch, held);
+        const auto from = juce::jmin (audio.getNumSamples() - 1, (int) (after * rate));
+        return { juce::Decibels::gainToDecibels (audio.getMagnitude (0, audio.getNumSamples()), -100.0f),
+                 juce::Decibels::gainToDecibels (audio.getMagnitude (from, audio.getNumSamples() - from), -100.0f) };
+    }
+
+    /** A target as it was matched before notes that die away were held: let go where it last falls 12 dB under its loudest, no silence after it. */
+    Target heldForItsLoudPart (Target t)
+    {
+        if (! t.decays)
+            return t;
+
+        const auto samples = t.audio.getNumSamples() - (int) (silenceAfter * rate);
+        t.audio.setSize (1, samples, true);
+        t.measures = measure (t.audio.getReadPointer (0), samples);
+        int last = 0;
+
+        for (int f = 0; f < t.measures.frames; ++f)
+            if (t.measures.loudness[(size_t) f] >= -12.0f)
+                last = f;
+
+        t.held = juce::jlimit (Measures::hop * 5, samples, (last + 1) * Measures::hop);
+        t.decays = false;
+        return t;
+    }
+
+    void testDecay()
+    {
+        // A stab: the reese with its amp falling to nothing in a quarter of a second, the key held all the way. The patch
+        // found must fall silent with the key held too, as the recording does; matched the old way, it could go on as a pad.
+        const auto stabClip = recordingOf ("Abyss Reese", 45, 1.5, 1.5, rate, 0.0, [] (Patch& p)
+        {
+            p.values["env1Attack"] = 2.0;
+            p.values["env1Decay"] = 250.0;
+            p.values["env1Sustain"] = 0.0;
+            p.values["env1Release"] = 600.0;
+        });
+        const auto stab = prepare (stabClip, rate);
+        const auto sourceEnds = (stab.audio.getNumSamples() - (stab.decays ? (int) (silenceAfter * rate) : 0)) / rate;
+        Options options;
+        options.threads = 4;
+        options.leaveOut.add ("Abyss Reese");
+        const auto found = Search (stab, options).runNow().best.front();
+        const auto [peak, after] = heldFor (found.patch, stab.note, 3.0, sourceEnds + 0.1);
+        const auto oldWay = Search (heldForItsLoudPart (stab), options).runNow().best.front();
+        const auto [oldPeak, oldAfter] = heldFor (oldWay.patch, stab.note, 3.0, sourceEnds + 0.1);
+
+        // A pad held for 0.8 s and let go: held for its loud part as before, and its patch still sounds while the key is down.
+        const auto pad = prepare (recordingOf ("Concrete Pad", 57, 0.8, 1.5), rate);
+        Options padOptions;
+        padOptions.threads = 4;
+        padOptions.leaveOut.add ("Concrete Pad");
+        const auto padFound = Search (pad, padOptions).runNow().best.front();
+        const auto [padPeak, padLate] = heldFor (padFound.patch, pad.note, 3.0, 2.5);
+
+        check (stab.decays && after <= peak - 40.0f && ! pad.decays && padLate >= padPeak - 20.0f,
+               "decrypt: a stab that dies away with the key held (" + juce::String (sourceEnds, 2) + " s) is matched with the key held, and its patch ("
+                   + found.from + ", lock " + juce::String (found.lock, 1) + " %) held for 3 s is " + juce::String (peak - after, 1)
+                   + " dB down from 0.1 s after the stab's end (matched the old way, " + oldWay.from + " at " + juce::String (oldWay.lock, 1) + " %, it was "
+                   + juce::String (oldPeak - oldAfter, 1) + " dB down); a pad held and let go is matched as before, and its patch ("
+                   + padFound.from + ", lock " + juce::String (padFound.lock, 1) + " %) still sounds at 2.5 s, " + juce::String (padPeak - padLate, 1) + " dB under its peak");
     }
 
     void testPrepare()
@@ -190,7 +341,7 @@ namespace
             r.within += best < within ? 1 : 0;
             r.lines.add (name + " " + juce::String (best, 1) + " dB (" + juce::String (lock, 0) + " %, heard at " + noteName (target.note) + " for " + noteName (c.note) + ", from "
                          + (result.best.empty() ? juce::String ("nothing") : result.best.front().from) + ", " + juce::String (result.round) + " rounds, "
-                         + juce::String (result.seconds, 1) + " s)");
+                         + juce::String (result.seconds, 1) + " s" + (target.decays ? ", dies away" : "") + ")");
         }
 
         return r;
@@ -461,6 +612,8 @@ namespace
         view.setMotion (false);
         window->showView (2);
         auto drawn = true;
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (false);   // no link played into the synth's output as it lands, while that output is measured
 
         const auto snapshots = [&]
         {
@@ -497,6 +650,8 @@ namespace
         const auto placed = view.candidateCentre (3) != view.candidateCentre (-1);
         click (view.candidateCentre (3), 2);
         const auto onKeys = SignalConsole::addressOf (SignalConsole::capture (synth)) != before;
+        const auto keysDb = peakOnKeys (synth, view.getSearch()->getTarget());
+        const auto asHeard = std::abs (keysDb - auditionDb) <= 1.0f && std::abs (keysDb - view.lastKeysDb()) <= 0.1f;
         click (view.stopBounds().getCentre());
         TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 5000);
         const auto stoppedBack = SignalConsole::addressOf (SignalConsole::capture (synth)) == before;
@@ -508,11 +663,13 @@ namespace
         if (! onKeys)      failed.add ("the double-click put nothing on the keys (the search had " + juce::String ((int) searchHad)
                                        + " candidates, the view had candidate 3 " + (placed ? "placed" : "not placed yet") + ")");
         if (! stoppedBack) failed.add ("Stop did not give back the patch from before");
+        if (! asHeard)     failed.add ("the candidate on the keys peaks at " + juce::String (keysDb, 2) + " dB (the view measured " + juce::String (view.lastKeysDb(), 2)
+                                       + "), not within 1 dB of the audition's " + juce::String (auditionDb, 1));
         if (! drawn)       failed.add ("a snapshot was not drawn at its size");
         check (failed.isEmpty(),
                "decrypt: the window refuses a silent clip, switches Tables only from the factory, starts on a clip, puts a candidate on the keys with a double-click, "
-               "and Stop gives back the patch it had; it draws at 70 %, 100 % and 160 % before and during a search"
-                   + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
+               "as loud on the keys as its audition (" + juce::String (keysDb - auditionDb, 2) + " dB apart), and Stop gives back the patch it had; it draws at 70 %, 100 % and 160 % "
+                   "before and during a search" + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
 
         // Take keeps the best; a model's name for it can be refused, and used.
         const auto namer = std::make_shared<MadeUp> (MadeUp::Kind::namer);
@@ -521,7 +678,7 @@ namespace
         TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
         const auto best = view.getSearch()->getProgress().best;
         click (view.takeBounds().getCentre());
-        const auto taken = ! best.empty() && SignalConsole::addressOf (SignalConsole::capture (synth)) == best.front().address
+        const auto taken = ! best.empty() && alikeButLevel (SignalConsole::capture (synth), best.front().patch)
                            && synth.getPatchName() == "Node " + SignalConsole::addressText (best.front().address);
         TestUtils::runUntil ([&view] { return view.offeredName().name.isNotEmpty(); }, 5000);
         const auto offered = view.offeredName().name == "Rust Reese";
@@ -556,7 +713,7 @@ namespace
             const auto picked = view.getSearch()->getProgress().best[3];
             view.setHovered (3);
             view.take();
-            const auto tookIt = SignalConsole::addressOf (SignalConsole::capture (synth)) == picked.address && view.canGoAgain();
+            const auto tookIt = alikeButLevel (SignalConsole::capture (synth), picked.patch) && view.canGoAgain();
             view.again();
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto fromPicked = view.getSearch()->getProgress().best.front().lock >= picked.lock - 0.01f && view.getPasses() == 4;
@@ -566,7 +723,7 @@ namespace
                 allFromIt = allFromIt && c.from == "the last search";
 
 
-            // The chain: a step each time the search came nearer, oldest first, never falling; Play goes through it, and a double-click goes back.
+            // The chain: a link each time the nearest sounded different enough, oldest first, never falling; Play goes through it, and a double-click goes back.
             // The locks rise along it, but for a candidate picked to go on from, which may be a little further away.
             int falls = 0;
 
@@ -590,7 +747,7 @@ namespace
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto onFromIt = view.getPasses() == passesBefore + 1 && view.getSearch()->getProgress().best.front().lock >= view.chainLock (0) - 0.01f;
             check (rising && playing && stoppedPlaying && heardOnly && wentBack && onFromIt,
-                   "decrypt: the chain gains a step each time the search comes nearer (" + juce::String (length) + " here); Play goes through it and stops, a click only plays a step, "
+                   "decrypt: the chain gains a link when the nearest patch sounds different enough from the last (" + juce::String (length) + " here); Play goes through it and stops, a click only plays a step, "
                    "and going back to the first drops the later ones, puts it on the keys and lets Again go on from it");
             view.stop();
             check (tookIt && fromPicked && allFromIt,
@@ -661,7 +818,7 @@ namespace
             for (int i = 0; i < (int) shownBest.size(); ++i)
             {
                 click (view.candidateCentre (i), 2);
-                hits += SignalConsole::addressOf (SignalConsole::capture (synth)) == shownBest[(size_t) i].address ? 1 : 0;
+                hits += alikeButLevel (SignalConsole::capture (synth), shownBest[(size_t) i].patch) ? 1 : 0;
             }
 
             view.stop();
@@ -671,6 +828,111 @@ namespace
                        + " the heading here), the chain's hint fits (" + juce::String (hint, 0) + " of " + juce::String (room, 0) + " points), and no lock label on the scope "
                        "prints over another, the one under the pointer always labelled (" + juce::String (labelled) + " of " + juce::String (candidates) + " labelled); "
                        "a double-click on each candidate puts that one on the keys (" + juce::String (hits) + " of " + juce::String (candidates) + ")");
+        }
+
+        // The chain: a strip of tiles across the page and the same links as a path on the scope; links that differ enough
+        // to hear, from a rough first match to the nearest; heard as they land when Audition is on.
+        {
+            const auto wasAudition = InstrumentKeys::getAudition();
+            InstrumentKeys::setAudition (false);
+            const auto playedBefore = view.linksPlayedAsTheyLanded();
+            view.decrypt (clip, rate, "reese");
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            const auto silent = view.linksPlayedAsTheyLanded() == playedBefore;
+            InstrumentKeys::setAudition (true);
+            view.decrypt (clip, rate, "reese");
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            const auto length = view.getChainLength();
+            const auto followed = view.linksPlayedAsTheyLanded() - playedBefore >= length && length >= 2;
+            InstrumentKeys::setAudition (wasAudition);
+
+            // Links differ by the threshold at least (the last may be nearer: the end always takes the last place), and the first is well under the last.
+            auto apartEnough = true;
+            juce::StringArray locks;
+
+            for (int i = 0; i < length; ++i)
+            {
+                apartEnough = apartEnough && (i == 0 || i == length - 1 || view.chainMoved (i) >= linkApartDb);
+                locks.add (juce::String (view.chainLock (i), 0));
+            }
+
+            const auto farToNear = length >= 2 && view.chainLock (0) <= view.chainLock (length - 1) - 5.0f;
+
+            // Every tile inside the strip, in order, and a node for each on the scope, at every size; with 20 links too.
+            const auto placedAt = [&] (int links)
+            {
+                auto ok = view.getChainLength() == links && view.stripBounds().contains (view.playChainBounds()) && view.stripBounds().contains (view.signalTileBounds());
+
+                for (auto scale : { 0.7f, 1.0f, 1.6f })
+                {
+                    window->setSize (juce::roundToInt (WaveSynthEditor::designWidth * scale), juce::roundToInt (WaveSynthEditor::designHeight * scale));
+
+                    for (int i = 0; i < links; ++i)
+                    {
+                        const auto tile = view.chainBounds (i);
+                        ok = ok && ! tile.isEmpty() && view.stripBounds().contains (tile) && tile.getWidth() >= 24.0f
+                             && (i == 0 ? tile.getX() >= view.signalTileBounds().getRight() : tile.getX() >= view.chainBounds (i - 1).getRight())
+                             && view.getLocalBounds().toFloat().contains (view.chainNode (i)) && ! view.stripBounds().contains (view.chainNode (i))
+                             && (i == 0 || view.chainNode (i).getDistanceFrom (view.chainNode (i - 1)) > 8.0f);
+                    }
+                }
+
+                window->setSize (WaveSynthEditor::designWidth, WaveSynthEditor::designHeight);
+                return ok;
+            };
+
+            const auto tilesPlaced = placedAt (length);
+
+            // A click on a tile or on its node plays that link, marks it and shows it in the panel; the signal's tile plays the signal.
+            click (view.chainBounds (0).getCentre());
+            const auto byTile = view.selectedStep() == 0 && view.heardStep() == 0 && view.stepChange (0).startsWith ("the first rough match");
+            click (view.chainNode (length - 1));
+            const auto byNode = view.selectedStep() == length - 1 && view.heardStep() == length - 1 && view.stepChange (length - 1).startsWith ("from step " + juce::String (length - 1));
+            const auto said = view.stepChange (length - 1);
+            click (view.signalTileBounds().getCentre());
+            const auto signalHeard = view.heardStep() == -1;
+
+            // Play marks the signal, then each link; a double-click on a node goes back to it: on the keys, the later links dropped, and Take keeps it.
+            click (view.playChainBounds().getCentre());
+            const auto playing = view.isPlayingChain() && view.heardStep() == -1;
+            click (view.playChainBounds().getCentre());
+            const auto stopped = ! view.isPlayingChain() && view.heardStep() == -2;
+            click (view.chainNode (0), 2);
+            const auto back = view.getChainLength() == 1 && view.keysStep() == 0 && view.selectedStep() == 0 && view.canGoAgain();
+            const auto onKeysNow = SignalConsole::capture (synth);
+            click (view.takeBounds().getCentre());
+            const auto kept = alikeButLevel (SignalConsole::capture (synth), onKeysNow) && SignalConsole::addressOf (SignalConsole::capture (synth)) == SignalConsole::addressOf (onKeysNow);
+
+            // Again's links follow on the same chain, each nearer than the one it went on from.
+            view.again();
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            auto appended = view.getChainLength() >= 1;
+
+            for (int i = 1; i < view.getChainLength(); ++i)
+                appended = appended && view.chainLock (i) > view.chainLock (i - 1);
+
+            const auto afterAgain = view.getChainLength();
+            view.addTestLinks (20 - view.getChainLength());
+            const auto twenty = placedAt (20);
+            view.stop();
+            juce::StringArray chainFailed;
+            if (! silent)                   chainFailed.add ("links were played as they landed with Audition off");
+            if (! followed)                 chainFailed.add ("links were not played as they landed with Audition on");
+            if (! apartEnough)              chainFailed.add ("two links were nearer than " + juce::String (linkApartDb, 1) + " dB in sound");
+            if (! farToNear)                chainFailed.add ("the first link was not well under the last");
+            if (! tilesPlaced || ! twenty)  chainFailed.add (juce::String ("a tile or a node was out of place") + (tilesPlaced ? " with 20 links" : ""));
+            if (! byTile || ! byNode)       chainFailed.add ("a click on a tile or a node did not play, mark and show its link");
+            if (! signalHeard)              chainFailed.add ("the signal's tile did not play the signal");
+            if (! playing || ! stopped)     chainFailed.add ("Play did not mark the signal first, or did not stop");
+            if (! back || ! kept)           chainFailed.add ("a double-click did not go back to the link, or Take did not keep it");
+            if (! appended)                 chainFailed.add ("Again's links did not follow on, each nearer");
+            check (chainFailed.isEmpty(),
+                   "decrypt: the chain is a strip across the page (Play, the signal, a tile for each link) and a numbered path on the scope, every tile and node in place at "
+                   "70 %, 100 % and 160 %, with 20 links too; its links run from a rough first match to the nearest (lock " + locks.joinIntoString (", ")
+                       + " %), each " + juce::String (linkApartDb, 1) + " dB or more in sound from the one before; a click on a tile or node plays, marks and describes the link (\""
+                       + said + "\"), a double-click goes back to it and Take keeps it, Again's links follow on (" + juce::String (afterAgain)
+                       + " after it), and links are heard as they land only with Audition on"
+                       + (chainFailed.isEmpty() ? juce::String() : " (failed: " + chainFailed.joinIntoString ("; ") + ")"));
         }
 
         // Until settled: the window's searches go on past 16 rounds while they come closer, and say when they no longer do.
@@ -706,11 +968,64 @@ namespace
             view.stop();
             SoundDrops::isSound = nullptr;
             SoundDrops::soundOf = nullptr;
+            InstrumentKeys::setAudition (auditionWas);
             check (unhooked && wanted && searching,
                    "decrypt: an open file dragged from the Files panel is taken and searched for, as a file from the Finder is; any other drag is not");
         }
 
         window->showView (0);
+    }
+}
+
+void saveDecryptWindow (const juce::File& folder)
+{
+    folder.createDirectory();
+    Theme::apply (Theme::make ("Dark", "Blue"));
+    Synth synth;
+    synth.setPlayConfigDetails (0, 2, rate, 512);
+    synth.prepareToPlay (rate, 512);
+    synth.loadPatch ("Cathedral Stack Pad");
+    std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+    auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+
+    if (window == nullptr || window->getDecryptView() == nullptr)
+        return;
+
+    auto& view = *window->getDecryptView();
+    view.setMotion (false);
+    window->showView (2);
+
+    const auto save = [&] (const juce::String& name)
+    {
+        const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+        auto file = folder.getChildFile (name + ".png");
+        file.deleteFile();
+        juce::FileOutputStream out (file);
+        juce::PNGImageFormat().writeImageToStream (image, out);
+        std::cout << file.getFullPathName() << std::endl;
+    };
+
+    save ("decrypt-empty");
+
+    for (auto& [name, clip] : std::vector<std::pair<juce::String, juce::AudioBuffer<float>>> { { "reese", recordingOf ("Abyss Reese", 45, 0.8, 1.5) },
+                                                                                               { "bell", recordingOf ("Cold Bell", 57, 0.6, 1.5) } })
+    {
+        view.decrypt (clip, rate, name);
+        TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
+        juce::StringArray locks;
+
+        for (int i = 0; i < view.getChainLength(); ++i)
+            locks.add (juce::String (view.chainLock (i), 1) + (i > 0 ? " (" + juce::String (view.chainMoved (i), 1) + " dB from the last)" : juce::String()));
+
+        std::cout << name << ": " << view.getChainLength() << " links, lock " << locks.joinIntoString (", ") << std::endl;
+        save ("decrypt-" + name + "-settled");
+        const auto step = juce::jmax (0, view.getChainLength() - 2);
+        const auto at = view.chainBounds (step).getCentre();
+        view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+        save ("decrypt-" + name + "-step");
+        view.addTestLinks (20 - view.getChainLength());
+        save ("decrypt-" + name + "-20-links");
+        view.stop();
     }
 }
 
@@ -724,6 +1039,8 @@ void runDecryptTests()
     testThreshold();
     testModel();
     testWindow();
+    testLevel();
+    testDecay();
     testPrepare();
     testRepeatable();
     testStopAndLoad();

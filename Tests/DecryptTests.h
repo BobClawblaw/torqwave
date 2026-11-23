@@ -10,6 +10,8 @@
 void runDecryptTests();
 /** Only the window's checks, quicker to repeat. */
 void runDecryptWindowTests();
+/** Saves pictures of the synth's window on Decrypt: empty, a search ended, a step chosen, a chain of 20. */
+void saveDecryptWindow (const juce::File& folder);
 
 /** The ten patches of the search test decrypted twice, alone and helped by the model at that
     OpenAI-compatible server (Ask Torq's DecryptAdvisor, told each patch's category in words), with

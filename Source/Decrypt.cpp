@@ -401,6 +401,7 @@ Target prepare (const juce::AudioBuffer<float>& clip, double sampleRate)
         --end;
 
     start = juce::jmax (0, start - 96);
+    const auto fadesInside = end + 480 < n && end + 480 <= start + (int) (longest * rate);   // silent before the clip (and the four seconds) end
     end = juce::jmin (n, end + 480, start + (int) (longest * rate));
 
     if (end - start < (int) (0.1 * rate))
@@ -419,8 +420,64 @@ Target prepare (const juce::AudioBuffer<float>& clip, double sampleRate)
     t.pitchHz = WaveTables::findPitch (x + from, juce::jmin (samples - from, (int) (0.5 * rate)), rate);
     t.note = t.pitchHz > 0.0 ? juce::jlimit (12, 108, (int) std::lround (69.0 + 12.0 * std::log2 (t.pitchHz / 440.0))) : 60;
 
-    // Held for its loud part: until it last falls under 12 dB below its loudest 10 ms.
     t.measures = measure (x, samples);
+    t.signature = SignalConsole::Renderer::measure (t.audio, rate);
+
+    // A note that dies away by itself (a stab, a pluck, a hit) is matched with the key held all the
+    // way and a quarter of a second of silence after it: the patch has to fall silent as the sound
+    // does with the key still down, and any sound it makes after the source has gone counts against
+    // it. Held for only the note's loud part, a patch that sustains and lets go in time matched as
+    // well, and on the keys went on for as long as a key was held.
+    //
+    // A note is taken as held and let go, and matched as before (the key down until it last falls
+    // 12 dB under its loudest 10 ms), when after its loudest moment its level, smoothed over 90 ms:
+    // stays within 3 dB for a fifth of a second (a pad, an organ); comes back up 3 dB after falling
+    // (a beating reese, a gate, a tremolo); or, 0.4 s or more into the note, starts falling three
+    // times as fast as it was, at 100 dB a second or more (a pluck let go). So does a note still
+    // sounding where the clip ends.
+    const auto frames = t.measures.frames;
+    std::vector<float> smooth ((size_t) frames, -100.0f);
+
+    for (int f = 0; f < frames; ++f)
+        for (int k = juce::jmax (0, f - 4); k <= juce::jmin (frames - 1, f + 4); ++k)
+            smooth[(size_t) f] = juce::jmax (smooth[(size_t) f], t.measures.loudness[(size_t) k]);
+
+    auto holds = false;
+    const auto loudest = (int) (std::max_element (smooth.begin(), smooth.end()) - smooth.begin());
+    auto lowest = frames > 0 ? smooth[(size_t) loudest] : 0.0f;
+
+    for (int f = loudest; f < frames && ! holds; ++f)
+    {
+        const auto now = smooth[(size_t) f];
+
+        if (f + steadyFrames <= frames)
+        {
+            const auto [low, high] = std::minmax_element (smooth.begin() + f, smooth.begin() + f + steadyFrames);
+            holds = *low > -24.0f && *high - *low < 3.0f;
+        }
+
+        lowest = juce::jmin (lowest, now);
+        holds = holds || (lowest > -40.0f && now > lowest + 3.0f);
+
+        if (f >= 40 && f - 15 >= loudest && f + 8 < frames && now > -20.0f)
+        {
+            const auto before = (now - smooth[(size_t) f - 15]) / 0.15f, after = (smooth[(size_t) f + 8] - now) / 0.08f;   // dB a second
+            holds = holds || (after <= -100.0f && after <= 3.0f * before);
+        }
+    }
+
+    t.decays = fadesInside && ! holds;
+
+    if (t.decays)
+    {
+        const auto tail = (int) (silenceAfter * rate);
+        t.audio.setSize (1, samples + tail, true, true);
+        t.audio.clear (0, samples, tail);
+        t.held = samples + tail;   // never let go inside the render
+        t.measures = measure (t.audio.getReadPointer (0), samples + tail);
+        return t;
+    }
+
     int last = 0;
 
     for (int f = 0; f < t.measures.frames; ++f)
@@ -428,8 +485,45 @@ Target prepare (const juce::AudioBuffer<float>& clip, double sampleRate)
             last = f;
 
     t.held = juce::jlimit (Measures::hop * 5, samples, (last + 1) * Measures::hop);
-    t.signature = SignalConsole::Renderer::measure (t.audio, rate);
     return t;
+}
+
+namespace
+{
+    /** A patch played on the target's key, held for as long as the target's is, at a velocity. */
+    juce::AudioBuffer<float> play (Synth& synth, const Patch& patch, const Target& target, float velocity)
+    {
+        SignalConsole::apply (synth, patch);
+        synth.prepareToPlay (rate, block);
+        const auto length = target.audio.getNumSamples();
+        juce::AudioBuffer<float> out (2, length), part (2, block);
+
+        for (int at = 0; at < length; at += block)
+        {
+            const auto count = juce::jmin (block, length - at);
+            juce::MidiBuffer midi;
+
+            if (at == 0)
+                midi.addEvent (juce::MidiMessage::noteOn (1, target.note, velocity), 0);
+
+            if (target.held >= at && target.held < at + count)
+                midi.addEvent (juce::MidiMessage::noteOff (1, target.note), target.held - at);
+
+            part.setSize (2, count, false, false, true);
+            part.clear();
+            synth.processBlock (part, midi);
+
+            for (int ch = 0; ch < 2; ++ch)
+                out.copyFrom (ch, at, part, ch, 0, count);
+        }
+
+        return out;
+    }
+
+    float peakDb (const juce::AudioBuffer<float>& audio)
+    {
+        return juce::Decibels::gainToDecibels (audio.getMagnitude (0, audio.getNumSamples()), -100.0f);
+    }
 }
 
 juce::AudioBuffer<float> render (Synth& synth, const Patch& patch, const Target& target)
@@ -439,31 +533,47 @@ juce::AudioBuffer<float> render (Synth& synth, const Patch& patch, const Target&
     for (auto* effect : { "fxDriveOn", "fxChorusOn", "fxPhaserOn", "fxDelayOn", "fxReverbOn" })
         dry.values[effect] = 0.0;
 
-    SignalConsole::apply (synth, dry);
-    synth.prepareToPlay (rate, block);
-    const auto length = target.audio.getNumSamples();
-    juce::AudioBuffer<float> out (2, length), part (2, block);
+    return play (synth, dry, target, 0.8f);
+}
 
-    for (int at = 0; at < length; at += block)
+Levelled levelForKeys (const Patch& patch, const Target& target)
+{
+    // Played as the keys play it (its effects on, velocity 100), its Amp Level moved by what its peak
+    // misses the audition's by. The effects after the amp (drive above all) need not answer in step,
+    // so it is measured again after each move, and the next move takes how far the last one got it:
+    // six moves at most.
+    Synth player;
+    player.setPlayConfigDetails (0, 2, rate, block);
+    player.setNonRealtime (true);
+    const auto* knob = player.parameter ("ampLevel");
+    const auto range = knob != nullptr ? knob->getNormalisableRange() : juce::NormalisableRange<float> (-40.0f, 6.0f);
+    const auto velocity = 100.0f / 127.0f;
+
+    Levelled l;
+    l.patch = patch;
+    const auto it = patch.values.find ("ampLevel");
+    auto level = it != patch.values.end() ? (float) it->second : (knob != nullptr ? range.convertFrom0to1 (knob->getDefaultValue()) : -9.0f);
+    l.beforeDb = peakDb (play (player, patch, target, velocity));
+    l.afterDb = l.beforeDb;
+    auto perDb = 1.0f;   // how many dB the peak moves for a dB of Amp Level: 1 until it is measured (drive and a limiter give less)
+
+    for (int move = 0; move < 6 && std::abs (l.afterDb - auditionDb) > 0.25f && l.afterDb > -99.0f; ++move)
     {
-        const auto count = juce::jmin (block, length - at);
-        juce::MidiBuffer midi;
+        const auto next = juce::jlimit (range.start, range.end, level + (auditionDb - l.afterDb) / perDb);
 
-        if (at == 0)
-            midi.addEvent (juce::MidiMessage::noteOn (1, target.note, 0.8f), 0);
+        if (std::abs (next - level) < 0.01f)
+            break;   // the knob is at the end of its range
 
-        if (target.held >= at && target.held < at + count)
-            midi.addEvent (juce::MidiMessage::noteOff (1, target.note), target.held - at);
-
-        part.setSize (2, count, false, false, true);
-        part.clear();
-        synth.processBlock (part, midi);
-
-        for (int ch = 0; ch < 2; ++ch)
-            out.copyFrom (ch, at, part, ch, 0, count);
+        const auto was = l.afterDb;
+        l.patch.values["ampLevel"] = next;
+        l.afterDb = peakDb (play (player, l.patch, target, velocity));
+        l.patch.values["ampLevel"] = SignalConsole::capture (player).values["ampLevel"];   // as the knob holds it, so the patch reads back the same
+        perDb = juce::jlimit (0.2f, 2.0f, (l.afterDb - was) / (next - level));
+        level = next;
     }
 
-    return out;
+    l.ranOut = std::abs (l.afterDb - auditionDb) > 1.0f;
+    return l;
 }
 
 Measures measureRender (const juce::AudioBuffer<float>& audio)
@@ -991,6 +1101,43 @@ Advisor::Brief Search::briefFor (const std::vector<Candidate>& best, int round, 
     return b;
 }
 
+void Search::growChain (const Candidate& best, bool last, Synth& synth)
+{
+    if (! chain.empty() && chain.back().candidate.address == best.address)
+        return;
+
+    // What the next link is heard against: the last link, or the link this search goes on from.
+    if (chain.empty() && ! chainFrom.has_value() && options.chainFrom.has_value())
+    {
+        const auto m = measureRender (render (synth, *options.chainFrom, target));
+        chainFrom = { m, distance (target.measures, m).total };
+    }
+
+    const auto* against = ! linkMeasures.empty() ? &linkMeasures.back() : chainFrom.has_value() ? &chainFrom->first : nullptr;
+    const auto againstDb = ! chain.empty() ? chain.back().candidate.distance.total : chainFrom.has_value() ? chainFrom->second : 1000.0f;
+
+    if (against != nullptr && best.distance.total >= againstDb)
+        return;   // no nearer the signal than the last link
+
+    const auto m = measureRender (render (synth, best.patch, target));
+    const auto moved = against != nullptr ? distance (*against, m).total : 0.0f;
+
+    if (against == nullptr || moved >= linkApartDb || (last && chain.empty()))
+    {
+        // Far enough from the last link to hear (or the first link; or, where a search carried on came
+        // nearer by less, its end, which takes the place of the link it went on from).
+        chain.push_back ({ best, moved });
+        linkMeasures.push_back (m);
+    }
+    else if (last)
+    {
+        // The end is always the nearest found: it takes the last link's place when it is too like it to be a link of its own.
+        const auto* before = linkMeasures.size() > 1 ? &linkMeasures[linkMeasures.size() - 2] : chainFrom.has_value() ? &chainFrom->first : nullptr;
+        chain.back() = { best, before != nullptr ? distance (*before, m).total : 0.0f };
+        linkMeasures.back() = m;
+    }
+}
+
 void Search::publish (std::vector<Candidate> merged, int round, const juce::String& stage, bool finished, bool stopped, Synth& synth, bool noCloser)
 {
     // The best twelve's signatures, for drawing (each rendered again: twelve renders at most).
@@ -1031,8 +1178,12 @@ void Search::publish (std::vector<Candidate> merged, int round, const juce::Stri
             settled[(size_t) part] = count > 0 ? (float) juce::jlimit (0.0, 1.0, 1.0 - 3.0 * spread / count) : 1.0f;
         }
 
+    if (! merged.empty() && ! stopped)
+        growChain (merged.front(), finished, synth);
+
     {
         const juce::ScopedLock sl (lock);
+        progress.chain = chain;
         progress.best = std::move (merged);
         progress.round = round;
         progress.stage = stage;
@@ -1130,16 +1281,70 @@ void Search::run (const std::function<bool()>& shouldStop)
             if (startable (i))
                 jobs.push_back (factoryCandidate (*synth, i));
 
-        jobs = score (std::move (jobs), shortened (target, firstRoundsLength), shouldStop);
+        // A first look at one in 64 of them, a closer look at one in 8, then all: the best of each look
+        // is shown as it is found, so the chain starts with rough matches and not with the nearest of
+        // thousands. What is scored, and in what order it is ranked, is the same as scoring them at once.
+        const auto first = shortened (target, firstRoundsLength);
+        std::vector<Candidate> looks;   // the nearest of each look, over the whole note
+        size_t looked = 0;
+        std::vector<bool> done (jobs.size(), false);
 
-        if (shouldStop())
+        for (const auto stride : { size_t { 64 }, size_t { 8 }, size_t { 1 } })
         {
-            publish (bestOf (std::move (jobs), keptBest), 0, "Stopped", true, true, *synth);
-            return;
+            std::vector<size_t> at;
+            std::vector<Candidate> part;
+
+            for (size_t i = 0; i < jobs.size(); ++i)
+                if (i % stride == 0 && ! done[i])
+                {
+                    done[i] = true;
+                    at.push_back (i);
+                    part.push_back (std::move (jobs[i]));
+                }
+
+            part = score (std::move (part), first, shouldStop);
+
+            for (size_t k = 0; k < at.size(); ++k)
+                jobs[at[k]] = std::move (part[k]);
+
+            looked += at.size();
+
+            if (shouldStop())
+            {
+                publish (bestOf (std::move (jobs), keptBest), 0, "Stopped", true, true, *synth);
+                return;
+            }
+
+            if (stride > 1 && looked >= keptBest)
+            {
+                auto look = bestOf (jobs, keptBest);
+
+                for (auto& c : look)
+                    c.signature = {};
+
+                look = bestOf (score (std::move (look), target, shouldStop), keptBest);
+
+                if (shouldStop())
+                {
+                    publish (std::move (look), 0, "Stopped", true, true, *synth);
+                    return;
+                }
+
+                if (! look.empty())
+                {
+                    looks.push_back (look.front());
+                    publish (std::move (look), 0, stride == 64 ? "A first look" : "A closer look", false, false, *synth);
+                }
+            }
         }
 
         // The 48 nearest over the whole note, with the clip's own table tried on the best six.
         pool = bestOf (std::move (jobs), 48);
+
+        // The nearest of each look stays in, wherever its first second ranked it: the chain has shown it.
+        for (auto& l : looks)
+            if (std::none_of (pool.begin(), pool.end(), [&l] (const Candidate& c) { return c.address == l.address; }))
+                pool.push_back (l);
 
         for (auto& c : pool)
             c.signature = {};
