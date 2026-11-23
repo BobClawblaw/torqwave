@@ -1448,6 +1448,232 @@ void saveDecryptWindow (const juce::File& folder)
     scratch.deleteRecursively();
 }
 
+namespace
+{
+    /** The synth's output as its audio thread makes it: blocks processed on a thread of their own, at the pace a
+        sound card asks for them, and kept. What the page plays (the signal, a link, a candidate) is mixed in there. */
+    struct Listener final : public juce::Thread
+    {
+        explicit Listener (Synth& s) : juce::Thread ("decrypt test audio"), synth (s)    { startThread(); }
+        ~Listener() override                                                              { stopThread (2000); }
+
+        void run() override
+        {
+            juce::AudioBuffer<float> block (2, 512);
+            auto next = juce::Time::getMillisecondCounterHiRes();
+
+            while (! threadShouldExit())
+            {
+                block.clear();
+                juce::MidiBuffer midi;
+                synth.processBlock (block, midi);
+                {
+                    const juce::ScopedLock sl (lock);
+                    const auto* l = block.getReadPointer (0);
+                    const auto* r = block.getReadPointer (1);
+
+                    for (int i = 0; i < 512; ++i)
+                        heard.push_back (0.5f * (l[i] + r[i]));
+                }
+
+                next += 512000.0 / rate;
+                const auto wait = (int) (next - juce::Time::getMillisecondCounterHiRes());
+
+                if (wait > 0)
+                    juce::Thread::sleep (wait);
+            }
+        }
+
+        size_t now() const                  { const juce::ScopedLock sl (lock); return heard.size(); }
+
+        /** The loudest sample from a moment on. */
+        float peakFrom (size_t from) const
+        {
+            const juce::ScopedLock sl (lock);
+            float peak = 0.0f;
+
+            for (auto i = from; i < heard.size(); ++i)
+                peak = juce::jmax (peak, std::abs (heard[i]));
+
+            return peak;
+        }
+
+        /** How like a sound what was heard from a moment on is, at its best within a fifth of a second: 1 the same. */
+        float likeness (size_t from, const juce::AudioBuffer<float>& sound) const
+        {
+            const juce::ScopedLock sl (lock);
+            const auto* s = sound.getReadPointer (0);
+            const auto n = juce::jmin (sound.getNumSamples(), 24000);
+            double energy = 0.0;
+
+            for (int i = 0; i < n; ++i)
+                energy += (double) s[i] * s[i];
+
+            double best = 0.0;
+
+            for (size_t lag = 0; lag < 9600 && from + lag + (size_t) n <= heard.size(); lag += 1)
+            {
+                double dot = 0.0, own = 0.0;
+
+                for (int i = 0; i < n; i += 4)
+                {
+                    dot += (double) heard[from + lag + (size_t) i] * s[i];
+                    own += (double) heard[from + lag + (size_t) i] * heard[from + lag + (size_t) i];
+                }
+
+                if (own > 1.0e-9)
+                    best = juce::jmax (best, dot / std::sqrt (own * energy / 4.0));
+            }
+
+            return (float) best;
+        }
+
+        Synth& synth;
+        mutable juce::CriticalSection lock;
+        std::vector<float> heard;
+    };
+
+    /** A second sound, heard: after it is given to the page in each state a first sound leaves it in, with Audition on
+        and the synth's audio running, its links are heard as they land, the middle of the scope plays the new signal
+        (not the old one, not silence), and a link and a candidate clicked are heard. */
+    void testSecondSoundHeard()
+    {
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (true);
+        const auto first = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
+        const auto second = recordingOf ("Cold Bell", 69, 0.3, 0.9);
+        const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypt-heard-" + juce::String (juce::Time::getMillisecondCounter()) + ".wav");
+        {
+            juce::WavAudioFormat wav;
+            std::unique_ptr<juce::OutputStream> stream = std::make_unique<juce::FileOutputStream> (file);
+            if (auto writer = wav.createWriterFor (stream, juce::AudioFormatWriterOptions{}.withSampleRate (rate).withNumChannels (2).withBitsPerSample (32)
+                                                               .withSampleFormat (juce::AudioFormatWriterOptions::SampleFormat::floatingPoint)))
+                writer->writeFromAudioSampleBuffer (second, 0, second.getNumSamples());
+        }
+
+        const auto pump = [] (int ms) { TestUtils::runUntil ([] { return false; }, ms); };
+        juce::StringArray wrong, figures;
+
+        struct State
+        {
+            juce::String name;
+            int way;        // 0 a clip given, 1 a file dropped, 2 a sound dragged from inside the app
+            std::function<void (DecryptView&, const std::function<void (juce::Point<float>, int)>&)> reach;
+        };
+
+        const auto ended = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000); };
+        const auto candidates = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000); };
+
+        const std::vector<State> states {
+            { "a search just started", 1, [&] (DecryptView& v, auto&) { v.decrypt (first, rate, "first"); } },
+            { "running, a candidate on the keys", 2, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); candidates (v); click (v.candidateCentre (4), 2); } },
+            { "running, an audition being rendered", 0, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); candidates (v); click (v.candidateCentre (2), 1); } },
+            { "a search ended", 1, [&] (DecryptView& v, auto&) { v.decrypt (first, rate, "first"); ended (v); } },
+            { "a link chosen", 2, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); ended (v); click (v.chainBounds (0).getCentre(), 1); } },
+            { "a link gone back to", 0, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); ended (v); click (v.chainBounds (0).getCentre(), 2); } },
+            { "the chain playing", 1, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); ended (v); click (v.playChainBounds().getCentre(), 1); pump (400); } },
+            { "after Stop", 2, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); ended (v); click (v.stopBounds().getCentre(), 1); } },
+            { "after Again", 0, [&] (DecryptView& v, auto&) { v.decrypt (first, rate, "first"); ended (v); v.again(); ended (v); } },
+            { "Again running", 1, [&] (DecryptView& v, auto&) { v.decrypt (first, rate, "first"); ended (v); v.again(); } },
+            { "after Take", 2, [&] (DecryptView& v, auto& click) { v.decrypt (first, rate, "first"); ended (v); click (v.takeBounds().getCentre(), 1); } },
+        };
+
+        for (auto& state : states)
+        {
+            Synth synth;
+            synth.setPlayConfigDetails (0, 2, rate, 512);
+            synth.prepareToPlay (rate, 512);
+            synth.loadPatch ("Cathedral Stack Pad");
+            std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+            auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+            auto& view = *window->getDecryptView();
+            view.setMotion (false);
+            window->showView (2);
+            const std::function<void (juce::Point<float>, int)> click = [&view] (juce::Point<float> at, int clicks)
+            {
+                const auto event = juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), clicks, false);
+                if (clicks == 2) view.mouseDoubleClick (event); else view.mouseDown (event);
+            };
+
+            {
+                Listener listener (synth);
+                state.reach (view, click);
+                pump (150);
+
+                // The second sound arrives.
+                const auto arrived = listener.now();
+
+                if (state.way == 1)
+                    view.filesDropped ({ file.getFullPathName() }, 0, 0);
+                else if (state.way == 2)
+                {
+                    SoundDrops::isSound = [] (const juce::var& d) { return d.toString() == "openfile:0"; };
+                    SoundDrops::soundOf = [&second] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { second, rate, "second" }; };
+                    view.itemDropped (juce::DragAndDropTarget::SourceDetails ("openfile:0", nullptr, {}));
+                    SoundDrops::isSound = nullptr;
+                    SoundDrops::soundOf = nullptr;
+                }
+                else
+                    view.decrypt (second, rate, "second");
+
+                const auto isSecond = view.getSearch() != nullptr && view.getSearch()->getTarget().audio.getNumSamples() < 48000;
+                ended (view);
+                pump (1300);
+                const auto landed = listener.peakFrom (arrived + 4800);          // links heard as they landed (the first tenth of a second may be the old sound's end)
+
+                // The middle of the scope: the signal.
+                pump (300);
+                const auto atSignal = listener.now();
+                click (view.candidateCentre (-1), 1);
+                pump (1300);
+                const auto& target = view.getSearch()->getTarget().audio;
+                const auto signalPeak = listener.peakFrom (atSignal);
+                const auto likeNew = listener.likeness (atSignal, target);
+
+                // A link, then a candidate.
+                const auto atLink = listener.now();
+                click (view.chainBounds (0).getCentre(), 1);
+                pump (1600);
+                const auto linkPeak = listener.peakFrom (atLink);
+                const auto atCandidate = listener.now();
+                click (view.candidateCentre (0), 1);
+                pump (1600);
+                const auto candidatePeak = listener.peakFrom (atCandidate);
+
+                figures.add (state.name + ": landing " + juce::String (landed, 2) + ", signal " + juce::String (signalPeak, 2) + " (like the new one " + juce::String (likeNew, 2)
+                             + "), a link " + juce::String (linkPeak, 2) + ", a candidate " + juce::String (candidatePeak, 2));
+
+                juce::StringArray silent;
+                if (! isSecond)             silent.add ("the page is not on the second sound");
+                if (landed < 0.1f)          silent.add ("no link was heard as it landed");
+                if (signalPeak < 0.1f)      silent.add ("the signal was silent");
+                else if (likeNew < 0.9f)    silent.add ("what the middle played was not the new signal (likeness " + juce::String (likeNew, 2) + ")");
+                if (linkPeak < 0.1f)        silent.add ("a link clicked was silent");
+                if (candidatePeak < 0.1f)   silent.add ("a candidate clicked was silent");
+
+                if (! silent.isEmpty())
+                    wrong.add (state.name + ": " + silent.joinIntoString (", "));
+
+                view.stop();
+            }
+        }
+
+        file.deleteFile();
+        InstrumentKeys::setAudition (auditionWas);
+        std::cout << "DECRYPT-HEARD " << figures.joinIntoString (" | ") << std::endl;
+        check (wrong.isEmpty(),
+               "decrypt: a second sound is heard: given to the page in " + juce::String ((int) states.size()) + " states with Audition on and the synth's audio running, its links are heard as they "
+               "land, the middle of the scope plays the new signal (not the first, not silence), and a link and a candidate clicked are heard"
+                   + (wrong.isEmpty() ? juce::String() : " (wrong: " + wrong.joinIntoString (" | ") + ")"));
+    }
+}
+
+void runDecryptHeardTests()
+{
+    testSecondSoundHeard();
+}
+
 void runDecryptWindowTests()
 {
     testWindow();

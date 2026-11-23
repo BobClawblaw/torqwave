@@ -10,6 +10,8 @@
 void runDecryptTests();
 /** Only the window's checks, quicker to repeat. */
 void runDecryptWindowTests();
+/** Only the check that a second sound is heard, with the synth's audio running (about three minutes). */
+void runDecryptHeardTests();
 /** Saves pictures of the synth's window on Decrypt: empty, a search ended, a step chosen, a chain of 20. */
 void saveDecryptWindow (const juce::File& folder);
 
