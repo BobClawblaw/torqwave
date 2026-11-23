@@ -632,6 +632,7 @@ int main (int argc, char* argv[])
     //   --small                 only the tests of mixer scenes, channel strips and hardware inserts
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
     //   --decrypt-real [files]  only Decrypt on recordings not from the synth: the files, some system sounds, wet patches
+    //   --decrypt-window        only Decrypt's window checks
     //   --decrypt-measure       only Decrypt's two sets of ten, in 16 rounds and until settled, with times (minutes)
     //   --decrypt-eval <url> <model>  only Decrypt's ten clips, alone and helped by the model at that server
     //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session, sequence, library or decrypt
@@ -722,6 +723,13 @@ int main (int argc, char* argv[])
     {
         saveSignalConsoleWindow (juce::File (folder));
         return 0;
+    }
+
+    if (args.contains ("--decrypt-window"))
+    {
+        runDecryptWindowTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
     }
 
     if (args.contains ("--decrypt"))

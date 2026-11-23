@@ -8,6 +8,8 @@
     threads; a search can be stopped, changes no synth but its own, and leaves a synth that is
     playing alongside it without a late block. */
 void runDecryptTests();
+/** Only the window's checks, quicker to repeat. */
+void runDecryptWindowTests();
 
 /** The ten patches of the search test decrypted twice, alone and helped by the model at that
     OpenAI-compatible server (Ask Torq's DecryptAdvisor, told each patch's category in words), with
