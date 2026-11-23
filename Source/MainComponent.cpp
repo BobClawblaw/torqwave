@@ -1132,11 +1132,14 @@ private:
 class MainComponent::EditorPanel final : public juce::Component
 {
 public:
-    EditorPanel (FileTabs& t, WaveformView& w, EditorBar& b, SessionOverview& o, MultitrackView& m, TrackTools& tt, ClipProperties& il)
-        : tabs (t), waveform (w), bar (b), overview (o), multitrack (m), trackTools (tt), infoLine (il)
+    EditorPanel (FileTabs& t, WaveformView& w, FileOverview& fo, EditorBar& b, SessionOverview& o, MultitrackView& m, TrackTools& tt,
+                 ClipProperties& il)
+        : tabs (t), waveform (w), fileOverview (fo), bar (b), overview (o), multitrack (m), trackTools (tt), infoLine (il)
     {
         addChildComponent (infoLine);
         addAndMakeVisible (tabs);
+        addChildComponent (fileOverview);
+        fileOverview.onHasAudioChanged = [this] { resized(); };
         addAndMakeVisible (waveform);
         addAndMakeVisible (bar);
         addChildComponent (overview);
@@ -1160,6 +1163,15 @@ public:
         tabs.setBounds (showTabs ? r.removeFromTop (FileTabs::height) : juce::Rectangle<int>());
         bar.setVisible (waveform.isVisible());
         bar.setBounds (waveform.isVisible() ? r.removeFromBottom (EditorBar::height) : juce::Rectangle<int>());
+
+        // The file's time-view strip over the ruler, as the session's is over the lanes (not over the home screen).
+        const auto showStrip = waveform.isVisible() && fileOverview.getTotalFrames() > 1.0;
+        fileOverview.setVisible (showStrip);
+        fileOverview.setBounds (showStrip ? r.removeFromTop (FileOverview::height) : juce::Rectangle<int>());
+
+        if (showStrip)
+            r.removeFromTop (4);
+
         waveform.setBounds (r);
         r = getLocalBounds();
         overview.setBounds (r.removeFromTop (SessionOverview::height));
@@ -1176,6 +1188,7 @@ private:
     bool tabsWanted = false, infoLineWanted = true;
     FileTabs& tabs;
     WaveformView& waveform;
+    FileOverview& fileOverview;
     EditorBar& bar;
     SessionOverview& overview;
     MultitrackView& multitrack;
@@ -1341,7 +1354,7 @@ MainComponent::MainComponent()
     infoLine = std::make_unique<ClipProperties> (engine, [this] { return multitrack.isNoteClipLast() ? 0 : multitrack.getSelectedClip(); },
                                                  [this] { return multitrack.isNoteClipLast() ? multitrack.getSelectedNoteClip() : 0; });
     infoLine->setLine (true);
-    editorPanel = std::make_unique<EditorPanel> (fileTabs, waveform, *editorBar, overview, multitrack, *trackTools, *infoLine);
+    editorPanel = std::make_unique<EditorPanel> (fileTabs, waveform, fileOverview, *editorBar, overview, multitrack, *trackTools, *infoLine);
     fileTabs.onChoose = [this] (int index) { switchToFile (index); };
     fileTabs.onClose = [this] (int index) { closeFile (index); };
     multitrack.setSnapping (settings->getBoolValue (snappingKey, true));

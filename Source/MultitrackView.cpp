@@ -2727,6 +2727,12 @@ void MultitrackView::zoomToRange (juce::Range<juce::int64> range)
     setView ((double) range.getStart() - margin, ((double) range.getLength() + 2.0 * margin) / juce::jmax (1, timelineArea().getWidth()));
 }
 
+void MultitrackView::showFrames (juce::Range<double> frames)
+{
+    if (frames.getLength() > 0.0)
+        setView (frames.getStart(), frames.getLength() / juce::jmax (1, timelineArea().getWidth()));
+}
+
 juce::Range<double> MultitrackView::getVisibleFrames() const
 {
     return { viewStart, viewStart + framesPerPixel * timelineArea().getWidth() };

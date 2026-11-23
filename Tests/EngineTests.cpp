@@ -55,6 +55,7 @@
 #include "SpectralShapeTests.h"
 #include "DuckingTests.h"
 #include "FadeHandleTests.h"
+#include "TimeViewStripTests.h"
 #include "MultibandTests.h"
 #include "DynamicEqTests.h"
 #include "ExciterTests.h"
@@ -1086,6 +1087,7 @@ int main (int argc, char* argv[])
         runSpectralShapeTests();
         runDuckingTests();
         runFadeHandleTests();
+        runTimeViewStripTests();
 
         // Scan the way the app does: on a background thread, with the message loop running.
         std::atomic<bool> scanned { false };

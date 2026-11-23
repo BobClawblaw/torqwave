@@ -98,6 +98,8 @@ The setting covers a time range too. Draw one with the Range tool (6), or across
 
 Cut copies what was in the range, so **Paste** (Cmd-V) puts those clips at the cursor. **Copy** (Cmd-C) copies them without taking anything out. The Edit menu says which it will do: Delete Range or Delete Clip. A click on a clip, a point or an empty lane turns Delete, Cut and Copy back to the selected clips.
 
+The thin strip across the top of the multitrack view shows the whole session in miniature (every shown track's clips in their colours, and the cursor), with a frame around the part the lanes show. Drag inside the frame to move along the session, drag either edge to zoom, click elsewhere to jump there, and double-click to fit the session. The editor has the same strip for a file.
+
 ### The tools
 
 The toolbar under the lanes holds the tools. Each has a number key:

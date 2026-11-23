@@ -54,6 +54,7 @@
 #include "EffectPreview.h"
 #include "RackView.h"
 #include "SessionOverview.h"
+#include "FileOverview.h"
 #include "SessionRecording.h"
 #include "WaveformView.h"
 #include "Dock.h"
@@ -745,6 +746,7 @@ private:
     /** Asks about each open file with unsaved changes in turn (from the index given), then proceeds. */
     void confirmAllFiles (std::function<void()> proceed, int from = 0);
     SessionOverview overview { engine, multitrack };
+    FileOverview fileOverview { engine, waveform };
     bool multitrackMode = false;
     FadeShape fadeShape = FadeShape::sCurve;   // the editor's Fade In and Fade Out
     bool normalizeChannelsApart = false;   // the Normalize dialog's last choice

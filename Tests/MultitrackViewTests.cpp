@@ -2893,6 +2893,15 @@ void runMultitrackViewTests (AudioEngine& engine)
                    && std::abs (dragged.getStart() - (rate * 59.0 - span / 2.0)) < 1.0 && juce::exactlyEqual (atStart.getStart(), 0.0),
                "overview: clicking centres the lanes there, dragging follows, the start stops at zero, the zoom stays");
 
+        // The frame's right edge zooms the lanes out, its left edge staying put (TimeViewStrip).
+        const auto edge = overview.getViewFrame().getRight();
+        press (edge - 1.0f, false);
+        press (edge + 59.0f, true);
+        const auto zoomed = view.getVisibleFrames();
+        check (std::abs (zoomed.getStart() - atStart.getStart()) < 1.0 && std::abs (zoomed.getEnd() - (atStart.getEnd() + rate * 6.0)) < rate * 0.2,
+               "overview: dragging the frame's right edge zooms the lanes out by as much, the start staying put");
+        view.showFrames (atStart);
+
         // A software image: Direct2D's, on Windows, holds what is drawn until the Graphics goes.
         juce::Image strip (juce::Image::ARGB, 600, SessionOverview::height, true, juce::SoftwareImageType());
         juce::Graphics g (strip);
