@@ -1,6 +1,7 @@
 #include "WaveSynthEditor.h"
 #include "SignalConsoleView.h"
 #include "DecryptView.h"
+#include "SoundDrops.h"
 #include "WaveSynthFavourites.h"
 #include "Theme.h"
 
@@ -62,6 +63,7 @@ namespace
         in front with a glow, moving as its Position is modulated. A string shows as a pluck dying away. */
     class WavetableView final : public juce::Component,
                                 public juce::FileDragAndDropTarget,
+                                public juce::DragAndDropTarget,
                                 public juce::SettableTooltipClient
     {
     public:
@@ -84,12 +86,22 @@ namespace
             const auto length = (int) juce::jmin (reader->lengthInSamples, (juce::int64) (reader->sampleRate * 30.0));
             juce::AudioBuffer<float> audio ((int) reader->numChannels, length);
             reader->read (&audio, 0, length, 0, true, true);
+            return loadAudio (audio, reader->sampleRate, file.getFileNameWithoutExtension());
+        }
+
+        /** The same from audio in memory (a sound dragged from the Files panel). */
+        bool loadAudio (juce::AudioBuffer<float> audio, double sampleRate, const juce::String& name)
+        {
+            const auto length = audio.getNumSamples();
+
+            if (length <= 0 || audio.getNumChannels() <= 0)
+                return false;
 
             for (int ch = 1; ch < audio.getNumChannels(); ++ch)
                 audio.addFrom (0, 0, audio, ch, 0, length);
 
             audio.applyGain (0, 0, length, 1.0f / (float) audio.getNumChannels());
-            const auto table = WaveTables::sampledFromAudio (audio.getReadPointer (0), length, reader->sampleRate, 0.0, file.getFileNameWithoutExtension());
+            const auto table = WaveTables::sampledFromAudio (audio.getReadPointer (0), length, sampleRate, 0.0, name);
 
             if (table == nullptr)
                 return false;
@@ -101,6 +113,20 @@ namespace
             choice->endChangeGesture();
             update();
             return true;
+        }
+
+        bool isInterestedInDragSource (const SourceDetails& d) override   { return SoundDrops::accepts (d.description); }
+        void itemDragEnter (const SourceDetails&) override                { over = true; repaint(); }
+        void itemDragExit (const SourceDetails&) override                 { over = false; repaint(); }
+
+        void itemDropped (const SourceDetails& d) override
+        {
+            over = false;
+
+            if (auto sound = SoundDrops::take (d.description, 30.0))
+                loadAudio (std::move (sound->audio), sound->sampleRate, sound->name);
+
+            repaint();
         }
 
         bool isInterestedInFileDrag (const juce::StringArray& files) override

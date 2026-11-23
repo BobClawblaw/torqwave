@@ -1,5 +1,6 @@
 #include "MainComponent.h"
 #include "InstrumentKeys.h"
+#include "SoundDrops.h"
 #include "WaveSynth.h"
 #include "AiDecrypt.h"
 #include "SequencePropertiesDialog.h"
@@ -1506,6 +1507,30 @@ MainComponent::MainComponent()
     InstrumentKeys::setAudition (settings->getBoolValue ("auditionOnBrowse", true));
     InstrumentKeys::setAuditionLoop (settings->getBoolValue ("auditionLoop", false));
     InstrumentKeys::setPatternChoices (settings->getValue ("auditionPatterns"));
+    // An open file dragged from the Files panel onto an instrument's window (Decrypt, an oscillator's table).
+    SoundDrops::isSound = [this] (const juce::var& description)
+    {
+        const auto row = FilesPanel::rowOfDrag (description);
+        return juce::isPositiveAndBelow (row, openFiles.size()) && openFiles.documentAt (row).hasAudio();
+    };
+    SoundDrops::soundOf = [this] (const juce::var& description, double maxSeconds) -> std::optional<SoundDrops::Sound>
+    {
+        const auto row = FilesPanel::rowOfDrag (description);
+
+        if (! juce::isPositiveAndBelow (row, openFiles.size()) || ! openFiles.documentAt (row).hasAudio())
+            return std::nullopt;
+
+        auto& document = openFiles.documentAt (row);
+        const auto snapshot = document.getSnapshot();
+        SoundDrops::Sound sound;
+        sound.sampleRate = document.getSampleRate();
+        sound.name = juce::File::createLegalFileName (openFiles.nameAt (row)).upToLastOccurrenceOf (".", false, false);
+        const auto frames = (int) juce::jmin (snapshot->getNumFrames(), (juce::int64) (sound.sampleRate * maxSeconds));
+        sound.audio.setSize (juce::jmin (2, snapshot->getNumChannels()), frames);
+        snapshot->read (sound.audio, 0, 0, frames);
+        return sound;
+    };
+
     InstrumentKeys::sessionTempo = [this]
     {
         const auto session = engine.session.getState();
@@ -1756,6 +1781,9 @@ void MainComponent::offerRecoveredSession()
 MainComponent::~MainComponent()
 {
     Decrypt::setAdvisorMaker (nullptr);
+    SoundDrops::isSound = nullptr;
+    SoundDrops::soundOf = nullptr;
+    InstrumentKeys::sessionTempo = nullptr;
     waveform.setHomePictures (nullptr);
    #if JUCE_MAC
     juce::MenuBarModel::setMacMainMenu (nullptr);

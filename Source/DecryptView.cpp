@@ -1,6 +1,13 @@
 #include "DecryptView.h"
+#include "SoundDrops.h"
 #include "SignalConsoleView.h"
 #include "Theme.h"
+
+namespace SoundDrops
+{
+    std::function<bool (const juce::var&)> isSound;
+    std::function<std::optional<Sound> (const juce::var&, double)> soundOf;
+}
 
 using namespace SignalConsoleDrawing;
 using namespace Decrypt;
@@ -82,6 +89,23 @@ void DecryptView::filesDropped (const juce::StringArray& files, int, int)
     decryptFile (juce::File (files[0]));
 }
 
+bool DecryptView::isInterestedInDragSource (const SourceDetails& d)   { return SoundDrops::accepts (d.description); }
+void DecryptView::itemDragEnter (const SourceDetails&)                { dragOver = true; repaint(); }
+void DecryptView::itemDragExit (const SourceDetails&)                 { dragOver = false; repaint(); }
+
+void DecryptView::itemDropped (const SourceDetails& d)
+{
+    dragOver = false;
+
+    // Ten seconds, as from a file: the note is found in it.
+    if (const auto sound = SoundDrops::take (d.description, 10.0))
+        decrypt (sound->audio, sound->sampleRate, sound->name);
+    else
+        problem = "That sound couldn't be read.";
+
+    repaint();
+}
+
 bool DecryptView::decryptFile (const juce::File& file)
 {
     juce::AudioFormatManager formats;
@@ -117,38 +141,95 @@ bool DecryptView::decrypt (const juce::AudioBuffer<float>& audio, double sampleR
     if (search != nullptr && ! restored)
         stop();
 
-    problem = {};
     clipName = name;
+    passes = 0;
+    chain.clear();
+    begin (std::move (target), {});
+    return true;
+}
+
+bool DecryptView::canGoAgain() const
+{
+    return search != nullptr && ! search->isRunning() && ! progress.best.empty();
+}
+
+bool DecryptView::again()
+{
+    if (! canGoAgain())
+        return false;
+
+    // From the one chosen, if one was: taken, or on the keys. Otherwise from all twelve.
+    std::vector<SignalConsole::Patch> from;
+    Link link;
+
+    if (chosen.has_value())
+    {
+        from.push_back (*chosen);
+        link = { *chosen, chosenLock, {} };
+    }
+    else if (juce::isPositiveAndBelow (onKeys, (int) progress.best.size()))
+    {
+        from.push_back (progress.best[(size_t) onKeys].patch);
+        link = { progress.best[(size_t) onKeys].patch, progress.best[(size_t) onKeys].lock, {} };
+    }
+    else
+    {
+        for (auto& c : progress.best)
+            from.push_back (c.patch);
+
+        link = { progress.best.front().patch, progress.best.front().lock, {} };
+    }
+
+    // The chain keeps where this pass went on from, to hear beside what comes next.
+    addLink (link.patch, link.lock);
+
+    // What the synth holds now (the patch it had, or one taken) is what Stop gives back.
+    auto target = search->getTarget();
+    begin (std::move (target), std::move (from));
+    return true;
+}
+
+void DecryptView::begin (Decrypt::Target target, std::vector<SignalConsole::Patch> resume)
+{
+    problem = {};
     ended = {};
     offer = {};
     before = SignalConsole::capture (synth);
     restored = false;
     onKeys = -1;
     hovered = -2;
-    shownLock = 0.0f;
-    places.clear();
-    shownRadius.clear();
+    chosen.reset();
 
+    if (resume.empty())
+    {
+        shownLock = 0.0f;
+        places.clear();
+        shownRadius.clear();
+    }
+
+    ++passes;
     Options options;
     options.factoryTablesOnly = tablesOnly;
     options.words = words.getText().trim();
     options.advisor = makeAdvisor();
-    options.seed = SignalConsole::addressOf (before) | 1u;
+    options.seed = (SignalConsole::addressOf (before) + (juce::uint32) (passes - 1) * 0x9e3779b9u) | 1u;   // other variations each pass
+    options.resume = std::move (resume);
+    options.untilSettled = true;        // it goes on while it comes closer, and says when it no longer does
     search = std::make_unique<Search> (std::move (target), std::move (options));
     progress = {};
     search->onChange = [this]
     {
         progress = search->getProgress();
+        growChain();
         layout();
         repaint();
 
         if (progress.finished && ! restored)
-            ended = progress.stopped ? "STOPPED" : "LOCKED";
+            ended = progress.stopped ? "STOPPED" : progress.noCloser ? "NO CLOSER FOUND" : "LOCKED";
     };
     search->start();
     startTimerHz (30);
     repaint();
-    return true;
 }
 
 void DecryptView::stop()
@@ -174,6 +255,8 @@ void DecryptView::take()
         return;
 
     search->stop();
+    chosen = c->patch;
+    chosenLock = c->lock;
     auto patch = c->patch;
     patch.name = "Node " + SignalConsole::addressText (c->address);
     SignalConsole::apply (synth, patch);
@@ -261,12 +344,95 @@ void DecryptView::hear (int candidate)
         return;
     }
 
-    if (! juce::isPositiveAndBelow (candidate, (int) progress.best.size()))
+    if (juce::isPositiveAndBelow (candidate, (int) progress.best.size()))
+        hearPatch (progress.best[(size_t) candidate].patch);
+}
+
+void DecryptView::addLink (const SignalConsole::Patch& patch, float lock)
+{
+    if (! chain.empty() && SignalConsole::addressOf (chain.back().patch) == SignalConsole::addressOf (patch))
+        return;
+
+    chain.push_back ({ patch, lock, {} });
+}
+
+void DecryptView::growChain()
+{
+    // A step each time the best comes a point nearer (and the first best, and the last when it ends).
+    if (progress.best.empty())
+        return;
+
+    const auto& best = progress.best.front();
+
+    if (chain.empty() || best.lock >= chain.back().lock + 1.0f || (progress.finished && ! progress.stopped && best.lock > chain.back().lock))
+        addLink (best.patch, best.lock);
+}
+
+void DecryptView::playChain()
+{
+    if (chainPlayer.isTimerRunning() || search == nullptr || chain.empty())
+    {
+        chainPlayer.stopTimer();
+        repaint();
+        return;
+    }
+
+    chainPlayer.next = -1;
+    chainPlayer.timerCallback();
+    repaint();
+}
+
+void DecryptView::ChainPlayer::timerCallback()
+{
+    if (view.search == nullptr || next >= (int) view.chain.size())
+    {
+        stopTimer();
+        view.repaint();
+        return;
+    }
+
+    if (next < 0)
+        view.hear (-1);
+    else
+        view.hearPatch (view.chain[(size_t) next].patch);
+
+    ++next;
+    // Each for as long as the note, and a breath.
+    startTimer (juce::roundToInt (1000.0 * (double) view.search->getTarget().audio.getNumSamples() / rate) + 350);
+    view.repaint();
+}
+
+void DecryptView::goBackTo (int index)
+{
+    if (search == nullptr || ! juce::isPositiveAndBelow (index, (int) chain.size()))
+        return;
+
+    chainPlayer.stopTimer();
+    search->stop();
+    const auto link = chain[(size_t) index];
+    chain.resize ((size_t) index + 1);
+
+    if (restored)       // Stop or Take had settled it: what the synth holds now is what Stop gives back
+        before = SignalConsole::capture (synth);
+
+    auto patch = link.patch;
+    patch.name = "Node " + SignalConsole::addressText (SignalConsole::addressOf (link.patch));
+    SignalConsole::apply (synth, patch);
+    chosen = link.patch;
+    chosenLock = link.lock;
+    restored = false;
+    onKeys = -1;
+    finish ("STEP " + juce::String (index + 1));
+}
+
+void DecryptView::hearPatch (const SignalConsole::Patch& heard)
+{
+    if (search == nullptr)
         return;
 
     // Rendered off the message thread, as the search renders it, then played.
     renders.removeAllJobs (false, 0);
-    renders.addJob ([patch = progress.best[(size_t) candidate].patch, target = &search->getTarget(), safe = juce::Component::SafePointer<DecryptView> (this),
+    renders.addJob ([patch = heard, target = &search->getTarget(), safe = juce::Component::SafePointer<DecryptView> (this),
                      weak = std::weak_ptr<std::atomic<bool>> (alive)]
     {
         Synth player;
@@ -385,8 +551,26 @@ void DecryptView::layout()
         refuseChip = { useChip.getRight() + 8.0f, useChip.getY(), 64.0f, 24.0f };
     }
 
+    // The chain, above the buttons: its last seven links, oldest first.
+    {
+        playChip = chain.empty() ? juce::Rectangle<float>() : juce::Rectangle<float> (panel.getX() + 16.0f, panel.getBottom() - 76.0f, 44.0f, 22.0f);
+        const auto shownLinks = juce::jmin (6, (int) chain.size());
+        const auto first = (int) chain.size() - shownLinks;
+
+        for (int i = 0; i < (int) chain.size(); ++i)
+            chain[(size_t) i].at = i < first ? juce::Rectangle<float>()
+                                             : juce::Rectangle<float> (playChip.getRight() + 6.0f + (float) (i - first) * 39.0f, panel.getBottom() - 76.0f, 36.0f, 22.0f);
+
+        if (! chain.empty() && offer.name.isNotEmpty())
+        {
+            useChip.translate (0.0f, -34.0f);
+            refuseChip.translate (0.0f, -34.0f);
+        }
+    }
+
     stopChip = { panel.getX() + 16.0f, panel.getBottom() - 44.0f, 84.0f, 26.0f };
-    takeChip = { stopChip.getRight() + 10.0f, stopChip.getY(), 120.0f, 26.0f };
+    takeChip = { stopChip.getRight() + 8.0f, stopChip.getY(), 108.0f, 26.0f };
+    againChip = { takeChip.getRight() + 8.0f, stopChip.getY(), 72.0f, 26.0f };
 }
 
 juce::Point<float> DecryptView::candidateCentre (int index) const
@@ -451,6 +635,26 @@ void DecryptView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
+    if (playChip.contains (p) && ! chain.empty())
+    {
+        playChain();
+        return;
+    }
+
+    for (auto& link : chain)
+        if (link.at.contains (p))
+        {
+            chainPlayer.stopTimer();
+            hearPatch (link.patch);
+            return;
+        }
+
+    if (againChip.contains (p) && canGoAgain())
+    {
+        again();
+        return;
+    }
+
     if (search != nullptr && ! restored && stopChip.contains (p))
     {
         stop();
@@ -471,6 +675,13 @@ void DecryptView::mouseDown (const juce::MouseEvent& e)
 
 void DecryptView::mouseDoubleClick (const juce::MouseEvent& e)
 {
+    for (int i = 0; i < (int) chain.size(); ++i)
+        if (chain[(size_t) i].at.contains (e.position))
+        {
+            goBackTo (i);
+            return;
+        }
+
     const auto at = candidateAt (e.position);
 
     // On the keys: the synth plays the candidate until Stop gives the patch back or Take keeps it.
@@ -490,6 +701,15 @@ juce::String DecryptView::getTooltip()
 
     if (chooseChip.contains (p))   return "Choose a recording of one note to decrypt";
     if (tablesChip.contains (p))   return "Tables only from the factory: the patch is made of the synth's own waves, never given the clip's own sampled table";
+    for (size_t i = 0; i < chain.size(); ++i)
+        if (chain[i].at.contains (p))
+            return "Step " + juce::String ((int) i + 1) + " of the chain, lock " + juce::String (juce::roundToInt (chain[i].lock))
+                   + " %: click to hear it, double-click to go back to it (it goes on the keys, and Again goes on from it)";
+
+    if (playChip.contains (p) && ! chain.empty())
+        return "Play the chain: the signal, then each step in turn, to hear the patch closing in. Click again to stop";
+
+    if (againChip.contains (p))    return "Again: search on from the candidate you chose (taken, or double-clicked onto the keys), or from all twelve if none, in smaller steps. Press it as often as it keeps getting closer";
     if (stopChip.contains (p))     return "Stop: end the search and give the synth back the patch it had";
     if (takeChip.contains (p))     return "Take: keep the candidate shown as the synth's patch";
 
@@ -761,5 +981,21 @@ void DecryptView::drawPanel (juce::Graphics& g)
     {
         drawChip (g, stopChip, "Stop", Theme::lineStrong, false, Theme::text);
         drawChip (g, takeChip, c != nullptr ? "Take " + juce::String (juce::roundToInt (c->lock)) + "%" : juce::String ("Take"), Theme::good, true, Theme::textStrong);
+    }
+
+    if (canGoAgain())
+        drawChip (g, againChip, "Again", Theme::accent, true, Theme::textStrong);
+
+    for (size_t i = 0; i < chain.size(); ++i)
+        if (! chain[i].at.isEmpty())
+            drawChip (g, chain[i].at, juce::String (juce::roundToInt (chain[i].lock)) + "%",
+                      chainPlayer.isTimerRunning() && (int) i == chainPlayer.next - 1 ? Theme::accent : Theme::lineStrong, false, Theme::dimText);
+
+    if (! chain.empty())
+    {
+        const auto playing = chainPlayer.isTimerRunning();
+        drawChip (g, playChip, playing ? "Stop" : "Play", Theme::accent, playing, Theme::text);
+        text (g, juce::String ((int) chain.size()) + (chain.size() == 1 ? " step" : " steps") + " so far: click one to hear it, double-click to go back to it",
+              x, panel.getBottom() - 88.0f, 10.0f, Theme::faintText);
     }
 }

@@ -965,7 +965,7 @@ Advisor::Brief Search::briefFor (const std::vector<Candidate>& best, int round, 
     return b;
 }
 
-void Search::publish (std::vector<Candidate> merged, int round, const juce::String& stage, bool finished, bool stopped, Synth& synth)
+void Search::publish (std::vector<Candidate> merged, int round, const juce::String& stage, bool finished, bool stopped, Synth& synth, bool noCloser)
 {
     // The best twelve's signatures, for drawing (each rendered again: twelve renders at most).
     for (auto& c : merged)
@@ -1012,6 +1012,7 @@ void Search::publish (std::vector<Candidate> merged, int round, const juce::Stri
         progress.stage = stage;
         progress.finished = finished;
         progress.stopped = stopped;
+        progress.noCloser = noCloser;
         progress.settled = settled;
         progress.model = modelLog;
         progress.seconds = (juce::Time::getMillisecondCounterHiRes() - started) / 1000.0;
@@ -1080,28 +1081,45 @@ void Search::run (const std::function<bool()>& shouldStop)
         return added;
     };
 
-    // The factory patches, over the clip's first second.
-    std::vector<Candidate> jobs;
+    std::vector<Candidate> pool;
+    const auto resumed = ! options.resume.empty();
 
-    for (int i = 0; i < (int) factory.size(); ++i)
-        if (startable (i))
-            jobs.push_back (factoryCandidate (*synth, i));
-
-    jobs = score (std::move (jobs), shortened (target, firstRoundsLength), shouldStop);
-
-    if (shouldStop())
+    if (resumed)
     {
-        publish (bestOf (std::move (jobs), keptBest), 0, "Stopped", true, true, *synth);
-        return;
+        // A search carried on: where the last one ended.
+        for (auto& patch : options.resume)
+        {
+            Candidate c;
+            c.patch = patch;
+            c.from = "the last search";
+            pool.push_back (std::move (c));
+        }
+    }
+    else
+    {
+        // The factory patches, over the clip's first second.
+        std::vector<Candidate> jobs;
+
+        for (int i = 0; i < (int) factory.size(); ++i)
+            if (startable (i))
+                jobs.push_back (factoryCandidate (*synth, i));
+
+        jobs = score (std::move (jobs), shortened (target, firstRoundsLength), shouldStop);
+
+        if (shouldStop())
+        {
+            publish (bestOf (std::move (jobs), keptBest), 0, "Stopped", true, true, *synth);
+            return;
+        }
+
+        // The 48 nearest over the whole note, with the clip's own table tried on the best six.
+        pool = bestOf (std::move (jobs), 48);
+
+        for (auto& c : pool)
+            c.signature = {};
     }
 
-    // The 48 nearest over the whole note, with the clip's own table tried on the best six.
-    auto pool = bestOf (std::move (jobs), 48);
-
-    for (auto& c : pool)
-        c.signature = {};
-
-    if (clipTable != nullptr)
+    if (clipTable != nullptr && ! resumed)
         for (size_t i = 0; i < 6 && i < pool.size(); ++i)
             for (auto alone : { false, true })
             {
@@ -1122,7 +1140,7 @@ void Search::run (const std::function<bool()>& shouldStop)
         }
 
     auto best = bestOf (score (std::move (pool), target, shouldStop), keptBest);
-    publish (best, 0, "Factory patches", false, false, *synth);
+    publish (best, 0, resumed ? "The last search" : "Factory patches", false, false, *synth);
 
     if (helper != nullptr && ! shouldStop() && startAnswered)
         helper->ask (false, briefFor (best, 0, *synth));
@@ -1201,9 +1219,26 @@ void Search::run (const std::function<bool()>& shouldStop)
         }
     };
 
-    for (int round = 1; round <= options.rounds && ! shouldStop(); ++round)
+    // Fixed rounds, or (untilSettled) on past them while they come closer.
+    int quietRounds = 0;
+    auto noCloser = false;
+    const auto goesOn = [&] (int round)
     {
-        const auto reach = 0.45f * std::pow (0.15f / 0.45f, (float) (round - 1) / (float) juce::jmax (1, options.rounds - 1));
+        if (round <= options.rounds)
+            return true;
+
+        return options.untilSettled && round <= options.maxRounds && quietRounds < options.patience;
+    };
+
+    for (int round = 1; goesOn (round) && ! shouldStop(); ++round)
+    {
+        // Carried on, the steps are smaller from the first: it is refining, not looking for somewhere to start.
+        const auto widest = resumed ? 0.25f : 0.45f, finest = resumed ? 0.06f : 0.15f;
+        // Past its set rounds the steps go round the last quarter of the schedule again: fine, then finer.
+        const auto place = round <= options.rounds ? (float) (round - 1) / (float) juce::jmax (1, options.rounds - 1)
+                                                   : 0.75f + 0.25f * (float) ((round - options.rounds - 1) % 4) / 3.0f;
+        const auto reach = widest * std::pow (finest / widest, place);
+        const auto lockBeforeRound = best.empty() ? 0.0f : best.front().lock;
         std::vector<Candidate> next = best;
         const auto proposed = helper != nullptr ? takeProposals() : std::vector<Candidate>();
 
@@ -1245,11 +1280,14 @@ void Search::run (const std::function<bool()>& shouldStop)
 
         best = bestOf (std::move (next), keptBest);
         lastRound = round;
+        quietRounds = ! best.empty() && best.front().lock > lockBeforeRound + 0.05f ? 0 : quietRounds + 1;
+        noCloser = options.untilSettled && quietRounds >= options.patience;
 
         if (helper != nullptr)
             helper->ask (! startAnswered, briefFor (best, round, *synth));
 
-        publish (best, round, "Round " + juce::String (round) + " of " + juce::String (options.rounds), false, false, *synth);
+        publish (best, round, options.untilSettled ? "Round " + juce::String (round) + (quietRounds > 0 ? ", no closer for " + juce::String (quietRounds) : juce::String())
+                                                   : "Round " + juce::String (round) + " of " + juce::String (options.rounds), false, false, *synth);
     }
 
     // A model answers in seconds, the search in about as long: when the rounds are done, up to three
@@ -1289,6 +1327,7 @@ void Search::run (const std::function<bool()>& shouldStop)
     }
 
     helper.reset();
-    publish (best, lastRound, shouldStop() ? "Stopped" : "Done", true, shouldStop(), *synth);
+    const auto settledNow = noCloser && ! shouldStop();
+    publish (best, lastRound, shouldStop() ? "Stopped" : settledNow ? "No closer found after " + juce::String (lastRound) + " rounds" : "Done", true, shouldStop(), *synth, settledNow);
 }
 }

@@ -3,6 +3,7 @@
 #include "../Source/AiDecrypt.h"
 #include "TestUtils.h"
 #include "../Source/DecryptView.h"
+#include "../Source/SoundDrops.h"
 #include "../Source/WaveSynthEditor.h"
 #include "../Source/Theme.h"
 #include "DecryptTests.h"
@@ -458,7 +459,7 @@ namespace
         const auto namer = std::make_shared<MadeUp> (MadeUp::Kind::namer);
         setAdvisorMaker ([namer] { return namer; });
         view.decrypt (clip, rate, "reese");
-        TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 30000);
+        TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
         const auto best = view.getSearch()->getProgress().best;
         click (view.takeBounds().getCentre());
         const auto taken = ! best.empty() && SignalConsole::addressOf (SignalConsole::capture (synth)) == best.front().address
@@ -468,7 +469,7 @@ namespace
         view.useOfferedName (false);
         const auto refusedName = synth.getPatchName().startsWith ("Node ");
         view.decrypt (clip, rate, "reese");
-        TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 30000);
+        TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
         click (view.takeBounds().getCentre());
         TestUtils::runUntil ([&view] { return view.offeredName().name.isNotEmpty(); }, 5000);
         view.useOfferedName (true);
@@ -476,6 +477,107 @@ namespace
         setAdvisorMaker (nullptr);
         check (taken && offered && refusedName && used,
                "decrypt: Take makes the best the synth's patch, named for its address; a name a model offers can be refused (the address stays) or used (the name and macros)");
+
+        // Again: the search carried on from its best twelve, never ending further away than it began.
+        {
+            view.decrypt (clip, rate, "reese");
+            const auto notYet = ! view.canGoAgain() && ! view.again();
+            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            const auto first = view.getSearch()->getProgress().best.front().lock;
+            const auto ready = view.canGoAgain() && view.getPasses() == 1;
+            click (view.againBounds().getCentre());
+            const auto going = view.getPasses() == 2 && view.getSearch() != nullptr;
+            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            const auto second = view.getSearch()->getProgress().best.front().lock;
+            view.again();
+            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            const auto third = view.getSearch()->getProgress().best.front().lock;
+
+            // From a candidate taken: the next search goes on from that one alone.
+            const auto picked = view.getSearch()->getProgress().best[3];
+            view.setHovered (3);
+            view.take();
+            const auto tookIt = SignalConsole::addressOf (SignalConsole::capture (synth)) == picked.address && view.canGoAgain();
+            view.again();
+            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            const auto fromPicked = view.getSearch()->getProgress().best.front().lock >= picked.lock - 0.01f && view.getPasses() == 4;
+            auto allFromIt = true;
+
+            for (auto& c : view.getSearch()->getProgress().best)
+                allFromIt = allFromIt && c.from == "the last search";
+
+
+            // The chain: a step each time the search came nearer, oldest first, never falling; Play goes through it, and a double-click goes back.
+            // The locks rise along it, but for a candidate picked to go on from, which may be a little further away.
+            int falls = 0;
+
+            for (int i = 1; i < view.getChainLength(); ++i)
+                falls += view.chainLock (i) < view.chainLock (i - 1) ? 1 : 0;
+
+            const auto rising = view.getChainLength() >= 2 && falls <= 1;
+
+            click (view.playChainBounds().getCentre());
+            const auto playing = view.isPlayingChain();
+            click (view.playChainBounds().getCentre());
+            const auto stoppedPlaying = ! view.isPlayingChain();
+            const auto length = view.getChainLength();
+            const auto passesBefore = view.getPasses();
+            click (view.chainBounds (length - 1).getCentre());
+            const auto heardOnly = view.getPasses() == passesBefore && view.getChainLength() == length;
+            view.goBackTo (0);
+            const auto wentBack = view.getChainLength() == 1 && view.canGoAgain()
+                                  && SignalConsole::addressOf (SignalConsole::capture (synth)) != before;
+            view.again();
+            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            const auto onFromIt = view.getPasses() == passesBefore + 1 && view.getSearch()->getProgress().best.front().lock >= view.chainLock (0) - 0.01f;
+            check (rising && playing && stoppedPlaying && heardOnly && wentBack && onFromIt,
+                   "decrypt: the chain gains a step each time the search comes nearer (" + juce::String (length) + " here); Play goes through it and stops, a click only plays a step, "
+                   "and going back to the first drops the later ones, puts it on the keys and lets Again go on from it");
+            view.stop();
+            check (tookIt && fromPicked && allFromIt,
+                   "decrypt: after Take, Again searches on from the candidate taken alone, and ends no further from the signal than it was");
+            check (notYet && ready && going && second >= first && third >= second,
+                   "decrypt: Again carries a finished search on from its best twelve, as often as asked, and never ends further from the signal (lock "
+                       + juce::String (first, 1) + ", then " + juce::String (second, 1) + ", then " + juce::String (third, 1) + " %)");
+        }
+
+        // Until settled: the window's searches go on past 16 rounds while they come closer, and say when they no longer do.
+        {
+            Options settle;
+            settle.untilSettled = true;
+            settle.threads = 4;
+            Search search (prepare (clip, rate), settle);
+            const auto began = juce::Time::getMillisecondCounterHiRes();
+            const auto end = search.runNow();
+            const auto took = (juce::Time::getMillisecondCounterHiRes() - began) / 1000.0;
+            Options fixed;
+            fixed.threads = 4;
+            Search plain (prepare (clip, rate), fixed);
+            const auto sixteen = plain.runNow();
+            check (end.finished && ! end.stopped && end.round >= 16 && end.round <= 64 && (end.noCloser || end.round == 64)
+                       && sixteen.round == 16 && ! sixteen.noCloser && end.best.front().lock >= sixteen.best.front().lock,
+                   "decrypt: a search until settled runs at least its 16 rounds, ends once six in a row come no closer (here after " + juce::String (end.round)
+                       + " rounds and " + juce::String (took, 1) + " s, lock " + juce::String (end.best.front().lock, 1) + " % against "
+                       + juce::String (sixteen.best.front().lock, 1) + " % at 16 rounds), and says so; a search of fixed rounds runs exactly 16");
+        }
+
+        // A sound dragged from inside the app (an open file in the Files panel): the app says it is one and hands over its audio.
+        {
+            view.stop();
+            const juce::DragAndDropTarget::SourceDetails openFile ("openfile:0", nullptr, {}), other ("dockPanel:Files", nullptr, {});
+            const auto unhooked = ! view.isInterestedInDragSource (openFile);
+            SoundDrops::isSound = [] (const juce::var& d) { return d.toString() == "openfile:0"; };
+            SoundDrops::soundOf = [&clip] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { clip, rate, "Dropped" }; };
+            const auto wanted = view.isInterestedInDragSource (openFile) && ! view.isInterestedInDragSource (other);
+            view.itemDropped (openFile);
+            const auto searching = view.getSearch() != nullptr;
+            view.stop();
+            SoundDrops::isSound = nullptr;
+            SoundDrops::soundOf = nullptr;
+            check (unhooked && wanted && searching,
+                   "decrypt: an open file dragged from the Files panel is taken and searched for, as a file from the Finder is; any other drag is not");
+        }
+
         window->showView (0);
     }
 }

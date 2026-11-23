@@ -19,6 +19,7 @@
     searches, and not at all when the system asks for less motion. */
 class DecryptView final : public juce::Component,
                           public juce::FileDragAndDropTarget,
+                          public juce::DragAndDropTarget,
                           public juce::SettableTooltipClient,
                           private juce::Timer
 {
@@ -39,10 +40,35 @@ public:
     void fileDragExit (const juce::StringArray&) override;
     void filesDropped (const juce::StringArray&, int, int) override;
 
+    // A sound dragged from inside Torqwave: an open file from the Files panel.
+    bool isInterestedInDragSource (const SourceDetails&) override;
+    void itemDragEnter (const SourceDetails&) override;
+    void itemDragExit (const SourceDetails&) override;
+    void itemDropped (const SourceDetails&) override;
+
     /** Decrypts a sound file (its first four seconds after the note starts), or a clip. False, with
         the reason shown, when it can't be matched. */
     bool decryptFile (const juce::File&);
     bool decrypt (const juce::AudioBuffer<float>&, double sampleRate, const juce::String& name);
+
+    /** Carries the search on for another set of rounds, in smaller steps and with other variations
+        than the last: from the candidate chosen (the one taken, or put on the keys by a
+        double-click), so the next twelve are all nearer versions of that one; with none chosen,
+        from the best twelve. Nothing happens with no search, or one still running. True if it started. */
+    bool again();
+    bool canGoAgain() const;
+    juce::Rectangle<float> againBounds() const                    { return againChip; }
+    int getPasses() const noexcept                                { return passes; }
+    int getChainLength() const noexcept                           { return (int) chain.size(); }
+    /** Plays the signal and then every step in turn; a second call stops it. */
+    void playChain();
+    bool isPlayingChain() const noexcept                          { return chainPlayer.isTimerRunning(); }
+    /** Goes back to a step: on the keys, the later steps dropped, Again to go on from it. */
+    void goBackTo (int link);
+    juce::Rectangle<float> playChainBounds() const                { return playChip; }
+    juce::Rectangle<float> chainBounds (int link) const           { return juce::isPositiveAndBelow (link, (int) chain.size()) ? chain[(size_t) link].at : juce::Rectangle<float>(); }
+    float chainLock (int link) const                              { return juce::isPositiveAndBelow (link, (int) chain.size()) ? chain[(size_t) link].lock : 0.0f; }
+    void setHovered (int candidate)                               { hovered = candidate; }    // for tests: the pointer over a candidate
 
     /** Ends the search, giving the synth back the patch it had before. */
     void stop();
@@ -84,7 +110,40 @@ private:
 
     juce::Point<float> centre;
     float radius = 100.0f;
-    juce::Rectangle<float> panel, stopChip, takeChip, chooseChip, tablesChip, useChip, refuseChip;
+    juce::Rectangle<float> panel, stopChip, takeChip, againChip, chooseChip, tablesChip, useChip, refuseChip;
+    int passes = 0;                                  // searches run on this clip: 1 the first, more for each Again
+    std::optional<SignalConsole::Patch> chosen;      // the candidate taken from the search shown, for Again to go on from
+    float chosenLock = 0.0f;
+
+    /** The chain: the best candidate each time the search came at least a point nearer the signal
+        (and whatever an Again went on from), oldest first: how the sound has come along. A click
+        plays a step, Play plays them all in turn after the signal, and a double-click goes back to
+        one: it is put on the keys, the steps after it are dropped, and Again goes on from it.
+        Emptied by a new clip. */
+    struct Link
+    {
+        SignalConsole::Patch patch;
+        float lock = 0.0f;
+        juce::Rectangle<float> at;
+    };
+
+    std::vector<Link> chain;
+    juce::Rectangle<float> playChip;
+    void hearPatch (const SignalConsole::Patch&);
+    void growChain();
+    void addLink (const SignalConsole::Patch&, float lock);
+
+    /** Plays the signal, then each step of the chain, one after another. */
+    struct ChainPlayer final : public juce::Timer
+    {
+        explicit ChainPlayer (DecryptView& v) : view (v) {}
+        void timerCallback() override;
+        DecryptView& view;
+        int next = -1;      // -1 the signal, then the chain's steps
+    };
+
+    ChainPlayer chainPlayer { *this };
+    void begin (Decrypt::Target, std::vector<SignalConsole::Patch> resume);
     std::vector<juce::Point<float>> places;          // the twelve, where they are drawn
     std::vector<float> shownRadius;                  // their distance from the middle as drawn (drifting toward their lock's)
     std::vector<int> sectorOf;

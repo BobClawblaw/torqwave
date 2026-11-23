@@ -162,9 +162,17 @@ namespace Decrypt
         bool factoryTablesOnly = false;     // never give oscillator 1 the clip's own Sampled table
         juce::StringArray leaveOut;         // factory patches not to start from (tests)
         int rounds = 16;
+        /** Rounds go on past `rounds` for as long as they come closer: the search ends when `patience`
+            rounds in a row have raised the best lock by less than a twentieth of a point, or at
+            `maxRounds`. Off (as tests and tools have it): exactly `rounds`. */
+        bool untilSettled = false;
+        int patience = 6, maxRounds = 64;
         int threads = 0;                    // 0: about half the cores
         juce::String words;                 // what the user said it is ("a reese"), for the advisor
         std::shared_ptr<Advisor> advisor;   // none: the search alone
+        /** A search carried on: these patches (an earlier search's best) are where it starts, in place
+            of the factory patches, and its rounds take smaller steps. Empty: a search from the start. */
+        std::vector<Patch> resume;
     };
 
     /** Where a search is. */
@@ -175,6 +183,7 @@ namespace Decrypt
         double seconds = 0.0;
         bool finished = false, stopped = false;
         juce::String stage;                 // "Factory patches", "Round 3 of 12", "Done"
+        bool noCloser = false;              // it ended because no round came closer (untilSettled), not at a set last round
         /** How far each part has settled, 0 to 1: how closely the best twelve agree on its settings
             (1 when they all have the same). The effects are off while matching: always 0. */
         std::array<float, SignalConsole::numParts> settled {};
@@ -208,7 +217,7 @@ namespace Decrypt
         class Helper;
         void run (const std::function<bool()>& shouldStop);
         std::vector<Candidate> score (std::vector<Candidate> jobs, const Target&, const std::function<bool()>& shouldStop);
-        void publish (std::vector<Candidate> merged, int round, const juce::String& stage, bool finished, bool stopped, Synth&);
+        void publish (std::vector<Candidate> merged, int round, const juce::String& stage, bool finished, bool stopped, Synth&, bool noCloser = false);
         Advisor::Brief briefFor (const std::vector<Candidate>& best, int round, Synth&) const;
 
         const Target target;
