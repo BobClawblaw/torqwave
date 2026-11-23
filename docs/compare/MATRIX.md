@@ -146,7 +146,7 @@ Rows where Torqwave 0.20.0 is yes and at most two of the 15 other products are y
 | Built-in synthesizer | Yes: Basic Synth: one waveform, an envelope and a filter. | Yes: Torqwave Synth (wavetable, three oscillators) and StringSwarm. |
 | Wavetable from your own audio | No: Basic Synth has no wavetables. | Yes: A sound dropped on an oscillator of Torqwave Synth becomes its wavetable. |
 | Built-in drum instrument | No: No drum instrument. | Yes: Basic Drums: 30 synthesised sounds on pads covering the 47 General MIDI drum notes, seven kits. |
-| Built-in sampler | No: No sampler instrument. | Yes: Torqwave Sampler: the user's sounds across the keys in up to 128 zones with loops and crossfades, or cut into slices on keys. Samples are held in memory; no import of SFZ or SF2 libraries, no round robins. Measured by the tests; not yet tried by hand in the app. |
+| Built-in sampler | No: No sampler instrument. | Yes: Torqwave Sampler: the user's sounds across the keys in up to 128 zones with loops and crossfades, or cut into slices on keys. Samples are held in memory; no import of SFZ or SF2 libraries, no round robins. |
 | Factory instrument sounds | Partial: 1 instrument, Basic Synth, with a short presets menu; the docs give no count. | Yes: 4 instruments: Torqwave Synth with 3,743 patches in 29 categories, StringSwarm with 296 presets, Basic Drums with seven kits, Torqwave Sampler with 11 presets. |
 | Synth patch from a recording | No: Not in 0.19.2. | Yes: Decrypt searches for a Torqwave Synth patch that plays like a recording of one note. Close for sounds the synth made; loose for voices, drums and samples; one note, effects off. |
 
@@ -559,7 +559,7 @@ Version 0.20.0, the only edition. Looked up 2026-11-23. This repository at commi
 | Built-in synthesizer | Yes | Torqwave Synth (wavetable, three oscillators) and StringSwarm. | `docs/guide/07-instruments-and-midi.md` |  |
 | Wavetable from your own audio | Yes | A sound dropped on an oscillator of Torqwave Synth becomes its wavetable. | `docs/guide/07-instruments-and-midi.md` |  |
 | Built-in drum instrument | Yes | Basic Drums: 30 synthesised sounds on pads covering the 47 General MIDI drum notes, seven kits. | `docs/guide/07-instruments-and-midi.md` |  |
-| Built-in sampler | Yes | Torqwave Sampler: the user's sounds across the keys in up to 128 zones with loops and crossfades, or cut into slices on keys. Samples are held in memory; no import of SFZ or SF2 libraries, no round robins. Measured by the tests; not yet tried by hand in the app. | `docs/guide/07-instruments-and-midi.md` |  |
+| Built-in sampler | Yes | Torqwave Sampler: the user's sounds across the keys in up to 128 zones with loops and crossfades, or cut into slices on keys. Samples are held in memory; no import of SFZ or SF2 libraries, no round robins. | `docs/guide/07-instruments-and-midi.md` |  |
 | Factory instrument sounds | Yes | 4 instruments: Torqwave Synth with 3,743 patches in 29 categories, StringSwarm with 296 presets, Basic Drums with seven kits, Torqwave Sampler with 11 presets. | `README.md` |  |
 | Synth patch from a recording | Yes | Decrypt searches for a Torqwave Synth patch that plays like a recording of one note. Close for sounds the synth made; loose for voices, drums and samples; one note, effects off. | `docs/guide/07-instruments-and-midi.md` |  |
 | VST3 | Yes | Effects and instruments, scanned out of process. | `README.md` |  |

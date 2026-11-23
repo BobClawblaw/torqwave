@@ -143,6 +143,6 @@ A dark table titled "Torqwave 0.20.0 and the DAWs, 2 of 2", with the same rows; 
 
 - It is written for the day of the release. Nothing here is posted until the release is published: "is out" is true only then.
 - No other product is named in the posts, and none is called worse. The comparison is offered as a table to read, with what Torqwave lacks in the same post.
-- Torqwave Sampler ships in 0.20.0. By its changelog it was measured by the tests and not yet tried by hand in the app: try it before posting.
+- Torqwave Sampler ships in 0.20.0. It has been tried by hand in the app, and a bug from that is filed: check the fix log for it before posting.
 - Two hashtags at most if any are added; the draft has none.
 - The Windows and Linux packages of 0.20.0 are built by the workflows and, by the release notes, were not tried by hand. If someone asks, say so.
