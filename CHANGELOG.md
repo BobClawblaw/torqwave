@@ -4,6 +4,15 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**A Hand tool in the editor, and two more ways to move along a zoomed file** (0.20.0)
+- **Hand** (H, the hand button after Heal in the bar under the waveform): drag the waveform left and right to move along the file; nothing is selected. Zoomed in, the only ways along were the thin scroll bar, a sideways scroll on a trackpad, and zooming out and in again (fix log 86).
+- **Dragging with the middle button** moves the view with any tool in hand, and **Shift with the mouse wheel** scrolls along the file (the wheel alone still zooms).
+- Tested (the editor bar's checks): the Hand button's place, its command and its light; a drag of 100 pixels with the hand moving the view 100 pixels and selecting nothing. Not tried by hand: the middle button and Shift with the wheel.
+
+**Paste Clipboard as New File** (0.20.0)
+- **File > Paste Clipboard as New File** (Option-Cmd-N), and a **From Clipboard** button in the New File dialog whenever something is copied: a new file holding what was copied, at its length, sample rate and channels. Before, a new file was silence of a typed length, and pasting a copied selection into it left that silence round it (fix log 85).
+- Not tried by hand. Tested: the full suite's command and shortcut checks.
+
 **Decrypt: it goes on until it comes no closer, a chain to hear, Again, and drops from the Files panel** (0.20.0)
 - **A search goes on while it comes closer.** It ran 16 rounds and stopped, whether or not it was still gaining. In the window it now runs its 16 and then on, for as long as a round raises the best lock by a twentieth of a point, ending when six rounds in a row have not (64 rounds at most) with "NO CLOSER FOUND" and the round it ended on (fix log 83). Tools and tests still run a set number of rounds.
 - **The chain**: each time the search comes a point nearer the signal, its best patch becomes a step in a row above the buttons, with its lock. A click plays a step; **Play** plays the signal and then every step in turn; a double-click goes back to a step (it goes on the keys, the later steps are dropped, and Again goes on from it). The last six are shown (fix log 84).

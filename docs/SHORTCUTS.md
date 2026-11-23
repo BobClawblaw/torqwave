@@ -9,6 +9,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Command | Keys |
 |---|---|
 | New File... | `Cmd-N` |
+| Paste Clipboard as New File | `Option-Cmd-N` |
 | Open... | `Cmd-O` |
 | Save | `Cmd-S` |
 | Save As... | `Shift-Cmd-S` |
@@ -41,6 +42,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Box Selection tool | `E` |
 | Lasso Selection tool | `D` |
 | Brush Selection tool | `P` |
+| Hand tool | `H` |
 | Smaller Brush, Larger Brush | `[`, `]` |
 | Lighter Brush, Heavier Brush | `Shift-[`, `Shift-]` |
 

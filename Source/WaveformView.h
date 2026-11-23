@@ -57,7 +57,9 @@ public:
         lasso draws an outline, the brush paints; Shift adds a stroke to the drawing, Option draws a
         stroke that takes from it. The drawing is the selection: its span in time is the time
         selection, and any other change of selection clears it. */
-    enum class SpectralTool { time, box, lasso, brush };
+    /** hand: a drag moves the view left and right, selecting nothing (so does a drag with the
+        middle button, whatever the tool). */
+    enum class SpectralTool { time, box, lasso, brush, hand };
     void setSpectralTool (SpectralTool);
     SpectralTool getSpectralTool() const                { return tool; }
 
@@ -244,6 +246,9 @@ private:
     // A marker being dragged: the document's markers with that one moved, shown until mouse-up.
     int draggedMarker = -1;
     bool scrubbing = false;   // dragging along the ruler, heard (Scrubber)
+    bool panning = false;     // dragging the view along: the hand tool, or the middle button
+    float panFromX = 0.0f;
+    double panFromView = 0.0;
     juce::int64 dragGrabOffset = 0;
     Markers dragMarkers;
     bool markerWasMoved = false;

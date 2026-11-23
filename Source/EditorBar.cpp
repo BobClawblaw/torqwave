@@ -78,6 +78,27 @@ public:
                 break;
             }
 
+            case Tool::hand:
+            {
+                // An open hand: a palm with four fingers up and a thumb out.
+                juce::Path hand;
+                hand.addRoundedRectangle (box.getX() + 4.5f, box.getY() + 7.0f, 8.5f, 7.0f, 2.5f);
+                g.fillPath (hand);
+                juce::Path fingers;
+
+                for (int i = 0; i < 4; ++i)
+                {
+                    const auto fx = box.getX() + 5.5f + (float) i * 2.2f;
+                    fingers.startNewSubPath (fx, box.getY() + 8.0f);
+                    fingers.lineTo (fx, box.getY() + (i == 1 || i == 2 ? 1.8f : 3.0f));
+                }
+
+                fingers.startNewSubPath (box.getX() + 5.0f, box.getY() + 11.0f);
+                fingers.lineTo (box.getX() + 2.0f, box.getY() + 8.0f);
+                g.strokePath (fingers, juce::PathStrokeType (1.7f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+                break;
+            }
+
             case Tool::heal:
             {
                 // A plaster laid across: a rounded strip with its pad in the middle.
@@ -123,7 +144,7 @@ EditorBar::EditorBar (juce::ApplicationCommandManager& c, WaveformView& v, const
     add (vertical, ids.verticalReset, "1x");
 
     for (auto [tool, id] : { std::pair (Tool::time, ids.timeTool), std::pair (Tool::box, ids.boxTool), std::pair (Tool::lasso, ids.lassoTool),
-                             std::pair (Tool::brush, ids.brushTool), std::pair (Tool::heal, ids.heal) })
+                             std::pair (Tool::brush, ids.brushTool), std::pair (Tool::heal, ids.heal), std::pair (Tool::hand, ids.handTool) })
     {
         auto* b = tools.add (new ToolButton (tool, id));
         b->onClick = [this, id] { if (run) run (id); update(); };
@@ -231,6 +252,9 @@ void EditorBar::update()
     for (int i = 0; i < 4; ++i)
         if (tools[i]->getToggleState() != lit[i])
             tools[i]->setToggleState (lit[i], juce::dontSendNotification);
+
+    if (const auto handOn = inHand == WaveformView::SpectralTool::hand; tools[5]->getToggleState() != handOn)
+        tools[5]->setToggleState (handOn, juce::dontSendNotification);
 
     const auto canHeal = view.getSpectralShape().isEmpty() ? ! view.getSelection().isEmpty() && ! view.getSpectralBand().isEmpty() : true;
 
@@ -345,7 +369,7 @@ void EditorBar::resized()
 
     for (int i = 0; i < tools.size(); ++i)
     {
-        if (i == 4)
+        if (i == 4 || i == 5)
             left.removeFromLeft (6);
 
         tools[i]->setBounds (left.removeFromLeft (26));

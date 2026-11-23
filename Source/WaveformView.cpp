@@ -970,6 +970,16 @@ void WaveformView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
+    // The hand tool, or the middle button with any tool: the view is dragged along.
+    if (tool == SpectralTool::hand || e.mods.isMiddleButtonDown())
+    {
+        panning = true;
+        panFromX = e.position.x;
+        panFromView = viewStart;
+        setMouseCursor (juce::MouseCursor::DraggingHandCursor);
+        return;
+    }
+
     // The edges and corners of a spectral box drag to resize it (with the time or box tool).
     if ((tool == SpectralTool::time || tool == SpectralTool::box) && ! e.mods.isAltDown() && ! e.mods.isShiftDown())
     {
@@ -1060,6 +1070,12 @@ void WaveformView::mouseDrag (const juce::MouseEvent& e)
 {
     if (! engine.document.hasAudio())
         return;
+
+    if (panning)
+    {
+        setView (panFromView - (double) (e.position.x - panFromX) * framesPerPixel, framesPerPixel);
+        return;
+    }
 
     if (fadeDragged >= 0)
     {
@@ -1154,6 +1170,13 @@ void WaveformView::mouseDrag (const juce::MouseEvent& e)
 
 void WaveformView::mouseUp (const juce::MouseEvent&)
 {
+    if (panning)
+    {
+        panning = false;
+        setMouseCursor (tool == SpectralTool::hand ? juce::MouseCursor::DraggingHandCursor : juce::MouseCursor::NormalCursor);
+        return;
+    }
+
     if (scrubbing)
     {
         scrubbing = false;
@@ -1259,6 +1282,8 @@ void WaveformView::mouseMove (const juce::MouseEvent& e)
                         : edges == (boxRight | boxBottom) ? juce::MouseCursor::BottomRightCornerResizeCursor
                         : (edges & (boxLeft | boxRight)) != 0 ? juce::MouseCursor::LeftRightResizeCursor
                                                               : juce::MouseCursor::UpDownResizeCursor);
+    else if (tool == SpectralTool::hand)
+        setMouseCursor (juce::MouseCursor::DraggingHandCursor);
     else if (tool == SpectralTool::lasso && overSpectrum && fadeHandleAt (e.position) < 0)
         setMouseCursor (lassoPointer);
     else
@@ -1337,6 +1362,8 @@ void WaveformView::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseW
         setVerticalZoom (verticalZoom * std::pow (2.0, (double) wheel.deltaY * 2.0));
     else if (std::abs (wheel.deltaX) > std::abs (wheel.deltaY))
         setView (viewStart - (double) wheel.deltaX * getWidth() * framesPerPixel * 0.5, framesPerPixel);
+    else if (e.mods.isShiftDown() && wheel.deltaY != 0.0f)      // Shift and the wheel: along the file, for a mouse with one wheel
+        setView (viewStart - (double) wheel.deltaY * getWidth() * framesPerPixel * 0.5, framesPerPixel);
     else if (wheel.deltaY != 0.0f)
         zoomAround (e.position.x, std::pow (2.0, (double) -wheel.deltaY * 2.0));
 }

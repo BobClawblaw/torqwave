@@ -22,10 +22,11 @@ public:
         int verticalOut = 0, verticalIn = 0, verticalReset = 0;
         int goToTime = 0, setSelection = 0;
         int timeTool = 0, boxTool = 0, lassoTool = 0, brushTool = 0, heal = 0;
+        int handTool = 0;
     };
 
     /** The tool buttons, left to right. */
-    enum class Tool { time, box, lasso, brush, heal };
+    enum class Tool { time, box, lasso, brush, heal, hand };
 
     EditorBar (juce::ApplicationCommandManager&, WaveformView&, const AudioDocument&, Commands);
     ~EditorBar() override;

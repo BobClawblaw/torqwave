@@ -121,6 +121,8 @@ WAV, AIFF, FLAC, MP3, AAC and Ogg Vorbis open as they are. Many more types open 
 
 It opens beside your other files, named Untitled until you save it.
 
+**File > Paste Clipboard as New File** (Option-Cmd-N) makes a file out of what you copied: select part of a longer file, copy it, and the new file holds exactly that, at its length, sample rate and channels, with no silence to trim. The New File dialog has the same as a button, **From Clipboard**, whenever something is copied.
+
 ## Save
 
 - **Save** (Cmd-S) writes the file back in its own format.

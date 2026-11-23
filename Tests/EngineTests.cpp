@@ -657,6 +657,9 @@ int main (int argc, char* argv[])
     SequenceLibrary::setFactoryFolder (factoryPresets);
     SequenceLibrary::setSearchesFile (factoryPresets.getSiblingFile ("Sequence Searches.xml"));
 
+    if (const auto i = args.indexOf ("--decrypt-file"); i >= 0)
+        return runDecryptFile (args[i + 1]);
+
     if (const auto i = args.indexOf ("--decrypt-eval"); i >= 0)
         return runDecryptEval (args[i + 1], args[i + 2], juce::SystemStats::getEnvironmentVariable ("TORQWAVE_AI_KEY", {}));
 

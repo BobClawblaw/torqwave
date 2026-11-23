@@ -211,6 +211,7 @@ namespace
         cmdStoreScene, cmdSaveChannelStrip, cmdApplyChannelStrip,
         cmdShowSequenceLibrary, cmdAddToSequenceLibrary, cmdShowSequencer, cmdShowIdeaBoard,
         cmdCrossfadeSelected, cmdEditCrossfade,
+        cmdNewFromClipboard, cmdHandTool,
         cmdCount   // one past the last command: every id before it is registered
     };
 
@@ -222,7 +223,7 @@ namespace
             || (id >= cmdRemoveDc && id <= cmdSaveRegions) || (id >= cmdFindClipping && id <= cmdShortenPauses)
             || (id >= cmdStepSelectionLater && id <= cmdSavePieces) || id == cmdMarkersToZero || (id >= cmdGainRamp && id <= cmdGraphicEq31) || id == cmdReverseRegions || id == cmdMultiband || id == cmdDeEsser || id == cmdDynamicEq || id == cmdMultibandWidth || id == cmdExciter || id == cmdMaximizer || id == cmdTransientShaper || (id >= cmdCaptureMatchReference && id <= cmdMatchEq) || id == cmdDither || id == cmdDialogueIsolation || id == cmdAdaptiveDenoise || (id >= cmdMouthDeClick && id <= cmdCodecPreview) || (id >= cmdNudgeStartEarlier && id <= cmdBrushHeavier)
             || id == cmdRemoveHum || id == cmdDeclip || id == cmdGenerateTone || id == cmdGenerateNoise
-            || (id >= cmdBoxTool && id <= cmdExportLossy) || id == cmdTimeTool || id == cmdExportFfmpeg || id == cmdFileInfo
+            || (id >= cmdBoxTool && id <= cmdExportLossy) || id == cmdTimeTool || id == cmdHandTool || id == cmdExportFfmpeg || id == cmdFileInfo
             || id == cmdRecordSequence || id == cmdPlaySequence || id == cmdSaveChannels
             || id == cmdStretch || id == cmdExtremeStretch || id == cmdPitch || id == cmdDereverb || id == cmdLevelSpeech || id == cmdCentreChannel || id == cmdPhaseCorrection || id == cmdGenerateTones || id == cmdPitchCorrection
             || id == cmdGenerateInstrument;
@@ -1333,7 +1334,7 @@ MainComponent::MainComponent()
     editorBar = std::make_unique<EditorBar> (commands, waveform, engine.document,
                                              EditorBar::Commands { cmdZoomOut, cmdZoomIn, cmdZoomFit, cmdShorterTracks, cmdTallerTracks,
                                                                    cmdResetVerticalZoom, cmdGoToTime, cmdSetSelection,
-                                                                   cmdTimeTool, cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdSpectralHeal });
+                                                                   cmdTimeTool, cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdSpectralHeal, cmdHandTool });
     trackTools = std::make_unique<TrackTools> (commands, multitrack, engine,
                                                TrackTools::Commands { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue,
                                                                       cmdTrackToolRange, cmdTrackToolMute, cmdTempo, cmdBarsAndBeats, cmdSnapping, cmdTapTempo });
@@ -2359,6 +2360,8 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.setActive (false); break;   // a session's
         case cmdDetachVideo: info.setInfo ("Detach Video", "Stop showing a video with the file or session", "File", 0);
                              info.setActive (doc.getVideo() != juce::File()); break;
+        case cmdNewFromClipboard: info.setInfo ("Paste Clipboard as New File", "Start a new file holding what was copied: its length, sample rate and channels, with no silence round it", "File", 0);
+                            info.addDefaultKeypress ('n', cmd | alt); info.setActive (! clipboard.isEmpty()); break;
         case cmdNewFromChannels: info.setInfo ("New File from Mono Files...", "Put several files' channels side by side as one file, such as six mono files as 5.1 or eight as 7.1", "File", 0);
                                  info.setActive (backgroundJob == nullptr); break;
         case cmdPlaySequence: info.setInfo ("Play Sequence...", "Play a recorded sequence on the selection, or the whole file", "Sequences", 0);
@@ -2370,6 +2373,12 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
         case cmdSpectralHeal: info.setInfo ("Heal", "Replace what is inside the box, lasso or brush selection in the spectrogram with the sound around it", "Effects", 0);
                             info.addDefaultKeypress ('h', cmd | shift);
                             info.setActive (hasSpectral); break;
+        case cmdHandTool:
+            info.setInfo ("Hand", "Drag the waveform left and right to move along the file. Dragging with the middle button does the same with any tool, and Shift with the wheel scrolls along", "Edit", 0);
+            info.addDefaultKeypress ('h', 0);
+            info.setTicked (waveform.getSpectralTool() == WaveformView::SpectralTool::hand);
+            info.setActive (! multitrackMode);
+            break;
         case cmdTimeTool:
         case cmdBoxTool:
         case cmdLassoTool:
@@ -3615,6 +3624,7 @@ bool MainComponent::perform (const InvocationInfo& info)
             break;
         case cmdSaveChannels: saveChannels(); break;
         case cmdNewFromChannels: newFileFromChannels(); break;
+        case cmdNewFromClipboard: newFileFromClipboard (newFileDepth); break;
         case cmdShowVideo: dock->toggle (Panels::video); break;
         case cmdShowPitchEditor: dock->toggle (Panels::pitch); break;
         case cmdShowPianoRoll: dock->toggle (Panels::pianoRoll); break;
@@ -3637,6 +3647,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdBoxTool:    waveform.setSpectralTool (WaveformView::SpectralTool::box); commands.commandStatusChanged(); break;
         case cmdLassoTool:  waveform.setSpectralTool (WaveformView::SpectralTool::lasso); commands.commandStatusChanged(); break;
         case cmdBrushTool:  waveform.setSpectralTool (WaveformView::SpectralTool::brush); commands.commandStatusChanged(); break;
+        case cmdHandTool:   waveform.setSpectralTool (WaveformView::SpectralTool::hand); commands.commandStatusChanged(); break;
         case cmdBrushLarger: waveform.setBrushRadius (waveform.getBrushRadius() * 1.25f); break;
         case cmdBrushSmaller: waveform.setBrushRadius (waveform.getBrushRadius() / 1.25f); break;
         case cmdBrushLighter: waveform.setBrushStrength (waveform.getBrushStrength() - WaveformView::brushStrengthStep); commands.commandStatusChanged(); break;
@@ -3757,10 +3768,10 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
     switch (index)
     {
         case 0:
-            add ({ cmdNewFile, cmdOpen });
+            add ({ cmdNewFile, cmdNewFromClipboard, cmdOpen });
             menu.addSubMenu ("Open Recent", RecentFiles::createMenu (recentFiles, recentBaseId, [this] (const juce::File& f) { return isThere (f); }), recentFiles.getNumFiles() > 0 && ! isRecording());
             add ({ cmdCloseFile, cmdBackToClip, cmdNextFile, cmdPreviousFile, 0, cmdSave, cmdSaveAs, cmdSaveSelection, cmdSaveRegions, cmdSavePieces, cmdSaveChannels, cmdExportLossy, cmdExportFfmpeg, 0, cmdAttachVideo, cmdVideoStart, cmdDetachVideo, cmdSaveIntoVideo, 0, cmdBatchProcess, cmdNewFromChannels, 0, cmdFileInfo, cmdSettings, 0, cmdOpenProject, cmdSaveProject, cmdSaveProjectAs, cmdKeepProjectHistory, 0, cmdNewSession, cmdOpenSession, cmdSaveCopyWithAudio, 0, cmdExportMarkers, cmdImportMarkers, cmdExportClips }); break;
-        case 1: add ({ cmdUndo, cmdRedo, cmdUndoHistory, cmdRepeatLast, 0, cmdCut, cmdCopy, cmdPaste, cmdPasteMix, cmdPasteFill, cmdDelete, cmdRepeatSelection, 0, cmdSelectAll, cmdSelectAudible, cmdSetSelection, cmdStepSelectionEarlier, cmdStepSelectionLater, cmdDoubleSelection, cmdHalveSelection, cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectionToZero, cmdSelectZeroCrossings, cmdCopySelectionTime, cmdFindClipping, cmdFindSilence, cmdNextSound, cmdPreviousSound, cmdSelectTrackClips, cmdSelectClipsAfter, cmdSelectClipsInRange, cmdSelectClipsInRegion, cmdNextClip, cmdPreviousClip, cmdCrop, cmdCropMargins, 0, cmdTimeTool, cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdBrushLarger, cmdBrushSmaller, cmdBrushLighter, cmdBrushHeavier, 0, cmdConvertRate, 0, cmdAskTorqwave }); break;
+        case 1: add ({ cmdUndo, cmdRedo, cmdUndoHistory, cmdRepeatLast, 0, cmdCut, cmdCopy, cmdPaste, cmdPasteMix, cmdPasteFill, cmdDelete, cmdRepeatSelection, 0, cmdSelectAll, cmdSelectAudible, cmdSetSelection, cmdStepSelectionEarlier, cmdStepSelectionLater, cmdDoubleSelection, cmdHalveSelection, cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectionToZero, cmdSelectZeroCrossings, cmdCopySelectionTime, cmdFindClipping, cmdFindSilence, cmdNextSound, cmdPreviousSound, cmdSelectTrackClips, cmdSelectClipsAfter, cmdSelectClipsInRange, cmdSelectClipsInRegion, cmdNextClip, cmdPreviousClip, cmdCrop, cmdCropMargins, 0, cmdTimeTool, cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdHandTool, cmdBrushLarger, cmdBrushSmaller, cmdBrushLighter, cmdBrushHeavier, 0, cmdConvertRate, 0, cmdAskTorqwave }); break;
         case 2:
         {
             juce::PopupMenu shapes;
@@ -14968,10 +14979,22 @@ void MainComponent::askToNewFile()
     box->getComboBoxComponent ("channels")->setSelectedItemIndex (juce::jmax (0, channelCounts.indexOf (newFileChannels)));
     box->getComboBoxComponent ("depth")->setSelectedItemIndex (juce::jmax (0, depths.indexOf (newFileDepth)));
     box->addButton ("Create", 1, juce::KeyPress (juce::KeyPress::returnKey));
+
+    // What was copied, as a file of its own: its length exactly, so there is no silence to trim off.
+    if (! clipboard.isEmpty())
+        box->addButton ("From Clipboard (" + juce::String ((double) clipboard.getNumFrames() / clipboard.sampleRate, 2) + " s)", 2);
+
     box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
 
     box->enterModalState (true, juce::ModalCallbackFunction::create ([this, box, rates, channelCounts, depths] (int result)
     {
+        if (result == 2)
+        {
+            newFileDepth = depths[box->getComboBoxComponent ("depth")->getSelectedItemIndex()];
+            newFileFromClipboard (newFileDepth);
+            return;
+        }
+
         if (result != 1)
             return;
 
@@ -15006,6 +15029,19 @@ void MainComponent::newFile (double sampleRate, int channels, int bitDepth, doub
     refreshTitle();
     timerCallback();
     commands.commandStatusChanged();
+}
+
+void MainComponent::newFileFromClipboard (int bitDepth)
+{
+    if (isRecording() || clipboard.isEmpty())
+        return;
+
+    // A file as long as the clipboard at its rate and channels, then the clipboard in place of its silence.
+    const auto clip = clipboard;
+    newFile (clip.sampleRate, clip.numChannels, bitDepth, (double) clip.getNumFrames() / clip.sampleRate);
+    auto& doc = engine.document;
+    applyEdit (AudioEdits::replaceWithClip (*doc.getSnapshot(), 0, doc.getNumFrames(), clip), "Paste Clipboard as New File", { 0, 0 });
+    waveform.zoomToFit();
 }
 
 void MainComponent::chooseSampleRate()
