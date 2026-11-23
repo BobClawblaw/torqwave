@@ -306,6 +306,8 @@ target_sources(Torqwave PRIVATE
     Source/LoadingScreen.cpp
     Source/TransportBar.cpp
     Source/SessionOverview.cpp
+    Source/TimeViewStrip.cpp
+    Source/FileOverview.cpp
     Source/SessionRecording.cpp
     Source/Bounce.cpp
     Source/ClipList.cpp
@@ -553,6 +555,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/SpectralShapeTests.cpp
     Tests/DuckingTests.cpp
     Tests/FadeHandleTests.cpp
+    Tests/TimeViewStripTests.cpp
     Tests/GuideTests.cpp
     Tests/HomeTests.cpp
     Tests/AiTests.cpp
@@ -732,6 +735,8 @@ target_sources(TorqwaveTests PRIVATE
     Source/TransportBar.cpp
     Source/WaveformView.cpp
     Source/SessionOverview.cpp
+    Source/TimeViewStrip.cpp
+    Source/FileOverview.cpp
     Source/SessionRecording.cpp
     Source/Bounce.cpp
     Source/ClipList.cpp

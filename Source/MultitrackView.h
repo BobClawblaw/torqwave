@@ -740,6 +740,10 @@ public:
     /** The session frames the timeline shows, from its left edge to its right. */
     juce::Range<double> getVisibleFrames() const;
 
+    /** Makes the timeline show these session frames, from its left edge to its right (as far as
+        the zoom's limits allow). */
+    void showFrames (juce::Range<double>);
+
     /** Scrolls the lanes so they start at this session frame, keeping the zoom. */
     void scrollTo (double startFrame);
 

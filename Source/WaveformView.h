@@ -88,6 +88,9 @@ public:
     juce::Range<juce::int64> getSelection() const       { return selection; }
     juce::int64 getCursor() const                       { return cursor; }
     juce::Range<double> getVisibleFrames() const        { return { viewStart, viewStart + framesPerPixel * juce::jmax (1, getWidth()) }; }
+    /** Makes the view show these frames of the file, from its left edge to its right (as far as
+        the zoom's limits and the file's ends allow). */
+    void showFrames (juce::Range<double>);
     void setSelection (juce::Range<juce::int64>);
     void setCursor (juce::int64 frame);
     void selectAll();

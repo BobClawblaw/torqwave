@@ -4,6 +4,11 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The time-view strip in the editor, and its frame's edges zoom** (0.20.0)
+- **The editor has the multitrack view's time-view strip** over its ruler: the whole file in miniature (its peaks, the selection, the cursor or playhead) with a frame around the part shown. Drag inside the frame to move along the file, click elsewhere on the strip to jump there, double-click it to show the whole file. In a long file the Hand tool and the scroll bar were the only ways along (fix log 87).
+- **Dragging an edge of the frame zooms**, the other edge staying where it is, in the editor and in the multitrack view: one strip (TimeViewStrip) now serves both, and follows the views' zoom buttons, scroll bars and Hand tool.
+- Tested (`TimeViewStripTests`, and the multitrack overview's checks): on a five-minute stereo file the strip spans the file, follows Zoom +, Fit and scrolling; dragging the frame 50 pixels scrolls the editor as far, keeping the zoom; each edge zooms with the other edge held, and an edge dragged past the other leaves a sliver; a click centres the view there; a double-click fits; the peaks are drawn where the file is loud. In the multitrack view, the right edge dragged 60 pixels zooms out by 6 s, the start held. Tried in the built app on a five-minute stereo file: Zoom +, dragging the frame, dragging its right edge, the Hand tool and a double-click, the strip and the editor following each other each time. Not tried by hand: the edges in the multitrack view.
+
 **A Hand tool in the editor, and two more ways to move along a zoomed file** (0.20.0)
 - **Hand** (H, the hand button after Heal in the bar under the waveform): drag the waveform left and right to move along the file; nothing is selected. Zoomed in, the only ways along were the thin scroll bar, a sideways scroll on a trackpad, and zooming out and in again (fix log 86).
 - **Dragging with the middle button** moves the view with any tool in hand, and **Shift with the mouse wheel** scrolls along the file (the wheel alone still zooms).
