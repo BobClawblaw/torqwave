@@ -4,6 +4,9 @@
 #include "../Source/Sampler.h"
 #include "../Source/SamplerEditor.h"
 #include "../Source/SamplerTrack.h"
+#include "../Source/AiLibrary.h"
+#include "../Source/EffectPresets.h"
+#include "SamplerContent.h"
 #include "../Source/SoundDrops.h"
 #include "../Source/Theme.h"
 #include "../Source/InstrumentKeys.h"
@@ -1712,6 +1715,176 @@ namespace
         sampler.setSlicing ({});
         folder.deleteRecursively();
     }
+
+    /** The factory content: every preset loads its samples and plays, loops don't click, slices sound, and the files are the ones the tool writes. */
+    void testFactory (Processor& sampler)
+    {
+        const auto runs = Sampler::factoryFolder();      // the test run's own
+        const auto folder = juce::File::createTempFile ("samplerfactory");
+        const auto unpackError = Sampler::unpackFactorySamples (folder);
+        Sampler::setFactoryFolder (folder);
+        const auto presets = BuiltInEffects::samplerPresets();
+        juce::StringArray names, problems;
+        int zonesInAll = 0, loops = 0, slices = 0, kits = 0;
+        auto quietest = 0.0, loudestDb = -200.0, worstLoop = 0.0;
+        juce::int64 bytes = 0;
+
+        for (const auto& found : juce::RangedDirectoryIterator (folder, true, "*.flac", juce::File::findFiles))
+            bytes += found.getFile().getSize();
+
+        for (auto& preset : presets)
+        {
+            names.add (preset.name);
+            defaults (sampler);
+            sampler.setZones ({});
+            sampler.setSlicing ({});
+            sampler.setPresetValues (preset.values);
+            sampler.setPresetTexts (preset.texts);
+            const auto zones = sampler.getZones();
+            zonesInAll += (int) zones.size();
+
+            if (zones.empty() || ! sampler.getMissing().isEmpty())
+                problems.add (preset.name + ": " + (zones.empty() ? juce::String ("no zones") : sampler.getMissing().joinIntoString (", ")));
+
+            if (sampler.getSlicing().on)
+            {
+                ++kits;
+                slices += (int) zones.size();
+
+                // Every slice sounds on its own key, and all of them one after another don't clip.
+                for (auto& z : zones)
+                {
+                    const auto out = play (sampler, { on (0.0, z.lowKey) }, 0.3);
+
+                    if (peak (out, 0.0, 0.3) < 0.003f)
+                        problems.add (preset.name + ": " + z.name + " is silent");
+
+                    loudestDb = juce::jmax (loudestDb, db (juce::jmax (peak (out, 0.0, 0.3, 0), peak (out, 0.0, 0.3, 1))));
+                }
+
+                continue;
+            }
+
+            for (auto& z : zones)
+            {
+                if (z.sample == nullptr)
+                    continue;
+
+                // Its root, held for six seconds (a looped zone goes round several times), then let go.
+                const auto out = play (sampler, { on (0.0, z.root), off (6.0, z.root) }, 7.5);
+                const auto level = db (juce::jmax (peak (out, 0.0, 6.0, 0), peak (out, 0.0, 6.0, 1)));
+                loudestDb = juce::jmax (loudestDb, level);
+                quietest = juce::jmin (quietest, level);
+
+                if (level < -30.0 || level > -0.1)
+                    problems.add (preset.name + ": " + z.name + " peaks at " + juce::String (level, 1) + " dB");
+
+                // In tune with its root: on its note, in whatever octave the sound it was sampled from plays
+                // (a sub sounds an octave under its key, a kalimba an octave over). Bells, whose partials
+                // are not a note's, are left out.
+                if (const auto found = Sampler::findPitch (*z.sample); found.found && preset.category != "Bell"
+                                                                         && ((found.root - z.root) % 12 != 0 || std::abs (found.tune) > 8.0f))
+                    problems.add (preset.name + ": " + z.name + " is not on its root's note (" + Instrument::pitchName (found.root) + ", " + juce::String (found.tune, 1) + " cents)");
+
+                if (z.loop != 0)
+                {
+                    ++loops;
+                    const auto click = ClickCheck::worst (out, rate, 0.004f, { 0 });
+                    worstLoop = juce::jmax (worstLoop, (double) click.ratio);
+
+                    if (click.ratio >= 4.0f)
+                        problems.add (preset.name + ": " + z.name + "'s loop steps (" + juce::String (click.ratio, 1) + " times its surroundings at " + juce::String (click.seconds, 2) + " s)");
+
+                    if (rms (out, 5.0, 0.9) < 0.003f)
+                        problems.add (preset.name + ": " + z.name + " has died away by five seconds though it loops");
+                }
+            }
+        }
+
+        check (unpackError.isEmpty() && presets.size() == 11 && problems.isEmpty() && loops >= 9 && kits == 4,
+               "sampler factory: the " + juce::String (presets.size()) + " presets (" + names.joinIntoString (", ") + ") hold " + juce::String (zonesInAll) + " zones over 26 samples, "
+                   + juce::String ((double) bytes / (1024.0 * 1024.0), 1) + " MB; every zone's sample is there and plays, its root peaking between " + juce::String (quietest, 1) + " and "
+                   + juce::String (loudestDb, 1) + " dB; the " + juce::String (loops) + " loops go round without a step (the worst jump " + juce::String (worstLoop, 2)
+                   + " times its surroundings); the four sliced kits' " + juce::String (slices) + " slices each sound" + (problems.isEmpty() ? juce::String() : ". PROBLEMS: " + problems.joinIntoString ("; ")));
+
+        // The files the app ships are the ones the tool writes.
+        {
+            const auto again = juce::File::createTempFile ("samplercontent");
+            std::ostringstream quiet;
+            auto* was = std::cout.rdbuf (quiet.rdbuf());
+            writeSamplerContent (again);
+            std::cout.rdbuf (was);
+            Sampler::setFactoryFolder (folder);
+            int compared = 0, different = 0;
+
+            for (const auto& found : juce::RangedDirectoryIterator (again, true, "*", juce::File::findFiles))
+            {
+                const auto shipped = folder.getChildFile (found.getFile().getRelativePathFrom (again));
+                ++compared;
+                different += shipped.existsAsFile() && shipped.hasIdenticalContentTo (found.getFile()) ? 0 : 1;
+            }
+
+            check (compared == 27 && different == 0 && ! quiet.str().empty() && juce::String (quiet.str()).contains ("26 samples") && ! juce::String (quiet.str()).contains ("FAILED"),
+                   "sampler factory: the tool that renders the content from Torqwave's own instruments writes 26 samples and the manifest again, and all " + juce::String (compared)
+                       + " are byte for byte the files the app ships (" + juce::String (different) + " different)");
+            again.deleteRecursively();
+        }
+
+        // A factory preset's samples are named by their place among the factory samples, so its state works wherever they are unpacked.
+        {
+            defaults (sampler);
+            sampler.setPresetValues (presets[2].values);
+            sampler.setPresetTexts (presets[2].texts);
+            juce::MemoryBlock state;
+            sampler.getStateInformation (state);
+            const auto xml = juce::AudioProcessor::getXmlFromBinary (state.getData(), (int) state.getSize());
+            const auto named = xml != nullptr && xml->getChildByName ("ZONES") != nullptr && xml->getChildByName ("ZONES")->getChildByName ("ZONE") != nullptr
+                                   ? xml->getChildByName ("ZONES")->getChildByName ("ZONE")->getStringAttribute ("file") : juce::String();
+            const auto before = play (sampler, { on (0.0, 48), off (1.0, 48) }, 1.5);
+
+            const auto elsewhere = juce::File::createTempFile ("samplerfactory2");
+            Sampler::unpackFactorySamples (elsewhere);
+            Sampler::setFactoryFolder (elsewhere);
+            Processor other;
+            other.setStateInformation (state.getData(), (int) state.getSize());
+            const auto there = ! other.getZones().empty() && other.getZones()[0].sample != nullptr && other.getZones()[0].file.isAChildOf (elsewhere) && other.getMissing().isEmpty();
+            const auto same2 = same (before, play (other, { on (0.0, 48), off (1.0, 48) }, 1.5));
+            Sampler::setFactoryFolder (folder);
+
+            // Ask Torq's list of factory sounds, and the presets row stepping onto one.
+            const auto listed = Ai::FactorySounds::of (BuiltInEffects::samplerDescription());
+            const auto asState = Ai::FactorySounds::stateOf (BuiltInEffects::samplerDescription(), "Cold Bell");
+            const auto noSuch = Ai::FactorySounds::stateOf (BuiltInEffects::samplerDescription(), "No Such Sound");
+            Processor loaded;
+            const auto byName = loaded.loadFactory ("Dark Techno Break") && loaded.getSlicing().on && loaded.getZones().size() > 8 && ! loaded.loadFactory ("No Such Sound");
+
+            Processor stepped;
+            std::unique_ptr<juce::AudioProcessorEditor> made (stepped.createEditorAndMakeActive());
+            auto steppedOn = false;
+
+            if (auto* row = made != nullptr ? InstrumentKeys::presetsRow (*made) : nullptr)
+            {
+                row->step (1);
+                steppedOn = ! stepped.getZones().empty() && stepped.getZones()[0].sample != nullptr;
+            }
+
+            stepped.editorBeingDeleted (made.get());
+            made.reset();
+
+            check (named.startsWith ("factory:Strings/") && there && same2 && listed.size() == 11 && listed[0].category == "Keys" && asState.has_value() && ! noSuch.has_value() && byName && steppedOn
+                       && InstrumentKeys::kindFor (loaded) == InstrumentKeys::Kind::kit,
+                   "sampler factory: a factory preset's state names its samples by their place among the factory samples (" + named + ") and plays the same with them unpacked somewhere else; "
+                   "Ask Torq is given the eleven by name and category and a state for one; a preset is loaded by name; the presets row's next arrow puts one on the keys");
+            elsewhere.deleteRecursively();
+        }
+
+        Sampler::setFactoryFolder (runs);
+        sampler.setZones ({});
+        sampler.setSlicing ({});
+        defaults (sampler);
+
+        folder.deleteRecursively();
+    }
 }
 
 void saveSamplerWindow (const juce::File& folder)
@@ -2306,6 +2479,7 @@ void runSamplerTests (AudioEngine& engine)
     testFiles (engine, *sampler);
     testWindow (*sampler);
     testGettingSoundIn (engine, *sampler);
+    testFactory (*sampler);
 
     defaults (*sampler);
     sampler->setZones ({});

@@ -3,6 +3,8 @@
 #include "FadeShape.h"
 #include "PhaseVocoder.h"
 #include "WaveTables.h"
+#include "SequenceLibrary.h"
+#include "FactorySampleData.h"
 #include "Session.h"
 
 namespace Sampler
@@ -386,7 +388,7 @@ namespace
         juce::CriticalSection lock;
         std::map<juce::String, Held> held;
         juce::AudioFormatManager formats;
-        juce::File sessionFolder, savingInto;
+        juce::File sessionFolder, savingInto, factory;
 
         Store()     { AudioFileIO::registerFormats (formats); }
     };
@@ -485,6 +487,82 @@ juce::File writeSample (const juce::AudioBuffer<float>& audio, double rate, cons
     return file;
 }
 
+juce::File factoryFolder()
+{
+    {
+        const juce::ScopedLock sl (store().lock);
+
+        if (store().factory != juce::File())
+            return store().factory;
+    }
+
+    // One folder for each set of samples shipped, named for its contents, as the factory sequences have.
+    static const auto set = []
+    {
+        juce::uint64 h = 14695981039346656037ull;   // FNV-1a over the zip
+
+        for (int i = 0; i < FactorySampleData::factorysamples_zipSize; ++i)
+            h = (h ^ (juce::uint8) FactorySampleData::factorysamples_zip[i]) * 1099511628211ull;
+
+        return juce::String::toHexString ((juce::int64) h);
+    }();
+
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory).getChildFile ("Torqwave").getChildFile ("Factory Samples").getChildFile (set);
+}
+
+void setFactoryFolder (const juce::File& folder)
+{
+    const juce::ScopedLock sl (store().lock);
+    store().factory = folder;
+}
+
+juce::String unpackFactorySamples()
+{
+    {
+        // A folder put elsewhere is its owner's: never emptied and filled from here.
+        const juce::ScopedLock sl (store().lock);
+
+        if (store().factory != juce::File())
+            return {};
+    }
+
+    return SequenceLibrary::unpackPresets (FactorySampleData::factorysamples_zip, (size_t) FactorySampleData::factorysamples_zipSize, factoryFolder());
+}
+
+juce::String unpackFactorySamples (const juce::File& into)
+{
+    // Only this folder is touched: nothing beside it (the app's own folder, above, also clears
+    // away the sets earlier versions shipped, which a folder of the caller's has none of).
+    if (! into.createDirectory())
+        return "The samples' folder could not be made: " + into.getFullPathName();
+
+    juce::MemoryInputStream stream (FactorySampleData::factorysamples_zip, (size_t) FactorySampleData::factorysamples_zipSize, false);
+    juce::ZipFile archive (stream);
+
+    if (archive.getNumEntries() == 0)
+        return "The samples the app ships could not be read.";
+
+    const auto result = archive.uncompressTo (into, true);
+    return result.failed() ? "The samples could not be unpacked: " + result.getErrorMessage() : juce::String();
+}
+
+namespace
+{
+    constexpr const char* factoryPrefix = "factory:";
+
+    /** A zone's file as the state names it: a factory sample by its place among them. */
+    juce::String pathFor (const juce::File& file)
+    {
+        const auto factory = factoryFolder();
+        return file.isAChildOf (factory) ? factoryPrefix + file.getRelativePathFrom (factory).replaceCharacter ('\\', '/') : file.getFullPathName();
+    }
+
+    juce::File fileFor (const juce::String& path)
+    {
+        return path.startsWith (factoryPrefix) ? factoryFolder().getChildFile (path.fromFirstOccurrenceOf (factoryPrefix, false, false)) : juce::File (path);
+    }
+}
+
 void setSessionFolder (const juce::File& folder)
 {
     const juce::ScopedLock sl (store().lock);
@@ -536,7 +614,7 @@ juce::String collectFiles (juce::XmlElement& effects, const juce::File& sessionF
         {
             const auto path = zone->getStringAttribute ("file");
 
-            if (path.isEmpty())
+            if (path.isEmpty() || path.startsWith (factoryPrefix))    // a factory sample is on every computer
                 continue;
 
             const juce::File from (path);
@@ -672,7 +750,8 @@ LoopFound findLoop (const Sample& sample, juce::Range<juce::int64> part, double 
     }
 
     const auto reach = (int) std::ceil (2.0 * period);       // how far either side of the two places is compared
-    const auto from = juce::jmax (length / 4, loudestAt + (int) (0.05 * sample.rate), reach + 1);
+    // (A sound that goes on swelling is loudest late: the loop still starts no later than half way.)
+    const auto from = juce::jmax (length / 4, juce::jmin (length / 2, loudestAt + (int) (0.05 * sample.rate)), reach + 1);
     const auto to = length - juce::jmax (reach + 1, length / 20);
 
     if (to - from < (int) (4.0 * period))
@@ -2058,6 +2137,19 @@ juce::String SamplerProcessor::addSamples (const std::vector<std::pair<SamplePtr
     return error;
 }
 
+bool SamplerProcessor::loadFactory (const juce::String& name)
+{
+    for (auto& preset : EffectPresets::factory (samplerId))
+        if (preset.name == name)
+        {
+            setPresetValues (preset.values);
+            setPresetTexts (preset.texts);
+            return true;
+        }
+
+    return false;
+}
+
 EffectPresets::Texts SamplerProcessor::getPresetTexts() const
 {
     juce::XmlElement holder ("SAMPLER");
@@ -2104,10 +2196,11 @@ void SamplerProcessor::writeZones (juce::XmlElement& xml) const
     {
         auto* e = all->createNewChildElement ("ZONE");
         e->setAttribute ("id", (int) z.id);
-        e->setAttribute ("file", z.file.getFullPathName());
+        const auto path = z.file != juce::File() ? pathFor (z.file) : juce::String();
+        e->setAttribute ("file", path);
 
         // Saved into a session: relative to its folder too, as its clips' audio is, so the folder can be moved.
-        if (saving != juce::File() && z.file != juce::File())
+        if (saving != juce::File() && z.file != juce::File() && ! path.startsWith (factoryPrefix))
             e->setAttribute ("relative", z.file.getRelativePathFrom (saving));
 
         if (z.name.isNotEmpty())
@@ -2185,7 +2278,10 @@ void SamplerProcessor::readZones (const juce::XmlElement& xml)
                 if (const auto beside = sessionFolder.getChildFile (relative); beside.existsAsFile())
                     path = beside.getFullPathName();
 
-            z.file = juce::File (path);
+            if (path.startsWith (factoryPrefix))
+                unpackFactorySamples();
+
+            z.file = fileFor (path);
 
             if (const auto found = read.find (path); found != read.end())
             {
@@ -2290,5 +2386,40 @@ int SamplerProcessor::locate (const juce::File& found)
 
     missing = still;
     return back;
+}
+}
+
+namespace BuiltInEffects
+{
+std::vector<EffectPresets::Factory> samplerPresets()
+{
+    std::vector<EffectPresets::Factory> presets;
+
+    if (Sampler::unpackFactorySamples().isNotEmpty())
+        return presets;
+
+    const auto manifest = juce::XmlDocument::parse (Sampler::factoryFolder().getChildFile ("Presets.xml"));
+
+    if (manifest == nullptr)
+        return presets;
+
+    for (auto* p : manifest->getChildWithTagNameIterator ("PRESET"))
+    {
+        EffectPresets::Factory made;
+        made.name = p->getStringAttribute ("name");
+        made.category = p->getStringAttribute ("category");
+
+        if (const auto* values = p->getChildByName ("VALUES"))
+            for (int i = 0; i < values->getNumAttributes(); ++i)
+                made.values[values->getAttributeName (i)] = values->getAttributeValue (i).getDoubleValue();
+
+        if (const auto* zones = p->getChildByName ("ZONES"))
+            made.texts["zones"] = zones->toString (juce::XmlElement::TextFormat().singleLine());
+
+        if (made.name.isNotEmpty())
+            presets.push_back (std::move (made));
+    }
+
+    return presets;
 }
 }

@@ -73,6 +73,20 @@ namespace Sampler
     juce::File writeSample (const juce::AudioBuffer<float>&, double rate, const juce::String& name, const Markers&, juce::String& error,
                             juce::File folder = {});
 
+    /** The folder the samples that ship with Torqwave are unpacked into on first use (the factory
+        presets' zones name them relative to it, as "factory:Keys/Hammer Tine C3.flac", so a session
+        that plays one finds it on any computer and after an update). setFactoryFolder puts it
+        elsewhere, for the tests and the tool that writes the content. */
+    juce::File factoryFolder();
+    void setFactoryFolder (const juce::File&);
+
+    /** Unpacks the samples the app ships into factoryFolder(), once; nothing when setFactoryFolder
+        has put the folder elsewhere (what is there is taken as it is). An error, or empty. */
+    juce::String unpackFactorySamples();
+
+    /** Unpacks them into a folder of the caller's, touching nothing beside it, for the tests. */
+    juce::String unpackFactorySamples (const juce::File& into);
+
     /** The folder of the session last opened (none before any): where a sample named relative to
         its session is looked for first. Any thread. */
     void setSessionFolder (const juce::File&);
@@ -354,6 +368,11 @@ namespace BuiltInEffects
 
     juce::PluginDescription samplerDescription();
 
+    /** Its factory presets, each with its category, its settings and its zones (their samples the
+        ones Torqwave ships, rendered from its own instruments): read from the manifest beside the
+        samples, unpacking them first when they are not yet. None when they can't be read. */
+    std::vector<EffectPresets::Factory> samplerPresets();
+
     /** Torqwave Sampler, the sampler built in (Sampler::Engine), as an instrument: its settings are
         hosted parameters, so automation, presets and sessions find them, and its zones are kept in
         its state, each sample named by its file. Stereo out, no audio input. MIDI: notes with
@@ -384,6 +403,9 @@ namespace BuiltInEffects
             the keys between two shared half and half; otherwise each goes on a key of its own from
             `fromKey` up, as a one-shot. The first error (no room), or empty. Message thread. */
         juce::String addSamples (const std::vector<std::pair<Sampler::SamplePtr, juce::File>>&, int fromKey = Sampler::firstSliceKey);
+
+        /** Loads a factory preset by name: its settings and its zones. False when there is none of that name. */
+        bool loadFactory (const juce::String& name);
 
         /** Plays a note now, as a click in its window does, and lets it go: added to the next block. Any thread. */
         void play (int note, float velocity);

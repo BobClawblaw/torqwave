@@ -244,6 +244,16 @@ Switch **Keys** to **Slices** at the top, and the sample is cut into pieces, eac
 
 **Everywhere an instrument goes.** Generate from Instrument, freeze, bounce and Mix Down play it as they play any instrument; a sequence saved with a sampler as its voice brings the sampler back with its samples; its settings can be drawn and written as automation.
 
+**Factory presets.** The presets row lists eleven, and the set is small on purpose: Torqwave Sampler is for your own sounds. Every sample in them was rendered by Torqwave from its own instruments, 26 samples and 8.2 MB in all.
+
+| Category | Presets | What they are |
+|---|---|---|
+| Keys, Pad, Strings, Bell, Bass, Pluck | Hammer Tine, Concrete Pad, Iron Cello, Cold Bell, Warehouse Sub, Dark Kalimba | Notes of the Torqwave Synth patches of those names, sampled at three or four keys an octave apart (a bass at E1, C2 and G2). The pad, the cello and the sub are looped; the others ring out. |
+| Guitar | One Note Guitar | StringSwarm's Every String One Note, at E2 and E3. |
+| Sliced Kits | Dark Techno Break, Industrial Break, EBM Machine Break, Breaks Break | Two bars of a Basic Drums kit each, at 120 to 135 BPM, cut at their hits: 19 to 31 slices from C2. They are there to show slices; any drum loop of yours does the same. |
+
+They play in the octave their source does: the sub and the cello sound an octave under the key, the kalimba an octave over. A session that uses one finds its samples on any computer with Torqwave.
+
 **Presets.** A preset saved from the presets row keeps the knobs and the zones. It names each sample's file where it is; it does not hold the audio. Move or rename the files and the preset's zones come up missing (see below).
 
 **What it holds, and what it doesn't do.** Samples are held whole in memory, not played from disk: one sample can be up to 10 minutes long, and one sampler holds up to 1 GB of samples (about 46 minutes of 48 kHz stereo). A file past either is refused, and the status line says why. Two samplers playing the same file hold it once. There is no import of sample libraries (SFZ, SF2 or others), no round robins, one stereo output, and a sample played higher is shorter, as on any sampler that plays by resampling.
