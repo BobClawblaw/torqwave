@@ -2,6 +2,7 @@
 #include "DrumMachine.h"
 #include "HardwareInsert.h"
 #include "SwarmGuitar.h"
+#include "Sampler.h"
 #include "PreviousName.h"
 #include "AudioFileIO.h"
 #include "Theme.h"
@@ -147,6 +148,8 @@ namespace
                 effect = std::make_unique<BasicDrumsProcessor>();
             else if (d.fileOrIdentifier == swarmGuitarId)
                 effect = std::make_unique<SwarmGuitarProcessor>();
+            else if (d.fileOrIdentifier == samplerId)
+                effect = std::make_unique<SamplerProcessor>();
             else if (d.fileOrIdentifier == HardwareInsert::identifier)
                 effect = std::make_unique<HardwareInsert::Processor>();
 
@@ -170,6 +173,14 @@ juce::PluginDescription swarmGuitarDescription()
     return d;
 }
 
+juce::PluginDescription samplerDescription()
+{
+    auto d = describe ("Torqwave Sampler", "Instrument", samplerId, 0x5351534d);   // "SQSM"
+    d.isInstrument = true;
+    d.numInputChannels = 0;
+    return d;
+}
+
 std::unique_ptr<juce::AudioPluginFormat> createFormat()
 {
     return std::make_unique<Format>();
@@ -179,7 +190,7 @@ juce::Array<juce::PluginDescription> getDescriptions()
 {
     return { parametricEqDescription(), compressorDescription(), limiterDescription(), chorusDescription(), flangerDescription(), phaserDescription(), reverbDescription(), convolutionDescription(),
              graphicEqDescription (10), graphicEqDescription (31), multibandDescription(), deEsserDescription(), dynamicEqDescription(), multibandWidthDescription(), exciterDescription(), maximizerDescription(), transientShaperDescription(),
-             basicSynthDescription(), basicDrumsDescription(), swarmGuitarDescription(), HardwareInsert::Processor::description() };
+             basicSynthDescription(), basicDrumsDescription(), swarmGuitarDescription(), samplerDescription(), HardwareInsert::Processor::description() };
 }
 
 void addTo (juce::KnownPluginList& list)

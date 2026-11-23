@@ -38,6 +38,7 @@
 #include "../Source/WaveSynth.h"
 #include "../Source/DrumMachine.h"
 #include "SwarmGuitarTests.h"
+#include "SamplerTests.h"
 #include "InstrumentKeysTests.h"
 #include "SoundDemos.h"
 #include "SignalConsoleTests.h"
@@ -813,6 +814,14 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (args.contains ("--sampler"))
+    {
+        AudioEngine engine;
+        runSamplerTests (engine);
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
     if (args.contains ("--keys"))
     {
         runInstrumentKeysTests();
@@ -1084,6 +1093,7 @@ int main (int argc, char* argv[])
         runGeneratorTests();
         runInstrumentTests (engine);
         runSwarmGuitarTests (engine);
+        runSamplerTests (engine);
         runDrumMachineTests (engine);
         runSoundControlsTests();
         runInstrumentTrackTests (engine);
