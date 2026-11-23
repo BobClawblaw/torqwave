@@ -189,7 +189,7 @@ Six notes can sound at once; a seventh takes the oldest's place. It answers pitc
 
 ### Torqwave Sampler
 
-**Torqwave Sampler** plays recordings: a sound of your own across the keys, or cut into slices with each piece on its own key. It is new in 0.21.0.
+**Torqwave Sampler** plays recordings: a sound of your own across the keys, or cut into slices with each piece on its own key. It is new in 0.20.0.
 
 <img src="../screenshots/guide-sampler.png" width="720" alt="The Torqwave Sampler window playing a held note across the keys: the Keys and Slices switch and the presets row along the top; the Sample panel with the waveform, the part's start and end, a loop shaded with its crossfade handle along the top and a line where the note is playing; the Keys panel with the zone drawn over two octaves either side of its root; the Zone panel with Root, Tune, Zone Level, Zone Pan and Crossfade, the loop and choke choices, Reverse, One-Shot and Loop in Release, and Find Pitch, Find Loop and Remove Zone; and the Amp, Filter, LFO and Voice panels">
 

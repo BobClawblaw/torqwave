@@ -1,5 +1,7 @@
 # Plan 0.21: Torqwave Sampler, a built-in sampler
 
+**It ships in 0.20.0.** The plan was written for 0.21.0, and it was built before 0.20.0 was published, so it was decided on 2026-11-23 to release the sampler with 0.20.0. The plan keeps its name and number.
+
 Torqwave has three instruments of its own (Torqwave Synth, Basic Drums and StringSwarm) and none of them plays a recording. Torqwave Synth's Sampled table takes a sound's tone, not the sound: the pitch comes from the keys and the timing is gone. A feature comparison made for 0.20.0 found that nine of the ten DAWs compared ship a sampler, and this is the widest gap in it.
 
 This plan adds **Torqwave Sampler**, a fourth built-in instrument:
@@ -27,9 +29,9 @@ The user decided these on 2026-11-23, before any code:
 | The name | **Torqwave Sampler** (plug-in ID `torqwave:sampler`) |
 | Factory content | A small set, rendered from Torqwave's own three instruments, plus sliced kits. The guide says plainly that it is small. Nothing comes from anyone else's samples or presets (the clean-room rule) |
 | Samples in presets | A preset names its sample files by path. No audio is embedded in a preset. Projects copy the files in; a file that has moved is asked for |
-| SFZ import | Not in 0.21.0. It can follow in 0.21.x |
+| SFZ import | Not in 0.20.0. It can follow in a later release |
 
-## Not in 0.21.0
+## Not in 0.20.0
 
 - **Disk streaming.** Samples load whole into memory as 32-bit float. One sample can be up to 10 minutes long, and one sampler holds up to 1 GB of samples (about 46 minutes of 48 kHz stereo). A sample over either limit is refused, with the reason. Two samplers playing the same file hold it once.
 - **Importing sample libraries:** SFZ, SF2 or any other format.
@@ -130,7 +132,7 @@ The second way to play: **Slices** in place of **Keys**. One sample is cut into 
 
 Built as planned, with one narrowing: a project copies the samples into its Files folder only when its session is kept there (one never saved on its own); a session with a file of its own keeps naming them where they are, and Save a Copy with Audio is the way to gather them. A sound with no clear pitch gets C4 (key 60).
 
-- **Loading:** through `AudioFileIO::load`, so every format Torqwave opens, with its markers. A sample is loaded once and shared by every sampler that plays that file. The limits are those under "Not in 0.21.0", and a refused file says why.
+- **Loading:** through `AudioFileIO::load`, so every format Torqwave opens, with its markers. A sample is loaded once and shared by every sampler that plays that file. The limits are those under "Not in 0.20.0", and a refused file says why.
 - **The WAV sampler chunk:** when a file has one, its root note and loop are taken from it.
 - **Root pitch found:** otherwise the pitch is measured half a second in, after the attack (as Decrypt does), and sets the root note and fine tune. A sound without a clear pitch gets C4 and says so.
 - **Find Loop:** in the held part of a note, looks for a start and an end a whole number of the sound's periods apart where the two places are most alike, moves both to zero crossings, and sets a crossfade. It is a suggestion: the handles are there to change it.
@@ -224,7 +226,7 @@ Done with each step. The two pictures of the window are drawn by the tests, not 
 - **Screenshots:** the window on a looped note and on a sliced break.
 - **`docs/TESTING.md`:** the `--sampler` and `--sampler-window` flags.
 - **The changelog**, with what was measured and what was not tried by hand.
-- **`ROADMAP.md`:** 0.21.0's line.
+- **`ROADMAP.md`:** the sampler's line.
 
 ## Order and size
 
@@ -239,14 +241,14 @@ Done with each step. The two pictures of the window are drawn by the tests, not 
 9. Factory content (M)
 10. Guide, screenshots, changelog
 
-All ten are built, each as its own commit, with the whole test suite passing at each. Nothing of it has been tried by hand in the running app: that is what is left before 0.21.0.
+All ten are built, each as its own commit, with the whole test suite passing at each. Nothing of it has been tried by hand in the running app: that is what is left before 0.20.0 is released.
 
 Steps 1 to 4 are in order: each needs the one before. Step 5 needs 1 to 4, and 6 needs 5. Steps 7, 8 and 9 need 6 and can go in any order.
 
-If 0.21.0 should ship sooner, steps 1 to 7 are a whole sampler; Ask Torq's tools and the factory content could follow as 0.21.1.
+Steps 1 to 7 are a whole sampler, had it needed to ship sooner without Ask Torq's tools and the factory content.
 
 ## At release
 
-- The version in `CMakeLists.txt` and the docs goes to 0.21.0.
-- If the comparison (`docs/compare/`) has been merged by then: `builtin_sampler` becomes yes for Torqwave in a 0.21.0 snapshot, and the matrix and graphics are made again.
+- The version in `CMakeLists.txt` is 0.20.0 already, and the docs name 0.20.0.
+- The comparison (`docs/compare/`): `builtin_sampler` becomes yes for Torqwave 0.20.0 and the count of built-in instruments four, and the matrix and graphics are made again.
 - The release notes say what the sampler is not: no streaming from disk, no library import, no round robins, and a small factory set.
