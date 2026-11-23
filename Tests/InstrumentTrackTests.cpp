@@ -13,6 +13,10 @@
 #include "../Source/MidiInput.h"
 #include "../Source/Instrument.h"
 #include "../Source/MultitrackView.h"
+#include "../Source/Sampler.h"
+#include "../Source/SamplerTrack.h"
+#include "../Source/SequenceFile.h"
+#include "../Source/InstrumentKeys.h"
 #include "TestPlugins.h"
 #include "TestUtils.h"
 #include "InstrumentTrackTests.h"
@@ -1315,6 +1319,216 @@ namespace
         const auto kept = SessionEdits::quantizeNotes (s, { id }, lines) == 1 && starts() == "0 4000 10000";
         check (quantized && onLines && kept, "notes across clips: quantized to the nearest session line (" + starts() + "), a note never before the clip's timeline start");
     }
+    juce::File writeFloatWav (const juce::File& file, const juce::AudioBuffer<float>& audio)
+    {
+        file.deleteFile();
+        std::unique_ptr<juce::OutputStream> stream = std::make_unique<juce::FileOutputStream> (file);
+        auto writer = juce::WavAudioFormat().createWriterFor (stream, juce::AudioFormatWriterOptions().withSampleRate (rate).withNumChannels (audio.getNumChannels()).withBitsPerSample (32)
+                                                                          .withSampleFormat (juce::AudioFormatWriterOptions::SampleFormat::floatingPoint));
+        if (writer != nullptr)
+            writer->writeFromAudioSampleBuffer (audio, 0, audio.getNumSamples());
+
+        return file;
+    }
+
+    std::map<juce::uint32, std::unique_ptr<juce::XmlElement>> chainFor (juce::uint32 trackId, const juce::XmlElement& effects)
+    {
+        std::map<juce::uint32, std::unique_ptr<juce::XmlElement>> xml;
+        xml[trackId] = std::make_unique<juce::XmlElement> (effects);
+        return xml;
+    }
+
+    /** Torqwave Sampler on a session's track: a clip sliced onto it, the chain loaded afresh, the tempo, Generate from Instrument, a sequence's voice. */
+    void testSampler (AudioEngine& engine)
+    {
+        const auto folder = juce::File::createTempFile ("samplertrack");
+        folder.createDirectory();
+
+        // Two seconds of hits: bursts of a falling tone, left and right a little different, at uneven times.
+        constexpr int loopFrames = 96000;
+        juce::AudioBuffer<float> loop (2, loopFrames);
+        loop.clear();
+
+        for (const auto [when, hz, level] : { std::tuple { 0.0, 90.0, 0.8 }, std::tuple { 0.25, 1800.0, 0.3 }, std::tuple { 0.5, 220.0, 0.6 }, std::tuple { 0.75, 2400.0, 0.3 },
+                                              std::tuple { 1.0, 90.0, 0.8 }, std::tuple { 1.19, 90.0, 0.5 }, std::tuple { 1.5, 220.0, 0.6 }, std::tuple { 1.75, 2000.0, 0.35 } })
+            for (int i = 0; i < 9000; ++i)
+            {
+                const auto t = i / rate;
+                const auto x = level * std::exp (-t * 28.0) * std::sin (juce::MathConstants<double>::twoPi * hz * t * (1.0 + 0.3 * std::exp (-t * 60.0)));
+                const auto at = (int) (when * rate) + i;
+                loop.addSample (0, at, (float) x);
+                loop.addSample (1, at, (float) (0.8 * x));
+            }
+
+        const auto loopFile = writeFloatWav (folder.getChildFile ("Hits.wav"), loop);
+        const auto loaded = AudioFileIO::load (loopFile, engine.formatManager);
+
+        SessionState s;
+        s.sampleRate = rate;
+        auto& audioTrack = s.addTrack();
+        SessionClip clip;
+        clip.id = 9001;
+        clip.name = "Hits";
+        clip.source = loopFile;
+        clip.audio = loaded.snapshot;
+        clip.position = 24000;
+        clip.length = loopFrames;
+        audioTrack.clips.push_back (clip);
+        constexpr int total = 24000 + loopFrames + 24000;
+        const auto asAudio = play (s, 0, total, 512, nullptr);
+
+        // Slice to Sampler Track, its chain loaded as the app loads it: the session sounds as it did.
+        juce::String error;
+        const auto sound = SamplerTrack::soundOf (s, 9001, error);
+        const auto made = sound.has_value() ? SamplerTrack::make (*sound, true) : SamplerTrack::Made();
+
+        if (made.effects == nullptr)
+        {
+            check (false, "sampler on a track: a clip is made into a sampler (" + error + made.error + ")");
+            folder.deleteRecursively();
+            return;
+        }
+
+        auto sliced = s;
+        const auto placed = SamplerTrack::place (sliced, made, clip.position, 9001);
+        TrackEffects chain;
+        const auto loadErrors = OfflineRender::loadTrackEffects (chainFor (placed.trackId, *made.effects), engine.pluginFormatManager, rate, chain);
+        const auto asNotes = play (sliced, 0, total, 512, &chain);
+        const auto* notes = sliced.findTrack (placed.trackId) != nullptr && sliced.findTrack (placed.trackId)->noteClips.size() == 1 ? &sliced.findTrack (placed.trackId)->noteClips[0] : nullptr;
+        auto apart = 0.0f;
+        int slices = 0;
+
+        if (notes != nullptr)
+        {
+            std::vector<juce::int64> cuts { notes->position + notes->length };
+
+            for (auto& n : notes->notes)
+                cuts.push_back (notes->position + n.start);
+
+            slices = (int) notes->notes.size();
+
+            for (int i = 0; i < total; ++i)
+                if (std::none_of (cuts.begin(), cuts.end(), [i] (juce::int64 cut) { return std::abs ((juce::int64) i - cut) < 72; }))
+                    apart = juce::jmax (apart, std::abs (asNotes.getSample (0, i) - asAudio.getSample (0, i)), std::abs (asNotes.getSample (1, i) - asAudio.getSample (1, i)));
+        }
+
+        check (loadErrors.isEmpty() && chain.getInstrument (placed.trackId) != nullptr && slices == 8 && apart < 1.0e-5f && rms (asAudio, 24000, 4000) > 0.05,
+               "sampler on a track: a clip of eight hits sliced to a sampler track plays, from its " + juce::String (slices) + " notes with the audio clip muted, what the clip played: within "
+                   + juce::String (juce::Decibels::gainToDecibels (apart), 1) + " dB away from the cuts (1.5 ms either side of each)");
+
+        // The chain a freeze, bounce or mixdown loads afresh from the session's XML mixes the same, at any block size.
+        {
+            const auto xml = chain.createXml (placed.trackId);
+            TrackEffects fresh, small;
+            const auto errors = OfflineRender::loadTrackEffects (chainFor (placed.trackId, *xml), engine.pluginFormatManager, rate, fresh)
+                                + OfflineRender::loadTrackEffects (chainFor (placed.trackId, *xml), engine.pluginFormatManager, rate, small);
+            const auto frozen = SessionEdits::frozenSource (sliced, placed.trackId);
+            check (errors.isEmpty() && same (asNotes, play (sliced, 0, total, 512, &fresh)) && same (asNotes, play (sliced, 0, total, 100, &small))
+                       && frozen.findTrack (placed.trackId) != nullptr && frozen.findTrack (placed.trackId)->noteClips.size() == 1,
+                   "sampler on a track: the chain a freeze, bounce or mixdown loads afresh from the session mixes the same as the one playing, bit for bit, in blocks of 512 and of 100");
+
+            // Generate from Instrument: the sampler from its state, a slice's key played.
+            juce::PluginDescription description;
+
+            for (auto& d : BuiltInEffects::getDescriptions())
+                if (d.fileOrIdentifier == BuiltInEffects::samplerId)
+                    description = d;
+
+            juce::MemoryBlock state;
+            chain.getInstrument (placed.trackId)->getStateInformation (state);
+            juce::AudioBuffer<float> generated;
+            const auto renderError = Instrument::render (engine.pluginFormatManager, description, state, Instrument::together ({ 36 }, 0.2, 0.5, 1.0f), rate, 2, generated);
+            auto firstSlice = generated.getNumSamples() == 24000;
+
+            for (int i = 100; firstSlice && i < 8000; ++i)
+                firstSlice = std::abs (generated.getSample (0, i) - loop.getSample (0, i)) < 1.0e-5f;
+
+            check (renderError.isEmpty() && firstSlice && InstrumentKeys::kindFor (*chain.getInstrument (placed.trackId)) == InstrumentKeys::Kind::kit,
+                   "sampler on a track: Generate from Instrument, given the sampler's state, plays the first slice from C1 as it is in the file; Audition plays a sliced sampler a kit's beat");
+
+            // A sequence saved with the sampler as its voice brings it back, samples and all.
+            auto q = SequenceFile::fromClip (sliced, placed.clipId, chain.createXml (placed.trackId));
+            const auto file = folder.getChildFile ("Hits.tqseq");
+            const auto saveError = q.has_value() ? SequenceFile::save (*q, file) : juce::String ("no sequence");
+            juce::String loadError;
+            const auto back = SequenceFile::load (file, loadError);
+            SessionState other;
+            other.sampleRate = rate;
+            const auto dropped = back.has_value() ? SequenceFile::place (other, *back, -1, 0, false) : SequenceFile::Placed();
+            TrackEffects voice;
+            const auto voiceErrors = dropped.effects != nullptr ? OfflineRender::loadTrackEffects (chainFor (dropped.trackId, *dropped.effects), engine.pluginFormatManager, rate, voice)
+                                                                : juce::String ("no voice");
+            auto* voiced = dynamic_cast<BuiltInEffects::SamplerProcessor*> (voice.getInstrument (dropped.trackId));
+
+            check (saveError.isEmpty() && loadError.isEmpty() && voiceErrors.isEmpty() && voiced != nullptr && voiced->getZones().size() == 8 && voiced->getZones()[0].sample != nullptr
+                       && voiced->getSlicing().on && rms (play (other, 0, loopFrames, 512, &voice), 0, 4000) > 0.05,
+                   "sampler on a track: a sequence saved with the sampler as its voice, dropped into another session, brings the sampler back with its eight slices and their sample, and plays");
+        }
+
+        // Its LFO in note values follows the session's tempo.
+        {
+            juce::AudioBuffer<float> steady (1, 5 * 48000);
+            juce::FloatVectorOperations::fill (steady.getWritePointer (0), 0.5f, steady.getNumSamples());
+            const auto steadyFile = writeFloatWav (folder.getChildFile ("Steady.wav"), steady);
+            auto sampler = std::make_unique<BuiltInEffects::SamplerProcessor>();
+            Sampler::Zone z;
+            z.sample = Sampler::sharedSample (steadyFile, error);
+            z.file = steadyFile;
+            sampler->setZones ({ z });
+            setPlain (*sampler, "lfoLevel", 100.0f);
+            setPlain (*sampler, "lfoSync", 4.0f);      // 1/4
+            setPlain (*sampler, "velocity", 0.0f);
+
+            SessionState t;
+            t.sampleRate = rate;
+            const auto trackId = t.addInstrumentTrack().id;
+            NoteClip held;
+            held.length = 4 * 48000;
+            held.notes = { { 60, 0, 4 * 48000 - 100, 1.0f } };
+            SessionEdits::addNoteClip (t, trackId, held);
+            TrackEffects effects;
+            effects.prepare (rate);
+            const auto slotId = effects.add (trackId, std::move (sampler));
+
+            auto dips = [] (const juce::AudioBuffer<float>& out)
+            {
+                const auto* x = out.getReadPointer (0);
+                auto low = 1.0e9f, high = 0.0f;
+
+                for (int i = 1000; i < out.getNumSamples() - 1000; ++i)
+                {
+                    low = juce::jmin (low, x[i]);
+                    high = juce::jmax (high, x[i]);
+                }
+
+                const auto middle = 0.5f * (low + high);
+                int count = 0;
+
+                for (int i = 1001; i < out.getNumSamples() - 1000; ++i)
+                    count += x[i - 1] >= middle && x[i] < middle ? 1 : 0;
+
+                return count;
+            };
+
+            t.tempo = 120.0;
+            const auto at120 = dips (play (t, 0, 4 * 48000, 512, &effects));
+            t.tempo = 90.0;
+            const auto at90 = dips (play (t, 0, 4 * 48000, 512, &effects));
+
+            // And a parameter of it follows an envelope, as any instrument's does: its level 20 dB down.
+            t.tempo = 120.0;
+            const auto full = rms (play (t, 0, 48000, 512, &effects), 2000, 40000);
+            constexpr auto down = 22.0f / 54.0f;      // -26 dB in its range of -48 to +6: 20 dB under the -6 it comes at
+            t.tracks[0].effectEnvelopes.push_back ({ slotId, "level", Envelope { { { 0, down }, { 4 * 48000, down } } } });
+            const auto quiet = rms (play (t, 0, 48000, 512, &effects), 2000, 40000);
+
+            check (at120 == 8 && at90 == 6 && std::abs (juce::Decibels::gainToDecibels (quiet / full) + 20.0) < 0.2,
+                   "sampler on a track: its LFO at 1/4 dips the level " + juce::String (at120) + " times in four seconds at the session's 120 BPM and " + juce::String (at90)
+                       + " at 90; an envelope on its Level 20 dB down plays " + juce::String (juce::Decibels::gainToDecibels (quiet / full), 1) + " dB");
+        }
+
+        folder.deleteRecursively();
+    }
 }
 
 void runInstrumentTrackTests (AudioEngine& engine)
@@ -1334,4 +1548,10 @@ void runInstrumentTrackTests (AudioEngine& engine)
     testAddInstrumentTrack (engine);
     testMusicalTimebase();
     testNoteFunctions();
+    testSampler (engine);
+}
+
+void runSamplerTrackTests (AudioEngine& engine)
+{
+    testSampler (engine);
 }

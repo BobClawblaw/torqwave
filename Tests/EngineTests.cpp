@@ -824,6 +824,7 @@ int main (int argc, char* argv[])
     {
         AudioEngine engine;
         runSamplerTests (engine);
+        runSamplerTrackTests (engine);
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }

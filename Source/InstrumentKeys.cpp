@@ -6,6 +6,7 @@
 #include "WaveSynth.h"
 #include "DrumMachine.h"
 #include "SwarmGuitar.h"
+#include "Sampler.h"
 
 namespace InstrumentKeys
 {
@@ -88,6 +89,26 @@ Kind kindFor (juce::AudioProcessor& p)
 
     if (dynamic_cast<BuiltInEffects::SwarmGuitarProcessor*> (&p) != nullptr)
         return Kind::strings;
+
+    // The sampler: a kit's beat for slices, hits for one-shots, a held chord for looped samples.
+    if (auto* sampler = dynamic_cast<BuiltInEffects::SamplerProcessor*> (&p))
+    {
+        if (sampler->getSlicing().on)
+            return Kind::kit;
+
+        const auto zones = sampler->getZones();
+
+        if (zones.empty())
+            return Kind::other;
+
+        if (std::all_of (zones.begin(), zones.end(), [] (const Sampler::Zone& z) { return z.oneShot; }))
+            return Kind::hit;
+
+        if (std::any_of (zones.begin(), zones.end(), [] (const Sampler::Zone& z) { return z.loop != 0; }))
+            return Kind::chord;
+
+        return Kind::lead;
+    }
 
     return Kind::other;
 }
