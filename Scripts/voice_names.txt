@@ -1,4 +1,44 @@
 patch|Init|Init
+patch|Bass|Hydraulic Maw
+patch|Bass|Ferrous Yawn
+patch|Bass|Turbine Throat
+patch|Bass|Slag Wobble
+patch|Bass|Magma Pulley
+patch|Bass|Rotor Gnash
+patch|Bass|Sulphur Choke
+patch|Bass|Piston Howl
+patch|Bass|Tar Siren
+patch|Bass|Cinder Mandible
+patch|Bass|Riveted Snap
+patch|Bass|Torque Fang
+patch|Bass|Spark Gap
+patch|Bass|Clamp Jaw
+patch|Bass|Hot Wire Bass
+patch|Bass|Ratchet Bite
+patch|Bass|Lockjaw Engine
+patch|Bass|Arc Furnace
+patch|Bass|Tension Strap
+patch|Bass|Bolt Cutter
+patch|Bass|Pylon Bloom
+patch|Bass|Grid Pump
+patch|Bass|Strobe Saw Bass
+patch|Bass|Concourse Throb
+patch|Bass|Afterburn Unison
+patch|Bass|Velvet Piston
+patch|Bass|Neon Stack Bass
+patch|Bass|Treadmill Bass
+patch|Bass|Bulkhead Swell
+patch|Bass|Ribbon Throb
+patch|Bass|Mouth Of Iron
+patch|Bass|Yammer Bass
+patch|Bass|Formant Furnace
+patch|Bass|Chatter Valve
+patch|Bass|Gargle Line
+patch|Bass|Vox Hammer Bass
+patch|Bass|Tongue Twister
+patch|Bass|Baritone Engine
+patch|Bass|Wah Crane
+patch|Bass|Larynx Press
 patch|Bass|Warehouse Sub
 patch|Bass|Rumble Floor
 patch|Bass|Pressure Bass

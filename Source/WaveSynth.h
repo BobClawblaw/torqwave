@@ -105,7 +105,8 @@ namespace BuiltInEffects
 
         /** What the next and previous arrows go through (the window's, and the arrow keys'): every
             factory patch in the browser's order, or, while the favourites are being browsed and
-            there are some, the favourites by name. The factory list's indices. */
+            there are some, the favourites in the tree's order (by category, then as the tree lists
+            them). The factory list's indices. */
         std::vector<int> browseList() const;
         void setBrowsingFavourites (bool favourites) noexcept        { browsingFavourites = favourites; }
         bool isBrowsingFavourites() const noexcept                   { return browsingFavourites; }

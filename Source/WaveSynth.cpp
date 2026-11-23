@@ -2404,7 +2404,7 @@ bool BasicSynthProcessor::loadPatch (const juce::String& name)
 std::vector<int> BasicSynthProcessor::browseList() const
 {
     if (browsingFavourites)
-        if (auto favourites = WaveSynth::Favourites::shared().indices(); ! favourites.empty())
+        if (auto favourites = WaveSynth::Favourites::shared().inTreeOrder(); ! favourites.empty())
             return favourites;
 
     std::vector<int> all (WaveSynth::factoryPatches().size());
