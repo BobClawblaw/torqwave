@@ -490,22 +490,35 @@ namespace
         // Started, a candidate put on the keys, then Stop: the patch the synth had comes back.
         const auto clip = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
         const auto started = view.decrypt (clip, rate, "reese");
-        TestUtils::runUntil ([&view] { return view.getSearch() != nullptr && view.getSearch()->getProgress().best.size() >= 12; }, 20000);
+        // The view takes the search's progress on the message thread, after the search has it: wait for the view's own.
+        TestUtils::runUntil ([&view] { return view.getSearch() != nullptr && view.candidateCentre (11) != view.candidateCentre (-1); }, 20000);
         snapshots();
+        const auto searchHad = view.getSearch()->getProgress().best.size();
+        const auto placed = view.candidateCentre (3) != view.candidateCentre (-1);
         click (view.candidateCentre (3), 2);
         const auto onKeys = SignalConsole::addressOf (SignalConsole::capture (synth)) != before;
         click (view.stopBounds().getCentre());
         TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 5000);
         const auto stoppedBack = SignalConsole::addressOf (SignalConsole::capture (synth)) == before;
-        check (refused && tables && ! view.factoryTablesOnly() && started && onKeys && stoppedBack && drawn,
+        const auto untabled = ! view.factoryTablesOnly();
+        juce::StringArray failed;
+        if (! refused)     failed.add ("a silent clip was taken");
+        if (! tables || ! untabled) failed.add ("Tables only from the factory did not switch on and off");
+        if (! started)     failed.add ("the clip did not start a search");
+        if (! onKeys)      failed.add ("the double-click put nothing on the keys (the search had " + juce::String ((int) searchHad)
+                                       + " candidates, the view had candidate 3 " + (placed ? "placed" : "not placed yet") + ")");
+        if (! stoppedBack) failed.add ("Stop did not give back the patch from before");
+        if (! drawn)       failed.add ("a snapshot was not drawn at its size");
+        check (failed.isEmpty(),
                "decrypt: the window refuses a silent clip, switches Tables only from the factory, starts on a clip, puts a candidate on the keys with a double-click, "
-               "and Stop gives back the patch it had; it draws at 70 %, 100 % and 160 % before and during a search");
+               "and Stop gives back the patch it had; it draws at 70 %, 100 % and 160 % before and during a search"
+                   + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
 
         // Take keeps the best; a model's name for it can be refused, and used.
         const auto namer = std::make_shared<MadeUp> (MadeUp::Kind::namer);
         setAdvisorMaker ([namer] { return namer; });
         view.decrypt (clip, rate, "reese");
-        TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+        TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
         const auto best = view.getSearch()->getProgress().best;
         click (view.takeBounds().getCentre());
         const auto taken = ! best.empty() && SignalConsole::addressOf (SignalConsole::capture (synth)) == best.front().address
@@ -515,7 +528,7 @@ namespace
         view.useOfferedName (false);
         const auto refusedName = synth.getPatchName().startsWith ("Node ");
         view.decrypt (clip, rate, "reese");
-        TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+        TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
         click (view.takeBounds().getCentre());
         TestUtils::runUntil ([&view] { return view.offeredName().name.isNotEmpty(); }, 5000);
         view.useOfferedName (true);
@@ -528,15 +541,15 @@ namespace
         {
             view.decrypt (clip, rate, "reese");
             const auto notYet = ! view.canGoAgain() && ! view.again();
-            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto first = view.getSearch()->getProgress().best.front().lock;
             const auto ready = view.canGoAgain() && view.getPasses() == 1;
             click (view.againBounds().getCentre());
             const auto going = view.getPasses() == 2 && view.getSearch() != nullptr;
-            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto second = view.getSearch()->getProgress().best.front().lock;
             view.again();
-            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto third = view.getSearch()->getProgress().best.front().lock;
 
             // From a candidate taken: the next search goes on from that one alone.
@@ -545,7 +558,7 @@ namespace
             view.take();
             const auto tookIt = SignalConsole::addressOf (SignalConsole::capture (synth)) == picked.address && view.canGoAgain();
             view.again();
-            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto fromPicked = view.getSearch()->getProgress().best.front().lock >= picked.lock - 0.01f && view.getPasses() == 4;
             auto allFromIt = true;
 
@@ -574,7 +587,7 @@ namespace
             const auto wentBack = view.getChainLength() == 1 && view.canGoAgain()
                                   && SignalConsole::addressOf (SignalConsole::capture (synth)) != before;
             view.again();
-            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto onFromIt = view.getPasses() == passesBefore + 1 && view.getSearch()->getProgress().best.front().lock >= view.chainLock (0) - 0.01f;
             check (rising && playing && stoppedPlaying && heardOnly && wentBack && onFromIt,
                    "decrypt: the chain gains a step each time the search comes nearer (" + juce::String (length) + " here); Play goes through it and stops, a click only plays a step, "
@@ -591,7 +604,7 @@ namespace
         {
             const auto patchBefore = SignalConsole::addressOf (SignalConsole::capture (synth));
             view.decrypt (clip, rate, "reese");
-            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            TestUtils::runUntil ([&view] { return view.hasEnded() && view.candidateCentre (2) != view.candidateCentre (-1); }, 60000);
             click (view.candidateCentre (2), 2);
             const auto wasOnKeys = SignalConsole::addressOf (SignalConsole::capture (synth)) != patchBefore;
             view.again();
@@ -604,10 +617,10 @@ namespace
         // the scope never print over each other, the one under the pointer always labelled.
         {
             view.decrypt (clip, rate, "reese");
-            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             auto apart = true, fits = true, unprinted = true, keyLabelled = true, under = false;
             float hint = 0.0f, room = 0.0f;
-            int labelled = 0, candidates = 0;
+            int labelled = 0, candidates = 0, hits = 0;
 
             for (auto scale : { 0.7f, 1.0f, 1.6f })
             {
@@ -640,10 +653,24 @@ namespace
 
             view.setHovered (-2);
             window->setSize (WaveSynthEditor::designWidth, WaveSynthEditor::designHeight);
-            check (apart && fits && unprinted && keyLabelled,
+
+            // However close together they sit, a double-click on a candidate puts that one on the keys, not a neighbour.
+            const auto& shownBest = view.getSearch()->getProgress().best;
+            hits = 0;
+
+            for (int i = 0; i < (int) shownBest.size(); ++i)
+            {
+                click (view.candidateCentre (i), 2);
+                hits += SignalConsole::addressOf (SignalConsole::capture (synth)) == shownBest[(size_t) i].address ? 1 : 0;
+            }
+
+            view.stop();
+            const auto allHit = hits == (int) shownBest.size();
+            check (apart && fits && unprinted && keyLabelled && allHit,
                    "decrypt: at 70 %, 100 % and 160 % the panel's heading and status never meet (the status " + juce::String (under ? "under" : "beside")
                        + " the heading here), the chain's hint fits (" + juce::String (hint, 0) + " of " + juce::String (room, 0) + " points), and no lock label on the scope "
-                       "prints over another, the one under the pointer always labelled (" + juce::String (labelled) + " of " + juce::String (candidates) + " labelled)");
+                       "prints over another, the one under the pointer always labelled (" + juce::String (labelled) + " of " + juce::String (candidates) + " labelled); "
+                       "a double-click on each candidate puts that one on the keys (" + juce::String (hits) + " of " + juce::String (candidates) + ")");
         }
 
         // Until settled: the window's searches go on past 16 rounds while they come closer, and say when they no longer do.
@@ -685,6 +712,11 @@ namespace
 
         window->showView (0);
     }
+}
+
+void runDecryptWindowTests()
+{
+    testWindow();
 }
 
 void runDecryptTests()

@@ -604,10 +604,19 @@ juce::Point<float> DecryptView::candidateCentre (int index) const
 int DecryptView::candidateAt (juce::Point<float> p) const
 {
     const auto k = radius / 236.0f;
+    auto nearest = -2;
+    auto nearestDistance = 22.0f * k + 4.0f;
 
+    // The nearest within reach: candidates close together overlap, and the first in reach may be a neighbour.
     for (int i = 0; i < (int) places.size(); ++i)
-        if (p.getDistanceFrom (places[(size_t) i]) < 22.0f * k + 4.0f)
-            return i;
+        if (const auto d = p.getDistanceFrom (places[(size_t) i]); d < nearestDistance)
+        {
+            nearest = i;
+            nearestDistance = d;
+        }
+
+    if (nearest >= 0)
+        return nearest;
 
     return p.getDistanceFrom (centre) < 46.0f * k ? -1 : -2;
 }

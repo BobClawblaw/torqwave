@@ -80,6 +80,8 @@ public:
     const Decrypt::Search* getSearch() const noexcept             { return search.get(); }
     void setMotion (bool allowed)                                 { motion = allowed; }
     bool isMoving() const noexcept                                { return motion && search != nullptr && search->isRunning(); }
+    /** The search has ended and the view holds its last progress (it takes each on the message thread, after the search). */
+    bool hasEnded() const noexcept                                { return search != nullptr && progress.finished; }
     juce::Point<float> candidateCentre (int index) const;
     juce::Rectangle<float> stopBounds() const                     { return stopChip; }
     juce::Rectangle<float> takeBounds() const                     { return takeChip; }
