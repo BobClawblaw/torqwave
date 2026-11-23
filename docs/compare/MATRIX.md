@@ -75,13 +75,13 @@ Rows that are yes, with partial rows after a plus sign and rows not confirmed af
 | Loudness and analysis | 5 | 5 | 5 | 4 +1 | 1 ?1 | 3 +2 | 1 +2 | 2 +3 |
 | Multitrack and mixing | 9 | 7 | 7 | 4 +1 ?1 | 1 +2 ?1 | 0 +1 | 1 +3 | 4 +2 |
 | MIDI and writing music | 6 | 4 | 3 | 0 +1 | 0 | 0 | 0 | 0 +1 |
-| Built-in instruments | 6 | 5 | 1 +1 | 0 | 0 | 0 | 0 | 0 |
+| Built-in instruments | 6 | 6 | 1 +1 | 0 | 0 | 0 | 0 | 0 |
 | Plug-in hosting | 5 | 3 | 3 | 3 | 3 ?1 | 2 +1 | 1 | 2 |
 | Working to picture | 4 | 4 | 4 | 3 | 1 | 1 | 0 +1 | 3 |
 | Sound library | 1 | 1 | 1 | 0 ?1 | 0 | 0 | 0 | 0 |
 | AI help | 3 | 2 +1 | 2 +1 | 0 ?1 | 0 | 0 ?1 | 1 | 0 |
 | Platforms and licence | 4 | 4 | 4 | 2 | 4 | 2 | 2 | 2 |
-| **All rows** | 53 | 44 +2 | 39 +3 | 23 +5 ?3 | 15 +5 ?3 | 18 +4 ?1 | 15 +7 | 20 +7 |
+| **All rows** | 53 | 45 +2 | 39 +3 | 23 +5 ?3 | 15 +5 ?3 | 18 +4 ?1 | 15 +7 | 20 +7 |
 
 **The DAWs**
 
@@ -92,13 +92,13 @@ Rows that are yes, with partial rows after a plus sign and rows not confirmed af
 | Loudness and analysis | 5 | 5 | 5 | 2 +2 ?1 | 2 +1 | 0 +2 | 1 +2 | 4 +1 | 4 +1 | 4 +1 | 2 +2 | 4 +1 | 2 +2 |
 | Multitrack and mixing | 9 | 7 | 7 | 6 +1 ?1 | 6 +1 | 6 | 5 | 7 | 8 ?1 | 8 | 9 | 8 +1 | 6 +1 |
 | MIDI and writing music | 6 | 4 | 3 | 4 +1 ?1 | 4 +1 | 4 | 4 +1 | 3 +1 | 5 ?1 | 5 ?1 | 5 ?1 | 6 | 3 +1 |
-| Built-in instruments | 6 | 5 | 1 +1 | 5 +1 | 5 | 4 +1 | 5 | 2 +1 | 6 | 4 +1 | 4 | 4 | 2 +1 |
+| Built-in instruments | 6 | 6 | 1 +1 | 5 +1 | 5 | 4 +1 | 5 | 2 +1 | 6 | 4 +1 | 4 | 4 | 2 +1 |
 | Plug-in hosting | 5 | 3 | 3 | 4 | 3 | 3 | 2 | 5 | 1 | 2 | 0 | 3 | 4 |
 | Working to picture | 4 | 4 | 4 | 2 +1 | 2 +1 | 0 | 0 | 3 | 4 | 3 | 3 | 3 | 3 |
 | Sound library | 1 | 1 | 1 | 0 +1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 +1 | 0 +1 |
 | AI help | 3 | 2 +1 | 2 +1 | 1 +1 | 1 | 0 | 0 | 0 | 1 ?1 | 0 ?1 | 1 | 0 +1 | 0 +1 |
 | Platforms and licence | 4 | 4 | 4 | 2 | 2 | 3 | 2 | 3 | 1 | 2 | 2 | 2 +1 | 4 |
-| **All rows** | 53 | 44 +2 | 39 +3 | 32 +9 ?4 | 27 +5 | 21 +3 | 20 +4 | 32 +6 | 34 +4 ?3 | 32 +4 ?2 | 31 +6 ?1 | 32 +7 | 24 +9 |
+| **All rows** | 53 | 45 +2 | 39 +3 | 32 +9 ?4 | 27 +5 | 21 +3 | 20 +4 | 32 +6 | 34 +4 ?3 | 32 +4 ?2 | 31 +6 ?1 | 32 +7 | 24 +9 |
 
 
 ## Torqwave by release
@@ -106,7 +106,7 @@ Rows that are yes, with partial rows after a plus sign and rows not confirmed af
 | Release | Yes | Partial | No | Rows |
 |---|---|---|---|---|
 | 0.19.2 | 39 | 3 | 11 | 53 |
-| 0.20.0 | 44 | 2 | 7 | 53 |
+| 0.20.0 | 45 | 2 | 6 | 53 |
 
 ## Where Torqwave is behind
 
@@ -119,7 +119,6 @@ Rows where Torqwave 0.20.0 is no or partial and at least two of the 15 other pro
 | ARA 2 plug-ins | No | 4: Steinberg SpectraLayers, REAPER, Cubase, Pro Tools |
 | Audio to MIDI | No | 7: FL Studio, Ableton Live, Reason, Logic Pro, Cubase, Pro Tools, Fender Studio Pro |
 | Notation editor | No | 5: REAPER, Logic Pro, Cubase, Pro Tools, Fender Studio Pro |
-| Built-in sampler | No | 9: FL Studio, Ableton Live, Bitwig Studio, Reason, REAPER, Logic Pro, Cubase, Pro Tools, Fender Studio Pro |
 | CLAP | No | 3: FL Studio, Bitwig Studio, REAPER |
 | VST2 | No | 10: Adobe Audition, Steinberg WaveLab, FL Studio, Ableton Live, Bitwig Studio, Reason, REAPER, Cubase, Fender Studio Pro, Ardour |
 | A typed request becomes edits | Partial | 2: FL Studio, Logic Pro |
@@ -147,14 +146,14 @@ Rows where Torqwave 0.20.0 is yes and at most two of the 15 other products are y
 | Built-in synthesizer | Yes: Basic Synth: one waveform, an envelope and a filter. | Yes: Torqwave Synth (wavetable, three oscillators) and StringSwarm. |
 | Wavetable from your own audio | No: Basic Synth has no wavetables. | Yes: A sound dropped on an oscillator of Torqwave Synth becomes its wavetable. |
 | Built-in drum instrument | No: No drum instrument. | Yes: Basic Drums: 30 synthesised sounds on pads covering the 47 General MIDI drum notes, seven kits. |
-| Built-in sampler | No: No sampler instrument. | No: No sampler instrument. Torqwave Synth reads a sound as a wavetable, which is not sample playback. |
-| Factory instrument sounds | Partial: 1 instrument, Basic Synth, with a short presets menu; the docs give no count. | Yes: 3 instruments: Torqwave Synth with 3,743 patches in 29 categories, StringSwarm with 296 presets, Basic Drums with seven kits. |
+| Built-in sampler | No: No sampler instrument. | Yes: Torqwave Sampler: the user's sounds across the keys in up to 128 zones with loops and crossfades, or cut into slices on keys. Samples are held in memory; no import of SFZ or SF2 libraries, no round robins. Measured by the tests; not yet tried by hand in the app. |
+| Factory instrument sounds | Partial: 1 instrument, Basic Synth, with a short presets menu; the docs give no count. | Yes: 4 instruments: Torqwave Synth with 3,743 patches in 29 categories, StringSwarm with 296 presets, Basic Drums with seven kits, Torqwave Sampler with 11 presets. |
 | Synth patch from a recording | No: Not in 0.19.2. | Yes: Decrypt searches for a Torqwave Synth patch that plays like a recording of one note. Close for sounds the synth made; loose for voices, drums and samples; one note, effects off. |
 
 | Number | 0.19.2 | 0.20.0 | |
 |---|---|---|---|
 | Synth patches | 0 | 3,743 | Torqwave Synth, in 29 categories; 1,280 hand-made |
-| Built-in instruments | 1 | 3 | Torqwave Synth, StringSwarm, Basic Drums (Basic Synth before) |
+| Built-in instruments | 1 | 4 | Torqwave Synth, StringSwarm, Basic Drums, Torqwave Sampler (Basic Synth before) |
 | Sequence presets | 0 | 1,018 | in 37 styles, with 116 starter kits |
 | StringSwarm presets | 0 | 296 | strings on one note, or a swarm of oscillators |
 | Drum sounds | 0 | 30 | Basic Drums: every General MIDI drum note, seven kits |
@@ -269,7 +268,7 @@ Rows where Torqwave 0.20.0 is yes and at most two of the 15 other products are y
 | Built-in synthesizer | Yes | Yes | No | No | No | No | No |
 | Wavetable from your own audio | Yes | No | No | No | No | No | No |
 | Built-in drum instrument | Yes | No | No | No | No | No | No |
-| Built-in sampler | No | No | No | No | No | No | No |
+| Built-in sampler | Yes | No | No | No | No | No | No |
 | Factory instrument sounds | Yes | Partial | No | No | No | No | No |
 | Synth patch from a recording | Yes | No | No | No | No | No | No |
 
@@ -278,7 +277,7 @@ Rows where Torqwave 0.20.0 is yes and at most two of the 15 other products are y
 | Built-in synthesizer | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
 | Wavetable from your own audio | Yes | No | Partial | Yes | Partial | Yes | No | Yes | Partial | No | No | No |
 | Built-in drum instrument | Yes | No | Yes | Yes | Yes | Yes | Partial | Yes | Yes | Yes | Yes | No |
-| Built-in sampler | No | No | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Partial |
+| Built-in sampler | Yes | No | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Partial |
 | Factory instrument sounds | Yes | Partial | Yes | Yes | Yes | Yes | No | Yes | Yes | Yes | Yes | Yes |
 | Synth patch from a recording | Yes | No | Yes | No | No | No | No | Yes | No | No | No | No |
 
@@ -560,8 +559,8 @@ Version 0.20.0, the only edition. Looked up 2026-11-23. This repository at commi
 | Built-in synthesizer | Yes | Torqwave Synth (wavetable, three oscillators) and StringSwarm. | `docs/guide/07-instruments-and-midi.md` |  |
 | Wavetable from your own audio | Yes | A sound dropped on an oscillator of Torqwave Synth becomes its wavetable. | `docs/guide/07-instruments-and-midi.md` |  |
 | Built-in drum instrument | Yes | Basic Drums: 30 synthesised sounds on pads covering the 47 General MIDI drum notes, seven kits. | `docs/guide/07-instruments-and-midi.md` |  |
-| Built-in sampler | No | No sampler instrument. Torqwave Synth reads a sound as a wavetable, which is not sample playback. | `docs/guide/07-instruments-and-midi.md` |  |
-| Factory instrument sounds | Yes | 3 instruments: Torqwave Synth with 3,743 patches in 29 categories, StringSwarm with 296 presets, Basic Drums with seven kits. | `README.md` |  |
+| Built-in sampler | Yes | Torqwave Sampler: the user's sounds across the keys in up to 128 zones with loops and crossfades, or cut into slices on keys. Samples are held in memory; no import of SFZ or SF2 libraries, no round robins. Measured by the tests; not yet tried by hand in the app. | `docs/guide/07-instruments-and-midi.md` |  |
+| Factory instrument sounds | Yes | 4 instruments: Torqwave Synth with 3,743 patches in 29 categories, StringSwarm with 296 presets, Basic Drums with seven kits, Torqwave Sampler with 11 presets. | `README.md` |  |
 | Synth patch from a recording | Yes | Decrypt searches for a Torqwave Synth patch that plays like a recording of one note. Close for sounds the synth made; loose for voices, drums and samples; one note, effects off. | `docs/guide/07-instruments-and-midi.md` |  |
 | VST3 | Yes | Effects and instruments, scanned out of process. | `README.md` |  |
 | Audio Units (Mac) | Yes | Audio Units v2 and v3 on the Mac. | `README.md` |  |

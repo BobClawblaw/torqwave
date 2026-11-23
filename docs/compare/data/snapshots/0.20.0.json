@@ -15,8 +15,8 @@
   {
    "label": "Built-in instruments",
    "prev": 1,
-   "now": 3,
-   "note": "Torqwave Synth, StringSwarm, Basic Drums (Basic Synth before)",
+   "now": 4,
+   "note": "Torqwave Synth, StringSwarm, Basic Drums, Torqwave Sampler (Basic Synth before)",
    "source": "README.md"
   },
   {
@@ -50,6 +50,7 @@
  ],
  "release_firsts": [
   "Decrypt: a synth patch from a recording of one note",
+  "Torqwave Sampler: your own sounds across the keys, or cut into slices",
   "A wavetable from any sound dropped on an oscillator",
   "Instruments played from the computer's keys",
   "Instruments and plug-ins follow the session's tempo",
@@ -230,13 +231,13 @@
      "source": "docs/guide/07-instruments-and-midi.md"
     },
     "builtin_sampler": {
-     "value": "no",
-     "note": "No sampler instrument. Torqwave Synth reads a sound as a wavetable, which is not sample playback.",
+     "value": "yes",
+     "note": "Torqwave Sampler: the user's sounds across the keys in up to 128 zones with loops and crossfades, or cut into slices on keys. Samples are held in memory; no import of SFZ or SF2 libraries, no round robins. Measured by the tests; not yet tried by hand in the app.",
      "source": "docs/guide/07-instruments-and-midi.md"
     },
     "factory_instrument_presets": {
      "value": "yes",
-     "note": "3 instruments: Torqwave Synth with 3,743 patches in 29 categories, StringSwarm with 296 presets, Basic Drums with seven kits.",
+     "note": "4 instruments: Torqwave Synth with 3,743 patches in 29 categories, StringSwarm with 296 presets, Basic Drums with seven kits, Torqwave Sampler with 11 presets.",
      "source": "README.md"
     },
     "patch_from_recording": {

@@ -12,12 +12,12 @@
 <text x="74.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">categories; 1,280 hand-made</text>
 <rect x="390.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="390.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="414.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">3</text>
+<text x="414.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">4</text>
 <text x="414.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Built-in instruments</text>
 <text x="414.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 1</text>
 <text x="414.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Torqwave Synth, StringSwarm,</text>
-<text x="414.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Basic Drums (Basic Synth</text>
-<text x="414.0" y="438.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">before)</text>
+<text x="414.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Basic Drums, Torqwave Sampler</text>
+<text x="414.0" y="438.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">(Basic Synth before)</text>
 <rect x="730.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="730.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
 <text x="754.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">1,018</text>
@@ -52,15 +52,19 @@
 <text x="1130.0" y="260.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Decrypt: a synth patch from a</text>
 <text x="1130.0" y="290.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">recording of one note</text>
 <rect x="1108.0" y="330.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="342.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">A wavetable from any sound dropped</text>
-<text x="1130.0" y="372.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">on an oscillator</text>
-<rect x="1108.0" y="412.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="424.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Instruments played from the</text>
-<text x="1130.0" y="454.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">computer&#x27;s keys</text>
-<rect x="1108.0" y="494.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="506.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Instruments and plug-ins follow</text>
-<text x="1130.0" y="536.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">the session&#x27;s tempo</text>
-<rect x="1108.0" y="576.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="588.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">A time-view strip, a Hand tool,</text>
-<text x="1130.0" y="618.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Paste Clipboard as New File</text>
+<text x="1130.0" y="342.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Torqwave Sampler: your own sounds</text>
+<text x="1130.0" y="372.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">across the keys, or cut into</text>
+<text x="1130.0" y="402.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">slices</text>
+<rect x="1108.0" y="442.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="454.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">A wavetable from any sound dropped</text>
+<text x="1130.0" y="484.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">on an oscillator</text>
+<rect x="1108.0" y="524.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="536.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Instruments played from the</text>
+<text x="1130.0" y="566.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">computer&#x27;s keys</text>
+<rect x="1108.0" y="606.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="618.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Instruments and plug-ins follow</text>
+<text x="1130.0" y="648.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">the session&#x27;s tempo</text>
+<rect x="1108.0" y="688.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="700.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">A time-view strip, a Hand tool,</text>
+<text x="1130.0" y="730.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Paste Clipboard as New File</text>
 </svg>
