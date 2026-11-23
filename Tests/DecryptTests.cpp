@@ -600,6 +600,52 @@ namespace
                    "decrypt: Again with a candidate on the keys but not taken, then Stop, gives back the patch the synth had before the search");
         }
 
+        // Crowded text: the heading and its status never meet, the chain's hint fits its panel, and the lock labels on
+        // the scope never print over each other, the one under the pointer always labelled.
+        {
+            view.decrypt (clip, rate, "reese");
+            TestUtils::runUntil ([&view] { return ! view.getSearch()->isRunning(); }, 60000);
+            auto apart = true, fits = true, unprinted = true, keyLabelled = true, under = false;
+            float hint = 0.0f, room = 0.0f;
+            int labelled = 0, candidates = 0;
+
+            for (auto scale : { 0.7f, 1.0f, 1.6f })
+            {
+                window->setSize (juce::roundToInt (WaveSynthEditor::designWidth * scale), juce::roundToInt (WaveSynthEditor::designHeight * scale));
+                apart = apart && ! view.headingBounds().isEmpty() && ! view.headingBounds().intersects (view.statusBounds())
+                        && view.statusBounds().getWidth() <= view.panelTextWidth() + 0.5f;
+                under = under || view.statusBounds().getY() > view.headingBounds().getY() + 4.0f;
+                hint = view.chainHintWidth();
+                room = view.panelTextWidth();
+                fits = fits && view.getChainLength() > 0 && hint <= room;
+
+                for (int h : { -2, 1, 7 })
+                {
+                    view.setHovered (h);
+                    const auto labels = view.lockLabelBounds();
+                    candidates = (int) labels.size();
+                    labelled = 0;
+
+                    for (size_t i = 0; i < labels.size(); ++i)
+                    {
+                        labelled += labels[i].isEmpty() ? 0 : 1;
+
+                        for (size_t j = i + 1; j < labels.size(); ++j)
+                            unprinted = unprinted && ! labels[i].intersects (labels[j]);
+                    }
+
+                    keyLabelled = keyLabelled && (juce::isPositiveAndBelow (h, (int) labels.size()) ? ! labels[(size_t) h].isEmpty() : labelled > 0);
+                }
+            }
+
+            view.setHovered (-2);
+            window->setSize (WaveSynthEditor::designWidth, WaveSynthEditor::designHeight);
+            check (apart && fits && unprinted && keyLabelled,
+                   "decrypt: at 70 %, 100 % and 160 % the panel's heading and status never meet (the status " + juce::String (under ? "under" : "beside")
+                       + " the heading here), the chain's hint fits (" + juce::String (hint, 0) + " of " + juce::String (room, 0) + " points), and no lock label on the scope "
+                       "prints over another, the one under the pointer always labelled (" + juce::String (labelled) + " of " + juce::String (candidates) + " labelled)");
+        }
+
         // Until settled: the window's searches go on past 16 rounds while they come closer, and say when they no longer do.
         {
             Options settle;
