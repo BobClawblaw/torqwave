@@ -46,6 +46,20 @@ public:
         `ticked` says whether any is. */
     static juce::PopupMenu favouritesMenu (const juce::String& current, bool browsing, int firstId, bool& ticked);
 
+    /** The patch browser's Decrypted sub-menu: the patches taken from Decrypt and named
+        (DecryptedPatches), by name, an item's ID `firstId` plus its place in that list; the one
+        named `current` is ticked. With one of them on the synth, Rename and Delete for it follow
+        (`renameId`, `deleteId`). `ticked` says whether any is ticked. */
+    static juce::PopupMenu decryptedMenu (const juce::String& current, int firstId, int renameId, int deleteId, bool& ticked);
+
+    /** For Decrypt, and tests: the user's own patches have changed (one saved, renamed or deleted):
+        the presets bar reads its names again and the browser is drawn again. */
+    void ownPatchesChanged();
+    /** Renames or deletes one of the Decrypted patches as the browser's menu does, without asking:
+        false, with nothing changed, for a name that is empty or taken. For tests. */
+    bool renameDecrypted (const juce::String& from, const juce::String& to);
+    bool deleteDecrypted (const juce::String& name);
+
     /** Reads every control's parameter, the modulation and the displays again. */
     void refresh();
 

@@ -4,6 +4,7 @@
 #include "TestUtils.h"
 #include "../Source/DecryptView.h"
 #include "../Source/InstrumentKeys.h"
+#include "../Source/DecryptPatches.h"
 #include "../Source/SoundDrops.h"
 #include "../Source/WaveSynthEditor.h"
 #include "../Source/Theme.h"
@@ -1198,6 +1199,157 @@ namespace
     }
 }
 
+namespace
+{
+    /** Take, name, keep: the patch taken is saved under the name as one of the user's presets and listed under
+        Decrypted; recalled, it is the same patch; it can be renamed and deleted; a name taken or empty is refused. */
+    void testTakeAndName()
+    {
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        const auto auditionWas = InstrumentKeys::getAudition();
+        InstrumentKeys::setAudition (false);
+        const auto folder = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypted-" + juce::String (juce::Time::getMillisecondCounter()));
+        const auto list = folder.getChildFile ("Synth Decrypted.txt");
+        auto presets = std::make_unique<EffectPresets::Store> (folder.getChildFile ("Presets"));
+        DecryptedPatches::Store::use (presets.get(), list);
+        auto& store = DecryptedPatches::Store::shared;
+        const juce::String key = BuiltInEffects::basicSynthId;
+        juce::StringArray failed;
+
+        {
+            Synth synth;
+            synth.setPlayConfigDetails (0, 2, rate, 512);
+            synth.prepareToPlay (rate, 512);
+            synth.loadPatch ("Cathedral Stack Pad");
+            std::unique_ptr<juce::AudioProcessorEditor> made (synth.createEditorAndMakeActive());
+            auto* window = dynamic_cast<WaveSynthEditor*> (made.get());
+            auto& view = *window->getDecryptView();
+            view.setMotion (false);
+            window->showView (2);
+            const auto click = [&view] (juce::Point<float> at)
+            {
+                view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+            };
+            const auto clip = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
+            const auto takeOne = [&]
+            {
+                view.decrypt (clip, rate, "reese");
+                TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
+                click (view.takeBounds().getCentre());
+            };
+
+            // Take asks for a name, the Node name there; Not Now leaves the patch on the keys, unsaved.
+            takeOne();
+            const auto node = synth.getPatchName();
+            if (! (view.isNaming() && node.startsWith ("Node ") && view.nameTyped() == node))
+                failed.add ("Take did not ask for a name with the Node name in it");
+            const auto unsaved = SignalConsole::addressOf (SignalConsole::capture (synth));
+            click (view.notNowBounds().getCentre());
+            if (view.isNaming() || ! store().names().isEmpty() || SignalConsole::addressOf (SignalConsole::capture (synth)) != unsaved || synth.getPatchName() != node)
+                failed.add ("Not Now did not leave the patch on the keys, unsaved");
+
+            // A name typed and saved: one of the user's presets, a Decrypted patch, and the synth's patch's name.
+            takeOne();
+            synth.setMacroName (0, "Grit");
+            synth.setSampledTable (1, WaveTables::makeSampled (std::vector<float> ((size_t) (4 * WaveTables::Sampled::harmonics), 0.5f), 4, 110.0, "a table"));
+            const auto trimmed = synth.getPresetValues().at ("ampLevel");
+            view.typeName ("Night Reese");
+            click (view.saveNameBounds().getCentre());
+            const auto values = synth.getPresetValues();
+            const auto texts = synth.getPresetTexts();
+            if (! (! view.isNaming() && store().names() == juce::StringArray { "Night Reese" } && presets->getNames (key).contains ("Night Reese")
+                   && synth.getPatchName() == "Night Reese" && view.nameNote().contains ("Night Reese")))
+                failed.add ("a name saved did not make a preset and a Decrypted patch of that name");
+
+            // Recalled from another patch: the same settings (the level trim among them), tables, macro names and name.
+            synth.loadPatch ("Cold Bell");
+            const auto recalled = store().load (synth, "night reese") && synth.getPresetValues() == values && synth.getPresetTexts() == texts
+                                  && juce::exactlyEqual (synth.getPresetValues().at ("ampLevel"), trimmed) && synth.getMacroName (0) == "Grit"
+                                  && synth.getSampledTable (1) != nullptr && synth.getSampledTable (1)->name == "a table" && synth.getPatchName() == "Night Reese";
+            if (! recalled)
+                failed.add ("the patch recalled is not the patch saved");
+
+            // In the patch list: under Decrypted, ticked when the synth is on it, with Rename and Delete for it.
+            {
+                auto ticked = false;
+                const auto menu = WaveSynthEditor::decryptedMenu ("Night Reese", 100, 900, 901, ticked);
+                juce::StringArray items;
+                for (juce::PopupMenu::MenuItemIterator i (menu); i.next();)
+                    if (! i.getItem().isSeparator)
+                        items.add (i.getItem().text);
+                if (! (ticked && items.size() == 3 && items[0] == "Night Reese" && items[1].startsWith ("Rename") && items[2].startsWith ("Delete")))
+                    failed.add ("the Decrypted menu does not list it with Rename and Delete (" + items.joinIntoString (", ") + ")");
+            }
+
+            // A name taken asks before replacing; a factory patch's and an empty one are refused; Replace replaces.
+            takeOne();
+            view.typeName ("night reese");
+            const auto asked = ! view.saveName() && view.isAskingToReplace() && view.isNaming() && store().names().size() == 1;
+            view.typeName ("Abyss Reese");
+            const auto factoryRefused = ! view.saveName() && ! view.isAskingToReplace() && view.nameNote().contains ("factory");
+            view.typeName ("  ");
+            const auto emptyRefused = ! view.saveName() && view.nameNote().isNotEmpty() && view.isNaming();
+            synth.setMacroName (0, "Grit");
+            synth.setSampledTable (1, WaveTables::makeSampled (std::vector<float> ((size_t) (4 * WaveTables::Sampled::harmonics), 0.5f), 4, 110.0, "a table"));
+            view.typeName ("Night Reese");
+            click (view.saveNameBounds().getCentre());     // asks
+            const auto asksAgain = view.isAskingToReplace();
+            click (view.saveNameBounds().getCentre());     // Replace
+            if (! (asked && factoryRefused && emptyRefused && asksAgain && ! view.isNaming() && store().names().size() == 1))
+                failed.add ("a taken, a factory or an empty name was not asked about or refused as it should be");
+
+            // A second one; the arrows step through the Decrypted patches when they are browsed, as the arrow keys do.
+            takeOne();
+            view.typeName ("Bell Thing");
+            view.saveName();
+            synth.setBrowsingDecrypted (true);
+            const auto firstStep = InstrumentKeys::stepSound (synth, window, 1);
+            const auto secondStep = InstrumentKeys::stepSound (synth, window, 1);
+            const auto back = InstrumentKeys::stepSound (synth, window, -1);
+            if (! (store().names() == juce::StringArray { "Bell Thing", "Night Reese" } && firstStep == "Night Reese" && secondStep == "Bell Thing" && back == "Night Reese"
+                   && synth.getPatchName() == "Night Reese"))
+                failed.add ("the arrows did not step through the Decrypted patches (" + firstStep + ", " + secondStep + ", " + back + ")");
+
+            // Rename: an empty, a taken and a factory name refused; a new one renames it, and the synth's patch with it.
+            const auto refusedNames = ! window->renameDecrypted ("Night Reese", "") && ! window->renameDecrypted ("Night Reese", "bell thing")
+                                      && ! window->renameDecrypted ("Night Reese", "Abyss Reese") && store().names().contains ("Night Reese");
+            const auto renamed = window->renameDecrypted ("Night Reese", "Dusk Reese") && store().names() == juce::StringArray { "Bell Thing", "Dusk Reese" }
+                                 && ! presets->getNames (key).contains ("Night Reese") && synth.getPatchName() == "Dusk Reese";
+            synth.loadPatch ("Cold Bell");
+            const auto renamedLoads = store().load (synth, "Dusk Reese") && synth.getPatchName() == "Dusk Reese" && synth.getMacroName (0) == "Grit";
+            if (! (refusedNames && renamed && renamedLoads))
+                failed.add ("rename did not refuse an empty, taken or factory name, or did not rename");
+
+            // The store read again, as after a restart: the same list, the same patch.
+            auto again = std::make_unique<EffectPresets::Store> (folder.getChildFile ("Presets"));
+            DecryptedPatches::Store::use (again.get(), list);
+            synth.loadPatch ("Cold Bell");
+            const auto survived = store().names() == juce::StringArray { "Bell Thing", "Dusk Reese" } && store().load (synth, "Dusk Reese") && synth.getMacroName (0) == "Grit"
+                                  && synth.getSampledTable (1) != nullptr;
+            if (! survived)
+                failed.add ("the Decrypted patches did not survive the store being read again");
+
+            // Delete: gone from the list and from the presets; a preset deleted from the bar is no longer listed.
+            const auto deleted = window->deleteDecrypted ("Dusk Reese") && store().names() == juce::StringArray { "Bell Thing" } && ! again->getNames (key).contains ("Dusk Reese")
+                                 && ! window->deleteDecrypted ("Dusk Reese");
+            again->remove (key, "Bell Thing");
+            if (! (deleted && store().names().isEmpty()))
+                failed.add ("delete did not remove the patch, or a preset deleted from the bar was still listed");
+
+            view.stop();
+            DecryptedPatches::Store::use (nullptr, {});
+        }
+
+        folder.deleteRecursively();
+        InstrumentKeys::setAudition (auditionWas);
+        check (failed.isEmpty(),
+               "decrypt: Take asks for a name with the Node name in it; Not Now leaves the patch on the keys unsaved; a name saves it as one of the user's presets and lists it under "
+               "Decrypted; recalled it is the same patch (settings, level trim, table, macro names, name); a taken name asks before replacing and a factory patch's or an empty one "
+               "is refused; the arrows step through the Decrypted patches; rename refuses an empty, taken or factory name; the list survives the store being read again; delete "
+               "removes it" + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
+    }
+}
+
 void saveDecryptWindow (const juce::File& folder)
 {
     folder.createDirectory();
@@ -1228,6 +1380,11 @@ void saveDecryptWindow (const juce::File& folder)
 
     save ("decrypt-empty");
 
+    // The user's own presets are left alone: what is saved here goes to a folder of its own.
+    const auto scratch = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypt-pictures-" + juce::String (juce::Time::getMillisecondCounter()));
+    EffectPresets::Store scratchPresets (scratch.getChildFile ("Presets"));
+    DecryptedPatches::Store::use (&scratchPresets, scratch.getChildFile ("Synth Decrypted.txt"));
+
     for (auto& [name, clip] : std::vector<std::pair<juce::String, juce::AudioBuffer<float>>> { { "reese", recordingOf ("Abyss Reese", 45, 0.8, 1.5) },
                                                                                                { "bell", recordingOf ("Cold Bell", 57, 0.6, 1.5) } })
     {
@@ -1248,12 +1405,54 @@ void saveDecryptWindow (const juce::File& folder)
         save ("decrypt-" + name + "-20-links");
         view.stop();
     }
+
+    // Take: the name asked for; then two patches taken and named, and the patch list open on Decrypted.
+    const auto clickAt = [&view] (juce::Point<float> at)
+    {
+        view.mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &view, &view, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false));
+    };
+
+    view.decrypt (recordingOf ("Cold Bell", 57, 0.6, 1.5), rate, "bell");
+    TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
+    clickAt (view.takeBounds().getCentre());
+    view.typeName ("Glass Bell");
+    view.saveName();
+    view.decrypt (recordingOf ("Abyss Reese", 45, 0.8, 1.5), rate, "reese");
+    TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
+    clickAt (view.takeBounds().getCentre());
+    save ("decrypt-name-prompt");
+    view.typeName ("Night Reese");
+    view.saveName();
+    save ("decrypt-name-saved");
+
+    // The patch list: one of the Decrypted patches loaded from it (the browser names its category), and what the Decrypted
+    // sub-menu lists. The menu itself is not put up as a window here, so it is printed.
+    synth.loadPatch ("Cold Bell");
+    DecryptedPatches::Store::shared().load (synth, "Glass Bell");
+    synth.setBrowsingDecrypted (true);
+    window->showView (0);
+    window->refresh();
+    save ("decrypt-patch-from-the-list");
+    {
+        auto ticked = false;
+        const auto menu = WaveSynthEditor::decryptedMenu (synth.getPatchName(), 1, 900, 901, ticked);
+        juce::StringArray items;
+
+        for (juce::PopupMenu::MenuItemIterator i (menu); i.next();)
+            items.add (i.getItem().isSeparator ? juce::String ("-") : i.getItem().text + (i.getItem().isTicked ? " (ticked)" : ""));
+
+        std::cout << "the patch list's Decrypted menu: " << items.joinIntoString (" | ") << std::endl;
+    }
+
+    DecryptedPatches::Store::use (nullptr, {});
+    scratch.deleteRecursively();
 }
 
 void runDecryptWindowTests()
 {
     testWindow();
     testSecondSound();
+    testTakeAndName();
 }
 
 void runDecryptTests()
@@ -1262,6 +1461,7 @@ void runDecryptTests()
     testModel();
     testWindow();
     testSecondSound();
+    testTakeAndName();
     testLevel();
     testDecay();
     testPrepare();

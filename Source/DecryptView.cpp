@@ -3,6 +3,7 @@
 #include "SignalConsoleView.h"
 #include "Theme.h"
 #include "InstrumentKeys.h"
+#include "DecryptPatches.h"
 
 namespace SoundDrops
 {
@@ -66,6 +67,85 @@ DecryptView::DecryptView (Synth& s) : synth (s)
     words.setTooltip ("For Ask Torq's model, which suggests where to start and what to change; the search scores whatever it suggests and keeps only what sounds closer");
     words.setFont (mono (12.0f));
     addChildComponent (words);
+    nameBox.setFont (mono (13.0f));
+    nameBox.setTooltip ("A name for the patch taken: Return saves it under Decrypted in the patch list, Escape leaves it on the keys unsaved");
+    nameBox.onReturnKey = [this] { saveName (replacing); };
+    nameBox.onEscapeKey = [this] { notNow(); };
+    nameBox.onTextChange = [this]
+    {
+        // Another name typed: whatever was said of the last one no longer holds.
+        if (replacing || namingNote.isNotEmpty())
+        {
+            replacing = false;
+            namingNote = {};
+            repaint();
+        }
+    };
+    addChildComponent (nameBox);
+}
+
+void DecryptView::askName()
+{
+    naming = true;
+    replacing = false;
+    namingNote = {};
+    nameBox.setText (synth.getPatchName(), false);
+    layout();
+    nameBox.setVisible (true);
+    nameBox.selectAll();
+
+    if (isShowing())
+        nameBox.grabKeyboardFocus();
+
+    repaint();
+}
+
+bool DecryptView::saveName (bool replace)
+{
+    if (! naming)
+        return false;
+
+    auto& store = DecryptedPatches::Store::shared();
+    const auto name = nameBox.getText().trim();
+
+    // A taken name asks first; an empty one or a factory patch's is refused.
+    if (store.isTaken (name) && ! replace && store.whyNot (name).isNotEmpty())
+    {
+        replacing = true;
+        namingNote = "There is a preset called " + name.quoted() + ". Replace it?";
+        repaint();
+        return false;
+    }
+
+    if (const auto why = replace ? store.whyNot (name, name) : store.whyNot (name); why.isNotEmpty() || ! store.save (synth, name, replace))
+    {
+        replacing = false;
+        namingNote = why.isNotEmpty() ? why : juce::String ("It couldn't be written to the presets folder.");
+        repaint();
+        return false;
+    }
+
+    naming = replacing = false;
+    namingNote = "Saved as " + name.quoted() + ", under Decrypted in the patch list.";
+    nameBox.setVisible (false);
+    offer = {};
+    offerFor = 0;
+    layout();
+    repaint();
+
+    if (onPatchSaved != nullptr)
+        onPatchSaved();
+
+    return true;
+}
+
+void DecryptView::notNow()
+{
+    naming = replacing = false;
+    namingNote = {};
+    nameBox.setVisible (false);
+    layout();
+    repaint();
 }
 
 DecryptView::~DecryptView()
@@ -217,6 +297,9 @@ void DecryptView::begin (Decrypt::Target target, std::vector<SignalConsole::Patc
     problem = {};
     ended = {};
     levelNote = {};
+    naming = replacing = false;
+    namingNote = {};
+    nameBox.setVisible (false);
     offer = {};
     onKeys = -1;
     hovered = -2;
@@ -296,6 +379,7 @@ void DecryptView::take()
         search->stop();
         restored = true;
         finish ("TAKEN");
+        askName();
         return;
     }
 
@@ -308,6 +392,7 @@ void DecryptView::take()
     restored = true;
     onKeys = -1;
     finish ("TAKEN");
+    askName();
 
     // Ask Torq's model may offer a better name, to use or refuse; the patch is named for its address until then.
     if (auto advisor = makeAdvisor())
@@ -347,6 +432,13 @@ void DecryptView::useOfferedName (bool use)
         for (int m = 0; m < WaveSynth::numMacros; ++m)
             if (offer.macros[(size_t) m].trim().isNotEmpty())
                 synth.setMacroName (m, offer.macros[(size_t) m].trim().substring (0, 16));
+
+        if (naming)
+        {
+            nameBox.setText (synth.getPatchName(), false);
+            replacing = false;
+            namingNote = {};
+        }
     }
 
     offer = {};
@@ -757,12 +849,20 @@ void DecryptView::layout()
     }
 
     // The offer of a name, under the panel's figures.
-    useChip = refuseChip = {};
+    useChip = refuseChip = saveChip = laterChip = {};
 
     if (offer.name.isNotEmpty())
     {
-        useChip = { panel.getX() + 16.0f, panel.getBottom() - 92.0f, 64.0f, 24.0f };
+        useChip = { panel.getX() + 16.0f, panel.getBottom() - (naming ? 214.0f : 92.0f), 64.0f, 24.0f };
         refuseChip = { useChip.getRight() + 8.0f, useChip.getY(), 64.0f, 24.0f };
+    }
+
+    // Take's name: the box, then Save and Not Now (Replace and Keep Typing when the name is taken).
+    if (naming)
+    {
+        nameBox.setBounds (juce::Rectangle<float> (panel.getX() + 16.0f, panel.getBottom() - 158.0f, panel.getWidth() - 32.0f, 26.0f).toNearestInt());
+        saveChip = { panel.getX() + 16.0f, panel.getBottom() - 106.0f, replacing ? 84.0f : 64.0f, 24.0f };
+        laterChip = { saveChip.getRight() + 8.0f, saveChip.getY(), replacing ? 108.0f : 84.0f, 24.0f };
     }
 
     // The chain's strip: Play, the signal, then every link, each as wide as the room allows. Past
@@ -871,6 +971,28 @@ void DecryptView::mouseDown (const juce::MouseEvent& e)
     if (useChip.contains (p) || refuseChip.contains (p))
     {
         useOfferedName (useChip.contains (p));
+        return;
+    }
+
+    if (naming && saveChip.contains (p))
+    {
+        saveName (replacing);
+        return;
+    }
+
+    if (naming && laterChip.contains (p))
+    {
+        if (replacing)      // Keep Typing: back to the name
+        {
+            replacing = false;
+            namingNote = {};
+            nameBox.grabKeyboardFocus();
+            layout();
+            repaint();
+        }
+        else
+            notNow();
+
         return;
     }
 
@@ -1477,8 +1599,24 @@ void DecryptView::drawPanel (juce::Graphics& g)
     }
 
     const auto& t = search->getTarget();
-    text (g, "signal  " + (t.pitchHz > 0.0 ? noteName (t.note) : juce::String ("no pitch")) + "  " + juce::String (t.audio.getNumSamples() / rate - (t.decays ? silenceAfter : 0.0), 2) + " s  dry" + (t.decays ? "  dies away" : "")
-             + (clipName.isNotEmpty() ? "  " + clipName.substring (0, 18) : juce::String()), x, juce::jmax (y + 8.0f, panel.getBottom() - 118.0f), 10.5f, Theme::dimText);
+
+    if (naming)
+    {
+        text (g, "KEEP IT", x, panel.getBottom() - 176.0f, 11.0f, Theme::good, juce::Justification::centredLeft, true);
+        text (g, "a name saves it under Decrypted", x + 62.0f, panel.getBottom() - 176.0f, 10.5f, Theme::dimText);
+
+        if (namingNote.isNotEmpty())
+            text (g, namingNote.substring (0, 46), x, panel.getBottom() - 120.0f, 10.5f, replacing ? Theme::accentLight : Theme::danger);
+
+        drawChip (g, saveChip, replacing ? "Replace" : "Save", Theme::good, true, Theme::textStrong);
+        drawChip (g, laterChip, replacing ? "Keep Typing" : "Not Now", Theme::lineStrong, false, Theme::dimText);
+    }
+    else if (namingNote.isNotEmpty())
+        text (g, namingNote.substring (0, 46), x, panel.getBottom() - 88.0f, 10.5f, Theme::good);
+
+    if (! naming)
+        text (g, "signal  " + (t.pitchHz > 0.0 ? noteName (t.note) : juce::String ("no pitch")) + "  " + juce::String (t.audio.getNumSamples() / rate - (t.decays ? silenceAfter : 0.0), 2) + " s  dry" + (t.decays ? "  dies away" : "")
+                 + (clipName.isNotEmpty() ? "  " + clipName.substring (0, 18) : juce::String()), x, juce::jmax (y + 8.0f, panel.getBottom() - 118.0f), 10.5f, Theme::dimText);
 
     if (offer.name.isNotEmpty())
     {

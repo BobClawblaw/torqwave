@@ -101,6 +101,24 @@ public:
     /** The search has ended and the view holds its last progress (it takes each on the message thread, after the search). */
     /** For tests: the peak of the matched note, as the keys play the patch last put on them, in dB (Decrypt::auditionDb when levelled). */
     float lastKeysDb() const noexcept                             { return keysDb; }
+    /** Take's name: after Take the panel asks for a name, the patch's "Node" name there to type
+        over. Save (or Return) keeps the patch as one of the user's own presets under it, listed in
+        the synth's Decrypted category (DecryptedPatches); a name one of the presets has asks before
+        replacing it, and an empty name or a factory patch's is refused, with the reason. Not Now (or
+        Escape) leaves the patch on the keys, unsaved. Nothing waits on the answer. */
+    bool isNaming() const noexcept                                { return naming; }
+    juce::String nameTyped() const                                { return nameBox.getText(); }
+    void typeName (const juce::String& name)                      { nameBox.setText (name, false); }
+    /** Save: true once it is saved; false when it asks first (a taken name) or refuses (see nameNote). */
+    bool saveName (bool replace = false);
+    void notNow();
+    bool isAskingToReplace() const noexcept                       { return replacing; }
+    const juce::String& nameNote() const noexcept                 { return namingNote; }
+    juce::Rectangle<float> saveNameBounds() const                 { return saveChip; }
+    juce::Rectangle<float> notNowBounds() const                   { return laterChip; }
+    /** Told when a patch has been saved (the presets bar and the patch list then show it). */
+    std::function<void()> onPatchSaved;
+
     /** For tests: how many sounds the page has played since the sound on it arrived, and what it says of a sound it refused. */
     int playsSinceSound() const noexcept                          { return plays; }
     const juce::String& refusal() const noexcept                  { return problem; }
@@ -224,7 +242,11 @@ private:
     int hovered = -2, onKeys = -1;                   // -2 nothing under the pointer, -1 the middle
     float sweep = 0.0f, shownLock = 0.0f;
     bool motion = true, dragOver = false, tablesOnly = false;
-    juce::TextEditor words;
+    juce::TextEditor words, nameBox;
+    bool naming = false, replacing = false;          // Take's name is being asked for; the name is taken, and Replace is asked
+    juce::String namingNote;                         // why a name was refused, or where the patch was saved
+    juce::Rectangle<float> saveChip, laterChip;
+    void askName();
     Decrypt::Advisor::Name offer;
     juce::uint32 offerFor = 0;
 

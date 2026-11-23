@@ -270,7 +270,8 @@ juce::String stepSound (juce::AudioProcessor& p, juce::Component* editor, int by
     if (auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (&p))
     {
         const auto loaded = synth->stepPatch (by);
-        return loaded >= 0 ? WaveSynth::factoryPatches()[(size_t) loaded].name : juce::String();
+        return loaded >= 0 ? WaveSynth::factoryPatches()[(size_t) loaded].name
+                           : synth->isBrowsingDecrypted() ? synth->getPatchName() : juce::String();   // one of the user's Decrypted patches
     }
 
     if (editor != nullptr)
