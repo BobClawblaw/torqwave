@@ -1,44 +1,44 @@
 Init|Init|18034492c25894ce
 Bass|Hydraulic Maw|d5c32894196c142a
-Bass|Ferrous Yawn|aedee3a8fb74b110
+Bass|Ferrous Yawn|266fa5508a72a984
 Bass|Turbine Throat|2c12efc86fe0d3ac
-Bass|Slag Wobble|efe2f7b696876796
+Bass|Slag Wobble|0e9036a20182f4ac
 Bass|Magma Pulley|1d2c98d5e5f5c879
-Bass|Rotor Gnash|1314bef08f5b68ec
+Bass|Rotor Gnash|6d55ae1dd578b918
 Bass|Sulphur Choke|67e5b91eb5c4fdd6
 Bass|Piston Howl|99529b1b95b525f4
-Bass|Tar Siren|e24e5b0cfaf4b73c
+Bass|Tar Siren|571825969dc7dac4
 Bass|Cinder Mandible|8c246a3046527360
 Bass|Riveted Snap|8ac33d9833667d50
 Bass|Torque Fang|9aa34120f35b7239
 Bass|Spark Gap|1cde538e809ba86c
 Bass|Clamp Jaw|e592095c48bd7fdc
 Bass|Hot Wire Bass|3f84ce6e986844b9
-Bass|Ratchet Bite|f673f3426bb19cb5
-Bass|Lockjaw Engine|8dfa4b5d7628c5aa
+Bass|Ratchet Bite|478d83ead3ebae3f
+Bass|Lockjaw Engine|f0ed1461e5551c79
 Bass|Arc Furnace|3145bc1a8691dcce
 Bass|Tension Strap|68acec9011333f1d
-Bass|Bolt Cutter|e9006597a09ad2da
+Bass|Bolt Cutter|263105494228c322
 Bass|Pylon Bloom|af2a6840a047326f
 Bass|Grid Pump|9629a60e0859fc10
 Bass|Strobe Saw Bass|b57a7e4643660d1f
 Bass|Concourse Throb|816532ebdcf2af3a
 Bass|Afterburn Unison|4b655888c132347f
 Bass|Velvet Piston|a4761e6931282e8c
-Bass|Neon Stack Bass|1670340652201294
+Bass|Neon Stack Bass|b4ebe1fe416cc3e8
 Bass|Treadmill Bass|62533a8473720597
 Bass|Bulkhead Swell|ed324dd772f1032d
 Bass|Ribbon Throb|4f6db951d5499095
-Bass|Mouth Of Iron|b4f1110a4396c280
-Bass|Yammer Bass|86ad804bda690e55
-Bass|Formant Furnace|2095f4ceac67cc70
-Bass|Chatter Valve|e6ae76bcaf815795
-Bass|Gargle Line|25a275053c25214b
+Bass|Mouth Of Iron|6e5ed10b470e4368
+Bass|Yammer Bass|26dac987109175d4
+Bass|Formant Furnace|ce7eae68e55c1cdc
+Bass|Chatter Valve|d7e51b5d9f195a49
+Bass|Gargle Line|9ede53b5cdbc3f93
 Bass|Vox Hammer Bass|d7c0cef191b3e730
-Bass|Tongue Twister|9217625a3f00c4e9
-Bass|Baritone Engine|1aadf445f1478885
+Bass|Tongue Twister|b5c71a3499144fb4
+Bass|Baritone Engine|a200d3b6ff779099
 Bass|Wah Crane|0410dd8c3c4b3f11
-Bass|Larynx Press|2014add78fb5bf7c
+Bass|Larynx Press|495d4ab59c820b8c
 Bass|Warehouse Sub|2c4d06c22b150a02
 Bass|Rumble Floor|0bc38a026e95931b
 Bass|Pressure Bass|8fccecc46433659c
@@ -270,6 +270,26 @@ Bass|Western Throat|0d539336c64e0e8b
 Bass|Wordless Hawser|313c68d358b6da3a
 Bass|Wordless Solenoid|55210955ccd5299f
 Bass|Wrecked Fang|791bf7340a1c17e4
+Sub|Bedrock Growl|f384273cff740de2
+Sub|Mantle Wobble|3cb2349c430e8196
+Sub|Magma Floor|2145c4cb6a0d2256
+Sub|Fault Line Hum|c2af6bbf09731fc1
+Sub|Caldera Thump|020a6f99cdc43850
+Sub|Pile Ram Sub|e838cf48153d070d
+Sub|Seismic Tick|aeba4737252efef2
+Sub|Anvil Floor|0c083d19e8c86059
+Sub|Sounding Charge|884052d14d505c6a
+Sub|Rivet Floor|de386942c508851b
+Sub|Undertone Pump|c983b5f125dc9354
+Sub|Ground Swell Gate|8083ca1149434158
+Sub|Pressure Floor|6c1c9a6cba4da02f
+Sub|Ballast Breath|5b8108260219bf21
+Sub|Lowland Throb|6058b178e466c512
+Sub|Cavern Vowel|fb9e49cdb55265af
+Sub|Crypt Murmur|79a2653898c2d0b6
+Sub|Catacomb Chant|646a6e41d8a67cda
+Sub|Sump Gargle|b8ea9e76245a985d
+Sub|Charnel Hum|99e7909cef013fbc
 Sub|Bare Shiver|13d447810481c0cf
 Sub|Blackened Flick|29261d694927933a
 Sub|Blackened Keel|17a5e723ab43f7cd
@@ -294,6 +314,46 @@ Sub|Terse Slump|0d5b8e90e38043df
 Sub|Terse Tick|0417cef90a03e119
 Sub|Tight Heave|e6935caa3a29fc79
 Sub|Tight Mass|bbee338fa5a08996
+Reese|Undertow Gnash|9aed3feac2757190
+Reese|Tidal Mangle|0828922683e835fd
+Reese|Abyssal Hinge|fe83cec5dfc145a4
+Reese|Slurry Phase|ff105915328108cd
+Reese|Grinding Current|f4976e09afeba025
+Reese|Bathyal Churn|708ff0da74855dd9
+Reese|Keelhaul Fold|1b9b0f182d2066f6
+Reese|Rip Current Maw|ef8aef1e315fea8b
+Reese|Leviathan Gear|9df95b24a074e1f4
+Reese|Trench Spiral|f941a616ec72337a
+Reese|Hawser Sync|a428e5110e28bae7
+Reese|Cable Snapper|47b31539de58be34
+Reese|Tensile Moan|7e0cecffae2cfc8b
+Reese|Winch Bite|6af20c4459016a05
+Reese|Gantry Lash|661108c6650670d2
+Reese|Anchor Spark|6c7522ecbe23b535
+Reese|Mooring Fang|471b281f2394f403
+Reese|Bowline Shear|6495b94f67cbfb7f
+Reese|Ballast Arc|30b7e542465be4c6
+Reese|Riptide Clamp|081b1083ff814492
+Reese|Tow Rope Pump|584b65c10fc87130
+Reese|Tidal Bellows|b124f8fb093cdc91
+Reese|Siphon Throb|57d4482497b546f7
+Reese|Maelstrom Gate|795af95d2e014d05
+Reese|Seiche Pulse|be08c7005a8459ff
+Reese|Bore Tide|3af4c7f160cd9c4b
+Reese|Wake Turbine|a0f6ae29635bb1a0
+Reese|Flood Engine|f772a084c889973b
+Reese|Bulkhead Throb|3f75e35ad4ecf1d2
+Reese|Brine Stream Drag|11eca8deeeddc6f4
+Reese|Drowned Chorus|7b503279a13b88bf
+Reese|Silt Mouth|f336ed10e18729b8
+Reese|Kraken Vowel|bdb4a99be8db4cdd
+Reese|Bilge Choir|0a4be1fea7b18477
+Reese|Abyss Gargle|f8941390d8579992
+Reese|Sunken Cantor|115e23ca9cd2b8a5
+Reese|Moaning Keel|7c883ad4bdf1648a
+Reese|Mudflat Oracle|017b6eb92a35c7ba
+Reese|Benthic Murmur|278f6417155afd0c
+Reese|Wreck Liturgy|347d33f5738c1fc4
 Reese|Abyss Reese|2b0d2fb2009abfae
 Reese|Tar Reese|ae07611c922e8713
 Reese|Corroded Reese|801b015fe7ebf866
@@ -387,6 +447,46 @@ Reese|Terse Churn|64bba3772e4cbfff
 Reese|Tight Scarab|7e0b20986538cbc0
 Reese|Twisted Spout|fcf8ddb8a94c59b5
 Reese|Zone Purr|8fe676c446a9d45b
+Acid|Caustic Gnaw|77c6fb1fc2432d5e
+Acid|Lye Serpent|8768843c345932df
+Acid|Etchant Howl|68272e2683465a6d
+Acid|Pickling Grinder|666e0bcfe4f6aa1b
+Acid|Vitriol Coil|a566bbcbb700a2d8
+Acid|Bleach Throat|a5a9bffc2607f5d7
+Acid|Sour Mandible|27eab7f93853da55
+Acid|Rot Vat|423a55c854fb0bd7
+Acid|Fester Pump|8301a4da44a88c87
+Acid|Solder Squelch|bb54d1448f70da4b
+Acid|Galvanic Bite|ef460c130feee76e
+Acid|Electrode Drip|01ea0bbb3e0d2246
+Acid|Anode Spit|40c101a9f04c4270
+Acid|Lancet Arc|393a7d3773d26679
+Acid|Corrosion Probe|712d55770a4cbe0c
+Acid|Wire Brush Acid|f1e945ff67d4a81e
+Acid|Mordant Spark|edbb859e465bafb1
+Acid|Brine Stampede|cbf5e875fcdd5628
+Acid|Caustic Choir|b0e8ea92013e3a44
+Acid|Chlorine Engine|fe461dff92413f39
+Acid|Swamp Ratchet|034cdcd782a28a2e
+Acid|Effluent Wave|fb2a7042cc731c08
+Acid|Sludge Carousel|0a96a7a1e47884e2
+Acid|Phosphor Tide|01dc3ed10492266e
+Acid|Venom Treadmill|e11d21399f2e3bdf
+Acid|Bromide Haze|e99b98a126c81e0f
+Acid|Pickle Press|d19fd479d4801678
+Acid|Blister Wheel|dcdf3c9fceff824f
+Acid|Gurgling Vat|a167d0bb4d97eb95
+Acid|Tongue Of Lye|4720f0d3c063ae7e
+Acid|Blather Squelch|ae8e3c37e24a6120
+Acid|Wah Corroder|4ae348bd5a05a057
+Acid|Larynx Acid|2a0f1702bdf46f3a
+Acid|Spittle Formant|fe1a0373be9c5102
+Acid|Oracle Of Brine|a1933c0f36fca14d
+Acid|Chewing Diode|01c7ab4cbc6649a7
+Acid|Sizzling Larynx|4155ae4817dc3b44
+Acid|Rasping Siphon|8ff7ac436b392624
+Acid|Mumbling Etch|4afd8c6d92350931
+Acid|Yowling Reagent|3023ece3855510a2
 Acid|Acid Corrosion|f20791e540e0e006
 Acid|Square Acid|4814da6a5bcde317
 Acid|Acid Scream|a6cbbbc65fb828ac
@@ -482,6 +582,48 @@ Acid|Sullen Diode|712fe267ff79305f
 Acid|Tight Pin|4975311c70d6c804
 Acid|Voiceless Tincture|79f37a05850f306f
 Acid|Wasteland Gel|431ba7056cd538f5
+Lead|Voltage Scream|97496c1464291e18
+Lead|Folded Halo|b9f40ab7e7adb369
+Lead|Razor Siren|e9288f205adaddb1
+Lead|Ion Whip|0cfb57c9fc4f5ac5
+Lead|Wire Saint|6883ad156dba9b19
+Lead|Feedback Hawk|41bfc99872bd142d
+Lead|Static Comet|699a607db5d0ea85
+Lead|Hex Wail|3f29bf806d3e7392
+Lead|Live Wire Lead|ddbecef71652a3e9
+Lead|Solar Flare Lead|1af5c4a1ec8a09a7
+Lead|Cantor Lead|d36059faafe9ea69
+Lead|Talking Torch|2c8e93aab6a79a4a
+Lead|Oracle Throat|afb3d4629f2d23d3
+Lead|Muezzin Wire|2084b2f0f00e5e00
+Lead|Gospel Engine|2525f75b6bcacb99
+Lead|Larynx Lead|8567b9f6491515e3
+Lead|Phantom Aria|f3e302bf04f2ee9c
+Lead|Sermon Saw|18b867f658d28838
+Lead|Mantra Line|5d6b4709add3817f
+Lead|Siren Psalm|74d8af847eed74a2
+Lead|Hollow Chant|c762253e74c56664
+Lead|Skyline Stack|6a459b716212a48d
+Lead|Strobe Anthem|2bb45824e27c1590
+Lead|Victory Lap|37ae73de02f974e5
+Lead|Laser Choir Lead|f35d418795debd5c
+Lead|Rave Torch|712ca1e2b80b20a3
+Lead|Wide Signal Lead|5b0266076243f4e7
+Lead|Hyperion Lead|4cd6ec210f8b53a1
+Lead|Gate Crasher Lead|81727783584544e1
+Lead|Supernova Lead|420b9c93b796fbc8
+Lead|Prism Saw Lead|fb42006b063c8aec
+Lead|Midnight Arena|80a69a5009b4105a
+Lead|Crystal Engine|137a3601da5ddafa
+Lead|Chrome Kestrel|3e427b43ead595e7
+Lead|Glass Harpoon|704533d40663b614
+Lead|Mercury Thread|c20f61ab043b73bb
+Lead|Tungsten Bell Lead|99d6adec7c8bd88e
+Lead|Ice Lattice|b42c47377a9cdcdd
+Lead|Titanium Flute|ce0b9885a6f5afc1
+Lead|Frostbite Lead|5d1345caf4d2df4a
+Lead|Mirror Bell Lead|062afa96948b57a9
+Lead|Anvil Spark Lead|18bf448cb4b50809
 Lead|Siren Burn|c897d6848a1901df
 Lead|Mercury Lead|433fcd3fc3ccfb1e
 Lead|Feedback Wire|46f781a3a876064f
@@ -629,6 +771,46 @@ Lead|Waxen Wail|8ba3486bf9e30d40
 Lead|Western Howl|0426d2eef04cdb88
 Lead|Western Strand|48988307d3cc2798
 Lead|Wordless Chanter|be93649a339d85b1
+Stab|Furnace Clamp|bdc1d5000e0d988c
+Stab|Slag Chord Hit|d506a61e72d47e40
+Stab|Gnarled Rivet|2e9f0ed0a66456c6
+Stab|Corrosion Jab|1447f434a1e25f4a
+Stab|Mauler Brace|d53321b6c159d3e3
+Stab|Tarpit Knuckle|5d3ba0b8f76f36a0
+Stab|Lathe Snarl|03418a9c8879ebfa
+Stab|Scrap Hammer|9f5540feed6a2bdb
+Stab|Rust Mandala|941d78f153d76fca
+Stab|Ore Crusher|4eed6dd6a2f24434
+Stab|Voltage Clamp|144d6758f50eca66
+Stab|Arc Weld Stab|e91d777bc0b640e8
+Stab|Strike Plate|b4563a30bed3a3ed
+Stab|Spur Gear Hit|09cf9b5010b50ddf
+Stab|Flint Spark Chord|39c67e175188e0d1
+Stab|Coil Discharge|74fcb4d11e8a926e
+Stab|Bitter Shrapnel|636484ba61dfa464
+Stab|Ignition Bar|1a59c00780641c8d
+Stab|Piston Spark|0377bce104b65bd5
+Stab|Cleaver Stab|0f4e2b4cbade6b79
+Stab|Strobe Choir Stab|60ee4f48e751999d
+Stab|Pressure Chop|04efe01f4030e605
+Stab|Rave Bulkhead|2a48b7397f9898d8
+Stab|Dub Signal Stab|3e772086a53c96bb
+Stab|Turbo Gate Stab|0332ecd4b2a5aca4
+Stab|Grid Shimmer Stab|754f9226ff8b9dd4
+Stab|Reactor Pulse Stab|f135f63a8018bba7
+Stab|Warehouse Bloom|f29c3885fd93b8cd
+Stab|Stomp Stack|f652af336a03037a
+Stab|Tidal Lock Stab|230b1631e9225d6d
+Stab|Jaw Brace Stab|5c7e9c9b41c131d0
+Stab|Glottal Press|751d2e934b4f8836
+Stab|Oracle Hit|3d2da2133d879eb7
+Stab|Chant Ratchet|d4e2f990ff8dbd43
+Stab|Throat Gasket|9c0b2739c2bc84bc
+Stab|Speaking Rivet|bd903dabe3fee077
+Stab|Murmur Crate|70bc7d1fd1a6e8e6
+Stab|Vox Breaker|a361b4f885bc872e
+Stab|Cathedral Jab|50b577605281fe40
+Stab|Gargle Valve|f2e206e07b057e1e
 Stab|Dub Chord Stab|a89147dae8358e06
 Stab|Minor Stab|4127f3126d9340b0
 Stab|Metal Stab|b1ae16f968efec68
@@ -763,6 +945,46 @@ Stab|Vicious Yell|e6fc9362bb07211d
 Stab|Violent Call|a4620e19feaaed66
 Stab|Warped Bark|0064e28d3f08a336
 Stab|Warped Blow|b0f9d7cb8e2b173f
+Chord|Smelter Chord|da8265a0bf540408
+Chord|Iron Lung Chord|139861353ff1769a
+Chord|Blast Door Chord|f0d6b9f77fc84d4a
+Chord|Groaning Truss|53f56b45493302a3
+Chord|Bunker Organism|eed56940436fd140
+Chord|Seismic Triad|03b741c4cf9f5294
+Chord|Pylon Choir|b6b8400652dda187
+Chord|Dredge Minor|2daf95bb31bafe64
+Chord|Lurching Ninth|ae213ea43a21d671
+Chord|Kiln Swell Chord|aba3cd6105dabb3e
+Chord|Tungsten Chord|fe25bbbe17492f39
+Chord|Signal Flare Chord|db581c790ff4edc3
+Chord|Razorline Sus|ee6dc3742b7e45a5
+Chord|Magnet Chord|f016869a004f5333
+Chord|Glint Minor Ninth|c086e2e1ed1d9f1c
+Chord|Wire Harness Chord|bd0bcb3b16fc1463
+Chord|Neon Rail Chord|ed0fb516de53be84
+Chord|Gantry Seventh|aa2befe77b928e01
+Chord|Sparkline Fifths|46095034c2c9fe62
+Chord|Transformer Hum|9fc301fb012e5e72
+Chord|Sidechain Cathedral|d9ea58931653f07a
+Chord|Trancegate Minor|227c4175fbcc3033
+Chord|Pump Room Chord|c77cd42a1de63871
+Chord|Drift Lattice Chord|bd0bede07f902d50
+Chord|Shutter Chord|af423a4d4ff949b9
+Chord|Exhaust Stack|943e25124b8b8412
+Chord|Floodlight Chord|78db807344d1aae4
+Chord|Conveyor Echo Chord|dbf0926fb9039cdb
+Chord|Heatwave Stack|23ef192923023a4a
+Chord|Ratchet Halo Chord|683f23cd7493d9ef
+Chord|Hymn Of Rivets|edf31d04fd28e358
+Chord|Mouthpiece Chord|001d3f5a3defe542
+Chord|Wah Foundry|bc18eb9b0c8350c5
+Chord|Psalm Machine|b127c430fa98ff73
+Chord|Gutter Chorale|4a20a4e778393c1b
+Chord|Vocoder Grid|dba1972bdf8ed9d3
+Chord|Exhale Chord|57989888e91c1021
+Chord|Tongue Engine|e6616bc0aacd5f7b
+Chord|Votive Ninth|0e26f3e3624dcfaa
+Chord|Bellows Liturgy|9cebcffcb82b8300
 Chord|Adrift Trance|75c5142da40dce78
 Chord|Banished Dulcimer|c23ad6ef3d2cbf21
 Chord|Bruised Oath|85d1c1502b9bd2ec
@@ -823,6 +1045,46 @@ Chord|Violet Zither|a5571a0348eecc0c
 Chord|Western Daydream|5185bb19c3f915cc
 Chord|White Cittern|b499ade00e3b54eb
 Chord|Zone Vow|6b1c9de6a20b8246
+Pluck|Rivet Snarl|9fc0853df3cd3a50
+Pluck|Gristle Pick|3f97bfbdf2e6db6b
+Pluck|Clamp Bloom|43fad38915ceef6c
+Pluck|Scrap Lyre|f88af4d3723783fa
+Pluck|Fang Ratchet|d7fadc7f2dbac54c
+Pluck|Molar Twang|2bb4e9696cf059fc
+Pluck|Cinder Plectrum|5c1308dfaa008d8a
+Pluck|Bolt Spitter|1e20aa3af5c27ff4
+Pluck|Ash Gnaw|ad0e14b100168e31
+Pluck|Kiln Flick|d86d9675212b72c2
+Pluck|Spark Gavel|652635203e60a35b
+Pluck|Arc Needle|c22dae7916bb24d0
+Pluck|Welder Tick|9494992408df5c72
+Pluck|Chrome Lash|1c9bb2b71eb612d2
+Pluck|Ion Snap|4bb2efb813653dbb
+Pluck|Flint Strike|30bd7b794c588320
+Pluck|Tesla Pick|6290630e82ff345d
+Pluck|Crackle Fuse|8f53401c344df057
+Pluck|Hex Prong|101b9b02af268b21
+Pluck|Glint Torque|81c6a45f057a09e4
+Pluck|Gantry Pulse|5d5d5487dbdf005e
+Pluck|Crowd Shiver|97663edc40983f69
+Pluck|Stack Hammer|3df0de309ba0a4d6
+Pluck|Neon Gantry|eb9d57e8d8791d15
+Pluck|Swarm Ledger|85dae5200d6744de
+Pluck|Strobe Mantle|9ca861b7bc14d106
+Pluck|Glass Concourse|a1f87d16982af332
+Pluck|Riot Shovel|586e0687d1bd6286
+Pluck|Turnstile Bloom|d44684c10ed4eb8f
+Pluck|Ferro Cascade|d63733b2511e3694
+Pluck|Mouth Pick|8ddef32356c3c6aa
+Pluck|Gullet Tap|d8265f4a9d75cd47
+Pluck|Tongue Wire|d1bf6f494c9851b8
+Pluck|Choir Shard|f42526d4358eadc3
+Pluck|Larynx Click|3856cfecd5820fb2
+Pluck|Hollow Diction|884481ed3dddbca8
+Pluck|Gargle Pin|61d2d63f2ec8e49d
+Pluck|Murmur Latch|6773517e54b91295
+Pluck|Syllable Spike|9e300395c6e93b13
+Pluck|Sibilant Prong|cdc7a618dcd7726c
 Pluck|Black Pluck|206ba1dca2f20e20
 Pluck|Glass Shard|d365c127077d1ba0
 Pluck|Wire Pluck|bfe33e40bf0534c8
@@ -932,6 +1194,46 @@ Pluck|Umbral Dot|15a34cbffcf8a042
 Pluck|Vicious Hush|047ecae8101ac4b7
 Pluck|Zone Fibre|38f901c7bcd18022
 Pluck|Zone Filament|b815321df167b6d7
+Arp|Smelter Ladder|37983054a4d00904
+Arp|Gnashing Stair|66c533aeb5f0618d
+Arp|Crucible Spiral|90e9c774c35960a4
+Arp|Scrap Carousel|58ddb8c271da6080
+Arp|Ferric Cascade|6428dfb94e02a382
+Arp|Mangle Wheel|5ec31c5f41a2351a
+Arp|Ingot Tumbler|4f10b3d396713ba3
+Arp|Bruiser Orbit|e0e8c38576ae2864
+Arp|Clinker Cascade|0f9ab3adafb03ddc
+Arp|Rebar Twister|afa9bdc3d58c7ecf
+Arp|Spark Ladder|f973a3fd2130d9ad
+Arp|Filament Run|119ecfba6a3ee29e
+Arp|Rivet Gun Run|f6409ceeefbe599d
+Arp|Glint Escapement|587f6f7a17b3de25
+Arp|Ohm Staircase|8304b78fb720ef7b
+Arp|Pincer Run|12e5406c90215c16
+Arp|Zinc Clockface|82743e27acb826c1
+Arp|Cathode Skitter|fbe239f7c04a68cd
+Arp|Torsion Spindle|f7dfef22cf7bb5de
+Arp|Fuse Box Run|ca9f0d23cf0a3960
+Arp|Grid Cascade|89e2665083f79068
+Arp|Turbine Flock|0de8575a4ca420a0
+Arp|Exhale Wheel|12cebb67b3857caa
+Arp|Assembly Rush|c72c498e10173f5e
+Arp|Pressure Carousel|c8921a3995212143
+Arp|Sodium Fountain|95e0c3725dda1596
+Arp|Riveted Stampede|92783f0e11dd4094
+Arp|Vapour Lattice|bf1398127a5fdc7e
+Arp|Ratchet Choir|cc78a382d528d5cd
+Arp|Halogen Drift|7621000455570db1
+Arp|Oracle Stair|af0ec30b40181123
+Arp|Murmur Spiral|50548b76bcfee89a
+Arp|Phonetic Wheel|e9a00e6c28f87b68
+Arp|Gargoyle Tumbler|752eb39bb7034ff5
+Arp|Whisper Abacus|62063b6e4826cd8c
+Arp|Glottal Clock|faf95d458fe22027
+Arp|Hymnal Gears|b65c38e418486839
+Arp|Mutter Engine|ae00b8772cfd43d6
+Arp|Prayer Wheel Run|0828b57121b7c3ed
+Arp|Siren Abacus|e43f32cbad23bc49
 Arp|Abyssal Developer|36b0c77378836e7c
 Arp|Adrift Changes|7a656fea052418ac
 Arp|Airless Cascade|aca6d7ce76ce7385
@@ -992,6 +1294,46 @@ Arp|Umbral Developer|97c4a779e2b73193
 Arp|Unholy Salvo|3bc9697c7d2d6e2e
 Arp|Violent Salvo|2b88970a864dc27a
 Arp|Watched Titrant|394612d9bae24da0
+Keys|Burnt Tine Piano|caec1724517a3321
+Keys|Overdriven Reed Keys|2dd6a433a7fff280
+Keys|Rust Clav|28092785e18c4b2b
+Keys|Grinder Tines|f5a4dcdcfcd89290
+Keys|Kiln Lamella|afcbafbf50780991
+Keys|Mangled Upright|bd8dd7558c7dd612
+Keys|Ferric Pluck Clav|8e36b02436c85806
+Keys|Engine Block Keys|33b404549efd2f2d
+Keys|Hellfire Suitcase|923df94f44a0b2e3
+Keys|Slag Tine Ghost|ad5539ed0b51ca64
+Keys|Hammer Tine|52cf65f9141af347
+Keys|Sync Clav Rig|4e9d58755e303a01
+Keys|Ice Pick Keys|8082d02e0d41bc16
+Keys|Struck Circuit|ae23756dc8f9a7fb
+Keys|Steel Reed Piano|4534e3f30b5bbd92
+Keys|Flicker Keys|4486eb05c55006f6
+Keys|Knuckle Clav|3e1475b2774275da
+Keys|Lamp Filament Keys|764d66a30c47df1d
+Keys|Riveting Keys|9594319e3e0ddc2f
+Keys|Electrode Piano|9eaf70e5f521c62d
+Keys|Sidechain Tines|5b1a050463a5a778
+Keys|Chopped Suitcase|05af5cdb3c240267
+Keys|Wide Grid Keys|878e5ceb2ee67aa1
+Keys|Dub Echo Piano|e6432c16500632cd
+Keys|Pulse Lattice Keys|1a9f2e6f7fdf8026
+Keys|Gate Keeper Keys|0be9a32f36ec5b71
+Keys|Tremor Bench|9558f7ba2de09dde
+Keys|Rave Piano Stack|4a672add985e0771
+Keys|Shutter Clav|f810d63a27f7efc8
+Keys|Hazard Light Keys|05f5da0a0a0b0b52
+Keys|Wah Clav Engine|8966686fb982916e
+Keys|Vowel Tine Piano|e73ffce5029b0fee
+Keys|Mouthing Tines|82428238408e0e82
+Keys|Yapping Clav|322be841823269f4
+Keys|Whisper Keys|2ceffbba89149b80
+Keys|Talking Suitcase|c73c24a20967ba75
+Keys|Gutter Wah Keys|20878a934c4033a2
+Keys|Formant Hammers|0e47a0065845d467
+Keys|Murmuring Piano|d10708c46cf455e2
+Keys|Envelope Filter Clav|40eb8da2fa8bfa45
 Keys|Afterhours Spank|0326cf9e5d7bb19f
 Keys|Attic Manual|a3092941b9302a1e
 Keys|Backroom Bellows|92cd24dc746f16da
@@ -1042,6 +1384,46 @@ Keys|Trapped Squeezebox|eceb8b42ab5a593c
 Keys|Vagrant Cottage|0398a0c8baa4e72a
 Keys|Vigilant Spank|2365c9b67ffe7523
 Keys|Vigilant Toy|475c3bbbcc9960ce
+Organ|Smokestack Drawbars|430536cb52f7650d
+Organ|Boiler Room Organ|bd9a46a27a6ca1c0
+Organ|Scorched Tonewheel|9da8a18d80ccc2ae
+Organ|Pit Organ Snarl|15971df9fda6740c
+Organ|Cracked Manual|6ac5440f7a004c25
+Organ|Sulphur Pipes|60cce15151ac19c4
+Organ|Hammered Console|e1b4dc4ac1abaa53
+Organ|Asbestos Hymnal|16116e583366ec0b
+Organ|Grinding Rotor|5deb76760f214ea1
+Organ|Clinker Organ|6056a0acd344cc24
+Organ|Percussion Relay|73c8976ce4502a0b
+Organ|Switchgear Organ|6a8bdc904526a21a
+Organ|Spark Plug Organ|049e339c45f93fe0
+Organ|Relay Chapel|f5a8bea3bace2e25
+Organ|Tappet Organ|5d0d6592ddc9764e
+Organ|Fused Combo|319fc1aa4811e488
+Organ|Turbine Gospel|dc1cf8448f39d340
+Organ|Ignition Manual|b73c50e69a04edd1
+Organ|Glass Key Organ|d65ece28a9d7651f
+Organ|Ratchet Console|8ed82641532c91d3
+Organ|Warehouse Chop Organ|7d4f5744375d922c
+Organ|Pumping Nave|6d0be0df2e8fd176
+Organ|Gated Parlour Ghost|66c0cba7aa4f730f
+Organ|Strobe Manual|85ee32e46fcdce43
+Organ|House Of Bellows|8721af24b4cff18c
+Organ|Conveyor Organ|30d405110941ea31
+Organ|Rave Organ Riser|366e88e3d0d10424
+Organ|Signal Box Organ|d8aaf99eb078df4d
+Organ|Lattice Swell Organ|28efb093e35bc933
+Organ|Crankshaft Organ|77db895437194b36
+Organ|Vox Humana Machine|67857dbd190c3117
+Organ|Wah Drawbar|8df94e447e8e6de9
+Organ|Choir Loft Engine|864bf8df9b5db227
+Organ|Talking Tonewheel|43420201717d132d
+Organ|Larynx Pipes|b994a41b4c185783
+Organ|Mutter Organ|77c6bc9bc8465ec3
+Organ|Gospel Throat|0693bb0e493899bc
+Organ|Cathode Cantor|61c2eebb0a73aafb
+Organ|Sermon Pipes|f0427e82bfb82628
+Organ|Orator Rotor|a8af1d5a2319a491
 Organ|Adrift Chapel|72adb3914724352d
 Organ|Arctic Swell|00e11411a5647df8
 Organ|Asphalt Absolution|a4b996905bb6df14
@@ -1086,6 +1468,46 @@ Organ|Velvet Treadle|4156a0fbdc058a7f
 Organ|Wary Harmonium|de7a948d958c19b3
 Organ|White Cabinet|58bfbec1e6fb43ee
 Organ|Wordless Console|faffc323685458c0
+Guitar|Scorched Fret|67f55230d38cdc5a
+Guitar|Bonesaw Riff|ee3806092e353c3e
+Guitar|Tarpit Wah|38c4d4891fac3900
+Guitar|Crowbar Chug|cf6ff0686fe16f64
+Guitar|Feedback Maw|ee685e196277e51e
+Guitar|Grinder Lick|5e4483816e47535a
+Guitar|Magma Strings|92d45b1f079461a9
+Guitar|Brimstone Picking|773305789d08046b
+Guitar|Sludge Bender|db98eedaebbeafac
+Guitar|Rust Thrasher|95c294223da891bc
+Guitar|Barbwire Lead|839236f04f163cf9
+Guitar|Live Wire Pick|4025db2eb05588f7
+Guitar|Spur Scraper|ac6b08207fdb550f
+Guitar|Ignition Twang|11cd685bc0dc2379
+Guitar|Gunmetal Solo|2cedbf266419ed17
+Guitar|Arc Strafe|5e20a1aaaf7df2f0
+Guitar|Chainlink Lead|ee7b230926508999
+Guitar|Pickaxe Snap|1374db0b71611714
+Guitar|Lightning Rod|425fa9b341cde78e
+Guitar|Shrapnel Tremolo|c3d4035600d67afb
+Guitar|Gated Power Chord|058b651ea48fc170
+Guitar|Twelve Wire Strum|9f1fdecada2f2ced
+Guitar|Mutepalm Engine|f3dfa7e094a3e87a
+Guitar|Wall Of Amps|d40600a8c645d98b
+Guitar|Ricochet Strum|dd69b78ab3151675
+Guitar|Slapback Choke|cc717b4a356f1f45
+Guitar|Dread Strummer|2c055bb32ac35aa9
+Guitar|Pulse Rhythm Rig|4bad6301778f7e45
+Guitar|Surge Arpeggio|9672d009c0ec5e1e
+Guitar|Bunker Shuffle|9ff3460595c4e80b
+Guitar|Auto Wah Grunt|71209516284da2e4
+Guitar|Talkbox Torch|bc17866ab356a8fa
+Guitar|Cry Pedal Howl|81429c983d833bd6
+Guitar|Throat Riff|e207ac930bab513a
+Guitar|Vowel Fuzzbox|69b11b901efb5d7e
+Guitar|Gossip Strings|d12fca8ca4f7ae7b
+Guitar|Mouthpiece Lead|80217cc8adcfe557
+Guitar|Sneer Picking|961713036dc2e9ae
+Guitar|Wahwah Engine|5f939072da1c1e5d
+Guitar|Lament Wire|cbfb1b8ae11ff2cd
 Guitar|Wailing Fuzz Lead|c0d26d6ce0ab9b71
 Guitar|Swarm Drone|81997b4fd96ead10
 Guitar|Downward Strum|3c7848b89b1e3c5c
@@ -1135,6 +1557,46 @@ Guitar|Void Amp|23bada45f52b4e6e
 Guitar|Void Storm|7aa578c5bcd45b0f
 Guitar|Void Swarm|4c1f0b4bca59a712
 Guitar|Welded Storm|4a1bc28288b1dd0f
+Brass|Foundry Horns|ec290129c2c501bc
+Brass|Rusted Tuba Choir|b05f8dcd923e095a
+Brass|Blastfurnace Section|8c924f1d1cec5c24
+Brass|Cinder Trombones|f82834434fd5648b
+Brass|Gravel Fanfare|22b953ed7b10c547
+Brass|Siege Horn|03eab36349570c95
+Brass|Bellow Of Iron|5e505af73225cbaf
+Brass|Molten Brassline|17f89015ee83293d
+Brass|Barrage Tenors|fd982f66208ec30f
+Brass|Dread Sackbut|f63a52153c6b3203
+Brass|Bark Section|42f0590c53ef9a4b
+Brass|Signal Trumpets|ed76fdfb9384e526
+Brass|Klaxon Brass|6194ad378c4bda6e
+Brass|Edge Brass Sweep|34100f5d90cd709a
+Brass|Spitfire Horns|165d4e3aca72968c
+Brass|Steelworks Brass|e46203f1667f19b8
+Brass|Brazen Engine|4c42d9c079e45a5e
+Brass|Rally Cry Brass|b28c04285fae4d14
+Brass|Ricochet Horns|d601600827078bf7
+Brass|Clarion Spark|be3e7cb6ca2ddc08
+Brass|Pressure Section|7c385ffd01a8ed34
+Brass|Gated Legion|b6a10a596f121406
+Brass|Swell Barracks|ddea63913d8eb6b0
+Brass|Riot Brass Stack|f1d62e45d25e1c78
+Brass|Parade Of Pistons|4802ae665dbe2cb6
+Brass|Engine Room Horns|28461a701b4b09fd
+Brass|Ducking Fanfare|9d0fa5d1cbbb0db6
+Brass|Strobe Brass Wall|9c4a1e68c5664b7d
+Brass|Tidewall Brass|67c94c0b1198a6ff
+Brass|Assembly Line Brass|641faccfeae9c49f
+Brass|Wah Horn Section|ed29fa9d5716591c
+Brass|Throat Of Brass|5e780c8fa0f86ff6
+Brass|Talkbox Brigade|13ab52de7490ad4f
+Brass|Yawning Bugle|1cebaf4b727461b8
+Brass|Muted Plunger|d1dab160e049fab7
+Brass|Chorale Valve|cf9e4ec553265dd5
+Brass|Growling Cornet|889e4ad2c43ee3ff
+Brass|Oration Horns|a5cc6d61aac41301
+Brass|Baritone Murmur|6324ccf756c8dc24
+Brass|Speech Of Bronze|8123320c7335f6a8
 Brass|Abrasive Bray|d67af1fce8536e34
 Brass|Abyssal Guard|294d355736c903e1
 Brass|Acrid Herald|2654141bf381e031
@@ -1184,6 +1646,46 @@ Brass|Vaulted Horn|95da0c35348cbd51
 Brass|Violet Clarion|bf7ef7c161143502
 Brass|Wasteland Fanfare|98c48760e2f96975
 Brass|Weary Bugle|17562c9f73e8be7a
+Strings|Iron Cello|afc9e1485ba41506
+Strings|Rosin Grind|6d33731c341b294b
+Strings|Bowed Girder|d6449a68ab63e8f8
+Strings|Scraped Hull|029b888ed58b3ec7
+Strings|Folded Bow|5f00b8a4a8f00d2f
+Strings|Gutted Viola|55e408b8677e5d27
+Strings|Tension Cable|be61320ebfc08523
+Strings|Rasping Section|dae770d28bdeee9a
+Strings|Barbed Ensemble|191ec58117f5cfba
+Strings|Cable Bow|06046b77f80af338
+Strings|Tremolo Sparks|1ab9758c43791bf2
+Strings|Wire Pizzicato|6d88efedf8fd57b8
+Strings|Steel Spiccato|4a0e4aeae979d638
+Strings|Plucked Rebar|e07476bbff1199a7
+Strings|Snapping Cables|588a263eb461eb39
+Strings|Martele Engine|4335479c84ceb22f
+Strings|Bow Strike Grid|6eece4ac57d67f7c
+Strings|Needle Strings|c857fee63e8a3aab
+Strings|Piano Wire Section|25d9b86c7c3f5425
+Strings|Sync Quartet|91b519314a26cc17
+Strings|Ostinato Engine|8f04ffd9034136e8
+Strings|Pulse Orchestra|3fc81362f5e7e9a3
+Strings|Marching Bows|be9ebdd28fd6204f
+Strings|Gated Legato|117f2c8aa937353f
+Strings|Clockwork Section|facab6fc07cdb881
+Strings|Tremolo Factory|fe28cbe5ae467c4a
+Strings|Driving Violins|861d50091aeaae60
+Strings|Pumping Viola|dbf626104d710800
+Strings|Shuttle Strings|09edad6bbaf7b5db
+Strings|Rhythm Of Steel|50aa9abb3094403c
+Strings|Singing Bows|65737156ad9ebb9a
+Strings|Vowel Violins|6d0f04554d532f37
+Strings|Choral Strings|e58faecdd5102ca9
+Strings|Hymn Of Cables|464c76eb4c84dbd5
+Strings|Mouthed Cellos|6c774de6a2391f29
+Strings|Formant Quartet|8622d05cc7e6cd63
+Strings|Breathing Section|8beb6a6e1a466018
+Strings|Lament Machine|35b2b06059eef359
+Strings|Speaking Viola|a0248a0e87884ae8
+Strings|Chapel Of Strings|e0396c6e593c0ab2
 Strings|Amber Bounce|2024c68264b7b218
 Strings|Bone Nail|f3784415ec5e7411
 Strings|Burnished Section|b63b23a7765d8549
@@ -1229,6 +1731,46 @@ Strings|Vaulted Finger|e6b24423e3aca2dc
 Strings|Wan Bass|70d7db544c2a968f
 Strings|Wary Cello|230e353315a24831
 Strings|Watched Shudder|2077cd7ab0254ba8
+Pad|Furnace Halo|663b605dbbc0370a
+Pad|Rust Aurora|6b0f47cb4a5daf30
+Pad|Smelter Bloom|b884ae2f733dbcf0
+Pad|Bruised Horizon|a88463f0a3789448
+Pad|Coal Seam Glow|6c5b5be66ecca35d
+Pad|Folded Dusk|18ba257d29a9df34
+Pad|Slag Heaven|c3bceeb9820481fe
+Pad|Mirror Furnace|176573d6a894395c
+Pad|Ember Vault|0a742fc705406e4b
+Pad|Oxide Tide|956544c561aa354e
+Pad|Arc Lamp Dawn|a3b865567a3e8f40
+Pad|Welded Sky|f730a55b3350d532
+Pad|Sync Cathedral|b53aa580cf5485b6
+Pad|Voltage Veil|f85057fb20bf188e
+Pad|Filament Rise|8b661e0f5a9bd752
+Pad|Spark Shroud|885cd823a18a7bf6
+Pad|Cobalt Flash|710abaf5f33609f6
+Pad|Tungsten Haze|a1a3554a6a7abe07
+Pad|Static Seraph|c4e6a90f541c107d
+Pad|Coil Bloom|33af372f95057c9f
+Pad|Piston Halo|d7b2917f3f235cfb
+Pad|Gate Mirage|bbbff11f66d1faae
+Pad|Ducked Horizon|0b5fc64b413ba329
+Pad|Strobe Cathedral|8f36941a1c88598e
+Pad|Pulse Fog|cb507a49c72bf034
+Pad|Conveyor Haze|dab0466bb6e2f808
+Pad|Throb Canopy|fdb4c7998c7fe2a0
+Pad|Shutter Glow|1fc15fbefd629717
+Pad|Night Shift Pad|253266e09ce9a413
+Pad|Swell Engine|d09693662551f44d
+Pad|Hollow Cantata|7b9e60ba16b59763
+Pad|Iron Hymn|0b6b14b4fab90d25
+Pad|Vowel Ash|98b122d878854f2e
+Pad|Mouth Of Fog|bd8b3c074751365d
+Pad|Murmur Vault|f673c942931ae8c3
+Pad|Throat Of Glass|c67dd67ede691b69
+Pad|Chant Engine|0f44433beaa5f536
+Pad|Whisper Gantry|1259392f61e59b46
+Pad|Breath Foundry|0afe136a7c313fa8
+Pad|Sermon Haze|d8162f388636ab43
 Pad|Concrete Pad|4da435816434a75a
 Pad|Ashfall|b6530961527b917e
 Pad|Cathedral Of Rust|d2fdfcacf9d1f958
@@ -1383,6 +1925,46 @@ Pad|Weary Gleam|6dc2ad445a527b4e
 Pad|Western Gloom|870fdff89e3f3535
 Pad|Wordless Sigh|e0df467ca774442b
 Pad|Wrecked Gloom|d6ddbe7457b45216
+Drone|Reactor Gut|034d661bf53a2ef1
+Drone|Abyss Furnace|2e4ee03c6588e34a
+Drone|Deep Grinder|f480937ff72eda46
+Drone|Bore Hole Hum|2176df24b6536474
+Drone|Magma Undertow|26c80e274457cc95
+Drone|Crater Moan|f5ff48da1063d535
+Drone|Basalt Engine|ccbbfd696aad58d0
+Drone|Seismic Fold|7ac9dae1948d2369
+Drone|Pit Of Rust|45e64db555d7d56b
+Drone|Leviathan Coil|1132778b5142e6a1
+Drone|High Tension Wire|74f459997c340793
+Drone|Transformer Bleed|f8c6146d55974cc0
+Drone|Arc Furnace Drone|d7065278b82c701a
+Drone|Dynamo Scream|34fce9657f10630f
+Drone|Relay Storm|ebd934f47d654f5e
+Drone|Live Rail|addc11458223d221
+Drone|Ion Furnace|f011ea8bba85d9f3
+Drone|Capacitor Groan|26b26e8cabc6b74e
+Drone|Overload Lattice|ef8fbbd123b08303
+Drone|Static Generator|92312733e428ded0
+Drone|Night Freight|26faba18db3e6bf8
+Drone|Compressor Hall|7ad193e14db0651d
+Drone|Bunker Pulse|a46d9ddcf89dabc5
+Drone|Pump Station|df4aa5fc1f11b3a9
+Drone|Throttle Field|0572a3c272e928c0
+Drone|Cooling Tower|7e1d2191f615aef4
+Drone|Rail Yard Throb|fe9ab4b5cb76ee74
+Drone|Blast Door Loop|3e07d79532bd7437
+Drone|Factory Lungs|e31898d95a2beb8b
+Drone|Beacon Mast Pulse|d1fc6267bb991e6e
+Drone|Monolith Chant|a2f5c4b7230aac8b
+Drone|Catacomb Voice|de04bda4a28cfa59
+Drone|Ossuary Hum|5c5380d4e54e8d91
+Drone|Mantra Machine|6dab0d1395413595
+Drone|Tunnel Prayer|848c1bb434f0f9d1
+Drone|Undercroft Moan|38a795fdc4170b34
+Drone|Crypt Throat|27f1109d3d560288
+Drone|Abbey Of Steel|797a75c509bc343e
+Drone|Silo Choir|1c0cdf9578c6357f
+Drone|Deep Vowel Mass|fb15b0b4d6215ce1
 Drone|Reactor Drone|70dc3c15e4de6bc3
 Drone|Turbine|b3df2abe1d0e75c2
 Drone|Substation|7ea55c1a8bdc3281
@@ -1499,6 +2081,46 @@ Drone|Unlit Cantor|5c3d09c04379d377
 Drone|Vagrant Furnace|c0594071cef90261
 Drone|Vagrant Turbine|f6ce01afbf86db44
 Drone|Vast Hermit|f6c098afde3583fa
+Bell|Foundry Knell|7c4e316e294a633c
+Bell|Smelter Peal|3f234ddcfeb95da2
+Bell|Cracked Carillon|794143da2202372c
+Bell|Gnashing Gong|3f79178b7b197857
+Bell|Slag Tine|e4be3f5a3f232e11
+Bell|Ironwork Bowl|574b43d3f91a7623
+Bell|Hammered Lantern|cfdc5dfa5b18a80c
+Bell|Blister Chime|209c2fc8ae1a199a
+Bell|Rust Belfry|8b840588b56c7cf8
+Bell|Mangled Vesper|892c9b98a929a1ae
+Bell|Anvil Halo|d03a368e0527baad
+Bell|Voltage Tocsin|e46c929de1dcd7b5
+Bell|Glass Detonator|c87a667407f6c951
+Bell|Tungsten Strike|a63bedd7678fd5a2
+Bell|Static Psalm|c3b7f61bcab07154
+Bell|Pylon Bellstrike|503d2f3badd062e0
+Bell|Arcing Vigil|92315a2ecf36d420
+Bell|Spindle Clang|653e800c3c2992e1
+Bell|Cathode Ring|bcf7a87dab58ba64
+Bell|Ozone Toll|1ec5315c0868babb
+Bell|Signal Cascade|0b8029ff7bb94192
+Bell|Relay Chimes|563e44279e7ffa42
+Bell|Crowd Of Bells|dd115b5f3185ef66
+Bell|Morse Belfry|eac577d13bb389a4
+Bell|Prism Stutter|ecf79aad53b6fa01
+Bell|Transit Carol|210ae7ea6859b5b4
+Bell|Mirror Arcade Bells|fc23aa0e05cf6dde
+Bell|Siren Lattice|cb4af6bf7bd7b195
+Bell|Clocktower Pump|4ac9c25a818a02f4
+Bell|Ghost Ostinato|eb401f9356638e38
+Bell|Oracle Bell|872980685417c664
+Bell|Whispering Gong|9df70a41f1cca3fd
+Bell|Chanting Anvil|0d4e26f4e08b4e01
+Bell|Sermon Chime|9a708a2400151e3b
+Bell|Mouthed Tocsin|c0c8c1a3c5453ca7
+Bell|Liturgy Wire|5b06bbd3b217351a
+Bell|Speaking Bowl|f460a3829a695081
+Bell|Yammer Peal|181a76a8fcf8dcae
+Bell|Mantra Disc|0c28330af17063f2
+Bell|Grievance Bell|bef08fc5200392da
 Bell|Cold Bell|f71cffc83883b478
 Bell|Prison Bell|dea930524ce4851a
 Bell|Rusted Chime|ce4c88a1c146c0f3
@@ -1586,6 +2208,46 @@ Bell|Sterile Prism|dcc380ee369a8d65
 Bell|Umber Toll|89e5910f918b840e
 Bell|Vaulted Shield|2917026b658c2a7f
 Bell|Wordless Cauldron|c2a1012fa2fc3737
+Sequence|Foundry Stutter|0fe6f00270a60c5e
+Sequence|Gearbox Snarl|46b94cf2c14828c5
+Sequence|Slag Conveyor|d645ed8c957fff53
+Sequence|Ratcheted Maw|0ac0077b894d9171
+Sequence|Cinder Loom|6aed20550f7e5aa1
+Sequence|Kiln Shuttle|00fa27ffbf8f2923
+Sequence|Hammer Lattice|ce6bae356b27b8fa
+Sequence|Bilge Pattern|d05e5484b01dc021
+Sequence|Rust Escarpment|3f02c228bb2268bf
+Sequence|Coal Gantry|f2913c789302d828
+Sequence|Arc Welder Grid|ba62d926ad6ee716
+Sequence|Tungsten Tick|e1dcc04c5daa0030
+Sequence|Spline Cutter|dde97165c559522a
+Sequence|Lathe Chatter|4ea4ed7fff067ae7
+Sequence|Strobe Rivet|5c7c6e97b68e23a5
+Sequence|Volt Abacus|9b2fb6ed94a1fe25
+Sequence|Shear Pin|728dd077158a3496
+Sequence|Bolt Thrower Grid|9a5854aeb64367d9
+Sequence|Ignition Ladder|ab41a38c56cfa144
+Sequence|Pneumatic Sorter|8d2753a15a32501b
+Sequence|Bellows Engine|1018157eb5d08959
+Sequence|Ventilator Choir|87f1f09caef6b0ff
+Sequence|Turnstile Pump|ee8fe6bc898a787c
+Sequence|Corridor Gate|f03484ad97f37c98
+Sequence|Pressure Hymn|c6d86ed79a121135
+Sequence|Exhaust Ladder|a536d09ae1642336
+Sequence|Signal Tower Pulse|19f138e2a2059d0a
+Sequence|Ballast Swell|74ed0efbb3b6dab2
+Sequence|Dynamo Flicker|12f01532f0644ac4
+Sequence|Pylon Thrum|f914b048ae7ff513
+Sequence|Syllable Press|a8cc2c3caff9a3a5
+Sequence|Telegraph Mouth|9fe03dd97e98557f
+Sequence|Phoneme Mill|3e1df1ea6b5152da
+Sequence|Dial Tone Oracle|6c784d926e0124c2
+Sequence|Gristle Chant|f1fbe93b7abac331
+Sequence|Larynx Relay|64d7925fc18415cd
+Sequence|Ventriloquist Loop|370741fc7431968c
+Sequence|Lisping Cog|6e22e0d107ad69ff
+Sequence|Cantor Gearing|6e581b1f29b62fae
+Sequence|Grinder Gossip|6d8ea0ef27ee3889
 Sequence|Gated Machine|7e80015203243f4c
 Sequence|Trance Gate Industrial|ec721093247c712a
 Sequence|Clockwork|5adf76e4df52bbb0
@@ -1737,6 +2399,46 @@ Sequence|Vigilant Escapement|bb80dc070a1fd1f3
 Sequence|Wandering Register|9ea8fe053e373bc1
 Sequence|Warped Tracer|2bab512b018b2f76
 Sequence|Watched Mesh|cad3fb5f5eedb13c
+Riser|Furnace Ascent|38567bc784d09ac7
+Riser|Gnashing Spiral|a8b9afee77cb716f
+Riser|Ferric Vortex|d57c83ee22555048
+Riser|Scrap Cyclone|35a72f33d5c87ff0
+Riser|Smelter Rise|9c89b577a730a27d
+Riser|Grinding Helix|962437027dc2580e
+Riser|Throttle Bloom|53755c4fb45319f2
+Riser|Cinder Tornado|4b951b6edbafa9ed
+Riser|Rivet Storm|c0a406243e8356ca
+Riser|Magnet Coil|0bd2c883797ed1f8
+Riser|Spark Gantry|2c96d26a9a340f42
+Riser|Arc Welder Rise|7dc1447c90639ac2
+Riser|Voltage Ladder|3f6b5fc5656e3242
+Riser|Ion Climb|b7f15418bc851c30
+Riser|Shear Lift|6ea744c3608da563
+Riser|Coil Arc|ab69e18eec6be107
+Riser|Blade Hoist|004726e5d013dddc
+Riser|Valve Overpressure|eb0fa4d912149064
+Riser|Strobe Ramp|ab74666569af2387
+Riser|Fuse Countup|c9b8ba55b543e081
+Riser|Hangar Lift|45ddab6fd2c3d926
+Riser|Turbine Overture|82dd07da19a617b9
+Riser|Gantry Swell|57a5bd78710ee838
+Riser|Freight Uplift|5dfd147a9cbd3022
+Riser|Floodlight Ramp|41420bc09f2cfd40
+Riser|Signal Flare|2e20311f825437ae
+Riser|Thrust Column|be8e747c4f700530
+Riser|Conveyor Climb|a3f82743f0b37be0
+Riser|Rally Furnace|59ec458830f26119
+Riser|Pressure Front|a1a106d028e72e58
+Riser|Choir Ignition|30593ddddb6aec73
+Riser|Throat Elevator|dc5452abd809038c
+Riser|Siren Larynx|2c4e0c2d45fee4d4
+Riser|Vowel Ascent|e5f3c69f84b3d19a
+Riser|Oracle Ramp|e6b967ddb8087530
+Riser|Mouth Of Steam|5c1ae947a0fe745d
+Riser|Howl Shaft|9112cdba93c6f118
+Riser|Speaking Furnace|0802bb9bbb842497
+Riser|Gasp Ramp|9d79f40eedad95a5
+Riser|Banshee Hoist|e8f011408559648c
 Riser|Tension Riser|f935e342e4255438
 Riser|Siren Climb|ff551c21f16799f6
 Riser|Falling Note Ramp|45a33bf92de608d4
@@ -1822,6 +2524,46 @@ Riser|Terminal Rattle|0769e83f7bc071d1
 Riser|Tundra Drain|ea54c074ad9db118
 Riser|Violet Drain|80bd29df3c496645
 Riser|Wrecked Hoist|5f4528cae91a1bc6
+Impact|Tectonic Groan|c975e05db7e32442
+Impact|Bunker Collapse|8429b234b2784fea
+Impact|Hull Breach|be989f82b8ae975e
+Impact|Leviathan Fall|ef1b2899c0bd2e9e
+Impact|Iron Avalanche|b04ac7ce6cc03208
+Impact|Crater Maw|9c1ca1fb63e29283
+Impact|Dredge Slam|50999f0330639819
+Impact|Monolith Drop|7c4d3853b5f0dce3
+Impact|Abyss Fold|bc0a48ca716bc619
+Impact|Quarry Blast|47694ee6731ff81c
+Impact|Railgun Strike|759f68b1156f6efb
+Impact|Thunder Arc|10a0eeb352ea196d
+Impact|Orbital Lance|9a1c0eacab79c263
+Impact|Shockwave Crack|877f445926a8b328
+Impact|Detonator Snap|720c0dbb9252c97a
+Impact|Kinetic Spear|13b455900ceeda0b
+Impact|Blast Door|327229ea1cd2455e
+Impact|Lightning Anvil|ccf3970a6b108957
+Impact|Hammer Of Static|dd8a1aabbba047de
+Impact|Gauss Recoil|c40f506bc7be02ab
+Impact|Siege Pulse|21186c75a9dc599c
+Impact|War Drum Echo|56726b3c1a3fbbd2
+Impact|Barrage Gate|ab841c588ce4ac51
+Impact|Titan Stomp|df396e7b4eec04f3
+Impact|Engine Room Pound|6cd5129c77e29d0b
+Impact|March Of Iron|fa028743f42ed905
+Impact|Artillery Roll|aa09f6b941570659
+Impact|Collapse Echo|52f86363a52707ba
+Impact|Stampede Gate|97415ab1b229b183
+Impact|Bombard Throb|e88f06ebf74bba78
+Impact|Colossus Roar|deefb56d7dcccf1b
+Impact|Giant's Breath|3c73939258be568f
+Impact|Cathedral Groan|d6ec61be6bba36d6
+Impact|Maw Of Night|55a11bf932db1436
+Impact|Furnace Howl|bbccbd21f08a9cb5
+Impact|Behemoth Moan|46f587c9b21ba470
+Impact|Vault Voice|9b54e9481e8be162
+Impact|Choir Of Rust|dfafb96318619ad3
+Impact|Chasm Voice|2dc52eea9839a4e2
+Impact|Titan Vowel|331d084df8a404f8
 Impact|Low Boom|d20942969645b8fc
 Impact|Steel Door|1f4c7a365ac2cc91
 Impact|Hydraulic Slam|07e7b99c7784200b
@@ -1923,6 +2665,46 @@ Impact|Tagged Shutter|eab4c1451173706b
 Impact|Trailing Judgment|6a3f5bcd94ed229d
 Impact|Violent Lid|e698769d0d656460
 Impact|Wordless Clang|45b46e1b7d4b0b16
+Cinematic|Abyssal Horn|81b00d7beefcb4b7
+Cinematic|Basalt Fanfare|4d505d63cb16bd85
+Cinematic|Ironclad Swell|e2fa8c5da6c8ebc1
+Cinematic|Undertow Brass|11e232011bb2a506
+Cinematic|Colossus Groan|7511df4a053caa52
+Cinematic|Rampart Horn|29c40467a7e95368
+Cinematic|Warship Bellow|a646bad0a1c5a649
+Cinematic|Bastion Growl|4899910214068999
+Cinematic|Monolith Swell|6aad8026e8e45d12
+Cinematic|Leviathan Call|3590373ea3f79a9d
+Cinematic|Hammerfall Hit|a2fd2d6c9465d4c6
+Cinematic|Citadel Impact|7e0f0354e0ba5706
+Cinematic|Shockwave Toll|2b91ef0232bd27b8
+Cinematic|Ruin Strike|defe5a4ed7bb7f35
+Cinematic|Bunker Slam|ba59fd90bf711d3a
+Cinematic|Anvil Of Night|855021bda67fd489
+Cinematic|Collapse Hit|7fd8242cf11e9f44
+Cinematic|Fault Line|aeb9c4ed0568fa41
+Cinematic|Meteor Toll|6e5ff20aeee88998
+Cinematic|Iron Verdict|5c57f2303bece6b4
+Cinematic|Ticking Dread|cbe3df558cd5ad1d
+Cinematic|Heartbeat Of Steel|7533df99e12afbec
+Cinematic|Gated Siege|3db16b889b697fac
+Cinematic|Pulse Of Ruin|5a47432f054a61f6
+Cinematic|Throbbing Abyss|1a0a2eae38ddb3ca
+Cinematic|Marching Shadow|ffa0d49e6da2e433
+Cinematic|Pressure Chamber|61551ed0b99921ab
+Cinematic|Alarm Cathedral|a3f16fa22f09e414
+Cinematic|Ostinato Furnace|11cc006d7b08903b
+Cinematic|Rolling Blackout|696a104b6a6f0fe3
+Cinematic|Vowel Abyss|d2372e493936d09f
+Cinematic|Requiem Machine|b1c2bd9da3175efc
+Cinematic|Dark Litany|0085b6120c63b0c8
+Cinematic|Wailing Bulkhead|b2aa2686c8f94354
+Cinematic|Sunken Oratorio|028167418644284b
+Cinematic|Groaning Hull|c4a771c80ea32afa
+Cinematic|Phantom Chorus|060b780c4a7f7ce5
+Cinematic|Breathing Monolith|fdf08cd89de523f3
+Cinematic|Whale Engine|c74983d36f1ba0b1
+Cinematic|Tomb Hymn|e5fdcb4180709dc2
 Cinematic|Abyssal Lifesign|138bb35e19485ef3
 Cinematic|Barred Touchdown|b11d99bbe22842da
 Cinematic|Blistered Leviathan|03977abb3dd54d8c
@@ -1990,6 +2772,46 @@ Cinematic|Stern Countdown|da3141b525a626b6
 Cinematic|Vast Vertigo|2d3ff79115558516
 Cinematic|Violent Monolith|b7b8cdedfc8d67ec
 Cinematic|Voiceless Horn|4ca5245f5a5b9e35
+Perc|Anvil Gnaw|32d1cc4193d08cd5
+Perc|Rebar Gong|135ea867adb045e4
+Perc|Boiler Knock|befaedcdc62afc6d
+Perc|Flange Bell|ee7a9496538bb4fb
+Perc|Crucible Tick|b3ebc36e2c156a56
+Perc|Scrap Marimba|a016b3f126252c23
+Perc|Chain Rattle|7469820736e6b2e6
+Perc|Foundry Plate|10acaf71e4bb768a
+Perc|Torsion Block|68b8cf4fb7cc4695
+Perc|Smelter Clank|4c85e751539161ab
+Perc|Spark Rim|7b50a96b7084523b
+Perc|Arc Cowbell|a5f7444c81bfb181
+Perc|Solder Snap|4be1f0cd9af5d51f
+Perc|Ignition Tap|70cacddde3c7740e
+Perc|Relay Click|c74a89e00e9e4663
+Perc|Breaker Pop|8c608b9f6cecf082
+Perc|Static Woodblock|df4e456d5f00f4d2
+Perc|Fuse Strike|bb2e8779e8dcbb44
+Perc|Voltage Clave|85be2cb81447f75e
+Perc|Cathode Tick|7bb59355553c50de
+Perc|Conveyor Shaker|47bf77ce2d89f03e
+Perc|Ratchet Roll|fca6d677f781b141
+Perc|Piston Tambour|dc90f6f095c24991
+Perc|Shutter Loop|913d1bb1271dd744
+Perc|Gantry Shuffle|52b73c52e20a18b8
+Perc|Cog Patter|ebfc5f70dccba998
+Perc|Turnstile Rattle|df1e9edb9c781abe
+Perc|Rivet Gun|bf7586ad5de91041
+Perc|Dynamo Flutter|b3845fbd18cfdc09
+Perc|Loom Shuttle|f93916fc6b007ce3
+Perc|Throat Tabla|dc8d87b09c236b70
+Perc|Mouth Harp Knock|ac3d6e30df2ac2cb
+Perc|Vowel Bongo|e4b6af0da08827fb
+Perc|Larynx Drop|f1ed09abc44c3324
+Perc|Tongue Clap|a3642969fe08234d
+Perc|Jaw Conga|07a985db9e9c6c9e
+Perc|Gullet Tom|a4a6822c44adee03
+Perc|Syllable Tick|8005f615a0c40d30
+Perc|Murmur Block|cf1c4e8b7f46d7ce
+Perc|Uvula Pop|cc21f35615e1b08a
 Perc|Abandoned Clank|b6642dc828ac005a
 Perc|Abandoned Tick|fa3aba34e0b1256d
 Perc|Acid Knock|4b0a4a463748d778
@@ -2110,6 +2932,46 @@ Perc|Wasteland Flash|ed0477863b0a05b2
 Perc|Waxen Boing|c3aa021fc59bb2e7
 Perc|Welded Can|a4da18f1aa25c3f9
 Perc|Wordless Jolt|2ae9602234db4025
+Drum|Slag Kick|e24f3eb7214bb1fa
+Drum|Furnace Tom|e9ee7c63db5274ff
+Drum|Overload Kick|86751908e176264f
+Drum|Grinder Snare|2565c3c3224bfb6f
+Drum|Fold Floor Tom|fd53d61e93fd5f1a
+Drum|Cinder Kick|d1459aede66cac51
+Drum|Ironclad Tom|c8abc4eb511d963a
+Drum|Bitter Kick|03d57b8693da74eb
+Drum|Mangle Snare|f1b312e0df1796f8
+Drum|Crusher Kick|f9ce086cc5f624c0
+Drum|Zap Kick|52146a1d91fd971a
+Drum|Laser Snare|a02ab05b41b7597f
+Drum|Arc Kick|a7e1a5b454ae4c76
+Drum|Sync Rim Snare|a3ea790d944e5309
+Drum|Pulse Tom|6985b67e4cab72b1
+Drum|Strobe Hat|f31a704c908485df
+Drum|Ion Kick|fd68c9d5a798d0b4
+Drum|Cutter Snare|e407403f55d8a1a4
+Drum|Plasma Tom|b82228dc56ee0688
+Drum|Spike Hat|bc2b7fef3a627994
+Drum|Gated Clap|d5e334a8b349228f
+Drum|Stutter Clap|a6525d04b35e8487
+Drum|Swarm Hat|72a465c385c12f30
+Drum|Roll Snare|a8a7ecb4b87b5b97
+Drum|Brake Clap|920b54c7e619aab4
+Drum|Steam Hat|6195da9b083c0057
+Drum|Pump Kick|015e8c50498ed28c
+Drum|Crowd Clap|0e82dbc8e7a4bb23
+Drum|Shuffle Hat|377f789ec46a59cd
+Drum|Echo Rim|67c855643db6567a
+Drum|Vowel Kick|a646ed33df33832c
+Drum|Speaking Tom|08876c0dd899f038
+Drum|Formant Snare|7c5e5437a3978624
+Drum|Choir Clap|8e4c93b38d76e48b
+Drum|Wah Tom|374fb09a15f85cbf
+Drum|Breath Hat|817d3e2fb4a9bfdf
+Drum|Groan Kick|6b5fd1337149d7db
+Drum|Mouth Snare|d04b53bd61bf232d
+Drum|Hollow Vowel Tom|3c21ba96d5870bae
+Drum|Whisper Cymbal|ae781830995359ed
 Drum|Abrasive Cymbal|5f97ff357620efd1
 Drum|Annealed Hat|6397a9a3090837bf
 Drum|Arctic Kick|170757b04f89e09a
@@ -2207,6 +3069,46 @@ Drum|Waxen Gong|cf35090245c7cd37
 Drum|Weightless Thump|86ffb8066f87e33a
 Drum|Western Stamp|c71ccd06827383f3
 Drum|Wrecked Boot|1d8f8a4e0f138861
+FX|Rift Growl|72ceb87f2ba04c67
+FX|Warp Engine|bbe9462f3c578fc1
+FX|Hull Groan|339e92950ef43386
+FX|Reactor Wobble|5eac129bbb1230ad
+FX|Void Turbine|28818a77ed71755d
+FX|Abyss Siren|8ecf4108a6f460a6
+FX|Machine Breath|6aa3f815c01df931
+FX|Grinding Portal|59ea91f4660f4060
+FX|Swamp Engine|f02828b37ba30b9d
+FX|Exhaust Snarl|1c24848d75aa3b9f
+FX|Laser Volley|2bd364d409723ae6
+FX|Zap Cascade|0046784f682dc719
+FX|Arc Welder|ebf2f4801705c383
+FX|Particle Zap|be69880f6fa4cc87
+FX|Pulse Rifle|93514385a267bd3f
+FX|Ion Streak|952bfa9291a1876e
+FX|Plasma Spit|04fe0b9e5441ea89
+FX|Bolt Ricochet|4d6570f98727b622
+FX|Capacitor Dump|0e49b9067cbef9b7
+FX|Coil Whine|32be3242325f273d
+FX|Riser Pump|cd576e48c4ddb49f
+FX|Siren Gate|bfbdfc292aa511ac
+FX|Strobe Sweep|4ac716030f0190bd
+FX|Lockdown Klaxon|ed6f7a37c1139354
+FX|Scanner Pulse|f4cbf577bc247f15
+FX|Heartbeat Sonar|83f56990e463ecb7
+FX|Radar Sweep|7fb52171b11039fc
+FX|Beacon Throb|088090d640686f86
+FX|Tunnel Rush|21ec0b43ff20b6a7
+FX|Hover Drone|1d9419498229b3be
+FX|Alien Speech|6082d70d2fc96935
+FX|Wind Tunnel Vowel|9c0fd6891951d5f2
+FX|Ghost Whisper|049994cc73166f24
+FX|Portal Breath|cdd7ca146ea38103
+FX|Machine Mutter|8e8f57c451183f4a
+FX|Ether Choir|1761f5317812809d
+FX|Wraith Call|a57d85b3992a75e4
+FX|Static Prayer|84295684fdad7c55
+FX|Signal Ghost|45a8f86f944cb52d
+FX|Howling Shaft|0951b19728f64dde
 FX|Acrid Seizure|ed04ef75669d62f6
 FX|Amber Siren|1da6c56da9395a45
 FX|Arctic Lockdown|d9927240aee713b6
@@ -2279,6 +3181,46 @@ FX|Tender Sweep|398ba62ae6ad81ee
 FX|Thin Ray|4112668d6ba29807
 FX|Threadbare Blackout|1725c60f6e8a92c5
 FX|Wrecked Saucer|50beb9ab01ed8272
+Glitch|Corrupt Growl|836600d920c7da72
+Glitch|Fold Fault|646c5becb6073200
+Glitch|Byte Gnash|4a5c757ae8b04cf5
+Glitch|Mangled Packet|c1938fa0557bff9e
+Glitch|Kernel Snarl|74cad734b4a24ed3
+Glitch|Parity Rip|18071c2979ae57d5
+Glitch|Overflow Maw|03fc6e8c7d2563d0
+Glitch|Fractured Bus|aff7b60beb4c4d69
+Glitch|Segment Fault|ebfbeaac79cd88dd
+Glitch|Shredded Cache|6b8b6ef286055ac6
+Glitch|Sync Splinter|1f27f270dd6b3859
+Glitch|Clock Skew|3c9c4ac8ad456f42
+Glitch|Bit Spark|6797a33dfcf93d6b
+Glitch|Jitter Zap|a1e0e54c70e0fa70
+Glitch|Interrupt Bite|0cdcccbabf7bd572
+Glitch|Logic Arc|b3e0dd40a04a8506
+Glitch|Tick Error|a65dea1b55fa1f42
+Glitch|Sample Slice|86f7a5b41d9e6598
+Glitch|Short Circuit Blip|850fd25deb64bd62
+Glitch|Opcode Snap|5ec4b2bfb3133a78
+Glitch|Buffer Stutter|191a140ce3eaaa92
+Glitch|Loop Seizure|a720362ba9928e1c
+Glitch|Gate Cascade|035646a4d5e88591
+Glitch|Frame Drop|76e245379c025e68
+Glitch|Repeat Fault|8c5c372adc211110
+Glitch|Stack Pump|b55caaa5bdc7be43
+Glitch|Retry Storm|64934216243616fb
+Glitch|Strobe Cache|87fe599c5c76bd1f
+Glitch|Packet Burst|62cb65f43c9b2110
+Glitch|Hold Loop|67c18f10d82660be
+Glitch|Robot Gargle|9aec5d2966e1a6b0
+Glitch|Vocoder Debris|475f89153a919738
+Glitch|Syllable Crash|49efd707eff08c17
+Glitch|Data Mouth|897d6a57f97dcaaf
+Glitch|Glottal Fault|3da591e6d4079488
+Glitch|Speech Shard|0043fad3f2b2d0d8
+Glitch|Formant Error|aab62bbeac40ddb1
+Glitch|Babble Bits|691f8cb16ca5ae62
+Glitch|Talkbox Rot|d241595b18fadee2
+Glitch|Voice Mangle|b21e4aaccc1e786b
 Glitch|Adrift Shard|642e318ec09a3ac8
 Glitch|Ageless Abort|6b4b1e7343b1ffa4
 Glitch|Bleak Cursor|9584d323a232e4d9
@@ -2327,6 +3269,46 @@ Glitch|Turning Carrier|890dfe518dd8d643
 Glitch|Vaulted Slice|dc97c3231deea074
 Glitch|Veiled Scratch|ba8ba4469f0dc8e5
 Glitch|Voiceless Modem|0e5a92dab6c41f11
+Game|Mutant Powerup|84b3aabc12bb6171
+Game|Slime Gargle|85b6143a3452b421
+Game|Boss Roar Tone|8e5c87cf3352b9f2
+Game|Engine Kart|5c28ffc2adbc97ec
+Game|Cursed Chest|8f3beb3abd1c16c3
+Game|Goblin Chatter|589fb33dd80afc7b
+Game|Lava Level|344bdba38a08d1ff
+Game|Glitched Grunt|5bcd15a7af2b475f
+Game|Dungeon Drone Tone|622bf0efddbbf0e0
+Game|Mecha Stomp|41a81a463ca54225
+Game|Plasma Laser|651400ad37bb0634
+Game|Gold Coin Grab|6f0ab4123998989b
+Game|Blaster Recoil|e059b4500ca430f4
+Game|Hitbox Spark|f35b04e62e527ce3
+Game|Jump Spring|47dab5111e5e3ea2
+Game|Shield Break|a776ca857e1d9a7c
+Game|Teleport Pad|aedff03b49ab6da9
+Game|Critical Hit|5ab02c99ae887e9f
+Game|Extra Life|6693b1a158908cc6
+Game|Railgun Charge|0e2b543742ef9f95
+Game|Breach Klaxon|537dad0a49a57bd4
+Game|Victory Fanfare|a250344343966a1d
+Game|Menu Loop Pulse|2142b1f390c400b7
+Game|Countdown Beacon|0aa038485ad92be9
+Game|Bonus Round|66c0b88fc9c72575
+Game|Siren Chase|aacc8c49f89c4e22
+Game|Combo Meter|e79e68058ce427fc
+Game|Lobby Shimmer|056800946f2f0f01
+Game|Respawn Pulse|5c71ae18ec57c44c
+Game|Pinball Flipper|e0085fddfa808c66
+Game|Creature Yelp|3fc5ec8cbd74a735
+Game|Announcer Hum|d35ecff05c5cc19d
+Game|Ghost Moan|088be85224e33f63
+Game|Robot Greeting|37c1d44eb1b51d10
+Game|Wizard Incant|c9457ae8704548f9
+Game|Ouch Formant|5378d9e0f993e5aa
+Game|Oracle Riddle|ee6184d212f2bd00
+Game|Gibberish Merchant|beca2f01d95ea16b
+Game|Portal Whisper|c5704aadcfb5e772
+Game|Talking Treasure|2112ed5adfc7035c
 Game|Amber Unlock|d17dc25c2df77a35
 Game|Arctic Confirm|d39042ca4c736198
 Game|Asphalt Locked|001d2b97587d13a3
@@ -2411,6 +3393,46 @@ Game|Weightless Fall|5d4dc946161e6837
 Game|White Confirm|107ac8143abd440c
 Game|White Token|d4e298974a774c28
 Game|Zone Loss|d568f336e889b07f
+Chip|Cartridge Growl|b0605ed1f8702baf
+Chip|Eightbit Gnaw|6589d0f5aa905d7b
+Chip|Pixel Mangler|96be04a22d0e5097
+Chip|Bitrot Wobble|c8b778ef9c8d81de
+Chip|Glitch Gremlin|3bcdb8ca96964c7b
+Chip|Sprite Snarl|0361d988eeb2a835
+Chip|Lo Res Beast|ae310c87d6870123
+Chip|Pocket Fiend|172fa10a195c0a28
+Chip|Mainframe Rumble|769ca42441f61b4d
+Chip|Corrupt Save|4f2ec63c8ab6f0a1
+Chip|Zapper Lead|f530a7b988b9b3e5
+Chip|Laser Sprite|f4272eb2d80dbef2
+Chip|Turbo Blaster|f83890194dc5037c
+Chip|Ricochet Bleep|332b7a02c188c81e
+Chip|Boss Encounter|56866c657810572d
+Chip|Blip Cannon|cceae8d8cf50fd23
+Chip|Warp Zone Lead|4bba05e77a4bbef1
+Chip|Plasma Tick|e2ac31a782dfe1e4
+Chip|Dropkick Sync|5227f58be5a733ab
+Chip|Neon Hazard|bb37a94dd843e22c
+Chip|Arpeggiator Coin|9f2ac3865cae549f
+Chip|Minor Dungeon Arp|e62465ee4c09e135
+Chip|Chiptune Choir Gate|bdb80bf18b8c36b7
+Chip|Triplet Console|6f2b2c3b1934d7f1
+Chip|Overworld Stack|d88958fd795ab745
+Chip|Credits Roll|b7267c0db9352ed6
+Chip|Bitstream Pump|8190bee87e626120
+Chip|Insert Coin Rush|147475ae768bdc0b
+Chip|Gamepad Shuffle|16930167f6733b3e
+Chip|Highscore Swell|ea40d4632babe9ab
+Chip|Speech Chip|68d929c5f6619d62
+Chip|Robot Vowel Arp|64db7f3e221d8328
+Chip|Voicebox Glitch|9f2c67ce7cff1344
+Chip|Synthetic Narrator|44964c43dfa47c57
+Chip|Bitmouth Blip|408204dca5384e1e
+Chip|Dialogue Tree|70523e477d3c4158
+Chip|Phoneme Crusher|4fa7197fd749b97c
+Chip|Talking Cartridge|5058f082a0709ad4
+Chip|Wah Sprite|c629106f31d838cc
+Chip|Garbled Oracle|34ad5fd422e4dacf
 Chip|Amber Fuzz|08fb3add259bded5
 Chip|Banished Rotate|1e8f37f71987ffeb
 Chip|Binary Duet|f81178a81af2b96a
@@ -2464,6 +3486,46 @@ Chip|Synthetic Mirror|a36575aaa895ab9f
 Chip|Thin Step|cb69822c9dde8c32
 Chip|Ticking Shift|d5096f2ffa45580e
 Chip|Tight Tumble|7556faf1c972001d
+Texture|Grinding Dust|8f14b0e411accf7f
+Texture|Ferric Swarm|1073b59138600c83
+Texture|Scrap Tide|790ceefbc82acf40
+Texture|Torn Metal Air|30854adb59d276bc
+Texture|Shredded Signal|ada900d965936490
+Texture|Gravel Storm|0c7fba6c802373df
+Texture|Folded Static|ad8b92bce1a28690
+Texture|Corroded Wind|9eeb12f7a2985f49
+Texture|Rust Rain|6a59c8015ce0326c
+Texture|Debris Field|30fb7479855199f0
+Texture|Neon Fizz|1c45b6b4bff2e866
+Texture|Spark Shower|6fd4926586270278
+Texture|Glitch Lattice|931bbff7ac246cde
+Texture|Arc Rain|f9f151e46e2a761f
+Texture|Data Hail|9c89049c9fa4aa6f
+Texture|Zapped Grid|0d28681c43b40a3d
+Texture|Fuse Box Chatter|f0d2b79f67133100
+Texture|Shorted Panel|3e86ffa55f71a2a8
+Texture|Ion Drizzle|6284346073903d5b
+Texture|Laser Dust|3bf6cbb38a8a3b30
+Texture|Stutter Fog|4082e245f2e9ff43
+Texture|Gated Steam|182e2e4641a4009e
+Texture|Pulse Smoke|003f1857ef75d132
+Texture|Strobe Rain|b3883ece15a76afb
+Texture|Chopped Ether|50419ee7483fe88e
+Texture|Tape Gate Haze|9dc284a01c42dc7a
+Texture|Morse Mist|7ed044f96213ad99
+Texture|Shutter Static|f7569c3902977769
+Texture|Ventilator Chop|6c10d55b828204f0
+Texture|Clock Tower Hiss|cf35e369b1343b97
+Texture|Whispering Ducts|3464438fe7eedc22
+Texture|Mouth Of Static|ad21ccd92f9b3b35
+Texture|Phantom Vowels|a7b0d6a61059e05b
+Texture|Tunnel Whisper|f4592544c63ea975
+Texture|Broken Speech|baa38b33d9673008
+Texture|Breath Machine|4dbf262c284720d7
+Texture|Murmuring Pipes|a08d3c2c1e9a6e99
+Texture|Haunted Intercom|a256643d03fdc2cd
+Texture|Hollow Tongue|c0c6a806fdebe809
+Texture|Ghost Radio Choir|5f8de6b6beabb522
 Texture|Radio Static|339efe4147db4744
 Texture|Vinyl Crackle Bed|969ee9d5be7bdc47
 Texture|Ventilation|19bd1e472f8e358e
@@ -2580,6 +3642,46 @@ Texture|Warped Wind|fdc4d3258e4b9b62
 Texture|Wary Brood|4dd37d04f739c10e
 Texture|Waxen Shortwave|26961e805759fb89
 Texture|Zinc Refinery|b5a4be6dc9ad832f
+Vox|Iron Larynx|abe99aada735e422
+Vox|Choked Cantor|fdf59d4fdaf65208
+Vox|Gravel Psalm|04950d179f629439
+Vox|Bellows Moan|84ab8d7f1e7b5702
+Vox|Foundry Chant|a56d7ffcced96320
+Vox|Maw Liturgy|c3ed66969845ce5e
+Vox|Slag Choir|86c99f32848122b7
+Vox|Snarling Vespers|1b6e8f9ecca569b4
+Vox|Clenched Hymn|2d2f3deb88ed699c
+Vox|Rasp Tabernacle|fbf0c0feaa2b83de
+Vox|Spitting Cantor|acca79456343dc73
+Vox|Hiss Oracle|b35e8aee3f1fd6bb
+Vox|Teeth Of Prayer|29ab66da7f76680a
+Vox|Clicking Tongue|d2f057dedfac877c
+Vox|Sibilant Wire|2db976ae3f9ccd5f
+Vox|Glottal Spark|60f849fef2d3d50b
+Vox|Barked Hymn|52c51bffe9f0f28d
+Vox|Stutter Deacon|e9c2b6a1c1b177f9
+Vox|Lash Chorale|e0c1a1e44fc1dcf7
+Vox|Fricative Engine|e7dcb1ae2c02dbcf
+Vox|Pulse Cathedral|bbad910271e61f14
+Vox|Gated Congregation|b1dc873ef1e643fd
+Vox|Choir Of Pistons|fc086bb79eb276ed
+Vox|Breathing Nave|0510af81f74aaf4c
+Vox|Tidal Chorale|8cbd38b8309a70cb
+Vox|Pumping Requiem|a63f8613106bf7e8
+Vox|Engine Cathedral|af1e9a4d65f24e4b
+Vox|Sidechain Psalter|d06b3ae8905d57b8
+Vox|Stadium Ghosts|5b40a1b1525b2bd5
+Vox|Throbbing Vigil|e4135dd409e0d57e
+Vox|Whispering Gear|2661c698757e35a6
+Vox|Murmur Machine|a144b873bf3d2ff5
+Vox|Vowel Loom|9d69a6eb5282cd4c
+Vox|Speaking Valve|cffc3df044ea6252
+Vox|Lipless Oracle|52fd6351afb0352a
+Vox|Formant Ghoul|3fd61d660747932c
+Vox|Chattering Relay|bc7da0872c5ea8dc
+Vox|Mouth Of Wires|4d77fe119cb2c031
+Vox|Jawbone Drift|94a26b6fe8137705
+Vox|Slow Diction|ed9a2e3000cba61e
 Vox|Acid Breath|ccf8691478bbb8f9
 Vox|Ash Wraith|51219df862e34b47
 Vox|Bitter Mass|3ab2ac181c117cf9

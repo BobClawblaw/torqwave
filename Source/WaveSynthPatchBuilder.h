@@ -167,6 +167,14 @@ namespace WaveSynthPatchBuilder
     /** The layered patches (WaveSynthPatchesLayered.cpp): hand-made, first in their categories. */
     void addLayered (std::vector<Builder>&);
 
+    /** The layered patches of the other categories, one file each (WaveSynthPatchesLayered<Name>.cpp). */
+    void addLayeredPads (std::vector<Builder>&);
+    void addLayeredSequences (std::vector<Builder>&);
+    void addLayeredStabs (std::vector<Builder>&);
+    void addLayeredPlucks (std::vector<Builder>&);
+    void addLayeredHits (std::vector<Builder>&);
+    void addLayeredRisers (std::vector<Builder>&);
+
     /** The second bank's patches by name: the ones Tests/WaveSynthBankTests.cpp holds to its limits. */
     const juce::StringArray& secondBankNames();
 }

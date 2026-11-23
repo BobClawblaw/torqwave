@@ -270,6 +270,26 @@ patch|Bass|Western Throat
 patch|Bass|Wordless Hawser
 patch|Bass|Wordless Solenoid
 patch|Bass|Wrecked Fang
+patch|Sub|Bedrock Growl
+patch|Sub|Mantle Wobble
+patch|Sub|Magma Floor
+patch|Sub|Fault Line Hum
+patch|Sub|Caldera Thump
+patch|Sub|Pile Ram Sub
+patch|Sub|Seismic Tick
+patch|Sub|Anvil Floor
+patch|Sub|Sounding Charge
+patch|Sub|Rivet Floor
+patch|Sub|Undertone Pump
+patch|Sub|Ground Swell Gate
+patch|Sub|Pressure Floor
+patch|Sub|Ballast Breath
+patch|Sub|Lowland Throb
+patch|Sub|Cavern Vowel
+patch|Sub|Crypt Murmur
+patch|Sub|Catacomb Chant
+patch|Sub|Sump Gargle
+patch|Sub|Charnel Hum
 patch|Sub|Bare Shiver
 patch|Sub|Blackened Flick
 patch|Sub|Blackened Keel
@@ -294,6 +314,46 @@ patch|Sub|Terse Slump
 patch|Sub|Terse Tick
 patch|Sub|Tight Heave
 patch|Sub|Tight Mass
+patch|Reese|Undertow Gnash
+patch|Reese|Tidal Mangle
+patch|Reese|Abyssal Hinge
+patch|Reese|Slurry Phase
+patch|Reese|Grinding Current
+patch|Reese|Bathyal Churn
+patch|Reese|Keelhaul Fold
+patch|Reese|Rip Current Maw
+patch|Reese|Leviathan Gear
+patch|Reese|Trench Spiral
+patch|Reese|Hawser Sync
+patch|Reese|Cable Snapper
+patch|Reese|Tensile Moan
+patch|Reese|Winch Bite
+patch|Reese|Gantry Lash
+patch|Reese|Anchor Spark
+patch|Reese|Mooring Fang
+patch|Reese|Bowline Shear
+patch|Reese|Ballast Arc
+patch|Reese|Riptide Clamp
+patch|Reese|Tow Rope Pump
+patch|Reese|Tidal Bellows
+patch|Reese|Siphon Throb
+patch|Reese|Maelstrom Gate
+patch|Reese|Seiche Pulse
+patch|Reese|Bore Tide
+patch|Reese|Wake Turbine
+patch|Reese|Flood Engine
+patch|Reese|Bulkhead Throb
+patch|Reese|Brine Stream Drag
+patch|Reese|Drowned Chorus
+patch|Reese|Silt Mouth
+patch|Reese|Kraken Vowel
+patch|Reese|Bilge Choir
+patch|Reese|Abyss Gargle
+patch|Reese|Sunken Cantor
+patch|Reese|Moaning Keel
+patch|Reese|Mudflat Oracle
+patch|Reese|Benthic Murmur
+patch|Reese|Wreck Liturgy
 patch|Reese|Abyss Reese
 patch|Reese|Tar Reese
 patch|Reese|Corroded Reese
@@ -387,6 +447,46 @@ patch|Reese|Terse Churn
 patch|Reese|Tight Scarab
 patch|Reese|Twisted Spout
 patch|Reese|Zone Purr
+patch|Acid|Caustic Gnaw
+patch|Acid|Lye Serpent
+patch|Acid|Etchant Howl
+patch|Acid|Pickling Grinder
+patch|Acid|Vitriol Coil
+patch|Acid|Bleach Throat
+patch|Acid|Sour Mandible
+patch|Acid|Rot Vat
+patch|Acid|Fester Pump
+patch|Acid|Solder Squelch
+patch|Acid|Galvanic Bite
+patch|Acid|Electrode Drip
+patch|Acid|Anode Spit
+patch|Acid|Lancet Arc
+patch|Acid|Corrosion Probe
+patch|Acid|Wire Brush Acid
+patch|Acid|Mordant Spark
+patch|Acid|Brine Stampede
+patch|Acid|Caustic Choir
+patch|Acid|Chlorine Engine
+patch|Acid|Swamp Ratchet
+patch|Acid|Effluent Wave
+patch|Acid|Sludge Carousel
+patch|Acid|Phosphor Tide
+patch|Acid|Venom Treadmill
+patch|Acid|Bromide Haze
+patch|Acid|Pickle Press
+patch|Acid|Blister Wheel
+patch|Acid|Gurgling Vat
+patch|Acid|Tongue Of Lye
+patch|Acid|Blather Squelch
+patch|Acid|Wah Corroder
+patch|Acid|Larynx Acid
+patch|Acid|Spittle Formant
+patch|Acid|Oracle Of Brine
+patch|Acid|Chewing Diode
+patch|Acid|Sizzling Larynx
+patch|Acid|Rasping Siphon
+patch|Acid|Mumbling Etch
+patch|Acid|Yowling Reagent
 patch|Acid|Acid Corrosion
 patch|Acid|Square Acid
 patch|Acid|Acid Scream
@@ -482,6 +582,48 @@ patch|Acid|Sullen Diode
 patch|Acid|Tight Pin
 patch|Acid|Voiceless Tincture
 patch|Acid|Wasteland Gel
+patch|Lead|Voltage Scream
+patch|Lead|Folded Halo
+patch|Lead|Razor Siren
+patch|Lead|Ion Whip
+patch|Lead|Wire Saint
+patch|Lead|Feedback Hawk
+patch|Lead|Static Comet
+patch|Lead|Hex Wail
+patch|Lead|Live Wire Lead
+patch|Lead|Solar Flare Lead
+patch|Lead|Cantor Lead
+patch|Lead|Talking Torch
+patch|Lead|Oracle Throat
+patch|Lead|Muezzin Wire
+patch|Lead|Gospel Engine
+patch|Lead|Larynx Lead
+patch|Lead|Phantom Aria
+patch|Lead|Sermon Saw
+patch|Lead|Mantra Line
+patch|Lead|Siren Psalm
+patch|Lead|Hollow Chant
+patch|Lead|Skyline Stack
+patch|Lead|Strobe Anthem
+patch|Lead|Victory Lap
+patch|Lead|Laser Choir Lead
+patch|Lead|Rave Torch
+patch|Lead|Wide Signal Lead
+patch|Lead|Hyperion Lead
+patch|Lead|Gate Crasher Lead
+patch|Lead|Supernova Lead
+patch|Lead|Prism Saw Lead
+patch|Lead|Midnight Arena
+patch|Lead|Crystal Engine
+patch|Lead|Chrome Kestrel
+patch|Lead|Glass Harpoon
+patch|Lead|Mercury Thread
+patch|Lead|Tungsten Bell Lead
+patch|Lead|Ice Lattice
+patch|Lead|Titanium Flute
+patch|Lead|Frostbite Lead
+patch|Lead|Mirror Bell Lead
+patch|Lead|Anvil Spark Lead
 patch|Lead|Siren Burn
 patch|Lead|Mercury Lead
 patch|Lead|Feedback Wire
@@ -629,6 +771,46 @@ patch|Lead|Waxen Wail
 patch|Lead|Western Howl
 patch|Lead|Western Strand
 patch|Lead|Wordless Chanter
+patch|Stab|Furnace Clamp
+patch|Stab|Slag Chord Hit
+patch|Stab|Gnarled Rivet
+patch|Stab|Corrosion Jab
+patch|Stab|Mauler Brace
+patch|Stab|Tarpit Knuckle
+patch|Stab|Lathe Snarl
+patch|Stab|Scrap Hammer
+patch|Stab|Rust Mandala
+patch|Stab|Ore Crusher
+patch|Stab|Voltage Clamp
+patch|Stab|Arc Weld Stab
+patch|Stab|Strike Plate
+patch|Stab|Spur Gear Hit
+patch|Stab|Flint Spark Chord
+patch|Stab|Coil Discharge
+patch|Stab|Bitter Shrapnel
+patch|Stab|Ignition Bar
+patch|Stab|Piston Spark
+patch|Stab|Cleaver Stab
+patch|Stab|Strobe Choir Stab
+patch|Stab|Pressure Chop
+patch|Stab|Rave Bulkhead
+patch|Stab|Dub Signal Stab
+patch|Stab|Turbo Gate Stab
+patch|Stab|Grid Shimmer Stab
+patch|Stab|Reactor Pulse Stab
+patch|Stab|Warehouse Bloom
+patch|Stab|Stomp Stack
+patch|Stab|Tidal Lock Stab
+patch|Stab|Jaw Brace Stab
+patch|Stab|Glottal Press
+patch|Stab|Oracle Hit
+patch|Stab|Chant Ratchet
+patch|Stab|Throat Gasket
+patch|Stab|Speaking Rivet
+patch|Stab|Murmur Crate
+patch|Stab|Vox Breaker
+patch|Stab|Cathedral Jab
+patch|Stab|Gargle Valve
 patch|Stab|Dub Chord Stab
 patch|Stab|Minor Stab
 patch|Stab|Metal Stab
@@ -763,6 +945,46 @@ patch|Stab|Vicious Yell
 patch|Stab|Violent Call
 patch|Stab|Warped Bark
 patch|Stab|Warped Blow
+patch|Chord|Smelter Chord
+patch|Chord|Iron Lung Chord
+patch|Chord|Blast Door Chord
+patch|Chord|Groaning Truss
+patch|Chord|Bunker Organism
+patch|Chord|Seismic Triad
+patch|Chord|Pylon Choir
+patch|Chord|Dredge Minor
+patch|Chord|Lurching Ninth
+patch|Chord|Kiln Swell Chord
+patch|Chord|Tungsten Chord
+patch|Chord|Signal Flare Chord
+patch|Chord|Razorline Sus
+patch|Chord|Magnet Chord
+patch|Chord|Glint Minor Ninth
+patch|Chord|Wire Harness Chord
+patch|Chord|Neon Rail Chord
+patch|Chord|Gantry Seventh
+patch|Chord|Sparkline Fifths
+patch|Chord|Transformer Hum
+patch|Chord|Sidechain Cathedral
+patch|Chord|Trancegate Minor
+patch|Chord|Pump Room Chord
+patch|Chord|Drift Lattice Chord
+patch|Chord|Shutter Chord
+patch|Chord|Exhaust Stack
+patch|Chord|Floodlight Chord
+patch|Chord|Conveyor Echo Chord
+patch|Chord|Heatwave Stack
+patch|Chord|Ratchet Halo Chord
+patch|Chord|Hymn Of Rivets
+patch|Chord|Mouthpiece Chord
+patch|Chord|Wah Foundry
+patch|Chord|Psalm Machine
+patch|Chord|Gutter Chorale
+patch|Chord|Vocoder Grid
+patch|Chord|Exhale Chord
+patch|Chord|Tongue Engine
+patch|Chord|Votive Ninth
+patch|Chord|Bellows Liturgy
 patch|Chord|Adrift Trance
 patch|Chord|Banished Dulcimer
 patch|Chord|Bruised Oath
@@ -823,6 +1045,46 @@ patch|Chord|Violet Zither
 patch|Chord|Western Daydream
 patch|Chord|White Cittern
 patch|Chord|Zone Vow
+patch|Pluck|Rivet Snarl
+patch|Pluck|Gristle Pick
+patch|Pluck|Clamp Bloom
+patch|Pluck|Scrap Lyre
+patch|Pluck|Fang Ratchet
+patch|Pluck|Molar Twang
+patch|Pluck|Cinder Plectrum
+patch|Pluck|Bolt Spitter
+patch|Pluck|Ash Gnaw
+patch|Pluck|Kiln Flick
+patch|Pluck|Spark Gavel
+patch|Pluck|Arc Needle
+patch|Pluck|Welder Tick
+patch|Pluck|Chrome Lash
+patch|Pluck|Ion Snap
+patch|Pluck|Flint Strike
+patch|Pluck|Tesla Pick
+patch|Pluck|Crackle Fuse
+patch|Pluck|Hex Prong
+patch|Pluck|Glint Torque
+patch|Pluck|Gantry Pulse
+patch|Pluck|Crowd Shiver
+patch|Pluck|Stack Hammer
+patch|Pluck|Neon Gantry
+patch|Pluck|Swarm Ledger
+patch|Pluck|Strobe Mantle
+patch|Pluck|Glass Concourse
+patch|Pluck|Riot Shovel
+patch|Pluck|Turnstile Bloom
+patch|Pluck|Ferro Cascade
+patch|Pluck|Mouth Pick
+patch|Pluck|Gullet Tap
+patch|Pluck|Tongue Wire
+patch|Pluck|Choir Shard
+patch|Pluck|Larynx Click
+patch|Pluck|Hollow Diction
+patch|Pluck|Gargle Pin
+patch|Pluck|Murmur Latch
+patch|Pluck|Syllable Spike
+patch|Pluck|Sibilant Prong
 patch|Pluck|Black Pluck
 patch|Pluck|Glass Shard
 patch|Pluck|Wire Pluck
@@ -932,6 +1194,46 @@ patch|Pluck|Umbral Dot
 patch|Pluck|Vicious Hush
 patch|Pluck|Zone Fibre
 patch|Pluck|Zone Filament
+patch|Arp|Smelter Ladder
+patch|Arp|Gnashing Stair
+patch|Arp|Crucible Spiral
+patch|Arp|Scrap Carousel
+patch|Arp|Ferric Cascade
+patch|Arp|Mangle Wheel
+patch|Arp|Ingot Tumbler
+patch|Arp|Bruiser Orbit
+patch|Arp|Clinker Cascade
+patch|Arp|Rebar Twister
+patch|Arp|Spark Ladder
+patch|Arp|Filament Run
+patch|Arp|Rivet Gun Run
+patch|Arp|Glint Escapement
+patch|Arp|Ohm Staircase
+patch|Arp|Pincer Run
+patch|Arp|Zinc Clockface
+patch|Arp|Cathode Skitter
+patch|Arp|Torsion Spindle
+patch|Arp|Fuse Box Run
+patch|Arp|Grid Cascade
+patch|Arp|Turbine Flock
+patch|Arp|Exhale Wheel
+patch|Arp|Assembly Rush
+patch|Arp|Pressure Carousel
+patch|Arp|Sodium Fountain
+patch|Arp|Riveted Stampede
+patch|Arp|Vapour Lattice
+patch|Arp|Ratchet Choir
+patch|Arp|Halogen Drift
+patch|Arp|Oracle Stair
+patch|Arp|Murmur Spiral
+patch|Arp|Phonetic Wheel
+patch|Arp|Gargoyle Tumbler
+patch|Arp|Whisper Abacus
+patch|Arp|Glottal Clock
+patch|Arp|Hymnal Gears
+patch|Arp|Mutter Engine
+patch|Arp|Prayer Wheel Run
+patch|Arp|Siren Abacus
 patch|Arp|Abyssal Developer
 patch|Arp|Adrift Changes
 patch|Arp|Airless Cascade
@@ -992,6 +1294,46 @@ patch|Arp|Umbral Developer
 patch|Arp|Unholy Salvo
 patch|Arp|Violent Salvo
 patch|Arp|Watched Titrant
+patch|Keys|Burnt Tine Piano
+patch|Keys|Overdriven Reed Keys
+patch|Keys|Rust Clav
+patch|Keys|Grinder Tines
+patch|Keys|Kiln Lamella
+patch|Keys|Mangled Upright
+patch|Keys|Ferric Pluck Clav
+patch|Keys|Engine Block Keys
+patch|Keys|Hellfire Suitcase
+patch|Keys|Slag Tine Ghost
+patch|Keys|Hammer Tine
+patch|Keys|Sync Clav Rig
+patch|Keys|Ice Pick Keys
+patch|Keys|Struck Circuit
+patch|Keys|Steel Reed Piano
+patch|Keys|Flicker Keys
+patch|Keys|Knuckle Clav
+patch|Keys|Lamp Filament Keys
+patch|Keys|Riveting Keys
+patch|Keys|Electrode Piano
+patch|Keys|Sidechain Tines
+patch|Keys|Chopped Suitcase
+patch|Keys|Wide Grid Keys
+patch|Keys|Dub Echo Piano
+patch|Keys|Pulse Lattice Keys
+patch|Keys|Gate Keeper Keys
+patch|Keys|Tremor Bench
+patch|Keys|Rave Piano Stack
+patch|Keys|Shutter Clav
+patch|Keys|Hazard Light Keys
+patch|Keys|Wah Clav Engine
+patch|Keys|Vowel Tine Piano
+patch|Keys|Mouthing Tines
+patch|Keys|Yapping Clav
+patch|Keys|Whisper Keys
+patch|Keys|Talking Suitcase
+patch|Keys|Gutter Wah Keys
+patch|Keys|Formant Hammers
+patch|Keys|Murmuring Piano
+patch|Keys|Envelope Filter Clav
 patch|Keys|Afterhours Spank
 patch|Keys|Attic Manual
 patch|Keys|Backroom Bellows
@@ -1042,6 +1384,46 @@ patch|Keys|Trapped Squeezebox
 patch|Keys|Vagrant Cottage
 patch|Keys|Vigilant Spank
 patch|Keys|Vigilant Toy
+patch|Organ|Smokestack Drawbars
+patch|Organ|Boiler Room Organ
+patch|Organ|Scorched Tonewheel
+patch|Organ|Pit Organ Snarl
+patch|Organ|Cracked Manual
+patch|Organ|Sulphur Pipes
+patch|Organ|Hammered Console
+patch|Organ|Asbestos Hymnal
+patch|Organ|Grinding Rotor
+patch|Organ|Clinker Organ
+patch|Organ|Percussion Relay
+patch|Organ|Switchgear Organ
+patch|Organ|Spark Plug Organ
+patch|Organ|Relay Chapel
+patch|Organ|Tappet Organ
+patch|Organ|Fused Combo
+patch|Organ|Turbine Gospel
+patch|Organ|Ignition Manual
+patch|Organ|Glass Key Organ
+patch|Organ|Ratchet Console
+patch|Organ|Warehouse Chop Organ
+patch|Organ|Pumping Nave
+patch|Organ|Gated Parlour Ghost
+patch|Organ|Strobe Manual
+patch|Organ|House Of Bellows
+patch|Organ|Conveyor Organ
+patch|Organ|Rave Organ Riser
+patch|Organ|Signal Box Organ
+patch|Organ|Lattice Swell Organ
+patch|Organ|Crankshaft Organ
+patch|Organ|Vox Humana Machine
+patch|Organ|Wah Drawbar
+patch|Organ|Choir Loft Engine
+patch|Organ|Talking Tonewheel
+patch|Organ|Larynx Pipes
+patch|Organ|Mutter Organ
+patch|Organ|Gospel Throat
+patch|Organ|Cathode Cantor
+patch|Organ|Sermon Pipes
+patch|Organ|Orator Rotor
 patch|Organ|Adrift Chapel
 patch|Organ|Arctic Swell
 patch|Organ|Asphalt Absolution
@@ -1086,6 +1468,46 @@ patch|Organ|Velvet Treadle
 patch|Organ|Wary Harmonium
 patch|Organ|White Cabinet
 patch|Organ|Wordless Console
+patch|Guitar|Scorched Fret
+patch|Guitar|Bonesaw Riff
+patch|Guitar|Tarpit Wah
+patch|Guitar|Crowbar Chug
+patch|Guitar|Feedback Maw
+patch|Guitar|Grinder Lick
+patch|Guitar|Magma Strings
+patch|Guitar|Brimstone Picking
+patch|Guitar|Sludge Bender
+patch|Guitar|Rust Thrasher
+patch|Guitar|Barbwire Lead
+patch|Guitar|Live Wire Pick
+patch|Guitar|Spur Scraper
+patch|Guitar|Ignition Twang
+patch|Guitar|Gunmetal Solo
+patch|Guitar|Arc Strafe
+patch|Guitar|Chainlink Lead
+patch|Guitar|Pickaxe Snap
+patch|Guitar|Lightning Rod
+patch|Guitar|Shrapnel Tremolo
+patch|Guitar|Gated Power Chord
+patch|Guitar|Twelve Wire Strum
+patch|Guitar|Mutepalm Engine
+patch|Guitar|Wall Of Amps
+patch|Guitar|Ricochet Strum
+patch|Guitar|Slapback Choke
+patch|Guitar|Dread Strummer
+patch|Guitar|Pulse Rhythm Rig
+patch|Guitar|Surge Arpeggio
+patch|Guitar|Bunker Shuffle
+patch|Guitar|Auto Wah Grunt
+patch|Guitar|Talkbox Torch
+patch|Guitar|Cry Pedal Howl
+patch|Guitar|Throat Riff
+patch|Guitar|Vowel Fuzzbox
+patch|Guitar|Gossip Strings
+patch|Guitar|Mouthpiece Lead
+patch|Guitar|Sneer Picking
+patch|Guitar|Wahwah Engine
+patch|Guitar|Lament Wire
 patch|Guitar|Wailing Fuzz Lead
 patch|Guitar|Swarm Drone
 patch|Guitar|Downward Strum
@@ -1135,6 +1557,46 @@ patch|Guitar|Void Amp
 patch|Guitar|Void Storm
 patch|Guitar|Void Swarm
 patch|Guitar|Welded Storm
+patch|Brass|Foundry Horns
+patch|Brass|Rusted Tuba Choir
+patch|Brass|Blastfurnace Section
+patch|Brass|Cinder Trombones
+patch|Brass|Gravel Fanfare
+patch|Brass|Siege Horn
+patch|Brass|Bellow Of Iron
+patch|Brass|Molten Brassline
+patch|Brass|Barrage Tenors
+patch|Brass|Dread Sackbut
+patch|Brass|Bark Section
+patch|Brass|Signal Trumpets
+patch|Brass|Klaxon Brass
+patch|Brass|Edge Brass Sweep
+patch|Brass|Spitfire Horns
+patch|Brass|Steelworks Brass
+patch|Brass|Brazen Engine
+patch|Brass|Rally Cry Brass
+patch|Brass|Ricochet Horns
+patch|Brass|Clarion Spark
+patch|Brass|Pressure Section
+patch|Brass|Gated Legion
+patch|Brass|Swell Barracks
+patch|Brass|Riot Brass Stack
+patch|Brass|Parade Of Pistons
+patch|Brass|Engine Room Horns
+patch|Brass|Ducking Fanfare
+patch|Brass|Strobe Brass Wall
+patch|Brass|Tidewall Brass
+patch|Brass|Assembly Line Brass
+patch|Brass|Wah Horn Section
+patch|Brass|Throat Of Brass
+patch|Brass|Talkbox Brigade
+patch|Brass|Yawning Bugle
+patch|Brass|Muted Plunger
+patch|Brass|Chorale Valve
+patch|Brass|Growling Cornet
+patch|Brass|Oration Horns
+patch|Brass|Baritone Murmur
+patch|Brass|Speech Of Bronze
 patch|Brass|Abrasive Bray
 patch|Brass|Abyssal Guard
 patch|Brass|Acrid Herald
@@ -1184,6 +1646,46 @@ patch|Brass|Vaulted Horn
 patch|Brass|Violet Clarion
 patch|Brass|Wasteland Fanfare
 patch|Brass|Weary Bugle
+patch|Strings|Iron Cello
+patch|Strings|Rosin Grind
+patch|Strings|Bowed Girder
+patch|Strings|Scraped Hull
+patch|Strings|Folded Bow
+patch|Strings|Gutted Viola
+patch|Strings|Tension Cable
+patch|Strings|Rasping Section
+patch|Strings|Barbed Ensemble
+patch|Strings|Cable Bow
+patch|Strings|Tremolo Sparks
+patch|Strings|Wire Pizzicato
+patch|Strings|Steel Spiccato
+patch|Strings|Plucked Rebar
+patch|Strings|Snapping Cables
+patch|Strings|Martele Engine
+patch|Strings|Bow Strike Grid
+patch|Strings|Needle Strings
+patch|Strings|Piano Wire Section
+patch|Strings|Sync Quartet
+patch|Strings|Ostinato Engine
+patch|Strings|Pulse Orchestra
+patch|Strings|Marching Bows
+patch|Strings|Gated Legato
+patch|Strings|Clockwork Section
+patch|Strings|Tremolo Factory
+patch|Strings|Driving Violins
+patch|Strings|Pumping Viola
+patch|Strings|Shuttle Strings
+patch|Strings|Rhythm Of Steel
+patch|Strings|Singing Bows
+patch|Strings|Vowel Violins
+patch|Strings|Choral Strings
+patch|Strings|Hymn Of Cables
+patch|Strings|Mouthed Cellos
+patch|Strings|Formant Quartet
+patch|Strings|Breathing Section
+patch|Strings|Lament Machine
+patch|Strings|Speaking Viola
+patch|Strings|Chapel Of Strings
 patch|Strings|Amber Bounce
 patch|Strings|Bone Nail
 patch|Strings|Burnished Section
@@ -1229,6 +1731,46 @@ patch|Strings|Vaulted Finger
 patch|Strings|Wan Bass
 patch|Strings|Wary Cello
 patch|Strings|Watched Shudder
+patch|Pad|Furnace Halo
+patch|Pad|Rust Aurora
+patch|Pad|Smelter Bloom
+patch|Pad|Bruised Horizon
+patch|Pad|Coal Seam Glow
+patch|Pad|Folded Dusk
+patch|Pad|Slag Heaven
+patch|Pad|Mirror Furnace
+patch|Pad|Ember Vault
+patch|Pad|Oxide Tide
+patch|Pad|Arc Lamp Dawn
+patch|Pad|Welded Sky
+patch|Pad|Sync Cathedral
+patch|Pad|Voltage Veil
+patch|Pad|Filament Rise
+patch|Pad|Spark Shroud
+patch|Pad|Cobalt Flash
+patch|Pad|Tungsten Haze
+patch|Pad|Static Seraph
+patch|Pad|Coil Bloom
+patch|Pad|Piston Halo
+patch|Pad|Gate Mirage
+patch|Pad|Ducked Horizon
+patch|Pad|Strobe Cathedral
+patch|Pad|Pulse Fog
+patch|Pad|Conveyor Haze
+patch|Pad|Throb Canopy
+patch|Pad|Shutter Glow
+patch|Pad|Night Shift Pad
+patch|Pad|Swell Engine
+patch|Pad|Hollow Cantata
+patch|Pad|Iron Hymn
+patch|Pad|Vowel Ash
+patch|Pad|Mouth Of Fog
+patch|Pad|Murmur Vault
+patch|Pad|Throat Of Glass
+patch|Pad|Chant Engine
+patch|Pad|Whisper Gantry
+patch|Pad|Breath Foundry
+patch|Pad|Sermon Haze
 patch|Pad|Concrete Pad
 patch|Pad|Ashfall
 patch|Pad|Cathedral Of Rust
@@ -1383,6 +1925,46 @@ patch|Pad|Weary Gleam
 patch|Pad|Western Gloom
 patch|Pad|Wordless Sigh
 patch|Pad|Wrecked Gloom
+patch|Drone|Reactor Gut
+patch|Drone|Abyss Furnace
+patch|Drone|Deep Grinder
+patch|Drone|Bore Hole Hum
+patch|Drone|Magma Undertow
+patch|Drone|Crater Moan
+patch|Drone|Basalt Engine
+patch|Drone|Seismic Fold
+patch|Drone|Pit Of Rust
+patch|Drone|Leviathan Coil
+patch|Drone|High Tension Wire
+patch|Drone|Transformer Bleed
+patch|Drone|Arc Furnace Drone
+patch|Drone|Dynamo Scream
+patch|Drone|Relay Storm
+patch|Drone|Live Rail
+patch|Drone|Ion Furnace
+patch|Drone|Capacitor Groan
+patch|Drone|Overload Lattice
+patch|Drone|Static Generator
+patch|Drone|Night Freight
+patch|Drone|Compressor Hall
+patch|Drone|Bunker Pulse
+patch|Drone|Pump Station
+patch|Drone|Throttle Field
+patch|Drone|Cooling Tower
+patch|Drone|Rail Yard Throb
+patch|Drone|Blast Door Loop
+patch|Drone|Factory Lungs
+patch|Drone|Beacon Mast Pulse
+patch|Drone|Monolith Chant
+patch|Drone|Catacomb Voice
+patch|Drone|Ossuary Hum
+patch|Drone|Mantra Machine
+patch|Drone|Tunnel Prayer
+patch|Drone|Undercroft Moan
+patch|Drone|Crypt Throat
+patch|Drone|Abbey Of Steel
+patch|Drone|Silo Choir
+patch|Drone|Deep Vowel Mass
 patch|Drone|Reactor Drone
 patch|Drone|Turbine
 patch|Drone|Substation
@@ -1499,6 +2081,46 @@ patch|Drone|Unlit Cantor
 patch|Drone|Vagrant Furnace
 patch|Drone|Vagrant Turbine
 patch|Drone|Vast Hermit
+patch|Bell|Foundry Knell
+patch|Bell|Smelter Peal
+patch|Bell|Cracked Carillon
+patch|Bell|Gnashing Gong
+patch|Bell|Slag Tine
+patch|Bell|Ironwork Bowl
+patch|Bell|Hammered Lantern
+patch|Bell|Blister Chime
+patch|Bell|Rust Belfry
+patch|Bell|Mangled Vesper
+patch|Bell|Anvil Halo
+patch|Bell|Voltage Tocsin
+patch|Bell|Glass Detonator
+patch|Bell|Tungsten Strike
+patch|Bell|Static Psalm
+patch|Bell|Pylon Bellstrike
+patch|Bell|Arcing Vigil
+patch|Bell|Spindle Clang
+patch|Bell|Cathode Ring
+patch|Bell|Ozone Toll
+patch|Bell|Signal Cascade
+patch|Bell|Relay Chimes
+patch|Bell|Crowd Of Bells
+patch|Bell|Morse Belfry
+patch|Bell|Prism Stutter
+patch|Bell|Transit Carol
+patch|Bell|Mirror Arcade Bells
+patch|Bell|Siren Lattice
+patch|Bell|Clocktower Pump
+patch|Bell|Ghost Ostinato
+patch|Bell|Oracle Bell
+patch|Bell|Whispering Gong
+patch|Bell|Chanting Anvil
+patch|Bell|Sermon Chime
+patch|Bell|Mouthed Tocsin
+patch|Bell|Liturgy Wire
+patch|Bell|Speaking Bowl
+patch|Bell|Yammer Peal
+patch|Bell|Mantra Disc
+patch|Bell|Grievance Bell
 patch|Bell|Cold Bell
 patch|Bell|Prison Bell
 patch|Bell|Rusted Chime
@@ -1586,6 +2208,46 @@ patch|Bell|Sterile Prism
 patch|Bell|Umber Toll
 patch|Bell|Vaulted Shield
 patch|Bell|Wordless Cauldron
+patch|Sequence|Foundry Stutter
+patch|Sequence|Gearbox Snarl
+patch|Sequence|Slag Conveyor
+patch|Sequence|Ratcheted Maw
+patch|Sequence|Cinder Loom
+patch|Sequence|Kiln Shuttle
+patch|Sequence|Hammer Lattice
+patch|Sequence|Bilge Pattern
+patch|Sequence|Rust Escarpment
+patch|Sequence|Coal Gantry
+patch|Sequence|Arc Welder Grid
+patch|Sequence|Tungsten Tick
+patch|Sequence|Spline Cutter
+patch|Sequence|Lathe Chatter
+patch|Sequence|Strobe Rivet
+patch|Sequence|Volt Abacus
+patch|Sequence|Shear Pin
+patch|Sequence|Bolt Thrower Grid
+patch|Sequence|Ignition Ladder
+patch|Sequence|Pneumatic Sorter
+patch|Sequence|Bellows Engine
+patch|Sequence|Ventilator Choir
+patch|Sequence|Turnstile Pump
+patch|Sequence|Corridor Gate
+patch|Sequence|Pressure Hymn
+patch|Sequence|Exhaust Ladder
+patch|Sequence|Signal Tower Pulse
+patch|Sequence|Ballast Swell
+patch|Sequence|Dynamo Flicker
+patch|Sequence|Pylon Thrum
+patch|Sequence|Syllable Press
+patch|Sequence|Telegraph Mouth
+patch|Sequence|Phoneme Mill
+patch|Sequence|Dial Tone Oracle
+patch|Sequence|Gristle Chant
+patch|Sequence|Larynx Relay
+patch|Sequence|Ventriloquist Loop
+patch|Sequence|Lisping Cog
+patch|Sequence|Cantor Gearing
+patch|Sequence|Grinder Gossip
 patch|Sequence|Gated Machine
 patch|Sequence|Trance Gate Industrial
 patch|Sequence|Clockwork
@@ -1737,6 +2399,46 @@ patch|Sequence|Vigilant Escapement
 patch|Sequence|Wandering Register
 patch|Sequence|Warped Tracer
 patch|Sequence|Watched Mesh
+patch|Riser|Furnace Ascent
+patch|Riser|Gnashing Spiral
+patch|Riser|Ferric Vortex
+patch|Riser|Scrap Cyclone
+patch|Riser|Smelter Rise
+patch|Riser|Grinding Helix
+patch|Riser|Throttle Bloom
+patch|Riser|Cinder Tornado
+patch|Riser|Rivet Storm
+patch|Riser|Magnet Coil
+patch|Riser|Spark Gantry
+patch|Riser|Arc Welder Rise
+patch|Riser|Voltage Ladder
+patch|Riser|Ion Climb
+patch|Riser|Shear Lift
+patch|Riser|Coil Arc
+patch|Riser|Blade Hoist
+patch|Riser|Valve Overpressure
+patch|Riser|Strobe Ramp
+patch|Riser|Fuse Countup
+patch|Riser|Hangar Lift
+patch|Riser|Turbine Overture
+patch|Riser|Gantry Swell
+patch|Riser|Freight Uplift
+patch|Riser|Floodlight Ramp
+patch|Riser|Signal Flare
+patch|Riser|Thrust Column
+patch|Riser|Conveyor Climb
+patch|Riser|Rally Furnace
+patch|Riser|Pressure Front
+patch|Riser|Choir Ignition
+patch|Riser|Throat Elevator
+patch|Riser|Siren Larynx
+patch|Riser|Vowel Ascent
+patch|Riser|Oracle Ramp
+patch|Riser|Mouth Of Steam
+patch|Riser|Howl Shaft
+patch|Riser|Speaking Furnace
+patch|Riser|Gasp Ramp
+patch|Riser|Banshee Hoist
 patch|Riser|Tension Riser
 patch|Riser|Siren Climb
 patch|Riser|Falling Note Ramp
@@ -1822,6 +2524,46 @@ patch|Riser|Terminal Rattle
 patch|Riser|Tundra Drain
 patch|Riser|Violet Drain
 patch|Riser|Wrecked Hoist
+patch|Impact|Tectonic Groan
+patch|Impact|Bunker Collapse
+patch|Impact|Hull Breach
+patch|Impact|Leviathan Fall
+patch|Impact|Iron Avalanche
+patch|Impact|Crater Maw
+patch|Impact|Dredge Slam
+patch|Impact|Monolith Drop
+patch|Impact|Abyss Fold
+patch|Impact|Quarry Blast
+patch|Impact|Railgun Strike
+patch|Impact|Thunder Arc
+patch|Impact|Orbital Lance
+patch|Impact|Shockwave Crack
+patch|Impact|Detonator Snap
+patch|Impact|Kinetic Spear
+patch|Impact|Blast Door
+patch|Impact|Lightning Anvil
+patch|Impact|Hammer Of Static
+patch|Impact|Gauss Recoil
+patch|Impact|Siege Pulse
+patch|Impact|War Drum Echo
+patch|Impact|Barrage Gate
+patch|Impact|Titan Stomp
+patch|Impact|Engine Room Pound
+patch|Impact|March Of Iron
+patch|Impact|Artillery Roll
+patch|Impact|Collapse Echo
+patch|Impact|Stampede Gate
+patch|Impact|Bombard Throb
+patch|Impact|Colossus Roar
+patch|Impact|Giant's Breath
+patch|Impact|Cathedral Groan
+patch|Impact|Maw Of Night
+patch|Impact|Furnace Howl
+patch|Impact|Behemoth Moan
+patch|Impact|Vault Voice
+patch|Impact|Choir Of Rust
+patch|Impact|Chasm Voice
+patch|Impact|Titan Vowel
 patch|Impact|Low Boom
 patch|Impact|Steel Door
 patch|Impact|Hydraulic Slam
@@ -1923,6 +2665,46 @@ patch|Impact|Tagged Shutter
 patch|Impact|Trailing Judgment
 patch|Impact|Violent Lid
 patch|Impact|Wordless Clang
+patch|Cinematic|Abyssal Horn
+patch|Cinematic|Basalt Fanfare
+patch|Cinematic|Ironclad Swell
+patch|Cinematic|Undertow Brass
+patch|Cinematic|Colossus Groan
+patch|Cinematic|Rampart Horn
+patch|Cinematic|Warship Bellow
+patch|Cinematic|Bastion Growl
+patch|Cinematic|Monolith Swell
+patch|Cinematic|Leviathan Call
+patch|Cinematic|Hammerfall Hit
+patch|Cinematic|Citadel Impact
+patch|Cinematic|Shockwave Toll
+patch|Cinematic|Ruin Strike
+patch|Cinematic|Bunker Slam
+patch|Cinematic|Anvil Of Night
+patch|Cinematic|Collapse Hit
+patch|Cinematic|Fault Line
+patch|Cinematic|Meteor Toll
+patch|Cinematic|Iron Verdict
+patch|Cinematic|Ticking Dread
+patch|Cinematic|Heartbeat Of Steel
+patch|Cinematic|Gated Siege
+patch|Cinematic|Pulse Of Ruin
+patch|Cinematic|Throbbing Abyss
+patch|Cinematic|Marching Shadow
+patch|Cinematic|Pressure Chamber
+patch|Cinematic|Alarm Cathedral
+patch|Cinematic|Ostinato Furnace
+patch|Cinematic|Rolling Blackout
+patch|Cinematic|Vowel Abyss
+patch|Cinematic|Requiem Machine
+patch|Cinematic|Dark Litany
+patch|Cinematic|Wailing Bulkhead
+patch|Cinematic|Sunken Oratorio
+patch|Cinematic|Groaning Hull
+patch|Cinematic|Phantom Chorus
+patch|Cinematic|Breathing Monolith
+patch|Cinematic|Whale Engine
+patch|Cinematic|Tomb Hymn
 patch|Cinematic|Abyssal Lifesign
 patch|Cinematic|Barred Touchdown
 patch|Cinematic|Blistered Leviathan
@@ -1990,6 +2772,46 @@ patch|Cinematic|Stern Countdown
 patch|Cinematic|Vast Vertigo
 patch|Cinematic|Violent Monolith
 patch|Cinematic|Voiceless Horn
+patch|Perc|Anvil Gnaw
+patch|Perc|Rebar Gong
+patch|Perc|Boiler Knock
+patch|Perc|Flange Bell
+patch|Perc|Crucible Tick
+patch|Perc|Scrap Marimba
+patch|Perc|Chain Rattle
+patch|Perc|Foundry Plate
+patch|Perc|Torsion Block
+patch|Perc|Smelter Clank
+patch|Perc|Spark Rim
+patch|Perc|Arc Cowbell
+patch|Perc|Solder Snap
+patch|Perc|Ignition Tap
+patch|Perc|Relay Click
+patch|Perc|Breaker Pop
+patch|Perc|Static Woodblock
+patch|Perc|Fuse Strike
+patch|Perc|Voltage Clave
+patch|Perc|Cathode Tick
+patch|Perc|Conveyor Shaker
+patch|Perc|Ratchet Roll
+patch|Perc|Piston Tambour
+patch|Perc|Shutter Loop
+patch|Perc|Gantry Shuffle
+patch|Perc|Cog Patter
+patch|Perc|Turnstile Rattle
+patch|Perc|Rivet Gun
+patch|Perc|Dynamo Flutter
+patch|Perc|Loom Shuttle
+patch|Perc|Throat Tabla
+patch|Perc|Mouth Harp Knock
+patch|Perc|Vowel Bongo
+patch|Perc|Larynx Drop
+patch|Perc|Tongue Clap
+patch|Perc|Jaw Conga
+patch|Perc|Gullet Tom
+patch|Perc|Syllable Tick
+patch|Perc|Murmur Block
+patch|Perc|Uvula Pop
 patch|Perc|Abandoned Clank
 patch|Perc|Abandoned Tick
 patch|Perc|Acid Knock
@@ -2110,6 +2932,46 @@ patch|Perc|Wasteland Flash
 patch|Perc|Waxen Boing
 patch|Perc|Welded Can
 patch|Perc|Wordless Jolt
+patch|Drum|Slag Kick
+patch|Drum|Furnace Tom
+patch|Drum|Overload Kick
+patch|Drum|Grinder Snare
+patch|Drum|Fold Floor Tom
+patch|Drum|Cinder Kick
+patch|Drum|Ironclad Tom
+patch|Drum|Bitter Kick
+patch|Drum|Mangle Snare
+patch|Drum|Crusher Kick
+patch|Drum|Zap Kick
+patch|Drum|Laser Snare
+patch|Drum|Arc Kick
+patch|Drum|Sync Rim Snare
+patch|Drum|Pulse Tom
+patch|Drum|Strobe Hat
+patch|Drum|Ion Kick
+patch|Drum|Cutter Snare
+patch|Drum|Plasma Tom
+patch|Drum|Spike Hat
+patch|Drum|Gated Clap
+patch|Drum|Stutter Clap
+patch|Drum|Swarm Hat
+patch|Drum|Roll Snare
+patch|Drum|Brake Clap
+patch|Drum|Steam Hat
+patch|Drum|Pump Kick
+patch|Drum|Crowd Clap
+patch|Drum|Shuffle Hat
+patch|Drum|Echo Rim
+patch|Drum|Vowel Kick
+patch|Drum|Speaking Tom
+patch|Drum|Formant Snare
+patch|Drum|Choir Clap
+patch|Drum|Wah Tom
+patch|Drum|Breath Hat
+patch|Drum|Groan Kick
+patch|Drum|Mouth Snare
+patch|Drum|Hollow Vowel Tom
+patch|Drum|Whisper Cymbal
 patch|Drum|Abrasive Cymbal
 patch|Drum|Annealed Hat
 patch|Drum|Arctic Kick
@@ -2207,6 +3069,46 @@ patch|Drum|Waxen Gong
 patch|Drum|Weightless Thump
 patch|Drum|Western Stamp
 patch|Drum|Wrecked Boot
+patch|FX|Rift Growl
+patch|FX|Warp Engine
+patch|FX|Hull Groan
+patch|FX|Reactor Wobble
+patch|FX|Void Turbine
+patch|FX|Abyss Siren
+patch|FX|Machine Breath
+patch|FX|Grinding Portal
+patch|FX|Swamp Engine
+patch|FX|Exhaust Snarl
+patch|FX|Laser Volley
+patch|FX|Zap Cascade
+patch|FX|Arc Welder
+patch|FX|Particle Zap
+patch|FX|Pulse Rifle
+patch|FX|Ion Streak
+patch|FX|Plasma Spit
+patch|FX|Bolt Ricochet
+patch|FX|Capacitor Dump
+patch|FX|Coil Whine
+patch|FX|Riser Pump
+patch|FX|Siren Gate
+patch|FX|Strobe Sweep
+patch|FX|Lockdown Klaxon
+patch|FX|Scanner Pulse
+patch|FX|Heartbeat Sonar
+patch|FX|Radar Sweep
+patch|FX|Beacon Throb
+patch|FX|Tunnel Rush
+patch|FX|Hover Drone
+patch|FX|Alien Speech
+patch|FX|Wind Tunnel Vowel
+patch|FX|Ghost Whisper
+patch|FX|Portal Breath
+patch|FX|Machine Mutter
+patch|FX|Ether Choir
+patch|FX|Wraith Call
+patch|FX|Static Prayer
+patch|FX|Signal Ghost
+patch|FX|Howling Shaft
 patch|FX|Acrid Seizure
 patch|FX|Amber Siren
 patch|FX|Arctic Lockdown
@@ -2279,6 +3181,46 @@ patch|FX|Tender Sweep
 patch|FX|Thin Ray
 patch|FX|Threadbare Blackout
 patch|FX|Wrecked Saucer
+patch|Glitch|Corrupt Growl
+patch|Glitch|Fold Fault
+patch|Glitch|Byte Gnash
+patch|Glitch|Mangled Packet
+patch|Glitch|Kernel Snarl
+patch|Glitch|Parity Rip
+patch|Glitch|Overflow Maw
+patch|Glitch|Fractured Bus
+patch|Glitch|Segment Fault
+patch|Glitch|Shredded Cache
+patch|Glitch|Sync Splinter
+patch|Glitch|Clock Skew
+patch|Glitch|Bit Spark
+patch|Glitch|Jitter Zap
+patch|Glitch|Interrupt Bite
+patch|Glitch|Logic Arc
+patch|Glitch|Tick Error
+patch|Glitch|Sample Slice
+patch|Glitch|Short Circuit Blip
+patch|Glitch|Opcode Snap
+patch|Glitch|Buffer Stutter
+patch|Glitch|Loop Seizure
+patch|Glitch|Gate Cascade
+patch|Glitch|Frame Drop
+patch|Glitch|Repeat Fault
+patch|Glitch|Stack Pump
+patch|Glitch|Retry Storm
+patch|Glitch|Strobe Cache
+patch|Glitch|Packet Burst
+patch|Glitch|Hold Loop
+patch|Glitch|Robot Gargle
+patch|Glitch|Vocoder Debris
+patch|Glitch|Syllable Crash
+patch|Glitch|Data Mouth
+patch|Glitch|Glottal Fault
+patch|Glitch|Speech Shard
+patch|Glitch|Formant Error
+patch|Glitch|Babble Bits
+patch|Glitch|Talkbox Rot
+patch|Glitch|Voice Mangle
 patch|Glitch|Adrift Shard
 patch|Glitch|Ageless Abort
 patch|Glitch|Bleak Cursor
@@ -2327,6 +3269,46 @@ patch|Glitch|Turning Carrier
 patch|Glitch|Vaulted Slice
 patch|Glitch|Veiled Scratch
 patch|Glitch|Voiceless Modem
+patch|Game|Mutant Powerup
+patch|Game|Slime Gargle
+patch|Game|Boss Roar Tone
+patch|Game|Engine Kart
+patch|Game|Cursed Chest
+patch|Game|Goblin Chatter
+patch|Game|Lava Level
+patch|Game|Glitched Grunt
+patch|Game|Dungeon Drone Tone
+patch|Game|Mecha Stomp
+patch|Game|Plasma Laser
+patch|Game|Gold Coin Grab
+patch|Game|Blaster Recoil
+patch|Game|Hitbox Spark
+patch|Game|Jump Spring
+patch|Game|Shield Break
+patch|Game|Teleport Pad
+patch|Game|Critical Hit
+patch|Game|Extra Life
+patch|Game|Railgun Charge
+patch|Game|Breach Klaxon
+patch|Game|Victory Fanfare
+patch|Game|Menu Loop Pulse
+patch|Game|Countdown Beacon
+patch|Game|Bonus Round
+patch|Game|Siren Chase
+patch|Game|Combo Meter
+patch|Game|Lobby Shimmer
+patch|Game|Respawn Pulse
+patch|Game|Pinball Flipper
+patch|Game|Creature Yelp
+patch|Game|Announcer Hum
+patch|Game|Ghost Moan
+patch|Game|Robot Greeting
+patch|Game|Wizard Incant
+patch|Game|Ouch Formant
+patch|Game|Oracle Riddle
+patch|Game|Gibberish Merchant
+patch|Game|Portal Whisper
+patch|Game|Talking Treasure
 patch|Game|Amber Unlock
 patch|Game|Arctic Confirm
 patch|Game|Asphalt Locked
@@ -2411,6 +3393,46 @@ patch|Game|Weightless Fall
 patch|Game|White Confirm
 patch|Game|White Token
 patch|Game|Zone Loss
+patch|Chip|Cartridge Growl
+patch|Chip|Eightbit Gnaw
+patch|Chip|Pixel Mangler
+patch|Chip|Bitrot Wobble
+patch|Chip|Glitch Gremlin
+patch|Chip|Sprite Snarl
+patch|Chip|Lo Res Beast
+patch|Chip|Pocket Fiend
+patch|Chip|Mainframe Rumble
+patch|Chip|Corrupt Save
+patch|Chip|Zapper Lead
+patch|Chip|Laser Sprite
+patch|Chip|Turbo Blaster
+patch|Chip|Ricochet Bleep
+patch|Chip|Boss Encounter
+patch|Chip|Blip Cannon
+patch|Chip|Warp Zone Lead
+patch|Chip|Plasma Tick
+patch|Chip|Dropkick Sync
+patch|Chip|Neon Hazard
+patch|Chip|Arpeggiator Coin
+patch|Chip|Minor Dungeon Arp
+patch|Chip|Chiptune Choir Gate
+patch|Chip|Triplet Console
+patch|Chip|Overworld Stack
+patch|Chip|Credits Roll
+patch|Chip|Bitstream Pump
+patch|Chip|Insert Coin Rush
+patch|Chip|Gamepad Shuffle
+patch|Chip|Highscore Swell
+patch|Chip|Speech Chip
+patch|Chip|Robot Vowel Arp
+patch|Chip|Voicebox Glitch
+patch|Chip|Synthetic Narrator
+patch|Chip|Bitmouth Blip
+patch|Chip|Dialogue Tree
+patch|Chip|Phoneme Crusher
+patch|Chip|Talking Cartridge
+patch|Chip|Wah Sprite
+patch|Chip|Garbled Oracle
 patch|Chip|Amber Fuzz
 patch|Chip|Banished Rotate
 patch|Chip|Binary Duet
@@ -2464,6 +3486,46 @@ patch|Chip|Synthetic Mirror
 patch|Chip|Thin Step
 patch|Chip|Ticking Shift
 patch|Chip|Tight Tumble
+patch|Texture|Grinding Dust
+patch|Texture|Ferric Swarm
+patch|Texture|Scrap Tide
+patch|Texture|Torn Metal Air
+patch|Texture|Shredded Signal
+patch|Texture|Gravel Storm
+patch|Texture|Folded Static
+patch|Texture|Corroded Wind
+patch|Texture|Rust Rain
+patch|Texture|Debris Field
+patch|Texture|Neon Fizz
+patch|Texture|Spark Shower
+patch|Texture|Glitch Lattice
+patch|Texture|Arc Rain
+patch|Texture|Data Hail
+patch|Texture|Zapped Grid
+patch|Texture|Fuse Box Chatter
+patch|Texture|Shorted Panel
+patch|Texture|Ion Drizzle
+patch|Texture|Laser Dust
+patch|Texture|Stutter Fog
+patch|Texture|Gated Steam
+patch|Texture|Pulse Smoke
+patch|Texture|Strobe Rain
+patch|Texture|Chopped Ether
+patch|Texture|Tape Gate Haze
+patch|Texture|Morse Mist
+patch|Texture|Shutter Static
+patch|Texture|Ventilator Chop
+patch|Texture|Clock Tower Hiss
+patch|Texture|Whispering Ducts
+patch|Texture|Mouth Of Static
+patch|Texture|Phantom Vowels
+patch|Texture|Tunnel Whisper
+patch|Texture|Broken Speech
+patch|Texture|Breath Machine
+patch|Texture|Murmuring Pipes
+patch|Texture|Haunted Intercom
+patch|Texture|Hollow Tongue
+patch|Texture|Ghost Radio Choir
 patch|Texture|Radio Static
 patch|Texture|Vinyl Crackle Bed
 patch|Texture|Ventilation
@@ -2580,6 +3642,46 @@ patch|Texture|Warped Wind
 patch|Texture|Wary Brood
 patch|Texture|Waxen Shortwave
 patch|Texture|Zinc Refinery
+patch|Vox|Iron Larynx
+patch|Vox|Choked Cantor
+patch|Vox|Gravel Psalm
+patch|Vox|Bellows Moan
+patch|Vox|Foundry Chant
+patch|Vox|Maw Liturgy
+patch|Vox|Slag Choir
+patch|Vox|Snarling Vespers
+patch|Vox|Clenched Hymn
+patch|Vox|Rasp Tabernacle
+patch|Vox|Spitting Cantor
+patch|Vox|Hiss Oracle
+patch|Vox|Teeth Of Prayer
+patch|Vox|Clicking Tongue
+patch|Vox|Sibilant Wire
+patch|Vox|Glottal Spark
+patch|Vox|Barked Hymn
+patch|Vox|Stutter Deacon
+patch|Vox|Lash Chorale
+patch|Vox|Fricative Engine
+patch|Vox|Pulse Cathedral
+patch|Vox|Gated Congregation
+patch|Vox|Choir Of Pistons
+patch|Vox|Breathing Nave
+patch|Vox|Tidal Chorale
+patch|Vox|Pumping Requiem
+patch|Vox|Engine Cathedral
+patch|Vox|Sidechain Psalter
+patch|Vox|Stadium Ghosts
+patch|Vox|Throbbing Vigil
+patch|Vox|Whispering Gear
+patch|Vox|Murmur Machine
+patch|Vox|Vowel Loom
+patch|Vox|Speaking Valve
+patch|Vox|Lipless Oracle
+patch|Vox|Formant Ghoul
+patch|Vox|Chattering Relay
+patch|Vox|Mouth Of Wires
+patch|Vox|Jawbone Drift
+patch|Vox|Slow Diction
 patch|Vox|Acid Breath
 patch|Vox|Ash Wraith
 patch|Vox|Bitter Mass
