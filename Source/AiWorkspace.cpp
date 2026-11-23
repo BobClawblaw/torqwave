@@ -1,3 +1,4 @@
+#include "Sampler.h"
 #include "AiWorkspace.h"
 #include "SignalConsole.h"
 #include "AudioEngine.h"
@@ -1556,6 +1557,36 @@ std::vector<SessionTools::Effect> readChain (const TrackEffects& chains, juce::u
         effect.plugin = p->getPluginDescription();
         effect.instrument = p == chains.getInstrument (trackId);
         effect.bypassed = chains.isBypassed (trackId, i);
+
+        // Torqwave Sampler: what it holds.
+        if (auto* sampler = dynamic_cast<BuiltInEffects::SamplerProcessor*> (p))
+        {
+            const auto zones = sampler->getZones();
+            const auto how = sampler->getSlicing();
+            effect.zones = (int) zones.size();
+
+            if (zones.empty())
+            {
+                effect.about = "no sample yet";
+            }
+            else if (how.on)
+            {
+                effect.about = juce::String (zones.size()) + " slices of " + zones[0].file.getFileName().quoted() + ", cut at " + Sampler::sliceSourceNames()[(int) how.source].toLowerCase()
+                               + ", one a key from " + Instrument::pitchName (zones.front().lowKey) + " to " + Instrument::pitchName (zones.back().lowKey);
+            }
+            else
+            {
+                juce::StringArray each;
+
+                for (size_t z = 0; z < zones.size() && z < 8; ++z)
+                    each.add ("zone " + juce::String (z + 1) + ": " + (zones[z].file != juce::File() ? zones[z].file.getFileName().quoted() : juce::String ("no file"))
+                              + (zones[z].sample == nullptr ? " (missing)" : "") + ", root " + Instrument::pitchName (zones[z].root) + ", keys " + Instrument::pitchName (zones[z].lowKey) + " to "
+                              + Instrument::pitchName (zones[z].highKey) + (zones[z].loop != 0 && ! zones[z].oneShot ? ", looped" : "") + (zones[z].oneShot ? ", one-shot" : ""));
+
+                effect.about = each.joinIntoString ("; ") + (zones.size() > 8 ? "; and " + juce::String (zones.size() - 8) + " more" : juce::String());
+            }
+        }
+
         std::map<const juce::AudioProcessorParameter*, juce::String> ids;
 
         for (auto& [id, parameter] : TrackEffects::parametersById (*p))
@@ -1611,6 +1642,9 @@ std::optional<juce::MemoryBlock> stateFor (const SessionTools::InstrumentLoad& l
 
 bool applySynthChange (AudioEngine& engine, const SessionTools::SynthChange& change)
 {
+    if (change.apply != nullptr)
+        return engine.changeInstrument (change.trackId, change.apply);
+
     return engine.changeInstrument (change.trackId, [&change] (juce::AudioPluginInstance& plugin)
     {
         auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (&plugin);

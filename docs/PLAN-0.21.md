@@ -104,7 +104,7 @@ A new instrument, **Torqwave Sampler** (`Source/Sampler.h/.cpp`, ID `torqwave:sa
 
 ## Step 3: slices (M)
 
-The second way to play: **Slices** in place of **Keys**. One sample is cut into pieces and each piece plays on its own key, upward from C1 (36, where a kick sits), up to 64 slices.
+The second way to play: **Slices** in place of **Keys**. One sample is cut into pieces and each piece plays on its own key, upward from C2 (36, where a kick sits), up to 64 slices.
 
 - **Where the cuts come from:**
   - the file's **markers** (a slice between each pair);
@@ -124,7 +124,7 @@ The second way to play: **Slices** in place of **Keys**. One sample is cut into 
 
 - **Loading:** through `AudioFileIO::load`, so every format Torqwave opens, with its markers. A sample is loaded once and shared by every sampler that plays that file. The limits are those under "Not in 0.21.0", and a refused file says why.
 - **The WAV sampler chunk:** when a file has one, its root note and loop are taken from it.
-- **Root pitch found:** otherwise the pitch is measured half a second in, after the attack (as Decrypt does), and sets the root note and fine tune. A sound without a clear pitch gets C3 and says so.
+- **Root pitch found:** otherwise the pitch is measured half a second in, after the attack (as Decrypt does), and sets the root note and fine tune. A sound without a clear pitch gets C4 and says so.
 - **Find Loop:** in the held part of a note, looks for a start and an end a whole number of the sound's periods apart where the two places are most alike, moves both to zero crossings, and sets a crossfade. It is a suggestion: the handles are there to change it.
 - **Where the files are kept in the state:** each sample by a path relative to the session's folder and by its full path, as clips are, and found in that order. A factory sample is named relative to the app's own samples.
 - **Sounds that are not files** (an editor selection, an unsaved file) are written as 32-bit float WAV files into **Music > Torqwave > Samples**, beside the Sequence Library's folder, and named from where they came.
@@ -133,7 +133,7 @@ The second way to play: **Slices** in place of **Keys**. One sample is cut into 
 
 **Builds on:** `AudioFileIO::load`, `WaveTables::findPitch`, `AudioEdits::crossfadeLoop` and `zeroCrossingNear`, `SessionFile`'s paths, `SessionCollect`, `Project::filesFolder`.
 
-**Tests:** a WAV written with a sampler chunk loads with its root and loop. Tones at known pitches, low and high, are found to within a few cents, and noise is given C3. Find Loop on a held synth note gives a loop whose turn can't be seen in the render (the step at the turn is measured and given in the changelog). A session with a sampler survives its folder being moved. A project and a copy with audio hold the samples and play with the originals deleted. A deleted sample is reported, its zone is silent, and locating it brings it back. A file over a limit is refused with the reason. Two samplers on one file hold one copy.
+**Tests:** a WAV written with a sampler chunk loads with its root and loop. Tones at known pitches, low and high, are found to within a few cents, and noise is given C4. Find Loop on a held synth note gives a loop whose turn can't be seen in the render (the step at the turn is measured and given in the changelog). A session with a sampler survives its folder being moved. A project and a copy with audio hold the samples and play with the originals deleted. A deleted sample is reported, its zone is silent, and locating it brings it back. A file over a limit is refused with the reason. Two samplers on one file hold one copy.
 
 Fresh copies of an instrument are made for mixdown, freeze and bounce, so a sampler's state loads its samples before it returns. With the live instrument holding them, a copy takes them from the shared store.
 

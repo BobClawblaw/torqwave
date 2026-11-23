@@ -1444,7 +1444,7 @@ namespace
                 firstSlice = std::abs (generated.getSample (0, i) - loop.getSample (0, i)) < 1.0e-5f;
 
             check (renderError.isEmpty() && firstSlice && InstrumentKeys::kindFor (*chain.getInstrument (placed.trackId)) == InstrumentKeys::Kind::kit,
-                   "sampler on a track: Generate from Instrument, given the sampler's state, plays the first slice from C1 as it is in the file; Audition plays a sliced sampler a kit's beat");
+                   "sampler on a track: Generate from Instrument, given the sampler's state, plays the first slice from C2 as it is in the file; Audition plays a sliced sampler a kit's beat");
 
             // A sequence saved with the sampler as its voice brings it back, samples and all.
             auto q = SequenceFile::fromClip (sliced, placed.clipId, chain.createXml (placed.trackId));

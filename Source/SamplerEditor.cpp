@@ -743,7 +743,7 @@ SamplerEditor::SamplerEditor (SamplerProcessor& p)
     attach (velocity, ampPanel, "velocity", "How much a note's velocity sets its level");
     attach (cutoff, filterPanel, "cutoff", "Where the filter sits");
     attach (resonance, filterPanel, "resonance", "How much the filter rings at its cutoff");
-    attach (keyTrack, filterPanel, "keyTrack", "How far the cutoff follows the key, around C3");
+    attach (keyTrack, filterPanel, "keyTrack", "How far the cutoff follows the key, around C4");
     attach (filterEnv, filterPanel, "filterEnv", "How far the filter's envelope moves the cutoff: 100 % is eight octaves up");
     attach (filterAttack, filterPanel, "filterAttack", "The filter envelope's rise");
     attach (filterDecay, filterPanel, "filterDecay", "The filter envelope's fall to its sustain level");
@@ -783,7 +783,7 @@ SamplerEditor::SamplerEditor (SamplerProcessor& p)
     choice (lfoSync, lfoPanel, "lfoSync", "Off: the Rate knob, in Hz. Otherwise the LFO's cycle in note values at the session's tempo");
     choice (voices, voicePanel, "voices", "Poly: up to 32 notes at once. Mono: one, each new note taking over from the last");
 
-    // The selectedZone zone's settings: they are the zone's, not hosted parameters.
+    // The selected zone's settings: they are the zone's, not hosted parameters.
     const auto zoneKnob = [this] (Knob& k, const juce::NormalisableRange<float>& range, float start, const juce::String& unit, const juce::String& tip,
                                   std::function<void (Sampler::Zone&, float)> set)
     {
@@ -863,7 +863,7 @@ SamplerEditor::SamplerEditor (SamplerProcessor& p)
 
     // Keys or slices, and how the slices are cut.
     mode.setChoices ({ "Keys", "Slices" });
-    mode.setTooltip ("Keys: samples across the keys, in zoneList. Slices: one sample cut into pieces, each on its own key from C1");
+    mode.setTooltip ("Keys: samples across the keys, in zones. Slices: one sample cut into pieces, each on its own key from C2");
     mode.onChange = [this] (int index)
     {
         if (! showing)
@@ -921,11 +921,11 @@ SamplerEditor::SamplerEditor (SamplerProcessor& p)
     locateButton.onClick = [this] { locate(); };
     removeButton.onClick = [this] { removeZone(); };
     sliceButton.onClick = [this] { sliceAgain(); };
-    open.setTooltip ("Choose a sound for the selectedZone zone, or to slice");
+    open.setTooltip ("Choose a sound for the selected zone, or to slice");
     pitchButton.setTooltip ("Measures the sample's pitch and sets the zone's root and tuning from it");
     loopButton.setTooltip ("Looks for a loop in the held part of the sound, and sets the loop and its crossfade: a suggestion, to change with the handles");
     locateButton.setTooltip ("Finds a missing sample: choose it where it is now");
-    removeButton.setTooltip ("Takes the selectedZone zone away");
+    removeButton.setTooltip ("Takes the selected zone away");
     sliceButton.setTooltip ("Cuts the sample again from its start, as Source, Sensitivity and Parts say: cuts moved or added by hand are lost");
 
     wavePanel.addAndMakeVisible (open);
@@ -1097,7 +1097,7 @@ bool SamplerEditor::loadFile (const juce::File& file, int atKey)
         return false;
     }
 
-    // On the key map a sound becomes a new zone; anywhere else it is the selectedZone zone's sample.
+    // On the key map a sound becomes a new zone; anywhere else it is the selected zone's sample.
     const auto replace = atKey < 0 && juce::isPositiveAndBelow (selectedZone, (int) zoneList.size()) ? zoneList[(size_t) selectedZone].id : 0;
     error = sampler.addSample (sample, file, replace, atKey);
 
@@ -1250,7 +1250,7 @@ void SamplerEditor::findPitch()
     if (juce::isPositiveAndBelow (selectedZone, (int) zoneList.size()) && zoneList[(size_t) selectedZone].sample != nullptr
         && ! Sampler::findPitch (*zoneList[(size_t) selectedZone].sample, zoneList[(size_t) selectedZone].span()).found)
     {
-        say ("No clear pitch was found: the root is C3. Set it with the Root knob.");
+        say ("No clear pitch was found: the root is C4. Set it with the Root knob.");
     }
 }
 
@@ -1326,7 +1326,7 @@ void SamplerEditor::setSlices (bool on)
     {
         if (on)
         {
-            // The selectedZone zone's sample, cut: at its hits when it has no markers or regions to cut at.
+            // The selected zone's sample, cut: at its hits when it has no markers or regions to cut at.
             if (Sampler::findSlices (*sample, {}, how).empty())
                 how.source = Sampler::SliceSource::hits;
 

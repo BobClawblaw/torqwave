@@ -383,7 +383,7 @@ namespace
             const auto layerDb = db (toneAt (layered, 0.1, 0.3, 1300.0) / toneAt (layered, 0.1, 0.3, 800.0));
 
             check (lowKey == "1000" && softKey == "0101" && hardKey == "0011" && edge == "0101" && over == "0011" && std::abs (layerDb + 6.0) < 0.1 && sampler.getNumSounding() == 2,
-                   "sampler: a key below C3 plays the low zone alone; above it a soft note plays the soft zone and a hard one the hard zone (velocity 79 the one, 80 the other), each with the layer over them, "
+                   "sampler: a key below C4 plays the low zone alone; above it a soft note plays the soft zone and a hard one the hard zone (velocity 79 the one, 80 the other), each with the layer over them, "
                        + juce::String (-layerDb, 1) + " dB down as its level says");
         }
 
@@ -809,7 +809,7 @@ namespace
                        && inPart.size() == 2 && inPart[0].name == "Late"
                        && partOnly.size() == 4 && partOnly[0].start == 20000 && partOnly[0].name == "Start" && partOnly[3].end == 50000,
                    "sampler: a sample with eight markers is cut into the nine pieces between them, named after the markers (" + names.joinIntoString (", ")
-                       + "), each a one-shot on its own key from C1 playing its piece and nothing after it; its three regions give three slices; a part of it is cut at the markers and regions in that part alone");
+                       + "), each a one-shot on its own key from C2 playing its piece and nothing after it; its three regions give three slices; a part of it is cut at the markers and regions in that part alone");
         }
 
         // Equal parts, and no more than 64 of anything.
@@ -835,7 +835,7 @@ namespace
 
             check (equal && Sampler::findSlices (*sample, {}, how).size() == 64 && Sampler::findSlices (*crowded, {}, byMarkers).size() == 64
                        && Sampler::zonesFromSlices (crowded, {}, Sampler::findSlices (*crowded, {}, byMarkers), false).back().highKey == 99,
-                   "sampler: sixteen equal parts of 86,400 frames are 5,400 frames each; 500 parts asked for, or a hundred markers, give 64 slices, the last on D#6");
+                   "sampler: sixteen equal parts of 86,400 frames are 5,400 frames each; 500 parts asked for, or a hundred markers, give 64 slices, the last on D#7");
         }
 
         // Hits: a drum loop from Basic Drums cut where its hits start.
@@ -1042,7 +1042,7 @@ namespace
 
             check (worst < 3.0 && ! none.found && none.root == 60 && juce::exactlyEqual (none.tune, 0.0f) && flat.root == 69 && flat.tune < -40.0f && flat.tune > -52.0f,
                    "sampler: the pitch of harmonic tones from 41 Hz to 1,760 Hz is found within " + juce::String (worst, 2) + " cents (" + readings.joinIntoString (", ")
-                       + "); a tone 47 cents above A4 gets A4 and " + juce::String (flat.tune, 1) + " cents of tuning; noise has no pitch and gets C3");
+                       + "); a tone 47 cents above A4 gets A4 and " + juce::String (flat.tune, 1) + " cents of tuning; noise has no pitch and gets C4");
         }
 
         // Find Loop: on a held note of Torqwave Synth, on two detuned tones beating, and on noise.
@@ -1497,7 +1497,7 @@ namespace
             const auto whole = ! window->showsSlices() && sampler.getZones().size() == 1 && sampler.getZones()[0].lowKey == 0 && sampler.getZones()[0].highKey == 127 && ! sampler.getZones()[0].oneShot;
 
             check (sliced && onCut && dragged && held && split && joined && pads && lit && dark && eight && whole,
-                   "sampler window: Slices cuts the selected zone's sample at its hits (" + juce::String (times.size()) + " slices from C1, a pad each); a cut is where its slice starts and drags it, "
+                   "sampler window: Slices cuts the selected zone's sample at its hits (" + juce::String (times.size()) + " slices from C2, a pad each); a cut is where its slice starts and drags it, "
                    "not past the next slice; a cut added makes two slices of one and moves the keys after it up, and taken away joins them again; a pad lights while its slice plays; "
                    "Slice Again in eight equal parts gives eight; back to Keys, the sample is one zone over every key");
         }

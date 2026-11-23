@@ -100,7 +100,7 @@ namespace Sampler
     /** A sound's pitch as a zone needs it: the key it is nearest, and the cents to tune it by so
         that key plays it in tune. Measured over half a second after the first 20 ms of the part
         (all of a shorter one), as Decrypt measures a note. Not found for a sound with no clear
-        pitch between 30 Hz and 2 kHz: then the root is C3 (60). */
+        pitch between 30 Hz and 2 kHz: then the root is C4 (60). */
     struct Pitch
     {
         bool found = false;
@@ -184,7 +184,7 @@ namespace Sampler
     ProgramPtr makeProgram (std::vector<Zone>, juce::uint32 generation = 0);
 
     //==============================================================================
-    // Slices: one sample cut into pieces, each on a key of its own from C1 (36) up.
+    // Slices: one sample cut into pieces, each on a key of its own from C2 (36) up.
     constexpr int maxSlices = 64, firstSliceKey = 36;
 
     enum class SliceSource { markers, regions, hits, equalParts };
@@ -259,7 +259,7 @@ namespace Sampler
         FilterType filter = FilterType::off;
         float cutoff = 20000.0f;       // Hz, 20 to 20,000
         float resonance = 0.0f;        // %, 0 to 100
-        float keyTrack = 0.0f;         // %, how far the cutoff follows the key (around C3)
+        float keyTrack = 0.0f;         // %, how far the cutoff follows the key (around C4)
         float filterEnvelope = 0.0f;   // %, -100 to 100: 100 opens it eight octaves
         float filterAttack = 0.0f, filterDecay = 300.0f, filterSustain = 0.0f, filterRelease = 100.0f;
         float velocityToCutoff = 0.0f; // %, 100 opens it four octaves at full velocity

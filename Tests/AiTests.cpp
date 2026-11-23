@@ -1,4 +1,6 @@
 #include <JuceHeader.h>
+#include "../Source/Sampler.h"
+#include "../Source/SamplerTrack.h"
 #include "../Source/AiAssistant.h"
 #include "../Source/InstrumentPresets.h"
 #include "../Source/AiCatalogue.h"
@@ -960,7 +962,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 47 && names.contains ("decrypt_clip") && names.contains ("table_from_clip") && names.contains ("find_sequence_presets") && names.contains ("add_sequence_preset") && names.contains ("add_kit") && names.contains ("list_drum_maps") && names.contains ("set_drum_map") && names.contains ("remap_clip_notes") && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("fit_tempo_to_hits") && names.contains ("store_scene") && names.contains ("recall_scene") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 49 && names.contains ("decrypt_clip") && names.contains ("table_from_clip") && names.contains ("sampler_from_clip") && names.contains ("set_sampler") && names.contains ("find_sequence_presets") && names.contains ("add_sequence_preset") && names.contains ("add_kit") && names.contains ("list_drum_maps") && names.contains ("set_drum_map") && names.contains ("remap_clip_notes") && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("fit_tempo_to_hits") && names.contains ("store_scene") && names.contains ("recall_scene") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -2763,6 +2765,205 @@ namespace
         return out;
     }
 
+    /** sampler_from_clip and set_sampler on a session on the engine: the plan and its result, nothing
+        changed until applied, applied as the app applies it; what get_session says of a sampler;
+        refusals with their reasons. */
+    void testSamplerTools()
+    {
+        AudioEngine engine;
+        const auto folder = juce::File::createTempFile ("aisampler");
+        folder.createDirectory();
+
+        // A second and a half of six hits, and a held tone.
+        juce::AudioBuffer<float> hits (2, 72000), tone (1, 96000);
+        hits.clear();
+
+        for (int h = 0; h < 6; ++h)
+            for (int i = 0; i < 8000; ++i)
+            {
+                const auto t = i / 48000.0;
+                const auto x = (float) (0.7 * std::exp (-t * 30.0) * std::sin (juce::MathConstants<double>::twoPi * (h % 2 == 0 ? 95.0 : 1900.0) * t));
+                hits.addSample (0, h * 12000 + i, x);
+                hits.addSample (1, h * 12000 + i, x);
+            }
+
+        for (int i = 0; i < tone.getNumSamples(); ++i)
+        {
+            auto x = 0.0;
+
+            for (int n = 1; n <= 6; ++n)
+                x += std::sin (juce::MathConstants<double>::twoPi * 110.0 * n * i / 48000.0) / n;
+
+            tone.setSample (0, i, (float) (0.3 * x));
+        }
+
+        const auto write = [&] (const juce::String& name, const juce::AudioBuffer<float>& audio)
+        {
+            const auto file = folder.getChildFile (name);
+            std::unique_ptr<juce::OutputStream> stream = std::make_unique<juce::FileOutputStream> (file);
+            auto writer = juce::WavAudioFormat().createWriterFor (stream, juce::AudioFormatWriterOptions().withSampleRate (48000.0).withNumChannels (audio.getNumChannels()).withBitsPerSample (32)
+                                                                              .withSampleFormat (juce::AudioFormatWriterOptions::SampleFormat::floatingPoint));
+            if (writer != nullptr)
+                writer->writeFromAudioSampleBuffer (audio, 0, audio.getNumSamples());
+
+            return file;
+        };
+
+        const auto hitsFile = write ("Six Hits.wav", hits), toneFile = write ("Held.wav", tone);
+
+        SessionState s;
+        s.sampleRate = 48000.0;
+        auto& audioTrack = s.addTrack();
+        audioTrack.name = "Recording";
+        SessionClip clip;
+        clip.id = 8001;
+        clip.name = "six hits";
+        clip.source = hitsFile;
+        clip.audio = AudioFileIO::load (hitsFile, engine.formatManager).snapshot;
+        clip.position = 48000;
+        clip.length = 72000;
+        audioTrack.clips.push_back (clip);
+        SessionClip held = clip;
+        held.id = 8002;
+        held.name = "held";
+        held.source = toneFile;
+        held.audio = AudioFileIO::load (toneFile, engine.formatManager).snapshot;
+        held.position = 240000;
+        held.length = 96000;
+        audioTrack.clips.push_back (held);
+        SessionClip unsaved = clip;
+        unsaved.id = 8003;
+        unsaved.name = "recorded";
+        unsaved.source = juce::File();
+        unsaved.position = 480000;
+        audioTrack.clips.push_back (unsaved);
+        s.addInstrumentTrack().name = "Keys";
+        engine.session.reset (s, {});
+
+        const auto startFor = [&]
+        {
+            Ai::Workspace::Start start;
+            start.session = *engine.session.getState();
+            start.plugins = BuiltInEffects::getDescriptions();
+            start.library = Ai::Library::standard();
+
+            for (auto& t : engine.session.getState()->tracks)
+                if (auto* instrument = engine.getTrackEffects().getInstrument (t.id))
+                {
+                    start.instruments[t.id] = instrument->getPluginDescription();
+                    start.effects[t.id] = Ai::readChain (engine.getTrackEffects(), t.id);
+                }
+
+            return start;
+        };
+
+        // A clip sliced onto a sampler track: planned, nothing changed, then applied as the app applies it.
+        Ai::Workspace w (startFor());
+        const auto slicedResult = parse (w.run ("sampler_from_clip", "{\"clip\": 8001, \"slices\": true}"));
+        const auto voices = w.getVoiceLoads();
+        const auto& planned = *w.getSession();
+        const auto untouched = engine.session.getState()->tracks.size() == 2;
+        const auto newTrack = planned.tracks.size() == 3 ? &planned.tracks[2] : nullptr;
+        const auto plannedRight = (bool) slicedResult["ok"] && (int) slicedResult["slices"] == 6 && (int) slicedResult["track"] == 3 && voices.size() == 1 && newTrack != nullptr
+                                  && newTrack->isInstrument && newTrack->name == "six hits" && newTrack->drumGrid && newTrack->drumMap.size() == 6 && newTrack->noteClips.size() == 1
+                                  && newTrack->noteClips[0].position == 48000 && newTrack->noteClips[0].notes.size() == 6 && planned.tracks[0].clips[0].muted
+                                  && voices[0].instrument == "Torqwave Sampler" && w.getSteps().size() == 1;
+
+        const auto samplerTrackId = newTrack != nullptr ? newTrack->id : 0u;
+        engine.session.apply (planned, "Ask Torq");
+        auto loadedVoices = false;
+        juce::String voiceErrors;
+        Ai::loadVoices (engine, voices, [&] (const juce::String& errors) { voiceErrors = errors; loadedVoices = true; });
+        TestUtils::runUntil ([&] { return loadedVoices; }, 5000);
+        auto* sampler = dynamic_cast<BuiltInEffects::SamplerProcessor*> (engine.getTrackEffects().getInstrument (samplerTrackId));
+
+        check (plannedRight && untouched && loadedVoices && voiceErrors.isEmpty() && sampler != nullptr && sampler->getZones().size() == 6 && sampler->getSlicing().on,
+               "Ask Torq sampler: sampler_from_clip with slices plans \"" + w.getSteps().joinIntoString ("") + "\": a new track with the drum grid, six notes where the clip is and the clip muted; "
+               "nothing changes until it is applied, and applied the track plays Torqwave Sampler with the six slices");
+
+        if (sampler == nullptr)
+        {
+            folder.deleteRecursively();
+            return;
+        }
+
+        // What get_session says of it, and set_sampler on a slice.
+        Ai::Workspace c (startFor());
+        const auto session = parse (c.run ("get_session", "{}"));
+        juce::String about;
+
+        if (auto* tracks = session["tracks"].getArray())
+            for (auto& t : *tracks)
+                if (t["name"].toString() == "six hits")
+                    about = t["sampler"].toString();
+
+        const auto changed = parse (c.run ("set_sampler", "{\"track\": \"six hits\", \"zone\": 2, \"root\": \"D2\", \"reverse\": true, \"tune\": 25}"));
+        const auto changes = c.getSynthChanges();
+        const auto before = sampler->getZones()[1];
+        const auto applied = changes.size() == 1 && Ai::applySynthChange (engine, changes[0]);
+        const auto after = sampler->getZones()[1];
+
+        check (about.contains ("6 slices") && about.contains ("Six Hits.wav") && about.contains ("hits") && (bool) changed["ok"] && ! before.reverse && before.root == 37 && applied
+                   && after.reverse && after.root == 38 && std::abs (after.tune - 25.0f) < 0.01f && after.lowKey == 37 && sampler->getZones().size() == 6 && ! c.sessionChanged(),
+               "Ask Torq sampler: get_session says what the sampler holds (\"" + about + "\"); set_sampler plans \"" + c.getSteps().joinIntoString ("")
+                   + "\", changes nothing until applied, and applied the second slice is reversed, rooted on D2 and tuned");
+
+        // Cut again in equal parts; then back to one zone across the keys with a loop found.
+        Ai::Workspace e (startFor());
+        const auto equal = parse (e.run ("set_sampler", "{\"track\": \"six hits\", \"slice_at\": \"equal_parts\", \"parts\": 4}"));
+        const auto equalApplied = e.getSynthChanges().size() == 1 && Ai::applySynthChange (engine, e.getSynthChanges()[0]);
+        const auto four = sampler->getZones().size() == 4 && sampler->getZones()[3].end == 72000 && sampler->getSlicing().source == Sampler::SliceSource::equalParts;
+        Ai::Workspace k (startFor());
+        const auto keys = parse (k.run ("set_sampler", "{\"track\": \"six hits\", \"mode\": \"keys\", \"low_key\": \"C2\", \"high_key\": \"C4\", \"loop\": \"forward\", \"crossfade_ms\": 30}"));
+        const auto keysApplied = k.getSynthChanges().size() == 1 && Ai::applySynthChange (engine, k.getSynthChanges()[0]);
+        const auto zones = sampler->getZones();
+        const auto whole = zones.size() == 1 && ! sampler->getSlicing().on && zones[0].lowKey == 36 && zones[0].highKey == 60 && zones[0].loop == 1 && zones[0].loopStart == 36000
+                           && std::abs (zones[0].crossfade - 30.0f) < 0.01f && ! zones[0].oneShot;
+
+        check ((bool) equal["ok"] && equalApplied && four && (bool) keys["ok"] && keysApplied && whole,
+               "Ask Torq sampler: set_sampler cuts the sample again into four equal parts; back to keys, it is one zone from C2 to C4, looped over its second half with a 30 ms crossfade (\""
+                   + k.getSteps().joinIntoString ("") + "\")");
+
+        // A clip across the keys, its pitch found; then a loop found for it in a later request.
+        Ai::Workspace a (startFor());
+        const auto across = parse (a.run ("sampler_from_clip", "{\"clip\": 8002}"));
+        const auto acrossVoices = a.getVoiceLoads();
+        const auto acrossTrack = a.getSession()->tracks.back().id;
+        const auto notMuted = ! a.getSession()->tracks[0].clips[1].muted && a.getSession()->tracks.back().noteClips.empty();
+        const auto soon = parse (a.run ("set_sampler", "{\"track\": \"held\", \"find_loop\": true}"));
+        engine.session.apply (*a.getSession(), "Ask Torq");
+        loadedVoices = false;
+        Ai::loadVoices (engine, acrossVoices, [&] (const juce::String&) { loadedVoices = true; });
+        TestUtils::runUntil ([&] { return loadedVoices; }, 5000);
+        auto* second = dynamic_cast<BuiltInEffects::SamplerProcessor*> (engine.getTrackEffects().getInstrument (acrossTrack));
+        Ai::Workspace l (startFor());
+        const auto looped = parse (l.run ("set_sampler", "{\"track\": \"held\", \"find_loop\": true}"));
+        const auto loopApplied = second != nullptr && l.getSynthChanges().size() == 1 && Ai::applySynthChange (engine, l.getSynthChanges()[0]);
+
+        check ((bool) across["ok"] && notMuted && ! (bool) soon["ok"] && soon["error"].toString().contains ("later request") && second != nullptr && second->getZones().size() == 1
+                   && second->getZones()[0].root == 45 && (bool) looped["ok"] && loopApplied && second->getZones()[0].loop == 1 && second->getZones()[0].loopEnd > second->getZones()[0].loopStart,
+               "Ask Torq sampler: sampler_from_clip without slices makes a held note a sampler across the keys, its root found (A2), the clip left as it is; set_sampler on it in the same plan is refused ("
+                   + soon["error"].toString() + "), and in a later request finds it a loop");
+
+        // Refused, with the reason, and nothing planned.
+        Ai::Workspace r (startFor());
+        const auto noFile = parse (r.run ("sampler_from_clip", "{\"clip\": 8003}"));
+        const auto noClip = parse (r.run ("sampler_from_clip", "{\"clip\": 9999}"));
+        const auto noSampler = parse (r.run ("set_sampler", "{\"track\": \"Keys\", \"root\": \"C3\"}"));
+        const auto noZone = parse (r.run ("set_sampler", "{\"track\": \"held\", \"zone\": 5, \"root\": \"C3\"}"));
+        const auto badLoop = parse (r.run ("set_sampler", "{\"track\": \"held\", \"loop\": \"sideways\"}"));
+        const auto badKey = parse (r.run ("set_sampler", "{\"track\": \"held\", \"root\": \"H9\"}"));
+        const auto nothing = parse (r.run ("set_sampler", "{\"track\": \"held\"}"));
+
+        check (! (bool) noFile["ok"] && noFile["error"].toString().contains ("no file") && ! (bool) noClip["ok"] && ! (bool) noSampler["ok"]
+                   && noSampler["error"].toString().contains ("doesn't play Torqwave Sampler") && ! (bool) noZone["ok"] && noZone["error"].toString().contains ("1 zone")
+                   && ! (bool) badLoop["ok"] && ! (bool) badKey["ok"] && ! (bool) nothing["ok"] && r.getSteps().isEmpty() && r.getSynthChanges().empty() && r.getVoiceLoads().empty(),
+               "Ask Torq sampler: a clip with no file (" + noFile["error"].toString() + "), a clip that isn't there, a track without a sampler, a zone it doesn't have ("
+                   + noZone["error"].toString() + "), a loop or key that isn't one, and no settings at all are refused, and nothing is planned");
+
+        folder.deleteRecursively();
+    }
+
     /** decrypt_clip and table_from_clip on a session on the engine: the plan step and result, nothing
         changed until applied, applied as the app applies it; refusals with their reasons; a search
         stopped plans nothing and leaves the patch as it was. */
@@ -2970,6 +3171,7 @@ void runAiTests()
     testSequenceTools();
     testSequencerAsk();
     testDecryptTools();
+    testSamplerTools();
     testDecryptAdvisor();
     testName();
 }

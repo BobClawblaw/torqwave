@@ -192,7 +192,7 @@ Six notes can sound at once; a seventh takes the oldest's place. It answers pitc
 
 *Torqwave Sampler playing a looped note. The picture is drawn by Torqwave's tests, without the strip of playing keys the window has in the app.*
 
-**Give it a sound.** Drop an audio file on the window, click **Open...**, or double-click the empty waveform. Any type Torqwave opens will do. A file can come from the Finder, from the **Sound Library** (a whole sound, or the part you dragged out of its preview), or from the **Files** panel: an open file that is saved is sampled where it is, and one with unsaved changes, or never saved, is written into Music > Torqwave > Samples first. The sound becomes a **zone** over every key, and Torqwave measures its pitch to set the key that plays it as it was recorded (the **root**) and its tuning. A sound with no clear pitch gets C3. A WAV file that carries its own root note and loop (many sample libraries' files do) keeps those.
+**Give it a sound.** Drop an audio file on the window, click **Open...**, or double-click the empty waveform. Any type Torqwave opens will do. A file can come from the Finder, from the **Sound Library** (a whole sound, or the part you dragged out of its preview), or from the **Files** panel: an open file that is saved is sampled where it is, and one with unsaved changes, or never saved, is written into Music > Torqwave > Samples first. The sound becomes a **zone** over every key, and Torqwave measures its pitch to set the key that plays it as it was recorded (the **root**) and its tuning. A sound with no clear pitch gets C4. A WAV file that carries its own root note and loop (many sample libraries' files do) keeps those.
 
 **Straight from the editor or a clip**, without opening the window first:
 
@@ -201,7 +201,7 @@ Six notes can sound at once; a seventh takes the oldest's place. It answers pitc
 
 **Zones.** A zone is a sample with the keys and velocities that play it. One sampler holds up to 128.
 
-- Drop **several files at once**: when each has a clear pitch they become zones around their own notes, sharing the keys between them; otherwise each goes on a key of its own, as a one-shot, from the key they land on (or from C1).
+- Drop **several files at once**: when each has a clear pitch they become zones around their own notes, sharing the keys between them; otherwise each goes on a key of its own, as a one-shot, from the key they land on (or from C2).
 
 - Drop another sound **on the key map** and it becomes a new zone over the octave from the key it lands on. Dropped anywhere else, a sound replaces the selected zone's sample and keeps its keys.
 - In the **Keys** panel each zone is drawn over its keys, and from bottom to top over the velocities that play it. Click a zone to select it. Drag its left or right edge to set its keys, and its top or bottom edge to set its velocities. Zones that overlap play together, so layers, and soft and hard samples of one sound, are zones.
@@ -231,7 +231,7 @@ Six notes can sound at once; a seventh takes the oldest's place. It answers pitc
 
 *A drum loop cut at its hits: twenty slices, each a pad and a key.*
 
-Switch **Keys** to **Slices** at the top, and the sample is cut into pieces, each on its own key from C1 (where a kick sits) upward, up to 64. A break becomes a kit; a field recording becomes a set of hits.
+Switch **Keys** to **Slices** at the top, and the sample is cut into pieces, each on its own key from C2 (where a kick sits) upward, up to 64. A break becomes a kit; a field recording becomes a set of hits.
 
 - **Where the cuts come from:** the choice in the Slices panel. **Hits** finds the attacks in the sound; **Markers** cuts at the file's markers; **Regions** makes a slice of each region; **Equal Parts** cuts it into 2 to 64 pieces of one length. Mark a file in the editor first and Markers or Regions cuts exactly where you chose. A file with no markers is cut at its hits.
 - **Sensitivity** is for hits: at 100 % every attack found is a cut, and lower only the louder ones. **Slice Again** cuts with the settings as they are now. It starts again from the whole sample, so cuts you moved or added by hand are lost.
