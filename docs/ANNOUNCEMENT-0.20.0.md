@@ -17,9 +17,9 @@ One post, with graphic 1 (`compare/graphics/1-release-by-the-numbers.png`).
 ```text
 Torqwave 0.20.0 is out. The free, open-source audio editor and DAW gets its own instruments:
 
-• Torqwave Synth: a wavetable synth, 3,743 patches
+• Torqwave Synth: wavetable, 3,743 patches
 • Decrypt: a patch from a recording of one note
-• StringSwarm and Basic Drums
+• Sampler, StringSwarm and Basic Drums
 • 1,018 sequence presets
 
 <release link>
@@ -53,12 +53,12 @@ Decrypt builds a synth patch from a recording of one note. It finds the pitch, p
 Close for sounds a synth made. Loose for voices, drums and samples: a patch in their spirit.
 ```
 
-**4 of 6**, with StringSwarm's and Basic Drums' windows (`screenshots/guide-swarm.png`, `screenshots/guide-drums.png`).
+**4 of 6**, with Torqwave Sampler's, StringSwarm's and Basic Drums' windows (`screenshots/guide-sampler.png`, `screenshots/guide-swarm.png`, `screenshots/guide-drums.png`). The sampler's picture comes with the sampler's branch and is drawn by the tests without the playing keys; retake it from the release build if there is time.
 
 ```text
-Two more instruments. StringSwarm: a guitar with every string tuned to the note you play, through a fuzz, or a swarm of oscillators. Basic Drums: 30 sounds on pads, for every General MIDI drum.
+Three more instruments. Torqwave Sampler: your own sounds across the keys, or cut into slices. StringSwarm: a guitar with every string tuned to the note you play, through a fuzz, or a swarm of oscillators. Basic Drums: 30 sounds on pads.
 
-Both play from the computer's keys. Audition plays each sound as you choose it.
+All play from the computer's keys.
 ```
 
 **5 of 6**, with the Sequencer workspace (`screenshots/guide-sequencer.png`) and the editor (`screenshots/editor.png`).
@@ -74,7 +74,7 @@ In the editor: a time-view strip over the ruler, a Hand tool, and Paste Clipboar
 ```text
 Where does it stand? We keep a feature comparison with 15 other editors and DAWs, each cell read from that product's own documentation, and update it every release.
 
-It shows what Torqwave lacks too: no sampler, no audio to MIDI, no CLAP or ARA, and installers not yet notarized.
+It shows what Torqwave lacks too: no audio to MIDI, no CLAP, ARA or Dolby Atmos, and installers not yet notarized.
 ```
 
 A reply under the thread can carry the comparison's address once the branch is on GitHub: `https://github.com/BobClawblaw/torqwave/blob/main/docs/compare/MATRIX.md`.
@@ -84,7 +84,7 @@ A reply under the thread can carry the comparison's address once the branch is o
 For graphic 1, `1-release-by-the-numbers.png`:
 
 ```alt
-A dark chart titled "Torqwave 0.20.0: what it adds over 0.19.2". Six tiles, each with a number and the figure for 0.19.2 under it: 3,743 synth patches (0 before), 3 built-in instruments (1 before), 1,018 sequence presets (0 before), 296 StringSwarm presets (0 before), 30 drum sounds (0 before), 85 audition patterns (0 before). A list beside them, "Also new in 0.20.0": Decrypt, a synth patch from a recording of one note; a wavetable from any sound dropped on an oscillator; instruments played from the computer's keys; instruments and plug-ins follow the session's tempo; a time-view strip, a Hand tool and Paste Clipboard as New File.
+A dark chart titled "Torqwave 0.20.0: what it adds over 0.19.2". Six tiles, each with a number and the figure for 0.19.2 under it: 3,743 synth patches (0 before), 4 built-in instruments (1 before), 1,018 sequence presets (0 before), 296 StringSwarm presets (0 before), 30 drum sounds (0 before), 85 audition patterns (0 before). A list beside them, "Also new in 0.20.0": Decrypt, a synth patch from a recording of one note; Torqwave Sampler, your own sounds across the keys or cut into slices; a wavetable from any sound dropped on an oscillator; instruments played from the computer's keys; instruments and plug-ins follow the session's tempo; a time-view strip, a Hand tool and Paste Clipboard as New File.
 ```
 
 For `screenshots/guide-synth.png`:
@@ -95,7 +95,11 @@ The window of Torqwave Synth with the bass patch Turbine Throat: the presets row
 
 For the Decrypt screenshot (write this when the picture is taken, saying what it shows: the recording dropped in, the chain of steps and how near the patch measures).
 
-For `screenshots/guide-swarm.png` and `screenshots/guide-drums.png`:
+For `screenshots/guide-sampler.png`, `screenshots/guide-swarm.png` and `screenshots/guide-drums.png`:
+
+```alt
+The window of Torqwave Sampler playing a held note: the Keys and Slices switch and the presets row along the top, the sample's waveform with its start, end and a shaded loop, the zone drawn across the keys either side of its root, and the zone's, amp's, filter's, LFO's and voice's settings below.
+```
 
 ```alt
 The window of StringSwarm with the preset Tremolo Swarm Wall: twelve strings all tuned to G across three octaves, each a few cents apart, the fuzz amp with its Drive, Tone, Level and Velocity knobs, the strum and layers controls, and the playing keys along the bottom.
@@ -128,16 +132,17 @@ A dark table titled "Torqwave 0.20.0 and the audio editors". Rows are features s
 ```
 
 ```alt
-A dark table titled "Torqwave 0.20.0 and the DAWs, 1 of 2". Rows are features such as comping, clip launching, a piano roll, built-in instruments, a sampler, audio to MIDI, CLAP and ARA 2; columns are Torqwave 0.20.0, Torqwave 0.19.2, FL Studio, Ableton Live, Bitwig Studio, Reason and REAPER. Each cell is marked yes, partial, no or not confirmed. Torqwave is marked no for a built-in sampler, audio to MIDI, Dolby Atmos, ARA 2 and CLAP.
+A dark table titled "Torqwave 0.20.0 and the DAWs, 1 of 2". Rows are features such as comping, clip launching, a piano roll, built-in instruments, a sampler, audio to MIDI, CLAP and ARA 2; columns are Torqwave 0.20.0, Torqwave 0.19.2, FL Studio, Ableton Live, Bitwig Studio, Reason and REAPER. Each cell is marked yes, partial, no or not confirmed. Torqwave is marked no for audio to MIDI, Dolby Atmos, ARA 2 and CLAP.
 ```
 
 ```alt
-A dark table titled "Torqwave 0.20.0 and the DAWs, 2 of 2", with the same rows; columns are Torqwave 0.20.0, Torqwave 0.19.2, Logic Pro, Cubase, Pro Tools, Fender Studio Pro and Ardour. Each cell is marked yes, partial, no or not confirmed. Torqwave is marked no for a built-in sampler, audio to MIDI, Dolby Atmos, ARA 2 and CLAP, and partial for stem separation, where four of these five are marked yes.
+A dark table titled "Torqwave 0.20.0 and the DAWs, 2 of 2", with the same rows; columns are Torqwave 0.20.0, Torqwave 0.19.2, Logic Pro, Cubase, Pro Tools, Fender Studio Pro and Ardour. Each cell is marked yes, partial, no or not confirmed. Torqwave is marked no for audio to MIDI, Dolby Atmos, ARA 2 and CLAP, and partial for stem separation, where four of these five are marked yes.
 ```
 
 ## Notes for whoever posts it
 
 - It is written for the day of the release. Until then nothing here is posted, and "is out" is not yet true.
 - No other product is named in the posts, and none is called worse. The comparison is offered as a table to read, with what Torqwave lacks in the same post.
+- Torqwave Sampler is in the posts and the graphics on the understanding that it ships in 0.20.0. By its changelog it was measured by the tests and not yet tried by hand in the app: try it before posting, and take it out of the posts if it does not ship.
 - Two hashtags at most if any are added; the draft has none.
 - The Windows and Linux packages of 0.20.0 are built by the workflows and, by the release notes, were not tried by hand. If someone asks, say so.

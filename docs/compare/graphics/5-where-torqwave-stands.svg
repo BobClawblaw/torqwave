@@ -44,8 +44,8 @@
 <rect x="655.0" y="216.0" width="52.7" height="28.4" rx="4" fill="#2f7f5b"/>
 <text x="694.5" y="236.2" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">4/6</text>
 <rect x="746.0" y="216.0" width="79.0" height="28.4" rx="4" fill="#111317" stroke="#2a2f36" stroke-width="1.5"/>
-<rect x="746.0" y="216.0" width="65.8" height="28.4" rx="4" fill="#2f7f5b"/>
-<text x="785.5" y="236.2" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">5/6</text>
+<rect x="746.0" y="216.0" width="79.0" height="28.4" rx="4" fill="#2f7f5b"/>
+<text x="785.5" y="236.2" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">6/6</text>
 <rect x="837.0" y="216.0" width="79.0" height="28.4" rx="4" fill="#111317" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="837.0" y="216.0" width="47.4" height="28.4" rx="4" fill="#2f7f5b"/>
 <text x="876.5" y="236.2" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">3/5</text>
@@ -658,9 +658,9 @@
 <text x="1358.8" y="342.0" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">39</text>
 <text x="1358.8" y="794.0" font-size="13" fill="#d8dde3" text-anchor="middle" font-weight="normal">0.19.2</text>
 <rect x="1388.5" y="240.0" width="39.5" height="530.0" rx="4" fill="#111317" stroke="#2a2f36" stroke-width="1.5"/>
-<rect x="1388.5" y="330.0" width="39.5" height="440.0" rx="4" fill="#2f7f5b"/>
-<rect x="1388.5" y="310.0" width="39.5" height="20.0" rx="0" fill="#8a7a2c"/>
-<text x="1408.2" y="302.0" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">44</text>
+<rect x="1388.5" y="320.0" width="39.5" height="450.0" rx="4" fill="#2f7f5b"/>
+<rect x="1388.5" y="300.0" width="39.5" height="20.0" rx="0" fill="#8a7a2c"/>
+<text x="1408.2" y="292.0" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">45</text>
 <text x="1408.2" y="794.0" font-size="13" fill="#d8dde3" text-anchor="middle" font-weight="normal">0.20.0</text>
 <rect x="1438.0" y="240.0" width="39.5" height="530.0" rx="4" fill="none" stroke="#2a2f36" stroke-width="1.5" stroke-dasharray="4 5"/>
 <rect x="1487.5" y="240.0" width="39.5" height="530.0" rx="4" fill="none" stroke="#2a2f36" stroke-width="1.5" stroke-dasharray="4 5"/>
