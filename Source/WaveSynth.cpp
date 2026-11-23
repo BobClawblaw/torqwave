@@ -2,6 +2,7 @@
 #include "WaveSynthEditor.h"
 #include "SignalConsole.h"
 #include "WaveSynthFavourites.h"
+#include "DecryptPatches.h"
 
 namespace WaveSynth
 {
@@ -2414,6 +2415,10 @@ std::vector<int> BasicSynthProcessor::browseList() const
 
 int BasicSynthProcessor::stepPatch (int by)
 {
+    // The user's Decrypted patches, while they are browsed and there are some: no factory patch, so no index.
+    if (browsingDecrypted && by != 0 && DecryptedPatches::Store::shared().step (*this, by).isNotEmpty())
+        return -1;
+
     const auto list = browseList();
 
     if (list.empty() || by == 0)

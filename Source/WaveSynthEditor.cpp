@@ -3,6 +3,8 @@
 #include "DecryptView.h"
 #include "SoundDrops.h"
 #include "WaveSynthFavourites.h"
+#include "DecryptPatches.h"
+#include "DecryptedView.h"
 #include "Theme.h"
 
 namespace
@@ -828,7 +830,7 @@ namespace
                                public juce::SettableTooltipClient
     {
     public:
-        explicit PatchBrowser (Synth& s) : synth (s) {}
+        explicit PatchBrowser (Synth& s) : synth (s)    { setComponentID ("patchBrowser"); }
 
         /** Where the heart is. */
         juce::Rectangle<float> heartBounds() const
@@ -850,15 +852,81 @@ namespace
         {
             const auto x = (float) getMouseXYRelative().x;
 
-            if (x < 24.0f)                       return synth.isBrowsingFavourites() ? "The favourite before this one" : "The patch before this one";
-            if (x > (float) getWidth() - 24.0f)  return synth.isBrowsingFavourites() ? "The next favourite" : "The next patch";
+            if (x < 24.0f)                       return synth.isBrowsingFavourites() ? "The favourite before this one" : synth.isBrowsingDecrypted() ? "The Decrypted patch before this one" : "The patch before this one";
+            if (x > (float) getWidth() - 24.0f)  return synth.isBrowsingFavourites() ? "The next favourite" : synth.isBrowsingDecrypted() ? "The next Decrypted patch" : "The next patch";
             if (heartBounds().contains (getMouseXYRelative().toFloat()))
                 return WaveSynth::Favourites::shared().contains (synth.getPatchName()) ? "A favourite: click to unmark it" : "Mark this patch as a favourite";
 
-            return "Click for all the patches: your favourites first, then by category";
+            return "Click for all the patches: your favourites first, then the ones you took from Decrypt, then by category. Right-click one of your own to rename or delete it";
         }
 
         std::function<void()> onLoaded;
+        std::function<void()> onOwnChanged;     // one of the user's own patches was renamed or deleted
+
+        /** Whether the synth is on one of the patches taken from Decrypt. */
+        bool onDecrypted() const
+        {
+            return currentIndex() < 0 && DecryptedPatches::Store::shared().contains (synth.getPatchName());
+        }
+
+        /** Renames the Decrypted patch `from`; false for a name that is empty or taken. The synth's patch takes the name if it is on it. */
+        bool rename (const juce::String& from, const juce::String& to)
+        {
+            const auto onIt = synth.getPatchName().equalsIgnoreCase (from);
+
+            if (! DecryptedPatches::Store::shared().rename (from, to))
+                return false;
+
+            if (onIt)
+                synth.setPatchName (to.trim());
+
+            repaint();
+            if (onOwnChanged != nullptr) onOwnChanged();
+            return true;
+        }
+
+        /** Deletes a Decrypted patch; the synth keeps the sound it is on. */
+        bool remove (const juce::String& name)
+        {
+            if (! DecryptedPatches::Store::shared().remove (name))
+                return false;
+
+            repaint();
+            if (onOwnChanged != nullptr) onOwnChanged();
+            return true;
+        }
+
+        void askRename()
+        {
+            const auto from = synth.getPatchName();
+            auto* box = new juce::AlertWindow ("Rename Patch", "A new name for " + from.quoted() + ".", juce::MessageBoxIconType::NoIcon, this);
+            box->addTextEditor ("name", from, "Name");
+            box->addButton ("Rename", 1, juce::KeyPress (juce::KeyPress::returnKey));
+            box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+            box->enterModalState (true, juce::ModalCallbackFunction::create ([safe = juce::Component::SafePointer<PatchBrowser> (this), box, from] (int result)
+            {
+                if (safe == nullptr || result != 1)
+                    return;
+
+                const auto to = box->getTextEditorContents ("name").trim();
+
+                if (const auto why = DecryptedPatches::Store::shared().whyNot (to, from); why.isNotEmpty() || ! safe->rename (from, to))
+                    juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Rename Patch",
+                                                            why.isNotEmpty() ? why + " " + from.quoted() + " keeps its name." : from.quoted() + " couldn't be renamed.");
+            }), true);
+        }
+
+        void askDelete()
+        {
+            const auto name = synth.getPatchName();
+            juce::AlertWindow::showOkCancelBox (juce::MessageBoxIconType::QuestionIcon, "Delete Patch", "Delete " + name.quoted() + " from your Decrypted patches? The synth keeps the sound it is on.",
+                                                "Delete", "Cancel", this,
+                                                juce::ModalCallbackFunction::create ([safe = juce::Component::SafePointer<PatchBrowser> (this), name] (int result)
+                                                {
+                                                    if (safe != nullptr && result == 1)
+                                                        safe->remove (name);
+                                                }));
+        }
 
         void paint (juce::Graphics& g) override
         {
@@ -881,7 +949,8 @@ namespace
             const auto index = currentIndex();
             const auto favourite = index >= 0 && WaveSynth::Favourites::shared().contains (synth.getPatchName());
             const auto category = favourite && synth.isBrowsingFavourites() ? juce::String ("Favourites")
-                                : index >= 0 ? WaveSynth::factoryPatches()[(size_t) index].category : juce::String ("Patch");
+                                : index >= 0 ? WaveSynth::factoryPatches()[(size_t) index].category
+                                : onDecrypted() ? juce::String ("Decrypted") : juce::String ("Patch");
 
             // The heart: filled when the patch is a favourite, an outline when it could be one.
             if (index >= 0)
@@ -942,7 +1011,26 @@ namespace
                 return;
             }
 
-            // The favourites first, by name; then a sub-menu for each category, a large category's a list of pages by name.
+            constexpr int decryptedIds = 2000000, renameId = 2900001, deleteId = 2900002;
+
+            // A right-click on one of the user's own: its name and whether it stays.
+            if (e.mods.isPopupMenu())
+            {
+                if (! onDecrypted())
+                    return;
+
+                juce::PopupMenu own;
+                own.addItem (renameId, "Rename " + synth.getPatchName().quoted() + "...");
+                own.addItem (deleteId, "Delete " + synth.getPatchName().quoted() + "...");
+                own.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this), [safe = juce::Component::SafePointer<PatchBrowser> (this)] (int chosen)
+                {
+                    if (safe != nullptr && chosen == renameId)  safe->askRename();
+                    if (safe != nullptr && chosen == deleteId)  safe->askDelete();
+                });
+                return;
+            }
+
+            // The favourites first, by name; then the patches taken from Decrypt; then a sub-menu for each category, a large category's a list of pages by name.
             juce::PopupMenu menu;
             const auto current = synth.getPatchName();
             constexpr int favouriteIds = 1000000;
@@ -951,6 +1039,9 @@ namespace
                 auto ticked = false;
                 const auto favourites = WaveSynthEditor::favouritesMenu (current, synth.isBrowsingFavourites(), favouriteIds + 1, ticked);
                 menu.addSubMenu ("Favourites", favourites, true, nullptr, ticked);
+                auto decryptedTicked = false;
+                const auto decrypted = WaveSynthEditor::decryptedMenu (onDecrypted() ? current : juce::String(), decryptedIds + 1, renameId, deleteId, decryptedTicked);
+                menu.addSubMenu ("Decrypted", decrypted, true, nullptr, decryptedTicked);
                 menu.addSeparator();
             }
 
@@ -982,11 +1073,43 @@ namespace
                     menu.addSubMenu (c, category, true, nullptr, holdsCurrent);
             }
 
+            // On one of the user's Decrypted patches, the menu opens on it.
+            auto openOn = 0;
+
+            if (onDecrypted())
+            {
+                const auto order = DecryptedPatches::Store::shared().inFolderOrder();
+
+                for (size_t i = 0; i < order.size(); ++i)
+                    if (order[i].name.equalsIgnoreCase (current))
+                        openOn = decryptedIds + 1 + (int) i;
+            }
             juce::Component::SafePointer<PatchBrowser> safe (this);
-            menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this), [safe] (int chosen)
+            menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withInitiallySelectedItem (openOn), [safe] (int chosen)
             {
                 if (safe == nullptr || chosen <= 0)
                     return;
+
+                if (chosen == renameId)     { safe->askRename(); return; }
+                if (chosen == deleteId)     { safe->askDelete(); return; }
+
+                // One of the user's Decrypted patches: the arrows then go through those.
+                if (chosen > decryptedIds)
+                {
+                    const auto order = DecryptedPatches::Store::shared().inFolderOrder();
+
+                    if (juce::isPositiveAndBelow (chosen - decryptedIds - 1, (int) order.size())
+                        && DecryptedPatches::Store::shared().load (safe->synth, order[(size_t) (chosen - decryptedIds - 1)].name))
+                    {
+                        safe->synth.setBrowsingDecrypted (true);
+                        safe->repaint();
+                        if (safe->onLoaded != nullptr) safe->onLoaded();
+                    }
+
+                    return;
+                }
+
+                safe->synth.setBrowsingDecrypted (false);
 
                 // A patch chosen from the favourites puts the arrows on the favourites; one from a category, on every patch.
                 safe->synth.setBrowsingFavourites (chosen > favouriteIds);
@@ -1053,6 +1176,47 @@ juce::PopupMenu WaveSynthEditor::favouritesMenu (const juce::String& current, bo
     return favourites;
 }
 
+juce::PopupMenu WaveSynthEditor::decryptedMenu (const juce::String& current, int firstId, int renameId, int deleteId, bool& ticked)
+{
+    // In the folder's order (DecryptedPatches::Store::inFolderOrder): a sub-menu for each category that holds one, then those with no category.
+    const auto order = DecryptedPatches::Store::shared().inFolderOrder();
+    juce::PopupMenu decrypted;
+    ticked = false;
+
+    for (size_t from = 0; from < order.size();)
+    {
+        const auto& category = order[from].category;
+        juce::PopupMenu items;
+        auto holdsCurrent = false;
+        auto to = from;
+
+        for (; to < order.size() && order[to].category == category; ++to)
+        {
+            const auto isCurrent = current.isNotEmpty() && order[to].name.equalsIgnoreCase (current);
+            holdsCurrent = holdsCurrent || isCurrent;
+            (category.isEmpty() ? decrypted : items).addItem (firstId + (int) to, order[to].name, true, isCurrent);
+        }
+
+        if (category.isNotEmpty())
+            decrypted.addSubMenu (category, items, true, nullptr, holdsCurrent);
+
+        ticked = ticked || holdsCurrent;
+        from = to;
+    }
+
+    if (order.empty())
+        decrypted.addItem (-1, "None yet: Take a patch in Decrypt and give it a name", false);
+
+    if (ticked)
+    {
+        decrypted.addSeparator();
+        decrypted.addItem (renameId, "Rename " + current.quoted() + "...");
+        decrypted.addItem (deleteId, "Delete " + current.quoted() + "...");
+    }
+
+    return decrypted;
+}
+
 std::vector<WaveSynthEditor::MenuPage> WaveSynthEditor::menuPages (const juce::String& category)
 {
     const auto& all = WaveSynth::factoryPatches();
@@ -1090,7 +1254,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         : synth (s),
           presets (EffectPresets::userStore(), s.getPresetKey(), [&s] { return s.getPresetValues(); },
                    [&s] (const EffectPresets::Values& v) { s.setPresetValues (v); }),
-          browser (s), modPages ({ "Slots 1-8", "Slots 9-16", "Effects" }), viewPages ({ "Knobs", "Decrypt" }),
+          browser (s), modPages ({ "Slots 1-8", "Slots 9-16", "Effects" }), viewPages ({ "Knobs", "Decrypt", "Decrypted" }),
           envelopeView (s), lfoView (s)
     {
         addAndMakeVisible (browser);
@@ -1306,15 +1470,22 @@ struct WaveSynthEditor::Content final : public juce::Component
             effects.back().knobs.push_back (knob (*effects.back().panel, id, label, Knob::Size::small));
 
         browser.onLoaded = [this] { refresh(); };
+        browser.onOwnChanged = [this] { presets.refresh(); decryptedView->refresh(); };
         // Decrypt takes the place of the knobs when its page is chosen. Trace's scope is not offered in the
         // window (it was withdrawn from 0.20.0); it stays for its tests.
         consoleView = std::make_unique<SignalConsoleView> (synth);
         addChildComponent (*consoleView);
         decryptView = std::make_unique<DecryptView> (synth);
+        decryptView->onPatchSaved = [this] { presets.refresh(); browser.repaint(); decryptedView->refresh(); };
+        decryptedView = std::make_unique<DecryptedView> (synth);
+        addChildComponent (*decryptedView);
+        decryptedView->onOpen = [this] { showView (0); };
+        decryptedView->onLoaded = [this] { refresh(); browser.repaint(); };
+        decryptedView->onChanged = [this] { presets.refresh(); browser.repaint(); };
         addChildComponent (*decryptView);
         addAndMakeVisible (viewPages);
-        viewPages.setTooltip ("Knobs: the synth's controls. Decrypt: drop a recording of one note and find a patch that plays like it");
-        viewPages.onChange = [this] (int i) { showView (i == 1 ? 2 : 0); };
+        viewPages.setTooltip ("Knobs: the synth's controls. Decrypt: drop a recording of one note and find a patch that plays like it. Decrypted: the patches you took from Decrypt and named");
+        viewPages.onChange = [this] (int i) { showView (i == 1 ? 2 : i == 2 ? 3 : 0); };
 
         showModulator (0);
         showRightPage (0);
@@ -1403,21 +1574,22 @@ struct WaveSynthEditor::Content final : public juce::Component
         resized();
     }
 
-    /** The knobs (0), Trace's scope (1, for its tests) or Decrypt (2) under the header. */
+    /** The knobs (0), Trace's scope (1, for its tests), Decrypt (2) or the Decrypted patches (3) under the header. */
     void showView (int index)
     {
-        const auto trace = index == 1, decrypt = index == 2;
-        viewPages.chosen = decrypt ? 1 : 0;
+        const auto trace = index == 1, decrypt = index == 2, decrypted = index == 3;
+        viewPages.chosen = decrypt ? 1 : decrypted ? 2 : 0;
         viewPages.repaint();
 
         for (auto* c : getChildren())
-            if (c != &browser && c != &presets && c != &viewPages && c != consoleView.get() && c != decryptView.get())
-                c->setVisible (! trace && ! decrypt);
+            if (c != &browser && c != &presets && c != &viewPages && c != consoleView.get() && c != decryptView.get() && c != decryptedView.get())
+                c->setVisible (! trace && ! decrypt && ! decrypted);
 
         consoleView->setVisible (trace);
         decryptView->setVisible (decrypt);
+        decryptedView->setVisible (decrypted);
 
-        if (! trace && ! decrypt)
+        if (! trace && ! decrypt && ! decrypted)
         {
             // The pages within the knobs show what they showed.
             showModulator (modulator);
@@ -1561,14 +1733,15 @@ struct WaveSynthEditor::Content final : public juce::Component
         auto header = r.removeFromTop (headerHeight);
         header.removeFromLeft (210);
         header.removeFromRight (100);
-        browser.setBounds (header.removeFromLeft (380).withSizeKeepingCentre (380, 32));
+        browser.setBounds (header.removeFromLeft (340).withSizeKeepingCentre (340, 32));   // a little narrower than it was, for the third page in the switch
         header.removeFromLeft (gap * 2);
-        viewPages.setBounds (header.removeFromRight (136).withSizeKeepingCentre (136, 24));
+        viewPages.setBounds (header.removeFromRight (216).withSizeKeepingCentre (216, 24));
         header.removeFromRight (gap * 2);
         presets.setBounds (header.withSizeKeepingCentre (header.getWidth(), 28));
         r.removeFromBottom (margin);
         consoleView->setBounds (r);
         decryptView->setBounds (r);
+        decryptedView->setBounds (r);
 
         // The oscillators and sources.
         auto row = r.removeFromTop (236);
@@ -1850,6 +2023,7 @@ struct WaveSynthEditor::Content final : public juce::Component
     PageSwitch modPages, viewPages;
     std::unique_ptr<SignalConsoleView> consoleView;
     std::unique_ptr<DecryptView> decryptView;
+    std::unique_ptr<DecryptedView> decryptedView;
     EnvelopeView envelopeView;
     LfoView lfoView;
 
@@ -1992,6 +2166,21 @@ void WaveSynthEditor::showView (int index)
 SignalConsoleView* WaveSynthEditor::getConsoleView() const
 {
     return content->consoleView.get();
+}
+
+void WaveSynthEditor::ownPatchesChanged()
+{
+    content->presets.refresh();
+    content->browser.repaint();
+    content->decryptedView->refresh();
+}
+
+bool WaveSynthEditor::renameDecrypted (const juce::String& from, const juce::String& to)    { return content->browser.rename (from, to); }
+bool WaveSynthEditor::deleteDecrypted (const juce::String& name)                            { return content->browser.remove (name); }
+
+DecryptedView* WaveSynthEditor::getDecryptedView() const
+{
+    return content->decryptedView.get();
 }
 
 DecryptView* WaveSynthEditor::getDecryptView() const

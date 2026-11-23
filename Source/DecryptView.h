@@ -101,6 +101,29 @@ public:
     /** The search has ended and the view holds its last progress (it takes each on the message thread, after the search). */
     /** For tests: the peak of the matched note, as the keys play the patch last put on them, in dB (Decrypt::auditionDb when levelled). */
     float lastKeysDb() const noexcept                             { return keysDb; }
+    /** Take's name: after Take the panel asks for a name, the patch's "Node" name there to type
+        over. Save (or Return) keeps the patch as one of the user's own presets under it, listed in
+        the synth's Decrypted category (DecryptedPatches); a name one of the presets has asks before
+        replacing it, and an empty name or a factory patch's is refused, with the reason. Not Now (or
+        Escape) leaves the patch on the keys, unsaved. Nothing waits on the answer. */
+    bool isNaming() const noexcept                                { return naming; }
+    juce::String nameTyped() const                                { return nameBox.getText(); }
+    void typeName (const juce::String& name)                      { nameBox.setText (name, false); }
+    /** Save: true once it is saved; false when it asks first (a taken name) or refuses (see nameNote). */
+    bool saveName (bool replace = false);
+    void notNow();
+    bool isAskingToReplace() const noexcept                       { return replacing; }
+    const juce::String& nameNote() const noexcept                 { return namingNote; }
+    /** The category the patch will be saved under (one of the synth's factory categories, or empty:
+        none): guessed from the factory patch it grew from, and chosen from the menu on its chip. */
+    const juce::String& nameCategory() const noexcept             { return category; }
+    void chooseCategory (const juce::String& c)                   { category = WaveSynth::patchCategories().contains (c) ? c : juce::String(); repaint(); }
+    juce::Rectangle<float> categoryBounds() const                 { return categoryChip; }
+    juce::Rectangle<float> saveNameBounds() const                 { return saveChip; }
+    juce::Rectangle<float> notNowBounds() const                   { return laterChip; }
+    /** Told when a patch has been saved (the presets bar and the patch list then show it). */
+    std::function<void()> onPatchSaved;
+
     /** For tests: how many sounds the page has played since the sound on it arrived, and what it says of a sound it refused. */
     int playsSinceSound() const noexcept                          { return plays; }
     const juce::String& refusal() const noexcept                  { return problem; }
@@ -192,6 +215,8 @@ private:
     size_t passBase = 0;                             // links before this pass's
     int selectedLink = -1, heardLink = -2, keysLink = -1;   // heardLink: -1 the signal, -2 none
     int autoPlays = 0, plays = 0;                    // plays: sounds played since the sound on the page arrived
+    juce::uint32 auditions = 0;                      // counts the auditions asked for: only the newest is played
+    std::shared_ptr<Decrypt::Advisor> namer;         // the model asked for a name, to tell to give up
     juce::uint32 soundCount = 0;                     // counts the sounds given: a render made for an earlier one is not played
     float stripScroll = 0.0f;                        // how far the tiles are scrolled, when there are too many to shrink
     void hearPatch (const SignalConsole::Patch&);
@@ -224,7 +249,13 @@ private:
     int hovered = -2, onKeys = -1;                   // -2 nothing under the pointer, -1 the middle
     float sweep = 0.0f, shownLock = 0.0f;
     bool motion = true, dragOver = false, tablesOnly = false;
-    juce::TextEditor words;
+    juce::TextEditor words, nameBox;
+    bool naming = false, replacing = false;          // Take's name is being asked for; the name is taken, and Replace is asked
+    juce::String namingNote;                         // why a name was refused, or where the patch was saved
+    juce::Rectangle<float> saveChip, laterChip, categoryChip;
+    juce::String category;                           // the category it will be saved under; empty: none
+    float takenLock = 0.0f;                          // the lock of the patch taken
+    void askName();
     Decrypt::Advisor::Name offer;
     juce::uint32 offerFor = 0;
 

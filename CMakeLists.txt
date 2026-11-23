@@ -290,6 +290,8 @@ target_sources(Torqwave PRIVATE
     Source/SignalConsoleView.cpp
     Source/Decrypt.cpp
     Source/DecryptView.cpp
+    Source/DecryptPatches.cpp
+    Source/DecryptedView.cpp
     Source/WaveSynthPatches.cpp
     Source/WaveSynthPatchBank.cpp
     Source/WaveSynthPatchBank2.cpp
@@ -719,6 +721,8 @@ target_sources(TorqwaveTests PRIVATE
     Source/SignalConsoleView.cpp
     Source/Decrypt.cpp
     Source/DecryptView.cpp
+    Source/DecryptPatches.cpp
+    Source/DecryptedView.cpp
     Source/WaveSynthPatches.cpp
     Source/WaveSynthPatchBank.cpp
     Source/WaveSynthPatchBank2.cpp

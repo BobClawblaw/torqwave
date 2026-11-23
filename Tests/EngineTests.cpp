@@ -634,6 +634,8 @@ int main (int argc, char* argv[])
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
     //   --decrypt-real [files]  only Decrypt on recordings not from the synth: the files, some system sounds, wet patches
     //   --decrypt-window        only Decrypt's window checks
+    //   --decrypt-model         only the check that a slow or hung model never makes Decrypt's page wait or go silent
+    //   --decrypt-heard         only the check that a second sound given to Decrypt is heard, the synth's audio running
     //   --decrypt-pictures <folder>  only save pictures of the synth's window on Decrypt, and print each chain
     //   --decrypt-measure       only Decrypt's two sets of ten, in 16 rounds and until settled, with times (minutes)
     //   --decrypt-eval <url> <model>  only Decrypt's ten clips, alone and helped by the model at that server
@@ -731,6 +733,20 @@ int main (int argc, char* argv[])
     {
         saveSignalConsoleWindow (juce::File (folder));
         return 0;
+    }
+
+    if (args.contains ("--decrypt-model"))
+    {
+        runDecryptModelTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (args.contains ("--decrypt-heard"))
+    {
+        runDecryptHeardTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
     }
 
     if (args.contains ("--decrypt-window"))
