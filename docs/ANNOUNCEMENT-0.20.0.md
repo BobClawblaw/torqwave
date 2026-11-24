@@ -8,7 +8,7 @@ Check the lengths after any change:
 python3 docs/compare/generate.py --posts docs/ANNOUNCEMENT-0.20.0.md
 ```
 
-The graphics are in [compare/graphics/](compare/graphics/), made from the [comparison data](compare/README.md); the screenshots are in [screenshots/](screenshots/). The graphics were regenerated for release day: they carry the date 2026-11-23 and say 0.20.0 is released. If the release goes out on another day, set `as_of` and Torqwave's `version_date` in `compare/data/snapshots/0.20.0.json` and run the generator again. Check that every number below still matches the release notes.
+The graphics are in [compare/graphics/](compare/graphics/), made from the [comparison data](compare/README.md); the screenshots are in [screenshots/](screenshots/). The graphics were regenerated for release day: they carry the date 2026-11-24 (the other products' cells were read on 2026-11-23, as the matrix says for each) and say 0.20.0 is released. If the release goes out on another day, set `as_of` and Torqwave's `version_date` in `compare/data/snapshots/0.20.0.json` and run the generator again. Check that every number below still matches the release notes.
 
 ## The main post
 
@@ -45,7 +45,7 @@ Torqwave Synth: three wavetable oscillators with warps and unison, a sub and noi
 3,743 patches in 29 categories. Drop any sound on an oscillator and it becomes that oscillator's wavetable.
 ```
 
-**3 of 6**, with the synth's window on its Decrypt page (take this screenshot from the release build; the page's display is still changing).
+**3 of 6**, with the synth's window on its Decrypt page (`screenshots/guide-decrypt.png`, drawn by the tests from a factory bell note).
 
 ```text
 Decrypt builds a synth patch from a recording of one note. It finds the pitch, plays every factory patch against the recording, then changes the nearest ones round after round.
@@ -93,7 +93,11 @@ For `screenshots/guide-synth.png`:
 The window of Torqwave Synth with the bass patch Turbine Throat: the presets row with the Knobs and Decrypt switch, three wavetable oscillators each showing its wave, the sub and noise, two filters with their curves, the amp envelope, four macro knobs, the modulation slots, and the playing keys along the bottom.
 ```
 
-For the Decrypt screenshot (write this when the picture is taken, saying what it shows: the recording dropped in, the chain of steps and how near the patch measures).
+For `screenshots/guide-decrypt.png`:
+
+```alt
+Torqwave Synth's Decrypt page after a search on a bell note. A round scope with the recording's signature in the middle and eight candidate patches round it, each with how near it measures; the nearest is ringed at 99 %. A numbered path of three steps crosses the scope. A panel on the right shows the lock, a bar each for oscillators, filter, envelopes and modulation, and the buttons Stop, Take and Again. Along the bottom, a chain: Play, the signal, and three links at 23, 37 and 99 %.
+```
 
 For `screenshots/guide-sampler.png`, `screenshots/guide-swarm.png` and `screenshots/guide-drums.png`:
 
@@ -143,6 +147,6 @@ A dark table titled "Torqwave 0.20.0 and the DAWs, 2 of 2", with the same rows; 
 
 - It is written for the day of the release. Nothing here is posted until the release is published: "is out" is true only then.
 - No other product is named in the posts, and none is called worse. The comparison is offered as a table to read, with what Torqwave lacks in the same post.
-- Torqwave Sampler ships in 0.20.0. It has been tried by hand in the app, and a bug from that is filed: check the fix log for it before posting.
+- Torqwave Sampler ships in 0.20.0. It was tried by hand in the app, and the two problems found that way (fix log 98 and 99) were fixed before the release.
 - Two hashtags at most if any are added; the draft has none.
 - The Windows and Linux packages of 0.20.0 are built by the workflows and, by the release notes, were not tried by hand. If someone asks, say so.

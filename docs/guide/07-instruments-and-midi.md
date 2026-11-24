@@ -63,7 +63,11 @@ Torqwave Synth is a wavetable synth made for dark techno, industrial and EBM. It
 
 ### Decrypt: a patch from a recording
 
-**Decrypt**, the second page of the synth's window (the **Knobs / Decrypt** switch at the top right), finds a Torqwave Synth patch that plays like a recording of one note. Drop the note on the scope, or click **Decrypt a Sound...** to choose a file.
+**Decrypt**, the second page of the synth's window (the **Knobs / Decrypt / Decrypted** switch at the top right), finds a Torqwave Synth patch that plays like a recording of one note. Drop the note on the scope, or click **Decrypt a Sound...** to choose a file.
+
+<img src="../screenshots/guide-decrypt.png" width="720" alt="Torqwave Synth's Decrypt page after a search on a bell note: the scope with the recording's signature in the middle and eight candidate patches round it, each with its lock, the nearest ringed at 99 %; a numbered path of three steps; the panel on the right with the lock, how far apart tone and loudness are, a bar each for oscillators, filter, envelopes and modulation, and Stop, Take and Again; and the chain along the bottom with Play, the signal and three links at 23, 37 and 99 %">
+
+*Decrypt after a search on a bell note from a factory patch. The picture is drawn by Torqwave's tests.*
 
 - **What it takes:** one note, held or plucked, up to 4 seconds (a longer one is cut 4 seconds after the sound starts). Its pitch is found, silence is trimmed from both ends and it is levelled. A silent clip, a note shorter than a tenth of a second and a file it cannot read are refused, with the reason.
 - **A chord** (a pad or a stab of several notes at once) is matched as a chord. Decrypt finds its notes, the signal line names them ("chord C#4 E4 B4 D#5"), and every candidate is played on those keys, so what you hear in the window is the chord. The patch you take plays one note for each key, as any patch does: play the same chord to hear the sound. A chord is taken as one when notes of three or more different names are found; two notes, a bell and a short pluck are often read as one note, and a note may be found an octave off. The lock does not tell notes apart (its bands are wider than a semitone), so a chord's lock says how near the tone and the loudness are, not whether the notes are right.
@@ -80,6 +84,10 @@ Torqwave Synth is a wavetable synth made for dark techno, industrial and EBM. It
 - **The effects are off while it matches**: the recording is matched dry, and a taken patch has its effects off. Turn them on afterwards to taste.
 
 **The Decrypted page** (the third choice beside Knobs and Decrypt) lists every patch you took and named: its name, its category, the lock it was taken at, the recording it came from and when. Click a row to put the patch on the keys (it plays when Audition is on), double-click it or press Return to load it and go to the knobs, and step through the rows with the up and down arrows. Click a heading to sort by it, and type in the box at the top right to filter by name, category or recording. Command- and Shift-click select several rows: **Category** files them under one of the synth's categories (or none), **Rename** renames the one selected (an empty or taken name is refused) and **Delete** deletes them after asking; a right-click on a row offers the same. The list is kept in Torqwave's application data, so it is the same in every session.
+
+<img src="../screenshots/guide-decrypted.png" width="720" alt="The Decrypted page listing twelve patches taken from Decrypt: a row each with its name, category, lock, the recording it came from and the date taken, sorted by name, one row on the keys; a filter box at the top right; and Category, Rename and Delete along the bottom">
+
+*The Decrypted page. The picture is drawn by Torqwave's tests, with made-up patches.*
 
 **What a lock means.** The lock is how near the patch sounds: 100 % is the same spectrum and loudness over time, 0 % is 12 dB or more apart. Detail more than 40 dB under the loudest part of each moment is left out, as you would not hear it under the rest. A recording of Torqwave Synth itself is found again, usually to within a few dB (see below). Anything else gives a patch in its spirit, not a copy: close for other synths and simple tones, loose for voices, acoustic instruments, drums and samples, which a wavetable synth can only suggest. A lock says the two measure alike, not that they sound alike to you: listen before you trust it. One note only: a chord, a melody or a loop is matched as one sound, badly. Decrypt never sees the sound's effects, room or processing as separate from its source.
 
