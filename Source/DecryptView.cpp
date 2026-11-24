@@ -1888,7 +1888,8 @@ void DecryptView::drawPanel (juce::Graphics& g)
             "voices, drums and samples.",
             "",
             "Effects are off while it",
-            "matches; one note, no chords."
+            "matches. One note or one",
+            "chord; riffs are not matched."
         };
 
         for (auto& line : lines)
