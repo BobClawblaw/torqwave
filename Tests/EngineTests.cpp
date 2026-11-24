@@ -631,6 +631,7 @@ int main (int argc, char* argv[])
     //   --patch-measure <file>  only measure the synth's factory patches (or those in --patches <file>) into this file,
     //                           for Scripts/make_patch_bank.py; --part k/n measures every nth, --wav <folder> writes each note
     //   --ai                    only the AI assistance tests (a mock server; no network)
+    //   --maximizer             only the Maximizer's tests
     //   --tempo                 only the tests of audio that follows the tempo
     //   --sequences             only the tests of sequences and the Sequence Library
     //   --sounddesign           only the tests of sound design in the session (edit in place, clip effects, layering)
@@ -935,6 +936,13 @@ int main (int argc, char* argv[])
         AudioEngine engine;
         runStressTests (engine);
         return 0;
+    }
+
+    if (args.contains ("--maximizer"))
+    {
+        runMaximizerTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
     }
 
     if (args.contains ("--tempo"))

@@ -25,9 +25,18 @@ Timing timingOf (Character c)
     return { 5.0, 200.0, 30.0, 0.5 };
 }
 
+namespace
+{
+    int trimLookahead (double sampleRate)
+    {
+        return juce::jmax (1, juce::roundToInt (trimLookaheadMs / 1000.0 * sampleRate));
+    }
+}
+
 int latencyFrames (Character c, double sampleRate)
 {
-    return Oversampler4::upLatency + juce::jmax (1, juce::roundToInt (timingOf (c).lookaheadMs / 1000.0 * sampleRate));
+    return Oversampler4::upLatency + SampleRateConverter::PeakDetector::latency() + juce::jmax (1, juce::roundToInt (timingOf (c).lookaheadMs / 1000.0 * sampleRate))
+           + trimLookahead (sampleRate);
 }
 
 void Core::prepare (int numChannels, double sampleRate)
@@ -35,6 +44,7 @@ void Core::prepare (int numChannels, double sampleRate)
     rate = sampleRate;
     channelsPrepared = juce::jmax (1, numChannels);
     detectors.assign ((size_t) channelsPrepared, {});
+    trimDetectors.assign ((size_t) channelsPrepared, {});
     set (settings);
     reset();
 }
@@ -74,6 +84,16 @@ void Core::reset()
     delay.clear();
     emphasisGains.assign ((size_t) (Oversampler4::upLatency + ahead), 1.0);
     delayPos = 0;
+
+    trimAhead = trimLookahead (rate);
+    trim.prepare (trimAhead, Dynamics::smoothingCoefficient (trimReleaseMs, rate));
+
+    for (auto& d : trimDetectors)
+        d.reset();
+
+    trimDelay.setSize (channelsPrepared, SampleRateConverter::PeakDetector::latency() + trimAhead);
+    trimDelay.clear();
+    trimPos = 0;
     envFast = envSlow = 0.0;
     reductionDb = 0.0;
 }
@@ -82,7 +102,7 @@ void Core::process (float* const* channels, int numChannels, int numFrames) noex
 {
     const auto n = juce::jmin (numChannels, channelsPrepared);
     const auto emphasis = settings.emphasisPercent / 100.0;
-    const auto length = delay.getNumSamples();
+    const auto length = delay.getNumSamples(), trimLength = trimDelay.getNumSamples();
 
     for (int i = 0; i < numFrames; ++i)
     {
@@ -109,7 +129,10 @@ void Core::process (float* const* channels, int numChannels, int numFrames) noex
         const auto need = Dynamics::limiterNeed (truePeak * detectedLift, input, top);
         const auto slowGain = slow.push (need), fastGain = fast.push (need);
 
-        // Out goes the frame a whole delay old, with its lift and the blended gain.
+        // Out of the first stage goes the frame a whole delay old, with its lift and the blended
+        // gain; its true peak (for the frame the trim detector's latency back) is the second stage's need.
+        auto madePeak = 0.0;
+
         for (int ch = 0; ch < n; ++ch)
         {
             const auto old = (double) delay.getSample (ch, delayPos);
@@ -126,10 +149,27 @@ void Core::process (float* const* channels, int numChannels, int numFrames) noex
             }
 
             channels[ch][i] = (float) out;
+            madePeak = juce::jmax (madePeak, trimDetectors[(size_t) ch].tick (channels[ch][i]));
         }
 
         emphasisGains[(size_t) delayPos] = lift;
         delayPos = (delayPos + 1) % length;
+
+        // The second stage: the first's output a trim delay old, under the gain its own peaks need
+        // (to a hair under the ceiling: this gain moves too, and remakes the peaks by a little).
+        const auto trimGain = trim.push (Dynamics::limiterNeed (madePeak, 1.0, top * trimMargin));
+
+        for (int ch = 0; ch < n; ++ch)
+        {
+            const auto made = (double) trimDelay.getSample (ch, trimPos);
+            trimDelay.setSample (ch, trimPos, channels[ch][i]);
+            channels[ch][i] = (float) (trimGain.has_value() ? juce::jlimit (-top, top, made * *trimGain) : made);
+        }
+
+        if (trimGain.has_value())
+            reductionDb += 20.0 * std::log10 (juce::jmax (1.0e-9, *trimGain));
+
+        trimPos = (trimPos + 1) % trimLength;
     }
 }
 

@@ -189,6 +189,50 @@ juce::int64 getOutputLength (juce::int64 inputFrames, double inRate, double outR
     return (juce::int64) std::ceil ((double) inputFrames * outRate / inRate);
 }
 
+namespace
+{
+    const Filter& fourTimes()
+    {
+        static const Filter f (1.0, 4.0);
+        return f;
+    }
+}
+
+PeakDetector::PeakDetector()
+{
+    history.assign ((size_t) fourTimes().taps * 2, 0.0f);
+}
+
+int PeakDetector::latency()
+{
+    return fourTimes().half;
+}
+
+void PeakDetector::reset() noexcept
+{
+    std::fill (history.begin(), history.end(), 0.0f);
+    pos = 0;
+    lateHalf = 0.0;
+}
+
+double PeakDetector::tick (float in) noexcept
+{
+    // The frame goes in twice, a filter's length apart, so the last `taps` frames always lie in a row
+    // from pos: the frames the filter reads for the frame `half` back, as convertRange reads them.
+    const auto& f = fourTimes();
+    history[(size_t) pos] = in;
+    history[(size_t) (pos + f.taps)] = in;
+    pos = (pos + 1) % f.taps;
+    const auto* frames = history.data() + pos;
+
+    const auto phase = [&] (int p) { return (double) std::abs ((float) dot (f.row (p), frames, f.taps)); };
+    const auto early = juce::jmax (phase (0), phase (1), (double) std::abs (frames[f.half - 1]));
+    const auto late = juce::jmax (phase (2), phase (3));
+    const auto peak = juce::jmax (lateHalf, early, late);
+    lateHalf = late;
+    return peak;
+}
+
 bool convert (const juce::AudioBuffer<float>& input, double inRate, double outRate,
               juce::AudioBuffer<float>& output, const std::function<bool (float)>& progress)
 {

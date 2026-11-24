@@ -59,9 +59,8 @@ void runMaximizerTests()
     std::cout << "Maximizer:" << std::endl;
 
     // The ceiling: a loud sine driven 12 dB comes out with no sample over the ceiling and its true
-    // peak at it, for every character. (The sine fades in over 50 ms: a sound that starts loud at
-    // once comes out over the ceiling between samples through its first look-ahead, since the frames
-    // before the first count as needing nothing, as the plain limiter's do; measured too.)
+    // peak at it or a hair under (the second stage's margin), for every character; so does one that
+    // starts loud at once, which the first stage alone lets over through its first look-ahead.
     {
         juce::AudioBuffer<float> in (2, 48000), abrupt (2, 48000);
 
@@ -88,14 +87,75 @@ void runMaximizerTests()
             const auto truePeak = Dynamics::truePeakDb (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (out)), 0, 48000, rate);
             worstOver = juce::jmax (worstOver, truePeak + 1.0);
             worstStart = juce::jmax (worstStart, Dynamics::truePeakDb (*AudioEdits::fromBuffer (applied (abrupt, s)), 0, 48000, rate) + 1.0);
-            held = held && std::abs (truePeak + 1.0) < 0.1;
+            held = held && truePeak + 1.0 <= 0.0 && truePeak + 1.0 > -0.05;
         }
 
-        std::cout << "      ceiling -1 dBTP: the true peak over it by at most " << worstOver << " dB (a sound starting loud at once: " << worstStart << " dB, at its start)" << std::endl;
-        check (under && held && worstStart < 1.5,
-               "maximizer: a 0.9 sine faded in and driven 12 dB into a -1 dB ceiling comes out with no sample over the ceiling and its true peak within "
-               "0.1 dB of it, for Transparent, Balanced and Loud; one that starts loud at once keeps its samples under the ceiling and its true peak "
-               "within 1.5 dB of it through its first look-ahead");
+        std::cout << "      ceiling -1 dBTP: the true peak from it by at most " << worstOver << " dB (a sound starting loud at once: " << worstStart << " dB)" << std::endl;
+        check (under && held && worstStart <= 0.0,
+               "maximizer: a 0.9 sine faded in and driven 12 dB into a -1 dBTP ceiling comes out with no sample over the ceiling and its true peak at "
+               "the ceiling or under it by less than 0.05 dB, for Transparent, Balanced and Loud; one that starts loud at once is not over it either");
+    }
+
+    // Drums: bursts of noise with a low thump under them every 125 ms, the kind of sound whose
+    // peaks between samples the moving gain and the clip remake (the first stage alone: 0.3 dB over).
+    // Driven 4 to 16 dB, the true peak, as the loudness meter measures it, is not over the ceiling.
+    {
+        juce::AudioBuffer<float> in (2, 96000);
+        juce::Random random (20);
+
+        for (int i = 0; i < 96000; ++i)
+        {
+            const auto t = (i % 6000) / rate;
+            const auto thump = 0.5 * std::exp (-t * 30.0) * std::sin (juce::MathConstants<double>::twoPi * 55.0 * t);
+            const auto noise = 0.35 * std::exp (-t * 60.0);
+            in.setSample (0, i, (float) (thump + noise * (random.nextDouble() * 2.0 - 1.0)));
+            in.setSample (1, i, (float) (thump + noise * (random.nextDouble() * 2.0 - 1.0)));
+        }
+
+        auto worst = -100.0;
+        auto under = true;
+
+        for (auto c : { Maximizer::Character::transparent, Maximizer::Character::balanced, Maximizer::Character::loud })
+            for (const auto gain : { 4.0, 8.0, 12.0, 16.0 })
+                for (const auto emphasis : { 0.0, 100.0 })
+                {
+                    Maximizer::Settings s;
+                    s.gainDb = gain;
+                    s.ceilingDb = -1.0;
+                    s.character = c;
+                    s.emphasisPercent = emphasis;
+                    const auto out = applied (in, s);
+                    under = under && peakOf (out) <= Dynamics::ceilingGain (-1.0);
+                    worst = juce::jmax (worst, Dynamics::truePeakDb (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (out)), 0, 96000, rate) + 1.0);
+                }
+
+        std::cout << "      noise bursts over a thump, driven 4 to 16 dB: the true peak from a -1 dBTP ceiling by at most " << worst << " dB" << std::endl;
+        check (under && worst <= 0.0,
+               "maximizer: two seconds of noise bursts over a thump, driven 4, 8, 12 and 16 dB into a -1 dBTP ceiling with and without Transient "
+               "Emphasis, come out with no sample and no true peak over the ceiling, for every character");
+    }
+
+    // The second stage's detector reads what the meter reads: over a second of white noise, the
+    // largest peak it gives is the true peak Dynamics measures.
+    {
+        juce::AudioBuffer<float> noise (1, 48000);
+        juce::Random random (7);
+
+        for (int i = 0; i < 48000; ++i)
+            noise.setSample (0, i, (float) (0.5 * (random.nextDouble() * 2.0 - 1.0)));
+
+        SampleRateConverter::PeakDetector detector;
+        auto peak = 0.0;
+
+        for (int i = 0; i < 48000 + SampleRateConverter::PeakDetector::latency(); ++i)
+            peak = juce::jmax (peak, detector.tick (i < 48000 ? noise.getSample (0, i) : 0.0f));
+
+        const auto metered = Dynamics::truePeakDb (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (noise)), 0, 48000, rate);
+        const auto apart = 20.0 * std::log10 (peak) - metered;
+        std::cout << "      peak detector: " << apart << " dB from the meter's true peak on white noise" << std::endl;
+        check (std::abs (apart) < 0.0001,
+               "peak detector: over a second of white noise, a frame at a time, its largest peak is within 0.0001 dB of the true peak the meter "
+               "measures (the same filter, at four times the rate)");
     }
 
     // A quiet sound with no gain passes bit for bit, in place (the latency taken off).
@@ -223,7 +283,7 @@ void runMaximizerTests()
         std::cout << "      live: latency " << reportedLoud << " frames as Loud, " << reportedTransparent << " as Transparent" << std::endl;
         check (same && reportedLoud == latency && reportedTransparent == Maximizer::latencyFrames (Maximizer::Character::transparent, rate) && kept && refused,
                "built-in maximizer: played in blocks of 1, 7, 512 and 3,000 frames it gives the offline samples bit for bit, late by its latency, which it "
-               "reports and changes with the character (Loud 116 frames, Transparent 500 at 48 kHz); its state and presets restore every setting; a gain "
+               "reports and changes with the character (Loud 267 frames, Transparent 651 at 48 kHz); its state and presets restore every setting; a gain "
                "past 24 dB, a ceiling under -24 dB and an empty range are refused");
     }
 }

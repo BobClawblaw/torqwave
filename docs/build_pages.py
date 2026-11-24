@@ -473,7 +473,8 @@ def quality_demos():
          f'<tr><td>Loudness range</td><td class="n">{d["rangeBefore"]:.1f} LU</td><td class="n">{d["rangeAfter"]:.1f} LU</td></tr>'
          f'<tr><td>Gain into the ceiling</td><td></td><td class="n">{d["gainDb"]:.1f} dB</td></tr>',
          (f'<p class="note">The true peak reads {d["truePeakAfter"]:.2f} dBTP on Torqwave\'s own meter, {over:.2f} dB over the −1 dBTP ceiling that was set. No sample is over the ceiling; '
-          'the limiter and the meter draw the peaks between samples with different interpolators, and they disagree by that much on this clip. Leave that margin if a delivery spec is strict.</p>'
+          'the limiter measures the peaks between samples before its gain moves, and the moving gain and the clip at the ceiling make new ones. Leave that margin if a delivery spec is strict. '
+          'This is 0.20.1 as released. It is corrected for the next release, where this clip reads −1.03 dBTP.</p>'
           if over > 0.005 else ""))
 
     between("quality/index.html", "demos", "\n".join(out))

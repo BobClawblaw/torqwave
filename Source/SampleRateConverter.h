@@ -27,6 +27,27 @@ namespace SampleRateConverter
     /** Converts a clip to outRate. Returns an empty clip when cancelled. */
     AudioClip convert (const AudioClip&, double outRate, const std::function<bool (float)>& progress = {});
 
+    /** The peaks between samples as convert draws them at four times the rate, a frame at a time:
+        the same filter, so a limiter that uses this agrees with Loudness's and Dynamics's true peak.
+        tick takes a frame and gives the largest magnitude from half a frame before to three quarters
+        of a frame after the frame `latency` back (the meter's half frame either side, and a quarter
+        more). Silence is taken before the first frame. */
+    class PeakDetector
+    {
+    public:
+        PeakDetector();
+
+        static int latency();
+
+        void reset() noexcept;
+        double tick (float in) noexcept;
+
+    private:
+        std::vector<float> history;   // the last `taps` frames, twice over so a row's dot product runs straight
+        int pos = 0;
+        double lateHalf = 0.0;        // the last frame's two later phases
+    };
+
     /** Marker positions at the new rate. */
     Markers convert (const Markers&, double inRate, double outRate);
 }
