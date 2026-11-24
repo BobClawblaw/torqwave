@@ -2754,7 +2754,7 @@ namespace
                "rounds, and what is sent with a request: " + panel.getStats());
         panel.getRequestBox().setText ("Is that enough?");
         panel.ask();
-        TestUtils::runUntil ([&] { return panel.getLog().contains ("It is 6 dB up already."); }, 10000);
+        TestUtils::runUntil ([&] { return panel.getLog().contains ("It is 6 dB up already.") && panel.getTurns().size() == 2; }, 10000);
         const auto followUp = parse (server.requests().size() == 3 ? server.requests()[2].body : juce::String ("{}"))["messages"];
         const auto system = followUp[0]["content"].toString();
         check (followUp.size() == 4 && followUp[1]["role"] == juce::var ("user") && followUp[1]["content"] == juce::var ("Make it 6 dB louder")
@@ -2771,7 +2771,7 @@ namespace
         // A question about the release carries the notes, written for this version.
         panel.getRequestBox().setText ("What is new in this version?");
         panel.ask();
-        TestUtils::runUntil ([&] { return panel.getLog().contains ("Drums have a Modern type."); }, 10000);
+        TestUtils::runUntil ([&] { return panel.getLog().contains ("Drums have a Modern type.") && panel.getTurns().size() == 3; }, 10000);   // answered and finished: the arrows are refused while a request runs
         const auto asked = parse (server.requests().size() == 4 ? server.requests()[3].body : juce::String ("{}"))["messages"];
         check (asked.size() == 6 && asked[0]["content"].toString().contains ("New in " + Ai::releaseNotesFor() + ":")
                    && Ai::releaseNotesFor() == JUCE_APPLICATION_VERSION_STRING,
