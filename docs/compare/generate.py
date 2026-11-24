@@ -242,8 +242,8 @@ def graphic_whole(defs, snap):
 
 def trend_points(defs, snaps, announced_only=False):
     """Torqwave's coverage by release. With announced_only, a release whose snapshot says
-    "announced": false is left out: the graphic shows the releases people were told about, and
-    MATRIX.md keeps them all."""
+    "announced": false is left out: the graphic and MATRIX.md show the releases people were told
+    about, and the snapshots keep them all."""
     rows = all_rows(defs)
     pts = []
     for i, snap in enumerate(snaps):
@@ -381,12 +381,15 @@ def matrix_md(defs, snaps):
         for g in defs["groups"]:
             o.append(f'| {g["title"]} | {len(g["rows"])} | ' + " | ".join(cov_text(coverage(P[p]["cells"], g["rows"])) for p in cols) + " |")
         o.append(f'| **All rows** | {len(rows)} | ' + " | ".join(cov_text(coverage(P[p]["cells"], rows)) for p in cols) + " |\n")
-    pts, total = trend_points(defs, snaps)
+    pts, total = trend_points(defs, snaps, announced_only=True)
     o.append("\n## Torqwave by release\n")
     o.append("| Release | Yes | Partial | No | Rows |")
     o.append("|---|---|---|---|---|")
     for ver, c in pts:
         o.append(f'| {ver} | {c["yes"]} | {c["partial"]} | {c["no"]} | {total} |')
+    quiet = [s["release"] for s in snaps if s.get("announced") is False]
+    if quiet:
+        o.append(f'\nAnnounced releases only. {" and ".join(quiet)} came out between them without an announcement; their snapshots are in `data/snapshots/`.')
     # behind and ahead, computed
     o.append("\n## Where Torqwave is behind\n")
     o.append(f"Rows where Torqwave {snap['release']} is no or partial and at least two of the {len(comp)} other products are yes.\n")

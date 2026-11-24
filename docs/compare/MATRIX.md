@@ -106,9 +106,9 @@ Rows that are yes, with partial rows after a plus sign and rows not confirmed af
 | Release | Yes | Partial | No | Rows |
 |---|---|---|---|---|
 | 0.19.2 | 39 | 3 | 11 | 53 |
-| 0.20.0 | 45 | 2 | 6 | 53 |
-| 0.20.1 | 45 | 2 | 6 | 53 |
 | 0.21.0 | 45 | 2 | 6 | 53 |
+
+Announced releases only. 0.20.0 and 0.20.1 came out between them without an announcement; their snapshots are in `data/snapshots/`.
 
 ## Where Torqwave is behind
 
