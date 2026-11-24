@@ -92,9 +92,10 @@ namespace Home
         void handleAsyncUpdate() override;
     };
 
-    /** What the app shows when it starts: the home screen (the default), or the file that was
-        open when it quit. Kept in the settings under startKey as 0 or 1. */
-    enum class Start { homeScreen, lastFile };
+    /** What the app shows when it starts: the home screen (the default), the file that was open
+        when it quit, or everything that was open, as it was left (see Resume). Kept in the settings
+        under startKey as 0, 1 or 2. */
+    enum class Start { homeScreen, lastFile, leftOff };
     inline constexpr const char* startKey = "onStart";
     Start startWith (const juce::PropertySet& settings);
 

@@ -801,9 +801,13 @@ void WaveformView::drawEmpty (juce::Graphics& g, juce::Rectangle<int> area)
 
     // The buttons, each as wide as its words.
     auto row = page.removeFromTop (34);
-    const std::array<std::pair<HomeAction, const char*>, 5> actions { { { HomeAction::newFile, "New File" }, { HomeAction::open, "Open..." },
-                                                                        { HomeAction::newSession, "New Session" },
-                                                                        { HomeAction::openProject, "Open Project..." }, { HomeAction::guide, "User Guide" } } };
+    std::vector<std::pair<HomeAction, const char*>> actions { { HomeAction::newFile, "New File" }, { HomeAction::open, "Open..." },
+                                                              { HomeAction::newSession, "New Session" },
+                                                              { HomeAction::openProject, "Open Project..." }, { HomeAction::guide, "User Guide" } };
+
+    if (canContinueLeftOff != nullptr && canContinueLeftOff())
+        actions.insert (actions.begin(), { HomeAction::continueLeftOff, "Continue Where You Left Off" });
+
     g.setFont (juce::FontOptions (14.0f));
 
     for (const auto& [action, label] : actions)

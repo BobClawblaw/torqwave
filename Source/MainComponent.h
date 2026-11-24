@@ -71,6 +71,8 @@
 #include "IdeaBoardView.h"
 #include "SettingsPanel.h"
 
+namespace Resume { class Keeper; struct Loaded; struct Waiting; }
+
 namespace Guide { class Window; }
 
 class ClipProperties;
@@ -341,6 +343,17 @@ private:
     void restoreProject (const juce::File&);
     void saveProject (bool chooseFile);
     void writeProject (const juce::File&);
+
+    /** Continue where you left off (see Resume): what was open is noted in leftOffFolder() while
+        the app runs and when it quits, and brought back at start when Settings > Start asks for
+        it, or by the command. */
+    juce::File leftOffFolder();
+    bool canContinueWhereLeftOff() const;
+    void continueWhereLeftOff();              // the command: asks about changes, then brings it back
+    void beginContinuing (bool atStart);      // reads the note and its files off the message thread
+    void finishContinuing();                  // opens what was read, once the device and plug-in list are ready
+    void keepLeftOff (bool now);              // notes what is open: every so often, or now (at quit)
+    void showStartNotice();
     juce::String projectSuffix() const;
     void combineLoaded (const juce::Array<juce::File>&, const std::vector<AudioFileIO::Loaded>&);
     int sequencePosition = 0, sequenceResetCount = 0;      // where the document was after the last recorded step
@@ -715,6 +728,16 @@ private:
     juce::uint32 recoveredVersion = 0;         // the session version last copied for recovery
     juce::uint32 lastRecoveryCheck = 0;        // when, in milliseconds since startup
     bool recoveryCopyKept = false;
+    std::unique_ptr<Resume::Keeper> leftOffKeeper;
+    std::shared_ptr<Resume::Loaded> leftOffLoaded;   // read, waiting to be opened
+    std::unique_ptr<Resume::Waiting> leftOffWaiting; // what couldn't be reopened: kept in the note and tried again next start
+    std::function<void()> placesAfterBoot;     // puts the views back where they were once the window has its size
+    juce::String startNotice;                  // what couldn't be reopened, said once the start's other question is answered
+    juce::uint32 lastLeftOffNote = 0;          // when, in milliseconds since startup
+    bool leftOffOnOffer = false;               // a note from an earlier run was there at start
+    bool continuing = false, continuingAtStart = false;
+    bool deviceAsked = false, pluginListRead = false;
+    bool recoveryOfferWaiting = false;         // the start finished while what was open was still being read
     juce::TooltipWindow tooltips { this, 700 };   // without one, no control's tooltip ever shows
     AudioEngine engine;
     juce::ApplicationCommandManager commands;
@@ -952,3 +975,4 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
+

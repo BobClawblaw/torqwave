@@ -424,6 +424,6 @@ A session can also be mixed in 5.1 or 7.1 (**Multitrack > Surround**). See [Vide
 - In the multitrack view, **File > Save** becomes **Save Session** (Cmd-S), and Save As becomes **Save Session As...**. A session is saved as a `.tqsession` file. It points to the audio files, so keep them where they are.
 - **File > Save a Copy with Audio...** writes a copy of the session with every audio file it uses in a folder beside it, to move it or hand it on.
 - **A project** keeps the session together with the files open in the editor.
-- **After a crash,** Torqwave offers to recover the session the next time it starts.
+- **After a crash,** Torqwave offers to recover the session the next time it starts. With [Continue where you left off](01-getting-started.md#continue-where-you-left-off) chosen it reopens the saved session first, and **Open** puts the recovered copy in its place.
 
 Next: [Instruments and MIDI](07-instruments-and-midi.md).
