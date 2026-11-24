@@ -593,7 +593,7 @@ struct Engine::Hit
     std::array<double, 6> hz {};
     std::array<Svf, 10> f {};
     std::array<Decay, 8> e {};
-    std::array<double, 10> v {};
+    std::array<double, 12> v {};
     juce::uint32 n1 = 1, n2 = 2, n3 = 3;
 };
 
@@ -683,7 +683,7 @@ namespace
     {
         switch (s)
         {
-            case Sound::kick:        return -3.1f;
+            case Sound::kick:        return -0.45f;
             case Sound::snare:       return 4.8f;
             case Sound::clap:        return -1.0f;
             case Sound::closedHat:   return -0.8f;
@@ -818,6 +818,11 @@ namespace
         }
     }
 
+    /** The Modern kick: how far its level is pushed into a ceiling, so that it holds before it falls, and
+        the level above which the sum of body and beater is rounded off (to 1). */
+    constexpr double kickSustain = 3.0;
+    constexpr float kickKnee = 0.75f;
+
     /** Sets a Modern hit going (its tune, tone, decay and velocity already in it); its onset ramp in seconds. */
     double startModern (Hit& h, int note, double D)
     {
@@ -829,12 +834,14 @@ namespace
             {
                 // The Classic kick's three characters, each with a beater and shell of its own; struck
                 // softer its pitch sweeps less and the beater is hardly heard, so ghost notes rumble.
+                // Its weight: the level is held near full before it falls (the decay still ends where it
+                // did), and an octave over the fundamental fills the low mids under the beater.
                 const auto character = (int) h.kick;
                 const auto low = note == 35;
                 const auto decay = D * (low ? 1.15 : 1.0);
                 static constexpr double bases[] { 47.0, 52.0, 55.0 }, holds[] { 0.02, 0.012, 0.008 }, shapes[] { 1.1, 1.8, 4.0 }, clicks[] { 0.7, 1.5, 2.2 };
-                static constexpr double drop1[] { 1.4, 3.2, 6.0 }, time1[] { 0.006, 0.004, 0.0025 }, drop2[] { 0.8, 1.1, 1.8 }, time2[] { 0.05, 0.028, 0.02 };
-                static constexpr double biases[] { 0.2, 0.4, 0.5 }, shells[] { 0.45, 0.9, 1.2 };
+                static constexpr double drop1[] { 1.4, 3.2, 6.0 }, time1[] { 0.006, 0.004, 0.0025 }, drop2[] { 0.9, 1.3, 1.9 }, time2[] { 0.06, 0.042, 0.03 };
+                static constexpr double biases[] { 0.2, 0.4, 0.5 }, shells[] { 0.45, 0.9, 1.2 }, octaves[] { 0.4, 0.6, 0.65 };
                 const auto hold = holds[character] * juce::jmin (1.0, S);
                 h.v[0] = bases[character] * T * (low ? semis (-2.0) : 1.0);
                 h.v[1] = drop1[character] * (0.35 + 0.65 * vel);
@@ -845,7 +852,9 @@ namespace
                 h.v[6] = biases[character];
                 h.v[7] = 1.0 - std::exp (-twoPi * 20.0 / rate);
                 h.v[9] = shells[character] * vel;
-                h.e[0].set (juce::jmax (0.005, decay - hold) / 6.9, rate);
+                h.v[10] = octaves[character];
+                h.e[0].set (juce::jmax (0.005, decay - hold) / (6.9 + std::log (kickSustain / std::tanh (kickSustain))), rate);
+                h.e[5].set (0.08 * juce::jmin (1.0, S), rate);
                 h.e[1].set (time1[character], rate);
                 h.e[2].set (time2[character], rate);
                 h.e[3].set (0.003, rate);
@@ -1016,8 +1025,8 @@ namespace
             case Sound::kick:
             {
                 const auto hz = h.v[0] * (1.0 + h.v[1] * h.e[1].next() + h.v[2] * h.e[2].next());
-                const auto body = sine (h.ph[0], hz, h.rate);
-                const auto amp = h.age < (juce::int64) h.v[5] ? 1.0f : h.e[0].next();
+                const auto body = sine (h.ph[0], hz, h.rate) + (float) h.v[10] * h.e[5].next() * sine (h.ph[2], 2.0 * hz, h.rate);
+                const auto amp = h.age < (juce::int64) h.v[5] ? 1.0f : std::tanh ((float) kickSustain * h.e[0].next()) / std::tanh ((float) kickSustain);
 
                 // Clipped off centre, so the body has even harmonics as well as odd (what is heard of a
                 // kick on small speakers); what that leaves under 20 Hz is taken off again.
@@ -1031,6 +1040,10 @@ namespace
                 const auto click = (0.9f * h.f[1].bandPass (hit) + 0.4f * sine (h.ph[1], 1700.0 * h.T, h.rate)) * h.e[3].next() * (float) h.v[4];
                 const auto shell = h.f[2].bandPass (hit) * h.e[4].next() * (float) h.v[9];
                 s = 0.9f * driven + click + shell;
+
+                // The beater sits in the body's level, not on top of it: the peak is the body's.
+                if (const auto over = std::abs (s) - kickKnee; over > 0.0f)
+                    s = std::copysign (kickKnee + (1.0f - kickKnee) * std::tanh (over / (1.0f - kickKnee)), s);
                 break;
             }
             case Sound::snare:
