@@ -80,7 +80,7 @@ Try it on real work and tell me what breaks: https://github.com/BobClawblaw/torq
 
 ## Notes on the claims
 
-Everything in the post is from the [changelog](../CHANGELOG.md) and the release notes of 0.18.0 to 0.19.2. It makes no comparison with other apps, so there is nothing outside the project to check.
+Everything in the post is from the [changelog](../../CHANGELOG.md) and the release notes of 0.18.0 to 0.19.2. It makes no comparison with other apps, so there is nothing outside the project to check.
 
 - **Ask Torq:** freezes and bounces each take an undo step of their own after the plan's, so the post doesn't say a plan is one undo step.
 - **Testing:** the post makes no test claims. Each release's Mac suite passed in both halves of the universal app; Windows and Linux were built by the workflows and not tried by hand this round.

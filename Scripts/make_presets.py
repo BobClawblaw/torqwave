@@ -4,7 +4,7 @@ kits in Data/Presets/Kits.
 
 Every preset is made here from a compact definition (a 16-step grid per drum, a step list for a
 line, chords by bar), so a change to the conventions is one edit and a rerun. The rules they keep
-(docs/PLAN-0.19.3.md, step 6), which the test suite checks again:
+(docs/plans/PLAN-0.19.3.md, step 6), which the test suite checks again:
 
 - on the 16th grid; drums on the General MIDI map; bass lines mono except an acid slide, which
   overlaps the next note by 20 ticks;

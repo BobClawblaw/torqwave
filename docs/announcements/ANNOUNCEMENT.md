@@ -65,7 +65,7 @@ Every comparison with Audacity above was checked on 2026-11-18:
 - **LV2:** Audacity loads LV2 effects too, so the post lists LV2 in what Torqwave is, not in what Audacity lacks.
 - Audacity 4.0 does have **workspaces** and **non-destructive clip editing**. The post doesn't claim either as Torqwave's alone.
 
-What Torqwave has is from the [README](../README.md) and the [changelog](../CHANGELOG.md). Before posting, check that:
+What Torqwave has is from the [README](../../README.md) and the [changelog](../../CHANGELOG.md). Before posting, check that:
 
 - the latest release is the one named in the post;
 - the download links work on all three platforms.

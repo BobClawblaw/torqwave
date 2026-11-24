@@ -45,7 +45,7 @@ Yes, with one condition: **a small relay has to be hosted.** There is no sound w
 - **HTTP** (`Source/AiClient.cpp`, `Ai::Client::open`). A POST of JSON through `juce::WebInputStream` with headers and a time limit, called from a background thread, with cancel. On Linux it goes through libcurl, loaded only when first needed (`NEEDS_CURL`, `JUCE_LOAD_CURL_SYMBOLS_LAZILY`), so the app starts without it. The tests have a mock HTTP server (`MockServer` in `Tests/AiTests.cpp`) that answers with recorded replies.
 - **Secrets** (`Source/AiKeychain.h`): the system's keychain for Ask Torq's keys. Reports need no secret in the app, so this is not used.
 - **The build stamp** (`Source/BuildStamp.h`): whether this is a release build, and for a test build its time and commit.
-- **The fix log** ([DOGFOODING.md](DOGFOODING.md)): every problem found by use gets a row and a GitHub issue, in the commit that fixes it. Reports from users should end as rows there.
+- **The fix log** ([DOGFOODING.md](../DOGFOODING.md)): every problem found by use gets a row and a GitHub issue, in the commit that fixes it. Reports from users should end as rows there.
 
 ## How a report reaches a private repository
 
@@ -307,7 +307,7 @@ One private repository (called `torqwave-reports` here). The relay's token reach
 
 1. The developer opens an issue in the public repository in their own words, with nothing copied from the report that the redaction should have caught.
 2. The private issue gets the public issue's number in a comment and the label `public:#N`.
-3. The fix commit adds the row to [DOGFOODING.md](DOGFOODING.md) as now, with "Found in" naming the version and "from a user's report" in the description, and closes the public issue. The private issue is closed with the release that carries the fix.
+3. The fix commit adds the row to [DOGFOODING.md](../DOGFOODING.md) as now, with "Found in" naming the version and "from a user's report" in the description, and closes the public issue. The private issue is closed with the release that carries the fix.
 
 ## Steps
 

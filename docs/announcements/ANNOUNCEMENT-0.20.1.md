@@ -5,14 +5,14 @@ A draft, not posted. 0.20.1 is the major release: this announces everything sinc
 Check the lengths after any change:
 
 ```bash
-python3 docs/compare/generate.py --posts docs/ANNOUNCEMENT-0.20.1.md
+python3 docs/compare/generate.py --posts docs/announcements/ANNOUNCEMENT-0.20.1.md
 ```
 
-The graphics are in [compare/graphics/](compare/graphics/), made from the [comparison data](compare/README.md); the screenshots are in [screenshots/](screenshots/).
+The graphics are in [compare/graphics/](../compare/graphics/), made from the [comparison data](../compare/README.md); the screenshots are in [screenshots/](../screenshots/).
 
 ## The main post
 
-One post, with graphic 1 (`compare/graphics/1-release-by-the-numbers.png`).
+One post, with graphic 1 (`docs/compare/graphics/1-release-by-the-numbers.png`).
 
 ```text
 Torqwave 0.20.1 is out. New in the free, open-source audio editor and DAW:
@@ -28,7 +28,7 @@ Torqwave 0.20.1 is out. New in the free, open-source audio editor and DAW:
 
 ## The thread
 
-**1 of 8**, with graphic 1 (`compare/graphics/1-release-by-the-numbers.png`).
+**1 of 8**, with graphic 1 (`docs/compare/graphics/1-release-by-the-numbers.png`).
 
 ```text
 Torqwave 0.20.1 is out. It is a free, open-source audio editor and DAW in one, and this release gives it its own instruments, something to play on them, and a start that brings back what you had open.
@@ -38,7 +38,7 @@ What is new since 0.19.2, in eight posts.
 <release link>
 ```
 
-**2 of 8**, with the synth's window (`screenshots/guide-synth.png`).
+**2 of 8**, with the synth's window (`docs/screenshots/guide-synth.png`).
 
 ```text
 Torqwave Synth: three wavetable oscillators with warps and unison, a sub and noise, two filters, four envelopes, two LFOs, sixteen modulation slots and four macros.
@@ -46,7 +46,7 @@ Torqwave Synth: three wavetable oscillators with warps and unison, a sub and noi
 3,743 patches in 29 categories. Drop any sound on an oscillator and it becomes that oscillator's wavetable.
 ```
 
-**3 of 8**, with the Decrypt page and the Decrypted page (`screenshots/guide-decrypt.png`, `screenshots/guide-decrypted.png`).
+**3 of 8**, with the Decrypt page and the Decrypted page (`docs/screenshots/guide-decrypt.png`, `docs/screenshots/guide-decrypted.png`).
 
 ```text
 Decrypt builds a synth patch from a recording of one note, or of a chord, matched as a chord. It shows up to eight candidates that sound different. Take one, name it, and it is kept on the Decrypted page by category.
@@ -54,7 +54,7 @@ Decrypt builds a synth patch from a recording of one note, or of a chord, matche
 Close for synth sounds; looser for voices and drums.
 ```
 
-**4 of 8**, with Torqwave Sampler's window in Keys and in Slices (`screenshots/guide-sampler.png`, `screenshots/guide-sampler-slices.png`).
+**4 of 8**, with Torqwave Sampler's window in Keys and in Slices (`docs/screenshots/guide-sampler.png`, `docs/screenshots/guide-sampler-slices.png`).
 
 ```text
 Torqwave Sampler plays your own sounds: across the keys in zones with loops and crossfades, or cut into slices with each piece on its own key.
@@ -62,7 +62,7 @@ Torqwave Sampler plays your own sounds: across the keys in zones with loops and 
 It takes its sound straight from the editor's selection, a clip in a session, the Files panel or the Sound Library.
 ```
 
-**5 of 8**, with StringSwarm's and Basic Drums' windows (`screenshots/guide-swarm.png`, `screenshots/guide-drums.png`).
+**5 of 8**, with StringSwarm's and Basic Drums' windows (`docs/screenshots/guide-swarm.png`, `docs/screenshots/guide-drums.png`).
 
 ```text
 Two more instruments. StringSwarm: a guitar with every string tuned to the note you play, through a fuzz, or a swarm of oscillators. Basic Drums: 30 sounds on pads, for every General MIDI drum.
@@ -70,7 +70,7 @@ Two more instruments. StringSwarm: a guitar with every string tuned to the note 
 All four play from the computer's keys. Audition plays each sound as you choose it.
 ```
 
-**6 of 8**, with the Sequencer workspace (`screenshots/guide-sequencer.png`) and the editor (`screenshots/editor.png`).
+**6 of 8**, with the Sequencer workspace (`docs/screenshots/guide-sequencer.png`) and the editor (`docs/screenshots/editor.png`).
 
 ```text
 Something to play on them: 1,018 sequence presets and 116 starter kits in 37 styles, sorted by style, energy and character.
@@ -86,7 +86,7 @@ Continue where you left off: quit with files open in the editor and a session in
 It keeps a note of what was open, not your audio.
 ```
 
-**8 of 8**, with graphic 5 (`compare/graphics/5-where-torqwave-stands.png`), and graphics 2, 3 and 4 (the editors, and the DAWs in two parts) to fill the post's four images.
+**8 of 8**, with graphic 5 (`docs/compare/graphics/5-where-torqwave-stands.png`), and graphics 2, 3 and 4 (the editors, and the DAWs in two parts) to fill the post's four images.
 
 ```text
 Where does it stand? We keep a feature comparison with 15 other editors and DAWs, each cell read from that product's own documentation, and update it every release.
@@ -104,13 +104,13 @@ For graphic 1, `1-release-by-the-numbers.png`:
 A dark chart titled "Torqwave 0.20.1: what it adds over 0.19.2". Six tiles, each with a number and the figure for 0.19.2 under it: 3,743 synth patches (0 before), 4 built-in instruments (1 before), 1,018 sequence presets (0 before), 296 StringSwarm presets (0 before), 30 drum sounds (0 before), 85 audition patterns (0 before). A list beside them, "Also new since 0.19.2": Continue where you left off, every open file and the session back at the next start; Decrypt, a synth patch from a recording of one note; Torqwave Sampler, your own sounds across the keys or cut into slices; a wavetable from any sound dropped on an oscillator; instruments played from the computer's keys; a time-view strip, a Hand tool and Paste Clipboard as New File.
 ```
 
-For `screenshots/guide-synth.png`:
+For `docs/screenshots/guide-synth.png`:
 
 ```alt
 The window of Torqwave Synth with the bass patch Turbine Throat: the presets row with the Knobs and Decrypt switch, three wavetable oscillators each showing its wave, the sub and noise, two filters with their curves, the amp envelope, four macro knobs, the modulation slots, and the playing keys along the bottom.
 ```
 
-For `screenshots/guide-decrypt.png` and `screenshots/guide-decrypted.png`:
+For `docs/screenshots/guide-decrypt.png` and `docs/screenshots/guide-decrypted.png`:
 
 ```alt
 Torqwave Synth's Decrypt page after a search on a bell note. A round scope with the recording's signature in the middle and eight candidate patches round it, each with how near it measures; the nearest is ringed at 99 %. A numbered path of three steps crosses the scope. A panel on the right shows the lock, a bar each for oscillators, filter, envelopes and modulation, and the buttons Stop, Take and Again. Along the bottom, a chain: Play, the signal, and three links at 23, 37 and 99 %.
@@ -120,7 +120,7 @@ Torqwave Synth's Decrypt page after a search on a bell note. A round scope with 
 Torqwave Synth's Decrypted page listing twelve patches taken from Decrypt: a row each with its name, category, lock, the recording it came from and the date taken, sorted by name, one row on the keys; a filter box at the top right; and Category, Rename and Delete along the bottom. The patches in the picture are made up for it.
 ```
 
-For `screenshots/guide-sampler.png` and `screenshots/guide-sampler-slices.png`:
+For `docs/screenshots/guide-sampler.png` and `docs/screenshots/guide-sampler-slices.png`:
 
 ```alt
 The window of Torqwave Sampler playing a held note: the Keys and Slices switch and the presets row along the top, the sample's waveform with its start, end and a shaded loop, the zone drawn across the keys either side of its root, and the zone's, amp's, filter's, LFO's and voice's settings below.
@@ -130,7 +130,7 @@ The window of Torqwave Sampler playing a held note: the Keys and Slices switch a
 The window of Torqwave Sampler in Slices: a two-bar drum loop in the waveform with a cut at each of its 20 hits, each slice numbered, the fifth lit; the Slices panel with the source set to Hits and 20 pads; and the selected slice's settings, with Slice Again and its Sensitivity knob.
 ```
 
-For `screenshots/guide-swarm.png` and `screenshots/guide-drums.png`:
+For `docs/screenshots/guide-swarm.png` and `docs/screenshots/guide-drums.png`:
 
 ```alt
 The window of StringSwarm with the preset Tremolo Swarm Wall: twelve strings all tuned to G across three octaves, each a few cents apart, the fuzz amp with its Drive, Tone, Level and Velocity knobs, the strum and layers controls, and the playing keys along the bottom.
@@ -140,7 +140,7 @@ The window of StringSwarm with the preset Tremolo Swarm Wall: twelve strings all
 The window of Basic Drums in its Industrial kit: the kit selector and presets row along the top, thirty pads coloured by family (kicks, snares and claps, hats, toms, cymbals, hand percussion) on the left, and the selected kick's settings on the right.
 ```
 
-For `screenshots/guide-sequencer.png` and `screenshots/editor.png`:
+For `docs/screenshots/guide-sequencer.png` and `docs/screenshots/editor.png`:
 
 ```alt
 Torqwave's Sequencer workspace: the Sequence Library on the left, the Sequencer with a three-bar hook's notes and its Torqwave Synth voice, and the Idea Board below with the Chorus scene playing.

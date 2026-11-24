@@ -12,7 +12,7 @@ A running comparison of Torqwave with the editors and DAWs that are real alterna
 - **[data/snapshots/](data/snapshots/):** one file per Torqwave release with every cell: its value, a note, the page it was read on, a short quotation or what was checked, the version assessed and the date looked up. The files together are the history the trend is drawn from.
 - **[generate.py](generate.py):** makes MATRIX.md and the graphics from the data. Python's standard library only.
 
-The announcement for a release that uses these graphics is beside the other announcements, for example [ANNOUNCEMENT-0.20.0.md](../ANNOUNCEMENT-0.20.0.md).
+The announcement for a release that uses these graphics is beside the other announcements, for example [announcements/ANNOUNCEMENT-0.20.1.md](../announcements/ANNOUNCEMENT-0.20.1.md).
 
 ## Regenerating
 
@@ -23,7 +23,7 @@ python3 docs/compare/generate.py
 It writes `MATRIX.md` and the five SVGs. The PNGs are written too when `rsvg-convert` is on the `PATH` (librsvg); without it, convert the SVGs with any tool you have. Nothing is installed by the script.
 
 ```bash
-python3 docs/compare/generate.py --posts docs/ANNOUNCEMENT-0.20.0.md
+python3 docs/compare/generate.py --posts docs/announcements/ANNOUNCEMENT-0.20.0.md
 ```
 
 counts each post in an announcement as X counts it (a link is 23 characters) and fails if one is over 280, or an alt text over 1,000.
