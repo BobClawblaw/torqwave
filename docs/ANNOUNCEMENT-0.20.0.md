@@ -8,7 +8,7 @@ Check the lengths after any change:
 python3 docs/compare/generate.py --posts docs/ANNOUNCEMENT-0.20.0.md
 ```
 
-The graphics are in [compare/graphics/](compare/graphics/), made from the [comparison data](compare/README.md); the screenshots are in [screenshots/](screenshots/). The graphics were regenerated for release day: they carry the date 2026-11-23 and say 0.20.0 is released. If the release goes out on another day, set `as_of` and Torqwave's `version_date` in `compare/data/snapshots/0.20.0.json` and run the generator again. Check that every number below still matches the release notes.
+The graphics are in [compare/graphics/](compare/graphics/), made from the [comparison data](compare/README.md); the screenshots are in [screenshots/](screenshots/). The graphics were regenerated for release day: they carry the date 2026-11-24 (the other products' cells were read on 2026-11-23, as the matrix says for each) and say 0.20.0 is released. If the release goes out on another day, set `as_of` and Torqwave's `version_date` in `compare/data/snapshots/0.20.0.json` and run the generator again. Check that every number below still matches the release notes.
 
 ## The main post
 

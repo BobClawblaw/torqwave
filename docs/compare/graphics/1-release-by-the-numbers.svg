@@ -2,7 +2,7 @@
 <rect width="1600" height="900" fill="#111317"/>
 <text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.20.0: what it adds over 0.19.2</text>
 <text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">By the numbers, counted from the release&#x27;s own files and documentation</text>
-<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-23. Torqwave 0.20.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
+<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-24. Torqwave 0.20.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
 <rect x="50.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="50.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
 <text x="74.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">3,743</text>

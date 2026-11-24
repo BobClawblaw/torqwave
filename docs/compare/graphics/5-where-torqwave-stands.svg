@@ -2,7 +2,7 @@
 <rect width="1600" height="900" fill="#111317"/>
 <text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Where Torqwave stands, area by area</text>
 <text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">Rows covered in each area, of the rows this comparison tracks. A count of features, not of depth or maturity.</text>
-<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-23. Torqwave 0.20.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
+<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-24. Torqwave 0.20.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
 <text x="330.5" y="176.0" font-size="15" fill="#d8dde3" text-anchor="middle" font-weight="bold">Editing</text>
 <text x="330.5" y="196.0" font-size="13" fill="#6b737d" text-anchor="middle" font-weight="normal">5 rows</text>
 <text x="421.5" y="176.0" font-size="15" fill="#d8dde3" text-anchor="middle" font-weight="bold">Repair</text>
