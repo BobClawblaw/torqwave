@@ -631,6 +631,7 @@ int main (int argc, char* argv[])
     //   --patch-measure <file>  only measure the synth's factory patches (or those in --patches <file>) into this file,
     //                           for Scripts/make_patch_bank.py; --part k/n measures every nth, --wav <folder> writes each note
     //   --ai                    only the AI assistance tests (a mock server; no network)
+    //   --metronome             only the tests of the click, the tempo map, loop playback and snapping
     //   --maximizer             only the Maximizer's tests
     //   --clicks                only Click and Pop Repair's tests
     //   --restoration           only the tests of hum removal and Repair Clipping
@@ -956,6 +957,14 @@ int main (int argc, char* argv[])
     if (args.contains ("--clicks"))
     {
         runClickTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (args.contains ("--metronome"))
+    {
+        AudioEngine engine;
+        runMetronomeTests (engine.formatManager);
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }
