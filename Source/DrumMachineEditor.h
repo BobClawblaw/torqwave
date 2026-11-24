@@ -43,6 +43,9 @@ public:
         length of the picture's hit in seconds. */
     juce::String getKitText() const;
     juce::String getKnobText (const juce::String& what) const;
+
+    /** The selected sound's type as its selector shows it ("Classic", "Modern"); empty for a sound with one type, which has no selector. */
+    juce::String getTypeText() const;
     double getPictureSeconds() const noexcept              { return pictureSeconds; }
 
     /** Each family's colour: kick, snares and claps, hats, toms, cymbals, hand percussion. */
@@ -68,7 +71,7 @@ private:
     std::array<juce::uint32, (size_t) DrumMachine::numSounds> seenHits {};
 
     SoundControls::Panel padPanel { "Pads" }, soundPanel { "Kick" }, kitPanel { "Kit" }, busPanel { "Bus" }, spacePanel { "Space" };
-    SoundControls::StepSelector kits, character, filter, delayTime;
+    SoundControls::StepSelector kits, character, type, filter, delayTime;
     SoundControls::Knob tune { "Tune", SoundControls::Knob::Size::large }, decay { "Decay", SoundControls::Knob::Size::large },
                         tone { "Tone", SoundControls::Knob::Size::large }, level { "Level" }, pan { "Pan" }, drive { "Drive" };
     SoundControls::Knob cutoff { "Cutoff", SoundControls::Knob::Size::small }, resonance { "Reso", SoundControls::Knob::Size::small },

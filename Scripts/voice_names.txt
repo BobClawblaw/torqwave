@@ -3748,3 +3748,8 @@ kit|EBM Machine|Tight drum-machine body music: a short punchy kick, big gated sn
 kit|Electro|An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.
 kit|Breaks|Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.
 kit|Industrial Rock|A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.
+kit|Modern|Every sound that has a Modern type on it, clean: nothing on the bus.
+kit|Warehouse|Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.
+kit|Body Music|EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.
+kit|Foundry|Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.
+kit|Broken Beat|Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.

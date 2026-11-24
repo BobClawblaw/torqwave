@@ -48,6 +48,7 @@ Assembly Throb|-0.5
 Assembly Wash|-2.5
 Aurora Bass|0.0
 Autobahn Slam|-1.5
+Back Room Break|-3.5
 Backbeat Clap Layer|1.5
 Barbed Arp|0.5
 Barbed Backbeat|-1.5
@@ -78,6 +79,7 @@ Black Hook|-1.0
 Black Lace Drive|-2.0
 Black Stomp|-2.0
 Blackout Pad|-1.0
+Blast Furnace Engine|-2.0
 Blast Wall Hook|1.5
 Blast Wall Lift|17.0
 Blast Wall Stab|-3.0
@@ -161,8 +163,10 @@ Circuit Stomp|-2.0
 Clap Roll Build|1.0
 Clap Stutter Fill|-1.5
 Clash Stabs|-1.0
+Clean Room Groove|-2.5
 Coastline Line|7.5
 Coastline Transition|3.0
+Cold Assembly Drive|-3.0
 Cold Heart Shifting Pad|-1.5
 Cold Wire Engine|-1.5
 Cold Wire Impact|-2.0
@@ -178,6 +182,7 @@ Computer Sixteenths|4.0
 Computer Transition|2.0
 Concrete Boom|-1.5
 Concrete Drive|-5.5
+Concrete Floor Roller|-2.5
 Concrete Hum|5.0
 Concrete Perc Loop|0.5
 Concrete Pluck|3.5
@@ -192,6 +197,7 @@ Corrosion Percussion|-1.5
 Corrosive Tops|-1.0
 Counterstrike Arp|3.5
 Counterstrike Kick Pattern|-1.5
+Cracked Pavement Break|-3.5
 Crash and Kick Impact|-2.0
 Creeping Hat Line|3.0
 Creeping Loop|-1.5
@@ -486,6 +492,7 @@ Long Shadow Changes|-1.5
 Loopwise Bridge|0.5
 Loopwise Clap Fill|-2.0
 Loopwise Groove|-2.5
+Loose Wire Break|-3.5
 Lost Woods Line|10.0
 Lost Woods Pattern|3.5
 Lotus Bridge|1.5
@@ -519,6 +526,7 @@ Mainroom Drive Bass|-1.5
 Mantra Loop|-2.0
 Mantra Pluck Line|3.5
 Marching Build|14.0
+Marching Order Beat|-3.0
 Marching Perc Loop|0.5
 Marching Sub|0.0
 Melodic Four-Six Turn|0.5
@@ -567,6 +575,7 @@ Muscle Bass Run|7.5
 Muscle Changes|-4.0
 Muscle Machine Bassline|0.5
 Muscle Machine Lift|-0.5
+Muscle Memory Beat|-2.5
 Muscle Pluck|1.0
 Muscle Riff|-1.0
 Muscle Transition|2.5
@@ -582,6 +591,7 @@ Night Drive Bass Sequence|-1.0
 Night Drive Pad|-2.0
 Night Drive Stomp|-1.5
 Night Shift Comp|0.0
+Night Shift Hammer|-2.5
 Night Shift Pluck|7.0
 Night Shift Roller|-1.5
 Night Shift Sub|0.0
@@ -742,6 +752,7 @@ Ritual Stomp|-2.0
 Riverbed Stab|-2.5
 Rivet Evolving Pad|0.5
 Rivet Groove|-2.0
+Rivet Line Stomp|-2.0
 Rolling Kick Gap Bass|6.0
 Rolling Sub Sixteenths|0.0
 Rooftop Clap Stutter|2.5
@@ -817,6 +828,7 @@ Slag Arp|3.0
 Slag Build|14.0
 Slag Chords|-3.5
 Slag Drone|5.0
+Slag Hammer Pound|-2.0
 Slag Stabs|-2.0
 Slag Sub Line|0.0
 Sledge Up-Down Arp|1.0
@@ -883,6 +895,7 @@ Street Evolving Pad|0.5
 Street Throb|0.5
 Strobe Bass Run|-0.5
 Strobe Pulse|-1.5
+Strobe Tunnel Pulse|-2.5
 Sub Drone Hold|0.0
 Sub Drop Impact|-1.5
 Sub Root Pulse|0.0
@@ -904,6 +917,7 @@ Tape Delay Evolving Pad|-2.0
 Tape Delay Kick Line|2.5
 Tape Delay Sixteenths|3.0
 Tape Delay Theme|8.0
+Tape Splice Groove|-3.5
 Techno Body Arp|3.0
 Techno Body Groove|-2.0
 Techno Body Sixteenths|-0.5

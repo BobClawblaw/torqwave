@@ -232,7 +232,7 @@ void runInstrumentKeysTests()
                "audition: a bass plays a line under C3, a pad a chord held over a second, a stab its chord twice, a lead a rising figure from middle C; "
                "Basic Drums a kick, hat and snare; StringSwarm a low E held");
 
-        // The patterns: a dozen for basses, chords, stabs, leads and kits, eight for the rest; each plays, fits its round and is in range.
+        // The patterns: a dozen for basses, chords, stabs and leads, twenty for kits, eight for the rest; each plays, fits its round and is in range.
         {
             auto counts = true, fit = true, named = true;
             int total = 0;
@@ -240,7 +240,7 @@ void runInstrumentKeysTests()
             for (int k = 0; k <= (int) Kind::other; ++k)
             {
                 const auto& list = patternsFor ((Kind) k);
-                const auto want = k <= (int) Kind::lead || (Kind) k == Kind::kit ? 12 : ((Kind) k == Kind::other ? 1 : 8);
+                const auto want = (Kind) k == Kind::kit ? 20 : k <= (int) Kind::lead ? 12 : ((Kind) k == Kind::other ? 1 : 8);
                 counts = counts && (int) list.size() == want;
                 juce::StringArray names;
 
@@ -280,7 +280,7 @@ void runInstrumentKeysTests()
             looper.stop();
 
             check (counts && fit && named && galloping && cleared && restored && unknown && onBars && kindFor (drums) == Kind::kit && kindFor (guitar) == Kind::strings,
-                   "audition patterns: " + juce::String (total) + " in all, a dozen for basses, chords, stabs, leads and kits and eight for held sounds, hits and strings, "
+                   "audition patterns: " + juce::String (total) + " in all, a dozen for basses, chords, stabs and leads, twenty for kits and eight for held sounds, hits and strings, "
                    "each named once, in range and inside its round of whole bars; the one chosen plays, is kept by name, and an unknown name falls back to the first");
         }
 

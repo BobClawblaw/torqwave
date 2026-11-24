@@ -355,7 +355,7 @@ void Bar::showPatternName()
 
     const auto names = patternNames();
     const auto name = names[patternChosen != nullptr ? patternChosen() : 0];
-    pattern.setTooltip ("Audition pattern: " + name + ". Click to choose what the audition plays (basses, leads, chords and kits have a dozen each)");
+    pattern.setTooltip ("Audition pattern: " + name + ". Click to choose what the audition plays (basses, leads and chords have a dozen each, kits twenty)");
 
     if (pattern.getWidth() >= 80)
         pattern.setButtonText (name + juce::String::fromUTF8 (" \xe2\x96\xbe"));

@@ -417,6 +417,11 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     character.setTooltip ("The kick's character: Boom (long and round), Punch (909-style), Hard (an overdriven industrial kick)");
     soundPanel.addChildComponent (character);
 
+    type.setChoices (DrumMachine::typeNames());
+    type.setTooltip ("The sound's type: Classic, as it has always been, or Modern, a second model with more to it, duller the softer it is struck");
+    type.onChange = [this] (int) { refreshPicture (true); };
+    soundPanel.addChildComponent (type);
+
     juce::StringArray kitNames;
 
     for (auto& kit : DrumMachine::kits())
@@ -561,6 +566,15 @@ void DrumMachineEditor::showSelected()
     refreshFilterKnobs();
 
     character.setVisible (selected == Sound::kick);
+
+    // Its type, where it has two.
+    if (auto* p = drums.typeParameter (selected))
+    {
+        type.attach (p);
+        type.setColour (colour);
+    }
+
+    type.setVisible (drums.typeParameter (selected) != nullptr);
     refreshReadouts();
     refreshPicture (true);
     resized();
@@ -607,6 +621,11 @@ void DrumMachineEditor::refreshPicture (bool force)
 juce::String DrumMachineEditor::getKitText() const
 {
     return drums.getKitName() + (drums.kitModified() ? " (edited)" : "");
+}
+
+juce::String DrumMachineEditor::getTypeText() const
+{
+    return type.isVisible() ? DrumMachine::typeNames()[type.getIndex()] : juce::String();
 }
 
 juce::String DrumMachineEditor::getKnobText (const juce::String& what) const
@@ -743,7 +762,13 @@ void DrumMachineEditor::resized()
     soundPanel.setBounds (r);
     {
         auto header = soundPanel.getHeaderBounds();
-        character.setBounds (header.removeFromRight (150).reduced (0, 2));
+        if (character.isVisible())
+        {
+            character.setBounds (header.removeFromRight (140).reduced (0, 2));
+            header.removeFromRight (6);
+        }
+
+        type.setBounds (header.removeFromRight (140).reduced (0, 2));
 
         auto c = soundPanel.getContentBounds();
         c.removeFromBottom (20);   // the line about notes and chokes, painted by the panel's owner below

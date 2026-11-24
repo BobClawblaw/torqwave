@@ -753,6 +753,12 @@ int main (int argc, char* argv[])
         return 0;
     }
 
+    if (const auto folder = valueOf ("--drums-sounds"); folder.isNotEmpty())
+    {
+        saveDrumMachineSounds (juce::File::getCurrentWorkingDirectory().getChildFile (folder));
+        return 0;
+    }
+
     if (const auto folder = valueOf ("--drums-window"); folder.isNotEmpty())
     {
         saveDrumMachineWindow (juce::File (folder));

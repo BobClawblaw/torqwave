@@ -2,7 +2,7 @@
 
 Every factory preset in the [Sequence Library](07-instruments-and-midi.md#presets) carries a style, and it is written to that style's conventions. This page says what those conventions are, so the presets can teach as well as play: open one in the [Sequencer](07-instruments-and-midi.md#the-sequencer) next to the row here and you can see each rule in its notes. **Filters > Style** in the library shows a style's presets, and **By Style** groups them (see [Sort, group and filter](07-instruments-and-midi.md#sort-group-and-filter)).
 
-There are 37 styles. The presets lean towards techno (392 of the 1,018) and industrial (320): dark, driving and peak-time techno and EBM have the most, 43 to 47 each. Around them are smaller sets of 18 for electro, breaks, drum and bass, ambient, deep house, darksynth and psytrance, and six game styles of 24 each.
+There are 37 styles. The presets lean towards techno (398 of the 1,032) and industrial (324): dark, driving and peak-time techno and EBM have the most, 44 to 48 each. Around them are smaller sets of 18 for electro, drum and bass, ambient, deep house, darksynth and psytrance, 22 for breaks, and six game styles of 24 each.
 
 ## Techno
 

@@ -4,7 +4,8 @@
 
 /** The drum machine behind Basic Drums: synthesised sounds on the General MIDI drum map (35 to 81),
     each with its own tune, decay, tone, level, pan and drive, a kit-wide drive, glue compressor and
-    level, and the kits made from them. The engine knows nothing of plug-ins, so the window can
+    level, and the kits made from them. Twenty-one of the sounds come in two types: Classic, the
+    sound as it has always been, and Modern, a second model of it with more to it. The engine knows nothing of plug-ins, so the window can
     render a sound with it to draw, and the tests can play it bare. */
 namespace DrumMachine
 {
@@ -51,14 +52,25 @@ namespace DrumMachine
         float reverb = 0.0f;         // %, 0 to 100, sent
         float delay = 0.0f;          // %, 0 to 100, sent
 
+        // Which model of the sound plays: 0 Classic, 1 Modern (for the sounds that have one, hasTypes).
+        int type = 0;
+
         bool operator== (const Settings& o) const
         {
             return juce::exactlyEqual (tune, o.tune) && juce::exactlyEqual (decay, o.decay) && juce::exactlyEqual (tone, o.tone)
                 && juce::exactlyEqual (level, o.level) && juce::exactlyEqual (pan, o.pan) && juce::exactlyEqual (drive, o.drive)
                 && filter == o.filter && juce::exactlyEqual (cutoff, o.cutoff) && juce::exactlyEqual (resonance, o.resonance)
-                && juce::exactlyEqual (crush, o.crush) && juce::exactlyEqual (reverb, o.reverb) && juce::exactlyEqual (delay, o.delay);
+                && juce::exactlyEqual (crush, o.crush) && juce::exactlyEqual (reverb, o.reverb) && juce::exactlyEqual (delay, o.delay)
+                && type == o.type;
         }
     };
+
+    /** A sound's types ("Classic", "Modern"), and whether it has the second. Classic is the model
+        every sound had before there were two, unchanged: a hit's level follows how hard it is
+        struck and nothing else. A Modern sound is also duller, and where it suits shorter or less
+        bent in pitch, the softer it is struck. */
+    juce::StringArray typeNames();
+    bool hasTypes (Sound);
 
     /** The kick's three characters. */
     enum class KickCharacter { boom, punch, hard };
@@ -93,7 +105,8 @@ namespace DrumMachine
     Settings defaultsFor (Sound);
     KitSettings defaultKit();
 
-    /** The factory kits, Standard (the defaults) first. */
+    /** The factory kits, Standard (the defaults) first; the kits made of Modern sounds come after
+        the seven that were there before them. */
     struct Kit
     {
         juce::String name, description;
@@ -196,8 +209,9 @@ namespace BuiltInEffects
     juce::PluginDescription basicDrumsDescription();
 
     /** Basic Drums, the drum machine built in (DrumMachine), as an instrument: each sound's tune,
-        decay, tone, level, pan and drive, the kick's character and the kit's drive, glue and level
-        are hosted parameters, so automation and sessions find them. Stereo out. A kit sets them all
+        decay, tone, level, pan and drive, its type where it has two, the kick's character and the
+        kit's drive, glue and level are hosted parameters, so automation and sessions find them. A
+        session saved before there were types has none, and plays every sound Classic, as it did. Stereo out. A kit sets them all
         at once; the state keeps the kit's name. Sessions saved before 0.20.0's step 10 (a kick,
         snare, hat and tom tune and decay in percent) load into the nearest settings: the same
         tunings, their decays scaled from the new sounds' own. MIDI: notes, CC 7 volume, CC 121 and
@@ -239,6 +253,9 @@ namespace BuiltInEffects
             "cutoff", "resonance", "crush", "reverb" or "delay"; and its filter's type. */
         juce::AudioParameterFloat* parameterOf (Sound, const juce::String& what) const;
         juce::AudioParameterChoice* filterParameter (Sound s) const noexcept { return sounds[(size_t) s].filter; }
+
+        /** A sound's type, for the sounds that have two (null for the rest). */
+        juce::AudioParameterChoice* typeParameter (Sound s) const noexcept   { return sounds[(size_t) s].type; }
         juce::AudioParameterChoice* kickCharacterParameter() const noexcept   { return kickCharacter; }
         juce::AudioParameterFloat* kitDriveParameter() const noexcept         { return kitDrive; }
         juce::AudioParameterFloat* glueParameter() const noexcept             { return glue; }
@@ -254,7 +271,7 @@ namespace BuiltInEffects
         struct SoundParameters
         {
             juce::AudioParameterFloat *tune = nullptr, *decay = nullptr, *tone = nullptr, *level = nullptr, *pan = nullptr, *drive = nullptr;
-            juce::AudioParameterChoice* filter = nullptr;
+            juce::AudioParameterChoice *filter = nullptr, *type = nullptr;
             juce::AudioParameterFloat *cutoff = nullptr, *resonance = nullptr, *crush = nullptr, *reverb = nullptr, *delay = nullptr;
         };
 

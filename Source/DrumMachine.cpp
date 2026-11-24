@@ -197,6 +197,22 @@ int chokeGroup (int note)
 }
 
 juce::StringArray kickCharacterNames()   { return { "Boom", "Punch", "Hard" }; }
+juce::StringArray typeNames()            { return { "Classic", "Modern" }; }
+
+bool hasTypes (Sound s)
+{
+    switch (s)
+    {
+        case Sound::kick: case Sound::snare: case Sound::clap: case Sound::closedHat: case Sound::pedalHat: case Sound::openHat:
+        case Sound::lowTom: case Sound::midTom: case Sound::highTom: case Sound::crash: case Sound::ride: case Sound::shaker:
+        case Sound::china: case Sound::tambourine: case Sound::splash: case Sound::bongo: case Sound::muteConga: case Sound::openConga:
+        case Sound::agogo: case Sound::whistle: case Sound::triangle:
+            return true;
+        case Sound::rim: case Sound::cowbell: case Sound::rideBell: case Sound::vibraslap: case Sound::timbale: case Sound::guiro:
+        case Sound::claves: case Sound::woodBlock: case Sound::cuica: case Sound::count:
+            return false;
+    }
+}
 juce::StringArray filterNames()          { return { "Off", "Low-pass", "Band-pass", "High-pass" }; }
 juce::StringArray delayTimeNames()       { return { "1/16", "1/8T", "1/8", "1/8 dotted", "1/4", "1/4 dotted" }; }
 
@@ -408,6 +424,132 @@ const std::vector<Kit>& kits()
             k.feedback = 25.0f;
         });
 
+        // The kits of Modern sounds, after the seven that were there before them. Each starts from
+        // every sound's Modern type, with hats that last long enough to be heard as hats.
+        const auto modern = [&make] (const char* name, const char* description, auto&& change)
+        {
+            make (name, description, [&change] (KitSettings& k, auto&& s)
+            {
+                for (int i = 0; i < numSounds; ++i)
+                    if (hasTypes ((Sound) i))
+                        s ((Sound) i).type = 1;
+
+                s (Sound::closedHat).decay = 160.0f;
+                s (Sound::pedalHat).decay = 120.0f;
+                change (k, s);
+            });
+        };
+
+        // A sound's first six settings, leaving its type and effects as they are.
+        const auto set = [] (Settings& to, float tune, float decay, float tone, float level, float pan, float drive)
+        {
+            to.tune = tune;
+            to.decay = decay;
+            to.tone = tone;
+            to.level = level;
+            to.pan = pan;
+            to.drive = drive;
+        };
+
+        modern ("Modern", "Every sound that has a Modern type on it, clean: nothing on the bus.", [] (KitSettings&, auto&&) {});
+
+        modern ("Warehouse", "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.", [&set] (KitSettings& k, auto&& s)
+        {
+            k.kick = KickCharacter::punch;
+            set (s (Sound::kick), -2.0f, 440.0f, -10.0f, -2.0f, 0.0f, 25.0f);
+            set (s (Sound::snare), -2.0f, 280.0f, -10.0f, -3.0f, 0.0f, 15.0f);
+            set (s (Sound::clap), -1.0f, 480.0f, 0.0f, -1.0f, 0.0f, 10.0f);
+            set (s (Sound::closedHat), 0.0f, 130.0f, 5.0f, 0.0f, 12.0f, 0.0f);
+            set (s (Sound::openHat), 0.0f, 420.0f, 5.0f, -1.0f, 12.0f, 0.0f);
+            set (s (Sound::ride), -2.0f, 2400.0f, -5.0f, -3.0f, -20.0f, 0.0f);
+            set (s (Sound::rim), -3.0f, 110.0f, 20.0f, -4.0f, -10.0f, 25.0f);
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                set (s (t), -4.0f, 800.0f, -10.0f, -3.0f, s (t).pan, 25.0f);
+            s (Sound::clap).reverb = 25.0f;
+            s (Sound::snare).reverb = 12.0f;
+            s (Sound::rim).delay = 22.0f;
+            s (Sound::openHat).reverb = 8.0f;
+            s (Sound::ride).reverb = 8.0f;
+            k.drive = 18.0f;
+            k.glue = 35.0f;
+            k.level = -5.0f;
+            k.reverbSize = 60.0f;
+            k.delayTime = 3;
+            k.feedback = 40.0f;
+        });
+
+        modern ("Body Music", "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.", [&set] (KitSettings& k, auto&& s)
+        {
+            k.kick = KickCharacter::punch;
+            set (s (Sound::kick), 1.0f, 360.0f, 15.0f, 0.0f, 0.0f, 20.0f);
+            set (s (Sound::snare), 0.0f, 420.0f, 15.0f, -2.0f, 0.0f, 25.0f);
+            set (s (Sound::clap), 0.0f, 480.0f, 10.0f, -4.0f, 0.0f, 10.0f);
+            set (s (Sound::closedHat), 2.0f, 110.0f, 10.0f, -4.0f, 10.0f, 0.0f);
+            set (s (Sound::openHat), 2.0f, 340.0f, 10.0f, -5.0f, 10.0f, 0.0f);
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                set (s (t), -2.0f, 600.0f, 10.0f, -3.0f, s (t).pan, 15.0f);
+            s (Sound::snare).reverb = 30.0f;
+            s (Sound::clap).reverb = 25.0f;
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                s (t).reverb = 18.0f;
+            k.drive = 12.0f;
+            k.glue = 45.0f;
+            k.level = -6.0f;
+            k.reverbSize = 68.0f;
+            k.delayTime = 2;
+            k.feedback = 30.0f;
+        });
+
+        modern ("Foundry", "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.", [&set] (KitSettings& k, auto&& s)
+        {
+            k.kick = KickCharacter::hard;
+            set (s (Sound::kick), 0.0f, 340.0f, 30.0f, -1.0f, 0.0f, 45.0f);
+            set (s (Sound::snare), -2.0f, 360.0f, 35.0f, -2.0f, 0.0f, 50.0f);
+            set (s (Sound::clap), -4.0f, 500.0f, 5.0f, -4.0f, 0.0f, 35.0f);
+            set (s (Sound::closedHat), -3.0f, 120.0f, 20.0f, -3.0f, 15.0f, 30.0f);
+            set (s (Sound::openHat), -3.0f, 440.0f, 20.0f, -4.0f, 15.0f, 30.0f);
+            set (s (Sound::cowbell), -5.0f, 450.0f, 20.0f, -5.0f, 10.0f, 55.0f);
+            set (s (Sound::china), -2.0f, 1800.0f, 5.0f, -5.0f, -25.0f, 35.0f);
+            set (s (Sound::rim), -5.0f, 140.0f, 30.0f, -4.0f, -10.0f, 55.0f);
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                set (s (t), -5.0f, 800.0f, 20.0f, -2.0f, s (t).pan, 45.0f);
+            s (Sound::snare).crush = 20.0f;
+            s (Sound::snare).reverb = 18.0f;
+            s (Sound::clap).crush = 12.0f;
+            s (Sound::clap).reverb = 22.0f;
+            s (Sound::closedHat).crush = 18.0f;
+            s (Sound::openHat).crush = 18.0f;
+            s (Sound::cowbell).delay = 28.0f;
+            s (Sound::china).reverb = 18.0f;
+            s (Sound::rim).crush = 35.0f;
+            s (Sound::rim).delay = 28.0f;
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                s (t).reverb = 15.0f;
+            k.drive = 30.0f;
+            k.glue = 50.0f;
+            k.level = -5.0f;
+            k.reverbSize = 45.0f;
+            k.delayTime = 0;
+            k.feedback = 38.0f;
+        });
+
+        modern ("Broken Beat", "Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.", [&set] (KitSettings& k, auto&& s)
+        {
+            k.kick = KickCharacter::punch;
+            set (s (Sound::kick), 2.0f, 340.0f, 30.0f, 0.0f, 0.0f, 25.0f);
+            set (s (Sound::snare), 2.0f, 300.0f, 25.0f, -1.0f, 0.0f, 25.0f);
+            set (s (Sound::closedHat), 1.0f, 140.0f, 15.0f, -4.0f, 20.0f, 0.0f);
+            set (s (Sound::openHat), 1.0f, 520.0f, 15.0f, -5.0f, 20.0f, 0.0f);
+            set (s (Sound::ride), 0.0f, 2400.0f, 5.0f, -6.0f, -25.0f, 0.0f);
+            s (Sound::snare).reverb = 10.0f;
+            k.drive = 22.0f;
+            k.glue = 60.0f;
+            k.level = -5.0f;
+            k.reverbSize = 35.0f;
+            k.delayTime = 2;
+            k.feedback = 25.0f;
+        });
+
         return list;
     }();
 
@@ -444,12 +586,14 @@ struct Engine::Hit
     int fade = 0, fadeLength = 0;         // when cut: samples left of its fade out
     double rate = 48000.0;
     double T = 1.0, S = 1.0, u = 0.0;     // its tune as a ratio, decay as a ratio of the sound's own, and tone, -1 to 1
+    bool modern = false;                  // its type: the Modern model, not the Classic
+    double vel = 1.0;                     // how hard it is struck, 0 to 1: a Modern sound's own use of it
     KickCharacter kick = KickCharacter::punch;
     std::array<double, 14> ph {};
     std::array<double, 6> hz {};
-    std::array<Svf, 6> f {};
-    std::array<Decay, 6> e {};
-    std::array<double, 8> v {};
+    std::array<Svf, 10> f {};
+    std::array<Decay, 8> e {};
+    std::array<double, 10> v {};
     juce::uint32 n1 = 1, n2 = 2, n3 = 3;
 };
 
@@ -531,9 +675,483 @@ namespace
         }
     }
 
+    //==============================================================================
+    // The Modern type of a sound: a second model beside the first, which is left exactly as it was.
+
+    /** The dB that puts a Modern sound's peak where its Classic one is, at full velocity and as it starts. */
+    float modernTrimDb (Sound s)
+    {
+        switch (s)
+        {
+            case Sound::kick:        return -3.1f;
+            case Sound::snare:       return 4.8f;
+            case Sound::clap:        return -1.0f;
+            case Sound::closedHat:   return -0.8f;
+            case Sound::pedalHat:    return -3.4f;
+            case Sound::openHat:     return -1.6f;
+            case Sound::lowTom:      return 0.1f;
+            case Sound::midTom:      return -0.4f;
+            case Sound::highTom:     return -1.2f;
+            case Sound::crash:       return 1.5f;
+            case Sound::ride:        return -0.2f;
+            case Sound::shaker:      return 5.6f;
+            case Sound::china:       return 0.0f;
+            case Sound::tambourine:  return 4.0f;
+            case Sound::splash:      return 1.5f;
+            case Sound::bongo:       return 0.0f;
+            case Sound::muteConga:   return 0.0f;
+            case Sound::openConga:   return 0.0f;
+            case Sound::agogo:       return -1.7f;
+            case Sound::whistle:     return -6.3f;
+            case Sound::triangle:    return -1.9f;
+            case Sound::rim: case Sound::cowbell: case Sound::rideBell: case Sound::vibraslap: case Sound::timbale: case Sound::guiro:
+            case Sound::claves: case Sound::woodBlock: case Sound::cuica: case Sound::count:
+                break;
+        }
+
+        return 0.0f;
+    }
+
+    /** A skin: its fundamental falling in pitch (further the harder it is struck), two more of a
+        drumhead's modes that die sooner, the stick's strike, and for the toms the thud of the
+        shell; pushed a little into a soft clip, so there is more to it than a sine. */
+    void startSkin (Hit& h, double base, double drop, double dropTime, double strikeHz, double strikeTime, double strike, double mode2, double decaySeconds,
+                    double shape, double thud)
+    {
+        h.v[0] = base;
+        h.v[1] = drop * (0.5 + 0.5 * h.vel);
+        h.v[2] = strike * (0.4 + 0.6 * h.vel);
+        h.v[3] = mode2;
+        h.v[4] = shape;
+        h.v[5] = thud * (0.4 + 0.6 * h.vel);
+        h.e[0].set (decaySeconds / 6.9, h.rate);
+        h.e[1].set (dropTime, h.rate);
+        h.e[2].set (0.55 * decaySeconds / 6.9, h.rate);
+        h.e[3].set (strikeTime, h.rate);
+        h.e[4].set (0.3 * decaySeconds / 6.9, h.rate);
+        h.e[5].set (0.012, h.rate);
+        h.f[0].set (strikeHz, 1.0, h.rate);
+        h.f[1].set (base * 4.5, 0.9, h.rate);
+        h.length = (juce::int64) (decaySeconds * h.rate);
+    }
+
+    float skin (Hit& h)
+    {
+        const auto hz = h.v[0] * (1.0 + h.v[1] * h.e[1].next());
+        auto body = sine (h.ph[0], hz, h.rate) * h.e[0].next() + (float) h.v[3] * (sine (h.ph[1], hz * 1.59, h.rate) * h.e[2].next()
+                                                                                   + 0.5f * sine (h.ph[2], hz * 2.14, h.rate) * h.e[4].next());
+        const auto shape = (float) h.v[4];
+        body = std::tanh (shape * body) / std::tanh (shape);
+        const auto hit = noise (h.n1);
+        const auto strike = h.f[0].bandPass (hit) * h.e[3].next() * (float) h.v[2];
+        const auto thud = h.f[1].bandPass (hit) * h.e[5].next() * (float) h.v[5];
+        return 0.9f * body + 2.0f * strike + thud;
+    }
+
+    /** A cymbal in two bands, as a cymbal is heard: the low one ringing on, the high one bright at
+        the strike and gone sooner, so it darkens as it fades; over a wash of noise that swells in
+        after the stick and shimmers, each side in its own time. */
+    void startMetal (Hit& h, double scale, double lowHz, double lowQ, double highHz, double noiseHz, double noiseMix, double noiseLonger, double seconds,
+                     double highShare, double stick)
+    {
+        for (size_t i = 0; i < 6; ++i)
+            h.hz[i] = metalHz[i] * scale * h.T;
+
+        for (size_t i = 0; i < 12; ++i)
+            h.ph[i] = (double) ((h.n3 = h.n3 * 1664525u + 1013904223u) >> 8) / (double) (1u << 24);
+
+        const auto bright = std::exp2 (0.5 * h.u);
+        h.f[0].set (lowHz * bright, lowQ, h.rate);
+        h.f[1].set (lowHz * bright * 1.03, lowQ, h.rate);
+        h.f[2].set (highHz * bright, 0.7, h.rate);
+        h.f[3].set (highHz * bright * 1.03, 0.7, h.rate);
+        h.f[4].set (noiseHz * bright, 0.7, h.rate);
+        h.f[5].set (noiseHz * bright, 0.7, h.rate);
+        h.f[8].set (lowHz * bright * 0.5, 0.7, h.rate);    // the squares' own low notes kept out of the ring
+        h.f[9].set (lowHz * bright * 0.5, 0.7, h.rate);
+        h.v[0] = noiseMix;
+        h.v[1] = stick * (0.3 + 0.7 * h.vel);
+        h.v[2] = (double) ((h.n3 = h.n3 * 1664525u + 1013904223u) >> 8) / (double) (1u << 24);   // where the shimmer starts
+        h.v[5] = 1.0 - std::exp (-twoPi * juce::jmin (0.45 * h.rate, 3500.0 * bright) / h.rate);     // the wash's top: from 14 kHz
+        h.v[6] = 1.0 - std::exp (-twoPi * juce::jmin (0.45 * h.rate, 14000.0 * bright) / h.rate);    // at the strike down to 3.5
+        h.e[0].set (seconds / 6.9, h.rate);
+        h.e[1].set (noiseLonger * seconds / 6.9, h.rate);
+        h.e[2].set (0.015, h.rate);
+        h.e[3].set (highShare * seconds / 6.9, h.rate);
+        h.e[4].set (0.008, h.rate);
+        h.length = (juce::int64) (juce::jmax (1.0, noiseLonger) * seconds * h.rate);
+    }
+
+    void metal (Hit& h, float& l, float& r, float shape)
+    {
+        const auto side = [&h] (size_t first, double detune)
+        {
+            std::array<float, 6> s {};
+
+            for (size_t i = 0; i < 6; ++i)
+                s[i] = square (h.ph[first + i], h.hz[i] * detune, h.rate);
+
+            return (s[0] * s[1] + s[2] * s[3] + s[4] * s[5] + s[0] * s[3] + s[1] * s[4] + s[2] * s[5]) / 6.0f;
+        };
+
+        const auto t = (double) h.age / h.rate;
+        const auto ring = h.e[0].next(), hiss = h.e[1].next(), crack = h.e[2].next(), sheen = h.e[3].next();
+        const auto swell = 1.0f - 0.7f * h.e[4].next();
+        const auto metalL = side (0, 1.0), metalR = side (6, 1.012);
+        const auto stick = (float) h.v[1];
+        const auto ml = 1.5f * h.f[8].highPass (h.f[0].bandPass (metalL)) * ring + h.f[2].highPass (metalL) * (sheen + stick * crack);
+        const auto mr = 1.5f * h.f[9].highPass (h.f[1].bandPass (metalR)) * ring + h.f[3].highPass (metalR) * (sheen + stick * crack);
+        const auto shimmerL = (float) (1.0 + 0.22 * std::sin (twoPi * (5.3 * t + h.v[2])));
+        const auto shimmerR = (float) (1.0 + 0.22 * std::sin (twoPi * (4.1 * t + 2.0 * h.v[2])));
+        const auto top = h.v[5] + (h.v[6] - h.v[5]) * std::sqrt ((double) sheen);
+        h.v[3] += top * ((double) h.f[4].highPass (noise (h.n1)) - h.v[3]);
+        h.v[4] += top * ((double) h.f[5].highPass (noise (h.n2)) - h.v[4]);
+        const auto nl = (float) h.v[3], nr = (float) h.v[4];
+        const auto mix = (float) h.v[0];
+        l = (1.0f - mix) * ml * 2.2f + mix * nl * (hiss * swell * shimmerL + 0.6f * stick * crack);
+        r = (1.0f - mix) * mr * 2.2f + mix * nr * (hiss * swell * shimmerR + 0.6f * stick * crack);
+
+        if (shape > 0.0f)
+        {
+            l = std::tanh (shape * l) / std::tanh (shape);
+            r = std::tanh (shape * r) / std::tanh (shape);
+        }
+    }
+
+    /** Sets a Modern hit going (its tune, tone, decay and velocity already in it); its onset ramp in seconds. */
+    double startModern (Hit& h, int note, double D)
+    {
+        const auto rate = h.rate, u = h.u, T = h.T, S = h.S, vel = h.vel;
+
+        switch (h.sound)
+        {
+            case Sound::kick:
+            {
+                // The Classic kick's three characters, each with a beater and shell of its own; struck
+                // softer its pitch sweeps less and the beater is hardly heard, so ghost notes rumble.
+                const auto character = (int) h.kick;
+                const auto low = note == 35;
+                const auto decay = D * (low ? 1.15 : 1.0);
+                static constexpr double bases[] { 47.0, 52.0, 55.0 }, holds[] { 0.02, 0.012, 0.008 }, shapes[] { 1.1, 1.8, 4.0 }, clicks[] { 0.7, 1.5, 2.2 };
+                static constexpr double drop1[] { 1.4, 3.2, 6.0 }, time1[] { 0.006, 0.004, 0.0025 }, drop2[] { 0.8, 1.1, 1.8 }, time2[] { 0.05, 0.028, 0.02 };
+                static constexpr double biases[] { 0.2, 0.4, 0.5 }, shells[] { 0.45, 0.9, 1.2 };
+                const auto hold = holds[character] * juce::jmin (1.0, S);
+                h.v[0] = bases[character] * T * (low ? semis (-2.0) : 1.0);
+                h.v[1] = drop1[character] * (0.35 + 0.65 * vel);
+                h.v[2] = drop2[character] * (0.6 + 0.4 * vel);
+                h.v[3] = shapes[character];
+                h.v[4] = clicks[character] * (0.5 + 0.5 * u) * vel;
+                h.v[5] = hold * rate;
+                h.v[6] = biases[character];
+                h.v[7] = 1.0 - std::exp (-twoPi * 20.0 / rate);
+                h.v[9] = shells[character] * vel;
+                h.e[0].set (juce::jmax (0.005, decay - hold) / 6.9, rate);
+                h.e[1].set (time1[character], rate);
+                h.e[2].set (time2[character], rate);
+                h.e[3].set (0.003, rate);
+                h.e[4].set (0.01, rate);
+                h.f[0].set (700.0 * std::exp2 ((u + 1.0) * 2.5), 0.707, rate);
+                h.f[1].set (3800.0 * std::sqrt (T), 0.8, rate);
+                h.f[2].set (220.0 * T, 1.2, rate);
+                h.length = (juce::int64) ((hold + decay) * rate);
+                return 0.0002;
+            }
+            case Sound::snare:
+            {
+                const auto electric = note == 40;
+                const auto t = T * (electric ? semis (3.0) : 1.0);
+                const auto tone = juce::jlimit (-1.0, 1.0, u + (electric ? 0.3 : 0.0));
+                h.v[0] = 185.0 * t;
+                h.v[1] = 330.0 * t;
+                h.v[2] = (electric ? 0.35 : 0.48) - 0.18 * tone;
+                h.v[3] = 2.2 * (1.0 + 0.4 * tone);
+                h.v[4] = 0.15 + 0.35 * vel;                               // how far the head's pitch bends at the strike
+                h.v[5] = 2.2 * (1.0 + 0.2 * tone) * (0.6 + 0.4 * vel);    // the crack
+                h.v[6] = 0.5 * vel;                                       // the snap
+                h.e[0].set (0.06 * S, rate);
+                h.e[1].set (0.04 * S, rate);
+                h.e[2].set (0.01, rate);
+                h.e[3].set (D / 6.9, rate);
+                h.e[4].set (0.003, rate);
+                h.e[5].set (0.006, rate);
+                h.e[6].set (0.5 * D / 6.9, rate);
+                h.f[0].set (350.0, 0.7, rate);
+                h.f[1].set (5200.0 * std::exp2 (1.2 * tone), 0.5, rate);
+                h.f[2].set (2500.0, 0.7, rate);
+                h.f[3].set (1500.0 * std::sqrt (t) * std::exp2 (0.5 * tone), 0.8, rate);
+                h.length = (juce::int64) (juce::jmax (D, 0.35 * S) * rate);
+                return 0.0003;
+            }
+            case Sound::clap:
+            {
+                const double offsets[] { 0.0, 0.0085, 0.0175, 0.028 };
+
+                for (size_t k = 0; k < 4; ++k)
+                    h.v[k] = offsets[k];
+
+                h.v[4] = D / 6.9;
+                h.v[5] = 0.16 * S;
+                h.v[6] = 0.55 * (1.0 + 0.5 * u);
+                const auto hz = 1150.0 * T * std::exp2 (0.6 * u);
+                h.f[0].set (hz, 1.8, rate);
+                h.f[1].set (400.0, 0.7, rate);
+                h.f[2].set (hz * 0.7, 0.8, rate);
+                h.f[3].set (hz * 0.75, 0.8, rate);
+                h.f[4].set (hz * 2.4, 0.7, rate);
+                h.f[5].set (hz * 2.4, 0.7, rate);
+                h.length = (juce::int64) ((0.028 + juce::jmax (D, 0.16 * S * 6.9)) * rate);
+                return 0.0004;
+            }
+            case Sound::closedHat: case Sound::pedalHat: case Sound::openHat:
+            {
+                for (size_t i = 0; i < 6; ++i)
+                {
+                    h.hz[i] = metalHz[i] * T;
+                    h.ph[i] = (double) ((h.n3 = h.n3 * 1664525u + 1013904223u) >> 8) / (double) (1u << 24);
+                }
+
+                // Struck softer a hat is shorter too.
+                const auto bright = std::exp2 (0.5 * u);
+                const auto decay = D * (0.7 + 0.3 * vel);
+                h.f[0].set (6800.0 * bright, 1.4, rate);
+                h.f[1].set (8600.0 * bright, 0.7, rate);
+                h.f[2].set (6200.0 * bright, 0.7, rate);
+                h.f[3].set (12500.0 * bright, 0.6, rate);
+                h.f[4].set (4500.0 * bright, 0.7, rate);
+                h.v[1] = 0.45 + 0.15 * u;
+                h.e[0].set (decay / 6.9, rate);
+                h.e[1].set (0.004, rate);
+                h.e[2].set (0.6 * decay / 6.9, rate);
+                h.length = (juce::int64) (decay * rate);
+                return h.sound == Sound::pedalHat ? 0.0015 : 0.0003;
+            }
+            case Sound::lowTom: case Sound::midTom: case Sound::highTom:
+            {
+                const auto base = (note == 41 ? 80.0 : note == 43 ? 98.0 : note == 45 ? 117.0 : note == 47 ? 139.0 : note == 48 ? 165.0 : 196.0) * T;
+                startSkin (h, base, 0.35, 0.05, 2500.0 * std::exp2 (u), 0.004, 0.4 + 0.25 * u, 0.3, D, 2.2, 1.6);
+                return 0.00025;
+            }
+            case Sound::bongo:
+                startSkin (h, (note == 60 ? 420.0 : 310.0) * T, 0.2, 0.015, 2500.0 * std::exp2 (u), 0.006, 0.25 + 0.15 * u, 0.15, D * (note == 61 ? 1.2 : 1.0), 0.7, 0.0);
+                return 0.00025;
+            case Sound::muteConga:
+                startSkin (h, 340.0 * T, 0.15, 0.01, 1800.0 * std::exp2 (u), 0.008, 0.35 + 0.2 * u, 0.1, D, 0.7, 0.0);
+                return 0.00025;
+            case Sound::openConga:
+                startSkin (h, (note == 63 ? 330.0 : 225.0) * T, 0.12, 0.02, 1500.0 * std::exp2 (u), 0.006, 0.25 + 0.15 * u, 0.12, D * (note == 64 ? 1.15 : 1.0), 0.7, 0.0);
+                return 0.00025;
+            case Sound::crash:
+                startMetal (h, note == 57 ? 1.35 * semis (2.0) : 1.35, 3600.0, 0.7, 6800.0, 3800.0, 0.55, 1.2, D, 0.4, 0.6);
+                return 0.001;
+            case Sound::splash:
+                startMetal (h, 1.7, 4800.0, 0.7, 7500.0, 5000.0, 0.5, 1.1, D, 0.5, 0.6);
+                return 0.0008;
+            case Sound::china:
+                startMetal (h, 1.05, 2400.0, 0.8, 5000.0, 3000.0, 0.45, 1.1, D, 0.5, 0.5);
+                return 0.0008;
+            case Sound::ride:
+                startMetal (h, note == 59 ? 1.55 * semis (-1.5) : 1.55, 4200.0, 1.4, 7000.0, 5000.0, 0.12, 1.0, D, 0.25, 1.0);
+                return 0.0005;
+            case Sound::shaker:
+            {
+                const auto cabasa = note == 69;
+                const auto decay = D * (cabasa ? 1.5 : 1.0);
+                h.e[0].set (decay / 6.9, rate);
+                h.f[0].set ((cabasa ? 5200.0 : 4000.0) * T * std::exp2 (0.6 * u), 0.7, rate);
+                h.f[1].set (10500.0 * std::exp2 (0.5 * u), 0.6, rate);
+                h.length = (juce::int64) (decay * rate);
+                return 0.005;
+            }
+            case Sound::tambourine:
+                for (size_t i = 0; i < 6; ++i)
+                    h.hz[i] = metalHz[i] * 3.1 * T;
+
+                h.e[0].set (D / 6.9, rate);
+                h.f[0].set (5200.0 * std::exp2 (0.5 * u), 0.7, rate);
+                h.f[1].set (12000.0 * std::exp2 (0.5 * u), 0.6, rate);
+                h.length = (juce::int64) (D * rate);
+                return 0.0005;
+            case Sound::agogo:
+                h.v[0] = (note == 67 ? 950.0 : 700.0) * T;
+                h.e[0].set (D / 6.9, rate);
+                h.e[1].set (0.45 * D / 6.9, rate);
+                h.e[2].set (0.25 * D / 6.9, rate);
+                h.e[3].set (0.003, rate);
+                h.f[0].set (h.v[0] * 3.0, 1.0, rate);
+                h.length = (juce::int64) (D * rate);
+                return 0.0003;
+            case Sound::whistle:
+                h.v[0] = (note == 71 ? 0.09 : 0.45) * S;
+                h.f[0].set (2600.0 * T, 6.0, rate);
+                h.length = (juce::int64) ((h.v[0] + 0.15) * rate);
+                return 0.0;   // its blow rises over 10 ms of its own
+            case Sound::triangle:
+            {
+                const auto decay = D * (note == 80 ? 0.025 : 1.0);
+                h.e[0].set (decay / 6.9, rate);
+                h.e[1].set (0.6 * decay / 6.9, rate);
+                h.e[2].set (0.5 * decay / 6.9, rate);
+                h.e[3].set (0.002, rate);
+                h.f[0].set (6000.0, 0.7, rate);
+                h.length = (juce::int64) (decay * rate);
+                return 0.00025;
+            }
+            case Sound::rim: case Sound::cowbell: case Sound::rideBell: case Sound::vibraslap: case Sound::timbale: case Sound::guiro:
+            case Sound::claves: case Sound::woodBlock: case Sound::cuica: case Sound::count:
+                break;
+        }
+
+        jassertfalse;   // a sound with no Modern type
+        return 0.00025;
+    }
+
+    /** One sample of a Modern hit, before its level, pan, drive, onset and end. */
+    void voiceModern (Hit& h, float& l, float& r)
+    {
+        const auto t = (double) h.age / h.rate;
+        float s = 0.0f;
+
+        switch (h.sound)
+        {
+            case Sound::kick:
+            {
+                const auto hz = h.v[0] * (1.0 + h.v[1] * h.e[1].next() + h.v[2] * h.e[2].next());
+                const auto body = sine (h.ph[0], hz, h.rate);
+                const auto amp = h.age < (juce::int64) h.v[5] ? 1.0f : h.e[0].next();
+
+                // Clipped off centre, so the body has even harmonics as well as odd (what is heard of a
+                // kick on small speakers); what that leaves under 20 Hz is taken off again.
+                const auto shape = (float) h.v[3], bias = (float) h.v[6] * amp;
+                auto driven = (std::tanh (shape * body * amp + bias) - std::tanh (bias)) / std::tanh (shape);
+                h.v[8] += h.v[7] * ((double) driven - h.v[8]);
+                driven = h.f[0].lowPass (driven - (float) h.v[8]);
+
+                // The beater: a burst of noise and a knock, then a moment of the shell.
+                const auto hit = noise (h.n1);
+                const auto click = (0.9f * h.f[1].bandPass (hit) + 0.4f * sine (h.ph[1], 1700.0 * h.T, h.rate)) * h.e[3].next() * (float) h.v[4];
+                const auto shell = h.f[2].bandPass (hit) * h.e[4].next() * (float) h.v[9];
+                s = 0.9f * driven + click + shell;
+                break;
+            }
+            case Sound::snare:
+            {
+                // The head: two modes bent down from the strike, pushed into a soft clip. The wires: noise in
+                // two bands, a crack in the middle that is over sooner and the sizzle above it. The stick's snap.
+                const auto m = 1.0 + h.v[4] * h.e[2].next();
+                auto body = sine (h.ph[0], h.v[0] * m, h.rate) * h.e[0].next() + 0.55f * sine (h.ph[1], h.v[1] * m, h.rate) * h.e[1].next();
+                body = std::tanh (1.6f * body) * 1.085f;
+                const auto wires = h.f[0].highPass (noise (h.n1));
+                const auto burst = h.e[5].next();
+                const auto crack = h.f[3].bandPass (wires) * (h.e[6].next() + 0.6f * burst);
+                const auto sizzle = h.f[1].bandPass (wires) * (0.8f * h.e[3].next() + 0.6f * burst);
+                const auto snap = h.f[2].highPass (noise (h.n2)) * h.e[4].next();
+                s = body * (float) h.v[2] + sizzle * (float) h.v[3] + crack * (float) h.v[5] + (float) h.v[6] * snap;
+                s = std::tanh (1.2f * s) * 1.2f;
+                break;
+            }
+            case Sound::clap:
+            {
+                // The Classic clap's four bursts, tail and room, and over them the hands' own brightness
+                // above the band, a different noise each side, so the clap is wide.
+                float bursts = 0.0f;
+
+                for (size_t k = 0; k < 4; ++k)
+                    if (const auto dt = t - h.v[k]; dt >= 0.0)
+                        bursts += (float) (juce::jmin (1.0, dt / 0.0004) * std::exp (-dt / 0.0028));
+
+                const auto dt = t - h.v[3];
+                const auto tail = dt >= 0.0 ? (float) (0.55 * juce::jmin (1.0, dt / 0.002) * std::exp (-dt / h.v[4])) : 0.0f;
+                const auto clap = h.f[0].bandPass (h.f[1].highPass (noise (h.n1))) * (bursts + tail) * 2.6f;
+                const auto room = (float) ((1.0 - std::exp (-t / 0.01)) * std::exp (-t / h.v[5])) * 0.9f;
+                const auto nl = noise (h.n2), nr = noise (h.n3);
+                const auto air = (bursts + 0.5f * tail) * (float) h.v[6];
+                l = clap + h.f[2].bandPass (nl) * room + h.f[4].highPass (nl) * air;
+                r = clap + h.f[3].bandPass (nr) * room + h.f[5].highPass (nr) * air;
+                return;
+            }
+            case Sound::closedHat: case Sound::pedalHat: case Sound::openHat:
+            {
+                // The metal in two bands, its clang dying sooner than its sheen, and noise for the air; all
+                // rolled off above, as a cymbal is, and with a tick where the stick lands.
+                float squares = 0.0f;
+
+                for (size_t i = 0; i < 6; ++i)
+                    squares += square (h.ph[i], h.hz[i], h.rate);
+
+                squares /= 6.0f;
+                const auto ring = h.e[0].next(), tick = h.e[1].next();
+                const auto clang = h.f[4].highPass (h.f[0].bandPass (squares)) * (h.e[2].next() + 0.5f * tick);
+                const auto sheen = h.f[1].highPass (squares) * (ring + 0.5f * tick);
+                const auto air = h.f[2].highPass (noise (h.n1)) * (float) h.v[1] * (ring + 0.3f * tick);
+                s = h.f[3].lowPass (1.3f * clang + 1.1f * sheen + air) * 2.0f;
+                break;
+            }
+            case Sound::lowTom: case Sound::midTom: case Sound::highTom:
+            case Sound::bongo: case Sound::muteConga: case Sound::openConga:
+                s = skin (h);
+                break;
+            case Sound::crash: case Sound::splash: case Sound::ride:
+                metal (h, l, r, 0.0f);
+                return;
+            case Sound::china:
+                metal (h, l, r, 2.2f);
+                return;
+            case Sound::shaker:
+                s = 1.1f * h.f[1].lowPass (h.f[0].highPass (noise (h.n1))) * h.e[0].next();
+                break;
+            case Sound::tambourine:
+            {
+                float squares = 0.0f;
+
+                for (size_t i = 0; i < 6; ++i)
+                    squares += square (h.ph[i], h.hz[i], h.rate);
+
+                float shakes = 0.0f;
+
+                for (auto at : { 0.0, 0.007, 0.015 })
+                    if (const auto dt = t - at; dt >= 0.0)
+                        shakes += (float) (juce::jmin (1.0, dt / 0.0005) * std::exp (-dt / 0.006));
+
+                const auto tail = (float) juce::jmin (1.0, t / 0.002) * h.e[0].next();
+                s = 1.6f * h.f[1].lowPass (h.f[0].highPass (0.55f * squares / 6.0f + 0.45f * noise (h.n1))) * (0.6f * shakes + 0.7f * tail);
+                break;
+            }
+            case Sound::agogo:
+                s = 0.6f * sine (h.ph[0], h.v[0], h.rate) * h.e[0].next() + 0.3f * sine (h.ph[1], h.v[0] * 2.65, h.rate) * h.e[1].next()
+                  + 0.15f * sine (h.ph[2], h.v[0] * 4.3, h.rate) * h.e[2].next() + 0.5f * h.f[0].bandPass (noise (h.n1)) * h.e[3].next();
+                break;
+            case Sound::whistle:
+            {
+                // The pea's flutter in pitch and in level, an overtone, and the breath round the note.
+                const auto blow = h.v[0];
+                const auto env = t < 0.01 ? t / 0.01 : (t < blow ? 1.0 : std::exp (-(t - blow) / 0.02));
+                const auto flutter = std::sin (twoPi * 18.0 * t);
+                const auto hz = 2600.0 * h.T * (1.0 + 0.02 * flutter) * (1.0 - 0.04 * (1.0 - h.vel));   // blown softer it is a little flat
+                s = (0.5f * sine (h.ph[0], hz, h.rate) + 0.08f * sine (h.ph[1], 2.0 * hz, h.rate) + 0.35f * h.f[0].bandPass (noise (h.n1)))
+                  * (float) (env * (0.85 + 0.15 * flutter));
+                break;
+            }
+            case Sound::triangle:
+                s = 0.45f * sine (h.ph[0], 4200.0 * h.T, h.rate) * h.e[0].next() + 0.2f * sine (h.ph[1], 4200.0 * 2.76 * h.T, h.rate) * h.e[1].next()
+                  + 0.12f * sine (h.ph[2], 4200.0 * 1.52 * h.T, h.rate) * h.e[2].next() + 0.3f * h.f[0].highPass (noise (h.n1)) * h.e[3].next();
+                break;
+            case Sound::rim: case Sound::cowbell: case Sound::rideBell: case Sound::vibraslap: case Sound::timbale: case Sound::guiro:
+            case Sound::claves: case Sound::woodBlock: case Sound::cuica: case Sound::count:
+                break;
+        }
+
+        l = r = s;
+    }
+
     /** One sample of a hit, before its level, pan, drive, onset and end. */
     void voice (Hit& h, float& l, float& r)
     {
+        if (h.modern)
+        {
+            voiceModern (h, l, r);
+            return;
+        }
+
         const auto t = (double) h.age / h.rate;
         float s = 0.0f;
         l = r = 0.0f;
@@ -873,7 +1491,15 @@ void Engine::start (Hit& h, int note, float velocity)
     h.n2 = h.n1 * 747796405u + 2891336453u;
     h.n3 = h.n2 * 747796405u + 2891336453u;
 
-    const auto gain = juce::Decibels::decibelsToGain (st.level + infos[(size_t) sound].trimDb, -100.0f) * velocity;
+    // A Modern sound is duller the softer it is struck, by up to a third of the tone's range.
+    if (st.type == 1 && hasTypes (sound))
+    {
+        h.modern = true;
+        h.vel = juce::jlimit (0.0, 1.0, (double) velocity);
+        h.u = juce::jlimit (-1.0, 1.0, h.u - 0.45 * (1.0 - h.vel));
+    }
+
+    const auto gain = juce::Decibels::decibelsToGain (st.level + infos[(size_t) sound].trimDb + (h.modern ? modernTrimDb (sound) : 0.0f), -100.0f) * velocity;
     const auto angle = (juce::jlimit (-100.0f, 100.0f, st.pan) * 0.01f + 1.0f) * juce::MathConstants<float>::pi * 0.25f;
     h.gainL = gain * std::sqrt (2.0f) * std::cos (angle);
     h.gainR = gain * std::sqrt (2.0f) * std::sin (angle);
@@ -915,7 +1541,9 @@ void Engine::start (Hit& h, int note, float velocity)
     const auto u = h.u, T = h.T, S = h.S;
     auto riseSeconds = 0.00025;
 
-    switch (sound)
+    if (h.modern)
+        riseSeconds = startModern (h, note, D);
+    else switch (sound)
     {
         case Sound::kick:
         {
@@ -1429,6 +2057,11 @@ BasicDrumsProcessor::BasicDrumsProcessor()
         p.delay = addFloat (id + "_delay", name + " Delay", { 0.0f, 100.0f }, d.delay, "%");
     }
 
+    // After every sound's own twelve, so those keep their places: the type of each sound that has two.
+    for (int i = 0; i < numSounds; ++i)
+        if (const auto sound = (Sound) i; hasTypes (sound))
+            sounds[(size_t) i].type = addChoice (idOf (sound) + "_type", nameOf (sound) + " Type", typeNames(), 0);
+
     const auto start = defaultKit();
     kickCharacter = addChoice ("kick_character", "Kick Character", kickCharacterNames(), (int) start.kick);
     kitDrive = addFloat ("drive", "Kit Drive", { 0.0f, 100.0f }, start.drive, "%");
@@ -1448,7 +2081,8 @@ KitSettings BasicDrumsProcessor::currentSettings() const
     {
         const auto& p = sounds[i];
         k.sounds[i] = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
-                        p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get() };
+                        p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
+                        p.type != nullptr ? p.type->getIndex() : 0 };
     }
 
     k.kick = (KickCharacter) kickCharacter->getIndex();
@@ -1479,6 +2113,9 @@ void BasicDrumsProcessor::applySettings (const KitSettings& k)
         setExactly (*p.crush, s.crush);
         setExactly (*p.reverb, s.reverb);
         setExactly (*p.delay, s.delay);
+
+        if (p.type != nullptr)
+            p.type->setValueNotifyingHost (p.type->convertTo0to1 ((float) juce::jlimit (0, 1, s.type)));
     }
 
     kickCharacter->setValueNotifyingHost (kickCharacter->convertTo0to1 ((float) (int) k.kick));
@@ -1513,7 +2150,7 @@ bool BasicDrumsProcessor::kitModified() const
 
         if (! (near (a.tune, b.tune) && near (a.decay, b.decay) && near (a.tone, b.tone) && near (a.level, b.level) && near (a.pan, b.pan) && near (a.drive, b.drive)
                && a.filter == b.filter && near (a.cutoff, b.cutoff) && near (a.resonance, b.resonance) && near (a.crush, b.crush)
-               && near (a.reverb, b.reverb) && near (a.delay, b.delay)))
+               && near (a.reverb, b.reverb) && near (a.delay, b.delay) && a.type == b.type))
             return true;
     }
 

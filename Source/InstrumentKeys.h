@@ -90,8 +90,9 @@ namespace InstrumentKeys
     };
 
     /** The patterns a kind of sound can be auditioned by, at 125 BPM and written for the keys at
-        octave 3 (AuditionPatterns.cpp): a dozen for basses, chords, stabs, leads and kits, eight for
-        held sounds, hits and strings. The first of each is the phrase it had before there was a choice. */
+        octave 3 (AuditionPatterns.cpp): a dozen for basses, chords, stabs and leads, twenty for kits
+        (the last eight play more of a kit, with ghost notes and accents), eight for held sounds, hits
+        and strings. The first of each is the phrase it had before there was a choice. */
     const std::vector<Pattern>& patternsFor (Kind);
 
     /** The pattern chosen for a kind (an index into patternsFor), and choosing one: one choice per
