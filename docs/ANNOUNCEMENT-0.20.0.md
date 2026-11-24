@@ -1,5 +1,7 @@
 # Announcing Torqwave 0.20.0 on X
 
+**Not posted, and superseded.** 0.20.0 was a baseline release and was not announced; [the 0.20.1 announcement](ANNOUNCEMENT-0.20.1.md) covers everything since 0.19.2. The graphics this draft names are now drawn for 0.20.1.
+
 A draft, not posted. It holds one main post, a thread of six, and alt text for every image, for the day 0.20.0 is released. Each post is the plain text in its box: copy it from there. `<release link>` stands for the release's address (`https://github.com/BobClawblaw/torqwave/releases/tag/v0.20.0` once the tag exists); X counts any link as 23 characters, and the counts below do too.
 
 Check the lengths after any change:
