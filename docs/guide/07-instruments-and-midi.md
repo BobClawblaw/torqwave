@@ -247,7 +247,7 @@ Switch **Keys** to **Slices** at the top, and the sample is cut into pieces, eac
 
 **Everywhere an instrument goes.** Generate from Instrument, freeze, bounce and Mix Down play it as they play any instrument; a sequence saved with a sampler as its voice brings the sampler back with its samples; its settings can be drawn and written as automation.
 
-**Factory presets.** The presets row lists eleven, and the set is small on purpose: Torqwave Sampler is for your own sounds. Every sample in them was rendered by Torqwave from its own instruments, 26 samples and 8.2 MB in all.
+**Factory presets.** The presets row lists eleven, and the set is small on purpose: Torqwave Sampler is for your own sounds. Every sample in them was rendered by Torqwave from its own instruments, 26 samples and 8.6 MB in all.
 
 | Category | Presets | What they are |
 |---|---|---|

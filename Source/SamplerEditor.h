@@ -70,6 +70,10 @@ public:
         bool addCut (juce::int64 frame);
         bool removeCut (int cut);
 
+        /** The frames of the sample shown where a line is drawn for a sounding voice: the frame
+            each reads next. */
+        std::vector<juce::int64> playingFrames() const;
+
         void paint (juce::Graphics&) override;
         void mouseDown (const juce::MouseEvent&) override;
         void mouseDrag (const juce::MouseEvent&) override;

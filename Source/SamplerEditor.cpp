@@ -407,6 +407,16 @@ void SamplerEditor::Wave::paint (juce::Graphics& g)
     }
 
     // Where each voice is playing.
+    for (const auto frame : playingFrames())
+        line (frame, Theme::cursor, 1.0f);
+}
+
+std::vector<juce::int64> SamplerEditor::Wave::playingFrames() const
+{
+    std::vector<juce::int64> frames;
+    const auto& zones = editor.getZones();
+    const auto selected = editor.getSelected();
+
     for (auto& reading : editor.getSampler().getEngine().getReadings())
     {
         const auto position = reading.position.load (std::memory_order_relaxed);
@@ -419,9 +429,11 @@ void SamplerEditor::Wave::paint (juce::Graphics& g)
             if (zones[i].id == id && zones[i].sample == shown && (editor.showsSlices() || (int) i == selected))
             {
                 const auto span = zones[i].span();
-                line (zones[i].reverse ? span.getEnd() - 1 - (juce::int64) position : span.getStart() + (juce::int64) position, Theme::cursor, 1.0f);
+                frames.push_back (zones[i].reverse ? span.getEnd() - 1 - (juce::int64) position : span.getStart() + (juce::int64) position);
             }
     }
+
+    return frames;
 }
 
 void SamplerEditor::Wave::mouseMove (const juce::MouseEvent& e)

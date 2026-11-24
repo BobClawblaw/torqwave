@@ -1675,7 +1675,15 @@ void Engine::render (float* left, float* right, int count)
     for (size_t i = 0; i < voices.size(); ++i)
     {
         const auto& v = voices[i];
-        readings[i].position.store (v.active && ! v.dying ? (float) v.position : -1.0f, std::memory_order_relaxed);
+        auto position = v.position;
+
+        // A loop forward and back counts on past its end while it plays backwards: the frame it
+        // reads then is as far before the end as the count is past it.
+        if (v.active && v.view != nullptr && v.view->loop == 2 && ! v.leaving)
+            if (const auto along = position - (double) v.view->loopStart; along > 0.5 * (double) v.view->period)
+                position = (double) v.view->loopStart + (double) v.view->period - along;
+
+        readings[i].position.store (v.active && ! v.dying ? (float) position : -1.0f, std::memory_order_relaxed);
         readings[i].zone.store (v.active && v.zone != nullptr ? v.zone->id : 0, std::memory_order_relaxed);
     }
 }

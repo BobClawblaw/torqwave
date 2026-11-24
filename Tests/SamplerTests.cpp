@@ -1524,6 +1524,87 @@ namespace
             check (menuWidth >= 180, "sampler window: with Audition, Loop, Stop and the pattern menu showing, the preset menu is " + juce::String (menuWidth) + " px wide, room for a name");
         }
 
+        // The line on the waveform is where the voice reads, through a loop forward and back too: the sample is a
+        // ramp, so what is heard says which frame was read.
+        {
+            constexpr int frames = 24000, blockSize = 256;
+            juce::AudioBuffer<float> ramp (1, frames);
+
+            for (int i = 0; i < frames; ++i)
+                ramp.setSample (0, i, 0.1f + 0.8f * (float) i / (float) frames);
+
+            const auto frameHeard = [] (float heard, float gain)    { return ((double) (heard / gain) - 0.1) / 0.8 * (double) frames; };
+
+            // How far the line is from the frame last heard, at its worst over the blocks, and how often it turned.
+            const auto follow = [&] (bool reverse, int& turns, int& lines)
+            {
+                plain (sampler);
+                sampler.setSlicing ({});
+                auto z = zoneOf (ramp, 60);
+                z.loop = 2;
+                z.loopStart = 6000;
+                z.loopEnd = 9000;
+                z.reverse = reverse;
+                sampler.setZones ({ z });
+                sampler.prepareToPlay (rate, blockSize);
+                window->refreshNow();
+                window->select (0);
+
+                juce::AudioBuffer<float> block (2, blockSize);
+                double worst = 0.0;
+                float gain = 0.0f;
+                juce::int64 last = -1;
+                int direction = 0;
+                turns = 0;
+                lines = 0;
+
+                for (int n = 0; n < 110; ++n)
+                {
+                    juce::MidiBuffer midi;
+
+                    if (n == 0)
+                        midi.addEvent (juce::MidiMessage::noteOn (1, 60, 1.0f), 0);
+
+                    block.clear();
+                    sampler.processBlock (block, midi);
+
+                    if (n == 0)     // the frame it read at the block's 200th sample is known: 200 along the way it plays
+                        gain = block.getSample (0, 200) / ramp.getSample (0, reverse ? frames - 1 - 200 : 200);
+
+                    const auto drawn = window->getWave().playingFrames();
+                    lines = juce::jmax (lines, (int) drawn.size());
+
+                    if (drawn.size() != 1)
+                        return 1.0e9;
+
+                    worst = juce::jmax (worst, std::abs ((double) drawn[0] - frameHeard (block.getSample (0, blockSize - 1), gain)));
+
+                    if (last >= 0 && drawn[0] != last)
+                    {
+                        const auto now = drawn[0] > last ? 1 : -1;
+                        turns += direction != 0 && now != direction ? 1 : 0;
+                        direction = now;
+                    }
+
+                    last = drawn[0];
+                }
+
+                juce::MidiBuffer end;
+                end.addEvent (juce::MidiMessage::allSoundOff (1), 0);
+                block.clear();
+                sampler.processBlock (block, end);
+                return worst;
+            };
+
+            int turns = 0, lines = 0, turnsReversed = 0, linesReversed = 0;
+            const auto off = follow (false, turns, lines);
+            const auto offReversed = follow (true, turnsReversed, linesReversed);
+
+            check (off <= 2.0 && offReversed <= 2.0 && turns >= 4 && turnsReversed >= 4 && lines == 1 && linesReversed == 1,
+                   "sampler window: through a loop forward and back the playing line stays on the frame heard, within " + juce::String (off, 1) + " frames over "
+                       + juce::String (turns) + " turns, and within " + juce::String (offReversed, 1) + " over " + juce::String (turnsReversed) + " on a reversed zone");
+        }
+
         sampler.editorBeingDeleted (made.get());   // as its host tells it
         made.reset();
         sampler.setZones ({});
