@@ -4,6 +4,14 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The site: 750 synth patches, drum kits on factory grooves, and the whole comparison in one picture** (documents and the demo renderer only)
+- **Torqwave Synth:** 750 patches to hear, where there were 163. Besides the 18 chosen by ear, they are the patches that use the most of the synth, by a count made with each patch loaded: a point for each oscillator on, each of those with unison voices, each with a warp, the sub, the noise, each filter, each effect on, each modulation routing in use and each named macro. Each category has its share (about a fifth of its patches, ten at least: from 54 of Bass's 271 to 10 of Sub's 44), the highest count first; the ones shown count 16 to 24. The page is an overview with a page for each of the 29 categories.
+- **Basic Drums:** each kit plays the three factory grooves of the Sequence Library with the most energy written for it (Drums > Full Grooves), as the library's preview plays them, in place of two of the short audition beats. Breaks keeps the audition beats, because no factory groove uses that kit.
+- **The comparison:** a sixth graphic, drawn by `docs/compare/generate.py` from the same data, shows all 53 rows against all 17 columns in one picture at the head of the matrix. The other five graphics come out as they were.
+- The front page has a button to all the clips under its players.
+- The Sounds pages now have 1,053 clips, 99.0 MB as MP3 (the synth's 750 are 61.7 MB).
+- Nothing in the app changed. Not tested by the suite at this code: only `Tests/SoundDemos.cpp`, the page and graphic generators and their output changed. All 750 synth clips and the drum clips rendered with sound and none failed; apart from the 18 chosen by ear, none was listened to. The pages were previewed with a local Jekyll build at desktop width, and fetched from GitHub's own build after each push; the new synth pages were not looked at at phone width.
+
 **The project's site: sounds to hear, measured results and the guide** (documents and the demo renderer only)
 - The site (`docs/`, served by GitHub Pages) has an overview, a Sounds section, a Quality page, the guide in the site's layout and the comparison, with the same navigation on every page.
 - **Sounds:** 460 clips, about 50 MB as MP3, rendered by Torqwave's own code with nothing added: 163 Torqwave Synth patches from all 29 categories, 38 StringSwarm presets, the 7 Basic Drums kits (14 clips), the 11 Torqwave Sampler factory presets, the 116 factory kits and 118 sequences from all 37 styles. `TorqwaveTests --sound-demos` renders them and `docs/build_pages.py` writes the pages.
