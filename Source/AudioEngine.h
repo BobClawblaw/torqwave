@@ -206,7 +206,7 @@ public:
     /** Plays [start, end) of the document or session over and over once it gets there, until
         clearLoop() or the mode changes. The played frame keeps counting on through each pass, so
         frame f of pass k (from 0) is played frame f + k * (end - start). */
-    void setLoop (juce::int64 start, juce::int64 end)      { source.setLoop (start, end); sessionSource.setLoop (start, end); }
+    void setLoop (juce::int64 start, juce::int64 end);
 
     /** Plays this audio in place of the document (see DocumentSource::setStandIn); nullptr: the document. */
     void setStandIn (AudioDocument::Snapshot s)            { source.setStandIn (std::move (s)); }
@@ -334,6 +334,8 @@ private:
     int separateOutputs = -1;   // see setSeparateOutputs
     double sourceRate = 0.0;
     std::atomic<juce::int64> playedFrame { 0 }, playStart { 0 };   // playStart: where play() or a seek began
+    std::atomic<bool> loopChanged { false };   // the loop was changed while playing: the played frame is counted afresh from where the source is
+    void countFromSource();
     std::atomic<int> outputLatency { 0 }, deviceLatency { 0 }, midiOutDelay { 0 };
     MidiOut::Player* midiOut = nullptr;
     juce::TimeSliceThread auditionThread { "Audition" };
