@@ -4067,7 +4067,7 @@ void MainComponent::routeLiveMidi()
     const auto state = engine.session.getState();
     const SessionTrack* target = nullptr;
 
-    if (multitrackMode && auditionTrack != 0)
+    if (auditionTrack != 0)
         target = state->findTrack (auditionTrack);
     else if (multitrackMode && recordingNotes)
         target = state->findTrack (engine.getLiveMidi().getTrack());
@@ -4082,8 +4082,9 @@ void MainComponent::routeLiveMidi()
     }
 
     // An instrument's window in front: what is played is for that instrument's track, whichever is
-    // selected (not while a recording or a note from the piano roll holds its own).
-    if (multitrackMode && auditionTrack == 0 && ! recordingNotes)
+    // selected (not while a recording or a note from the piano roll holds its own), and with the
+    // editor behind it too.
+    if (auditionTrack == 0 && ! recordingNotes)
         for (auto* w : editorWindows)
             if (w->getKeys() != nullptr && w->isActiveWindow())
                 for (auto& t : state->tracks)
@@ -4100,7 +4101,7 @@ void MainComponent::routeLiveMidi()
     // The keyboard says what it plays, or why nothing.
     if (auto it = madePanels.find (Panels::keyboard); it != madePanels.end())
         if (auto* keyboard = dynamic_cast<MidiIn::KeyboardPanel*> (it->second.get()))
-            keyboard->setStatus (! multitrackMode ? juce::String ("Instruments play in the Multitrack view.")
+            keyboard->setStatus (! multitrackMode && target == nullptr ? juce::String ("Instruments play in the Multitrack view, or from their own windows.")
                                  : target == nullptr ? juce::String ("Select an instrument track to play its instrument.")
                                  : engine.getTrackEffects().getInstrument (target->id) == nullptr ? target->name + " has no instrument yet."
                                  : "Plays " + target->name + "'s instrument.");
