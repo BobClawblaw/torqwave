@@ -4,6 +4,9 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The sampler's factory check on the Intel build** (0.20.0)
+- The check that the content tool writes the factory samples byte for byte as shipped failed in the Intel half of the release build (27 of 27 different): the shipped files were rendered on Apple silicon, and the Intel build's arithmetic rounds differently, so its renders are near them and not the same bytes (a FLAC of 225,029 bytes against 225,025, for one). The app ships the files; it does not render them. The check compares bytes on Apple silicon, and on Intel checks that the tool writes all 27. Found building the release, not by use.
+
 **The Decrypted page's hint shows whole** (0.20.0; fix log 103)
 - The hint under the list ("click a row to hear it on the keys; double-click to load it and go to the knobs") was cut off after "go to the": it was drawn in a box 400 wide. It now has the rest of its row. Seen in the tests' picture of the page, and by the user in the app.
 - The Decrypt page's first line was cut the same way, after "a recording of one". It now runs up to the panel: "finds a Torqwave Synth patch that plays like a recording of one note. Drop the note on the scope."
