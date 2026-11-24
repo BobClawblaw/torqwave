@@ -108,11 +108,13 @@ namespace
     /** Whether a hit cut at `at` (with the rest of what plays subtracted, so the hit alone is
         left) fades out rather than stopping: from one sample to the next it moves no further than
         the sound itself moves just before, plus its 3 ms fade's share of its level; and it is
-        silent once the fade is done. */
-    bool fadesOut (const juce::AudioBuffer<float>& left, int at, juce::String& why)
+        silent once the fade is done. With the hit as it sounds when nothing cuts it, the sound's own
+        moves are also those it would have made while it fades: noise does not move the same from one
+        moment to the next. */
+    bool fadesOut (const juce::AudioBuffer<float>& left, int at, juce::String& why, const juce::AudioBuffer<float>* uncut = nullptr)
     {
         const auto fade = (int) std::round (0.003 * rate);
-        const auto before = largestStep (left, at - 96, at);
+        const auto before = juce::jmax (largestStep (left, at - 96, at), uncut != nullptr ? largestStep (*uncut, at, at + fade + 4) : 0.0f);
         const auto level = peakOf (left, at - 96, 96);
         const auto step = largestStep (left, at, at + fade + 4);
         const auto allowed = before + level / (float) fade * 1.1f + 1.0e-4f;
@@ -134,9 +136,9 @@ namespace
         auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (instance.get());
         check (drums != nullptr && error.isEmpty() && description.isInstrument && description.numInputChannels == 0 && description.name == "Basic Drums"
                    && description.uniqueId == 0x53424452 && drums->acceptsMidi() && drums->getTotalNumInputChannels() == 0
-                   && drums->getTotalNumOutputChannels() == 2 && drums->getParameters().size() == DrumMachine::numSounds * 12 + 7,
+                   && drums->getTotalNumOutputChannels() == 2 && drums->getParameters().size() == DrumMachine::numSounds * 12 + 21 + 7,
                "drums: Basic Drums is made from its description (the same ID, so sessions find it), an instrument with no audio input, a stereo output and "
-                   + juce::String (drums != nullptr ? drums->getParameters().size() : 0) + " parameters (twelve for each of 30 sounds, the kick's character, the kit's drive, glue, level, reverb size, delay time and feedback)");
+                   + juce::String (drums != nullptr ? drums->getParameters().size() : 0) + " parameters (twelve for each of 30 sounds, a type for the 21 that have two, the kick's character, the kit's drive, glue, level, reverb size, delay time and feedback)");
 
         BuiltInEffects::addTo (engine.knownPlugins);
         const auto known = Instrument::known (engine.knownPlugins);
@@ -203,6 +205,20 @@ namespace
                "drums window: the picture shows the whole hit, " + juce::String (longPicture * 1000.0, 0) + " ms at a 640 ms decay and "
                    + juce::String (shortPicture * 1000.0, 0) + " ms at 160 ms");
 
+        // A sound with two types has a selector for them, and its picture follows it; a sound with one has none.
+        const auto classicShown = window->getTypeText();
+        const auto classicSeconds = window->getPictureSeconds();
+        drums.typeParameter (Sound::snare)->setValueNotifyingHost (1.0f);
+        window->select (Sound::snare);
+        const auto modernShown = window->getTypeText();
+        window->select (Sound::rim);
+        const auto rimShown = window->getTypeText();
+        drums.typeParameter (Sound::snare)->setValueNotifyingHost (0.0f);
+        window->select (Sound::kick);
+        check (classicShown == "Classic" && modernShown == "Modern" && rimShown.isEmpty() && window->getTypeText() == "Classic" && classicSeconds > 0.0
+                   && drums.typeParameter (Sound::rim) == nullptr,
+               "drums window: the snare's type reads Classic, then Modern once chosen; the rim, which has one type, shows no selector; the kick has its type beside its character");
+
         // The kits: choosing one sets every sound; a knob moved marks it edited.
         drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Dark Techno")]);
         const auto chosen = window->getKitText();
@@ -255,9 +271,12 @@ namespace
         check (silent && ! DrumMachine::soundFor (82).has_value() && ! DrumMachine::soundFor (34).has_value(), "drums: notes outside 35 to 81 are silent");
     }
 
-    void testNoClicks (BuiltInEffects::BasicDrumsProcessor& drums)
+    /** In a kit with no drive or glue on the bus, so hits add as they are: Standard for the Classic
+        sounds, Modern for the Modern ones. */
+    void testNoClicks (BuiltInEffects::BasicDrumsProcessor& drums, const juce::String& kitName)
     {
-        drums.applyKit (DrumMachine::kits()[0]);   // Standard: no drive or glue on the bus, so hits add as they are
+        drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex (kitName)]);
+        const auto tag = kitName == "Standard" ? juce::String ("drums: ") : "drums (the " + kitName + " kit's sounds): ";
 
         // Each note starts from silence, ends falling to nothing, and struck again 60 ms in, fades its
         // last hit rather than cutting it.
@@ -287,15 +306,15 @@ namespace
             const auto second60 = play (drums, { { note, 0.06, 1.0f } }, 0.2);
             juce::String why;
 
-            if (! fadesOut (minus (both, second60), at, why))
+            if (! fadesOut (minus (both, second60), at, why, &alone))
                 cuts.add (juce::String (note) + " (" + why + ")");
         }
 
-        check (starts.isEmpty(), "drums: every note starts from silence, its second sample at most " + juce::String (worstStart * 100.0f, 1)
+        check (starts.isEmpty(), tag + "every note starts from silence, its second sample at most " + juce::String (worstStart * 100.0f, 1)
                                      + " % of its peak" + (starts.isEmpty() ? juce::String() : " (steps: " + starts.joinIntoString (", ") + ")"));
-        check (ends.isEmpty(), "drums: every note ends falling to nothing, its last millisecond at most " + juce::String (worstEnd * 100.0f, 2)
+        check (ends.isEmpty(), tag + "every note ends falling to nothing, its last millisecond at most " + juce::String (worstEnd * 100.0f, 2)
                                    + " % of its peak" + (ends.isEmpty() ? juce::String() : " (cut off: " + ends.joinIntoString (", ") + ")"));
-        check (cuts.isEmpty(), "drums: every note struck again 60 ms in fades its last hit over 3 ms, moving no further than the sound itself does"
+        check (cuts.isEmpty(), tag + "every note struck again 60 ms in fades its last hit over 3 ms, moving no further than the sound itself does"
                                    + (cuts.isEmpty() ? juce::String() : " (clicks: " + cuts.joinIntoString ("; ") + ")"));
 
         // The choke groups: a closed or pedal hat cuts the open one, the mute triangle and cuica the
@@ -311,7 +330,7 @@ namespace
             juce::String why;
             const auto rangOn = peakOf (ringingAlone, at + 400, 2000) > 1.0e-3f;
 
-            if (! (fadesOut (minus (both, chokerAlone), at, why) && rangOn))
+            if (! (fadesOut (minus (both, chokerAlone), at, why, &ringingAlone) && rangOn))
                 chokes.add (juce::String (choker) + " on " + juce::String (ringing) + " (" + why + ")");
         }
 
@@ -321,14 +340,14 @@ namespace
         const auto hatLeft = peakOf (minus (hatAndKick, kickAlone), (int) (0.2 * rate), (int) (0.1 * rate));
 
         check (chokes.isEmpty() && hatLeft > 1.0e-3f,
-               "drums: the choke groups (closed and pedal hat on the open hat, mute and open triangle, mute and open cuica) fade the choked hit over 3 ms; a kick chokes nothing"
+               tag + "the choke groups (closed and pedal hat on the open hat, mute and open triangle, mute and open cuica) fade the choked hit over 3 ms; a kick chokes nothing"
                    + (chokes.isEmpty() ? juce::String() : " (failed: " + chokes.joinIntoString ("; ") + ")"));
 
         // A tom fill rings over itself: 41 and 43 share the low tom's settings but not a voice.
         const auto fill = play (drums, { { 41, 0.0, 1.0f }, { 43, 0.05, 1.0f } }, 0.4);
         const auto secondTom = play (drums, { { 43, 0.05, 1.0f } }, 0.4);
         check (peakOf (minus (fill, secondTom), (int) (0.1 * rate), (int) (0.05 * rate)) > 0.01f,
-               "drums: notes of one sound (low tom 41 and 43) each ring on their own voice");
+               tag + "notes of one sound (low tom 41 and 43) each ring on their own voice");
 
         // All Sound Off (a stop, a loop, a seek) fades every hit over 3 ms.
         Notes kit;
@@ -339,11 +358,11 @@ namespace
         const auto at = (int) std::round (0.1 * rate);
         const auto stopped = play (drums, kit, 0.3, 512, 0.1);
         juce::String why;
-        check (fadesOut (stopped, at, why) && drums.getNumSounding() == 0, "drums: All Sound Off fades a whole kit out over 3 ms, no click (" + why + ")");
+        check (fadesOut (stopped, at, why) && drums.getNumSounding() == 0, tag + "All Sound Off fades a whole kit out over 3 ms, no click (" + why + ")");
 
         // Every sound ends: a whole kit is silent within six and a half seconds.
         const auto all = play (drums, kit, 7.0);
-        check (drums.getNumSounding() == 0 && peakOf (all, (int) (6.5 * rate)) == 0.0f, "drums: every sound ends, a whole kit silent within 6.5 seconds");
+        check (drums.getNumSounding() == 0 && peakOf (all, (int) (6.5 * rate)) == 0.0f, tag + "every sound ends, a whole kit silent within 6.5 seconds");
     }
 
     void testSettings (BuiltInEffects::BasicDrumsProcessor& drums)
@@ -468,6 +487,90 @@ namespace
         midi.addEvent (juce::MidiMessage::noteOn (10, 36, 1.0f), 0);
         drums.processBlock (block, midi);
         check (std::abs (block.getMagnitude (0, 0, 4800) / peakOf (full, 0, 4800) - std::pow (64.0f / 127.0f, 2.0f)) < 1.0e-3f, "drums: CC 7 sets its volume, squared");
+    }
+
+    /** How bright a hit is: the energy of its sample-to-sample moves over its energy. */
+    double brightnessOf (const juce::AudioBuffer<float>& b)
+    {
+        double moves = 0.0, energy = 0.0;
+
+        for (int n = 1; n < b.getNumSamples(); ++n)
+        {
+            moves += std::pow (b.getSample (0, n) - b.getSample (0, n - 1), 2.0);
+            energy += std::pow (b.getSample (0, n), 2.0);
+        }
+
+        return moves / juce::jmax (1.0e-12, energy);
+    }
+
+    void testTypes (BuiltInEffects::BasicDrumsProcessor& drums)
+    {
+        drums.applyKit (DrumMachine::kits()[0]);
+        const auto setType = [&drums] (Sound s, int index) { drums.typeParameter (s)->setValueNotifyingHost ((float) index); };
+
+        // Twenty-one sounds have a Modern type: another sound at the level of the Classic one, which is left as it was.
+        juce::StringArray sameSound, offLevel, noTone, rigid;
+        int withTypes = 0;
+        float mostApart = 0.0f;
+
+        for (int i = 0; i < DrumMachine::numSounds; ++i)
+        {
+            const auto sound = (Sound) i;
+
+            if (! DrumMachine::hasTypes (sound))
+            {
+                if (drums.typeParameter (sound) != nullptr)
+                    sameSound.add (DrumMachine::nameOf (sound) + " has a type");
+
+                continue;
+            }
+
+            ++withTypes;
+            const auto note = DrumMachine::padNote (sound);
+            const auto classic = play (drums, { { note, 0.0, 1.0f } }, 1.0);
+            setType (sound, 1);
+            const auto modern = play (drums, { { note, 0.0, 1.0f } }, 1.0);
+            const auto soft = play (drums, { { note, 0.0, 0.3f } }, 1.0);
+
+            // Each of its six settings changes the Modern sound too.
+            for (auto what : { "tune", "decay", "tone", "level", "pan", "drive" })
+            {
+                auto* p = drums.parameterOf (sound, what);
+                const auto was = p->get();
+                const auto range = p->getNormalisableRange();
+                set (p, juce::String (what) == "decay" ? was * 0.5f : juce::String (what) == "drive" ? 60.0f
+                        : was + (range.end - was > was - range.start ? 1.0f : -1.0f) * 0.3f * (range.end - range.start));
+
+                if (same (modern, play (drums, { { note, 0.0, 1.0f } }, 1.0)))
+                    noTone.add (DrumMachine::nameOf (sound) + " " + what);
+
+                set (p, was);
+            }
+
+            setType (sound, 0);
+            const auto apart = std::abs (juce::Decibels::gainToDecibels (peakOf (modern)) - juce::Decibels::gainToDecibels (peakOf (classic)));
+            mostApart = juce::jmax (mostApart, apart);
+
+            if (same (classic, modern) || ! same (classic, play (drums, { { note, 0.0, 1.0f } }, 1.0)))
+                sameSound.add (DrumMachine::nameOf (sound));
+
+            if (apart > 1.0f)
+                offLevel.add (DrumMachine::nameOf (sound) + " " + juce::String (apart, 1) + " dB");
+
+            // Struck softer a Modern sound is quieter and duller, not the same hit turned down.
+            if (! (peakOf (soft) < 0.45f * peakOf (modern) && brightnessOf (soft) < 0.97 * brightnessOf (modern)))
+                rigid.add (DrumMachine::nameOf (sound) + " " + juce::String (brightnessOf (soft) / brightnessOf (modern), 2));
+        }
+
+        check (withTypes == 21 && DrumMachine::typeNames() == juce::StringArray ({ "Classic", "Modern" }) && sameSound.isEmpty(),
+               "drums: 21 of the 30 sounds have a second type, Modern, another sound than Classic, which plays as before once chosen again"
+                   + (sameSound.isEmpty() ? juce::String() : " (failed: " + sameSound.joinIntoString (", ") + ")"));
+        check (offLevel.isEmpty(), "drums: each Modern sound peaks within 1 dB of its Classic one at full velocity (the furthest " + juce::String (mostApart, 2) + " dB apart)"
+                                       + (offLevel.isEmpty() ? juce::String() : " (off: " + offLevel.joinIntoString (", ") + ")"));
+        check (noTone.isEmpty(), "drums: tune, decay, tone, level, pan and drive each change every Modern sound"
+                                     + (noTone.isEmpty() ? juce::String() : " (no change: " + noTone.joinIntoString (", ") + ")"));
+        check (rigid.isEmpty(), "drums: a Modern sound struck at a third of full velocity is quieter and duller than at full"
+                                    + (rigid.isEmpty() ? juce::String() : " (not duller: " + rigid.joinIntoString (", ") + ")"));
     }
 
     void testEffects (BuiltInEffects::BasicDrumsProcessor& drums)
@@ -604,9 +707,24 @@ namespace
         set (drums.parameterOf (Sound::kick, "tune"), 5.0f);
         const auto modified = drums.kitModified();
 
-        check (all.size() == 7 && names[0] == "Standard" && names.contains ("Dark Techno") && names.contains ("Industrial") && names.contains ("EBM Machine")
-                   && names.contains ("Electro") && names.contains ("Breaks") && names.contains ("Industrial Rock") && clean && distinct && modified,
-               "drums: seven kits (" + names.joinIntoString (", ") + "), each sounding different; a kit chosen reads as itself until a knob moves");
+        // The seven kits of Classic sounds come first and use no Modern sound; the five after them are made of Modern ones.
+        auto classicFirst = true;
+
+        for (size_t i = 0; i < all.size(); ++i)
+        {
+            int modernSounds = 0;
+
+            for (auto& sound : all[i].settings.sounds)
+                modernSounds += sound.type;
+
+            classicFirst = classicFirst && (i < 7 ? modernSounds == 0 : modernSounds == 21);
+        }
+
+        check (all.size() == 12 && names[0] == "Standard" && names[1] == "Dark Techno" && names[2] == "Industrial" && names[3] == "EBM Machine"
+                   && names[4] == "Electro" && names[5] == "Breaks" && names[6] == "Industrial Rock" && names[7] == "Modern" && names.contains ("Warehouse")
+                   && names.contains ("Body Music") && names.contains ("Foundry") && names.contains ("Broken Beat") && classicFirst && clean && distinct && modified,
+               "drums: twelve kits (" + names.joinIntoString (", ") + "), the first seven all Classic sounds, the five after them Modern, each sounding different; "
+               "a kit chosen reads as itself until a knob moves");
 
         // The state keeps the kit's name and every setting.
         drums.applyKit (all[(size_t) DrumMachine::kitIndex ("Industrial")]);
@@ -618,6 +736,38 @@ namespace
         check (another.getKitName() == "Industrial" && another.kitModified() && another.currentSettings() == drums.currentSettings()
                    && same (play (another, groove, 0.6), play (drums, groove, 0.6)),
                "drums: the state brings back the kit's name and every setting, and the same sound");
+
+        // The types are kept too; a state from before there were types (none in it) plays every sound Classic.
+        drums.applyKit (all[(size_t) DrumMachine::kitIndex ("Warehouse")]);
+        juce::MemoryBlock modernState;
+        drums.getStateInformation (modernState);
+        BuiltInEffects::BasicDrumsProcessor warehouse;
+        warehouse.setStateInformation (modernState.getData(), (int) modernState.getSize());
+
+        drums.applyKit (all[(size_t) DrumMachine::kitIndex ("Dark Techno")]);
+        juce::MemoryBlock full;
+        drums.getStateInformation (full);
+        auto before = juce::AudioProcessor::getXmlFromBinary (full.getData(), (int) full.getSize());
+        int removed = 0;
+
+        for (int i = 0; before != nullptr && i < DrumMachine::numSounds; ++i)
+            if (const auto id = DrumMachine::idOf ((Sound) i) + "_type"; before->hasAttribute (id))
+            {
+                before->removeAttribute (id);
+                ++removed;
+            }
+
+        juce::MemoryBlock beforeTypes;
+
+        if (before != nullptr)
+            juce::AudioProcessor::copyXmlToBinary (*before, beforeTypes);
+
+        BuiltInEffects::BasicDrumsProcessor untyped;
+        untyped.setStateInformation (beforeTypes.getData(), (int) beforeTypes.getSize());
+        check (warehouse.getKitName() == "Warehouse" && ! warehouse.kitModified() && warehouse.currentSettings().sounds[0].type == 1
+                   && removed == 21 && untyped.getKitName() == "Dark Techno" && ! untyped.kitModified() && untyped.currentSettings() == drums.currentSettings()
+                   && same (play (untyped, groove, 0.6), play (drums, groove, 0.6)),
+               "drums: a kit of Modern sounds comes back from the state as itself; a state saved before there were types loads as its kit, unedited, every sound Classic and sounding the same");
 
         // A session from before (a kick, snare, hat and tom tune and decay in percent) loads into
         // the nearest settings. First a state as 0.19.2 wrote it, then the factory presets' Machine kit.
@@ -719,7 +869,19 @@ namespace
                 sum += std::pow (0.5 * (out.getSample (0, i) + out.getSample (1, i)), 2.0);
 
             std::cout << note << " " << DrumMachine::nameOf (*DrumMachine::soundFor (note)) << ": peak " << juce::Decibels::gainToDecibels (peakOf (out))
-                      << " dB, rms(100ms) " << juce::Decibels::gainToDecibels ((float) std::sqrt (sum / n)) << " dB" << std::endl;
+                      << " dB, rms(100ms) " << juce::Decibels::gainToDecibels ((float) std::sqrt (sum / n)) << " dB";
+
+            // Its Modern type against it, for modernTrimDb.
+            if (auto* type = drums.typeParameter (*DrumMachine::soundFor (note)))
+            {
+                type->setValueNotifyingHost (1.0f);
+                const auto modern = play (drums, { { note, 0.0, 1.0f } }, 0.5);
+                type->setValueNotifyingHost (0.0f);
+                std::cout << "; Modern peak " << juce::Decibels::gainToDecibels (peakOf (modern)) << " dB ("
+                          << juce::Decibels::gainToDecibels (peakOf (modern)) - juce::Decibels::gainToDecibels (peakOf (out)) << " dB against it)";
+            }
+
+            std::cout << std::endl;
         }
     }
 }
@@ -781,9 +943,18 @@ void saveDrumMachineDemos (const juce::File& folder)
                                     { { 36, "x.......x......." }, { 38, "....x..." }, { 48, "........xx......" }, { 45, "..........xx...." }, { 41, "............xxxx" } } },
     };
 
+    // Each kit of Modern sounds plays the groove of the kit it stands beside, to hear one against the other.
+    auto all = grooves;
+
+    for (auto [kit, beside] : std::vector<std::pair<const char*, size_t>> { { "Modern", 0 }, { "Warehouse", 1 }, { "Foundry", 2 }, { "Body Music", 3 }, { "Broken Beat", 5 } })
+    {
+        all.push_back (grooves[beside]);
+        all.back().kit = kit;
+    }
+
     folder.createDirectory();
 
-    for (auto& groove : grooves)
+    for (auto& groove : all)
     {
         // A playhead at the groove's tempo, so the delay echoes in time with it.
         struct Tempo final : juce::AudioPlayHead
@@ -828,6 +999,64 @@ void saveDrumMachineDemos (const juce::File& folder)
     }
 }
 
+void saveDrumMachineSounds (const juce::File& folder)
+{
+    folder.createDirectory();
+
+    const auto write = [&folder] (const juce::String& name, const juce::AudioBuffer<float>& audio)
+    {
+        auto file = folder.getChildFile (name + ".wav");
+        file.deleteFile();
+        std::unique_ptr<juce::OutputStream> stream (new juce::FileOutputStream (file));
+        const auto options = juce::AudioFormatWriterOptions{}.withSampleRate (rate).withNumChannels (2).withBitsPerSample (24);
+
+        if (auto writer = juce::WavAudioFormat().createWriterFor (stream, options))
+            writer->writeFromAudioSampleBuffer (audio, 0, audio.getNumSamples());
+    };
+
+    // Every note of the Standard kit, hard and soft, the kit's level at 0 dB.
+    BuiltInEffects::BasicDrumsProcessor drums;
+    drums.applyKit (DrumMachine::kits()[0]);
+    set (drums.levelParameter(), 0.0f);
+
+    for (int note = DrumMachine::firstNote; note <= DrumMachine::lastNote; ++note)
+    {
+        const auto sound = *DrumMachine::soundFor (note);
+        const auto seconds = juce::jmin (6.0, drums.parameterOf (sound, "decay")->get() * 0.001 * 1.3 + 0.3);
+
+        for (auto velocity : { 127, 80, 40 })
+        {
+            write ("Standard " + juce::String (note) + " " + DrumMachine::nameOf (sound) + " v" + juce::String (velocity),
+                   play (drums, { { note, 0.0, (float) velocity / 127.0f } }, seconds));
+
+            if (auto* type = drums.typeParameter (sound))
+            {
+                type->setValueNotifyingHost (1.0f);
+                write ("Modern " + juce::String (note) + " " + DrumMachine::nameOf (sound) + " v" + juce::String (velocity),
+                       play (drums, { { note, 0.0, (float) velocity / 127.0f } }, seconds));
+                type->setValueNotifyingHost (0.0f);
+            }
+        }
+    }
+
+    // Each kit's main sounds as the kit plays them, one after another: kick, snare, clap, rim, closed and open hat, the toms, ride, crash.
+    for (auto& kit : DrumMachine::kits())
+    {
+        BuiltInEffects::BasicDrumsProcessor one;
+        one.applyKit (kit);
+        Notes notes;
+        int i = 0;
+
+        for (auto note : { 36, 36, 38, 38, 39, 37, 42, 42, 42, 42, 46, 41, 45, 48, 51, 51, 49 })
+        {
+            notes.push_back ({ note, i * 0.5, i == 1 || i == 3 || i == 7 || i == 9 || i == 15 ? 0.4f : 1.0f });
+            ++i;
+        }
+
+        write ("Kit sounds - " + kit.name, play (one, notes, i * 0.5 + 3.0));
+    }
+}
+
 void runDrumMachineTests (AudioEngine& engine, bool levels)
 {
     BuiltInEffects::BasicDrumsProcessor drums;
@@ -841,8 +1070,10 @@ void runDrumMachineTests (AudioEngine& engine, bool levels)
     testMade (engine);
     testWindow();
     testEverySound (drums);
-    testNoClicks (drums);
+    testNoClicks (drums, "Standard");
+    testNoClicks (drums, "Modern");
     testSettings (drums);
+    testTypes (drums);
     testEffects (drums);
     testKitsAndState (drums);
     testRendering (drums);
