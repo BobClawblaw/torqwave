@@ -365,6 +365,38 @@ void runSequenceTests (AudioEngine& engine)
         const auto eNone = SequencePreview::render (*silent, 120.0, 4, rate, engine.pluginFormatManager, none);
         const auto level = [] (const juce::AudioBuffer<float>& b, int from, int n) { return b.getNumSamples() >= from + n ? b.getRMSLevel (0, from, n) : 0.0f; };
 
+        // Going round: a note held to the very end, at a pitch whose wave does not come out whole in
+        // the loop, ends each pass at another point of its wave. The pass's end is faded into the end
+        // of the pass before, so the step from its last frame to its first is no bigger than the
+        // steps inside it. (Without the fade it is the wave's full swing: a click every round.)
+        {
+            auto held = *q;
+            held.offset = 0;
+            held.length = 4 * 960;
+            held.loopLength = 0;
+            held.lanes.clear();
+            held.notes = { { 34, 0, 4 * 960, 0.9f, 1.0f } };   // B flat 1 for a bar: 116.5 cycles at 120 BPM
+            juce::AudioBuffer<float> round;
+            const auto failed = SequencePreview::render (held, 120.0, 4, rate, engine.pluginFormatManager, round);
+            auto inside = 0.0f, join = 1.0f;
+
+            if (failed.isEmpty() && round.getNumSamples() > 4)
+            {
+                const auto* x = round.getReadPointer (0);
+                const auto n = round.getNumSamples();
+
+                for (int i = n / 2; i + 1 < n; ++i)   // past the note's own start
+                    inside = juce::jmax (inside, std::abs (x[i + 1] - x[i]));
+
+                join = std::abs (x[0] - x[n - 1]);
+            }
+
+            std::cout << "      sequence preview: a held note's loop joins with a step of " << join << "; the largest step inside it " << inside << std::endl;
+            check (failed.isEmpty() && round.getMagnitude (0, round.getNumSamples() / 2, round.getNumSamples() / 4) > 0.01f && join <= inside * 1.5f,
+                   "sequence preview: a note held to the end of the loop goes round without a click (the step at the join is no more than one and a "
+                   "half times the largest step inside the note)");
+        }
+
         check (SequenceFile::instrumentOf (*q) == synth.name && e120.isEmpty() && at120.getNumChannels() == 2 && at120.getNumSamples() == 2 * 96000
                    && e60.isEmpty() && at60.getNumSamples() == 4 * 96000 && level (at120, 0, 4800) > 0.001f && level (at60, 0, 9600) > 0.001f
                    && eNone.contains ("no instrument") && none.getNumSamples() == 0,

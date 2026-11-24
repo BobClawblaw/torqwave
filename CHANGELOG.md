@@ -4,6 +4,12 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**A sequence's preview goes round without a click** (fix log 113)
+- **What was wrong,** found by the user listening to the site's demos: "the note clicks on start". A sub held in half notes (Pinpoint Sub Pulse) clicked each time its one-bar loop went round: in the clip the wave stepped by 0.22 at each bar's start, where the clip peaks at 0.35. The Sequence Library's preview plays the same rendered pass in a loop, so it clicked in the program too.
+- **Why.** The pass that loops is the second of two played in a row, so it starts as the first ended and what rings over comes in. But a note held to the end on an oscillator that runs free ends each pass at another point of its wave, so the pass's last frame and its first did not meet.
+- **Now** the pass's last 20 ms are faded into the end of the pass before it, which its start follows on from. Where both passes end the same way (drums, anything struck afresh each round), nothing changes.
+- Tested (`--sequences`, 98 checks): a note held for the whole bar at a pitch that does not come out whole in the loop joins with a step of 0.0007, against 0.068 for the largest step inside the note; without the change the step is 0.118 and the check fails. **Not listened to.** The site's sequence and kit clips were rendered before this and still have the click until they are rendered again.
+
 **The site: the clips start where the sound does** (the demo renderer and documents only)
 - **What was wrong.** The user: "too much dead air in our demos", and drones and pads that spend their first second arriving. Measured on the 1,066 clips as published (each MP3 decoded, the time to the first hundredth of a second that reaches a quarter of the clip's peak): 57 took more than 0.3 s (47 synth patches, 7 StringSwarm presets, 3 sequences) and 7 more than a second, Bunker Evolving Pad the longest at 2.64 s. And a patch played on the One Hit phrase was a hit and then six seconds of nothing.
 - **Now** `TorqwaveTests --sound-demos` cuts the dead air from every clip. A clip whose sound arrives more than a tenth of a second in is joined 30 ms before it reaches a quarter of its peak, with a fade in over those 30 ms, and its card says how far in ("Joined 0.4 s in."): 200 clips. A clip is ended a twentieth of a second after it last stands within 60 dB of its peak, where more than a fifth of a second of nothing follows.
