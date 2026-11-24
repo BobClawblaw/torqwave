@@ -61,7 +61,7 @@
    "name": "Torqwave",
    "version": "0.20.0",
    "edition": "the only edition",
-   "version_date": "2026-11-23",
+   "version_date": "2026-11-24",
    "looked_up": "2026-11-23",
    "source_note": "This repository at commit 49ad967 (branch day/0.19), before the release tag.",
    "cells": {
@@ -347,7 +347,7 @@
     },
     "current_version": {
      "value": "info",
-     "note": "0.20.0, released 2026-11-23.",
+     "note": "0.20.0, released 2026-11-24.",
      "source": "CHANGELOG.md"
     },
     "signed_installers": {

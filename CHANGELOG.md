@@ -4,6 +4,11 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The Decrypted page's hint shows whole** (0.20.0; fix log 103)
+- The hint under the list ("click a row to hear it on the keys; double-click to load it and go to the knobs") was cut off after "go to the": it was drawn in a box 400 wide. It now has the rest of its row. Seen in the tests' picture of the page, and by the user in the app.
+- The Decrypt page's first line was cut the same way, after "a recording of one". It now runs up to the panel: "finds a Torqwave Synth patch that plays like a recording of one note. Drop the note on the scope."
+- Tested: `--decrypt-window` (13 checks) passes, and both lines read whole in the pictures `--decrypt-pictures` draws. No check measures them.
+
 **Decrypt: a candidate's lock no longer depends on what was rendered before it** (0.20.0; fix log 102)
 - **What was wrong.** Torqwave Synth kept part of each voice's state through a reset: its envelopes' levels, its ramps and each oscillator's table level. A note starts from those, so a patch rendered after another one could come out a little different, and for some patches by enough to move a candidate's lock by points. Decrypt's workers each render thousands of patches one after another, so which candidates were shown, how many, and their locks could change from one run of the same search to the next. A link could then land on the chain further from the signal than the one before it.
 - **Now** a reset puts every voice wholly at rest (`Source/WaveSynth.cpp`). The same clip and seed give the same candidates at the same distances to the last bit on 2 threads and on 5; the check allowed 0.01 dB before.

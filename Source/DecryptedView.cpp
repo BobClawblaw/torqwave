@@ -538,6 +538,11 @@ void DecryptedView::paint (juce::Graphics& g)
     drawChip (g, categoryChip, "Category...", Theme::accent, false, some ? Theme::text : Theme::faintText);
     drawChip (g, renameChip, "Rename...", Theme::lineStrong, false, one ? Theme::text : Theme::faintText);
     drawChip (g, deleteChip, "Delete...", Theme::lineStrong, false, some ? Theme::text : Theme::faintText);
-    text (g, some ? juce::String (selection.size()) + " selected" : juce::String ("click a row to hear it on the keys; double-click to load it and go to the knobs"),
-          deleteChip.getRight() + 16.0f, deleteChip.getCentreY(), 10.5f, Theme::faintText);
+    // The hint has the rest of the row: the shared text helper's box is 400 wide, which cut it off.
+    const auto hint = juce::Rectangle<float> (deleteChip.getRight() + 16.0f, deleteChip.getY(),
+                                               juce::jmax (0.0f, list.getRight() - deleteChip.getRight() - 16.0f), deleteChip.getHeight());
+    g.setColour (Theme::faintText);
+    g.setFont (mono (10.5f));
+    g.drawText (some ? juce::String (selection.size()) + " selected" : juce::String ("click a row to hear it on the keys; double-click to load it and go to the knobs"),
+                hint, juce::Justification::centredLeft, true);
 }

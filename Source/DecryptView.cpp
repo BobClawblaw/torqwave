@@ -1236,7 +1236,11 @@ void DecryptView::paint (juce::Graphics& g)
 
     // What Decrypt is for, in a line.
     text (g, "DECRYPT", 24.0f, 20.0f, 12.0f, signal(), juce::Justification::centredLeft, true);
-    text (g, "finds a Torqwave Synth patch that plays like a recording of one note. Drop the note on the scope.", 92.0f, 20.0f, 12.0f, Theme::dimText);
+    // Up to the panel: the shared text helper's box is 400 wide, which cut the sentence off.
+    g.setColour (Theme::dimText);
+    g.setFont (mono (12.0f));
+    g.drawText ("finds a Torqwave Synth patch that plays like a recording of one note. Drop the note on the scope.",
+                juce::Rectangle<float> (92.0f, 11.0f, juce::jmax (0.0f, panel.getX() - 92.0f - 12.0f), 18.0f), juce::Justification::centredLeft, true);
 
     drawScope (g);
     drawPath (g);
