@@ -145,7 +145,7 @@ The window of StringSwarm with the preset Tremolo Swarm Wall: twelve strings all
 ```
 
 ```alt
-The window of Basic Drums in its Dark Techno kit: the kit selector and presets row along the top, thirty pads coloured by family (kicks, snares and claps, hats, toms, cymbals, hand percussion) on the left, and the selected kick's settings on the right, with its Type selector reading Classic.
+The window of Basic Drums in its Warehouse kit: the kit selector and presets row along the top, thirty pads coloured by family (kicks, snares and claps, hats, toms, cymbals, hand percussion) on the left, and the selected kick's settings on the right, with its Type selector reading Modern.
 ```
 
 For `docs/screenshots/guide-continue.png`:
