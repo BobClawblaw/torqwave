@@ -890,7 +890,7 @@ void saveDrumMachineWindow (const juce::File& folder)
 {
     BuiltInEffects::BasicDrumsProcessor drums;
     drums.prepareToPlay (rate, 512);
-    drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Dark Techno")]);
+    drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Warehouse")]);
     std::unique_ptr<juce::AudioProcessorEditor> window (drums.createEditorAndMakeActive());
 
     for (auto theme : { "Dark", "Light" })
