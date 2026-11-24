@@ -10,6 +10,7 @@
 #include "../Source/WaveSynthEditor.h"
 #include "../Source/Theme.h"
 #include "DecryptTests.h"
+#include "DecryptReal.h"
 
 namespace
 {
@@ -387,14 +388,18 @@ namespace
         auto same = first.best.size() == second.best.size() && ! first.best.empty();
 
         for (size_t i = 0; same && i < first.best.size(); ++i)
-            same = first.best[i].address == second.best[i].address && juce::exactlyEqual (first.best[i].distance.total, second.best[i].distance.total);
+            same = first.best[i].address == second.best[i].address && std::abs (first.best[i].distance.total - second.best[i].distance.total) < 0.01f;   // a render can differ by a few ten-thousandths of a dB with what its worker's synth played before
 
         Options c = a;
         c.seed = 2;
         Search three (target, c);
         const auto other = three.runNow();
+        juce::StringArray one8, two8;
+        for (auto& k : first.best)  one8.add (SignalConsole::addressText (k.address) + " " + juce::String (k.distance.total, 4) + " " + k.from);
+        for (auto& k : second.best) two8.add (SignalConsole::addressText (k.address) + " " + juce::String (k.distance.total, 4) + " " + k.from);
         check (same && ! other.best.empty() && other.best.front().address != first.best.front().address,
-               "decrypt: the same clip and seed give the same twelve on 2 threads and on 5, and another seed others");
+               "decrypt: the same clip and seed give the same candidates shown on 2 threads and on 5 (the same patches, their distances within 0.01 dB), and another seed others"
+               + (same ? juce::String() : " (on 2: " + one8.joinIntoString (", ") + "; on 5: " + two8.joinIntoString (", ") + ")"));
     }
 
     void testStopAndLoad()
@@ -646,7 +651,7 @@ namespace
         const auto clip = recordingOf ("Abyss Reese", 45, 0.8, 1.5);
         const auto started = view.decrypt (clip, rate, "reese");
         // The view takes the search's progress on the message thread, after the search has it: wait for the view's own.
-        TestUtils::runUntil ([&view] { return view.getSearch() != nullptr && view.candidateCentre (11) != view.candidateCentre (-1); }, 20000);
+        TestUtils::runUntil ([&view] { return view.getSearch() != nullptr && view.candidateCount() >= 5; }, 20000);
         snapshots();
         const auto searchHad = view.getSearch()->getProgress().best.size();
         const auto placed = view.candidateCentre (3) != view.candidateCentre (-1);
@@ -722,7 +727,7 @@ namespace
             auto allFromIt = true;
 
             for (auto& c : view.getSearch()->getProgress().best)
-                allFromIt = allFromIt && c.from == "the last search";
+                allFromIt = allFromIt && c.from == picked.from;   // its line keeps its name
 
 
             // The chain: a link each time the nearest sounded different enough, oldest first, never falling; Play goes through it, and a double-click goes back.
@@ -847,7 +852,7 @@ namespace
             };
 
             view.decrypt (clip, rate, "a recording with a long name 03");
-            TestUtils::runUntil ([&view] { return view.getSearch() != nullptr && view.candidateCentre (11) != view.candidateCentre (-1); }, 20000);
+            TestUtils::runUntil ([&view] { return view.getSearch() != nullptr && view.candidateCount() >= 5; }, 20000);
             look ("searching");
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             look ("ended");
@@ -911,7 +916,7 @@ namespace
         {
             view.decrypt (clip, rate, "reese");
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
-            auto apart = true, fits = true, unprinted = true, keyLabelled = true, under = false;
+            auto apart = true, fits = true, unprinted = true, keyLabelled = true, under = false, ownRoom = true;
             float hint = 0.0f, room = 0.0f;
             int labelled = 0, candidates = 0, hits = 0;
 
@@ -941,6 +946,18 @@ namespace
                     }
 
                     keyLabelled = keyLabelled && (juce::isPositiveAndBelow (h, (int) labels.size()) ? ! labels[(size_t) h].isEmpty() : labelled > 0);
+
+                    // Each candidate has room of its own for its signature and the lock under it: every one labelled, none over another.
+                    const auto rooms = view.candidateRooms();
+                    ownRoom = ownRoom && labelled == candidates && rooms.size() == labels.size();
+
+                    for (size_t i = 0; i < rooms.size(); ++i)
+                    {
+                        ownRoom = ownRoom && i < labels.size() && rooms[i].expanded (0.5f).contains (labels[i]);
+
+                        for (size_t j = i + 1; j < rooms.size(); ++j)
+                            ownRoom = ownRoom && ! rooms[i].intersects (rooms[j]);
+                    }
                 }
             }
 
@@ -965,10 +982,10 @@ namespace
 
             view.stop();
             const auto allHit = hits == (int) shownBest.size();
-            check (apart && fits && unprinted && keyLabelled && allHit,
+            check (apart && fits && unprinted && keyLabelled && allHit && ownRoom,
                    "decrypt: at 70 %, 100 % and 160 % the panel's heading and status never meet (the status " + juce::String (under ? "under" : "beside")
                        + " the heading here), the chain's hint fits (" + juce::String (hint, 0) + " of " + juce::String (room, 0) + " points), and no lock label on the scope "
-                       "prints over another, the one under the pointer always labelled (" + juce::String (labelled) + " of " + juce::String (candidates) + " labelled); "
+                       "prints over another or over another candidate's signature, every candidate labelled (" + juce::String (labelled) + " of " + juce::String (candidates) + "); "
                        "a double-click on each candidate puts that one on the keys (" + juce::String (hits) + " of " + juce::String (candidates) + ")"
                        + (missed.isEmpty() ? juce::String() : " (missed: " + missed.joinIntoString ("; ") + ")"));
         }
@@ -979,11 +996,12 @@ namespace
             const auto wasAudition = InstrumentKeys::getAudition();
             InstrumentKeys::setAudition (false);
             const auto playedBefore = view.linksPlayedAsTheyLanded();
-            view.decrypt (clip, rate, "reese");
+            const auto bell = recordingOf ("Cold Bell", 57, 0.6, 1.5);     // its first looks are far from where it ends: a chain of several links
+            view.decrypt (bell, rate, "bell");
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto silent = view.linksPlayedAsTheyLanded() == playedBefore;
             InstrumentKeys::setAudition (true);
-            view.decrypt (clip, rate, "reese");
+            view.decrypt (bell, rate, "bell");
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto length = view.getChainLength();
             const auto followed = view.linksPlayedAsTheyLanded() - playedBefore >= length && length >= 2;
@@ -996,7 +1014,7 @@ namespace
             for (int i = 0; i < length; ++i)
             {
                 apartEnough = apartEnough && (i == 0 || i == length - 1 || view.chainMoved (i) >= linkApartDb);
-                locks.add (juce::String (view.chainLock (i), 0));
+                locks.add (juce::String (juce::roundToInt (view.chainLock (i))));
             }
 
             const auto farToNear = length >= 2 && view.chainLock (0) <= view.chainLock (length - 1) - 5.0f;
@@ -1224,7 +1242,7 @@ namespace
         };
 
         const auto ended = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000); };
-        const auto candidates = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000); };
+        const auto candidates = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.candidateCount() >= 5; }, 60000); };
 
         // A fresh page given only the second sound, from a patch: what every other page must end as.
         const auto freshFrom = [&] (const Patch* held, bool tablesOnly)
@@ -1889,7 +1907,7 @@ namespace
         };
 
         const auto ended = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000); };
-        const auto candidates = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000); };
+        const auto candidates = [] (DecryptView& view) { TestUtils::runUntil ([&view] { return view.candidateCount() >= 5; }, 60000); };
 
         const std::vector<State> states {
             { "a search just started", 1, [&] (DecryptView& v, auto&) { v.decrypt (first, rate, "first"); } },
@@ -2106,7 +2124,7 @@ namespace
             const auto tryOne = [&] (const juce::String& what, bool mustTake, const std::function<void()>& give)
             {
                 view.decrypt (first, rate, "first");
-                TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000);
+                TestUtils::runUntil ([&view] { return view.candidateCount() >= 5; }, 60000);
                 give();
                 const auto& target = view.getSearch()->getTarget();
                 const auto isBell = target.note == 69 && target.audio.getNumSamples() < 60000;
@@ -2323,7 +2341,7 @@ namespace
                 };
 
                 view.decrypt (first, rate, "first");
-                TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1); }, 60000);
+                TestUtils::runUntil ([&view] { return view.candidateCount() >= 5; }, 60000);
 
                 for (auto* sound : { &second, &third })
                 {
@@ -2335,7 +2353,7 @@ namespace
                     longestDrop = juce::jmax (longestDrop, drop);
                     times.add (juce::String (sound == &second ? "the second" : "the third") + " sound taken in " + juce::String (drop, 0) + " ms");
                     note ("a link as it landed", heardAfter (before + 4800, 4000));
-                    TestUtils::runUntil ([&view] { return view.candidateCentre (11) != view.candidateCentre (-1) && view.getChainLength() > 0; }, 20000);
+                    TestUtils::runUntil ([&view] { return view.candidateCount() >= 5 && view.getChainLength() > 0; }, 20000);
                     TestUtils::runUntil ([] { return false; }, 1200);
                     auto at = listener.now();
                     click (view.candidateCentre (-1));
@@ -2389,9 +2407,15 @@ namespace
 
 void runDecryptHeardTests()
 {
+    testDecryptVariety();
     testSecondSoundHeard();
     testSecondSoundRoutes();
     testModelStuck();
+}
+
+void runDecryptRepeatableTest()
+{
+    testRepeatable();
 }
 
 void runDecryptModelTests()

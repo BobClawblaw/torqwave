@@ -117,6 +117,7 @@ namespace Decrypt
         juce::String from;                  // what it grew from: a factory patch's name, or "model: ..."
         juce::uint32 address = 0;
         SignalConsole::Signature signature; // of its render
+        std::shared_ptr<const Measures> measures;   // its sound as scored, for hearing it against another candidate's
     };
 
     /** Help from a language model, optional at every point. Each call blocks, and is made on a
@@ -197,15 +198,23 @@ namespace Decrypt
         /** A search carried on: these patches (an earlier search's best) are where it starts, in place
             of the factory patches, and its rounds take smaller steps. Empty: a search from the start. */
         std::vector<Patch> resume;
+        /** What each of those grew from (Candidate::from), in the same order, so that the lines the
+            last search kept apart stay apart; where there is none, "the last search". */
+        juce::StringArray resumeFrom;
         /** The chain's last link, when this search carries a chain on: its first link must be nearer
             the signal than this and sound different enough from it. */
         std::optional<Patch> chainFrom;
     };
 
     /** Where a search is. */
-    /** How far apart, in dB as sounds are measured, two links of the chain are at least: enough to
-        hear one against the other (changes at the edge of hearing measure under 0.9 dB). */
-    constexpr float linkApartDb = 1.5f;
+    /** How far apart, in dB as sounds are measured, two links of the chain are at least, and any
+        two candidates shown: a difference anyone hears (changes at the edge of hearing measure
+        under 0.9 dB; at 1.5 dB, as the chain first had it, neighbours were still heard as the same). */
+    constexpr float linkApartDb = 3.0f, shownApartDb = 3.0f;
+
+    /** How much nearer the signal a link is than the one before it, at least: 0.5 dB, about four
+        points of lock. Two patches as near as each other are not two steps of the way. */
+    constexpr float linkNearerDb = 0.5f;
 
     /** A link of the chain: the nearest patch at a moment of the search when it sounded different
         enough from the link before. */
@@ -217,13 +226,20 @@ namespace Decrypt
 
     struct Progress
     {
-        std::vector<Candidate> best;        // the best twelve, best first
+        /** What is shown, best first: the nearest patch, then up to seven others, each at least
+            shownApartDb in sound from the nearest and from every other shown, the nearest to the
+            signal of those that are. The search keeps its twelve nearest to work from, which soon are
+            all one patch's close variations; beside them it keeps the nearest of every line (the
+            variations grown from one factory patch, or from one of the model's proposals) and grows
+            the nearest few lines that sound different, so that the others shown are other answers
+            and not copies. One of them is further from the signal than the nearest, and its lock says so. */
+        std::vector<Candidate> best;
         /** The chain, oldest first: the nearest of a first look at a few factory patches, then of a
-            closer look, of them all, and of the rounds, each kept as a link only when it is nearer
-            the signal than the last link and at least linkApartDb from it in sound. The search's end
+            closer look, of them all, and of the rounds, each kept as a link only when it is at least
+            linkNearerDb nearer the signal than the last link and at least linkApartDb from it in sound. The search's end
             is always the last link: when it is too like the link before to be one of its own it
-            takes that link's place (so only the last link may be nearer than linkApartDb to the one
-            before it). In a search carried on (Options::chainFrom), the first link is heard against
+            takes that link's place, and the place of any before it that it is as like (so no two
+            neighbours are nearer than linkApartDb). In a search carried on (Options::chainFrom), the first link is heard against
             the link it went on from, and its movedDb says how far it is from that. */
         std::vector<Link> chain;
         int rendered = 0, round = 0, rounds = 0;
@@ -231,7 +247,7 @@ namespace Decrypt
         bool finished = false, stopped = false;
         juce::String stage;                 // "Factory patches", "Round 3 of 12", "Done"
         bool noCloser = false;              // it ended because no round came closer (untilSettled), not at a set last round
-        /** How far each part has settled, 0 to 1: how closely the best twelve agree on its settings
+        /** How far each part has settled, 0 to 1: how closely the twelve nearest (the search's own, not those shown) agree on its settings
             (1 when they all have the same). The effects are off while matching: always 0. */
         std::array<float, SignalConsole::numParts> settled {};
         /** What the advisor proposed and what came of it, oldest first. Empty without one. */
@@ -239,7 +255,7 @@ namespace Decrypt
     };
 
     /** A search, on threads of its own. Started on the message thread; onChange is called there as
-        the best twelve change and when it ends. Stopping (or destroying it) ends it within a
+        what is shown changes and when it ends. Stopping (or destroying it) ends it within a
         render or two and leaves every synth as it was: a search changes no synth but its own. */
     class Search
     {
@@ -263,7 +279,7 @@ namespace Decrypt
         class Runner;
         class Helper;
         void run (const std::function<bool()>& shouldStop);
-        std::vector<Candidate> score (std::vector<Candidate> jobs, const Target&, const std::function<bool()>& shouldStop);
+        std::vector<Candidate> score (std::vector<Candidate> jobs, const Target&, const std::function<bool()>& shouldStop, bool keepMeasures = true);
         void publish (std::vector<Candidate> merged, int round, const juce::String& stage, bool finished, bool stopped, Synth&, bool noCloser = false);
         void growChain (const Candidate& best, bool last, Synth&);
         Advisor::Brief briefFor (const std::vector<Candidate>& best, int round, Synth&) const;
@@ -275,6 +291,9 @@ namespace Decrypt
         Progress progress;
         juce::StringArray modelLog;         // the search thread's; copied into progress
         std::vector<Link> chain;            // the search thread's; copied into progress
+        std::map<juce::String, Candidate> lines;   // the search thread's: the nearest of each line, by what it grew from
+        void noteLines (const std::vector<Candidate>& scored, const Candidate* nearest);
+        std::vector<Candidate> shownOf (const std::vector<Candidate>& working) const;
         std::vector<Measures> linkMeasures; // each link's sound, for the next to be heard against
         std::optional<std::pair<Measures, float>> chainFrom;   // Options::chainFrom's sound and its distance from the signal
         std::atomic<int> rendered { 0 };

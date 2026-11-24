@@ -8,3 +8,17 @@
     stage's best, the search until settled with its lock after each round, the rounds and time, and
     where the best still differs. For finding out why a search settles where it does. */
 int runDecryptReal (const juce::StringArray& files);
+
+/** How different from each other the patches Decrypt shows are: on each file given (printed by
+    number, never by name), four sounds with no pitch, the two sets of ten factory patches (their
+    own names left out), some system sounds and a wet patch. For each: the lock, the time, how many
+    candidates are shown and from how many factory patches, how far apart they are from each other
+    by Decrypt's own measure (least, median, most, and how many have another within 1.5 dB), and
+    the chain's links with how far each is from the one before. "quick" takes three of each set. */
+int runDecryptVariety (const juce::StringArray& filesAndFlags);
+
+/** A check, part of --decrypt-heard: on sounds with a pitch and without, the candidates Decrypt
+    shows are far enough from each other to hear (Decrypt::shownApartDb, rendered and measured
+    again) and come from several factory patches, and its chain's neighbouring links are
+    Decrypt::linkApartDb or more apart, each clearly nearer the signal. */
+void testDecryptVariety();

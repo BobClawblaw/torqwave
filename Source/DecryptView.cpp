@@ -285,24 +285,30 @@ bool DecryptView::again()
     if (! canGoAgain())
         return false;
 
-    // From the one chosen, if one was: taken, or on the keys. Otherwise from all twelve.
+    // From the one chosen, if one was: taken, or on the keys. Otherwise from all those shown.
     std::vector<SignalConsole::Patch> from;
+    juce::StringArray grewFrom;     // what each grew from: the lines the last pass kept apart stay apart
     std::optional<Link> picked;
 
     if (chosen.has_value())
     {
         from.push_back (chosen->patch);
+        grewFrom.add (chosen->from);
         picked = chosen;
     }
     else if (juce::isPositiveAndBelow (onKeys, (int) progress.best.size()))
     {
         from.push_back (progress.best[(size_t) onKeys].patch);
+        grewFrom.add (progress.best[(size_t) onKeys].from);
         picked = linkOf (progress.best[(size_t) onKeys]);
     }
     else
     {
         for (auto& c : progress.best)
+        {
             from.push_back (c.patch);
+            grewFrom.add (c.from);
+        }
     }
 
     // A candidate picked to go on from becomes a link, to hear beside what comes next (the best is the last link already).
@@ -316,11 +322,11 @@ bool DecryptView::again()
 
     // Stop then gives back the patch from before the first pass, or the one taken (begin).
     auto target = search->getTarget();
-    begin (std::move (target), std::move (from));
+    begin (std::move (target), std::move (from), std::move (grewFrom));
     return true;
 }
 
-void DecryptView::begin (Decrypt::Target target, std::vector<SignalConsole::Patch> resume)
+void DecryptView::begin (Decrypt::Target target, std::vector<SignalConsole::Patch> resume, juce::StringArray resumeFrom)
 {
     problem = {};
     ended = {};
@@ -359,6 +365,7 @@ void DecryptView::begin (Decrypt::Target target, std::vector<SignalConsole::Patc
     options.advisor = makeAdvisor();
     options.seed = (SignalConsole::addressOf (before) + (juce::uint32) (passes - 1) * 0x9e3779b9u) | 1u;   // other variations each pass
     options.resume = std::move (resume);
+    options.resumeFrom = std::move (resumeFrom);
 
     if (! chain.empty())
         options.chainFrom = chain.back().patch;   // this pass's links follow it: nearer, and different enough to hear
@@ -890,7 +897,34 @@ void DecryptView::layout()
         const auto count = inSector[(size_t) s], n = placed[(size_t) s]++;
         const auto angle = sectorMiddle (s) + (((float) n + 0.5f) / (float) count - 0.5f) * 0.8f * tau / (float) SignalConsole::numParts;
         const auto r = juce::jmax (radius * shownRadius[i], 52.0f * k + 20.0f * k);
-        places[i] = centre + juce::Point<float> (std::cos (angle), std::sin (angle)) * r;
+
+        // Each has room of its own for its signature and the lock under it: one that would lie over another already
+        // placed (or over the signal in the middle) steps round its ring, a little further each way, and only if the
+        // ring is full there, out to the next.
+        const auto at = [&] (float a, float out) { return centre + juce::Point<float> (std::cos (a), std::sin (a)) * (r + out); };
+        const auto free = [&] (juce::Point<float> p)
+        {
+            const auto room = roomOf (p);
+            return room.getCentre().getDistanceFrom (centre) <= radius * 1.08f
+                   && ! room.intersects (juce::Rectangle<float> (92.0f * k, 92.0f * k).withCentre (centre))
+                   && std::none_of (places.begin(), places.begin() + (std::ptrdiff_t) i, [&] (juce::Point<float> other) { return roomOf (other).intersects (room); });
+        };
+
+        places[i] = at (angle, 0.0f);
+        auto found = free (places[i]);
+
+        for (int ring = 0; ring < 4 && ! found; ++ring)
+            for (int step = 1; step <= 40 && ! found; ++step)
+            {
+                const auto out = (float) ring * 26.0f * k;
+                const auto p = at (angle + (step % 2 == 1 ? 1.0f : -1.0f) * (float) ((step + 1) / 2) * 8.0f * k / (r + out), out);
+
+                if (free (p))
+                {
+                    places[i] = p;
+                    found = true;
+                }
+            }
     }
 
     // The chain's strip: Play, the signal, then every link, each as wide as the room allows. Past
@@ -921,8 +955,8 @@ void DecryptView::layout()
             auto r = juce::jmax (radius * reachOf (chain[(size_t) i].lock), 72.0f * k);
             const auto at = [&] { return centre + juce::Point<float> (std::cos (angle), std::sin (angle)) * r; };
 
-            // Never on a candidate (both sit on the inner ring from 85 % up): a node there steps outward, to have a middle of its own to click.
-            for (int tries = 0; tries < 6 && std::any_of (places.begin(), places.end(), [&] (juce::Point<float> place) { return place.getDistanceFrom (at()) < 10.0f * k; }); ++tries)
+            // Never on a candidate or its lock (both sit on the inner ring from 85 % up): a node there steps outward, to a place of its own.
+            for (int tries = 0; tries < 10 && std::any_of (places.begin(), places.end(), [&] (juce::Point<float> place) { return roomOf (place).expanded (10.0f * k).contains (at()); }); ++tries)
                 r += 12.0f * k;
 
             chain[(size_t) i].node = at();
@@ -943,6 +977,24 @@ void DecryptView::layout()
     stopChip = { panel.getX() + 16.0f, panel.getBottom() - 44.0f, 84.0f, 26.0f };
     takeChip = { stopChip.getRight() + 8.0f, stopChip.getY(), 108.0f, 26.0f };
     againChip = { takeChip.getRight() + 8.0f, stopChip.getY(), 72.0f, 26.0f };
+}
+
+juce::Rectangle<float> DecryptView::roomOf (juce::Point<float> place) const
+{
+    // A candidate's signature (its spokes reach a little past its ring) and the lock printed under it.
+    const auto nodeRadius = 15.0f * radius / 236.0f;
+    const auto half = juce::jmax (nodeRadius + 4.0f, 18.0f);
+    return { place.x - half, place.y - nodeRadius - 4.0f, half * 2.0f, nodeRadius * 2.0f + 4.0f + 20.0f };
+}
+
+std::vector<juce::Rectangle<float>> DecryptView::candidateRooms() const
+{
+    std::vector<juce::Rectangle<float>> rooms;
+
+    for (auto p : places)
+        rooms.push_back (roomOf (p));
+
+    return rooms;
 }
 
 juce::Point<float> DecryptView::candidateCentre (int index) const
@@ -1160,7 +1212,7 @@ juce::String DecryptView::getTooltip()
     if (playChip.contains (p) && ! chain.empty())
         return "Play the chain: the signal, then each step in turn, to hear the patch closing in. Click again to stop";
 
-    if (againChip.contains (p))    return "Again: search on from the candidate you chose (taken, or double-clicked onto the keys), or from all twelve if none, in smaller steps. Press it as often as it keeps getting closer";
+    if (againChip.contains (p))    return "Again: search on from the candidate you chose (taken, or double-clicked onto the keys), or from all those shown if none, in smaller steps. Press it as often as it keeps getting closer";
     if (stopChip.contains (p))     return "Stop: end the search and give the synth back the patch it had";
     if (takeChip.contains (p))     return "Take: keep the candidate shown as the synth's patch";
 
@@ -1255,7 +1307,7 @@ void DecryptView::drawScope (juce::Graphics& g)
         return;
     }
 
-    // The twelve: a dashed line toward the middle, the signature, the lock under it.
+    // The candidates shown: a dashed line toward the middle, the signature, the lock under it.
     const auto nodeRadius = 15.0f * k;
     const auto* show = shown();
     const auto labels = lockLabels();
