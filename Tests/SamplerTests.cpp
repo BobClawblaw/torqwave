@@ -2032,6 +2032,80 @@ void saveSamplerWindow (const juce::File& folder)
     sounds.deleteRecursively();
 }
 
+int trySamplerFolder (const juce::File& folder)
+{
+    juce::Array<juce::File> files;
+    folder.findChildFiles (files, juce::File::findFiles, true, "*.wav;*.wave;*.bwf;*.aif;*.aiff;*.aifc;*.flac;*.ogg;*.opus;*.mp3;*.m4a;*.caf");
+    files.sort();
+
+    if (files.isEmpty())
+    {
+        std::cout << "No sounds in " << folder.getFullPathName() << std::endl;
+        return 1;
+    }
+
+    Processor sampler;
+    int failed = 0;
+
+    // The level of a note at a zone's root, held for the sound's length (two seconds at most).
+    const auto levelOf = [&sampler] (const Sampler::Zone& z)
+    {
+        const auto seconds = juce::jlimit (0.1, 2.0, z.sample != nullptr ? (double) z.sample->getNumFrames() / z.sample->rate : 0.1);
+        const auto out = play (sampler, { on (0.0, z.root) }, seconds);
+        return juce::Decibels::gainToDecibels (out.getMagnitude (0, out.getNumSamples()), -120.0f);
+    };
+
+    for (auto& f : files)
+    {
+        juce::String error;
+        const auto sample = Sampler::sharedSample (f, error);
+
+        if (sample == nullptr)
+        {
+            std::cout << "REFUSED  " << f.getFileName() << ": " << error << std::endl;
+            continue;
+        }
+
+        // As the first sound of an empty sampler, then in place of another sound, as a drop on the waveform does.
+        plain (sampler);
+        sampler.setSlicing ({});
+        sampler.setZones ({});
+        const auto first = sampler.addSample (sample, f);
+        const auto asFirst = first.isEmpty() && sampler.getZones().size() == 1 ? levelOf (sampler.getZones()[0]) : -120.0f;
+
+        oneZone (sampler, sine (220.0, 1.0), 57);
+        const auto second = sampler.addSample (sample, f, sampler.getZones()[0].id);
+        const auto zones = sampler.getZones();
+        const auto asSecond = second.isEmpty() && zones.size() == 1 && zones[0].sample == sample ? levelOf (zones[0]) : -120.0f;
+
+        // Sliced at its hits: each slice's key sounds.
+        Sampler::Slicing how;
+        how.on = true;
+        how.source = Sampler::SliceSource::hits;
+        const auto sliced = sampler.slice (sample, f, {}, how);
+        const auto slices = sliced ? (int) sampler.getZones().size() : 0;
+        int silent = 0;
+
+        for (auto& z : sampler.getZones())
+            silent += levelOf (z) < -60.0f ? 1 : 0;
+
+        const auto peak = juce::Decibels::gainToDecibels (sample->audio.getMagnitude (0, sample->audio.getNumSamples()), -120.0f);
+        const auto ok = first.isEmpty() && second.isEmpty() && asFirst > peak - 12.0f && asSecond > peak - 12.0f && std::abs (asFirst - asSecond) < 0.1f;
+        failed += ok ? 0 : 1;
+        const auto& z = zones[0];
+
+        std::cout << (ok ? "PASS  " : "FAIL  ") << f.getFileName() << ": " << juce::String ((double) sample->getNumFrames() / sample->rate, 2) << " s, "
+                  << sample->audio.getNumChannels() << " ch at " << sample->rate << " Hz, peak " << juce::String (peak, 1) << " dB; root " << Instrument::pitchName (z.root)
+                  << (sample->fileRoot >= 0 ? " (the file's)" : " (found)") << ", tune " << juce::String (z.tune, 1) << " ct, loop " << z.loop
+                  << "; at its root " << juce::String (asFirst, 1) << " dB as the first sound, " << juce::String (asSecond, 1) << " dB in place of another; "
+                  << slices << " slices at its hits" << (silent > 0 ? ", " + juce::String (silent) + " of them silent" : juce::String())
+                  << (first.isNotEmpty() ? "; " + first : juce::String()) << (second.isNotEmpty() ? "; " + second : juce::String()) << std::endl;
+    }
+
+    std::cout << (failed == 0 ? "ALL PASSED" : juce::String (failed) + " FAILED") << std::endl;
+    return failed == 0 ? 0 : 1;
+}
+
 void runSamplerTests (AudioEngine& engine)
 {
     juce::PluginDescription description;

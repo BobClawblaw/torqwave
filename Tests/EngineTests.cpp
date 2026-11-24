@@ -852,6 +852,9 @@ int main (int argc, char* argv[])
         return 0;
     }
 
+    if (const auto folder = valueOf ("--sampler-folder"); folder.isNotEmpty())
+        return trySamplerFolder (juce::File (folder));
+
     if (const auto folder = valueOf ("--sampler-content"); folder.isNotEmpty())
     {
         writeSamplerContent (juce::File (folder));
