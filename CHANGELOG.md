@@ -4,6 +4,17 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The site: the clips start where the sound does** (the demo renderer and documents only)
+- **What was wrong.** The user: "too much dead air in our demos", and drones and pads that spend their first second arriving. Measured on the 1,066 clips as published (each MP3 decoded, the time to the first hundredth of a second that reaches a quarter of the clip's peak): 57 took more than 0.3 s (47 synth patches, 7 StringSwarm presets, 3 sequences) and 7 more than a second, Bunker Evolving Pad the longest at 2.64 s. And a patch played on the One Hit phrase was a hit and then six seconds of nothing.
+- **Now** `TorqwaveTests --sound-demos` cuts the dead air from every clip. A clip whose sound arrives more than a tenth of a second in is joined 30 ms before it reaches a quarter of its peak, with a fade in over those 30 ms, and its card says how far in ("Joined 0.4 s in."): 200 clips. A clip is ended a twentieth of a second after it last stands within 60 dB of its peak, where more than a fifth of a second of nothing follows.
+- **A slow sound is rendered longer,** so it is not short once joined: an audition phrase goes round once more where the sound takes over 0.3 s to arrive, and a sequence or kit goes round until it has five seconds from where it arrives.
+- **Measured after:** 2 clips take more than 0.3 s, where there were 57. Both are sequences that build from the start, Hex Riser and Smoke Bloom: they sound from their first moment at about a sixth of their peak and pass a quarter 1.5 to 1.7 s in. Over 0.1 s: 21 where there were 201. All the clips together run 6,578 s where they ran 7,306 s.
+- **No clip is silent:** every one decodes with sound. The quietest are single hats (Strobe Hat at 0.8% of full scale, Swarm Hat at 1%).
+- The pages say that slow sounds are joined partway in and that silence after a sound is left off. The Quality page's clips are not trimmed: they are measurements.
+- The same 1,066 clips under the same names, 101.9 MB; 626 of the files changed.
+- A clip file a page stops using will now be left in place for one push and removed in the next, so a cached page does not point at nothing: the user met dead players on a cached sequences page after the last two pushes. No file was dropped in this one.
+- Tested: the renderer ran without a failure, the pages were built and their links checked. **Not listened to:** none of the clips, and the pages were not looked at again. The test suite was not run for this.
+
 **The site: the sequence clips are chosen by how much they do** (the demo renderer and documents only)
 - **What was wrong.** The user found three sequence clips on the Sounds pages dull and the same: Fog Roller (Hypnotic), Afterglow Sub (Melodic) and Pinpoint Sub Pulse (Minimal), each a sub holding or pulsing one note a bar or two. The rule took the sequence with the most energy in each role of a style, which says nothing about what a part does.
 - **Now** `TorqwaveTests --sound-demos` measures each candidate: its notes to a bar, its different pitches (a drum part's different sounds), the different gaps between its notes and its different note lengths. A part with two notes a bar or fewer, or with one pitch only, is passed over while anything else is there, and a Bass > Sub part on one pitch comes last of all, so none is shown; then a voice the style's other clips do not play comes first, then the highest count.

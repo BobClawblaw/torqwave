@@ -1,647 +1,5 @@
 [
   {
-    "group": "swarm",
-    "category": "Walls",
-    "name": "Tremolo Swarm Wall",
-    "file": "swarm/tremolo-swarm-wall.mp3",
-    "featured": true,
-    "about": "12 strings, Three Octaves tuning, 4 guitars; Fuzz amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -7.9,
-    "faded": false,
-    "bytes": 148200
-  },
-  {
-    "group": "swarm",
-    "category": "Walls",
-    "name": "Every String One Note",
-    "file": "swarm/every-string-one-note.mp3",
-    "featured": true,
-    "about": "12 strings, Unison tuning, 4 guitars; Fuzz amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -8.6,
-    "faded": false,
-    "bytes": 149256
-  },
-  {
-    "group": "swarm",
-    "category": "Walls",
-    "name": "Low Octave Roar",
-    "file": "swarm/low-octave-roar.mp3",
-    "featured": true,
-    "about": "8 strings, Low Octave tuning, 3 guitars; Fuzz amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -10.300000000000001,
-    "faded": false,
-    "bytes": 164184
-  },
-  {
-    "group": "swarm",
-    "category": "Riffs",
-    "name": "Palm Muted Chug",
-    "file": "swarm/palm-muted-chug.mp3",
-    "featured": true,
-    "about": "4 strings, Three Octaves tuning, 2 guitars; Fuzz amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -8.5,
-    "faded": false,
-    "bytes": 178896
-  },
-  {
-    "group": "swarm",
-    "category": "Riffs",
-    "name": "Crunch Riff",
-    "file": "swarm/crunch-riff.mp3",
-    "featured": true,
-    "about": "6 strings, Low Octave tuning, 2 guitars; Crunch amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -8.6,
-    "faded": false,
-    "bytes": 132240
-  },
-  {
-    "group": "swarm",
-    "category": "Riffs",
-    "name": "Fifths Riff",
-    "file": "swarm/fifths-riff.mp3",
-    "featured": true,
-    "about": "6 strings, Fifths tuning, 2 guitars; Fuzz amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -9.1,
-    "faded": false,
-    "bytes": 180504
-  },
-  {
-    "group": "swarm",
-    "category": "Strums",
-    "name": "Tremolo Strum",
-    "file": "swarm/tremolo-strum.mp3",
-    "featured": true,
-    "about": "6 strings, Three Octaves tuning, 2 guitars; Fuzz amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -9.800000000000001,
-    "faded": false,
-    "bytes": 188664
-  },
-  {
-    "group": "swarm",
-    "category": "Clean",
-    "name": "Clean Shimmer",
-    "file": "swarm/clean-shimmer.mp3",
-    "featured": true,
-    "about": "6 strings, Three Octaves tuning, 2 guitars; no amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -11.1,
-    "faded": false,
-    "bytes": 148416
-  },
-  {
-    "group": "swarm",
-    "category": "Drones",
-    "name": "Long Low Drone",
-    "file": "swarm/long-low-drone.mp3",
-    "featured": true,
-    "about": "12 strings, Three Octaves tuning, 2 guitars; Fuzz amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -9.0,
-    "faded": false,
-    "bytes": 186600
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Sequences",
-    "name": "Eight Voice Swarm Pulse",
-    "file": "swarm/eight-voice-swarm-pulse.mp3",
-    "featured": true,
-    "about": "8 oscillators, Unison tuning; no amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -3.3,
-    "faded": false,
-    "bytes": 157392
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Sequences",
-    "name": "Racing Swarm Sixteenths",
-    "file": "swarm/racing-swarm-sixteenths.mp3",
-    "featured": true,
-    "about": "8 oscillators, Unison tuning; Crunch amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -4.5,
-    "faded": false,
-    "bytes": 133224
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Sequences",
-    "name": "Swarm Pulse Engine",
-    "file": "swarm/swarm-pulse-engine.mp3",
-    "featured": true,
-    "about": "8 oscillators, Low Octave tuning; no amp; strummed in 1/16 with the tempo.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -10.199999999999999,
-    "faded": false,
-    "bytes": 133392
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Sequences",
-    "name": "Fuzzed Swarm Motor",
-    "file": "swarm/fuzzed-swarm-motor.mp3",
-    "featured": true,
-    "about": "8 oscillators, Unison tuning; Fuzz amp; strummed in 1/16T with the tempo.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -9.300000000000001,
-    "faded": false,
-    "bytes": 237024
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Pads",
-    "name": "Converging Swarm",
-    "file": "swarm/converging-swarm.mp3",
-    "featured": true,
-    "about": "8 oscillators, Unison tuning; no amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -12.699999999999999,
-    "faded": false,
-    "bytes": 147024
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Pads",
-    "name": "Opening Swarm",
-    "file": "swarm/opening-swarm.mp3",
-    "featured": true,
-    "about": "8 oscillators, Unison tuning; no amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -12.0,
-    "faded": false,
-    "bytes": 142896
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Pads",
-    "name": "Bruised Swarm",
-    "file": "swarm/bruised-swarm.mp3",
-    "featured": true,
-    "about": "8 oscillators, Low Octave tuning; no amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -5.1,
-    "faded": true,
-    "bytes": 151152
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Leads",
-    "name": "Gliding Swarm",
-    "file": "swarm/gliding-swarm.mp3",
-    "featured": true,
-    "about": "8 oscillators, Unison tuning; no amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -9.199999999999999,
-    "faded": false,
-    "bytes": 170952
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Leads",
-    "name": "Smeared Swarm Lead",
-    "file": "swarm/smeared-swarm-lead.mp3",
-    "featured": true,
-    "about": "8 oscillators, Unison tuning; Crunch amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -11.1,
-    "faded": false,
-    "bytes": 149256
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Basses",
-    "name": "Swarm Bass",
-    "file": "swarm/swarm-bass.mp3",
-    "featured": true,
-    "about": "6 oscillators, Low Octave tuning; no amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -9.300000000000001,
-    "faded": false,
-    "bytes": 100968
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Risers",
-    "name": "Swarm Opening Out",
-    "file": "swarm/swarm-opening-out.mp3",
-    "featured": true,
-    "about": "12 oscillators, Three Octaves tuning; no amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -6.6,
-    "faded": false,
-    "bytes": 150960
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Fuzz",
-    "name": "Swarm Through Fuzz",
-    "file": "swarm/swarm-through-fuzz.mp3",
-    "featured": true,
-    "about": "8 oscillators, Unison tuning; Fuzz amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -12.4,
-    "faded": false,
-    "bytes": 181032
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Fuzz",
-    "name": "Wailing Swarm",
-    "file": "swarm/wailing-swarm.mp3",
-    "featured": true,
-    "about": "8 oscillators, Low Octave tuning; Fuzz amp.",
-    "phrase": "four bars at 120 BPM",
-    "seconds": 10.0,
-    "peakDb": -10.6,
-    "faded": false,
-    "bytes": 185616
-  },
-  {
-    "group": "swarm",
-    "category": "Walls",
-    "name": "Charred Tide",
-    "file": "swarm/charred-tide.mp3",
-    "about": "7 strings, Fifths tuning, 3 guitars; Fuzz amp.",
-    "phrase": "Low E Held",
-    "place": 17,
-    "of": 31,
-    "seconds": 6.3,
-    "peakDb": -9.9,
-    "faded": false,
-    "bytes": 70752
-  },
-  {
-    "group": "swarm",
-    "category": "Riffs",
-    "name": "Hammered Gallop",
-    "file": "swarm/hammered-gallop.mp3",
-    "about": "4 strings, Unison tuning, 3 guitars; Fuzz amp.",
-    "phrase": "Low E Held",
-    "place": 16,
-    "of": 29,
-    "seconds": 6.3,
-    "peakDb": -10.1,
-    "faded": false,
-    "bytes": 64344
-  },
-  {
-    "group": "swarm",
-    "category": "Strums",
-    "name": "Slow Strum",
-    "file": "swarm/slow-strum.mp3",
-    "about": "6 strings, Three Octaves tuning, 2 guitars; Fuzz amp.",
-    "phrase": "Low E Held",
-    "place": 2,
-    "of": 25,
-    "seconds": 6.3,
-    "peakDb": -10.6,
-    "faded": false,
-    "bytes": 88944
-  },
-  {
-    "group": "swarm",
-    "category": "Strums",
-    "name": "Restless Shimmer",
-    "file": "swarm/restless-shimmer.mp3",
-    "about": "9 strings, Low Octave tuning, 2 guitars; no amp; strummed in 1/16T with the tempo.",
-    "phrase": "Power Chord",
-    "place": 14,
-    "of": 25,
-    "seconds": 6.3,
-    "peakDb": -8.6,
-    "faded": false,
-    "bytes": 83040
-  },
-  {
-    "group": "swarm",
-    "category": "Clean",
-    "name": "Twelve String Clean",
-    "file": "swarm/twelve-string-clean.mp3",
-    "about": "12 strings, Three Octaves tuning, 2 guitars; no amp.",
-    "phrase": "Low E Held",
-    "place": 2,
-    "of": 20,
-    "seconds": 6.3,
-    "peakDb": -11.0,
-    "faded": false,
-    "bytes": 65112
-  },
-  {
-    "group": "swarm",
-    "category": "Clean",
-    "name": "Hollow Glimmer",
-    "file": "swarm/hollow-glimmer.mp3",
-    "about": "4 strings, Three Octaves tuning, 2 guitars; no amp; strummed in 1/8T with the tempo.",
-    "phrase": "Power Chord",
-    "place": 11,
-    "of": 20,
-    "seconds": 6.3,
-    "peakDb": -9.199999999999999,
-    "faded": false,
-    "bytes": 98112
-  },
-  {
-    "group": "swarm",
-    "category": "Drones",
-    "name": "Feedback Hum",
-    "file": "swarm/feedback-hum.mp3",
-    "about": "10 strings, Unison tuning, 2 guitars; Fuzz amp.",
-    "phrase": "Low E Held",
-    "place": 2,
-    "of": 20,
-    "seconds": 6.3,
-    "peakDb": -10.6,
-    "faded": true,
-    "bytes": 123984
-  },
-  {
-    "group": "swarm",
-    "category": "Drones",
-    "name": "Underground Pillar",
-    "file": "swarm/underground-pillar.mp3",
-    "about": "10 strings, Three Octaves tuning, 3 guitars; no amp.",
-    "phrase": "Power Chord",
-    "place": 11,
-    "of": 20,
-    "seconds": 6.3,
-    "peakDb": -7.8,
-    "faded": false,
-    "bytes": 53808
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Sequences",
-    "name": "Pulsing Circuit",
-    "file": "swarm/pulsing-circuit.mp3",
-    "about": "12 oscillators, Fifths tuning; no amp.",
-    "phrase": "Low E Held",
-    "place": 26,
-    "of": 50,
-    "seconds": 6.3,
-    "peakDb": -13.4,
-    "faded": false,
-    "bytes": 28296
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Pads",
-    "name": "Murmuring Horizon",
-    "file": "swarm/murmuring-horizon.mp3",
-    "about": "8 oscillators, Low Octave tuning; no amp.",
-    "phrase": "Low E Held",
-    "place": 18,
-    "of": 33,
-    "seconds": 6.3,
-    "peakDb": -15.0,
-    "faded": false,
-    "bytes": 58632
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Leads",
-    "name": "Soaring Lead",
-    "file": "swarm/soaring-lead.mp3",
-    "about": "8 oscillators, Three Octaves tuning; Fuzz amp.",
-    "phrase": "Low E Held",
-    "place": 15,
-    "of": 27,
-    "seconds": 6.3,
-    "peakDb": -10.0,
-    "faded": false,
-    "bytes": 123648
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Basses",
-    "name": "Driven Swarm Bass",
-    "file": "swarm/driven-swarm-bass.mp3",
-    "about": "6 oscillators, Low Octave tuning; Crunch amp.",
-    "phrase": "Low E Held",
-    "place": 2,
-    "of": 22,
-    "seconds": 6.3,
-    "peakDb": -12.300000000000001,
-    "faded": false,
-    "bytes": 48216
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Basses",
-    "name": "Dark Throb",
-    "file": "swarm/dark-throb.mp3",
-    "about": "6 oscillators, Three Octaves tuning; no amp.",
-    "phrase": "Power Chord",
-    "place": 12,
-    "of": 22,
-    "seconds": 6.3,
-    "peakDb": -7.8,
-    "faded": false,
-    "bytes": 35928
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Risers",
-    "name": "Swarm Closing In",
-    "file": "swarm/swarm-closing-in.mp3",
-    "about": "12 oscillators, Unison tuning; no amp.",
-    "phrase": "Low E Held",
-    "place": 2,
-    "of": 17,
-    "seconds": 6.3,
-    "peakDb": -14.9,
-    "faded": false,
-    "bytes": 73104
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Risers",
-    "name": "Opening Bloom",
-    "file": "swarm/opening-bloom.mp3",
-    "about": "12 oscillators, Three Octaves tuning; no amp.",
-    "phrase": "Power Chord",
-    "place": 10,
-    "of": 17,
-    "seconds": 6.3,
-    "peakDb": -3.2,
-    "faded": false,
-    "bytes": 85104
-  },
-  {
-    "group": "swarm",
-    "category": "Swarm Fuzz",
-    "name": "Smouldering Drone",
-    "file": "swarm/smouldering-drone.mp3",
-    "about": "12 oscillators, Low Octave tuning; Fuzz amp.",
-    "phrase": "Low E Held",
-    "place": 12,
-    "of": 22,
-    "seconds": 6.3,
-    "peakDb": -10.6,
-    "faded": false,
-    "bytes": 124488
-  },
-  {
-    "group": "sampler",
-    "category": "Keys",
-    "name": "Hammer Tine",
-    "file": "sampler/hammer-tine.mp3",
-    "about": "4 samples across the keys.",
-    "phrase": "Rising Figure",
-    "seconds": 4.4,
-    "peakDb": -15.5,
-    "faded": false,
-    "bytes": 30768
-  },
-  {
-    "group": "sampler",
-    "category": "Pad",
-    "name": "Concrete Pad",
-    "file": "sampler/concrete-pad.mp3",
-    "about": "4 samples across the keys.",
-    "phrase": "Held Chord",
-    "seconds": 6.3,
-    "peakDb": -10.199999999999999,
-    "faded": false,
-    "bytes": 73464
-  },
-  {
-    "group": "sampler",
-    "category": "Strings",
-    "name": "Iron Cello",
-    "file": "sampler/iron-cello.mp3",
-    "about": "3 samples across the keys.",
-    "phrase": "Held Chord",
-    "seconds": 6.3,
-    "peakDb": -11.4,
-    "faded": false,
-    "bytes": 51456
-  },
-  {
-    "group": "sampler",
-    "category": "Bell",
-    "name": "Cold Bell",
-    "file": "sampler/cold-bell.mp3",
-    "about": "3 samples across the keys.",
-    "phrase": "Rising Figure",
-    "seconds": 4.4,
-    "peakDb": -13.1,
-    "faded": false,
-    "bytes": 39528
-  },
-  {
-    "group": "sampler",
-    "category": "Bass",
-    "name": "Warehouse Sub",
-    "file": "sampler/warehouse-sub.mp3",
-    "about": "3 samples across the keys.",
-    "phrase": "Held Chord",
-    "seconds": 6.3,
-    "peakDb": -5.4,
-    "faded": false,
-    "bytes": 36312
-  },
-  {
-    "group": "sampler",
-    "category": "Pluck",
-    "name": "Dark Kalimba",
-    "file": "sampler/dark-kalimba.mp3",
-    "about": "3 samples across the keys.",
-    "phrase": "Rising Figure",
-    "seconds": 4.4,
-    "peakDb": -13.800000000000001,
-    "faded": false,
-    "bytes": 30528
-  },
-  {
-    "group": "sampler",
-    "category": "Guitar",
-    "name": "One Note Guitar",
-    "file": "sampler/one-note-guitar.mp3",
-    "about": "2 samples across the keys.",
-    "phrase": "Rising Figure",
-    "seconds": 4.4,
-    "peakDb": -15.199999999999999,
-    "faded": false,
-    "bytes": 38136
-  },
-  {
-    "group": "sampler",
-    "category": "Sliced Kits",
-    "name": "Dark Techno Break",
-    "file": "sampler/dark-techno-break.mp3",
-    "about": "A loop cut into 29 slices, each on a key of its own.",
-    "phrase": "Kick Hat Snare",
-    "seconds": 4.4,
-    "peakDb": -6.4,
-    "faded": false,
-    "bytes": 51192
-  },
-  {
-    "group": "sampler",
-    "category": "Sliced Kits",
-    "name": "Industrial Break",
-    "file": "sampler/industrial-break.mp3",
-    "about": "A loop cut into 31 slices, each on a key of its own.",
-    "phrase": "Kick Hat Snare",
-    "seconds": 4.4,
-    "peakDb": -5.4,
-    "faded": false,
-    "bytes": 70176
-  },
-  {
-    "group": "sampler",
-    "category": "Sliced Kits",
-    "name": "EBM Machine Break",
-    "file": "sampler/ebm-machine-break.mp3",
-    "about": "A loop cut into 30 slices, each on a key of its own.",
-    "phrase": "Kick Hat Snare",
-    "seconds": 4.4,
-    "peakDb": -10.1,
-    "faded": false,
-    "bytes": 36744
-  },
-  {
-    "group": "sampler",
-    "category": "Sliced Kits",
-    "name": "Breaks Break",
-    "file": "sampler/breaks-break.mp3",
-    "about": "A loop cut into 19 slices, each on a key of its own.",
-    "phrase": "Kick Hat Snare",
-    "seconds": 4.4,
-    "peakDb": -6.9,
-    "faded": false,
-    "bytes": 47784
-  },
-  {
     "group": "synth",
     "category": "Bass",
     "name": "Target Lock Bass",
@@ -650,10 +8,10 @@
     "about": "Analog saw. Filters: Ladder 24 at 780 Hz and SVF High at 90 Hz. Mono. Effects: tube drive. Macros: Cutoff, Grit, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 11,
-    "seconds": 10.0,
+    "seconds": 8.1,
     "peakDb": -5.8,
     "faded": false,
-    "bytes": 87576
+    "bytes": 79992
   },
   {
     "group": "synth",
@@ -664,10 +22,10 @@
     "about": "Analog saw, Analog square. Filter: Ladder 24 at 350 Hz. Mono. Macros: Cutoff, Grit, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 10,
-    "seconds": 10.0,
+    "seconds": 8.1,
     "peakDb": -6.0,
     "faded": false,
-    "bytes": 93384
+    "bytes": 85704
   },
   {
     "group": "synth",
@@ -678,10 +36,10 @@
     "about": "Sub, a sub. Filter: Ladder 24 at 600 Hz. Legato. Macros: Grit, Body.",
     "phrase": "four bars at 120 BPM",
     "parts": 7,
-    "seconds": 10.0,
+    "seconds": 8.1,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 53496
+    "bytes": 45912
   },
   {
     "group": "synth",
@@ -692,10 +50,10 @@
     "about": "Analog saw x2, Analog saw x2, a sub. Filter: Ladder 24 at 700 Hz. Legato. Macros: Cutoff, Grit, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 13,
-    "seconds": 10.0,
+    "seconds": 8.199999999999999,
     "peakDb": -6.5,
     "faded": false,
-    "bytes": 189120
+    "bytes": 181824
   },
   {
     "group": "synth",
@@ -706,10 +64,10 @@
     "about": "Analog saw. Filter: Ladder 24 at 300 Hz. Legato. Effects: hard drive, 1/16 D delay. Macros: Cutoff, Resonance, Env Mod.",
     "phrase": "four bars at 120 BPM",
     "parts": 12,
-    "seconds": 10.0,
+    "seconds": 9.0,
     "peakDb": -5.5,
     "faded": false,
-    "bytes": 165336
+    "bytes": 161208
   },
   {
     "group": "synth",
@@ -748,10 +106,10 @@
     "about": "Analog saw, Analog saw +3 st, Analog saw +7 st. Filter: Ladder 24 at 1.6 kHz. Effects: reverb. Macros: Cutoff, Grit, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 12,
-    "seconds": 10.0,
+    "seconds": 9.300000000000001,
     "peakDb": -12.1,
     "faded": false,
-    "bytes": 131400
+    "bytes": 128424
   },
   {
     "group": "synth",
@@ -762,10 +120,10 @@
     "about": "FM. Filter: SVF High at 300 Hz. Effects: 1/8 D delay, reverb. Macros: Cutoff, Grit, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 11,
-    "seconds": 10.0,
+    "seconds": 9.699999999999999,
     "peakDb": -13.199999999999999,
     "faded": false,
-    "bytes": 176952
+    "bytes": 175704
   },
   {
     "group": "synth",
@@ -776,10 +134,10 @@
     "about": "String x3, Analog saw x2. Filters: Ladder 24 at 1.8 kHz and SVF High at 85 Hz. Legato. Effects: fuzz drive, reverb. Macros: Swarm, Fuzz, Bright, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 20,
-    "seconds": 10.0,
+    "seconds": 9.6,
     "peakDb": -2.7,
     "faded": false,
-    "bytes": 212952
+    "bytes": 211608
   },
   {
     "group": "synth",
@@ -790,10 +148,10 @@
     "about": "Analog saw x2, Analog saw +7 st, Analog saw an octave up. Filters: Ladder 24 at 20 kHz and SVF High at 200 Hz. Effects: hard drive, reverb. Macros: Mute, Fuzz, Fifth, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 17,
-    "seconds": 10.0,
+    "seconds": 8.6,
     "peakDb": -6.4,
     "faded": false,
-    "bytes": 324864
+    "bytes": 318984
   },
   {
     "group": "synth",
@@ -818,10 +176,11 @@
     "about": "Analog saw x4, Analog saw x4. Filter: Ladder 24 at 1.2 kHz. Effects: chorus, reverb. Macros: Cutoff, Grit, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 14,
-    "seconds": 10.0,
+    "joined": 0.2,
+    "seconds": 9.800000000000001,
     "peakDb": -7.2,
     "faded": true,
-    "bytes": 154464
+    "bytes": 152064
   },
   {
     "group": "synth",
@@ -832,10 +191,11 @@
     "about": "Growl x4, Analog saw an octave down. Filter: Ladder 24 at 700 Hz. Effects: reverb. Macros: Cutoff, Grit, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 13,
-    "seconds": 10.0,
+    "joined": 0.4,
+    "seconds": 9.6,
     "peakDb": -14.6,
     "faded": true,
-    "bytes": 175680
+    "bytes": 172320
   },
   {
     "group": "synth",
@@ -860,10 +220,10 @@
     "about": "Analog saw x3. Filter: Ladder 24 at 1.5 kHz. Effects: 1/16 D delay. Macros: Cutoff, Grit, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 12,
-    "seconds": 10.0,
+    "seconds": 8.5,
     "peakDb": -6.9,
     "faded": false,
-    "bytes": 141672
+    "bytes": 135552
   },
   {
     "group": "synth",
@@ -874,10 +234,11 @@
     "about": "Analog saw x6, white noise. Filter: SVF Band at 300 Hz. Effects: reverb. Macros: Cutoff, Grit, Space.",
     "phrase": "four bars at 120 BPM",
     "parts": 13,
-    "seconds": 10.0,
+    "joined": 0.8,
+    "seconds": 9.199999999999999,
     "peakDb": -7.7,
     "faded": false,
-    "bytes": 203928
+    "bytes": 190608
   },
   {
     "group": "synth",
@@ -903,10 +264,10 @@
     "place": 1,
     "of": 271,
     "parts": 23,
-    "seconds": 3.4,
+    "seconds": 1.7,
     "peakDb": -8.1,
     "faded": false,
-    "bytes": 22488
+    "bytes": 15480
   },
   {
     "group": "synth",
@@ -918,10 +279,10 @@
     "place": 4,
     "of": 271,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.3,
     "faded": false,
-    "bytes": 80616
+    "bytes": 75048
   },
   {
     "group": "synth",
@@ -933,10 +294,11 @@
     "place": 5,
     "of": 271,
     "parts": 21,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.8,
     "peakDb": -8.199999999999999,
     "faded": false,
-    "bytes": 36816
+    "bytes": 30816
   },
   {
     "group": "synth",
@@ -948,10 +310,10 @@
     "place": 10,
     "of": 271,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.1,
     "faded": false,
-    "bytes": 69264
+    "bytes": 63792
   },
   {
     "group": "synth",
@@ -963,10 +325,10 @@
     "place": 12,
     "of": 271,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.0,
     "faded": false,
-    "bytes": 101496
+    "bytes": 96024
   },
   {
     "group": "synth",
@@ -978,10 +340,10 @@
     "place": 2,
     "of": 271,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.4,
     "faded": false,
-    "bytes": 50784
+    "bytes": 45408
   },
   {
     "group": "synth",
@@ -993,10 +355,10 @@
     "place": 8,
     "of": 271,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.8,
     "faded": false,
-    "bytes": 56880
+    "bytes": 51312
   },
   {
     "group": "synth",
@@ -1008,10 +370,10 @@
     "place": 14,
     "of": 271,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.2,
     "faded": false,
-    "bytes": 54456
+    "bytes": 48888
   },
   {
     "group": "synth",
@@ -1023,10 +385,11 @@
     "place": 22,
     "of": 271,
     "parts": 19,
-    "seconds": 5.3,
+    "joined": 0.1,
+    "seconds": 4.8,
     "peakDb": -6.8,
     "faded": false,
-    "bytes": 45360
+    "bytes": 40920
   },
   {
     "group": "synth",
@@ -1038,10 +401,10 @@
     "place": 27,
     "of": 271,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.8,
     "peakDb": -7.5,
     "faded": false,
-    "bytes": 48024
+    "bytes": 45720
   },
   {
     "group": "synth",
@@ -1053,10 +416,10 @@
     "place": 40,
     "of": 271,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -8.0,
     "faded": false,
-    "bytes": 32376
+    "bytes": 26808
   },
   {
     "group": "synth",
@@ -1068,10 +431,10 @@
     "place": 3,
     "of": 271,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.6,
     "faded": false,
-    "bytes": 77784
+    "bytes": 72216
   },
   {
     "group": "synth",
@@ -1083,10 +446,10 @@
     "place": 9,
     "of": 271,
     "parts": 18,
-    "seconds": 3.4,
+    "seconds": 1.7,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 24960
+    "bytes": 17952
   },
   {
     "group": "synth",
@@ -1098,10 +461,10 @@
     "place": 11,
     "of": 271,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -5.3,
     "faded": false,
-    "bytes": 40776
+    "bytes": 35208
   },
   {
     "group": "synth",
@@ -1113,10 +476,11 @@
     "place": 15,
     "of": 271,
     "parts": 18,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.7,
     "peakDb": -6.6,
     "faded": false,
-    "bytes": 41472
+    "bytes": 35016
   },
   {
     "group": "synth",
@@ -1128,10 +492,10 @@
     "place": 17,
     "of": 271,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.9,
     "faded": false,
-    "bytes": 70512
+    "bytes": 65040
   },
   {
     "group": "synth",
@@ -1143,10 +507,10 @@
     "place": 18,
     "of": 271,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.6,
     "faded": false,
-    "bytes": 67824
+    "bytes": 62352
   },
   {
     "group": "synth",
@@ -1158,10 +522,10 @@
     "place": 20,
     "of": 271,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -9.6,
     "faded": false,
-    "bytes": 36144
+    "bytes": 30672
   },
   {
     "group": "synth",
@@ -1173,10 +537,10 @@
     "place": 23,
     "of": 271,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 4.4,
     "peakDb": -7.1,
     "faded": false,
-    "bytes": 107544
+    "bytes": 103944
   },
   {
     "group": "synth",
@@ -1203,10 +567,10 @@
     "place": 25,
     "of": 271,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 5.0,
     "peakDb": -7.6,
     "faded": false,
-    "bytes": 75216
+    "bytes": 73776
   },
   {
     "group": "synth",
@@ -1218,10 +582,10 @@
     "place": 33,
     "of": 271,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 3.7,
     "peakDb": -7.6,
     "faded": false,
-    "bytes": 38952
+    "bytes": 32424
   },
   {
     "group": "synth",
@@ -1233,10 +597,10 @@
     "place": 38,
     "of": 271,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -14.6,
     "faded": false,
-    "bytes": 106464
+    "bytes": 100992
   },
   {
     "group": "synth",
@@ -1248,10 +612,10 @@
     "place": 6,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -11.4,
     "faded": false,
-    "bytes": 52968
+    "bytes": 47496
   },
   {
     "group": "synth",
@@ -1263,10 +627,10 @@
     "place": 7,
     "of": 271,
     "parts": 17,
-    "seconds": 3.4,
+    "seconds": 1.7,
     "peakDb": -7.8,
     "faded": false,
-    "bytes": 23088
+    "bytes": 16176
   },
   {
     "group": "synth",
@@ -1278,10 +642,10 @@
     "place": 13,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -5.9,
     "faded": false,
-    "bytes": 43152
+    "bytes": 37584
   },
   {
     "group": "synth",
@@ -1293,10 +657,11 @@
     "place": 16,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.7,
     "peakDb": -7.8,
     "faded": false,
-    "bytes": 24816
+    "bytes": 18336
   },
   {
     "group": "synth",
@@ -1308,10 +673,10 @@
     "place": 19,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.6,
     "faded": false,
-    "bytes": 40248
+    "bytes": 34776
   },
   {
     "group": "synth",
@@ -1338,10 +703,10 @@
     "place": 26,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "seconds": 5.1,
     "peakDb": -11.9,
     "faded": false,
-    "bytes": 67104
+    "bytes": 66240
   },
   {
     "group": "synth",
@@ -1353,10 +718,10 @@
     "place": 28,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "seconds": 4.6,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 96672
+    "bytes": 93792
   },
   {
     "group": "synth",
@@ -1398,10 +763,10 @@
     "place": 31,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "seconds": 3.7,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 37992
+    "bytes": 31560
   },
   {
     "group": "synth",
@@ -1413,10 +778,10 @@
     "place": 32,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.8,
     "faded": false,
-    "bytes": 50208
+    "bytes": 44736
   },
   {
     "group": "synth",
@@ -1428,10 +793,10 @@
     "place": 34,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -14.1,
     "faded": false,
-    "bytes": 92664
+    "bytes": 87192
   },
   {
     "group": "synth",
@@ -1443,10 +808,10 @@
     "place": 35,
     "of": 271,
     "parts": 17,
-    "seconds": 3.4,
+    "seconds": 1.7,
     "peakDb": -10.199999999999999,
     "faded": false,
-    "bytes": 23400
+    "bytes": 16488
   },
   {
     "group": "synth",
@@ -1458,10 +823,10 @@
     "place": 37,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -10.1,
     "faded": false,
-    "bytes": 81600
+    "bytes": 76032
   },
   {
     "group": "synth",
@@ -1473,10 +838,11 @@
     "place": 39,
     "of": 271,
     "parts": 17,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.8,
     "peakDb": -9.1,
     "faded": false,
-    "bytes": 108720
+    "bytes": 101976
   },
   {
     "group": "synth",
@@ -1488,10 +854,10 @@
     "place": 36,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.5,
     "faded": false,
-    "bytes": 49152
+    "bytes": 43584
   },
   {
     "group": "synth",
@@ -1503,10 +869,10 @@
     "place": 57,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.8,
     "faded": false,
-    "bytes": 44952
+    "bytes": 39480
   },
   {
     "group": "synth",
@@ -1518,10 +884,10 @@
     "place": 59,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "seconds": 4.1,
     "peakDb": -6.5,
     "faded": false,
-    "bytes": 52440
+    "bytes": 47352
   },
   {
     "group": "synth",
@@ -1533,10 +899,10 @@
     "place": 183,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "seconds": 3.8,
     "peakDb": -6.9,
     "faded": false,
-    "bytes": 33240
+    "bytes": 27288
   },
   {
     "group": "synth",
@@ -1548,10 +914,10 @@
     "place": 185,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "seconds": 3.8,
     "peakDb": -7.8,
     "faded": false,
-    "bytes": 41376
+    "bytes": 35424
   },
   {
     "group": "synth",
@@ -1563,10 +929,10 @@
     "place": 186,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.7,
     "faded": false,
-    "bytes": 47616
+    "bytes": 42240
   },
   {
     "group": "synth",
@@ -1578,10 +944,10 @@
     "place": 188,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "seconds": 3.5,
     "peakDb": -6.0,
     "faded": false,
-    "bytes": 24912
+    "bytes": 17520
   },
   {
     "group": "synth",
@@ -1593,10 +959,10 @@
     "place": 192,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.1,
     "faded": false,
-    "bytes": 39168
+    "bytes": 33792
   },
   {
     "group": "synth",
@@ -1608,10 +974,10 @@
     "place": 200,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -4.6,
     "faded": false,
-    "bytes": 47088
+    "bytes": 41616
   },
   {
     "group": "synth",
@@ -1623,10 +989,10 @@
     "place": 203,
     "of": 271,
     "parts": 16,
-    "seconds": 3.4,
+    "seconds": 1.7,
     "peakDb": -6.1,
     "faded": false,
-    "bytes": 19416
+    "bytes": 12408
   },
   {
     "group": "synth",
@@ -1638,10 +1004,10 @@
     "place": 205,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.7,
     "faded": false,
-    "bytes": 40440
+    "bytes": 34968
   },
   {
     "group": "synth",
@@ -1653,10 +1019,11 @@
     "place": 208,
     "of": 271,
     "parts": 16,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.7,
     "peakDb": -6.4,
     "faded": false,
-    "bytes": 35016
+    "bytes": 28056
   },
   {
     "group": "synth",
@@ -1668,10 +1035,10 @@
     "place": 13,
     "of": 44,
     "parts": 21,
-    "seconds": 3.4,
+    "seconds": 1.7,
     "peakDb": -8.300000000000001,
     "faded": false,
-    "bytes": 20904
+    "bytes": 14184
   },
   {
     "group": "synth",
@@ -1683,10 +1050,10 @@
     "place": 4,
     "of": 44,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.2,
     "faded": false,
-    "bytes": 67104
+    "bytes": 61920
   },
   {
     "group": "synth",
@@ -1698,10 +1065,11 @@
     "place": 17,
     "of": 44,
     "parts": 20,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.9,
     "peakDb": -8.5,
     "faded": false,
-    "bytes": 37272
+    "bytes": 31824
   },
   {
     "group": "synth",
@@ -1713,10 +1081,10 @@
     "place": 3,
     "of": 44,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.0,
     "faded": false,
-    "bytes": 67560
+    "bytes": 62280
   },
   {
     "group": "synth",
@@ -1728,10 +1096,10 @@
     "place": 10,
     "of": 44,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.8,
     "faded": false,
-    "bytes": 34560
+    "bytes": 29184
   },
   {
     "group": "synth",
@@ -1743,10 +1111,10 @@
     "place": 14,
     "of": 44,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -15.1,
     "faded": false,
-    "bytes": 47352
+    "bytes": 42168
   },
   {
     "group": "synth",
@@ -1758,10 +1126,10 @@
     "place": 15,
     "of": 44,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.9,
     "faded": false,
-    "bytes": 63384
+    "bytes": 58104
   },
   {
     "group": "synth",
@@ -1773,10 +1141,10 @@
     "place": 1,
     "of": 44,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -8.6,
     "faded": false,
-    "bytes": 29016
+    "bytes": 23640
   },
   {
     "group": "synth",
@@ -1788,10 +1156,10 @@
     "place": 2,
     "of": 44,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -9.1,
     "faded": false,
-    "bytes": 36192
+    "bytes": 31008
   },
   {
     "group": "synth",
@@ -1803,10 +1171,10 @@
     "place": 5,
     "of": 44,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 3.8,
     "peakDb": -8.6,
     "faded": false,
-    "bytes": 24096
+    "bytes": 17760
   },
   {
     "group": "synth",
@@ -1818,10 +1186,10 @@
     "place": 10,
     "of": 133,
     "parts": 22,
-    "seconds": 3.4,
+    "seconds": 1.8,
     "peakDb": -7.7,
     "faded": false,
-    "bytes": 32880
+    "bytes": 26160
   },
   {
     "group": "synth",
@@ -1833,10 +1201,10 @@
     "place": 15,
     "of": 133,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.8,
     "faded": false,
-    "bytes": 70272
+    "bytes": 64992
   },
   {
     "group": "synth",
@@ -1848,10 +1216,11 @@
     "place": 18,
     "of": 133,
     "parts": 22,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.8,
     "peakDb": -7.2,
     "faded": false,
-    "bytes": 57864
+    "bytes": 52416
   },
   {
     "group": "synth",
@@ -1863,10 +1232,10 @@
     "place": 20,
     "of": 133,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -5.2,
     "faded": false,
-    "bytes": 86832
+    "bytes": 81552
   },
   {
     "group": "synth",
@@ -1878,10 +1247,10 @@
     "place": 1,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.0,
     "faded": false,
-    "bytes": 49848
+    "bytes": 44568
   },
   {
     "group": "synth",
@@ -1893,10 +1262,10 @@
     "place": 2,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.2,
     "faded": false,
-    "bytes": 60576
+    "bytes": 55296
   },
   {
     "group": "synth",
@@ -1908,10 +1277,10 @@
     "place": 5,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.5,
     "faded": false,
-    "bytes": 97704
+    "bytes": 92520
   },
   {
     "group": "synth",
@@ -1923,10 +1292,10 @@
     "place": 7,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 68544
+    "bytes": 63264
   },
   {
     "group": "synth",
@@ -1938,10 +1307,10 @@
     "place": 8,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.8,
     "faded": false,
-    "bytes": 60000
+    "bytes": 54720
   },
   {
     "group": "synth",
@@ -1953,10 +1322,10 @@
     "place": 9,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 3.8,
     "peakDb": -7.1,
     "faded": false,
-    "bytes": 58512
+    "bytes": 52464
   },
   {
     "group": "synth",
@@ -1968,10 +1337,10 @@
     "place": 12,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 66696
+    "bytes": 61416
   },
   {
     "group": "synth",
@@ -1983,10 +1352,10 @@
     "place": 13,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.7,
     "faded": false,
-    "bytes": 76776
+    "bytes": 71496
   },
   {
     "group": "synth",
@@ -1998,10 +1367,10 @@
     "place": 14,
     "of": 133,
     "parts": 21,
-    "seconds": 3.4,
+    "seconds": 1.7,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 31704
+    "bytes": 24984
   },
   {
     "group": "synth",
@@ -2028,10 +1397,11 @@
     "place": 25,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.8,
     "peakDb": -8.4,
     "faded": false,
-    "bytes": 59160
+    "bytes": 54864
   },
   {
     "group": "synth",
@@ -2043,10 +1413,10 @@
     "place": 28,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.6,
     "peakDb": -5.8,
     "faded": false,
-    "bytes": 115704
+    "bytes": 112704
   },
   {
     "group": "synth",
@@ -2058,10 +1428,10 @@
     "place": 29,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.5,
     "faded": false,
-    "bytes": 88560
+    "bytes": 83280
   },
   {
     "group": "synth",
@@ -2073,10 +1443,10 @@
     "place": 39,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -8.0,
     "faded": false,
-    "bytes": 48840
+    "bytes": 43560
   },
   {
     "group": "synth",
@@ -2088,10 +1458,10 @@
     "place": 40,
     "of": 133,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.1,
     "peakDb": -6.2,
     "faded": false,
-    "bytes": 76704
+    "bytes": 71616
   },
   {
     "group": "synth",
@@ -2103,10 +1473,10 @@
     "place": 3,
     "of": 133,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.2,
     "faded": false,
-    "bytes": 62952
+    "bytes": 57672
   },
   {
     "group": "synth",
@@ -2118,10 +1488,10 @@
     "place": 4,
     "of": 133,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.1,
     "peakDb": -7.9,
     "faded": false,
-    "bytes": 91176
+    "bytes": 86088
   },
   {
     "group": "synth",
@@ -2133,10 +1503,10 @@
     "place": 11,
     "of": 133,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 3.8,
     "peakDb": -5.4,
     "faded": false,
-    "bytes": 53616
+    "bytes": 47376
   },
   {
     "group": "synth",
@@ -2148,10 +1518,10 @@
     "place": 16,
     "of": 133,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -8.1,
     "faded": false,
-    "bytes": 42024
+    "bytes": 36744
   },
   {
     "group": "synth",
@@ -2163,10 +1533,10 @@
     "place": 19,
     "of": 133,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.5,
     "faded": false,
-    "bytes": 56304
+    "bytes": 51024
   },
   {
     "group": "synth",
@@ -2178,10 +1548,10 @@
     "place": 22,
     "of": 133,
     "parts": 20,
-    "seconds": 3.4,
+    "seconds": 1.8,
     "peakDb": -9.0,
     "faded": false,
-    "bytes": 39456
+    "bytes": 32928
   },
   {
     "group": "synth",
@@ -2193,10 +1563,10 @@
     "place": 23,
     "of": 133,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.6,
     "peakDb": -6.3,
     "faded": false,
-    "bytes": 60240
+    "bytes": 57456
   },
   {
     "group": "synth",
@@ -2208,10 +1578,10 @@
     "place": 12,
     "of": 135,
     "parts": 24,
-    "seconds": 3.4,
+    "seconds": 3.0,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 45120
+    "bytes": 43488
   },
   {
     "group": "synth",
@@ -2223,10 +1593,10 @@
     "place": 34,
     "of": 135,
     "parts": 24,
-    "seconds": 5.3,
+    "seconds": 4.6,
     "peakDb": -9.300000000000001,
     "faded": false,
-    "bytes": 135504
+    "bytes": 132528
   },
   {
     "group": "synth",
@@ -2238,10 +1608,11 @@
     "place": 1,
     "of": 135,
     "parts": 23,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 5.1,
     "peakDb": -8.5,
     "faded": false,
-    "bytes": 63672
+    "bytes": 63336
   },
   {
     "group": "synth",
@@ -2253,10 +1624,10 @@
     "place": 17,
     "of": 135,
     "parts": 23,
-    "seconds": 5.3,
+    "seconds": 4.6,
     "peakDb": -7.6,
     "faded": false,
-    "bytes": 84144
+    "bytes": 81168
   },
   {
     "group": "synth",
@@ -2268,10 +1639,10 @@
     "place": 19,
     "of": 135,
     "parts": 23,
-    "seconds": 5.3,
+    "seconds": 5.2,
     "peakDb": -6.8,
     "faded": false,
-    "bytes": 97824
+    "bytes": 97104
   },
   {
     "group": "synth",
@@ -2283,10 +1654,10 @@
     "place": 21,
     "of": 135,
     "parts": 23,
-    "seconds": 5.3,
+    "seconds": 4.9,
     "peakDb": -7.1,
     "faded": false,
-    "bytes": 94224
+    "bytes": 92328
   },
   {
     "group": "synth",
@@ -2328,10 +1699,10 @@
     "place": 4,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 4.6,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 103704
+    "bytes": 100728
   },
   {
     "group": "synth",
@@ -2343,10 +1714,10 @@
     "place": 7,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 3.7,
     "peakDb": -6.6,
     "faded": false,
-    "bytes": 38832
+    "bytes": 32400
   },
   {
     "group": "synth",
@@ -2358,10 +1729,10 @@
     "place": 9,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 5.2,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 89064
+    "bytes": 88296
   },
   {
     "group": "synth",
@@ -2373,10 +1744,10 @@
     "place": 10,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.6,
     "faded": false,
-    "bytes": 66432
+    "bytes": 60960
   },
   {
     "group": "synth",
@@ -2388,10 +1759,10 @@
     "place": 14,
     "of": 135,
     "parts": 22,
-    "seconds": 3.4,
+    "seconds": 1.7,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 29376
+    "bytes": 22464
   },
   {
     "group": "synth",
@@ -2403,10 +1774,10 @@
     "place": 15,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.2,
     "faded": false,
-    "bytes": 80064
+    "bytes": 74592
   },
   {
     "group": "synth",
@@ -2418,10 +1789,11 @@
     "place": 20,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 4.3,
     "peakDb": -7.1,
     "faded": false,
-    "bytes": 93912
+    "bytes": 91560
   },
   {
     "group": "synth",
@@ -2448,10 +1820,10 @@
     "place": 25,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 4.8,
     "peakDb": -5.8,
     "faded": false,
-    "bytes": 114024
+    "bytes": 111720
   },
   {
     "group": "synth",
@@ -2478,10 +1850,10 @@
     "place": 27,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 4.5,
     "peakDb": -7.3,
     "faded": false,
-    "bytes": 103344
+    "bytes": 100080
   },
   {
     "group": "synth",
@@ -2493,10 +1865,10 @@
     "place": 28,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 97104
+    "bytes": 91632
   },
   {
     "group": "synth",
@@ -2523,10 +1895,10 @@
     "place": 38,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 3.7,
     "peakDb": -7.6,
     "faded": false,
-    "bytes": 61392
+    "bytes": 54960
   },
   {
     "group": "synth",
@@ -2538,10 +1910,10 @@
     "place": 40,
     "of": 135,
     "parts": 22,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -8.199999999999999,
     "faded": false,
-    "bytes": 64032
+    "bytes": 58560
   },
   {
     "group": "synth",
@@ -2553,10 +1925,10 @@
     "place": 2,
     "of": 135,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -6.2,
     "faded": false,
-    "bytes": 70800
+    "bytes": 65424
   },
   {
     "group": "synth",
@@ -2568,10 +1940,10 @@
     "place": 5,
     "of": 135,
     "parts": 21,
-    "seconds": 3.4,
+    "seconds": 1.7,
     "peakDb": -10.6,
     "faded": false,
-    "bytes": 31272
+    "bytes": 24360
   },
   {
     "group": "synth",
@@ -2583,10 +1955,10 @@
     "place": 13,
     "of": 135,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -7.9,
     "faded": false,
-    "bytes": 58272
+    "bytes": 52896
   },
   {
     "group": "synth",
@@ -2763,10 +2135,10 @@
     "place": 3,
     "of": 189,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.4,
     "peakDb": -9.4,
     "faded": false,
-    "bytes": 70560
+    "bytes": 66672
   },
   {
     "group": "synth",
@@ -2913,10 +2285,10 @@
     "place": 29,
     "of": 189,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 5.1,
     "peakDb": -12.199999999999999,
     "faded": false,
-    "bytes": 83904
+    "bytes": 82800
   },
   {
     "group": "synth",
@@ -3003,10 +2375,10 @@
     "place": 9,
     "of": 189,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.7,
     "peakDb": -8.0,
     "faded": false,
-    "bytes": 101256
+    "bytes": 98424
   },
   {
     "group": "synth",
@@ -3123,10 +2495,10 @@
     "place": 40,
     "of": 189,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 5.1,
     "peakDb": -8.5,
     "faded": false,
-    "bytes": 80280
+    "bytes": 79200
   },
   {
     "group": "synth",
@@ -3138,10 +2510,10 @@
     "place": 2,
     "of": 174,
     "parts": 21,
-    "seconds": 3.4,
+    "seconds": 2.7,
     "peakDb": -5.0,
     "faded": false,
-    "bytes": 40800
+    "bytes": 37560
   },
   {
     "group": "synth",
@@ -3153,10 +2525,11 @@
     "place": 12,
     "of": 174,
     "parts": 21,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 5.1,
     "peakDb": -4.7,
     "faded": true,
-    "bytes": 92664
+    "bytes": 90576
   },
   {
     "group": "synth",
@@ -3198,10 +2571,10 @@
     "place": 4,
     "of": 174,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 2.9,
     "peakDb": -5.4,
     "faded": false,
-    "bytes": 34344
+    "bytes": 24744
   },
   {
     "group": "synth",
@@ -3213,10 +2586,10 @@
     "place": 5,
     "of": 174,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.7,
     "peakDb": -5.5,
     "faded": false,
-    "bytes": 77088
+    "bytes": 74232
   },
   {
     "group": "synth",
@@ -3228,10 +2601,11 @@
     "place": 7,
     "of": 174,
     "parts": 20,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.8,
     "peakDb": -7.3,
     "faded": false,
-    "bytes": 64992
+    "bytes": 58224
   },
   {
     "group": "synth",
@@ -3258,10 +2632,11 @@
     "place": 15,
     "of": 174,
     "parts": 20,
-    "seconds": 5.3,
-    "peakDb": -7.6,
+    "joined": 0.3,
+    "seconds": 6.6,
+    "peakDb": -7.4,
     "faded": false,
-    "bytes": 76392
+    "bytes": 105816
   },
   {
     "group": "synth",
@@ -3273,10 +2648,11 @@
     "place": 16,
     "of": 174,
     "parts": 20,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.8,
     "peakDb": -7.0,
     "faded": false,
-    "bytes": 52320
+    "bytes": 45600
   },
   {
     "group": "synth",
@@ -3288,10 +2664,10 @@
     "place": 18,
     "of": 174,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 3.3,
     "peakDb": -6.5,
     "faded": false,
-    "bytes": 50856
+    "bytes": 42840
   },
   {
     "group": "synth",
@@ -3303,10 +2679,10 @@
     "place": 19,
     "of": 174,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.1,
     "peakDb": -5.6,
     "faded": false,
-    "bytes": 57072
+    "bytes": 51864
   },
   {
     "group": "synth",
@@ -3333,10 +2709,11 @@
     "place": 23,
     "of": 174,
     "parts": 20,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 5.1,
     "peakDb": -5.6,
     "faded": false,
-    "bytes": 91632
+    "bytes": 88584
   },
   {
     "group": "synth",
@@ -3363,10 +2740,10 @@
     "place": 35,
     "of": 174,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.4,
     "peakDb": -4.9,
     "faded": false,
-    "bytes": 66864
+    "bytes": 62904
   },
   {
     "group": "synth",
@@ -3378,10 +2755,10 @@
     "place": 38,
     "of": 174,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 3.0,
     "peakDb": -8.199999999999999,
     "faded": false,
-    "bytes": 37440
+    "bytes": 27840
   },
   {
     "group": "synth",
@@ -3408,10 +2785,11 @@
     "place": 3,
     "of": 174,
     "parts": 19,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.7,
     "peakDb": -5.5,
     "faded": false,
-    "bytes": 49368
+    "bytes": 42312
   },
   {
     "group": "synth",
@@ -3423,10 +2801,10 @@
     "place": 6,
     "of": 174,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.6,
     "peakDb": -4.7,
     "faded": false,
-    "bytes": 51336
+    "bytes": 48552
   },
   {
     "group": "synth",
@@ -3438,10 +2816,11 @@
     "place": 8,
     "of": 174,
     "parts": 19,
-    "seconds": 5.3,
-    "peakDb": -5.1,
+    "joined": 0.3,
+    "seconds": 6.7,
+    "peakDb": -5.0,
     "faded": false,
-    "bytes": 74976
+    "bytes": 103080
   },
   {
     "group": "synth",
@@ -3453,10 +2832,11 @@
     "place": 10,
     "of": 174,
     "parts": 19,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 3.7,
     "peakDb": -4.7,
     "faded": false,
-    "bytes": 37872
+    "bytes": 30456
   },
   {
     "group": "synth",
@@ -3468,10 +2848,10 @@
     "place": 11,
     "of": 174,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 3.5,
     "peakDb": -5.3,
     "faded": false,
-    "bytes": 33072
+    "bytes": 25800
   },
   {
     "group": "synth",
@@ -3483,10 +2863,10 @@
     "place": 17,
     "of": 174,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 3.7,
     "peakDb": -7.0,
     "faded": false,
-    "bytes": 49848
+    "bytes": 43128
   },
   {
     "group": "synth",
@@ -3513,10 +2893,11 @@
     "place": 24,
     "of": 174,
     "parts": 19,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 5.1,
     "peakDb": -5.1,
     "faded": true,
-    "bytes": 83136
+    "bytes": 80232
   },
   {
     "group": "synth",
@@ -3528,10 +2909,10 @@
     "place": 29,
     "of": 174,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.5,
     "peakDb": -5.7,
     "faded": false,
-    "bytes": 70176
+    "bytes": 66648
   },
   {
     "group": "synth",
@@ -3558,10 +2939,10 @@
     "place": 33,
     "of": 174,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 3.5,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 42672
+    "bytes": 35184
   },
   {
     "group": "synth",
@@ -3588,10 +2969,11 @@
     "place": 37,
     "of": 174,
     "parts": 19,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 4.8,
     "peakDb": -3.3,
     "faded": false,
-    "bytes": 81768
+    "bytes": 78552
   },
   {
     "group": "synth",
@@ -3603,10 +2985,10 @@
     "place": 14,
     "of": 174,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -7.3,
     "faded": false,
-    "bytes": 44688
+    "bytes": 38832
   },
   {
     "group": "synth",
@@ -3618,10 +3000,11 @@
     "place": 20,
     "of": 174,
     "parts": 18,
-    "seconds": 5.3,
+    "joined": 0.3,
+    "seconds": 5.6,
     "peakDb": -6.6,
     "faded": false,
-    "bytes": 38736
+    "bytes": 47952
   },
   {
     "group": "synth",
@@ -3633,10 +3016,11 @@
     "place": 25,
     "of": 174,
     "parts": 18,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 4.1,
     "peakDb": -5.6,
     "faded": false,
-    "bytes": 79536
+    "bytes": 73920
   },
   {
     "group": "synth",
@@ -3648,10 +3032,10 @@
     "place": 2,
     "of": 100,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.3,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 81672
+    "bytes": 71400
   },
   {
     "group": "synth",
@@ -3663,10 +3047,10 @@
     "place": 13,
     "of": 100,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "seconds": 9.1,
     "peakDb": -6.8,
     "faded": false,
-    "bytes": 158352
+    "bytes": 152016
   },
   {
     "group": "synth",
@@ -3678,10 +3062,10 @@
     "place": 26,
     "of": 100,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 6.2,
     "peakDb": -6.5,
     "faded": false,
-    "bytes": 95880
+    "bytes": 93264
   },
   {
     "group": "synth",
@@ -3693,10 +3077,10 @@
     "place": 3,
     "of": 100,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "seconds": 9.0,
     "peakDb": -8.5,
     "faded": false,
-    "bytes": 132624
+    "bytes": 125760
   },
   {
     "group": "synth",
@@ -3708,10 +3092,10 @@
     "place": 4,
     "of": 100,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 6.3,
     "peakDb": -10.6,
     "faded": false,
-    "bytes": 94392
+    "bytes": 92448
   },
   {
     "group": "synth",
@@ -3738,10 +3122,10 @@
     "place": 6,
     "of": 100,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.4,
     "peakDb": -8.300000000000001,
     "faded": false,
-    "bytes": 59712
+    "bytes": 49824
   },
   {
     "group": "synth",
@@ -3753,10 +3137,11 @@
     "place": 7,
     "of": 100,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -7.6,
     "faded": false,
-    "bytes": 103872
+    "bytes": 102744
   },
   {
     "group": "synth",
@@ -3783,10 +3168,10 @@
     "place": 10,
     "of": 100,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 6.0,
     "peakDb": -7.3,
     "faded": false,
-    "bytes": 91872
+    "bytes": 88320
   },
   {
     "group": "synth",
@@ -3798,10 +3183,10 @@
     "place": 14,
     "of": 100,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "seconds": 9.300000000000001,
     "peakDb": -8.300000000000001,
     "faded": false,
-    "bytes": 136488
+    "bytes": 130416
   },
   {
     "group": "synth",
@@ -3813,10 +3198,10 @@
     "place": 17,
     "of": 100,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.2,
     "peakDb": -17.100000000000001,
     "faded": false,
-    "bytes": 90192
+    "bytes": 83472
   },
   {
     "group": "synth",
@@ -3828,10 +3213,10 @@
     "place": 20,
     "of": 100,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.4,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 70632
+    "bytes": 60744
   },
   {
     "group": "synth",
@@ -3843,10 +3228,10 @@
     "place": 24,
     "of": 100,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "seconds": 10.0,
     "peakDb": -5.0,
     "faded": false,
-    "bytes": 158208
+    "bytes": 155160
   },
   {
     "group": "synth",
@@ -3858,10 +3243,10 @@
     "place": 29,
     "of": 100,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 6.1,
     "peakDb": -7.5,
     "faded": false,
-    "bytes": 89136
+    "bytes": 86256
   },
   {
     "group": "synth",
@@ -3873,10 +3258,10 @@
     "place": 30,
     "of": 100,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "seconds": 9.800000000000001,
     "peakDb": -9.6,
     "faded": false,
-    "bytes": 158280
+    "bytes": 154848
   },
   {
     "group": "synth",
@@ -3888,10 +3273,10 @@
     "place": 35,
     "of": 100,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 6.1,
     "peakDb": -9.1,
     "faded": false,
-    "bytes": 91488
+    "bytes": 88608
   },
   {
     "group": "synth",
@@ -3903,10 +3288,10 @@
     "place": 38,
     "of": 100,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.2,
     "peakDb": -8.300000000000001,
     "faded": false,
-    "bytes": 81360
+    "bytes": 74904
   },
   {
     "group": "synth",
@@ -3933,10 +3318,11 @@
     "place": 40,
     "of": 100,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 5.8,
     "peakDb": -4.8,
     "faded": false,
-    "bytes": 83376
+    "bytes": 78888
   },
   {
     "group": "synth",
@@ -3948,10 +3334,10 @@
     "place": 3,
     "of": 149,
     "parts": 20,
-    "seconds": 3.4,
+    "seconds": 2.4,
     "peakDb": -11.699999999999999,
     "faded": false,
-    "bytes": 44904
+    "bytes": 40968
   },
   {
     "group": "synth",
@@ -3978,10 +3364,10 @@
     "place": 6,
     "of": 149,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.6,
     "peakDb": -15.4,
     "faded": false,
-    "bytes": 74688
+    "bytes": 71808
   },
   {
     "group": "synth",
@@ -3993,10 +3379,10 @@
     "place": 7,
     "of": 149,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.2,
     "peakDb": -8.300000000000001,
     "faded": false,
-    "bytes": 101472
+    "bytes": 97056
   },
   {
     "group": "synth",
@@ -4023,10 +3409,10 @@
     "place": 18,
     "of": 149,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -14.300000000000001,
     "faded": false,
-    "bytes": 72600
+    "bytes": 67032
   },
   {
     "group": "synth",
@@ -4038,10 +3424,10 @@
     "place": 24,
     "of": 149,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 2.0,
     "peakDb": -13.6,
     "faded": false,
-    "bytes": 40704
+    "bytes": 27456
   },
   {
     "group": "synth",
@@ -4083,10 +3469,10 @@
     "place": 2,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 2.9,
     "peakDb": -11.6,
     "faded": false,
-    "bytes": 49872
+    "bytes": 40248
   },
   {
     "group": "synth",
@@ -4098,10 +3484,10 @@
     "place": 5,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.4,
     "peakDb": -14.5,
     "faded": false,
-    "bytes": 74928
+    "bytes": 71064
   },
   {
     "group": "synth",
@@ -4113,10 +3499,10 @@
     "place": 8,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 2.2,
     "peakDb": -11.300000000000001,
     "faded": false,
-    "bytes": 25248
+    "bytes": 12480
   },
   {
     "group": "synth",
@@ -4128,10 +3514,10 @@
     "place": 9,
     "of": 149,
     "parts": 19,
-    "seconds": 3.4,
+    "seconds": 3.3,
     "peakDb": -9.699999999999999,
     "faded": false,
-    "bytes": 65376
+    "bytes": 64464
   },
   {
     "group": "synth",
@@ -4143,10 +3529,10 @@
     "place": 11,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.7,
     "peakDb": -13.800000000000001,
     "faded": false,
-    "bytes": 80304
+    "bytes": 77904
   },
   {
     "group": "synth",
@@ -4158,10 +3544,10 @@
     "place": 12,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 5.0,
     "peakDb": -10.4,
     "faded": false,
-    "bytes": 83640
+    "bytes": 82080
   },
   {
     "group": "synth",
@@ -4173,10 +3559,10 @@
     "place": 16,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.2,
     "peakDb": -11.800000000000001,
     "faded": false,
-    "bytes": 55440
+    "bytes": 50832
   },
   {
     "group": "synth",
@@ -4188,10 +3574,10 @@
     "place": 19,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.3,
     "peakDb": -8.4,
     "faded": false,
-    "bytes": 56592
+    "bytes": 52272
   },
   {
     "group": "synth",
@@ -4203,10 +3589,10 @@
     "place": 20,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.3,
     "peakDb": -10.9,
     "faded": false,
-    "bytes": 89496
+    "bytes": 85272
   },
   {
     "group": "synth",
@@ -4218,10 +3604,10 @@
     "place": 22,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 2.9,
     "peakDb": -14.4,
     "faded": false,
-    "bytes": 41448
+    "bytes": 31848
   },
   {
     "group": "synth",
@@ -4233,10 +3619,10 @@
     "place": 23,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 5.1,
     "peakDb": -11.199999999999999,
     "faded": false,
-    "bytes": 92760
+    "bytes": 91800
   },
   {
     "group": "synth",
@@ -4263,10 +3649,10 @@
     "place": 28,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -14.1,
     "faded": false,
-    "bytes": 49800
+    "bytes": 43944
   },
   {
     "group": "synth",
@@ -4278,10 +3664,10 @@
     "place": 30,
     "of": 149,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.7,
     "peakDb": -10.300000000000001,
     "faded": false,
-    "bytes": 89760
+    "bytes": 87336
   },
   {
     "group": "synth",
@@ -4308,10 +3694,10 @@
     "place": 13,
     "of": 149,
     "parts": 18,
-    "seconds": 3.4,
+    "seconds": 1.7,
     "peakDb": -16.399999999999999,
     "faded": false,
-    "bytes": 35568
+    "bytes": 28848
   },
   {
     "group": "synth",
@@ -4338,10 +3724,10 @@
     "place": 26,
     "of": 149,
     "parts": 18,
-    "seconds": 5.3,
+    "seconds": 4.8,
     "peakDb": -10.699999999999999,
     "faded": false,
-    "bytes": 93696
+    "bytes": 91776
   },
   {
     "group": "synth",
@@ -4383,10 +3769,10 @@
     "place": 9,
     "of": 100,
     "parts": 23,
-    "seconds": 7.8,
+    "seconds": 6.6,
     "peakDb": -15.0,
     "faded": false,
-    "bytes": 94128
+    "bytes": 89616
   },
   {
     "group": "synth",
@@ -4398,10 +3784,10 @@
     "place": 2,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 4.6,
     "peakDb": -16.300000000000001,
     "faded": false,
-    "bytes": 62496
+    "bytes": 53760
   },
   {
     "group": "synth",
@@ -4413,10 +3799,10 @@
     "place": 4,
     "of": 100,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "seconds": 8.6,
     "peakDb": -15.699999999999999,
     "faded": false,
-    "bytes": 109896
+    "bytes": 101448
   },
   {
     "group": "synth",
@@ -4428,10 +3814,10 @@
     "place": 6,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -16.800000000000001,
     "faded": false,
-    "bytes": 62352
+    "bytes": 50832
   },
   {
     "group": "synth",
@@ -4443,10 +3829,10 @@
     "place": 8,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 5.7,
     "peakDb": -16.199999999999999,
     "faded": false,
-    "bytes": 95424
+    "bytes": 90912
   },
   {
     "group": "synth",
@@ -4458,10 +3844,10 @@
     "place": 12,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 5.4,
     "peakDb": -8.199999999999999,
     "faded": false,
-    "bytes": 97536
+    "bytes": 91680
   },
   {
     "group": "synth",
@@ -4473,10 +3859,10 @@
     "place": 15,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -14.199999999999999,
     "faded": false,
-    "bytes": 67992
+    "bytes": 56472
   },
   {
     "group": "synth",
@@ -4488,10 +3874,10 @@
     "place": 18,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 4.5,
     "peakDb": -17.100000000000001,
     "faded": false,
-    "bytes": 89328
+    "bytes": 80016
   },
   {
     "group": "synth",
@@ -4503,10 +3889,10 @@
     "place": 20,
     "of": 100,
     "parts": 22,
-    "seconds": 7.8,
+    "seconds": 5.8,
     "peakDb": -13.9,
     "faded": false,
-    "bytes": 83976
+    "bytes": 75888
   },
   {
     "group": "synth",
@@ -4518,10 +3904,10 @@
     "place": 23,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 6.1,
     "peakDb": -15.300000000000001,
     "faded": false,
-    "bytes": 124608
+    "bytes": 121728
   },
   {
     "group": "synth",
@@ -4533,10 +3919,10 @@
     "place": 25,
     "of": 100,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "seconds": 9.6,
     "peakDb": -15.6,
     "faded": false,
-    "bytes": 177216
+    "bytes": 172992
   },
   {
     "group": "synth",
@@ -4548,10 +3934,10 @@
     "place": 27,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -14.5,
     "faded": false,
-    "bytes": 62952
+    "bytes": 51240
   },
   {
     "group": "synth",
@@ -4563,10 +3949,10 @@
     "place": 29,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 5.0,
     "peakDb": -14.4,
     "faded": false,
-    "bytes": 84096
+    "bytes": 76896
   },
   {
     "group": "synth",
@@ -4578,10 +3964,10 @@
     "place": 34,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -9.1,
     "faded": false,
-    "bytes": 47640
+    "bytes": 35928
   },
   {
     "group": "synth",
@@ -4593,10 +3979,10 @@
     "place": 38,
     "of": 100,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 4.6,
     "peakDb": -16.899999999999999,
     "faded": false,
-    "bytes": 69456
+    "bytes": 60336
   },
   {
     "group": "synth",
@@ -4608,10 +3994,10 @@
     "place": 3,
     "of": 100,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 5.2,
     "peakDb": -16.100000000000001,
     "faded": false,
-    "bytes": 77808
+    "bytes": 71376
   },
   {
     "group": "synth",
@@ -4623,10 +4009,10 @@
     "place": 5,
     "of": 100,
     "parts": 21,
-    "seconds": 7.8,
+    "seconds": 5.5,
     "peakDb": -15.0,
     "faded": false,
-    "bytes": 86376
+    "bytes": 77064
   },
   {
     "group": "synth",
@@ -4638,10 +4024,10 @@
     "place": 7,
     "of": 100,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 5.1,
     "peakDb": -16.100000000000001,
     "faded": false,
-    "bytes": 79512
+    "bytes": 72504
   },
   {
     "group": "synth",
@@ -4653,10 +4039,10 @@
     "place": 16,
     "of": 100,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "seconds": 8.6,
     "peakDb": -11.6,
     "faded": false,
-    "bytes": 124344
+    "bytes": 115992
   },
   {
     "group": "synth",
@@ -4683,10 +4069,10 @@
     "place": 3,
     "of": 90,
     "parts": 20,
-    "seconds": 3.4,
+    "seconds": 2.5,
     "peakDb": -15.9,
     "faded": false,
-    "bytes": 41088
+    "bytes": 37344
   },
   {
     "group": "synth",
@@ -4728,10 +4114,10 @@
     "place": 17,
     "of": 90,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -14.699999999999999,
     "faded": false,
-    "bytes": 53976
+    "bytes": 48504
   },
   {
     "group": "synth",
@@ -4743,10 +4129,10 @@
     "place": 20,
     "of": 90,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.4,
     "peakDb": -11.300000000000001,
     "faded": false,
-    "bytes": 117936
+    "bytes": 114096
   },
   {
     "group": "synth",
@@ -4788,10 +4174,10 @@
     "place": 40,
     "of": 90,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -16.399999999999999,
     "faded": false,
-    "bytes": 68280
+    "bytes": 63000
   },
   {
     "group": "synth",
@@ -4803,10 +4189,10 @@
     "place": 7,
     "of": 90,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -14.5,
     "faded": false,
-    "bytes": 75024
+    "bytes": 69648
   },
   {
     "group": "synth",
@@ -4818,10 +4204,10 @@
     "place": 10,
     "of": 90,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.9,
     "peakDb": -14.800000000000001,
     "faded": false,
-    "bytes": 67824
+    "bytes": 65904
   },
   {
     "group": "synth",
@@ -4833,10 +4219,10 @@
     "place": 12,
     "of": 90,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.3,
     "peakDb": -14.5,
     "faded": false,
-    "bytes": 89688
+    "bytes": 85488
   },
   {
     "group": "synth",
@@ -4848,10 +4234,10 @@
     "place": 13,
     "of": 90,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.9,
     "peakDb": -6.5,
     "faded": false,
-    "bytes": 77904
+    "bytes": 75408
   },
   {
     "group": "synth",
@@ -4863,10 +4249,10 @@
     "place": 16,
     "of": 90,
     "parts": 19,
-    "seconds": 3.4,
+    "seconds": 3.2,
     "peakDb": -12.199999999999999,
     "faded": false,
-    "bytes": 58872
+    "bytes": 58032
   },
   {
     "group": "synth",
@@ -4938,10 +4324,10 @@
     "place": 29,
     "of": 90,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.6,
     "peakDb": -14.300000000000001,
     "faded": false,
-    "bytes": 97272
+    "bytes": 94392
   },
   {
     "group": "synth",
@@ -4953,10 +4339,10 @@
     "place": 8,
     "of": 84,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.7,
     "peakDb": -6.6,
     "faded": false,
-    "bytes": 82608
+    "bytes": 77616
   },
   {
     "group": "synth",
@@ -4968,10 +4354,10 @@
     "place": 11,
     "of": 84,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "seconds": 7.7,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 165360
+    "bytes": 153552
   },
   {
     "group": "synth",
@@ -4983,10 +4369,10 @@
     "place": 16,
     "of": 84,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -6.4,
     "faded": false,
-    "bytes": 58296
+    "bytes": 46488
   },
   {
     "group": "synth",
@@ -4998,10 +4384,10 @@
     "place": 17,
     "of": 84,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "seconds": 7.8,
     "peakDb": -7.8,
     "faded": false,
-    "bytes": 143424
+    "bytes": 131808
   },
   {
     "group": "synth",
@@ -5013,10 +4399,10 @@
     "place": 19,
     "of": 84,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 6.7,
     "peakDb": -9.800000000000001,
     "faded": false,
-    "bytes": 83184
+    "bytes": 82584
   },
   {
     "group": "synth",
@@ -5043,10 +4429,10 @@
     "place": 30,
     "of": 84,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.1,
     "peakDb": -13.6,
     "faded": false,
-    "bytes": 76968
+    "bytes": 70056
   },
   {
     "group": "synth",
@@ -5058,10 +4444,11 @@
     "place": 1,
     "of": 84,
     "parts": 19,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 3.7,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 55440
+    "bytes": 42672
   },
   {
     "group": "synth",
@@ -5073,10 +4460,10 @@
     "place": 2,
     "of": 84,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -7.6,
     "faded": false,
-    "bytes": 83280
+    "bytes": 71664
   },
   {
     "group": "synth",
@@ -5088,10 +4475,10 @@
     "place": 3,
     "of": 84,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -6.8,
     "faded": false,
-    "bytes": 84000
+    "bytes": 72192
   },
   {
     "group": "synth",
@@ -5103,10 +4490,10 @@
     "place": 4,
     "of": 84,
     "parts": 19,
-    "seconds": 10.699999999999999,
+    "seconds": 7.8,
     "peakDb": -7.9,
     "faded": false,
-    "bytes": 114408
+    "bytes": 102696
   },
   {
     "group": "synth",
@@ -5118,10 +4505,10 @@
     "place": 5,
     "of": 84,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -15.800000000000001,
     "faded": false,
-    "bytes": 104256
+    "bytes": 92544
   },
   {
     "group": "synth",
@@ -5133,10 +4520,10 @@
     "place": 6,
     "of": 84,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 6.2,
     "peakDb": -6.8,
     "faded": false,
-    "bytes": 84696
+    "bytes": 81936
   },
   {
     "group": "synth",
@@ -5148,10 +4535,10 @@
     "place": 7,
     "of": 84,
     "parts": 19,
-    "seconds": 10.699999999999999,
+    "seconds": 7.7,
     "peakDb": -7.9,
     "faded": false,
-    "bytes": 135696
+    "bytes": 123888
   },
   {
     "group": "synth",
@@ -5163,10 +4550,10 @@
     "place": 9,
     "of": 84,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -8.5,
     "faded": false,
-    "bytes": 74040
+    "bytes": 62328
   },
   {
     "group": "synth",
@@ -5178,10 +4565,10 @@
     "place": 12,
     "of": 84,
     "parts": 19,
-    "seconds": 10.699999999999999,
+    "seconds": 7.7,
     "peakDb": -8.1,
     "faded": false,
-    "bytes": 149736
+    "bytes": 138024
   },
   {
     "group": "synth",
@@ -5193,10 +4580,10 @@
     "place": 18,
     "of": 84,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -8.1,
     "faded": false,
-    "bytes": 101520
+    "bytes": 89808
   },
   {
     "group": "synth",
@@ -5208,10 +4595,10 @@
     "place": 1,
     "of": 89,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 3.8,
     "peakDb": -12.9,
     "faded": false,
-    "bytes": 58416
+    "bytes": 52080
   },
   {
     "group": "synth",
@@ -5223,10 +4610,10 @@
     "place": 3,
     "of": 89,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.7,
     "peakDb": -10.699999999999999,
     "faded": false,
-    "bytes": 79200
+    "bytes": 76608
   },
   {
     "group": "synth",
@@ -5238,10 +4625,10 @@
     "place": 10,
     "of": 89,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -15.699999999999999,
     "faded": false,
-    "bytes": 64488
+    "bytes": 58632
   },
   {
     "group": "synth",
@@ -5268,10 +4655,10 @@
     "place": 16,
     "of": 89,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -12.199999999999999,
     "faded": false,
-    "bytes": 54600
+    "bytes": 48936
   },
   {
     "group": "synth",
@@ -5298,10 +4685,10 @@
     "place": 30,
     "of": 89,
     "parts": 20,
-    "seconds": 9.199999999999999,
+    "seconds": 8.1,
     "peakDb": -15.300000000000001,
     "faded": false,
-    "bytes": 75960
+    "bytes": 71736
   },
   {
     "group": "synth",
@@ -5343,10 +4730,10 @@
     "place": 6,
     "of": 89,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.3,
     "peakDb": -7.1,
     "faded": false,
-    "bytes": 64368
+    "bytes": 60312
   },
   {
     "group": "synth",
@@ -5358,10 +4745,10 @@
     "place": 7,
     "of": 89,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.2,
     "peakDb": -12.1,
     "faded": false,
-    "bytes": 60912
+    "bytes": 56208
   },
   {
     "group": "synth",
@@ -5373,10 +4760,10 @@
     "place": 8,
     "of": 89,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.9,
     "peakDb": -10.199999999999999,
     "faded": false,
-    "bytes": 81336
+    "bytes": 79368
   },
   {
     "group": "synth",
@@ -5388,10 +4775,10 @@
     "place": 12,
     "of": 89,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -14.1,
     "faded": false,
-    "bytes": 43392
+    "bytes": 37728
   },
   {
     "group": "synth",
@@ -5403,10 +4790,10 @@
     "place": 13,
     "of": 89,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -13.300000000000001,
     "faded": false,
-    "bytes": 57816
+    "bytes": 52248
   },
   {
     "group": "synth",
@@ -5418,10 +4805,10 @@
     "place": 14,
     "of": 89,
     "parts": 19,
-    "seconds": 9.199999999999999,
+    "seconds": 7.9,
     "peakDb": -15.9,
     "faded": false,
-    "bytes": 79416
+    "bytes": 74232
   },
   {
     "group": "synth",
@@ -5433,10 +4820,10 @@
     "place": 30,
     "of": 89,
     "parts": 22,
-    "seconds": 3.4,
+    "seconds": 2.3,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 43656
+    "bytes": 39288
   },
   {
     "group": "synth",
@@ -5448,10 +4835,11 @@
     "place": 1,
     "of": 89,
     "parts": 21,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 5.1,
     "peakDb": -6.9,
     "faded": false,
-    "bytes": 82272
+    "bytes": 82248
   },
   {
     "group": "synth",
@@ -5463,10 +4851,10 @@
     "place": 3,
     "of": 89,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 5.0,
     "peakDb": -6.6,
     "faded": false,
-    "bytes": 84432
+    "bytes": 83016
   },
   {
     "group": "synth",
@@ -5493,10 +4881,10 @@
     "place": 14,
     "of": 89,
     "parts": 21,
-    "seconds": 5.3,
+    "seconds": 4.2,
     "peakDb": -7.7,
     "faded": false,
-    "bytes": 64056
+    "bytes": 59160
   },
   {
     "group": "synth",
@@ -5523,10 +4911,11 @@
     "place": 18,
     "of": 89,
     "parts": 21,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 5.1,
     "peakDb": -6.9,
     "faded": false,
-    "bytes": 82848
+    "bytes": 82752
   },
   {
     "group": "synth",
@@ -5553,10 +4942,11 @@
     "place": 9,
     "of": 89,
     "parts": 20,
-    "seconds": 5.3,
+    "joined": 0.3,
+    "seconds": 6.9,
     "peakDb": -6.9,
     "faded": false,
-    "bytes": 85632
+    "bytes": 119856
   },
   {
     "group": "synth",
@@ -5568,10 +4958,11 @@
     "place": 11,
     "of": 89,
     "parts": 20,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 4.7,
     "peakDb": -8.5,
     "faded": false,
-    "bytes": 84456
+    "bytes": 83064
   },
   {
     "group": "synth",
@@ -5583,10 +4974,10 @@
     "place": 15,
     "of": 89,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -6.2,
     "faded": false,
-    "bytes": 75096
+    "bytes": 69480
   },
   {
     "group": "synth",
@@ -5628,10 +5019,11 @@
     "place": 22,
     "of": 89,
     "parts": 20,
-    "seconds": 5.3,
+    "joined": 0.2,
+    "seconds": 4.7,
     "peakDb": -7.2,
     "faded": false,
-    "bytes": 88728
+    "bytes": 86112
   },
   {
     "group": "synth",
@@ -5673,10 +5065,10 @@
     "place": 28,
     "of": 89,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 3.0,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 50400
+    "bytes": 40896
   },
   {
     "group": "synth",
@@ -5703,10 +5095,10 @@
     "place": 1,
     "of": 85,
     "parts": 24,
-    "seconds": 6.8,
+    "seconds": 6.5,
     "peakDb": -7.1,
     "faded": false,
-    "bytes": 124872
+    "bytes": 123288
   },
   {
     "group": "synth",
@@ -5733,10 +5125,11 @@
     "place": 4,
     "of": 85,
     "parts": 23,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -8.199999999999999,
     "faded": false,
-    "bytes": 88632
+    "bytes": 86688
   },
   {
     "group": "synth",
@@ -5778,10 +5171,11 @@
     "place": 5,
     "of": 85,
     "parts": 22,
+    "joined": 0.1,
     "seconds": 6.8,
     "peakDb": -7.3,
     "faded": true,
-    "bytes": 97632
+    "bytes": 96696
   },
   {
     "group": "synth",
@@ -5808,10 +5202,11 @@
     "place": 18,
     "of": 85,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 107400
+    "bytes": 106584
   },
   {
     "group": "synth",
@@ -5823,10 +5218,10 @@
     "place": 27,
     "of": 85,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 6.2,
     "peakDb": -7.2,
     "faded": false,
-    "bytes": 96048
+    "bytes": 93264
   },
   {
     "group": "synth",
@@ -5853,10 +5248,10 @@
     "place": 6,
     "of": 85,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "seconds": 10.300000000000001,
     "peakDb": -7.3,
     "faded": false,
-    "bytes": 141144
+    "bytes": 139344
   },
   {
     "group": "synth",
@@ -5973,10 +5368,11 @@
     "place": 1,
     "of": 194,
     "parts": 23,
-    "seconds": 10.699999999999999,
+    "joined": 0.2,
+    "seconds": 10.5,
     "peakDb": -9.699999999999999,
     "faded": true,
-    "bytes": 146232
+    "bytes": 144096
   },
   {
     "group": "synth",
@@ -5988,10 +5384,11 @@
     "place": 2,
     "of": 194,
     "parts": 23,
-    "seconds": 6.8,
-    "peakDb": -10.5,
+    "joined": 0.4,
+    "seconds": 10.199999999999999,
+    "peakDb": -8.800000000000001,
     "faded": true,
-    "bytes": 100440
+    "bytes": 157296
   },
   {
     "group": "synth",
@@ -6003,10 +5400,11 @@
     "place": 3,
     "of": 194,
     "parts": 23,
-    "seconds": 10.699999999999999,
+    "joined": 0.1,
+    "seconds": 10.6,
     "peakDb": -9.699999999999999,
     "faded": true,
-    "bytes": 162168
+    "bytes": 160800
   },
   {
     "group": "synth",
@@ -6018,10 +5416,11 @@
     "place": 9,
     "of": 194,
     "parts": 23,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 6.7,
     "peakDb": -15.4,
     "faded": true,
-    "bytes": 87912
+    "bytes": 86328
   },
   {
     "group": "synth",
@@ -6063,10 +5462,11 @@
     "place": 5,
     "of": 194,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -12.5,
     "faded": true,
-    "bytes": 90240
+    "bytes": 88992
   },
   {
     "group": "synth",
@@ -6093,10 +5493,11 @@
     "place": 10,
     "of": 194,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -8.199999999999999,
     "faded": true,
-    "bytes": 115416
+    "bytes": 112224
   },
   {
     "group": "synth",
@@ -6108,10 +5509,11 @@
     "place": 15,
     "of": 194,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "joined": 0.4,
+    "seconds": 18.0,
     "peakDb": -8.800000000000001,
     "faded": true,
-    "bytes": 149208
+    "bytes": 263904
   },
   {
     "group": "synth",
@@ -6138,10 +5540,11 @@
     "place": 18,
     "of": 194,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -8.6,
     "faded": true,
-    "bytes": 114168
+    "bytes": 110544
   },
   {
     "group": "synth",
@@ -6153,10 +5556,11 @@
     "place": 19,
     "of": 194,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "joined": 0.2,
+    "seconds": 10.5,
     "peakDb": -8.5,
     "faded": true,
-    "bytes": 180672
+    "bytes": 177888
   },
   {
     "group": "synth",
@@ -6168,10 +5572,11 @@
     "place": 20,
     "of": 194,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -6.6,
     "faded": true,
-    "bytes": 77688
+    "bytes": 76032
   },
   {
     "group": "synth",
@@ -6183,10 +5588,11 @@
     "place": 25,
     "of": 194,
     "parts": 22,
-    "seconds": 10.699999999999999,
-    "peakDb": -8.800000000000001,
+    "joined": 0.3,
+    "seconds": 18.100000000000001,
+    "peakDb": -8.0,
     "faded": true,
-    "bytes": 175656
+    "bytes": 304176
   },
   {
     "group": "synth",
@@ -6213,10 +5619,11 @@
     "place": 32,
     "of": 194,
     "parts": 22,
-    "seconds": 6.8,
-    "peakDb": -9.699999999999999,
+    "joined": 0.6,
+    "seconds": 10.1,
+    "peakDb": -7.8,
     "faded": true,
-    "bytes": 111840
+    "bytes": 171936
   },
   {
     "group": "synth",
@@ -6243,10 +5650,11 @@
     "place": 4,
     "of": 194,
     "parts": 21,
-    "seconds": 6.8,
-    "peakDb": -16.699999999999999,
+    "joined": 0.3,
+    "seconds": 8.4,
+    "peakDb": -16.5,
     "faded": true,
-    "bytes": 93120
+    "bytes": 120096
   },
   {
     "group": "synth",
@@ -6258,10 +5666,11 @@
     "place": 11,
     "of": 194,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -10.699999999999999,
     "faded": true,
-    "bytes": 124656
+    "bytes": 121104
   },
   {
     "group": "synth",
@@ -6273,10 +5682,11 @@
     "place": 21,
     "of": 194,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 6.7,
     "peakDb": -10.4,
     "faded": true,
-    "bytes": 91656
+    "bytes": 90720
   },
   {
     "group": "synth",
@@ -6288,10 +5698,11 @@
     "place": 23,
     "of": 194,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "joined": 0.1,
+    "seconds": 10.6,
     "peakDb": -9.300000000000001,
     "faded": true,
-    "bytes": 171528
+    "bytes": 170448
   },
   {
     "group": "synth",
@@ -6318,10 +5729,11 @@
     "place": 27,
     "of": 194,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.3,
+    "seconds": 8.5,
     "peakDb": -9.699999999999999,
     "faded": true,
-    "bytes": 107064
+    "bytes": 135936
   },
   {
     "group": "synth",
@@ -6363,10 +5775,11 @@
     "place": 38,
     "of": 194,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "joined": 1.2,
+    "seconds": 17.100000000000001,
     "peakDb": -9.0,
     "faded": true,
-    "bytes": 198960
+    "bytes": 318000
   },
   {
     "group": "synth",
@@ -6378,10 +5791,11 @@
     "place": 39,
     "of": 194,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.8,
+    "seconds": 9.9,
     "peakDb": -12.1,
     "faded": true,
-    "bytes": 97992
+    "bytes": 146544
   },
   {
     "group": "synth",
@@ -6393,10 +5807,11 @@
     "place": 40,
     "of": 194,
     "parts": 21,
-    "seconds": 6.8,
-    "peakDb": -8.4,
+    "joined": 0.3,
+    "seconds": 10.4,
+    "peakDb": -8.1,
     "faded": true,
-    "bytes": 107856
+    "bytes": 172968
   },
   {
     "group": "synth",
@@ -6408,10 +5823,11 @@
     "place": 6,
     "of": 194,
     "parts": 20,
-    "seconds": 6.8,
-    "peakDb": -16.0,
+    "joined": 0.4,
+    "seconds": 8.4,
+    "peakDb": -15.699999999999999,
     "faded": true,
-    "bytes": 109824
+    "bytes": 136032
   },
   {
     "group": "synth",
@@ -6423,10 +5839,11 @@
     "place": 13,
     "of": 194,
     "parts": 20,
-    "seconds": 6.8,
-    "peakDb": -19.600000000000001,
+    "joined": 0.9,
+    "seconds": 7.9,
+    "peakDb": -17.5,
     "faded": true,
-    "bytes": 122208
+    "bytes": 145056
   },
   {
     "group": "synth",
@@ -6438,10 +5855,11 @@
     "place": 14,
     "of": 194,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -10.0,
     "faded": false,
-    "bytes": 121344
+    "bytes": 117720
   },
   {
     "group": "synth",
@@ -6453,10 +5871,11 @@
     "place": 22,
     "of": 194,
     "parts": 20,
+    "joined": 0.1,
     "seconds": 6.8,
     "peakDb": -9.199999999999999,
     "faded": true,
-    "bytes": 120816
+    "bytes": 117648
   },
   {
     "group": "synth",
@@ -6468,10 +5887,11 @@
     "place": 24,
     "of": 194,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "joined": 0.1,
+    "seconds": 10.5,
     "peakDb": -8.699999999999999,
     "faded": true,
-    "bytes": 175584
+    "bytes": 172848
   },
   {
     "group": "synth",
@@ -6483,10 +5903,11 @@
     "place": 30,
     "of": 194,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 1.1,
+    "seconds": 9.6,
     "peakDb": -13.5,
     "faded": true,
-    "bytes": 80928
+    "bytes": 132720
   },
   {
     "group": "synth",
@@ -6498,10 +5919,11 @@
     "place": 31,
     "of": 194,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.3,
+    "seconds": 6.6,
     "peakDb": -9.300000000000001,
     "faded": true,
-    "bytes": 115248
+    "bytes": 111648
   },
   {
     "group": "synth",
@@ -6513,10 +5935,11 @@
     "place": 33,
     "of": 194,
     "parts": 19,
-    "seconds": 10.699999999999999,
-    "peakDb": -9.199999999999999,
+    "joined": 0.4,
+    "seconds": 18.0,
+    "peakDb": -9.0,
     "faded": true,
-    "bytes": 160224
+    "bytes": 272880
   },
   {
     "group": "synth",
@@ -6543,10 +5966,11 @@
     "place": 9,
     "of": 156,
     "parts": 23,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.7,
     "peakDb": -17.699999999999999,
     "faded": true,
-    "bytes": 97848
+    "bytes": 95256
   },
   {
     "group": "synth",
@@ -6558,10 +5982,11 @@
     "place": 36,
     "of": 156,
     "parts": 23,
-    "seconds": 10.699999999999999,
-    "peakDb": -14.1,
+    "joined": 0.4,
+    "seconds": 18.0,
+    "peakDb": -13.1,
     "faded": true,
-    "bytes": 171408
+    "bytes": 306024
   },
   {
     "group": "synth",
@@ -6573,10 +5998,11 @@
     "place": 2,
     "of": 156,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 6.7,
     "peakDb": -17.300000000000001,
     "faded": true,
-    "bytes": 89280
+    "bytes": 86376
   },
   {
     "group": "synth",
@@ -6588,10 +6014,11 @@
     "place": 5,
     "of": 156,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -21.399999999999999,
     "faded": true,
-    "bytes": 40848
+    "bytes": 39888
   },
   {
     "group": "synth",
@@ -6603,10 +6030,11 @@
     "place": 8,
     "of": 156,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -11.0,
     "faded": true,
-    "bytes": 104592
+    "bytes": 102192
   },
   {
     "group": "synth",
@@ -6618,10 +6046,11 @@
     "place": 13,
     "of": 156,
     "parts": 22,
+    "joined": 0.1,
     "seconds": 6.8,
     "peakDb": -15.800000000000001,
     "faded": true,
-    "bytes": 98520
+    "bytes": 97464
   },
   {
     "group": "synth",
@@ -6648,10 +6077,11 @@
     "place": 20,
     "of": 156,
     "parts": 22,
-    "seconds": 7.8,
+    "joined": 0.3,
+    "seconds": 9.9,
     "peakDb": -17.300000000000001,
     "faded": true,
-    "bytes": 100968
+    "bytes": 125592
   },
   {
     "group": "synth",
@@ -6663,10 +6093,11 @@
     "place": 28,
     "of": 156,
     "parts": 22,
+    "joined": 0.1,
     "seconds": 6.8,
     "peakDb": -16.5,
     "faded": true,
-    "bytes": 101928
+    "bytes": 100176
   },
   {
     "group": "synth",
@@ -6678,10 +6109,11 @@
     "place": 34,
     "of": 156,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "joined": 0.6,
+    "seconds": 17.800000000000001,
     "peakDb": -9.6,
     "faded": true,
-    "bytes": 247440
+    "bytes": 424296
   },
   {
     "group": "synth",
@@ -6708,10 +6140,11 @@
     "place": 6,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
-    "peakDb": -13.199999999999999,
+    "joined": 1.2,
+    "seconds": 9.5,
+    "peakDb": -12.199999999999999,
     "faded": true,
-    "bytes": 81504
+    "bytes": 117264
   },
   {
     "group": "synth",
@@ -6723,10 +6156,11 @@
     "place": 10,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
-    "peakDb": -9.0,
+    "joined": 0.3,
+    "seconds": 10.300000000000001,
+    "peakDb": -7.9,
     "faded": true,
-    "bytes": 104424
+    "bytes": 165048
   },
   {
     "group": "synth",
@@ -6753,10 +6187,11 @@
     "place": 14,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 6.7,
     "peakDb": -18.399999999999999,
     "faded": false,
-    "bytes": 89328
+    "bytes": 88176
   },
   {
     "group": "synth",
@@ -6798,10 +6233,11 @@
     "place": 24,
     "of": 156,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "joined": 0.1,
+    "seconds": 10.6,
     "peakDb": -17.600000000000001,
     "faded": true,
-    "bytes": 163920
+    "bytes": 162576
   },
   {
     "group": "synth",
@@ -6813,10 +6249,11 @@
     "place": 25,
     "of": 156,
     "parts": 21,
+    "joined": 0.1,
     "seconds": 6.8,
     "peakDb": -13.300000000000001,
     "faded": false,
-    "bytes": 73848
+    "bytes": 73536
   },
   {
     "group": "synth",
@@ -6828,10 +6265,11 @@
     "place": 26,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
-    "peakDb": -15.199999999999999,
+    "joined": 0.9,
+    "seconds": 9.800000000000001,
+    "peakDb": -14.9,
     "faded": true,
-    "bytes": 95208
+    "bytes": 145344
   },
   {
     "group": "synth",
@@ -6843,10 +6281,11 @@
     "place": 39,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
-    "peakDb": -11.199999999999999,
+    "joined": 0.4,
+    "seconds": 10.199999999999999,
+    "peakDb": -9.5,
     "faded": true,
-    "bytes": 88008
+    "bytes": 139392
   },
   {
     "group": "synth",
@@ -6858,10 +6297,11 @@
     "place": 40,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.4,
+    "seconds": 10.300000000000001,
     "peakDb": -15.300000000000001,
     "faded": true,
-    "bytes": 106224
+    "bytes": 159168
   },
   {
     "group": "synth",
@@ -6873,10 +6313,11 @@
     "place": 4,
     "of": 156,
     "parts": 20,
-    "seconds": 6.8,
-    "peakDb": -15.800000000000001,
+    "joined": 0.4,
+    "seconds": 10.300000000000001,
+    "peakDb": -15.0,
     "faded": true,
-    "bytes": 78456
+    "bytes": 121968
   },
   {
     "group": "synth",
@@ -6888,10 +6329,11 @@
     "place": 11,
     "of": 156,
     "parts": 20,
-    "seconds": 7.8,
+    "joined": 0.2,
+    "seconds": 7.6,
     "peakDb": -18.899999999999999,
     "faded": true,
-    "bytes": 119352
+    "bytes": 117528
   },
   {
     "group": "synth",
@@ -6903,10 +6345,11 @@
     "place": 17,
     "of": 156,
     "parts": 20,
-    "seconds": 6.8,
-    "peakDb": -17.100000000000001,
+    "joined": 0.4,
+    "seconds": 10.300000000000001,
+    "peakDb": -16.300000000000001,
     "faded": true,
-    "bytes": 99216
+    "bytes": 153840
   },
   {
     "group": "synth",
@@ -6918,10 +6361,11 @@
     "place": 19,
     "of": 156,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "joined": 0.2,
+    "seconds": 10.5,
     "peakDb": -18.800000000000001,
     "faded": true,
-    "bytes": 163080
+    "bytes": 160512
   },
   {
     "group": "synth",
@@ -6933,10 +6377,11 @@
     "place": 21,
     "of": 156,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.7,
     "peakDb": -16.5,
     "faded": true,
-    "bytes": 82416
+    "bytes": 81552
   },
   {
     "group": "synth",
@@ -7068,10 +6513,10 @@
     "place": 23,
     "of": 127,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 5.1,
     "peakDb": -15.4,
     "faded": false,
-    "bytes": 79536
+    "bytes": 78672
   },
   {
     "group": "synth",
@@ -7203,10 +6648,10 @@
     "place": 18,
     "of": 127,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.9,
     "peakDb": -10.9,
     "faded": false,
-    "bytes": 84168
+    "bytes": 82272
   },
   {
     "group": "synth",
@@ -7338,10 +6783,10 @@
     "place": 5,
     "of": 191,
     "parts": 22,
-    "seconds": 7.8,
+    "seconds": 6.2,
     "peakDb": -15.4,
     "faded": false,
-    "bytes": 69480
+    "bytes": 63336
   },
   {
     "group": "synth",
@@ -7353,10 +6798,10 @@
     "place": 7,
     "of": 191,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 4.5,
     "peakDb": -15.1,
     "faded": false,
-    "bytes": 80208
+    "bytes": 70896
   },
   {
     "group": "synth",
@@ -7368,10 +6813,10 @@
     "place": 9,
     "of": 191,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "seconds": 8.800000000000001,
     "peakDb": -15.800000000000001,
     "faded": false,
-    "bytes": 149712
+    "bytes": 142200
   },
   {
     "group": "synth",
@@ -7383,10 +6828,10 @@
     "place": 13,
     "of": 191,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 4.1,
     "peakDb": -9.6,
     "faded": false,
-    "bytes": 72432
+    "bytes": 61584
   },
   {
     "group": "synth",
@@ -7398,10 +6843,10 @@
     "place": 18,
     "of": 191,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 5.2,
     "peakDb": -14.699999999999999,
     "faded": false,
-    "bytes": 86832
+    "bytes": 80400
   },
   {
     "group": "synth",
@@ -7413,10 +6858,10 @@
     "place": 20,
     "of": 191,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -9.199999999999999,
     "faded": false,
-    "bytes": 42000
+    "bytes": 30864
   },
   {
     "group": "synth",
@@ -7428,10 +6873,10 @@
     "place": 1,
     "of": 191,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.4,
     "peakDb": -14.5,
     "faded": false,
-    "bytes": 72048
+    "bytes": 62448
   },
   {
     "group": "synth",
@@ -7443,10 +6888,10 @@
     "place": 3,
     "of": 191,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.5,
     "peakDb": -16.899999999999999,
     "faded": false,
-    "bytes": 76488
+    "bytes": 67176
   },
   {
     "group": "synth",
@@ -7458,10 +6903,10 @@
     "place": 14,
     "of": 191,
     "parts": 21,
-    "seconds": 7.8,
+    "seconds": 4.6,
     "peakDb": -13.5,
     "faded": false,
-    "bytes": 77280
+    "bytes": 64320
   },
   {
     "group": "synth",
@@ -7488,10 +6933,11 @@
     "place": 28,
     "of": 191,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "joined": 0.1,
+    "seconds": 8.699999999999999,
     "peakDb": -16.0,
     "faded": false,
-    "bytes": 200040
+    "bytes": 191448
   },
   {
     "group": "synth",
@@ -7503,10 +6949,10 @@
     "place": 2,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -14.0,
     "faded": false,
-    "bytes": 79296
+    "bytes": 67584
   },
   {
     "group": "synth",
@@ -7518,10 +6964,10 @@
     "place": 4,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.8,
     "peakDb": -14.800000000000001,
     "faded": false,
-    "bytes": 70248
+    "bytes": 61992
   },
   {
     "group": "synth",
@@ -7533,10 +6979,10 @@
     "place": 8,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -10.0,
     "faded": false,
-    "bytes": 71760
+    "bytes": 60336
   },
   {
     "group": "synth",
@@ -7548,10 +6994,10 @@
     "place": 10,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.3,
     "peakDb": -15.800000000000001,
     "faded": false,
-    "bytes": 110280
+    "bytes": 104232
   },
   {
     "group": "synth",
@@ -7563,10 +7009,10 @@
     "place": 15,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.4,
     "peakDb": -15.300000000000001,
     "faded": false,
-    "bytes": 99576
+    "bytes": 89880
   },
   {
     "group": "synth",
@@ -7578,10 +7024,10 @@
     "place": 16,
     "of": 191,
     "parts": 20,
-    "seconds": 7.8,
+    "seconds": 5.8,
     "peakDb": -15.9,
     "faded": false,
-    "bytes": 86016
+    "bytes": 78240
   },
   {
     "group": "synth",
@@ -7593,10 +7039,10 @@
     "place": 19,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.1,
     "peakDb": -16.0,
     "faded": false,
-    "bytes": 77976
+    "bytes": 71064
   },
   {
     "group": "synth",
@@ -7608,10 +7054,11 @@
     "place": 21,
     "of": 191,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "joined": 0.2,
+    "seconds": 9.199999999999999,
     "peakDb": -16.399999999999999,
     "faded": false,
-    "bytes": 173376
+    "bytes": 165792
   },
   {
     "group": "synth",
@@ -7623,10 +7070,10 @@
     "place": 22,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.6,
     "peakDb": -13.300000000000001,
     "faded": false,
-    "bytes": 88296
+    "bytes": 83304
   },
   {
     "group": "synth",
@@ -7638,10 +7085,11 @@
     "place": 23,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 5.0,
     "peakDb": -15.9,
     "faded": false,
-    "bytes": 72864
+    "bytes": 63168
   },
   {
     "group": "synth",
@@ -7653,10 +7101,10 @@
     "place": 24,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.8,
     "peakDb": -6.8,
     "faded": false,
-    "bytes": 96216
+    "bytes": 88032
   },
   {
     "group": "synth",
@@ -7668,10 +7116,11 @@
     "place": 25,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 5.7,
     "peakDb": -14.300000000000001,
     "faded": false,
-    "bytes": 103008
+    "bytes": 98448
   },
   {
     "group": "synth",
@@ -7683,10 +7132,11 @@
     "place": 26,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.4,
+    "seconds": 8.0,
     "peakDb": -15.5,
     "faded": false,
-    "bytes": 97608
+    "bytes": 169152
   },
   {
     "group": "synth",
@@ -7698,10 +7148,10 @@
     "place": 29,
     "of": 191,
     "parts": 20,
-    "seconds": 7.8,
+    "seconds": 5.9,
     "peakDb": -14.800000000000001,
     "faded": false,
-    "bytes": 137472
+    "bytes": 129984
   },
   {
     "group": "synth",
@@ -7713,10 +7163,10 @@
     "place": 38,
     "of": 191,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.5,
     "peakDb": -16.399999999999999,
     "faded": false,
-    "bytes": 90288
+    "bytes": 80976
   },
   {
     "group": "synth",
@@ -7728,10 +7178,10 @@
     "place": 40,
     "of": 191,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "seconds": 7.7,
     "peakDb": -17.0,
     "faded": false,
-    "bytes": 90744
+    "bytes": 78744
   },
   {
     "group": "synth",
@@ -7743,10 +7193,10 @@
     "place": 6,
     "of": 191,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.8,
     "peakDb": -16.0,
     "faded": false,
-    "bytes": 64320
+    "bytes": 52320
   },
   {
     "group": "synth",
@@ -7758,10 +7208,10 @@
     "place": 12,
     "of": 191,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 2.2,
     "peakDb": -12.800000000000001,
     "faded": false,
-    "bytes": 39264
+    "bytes": 20928
   },
   {
     "group": "synth",
@@ -7773,10 +7223,10 @@
     "place": 17,
     "of": 191,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -9.1,
     "faded": false,
-    "bytes": 65352
+    "bytes": 53544
   },
   {
     "group": "synth",
@@ -7788,10 +7238,10 @@
     "place": 30,
     "of": 191,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 5.8,
     "peakDb": -15.199999999999999,
     "faded": false,
-    "bytes": 93288
+    "bytes": 89256
   },
   {
     "group": "synth",
@@ -7803,10 +7253,10 @@
     "place": 31,
     "of": 191,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 5.2,
     "peakDb": -13.699999999999999,
     "faded": false,
-    "bytes": 92400
+    "bytes": 86064
   },
   {
     "group": "synth",
@@ -7818,10 +7268,11 @@
     "place": 33,
     "of": 191,
     "parts": 19,
-    "seconds": 7.8,
-    "peakDb": -14.4,
+    "joined": 0.4,
+    "seconds": 6.6,
+    "peakDb": -12.800000000000001,
     "faded": false,
-    "bytes": 89616
+    "bytes": 108024
   },
   {
     "group": "synth",
@@ -7833,10 +7284,11 @@
     "place": 34,
     "of": 191,
     "parts": 19,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 5.3,
     "peakDb": -17.800000000000001,
     "faded": false,
-    "bytes": 86712
+    "bytes": 81192
   },
   {
     "group": "synth",
@@ -7848,10 +7300,10 @@
     "place": 35,
     "of": 191,
     "parts": 19,
-    "seconds": 10.699999999999999,
+    "seconds": 7.7,
     "peakDb": -15.0,
     "faded": false,
-    "bytes": 79608
+    "bytes": 67800
   },
   {
     "group": "synth",
@@ -7863,10 +7315,10 @@
     "place": 36,
     "of": 191,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 5.2,
     "peakDb": -14.300000000000001,
     "faded": false,
-    "bytes": 156096
+    "bytes": 149664
   },
   {
     "group": "synth",
@@ -7878,10 +7330,10 @@
     "place": 39,
     "of": 191,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 5.5,
     "peakDb": -13.4,
     "faded": false,
-    "bytes": 79296
+    "bytes": 73824
   },
   {
     "group": "synth",
@@ -7893,10 +7345,11 @@
     "place": 1,
     "of": 125,
     "parts": 24,
-    "seconds": 7.8,
+    "joined": 0.2,
+    "seconds": 7.6,
     "peakDb": -16.0,
     "faded": false,
-    "bytes": 55584
+    "bytes": 54432
   },
   {
     "group": "synth",
@@ -7908,10 +7361,11 @@
     "place": 4,
     "of": 125,
     "parts": 23,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 5.5,
     "peakDb": -16.800000000000001,
     "faded": false,
-    "bytes": 104976
+    "bytes": 102936
   },
   {
     "group": "synth",
@@ -7923,10 +7377,11 @@
     "place": 5,
     "of": 125,
     "parts": 23,
-    "seconds": 10.699999999999999,
+    "joined": 0.2,
+    "seconds": 10.4,
     "peakDb": -14.6,
     "faded": true,
-    "bytes": 126840
+    "bytes": 125616
   },
   {
     "group": "synth",
@@ -7938,10 +7393,11 @@
     "place": 6,
     "of": 125,
     "parts": 23,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 5.7,
     "peakDb": -13.4,
     "faded": false,
-    "bytes": 63792
+    "bytes": 59208
   },
   {
     "group": "synth",
@@ -7953,10 +7409,11 @@
     "place": 14,
     "of": 125,
     "parts": 23,
-    "seconds": 6.8,
-    "peakDb": -12.699999999999999,
+    "joined": 0.4,
+    "seconds": 9.0,
+    "peakDb": -10.6,
     "faded": false,
-    "bytes": 88152
+    "bytes": 141432
   },
   {
     "group": "synth",
@@ -7968,10 +7425,11 @@
     "place": 25,
     "of": 125,
     "parts": 23,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 5.9,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 97080
+    "bytes": 90984
   },
   {
     "group": "synth",
@@ -7983,10 +7441,11 @@
     "place": 40,
     "of": 125,
     "parts": 23,
-    "seconds": 6.8,
-    "peakDb": -12.300000000000001,
+    "joined": 0.5,
+    "seconds": 10.199999999999999,
+    "peakDb": -12.0,
     "faded": true,
-    "bytes": 96816
+    "bytes": 154992
   },
   {
     "group": "synth",
@@ -7998,10 +7457,11 @@
     "place": 2,
     "of": 125,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 4.9,
     "peakDb": -16.5,
     "faded": false,
-    "bytes": 75792
+    "bytes": 67416
   },
   {
     "group": "synth",
@@ -8013,10 +7473,11 @@
     "place": 10,
     "of": 125,
     "parts": 22,
-    "seconds": 7.8,
+    "joined": 0.1,
+    "seconds": 7.1,
     "peakDb": -15.1,
     "faded": false,
-    "bytes": 91872
+    "bytes": 87648
   },
   {
     "group": "synth",
@@ -8028,10 +7489,11 @@
     "place": 11,
     "of": 125,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 5.8,
     "peakDb": -14.1,
     "faded": false,
-    "bytes": 94440
+    "bytes": 87432
   },
   {
     "group": "synth",
@@ -8043,10 +7505,11 @@
     "place": 12,
     "of": 125,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "joined": 0.1,
+    "seconds": 9.699999999999999,
     "peakDb": -15.9,
     "faded": false,
-    "bytes": 142104
+    "bytes": 139032
   },
   {
     "group": "synth",
@@ -8058,10 +7521,11 @@
     "place": 15,
     "of": 125,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 5.5,
     "peakDb": -16.199999999999999,
     "faded": false,
-    "bytes": 80688
+    "bytes": 73776
   },
   {
     "group": "synth",
@@ -8073,10 +7537,11 @@
     "place": 17,
     "of": 125,
     "parts": 22,
-    "seconds": 6.8,
-    "peakDb": -12.1,
+    "joined": 1.0,
+    "seconds": 9.4,
+    "peakDb": -10.699999999999999,
     "faded": false,
-    "bytes": 91128
+    "bytes": 148968
   },
   {
     "group": "synth",
@@ -8088,10 +7553,11 @@
     "place": 18,
     "of": 125,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 5.9,
     "peakDb": -8.0,
     "faded": false,
-    "bytes": 93024
+    "bytes": 87912
   },
   {
     "group": "synth",
@@ -8103,10 +7569,11 @@
     "place": 27,
     "of": 125,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -14.6,
     "faded": false,
-    "bytes": 47616
+    "bytes": 46488
   },
   {
     "group": "synth",
@@ -8118,10 +7585,11 @@
     "place": 29,
     "of": 125,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 5.4,
     "peakDb": -13.800000000000001,
     "faded": false,
-    "bytes": 68184
+    "bytes": 62544
   },
   {
     "group": "synth",
@@ -8133,10 +7601,11 @@
     "place": 30,
     "of": 125,
     "parts": 22,
-    "seconds": 7.8,
-    "peakDb": -15.9,
+    "joined": 0.3,
+    "seconds": 9.300000000000001,
+    "peakDb": -13.1,
     "faded": false,
-    "bytes": 75024
+    "bytes": 102024
   },
   {
     "group": "synth",
@@ -8148,10 +7617,11 @@
     "place": 35,
     "of": 125,
     "parts": 22,
-    "seconds": 6.8,
-    "peakDb": -11.1,
-    "faded": true,
-    "bytes": 109872
+    "joined": 0.9,
+    "seconds": 9.800000000000001,
+    "peakDb": -10.1,
+    "faded": false,
+    "bytes": 178728
   },
   {
     "group": "synth",
@@ -8163,10 +7633,11 @@
     "place": 37,
     "of": 125,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "joined": 0.8,
+    "seconds": 17.600000000000001,
     "peakDb": -12.1,
     "faded": false,
-    "bytes": 127488
+    "bytes": 259008
   },
   {
     "group": "synth",
@@ -8178,10 +7649,11 @@
     "place": 38,
     "of": 125,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 4.4,
     "peakDb": -9.699999999999999,
     "faded": false,
-    "bytes": 88560
+    "bytes": 75672
   },
   {
     "group": "synth",
@@ -8193,10 +7665,11 @@
     "place": 3,
     "of": 125,
     "parts": 21,
-    "seconds": 6.8,
-    "peakDb": -16.399999999999999,
+    "joined": 0.7,
+    "seconds": 8.300000000000001,
+    "peakDb": -12.699999999999999,
     "faded": false,
-    "bytes": 84960
+    "bytes": 126360
   },
   {
     "group": "synth",
@@ -8208,10 +7681,11 @@
     "place": 8,
     "of": 125,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.9,
+    "seconds": 9.800000000000001,
     "peakDb": -8.199999999999999,
     "faded": true,
-    "bytes": 88656
+    "bytes": 139680
   },
   {
     "group": "synth",
@@ -8223,10 +7697,10 @@
     "place": 13,
     "of": 125,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.7,
     "peakDb": -15.300000000000001,
     "faded": false,
-    "bytes": 45696
+    "bytes": 37056
   },
   {
     "group": "synth",
@@ -8238,10 +7712,10 @@
     "place": 20,
     "of": 125,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.7,
     "peakDb": -15.0,
     "faded": false,
-    "bytes": 76320
+    "bytes": 67968
   },
   {
     "group": "synth",
@@ -8268,10 +7742,10 @@
     "place": 20,
     "of": 141,
     "parts": 23,
-    "seconds": 6.8,
+    "seconds": 6.6,
     "peakDb": -15.199999999999999,
     "faded": false,
-    "bytes": 81768
+    "bytes": 80616
   },
   {
     "group": "synth",
@@ -8283,10 +7757,11 @@
     "place": 30,
     "of": 141,
     "parts": 23,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -14.1,
     "faded": true,
-    "bytes": 85056
+    "bytes": 84216
   },
   {
     "group": "synth",
@@ -8313,10 +7788,10 @@
     "place": 7,
     "of": 141,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 3.0,
     "peakDb": -15.0,
     "faded": false,
-    "bytes": 49080
+    "bytes": 33816
   },
   {
     "group": "synth",
@@ -8343,10 +7818,10 @@
     "place": 15,
     "of": 141,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 6.6,
     "peakDb": -14.4,
     "faded": false,
-    "bytes": 72288
+    "bytes": 71520
   },
   {
     "group": "synth",
@@ -8403,10 +7878,11 @@
     "place": 35,
     "of": 141,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -12.1,
     "faded": true,
-    "bytes": 101616
+    "bytes": 100344
   },
   {
     "group": "synth",
@@ -8433,10 +7909,10 @@
     "place": 40,
     "of": 141,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 5.7,
     "peakDb": -14.4,
     "faded": false,
-    "bytes": 67056
+    "bytes": 62640
   },
   {
     "group": "synth",
@@ -8523,10 +7999,11 @@
     "place": 10,
     "of": 141,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -16.0,
     "faded": false,
-    "bytes": 113664
+    "bytes": 111480
   },
   {
     "group": "synth",
@@ -8553,10 +8030,10 @@
     "place": 13,
     "of": 141,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 6.5,
     "peakDb": -16.300000000000001,
     "faded": false,
-    "bytes": 81672
+    "bytes": 80232
   },
   {
     "group": "synth",
@@ -8613,10 +8090,10 @@
     "place": 25,
     "of": 141,
     "parts": 21,
-    "seconds": 4.9,
+    "seconds": 4.2,
     "peakDb": -13.699999999999999,
     "faded": false,
-    "bytes": 63744
+    "bytes": 60960
   },
   {
     "group": "synth",
@@ -8643,10 +8120,11 @@
     "place": 31,
     "of": 141,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -12.5,
     "faded": true,
-    "bytes": 103536
+    "bytes": 103344
   },
   {
     "group": "synth",
@@ -8658,10 +8136,11 @@
     "place": 9,
     "of": 107,
     "parts": 24,
-    "seconds": 6.8,
+    "joined": 0.4,
+    "seconds": 8.4,
     "peakDb": -7.4,
     "faded": true,
-    "bytes": 101064
+    "bytes": 134328
   },
   {
     "group": "synth",
@@ -8688,10 +8167,11 @@
     "place": 1,
     "of": 107,
     "parts": 22,
-    "seconds": 6.8,
-    "peakDb": -8.699999999999999,
+    "joined": 0.4,
+    "seconds": 10.300000000000001,
+    "peakDb": -8.1,
     "faded": true,
-    "bytes": 84720
+    "bytes": 139824
   },
   {
     "group": "synth",
@@ -8703,10 +8183,11 @@
     "place": 10,
     "of": 107,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "joined": 0.1,
+    "seconds": 10.6,
     "peakDb": -9.199999999999999,
     "faded": true,
-    "bytes": 132144
+    "bytes": 132360
   },
   {
     "group": "synth",
@@ -8763,10 +8244,11 @@
     "place": 27,
     "of": 107,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.4,
+    "seconds": 8.4,
     "peakDb": -20.800000000000001,
     "faded": false,
-    "bytes": 64488
+    "bytes": 85680
   },
   {
     "group": "synth",
@@ -8778,10 +8260,11 @@
     "place": 39,
     "of": 107,
     "parts": 22,
-    "seconds": 6.8,
-    "peakDb": -8.1,
+    "joined": 0.3,
+    "seconds": 10.4,
+    "peakDb": -7.8,
     "faded": true,
-    "bytes": 93072
+    "bytes": 149040
   },
   {
     "group": "synth",
@@ -8793,10 +8276,11 @@
     "place": 3,
     "of": 107,
     "parts": 21,
-    "seconds": 6.8,
-    "peakDb": -3.3,
+    "joined": 1.1,
+    "seconds": 9.6,
+    "peakDb": -1.9,
     "faded": true,
-    "bytes": 73416
+    "bytes": 130104
   },
   {
     "group": "synth",
@@ -8808,10 +8292,11 @@
     "place": 4,
     "of": 107,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "joined": 0.2,
+    "seconds": 10.5,
     "peakDb": -6.5,
     "faded": true,
-    "bytes": 144264
+    "bytes": 142440
   },
   {
     "group": "synth",
@@ -8823,10 +8308,11 @@
     "place": 5,
     "of": 107,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.3,
+    "seconds": 10.4,
     "peakDb": -15.199999999999999,
     "faded": true,
-    "bytes": 71904
+    "bytes": 118152
   },
   {
     "group": "synth",
@@ -8853,10 +8339,11 @@
     "place": 7,
     "of": 107,
     "parts": 21,
-    "seconds": 10.699999999999999,
-    "peakDb": -6.8,
+    "joined": 0.5,
+    "seconds": 17.899999999999999,
+    "peakDb": -6.7,
     "faded": true,
-    "bytes": 143088
+    "bytes": 254880
   },
   {
     "group": "synth",
@@ -8898,10 +8385,11 @@
     "place": 25,
     "of": 107,
     "parts": 21,
-    "seconds": 6.8,
-    "peakDb": -12.0,
+    "joined": 0.5,
+    "seconds": 10.199999999999999,
+    "peakDb": -11.0,
     "faded": true,
-    "bytes": 44328
+    "bytes": 70560
   },
   {
     "group": "synth",
@@ -8913,10 +8401,11 @@
     "place": 30,
     "of": 107,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 6.7,
     "peakDb": -6.6,
     "faded": false,
-    "bytes": 89136
+    "bytes": 87096
   },
   {
     "group": "synth",
@@ -8928,10 +8417,11 @@
     "place": 34,
     "of": 107,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -9.699999999999999,
     "faded": true,
-    "bytes": 91680
+    "bytes": 89280
   },
   {
     "group": "synth",
@@ -8943,10 +8433,11 @@
     "place": 36,
     "of": 107,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.3,
+    "seconds": 8.4,
     "peakDb": -15.5,
     "faded": true,
-    "bytes": 60384
+    "bytes": 79584
   },
   {
     "group": "synth",
@@ -8973,10 +8464,10 @@
     "place": 2,
     "of": 160,
     "parts": 21,
-    "seconds": 4.9,
+    "seconds": 4.2,
     "peakDb": -10.800000000000001,
     "faded": false,
-    "bytes": 63432
+    "bytes": 60336
   },
   {
     "group": "synth",
@@ -8988,10 +8479,10 @@
     "place": 5,
     "of": 160,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 3.8,
     "peakDb": -8.6,
     "faded": false,
-    "bytes": 57936
+    "bytes": 45744
   },
   {
     "group": "synth",
@@ -9003,10 +8494,11 @@
     "place": 7,
     "of": 160,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 4.1,
     "peakDb": -11.699999999999999,
     "faded": false,
-    "bytes": 81888
+    "bytes": 69744
   },
   {
     "group": "synth",
@@ -9018,10 +8510,10 @@
     "place": 18,
     "of": 160,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.8,
     "peakDb": -13.1,
     "faded": false,
-    "bytes": 99840
+    "bytes": 91680
   },
   {
     "group": "synth",
@@ -9033,10 +8525,10 @@
     "place": 1,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 1.0,
     "peakDb": -14.9,
     "faded": false,
-    "bytes": 36024
+    "bytes": 12792
   },
   {
     "group": "synth",
@@ -9048,10 +8540,10 @@
     "place": 4,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.0,
     "peakDb": -12.699999999999999,
     "faded": false,
-    "bytes": 129552
+    "bytes": 122328
   },
   {
     "group": "synth",
@@ -9063,10 +8555,10 @@
     "place": 8,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 6.0,
     "peakDb": -15.9,
     "faded": false,
-    "bytes": 86232
+    "bytes": 82968
   },
   {
     "group": "synth",
@@ -9078,10 +8570,10 @@
     "place": 10,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 3.5,
     "peakDb": -15.5,
     "faded": false,
-    "bytes": 64824
+    "bytes": 51552
   },
   {
     "group": "synth",
@@ -9093,10 +8585,10 @@
     "place": 11,
     "of": 160,
     "parts": 20,
-    "seconds": 4.9,
+    "seconds": 1.8,
     "peakDb": -14.6,
     "faded": false,
-    "bytes": 37224
+    "bytes": 24600
   },
   {
     "group": "synth",
@@ -9108,10 +8600,10 @@
     "place": 12,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.0,
     "peakDb": -9.800000000000001,
     "faded": false,
-    "bytes": 70056
+    "bytes": 62664
   },
   {
     "group": "synth",
@@ -9123,10 +8615,11 @@
     "place": 15,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 4.4,
     "peakDb": -12.199999999999999,
     "faded": false,
-    "bytes": 63120
+    "bytes": 52680
   },
   {
     "group": "synth",
@@ -9138,10 +8631,10 @@
     "place": 16,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -14.699999999999999,
     "faded": false,
-    "bytes": 63312
+    "bytes": 51984
   },
   {
     "group": "synth",
@@ -9153,10 +8646,10 @@
     "place": 23,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 0.7,
     "peakDb": -9.699999999999999,
     "faded": false,
-    "bytes": 37464
+    "bytes": 12696
   },
   {
     "group": "synth",
@@ -9168,10 +8661,10 @@
     "place": 25,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.4,
     "peakDb": -7.8,
     "faded": false,
-    "bytes": 107592
+    "bytes": 97632
   },
   {
     "group": "synth",
@@ -9183,10 +8676,10 @@
     "place": 27,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -9.0,
     "faded": false,
-    "bytes": 88296
+    "bytes": 76584
   },
   {
     "group": "synth",
@@ -9198,10 +8691,10 @@
     "place": 37,
     "of": 160,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 3.8,
     "peakDb": -9.5,
     "faded": false,
-    "bytes": 54984
+    "bytes": 42840
   },
   {
     "group": "synth",
@@ -9213,10 +8706,10 @@
     "place": 3,
     "of": 160,
     "parts": 19,
-    "seconds": 4.9,
+    "seconds": 2.0,
     "peakDb": -11.699999999999999,
     "faded": false,
-    "bytes": 37872
+    "bytes": 26328
   },
   {
     "group": "synth",
@@ -9228,10 +8721,10 @@
     "place": 6,
     "of": 160,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 5.0,
     "peakDb": -14.300000000000001,
     "faded": false,
-    "bytes": 111960
+    "bytes": 104664
   },
   {
     "group": "synth",
@@ -9243,10 +8736,11 @@
     "place": 14,
     "of": 160,
     "parts": 19,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 3.7,
     "peakDb": -13.800000000000001,
     "faded": false,
-    "bytes": 42672
+    "bytes": 29544
   },
   {
     "group": "synth",
@@ -9258,10 +8752,10 @@
     "place": 19,
     "of": 160,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 4.4,
     "peakDb": -14.699999999999999,
     "faded": false,
-    "bytes": 73368
+    "bytes": 63768
   },
   {
     "group": "synth",
@@ -9273,10 +8767,10 @@
     "place": 20,
     "of": 160,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 0.3,
     "peakDb": -15.4,
     "faded": false,
-    "bytes": 31704
+    "bytes": 5664
   },
   {
     "group": "synth",
@@ -9288,10 +8782,10 @@
     "place": 21,
     "of": 160,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -13.5,
     "faded": false,
-    "bytes": 115992
+    "bytes": 104856
   },
   {
     "group": "synth",
@@ -9303,10 +8797,10 @@
     "place": 22,
     "of": 160,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -5.6,
     "faded": false,
-    "bytes": 63816
+    "bytes": 52392
   },
   {
     "group": "synth",
@@ -9318,10 +8812,10 @@
     "place": 34,
     "of": 160,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.1,
     "peakDb": -12.699999999999999,
     "faded": false,
-    "bytes": 49896
+    "bytes": 34920
   },
   {
     "group": "synth",
@@ -9333,10 +8827,10 @@
     "place": 35,
     "of": 160,
     "parts": 19,
-    "seconds": 4.9,
+    "seconds": 2.1,
     "peakDb": -12.0,
     "faded": false,
-    "bytes": 48936
+    "bytes": 37704
   },
   {
     "group": "synth",
@@ -9348,10 +8842,10 @@
     "place": 39,
     "of": 160,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -10.4,
     "faded": false,
-    "bytes": 65568
+    "bytes": 54336
   },
   {
     "group": "synth",
@@ -9363,10 +8857,11 @@
     "place": 40,
     "of": 160,
     "parts": 19,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 4.2,
     "peakDb": -10.800000000000001,
     "faded": false,
-    "bytes": 63552
+    "bytes": 52896
   },
   {
     "group": "synth",
@@ -9378,10 +8873,10 @@
     "place": 9,
     "of": 160,
     "parts": 18,
-    "seconds": 6.8,
+    "seconds": 4.8,
     "peakDb": -8.800000000000001,
     "faded": false,
-    "bytes": 72528
+    "bytes": 64176
   },
   {
     "group": "synth",
@@ -9393,10 +8888,10 @@
     "place": 13,
     "of": 160,
     "parts": 18,
-    "seconds": 6.8,
+    "seconds": 0.5,
     "peakDb": -13.0,
     "faded": false,
-    "bytes": 32256
+    "bytes": 7104
   },
   {
     "group": "synth",
@@ -9408,10 +8903,10 @@
     "place": 17,
     "of": 160,
     "parts": 18,
-    "seconds": 6.8,
+    "seconds": 4.3,
     "peakDb": -13.199999999999999,
     "faded": false,
-    "bytes": 48048
+    "bytes": 37872
   },
   {
     "group": "synth",
@@ -9423,10 +8918,10 @@
     "place": 24,
     "of": 160,
     "parts": 18,
-    "seconds": 6.8,
+    "seconds": 5.4,
     "peakDb": -13.1,
     "faded": false,
-    "bytes": 99696
+    "bytes": 94032
   },
   {
     "group": "synth",
@@ -9438,10 +8933,10 @@
     "place": 26,
     "of": 160,
     "parts": 18,
-    "seconds": 6.8,
+    "seconds": 3.8,
     "peakDb": -12.6,
     "faded": false,
-    "bytes": 68400
+    "bytes": 56328
   },
   {
     "group": "synth",
@@ -9453,10 +8948,10 @@
     "place": 4,
     "of": 137,
     "parts": 21,
-    "seconds": 4.9,
+    "seconds": 2.0,
     "peakDb": -14.0,
     "faded": false,
-    "bytes": 43560
+    "bytes": 31992
   },
   {
     "group": "synth",
@@ -9468,10 +8963,10 @@
     "place": 6,
     "of": 137,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 3.8,
     "peakDb": -12.5,
     "faded": false,
-    "bytes": 48960
+    "bytes": 36864
   },
   {
     "group": "synth",
@@ -9483,10 +8978,11 @@
     "place": 7,
     "of": 137,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 4.3,
     "peakDb": -12.199999999999999,
     "faded": false,
-    "bytes": 64104
+    "bytes": 53832
   },
   {
     "group": "synth",
@@ -9498,10 +8994,10 @@
     "place": 9,
     "of": 137,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.2,
     "peakDb": -7.0,
     "faded": false,
-    "bytes": 97176
+    "bytes": 86544
   },
   {
     "group": "synth",
@@ -9513,10 +9009,10 @@
     "place": 10,
     "of": 137,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 0.9,
     "peakDb": -17.100000000000001,
     "faded": false,
-    "bytes": 30480
+    "bytes": 6960
   },
   {
     "group": "synth",
@@ -9528,10 +9024,10 @@
     "place": 18,
     "of": 137,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -13.800000000000001,
     "faded": false,
-    "bytes": 79488
+    "bytes": 68256
   },
   {
     "group": "synth",
@@ -9543,10 +9039,10 @@
     "place": 19,
     "of": 137,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 5.0,
     "peakDb": -13.5,
     "faded": false,
-    "bytes": 70728
+    "bytes": 63336
   },
   {
     "group": "synth",
@@ -9558,10 +9054,10 @@
     "place": 25,
     "of": 137,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.2,
     "peakDb": -11.300000000000001,
     "faded": false,
-    "bytes": 76920
+    "bytes": 66336
   },
   {
     "group": "synth",
@@ -9573,10 +9069,10 @@
     "place": 40,
     "of": 137,
     "parts": 21,
-    "seconds": 4.9,
+    "seconds": 3.8,
     "peakDb": -10.5,
     "faded": false,
-    "bytes": 105912
+    "bytes": 100320
   },
   {
     "group": "synth",
@@ -9588,10 +9084,10 @@
     "place": 2,
     "of": 137,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.7,
     "peakDb": -14.699999999999999,
     "faded": false,
-    "bytes": 59400
+    "bytes": 50952
   },
   {
     "group": "synth",
@@ -9603,10 +9099,11 @@
     "place": 5,
     "of": 137,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 5.1,
     "peakDb": -14.300000000000001,
     "faded": false,
-    "bytes": 54504
+    "bytes": 48960
   },
   {
     "group": "synth",
@@ -9618,10 +9115,10 @@
     "place": 8,
     "of": 137,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -8.1,
     "faded": false,
-    "bytes": 43968
+    "bytes": 32640
   },
   {
     "group": "synth",
@@ -9633,10 +9130,10 @@
     "place": 12,
     "of": 137,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 0.7,
     "peakDb": -13.9,
     "faded": false,
-    "bytes": 36168
+    "bytes": 11640
   },
   {
     "group": "synth",
@@ -9648,10 +9145,10 @@
     "place": 20,
     "of": 137,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.1,
     "peakDb": -9.6,
     "faded": false,
-    "bytes": 106296
+    "bytes": 95352
   },
   {
     "group": "synth",
@@ -9663,10 +9160,10 @@
     "place": 28,
     "of": 137,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.9,
     "peakDb": -14.199999999999999,
     "faded": false,
-    "bytes": 107424
+    "bytes": 99672
   },
   {
     "group": "synth",
@@ -9678,10 +9175,10 @@
     "place": 29,
     "of": 137,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 3.1,
     "peakDb": -13.0,
     "faded": false,
-    "bytes": 83424
+    "bytes": 68328
   },
   {
     "group": "synth",
@@ -9693,10 +9190,10 @@
     "place": 30,
     "of": 137,
     "parts": 20,
-    "seconds": 4.9,
+    "seconds": 3.9,
     "peakDb": -9.800000000000001,
     "faded": false,
-    "bytes": 50232
+    "bytes": 46296
   },
   {
     "group": "synth",
@@ -9708,10 +9205,10 @@
     "place": 34,
     "of": 137,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.3,
     "peakDb": -13.1,
     "faded": false,
-    "bytes": 106416
+    "bytes": 99888
   },
   {
     "group": "synth",
@@ -9723,10 +9220,11 @@
     "place": 1,
     "of": 137,
     "parts": 19,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 3.8,
     "peakDb": -15.0,
     "faded": false,
-    "bytes": 33648
+    "bytes": 21552
   },
   {
     "group": "synth",
@@ -9738,10 +9236,10 @@
     "place": 3,
     "of": 137,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -13.199999999999999,
     "faded": false,
-    "bytes": 54264
+    "bytes": 43032
   },
   {
     "group": "synth",
@@ -9753,10 +9251,10 @@
     "place": 13,
     "of": 137,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 0.4,
     "peakDb": -15.6,
     "faded": false,
-    "bytes": 30168
+    "bytes": 4248
   },
   {
     "group": "synth",
@@ -9768,10 +9266,10 @@
     "place": 14,
     "of": 137,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 4.2,
     "peakDb": -13.5,
     "faded": false,
-    "bytes": 69528
+    "bytes": 59160
   },
   {
     "group": "synth",
@@ -9783,10 +9281,10 @@
     "place": 15,
     "of": 137,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 4.6,
     "peakDb": -14.300000000000001,
     "faded": false,
-    "bytes": 66528
+    "bytes": 57600
   },
   {
     "group": "synth",
@@ -9798,10 +9296,10 @@
     "place": 16,
     "of": 137,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 2.9,
     "peakDb": -12.9,
     "faded": false,
-    "bytes": 80520
+    "bytes": 64944
   },
   {
     "group": "synth",
@@ -9813,10 +9311,10 @@
     "place": 17,
     "of": 137,
     "parts": 19,
-    "seconds": 4.9,
+    "seconds": 1.7,
     "peakDb": -14.699999999999999,
     "faded": false,
-    "bytes": 22008
+    "bytes": 9240
   },
   {
     "group": "synth",
@@ -9828,10 +9326,10 @@
     "place": 23,
     "of": 137,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.8,
     "peakDb": -13.1,
     "faded": false,
-    "bytes": 101448
+    "bytes": 89448
   },
   {
     "group": "synth",
@@ -9843,10 +9341,11 @@
     "place": 24,
     "of": 137,
     "parts": 19,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 4.4,
     "peakDb": -10.300000000000001,
     "faded": false,
-    "bytes": 86112
+    "bytes": 75600
   },
   {
     "group": "synth",
@@ -9858,10 +9357,10 @@
     "place": 2,
     "of": 112,
     "parts": 22,
-    "seconds": 4.9,
+    "seconds": 4.2,
     "peakDb": -12.699999999999999,
     "faded": false,
-    "bytes": 54408
+    "bytes": 51528
   },
   {
     "group": "synth",
@@ -9888,10 +9387,11 @@
     "place": 8,
     "of": 112,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -15.699999999999999,
     "faded": false,
-    "bytes": 155928
+    "bytes": 154464
   },
   {
     "group": "synth",
@@ -9903,10 +9403,10 @@
     "place": 19,
     "of": 112,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 5.0,
     "peakDb": -14.1,
     "faded": false,
-    "bytes": 91512
+    "bytes": 84216
   },
   {
     "group": "synth",
@@ -9918,10 +9418,10 @@
     "place": 27,
     "of": 112,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 3.8,
     "peakDb": -27.399999999999999,
     "faded": false,
-    "bytes": 42936
+    "bytes": 30840
   },
   {
     "group": "synth",
@@ -9963,10 +9463,10 @@
     "place": 10,
     "of": 112,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 3.7,
     "peakDb": -13.0,
     "faded": false,
-    "bytes": 77040
+    "bytes": 64656
   },
   {
     "group": "synth",
@@ -9978,10 +9478,10 @@
     "place": 13,
     "of": 112,
     "parts": 21,
-    "seconds": 4.9,
+    "seconds": 2.1,
     "peakDb": -15.9,
     "faded": false,
-    "bytes": 53568
+    "bytes": 42336
   },
   {
     "group": "synth",
@@ -9993,10 +9493,10 @@
     "place": 15,
     "of": 112,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.5,
     "peakDb": -17.699999999999999,
     "faded": false,
-    "bytes": 68736
+    "bytes": 59232
   },
   {
     "group": "synth",
@@ -10008,10 +9508,11 @@
     "place": 16,
     "of": 112,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 5.5,
     "peakDb": -14.4,
     "faded": false,
-    "bytes": 97728
+    "bytes": 92472
   },
   {
     "group": "synth",
@@ -10023,10 +9524,10 @@
     "place": 17,
     "of": 112,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.2,
     "peakDb": -11.5,
     "faded": false,
-    "bytes": 86928
+    "bytes": 76416
   },
   {
     "group": "synth",
@@ -10038,10 +9539,11 @@
     "place": 21,
     "of": 112,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 3.0,
     "peakDb": -21.800000000000001,
     "faded": false,
-    "bytes": 35328
+    "bytes": 19728
   },
   {
     "group": "synth",
@@ -10068,10 +9570,10 @@
     "place": 30,
     "of": 112,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 6.0,
     "peakDb": -11.9,
     "faded": false,
-    "bytes": 101832
+    "bytes": 98736
   },
   {
     "group": "synth",
@@ -10128,10 +9630,11 @@
     "place": 40,
     "of": 112,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -13.0,
     "faded": true,
-    "bytes": 112680
+    "bytes": 111744
   },
   {
     "group": "synth",
@@ -10158,10 +9661,10 @@
     "place": 4,
     "of": 112,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 1.2,
     "peakDb": -18.100000000000001,
     "faded": false,
-    "bytes": 33168
+    "bytes": 10512
   },
   {
     "group": "synth",
@@ -10173,10 +9676,10 @@
     "place": 7,
     "of": 112,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 6.6,
     "peakDb": -13.699999999999999,
     "faded": false,
-    "bytes": 106008
+    "bytes": 104832
   },
   {
     "group": "synth",
@@ -10188,10 +9691,10 @@
     "place": 4,
     "of": 88,
     "parts": 22,
-    "seconds": 4.9,
+    "seconds": 2.1,
     "peakDb": -17.0,
     "faded": false,
-    "bytes": 39168
+    "bytes": 28032
   },
   {
     "group": "synth",
@@ -10203,10 +9706,10 @@
     "place": 8,
     "of": 88,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 4.3,
     "peakDb": -13.6,
     "faded": false,
-    "bytes": 66192
+    "bytes": 56112
   },
   {
     "group": "synth",
@@ -10218,10 +9721,11 @@
     "place": 10,
     "of": 88,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 3.9,
     "peakDb": -12.800000000000001,
     "faded": false,
-    "bytes": 95352
+    "bytes": 83376
   },
   {
     "group": "synth",
@@ -10233,10 +9737,10 @@
     "place": 13,
     "of": 88,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 4.3,
     "peakDb": -8.800000000000001,
     "faded": false,
-    "bytes": 137736
+    "bytes": 127656
   },
   {
     "group": "synth",
@@ -10248,10 +9752,10 @@
     "place": 29,
     "of": 88,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 1.1,
     "peakDb": -14.300000000000001,
     "faded": false,
-    "bytes": 38016
+    "bytes": 15048
   },
   {
     "group": "synth",
@@ -10263,10 +9767,10 @@
     "place": 27,
     "of": 88,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.9,
     "peakDb": -11.9,
     "faded": false,
-    "bytes": 89256
+    "bytes": 81480
   },
   {
     "group": "synth",
@@ -10278,10 +9782,10 @@
     "place": 32,
     "of": 88,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.3,
     "peakDb": -14.0,
     "faded": false,
-    "bytes": 104808
+    "bytes": 94632
   },
   {
     "group": "synth",
@@ -10293,10 +9797,10 @@
     "place": 2,
     "of": 88,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 3.5,
     "peakDb": -14.9,
     "faded": false,
-    "bytes": 70968
+    "bytes": 57720
   },
   {
     "group": "synth",
@@ -10308,10 +9812,10 @@
     "place": 3,
     "of": 88,
     "parts": 20,
-    "seconds": 4.9,
+    "seconds": 1.7,
     "peakDb": -15.0,
     "faded": false,
-    "bytes": 31848
+    "bytes": 18984
   },
   {
     "group": "synth",
@@ -10323,10 +9827,10 @@
     "place": 6,
     "of": 88,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 3.8,
     "peakDb": -14.199999999999999,
     "faded": false,
-    "bytes": 91920
+    "bytes": 79920
   },
   {
     "group": "synth",
@@ -10338,10 +9842,11 @@
     "place": 7,
     "of": 88,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 3.8,
     "peakDb": -15.1,
     "faded": false,
-    "bytes": 30672
+    "bytes": 18984
   },
   {
     "group": "synth",
@@ -10353,10 +9858,10 @@
     "place": 9,
     "of": 88,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.1,
     "peakDb": -18.199999999999999,
     "faded": false,
-    "bytes": 55728
+    "bytes": 44688
   },
   {
     "group": "synth",
@@ -10368,10 +9873,10 @@
     "place": 15,
     "of": 88,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 1.6,
     "peakDb": -15.699999999999999,
     "faded": false,
-    "bytes": 33000
+    "bytes": 12264
   },
   {
     "group": "synth",
@@ -10383,10 +9888,10 @@
     "place": 16,
     "of": 88,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -13.9,
     "faded": false,
-    "bytes": 64416
+    "bytes": 52896
   },
   {
     "group": "synth",
@@ -10398,10 +9903,10 @@
     "place": 17,
     "of": 88,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.2,
     "peakDb": -13.0,
     "faded": false,
-    "bytes": 95448
+    "bytes": 84840
   },
   {
     "group": "synth",
@@ -10413,10 +9918,10 @@
     "place": 19,
     "of": 88,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 3.4,
     "peakDb": -13.9,
     "faded": false,
-    "bytes": 58152
+    "bytes": 44328
   },
   {
     "group": "synth",
@@ -10428,10 +9933,10 @@
     "place": 26,
     "of": 88,
     "parts": 20,
-    "seconds": 4.9,
+    "seconds": 1.8,
     "peakDb": -25.899999999999999,
     "faded": false,
-    "bytes": 37536
+    "bytes": 25152
   },
   {
     "group": "synth",
@@ -10443,10 +9948,10 @@
     "place": 34,
     "of": 88,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.2,
     "peakDb": -13.699999999999999,
     "faded": false,
-    "bytes": 51456
+    "bytes": 40992
   },
   {
     "group": "synth",
@@ -10458,10 +9963,10 @@
     "place": 3,
     "of": 124,
     "parts": 21,
-    "seconds": 4.9,
+    "seconds": 3.0,
     "peakDb": -14.4,
     "faded": false,
-    "bytes": 40752
+    "bytes": 33360
   },
   {
     "group": "synth",
@@ -10473,10 +9978,10 @@
     "place": 4,
     "of": 124,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 3.9,
     "peakDb": -13.699999999999999,
     "faded": false,
-    "bytes": 54072
+    "bytes": 42360
   },
   {
     "group": "synth",
@@ -10488,10 +9993,11 @@
     "place": 7,
     "of": 124,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -14.0,
     "faded": false,
-    "bytes": 95376
+    "bytes": 93432
   },
   {
     "group": "synth",
@@ -10503,10 +10009,10 @@
     "place": 13,
     "of": 124,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.0,
     "peakDb": -11.4,
     "faded": false,
-    "bytes": 65808
+    "bytes": 54576
   },
   {
     "group": "synth",
@@ -10518,10 +10024,10 @@
     "place": 17,
     "of": 124,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 2.1,
     "peakDb": -13.5,
     "faded": false,
-    "bytes": 46488
+    "bytes": 27576
   },
   {
     "group": "synth",
@@ -10533,10 +10039,10 @@
     "place": 20,
     "of": 124,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.1,
     "peakDb": -14.6,
     "faded": false,
-    "bytes": 56496
+    "bytes": 45456
   },
   {
     "group": "synth",
@@ -10548,10 +10054,10 @@
     "place": 22,
     "of": 124,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.9,
     "peakDb": -15.699999999999999,
     "faded": false,
-    "bytes": 94296
+    "bytes": 90552
   },
   {
     "group": "synth",
@@ -10563,10 +10069,10 @@
     "place": 2,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.0,
     "peakDb": -17.100000000000001,
     "faded": false,
-    "bytes": 46368
+    "bytes": 31008
   },
   {
     "group": "synth",
@@ -10578,10 +10084,10 @@
     "place": 5,
     "of": 124,
     "parts": 19,
-    "seconds": 4.9,
+    "seconds": 4.2,
     "peakDb": -13.9,
     "faded": false,
-    "bytes": 54960
+    "bytes": 52080
   },
   {
     "group": "synth",
@@ -10593,10 +10099,10 @@
     "place": 6,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 3.7,
     "peakDb": -13.6,
     "faded": false,
-    "bytes": 44040
+    "bytes": 31560
   },
   {
     "group": "synth",
@@ -10608,10 +10114,11 @@
     "place": 8,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 3.7,
     "peakDb": -13.800000000000001,
     "faded": false,
-    "bytes": 48144
+    "bytes": 35184
   },
   {
     "group": "synth",
@@ -10623,10 +10130,10 @@
     "place": 10,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 4.1,
     "peakDb": -15.6,
     "faded": false,
-    "bytes": 64488
+    "bytes": 53736
   },
   {
     "group": "synth",
@@ -10638,10 +10145,10 @@
     "place": 11,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 1.0,
     "peakDb": -13.4,
     "faded": false,
-    "bytes": 38064
+    "bytes": 14928
   },
   {
     "group": "synth",
@@ -10653,10 +10160,10 @@
     "place": 14,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 4.3,
     "peakDb": -12.800000000000001,
     "faded": false,
-    "bytes": 83760
+    "bytes": 73680
   },
   {
     "group": "synth",
@@ -10668,10 +10175,10 @@
     "place": 16,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 5.2,
     "peakDb": -13.9,
     "faded": false,
-    "bytes": 88224
+    "bytes": 81504
   },
   {
     "group": "synth",
@@ -10683,10 +10190,10 @@
     "place": 18,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 2.9,
     "peakDb": -15.6,
     "faded": false,
-    "bytes": 47832
+    "bytes": 32280
   },
   {
     "group": "synth",
@@ -10698,10 +10205,10 @@
     "place": 26,
     "of": 124,
     "parts": 19,
-    "seconds": 4.9,
+    "seconds": 2.7,
     "peakDb": -17.399999999999999,
     "faded": false,
-    "bytes": 52128
+    "bytes": 43296
   },
   {
     "group": "synth",
@@ -10728,10 +10235,11 @@
     "place": 29,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 5.4,
     "peakDb": -13.6,
     "faded": false,
-    "bytes": 97440
+    "bytes": 91920
   },
   {
     "group": "synth",
@@ -10743,10 +10251,10 @@
     "place": 35,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 6.3,
     "peakDb": -11.1,
     "faded": false,
-    "bytes": 111672
+    "bytes": 109704
   },
   {
     "group": "synth",
@@ -10758,10 +10266,10 @@
     "place": 36,
     "of": 124,
     "parts": 19,
-    "seconds": 6.8,
+    "seconds": 0.3,
     "peakDb": -12.5,
     "faded": false,
-    "bytes": 29688
+    "bytes": 3768
   },
   {
     "group": "synth",
@@ -10788,10 +10296,10 @@
     "place": 1,
     "of": 124,
     "parts": 18,
-    "seconds": 6.8,
+    "seconds": 3.8,
     "peakDb": -14.5,
     "faded": false,
-    "bytes": 52200
+    "bytes": 40200
   },
   {
     "group": "synth",
@@ -10803,10 +10311,10 @@
     "place": 9,
     "of": 124,
     "parts": 18,
-    "seconds": 6.8,
+    "seconds": 6.1,
     "peakDb": -14.699999999999999,
     "faded": false,
-    "bytes": 76560
+    "bytes": 73488
   },
   {
     "group": "synth",
@@ -10818,10 +10326,10 @@
     "place": 12,
     "of": 124,
     "parts": 18,
-    "seconds": 4.9,
+    "seconds": 2.5,
     "peakDb": -16.399999999999999,
     "faded": false,
-    "bytes": 45576
+    "bytes": 35976
   },
   {
     "group": "synth",
@@ -10833,10 +10341,10 @@
     "place": 40,
     "of": 93,
     "parts": 21,
-    "seconds": 3.4,
+    "seconds": 3.2,
     "peakDb": -16.800000000000001,
     "faded": false,
-    "bytes": 47376
+    "bytes": 46416
   },
   {
     "group": "synth",
@@ -10848,10 +10356,10 @@
     "place": 5,
     "of": 93,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.4,
     "peakDb": -12.699999999999999,
     "faded": false,
-    "bytes": 74664
+    "bytes": 70824
   },
   {
     "group": "synth",
@@ -10863,10 +10371,10 @@
     "place": 6,
     "of": 93,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.1,
     "peakDb": -12.699999999999999,
     "faded": false,
-    "bytes": 51840
+    "bytes": 46752
   },
   {
     "group": "synth",
@@ -10878,10 +10386,10 @@
     "place": 20,
     "of": 93,
     "parts": 20,
-    "seconds": 5.3,
+    "seconds": 4.1,
     "peakDb": -12.0,
     "faded": false,
-    "bytes": 84264
+    "bytes": 79176
   },
   {
     "group": "synth",
@@ -10908,10 +10416,11 @@
     "place": 27,
     "of": 93,
     "parts": 20,
-    "seconds": 5.3,
-    "peakDb": -17.199999999999999,
+    "joined": 0.6,
+    "seconds": 8.6,
+    "peakDb": -14.4,
     "faded": false,
-    "bytes": 75168
+    "bytes": 129672
   },
   {
     "group": "synth",
@@ -10923,10 +10432,10 @@
     "place": 1,
     "of": 93,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 3.9,
     "peakDb": -16.800000000000001,
     "faded": false,
-    "bytes": 47544
+    "bytes": 41784
   },
   {
     "group": "synth",
@@ -10938,10 +10447,10 @@
     "place": 2,
     "of": 93,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -14.0,
     "faded": false,
-    "bytes": 53040
+    "bytes": 47664
   },
   {
     "group": "synth",
@@ -10953,10 +10462,10 @@
     "place": 3,
     "of": 93,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.1,
     "peakDb": -13.9,
     "faded": false,
-    "bytes": 50904
+    "bytes": 45816
   },
   {
     "group": "synth",
@@ -10968,10 +10477,10 @@
     "place": 4,
     "of": 93,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -9.1,
     "faded": false,
-    "bytes": 61776
+    "bytes": 56496
   },
   {
     "group": "synth",
@@ -10983,10 +10492,10 @@
     "place": 8,
     "of": 93,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.6,
     "peakDb": -12.1,
     "faded": false,
-    "bytes": 69600
+    "bytes": 66432
   },
   {
     "group": "synth",
@@ -10998,10 +10507,10 @@
     "place": 9,
     "of": 93,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 3.6,
     "peakDb": -7.6,
     "faded": false,
-    "bytes": 76008
+    "bytes": 69288
   },
   {
     "group": "synth",
@@ -11013,10 +10522,10 @@
     "place": 10,
     "of": 93,
     "parts": 19,
-    "seconds": 3.4,
+    "seconds": 2.1,
     "peakDb": -14.0,
     "faded": false,
-    "bytes": 32184
+    "bytes": 27096
   },
   {
     "group": "synth",
@@ -11043,10 +10552,10 @@
     "place": 12,
     "of": 93,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.0,
     "peakDb": -13.300000000000001,
     "faded": false,
-    "bytes": 66768
+    "bytes": 61392
   },
   {
     "group": "synth",
@@ -11058,10 +10567,10 @@
     "place": 13,
     "of": 93,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.1,
     "peakDb": -12.699999999999999,
     "faded": false,
-    "bytes": 58176
+    "bytes": 53088
   },
   {
     "group": "synth",
@@ -11073,10 +10582,10 @@
     "place": 15,
     "of": 93,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 4.1,
     "peakDb": -8.6,
     "faded": false,
-    "bytes": 80544
+    "bytes": 75744
   },
   {
     "group": "synth",
@@ -11103,10 +10612,10 @@
     "place": 18,
     "of": 93,
     "parts": 19,
-    "seconds": 5.3,
+    "seconds": 1.3,
     "peakDb": -13.9,
     "faded": false,
-    "bytes": 28296
+    "bytes": 12168
   },
   {
     "group": "synth",
@@ -11118,10 +10627,11 @@
     "place": 10,
     "of": 156,
     "parts": 23,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.7,
     "peakDb": -10.1,
     "faded": true,
-    "bytes": 85992
+    "bytes": 83352
   },
   {
     "group": "synth",
@@ -11148,10 +10658,11 @@
     "place": 40,
     "of": 156,
     "parts": 23,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -9.800000000000001,
     "faded": true,
-    "bytes": 118320
+    "bytes": 114624
   },
   {
     "group": "synth",
@@ -11163,10 +10674,11 @@
     "place": 3,
     "of": 156,
     "parts": 22,
-    "seconds": 10.699999999999999,
-    "peakDb": -13.1,
+    "joined": 0.4,
+    "seconds": 17.899999999999999,
+    "peakDb": -12.800000000000001,
     "faded": true,
-    "bytes": 157440
+    "bytes": 265824
   },
   {
     "group": "synth",
@@ -11208,10 +10720,11 @@
     "place": 14,
     "of": 156,
     "parts": 22,
+    "joined": 0.1,
     "seconds": 6.8,
     "peakDb": -13.5,
     "faded": true,
-    "bytes": 118272
+    "bytes": 118344
   },
   {
     "group": "synth",
@@ -11223,10 +10736,11 @@
     "place": 17,
     "of": 156,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -12.5,
     "faded": false,
-    "bytes": 107376
+    "bytes": 106848
   },
   {
     "group": "synth",
@@ -11253,10 +10767,11 @@
     "place": 19,
     "of": 156,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -10.0,
     "faded": true,
-    "bytes": 122928
+    "bytes": 120096
   },
   {
     "group": "synth",
@@ -11268,10 +10783,11 @@
     "place": 23,
     "of": 156,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "joined": 0.1,
+    "seconds": 10.6,
     "peakDb": -9.0,
     "faded": true,
-    "bytes": 157056
+    "bytes": 155952
   },
   {
     "group": "synth",
@@ -11283,10 +10799,11 @@
     "place": 25,
     "of": 156,
     "parts": 22,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.7,
     "peakDb": -16.100000000000001,
     "faded": true,
-    "bytes": 102864
+    "bytes": 99672
   },
   {
     "group": "synth",
@@ -11343,10 +10860,11 @@
     "place": 39,
     "of": 156,
     "parts": 22,
-    "seconds": 10.699999999999999,
+    "joined": 0.1,
+    "seconds": 10.6,
     "peakDb": -11.0,
     "faded": true,
-    "bytes": 173088
+    "bytes": 171456
   },
   {
     "group": "synth",
@@ -11358,10 +10876,11 @@
     "place": 1,
     "of": 156,
     "parts": 21,
+    "joined": 0.1,
     "seconds": 6.8,
     "peakDb": -11.4,
     "faded": true,
-    "bytes": 111696
+    "bytes": 109776
   },
   {
     "group": "synth",
@@ -11373,10 +10892,11 @@
     "place": 2,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 6.7,
     "peakDb": -9.199999999999999,
     "faded": true,
-    "bytes": 99480
+    "bytes": 98616
   },
   {
     "group": "synth",
@@ -11403,10 +10923,11 @@
     "place": 5,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -11.5,
     "faded": true,
-    "bytes": 105504
+    "bytes": 104952
   },
   {
     "group": "synth",
@@ -11418,10 +10939,11 @@
     "place": 8,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 6.7,
     "peakDb": -7.4,
     "faded": true,
-    "bytes": 136704
+    "bytes": 135984
   },
   {
     "group": "synth",
@@ -11448,10 +10970,11 @@
     "place": 12,
     "of": 156,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "joined": 0.1,
+    "seconds": 10.6,
     "peakDb": -8.300000000000001,
     "faded": true,
-    "bytes": 183288
+    "bytes": 181440
   },
   {
     "group": "synth",
@@ -11478,10 +11001,10 @@
     "place": 15,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 5.6,
     "peakDb": -9.699999999999999,
     "faded": false,
-    "bytes": 100968
+    "bytes": 96072
   },
   {
     "group": "synth",
@@ -11523,10 +11046,11 @@
     "place": 27,
     "of": 156,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "joined": 0.3,
+    "seconds": 10.4,
     "peakDb": -9.6,
     "faded": true,
-    "bytes": 202608
+    "bytes": 192960
   },
   {
     "group": "synth",
@@ -11553,10 +11077,11 @@
     "place": 29,
     "of": 156,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.1,
+    "seconds": 6.7,
     "peakDb": -8.1,
     "faded": true,
-    "bytes": 91416
+    "bytes": 89520
   },
   {
     "group": "synth",
@@ -11583,10 +11108,10 @@
     "place": 10,
     "of": 99,
     "parts": 22,
-    "seconds": 6.8,
+    "seconds": 5.3,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 86544
+    "bytes": 79944
   },
   {
     "group": "synth",
@@ -11598,10 +11123,10 @@
     "place": 1,
     "of": 99,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "seconds": 9.300000000000001,
     "peakDb": -8.300000000000001,
     "faded": false,
-    "bytes": 139872
+    "bytes": 134160
   },
   {
     "group": "synth",
@@ -11613,10 +11138,10 @@
     "place": 3,
     "of": 99,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 5.9,
     "peakDb": -7.5,
     "faded": false,
-    "bytes": 99048
+    "bytes": 94896
   },
   {
     "group": "synth",
@@ -11658,10 +11183,10 @@
     "place": 9,
     "of": 99,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 6.3,
     "peakDb": -7.3,
     "faded": false,
-    "bytes": 94440
+    "bytes": 91896
   },
   {
     "group": "synth",
@@ -11673,10 +11198,10 @@
     "place": 12,
     "of": 99,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 6.6,
     "peakDb": -7.9,
     "faded": false,
-    "bytes": 102000
+    "bytes": 101160
   },
   {
     "group": "synth",
@@ -11688,10 +11213,11 @@
     "place": 15,
     "of": 99,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 4.0,
     "peakDb": -7.5,
     "faded": false,
-    "bytes": 90000
+    "bytes": 77640
   },
   {
     "group": "synth",
@@ -11703,10 +11229,10 @@
     "place": 16,
     "of": 99,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 5.3,
     "peakDb": -8.1,
     "faded": false,
-    "bytes": 77424
+    "bytes": 71352
   },
   {
     "group": "synth",
@@ -11718,10 +11244,10 @@
     "place": 20,
     "of": 99,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 4.3,
     "peakDb": -6.7,
     "faded": false,
-    "bytes": 75144
+    "bytes": 64872
   },
   {
     "group": "synth",
@@ -11748,10 +11274,11 @@
     "place": 29,
     "of": 99,
     "parts": 21,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 6.6,
     "peakDb": -14.0,
     "faded": true,
-    "bytes": 93240
+    "bytes": 90288
   },
   {
     "group": "synth",
@@ -11763,10 +11290,10 @@
     "place": 30,
     "of": 99,
     "parts": 21,
-    "seconds": 6.8,
+    "seconds": 5.3,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 81816
+    "bytes": 75528
   },
   {
     "group": "synth",
@@ -11778,10 +11305,11 @@
     "place": 35,
     "of": 99,
     "parts": 21,
-    "seconds": 10.699999999999999,
+    "joined": 0.2,
+    "seconds": 10.5,
     "peakDb": -8.800000000000001,
     "faded": false,
-    "bytes": 158688
+    "bytes": 156072
   },
   {
     "group": "synth",
@@ -11793,10 +11321,10 @@
     "place": 4,
     "of": 99,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 4.7,
     "peakDb": -7.4,
     "faded": false,
-    "bytes": 82632
+    "bytes": 73992
   },
   {
     "group": "synth",
@@ -11808,10 +11336,10 @@
     "place": 5,
     "of": 99,
     "parts": 20,
-    "seconds": 10.699999999999999,
+    "seconds": 9.4,
     "peakDb": -9.0,
     "faded": false,
-    "bytes": 134112
+    "bytes": 128856
   },
   {
     "group": "synth",
@@ -11823,10 +11351,10 @@
     "place": 8,
     "of": 99,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 5.3,
     "peakDb": -10.5,
     "faded": false,
-    "bytes": 70272
+    "bytes": 64032
   },
   {
     "group": "synth",
@@ -11838,10 +11366,10 @@
     "place": 17,
     "of": 99,
     "parts": 20,
-    "seconds": 6.8,
+    "seconds": 6.0,
     "peakDb": -6.9,
     "faded": false,
-    "bytes": 82800
+    "bytes": 79320
   },
   {
     "group": "synth",
@@ -11868,10 +11396,528 @@
     "place": 23,
     "of": 99,
     "parts": 20,
-    "seconds": 6.8,
+    "joined": 0.2,
+    "seconds": 4.2,
     "peakDb": -9.300000000000001,
     "faded": false,
-    "bytes": 72432
+    "bytes": 62376
+  },
+  {
+    "group": "swarm",
+    "category": "Walls",
+    "name": "Tremolo Swarm Wall",
+    "file": "swarm/tremolo-swarm-wall.mp3",
+    "featured": true,
+    "about": "12 strings, Three Octaves tuning, 4 guitars; Fuzz amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.1,
+    "peakDb": -7.9,
+    "faded": false,
+    "bytes": 140712
+  },
+  {
+    "group": "swarm",
+    "category": "Walls",
+    "name": "Every String One Note",
+    "file": "swarm/every-string-one-note.mp3",
+    "featured": true,
+    "about": "12 strings, Unison tuning, 4 guitars; Fuzz amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.0,
+    "peakDb": -8.6,
+    "faded": false,
+    "bytes": 141192
+  },
+  {
+    "group": "swarm",
+    "category": "Walls",
+    "name": "Low Octave Roar",
+    "file": "swarm/low-octave-roar.mp3",
+    "featured": true,
+    "about": "8 strings, Low Octave tuning, 3 guitars; Fuzz amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.199999999999999,
+    "peakDb": -10.300000000000001,
+    "faded": false,
+    "bytes": 157176
+  },
+  {
+    "group": "swarm",
+    "category": "Riffs",
+    "name": "Palm Muted Chug",
+    "file": "swarm/palm-muted-chug.mp3",
+    "featured": true,
+    "about": "4 strings, Three Octaves tuning, 2 guitars; Fuzz amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.1,
+    "peakDb": -8.5,
+    "faded": false,
+    "bytes": 171216
+  },
+  {
+    "group": "swarm",
+    "category": "Riffs",
+    "name": "Crunch Riff",
+    "file": "swarm/crunch-riff.mp3",
+    "featured": true,
+    "about": "6 strings, Low Octave tuning, 2 guitars; Crunch amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.0,
+    "peakDb": -8.6,
+    "faded": false,
+    "bytes": 124176
+  },
+  {
+    "group": "swarm",
+    "category": "Riffs",
+    "name": "Fifths Riff",
+    "file": "swarm/fifths-riff.mp3",
+    "featured": true,
+    "about": "6 strings, Fifths tuning, 2 guitars; Fuzz amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.0,
+    "peakDb": -9.1,
+    "faded": false,
+    "bytes": 172632
+  },
+  {
+    "group": "swarm",
+    "category": "Strums",
+    "name": "Tremolo Strum",
+    "file": "swarm/tremolo-strum.mp3",
+    "featured": true,
+    "about": "6 strings, Three Octaves tuning, 2 guitars; Fuzz amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.199999999999999,
+    "peakDb": -9.800000000000001,
+    "faded": false,
+    "bytes": 181656
+  },
+  {
+    "group": "swarm",
+    "category": "Clean",
+    "name": "Clean Shimmer",
+    "file": "swarm/clean-shimmer.mp3",
+    "featured": true,
+    "about": "6 strings, Three Octaves tuning, 2 guitars; no amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.1,
+    "peakDb": -11.1,
+    "faded": false,
+    "bytes": 140928
+  },
+  {
+    "group": "swarm",
+    "category": "Drones",
+    "name": "Long Low Drone",
+    "file": "swarm/long-low-drone.mp3",
+    "featured": true,
+    "about": "12 strings, Three Octaves tuning, 2 guitars; Fuzz amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 9.6,
+    "peakDb": -9.0,
+    "faded": false,
+    "bytes": 184776
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Sequences",
+    "name": "Eight Voice Swarm Pulse",
+    "file": "swarm/eight-voice-swarm-pulse.mp3",
+    "featured": true,
+    "about": "8 oscillators, Unison tuning; no amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.1,
+    "peakDb": -3.3,
+    "faded": false,
+    "bytes": 149808
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Sequences",
+    "name": "Racing Swarm Sixteenths",
+    "file": "swarm/racing-swarm-sixteenths.mp3",
+    "featured": true,
+    "about": "8 oscillators, Unison tuning; Crunch amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.0,
+    "peakDb": -4.5,
+    "faded": false,
+    "bytes": 125448
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Sequences",
+    "name": "Swarm Pulse Engine",
+    "file": "swarm/swarm-pulse-engine.mp3",
+    "featured": true,
+    "about": "8 oscillators, Low Octave tuning; no amp; strummed in 1/16 with the tempo.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 7.9,
+    "peakDb": -10.199999999999999,
+    "faded": false,
+    "bytes": 125040
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Sequences",
+    "name": "Fuzzed Swarm Motor",
+    "file": "swarm/fuzzed-swarm-motor.mp3",
+    "featured": true,
+    "about": "8 oscillators, Unison tuning; Fuzz amp; strummed in 1/16T with the tempo.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 7.9,
+    "peakDb": -9.300000000000001,
+    "faded": false,
+    "bytes": 228768
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Pads",
+    "name": "Converging Swarm",
+    "file": "swarm/converging-swarm.mp3",
+    "featured": true,
+    "about": "8 oscillators, Unison tuning; no amp.",
+    "phrase": "four bars at 120 BPM",
+    "joined": 0.3,
+    "seconds": 9.5,
+    "peakDb": -12.699999999999999,
+    "faded": false,
+    "bytes": 139656
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Pads",
+    "name": "Opening Swarm",
+    "file": "swarm/opening-swarm.mp3",
+    "featured": true,
+    "about": "8 oscillators, Unison tuning; no amp.",
+    "phrase": "four bars at 120 BPM",
+    "joined": 0.5,
+    "seconds": 9.5,
+    "peakDb": -12.0,
+    "faded": false,
+    "bytes": 137712
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Pads",
+    "name": "Bruised Swarm",
+    "file": "swarm/bruised-swarm.mp3",
+    "featured": true,
+    "about": "8 oscillators, Low Octave tuning; no amp.",
+    "phrase": "four bars at 120 BPM",
+    "joined": 0.3,
+    "seconds": 9.699999999999999,
+    "peakDb": -5.1,
+    "faded": true,
+    "bytes": 146832
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Leads",
+    "name": "Gliding Swarm",
+    "file": "swarm/gliding-swarm.mp3",
+    "featured": true,
+    "about": "8 oscillators, Unison tuning; no amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.5,
+    "peakDb": -9.199999999999999,
+    "faded": false,
+    "bytes": 164976
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Leads",
+    "name": "Smeared Swarm Lead",
+    "file": "swarm/smeared-swarm-lead.mp3",
+    "featured": true,
+    "about": "8 oscillators, Unison tuning; Crunch amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.800000000000001,
+    "peakDb": -11.1,
+    "faded": false,
+    "bytes": 144360
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Basses",
+    "name": "Swarm Bass",
+    "file": "swarm/swarm-bass.mp3",
+    "featured": true,
+    "about": "6 oscillators, Low Octave tuning; no amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.1,
+    "peakDb": -9.300000000000001,
+    "faded": false,
+    "bytes": 93480
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Risers",
+    "name": "Swarm Opening Out",
+    "file": "swarm/swarm-opening-out.mp3",
+    "featured": true,
+    "about": "12 oscillators, Three Octaves tuning; no amp.",
+    "phrase": "four bars at 120 BPM",
+    "joined": 0.8,
+    "seconds": 9.199999999999999,
+    "peakDb": -6.6,
+    "faded": false,
+    "bytes": 142128
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Fuzz",
+    "name": "Swarm Through Fuzz",
+    "file": "swarm/swarm-through-fuzz.mp3",
+    "featured": true,
+    "about": "8 oscillators, Unison tuning; Fuzz amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 8.6,
+    "peakDb": -12.4,
+    "faded": false,
+    "bytes": 175368
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Fuzz",
+    "name": "Wailing Swarm",
+    "file": "swarm/wailing-swarm.mp3",
+    "featured": true,
+    "about": "8 oscillators, Low Octave tuning; Fuzz amp.",
+    "phrase": "four bars at 120 BPM",
+    "seconds": 9.199999999999999,
+    "peakDb": -10.6,
+    "faded": false,
+    "bytes": 182352
+  },
+  {
+    "group": "swarm",
+    "category": "Walls",
+    "name": "Charred Tide",
+    "file": "swarm/charred-tide.mp3",
+    "about": "7 strings, Fifths tuning, 3 guitars; Fuzz amp.",
+    "phrase": "Low E Held",
+    "place": 17,
+    "of": 31,
+    "seconds": 3.7,
+    "peakDb": -9.9,
+    "faded": false,
+    "bytes": 60288
+  },
+  {
+    "group": "swarm",
+    "category": "Riffs",
+    "name": "Hammered Gallop",
+    "file": "swarm/hammered-gallop.mp3",
+    "about": "4 strings, Unison tuning, 3 guitars; Fuzz amp.",
+    "phrase": "Low E Held",
+    "place": 16,
+    "of": 29,
+    "seconds": 3.5,
+    "peakDb": -10.1,
+    "faded": false,
+    "bytes": 53112
+  },
+  {
+    "group": "swarm",
+    "category": "Strums",
+    "name": "Slow Strum",
+    "file": "swarm/slow-strum.mp3",
+    "about": "6 strings, Three Octaves tuning, 2 guitars; Fuzz amp.",
+    "phrase": "Low E Held",
+    "place": 2,
+    "of": 25,
+    "seconds": 4.3,
+    "peakDb": -10.6,
+    "faded": false,
+    "bytes": 80592
+  },
+  {
+    "group": "swarm",
+    "category": "Strums",
+    "name": "Restless Shimmer",
+    "file": "swarm/restless-shimmer.mp3",
+    "about": "9 strings, Low Octave tuning, 2 guitars; no amp; strummed in 1/16T with the tempo.",
+    "phrase": "Power Chord",
+    "place": 14,
+    "of": 25,
+    "seconds": 3.9,
+    "peakDb": -8.6,
+    "faded": false,
+    "bytes": 73152
+  },
+  {
+    "group": "swarm",
+    "category": "Clean",
+    "name": "Twelve String Clean",
+    "file": "swarm/twelve-string-clean.mp3",
+    "about": "12 strings, Three Octaves tuning, 2 guitars; no amp.",
+    "phrase": "Low E Held",
+    "place": 2,
+    "of": 20,
+    "seconds": 3.9,
+    "peakDb": -11.0,
+    "faded": false,
+    "bytes": 55272
+  },
+  {
+    "group": "swarm",
+    "category": "Clean",
+    "name": "Hollow Glimmer",
+    "file": "swarm/hollow-glimmer.mp3",
+    "about": "4 strings, Three Octaves tuning, 2 guitars; no amp; strummed in 1/8T with the tempo.",
+    "phrase": "Power Chord",
+    "place": 11,
+    "of": 20,
+    "seconds": 4.8,
+    "peakDb": -9.199999999999999,
+    "faded": false,
+    "bytes": 91632
+  },
+  {
+    "group": "swarm",
+    "category": "Drones",
+    "name": "Feedback Hum",
+    "file": "swarm/feedback-hum.mp3",
+    "about": "10 strings, Unison tuning, 2 guitars; Fuzz amp.",
+    "phrase": "Low E Held",
+    "place": 2,
+    "of": 20,
+    "seconds": 6.3,
+    "peakDb": -10.6,
+    "faded": true,
+    "bytes": 123984
+  },
+  {
+    "group": "swarm",
+    "category": "Drones",
+    "name": "Underground Pillar",
+    "file": "swarm/underground-pillar.mp3",
+    "about": "10 strings, Three Octaves tuning, 3 guitars; no amp.",
+    "phrase": "Power Chord",
+    "place": 11,
+    "of": 20,
+    "seconds": 5.1,
+    "peakDb": -7.8,
+    "faded": false,
+    "bytes": 48720
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Sequences",
+    "name": "Pulsing Circuit",
+    "file": "swarm/pulsing-circuit.mp3",
+    "about": "12 oscillators, Fifths tuning; no amp.",
+    "phrase": "Low E Held",
+    "place": 26,
+    "of": 50,
+    "seconds": 2.2,
+    "peakDb": -13.4,
+    "faded": false,
+    "bytes": 11880
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Pads",
+    "name": "Murmuring Horizon",
+    "file": "swarm/murmuring-horizon.mp3",
+    "about": "8 oscillators, Low Octave tuning; no amp.",
+    "phrase": "Low E Held",
+    "place": 18,
+    "of": 33,
+    "joined": 0.4,
+    "seconds": 6.9,
+    "peakDb": -14.6,
+    "faded": false,
+    "bytes": 74712
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Leads",
+    "name": "Soaring Lead",
+    "file": "swarm/soaring-lead.mp3",
+    "about": "8 oscillators, Three Octaves tuning; Fuzz amp.",
+    "phrase": "Low E Held",
+    "place": 15,
+    "of": 27,
+    "seconds": 5.0,
+    "peakDb": -10.0,
+    "faded": false,
+    "bytes": 118176
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Basses",
+    "name": "Driven Swarm Bass",
+    "file": "swarm/driven-swarm-bass.mp3",
+    "about": "6 oscillators, Low Octave tuning; Crunch amp.",
+    "phrase": "Low E Held",
+    "place": 2,
+    "of": 22,
+    "seconds": 3.6,
+    "peakDb": -12.300000000000001,
+    "faded": false,
+    "bytes": 37272
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Basses",
+    "name": "Dark Throb",
+    "file": "swarm/dark-throb.mp3",
+    "about": "6 oscillators, Three Octaves tuning; no amp.",
+    "phrase": "Power Chord",
+    "place": 12,
+    "of": 22,
+    "seconds": 4.0,
+    "peakDb": -7.8,
+    "faded": false,
+    "bytes": 26424
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Risers",
+    "name": "Swarm Closing In",
+    "file": "swarm/swarm-closing-in.mp3",
+    "about": "12 oscillators, Unison tuning; no amp.",
+    "phrase": "Low E Held",
+    "place": 2,
+    "of": 17,
+    "joined": 0.4,
+    "seconds": 7.0,
+    "peakDb": -14.4,
+    "faded": false,
+    "bytes": 92496
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Risers",
+    "name": "Opening Bloom",
+    "file": "swarm/opening-bloom.mp3",
+    "about": "12 oscillators, Three Octaves tuning; no amp.",
+    "phrase": "Power Chord",
+    "place": 10,
+    "of": 17,
+    "joined": 1.0,
+    "seconds": 8.699999999999999,
+    "peakDb": -2.4,
+    "faded": false,
+    "bytes": 134976
+  },
+  {
+    "group": "swarm",
+    "category": "Swarm Fuzz",
+    "name": "Smouldering Drone",
+    "file": "swarm/smouldering-drone.mp3",
+    "about": "12 oscillators, Low Octave tuning; Fuzz amp.",
+    "phrase": "Low E Held",
+    "place": 12,
+    "of": 22,
+    "seconds": 4.6,
+    "peakDb": -10.6,
+    "faded": false,
+    "bytes": 117576
   },
   {
     "group": "drums",
@@ -12672,6 +12718,139 @@
     "peakDb": -8.9,
     "faded": true,
     "bytes": 155424
+  },
+  {
+    "group": "sampler",
+    "category": "Keys",
+    "name": "Hammer Tine",
+    "file": "sampler/hammer-tine.mp3",
+    "about": "4 samples across the keys.",
+    "phrase": "Rising Figure",
+    "seconds": 2.3,
+    "peakDb": -15.5,
+    "faded": false,
+    "bytes": 22128
+  },
+  {
+    "group": "sampler",
+    "category": "Pad",
+    "name": "Concrete Pad",
+    "file": "sampler/concrete-pad.mp3",
+    "about": "4 samples across the keys.",
+    "phrase": "Held Chord",
+    "joined": 0.1,
+    "seconds": 4.3,
+    "peakDb": -10.199999999999999,
+    "faded": false,
+    "bytes": 63720
+  },
+  {
+    "group": "sampler",
+    "category": "Strings",
+    "name": "Iron Cello",
+    "file": "sampler/iron-cello.mp3",
+    "about": "3 samples across the keys.",
+    "phrase": "Held Chord",
+    "seconds": 3.9,
+    "peakDb": -11.4,
+    "faded": false,
+    "bytes": 41664
+  },
+  {
+    "group": "sampler",
+    "category": "Bell",
+    "name": "Cold Bell",
+    "file": "sampler/cold-bell.mp3",
+    "about": "3 samples across the keys.",
+    "phrase": "Rising Figure",
+    "seconds": 2.5,
+    "peakDb": -13.1,
+    "faded": false,
+    "bytes": 31944
+  },
+  {
+    "group": "sampler",
+    "category": "Bass",
+    "name": "Warehouse Sub",
+    "file": "sampler/warehouse-sub.mp3",
+    "about": "3 samples across the keys.",
+    "phrase": "Held Chord",
+    "seconds": 3.7,
+    "peakDb": -5.4,
+    "faded": false,
+    "bytes": 25656
+  },
+  {
+    "group": "sampler",
+    "category": "Pluck",
+    "name": "Dark Kalimba",
+    "file": "sampler/dark-kalimba.mp3",
+    "about": "3 samples across the keys.",
+    "phrase": "Rising Figure",
+    "seconds": 2.1,
+    "peakDb": -13.800000000000001,
+    "faded": false,
+    "bytes": 21216
+  },
+  {
+    "group": "sampler",
+    "category": "Guitar",
+    "name": "One Note Guitar",
+    "file": "sampler/one-note-guitar.mp3",
+    "about": "2 samples across the keys.",
+    "phrase": "Rising Figure",
+    "seconds": 2.2,
+    "peakDb": -15.199999999999999,
+    "faded": false,
+    "bytes": 29400
+  },
+  {
+    "group": "sampler",
+    "category": "Sliced Kits",
+    "name": "Dark Techno Break",
+    "file": "sampler/dark-techno-break.mp3",
+    "about": "A loop cut into 29 slices, each on a key of its own.",
+    "phrase": "Kick Hat Snare",
+    "seconds": 1.8,
+    "peakDb": -6.4,
+    "faded": false,
+    "bytes": 40824
+  },
+  {
+    "group": "sampler",
+    "category": "Sliced Kits",
+    "name": "Industrial Break",
+    "file": "sampler/industrial-break.mp3",
+    "about": "A loop cut into 31 slices, each on a key of its own.",
+    "phrase": "Kick Hat Snare",
+    "seconds": 1.9,
+    "peakDb": -5.4,
+    "faded": false,
+    "bytes": 60000
+  },
+  {
+    "group": "sampler",
+    "category": "Sliced Kits",
+    "name": "EBM Machine Break",
+    "file": "sampler/ebm-machine-break.mp3",
+    "about": "A loop cut into 30 slices, each on a key of its own.",
+    "phrase": "Kick Hat Snare",
+    "seconds": 1.9,
+    "peakDb": -10.1,
+    "faded": false,
+    "bytes": 26568
+  },
+  {
+    "group": "sampler",
+    "category": "Sliced Kits",
+    "name": "Breaks Break",
+    "file": "sampler/breaks-break.mp3",
+    "about": "A loop cut into 19 slices, each on a key of its own.",
+    "phrase": "Kick Hat Snare",
+    "seconds": 1.9,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 37608
   },
   {
     "group": "kits",
@@ -18502,10 +18681,11 @@
         "voice": "Torqwave Synth: Rolling Offbeat"
       }
     ],
-    "seconds": 7.3,
+    "joined": 0.1,
+    "seconds": 7.2,
     "peakDb": -9.300000000000001,
     "faded": true,
-    "bytes": 82488
+    "bytes": 82176
   },
   {
     "group": "sequences",
@@ -18712,10 +18892,11 @@
         "voice": "Torqwave Synth: Strobe Stab"
       }
     ],
-    "seconds": 7.7,
+    "joined": 0.2,
+    "seconds": 7.5,
     "peakDb": -9.199999999999999,
     "faded": true,
-    "bytes": 106656
+    "bytes": 104808
   },
   {
     "group": "sequences",
@@ -19102,10 +19283,10 @@
         "voice": "Torqwave Synth: Iron Sub"
       }
     ],
-    "seconds": 8.0,
+    "seconds": 7.8,
     "peakDb": -9.0,
     "faded": false,
-    "bytes": 43320
+    "bytes": 42264
   },
   {
     "group": "sequences",
@@ -19312,10 +19493,11 @@
         "voice": "Torqwave Synth: Mercury Lead"
       }
     ],
-    "seconds": 7.1,
+    "joined": 0.2,
+    "seconds": 6.9,
     "peakDb": -9.4,
     "faded": true,
-    "bytes": 110592
+    "bytes": 107928
   },
   {
     "group": "sequences",
@@ -19612,10 +19794,11 @@
         "voice": "Torqwave Synth: Cold Saw Lead"
       }
     ],
-    "seconds": 8.0,
+    "joined": 0.2,
+    "seconds": 7.8,
     "peakDb": -9.0,
     "faded": true,
-    "bytes": 127848
+    "bytes": 124272
   },
   {
     "group": "sequences",
@@ -19672,10 +19855,11 @@
         "voice": "Torqwave Synth: Organ Stab"
       }
     ],
-    "seconds": 8.6,
+    "joined": 0.2,
+    "seconds": 8.300000000000001,
     "peakDb": -8.6,
     "faded": true,
-    "bytes": 113856
+    "bytes": 111360
   },
   {
     "group": "sequences",
@@ -19732,10 +19916,11 @@
         "voice": "Torqwave Synth: Abandoned Pump"
       }
     ],
-    "seconds": 7.9,
+    "joined": 0.1,
+    "seconds": 7.8,
     "peakDb": -8.800000000000001,
     "faded": true,
-    "bytes": 51048
+    "bytes": 51792
   },
   {
     "group": "sequences",
@@ -19762,10 +19947,11 @@
         "voice": "Torqwave Synth: Abandoned Jab"
       }
     ],
-    "seconds": 8.0,
+    "joined": 0.2,
+    "seconds": 7.8,
     "peakDb": -9.800000000000001,
     "faded": true,
-    "bytes": 117120
+    "bytes": 114624
   },
   {
     "group": "sequences",
@@ -19852,10 +20038,11 @@
         "voice": "Torqwave Synth: Rust Lead"
       }
     ],
-    "seconds": 8.1,
+    "joined": 0.2,
+    "seconds": 7.9,
     "peakDb": -9.4,
     "faded": true,
-    "bytes": 126576
+    "bytes": 123864
   },
   {
     "group": "sequences",
@@ -20242,10 +20429,11 @@
         "voice": "Torqwave Synth: Distorted 909 Bass"
       }
     ],
-    "seconds": 7.6,
+    "joined": 0.1,
+    "seconds": 7.5,
     "peakDb": -8.9,
     "faded": true,
-    "bytes": 69384
+    "bytes": 69216
   },
   {
     "group": "sequences",
@@ -20332,10 +20520,11 @@
         "voice": "Torqwave Synth: Body Music"
       }
     ],
-    "seconds": 7.6,
+    "joined": 0.1,
+    "seconds": 7.5,
     "peakDb": -9.6,
     "faded": true,
-    "bytes": 84840
+    "bytes": 83040
   },
   {
     "group": "sequences",
@@ -20362,10 +20551,11 @@
         "voice": "Torqwave Synth: Abandoned Clamp"
       }
     ],
-    "seconds": 7.3,
+    "joined": 0.2,
+    "seconds": 7.1,
     "peakDb": -7.8,
     "faded": true,
-    "bytes": 114960
+    "bytes": 112128
   },
   {
     "group": "sequences",
@@ -20722,10 +20912,10 @@
         "voice": "Torqwave Synth: Vowel Scream"
       }
     ],
-    "seconds": 7.4,
+    "seconds": 7.2,
     "peakDb": -9.1,
     "faded": false,
-    "bytes": 74928
+    "bytes": 74352
   },
   {
     "group": "sequences",
@@ -20812,10 +21002,11 @@
         "voice": "Basic Drums: Standard"
       }
     ],
-    "seconds": 5.6,
+    "joined": 0.2,
+    "seconds": 5.4,
     "peakDb": -6.8,
     "faded": true,
-    "bytes": 143904
+    "bytes": 140304
   },
   {
     "group": "sequences",
@@ -20872,10 +21063,11 @@
         "voice": "Torqwave Synth: Bunker Kick Bass"
       }
     ],
-    "seconds": 7.4,
+    "joined": 0.1,
+    "seconds": 7.3,
     "peakDb": -8.9,
     "faded": true,
-    "bytes": 36528
+    "bytes": 36072
   },
   {
     "group": "sequences",
@@ -20932,10 +21124,11 @@
         "voice": "Torqwave Synth: Fog Machine"
       }
     ],
-    "seconds": 7.3,
+    "joined": 0.1,
+    "seconds": 7.2,
     "peakDb": -10.199999999999999,
     "faded": true,
-    "bytes": 117648
+    "bytes": 116688
   },
   {
     "group": "sequences",
@@ -21052,10 +21245,11 @@
         "voice": "Torqwave Synth: Pressure Bass"
       }
     ],
-    "seconds": 7.3,
+    "joined": 0.2,
+    "seconds": 7.1,
     "peakDb": -8.5,
     "faded": true,
-    "bytes": 55152
+    "bytes": 53904
   },
   {
     "group": "sequences",
@@ -21112,10 +21306,11 @@
         "voice": "Torqwave Synth: Warehouse Sub"
       }
     ],
-    "seconds": 8.0,
+    "joined": 0.1,
+    "seconds": 7.9,
     "peakDb": -9.0,
     "faded": true,
-    "bytes": 41160
+    "bytes": 40464
   },
   {
     "group": "sequences",
@@ -21232,10 +21427,11 @@
         "voice": "Torqwave Synth: Mercury Lead"
       }
     ],
-    "seconds": 6.4,
+    "joined": 0.2,
+    "seconds": 6.2,
     "peakDb": -8.6,
     "faded": true,
-    "bytes": 106200
+    "bytes": 104016
   },
   {
     "group": "sequences",
@@ -21254,7 +21450,7 @@
     "still": false,
     "voiceAgain": false,
     "tempo": 150.0,
-    "rounds": 1,
+    "rounds": 2,
     "parts": [
       {
         "name": "Bunker Evolving Pad",
@@ -21262,10 +21458,11 @@
         "voice": "Torqwave Synth: Tension Riser"
       }
     ],
-    "seconds": 6.4,
+    "joined": 2.6,
+    "seconds": 10.199999999999999,
     "peakDb": -14.800000000000001,
     "faded": true,
-    "bytes": 110832
+    "bytes": 177552
   },
   {
     "group": "sequences",
@@ -21382,10 +21579,11 @@
         "voice": "Torqwave Synth: Rolling Offbeat"
       }
     ],
-    "seconds": 7.5,
+    "joined": 0.1,
+    "seconds": 7.4,
     "peakDb": -8.1,
     "faded": true,
-    "bytes": 89568
+    "bytes": 88848
   },
   {
     "group": "sequences",
@@ -21592,10 +21790,11 @@
         "voice": "Torqwave Synth: Mercury Lead"
       }
     ],
-    "seconds": 7.4,
+    "joined": 0.2,
+    "seconds": 7.2,
     "peakDb": -9.0,
     "faded": true,
-    "bytes": 120264
+    "bytes": 116688
   },
   {
     "group": "sequences",
@@ -21772,10 +21971,11 @@
         "voice": "Torqwave Synth: Rolling Offbeat"
       }
     ],
-    "seconds": 7.1,
+    "joined": 0.1,
+    "seconds": 7.0,
     "peakDb": -9.1,
     "faded": true,
-    "bytes": 81528
+    "bytes": 80496
   },
   {
     "group": "sequences",

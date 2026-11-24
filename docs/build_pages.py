@@ -131,7 +131,7 @@ def instrument_card(clip, prefix, heading="h3", kind=None):
         elif "place" in clip:
             plays = f'No. {clip["place"]} of {clip["of"]} in {clip["category"]}. ' + plays
 
-    lines.append(f'<p>{esc(plays)}</p><div class="fill"></div>{player(clip, prefix)}</div>')
+    lines.append(f'<p>{esc(plays + joined(clip))}</p><div class="fill"></div>{player(clip, prefix)}</div>')
     return "".join(lines)
 
 
@@ -156,12 +156,12 @@ def loop_card(clip, prefix, heading="h3", kind=None):
     lines = [f'<div class="clip"><div class="kind">{esc(kind or clip["category"].replace("/", " › "))}</div><{heading}>{esc(clip["name"])}</{heading}>']
 
     if clip["group"] == "kits":
-        lines.append(f'<p>{esc(" · ".join(facts))}</p><ul>')
+        lines.append(f'<p>{esc(" · ".join(facts) + joined(clip))}</p><ul>')
         lines += [f'<li>{esc(part["name"])} <span>({esc(part["role"])}, on {esc(part["voice"])})</span></li>' for part in clip["parts"]]
         lines.append("</ul>")
     else:
         lines.append(f'<p class="what">{esc(clip["about"])}</p>')
-        lines.append(f'<p>{esc(clip["role"].replace(" > ", " › "))} · {esc(" · ".join(facts))} · on {esc(clip["parts"][0]["voice"])}</p>')
+        lines.append(f'<p>{esc(clip["role"].replace(" > ", " › "))} · {esc(" · ".join(facts))} · on {esc(clip["parts"][0]["voice"])}.{joined(clip)}</p>')
 
     lines.append(f'<div class="fill"></div>{player(clip, prefix)}</div>')
     return "".join(lines)
@@ -196,7 +196,14 @@ def grouped(clips, key):
 
 
 HOW = ("Each clip was rendered by Torqwave's own code (<code>TorqwaveTests --sound-demos</code>, in the repository) and written as an MP3. "
-       "Nothing was added: no effects, no levelling, no editing, except that a clip still sounding where it stops is faded over its last 30 ms so the cut does not click.")
+       "Nothing was added: no effects, no levelling, no editing. Dead air is cut: a sound slow to arrive (a pad, a drone, a swell, a riser) is joined partway in, "
+       "30 ms before it reaches a quarter of its peak, with a fade in, and its card says how far in; silence after a sound has died away is left off; "
+       "and a clip still sounding where it stops is faded over its last 30 ms so the cut does not click.")
+
+
+def joined(clip):
+    """A line for a clip joined partway in, or nothing."""
+    return f' Joined {clip["joined"]:.1f} s in.' if clip.get("joined") else ""
 
 
 RULE = ("A point for each oscillator on, each of those with unison voices, each with a warp, the sub, the noise, each filter, each effect on, "

@@ -191,13 +191,74 @@ namespace
         return juce::Decibels::gainToDecibels (audio.getMagnitude (0, audio.getNumSamples()), -100.0f);
     }
 
+    /** Where a clip's sound has arrived: the start of the first hundredth of a second in which it reaches a
+        quarter of its peak, in frames. 0 for silence. */
+    int arrival (const juce::AudioBuffer<float>& audio)
+    {
+        const auto frames = audio.getNumSamples(), window = (int) (0.01 * rate);
+        const auto peak = audio.getMagnitude (0, frames);
+
+        if (peak > 0.0f)
+            for (int at = 0; at < frames; at += window)
+                if (audio.getMagnitude (at, juce::jmin (window, frames - at)) >= 0.25f * peak)
+                    return at;
+
+        return 0;
+    }
+
+    /** The clip without its dead air: joined 30 ms before its sound arrives, with a fade in over those 30 ms,
+        where that is more than a tenth of a second in; and ended a twentieth of a second after it last stands
+        within 60 dB of its peak, where more than a fifth of a second of nothing follows. Gives the seconds
+        cut from its start. */
+    double withoutDeadAir (juce::AudioBuffer<float>& audio)
+    {
+        const auto window = (int) (0.01 * rate), fade = (int) (0.03 * rate);
+        const auto peak = audio.getMagnitude (0, audio.getNumSamples());
+
+        if (peak <= 0.0f)
+            return 0.0;
+
+        auto end = audio.getNumSamples();
+
+        for (int at = (end - 1) / window * window; at >= 0; at -= window)
+            if (audio.getMagnitude (at, juce::jmin (window, end - at)) >= 0.001f * peak)
+            {
+                if (end - (at + window) > (int) (0.2 * rate))
+                    end = at + window + (int) (0.05 * rate);
+
+                break;
+            }
+
+        const auto arrives = arrival (audio);
+        const auto start = arrives > (int) (0.1 * rate) ? arrives - fade : 0;
+
+        if (start == 0 && end == audio.getNumSamples())
+            return 0.0;
+
+        juce::AudioBuffer<float> cut (audio.getNumChannels(), end - start);
+
+        for (int ch = 0; ch < cut.getNumChannels(); ++ch)
+            cut.copyFrom (ch, 0, audio, ch, start, end - start);
+
+        if (start > 0)
+            cut.applyGainRamp (0, juce::jmin (fade, cut.getNumSamples()), 0.0f, 1.0f);
+
+        audio = std::move (cut);
+        return start / rate;
+    }
+
     /** Writes the clip as an MP3 (variable bit rate, quality 4 unless given) and notes its length, peak and size. A clip
-        still sounding where it stops is faded over its last 30 ms, so the cut does not click: the
-        only thing done to a render. */
-    bool save (const juce::File& folder, juce::DynamicObject* entry, juce::AudioBuffer<float> audio, int vbrQuality = 4)
+        still sounding where it stops is faded over its last 30 ms, so the cut does not click. With `trim`, the
+        clip is written without its dead air (withoutDeadAir) and the seconds cut from its start are noted.
+        Nothing else is done to a render. */
+    bool save (const juce::File& folder, juce::DynamicObject* entry, juce::AudioBuffer<float> audio, int vbrQuality = 4, bool trim = true)
     {
         const auto file = folder.getChildFile (entry->getProperty ("file").toString());
         file.getParentDirectory().createDirectory();
+
+        if (const auto joined = trim ? withoutDeadAir (audio) : 0.0; joined > 0.0)
+            entry->setProperty ("joined", juce::roundToInt (joined * 10.0) / 10.0);
+
         const auto frames = audio.getNumSamples();
         const auto fade = juce::jmin (frames, (int) (0.03 * rate));
         const auto faded = frames > 0 && audio.getMagnitude (frames - fade, fade) > 0.001f;
@@ -238,7 +299,18 @@ namespace
             for (auto& n : pattern.notes)
                 played.push_back ({ (r * round + n.startMs) * 0.001, n.lengthMs * 0.001, n.note, n.velocity });
 
-        return play (instrument, played, rounds * round * 0.001 + tail, 125.0);
+        auto audio = play (instrument, played, rounds * round * 0.001 + tail, 125.0);
+
+        // A sound slow to arrive plays the phrase once more, so the clip is not short once it is joined partway in.
+        if (arrival (audio) > (int) (0.3 * rate))
+        {
+            for (auto& n : pattern.notes)
+                played.push_back ({ (rounds * round + n.startMs) * 0.001, n.lengthMs * 0.001, n.note, n.velocity });
+
+            audio = play (instrument, played, (rounds + 1) * round * 0.001 + tail, 125.0);
+        }
+
+        return audio;
     }
 
     /** An instrument's settings, read by parameter ID. */
@@ -694,7 +766,7 @@ namespace
     };
 
     /** A sequence's or a kit's loop, as the Sequence Library's preview renders it at its written tempo:
-        round again until it is five seconds or more. */
+        round again until it is five seconds or more from where its sound arrives. */
     bool writeLoop (const juce::File& folder, juce::DynamicObject* entry, const std::vector<SequenceFile::Sequence>& parts, juce::AudioPluginFormatManager& formats)
     {
         const auto tempo = parts.front().writtenTempo;
@@ -707,7 +779,9 @@ namespace
             return false;
         }
 
-        const auto rounds = juce::jlimit (1, 4, (int) std::ceil (5.0 * rate / pass.getNumSamples()));
+        // Five seconds or more after the sound has arrived: a part slow to arrive goes round once more.
+        const auto arrives = arrival (pass);
+        const auto rounds = juce::jlimit (1, 4, (int) std::ceil ((5.0 * rate + (arrives > (int) (0.1 * rate) ? arrives : 0)) / pass.getNumSamples()));
         juce::AudioBuffer<float> audio (pass.getNumChannels(), pass.getNumSamples() * rounds);
 
         for (int r = 0; r < rounds; ++r)
@@ -1072,7 +1146,7 @@ namespace
             const auto name = demo->getProperty ("id").toString() + "-" + which;
             juce::DynamicObject::Ptr entry = new juce::DynamicObject();
             entry->setProperty ("file", "audio/" + name + ".mp3");
-            save (folder, entry.get(), audio, 2);
+            save (folder, entry.get(), audio, 2, false);
 
             const auto image = Spectrogram::render (*snapshotOf (audio), 0, rate, 0.0, audio.getNumSamples() / 900.0, 900, 220);
             const auto png = folder.getChildFile ("img").getChildFile (name + ".png");
