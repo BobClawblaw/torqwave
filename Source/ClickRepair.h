@@ -6,8 +6,12 @@
 
     Detection fits an autoregressive model (order 32) to each block and predicts every sample
     from the ones before it and, separately, from the ones after it. A click is where both
-    predictions miss by more than the threshold above the block's typical error (a robust
-    median estimate), which pins it to the damaged samples themselves. Each click, with a few
+    predictions miss by more than the threshold above the typical error (a robust median
+    estimate, over the block and over the stretch round the sample, whichever is more), or where
+    the forward one misses and the backward one misses within a few samples after, as at the two
+    ends of a flat-topped click. That pins it to the damaged samples themselves. Where the level
+    steps by more than three times from one side to the other, a note begins or ends and nothing
+    is taken, so a click within about 10 ms of one is left. Each click, with a few
     samples of margin, is then filled by least-squares autoregressive interpolation from the
     audio either side (Janssen, Veldhuis and Vries; Vaseghi and Rayner). No other sample changes. */
 namespace ClickRepair

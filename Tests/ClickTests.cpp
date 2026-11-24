@@ -189,6 +189,82 @@ void runClickTests()
         check (res.has_value() && res->repaired == 0, "click repair: a 10 ms tone burst is left alone");
     }
 
+    // Flat-topped clicks: two, three and four samples held at one level, as a dropped or stuck
+    // sample makes. Forward prediction misses at the first sample and backward at the last, and
+    // often no one sample is missed both ways.
+    {
+        const auto base = clean (10);
+        auto flat = base;
+        juce::Random random (31);
+        std::vector<Click> flats;
+
+        for (int n = 0; n < 30; ++n)
+        {
+            const auto position = second / 4 + n * (int) (0.3 * rate) + random.nextInt (2000);
+            const auto length = 2 + n % 3;
+            const auto value = (n % 2 == 0 ? 1.0f : -1.0f) * (0.4f + 0.5f * random.nextFloat());
+
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < length; ++i)
+                    flat.setSample (ch, position + i, value);
+
+            flats.push_back ({ position, length });
+        }
+
+        const auto res = ClickRepair::repair (*snapshotOf (flat), 0, flat.getNumSamples(), rate, {});
+        auto worst = 0.0f;
+
+        if (res.has_value() && res->snapshot != nullptr)
+        {
+            const auto out = readAll (*res->snapshot);
+
+            for (auto& c : flats)
+                for (int ch = 0; ch < 2; ++ch)
+                    for (int i = 0; i < c.length; ++i)
+                        worst = juce::jmax (worst, std::abs (out.getSample (ch, c.position + i) - base.getSample (ch, c.position + i)));
+        }
+        else
+        {
+            worst = 1.0f;
+        }
+
+        check (res.has_value() && res->repaired == 30 && res->skipped == 0 && worst < 0.01f,
+               "click repair: 30 flat-topped clicks of 2, 3 and 4 samples at 40 to 90 % of full scale are all repaired ("
+                   + juce::String (res.has_value() ? res->repaired : -1) + "), the worst sample left " + juce::String (worst, 4) + " from the clean one");
+    }
+
+    // A sound's own attacks are not clicks: plucked notes and drum hits every 250 ms, with nothing
+    // under them (as an instrument renders them), rising in one sample, 0.25 ms, 1 ms and 2 ms.
+    // Through a hit the prediction misses of itself, and where a note begins the level steps.
+    {
+        int taken = 0, skipped = 0;
+
+        for (const auto drums : { false, true })
+            for (const auto riseFrames : { 1.0, 12.0, 48.0, 96.0 })
+            {
+                juce::AudioBuffer<float> hits (2, 8 * second);
+                juce::Random random (5);
+
+                for (int i = 0; i < hits.getNumSamples(); ++i)
+                {
+                    const auto t = (i % 12000) / rate;
+                    const auto rise = juce::jmin (1.0, (i % 12000) / riseFrames);
+                    const auto hit = rise * (drums ? 0.5 * std::exp (-t * 40.0) * (random.nextDouble() * 2.0 - 1.0) + 0.4 * std::exp (-t * 25.0) * std::cos (twoPi * 60.0 * t)
+                                                   : 0.5 * std::exp (-t * 12.0) * (std::cos (twoPi * 330.0 * t) + 0.5 * std::cos (twoPi * 2640.0 * t)));
+                    hits.setSample (0, i, (float) hit);
+                    hits.setSample (1, i, (float) hit);
+                }
+
+                const auto res = ClickRepair::repair (*snapshotOf (hits), 0, hits.getNumSamples(), rate, {});
+                taken += res.has_value() ? res->repaired : 1000;
+                skipped += res.has_value() ? res->skipped : 1000;
+            }
+
+        check (taken == 0 && skipped == 0,
+               "click repair: 32 plucked notes and 32 drum hits, each rising in 1, 12, 48 and 96 samples, are left alone ("
+                   + juce::String (taken) + " taken for clicks, " + juce::String (skipped) + " skipped)");
+    }
+
     // Cancelling.
     {
         int calls = 0;

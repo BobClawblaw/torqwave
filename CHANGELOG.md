@@ -4,6 +4,16 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Click and Pop Repair finds flat-topped clicks, and leaves drums alone** (fix log 106 and 107)
+- **What was wrong, first.** At its defaults it left 16 of 60 clicks put into a pad and bell clip (one to three samples long, at 40 to 90% of full scale). All 16 were two or three samples held at one level; 13 were never found and 3 were only partly rebuilt. Every one-sample click was repaired.
+- **Why.** A click was where the forward and the backward prediction both missed at the same sample. A flat-topped click is missed forward at its first sample and backward at its last, and often at no one sample both ways.
+- **What was wrong, second,** found while testing the first. On the factory EBM Kit loop with no clicks in it, the released repair took 37 places for clicks and rewrote them, one sample by 0.41 where the loop peaks at 0.58. Its threshold stood over the typical prediction error of a whole block (85 ms at 48 kHz), and through a drum hit the error is large of itself.
+- **Now** a click is also where the forward prediction misses and the backward one misses within eight samples after. A sample's threshold stands over the block's typical error and over that of the stretch round it (512 samples at 48 kHz, and the stretch either side). And where the level steps by more than three times from one side of a find to the other, a note or a hit begins or ends there, and nothing is taken.
+- **Measured:** all 60 clicks in the pad and bell clip are repaired, none left more than a tenth of full scale from the clean clip, and the repaired clip is 46.9 dB from the clean one (20.7 dB before; 15.0 dB with the clicks in). The clean drum loop and the clean pad and bell clip come back with nothing changed. With 60 such clicks put into the drum loop, 58 are repaired and 2 are left; the clip goes from 21.5 dB from the clean loop to 37.9 dB.
+- **What it gives up:** a click within about 10 ms of where a note or a hit begins or ends, or of the start or end of the file where the sound starts at once, is left. A click inside a drum hit has to stand over the hit's own error to be found.
+- The tests have a `--clicks` flag for these checks alone (15), with two new ones: 30 flat-topped clicks of 2, 3 and 4 samples all repaired, and plucked notes and drum hits rising in 1 to 96 samples left alone. Not tried by hand, and not tried on a recording of a record or a tape.
+- Tested: `--clicks`, and the whole suite on the development Mac (2,583 checks).
+
 **The Maximizer holds its ceiling on the meter** (fix log 105)
 - **What was wrong.** With the ceiling at -1 dBTP, the factory EBM Kit loop driven 8.3 dB came out reading -0.79 dBTP on Torqwave's own loudness meter, 0.21 dB over. Bursts of white noise over a thump came out up to 0.30 dB over, and a sound that starts loud at once 1.1 dB over at its start. No sample was over the ceiling in any of them.
 - **Why.** The limiter measured the peaks between samples on its input. Its gain then moved and its output was clipped at the ceiling, and both make new peaks between samples that it never measured. Its detector and the meter were not the cause: on the loop they read -0.77 and -0.79 dBTP.

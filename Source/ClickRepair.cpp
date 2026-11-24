@@ -10,7 +10,9 @@ namespace
     constexpr int pad = 3;                   // samples repaired either side of a detection, plus a
                                              // quarter of its length (longer clicks fade out below the threshold)
     constexpr int mergeGap = order / 2;      // detections closer than this are one click
+    constexpr int pairReach = 8;             // a forward miss and a backward miss this close, in that order, are one click
     constexpr double minSigma = 1.0e-5;      // -100 dBFS: silence is not full of clicks
+    constexpr double onsetStep = 3.0;        // the level either side of a click is within this ratio; more is a note beginning or ending
     constexpr int outputChunk = 1 << 16;
 
     struct Gap
@@ -130,7 +132,7 @@ namespace
         miss; it reaches back to the first forward miss before the core (forward prediction from clean
         audio fails where the click begins) and on to the last backward miss after it (backward
         prediction fails where it ends), so smooth click edges are caught as well. */
-    void detectBlock (const AudioSnapshot& snapshot, juce::int64 from, juce::int64 to, double threshold, bool voice,
+    void detectBlock (const AudioSnapshot& snapshot, juce::int64 from, juce::int64 to, double threshold, bool voice, int stretch,
                       juce::AudioBuffer<float>& window, std::vector<Gap>& raw)
     {
         const auto windowStart = from - blockSize / 2;
@@ -138,7 +140,7 @@ namespace
         const auto count = (int) (to - from);
         const auto offset = blockSize / 2;
         const auto span = count + 2 * order;   // errors also for order samples either side of the block
-        std::vector<double> r ((size_t) order + 1), a, forward ((size_t) span), backward ((size_t) span), sorted;
+        std::vector<double> r ((size_t) order + 1), a, forward ((size_t) span), backward ((size_t) span), sorted, limits ((size_t) span), spreads;
 
         for (int ch = 0; ch < window.getNumChannels(); ++ch)
         {
@@ -179,18 +181,58 @@ namespace
                 spread = juce::jmax (spread, sorted[(size_t) high] / 1.96);
             }
 
-            const auto limit = threshold * juce::jmax (minSigma, spread);
-            auto both = [&] (int j) { return forward[(size_t) j] > limit && backward[(size_t) j] > limit; };
+            // The same spread over each stretch of the block (stretch samples, several times a click's
+            // longest). A sample's limit is over the block's spread and over its own stretch's and the
+            // stretches' either side, so where the error is large of itself for a while, as through a
+            // drum hit or a plucked note's attack, it is not a row of clicks.
+            const auto stretches = (span + stretch - 1) / stretch;
+            spreads.assign ((size_t) stretches, 0.0);
+
+            for (int s = 0; s < stretches; ++s)
+            {
+                const auto begin = s * stretch, n = juce::jmin (stretch, span - begin);
+                sorted.assign (forward.begin() + begin, forward.begin() + begin + n);
+                std::nth_element (sorted.begin(), sorted.begin() + n / 2, sorted.end());
+                spreads[(size_t) s] = sorted[(size_t) n / 2] / 0.6745;
+            }
+
+            for (int j = 0; j < span; ++j)
+            {
+                const auto s = j / stretch;
+                const auto local = juce::jmax (spreads[(size_t) juce::jmax (0, s - 1)], spreads[(size_t) s], spreads[(size_t) juce::jmin (stretches - 1, s + 1)]);
+                limits[(size_t) j] = threshold * juce::jmax (minSigma, spread, local);
+            }
+
+            auto both = [&] (int j) { return forward[(size_t) j] > limits[(size_t) j] && backward[(size_t) j] > limits[(size_t) j]; };
+
+            // A core starts where both miss at one sample, or where the forward prediction misses and
+            // the backward one misses within pairReach samples after: a click of a few samples at one
+            // level (a flat top) is missed forward at its first sample and backward at its last, and
+            // need not be missed both ways at any one of them. (A sound's own attack is the other way
+            // round: the backward miss comes before the forward one.)
+            auto pairedEnd = [&] (int j)
+            {
+                if (forward[(size_t) j] <= limits[(size_t) j])
+                    return -1;
+
+                for (int k = juce::jmin (span - 1, j + pairReach); k >= j; --k)
+                    if (backward[(size_t) k] > limits[(size_t) k])
+                        return k;
+
+                return -1;
+            };
 
             for (int j = order; j < order + count;)
             {
-                if (! both (j))
+                const auto paired = pairedEnd (j);
+
+                if (paired < 0)
                 {
                     ++j;
                     continue;
                 }
 
-                auto coreEnd = j + 1;
+                auto coreEnd = paired + 1;
 
                 while (coreEnd < span && both (coreEnd))
                     ++coreEnd;
@@ -198,16 +240,34 @@ namespace
                 auto first = j;
 
                 for (int k = j - 1; k >= j - order; --k)
-                    if (forward[(size_t) k] > limit)
+                    if (forward[(size_t) k] > limits[(size_t) k])
                         first = k;
 
                 auto last = coreEnd - 1;
 
                 for (int k = coreEnd; k < juce::jmin (span, coreEnd + order); ++k)
-                    if (backward[(size_t) k] > limit)
+                    if (backward[(size_t) k] > limits[(size_t) k])
                         last = k;
 
-                raw.push_back ({ ch, from + first - order, from + last + 1 - order });
+                // A click passes: the sound after it is about as loud as the sound before. Where the
+                // level steps (by more than onsetStep, over a stretch either side), a note or a hit
+                // begins or ends there, and that is the sound's own.
+                const auto levelOf = [x] (int begin, int n)
+                {
+                    auto sum = 0.0;
+
+                    for (int i = begin; i < begin + n; ++i)
+                        sum += (double) x[i] * x[i];
+
+                    return std::sqrt (sum / n);
+                };
+
+                const auto reach = juce::jmin (stretch, offset - order - 1);
+                const auto before = levelOf (offset + first - order - reach, reach), after = levelOf (offset + last + 1 - order, reach);
+
+                if (juce::jmax (before, after) <= onsetStep * juce::jmax (minSigma, juce::jmin (before, after)))
+                    raw.push_back ({ ch, from + first - order, from + last + 1 - order });
+
                 j = juce::jmax (coreEnd, last + 1);
             }
         }
@@ -294,9 +354,14 @@ std::optional<Result> repair (const AudioSnapshot& snapshot, juce::int64 start, 
     juce::AudioBuffer<float> window (snapshot.getNumChannels(), 2 * blockSize);
     std::vector<Gap> raw;
 
+    // A stretch for the local spread: at least three and a half times the longest click, so a click
+    // is never most of one (512 samples at 48 kHz with the default 3 ms).
+    const auto longest = juce::jmax (1.0, settings.maxLengthMs / 1000.0 * sampleRate);
+    const auto stretch = juce::jlimit (64, blockSize, juce::nextPowerOfTwo ((int) std::ceil (3.5 * longest)));
+
     for (auto b = start; b < end; b += blockSize)
     {
-        detectBlock (snapshot, b, juce::jmin (end, b + blockSize), threshold, settings.voice, window, raw);
+        detectBlock (snapshot, b, juce::jmin (end, b + blockSize), threshold, settings.voice, stretch, window, raw);
 
         if (progress != nullptr && ! progress (0.85f * (float) ((double) (b - start) / (double) (end - start))))
             return std::nullopt;
