@@ -218,7 +218,7 @@ def graphic_whole(defs, snap):
     for i, pid in enumerate(pids):
         x = cx0 + cw * (i + 0.5)
         own = pid.startswith("torqwave")
-        s.text(x - 2, top + head - 14, label(defs, snap, pid), 19, (WAVE if pid == "torqwave" else WHITE) if own else TEXT, "start", "bold", -65)
+        s.text(x + 7, top + head - 14, label(defs, snap, pid), 19, (WAVE if pid == "torqwave" else WHITE) if own else TEXT, "start", "bold", -90)
     y = top + head
     for g in groups:
         s.rect(lx - 10, y + 8, W - 2 * lx + 20, gh - 12, LINE, 4)
