@@ -1440,8 +1440,13 @@ namespace
 
             // Recalled from another patch: the same settings (the level trim among them), tables, macro names and name.
             synth.loadPatch ("Cold Bell");
-            const auto recalled = store().load (synth, "night reese") && synth.getPresetValues() == values && synth.getPresetTexts() == texts
-                                  && juce::exactlyEqual (synth.getPresetValues().at ("ampLevel"), trimmed) && synth.getMacroName (0) == "Grit"
+            // The level is compared on its own line: with it inside the expression below, Microsoft's compiler
+            // stopped with an internal error.
+            const auto loadedIt = store().load (synth, "night reese");
+            const auto levelNow = synth.getPresetValues().at ("ampLevel");
+            const auto sameLevel = ! (levelNow < trimmed) && ! (levelNow > trimmed);
+            const auto recalled = loadedIt && synth.getPresetValues() == values && synth.getPresetTexts() == texts
+                                  && sameLevel && synth.getMacroName (0) == "Grit"
                                   && synth.getSampledTable (1) != nullptr && synth.getSampledTable (1)->name == "a table" && synth.getPatchName() == "Night Reese";
             if (! recalled)
                 failed.add ("the patch recalled is not the patch saved");
