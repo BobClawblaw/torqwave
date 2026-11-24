@@ -80,6 +80,8 @@ namespace Project
     {
         State state;
         juce::StringArray missing;   // files and a session no longer there (left out of state)
+        std::vector<OpenFile> missingFiles;   // those files, each with its place (no history)
+        juce::File missingSession;
         juce::String error;
     };
 
@@ -143,5 +145,7 @@ namespace Project
         juce::StringArray missing;
     };
 
-    Restored restoreFiles (const State&, OpenFiles&, AudioEngine&);
+    /** preloaded (if given): each of the state's files already read, in order, used in place of
+        reading it here (one with a history still comes from its history). */
+    Restored restoreFiles (const State&, OpenFiles&, AudioEngine&, std::vector<AudioFileIO::Loaded>* preloaded = nullptr);
 }

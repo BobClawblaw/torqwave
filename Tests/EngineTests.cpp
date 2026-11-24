@@ -80,6 +80,7 @@
 #include "AzimuthTests.h"
 #include "GuideTests.h"
 #include "HomeTests.h"
+#include "ResumeTests.h"
 #include "AiTests.h"
 #include "AiEval.h"
 #include "CodecPreviewTests.h"
@@ -951,6 +952,20 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (const auto folder = valueOf ("--resume-demo"); folder.isNotEmpty())
+    {
+        const auto made = makeResumeDemo (juce::File::getCurrentWorkingDirectory().getChildFile (folder));
+        std::cout << (made ? "Made " : "Could not make ") << folder << std::endl;
+        return made ? 0 : 1;
+    }
+
+    if (args.contains ("--resume"))
+    {
+        runResumeTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
     if (args.contains ("--picture"))
     {
         AudioEngine engine;
@@ -1124,6 +1139,7 @@ int main (int argc, char* argv[])
         runAzimuthTests();
         runGuideTests();
         runHomeTests();
+        runResumeTests();
         runAiTests();
         runCodecPreviewTests();
         runDynamicsTests();

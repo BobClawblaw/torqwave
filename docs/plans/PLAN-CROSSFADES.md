@@ -9,7 +9,7 @@ Each piece below has:
 - its size: **S** is days, **M** about a week, **L** more;
 - how it is tested.
 
-Each step lands as its own commit with its tests, guide pages and a changelog entry that says what was not tried by hand. The steps are built in order, and each one is useful on its own. Problems found by using them go into the [fix log](DOGFOODING.md) with an issue, as each is fixed.
+Each step lands as its own commit with its tests, guide pages and a changelog entry that says what was not tried by hand. The steps are built in order, and each one is useful on its own. Problems found by using them go into the [fix log](../DOGFOODING.md) with an issue, as each is fixed.
 
 ## What the code gives us to build on
 

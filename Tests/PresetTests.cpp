@@ -51,7 +51,7 @@ namespace
         return q.voice != nullptr && q.voice->toString().contains (BuiltInEffects::basicDrumsId);
     }
 
-    /** The rules every preset keeps (docs/PLAN-0.19.3.md, step 6). What breaks one goes into `problems`. */
+    /** The rules every preset keeps (docs/plans/PLAN-0.19.3.md, step 6). What breaks one goes into `problems`. */
     void checkRules (const SequenceFile::Sequence& q, const juce::XmlElement& xml, juce::StringArray& problems)
     {
         const auto drums = playsOnDrums (q);

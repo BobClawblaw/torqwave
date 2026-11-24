@@ -343,13 +343,6 @@ Loaded fromXml (const juce::XmlElement& xml, const juce::File& project)
         {
             const auto file = readPath (*e, "path", project);
 
-            if (! file.existsAsFile())
-            {
-                out.missing.add (file != juce::File() ? file.getFullPathName() : e->getStringAttribute ("path"));
-                ++index;
-                continue;
-            }
-
             OpenFile f;
             f.file = file;
             f.video = readPath (*e, "video", project);
@@ -358,6 +351,17 @@ Loaded fromXml (const juce::XmlElement& xml, const juce::File& project)
             f.place.viewStart = e->getDoubleAttribute ("viewStart");
             f.place.framesPerPixel = juce::jmax (0.0, e->getDoubleAttribute ("framesPerPixel"));
             f.place.band = { e->getDoubleAttribute ("bandLow"), juce::jmax (e->getDoubleAttribute ("bandLow"), e->getDoubleAttribute ("bandHigh")) };
+
+            if (! file.existsAsFile())
+            {
+                out.missing.add (file != juce::File() ? file.getFullPathName() : e->getStringAttribute ("path"));
+
+                if (file != juce::File())
+                    out.missingFiles.push_back (f);
+
+                ++index;
+                continue;
+            }
 
             if (auto* x = e->getChildByName ("HISTORY"))
             {
@@ -401,6 +405,7 @@ Loaded fromXml (const juce::XmlElement& xml, const juce::File& project)
         if (! s.session.existsAsFile())
         {
             out.missing.add (s.session != juce::File() ? s.session.getFullPathName() : session->getStringAttribute ("path"));
+            out.missingSession = s.session;
             s.session = juce::File();
         }
     }
@@ -591,7 +596,7 @@ void attachHistories (State& state, const OpenFiles& files, const std::vector<st
     }
 }
 
-Restored restoreFiles (const State& state, OpenFiles& files, AudioEngine& engine)
+Restored restoreFiles (const State& state, OpenFiles& files, AudioEngine& engine, std::vector<AudioFileIO::Loaded>* preloaded)
 {
     Restored out;
     files.closeAll();
@@ -617,7 +622,8 @@ Restored restoreFiles (const State& state, OpenFiles& files, AudioEngine& engine
         }
         else
         {
-            auto loaded = AudioFileIO::load (f.file, engine.formatManager);
+            auto loaded = preloaded != nullptr && i < preloaded->size() ? std::move ((*preloaded)[i])
+                                                                        : AudioFileIO::load (f.file, engine.formatManager);
 
             if (loaded.error.isNotEmpty())
             {

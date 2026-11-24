@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(Torqwave VERSION 0.20.0 LANGUAGES C CXX)
+project(Torqwave VERSION 0.20.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -262,6 +262,7 @@ target_sources(Torqwave PRIVATE
     Source/SessionNotes.cpp
     Source/LoadReadout.cpp
     Source/SessionRecovery.cpp
+    Source/Resume.cpp
     Source/KeyShortcuts.cpp
     Source/AuditionPreview.cpp
     Source/WindowPlaces.cpp
@@ -409,9 +410,14 @@ foreach(preset IN LISTS torqwave_presets)
     list(APPEND torqwave_preset_names ${name})
 endforeach()
 set(torqwave_presets_zip ${CMAKE_BINARY_DIR}/factory-presets.zip)
+# The names go in a file, not on the command line: there are over a thousand, and a folder such as
+# "Hats & Tops" has an ampersand that the Windows shell reads as the end of the command.
+set(torqwave_preset_list ${CMAKE_BINARY_DIR}/factory-presets.txt)
+string(REPLACE ";" "\n" torqwave_preset_lines "${torqwave_preset_names}")
+file(WRITE ${torqwave_preset_list} "${torqwave_preset_lines}\n")
 add_custom_command(OUTPUT ${torqwave_presets_zip}
     COMMAND ${CMAKE_COMMAND} -E rm -f ${torqwave_presets_zip}
-    COMMAND ${CMAKE_COMMAND} -E tar cf ${torqwave_presets_zip} --format=zip "--mtime=2026-01-01 00:00:00 UTC" -- ${torqwave_preset_names}
+    COMMAND ${CMAKE_COMMAND} -E tar cf ${torqwave_presets_zip} --format=zip "--mtime=2026-01-01 00:00:00 UTC" --files-from=${torqwave_preset_list}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Data/Presets
     DEPENDS ${torqwave_presets}
     COMMENT "Zipping the factory presets"
@@ -429,9 +435,14 @@ foreach(sample IN LISTS torqwave_samples)
     list(APPEND torqwave_sample_names ${name})
 endforeach()
 set(torqwave_samples_zip ${CMAKE_BINARY_DIR}/factory-samples.zip)
+# The names go in a file, not on the command line: there are over a thousand, and a folder such as
+# "Hats & Tops" has an ampersand that the Windows shell reads as the end of the command.
+set(torqwave_sample_list ${CMAKE_BINARY_DIR}/factory-samples.txt)
+string(REPLACE ";" "\n" torqwave_sample_lines "${torqwave_sample_names}")
+file(WRITE ${torqwave_sample_list} "${torqwave_sample_lines}\n")
 add_custom_command(OUTPUT ${torqwave_samples_zip}
     COMMAND ${CMAKE_COMMAND} -E rm -f ${torqwave_samples_zip}
-    COMMAND ${CMAKE_COMMAND} -E tar cf ${torqwave_samples_zip} --format=zip "--mtime=2026-01-01 00:00:00 UTC" -- ${torqwave_sample_names}
+    COMMAND ${CMAKE_COMMAND} -E tar cf ${torqwave_samples_zip} --format=zip "--mtime=2026-01-01 00:00:00 UTC" --files-from=${torqwave_sample_list}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Data/Samples
     DEPENDS ${torqwave_samples}
     COMMENT "Zipping the sampler's factory samples"
@@ -587,6 +598,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/TimeViewStripTests.cpp
     Tests/GuideTests.cpp
     Tests/HomeTests.cpp
+    Tests/ResumeTests.cpp
     Tests/AiTests.cpp
     Tests/AiEval.cpp
     Source/AiClient.cpp
@@ -719,6 +731,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/SessionNotes.cpp
     Source/LoadReadout.cpp
     Source/SessionRecovery.cpp
+    Source/Resume.cpp
     Source/KeyShortcuts.cpp
     Source/AuditionPreview.cpp
     Source/WindowPlaces.cpp

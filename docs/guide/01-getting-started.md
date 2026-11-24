@@ -85,9 +85,34 @@ A workspace can have an accent colour of its own, so you can tell at a glance wh
 
 ## The home screen
 
-With nothing open, the editor shows the home screen: buttons for **New File**, **Open...**, **New Session**, **Open Project...** and the **User Guide**, and your recent files, sessions and projects as cards. Each card has a picture of what it holds. An audio file shows its waveform. A session shows its tracks with their clips in their colours. A project shows its session, or the file it had in front. Under the name are the kind, when you last saved it and its folder. Click a card to open it again.
+With nothing open, the editor shows the home screen: buttons for **New File**, **Open...**, **New Session**, **Open Project...** and the **User Guide** (and **Continue Where You Left Off** before them, when there is something from last time), and your recent files, sessions and projects as cards. Each card has a picture of what it holds. An audio file shows its waveform. A session shows its tracks with their clips in their colours. A project shows its session, or the file it had in front. Under the name are the kind, when you last saved it and its folder. Click a card to open it again.
 
-Torqwave starts on the home screen. To have it reopen the file you had open when you quit instead, choose **Reopen the last file** under **File > Settings... > Start**.
+Torqwave starts on the home screen. **File > Settings... > Start** has two other choices: **Reopen the last file** reopens the file you had in the editor when you quit, and **Continue where you left off** brings back everything that was open.
+
+### Continue where you left off
+
+With this chosen, Torqwave starts with what was open when it last closed:
+
+- every file that was open in the editor, in the same order, with the one you were on in front;
+- each file's selection, cursor, zoom and scroll, and the video attached to it;
+- the effects rack beside the editor, with its effects' settings;
+- the multitrack session, with its cursor, time range, zoom, scroll and selected track;
+- the editor or the Multitrack view in front, whichever it was, and the project they belonged to.
+
+Whatever the setting, the same is on offer once after a start, until you use it or open something else: **File > Continue Where You Left Off**, and a button of that name at the start of the home screen's row.
+
+**It reopens files; it does not keep unsaved work.** Torqwave notes which files were open and where you were in them, in its own data folder. It writes no audio there. So:
+
+- A file comes back as it is on disk. If you chose **Don't Save** when you quit, those changes are gone, as that choice says.
+- A file you never saved, and a session you never saved, are not brought back. Quitting asks whether to save them first, as it always has.
+- Undo histories are not brought back, and neither are open instrument, plug-in or tool windows. The panels and their layout come back as they always do, with the workspace.
+- To keep unsaved audio and undo steps between runs, save a [project](11-projects-and-file-types.md#projects).
+
+**If something is no longer there** (moved, renamed, deleted, or on a drive that isn't connected), Torqwave reopens the rest and lists what it could not reopen. Those stay in its note, each with its place, and are tried again at every start: connect the drive or put the file back, and the next start reopens it, after the files that were there all along. Opening one by hand, or opening another session or project in place of a missing one, also ends the wait. For something that is gone for good, click **Forget Them** on the message (Return and Escape only close it) and Torqwave stops looking. A file that changed on disk opens as it is now.
+
+**After a crash** it brings back what was open up to 30 seconds before (the note is refreshed that often while nothing is playing or recording), each file as it is on disk. If the session had unsaved changes, Torqwave then offers its recovery copy, as it does without this setting: one question, and **Open** puts the copy in place of the saved session. If Torqwave closed while it was reopening, the next start skips it once and says so, so that one bad file can't stop the app from starting; File > Continue Where You Left Off tries again.
+
+The files are read while the loading screen is up, one after another, so a start takes about as long as opening them by hand. If a drive doesn't answer, **Continue** appears after three seconds: the app is usable at once and the files come in when they are read, unless you have opened or changed something by then.
 
 ![The home screen with buttons to start and cards for six recent files, sessions and projects](../screenshots/guide-home.png)
 

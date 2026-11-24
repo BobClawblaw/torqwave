@@ -1,3 +1,4 @@
+#include <cstring>
 #include <JuceHeader.h>
 #include "../Source/Decrypt.h"
 #include "../Source/AiDecrypt.h"
@@ -1427,7 +1428,7 @@ namespace
             takeOne();
             synth.setMacroName (0, "Grit");
             synth.setSampledTable (1, WaveTables::makeSampled (std::vector<float> ((size_t) (4 * WaveTables::Sampled::harmonics), 0.5f), 4, 110.0, "a table"));
-            const auto trimmed = synth.getPresetValues().at ("ampLevel");
+            double trimmed = synth.getPresetValues().at ("ampLevel");   // not const: see the note where it is compared
             const auto guessed = view.nameCategory();
             const auto takenAt = view.getSearch()->getProgress().best.front().lock;
             view.typeName ("Night Reese");
@@ -1440,8 +1441,13 @@ namespace
 
             // Recalled from another patch: the same settings (the level trim among them), tables, macro names and name.
             synth.loadPatch ("Cold Bell");
-            const auto recalled = store().load (synth, "night reese") && synth.getPresetValues() == values && synth.getPresetTexts() == texts
-                                  && juce::exactlyEqual (synth.getPresetValues().at ("ampLevel"), trimmed) && synth.getMacroName (0) == "Grit"
+            // Not const, and the store named in full: Microsoft's compiler stopped with an internal error in its
+            // constant evaluator on "const auto x = store().load (...)", where store is a reference to a function.
+            bool loadedIt = DecryptedPatches::Store::shared().load (synth, "night reese");
+            double levelNow = synth.getPresetValues().at ("ampLevel");
+            const bool sameLevel = std::memcmp (&levelNow, &trimmed, sizeof (double)) == 0;
+            const auto recalled = loadedIt && synth.getPresetValues() == values && synth.getPresetTexts() == texts
+                                  && sameLevel && synth.getMacroName (0) == "Grit"
                                   && synth.getSampledTable (1) != nullptr && synth.getSampledTable (1)->name == "a table" && synth.getPatchName() == "Night Reese";
             if (! recalled)
                 failed.add ("the patch recalled is not the patch saved");
@@ -1593,7 +1599,7 @@ namespace
             const auto renamed = page.renameSelected ("Dusk Reese") && store().names().contains ("Dusk Reese") && ! presets->getNames (key).contains ("Night Reese")
                                  && synth.getPatchName() == "Dusk Reese" && store().entry ("Dusk Reese")->category == second && juce::exactlyEqual (store().entry ("Dusk Reese")->lock, takenAt2);
             synth.loadPatch ("Cold Bell");
-            const auto renamedLoads = store().load (synth, "Dusk Reese") && synth.getPatchName() == "Dusk Reese" && synth.getMacroName (0) == "Grit";
+            bool renamedLoads = DecryptedPatches::Store::shared().load (synth, "Dusk Reese") && synth.getPatchName() == "Dusk Reese" && synth.getMacroName (0) == "Grit";
             const auto fromBrowser = ! window->renameDecrypted ("Dusk Reese", "ash lead") && window->renameDecrypted ("Dusk Reese", "Dusk Reese II") && window->renameDecrypted ("Dusk Reese II", "Dusk Reese");
             if (! (refusedNames && renamed && renamedLoads && fromBrowser))
                 failed.add ("rename did not refuse an empty, taken or factory name, or did not rename and keep what the list holds");

@@ -1,6 +1,6 @@
 # 0.19 plan: the editor and DAW in one
 
-0.19 is the first line of work toward Torqwave as an editor and a DAW in one, for **sound design**, **writing and producing music**, and **working to picture** (see the [roadmap](../ROADMAP.md)). This plan scopes each piece:
+0.19 is the first line of work toward Torqwave as an editor and a DAW in one, for **sound design**, **writing and producing music**, and **working to picture** (see the [roadmap](../../ROADMAP.md)). This plan scopes each piece:
 
 - what it is;
 - what it builds on in the code today;
@@ -8,7 +8,7 @@
 - how it is tested;
 - the order it is built in.
 
-Each piece lands as its own commit with its tests and docs. The [changelog](../CHANGELOG.md) records each one as it is built.
+Each piece lands as its own commit with its tests and docs. The [changelog](../../CHANGELOG.md) records each one as it is built.
 
 ## What the code gives us to build on
 

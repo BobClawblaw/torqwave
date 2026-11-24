@@ -2,7 +2,7 @@
 <rect width="1600" height="900" fill="#111317"/>
 <text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Where Torqwave stands, area by area</text>
 <text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">Rows covered in each area, of the rows this comparison tracks. A count of features, not of depth or maturity.</text>
-<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-24. Torqwave 0.20.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
+<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-24. Torqwave 0.20.1 is released. Sources and method: docs/compare in the Torqwave repository.</text>
 <text x="330.5" y="176.0" font-size="15" fill="#d8dde3" text-anchor="middle" font-weight="bold">Editing</text>
 <text x="330.5" y="196.0" font-size="13" fill="#6b737d" text-anchor="middle" font-weight="normal">5 rows</text>
 <text x="421.5" y="176.0" font-size="15" fill="#d8dde3" text-anchor="middle" font-weight="bold">Repair</text>
@@ -26,7 +26,7 @@
 <text x="1240.5" y="176.0" font-size="15" fill="#d8dde3" text-anchor="middle" font-weight="bold">Platforms</text>
 <text x="1240.5" y="196.0" font-size="13" fill="#6b737d" text-anchor="middle" font-weight="normal">4 rows</text>
 <rect x="40.0" y="212.0" width="1250.0" height="36.4" rx="0" fill="#1d2126"/>
-<text x="50.0" y="236.2" font-size="18" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.20.0</text>
+<text x="50.0" y="236.2" font-size="18" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.20.1</text>
 <rect x="291.0" y="216.0" width="79.0" height="28.4" rx="4" fill="#111317" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="291.0" y="216.0" width="79.0" height="28.4" rx="4" fill="#2f7f5b"/>
 <text x="330.5" y="236.2" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">5/5</text>
@@ -662,7 +662,11 @@
 <rect x="1388.5" y="300.0" width="39.5" height="20.0" rx="0" fill="#8a7a2c"/>
 <text x="1408.2" y="292.0" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">45</text>
 <text x="1408.2" y="794.0" font-size="13" fill="#d8dde3" text-anchor="middle" font-weight="normal">0.20.0</text>
-<rect x="1438.0" y="240.0" width="39.5" height="530.0" rx="4" fill="none" stroke="#2a2f36" stroke-width="1.5" stroke-dasharray="4 5"/>
+<rect x="1438.0" y="240.0" width="39.5" height="530.0" rx="4" fill="#111317" stroke="#2a2f36" stroke-width="1.5"/>
+<rect x="1438.0" y="320.0" width="39.5" height="450.0" rx="4" fill="#2f7f5b"/>
+<rect x="1438.0" y="300.0" width="39.5" height="20.0" rx="0" fill="#8a7a2c"/>
+<text x="1457.8" y="292.0" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">45</text>
+<text x="1457.8" y="794.0" font-size="13" fill="#d8dde3" text-anchor="middle" font-weight="normal">0.20.1</text>
 <rect x="1487.5" y="240.0" width="39.5" height="530.0" rx="4" fill="none" stroke="#2a2f36" stroke-width="1.5" stroke-dasharray="4 5"/>
 <text x="1334.0" y="816.0" font-size="13" fill="#6b737d" text-anchor="start" font-weight="normal">empty slots: the releases to come</text>
 <rect x="50.0" y="858.0" width="18.0" height="18.0" rx="3" fill="#2f7f5b" stroke="#2a2f36" stroke-width="1.5"/>

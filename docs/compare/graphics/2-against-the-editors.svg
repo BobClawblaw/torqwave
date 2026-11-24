@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
 <rect width="1600" height="900" fill="#111317"/>
-<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.20.0 and the audio editors</text>
+<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.20.1 and the audio editors</text>
 <text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">What ships in each product, from its own documentation</text>
-<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-24. Torqwave 0.20.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
+<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-24. Torqwave 0.20.1 is released. Sources and method: docs/compare in the Torqwave repository.</text>
 <rect x="440.0" y="150.0" width="317.1" height="680.0" rx="8" fill="#1d2126"/>
 <rect x="440.0" y="150.0" width="317.1" height="5.0" rx="2" fill="#4fc3a1"/>
 <text x="519.3" y="184.0" font-size="21" fill="#ffffff" text-anchor="middle" font-weight="bold">Torqwave</text>
-<text x="519.3" y="208.0" font-size="19" fill="#4fc3a1" text-anchor="middle" font-weight="bold">0.20.0</text>
+<text x="519.3" y="208.0" font-size="19" fill="#4fc3a1" text-anchor="middle" font-weight="bold">0.20.1</text>
 <text x="677.9" y="184.0" font-size="21" fill="#ffffff" text-anchor="middle" font-weight="bold">Torqwave</text>
 <text x="677.9" y="208.0" font-size="19" fill="#8b939e" text-anchor="middle" font-weight="bold">0.19.2</text>
 <text x="836.4" y="184.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Adobe</text>

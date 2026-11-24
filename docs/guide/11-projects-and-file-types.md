@@ -18,6 +18,8 @@ None of them hold audio. They point to your audio files.
 
 A project brings everything back as you left it. Use **File > Save Project** and **File > Open Project...**, or open a `.tqproject` with File > Open.
 
+To have Torqwave start with what was open last time without saving a project, see [Continue where you left off](01-getting-started.md#continue-where-you-left-off). That reopens the files as they are on disk; a project also keeps unsaved audio and undo steps.
+
 **What happens to your audio:**
 
 - Saving a project doesn't change the files you opened.

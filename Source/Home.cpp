@@ -277,7 +277,8 @@ void Pictures::handleAsyncUpdate()
 //==============================================================================
 Start startWith (const juce::PropertySet& settings)
 {
-    return settings.getIntValue (startKey, 0) == 1 ? Start::lastFile : Start::homeScreen;
+    const auto kept = settings.getIntValue (startKey, 0);
+    return kept == 1 ? Start::lastFile : kept == 2 ? Start::leftOff : Start::homeScreen;
 }
 
 juce::File fileToReopen (const juce::PropertySet& settings, const juce::String& lastFileKey)
