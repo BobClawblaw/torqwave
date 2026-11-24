@@ -172,10 +172,10 @@ A dark table titled "Torqwave 0.20.1 and the DAWs, 2 of 2", with the same rows; 
 
 ## Notes for whoever posts it
 
-- Nothing here is posted until the release is published: "is out" is true only then.
-- The graphics say 0.20.1 "is about to be released" until the snapshot's `status` is set to `released` and the generator run again (`python3 docs/compare/generate.py`), with the day's date in `as_of`.
+- The release is published (2026-11-24), so "is out" is true.
+- The graphics were drawn again after the release and say 0.20.1 is released.
 - Graphic 1 sets 0.20.1 against 0.19.2, as the posts do. Only Continue where you left off is new in 0.20.1 itself; the rest came in 0.20.0.
-- Platforms: 0.20.0's Windows and Linux packages failed to build, and 0.20.1 is meant to correct that. The posts do not name platforms. Say "for macOS, Windows and Linux" only once the 0.20.1 Windows and Linux packages are on the release page; they are built by the workflows and, by the release notes, not tried by hand.
+- Platforms: the 0.20.1 Windows and Linux packages are on the release page beside the Mac disk image, so the posts may say "for macOS, Windows and Linux". They are built by the workflows and, by the release notes, not tried by hand. 0.20.0's Windows and Linux packages failed to build.
 - How it was tried, if someone asks. Torqwave Sampler was tried by hand in the app before release (its window, sounds dragged from the Files panel, loops forward and back, its settings), and the two problems found that way were fixed (fix log 98 and 99). Decrypt was used by hand with real recordings and a local model. Continue where you left off was tested by its own suite and tried once in the built app on made-up files.
 - The sampler's and Decrypt's pictures are drawn by Torqwave's tests; the sampler's lack the strip of playing keys the window has in the app.
 - What Continue where you left off does not bring back, if someone asks: changes you chose not to save, files never saved, undo histories, and open instrument, plug-in and tool windows. A project keeps more.
