@@ -2659,7 +2659,10 @@ namespace
                          + chunk (R"({"choices":[{"delta":{"tool_calls":[{"index":0,"id":"a","function":{"name":"edit","arguments":"{\"kind\": \"gain\", \"settings\": {\"db\": 6}}"}}]},"finish_reason":"tool_calls"}]})")
                          + "data: [DONE]\n\n";
         const auto second = chunk (R"({"choices":[{"delta":{"content":"Raised by 6 dB."},"finish_reason":"stop"}]})") + "data: [DONE]\n\n";
-        MockServer server ({ { 200, "text/event-stream", first }, { 200, "text/event-stream", second } });
+        const auto third = chunk (R"({"choices":[{"delta":{"content":"It is 6 dB up already."},"finish_reason":"stop"}]})") + "data: [DONE]\n\n";
+        const auto fourth = chunk (R"({"choices":[{"delta":{"content":"Drums have a Modern type."},"finish_reason":"stop"}]})") + "data: [DONE]\n\n";
+        MockServer server ({ { 200, "text/event-stream", first }, { 200, "text/event-stream", second }, { 200, "text/event-stream", third },
+                             { 200, "text/event-stream", fourth } });
 
         const auto audio = tone (48000.0, 3);
         AudioDocument::Snapshot applied;
@@ -2707,6 +2710,58 @@ namespace
                    && AudioEdits::peakLevel (*audio, 0, audio->getNumFrames()) < 0.26f,
                "Ask Torq: Apply hands over the edited copy; the original is untouched until then");
         check (panel.getLog().contains ("Applied, as one undo step.") && ! button ("Apply")->isEnabled(), "Ask Torq: once applied, the plan is gone");
+
+        // The box is empty for the next request, and the next request goes with the one before it:
+        // what was asked, what was answered, the plan and that it was applied. The log keeps both.
+        check (panel.getRequestBox().isEmpty(), "Ask Torq: the request box is empty once the request is sent");
+        panel.getRequestBox().setText ("Is that enough?");
+        panel.ask();
+        TestUtils::runUntil ([&] { return panel.getLog().contains ("It is 6 dB up already."); }, 10000);
+        const auto followUp = parse (server.requests().size() == 3 ? server.requests()[2].body : juce::String ("{}"))["messages"];
+        const auto system = followUp[0]["content"].toString();
+        check (followUp.size() == 4 && followUp[1]["role"] == juce::var ("user") && followUp[1]["content"] == juce::var ("Make it 6 dB louder")
+                   && followUp[2]["role"] == juce::var ("assistant") && followUp[2]["content"].toString().startsWith ("Raised by 6 dB.")
+                   && followUp[2]["content"].toString().contains ("1. Gain 6.00 dB, the whole file")
+                   && followUp[2]["content"].toString().contains ("The user applied this plan")
+                   && followUp[3]["content"] == juce::var ("Is that enough?"),
+               "Ask Torq: a follow-up is sent with the request before it, its answer, its plan and that the plan was applied");
+        check (panel.getLog().contains ("You: Make it 6 dB louder") && panel.getLog().contains ("You: Is that enough?") && panel.getTurns().size() == 2,
+               "Ask Torq: the log keeps the conversation, one request after another");
+        check (system.contains ("This is Torqwave " JUCE_APPLICATION_VERSION_STRING) && ! system.contains ("New in ") && system.contains ("earlier requests"),
+               "Ask Torq: every request names the program and its version, and a request for an edit does not carry the release's notes");
+
+        // A question about the release carries the notes, written for this version.
+        panel.getRequestBox().setText ("What is new in this version?");
+        panel.ask();
+        TestUtils::runUntil ([&] { return panel.getLog().contains ("Drums have a Modern type."); }, 10000);
+        const auto asked = parse (server.requests().size() == 4 ? server.requests()[3].body : juce::String ("{}"))["messages"];
+        check (asked.size() == 6 && asked[0]["content"].toString().contains ("New in " + Ai::releaseNotesFor() + ":")
+                   && Ai::releaseNotesFor() == JUCE_APPLICATION_VERSION_STRING,
+               "Ask Torq: a question about what is new is sent with the release's notes, and the notes are the ones for this version ("
+                   + Ai::releaseNotesFor() + ", the build " JUCE_APPLICATION_VERSION_STRING ")");
+        check (Ai::asksAboutRelease ("what's new?") && Ai::asksAboutRelease ("Which version is this") && ! Ai::asksAboutRelease ("Make it 6 dB louder")
+                   && ! Ai::asksAboutRelease ("add a track and a bass line"),
+               "Ask Torq: requests about the program are told from requests for changes");
+
+        // What is sent stays small: the last four turns, each answer's first 600 characters.
+        {
+            Ai::Turn longTurn { "Tell me everything", juce::String::repeatedString ("word ", 400), {}, Ai::Turn::Outcome::none };
+            juce::StringArray manySteps;
+
+            for (int i = 0; i < 10; ++i)
+                manySteps.add ("Step " + juce::String (i + 1));
+
+            Ai::Turn planned { "Do ten things", "Done.", manySteps, Ai::Turn::Outcome::pending };
+            check (longTurn.said().length() <= Ai::maxAnswerSent && planned.said().contains ("6. Step 6") && ! planned.said().contains ("7. Step 7")
+                       && planned.said().contains ("and 4 more") && planned.said().contains ("did not apply this plan"),
+                   "Ask Torq: an earlier answer is sent cut to 600 characters and a plan to its first six steps, with whether it was applied");
+        }
+
+        // New Chat forgets it all.
+        button ("New Chat")->triggerClick();
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+        check (panel.getTurns().empty() && panel.getLog().isEmpty() && ! button ("New Chat")->isEnabled(),
+               "Ask Torq: New Chat empties the log and forgets the conversation");
     }
 
     /** The name in menus and titles carries the puppy: drawn with the app's fonts, it shows in colour. */

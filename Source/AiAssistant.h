@@ -13,6 +13,33 @@ namespace Ai
     /** The feature's name as menus and titles show it: "Ask Torq" and the puppy, Torqwave's mascot. */
     inline juce::String askName()    { return juce::String (juce::CharPointer_UTF8 ("Ask Torq \xf0\x9f\x90\xb6")); }
 
+    /** A request made earlier in the window's conversation and what came of it, given to the model
+        before the next request so a follow-up ("now louder", "undo that idea") has something to follow. */
+    struct Turn
+    {
+        enum class Outcome { none, pending, applied, discarded };
+
+        juce::String request, answer;
+        juce::StringArray plan;             // the plan's steps, if it made one
+        Outcome outcome = Outcome::none;
+
+        /** What the model is told it answered: the answer, the plan, and whether the user applied it. */
+        juce::String said() const;
+    };
+
+    /** What the model is told about the program it is in. Every request gets one line, the name
+        and version. A request that asks about the program (asksAboutRelease: "what is new", a
+        version, the changelog) also gets what the release brought, so the question has an answer;
+        other requests don't carry it. Written by hand for each release (releaseNotesFor names the
+        version it was written for; a test holds it to the build's version). */
+    juce::String aboutThisRelease (bool withNotes);
+    juce::String releaseNotesFor();
+    bool asksAboutRelease (const juce::String& request);
+
+    /** The model's context is small and the tools' descriptions fill much of it, so little of the
+        conversation is sent: the last few turns, the start of each answer and of each plan. */
+    constexpr int maxTurnsSent = 4, maxAnswerSent = 600, maxPlanStepsSent = 6;
+
     /** Runs the conversation on a background thread: the model's answer, the tools it calls, their
         results back to it, until it answers without a tool or runs out of rounds. What happens is
         reported on the message thread, through the callbacks, as it happens. */
@@ -20,7 +47,7 @@ namespace Ai
                         private juce::AsyncUpdater
     {
     public:
-        Agent (Settings, juce::String key, Workspace::Start, juce::String request);
+        Agent (Settings, juce::String key, Workspace::Start, juce::String request, std::vector<Turn> earlier = {});
         ~Agent() override;
 
         void start();
@@ -54,6 +81,7 @@ namespace Ai
         Client client;
         Workspace workspace;
         juce::String request;
+        std::vector<Turn> earlier;
         std::atomic<bool> working { false };
 
         juce::CriticalSection lock;
@@ -82,6 +110,12 @@ namespace Ai
         /** What the window asks about, and an example request ("What should change?" by default). */
         void setSubject (const juce::String& prompt, const juce::String& example);
 
+        /** The conversation so far: each finished request, its answer and what became of its plan. */
+        const std::vector<Turn>& getTurns() const noexcept   { return turns; }
+
+        /** Forgets the conversation and empties the log, as the New Chat button does. */
+        void newChat();
+
         /** For the tests: the request box, and the log as shown. */
         juce::TextEditor& getRequestBox() noexcept      { return requestBox; }
         juce::String getLog() const                     { return log.getText(); }
@@ -107,7 +141,7 @@ namespace Ai
 
         juce::Label banner, prompt;
         juce::TextEditor requestBox, log;
-        juce::TextButton askButton { "Ask" }, stopButton { "Stop" }, applyButton { "Apply" }, discardButton { "Discard" };
+        juce::TextButton askButton { "Ask" }, stopButton { "Stop" }, newChatButton { "New Chat" }, applyButton { "Apply" }, discardButton { "Discard" };
         juce::TextButton applyAllButton { "Apply All" };
         juce::Component suggestionRows;
         juce::OwnedArray<juce::Label> suggestionLabels;
@@ -116,6 +150,8 @@ namespace Ai
         std::vector<bool> applied;
         std::unique_ptr<Agent> agent;
         juce::String lastRequest;
+        std::vector<Turn> turns;
+        void settle (Turn::Outcome);        // what became of the last turn's plan, if it is still pending
         bool reasoningShown = false, planReady = false;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AskPanel)

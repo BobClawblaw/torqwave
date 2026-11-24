@@ -40,8 +40,68 @@ namespace
 }
 
 //==============================================================================
-Agent::Agent (Settings s, juce::String key, Workspace::Start start, juce::String r)
-    : juce::Thread ("Ask Torq"), client (std::move (s), std::move (key)), workspace (std::move (start)), request (std::move (r))
+juce::String Turn::said() const
+{
+    auto text = answer.substring (0, maxAnswerSent);
+
+    if (! plan.isEmpty())
+    {
+        text << "\n\nThe plan: ";
+
+        for (int i = 0; i < juce::jmin (plan.size(), maxPlanStepsSent); ++i)
+            text << (i + 1) << ". " << plan[i] << (i + 1 < plan.size() ? "; " : ".");
+
+        if (plan.size() > maxPlanStepsSent)
+            text << " and " << (plan.size() - maxPlanStepsSent) << " more.";
+    }
+
+    switch (outcome)
+    {
+        case Outcome::applied:    text << "\n\n[The user applied this plan: these changes are made.]"; break;
+        case Outcome::discarded:  text << "\n\n[The user discarded this plan: nothing was changed.]"; break;
+        case Outcome::pending:    text << "\n\n[The user did not apply this plan: nothing was changed.]"; break;
+        case Outcome::none:       break;
+    }
+
+    return text.trim();
+}
+
+juce::String releaseNotesFor()
+{
+    return "0.21.0";
+}
+
+bool asksAboutRelease (const juce::String& request)
+{
+    const auto r = request.toLowerCase();
+
+    for (auto* words : { "what's new", "whats new", "what is new", "new in ", "new feature", "version", "release", "changelog", "change log", "what changed" })
+        if (r.contains (words))
+            return true;
+
+    return false;
+}
+
+juce::String aboutThisRelease (bool withNotes)
+{
+    const juce::String line ("This is Torqwave " JUCE_APPLICATION_VERSION_STRING ", a free, open-source audio editor and DAW.");
+
+    if (! withNotes)
+        return line;
+
+    return line + " The user may be asking about the program, not for a change: then answer from these notes in a few lines, make no changes, and "
+           "say the full list is the changelog at https://github.com/BobClawblaw/torqwave/blob/main/CHANGELOG.md. "
+           "New in 0.21.0: Basic Drums has a second type, Modern, for 21 of its 30 sounds, and five kits made of them; the Maximizer holds its "
+           "true-peak ceiling as the loudness meter reads it; Click and Pop Repair finds flat-topped clicks and leaves drum hits alone; Repair "
+           "Clipping rebuilds from the sound round the clip; Ask Torq remembers the conversation. "
+           "0.20.1: Continue where you left off, a start that reopens the files and session that were open. "
+           "0.20.0: Torqwave Synth (wavetable, 3,743 patches), Decrypt (a synth patch from a recording), Torqwave Sampler, StringSwarm, Basic "
+           "Drums, instruments played from the computer's keys, and over a thousand factory sequence presets.";
+}
+
+Agent::Agent (Settings s, juce::String key, Workspace::Start start, juce::String r, std::vector<Turn> before)
+    : juce::Thread ("Ask Torq"), client (std::move (s), std::move (key)), workspace (std::move (start)), request (std::move (r)),
+      earlier (std::move (before))
 {
     workspace.shouldStop = [this] { return threadShouldExit(); };
 }
@@ -77,7 +137,21 @@ void Agent::post (Event e)
 
 void Agent::run()
 {
-    juce::Array<juce::var> messages { message ("system", workspace.systemMessage()), message ("user", request) };
+    // The conversation: what the program and the open file are, the turns before (the last few,
+    // cut short: the model's context is small), and the request. Each request works on a fresh
+    // copy of the file as it is now, so the turns say whether their plans were applied.
+    juce::Array<juce::var> messages { message ("system", workspace.systemMessage() + "\n\n" + aboutThisRelease (asksAboutRelease (request))
+                                                             + (earlier.empty() ? "" : "\n\nThis conversation has earlier requests. Each request starts "
+                                                                                       "from the file as it is now: an earlier plan is in it only if the "
+                                                                                       "user applied it.")) };
+
+    for (auto i = earlier.size() > (size_t) maxTurnsSent ? earlier.size() - (size_t) maxTurnsSent : (size_t) 0; i < earlier.size(); ++i)
+    {
+        messages.add (message ("user", earlier[i].request));
+        messages.add (message ("assistant", earlier[i].said()));
+    }
+
+    messages.add (message ("user", request));
     const auto tools = workspace.tools();
     std::map<juce::String, int> callsMade;   // each tool and its arguments, how often called
 
@@ -241,6 +315,7 @@ AskPanel::AskPanel (Settings s, std::function<std::optional<Workspace::Start>()>
 
         addLog (oneStep ? "\nApplied, as one undo step.\n" : "\nApplied; the notes above say what isn't in its undo step.\n", Theme::good);
         planReady = false;
+        settle (Turn::Outcome::applied);
 
         if (suggestionButtons.isEmpty())   // suggestions stay to apply
             agent.reset();
@@ -248,10 +323,12 @@ AskPanel::AskPanel (Settings s, std::function<std::optional<Workspace::Start>()>
         updateButtons();
     };
     discardButton.onClick = [this] { discard(); };
+    newChatButton.onClick = [this] { newChat(); };
+    newChatButton.setTooltip ("Forgets this conversation and starts another. Until then, each request is sent with the ones before it");
     applyAllButton.onClick = [this] { applyAllSuggestions(); };
     applyAllButton.setTooltip ("Applies every suggestion not yet applied, together as one undo step");
 
-    for (auto* b : { &askButton, &stopButton, &applyButton, &discardButton })
+    for (auto* b : { &askButton, &stopButton, &newChatButton, &applyButton, &discardButton })
         addAndMakeVisible (b);
 
     addChildComponent (applyAllButton);
@@ -285,6 +362,7 @@ void AskPanel::resized()
     askButton.setBounds (top.removeFromLeft (90));
     top.removeFromLeft (8);
     stopButton.setBounds (top.removeFromLeft (90));
+    newChatButton.setBounds (top.removeFromRight (100));
 
     auto bottom = r.removeFromBottom (28);
     discardButton.setBounds (bottom.removeFromRight (100));
@@ -414,6 +492,7 @@ void AskPanel::updateButtons()
     const auto working = agent != nullptr && agent->isWorking();
     askButton.setEnabled (! working);
     stopButton.setEnabled (working);
+    newChatButton.setEnabled (! working && (! turns.empty() || ! log.isEmpty()));
     applyButton.setEnabled (! working && planReady);
     discardButton.setEnabled (! working && (planReady || ! suggestionButtons.isEmpty()));
     requestBox.setReadOnly (working);
@@ -445,7 +524,10 @@ void AskPanel::addLog (const juce::String& text, juce::Colour colour)
 void AskPanel::discard()
 {
     if (agent != nullptr && planReady)
+    {
         addLog ("\nDiscarded. Nothing was changed.\n", Theme::dimText);
+        settle (Turn::Outcome::discarded);
+    }
 
     agent.reset();
     planReady = false;
@@ -476,10 +558,15 @@ void AskPanel::ask()
     showSuggestions();
     reasoningShown = false;
     lastRequest = text;
-    log.clear();
-    addLog ("You: " + text + "\n\n", Theme::textStrong);
 
-    agent = std::make_unique<Agent> (settings, savedKey (settings), std::move (*start), text);
+    // The log is the conversation: a request follows the ones before it, and the box is ready for the next.
+    if (! log.isEmpty())
+        addLog ("\n\n", Theme::text);
+
+    addLog ("You: " + text + "\n\n", Theme::textStrong);
+    requestBox.setText ({}, false);   // not clear(): that leaves the box's value behind, which can put the text back
+
+    agent = std::make_unique<Agent> (settings, savedKey (settings), std::move (*start), text, turns);
     agent->onText = [this] (const juce::String& t, bool reasoning)
     {
         if (reasoning && ! reasoningShown)
@@ -517,7 +604,26 @@ void AskPanel::ask()
     updateButtons();
 }
 
-void AskPanel::finish (const juce::String&, const juce::String& error)
+void AskPanel::settle (Turn::Outcome outcome)
+{
+    if (! turns.empty() && turns.back().outcome == Turn::Outcome::pending)
+        turns.back().outcome = outcome;
+}
+
+void AskPanel::newChat()
+{
+    if (agent != nullptr && agent->isWorking())
+        return;
+
+    agent.reset();
+    planReady = false;
+    turns.clear();
+    log.clear();
+    showSuggestions();
+    updateButtons();
+}
+
+void AskPanel::finish (const juce::String& answer, const juce::String& error)
 {
     if (error.isNotEmpty())
     {
@@ -531,6 +637,7 @@ void AskPanel::finish (const juce::String&, const juce::String& error)
     auto& w = agent->getWorkspace();
     const auto& steps = w.getSteps();
     planReady = ! steps.isEmpty();
+    turns.push_back ({ lastRequest, answer, steps, planReady ? Turn::Outcome::pending : Turn::Outcome::none });
 
     // A review of a sequence: what it says, the notes outside the key, and its suggestions.
     if (const auto* tools = w.getSequenceTools(); tools != nullptr && tools->getReview().isNotEmpty())
