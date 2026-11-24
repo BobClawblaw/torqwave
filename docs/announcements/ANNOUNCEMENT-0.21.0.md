@@ -86,7 +86,7 @@ Continue where you left off: quit with files open in the editor and a session in
 It keeps a note of what was open, not your audio.
 ```
 
-**8 of 9**, with a picture of the site's Quality page (https://bobclawblaw.github.io/torqwave/quality/), taken once the site shows 0.21.0's results; there is none in the repository yet.
+**8 of 9**, with the site's Quality page (`docs/screenshots/site-quality.png`).
 
 ```text
 We measured our own effects for the site and fixed what fell short. The Maximizer holds its true-peak ceiling. Click Repair finds 60 of 60 test clicks (was 44) and leaves clean drums alone. Repair Clipping rebuilds from the sound round the clip.
@@ -146,6 +146,12 @@ The window of StringSwarm with the preset Tremolo Swarm Wall: twelve strings all
 
 ```alt
 The window of Basic Drums in its Warehouse kit: the kit selector and presets row along the top, thirty pads coloured by family (kicks, snares and claps, hats, toms, cymbals, hand percussion) on the left, and the selected kick's settings on the right, with its Type selector reading Modern.
+```
+
+For `docs/screenshots/site-quality.png`:
+
+```alt
+The Quality page of Torqwave's website, "Quality: shown, and measured". Under "Before and after", a panel on clicks: a pad and bell clip with 60 clicks put in, two audio players with a spectrogram each, with the clicks and repaired, and a table: 60 put in, 60 repaired, none left more than a tenth of full scale from the clean clip, and the clip 46.9 dB from the clean one against 15.0 dB with the clicks in.
 ```
 
 For `docs/screenshots/guide-continue.png`:

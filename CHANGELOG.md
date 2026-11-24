@@ -4,6 +4,10 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Tests: Ask Torq's arrow check waits for the request before it** (tests only)
+- In 0.21.0's release run the check that the up arrow walks back through the requests failed once, on the Intel half under Rosetta: it pressed the arrow as soon as the answer's text showed, while the request was still finishing, and the arrows are refused while a request runs. It now waits for the request to finish, as does the follow-up check before it. Nothing in the app changed.
+- Tested: `--ai` (202 checks) on Apple silicon.
+
 **The site at 0.21.0: twelve drum kits, Click and Pop Repair shown, and the counts brought up** (documents and rendered clips only)
 - **Basic Drums:** the Sounds pages play all twelve kits, 32 clips where there were 20. Each kit plays the three factory grooves written for it with the most energy, or all it has: Breaks and Broken Beat have two and Modern one. Breaks' two audition beats are gone, since it has grooves now.
 - **Rendered from the released code:** the twelve clips of the five Modern kits and the Blast Furnace Engine sequence were rendered again after the Modern kick was made heavier and two grooves' gains changed; the other drum, sequence and kit clips and every Quality number came out the same.
