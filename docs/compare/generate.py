@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerates the comparison matrix and its four graphics from the data.
+"""Regenerates the comparison matrix and its graphics from the data.
 
     python3 docs/compare/generate.py                  # MATRIX.md, graphics/*.svg (and *.png when rsvg-convert is found)
     python3 docs/compare/generate.py --posts FILE.md  # counts each ```text block as X counts it, and each ```alt block
@@ -62,9 +62,10 @@ def label(defs, snap, pid):
 # ---------------------------------------------------------------- SVG helpers
 
 class Svg:
-    def __init__(self):
-        self.parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="{FONT}">',
-                      f'<rect width="{W}" height="{H}" fill="{BG}"/>']
+    def __init__(self, w=W, h=H):
+        self.w, self.h = w, h
+        self.parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" font-family="{FONT}">',
+                      f'<rect width="{w}" height="{h}" fill="{BG}"/>']
 
     def rect(self, x, y, w, h, fill, rx=0, stroke=None, dash=None):
         s = f' stroke="{stroke}" stroke-width="1.5"' if stroke else ""
@@ -74,9 +75,10 @@ class Svg:
     def line(self, x1, y1, x2, y2, stroke=LINE, width=1):
         self.parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{stroke}" stroke-width="{width}"/>')
 
-    def text(self, x, y, s, size=20, fill=TEXT, anchor="start", weight="normal"):
+    def text(self, x, y, s, size=20, fill=TEXT, anchor="start", weight="normal", turn=0):
+        t = f' transform="rotate({turn} {x:.1f} {y:.1f})"' if turn else ""
         self.parts.append(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}" text-anchor="{anchor}" '
-                          f'font-weight="{weight}">{escape(str(s))}</text>')
+                          f'font-weight="{weight}"{t}>{escape(str(s))}</text>')
 
     def mark(self, cx, cy, value, r=11):
         if value == "yes":
@@ -98,7 +100,7 @@ class Svg:
     def frame(self, title, sub, snap):
         self.text(50, 76, title, 44, WHITE, weight="bold")
         self.text(50, 116, sub, 23, DIM)
-        self.text(W - 50, H - 28, f'As of {snap["as_of"]}. Torqwave {snap["release"]} is {snap["status"]}. '
+        self.text(self.w - 50, self.h - 28, f'As of {snap["as_of"]}. Torqwave {snap["release"]} is {snap["status"]}. '
                   'Sources and method: docs/compare in the Torqwave repository.', 17, FAINT, "end")
 
     def save(self, name):
@@ -197,6 +199,45 @@ def graphic_matrix(defs, snap, m):
             s.mark(cx0 + cw * (i + 0.5), y + rh / 2, snap["products"][pid]["cells"][r["id"]]["value"])
     s.legend(50, H - 28)
     return s.save(m["file"] + ".svg")
+
+
+def graphic_whole(defs, snap):
+    """Every row of the matrix against every product, in one tall picture."""
+    pids = [p["id"] for p in defs["products"]]
+    groups = defs["groups"]
+    lx, cx0, top, head, rh, gh = 50, 420, 150, 262, 30, 44
+    h = top + head + sum(gh + rh * len(g["rows"]) for g in groups) + 90
+    s = Svg(W, h)
+    s.frame(f'Torqwave {snap["release"]} against the alternatives: the whole matrix',
+            f'{len(all_rows(defs))} rows in {len(groups)} areas, {len(pids) - 2} products, each from its own documentation', snap)
+    cw = (W - 50 - cx0) / len(pids)
+    bottom = h - 70
+    s.rect(cx0, top, cw * 2, bottom - top, RAISED, 8)
+    s.rect(cx0, top, cw * 2, 5, WAVE, 2)
+    first_daw = next(i for i, p in enumerate(defs["products"]) if p["group"] == "daw")
+    for i, pid in enumerate(pids):
+        x = cx0 + cw * (i + 0.5)
+        own = pid.startswith("torqwave")
+        s.text(x - 2, top + head - 14, label(defs, snap, pid), 19, (WAVE if pid == "torqwave" else WHITE) if own else TEXT, "start", "bold", -65)
+    y = top + head
+    for g in groups:
+        s.rect(lx - 10, y + 8, W - 2 * lx + 20, gh - 12, LINE, 4)
+        s.text(lx, y + gh - 13, g["title"], 20, WHITE, weight="bold")
+        y += gh
+        for k, r in enumerate(g["rows"]):
+            if k % 2 == 0:
+                s.rect(lx - 10, y, cx0 - lx + 10, rh, SURFACE)
+                s.rect(cx0 + cw * 2, y, W - 50 - cx0 - cw * 2 + 10, rh, SURFACE)
+            s.text(lx, y + rh / 2 + 6, r["title"], 18, TEXT)
+            for i, pid in enumerate(pids):
+                s.mark(cx0 + cw * (i + 0.5), y + rh / 2, snap["products"][pid]["cells"][r["id"]]["value"], 9)
+            y += rh
+    for i in (2, first_daw):
+        s.line(cx0 + cw * i, top + head - 6, cx0 + cw * i, bottom, LINE2, 1)
+    s.text(cx0 + cw * (2 + (first_daw - 2) / 2), top + 22, "The editors", 17, DIM, "middle")
+    s.text(cx0 + cw * (first_daw + (len(pids) - first_daw) / 2), top + 22, "The DAWs", 17, DIM, "middle")
+    s.legend(50, h - 28)
+    return s.save(f"{len(defs['matrices']) + 3}-the-whole-matrix.svg"), h
 
 
 def trend_points(defs, snaps):
@@ -378,6 +419,8 @@ def matrix_md(defs, snaps):
     for n in snap["release_numbers"]:
         o.append(f'| {n["label"]} | {fmt(n["prev"])} | {fmt(n["now"])} | {md_escape(n["note"])} |')
     o.append("\n## The matrix\n")
+    o.append(f"![Every row of the matrix against every product: yes, partial, no or not confirmed](graphics/{len(defs['matrices']) + 3}-the-whole-matrix.png)\n")
+    o.append("The whole matrix in one picture. The tables under it say the same, row by row, and the notes at the end give each cell's source.\n")
     for g in defs["groups"]:
         o.append(f'### {g["title"]}\n')
         for name, cols in sets:
@@ -473,13 +516,16 @@ def main():
             sys.exit(f"{pid} has no cell for: {', '.join(missing)}")
     os.makedirs(OUT, exist_ok=True)
     svgs = [graphic_numbers(defs, snap)] + [graphic_matrix(defs, snap, m) for m in defs["matrices"]] + [graphic_standing(defs, snaps)]
+    whole, tall = graphic_whole(defs, snap)
+    svgs.append(whole)
+    heights = {whole: tall}
     print("wrote", os.path.relpath(matrix_md(defs, snaps)))
     conv = shutil.which("rsvg-convert")
     for svg in svgs:
         print("wrote", os.path.relpath(svg))
         if conv:
             png = svg[:-4] + ".png"
-            subprocess.run([conv, "-w", str(W), "-h", str(H), "-o", png, svg], check=True)
+            subprocess.run([conv, "-w", str(W), "-h", str(heights.get(svg, H)), "-o", png, svg], check=True)
             print("wrote", os.path.relpath(png))
     if not conv:
         print("rsvg-convert not found: SVGs only. Any SVG converter will make the PNGs.")

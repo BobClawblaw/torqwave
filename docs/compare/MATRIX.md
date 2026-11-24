@@ -164,6 +164,10 @@ Rows where Torqwave 0.20.1 is yes and at most two of the 15 other products are y
 
 ## The matrix
 
+![Every row of the matrix against every product: yes, partial, no or not confirmed](graphics/6-the-whole-matrix.png)
+
+The whole matrix in one picture. The tables under it say the same, row by row, and the notes at the end give each cell's source.
+
 ### Editing a file
 
 | The editors | Torqwave 0.20.1 | Torqwave 0.19.2 | Adobe Audition | Audacity | iZotope RX | Steinberg SpectraLayers | Steinberg WaveLab |
