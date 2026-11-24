@@ -1,5 +1,6 @@
 # Torqwave
 
+[![Website: hear it](https://img.shields.io/badge/website-hear%20it-2f81f7)](https://bobclawblaw.github.io/torqwave/)
 [![Latest release](https://img.shields.io/github/v/release/BobClawblaw/torqwave?label=release)](https://github.com/BobClawblaw/torqwave/releases/latest)
 [![Licence: AGPL-3.0](https://img.shields.io/github/license/BobClawblaw/torqwave?label=licence)](LICENSE)
 ![macOS 13 or later](https://img.shields.io/badge/macOS-13%2B-black?logo=apple)
@@ -14,6 +15,8 @@
 A free, open-source audio editor and DAW in one, for macOS, Windows and Linux: for sound designers, for writing and producing music, and for working to picture. Waveform and spectral editing, repair and mastering suites, built-in effects, multitrack sessions with instruments, a piano roll, automation and mixdown, a Sound Library for large effects collections, video, and VST3 plug-ins (with Audio Units on the Mac, and LV2 on the Mac and Linux). It is also a free alternative to Audacity for everyday editing. Clean-room, built on JUCE 9.0.4.
 
 ![Torqwave](Art/torqwave-banner.png)
+
+**[The website](https://bobclawblaw.github.io/torqwave/)** has the instruments and factory kits to hear, before-and-after repairs with their measurements, the user guide and the comparison with other editors and DAWs.
 
 **[Download the latest release](https://github.com/BobClawblaw/torqwave/releases/latest)** (macOS 13 or later, Apple silicon or Intel; Windows 10 or later, 64-bit; Linux, 64-bit x86). Every build is on the [Releases](https://github.com/BobClawblaw/torqwave/releases) page.
 

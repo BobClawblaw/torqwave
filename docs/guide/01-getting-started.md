@@ -101,6 +101,8 @@ With this chosen, Torqwave starts with what was open when it last closed:
 
 Whatever the setting, the same is on offer once after a start, until you use it or open something else: **File > Continue Where You Left Off**, and a button of that name at the start of the home screen's row.
 
+![The home screen after a start with something left off: the Continue Where You Left Off button beside New File and Open..., in an empty editor with no files open](../screenshots/guide-continue.png)
+
 **It reopens files; it does not keep unsaved work.** Torqwave notes which files were open and where you were in them, in its own data folder. It writes no audio there. So:
 
 - A file comes back as it is on disk. If you chose **Don't Save** when you quit, those changes are gone, as that choice says.

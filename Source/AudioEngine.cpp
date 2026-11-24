@@ -611,6 +611,41 @@ void DocumentPlayerProcessor::play (juce::int64 startFrame, juce::int64 stopFram
     transport.start();
 }
 
+void DocumentPlayerProcessor::setLoop (juce::int64 start, juce::int64 end)
+{
+    const auto was = mode == Mode::session ? sessionSource.getLoop() : source.getLoop();
+    source.setLoop (start, end);
+    sessionSource.setLoop (start, end);
+
+    // The played frame counts on through each pass of a loop, and the heard frame and the click
+    // are worked out from it by the loop's length. A loop changed while it plays (a clip moved or
+    // trimmed under Loop Playback changes the whole session's length; a selection is dragged) would
+    // leave them counting by the wrong length, the playhead and the click somewhere the sound is
+    // not. The audio thread counts afresh from where the source is, at its next block.
+    if (transport.isPlaying() && was.second > was.first && (was.first != start || was.second != end))
+        loopChanged = true;
+}
+
+void DocumentPlayerProcessor::countFromSource()
+{
+    // Where the source will read next, in its own frames, is what the played frame stands for; what
+    // is heard is that less the delay of the effects and the device. With the heard frame before the
+    // loop's start (the source has just gone round), it is counted from a pass earlier.
+    const auto next = mode == Mode::session ? sessionSource.getNextReadPosition() : source.getNextReadPosition();
+    const auto [from, to] = mode == Mode::session ? sessionSource.getLoop() : source.getLoop();
+    const auto delay = (juce::int64) outputLatency.load() + (juce::int64) deviceLatency.load();   // the device's frames
+    const auto delayInSource = deviceRate > 0.0 && sourceRate > 0.0 ? (juce::int64) std::llround ((double) delay * sourceRate / deviceRate) : delay;
+    auto start = next - delayInSource;
+
+    if (to > from && next >= from && next < to)
+        while (start < from)
+            start += to - from;
+
+    start = juce::jmax ((juce::int64) 0, start);
+    playStart = start;
+    playedFrame = start + delay;
+}
+
 juce::int64 DocumentPlayerProcessor::getPositionFrames() const
 {
     return (juce::int64) std::llround (transport.getCurrentPosition() * modeRate());
@@ -741,6 +776,9 @@ void DocumentPlayerProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     juce::AudioSourceChannelInfo info (&buffer, 0, numFrames);
     const auto playing = transport.isPlaying();
+
+    if (loopChanged.exchange (false) && playing)
+        countFromSource();
 
     // Stopped (by hand or at the end): a clip's note sounding will get no off, so the instruments
     // end their notes the next time they run (at once, while an instrument's window is open or a

@@ -292,6 +292,94 @@ namespace
                "tempo map: snapping lands on the beats and bars of the changed tempo");
     }
 
+    /** Looping the whole session while its clip is moved and trimmed: what plays is the session as
+        it is now, from the next block, with the loop set to its new length as the app sets it. */
+    void testLoopFollowsEdits()
+    {
+        Session session;
+        juce::AudioBuffer<float> b (1, 20000);
+
+        for (int i = 0; i < b.getNumSamples(); ++i)
+            b.setSample (0, i, (float) (i + 1) * 1.0e-5f);
+
+        auto state = *session.getState();
+        SessionEdits::addClip (state, 0, juce::File(), AudioEdits::fromBuffer (std::move (b)), 0);
+        session.apply (state, "Add");
+
+        Rig rig (session);
+        rig.player.play (0, session.getState()->getLength());
+        rig.player.setStopFrame (-1);
+        rig.player.setLoop (0, session.getState()->getLength());
+        rig.run (100);   // more than one pass
+        // The transport reads a few frames ahead of what it has played, so the two agree to within those.
+        const auto near = [&rig] { return std::abs (rig.player.getHeardFrame() - rig.player.getPositionFrames()) <= 8; };
+        const auto heardBefore = near();
+        const auto unit = rig.sent[0][0];   // frame 0's sample as it is heard (the pan's law on a mono clip)
+
+        // The clip moved 5,000 frames later and its end brought in to 10,000 frames: the session is
+        // 15,000 frames long now, and the app sets the loop to that (MainComponent::updatePlaybackLoop).
+        auto next = *session.getState();
+        next.tracks[0].clips[0].position = 5000;
+        next.tracks[0].clips[0].length = 10000;
+        session.apply (next, "Move and Trim");
+        const auto length = session.getState()->getLength();
+        rig.player.setLoop (0, length);
+
+        if (rig.player.getPositionFrames() >= length)
+            rig.player.setPositionFrames (0);
+
+        // The playhead is where the sound is, block after block, through the loop's end and round.
+        auto heardAfter = true, soundsAsEdited = true;
+        const auto afterEdit = rig.sent[0].size();
+        juce::int64 farthest = 0;
+
+        for (int block = 0; block < 150; ++block)
+        {
+            rig.run (1);
+            const auto heard = rig.player.getHeardFrame();
+            heardAfter = heardAfter && near() && heard >= 0 && heard < length;
+            farthest = juce::jmax (farthest, heard);
+        }
+
+        // What sounded after the block the edit landed in: the clip's 10,000 frames in order (frame n
+        // of it sounds as n + 1 units), then 5,000 frames of silence, round and round.
+        int silent = 0, passes = 0;
+
+        for (auto k = afterEdit + (size_t) blockSize; k + 1 < rig.sent[0].size(); ++k)
+        {
+            const auto now = juce::roundToInt (rig.sent[0][k] / unit), then = juce::roundToInt (rig.sent[0][k + 1] / unit);
+
+            if (now == 0)
+            {
+                ++silent;
+
+                if (then != 0)
+                {
+                    soundsAsEdited = soundsAsEdited && then == 1 && (passes == 0 || silent == 5000);
+                    ++passes;
+                    silent = 0;
+                }
+            }
+            else
+            {
+                soundsAsEdited = soundsAsEdited && (now < 10000 ? then == now + 1 : then == 0);
+            }
+        }
+
+        soundsAsEdited = soundsAsEdited && passes >= 2;
+
+        // The loop turned off after all those passes: the playhead still follows the sound.
+        rig.player.clearLoop();
+        rig.run (1);
+        const auto heardUnlooped = near();
+        rig.player.pause();
+
+        check (heardBefore && length == 15000 && heardAfter && farthest > 14000 && heardUnlooped,
+               "loop playback: a clip moved and trimmed while the whole session loops changes the loop's length, and the playhead stays where "
+               "the sound is through every pass after it, and when the loop is then turned off");
+        check (soundsAsEdited, "loop playback: the session sounds as edited from the block after the edit, round the new loop");
+    }
+
     void testLoopPlayback()
     {
         // The open file looping over a selection: 1000 to 3000 again and again, each frame's
@@ -563,6 +651,7 @@ void runMetronomeTests (juce::AudioFormatManager& formats)
 {
     testGrid();
     testTempoMap();
+    testLoopFollowsEdits();
     testLoopPlayback();
     testClicks();
     testSnapping();
