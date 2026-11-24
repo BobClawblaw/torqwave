@@ -71,7 +71,7 @@
 #include "IdeaBoardView.h"
 #include "SettingsPanel.h"
 
-namespace Resume { class Keeper; struct Loaded; }
+namespace Resume { class Keeper; struct Loaded; struct Waiting; }
 
 namespace Guide { class Window; }
 
@@ -730,6 +730,7 @@ private:
     bool recoveryCopyKept = false;
     std::unique_ptr<Resume::Keeper> leftOffKeeper;
     std::shared_ptr<Resume::Loaded> leftOffLoaded;   // read, waiting to be opened
+    std::unique_ptr<Resume::Waiting> leftOffWaiting; // what couldn't be reopened: kept in the note and tried again next start
     std::function<void()> placesAfterBoot;     // puts the views back where they were once the window has its size
     juce::String startNotice;                  // what couldn't be reopened, said once the start's other question is answered
     juce::uint32 lastLeftOffNote = 0;          // when, in milliseconds since startup

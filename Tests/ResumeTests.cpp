@@ -251,6 +251,67 @@ namespace
         check (loaded.state.open.session == juce::File() && loaded.state.project == juce::File() && loaded.state.open.multitrack,
                "left off: a session and a project that are gone are left out, the view that was in front kept");
 
+        // What couldn't be reopened waits in the note, each with its place, and is tried again.
+        const auto& waiting = loaded.state.waiting;
+        const auto waitingFor = [&waiting] (const juce::File& f)
+        {
+            return std::any_of (waiting.files.begin(), waiting.files.end(), [&f] (auto& w) { return w.file == f; });
+        };
+        check (waiting.files.size() == 3 && waitingFor (b) && waitingFor (c) && waitingFor (d) && waiting.session == sessionFile
+                   && waiting.project == project,
+               "left off: the three files, the session and the project that could not be reopened are kept waiting");
+
+        // The run goes on with One.wav open; at quit the note holds it and what is waiting.
+        Resume::Keeper keeper (data);
+        keeper.restored();
+        const auto quit = Resume::gather (files, placeA, engine, true, {}, {}, waiting);
+        keeper.note (quit);
+        check (quit.open.files.size() == 1 && quit.waiting.files.size() == 3 && quit.waiting.session == sessionFile && ! quit.isEmpty(),
+               "left off: quitting notes what is open and what is still waiting");
+
+        // Before the next start two.wav is moved back and the session is there again (the drive
+        // connected); Three.wav is still not audio, Four.wav and the project still gone.
+        user.getChildFile ("Elsewhere.wav").moveFileTo (b);
+        {
+            SessionState session;
+            session.sampleRate = 48000.0;
+            session.addTrack();
+            SessionFile::save (session, sessionFile);
+        }
+
+        AudioEngine next;
+        OpenFiles nextFiles (next);
+        auto again = Resume::load (data);
+        Resume::restoreFiles (again, nextFiles, next);
+        const auto saidAgain = again.missing.joinIntoString ("\n");
+        check (nextFiles.size() == 2 && nextFiles.documentAt (0).getFile() == a && nextFiles.documentAt (1).getFile() == b
+                   && next.document.getFile() == a && again.state.open.session == sessionFile,
+               "left off: at the next start what is back is reopened after the others, and the session with it");
+        check (again.state.waiting.files.size() == 2 && again.state.waiting.session == juce::File() && again.state.waiting.project == project
+                   && again.missing.size() == 3 && saidAgain.contains (d.getFullPathName()) && saidAgain.contains ("Three.wav: ")
+                   && saidAgain.contains (project.getFullPathName()) && ! saidAgain.contains (b.getFullPathName()),
+               "left off: what is still away goes on waiting and is named again; what came back is not");
+
+        // A waiting file opened by hand meanwhile stops waiting; a session or project opened in place of a waiting one replaces it.
+        next.session.reset (SessionState::newEmpty (48000.0), a.getSiblingFile ("Other.tqsession"));
+        Resume::Waiting w;
+        w.files.push_back ({ a, {}, {}, nullptr });
+        w.files.push_back ({ d, {}, {}, nullptr });
+        w.session = sessionFile;
+        w.project = project;
+        const auto merged = Resume::gather (nextFiles, {}, next, false, {}, a.getSiblingFile ("Other.tqproject"), w);
+        check (merged.waiting.files.size() == 1 && merged.waiting.files[0].file == d && merged.waiting.session == juce::File()
+                   && merged.waiting.project == juce::File(),
+               "left off: a waiting file that is open again stops waiting, and an open session and project replace waiting ones");
+
+        // Forgotten (an empty waiting list), with everything closed: nothing is left to come back to.
+        nextFiles.closeAll();
+        next.session.reset (SessionState::newEmpty (48000.0), {});
+        const auto onlyWaiting = Resume::gather (nextFiles, {}, next, false, {}, {}, again.state.waiting);
+        const auto forgotten = Resume::gather (nextFiles, {}, next, false, {}, {}, {});
+        check (! onlyWaiting.isEmpty() && forgotten.isEmpty(),
+               "left off: with everything closed, what is waiting is still kept for the next start, until it is forgotten");
+
         // A note that can't be read, or from a newer version, is no note; nothing is opened.
         data.getChildFile ("Left Off.xml").replaceWithText ("<TORQWAVE_LEFT_OFF version=\"999\"/>");
         const auto newer = ! Resume::isKept (data) && ! Resume::load (data).found;
@@ -371,8 +432,8 @@ namespace
         auto some = Resume::load (data, loader, [&count] { return ++count <= 2; });
         OpenFiles fewer (engine);
         Resume::restoreFiles (some, fewer, engine);
-        check (asked.size() == 2 && fewer.size() == 2 && some.missing.size() == 3,
-               "left off: reading that is stopped opens what was read and names the rest");
+        check (asked.size() == 2 && fewer.size() == 2 && some.missing.size() == 3 && some.state.waiting.files.size() == 3,
+               "left off: reading that is stopped opens what was read, and names the rest and keeps them waiting");
     }
 }
 

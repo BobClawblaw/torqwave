@@ -80,6 +80,8 @@ namespace Project
     {
         State state;
         juce::StringArray missing;   // files and a session no longer there (left out of state)
+        std::vector<OpenFile> missingFiles;   // those files, each with its place (no history)
+        juce::File missingSession;
         juce::String error;
     };
 

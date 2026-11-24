@@ -11,6 +11,50 @@ namespace
 
     juce::String int64Text (juce::int64 v)         { return juce::String (v); }
 
+    void writePlace (juce::XmlElement& place, const SessionPlace& p)
+    {
+        place.setAttribute ("cursor", int64Text (p.cursor));
+        place.setAttribute ("selectionStart", int64Text (p.selection.getStart()));
+        place.setAttribute ("selectionEnd", int64Text (p.selection.getEnd()));
+        place.setAttribute ("viewStart", p.viewStart);
+        place.setAttribute ("framesPerPixel", p.framesPerPixel);
+        place.setAttribute ("scrollY", p.scrollY);
+        place.setAttribute ("selectedTrack", p.selectedTrack);
+    }
+
+    SessionPlace readPlace (const juce::XmlElement* place)
+    {
+        SessionPlace p;
+
+        if (place == nullptr)
+            return p;
+
+        const auto start = place->getStringAttribute ("selectionStart").getLargeIntValue();
+        p.cursor = juce::jmax ((juce::int64) 0, place->getStringAttribute ("cursor").getLargeIntValue());
+        p.selection = { start, juce::jmax (start, place->getStringAttribute ("selectionEnd").getLargeIntValue()) };
+        p.viewStart = juce::jmax (0.0, place->getDoubleAttribute ("viewStart"));
+        p.framesPerPixel = juce::jmax (0.0, place->getDoubleAttribute ("framesPerPixel"));
+        p.scrollY = juce::jmax (0, place->getIntAttribute ("scrollY"));
+        p.selectedTrack = place->getIntAttribute ("selectedTrack", -1);
+        return p;
+    }
+
+    /** A project named in the note: the file when it is there; otherwise it is said, and given to keep. */
+    juce::File readProject (const juce::XmlElement& e, juce::StringArray& missing, juce::File& waiting)
+    {
+        const auto path = e.getStringAttribute ("project");
+
+        if (! juce::File::isAbsolutePath (path))
+            return {};
+
+        if (juce::File (path).existsAsFile())
+            return juce::File (path);
+
+        missing.add (path);
+        waiting = juce::File (path);
+        return {};
+    }
+
     std::unique_ptr<juce::XmlElement> parse (const juce::File& folder)
     {
         auto xml = juce::XmlDocument::parse (noteIn (folder));
@@ -23,7 +67,7 @@ namespace
 }
 
 State gather (const OpenFiles& files, const FilePlace& activePlace, const AudioEngine& engine, bool multitrack,
-              const SessionPlace& sessionPlace, const juce::File& project)
+              const SessionPlace& sessionPlace, const juce::File& project, const Waiting& waiting)
 {
     State s;
     s.open.multitrack = multitrack;
@@ -46,6 +90,20 @@ State gather (const OpenFiles& files, const FilePlace& activePlace, const AudioE
     }
 
     s.open.active = juce::jlimit (0, juce::jmax (0, (int) s.open.files.size() - 1), s.open.active);
+
+    for (auto& f : waiting.files)
+        if (files.indexOf (f.file) < 0)
+            s.waiting.files.push_back (f);
+
+    if (s.open.session == juce::File())
+    {
+        s.waiting.session = waiting.session;
+        s.waiting.sessionPlace = waiting.sessionPlace;
+    }
+
+    if (project == juce::File())
+        s.waiting.project = waiting.project;
+
     return s;
 }
 
@@ -58,14 +116,19 @@ std::unique_ptr<juce::XmlElement> toXml (const State& state)
     // Every path in full: the note is not beside the files.
     xml->addChildElement (Project::toXml (state.open, {}).release());
 
-    auto* place = xml->createNewChildElement ("SESSION_PLACE");
-    place->setAttribute ("cursor", int64Text (state.sessionPlace.cursor));
-    place->setAttribute ("selectionStart", int64Text (state.sessionPlace.selection.getStart()));
-    place->setAttribute ("selectionEnd", int64Text (state.sessionPlace.selection.getEnd()));
-    place->setAttribute ("viewStart", state.sessionPlace.viewStart);
-    place->setAttribute ("framesPerPixel", state.sessionPlace.framesPerPixel);
-    place->setAttribute ("scrollY", state.sessionPlace.scrollY);
-    place->setAttribute ("selectedTrack", state.sessionPlace.selectedTrack);
+    writePlace (*xml->createNewChildElement ("SESSION_PLACE"), state.sessionPlace);
+
+    if (! state.waiting.isEmpty())
+    {
+        Project::State kept;
+        kept.files = state.waiting.files;
+        kept.session = state.waiting.session;
+        auto* waiting = xml->createNewChildElement ("WAITING");
+        waiting->setAttribute ("project", state.waiting.project.getFullPathName());
+        waiting->addChildElement (Project::toXml (kept, {}).release());
+        writePlace (*waiting->createNewChildElement ("SESSION_PLACE"), state.waiting.sessionPlace);
+    }
+
     return xml;
 }
 
@@ -97,48 +160,90 @@ Loaded load (const juce::File& folder, const BackgroundLoad::Loader& loader, con
 
     out.found = true;
 
+    auto& state = out.state;
+
     if (auto* open = xml->getChildByName ("TORQWAVE_PROJECT"))
     {
         auto read = Project::fromXml (*open, {});
-        out.state.open = std::move (read.state);
+        state.open = std::move (read.state);
         out.missing = std::move (read.missing);
+        state.waiting.files = std::move (read.missingFiles);
+        state.waiting.session = read.missingSession;
     }
 
-    if (const auto path = xml->getStringAttribute ("project"); juce::File::isAbsolutePath (path))
-    {
-        if (juce::File (path).existsAsFile())
-            out.state.project = juce::File (path);
-        else
-            out.missing.add (path);
-    }
+    state.sessionPlace = readPlace (xml->getChildByName ("SESSION_PLACE"));
+    state.project = readProject (*xml, out.missing, state.waiting.project);
 
-    if (auto* place = xml->getChildByName ("SESSION_PLACE"))
-    {
-        auto& p = out.state.sessionPlace;
-        const auto start = place->getStringAttribute ("selectionStart").getLargeIntValue();
-        p.cursor = juce::jmax ((juce::int64) 0, place->getStringAttribute ("cursor").getLargeIntValue());
-        p.selection = { start, juce::jmax (start, place->getStringAttribute ("selectionEnd").getLargeIntValue()) };
-        p.viewStart = juce::jmax (0.0, place->getDoubleAttribute ("viewStart"));
-        p.framesPerPixel = juce::jmax (0.0, place->getDoubleAttribute ("framesPerPixel"));
-        p.scrollY = juce::jmax (0, place->getIntAttribute ("scrollY"));
-        p.selectedTrack = place->getIntAttribute ("selectedTrack", -1);
-    }
+    // A session that is waiting keeps the place noted for it.
+    if (state.waiting.session != juce::File())
+        state.waiting.sessionPlace = state.sessionPlace;
 
-    for (auto& f : out.state.open.files)
+    // What was waiting: back, it is opened after the others; still away, it goes on waiting.
+    if (auto* waiting = xml->getChildByName ("WAITING"))
     {
-        if (keepGoing != nullptr && ! keepGoing())
+        if (auto* kept = waiting->getChildByName ("TORQWAVE_PROJECT"))
         {
-            out.audio.emplace_back();
-            out.audio.back().error = "Stopped before it was read.";
+            auto read = Project::fromXml (*kept, {});
+            out.missing.addArray (read.missing);
+
+            for (auto& f : read.state.files)
+                state.open.files.push_back (f);
+
+            for (auto& f : read.missingFiles)
+                state.waiting.files.push_back (f);
+
+            if (state.open.session == juce::File() && state.waiting.session == juce::File())
+            {
+                const auto place = readPlace (waiting->getChildByName ("SESSION_PLACE"));
+
+                if (read.state.session != juce::File())
+                {
+                    state.open.session = read.state.session;
+                    state.sessionPlace = place;
+                }
+                else if (read.missingSession != juce::File())
+                {
+                    state.waiting.session = read.missingSession;
+                    state.waiting.sessionPlace = place;
+                }
+            }
+        }
+
+        if (state.project == juce::File() && state.waiting.project == juce::File())
+            state.project = readProject (*waiting, out.missing, state.waiting.project);
+    }
+
+    // Read each; one that can't be read is said, and waits with the others.
+    std::vector<Project::OpenFile> readable;
+    auto active = 0;
+
+    for (size_t i = 0; i < state.open.files.size(); ++i)
+    {
+        const auto& f = state.open.files[i];
+        AudioFileIO::Loaded loaded;
+
+        if (keepGoing != nullptr && ! keepGoing())
+            loaded.error = "Stopped before it was read.";
+        else
+            loaded = loader (f.file);
+
+        if (loaded.snapshot == nullptr)
+        {
+            out.missing.add (f.file.getFileName() + ": " + (loaded.error.isNotEmpty() ? loaded.error : juce::String ("It is no longer there.")));
+            state.waiting.files.push_back (f);
             continue;
         }
 
-        out.audio.push_back (loader (f.file));
+        // The one shown, or the one before it when that can't be read.
+        if ((int) i <= state.open.active)
+            active = (int) readable.size();
 
-        if (out.audio.back().snapshot == nullptr && out.audio.back().error.isEmpty())
-            out.audio.back().error = "It is no longer there.";
+        readable.push_back (f);
+        out.audio.push_back (std::move (loaded));
     }
 
+    state.open.files = std::move (readable);
+    state.open.active = active;
     return out;
 }
 

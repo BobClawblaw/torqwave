@@ -18,20 +18,36 @@ namespace Resume
         no older than this. */
     constexpr int intervalSeconds = 30;
 
+    /** What was open and could not be reopened (moved, deleted, unreadable, or on a drive that isn't
+        connected): kept in the note, each with its place, and tried again at every start until it
+        is back, or is forgotten. */
+    struct Waiting
+    {
+        std::vector<Project::OpenFile> files;
+        juce::File session;
+        SessionPlace sessionPlace;
+        juce::File project;
+
+        bool isEmpty() const            { return files.empty() && session == juce::File() && project == juce::File(); }
+    };
+
     struct State
     {
         Project::State open;            // no histories
         SessionPlace sessionPlace;
         juce::File project;             // the project they were opened from or saved as, or none
+        Waiting waiting;
 
-        /** Nothing to come back to: no file and no session. */
-        bool isEmpty() const            { return open.files.empty() && open.session == juce::File(); }
+        /** Nothing to come back to: no file and no session, open or waiting. */
+        bool isEmpty() const            { return open.files.empty() && open.session == juce::File() && waiting.isEmpty(); }
     };
 
-    /** What is open now. A file never saved is left out, and so is one opened from a session clip
-        (it belongs to the clip). activePlace: where the editor is in the file shown. */
+    /** What is open now, and of `waiting` what still is: a waiting file that has been opened since
+        is no longer waiting, and a waiting session or project gives way to one that is open. A file
+        never saved is left out, and so is one opened from a session clip (it belongs to the clip).
+        activePlace: where the editor is in the file shown. */
     State gather (const OpenFiles&, const FilePlace& activePlace, const AudioEngine&, bool multitrack,
-                  const SessionPlace&, const juce::File& project);
+                  const SessionPlace&, const juce::File& project, const Waiting& waiting = {});
 
     std::unique_ptr<juce::XmlElement> toXml (const State&);
 
@@ -45,20 +61,22 @@ namespace Resume
     struct Loaded
     {
         bool found = false;                        // there was a note
-        State state;                               // without what is missing
-        juce::StringArray missing;                 // files, a session or a project no longer there
+        State state;                               // open: what can be opened; waiting: what can't, to keep
+        juce::StringArray missing;                 // what can't be opened, to say
         std::vector<AudioFileIO::Loaded> audio;    // each of state.open.files, read
     };
 
     /** Reads the note and every file it names that is still there, on the calling thread (any
-        thread: a file on a volume that doesn't answer holds up only this). keepGoing (if given) is
-        asked before each file; false stops, and what is left is not read. */
+        thread: a file on a volume that doesn't answer holds up only this). What was waiting and is
+        back joins the files to open, after the others; a waiting session or project is taken when
+        the note has none of its own. What can't be read is moved to state.waiting. keepGoing (if
+        given) is asked before each file; false stops, and what is left is not read. */
     Loaded load (const juce::File& folder, const BackgroundLoad::Loader& = BackgroundLoad::readIfThere,
                  const std::function<bool()>& keepGoing = {});
 
     /** Opens what was loaded in place of every open file (ask about changes first), each with its
-        video and place, the one that was shown in front. Gives its place, and adds what couldn't be
-        read to loaded.missing. The session, rack and project are left to the caller. */
+        video and place, the one that was shown in front. Gives its place. The session, rack and
+        project are left to the caller. */
     FilePlace restoreFiles (Loaded&, OpenFiles&, AudioEngine&);
 
     /** Decides when the note is written while the app runs. A state the same as the last one

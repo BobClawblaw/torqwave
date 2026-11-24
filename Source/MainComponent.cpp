@@ -1607,6 +1607,7 @@ MainComponent::MainComponent()
     // is brought back now, read off the message thread like the last file. A start that closed
     // while it was reopening is not tried again by itself: the app starts on the home screen and says so.
     leftOffKeeper = std::make_unique<Resume::Keeper> (leftOffFolder());
+    leftOffWaiting = std::make_unique<Resume::Waiting>();
     leftOffOnOffer = Resume::isKept (leftOffFolder());
     const auto interrupted = Resume::wasInterrupted (leftOffFolder());
     Resume::markFinished (leftOffFolder());
@@ -9124,8 +9125,12 @@ void MainComponent::finishContinuing()
                 multitrack.setPlace (sessionPlace);
         };
 
+    // What couldn't be reopened stays in the note, to be tried again at the next start.
+    *leftOffWaiting = state.waiting;
+
     if (! loaded->missing.isEmpty())
-        startNotice = "These could not be reopened, so they were left out:\n\n" + loaded->missing.joinIntoString ("\n");
+        startNotice = "These could not be reopened:\n\n" + loaded->missing.joinIntoString ("\n")
+                          + "\n\nTorqwave will try them again the next time it starts. Forget Them stops that.";
 
     done();
 }
@@ -9145,7 +9150,7 @@ void MainComponent::keepLeftOff (bool now)
     lastLeftOffNote = time;
     const auto couldContinue = canContinueWhereLeftOff();
     const auto error = leftOffKeeper->note (Resume::gather (openFiles, waveform.getPlace(), engine, multitrackMode,
-                                                            multitrack.getPlace(), projectFile));
+                                                            multitrack.getPlace(), projectFile, *leftOffWaiting));
 
     if (error.isNotEmpty())
         juce::Logger::writeToLog ("Could not note what is open: " + error);
@@ -9156,8 +9161,27 @@ void MainComponent::keepLeftOff (bool now)
 
 void MainComponent::showStartNotice()
 {
-    if (const auto notice = std::exchange (startNotice, {}); notice.isNotEmpty())
+    const auto notice = std::exchange (startNotice, {});
+
+    if (notice.isEmpty())
+        return;
+
+    if (leftOffWaiting->isEmpty())
+    {
         showError ("Continue Where You Left Off", notice);
+        return;
+    }
+
+    juce::Logger::writeToLog ("Could not be reopened: " + notice);
+    // OK on Return and Escape: forgetting is only ever a click on its own button.
+    auto* box = new juce::AlertWindow ("Continue Where You Left Off", notice, juce::MessageBoxIconType::WarningIcon, this);
+    box->addButton ("OK", 0, juce::KeyPress (juce::KeyPress::returnKey), juce::KeyPress (juce::KeyPress::escapeKey));
+    box->addButton ("Forget Them", 1);
+    box->enterModalState (true, juce::ModalCallbackFunction::create ([safe = juce::Component::SafePointer<MainComponent> (this)] (int result)
+    {
+        if (safe != nullptr && result == 1)
+            *safe->leftOffWaiting = {};
+    }), true);
 }
 
 void MainComponent::saveProject (bool chooseFile)
