@@ -6326,3312 +6326,6 @@
     "bytes": 149232
   },
   {
-    "group": "sequences",
-    "category": "Ambient/Dark ambient",
-    "name": "Ruin Sub Line",
-    "file": "sequences/dark-ambient-ruin-sub-line.mp3",
-    "about": "One held note a bar, moving through the roots of A minor, A minor, F, E",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 1,
-    "role": "Bass > Sub",
-    "tempo": 80.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Ruin Sub Line",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Iron Sub"
-      }
-    ],
-    "seconds": 12.0,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 91104
-  },
-  {
-    "group": "sequences",
-    "category": "Ambient/Dark ambient",
-    "name": "Ruin Hook",
-    "file": "sequences/dark-ambient-ruin-hook.mp3",
-    "about": "A two-bar long phrase in A harmonic minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 2,
-    "role": "Melody > Hooks",
-    "tempo": 70.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Ruin Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Glass Shard"
-      }
-    ],
-    "seconds": 6.9,
-    "peakDb": -10.199999999999999,
-    "faded": true,
-    "bytes": 110736
-  },
-  {
-    "group": "sequences",
-    "category": "Ambient/Drone",
-    "name": "Monolith Sub Pulse",
-    "file": "sequences/drone-monolith-sub-pulse.mp3",
-    "about": "One held note a bar, on A",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 2,
-    "role": "Bass > Sub",
-    "tempo": 80.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Monolith Sub Pulse",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Iron Sub"
-      }
-    ],
-    "seconds": 6.0,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 46512
-  },
-  {
-    "group": "sequences",
-    "category": "Ambient/Drone",
-    "name": "Endless Riff",
-    "file": "sequences/drone-endless-riff.mp3",
-    "about": "A two-bar syncopated phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 1,
-    "role": "Melody > Hooks",
-    "tempo": 72.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Endless Riff",
-        "role": "Melody",
-        "voice": "Torqwave Synth: FM Toll"
-      }
-    ],
-    "seconds": 6.7,
-    "peakDb": -8.699999999999999,
-    "faded": true,
-    "bytes": 125184
-  },
-  {
-    "group": "sequences",
-    "category": "Breakbeat/Breaks",
-    "name": "Rough Cut Pressure",
-    "file": "sequences/breaks-rough-cut-pressure.mp3",
-    "about": "Rolling 16ths in the kick's gaps, accented, jumping to the octave at the end, moving through the roots of A minor, G, A minor, F",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Bass > Synth Bass",
-    "tempo": 132.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Rough Cut Pressure",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Rolling Offbeat"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -9.300000000000001,
-    "faded": true,
-    "bytes": 82488
-  },
-  {
-    "group": "sequences",
-    "category": "Breakbeat/Breaks",
-    "name": "Skate Riff",
-    "file": "sequences/breaks-skate-riff.mp3",
-    "about": "A two-bar syncopated phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Melody > Hooks",
-    "tempo": 135.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Skate Riff",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Rust Lead"
-      }
-    ],
-    "seconds": 7.1,
-    "peakDb": -9.699999999999999,
-    "faded": true,
-    "bytes": 127824
-  },
-  {
-    "group": "sequences",
-    "category": "Drum and Bass/Liquid",
-    "name": "Rainwater Roller",
-    "file": "sequences/liquid-rainwater-roller.mp3",
-    "about": "A half-time line, held roots and a fifth, on A",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Bass > Synth Bass",
-    "tempo": 172.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Rainwater Roller",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 5.6,
-    "peakDb": -8.9,
-    "faded": false,
-    "bytes": 24432
-  },
-  {
-    "group": "sequences",
-    "category": "Drum and Bass/Liquid",
-    "name": "Lagoon Hook",
-    "file": "sequences/liquid-lagoon-hook.mp3",
-    "about": "A two-bar syncopated phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Melody > Hooks",
-    "tempo": 170.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Lagoon Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Minor Bell Motif"
-      }
-    ],
-    "seconds": 5.6,
-    "peakDb": -8.699999999999999,
-    "faded": true,
-    "bytes": 97056
-  },
-  {
-    "group": "sequences",
-    "category": "Drum and Bass/Neurofunk",
-    "name": "Mainline Sub",
-    "file": "sequences/neurofunk-mainline-sub.mp3",
-    "about": "A held sub on the root, on A",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 5,
-    "role": "Bass > Sub",
-    "tempo": 172.0,
-    "rounds": 4,
-    "parts": [
-      {
-        "name": "Mainline Sub",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 5.6,
-    "peakDb": -9.1,
-    "faded": true,
-    "bytes": 24384
-  },
-  {
-    "group": "sequences",
-    "category": "Drum and Bass/Neurofunk",
-    "name": "Biohazard Line",
-    "file": "sequences/neurofunk-biohazard-line.mp3",
-    "about": "A two-bar offbeat phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Melody > Leads",
-    "tempo": 174.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Biohazard Line",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Mercury Lead"
-      }
-    ],
-    "seconds": 5.5,
-    "peakDb": -8.699999999999999,
-    "faded": true,
-    "bytes": 94848
-  },
-  {
-    "group": "sequences",
-    "category": "Electro/Electro",
-    "name": "Bodypop Sub Pulse",
-    "file": "sequences/electro-bodypop-sub-pulse.mp3",
-    "about": "A quarter-note pulse on the root, moving through the roots of A minor, A minor, F, G",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Bass > Sub",
-    "tempo": 130.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Bodypop Sub Pulse",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -9.0,
-    "faded": false,
-    "bytes": 32304
-  },
-  {
-    "group": "sequences",
-    "category": "Electro/Electro",
-    "name": "Mainframe Hook",
-    "file": "sequences/electro-mainframe-hook.mp3",
-    "about": "A call-and-answer phrase stated twice, the second time ending another way in A Phrygian",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Melody > Hooks",
-    "tempo": 130.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Mainframe Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Abandoned Chime"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -7.9,
-    "faded": true,
-    "bytes": 120840
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Boss",
-    "name": "Doom Bassline",
-    "file": "sequences/boss-doom-bassline.mp3",
-    "about": "A marching 16th line, moving through the roots of A minor, D minor, E, A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Bass > Synth Bass",
-    "tempo": 175.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Doom Bassline",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Abyss Reese"
-      }
-    ],
-    "seconds": 5.5,
-    "peakDb": -9.1,
-    "faded": true,
-    "bytes": 98544
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Boss",
-    "name": "Final Boss Line",
-    "file": "sequences/boss-final-boss-line.mp3",
-    "about": "A two-bar busy phrase in A Phrygian",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Melody > Leads",
-    "tempo": 170.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Final Boss Line",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Factory Hit"
-      }
-    ],
-    "seconds": 5.6,
-    "peakDb": -8.6,
-    "faded": true,
-    "bytes": 118368
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Chiptune",
-    "name": "Bitcrush Pressure",
-    "file": "sequences/chiptune-bitcrush-pressure.mp3",
-    "about": "Straight 8ths on the root, moving through the roots of A minor, F, G, A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Bass > Synth Bass",
-    "tempo": 140.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Bitcrush Pressure",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Square Acid"
-      }
-    ],
-    "seconds": 6.9,
-    "peakDb": -9.0,
-    "faded": false,
-    "bytes": 66312
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Chiptune",
-    "name": "High Score Hook",
-    "file": "sequences/chiptune-high-score-hook.mp3",
-    "about": "A two-bar syncopated phrase in A harmonic minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Melody > Hooks",
-    "tempo": 160.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "High Score Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Bit Pluck"
-      }
-    ],
-    "seconds": 6.0,
-    "peakDb": -9.300000000000001,
-    "faded": true,
-    "bytes": 120048
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Combat",
-    "name": "Frontline Bass",
-    "file": "sequences/combat-frontline-bass.mp3",
-    "about": "Driving 16ths on the root, moving through the roots of A minor, D minor, E, A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Bass > Synth Bass",
-    "tempo": 160.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Frontline Bass",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Grinder"
-      }
-    ],
-    "seconds": 6.0,
-    "peakDb": -9.0,
-    "faded": true,
-    "bytes": 70560
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Combat",
-    "name": "Vanguard Theme",
-    "file": "sequences/combat-vanguard-theme.mp3",
-    "about": "A dotted phrase stated twice, the second time ending another way in A Phrygian",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Melody > Leads",
-    "tempo": 140.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Vanguard Theme",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Mercury Lead"
-      }
-    ],
-    "seconds": 6.9,
-    "peakDb": -8.699999999999999,
-    "faded": true,
-    "bytes": 118488
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Exploration",
-    "name": "Open Field Bassline",
-    "file": "sequences/exploration-open-field-bassline.mp3",
-    "about": "A walking line up through the chord, moving through the roots of A minor, C, G, D minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 2,
-    "role": "Bass > Synth Bass",
-    "tempo": 100.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Open Field Bassline",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Low Ceiling"
-      }
-    ],
-    "seconds": 9.6,
-    "peakDb": -7.5,
-    "faded": true,
-    "bytes": 108576
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Exploration",
-    "name": "Far Shore Counter-line",
-    "file": "sequences/exploration-far-shore-counter-line.mp3",
-    "about": "A syncopated phrase stated twice, the second time ending another way in A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 3,
-    "role": "Melody > Counter-lines",
-    "tempo": 100.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Far Shore Counter-line",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Glass Shard"
-      }
-    ],
-    "seconds": 9.6,
-    "peakDb": -7.4,
-    "faded": true,
-    "bytes": 176688
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Horror",
-    "name": "Flicker Pressure",
-    "file": "sequences/horror-flicker-pressure.mp3",
-    "about": "A quarter-note pulse on the root, on A",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 3,
-    "role": "Bass > Synth Bass",
-    "tempo": 80.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Flicker Pressure",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Iron Sub"
-      }
-    ],
-    "seconds": 6.0,
-    "peakDb": -9.199999999999999,
-    "faded": false,
-    "bytes": 30240
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Horror",
-    "name": "Cellar Door Motif",
-    "file": "sequences/horror-cellar-door-motif.mp3",
-    "about": "A sparse phrase stated twice, the second time ending another way in A harmonic minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 3,
-    "role": "Melody > Hooks",
-    "tempo": 70.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Cellar Door Motif",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Dark Kalimba"
-      }
-    ],
-    "seconds": 13.699999999999999,
-    "peakDb": -8.0,
-    "faded": true,
-    "bytes": 158040
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Menu",
-    "name": "Title Screen Bassline",
-    "file": "sequences/menu-title-screen-bassline.mp3",
-    "about": "The sub in half notes, moving through the roots of A minor, D minor, F, G",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 2,
-    "role": "Bass > Synth Bass",
-    "tempo": 96.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Title Screen Bassline",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 10.0,
-    "peakDb": -9.0,
-    "faded": true,
-    "bytes": 41832
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Menu",
-    "name": "Hub Motif",
-    "file": "sequences/menu-hub-motif.mp3",
-    "about": "A two-bar busy phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 1,
-    "role": "Melody > Hooks",
-    "tempo": 90.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Hub Motif",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Minor Bell Motif"
-      }
-    ],
-    "seconds": 5.3,
-    "peakDb": -9.4,
-    "faded": true,
-    "bytes": 97536
-  },
-  {
-    "group": "sequences",
-    "category": "House/Deep house",
-    "name": "Lounge Drive Bass",
-    "file": "sequences/deep-house-lounge-drive-bass.mp3",
-    "about": "An 8th on every offbeat, moving through the roots of A minor, G, F, G",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Bass > Synth Bass",
-    "tempo": 118.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Lounge Drive Bass",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Organ Stab"
-      }
-    ],
-    "seconds": 8.1,
-    "peakDb": -8.9,
-    "faded": false,
-    "bytes": 70488
-  },
-  {
-    "group": "sequences",
-    "category": "House/Deep house",
-    "name": "Late Night Riff",
-    "file": "sequences/deep-house-late-night-riff.mp3",
-    "about": "A syncopated phrase stated twice, the second time ending another way in A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Melody > Hooks",
-    "tempo": 120.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Late Night Riff",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Prison Bell"
-      }
-    ],
-    "seconds": 8.0,
-    "peakDb": -8.5,
-    "faded": true,
-    "bytes": 156672
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Aggrotech",
-    "name": "Barbed Backbeat",
-    "file": "sequences/aggrotech-barbed-backbeat.mp3",
-    "about": "A clap layered with a snare on 2 and 4, with a snare pickup ending bar 2",
-    "key": "",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Drums > Snare & Clap",
-    "tempo": 135.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Barbed Backbeat",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 7.1,
-    "peakDb": -9.0,
-    "faded": true,
-    "bytes": 131184
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Aggrotech",
-    "name": "Bloodline Bassline",
-    "file": "sequences/aggrotech-bloodline-bassline.mp3",
-    "about": "The gallop: an 8th and two 16ths on every beat, the last beat up an octave, moving through the roots of A minor, F, G, A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Bass > Synth Bass",
-    "tempo": 140.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Bloodline Bassline",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Ash Swell"
-      }
-    ],
-    "seconds": 6.9,
-    "peakDb": -9.6,
-    "faded": true,
-    "bytes": 169920
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Aggrotech",
-    "name": "Assault Turn",
-    "file": "sequences/aggrotech-assault-turn.mp3",
-    "about": "A minor seventh, F major seventh, G seventh, A minor seventh, in half notes",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Harmony > Progressions",
-    "tempo": 140.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Assault Turn",
-        "role": "Harmony",
-        "voice": "Torqwave Synth: Rave Hoover Stab"
-      }
-    ],
-    "seconds": 6.9,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 114912
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Aggrotech",
-    "name": "Hellfire Drone",
-    "file": "sequences/aggrotech-hellfire-drone.mp3",
-    "about": "A and E held together for 8 bars, the filter breathing in and out",
-    "key": "A minor",
-    "bars": 8.0,
-    "energy": 5,
-    "role": "Pads > Drones",
-    "tempo": 138.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Hellfire Drone",
-        "role": "Pads",
-        "voice": "Torqwave Synth: Abandoned Reactor"
-      }
-    ],
-    "seconds": 13.9,
-    "peakDb": -13.800000000000001,
-    "faded": true,
-    "bytes": 83952
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Aggrotech",
-    "name": "Aggro Saw Gate",
-    "file": "sequences/aggrotech-aggro-saw-gate.mp3",
-    "about": "Supersaw 16ths gated round the root and fifth",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 5,
-    "role": "Arps > Gated",
-    "tempo": 140.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Aggro Saw Gate",
-        "role": "Arps",
-        "voice": "Torqwave Synth: Rust Lead"
-      }
-    ],
-    "seconds": 5.1,
-    "peakDb": -9.1,
-    "faded": true,
-    "bytes": 98928
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Aggrotech",
-    "name": "Bloodline Motif",
-    "file": "sequences/aggrotech-bloodline-motif.mp3",
-    "about": "A offbeat phrase stated twice, the second time ending another way in A harmonic minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Melody > Hooks",
-    "tempo": 135.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Bloodline Motif",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Cold Saw Lead"
-      }
-    ],
-    "seconds": 7.1,
-    "peakDb": -8.800000000000001,
-    "faded": true,
-    "bytes": 132864
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Aggrotech",
-    "name": "Razor Lift",
-    "file": "sequences/aggrotech-razor-lift.mp3",
-    "about": "16ths climbing the A minor scale for 2 bars, louder and brighter as they go",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "SFX > Risers",
-    "tempo": 138.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Razor Lift",
-        "role": "SFX",
-        "voice": "Torqwave Synth: Cold Saw Lead"
-      }
-    ],
-    "seconds": 7.0,
-    "peakDb": -8.1,
-    "faded": true,
-    "bytes": 126768
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Coldwave",
-    "name": "Distant Sub Pulse",
-    "file": "sequences/coldwave-distant-sub-pulse.mp3",
-    "about": "An 8th on every offbeat, moving through the roots of A minor, A minor, D minor, A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 3,
-    "role": "Bass > Sub",
-    "tempo": 110.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Distant Sub Pulse",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 8.699999999999999,
-    "peakDb": -9.0,
-    "faded": false,
-    "bytes": 37056
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Coldwave",
-    "name": "Monochrome Lead",
-    "file": "sequences/coldwave-monochrome-lead.mp3",
-    "about": "A busy phrase stated twice, the second time ending another way in A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 2,
-    "role": "Melody > Leads",
-    "tempo": 110.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Monochrome Lead",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Rust Lead"
-      }
-    ],
-    "seconds": 8.699999999999999,
-    "peakDb": -9.0,
-    "faded": true,
-    "bytes": 170448
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Dark electro",
-    "name": "Abyss Top Loop",
-    "file": "sequences/dark-electro-abyss-top-loop.mp3",
-    "about": "8th hats, the downbeats stronger, with a ride in 8ths added in bar 2",
-    "key": "",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Drums > Hats & Tops",
-    "tempo": 110.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Abyss Top Loop",
-        "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 8.699999999999999,
-    "peakDb": -9.199999999999999,
-    "faded": true,
-    "bytes": 233424
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Dark electro",
-    "name": "Ashes Sub Pulse",
-    "file": "sequences/dark-electro-ashes-sub-pulse.mp3",
-    "about": "An 8th on every offbeat, moving through the roots of A minor, A minor, F, E",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Bass > Sub",
-    "tempo": 125.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Ashes Sub Pulse",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Iron Sub"
-      }
-    ],
-    "seconds": 7.7,
-    "peakDb": -9.199999999999999,
-    "faded": false,
-    "bytes": 39552
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Dark electro",
-    "name": "Grave Turn",
-    "file": "sequences/dark-electro-grave-turn.mp3",
-    "about": "A minor seventh, D minor seventh, E seventh, A minor seventh, a bar each",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Harmony > Progressions",
-    "tempo": 125.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Grave Turn",
-        "role": "Harmony",
-        "voice": "Torqwave Synth: Factory Hit"
-      }
-    ],
-    "seconds": 7.7,
-    "peakDb": -8.6,
-    "faded": false,
-    "bytes": 69072
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Dark electro",
-    "name": "Plague Pad",
-    "file": "sequences/dark-electro-plague-pad.mp3",
-    "about": "A minor seventh, D minor seventh, E seventh, A minor seventh, held a bar each",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 3,
-    "role": "Pads > Sustained",
-    "tempo": 120.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Plague Pad",
-        "role": "Pads",
-        "voice": "Torqwave Synth: Ventilation"
-      }
-    ],
-    "seconds": 8.0,
-    "peakDb": -6.8,
-    "faded": true,
-    "bytes": 149232
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Dark electro",
-    "name": "Abyss Pluck Line",
-    "file": "sequences/dark-electro-abyss-pluck-line.mp3",
-    "about": "Dotted-8th plucks falling from the octave, through A minor, B flat, A minor, G minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Arps > Plucks",
-    "tempo": 115.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Abyss Pluck Line",
-        "role": "Arps",
-        "voice": "Torqwave Synth: Basalt Wire"
-      }
-    ],
-    "seconds": 8.300000000000001,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 155520
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Dark electro",
-    "name": "Nightmare Motif",
-    "file": "sequences/dark-electro-nightmare-motif.mp3",
-    "about": "A two-bar dotted phrase in A harmonic minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Melody > Hooks",
-    "tempo": 110.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Nightmare Motif",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Abandoned Cutter"
-      }
-    ],
-    "seconds": 8.699999999999999,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 128448
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Dark electro",
-    "name": "Nightmare Transition",
-    "file": "sequences/dark-electro-nightmare-transition.mp3",
-    "about": "Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th",
-    "key": "",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "SFX > Transitions",
-    "tempo": 120.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Nightmare Transition",
-        "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 8.0,
-    "peakDb": -7.9,
-    "faded": true,
-    "bytes": 163008
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Darkwave",
-    "name": "Cathedral Bass",
-    "file": "sequences/darkwave-cathedral-bass.mp3",
-    "about": "8ths leaping between the root and the octave, moving through the roots of A minor, F, G sharp diminished, A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 2,
-    "role": "Bass > Synth Bass",
-    "tempo": 100.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Cathedral Bass",
-        "role": "Bass",
-        "voice": "Torqwave Synth: FM Basement"
-      }
-    ],
-    "seconds": 9.6,
-    "peakDb": -8.800000000000001,
-    "faded": false,
-    "bytes": 49488
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Darkwave",
-    "name": "Cathedral Line",
-    "file": "sequences/darkwave-cathedral-line.mp3",
-    "about": "A two-bar dotted phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 3,
-    "role": "Melody > Leads",
-    "tempo": 108.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Cathedral Line",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Prison Bell"
-      }
-    ],
-    "seconds": 8.9,
-    "peakDb": -8.699999999999999,
-    "faded": true,
-    "bytes": 173760
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/EBM",
-    "name": "Parade Kick Line",
-    "file": "sequences/ebm-parade-kick-line.mp3",
-    "about": "Four to the floor, with ghost kicks leading into the next bar at the end of bar 2",
-    "key": "",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Drums > Kick",
-    "tempo": 118.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Parade Kick Line",
-        "role": "Drums",
-        "voice": "Basic Drums: Standard"
-      }
-    ],
-    "seconds": 8.1,
-    "peakDb": -9.199999999999999,
-    "faded": true,
-    "bytes": 39936
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/EBM",
-    "name": "Leather Bass Walk",
-    "file": "sequences/ebm-leather-bass-walk.mp3",
-    "about": "16ths on the root dipping a step under it, on A",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Bass > Picked & Played",
-    "tempo": 122.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Leather Bass Walk",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Organ Stab"
-      }
-    ],
-    "seconds": 7.9,
-    "peakDb": -9.4,
-    "faded": true,
-    "bytes": 143352
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/EBM",
-    "name": "Iron Curtain Strum",
-    "file": "sequences/ebm-iron-curtain-strum.mp3",
-    "about": "A minor, F, G, A minor, each strummed upwards a 16th a note",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Harmony > Strums",
-    "tempo": 120.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Iron Curtain Strum",
-        "role": "Harmony",
-        "voice": "Torqwave Synth: Rave Hoover Stab"
-      }
-    ],
-    "seconds": 8.0,
-    "peakDb": -9.5,
-    "faded": true,
-    "bytes": 133800
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/EBM",
-    "name": "Body Drone",
-    "file": "sequences/ebm-body-drone.mp3",
-    "about": "A and E held together for 8 bars, the filter breathing in and out",
-    "key": "A minor",
-    "bars": 8.0,
-    "energy": 4,
-    "role": "Pads > Drones",
-    "tempo": 118.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Body Drone",
-        "role": "Pads",
-        "voice": "Torqwave Synth: Void Hum"
-      }
-    ],
-    "seconds": 16.300000000000001,
-    "peakDb": -10.1,
-    "faded": true,
-    "bytes": 183168
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/EBM",
-    "name": "Muscle Pluck",
-    "file": "sequences/ebm-muscle-pluck.mp3",
-    "about": "Dotted-8th plucks falling from the octave, on A minor",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 5,
-    "role": "Arps > Plucks",
-    "tempo": 124.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Muscle Pluck",
-        "role": "Arps",
-        "voice": "Torqwave Synth: Grinder"
-      }
-    ],
-    "seconds": 5.8,
-    "peakDb": -9.0,
-    "faded": false,
-    "bytes": 35400
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/EBM",
-    "name": "Muscle Riff",
-    "file": "sequences/ebm-muscle-riff.mp3",
-    "about": "A offbeat phrase stated twice, the second time ending another way in A Phrygian",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Melody > Hooks",
-    "tempo": 122.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Muscle Riff",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Acid Signal"
-      }
-    ],
-    "seconds": 7.9,
-    "peakDb": -8.1,
-    "faded": true,
-    "bytes": 155424
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/EBM",
-    "name": "Marching Build",
-    "file": "sequences/ebm-marching-build.mp3",
-    "about": "16ths climbing the A minor scale for 2 bars, louder and brighter as they go",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "SFX > Risers",
-    "tempo": 122.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Marching Build",
-        "role": "SFX",
-        "voice": "Torqwave Synth: Machine Spin Up"
-      }
-    ],
-    "seconds": 7.9,
-    "peakDb": -10.6,
-    "faded": true,
-    "bytes": 67296
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Electro-industrial",
-    "name": "Interference Hats",
-    "file": "sequences/electro-industrial-interference-hats.mp3",
-    "about": "16th hats with the offbeat lifted, with 8th hats, the downbeats stronger added in bar 2",
-    "key": "",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Drums > Hats & Tops",
-    "tempo": 110.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Interference Hats",
-        "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 8.699999999999999,
-    "peakDb": -10.9,
-    "faded": false,
-    "bytes": 118296
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Electro-industrial",
-    "name": "Harmonic Minor Arp Bass",
-    "file": "sequences/electro-industrial-harmonic-minor-arp-bass.mp3",
-    "about": "16ths climbing to the sharp seventh and back, in harmonic minor",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 4,
-    "role": "Bass > Arp Bass",
-    "tempo": 120.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Harmonic Minor Arp Bass",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Body Music"
-      }
-    ],
-    "seconds": 6.0,
-    "peakDb": -9.6,
-    "faded": true,
-    "bytes": 86784
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Electro-industrial",
-    "name": "Interference Chord Pulse",
-    "file": "sequences/electro-industrial-interference-chord-pulse.mp3",
-    "about": "Short A minor, B flat chords comping over two bars",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 3,
-    "role": "Harmony > Keys & Comping",
-    "tempo": 122.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Interference Chord Pulse",
-        "role": "Harmony",
-        "voice": "Torqwave Synth: Dub Chord Stab"
-      }
-    ],
-    "seconds": 7.9,
-    "peakDb": -8.6,
-    "faded": true,
-    "bytes": 114336
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Electro-industrial",
-    "name": "Glitch Drone",
-    "file": "sequences/electro-industrial-glitch-drone.mp3",
-    "about": "A and E held together for 4 bars, the filter breathing in and out",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 3,
-    "role": "Pads > Drones",
-    "tempo": 122.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Glitch Drone",
-        "role": "Pads",
-        "voice": "Torqwave Synth: Abandoned Reactor"
-      }
-    ],
-    "seconds": 7.9,
-    "peakDb": -22.699999999999999,
-    "faded": true,
-    "bytes": 40608
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Electro-industrial",
-    "name": "Glitch Gated Chord",
-    "file": "sequences/electro-industrial-glitch-gated-chord.mp3",
-    "about": "The root gated in 16ths, through A minor, D minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Arps > Gated",
-    "tempo": 122.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Glitch Gated Chord",
-        "role": "Arps",
-        "voice": "Torqwave Synth: Dark Kalimba"
-      }
-    ],
-    "seconds": 7.9,
-    "peakDb": -7.0,
-    "faded": true,
-    "bytes": 145680
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Electro-industrial",
-    "name": "Phrygian Lead",
-    "file": "sequences/electro-industrial-phrygian-lead.mp3",
-    "about": "A lead falling from B flat to the root",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 3,
-    "role": "Melody > Leads",
-    "tempo": 118.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Phrygian Lead",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Vowel Scream"
-      }
-    ],
-    "seconds": 8.1,
-    "peakDb": -9.1,
-    "faded": false,
-    "bytes": 74712
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Electro-industrial",
-    "name": "Sector Bridge",
-    "file": "sequences/electro-industrial-sector-bridge.mp3",
-    "about": "Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th",
-    "key": "",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "SFX > Transitions",
-    "tempo": 114.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Sector Bridge",
-        "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 8.4,
-    "peakDb": -8.4,
-    "faded": true,
-    "bytes": 170880
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Futurepop",
-    "name": "Satellite Roller",
-    "file": "sequences/futurepop-satellite-roller.mp3",
-    "about": "Two 16ths on each offbeat, the last up an octave, moving through the roots of A minor, F, G, A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Bass > Synth Bass",
-    "tempo": 130.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Satellite Roller",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Rumble Floor"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -9.699999999999999,
-    "faded": true,
-    "bytes": 66000
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Futurepop",
-    "name": "Pulse Star Hook",
-    "file": "sequences/futurepop-pulse-star-hook.mp3",
-    "about": "A two-bar held phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Melody > Hooks",
-    "tempo": 132.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Pulse Star Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Rust Lead"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 130320
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Industrial rock",
-    "name": "Barbwire Throb",
-    "file": "sequences/industrial-rock-barbwire-throb.mp3",
-    "about": "Straight 8ths on the root, moving through the roots of A minor, G minor, F, G minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Bass > Synth Bass",
-    "tempo": 116.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Barbwire Throb",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 8.300000000000001,
-    "peakDb": -9.0,
-    "faded": false,
-    "bytes": 37560
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Industrial rock",
-    "name": "Fuse Box Theme",
-    "file": "sequences/industrial-rock-fuse-box-theme.mp3",
-    "about": "A call-and-answer phrase stated twice, the second time ending another way in A Phrygian",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Melody > Leads",
-    "tempo": 120.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Fuse Box Theme",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Vowel Scream"
-      }
-    ],
-    "seconds": 8.0,
-    "peakDb": -9.1,
-    "faded": true,
-    "bytes": 78600
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Synth-EBM",
-    "name": "Synthetic Tears Bass Arp",
-    "file": "sequences/synth-ebm-synthetic-tears-bass-arp.mp3",
-    "about": "8ths leaping between the root and the octave, moving through the roots of A minor, C, G, D minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Bass > Arp Bass",
-    "tempo": 120.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Synthetic Tears Bass Arp",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Rumble Floor"
-      }
-    ],
-    "seconds": 8.0,
-    "peakDb": -8.699999999999999,
-    "faded": true,
-    "bytes": 67536
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Synth-EBM",
-    "name": "Chrome Motif",
-    "file": "sequences/synth-ebm-chrome-motif.mp3",
-    "about": "A offbeat phrase stated twice, the second time ending another way in A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Melody > Hooks",
-    "tempo": 120.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Chrome Motif",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Acid Signal"
-      }
-    ],
-    "seconds": 8.0,
-    "peakDb": -10.300000000000001,
-    "faded": true,
-    "bytes": 169536
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Techno-body",
-    "name": "Chain Drive Beat",
-    "file": "sequences/techno-body-chain-drive-beat.mp3",
-    "about": "Four to the floor with ghost kicks after each, a big snare and clap together on 2 and 4, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
-    "key": "",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Drums > Full Grooves",
-    "tempo": 134.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Chain Drive Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -9.5,
-    "faded": true,
-    "bytes": 150048
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Techno-body",
-    "name": "Assembly Played Bass",
-    "file": "sequences/techno-body-assembly-played-bass.mp3",
-    "about": "8th roots with an octave before the last, moving through the roots of A minor, A minor, A minor, F",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Bass > Picked & Played",
-    "tempo": 134.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Assembly Played Bass",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Organ Stab"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -8.199999999999999,
-    "faded": true,
-    "bytes": 107544
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Techno-body",
-    "name": "Assembly Keys",
-    "file": "sequences/techno-body-assembly-keys.mp3",
-    "about": "Short A minor, B flat chords comping over two bars",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Harmony > Keys & Comping",
-    "tempo": 132.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Assembly Keys",
-        "role": "Harmony",
-        "voice": "Torqwave Synth: Abandoned Jab"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -6.8,
-    "faded": true,
-    "bytes": 113280
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Techno-body",
-    "name": "Body Shop Low Drone",
-    "file": "sequences/techno-body-body-shop-low-drone.mp3",
-    "about": "A and E held together for 4 bars, the filter breathing in and out",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Pads > Drones",
-    "tempo": 126.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Body Shop Low Drone",
-        "role": "Pads",
-        "voice": "Torqwave Synth: Abandoned Reactor"
-      }
-    ],
-    "seconds": 7.6,
-    "peakDb": -21.300000000000001,
-    "faded": true,
-    "bytes": 40104
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Techno-body",
-    "name": "Torque Plucks",
-    "file": "sequences/techno-body-torque-plucks.mp3",
-    "about": "8ths up and down, through A minor, A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Arps > Plucks",
-    "tempo": 134.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Torque Plucks",
-        "role": "Arps",
-        "voice": "Torqwave Synth: Basalt Wire"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -9.0,
-    "faded": true,
-    "bytes": 171720
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Techno-body",
-    "name": "Ironworks Hook",
-    "file": "sequences/techno-body-ironworks-hook.mp3",
-    "about": "A busy phrase stated twice, the second time ending another way in A Phrygian",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Melody > Hooks",
-    "tempo": 128.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Ironworks Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Mercury Lead"
-      }
-    ],
-    "seconds": 7.5,
-    "peakDb": -8.6,
-    "faded": true,
-    "bytes": 129120
-  },
-  {
-    "group": "sequences",
-    "category": "Industrial/Techno-body",
-    "name": "Body Shop Transition",
-    "file": "sequences/techno-body-body-shop-transition.mp3",
-    "about": "Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th",
-    "key": "",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "SFX > Transitions",
-    "tempo": 126.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Body Shop Transition",
-        "role": "SFX",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 7.6,
-    "peakDb": -9.9,
-    "faded": true,
-    "bytes": 239712
-  },
-  {
-    "group": "sequences",
-    "category": "Synthwave/Darksynth",
-    "name": "Chrome Night Sub Pulse",
-    "file": "sequences/darksynth-chrome-night-sub-pulse.mp3",
-    "about": "A held sub on the root, on A",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Bass > Sub",
-    "tempo": 124.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Chrome Night Sub Pulse",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 7.7,
-    "peakDb": -9.0,
-    "faded": true,
-    "bytes": 32640
-  },
-  {
-    "group": "sequences",
-    "category": "Synthwave/Darksynth",
-    "name": "Midnight Run Hook",
-    "file": "sequences/darksynth-midnight-run-hook.mp3",
-    "about": "A dotted phrase stated twice, the second time ending another way in A harmonic minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 3,
-    "role": "Melody > Hooks",
-    "tempo": 118.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Midnight Run Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Rust Lead"
-      }
-    ],
-    "seconds": 8.1,
-    "peakDb": -9.199999999999999,
-    "faded": true,
-    "bytes": 122880
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Acid",
-    "name": "Corrosive Tops",
-    "file": "sequences/acid-corrosive-tops.mp3",
-    "about": "Open hats on the offbeats, with 8th hats, the downbeats stronger added in bar 2",
-    "key": "",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Drums > Hats & Tops",
-    "tempo": 130.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Corrosive Tops",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -8.6,
-    "faded": true,
-    "bytes": 123984
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Acid",
-    "name": "Acid Slide Rider",
-    "file": "sequences/acid-acid-slide-rider.mp3",
-    "about": "A two-bar 303 line with longer slides and the answer an octave up",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Bass > Arp Bass",
-    "tempo": 138.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Acid Slide Rider",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Acid Scream"
-      }
-    ],
-    "seconds": 7.0,
-    "peakDb": -9.300000000000001,
-    "faded": true,
-    "bytes": 124008
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Acid",
-    "name": "Acidic Comp",
-    "file": "sequences/acid-acidic-comp.mp3",
-    "about": "Short A minor, A minor chords comping over two bars",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Harmony > Keys & Comping",
-    "tempo": 134.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Acidic Comp",
-        "role": "Harmony",
-        "voice": "Torqwave Synth: Organ Stab"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -10.699999999999999,
-    "faded": false,
-    "bytes": 90240
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Acid",
-    "name": "Three-Oh Bed",
-    "file": "sequences/acid-three-oh-bed.mp3",
-    "about": "A minor seventh, A minor seventh, A minor seventh, F major seventh, held a bar each",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Pads > Sustained",
-    "tempo": 134.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Three-Oh Bed",
-        "role": "Pads",
-        "voice": "Torqwave Synth: Machine Spin Up"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -9.800000000000001,
-    "faded": true,
-    "bytes": 89592
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Acid",
-    "name": "Acid Arp",
-    "file": "sequences/acid-acid-arp.mp3",
-    "about": "An arp with 303 accents and slides",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 4,
-    "role": "Arps > 16th Sequences",
-    "tempo": 134.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Acid Arp",
-        "role": "Arps",
-        "voice": "Torqwave Synth: Basalt Sting"
-      }
-    ],
-    "seconds": 5.4,
-    "peakDb": -8.6,
-    "faded": true,
-    "bytes": 112896
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Acid",
-    "name": "Fizz Motif",
-    "file": "sequences/acid-fizz-motif.mp3",
-    "about": "A sparse phrase stated twice, the second time ending another way in A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Melody > Hooks",
-    "tempo": 138.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Fizz Motif",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Mercury Lead"
-      }
-    ],
-    "seconds": 7.0,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 109416
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Acid",
-    "name": "Acidic Transition",
-    "file": "sequences/acid-acidic-transition.mp3",
-    "about": "Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th",
-    "key": "",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "SFX > Transitions",
-    "tempo": 138.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Acidic Transition",
-        "role": "SFX",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 7.0,
-    "peakDb": -10.300000000000001,
-    "faded": true,
-    "bytes": 233568
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Club tools",
-    "name": "Offbeat Sub",
-    "file": "sequences/club-tools-offbeat-sub.mp3",
-    "about": "A short sub on every offbeat, out of the kick's way",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 2,
-    "role": "Bass > Sub",
-    "tempo": 128.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Offbeat Sub",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 5.6,
-    "peakDb": -9.0,
-    "faded": false,
-    "bytes": 24312
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Dark",
-    "name": "Black Stomp",
-    "file": "sequences/dark-black-stomp.mp3",
-    "about": "Four to the floor with a skipped kick before the one, a clap on 4 only, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
-    "key": "",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Drums > Full Grooves",
-    "tempo": 130.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Black Stomp",
-        "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -9.9,
-    "faded": true,
-    "bytes": 205872
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Dark",
-    "name": "Peak Rumble Bass",
-    "file": "sequences/dark-peak-rumble-bass.mp3",
-    "about": "Offbeat 16ths on the root with an octave accent at the end of each half bar",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Bass > Synth Bass",
-    "tempo": 132.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Peak Rumble Bass",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Bunker Kick Bass"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -9.5,
-    "faded": true,
-    "bytes": 33960
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Dark",
-    "name": "Cellar Strummed Chords",
-    "file": "sequences/dark-cellar-strummed-chords.mp3",
-    "about": "A minor, A minor, A minor, F, each strummed upwards a 16th a note",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Harmony > Strums",
-    "tempo": 130.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Cellar Strummed Chords",
-        "role": "Harmony",
-        "voice": "Torqwave Synth: Abandoned Jab"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -8.199999999999999,
-    "faded": false,
-    "bytes": 84360
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Dark",
-    "name": "Smoke Bloom",
-    "file": "sequences/dark-smoke-bloom.mp3",
-    "about": "A minor seventh, G seventh, A minor seventh, F major seventh, the filter opening and closing again over four bars",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Pads > Evolving",
-    "tempo": 132.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Smoke Bloom",
-        "role": "Pads",
-        "voice": "Torqwave Synth: Fog Machine"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -10.199999999999999,
-    "faded": true,
-    "bytes": 117648
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Dark",
-    "name": "Concrete Pluck",
-    "file": "sequences/dark-concrete-pluck.mp3",
-    "about": "Dotted-8th plucks falling from the octave, through A minor, A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Arps > Plucks",
-    "tempo": 130.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Concrete Pluck",
-        "role": "Arps",
-        "voice": "Torqwave Synth: Wire Pluck"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -8.300000000000001,
-    "faded": true,
-    "bytes": 88656
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Dark",
-    "name": "Black Answer",
-    "file": "sequences/dark-black-answer.mp3",
-    "about": "A dotted phrase stated twice, the second time ending another way in A Phrygian",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Melody > Counter-lines",
-    "tempo": 128.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Black Answer",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Prison Bell"
-      }
-    ],
-    "seconds": 7.5,
-    "peakDb": -7.4,
-    "faded": true,
-    "bytes": 138648
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Dark",
-    "name": "Low Boom",
-    "file": "sequences/dark-low-boom.mp3",
-    "about": "A low A struck and bent down",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 4,
-    "role": "SFX > Impacts",
-    "tempo": 130.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Low Boom",
-        "role": "SFX",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 5.5,
-    "peakDb": -9.1,
-    "faded": true,
-    "bytes": 23904
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Driving",
-    "name": "Rolling Kick Gap Bass",
-    "file": "sequences/driving-rolling-kick-gap-bass.mp3",
-    "about": "The driving roll: three 16ths between the kicks, moving to C and G in bar 4",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Bass > Synth Bass",
-    "tempo": 134.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Rolling Kick Gap Bass",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Bunker Kick Bass"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 36096
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Driving",
-    "name": "Call and Answer Hook",
-    "file": "sequences/driving-call-and-answer-hook.mp3",
-    "about": "A two-note call in bar 1, a falling answer in bar 2",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Melody > Hooks",
-    "tempo": 134.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Call and Answer Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Abandoned Cutter"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -9.1,
-    "faded": true,
-    "bytes": 106176
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Dub",
-    "name": "Echo Chamber Drive Bass",
-    "file": "sequences/dub-echo-chamber-drive-bass.mp3",
-    "about": "An 8th on every offbeat, on A",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 3,
-    "role": "Bass > Synth Bass",
-    "tempo": 118.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Echo Chamber Drive Bass",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Iron Sub"
-      }
-    ],
-    "seconds": 8.1,
-    "peakDb": -9.199999999999999,
-    "faded": false,
-    "bytes": 42216
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Dub",
-    "name": "Echo Chamber Hook",
-    "file": "sequences/dub-echo-chamber-hook.mp3",
-    "about": "A call-and-answer phrase stated twice, the second time ending another way in A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 3,
-    "role": "Melody > Hooks",
-    "tempo": 122.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Echo Chamber Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Glass Shard"
-      }
-    ],
-    "seconds": 7.9,
-    "peakDb": -8.4,
-    "faded": true,
-    "bytes": 163056
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Hard",
-    "name": "Bunker Clap Stutter",
-    "file": "sequences/hard-bunker-clap-stutter.mp3",
-    "about": "The kick for two beats, then claps stuttering into the next bar",
-    "key": "",
-    "bars": 1.0,
-    "energy": 5,
-    "role": "Drums > Fills",
-    "tempo": 150.0,
-    "rounds": 4,
-    "parts": [
-      {
-        "name": "Bunker Clap Stutter",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 6.4,
-    "peakDb": -11.699999999999999,
-    "faded": true,
-    "bytes": 156576
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Hard",
-    "name": "Full Force Bass Sequence",
-    "file": "sequences/hard-full-force-bass-sequence.mp3",
-    "about": "A 303 line with accents and slides, on A",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Bass > Arp Bass",
-    "tempo": 145.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Full Force Bass Sequence",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Bleach Bite"
-      }
-    ],
-    "seconds": 6.6,
-    "peakDb": -9.0,
-    "faded": true,
-    "bytes": 100560
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Hard",
-    "name": "Blast Wall Stab",
-    "file": "sequences/hard-blast-wall-stab.mp3",
-    "about": "A minor stabs in a syncopated one-bar pattern",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 5,
-    "role": "Harmony > Stabs",
-    "tempo": 155.0,
-    "rounds": 4,
-    "parts": [
-      {
-        "name": "Blast Wall Stab",
-        "role": "Harmony",
-        "voice": "Torqwave Synth: Rust Lead"
-      }
-    ],
-    "seconds": 6.2,
-    "peakDb": -9.9,
-    "faded": true,
-    "bytes": 102576
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Hard",
-    "name": "Warhead Low Drone",
-    "file": "sequences/hard-warhead-low-drone.mp3",
-    "about": "A and E held together for 8 bars, the filter breathing in and out",
-    "key": "A minor",
-    "bars": 8.0,
-    "energy": 5,
-    "role": "Pads > Drones",
-    "tempo": 155.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Warhead Low Drone",
-        "role": "Pads",
-        "voice": "Torqwave Synth: Ventilation"
-      }
-    ],
-    "seconds": 12.4,
-    "peakDb": -9.4,
-    "faded": true,
-    "bytes": 204288
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Hard",
-    "name": "Hard Gate Arp",
-    "file": "sequences/hard-hard-gate-arp.mp3",
-    "about": "A hard 16th gate on the root with octave accents",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 5,
-    "role": "Arps > Gated",
-    "tempo": 150.0,
-    "rounds": 4,
-    "parts": [
-      {
-        "name": "Hard Gate Arp",
-        "role": "Arps",
-        "voice": "Torqwave Synth: Basalt Wire"
-      }
-    ],
-    "seconds": 6.4,
-    "peakDb": -7.0,
-    "faded": true,
-    "bytes": 165120
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Hard",
-    "name": "Blast Wall Hook",
-    "file": "sequences/hard-blast-wall-hook.mp3",
-    "about": "A held phrase stated twice, the second time ending another way in A Phrygian",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Melody > Hooks",
-    "tempo": 145.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Blast Wall Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Mercury Lead"
-      }
-    ],
-    "seconds": 6.6,
-    "peakDb": -8.800000000000001,
-    "faded": true,
-    "bytes": 116640
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Hard",
-    "name": "Hardline Transition",
-    "file": "sequences/hard-hardline-transition.mp3",
-    "about": "Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th",
-    "key": "",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "SFX > Transitions",
-    "tempo": 150.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Hardline Transition",
-        "role": "SFX",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 6.4,
-    "peakDb": -10.300000000000001,
-    "faded": true,
-    "bytes": 220608
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Hypnotic",
-    "name": "Fog Roller",
-    "file": "sequences/hypnotic-fog-roller.mp3",
-    "about": "One held note a bar, moving through the roots of A minor, A minor, A minor, F",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 4,
-    "role": "Bass > Synth Bass",
-    "tempo": 126.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Fog Roller",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Iron Sub"
-      }
-    ],
-    "seconds": 7.6,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 57888
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Hypnotic",
-    "name": "Inner Space Lead",
-    "file": "sequences/hypnotic-inner-space-lead.mp3",
-    "about": "A two-bar syncopated phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 3,
-    "role": "Melody > Leads",
-    "tempo": 126.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Inner Space Lead",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Cold Bell"
-      }
-    ],
-    "seconds": 7.6,
-    "peakDb": -9.5,
-    "faded": true,
-    "bytes": 180144
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Industrial",
-    "name": "Anvil Beat",
-    "file": "sequences/industrial-anvil-beat.mp3",
-    "about": "Four to the floor with a rolling rumble between the kicks, a snare on 2 and 4, a ride in 8ths, a syncopated rimshot and a tom run ends bar 4",
-    "key": "",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Drums > Full Grooves",
-    "tempo": 126.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Anvil Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 7.6,
-    "peakDb": -13.0,
-    "faded": true,
-    "bytes": 223488
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Industrial",
-    "name": "Foundry Pressure",
-    "file": "sequences/industrial-foundry-pressure.mp3",
-    "about": "Driving 16ths on the root, on A",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Bass > Synth Bass",
-    "tempo": 132.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Foundry Pressure",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Tar Reese"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -8.300000000000001,
-    "faded": true,
-    "bytes": 74664
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Industrial",
-    "name": "Pressworks Strum",
-    "file": "sequences/industrial-pressworks-strum.mp3",
-    "about": "A minor, B flat, G minor, A minor, each strummed upwards a 16th a note",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Harmony > Strums",
-    "tempo": 130.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Pressworks Strum",
-        "role": "Harmony",
-        "voice": "Torqwave Synth: Minor Stab"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -9.4,
-    "faded": false,
-    "bytes": 86616
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Industrial",
-    "name": "Slag Drone",
-    "file": "sequences/industrial-slag-drone.mp3",
-    "about": "A and E held together for 8 bars, the filter breathing in and out",
-    "key": "A minor",
-    "bars": 8.0,
-    "energy": 5,
-    "role": "Pads > Drones",
-    "tempo": 132.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Slag Drone",
-        "role": "Pads",
-        "voice": "Torqwave Synth: Substation"
-      }
-    ],
-    "seconds": 14.5,
-    "peakDb": -30.399999999999999,
-    "faded": false,
-    "bytes": 62112
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Industrial",
-    "name": "Corrosion Pattern",
-    "file": "sequences/industrial-corrosion-pattern.mp3",
-    "about": "Straight up the chord in 16ths, again and again, through A minor, B flat",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Arps > 16th Sequences",
-    "tempo": 132.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Corrosion Pattern",
-        "role": "Arps",
-        "voice": "Torqwave Synth: Acid Shard"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -9.0,
-    "faded": true,
-    "bytes": 150624
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Industrial",
-    "name": "Factory Riff",
-    "file": "sequences/industrial-factory-riff.mp3",
-    "about": "A two-bar dotted phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Melody > Hooks",
-    "tempo": 130.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Factory Riff",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Abandoned Cutter"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -8.800000000000001,
-    "faded": true,
-    "bytes": 119880
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Industrial",
-    "name": "Factory Slam",
-    "file": "sequences/industrial-factory-slam.mp3",
-    "about": "Kick, low tom and crash struck together on the one",
-    "key": "",
-    "bars": 1.0,
-    "energy": 4,
-    "role": "SFX > Impacts",
-    "tempo": 126.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Factory Slam",
-        "role": "SFX",
-        "voice": "Basic Drums: Electro"
-      }
-    ],
-    "seconds": 5.7,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 139872
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Melodic",
-    "name": "Afterglow Sub",
-    "file": "sequences/melodic-afterglow-sub.mp3",
-    "about": "One held note a bar, on A",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 3,
-    "role": "Bass > Sub",
-    "tempo": 122.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Afterglow Sub",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Iron Sub"
-      }
-    ],
-    "seconds": 7.9,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 61080
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Melodic",
-    "name": "Afterglow Hook",
-    "file": "sequences/melodic-afterglow-hook.mp3",
-    "about": "A two-bar call-and-answer phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Melody > Hooks",
-    "tempo": 120.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Afterglow Hook",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Cold Bell"
-      }
-    ],
-    "seconds": 8.0,
-    "peakDb": -8.800000000000001,
-    "faded": true,
-    "bytes": 165504
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Minimal",
-    "name": "Pinpoint Sub Pulse",
-    "file": "sequences/minimal-pinpoint-sub-pulse.mp3",
-    "about": "The sub in half notes, on A",
-    "key": "A minor",
-    "bars": 1.0,
-    "energy": 3,
-    "role": "Bass > Sub",
-    "tempo": 124.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Pinpoint Sub Pulse",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 5.8,
-    "peakDb": -9.1,
-    "faded": true,
-    "bytes": 25416
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Minimal",
-    "name": "Microdub Theme",
-    "file": "sequences/minimal-microdub-theme.mp3",
-    "about": "A held phrase stated twice, the second time ending another way in A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 3,
-    "role": "Melody > Leads",
-    "tempo": 122.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Microdub Theme",
-        "role": "Melody",
-        "voice": "Torqwave Synth: FM Toll"
-      }
-    ],
-    "seconds": 7.9,
-    "peakDb": -8.5,
-    "faded": true,
-    "bytes": 147120
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Peak-time",
-    "name": "Crowd Played Bass",
-    "file": "sequences/peak-time-crowd-played-bass.mp3",
-    "about": "Straight 8ths on the root, moving through the roots of A minor, A minor, F, G",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Bass > Picked & Played",
-    "tempo": 136.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Crowd Played Bass",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Abyss Reese"
-      }
-    ],
-    "seconds": 7.1,
-    "peakDb": -8.699999999999999,
-    "faded": true,
-    "bytes": 102864
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Peak-time",
-    "name": "Floodlight Line",
-    "file": "sequences/peak-time-floodlight-line.mp3",
-    "about": "A long phrase stated twice, the second time ending another way in A minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Melody > Leads",
-    "tempo": 136.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Floodlight Line",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Acid Signal"
-      }
-    ],
-    "seconds": 7.1,
-    "peakDb": -8.699999999999999,
-    "faded": true,
-    "bytes": 152640
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Percussive",
-    "name": "Kinetic Bass Arp",
-    "file": "sequences/percussive-kinetic-bass-arp.mp3",
-    "about": "8ths leaping between the root and the octave, on A",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 5,
-    "role": "Bass > Arp Bass",
-    "tempo": 138.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Kinetic Bass Arp",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 7.0,
-    "peakDb": -8.9,
-    "faded": false,
-    "bytes": 32448
-  },
-  {
-    "group": "sequences",
-    "category": "Techno/Percussive",
-    "name": "Rhythm Pit Lead",
-    "file": "sequences/percussive-rhythm-pit-lead.mp3",
-    "about": "A two-bar offbeat phrase in A minor",
-    "key": "A minor",
-    "bars": 2.0,
-    "energy": 4,
-    "role": "Melody > Leads",
-    "tempo": 132.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Rhythm Pit Lead",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Cold Bell"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 155808
-  },
-  {
-    "group": "sequences",
-    "category": "Trance/Psytrance",
-    "name": "Goa Roller",
-    "file": "sequences/psytrance-goa-roller.mp3",
-    "about": "The rolling triplet-feel 16ths after every kick, on A",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Bass > Synth Bass",
-    "tempo": 140.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Goa Roller",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Pressure Bass"
-      }
-    ],
-    "seconds": 6.9,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 65760
-  },
-  {
-    "group": "sequences",
-    "category": "Trance/Psytrance",
-    "name": "Fractal Line",
-    "file": "sequences/psytrance-fractal-line.mp3",
-    "about": "A call-and-answer phrase stated twice, the second time ending another way in A harmonic minor",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 5,
-    "role": "Melody > Leads",
-    "tempo": 145.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Fractal Line",
-        "role": "Melody",
-        "voice": "Torqwave Synth: Feedback Wire"
-      }
-    ],
-    "seconds": 6.6,
-    "peakDb": -8.6,
-    "faded": true,
-    "bytes": 83448
-  },
-  {
-    "group": "drums",
-    "category": "Standard",
-    "name": "Afterimage Beat",
-    "file": "drums/standard-afterimage-beat.mp3",
-    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
-    "groove": "Four to the floor, a snare on 2 and 4 and open hats on the offbeats",
-    "style": "Industrial/Futurepop",
-    "bars": 1.0,
-    "energy": 5,
-    "of": 36,
-    "tempo": 135.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Afterimage Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Standard"
-      }
-    ],
-    "seconds": 5.3,
-    "peakDb": -9.199999999999999,
-    "faded": true,
-    "bytes": 104784
-  },
-  {
-    "group": "drums",
-    "category": "Standard",
-    "name": "Peak Hour Driver",
-    "file": "drums/standard-peak-hour-driver.mp3",
-    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
-    "groove": "Four to the floor, clap and snare on 2 and 4, ghost kicks before them, 16th hats with the offbeat lifted",
-    "style": "Techno/Driving",
-    "bars": 2.0,
-    "energy": 5,
-    "of": 36,
-    "tempo": 134.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Peak Hour Driver",
-        "role": "Drums",
-        "voice": "Basic Drums: Standard"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 150216
-  },
-  {
-    "group": "drums",
-    "category": "Standard",
-    "name": "Throttle Drive",
-    "file": "drums/standard-throttle-drive.mp3",
-    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
-    "groove": "Four to the floor, a clap layered with a snare on 2 and 4, 16th hats with the offbeat lifted, a shaker in 16ths and a tom run ends bar 4",
-    "style": "Techno/Driving",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 36,
-    "tempo": 134.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Throttle Drive",
-        "role": "Drums",
-        "voice": "Basic Drums: Standard"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 146544
-  },
-  {
-    "group": "drums",
-    "category": "Dark Techno",
-    "name": "Hard Offbeat Rumble",
-    "file": "drums/dark-techno-hard-offbeat-rumble.mp3",
-    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
-    "groove": "Fast four-to-the-floor with a rumble between the kicks and metal accented every three 16ths; a kick roll ends bar 4",
-    "style": "Techno/Hard",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 8,
-    "tempo": 150.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Hard Offbeat Rumble",
-        "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
-      }
-    ],
-    "seconds": 6.4,
-    "peakDb": -11.699999999999999,
-    "faded": true,
-    "bytes": 139680
-  },
-  {
-    "group": "drums",
-    "category": "Dark Techno",
-    "name": "Black Stomp",
-    "file": "drums/dark-techno-black-stomp.mp3",
-    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
-    "groove": "Four to the floor with a skipped kick before the one, a clap on 4 only, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
-    "style": "Techno/Dark",
-    "bars": 4.0,
-    "energy": 4,
-    "of": 8,
-    "tempo": 130.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Black Stomp",
-        "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -9.9,
-    "faded": true,
-    "bytes": 205872
-  },
-  {
-    "group": "drums",
-    "category": "Dark Techno",
-    "name": "Furnace Thump",
-    "file": "drums/dark-techno-furnace-thump.mp3",
-    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
-    "groove": "Four to the floor with a rolling rumble between the kicks, a clap on 2 and 4, a ride in 8ths, toms in shifting 16ths and a tom run ends bar 4",
-    "style": "Techno/Industrial",
-    "bars": 4.0,
-    "energy": 4,
-    "of": 8,
-    "tempo": 132.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Furnace Thump",
-        "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -11.699999999999999,
-    "faded": true,
-    "bytes": 232704
-  },
-  {
-    "group": "drums",
-    "category": "Industrial",
-    "name": "Anvil Beat",
-    "file": "drums/industrial-anvil-beat.mp3",
-    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
-    "groove": "Four to the floor with a rolling rumble between the kicks, a snare on 2 and 4, a ride in 8ths, a syncopated rimshot and a tom run ends bar 4",
-    "style": "Techno/Industrial",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 31,
-    "tempo": 126.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Anvil Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 7.6,
-    "peakDb": -13.0,
-    "faded": true,
-    "bytes": 223488
-  },
-  {
-    "group": "drums",
-    "category": "Industrial",
-    "name": "Bloodline Beat",
-    "file": "drums/industrial-bloodline-beat.mp3",
-    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
-    "groove": "Four to the floor, a clap layered with a snare on 2 and 4, open hats on the offbeats, a crash on the one and a tom run ends bar 4",
-    "style": "Industrial/Aggrotech",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 31,
-    "tempo": 138.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Bloodline Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 7.0,
-    "peakDb": -10.800000000000001,
-    "faded": true,
-    "bytes": 222720
-  },
-  {
-    "group": "drums",
-    "category": "Industrial",
-    "name": "Bunker Stomp",
-    "file": "drums/industrial-bunker-stomp.mp3",
-    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
-    "groove": "Four to the floor with a rolling rumble between the kicks, a big snare and clap together on 2 and 4 and closed hats on the beat and open ones between",
-    "style": "Techno/Hard",
-    "bars": 1.0,
-    "energy": 5,
-    "of": 31,
-    "tempo": 150.0,
-    "rounds": 4,
-    "parts": [
-      {
-        "name": "Bunker Stomp",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 6.4,
-    "peakDb": -13.300000000000001,
-    "faded": true,
-    "bytes": 167856
-  },
-  {
-    "group": "drums",
-    "category": "EBM Machine",
-    "name": "Chain Drive Beat",
-    "file": "drums/ebm-machine-chain-drive-beat.mp3",
-    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
-    "groove": "Four to the floor with ghost kicks after each, a big snare and clap together on 2 and 4, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
-    "style": "Industrial/Techno-body",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 27,
-    "tempo": 134.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Chain Drive Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -9.5,
-    "faded": true,
-    "bytes": 150048
-  },
-  {
-    "group": "drums",
-    "category": "EBM Machine",
-    "name": "Overdrive Machine",
-    "file": "drums/ebm-machine-overdrive-machine.mp3",
-    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
-    "groove": "A rock kick on 1, 3 and the and of 3, a snare on 2 and 4 and 16th hats with the offbeat lifted",
-    "style": "Synthwave/Darksynth",
-    "bars": 1.0,
-    "energy": 5,
-    "of": 27,
-    "tempo": 100.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Overdrive Machine",
-        "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -9.199999999999999,
-    "faded": true,
-    "bytes": 141408
-  },
-  {
-    "group": "drums",
-    "category": "EBM Machine",
-    "name": "Transistor Groove",
-    "file": "drums/ebm-machine-transistor-groove.mp3",
-    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
-    "groove": "An electro kick on 1, the a of 2 and 3, a clap on 2 and 4, 16th hats with the offbeat lifted and a cowbell on the and of 2 and 4",
-    "style": "Electro/Electro",
-    "bars": 2.0,
-    "energy": 5,
-    "of": 27,
-    "tempo": 130.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Transistor Groove",
-        "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -8.800000000000001,
-    "faded": true,
-    "bytes": 162960
-  },
-  {
-    "group": "drums",
-    "category": "Electro",
-    "name": "Battle Groove",
-    "file": "drums/electro-battle-groove.mp3",
-    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
-    "groove": "Four to the floor with a gallop into beats 3 and 1, a snare on 2 and 4, 8th hats, the downbeats stronger, toms in shifting 16ths and a tom run ends bar 4",
-    "style": "Game/Combat",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 9,
-    "tempo": 140.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Battle Groove",
-        "role": "Drums",
-        "voice": "Basic Drums: Electro"
-      }
-    ],
-    "seconds": 6.9,
-    "peakDb": -9.699999999999999,
-    "faded": true,
-    "bytes": 120936
-  },
-  {
-    "group": "drums",
-    "category": "Electro",
-    "name": "Bonus Stage Pound",
-    "file": "drums/electro-bonus-stage-pound.mp3",
-    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
-    "groove": "Four to the floor, a snare on 2 and 4, 16th hats with the offbeat lifted and a tom run ends bar 4",
-    "style": "Game/Chiptune",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 9,
-    "tempo": 160.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Bonus Stage Pound",
-        "role": "Drums",
-        "voice": "Basic Drums: Electro"
-      }
-    ],
-    "seconds": 6.0,
-    "peakDb": -10.300000000000001,
-    "faded": true,
-    "bytes": 108432
-  },
-  {
-    "group": "drums",
-    "category": "Electro",
-    "name": "Sprite Machine",
-    "file": "drums/electro-sprite-machine.mp3",
-    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
-    "groove": "A marching kick with a pickup before beat 3, a snare on 2 and 4 with ghost notes after them, 16th hats with the offbeat lifted and a tom run ends bar 4",
-    "style": "Game/Chiptune",
-    "bars": 4.0,
-    "energy": 4,
-    "of": 9,
-    "tempo": 160.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Sprite Machine",
-        "role": "Drums",
-        "voice": "Basic Drums: Electro"
-      }
-    ],
-    "seconds": 6.0,
-    "peakDb": -10.300000000000001,
-    "faded": true,
-    "bytes": 108600
-  },
-  {
-    "group": "drums",
-    "category": "Breaks",
-    "name": "Breaks: Kick Hat Snare",
-    "file": "drums/breaks-kick-hat-snare.mp3",
-    "about": "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.",
-    "phrase": "Kick Hat Snare",
-    "seconds": 3.4,
-    "peakDb": -5.6,
-    "faded": false,
-    "bytes": 63936
-  },
-  {
-    "group": "drums",
-    "category": "Breaks",
-    "name": "Breaks: Half-Time",
-    "file": "drums/breaks-half-time.mp3",
-    "about": "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.",
-    "phrase": "Half-Time",
-    "seconds": 5.3,
-    "peakDb": -5.6,
-    "faded": false,
-    "bytes": 77040
-  },
-  {
-    "group": "drums",
-    "category": "Industrial Rock",
-    "name": "Biohazard Beat",
-    "file": "drums/industrial-rock-biohazard-beat.mp3",
-    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
-    "groove": "The two-step kick on 1 and the and of 3, the snare on 2 and 4 and 8th hats, the downbeats stronger",
-    "style": "Drum and Bass/Neurofunk",
-    "bars": 2.0,
-    "energy": 4,
-    "of": 3,
-    "tempo": 174.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Biohazard Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial Rock"
-      }
-    ],
-    "seconds": 5.5,
-    "peakDb": -9.300000000000001,
-    "faded": true,
-    "bytes": 123168
-  },
-  {
-    "group": "drums",
-    "category": "Industrial Rock",
-    "name": "Rough Cut Beat",
-    "file": "drums/industrial-rock-rough-cut-beat.mp3",
-    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
-    "groove": "A breakbeat kick with a push before the 4, a snare on 2 and 4 with ghost notes in between, hats pushing into each beat and a crash on the one",
-    "style": "Breakbeat/Breaks",
-    "bars": 1.0,
-    "energy": 4,
-    "of": 3,
-    "tempo": 132.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Rough Cut Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial Rock"
-      }
-    ],
-    "seconds": 5.5,
-    "peakDb": -10.0,
-    "faded": true,
-    "bytes": 129744
-  },
-  {
-    "group": "drums",
-    "category": "Industrial Rock",
-    "name": "Scratch Loop",
-    "file": "drums/industrial-rock-scratch-loop.mp3",
-    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
-    "groove": "A breakbeat kick on 1, the and of 1 and the and of 3, a snare on 2 and 4 with ghost notes in between, 16th hats with the offbeat lifted, a crash on the one and a tom run ends bar 4",
-    "style": "Breakbeat/Breaks",
-    "bars": 4.0,
-    "energy": 4,
-    "of": 3,
-    "tempo": 128.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Scratch Loop",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial Rock"
-      }
-    ],
-    "seconds": 7.5,
-    "peakDb": -9.5,
-    "faded": true,
-    "bytes": 189240
-  },
-  {
     "group": "synth",
     "category": "Bass",
     "name": "Target Lock Bass",
@@ -20862,5 +17556,3637 @@
     "peakDb": -9.300000000000001,
     "faded": false,
     "bytes": 72432
+  },
+  {
+    "group": "drums",
+    "category": "Standard",
+    "name": "Afterimage Beat",
+    "file": "drums/standard-afterimage-beat.mp3",
+    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
+    "groove": "Four to the floor, a snare on 2 and 4 and open hats on the offbeats",
+    "style": "Industrial/Futurepop",
+    "bars": 1.0,
+    "energy": 5,
+    "of": 36,
+    "tempo": 135.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Afterimage Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Standard"
+      }
+    ],
+    "seconds": 5.3,
+    "peakDb": -9.199999999999999,
+    "faded": true,
+    "bytes": 104784
+  },
+  {
+    "group": "drums",
+    "category": "Standard",
+    "name": "Peak Hour Driver",
+    "file": "drums/standard-peak-hour-driver.mp3",
+    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
+    "groove": "Four to the floor, clap and snare on 2 and 4, ghost kicks before them, 16th hats with the offbeat lifted",
+    "style": "Techno/Driving",
+    "bars": 2.0,
+    "energy": 5,
+    "of": 36,
+    "tempo": 134.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Peak Hour Driver",
+        "role": "Drums",
+        "voice": "Basic Drums: Standard"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 150216
+  },
+  {
+    "group": "drums",
+    "category": "Standard",
+    "name": "Throttle Drive",
+    "file": "drums/standard-throttle-drive.mp3",
+    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
+    "groove": "Four to the floor, a clap layered with a snare on 2 and 4, 16th hats with the offbeat lifted, a shaker in 16ths and a tom run ends bar 4",
+    "style": "Techno/Driving",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 36,
+    "tempo": 134.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Throttle Drive",
+        "role": "Drums",
+        "voice": "Basic Drums: Standard"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 146544
+  },
+  {
+    "group": "drums",
+    "category": "Dark Techno",
+    "name": "Hard Offbeat Rumble",
+    "file": "drums/dark-techno-hard-offbeat-rumble.mp3",
+    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
+    "groove": "Fast four-to-the-floor with a rumble between the kicks and metal accented every three 16ths; a kick roll ends bar 4",
+    "style": "Techno/Hard",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 8,
+    "tempo": 150.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Hard Offbeat Rumble",
+        "role": "Drums",
+        "voice": "Basic Drums: Dark Techno"
+      }
+    ],
+    "seconds": 6.4,
+    "peakDb": -11.699999999999999,
+    "faded": true,
+    "bytes": 139680
+  },
+  {
+    "group": "drums",
+    "category": "Dark Techno",
+    "name": "Black Stomp",
+    "file": "drums/dark-techno-black-stomp.mp3",
+    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
+    "groove": "Four to the floor with a skipped kick before the one, a clap on 4 only, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
+    "style": "Techno/Dark",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 8,
+    "tempo": 130.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Black Stomp",
+        "role": "Drums",
+        "voice": "Basic Drums: Dark Techno"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -9.9,
+    "faded": true,
+    "bytes": 205872
+  },
+  {
+    "group": "drums",
+    "category": "Dark Techno",
+    "name": "Furnace Thump",
+    "file": "drums/dark-techno-furnace-thump.mp3",
+    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
+    "groove": "Four to the floor with a rolling rumble between the kicks, a clap on 2 and 4, a ride in 8ths, toms in shifting 16ths and a tom run ends bar 4",
+    "style": "Techno/Industrial",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 8,
+    "tempo": 132.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Furnace Thump",
+        "role": "Drums",
+        "voice": "Basic Drums: Dark Techno"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -11.699999999999999,
+    "faded": true,
+    "bytes": 232704
+  },
+  {
+    "group": "drums",
+    "category": "Industrial",
+    "name": "Anvil Beat",
+    "file": "drums/industrial-anvil-beat.mp3",
+    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
+    "groove": "Four to the floor with a rolling rumble between the kicks, a snare on 2 and 4, a ride in 8ths, a syncopated rimshot and a tom run ends bar 4",
+    "style": "Techno/Industrial",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 31,
+    "tempo": 126.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Anvil Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 7.6,
+    "peakDb": -13.0,
+    "faded": true,
+    "bytes": 223488
+  },
+  {
+    "group": "drums",
+    "category": "Industrial",
+    "name": "Bloodline Beat",
+    "file": "drums/industrial-bloodline-beat.mp3",
+    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
+    "groove": "Four to the floor, a clap layered with a snare on 2 and 4, open hats on the offbeats, a crash on the one and a tom run ends bar 4",
+    "style": "Industrial/Aggrotech",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 31,
+    "tempo": 138.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Bloodline Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 7.0,
+    "peakDb": -10.800000000000001,
+    "faded": true,
+    "bytes": 222720
+  },
+  {
+    "group": "drums",
+    "category": "Industrial",
+    "name": "Bunker Stomp",
+    "file": "drums/industrial-bunker-stomp.mp3",
+    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
+    "groove": "Four to the floor with a rolling rumble between the kicks, a big snare and clap together on 2 and 4 and closed hats on the beat and open ones between",
+    "style": "Techno/Hard",
+    "bars": 1.0,
+    "energy": 5,
+    "of": 31,
+    "tempo": 150.0,
+    "rounds": 4,
+    "parts": [
+      {
+        "name": "Bunker Stomp",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 6.4,
+    "peakDb": -13.300000000000001,
+    "faded": true,
+    "bytes": 167856
+  },
+  {
+    "group": "drums",
+    "category": "EBM Machine",
+    "name": "Chain Drive Beat",
+    "file": "drums/ebm-machine-chain-drive-beat.mp3",
+    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
+    "groove": "Four to the floor with ghost kicks after each, a big snare and clap together on 2 and 4, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
+    "style": "Industrial/Techno-body",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 27,
+    "tempo": 134.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Chain Drive Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -9.5,
+    "faded": true,
+    "bytes": 150048
+  },
+  {
+    "group": "drums",
+    "category": "EBM Machine",
+    "name": "Overdrive Machine",
+    "file": "drums/ebm-machine-overdrive-machine.mp3",
+    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
+    "groove": "A rock kick on 1, 3 and the and of 3, a snare on 2 and 4 and 16th hats with the offbeat lifted",
+    "style": "Synthwave/Darksynth",
+    "bars": 1.0,
+    "energy": 5,
+    "of": 27,
+    "tempo": 100.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Overdrive Machine",
+        "role": "Drums",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -9.199999999999999,
+    "faded": true,
+    "bytes": 141408
+  },
+  {
+    "group": "drums",
+    "category": "EBM Machine",
+    "name": "Transistor Groove",
+    "file": "drums/ebm-machine-transistor-groove.mp3",
+    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
+    "groove": "An electro kick on 1, the a of 2 and 3, a clap on 2 and 4, 16th hats with the offbeat lifted and a cowbell on the and of 2 and 4",
+    "style": "Electro/Electro",
+    "bars": 2.0,
+    "energy": 5,
+    "of": 27,
+    "tempo": 130.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Transistor Groove",
+        "role": "Drums",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -8.800000000000001,
+    "faded": true,
+    "bytes": 162960
+  },
+  {
+    "group": "drums",
+    "category": "Electro",
+    "name": "Battle Groove",
+    "file": "drums/electro-battle-groove.mp3",
+    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
+    "groove": "Four to the floor with a gallop into beats 3 and 1, a snare on 2 and 4, 8th hats, the downbeats stronger, toms in shifting 16ths and a tom run ends bar 4",
+    "style": "Game/Combat",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 9,
+    "tempo": 140.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Battle Groove",
+        "role": "Drums",
+        "voice": "Basic Drums: Electro"
+      }
+    ],
+    "seconds": 6.9,
+    "peakDb": -9.699999999999999,
+    "faded": true,
+    "bytes": 120936
+  },
+  {
+    "group": "drums",
+    "category": "Electro",
+    "name": "Bonus Stage Pound",
+    "file": "drums/electro-bonus-stage-pound.mp3",
+    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
+    "groove": "Four to the floor, a snare on 2 and 4, 16th hats with the offbeat lifted and a tom run ends bar 4",
+    "style": "Game/Chiptune",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 9,
+    "tempo": 160.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Bonus Stage Pound",
+        "role": "Drums",
+        "voice": "Basic Drums: Electro"
+      }
+    ],
+    "seconds": 6.0,
+    "peakDb": -10.300000000000001,
+    "faded": true,
+    "bytes": 108432
+  },
+  {
+    "group": "drums",
+    "category": "Electro",
+    "name": "Sprite Machine",
+    "file": "drums/electro-sprite-machine.mp3",
+    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
+    "groove": "A marching kick with a pickup before beat 3, a snare on 2 and 4 with ghost notes after them, 16th hats with the offbeat lifted and a tom run ends bar 4",
+    "style": "Game/Chiptune",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 9,
+    "tempo": 160.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Sprite Machine",
+        "role": "Drums",
+        "voice": "Basic Drums: Electro"
+      }
+    ],
+    "seconds": 6.0,
+    "peakDb": -10.300000000000001,
+    "faded": true,
+    "bytes": 108600
+  },
+  {
+    "group": "drums",
+    "category": "Breaks",
+    "name": "Tape Splice Groove",
+    "file": "drums/breaks-tape-splice-groove.mp3",
+    "about": "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.",
+    "groove": "A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, 16th hats and an open hat before 3 and 1",
+    "style": "Breakbeat/Breaks",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 2,
+    "tempo": 128.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Tape Splice Groove",
+        "role": "Drums",
+        "voice": "Basic Drums: Breaks"
+      }
+    ],
+    "seconds": 7.5,
+    "peakDb": -9.6,
+    "faded": true,
+    "bytes": 167712
+  },
+  {
+    "group": "drums",
+    "category": "Breaks",
+    "name": "Back Room Break",
+    "file": "drums/breaks-back-room-break.mp3",
+    "about": "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.",
+    "groove": "A two-step break with a kick pickup in bar 2, ghost snares before the backbeat, 8th hats and a ride on the beat",
+    "style": "Breakbeat/Breaks",
+    "bars": 2.0,
+    "energy": 3,
+    "of": 2,
+    "tempo": 130.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Back Room Break",
+        "role": "Drums",
+        "voice": "Basic Drums: Breaks"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 180336
+  },
+  {
+    "group": "drums",
+    "category": "Industrial Rock",
+    "name": "Biohazard Beat",
+    "file": "drums/industrial-rock-biohazard-beat.mp3",
+    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
+    "groove": "The two-step kick on 1 and the and of 3, the snare on 2 and 4 and 8th hats, the downbeats stronger",
+    "style": "Drum and Bass/Neurofunk",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 174.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Biohazard Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial Rock"
+      }
+    ],
+    "seconds": 5.5,
+    "peakDb": -9.300000000000001,
+    "faded": true,
+    "bytes": 123168
+  },
+  {
+    "group": "drums",
+    "category": "Industrial Rock",
+    "name": "Rough Cut Beat",
+    "file": "drums/industrial-rock-rough-cut-beat.mp3",
+    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
+    "groove": "A breakbeat kick with a push before the 4, a snare on 2 and 4 with ghost notes in between, hats pushing into each beat and a crash on the one",
+    "style": "Breakbeat/Breaks",
+    "bars": 1.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 132.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Rough Cut Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial Rock"
+      }
+    ],
+    "seconds": 5.5,
+    "peakDb": -10.0,
+    "faded": true,
+    "bytes": 129744
+  },
+  {
+    "group": "drums",
+    "category": "Industrial Rock",
+    "name": "Scratch Loop",
+    "file": "drums/industrial-rock-scratch-loop.mp3",
+    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
+    "groove": "A breakbeat kick on 1, the and of 1 and the and of 3, a snare on 2 and 4 with ghost notes in between, 16th hats with the offbeat lifted, a crash on the one and a tom run ends bar 4",
+    "style": "Breakbeat/Breaks",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 128.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Scratch Loop",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial Rock"
+      }
+    ],
+    "seconds": 7.5,
+    "peakDb": -9.5,
+    "faded": true,
+    "bytes": 189240
+  },
+  {
+    "group": "drums",
+    "category": "Modern",
+    "name": "Clean Room Groove",
+    "file": "drums/modern-clean-room-groove.mp3",
+    "about": "Every sound that has a Modern type on it, clean: nothing on the bus.",
+    "groove": "Four to the floor with ghost kicks before 2 and 4, a clap over a snare, 16th hats with the offbeat lifted, a shaker between them and open hats in bar 2",
+    "style": "Techno/Driving",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 1,
+    "tempo": 134.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Clean Room Groove",
+        "role": "Drums",
+        "voice": "Basic Drums: Modern"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 148704
+  },
+  {
+    "group": "drums",
+    "category": "Warehouse",
+    "name": "Night Shift Hammer",
+    "file": "drums/warehouse-night-shift-hammer.mp3",
+    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
+    "groove": "A peak-time groove: a crash on the one, a clap on 2 and 4, open hats on the offbeats over closed ones, a ride in 8ths and a skipped kick in bar 2",
+    "style": "Techno/Peak-time",
+    "bars": 2.0,
+    "energy": 5,
+    "of": 3,
+    "tempo": 136.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Night Shift Hammer",
+        "role": "Drums",
+        "voice": "Basic Drums: Warehouse"
+      }
+    ],
+    "seconds": 7.1,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 158016
+  },
+  {
+    "group": "drums",
+    "category": "Warehouse",
+    "name": "Concrete Floor Roller",
+    "file": "drums/warehouse-concrete-floor-roller.mp3",
+    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
+    "groove": "Four to the floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a rim against it; a ride comes in for bars 3 and 4, and a clap pickup ends bar 4",
+    "style": "Techno/Dark",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 132.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Concrete Floor Roller",
+        "role": "Drums",
+        "voice": "Basic Drums: Warehouse"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 156864
+  },
+  {
+    "group": "drums",
+    "category": "Warehouse",
+    "name": "Strobe Tunnel Pulse",
+    "file": "drums/warehouse-strobe-tunnel-pulse.mp3",
+    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
+    "groove": "A rim every three 16ths and a shaker every five turn against the kick and offbeat hats, a low tom answering in bars 2 and 4, open hats over bar 4",
+    "style": "Techno/Hypnotic",
+    "bars": 4.0,
+    "energy": 3,
+    "of": 3,
+    "tempo": 130.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Strobe Tunnel Pulse",
+        "role": "Drums",
+        "voice": "Basic Drums: Warehouse"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -9.199999999999999,
+    "faded": true,
+    "bytes": 117336
+  },
+  {
+    "group": "drums",
+    "category": "Body Music",
+    "name": "Cold Assembly Drive",
+    "file": "drums/body-music-cold-assembly-drive.mp3",
+    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
+    "groove": "Techno kick and 16th hats with a snare on 2 and 4 and a metal figure, ready for an EBM bass in the gaps; a snare roll rises through the end of bar 4",
+    "style": "Industrial/Techno-body",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 128.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Cold Assembly Drive",
+        "role": "Drums",
+        "voice": "Basic Drums: Body Music"
+      }
+    ],
+    "seconds": 7.5,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 150000
+  },
+  {
+    "group": "drums",
+    "category": "Body Music",
+    "name": "Marching Order Beat",
+    "file": "drums/body-music-marching-order-beat.mp3",
+    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
+    "groove": "Four to the floor, a big snare and clap together on 2 and 4, open hats on the offbeats and flat machine hats round them",
+    "style": "Industrial/EBM",
+    "bars": 1.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 124.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Marching Order Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Body Music"
+      }
+    ],
+    "seconds": 5.8,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 117024
+  },
+  {
+    "group": "drums",
+    "category": "Body Music",
+    "name": "Muscle Memory Beat",
+    "file": "drums/body-music-muscle-memory-beat.mp3",
+    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
+    "groove": "The machine backbeat: kick on 1 and 3 with a push, a big snare on 2 and 4, 8th hats with the downbeats stronger, three toms falling into the next bar",
+    "style": "Industrial/EBM",
+    "bars": 2.0,
+    "energy": 3,
+    "of": 3,
+    "tempo": 118.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Muscle Memory Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Body Music"
+      }
+    ],
+    "seconds": 8.1,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 150336
+  },
+  {
+    "group": "drums",
+    "category": "Foundry",
+    "name": "Blast Furnace Engine",
+    "file": "drums/foundry-blast-furnace-engine.mp3",
+    "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
+    "groove": "Fast four-to-the-floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a crash every other bar; a kick roll ends bar 4",
+    "style": "Techno/Hard",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 3,
+    "tempo": 148.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Blast Furnace Engine",
+        "role": "Drums",
+        "voice": "Basic Drums: Foundry"
+      }
+    ],
+    "seconds": 6.5,
+    "peakDb": -11.5,
+    "faded": true,
+    "bytes": 166104
+  },
+  {
+    "group": "drums",
+    "category": "Foundry",
+    "name": "Rivet Line Stomp",
+    "file": "drums/foundry-rivet-line-stomp.mp3",
+    "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
+    "groove": "A broken kick with a push before the 4, a snare on 2 and 4 with ghost notes after them, 16th hats shaped by velocity and metal struck in threes",
+    "style": "Industrial/Electro-industrial",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 112.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Rivet Line Stomp",
+        "role": "Drums",
+        "voice": "Basic Drums: Foundry"
+      }
+    ],
+    "seconds": 8.6,
+    "peakDb": -9.300000000000001,
+    "faded": true,
+    "bytes": 181920
+  },
+  {
+    "group": "drums",
+    "category": "Foundry",
+    "name": "Slag Hammer Pound",
+    "file": "drums/foundry-slag-hammer-pound.mp3",
+    "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
+    "groove": "A pounding kick with low toms in its gaps, a hard snare on 2 and 4, flat 8th hats, a rim against them and a crash on the one",
+    "style": "Techno/Industrial",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 128.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Slag Hammer Pound",
+        "role": "Drums",
+        "voice": "Basic Drums: Foundry"
+      }
+    ],
+    "seconds": 7.5,
+    "peakDb": -12.800000000000001,
+    "faded": true,
+    "bytes": 203304
+  },
+  {
+    "group": "drums",
+    "category": "Broken Beat",
+    "name": "Cracked Pavement Break",
+    "file": "drums/broken-beat-cracked-pavement-break.mp3",
+    "about": "Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.",
+    "groove": "A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, 8th hats and an open hat into the next bar",
+    "style": "Breakbeat/Breaks",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 2,
+    "tempo": 132.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Cracked Pavement Break",
+        "role": "Drums",
+        "voice": "Basic Drums: Broken Beat"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 136416
+  },
+  {
+    "group": "drums",
+    "category": "Broken Beat",
+    "name": "Loose Wire Break",
+    "file": "drums/broken-beat-loose-wire-break.mp3",
+    "about": "Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.",
+    "groove": "A chopped break, the snare doubling at the end of bar 2, hats pushing into each beat and a crash on the one",
+    "style": "Breakbeat/Breaks",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 2,
+    "tempo": 135.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Loose Wire Break",
+        "role": "Drums",
+        "voice": "Basic Drums: Broken Beat"
+      }
+    ],
+    "seconds": 7.1,
+    "peakDb": -9.0,
+    "faded": true,
+    "bytes": 139920
+  },
+  {
+    "group": "sequences",
+    "category": "Ambient/Dark ambient",
+    "name": "Ruin Sub Line",
+    "file": "sequences/dark-ambient-ruin-sub-line.mp3",
+    "about": "One held note a bar, moving through the roots of A minor, A minor, F, E",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 1,
+    "role": "Bass > Sub",
+    "tempo": 80.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Ruin Sub Line",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Iron Sub"
+      }
+    ],
+    "seconds": 12.0,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 91104
+  },
+  {
+    "group": "sequences",
+    "category": "Ambient/Dark ambient",
+    "name": "Ruin Hook",
+    "file": "sequences/dark-ambient-ruin-hook.mp3",
+    "about": "A two-bar long phrase in A harmonic minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 2,
+    "role": "Melody > Hooks",
+    "tempo": 70.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Ruin Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Glass Shard"
+      }
+    ],
+    "seconds": 6.9,
+    "peakDb": -10.199999999999999,
+    "faded": true,
+    "bytes": 110736
+  },
+  {
+    "group": "sequences",
+    "category": "Ambient/Drone",
+    "name": "Monolith Sub Pulse",
+    "file": "sequences/drone-monolith-sub-pulse.mp3",
+    "about": "One held note a bar, on A",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 2,
+    "role": "Bass > Sub",
+    "tempo": 80.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Monolith Sub Pulse",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Iron Sub"
+      }
+    ],
+    "seconds": 6.0,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 46512
+  },
+  {
+    "group": "sequences",
+    "category": "Ambient/Drone",
+    "name": "Endless Riff",
+    "file": "sequences/drone-endless-riff.mp3",
+    "about": "A two-bar syncopated phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 1,
+    "role": "Melody > Hooks",
+    "tempo": 72.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Endless Riff",
+        "role": "Melody",
+        "voice": "Torqwave Synth: FM Toll"
+      }
+    ],
+    "seconds": 6.7,
+    "peakDb": -8.699999999999999,
+    "faded": true,
+    "bytes": 125184
+  },
+  {
+    "group": "sequences",
+    "category": "Breakbeat/Breaks",
+    "name": "Rough Cut Pressure",
+    "file": "sequences/breaks-rough-cut-pressure.mp3",
+    "about": "Rolling 16ths in the kick's gaps, accented, jumping to the octave at the end, moving through the roots of A minor, G, A minor, F",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Bass > Synth Bass",
+    "tempo": 132.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Rough Cut Pressure",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Rolling Offbeat"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -9.300000000000001,
+    "faded": true,
+    "bytes": 82488
+  },
+  {
+    "group": "sequences",
+    "category": "Breakbeat/Breaks",
+    "name": "Skate Riff",
+    "file": "sequences/breaks-skate-riff.mp3",
+    "about": "A two-bar syncopated phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Melody > Hooks",
+    "tempo": 135.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Skate Riff",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Rust Lead"
+      }
+    ],
+    "seconds": 7.1,
+    "peakDb": -9.699999999999999,
+    "faded": true,
+    "bytes": 127824
+  },
+  {
+    "group": "sequences",
+    "category": "Drum and Bass/Liquid",
+    "name": "Rainwater Roller",
+    "file": "sequences/liquid-rainwater-roller.mp3",
+    "about": "A half-time line, held roots and a fifth, on A",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Bass > Synth Bass",
+    "tempo": 172.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Rainwater Roller",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 5.6,
+    "peakDb": -8.9,
+    "faded": false,
+    "bytes": 24432
+  },
+  {
+    "group": "sequences",
+    "category": "Drum and Bass/Liquid",
+    "name": "Lagoon Hook",
+    "file": "sequences/liquid-lagoon-hook.mp3",
+    "about": "A two-bar syncopated phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Melody > Hooks",
+    "tempo": 170.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Lagoon Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Minor Bell Motif"
+      }
+    ],
+    "seconds": 5.6,
+    "peakDb": -8.699999999999999,
+    "faded": true,
+    "bytes": 97056
+  },
+  {
+    "group": "sequences",
+    "category": "Drum and Bass/Neurofunk",
+    "name": "Mainline Sub",
+    "file": "sequences/neurofunk-mainline-sub.mp3",
+    "about": "A held sub on the root, on A",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 5,
+    "role": "Bass > Sub",
+    "tempo": 172.0,
+    "rounds": 4,
+    "parts": [
+      {
+        "name": "Mainline Sub",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 5.6,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 24384
+  },
+  {
+    "group": "sequences",
+    "category": "Drum and Bass/Neurofunk",
+    "name": "Biohazard Line",
+    "file": "sequences/neurofunk-biohazard-line.mp3",
+    "about": "A two-bar offbeat phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Melody > Leads",
+    "tempo": 174.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Biohazard Line",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Mercury Lead"
+      }
+    ],
+    "seconds": 5.5,
+    "peakDb": -8.699999999999999,
+    "faded": true,
+    "bytes": 94848
+  },
+  {
+    "group": "sequences",
+    "category": "Electro/Electro",
+    "name": "Bodypop Sub Pulse",
+    "file": "sequences/electro-bodypop-sub-pulse.mp3",
+    "about": "A quarter-note pulse on the root, moving through the roots of A minor, A minor, F, G",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Bass > Sub",
+    "tempo": 130.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Bodypop Sub Pulse",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -9.0,
+    "faded": false,
+    "bytes": 32304
+  },
+  {
+    "group": "sequences",
+    "category": "Electro/Electro",
+    "name": "Mainframe Hook",
+    "file": "sequences/electro-mainframe-hook.mp3",
+    "about": "A call-and-answer phrase stated twice, the second time ending another way in A Phrygian",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Melody > Hooks",
+    "tempo": 130.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Mainframe Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Abandoned Chime"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -7.9,
+    "faded": true,
+    "bytes": 120840
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Boss",
+    "name": "Doom Bassline",
+    "file": "sequences/boss-doom-bassline.mp3",
+    "about": "A marching 16th line, moving through the roots of A minor, D minor, E, A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Bass > Synth Bass",
+    "tempo": 175.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Doom Bassline",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Abyss Reese"
+      }
+    ],
+    "seconds": 5.5,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 98544
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Boss",
+    "name": "Final Boss Line",
+    "file": "sequences/boss-final-boss-line.mp3",
+    "about": "A two-bar busy phrase in A Phrygian",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Melody > Leads",
+    "tempo": 170.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Final Boss Line",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Factory Hit"
+      }
+    ],
+    "seconds": 5.6,
+    "peakDb": -8.6,
+    "faded": true,
+    "bytes": 118368
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Chiptune",
+    "name": "Bitcrush Pressure",
+    "file": "sequences/chiptune-bitcrush-pressure.mp3",
+    "about": "Straight 8ths on the root, moving through the roots of A minor, F, G, A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Bass > Synth Bass",
+    "tempo": 140.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Bitcrush Pressure",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Square Acid"
+      }
+    ],
+    "seconds": 6.9,
+    "peakDb": -9.0,
+    "faded": false,
+    "bytes": 66312
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Chiptune",
+    "name": "High Score Hook",
+    "file": "sequences/chiptune-high-score-hook.mp3",
+    "about": "A two-bar syncopated phrase in A harmonic minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Melody > Hooks",
+    "tempo": 160.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "High Score Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Bit Pluck"
+      }
+    ],
+    "seconds": 6.0,
+    "peakDb": -9.300000000000001,
+    "faded": true,
+    "bytes": 120048
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Combat",
+    "name": "Frontline Bass",
+    "file": "sequences/combat-frontline-bass.mp3",
+    "about": "Driving 16ths on the root, moving through the roots of A minor, D minor, E, A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Bass > Synth Bass",
+    "tempo": 160.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Frontline Bass",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Grinder"
+      }
+    ],
+    "seconds": 6.0,
+    "peakDb": -9.0,
+    "faded": true,
+    "bytes": 70560
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Combat",
+    "name": "Vanguard Theme",
+    "file": "sequences/combat-vanguard-theme.mp3",
+    "about": "A dotted phrase stated twice, the second time ending another way in A Phrygian",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Melody > Leads",
+    "tempo": 140.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Vanguard Theme",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Mercury Lead"
+      }
+    ],
+    "seconds": 6.9,
+    "peakDb": -8.699999999999999,
+    "faded": true,
+    "bytes": 118488
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Exploration",
+    "name": "Open Field Bassline",
+    "file": "sequences/exploration-open-field-bassline.mp3",
+    "about": "A walking line up through the chord, moving through the roots of A minor, C, G, D minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 2,
+    "role": "Bass > Synth Bass",
+    "tempo": 100.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Open Field Bassline",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Low Ceiling"
+      }
+    ],
+    "seconds": 9.6,
+    "peakDb": -7.5,
+    "faded": true,
+    "bytes": 108576
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Exploration",
+    "name": "Far Shore Counter-line",
+    "file": "sequences/exploration-far-shore-counter-line.mp3",
+    "about": "A syncopated phrase stated twice, the second time ending another way in A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 3,
+    "role": "Melody > Counter-lines",
+    "tempo": 100.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Far Shore Counter-line",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Glass Shard"
+      }
+    ],
+    "seconds": 9.6,
+    "peakDb": -7.4,
+    "faded": true,
+    "bytes": 176688
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Horror",
+    "name": "Flicker Pressure",
+    "file": "sequences/horror-flicker-pressure.mp3",
+    "about": "A quarter-note pulse on the root, on A",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 3,
+    "role": "Bass > Synth Bass",
+    "tempo": 80.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Flicker Pressure",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Iron Sub"
+      }
+    ],
+    "seconds": 6.0,
+    "peakDb": -9.199999999999999,
+    "faded": false,
+    "bytes": 30240
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Horror",
+    "name": "Cellar Door Motif",
+    "file": "sequences/horror-cellar-door-motif.mp3",
+    "about": "A sparse phrase stated twice, the second time ending another way in A harmonic minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 3,
+    "role": "Melody > Hooks",
+    "tempo": 70.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Cellar Door Motif",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Dark Kalimba"
+      }
+    ],
+    "seconds": 13.699999999999999,
+    "peakDb": -8.0,
+    "faded": true,
+    "bytes": 158040
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Menu",
+    "name": "Title Screen Bassline",
+    "file": "sequences/menu-title-screen-bassline.mp3",
+    "about": "The sub in half notes, moving through the roots of A minor, D minor, F, G",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 2,
+    "role": "Bass > Synth Bass",
+    "tempo": 96.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Title Screen Bassline",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 10.0,
+    "peakDb": -9.0,
+    "faded": true,
+    "bytes": 41832
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Menu",
+    "name": "Hub Motif",
+    "file": "sequences/menu-hub-motif.mp3",
+    "about": "A two-bar busy phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 1,
+    "role": "Melody > Hooks",
+    "tempo": 90.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Hub Motif",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Minor Bell Motif"
+      }
+    ],
+    "seconds": 5.3,
+    "peakDb": -9.4,
+    "faded": true,
+    "bytes": 97536
+  },
+  {
+    "group": "sequences",
+    "category": "House/Deep house",
+    "name": "Lounge Drive Bass",
+    "file": "sequences/deep-house-lounge-drive-bass.mp3",
+    "about": "An 8th on every offbeat, moving through the roots of A minor, G, F, G",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Bass > Synth Bass",
+    "tempo": 118.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Lounge Drive Bass",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Organ Stab"
+      }
+    ],
+    "seconds": 8.1,
+    "peakDb": -8.9,
+    "faded": false,
+    "bytes": 70488
+  },
+  {
+    "group": "sequences",
+    "category": "House/Deep house",
+    "name": "Late Night Riff",
+    "file": "sequences/deep-house-late-night-riff.mp3",
+    "about": "A syncopated phrase stated twice, the second time ending another way in A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Melody > Hooks",
+    "tempo": 120.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Late Night Riff",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Prison Bell"
+      }
+    ],
+    "seconds": 8.0,
+    "peakDb": -8.5,
+    "faded": true,
+    "bytes": 156672
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Aggrotech",
+    "name": "Barbed Backbeat",
+    "file": "sequences/aggrotech-barbed-backbeat.mp3",
+    "about": "A clap layered with a snare on 2 and 4, with a snare pickup ending bar 2",
+    "key": "",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Drums > Snare & Clap",
+    "tempo": 135.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Barbed Backbeat",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 7.1,
+    "peakDb": -9.0,
+    "faded": true,
+    "bytes": 131184
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Aggrotech",
+    "name": "Bloodline Bassline",
+    "file": "sequences/aggrotech-bloodline-bassline.mp3",
+    "about": "The gallop: an 8th and two 16ths on every beat, the last beat up an octave, moving through the roots of A minor, F, G, A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Bass > Synth Bass",
+    "tempo": 140.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Bloodline Bassline",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Ash Swell"
+      }
+    ],
+    "seconds": 6.9,
+    "peakDb": -9.6,
+    "faded": true,
+    "bytes": 169920
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Aggrotech",
+    "name": "Assault Turn",
+    "file": "sequences/aggrotech-assault-turn.mp3",
+    "about": "A minor seventh, F major seventh, G seventh, A minor seventh, in half notes",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Harmony > Progressions",
+    "tempo": 140.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Assault Turn",
+        "role": "Harmony",
+        "voice": "Torqwave Synth: Rave Hoover Stab"
+      }
+    ],
+    "seconds": 6.9,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 114912
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Aggrotech",
+    "name": "Hellfire Drone",
+    "file": "sequences/aggrotech-hellfire-drone.mp3",
+    "about": "A and E held together for 8 bars, the filter breathing in and out",
+    "key": "A minor",
+    "bars": 8.0,
+    "energy": 5,
+    "role": "Pads > Drones",
+    "tempo": 138.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Hellfire Drone",
+        "role": "Pads",
+        "voice": "Torqwave Synth: Abandoned Reactor"
+      }
+    ],
+    "seconds": 13.9,
+    "peakDb": -13.800000000000001,
+    "faded": true,
+    "bytes": 83952
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Aggrotech",
+    "name": "Aggro Saw Gate",
+    "file": "sequences/aggrotech-aggro-saw-gate.mp3",
+    "about": "Supersaw 16ths gated round the root and fifth",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 5,
+    "role": "Arps > Gated",
+    "tempo": 140.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Aggro Saw Gate",
+        "role": "Arps",
+        "voice": "Torqwave Synth: Rust Lead"
+      }
+    ],
+    "seconds": 5.1,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 98928
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Aggrotech",
+    "name": "Bloodline Motif",
+    "file": "sequences/aggrotech-bloodline-motif.mp3",
+    "about": "A offbeat phrase stated twice, the second time ending another way in A harmonic minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Melody > Hooks",
+    "tempo": 135.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Bloodline Motif",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Cold Saw Lead"
+      }
+    ],
+    "seconds": 7.1,
+    "peakDb": -8.800000000000001,
+    "faded": true,
+    "bytes": 132864
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Aggrotech",
+    "name": "Razor Lift",
+    "file": "sequences/aggrotech-razor-lift.mp3",
+    "about": "16ths climbing the A minor scale for 2 bars, louder and brighter as they go",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "SFX > Risers",
+    "tempo": 138.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Razor Lift",
+        "role": "SFX",
+        "voice": "Torqwave Synth: Cold Saw Lead"
+      }
+    ],
+    "seconds": 7.0,
+    "peakDb": -8.1,
+    "faded": true,
+    "bytes": 126768
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Coldwave",
+    "name": "Distant Sub Pulse",
+    "file": "sequences/coldwave-distant-sub-pulse.mp3",
+    "about": "An 8th on every offbeat, moving through the roots of A minor, A minor, D minor, A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 3,
+    "role": "Bass > Sub",
+    "tempo": 110.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Distant Sub Pulse",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 8.699999999999999,
+    "peakDb": -9.0,
+    "faded": false,
+    "bytes": 37056
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Coldwave",
+    "name": "Monochrome Lead",
+    "file": "sequences/coldwave-monochrome-lead.mp3",
+    "about": "A busy phrase stated twice, the second time ending another way in A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 2,
+    "role": "Melody > Leads",
+    "tempo": 110.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Monochrome Lead",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Rust Lead"
+      }
+    ],
+    "seconds": 8.699999999999999,
+    "peakDb": -9.0,
+    "faded": true,
+    "bytes": 170448
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Dark electro",
+    "name": "Abyss Top Loop",
+    "file": "sequences/dark-electro-abyss-top-loop.mp3",
+    "about": "8th hats, the downbeats stronger, with a ride in 8ths added in bar 2",
+    "key": "",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Drums > Hats & Tops",
+    "tempo": 110.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Abyss Top Loop",
+        "role": "Drums",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 8.699999999999999,
+    "peakDb": -9.199999999999999,
+    "faded": true,
+    "bytes": 233424
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Dark electro",
+    "name": "Ashes Sub Pulse",
+    "file": "sequences/dark-electro-ashes-sub-pulse.mp3",
+    "about": "An 8th on every offbeat, moving through the roots of A minor, A minor, F, E",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Bass > Sub",
+    "tempo": 125.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Ashes Sub Pulse",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Iron Sub"
+      }
+    ],
+    "seconds": 7.7,
+    "peakDb": -9.199999999999999,
+    "faded": false,
+    "bytes": 39552
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Dark electro",
+    "name": "Grave Turn",
+    "file": "sequences/dark-electro-grave-turn.mp3",
+    "about": "A minor seventh, D minor seventh, E seventh, A minor seventh, a bar each",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Harmony > Progressions",
+    "tempo": 125.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Grave Turn",
+        "role": "Harmony",
+        "voice": "Torqwave Synth: Factory Hit"
+      }
+    ],
+    "seconds": 7.7,
+    "peakDb": -8.6,
+    "faded": false,
+    "bytes": 69072
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Dark electro",
+    "name": "Plague Pad",
+    "file": "sequences/dark-electro-plague-pad.mp3",
+    "about": "A minor seventh, D minor seventh, E seventh, A minor seventh, held a bar each",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 3,
+    "role": "Pads > Sustained",
+    "tempo": 120.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Plague Pad",
+        "role": "Pads",
+        "voice": "Torqwave Synth: Ventilation"
+      }
+    ],
+    "seconds": 8.0,
+    "peakDb": -6.8,
+    "faded": true,
+    "bytes": 149232
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Dark electro",
+    "name": "Abyss Pluck Line",
+    "file": "sequences/dark-electro-abyss-pluck-line.mp3",
+    "about": "Dotted-8th plucks falling from the octave, through A minor, B flat, A minor, G minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Arps > Plucks",
+    "tempo": 115.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Abyss Pluck Line",
+        "role": "Arps",
+        "voice": "Torqwave Synth: Basalt Wire"
+      }
+    ],
+    "seconds": 8.300000000000001,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 155520
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Dark electro",
+    "name": "Nightmare Motif",
+    "file": "sequences/dark-electro-nightmare-motif.mp3",
+    "about": "A two-bar dotted phrase in A harmonic minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Melody > Hooks",
+    "tempo": 110.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Nightmare Motif",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Abandoned Cutter"
+      }
+    ],
+    "seconds": 8.699999999999999,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 128448
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Dark electro",
+    "name": "Nightmare Transition",
+    "file": "sequences/dark-electro-nightmare-transition.mp3",
+    "about": "Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th",
+    "key": "",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "SFX > Transitions",
+    "tempo": 120.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Nightmare Transition",
+        "role": "SFX",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 8.0,
+    "peakDb": -7.9,
+    "faded": true,
+    "bytes": 163008
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Darkwave",
+    "name": "Cathedral Bass",
+    "file": "sequences/darkwave-cathedral-bass.mp3",
+    "about": "8ths leaping between the root and the octave, moving through the roots of A minor, F, G sharp diminished, A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 2,
+    "role": "Bass > Synth Bass",
+    "tempo": 100.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Cathedral Bass",
+        "role": "Bass",
+        "voice": "Torqwave Synth: FM Basement"
+      }
+    ],
+    "seconds": 9.6,
+    "peakDb": -8.800000000000001,
+    "faded": false,
+    "bytes": 49488
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Darkwave",
+    "name": "Cathedral Line",
+    "file": "sequences/darkwave-cathedral-line.mp3",
+    "about": "A two-bar dotted phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 3,
+    "role": "Melody > Leads",
+    "tempo": 108.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Cathedral Line",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Prison Bell"
+      }
+    ],
+    "seconds": 8.9,
+    "peakDb": -8.699999999999999,
+    "faded": true,
+    "bytes": 173760
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/EBM",
+    "name": "Parade Kick Line",
+    "file": "sequences/ebm-parade-kick-line.mp3",
+    "about": "Four to the floor, with ghost kicks leading into the next bar at the end of bar 2",
+    "key": "",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Drums > Kick",
+    "tempo": 118.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Parade Kick Line",
+        "role": "Drums",
+        "voice": "Basic Drums: Standard"
+      }
+    ],
+    "seconds": 8.1,
+    "peakDb": -9.199999999999999,
+    "faded": true,
+    "bytes": 39936
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/EBM",
+    "name": "Leather Bass Walk",
+    "file": "sequences/ebm-leather-bass-walk.mp3",
+    "about": "16ths on the root dipping a step under it, on A",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Bass > Picked & Played",
+    "tempo": 122.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Leather Bass Walk",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Organ Stab"
+      }
+    ],
+    "seconds": 7.9,
+    "peakDb": -9.4,
+    "faded": true,
+    "bytes": 143352
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/EBM",
+    "name": "Iron Curtain Strum",
+    "file": "sequences/ebm-iron-curtain-strum.mp3",
+    "about": "A minor, F, G, A minor, each strummed upwards a 16th a note",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Harmony > Strums",
+    "tempo": 120.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Iron Curtain Strum",
+        "role": "Harmony",
+        "voice": "Torqwave Synth: Rave Hoover Stab"
+      }
+    ],
+    "seconds": 8.0,
+    "peakDb": -9.5,
+    "faded": true,
+    "bytes": 133800
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/EBM",
+    "name": "Body Drone",
+    "file": "sequences/ebm-body-drone.mp3",
+    "about": "A and E held together for 8 bars, the filter breathing in and out",
+    "key": "A minor",
+    "bars": 8.0,
+    "energy": 4,
+    "role": "Pads > Drones",
+    "tempo": 118.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Body Drone",
+        "role": "Pads",
+        "voice": "Torqwave Synth: Void Hum"
+      }
+    ],
+    "seconds": 16.300000000000001,
+    "peakDb": -10.1,
+    "faded": true,
+    "bytes": 183168
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/EBM",
+    "name": "Muscle Pluck",
+    "file": "sequences/ebm-muscle-pluck.mp3",
+    "about": "Dotted-8th plucks falling from the octave, on A minor",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 5,
+    "role": "Arps > Plucks",
+    "tempo": 124.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Muscle Pluck",
+        "role": "Arps",
+        "voice": "Torqwave Synth: Grinder"
+      }
+    ],
+    "seconds": 5.8,
+    "peakDb": -9.0,
+    "faded": false,
+    "bytes": 35400
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/EBM",
+    "name": "Muscle Riff",
+    "file": "sequences/ebm-muscle-riff.mp3",
+    "about": "A offbeat phrase stated twice, the second time ending another way in A Phrygian",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Melody > Hooks",
+    "tempo": 122.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Muscle Riff",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Acid Signal"
+      }
+    ],
+    "seconds": 7.9,
+    "peakDb": -8.1,
+    "faded": true,
+    "bytes": 155424
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/EBM",
+    "name": "Marching Build",
+    "file": "sequences/ebm-marching-build.mp3",
+    "about": "16ths climbing the A minor scale for 2 bars, louder and brighter as they go",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "SFX > Risers",
+    "tempo": 122.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Marching Build",
+        "role": "SFX",
+        "voice": "Torqwave Synth: Machine Spin Up"
+      }
+    ],
+    "seconds": 7.9,
+    "peakDb": -10.6,
+    "faded": true,
+    "bytes": 67296
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Electro-industrial",
+    "name": "Interference Hats",
+    "file": "sequences/electro-industrial-interference-hats.mp3",
+    "about": "16th hats with the offbeat lifted, with 8th hats, the downbeats stronger added in bar 2",
+    "key": "",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Drums > Hats & Tops",
+    "tempo": 110.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Interference Hats",
+        "role": "Drums",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 8.699999999999999,
+    "peakDb": -10.9,
+    "faded": false,
+    "bytes": 118296
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Electro-industrial",
+    "name": "Harmonic Minor Arp Bass",
+    "file": "sequences/electro-industrial-harmonic-minor-arp-bass.mp3",
+    "about": "16ths climbing to the sharp seventh and back, in harmonic minor",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 4,
+    "role": "Bass > Arp Bass",
+    "tempo": 120.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Harmonic Minor Arp Bass",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Body Music"
+      }
+    ],
+    "seconds": 6.0,
+    "peakDb": -9.6,
+    "faded": true,
+    "bytes": 86784
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Electro-industrial",
+    "name": "Interference Chord Pulse",
+    "file": "sequences/electro-industrial-interference-chord-pulse.mp3",
+    "about": "Short A minor, B flat chords comping over two bars",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 3,
+    "role": "Harmony > Keys & Comping",
+    "tempo": 122.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Interference Chord Pulse",
+        "role": "Harmony",
+        "voice": "Torqwave Synth: Dub Chord Stab"
+      }
+    ],
+    "seconds": 7.9,
+    "peakDb": -8.6,
+    "faded": true,
+    "bytes": 114336
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Electro-industrial",
+    "name": "Glitch Drone",
+    "file": "sequences/electro-industrial-glitch-drone.mp3",
+    "about": "A and E held together for 4 bars, the filter breathing in and out",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 3,
+    "role": "Pads > Drones",
+    "tempo": 122.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Glitch Drone",
+        "role": "Pads",
+        "voice": "Torqwave Synth: Abandoned Reactor"
+      }
+    ],
+    "seconds": 7.9,
+    "peakDb": -22.699999999999999,
+    "faded": true,
+    "bytes": 40608
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Electro-industrial",
+    "name": "Glitch Gated Chord",
+    "file": "sequences/electro-industrial-glitch-gated-chord.mp3",
+    "about": "The root gated in 16ths, through A minor, D minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Arps > Gated",
+    "tempo": 122.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Glitch Gated Chord",
+        "role": "Arps",
+        "voice": "Torqwave Synth: Dark Kalimba"
+      }
+    ],
+    "seconds": 7.9,
+    "peakDb": -7.0,
+    "faded": true,
+    "bytes": 145680
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Electro-industrial",
+    "name": "Phrygian Lead",
+    "file": "sequences/electro-industrial-phrygian-lead.mp3",
+    "about": "A lead falling from B flat to the root",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 3,
+    "role": "Melody > Leads",
+    "tempo": 118.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Phrygian Lead",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Vowel Scream"
+      }
+    ],
+    "seconds": 8.1,
+    "peakDb": -9.1,
+    "faded": false,
+    "bytes": 74712
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Electro-industrial",
+    "name": "Sector Bridge",
+    "file": "sequences/electro-industrial-sector-bridge.mp3",
+    "about": "Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th",
+    "key": "",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "SFX > Transitions",
+    "tempo": 114.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Sector Bridge",
+        "role": "SFX",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 8.4,
+    "peakDb": -8.4,
+    "faded": true,
+    "bytes": 170880
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Futurepop",
+    "name": "Satellite Roller",
+    "file": "sequences/futurepop-satellite-roller.mp3",
+    "about": "Two 16ths on each offbeat, the last up an octave, moving through the roots of A minor, F, G, A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Bass > Synth Bass",
+    "tempo": 130.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Satellite Roller",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Rumble Floor"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -9.699999999999999,
+    "faded": true,
+    "bytes": 66000
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Futurepop",
+    "name": "Pulse Star Hook",
+    "file": "sequences/futurepop-pulse-star-hook.mp3",
+    "about": "A two-bar held phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Melody > Hooks",
+    "tempo": 132.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Pulse Star Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Rust Lead"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 130320
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Industrial rock",
+    "name": "Barbwire Throb",
+    "file": "sequences/industrial-rock-barbwire-throb.mp3",
+    "about": "Straight 8ths on the root, moving through the roots of A minor, G minor, F, G minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Bass > Synth Bass",
+    "tempo": 116.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Barbwire Throb",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 8.300000000000001,
+    "peakDb": -9.0,
+    "faded": false,
+    "bytes": 37560
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Industrial rock",
+    "name": "Fuse Box Theme",
+    "file": "sequences/industrial-rock-fuse-box-theme.mp3",
+    "about": "A call-and-answer phrase stated twice, the second time ending another way in A Phrygian",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Melody > Leads",
+    "tempo": 120.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Fuse Box Theme",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Vowel Scream"
+      }
+    ],
+    "seconds": 8.0,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 78600
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Synth-EBM",
+    "name": "Synthetic Tears Bass Arp",
+    "file": "sequences/synth-ebm-synthetic-tears-bass-arp.mp3",
+    "about": "8ths leaping between the root and the octave, moving through the roots of A minor, C, G, D minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Bass > Arp Bass",
+    "tempo": 120.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Synthetic Tears Bass Arp",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Rumble Floor"
+      }
+    ],
+    "seconds": 8.0,
+    "peakDb": -8.699999999999999,
+    "faded": true,
+    "bytes": 67536
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Synth-EBM",
+    "name": "Chrome Motif",
+    "file": "sequences/synth-ebm-chrome-motif.mp3",
+    "about": "A offbeat phrase stated twice, the second time ending another way in A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Melody > Hooks",
+    "tempo": 120.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Chrome Motif",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Acid Signal"
+      }
+    ],
+    "seconds": 8.0,
+    "peakDb": -10.300000000000001,
+    "faded": true,
+    "bytes": 169536
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Techno-body",
+    "name": "Chain Drive Beat",
+    "file": "sequences/techno-body-chain-drive-beat.mp3",
+    "about": "Four to the floor with ghost kicks after each, a big snare and clap together on 2 and 4, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
+    "key": "",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Drums > Full Grooves",
+    "tempo": 134.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Chain Drive Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -9.5,
+    "faded": true,
+    "bytes": 150048
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Techno-body",
+    "name": "Assembly Played Bass",
+    "file": "sequences/techno-body-assembly-played-bass.mp3",
+    "about": "8th roots with an octave before the last, moving through the roots of A minor, A minor, A minor, F",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Bass > Picked & Played",
+    "tempo": 134.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Assembly Played Bass",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Organ Stab"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -8.199999999999999,
+    "faded": true,
+    "bytes": 107544
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Techno-body",
+    "name": "Assembly Keys",
+    "file": "sequences/techno-body-assembly-keys.mp3",
+    "about": "Short A minor, B flat chords comping over two bars",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Harmony > Keys & Comping",
+    "tempo": 132.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Assembly Keys",
+        "role": "Harmony",
+        "voice": "Torqwave Synth: Abandoned Jab"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -6.8,
+    "faded": true,
+    "bytes": 113280
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Techno-body",
+    "name": "Body Shop Low Drone",
+    "file": "sequences/techno-body-body-shop-low-drone.mp3",
+    "about": "A and E held together for 4 bars, the filter breathing in and out",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Pads > Drones",
+    "tempo": 126.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Body Shop Low Drone",
+        "role": "Pads",
+        "voice": "Torqwave Synth: Abandoned Reactor"
+      }
+    ],
+    "seconds": 7.6,
+    "peakDb": -21.300000000000001,
+    "faded": true,
+    "bytes": 40104
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Techno-body",
+    "name": "Torque Plucks",
+    "file": "sequences/techno-body-torque-plucks.mp3",
+    "about": "8ths up and down, through A minor, A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Arps > Plucks",
+    "tempo": 134.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Torque Plucks",
+        "role": "Arps",
+        "voice": "Torqwave Synth: Basalt Wire"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -9.0,
+    "faded": true,
+    "bytes": 171720
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Techno-body",
+    "name": "Ironworks Hook",
+    "file": "sequences/techno-body-ironworks-hook.mp3",
+    "about": "A busy phrase stated twice, the second time ending another way in A Phrygian",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Melody > Hooks",
+    "tempo": 128.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Ironworks Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Mercury Lead"
+      }
+    ],
+    "seconds": 7.5,
+    "peakDb": -8.6,
+    "faded": true,
+    "bytes": 129120
+  },
+  {
+    "group": "sequences",
+    "category": "Industrial/Techno-body",
+    "name": "Body Shop Transition",
+    "file": "sequences/techno-body-body-shop-transition.mp3",
+    "about": "Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th",
+    "key": "",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "SFX > Transitions",
+    "tempo": 126.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Body Shop Transition",
+        "role": "SFX",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 7.6,
+    "peakDb": -9.9,
+    "faded": true,
+    "bytes": 239712
+  },
+  {
+    "group": "sequences",
+    "category": "Synthwave/Darksynth",
+    "name": "Chrome Night Sub Pulse",
+    "file": "sequences/darksynth-chrome-night-sub-pulse.mp3",
+    "about": "A held sub on the root, on A",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Bass > Sub",
+    "tempo": 124.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Chrome Night Sub Pulse",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 7.7,
+    "peakDb": -9.0,
+    "faded": true,
+    "bytes": 32640
+  },
+  {
+    "group": "sequences",
+    "category": "Synthwave/Darksynth",
+    "name": "Midnight Run Hook",
+    "file": "sequences/darksynth-midnight-run-hook.mp3",
+    "about": "A dotted phrase stated twice, the second time ending another way in A harmonic minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 3,
+    "role": "Melody > Hooks",
+    "tempo": 118.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Midnight Run Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Rust Lead"
+      }
+    ],
+    "seconds": 8.1,
+    "peakDb": -9.199999999999999,
+    "faded": true,
+    "bytes": 122880
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Acid",
+    "name": "Corrosive Tops",
+    "file": "sequences/acid-corrosive-tops.mp3",
+    "about": "Open hats on the offbeats, with 8th hats, the downbeats stronger added in bar 2",
+    "key": "",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Drums > Hats & Tops",
+    "tempo": 130.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Corrosive Tops",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -8.6,
+    "faded": true,
+    "bytes": 123984
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Acid",
+    "name": "Acid Slide Rider",
+    "file": "sequences/acid-acid-slide-rider.mp3",
+    "about": "A two-bar 303 line with longer slides and the answer an octave up",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Bass > Arp Bass",
+    "tempo": 138.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Acid Slide Rider",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Acid Scream"
+      }
+    ],
+    "seconds": 7.0,
+    "peakDb": -9.300000000000001,
+    "faded": true,
+    "bytes": 124008
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Acid",
+    "name": "Acidic Comp",
+    "file": "sequences/acid-acidic-comp.mp3",
+    "about": "Short A minor, A minor chords comping over two bars",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Harmony > Keys & Comping",
+    "tempo": 134.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Acidic Comp",
+        "role": "Harmony",
+        "voice": "Torqwave Synth: Organ Stab"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -10.699999999999999,
+    "faded": false,
+    "bytes": 90240
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Acid",
+    "name": "Three-Oh Bed",
+    "file": "sequences/acid-three-oh-bed.mp3",
+    "about": "A minor seventh, A minor seventh, A minor seventh, F major seventh, held a bar each",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Pads > Sustained",
+    "tempo": 134.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Three-Oh Bed",
+        "role": "Pads",
+        "voice": "Torqwave Synth: Machine Spin Up"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -9.800000000000001,
+    "faded": true,
+    "bytes": 89592
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Acid",
+    "name": "Acid Arp",
+    "file": "sequences/acid-acid-arp.mp3",
+    "about": "An arp with 303 accents and slides",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 4,
+    "role": "Arps > 16th Sequences",
+    "tempo": 134.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Acid Arp",
+        "role": "Arps",
+        "voice": "Torqwave Synth: Basalt Sting"
+      }
+    ],
+    "seconds": 5.4,
+    "peakDb": -8.6,
+    "faded": true,
+    "bytes": 112896
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Acid",
+    "name": "Fizz Motif",
+    "file": "sequences/acid-fizz-motif.mp3",
+    "about": "A sparse phrase stated twice, the second time ending another way in A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Melody > Hooks",
+    "tempo": 138.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Fizz Motif",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Mercury Lead"
+      }
+    ],
+    "seconds": 7.0,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 109416
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Acid",
+    "name": "Acidic Transition",
+    "file": "sequences/acid-acidic-transition.mp3",
+    "about": "Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th",
+    "key": "",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "SFX > Transitions",
+    "tempo": 138.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Acidic Transition",
+        "role": "SFX",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 7.0,
+    "peakDb": -10.300000000000001,
+    "faded": true,
+    "bytes": 233568
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Club tools",
+    "name": "Offbeat Sub",
+    "file": "sequences/club-tools-offbeat-sub.mp3",
+    "about": "A short sub on every offbeat, out of the kick's way",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 2,
+    "role": "Bass > Sub",
+    "tempo": 128.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Offbeat Sub",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 5.6,
+    "peakDb": -9.0,
+    "faded": false,
+    "bytes": 24312
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Dark",
+    "name": "Black Stomp",
+    "file": "sequences/dark-black-stomp.mp3",
+    "about": "Four to the floor with a skipped kick before the one, a clap on 4 only, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
+    "key": "",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Drums > Full Grooves",
+    "tempo": 130.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Black Stomp",
+        "role": "Drums",
+        "voice": "Basic Drums: Dark Techno"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -9.9,
+    "faded": true,
+    "bytes": 205872
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Dark",
+    "name": "Peak Rumble Bass",
+    "file": "sequences/dark-peak-rumble-bass.mp3",
+    "about": "Offbeat 16ths on the root with an octave accent at the end of each half bar",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Bass > Synth Bass",
+    "tempo": 132.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Peak Rumble Bass",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Bunker Kick Bass"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -9.5,
+    "faded": true,
+    "bytes": 33960
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Dark",
+    "name": "Cellar Strummed Chords",
+    "file": "sequences/dark-cellar-strummed-chords.mp3",
+    "about": "A minor, A minor, A minor, F, each strummed upwards a 16th a note",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Harmony > Strums",
+    "tempo": 130.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Cellar Strummed Chords",
+        "role": "Harmony",
+        "voice": "Torqwave Synth: Abandoned Jab"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -8.199999999999999,
+    "faded": false,
+    "bytes": 84360
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Dark",
+    "name": "Smoke Bloom",
+    "file": "sequences/dark-smoke-bloom.mp3",
+    "about": "A minor seventh, G seventh, A minor seventh, F major seventh, the filter opening and closing again over four bars",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Pads > Evolving",
+    "tempo": 132.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Smoke Bloom",
+        "role": "Pads",
+        "voice": "Torqwave Synth: Fog Machine"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -10.199999999999999,
+    "faded": true,
+    "bytes": 117648
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Dark",
+    "name": "Concrete Pluck",
+    "file": "sequences/dark-concrete-pluck.mp3",
+    "about": "Dotted-8th plucks falling from the octave, through A minor, A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Arps > Plucks",
+    "tempo": 130.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Concrete Pluck",
+        "role": "Arps",
+        "voice": "Torqwave Synth: Wire Pluck"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -8.300000000000001,
+    "faded": true,
+    "bytes": 88656
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Dark",
+    "name": "Black Answer",
+    "file": "sequences/dark-black-answer.mp3",
+    "about": "A dotted phrase stated twice, the second time ending another way in A Phrygian",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Melody > Counter-lines",
+    "tempo": 128.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Black Answer",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Prison Bell"
+      }
+    ],
+    "seconds": 7.5,
+    "peakDb": -7.4,
+    "faded": true,
+    "bytes": 138648
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Dark",
+    "name": "Low Boom",
+    "file": "sequences/dark-low-boom.mp3",
+    "about": "A low A struck and bent down",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 4,
+    "role": "SFX > Impacts",
+    "tempo": 130.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Low Boom",
+        "role": "SFX",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 5.5,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 23904
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Driving",
+    "name": "Rolling Kick Gap Bass",
+    "file": "sequences/driving-rolling-kick-gap-bass.mp3",
+    "about": "The driving roll: three 16ths between the kicks, moving to C and G in bar 4",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Bass > Synth Bass",
+    "tempo": 134.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Rolling Kick Gap Bass",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Bunker Kick Bass"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 36096
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Driving",
+    "name": "Call and Answer Hook",
+    "file": "sequences/driving-call-and-answer-hook.mp3",
+    "about": "A two-note call in bar 1, a falling answer in bar 2",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Melody > Hooks",
+    "tempo": 134.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Call and Answer Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Abandoned Cutter"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 106176
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Dub",
+    "name": "Echo Chamber Drive Bass",
+    "file": "sequences/dub-echo-chamber-drive-bass.mp3",
+    "about": "An 8th on every offbeat, on A",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 3,
+    "role": "Bass > Synth Bass",
+    "tempo": 118.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Echo Chamber Drive Bass",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Iron Sub"
+      }
+    ],
+    "seconds": 8.1,
+    "peakDb": -9.199999999999999,
+    "faded": false,
+    "bytes": 42216
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Dub",
+    "name": "Echo Chamber Hook",
+    "file": "sequences/dub-echo-chamber-hook.mp3",
+    "about": "A call-and-answer phrase stated twice, the second time ending another way in A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 3,
+    "role": "Melody > Hooks",
+    "tempo": 122.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Echo Chamber Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Glass Shard"
+      }
+    ],
+    "seconds": 7.9,
+    "peakDb": -8.4,
+    "faded": true,
+    "bytes": 163056
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Hard",
+    "name": "Blast Furnace Engine",
+    "file": "sequences/hard-blast-furnace-engine.mp3",
+    "about": "Fast four-to-the-floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a crash every other bar; a kick roll ends bar 4",
+    "key": "",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Drums > Full Grooves",
+    "tempo": 148.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Blast Furnace Engine",
+        "role": "Drums",
+        "voice": "Basic Drums: Foundry"
+      }
+    ],
+    "seconds": 6.5,
+    "peakDb": -11.5,
+    "faded": true,
+    "bytes": 166104
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Hard",
+    "name": "Full Force Bass Sequence",
+    "file": "sequences/hard-full-force-bass-sequence.mp3",
+    "about": "A 303 line with accents and slides, on A",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Bass > Arp Bass",
+    "tempo": 145.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Full Force Bass Sequence",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Bleach Bite"
+      }
+    ],
+    "seconds": 6.6,
+    "peakDb": -9.0,
+    "faded": true,
+    "bytes": 100560
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Hard",
+    "name": "Blast Wall Stab",
+    "file": "sequences/hard-blast-wall-stab.mp3",
+    "about": "A minor stabs in a syncopated one-bar pattern",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 5,
+    "role": "Harmony > Stabs",
+    "tempo": 155.0,
+    "rounds": 4,
+    "parts": [
+      {
+        "name": "Blast Wall Stab",
+        "role": "Harmony",
+        "voice": "Torqwave Synth: Rust Lead"
+      }
+    ],
+    "seconds": 6.2,
+    "peakDb": -9.9,
+    "faded": true,
+    "bytes": 102576
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Hard",
+    "name": "Warhead Low Drone",
+    "file": "sequences/hard-warhead-low-drone.mp3",
+    "about": "A and E held together for 8 bars, the filter breathing in and out",
+    "key": "A minor",
+    "bars": 8.0,
+    "energy": 5,
+    "role": "Pads > Drones",
+    "tempo": 155.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Warhead Low Drone",
+        "role": "Pads",
+        "voice": "Torqwave Synth: Ventilation"
+      }
+    ],
+    "seconds": 12.4,
+    "peakDb": -9.4,
+    "faded": true,
+    "bytes": 204288
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Hard",
+    "name": "Hard Gate Arp",
+    "file": "sequences/hard-hard-gate-arp.mp3",
+    "about": "A hard 16th gate on the root with octave accents",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 5,
+    "role": "Arps > Gated",
+    "tempo": 150.0,
+    "rounds": 4,
+    "parts": [
+      {
+        "name": "Hard Gate Arp",
+        "role": "Arps",
+        "voice": "Torqwave Synth: Basalt Wire"
+      }
+    ],
+    "seconds": 6.4,
+    "peakDb": -7.0,
+    "faded": true,
+    "bytes": 165120
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Hard",
+    "name": "Blast Wall Hook",
+    "file": "sequences/hard-blast-wall-hook.mp3",
+    "about": "A held phrase stated twice, the second time ending another way in A Phrygian",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Melody > Hooks",
+    "tempo": 145.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Blast Wall Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Mercury Lead"
+      }
+    ],
+    "seconds": 6.6,
+    "peakDb": -8.800000000000001,
+    "faded": true,
+    "bytes": 116640
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Hard",
+    "name": "Hardline Transition",
+    "file": "sequences/hard-hardline-transition.mp3",
+    "about": "Toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th",
+    "key": "",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "SFX > Transitions",
+    "tempo": 150.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Hardline Transition",
+        "role": "SFX",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 6.4,
+    "peakDb": -10.300000000000001,
+    "faded": true,
+    "bytes": 220608
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Hypnotic",
+    "name": "Fog Roller",
+    "file": "sequences/hypnotic-fog-roller.mp3",
+    "about": "One held note a bar, moving through the roots of A minor, A minor, A minor, F",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 4,
+    "role": "Bass > Synth Bass",
+    "tempo": 126.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Fog Roller",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Iron Sub"
+      }
+    ],
+    "seconds": 7.6,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 57888
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Hypnotic",
+    "name": "Inner Space Lead",
+    "file": "sequences/hypnotic-inner-space-lead.mp3",
+    "about": "A two-bar syncopated phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 3,
+    "role": "Melody > Leads",
+    "tempo": 126.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Inner Space Lead",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Cold Bell"
+      }
+    ],
+    "seconds": 7.6,
+    "peakDb": -9.5,
+    "faded": true,
+    "bytes": 180144
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Industrial",
+    "name": "Anvil Beat",
+    "file": "sequences/industrial-anvil-beat.mp3",
+    "about": "Four to the floor with a rolling rumble between the kicks, a snare on 2 and 4, a ride in 8ths, a syncopated rimshot and a tom run ends bar 4",
+    "key": "",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Drums > Full Grooves",
+    "tempo": 126.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Anvil Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 7.6,
+    "peakDb": -13.0,
+    "faded": true,
+    "bytes": 223488
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Industrial",
+    "name": "Foundry Pressure",
+    "file": "sequences/industrial-foundry-pressure.mp3",
+    "about": "Driving 16ths on the root, on A",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Bass > Synth Bass",
+    "tempo": 132.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Foundry Pressure",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Tar Reese"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -8.300000000000001,
+    "faded": true,
+    "bytes": 74664
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Industrial",
+    "name": "Pressworks Strum",
+    "file": "sequences/industrial-pressworks-strum.mp3",
+    "about": "A minor, B flat, G minor, A minor, each strummed upwards a 16th a note",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Harmony > Strums",
+    "tempo": 130.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Pressworks Strum",
+        "role": "Harmony",
+        "voice": "Torqwave Synth: Minor Stab"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -9.4,
+    "faded": false,
+    "bytes": 86616
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Industrial",
+    "name": "Slag Drone",
+    "file": "sequences/industrial-slag-drone.mp3",
+    "about": "A and E held together for 8 bars, the filter breathing in and out",
+    "key": "A minor",
+    "bars": 8.0,
+    "energy": 5,
+    "role": "Pads > Drones",
+    "tempo": 132.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Slag Drone",
+        "role": "Pads",
+        "voice": "Torqwave Synth: Substation"
+      }
+    ],
+    "seconds": 14.5,
+    "peakDb": -30.399999999999999,
+    "faded": false,
+    "bytes": 62112
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Industrial",
+    "name": "Corrosion Pattern",
+    "file": "sequences/industrial-corrosion-pattern.mp3",
+    "about": "Straight up the chord in 16ths, again and again, through A minor, B flat",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Arps > 16th Sequences",
+    "tempo": 132.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Corrosion Pattern",
+        "role": "Arps",
+        "voice": "Torqwave Synth: Acid Shard"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -9.0,
+    "faded": true,
+    "bytes": 150624
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Industrial",
+    "name": "Factory Riff",
+    "file": "sequences/industrial-factory-riff.mp3",
+    "about": "A two-bar dotted phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Melody > Hooks",
+    "tempo": 130.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Factory Riff",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Abandoned Cutter"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -8.800000000000001,
+    "faded": true,
+    "bytes": 119880
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Industrial",
+    "name": "Factory Slam",
+    "file": "sequences/industrial-factory-slam.mp3",
+    "about": "Kick, low tom and crash struck together on the one",
+    "key": "",
+    "bars": 1.0,
+    "energy": 4,
+    "role": "SFX > Impacts",
+    "tempo": 126.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Factory Slam",
+        "role": "SFX",
+        "voice": "Basic Drums: Electro"
+      }
+    ],
+    "seconds": 5.7,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 139872
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Melodic",
+    "name": "Afterglow Sub",
+    "file": "sequences/melodic-afterglow-sub.mp3",
+    "about": "One held note a bar, on A",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 3,
+    "role": "Bass > Sub",
+    "tempo": 122.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Afterglow Sub",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Iron Sub"
+      }
+    ],
+    "seconds": 7.9,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 61080
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Melodic",
+    "name": "Afterglow Hook",
+    "file": "sequences/melodic-afterglow-hook.mp3",
+    "about": "A two-bar call-and-answer phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Melody > Hooks",
+    "tempo": 120.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Afterglow Hook",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Cold Bell"
+      }
+    ],
+    "seconds": 8.0,
+    "peakDb": -8.800000000000001,
+    "faded": true,
+    "bytes": 165504
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Minimal",
+    "name": "Pinpoint Sub Pulse",
+    "file": "sequences/minimal-pinpoint-sub-pulse.mp3",
+    "about": "The sub in half notes, on A",
+    "key": "A minor",
+    "bars": 1.0,
+    "energy": 3,
+    "role": "Bass > Sub",
+    "tempo": 124.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Pinpoint Sub Pulse",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 5.8,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 25416
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Minimal",
+    "name": "Microdub Theme",
+    "file": "sequences/minimal-microdub-theme.mp3",
+    "about": "A held phrase stated twice, the second time ending another way in A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 3,
+    "role": "Melody > Leads",
+    "tempo": 122.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Microdub Theme",
+        "role": "Melody",
+        "voice": "Torqwave Synth: FM Toll"
+      }
+    ],
+    "seconds": 7.9,
+    "peakDb": -8.5,
+    "faded": true,
+    "bytes": 147120
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Peak-time",
+    "name": "Crowd Played Bass",
+    "file": "sequences/peak-time-crowd-played-bass.mp3",
+    "about": "Straight 8ths on the root, moving through the roots of A minor, A minor, F, G",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Bass > Picked & Played",
+    "tempo": 136.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Crowd Played Bass",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Abyss Reese"
+      }
+    ],
+    "seconds": 7.1,
+    "peakDb": -8.699999999999999,
+    "faded": true,
+    "bytes": 102864
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Peak-time",
+    "name": "Floodlight Line",
+    "file": "sequences/peak-time-floodlight-line.mp3",
+    "about": "A long phrase stated twice, the second time ending another way in A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Melody > Leads",
+    "tempo": 136.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Floodlight Line",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Acid Signal"
+      }
+    ],
+    "seconds": 7.1,
+    "peakDb": -8.699999999999999,
+    "faded": true,
+    "bytes": 152640
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Percussive",
+    "name": "Kinetic Bass Arp",
+    "file": "sequences/percussive-kinetic-bass-arp.mp3",
+    "about": "8ths leaping between the root and the octave, on A",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 5,
+    "role": "Bass > Arp Bass",
+    "tempo": 138.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Kinetic Bass Arp",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Warehouse Sub"
+      }
+    ],
+    "seconds": 7.0,
+    "peakDb": -8.9,
+    "faded": false,
+    "bytes": 32448
+  },
+  {
+    "group": "sequences",
+    "category": "Techno/Percussive",
+    "name": "Rhythm Pit Lead",
+    "file": "sequences/percussive-rhythm-pit-lead.mp3",
+    "about": "A two-bar offbeat phrase in A minor",
+    "key": "A minor",
+    "bars": 2.0,
+    "energy": 4,
+    "role": "Melody > Leads",
+    "tempo": 132.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Rhythm Pit Lead",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Cold Bell"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 155808
+  },
+  {
+    "group": "sequences",
+    "category": "Trance/Psytrance",
+    "name": "Goa Roller",
+    "file": "sequences/psytrance-goa-roller.mp3",
+    "about": "The rolling triplet-feel 16ths after every kick, on A",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Bass > Synth Bass",
+    "tempo": 140.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Goa Roller",
+        "role": "Bass",
+        "voice": "Torqwave Synth: Pressure Bass"
+      }
+    ],
+    "seconds": 6.9,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 65760
+  },
+  {
+    "group": "sequences",
+    "category": "Trance/Psytrance",
+    "name": "Fractal Line",
+    "file": "sequences/psytrance-fractal-line.mp3",
+    "about": "A call-and-answer phrase stated twice, the second time ending another way in A harmonic minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 5,
+    "role": "Melody > Leads",
+    "tempo": 145.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Fractal Line",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Feedback Wire"
+      }
+    ],
+    "seconds": 6.6,
+    "peakDb": -8.6,
+    "faded": true,
+    "bytes": 83448
   }
 ]

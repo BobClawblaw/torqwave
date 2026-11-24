@@ -272,11 +272,11 @@ def drums_page():
     kits = grouped(drums, lambda c: c["category"])
     body = [f'<div class="title">{crumbs("Basic Drums and Torqwave Sampler")}<h1>Basic Drums and Torqwave Sampler</h1>',
             f'<p>Basic Drums\' {len(kits)} kits, each playing factory grooves written for it, and Torqwave Sampler\'s {len(sampler)} factory presets.</p>',
-            f'<p class="meta">{HOW} Each kit plays the Sequence Library\'s factory grooves written for it (of its Drums › Full Grooves, the three with the most energy), as the library\'s preview plays them, at the tempo they were written at; '
-            f'a kit no factory groove uses, and the sampler\'s presets, play the audition phrases Torqwave plays when you choose a sound, at 125 BPM. {megabytes(drums + sampler)} in all.</p>',
+            f'<p class="meta">{HOW} Each kit plays the Sequence Library\'s factory grooves written for it (of its Drums › Full Grooves, the three with the most energy, or all of them where a kit has fewer), as the library\'s preview plays them, at the tempo they were written at. '
+            f'The sampler\'s presets play the audition phrases Torqwave plays when you choose a sound, at 125 BPM. {megabytes(drums + sampler)} in all.</p>',
             chips(["Basic Drums", "Torqwave Sampler"]), "</div>",
             '<h2 id="basic-drums">Basic Drums</h2>',
-            '<p class="lede">A drum machine with 30 sounds that cover every General MIDI drum note, each with its own tune, decay, tone, level, pan and drive, '
+            '<p class="lede">A drum machine with 30 sounds that cover every General MIDI drum note, 21 of them with a second, Modern type beside the Classic one, each with its own tune, decay, tone, level, pan and drive, '
             'and a filter, crush, reverb and delay on every pad. A kit sets all of it at once.</p>']
 
     for kit, found in kits.items():
@@ -346,12 +346,12 @@ def kits_page():
 
 def sequences_page():
     clips = of("sequences")
-    library_page("sequences", "sounds/sequences.html", "Sequence Library: factory sequences", f"The Sequence Library: {len(clips)} of its 1,018 factory sequences",
-                 f'<p>The Sequence Library ships 1,018 sequence presets in 37 styles: drums, bass lines, harmony, pads, arps, melodies and effects, each with a line saying what it does. '
+    library_page("sequences", "sounds/sequences.html", "Sequence Library: factory sequences", f"The Sequence Library: {len(clips)} of its 1,032 factory sequences",
+                 f'<p>The Sequence Library ships 1,032 sequence presets in 37 styles: drums, bass lines, harmony, pads, arps, melodies and effects, each with a line saying what it does. '
                  f'Here are {len(clips)} on their own: one of each role from nine techno and industrial styles, and a bass line and a melody from each of the others. '
                  'Of each role the one with the most energy was taken (the first by name among equals): chosen by rule, not by ear. '
                  'The <a href="kits.html">kits</a> play six sequences together.</p>',
-                 f"{len(clips)} of the 1,018 factory sequences in Torqwave's Sequence Library, from all 37 styles, rendered by Torqwave with nothing added.")
+                 f"{len(clips)} of the 1,032 factory sequences in Torqwave's Sequence Library, from all 37 styles, rendered by Torqwave with nothing added.")
 
 
 def find(group, name):
@@ -378,10 +378,10 @@ def sounds_index():
     rows = []
     pages = [("synth", "synth.html", "Torqwave Synth", "of 3,743 patches: the ones that use the most of the synth, from all 29 categories"),
              ("swarm", "stringswarm.html", "StringSwarm", "of 296 presets, from all 11 categories"),
-             ("drums", "drums-and-sampler.html#basic-drums", "Basic Drums", "all 7 kits, on factory grooves from the Sequence Library"),
+             ("drums", "drums-and-sampler.html#basic-drums", "Basic Drums", f"all {len(set(c['category'] for c in of('drums')))} kits, on factory grooves from the Sequence Library"),
              ("sampler", "drums-and-sampler.html#torqwave-sampler", "Torqwave Sampler", "all 11 factory presets"),
              ("kits", "kits.html", "Sequence Library: kits", f"all 116 factory kits, in {len(set(c['category'] for c in of('kits')))} styles"),
-             ("sequences", "sequences.html", "Sequence Library: sequences", "of 1,018 factory sequences, from all 37 styles")]
+             ("sequences", "sequences.html", "Sequence Library: sequences", "of 1,032 factory sequences, from all 37 styles")]
     cards = []
 
     for group, link, name, what in pages:
@@ -443,6 +443,18 @@ def quality_demos():
 
         out.append('</div><table class="facts">' + table + "</table>" + note + "</div>")
 
+    d = by_id["clicks"]
+    between_marks = d["clicksAdded"] - d["clicksLeft"] - d["clicksGone"]
+    demo(d, "Clicks", [("before", "With the clicks"), ("after", "Clicks repaired")],
+         "<tr><th>Measured</th><th>With the clicks</th><th>Clicks repaired</th></tr>"
+         f'<tr><td>Clicks</td><td class="n">{d["clicksAdded"]} put in</td><td class="n">{d["clicksRepaired"]} repaired, {d["skipped"]} skipped</td></tr>'
+         f'<tr><td>Places still more than a tenth of full scale from the clean clip</td><td></td><td class="n">{d["clicksLeft"]}</td></tr>'
+         f'<tr><td>Places within a hundredth of full scale of it</td><td></td><td class="n">{d["clicksGone"]}</td></tr>'
+         f'<tr><td>Places in between</td><td></td><td class="n">{between_marks}</td></tr>'
+         f'<tr><td>How far the clip is from the clean one</td><td class="n">{db(d["differenceBefore"])} dB</td><td class="n">{db(d["differenceAfter"])} dB</td></tr>',
+         '<p class="meta">A place is the three samples from where a click was put in, in both channels. The repair rebuilds each click from the sound round it, so a repaired place is near the clean clip, not equal to it. '
+         'These clicks are in a pad and a bell; the changelog records what the repair does with clicks in a drum loop, where it leaves some.</p>')
+
     d = by_id["hiss"]
     demo(d, "Hiss, with a noise print", [("before", "With the hiss"), ("after", "Reduced by 12 dB"), ("after24", "Reduced by 24 dB")],
          "<tr><th>Measured</th><th>With the hiss</th><th>Reduced by 12 dB</th><th>Reduced by 24 dB</th></tr>"
@@ -473,12 +485,13 @@ def quality_demos():
          f'<tr><td>Loudness range</td><td class="n">{d["rangeBefore"]:.1f} LU</td><td class="n">{d["rangeAfter"]:.1f} LU</td></tr>'
          f'<tr><td>Gain into the ceiling</td><td></td><td class="n">{d["gainDb"]:.1f} dB</td></tr>',
          (f'<p class="note">The true peak reads {d["truePeakAfter"]:.2f} dBTP on Torqwave\'s own meter, {over:.2f} dB over the −1 dBTP ceiling that was set. No sample is over the ceiling; '
-          'the limiter measures the peaks between samples before its gain moves, and the moving gain and the clip at the ceiling make new ones. Leave that margin if a delivery spec is strict. '
-          'This is 0.20.1 as released. It is corrected for the next release, where this clip reads −1.03 dBTP.</p>'
-          if over > 0.005 else ""))
+          'Leave that margin if a delivery spec is strict.</p>'
+          if over > 0.005 else
+          f'<p class="meta">The ceiling was set to −1 dBTP, and the clip reads {d["truePeakAfter"]:.2f} dBTP on Torqwave\'s own meter: under it. '
+          'Before 0.21.0 the same clip read −0.79 dBTP, 0.21 dB over.</p>'))
 
     between("quality/index.html", "demos", "\n".join(out))
-    return sum(v for d in FACTS for k, v in d.items() if k.endswith("Bytes"))
+    return sum(v for d in FACTS if d["id"] != "clipping" for k, v in d.items() if k.endswith("Bytes"))
 
 
 if __name__ == "__main__":
