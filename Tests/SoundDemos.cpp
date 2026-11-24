@@ -1,4 +1,5 @@
 #include <JuceHeader.h>
+#include <numeric>
 #include "../Source/AudioEdits.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/ClickRepair.h"
@@ -346,6 +347,54 @@ namespace
         return text;
     }
 
+    /** How much of the synth a patch uses, counted off the synth with the patch loaded: a point for each
+        oscillator on, each of those with unison voices, each with a warp, the sub, the noise, each filter,
+        each effect on, each modulation routing in use and each named macro. */
+    int partsInUse (BuiltInEffects::BasicSynthProcessor& synth, const WaveSynth::Patch& patch)
+    {
+        const Settings p (synth);
+        int parts = 0;
+
+        for (int o = 1; o <= WaveSynth::numOscillators; ++o)
+        {
+            const auto id = "osc" + juce::String (o);
+
+            if (! p.on (id + "On"))
+                continue;
+
+            ++parts;
+            parts += p.number (id + "Unison") > 1.5 ? 1 : 0;
+
+            if (const auto warp = p.choice (id + "Warp"); warp.isNotEmpty() && warp != "Off")
+                ++parts;
+        }
+
+        parts += p.number ("subLevel") > 0.5 ? 1 : 0;
+        parts += p.number ("noiseLevel") > 0.5 ? 1 : 0;
+
+        for (int f = 1; f <= 2; ++f)
+            if (const auto type = p.choice ("filter" + juce::String (f) + "Type"); type.isNotEmpty() && type != "Off")
+                ++parts;
+
+        parts += p.on ("fxDriveOn") && p.number ("fxDriveAmount") > 0.5 ? 1 : 0;
+        parts += p.on ("fxChorusOn") && p.number ("fxChorusMix") > 0.5 ? 1 : 0;
+        parts += p.on ("fxPhaserOn") && p.number ("fxPhaserMix") > 0.5 ? 1 : 0;
+        parts += p.on ("fxDelayOn") && p.number ("fxDelayMix") > 0.5 ? 1 : 0;
+        parts += p.on ("fxReverbOn") && p.number ("fxReverbMix") > 0.5 ? 1 : 0;
+
+        for (int m = 1; m <= WaveSynth::numSlots; ++m)
+        {
+            const auto id = "mod" + juce::String (m);
+            parts += p.number (id + "Source") > 0.5 && p.number (id + "Destination") > 0.5
+                     && std::abs (p.number (id + "Amount")) > 0.5 ? 1 : 0;
+        }
+
+        for (auto& name : patch.macroNames)
+            parts += name.isNotEmpty() ? 1 : 0;
+
+        return parts;
+    }
+
     /** A StringSwarm preset in a line, from its values. */
     juce::String describe (BuiltInEffects::SwarmGuitarProcessor& guitar)
     {
@@ -395,7 +444,7 @@ namespace
             { "Tension Riser", &one }, { "Low Boom", &hits } };
 
         const auto& patches = WaveSynth::factoryPatches();
-        juce::StringArray done;
+        juce::StringArray done, files;
 
         for (auto& [name, part] : featured)
         {
@@ -412,27 +461,80 @@ namespace
             entry->setProperty ("featured", true);
             entry->setProperty ("about", describe (synth, *found));
             entry->setProperty ("phrase", "four bars at 120 BPM");
+            entry->setProperty ("parts", partsInUse (synth, *found));
             save (folder, entry, play (synth, *part, length));
             done.add (name);
+            files.add (slug (name));
         }
 
-        // Every category: five patches by their place in the list (the first, then spread evenly through
-        // the rest), each on one of the category's audition phrases.
+        // Then the patches that use the most of the synth, 750 with those above: each category's share is
+        // its share of the list (ten at least), and within a category the patches with the most parts in
+        // use come first (partsInUse), the earlier in the list among equals. Each plays one of the
+        // category's audition phrases.
+        const int wanted = 750;
+        std::vector<std::vector<const WaveSynth::Patch*>> lists;
+        std::vector<int> share;
+        int all = 0, given = 0;
+
         for (auto& category : WaveSynth::patchCategories())
         {
             if (category == "Init")
                 continue;
 
-            std::vector<const WaveSynth::Patch*> inCategory;
+            lists.emplace_back();
 
             for (auto& patch : patches)
                 if (patch.category == category)
-                    inCategory.push_back (&patch);
+                    lists.back().push_back (&patch);
 
-            int number = 0;
+            all += (int) lists.back().size();
+        }
 
-            for (auto at : spread ((int) inCategory.size(), 5))
+        for (auto& list : lists)
+        {
+            share.push_back (juce::jmin ((int) list.size(), juce::jmax (10, juce::roundToInt ((double) wanted * (double) list.size() / all))));
+            given += share.back();
+        }
+
+        // Rounding leaves a few over or under: taken from, or given to, the lists in turn, the longest first.
+        std::vector<size_t> bySize (lists.size());
+        std::iota (bySize.begin(), bySize.end(), (size_t) 0);
+        std::stable_sort (bySize.begin(), bySize.end(), [&lists] (size_t x, size_t y) { return lists[x].size() > lists[y].size(); });
+
+        for (int turn = 0; given != wanted && turn < 10000; ++turn)
+        {
+            const auto c = bySize[(size_t) turn % bySize.size()];
+            const auto step = given > wanted ? -1 : 1;
+
+            if (share[c] + step >= juce::jmin (10, (int) lists[c].size()) && share[c] + step <= (int) lists[c].size())
             {
+                share[c] += step;
+                given += step;
+            }
+        }
+
+        for (size_t c = 0; c < lists.size(); ++c)
+        {
+            const auto& inCategory = lists[c];
+            std::vector<std::pair<int, int>> scored;   // parts in use, place in the list
+
+            for (int at = 0; at < (int) inCategory.size(); ++at)
+            {
+                BuiltInEffects::BasicSynthProcessor synth;
+
+                if (synth.loadPatch (inCategory[(size_t) at]->name))
+                    scored.emplace_back (partsInUse (synth, *inCategory[(size_t) at]), at);
+            }
+
+            std::stable_sort (scored.begin(), scored.end(), [] (const auto& x, const auto& y) { return x.first > y.first; });
+            int number = 0, shown = 0;
+
+            for (auto& patch : inCategory)
+                shown += done.contains (patch->name) ? 1 : 0;
+
+            for (int rank = 0; rank < (int) scored.size() && shown < share[c]; ++rank)
+            {
+                const auto at = scored[(size_t) rank].second;
                 const auto& patch = *inCategory[(size_t) at];
 
                 if (done.contains (patch.name))
@@ -446,17 +548,25 @@ namespace
                     continue;
                 }
 
+                auto file = slug (patch.name);
+
+                while (files.contains (file))
+                    file << "-2";
+
+                files.add (file);
                 const auto kind = InstrumentKeys::kindFor (synth);
                 const auto& patterns = InstrumentKeys::patternsFor (kind);
                 const auto& pattern = patterns[(size_t) number++ % patterns.size()];
                 const auto longTail = kind == InstrumentKeys::Kind::chord || kind == InstrumentKeys::Kind::held || kind == InstrumentKeys::Kind::hit;
-                auto* entry = index.add ("synth", category, patch.name, "synth/" + slug (patch.name) + ".mp3");
+                auto* entry = index.add ("synth", patch.category, patch.name, "synth/" + file + ".mp3");
                 entry->setProperty ("about", describe (synth, patch));
                 entry->setProperty ("phrase", pattern.name);
                 entry->setProperty ("place", at + 1);
                 entry->setProperty ("of", (int) inCategory.size());
+                entry->setProperty ("parts", scored[(size_t) rank].first);
                 save (folder, entry, audition (synth, pattern, longTail ? 3.0 : 1.5));
                 done.add (patch.name);
+                ++shown;
             }
         }
     }

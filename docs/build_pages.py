@@ -127,7 +127,9 @@ def instrument_card(clip, prefix, heading="h3", kind=None):
     else:
         plays = f'Plays the audition phrase “{clip["phrase"]}” at 125 BPM.'
 
-        if "place" in clip:
+        if "parts" in clip:
+            plays = f'{clip["parts"]} parts in use; no. {clip["place"]} of {clip["of"]} in the synth\'s {clip["category"]} list. ' + plays
+        elif "place" in clip:
             plays = f'No. {clip["place"]} of {clip["of"]} in {clip["category"]}. ' + plays
 
     lines.append(f'<p>{esc(plays)}</p><div class="fill"></div>{player(clip, prefix)}</div>')
@@ -198,23 +200,53 @@ HOW = ("Each clip was rendered by Torqwave's own code (<code>TorqwaveTests --sou
        "Nothing was added: no effects, no levelling, no editing, except that a clip still sounding where it stops is faded over its last 30 ms so the cut does not click.")
 
 
+RULE = ("A point for each oscillator on, each of those with unison voices, each with a warp, the sub, the noise, each filter, each effect on, "
+        "each modulation routing in use and each named macro.")
+
+
 def synth_page():
     clips = of("synth")
-    by_category = grouped([c for c in clips if not c.get("featured")] + [c for c in clips if c.get("featured")], lambda c: c["category"])
-    counts = {name: len(found) for name, found in by_category.items()}
-    body = [f'<div class="title">{crumbs("Torqwave Synth")}<h1>Torqwave Synth: {len(clips)} of its patches</h1>',
-            f'<p>A wavetable synth with 3,743 factory patches in 29 categories. Here are {len(clips)} of them, from every category: '
-            'in each, the first patch in the list and four more spread evenly through it (chosen by their place, not by ear, so this is what the list is like), '
-            'and 18 chosen by ear for the first version of this page. Under each name is what the patch is made of, read off the synth with the patch loaded.</p>',
-            f'<p class="meta">{HOW} Patches chosen by their place play one of the audition phrases Torqwave itself plays when you choose a sound, at 125 BPM. {megabytes(clips)} in all.</p>',
-            chips(list(by_category), counts), "</div>"]
+    by_ear = [c for c in clips if c.get("featured")]
+    by_category = grouped(clips, lambda c: c["category"])
+    cards = []
 
     for category, found in by_category.items():
-        found.sort(key=lambda c: (0 if c.get("featured") else 1, c.get("place", 0)))
-        body.append(f'<h2 id="{anchor(category)}">{esc(category)}</h2><div class="clips">' + "".join(card(c, "audio/") for c in found) + "</div>")
+        found.sort(key=lambda c: (-c["parts"], c.get("place", 0)))
+        cards.append(f'<a class="card" href="synth/{anchor(category)}.html"><div class="count">{len(found)} patches · {megabytes(found)}</div>'
+                     f'<h3>{esc(category)}</h3><p>{esc(", ".join(c["name"] for c in found[:3]))} and {len(found) - 3} more.</p></a>')
 
+    body = [f'<div class="title">{crumbs("Torqwave Synth")}<h1>Torqwave Synth: {len(clips)} of its patches</h1>',
+            f'<p>A wavetable synth with 3,743 factory patches in 29 categories. Here are {len(clips)} of them: the ones that use the most of the synth, from every category, '
+            f'and {len(by_ear)} chosen by ear. Under each name is what the patch is made of, read off the synth with the patch loaded.</p>',
+            f'<p class="meta">{HOW} Each patch plays one of the audition phrases Torqwave itself plays when you choose a sound, at 125 BPM; the {len(by_ear)} chosen by ear play a part that suits them. '
+            f'{megabytes(clips)} in all; a clip loads only when you play it.</p>',
+            chips(["Chosen by ear", "By category", "How they were chosen"]), "</div>",
+            '<h2 id="chosen-by-ear">Chosen by ear</h2><p class="lede">Picked for the first version of this page, each on four bars at 120 BPM.</p>'
+            '<div class="clips">' + "".join(card(c, "audio/") for c in by_ear) + "</div>",
+            '<h2 id="by-category">By category</h2><p class="lede">In each category, the patches with the most going on.</p>'
+            '<div class="grid">' + "".join(cards) + "</div>",
+            '<h2 id="how-they-were-chosen">How they were chosen</h2><ul class="plain">'
+            f'<li><b>By count, not by ear.</b> Every patch was loaded and its parts in use counted. {RULE} Each card gives its count.</li>'
+            f'<li><b>From every category.</b> Each category has its share of the {len(clips)} (about a fifth of its patches, ten at least), and within it the patches with the highest count come first, '
+            'the earlier in the synth\'s list among equals.</li>'
+            '<li><b>A high count is not a promise of a better sound.</b> It finds the patches with layers, movement and effects; a plain sub with one oscillator is a good sub and counts low. '
+            f'Apart from the {len(by_ear)} chosen by ear, these were not listened to one by one.</li></ul>']
     page("sounds/synth.html", "Torqwave Synth: hear its patches",
-         f"{len(clips)} Torqwave Synth factory patches from all 29 categories, rendered by Torqwave with nothing added.", "\n".join(body))
+         f"{len(clips)} Torqwave Synth factory patches from all 29 categories, the ones that use the most of the synth, rendered by Torqwave with nothing added.", "\n".join(body))
+    (DOCS / "sounds/synth").mkdir(exist_ok=True)
+    names = list(by_category)
+
+    for at, (category, found) in enumerate(by_category.items()):
+        before, after = names[at - 1] if at else None, names[at + 1] if at + 1 < len(names) else None
+        pager = '<p class="meta">' + " · ".join(
+            f'<a href="{anchor(n)}.html">{arrow[0]}{esc(n)}{arrow[1]}</a>' for n, arrow in ((before, ("← ", "")), (after, ("", " →"))) if n) + "</p>"
+        body = [f'<div class="title"><p class="crumbs"><a href="../">Sounds</a> › <a href="../synth.html">Torqwave Synth</a> › {esc(category)}</p>'
+                f'<h1>Torqwave Synth: {esc(category)}</h1>',
+                f'<p>{len(found)} of the {max(c.get("of", 0) for c in found)} factory patches in {esc(category)}: the ones that use the most of the synth, the highest count first.</p>',
+                f'<p class="meta">{HOW} {RULE} {megabytes(found)} in all; a clip loads only when you play it.</p>{pager}</div>',
+                '<div class="clips">' + "".join(card(c, "../audio/") for c in found) + "</div>", pager]
+        page(f"sounds/synth/{anchor(category)}.html", f"Torqwave Synth: {category} patches",
+             f"{len(found)} Torqwave Synth factory patches in {category}, rendered by Torqwave with nothing added.", "\n".join(body))
 
 
 def swarm_page():
@@ -345,7 +377,7 @@ def front_clips(prefix):
 def sounds_index():
     total = len(CLIPS)
     rows = []
-    pages = [("synth", "synth.html", "Torqwave Synth", "of 3,743 patches, from all 29 categories"),
+    pages = [("synth", "synth.html", "Torqwave Synth", "of 3,743 patches: the ones that use the most of the synth, from all 29 categories"),
              ("swarm", "stringswarm.html", "StringSwarm", "of 296 presets, from all 11 categories"),
              ("drums", "drums-and-sampler.html#basic-drums", "Basic Drums", "all 7 kits, on factory grooves from the Sequence Library"),
              ("sampler", "drums-and-sampler.html#torqwave-sampler", "Torqwave Sampler", "all 11 factory presets"),
@@ -369,7 +401,7 @@ def sounds_index():
             '<h2 id="how">How they were chosen and made</h2>',
             '<ul class="plain">'
             '<li><b>Chosen by ear:</b> 18 Torqwave Synth patches and 22 StringSwarm presets, picked for the first version of this page and each given a part that suits it (four bars at 120 BPM). Their cards say so.</li>'
-            '<li><b>Chosen by rule:</b> everything else, so the pages show what the lists are like and not only their best. From each synth category, the first patch and four spread evenly through the list; '
+            '<li><b>Chosen by rule:</b> everything else, so the pages show what the lists are like and not only their best. Of the synth\'s patches, the ones that use the most of the synth, by a count of their parts in use, a share from every category; '
             'from each StringSwarm category, the first preset and two more; every Basic Drums kit, every sampler preset and every kit of the Sequence Library; '
             'and of the sequences, the one with the most energy in each role of a style.</li>'
             '<li><b>Played as the app plays them:</b> patches and presets on the audition phrases Torqwave plays when you choose a sound; kits and sequences through the Sequence Library\'s own preview, at the tempo they were written at.</li>'
