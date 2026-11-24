@@ -2,7 +2,12 @@
 
 #include <JuceHeader.h>
 
-/** Writes the sound demos (docs/sounds/audio) into the folder: Torqwave Synth patches and StringSwarm
-    presets playing short parts at 120 BPM, as MP3s, each named for what it plays. The Sounds page
-    (docs/sounds/index.html) lists them. Run with `TorqwaveTests --sound-demos <folder>`. */
-void writeSoundDemos (const juce::File& folder);
+/** Writes the Sounds pages' demos (docs/sounds/audio) into the folder as MP3s, rendered by Torqwave's
+    own instruments with nothing added: Torqwave Synth patches from every category, StringSwarm
+    presets, Basic Drums' kits, Torqwave Sampler's factory presets, and the Sequence Library's factory
+    kits and sequences, each in a folder of its group (synth, swarm, drums, sampler, kits,
+    sequences), with index.json listing every clip (what it is, what it plays, its length, peak and
+    size), which docs/sounds/build.py makes the pages from. `only` names the groups to render (the
+    others' lines in index.json are kept); empty, all of them.
+    Run with `TorqwaveTests --sound-demos <folder> [--only synth,kits]`. */
+void writeSoundDemos (const juce::File& folder, const juce::StringArray& only = {});
