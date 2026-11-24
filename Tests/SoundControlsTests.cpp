@@ -24,7 +24,7 @@ namespace
         ~Holder() override                                         { removeListener (this); }
 
         void audioProcessorParameterChanged (juce::AudioProcessor*, int, float) override        { ++changes; }
-        void audioProcessorChanged (juce::AudioProcessor*, const ChangeDetails&) override        {}
+        void audioProcessorChanged (juce::AudioProcessor*, const juce::AudioProcessorListener::ChangeDetails&) override {}
         void audioProcessorParameterChangeGestureBegin (juce::AudioProcessor*, int) override    { ++begins; }
         void audioProcessorParameterChangeGestureEnd (juce::AudioProcessor*, int) override      { ++ends; }
 
