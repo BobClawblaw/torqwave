@@ -753,7 +753,7 @@ void DocumentPlayerProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // device's rate, its notes are captured at their session frames.
     const auto liveAny = liveMidi.takeBlock (liveBlock, numFrames);
     const auto blockFrame = sessionSource.getNextReadPosition();
-    inserts.setLiveMidi (liveMidi.getPlayingTrack(), mode == Mode::session ? &liveBlock : nullptr);
+    inserts.setLiveMidi (liveMidi.getPlayingTrack(), &liveBlock);   // with the editor in front too: an instrument's window may be open over it
 
     const auto atSessionFrames = playing && mode == Mode::session && juce::exactlyEqual (sourceRate, deviceRate);
 
@@ -777,12 +777,14 @@ void DocumentPlayerProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     transport.getNextAudioBlock (info);
 
     // Stopped (the transport read nothing and played silence): the input plays on its own, or
-    // an instrument played live sounds through the session.
+    // an instrument played live sounds through the session. That holds with the editor in front
+    // too, so an instrument's window open over it (a sound dragged to it from the Files panel)
+    // goes on sounding; while the document plays, the document alone is heard.
     if (! playing && sessionSource.getBlocksRead() == blocksRead)
     {
         if (monitoring)
             sessionSource.renderLive (info);
-        else if (mode == Mode::session && ! scrubber.isSounding() && liveMidi.getSoundingFrames() > 0)
+        else if (! scrubber.isSounding() && liveMidi.getSoundingFrames() > 0)
             sessionSource.renderIdle (info);
     }
 

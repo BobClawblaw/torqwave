@@ -1073,6 +1073,30 @@ namespace
         check (started && click.allOff > offsWhilePlaying && click.offs.size() == 1 && click.offs[0].first == 60,
                "instrument tracks: stopping playback in the middle of a clip's note sends the instrument that note's off ("
                    + juce::String ((int) click.offs.size()) + ") and every note off, so the note does not go on sounding");
+
+        // With the editor in front (an instrument's window open over it, a sound dragged to it from the Files panel)
+        // a note played to the instrument is still heard.
+        player.setMode (DocumentPlayerProcessor::Mode::document);
+        live.setTrack (trackId);
+        run (1000);     // the tail of what was sounding runs out (ten seconds)
+        const auto notesBefore = click.notes.size();
+        live.addMessage (juce::MidiMessage::noteOn (1, 64, 0.8f));
+        float heard = 0.0f;
+
+        for (int i = 0; i < 4; ++i)
+        {
+            player.processBlock (block, midi);
+            heard = juce::jmax (heard, block.getMagnitude (0, block.getNumSamples()));
+        }
+
+        const auto played = click.notes.size() == notesBefore + 1 && click.notes.back().first == 64;
+        live.addMessage (juce::MidiMessage::noteOff (1, 64));
+        run (2);
+        const auto letGo = ! click.offs.empty() && click.offs.back().first == 64;
+
+        check (played && heard > 0.0f && letGo,
+               "instrument tracks: with the editor in front and nothing playing, a note played to an instrument reaches it and is heard (peak " + juce::String (heard, 2)
+                   + "), and so does its off");
     }
 
     void testAddInstrumentTrack (AudioEngine& engine)
