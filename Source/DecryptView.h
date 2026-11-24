@@ -134,7 +134,9 @@ public:
     juce::Rectangle<float> chooseBounds() const                   { return chooseChip; }
     juce::Rectangle<float> tablesBounds() const                   { return tablesChip; }
     bool factoryTablesOnly() const noexcept                       { return tablesOnly; }
-    /** The name Ask Torq's model offered for the patch taken, waiting to be used or refused. */
+    /** The name Ask Torq's model offered for the patch taken. While Take's name is asked for it is
+        part of that prompt: one line under the box with Use, which puts it (and its category) there
+        to save or type over; left alone, it is not used. Once the prompt has gone it has Use and No. */
     const Decrypt::Advisor::Name& offeredName() const noexcept    { return offer; }
     void useOfferedName (bool use);
 
@@ -146,6 +148,17 @@ public:
     float chainHintWidth() const;
     float panelTextWidth() const noexcept                         { return panel.getWidth() - 32.0f; }
     std::vector<juce::Rectangle<float>> lockLabelBounds() const   { return lockLabels(); }
+    /** For tests: everything the panel shows while a sound is on it (each line of text as shortened,
+        each control, bar and the signature) with its bounds, the panel's own bounds, how many of
+        the model's lines it had room for, and the chips of the model's name. setTestModel gives it
+        lines the model tried and a name it offers, as a search with a model would. */
+    std::vector<std::pair<juce::String, juce::Rectangle<float>>> panelBlocks() const;
+    juce::Rectangle<float> panelBounds() const                    { return panel; }
+    int modelLinesShown() const                                   { return planPanel().tried; }
+    juce::Rectangle<int> nameBoxBounds() const                    { return nameBox.getBounds(); }
+    juce::Rectangle<float> useNameBounds() const                  { return useChip; }
+    juce::Rectangle<float> refuseNameBounds() const               { return refuseChip; }
+    void setTestModel (const juce::StringArray& tried, const Decrypt::Advisor::Name& name);
 
 private:
     void timerCallback() override;
@@ -169,6 +182,35 @@ private:
     };
 
     TopLine topLine() const;
+
+    /** The panel, planned before it is drawn: every line of text measured and shortened to its room,
+        every control and bar, each in a place of its own. The buttons, the chain's hint and Take's
+        name (or the signal's line) are placed from the bottom up; the figures take what is left
+        above, and where that is short the model's lines go first, then the bars close up, then the
+        advice goes. Nothing is drawn that is not in the plan. */
+    struct PanelText
+    {
+        const char* what;
+        juce::String text;
+        juce::Rectangle<float> at;
+        float size;
+        juce::Colour colour;
+        bool bold, rightAligned;
+    };
+
+    struct PanelPlan
+    {
+        std::vector<PanelText> texts;
+        std::vector<std::pair<const char*, juce::Rectangle<float>>> boxes;   // the controls, bars and signature shown
+        juce::Rectangle<float> stop, take, again, use, refuse, save, later, category, nameBox, figure;
+        const SignalConsole::Signature* signature = nullptr;
+        std::array<juce::Rectangle<float>, SignalConsole::numParts> bars;
+        std::array<float, SignalConsole::numParts> amounts {};
+        bool ofLink = false;
+        int tried = 0;
+    };
+
+    PanelPlan planPanel() const;
     juce::String chainHint() const;
     /** Each candidate's lock label, empty where it would print over one already placed: the candidate
         shown first, then the one under the pointer, then the rest best first. */
