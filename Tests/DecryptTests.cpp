@@ -1,3 +1,4 @@
+#include <cstring>
 #include <JuceHeader.h>
 #include "../Source/Decrypt.h"
 #include "../Source/AiDecrypt.h"
@@ -1427,7 +1428,7 @@ namespace
             takeOne();
             synth.setMacroName (0, "Grit");
             synth.setSampledTable (1, WaveTables::makeSampled (std::vector<float> ((size_t) (4 * WaveTables::Sampled::harmonics), 0.5f), 4, 110.0, "a table"));
-            const auto trimmed = synth.getPresetValues().at ("ampLevel");
+            double trimmed = synth.getPresetValues().at ("ampLevel");   // not const: see the note where it is compared
             const auto guessed = view.nameCategory();
             const auto takenAt = view.getSearch()->getProgress().best.front().lock;
             view.typeName ("Night Reese");
@@ -1440,11 +1441,11 @@ namespace
 
             // Recalled from another patch: the same settings (the level trim among them), tables, macro names and name.
             synth.loadPatch ("Cold Bell");
-            // The level is compared on its own line: with it inside the expression below, Microsoft's compiler
-            // stopped with an internal error.
+            // The level is compared by its bytes, in variables that are not const: Microsoft's compiler stopped with
+            // an internal error in its constant evaluator on the comparison written as an expression of constants.
             const auto loadedIt = store().load (synth, "night reese");
-            const auto levelNow = synth.getPresetValues().at ("ampLevel");
-            const auto sameLevel = ! (levelNow < trimmed) && ! (levelNow > trimmed);
+            double levelNow = synth.getPresetValues().at ("ampLevel");
+            const bool sameLevel = std::memcmp (&levelNow, &trimmed, sizeof (double)) == 0;
             const auto recalled = loadedIt && synth.getPresetValues() == values && synth.getPresetTexts() == texts
                                   && sameLevel && synth.getMacroName (0) == "Grit"
                                   && synth.getSampledTable (1) != nullptr && synth.getSampledTable (1)->name == "a table" && synth.getPatchName() == "Night Reese";
