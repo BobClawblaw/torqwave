@@ -1,0 +1,79 @@
+<!doctype html>
+{%- assign parts = page.url | split: '/' -%}
+{%- assign depth = parts.size | minus: 2 -%}
+{%- assign last = page.url | slice: -1 -%}
+{%- if last == '/' -%}{%- assign depth = depth | plus: 1 -%}{%- endif -%}
+{%- capture root -%}{%- if depth > 0 -%}{%- for i in (1..depth) -%}../{%- endfor -%}{%- endif -%}{%- endcapture -%}
+{%- assign section = page.section -%}
+{%- if page.path contains 'guide/' or page.path == 'SHORTCUTS.md' -%}{%- assign section = 'guide' -%}{%- endif -%}
+{%- if page.path contains 'compare/' -%}{%- assign section = 'compare' -%}{%- endif -%}
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% if page.title %}{{ page.title | strip_html | escape }}{% unless page.home %} · Torqwave{% endunless %}{% else %}Torqwave{% endif %}</title>
+<meta name="description" content="{% if page.description %}{{ page.description | escape }}{% else %}{{ site.description | escape }}{% endif %}">
+<link rel="stylesheet" href="{{ root }}assets/site.css">
+</head>
+<body{% if section == 'guide' %} class="has-side"{% endif %}>
+<header class="top">
+  <div class="top-in">
+    <a class="mark" href="{{ root }}{% if root == '' %}./{% endif %}">TORQ<span>WAVE</span></a>
+    <nav class="top-nav" aria-label="Site">
+      <a href="{{ root }}{% if root == '' %}./{% endif %}"{% if section == 'home' %} aria-current="page"{% endif %}>Overview</a>
+      <a href="{{ root }}sounds/"{% if section == 'sounds' %} aria-current="page"{% endif %}>Sounds</a>
+      <a href="{{ root }}quality/"{% if section == 'quality' %} aria-current="page"{% endif %}>Quality</a>
+      <a href="{{ root }}guide/"{% if section == 'guide' %} aria-current="page"{% endif %}>Guide</a>
+      <a href="{{ root }}compare/"{% if section == 'compare' %} aria-current="page"{% endif %}>Compare</a>
+      <a class="get" href="https://github.com/BobClawblaw/torqwave/releases/latest">Download {{ site.version }}</a>
+    </nav>
+  </div>
+</header>
+{%- if section == 'guide' %}
+<div class="with-side">
+  <nav class="side" aria-label="User guide">
+    <details open>
+      <summary>User guide</summary>
+      <ol>
+        <li><a href="{{ root }}guide/01-getting-started.html">Getting started</a></li>
+        <li><a href="{{ root }}guide/02-editing-audio.html">Editing audio</a></li>
+        <li><a href="{{ root }}guide/03-spectral-editing-and-repair.html">Spectral editing and repair</a></li>
+        <li><a href="{{ root }}guide/04-effects-and-the-rack.html">Effects and the rack</a></li>
+        <li><a href="{{ root }}guide/05-loudness-and-mastering.html">Loudness and mastering</a></li>
+        <li><a href="{{ root }}guide/06-multitrack-sessions.html">Multitrack sessions</a></li>
+        <li><a href="{{ root }}guide/07-instruments-and-midi.html">Instruments and MIDI</a></li>
+        <li><a href="{{ root }}guide/08-recording.html">Recording</a></li>
+        <li><a href="{{ root }}guide/09-video-and-surround.html">Video and surround</a></li>
+        <li><a href="{{ root }}guide/10-sound-library.html">The Sound Library</a></li>
+        <li><a href="{{ root }}guide/11-projects-and-file-types.html">Projects and file types</a></li>
+        <li><a href="{{ root }}guide/12-customising-and-troubleshooting.html">Customising and troubleshooting</a></li>
+        <li><a href="{{ root }}guide/13-ask-torq.html">Ask Torq (experimental)</a></li>
+        <li><a href="{{ root }}guide/14-styles.html">Styles</a></li>
+      </ol>
+      <p><a href="{{ root }}SHORTCUTS.html">Keyboard shortcuts</a></p>
+    </details>
+  </nav>
+  <main class="doc" id="doc">
+{{ content }}
+    <div class="pager" id="pager"></div>
+  </main>
+</div>
+{%- elsif page.wide %}
+<main class="page">
+{{ content }}
+</main>
+{%- else %}
+<main class="doc alone">
+{{ content }}
+</main>
+{%- endif %}
+<footer class="foot">
+  <div class="foot-in">
+    <p>Torqwave is free software under the GNU Affero General Public License, version 3.</p>
+    <p><a href="https://github.com/BobClawblaw/torqwave">Source on GitHub</a> · <a href="https://github.com/BobClawblaw/torqwave/releases">Releases</a> · <a href="https://github.com/BobClawblaw/torqwave/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/BobClawblaw/torqwave/issues">Report a problem</a></p>
+  </div>
+</footer>
+<script>window.torqwaveRoot = "{{ root }}";</script>
+<script src="{{ root }}assets/site.js"></script>
+</body>
+</html>

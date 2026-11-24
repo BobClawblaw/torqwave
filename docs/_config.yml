@@ -1,0 +1,18 @@
+# The site (GitHub Pages, from this folder). Pages build it with Jekyll: Markdown pages (the user
+# guide and the rest) take _layouts/default.html, and so do the HTML pages that start with front matter.
+title: Torqwave
+description: A free, open-source audio editor and DAW in one, for macOS, Windows and Linux.
+# The release the download buttons name. Change it when a release is published.
+version: "0.20.1"
+repository: BobClawblaw/torqwave
+markdown: kramdown
+kramdown:
+  input: GFM
+plugins:
+  - jekyll-optional-front-matter
+  - jekyll-default-layout
+  - jekyll-relative-links
+  - jekyll-titles-from-headings
+  - jekyll-readme-index
+exclude:
+  - build_pages.py

@@ -362,7 +362,8 @@ Others write something to look at or listen to, and check nothing:
 | `--synth-window <folder>`, `--swarm-window <folder>`, `--sampler-window <folder>`, `--drums-window <folder>`, `--console-window <folder>` | Saves pictures of that instrument's window, or of the signal console's scope |
 | `--sampler-content <folder>` | Renders Torqwave Sampler's factory samples and their presets from Torqwave's own instruments into the folder: `Data/Samples` in the repository, which the build zips into the app. The same files each time; the suite checks the shipped ones against it |
 | `--sampler-folder <folder>` | Tries every sound in a folder of your own in Torqwave Sampler: as the first sound, in place of another, and sliced at its hits. It prints what the sampler makes of each (length, root, loop, the level at its root, the slices) and fails a sound that loads but does not play at its root, or plays quieter in place of another. Not part of the suite: the folder is yours |
-| `--sound-demos <folder>` | Renders the Sounds page's MP3s |
+| `--sound-demos <folder>` | Renders the Sounds pages' MP3s and their `index.json` (`--only synth,kits` for some of the groups) |
+| `--quality-demos <folder>` | Renders the Quality page's before-and-after clips, spectrograms and `facts.json` |
 | `--patch-levels`, `--patch-hashes <file>` | Prints each factory patch's level; writes a hash of each patch's render |
 | `--decrypt-measure` | Decrypts the two pinned sets of factory patches, in a set number of rounds and until settled, with each patch's distance, lock, key, rounds and time |
 | `--decrypt-real [files]` | Decrypts recordings from outside the synth until settled, with each round's distance; `wav=<folder>` writes each chain as the window plays it |
