@@ -445,7 +445,8 @@ if __name__ == "__main__":
     kits_page()
     sequences_page()
     between("index.html", "clips", front_clips("sounds/audio/")
-            + f'\n<p class="meta"><a href="sounds/">All {len(CLIPS)} clips</a>: <a href="sounds/synth.html">Torqwave Synth</a> ({len(of("synth"))}), '
+            + f'\n<div class="actions"><a class="button primary" href="sounds/">Hear all {len(CLIPS)} clips</a></div>'
+              f'\n<p class="meta">By instrument: <a href="sounds/synth.html">Torqwave Synth</a> ({len(of("synth"))}), '
               f'<a href="sounds/stringswarm.html">StringSwarm</a> ({len(of("swarm"))}), <a href="sounds/drums-and-sampler.html">Basic Drums and Torqwave Sampler</a> ({len(of("drums")) + len(of("sampler"))}), '
               f'<a href="sounds/kits.html">every factory kit</a> ({len(of("kits"))}) and <a href="sounds/sequences.html">sequences from every style</a> ({len(of("sequences"))}).</p>')
     bytes_quality = quality_demos()
