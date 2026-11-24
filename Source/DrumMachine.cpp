@@ -503,11 +503,11 @@ const std::vector<Kit>& kits()
         modern ("Foundry", "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.", [&set] (KitSettings& k, auto&& s)
         {
             k.kick = KickCharacter::hard;
-            set (s (Sound::kick), 0.0f, 420.0f, 30.0f, -1.0f, 0.0f, 55.0f);
-            set (s (Sound::snare), -2.0f, 360.0f, 35.0f, -3.0f, 0.0f, 50.0f);
+            set (s (Sound::kick), 0.0f, 340.0f, 30.0f, -1.0f, 0.0f, 45.0f);
+            set (s (Sound::snare), -2.0f, 360.0f, 35.0f, -2.0f, 0.0f, 50.0f);
             set (s (Sound::clap), -4.0f, 500.0f, 5.0f, -4.0f, 0.0f, 35.0f);
-            set (s (Sound::closedHat), -3.0f, 120.0f, 20.0f, -5.0f, 15.0f, 30.0f);
-            set (s (Sound::openHat), -3.0f, 440.0f, 20.0f, -6.0f, 15.0f, 30.0f);
+            set (s (Sound::closedHat), -3.0f, 120.0f, 20.0f, -3.0f, 15.0f, 30.0f);
+            set (s (Sound::openHat), -3.0f, 440.0f, 20.0f, -4.0f, 15.0f, 30.0f);
             set (s (Sound::cowbell), -5.0f, 450.0f, 20.0f, -5.0f, 10.0f, 55.0f);
             set (s (Sound::china), -2.0f, 1800.0f, 5.0f, -5.0f, -25.0f, 35.0f);
             set (s (Sound::rim), -5.0f, 140.0f, 30.0f, -4.0f, -10.0f, 55.0f);
@@ -525,7 +525,7 @@ const std::vector<Kit>& kits()
             s (Sound::rim).delay = 28.0f;
             for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
                 s (t).reverb = 15.0f;
-            k.drive = 40.0f;
+            k.drive = 30.0f;
             k.glue = 50.0f;
             k.level = -5.0f;
             k.reverbSize = 45.0f;

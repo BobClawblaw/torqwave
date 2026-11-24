@@ -233,6 +233,32 @@ namespace
                                      hits (highTom, { 26, 27 }, 0.75f), hits (midTom, { 28, 29 }, 0.8f), hits (lowTom, { 30, 31 }, 0.9f), hits (crash, { 0 }, 0.7f) }), 2 * bar },
             { "Ride Groove", join ({ hits (kick, { 0, 4, 8, 12 }, 0.95f), hits (ride, { 0, 2, 4, 6, 8, 10, 12, 14 }, 0.6f), hits (clap, { 4, 12 }, 0.8f) }), bar },
             { "Kick and Clap", join ({ hits (kick, { 0, 4, 8, 12 }, 0.95f), hits (clap, { 4, 12 }, 0.9f) }), bar },
+
+            // Grooves that play more of a kit, with ghost notes and accents: dark techno, EBM, industrial and breaks.
+            { "Warehouse Roller", join ({ hits (kick, { 0, 4, 8, 12, 16, 20, 24, 28 }, 0.95f), hits (kick, { 2, 3, 6, 7, 10, 11, 14, 18, 19, 22, 23, 26, 27, 30 }, 0.32f),
+                                          hits (openHat, { 2, 6, 10, 14, 18, 22, 26, 30 }, 0.7f), hits (clap, { 4, 12, 20, 28 }, 0.85f),
+                                          hits (closedHat, { 0, 4, 8, 12, 16, 20, 24, 28 }, 0.5f), hits (rim, { 7, 14, 23 }, 0.6f),
+                                          hits (ride, { 16, 20, 24, 28 }, 0.75f), hits (ride, { 18, 22, 26, 30 }, 0.55f), hits (clap, { 31 }, 0.6f) }), 2 * bar },
+            { "Body Beat", join ({ hits (kick, { 0, 8, 10, 16, 22, 24, 26 }, 0.95f), hits (snare, { 4, 12, 20, 28 }, 0.95f),
+                                   hits (closedHat, { 0, 4, 8, 12, 16, 20, 24 }, 0.75f), hits (closedHat, { 2, 6, 10, 14, 18, 22, 26 }, 0.5f),
+                                   hits (highTom, { 29 }, 0.8f), hits (midTom, { 30 }, 0.85f), hits (lowTom, { 31 }, 0.95f) }), 2 * bar },
+            { "Hammer Works", join ({ hits (kick, { 0, 4, 8, 12, 16, 20, 24, 28 }, 1.0f), hits (lowTom, { 2, 6, 10, 13, 15, 18, 22, 26 }, 0.8f),
+                                      hits (snare, { 4, 12, 20, 28 }, 0.95f), hits (snare, { 29, 30, 31 }, 0.45f, 0.6f), hits (52, { 0 }, 0.8f),
+                                      hits (closedHat, { 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30 }, 0.6f), hits (rim, { 3, 10, 19, 27 }, 0.6f) }), 2 * bar },
+            { "Two-Step Break", join ({ hits (kick, { 0, 2, 10, 16, 26, 29 }, 0.95f), hits (snare, { 4, 12, 20, 28 }, 0.95f), hits (snare, { 7, 9, 23, 25, 30 }, 0.32f),
+                                        hits (closedHat, { 0, 4, 8, 12, 16, 20, 24, 28 }, 0.75f), hits (closedHat, { 2, 6, 10, 14, 18, 22, 26 }, 0.55f),
+                                        hits (openHat, { 30 }, 0.7f) }), 2 * bar },
+            { "Hypnotic Threes", join ({ hits (kick, { 0, 4, 8, 12, 16, 20, 24, 28 }, 0.95f), hits (rim, { 0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30 }, 0.6f),
+                                         hits (closedHat, { 2, 6, 10, 14, 18, 22, 26, 30 }, 0.7f), hits (70, { 2, 7, 12, 17, 22, 27 }, 0.5f),
+                                         hits (lowTom, { 26 }, 0.6f) }), 2 * bar },
+            { "Peak Time", join ({ hits (kick, { 0, 4, 8, 12, 16, 20, 24, 28 }, 0.95f), hits (clap, { 4, 12, 20, 28 }, 0.9f), hits (openHat, { 2, 6, 10, 14, 18, 22, 26, 30 }, 0.75f),
+                                   hits (closedHat, { 0, 1, 3, 4, 5, 7, 8, 9, 11, 12, 13, 15, 16, 17, 19, 20, 21, 23, 24, 25, 27 }, 0.6f, 0.4f),
+                                   hits (ride, { 0, 4, 8, 12, 16, 20, 24 }, 0.7f), hits (crash, { 0 }, 0.75f),
+                                   hits (snare, { 28, 29, 30, 31 }, 0.5f, 0.65f) }), 2 * bar },
+            { "Machine Disco", join ({ hits (kick, { 0, 4, 8, 12 }, 0.95f), hits (snare, { 4, 12 }, 0.9f), hits (clap, { 4, 12 }, 0.8f), hits (openHat, { 2, 6, 10, 14 }, 0.7f),
+                                       hits (closedHat, { 0, 1, 3, 4, 5, 7, 8, 9, 11, 12, 13, 15 }, 0.6f) }), bar },
+            { "Ghost Kicks", join ({ hits (kick, { 0, 4, 8, 12 }, 0.95f), hits (kick, { 3, 11 }, 0.32f), hits (clap, { 4, 12 }, 0.9f), hits (snare, { 4, 12 }, 0.55f),
+                                     hits (closedHat, { 0, 1, 3, 4, 5, 7, 8, 9, 11, 12, 13, 15 }, 0.5f, 0.45f), hits (closedHat, { 2, 6, 10, 14 }, 0.8f) }), bar },
         };
     }
 }

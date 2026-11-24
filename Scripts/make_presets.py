@@ -371,6 +371,13 @@ VOICE_KITS = {
     "boom":     ["Electro"],
     "break":    ["Breaks", "Industrial Rock"],
     "chip":     ["Electro"],
+    # One kit each, for the grooves written for that kit (after the generated ones, below).
+    "breaks":      ["Breaks"],
+    "modern":      ["Modern"],
+    "warehouse":   ["Warehouse"],
+    "bodymusic":   ["Body Music"],
+    "foundry":     ["Foundry"],
+    "brokenbeat":  ["Broken Beat"],
 }
 
 
@@ -2051,6 +2058,87 @@ def generate():
 
 
 generate()
+
+
+# ---------------------------------------------------------------------------------------------
+# Grooves written for one kit each: the Breaks kit, which no generated groove landed on, and the kits
+# of Basic Drums' Modern sounds, whose ghost notes are duller as well as quieter. They come after the
+# generated presets, so none of those changes its name or its voice.
+
+def kit_groove(name, style, energy, character, description, part, tempo, sound):
+    assert name not in {p.name for p in PRESETS} | {k[0] for k in KITS}, name
+    preset(name, D, "Full Grooves", style, energy, character, description, part, tempo, drums(sound))
+
+
+g = Part(2).grid(KICK, "X.........X.....X.x.......x.....").grid(SNARE, "....X.......X..g....X..g....X...").grid(CH, "x.o.x.o.x.o.x.o.").grid(RIDE, "x...x...x...x...")
+kit_groove("Back Room Break", "Breakbeat/Breaks", 3, ["Dark", "Dense", "Straight", "Distorted"],
+           "A two-step break with a kick pickup in bar 2, ghost snares before the backbeat, 8th hats and a ride on the beat", g, 130, "breaks")
+
+g = Part(2).grid(KICK, "X.x.......x.....X.........x..x..").grid(SNARE, "....X..g.g..X.......X..g.g..X.g.").grid(CH, "wwxwwwxwwwxwwwxw").grid(OH, "......x.......x.")
+kit_groove("Tape Splice Groove", "Breakbeat/Breaks", 4, ["Dark", "Dense", "Straight", "Distorted"],
+           "A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, 16th hats and an open hat before 3 and 1", g, 128, "breaks")
+
+g = Part(2).grid(KICK, "X...X...X...X...").grid(KICK, "...g.......g....").grid(CLAP, "....X.......X...").grid(SNARE, "....o.......o...") \
+    .grid(CH, "wwxwwwxwwwxwwwxw").grid(SHAKER, ".w.w.w.w.w.w.w.w").grid(OH, "..x...x...x...x.", bar=1)
+kit_groove("Clean Room Groove", "Techno/Driving", 4, ["Bright", "Dense", "Straight", "Clean"],
+           "Four to the floor with ghost kicks before 2 and 4, a clap over a snare, 16th hats with the offbeat lifted, a shaker between them and open hats in bar 2", g, 134, "modern")
+
+g = Part(4).grid(KICK, "X...X...X...X...").grid(KICK, ".gg..gg..gg..gg.").grid(CH, "w.ow..ow..ow..ow").grid(OH, "..x...x...x...x.").grid(CLAP, "....x.......x...") \
+    .grid(RIM, ".......o......o.")
+for b in (2, 3):
+    g.grid(RIDE, "x.o.x.o.x.o.x.o.", bar=b)
+g.grid(CLAP, "..............xX", bar=3)
+kit_groove("Concrete Floor Roller", "Techno/Dark", 4, ["Dark", "Dense", "Straight", "Distorted"],
+           "Four to the floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a rim against it; a ride comes in for bars 3 and 4, and a clap pickup ends bar 4", g, 132, "warehouse")
+
+g = Part(4).grid(KICK, "X...X...X...X...").cycle(RIM, 3, "o").cycle(SHAKER, 5, "w", 2).grid(CH, "..x...x...x...x.")
+for b in (1, 3):
+    g.grid(LT, "..........o.....", bar=b)
+g.grid(OH, "..x...x...x...x.", bar=3)
+kit_groove("Strobe Tunnel Pulse", "Techno/Hypnotic", 3, ["Dark", "Sparse", "Straight", "Clean"],
+           "A rim every three 16ths and a shaker every five turn against the kick and offbeat hats, a low tom answering in bars 2 and 4, open hats over bar 4", g, 130, "warehouse")
+
+g = Part(2).grid(KICK, "X...X...X...X...").grid(KICK, "..............x.", bar=1).grid(CLAP, "....X.......X...").grid(OH, "..x...x...x...x.").grid(CH, "x.wwx.wwx.wwx.ww") \
+    .grid(RIDE, "x.o.x.o.x.o.x.o.", bar=1).grid(CRASH, "x...............", bar=0)
+kit_groove("Night Shift Hammer", "Techno/Peak-time", 5, ["Dark", "Dense", "Straight", "Distorted"],
+           "A peak-time groove: a crash on the one, a clap on 2 and 4, open hats on the offbeats over closed ones, a ride in 8ths and a skipped kick in bar 2", g, 136, "warehouse")
+
+g = Part(2).grid(KICK, "X.......X.x.....", bar=0).grid(KICK, "X.....x.X.x.....", bar=1).grid(SNARE, "....X.......X...").grid(CH, "x.o.x.o.x.o.x.o.") \
+    .grid(HT, ".............x..", bar=1).grid(MT, "..............x.", bar=1).grid(LT, "...............X", bar=1)
+kit_groove("Muscle Memory Beat", "Industrial/EBM", 3, ["Dark", "Sparse", "Straight", "Clean"],
+           "The machine backbeat: kick on 1 and 3 with a push, a big snare on 2 and 4, 8th hats with the downbeats stronger, three toms falling into the next bar", g, 118, "bodymusic")
+
+g = Part(1).grid(KICK, "X...X...X...X...").grid(SNARE, "....X.......X...").grid(CLAP, "....x.......x...").grid(OH, "..x...x...x...x.").grid(CH, "x.xxx.xxx.xxx.xx")
+kit_groove("Marching Order Beat", "Industrial/EBM", 4, ["Dark", "Dense", "Straight", "Clean"],
+           "Four to the floor, a big snare and clap together on 2 and 4, open hats on the offbeats and flat machine hats round them", g, 124, "bodymusic")
+
+g = Part(4).grid(KICK, "X...X...X...X...").grid(SNARE, "....x.......x...").grid(CH, "wwowwwowwwowwwow").grid(COWBELL, "...o.....o.o....").grid(SNARE, "........gogoxxXX", bar=3)
+kit_groove("Cold Assembly Drive", "Industrial/Techno-body", 4, ["Dark", "Dense", "Straight", "Distorted"],
+           "Techno kick and 16th hats with a snare on 2 and 4 and a metal figure, ready for an EBM bass in the gaps; a snare roll rises through the end of bar 4", g, 128, "bodymusic")
+
+g = Part(2).grid(KICK, "X...X...X...X...").grid(LT, "..x...x...x..x.x").grid(SNARE, "....X.......X...").grid(CH, "x.x.x.x.x.x.x.x.").grid(RIM, "...o......o.....") \
+    .grid(CRASH, "x...............", bar=0)
+kit_groove("Slag Hammer Pound", "Techno/Industrial", 4, ["Dark", "Dense", "Straight", "Distorted"],
+           "A pounding kick with low toms in its gaps, a hard snare on 2 and 4, flat 8th hats, a rim against them and a crash on the one", g, 128, "foundry")
+
+g = Part(2).grid(KICK, "X.....x...X..x..").grid(SNARE, "....X..g....X.g.").grid(CH, "xwowxwowxwowxwow").grid(COWBELL, "x..x..x..x..x...")
+kit_groove("Rivet Line Stomp", "Industrial/Electro-industrial", 4, ["Dark", "Dense", "Straight", "Distorted"],
+           "A broken kick with a push before the 4, a snare on 2 and 4 with ghost notes after them, 16th hats shaped by velocity and metal struck in threes", g, 112, "foundry")
+
+g = Part(4).grid(KICK, "X...X...X...X...").grid(KICK, "..gg..gg..gg..gg").grid(OH, "..o...o...o...o.").grid(CLAP, "....x.......x...")
+for b in (0, 2):
+    g.grid(CRASH, "x...............", bar=b)
+g.grid(KICK, "........xxxxXXXX", bar=3)
+kit_groove("Blast Furnace Engine", "Techno/Hard", 5, ["Dark", "Dense", "Straight", "Distorted"],
+           "Fast four-to-the-floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a crash every other bar; a kick roll ends bar 4", g, 148, "foundry")
+
+g = Part(2).grid(KICK, "X.x.......x.....X.........x..x..").grid(SNARE, "....X..g.g..X.......X..g.g..X.g.").grid(CH, "x.o.x.o.x.o.x.o.").grid(OH, "..............x.", bar=1)
+kit_groove("Cracked Pavement Break", "Breakbeat/Breaks", 4, ["Dark", "Dense", "Straight", "Distorted"],
+           "A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, 8th hats and an open hat into the next bar", g, 132, "brokenbeat")
+
+g = Part(2).grid(KICK, "X..X......X.....X..X....X.......").grid(SNARE, "....X..g.g..X.......X..g.g..X..X").grid(CH, "x..ox..ox..ox..o").grid(CRASH, "x...............", bar=0)
+kit_groove("Loose Wire Break", "Breakbeat/Breaks", 4, ["Dark", "Dense", "Straight", "Distorted"],
+           "A chopped break, the snare doubling at the end of bar 2, hats pushing into each beat and a crash on the one", g, 135, "brokenbeat")
 
 
 # A kit's six parts play together, so each sits lower in a kit than it does alone: alone a preset peaks
