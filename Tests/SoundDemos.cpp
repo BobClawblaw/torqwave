@@ -940,7 +940,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
         const auto after = repaired.has_value() && repaired->snapshot != nullptr ? bufferOf (*repaired->snapshot) : damaged;
         d->setProperty ("source", tonalSource);
         d->setProperty ("damage", juce::String (clicks) + " clicks put in, each one to three samples long at 40 to 90% of full scale, in both channels");
-        d->setProperty ("repair", "Effects > Repair > Click Repair at its defaults (threshold 18 dB, clicks up to 3 ms)");
+        d->setProperty ("repair", "Effects > Noise Reduction and Repair > Click and Pop Repair at its defaults (threshold 18 dB, clicks up to 3 ms)");
         d->setProperty ("clicksAdded", clicks);
         d->setProperty ("clicksRepaired", repaired.has_value() ? repaired->repaired : 0);
         d->setProperty ("skipped", repaired.has_value() ? repaired->skipped : 0);
@@ -990,7 +990,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
         const auto print = NoiseReduction::capture (*snapshot, 0, lead - 2400, rate);
         d->setProperty ("source", tonalSource + ", after a second of the noise alone");
         d->setProperty ("damage", "white noise at -38 dBFS RMS over the whole clip");
-        d->setProperty ("repair", "Effects > Repair > Noise Reduction: the print taken from the first second, then the whole clip reduced by 12 dB (the default) and by 24 dB");
+        d->setProperty ("repair", "Effects > Noise Reduction and Repair > Noise Reduction: the print taken from the first second, then the whole clip reduced by 12 dB (the default) and by 24 dB");
         d->setProperty ("noiseBefore", tenth (rmsDb (damaged, 4800, lead - 9600)));
         d->setProperty ("differenceBefore", tenth (differenceDb (damaged, clean, lead)));
         q.clip (d, "before", damaged);
@@ -1030,7 +1030,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
         const auto after = removed != nullptr ? bufferOf (*removed) : damaged;
         d->setProperty ("source", tonalSource);
         d->setProperty ("damage", "a 50 Hz hum with five harmonics: the fundamental at -34 dBFS, each harmonic 6 dB under the one before");
-        d->setProperty ("repair", "Effects > Repair > Hum Removal at its defaults (50 Hz, 8 harmonics, Q 30)");
+        d->setProperty ("repair", "Effects > Noise Reduction and Repair > Remove Hum at its defaults (50 Hz, 8 harmonics, Q 30)");
 
         for (auto hz : { 50, 100, 150 })
         {
@@ -1065,7 +1065,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
         const auto after = rebuilt.audio != nullptr ? bufferOf (*rebuilt.audio) : damaged;
         d->setProperty ("source", beatSource);
         d->setProperty ("damage", "the loop turned up until its peak stood 4 dB over full scale, and cut off flat there");
-        d->setProperty ("repair", "Effects > Repair > Declip at its defaults (threshold 99% of the peak, the peak kept)");
+        d->setProperty ("repair", "Effects > Noise Reduction and Repair > Repair Clipping at its defaults (threshold 99% of the peak, the peak kept)");
         d->setProperty ("clippedSamples", clippedSamples);
         d->setProperty ("runsRebuilt", rebuilt.repaired);
         d->setProperty ("runsTooLong", rebuilt.tooLong);
@@ -1094,7 +1094,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
         const auto after = recovered != nullptr ? bufferOf (*recovered) : damaged;
         d->setProperty ("source", beatSource);
         d->setProperty ("damage", "everything over 5 kHz filtered away (eight 12 dB low-pass sections in a row at 5 kHz)");
-        d->setProperty ("repair", "Effects > Repair > Spectral Recovery at its defaults (the cutoff found from the audio, level -3 dB, rebuilt up to 16 kHz)");
+        d->setProperty ("repair", "Effects > Noise Reduction and Repair > Spectral Recovery at its defaults (the cutoff found from the audio, level -3 dB, rebuilt up to 16 kHz)");
         d->setProperty ("recovered", recovered != nullptr);
         d->setProperty ("cutoffFound", juce::roundToInt (cutoff));
         d->setProperty ("highsOriginal", tenth (bandDb (beatLoop, 6000.0, 16000.0)));
@@ -1132,7 +1132,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
 
         d->setProperty ("source", beatSource);
         d->setProperty ("damage", "nothing: the loop as the instruments made it");
-        d->setProperty ("repair", "Effects > Maximizer: Balanced, ceiling -1 dBTP, its gain set so the clip measures " + juce::String (target, 0) + " LUFS");
+        d->setProperty ("repair", "Effects > Dynamics > Maximizer: Balanced, ceiling -1 dBTP, its gain set so the clip measures " + juce::String (target, 0) + " LUFS");
         d->setProperty ("gainDb", tenth (settings.gainDb));
         d->setProperty ("loudnessBefore", tenth (before.integrated));
         d->setProperty ("loudnessAfter", tenth (measured.integrated));

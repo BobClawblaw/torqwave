@@ -1,201 +1,357 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Torqwave: an audio editor and DAW in one</title>
-<meta name="description" content="Torqwave is a free, open-source audio editor and DAW in one, for macOS, Windows and Linux: spectral editing and repair, mastering, multitrack sessions, built-in instruments, a sequencer, video and a Sound Library.">
-<style>
-  :root {
-    --base: #f4f5f7; --panel: #ffffff; --line: #d9dde3; --text: #2a2f36; --strong: #0f1216; --dim: #67707c;
-    --accent: #2f7fd8; --accent-soft: rgba(47, 127, 216, 0.10); --shot: #111317;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --base: #111418; --panel: #191d22; --line: #2a3038; --text: #c9cfd6; --strong: #f2f4f7; --dim: #828b96;
-            --accent: #4b9bf0; --accent-soft: rgba(75, 155, 240, 0.12); --shot: #0c0e11; }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--base); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 1080px; margin: 0 auto; padding: 48px 16px 64px; }
-  a { color: var(--accent); }
-  header h1 { margin: 0; color: var(--strong); font-size: 40px; letter-spacing: 0.04em; }
-  header h1 span { color: var(--accent); }
-  header .tag { margin: 10px 0 0; color: var(--strong); font-size: 22px; max-width: 760px; line-height: 1.35; }
-  header .sub { margin: 12px 0 0; color: var(--dim); max-width: 760px; }
-  .actions { margin: 24px 0 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .button { display: inline-block; text-decoration: none; border-radius: 8px; padding: 10px 18px; font-weight: 600; border: 1px solid var(--accent); }
-  .button.primary { background: var(--accent); color: #fff; }
-  .button.plain { color: var(--accent); background: var(--accent-soft); }
-  .meta { color: var(--dim); font-size: 14px; margin: 6px 0 0; }
-  nav { margin: 28px 0 0; display: flex; gap: 8px; flex-wrap: wrap; }
-  nav a { color: var(--text); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
-  nav a:hover { border-color: var(--accent); color: var(--accent); }
-  figure { margin: 28px 0 0; }
-  figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--shot); }
-  figcaption { margin-top: 8px; color: var(--dim); font-size: 14px; }
-  h2 { margin: 64px 0 6px; color: var(--strong); font-size: 24px; display: flex; align-items: center; gap: 10px; }
-  h2::before { content: ""; width: 3px; height: 22px; border-radius: 2px; background: var(--accent); flex: none; }
-  .lede { margin: 0 0 4px; color: var(--dim); max-width: 760px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; margin-top: 20px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
-  .card h3 { margin: 0 0 6px; color: var(--strong); font-size: 16px; }
-  .card p { margin: 0; font-size: 14.5px; color: var(--text); }
-  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
-  .pair figure { margin-top: 20px; }
-  .numbers { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
-  .numbers div { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
-  .numbers b { display: block; color: var(--strong); font-size: 26px; font-variant-numeric: tabular-nums; }
-  .numbers span { color: var(--dim); font-size: 13.5px; }
-  ul.plain { margin: 16px 0 0; padding-left: 20px; max-width: 800px; }
-  ul.plain li { margin: 6px 0; }
-  footer { margin-top: 64px; color: var(--dim); font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
-</style>
-</head>
-<body>
-<main>
-  <header>
-    <h1>TORQ<span>WAVE</span></h1>
-    <p class="tag">An audio editor and a DAW in one: for sound design, for writing and producing music, and for working to picture.</p>
-    <p class="sub">Free and open source, for macOS, Windows and Linux. Edit a file down to its spectrum, repair and master it, then build a session around it with instruments, a piano roll, automation and video, without leaving the program.</p>
-    <div class="actions">
-      <a class="button primary" href="https://github.com/BobClawblaw/torqwave/releases/latest">Download Torqwave 0.20.0</a>
-      <a class="button plain" href="guide/">Read the user guide</a>
-      <a class="button plain" href="https://github.com/BobClawblaw/torqwave">Source on GitHub</a>
-    </div>
-    <p class="meta">macOS 13 or later (Apple silicon and Intel), Windows 10 or later (64-bit), Linux (64-bit x86). No account, no subscription.</p>
-    <nav>
-      <a href="#new">New in 0.20.0</a><a href="#editor">The editor</a><a href="#sessions">Sessions</a><a href="#instruments">Instruments</a>
-      <a href="#more">And more</a><a href="sounds/">Hear it</a><a href="compare/">How it compares</a>
-    </nav>
-  </header>
+---
+layout: default
+title: "Torqwave: an audio editor and DAW in one"
+description: "Torqwave is a free, open-source audio editor and DAW in one, for macOS, Windows and Linux: spectral editing and repair, mastering, multitrack sessions, built-in instruments, a sequencer, video and a Sound Library."
+section: home
+home: true
+wide: true
+---
+<div class="hero">
+  <h1>TORQ<span>WAVE</span></h1>
+  <p class="tag">An audio editor and a DAW in one: for sound design, for writing and producing music, and for working to picture.</p>
+  <p class="sub">Free and open source, for macOS, Windows and Linux. Edit a file down to its spectrum, repair and master it, then build a session around it with instruments, a piano roll, automation and video, without leaving the program.</p>
+  <div class="actions">
+    <a class="button primary" href="https://github.com/BobClawblaw/torqwave/releases/latest">Download Torqwave {{ site.version }}</a>
+    <a class="button plain" href="#hear">Hear it</a>
+    <a class="button plain" href="guide/">Read the user guide</a>
+    <a class="button plain" href="https://github.com/BobClawblaw/torqwave">Source on GitHub</a>
+  </div>
+  <p class="meta">macOS 13 or later (Apple silicon and Intel), Windows 10 or later (64-bit), Linux (64-bit x86). No account, no subscription.</p>
+  <div class="chips">
+    <a href="#hear">Hear it</a><a href="#new">New</a><a href="#editor">The editor</a><a href="#repair">Spectral repair</a><a href="#effects">Effects</a><a href="#mastering">Mastering</a>
+    <a href="#sessions">Sessions</a><a href="#synth">Torqwave Synth</a><a href="#decrypt">Decrypt</a><a href="#sampler">Sampler</a><a href="#swarm-drums">StringSwarm and Basic Drums</a>
+    <a href="#sequencer">Sequencer</a><a href="#video">Video and surround</a><a href="#library">Sound Library</a><a href="#asktorq">Ask Torq</a><a href="#evidence">Evidence</a><a href="#get">Get it</a>
+  </div>
+</div>
 
-  <figure>
-    <img src="screenshots/editor.png" alt="Torqwave's editor with a file open: the waveform over its spectrogram, the transport, the level meters and the panels at the side" width="1600" height="990">
-    <figcaption>The editor: a waveform over its spectrogram, with the meters and panels docked where you want them.</figcaption>
-  </figure>
+<figure>
+  <img src="screenshots/editor.png" alt="Torqwave's editor with a file open: the waveform over its spectrogram, the transport, the level meters and the panels at the side" width="1600" height="990">
+  <figcaption>The editor: a waveform over its spectrogram, with the meters and panels docked where you want them.</figcaption>
+</figure>
 
-  <section id="new">
-    <h2>New in 0.20.0</h2>
-    <p class="lede">Built-in instruments worth playing, and something to play on them.</p>
-    <div class="numbers">
-      <div><b>4</b><span>built-in instruments</span></div>
-      <div><b>3,743</b><span>synth patches in 29 categories</span></div>
-      <div><b>1,018</b><span>sequence presets in 37 styles</span></div>
-      <div><b>116</b><span>drum kits for the sequencer</span></div>
-      <div><b>296</b><span>StringSwarm presets</span></div>
-      <div><b>30</b><span>drum sounds on pads</span></div>
-    </div>
-    <div class="grid">
-      <div class="card"><h3>Torqwave Synth</h3><p>Three wavetable oscillators with warps and unison, a sub and noise, two filters, four envelopes, two LFOs, sixteen modulation slots, four macros and a rack of effects. Drop any sound on an oscillator and it becomes that oscillator's wavetable.</p></div>
-      <div class="card"><h3>Decrypt</h3><p>Drop a recording of one note, or a chord, on the synth's Decrypt page and it searches for a patch that plays like it: a chain of steps you can hear, up to eight different candidates to choose from, and a Decrypted page that keeps the ones you take, by category.</p></div>
-      <div class="card"><h3>Torqwave Sampler</h3><p>Your own sounds across the keys, in zones with loops and crossfades, or cut into slices at their hits with each piece on its own key. Straight from the editor's selection or a clip in a session.</p></div>
-      <div class="card"><h3>StringSwarm</h3><p>A guitar with every string tuned to the note you play, through a fuzz or a crunch amp, or a swarm of oscillators in place of the strings: one note becomes a wall.</p></div>
-      <div class="card"><h3>Basic Drums</h3><p>Thirty sounds on pads, each with its own tune, decay, tone, drive and effects, in seven kits that cover every General MIDI drum.</p></div>
-      <div class="card"><h3>Play and audition</h3><p>Play any instrument from the computer's keys. Audition plays each sound as you choose it, with 85 phrases to judge it by, in the session's tempo.</p></div>
-    </div>
-    <div class="pair">
-      <figure>
-        <img loading="lazy" src="screenshots/guide-synth.png" alt="The Torqwave Synth window: three wavetable oscillators, two filters, envelopes, macros, modulation slots and the playing keys" width="2484" height="1768">
-        <figcaption>Torqwave Synth.</figcaption>
-      </figure>
-      <figure>
-        <img loading="lazy" src="screenshots/guide-decrypt.png" alt="The synth's Decrypt page after a search: a round scope with the recording in the middle and candidate patches round it, a panel with how near the patch measures, and a chain of steps along the bottom" width="2480" height="1520">
-        <figcaption>Decrypt, after a search on a bell note. Drawn by Torqwave's tests.</figcaption>
-      </figure>
-    </div>
-    <div class="pair">
-      <figure>
-        <img loading="lazy" src="screenshots/guide-sampler.png" alt="The Torqwave Sampler window playing a looped note: the sample's waveform with its loop, the zone across the keys, and the zone, amp, filter, LFO and voice settings">
-        <figcaption>Torqwave Sampler playing a looped note. Drawn by Torqwave's tests.</figcaption>
-      </figure>
-      <figure>
-        <img loading="lazy" src="screenshots/guide-sampler-slices.png" alt="The Torqwave Sampler in Slices: a drum loop cut at each of its hits, with a pad for each slice">
-        <figcaption>A drum loop cut at its hits, each slice on a pad and a key.</figcaption>
-      </figure>
-    </div>
-    <p class="meta"><a href="sounds/">Hear Torqwave Synth and StringSwarm</a>, rendered by Torqwave with nothing added. The <a href="https://github.com/BobClawblaw/torqwave/releases/tag/v0.20.0">release notes</a> have the rest, with what was and wasn't tried by hand.</p>
-  </section>
+<section id="hear">
+  <h2>Hear it</h2>
+  <p class="lede">What comes built in, played by Torqwave itself: factory kits from the Sequence Library and a sound from each instrument. Nothing was added after the render.</p>
+<!-- clips:start -->
+<div class="clips"><div class="clip"><div class="kind">Factory kit · Techno › Dark</div><h3>Midnight Kit</h3><p>130 BPM · A minor · 4 bars</p><ul><li>Black Stomp <span>(Drums, on Basic Drums: Dark Techno)</span></li><li>Undertow Sub <span>(Bass, on Torqwave Synth: Iron Sub)</span></li><li>Tunnel Stabs <span>(Harmony, on Torqwave Synth: Dub Chord Stab)</span></li><li>Concrete Pluck <span>(Arps, on Torqwave Synth: Wire Pluck)</span></li><li>Low-Light Tom Fall <span>(Drums, on Basic Drums: Standard)</span></li><li>Void Bridge <span>(SFX, on Basic Drums: Standard)</span></li></ul><div class="fill"></div><audio controls preload="none" src="sounds/audio/kits/dark-midnight-kit.mp3"></audio></div><div class="clip"><div class="kind">Factory kit · Industrial › EBM</div><h3>EBM Starter Kit</h3><p>122 BPM · A minor · 4 bars</p><ul><li>Iron Curtain Engine <span>(Drums, on Basic Drums: EBM Machine)</span></li><li>Sweat Pressure <span>(Bass, on Torqwave Synth: Distorted 909 Bass)</span></li><li>Muscle Changes <span>(Harmony, on Torqwave Synth: Abandoned Jab)</span></li><li>Boot Camp Sequence <span>(Arps, on Torqwave Synth: Rubber Pluck)</span></li><li>Drill Tom Fill <span>(Drums, on Basic Drums: EBM Machine)</span></li><li>Marching Build <span>(SFX, on Torqwave Synth: Machine Spin Up)</span></li></ul><div class="fill"></div><audio controls preload="none" src="sounds/audio/kits/ebm-ebm-starter-kit.mp3"></audio></div><div class="clip"><div class="kind">Factory kit · Techno › Industrial</div><h3>Industrial Techno Starter Kit</h3><p>130 BPM · A minor · 4 bars</p><ul><li>Corrosion Drive <span>(Drums, on Basic Drums: Industrial)</span></li><li>Anvil Throb <span>(Bass, on Torqwave Synth: Bunker Kick Bass)</span></li><li>Slag Chords <span>(Harmony, on Torqwave Synth: Rave Hoover Stab)</span></li><li>Corrosion Pattern <span>(Arps, on Torqwave Synth: Acid Shard)</span></li><li>Grinder Roll Fill <span>(Drums, on Basic Drums: Industrial)</span></li><li>Slag Build <span>(SFX, on Torqwave Synth: Machine Spin Up)</span></li></ul><div class="fill"></div><audio controls preload="none" src="sounds/audio/kits/industrial-industrial-techno-starter-kit.mp3"></audio></div><div class="clip"><div class="kind">Torqwave Synth · Bass</div><h3>Target Lock Bass</h3><p class="what">A sequenced bass: a sawtooth through a resonant low-pass that rings on its third harmonic.</p><p>Analog saw. Filters: Ladder 24 at 780 Hz and SVF High at 90 Hz. Mono. Effects: tube drive. Macros: Cutoff, Grit, Space.</p><p>Chosen by ear. Plays four bars at 120 BPM.</p><div class="fill"></div><audio controls preload="none" src="sounds/audio/synth/target-lock-bass.mp3"></audio></div><div class="clip"><div class="kind">Torqwave Synth · Pad</div><h3>Concrete Pad</h3><p class="what">Eight detuned saws, a slow filter sway, chorus and a long reverb.</p><p>Analog saw x4, Analog saw x4. Filter: Ladder 24 at 1.2 kHz. Effects: chorus, reverb. Macros: Cutoff, Grit, Space.</p><p>Chosen by ear. Plays four bars at 120 BPM.</p><div class="fill"></div><audio controls preload="none" src="sounds/audio/synth/concrete-pad.mp3"></audio></div><div class="clip"><div class="kind">Torqwave Synth · Acid</div><h3>Acid Corrosion</h3><p class="what">A squelching acid line with a dotted echo.</p><p>Analog saw. Filter: Ladder 24 at 300 Hz. Legato. Effects: hard drive, 1/16 D delay. Macros: Cutoff, Resonance, Env Mod.</p><p>Chosen by ear. Plays four bars at 120 BPM.</p><div class="fill"></div><audio controls preload="none" src="sounds/audio/synth/acid-corrosion.mp3"></audio></div><div class="clip"><div class="kind">StringSwarm</div><h3>Tremolo Swarm Wall</h3><p class="what">Twelve strings over three octaves of one note, 30 cents apart, four guitars picked 14 times a second through the fuzz.</p><p>12 strings, Three Octaves tuning, 4 guitars; Fuzz amp.</p><p>Chosen by ear. Plays four bars at 120 BPM.</p><div class="fill"></div><audio controls preload="none" src="sounds/audio/swarm/tremolo-swarm-wall.mp3"></audio></div><div class="clip"><div class="kind">Basic Drums</div><h3>Dark Techno: Techno 16ths</h3><p class="what">A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.</p><p>Plays the audition phrase “Techno 16ths” at 125 BPM.</p><div class="fill"></div><audio controls preload="none" src="sounds/audio/drums/dark-techno-techno-16ths.mp3"></audio></div><div class="clip"><div class="kind">Torqwave Sampler · Sliced Kits</div><h3>Dark Techno Break</h3><p class="what">A loop cut into 29 slices, each on a key of its own.</p><p>Plays the audition phrase “Kick Hat Snare” at 125 BPM.</p><div class="fill"></div><audio controls preload="none" src="sounds/audio/sampler/dark-techno-break.mp3"></audio></div></div>
+<p class="meta"><a href="sounds/">All 460 clips</a>: <a href="sounds/synth.html">Torqwave Synth</a> (163), <a href="sounds/stringswarm.html">StringSwarm</a> (38), <a href="sounds/drums-and-sampler.html">Basic Drums and Torqwave Sampler</a> (25), <a href="sounds/kits.html">every factory kit</a> (116) and <a href="sounds/sequences.html">sequences from every style</a> (118).</p>
+<!-- clips:end -->
+</section>
 
-  <section id="editor">
-    <h2>The editor</h2>
-    <p class="lede">For one file at a time, down to the single sound inside it.</p>
-    <div class="grid">
-      <div class="card"><h3>Waveform and spectrum</h3><p>Cut, paste, mix and fade on the waveform, or select a sound by frequency on the spectrogram with a box, a lasso or a brush, and edit only that.</p></div>
-      <div class="card"><h3>Repair</h3><p>Heal a click or a cough out of the spectrum, reduce noise, hum and clipping, and rebuild the highs of dull, band-limited audio.</p></div>
-      <div class="card"><h3>Loudness and mastering</h3><p>Measure and match a loudness target, check a file against delivery specs, and finish a master with EQ, dynamics and a limiter.</p></div>
-      <div class="card"><h3>Effects and plug-ins</h3><p>Built-in effects with presets and a live rack, and your VST3 plug-ins, with Audio Units on the Mac and LV2 on the Mac and Linux.</p></div>
-      <div class="card"><h3>Pitch and time</h3><p>Stretch and shift a selection, correct a voice or a solo line to a scale or note by note, and smear a sound into a pad with an extreme stretch.</p></div>
-      <div class="card"><h3>Sound Library</h3><p>Index, search and audition a large effects collection, and drag what you find straight into a file, a session or the sampler.</p></div>
+<section id="new">
+  <h2>New in 0.20</h2>
+  <p class="lede">Built-in instruments worth playing, something to play on them, and a start that brings back where you were.</p>
+  <div class="numbers">
+    <div><b>4</b><span>built-in instruments</span></div>
+    <div><b>3,743</b><span>synth patches in 29 categories</span></div>
+    <div><b>1,018</b><span>sequence presets in 37 styles</span></div>
+    <div><b>116</b><span>starter kits for the sequencer</span></div>
+    <div><b>296</b><span>StringSwarm presets</span></div>
+    <div><b>30</b><span>drum sounds on pads</span></div>
+  </div>
+  <div class="grid">
+    <div class="card"><h3>Continue where you left off (0.20.1)</h3><p>A start that reopens every file that was open in the editor, in order, each with its selection, cursor, zoom and scroll, and the session with its view where it was. It keeps a note of what was open, not your audio: files come back as they are on disk.</p><p class="more"><a href="guide/01-getting-started.html">Getting started</a></p></div>
+    <div class="card"><h3>Four instruments</h3><p>Torqwave Synth with Decrypt, Torqwave Sampler, StringSwarm and Basic Drums, each with its own window, played from the computer's keys, with Audition playing each sound as you choose it.</p><p class="more"><a href="#synth">More below</a></p></div>
+    <div class="card"><h3>Something to play on them</h3><p>The Sequence Library ships 1,018 sequences and 116 kits in 37 styles, techno and industrial first, sorted by style, energy and character. They play on the built-in instruments or on your own plug-ins.</p><p class="more"><a href="sounds/kits.html">Hear every kit</a></p></div>
+  </div>
+  <p class="meta">The <a href="https://github.com/BobClawblaw/torqwave/releases/latest">release notes</a> have the rest, with what was and wasn't tried by hand.</p>
+</section>
+
+<section id="editor">
+  <h2>The editor</h2>
+  <p class="lede">For one file at a time, down to the single sound inside it.</p>
+  <div class="area">
+    <div class="words">
+      <p>Open a file and it shows as a waveform, a spectrogram, or both. Several files stay open at once in the Files panel, each with its own undo history.</p>
+      <ul>
+        <li><b>Cut, paste and shape:</b> cut, copy, paste, paste mix and paste to fill; fades with shapes, dragged straight from handles on the waveform; gain, normalize, and gain and pan ramps.</li>
+        <li><b>Stretch and pitch:</b> stretch or shift a selection with two methods, one of them Torqwave's own, which plays each attack at its own speed so drum hits keep their edge; an extreme stretch, up to a thousand times, smears a sound into a pad.</li>
+        <li><b>Pitch correction:</b> a voice or a solo line, to a scale or by dragging its notes in the Pitch Editor.</li>
+        <li><b>Markers and regions:</b> with lists, CSV import and export, and saving regions as files.</li>
+        <li><b>Batch Process:</b> many files through the same steps, the originals left as they are.</li>
+      </ul>
+      <p class="read">In the guide: <a href="guide/02-editing-audio.html">Editing audio</a> · <a href="guide/11-projects-and-file-types.html">Projects and file types</a></p>
     </div>
     <figure>
-      <img loading="lazy" src="screenshots/analysis.png" alt="Torqwave's analysis views: level meters, a spectrum and loudness readings beside the waveform" width="1600" height="990">
-      <figcaption>Meters and analysis beside the file.</figcaption>
+      <img loading="lazy" src="screenshots/guide-editing.png" alt="A WAV file with the markers Intro, Verse and Outro, the region Whistle above the waveform, and the Verse selected up to the region">
+      <figcaption>Markers, a region and a selection in the editor.</figcaption>
     </figure>
-  </section>
+  </div>
+</section>
 
-  <section id="sessions">
-    <h2>Multitrack sessions</h2>
-    <p class="lede">The DAW half, with the editor's tools reaching into every clip.</p>
-    <div class="grid">
-      <div class="card"><h3>Tracks, clips and crossfades</h3><p>Audio and instrument tracks, folders, buses and sends, VCA faders, takes and comping, and crossfades you shape on the lane or in an editor of their own.</p></div>
-      <div class="card"><h3>Piano Roll and Sequencer</h3><p>Write notes in the Piano Roll with a drum grid and controller lanes, or start from the Sequencer and the Idea Board with 1,018 factory presets.</p></div>
-      <div class="card"><h3>Mixer and automation</h3><p>A mixer with effects on every track and bus, plug-in latency lined up, ducking, and automation drawn or written live for volume, pan and any setting.</p></div>
-      <div class="card"><h3>Tempo</h3><p>Sessions count in bars and beats; clips can follow the tempo with warp markers, and instruments and plug-ins get the tempo and playhead.</p></div>
-      <div class="card"><h3>Video and surround</h3><p>Edit to picture, write the sound back into the video, and work in 5.1 or 7.1 files and sessions.</p></div>
-      <div class="card"><h3>Out the door</h3><p>Mix down, bounce and freeze tracks, export stems, and save a project that keeps every file's undo history.</p></div>
+<section id="repair">
+  <h2>Spectral editing and repair</h2>
+  <p class="lede">A cough, a phone ringing or a squeaky chair shows in the spectrogram as a shape of its own. Select that shape and leave everything else as it was.</p>
+  <div class="area flip">
+    <div class="words">
+      <ul>
+        <li><b>Select by frequency:</b> a box, a lasso drawn freehand, or a brush you paint with, lighter or heavier.</li>
+        <li><b>Heal:</b> fills a drawn spot from the sound around it. Or attenuate it, or remove it.</li>
+        <li><b>Noise:</b> Noise Reduction from a noise print, Adaptive Noise Reduction without one, and Dialogue Isolation, which keeps the speech and lowers everything else.</li>
+        <li><b>Repair effects:</b> Click and Pop Repair, De-crackle, De-plosive, Remove Hum, Repair Clipping, Reduce Reverb, Wow and Flutter, and Spectral Recovery, which rebuilds the highs of dull, band-limited audio.</li>
+        <li><b>Rebalance:</b> turns the voice, the bass, the drums and the rest of a finished mix up or down separately.</li>
+      </ul>
+      <p class="read">In the guide: <a href="guide/03-spectral-editing-and-repair.html">Spectral editing and repair</a> · Before and after, with numbers: <a href="quality/">Quality</a></p>
     </div>
-    <div class="pair">
-      <figure>
-        <img loading="lazy" src="screenshots/multitrack.png" alt="A Torqwave multitrack session: audio and instrument tracks with clips on the lanes, track headers and the transport" width="1600" height="990">
-        <figcaption>A session.</figcaption>
-      </figure>
-      <figure>
-        <img loading="lazy" src="screenshots/guide-sequencer.png" alt="Torqwave's Sequencer with a pattern of steps for drums and a bass line">
-        <figcaption>The Sequencer.</figcaption>
-      </figure>
+    <figure>
+      <img loading="lazy" src="screenshots/guide-lasso.png" alt="A lasso drawn round a phone ring in the spectrogram, a dotted oval in each channel">
+      <figcaption>A lasso drawn freehand round a phone's ring. The shape is the selection.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="effects">
+  <h2>Effects and plug-ins</h2>
+  <p class="lede">Built-in effects with previews and presets, a live rack, and your own plug-ins.</p>
+  <div class="area">
+    <div class="words">
+      <ul>
+        <li><b>EQ:</b> parametric (each band on every channel, the mid or the side, in minimum or linear phase), dynamic, graphic with 10 or 31 bands, and match EQ, which takes a reference's tone onto the sound.</li>
+        <li><b>Dynamics:</b> compressor, multiband compressor, de-esser, transient shaper, limiter and maximizer.</li>
+        <li><b>Space and movement:</b> reverb and convolution reverb, echo, chorus, flanger, phaser and tremolo.</li>
+        <li><b>Every dialog</b> has a preview, Bypass to compare, and presets: 201 factory presets for common jobs to start from.</li>
+        <li><b>The effects rack</b> runs effects live on what plays until you apply it.</li>
+        <li><b>Plug-ins:</b> VST3, with Audio Units on the Mac and LV2 on the Mac and Linux, each checked when it is scanned.</li>
+      </ul>
+      <p class="read">In the guide: <a href="guide/04-effects-and-the-rack.html">Effects and the rack</a></p>
     </div>
-  </section>
+    <figure>
+      <img loading="lazy" src="screenshots/guide-rack.png" alt="The Effects Rack holding 1. Parametric EQ, 2. Compressor and 3. Limiter beside the editor">
+      <figcaption>The effects rack: an EQ, a compressor and a limiter, live on what plays.</figcaption>
+    </figure>
+  </div>
+</section>
 
-  <section id="instruments">
-    <h2>Instruments and sound</h2>
-    <p class="lede">Built in, so a session plays the same on any computer with Torqwave.</p>
-    <div class="pair">
-      <figure>
-        <img loading="lazy" src="screenshots/guide-swarm.png" alt="The StringSwarm window with its strings, amp and swarm settings">
-        <figcaption>StringSwarm.</figcaption>
-      </figure>
-      <figure>
-        <img loading="lazy" src="screenshots/guide-drums.png" alt="The Basic Drums window with its pads and each pad's settings">
-        <figcaption>Basic Drums.</figcaption>
-      </figure>
+<section id="mastering">
+  <h2>Loudness and mastering</h2>
+  <p class="lede">Measure first, hit a target in one step, and finish a master.</p>
+  <div class="area flip">
+    <div class="words">
+      <ul>
+        <li><b>Measure:</b> EBU R128 loudness and true peak, Amplitude Statistics for each channel, a frequency analyzer, Tonal Balance against a target range, and a phase meter.</li>
+        <li><b>Match Loudness:</b> brings a file to a loudness under a true-peak ceiling.</li>
+        <li><b>Meet Delivery Spec:</b> EBU R128, ATSC A/85, an online target or a spec of your own in one step, with a report; for mixdowns and stems too.</li>
+        <li><b>Finish:</b> EQ, multiband compression, stereo width, an exciter and the Maximizer, a true-peak limiter, then dither to the word length you deliver.</li>
+      </ul>
+      <p class="read">In the guide: <a href="guide/05-loudness-and-mastering.html">Loudness and mastering</a> · A loop brought to a loudness, measured: <a href="quality/#loudness">Quality</a></p>
     </div>
-    <p class="meta">Any VST3, Audio Unit or LV2 instrument works on an instrument track too, and a sequence can drive your own plug-ins as well as the built-in ones.</p>
-  </section>
+    <figure>
+      <img loading="lazy" src="screenshots/analysis.png" alt="The Analysis workspace: the frequency analyzer and phase meter under the editor" width="1600" height="990">
+      <figcaption>The Analysis workspace: analyzer, phase meter and levels beside the file.</figcaption>
+    </figure>
+  </div>
+</section>
 
-  <section id="more">
-    <h2>And more</h2>
-    <ul class="plain">
-      <li><b>Ask Torq (experimental, off by default):</b> edits from a sentence, planned by a language model you run yourself on any server that speaks the OpenAI-compatible API. Nothing leaves your computer unless you point it elsewhere.</li>
-      <li><b>Recording:</b> into a file or onto tracks, with punch-in, monitoring, a metronome and loop takes.</li>
-      <li><b>Yours to arrange:</b> dockable panels, workspaces, ten themes and every key changeable.</li>
-      <li><b>A guide in the app:</b> Help &gt; User Guide carries the whole <a href="guide/">user guide</a>, pictures and all.</li>
-      <li><b>Honest about itself:</b> a <a href="compare/">feature matrix</a> against fifteen other editors and DAWs, showing what Torqwave lacks as plainly as what it has, and a <a href="https://github.com/BobClawblaw/torqwave/blob/main/CHANGELOG.md">changelog</a> that says what was measured and what was not tried by hand.</li>
-    </ul>
-  </section>
-
-  <section id="get">
-    <h2>Get it</h2>
-    <div class="actions">
-      <a class="button primary" href="https://github.com/BobClawblaw/torqwave/releases/latest">Download Torqwave 0.20.0</a>
-      <a class="button plain" href="guide/01-getting-started.html">Getting started</a>
-      <a class="button plain" href="SHORTCUTS.html">Keyboard shortcuts</a>
+<section id="sessions">
+  <h2>Multitrack sessions</h2>
+  <p class="lede">The DAW half, with the editor's tools reaching into every clip.</p>
+  <div class="area">
+    <div class="words">
+      <ul>
+        <li><b>Tracks and routing:</b> audio and instrument tracks, folders, buses and sends, VCA faders, sidechain inputs on plug-ins, ducking under a voice.</li>
+        <li><b>Clips:</b> ripple editing, takes and comping, clip gain, fades, and crossfades you shape on the lane or in an editor of their own.</li>
+        <li><b>Mixer and automation:</b> effects on every track and bus with plug-in latency lined up, mixer scenes, and automation of volume, pan and any effect setting, drawn or written while playing.</li>
+        <li><b>Tempo:</b> a tempo map with bars and beats, an arranger, and audio that follows the tempo.</li>
+        <li><b>Sound design in the session:</b> Edit in Place, clip effects, Combine to New Sound and Add to Library.</li>
+        <li><b>Out the door:</b> freeze, bounce, mix down and export stems; recovery after a crash.</li>
+      </ul>
+      <p class="read">In the guide: <a href="guide/06-multitrack-sessions.html">Multitrack sessions</a> · <a href="guide/08-recording.html">Recording</a></p>
     </div>
-    <p class="meta">The Mac app is signed ad hoc and not notarized, so macOS blocks it the first time: open it once, then choose Open Anyway under System Settings &gt; Privacy &amp; Security. Found something wrong? <a href="https://github.com/BobClawblaw/torqwave/issues">Open an issue</a>.</p>
-  </section>
+    <figure>
+      <img loading="lazy" src="screenshots/multitrack.png" alt="A Torqwave multitrack session: audio and instrument tracks with clips on the lanes, track headers and the transport" width="1600" height="990">
+      <figcaption>A session.</figcaption>
+    </figure>
+  </div>
+</section>
 
-  <footer>
-    Torqwave is free software under the GNU Affero General Public License, version 3. <a href="https://github.com/BobClawblaw/torqwave">Source, changelog and issues on GitHub.</a>
-  </footer>
-</main>
-</body>
-</html>
+<section id="synth">
+  <h2>Torqwave Synth</h2>
+  <p class="lede">A wavetable synth with its own window and 3,743 factory patches in 29 categories, for dark techno, industrial and EBM first.</p>
+  <div class="area flip">
+    <div class="words">
+      <ul>
+        <li><b>Three wavetable oscillators</b> with warps and unison, a sub and noise. Drop any sound on an oscillator and it becomes that oscillator's table.</li>
+        <li><b>Two filters,</b> four envelopes, two LFOs, sixteen modulation slots and four macros.</li>
+        <li><b>A rack of effects</b> inside the synth: drive, chorus, phaser, delay and reverb.</li>
+        <li><b>Patches</b> by category, with favourites. Audition plays each one as you choose it, on a phrase that suits it, in the session's tempo.</li>
+      </ul>
+      <p class="read">Hear it: <a href="sounds/synth.html">patches from every category</a> · In the guide: <a href="guide/07-instruments-and-midi.html#play-it-live">Instruments and MIDI</a></p>
+    </div>
+    <figure>
+      <img loading="lazy" src="screenshots/guide-synth.png" alt="The Torqwave Synth window: three wavetable oscillators, two filters, envelopes, macros, modulation slots and the playing keys" width="2484" height="1768">
+      <figcaption>Torqwave Synth.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="decrypt">
+  <h2>Decrypt</h2>
+  <p class="lede">A patch from a recording: drop one note, or a chord, on the synth's Decrypt page and it searches for a patch that plays like it.</p>
+  <div class="area">
+    <div class="words">
+      <ul>
+        <li><b>A chain you can hear:</b> each step of the search is a patch, nearer the recording than the one before.</li>
+        <li><b>Choices, not copies:</b> up to eight different candidates round the scope, each with its lock: how near it measures.</li>
+        <li><b>Chords as chords:</b> where it finds three or more notes it names them and plays every candidate on those keys.</li>
+        <li><b>The Decrypted page</b> keeps the patches you take and name, by category.</li>
+        <li><b>What it is not:</b> the lock is a measurement, not a listening test, and two notes at once are still matched as one.</li>
+      </ul>
+      <p class="read">In the guide: <a href="guide/07-instruments-and-midi.html#decrypt-a-patch-from-a-recording">Decrypt: a patch from a recording</a>, with how long it takes and how near it gets</p>
+    </div>
+    <figure>
+      <img loading="lazy" src="screenshots/guide-decrypt.png" alt="The synth's Decrypt page after a search: a round scope with the recording in the middle and candidate patches round it, a panel with how near the patch measures, and a chain of steps along the bottom" width="2480" height="1520">
+      <figcaption>Decrypt, after a search on a bell note. Drawn by Torqwave's tests.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="sampler">
+  <h2>Torqwave Sampler</h2>
+  <p class="lede">Your own sounds across the keys, or cut into slices with each piece on a key of its own.</p>
+  <div class="pair">
+    <figure>
+      <img loading="lazy" src="screenshots/guide-sampler.png" alt="The Torqwave Sampler window playing a looped note: the sample's waveform with its loop, the zone across the keys, and the zone, amp, filter, LFO and voice settings">
+      <figcaption>A looped note across the keys. Drawn by Torqwave's tests.</figcaption>
+    </figure>
+    <figure>
+      <img loading="lazy" src="screenshots/guide-sampler-slices.png" alt="The Torqwave Sampler in Slices: a drum loop cut at each of its hits, with a pad for each slice">
+      <figcaption>A drum loop cut at its hits, each slice on a pad and a key.</figcaption>
+    </figure>
+  </div>
+  <ul class="plain">
+    <li><b>Zones:</b> up to 128, each a sample with the keys and velocities that play it, with loops and crossfades.</li>
+    <li><b>Slices:</b> a loop cut at its hits, its markers or its regions.</li>
+    <li><b>Straight from where the sound is:</b> the editor's selection, a clip in a session, the Files panel or the Sound Library.</li>
+    <li><b>Eleven factory presets,</b> rendered from Torqwave's own instruments. The set is small on purpose: the sampler is for your sounds.</li>
+  </ul>
+  <p class="meta">Hear it: <a href="sounds/drums-and-sampler.html#torqwave-sampler">all eleven presets</a> · In the guide: <a href="guide/07-instruments-and-midi.html#torqwave-sampler">Torqwave Sampler</a>, with what it holds and what it doesn't do</p>
+</section>
+
+<section id="swarm-drums">
+  <h2>StringSwarm and Basic Drums</h2>
+  <p class="lede">Built in, so a session plays the same on any computer with Torqwave.</p>
+  <div class="pair">
+    <figure>
+      <img loading="lazy" src="screenshots/guide-swarm.png" alt="The StringSwarm window with its strings, amp and swarm settings">
+      <figcaption><b>StringSwarm:</b> a guitar with every string tuned to the note you play, through a fuzz or a crunch amp, or a swarm of oscillators in place of the strings. One note becomes a wall. 296 presets. <a href="sounds/stringswarm.html">Hear it</a> · <a href="guide/07-instruments-and-midi.html#stringswarm">Guide</a></figcaption>
+    </figure>
+    <figure>
+      <img loading="lazy" src="screenshots/guide-drums.png" alt="The Basic Drums window with its pads and each pad's settings">
+      <figcaption><b>Basic Drums:</b> 30 synthesised sounds that cover every General MIDI drum note, each with its own tune, decay, tone and drive, and a filter, crush, reverb and delay on every pad, in seven kits. <a href="sounds/drums-and-sampler.html">Hear it</a> · <a href="guide/07-instruments-and-midi.html">Guide</a></figcaption>
+    </figure>
+  </div>
+  <p class="meta">Any VST3, Audio Unit or LV2 instrument works on an instrument track too, and a sequence can drive your own plug-ins as well as the built-in ones.</p>
+</section>
+
+<section id="sequencer">
+  <h2>Sequencer, Piano Roll and the Sequence Library</h2>
+  <p class="lede">For writing music: start from a pattern, a preset or a blank grid.</p>
+  <div class="area flip">
+    <div class="words">
+      <ul>
+        <li><b>The Sequencer</b> window, with its writing tools, and the <b>Idea Board</b> for launching sequences together.</li>
+        <li><b>The Piano Roll:</b> notes placed, moved and resized, a drum grid with swing and probability, controller lanes, and Capture MIDI for what you just played.</li>
+        <li><b>The Sequence Library:</b> 1,018 factory sequences and 116 kits in 37 styles, found by role, style, key, energy and character, heard on their own voices or on your own instruments before you drop them in.</li>
+        <li><b>Kits</b> make a track for each part. <b>Remap Notes</b> puts a drum pattern on any kit's keys.</li>
+        <li><b>MIDI:</b> files in and out, hardware synths through MIDI out, MIDI clock, control surfaces and MIDI learn.</li>
+      </ul>
+      <p class="read">Hear them: <a href="sounds/kits.html">every factory kit</a> · <a href="sounds/sequences.html">sequences from every style</a> · In the guide: <a href="guide/07-instruments-and-midi.html#the-sequencer">The Sequencer</a> · <a href="guide/07-instruments-and-midi.html#the-sequence-library">The Sequence Library</a> · <a href="guide/14-styles.html">The 37 styles</a></p>
+    </div>
+    <figure>
+      <img loading="lazy" src="screenshots/guide-sequencer.png" alt="Torqwave's Sequencer with a pattern of steps for drums and a bass line">
+      <figcaption>The Sequencer.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="video">
+  <h2>Video and surround</h2>
+  <p class="lede">Working to picture, in stereo, 5.1 or 7.1.</p>
+  <div class="area">
+    <div class="words">
+      <ul>
+        <li><b>A video beside the sound:</b> open a video to edit its sound, or attach one to a file or a session; the picture follows the cursor and plays along.</li>
+        <li><b>Back into the video:</b> Save Sound into Video and Save Mix into Video write a copy with the new sound (through ffmpeg, which is not part of Torqwave).</li>
+        <li><b>To picture:</b> session timecode, Find Cuts and hit markers.</li>
+        <li><b>Surround:</b> 5.1 and 7.1 files and sessions, each track placed with a surround pad, played folded down or to separate outputs.</li>
+      </ul>
+      <p class="read">In the guide: <a href="guide/09-video-and-surround.html">Video and surround</a></p>
+    </div>
+    <figure>
+      <img loading="lazy" src="screenshots/guide-video.png" alt="The editor with the Video panel docked beside it, showing the frame at the cursor, 6 seconds in">
+      <figcaption>The Video panel follows the cursor.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="library">
+  <h2>The Sound Library</h2>
+  <p class="lede">For a large sound-effects collection.</p>
+  <div class="area flip">
+    <div class="words">
+      <ul>
+        <li><b>Indexed in the background:</b> the folders you choose, and only those.</li>
+        <li><b>Found by words,</b> by folder or by UCS category, rated, tagged and marked as favourites.</li>
+        <li><b>Previewed</b> with the whole waveform, scrubbing and looping.</li>
+        <li><b>Dragged</b> into the editor, a session, the sampler or other apps, whole or just the part you selected.</li>
+      </ul>
+      <p class="read">In the guide: <a href="guide/10-sound-library.html">The Sound Library</a></p>
+    </div>
+    <figure>
+      <img loading="lazy" src="screenshots/guide-library.png" alt="The Sound Library browsing by category: sounds listed with their ratings, lengths and folders, and the selected sound's waveform in the preview below">
+      <figcaption>The Sound Library, browsing by category.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="asktorq">
+  <h2>Ask Torq <small>experimental, off by default</small></h2>
+  <p class="lede">A sentence becomes a plan of edits, made by a language model you run yourself.</p>
+  <ul class="plain">
+    <li><b>Yours to run:</b> it works with any server that speaks the OpenAI-compatible API, on your computer or your network. Torqwave ships no model.</li>
+    <li><b>You read the plan first:</b> the model measures the file and uses Torqwave's own edits, the effects rack and your plug-ins' settings; nothing changes until you apply, and Apply is one undo step.</li>
+    <li><b>No audio leaves</b> unless you turn on Let the model hear clips for Decrypt, which is off to begin with.</li>
+    <li><b>In sessions and the Sequencer too:</b> tracks, clips, instruments and automation, and writing and reviewing sequences.</li>
+  </ul>
+  <p class="meta">In the guide: <a href="guide/13-ask-torq.html">Ask Torq</a>, with what it needs, what it can do and when it goes wrong.</p>
+</section>
+
+<section id="yours">
+  <h2>Yours to arrange</h2>
+  <div class="pair">
+    <figure>
+      <img loading="lazy" src="screenshots/theme-light.png" alt="The Light theme">
+      <figcaption>Ten themes, each with a choice of accent and waveform colour.</figcaption>
+    </figure>
+    <figure>
+      <img loading="lazy" src="screenshots/guide-home.png" alt="The home screen with buttons to start and cards for six recent files, sessions and projects">
+      <figcaption>The home screen: recent files, sessions and projects as cards.</figcaption>
+    </figure>
+  </div>
+  <ul class="plain">
+    <li><b>Panels</b> docked round the editor, tabbed or floating, kept in workspaces.</li>
+    <li><b>Every key changeable:</b> search, change, export and import them. <a href="SHORTCUTS.html">The shortcuts Torqwave ships with</a>.</li>
+    <li><b>A guide in the app:</b> Help &gt; User Guide carries the whole <a href="guide/">user guide</a>, pictures and all.</li>
+  </ul>
+  <p class="meta">In the guide: <a href="guide/12-customising-and-troubleshooting.html">Customising and troubleshooting</a></p>
+</section>
+
+<section id="evidence">
+  <h2>Evidence, not adjectives</h2>
+  <div class="grid">
+    <a class="card" href="quality/"><div class="count">Quality</div><h3>Before and after, with numbers</h3><p>Hiss, hum and missing highs repaired at the default settings, and a loop brought to a loudness, on clips Torqwave rendered itself; what the tests measure; and what has not been checked.</p></a>
+    <a class="card" href="sounds/"><div class="count">Sounds</div><h3>Hear what is built in</h3><p>Patches, presets, kits and sequences from every built-in instrument, most chosen by rule and not by ear, so you hear what the lists are like.</p></a>
+    <a class="card" href="compare/"><div class="count">Compare</div><h3>Against fifteen other editors and DAWs</h3><p>A feature matrix, each cell read from that product's own documentation, showing what Torqwave lacks as plainly as what it has.</p></a>
+    <a class="card" href="https://github.com/BobClawblaw/torqwave/blob/main/CHANGELOG.md"><div class="count">Changelog</div><h3>What was measured, and what was not tried</h3><p>Every piece of work with what the tests measured, what was tried by hand and what was not.</p></a>
+  </div>
+</section>
+
+<section id="get">
+  <h2>Get it</h2>
+  <div class="actions">
+    <a class="button primary" href="https://github.com/BobClawblaw/torqwave/releases/latest">Download Torqwave {{ site.version }}</a>
+    <a class="button plain" href="guide/01-getting-started.html">Getting started</a>
+    <a class="button plain" href="SHORTCUTS.html">Keyboard shortcuts</a>
+  </div>
+  <p class="meta">The Mac app is signed ad hoc and not notarized, so macOS blocks it the first time: open it once, then choose Open Anyway under System Settings &gt; Privacy &amp; Security. Found something wrong? <a href="https://github.com/BobClawblaw/torqwave/issues">Open an issue</a>.</p>
+</section>
