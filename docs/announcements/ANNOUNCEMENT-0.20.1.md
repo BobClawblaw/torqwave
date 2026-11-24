@@ -1,6 +1,6 @@
 # Announcing Torqwave 0.20.1 on X
 
-A draft, not posted. 0.20.1 is the major release: this announces everything since 0.19.2 (0.20.0 was a baseline, published with the Mac disk image alone and not announced). It holds one main post, a thread of eight, and alt text for every image. Each post is the plain text in its box: copy it from there. `<release link>` stands for the release's address (`https://github.com/BobClawblaw/torqwave/releases/tag/v0.20.1` once it exists); X counts any link as 23 characters, and the counts below do too.
+**Superseded by [ANNOUNCEMENT-0.21.0.md](ANNOUNCEMENT-0.21.0.md): 0.20.1 was not announced.** A draft, not posted. 0.20.1 is the major release: this announces everything since 0.19.2 (0.20.0 was a baseline, published with the Mac disk image alone and not announced). It holds one main post, a thread of eight, and alt text for every image. Each post is the plain text in its box: copy it from there. `<release link>` stands for the release's address (`https://github.com/BobClawblaw/torqwave/releases/tag/v0.20.1` once it exists); X counts any link as 23 characters, and the counts below do too.
 
 Check the lengths after any change:
 

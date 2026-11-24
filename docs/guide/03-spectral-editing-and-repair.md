@@ -109,7 +109,7 @@ They are all in **Effects > Noise Reduction and Repair**. Each one works on the 
 | Effect | Use it for |
 |---|---|
 | Reduce Reverb... | Too much room: lowers the reverberation and keeps the direct sound |
-| Click and Pop Repair... | Clicks and pops, such as from vinyl or a bad edit: finds and rebuilds them |
+| Click and Pop Repair... | Clicks and pops, such as from vinyl or a bad edit: finds and rebuilds them. A drum hit or a note's attack is not taken for a click, so a click within about 10 ms of one is left |
 | Mouth De-click... | The small clicks of lips and tongue in speech |
 | De-crackle... | Crackle: dense tiny clicks |
 | De-plosive... | The thump a "p" or a "b" puts into the microphone |
