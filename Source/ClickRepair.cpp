@@ -338,6 +338,156 @@ namespace
     }
 }
 
+namespace
+{
+    /** Solves the symmetric positive definite banded system m u = b in place (Cholesky): row i of
+        m holds columns i - band .. i, the diagonal last. */
+    bool solveBanded (std::vector<double>& m, std::vector<double>& b, int n, int band)
+    {
+        const auto w = band + 1;
+        const auto at = [&m, w, band] (int i, int j) -> double& { return m[(size_t) (i * w + (j - i + band))]; };
+
+        for (int i = 0; i < n; ++i)
+        {
+            for (int j = juce::jmax (0, i - band); j <= i; ++j)
+            {
+                auto sum = at (i, j);
+
+                for (int k = juce::jmax (0, i - band); k < j; ++k)
+                    sum -= at (i, k) * at (j, k);
+
+                if (j < i)
+                {
+                    at (i, j) = sum / at (j, j);
+                }
+                else
+                {
+                    if (sum <= 0.0)
+                        return false;
+
+                    at (i, i) = std::sqrt (sum);
+                }
+            }
+        }
+
+        for (int i = 0; i < n; ++i)
+        {
+            auto sum = b[(size_t) i];
+
+            for (int k = juce::jmax (0, i - band); k < i; ++k)
+                sum -= at (i, k) * b[(size_t) k];
+
+            b[(size_t) i] = sum / at (i, i);
+        }
+
+        for (int i = n - 1; i >= 0; --i)
+        {
+            auto sum = b[(size_t) i];
+
+            for (int k = i + 1; k <= juce::jmin (n - 1, i + band); ++k)
+                sum -= at (k, i) * b[(size_t) k];
+
+            b[(size_t) i] = sum / at (i, i);
+        }
+
+        return true;
+    }
+}
+
+bool fillMissing (float* x, int n, const std::vector<int>& missing, const std::vector<float>* beyond)
+{
+    if (missing.empty() || missing.front() < order || missing.back() + order >= n)
+        return false;
+
+    std::vector<double> r ((size_t) order + 1), a;
+    addAutocorrelation (x, n, order, r);
+
+    if (! levinson (r, order, a))
+        return false;
+
+    std::vector<double> ra ((size_t) order + 1);
+
+    for (int d = 0; d <= order; ++d)
+        for (int k = 0; k + d <= order; ++k)
+            ra[(size_t) d] += a[(size_t) k] * a[(size_t) (k + d)];
+
+    // The samples still to solve for (`open`), and a copy of x with them at zero; a sample set to
+    // its bound leaves `open` and stays in the copy as known.
+    std::vector<double> work (x, x + n);
+    std::vector<int> open ((size_t) missing.size());
+    std::iota (open.begin(), open.end(), 0);
+
+    for (int round = 0; round < 4 && ! open.empty(); ++round)
+    {
+        const auto m = (int) open.size();
+        const auto first = missing[(size_t) open.front()], last = missing[(size_t) open.back()];
+
+        for (auto i : open)
+            work[(size_t) missing[(size_t) i]] = 0.0;
+
+        // Prediction error over every equation that touches an open sample, with those at zero.
+        std::vector<double> e0 ((size_t) (last - first + order + 1));
+
+        for (int t = first; t <= last + order; ++t)
+        {
+            auto e = 0.0;
+
+            for (int k = 0; k <= order; ++k)
+                e += a[(size_t) k] * work[(size_t) (t - k)];
+
+            e0[(size_t) (t - first)] = e;
+        }
+
+        // Normal equations: banded, since samples more than `order` apart share no equation.
+        const auto w = order + 1;
+        std::vector<double> matrix ((size_t) (m * w)), b ((size_t) m);
+
+        for (int i = 0; i < m; ++i)
+        {
+            const auto pi = missing[(size_t) open[(size_t) i]];
+
+            for (int j = juce::jmax (0, i - order); j <= i; ++j)
+            {
+                const auto d = pi - missing[(size_t) open[(size_t) j]];
+                matrix[(size_t) (i * w + (j - i + order))] = d <= order ? ra[(size_t) d] * (i == j ? 1.0 + 1.0e-9 : 1.0) : 0.0;
+            }
+
+            auto sum = 0.0;
+
+            for (int k = 0; k <= order; ++k)
+                sum += a[(size_t) k] * e0[(size_t) (pi + k - first)];
+
+            b[(size_t) i] = -sum;
+        }
+
+        if (! solveBanded (matrix, b, m, order))
+            return false;
+
+        std::vector<int> still;
+
+        for (int i = 0; i < m; ++i)
+        {
+            const auto index = open[(size_t) i];
+            const auto bound = beyond != nullptr ? (double) (*beyond)[(size_t) index] : 0.0;
+            const auto shortOfIt = beyond != nullptr && (bound >= 0.0 ? b[(size_t) i] < bound : b[(size_t) i] > bound);
+            work[(size_t) missing[(size_t) index]] = shortOfIt ? bound : b[(size_t) i];
+
+            if (! shortOfIt)
+                still.push_back (index);
+        }
+
+        if (still.size() == open.size())
+            break;
+
+        open = std::move (still);
+    }
+
+    for (auto p : missing)
+        x[p] = (float) work[(size_t) p];
+
+    return true;
+}
+
 std::optional<Result> repair (const AudioSnapshot& snapshot, juce::int64 start, juce::int64 end, double sampleRate,
                               Settings settings, const std::function<bool (float)>& progress)
 {

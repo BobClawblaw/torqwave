@@ -4,6 +4,15 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Repair Clipping rebuilds from the sound round the clip** (fix log 108)
+- **What was wrong.** On the factory EBM Kit loop turned up until its peak stood 4 dB over full scale and cut off flat there (1,544 samples in 334 runs), the repair rebuilt every run and left the loop no nearer the original: 34.6 dB from the clean loop before, 34.9 dB after.
+- **Why.** Each run was rebuilt as the cubic through six samples either side of it. That draws a smooth top, which suits a slow wave and says little about what a drum hit did in between.
+- **Now** the cubics are a first guess. Each group of runs near each other is then rebuilt together from a model of the 1,024 samples either side (the autoregressive interpolation Click and Pop Repair uses, now `ClickRepair::fillMissing`), three times over, with every rebuilt sample kept at or beyond the level it was cut off at. A group that can't be modelled, or that comes out over four times its clipped level, keeps its cubics.
+- **Measured:** the same loop comes back 37.8 dB from the clean one, 3.2 dB nearer than the clipped loop (0.3 dB with the cubics). A struck chord of four notes clipped the same way comes back 36.0 dB from the true sound where the clipped one stood 20.4 dB from it: 15.6 dB nearer (14.7 with the cubics). A 500 Hz sine at 1.5 clipped at 1.0 gets its peak back to 1.500 (1.438 with the cubics).
+- **What it still doesn't do.** A drum hit's clipped top is noise, and a model of the sound round it can only guess at it: 3 dB is what this method gives there, and more passes or more context did not move it (37.7 to 37.9 dB). Doing better on drums needs a different method. Runs longer than 5 ms are still left alone.
+- The tests have a `--restoration` flag for hum removal and Repair Clipping alone, with a new check on the clipped chord. Not tried by hand.
+- Tested: `--restoration`, and the whole suite on the development Mac (2,584 checks).
+
 **Click and Pop Repair finds flat-topped clicks, and leaves drums alone** (fix log 106 and 107)
 - **What was wrong, first.** At its defaults it left 16 of 60 clicks put into a pad and bell clip (one to three samples long, at 40 to 90% of full scale). All 16 were two or three samples held at one level; 13 were never found and 3 were only partly rebuilt. Every one-sample click was repaired.
 - **Why.** A click was where the forward and the backward prediction both missed at the same sample. A flat-topped click is missed forward at its first sample and backward at its last, and often at no one sample both ways.

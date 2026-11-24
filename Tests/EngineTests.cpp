@@ -633,6 +633,7 @@ int main (int argc, char* argv[])
     //   --ai                    only the AI assistance tests (a mock server; no network)
     //   --maximizer             only the Maximizer's tests
     //   --clicks                only Click and Pop Repair's tests
+    //   --restoration           only the tests of hum removal and Repair Clipping
     //   --tempo                 only the tests of audio that follows the tempo
     //   --sequences             only the tests of sequences and the Sequence Library
     //   --sounddesign           only the tests of sound design in the session (edit in place, clip effects, layering)
@@ -937,6 +938,13 @@ int main (int argc, char* argv[])
         AudioEngine engine;
         runStressTests (engine);
         return 0;
+    }
+
+    if (args.contains ("--restoration"))
+    {
+        runRestorationTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
     }
 
     if (args.contains ("--clicks"))

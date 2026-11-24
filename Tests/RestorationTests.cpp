@@ -161,6 +161,54 @@ namespace
                    + juce::String (peak, 3) + ", the clipped samples' error against the true sine down from " + juce::String (rmsBefore, 3)
                    + " to " + juce::String (rmsAfter, 3) + " RMS, and every sample that wasn't clipped left bit for bit");
 
+        // Music, not one sine: a chord of four notes with three partials each over quiet noise,
+        // struck every half second, turned up 4 dB over full scale and cut off there. The clipped
+        // samples are rebuilt from the model of the sound round them, not a curve through the gap.
+        {
+            juce::AudioBuffer<float> chord (1, 96000);
+            juce::Random random (11);
+
+            for (int i = 0; i < chord.getNumSamples(); ++i)
+            {
+                const auto t = (i % 24000) / rate;
+                auto v = 0.0;
+
+                for (auto f : { 110.0, 164.8, 220.0, 277.2 })
+                    for (int h = 1; h <= 3; ++h)
+                        v += std::sin (juce::MathConstants<double>::twoPi * f * h * 1.0007 * t + f) / (h * h);
+
+                chord.setSample (0, i, (float) (v * std::exp (-t * 4.0) * juce::jmin (1.0, t * 500.0) + 0.001 * (random.nextDouble() * 2.0 - 1.0)));
+            }
+
+            chord.applyGain (juce::Decibels::decibelsToGain (4.0f) / chord.getMagnitude (0, chord.getNumSamples()));
+            auto cut = chord;
+            int cutSamples = 0;
+
+            for (int i = 0; i < cut.getNumSamples(); ++i)
+                if (std::abs (cut.getSample (0, i)) > 1.0f)
+                {
+                    cut.setSample (0, i, cut.getSample (0, i) > 0.0f ? 1.0f : -1.0f);
+                    ++cutSamples;
+                }
+
+            const auto rebuilt = Restoration::declip (*AudioEdits::fromBuffer (juce::AudioBuffer<float> (cut)), 0, cut.getNumSamples(), rate, plain);
+            const auto out = rebuilt.audio != nullptr ? readAll (*rebuilt.audio) : cut;
+            double wrongBefore = 0.0, wrongAfter = 0.0, all = 0.0;
+
+            for (int i = 0; i < cut.getNumSamples(); ++i)
+            {
+                wrongBefore += juce::square ((double) cut.getSample (0, i) - chord.getSample (0, i));
+                wrongAfter += juce::square ((double) out.getSample (0, i) - chord.getSample (0, i));
+                all += juce::square ((double) chord.getSample (0, i));
+            }
+
+            const auto before = 10.0 * std::log10 (wrongBefore / all), after = 10.0 * std::log10 (wrongAfter / all);
+            std::cout << "      declip, a chord cut off 4 dB over: " << cutSamples << " samples in " << rebuilt.repaired << " runs, from the true sound " << before << " dB clipped, " << after << " dB rebuilt" << std::endl;
+            check (rebuilt.repaired > 0 && after < before - 12.0,
+                   "declip: a struck chord (four notes, three partials each) turned up 4 dB over full scale and cut off there comes back over 12 dB "
+                   "nearer the true sound than the clipped one was");
+        }
+
         const auto kept = Restoration::declip (*clipped, 0, clipped->getNumFrames(), rate, {});
         const auto keptAudio = readAll (*kept.audio);
         const auto ratio = keptAudio.getSample (0, 10) / after.getSample (0, 10);

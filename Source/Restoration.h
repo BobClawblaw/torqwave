@@ -47,9 +47,15 @@ namespace Restoration
     constexpr double maxRunSeconds = 0.005;
     constexpr float flatness = 1.0e-5f;
     constexpr int fitPoints = 6;        // samples used on each side of a run
+    constexpr int modelContext = 1024;  // samples either side of a group of runs that the model is fitted to
+    constexpr int modelGroupGap = 256;  // runs nearer than this are rebuilt together
+    constexpr int modelGroupSpan = 4096;
 
-    /** Rebuilds each clipped run in [start, end) as the cubic that best fits (least squares) the
-        fitPoints samples on each side of it, kept at or beyond the clipped level. Runs too near
+    /** Rebuilds each clipped run in [start, end): first as the cubic that best fits (least squares)
+        the fitPoints samples on each side of it, then, with the runs near it, by autoregressive
+        interpolation from the modelContext samples either side (ClickRepair::fillMissing, three
+        times over), kept at or beyond the clipped level. A group the model can't be fitted to, or
+        whose rebuilt samples come out over four times the clipped level, keeps its cubics. Runs too near
         the range's edges to have them are left. With keepPeak, the range is then scaled so its
         peak is the level the clipped runs had. */
     DeclipResult declip (const AudioSnapshot&, juce::int64 start, juce::int64 end, double sampleRate, const Declip&);

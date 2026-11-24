@@ -30,6 +30,14 @@ namespace ClickRepair
         int skipped = 0;                    // per channel: too long, or too near the file's ends
     };
 
+    /** Rebuilds the samples of x[0..n) at `missing` (ascending, each at least 32 from either end)
+        from the rest, by the same least-squares autoregressive interpolation, with the model fitted
+        to x as it stands (so call it again to refine: the rebuilt samples then inform the model).
+        With `beyond`, missing sample i is kept at or past beyond[i] on beyond[i]'s side of zero, as
+        a clipped sample must be: those that come out short are set to it and the rest solved again.
+        False, and x untouched, where no model can be fitted. */
+    bool fillMissing (float* x, int n, const std::vector<int>& missing, const std::vector<float>* beyond = nullptr);
+
     /** Repairs frames [start, end) of every channel. progress gets 0..1 and returns false to
         cancel; then this returns nothing. */
     std::optional<Result> repair (const AudioSnapshot&, juce::int64 start, juce::int64 end, double sampleRate,

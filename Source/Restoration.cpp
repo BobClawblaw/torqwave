@@ -1,4 +1,5 @@
 #include "Restoration.h"
+#include "ClickRepair.h"
 
 namespace Restoration
 {
@@ -174,6 +175,8 @@ namespace Restoration
 
                 const auto level = (float) (settings.threshold * peak);
                 const auto clipped = [&] (int i, float sign) { return x[i] * sign >= level; };
+                struct Run { int from, to; float bound; };   // [from, to), and the level it was cut off at, signed
+                std::vector<Run> runs;
 
                 for (int i = 0; i < n;)
                 {
@@ -221,11 +224,51 @@ namespace Restoration
                             }
 
                             clippedLevel = juce::jmax (clippedLevel, runLevel);
+                            runs.push_back ({ i, j, sign * runLevel });
                             ++result.repaired;
                         }
                     }
 
                     i = j;
+                }
+
+                // The cubics are a first guess. Each group of runs near each other is then rebuilt
+                // together from the audio round it by autoregressive interpolation (as Click Repair
+                // rebuilds a click), kept at or beyond the level it was cut off at, three times over
+                // so the rebuilt samples inform the model. A group that can't be modelled, or that
+                // comes out wild (over four times its clipped level), keeps its cubics.
+                for (size_t r = 0; r < runs.size();)
+                {
+                    auto last = r;
+
+                    while (last + 1 < runs.size() && runs[last + 1].from - runs[last].to < modelGroupGap && runs[last + 1].to - runs[r].from < modelGroupSpan)
+                        ++last;
+
+                    const auto from = juce::jmax (0, runs[r].from - modelContext), to = juce::jmin (n, runs[last].to + modelContext);
+                    std::vector<int> missing;
+                    std::vector<float> beyond;
+
+                    for (auto k = r; k <= last; ++k)
+                        for (int p = runs[k].from; p < runs[k].to; ++p)
+                        {
+                            missing.push_back (p - from);
+                            beyond.push_back (runs[k].bound);
+                        }
+
+                    std::vector<float> span (x + from, x + to);
+                    auto modelled = true;
+
+                    for (int pass = 0; pass < 3 && modelled; ++pass)
+                        modelled = ClickRepair::fillMissing (span.data(), (int) span.size(), missing, &beyond);
+
+                    for (size_t k = 0; k < missing.size() && modelled; ++k)
+                        modelled = std::abs (span[(size_t) missing[k]]) <= 4.0f * std::abs (beyond[k]);
+
+                    if (modelled)
+                        for (auto p : missing)
+                            x[from + p] = span[(size_t) p];
+
+                    r = last + 1;
                 }
             }
 
