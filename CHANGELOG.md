@@ -4,11 +4,23 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+## Released
+
+**Release 0.20.1: continue where you left off, and the first release of the 0.20 line for all three systems**
+- `Torqwave-0.20.1.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.20.1-windows-x64-setup.exe` and `Torqwave-0.20.1-windows-x64.zip`) and the Linux tarball (`Torqwave-0.20.1-linux-x86_64.tar.gz`), each built by its workflow from the release's tag.
+- **It is the major release since 0.19.2.** 0.20.0, a few hours before it, was a baseline: it had the instruments but only a Mac package, because its Windows and Linux builds failed, and it was not announced.
+- **New since 0.20.0:** Continue where you left off (the entry below), Decrypt's help and Ask Torq's decrypt tool no longer saying "no chords" (fix log 104), and the Windows and Linux builds repaired, in four places.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app universal (arm64 and x86_64) at the release's code, at the tag so the app is marked a release build, and signed it ad hoc; the whole suite (2,579 checks) passed in each half, the Intel one under Rosetta, with the signed app as the plug-in scan worker. Not run on an Intel Mac itself. The suites that run on their own passed on the Apple silicon half, 785 checks in all: the start option (31), the sampler (62), Decrypt (25), its window (13) and its listening check (5), Ask Torq (186), the signal console (18), the playing keys (15), StringSwarm (23), Torqwave Synth (37), the instruments (100), Basic Drums (44), sequences (97), the drum grid (22), effect previews (23), tempo (15), sound design (28), picture (28) and the small pieces (13). The tag is one commit after the code that was built and tested, and that commit changes documents only.
+- **Windows and Linux:** both workflows built the release's code without error before the tag was made (Linux at three commits running, Windows on the fourth round of fixes); they build without running the tests, and neither package was tried by hand.
+- As in 0.20.0, the script's disk-image step failed without a message on this Mac, and the image was made by running that step by hand from the app the tests had passed on.
+- The Mac app is signed ad hoc, not with a Developer ID, and is not notarized: macOS blocks it the first time, and Open Anyway under System Settings > Privacy & Security lets it through.
+- Tried by hand before the release: the sampler, Decrypt, its name prompt and Decrypted page, as 0.20.0's entry says. Continue where you left off was tried once in the built app on made-up files and a session; its setting, command and home screen button were not clicked by hand.
+
 **Decrypt's help no longer says "no chords"** (fix log 104)
 - Decrypt matches a held chord as a chord since 0.20.0 (fix log 101), but the help on its page still ended "one note, no chords", and Ask Torq's `decrypt_clip` tool and its instructions told the model the same. All three now say one note or one held chord, and that riffs are not matched. Text only: nothing about the matching changed.
 - Tested: `--decrypt-window` and `--ai`.
 
-**Continue where you left off: a start that brings back everything that was open** (for 0.20.1)
+**Continue where you left off: a start that brings back everything that was open** (0.20.1)
 - **What was asked for.** Quitting with several files open in the editor and a session in the Multitrack view, and getting all of it back at the next start. Settings > Start could only reopen one file.
 - **Now** Settings > Start has a third choice, **Continue where you left off**. It reopens every file that was open in the editor, in order, with the one you were on in front and each file's selection, cursor, zoom, scroll and attached video; the effects rack beside the editor; the session, with the view's cursor, time range, zoom, scroll and selected track; the editor or the Multitrack view in front as it was; and the project they belonged to.
 - **Also on demand:** File > Continue Where You Left Off, and a button of that name on the home screen, while there is something from last time that hasn't been brought back or replaced. So it can be used with the home screen as the start.
@@ -24,8 +36,6 @@ Each milestone as it was built, newest first, with what the tests measured on th
 **The Linux build of 0.20.0 failed: the factory zips' timestamp** (0.20.1)
 - The Linux workflow failed at the first step of the build, zipping the factory presets and the sampler's factory samples: the build gave the zips a fixed date as `--mtime=@1767225600`, and the CMake on the Linux runner cannot read a date written that way ("unable to parse mtime"). So 0.20.0 has no Linux package. The date is now written `2026-01-01 00:00:00 UTC`, the same moment; on the development Mac a zip made either way is the same file byte for byte. Found when the release's workflows ran, not by use.
 - **Three more build failures behind that one**, seen once the first was out of the way. On Windows the zip step still failed: the presets' names were passed on the command line, and the folder "Hats & Tops" has an ampersand the Windows shell reads as the end of the command; the names now go in a file the zip step reads. On Linux and Windows a test's listener named a type two of its bases both have (`ChangeDetails`), which the Mac's compiler let pass; it is named in full. And Microsoft's compiler stopped with an internal error on one long expression in a Decrypt test; it took three tries to find what it choked on, which was a constant declared from a call made through a reference to a function (`const auto x = store().load (...)`); that line now names the function in full and its result is not a constant. On the development Mac the zips are the same files byte for byte as before. So 0.20.0 has no Windows package either.
-
-## Released
 
 **Release 0.20.0: built-in instruments worth playing, and something to play on them**
 - `Torqwave-0.20.0.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.20.0-windows-x64-setup.exe` and `Torqwave-0.20.0-windows-x64.zip`) and the Linux tarball (`Torqwave-0.20.0-linux-x86_64.tar.gz`), each built by its workflow from the release's tag.

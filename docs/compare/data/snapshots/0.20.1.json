@@ -3,7 +3,7 @@
  "release": "0.20.1",
  "previous": "0.19.2",
  "previous_note": "The 0.19.2 column is the last release before the 0.20 line. 0.20.0 came out on 2026-11-24 with the Mac disk image alone, and its rows are the same as 0.20.1's; it is in the trend.",
- "status": "about to be released",
+ "status": "released",
  "as_of": "2026-11-24",
  "release_numbers": [
   {
@@ -62,7 +62,7 @@
    "name": "Torqwave",
    "version": "0.20.1",
    "edition": "the only edition",
-   "version_date": "about to be released",
+   "version_date": "2026-11-24",
    "looked_up": "2026-11-23",
    "source_note": "This repository at commit 49ad967 (branch day/0.19), before the release tag.",
    "cells": {
@@ -348,7 +348,7 @@
     },
     "current_version": {
      "value": "info",
-     "note": "0.20.1, about to be released (not yet tagged on the snapshot date). 0.20.0 was released 2026-11-24.",
+     "note": "0.20.1, released 2026-11-24, a few hours after 0.20.0.",
      "source": "CHANGELOG.md"
     },
     "signed_installers": {
