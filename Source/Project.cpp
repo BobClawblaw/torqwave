@@ -591,7 +591,7 @@ void attachHistories (State& state, const OpenFiles& files, const std::vector<st
     }
 }
 
-Restored restoreFiles (const State& state, OpenFiles& files, AudioEngine& engine)
+Restored restoreFiles (const State& state, OpenFiles& files, AudioEngine& engine, std::vector<AudioFileIO::Loaded>* preloaded)
 {
     Restored out;
     files.closeAll();
@@ -617,7 +617,8 @@ Restored restoreFiles (const State& state, OpenFiles& files, AudioEngine& engine
         }
         else
         {
-            auto loaded = AudioFileIO::load (f.file, engine.formatManager);
+            auto loaded = preloaded != nullptr && i < preloaded->size() ? std::move ((*preloaded)[i])
+                                                                        : AudioFileIO::load (f.file, engine.formatManager);
 
             if (loaded.error.isNotEmpty())
             {

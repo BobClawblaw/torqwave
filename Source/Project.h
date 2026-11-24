@@ -143,5 +143,7 @@ namespace Project
         juce::StringArray missing;
     };
 
-    Restored restoreFiles (const State&, OpenFiles&, AudioEngine&);
+    /** preloaded (if given): each of the state's files already read, in order, used in place of
+        reading it here (one with a history still comes from its history). */
+    Restored restoreFiles (const State&, OpenFiles&, AudioEngine&, std::vector<AudioFileIO::Loaded>* preloaded = nullptr);
 }

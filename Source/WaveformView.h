@@ -148,8 +148,12 @@ public:
     std::function<void (const juce::File&)> onRecentFileClicked;
 
     /** The home screen's buttons, in order. */
-    enum class HomeAction { newFile, open, newSession, openProject, guide };
+    enum class HomeAction { newFile, open, newSession, openProject, guide, continueLeftOff };
     std::function<void (HomeAction)> onHomeAction;
+
+    /** Whether there is something from last time to continue from: the home screen then starts
+        with a Continue Where You Left Off button. */
+    std::function<bool()> canContinueLeftOff;
 
     /** Where the cards' pictures come from; without one they show only their kind. */
     void setHomePictures (Home::Pictures* p)      { homePictures = p; repaint(); }

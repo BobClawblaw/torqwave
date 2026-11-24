@@ -2689,6 +2689,26 @@ void MultitrackView::scrollTo (double startFrame)
     setView (startFrame, framesPerPixel);
 }
 
+SessionPlace MultitrackView::getPlace() const
+{
+    return { cursor, timeSelection, viewStart, framesPerPixel, scrollY, getSelectedTrack() };
+}
+
+void MultitrackView::setPlace (const SessionPlace& place)
+{
+    setCursor (place.cursor);
+    setTimeSelection (place.selection);
+
+    if (juce::isPositiveAndBelow (place.selectedTrack, (int) shown().tracks.size()))
+        selectTrack (place.selectedTrack);
+
+    if (place.framesPerPixel > 0.0)
+    {
+        scrollY = juce::jmax (0, place.scrollY);
+        setView (place.viewStart, place.framesPerPixel);   // limits the scroll to the lanes there are
+    }
+}
+
 void MultitrackView::zoomAround (float x, double factor)
 {
     const auto anchor = viewStart + (double) (x - (float) listWidth) * framesPerPixel;

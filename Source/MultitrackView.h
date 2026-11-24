@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SessionPlace.h"
 #include "AudioEngine.h"
 
 /** The multitrack session: a ruler, a header per track or bus (name, effects, mute, solo, gain,
@@ -749,6 +750,11 @@ public:
 
     /** Scrolls the lanes so they start at this session frame, keeping the zoom. */
     void scrollTo (double startFrame);
+
+    /** Where the view is in the session, and putting it back there (a place with no zoom kept
+        leaves the zoom and scroll as they are; a selected track no longer there is not selected). */
+    SessionPlace getPlace() const;
+    void setPlace (const SessionPlace&);
 
     void paint (juce::Graphics&) override;
     void resized() override;

@@ -56,6 +56,7 @@
 #include "FitTempoPanel.h"
 #include "CrossfadePanel.h"
 #include "Project.h"
+#include "Resume.h"
 #include "GuideView.h"
 
 namespace
@@ -189,7 +190,7 @@ namespace
         cmdMaximizeEditor, cmdResetVerticalZoom, cmdPreviousEdge, cmdNextEdge, cmdRepeatLast, cmdRemoveHum, cmdDeclip, cmdGenerateTone, cmdGenerateNoise,
         cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdBrushLarger, cmdBrushSmaller, cmdSpectralHeal, cmdExportLossy, cmdShowFileTabs, cmdExportFfmpeg, cmdFileInfo, cmdBatchProcess, cmdRecordSequence, cmdPlaySequence,
         cmdSurroundFoldDown, cmdSurroundOutputs, cmdSaveChannels, cmdNewFromChannels,
-        cmdShowVideo, cmdAttachVideo, cmdSaveIntoVideo, cmdOpenProject, cmdSaveProject, cmdSaveProjectAs, cmdKeepProjectHistory,
+        cmdShowVideo, cmdAttachVideo, cmdSaveIntoVideo, cmdOpenProject, cmdSaveProject, cmdSaveProjectAs, cmdKeepProjectHistory, cmdContinueLeftOff,
         cmdSurroundMaster, cmdStretch, cmdPitch, cmdDereverb, cmdLevelSpeech, cmdVideoStart, cmdDetachVideo, cmdCentreChannel, cmdPhaseCorrection, cmdGenerateTones, cmdPitchCorrection, cmdShowPitchEditor,
         cmdSevenOneMaster, cmdMeetDeliverySpec, cmdShowSoundLibrary, cmdDynamicEq, cmdMultibandWidth, cmdExciter, cmdMaximizer, cmdTransientShaper, cmdCaptureMatchReference, cmdCaptureMatchReferenceFromFile, cmdMatchEq, cmdShowTonalBalance, cmdDither, cmdDialogueIsolation, cmdAdaptiveDenoise, cmdMouthDeClick, cmdDeCrackle, cmdDePlosive, cmdBreathControl, cmdSpill, cmdWowFlutter, cmdSpectralRecovery, cmdRebalance, cmdCaptureAmbience, cmdAmbienceMatch, cmdDialogueContour, cmdAzimuth, cmdCodecPreview,
         cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectZeroCrossings, cmdBrushLighter, cmdBrushHeavier, cmdShowStatistics,
@@ -1454,8 +1455,10 @@ MainComponent::MainComponent()
     {
         using A = WaveformView::HomeAction;
         commands.invokeDirectly (action == A::newFile ? cmdNewFile : action == A::open ? cmdOpen : action == A::newSession ? cmdNewSession
-                                 : action == A::openProject ? cmdOpenProject : cmdUserGuide, true);
+                                 : action == A::openProject ? cmdOpenProject
+                                 : action == A::continueLeftOff ? cmdContinueLeftOff : cmdUserGuide, true);
     };
+    waveform.canContinueLeftOff = [this] { return canContinueWhereLeftOff() && backgroundJob == nullptr; };
     rackView.onEditSlot = [this] (int index) { showEditor (index); };
     rackView.onEditPlugin = [this] (juce::AudioPluginInstance& p) { showEditor (p); };
     rackView.onApply = [this] { commands.invokeDirectly (cmdApplyRack, true); };
@@ -1599,6 +1602,24 @@ MainComponent::MainComponent()
     loading = std::make_unique<LoadingScreen>();
     loading->onFinished = [this] { bootFinished(); };
 
+    // What was open last time is on offer (File > Continue Where You Left Off, and the home screen)
+    // until it is brought back or something else is opened; with Settings > Start asking for it, it
+    // is brought back now, read off the message thread like the last file. A start that closed
+    // while it was reopening is not tried again by itself: the app starts on the home screen and says so.
+    leftOffKeeper = std::make_unique<Resume::Keeper> (leftOffFolder());
+    leftOffOnOffer = Resume::isKept (leftOffFolder());
+    const auto interrupted = Resume::wasInterrupted (leftOffFolder());
+    Resume::markFinished (leftOffFolder());
+
+    if (Home::startWith (*settings) == Home::Start::leftOff && leftOffOnOffer)
+    {
+        if (interrupted)
+            startNotice = "Torqwave closed while it was reopening what you had open, so this time it has started without it.\n\n"
+                          "File > Continue Where You Left Off tries again.";
+        else
+            beginContinuing (true);
+    }
+
     if (const auto last = Home::fileToReopen (*settings, lastFileKey); last != juce::File())
     {
         loading->begin ("file", "Reopening " + last.getFileName(),
@@ -1645,6 +1666,8 @@ void MainComponent::readPluginList()
         engine.knownPlugins.recreateFromXml (*xml);
 
     BuiltInEffects::addTo (engine.knownPlugins);
+    pluginListRead = true;
+    finishContinuing();
     loading->end ("plug-ins");
 }
 
@@ -1711,6 +1734,8 @@ void MainComponent::finishOpeningDevice (const juce::XmlElement* savedDevice)
     refreshOutputChoices();
     refreshInputChoices();
     commands.commandStatusChanged();
+    deviceAsked = true;
+    finishContinuing();
     loading->end ("device");
 }
 
@@ -1741,6 +1766,9 @@ void MainComponent::bootFinished()
     whenReady();
     loading->setVisible (false);
 
+    if (auto place = std::exchange (placesAfterBoot, nullptr))
+        place();
+
     // Called from inside the loading screen, so it goes on the next message.
     juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<MainComponent> (this)]
     {
@@ -1749,7 +1777,12 @@ void MainComponent::bootFinished()
 
         safe->loading->removeFromDesktop();
         safe->grabKeyboardFocus();
-        safe->offerRecoveredSession();
+
+        // One question at a time: with what was open still being read, the copy is offered after it.
+        if (safe->continuing)
+            safe->recoveryOfferWaiting = true;
+        else
+            safe->offerRecoveredSession();
     });
 }
 
@@ -1794,7 +1827,10 @@ void MainComponent::offerRecoveredSession()
     const auto copy = SessionRecovery::find (recoveryFolder());
 
     if (! copy.has_value())
+    {
+        showStartNotice();
         return;
+    }
 
     const auto name = copy->original != juce::File() ? copy->original.getFileName() : juce::String ("an untitled session");
     juce::AlertWindow::showOkCancelBox (juce::MessageBoxIconType::QuestionIcon, "Recover Session",
@@ -1805,13 +1841,25 @@ void MainComponent::offerRecoveredSession()
                                         {
                                             if (result == 1)
                                             {
+                                                // Over the session it is a copy of, when that was reopened: the view stays where it was.
+                                                const auto same = found.original != juce::File() && found.original == engine.session.getFile();
+                                                const auto place = multitrack.getPlace();
+                                                const auto inFront = multitrackMode;
                                                 openSession (found.session, found.original);
                                                 recoveryCopyKept = true;   // kept until the session is saved
+
+                                                if (same)
+                                                {
+                                                    multitrack.setPlace (place);
+                                                    setMultitrack (inFront);
+                                                }
                                             }
                                             else
                                             {
                                                 SessionRecovery::clear (recoveryFolder());
                                             }
+
+                                            showStartNotice();
                                         }));
 }
 
@@ -1830,6 +1878,8 @@ MainComponent::~MainComponent()
             r->stop();
 
     saveSettings();
+    keepLeftOff (true);
+    Resume::markFinished (leftOffFolder());
 
     // A normal close: the user has saved or discarded the session's changes.
     SessionRecovery::clear (recoveryFolder());
@@ -2362,6 +2412,8 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                               info.setActive (hasAudio && doc.getNumChannels() > 1 && backgroundJob == nullptr); break;
         case cmdOpenProject: info.setInfo ("Open Project...", "Open a project: its files with where you were in each, the effects rack and the session", "File", 0);
                              info.setActive (backgroundJob == nullptr); break;
+        case cmdContinueLeftOff: info.setInfo ("Continue Where You Left Off", "Reopen what was open when Torqwave last closed: the files, where you were in each, the effects rack and the session", "File", 0);
+                                 info.setActive (canContinueWhereLeftOff() && backgroundJob == nullptr && ! isRecording()); break;
         case cmdSaveProject: info.setInfo ("Save Project", "Save everything open as a project: the files, where you are in each, the effects rack and the session", "File", 0);
                              if (projectFile != juce::File()) info.shortName = "Save Project (" + projectFile.getFileNameWithoutExtension() + ")";
                              info.setActive (backgroundJob == nullptr); break;
@@ -3672,6 +3724,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdCaptureMidi: captureMidi(); break;
         case cmdImportMidi: chooseMidiFiles(); break;
         case cmdOpenProject: chooseProject(); break;
+        case cmdContinueLeftOff: continueWhereLeftOff(); break;
         case cmdSaveProject: saveProject (false); break;
         case cmdSaveProjectAs: saveProject (true); break;
         case cmdKeepProjectHistory:
@@ -3809,7 +3862,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         case 0:
             add ({ cmdNewFile, cmdNewFromClipboard, cmdOpen });
             menu.addSubMenu ("Open Recent", RecentFiles::createMenu (recentFiles, recentBaseId, [this] (const juce::File& f) { return isThere (f); }), recentFiles.getNumFiles() > 0 && ! isRecording());
-            add ({ cmdCloseFile, cmdBackToClip, cmdNextFile, cmdPreviousFile, 0, cmdSave, cmdSaveAs, cmdSaveSelection, cmdSaveRegions, cmdSavePieces, cmdSaveChannels, cmdSamplerFromSelection, cmdExportLossy, cmdExportFfmpeg, 0, cmdAttachVideo, cmdVideoStart, cmdDetachVideo, cmdSaveIntoVideo, 0, cmdBatchProcess, cmdNewFromChannels, 0, cmdFileInfo, cmdSettings, 0, cmdOpenProject, cmdSaveProject, cmdSaveProjectAs, cmdKeepProjectHistory, 0, cmdNewSession, cmdOpenSession, cmdSaveCopyWithAudio, 0, cmdExportMarkers, cmdImportMarkers, cmdExportClips }); break;
+            add ({ cmdContinueLeftOff, cmdCloseFile, cmdBackToClip, cmdNextFile, cmdPreviousFile, 0, cmdSave, cmdSaveAs, cmdSaveSelection, cmdSaveRegions, cmdSavePieces, cmdSaveChannels, cmdSamplerFromSelection, cmdExportLossy, cmdExportFfmpeg, 0, cmdAttachVideo, cmdVideoStart, cmdDetachVideo, cmdSaveIntoVideo, 0, cmdBatchProcess, cmdNewFromChannels, 0, cmdFileInfo, cmdSettings, 0, cmdOpenProject, cmdSaveProject, cmdSaveProjectAs, cmdKeepProjectHistory, 0, cmdNewSession, cmdOpenSession, cmdSaveCopyWithAudio, 0, cmdExportMarkers, cmdImportMarkers, cmdExportClips }); break;
         case 1: add ({ cmdUndo, cmdRedo, cmdUndoHistory, cmdRepeatLast, 0, cmdCut, cmdCopy, cmdPaste, cmdPasteMix, cmdPasteFill, cmdDelete, cmdRepeatSelection, 0, cmdSelectAll, cmdSelectAudible, cmdSetSelection, cmdStepSelectionEarlier, cmdStepSelectionLater, cmdDoubleSelection, cmdHalveSelection, cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectionToZero, cmdSelectZeroCrossings, cmdCopySelectionTime, cmdFindClipping, cmdFindSilence, cmdNextSound, cmdPreviousSound, cmdSelectTrackClips, cmdSelectClipsAfter, cmdSelectClipsInRange, cmdSelectClipsInRegion, cmdNextClip, cmdPreviousClip, cmdCrop, cmdCropMargins, 0, cmdTimeTool, cmdBoxTool, cmdLassoTool, cmdBrushTool, cmdHandTool, cmdBrushLarger, cmdBrushSmaller, cmdBrushLighter, cmdBrushHeavier, 0, cmdConvertRate, 0, cmdAskTorqwave }); break;
         case 2:
         {
@@ -4112,6 +4165,7 @@ void MainComponent::timerCallback()
     auto& player = engine.getPlayer();
     auto& recorder = engine.getRecorder();
     keepRecoveryCopy();
+    keepLeftOff (false);
 
     // Live MIDI plays the instrument of the track being worked on; a note recording ends with playback.
     routeLiveMidi();
@@ -8897,6 +8951,201 @@ void MainComponent::restoreProject (const juce::File& file)
 
     if (! missing.isEmpty())
         showError ("Missing from the project", "These could not be opened, so they were left out:\n\n" + missing.joinIntoString ("\n"));
+}
+
+//==============================================================================
+juce::File MainComponent::leftOffFolder()
+{
+    return appProperties.getUserSettings()->getFile().getParentDirectory().getChildFile ("Left Off");
+}
+
+bool MainComponent::canContinueWhereLeftOff() const
+{
+    return leftOffOnOffer && ! continuing && leftOffKeeper != nullptr && leftOffKeeper->keepsEarlier();
+}
+
+void MainComponent::continueWhereLeftOff()
+{
+    if (! canContinueWhereLeftOff() || isRecording() || backgroundJob != nullptr)
+        return;
+
+    // Everything open is replaced: changes are asked about first.
+    confirmAllFiles ([this] { confirmDiscardSession ([this] { beginContinuing (false); }); });
+}
+
+void MainComponent::beginContinuing (bool atStart)
+{
+    if (continuing || (! atStart && backgroundJob != nullptr))
+        return;
+
+    continuing = true;
+    continuingAtStart = atStart;
+    leftOffLoaded = nullptr;
+    const auto folder = leftOffFolder();
+    Resume::markStarted (folder);
+
+    if (atStart)
+    {
+        loading->begin ("left off", "Reopening what you had open",
+                        "A file's volume isn't answering. Continue to use Torqwave now; what you had open comes back when it can be read.");
+        std::thread ([safe = juce::Component::SafePointer<MainComponent> (this), folder]
+        {
+            auto loaded = std::make_shared<Resume::Loaded> (Resume::load (folder));
+            juce::MessageManager::callAsync ([safe, loaded]
+            {
+                if (safe != nullptr)
+                {
+                    safe->leftOffLoaded = loaded;
+                    safe->finishContinuing();
+                }
+            });
+        }).detach();
+        return;
+    }
+
+    // From the menu: behind a progress window, which can be cancelled (then nothing is changed).
+    auto loaded = std::make_shared<Resume::Loaded>();
+    afterBackgroundJob = [this] { finishContinuing(); };
+    backgroundJob = std::make_unique<BackgroundJob> (*this, "Reopening what you had open...",
+        [loaded, folder] (const std::function<bool (float)>& progress)
+        {
+            auto read = 0;
+            *loaded = Resume::load (folder, BackgroundLoad::readIfThere, [&progress, &read] { return progress (1.0f - 1.0f / (float) ++read); });
+            return progress (1.0f);
+        },
+        [this, loaded] { leftOffLoaded = loaded; });
+    backgroundJob->launchThread();
+    commands.commandStatusChanged();
+}
+
+void MainComponent::finishContinuing()
+{
+    if (! continuing)
+        return;
+
+    const auto atStart = continuingAtStart;
+
+    // At start the note is read while the device opens and the plug-in list is read; a session
+    // needs both, so whichever comes last calls this again.
+    if (atStart && (leftOffLoaded == nullptr || ! deviceAsked || ! pluginListRead))
+        return;
+
+    const auto loaded = std::exchange (leftOffLoaded, nullptr);
+    const auto done = [this, atStart]
+    {
+        continuing = false;
+        Resume::markFinished (leftOffFolder());
+        commands.commandStatusChanged();
+        waveform.repaint();
+
+        if (atStart)
+            loading->end ("left off");
+
+        if (std::exchange (recoveryOfferWaiting, false))
+            offerRecoveredSession();
+        else if (! atStart)
+            showStartNotice();
+    };
+
+    // Cancelled from its progress window, or no note after all: nothing is changed.
+    if (loaded == nullptr || ! loaded->found)
+    {
+        done();
+        return;
+    }
+
+    // Behind a slow volume the app may already be in use (Continue on the loading screen): what
+    // was opened, recorded or edited since is left alone, and what was kept stays on offer.
+    if (atStart && (engine.document.getFile() != juce::File() || engine.document.canUndo() || isRecording() || isEditingClip()
+                    || engine.session.getFile() != juce::File() || engine.session.canUndo()))
+    {
+        juce::Logger::writeToLog ("What was open last time was read after work had started, so it was not reopened.");
+        done();
+        return;
+    }
+
+    stopPreview();
+    engine.getPlayer().pause();
+    const auto place = Resume::restoreFiles (*loaded, openFiles, engine);
+    const auto& state = loaded->state;
+    waveform.setPlace (place);
+
+    if (state.open.session != juce::File())
+    {
+        openSession (state.open.session, std::nullopt, state.open.rack.get());
+        multitrack.setPlace (state.sessionPlace);
+    }
+    else
+    {
+        // No session was open: an empty one, as New Session leaves.
+        auto empty = SessionState::newEmpty (engine.deviceManager.getCurrentAudioDevice() != nullptr
+                                                 ? engine.deviceManager.getCurrentAudioDevice()->getCurrentSampleRate()
+                                                 : engine.session.getSampleRate());
+        engine.clearTrackEffects();
+        engine.session.reset (std::move (empty), {});
+        engine.session.ensureMaster();   // every session has a master track
+        multitrack.setCursor (0);
+    }
+
+    setMultitrack (state.open.multitrack);
+    engine.clearRack();
+
+    if (state.open.rack != nullptr)
+        engine.loadRackXml (*state.open.rack, [] (const juce::String& errors)
+        {
+            if (errors.isNotEmpty())
+                showError ("Some rack effects did not load", errors);
+        });
+
+    projectFile = state.project;
+    leftOffKeeper->restored();
+    refreshTitle();
+
+    // The views' zoom and scroll are limited by their size, which the window gives them when it
+    // is placed: they are put back again then.
+    if (atStart && ! loading->hasFinished())
+        placesAfterBoot = [this, place, session = state.open.session != juce::File(), sessionPlace = state.sessionPlace]
+        {
+            waveform.setPlace (place);
+
+            if (session)
+                multitrack.setPlace (sessionPlace);
+        };
+
+    if (! loaded->missing.isEmpty())
+        startNotice = "These could not be reopened, so they were left out:\n\n" + loaded->missing.joinIntoString ("\n");
+
+    done();
+}
+
+void MainComponent::keepLeftOff (bool now)
+{
+    // Not while what was kept is being brought back, and not during playback, a recording or a job.
+    if (continuing || leftOffKeeper == nullptr)
+        return;
+
+    const auto time = juce::Time::getMillisecondCounter();
+
+    if (! now && (time - lastLeftOffNote < (juce::uint32) Resume::intervalSeconds * 1000u
+                  || isRecording() || engine.getPlayer().isPlaying() || backgroundJob != nullptr || renderJob != nullptr))
+        return;
+
+    lastLeftOffNote = time;
+    const auto couldContinue = canContinueWhereLeftOff();
+    const auto error = leftOffKeeper->note (Resume::gather (openFiles, waveform.getPlace(), engine, multitrackMode,
+                                                            multitrack.getPlace(), projectFile));
+
+    if (error.isNotEmpty())
+        juce::Logger::writeToLog ("Could not note what is open: " + error);
+
+    if (! now && couldContinue != canContinueWhereLeftOff())
+        commands.commandStatusChanged();
+}
+
+void MainComponent::showStartNotice()
+{
+    if (const auto notice = std::exchange (startNotice, {}); notice.isNotEmpty())
+        showError ("Continue Where You Left Off", notice);
 }
 
 void MainComponent::saveProject (bool chooseFile)
@@ -14882,8 +15131,8 @@ Settings::Model MainComponent::makeSettingsModel()
     Settings::Model model;
 
     model.push_back ({ "Start", "What Torqwave shows when it opens.",
-        { Item::choice ("On start", "The home screen with your recent files, or the file that was open when you quit",
-                        { "Show the home screen", "Reopen the last file" },
+        { Item::choice ("On start", "The home screen with your recent files, the file that was open when you quit, or everything that was open, as you left it",
+                        { "Show the home screen", "Reopen the last file", "Continue where you left off" },
                         [settings] { return (int) Home::startWith (*settings); },
                         [settings, changed] (int i) { settings->setValue (Home::startKey, i); changed(); }) } });
 

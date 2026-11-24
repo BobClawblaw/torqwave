@@ -262,6 +262,7 @@ target_sources(Torqwave PRIVATE
     Source/SessionNotes.cpp
     Source/LoadReadout.cpp
     Source/SessionRecovery.cpp
+    Source/Resume.cpp
     Source/KeyShortcuts.cpp
     Source/AuditionPreview.cpp
     Source/WindowPlaces.cpp
@@ -587,6 +588,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/TimeViewStripTests.cpp
     Tests/GuideTests.cpp
     Tests/HomeTests.cpp
+    Tests/ResumeTests.cpp
     Tests/AiTests.cpp
     Tests/AiEval.cpp
     Source/AiClient.cpp
@@ -719,6 +721,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/SessionNotes.cpp
     Source/LoadReadout.cpp
     Source/SessionRecovery.cpp
+    Source/Resume.cpp
     Source/KeyShortcuts.cpp
     Source/AuditionPreview.cpp
     Source/WindowPlaces.cpp
