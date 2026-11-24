@@ -859,7 +859,8 @@ namespace
                 juce::String voice;
                 double notesPerBar = 0.0;
                 int pitches = 0, gaps = 0, lengths = 0;
-                bool still = false;   // a note a bar or fewer, or one pitch (one drum sound) only
+                bool still = false;   // two notes a bar or fewer, or one pitch (one drum sound) only
+                bool oneNoteSub = false;   // a Bass > Sub part on one pitch: the last thing to show
                 double score = 0.0;
             };
 
@@ -885,7 +886,8 @@ namespace
                 f.pitches = (int) pitches.size();
                 f.gaps = (int) gaps.size();
                 f.lengths = (int) lengths.size();
-                f.still = f.notesPerBar <= 1.0 || f.pitches <= 1;
+                f.still = f.notesPerBar <= 2.0 || f.pitches <= 1;
+                f.oneNoteSub = f.pitches <= 1 && e.path.size() > 1 && e.path[0] == "Bass" && e.path[1] == "Sub";
                 f.score = juce::jmin (16.0, f.notesPerBar) + 2.0 * juce::jmin (8, f.pitches) + 2.0 * juce::jmin (6, f.gaps) + juce::jmin (4, f.lengths);
                 f.sequence = std::move (q);
                 return f;
@@ -934,6 +936,7 @@ namespace
                     {
                         const auto xUsed = voices.contains (x.voice), yUsed = voices.contains (y.voice);
 
+                        if (x.oneNoteSub != y.oneNoteSub)   return ! x.oneNoteSub;
                         if (x.still != y.still)   return ! x.still;
                         if (xUsed != yUsed)       return ! xUsed;
                         if (! juce::approximatelyEqual (x.score, y.score))   return x.score > y.score;

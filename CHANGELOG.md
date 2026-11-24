@@ -5,13 +5,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 ## Unreleased
 
 **The site: the sequence clips are chosen by how much they do** (the demo renderer and documents only)
-- **What was wrong.** The user found two sequence clips on the Sounds pages dull and the same: Fog Roller (Hypnotic) and Afterglow Sub (Melodic), each one held sub note a bar on the same patch. The rule took the sequence with the most energy in each role of a style, which says nothing about what a part does.
-- **Now** `TorqwaveTests --sound-demos` measures each candidate: its notes to a bar, its different pitches (a drum part's different sounds), the different gaps between its notes and its different note lengths. A part with a note a bar or fewer, or with one pitch only, is passed over while anything else is there; then a voice the style's other clips do not play comes first, then the highest count.
-- **Roles.** The nine leading styles still show one of each role. The other 28 show a bass line and the best of their melodies, arps and harmony parts (a melody only, before). Where every bass line of a style stands still, the style's other roles stand in: Dark ambient, Drone and Psytrance.
-- **What changed:** 94 of the clips are different sequences and 25 are the ones there were; 119 where there were 118. Hypnotic now plays Spiral Bass Run and Inner Space Motif, Melodic plays Glacier Roller and Melodic Rolling Arp.
-- **What is left:** Club tools has three sequences, each one sound repeated, and shows two of them. In Techno/Hard one patch plays two clips, in different roles. No style has two clips on one voice in the same role.
+- **What was wrong.** The user found three sequence clips on the Sounds pages dull and the same: Fog Roller (Hypnotic), Afterglow Sub (Melodic) and Pinpoint Sub Pulse (Minimal), each a sub holding or pulsing one note a bar or two. The rule took the sequence with the most energy in each role of a style, which says nothing about what a part does.
+- **Now** `TorqwaveTests --sound-demos` measures each candidate: its notes to a bar, its different pitches (a drum part's different sounds), the different gaps between its notes and its different note lengths. A part with two notes a bar or fewer, or with one pitch only, is passed over while anything else is there, and a Bass > Sub part on one pitch comes last of all, so none is shown; then a voice the style's other clips do not play comes first, then the highest count.
+- **Roles.** The nine leading styles still show one of each role. The other 28 show a bass line and the best of their melodies, arps and harmony parts (a melody only, before). Where every bass line of a style stands still, the style's other roles stand in: Dark ambient, Drone, Psytrance, Game/Horror and Game/Menu.
+- **What changed:** 96 of the clips are different sequences and 23 are the ones there were; 119 where there were 118. Hypnotic now plays Spiral Bass Run and Inner Space Motif, Melodic plays Glacier Roller and Melodic Rolling Arp, Minimal plays Sparse Room Bass Sequence and Dot Changes.
+- **What is left:** Club tools has three sequences, each one sound repeated; it shows its kick and its open hats, both on one kit, and not its one-note sub. In Techno/Hard one patch plays two clips, in different roles. No other style has two clips on one voice in the same role.
 - The kits' page is unchanged: it plays every kit, six parts together, so there was nothing to choose.
-- 1,066 clips, 102.3 MB.
+- 1,066 clips, 102.7 MB.
 - Tested: the renderer ran without a failure and the pages were built and their links checked. **Chosen by measurement, not by ear:** none of the new clips were listened to, and a count of notes cannot tell a good part from a busy one. The pages were not looked at again, and the test suite was not run for this.
 
 **The site's pages carry a picture and a description for sharing** (documents only)

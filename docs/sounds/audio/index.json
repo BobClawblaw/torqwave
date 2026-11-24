@@ -18960,32 +18960,32 @@
   {
     "group": "sequences",
     "category": "Game/Horror",
-    "name": "Flicker Sub",
-    "file": "sequences/horror-flicker-sub.mp3",
-    "about": "The sub in half notes, moving through the roots of A minor, A minor, F, E",
+    "name": "Cellar Door Lift",
+    "file": "sequences/horror-cellar-door-lift.mp3",
+    "about": "16ths climbing the A minor scale for 4 bars, louder and brighter as they go",
     "key": "A minor",
     "bars": 4.0,
-    "energy": 2,
-    "role": "Bass > Sub",
-    "voice": "Torqwave Synth: Warehouse Sub",
-    "notesPerBar": 2.0,
-    "pitches": 3,
-    "of": 3,
+    "energy": 3,
+    "role": "SFX > Risers",
+    "voice": "Torqwave Synth: Mercury Lead",
+    "notesPerBar": 16.0,
+    "pitches": 14,
+    "of": 24,
     "still": false,
     "voiceAgain": false,
     "tempo": 70.0,
     "rounds": 1,
     "parts": [
       {
-        "name": "Flicker Sub",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
+        "name": "Cellar Door Lift",
+        "role": "SFX",
+        "voice": "Torqwave Synth: Mercury Lead"
       }
     ],
     "seconds": 13.699999999999999,
-    "peakDb": -9.1,
+    "peakDb": -10.4,
     "faded": true,
-    "bytes": 56640
+    "bytes": 139944
   },
   {
     "group": "sequences",
@@ -19020,36 +19020,6 @@
   {
     "group": "sequences",
     "category": "Game/Menu",
-    "name": "Title Screen Bassline",
-    "file": "sequences/menu-title-screen-bassline.mp3",
-    "about": "The sub in half notes, moving through the roots of A minor, D minor, F, G",
-    "key": "A minor",
-    "bars": 4.0,
-    "energy": 2,
-    "role": "Bass > Synth Bass",
-    "voice": "Torqwave Synth: Warehouse Sub",
-    "notesPerBar": 2.0,
-    "pitches": 4,
-    "of": 3,
-    "still": false,
-    "voiceAgain": false,
-    "tempo": 96.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Title Screen Bassline",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
-      }
-    ],
-    "seconds": 10.0,
-    "peakDb": -9.0,
-    "faded": true,
-    "bytes": 41832
-  },
-  {
-    "group": "sequences",
-    "category": "Game/Menu",
     "name": "Hub Motif",
     "file": "sequences/menu-hub-motif.mp3",
     "about": "A two-bar busy phrase in A minor",
@@ -19060,7 +19030,7 @@
     "voice": "Torqwave Synth: Minor Bell Motif",
     "notesPerBar": 10.0,
     "pitches": 8,
-    "of": 9,
+    "of": 24,
     "still": false,
     "voiceAgain": false,
     "tempo": 90.0,
@@ -19076,6 +19046,36 @@
     "peakDb": -9.4,
     "faded": true,
     "bytes": 97536
+  },
+  {
+    "group": "sequences",
+    "category": "Game/Menu",
+    "name": "Lobby Line",
+    "file": "sequences/menu-lobby-line.mp3",
+    "about": "A syncopated phrase stated twice, the second time ending another way in A minor",
+    "key": "A minor",
+    "bars": 4.0,
+    "energy": 1,
+    "role": "Melody > Leads",
+    "voice": "Torqwave Synth: Cold Bell",
+    "notesPerBar": 5.2,
+    "pitches": 7,
+    "of": 8,
+    "still": false,
+    "voiceAgain": false,
+    "tempo": 90.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Lobby Line",
+        "role": "Melody",
+        "voice": "Torqwave Synth: Cold Bell"
+      }
+    ],
+    "seconds": 10.699999999999999,
+    "peakDb": -7.8,
+    "faded": true,
+    "bytes": 201216
   },
   {
     "group": "sequences",
@@ -20790,32 +20790,32 @@
   {
     "group": "sequences",
     "category": "Techno/Club tools",
-    "name": "Offbeat Sub",
-    "file": "sequences/club-tools-offbeat-sub.mp3",
-    "about": "A short sub on every offbeat, out of the kick's way",
-    "key": "A minor",
+    "name": "Offbeat Open Hats",
+    "file": "sequences/club-tools-offbeat-open-hats.mp3",
+    "about": "An open hat on every offbeat",
+    "key": "",
     "bars": 1.0,
     "energy": 2,
-    "role": "Bass > Sub",
-    "voice": "Torqwave Synth: Warehouse Sub",
+    "role": "Drums > Hats & Tops",
+    "voice": "Basic Drums: Standard",
     "notesPerBar": 4.0,
     "pitches": 1,
     "of": 2,
     "still": true,
-    "voiceAgain": false,
+    "voiceAgain": true,
     "tempo": 128.0,
     "rounds": 3,
     "parts": [
       {
-        "name": "Offbeat Sub",
-        "role": "Bass",
-        "voice": "Torqwave Synth: Warehouse Sub"
+        "name": "Offbeat Open Hats",
+        "role": "Drums",
+        "voice": "Basic Drums: Standard"
       }
     ],
     "seconds": 5.6,
-    "peakDb": -9.0,
-    "faded": false,
-    "bytes": 24312
+    "peakDb": -6.8,
+    "faded": true,
+    "bytes": 143904
   },
   {
     "group": "sequences",

@@ -350,8 +350,8 @@ def sequences_page():
                  f'<p>The Sequence Library ships 1,032 sequence presets in 37 styles: drums, bass lines, harmony, pads, arps, melodies and effects, each with a line saying what it does. '
                  f'Here are {len(clips)} on their own: one of each role from nine techno and industrial styles, and from each of the others a bass line and a melody, an arp or a harmony part. '
                  'Of each, the one that does the most by measure was taken: its notes to a bar, its different pitches and how varied its rhythm is, on a voice the style\'s other clips do not play. '
-                 'A part that holds a note a bar or repeats one note is passed over, and where a style\'s bass lines all do that, another role stands in; '
-                 'Club tools has only such parts, and shows two. Chosen by that rule, not by ear: nobody has listened to them one by one. '
+                 'A part with two notes a bar or fewer, or that repeats one note, is passed over, and where a style\'s bass lines all do that, another role stands in. '
+                 'A sub on one note is shown nowhere. Club tools has only one-sound parts, and shows its kick and its hats. Chosen by that rule, not by ear: nobody has listened to them one by one. '
                  'The <a href="kits.html">kits</a> play six sequences together.</p>',
                  f"{len(clips)} of the 1,032 factory sequences in Torqwave's Sequence Library, from all 37 styles, rendered by Torqwave with nothing added.")
 
