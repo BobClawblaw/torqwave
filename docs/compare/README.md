@@ -57,3 +57,9 @@ counts each post in an announcement as X counts it (a link is 23 characters) and
 ## What the first snapshot could not settle
 
 The cells marked `not confirmed` are listed in MATRIX.md under "Cells not confirmed". Some "no" cells rest on a product's manual contents and feature list having no mention, not on a page that says the feature is absent; each such cell's evidence says so. Those are the first to recheck.
+
+## 0.20.1
+
+- 0.20.1 adds Continue where you left off, a start that reopens every file and the session. No row was added for it: a row needs a cell for each of the fifteen other products read from its own documentation, and reopening the last project at start is too common and too differently done to make a row that tells products apart. Torqwave's counts are the same as 0.20.0's.
+- Its graphics set it against 0.19.2, since 0.20.1 is the release being announced and 0.20.0 came out just before it with the Mac disk image alone. 0.20.0 keeps its own snapshot and its bar in the trend.
+- The other products' cells were not read again for it: they are as read on 2026-11-23.

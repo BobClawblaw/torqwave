@@ -2,7 +2,7 @@
  "schema": 1,
  "release": "0.20.1",
  "previous": "0.19.2",
- "previous_note": "The 0.19.2 column is the last release before the 0.20 line. 0.20.0 came out on 2026-11-24 without a Linux package, and its rows are the same as 0.20.1's; it is in the trend.",
+ "previous_note": "The 0.19.2 column is the last release before the 0.20 line. 0.20.0 came out on 2026-11-24 with the Mac disk image alone, and its rows are the same as 0.20.1's; it is in the trend.",
  "status": "about to be released",
  "as_of": "2026-11-24",
  "release_numbers": [
@@ -318,12 +318,12 @@
     },
     "windows": {
      "value": "yes",
-     "note": "Windows 10 or later, 64-bit. The release notes say the 0.20 line was built for Windows but not run or tried there.",
+     "note": "Windows 10 or later, 64-bit. 0.20.0 was published without Windows packages (only the Mac disk image is on its release page); 0.20.1 is meant to correct the builds, and its packages did not exist on the snapshot date. The 0.20 line was not run or tried on Windows.",
      "source": "README.md"
     },
     "linux": {
      "value": "yes",
-     "note": "64-bit x86, tried on Ubuntu 24.04. 0.20.0 has no Linux package (its build failed on a date format); 0.20.1 corrects the build. The 0.20 line was not run or tried on Linux.",
+     "note": "64-bit x86, tried on Ubuntu 24.04 in earlier releases. 0.20.0 was published without a Linux package (its build failed); 0.20.1 is meant to correct the build, and its package did not exist on the snapshot date. The 0.20 line was not run or tried on Linux.",
      "source": "README.md"
     },
     "open_source": {
