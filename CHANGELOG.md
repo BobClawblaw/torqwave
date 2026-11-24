@@ -4,6 +4,17 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+## Released
+
+**Release 0.20.0: built-in instruments worth playing, and something to play on them**
+- `Torqwave-0.20.0.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.20.0-windows-x64-setup.exe` and `Torqwave-0.20.0-windows-x64.zip`) and the Linux tarball (`Torqwave-0.20.0-linux-x86_64.tar.gz`), each built by its workflow from the release's tag.
+- What it brings is in the entries below, down to the release before it: Torqwave Synth with 3,743 patches and Decrypt, Torqwave Sampler, StringSwarm, Basic Drums with 30 sounds, 1,018 sequence presets in 37 styles, instruments played from the computer's keys, and the editor's time-view strip, Hand tool and Paste Clipboard as New File.
+- Fix log rows 66 to 103 are in it, each with its issue ([#40](https://github.com/BobClawblaw/torqwave/issues/40) to [#77](https://github.com/BobClawblaw/torqwave/issues/77)). Rows 90 to 103 came from using builds of this release by hand; the sampler, Decrypt's chain, its name prompt and the Decrypted page were all tried that way before it was cut. The last two fixes (the two lines cut off on the Decrypt and Decrypted pages, fix log 103) were seen in the tests' pictures only.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app universal (arm64 and x86_64) at the release's code and signed it ad hoc, and the whole suite (2,548 checks) passed in each half, the Intel one under Rosetta, with the signed app as the plug-in scan worker. Not run on an Intel Mac itself. The suites that run on their own passed on the Apple silicon half, 754 checks in all: the sampler (62), Decrypt (25), its window (13) and its listening check (5), Ask Torq (186), the signal console (18), the playing keys (15), StringSwarm (23), Torqwave Synth (37), the instruments (100), Basic Drums (44), sequences (97), the drum grid (22), effect previews (23), tempo (15), sound design (28), picture (28) and the small pieces (13).
+- The script's disk-image step failed without a message on this Mac, so the image was made by running that one step by hand from the app the tests had passed on: the app inside is that binary byte for byte, and its signature verifies.
+- The Mac app is signed ad hoc, not with a Developer ID, and is not notarized: macOS blocks it the first time, and Open Anyway under System Settings > Privacy & Security lets it through.
+- Not checked on Windows or Linux by hand for this release: the workflows build both packages without running the tests.
+
 **The sampler's factory check on the Intel build** (0.20.0)
 - The check that the content tool writes the factory samples byte for byte as shipped failed in the Intel half of the release build (27 of 27 different): the shipped files were rendered on Apple silicon, and the Intel build's arithmetic rounds differently, so its renders are near them and not the same bytes (a FLAC of 225,029 bytes against 225,025, for one). The app ships the files; it does not render them. The check compares bytes on Apple silicon, and on Intel checks that the tool writes all 27. Found building the release, not by use.
 
@@ -490,8 +501,6 @@ Each milestone as it was built, newest first, with what the tests measured on th
 **Ask Torq: a plan's undo steps said plainly**
 - A plan with instrument loads, track effect changes, a rack change or renders is headed "The plan:" rather than "The plan, applied as one undo step:", since those are made after Apply, outside its undo step (the notes under the plan say which); after Apply it says "Applied; the notes above say what isn't in its undo step." A plan of edits alone reads as before. The steps name the track after the change ("Add Reverb to the effects on \"Pad\"", "Set Compressor on \"Drums\": ...") instead of a possessive after its quoted name.
 - Tried by hand in the app (macOS 27, a local OpenAI-compatible server): on a copy of a session with two third-party instruments, one request added a Reverb to a track, froze another and bounced the first over bars 1 to 3. After Apply the Reverb was there, the freeze rendered (7 s, a 3 s clip and its tail), then the bounce (6 s) onto a new track with the original muted, and Undo History listed the plan, Freeze Track and Bounce Track as three steps.
-
-## Released
 
 **Release 0.19.2: crossfading clips laid over each other**
 - `Torqwave-0.19.2.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.19.2-windows-x64-setup.exe` and `Torqwave-0.19.2-windows-x64.zip`) and the Linux tarball (`Torqwave-0.19.2-linux-x86_64.tar.gz`), each built by its workflow from the release's tag.
