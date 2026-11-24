@@ -6,12 +6,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 **The site at 0.21.0: twelve drum kits, Click and Pop Repair shown, and the counts brought up** (documents and rendered clips only)
 - **Basic Drums:** the Sounds pages play all twelve kits, 32 clips where there were 20. Each kit plays the three factory grooves written for it with the most energy, or all it has: Breaks and Broken Beat have two and Modern one. Breaks' two audition beats are gone, since it has grooves now.
+- **Rendered from the released code:** the twelve clips of the five Modern kits and the Blast Furnace Engine sequence were rendered again after the Modern kick was made heavier and two grooves' gains changed; the other drum, sequence and kit clips and every Quality number came out the same.
 - **Sequences:** the rule (of each role in a style, the one with the most energy) now picks Blast Furnace Engine where it picked Bunker Clap Stutter. The other 117 clips are the files there were.
 - **Quality, rendered again with 0.21.0's code.** Click and Pop Repair is shown, first: 60 clicks put into the pad and bell clip, 60 repaired; no place left more than a tenth of full scale from the clean clip, 25 within a hundredth, 35 in between; the clip 46.9 dB from the clean one (15.0 dB with the clicks in).
 - **The Maximizer's loop** reads -1.03 dBTP under its -1 dBTP ceiling (gain 8.4 dB to -10.0 LUFS), and the note about reading over the ceiling is replaced by one line saying it read -0.79 dBTP before 0.21.0.
 - **Repair Clipping is still not shown.** The page gives its numbers: the clipped drum loop comes back 37.8 dB from the clean one, 3.2 dB nearer than clipped (34.6 dB), and says that on drums what it rebuilds is mostly a guess.
 - **Counts and the release's name:** 1,032 sequence presets and twelve kits on the front page and the Sounds pages; the front page's "New" section is for 0.21.0, with cards for the Modern drums and the three repairs; its Ask Torq section says a request goes with the last four before it and that a line shows the model's context. The Quality page's quotes of the release notes are 0.21.0's (2,618 checks).
-- 1,065 clips, 100.9 MB; the quality clips and pictures 5.3 MB. A picture of the Quality page's top is `docs/screenshots/site-quality.png`.
+- 1,065 clips, 101.1 MB; the quality clips and pictures 5.3 MB. A picture of the Quality page's top is `docs/screenshots/site-quality.png`.
 - Tested: the pages built with Jekyll and their links checked (the only broken ones are the links out of the site's folder and to folders that were broken before, and two more of the same kind in the 0.21.0 announcement). The front page, the Quality page and the drums page were looked at in dark at desktop width, not at phone width. **Not listened to:** none of the new clips. The test suite was not run for this.
 
 ## Released
