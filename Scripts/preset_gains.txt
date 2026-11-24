@@ -163,7 +163,7 @@ Circuit Stomp|-2.0
 Clap Roll Build|1.0
 Clap Stutter Fill|-1.5
 Clash Stabs|-1.0
-Clean Room Groove|-2.5
+Clean Room Groove|-4.0
 Coastline Line|7.5
 Coastline Transition|3.0
 Cold Assembly Drive|-3.0
@@ -575,7 +575,7 @@ Muscle Bass Run|7.5
 Muscle Changes|-4.0
 Muscle Machine Bassline|0.5
 Muscle Machine Lift|-0.5
-Muscle Memory Beat|-2.5
+Muscle Memory Beat|-3.0
 Muscle Pluck|1.0
 Muscle Riff|-1.0
 Muscle Transition|2.5
