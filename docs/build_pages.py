@@ -65,9 +65,8 @@ BY_EAR = {
 }
 
 # The clips on the front page, in this order.
-FRONT = [("kits", "Midnight Kit"), ("kits", "EBM Starter Kit"), ("kits", "Industrial Techno Starter Kit"), ("synth", "Target Lock Bass"),
-         ("synth", "Concrete Pad"), ("synth", "Acid Corrosion"), ("swarm", "Tremolo Swarm Wall"), ("drums", "Black Stomp"),
-         ("sampler", "Dark Techno Break")]
+FRONT = [("synth", "Concrete Pad"), ("synth", "Furnace Halo"), ("synth", "Cold Bell"), ("synth", "Glass Shard"), ("synth", "Iron Verdict"),
+         ("synth", "Ghost Radio Choir"), ("synth", "Abyss Reese"), ("synth", "Siren Burn"), ("swarm", "Tremolo Swarm Wall")]
 
 # The Sequence Library's genres and styles in the order the pages show them: techno and industrial first.
 GENRES = ["Techno", "Industrial"]
@@ -394,7 +393,7 @@ def sounds_index():
             '<p>Torqwave comes with four instruments, thousands of patches and presets for them, and a library of sequences and kits to play on them. '
             'These pages let you hear them before you download anything.</p>',
             f'<p class="meta">{HOW}</p></div>',
-            '<h2 id="start">Start here</h2><p class="lede">Three factory kits, and a sound from each instrument.</p>', front_clips("audio/"),
+            '<h2 id="start">Start here</h2><p class="lede">Pads, bells, a choir, a lead and a wall of strings from Torqwave Synth and StringSwarm.</p>', front_clips("audio/"),
             '<h2 id="all">Everything rendered</h2><div class="grid">' + "".join(cards) + "</div>",
             '<table class="facts"><tr><th>What</th><th>Clips</th><th>Which</th><th>Size</th></tr>' + "".join(rows)
             + f'<tr><th>All</th><th>{total}</th><th></th><th>{megabytes(CLIPS)}</th></tr></table>',
