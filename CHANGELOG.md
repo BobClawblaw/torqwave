@@ -4,6 +4,9 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The Linux build of 0.20.0 failed: the factory zips' timestamp** (0.20.1)
+- The Linux workflow failed at the first step of the build, zipping the factory presets and the sampler's factory samples: the build gave the zips a fixed date as `--mtime=@1767225600`, and the CMake on the Linux runner cannot read a date written that way ("unable to parse mtime"). So 0.20.0 has no Linux package. The date is now written `2026-01-01 00:00:00 UTC`, the same moment; on the development Mac a zip made either way is the same file byte for byte. Found when the release's workflows ran, not by use.
+
 ## Released
 
 **Release 0.20.0: built-in instruments worth playing, and something to play on them**

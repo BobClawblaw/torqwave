@@ -411,7 +411,7 @@ endforeach()
 set(torqwave_presets_zip ${CMAKE_BINARY_DIR}/factory-presets.zip)
 add_custom_command(OUTPUT ${torqwave_presets_zip}
     COMMAND ${CMAKE_COMMAND} -E rm -f ${torqwave_presets_zip}
-    COMMAND ${CMAKE_COMMAND} -E tar cf ${torqwave_presets_zip} --format=zip --mtime=@1767225600 -- ${torqwave_preset_names}
+    COMMAND ${CMAKE_COMMAND} -E tar cf ${torqwave_presets_zip} --format=zip "--mtime=2026-01-01 00:00:00 UTC" -- ${torqwave_preset_names}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Data/Presets
     DEPENDS ${torqwave_presets}
     COMMENT "Zipping the factory presets"
@@ -431,7 +431,7 @@ endforeach()
 set(torqwave_samples_zip ${CMAKE_BINARY_DIR}/factory-samples.zip)
 add_custom_command(OUTPUT ${torqwave_samples_zip}
     COMMAND ${CMAKE_COMMAND} -E rm -f ${torqwave_samples_zip}
-    COMMAND ${CMAKE_COMMAND} -E tar cf ${torqwave_samples_zip} --format=zip --mtime=@1767225600 -- ${torqwave_sample_names}
+    COMMAND ${CMAKE_COMMAND} -E tar cf ${torqwave_samples_zip} --format=zip "--mtime=2026-01-01 00:00:00 UTC" -- ${torqwave_sample_names}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Data/Samples
     DEPENDS ${torqwave_samples}
     COMMENT "Zipping the sampler's factory samples"
