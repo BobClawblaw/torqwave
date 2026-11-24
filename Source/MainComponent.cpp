@@ -9078,6 +9078,14 @@ void MainComponent::finishContinuing()
     {
         openSession (state.open.session, std::nullopt, state.open.rack.get());
         multitrack.setPlace (state.sessionPlace);
+
+        // And once the view has heard of the new session, which drops a selected track it no longer finds.
+        juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<MainComponent> (this), file = state.open.session,
+                                          sessionPlace = state.sessionPlace]
+        {
+            if (safe != nullptr && safe->engine.session.getFile() == file && ! safe->engine.session.canUndo())
+                safe->multitrack.setPlace (sessionPlace);
+        });
     }
     else
     {

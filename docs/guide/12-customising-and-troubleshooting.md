@@ -10,7 +10,7 @@
 
 | Section | What it holds |
 |---|---|
-| Start | Whether the app opens on the home screen (the default) or reopens the file you had open when you quit |
+| Start | Whether the app opens on the home screen (the default), reopens the file you had open when you quit, or [continues where you left off](01-getting-started.md#continue-where-you-left-off): every file, the session and where you were in each |
 | Look | Theme, accent, waveform colour, time format, and what the editor shows |
 | Editing | How editing behaves |
 | Playback | How playback behaves |
