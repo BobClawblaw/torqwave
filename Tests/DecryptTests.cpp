@@ -1441,9 +1441,9 @@ namespace
 
             // Recalled from another patch: the same settings (the level trim among them), tables, macro names and name.
             synth.loadPatch ("Cold Bell");
-            // The level is compared by its bytes, in variables that are not const: Microsoft's compiler stopped with
-            // an internal error in its constant evaluator on the comparison written as an expression of constants.
-            const auto loadedIt = store().load (synth, "night reese");
+            // Not const, and the store named in full: Microsoft's compiler stopped with an internal error in its
+            // constant evaluator on "const auto x = store().load (...)", where store is a reference to a function.
+            bool loadedIt = DecryptedPatches::Store::shared().load (synth, "night reese");
             double levelNow = synth.getPresetValues().at ("ampLevel");
             const bool sameLevel = std::memcmp (&levelNow, &trimmed, sizeof (double)) == 0;
             const auto recalled = loadedIt && synth.getPresetValues() == values && synth.getPresetTexts() == texts
@@ -1599,7 +1599,7 @@ namespace
             const auto renamed = page.renameSelected ("Dusk Reese") && store().names().contains ("Dusk Reese") && ! presets->getNames (key).contains ("Night Reese")
                                  && synth.getPatchName() == "Dusk Reese" && store().entry ("Dusk Reese")->category == second && juce::exactlyEqual (store().entry ("Dusk Reese")->lock, takenAt2);
             synth.loadPatch ("Cold Bell");
-            const auto renamedLoads = store().load (synth, "Dusk Reese") && synth.getPatchName() == "Dusk Reese" && synth.getMacroName (0) == "Grit";
+            bool renamedLoads = DecryptedPatches::Store::shared().load (synth, "Dusk Reese") && synth.getPatchName() == "Dusk Reese" && synth.getMacroName (0) == "Grit";
             const auto fromBrowser = ! window->renameDecrypted ("Dusk Reese", "ash lead") && window->renameDecrypted ("Dusk Reese", "Dusk Reese II") && window->renameDecrypted ("Dusk Reese II", "Dusk Reese");
             if (! (refusedNames && renamed && renamedLoads && fromBrowser))
                 failed.add ("rename did not refuse an empty, taken or factory name, or did not rename and keep what the list holds");
