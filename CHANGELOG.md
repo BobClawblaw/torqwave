@@ -4,6 +4,18 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+## Released
+
+**Release 0.21.0: the first announced release since 0.19.2**
+- `Torqwave-0.21.0.dmg` on the repository's Releases page, with its SHA-256, and the Windows and Linux packages built by their workflows from the release's tag.
+- **What it is.** Neither 0.20.0 nor 0.20.1 was announced, so 0.21.0 stands for the whole line since 0.19.2: the instruments (0.20.0), Continue where you left off (0.20.1), and what is new in it.
+- **New since 0.20.1** (the entries below): Basic Drums' Modern type, five kits, fourteen grooves and eight audition beats; the Maximizer, Click and Pop Repair and Repair Clipping corrected; Ask Torq remembering the conversation, showing the model's context and answering what is new; and the project's site.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app universal (arm64 and x86_64) at the release's code, at the tag so the app is marked a release build, signed it ad hoc and made the disk image (the step that failed in the two releases before now gives the image its size). The whole suite (2,618 checks) then passed once in each half of that build, the Intel one under Rosetta, with the signed app as the plug-in scan worker. Not run on an Intel Mac itself. The suites that run on their own were not run again after it: they repeat checks the whole suite makes. The tag is one commit after the code that was built and tested, and that commit changes documents and one picture only.
+- **Windows and Linux:** the workflows build the packages without running the tests, and neither was tried by hand.
+- The Mac app is signed ad hoc, not with a Developer ID, and is not notarized: macOS blocks it the first time, and Open Anyway under System Settings > Privacy & Security lets it through.
+- **Tried by hand before the release:** the new drum kits were heard as rendered clips beside the kits they stand next to; the Modern kick has less weight than the Classic one. Ask Torq's empty box, missing follow-ups and missing release notes were found by the user in the first 0.21.0 build and fixed before this one. The three effects, the Modern sounds in the window, and Ask Torq's arrows and context line were not tried by hand in this build before it was made.
+- The guide's picture of the Basic Drums window is now drawn by the tests (`--drums-window`), so it shows the Type selector; the picture before was a capture of the running window.
+
 **Ask Torq remembers the conversation, empties its box, shows how full the model's context is, and knows what release it is in** (fix log 110 and 111)
 - **What was wrong,** found by the user in the 0.21.0 build before its release. The question stayed in the box after it was sent. A follow-up had nothing to follow: each request went to the model by itself, and the log was emptied for it. And asked "what is new in 0.21.0?", the model said it had no release notes, which was true.
 - **Now the box empties on send** and the log keeps the conversation, one request after another. (The box is emptied by setting its text: `clear()` left its value behind, which could put the text back.)
@@ -71,8 +83,6 @@ Each milestone as it was built, newest first, with what the tests measured on th
 - **What the page says did not do well:** Click and Pop Repair at its defaults left 16 of 60 inserted clicks; Repair Clipping rebuilt all 334 clipped runs of a loop cut off 4 dB over full scale but left it no nearer the original (-34.6 dB from it before, -34.9 dB after); and the Maximizer's output read -0.79 dBTP on Torqwave's meter against a -1 dBTP ceiling. All three are open work.
 - The 0.20.1 comparison snapshot and the announcement's notes now say the Windows and Linux packages are on the release page.
 - Nothing in the app changed. Tested: the whole suite on the development Mac at this code (2,579 checks). A first run, while another build loaded the Mac, failed one control-surface timing check; run again alone, everything passed. The site was previewed with a local Jekyll build before it was pushed, not on GitHub's.
-
-## Released
 
 **Release 0.20.1: continue where you left off, and the first release of the 0.20 line for all three systems**
 - `Torqwave-0.20.1.dmg` on the repository's Releases page, with its SHA-256, the Windows packages (`Torqwave-0.20.1-windows-x64-setup.exe` and `Torqwave-0.20.1-windows-x64.zip`) and the Linux tarball (`Torqwave-0.20.1-linux-x86_64.tar.gz`), each built by its workflow from the release's tag.

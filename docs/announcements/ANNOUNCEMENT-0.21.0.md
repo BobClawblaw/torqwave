@@ -78,7 +78,7 @@ Something to play on them: 1,032 sequence presets and 116 starter kits in 37 sty
 In the editor: a time-view strip over the ruler, a Hand tool, and Paste Clipboard as New File.
 ```
 
-**7 of 9**, with the home screen and its Continue Where You Left Off button (`docs/screenshots/guide-home.png`).
+**7 of 9**, with no picture yet: the home screen with its Continue Where You Left Off button would suit it (the guide's picture of the home screen is from before the feature).
 
 ```text
 Continue where you left off: quit with files open in the editor and a session in the multitrack view, and the next start brings all of it back. Every file, your place in each, the effects rack, the session, the view you were in.
@@ -86,7 +86,7 @@ Continue where you left off: quit with files open in the editor and a session in
 It keeps a note of what was open, not your audio.
 ```
 
-**8 of 9**, with the site's Quality page (`docs/screenshots/site-quality.png`).
+**8 of 9**, with a picture of the site's Quality page (https://bobclawblaw.github.io/torqwave/quality/), taken once the site shows 0.21.0's results; there is none in the repository yet.
 
 ```text
 We measured our own effects for the site and fixed what fell short. The Maximizer holds its true-peak ceiling. Click Repair finds 60 of 60 test clicks (was 44) and leaves clean drums alone. Repair Clipping rebuilds from the sound round the clip.
@@ -145,7 +145,7 @@ The window of StringSwarm with the preset Tremolo Swarm Wall: twelve strings all
 ```
 
 ```alt
-The window of Basic Drums in its Industrial kit: the kit selector and presets row along the top, thirty pads coloured by family (kicks, snares and claps, hats, toms, cymbals, hand percussion) on the left, and the selected kick's settings on the right.
+The window of Basic Drums in its Dark Techno kit: the kit selector and presets row along the top, thirty pads coloured by family (kicks, snares and claps, hats, toms, cymbals, hand percussion) on the left, and the selected kick's settings on the right, with its Type selector reading Classic.
 ```
 
 For `docs/screenshots/guide-sequencer.png` and `docs/screenshots/editor.png`:
