@@ -11,3 +11,12 @@
     others' lines in index.json are kept); empty, all of them.
     Run with `TorqwaveTests --sound-demos <folder> [--only synth,kits]`. */
 void writeSoundDemos (const juce::File& folder, const juce::StringArray& only = {});
+
+/** Writes the Quality page's before-and-after clips (docs/quality) into the folder: damage of a known kind
+    and amount (hiss, mains hum, missing highs) put on clips Torqwave rendered, then repaired by the
+    code the Effects menu runs at its defaults, and a loop through the Maximizer to a loudness; each
+    as MP3s in audio/ with its spectrogram in img/, and facts.json with what was done and what was
+    measured against the clean clip. `also` adds the two the page leaves out ("clicks": Click Repair
+    on 60 clicks put in; "clipping": Declip on a loop cut off 4 dB over), to measure them.
+    Run with `TorqwaveTests --quality-demos <folder> [--also clicks,clipping]`. */
+void writeQualityDemos (const juce::File& folder, const juce::StringArray& also = {});

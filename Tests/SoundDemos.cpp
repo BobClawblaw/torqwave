@@ -14,6 +14,7 @@
 #include "../Source/SequenceLibrary.h"
 #include "../Source/SequencePreview.h"
 #include "../Source/SpectralRecovery.h"
+#include "../Source/Spectrogram.h"
 #include "../Source/SwarmGuitar.h"
 #include "../Source/WaveSynth.h"
 #include "SoundDemos.h"
@@ -188,10 +189,10 @@ namespace
         return juce::Decibels::gainToDecibels (audio.getMagnitude (0, audio.getNumSamples()), -100.0f);
     }
 
-    /** Writes the clip as an MP3 (variable bit rate, quality 4) and notes its length, peak and size. A clip
+    /** Writes the clip as an MP3 (variable bit rate, quality 4 unless given) and notes its length, peak and size. A clip
         still sounding where it stops is faded over its last 30 ms, so the cut does not click: the
         only thing done to a render. */
-    bool save (const juce::File& folder, juce::DynamicObject* entry, juce::AudioBuffer<float> audio)
+    bool save (const juce::File& folder, juce::DynamicObject* entry, juce::AudioBuffer<float> audio, int vbrQuality = 4)
     {
         const auto file = folder.getChildFile (entry->getProperty ("file").toString());
         file.getParentDirectory().createDirectory();
@@ -208,7 +209,7 @@ namespace
 
         LossyFiles::Settings mp3;
         mp3.variable = true;
-        mp3.vbrQuality = 4;
+        mp3.vbrQuality = vbrQuality;
         const auto error = LossyFiles::write (*AudioEdits::fromBuffer (std::move (audio)), rate, file, mp3);
         entry->setProperty ("bytes", file.getSize());
         std::cout << (error.isEmpty() ? entry->getProperty ("file").toString() + " (peak " + entry->getProperty ("peakDb").toString() + " dB)"
@@ -229,13 +230,13 @@ namespace
         const auto beatMs = 480.0;
         const auto round = pattern.lengthMs > 0.0 ? pattern.lengthMs : juce::jmax (2.0, std::ceil (end / beatMs)) * beatMs;
         const auto rounds = round < 3500.0 ? 2 : 1;
-        std::vector<Hit> hits;
+        std::vector<Hit> played;
 
         for (int r = 0; r < rounds; ++r)
             for (auto& n : pattern.notes)
-                hits.push_back ({ (r * round + n.startMs) * 0.001, n.lengthMs * 0.001, n.note, n.velocity });
+                played.push_back ({ (r * round + n.startMs) * 0.001, n.lengthMs * 0.001, n.note, n.velocity });
 
-        return play (instrument, hits, rounds * round * 0.001 + tail, 125.0);
+        return play (instrument, played, rounds * round * 0.001 + tail, 125.0);
     }
 
     /** An instrument's settings, read by parameter ID. */
@@ -578,6 +579,31 @@ namespace
         }
     }
 
+    /** The Sequence Library's factory presets unpacked into a folder of this run's own, taken away after. */
+    struct UnpackedPresets
+    {
+        UnpackedPresets()
+        {
+            SequenceLibrary::setFactoryFolder (presets);
+
+            if (const auto error = SequenceLibrary::unpackFactoryPresets(); error.isNotEmpty())
+                std::cout << "FAILED " << error << std::endl;
+        }
+
+        ~UnpackedPresets()
+        {
+            SequenceLibrary::setFactoryFolder (before);
+
+            // The unpacked files are read-only: made writable again to be deleted.
+            for (const auto& f : juce::RangedDirectoryIterator (base, true, "*", juce::File::findFilesAndDirectories))
+                f.getFile().setReadOnly (false);
+
+            base.deleteRecursively();
+        }
+
+        const juce::File before = SequenceLibrary::factoryFolder(), base = juce::File::createTempFile ("sounddemos-presets"), presets = base.getChildFile ("set");
+    };
+
     /** A sequence's or a kit's loop, as the Sequence Library's preview renders it at its written tempo:
         round again until it is five seconds or more. */
     bool writeLoop (const juce::File& folder, juce::DynamicObject* entry, const std::vector<SequenceFile::Sequence>& parts, juce::AudioPluginFormatManager& formats)
@@ -621,13 +647,8 @@ namespace
         role the one with the most energy, the first by name among equals). */
     void writeLibrary (const juce::File& folder, Index& index, bool kits, bool sequences)
     {
-        const auto before = SequenceLibrary::factoryFolder();
-        const auto base = juce::File::createTempFile ("sounddemos-presets");
-        const auto presets = base.getChildFile ("set");
-        SequenceLibrary::setFactoryFolder (presets);
-
-        if (const auto error = SequenceLibrary::unpackFactoryPresets(); error.isNotEmpty())
-            std::cout << "FAILED " << error << std::endl;
+        const UnpackedPresets unpacked;
+        const auto& presets = unpacked.presets;
 
         juce::AudioPluginFormatManager formats;
         formats.addFormat (BuiltInEffects::createFormat());
@@ -705,16 +726,428 @@ namespace
                     }
                 }
         }
-
-        SequenceLibrary::setFactoryFolder (before);
-
-        // The unpacked files are read-only: made writable again to be deleted.
-        for (const auto& f : juce::RangedDirectoryIterator (base, true, "*", juce::File::findFilesAndDirectories))
-            f.getFile().setReadOnly (false);
-
-        base.deleteRecursively();
     }
+    //==============================================================================
+    // Before and after: damage of a known kind and amount put on a clip Torqwave rendered, then repaired
+    // by the same code the Effects menu runs. The clean clip is kept, so each repair is measured against it.
+
+    juce::AudioBuffer<float> bufferOf (const AudioSnapshot& s)
+    {
+        juce::AudioBuffer<float> out (s.getNumChannels(), (int) s.getNumFrames());
+        s.read (out, 0, 0, out.getNumSamples());
+        return out;
+    }
+
+    AudioEdits::Snapshot snapshotOf (const juce::AudioBuffer<float>& audio)   { return AudioEdits::fromBuffer (juce::AudioBuffer<float> (audio)); }
+
+    double rmsDb (const juce::AudioBuffer<float>& a, int from, int frames)
+    {
+        auto sum = 0.0;
+
+        for (int ch = 0; ch < a.getNumChannels(); ++ch)
+            for (int i = from; i < from + frames; ++i)
+                sum += (double) a.getSample (ch, i) * a.getSample (ch, i);
+
+        return 10.0 * std::log10 (juce::jmax (1.0e-20, sum / juce::jmax (1, frames * a.getNumChannels())));
+    }
+
+    /** How far a clip is from the clean one, in dB against the clean one's level, once the clean one is
+        scaled to fit it best (so a repair that changes the level is not counted as an error for that). */
+    double differenceDb (const juce::AudioBuffer<float>& a, const juce::AudioBuffer<float>& clean, int from = 0)
+    {
+        auto ac = 0.0, cc = 0.0;
+        const auto frames = juce::jmin (a.getNumSamples(), clean.getNumSamples());
+
+        for (int ch = 0; ch < clean.getNumChannels(); ++ch)
+            for (int i = from; i < frames; ++i)
+            {
+                ac += (double) a.getSample (ch, i) * clean.getSample (ch, i);
+                cc += (double) clean.getSample (ch, i) * clean.getSample (ch, i);
+            }
+
+        const auto g = cc > 0.0 ? ac / cc : 1.0;
+        auto error = 0.0;
+
+        for (int ch = 0; ch < clean.getNumChannels(); ++ch)
+            for (int i = from; i < frames; ++i)
+            {
+                const auto d = a.getSample (ch, i) - g * clean.getSample (ch, i);
+                error += d * d;
+            }
+
+        return 10.0 * std::log10 (juce::jmax (1.0e-20, error) / juce::jmax (1.0e-20, g * g * cc));
+    }
+
+    /** The level between two frequencies, in dB: the mean power of Hann-windowed 4,096-point frames. */
+    double bandDb (const juce::AudioBuffer<float>& a, double lowHz, double highHz)
+    {
+        constexpr int order = 12, size = 1 << order;
+        juce::dsp::FFT fft (order);
+        juce::dsp::WindowingFunction<float> window ((size_t) size, juce::dsp::WindowingFunction<float>::hann);
+        std::vector<float> frame ((size_t) size * 2);
+        auto sum = 0.0;
+        int frames = 0;
+
+        for (int ch = 0; ch < a.getNumChannels(); ++ch)
+            for (int at = 0; at + size <= a.getNumSamples(); at += size / 2, ++frames)
+            {
+                std::fill (frame.begin(), frame.end(), 0.0f);
+                std::copy (a.getReadPointer (ch, at), a.getReadPointer (ch, at) + size, frame.begin());
+                window.multiplyWithWindowingTable (frame.data(), (size_t) size);
+                fft.performFrequencyOnlyForwardTransform (frame.data());
+
+                for (int bin = (int) (lowHz * size / rate); bin <= juce::jmin (size / 2, (int) (highHz * size / rate)); ++bin)
+                    sum += (double) frame[(size_t) bin] * frame[(size_t) bin] / ((double) size * size);
+            }
+
+        return 10.0 * std::log10 (juce::jmax (1.0e-20, sum / juce::jmax (1, frames)));
+    }
+
+    /** The level of one frequency over the whole clip (the left channel), in dBFS: a sine of that level would read the same. */
+    double toneDb (const juce::AudioBuffer<float>& a, double hz)
+    {
+        auto re = 0.0, im = 0.0;
+
+        for (int i = 0; i < a.getNumSamples(); ++i)
+        {
+            const auto phase = juce::MathConstants<double>::twoPi * hz * i / rate;
+            re += a.getSample (0, i) * std::cos (phase);
+            im += a.getSample (0, i) * std::sin (phase);
+        }
+
+        return 20.0 * std::log10 (juce::jmax (1.0e-10, 2.0 * std::sqrt (re * re + im * im) / juce::jmax (1, a.getNumSamples())));
+    }
+
+    double tenth (double v)   { return std::round (v * 10.0) / 10.0; }
+
+    struct Quality
+    {
+        juce::File folder;
+        juce::Array<juce::var> demos;
+
+        juce::DynamicObject* demo (const juce::String& id, const juce::String& title)
+        {
+            auto* o = new juce::DynamicObject();
+            o->setProperty ("id", id);
+            o->setProperty ("title", title);
+            demos.add (juce::var (o));
+            return o;
+        }
+
+        /** A clip of a demo: its MP3 (variable bit rate, quality 2) and its spectrogram, the left channel as the editor draws it. */
+        void clip (juce::DynamicObject* demo, const juce::String& which, const juce::AudioBuffer<float>& audio)
+        {
+            const auto name = demo->getProperty ("id").toString() + "-" + which;
+            juce::DynamicObject::Ptr entry = new juce::DynamicObject();
+            entry->setProperty ("file", "audio/" + name + ".mp3");
+            save (folder, entry.get(), audio, 2);
+
+            const auto image = Spectrogram::render (*snapshotOf (audio), 0, rate, 0.0, audio.getNumSamples() / 900.0, 900, 220);
+            const auto png = folder.getChildFile ("img").getChildFile (name + ".png");
+            png.getParentDirectory().createDirectory();
+            png.deleteFile();
+
+            if (juce::FileOutputStream out (png); out.openedOk())
+                juce::PNGImageFormat().writeImageToStream (image, out);
+
+            demo->setProperty (which, entry->getProperty ("file"));
+            demo->setProperty (which + "Picture", "img/" + name + ".png");
+            demo->setProperty (which + "Bytes", (juce::int64) entry->getProperty ("bytes") + png.getSize());
+        }
+    };
 }
+
+void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
+{
+    folder.createDirectory();
+    Quality q { folder, {} };
+    juce::Random random (20261124);
+
+    // The clips: a pad's chords under a bell's arpeggio (four bars at 120 BPM and two seconds to ring), and a factory kit's loop twice.
+    juce::AudioBuffer<float> tonal, beatLoop;
+    juce::String kitName;
+
+    {
+        BuiltInEffects::BasicSynthProcessor pad, bell;
+        pad.loadPatch (juce::String ("Concrete Pad"));
+        bell.loadPatch (juce::String ("Cold Bell"));
+        tonal = play (pad, minorChords, 4.0 * bar + 2.0);
+        const auto arp = play (bell, arpeggio, 4.0 * bar + 2.0);
+
+        for (int ch = 0; ch < 2; ++ch)
+            tonal.addFrom (ch, 0, arp, ch, 0, arp.getNumSamples());
+
+        tonal.applyGain (0.6f);
+    }
+
+    {
+        const UnpackedPresets unpacked;
+        juce::AudioPluginFormatManager formats;
+        formats.addFormat (BuiltInEffects::createFormat());
+
+        for (auto& e : SequenceLibrary (unpacked.presets).scan())
+            if (e.isKit && e.style == "Industrial/EBM" && (kitName.isEmpty() || e.name.compareNatural (kitName) < 0))
+            {
+                juce::String error;
+
+                if (const auto kit = SequenceKit::load (e.file, error); kit.has_value() && ! kit->parts.empty())
+                {
+                    juce::AudioBuffer<float> pass;
+
+                    if (SequencePreview::render (kit->parts, kit->parts.front().writtenTempo, kit->parts.front().beatsPerBar, rate, formats, pass).isEmpty())
+                    {
+                        kitName = e.name;
+                        beatLoop.setSize (2, pass.getNumSamples() * 2);
+
+                        for (int r = 0; r < 2; ++r)
+                            for (int ch = 0; ch < 2; ++ch)
+                                beatLoop.copyFrom (ch, r * pass.getNumSamples(), pass, ch, 0, pass.getNumSamples());
+                    }
+                }
+            }
+    }
+
+    if (beatLoop.getNumSamples() == 0)
+    {
+        std::cout << "FAILED no kit to play" << std::endl;
+        return;
+    }
+
+    const auto tonalSource = juce::String ("Torqwave Synth: Concrete Pad's chords under Cold Bell's arpeggio, four bars at 120 BPM");
+    const auto beatSource = "The factory kit " + kitName + " (Industrial/EBM), its loop twice, as the Sequence Library plays it";
+
+    // Clicks: 60 of them, one to three samples long, at up to nine tenths of full scale.
+    if (also.contains ("clicks"))
+    {
+        auto* d = q.demo ("clicks", "Clicks");
+        auto damaged = tonal;
+        const int clicks = 60;
+        std::vector<int> places;
+
+        for (int i = 0; i < clicks; ++i)
+        {
+            const auto at = 4800 + random.nextInt (damaged.getNumSamples() - 9600);
+            places.push_back (at);
+            const auto length = 1 + random.nextInt (3);
+            const auto value = (random.nextBool() ? 1.0f : -1.0f) * (0.4f + 0.5f * random.nextFloat());
+
+            for (int ch = 0; ch < 2; ++ch)
+                for (int k = 0; k < length; ++k)
+                    damaged.setSample (ch, at + k, value);
+        }
+
+        const auto repaired = ClickRepair::repair (*snapshotOf (damaged), 0, damaged.getNumSamples(), rate, ClickRepair::Settings());
+        const auto after = repaired.has_value() && repaired->snapshot != nullptr ? bufferOf (*repaired->snapshot) : damaged;
+        d->setProperty ("source", tonalSource);
+        d->setProperty ("damage", juce::String (clicks) + " clicks put in, each one to three samples long at 40 to 90% of full scale, in both channels");
+        d->setProperty ("repair", "Effects > Repair > Click Repair at its defaults (threshold 18 dB, clicks up to 3 ms)");
+        d->setProperty ("clicksAdded", clicks);
+        d->setProperty ("clicksRepaired", repaired.has_value() ? repaired->repaired : 0);
+        d->setProperty ("skipped", repaired.has_value() ? repaired->skipped : 0);
+
+        // What is left where each click was: how far the repaired clip stands from the clean one there.
+        int left = 0, gone = 0;   // still more than a tenth of full scale away; within a hundredth
+
+        for (auto at : places)
+        {
+            auto worst = 0.0f;
+
+            for (int ch = 0; ch < 2; ++ch)
+                for (int k = 0; k < 3; ++k)
+                    worst = juce::jmax (worst, std::abs (after.getSample (ch, at + k) - tonal.getSample (ch, at + k)));
+
+            left += worst > 0.1f ? 1 : 0;
+            gone += worst < 0.01f ? 1 : 0;
+        }
+
+        d->setProperty ("clicksLeft", left);
+        d->setProperty ("clicksGone", gone);
+        d->setProperty ("clipRms", tenth (rmsDb (tonal, 0, tonal.getNumSamples())));
+        d->setProperty ("differenceBefore", tenth (differenceDb (damaged, tonal)));
+        d->setProperty ("differenceAfter", tenth (differenceDb (after, tonal)));
+        q.clip (d, "before", damaged);
+        q.clip (d, "after", after);
+    }
+
+    // Hiss: white noise 38 dB under full scale, with a second of it alone first for the noise print.
+    {
+        auto* d = q.demo ("hiss", "Hiss");
+        const auto lead = (int) rate;
+        juce::AudioBuffer<float> clean (2, lead + tonal.getNumSamples());
+        clean.clear();
+
+        for (int ch = 0; ch < 2; ++ch)
+            clean.copyFrom (ch, lead, tonal, ch, 0, tonal.getNumSamples());
+
+        auto damaged = clean;
+        const auto amplitude = juce::Decibels::decibelsToGain (-38.0f) * std::sqrt (3.0f);   // a uniform noise of that RMS
+
+        for (int ch = 0; ch < 2; ++ch)
+            for (int i = 0; i < damaged.getNumSamples(); ++i)
+                damaged.addSample (ch, i, amplitude * (2.0f * random.nextFloat() - 1.0f));
+
+        const auto snapshot = snapshotOf (damaged);
+        const auto print = NoiseReduction::capture (*snapshot, 0, lead - 2400, rate);
+        d->setProperty ("source", tonalSource + ", after a second of the noise alone");
+        d->setProperty ("damage", "white noise at -38 dBFS RMS over the whole clip");
+        d->setProperty ("repair", "Effects > Repair > Noise Reduction: the print taken from the first second, then the whole clip reduced by 12 dB (the default) and by 24 dB");
+        d->setProperty ("noiseBefore", tenth (rmsDb (damaged, 4800, lead - 9600)));
+        d->setProperty ("differenceBefore", tenth (differenceDb (damaged, clean, lead)));
+        q.clip (d, "before", damaged);
+
+        if (print.has_value())
+            for (auto reduction : { 12.0f, 24.0f })
+            {
+                NoiseReduction::Settings settings;
+                settings.reductionDb = reduction;
+                const auto reduced = NoiseReduction::reduce (*snapshot, 0, damaged.getNumSamples(), rate, *print, settings);
+                const auto after = reduced != nullptr ? bufferOf (*reduced) : damaged;
+                const auto which = juce::String (reduction > 12.0f ? "after24" : "after");
+                d->setProperty (reduction > 12.0f ? "noiseAfter24" : "noiseAfter", tenth (rmsDb (after, 4800, lead - 9600)));
+                d->setProperty (reduction > 12.0f ? "differenceAfter24" : "differenceAfter", tenth (differenceDb (after, clean, lead)));
+                q.clip (d, which, after);
+            }
+    }
+
+    // Hum: 50 Hz and five harmonics, the fundamental 34 dB under full scale and each harmonic 6 dB under the one before.
+    {
+        auto* d = q.demo ("hum", "Mains hum");
+        auto damaged = tonal;
+
+        for (int h = 1; h <= 6; ++h)
+        {
+            const auto amplitude = juce::Decibels::decibelsToGain (-34.0f - 6.0f * (float) (h - 1));
+
+            for (int i = 0; i < damaged.getNumSamples(); ++i)
+            {
+                const auto v = amplitude * (float) std::sin (juce::MathConstants<double>::twoPi * 50.0 * h * i / rate + 0.7 * h);
+                damaged.addSample (0, i, v);
+                damaged.addSample (1, i, v);
+            }
+        }
+
+        const auto removed = Restoration::removeHum (*snapshotOf (damaged), 0, damaged.getNumSamples(), rate, Restoration::Hum());
+        const auto after = removed != nullptr ? bufferOf (*removed) : damaged;
+        d->setProperty ("source", tonalSource);
+        d->setProperty ("damage", "a 50 Hz hum with five harmonics: the fundamental at -34 dBFS, each harmonic 6 dB under the one before");
+        d->setProperty ("repair", "Effects > Repair > Hum Removal at its defaults (50 Hz, 8 harmonics, Q 30)");
+
+        for (auto hz : { 50, 100, 150 })
+        {
+            d->setProperty ("clean" + juce::String (hz), tenth (toneDb (tonal, hz)));
+            d->setProperty ("before" + juce::String (hz), tenth (toneDb (damaged, hz)));
+            d->setProperty ("after" + juce::String (hz), tenth (toneDb (after, hz)));
+        }
+        q.clip (d, "before", damaged);
+        q.clip (d, "after", after);
+    }
+
+    // Clipping: the kit pushed 4 dB over full scale and cut off flat there (then everything 6 dB down, to leave room for the rebuilt peaks).
+    if (also.contains ("clipping"))
+    {
+        auto* d = q.demo ("clipping", "Clipping");
+        auto clean = beatLoop;
+        clean.applyGain (1.0f / juce::jmax (1.0e-6f, clean.getMagnitude (0, clean.getNumSamples())) * juce::Decibels::decibelsToGain (4.0f));
+        auto damaged = clean;
+        int clippedSamples = 0;
+
+        for (int ch = 0; ch < 2; ++ch)
+            for (int i = 0; i < damaged.getNumSamples(); ++i)
+                if (std::abs (damaged.getSample (ch, i)) > 1.0f)
+                {
+                    damaged.setSample (ch, i, damaged.getSample (ch, i) > 0.0f ? 1.0f : -1.0f);
+                    ++clippedSamples;
+                }
+
+        clean.applyGain (0.5f);
+        damaged.applyGain (0.5f);
+        const auto rebuilt = Restoration::declip (*snapshotOf (damaged), 0, damaged.getNumSamples(), rate, Restoration::Declip());
+        const auto after = rebuilt.audio != nullptr ? bufferOf (*rebuilt.audio) : damaged;
+        d->setProperty ("source", beatSource);
+        d->setProperty ("damage", "the loop turned up until its peak stood 4 dB over full scale, and cut off flat there");
+        d->setProperty ("repair", "Effects > Repair > Declip at its defaults (threshold 99% of the peak, the peak kept)");
+        d->setProperty ("clippedSamples", clippedSamples);
+        d->setProperty ("runsRebuilt", rebuilt.repaired);
+        d->setProperty ("runsTooLong", rebuilt.tooLong);
+        d->setProperty ("differenceBefore", tenth (differenceDb (damaged, clean)));
+        d->setProperty ("differenceAfter", tenth (differenceDb (after, clean)));
+        q.clip (d, "before", damaged);
+        q.clip (d, "after", after);
+    }
+
+    // Missing highs: everything over 5 kHz filtered away (eight low-pass sections in a row), then rebuilt.
+    {
+        auto* d = q.demo ("highs", "Missing highs");
+        auto damaged = beatLoop;
+
+        for (int ch = 0; ch < 2; ++ch)
+            for (int stage = 0; stage < 8; ++stage)
+            {
+                juce::IIRFilter filter;
+                filter.setCoefficients (juce::IIRCoefficients::makeLowPass (rate, 5000.0));
+                filter.processSamples (damaged.getWritePointer (ch), damaged.getNumSamples());
+            }
+
+        const auto snapshot = snapshotOf (damaged);
+        const auto cutoff = SpectralRecovery::findCutoff (*snapshot, 0, damaged.getNumSamples(), rate);
+        const auto recovered = SpectralRecovery::recover (*snapshot, 0, damaged.getNumSamples(), rate, SpectralRecovery::Settings());
+        const auto after = recovered != nullptr ? bufferOf (*recovered) : damaged;
+        d->setProperty ("source", beatSource);
+        d->setProperty ("damage", "everything over 5 kHz filtered away (eight 12 dB low-pass sections in a row at 5 kHz)");
+        d->setProperty ("repair", "Effects > Repair > Spectral Recovery at its defaults (the cutoff found from the audio, level -3 dB, rebuilt up to 16 kHz)");
+        d->setProperty ("recovered", recovered != nullptr);
+        d->setProperty ("cutoffFound", juce::roundToInt (cutoff));
+        d->setProperty ("highsOriginal", tenth (bandDb (beatLoop, 6000.0, 16000.0)));
+        d->setProperty ("highsBefore", tenth (bandDb (damaged, 6000.0, 16000.0)));
+        d->setProperty ("highsAfter", tenth (bandDb (after, 6000.0, 16000.0)));
+        q.clip (d, "original", beatLoop);
+        q.clip (d, "before", damaged);
+        q.clip (d, "after", after);
+    }
+
+    // Loudness: the loop as rendered, then through the Maximizer with its gain set so it measures -10 LUFS.
+    {
+        auto* d = q.demo ("loudness", "Loudness");
+        const auto snapshot = snapshotOf (beatLoop);
+        const auto before = Loudness::measure (beatLoop, rate);
+        const auto target = -10.0;
+        Maximizer::Settings settings;
+        settings.ceilingDb = -1.0;
+        settings.gainDb = juce::jlimit (0.0, 24.0, target - before.integrated);
+        auto after = beatLoop;
+        Loudness::Result measured = before;
+
+        for (int round = 0; round < 6; ++round)
+        {
+            if (const auto made = Maximizer::apply (*snapshot, 0, beatLoop.getNumSamples(), rate, settings))
+                after = bufferOf (*made);
+
+            measured = Loudness::measure (after, rate);
+
+            if (std::abs (measured.integrated - target) < 0.05)
+                break;
+
+            settings.gainDb = juce::jlimit (0.0, 24.0, settings.gainDb + target - measured.integrated);
+        }
+
+        d->setProperty ("source", beatSource);
+        d->setProperty ("damage", "nothing: the loop as the instruments made it");
+        d->setProperty ("repair", "Effects > Maximizer: Balanced, ceiling -1 dBTP, its gain set so the clip measures " + juce::String (target, 0) + " LUFS");
+        d->setProperty ("gainDb", tenth (settings.gainDb));
+        d->setProperty ("loudnessBefore", tenth (before.integrated));
+        d->setProperty ("loudnessAfter", tenth (measured.integrated));
+        d->setProperty ("truePeakBefore", std::round (before.truePeak * 100.0) / 100.0);
+        d->setProperty ("truePeakAfter", std::round (measured.truePeak * 100.0) / 100.0);
+        d->setProperty ("rangeBefore", tenth (before.range));
+        d->setProperty ("rangeAfter", tenth (measured.range));
+        q.clip (d, "before", beatLoop);
+        q.clip (d, "after", after);
+    }
+
+    folder.getChildFile ("facts.json").replaceWithText (juce::JSON::toString (juce::var (q.demos)) + "\n");
+    std::cout << juce::JSON::toString (juce::var (q.demos)) << std::endl;
+}
+
 
 void writeSoundDemos (const juce::File& folder, const juce::StringArray& only)
 {
@@ -745,5 +1178,5 @@ void writeSoundDemos (const juce::File& folder, const juce::StringArray& only)
     for (auto& entry : index.entries)
         bytes += (juce::int64) entry["bytes"];
 
-    std::cout << index.entries.size() << " clips, " << juce::String (bytes / 1048576.0, 1) << " MB" << std::endl;
+    std::cout << index.entries.size() << " clips, " << juce::String ((double) bytes / 1048576.0, 1) << " MB" << std::endl;
 }

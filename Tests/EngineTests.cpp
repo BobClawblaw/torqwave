@@ -622,6 +622,7 @@ int main (int argc, char* argv[])
     //   --patch-hashes <file>   only write a hash of each factory patch's render, to compare two builds sample for sample
     //   --sound-demos <folder>  only write the Sounds pages' demos (the built-in instruments' patches, presets and kits, and
     //                           the Sequence Library's factory kits and sequences) as MP3s with index.json; --only synth,kits for some
+    //   --quality-demos <folder> only write the Quality page's before-and-after clips, their spectrograms and facts.json; --also clicks,clipping for two more
     //   --console-window <folder> only save pictures of the synth's window showing the Trace view
     //   --console               only the signal console's tests (Trace: the nodes within reach of a patch)
     //   --instruments           only the tests of the built-in instruments and their controls
@@ -838,6 +839,12 @@ int main (int argc, char* argv[])
     if (const auto folder = valueOf ("--sound-demos"); folder.isNotEmpty())
     {
         writeSoundDemos (juce::File::getCurrentWorkingDirectory().getChildFile (folder), juce::StringArray::fromTokens (valueOf ("--only"), ",", ""));
+        return 0;
+    }
+
+    if (const auto folder = valueOf ("--quality-demos"); folder.isNotEmpty())
+    {
+        writeQualityDemos (juce::File::getCurrentWorkingDirectory().getChildFile (folder), juce::StringArray::fromTokens (valueOf ("--also"), ",", ""));
         return 0;
     }
 
