@@ -4,6 +4,10 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Decrypt's help no longer says "no chords"** (fix log 104)
+- Decrypt matches a held chord as a chord since 0.20.0 (fix log 101), but the help on its page still ended "one note, no chords", and Ask Torq's `decrypt_clip` tool and its instructions told the model the same. All three now say one note or one held chord, and that riffs are not matched. Text only: nothing about the matching changed.
+- Tested: `--decrypt-window` and `--ai`.
+
 **Continue where you left off: a start that brings back everything that was open** (for 0.20.1)
 - **What was asked for.** Quitting with several files open in the editor and a session in the Multitrack view, and getting all of it back at the next start. Settings > Start could only reopen one file.
 - **Now** Settings > Start has a third choice, **Continue where you left off**. It reopens every file that was open in the editor, in order, with the one you were on in front and each file's selection, cursor, zoom, scroll and attached video; the effects rack beside the editor; the session, with the view's cursor, time range, zoom, scroll and selected track; the editor or the Multitrack view in front as it was; and the project they belonged to.
