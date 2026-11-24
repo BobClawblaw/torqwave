@@ -78,7 +78,10 @@ cp "$build/_deps/signalsmith_linear-src/LICENSE.txt" "$stage/SIGNALSMITH-LINEAR-
 mkdir -p "$dist"
 dmg="$dist/Torqwave-$version.dmg"
 rm -f "$dmg"
-hdiutil create -quiet -volname "Torqwave $version" -srcfolder "$stage" -format UDZO "$dmg"
+# The image's size is given: left to hdiutil, it has come out too small for the app ("No space
+# left on device"), and with -quiet that failed without a word.
+megabytes=$(( $(du -sm "$stage" | cut -f1) * 5 / 4 + 32 ))
+hdiutil create -volname "Torqwave $version" -srcfolder "$stage" -size "${megabytes}m" -format UDZO "$dmg"
 (cd "$dist" && shasum -a 256 "$(basename "$dmg")" > "$(basename "$dmg").sha256")
 
 echo "== Done"
