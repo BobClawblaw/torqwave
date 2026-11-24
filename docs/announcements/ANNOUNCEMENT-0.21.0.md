@@ -1,108 +1,99 @@
 # Announcing Torqwave 0.21.0 on X
 
-A draft, not posted. 0.21.0 is the first announced release since 0.19.2 (neither 0.20.0 nor 0.20.1 was announced), so this announces everything since 0.19.2, with what 0.21.0 itself adds (the Modern drum sounds and kits, three effects corrected, and the site). The 0.20.1 draft is superseded by this one. It holds one main post, a thread of nine, and alt text for every image. Each post is the plain text in its box: copy it from there. `<release link>` stands for the release's address (`https://github.com/BobClawblaw/torqwave/releases/tag/v0.21.0`); X counts any link as 23 characters, and the counts below do too.
+A draft, not posted. 0.21.0 is the first announced release since 0.19.2 (neither 0.20.0 nor 0.20.1 was announced), so this announces everything since 0.19.2. It is one long post of text, then the pictures in posts of four under it, for people to click through. An earlier draft was a thread of nine short posts; this takes its place.
 
-Check the lengths after any change:
+The post is about 4,200 characters, so it needs an account that can post long posts. The pictures are in [compare/graphics/](../compare/graphics/) (made from the [comparison data](../compare/README.md)) and [screenshots/](../screenshots/).
 
-```bash
-python3 docs/compare/generate.py --posts docs/announcements/ANNOUNCEMENT-0.21.0.md
-```
-
-The graphics are in [compare/graphics/](../compare/graphics/), made from the [comparison data](../compare/README.md); the screenshots are in [screenshots/](../screenshots/).
-
-## The main post
-
-One post, with graphic 1 (`docs/compare/graphics/1-release-by-the-numbers.png`).
+## The post
 
 ```text
-Torqwave 0.21.0 is out: a free, open-source audio editor and DAW. Since 0.19.2:
+Torqwave 0.21.0 is out.
 
-• Torqwave Synth: wavetable, 3,743 patches
-• Decrypt: a patch from a recording
-• Sampler, StringSwarm, Basic Drums
-• 1,032 sequence presets
-• A start where you left off
+Torqwave is a free, open-source audio editor and DAW in one program, for macOS, Windows and Linux. You edit a file down to its spectrum, repair and master it, then build a session around it with instruments, a piano roll, automation and video, without leaving the program.
 
-<release link>
+This is the first release I'm announcing since 0.19.2, so here is everything that has landed since.
+
+IT HAS ITS OWN INSTRUMENTS NOW
+
+• Torqwave Synth. A wavetable synth: three oscillators with warps and unison, a sub and noise, two filters, four envelopes, two LFOs, sixteen modulation slots and four macros. 3,743 patches in 29 categories. Drop any sound on an oscillator and it becomes that oscillator's wavetable.
+
+• Decrypt. Give the synth a recording of one note, or a held chord, and it builds a patch that plays like it. It shows up to eight candidates that sound different from each other, and the path it took to get there. Close for synth sounds, looser for voices and drums.
+
+• Torqwave Sampler. Your own sounds across the keys in zones with loops and crossfades, or cut into slices with each piece on its own key. It takes its sound straight from the editor's selection, a clip in a session, or the Sound Library.
+
+• StringSwarm. A guitar with every string tuned to the note you play, through a fuzz, or a swarm of oscillators in place of the strings.
+
+• Basic Drums. 30 drum sounds on pads, each with its own tune, decay, tone, drive and effects. 21 of them now come in two types, Classic and Modern, and there are twelve kits.
+
+All of them play from the computer's keyboard, and Audition plays each sound as you choose it.
+
+AND SOMETHING TO PLAY ON THEM
+
+1,032 sequence presets and 116 starter kits in 37 styles, techno and industrial first, sorted by style, energy and character. Preview any of them on your own instrument, plug-ins included.
+
+IT STARTS WHERE YOU STOPPED
+
+Continue where you left off: quit with files open in the editor and a session in the multitrack view, and the next start brings all of it back. Every file, your place in each, the effects rack, the session, the view you were in. It keeps a note of what was open, not a copy of your audio.
+
+ASK TORQ
+
+Describe an edit in a sentence and a language model you run yourself plans it; nothing changes until you read the plan and press Apply. It works with any server that speaks the OpenAI API, on your own machine. New in this release: it remembers the conversation, so "now a little less" works, and it shows how much of the model's context you've used.
+
+IN THE EDITOR
+
+A time-view strip over the ruler that shows the whole file, a Hand tool, and Paste Clipboard as New File.
+
+WE MEASURED OUR OWN EFFECTS, AND FIXED WHAT FELL SHORT
+
+For the new website I rendered before-and-after clips of Torqwave's repairs and published the numbers, including the ones that weren't good enough. Three got fixed in this release:
+
+• The Maximizer let true peaks through 0.2 dB over its ceiling. It holds the ceiling now, on the same meter you check it with.
+• Click and Pop Repair missed 16 of 60 test clicks, and was rewriting clean drum hits it mistook for clicks. It finds all 60 now and leaves drums alone.
+• Repair Clipping drew a smooth curve over each clipped peak. It now rebuilds from the sound around the clip. It's better; on drums it is still mostly a guess, and the page says so.
+
+HEAR IT BEFORE YOU DOWNLOAD IT
+
+The website has over a thousand clips rendered by Torqwave's own code with nothing added: 750 synth patches, every drum kit, factory kits and sequences, and the repairs with their measurements.
+https://bobclawblaw.github.io/torqwave/
+
+WHAT IT DOESN'T DO
+
+No audio to MIDI, no CLAP or ARA, no Dolby Atmos. The installers aren't notarized yet, so macOS asks before it opens the first time. The Windows and Linux builds are made by automation and haven't had the hands-on time the Mac build has. I keep a feature comparison with 15 other editors and DAWs, read from their own documentation, and it lists what Torqwave lacks as plainly as what it has.
+
+Free. Open source, AGPL-3.0. No account, no subscription.
+
+Download: https://github.com/BobClawblaw/torqwave/releases/tag/v0.21.0
 ```
 
-## The thread
+## The pictures, in order
 
-**1 of 9**, with graphic 1 (`docs/compare/graphics/1-release-by-the-numbers.png`).
+Posted under the text, four to a post. Each has its alt text below.
 
-```text
-Torqwave 0.21.0 is out: a free, open-source audio editor and DAW in one, for macOS, Windows and Linux. It now has its own instruments, things to play on them, and a start that reopens your work.
+**First four: the release, and the synth**
+1. `docs/compare/graphics/1-release-by-the-numbers.png`
+2. `docs/screenshots/guide-synth.png`
+3. `docs/screenshots/guide-decrypt.png`
+4. `docs/screenshots/guide-decrypted.png`
 
-What is new since 0.19.2, in nine posts.
+**Second four: the other instruments**
+5. `docs/screenshots/guide-sampler.png`
+6. `docs/screenshots/guide-sampler-slices.png`
+7. `docs/screenshots/guide-swarm.png`
+8. `docs/screenshots/guide-drums.png`
 
-<release link>
-```
+**Third four: playing, starting, editing, measuring**
+9. `docs/screenshots/guide-sequencer.png`
+10. `docs/screenshots/guide-continue.png`
+11. `docs/screenshots/editor.png`
+12. `docs/screenshots/site-quality.png`
 
-**2 of 9**, with the synth's window (`docs/screenshots/guide-synth.png`).
+**Last four: where it stands**
+13. `docs/compare/graphics/5-where-torqwave-stands.png`
+14. `docs/compare/graphics/2-against-the-editors.png`
+15. `docs/compare/graphics/3-against-the-daws-1.png`
+16. `docs/compare/graphics/4-against-the-daws-2.png`
 
-```text
-Torqwave Synth: three wavetable oscillators with warps and unison, a sub and noise, two filters, four envelopes, two LFOs, sixteen modulation slots and four macros.
-
-3,743 patches in 29 categories. Drop any sound on an oscillator and it becomes that oscillator's wavetable.
-```
-
-**3 of 9**, with the Decrypt page and the Decrypted page (`docs/screenshots/guide-decrypt.png`, `docs/screenshots/guide-decrypted.png`).
-
-```text
-Decrypt builds a synth patch from a recording of one note, or of a chord, matched as a chord. It shows up to eight candidates that sound different. Take one, name it, and it is kept on the Decrypted page by category.
-
-Close for synth sounds; looser for voices and drums.
-```
-
-**4 of 9**, with Torqwave Sampler's window in Keys and in Slices (`docs/screenshots/guide-sampler.png`, `docs/screenshots/guide-sampler-slices.png`).
-
-```text
-Torqwave Sampler plays your own sounds: across the keys in zones with loops and crossfades, or cut into slices with each piece on its own key.
-
-It takes its sound straight from the editor's selection, a clip in a session, the Files panel or the Sound Library.
-```
-
-**5 of 9**, with StringSwarm's and Basic Drums' windows (`docs/screenshots/guide-swarm.png`, `docs/screenshots/guide-drums.png`).
-
-```text
-Two more instruments. StringSwarm: a guitar with every string tuned to the note you play, through a fuzz, or a swarm of oscillators. Basic Drums: 30 sounds on pads in 12 kits, 21 of them with a second, Modern type.
-
-All four play from the computer's keys, with Audition.
-```
-
-**6 of 9**, with the Sequencer workspace (`docs/screenshots/guide-sequencer.png`) and the editor (`docs/screenshots/editor.png`).
-
-```text
-Something to play on them: 1,032 sequence presets and 116 starter kits in 37 styles, sorted by style, energy and character.
-
-In the editor: a time-view strip over the ruler, a Hand tool, and Paste Clipboard as New File.
-```
-
-**7 of 9**, with the home screen and its Continue Where You Left Off button (`docs/screenshots/guide-continue.png`).
-
-```text
-Continue where you left off: quit with files open in the editor and a session in the multitrack view, and the next start brings all of it back. Every file, your place in each, the effects rack, the session, the view you were in.
-
-It keeps a note of what was open, not your audio.
-```
-
-**8 of 9**, with the site's Quality page (`docs/screenshots/site-quality.png`).
-
-```text
-We measured our own effects for the site and fixed what fell short. The Maximizer holds its true-peak ceiling. Click Repair finds 60 of 60 test clicks (was 44) and leaves clean drums alone. Repair Clipping rebuilds from the sound round the clip.
-
-Hear it: https://bobclawblaw.github.io/torqwave/
-```
-
-**9 of 9**, with graphic 5 (`docs/compare/graphics/5-where-torqwave-stands.png`), and graphics 2, 3 and 4 (the editors, and the DAWs in two parts) to fill the post's four images.
-
-```text
-Where does it stand? We keep a feature comparison with 15 other editors and DAWs, each cell read from that product's own documentation, and update it every release.
-
-It shows what Torqwave lacks too: no audio to MIDI, no CLAP, ARA or Dolby Atmos, and installers not yet notarized.
-```
-
-A reply under the thread can carry the comparison's address: `https://github.com/BobClawblaw/torqwave/blob/main/docs/compare/MATRIX.md`.
+A reply under them can carry the comparison's address: `https://github.com/BobClawblaw/torqwave/blob/main/docs/compare/MATRIX.md`.
 
 ## Alt text
 
@@ -192,8 +183,7 @@ A dark table titled "Torqwave 0.21.0 and the DAWs, 2 of 2", with the same rows; 
 
 ## Notes for whoever posts it
 
-- The release is published before anything here is posted: "is out" is true only then.
-- Graphic 1 sets 0.21.0 against 0.19.2, as the posts do. Of what the posts name, the Modern drum type, the five kits, fourteen of the sequence presets and the three corrected effects are new in 0.21.0 itself, Continue where you left off came in 0.20.1, and the rest in 0.20.0.
-- Platforms: say "for macOS, Windows and Linux" only once the 0.21.0 Windows and Linux packages are on the release page. They are built by the workflows and, by the release notes, not tried by hand.
-- Post 8's figures are the tests' and the changelog's: 60 of 60 clicks put into a pad and bell clip (44 before), and a clean drum loop left unchanged. The Maximizer's result is on Torqwave's own meter.
-- The Modern kick was heard before the release and has less weight than the Classic one; the posts do not claim the drums sound better, only that the type and the kits exist.
+- The release is published and its Mac, Windows and Linux packages are on the release page, so "is out" and "for macOS, Windows and Linux" are true. The Windows and Linux packages are built by the workflows and not tried by hand, which the post says.
+- The figures: 3,743 patches, 30 sounds with 21 in two types, twelve kits, 1,032 sequence presets, 116 starter kits and 37 styles are the release's own counts. "16 of 60" and "all 60" are Click and Pop Repair on a pad and bell clip with 60 clicks put in; in a drum loop it repairs 58 of 60, which the post does not claim. "0.2 dB over" is 0.21 dB on Torqwave's loudness meter. "Over a thousand clips" is 1,065 on the site, 750 of them synth patches.
+- The post says "I": it is written to be posted by the project's author.
+- It names no other product, and says what Torqwave lacks.
