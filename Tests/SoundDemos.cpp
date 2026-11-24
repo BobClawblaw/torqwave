@@ -1,5 +1,6 @@
 #include <JuceHeader.h>
 #include <numeric>
+#include <set>
 #include "../Source/AudioEdits.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/ClickRepair.h"
@@ -794,8 +795,8 @@ namespace
     }
 
     /** The Sequence Library's factory presets: every kit, and sequences from every style (one of each role
-        from the styles the library leads with, a bass line and a melody from the others; of each
-        role the one with the most energy, the first by name among equals). */
+        from the styles the library leads with; a bass line and a melody, arp or harmony part from the
+        others; of each the one that does the most by measure, on a voice the style has not played yet). */
     void writeLibrary (const juce::File& folder, Index& index, bool kits, bool sequences)
     {
         const UnpackedPresets unpacked;
@@ -848,34 +849,111 @@ namespace
         {
             const juce::StringArray leading { "Techno/Dark", "Techno/Industrial", "Techno/Hard", "Techno/Acid", "Industrial/EBM", "Industrial/Electro-industrial",
                                               "Industrial/Dark electro", "Industrial/Aggrotech", "Industrial/Techno-body" };
-            const juce::StringArray everyRole { "Drums", "Bass", "Harmony", "Pads", "Arps", "Melody", "SFX" }, twoRoles { "Bass", "Melody" };
+            // What can be measured of how much a sequence does: its notes to a bar, its different pitches
+            // (a drum part's different sounds), and its rhythm (the different gaps between one note's start
+            // and the next, and the different note lengths).
+            struct Found
+            {
+                const SequenceLibrary::Entry* entry = nullptr;
+                SequenceFile::Sequence sequence;
+                juce::String voice;
+                double notesPerBar = 0.0;
+                int pitches = 0, gaps = 0, lengths = 0;
+                bool still = false;   // a note a bar or fewer, or one pitch (one drum sound) only
+                double score = 0.0;
+            };
+
+            const auto measure = [] (const SequenceLibrary::Entry& e, SequenceFile::Sequence q)
+            {
+                Found f;
+                f.entry = &e;
+                f.voice = q.voice != nullptr ? q.voice->getStringAttribute ("name") : juce::String();
+                std::set<int> pitches;
+                std::set<juce::int64> gaps, lengths, starts;
+
+                for (auto& n : q.notes)
+                {
+                    pitches.insert (n.pitch);
+                    lengths.insert (n.length);
+                    starts.insert (n.start);
+                }
+
+                for (auto at = starts.begin(); at != starts.end() && std::next (at) != starts.end(); ++at)
+                    gaps.insert (*std::next (at) - *at);
+
+                f.notesPerBar = q.bars() > 0.0 ? (double) q.notes.size() / q.bars() : 0.0;
+                f.pitches = (int) pitches.size();
+                f.gaps = (int) gaps.size();
+                f.lengths = (int) lengths.size();
+                f.still = f.notesPerBar <= 1.0 || f.pitches <= 1;
+                f.score = juce::jmin (16.0, f.notesPerBar) + 2.0 * juce::jmin (8, f.pitches) + 2.0 * juce::jmin (6, f.gaps) + juce::jmin (4, f.lengths);
+                f.sequence = std::move (q);
+                return f;
+            };
+
+            const std::vector<juce::StringArray> leadingSlots { { "Drums" }, { "Bass" }, { "Harmony" }, { "Pads" }, { "Arps" }, { "Melody" }, { "SFX" } },
+                                                 otherSlots { { "Bass" }, { "Melody", "Arps", "Harmony" } };
 
             for (auto& style : SequenceLibrary::stylesIn (entries))
-                for (auto& role : leading.contains (style) ? everyRole : twoRoles)
+            {
+                juce::StringArray voices;   // the voices this style's clips already play on
+                juce::StringArray taken;    // the names of the sequences already chosen for it
+
+                for (auto& slot : leading.contains (style) ? leadingSlots : otherSlots)
                 {
-                    const SequenceLibrary::Entry* best = nullptr;
+                    const auto candidates = [&] (bool anyRole)
+                    {
+                        std::vector<Found> found;
 
-                    for (auto& e : entries)
-                        if (! e.isKit && e.style == style && e.path.size() > 0 && e.path[0] == role
-                            && (best == nullptr || e.energy > best->energy || (e.energy == best->energy && e.name.compareNatural (best->name) < 0)))
-                            best = &e;
+                        for (auto& e : entries)
+                            if (! e.isKit && e.style == style && e.path.size() > 0 && (anyRole || slot.contains (e.path[0])) && ! taken.contains (e.name))
+                            {
+                                juce::String error;
 
-                    if (best == nullptr)
+                                if (auto q = SequenceFile::load (e.file, error))
+                                    found.push_back (measure (e, std::move (*q)));
+                                else
+                                    std::cout << "FAILED " << e.name << ": " << error << std::endl;
+                            }
+
+                        return found;
+                    };
+
+                    auto found = candidates (false);
+
+                    // Where every one of the role stands still, the style's other roles are looked at too.
+                    if (std::all_of (found.begin(), found.end(), [] (const Found& f) { return f.still; }))
+                        found = candidates (true);
+
+                    if (found.empty())
                         continue;
 
-                    juce::String error;
+                    // One that moves before one that stands still, a voice the style has not played before one
+                    // it has, then the highest score, the most energy, and the first by name.
+                    const auto best = std::min_element (found.begin(), found.end(), [&voices] (const Found& x, const Found& y)
+                    {
+                        const auto xUsed = voices.contains (x.voice), yUsed = voices.contains (y.voice);
 
-                    if (const auto q = SequenceFile::load (best->file, error))
-                    {
-                        auto* entry = index.add ("sequences", style, best->name, fileFor ("sequences", *best));
-                        note (entry, *best);
-                        writeLoop (folder, entry, { *q }, formats);
-                    }
-                    else
-                    {
-                        std::cout << "FAILED " << best->name << ": " << error << std::endl;
-                    }
+                        if (x.still != y.still)   return ! x.still;
+                        if (xUsed != yUsed)       return ! xUsed;
+                        if (! juce::approximatelyEqual (x.score, y.score))   return x.score > y.score;
+                        if (x.entry->energy != y.entry->energy)              return x.entry->energy > y.entry->energy;
+                        return x.entry->name.compareNatural (y.entry->name) < 0;
+                    });
+
+                    voices.add (best->voice);
+                    taken.add (best->entry->name);
+                    auto* entry = index.add ("sequences", style, best->entry->name, fileFor ("sequences", *best->entry));
+                    note (entry, *best->entry);
+                    entry->setProperty ("voice", best->voice);
+                    entry->setProperty ("notesPerBar", juce::roundToInt (best->notesPerBar * 10.0) / 10.0);
+                    entry->setProperty ("pitches", best->pitches);
+                    entry->setProperty ("of", (int) found.size());
+                    entry->setProperty ("still", best->still);
+                    entry->setProperty ("voiceAgain", voices.indexOf (best->voice) != voices.size() - 1);
+                    writeLoop (folder, entry, { best->sequence }, formats);
                 }
+            }
         }
     }
     //==============================================================================
