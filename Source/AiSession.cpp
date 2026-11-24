@@ -2356,7 +2356,8 @@ namespace Ai
         if (target.problem.isNotEmpty())
             return refused ("clip " + clip->name.quoted() + " can't be decrypted: " + target.problem);
 
-        const auto note = target.pitchHz > 0.0 ? Decrypt::noteName (target.note) : juce::String ("no clear pitch (matched at C4)");
+        const auto note = ! target.chord.empty() ? "a chord, " + Decrypt::chordName (target) + " (matched played as that chord: play it the same way)"
+                         : target.pitchHz > 0.0 ? Decrypt::noteName (target.note) : juce::String ("no clear pitch (matched at C4)");
         Decrypt::Options options;
         options.factoryTablesOnly = (bool) a["tables_only"];
         options.words = a["words"].toString().trim();

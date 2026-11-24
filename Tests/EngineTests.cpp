@@ -636,6 +636,7 @@ int main (int argc, char* argv[])
     //   --small                 only the tests of mixer scenes, channel strips and hardware inserts
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
     //   --decrypt-real [files]  only Decrypt on recordings not from the synth: the files, some system sounds, wet patches
+    //   --decrypt-chords [files]  only what Decrypt's chord finder makes of the files, of factory patches playing notes and chords, and of noise
     //   --decrypt-variety [files] [quick]  only how different from each other the patches Decrypt shows are, and its chain's links
     //   --decrypt-repeatable    only the check that a search shows the same patches on 2 threads and on 5
     //   --decrypt-window        only Decrypt's window checks
@@ -698,6 +699,16 @@ int main (int argc, char* argv[])
             files.add (args[f]);
 
         return runDecryptVariety (files);
+    }
+
+    if (const auto i = args.indexOf ("--decrypt-chords"); i >= 0)
+    {
+        juce::StringArray files;
+
+        for (int f = i + 1; f < args.size() && ! args[f].startsWith ("--"); ++f)
+            files.add (args[f]);
+
+        return runDecryptChords (files);
     }
 
     if (const auto i = args.indexOf ("--decrypt-real"); i >= 0)

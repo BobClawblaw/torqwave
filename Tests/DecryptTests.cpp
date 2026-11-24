@@ -388,7 +388,7 @@ namespace
         auto same = first.best.size() == second.best.size() && ! first.best.empty();
 
         for (size_t i = 0; same && i < first.best.size(); ++i)
-            same = first.best[i].address == second.best[i].address && std::abs (first.best[i].distance.total - second.best[i].distance.total) < 0.01f;   // a render can differ by a few ten-thousandths of a dB with what its worker's synth played before
+            same = first.best[i].address == second.best[i].address && first.best[i].distance.total == second.best[i].distance.total;
 
         Options c = a;
         c.seed = 2;
@@ -398,7 +398,7 @@ namespace
         for (auto& k : first.best)  one8.add (SignalConsole::addressText (k.address) + " " + juce::String (k.distance.total, 4) + " " + k.from);
         for (auto& k : second.best) two8.add (SignalConsole::addressText (k.address) + " " + juce::String (k.distance.total, 4) + " " + k.from);
         check (same && ! other.best.empty() && other.best.front().address != first.best.front().address,
-               "decrypt: the same clip and seed give the same candidates shown on 2 threads and on 5 (the same patches, their distances within 0.01 dB), and another seed others"
+               "decrypt: the same clip and seed give the same candidates shown on 2 threads and on 5 (the same patches at the same distances, to the last bit), and another seed others"
                + (same ? juce::String() : " (on 2: " + one8.joinIntoString (", ") + "; on 5: " + two8.joinIntoString (", ") + ")"));
     }
 
@@ -717,8 +717,11 @@ namespace
             const auto third = view.getSearch()->getProgress().best.front().lock;
 
             // From a candidate taken: the next search goes on from that one alone.
-            const auto picked = view.getSearch()->getProgress().best[3];
-            view.setHovered (3);
+            // The fourth shown, or the last when fewer are: after two more passes there may be only two or three far enough apart.
+            const auto shownNow = view.getSearch()->getProgress().best;
+            const auto pick = juce::jmin (3, (int) shownNow.size() - 1);
+            const auto picked = shownNow[(size_t) pick];
+            view.setHovered (pick);
             view.take();
             const auto tookIt = alikeButLevel (SignalConsole::capture (synth), picked.patch) && view.canGoAgain();
             view.again();
@@ -738,6 +741,10 @@ namespace
                 falls += view.chainLock (i) < view.chainLock (i - 1) ? 1 : 0;
 
             const auto rising = view.getChainLength() >= 2 && falls <= 1;
+            juce::String chainLocks;
+
+            for (int i = 0; i < view.getChainLength(); ++i)
+                chainLocks << (i > 0 ? ", " : "") << juce::String (view.chainLock (i), 2);
 
             click (view.playChainBounds().getCentre());
             const auto playing = view.isPlayingChain();
@@ -753,9 +760,17 @@ namespace
             view.again();
             TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
             const auto onFromIt = view.getPasses() == passesBefore + 1 && view.getSearch()->getProgress().best.front().lock >= view.chainLock (0) - 0.01f;
-            check (rising && playing && stoppedPlaying && heardOnly && wentBack && onFromIt,
+            juce::StringArray wrong;
+            if (! rising)         wrong.add ("the locks along it fall " + juce::String (falls) + " times (" + chainLocks + ")");
+            if (! playing)        wrong.add ("Play did not start");
+            if (! stoppedPlaying) wrong.add ("Play did not stop");
+            if (! heardOnly)      wrong.add ("a click on a step changed the chain or started a search");
+            if (! wentBack)       wrong.add ("going back to the first left " + juce::String (view.getChainLength()) + " links or nothing on the keys");
+            if (! onFromIt)       wrong.add ("Again from the first ended at " + juce::String (view.getSearch()->getProgress().best.front().lock, 2) + " %, the first is " + juce::String (view.chainLock (0), 2)
+                                             + " %, passes " + juce::String (view.getPasses()) + " after " + juce::String (passesBefore));
+            check (wrong.isEmpty(),
                    "decrypt: the chain gains a link when the nearest patch sounds different enough from the last (" + juce::String (length) + " here); Play goes through it and stops, a click only plays a step, "
-                   "and going back to the first drops the later ones, puts it on the keys and lets Again go on from it");
+                   "and going back to the first drops the later ones, puts it on the keys and lets Again go on from it" + (wrong.isEmpty() ? juce::String() : " (failed: " + wrong.joinIntoString ("; ") + ")"));
             view.stop();
             check (tookIt && fromPicked && allFromIt,
                    "decrypt: after Take, Again searches on from the candidate taken alone, and ends no further from the signal than it was");
@@ -2408,6 +2423,7 @@ namespace
 void runDecryptHeardTests()
 {
     testDecryptVariety();
+    testDecryptChords();
     testSecondSoundHeard();
     testSecondSoundRoutes();
     testModelStuck();

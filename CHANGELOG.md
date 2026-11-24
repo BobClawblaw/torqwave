@@ -4,6 +4,23 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Decrypt: a candidate's lock no longer depends on what was rendered before it** (0.20.0; fix log 102)
+- **What was wrong.** Torqwave Synth kept part of each voice's state through a reset: its envelopes' levels, its ramps and each oscillator's table level. A note starts from those, so a patch rendered after another one could come out a little different, and for some patches by enough to move a candidate's lock by points. Decrypt's workers each render thousands of patches one after another, so which candidates were shown, how many, and their locks could change from one run of the same search to the next. A link could then land on the chain further from the signal than the one before it.
+- **Now** a reset puts every voice wholly at rest (`Source/WaveSynth.cpp`). The same clip and seed give the same candidates at the same distances to the last bit on 2 threads and on 5; the check allowed 0.01 dB before.
+- **A check of mine was at fault too:** it took the fourth candidate shown without looking whether four were. Fewer are after two more passes on some runs, so it read past the end: three failures in six runs on the merged build, and one crash here. It takes the last when fewer are shown, and says which part failed.
+- Tested: `--decrypt-window` nine times in a row with the machine loaded, all 13 checks passing each time (with only the envelopes cleared and the check mended it still failed 1 run in 10); `--decrypt-repeatable` to the last bit; the whole suite.
+- This changes the synth only at a reset (when it is prepared to play), not while notes play.
+
+**Decrypt matches a chord as a chord** (0.20.0; fix log 101)
+- **What was wrong.** A held chord from a sample library could not be decrypted into anything like it. Decrypt took every sound for one note: finding no single pitch, it played each candidate on middle C alone. Its best, at a 78 % lock, had a tenth of its energy on the chord's notes.
+- **Now** Decrypt looks for several notes at once. Where it finds notes of three or more different names it names them on the signal line ("chord C#4 E4 B4 D#5") and plays every candidate on those keys, in the search and when you click one. Ask Torq's decrypt tool says the chord too.
+- **The patch taken plays one note for each key**, as any patch does: play the same chord to hear the sound.
+- **Measured on that recording** (outside the tests, on the search's best rendered to a file): energy on the chord's five note names 10 % before, 95 % now (the recording itself 89 %); its spectrum by semitone agrees with the recording's at 0.82, from 0.08. The lock hardly moves (78.2 to 78.7 %): its bands are wider than a semitone, so it never told the notes apart, and still doesn't.
+- **How well the notes are found** (`--decrypt-chords`): eight factory patches that play chords, each playing seven chords of two to five notes. The right note names were found for 36 of the 56, key for key for 8 (several of those patches sound an octave under the key). A plain pad is found exactly; a short pluck and a bell mostly are not. Of 24 single notes and four sounds without pitch, none was taken for a chord.
+- **It is slower:** a chord of four keys is four times the voices. That recording took 26.6 s to settle, where one note of its length takes about 6.
+- Tested (`--decrypt-heard`, 4 checks, one new: a pad's three chords found key for key and a brass patch's by name, 24 single notes and four noises never taken for a chord, and the search's best on a four-note chord sounds that chord's notes; the whole suite, 2,547, all passing).
+- Not tried by hand, and not listened to: that the notes are right is measured, whether the result sounds like the recording to an ear is not known. Two notes at once are still matched as one.
+
 **Torqwave Sampler: the playing line follows a loop forward and back** (0.20.0; fix log 98)
 - **What was wrong.** With a zone's loop set to forward and back, the line on the waveform that shows where a voice is playing ran on past the loop's end while the sample played backwards, then jumped back to the loop's start. The sound was right: a voice in such a loop counts on past the loop's end while it reads backwards, and the window drew the count, not the frame read.
 - **Now** the engine tells the window the frame the voice reads: on the way back the line comes back from the loop's end to its start, on every pass, and on a reversed zone too. The slices' line is the same line.

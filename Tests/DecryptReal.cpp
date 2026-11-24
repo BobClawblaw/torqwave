@@ -116,7 +116,7 @@ namespace
     }
 
     /** A factory patch through its own effects (reverb, delay, drive...), as a recording of it would be. */
-    Recording wet (const juce::String& patch, int note, double hold, double length, bool effects = true)
+    Recording wet (const juce::String& patch, const std::vector<int>& notes, double hold, double length, bool effects = true)
     {
         Synth synth;
         synth.setPlayConfigDetails (0, 2, 48000.0, 512);
@@ -139,8 +139,11 @@ namespace
         {
             const auto n = juce::jmin (512, total - at);
             juce::MidiBuffer midi;
-            if (at == 0) midi.addEvent (juce::MidiMessage::noteOn (1, note, 0.8f), 0);
-            if (off >= at && off < at + n) midi.addEvent (juce::MidiMessage::noteOff (1, note), off - at);
+            for (auto note : notes)
+            {
+                if (at == 0) midi.addEvent (juce::MidiMessage::noteOn (1, note, 0.8f), 0);
+                if (off >= at && off < at + n) midi.addEvent (juce::MidiMessage::noteOff (1, note), off - at);
+            }
             part.setSize (2, n, false, false, true);
             part.clear();
             synth.processBlock (part, midi);
@@ -148,6 +151,11 @@ namespace
         }
 
         return r;
+    }
+
+    Recording wet (const juce::String& patch, int note, double hold, double length, bool effects = true)
+    {
+        return wet (patch, std::vector<int> { note }, hold, length, effects);
     }
 }
 
@@ -614,4 +622,159 @@ void testDecryptVariety()
                       + juce::String (shownApartDb, 1) + " asked), and no two neighbouring links of a chain nearer than " + juce::String (leastLink >= 1000.0f ? 0.0f : leastLink, 2) + " dB (" + juce::String (linkApartDb, 1)
                       + " asked), each link clearly nearer the signal than the one before (" + said.joinIntoString ("; ") + ")"
                       + (faults.isEmpty() ? juce::String() : " (failed: " + faults.joinIntoString ("; ") + ")"));
+}
+
+int runDecryptChords (const juce::StringArray& files)
+{
+    const auto keysOf = [] (const std::vector<int>& keys)
+    {
+        juce::StringArray names;
+
+        for (auto k : keys)
+            names.add (noteName (k));
+
+        return names.isEmpty() ? juce::String ("none") : names.joinIntoString (" ");
+    };
+
+    int n = 0;
+
+    for (auto& path : files)
+        if (auto r = read (juce::File (path)))
+        {
+            const auto t = prepare (r->audio, r->sampleRate);
+            std::printf ("file %d: pitch %.1f Hz, chord %s\n", ++n, t.pitchHz, keysOf (findChord (t.audio.getReadPointer (0), t.audio.getNumSamples())).toRawUTF8());
+        }
+
+    const std::vector<std::vector<int>> played { { 45 }, { 60 }, { 72 }, { 50, 57 }, { 60, 64, 67 }, { 57, 60, 64 }, { 49, 52, 56, 59 }, { 48, 55, 63, 70 }, { 60, 63, 67, 70, 74 }, { 65, 69, 72, 76 } };
+    int right = 0, classes = 0, singlesRight = 0, singles = 0, chords = 0;
+
+    for (auto* patch : { "Concrete Pad", "Black Pluck", "Cold Bell", "Abrasive Bray", "Furnace Halo", "Rivet Snarl", "Foundry Knell", "Foundry Horns" })
+        for (auto& keys : played)
+        {
+            const auto r = wet (patch, keys, 1.2, 1.6, false);
+            const auto t = prepare (r.audio, r.sampleRate);
+
+            if (t.problem.isNotEmpty())
+                continue;
+
+            const auto found = findChord (t.audio.getReadPointer (0), t.audio.getNumSamples());
+            std::set<int> want, got;
+            for (auto k : keys) want.insert (k % 12);
+            for (auto k : found) got.insert (k % 12);
+            const auto same = found == keys, sameClasses = want == got;
+
+            if (keys.size() == 1) { ++singles; singlesRight += found.size() <= 1 ? 1 : 0; }
+            else { ++chords; right += same ? 1 : 0; classes += sameClasses ? 1 : 0; }
+
+            std::printf ("%-16s %-22s pitch %7.1f  found %-26s %s  as target: %s\n", patch, keysOf (keys).toRawUTF8(), t.pitchHz, keysOf (found).toRawUTF8(),
+                         same ? "same" : sameClasses ? "same notes, other octaves" : "DIFFERENT", keysOf (t.chord).toRawUTF8());
+        }
+
+    for (auto& r : unpitched())
+    {
+        const auto t = prepare (r.audio, r.sampleRate);
+        std::printf ("%-16s found %s\n", r.name.toRawUTF8(), keysOf (findChord (t.audio.getReadPointer (0), t.audio.getNumSamples())).toRawUTF8());
+    }
+
+    std::printf ("CHORDS exactly right %d of %d, the right notes in any octave %d; single notes left single %d of %d\n", right, chords, classes, singlesRight, singles);
+    return 0;
+}
+
+void testDecryptChords()
+{
+    // A sound of several notes at once is matched as its chord, not as one note: the keys are found (exactly, on a
+    // plain pad; by name on a brass patch with an octave under), one note and noise are never taken for a chord,
+    // and a search on a chord ends on a patch that, rendered again, sounds the chord's own notes.
+    const auto namesOf = [] (const std::vector<int>& keys)
+    {
+        std::set<int> names;
+
+        for (auto k : keys)
+            names.insert (k % 12);
+
+        return names;
+    };
+
+    const auto textOf = [] (const std::vector<int>& keys)
+    {
+        juce::StringArray s;
+
+        for (auto k : keys)
+            s.add (noteName (k));
+
+        return s.isEmpty() ? juce::String ("none") : s.joinIntoString (" ");
+    };
+
+    juce::StringArray faults;
+    const std::vector<std::vector<int>> chords { { 60, 64, 67 }, { 49, 52, 56, 59 }, { 60, 63, 67, 70, 74 } };
+
+    for (auto& keys : chords)
+    {
+        const auto r = wet ("Concrete Pad", keys, 1.2, 1.6, false);
+        const auto t = prepare (r.audio, r.sampleRate);
+
+        if (t.chord != keys)
+            faults.add ("the pad's " + textOf (keys) + " found as " + textOf (t.chord));
+
+        const auto horns = wet ("Foundry Horns", keys, 1.2, 1.6, false);
+        const auto h = prepare (horns.audio, horns.sampleRate);
+
+        if (namesOf (h.chord) != namesOf (keys))
+            faults.add ("the horns' " + textOf (keys) + " found as " + textOf (h.chord));
+    }
+
+    int singles = 0;
+
+    for (auto* patch : { "Concrete Pad", "Abrasive Bray", "Cold Bell", "Rivet Snarl", "Furnace Halo", "Foundry Knell", "Abyss Reese", "Black Pluck" })
+        for (auto key : { 45, 60, 72 })
+        {
+            const auto r = wet (patch, key, 1.2, 1.6, false);
+            const auto t = prepare (r.audio, r.sampleRate);
+            ++singles;
+
+            if (t.problem.isEmpty() && ! t.chord.empty())
+                faults.add (juce::String (patch) + "'s one " + noteName (key) + " taken for " + textOf (t.chord));
+        }
+
+    for (auto& r : unpitched())
+        if (const auto t = prepare (r.audio, r.sampleRate); ! t.chord.empty())
+            faults.add (r.name + " taken for " + textOf (t.chord));
+
+    // The search, on the pad's four-note chord with the pad itself left out.
+    const std::vector<int> keys { 49, 52, 56, 59 };
+    const auto r = wet ("Concrete Pad", keys, 1.2, 1.6, false);
+    const auto target = prepare (r.audio, r.sampleRate);
+    Options options;
+    options.untilSettled = true;
+    options.leaveOut.add ("Concrete Pad");
+    Search search (target, options);
+    const auto end = search.runNow();
+    Synth renderer;
+    std::vector<int> heard;
+    auto lock = 0.0f;
+
+    if (! end.best.empty())
+    {
+        const auto again = render (renderer, end.best.front().patch, target);
+        std::vector<float> mono ((size_t) again.getNumSamples());
+
+        for (int i = 0; i < again.getNumSamples(); ++i)
+            mono[(size_t) i] = 0.5f * (again.getSample (0, i) + again.getSample (1, i));
+
+        heard = findChord (mono.data(), (int) mono.size());
+        lock = lockOf (end.best.front().distance.total);
+    }
+
+    int shared = 0;
+
+    for (auto name : namesOf (keys))
+        shared += namesOf (heard).count (name) > 0 ? 1 : 0;
+
+    if (shared < 3)
+        faults.add ("the search's best on " + textOf (keys) + " sounds " + textOf (heard));
+
+    TestUtils::check (faults.isEmpty(), "decrypt: a sound of several notes is matched as its chord: a pad's three chords found key for key and a brass patch's by name, "
+                                            + juce::String (singles) + " single notes and four sounds without pitch never taken for one, and the search's best on "
+                                            + textOf (keys) + " (lock " + juce::String (lock, 1) + " %) sounds " + textOf (heard)
+                                            + (faults.isEmpty() ? juce::String() : ": " + faults.joinIntoString ("; ")));
 }

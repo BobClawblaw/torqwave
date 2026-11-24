@@ -22,3 +22,11 @@ int runDecryptVariety (const juce::StringArray& filesAndFlags);
     again) and come from several factory patches, and its chain's neighbouring links are
     Decrypt::linkApartDb or more apart, each clearly nearer the signal. */
 void testDecryptVariety();
+
+/** What Decrypt's chord finder makes of each file given (by number), of sixteen factory patches
+    playing single notes and chords of two to five, and of sounds with no pitch. */
+int runDecryptChords (const juce::StringArray& files);
+
+/** A check, part of --decrypt-heard: a sound of several notes at once is matched as its chord (the
+    keys found, one note and noise never taken for one, the search's best sounding the chord). */
+void testDecryptChords();
