@@ -4,6 +4,7 @@
  "previous": "0.19.2",
  "previous_note": "The 0.19.2 column is the last release before the 0.20 line. 0.20.0 came out on 2026-11-24 with the Mac disk image alone, and its rows are the same as 0.20.1's; it is in the trend.",
  "status": "released",
+ "announced": false,
  "as_of": "2026-11-24",
  "release_numbers": [
   {

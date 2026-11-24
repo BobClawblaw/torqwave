@@ -240,12 +240,17 @@ def graphic_whole(defs, snap):
     return s.save(f"{len(defs['matrices']) + 3}-the-whole-matrix.svg"), h
 
 
-def trend_points(defs, snaps):
+def trend_points(defs, snaps, announced_only=False):
+    """Torqwave's coverage by release. With announced_only, a release whose snapshot says
+    "announced": false is left out: the graphic shows the releases people were told about, and
+    MATRIX.md keeps them all."""
     rows = all_rows(defs)
     pts = []
     for i, snap in enumerate(snaps):
         if i == 0 and "torqwave_prev" in snap["products"]:
             pts.append((snap["products"]["torqwave_prev"]["version"], coverage(snap["products"]["torqwave_prev"]["cells"], rows)))
+        if announced_only and snap.get("announced") is False:
+            continue
         pts.append((snap["products"]["torqwave"]["version"], coverage(snap["products"]["torqwave"]["cells"], rows)))
     return pts, len(rows)
 
@@ -285,13 +290,13 @@ def graphic_standing(defs, snaps):
                 s.rect(x + bw - wu, by, wu, bh, LINE2, 0)
             s.text(x + bw / 2, by + bh / 2 + 6, f'{c["yes"]}/{n}', fs - 1, WHITE, "middle", "bold")
     # the trend across releases
-    pts, total = trend_points(defs, snaps)
+    pts, total = trend_points(defs, snaps, announced_only=True)
     px = gx + len(defs["groups"]) * cw + 30
     pw = W - 50 - px
     s.rect(px, top, pw, bottom - top, SURFACE, 10, LINE)
     s.text(px + 18, top + 34, "Torqwave by release", 19, WHITE, weight="bold")
     s.text(px + 18, top + 58, f"rows covered, of {total}", 15, DIM)
-    slots = max(4, len(pts) + 1)
+    slots = max(2, len(pts))   # the releases shown, side by side: no empty slots
     shown = pts[-slots:]
     bx0, by0, bh = px + 18, top + 90, bottom - top - 150
     bw = (pw - 36) / slots
@@ -307,7 +312,6 @@ def graphic_standing(defs, snaps):
             s.text(x + (bw - 10) / 2, by0 + bh + 24, ver, 13, TEXT, "middle")
         else:
             s.rect(x, by0, bw - 10, bh, "none", 4, LINE, "4 5")
-    s.text(px + 18, bottom - 14, "empty slots: the releases to come", 13, FAINT)
     # legend
     x = 50
     for col, word in (("#2f7f5b", "yes (the number)"), ("#8a7a2c", "partial"), (LINE2, "not confirmed"), (SURFACE, "no")):

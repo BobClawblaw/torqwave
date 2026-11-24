@@ -66,6 +66,6 @@ The cells marked `not confirmed` are listed in MATRIX.md under "Cells not confir
 
 ## 0.21.0
 
-- 0.21.0 is the first announced release since 0.19.2, so its graphics set it against 0.19.2. 0.20.0 and 0.20.1 keep their snapshots and their bars in the trend.
+- 0.21.0 is the first announced release since 0.19.2, so its graphics set it against 0.19.2. 0.20.0 and 0.20.1 keep their snapshots, marked `"announced": false`: the graphic's panel of Torqwave by release shows announced releases only (0.19.2 and 0.21.0), and MATRIX.md lists them all.
 - It adds a Modern type for 21 of Basic Drums' sounds, five kits and fourteen sequence presets, and corrects the Maximizer, Click and Pop Repair and Repair Clipping. No row changed its value: the rows already said yes for built-in drums, factory patterns, a limiter and click repair, so Torqwave's counts are the same as 0.20.1's (45 of 53). The notes of the drums, factory patterns and presets rows carry the new numbers.
 - The other products' cells were not read again for it: they are as read on 2026-11-23.

@@ -3,6 +3,7 @@
  "release": "0.20.0",
  "previous": "0.19.2",
  "status": "released",
+ "announced": false,
  "as_of": "2026-11-24",
  "release_numbers": [
   {
