@@ -4,6 +4,14 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The project's site: sounds to hear, measured results and the guide** (documents and the demo renderer only)
+- The site (`docs/`, served by GitHub Pages) has an overview, a Sounds section, a Quality page, the guide in the site's layout and the comparison, with the same navigation on every page.
+- **Sounds:** 460 clips, about 50 MB as MP3, rendered by Torqwave's own code with nothing added: 163 Torqwave Synth patches from all 29 categories, 38 StringSwarm presets, the 7 Basic Drums kits (14 clips), the 11 Torqwave Sampler factory presets, the 116 factory kits and 118 sequences from all 37 styles. `TorqwaveTests --sound-demos` renders them and `docs/build_pages.py` writes the pages.
+- **Quality:** four repairs with before-and-after audio and their measurements (hiss, mains hum, missing highs, loudness), and the results the tests measure, quoted from this changelog.
+- **What the page says did not do well:** Click and Pop Repair at its defaults left 16 of 60 inserted clicks; Repair Clipping rebuilt all 334 clipped runs of a loop cut off 4 dB over full scale but left it no nearer the original (-34.6 dB from it before, -34.9 dB after); and the Maximizer's output read -0.79 dBTP on Torqwave's meter against a -1 dBTP ceiling. All three are open work.
+- The 0.20.1 comparison snapshot and the announcement's notes now say the Windows and Linux packages are on the release page.
+- Nothing in the app changed. Tested: the whole suite on the development Mac at this code. The site was previewed with a local Jekyll build before it was pushed, not on GitHub's.
+
 ## Released
 
 **Release 0.20.1: continue where you left off, and the first release of the 0.20 line for all three systems**

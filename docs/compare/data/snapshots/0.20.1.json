@@ -318,12 +318,12 @@
     },
     "windows": {
      "value": "yes",
-     "note": "Windows 10 or later, 64-bit. 0.20.0 was published without Windows packages (only the Mac disk image is on its release page); 0.20.1 is meant to correct the builds, and its packages did not exist on the snapshot date. The 0.20 line was not run or tried on Windows.",
+     "note": "Windows 10 or later, 64-bit. 0.20.0 was published without Windows packages (only the Mac disk image is on its release page); 0.20.1 corrected the builds, and its installer and zip are on its release page. The 0.20 line was not run or tried on Windows.",
      "source": "README.md"
     },
     "linux": {
      "value": "yes",
-     "note": "64-bit x86, tried on Ubuntu 24.04 in earlier releases. 0.20.0 was published without a Linux package (its build failed); 0.20.1 is meant to correct the build, and its package did not exist on the snapshot date. The 0.20 line was not run or tried on Linux.",
+     "note": "64-bit x86, tried on Ubuntu 24.04 in earlier releases. 0.20.0 was published without a Linux package (its build failed); 0.20.1 corrected the build, and its tarball is on its release page. The 0.20 line was not run or tried on Linux.",
      "source": "README.md"
     },
     "open_source": {
