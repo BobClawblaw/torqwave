@@ -41,7 +41,7 @@ counts each post in an announcement as X counts it (a link is 23 characters) and
 ## Updating at the next release
 
 1. **Copy the newest snapshot** to `data/snapshots/<new version>.json`. Set `release`, `previous`, `status` and `as_of`.
-2. **Torqwave's columns.** The old `torqwave` cells become `torqwave_prev` (with its version and release date). Go through every row for the new `torqwave` column against the README, the guide and the changelog's entries for the release: a row changes only when the documentation says so. Rewrite `release_numbers` and `release_firsts` for the release, each number counted from the files or quoted from the release notes.
+2. **Torqwave's columns.** The old `torqwave` cells become `torqwave_prev` (with its version and release date). Go through every row for the new `torqwave` column against the README, the guide and the changelog's entries for the release: a row changes only when the documentation says so. Rewrite `release_numbers` and `release_firsts` for the release, each number counted from the files or quoted from the release notes. When a release follows another within days and is the one being announced (0.20.1 after 0.20.0), the comparison column may stay on the older release: set `previous` to it, leave `torqwave_prev` as it is, and say why in `previous_note`, which MATRIX.md prints.
 3. **Recheck the competitors.** For each product, open its release notes or what's-new page first and update `version`, `version_date` and `looked_up`. Then recheck, at least:
    - every cell that says `not confirmed`;
    - every cell the new release notes touch;
@@ -57,3 +57,9 @@ counts each post in an announcement as X counts it (a link is 23 characters) and
 ## What the first snapshot could not settle
 
 The cells marked `not confirmed` are listed in MATRIX.md under "Cells not confirmed". Some "no" cells rest on a product's manual contents and feature list having no mention, not on a page that says the feature is absent; each such cell's evidence says so. Those are the first to recheck.
+
+## 0.20.1
+
+- 0.20.1 adds Continue where you left off, a start that reopens every file and the session. No row was added for it: a row needs a cell for each of the fifteen other products read from its own documentation, and reopening the last project at start is too common and too differently done to make a row that tells products apart. Torqwave's counts are the same as 0.20.0's.
+- Its graphics set it against 0.19.2, since 0.20.1 is the release being announced and 0.20.0 came out just before it with the Mac disk image alone. 0.20.0 keeps its own snapshot and its bar in the trend.
+- The other products' cells were not read again for it: they are as read on 2026-11-23.
