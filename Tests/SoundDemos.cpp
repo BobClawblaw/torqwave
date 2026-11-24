@@ -533,28 +533,6 @@ namespace
     }
 
     /** Every Basic Drums kit on two of the kits' audition beats. */
-    void writeDrums (const juce::File& folder, Index& index)
-    {
-        const auto& patterns = InstrumentKeys::patternsFor (InstrumentKeys::Kind::kit);
-        int number = 0;
-
-        for (auto& kit : DrumMachine::kits())
-        {
-            for (auto which : { 0, 1 + number % juce::jmax (1, (int) patterns.size() - 1) })
-            {
-                const auto& pattern = patterns[(size_t) which % patterns.size()];
-                BuiltInEffects::BasicDrumsProcessor drums;
-                drums.applyKit (kit);
-                auto* entry = index.add ("drums", kit.name, kit.name + ": " + pattern.name, "drums/" + slug (kit.name + " " + pattern.name) + ".mp3");
-                entry->setProperty ("about", kit.description);
-                entry->setProperty ("phrase", pattern.name);
-                save (folder, entry, audition (drums, pattern, 1.5));
-            }
-
-            ++number;
-        }
-    }
-
     /** Torqwave Sampler's factory presets, each on the phrase Audition gives it. */
     void writeSampler (const juce::File& folder, Index& index)
     {
@@ -640,6 +618,69 @@ namespace
         entry->setProperty ("rounds", rounds);
         entry->setProperty ("parts", voices);
         return save (folder, entry, std::move (audio));
+    }
+
+    /** Basic Drums' kits, each on the Sequence Library's factory grooves written for it (Drums > Full
+        Grooves: the three with the most energy, the first by name among equals), as the library's
+        preview plays them. A kit no factory groove uses plays two of the audition beats instead. */
+    void writeDrums (const juce::File& folder, Index& index)
+    {
+        const UnpackedPresets unpacked;
+        juce::AudioPluginFormatManager formats;
+        formats.addFormat (BuiltInEffects::createFormat());
+        const auto entries = SequenceLibrary (unpacked.presets).scan();
+        const auto& patterns = InstrumentKeys::patternsFor (InstrumentKeys::Kind::kit);
+        int number = 0;
+
+        for (auto& kit : DrumMachine::kits())
+        {
+            std::vector<std::pair<const SequenceLibrary::Entry*, SequenceFile::Sequence>> grooves;
+
+            for (auto& e : entries)
+                if (! e.isKit && e.path.size() > 1 && e.path[0] == "Drums" && e.path[1] == "Full Grooves")
+                {
+                    juce::String error;
+
+                    if (auto q = SequenceFile::load (e.file, error); q.has_value() && q->voice != nullptr
+                                                                      && q->voice->getStringAttribute ("name") == "Basic Drums: " + kit.name)
+                        grooves.emplace_back (&e, std::move (*q));
+                }
+
+            std::stable_sort (grooves.begin(), grooves.end(), [] (const auto& x, const auto& y)
+            {
+                return x.first->energy != y.first->energy ? x.first->energy > y.first->energy : x.first->name.compareNatural (y.first->name) < 0;
+            });
+
+            std::cout << kit.name << ": " << grooves.size() << " factory grooves" << std::endl;
+            const auto shown = juce::jmin ((int) grooves.size(), 3);
+
+            for (int g = 0; g < shown; ++g)
+            {
+                const auto& e = *grooves[(size_t) g].first;
+                auto* entry = index.add ("drums", kit.name, e.name, "drums/" + slug (kit.name + " " + e.name) + ".mp3");
+                entry->setProperty ("about", kit.description);
+                entry->setProperty ("groove", e.description);
+                entry->setProperty ("style", e.style);
+                entry->setProperty ("bars", e.bars);
+                entry->setProperty ("energy", e.energy);
+                entry->setProperty ("of", (int) grooves.size());
+                writeLoop (folder, entry, { grooves[(size_t) g].second }, formats);
+            }
+
+            if (shown == 0)
+                for (auto which : { 0, 1 + number % juce::jmax (1, (int) patterns.size() - 1) })
+                {
+                    const auto& pattern = patterns[(size_t) which % patterns.size()];
+                    BuiltInEffects::BasicDrumsProcessor drums;
+                    drums.applyKit (kit);
+                    auto* entry = index.add ("drums", kit.name, kit.name + ": " + pattern.name, "drums/" + slug (kit.name + " " + pattern.name) + ".mp3");
+                    entry->setProperty ("about", kit.description);
+                    entry->setProperty ("phrase", pattern.name);
+                    save (folder, entry, audition (drums, pattern, 1.5));
+                }
+
+            ++number;
+        }
     }
 
     /** The Sequence Library's factory presets: every kit, and sequences from every style (one of each role

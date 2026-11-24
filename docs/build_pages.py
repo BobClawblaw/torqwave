@@ -66,7 +66,7 @@ BY_EAR = {
 
 # The clips on the front page, in this order.
 FRONT = [("kits", "Midnight Kit"), ("kits", "EBM Starter Kit"), ("kits", "Industrial Techno Starter Kit"), ("synth", "Target Lock Bass"),
-         ("synth", "Concrete Pad"), ("synth", "Acid Corrosion"), ("swarm", "Tremolo Swarm Wall"), ("drums", "Dark Techno: Techno 16ths"),
+         ("synth", "Concrete Pad"), ("synth", "Acid Corrosion"), ("swarm", "Tremolo Swarm Wall"), ("drums", "Black Stomp"),
          ("sampler", "Dark Techno Break")]
 
 # The Sequence Library's genres and styles in the order the pages show them: techno and industrial first.
@@ -120,7 +120,9 @@ def instrument_card(clip, prefix, heading="h3", kind=None):
     if clip.get("about"):
         lines.append(f'<p{"" if written else " class=\"what\""}>{esc(clip["about"])}</p>')
 
-    if clip.get("featured"):
+    if clip.get("groove"):
+        plays = groove_line(clip)
+    elif clip.get("featured"):
         plays = "Chosen by ear. Plays " + clip["phrase"] + "."
     else:
         plays = f'Plays the audition phrase “{clip["phrase"]}” at 125 BPM.'
@@ -130,6 +132,12 @@ def instrument_card(clip, prefix, heading="h3", kind=None):
 
     lines.append(f'<p>{esc(plays)}</p><div class="fill"></div>{player(clip, prefix)}</div>')
     return "".join(lines)
+
+
+def groove_line(clip):
+    """What a Basic Drums clip plays: a factory groove of the Sequence Library."""
+    return (f'Plays the factory groove “{clip["name"]}” ({clip["style"].replace("/", " › ")}, {number(clip["tempo"])} BPM, energy {clip["energy"]} of 5): '
+            f'{clip["groove"][0].lower() + clip["groove"][1:]}.')
 
 
 def loop_card(clip, prefix, heading="h3", kind=None):
@@ -232,8 +240,9 @@ def drums_page():
     drums, sampler = of("drums"), of("sampler")
     kits = grouped(drums, lambda c: c["category"])
     body = [f'<div class="title">{crumbs("Basic Drums and Torqwave Sampler")}<h1>Basic Drums and Torqwave Sampler</h1>',
-            f'<p>Basic Drums\' {len(kits)} kits, each on two beats, and Torqwave Sampler\'s {len(sampler)} factory presets.</p>',
-            f'<p class="meta">{HOW} They play the audition phrases Torqwave itself plays when you choose a sound, at 125 BPM. {megabytes(drums + sampler)} in all.</p>',
+            f'<p>Basic Drums\' {len(kits)} kits, each playing factory grooves written for it, and Torqwave Sampler\'s {len(sampler)} factory presets.</p>',
+            f'<p class="meta">{HOW} Each kit plays the Sequence Library\'s factory grooves written for it (of its Drums › Full Grooves, the three with the most energy), as the library\'s preview plays them, at the tempo they were written at; '
+            f'a kit no factory groove uses, and the sampler\'s presets, play the audition phrases Torqwave plays when you choose a sound, at 125 BPM. {megabytes(drums + sampler)} in all.</p>',
             chips(["Basic Drums", "Torqwave Sampler"]), "</div>",
             '<h2 id="basic-drums">Basic Drums</h2>',
             '<p class="lede">A drum machine with 30 sounds that cover every General MIDI drum note, each with its own tune, decay, tone, level, pan and drive, '
@@ -243,8 +252,11 @@ def drums_page():
         body.append(f'<h3 class="sub" id="{anchor(kit)}">{esc(kit)}</h3><p class="lede">{esc(found[0]["about"])}</p><div class="clips">')
 
         for c in found:
-            body.append(f'<div class="clip"><div class="kind">{esc(kit)}</div><h4>{esc(c["phrase"])}</h4>'
-                        f'<p>The audition beat “{esc(c["phrase"])}” at 125 BPM.</p><div class="fill"></div>{player(c, "audio/")}</div>')
+            what = (f'{c["groove"]}. {c["style"].replace("/", " › ")}, {number(c["tempo"])} BPM, energy {c["energy"]} of 5.' if c.get("groove")
+                    else f'The audition beat “{c["phrase"]}” at 125 BPM.')
+            body.append(f'<div class="clip"><div class="kind">{esc(kit)}{" · one of " + str(c["of"]) + " factory grooves" if c.get("groove") else ""}</div>'
+                        f'<h4>{esc(c["name"] if c.get("groove") else c["phrase"])}</h4>'
+                        f'<p>{esc(what)}</p><div class="fill"></div>{player(c, "audio/")}</div>')
 
         body.append("</div>")
 
@@ -335,7 +347,7 @@ def sounds_index():
     rows = []
     pages = [("synth", "synth.html", "Torqwave Synth", "of 3,743 patches, from all 29 categories"),
              ("swarm", "stringswarm.html", "StringSwarm", "of 296 presets, from all 11 categories"),
-             ("drums", "drums-and-sampler.html#basic-drums", "Basic Drums", "all 7 kits, on two beats each"),
+             ("drums", "drums-and-sampler.html#basic-drums", "Basic Drums", "all 7 kits, on factory grooves from the Sequence Library"),
              ("sampler", "drums-and-sampler.html#torqwave-sampler", "Torqwave Sampler", "all 11 factory presets"),
              ("kits", "kits.html", "Sequence Library: kits", f"all 116 factory kits, in {len(set(c['category'] for c in of('kits')))} styles"),
              ("sequences", "sequences.html", "Sequence Library: sequences", "of 1,018 factory sequences, from all 37 styles")]
