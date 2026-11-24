@@ -7,7 +7,7 @@
     Before a clip, the scope is empty and says what Decrypt is for: drop one note on it (or choose
     Decrypt a Sound...) and it finds a patch that plays like it. While it searches, the signal's
     signature sits in the middle with the best candidate's laid over it (where the two agree, the
-    spokes light up); the rings are 75, 50 and 25 % lock, and each of the best twelve sits as far
+    spokes light up); the rings are 75, 50 and 25 % lock, and each candidate shown (the nearest, and up to seven others that sound different from it and from each other) sits as far
     out as its lock is low, in the sector of the part it differs in most from the best, drifting
     inward as its lock rises. The panel at the right shows the candidate under the pointer (the
     best when there is none): its lock as a large figure, a bar for each part as the search
@@ -54,8 +54,8 @@ public:
 
     /** Carries the search on for another set of rounds, in smaller steps and with other variations
         than the last: from the candidate chosen (the one taken, or put on the keys by a
-        double-click), so the next twelve are all nearer versions of that one; with none chosen,
-        from the best twelve. Nothing happens with no search, or one still running. True if it started. */
+        double-click), so what comes next are nearer versions of that one; with none chosen,
+        from all those shown, each line kept. Nothing happens with no search, or one still running. True if it started. */
     bool again();
     bool canGoAgain() const;
     juce::Rectangle<float> againBounds() const                    { return againChip; }
@@ -148,6 +148,9 @@ public:
     float chainHintWidth() const;
     float panelTextWidth() const noexcept                         { return panel.getWidth() - 32.0f; }
     std::vector<juce::Rectangle<float>> lockLabelBounds() const   { return lockLabels(); }
+    /** For tests: the room each candidate has on the scope, its signature and the lock under it; no two meet. */
+    std::vector<juce::Rectangle<float>> candidateRooms() const;
+    int candidateCount() const noexcept                           { return (int) places.size(); }
     /** For tests: everything the panel shows while a sound is on it (each line of text as shortened,
         each control, bar and the signature) with its bounds, the panel's own bounds, how many of
         the model's lines it had room for, and the chips of the model's name. setTestModel gives it
@@ -164,6 +167,7 @@ private:
     void timerCallback() override;
     void layout();
     int candidateAt (juce::Point<float>) const;
+    juce::Rectangle<float> roomOf (juce::Point<float> place) const;
     void hear (int candidate);
     void finish (const juce::String& how);
     void drawScope (juce::Graphics&);
@@ -284,8 +288,8 @@ private:
     };
 
     ChainPlayer chainPlayer { *this };
-    void begin (Decrypt::Target, std::vector<SignalConsole::Patch> resume);
-    std::vector<juce::Point<float>> places;          // the twelve, where they are drawn
+    void begin (Decrypt::Target, std::vector<SignalConsole::Patch> resume, juce::StringArray resumeFrom = {});
+    std::vector<juce::Point<float>> places;          // the candidates shown, where they are drawn: each with room of its own (roomOf)
     std::vector<float> shownRadius;                  // their distance from the middle as drawn (drifting toward their lock's)
     std::vector<int> sectorOf;
     int hovered = -2, onKeys = -1;                   // -2 nothing under the pointer, -1 the middle

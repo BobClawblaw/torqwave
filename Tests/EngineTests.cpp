@@ -636,6 +636,8 @@ int main (int argc, char* argv[])
     //   --small                 only the tests of mixer scenes, channel strips and hardware inserts
     //   --ai-eval <url> <model> only run the AI evaluation sentences against that server (key: TORQWAVE_AI_KEY);
     //   --decrypt-real [files]  only Decrypt on recordings not from the synth: the files, some system sounds, wet patches
+    //   --decrypt-variety [files] [quick]  only how different from each other the patches Decrypt shows are, and its chain's links
+    //   --decrypt-repeatable    only the check that a search shows the same patches on 2 threads and on 5
     //   --decrypt-window        only Decrypt's window checks
     //   --decrypt-model         only the check that a slow or hung model never makes Decrypt's page wait or go silent
     //   --decrypt-heard         only the check that a second sound given to Decrypt is heard, the synth's audio running
@@ -681,6 +683,22 @@ int main (int argc, char* argv[])
 
         juce::File folder = juce::File::createTempFile ("factorysamples");
     } factorySamples;
+
+    if (args.contains ("--decrypt-repeatable"))
+    {
+        runDecryptRepeatableTest();
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (const auto i = args.indexOf ("--decrypt-variety"); i >= 0)
+    {
+        juce::StringArray files;
+
+        for (int f = i + 1; f < args.size() && ! args[f].startsWith ("--"); ++f)
+            files.add (args[f]);
+
+        return runDecryptVariety (files);
+    }
 
     if (const auto i = args.indexOf ("--decrypt-real"); i >= 0)
     {

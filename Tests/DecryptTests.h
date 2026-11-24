@@ -29,3 +29,5 @@ int runDecryptFile (const juce::String& path);
 /** The search test's two sets, simple and complex, each in 16 rounds and until settled, with
     distances, the key each was heard at, rounds and times. */
 int runDecryptMeasure();
+
+void runDecryptRepeatableTest();

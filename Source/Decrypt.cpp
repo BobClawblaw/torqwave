@@ -8,6 +8,7 @@ namespace
     constexpr int block = 512;
     constexpr int firstRoundsLength = 48000;   // the factory patches are first compared over a second at most
     constexpr int keptBest = 12, parents = 4, perParent = 12, sweptPerRound = 3;
+    constexpr int shownMost = 8, otherLines = 6, perOtherLine = 6;   // shown: the nearest and up to seven others; six other lines grown, six variations each a round
     constexpr float floorDb = -70.0f, loudnessFloorDb = -60.0f;
     constexpr float maskedDb = 40.0f;   // a band this far under its frame's loudest (in either sound) is masked: unheard
 
@@ -928,8 +929,8 @@ namespace
     class Worker final : public juce::Thread
     {
     public:
-        Worker (std::vector<Candidate>& j, std::atomic<size_t>& n, const Target& t, std::atomic<int>& r, const std::function<bool()>& stop)
-            : juce::Thread ("Torqwave Synth decrypt worker"), jobs (j), next (n), target (t), rendered (r), shouldStop (stop)
+        Worker (std::vector<Candidate>& j, std::atomic<size_t>& n, const Target& t, std::atomic<int>& r, const std::function<bool()>& stop, bool keep)
+            : juce::Thread ("Torqwave Synth decrypt worker"), jobs (j), next (n), target (t), rendered (r), shouldStop (stop), keepMeasures (keep)
         {
         }
 
@@ -947,7 +948,13 @@ namespace
                 if (silent)
                     job.distance.total = 1000.0f;
                 else
-                    job.distance = distance (target.measures, measure (mono.data(), (int) mono.size()));
+                {
+                    auto measures = std::make_shared<Measures> (measure (mono.data(), (int) mono.size()));
+                    job.distance = distance (target.measures, *measures);
+
+                    if (keepMeasures)
+                        job.measures = std::move (measures);
+                }
 
                 job.lock = lockOf (job.distance.total);
                 job.address = SignalConsole::addressOf (job.patch);
@@ -961,6 +968,7 @@ namespace
         const Target& target;
         std::atomic<int>& rendered;
         const std::function<bool()>& shouldStop;
+        const bool keepMeasures;
     };
 
     /** The best `count`, one for each address, by distance and then by the order they were made in. */
@@ -984,6 +992,12 @@ namespace
         }
 
         return best;
+    }
+
+    /** How far apart two candidates sound, by the measure they were scored with; 0 where one was never measured. */
+    float apart (const Candidate& a, const Candidate& b)
+    {
+        return a.measures != nullptr && b.measures != nullptr ? distance (*a.measures, *b.measures).total : 0.0f;
     }
 
     /** A factory patch as a candidate. */
@@ -1086,7 +1100,7 @@ Progress Search::runNow (std::function<bool()> stopWhen)
     return getProgress();
 }
 
-std::vector<Candidate> Search::score (std::vector<Candidate> jobs, const Target& against, const std::function<bool()>& shouldStop)
+std::vector<Candidate> Search::score (std::vector<Candidate> jobs, const Target& against, const std::function<bool()>& shouldStop, bool keepMeasures)
 {
     std::atomic<size_t> next { 0 };
     const auto count = options.threads > 0 ? options.threads : juce::jmax (1, juce::SystemStats::getNumCpus() / 2);
@@ -1094,7 +1108,7 @@ std::vector<Candidate> Search::score (std::vector<Candidate> jobs, const Target&
 
     for (int i = 0; i < count; ++i)
     {
-        workers.push_back (std::make_unique<Worker> (jobs, next, against, rendered, shouldStop));
+        workers.push_back (std::make_unique<Worker> (jobs, next, against, rendered, shouldStop, keepMeasures));
         workers.back()->startThread (juce::Thread::Priority::low);
     }
 
@@ -1143,26 +1157,89 @@ void Search::growChain (const Candidate& best, bool last, Synth& synth)
     const auto m = measureRender (render (synth, best.patch, target));
     const auto moved = against != nullptr ? distance (*against, m).total : 0.0f;
 
-    if (against == nullptr || moved >= linkApartDb || (last && chain.empty()))
+    if (against == nullptr || (moved >= linkApartDb && againstDb - best.distance.total >= linkNearerDb) || (last && chain.empty()))
     {
-        // Far enough from the last link to hear (or the first link; or, where a search carried on came
-        // nearer by less, its end, which takes the place of the link it went on from).
+        // Far enough from the last link to hear and clearly nearer the signal (or the first link; or, where a
+        // search carried on came nearer by less, its end, which takes the place of the link it went on from).
         chain.push_back ({ best, moved });
         linkMeasures.push_back (m);
     }
     else if (last)
     {
-        // The end is always the nearest found: it takes the last link's place when it is too like it to be a link of its own.
-        const auto* before = linkMeasures.size() > 1 ? &linkMeasures[linkMeasures.size() - 2] : chainFrom.has_value() ? &chainFrom->first : nullptr;
-        chain.back() = { best, before != nullptr ? distance (*before, m).total : 0.0f };
-        linkMeasures.back() = m;
+        // The end is always the nearest found. Too like the last link to be a link of its own, it takes that link's
+        // place, and the place of any before it that it is as like: no two neighbours are nearer than linkApartDb.
+        const auto from = [&] { return ! linkMeasures.empty() ? distance (linkMeasures.back(), m).total : chainFrom.has_value() ? distance (chainFrom->first, m).total : 0.0f; };
+
+        do
+        {
+            chain.pop_back();
+            linkMeasures.pop_back();
+        }
+        while (! chain.empty() && from() < linkApartDb);
+
+        chain.push_back ({ best, from() });
+        linkMeasures.push_back (m);
     }
+}
+
+void Search::noteLines (const std::vector<Candidate>& scored, const Candidate* nearest)
+{
+    // The nearest of each line. A line other than the nearest patch's takes a nearer one only while it
+    // still sounds different from the nearest: every line comes nearer the signal by coming to sound
+    // like it, and one that has come to sound like the nearest is no other answer.
+    for (auto& c : scored)
+    {
+        if (c.distance.total >= 1000.0f || c.measures == nullptr)
+            continue;
+
+        const auto line = lines.find (c.from);
+
+        if (line == lines.end())
+            lines[c.from] = c;
+        else if (c.distance.total < line->second.distance.total
+                 && (nearest == nullptr || c.from == nearest->from || apart (c, *nearest) >= shownApartDb))
+            line->second = c;
+    }
+}
+
+std::vector<Candidate> Search::shownOf (const std::vector<Candidate>& working) const
+{
+    std::vector<Candidate> shown;
+
+    if (working.empty())
+        return shown;
+
+    shown.push_back (working.front());
+    std::vector<const Candidate*> rest;
+
+    for (size_t i = 1; i < working.size(); ++i)
+        rest.push_back (&working[i]);
+
+    for (auto& line : lines)
+        rest.push_back (&line.second);
+
+    std::stable_sort (rest.begin(), rest.end(), [] (const Candidate* a, const Candidate* b) { return a->distance.total < b->distance.total; });
+
+    for (auto* c : rest)
+    {
+        if (shown.size() >= (size_t) shownMost)
+            break;
+
+        if (c->distance.total < 1000.0f && c->measures != nullptr
+            && std::all_of (shown.begin(), shown.end(), [c] (const Candidate& s) { return apart (s, *c) >= shownApartDb; }))
+            shown.push_back (*c);
+    }
+
+    return shown;
 }
 
 void Search::publish (std::vector<Candidate> merged, int round, const juce::String& stage, bool finished, bool stopped, Synth& synth, bool noCloser)
 {
-    // The best twelve's signatures, for drawing (each rendered again: twelve renders at most).
-    for (auto& c : merged)
+    // What is shown: the nearest, and others that sound different from it and from each other. Their
+    // signatures, for drawing (each rendered again: eight renders at most).
+    auto shown = shownOf (merged);
+
+    for (auto& c : shown)
         if (c.signature.peak <= 0.0f)
             c.signature = SignalConsole::Renderer::measure (render (synth, c.patch, target), rate);
 
@@ -1199,13 +1276,13 @@ void Search::publish (std::vector<Candidate> merged, int round, const juce::Stri
             settled[(size_t) part] = count > 0 ? (float) juce::jlimit (0.0, 1.0, 1.0 - 3.0 * spread / count) : 1.0f;
         }
 
-    if (! merged.empty() && ! stopped)
-        growChain (merged.front(), finished, synth);
+    if (! shown.empty() && ! stopped)
+        growChain (shown.front(), finished, synth);
 
     {
         const juce::ScopedLock sl (lock);
         progress.chain = chain;
-        progress.best = std::move (merged);
+        progress.best = std::move (shown);
         progress.round = round;
         progress.stage = stage;
         progress.finished = finished;
@@ -1279,7 +1356,7 @@ void Search::run (const std::function<bool()>& shouldStop)
         return added;
     };
 
-    std::vector<Candidate> pool;
+    std::vector<Candidate> pool, further;
     const auto resumed = ! options.resume.empty();
 
     if (resumed)
@@ -1289,7 +1366,8 @@ void Search::run (const std::function<bool()>& shouldStop)
         {
             Candidate c;
             c.patch = patch;
-            c.from = "the last search";
+            const auto at = (int) pool.size();
+            c.from = at < options.resumeFrom.size() && options.resumeFrom[at].isNotEmpty() ? options.resumeFrom[at] : juce::String ("the last search");
             pool.push_back (std::move (c));
         }
     }
@@ -1323,7 +1401,7 @@ void Search::run (const std::function<bool()>& shouldStop)
                     part.push_back (std::move (jobs[i]));
                 }
 
-            part = score (std::move (part), first, shouldStop);
+            part = score (std::move (part), first, shouldStop, false);   // thousands of them: their sounds are not kept
 
             for (size_t k = 0; k < at.size(); ++k)
                 jobs[at[k]] = std::move (part[k]);
@@ -1359,6 +1437,20 @@ void Search::run (const std::function<bool()>& shouldStop)
             }
         }
 
+        // Other lines to choose from: the 48 nearest are often one kind of patch, as like each other as
+        // they are like the signal, so every eighth of the next five hundred joins them, less near and
+        // more different. They are scored over the whole note with the rest; the nearest of them that
+        // sound different from the best are shown beside it and grown.
+        {
+            std::vector<size_t> order (jobs.size());
+            std::iota (order.begin(), order.end(), size_t { 0 });
+            std::stable_sort (order.begin(), order.end(), [&jobs] (size_t a, size_t b) { return jobs[a].distance.total < jobs[b].distance.total; });
+
+            for (size_t at = 48 + 8; at < order.size() && further.size() < 64; at += 8)
+                if (jobs[order[at]].distance.total < 1000.0f)
+                    further.push_back (jobs[order[at]]);
+        }
+
         // The 48 nearest over the whole note, with the clip's own table tried on the best six.
         pool = bestOf (std::move (jobs), 48);
 
@@ -1381,6 +1473,7 @@ void Search::run (const std::function<bool()>& shouldStop)
                 pool.push_back (std::move (c));
             }
 
+    pool.insert (pool.end(), std::make_move_iterator (further.begin()), std::make_move_iterator (further.end()));
     auto startAnswered = false;
 
     if (helper != nullptr)
@@ -1391,7 +1484,16 @@ void Search::run (const std::function<bool()>& shouldStop)
             pool.insert (pool.end(), std::make_move_iterator (added.begin()), std::make_move_iterator (added.end()));
         }
 
-    auto best = bestOf (score (std::move (pool), target, shouldStop), keptBest);
+    pool = score (std::move (pool), target, shouldStop);
+
+    // The nearest of each line, as it starts.
+    {
+        std::vector<Candidate> byDistance = pool;
+        std::stable_sort (byDistance.begin(), byDistance.end(), [] (const Candidate& a, const Candidate& b) { return a.distance.total < b.distance.total; });
+        noteLines (byDistance, nullptr);
+    }
+
+    auto best = bestOf (std::move (pool), keptBest);
     publish (best, 0, resumed ? "The last search" : "Factory patches", false, false, *synth);
 
     if (helper != nullptr && ! shouldStop() && startAnswered)
@@ -1531,6 +1633,26 @@ void Search::run (const std::function<bool()>& shouldStop)
                 }
         }
 
+        // The other lines: the nearest few that sound different from the best and from each other
+        // (those shown beside it) are grown too, half as many variations each, so that what is shown
+        // beside the best are other answers come as near as they can, and not the best's own copies.
+        {
+            const auto others = shownOf (best);
+
+            for (size_t o = 1; o < others.size() && o <= (size_t) otherLines; ++o)
+            {
+                const auto seed = mix (options.seed * 0x2545f491u + (juce::uint32) round * 0x85ebca6bu + (juce::uint32) o * 0x9e3779b9u);
+
+                for (auto& v : SignalConsole::variations (others[o].patch, *synth, reach, seed, firewall, perOtherLine))
+                {
+                    Candidate c;
+                    c.patch = std::move (v);
+                    c.from = others[o].from;
+                    next.push_back (std::move (c));
+                }
+            }
+        }
+
         // Fitted steps on the best: a few of its settings each taken across its whole range, the
         // next few each round, round and round. A random step moves many settings a little; this
         // finds the cutoff, level or envelope time that a recording needs, however far it is.
@@ -1562,6 +1684,7 @@ void Search::run (const std::function<bool()>& shouldStop)
         if (shouldStop())
             break;
 
+        noteLines (next, best.empty() ? nullptr : &best.front());
         best = bestOf (std::move (next), keptBest);
         lastRound = round;
         quietRounds = ! best.empty() && best.front().lock > lockBeforeRound + 0.1f ? 0 : quietRounds + 1;
@@ -1603,6 +1726,7 @@ void Search::run (const std::function<bool()>& shouldStop)
                 if (shouldStop())
                     break;
 
+                noteLines (next, best.empty() ? nullptr : &best.front());
                 best = bestOf (std::move (next), keptBest);
             }
 
