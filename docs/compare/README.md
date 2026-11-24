@@ -41,7 +41,7 @@ counts each post in an announcement as X counts it (a link is 23 characters) and
 ## Updating at the next release
 
 1. **Copy the newest snapshot** to `data/snapshots/<new version>.json`. Set `release`, `previous`, `status` and `as_of`.
-2. **Torqwave's columns.** The old `torqwave` cells become `torqwave_prev` (with its version and release date). Go through every row for the new `torqwave` column against the README, the guide and the changelog's entries for the release: a row changes only when the documentation says so. Rewrite `release_numbers` and `release_firsts` for the release, each number counted from the files or quoted from the release notes.
+2. **Torqwave's columns.** The old `torqwave` cells become `torqwave_prev` (with its version and release date). Go through every row for the new `torqwave` column against the README, the guide and the changelog's entries for the release: a row changes only when the documentation says so. Rewrite `release_numbers` and `release_firsts` for the release, each number counted from the files or quoted from the release notes. When a release follows another within days and is the one being announced (0.20.1 after 0.20.0), the comparison column may stay on the older release: set `previous` to it, leave `torqwave_prev` as it is, and say why in `previous_note`, which MATRIX.md prints.
 3. **Recheck the competitors.** For each product, open its release notes or what's-new page first and update `version`, `version_date` and `looked_up`. Then recheck, at least:
    - every cell that says `not confirmed`;
    - every cell the new release notes touch;
