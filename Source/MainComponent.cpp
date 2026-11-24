@@ -9030,6 +9030,10 @@ void MainComponent::finishContinuing()
     if (atStart && (leftOffLoaded == nullptr || ! deviceAsked || ! pluginListRead))
         return;
 
+    // From the menu, only once its progress window is gone (the start's own calls can come while it reads).
+    if (! atStart && backgroundJob != nullptr)
+        return;
+
     const auto loaded = std::exchange (leftOffLoaded, nullptr);
     const auto done = [this, atStart]
     {

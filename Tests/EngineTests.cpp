@@ -944,6 +944,13 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (const auto folder = valueOf ("--resume-demo"); folder.isNotEmpty())
+    {
+        const auto made = makeResumeDemo (juce::File::getCurrentWorkingDirectory().getChildFile (folder));
+        std::cout << (made ? "Made " : "Could not make ") << folder << std::endl;
+        return made ? 0 : 1;
+    }
+
     if (args.contains ("--resume"))
     {
         runResumeTests();

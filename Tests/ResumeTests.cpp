@@ -391,3 +391,35 @@ void runResumeTests()
 
     work.deleteRecursively();
 }
+
+bool makeResumeDemo (const juce::File& folder)
+{
+    const auto user = folder.getChildFile ("Files");
+    user.createDirectory();
+    const auto a = user.getChildFile ("Take A.wav"), b = user.getChildFile ("Take B.wav"), c = user.getChildFile ("Take C.flac"),
+               sessionFile = user.getChildFile ("Mix.tqsession");
+    AudioEngine engine;
+    OpenFiles files (engine);
+    AudioFileIO::save (*tone (480000, 440.0, 0.25f), 48000.0, a, 24, engine.formatManager);
+    AudioFileIO::save (*tone (240000, 660.0, 0.5f), 48000.0, b, 16, engine.formatManager);
+    AudioFileIO::save (*tone (360000, 880.0, 0.4f), 48000.0, c, 24, engine.formatManager);
+
+    SessionState session;
+    session.sampleRate = 48000.0;
+    SessionEdits::addClip (session, 0, a, AudioFileIO::load (a, engine.formatManager).snapshot, 48000);
+    SessionEdits::addClip (session, 1, b, AudioFileIO::load (b, engine.formatManager).snapshot, 480000);
+    SessionEdits::addClip (session, 2, c, AudioFileIO::load (c, engine.formatManager).snapshot, 240000);
+    const auto error = SessionFile::save (session, sessionFile);
+    engine.session.reset (std::move (session), sessionFile);
+
+    engine.adoptFile (a, AudioFileIO::load (a, engine.formatManager));
+    files.prepareForAnother ({ { 48000, 96000 }, 48000, 24000.0, 120.0, {}, {} });
+    engine.adoptFile (b, AudioFileIO::load (b, engine.formatManager));
+    files.prepareForAnother ({ { 100000, 130000 }, 130000, 90000.0, 60.0, {}, {} });
+    engine.adoptFile (c, AudioFileIO::load (c, engine.formatManager));
+    files.activate (1, { { 200000, 200000 }, 200000, 150000.0, 150.0, {}, {} });
+
+    const auto state = Resume::gather (files, { { 100000, 130000 }, 130000, 90000.0, 60.0, {}, {} }, engine, true,
+                                       { 300000, { 240000, 360000 }, 200000.0, 400.0, 0, 1 }, {});
+    return error.isEmpty() && Resume::write (state, folder.getChildFile ("Left Off")).isEmpty();
+}
