@@ -40,6 +40,28 @@ namespace Ai
         conversation is sent: the last few turns, the start of each answer and of each plan. */
     constexpr int maxTurnsSent = 4, maxAnswerSent = 600, maxPlanStepsSent = 6;
 
+    /** How full the model's context is, for the window to show: the last request to the server as
+        the server counted it (or an estimate from its length, four characters to a token, when the
+        server sent no count), the answers' tokens so far, and the model's window when the server
+        tells it. */
+    struct Usage
+    {
+        int contextTokens = 0;      // the last request and its answer: what the conversation holds now
+        int answerTokens = 0;       // every answer of this request, added up
+        int window = 0;             // the model's context window, or 0 when the server doesn't say
+        bool estimated = false;     // contextTokens is from lengths, not the server's count
+        int rounds = 0;             // requests made to the server for this one
+
+        /** Of the window, 0 to 1, or -1 when it isn't known. */
+        double share() const noexcept   { return window > 0 ? (double) contextTokens / (double) window : -1.0; }
+
+        /** The line the window shows. */
+        juce::String text() const;
+    };
+
+    /** With the context this full (of a known window), a request is sent without the earlier turns. */
+    constexpr double fullEnoughToForget = 0.7;
+
     /** Runs the conversation on a background thread: the model's answer, the tools it calls, their
         results back to it, until it answers without a tool or runs out of rounds. What happens is
         reported on the message thread, through the callbacks, as it happens. */
@@ -63,6 +85,11 @@ namespace Ai
         std::function<void (const juce::String& text, bool reasoning)> onText;
         std::function<void (const juce::String& tool, const juce::String& arguments, const juce::String& result)> onTool;
         std::function<void (const juce::String& answer, const juce::String& error)> onDone;
+        std::function<void (const Usage&)> onUsage;      // after each answer from the server
+
+        /** Whether a request first asks the server for the model's context window (once for each
+            server and model). The tests turn it off: their made-up servers answer in a set order. */
+        static bool askServerForWindow;
 
         /** The most rounds of tool calls in one request. */
         static constexpr int maxRounds = 60;
@@ -70,13 +97,16 @@ namespace Ai
     private:
         struct Event
         {
-            enum class Kind { text, reasoning, tool, done } kind;
+            enum class Kind { text, reasoning, tool, done, usage } kind;
             juce::String a, b, c;
+            Usage usage {};
         };
 
         void run() override;
         void handleAsyncUpdate() override;
         void post (Event);
+        void count (const Reply&);          // adds an answer's tokens to the usage and reports it
+        Usage usage;                        // the agent's thread only
 
         Client client;
         Workspace workspace;
@@ -92,7 +122,8 @@ namespace Ai
     /** The Ask Torq window's content: the request, what the model is doing, the plan, and
         Apply or Discard. Made with what the plan starts from; apply is called with the finished
         working copy when the user applies it. */
-    class AskPanel final : public juce::Component
+    class AskPanel final : public juce::Component,
+                           private juce::KeyListener
     {
     public:
         /** start makes a fresh copy of the file and rack for each request. */
@@ -115,6 +146,14 @@ namespace Ai
 
         /** Forgets the conversation and empties the log, as the New Chat button does. */
         void newChat();
+
+        /** The line under the log: how full the model's context is, and what is sent. */
+        juce::String getStats() const                    { return stats.getText(); }
+
+        /** Earlier requests, as the up and down arrows walk them in the request box: back one
+            (-1) or forward one (+1). Forward past the newest brings back what was being typed.
+            The requests are kept while the program runs, for every Ask Torq window. */
+        void recall (int direction);
 
         /** For the tests: the request box, and the log as shown. */
         juce::TextEditor& getRequestBox() noexcept      { return requestBox; }
@@ -139,7 +178,13 @@ namespace Ai
         std::function<std::optional<Workspace::Start>()> makeStart;
         std::function<juce::String (Workspace&, const juce::String&)> applyPlan;
 
-        juce::Label banner, prompt;
+        bool keyPressed (const juce::KeyPress&, juce::Component*) override;
+        void showStats (const Usage*);
+
+        juce::Label banner, prompt, stats;
+        Usage lastUsage;
+        int recalled = -1;                  // which earlier request the box shows, or -1
+        juce::String draft;                 // what was in the box before the arrows were used
         juce::TextEditor requestBox, log;
         juce::TextButton askButton { "Ask" }, stopButton { "Stop" }, newChatButton { "New Chat" }, applyButton { "Apply" }, discardButton { "Discard" };
         juce::TextButton applyAllButton { "Apply All" };

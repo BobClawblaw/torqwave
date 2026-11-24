@@ -71,6 +71,9 @@ namespace Ai
         juce::String finishReason;
         juce::String error;                 // empty when the request worked
         int status = 0;                     // the HTTP status
+        int promptTokens = -1;              // what the server counted for the request (its "usage"), or -1 when it sent no count
+        int completionTokens = -1;          // and for its answer
+        int requestChars = 0;               // the request's length as sent, for an estimate when there is no count
     };
 
     /** Talks to one server. Each call blocks: call from a background thread. cancel() from any
@@ -82,6 +85,15 @@ namespace Ai
 
         /** The models the server offers (/v1/models), sorted; nothing with the error set when it fails. */
         juce::StringArray listModels (juce::String& error);
+
+        /** The model's context window in tokens, as the server's /v1/models entry for it says
+            (servers name it differently: context_length, max_context_length, max_model_len,
+            context_window, n_ctx, or meta.n_ctx_train), or 0 when it doesn't say. Asked once for
+            each server and model while the program runs. */
+        int contextWindow();
+
+        /** The window in a /v1/models answer's entry for a model, or 0. Public for the tests. */
+        static int contextWindowFrom (const juce::String& modelsBody, const juce::String& model);
 
         /** One chat completion, streamed: messages and tools as the API takes them (tools may be
             void). onText hears the answer's text as it comes (reasoning true for thinking). */

@@ -344,6 +344,38 @@ namespace
         juce::MemoryInputStream failed (bytes (juce::String ("data: {\"error\":{\"message\":\"model not loaded\"}}\n\n")), true);
         check (Ai::Client::readAnswer (failed, {}, {}).error.contains ("model not loaded"), "AI: an error in the stream is reported");
 
+        // The server's token counts: in a streamed answer's last event, which has no choices, or in a whole answer.
+        juce::MemoryInputStream counted (bytes (juce::String ("data: {\"choices\":[{\"delta\":{\"content\":\"Hi.\"},\"finish_reason\":\"stop\"}]}\n\n"
+                                                              "data: {\"choices\":[],\"usage\":{\"prompt_tokens\":5120,\"completion_tokens\":7}}\n\ndata: [DONE]\n\n")), true);
+        const auto c = Ai::Client::readAnswer (counted, {}, {});
+        juce::MemoryInputStream uncounted (bytes (juce::String ("data: {\"choices\":[{\"delta\":{\"content\":\"Hi.\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n")), true);
+        const auto u = Ai::Client::readAnswer (uncounted, {}, {});
+        check (c.content == "Hi." && c.promptTokens == 5120 && c.completionTokens == 7 && u.promptTokens == -1 && u.completionTokens == -1,
+               "AI: the server's token counts are read from a streamed answer's last event; without one they are marked as not sent");
+
+        // A server that refuses the field that asks for counts, by name, is asked again without it.
+        {
+            const auto plain = juce::String ("data: {\"choices\":[{\"delta\":{\"content\":\"Hi.\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n");
+            MockServer strict ({ { 400, "application/json", R"({"error":{"message":"Unknown field: stream_options"}})" }, { 200, "text/event-stream", plain } });
+            Ai::Client client (settingsFor (strict.url()), {});
+            const auto reply = client.chat (juce::Array<juce::var> { juce::var (new juce::DynamicObject()) }, {});
+            const auto asked = strict.requests();
+            check (reply.error.isEmpty() && reply.content == "Hi." && asked.size() == 2 && parse (asked[0].body).hasProperty ("stream_options")
+                       && ! parse (asked[1].body).hasProperty ("stream_options") && reply.requestChars == asked[1].body.length(),
+                   "AI: a server that refuses stream_options by name is asked again without it, and the answer is taken");
+        }
+
+        // The model's context window, under the names servers give it.
+        const auto listing = [] (const juce::String& fields) { return R"({"data":[{"id":"other","context_length":1},{"id":"m",)" + fields + "}]}"; };
+        check (Ai::Client::contextWindowFrom (listing (R"("context_length":262144)"), "m") == 262144
+                   && Ai::Client::contextWindowFrom (listing (R"("max_model_len":32768)"), "m") == 32768
+                   && Ai::Client::contextWindowFrom (listing (R"("max_context_length":8192)"), "m") == 8192
+                   && Ai::Client::contextWindowFrom (listing (R"("meta":{"n_ctx_train":4096})"), "m") == 4096
+                   && Ai::Client::contextWindowFrom (listing (R"("owned_by":"me")"), "m") == 0
+                   && Ai::Client::contextWindowFrom ("not json", "m") == 0,
+               "AI: the model's context window is read from its /v1/models entry (context_length, max_model_len, max_context_length or "
+               "meta.n_ctx_train), and is unknown when the entry doesn't say");
+
         juce::MemoryInputStream empty (bytes (juce::String ("data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"length\"}]}\n\ndata: [DONE]\n\n")), true);
         check (Ai::Client::readAnswer (empty, {}, {}).error.contains ("ran out of room"), "AI: an answer cut off before it said anything is an error");
 
@@ -2658,7 +2690,8 @@ namespace
         const auto first = chunk (R"({"choices":[{"delta":{"reasoning_content":"Six dB up."}}]})")
                          + chunk (R"({"choices":[{"delta":{"tool_calls":[{"index":0,"id":"a","function":{"name":"edit","arguments":"{\"kind\": \"gain\", \"settings\": {\"db\": 6}}"}}]},"finish_reason":"tool_calls"}]})")
                          + "data: [DONE]\n\n";
-        const auto second = chunk (R"({"choices":[{"delta":{"content":"Raised by 6 dB."},"finish_reason":"stop"}]})") + "data: [DONE]\n\n";
+        const auto second = chunk (R"({"choices":[{"delta":{"content":"Raised by 6 dB."},"finish_reason":"stop"}]})")
+                          + chunk (R"({"choices":[],"usage":{"prompt_tokens":1200,"completion_tokens":20}})") + "data: [DONE]\n\n";
         const auto third = chunk (R"({"choices":[{"delta":{"content":"It is 6 dB up already."},"finish_reason":"stop"}]})") + "data: [DONE]\n\n";
         const auto fourth = chunk (R"({"choices":[{"delta":{"content":"Drums have a Modern type."},"finish_reason":"stop"}]})") + "data: [DONE]\n\n";
         MockServer server ({ { 200, "text/event-stream", first }, { 200, "text/event-stream", second }, { 200, "text/event-stream", third },
@@ -2714,6 +2747,11 @@ namespace
         // The box is empty for the next request, and the next request goes with the one before it:
         // what was asked, what was answered, the plan and that it was applied. The log keeps both.
         check (panel.getRequestBox().isEmpty(), "Ask Torq: the request box is empty once the request is sent");
+        check (panel.getStats().startsWith ("Context: 1,220 tokens (the server doesn't say the model's limit). Answers: ") && panel.getStats().contains ("in 2 rounds")
+                   && panel.getStats().contains ("the last 4 before it, 600 characters of each answer")
+                   && parse (server.requests()[0].body)["stream_options"]["include_usage"] == juce::var (true),
+               "Ask Torq: the line under the log shows the tokens the server counted for the last request and its answer, the answers' tokens and "
+               "rounds, and what is sent with a request: " + panel.getStats());
         panel.getRequestBox().setText ("Is that enough?");
         panel.ask();
         TestUtils::runUntil ([&] { return panel.getLog().contains ("It is 6 dB up already."); }, 10000);
@@ -2757,11 +2795,83 @@ namespace
                    "Ask Torq: an earlier answer is sent cut to 600 characters and a plan to its first six steps, with whether it was applied");
         }
 
+        // The arrows: up walks back through the requests made, down forward, and past the newest
+        // what was being typed comes back. The server sent no count for the last answers: an estimate.
+        check (panel.getStats().startsWith ("Context: about ") && panel.getStats().contains ("estimated: the server sent no count"),
+               "Ask Torq: without a count from the server the tokens are estimated from the lengths, and the line says so");
+        panel.getRequestBox().setText ("half typed");
+        panel.recall (-1);
+        const auto newest = panel.getRequestBox().getText();
+        panel.recall (-1);
+        const auto before = panel.getRequestBox().getText();
+        panel.recall (-1);
+        const auto oldest = panel.getRequestBox().getText();
+        panel.recall (1);
+        panel.recall (1);
+        panel.recall (1);
+        check (newest == "What is new in this version?" && before == "Is that enough?" && oldest == "Make it 6 dB louder"
+                   && panel.getRequestBox().getText() == "half typed",
+               "Ask Torq: the up arrow walks back through the requests made, the down arrow forward, and past the newest the text being typed comes back");
+        panel.getRequestBox().setText ({});
+
         // New Chat forgets it all.
         button ("New Chat")->triggerClick();
         juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
         check (panel.getTurns().empty() && panel.getLog().isEmpty() && ! button ("New Chat")->isEnabled(),
                "Ask Torq: New Chat empties the log and forgets the conversation");
+    }
+
+    /** The context window: asked of the server once, shown against the tokens used, and with the
+        context nearly full the next request goes without the earlier ones. */
+    void testAskContext()
+    {
+        const auto chunk = [] (const juce::String& json) { return "data: " + json + "\n\n"; };
+        const auto answer = [&chunk] (const juce::String& text, int prompt)
+        {
+            return chunk (R"({"choices":[{"delta":{"content":")" + text + R"("},"finish_reason":"stop"}]})")
+                   + chunk (R"({"choices":[],"usage":{"prompt_tokens":)" + juce::String (prompt) + R"(,"completion_tokens":50}})") + "data: [DONE]\n\n";
+        };
+        MockServer server ({ { 200, "application/json", R"({"data":[{"id":"test-model","context_length":1000}]})" },
+                             { 200, "text/event-stream", answer ("One.", 300) }, { 200, "text/event-stream", answer ("Two.", 750) },
+                             { 200, "text/event-stream", answer ("Three.", 200) } });
+        const auto audio = tone (48000.0, 1);
+        Ai::Agent::askServerForWindow = true;
+
+        {
+            Ai::AskPanel panel (settingsFor (server.url()),
+                                [audio]
+                                {
+                                    Ai::Workspace::Start s;
+                                    s.audio = audio;
+                                    s.sampleRate = 48000.0;
+                                    return std::optional<Ai::Workspace::Start> (std::move (s));
+                                },
+                                [] (Ai::Workspace&, const juce::String&) { return juce::String(); });
+
+            const auto say = [&] (const juce::String& request, const juce::String& until)
+            {
+                panel.getRequestBox().setText (request);
+                panel.ask();
+                TestUtils::runUntil ([&] { return panel.getLog().contains (until) && panel.getLog().contains ("No changes were planned") && panel.getTurns().size() > 0
+                                                  && panel.getTurns().back().request == request; }, 10000);
+            };
+
+            say ("first", "One.");
+            const auto afterFirst = panel.getStats();
+            say ("second", "Two.");
+            const auto afterSecond = panel.getStats();
+            say ("third", "Three.");
+            const auto requests = server.requests();
+            const auto sent = [&] (size_t i) { return i < requests.size() ? parse (requests[i].body)["messages"].size() : -1; };
+            check (requests.size() == 4 && requests[0].firstLine.startsWith ("GET /v1/models")
+                       && afterFirst.startsWith ("Context: 350 of 1,000 tokens (35 %)") && afterSecond.startsWith ("Context: 800 of 1,000 tokens (80 %)"),
+                   "Ask Torq: the model's window is asked of the server once, and the line shows the tokens used against it (" + afterFirst.upToFirstOccurrenceOf (".", true, false)
+                       + " then " + afterSecond.upToFirstOccurrenceOf (".", true, false) + ")");
+            check (sent (1) == 2 && sent (2) == 4 && sent (3) == 2 && panel.getLog().contains ("80 % full, so this request goes without the earlier ones"),
+                   "Ask Torq: with the context over 70 % full, the next request goes without the earlier ones, and the log says so");
+        }
+
+        Ai::Agent::askServerForWindow = false;
     }
 
     /** The name in menus and titles carries the puppy: drawn with the app's fonts, it shows in colour. */
@@ -3192,6 +3302,7 @@ namespace
 
 void runAiTests()
 {
+    Ai::Agent::askServerForWindow = false;   // the made-up servers answer in a set order; testAskContext turns it on
     testSettings();
     testEndpoints();
     testEndpointsView();
@@ -3223,6 +3334,7 @@ void runAiTests()
     testAskForFactoryThings();
     testCatalogueLearner();
     testAskPanel();
+    testAskContext();
     testSequenceTools();
     testSequencerAsk();
     testDecryptTools();

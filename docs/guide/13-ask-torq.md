@@ -32,6 +32,10 @@ The window shows the model at work: its thinking (for a model that shows it), ea
 
 **Follow-ups.** The request box empties when you send, and the log keeps the conversation. The next request goes to the model with the ones before it: what you asked, what it answered, its plan and whether you applied it. So "now a little less" or "do the same to the second track" has something to follow. Each request still starts from the file as it is now: a plan you did not apply is not in it. To keep the request small for the model, only the last four requests go along, each answer cut to its first 600 characters. **New Chat** forgets the conversation and empties the log.
 
+**Earlier requests.** In the request box, the up arrow brings back the request before, and the one before that; the down arrow goes forward again, and past the newest it gives back what you were typing. The last fifty are kept while Torqwave runs.
+
+**How full the model is.** A line under the log shows the tokens the last request and its answer took, against the model's context window where the server tells it: "Context: 6,412 of 262,144 tokens (2 %)". After it come the answers' tokens and what is sent with each request. If the server sends no count the number is an estimate and says so; if it doesn't tell the model's limit, none is shown. Over 70 % full, the line turns to the warning colour and the next request goes without the earlier ones, so it still fits; **New Chat** starts clean.
+
 **Asking about Torqwave.** Ask "what is new in this version?" and the answer comes from a short note of the release that is built into the program, not from the model's memory. It is a summary; the changelog has the whole list.
 
 **Stop** cancels a request in progress.

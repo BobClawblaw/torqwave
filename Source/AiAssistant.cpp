@@ -40,6 +40,44 @@ namespace
 }
 
 //==============================================================================
+namespace
+{
+    /** The requests made in any Ask Torq window while the program runs, oldest first. */
+    juce::StringArray& asked()
+    {
+        static juce::StringArray requests;
+        return requests;
+    }
+
+    juce::String thousands (int n)
+    {
+        auto digits = juce::String (n);
+
+        for (int i = digits.length() - 3; i > 0; i -= 3)
+            digits = digits.substring (0, i) + "," + digits.substring (i);
+
+        return digits;
+    }
+}
+
+juce::String Usage::text() const
+{
+    juce::String t;
+    t << "Context: " << (estimated ? "about " : "") << thousands (contextTokens);
+
+    if (window > 0)
+        t << " of " << thousands (window) << " tokens (" << juce::roundToInt (100.0 * share()) << " %)";
+    else
+        t << " tokens (the server doesn't say the model's limit)";
+
+    if (estimated)
+        t << ", estimated: the server sent no count";
+
+    t << ". Answers: " << thousands (answerTokens) << " tokens in " << rounds << (rounds == 1 ? " round" : " rounds")
+      << ". Sent with a request: the last " << maxTurnsSent << " before it, " << maxAnswerSent << " characters of each answer.";
+    return t;
+}
+
 juce::String Turn::said() const
 {
     auto text = answer.substring (0, maxAnswerSent);
@@ -135,8 +173,34 @@ void Agent::post (Event e)
     triggerAsyncUpdate();
 }
 
+bool Agent::askServerForWindow = true;
+
+void Agent::count (const Reply& reply)
+{
+    // The server's count where it sent one; otherwise four characters to a token, of what was sent
+    // and of what came back.
+    const auto answerChars = reply.content.length() + reply.reasoning.length();
+    const auto counted = reply.promptTokens >= 0;
+    const auto answered = reply.completionTokens >= 0 ? reply.completionTokens : (answerChars + 3) / 4;
+    usage.estimated = ! counted;
+    usage.contextTokens = (counted ? reply.promptTokens : (reply.requestChars + 3) / 4) + answered;
+    usage.answerTokens += answered;
+    ++usage.rounds;
+    Event e { Event::Kind::usage, {}, {}, {} };
+    e.usage = usage;
+    post (std::move (e));
+}
+
 void Agent::run()
 {
+    usage.window = askServerForWindow ? client.contextWindow() : 0;
+
+    if (threadShouldExit())
+    {
+        post ({ Event::Kind::done, {}, "Cancelled.", {} });
+        return;
+    }
+
     // The conversation: what the program and the open file are, the turns before (the last few,
     // cut short: the model's context is small), and the request. Each request works on a fresh
     // copy of the file as it is now, so the turns say whether their plans were applied.
@@ -167,6 +231,8 @@ void Agent::run()
             post ({ Event::Kind::done, reply.content, threadShouldExit() ? juce::String ("Cancelled.") : reply.error, {} });
             return;
         }
+
+        count (reply);
 
         // The answer goes back into the conversation as it came, tool calls and all.
         auto said = std::make_unique<juce::DynamicObject>();
@@ -236,6 +302,9 @@ void Agent::run()
         post ({ reasoning ? Event::Kind::reasoning : Event::Kind::text, text, {}, {} });
     });
 
+    if (reply.error.isEmpty())
+        count (reply);
+
     post ({ Event::Kind::done, reply.content, threadShouldExit() ? juce::String ("Cancelled.") : juce::String(), {} });
 }
 
@@ -259,6 +328,11 @@ void Agent::handleAsyncUpdate()
         {
             if (onTool != nullptr)
                 onTool (e.a, e.b, e.c);
+        }
+        else if (e.kind == Event::Kind::usage)
+        {
+            if (onUsage != nullptr)
+                onUsage (e.usage);
         }
         else
         {
@@ -290,7 +364,15 @@ AskPanel::AskPanel (Settings s, std::function<std::optional<Workspace::Start>()>
     requestBox.setReturnKeyStartsNewLine (false);
     requestBox.setTextToShowWhenEmpty ("e.g. trim the silence at both ends, bring it to -16 LUFS and fade out the last second", Theme::faintText);
     requestBox.onReturnKey = [this] { ask(); };
+    requestBox.addKeyListener (this);   // up and down: the requests made before
     addAndMakeVisible (requestBox);
+
+    stats.setColour (juce::Label::textColourId, Theme::dimText);
+    stats.setFont (juce::FontOptions (12.0f));
+    stats.setJustificationType (juce::Justification::topLeft);
+    stats.setMinimumHorizontalScale (1.0f);
+    addAndMakeVisible (stats);
+    showStats (nullptr);
 
     log.setMultiLine (true, true);
     log.setReadOnly (true);
@@ -369,7 +451,9 @@ void AskPanel::resized()
     bottom.removeFromRight (8);
     applyButton.setBounds (bottom.removeFromRight (100));
     applyAllButton.setBounds (bottom.removeFromLeft (100));
-    r.removeFromBottom (8);
+    r.removeFromBottom (6);
+    stats.setBounds (r.removeFromBottom (32));
+    r.removeFromBottom (4);
     r.removeFromTop (8);
 
     // The suggestions, under the log: a row each, up to about half the room.
@@ -566,7 +650,27 @@ void AskPanel::ask()
     addLog ("You: " + text + "\n\n", Theme::textStrong);
     requestBox.setText ({}, false);   // not clear(): that leaves the box's value behind, which can put the text back
 
-    agent = std::make_unique<Agent> (settings, savedKey (settings), std::move (*start), text, turns);
+    // Kept for the arrows (the newest last, each once), up to fifty.
+    asked().removeString (text);
+    asked().add (text);
+
+    while (asked().size() > 50)
+        asked().remove (0);
+
+    recalled = -1;
+    draft.clear();
+
+    // With the context nearly full, the earlier turns are left out, so the request still fits.
+    auto earlier = turns;
+
+    if (lastUsage.share() > fullEnoughToForget && ! earlier.empty())
+    {
+        earlier.clear();
+        addLog ("The model's context is " + juce::String (juce::roundToInt (100.0 * lastUsage.share()))
+                    + " % full, so this request goes without the earlier ones.\n\n", Theme::warn);
+    }
+
+    agent = std::make_unique<Agent> (settings, savedKey (settings), std::move (*start), text, std::move (earlier));
     agent->onText = [this] (const juce::String& t, bool reasoning)
     {
         if (reasoning && ! reasoningShown)
@@ -600,8 +704,72 @@ void AskPanel::ask()
             addLog ("  plan: " + step + "\n", Theme::accentLight);
     };
     agent->onDone = [this] (const juce::String& answer, const juce::String& error) { finish (answer, error); };
+    agent->onUsage = [this] (const Usage& u) { showStats (&u); };
     agent->start();
     updateButtons();
+}
+
+void AskPanel::showStats (const Usage* u)
+{
+    lastUsage = u != nullptr ? *u : Usage();
+    stats.setText (u != nullptr ? u->text()
+                                : "Context: nothing sent yet. Sent with a request: the last " + juce::String (maxTurnsSent) + " before it, "
+                                      + juce::String (maxAnswerSent) + " characters of each answer.",
+                   juce::dontSendNotification);
+    stats.setColour (juce::Label::textColourId, lastUsage.share() > fullEnoughToForget ? Theme::warn : Theme::dimText);
+}
+
+void AskPanel::recall (int direction)
+{
+    const auto& requests = asked();
+
+    if (requests.isEmpty() || (agent != nullptr && agent->isWorking()))
+        return;
+
+    if (recalled < 0)
+    {
+        if (direction > 0)
+            return;
+
+        draft = requestBox.getText();
+        recalled = requests.size();
+    }
+
+    recalled = juce::jmax (0, recalled + direction);
+
+    if (recalled >= requests.size())
+    {
+        recalled = -1;
+        requestBox.setText (draft, false);
+    }
+    else
+    {
+        requestBox.setText (requests[recalled], false);
+    }
+
+    requestBox.moveCaretToEnd();
+}
+
+bool AskPanel::keyPressed (const juce::KeyPress& key, juce::Component*)
+{
+    // Up on the box's first line and down on its last walk the earlier requests; elsewhere in a
+    // request of several lines they move the caret, as they do in any text.
+    const auto text = requestBox.getText();
+    const auto caret = requestBox.getCaretPosition();
+
+    if (key == juce::KeyPress::upKey && ! text.substring (0, caret).containsChar ('\n'))
+    {
+        recall (-1);
+        return true;
+    }
+
+    if (key == juce::KeyPress::downKey && recalled >= 0 && ! text.substring (caret).containsChar ('\n'))
+    {
+        recall (1);
+        return true;
+    }
+
+    return false;
 }
 
 void AskPanel::settle (Turn::Outcome outcome)
@@ -619,6 +787,7 @@ void AskPanel::newChat()
     planReady = false;
     turns.clear();
     log.clear();
+    showStats (nullptr);
     showSuggestions();
     updateButtons();
 }

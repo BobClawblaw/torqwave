@@ -261,10 +261,76 @@ juce::StringArray Client::listModels (juce::String& error)
     return names;
 }
 
+int Client::contextWindowFrom (const juce::String& modelsBody, const juce::String& model)
+{
+    const auto answer = parse (modelsBody);
+
+    if (auto* list = answer["data"].getArray())
+        for (auto& m : *list)
+            if (m["id"].toString() == model)
+            {
+                for (auto* field : { "context_length", "max_context_length", "max_model_len", "context_window", "n_ctx" })
+                    if (const auto n = (int) m[field]; n > 0)
+                        return n;
+
+                return juce::jmax (0, (int) m["meta"]["n_ctx_train"]);
+            }
+
+    return 0;
+}
+
+int Client::contextWindow()
+{
+    static juce::CriticalSection knownLock;
+    static std::map<juce::String, int> known;   // by server and model
+    const auto name = settings.baseUrl() + " " + settings.model;
+
+    {
+        const juce::ScopedLock sl (knownLock);
+
+        if (const auto found = known.find (name); found != known.end())
+            return found->second;
+    }
+
+    cancelled = false;
+    juce::String error;
+    int status = 0;
+    auto stream = open ("/models", nullptr, error, status);
+
+    if (stream == nullptr)
+        return 0;   // not kept: asked again next time
+
+    const auto window = contextWindowFrom (stream->readEntireStreamAsString(), settings.model);
+
+    {
+        const juce::ScopedLock sl (lock);
+        current = nullptr;
+    }
+
+    const juce::ScopedLock sl (knownLock);
+    known[name] = window;
+    return window;
+}
+
 Reply Client::readAnswer (juce::InputStream& in, const std::function<void (const juce::String&, bool)>& onText,
                                   const std::function<bool()>& isCancelled)
 {
     Reply r;
+
+    // The server's count of the request and the answer, where it sends one (with a streamed answer,
+    // in a last event with no choices).
+    const auto takeUsage = [&r] (const juce::var& from)
+    {
+        if (const auto& usage = from["usage"]; usage.isObject())
+        {
+            if (usage.hasProperty ("prompt_tokens"))
+                r.promptTokens = (int) usage["prompt_tokens"];
+
+            if (usage.hasProperty ("completion_tokens"))
+                r.completionTokens = (int) usage["completion_tokens"];
+        }
+    };
+
     std::map<int, ToolCall> calls;   // by the index the stream gives each
 
     const auto take = [&] (const juce::var& choice, bool whole)
@@ -348,6 +414,8 @@ Reply Client::readAnswer (juce::InputStream& in, const std::function<void (const
             return r;
         }
 
+        takeUsage (event);
+
         if (auto* choices = event["choices"].getArray(); choices != nullptr && ! choices->isEmpty())
             take (choices->getReference (0), false);
     }
@@ -355,6 +423,7 @@ Reply Client::readAnswer (juce::InputStream& in, const std::function<void (const
     if (unstreamed.isNotEmpty())
     {
         const auto whole = parse (unstreamed);
+        takeUsage (whole);
 
         if (whole.hasProperty ("error"))
             r.error = errorFrom (unstreamed, 200);
@@ -384,30 +453,58 @@ Reply Client::chat (const juce::var& messages, const juce::var& tools,
 {
     cancelled = false;
 
-    auto request = std::make_unique<juce::DynamicObject>();
-    request->setProperty ("model", settings.model);
-    request->setProperty ("messages", messages);
-    request->setProperty ("stream", true);
-
-    if (tools.isArray() && tools.size() > 0)
-        request->setProperty ("tools", tools);
-
-    for (auto& extra : requestExtras)
-        request->setProperty (extra.name, extra.value);
-
-    const auto body = juce::JSON::toString (juce::var (request.release()), true);
-    Reply r;
-    auto stream = open ("/chat/completions", &body, r.error, r.status);
-
-    if (stream != nullptr)
+    const auto bodyOf = [&] (bool askForUsage)
     {
-        const auto status = r.status;
-        r = readAnswer (*stream, onText, [this] { return cancelled.load(); });
-        r.status = status;
-    }
+        auto request = std::make_unique<juce::DynamicObject>();
+        request->setProperty ("model", settings.model);
+        request->setProperty ("messages", messages);
+        request->setProperty ("stream", true);
 
-    const juce::ScopedLock sl (lock);
-    current = nullptr;
+        // Asks for the token counts with the streamed answer.
+        if (askForUsage)
+        {
+            auto options = std::make_unique<juce::DynamicObject>();
+            options->setProperty ("include_usage", true);
+            request->setProperty ("stream_options", juce::var (options.release()));
+        }
+
+        if (tools.isArray() && tools.size() > 0)
+            request->setProperty ("tools", tools);
+
+        for (auto& extra : requestExtras)
+            request->setProperty (extra.name, extra.value);
+
+        return juce::JSON::toString (juce::var (request.release()), true);
+    };
+
+    Reply r;
+
+    // A server that refuses the request for counts by name (a 400 or 422 that names the field) is asked again without it.
+    for (const auto askForUsage : { true, false })
+    {
+        const auto body = bodyOf (askForUsage);
+        r = {};
+        auto stream = open ("/chat/completions", &body, r.error, r.status);
+
+        if (stream != nullptr)
+        {
+            const auto status = r.status;
+            r = readAnswer (*stream, onText, [this] { return cancelled.load(); });
+            r.status = status;
+        }
+
+        r.requestChars = body.length();
+
+        {
+            const juce::ScopedLock sl (lock);
+            current = nullptr;
+        }
+
+        const auto refusedByName = (r.status == 400 || r.status == 422) && (r.error.contains ("stream_options") || r.error.contains ("include_usage"));
+
+        if (stream != nullptr || cancelled || ! refusedByName)
+            break;
+    }
 
     if (cancelled)
         r.error = "Cancelled.";
