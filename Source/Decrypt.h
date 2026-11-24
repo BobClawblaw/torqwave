@@ -12,7 +12,9 @@
     a smaller step. The lock is how near a candidate is, 0 to 100 % (lockOf).
 
     Dry in this version: the candidates' effects are off, and a clip with reverb or delay on it is
-    matched as if it were dry. One note: chords and riffs are not matched.
+    matched as if it were dry. One note, or one chord: a sound of several notes at once (findChord)
+    is rendered on all of its keys, so a patch is found that sounds like it when that chord is
+    played. Riffs are not matched.
 
     Without an advisor, nothing here is random from one run to the next: the same clip, settings
     and seed give the same result, whatever the number of threads. */
@@ -61,12 +63,19 @@ namespace Decrypt
         juce::AudioBuffer<float> audio;     // one channel at 48 kHz, from just before the note starts, its peak at -6 dB
         double pitchHz = 0.0;               // 0: none found, matched at middle C
         int note = 60;                      // the key it is rendered on, the nearest to its pitch
+        std::vector<int> chord;             // the keys it is rendered on when it is several notes at once, lowest first; empty for one note
         int held = 0;                       // samples the key is held in a render: the note's loud part, or all of it when it decays
         bool decays = false;                // it dies away by itself: matched with the key held, and silence after it
         Measures measures;
         SignalConsole::Signature signature;
         juce::String problem;               // why it can't be matched; empty when it can
     };
+
+    /** The keys of a sound of several notes at once (one channel at 48 kHz), lowest first: each key's
+        harmonics looked for in the sound's spectrum, the key they speak for most taken, then the next
+        from what that leaves, six at most. Fewer than two found, or a sound under a quarter second: its
+        one key or nothing. */
+    std::vector<int> findChord (const float* mono, int length);
 
     /** A clip (any channels and rate) made a target. */
     Target prepare (const juce::AudioBuffer<float>& clip, double sampleRate);
@@ -96,6 +105,9 @@ namespace Decrypt
 
     /** A key's name, "A1". */
     juce::String noteName (int note);
+
+    /** A chord target's keys, "C#4 E4 B4"; empty for one note. */
+    juce::String chordName (const Target&);
 
     /** What a target is, in a line: "A1 (55.0 Hz), 1.82 s, attack 12 ms, ...". */
     juce::String describe (const Target&);

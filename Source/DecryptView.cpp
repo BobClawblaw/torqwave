@@ -1690,7 +1690,7 @@ DecryptView::PanelPlan DecryptView::planPanel() const
         }
 
         const auto& t = search->getTarget();
-        put ("signal", "signal  " + (t.pitchHz > 0.0 ? noteName (t.note) : juce::String ("no pitch")) + "  "
+        put ("signal", "signal  " + (! t.chord.empty() ? "chord " + chordName (t) : t.pitchHz > 0.0 ? noteName (t.note) : juce::String ("no pitch")) + "  "
                        + juce::String (t.audio.getNumSamples() / rate - (t.decays ? silenceAfter : 0.0), 2) + " s  dry" + (t.decays ? "  dies away" : "")
                        + (clipName.isNotEmpty() ? "  " + clipName : juce::String()), x, floor - 8.0f, 10.5f, Theme::dimText);
         floor -= 16.0f;

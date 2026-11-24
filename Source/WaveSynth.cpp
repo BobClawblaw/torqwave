@@ -708,6 +708,48 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         {
             v.active = v.fading = v.down = v.held = false;
             v.note = -1;
+            // Everything else it carries, at rest too. A note starts its envelopes, ramps and each
+            // oscillator's table level from where the last note left them, so what was played before
+            // a reset made the next render differ by a few ten-thousandths of a dB.
+            v.env = {};
+            v.levelEnv = {};
+            v.lfoPhase.fill (0.0);
+            v.lfoValue.fill (0.0f);
+            v.lfoSmoothed.fill (0.0f);
+            v.positionNow.fill (0.0f);
+            v.warpNow.fill (0.0f);
+            v.settle = true;
+            v.fade = 1.0f;
+            v.fadeStep = 0.0f;
+            v.velocity = v.randomValue = v.noiseTilt = 0.0f;
+            v.age = v.serial = 0;
+            v.pitch = v.target = 60.0;
+            v.glidePerSample = v.subPhase = v.subIncrement = v.holdPhase = 0.0;
+            v.sinceStart = 0;
+            v.value.fill (0.0f);
+            v.oscGain = {};
+            v.oscRoute = {};
+            v.subGain = v.noiseGain = v.ampGain = v.panL = v.panR = {};
+            v.cutoffG = {};
+            v.resonance = {};
+            v.drive = {};
+            v.combPeriod.fill (0.0f);
+            v.dcL = v.dcR = v.dcInL = v.dcInR = 0.0f;
+
+            for (auto& o : v.osc)
+            {
+                o.level = 0;
+                o.warpRatio = 1.0;
+
+                for (auto& u : o.unison)
+                {
+                    const auto line = u.line;
+                    const auto lineSize = u.lineSize;
+                    u = {};
+                    u.line = line;
+                    u.lineSize = lineSize;
+                }
+            }
             for (auto& f : v.filters) for (auto& ch : f) ch.clear();
             for (auto& o : v.osc) for (auto& u : o.unison) if (u.line != nullptr) std::fill (u.line, u.line + u.lineSize, 0.0f);
         }

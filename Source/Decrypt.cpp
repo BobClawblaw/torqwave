@@ -1,5 +1,6 @@
 #include "Decrypt.h"
 #include "WaveTables.h"
+#include <set>
 
 namespace Decrypt
 {
@@ -185,6 +186,7 @@ namespace
         s.audio.copyFrom (0, 0, t.audio, 0, 0, length);
         s.pitchHz = t.pitchHz;
         s.note = t.note;
+        s.chord = t.chord;
         s.held = juce::jmin (t.held, length);
         s.measures = measure (s.audio.getReadPointer (0), length);
         return s;
@@ -354,6 +356,160 @@ float lockOf (float distanceDb)
 }
 
 //==============================================================================
+std::vector<int> findChord (const float* mono, int length)
+{
+    constexpr double chordLeast = 0.5;   // a further key weighs half the first's or more
+    // The sound's spectrum at 1.5 Hz a bin, its windows' powers averaged: what stays in place through
+    // the sound stands, what moves or is noise spreads.
+    constexpr int order = 15, size = 1 << order;
+
+    if (length < (int) (0.25 * rate))
+        return {};
+
+    juce::dsp::FFT fft (order);
+    juce::dsp::WindowingFunction<float> window ((size_t) size, juce::dsp::WindowingFunction<float>::hann);
+    std::vector<float> work ((size_t) size * 2), power ((size_t) size / 2, 0.0f);
+
+    for (int at = 0; at == 0 || at + size <= length; at += size / 4)
+    {
+        std::fill (work.begin(), work.end(), 0.0f);
+        std::copy (mono + at, mono + juce::jmin (length, at + size), work.begin());
+        window.multiplyWithWindowingTable (work.data(), (size_t) size);
+        fft.performFrequencyOnlyForwardTransform (work.data());
+
+        for (int i = 0; i < size / 2; ++i)
+            power[(size_t) i] += work[(size_t) i] * work[(size_t) i];
+    }
+
+    const auto hzPerBin = rate / size;
+
+    const auto energy = [&] (double fromHz, double toHz)
+    {
+        const auto a = juce::jlimit (1, size / 2 - 1, (int) std::lround (fromHz / hzPerBin));
+        const auto b = juce::jlimit (a, size / 2 - 1, (int) std::lround (toHz / hzPerBin));
+        auto sum = 0.0;
+
+        for (int i = a; i <= b; ++i)
+            sum += power[(size_t) i];
+
+        return sum / (b - a + 1);
+    };
+
+    const auto cents = [] (double c) { return std::pow (2.0, c / 1200.0); };
+
+    // A partial stands at a frequency when what is within 20 cents of it is 5 dB or more over what
+    // lies 30 to 50 cents to either side, and within 30 dB of the strongest: its amplitude, or 0.
+    auto strongest = 0.0;
+
+    for (int i = (int) (100.0 / hzPerBin); i < (int) (5000.0 / hzPerBin); ++i)
+        strongest = juce::jmax (strongest, (double) power[(size_t) i]);
+
+    if (strongest <= 0.0)
+        return {};
+
+    const auto standing = [&] (double hz)
+    {
+        if (hz < 100.0 || hz > 5000.0)
+            return 0.0;
+
+        auto top = 0.0;
+
+        for (int i = (int) std::floor (hz * cents (-20.0) / hzPerBin); i <= (int) std::ceil (hz * cents (20.0) / hzPerBin); ++i)
+            top = juce::jmax (top, (double) power[(size_t) juce::jlimit (1, size / 2 - 1, i)]);
+
+        const auto beside = 0.5 * (energy (hz * cents (-50.0), hz * cents (-30.0)) + energy (hz * cents (30.0), hz * cents (50.0)));
+        return top >= beside * 3.16 && top >= strongest * 0.001 ? std::sqrt (top) : 0.0;
+    };
+
+    // Noise has no notes: its spectrum is near flat from bin to bin, a sound of notes is mostly gaps.
+    {
+        auto logs = 0.0, sum = 0.0;
+        const auto from = (int) (100.0 / hzPerBin), to = (int) (5000.0 / hzPerBin);
+
+        for (int i = from; i < to; ++i)
+        {
+            logs += std::log ((double) power[(size_t) i] + 1.0e-30);
+            sum += power[(size_t) i];
+        }
+
+        if (std::exp (logs / (to - from)) > 0.05 * sum / (to - from))
+            return {};
+    }
+
+    // Each key's harmonics that stand, the first sixteen, their amplitudes compressed (a square root)
+    // so one loud partial doesn't speak for a key alone. A key's weight is those amplitudes summed,
+    // each weighed by (f + 27) / (h f + 320): low harmonics count most, and a low key's many count
+    // for less each (Klapuri's weights). The heaviest key is taken, what it accounts for is taken
+    // off the partials, and the next is weighed on what is left, six keys at most.
+    constexpr int lowest = 36, highest = 96, harmonics = 16;
+    const auto hzOf = [] (int key) { return 440.0 * std::pow (2.0, (key - 69) / 12.0); };
+    std::vector<std::array<double, harmonics>> left ((size_t) (highest - lowest + 1));
+
+    for (int key = lowest; key <= highest; ++key)
+        for (int h = 1; h <= harmonics; ++h)
+            left[(size_t) (key - lowest)][(size_t) h - 1] = std::sqrt (standing (hzOf (key) * h));
+
+    const auto gain = [&] (int key, int h) { return (hzOf (key) + 27.0) / (h * hzOf (key) + 320.0); };
+
+    const auto weigh = [&] (int key)
+    {
+        auto weight = 0.0;
+        auto stood = 0;
+
+        for (int h = 1; h <= harmonics; ++h)
+            if (const auto a = left[(size_t) (key - lowest)][(size_t) h - 1]; a > 0.0)
+            {
+                weight += a * gain (key, h);
+                ++stood;
+            }
+
+        return stood >= 3 ? weight : 0.0;
+    };
+
+    std::vector<int> chord;
+    auto first = 0.0;
+
+    while (chord.size() < 6)
+    {
+        auto best = -1;
+        auto bestWeight = 0.0;
+
+        for (int key = lowest; key <= highest; ++key)
+            if (const auto w = weigh (key); w > bestWeight)
+            {
+                best = key;
+                bestWeight = w;
+            }
+
+        if (best < 0 || bestWeight < first * chordLeast)
+            break;
+
+        if (first <= 0.0)
+            first = bestWeight;
+
+        chord.push_back (best);
+
+        // What it accounts for comes off every key's partial at that frequency.
+        for (int h = 1; h <= harmonics; ++h)
+        {
+            const auto hz = hzOf (best) * h;
+            const auto share = gain (best, h) / gain (best, 1);
+
+            for (int key = lowest; key <= highest; ++key)
+                for (int k = 1; k <= harmonics; ++k)
+                    if (std::abs (1200.0 * std::log2 (hzOf (key) * k / hz)) < 25.0)
+                    {
+                        auto& a = left[(size_t) (key - lowest)][(size_t) k - 1];
+                        a = key == best ? 0.0 : juce::jmax (0.0, a * (1.0 - share));
+                    }
+        }
+    }
+
+    std::sort (chord.begin(), chord.end());
+    return chord;
+}
+
+//==============================================================================
 Target prepare (const juce::AudioBuffer<float>& clip, double sampleRate)
 {
     Target t;
@@ -420,6 +576,23 @@ Target prepare (const juce::AudioBuffer<float>& clip, double sampleRate)
     const auto from = juce::jmin (samples - 1, (int) (0.02 * rate));
     t.pitchHz = WaveTables::findPitch (x + from, juce::jmin (samples - from, (int) (0.5 * rate)), rate);
     t.note = t.pitchHz > 0.0 ? juce::jlimit (12, 108, (int) std::lround (69.0 + 12.0 * std::log2 (t.pitchHz / 440.0))) : 60;
+
+
+    // Several notes at once: keys of three or more different names found in it (one note's own
+    // harmonics give its octaves and its fifth at most). It is rendered on all of them.
+    if (auto chord = findChord (x, samples); chord.size() >= 3)
+    {
+        std::set<int> names;
+
+        for (auto key : chord)
+            names.insert (key % 12);
+
+        if (names.size() >= 3)
+        {
+            t.note = chord.front();
+            t.chord = std::move (chord);
+        }
+    }
 
     t.measures = measure (x, samples);
     t.signature = SignalConsole::Renderer::measure (t.audio, rate);
@@ -504,11 +677,14 @@ namespace
             const auto count = juce::jmin (block, length - at);
             juce::MidiBuffer midi;
 
-            if (at == 0)
-                midi.addEvent (juce::MidiMessage::noteOn (1, target.note, velocity), 0);
+            for (auto key : target.chord.empty() ? std::vector<int> { target.note } : target.chord)
+            {
+                if (at == 0)
+                    midi.addEvent (juce::MidiMessage::noteOn (1, key, velocity), 0);
 
-            if (target.held >= at && target.held < at + count)
-                midi.addEvent (juce::MidiMessage::noteOff (1, target.note), target.held - at);
+                if (target.held >= at && target.held < at + count)
+                    midi.addEvent (juce::MidiMessage::noteOff (1, key), target.held - at);
+            }
 
             part.setSize (2, count, false, false, true);
             part.clear();
@@ -614,6 +790,16 @@ juce::String noteName (int note)
     return names[((note % 12) + 12) % 12] + juce::String (note / 12 - 1);
 }
 
+juce::String chordName (const Target& t)
+{
+    juce::StringArray names;
+
+    for (auto key : t.chord)
+        names.add (noteName (key));
+
+    return names.joinIntoString (" ");
+}
+
 namespace
 {
     /** The frame the target's note is loudest in, and the first after it that falls 20 dB under that. */
@@ -647,7 +833,8 @@ juce::String describe (const Target& t)
     const auto [peak, fall] = shapeOf (m);
     const auto brightness = meanOf (m.brightness);
     juce::String s;
-    s << (t.pitchHz > 0.0 ? noteName (t.note) + " (" + juce::String (t.pitchHz, 1) + " Hz)" : juce::String ("no clear pitch (matched at C4)"))
+    s << (! t.chord.empty() ? "a chord (" + chordName (t) + ")"
+          : t.pitchHz > 0.0 ? noteName (t.note) + " (" + juce::String (t.pitchHz, 1) + " Hz)" : juce::String ("no clear pitch (matched at C4)"))
       << ", " << juce::String (t.audio.getNumSamples() / rate, 2) << " s"
       << ", loudest at " << peak * 10 << " ms"
       << ", " << (fall >= m.frames ? juce::String ("held to the end") : "20 dB down by " + juce::String (fall * 10) + " ms")
