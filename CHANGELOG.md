@@ -4,6 +4,10 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The site's pages carry a picture and a description for sharing** (documents only)
+- A link to the site posted on X or elsewhere showed no picture: the pages had no Open Graph or X card tags. Every page now gives its title, its description, its address and a picture (the Torqwave banner, `docs/assets/social-card.png`) as a large card.
+- The repository's description on GitHub no longer names another product, and the `audacity-alternative` topic is gone.
+
 **Tests: Ask Torq's arrow check waits for the request before it** (tests only)
 - In 0.21.0's release run the check that the up arrow walks back through the requests failed once, on the Intel half under Rosetta: it pressed the arrow as soon as the answer's text showed, while the request was still finishing, and the arrows are refused while a request runs. It now waits for the request to finish, as does the follow-up check before it. Nothing in the app changed.
 - Tested: `--ai` (202 checks) on Apple silicon.

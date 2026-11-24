@@ -13,6 +13,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% if page.title %}{{ page.title | strip_html | escape }}{% unless page.home %} · Torqwave{% endunless %}{% else %}Torqwave{% endif %}</title>
 <meta name="description" content="{% if page.description %}{{ page.description | escape }}{% else %}{{ site.description | escape }}{% endif %}">
+{%- capture shared_title -%}{% if page.title %}{{ page.title | strip_html | escape }}{% unless page.home %} · Torqwave{% endunless %}{% else %}Torqwave{% endif %}{%- endcapture -%}
+{%- capture shared_text -%}{% if page.description %}{{ page.description | escape }}{% else %}{{ site.description | escape }}{% endif %}{%- endcapture %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Torqwave">
+<meta property="og:title" content="{{ shared_title }}">
+<meta property="og:description" content="{{ shared_text }}">
+<meta property="og:url" content="{{ site.address }}{{ page.url | replace: 'index.html', '' }}">
+<meta property="og:image" content="{{ site.address }}/assets/social-card.png">
+<meta property="og:image:width" content="1600">
+<meta property="og:image:height" content="900">
+<meta property="og:image:alt" content="Torqwave: a ridged waveform drawn in white lines over the name, and the words cut, shape, restore.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ shared_title }}">
+<meta name="twitter:description" content="{{ shared_text }}">
+<meta name="twitter:image" content="{{ site.address }}/assets/social-card.png">
+<meta name="twitter:image:alt" content="Torqwave: a ridged waveform drawn in white lines over the name, and the words cut, shape, restore.">
 <link rel="stylesheet" href="{{ root }}assets/site.css">
 </head>
 <body{% if section == 'guide' %} class="has-side"{% endif %}>
