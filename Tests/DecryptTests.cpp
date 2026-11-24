@@ -772,6 +772,140 @@ namespace
                    "decrypt: Again with a candidate on the keys but not taken, then Stop, gives back the patch the synth had before the search");
         }
 
+        // The panel in each of its states, with what a model adds (three lines it tried, a name it offers): nothing is
+        // drawn over anything else and nothing reaches past the panel's edge; after Take there is one question of a
+        // name, the model's in it; and how each of the model's tries went is whole wherever it is shown.
+        {
+            const juce::StringArray triedLines { "tried \"Enable additive texture\": kept, lock 71 to 78 %",
+                                                 "tried \"Broaden unison spread\": dropped, lock 70 % against 78 %",
+                                                 "tried \"Adjust noise character and bring the second filter in under it\": dropped, lock 64 % against 78 %" };
+            const juce::StringArray outcomes { "kept, lock 71 to 78 %", "dropped, lock 70 %", "dropped, lock 64 %" };
+            Advisor::Name velvet, longest;
+            velvet.name = "Velvet Hiss";
+            velvet.category = WaveSynth::patchCategories()[3];
+            longest.name = "A Very Long Name For A Patch Of This Kind";
+            longest.category = WaveSynth::patchCategories()[3];
+            const auto scratch = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-decrypt-panel-" + juce::String (juce::Time::getMillisecondCounter()));
+            EffectPresets::Store scratchPresets (scratch.getChildFile ("Presets"));
+            DecryptedPatches::Store::use (&scratchPresets, scratch.getChildFile ("Synth Decrypted.xml"));
+            juce::StringArray faults;
+            int states = 0, blocksSeen = 0;
+
+            const auto has = [&view] (const juce::String& what)
+            {
+                int n = 0;
+
+                for (auto& [name, at] : view.panelBlocks())
+                    n += name == what || name.startsWith (what + " \"") ? 1 : 0;
+
+                return n;
+            };
+
+            const auto says = [&view] (const juce::String& what, const juce::String& words)
+            {
+                for (auto& [name, at] : view.panelBlocks())
+                    if (name.startsWith (what + " \"") && name.contains (words))
+                        return true;
+
+                return false;
+            };
+
+            const auto look = [&] (const juce::String& state)
+            {
+                ++states;
+
+                for (auto scale : { 0.7f, 1.0f, 1.6f })
+                {
+                    window->setSize (juce::roundToInt (WaveSynthEditor::designWidth * scale), juce::roundToInt (WaveSynthEditor::designHeight * scale));
+                    const auto blocks = view.panelBlocks();
+                    const auto inside = view.panelBounds().reduced (15.5f, 8.0f);
+                    blocksSeen = juce::jmax (blocksSeen, (int) blocks.size());
+
+                    if (blocks.size() < 12)
+                        faults.addIfNotAlreadyThere (state + ": only " + juce::String ((int) blocks.size()) + " things in the panel");
+
+                    for (size_t i = 0; i < blocks.size(); ++i)
+                    {
+                        if (blocks[i].second.isEmpty() || ! inside.contains (blocks[i].second))
+                            faults.addIfNotAlreadyThere (state + ": " + blocks[i].first + " reaches outside the panel");
+
+                        for (size_t j = i + 1; j < blocks.size(); ++j)
+                            if (blocks[i].second.intersects (blocks[j].second))
+                                faults.addIfNotAlreadyThere (state + ": " + blocks[i].first + " is over " + blocks[j].first);
+                    }
+
+                    // How each try shown went is whole: the last of the model's lines, as many as there is room for.
+                    for (int n = 0; n < view.modelLinesShown(); ++n)
+                        if (! says ("outcome " + juce::String (n + 1), "\"" + outcomes[outcomes.size() - view.modelLinesShown() + n] + "\""))
+                            faults.addIfNotAlreadyThere (state + ": a try's outcome is not whole");
+
+                    if (view.isNaming() && view.nameBoxBounds() != [&] { for (auto& [name, at] : view.panelBlocks()) if (name == "name box") return at.toNearestInt(); return juce::Rectangle<int>(); }())
+                        faults.addIfNotAlreadyThere (state + ": the name box is not where the panel planned it");
+                }
+
+                window->setSize (WaveSynthEditor::designWidth, WaveSynthEditor::designHeight);
+            };
+
+            view.decrypt (clip, rate, "a recording with a long name 03");
+            TestUtils::runUntil ([&view] { return view.getSearch() != nullptr && view.candidateCentre (11) != view.candidateCentre (-1); }, 20000);
+            look ("searching");
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            look ("ended");
+            view.setTestModel (triedLines, {});
+            look ("ended, the model's tries");
+            const auto triedBefore = view.modelLinesShown();
+            click (view.chainBounds (juce::jmax (0, view.getChainLength() - 2)).getCentre());
+            look ("a step chosen");
+            click (view.takeBounds().getCentre());
+            look ("taken");
+            view.setTestModel (triedLines, velvet);
+            look ("taken, the model's tries and name");
+            const auto triedAfter = view.modelLinesShown();
+            const auto oneQuestion = view.isNaming() && has ("Use") == 1 && has ("No") == 0 && has ("name offered") == 1 && has ("KEEP IT") == 1
+                                     && says ("name offered", "Velvet Hiss") && says ("name offered", "(" + velvet.category + ")");
+            view.setTestModel (triedLines, longest);
+            look ("taken, a long name offered");
+            const auto categoryWhole = says ("name offered", "(" + longest.category + ")");
+            view.typeName ("Cathedral Stack Pad");      // a factory patch's name: refused, with the reason
+            view.saveName();
+            look ("taken, a name refused");
+            const auto refusedSaid = view.nameNote().isNotEmpty() && has ("name note") == 1;
+            click (view.useNameBounds().getCentre());
+            look ("taken, the model's name used");
+            const auto usedName = view.isNaming() && view.nameTyped() == longest.name.substring (0, 40) && view.nameCategory() == longest.category
+                                  && view.offeredName().name.isEmpty() && has ("Use") == 0;
+            view.setTestModel (triedLines, velvet);
+            view.notNow();
+            look ("not now, a name offered");
+            const auto afterNotNow = ! view.isNaming() && has ("Use") == 1 && has ("No") == 1 && has ("KEEP IT") == 0;
+            click (view.refuseNameBounds().getCentre());
+            const auto refusedGone = view.offeredName().name.isEmpty() && has ("Use") == 0;
+            view.decrypt (clip, rate, "reese");
+            TestUtils::runUntil ([&view] { return view.hasEnded(); }, 60000);
+            click (view.takeBounds().getCentre());
+            view.typeName ("Panel Check");
+            const auto saved = view.saveName();
+            view.setTestModel (triedLines, {});
+            look ("saved");
+            DecryptedPatches::Store::use (nullptr, {});
+            scratch.deleteRecursively();
+
+            if (! oneQuestion)      faults.add ("after Take the model's name is not one line with Use in the name prompt");
+            if (! categoryWhole)    faults.add ("a long name offered cut its category off");
+            if (! refusedSaid)      faults.add ("a refused name's reason is not shown");
+            if (! usedName)         faults.add ("Use did not put the model's name and category into the prompt");
+            if (! afterNotNow)      faults.add ("after Not Now a name offered has not Use and No");
+            if (! refusedGone)      faults.add ("No did not take the offer away");
+            if (! saved)            faults.add ("the name was not saved");
+            if (triedBefore != 3)   faults.add ("before Take only " + juce::String (triedBefore) + " of the model's three tries are shown");
+
+            check (faults.isEmpty(),
+                   "decrypt: in " + juce::String (states) + " states of the panel at 70 %, 100 % and 160 % (up to " + juce::String (blocksSeen) + " lines, bars and controls) nothing is over "
+                   "anything else and nothing reaches outside the panel; the model's three tries show how each went in full (" + juce::String (triedBefore) + " of them before Take, "
+                   + juce::String (triedAfter) + " with Take's name asked for); and after Take there is one question of a name, the model's a line in it with Use"
+                   + (faults.isEmpty() ? juce::String() : " (failed: " + faults.joinIntoString ("; ") + ")"));
+        }
+
         // Crowded text: the heading and its status never meet, the chain's hint fits its panel, and the lock labels on
         // the scope never print over each other, the one under the pointer always labelled.
         {
@@ -816,11 +950,17 @@ namespace
             // However close together they sit, a double-click on a candidate puts that one on the keys, not a neighbour.
             const auto& shownBest = view.getSearch()->getProgress().best;
             hits = 0;
+            juce::StringArray missed;
 
             for (int i = 0; i < (int) shownBest.size(); ++i)
             {
                 click (view.candidateCentre (i), 2);
-                hits += alikeButLevel (SignalConsole::capture (synth), shownBest[(size_t) i].patch) ? 1 : 0;
+                const auto hit = alikeButLevel (SignalConsole::capture (synth), shownBest[(size_t) i].patch);
+                hits += hit ? 1 : 0;
+
+                if (! hit)
+                    missed.add (juce::String (i) + " (lock " + juce::String (shownBest[(size_t) i].lock, 1) + ", " + juce::String (view.candidateCentre (i).getDistanceFrom (view.candidateCentre (i == 0 ? 1 : i - 1)), 1)
+                                + " points from its neighbour, the keys hold " + synth.getPatchName() + ")");
             }
 
             view.stop();
@@ -829,7 +969,8 @@ namespace
                    "decrypt: at 70 %, 100 % and 160 % the panel's heading and status never meet (the status " + juce::String (under ? "under" : "beside")
                        + " the heading here), the chain's hint fits (" + juce::String (hint, 0) + " of " + juce::String (room, 0) + " points), and no lock label on the scope "
                        "prints over another, the one under the pointer always labelled (" + juce::String (labelled) + " of " + juce::String (candidates) + " labelled); "
-                       "a double-click on each candidate puts that one on the keys (" + juce::String (hits) + " of " + juce::String (candidates) + ")");
+                       "a double-click on each candidate puts that one on the keys (" + juce::String (hits) + " of " + juce::String (candidates) + ")"
+                       + (missed.isEmpty() ? juce::String() : " (missed: " + missed.joinIntoString ("; ") + ")"));
         }
 
         // The chain: a strip of tiles across the page and the same links as a path on the scope; links that differ enough
@@ -1147,7 +1288,7 @@ namespace
             else if (state.way == 2)
             {
                 SoundDrops::isSound = [] (const juce::var& d) { return d.toString() == "openfile:0"; };
-                SoundDrops::soundOf = [&second] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { second, rate, "second" }; };
+                SoundDrops::soundOf = [&second] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { second, rate, "second", {}, {} }; };
                 page.view->itemDropped (juce::DragAndDropTarget::SourceDetails ("openfile:0", nullptr, {}));
                 SoundDrops::isSound = nullptr;
                 SoundDrops::soundOf = nullptr;
@@ -1537,8 +1678,33 @@ void saveDecryptWindow (const juce::File& folder)
     view.saveName();
     view.decrypt (recordingOf ("Abyss Reese", 45, 0.8, 1.5), rate, "reese");
     TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
-    clickAt (view.takeBounds().getCentre());
-    save ("decrypt-name-prompt");
+    {
+        // What a model adds: three lines it tried, and after Take a name it offers, in the name's prompt.
+        const juce::StringArray tried { "tried \"Enable additive texture\": kept, lock 71 to 78 %", "tried \"Broaden unison spread\": dropped, lock 70 % against 78 %",
+                                        "tried \"Adjust noise character\": dropped, lock 64 % against 78 %" };
+        Advisor::Name offered;
+        offered.name = "Velvet Hiss";
+        offered.category = WaveSynth::patchCategories()[3];
+        view.setTestModel (tried, {});
+        save ("decrypt-model-tried");
+        clickAt (view.takeBounds().getCentre());
+        save ("decrypt-name-prompt");
+        view.setTestModel (tried, offered);
+        save ("decrypt-name-prompt-model");
+        window->setSize (WaveSynthEditor::designWidth * 7 / 10, WaveSynthEditor::designHeight * 7 / 10);
+        save ("decrypt-name-prompt-model-70");
+        window->setSize (WaveSynthEditor::designWidth, WaveSynthEditor::designHeight);
+        clickAt (view.useNameBounds().getCentre());
+        save ("decrypt-name-prompt-model-used");
+        view.setTestModel (tried, offered);
+        view.notNow();
+        save ("decrypt-name-offered-after-not-now");
+        view.useOfferedName (false);
+        view.decrypt (recordingOf ("Abyss Reese", 45, 0.8, 1.5), rate, "reese");
+        TestUtils::runUntil ([&view] { return view.hasEnded(); }, 120000);
+        clickAt (view.takeBounds().getCentre());
+    }
+
     view.typeName ("Night Reese");
     view.saveName();
     save ("decrypt-name-saved");
@@ -1769,7 +1935,7 @@ namespace
                 else if (state.way == 2)
                 {
                     SoundDrops::isSound = [] (const juce::var& d) { return d.toString() == "openfile:0"; };
-                    SoundDrops::soundOf = [&second] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { second, rate, "second" }; };
+                    SoundDrops::soundOf = [&second] (const juce::var&, double) -> std::optional<SoundDrops::Sound> { return SoundDrops::Sound { second, rate, "second", {}, {} }; };
                     view.itemDropped (juce::DragAndDropTarget::SourceDetails ("openfile:0", nullptr, {}));
                     SoundDrops::isSound = nullptr;
                     SoundDrops::soundOf = nullptr;
@@ -1994,11 +2160,11 @@ namespace
                 });
             };
 
-            handOver ("two channels at 48 kHz", true, SoundDrops::Sound { bellAt (48000.0, 2, 0.0, 0.9), 48000.0, "bell" });
-            handOver ("one channel at 44.1 kHz", true, SoundDrops::Sound { bellAt (44100.0, 1, 0.0, 0.9), 44100.0, "bell" });
-            handOver ("two channels at 96 kHz", true, SoundDrops::Sound { bellAt (96000.0, 2, 0.0, 0.9), 96000.0, "bell" });
-            handOver ("the first ten seconds of a longer file, the note 3 s in", true, SoundDrops::Sound { bellAt (48000.0, 2, 3.0, 10.0), 48000.0, "bell" });
-            handOver ("ten seconds of silence (the note comes later)", false, SoundDrops::Sound { bellAt (48000.0, 2, 9.99, 10.0), 48000.0, "bell" });
+            handOver ("two channels at 48 kHz", true, SoundDrops::Sound { bellAt (48000.0, 2, 0.0, 0.9), 48000.0, "bell", {}, {} });
+            handOver ("one channel at 44.1 kHz", true, SoundDrops::Sound { bellAt (44100.0, 1, 0.0, 0.9), 44100.0, "bell", {}, {} });
+            handOver ("two channels at 96 kHz", true, SoundDrops::Sound { bellAt (96000.0, 2, 0.0, 0.9), 96000.0, "bell", {}, {} });
+            handOver ("the first ten seconds of a longer file, the note 3 s in", true, SoundDrops::Sound { bellAt (48000.0, 2, 3.0, 10.0), 48000.0, "bell", {}, {} });
+            handOver ("ten seconds of silence (the note comes later)", false, SoundDrops::Sound { bellAt (48000.0, 2, 9.99, 10.0), 48000.0, "bell", {}, {} });
             handOver ("a file with no audio yet (nothing handed over)", false, std::nullopt);
         }
 
