@@ -1,61 +1,63 @@
 {
  "schema": 1,
  "release": "0.21.1",
- "previous": "0.19.2",
- "previous_note": "The 0.19.2 column is the last announced release. 0.20.0, 0.20.1 and 0.21.0 came out on 2026-11-24 and were not announced; each keeps its snapshot.",
+ "previous": "0.20.0",
+ "previous_note": "The 0.20.0 column is the release 0.21.1 is set against. 0.20.1 and 0.21.0 came out between them, on 2026-11-24; each keeps its snapshot, and what they added is counted here as new since 0.20.0.",
  "status": "released",
  "as_of": "2026-11-25",
  "release_numbers": [
   {
-   "label": "Synth patches",
-   "prev": 0,
-   "now": 3743,
-   "note": "Torqwave Synth, in 29 categories; 1,280 hand-made",
-   "source": "release notes"
+   "label": "Drum pads",
+   "prev": 30,
+   "now": 64,
+   "note": "30 sounds and 34 pads of your own",
+   "source": "CHANGELOG.md"
   },
   {
-   "label": "Built-in instruments",
-   "prev": 1,
-   "now": 4,
-   "note": "Torqwave Synth, StringSwarm, Basic Drums, Torqwave Sampler (Basic Synth before)",
-   "source": "README.md"
-  },
-  {
-   "label": "Sequence presets",
-   "prev": 0,
-   "now": 1032,
-   "note": "in 37 styles, with 116 starter kits",
-   "source": "README.md"
-  },
-  {
-   "label": "StringSwarm presets",
-   "prev": 0,
-   "now": 296,
-   "note": "strings on one note, or a swarm of oscillators",
-   "source": "README.md"
+   "label": "Drum sources",
+   "prev": 30,
+   "now": 54,
+   "note": "24 more synthesized sounds, for any pad",
+   "source": "CHANGELOG.md"
   },
   {
    "label": "Drum kits",
-   "prev": 0,
+   "prev": 7,
    "now": 15,
-   "note": "Basic Drums: 54 synthesized sources, or your own samples",
-   "source": "CHANGELOG.md (Unreleased)"
+   "note": "five came in 0.21.0, three in 0.21.1",
+   "source": "CHANGELOG.md"
   },
   {
-   "label": "Drum pads",
+   "label": "Layers a pad",
    "prev": 0,
-   "now": 64,
-   "note": "30 sounds and 34 pads of your own, effects on each",
-   "source": "CHANGELOG.md (Unreleased)"
+   "now": 16,
+   "note": "your own samples by velocity, with round robin",
+   "source": "CHANGELOG.md"
+  },
+  {
+   "label": "Your choke groups",
+   "prev": 0,
+   "now": 8,
+   "note": "beside the three built in",
+   "source": "CHANGELOG.md"
+  },
+  {
+   "label": "Sequence presets",
+   "prev": 1018,
+   "now": 1032,
+   "note": "in 37 styles, with 116 starter kits",
+   "source": "README.md"
   }
  ],
  "release_firsts": [
-  "Basic Drums plays your own samples: 16 velocity layers a pad, round robin",
-  "A folder of sounds, or a Battery 4 kit you own, laid on the pads",
-  "Decrypt: a synth patch from a recording of one note",
-  "Torqwave Sampler: your own sounds across the keys, or cut into slices",
-  "Continue where you left off: files and session back, unsaved work too",
-  "A wavetable from any sound dropped on an oscillator"
+  "Sample pads: your own sounds on any drum pad, in layers",
+  "On each pad: envelope, transient shaper, saturator, EQ, compressor",
+  "Imports a folder of sounds, or a Battery 4 kit you own",
+  "Modern types for 21 drum sounds",
+  "Continue where you left off, unsaved sessions too",
+  "Ask Torq remembers the conversation",
+  "Maximizer, Click Repair and Repair Clipping corrected",
+  "Panic: every instrument silenced"
  ],
  "products": {
   "torqwave": {
@@ -349,7 +351,7 @@
     },
     "current_version": {
      "value": "info",
-     "note": "0.21.1, released 2026-11-25: the first announced release since 0.19.2. 0.21.0 came out on 2026-11-24.",
+     "note": "0.21.1, released 2026-11-25. 0.20.1 and 0.21.0 came out on 2026-11-24, after 0.20.0.",
      "source": "CHANGELOG.md"
     },
     "signed_installers": {
@@ -371,11 +373,11 @@
   },
   "torqwave_prev": {
    "name": "Torqwave",
-   "version": "0.19.2",
+   "version": "0.20.0",
    "edition": "the only edition",
-   "version_date": "2026-11-21",
+   "version_date": "2026-11-24",
    "looked_up": "2026-11-23",
-   "source_note": "This repository at tag v0.19.2.",
+   "source_note": "Torqwave 0.20.0's own snapshot, data/snapshots/0.20.0.json.",
    "cells": {
     "wave_editor": {
      "value": "yes",
@@ -508,8 +510,8 @@
      "source": "docs/guide/07-instruments-and-midi.md"
     },
     "factory_patterns": {
-     "value": "no",
-     "note": "The Sequence Library shipped empty: no factory sequences.",
+     "value": "yes",
+     "note": "1,018 factory sequence presets and 116 starter kits in 37 styles.",
      "source": "README.md"
     },
     "midi_out_surfaces": {
@@ -529,32 +531,32 @@
     },
     "builtin_synth": {
      "value": "yes",
-     "note": "Basic Synth: one waveform, an envelope and a filter.",
+     "note": "Torqwave Synth (wavetable, three oscillators) and StringSwarm.",
      "source": "docs/guide/07-instruments-and-midi.md"
     },
     "wavetable_user_tables": {
-     "value": "no",
-     "note": "Basic Synth has no wavetables.",
+     "value": "yes",
+     "note": "A sound dropped on an oscillator of Torqwave Synth becomes its wavetable.",
      "source": "docs/guide/07-instruments-and-midi.md"
     },
     "builtin_drums": {
-     "value": "no",
-     "note": "No drum instrument.",
+     "value": "yes",
+     "note": "Basic Drums: 30 synthesised sounds on pads covering the 47 General MIDI drum notes, seven kits.",
      "source": "docs/guide/07-instruments-and-midi.md"
     },
     "builtin_sampler": {
-     "value": "no",
-     "note": "No sampler instrument.",
+     "value": "yes",
+     "note": "Torqwave Sampler: the user's sounds across the keys in up to 128 zones with loops and crossfades, or cut into slices on keys. Samples are held in memory; no import of SFZ or SF2 libraries, no round robins.",
      "source": "docs/guide/07-instruments-and-midi.md"
     },
     "factory_instrument_presets": {
-     "value": "partial",
-     "note": "1 instrument, Basic Synth, with a short presets menu; the docs give no count.",
+     "value": "yes",
+     "note": "4 instruments: Torqwave Synth with 3,743 patches in 29 categories, StringSwarm with 296 presets, Basic Drums with seven kits, Torqwave Sampler with 11 presets.",
      "source": "README.md"
     },
     "patch_from_recording": {
-     "value": "no",
-     "note": "Not in 0.19.2.",
+     "value": "yes",
+     "note": "Decrypt searches for a Torqwave Synth patch that plays like a recording of one note. Close for sounds the synth made; loose for voices, drums and samples; one note, effects off.",
      "source": "docs/guide/07-instruments-and-midi.md"
     },
     "vst3": {
@@ -659,7 +661,7 @@
     },
     "current_version": {
      "value": "info",
-     "note": "0.19.2, released 2026-11-21.",
+     "note": "0.20.0, released 2026-11-24.",
      "source": "CHANGELOG.md"
     },
     "signed_installers": {

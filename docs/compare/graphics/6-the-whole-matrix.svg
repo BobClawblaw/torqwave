@@ -6,7 +6,7 @@
 <rect x="420.0" y="150.0" width="132.9" height="2356.0" rx="8" fill="#1d2126"/>
 <rect x="420.0" y="150.0" width="132.9" height="5.0" rx="2" fill="#4fc3a1"/>
 <text x="460.2" y="398.0" font-size="19" fill="#4fc3a1" text-anchor="start" font-weight="bold" transform="rotate(-90 460.2 398.0)">Torqwave 0.21.1</text>
-<text x="526.7" y="398.0" font-size="19" fill="#ffffff" text-anchor="start" font-weight="bold" transform="rotate(-90 526.7 398.0)">Torqwave 0.19.2</text>
+<text x="526.7" y="398.0" font-size="19" fill="#ffffff" text-anchor="start" font-weight="bold" transform="rotate(-90 526.7 398.0)">Torqwave 0.20.0</text>
 <text x="593.2" y="398.0" font-size="19" fill="#d8dde3" text-anchor="start" font-weight="bold" transform="rotate(-90 593.2 398.0)">Adobe Audition</text>
 <text x="659.6" y="398.0" font-size="19" fill="#d8dde3" text-anchor="start" font-weight="bold" transform="rotate(-90 659.6 398.0)">Audacity</text>
 <text x="726.1" y="398.0" font-size="19" fill="#d8dde3" text-anchor="start" font-weight="bold" transform="rotate(-90 726.1 398.0)">iZotope RX</text>
@@ -600,7 +600,7 @@
 <rect x="552.9" y="1412.0" width="1007.1" height="30.0" rx="0" fill="#16191d"/>
 <text x="50.0" y="1433.0" font-size="18" fill="#d8dde3" text-anchor="start" font-weight="normal">Factory MIDI patterns</text>
 <circle cx="453.2" cy="1427.0" r="9" fill="#4cc38a"/>
-<line x1="511.7" y1="1427.0" x2="527.7" y2="1427.0" stroke="#434a54" stroke-width="3"/>
+<circle cx="519.7" cy="1427.0" r="9" fill="#4cc38a"/>
 <line x1="578.2" y1="1427.0" x2="594.2" y2="1427.0" stroke="#434a54" stroke-width="3"/>
 <line x1="644.6" y1="1427.0" x2="660.6" y2="1427.0" stroke="#434a54" stroke-width="3"/>
 <line x1="711.1" y1="1427.0" x2="727.1" y2="1427.0" stroke="#434a54" stroke-width="3"/>
@@ -701,7 +701,7 @@
 <circle cx="1516.8" cy="1591.0" r="9" fill="#4cc38a"/>
 <text x="50.0" y="1627.0" font-size="18" fill="#d8dde3" text-anchor="start" font-weight="normal">Wavetable from your own audio</text>
 <circle cx="453.2" cy="1621.0" r="9" fill="#4cc38a"/>
-<line x1="511.7" y1="1621.0" x2="527.7" y2="1621.0" stroke="#434a54" stroke-width="3"/>
+<circle cx="519.7" cy="1621.0" r="9" fill="#4cc38a"/>
 <line x1="578.2" y1="1621.0" x2="594.2" y2="1621.0" stroke="#434a54" stroke-width="3"/>
 <line x1="644.6" y1="1621.0" x2="660.6" y2="1621.0" stroke="#434a54" stroke-width="3"/>
 <line x1="711.1" y1="1621.0" x2="727.1" y2="1621.0" stroke="#434a54" stroke-width="3"/>
@@ -724,7 +724,7 @@
 <rect x="552.9" y="1636.0" width="1007.1" height="30.0" rx="0" fill="#16191d"/>
 <text x="50.0" y="1657.0" font-size="18" fill="#d8dde3" text-anchor="start" font-weight="normal">Built-in drum instrument</text>
 <circle cx="453.2" cy="1651.0" r="9" fill="#4cc38a"/>
-<line x1="511.7" y1="1651.0" x2="527.7" y2="1651.0" stroke="#434a54" stroke-width="3"/>
+<circle cx="519.7" cy="1651.0" r="9" fill="#4cc38a"/>
 <line x1="578.2" y1="1651.0" x2="594.2" y2="1651.0" stroke="#434a54" stroke-width="3"/>
 <line x1="644.6" y1="1651.0" x2="660.6" y2="1651.0" stroke="#434a54" stroke-width="3"/>
 <line x1="711.1" y1="1651.0" x2="727.1" y2="1651.0" stroke="#434a54" stroke-width="3"/>
@@ -743,7 +743,7 @@
 <line x1="1508.8" y1="1651.0" x2="1524.8" y2="1651.0" stroke="#434a54" stroke-width="3"/>
 <text x="50.0" y="1687.0" font-size="18" fill="#d8dde3" text-anchor="start" font-weight="normal">Built-in sampler</text>
 <circle cx="453.2" cy="1681.0" r="9" fill="#4cc38a"/>
-<line x1="511.7" y1="1681.0" x2="527.7" y2="1681.0" stroke="#434a54" stroke-width="3"/>
+<circle cx="519.7" cy="1681.0" r="9" fill="#4cc38a"/>
 <line x1="578.2" y1="1681.0" x2="594.2" y2="1681.0" stroke="#434a54" stroke-width="3"/>
 <line x1="644.6" y1="1681.0" x2="660.6" y2="1681.0" stroke="#434a54" stroke-width="3"/>
 <line x1="711.1" y1="1681.0" x2="727.1" y2="1681.0" stroke="#434a54" stroke-width="3"/>
@@ -764,8 +764,7 @@
 <rect x="552.9" y="1696.0" width="1007.1" height="30.0" rx="0" fill="#16191d"/>
 <text x="50.0" y="1717.0" font-size="18" fill="#d8dde3" text-anchor="start" font-weight="normal">Factory instrument sounds</text>
 <circle cx="453.2" cy="1711.0" r="9" fill="#4cc38a"/>
-<circle cx="519.7" cy="1711.0" r="8" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 519.7 1702.0 A 9 9 0 0 0 519.7 1720.0 Z" fill="#e3c74f"/>
+<circle cx="519.7" cy="1711.0" r="9" fill="#4cc38a"/>
 <line x1="578.2" y1="1711.0" x2="594.2" y2="1711.0" stroke="#434a54" stroke-width="3"/>
 <line x1="644.6" y1="1711.0" x2="660.6" y2="1711.0" stroke="#434a54" stroke-width="3"/>
 <line x1="711.1" y1="1711.0" x2="727.1" y2="1711.0" stroke="#434a54" stroke-width="3"/>
@@ -783,7 +782,7 @@
 <circle cx="1516.8" cy="1711.0" r="9" fill="#4cc38a"/>
 <text x="50.0" y="1747.0" font-size="18" fill="#d8dde3" text-anchor="start" font-weight="normal">Synth patch from a recording</text>
 <circle cx="453.2" cy="1741.0" r="9" fill="#4cc38a"/>
-<line x1="511.7" y1="1741.0" x2="527.7" y2="1741.0" stroke="#434a54" stroke-width="3"/>
+<circle cx="519.7" cy="1741.0" r="9" fill="#4cc38a"/>
 <line x1="578.2" y1="1741.0" x2="594.2" y2="1741.0" stroke="#434a54" stroke-width="3"/>
 <line x1="644.6" y1="1741.0" x2="660.6" y2="1741.0" stroke="#434a54" stroke-width="3"/>
 <line x1="711.1" y1="1741.0" x2="727.1" y2="1741.0" stroke="#434a54" stroke-width="3"/>

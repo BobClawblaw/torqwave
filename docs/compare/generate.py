@@ -151,10 +151,12 @@ def graphic_numbers(defs, snap):
     s.rect(x, y0, W - 50 - x, 2 * th + gap, RAISED, 10, LINE)
     s.text(x + 28, y0 + 52, f'Also new since {snap["previous"]}', 28, WHITE, weight="bold")
     y = y0 + 104
+    many = len(snap["release_firsts"]) > 6   # a longer list is set a little smaller, to fit the panel
+    size, step, space, wrap = (21, 28, 17, 36) if many else (22, 30, 22, 34)
     for item in snap["release_firsts"]:
         words, lines, cur = item.split(" "), [], ""
         for w in words:
-            if len(cur) + len(w) + 1 > 34:
+            if len(cur) + len(w) + 1 > wrap:
                 lines.append(cur)
                 cur = w
             else:
@@ -162,9 +164,9 @@ def graphic_numbers(defs, snap):
         lines.append(cur)
         s.rect(x + 28, y - 16, 8, 8, ACCENT, 2)
         for ln in lines:
-            s.text(x + 50, y - 4, ln, 22, TEXT)
-            y += 30
-        y += 22
+            s.text(x + 50, y - 4, ln, size, TEXT)
+            y += step
+        y += space
     return s.save("1-release-by-the-numbers.svg")
 
 
@@ -242,8 +244,9 @@ def graphic_whole(defs, snap):
 
 def trend_points(defs, snaps, announced_only=False):
     """Torqwave's coverage by release. With announced_only, a release whose snapshot says
-    "announced": false is left out: the graphic and MATRIX.md show the releases people were told
-    about, and the snapshots keep them all."""
+    "announced": false is left out, and so is any release before the one the newest snapshot is set
+    against (its "previous"): the graphic and MATRIX.md show the releases being compared, and the
+    snapshots keep them all."""
     rows = all_rows(defs)
     pts = []
     for i, snap in enumerate(snaps):
@@ -252,6 +255,8 @@ def trend_points(defs, snaps, announced_only=False):
         if announced_only and snap.get("announced") is False:
             continue
         pts.append((snap["products"]["torqwave"]["version"], coverage(snap["products"]["torqwave"]["cells"], rows)))
+    if announced_only:
+        pts = [p for p in pts if vkey(p[0]) >= vkey(snaps[-1]["previous"])]
     return pts, len(rows)
 
 
@@ -390,7 +395,7 @@ def matrix_md(defs, snaps):
     quiet = [s["release"] for s in snaps if s.get("announced") is False]
     if quiet:
         names = quiet[0] if len(quiet) == 1 else ", ".join(quiet[:-1]) + " and " + quiet[-1]
-        o.append(f'\nAnnounced releases only. {names} came out between them without an announcement; their snapshots are in `data/snapshots/`.')
+        o.append(f'\nThe releases the comparison is drawn for. {names} came out between them; their snapshots are in `data/snapshots/`.')
     # behind and ahead, computed
     o.append("\n## Where Torqwave is behind\n")
     o.append(f"Rows where Torqwave {snap['release']} is no or partial and at least two of the {len(comp)} other products are yes.\n")
