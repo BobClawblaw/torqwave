@@ -389,7 +389,8 @@ def matrix_md(defs, snaps):
         o.append(f'| {ver} | {c["yes"]} | {c["partial"]} | {c["no"]} | {total} |')
     quiet = [s["release"] for s in snaps if s.get("announced") is False]
     if quiet:
-        o.append(f'\nAnnounced releases only. {" and ".join(quiet)} came out between them without an announcement; their snapshots are in `data/snapshots/`.')
+        names = quiet[0] if len(quiet) == 1 else ", ".join(quiet[:-1]) + " and " + quiet[-1]
+        o.append(f'\nAnnounced releases only. {names} came out between them without an announcement; their snapshots are in `data/snapshots/`.')
     # behind and ahead, computed
     o.append("\n## Where Torqwave is behind\n")
     o.append(f"Rows where Torqwave {snap['release']} is no or partial and at least two of the {len(comp)} other products are yes.\n")

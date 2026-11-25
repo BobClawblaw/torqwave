@@ -66,6 +66,19 @@ The cells marked `not confirmed` are listed in MATRIX.md under "Cells not confir
 
 ## 0.21.0
 
-- 0.21.0 is the first announced release since 0.19.2, so its graphics set it against 0.19.2. 0.20.0 and 0.20.1 keep their snapshots, marked `"announced": false`: the graphic's panel and MATRIX.md's table of Torqwave by release show announced releases only (0.19.2 and 0.21.0).
+- 0.21.0 was to be the first announced release since 0.19.2, so its graphics set it against 0.19.2; in the end it was not announced (see 0.21.1). 0.20.0 and 0.20.1 keep their snapshots, marked `"announced": false`: the graphic's panel and MATRIX.md's table of Torqwave by release show announced releases only.
 - It adds a Modern type for 21 of Basic Drums' sounds, five kits and fourteen sequence presets, and corrects the Maximizer, Click and Pop Repair and Repair Clipping. No row changed its value: the rows already said yes for built-in drums, factory patterns, a limiter and click repair, so Torqwave's counts are the same as 0.20.1's (45 of 53). The notes of the drums, factory patterns and presets rows carry the new numbers.
+- The other products' cells were not read again for it: they are as read on 2026-11-23.
+
+## 0.21.1
+
+- 0.21.0 was not announced, so 0.21.1 is the first announced release since 0.19.2 and its graphics set it against 0.19.2. 0.21.0's snapshot is marked `"announced": false` with the two before it; the panel and the table of Torqwave by release show 0.19.2 and 0.21.1.
+- It makes Basic Drums a drum sampler as well as a drum synth: a Sample type on every pad with up to 16 velocity layers and round robin, 64 pads, five more effects on each pad, 54 synthesized sources, fifteen kits, eight choke groups of the user's own, and imports of a folder of sounds or a Battery 4 kit file. No row changed its value, so the counts are 0.21.0's (45 of 53):
+  - **Built-in drum instrument** was yes already, since the row asks for a drum machine or a drum sampler. Its note now says what the instrument is, and that the changelog calls the sample pads, the pad effects, the new sources and the imports first working versions not yet tried by hand.
+  - **Built-in sampler** stays yes on Torqwave Sampler alone: the row is about samples across the keys, which drum pads are not.
+  - **Factory instrument sounds** and **Step or drum grid** stay yes; their notes carry the fifteen kits and the user pads' rows.
+  - **A typed request becomes edits** stays partial: Ask Torq is still experimental, off to begin with, and ships no model. The follow-ups being measured with a real model is in its note.
+  - Nothing else in the release touches a row: keeping an unsaved session at Continue where you left off and the Panic command have no row.
+- No row was added for a drum sampler's depth (velocity layers, round robin, importing another product's kits): each would need a cell for the fifteen other products read from their own documentation, and this release's turn-round did not allow that reading. It is the first row to consider next time.
+- The release graphic's last two tiles are now drum kits (15) and drum pads (64); audition patterns (93, unchanged) left the tiles.
 - The other products' cells were not read again for it: they are as read on 2026-11-23.

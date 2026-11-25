@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2576" viewBox="0 0 1600 2576" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
 <rect width="1600" height="2576" fill="#111317"/>
-<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.21.0 against the alternatives: the whole matrix</text>
+<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.21.1 against the alternatives: the whole matrix</text>
 <text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">53 rows in 11 areas, 15 products, each from its own documentation</text>
-<text x="1550.0" y="2548.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-24. Torqwave 0.21.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
+<text x="1550.0" y="2548.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-25. Torqwave 0.21.1 is about to be released. Sources and method: docs/compare in the Torqwave repository.</text>
 <rect x="420.0" y="150.0" width="132.9" height="2356.0" rx="8" fill="#1d2126"/>
 <rect x="420.0" y="150.0" width="132.9" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="460.2" y="398.0" font-size="19" fill="#4fc3a1" text-anchor="start" font-weight="bold" transform="rotate(-90 460.2 398.0)">Torqwave 0.21.0</text>
+<text x="460.2" y="398.0" font-size="19" fill="#4fc3a1" text-anchor="start" font-weight="bold" transform="rotate(-90 460.2 398.0)">Torqwave 0.21.1</text>
 <text x="526.7" y="398.0" font-size="19" fill="#ffffff" text-anchor="start" font-weight="bold" transform="rotate(-90 526.7 398.0)">Torqwave 0.19.2</text>
 <text x="593.2" y="398.0" font-size="19" fill="#d8dde3" text-anchor="start" font-weight="bold" transform="rotate(-90 593.2 398.0)">Adobe Audition</text>
 <text x="659.6" y="398.0" font-size="19" fill="#d8dde3" text-anchor="start" font-weight="bold" transform="rotate(-90 659.6 398.0)">Audacity</text>

@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
 <rect width="1600" height="900" fill="#111317"/>
-<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.21.0: what it adds over 0.19.2</text>
+<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.21.1: what it adds over 0.19.2</text>
 <text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">By the numbers, counted from the release&#x27;s own files and documentation</text>
-<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-24. Torqwave 0.21.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
+<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-25. Torqwave 0.21.1 is about to be released. Sources and method: docs/compare in the Torqwave repository.</text>
 <rect x="50.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="50.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
 <text x="74.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">3,743</text>
@@ -34,39 +34,38 @@
 <text x="74.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">swarm of oscillators</text>
 <rect x="390.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="390.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="414.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">12</text>
+<text x="414.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">15</text>
 <text x="414.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Drum kits</text>
 <text x="414.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
-<text x="414.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Basic Drums: 30 sounds on</text>
-<text x="414.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">pads, 21 with a second, Modern</text>
-<text x="414.0" y="758.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">type</text>
+<text x="414.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Basic Drums: 54 synthesized</text>
+<text x="414.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">sources, or your own samples</text>
 <rect x="730.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="730.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="754.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">93</text>
-<text x="754.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Audition patterns</text>
+<text x="754.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">64</text>
+<text x="754.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Drum pads</text>
 <text x="754.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
-<text x="754.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">each sound plays as it is</text>
-<text x="754.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">chosen</text>
+<text x="754.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">30 sounds and 34 pads of your</text>
+<text x="754.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">own, effects on each</text>
 <rect x="1080.0" y="160.0" width="470.0" height="620.0" rx="10" fill="#1d2126" stroke="#2a2f36" stroke-width="1.5"/>
 <text x="1108.0" y="212.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Also new since 0.19.2</text>
 <rect x="1108.0" y="248.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="260.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Continue where you left off: every</text>
-<text x="1130.0" y="290.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">open file and the session back at</text>
-<text x="1130.0" y="320.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">the next start</text>
+<text x="1130.0" y="260.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Basic Drums plays your own</text>
+<text x="1130.0" y="290.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">samples: 16 velocity layers a pad,</text>
+<text x="1130.0" y="320.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">round robin</text>
 <rect x="1108.0" y="360.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="372.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Decrypt: a synth patch from a</text>
-<text x="1130.0" y="402.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">recording of one note</text>
+<text x="1130.0" y="372.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">A folder of sounds, or a Battery 4</text>
+<text x="1130.0" y="402.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">kit you own, laid on the pads</text>
 <rect x="1108.0" y="442.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="454.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Torqwave Sampler: your own sounds</text>
-<text x="1130.0" y="484.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">across the keys, or cut into</text>
-<text x="1130.0" y="514.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">slices</text>
-<rect x="1108.0" y="554.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="566.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">A wavetable from any sound dropped</text>
-<text x="1130.0" y="596.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">on an oscillator</text>
+<text x="1130.0" y="454.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Decrypt: a synth patch from a</text>
+<text x="1130.0" y="484.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">recording of one note</text>
+<rect x="1108.0" y="524.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="536.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Torqwave Sampler: your own sounds</text>
+<text x="1130.0" y="566.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">across the keys, or cut into</text>
+<text x="1130.0" y="596.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">slices</text>
 <rect x="1108.0" y="636.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="648.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Instruments played from the</text>
-<text x="1130.0" y="678.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">computer&#x27;s keys</text>
+<text x="1130.0" y="648.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Continue where you left off: files</text>
+<text x="1130.0" y="678.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">and session back, unsaved work too</text>
 <rect x="1108.0" y="718.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="730.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Maximizer, Click Repair and Repair</text>
-<text x="1130.0" y="760.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Clipping corrected</text>
+<text x="1130.0" y="730.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">A wavetable from any sound dropped</text>
+<text x="1130.0" y="760.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">on an oscillator</text>
 </svg>
