@@ -220,6 +220,7 @@ target_sources(Torqwave PRIVATE
     Source/DrumMachine.cpp
     Source/DrumPadEffects.cpp
     Source/DrumMachineEditor.cpp
+    Source/DrumPadEffectsView.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
     Source/ParametricEq.cpp
@@ -674,6 +675,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/DrumMachine.cpp
     Source/DrumPadEffects.cpp
     Source/DrumMachineEditor.cpp
+    Source/DrumPadEffectsView.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
     Source/ParametricEq.cpp

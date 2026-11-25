@@ -249,27 +249,49 @@ public:
         seconds = juce::jmax (0.02, (last + 1) / sampleRate * 1.04);
         const auto shown = juce::jmin (hit.getNumSamples(), (int) std::ceil (seconds * sampleRate));
         peak = 0.0f;
-
-        for (int i = 0; i < shown; ++i)
-            peak = juce::jmax (peak, std::abs (mid (i)));
-
-        // Each column's lowest, highest and loudest sample, for 400 columns.
-        constexpr int columns = 400;
-        lows.assign (columns, 0.0f);
-        highs.assign (columns, 0.0f);
-        levels.assign (columns, 0.0f);
+        samples.resize ((size_t) shown);
 
         for (int i = 0; i < shown; ++i)
         {
-            const auto col = juce::jmin (columns - 1, (int) ((double) i / shown * columns));
-            const auto v = mid (i);
-            lows[(size_t) col] = juce::jmin (lows[(size_t) col], v);
-            highs[(size_t) col] = juce::jmax (highs[(size_t) col], v);
-            levels[(size_t) col] = juce::jmax (levels[(size_t) col], std::abs (v));
+            samples[(size_t) i] = mid (i);
+            peak = juce::jmax (peak, std::abs (samples[(size_t) i]));
         }
 
+        lows.clear();   // made again for the width it is drawn at
+        repaint();
+    }
+
+    /** Each column's lowest, highest and loudest sample, a column for each pixel of the display. */
+    void build (int columns)
+    {
+        const auto shown = (int) samples.size();
+        lows.assign ((size_t) columns, 0.0f);
+        highs.assign ((size_t) columns, 0.0f);
+        levels.assign ((size_t) columns, 0.0f);
+        std::vector<bool> reached ((size_t) columns, false);
+
+        for (int i = 0; i < shown; ++i)
+        {
+            const auto col = (size_t) juce::jmin (columns - 1, (int) ((double) i / shown * columns));
+            const auto v = samples[(size_t) i];
+            lows[col] = reached[col] ? juce::jmin (lows[col], v) : v;
+            highs[col] = reached[col] ? juce::jmax (highs[col], v) : v;
+            levels[col] = juce::jmax (levels[col], std::abs (v));
+            reached[col] = true;
+        }
+
+        // With more columns than samples, a column no sample fell in runs between its neighbours.
+        for (int col = 1; col < columns; ++col)
+            if (! reached[(size_t) col])
+            {
+                lows[(size_t) col] = lows[(size_t) col - 1];
+                highs[(size_t) col] = highs[(size_t) col - 1];
+                levels[(size_t) col] = levels[(size_t) col - 1];
+            }
+
         // The level as a peak meter would hold it: each column the loudest of the next 20 ms, so a
-        // low sound's single cycles don't ripple the line.
+        // low sound's single cycles don't ripple the line; then evened out over the same 20 ms, so
+        // the line falls as a curve and not in steps.
         const auto hold = juce::jmax (1, (int) std::ceil (0.02 / seconds * columns));
         auto held = levels;
 
@@ -277,8 +299,16 @@ public:
             for (int k = 1; k < hold && col + k < columns; ++k)
                 held[(size_t) col] = juce::jmax (held[(size_t) col], levels[(size_t) (col + k)]);
 
-        levels = std::move (held);
-        repaint();
+        std::vector<double> sums ((size_t) columns + 1, 0.0);
+
+        for (int col = 0; col < columns; ++col)
+            sums[(size_t) col + 1] = sums[(size_t) col] + held[(size_t) col];
+
+        for (int col = 0; col < columns; ++col)
+        {
+            const auto from = juce::jmax (0, col - hold / 2), to = juce::jmin (columns, col + hold / 2 + 1);
+            levels[(size_t) col] = (float) ((sums[(size_t) to] - sums[(size_t) from]) / (double) (to - from));
+        }
     }
 
     double getSeconds() const noexcept   { return seconds; }
@@ -300,11 +330,16 @@ public:
         const auto area = getLocalBounds().toFloat();
         SoundControls::drawDisplayWell (g, area, 8, 4);
 
-        if (lows.empty() || peak <= 0.0f)
+        if (samples.empty() || peak <= 0.0f)
             return;
 
         auto plot = area.reduced (6.0f, 8.0f);
         plot.removeFromBottom (14.0f);   // the time scale
+
+        if (const auto columns = juce::jmax (2, (int) std::ceil (plot.getWidth() * juce::jmax (1.0f, g.getInternalContext().getPhysicalPixelScaleFactor())));
+            columns != (int) lows.size())
+            build (columns);
+
         const auto n = (int) lows.size();
         const auto xOf = [&plot, n] (int col) { return plot.getX() + plot.getWidth() * (float) col / (float) (n - 1); };
 
@@ -323,7 +358,7 @@ public:
         g.setColour (colour.withAlpha (0.45f));
         g.fillPath (wave);
         g.setColour (colour.withAlpha (0.85f));
-        g.strokePath (wave, juce::PathStrokeType (0.6f));
+        g.strokePath (wave, juce::PathStrokeType (0.6f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
         // Its level in dB from its peak (the top) to 60 dB down (the bottom).
         juce::Path fall;
@@ -393,7 +428,7 @@ private:
         return 5.0;
     }
 
-    std::vector<float> lows, highs, levels;
+    std::vector<float> samples, lows, highs, levels;
     juce::Colour colour;
     double seconds = 0.0, decaySeconds = 0.0, sweepStart = 0.0;
     float peak = 0.0f;
@@ -876,6 +911,11 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     layers = std::make_unique<Layers> (drums, [this] { chooseSamples(); });
     soundPanel.addChildComponent (*layers);
 
+    // Under everything else of the panel, so the filter's controls sit on its first page.
+    effects = std::make_unique<DrumPadEffectsView> (drums);
+    effects->onPageChanged = [this] { showEffectsPage(); resized(); };
+    soundPanel.addAndMakeVisible (*effects);
+
     for (auto* k : soundKnobs())
         soundPanel.addAndMakeVisible (*k);
 
@@ -1109,6 +1149,8 @@ void DrumMachineEditor::showSelected()
         k->setColour (colour);
 
     refreshFilterKnobs();
+    effects->show (selectedPad, colour);
+    showEffectsPage();
 
     character.setVisible (! user && selected == Sound::kick);
 
@@ -1157,6 +1199,21 @@ void DrumMachineEditor::refreshFilterKnobs()
 
     for (size_t i : { (size_t) 6, (size_t) 7 })
         readouts[i].setAlpha (on ? 1.0f : 0.4f);
+
+    effects->setFilterLit (on);
+}
+
+void DrumMachineEditor::showEffectsPage()
+{
+    // The filter, the crusher and the sends are the first page's; on the others they give way.
+    const auto first = effects->getPage() == DrumPadEffectsView::filterPage;
+    filter.setVisible (first);
+
+    for (size_t i = 6; i < 11; ++i)
+    {
+        soundKnobs()[i]->setVisible (first);
+        readouts[i].setVisible (first);
+    }
 }
 
 void DrumMachineEditor::refreshReadouts()
@@ -1200,6 +1257,7 @@ void DrumMachineEditor::refreshPicture (bool force)
     const auto hit = DrumMachine::Engine::renderPad (now, selectedPad, pictureRate, guess, drums.getSamples());
     picture->set (hit, pictureRate, settingsOf (now).decay, colourOfPad (selectedPad));
     pictureSeconds = picture->getSeconds();
+    effects->soundChanged (pictureSeconds);
 }
 
 juce::String DrumMachineEditor::getKitText() const
@@ -1609,6 +1667,7 @@ void DrumMachineEditor::timerCallback()
         refreshFilterKnobs();
 
     showHits();
+    effects->refresh();
 
     if (picture->isSweeping())
         picture->repaint();
@@ -1736,19 +1795,21 @@ void DrumMachineEditor::resized()
         const auto knobs = soundKnobs();
         const auto place = [this, &knobs] (size_t i, juce::Rectangle<int> cell, int inset)
         {
-            readouts[i].setBounds (cell.removeFromBottom (20).withSizeKeepingCentre (76, 18));
+            readouts[i].setBounds (cell.removeFromBottom (20).withSizeKeepingCentre (juce::jmin (76, cell.getWidth() - 2), 18));
             knobs[i]->setBounds (cell.reduced (inset, 0));
         };
 
-        // Below the sound's own six, its effects: the filter's type, then five small knobs.
-        auto fx = c.removeFromBottom (112);
-        c.removeFromBottom (4);
-        fxLine = fx.removeFromTop (14).translated (soundPanel.getX(), soundPanel.getY());
-        filter.setBounds (fx.removeFromTop (28).withSizeKeepingCentre (juce::jmin (200, fx.getWidth()), 26));
+        // Below the sound's own six, its effects, a page at a time. The first page is laid out
+        // here: the filter's type, then five small knobs.
+        effects->setBounds (c.removeFromBottom (118));
+        c.removeFromBottom (2);
+        auto fx = effects->getPageBounds().translated (effects->getX(), effects->getY());
+        filter.setBounds (fx.removeFromLeft (112).withSizeKeepingCentre (112, 26).translated (0, -8));
+        fx.removeFromLeft (4);
         const auto fw = fx.getWidth() / 5;
 
         for (size_t i = 6; i < 11; ++i)
-            place (i, (i < 10 ? fx.removeFromLeft (fw) : fx), 4);
+            place (i, (i < 10 ? fx.removeFromLeft (fw) : fx), 2);
 
         auto big = c.removeFromTop (c.getHeight() * 11 / 20);
         const auto bw = big.getWidth() / 3;
@@ -1800,10 +1861,4 @@ void DrumMachineEditor::paintOverChildren (juce::Graphics& g)
         g.drawRoundedRectangle (soundPanel.getBounds().toFloat().reduced (1.0f), 6.0f, 2.0f);
     }
 
-    // A rule and a heading over its effects.
-    g.setColour (Theme::dimText.withAlpha (0.35f));
-    g.drawHorizontalLine (fxLine.getCentreY(), (float) fxLine.getX() + 64.0f, (float) fxLine.getRight());
-    g.setColour (Theme::dimText);
-    g.setFont (juce::FontOptions (10.5f, juce::Font::bold));
-    g.drawText ("EFFECTS", fxLine.withWidth (60), juce::Justification::centredLeft);
 }

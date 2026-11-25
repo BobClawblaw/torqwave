@@ -2999,12 +2999,6 @@ void BasicDrumsProcessor::setEffects (int pad, const PadEffects& given)
     stateEdited();
 }
 
-void BasicDrumsProcessor::resetEffects()
-{
-    for (int pad = 0; pad < numPads; ++pad)
-        setEffects (pad, {});
-}
-
 void BasicDrumsProcessor::writeEffects (juce::XmlElement& xml) const
 {
     // Only what is not as it starts: a kit that uses none of them says nothing of them.
@@ -3436,14 +3430,14 @@ juce::String BasicDrumsProcessor::saveKitWithSamples (const juce::File& folder, 
     juce::MemoryBlock block;
     getStateInformation (block);
 
-    juce::XmlElement effects ("EFFECTS");
-    auto* slot = effects.createNewChildElement ("SLOT");
+    juce::XmlElement rack ("EFFECTS");
+    auto* slot = rack.createNewChildElement ("SLOT");
     slot->createNewChildElement ("PLUGIN")->setAttribute ("file", basicDrumsId);
     slot->createNewChildElement ("STATE")->addTextElement (block.toBase64Encoding());
 
     std::vector<std::pair<juce::File, juce::File>> copies;
 
-    if (const auto error = Sampler::collectFiles (effects, folder, folder.getChildFile ("Samples"), copies, notThere); error.isNotEmpty())
+    if (const auto error = Sampler::collectFiles (rack, folder, folder.getChildFile ("Samples"), copies, notThere); error.isNotEmpty())
         return error;
 
     juce::MemoryBlock gathered;

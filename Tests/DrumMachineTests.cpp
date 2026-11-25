@@ -2103,6 +2103,88 @@ namespace
                    "sounding the same; a value set outside its range is brought inside it; a state or preset from before them takes them off; so does emptying the pad and choosing a factory kit");
         }
 
+        // The window: the Effects part of a pad's panel, a page for each.
+        {
+            BasicDrumsProcessor shown;
+            shown.applyKit (DrumMachine::kits()[0]);
+            shown.addFiles (thudPad, { thudFile });
+            std::unique_ptr<juce::AudioProcessorEditor> made (shown.createEditor());
+            auto* window = dynamic_cast<DrumMachineEditor*> (made.get());
+            check (window != nullptr, "drum pad effects: the window opens");
+
+            if (window != nullptr)
+            {
+                auto& view = window->getEffectsView();
+                const auto kickPad = (int) Sound::kick;
+                window->select (Sound::kick);
+                const auto pages = DrumPadEffectsView::pageNames().joinIntoString (", ");
+                auto noneLit = true;
+
+                for (int p = 0; p < DrumPadEffectsView::numPages; ++p)
+                    noneLit = noneLit && ! view.isLit (p);
+
+                const auto first = view.getPage() == DrumPadEffectsView::filterPage && window->showsFilterControls() && window->getKnobText ("Cutoff").isNotEmpty();
+                shown.filterParameter (kickPad)->setValueNotifyingHost (shown.filterParameter (kickPad)->convertTo0to1 (1.0f));
+                window->select (Sound::kick);
+                const auto filterLit = view.isLit (DrumPadEffectsView::filterPage);
+
+                // The envelope's page: its switch and knobs set the pad's values, and read them.
+                view.setPage (DrumPadEffectsView::envPage);
+                const auto envLabels = view.getKnobLabels().joinIntoString (", ");
+                const auto hidden = ! window->showsFilterControls() && ! view.isOn();
+                view.clickSwitch();
+                const auto turned = view.turnKnob ("Decay", 120.0f) && view.turnKnob ("Curve", -30.0f);
+                const auto env = shown.getEffects (kickPad);
+                const auto envSet = env.on (Fx::envOn) && std::abs (env[Fx::envDecay] - 120.0f) < 0.5f && std::abs (env[Fx::envCurve] + 30.0f) < 0.5f && view.isLit (DrumPadEffectsView::envPage)
+                                 && view.getKnobText ("Decay") == "120 ms" && view.getKnobText ("Curve") == "-30" && shown.kitModified();
+
+                // Another pad has its own; back on the first, its are there again.
+                window->select (Sound::snare);
+                const auto others = view.getPage() == DrumPadEffectsView::envPage && ! view.isOn() && ! view.isLit (DrumPadEffectsView::envPage) && view.getKnobText ("Decay") == "300 ms";
+                window->select (Sound::kick);
+                const auto back = view.isOn() && view.getKnobText ("Decay") == "120 ms";
+
+                // The saturator's curve by its selector; the EQ's bands by a drag of a point or the selector.
+                view.setPage (DrumPadEffectsView::satPage);
+                view.stepSelector (1);
+                const auto tube = view.getSelectorText() == "Tube" && juce::exactlyEqual (shown.getEffect (kickPad, Fx::satType), 1.0f) && view.getKnobLabels().joinIntoString (", ") == "Amount, Mix";
+                view.setPage (DrumPadEffectsView::eqPage);
+                view.dragPoint (2, 1000.0, -6.0f);
+                const auto dragged = view.getSelectorText() == "3 Bell" && std::abs (shown.getEffect (kickPad, Fx::eqBell2Freq) - 1000.0f) < 0.5f
+                                  && juce::exactlyEqual (shown.getEffect (kickPad, Fx::eqBell2Gain), -6.0f) && view.getKnobText ("Gain") == "-6.0 dB" && view.getKnobLabels().joinIntoString (", ") == "Freq, Gain, Width";
+                view.stepSelector (-2);
+                const auto shelf = view.getSelectorText() == "1 Low" && view.getKnobLabels().joinIntoString (", ") == "Freq, Gain" && view.getKnobText ("Freq") == "100 Hz";
+
+                // The transient shaper's two, and the compressor's five with its meter after a hit.
+                view.setPage (DrumPadEffectsView::transPage);
+                const auto shaper = view.getKnobLabels().joinIntoString (", ") == "Attack, Sustain" && view.turnKnob ("Attack", 50.0f) && view.getKnobText ("Attack") == "+50 %";
+                view.setPage (DrumPadEffectsView::compPage);
+                view.clickSwitch();
+                view.turnKnob ("Thresh", -30.0f);
+                const auto still = view.getMeterText();
+                play (shown, { { 36, 0.0, 1.0f } }, 0.3);
+                view.refresh();
+                const auto meter = view.getMeterText();
+
+                // Changed from elsewhere (a preset, a kit), the page follows at the window's next look.
+                shown.setEffect (kickPad, Fx::compRatio, 8.0f);
+                view.refresh();
+                const auto followed = view.getKnobText ("Ratio") == "8.0:1";
+                shown.applyKit (DrumMachine::kits()[0]);
+                view.refresh();
+                const auto cleared = ! view.isOn() && ! view.isLit (DrumPadEffectsView::envPage) && view.getKnobText ("Ratio") == "4.0:1";
+                view.setPage (DrumPadEffectsView::filterPage);
+
+                check (pages == "FILTER, ENV, TRANSIENT, SATURATE, EQ, COMP" && noneLit && first && filterLit && envLabels == "Attack, Hold, Decay, Curve" && hidden && turned && envSet
+                           && others && back && tube && dragged && shelf && shaper && still == "0.0 dB" && meter != still && meter.getFloatValue() < -3.0f && followed && cleared
+                           && window->showsFilterControls(),
+                       "drum pad effects: the window's Effects are six pages (" + pages + "), the first the filter, crusher and sends as before, its tab's dot lit with the filter on; "
+                       "a page's switch and knobs set the selected pad's values and read them (Decay 120 ms, Curve -30), and its dot lights; another pad shows its own; the saturator's "
+                       "selector chooses its curve, an EQ point dragged sets its band (3 Bell at 1 kHz, -6.0 dB) and a shelf has no Width; the compressor's meter reads "
+                       + meter + " after a kick; a change from elsewhere and a factory kit show at the next look");
+            }
+        }
+
         folder.deleteRecursively();
     }
 
@@ -2201,6 +2283,38 @@ void saveDrumMachineWindow (const juce::File& folder)
             Theme::apply (Theme::make (theme, "Blue"));
             const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
             auto file = folder.getChildFile (juce::String ("drums-sample-") + theme + ".png");
+            file.deleteFile();
+            juce::FileOutputStream out (file);
+            juce::PNGImageFormat().writeImageToStream (image, out);
+            std::cout << file.getFullPathName() << std::endl;
+        }
+
+        // Each page of the pad's effects, every one switched on, after a hit (for the compressor's meter).
+        const auto snare = (int) Sound::snare;
+        using DrumMachine::Fx;
+
+        for (auto [f, v] : std::initializer_list<std::pair<Fx, float>> {
+                 { Fx::envOn, 1.0f }, { Fx::envAttack, 2.0f }, { Fx::envHold, 40.0f }, { Fx::envDecay, 180.0f }, { Fx::envCurve, 40.0f },
+                 { Fx::transOn, 1.0f }, { Fx::transAttack, 60.0f }, { Fx::transSustain, -40.0f },
+                 { Fx::satOn, 1.0f }, { Fx::satType, 1.0f }, { Fx::satAmount, 55.0f },
+                 { Fx::eqOn, 1.0f }, { Fx::eqLowFreq, 90.0f }, { Fx::eqLowGain, -4.0f }, { Fx::eqBell1Freq, 220.0f }, { Fx::eqBell1Gain, 5.0f },
+                 { Fx::eqBell2Freq, 1800.0f }, { Fx::eqBell2Gain, -6.0f }, { Fx::eqBell2Width, 0.6f }, { Fx::eqHighFreq, 7000.0f }, { Fx::eqHighGain, 3.0f },
+                 { Fx::compOn, 1.0f }, { Fx::compThreshold, -24.0f }, { Fx::compGain, 4.0f } })
+            drums.setEffect (snare, f, v);
+
+        drums.auditionPad (snare, 100.0f / 127.0f);
+        juce::AudioBuffer<float> block (2, 4800);
+        juce::MidiBuffer midi;
+        drums.processBlock (block, midi);
+        Theme::apply (Theme::make ("Dark", "Blue"));
+        auto& effects = drumWindow->getEffectsView();
+
+        for (int page = 0; page < DrumPadEffectsView::numPages; ++page)
+        {
+            effects.setPage (page);
+            effects.refresh();
+            const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+            auto file = folder.getChildFile ("drums-effects-" + DrumPadEffectsView::pageNames()[page].toLowerCase() + ".png");
             file.deleteFile();
             juce::FileOutputStream out (file);
             juce::PNGImageFormat().writeImageToStream (image, out);

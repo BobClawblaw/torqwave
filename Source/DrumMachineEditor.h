@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DrumMachine.h"
+#include "DrumPadEffectsView.h"
 #include "SoundControls.h"
 #include "EffectPresets.h"
 
@@ -12,8 +13,9 @@
     plays; a click plays it, at the velocity of the keys under the window, and selects it. On the right the
     selected sound: a picture of one hit (its waveform and its level falling, a line sweeping across
     as it plays), its six knobs in real units (tune in semitones, decay in ms, tone, level in dB,
-    pan, drive), its effects (a filter's type, cutoff and resonance, a crush, and how much goes to
-    the kit's reverb and delay) and, for the kick, its character. Along the top the kits and the
+    pan, drive), its effects, in six pages chosen by tabs (DrumPadEffectsView: the filter's type,
+    cutoff and resonance, a crush, and how much goes to the kit's reverb and delay; then its own
+    envelope, transient shaper, saturator, EQ and compressor) and, for the kick, its character. Along the top the kits and the
     user's own presets; the bus, the whole kit's drive, glue (with how far it turns the kit down)
     and level; and the space, the reverb's size and the delay's time and feedback. In Torqwave's
     theme, light or dark.
@@ -66,6 +68,12 @@ public:
     /** Takes in the hits since the last look, as the window's timer does: lights their pads, and
         for the selected pad says the hit's velocity and lights the layer it played. */
     void showHits();
+
+    /** The Effects part of the selected pad's panel: its pages, switches, knobs and pictures. */
+    DrumPadEffectsView& getEffectsView() noexcept           { return *effects; }
+
+    /** Whether the filter's own controls are shown (on the Effects' FILTER page alone). */
+    bool showsFilterControls() const                        { return filter.isVisible(); }
 
     /** For the tests: the layer the selected pad's last hit played (-1 for none, or before a hit),
         and the layer list's words about that hit ("hit 52: layer 2", "hit 20: no layer"). */
@@ -122,6 +130,7 @@ private:
     void refreshPicture (bool force);
     void refreshReadouts();
     void refreshFilterKnobs();
+    void showEffectsPage();
     void showSelected();
     void say (const juce::String&);
     void setDropTarget (std::optional<int>);
@@ -141,6 +150,7 @@ private:
     std::unique_ptr<Picture> picture;
     std::unique_ptr<GlueMeter> glueMeter;
     std::unique_ptr<Layers> layers;
+    std::unique_ptr<DrumPadEffectsView> effects;
     std::array<juce::uint32, (size_t) DrumMachine::numPads> seenHits {};
 
     SoundControls::Panel padPanel { "Pads" }, soundPanel { "Kick" }, kitPanel { "Kit" }, busPanel { "Bus" }, spacePanel { "Space" };
@@ -174,7 +184,6 @@ private:
     std::optional<int> dropTarget;             // the pad a drag is over
     juce::String message;                      // news for the line along the bottom, until messageUntil
     double messageUntil = 0.0;
-    juce::Rectangle<int> fxLine;   // where the effects' heading is drawn
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumMachineEditor)
 };

@@ -67,7 +67,7 @@ namespace DrumMachine
 
         // Its own envelope, transient shaper, saturator, EQ and compressor, each off to start with
         // (DrumPadEffects.h). They come after the filter and the crusher, before its level and pan.
-        PadEffects effects;
+        PadEffects effects {};
 
         bool operator== (const Settings& o) const
         {
@@ -511,7 +511,6 @@ namespace BuiltInEffects
         void resetPads();
         void writeEffects (juce::XmlElement& into) const;
         void readEffects (const juce::XmlElement& from);
-        void resetEffects();
         static void setUserDefaults (const SoundParameters&);
         static juce::String idOfPad (int pad);
         const SoundParameters& of (int pad) const noexcept;
