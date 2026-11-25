@@ -4,6 +4,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The site: the looped clips rendered again with the loop's click gone** (the demo renderer and rendered clips only)
+- The drum, sequence and kit clips (267) were rendered again from the code with fix log 113, which fades the end of a looping pass into the pass before it. 237 of the files changed; they are the same clips under the same names, and the pages list what they listed.
+- **Measured in the renderer,** on the audio before it is written: for each clip that goes round more than once (61 of the 267), the step from one sample to the next where the loop joins, against the largest step anywhere else in the clip. Before the fix 2 clips had a join more than twice their largest step inside: Synapse Drive Bass (0.348 at the join, 0.0073 inside) and Percussive Tool Bass (0.178, 0.006), both a bass note held to the loop's end. After it, none: those two step 0.0036 and 0.0005 at the join, and the largest join of any clip is half its largest step inside. `TorqwaveTests --sound-demos` now writes both numbers for each such clip (`joinStep`, `insideStep` in `index.json`).
+- The other 206 clips play their loop once, so they have no join to measure here.
+- 1,066 clips, 101.9 MB. No clip file was dropped.
+- Tested: the renderer ran without a failure, the pages were built and their links checked. **Not listened to.** The test suite was not run for this.
+
 **A sequence's preview goes round without a click** (fix log 113)
 - **What was wrong,** found by the user listening to the site's demos: "the note clicks on start". A sub held in half notes (Pinpoint Sub Pulse) clicked each time its one-bar loop went round: in the clip the wave stepped by 0.22 at each bar's start, where the clip peaks at 0.35. The Sequence Library's preview plays the same rendered pass in a loop, so it clicked in the program too.
 - **Why.** The pass that loops is the second of two played in a row, so it starts as the first ended and what rings over comes in. But a note held to the end on an oscillator that runs free ends each pass at another point of its wave, so the pass's last frame and its first did not meet.
