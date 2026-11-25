@@ -93,7 +93,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Rolling Offbeat" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>75.VMjLgHD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhTuwFao41Yf7jYlIVYgQmHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Rave Hall Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short A minor, F chords comping over two bars" style="Techno/Peak-time" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Rave Hall Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short A minor, F chords comping over two bars, in a dotted figure that turns round at beat 3" style="Techno/Peak-time" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.645669"/>
       <N p="60" s="0" l="220" v="0.645669"/>

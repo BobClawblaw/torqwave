@@ -145,7 +145,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Body Music" bus="0" instrument="1" musical="1" gainDb="-6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPuQVdfzTcyk1Xh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Assembly Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Phrygian" note="Short A minor, B flat chords comping over two bars" style="Industrial/Techno-body" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Assembly Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Phrygian" note="Short A minor, B flat chords comping over two bars, in a dotted figure that turns round at beat 3" style="Industrial/Techno-body" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.645669"/>
       <N p="60" s="0" l="220" v="0.645669"/>
@@ -252,7 +252,7 @@
   <TORQWAVE_SEQUENCE version="1" name="Hydraulic Snare Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Industrial/Techno-body" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
-      <N p="36" s="960" l="120" v="0.944882"/>
+      <N p="36" s="1680" l="120" v="0.771654"/>
       <N p="38" s="1920" l="120" v="0.314961"/>
       <N p="38" s="2160" l="120" v="0.582677"/>
       <N p="38" s="2400" l="120" v="0.314961"/>

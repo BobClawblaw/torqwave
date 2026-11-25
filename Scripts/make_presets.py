@@ -1127,6 +1127,63 @@ PERCS = {
     "none":      ([], ""),
 }
 
+BREAKS = [
+    ("X.x.......x.....X.........x..x..", "....X..g.g..X.......X..g.g..X.g.", "a two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat"),
+    ("X.........X.....X.x.......x.....", "....X.......X..g....X..g....X...", "a two-step break with a kick pickup in bar 2"),
+    ("X..X......X.....X..X....X.......", "....X..g.g..X.......X..g.g..X..X", "a chopped break, the snare doubling at the end of bar 2"),
+    ("X.....x...X..x..X.....x.x.......", "....X.......X.......X..g....X.gX", "a rolling break, two kicks answering the snare in bar 2"),
+    ("X..x....x.X.....X..x......X.x...", "....X.g.....X..g....X.g..g..X...", "a funk break, the kick pushed and the snare ghosted"),
+    ("X.x...x...X.....X.x...x.X.......", "....X.......X.g.....X.......XgXg", "a break with a kick in threes and a snare flurry at the end"),
+]
+
+# How a kick line gets into the next bar, a snare line likewise, and the fills of each kind: the first of
+# each is what there was.
+KICK_TAILS = [
+    ("..........g..g..", "with ghost kicks leading into the next bar at the end of bar 2"),
+    ("..............x.", "with a pickup kick an 8th before the next bar"),
+    ("............g.gx", "with three kicks crowding into the next bar"),
+    (".......g.......g", "with a ghost kick before beat 3 and before the next bar in bar 2"),
+]
+
+BACKBEAT_TAILS = [
+    (SNARE, "............gogx", "with a snare pickup ending bar 2"),
+    (SNARE, "..............xx", "with two snares on the last 8th of bar 2"),
+    (CLAP, "..........x...x.", "with claps on the offbeats of 3 and 4 in bar 2"),
+    (SNARE, "......g..g....g.", "with ghost snares scattered through bar 2"),
+    (RIM, "..o...o...o...o.", "with a rim on the offbeats of bar 2"),
+]
+
+FILLS = {
+    "snare": [
+        ([(SNARE, "........gogoxxXX")], "the kick for two beats, then a snare roll rising to the next bar"),
+        ([(SNARE, "........x.x.x.xX")], "the kick for two beats, then the snare in 8ths and a flam into the bar"),
+        ([(SNARE, "........X..x..xX")], "the kick for two beats, then the snare in a dotted figure"),
+        ([(SNARE, "..........gggxxX")], "the kick for two beats, a gap, then a short snare roll"),
+        ([(SNARE, "........x..xx.xX"), (CH, "........o.o.o.o.")], "the kick for two beats, then a broken snare figure over hats"),
+        ([(SNARE, "........gxgxgxgX")], "the kick for two beats, then ghost and full snares alternating"),
+        ([(SNARE, "............XXXX"), (KICK, "........x.x.....")], "the kick for two beats, two more in 8ths, then four snares"),
+        ([(SNARE, "........X.....xX"), (CRASH, "........x.......")], "the kick for two beats, a snare and crash on 3, two snares into the bar"),
+    ],
+    "toms": [
+        ([(HT, "........xx......"), (MT, "..........xx...."), (LT, "............xxXX")], "the kick for two beats, then toms falling high to low"),
+        ([(LT, "........xx......"), (MT, "..........xx...."), (HT, "............xxXX")], "the kick for two beats, then toms climbing low to high"),
+        ([(HT, "........x..x...."), (MT, "..........x..x.."), (LT, "..............xX")], "the kick for two beats, then high and mid toms trading and a low tom into the bar"),
+        ([(LT, "........x.x.x.xX")], "the kick for two beats, then the low tom alone in 8ths"),
+        ([(HT, "........x...x..."), (LT, "..........x...xX")], "the kick for two beats, then high and low toms answering each other"),
+        ([(MT, "........xxx....."), (LT, "...........xxxXX")], "the kick for two beats, then three on the mid tom and five on the low"),
+        ([(HT, "........X......."), (MT, "..........X....."), (LT, "............X.X.")], "the kick for two beats, then one tom to a beat, down"),
+        ([(LT, "........x..x..x."), (SNARE, "...............X")], "the kick for two beats, the low tom in threes, a snare on the last 16th"),
+    ],
+    "clap": [
+        ([(CLAP, "........x.x.xxxX")], "the kick for two beats, then claps stuttering into the next bar"),
+        ([(CLAP, "........x..x..xX")], "the kick for two beats, then claps in a dotted figure"),
+        ([(CLAP, "............xxxX")], "the kick for two beats, a beat of nothing, then four claps"),
+        ([(CLAP, "........X...x.xX"), (SNARE, "........x.......")], "the kick for two beats, a clap and snare on 3, then claps into the bar"),
+        ([(CLAP, "........xx..xx.X")], "the kick for two beats, then claps in pairs"),
+        ([(CLAP, "..........x.x.xX"), (RIM, "........o.o.....")], "the kick for two beats, two rims, then claps into the bar"),
+    ],
+}
+
 TOMRUN = [(HT, "........xxx....."), (MT, "...........xxx.."), (LT, "..............xx")]
 
 
@@ -1397,6 +1454,49 @@ DRONES_FOR = {
     "Game/Horror": ["cluster", "tritone", "leading"],
 }
 
+# How a progression is played: the rhythm in a bar (None: held), how long each strike lasts, what to say.
+CHORD_RHYTHMS = [
+    (None, None, "a bar each"),
+    ("x.......x.......", 8, "in half notes"),
+    ("..x...x...x...x.", 2, "struck on the offbeats"),
+    ("x.x.x.x.x.x.x.x.", 1, "pulsing in 8ths"),
+    ("x.....x.....x...", 3, "three times a bar in a three-three-two figure"),
+    ("x...........x...", 4, "on the one and again on beat 4"),
+    ("x..x..x..x..x...", 2, "in dotted 8ths across the bar"),
+    ("....x.......x...", 4, "on beats 2 and 4"),
+    ("x.......x.x.....", 2, "on the one, on 3 and its offbeat"),
+    ("x...x...x...x...", 2, "on every beat, short"),
+    ("..x.......x.....", 6, "on the offbeats of 1 and 3, held"),
+    ("x.....x.........", 6, "twice at the head of the bar, held"),
+    ("x.x...x.x...x.x.", 1, "in pairs of 8ths"),
+    ("......x.......x.", 2, "only on the offbeats of 2 and 4"),
+]
+
+COMP_RHYTHMS = [
+    ("..x...x...x...x.", "on the offbeats"),
+    ("x..x..x...x..x..", "in a dotted figure that turns round at beat 3"),
+    ("..x..x....x..x..", "off the beat in dotted pairs"),
+    ("x.....x.....x...", "three times a bar"),
+    (".x..x..x....x...", "a 16th late, then gathering"),
+    ("x.x.....x.x.....", "in pairs of 8ths on 1 and 3"),
+    ("...x..x...x..x..", "pushed ahead of the beats"),
+    ("x..x....x.x.....", "a dotted pair, then a straight one"),
+    ("..x.x.....x.x...", "in pairs of 8ths off 1 and 3"),
+    ("x.....x.x.....x.", "leaning into beat 3 and the next bar"),
+    ("....x..x....x..x", "on 2 and 4, each with a 16th before the next beat"),
+    ("x...x.x...x.x...", "on the one, then pairs across the beats"),
+]
+
+# A strum: 16ths between its notes, whether it goes down, whether it is struck twice a bar, what to say.
+STRUMS = [
+    (1, False, False, "each strummed upwards a 16th a note"),
+    (1, True, False, "each strummed downwards a 16th a note"),
+    (2, False, False, "each spread upwards an 8th a note"),
+    (1, False, True, "each strummed upwards twice a bar"),
+    (1, True, True, "each strummed downwards twice a bar"),
+    (2, True, False, "each spread downwards an 8th a note"),
+]
+
 # What a stab is struck with, and when. A chord: its notes, what to call it, the tags it needs.
 STAB_CHORDS = {
     "minor":     (["a3", "c4", "e4"], "A minor", []),
@@ -1472,6 +1572,37 @@ STABS_FOR = {
     "Game/Menu": ["second", "sus", "majorseven", "sixth"],
 }
 
+BASS.update({
+    "rollfive":  (". 1 1 5 . 1 1 1 . 1 1 5 . 1 1 8", "rolling 16ths in the kick's gaps, touching the fifth and ending on the octave"),
+    "rollback":  (". 1 1 . . 1 1 1 . 1 1 . . 1 8 1", "rolling 16ths in the kick's gaps with a breath in the first and third"),
+    "offdrop":   (". . 1 . . . 1 . . . 1 . . . b .", "an 8th on every offbeat, the last a step under the root"),
+    "offpair":   (". . 1 . . . 1 1 . . 1 . . . 1 1", "offbeat 8ths, every second one doubled"),
+    "gallopback": ("1 1 . 1 1 1 . 1 1 1 . 1 8 8 . 8", "the gallop turned round: two 16ths and an 8th"),
+    "ebmthird":  (". 1 8 1 . 1 8 3 . 1 8 1 . 1 7 8", "16ths in the kick's gaps with the octave, touching the third and the seventh"),
+    "ebmfive":   ("1 1 8 1 5 1 8 1 1 1 8 1 7 1 8 1", "driving 16ths, the octave on the offbeats and the fifth and seventh on beats 2 and 4"),
+    "stomp":     ("1 . 1 . 1 1 . 1 . 1 1 . 1 . 8 .", "8ths and 16ths trading places across the bar"),
+    "threes":    ("1 . . 1 . . 1 . . 1 . . 1 . 8 .", "the root every dotted 8th, the octave before the bar"),
+    "threesoct": ("1 . 8 1 . 8 1 . 8 1 . 8 1 . 8 8", "root and octave in threes against the beat"),
+    "pushpull":  ("1 - . . . 1 . 1 - . . . 5 . 1 .", "a held root, a push before beat 3, and the fifth before 4"),
+    "upstep":    ("1 . 1 . 3 . 3 . 5 . 5 . 7 . 8 .", "8ths in pairs climbing the chord to the octave"),
+    "downstep":  ("8 . 8 . 7 . 7 . 5 . 5 . 3 . 1 .", "8ths in pairs falling from the octave to the root"),
+    "octjump":   ("1 . . 8 . . 1 . 8 . . 1 . 8 . .", "root and octave trading in a three-three-two figure"),
+    "fifthwalk": ("1 . 5 . 8 . 5 . 1 . 5 . 7 . 5 .", "8ths walking root, fifth, octave, fifth, with the seventh once"),
+    "sixteenturn": ("1 3 5 3 1 3 5 8 1 3 5 3 1 5 8 5", "16ths turning through the chord"),
+    "dropout":   ("1 1 1 1 . . . . 1 1 1 1 . . 8 8", "a beat of 16ths, a beat of nothing"),
+    "lazy":      ("1 - - - . . 1 . . . 1 - - - . b", "a long root, two short ones, and a step under before the bar"),
+    "underturn": ("1 . b . 1 . . 1 . b 1 . 5 . . .", "the root and the step under it turning, ending on the fifth"),
+    "thirdfall": ("5 - . 3 - . 1 - . . 1 . 3 . 1 .", "falling fifth, third, root in dotted 8ths, then a turn on the third"),
+    "anticipate": (". . . 1 - . . 1 - . . 1 - . 1 .", "each note a 16th ahead of the beat"),
+    "pedalseven": ("1 . 1 . 1 . 7 . 1 . 1 . 1 . 5 .", "8ths on the root with the seventh at the end of beat 2 and the fifth at the end of 4"),
+})
+
+SYNTH_BASS_KEYS = ["roll", "rollacc", "rollfive", "rollback", "offbeat", "offsixteen", "offdrop", "offpair", "gallop", "gallopback", "ebm", "ebmrest", "ebmthird", "ebmfive",
+                   "eighths", "sixteens", "sixteensoct", "stomp", "threes", "threesoct", "pushpull", "electro", "electrob", "reese", "reesemove", "halftime", "march",
+                   "psy", "synthwave", "dropout", "lazy", "underturn", "anticipate", "pedalseven"]
+ARP_BASS_KEYS = ["chip", "octave8", "ebm", "electro", "upstep", "downstep", "octjump", "fifthwalk", "sixteenturn", "ebmthird", "ebmfive", "threesoct", "sixteensoct", "thirdfall"]
+PICKED_KEYS = ["deepwalk", "darkwave", "rock", "eighths", "deep", "lazy", "underturn", "thirdfall", "pushpull", "fifthwalk", "pedalseven", "halftime"]
+
 # Sub figures, a bar each. Nothing here leaves the sub register.
 SUB_FIGURES = {
     "sub":      ("1 - - - - - - - - - - - - - - -", "a held sub on the root"),
@@ -1546,6 +1677,47 @@ ARP_FIGURES = [
     ("0 0 . 0 0 . 0 0 0 . 0 0 . 0 0 .", "the root gated in 16ths", "Gated"),
     ("0 . 0 1 . 1 2 . 2 0 . 0 1 . 2 .", "a trance gate through the chord", "Gated"),
     ("0 0 0 . 1 1 1 . 2 2 2 . 1 1 1 .", "each note of the chord three times over", "Gated"),
+]
+
+ARP_FIGURES += [
+    ("0 1 2 0+ 1+ 0+ 2 1 0 1 2 0+ 1+ 0+ 2 1", "up past the octave to the third above it and back, in 16ths", "Up & Down"),
+    ("0+ 2 1 0 1 2 0+ 2 1 0 1 2 0+ 2 1 0", "down from the octave first, then up and down in 16ths", "Up & Down"),
+    ("0 2 0+ 2 0 2 0+ 2 0 2 0+ 2 0 2 0+ 2", "root, fifth and octave up and down, the third left out", "Up & Down"),
+    ("0 0 1 1 2 2 0+ 0+ 2 2 1 1 0 0 1 1", "up and down with each note twice", "Up & Down"),
+    ("0 1 2 . 0+ 2 1 . 0 1 2 . 0+ 2 1 .", "three up, a rest, three down, a rest", "Up & Down"),
+    ("0 . 1 2 0+ . 2 1 0 . 1 2 0+ . 2 1", "up and down with a gap after each turn", "Up & Down"),
+    ("0 1 2 0+ 1+ 2+ 1+ 0+ 2 1 0 1 2 0+ 2 1", "up through two octaves and back", "Up & Down"),
+    ("2 1 0 1 2 0+ 2 1 0 1 2 0+ 1+ 0+ 2 1", "starting from the fifth, down, then up past the octave", "Up & Down"),
+    ("0 1 0 2 1 0+ 2 1+ 0+ 2 1 0+ 2 1 0 1", "zigzagging: up two notes and back one, then the same down", "Up & Down"),
+    ("0 1 2 1 0 1 2 0+ 2 1 2 0+ 1+ 0+ 2 1", "waves climbing a note higher each time", "Up & Down"),
+    ("0 0+ 0 0+ 2 0+ 2 0+ 1 0+ 1 0+ 2 0+ 2 0+", "the octave on every other 16th, the chord's notes under it", "16th Sequences"),
+    ("0 2 0 2 1 2 1 2 0 2 0 2 0+ 2 0+ 2", "a pedal on the fifth with the other notes against it", "16th Sequences"),
+    ("0 1 0 2 0 0+ 0 2 0 1 0 2 0 0+ 2 1", "the root between each of the chord's notes as they climb", "16th Sequences"),
+    ("0 . 0 2 . 2 1 . 1 0+ . 0+ 2 . 1 .", "pairs of notes with a gap after each, three against the beat", "16th Sequences"),
+    ("0 2 1 . 0 2 1 . 0+ 2 1 . 0 2 1 .", "root, fifth, third and a rest, the octave leading the third time", "16th Sequences"),
+    ("0 0 0 2 0 0 1 0 0 0 0+ 0 0 2 1 0", "mostly the root, a chord note breaking in once a beat", "16th Sequences"),
+    ("0 1 2 0 1 2 0 1 2 0 1 2 0+ 2 1 0", "three notes against four beats, turning back at the octave", "16th Sequences"),
+    ("0 2 0+ 1 0 2 0+ 1 0 2 0+ 1 0+ 2 1 0", "root, fifth, octave, third, round and round", "16th Sequences"),
+    ("0+ 0 2 0 1 0 2 0 0+ 0 2 0 1 0 2 1", "falling to the root after every note", "16th Sequences"),
+    ("0 . 2 0+ . 1 2 . 0 . 2 0+ . 1 0+ .", "a syncopated sequence with a rest every third 16th", "16th Sequences"),
+    ("0 1 . 2 0+ . 2 1 . 0 1 . 2 0+ 2 .", "pairs climbing and falling with rests between", "16th Sequences"),
+    ("0 . . 1 . . 2 . . 0+ . . 2 . 1 .", "dotted-8th plucks climbing to the octave", "Plucks"),
+    ("0 . . . 2 . . . 1 . . . 0+ . . .", "a pluck on every beat: root, fifth, third, octave", "Plucks"),
+    ("0 . 2 . . . 1 . 0+ . . . 2 . . .", "sparse plucks, five to the bar", "Plucks"),
+    (". . 0 . . . 2 . . . 1 . . . 0+ .", "plucks on the offbeats only", "Plucks"),
+    ("0 . 0+ . 2 . 0+ . 1 . 0+ . 2 . 0+ .", "8th plucks with the octave between each of the chord's notes", "Plucks"),
+    ("0 . . 2 . 1 . . 0+ . . 2 . 1 . .", "plucks in a three-two figure", "Plucks"),
+    ("0 2 . . 1 0+ . . 2 1 . . 0 2 . .", "pairs of 16th plucks on each beat", "Plucks"),
+    (". 0 . 1 . 2 . 0+ . 2 . 1 . 0 . 1", "plucks a 16th after every 8th, up and down", "Plucks"),
+    ("0 . 1 . 2 . 0+ . 1+ . 0+ . 2 . 1 .", "8th plucks up past the octave and back", "Plucks"),
+    ("0+ . 2 . 1 . 0 . 1 . 2 . 0+ . 2 .", "8th plucks down from the octave and up again", "Plucks"),
+    ("0 . . . . . 2 . 1 . . . . . 0+ .", "four plucks, wide apart", "Plucks"),
+    ("0 . 0 0 . 0 . 0 0 . 0 0 . 0 . 0", "the root gated in an uneven figure", "Gated"),
+    ("0 0 . 2 2 . 1 1 . 0+ 0+ . 2 2 . 1", "pairs with a gap, up the chord and back", "Gated"),
+    ("0 . . 0 . . 0 . 2 . . 2 . . 1 .", "a dotted gate moving from the root to the fifth and third", "Gated"),
+    ("0 0 0 0 . . . . 2 2 2 2 . . . .", "a beat on, a beat off: the root, then the fifth", "Gated"),
+    ("0 0 . . 0 0 . . 1 1 . . 2 2 . .", "two 16ths on every beat, climbing through the chord in the back half", "Gated"),
+    ("0 . 0 . 0 0 0 . 2 . 2 . 2 2 2 .", "two 8ths and three 16ths, on the root and then the fifth", "Gated"),
 ]
 
 MELODY_RHYTHMS = [
@@ -2385,6 +2557,10 @@ class Maker:
                 return True
 
         self.leave_out(nouns, category)
+
+        if not more.get("tempo"):
+            self.tempo()   # a preset draws its tempo when it is written: drawn here too, for the names after it
+
         return False
 
     # -- Drums ------------------------------------------------------------------------------
@@ -2417,66 +2593,106 @@ class Maker:
                 said.append("a tom run ends bar 4")
             if not said:
                 return False
-            self.add("groove", DRUM_NOUNS[sub], "Drums", sub, join(said), part, sound)
+            self.add_new("groove", DRUM_NOUNS[sub], "Drums", sub, [(join(said), part, sound, [])])
         elif sub == "Kick":
-            pieces, words = KICKS[self.pick(s.kicks)]
-            part = Part(2)
-            put(part, pieces)
-            part.grid(KICK, "..........g..g..", bar=1)
-            self.add("kick", DRUM_NOUNS[sub], "Drums", sub, words + ", with ghost kicks leading into the next bar at the end of bar 2", part, sound)
+            drawn = self.pick(s.kicks)
+            candidates = []
+
+            # The kick drawn, then the style's others, then the rest; each with the ways into the next bar in turn.
+            for key in [drawn] + [k for k in s.kicks if k != drawn] + [k for k in KICKS if k not in s.kicks]:
+                pieces, words = KICKS[key]
+
+                for tail, how in KICK_TAILS:
+                    part = Part(2)
+                    put(part, pieces)
+                    part.grid(KICK, tail, bar=1)
+                    candidates.append((words + ", " + how, part, sound, []))
+
+            self.add_new("kick", DRUM_NOUNS[sub], "Drums", sub, candidates)
         elif sub == "Snare & Clap":
-            pieces, words = BACKBEATS[self.pick([b for b in s.backbeats if b != "none"] or ["rim24"])]
-            part = Part(2)
-            put(part, pieces)
-            part.grid(SNARE, "............gogx", bar=1)
-            self.add("snare", DRUM_NOUNS[sub], "Drums", sub, words + ", with a snare pickup ending bar 2", part, sound)
+            mine = [b for b in s.backbeats if b != "none"] or ["rim24"]
+            drawn = self.pick(mine)
+            candidates = []
+
+            for key in [drawn] + [k for k in mine if k != drawn] + [k for k in BACKBEATS if k not in mine and k != "none"]:
+                pieces, words = BACKBEATS[key]
+
+                for drum, tail, how in BACKBEAT_TAILS:
+                    part = Part(2)
+                    put(part, pieces)
+                    part.grid(drum, tail, bar=1)
+                    candidates.append((words + ", " + how, part, sound, []))
+
+            self.add_new("snare", DRUM_NOUNS[sub], "Drums", sub, candidates)
         elif sub == "Hats & Tops":
-            first, second = HATS[self.pick([h for h in s.hats if h != "none"] or ["sparse"])], HATS[self.pick(["ride", "pedal", "offopen", "eighths"])]
-            part = Part(2)
-            put(part, first[0])
-            if first[1] != second[1]:
-                put(part, [(n, p) for n, p in second[0]], bar=1)
-                said = f"{first[1]}, with {second[1]} added in bar 2"
-            else:
-                said = first[1]
-            self.add("hats", DRUM_NOUNS[sub], "Drums", sub, said, part, sound)
+            mine = [h for h in s.hats if h != "none"] or ["sparse"]
+            one, two = self.pick(mine), self.pick(["ride", "pedal", "offopen", "eighths"])
+            candidates = []
+
+            for a in [one] + [h for h in mine if h != one] + [h for h in HATS if h not in mine and h != "none"]:
+                for b in [two] + [h for h in ("ride", "pedal", "offopen", "eighths", "rideoff", "shuffle", "offclosed", "sparse") if h != two]:
+                    first, second = HATS[a], HATS[b]
+                    part = Part(2)
+                    put(part, first[0])
+
+                    if first[1] != second[1]:
+                        put(part, [(n, p) for n, p in second[0]], bar=1)
+                        said = f"{first[1]}, with {second[1]} added in bar 2"
+                    else:
+                        said = first[1]
+
+                    candidates.append((said, part, sound, []))
+
+            self.add_new("hats", DRUM_NOUNS[sub], "Drums", sub, candidates)
         elif sub == "Percussion":
             choices = [p for p in s.percs if p not in ("none", "crash")] or ["rim3"]
-            a = PERCS[self.pick(choices)]
-            b = PERCS[self.pick(["conga", "rimsync", "shaker", "cowbell", "toms"])]
-            part = Part(4)
-            put(part, a[0])
-            for n_p in b[0]:
-                if n_p[0] != "cycle":
-                    part.grid(n_p[0], n_p[1], bar=2).grid(n_p[0], n_p[1], bar=3)
-            said = a[1] if a[1] == b[1] else f"{a[1]}, with {b[1]} joining in bars 3 and 4"
-            self.add("perc", DRUM_NOUNS[sub], "Drums", sub, said, part, sound)
+            one, two = self.pick(choices), self.pick(["conga", "rimsync", "shaker", "cowbell", "toms"])
+            candidates = []
+
+            for x in [one] + [p for p in choices if p != one] + [p for p in PERCS if p not in choices and p not in ("none", "crash")]:
+                for y in [two] + [p for p in ("conga", "rimsync", "shaker", "cowbell", "toms", "metal") if p != two]:
+                    a, b = PERCS[x], PERCS[y]
+                    part = Part(4)
+                    put(part, a[0])
+                    for n_p in b[0]:
+                        if n_p[0] != "cycle":
+                            part.grid(n_p[0], n_p[1], bar=2).grid(n_p[0], n_p[1], bar=3)
+                    candidates.append((a[1] if a[1] == b[1] else f"{a[1]}, with {b[1]} joining in bars 3 and 4", part, sound, []))
+
+            self.add_new("perc", DRUM_NOUNS[sub], "Drums", sub, candidates)
         elif sub == "Fills":
             kind = self.pick(["snare", "toms", "clap"])
-            part = Part(1)
-            kick = KICKS[self.pick(s.kicks)]
-            put(part, [(n, p[:8] + "........") for n, p in kick[0] if isinstance(n, int)])
-            if kind == "snare":
-                part.grid(SNARE, "........gogoxxXX")
-                words = "the kick for two beats, then a snare roll rising to the next bar"
-            elif kind == "toms":
-                for n, p in [(HT, "........xx......"), (MT, "..........xx...."), (LT, "............xxXX")]:
-                    part.grid(n, p)
-                words = "the kick for two beats, then toms falling high to low"
-            else:
-                part.grid(CLAP, "........x.x.xxxX")
-                words = "the kick for two beats, then claps stuttering into the next bar"
-            self.add("fill", DRUM_NOUNS[{"snare": "snare fill", "toms": "tom fill", "clap": "clap fill"}[kind]], "Drums", sub, words, part, sound)
+            drawn = self.pick(s.kicks)
+            start = zlib.crc32(s.style.encode("utf-8"))
+            bodies = FILLS[kind]
+            candidates = []
+
+            # The first of its kind as it was, then the others from a place of the style's own; under each
+            # the kick drawn, then the style's others.
+            for body, words in bodies[:1] + [bodies[1 + (start + i) % (len(bodies) - 1)] for i in range(len(bodies) - 1)]:
+                for key in [drawn] + [k for k in s.kicks if k != drawn] + [k for k in KICKS if k not in s.kicks]:
+                    part = Part(1)
+                    put(part, [(n, p[:8] + "........") for n, p in KICKS[key][0] if isinstance(n, int)])
+                    for n, p in body:
+                        part.grid(n, p)
+                    candidates.append((words, part, sound, []))
+
+            self.add_new("fill", DRUM_NOUNS[{"snare": "snare fill", "toms": "tom fill", "clap": "clap fill"}[kind]], "Drums", sub, candidates)
         elif sub == "Breaks":
             part = Part(2)
-            pattern = self.pick([
-                ("X.x.......x.....X.........x..x..", "....X..g.g..X.......X..g.g..X.g.", "a two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat"),
-                ("X.........X.....X.x.......x.....", "....X.......X..g....X..g....X...", "a two-step break with a kick pickup in bar 2"),
-                ("X..X......X.....X..X....X.......", "....X..g.g..X.......X..g.g..X..X", "a chopped break, the snare doubling at the end of bar 2"),
-            ])
-            part.grid(KICK, pattern[0]).grid(SNARE, pattern[1])
-            put(part, HATS[self.pick(["eighths", "sixteen", "shuffle"])][0])
-            self.add("break", DRUM_NOUNS[sub], "Drums", sub, pattern[2], part, drums(self.pick(["break", s.drums_sound[0]])))
+            pattern = self.pick(BREAKS[:3])   # one of the three there were
+            hats = self.pick(["eighths", "sixteen", "shuffle"])
+            voice = drums(self.pick(["break", s.drums_sound[0]]))
+            candidates = []
+
+            for kick, snare, words in [pattern] + [b for b in BREAKS if b != pattern]:
+                for h in [hats] + [x for x in ("eighths", "sixteen", "shuffle", "ride", "dnb") if x != hats]:
+                    part = Part(2)
+                    part.grid(KICK, kick).grid(SNARE, snare)
+                    put(part, HATS[h][0])
+                    candidates.append((words + ", under " + HATS[h][1], part, voice, []))
+
+            self.add_new("break", DRUM_NOUNS[sub], "Drums", sub, candidates)
         return True
 
     # -- Bass -------------------------------------------------------------------------------
@@ -2540,17 +2756,28 @@ class Maker:
             key = self.pick(s.bass)
             patch = self.pick(s.bass_patches)
 
-        rhythm, words = (self.acid_rhythm(), "a 303 line with accents and slides") if key == "acid" else BASS[key]
+        acid = (self.acid_rhythm(), "a 303 line with accents and slides") if key == "acid" else None
         bars = self.pick([2, 4]) if len(set(degrees)) > 1 else self.pick([1, 2, 4])
-        moving = bars == 4 and len(set(degrees)) > 1
-        part = Part(bars)
 
-        for b in range(bars):
-            degree = degrees[b] if moving else 0
-            part.line(self.bass_bar(mode, rhythm, degree), gate=0.9 if key in ("sub", "subhalf", "drone", "reese", "reesemove") else 0.6, bar=b, repeat=False)
+        # The rhythm drawn first, then the style's own, then the rest of its kind; as long as drawn, then the others.
+        kind = {"Arp Bass": ARP_BASS_KEYS, "Picked & Played": PICKED_KEYS}.get(sub, s.bass + [k for k in SYNTH_BASS_KEYS if k not in s.bass])
+        keys = [key] + [k for k in kind if k != key]
+        candidates = []
 
-        words += (", moving through the roots of " + chord_names(mode, degrees)) if moving else ", on A"
-        self.add("bass", ROLE_NOUNS[sub], "Bass", sub, words, part, synth(patch), self.mode_tags(mode, [n[0] for n in part.notes]))
+        for k in keys:
+            rhythm, words = acid if k == "acid" else BASS[k]
+
+            for length in [bars] + [b for b in (4, 2, 1) if b != bars]:
+                moving = length == 4 and len(set(degrees)) > 1
+                part = Part(length)
+
+                for b in range(length):
+                    part.line(self.bass_bar(mode, rhythm, degrees[b] if moving else 0), gate=0.9 if k in ("sub", "subhalf", "drone", "reese", "reesemove") else 0.6, bar=b, repeat=False)
+
+                said = words + ((", moving through the roots of " + chord_names(mode, degrees)) if moving else ", on A")
+                candidates.append((said, part, synth(patch), self.mode_tags(mode, [n[0] for n in part.notes])))
+
+        self.add_new("bass", ROLE_NOUNS[sub], "Bass", sub, candidates)
 
     def sub_bass(self, mode, degrees, drawn, bars):
         """A sub: the figures its kind of style plays first (the one drawn before them where it is one of
@@ -2611,32 +2838,66 @@ class Maker:
         part = Part(4)
         patch = self.pick(s.chord_patches)
 
+        progressions = [(degrees, mode)] + [PROGRESSIONS[p] for p in s.progressions if PROGRESSIONS[p] != (degrees, mode)]
+        start = zlib.crc32((s.style + sub).encode("utf-8"))
+
         if sub == "Progressions":
-            rhythm = self.pick([None, "x.......x.......", "..x...x...x...x.", "x.x.x.x.x.x.x.x."])
-            if rhythm is None:
-                part.chords(chords, velocity=84)
-                words = f"{chord_words}, a bar each"
-            else:
-                part.chords(chords, rhythm=rhythm, length_steps={"x.......x.......": 8, "..x...x...x...x.": 2, "x.x.x.x.x.x.x.x.": 1}[rhythm], velocity=86)
-                words = f"{chord_words}, " + {"x.......x.......": "in half notes", "..x...x...x...x.": "struck on the offbeats", "x.x.x.x.x.x.x.x.": "pulsing in 8ths"}[rhythm]
+            drawn = self.pick([0, 1, 2, 3])   # one of the four there were
+            order = [drawn] + [(start + i) % len(CHORD_RHYTHMS) for i in range(len(CHORD_RHYTHMS)) if (start + i) % len(CHORD_RHYTHMS) != drawn]
+            candidates = []
+
+            for i in order:
+                rhythm, steps, how = CHORD_RHYTHMS[i]
+
+                for d, m in progressions:
+                    for with_seventh in (seventh, not seventh):
+                        chords = [names(triad(m, x, seventh=with_seventh)) for x in d]
+                        part = Part(4)
+                        part.chords(chords, velocity=84) if rhythm is None else part.chords(chords, rhythm=rhythm, length_steps=steps, velocity=86)
+                        candidates.append((f"{chord_names(m, d, with_seventh)}, {how}", part, synth(patch), self.mode_tags(m, [n[0] for n in part.notes])))
+
+            return self.add_new("harmony", ROLE_NOUNS[sub], "Harmony", sub, candidates)
         elif sub == "Keys & Comping":
-            rhythm = self.pick(["..x...x...x...x.", "x..x..x...x..x..", "..x..x....x..x..", "x.....x.....x..."])
-            part = Part(2)
-            part.chords(chords[:2], rhythm=rhythm, length_steps=1, velocity=82)
-            words = f"short {chord_names(mode, degrees[:2], seventh)} chords comping over two bars"
+            drawn = self.pick([0, 1, 2, 3])
+            order = [drawn] + [(start + i) % len(COMP_RHYTHMS) for i in range(len(COMP_RHYTHMS)) if (start + i) % len(COMP_RHYTHMS) != drawn]
+            candidates = []
+
+            for i in order:
+                rhythm, how = COMP_RHYTHMS[i]
+
+                for d, m in progressions:
+                    for with_seventh in (seventh, not seventh):
+                        chords = [names(triad(m, x, seventh=with_seventh)) for x in d]
+                        part = Part(2)
+                        part.chords(chords[:2], rhythm=rhythm, length_steps=1, velocity=82)
+                        candidates.append((f"short {chord_names(m, d[:2], with_seventh)} chords comping over two bars, {how}", part, synth(patch),
+                                           self.mode_tags(m, [n[0] for n in part.notes])))
+
+            return self.add_new("harmony", ROLE_NOUNS[sub], "Harmony", sub, candidates)
         elif sub == "Stabs":
             self.pick([0, 1, 2, 3, 4])   # the rhythm, drawn as before so the names after it stay
             patch = self.pick(["stab"] + s.chord_patches)
             return self.stabs(patch)
-        else:   # Strums: the chord's notes a 16th apart, each held to the bar's end
-            part = Part(4)
-            for b, ch in enumerate(chords):
-                for k, n in enumerate(ch):
-                    part.add(pitch(n), b * BAR + k * S, BAR - k * S - 40, 90 - 6 * k)
-            words = f"{chord_words}, each strummed upwards a 16th a note"
+        else:   # Strums: the chord's notes one after another, each held to the bar's end
+            candidates = []
 
-        tags = self.mode_tags(mode, [n[0] for n in part.notes])
-        self.add("harmony", ROLE_NOUNS[sub], "Harmony", sub, words, part, synth(patch), tags)
+            for apart, down, twice, how in STRUMS[start % len(STRUMS):] + STRUMS[:start % len(STRUMS)]:
+                for d, m in progressions:
+                    for with_seventh in (seventh, not seventh):
+                        part = Part(4)
+
+                        for b, x in enumerate(d):
+                            ch = triad(m, x, seventh=with_seventh)
+                            ch = ch[::-1] if down else ch
+
+                            for at in ([0, 8] if twice else [0]):
+                                end = 8 if twice and at == 0 else 16
+                                for k, p in enumerate(ch):
+                                    part.add(p, b * BAR + (at + k * apart) * S, (end - at - k * apart) * S - 40, 90 - 6 * k)
+
+                        candidates.append((f"{chord_names(m, d, with_seventh)}, {how}", part, synth(patch), self.mode_tags(m, [n[0] for n in part.notes])))
+
+            return self.add_new("harmony", ROLE_NOUNS[sub], "Harmony", sub, candidates)
 
     def stabs(self, patch):
         """Stabs: the chords its kind of style stabs with, each in the rhythms it favours, until one is new."""
@@ -2717,16 +2978,24 @@ class Maker:
         s = self.s
         degrees, mode = self.progression()
         figures = [f for f in ARP_FIGURES if f[2] == sub]
-        figure, words, _ = self.pick(figures)
+        drawn = self.pick(figures[:{"Up & Down": 2, "16th Sequences": 3, "Plucks": 3, "Gated": 3}[sub]])   # drawn from as many as there were
         octave_low = self.pick([52, 57, 64])
-        chords = [names(triad(mode, d, low=octave_low, high=octave_low + 11)) for d in degrees]
         bars = self.pick([1, 2, 4])
-        chords = chords[:bars] if bars > 1 else chords[:1]
-        part = arp(chords, figure, gate=0.4 if sub == "Gated" else 0.5)
         patch = self.pick(s.arp_patches)
-        words += ", through " + chord_names(mode, degrees[:bars]) if bars > 1 else ", on " + chord_name(mode, degrees[0])
-        tags = self.mode_tags(mode, [n[0] for n in part.notes])
-        self.add("arp", ROLE_NOUNS[sub], "Arps", sub, words, part, synth(patch), tags)
+
+        # The figure drawn first, then the others from a place of the style's own; its length as drawn, then the others.
+        start = zlib.crc32((s.style + sub).encode("utf-8")) % len(figures)
+        candidates = []
+
+        for figure, words, _ in [drawn] + [f for f in figures[start:] + figures[:start] if f != drawn]:
+            for length in [bars] + [b for b in (2, 4, 1) if b != bars]:
+                chords = [names(triad(mode, d, low=octave_low, high=octave_low + 11)) for d in degrees]
+                chords = chords[:length] if length > 1 else chords[:1]
+                part = arp(chords, figure, gate=0.4 if sub == "Gated" else 0.5)
+                said = words + (", through " + chord_names(mode, degrees[:length]) if length > 1 else ", on " + chord_name(mode, degrees[0]))
+                candidates.append((said, part, synth(patch), self.mode_tags(mode, [n[0] for n in part.notes])))
+
+        self.add_new("arp", ROLE_NOUNS[sub], "Arps", sub, candidates)
 
     def motif(self, mode, low, high, rhythm):
         """A bar's notes for a rhythm, stepping through the mode from a chord tone."""

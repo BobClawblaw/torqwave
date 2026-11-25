@@ -161,7 +161,7 @@
   <TORQWAVE_SEQUENCE version="1" name="Afterimage Snare Roll" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Industrial/Futurepop" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
-      <N p="36" s="960" l="120" v="0.944882"/>
+      <N p="36" s="480" l="120" v="0.771654"/>
       <N p="38" s="1920" l="120" v="0.314961"/>
       <N p="38" s="2160" l="120" v="0.582677"/>
       <N p="38" s="2400" l="120" v="0.314961"/>

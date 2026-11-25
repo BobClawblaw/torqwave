@@ -79,7 +79,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Distorted 909 Bass" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>78.VMjLgTD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQoMGcuIGckQFH4.SNfHTXyMmHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Chrome Turn" role="Harmony" subRole="Progressions" key="A minor" tags="" note="A minor, F, G, A minor, struck on the offbeats" style="Industrial/Synth-EBM" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Chrome Turn" role="Harmony" subRole="Progressions" key="A minor" tags="" note="A minor, C, G, D minor, struck on the offbeats" style="Industrial/Synth-EBM" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="57" s="480" l="460" v="0.677165"/>
       <N p="60" s="480" l="460" v="0.677165"/>
@@ -93,18 +93,18 @@
       <N p="57" s="3360" l="460" v="0.677165"/>
       <N p="60" s="3360" l="460" v="0.677165"/>
       <N p="64" s="3360" l="460" v="0.677165"/>
-      <N p="53" s="4320" l="460" v="0.677165"/>
-      <N p="57" s="4320" l="460" v="0.677165"/>
       <N p="60" s="4320" l="460" v="0.677165"/>
-      <N p="53" s="5280" l="460" v="0.677165"/>
-      <N p="57" s="5280" l="460" v="0.677165"/>
+      <N p="64" s="4320" l="460" v="0.677165"/>
+      <N p="67" s="4320" l="460" v="0.677165"/>
       <N p="60" s="5280" l="460" v="0.677165"/>
-      <N p="53" s="6240" l="460" v="0.677165"/>
-      <N p="57" s="6240" l="460" v="0.677165"/>
+      <N p="64" s="5280" l="460" v="0.677165"/>
+      <N p="67" s="5280" l="460" v="0.677165"/>
       <N p="60" s="6240" l="460" v="0.677165"/>
-      <N p="53" s="7200" l="460" v="0.677165"/>
-      <N p="57" s="7200" l="460" v="0.677165"/>
+      <N p="64" s="6240" l="460" v="0.677165"/>
+      <N p="67" s="6240" l="460" v="0.677165"/>
       <N p="60" s="7200" l="460" v="0.677165"/>
+      <N p="64" s="7200" l="460" v="0.677165"/>
+      <N p="67" s="7200" l="460" v="0.677165"/>
       <N p="55" s="8160" l="460" v="0.677165"/>
       <N p="59" s="8160" l="460" v="0.677165"/>
       <N p="62" s="8160" l="460" v="0.677165"/>
@@ -117,18 +117,18 @@
       <N p="55" s="11040" l="460" v="0.677165"/>
       <N p="59" s="11040" l="460" v="0.677165"/>
       <N p="62" s="11040" l="460" v="0.677165"/>
-      <N p="57" s="12000" l="460" v="0.677165"/>
-      <N p="60" s="12000" l="460" v="0.677165"/>
-      <N p="64" s="12000" l="460" v="0.677165"/>
-      <N p="57" s="12960" l="460" v="0.677165"/>
-      <N p="60" s="12960" l="460" v="0.677165"/>
-      <N p="64" s="12960" l="460" v="0.677165"/>
-      <N p="57" s="13920" l="460" v="0.677165"/>
-      <N p="60" s="13920" l="460" v="0.677165"/>
-      <N p="64" s="13920" l="460" v="0.677165"/>
-      <N p="57" s="14880" l="460" v="0.677165"/>
-      <N p="60" s="14880" l="460" v="0.677165"/>
-      <N p="64" s="14880" l="460" v="0.677165"/>
+      <N p="62" s="12000" l="460" v="0.677165"/>
+      <N p="65" s="12000" l="460" v="0.677165"/>
+      <N p="69" s="12000" l="460" v="0.677165"/>
+      <N p="62" s="12960" l="460" v="0.677165"/>
+      <N p="65" s="12960" l="460" v="0.677165"/>
+      <N p="69" s="12960" l="460" v="0.677165"/>
+      <N p="62" s="13920" l="460" v="0.677165"/>
+      <N p="65" s="13920" l="460" v="0.677165"/>
+      <N p="69" s="13920" l="460" v="0.677165"/>
+      <N p="62" s="14880" l="460" v="0.677165"/>
+      <N p="65" s="14880" l="460" v="0.677165"/>
+      <N p="69" s="14880" l="460" v="0.677165"/>
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Minor Stab" bus="0" instrument="1" musical="1" gainDb="-6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRSo41axAxTzElXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
@@ -169,10 +169,9 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Black Pin" bus="0" instrument="1" musical="1" gainDb="-3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPrE1XqABTo4lHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Machine Love Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Industrial/Synth-EBM" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Machine Love Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Industrial/Synth-EBM" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
-      <N p="36" s="960" l="120" v="0.944882"/>
       <N p="38" s="1920" l="120" v="0.314961"/>
       <N p="38" s="2160" l="120" v="0.582677"/>
       <N p="38" s="2400" l="120" v="0.314961"/>

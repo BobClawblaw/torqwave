@@ -397,25 +397,9 @@ void runPresetTests (AudioEngine& engine)
 
         // What each category may still have: presets with another's notes, and the styles its widest shape is in.
         const std::map<juce::String, std::pair<int, int>> allowed {
-            { "Arps > 16th Sequences", { 19, 6 } },
-            { "Arps > Gated", { 4, 4 } },
-            { "Arps > Plucks", { 13, 5 } },
-            { "Arps > Up & Down", { 15, 6 } },
-            { "Bass > Arp Bass", { 5, 7 } },
-            { "Bass > Picked & Played", { 4, 2 } },
-            { "Bass > Synth Bass", { 34, 5 } },
-            { "Drums > Breaks", { 2, 2 } },
-            { "Drums > Fills", { 31, 9 } },
-            { "Drums > Full Grooves", { 8, 2 } },
-            { "Drums > Hats & Tops", { 14, 4 } },
-            { "Drums > Kick", { 31, 15 } },
-            { "Drums > Percussion", { 2, 2 } },
-            { "Drums > Snare & Clap", { 7, 5 } },
-            { "Harmony > Keys & Comping", { 14, 7 } },
-            { "Harmony > Progressions", { 12, 9 } },
-            { "Harmony > Strums", { 2, 7 } }
+
         };
-        const int stylesUnderHalfAllowed = 9;
+        const int stylesUnderHalfAllowed = 0;
         juce::StringArray over, table, flat;
 
         juce::StringArray high, brief;

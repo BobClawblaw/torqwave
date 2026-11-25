@@ -175,7 +175,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Acid Helix" bus="0" instrument="1" musical="1" gainDb="-10.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPikFYffTYrkFdh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Interference Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Phrygian" note="Short A minor, B flat chords comping over two bars" style="Industrial/Electro-industrial" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Interference Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Phrygian" note="Short A minor, B flat chords comping over two bars, off the beat in dotted pairs" style="Industrial/Electro-industrial" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="480" l="220" v="0.645669"/>
       <N p="60" s="480" l="220" v="0.645669"/>
@@ -204,47 +204,47 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Dub Chord Stab" bus="0" instrument="1" musical="1" gainDb="-6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>74.VMjLgDD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQ0IFHCg1axQFHSQWXhIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Datastream Up-Down Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Phrygian" note="Rolling 16ths with the octave on top, through A minor, B flat" style="Industrial/Electro-industrial" energy="2" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Datastream Up-Down Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Phrygian" note="Down from the octave first, then up and down in 16ths, through A minor, B flat" style="Industrial/Electro-industrial" energy="2" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
-      <N p="69" s="0" l="120" v="0.755906"/>
-      <N p="72" s="240" l="120" v="0.755906"/>
-      <N p="76" s="480" l="120" v="0.755906"/>
-      <N p="72" s="720" l="120" v="0.755906"/>
-      <N p="81" s="960" l="120" v="0.755906"/>
-      <N p="72" s="1200" l="120" v="0.755906"/>
-      <N p="76" s="1440" l="120" v="0.755906"/>
-      <N p="72" s="1680" l="120" v="0.755906"/>
-      <N p="69" s="1920" l="120" v="0.755906"/>
-      <N p="72" s="2160" l="120" v="0.755906"/>
-      <N p="76" s="2400" l="120" v="0.755906"/>
-      <N p="72" s="2640" l="120" v="0.755906"/>
+      <N p="81" s="0" l="120" v="0.755906"/>
+      <N p="76" s="240" l="120" v="0.755906"/>
+      <N p="72" s="480" l="120" v="0.755906"/>
+      <N p="69" s="720" l="120" v="0.755906"/>
+      <N p="72" s="960" l="120" v="0.755906"/>
+      <N p="76" s="1200" l="120" v="0.755906"/>
+      <N p="81" s="1440" l="120" v="0.755906"/>
+      <N p="76" s="1680" l="120" v="0.755906"/>
+      <N p="72" s="1920" l="120" v="0.755906"/>
+      <N p="69" s="2160" l="120" v="0.755906"/>
+      <N p="72" s="2400" l="120" v="0.755906"/>
+      <N p="76" s="2640" l="120" v="0.755906"/>
       <N p="81" s="2880" l="120" v="0.755906"/>
       <N p="76" s="3120" l="120" v="0.755906"/>
       <N p="72" s="3360" l="120" v="0.755906"/>
-      <N p="76" s="3600" l="120" v="0.755906"/>
-      <N p="70" s="3840" l="120" v="0.755906"/>
-      <N p="74" s="4080" l="120" v="0.755906"/>
-      <N p="77" s="4320" l="120" v="0.755906"/>
-      <N p="74" s="4560" l="120" v="0.755906"/>
-      <N p="82" s="4800" l="120" v="0.755906"/>
-      <N p="74" s="5040" l="120" v="0.755906"/>
-      <N p="77" s="5280" l="120" v="0.755906"/>
-      <N p="74" s="5520" l="120" v="0.755906"/>
-      <N p="70" s="5760" l="120" v="0.755906"/>
-      <N p="74" s="6000" l="120" v="0.755906"/>
-      <N p="77" s="6240" l="120" v="0.755906"/>
-      <N p="74" s="6480" l="120" v="0.755906"/>
+      <N p="69" s="3600" l="120" v="0.755906"/>
+      <N p="82" s="3840" l="120" v="0.755906"/>
+      <N p="77" s="4080" l="120" v="0.755906"/>
+      <N p="74" s="4320" l="120" v="0.755906"/>
+      <N p="70" s="4560" l="120" v="0.755906"/>
+      <N p="74" s="4800" l="120" v="0.755906"/>
+      <N p="77" s="5040" l="120" v="0.755906"/>
+      <N p="82" s="5280" l="120" v="0.755906"/>
+      <N p="77" s="5520" l="120" v="0.755906"/>
+      <N p="74" s="5760" l="120" v="0.755906"/>
+      <N p="70" s="6000" l="120" v="0.755906"/>
+      <N p="74" s="6240" l="120" v="0.755906"/>
+      <N p="77" s="6480" l="120" v="0.755906"/>
       <N p="82" s="6720" l="120" v="0.755906"/>
       <N p="77" s="6960" l="120" v="0.755906"/>
       <N p="74" s="7200" l="120" v="0.755906"/>
-      <N p="77" s="7440" l="120" v="0.755906"/>
+      <N p="70" s="7440" l="120" v="0.755906"/>
     </NOTES>
-    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Glass Shard" bus="0" instrument="1" musical="1" gainDb="-1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxQrE1byAxTnElbjIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Glass Shard" bus="0" instrument="1" musical="1" gainDb="-1.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxQrE1byAxTnElbjIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
   <TORQWAVE_SEQUENCE version="1" name="Circuit Clap Stutter" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps stuttering into the next bar" style="Industrial/Electro-industrial" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
-      <N p="36" s="960" l="120" v="0.944882"/>
+      <N p="36" s="1440" l="120" v="0.771654"/>
       <N p="39" s="1920" l="120" v="0.771654"/>
       <N p="39" s="2400" l="120" v="0.771654"/>
       <N p="39" s="2880" l="120" v="0.771654"/>

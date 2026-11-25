@@ -113,7 +113,7 @@
   <TORQWAVE_SEQUENCE version="1" name="Lumen Tom Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then toms falling high to low" style="Techno/Melodic" energy="2" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
-      <N p="36" s="960" l="120" v="0.944882"/>
+      <N p="36" s="1440" l="120" v="0.771654"/>
       <N p="48" s="1920" l="120" v="0.771654"/>
       <N p="48" s="2160" l="120" v="0.771654"/>
       <N p="45" s="2400" l="120" v="0.771654"/>
