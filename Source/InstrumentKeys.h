@@ -57,6 +57,10 @@ namespace InstrumentKeys
     void setAuditionLoop (bool);
     extern std::function<void()> auditionChanged;
 
+    /** Stops the audition and lets go of every key in every instrument window that is open: part of
+        Transport > Silence All Instruments. Message thread. */
+    void silenceEveryStrip();
+
     /** The session's tempo where it stands, for auditions to play at (they are written at 125 BPM
         and stretched to it); unset or 0, 125. Message thread. */
     extern std::function<double()> sessionTempo;

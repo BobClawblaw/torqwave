@@ -785,6 +785,9 @@ void DocumentPlayerProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // note was played live).
     if (std::exchange (wasPlaying, playing) && ! playing && mode == Mode::session)
         inserts.endNotes();
+
+    if (silenceAsked.exchange (false))
+        inserts.endNotes();
     const auto blocksRead = sessionSource.getBlocksRead();
 
     // Live MIDI for the chosen track's instrument this block; while playing a session at the

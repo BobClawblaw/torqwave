@@ -69,6 +69,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Play/Pause | `Space` |
 | Loop Playback | `Cmd-L` |
 | Loop to Selection | `Option-P` |
+| Silence All Instruments (Panic) | `Shift-Cmd-.` |
 | Go to Start | `Home` |
 | Go to End | `End` |
 | Go to Previous Edge | `Cmd-Left Arrow` |

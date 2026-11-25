@@ -208,6 +208,11 @@ public:
         frame f of pass k (from 0) is played frame f + k * (end - start). */
     void setLoop (juce::int64 start, juce::int64 end);
 
+    /** Panic: every instrument gets an off for each note it was given, then All Notes Off and All
+        Sound Off, the next time it runs (as when playback stops), so a note left sounding by an
+        instrument or a plug-in is silenced. From any thread. */
+    void silenceInstruments() noexcept                    { silenceAsked = true; }
+
     /** Plays this audio in place of the document (see DocumentSource::setStandIn); nullptr: the document. */
     void setStandIn (AudioDocument::Snapshot s)            { source.setStandIn (std::move (s)); }
     bool hasStandIn() const noexcept                       { return source.hasStandIn(); }
@@ -334,6 +339,7 @@ private:
     int separateOutputs = -1;   // see setSeparateOutputs
     double sourceRate = 0.0;
     std::atomic<juce::int64> playedFrame { 0 }, playStart { 0 };   // playStart: where play() or a seek began
+    std::atomic<bool> silenceAsked { false };  // silenceInstruments(): acted on at the audio thread's next block
     std::atomic<bool> loopChanged { false };   // the loop was changed while playing: the played frame is counted afresh from where the source is
     void countFromSource();
     std::atomic<int> outputLatency { 0 }, deviceLatency { 0 }, midiOutDelay { 0 };

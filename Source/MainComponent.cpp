@@ -203,7 +203,7 @@ namespace
         cmdTakeOutOfFolder,
         cmdAskTorqwave,
         cmdSaveInstrumentPreset,
-        cmdLoopToSelection, cmdClearLoop, cmdInfoLine, cmdTrackInspector,
+        cmdLoopToSelection, cmdClearLoop, cmdInfoLine, cmdTrackInspector, cmdSilenceInstruments,
         cmdShowTakes, cmdFlattenComp,
         cmdAddSection, cmdPlayArrangement, cmdFlattenArrangement,
         cmdAddVca, cmdAllAutomationOff, cmdAllAutomationRead, cmdAllAutomationTouch, cmdAllAutomationLatch, cmdAllAutomationWrite,
@@ -2899,6 +2899,8 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.addDefaultKeypress ('p', alt);
                             info.setActive (multitrackMode && (! multitrack.getTimeSelection().isEmpty() || ! multitrack.getSelectedClips().empty()
                                                                || ! multitrack.getSelectedNoteClips().empty())); break;
+        case cmdSilenceInstruments: info.setInfo ("Silence All Instruments (Panic)", "Stop every note an instrument or a plug-in is still sounding: each gets its notes' offs, All Notes Off and All Sound Off, and the audition stops", "Transport", 0);
+                            info.addDefaultKeypress ('.', cmd | shift); break;
         case cmdClearLoop: info.setInfo ("Clear Loop", "Remove the session's loop, so Loop Playback goes round the selection or the whole session", "Transport", 0);
                             info.setActive (multitrackMode && ! engine.session.getState()->loop.isEmpty()); break;
         case cmdSaveInstrumentPreset: info.setInfo ("Save Instrument Preset...", "Save the selected track's instrument as it sounds now (a drum kit, say), to choose again by name, and for Ask Torq", "Multitrack", 0);
@@ -3584,6 +3586,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdSaveInstrumentPreset: showSaveInstrumentPreset(); break;
         case cmdLoopToSelection: multitrack.setLoopFromSelection(); updatePlaybackLoop(); break;
         case cmdClearLoop: multitrack.clearLoop(); updatePlaybackLoop(); break;
+        case cmdSilenceInstruments: InstrumentKeys::silenceEveryStrip(); engine.getPlayer().silenceInstruments(); break;
         case cmdSaveCopyWithAudio: saveSessionCopyWithAudio(); break;
         case cmdAddFromTemplate: chooseTrackTemplateToAdd(); break;
         case cmdZeroCrossings:
@@ -3984,7 +3987,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             group ("Surround", { cmdSurroundMaster, cmdSevenOneMaster });
             group ("Render and Export", { cmdBounceTrack, cmdFreezeTrack, 0, cmdMixDown, cmdExportStems, cmdExportFolderStems, cmdExportRegions });
             break;
-        case 5: add ({ cmdPlayPause, cmdStop, cmdLoopPlayback, cmdLoopRegion, cmdLoopToSelection, cmdClearLoop, cmdRecord, cmdRecordingOptions, 0, cmdGoToStart, cmdGoToEnd, cmdPreviousEdge, cmdNextEdge, cmdGoToTime, 0, cmdSurroundFoldDown, cmdSurroundOutputs }); break;
+        case 5: add ({ cmdPlayPause, cmdStop, cmdLoopPlayback, cmdLoopRegion, cmdLoopToSelection, cmdClearLoop, cmdRecord, cmdRecordingOptions, 0, cmdSilenceInstruments, 0, cmdGoToStart, cmdGoToEnd, cmdPreviousEdge, cmdNextEdge, cmdGoToTime, 0, cmdSurroundFoldDown, cmdSurroundOutputs }); break;
         case 6: add ({ cmdAddMarker, cmdRegionFromClips, cmdRegionsOverClips, cmdMarkersAtIntervals, cmdMarkersAtSilences, cmdRegionsOverSounds, cmdMarkClipping, cmdRegionsFromMarkers, cmdFitRegions, cmdRenameMarkers, 0, cmdPreviousMarker, cmdNextMarker, cmdSelectBetweenMarkers, cmdSelectRegion, cmdPreviousRegion, cmdNextRegion, cmdMarkersToZero, 0, cmdMoveMarkersInSelection, cmdDeleteMarkersInSelection, cmdDeleteAllMarkers }); break;
         case 7:
         {

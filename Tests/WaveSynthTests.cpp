@@ -268,6 +268,38 @@ namespace
         synth.processBlock (block, midi);
         check (sounding == 16 && synth.getNumSounding() == 0,
                "synth: sixteen voices sound, a seventeenth note taking the oldest, and All Notes Off ends them (" + juce::String (sounding) + ")");
+
+        // A patch changed with notes down: three notes struck in poly, the patch then set to mono (as
+        // choosing another patch does while a phrase plays), and the keys let go. Every note ends: none
+        // is left sounding because the mono voice was the only one a note-off looked at.
+        for (const auto mode : { 1.0f, 2.0f })
+        {
+            bare (synth);
+            synth.prepareToPlay (rate, 512);
+            midi.clear();
+
+            for (auto n : { 48, 55, 60 })
+                midi.addEvent (juce::MidiMessage::noteOn (1, n, 1.0f), 0);
+
+            synth.processBlock (block, midi);
+            midi.clear();
+            const auto struck = synth.getNumSounding();
+            set (synth, "voiceMode", mode);
+            synth.processBlock (block, midi);
+
+            for (auto n : { 48, 55, 60 })
+                midi.addEvent (juce::MidiMessage::noteOff (1, n), 0);
+
+            synth.processBlock (block, midi);
+            midi.clear();
+
+            for (int i = 0; i < 400; ++i)   // four seconds: past any release
+                synth.processBlock (block, midi);
+
+            check (struck == 3 && synth.getNumSounding() == 0,
+                   juce::String ("synth: three notes struck in poly all end when their keys are let go after the patch is set to ") + (mode < 1.5f ? "mono" : "legato")
+                       + " (" + juce::String (synth.getNumSounding()) + " left sounding)");
+        }
     }
 
     void testControllers (Synth& synth)

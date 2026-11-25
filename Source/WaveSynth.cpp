@@ -1044,16 +1044,18 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                     }
                     else
                         trigger (*v, back, v->velocity, false);
-
-                    return;
                 }
-
-                release (*v);
+                else
+                {
+                    release (*v);
+                }
             }
-
-            return;
         }
 
+        // Every voice still holding this note lets go. In poly that is the note's own voices. In mono
+        // and legato it is whatever the one voice above did not cover: a voice struck while the patch
+        // was still poly (the patch was changed with keys down, or mid-phrase) has no place in the
+        // held keys, and went on sounding for ever when this stopped at the mono voice.
         for (auto& v : voices)
             if (v.active && ! v.fading && v.note == note && v.down)
                 release (v);

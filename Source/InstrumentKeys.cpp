@@ -303,8 +303,28 @@ juce::String stepSound (juce::AudioProcessor& p, juce::Component* editor, int by
 }
 
 //==============================================================================
+namespace
+{
+    /** The strips there are, for silenceEveryStrip(). Message thread only. */
+    juce::Array<Strip*>& everyStrip()
+    {
+        static juce::Array<Strip*> strips;
+        return strips;
+    }
+}
+
+void silenceEveryStrip()
+{
+    for (auto* strip : everyStrip())
+    {
+        strip->stopAudition();
+        strip->allUp();
+    }
+}
+
 Strip::Strip (std::function<void (const juce::MidiMessage&)> send) : sendMessage (std::move (send))
 {
+    everyStrip().add (this);
     sounding.fill (-1);
     auditioner.on = [this] (int note, float v) { state.noteOn (1, note, v); };
     auditioner.off = [this] (int note) { state.noteOff (1, note, 0.0f); };
@@ -345,6 +365,7 @@ Strip::Strip (std::function<void (const juce::MidiMessage&)> send) : sendMessage
 
 Strip::~Strip()
 {
+    everyStrip().removeFirstMatchingValue (this);
     state.removeListener (this);
 }
 
