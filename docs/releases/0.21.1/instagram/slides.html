@@ -1,0 +1,108 @@
+<!doctype html>
+<!-- The Instagram set for Torqwave 0.21.1: seven slides of 1080 x 1350, drawn from the guide's own
+     test-drawn screenshots in docs/screenshots. Open this page with ?s=1 to ?s=7 for one slide each.
+     The PNGs beside it were made with a headless Chromium browser, one slide a run:
+       chrome -headless=new -hide-scrollbars -force-device-scale-factor=1 -window-size=1080,1350
+              -screenshot=slide-N.png "file://.../slides.html?s=N"   (each option with two dashes)
+     Every number on the slides is from the changelog's entry for 0.21.1 and the site's clip count. --><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1350px;overflow:hidden;background:#07090c}
+body{font-family:-apple-system,"SF Pro Display","Helvetica Neue",sans-serif;color:#f3f6f9;-webkit-font-smoothing:antialiased}
+.slide{display:none;position:relative;width:1080px;height:1350px;overflow:hidden;
+ background:radial-gradient(1200px 700px at 85% 108%,var(--g1),transparent 62%),radial-gradient(900px 600px at -10% -5%,var(--g2),transparent 60%),#07090c}
+.slide.on{display:block}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:54px 54px;mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.15) 55%,transparent)}
+.top{position:absolute;left:72px;right:72px;top:64px;display:flex;justify-content:space-between;align-items:center;font:600 24px/1 "SF Mono",Menlo,monospace;letter-spacing:.14em}
+.brand{display:flex;align-items:center;gap:14px;color:#fff}
+.brand i{display:block;width:8px;height:28px;border-radius:3px;background:var(--a)}
+.tag{color:var(--a);border:1.5px solid var(--a);border-radius:999px;padding:10px 18px;font-size:20px;letter-spacing:.12em}
+.eyebrow{position:absolute;left:72px;top:168px;font:700 26px/1 "SF Mono",Menlo,monospace;letter-spacing:.2em;color:var(--a)}
+h1{position:absolute;left:68px;right:60px;top:214px;font-weight:800;font-size:var(--hs,112px);line-height:.98;letter-spacing:-.035em}
+h1 em{font-style:normal;color:var(--a)}
+.sub{position:absolute;left:72px;width:820px;font-weight:500;font-size:38px;line-height:1.28;color:#b9c3cf;letter-spacing:-.01em}
+.sub b{color:#fff;font-weight:650}
+.shot{position:absolute;border-radius:18px;border:1.5px solid rgba(255,255,255,.16);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 50px 120px rgba(0,0,0,.75),0 0 140px var(--glow);transform-origin:left top}
+.chips{position:absolute;left:72px;right:60px;display:flex;flex-wrap:wrap;gap:14px}
+.chip{font-weight:700;font-size:30px;padding:16px 24px;border-radius:14px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.14);letter-spacing:-.01em}
+.chip b{color:var(--a);font-weight:800}
+.foot{position:absolute;left:72px;right:72px;bottom:58px;display:flex;justify-content:space-between;align-items:center;font:600 24px/1 "SF Mono",Menlo,monospace;letter-spacing:.1em;color:#8b97a5}
+.foot .go{color:#fff}
+.fade{position:absolute;left:0;right:0;bottom:0;height:260px;background:linear-gradient(180deg,transparent,#07090c 78%)}
+.big{position:absolute;left:68px;right:60px;font-weight:800;letter-spacing:-.04em;line-height:.95}
+.url{position:absolute;left:72px;font-weight:800;font-size:54px;letter-spacing:-.02em;color:var(--a)}
+.list{position:absolute;left:72px;right:72px;font-size:40px;font-weight:600;line-height:1.5;color:#dfe6ee}
+.list span{color:var(--a);font-weight:800;margin-right:18px}
+</style></head><body>
+
+<section class="slide" style="--a:#46d6b0;--g1:rgba(70,214,176,.30);--g2:rgba(74,159,224,.22);--glow:rgba(70,214,176,.28)">
+ <div class="grid"></div>
+ <div class="top"><div class="brand"><i></i>TORQWAVE</div><div class="tag">0.21.1 OUT NOW</div></div>
+ <h1 style="top:176px;--hs:128px">Edit it.<br>Build it.<br><em>Finish it.</em></h1>
+ <div class="sub" style="top:600px">An audio editor and a DAW in <b>one app</b>.<br><b>Free.</b> Open source. No account.</div>
+ <img class="shot" src="../../../screenshots/multitrack.png" style="left:72px;top:800px;width:1500px;transform:perspective(2400px) rotateY(-14deg) rotateX(6deg)">
+ <div class="fade"></div>
+ <div class="foot"><span>macOS · WINDOWS · LINUX</span><span class="go">SWIPE →</span></div>
+</section>
+
+<section class="slide" style="--a:#ff7a59;--g1:rgba(255,122,89,.30);--g2:rgba(160,112,216,.22);--glow:rgba(255,122,89,.26)">
+ <div class="grid"></div>
+ <div class="top"><div class="brand"><i></i>TORQWAVE</div><div class="tag">NEW IN 0.21.1</div></div>
+ <h1 style="top:170px;--hs:108px">The drum machine<br>is a <em>sampler</em> now.</h1>
+ <div class="sub" style="top:420px;width:900px">Drop your own samples on any pad. Or bring in a Battery 4 kit you already own.</div>
+ <div class="chips" style="top:560px"><div class="chip"><b>64</b> pads</div><div class="chip"><b>16</b> velocity layers</div><div class="chip"><b>5</b> effects on every pad</div><div class="chip"><b>54</b> synthesized drum sources</div></div>
+ <img class="shot" src="../../../screenshots/guide-drums.png" style="left:72px;top:770px;width:1380px;transform:perspective(2400px) rotateY(-10deg) rotateX(4deg)">
+ <div class="fade" style="height:170px"></div>
+ <div class="foot"><span>BASIC DRUMS</span><span class="go">2 / 7</span></div>
+</section>
+
+<section class="slide" style="--a:#4aa8ff;--g1:rgba(74,168,255,.32);--g2:rgba(70,214,176,.18);--glow:rgba(74,168,255,.30)">
+ <div class="grid"></div>
+ <div class="top"><div class="brand"><i></i>TORQWAVE</div><div class="tag">BUILT IN</div></div>
+ <h1 style="top:170px;--hs:150px"><em>3,743</em><br>patches.</h1>
+ <div class="sub" style="top:510px;width:900px">A three-oscillator wavetable synth, in the box. Drop <b>any sound</b> on an oscillator and it becomes the wavetable.</div>
+ <img class="shot" src="../../../screenshots/guide-synth.png" style="left:72px;top:740px;width:1320px;transform:perspective(2400px) rotateY(-10deg) rotateX(4deg)">
+ <div class="fade" style="height:170px"></div>
+ <div class="foot"><span>TORQWAVE SYNTH</span><span class="go">3 / 7</span></div>
+</section>
+
+<section class="slide" style="--a:#c58bff;--g1:rgba(197,139,255,.30);--g2:rgba(74,168,255,.20);--glow:rgba(197,139,255,.28)">
+ <div class="grid"></div>
+ <div class="top"><div class="brand"><i></i>TORQWAVE</div><div class="tag">DECRYPT</div></div>
+ <h1 style="top:170px;--hs:112px">Play it one note.<br>It <em>builds the patch.</em></h1>
+ <div class="sub" style="top:440px;width:900px">Give the synth a recording. It finds a patch that plays like it, and shows you how it got there.</div>
+ <img class="shot" src="../../../screenshots/guide-decrypt.png" style="left:72px;top:700px;width:1400px;transform:perspective(2400px) rotateY(-10deg) rotateX(4deg)">
+ <div class="fade" style="height:170px"></div>
+ <div class="foot"><span>A PATCH FROM A RECORDING</span><span class="go">4 / 7</span></div>
+</section>
+
+<section class="slide" style="--a:#ffc24a;--g1:rgba(255,194,74,.26);--g2:rgba(255,122,89,.18);--glow:rgba(255,194,74,.24)">
+ <div class="grid"></div>
+ <div class="top"><div class="brand"><i></i>TORQWAVE</div><div class="tag">THE EDITOR</div></div>
+ <h1 style="top:170px;--hs:120px">Down to the<br><em>spectrum.</em></h1>
+ <div class="sub" style="top:440px;width:920px">Select by box, lasso or brush. Heal, de-noise, de-click, repair clipping. Then master to a delivery spec.</div>
+ <img class="shot" src="../../../screenshots/editor.png" style="left:72px;top:720px;width:1500px;transform:perspective(2400px) rotateY(-12deg) rotateX(5deg)">
+ <div class="fade" style="height:170px"></div>
+ <div class="foot"><span>WAVEFORM + SPECTRAL EDITING</span><span class="go">5 / 7</span></div>
+</section>
+
+<section class="slide" style="--a:#46d6b0;--g1:rgba(70,214,176,.26);--g2:rgba(197,139,255,.20);--glow:rgba(70,214,176,.2)">
+ <div class="grid"></div>
+ <div class="top"><div class="brand"><i></i>TORQWAVE</div><div class="tag">ASK TORQ</div></div>
+ <h1 style="top:190px;--hs:124px">Say what<br>you want.<br><em>Read the plan.</em><br>Press Apply.</h1>
+ <div class="sub" style="top:780px;width:900px">It works with a language model <b>you run yourself</b>. Nothing changes until you say so, and one undo takes it all back.</div>
+ <div class="list" style="top:1040px"><div><span>→</span>Your machine. Your model.</div><div><span>→</span>No cloud. No AI company in the loop.</div></div>
+ <div class="foot"><span>LOCAL AI, OPTIONAL, OFF BY DEFAULT</span><span class="go">6 / 7</span></div>
+</section>
+
+<section class="slide" style="--a:#46d6b0;--g1:rgba(70,214,176,.34);--g2:rgba(74,168,255,.24);--glow:rgba(70,214,176,.2)">
+ <div class="grid"></div>
+ <div class="top"><div class="brand"><i></i>TORQWAVE</div><div class="tag">0.21.1</div></div>
+ <h1 style="top:190px;--hs:120px"><em>Free.</em><br>No account.<br>No subscription.</h1>
+ <div class="sub" style="top:640px;width:920px">Open source. An editor, a DAW, a wavetable synth, a sampler and a drum machine in one download.</div>
+ <div class="list" style="top:850px"><div><span>→</span>macOS, Windows and Linux</div><div><span>→</span>Hear 1,123 clips before you download</div></div>
+ <div class="url" style="top:1070px">bobclawblaw.github.io/torqwave</div>
+ <div class="foot"><span>LINK IN BIO</span><span class="go">7 / 7</span></div>
+</section>
+
+<script>const n=+(new URLSearchParams(location.search).get('s')||1);document.querySelectorAll('.slide')[n-1].classList.add('on')</script>
+</body></html>

@@ -1,6 +1,6 @@
 # Announcing Torqwave 0.21.1
 
-A draft, not posted. 0.20.0 was the last release set against in public, and 0.20.1 and 0.21.0 were not announced, so this announces what is new since 0.20.0, with 0.21.1's drum sampler first. It is one long post of text, then the pictures in posts of four under it, for people to click through. An Instagram caption for the infographic in this folder follows.
+A draft, not posted. 0.20.0 was the last release set against in public, and 0.20.1 and 0.21.0 were not announced, so this announces what is new since 0.20.0, with 0.21.1's drum sampler first. It is one long post of text, then the pictures in posts of four under it, for people to click through. A set of pictures and a caption for Instagram follow.
 
 The post is about 4,300 characters, so it needs an account that can post long posts. The pictures are in [compare/graphics/](../../compare/graphics/) (made from the [comparison data](../../compare/README.md)), [screenshots/](../../screenshots/) and this folder.
 
@@ -99,12 +99,6 @@ For graphic 1, `1-release-by-the-numbers.png`:
 A dark chart titled "Torqwave 0.21.1: what it adds over 0.20.0". Six tiles, each with a number and the figure for 0.20.0 under it: 64 drum pads (30 before), 54 drum sources (30 before), 15 drum kits (7 before), 16 layers a pad (0 before), 8 choke groups of your own (0 before), 1,032 sequence presets (1,018 before). A list beside them, "Also new since 0.20.0": sample pads, your own sounds on any drum pad, in layers; on each pad an envelope, transient shaper, saturator, EQ and compressor; imports a folder of sounds, or a Battery 4 kit you own; Modern types for 21 drum sounds; Continue where you left off, unsaved sessions too; Ask Torq remembers the conversation; Maximizer, Click Repair and Repair Clipping corrected; Panic, every instrument silenced.
 ```
 
-For the infographic, `infographic-portrait.png` (and `infographic-square.png`):
-
-```alt
-A dark poster headed Torqwave 0.21.1, "Basic Drums: a drum synth and a sampler in one". A grid of 64 pads, the first 30 coloured, beside a large 64: 30 drum sounds, 34 for your samples. Five tiles: 54 synthesized sources; 16 velocity layers a pad, round robin; 5 effects on every pad; 15 kits; 8 choke groups of your own. Under them: the five are envelope, transient shaper, saturator, EQ, compressor; imports a folder of sounds, or Battery 4 kit files you own; also an unsaved session comes back on Continue, and a Panic command. At the foot, bobclawblaw.github.io/torqwave and "Free, open source".
-```
-
 For `docs/screenshots/guide-drums.png`:
 
 ```alt
@@ -133,18 +127,42 @@ Basic Drums after a folder of sounds was imported, with a report over the window
 
 ## Instagram
 
-The infographic is in this folder (portrait, 1080 by 1350). A caption for it:
+A set of seven pictures for one post that people swipe through, each 1080 by 1350, in [instagram/](instagram/): `slide-1.png` to `slide-7.png`, with the page that draws them. Post them in order. Slide 1 or slide 2 also stands alone as a single picture.
+
+1. **Edit it. Build it. Finish it.** The multitrack view. "An audio editor and a DAW in one app. Free. Open source. No account."
+2. **The drum machine is a sampler now.** The Basic Drums window. 64 pads, 16 velocity layers, 5 effects on every pad, 54 synthesized drum sources.
+3. **3,743 patches.** Torqwave Synth.
+4. **Play it one note. It builds the patch.** Decrypt.
+5. **Down to the spectrum.** The editor.
+6. **Say what you want. Read the plan. Press Apply.** Ask Torq, in words only.
+7. **Free. No account. No subscription.** The site's address, and "Hear 1,123 clips before you download".
+
+A caption for the post:
 
 ```text
-Torqwave 0.21.1: the drum machine is a drum sampler too.
+Torqwave 0.21.1 is out: an audio editor and a DAW in one app. Free and open source.
 
-64 pads. Your own samples in up to 16 velocity layers, with round robin. An envelope, transient shaper, saturator, EQ and compressor on every pad. 54 synthesized drum sources and 15 kits, no samples shipped. Bring in a Battery 4 kit you own, or a folder of sounds.
+New in this one: the drum machine is a sampler too. 64 pads, your own samples in up to 16 velocity layers with round robin, five effects on every pad, 54 synthesized drum sources, 15 kits. Bring in a Battery 4 kit you own, or a folder of sounds.
 
-Torqwave is a free, open-source audio editor and DAW in one program, for macOS, Windows and Linux. No account, no subscription.
+Also in the box: a wavetable synth with 3,743 patches, Decrypt (a synth patch from a recording of one note), a sampler, spectral editing and repair, and Ask Torq, which plans edits with a language model you run yourself.
+
+macOS, Windows and Linux. No account, no subscription.
 
 Hear it before you download it: link in bio (bobclawblaw.github.io/torqwave)
 
-#torqwave #musicproduction #drummachine #sampler #sounddesign #techno #industrialmusic #ebm #opensource #daw
+#torqwave #musicproduction #daw #audioeditor #drummachine #sampler #synth #sounddesign #techno #industrialmusic #ebm #opensource
+```
+
+Alt text, one a slide:
+
+```alt
+1. Torqwave, 0.21.1 out now. "Edit it. Build it. Finish it." An audio editor and a DAW in one app; free, open source, no account. Below, Torqwave's multitrack view with drum, bass, keys and lead tracks. macOS, Windows, Linux.
+2. "The drum machine is a sampler now." Drop your own samples on any pad, or bring in a Battery 4 kit you already own. 64 pads, 16 velocity layers, 5 effects on every pad, 54 synthesized drum sources. Below, the Basic Drums window with its grid of pads.
+3. "3,743 patches." A three-oscillator wavetable synth, built in; drop any sound on an oscillator and it becomes the wavetable. Below, the Torqwave Synth window with three oscillators and two filters.
+4. "Play it one note. It builds the patch." Give the synth a recording and it finds a patch that plays like it, and shows how it got there. Below, the Decrypt page: a round scope with candidate patches round a signal and a numbered path between them.
+5. "Down to the spectrum." Select by box, lasso or brush; heal, de-noise, de-click, repair clipping; then master to a delivery spec. Below, Torqwave's editor with a waveform over a spectrogram.
+6. "Say what you want. Read the plan. Press Apply." Ask Torq works with a language model you run yourself; nothing changes until you say so, and one undo takes it all back. Your machine, your model; no cloud. Optional, and off by default.
+7. "Free. No account. No subscription." Open source: an editor, a DAW, a wavetable synth, a sampler and a drum machine in one download, for macOS, Windows and Linux. Hear 1,123 clips before you download, at bobclawblaw.github.io/torqwave.
 ```
 
 ## Notes for whoever posts it
