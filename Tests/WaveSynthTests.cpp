@@ -401,6 +401,8 @@ namespace
                "the filter envelope and velocity as modulation slots, glide as legato");
     }
 
+    void testOscillatorPages (Synth&, WaveSynthEditor&);
+
     void testEditor (Synth& synth)
     {
         synth.loadPatch ("Init");
@@ -446,6 +448,7 @@ namespace
             {
                 window->showModulator (page);
                 window->showRightPage (page % 3);
+                window->showOscillatorPage (page % 3);
                 window->refresh();
                 const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
                 drawn = drawn && image.getWidth() == window->getWidth() * 2;
@@ -453,6 +456,7 @@ namespace
         }
 
         Theme::apply (before);
+        testOscillatorPages (synth, *window);
         synth.loadPatch ("Wailing Fuzz Lead");
         window->refresh();
         synth.loadPatch ("Wailing Fuzz Lead");
@@ -460,6 +464,93 @@ namespace
         check (drawn && window->knobFor ("osc1Position") != nullptr && window->knobFor ("osc1Position")->getLabel() == "Bright",
                "synth: every page of its window draws in dark and light at 2x, and a string's Position reads as its brightness");
         editor.reset();
+    }
+
+    /** The window's nine oscillators: three at a time in the panels, the strip choosing which (a click on a
+        cell, its dot switching the oscillator), the Osc Levels page following, and FM From beside the warp
+        while the warp is FM. */
+    void testOscillatorPages (Synth& synth, WaveSynthEditor& window)
+    {
+        synth.loadPatch ("Init");
+        window.showModulator (0);
+        window.showOscillatorPage (0);
+        window.refresh();
+
+        // Shown in the window: it and every parent up to the window visible (none is on the screen in a test).
+        const auto shown = [&window] (const juce::Component* c)
+        {
+            for (; c != nullptr && c != &window; c = c->getParentComponent())
+                if (! c->isVisible())
+                    return false;
+
+            return c == &window;
+        };
+        const auto knobShown = [&] (const juce::String& id) { return shown (window.knobFor (id)); };
+
+        std::vector<juce::Component*> cells, fmFrom;
+        const std::function<void (juce::Component&)> find = [&] (juce::Component& in)
+        {
+            for (auto* c : in.getChildren())
+            {
+                if (auto* t = dynamic_cast<juce::SettableTooltipClient*> (c))
+                {
+                    if (t->getTooltip().startsWith ("Oscillator ") && t->getTooltip().contains ("click the dot")) cells.push_back (c);
+                    if (t->getTooltip().startsWith ("FM From:")) fmFrom.push_back (c);
+                }
+
+                find (*c);
+            }
+        };
+        find (window);
+
+        const auto click = [] (juce::Component& c, juce::Point<float> at)
+        {
+            const auto event = juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &c, &c, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false);
+            c.mouseDown (event);
+            c.mouseUp (event);
+        };
+
+        const auto firstPage = knobShown ("osc1Position") && knobShown ("osc3Unison") && ! knobShown ("osc4Position") && ! knobShown ("osc7Position");
+        check (cells.size() == 9 && fmFrom.size() == 9 && firstPage && window.knobFor ("osc9Position") != nullptr,
+               "synth window: nine cells in the oscillator strip and nine oscillator panels, oscillators 1 to 3 shown first");
+
+        if (cells.size() != 9 || fmFrom.size() != 9)
+            return;
+
+        // A click on oscillator 8's cell shows 7 to 9; one on its dot switches it on.
+        const auto wasOn = synth.parameter ("osc8On")->getValue();
+        click (*cells[7], cells[7]->getLocalBounds().getCentre().toFloat());
+        window.refresh();
+        const auto thirdPage = window.getOscillatorPage() == 2 && knobShown ("osc8Position") && knobShown ("osc9Pitch") && ! knobShown ("osc1Position") && ! knobShown ("osc5Position");
+        click (*cells[7], { 8.0f, 8.0f });
+        window.refresh();
+        const auto switched = wasOn < 0.5f && synth.parameter ("osc8On")->getValue() > 0.5f && window.getOscillatorPage() == 2;
+        const auto samePlace = window.knobFor ("osc8Position") != nullptr && window.knobFor ("osc2Position") != nullptr
+                                && window.knobFor ("osc8Position")->getBoundsInParent() == window.knobFor ("osc2Position")->getBoundsInParent()
+                                && window.knobFor ("osc8Position")->getParentComponent()->getBounds() == window.knobFor ("osc2Position")->getParentComponent()->getBounds();
+        check (thirdPage && switched && samePlace,
+               "synth window: a click on oscillator 8's cell shows oscillators 7 to 9 in the three panels (8 where 2 was), and a click on its dot switches it on");
+
+        // The Osc Levels page shows the page's three.
+        window.showModulator (6);
+        const auto levelsThird = knobShown ("osc7EnvAttack") && knobShown ("osc9EnvSustain") && ! knobShown ("osc1EnvAttack");
+        window.showOscillatorPage (1);
+        const auto levelsSecond = knobShown ("osc4EnvAttack") && knobShown ("osc6EnvDecay") && ! knobShown ("osc7EnvAttack") && knobShown ("osc5Position");
+        window.showModulator (0);
+        const auto levelsGone = ! knobShown ("osc4EnvAttack") && knobShown ("osc4Position");
+        check (levelsThird && levelsSecond && levelsGone, "synth window: the Osc Levels page shows the level envelopes of the oscillators the strip's page shows");
+
+        // FM From appears beside the warp while the warp is FM.
+        set (synth, "osc5Warp", (float) WaveSynth::Warp::fm);
+        window.refresh();
+        const auto fmShown = shown (fmFrom[4]) && ! shown (fmFrom[3]) && ! shown (fmFrom[5]) && ! fmFrom[4]->getBounds().isEmpty();
+        set (synth, "osc5Warp", (float) WaveSynth::Warp::off);
+        window.refresh();
+        check (fmShown && ! shown (fmFrom[4]), "synth window: FM From shows beside oscillator 5's warp while the warp is FM, and goes with it");
+
+        window.showOscillatorPage (0);
+        synth.loadPatch ("Init");
+        window.refresh();
     }
 
     //==========================================================================
@@ -1828,6 +1919,22 @@ void saveSynthWindow (const juce::File& folder)
     window->showModulator (6);
     window->showRightPage (1);
     save ("levels");
+
+    // Oscillators 4 to 6: 4 on a vowel, 5 an FM warp taking oscillator 1, 6 off.
+    set (synth, "osc4On", 1.0f);
+    set (synth, "osc4Table", (float) WaveTables::Table::vowel);
+    set (synth, "osc4Position", 40.0f);
+    set (synth, "osc5On", 1.0f);
+    set (synth, "osc5Table", (float) WaveTables::Table::pulse);
+    set (synth, "osc5Warp", (float) WaveSynth::Warp::fm);
+    set (synth, "osc5WarpAmount", 45.0f);
+    set (synth, "osc5FmFrom", 1.0f);
+    set (synth, "osc5Volume", 50.0f);
+    window->showModulator (0);
+    window->showRightPage (0);
+    window->showOscillatorPage (1);
+    save ("oscillators-4-6");
+    window->showOscillatorPage (0);
 
     // Oscillator 1 playing a table made from a sound: a sawtooth whose filter closes over two seconds.
     std::vector<float> sound ((size_t) (2.0 * rate));

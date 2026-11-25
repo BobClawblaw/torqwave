@@ -69,7 +69,8 @@ namespace
                                 public juce::SettableTooltipClient
     {
     public:
-        WavetableView (Synth& s, int index) : synth (s), osc (index)
+        WavetableView (Synth& s, int index)
+            : synth (s), osc (index), positionDestination (WaveSynth::destinationIds().indexOf ("osc" + juce::String (index + 1) + "Position"))
         {
             setTooltip ("Drop a sound here to make a table from it: Position then plays through its tone, start to end. Double-click to choose a file");
         }
@@ -166,7 +167,7 @@ namespace
             now.amount = plainValue (synth, n + "WarpAmount") * 0.01f;
             now.on = param<juce::AudioParameterBool> (synth, n + "On")->get();
             now.position = plainValue (synth, n + "Position") * 0.01f;
-            const auto live = synth.getReadings().destination[(size_t) (osc * 9)].load (std::memory_order_relaxed);
+            const auto live = synth.getReadings().destination[(size_t) positionDestination].load (std::memory_order_relaxed);
             now.live = live >= 0.0f ? live : now.position;
             now.live = std::round (now.live * 200.0f) / 200.0f;
             now.own = now.table == (int) WaveTables::Table::sampled ? synth.getSampledTable (osc).get() : nullptr;
@@ -275,7 +276,7 @@ namespace
         }
 
         Synth& synth;
-        int osc;
+        int osc, positionDestination;
         bool over = false;   // a sound is being dragged over it
         std::unique_ptr<juce::FileChooser> chooser;
         State state;
@@ -823,6 +824,192 @@ namespace
         juce::StringArray pages;
     };
 
+    //==========================================================================
+    /** The OSCILLATORS strip: all nine at a glance, a cell each with its switch, its table, its wave at
+        Position and its level. The panels below show three at a time; the page switch, or a click on a
+        cell, chooses which three. A click on a cell's dot switches that oscillator on or off. */
+    class OscillatorStrip final : public Panel
+    {
+    public:
+        explicit OscillatorStrip (Synth& s) : Panel ("Oscillators"), pages ({ "1-3", "4-6", "7-9" })
+        {
+            setInterceptsMouseClicks (false, true);
+            pages.setTooltip ("Which three oscillators the panels below show");
+            pages.onChange = [this] (int p) { if (onPage != nullptr) onPage (p); };
+            addAndMakeVisible (pages);
+
+            for (int o = 0; o < WaveSynth::numOscillators; ++o)
+            {
+                cells[(size_t) o] = std::make_unique<Cell> (s, o);
+                cells[(size_t) o]->onChoose = [this, o] { if (onPage != nullptr) onPage (o / WaveSynth::numFirstOscillators); };
+                addAndMakeVisible (*cells[(size_t) o]);
+            }
+        }
+
+        std::function<void (int)> onPage;
+
+        void setPage (int page)
+        {
+            pages.chosen = page;
+            pages.repaint();
+
+            for (int o = 0; o < WaveSynth::numOscillators; ++o)
+                cells[(size_t) o]->setShown (o / WaveSynth::numFirstOscillators == page);
+        }
+
+        void update()
+        {
+            for (auto& c : cells)
+                c->update();
+        }
+
+        void resized() override
+        {
+            auto r = getLocalBounds().reduced (8, 5);
+            r.setLeft (getHeaderBounds().getX());
+            pages.setBounds (r.removeFromLeft (150).removeFromTop (22));
+            r.removeFromLeft (14);
+            const auto w = r.getWidth() / WaveSynth::numOscillators;
+
+            for (auto& c : cells)
+                c->setBounds (r.removeFromLeft (w).reduced (3, 0));
+        }
+
+    private:
+        class Cell final : public juce::Component,
+                           public juce::SettableTooltipClient
+        {
+        public:
+            Cell (Synth& s, int index) : synth (s), osc (index), id ("osc" + juce::String (index + 1))
+            {
+                setMouseCursor (juce::MouseCursor::PointingHandCursor);
+                setTooltip ("Oscillator " + juce::String (index + 1) + ": click to show it below; click the dot to switch it on or off");
+            }
+
+            std::function<void()> onChoose;
+
+            void setShown (bool s)        { if (s != shown) { shown = s; repaint(); } }
+
+            void update()
+            {
+                State now;
+                now.on = param<juce::AudioParameterBool> (synth, id + "On")->get();
+                now.table = param<juce::AudioParameterChoice> (synth, id + "Table")->getIndex();
+                now.position = std::round (plainValue (synth, id + "Position") * 0.01f * 100.0f) / 100.0f;
+                now.level = std::round (synth.parameter (id + "Volume")->getValue() * 100.0f) / 100.0f;
+                auto table = now.table == (int) WaveTables::Table::sampled ? synth.getSampledTable (osc) : nullptr;
+                now.own = table.get();
+
+                if (now != state)
+                {
+                    state = now;
+                    held = std::move (table);
+                    repaint();
+                }
+            }
+
+            void paint (juce::Graphics& g) override
+            {
+                auto r = getLocalBounds().toFloat().reduced (0.5f);
+                g.setColour (Theme::inset);
+                g.fillRoundedRectangle (r, Theme::radius);
+                g.setColour (shown ? Theme::accent : Theme::line);
+                g.drawRoundedRectangle (r, Theme::radius, shown ? 1.5f : 1.0f);
+
+                const auto colour = state.on ? Theme::accent : Theme::faintText;
+                auto inner = r.reduced (6.0f, 3.0f);
+                auto bar = inner.removeFromRight (4.0f);
+                inner.removeFromRight (4.0f);
+                auto top = inner.removeFromTop (13.0f);
+
+                // The dot, the number and the table.
+                const auto dot = top.removeFromLeft (9.0f).withSizeKeepingCentre (7.0f, 7.0f);
+                g.setColour (colour);
+                state.on ? g.fillEllipse (dot) : g.drawEllipse (dot, 1.2f);
+                top.removeFromLeft (4.0f);
+                g.setColour (state.on ? Theme::textStrong : Theme::dimText);
+                g.setFont (bold (10.5f));
+                g.drawText (juce::String (osc + 1), top.removeFromLeft (10.0f), juce::Justification::centredLeft);
+                g.setFont (plain (9.5f));
+                g.drawFittedText (state.on ? tableName() : juce::String ("Off"), top.toNearestInt(), juce::Justification::centredLeft, 1, 0.8f);
+
+                // The wave at Position.
+                juce::Path p;
+                const auto& level = (held != nullptr ? held->bank : WaveTables::get ((WaveTables::Table) state.table)).levels[3];
+                constexpr int points = 48;
+
+                for (int i = 0; i <= points; ++i)
+                {
+                    const auto phase = (double) i / (double) points;
+                    const auto t = (float) phase;
+                    const auto v = state.table == (int) WaveTables::Table::string ? std::exp (-3.0f * t) * std::sin (6.0f * juce::MathConstants<float>::twoPi * t)
+                                                                                 : WaveTables::read (level, state.position, phase);
+                    const juce::Point<float> pt { inner.getX() + t * inner.getWidth(), inner.getCentreY() - v * inner.getHeight() * 0.42f };
+                    i == 0 ? p.startNewSubPath (pt) : p.lineTo (pt);
+                }
+
+                g.setColour (state.on ? colour : colour.withAlpha (0.5f));
+                g.strokePath (p, juce::PathStrokeType (1.2f));
+
+                // The level.
+                g.setColour (Theme::surface);
+                g.fillRoundedRectangle (bar, 1.5f);
+
+                if (state.on)
+                {
+                    g.setColour (Theme::accent);
+                    g.fillRoundedRectangle (bar.withTrimmedTop (bar.getHeight() * (1.0f - state.level)), 1.5f);
+                }
+            }
+
+            void mouseUp (const juce::MouseEvent& e) override
+            {
+                if (e.mouseWasDraggedSinceMouseDown())
+                    return;
+
+                if (e.position.x < 20.0f && e.position.y < 20.0f)
+                {
+                    auto* on = synth.parameter (id + "On");
+                    on->beginChangeGesture();
+                    on->setValueNotifyingHost (on->getValue() > 0.5f ? 0.0f : 1.0f);
+                    on->endChangeGesture();
+                    update();
+                }
+
+                if (onChoose != nullptr)
+                    onChoose();
+            }
+
+        private:
+            struct State
+            {
+                bool on = false;
+                int table = 0;
+                float position = 0.0f, level = 0.0f;
+                const void* own = nullptr;
+                bool operator!= (const State& o) const { return on != o.on || table != o.table || ! juce::exactlyEqual (position, o.position) || ! juce::exactlyEqual (level, o.level) || own != o.own; }
+            };
+
+            juce::String tableName() const
+            {
+                if (state.table == (int) WaveTables::Table::sampled)
+                    return held != nullptr ? held->name : juce::String ("Sampled");
+
+                return WaveTables::names()[state.table];
+            }
+
+            Synth& synth;
+            int osc;
+            juce::String id;
+            bool shown = false;
+            State state;
+            std::shared_ptr<const WaveTables::Sampled> held;   // the Sampled table drawn, kept while it is
+        };
+
+        PageSwitch pages;
+        std::array<std::unique_ptr<Cell>, WaveSynth::numOscillators> cells;
+    };
+
     /** The patch browser: the category and name, arrows for the one before and after, a heart to mark
         the patch as a favourite, and a click for the whole list: the favourites first, then by
         category. A patch chosen from the favourites puts the arrows on the favourites alone. */
@@ -1261,8 +1448,11 @@ struct WaveSynthEditor::Content final : public juce::Component
         addAndMakeVisible (presets);
         presets.carryTexts ([&s] { return s.getPresetTexts(); }, [&s] (const EffectPresets::Texts& t) { s.setPresetTexts (t); });
 
-        // The oscillators.
-        for (int o = 0; o < WaveSynth::numFirstOscillators; ++o)
+        // The oscillators: all nine, three at a time in the panels, the strip above choosing which.
+        addAndMakeVisible (strip);
+        strip.onPage = [this] (int page) { showOscillatorPage (page); };
+
+        for (int o = 0; o < WaveSynth::numOscillators; ++o)
         {
             const auto n = "osc" + juce::String (o + 1);
             auto& osc = oscillators[(size_t) o];
@@ -1275,6 +1465,9 @@ struct WaveSynthEditor::Content final : public juce::Component
             osc.position = knob (*osc.panel, n + "Position", "Position", Knob::Size::large);
             osc.warpAmount = knob (*osc.panel, n + "WarpAmount", "Warp");
             osc.warp = selector (*osc.panel, n + "Warp");
+            osc.fmFrom = selector (*osc.panel, n + "FmFrom");
+            osc.fmFrom->setTooltip ("FM From: the oscillator the FM warp takes. Before: the one before it (Osc 1 takes Osc 3), as it always was. "
+                                    "One named here is worked out even when off or silent, to drive this FM, and is never heard for it");
             osc.random = toggle (*osc.panel, n + "RandomPhase", "Rnd");
             osc.random->setTooltip ("Each note's unison voices start at random phases (on), or all at Phase (off)");
 
@@ -1354,7 +1547,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         levelsTab->onClick = [this] { showModulator (6); };
         modulatorPanel->addAndMakeVisible (*levelsTab);
 
-        for (int o = 0; o < WaveSynth::numFirstOscillators; ++o)
+        for (int o = 0; o < WaveSynth::numOscillators; ++o)
         {
             const auto n = "osc" + juce::String (o + 1) + "Env";
             LevelControls c;
@@ -1487,6 +1680,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         viewPages.setTooltip ("Knobs: the synth's controls. Decrypt: drop a recording of one note and find a patch that plays like it. Decrypted: the patches you took from Decrypt and named");
         viewPages.onChange = [this] (int i) { showView (i == 1 ? 2 : i == 2 ? 3 : 0); };
 
+        showOscillatorPage (0);
         showModulator (0);
         showRightPage (0);
         setSize (designWidth, designHeight);
@@ -1556,10 +1750,11 @@ struct WaveSynthEditor::Content final : public juce::Component
         else if (isLfo)
             lfoView.setLfo (modulator - 4);
 
-        for (auto& l : levels)
+        for (int o = 0; o < (int) levels.size(); ++o)
         {
-            l.on->setVisible (modulator == 6);
-            for (auto* k : l.knobs) k->setVisible (modulator == 6);
+            const auto shown = modulator == 6 && onPage (o);
+            levels[(size_t) o].on->setVisible (shown);
+            for (auto* k : levels[(size_t) o].knobs) k->setVisible (shown);
         }
 
         for (int e = 0; e < (int) envelopeKnobs.size(); ++e)
@@ -1573,6 +1768,21 @@ struct WaveSynthEditor::Content final : public juce::Component
         updateLfoVisibility();
         resized();
     }
+
+    /** Oscillators 1 to 3 (0), 4 to 6 (1) or 7 to 9 (2) in the three panels, and in the Osc Levels page. */
+    void showOscillatorPage (int page)
+    {
+        oscPage = juce::jlimit (0, WaveSynth::numOscillators / WaveSynth::numFirstOscillators - 1, page);
+        strip.setPage (oscPage);
+
+        if (strip.isVisible())
+            for (int o = 0; o < WaveSynth::numOscillators; ++o)
+                oscillators[(size_t) o].panel->setVisible (onPage (o));
+
+        showModulator (modulator);
+    }
+
+    bool onPage (int oscillator) const    { return oscillator / WaveSynth::numFirstOscillators == oscPage; }
 
     /** The knobs (0), Trace's scope (1, for its tests), Decrypt (2) or the Decrypted patches (3) under the header. */
     void showView (int index)
@@ -1592,6 +1802,9 @@ struct WaveSynthEditor::Content final : public juce::Component
         if (! trace && ! decrypt && ! decrypted)
         {
             // The pages within the knobs show what they showed.
+            for (int o = 0; o < WaveSynth::numOscillators; ++o)
+                oscillators[(size_t) o].panel->setVisible (onPage (o));
+
             showModulator (modulator);
             showRightPage (modPages.chosen);
         }
@@ -1659,10 +1872,17 @@ struct WaveSynthEditor::Content final : public juce::Component
         }
 
         // What a string's knobs mean, and which controls a choice leaves idle.
-        for (int o = 0; o < WaveSynth::numFirstOscillators; ++o)
+        for (int o = 0; o < WaveSynth::numOscillators; ++o)
         {
             auto& osc = oscillators[(size_t) o];
             const auto string = osc.table->getIndex() == (int) WaveTables::Table::string;
+
+            if (const auto fm = osc.warp->getIndex() == (int) WaveSynth::Warp::fm && ! string; fm != osc.fmFrom->isVisible())
+            {
+                osc.fmFrom->setVisible (fm);
+                layoutOscillator (osc);
+            }
+
             osc.position->setLabel (string ? "Bright" : "Position");
             osc.warpAmount->setLabel (string ? "Decay" : "Warp");
             osc.warp->setEnabled (! string);
@@ -1690,6 +1910,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         updateLfoVisibility();
         envelopeView.update();
         lfoView.update();
+        strip.update();
         browser.repaint();
     }
 
@@ -1743,16 +1964,23 @@ struct WaveSynthEditor::Content final : public juce::Component
         decryptView->setBounds (r);
         decryptedView->setBounds (r);
 
-        // The oscillators and sources.
+        // The strip of all nine, then the oscillators of its page, and the sources.
+        strip.setBounds (r.removeFromTop (stripHeight));
+        r.removeFromTop (gap);
         auto row = r.removeFromTop (236);
         const auto sourcesWidth = 196;
         const auto oscWidth = (row.getWidth() - sourcesWidth - gap * 3) / 3;
 
-        for (auto& osc : oscillators)
+        for (int place = 0; place < WaveSynth::numFirstOscillators; ++place)
         {
-            osc.panel->setBounds (row.removeFromLeft (oscWidth));
+            const auto bounds = row.removeFromLeft (oscWidth);
             row.removeFromLeft (gap);
-            layoutOscillator (osc);
+
+            for (int o = place; o < WaveSynth::numOscillators; o += WaveSynth::numFirstOscillators)
+            {
+                oscillators[(size_t) o].panel->setBounds (bounds);
+                layoutOscillator (oscillators[(size_t) o]);
+            }
         }
 
         sourcesPanel->setBounds (row);
@@ -1852,7 +2080,12 @@ struct WaveSynthEditor::Content final : public juce::Component
         auto knobsArea = top.removeFromTop (76);
         osc.position->setBounds (knobsArea.removeFromLeft (64));
         osc.warpAmount->setBounds (knobsArea.withSizeKeepingCentre (56, 66));
-        osc.warp->setBounds (top.removeFromBottom (20));
+        auto warpRow = top.removeFromBottom (20);
+
+        if (osc.fmFrom->isVisible())
+            osc.fmFrom->setBounds (warpRow.removeFromRight (warpRow.getWidth() / 2 - 2));
+
+        osc.warp->setBounds (warpRow.withTrimmedRight (osc.fmFrom->isVisible() ? 4 : 0));
         c.removeFromTop (4);
         const auto cell = c.getWidth() / 6;
         auto first = c.removeFromTop (c.getHeight() / 2);
@@ -1888,11 +2121,15 @@ struct WaveSynthEditor::Content final : public juce::Component
 
         if (modulator == 6)
         {
-            // The oscillators' level envelopes: a row each, its switch and four knobs.
-            const auto h = c.getHeight() / (int) levels.size();
+            // The level envelopes of the oscillators on the page: a row each, its switch and four knobs.
+            const auto h = c.getHeight() / WaveSynth::numFirstOscillators;
 
-            for (auto& l : levels)
+            for (int o = 0; o < (int) levels.size(); ++o)
             {
+                if (! onPage (o))
+                    continue;
+
+                auto& l = levels[(size_t) o];
                 auto row = c.removeFromTop (h);
                 l.on->setBounds (row.removeFromLeft (70).withSizeKeepingCentre (64, 20));
                 const auto w = row.getWidth() / (int) l.knobs.size();
@@ -2015,7 +2252,7 @@ struct WaveSynthEditor::Content final : public juce::Component
     }
 
     //==========================================================================
-    static constexpr int headerHeight = 52;
+    static constexpr int headerHeight = 52, stripHeight = 40;
 
     Synth& synth;
     EffectPresets::Bar presets;
@@ -2037,12 +2274,14 @@ struct WaveSynthEditor::Content final : public juce::Component
     {
         std::unique_ptr<Panel> panel;
         LedToggle *on = nullptr, *random = nullptr;
-        StepSelector *table = nullptr, *warp = nullptr;
+        StepSelector *table = nullptr, *warp = nullptr, *fmFrom = nullptr;
         std::unique_ptr<WavetableView> view;
         Knob *position = nullptr, *warpAmount = nullptr;
         std::vector<Knob*> knobs;
     };
-    std::array<Osc, WaveSynth::numFirstOscillators> oscillators;
+    std::array<Osc, WaveSynth::numOscillators> oscillators;
+    OscillatorStrip strip { synth };
+    int oscPage = 0;
 
     std::unique_ptr<Panel> sourcesPanel, routingPanel, ampPanel, modulatorPanel, macroPanel, rightPanel;
     Knob *subLevel = nullptr, *noiseLevel = nullptr, *noiseColour = nullptr, *ampLevel = nullptr, *ampPan = nullptr, *velocity = nullptr, *glide = nullptr, *bendRange = nullptr;
@@ -2146,6 +2385,16 @@ void WaveSynthEditor::showModulator (int index)
 void WaveSynthEditor::showRightPage (int index)
 {
     content->showRightPage (index);
+}
+
+void WaveSynthEditor::showOscillatorPage (int page)
+{
+    content->showOscillatorPage (page);
+}
+
+int WaveSynthEditor::getOscillatorPage() const
+{
+    return content->oscPage;
 }
 
 void WaveSynthEditor::toggleFavourite()
