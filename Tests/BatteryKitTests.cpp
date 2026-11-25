@@ -559,6 +559,7 @@ namespace
         plainCell.reverse = true;
         plainCell.layers[0].start = 1200;
         plainCell.layers[0].endBack = 100;
+        plainCell.colour = 16;
         plainCell.envelopeRead = plainCell.envelopeOn = true;
         plainCell.attack = 2.5f;
         plainCell.hold = 8.0f;
@@ -566,6 +567,7 @@ namespace
 
         auto& splitCell = m.cell ("Split", 38);
         splitCell.layers = { KitMaker::layer (b, 64, 127, 38), KitMaker::layer (a, 1, 63, 38) };
+        splitCell.colour = 3;
         splitCell.envelopeRead = true;
         splitCell.decay = 100.0f;
 
@@ -675,6 +677,8 @@ namespace
         }
 
         check (reports (plan, "effects, pitch envelopes, modulation"), "The report always says what an import never brings");
+        check (padNamed (plan, "Plain")->colour == juce::Colour (0xfff2403d) && padNamed (plan, "Split")->colour == juce::Colour (0xffa69129) && padNamed (plan, "Fade")->colour.isTransparent(),
+               "A cell's colour comes over: 16 is the first of Battery's sixteen as 0 is, 3 the fourth, and a cell that says none has none");
         check (padNamed (plan, "Plain")->envelope && near (padNamed (plan, "Plain")->hold, 8.0f) && ! padNamed (plan, "Split")->envelope && reports (plan, "1 cell has a volume envelope on"),
                "A cell's volume envelope is planned when it is on, not when it is there and off, and the report counts it");
 
@@ -711,6 +715,10 @@ namespace
 
         check (drums.getChoke ((int) DrumMachine::Sound::closedHat) == 1 && drums.getChoke ((int) DrumMachine::Sound::openHat) == 1 && drums.getChoke (kick) == 0,
                "The two cells that cut each other off are in choke group 1 on the pads, the others in none");
+
+        check (drums.getPadColour (kick) == juce::Colour (0xfff2403d) && drums.getPadColour ((int) DrumMachine::Sound::snare) == juce::Colour (0xffa69129)
+                   && drums.getPadColour (placeOf ("Fade")).isTransparent(),
+               "The colours are the pads' own, on a sound's pad while it plays samples and on a user pad");
 
         const auto fadePad = placeOf ("Fade");
         check (drums.getPadName (fadePad) == "Fade" && drums.getPadNote (fadePad) == 40 && drums.getLayers (fadePad).size() == 2 && drums.getLayers (fadePad)[1].lowVelocity == 66,

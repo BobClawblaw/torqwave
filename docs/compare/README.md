@@ -7,7 +7,7 @@ A running comparison of Torqwave with the editors and DAWs that are real alterna
   1. `1-release-by-the-numbers`: what the release adds over the one before.
   2. `2-against-the-editors`: the feature matrix against the audio editors.
   3. `3-against-the-daws-1` and 4. `4-against-the-daws-2`: the feature matrix against the DAWs, five to a graphic so the columns stay legible at X's size.
-  5. `5-where-torqwave-stands`: rows covered in each area by each product, and Torqwave's trend by release.
+  5. `5-where-torqwave-stands`: rows covered in each area by each product, and a panel: Torqwave's rows that are partial or no, or its trend by release when the releases shown count differently.
 - **[data/comparison.json](data/comparison.json):** the rows and their definitions, the products and why each is here, and the method.
 - **[data/snapshots/](data/snapshots/):** one file per Torqwave release with every cell: its value, a note, the page it was read on, a short quotation or what was checked, the version assessed and the date looked up. The files together are the history the trend is drawn from.
 - **[generate.py](generate.py):** makes MATRIX.md and the graphics from the data. Python's standard library only.
@@ -80,6 +80,6 @@ The cells marked `not confirmed` are listed in MATRIX.md under "Cells not confir
   - **A typed request becomes edits** stays partial: Ask Torq is still experimental, off to begin with, and ships no model. The follow-ups being measured with a real model is in its note.
   - Nothing else in the release touches a row: keeping an unsaved session at Continue where you left off and the Panic command have no row.
 - No row was added for a drum sampler's depth (velocity layers, round robin, importing another product's kits): each would need a cell for the fifteen other products read from their own documentation, and this release's turn-round did not allow that reading. It is the first row to consider next time.
-- The two Torqwave columns are alike in every row, and both count 45 of 53: nothing since 0.20.0 changed a row's value.
+- 0.20.0 and 0.21.1 are alike in every row, and both count 45 of 53: nothing since 0.20.0 changed a row's value. So the tables (graphics 2, 3, 4 and 6, and MATRIX.md's) show one Torqwave column, 0.21.1; the generator adds the earlier release's column only when a row's value differs. Graphic 5's panel, which would show two equal bars, lists the rows where 0.21.1 is partial or no; it draws the bars again when the releases shown count differently. 0.20.0 stays in the release graphic and in MATRIX.md's table of Torqwave by release.
 - The release graphic's tiles count Basic Drums against 0.20.0's (pads 64 from 30, sources 54 from 30, kits 15 from 7, layers a pad 16 from 0, choke groups of the user's own 8 from 0) and the sequence presets (1,032 from 1,018). Its list has eight lines and is set a little smaller to fit.
 - The other products' cells were not read again for it: they are as read on 2026-11-23.

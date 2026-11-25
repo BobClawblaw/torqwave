@@ -2,7 +2,7 @@
  "schema": 1,
  "release": "0.21.1",
  "previous": "0.20.0",
- "previous_note": "The 0.20.0 column is the release 0.21.1 is set against. 0.20.1 and 0.21.0 came out between them, on 2026-11-24; each keeps its snapshot, and what they added is counted here as new since 0.20.0.",
+ "previous_note": "0.21.1 is set against 0.20.0. Every row has the same value in both, so the tables show one Torqwave column and the release graphic shows what changed. 0.20.1 and 0.21.0 came out between them, on 2026-11-24; each keeps its snapshot, and what they added is counted here as new since 0.20.0.",
  "status": "released",
  "as_of": "2026-11-25",
  "release_numbers": [
@@ -115,8 +115,8 @@
     },
     "stem_separation": {
      "value": "partial",
-     "note": "Rebalance turns the voice, bass, drums and the rest of a mix up or down in place; it writes no stems. Stem separation with a model is on the roadmap, not built.",
-     "source": "docs/guide/03-spectral-editing-and-repair.md"
+     "note": "Rebalance turns the voice, bass, drums and the rest of a mix up or down in place; it writes no stems. Stem separation with a model is not planned: the roadmap puts it out of scope.",
+     "source": "docs/guide/03-spectral-editing-and-repair.md; ROADMAP.md"
     },
     "loudness_lufs": {
      "value": "yes",
