@@ -141,18 +141,22 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Electro" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>65.VMjLgfC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEwVYiQmbuIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Haunted Defeat Sting" role="SFX" subRole="Stingers" key="A minor" tags="" note="A defeat sting: E minor and D minor falling to a low held A minor" style="Game/Horror" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Cellar Door Lift" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="A cluster growing a semitone at a time, A, B flat, B and C a bar apart, all of it bending upward through the last two bars" style="Game/Horror" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
-      <N p="52" s="0" l="460" v="0.866142"/>
-      <N p="55" s="0" l="460" v="0.866142"/>
-      <N p="59" s="0" l="460" v="0.866142"/>
-      <N p="50" s="960" l="460" v="0.787402"/>
-      <N p="53" s="960" l="460" v="0.787402"/>
-      <N p="57" s="960" l="460" v="0.787402"/>
-      <N p="45" s="1920" l="5720" v="0.787402"/>
-      <N p="48" s="1920" l="5720" v="0.787402"/>
-      <N p="52" s="1920" l="5720" v="0.787402"/>
+      <N p="57" s="0" l="15320" v="0.629921"/>
+      <N p="58" s="3840" l="11480" v="0.661417"/>
+      <N p="59" s="7680" l="7640" v="0.692913"/>
+      <N p="60" s="11520" l="3800" v="0.724409"/>
     </NOTES>
-    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Low Ceiling" bus="0" instrument="1" musical="1" gainDb="-9.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBSucGHCUVZrklamIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+    <LANE controller="11">
+      <P t="0" v="0.150000"/>
+      <P t="15359" v="1.000000"/>
+    </LANE>
+    <LANE controller="128">
+      <P t="0" v="0.500000"/>
+      <P t="7680" v="0.500000"/>
+      <P t="15359" v="1.000000"/>
+    </LANE>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Brutal Tension" bus="0" instrument="1" musical="1" gainDb="5.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>74.VMjLgDD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPxUGcgwFHTUlayk1atIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
 </TORQWAVE_KIT>

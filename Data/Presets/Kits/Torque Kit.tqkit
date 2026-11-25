@@ -264,12 +264,13 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Ironworks Impact" role="SFX" subRole="Impacts" key="" tags="" note="Kick, low tom and crash struck together on the one" style="Industrial/Techno-body" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Ironworks Impact" role="SFX" subRole="Impacts" key="" tags="" note="Kick, low tom and cowbell on the one, the tom again on the next 16th" style="Industrial/Techno-body" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
-      <N p="36" s="0" l="120" v="1.000000"/>
-      <N p="41" s="0" l="120" v="0.866142"/>
-      <N p="49" s="0" l="120" v="0.929134"/>
+      <N p="36" s="0" l="120" v="0.944882"/>
+      <N p="41" s="0" l="120" v="0.944882"/>
+      <N p="56" s="0" l="120" v="0.771654"/>
+      <N p="41" s="240" l="120" v="0.771654"/>
     </NOTES>
-    <VOICE><TRACKTEMPLATE name="Basic Drums: Dark Techno" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHDElbqABUkMFZt8lHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: Voltage" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>65.VMjLgfC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHV8FazE1YkIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
 </TORQWAVE_KIT>

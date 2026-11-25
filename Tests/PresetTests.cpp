@@ -419,13 +419,9 @@ void runPresetTests (AudioEngine& engine)
             { "Harmony > Strums", { 2, 7 } },
             { "Pads > Drones", { 19, 11 } },
             { "Pads > Evolving", { 22, 23 } },
-            { "Pads > Sustained", { 26, 19 } },
-            { "SFX > Impacts", { 12, 9 } },
-            { "SFX > Stingers", { 11, 3 } },
-            { "SFX > Transitions", { 28, 28 } },
-            { "SFX > UI Sounds", { 6, 2 } }
+            { "Pads > Sustained", { 26, 19 } }
         };
-        const int stylesUnderHalfAllowed = 22;
+        const int stylesUnderHalfAllowed = 17;
         juce::StringArray over, table, flat;
 
         for (auto& o : ones)

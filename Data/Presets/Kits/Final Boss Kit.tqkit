@@ -173,13 +173,12 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Showdown Danger Sting" role="SFX" subRole="Stingers" key="A minor" tags="Harmonic minor" note="A danger sting: A and G sharp struck low together, twice" style="Game/Boss" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="160.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Dark Lord Open Blip" role="SFX" subRole="UI Sounds" key="A minor" tags="" note="A, C and E rising quickly for opening a menu" style="Game/Boss" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="160.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
-      <N p="45" s="0" l="460" v="0.866142"/>
-      <N p="56" s="0" l="460" v="0.866142"/>
-      <N p="45" s="1440" l="6200" v="0.787402"/>
-      <N p="56" s="1440" l="6200" v="0.787402"/>
+      <N p="69" s="0" l="220" v="0.866142"/>
+      <N p="72" s="240" l="220" v="0.866142"/>
+      <N p="76" s="480" l="460" v="0.866142"/>
     </NOTES>
-    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Rave Hoover Stab" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>76.VMjLgLD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhTgYWYffzauYWYxAxTzElXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Wire Pluck" bus="0" instrument="1" musical="1" gainDb="-3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUoIWYf.Ea0M1Zh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
 </TORQWAVE_KIT>

@@ -969,7 +969,7 @@ preset("Low Boom", X, "Impacts", "Techno/Dark", 4, ["Dark", "Sparse", "Straight"
 preset("Tom Impact", X, "Impacts", "Techno/Industrial", 4, ["Dark", "Sparse", "Straight", "Clean"],
        "Low tom, kick and crash together", Part(1).add(LT, 0, S // 2, 127).add(KICK, 0, S // 2, 120).add(CRASH, 0, S // 2, 110), 128, drums("rumble"))
 preset("Sub Drop Impact", X, "Impacts", "Techno/Hard", 5, ["Dark", "Sparse", "Straight", "Distorted"],
-       "A sub hit at the drop, bending down over a bar", Part(1).add(pitch("a1"), 0, BAR - 40, 127).lane(128, [(0, 1.0), (BAR - 1, 0.0)]), 150, synth("sub"))
+       "A sub hit on a low E at the drop, bending down over a bar", Part(1).add(pitch("e1"), 0, BAR - 40, 127).lane(128, [(0, 1.0), (BAR - 1, 0.0)]), 150, synth("sub"))
 
 preset("Filter Sweep Up", X, "Sweeps", "Techno/Driving", 4, ["Bright", "Dense", "Straight", "Clean"],
        "An A minor chord opening its filter over four bars", Part(4).chords([Am] * 4, velocity=80).lane(74, [(0, 0.0), (4 * BAR - 1, 1.0)]), 134, synth("sweep"))
@@ -1762,6 +1762,245 @@ def riser_boss():
     return "low octaves a semitone higher each bar, A to C: quarters for two bars, then 8ths, then 16ths", part, synth("brass"), ["Chromatic"]
 
 
+# ---------------------------------------------------------------------------------------------
+# Transitions and impacts, one written for each style that has one, as the risers are.
+
+def drum_part(bars, rows):
+    """Rows of (drum, pattern): a pattern of 16 steps is a bar's, a longer one runs on across the bars."""
+    part = Part(bars)
+    for note, pattern in rows:
+        part.grid(note, pattern)
+    return part
+
+
+def run(names, step=1, length=None, bars=1, velocity=100):
+    """Notes one after another, `step` 16ths apart: a name, a list of names struck together, or None for a rest."""
+    part = Part(bars)
+    for i, n in enumerate(names):
+        for name in ([] if n is None else n if isinstance(n, list) else [n]):
+            part.add(pitch(name), i * step * S, (length or step) * S - 20, velocity)
+    return part
+
+
+def transition_dark():
+    part = drum_part(2, [(KICK, "x...x...x......." + "." * 16), (CH, "o.o.o.o.o.o.o.o." * 2), (LT, "." * 16 + "....x.....x.x.xX")])
+    return "the kick drops out after beat 3 of the first bar, a low tom answers in the gap and rolls into the next", part, drums("rumble"), []
+
+
+def transition_driving():
+    part = drum_part(2, [(KICK, "x...x...x...x..." + "x...x..........."), (OH, "." * 16 + "..x...x........."), (SNARE, "." * 16 + "........x.x.xxxX")])
+    return "a bar of four to the floor, then the kick stops at beat 3 and the snare takes the last two beats, 8ths then 16ths", part, drums("hard"), []
+
+
+def transition_peak():
+    part = drum_part(1, [(KICK, "X..............."), (SNARE, "x.ox.ox.ox.ox.oX")])
+    return "a snare roll for a bar accented in threes across the beat, a kick under the first", part, drums("hard"), []
+
+
+def transition_industrial():
+    part = drum_part(1, [(COWBELL, "x..x..x..x..x.x."), (KICK, "x.......x......."), (SNARE, "............xxxX")])
+    return "metal in threes over two kicks, a snare 16th run through the last beat", part, drums("machineshop"), []
+
+
+def transition_hard():
+    part = drum_part(1, [(KICK, "x.x.x.x.xxxxxxxx"), (CLAP, "....x.......x...")])
+    return "the kick in 8ths for half a bar and 16ths for the rest, the clap staying on 2 and 4", part, drums("bunker"), []
+
+
+def transition_ebm():
+    part = drum_part(1, [(SNARE, "X..x..x.X..x..x."), (KICK, "x.......x......."), (HT, "..............xx")])
+    return "a gated snare in a dotted figure stated twice, a kick under each start, two high toms into the bar", part, drums("machine"), []
+
+
+def transition_electro_industrial():
+    part = Part(1)
+    for step, length in ((0, 8), (8, 4), (12, 2), (14, 1)):
+        part.add(pitch("a3"), step * S, length * S - 20, 104)
+    part.add(pitch("eb4"), 15 * S, S - 20, 120)
+    return "one note stuttering, each repeat half as long as the last, the tritone above on the last 16th", part, synth("=Metal Stab"), ["Chromatic"]
+
+
+def transition_aggrotech():
+    fifths = [["a2", "e3"], None, None, ["g2", "d3"], None, None, ["f2", "c3"], None, None, ["e2", "b2"], None, None, ["d2", "a2"], None, ["e2", "b2"], None]
+    return "power fifths falling from A to D on every third 16th, the E under the bar's last 8th", run(fifths, length=2, velocity=112), synth("saw"), []
+
+
+def transition_techno_body():
+    part = drum_part(1, [(KICK, "x..x..x..x..x..."), (CH, "..x..x..x..x...."), (SNARE, "..............xX")])
+    return "the kick in threes against the bar with a hat after each, two snares into the next bar", part, drums("voltage"), []
+
+
+def transition_hypnotic():
+    part = drum_part(1, [(CH, "x.xx.xx.xx.xx.xx"), (OH, ".o..o..o..o..o..")])
+    return "hats alone for a bar, an open hat every third 16th and closed hats between", part, drums("tight"), []
+
+
+def transition_acid():
+    part = Part(1)
+    for i, n in enumerate(["a2", "g2", "f2", "e2", "d2", "c2", "b1", "a1"]):
+        part.add(pitch(n), i * 2 * S, 2 * S + (SLIDE if i < 7 else -20), 124 if i % 2 == 0 else 96)
+    return "8ths sliding down the scale an octave from A to the low A as the resonant filter closes", part.lane(74, [(0, 0.9), (BAR - 1, 0.1)]), synth("acid"), []
+
+
+def transition_minimal():
+    part = drum_part(1, [(KICK, "x..............."), (RIM, "x.....x...x....."), (CLAP, "............x...")])
+    return "one kick, three rims in the space after it and a single clap on beat 4", part, drums("tight"), []
+
+
+def transition_melodic():
+    notes = ["e5", "c5", "a4", "e4", "c4", "a3", "e3", "c3", "a2", "c3", "e3", "a3", "c4", "e4", "a4", "c5"]
+    return "an A minor arpeggio in 16ths falling two and a half octaves and turning back up", run(notes).lane(74, [(0, 0.8), (BAR // 2, 0.3), (BAR - 1, 0.9)]), synth("pluck"), []
+
+
+def transition_percussive():
+    part = drum_part(1, [(HT, "x.x..x.x..x.x..x"), (MT, ".x..x..x.x..x.x."), (LT, "........x.....xX")])
+    return "high and mid toms interlocking in 16ths, the low tom on beat 3 and into the bar", part, drums(), []
+
+
+def transition_dub():
+    chord = ["a3", "c4", "e4", "g4"]
+    part = Part(2)
+    for step, velocity in ((2, 108), (9, 84)):
+        for n in chord:
+            part.add(pitch(n), step * S, S, velocity)
+    return "two A minor seventh stabs off the beat in the first bar, then a bar left empty for them to echo", part, synth("=Dub Chord Stab"), []
+
+
+def transition_futurepop():
+    part = drum_part(1, [(KICK, "x...x...x...x..."), (SNARE, "..x...x.x.xxxxxX"), (CRASH, "x...............")])
+    return "four to the floor under a snare on the offbeats, then 8ths, then 16ths through the last beat and a half, a crash on the one", part, drums("tight"), []
+
+
+def transition_synth_ebm():
+    notes = ["a2", "a1", "a2", "a1", "g2", "g1", "g2", "g1", "f2", "f1", "f2", "f1", "e2", "e1", "e2", "e2"]
+    return "an octave bass in 16ths stepping down from A through G and F to E", run(notes, velocity=104), synth("ebm"), []
+
+
+def transition_darkwave():
+    part = drum_part(1, [(HT, "x.x.x..........."), (MT, "......x.x......."), (LT, "..........x.x.xX"), (SNARE, "....x...........")])
+    return "toms in 8ths from high to low across the bar, a snare on beat 2, the low tom doubling into the next", part, drums("tight"), []
+
+
+def transition_industrial_rock():
+    part = drum_part(1, [(CRASH, "x..............."), (KICK, "x.....x.x......."), (SNARE, "....x.....x.xxxX")])
+    return "a crash and kick, a snare on 2, two kicks before 3, and a snare run from the and of 3 into the bar", part, drums("break"), []
+
+
+def transition_dark_electro():
+    return "a tritone falling in quarters on a bell: E flat, A, E flat, A, two octaves down", run(["eb5", "a4", "eb4", "a3"], step=4, velocity=104), synth("bell"), ["Chromatic"]
+
+
+def transition_coldwave():
+    return "a bass in 8ths walking up from E through G, A and B to the C", run(["e2", "e2", "g2", "g2", "a2", "a2", "b2", "c3"], step=2, velocity=102), synth("dark"), []
+
+
+def transition_electro():
+    part = drum_part(1, [(KICK, "x.....x........."), (COWBELL, "x.xx.x.xx.x.xx.x"), (CLAP, "............x.xX")])
+    return "a cowbell figure over two kicks, the clap stuttering through the last beat", part, drums("boom"), []
+
+
+def transition_breaks():
+    part = drum_part(1, [(KICK, "x..x......x....."), (SNARE, "....x..x.x..xxxX"), (OH, "..............o.")])
+    return "a broken kick under a snare that answers it and runs through the last beat", part, drums("breaks"), []
+
+
+def transition_neurofunk():
+    part = Part(1).add(pitch("a1"), 0, BAR - 40, 118).lane(128, [(0, 0.5), (BAR // 2, 0.0), (BAR - 1, 0.5)]).lane(74, [(0, 0.9), (BAR // 2, 0.15), (BAR - 1, 1.0)])
+    return "a low A dipping two semitones and coming back over a bar, the filter closing and opening with it", part, synth("reese"), []
+
+
+def transition_liquid():
+    part = drum_part(1, [(RIDE, "x.x.x.x.x.x.x.x."), (KICK, "x.........x....."), (SNARE, "......g..g..g.gX")])
+    return "a ride in 8ths over two kicks, ghost snares gathering into an accent on the last 16th", part, drums("break"), []
+
+
+def transition_deep_house():
+    part = Part(1)
+    for start, chord in ((0, ["d3", "f3", "a3", "c4"]), (8, ["e3", "g3", "b3", "d4"])):
+        for n in chord:
+            part.add(pitch(n), start * S, 8 * S - 40, 88)
+    return "D minor seventh for two beats, then E minor seventh, leading home", part, synth("warm"), []
+
+
+def transition_darksynth():
+    part = drum_part(1, [(HT, "xxxx............"), (MT, "....xxxx........"), (LT, "........xxxx...."), (KICK, "............x..."), (SNARE, "..............xX")])
+    return "16ths down the toms a beat each, then a kick and two snares", part, drums("boom"), []
+
+
+def transition_psytrance():
+    part = Part(1)
+    for i in range(12):
+        part.add(pitch("a2" if i == 11 else "a1"), i * S, S // 2, 100 + (20 if i % 4 == 1 else 0))
+    return "the 16th bass on A for three beats, its last note an octave up, stopping a beat early as the filter closes", part.lane(74, [(0, 0.8), (3 * TPB, 0.1)]), synth("psy"), []
+
+
+TRANSITIONS = {
+    "Techno/Dark": transition_dark, "Techno/Driving": transition_driving, "Techno/Peak-time": transition_peak, "Techno/Industrial": transition_industrial,
+    "Techno/Hard": transition_hard, "Techno/Hypnotic": transition_hypnotic, "Techno/Acid": transition_acid, "Techno/Minimal": transition_minimal,
+    "Techno/Melodic": transition_melodic, "Techno/Percussive": transition_percussive, "Techno/Dub": transition_dub,
+    "Industrial/EBM": transition_ebm, "Industrial/Electro-industrial": transition_electro_industrial, "Industrial/Aggrotech": transition_aggrotech,
+    "Industrial/Techno-body": transition_techno_body, "Industrial/Futurepop": transition_futurepop, "Industrial/Synth-EBM": transition_synth_ebm,
+    "Industrial/Darkwave": transition_darkwave, "Industrial/Industrial rock": transition_industrial_rock, "Industrial/Dark electro": transition_dark_electro,
+    "Industrial/Coldwave": transition_coldwave, "Electro/Electro": transition_electro, "Breakbeat/Breaks": transition_breaks,
+    "Drum and Bass/Neurofunk": transition_neurofunk, "Drum and Bass/Liquid": transition_liquid, "House/Deep house": transition_deep_house,
+    "Synthwave/Darksynth": transition_darksynth, "Trance/Psytrance": transition_psytrance,
+}
+
+
+def impact_dark():
+    part = Part(1).add(pitch("a0"), 0, BAR - 40, 127).add(pitch("e1"), 0, BAR - 40, 112).lane(128, [(0, 0.5), (BAR - 1, 0.2)])
+    return "a low fifth, A and E, struck and sinking", part, synth("=Low Boom"), []
+
+
+def impact_driving():
+    return "kick, clap and crash together on the one", drum_part(1, [(KICK, "X"), (CLAP, "X"), (CRASH, "x")]), drums("hard"), []
+
+
+def impact_peak():
+    part = Part(1)
+    for n in ("a1", "a2", "e3", "a3", "c4", "e4"):
+        part.add(pitch(n), 0, BAR - 40, 118)
+    return "A minor struck across three octaves and its filter closing over the bar", part.lane(74, [(0, 1.0), (BAR - 1, 0.1)]), synth("stab"), []
+
+
+def impact_industrial():
+    part = drum_part(1, [(KICK, "X.o............."), (COWBELL, "X.o............."), (SNARE, "X...............")])
+    return "kick, metal and snare on the one, the kick and metal again softer an 8th later", part, drums("machineshop"), []
+
+
+def impact_hard():
+    part = drum_part(1, [(KICK, "Xxx............."), (CRASH, "X...............")])
+    return "three kicks in 16ths from the one under a crash", part, drums("bunker"), []
+
+
+def impact_ebm():
+    return "kick, snare and clap together on the one", drum_part(1, [(KICK, "X"), (SNARE, "X"), (CLAP, "x")]), drums("machine"), []
+
+
+def impact_electro_industrial():
+    part = Part(1).add(pitch("a1"), 0, BAR - 40, 124).add(pitch("eb2"), 0, BAR - 40, 112).add(pitch("a2"), 0, BAR - 40, 100)
+    return "a low tritone inside an octave, A, E flat and A, struck and left to ring", part, synth("=Factory Hit"), ["Chromatic"]
+
+
+def impact_aggrotech():
+    part = Part(1).add(pitch("a1"), 0, 8 * S, 127).add(pitch("a2"), 0, 8 * S, 120).add(pitch("bb2"), 0, 8 * S, 116).add(pitch("e3"), 0, 8 * S, 108)
+    return "octave A with the B flat and the fifth above it, a distorted cluster cut off at half the bar", part, synth("saw"), ["Phrygian"]
+
+
+def impact_techno_body():
+    return "kick, low tom and cowbell on the one, the tom again on the next 16th", drum_part(1, [(KICK, "X"), (LT, "Xx"), (COWBELL, "x")]), drums("voltage"), []
+
+
+IMPACTS = {
+    "Techno/Dark": impact_dark, "Techno/Driving": impact_driving, "Techno/Peak-time": impact_peak, "Techno/Industrial": impact_industrial,
+    "Techno/Hard": impact_hard, "Industrial/EBM": impact_ebm, "Industrial/Electro-industrial": impact_electro_industrial,
+    "Industrial/Aggrotech": impact_aggrotech, "Industrial/Techno-body": impact_techno_body,
+}
+
+LEFT_OUT = []   # (style, name) of each preset not written
+DRAWN = {}   # how often each UI sound and stinger has been drawn, over every style
+
+
 RISERS = {
     "Techno/Dark": riser_dark, "Techno/Driving": riser_driving, "Techno/Peak-time": riser_peak, "Techno/Industrial": riser_industrial,
     "Techno/Hard": riser_hard, "Techno/Hypnotic": riser_hypnotic, "Techno/Acid": riser_acid, "Techno/Minimal": riser_minimal,
@@ -1820,6 +2059,12 @@ class Maker:
         PRESETS.append(Preset(name, role, sub, self.s.style, self.energy(energy_shift), self.character(part, distorted),
                               description, part, tempo or self.tempo(), voice, sorted(set(tags))))
         self.made.setdefault(kind, []).append(name)
+
+    def leave_out(self, nouns):
+        """A preset that is not written, since it would only play what another does. Its name and its
+        energy are drawn as if it were, so the presets after it keep their names."""
+        LEFT_OUT.append((self.s.style, self.name(nouns)))
+        self.energy()
 
     # -- Drums ------------------------------------------------------------------------------
 
@@ -2146,20 +2391,18 @@ class Maker:
             part = Part(2).add(degree_pitch("minor", 0, 57, 68), 0, 2 * BAR - 40, 100).lane(128, [(0, 0.5), (2 * BAR - 1, 0.0)]).lane(74, [(0, 1.0), (2 * BAR - 1, 0.1)])
             self.add("build", ROLE_NOUNS[sub], "SFX", sub, "a held A bending down two semitones as its filter closes over two bars", part, synth("sweep"), tempo=tempo)
         elif sub == "Impacts":
-            part = Part(1).add(KICK, 0, S // 2, 127).add(CRASH, 0, S // 2, 118).add(LT, 0, S // 2, 110)
-            self.add("build", ROLE_NOUNS[sub], "SFX", sub, "kick, low tom and crash struck together on the one", part, drums(self.pick(["boom", "rumble", "hard"])), tempo=tempo)
+            self.pick(["boom", "rumble", "hard"])   # drawn as before, so the names after it stay
+            words, part, voice, tags = IMPACTS[s.style]()
+            self.add("build", ROLE_NOUNS[sub], "SFX", sub, words, part, voice, tags, tempo=tempo)
         elif sub == "Sweeps":
             degrees, mode = self.progression()
             part = Part(4).chords([names(triad(mode, degrees[0]))] * 4, velocity=80).lane(74, [(0, 0.0), (4 * BAR - 1, 1.0)])
             self.add("build", ROLE_NOUNS[sub], "SFX", sub, f"{chord_name(mode, degrees[0])} held while its filter opens over four bars", part, synth("sweep"),
                      self.mode_tags(mode, [n[0] for n in part.notes]), tempo=tempo)
         elif sub == "Transitions":
-            part = Part(2)
-            for step in range(0, 32):
-                if step >= 16 or step % 2 == 0:
-                    part.add([HT, MT, LT][(step // 4) % 3], step * S, S // 2, min(127, 50 + step * 2))
-            part.add(CRASH, 31 * S, S // 2, 120)
-            self.add("build", ROLE_NOUNS[sub], "SFX", sub, "toms in 8ths, then 16ths, louder through two bars, a crash on the last 16th", part, drums(self.pick(s.drums_sound)), tempo=tempo)
+            self.pick(s.drums_sound)   # drawn as before, so the names after it stay
+            words, part, voice, tags = TRANSITIONS[s.style]()
+            self.add("build", ROLE_NOUNS[sub], "SFX", sub, words, part, voice, tags, tempo=tempo)
         elif sub == "Hits":
             degrees, mode = self.progression()
             ch = names(triad(mode, degrees[0]))
@@ -2189,10 +2432,21 @@ class Maker:
     def ui_sound(self, tempo):
         label, words, notes = self.UI[self.ui_index % len(self.UI)]
         self.ui_index += 1
+
+        # The second style to draw a sound gets its second form, so no two styles play the same notes.
+        DRAWN[label] = DRAWN.get(label, 0) + 1
+        if DRAWN[label] > 1:
+            words, notes = self.UI_AGAIN[label]
+
         part = Part(1)
         for n, step, length in notes:
             part.add(pitch(n), step * S, length * S - 20, 110)
         patch = self.pick(["chip", "bell", "glass", "pluck"] if self.s.style != "Game/Chiptune" else ["chip"])
+
+        # A third style to draw it has nothing new to play: the sound is left out.
+        if DRAWN[label] > 2:
+            return self.leave_out([label, label + " Blip", label + " Sound"])
+
         self.add("build", [label, label + " Blip", label + " Sound"], "SFX", "UI Sounds", words, part, synth(patch), tempo=tempo)
 
     STINGERS = [
@@ -2204,13 +2458,43 @@ class Maker:
         ("Game Over", "a slow fall through F, E minor and D minor to A minor", [["f3", "a3", "c4"], ["e3", "g3", "b3"], ["d3", "f3", "a3"], ["a2", "c3", "e3"]], "x...x...x...x..."),
     ]
 
+    STINGERS_AGAIN = {
+        "Victory": ("a victory fanfare: C, G and A minor struck, landing on a held E with its octave", [["c4", "e4", "g4"], ["g3", "b3", "d4"], ["a3", "c4", "e4"], ["e4", "a4", "e5"]], "x..x..x...x....."),
+        "Defeat": ("a defeat sting: A minor falling by step through G and F to a low held E", [["a3", "c4", "e4"], ["g3", "b3", "d4"], ["f3", "a3", "c4"], ["e2", "e3", "b3"]], "x.x.x...x......."),
+        "Discovery": ("a discovery sting: fifths and fourths stacking upward from A a 16th apart and held", None, None),
+        "Danger": ("a danger sting: B and F low together, a tritone, struck three times and the last held", [["b2", "f3"], ["b2", "f3"], ["b2", "f3"]], "x..x..x........."),
+        "Quest Complete": ("F, G and A minor climbing in 8ths, then the A minor above held", [["f3", "a3", "c4"], ["g3", "b3", "d4"], ["a3", "c4", "e4"], ["a4", "c5", "e5"]], "x.x.x.x........."),
+        "Game Over": ("a slow fall through A minor, G and F to a held E major", [["a3", "c4", "e4"], ["g3", "b3", "d4"], ["f3", "a3", "c4"], ["e3", "g#3", "b3"]], "x...x...x...x..."),
+    }
+
+    UI_AGAIN = {
+        "Confirm": ("two notes rising a fourth, E to A, for a confirm or select", [("e5", 0, 1), ("a5", 1, 2)]),
+        "Cancel": ("two notes falling a fourth, A to E, for a cancel or back", [("a5", 0, 1), ("e5", 1, 2)]),
+        "Pickup": ("E, A and the E above in quick 16ths for collecting an item", [("e5", 0, 1), ("a5", 1, 1), ("e6", 2, 2)]),
+        "Error": ("E and F together, a semitone, struck twice low for an error", [("e4", 0, 1), ("f4", 0, 1), ("e4", 2, 1), ("f4", 2, 1)]),
+        "Level Up": ("an A minor ninth run up in 16ths, A, B, C, E, G, B, the high A held", [("a4", 0, 1), ("b4", 1, 1), ("c5", 2, 1), ("e5", 3, 1), ("g5", 4, 1), ("b5", 5, 1), ("a6", 6, 4)]),
+        "Cursor": ("two quick notes a step apart, D to E, for moving a cursor", [("d6", 0, 1), ("e6", 1, 1)]),
+        "Notification": ("three notes, E, A and C, rising for a notice", [("e5", 0, 1), ("a5", 1, 1), ("c6", 2, 3)]),
+        "Power Down": ("five notes falling in thirds from the high E for losing a power", [("e6", 0, 1), ("c6", 1, 1), ("a5", 2, 1), ("f5", 3, 1), ("d5", 4, 3)]),
+        "Open": ("A, C and E rising quickly for opening a menu", [("a4", 0, 1), ("c5", 1, 1), ("e5", 2, 2)]),
+        "Close": ("E, C and A falling quickly for closing a menu", [("e5", 0, 1), ("c5", 1, 1), ("a4", 2, 2)]),
+        "Unlock": ("a rising fifth then the octave, A, E, A, for something unlocked", [("a4", 0, 1), ("e5", 1, 1), ("a5", 3, 3)]),
+        "Countdown": ("a short E on each beat, the last a fifth up", [("e5", 0, 1), ("e5", 4, 1), ("e5", 8, 1), ("b5", 12, 3)]),
+    }
+
     def stinger(self, tempo):
         label, words, chords, rhythm = self.STINGERS[self.sting_index % len(self.STINGERS)]
         self.sting_index += 1
         part = Part(2)
+        rising = ["a3", "c4", "e4", "g4", "b4"]
+
+        DRAWN[label] = DRAWN.get(label, 0) + 1
+        if DRAWN[label] > 1:
+            words, chords, rhythm = self.STINGERS_AGAIN[label]
+            rising = ["a3", "e4", "b4", "e5", "a5"]
 
         if chords is None:
-            for k, n in enumerate(["a3", "c4", "e4", "g4", "b4"]):
+            for k, n in enumerate(rising):
                 part.add(pitch(n), k * S, 2 * BAR - k * S - 40, 100)
         else:
             steps = [i for i, c in enumerate(rhythm) if c == "x"]
@@ -2222,6 +2506,10 @@ class Maker:
 
         tags = self.mode_tags("harmonic", [n[0] for n in part.notes])
         patch = "chip" if self.s.style == "Game/Chiptune" else self.pick(["brass", "warm", "stab"] if label != "Discovery" else ["glass", "warm", "bell"])
+
+        if DRAWN[label] > 2:
+            return self.leave_out([label, label + " Sting", label + " Stinger"])
+
         self.add("build", [label, label + " Sting", label + " Stinger"], "SFX", "Stingers", words, part, synth(patch), tags, tempo=tempo)
 
     def make(self):
