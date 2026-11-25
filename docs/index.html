@@ -314,7 +314,7 @@ wide: true
     <li><b>Yours to run:</b> it works with any server that speaks the OpenAI-compatible API, on your computer or your network. Torqwave ships no model.</li>
     <li><b>You read the plan first:</b> the model measures the file and uses Torqwave's own edits, the effects rack and your plug-ins' settings; nothing changes until you apply, and Apply is one undo step.</li>
     <li><b>No audio leaves</b> unless you turn on Let the model hear clips for Decrypt, which is off to begin with.</li>
-    <li><b>It follows a conversation:</b> a request goes with the last four before it, so a follow-up has something to follow, and New Chat forgets them. A line under the log shows how full the model's context is, as the server counted it, or an estimate where it sends no count. Tested against a made-up model on a mock server, not with a real one.</li>
+    <li><b>It follows a conversation:</b> a request goes with the last four before it, so a follow-up has something to follow, and New Chat forgets them. A line under the log shows how full the model's context is, as the server counted it, or an estimate where it sends no count. Its wiring is tested against a made-up model on a mock server, and four requests that only make sense after a conversation are run against a real model on a local server (Qwen3.8 27B: 4 of 4 right, three runs running).</li>
     <li><b>In sessions and the Sequencer too:</b> tracks, clips, instruments and automation, and writing and reviewing sequences.</li>
   </ul>
   <p class="meta">In the guide: <a href="guide/13-ask-torq.html">Ask Torq</a>, with what it needs, what it can do and when it goes wrong.</p>

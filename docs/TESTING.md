@@ -369,7 +369,7 @@ Others write something to look at or listen to, and check nothing:
 | `--decrypt-real [files]` | Decrypts recordings from outside the synth until settled, with each round's distance; `wav=<folder>` writes each chain as the window plays it |
 | `--decrypt-file <sound>` | Decrypts one sound file as the window does, printing each round's best lock and distance |
 | `--decrypt-eval <url> <model>` | Compares Decrypt with and without a model on a server you run |
-| `--ai-eval <url> <model>` | Runs Ask Torq's evaluation requests against a model on a server you run; `--ai-eval-set <name>` chooses the set (`session`, `sequence`, `library`, `decrypt`) |
+| `--ai-eval <url> <model>` | Runs Ask Torq's evaluation requests against a model on a server you run; `--ai-eval-set <name>` chooses the set (`session`, `sequence`, `library`, `decrypt`, or `followup` for requests that follow a conversation) |
 
 The Decrypt timings in the changelog and the guide are from an optimized build with no other tests running.
 

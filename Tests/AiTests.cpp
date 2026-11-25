@@ -2758,11 +2758,10 @@ namespace
         const auto followUp = parse (server.requests().size() == 3 ? server.requests()[2].body : juce::String ("{}"))["messages"];
         const auto system = followUp[0]["content"].toString();
         check (followUp.size() == 4 && followUp[1]["role"] == juce::var ("user") && followUp[1]["content"] == juce::var ("Make it 6 dB louder")
-                   && followUp[2]["role"] == juce::var ("assistant") && followUp[2]["content"].toString().startsWith ("Raised by 6 dB.")
-                   && followUp[2]["content"].toString().contains ("1. Gain 6.00 dB, the whole file")
-                   && followUp[2]["content"].toString().contains ("The user applied this plan")
-                   && followUp[3]["content"] == juce::var ("Is that enough?"),
-               "Ask Torq: a follow-up is sent with the request before it, its answer, its plan and that the plan was applied");
+                   && followUp[2]["role"] == juce::var ("assistant") && followUp[2]["content"] == juce::var ("Raised by 6 dB.")
+                   && followUp[3]["content"].toString().startsWith ("[The plan shown for the request before this: 1. Gain 6.00 dB, the whole file. The user applied it")
+                   && followUp[3]["content"].toString().endsWith ("]\n\nIs that enough?"),
+               "Ask Torq: a follow-up is sent with the request before it and its answer as they were, and at its own head the program's note of the plan and that it was applied");
         check (panel.getLog().contains ("You: Make it 6 dB louder") && panel.getLog().contains ("You: Is that enough?") && panel.getTurns().size() == 2,
                "Ask Torq: the log keeps the conversation, one request after another");
         check (system.contains ("This is Torqwave " JUCE_APPLICATION_VERSION_STRING) && ! system.contains ("New in ") && system.contains ("earlier requests"),
@@ -2790,8 +2789,8 @@ namespace
                 manySteps.add ("Step " + juce::String (i + 1));
 
             Ai::Turn planned { "Do ten things", "Done.", manySteps, Ai::Turn::Outcome::pending };
-            check (longTurn.said().length() <= Ai::maxAnswerSent && planned.said().contains ("6. Step 6") && ! planned.said().contains ("7. Step 7")
-                       && planned.said().contains ("and 4 more") && planned.said().contains ("did not apply this plan"),
+            check (longTurn.said().length() <= Ai::maxAnswerSent && longTurn.after().isEmpty() && planned.said() == "Done." && planned.after().contains ("6. Step 6")
+                       && ! planned.after().contains ("7. Step 7") && planned.after().contains ("and 4 more") && planned.after().contains ("did not apply it"),
                    "Ask Torq: an earlier answer is sent cut to 600 characters and a plan to its first six steps, with whether it was applied");
         }
 

@@ -80,28 +80,35 @@ juce::String Usage::text() const
 
 juce::String Turn::said() const
 {
-    auto text = answer.substring (0, maxAnswerSent);
+    return answer.substring (0, maxAnswerSent).trim();
+}
+
+juce::String Turn::after() const
+{
+    juce::String text;
 
     if (! plan.isEmpty())
     {
-        text << "\n\nThe plan: ";
+        text << "The plan shown for the request before this: ";
 
         for (int i = 0; i < juce::jmin (plan.size(), maxPlanStepsSent); ++i)
-            text << (i + 1) << ". " << plan[i] << (i + 1 < plan.size() ? "; " : ".");
+            text << (i + 1) << ". " << plan[i] << (i + 1 < plan.size() ? "; " : "");
 
         if (plan.size() > maxPlanStepsSent)
-            text << " and " << (plan.size() - maxPlanStepsSent) << " more.";
+            text << " and " << (plan.size() - maxPlanStepsSent) << " more";
+
+        text << ". ";
     }
 
     switch (outcome)
     {
-        case Outcome::applied:    text << "\n\n[The user applied this plan: these changes are made.]"; break;
-        case Outcome::discarded:  text << "\n\n[The user discarded this plan: nothing was changed.]"; break;
-        case Outcome::pending:    text << "\n\n[The user did not apply this plan: nothing was changed.]"; break;
+        case Outcome::applied:    text << "The user applied it: those changes are made."; break;
+        case Outcome::discarded:  text << "The user discarded it: nothing was changed."; break;
+        case Outcome::pending:    text << "The user did not apply it: nothing was changed."; break;
         case Outcome::none:       break;
     }
 
-    return text.trim();
+    return text.isEmpty() ? text : "[" + text.trim() + "]";
 }
 
 juce::String releaseNotesFor()
@@ -209,13 +216,19 @@ void Agent::run()
                                                                                        "from the file as it is now: an earlier plan is in it only if the "
                                                                                        "user applied it.")) };
 
+    // What became of each plan goes in with the request after it, as the program's note in
+    // brackets, not in the model's own words: given as its words, a real model took to ending its
+    // answers with a plan and a line saying the user had applied it.
+    juce::String note;
+
     for (auto i = earlier.size() > (size_t) maxTurnsSent ? earlier.size() - (size_t) maxTurnsSent : (size_t) 0; i < earlier.size(); ++i)
     {
-        messages.add (message ("user", earlier[i].request));
+        messages.add (message ("user", note.isEmpty() ? earlier[i].request : note + "\n\n" + earlier[i].request));
         messages.add (message ("assistant", earlier[i].said()));
+        note = earlier[i].after();
     }
 
-    messages.add (message ("user", request));
+    messages.add (message ("user", note.isEmpty() ? request : note + "\n\n" + request));
     const auto tools = workspace.tools();
     std::map<juce::String, int> callsMade;   // each tool and its arguments, how often called
 

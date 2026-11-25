@@ -23,8 +23,12 @@ namespace Ai
         juce::StringArray plan;             // the plan's steps, if it made one
         Outcome outcome = Outcome::none;
 
-        /** What the model is told it answered: the answer, the plan, and whether the user applied it. */
+        /** What the model is told it answered: the start of its answer. */
         juce::String said() const;
+
+        /** The program's note of what came of it, in brackets, sent at the head of the request that
+            follows: the plan's first steps and whether the user applied it. Empty when there was no plan. */
+        juce::String after() const;
     };
 
     /** What the model is told about the program it is in. Every request gets one line, the name

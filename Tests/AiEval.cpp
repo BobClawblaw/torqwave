@@ -120,6 +120,7 @@ namespace
         std::function<Ai::SequenceTools::Context()> sequence = {};             // works on this sequence in the Sequencer rather than a file
         std::function<SessionState()> library = {};                            // works on this session, with the factory sounds, sequences, kits and drum maps to reach
         bool decrypt = false;                                                  // works on decryptSession(), its Bass track playing Torqwave Synth
+        std::vector<Ai::Turn> earlier = {};                                    // the conversation before the request, as the window sends it
     };
 
     /** The session test: Drums and Bass with a clip each over 0 to 4 s, Vocals with one over 1 to
@@ -1013,6 +1014,51 @@ namespace
         };
     }
 
+    /** Follow-ups: each request only makes sense with the conversation before it, which goes to the
+        model as the window sends it (what was asked, what was answered, the plan, and whether it was
+        applied). The file is as it would be now: an applied plan is in it already. */
+    std::vector<Case> followUpCases()
+    {
+        using Outcome = Ai::Turn::Outcome;
+        const auto nothing = [] (Ai::Workspace& w) -> juce::String
+        {
+            return w.getSteps().isEmpty() && ! w.audioChanged() ? juce::String() : "it planned " + juce::String (w.getSteps().size()) + " steps for a question";
+        };
+
+        Case less { "Too much. Take half of that back off.", [] (Ai::Workspace& w) -> juce::String
+                    {
+                        const auto now = peakDb (w, 2.0, 3.0);
+                        return near (now, -15.0, 0.6) ? juce::String() : "peak " + juce::String (now, 1) + " dB, not 3 dB under the -12 dB it was";
+                    } };
+        less.earlier = { { "Make it 6 dB louder", "Raised by 6 dB.", { "Gain 6.00 dB, the whole file" }, Outcome::applied } };
+
+        Case again { "Do that again, but over the last two seconds of the sound this time.", [] (Ai::Workspace& w) -> juce::String
+                     {
+                         if (! near (seconds (w), 5.0, 0.001))
+                             return "the length changed";
+
+                         const auto end = peakDb (w, 3.98, 4.0), middle = peakDb (w, 2.9, 3.1), before = peakDb (w, 1.2, 1.8);
+                         return end < before - 20.0 && middle < before - 3.0 && middle > before - 12.0 && before > -12.5
+                                    ? juce::String() : "peaks: before " + juce::String (before, 1) + ", a second from the end " + juce::String (middle, 1) + ", at the end " + juce::String (end, 1) + " dB";
+                     } };
+        again.earlier = { { "Fade out the last half second of the sound.", "Faded out the last half second of the tone.",
+                            { "Fade Out, 3.500 s to 4.000 s" }, Outcome::discarded } };
+
+        Case recall { "What did I ask you for just before this?", nothing, TestFile::tone,
+                      [] (const juce::String& said) { return said.containsIgnoreCase ("normal") ? juce::String() : "it did not name the request to normalize"; } };
+        recall.earlier = { { "Trim the silence off both ends.", "Trimmed the silence: the file is 3 s long now.", { "Trim to 1.000 s to 4.000 s" }, Outcome::applied },
+                           { "Normalize it to -1 dB.", "Normalized to a peak of -1 dB.", { "Normalize to -1.00 dB, the whole file" }, Outcome::pending } };
+
+        Case whatsNew { "What is new in this version of Torqwave?", nothing, TestFile::tone,
+                        [] (const juce::String& said)
+                        {
+                            return said.containsIgnoreCase ("Modern") || said.containsIgnoreCase ("drum") || said.containsIgnoreCase ("Maximizer")
+                                       ? juce::String() : "it named nothing from the release's notes";
+                        } };
+
+        return { less, again, recall, whatsNew };
+    }
+
     std::vector<Case> cases()
     {
         return {
@@ -1115,7 +1161,7 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
     }
 
     auto chosen = set == "unseen" ? unseenCases() : set == "session" ? sessionCases() : set == "sequence" ? sequenceCases()
-                : set == "library" ? libraryCases() : set == "decrypt" ? decryptCases() : cases();
+                : set == "library" ? libraryCases() : set == "decrypt" ? decryptCases() : set == "followup" ? followUpCases() : cases();
 
     if (set == "all")
         for (auto& c : unseenCases())
@@ -1181,7 +1227,7 @@ int runAiEval (const juce::String& serverUrl, const juce::String& model, const j
         };
         start.formats = &formats;
 
-        Ai::Agent agent (settings, key, std::move (start), c.request);
+        Ai::Agent agent (settings, key, std::move (start), c.request, c.earlier);
         juce::String answer, error;
         bool done = false;
         int calls = 0, refused = 0;

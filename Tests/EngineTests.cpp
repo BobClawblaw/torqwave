@@ -652,7 +652,7 @@ int main (int argc, char* argv[])
     //   --decrypt-pictures <folder>  only save pictures of the synth's window on Decrypt, and print each chain
     //   --decrypt-measure       only Decrypt's two sets of ten, in 16 rounds and until settled, with times (minutes)
     //   --decrypt-eval <url> <model>  only Decrypt's ten clips, alone and helped by the model at that server
-    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session, sequence, library or decrypt
+    //                           add --ai-eval-set unseen (or all) for the requests it was never tuned on, session, sequence, library, decrypt or followup (requests that follow a conversation)
     juce::StringArray args;
 
     for (int i = 1; i < argc; ++i)
