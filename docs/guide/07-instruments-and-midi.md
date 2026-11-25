@@ -37,9 +37,9 @@ The selected instrument track plays whatever comes in live:
 - **A note that won't stop.** **Transport > Silence All Instruments (Panic)** (Shift-Cmd-.) stops every note an instrument or a plug-in is still sounding, and the audition with it: each instrument gets its notes' offs, then All Notes Off and All Sound Off.
 - **The Piano Roll's keyboard** (see below).
 
-<img src="../screenshots/guide-synth.png" width="720" alt="The Torqwave Synth window playing the Turbine Throat bass, one voice sounding: the patch browser and the presets row with its arrows, Audition, Loop, Stop and pattern buttons and the Knobs / Decrypt switch along the top; three oscillator panels with their wavetables drawn in depth, Sub and Noise, two filters with their response curves, Amp and Voice, the envelopes and LFOs, four named macros and the modulation slots; and the playing keys along the bottom">
+<img src="../screenshots/guide-synth.png" width="720" alt="The Torqwave Synth window playing the Turbine Throat bass, one voice sounding: the patch browser, the presets bar and the Knobs / Decrypt / Decrypted switch along the top; the Oscillators strip with its 1-3, 4-6 and 7-9 pages and nine cells, five of them on (Growl, FM, Analog, Sub and Metal) and four off; oscillators 1 to 3 in their panels with their wavetables drawn in depth, Sub and Noise, two filters with their response curves, Amp and Voice, the envelopes and LFOs, four named macros and the modulation slots">
 
-*The window of Torqwave Synth, the built-in instrument, playing Turbine Throat, one of the layered basses.*
+*The window of Torqwave Synth, the built-in instrument, playing Turbine Throat, one of the layered basses, with two more layers switched on in oscillators 4 and 5. The picture is drawn by Torqwave's tests.*
 
 Torqwave Synth is a wavetable synth made for dark techno, industrial and EBM. Its window is laid out the way the sound flows, left to right and top to bottom:
 

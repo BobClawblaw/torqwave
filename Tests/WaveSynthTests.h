@@ -14,8 +14,8 @@ namespace juce { class File; }
 void writePatchHashes (const juce::File&);
 
 /** Saves pictures of the synth's window into the folder, in the dark theme at 2x: a patch as it
-    opens, the oscillators' level envelopes with slots 9 to 16, and an oscillator playing a Sampled
-    table. Run with `TorqwaveTests --synth-window <folder>`. */
+    opens, the oscillators' level envelopes with slots 9 to 16, oscillators 4 to 6, an oscillator playing
+    a Sampled table, and the guide's picture (guide-synth.png: five oscillators on, a note held). Run with `TorqwaveTests --synth-window <folder>`. */
 void saveSynthWindow (const juce::File& folder);
 
 /** Prints `name|category|dB` for each factory patch: the peak of a held minor chord (C3, E flat 3, G3

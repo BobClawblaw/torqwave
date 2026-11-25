@@ -1954,6 +1954,32 @@ void saveSynthWindow (const juce::File& folder)
     window->showModulator (0);
     window->showRightPage (0);
     save ("sampled");
+
+    // The guide's picture: Turbine Throat with two more layers on oscillators 4 and 5 (a sub an octave down,
+    // and a metal edge whose FM takes oscillator 1), C2 held.
+    synth.loadPatch ("Turbine Throat");
+    set (synth, "osc4On", 1.0f);
+    set (synth, "osc4Table", (float) WaveTables::Table::sub);
+    set (synth, "osc4Pitch", -12.0f);
+    set (synth, "osc4Volume", 45.0f);
+    set (synth, "osc5On", 1.0f);
+    set (synth, "osc5Table", (float) WaveTables::Table::metal);
+    set (synth, "osc5Position", 30.0f);
+    set (synth, "osc5Warp", (float) WaveSynth::Warp::fm);
+    set (synth, "osc5WarpAmount", 35.0f);
+    set (synth, "osc5FmFrom", 1.0f);
+    set (synth, "osc5Volume", 25.0f);
+    play (synth, { { 0, juce::MidiMessage::noteOn (1, 36, 0.8f) } }, (int) (0.6 * rate));
+    window->showOscillatorPage (0);
+    window->refresh();
+    {
+        const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+        auto file = folder.getChildFile ("guide-synth.png");
+        file.deleteFile();
+        juce::FileOutputStream out (file);
+        juce::PNGImageFormat().writeImageToStream (image, out);
+        std::cout << file.getFullPathName() << std::endl;
+    }
 }
 
 void printPatchLevels()
