@@ -11,6 +11,17 @@ namespace
         return juce::String (n) + " " + (n == 1 ? one : many);
     }
 
+    /** A Battery cell's colour: its sixteen, in the order of its colour menu, as the cell itself is
+        drawn. A kit keeps a colour as a number whose low four bits choose among them (0 to 15 and
+        16 to 31 are the same sixteen); any other number is no colour. */
+    juce::Colour batteryColour (int index)
+    {
+        static const juce::uint32 colours[16] { 0xfff2403d, 0xffd95f36, 0xffd6801e, 0xffa69129, 0xffabab33, 0xff78a633, 0xff56b856, 0xff2bad82,
+                                                0xff2aa8a8, 0xff26acd1, 0xff3b7fed, 0xff816eff, 0xffb163ff, 0xffca54e8, 0xffcc56c2, 0xffe83a6e };
+
+        return juce::isPositiveAndBelow (index, 32) ? juce::Colour (colours[index & 15]) : juce::Colour();
+    }
+
     float decibels (float gain)
     {
         return gain > 0.0f ? juce::jlimit (-48.0f, 6.0f, 20.0f * std::log10 (gain)) : -48.0f;
@@ -231,6 +242,7 @@ Plan fromBattery (const BatteryKit::Kit& kit, const juce::File& kitFile, const j
         pad.tune = semitones (c.tune * tune.value_or (1.0f));
         pad.start = juce::jlimit (0.0f, 95.0f, start.value_or (kept.front()->frames > 0 ? 100.0f * (float) kept.front()->start / (float) kept.front()->frames : 0.0f));
         pad.reverse = c.reverse;
+        pad.colour = batteryColour (c.colour);
         pad.envelope = c.envelopeRead && c.envelopeOn;
         pad.attack = c.attack;
         pad.hold = c.hold;

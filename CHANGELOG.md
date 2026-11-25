@@ -4,6 +4,17 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Basic Drums: a Battery cell's colour comes over**
+- **What comes over.** An imported cell's colour is the pad's own colour: on a user pad, and on a sound's pad while it plays samples. A cell with no colour the kit knows leaves the pad's as it is.
+- **Where the colours are from.** A kit keeps a colour as a number, not as a colour. Battery has sixteen, and the installed Battery's own colour table lists them, so the import uses those values as they are; no screenshot was needed. The number's low four bits choose among the sixteen: across 500 kits, 0 and 16 are both kicks, 3 and 19 snares, 8 and 24 hi-hats, 15 and 31 claps. What the fifth bit means is not known, and it is not used. **Not checked by eye** against Battery's window: the values are the table's for a cell's body, and a pad here draws its colour its own way.
+- Tested (`--battery-kit`, 94 checks, 2 new): colours 16 and 3 and a cell with none, in the plan and on a real instrument's pads. `--drums` was not run again: nothing of the instrument changed.
+
+**Kits from Battery 3 and earlier: looked at, not built**
+- **What is there:** a search of the development Mac's drives found 153 Battery 3 kits (`.kt3`), all in one third-party sound pack, no Battery 2 kits or cells, and three `.kit` files that are not Battery's (two are XML of another kind, one is empty).
+- **What they are:** two layouts, both readable in the look taken. 105 are a short header and XML packed with zlib, every setting named. 48 are a header and the same records the import already reads, packed the same way without the container around them, with an older program record and an older table of sample paths. All 153 unpacked.
+- **Verdict:** within reach, about two to three days with tests (the XML one needs its own mapping and its sample-path text decoded; the other needs the older path table and the older cell and zone records checked), which is more than the day set for building it now. **Recommended: leave it.** Battery 4 opens these kits, and one saved from it as a Battery 4 kit imports as any other.
+- **A by-product.** The XML names the settings in the order the newer files keep them unnamed, which agrees with what the import reads there: key tracking, then reverse, among a cell's switches, and an exclusion group on a voice group.
+
 ## Released
 
 **Release 0.21.1: Basic Drums becomes a drum synth and sampler in one**
