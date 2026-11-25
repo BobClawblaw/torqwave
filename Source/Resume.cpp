@@ -7,6 +7,7 @@ namespace
     constexpr int formatVersion = 1;
 
     juce::File noteIn (const juce::File& folder)   { return folder.getChildFile ("Left Off.xml"); }
+    juce::File copyBeingWritten (const juce::File& folder)   { return folder.getChildFile ("Session Being Written.tqsession"); }
     juce::File markIn (const juce::File& folder)   { return folder.getChildFile ("Reopening"); }
 
     juce::String int64Text (juce::int64 v)         { return juce::String (v); }
@@ -72,6 +73,7 @@ State gather (const OpenFiles& files, const FilePlace& activePlace, const AudioE
     State s;
     s.open.multitrack = multitrack;
     s.open.session = engine.session.getFile();
+    s.sessionCopy = engine.session.isDirty();
     s.open.rack = engine.createRackXml();
     s.sessionPlace = sessionPlace;
     s.project = project;
@@ -95,7 +97,7 @@ State gather (const OpenFiles& files, const FilePlace& activePlace, const AudioE
         if (files.indexOf (f.file) < 0)
             s.waiting.files.push_back (f);
 
-    if (s.open.session == juce::File())
+    if (s.open.session == juce::File() && ! s.sessionCopy)
     {
         s.waiting.session = waiting.session;
         s.waiting.sessionPlace = waiting.sessionPlace;
@@ -114,7 +116,20 @@ std::unique_ptr<juce::XmlElement> toXml (const State& state)
     xml->setAttribute ("project", state.project.getFullPathName());
 
     // Every path in full: the note is not beside the files.
-    xml->addChildElement (Project::toXml (state.open, {}).release());
+    if (state.sessionCopy)
+    {
+        // The session is in its copy. Its own file is only where it would be saved, so it is
+        // named apart from the files to open, which have to be there.
+        auto open = state.open;
+        open.session = juce::File();
+        xml->setAttribute ("sessionCopy", true);
+        xml->setAttribute ("sessionFile", state.open.session.getFullPathName());
+        xml->addChildElement (Project::toXml (open, {}).release());
+    }
+    else
+    {
+        xml->addChildElement (Project::toXml (state.open, {}).release());
+    }
 
     writePlace (*xml->createNewChildElement ("SESSION_PLACE"), state.sessionPlace);
 
@@ -130,6 +145,11 @@ std::unique_ptr<juce::XmlElement> toXml (const State& state)
     }
 
     return xml;
+}
+
+juce::File sessionCopy (const juce::File& folder)
+{
+    return folder.getChildFile ("Unsaved Session.tqsession");
 }
 
 bool isKept (const juce::File& folder)
@@ -148,6 +168,8 @@ juce::String write (const State& state, const juce::File& folder)
 void clear (const juce::File& folder)
 {
     noteIn (folder).deleteFile();
+    sessionCopy (folder).deleteFile();
+    copyBeingWritten (folder).deleteFile();
 }
 
 Loaded load (const juce::File& folder, const BackgroundLoad::Loader& loader, const std::function<bool()>& keepGoing)
@@ -171,6 +193,33 @@ Loaded load (const juce::File& folder, const BackgroundLoad::Loader& loader, con
         state.waiting.session = read.missingSession;
     }
 
+    // A session kept in a copy: the copy is the session, whether or not its own file is there.
+    if (xml->getBoolAttribute ("sessionCopy"))
+    {
+        const auto path = xml->getStringAttribute ("sessionFile");
+        const auto own = juce::File::isAbsolutePath (path) ? juce::File (path) : juce::File();
+
+        if (sessionCopy (folder).existsAsFile())
+        {
+            state.sessionCopy = true;
+            state.open.session = own;
+        }
+        else if (own.existsAsFile())
+        {
+            out.missing.add ("The changes to " + own.getFileName() + " that were not saved (their copy is no longer there; it was opened as last saved)");
+            state.open.session = own;
+        }
+        else if (own != juce::File())
+        {
+            out.missing.add (own.getFullPathName());
+            state.waiting.session = own;
+        }
+        else
+        {
+            out.missing.add ("The session that was never saved (its copy is no longer there)");
+        }
+    }
+
     state.sessionPlace = readPlace (xml->getChildByName ("SESSION_PLACE"));
     state.project = readProject (*xml, out.missing, state.waiting.project);
 
@@ -192,7 +241,7 @@ Loaded load (const juce::File& folder, const BackgroundLoad::Loader& loader, con
             for (auto& f : read.missingFiles)
                 state.waiting.files.push_back (f);
 
-            if (state.open.session == juce::File() && state.waiting.session == juce::File())
+            if (state.open.session == juce::File() && state.waiting.session == juce::File() && ! state.sessionCopy)
             {
                 const auto place = readPlace (waiting->getChildByName ("SESSION_PLACE"));
 
@@ -259,7 +308,7 @@ Keeper::Keeper (juce::File f) : folder (std::move (f))
 {
 }
 
-juce::String Keeper::note (const State& state)
+juce::String Keeper::note (const State& state, const SessionWriter& writeSession, bool sessionChanged)
 {
     if (state.isEmpty())
     {
@@ -267,6 +316,7 @@ juce::String Keeper::note (const State& state)
         {
             clear (folder);
             last = "none";
+            copyWritten = false;
         }
 
         return {};
@@ -274,15 +324,50 @@ juce::String Keeper::note (const State& state)
 
     // Something is open: what was kept before is replaced, and from here on tracks what is open.
     mayClear = true;
+
+    // The session first, so the note never speaks of a copy that isn't there.
+    if (state.sessionCopy && (sessionChanged || ! copyWritten))
+    {
+        if (writeSession == nullptr)
+            return "The session's unsaved changes could not be kept: nothing was given to write them.";
+
+        if (! folder.createDirectory())
+            return "Couldn't make " + folder.getFullPathName() + ".";
+
+        const auto part = copyBeingWritten (folder);
+
+        if (const auto error = writeSession (part); error.isNotEmpty())
+        {
+            part.deleteFile();
+            return error;
+        }
+
+        if (! part.moveFileTo (sessionCopy (folder)))
+        {
+            part.deleteFile();
+            return "Couldn't write " + sessionCopy (folder).getFullPathName() + ".";
+        }
+
+        copyWritten = true;
+    }
+
     const auto text = toXml (state)->toString();
 
-    if (text == last)
-        return {};
+    if (text != last)
+    {
+        if (const auto error = write (state, folder); error.isNotEmpty())
+            return error;
 
-    if (const auto error = write (state, folder); error.isNotEmpty())
-        return error;
+        last = text;
+    }
 
-    last = text;
+    // A session saved or closed since: its copy goes once the note no longer speaks of it.
+    if (! state.sessionCopy)
+    {
+        sessionCopy (folder).deleteFile();
+        copyWritten = false;
+    }
+
     return {};
 }
 

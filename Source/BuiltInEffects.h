@@ -77,6 +77,15 @@ namespace BuiltInEffects
         void getStateInformation (juce::MemoryBlock&) override;
         void setStateInformation (const void*, int) override;
 
+        /** True on a thread that is inside a built-in effect's setStateInformation: the values it
+            is given then are a saved state coming back, not somebody changing it. */
+        static bool isRestoringState() noexcept;
+
+        /** Says that what the effect keeps besides its parameters was changed by hand (a sample
+            loaded, say), so whoever hosts it knows its state needs saving. Message thread; says
+            nothing while a state is being restored. */
+        void stateEdited();
+
         /** Its parameters as a preset: each one's plain value (a choice's index, 1 or 0 for on or
             off) under its ID; the presets' key is the effect's identifier. */
         EffectPresets::Values getPresetValues() const;

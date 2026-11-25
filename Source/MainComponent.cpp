@@ -9078,9 +9078,32 @@ void MainComponent::finishContinuing()
     const auto& state = loaded->state;
     waveform.setPlace (place);
 
-    if (state.open.session != juce::File())
+    if (state.sessionCopy || state.open.session != juce::File())
     {
-        openSession (state.open.session, std::nullopt, state.open.rack.get());
+        if (state.sessionCopy)
+        {
+            // The session as it was left, changes not saved: under its own file's name or none,
+            // and still to be saved. After a crash there may be a recovery copy of the same
+            // session as well: the later of the two is opened, and nothing more is asked.
+            auto copy = Resume::sessionCopy (leftOffFolder());
+
+            if (const auto recovered = atStart ? SessionRecovery::find (recoveryFolder()) : std::nullopt;
+                recovered.has_value() && recovered->original == state.open.session)
+            {
+                if (recovered->written > copy.getLastModificationTime())
+                    copy = recovered->session;
+
+                recoveryCopyKept = true;   // kept until the session is saved
+                recoveryOfferWaiting = false;
+            }
+
+            openSession (copy, state.open.session, state.open.rack.get());
+        }
+        else
+        {
+            openSession (state.open.session, std::nullopt, state.open.rack.get());
+        }
+
         multitrack.setPlace (state.sessionPlace);
 
         // And once the view has heard of the new session, which drops a selected track it no longer finds.
@@ -9120,7 +9143,7 @@ void MainComponent::finishContinuing()
     // The views' zoom and scroll are limited by their size, which the window gives them when it
     // is placed: they are put back again then.
     if (atStart && ! loading->hasFinished())
-        placesAfterBoot = [this, place, session = state.open.session != juce::File(), sessionPlace = state.sessionPlace]
+        placesAfterBoot = [this, place, session = state.sessionCopy || state.open.session != juce::File(), sessionPlace = state.sessionPlace]
         {
             waveform.setPlace (place);
 
@@ -9150,10 +9173,29 @@ void MainComponent::keepLeftOff (bool now)
                   || isRecording() || engine.getPlayer().isPlaying() || backgroundJob != nullptr || renderJob != nullptr))
         return;
 
+    // Nor while a session's effects are still loading: kept now, it would be kept without them.
+    if (engine.isLoadingTrackEffects())
+        return;
+
     lastLeftOffNote = time;
     const auto couldContinue = canContinueWhereLeftOff();
+
+    // A session with unsaved changes is kept whole. Asking every plug-in for its state is not
+    // free, so between quits it is written again only when the session or its effects are known
+    // to have changed; at quit, always.
+    auto& session = engine.session;
+    const auto sessionChanged = now || session.getVersion() != leftOffSessionVersion || session.getEffectsEdits() != leftOffEffectsEdits;
+    leftOffSessionVersion = session.getVersion();
+    leftOffEffectsEdits = session.getEffectsEdits();
+
     const auto error = leftOffKeeper->note (Resume::gather (openFiles, waveform.getPlace(), engine, multitrackMode,
-                                                            multitrack.getPlace(), projectFile, *leftOffWaiting));
+                                                            multitrack.getPlace(), projectFile, *leftOffWaiting),
+                                            [this] (const juce::File& target)
+                                            {
+                                                return SessionFile::save (*engine.session.getState(), target,
+                                                                          [this] (juce::uint32 id) { return engine.getTrackEffects().createXml (id); });
+                                            },
+                                            sessionChanged);
 
     if (error.isNotEmpty())
         juce::Logger::writeToLog ("Could not note what is open: " + error);

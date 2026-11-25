@@ -1006,6 +1006,7 @@ AudioEngine::AudioEngine()
     juce::addDefaultFormatsToManager (pluginFormatManager);
     pluginFormatManager.addFormat (BuiltInEffects::createFormat());
     trackEffects.prepare (session.getSampleRate());
+    trackEffects.onEdited = [this] { session.markEffectsEdited(); };
     trackEffects.makeCopy = [this] (const juce::PluginDescription& d)
     {
         juce::String error;
@@ -2349,7 +2350,8 @@ void AudioEngine::clearTrackEffects()
 
 void AudioEngine::loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects, AddCallback onDone)
 {
-    loadEffectsInto (trackEffects, session.getSampleRate(), std::move (effects), [this, onDone] (const juce::String& errors)
+    // Held by the callback until it has run, or is dropped unrun.
+    loadEffectsInto (trackEffects, session.getSampleRate(), std::move (effects), [this, onDone, loading = trackEffectsLoading] (const juce::String& errors)
     {
         updateInsertChannels();
 

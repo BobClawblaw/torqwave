@@ -5204,8 +5204,17 @@ void Session::goTo (int step)
 
 void Session::markEffectsChanged()
 {
+    ++effectsEdits;
     effectsChanged = true;
     sendChangeMessage();
+}
+
+void Session::markEffectsEdited()
+{
+    ++effectsEdits;
+
+    if (! std::exchange (effectsChanged, true))
+        sendChangeMessage();
 }
 
 void Session::markSaved (const juce::File& savedAs)

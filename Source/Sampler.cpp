@@ -1838,16 +1838,20 @@ void SamplerProcessor::setZones (std::vector<Zone> zones)
 
     auto next = makeProgram (std::move (zones), ++generations);
 
-    const juce::SpinLock::ScopedLockType lock (programLock);
+    {
+        const juce::SpinLock::ScopedLockType lock (programLock);
 
-    if (program != nullptr)
-        retired.push_back (program);
+        if (program != nullptr)
+            retired.push_back (program);
 
-    retire();
-    program = next;
-    pending = std::move (next);
-    programChanged.store (true);
-    version.fetch_add (1);
+        retire();
+        program = next;
+        pending = std::move (next);
+        programChanged.store (true);
+        version.fetch_add (1);
+    }
+
+    stateEdited();   // its samples and zones are saved with the session
 }
 
 std::vector<Zone> SamplerProcessor::getZones() const

@@ -1,15 +1,18 @@
 #include <JuceHeader.h>
 #include "../Source/AudioEdits.h"
 #include "../Source/AudioFileIO.h"
+#include "../Source/DrumMachine.h"
 #include "../Source/Home.h"
 #include "../Source/MultitrackView.h"
 #include "../Source/Resume.h"
+#include "../Source/Sampler.h"
 #include "TestUtils.h"
 #include "ResumeTests.h"
 
 namespace
 {
     using TestUtils::check;
+    using TestUtils::runUntil;
 
     AudioDocument::Snapshot tone (int frames, double hz, float level)
     {
@@ -399,6 +402,288 @@ namespace
                "left off: a restore that didn't finish can be told at the next start, and the note is still there to try again");
     }
 
+    juce::PluginDescription builtInInstrument (const juce::String& name)
+    {
+        for (auto& d : BuiltInEffects::getDescriptions())
+            if (d.isInstrument && d.name == name)
+                return d;
+
+        return {};
+    }
+
+    float value01 (const juce::AudioProcessorParameter& p)   { return p.getValue(); }
+
+    /** Lets what is waiting for the message thread run (an edit told of, a plug-in made). */
+    void pump()
+    {
+        runUntil ([] { return false; }, 120);
+    }
+
+    /** Adds an instrument track playing a built-in instrument, as Add Instrument Track does, and waits for it. */
+    juce::uint32 addInstrumentTrack (AudioEngine& engine, const juce::String& instrument)
+    {
+        auto next = *engine.session.getState();
+        auto& track = next.addInstrumentTrack();
+        track.name = instrument;
+        const auto id = track.id;
+        engine.session.apply (std::move (next), "Add Instrument Track");
+        auto done = false;
+        engine.addTrackPlugin (id, builtInInstrument (instrument), [&] (const juce::String&) { done = true; });
+        runUntil ([&] { return done; }, 10000);
+        return id;
+    }
+
+    /** Opens a session file as the main window does: the state, then its tracks' effects. */
+    bool openSession (AudioEngine& engine, const juce::File& file, const juce::File& as, bool unsaved)
+    {
+        auto loaded = SessionFile::load (file, engine.formatManager);
+
+        if (loaded.error.isNotEmpty())
+            return false;
+
+        engine.clearTrackEffects();
+        engine.session.reset (std::move (loaded.state), as);
+        engine.session.ensureMaster();
+
+        if (unsaved)
+            engine.session.markUnsaved();
+
+        auto done = false;
+        engine.loadTrackEffects (std::move (loaded.effects), [&] (const juce::String&) { done = true; });
+        const auto loading = engine.isLoadingTrackEffects();
+        runUntil ([&] { return done; }, 10000);
+        pump();
+        return done && loading && ! engine.isLoadingTrackEffects();
+    }
+
+    Resume::SessionWriter writerFor (AudioEngine& engine)
+    {
+        return [&engine] (const juce::File& target)
+        {
+            return SessionFile::save (*engine.session.getState(), target, [&engine] (juce::uint32 id) { return engine.getTrackEffects().createXml (id); });
+        };
+    }
+
+    /** Whether a session counts as changed (so quitting asks, and its changes are kept) after
+        each thing done to an instrument on one of its tracks. */
+    void testInstrumentEdits (const juce::File& work)
+    {
+        const auto user = work.getChildFile ("User 5");
+        user.createDirectory();
+        const auto sessionFile = user.getChildFile ("Beat.tqsession"), hit = user.getChildFile ("Hit.wav");
+        AudioEngine engine;
+        AudioFileIO::save (*tone (4800, 220.0, 0.5f), 48000.0, hit, 24, engine.formatManager);
+        const auto save = [&]
+        {
+            const auto error = writerFor (engine) (sessionFile);
+            engine.session.markSaved (sessionFile);
+            pump();
+            return error.isEmpty() && ! engine.session.isDirty();
+        };
+
+        engine.session.reset (SessionState::newEmpty (48000.0), {});
+        engine.session.ensureMaster();
+        const auto clean = ! engine.session.isDirty();
+        const auto drumsId = addInstrumentTrack (engine, "Basic Drums");
+        auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (engine.getTrackEffects().getInstrument (drumsId));
+        check (clean && drums != nullptr && engine.session.isDirty() && engine.session.getFile() == juce::File(),
+               "unsaved session: a new session is not changed; with only an instrument track added, never saved, it is (quitting asks)");
+
+        if (drums == nullptr)
+            return;
+
+        // Saved. Then a knob turned in the instrument's window, as a slider does it.
+        const auto saved = save();
+        auto* tune = drums->parameterOf (DrumMachine::Sound::kick, "tune");
+        const auto edits = engine.session.getEffectsEdits();
+        tune->beginChangeGesture();
+        tune->setValueNotifyingHost (value01 (*tune) > 0.5f ? 0.2f : 0.8f);
+        tune->endChangeGesture();
+        pump();
+        check (saved && engine.session.isDirty() && engine.session.getEffectsEdits() != edits,
+               "unsaved session: a knob turned in an instrument's window marks a saved session changed");
+
+        // A kit chosen: values set with no gesture.
+        const auto savedAgain = save();
+        drums->applyKit (DrumMachine::kits()[2]);
+        pump();
+        check (savedAgain && engine.session.isDirty(), "unsaved session: a kit chosen in Basic Drums marks a saved session changed");
+
+        // A value set from another thread (a MIDI controller reaches the instrument on the audio thread) is no edit.
+        const auto savedThird = save();
+        std::thread ([&] { tune->setValueNotifyingHost (0.5f); }).join();
+        pump();
+        check (savedThird && ! engine.session.isDirty(), "unsaved session: a value an instrument is given off the message thread is not a change to save");
+
+        // A sample loaded into the Sampler: no parameter moves, its state does.
+        const auto samplerId = addInstrumentTrack (engine, "Torqwave Sampler");
+        auto* sampler = dynamic_cast<BuiltInEffects::SamplerProcessor*> (engine.getTrackEffects().getInstrument (samplerId));
+        const auto savedFourth = sampler != nullptr && save();
+        juce::String error;
+        const auto sample = Sampler::sharedSample (hit, error);
+        const auto added = sampler != nullptr && sample != nullptr && sampler->addSample (sample, hit).isEmpty();
+        pump();
+        check (savedFourth && added && engine.session.isDirty(), "unsaved session: a sample loaded into the Sampler marks a saved session changed");
+
+        // Opening the saved session gives every instrument its state back, and that is not a change.
+        const auto savedLast = save();
+        const auto opened = openSession (engine, sessionFile, sessionFile, false);
+        const auto state = engine.session.getState();
+        auto* drumsBack = state->tracks.size() >= 2 ? dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (engine.getTrackEffects().getInstrument (state->tracks[0].id)) : nullptr;
+        auto* samplerBack = state->tracks.size() >= 2 ? dynamic_cast<BuiltInEffects::SamplerProcessor*> (engine.getTrackEffects().getInstrument (state->tracks[1].id)) : nullptr;
+        check (savedLast && opened && drumsBack != nullptr && samplerBack != nullptr && samplerBack->getZones().size() == 1
+                   && drumsBack->getKitName() == DrumMachine::kits()[2].name && ! engine.session.isDirty(),
+               "unsaved session: opening a session, its instruments given their saved state, leaves it not changed");
+        engine.clearTrackEffects();
+    }
+
+    /** Quits with a session never saved (an audio clip, an instrument with its settings and notes,
+        a tempo), starts again and has it back, still to be saved; and the same for a saved
+        session's unsaved changes. */
+    void testUnsavedSession (const juce::File& work)
+    {
+        const auto user = work.getChildFile ("User 6"), data = work.getChildFile ("Data 6/Left Off");
+        user.createDirectory();
+        const auto a = user.getChildFile ("Loop.wav"), sessionFile = user.getChildFile ("Song.tqsession");
+        const auto note = data.getChildFile ("Left Off.xml"), copy = Resume::sessionCopy (data);
+        const SessionPlace place { 4800, { 0, 9600 }, 0.0, 48.0, 0, 1 };
+        NoteClip notes;
+        notes.name = "Pattern";
+        notes.position = 24000;
+        notes.length = 96000;
+        notes.notes = { { 36, 0, 6000, 0.9f, 1.0f }, { 38, 24000, 6000, 0.7f, 1.0f }, { 42, 36000, 3000, 0.5f, 0.5f } };
+        float tuneLeft = 0.0f;
+        juce::String userBefore;
+
+        {
+            AudioEngine engine;
+            OpenFiles files (engine);
+            AudioFileIO::save (*tone (48000, 110.0, 0.4f), 48000.0, a, 24, engine.formatManager);
+            auto session = SessionState::newEmpty (48000.0);
+            session.tempo = 97.0;
+            SessionEdits::addClip (session, 0, a, AudioFileIO::load (a, engine.formatManager).snapshot, 12000);
+            engine.session.reset (std::move (session), {});
+            engine.session.ensureMaster();
+
+            // Clean and never saved, there is nothing of it to keep.
+            const auto nothing = Resume::gather (files, {}, engine, true, place, {});
+            const auto drumsId = addInstrumentTrack (engine, "Basic Drums");
+            auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (engine.getTrackEffects().getInstrument (drumsId));
+
+            if (drums == nullptr)
+            {
+                check (false, "unsaved session: Basic Drums loads onto a track");
+                return;
+            }
+
+            drums->applyKit (DrumMachine::kits()[3]);
+            auto* tune = drums->parameterOf (DrumMachine::Sound::snare, "tune");
+            tune->setValueNotifyingHost (value01 (*tune) > 0.5f ? 0.25f : 0.75f);
+            tuneLeft = value01 (*tune);
+            auto next = *engine.session.getState();
+            SessionEdits::addNoteClip (next, drumsId, notes);
+            engine.session.apply (std::move (next), "Add Notes");
+            pump();
+            userBefore = listing (user);
+
+            // Quit: the note, and the session beside it.
+            Resume::Keeper keeper (data);
+            const auto state = Resume::gather (files, {}, engine, true, place, {});
+            const auto error = keeper.note (state, writerFor (engine), true);
+            check (nothing.isEmpty() && ! nothing.sessionCopy && state.sessionCopy && ! state.isEmpty() && state.open.session == juce::File()
+                       && error.isEmpty() && note.existsAsFile() && copy.existsAsFile(),
+                   "unsaved session: a session never saved, with work in it, is kept beside the note at quit");
+            check (data.findChildFiles (juce::File::findFiles, true).size() == 2 && copy.getSize() < 200000 && listing (user) == userBefore,
+                   "unsaved session: what is kept is the note and the session's file alone (" + juce::String (copy.getSize())
+                       + " bytes: no audio), and nothing is written beside the user's files");
+
+            // Not written again while nothing has changed; again when something has.
+            copy.deleteFile();
+            const auto notAgain = keeper.note (state, writerFor (engine), false).isEmpty() && ! copy.existsAsFile();
+            const auto again = keeper.note (state, writerFor (engine), true).isEmpty() && copy.existsAsFile()
+                            && ! data.getChildFile ("Session Being Written.tqsession").exists();
+            check (notAgain && again, "unsaved session: the session is written again only when it is said to have changed");
+            engine.clearTrackEffects();
+        }
+
+        // The next start.
+        {
+            AudioEngine engine;
+            auto loaded = Resume::load (data);
+            const auto found = loaded.found && loaded.state.sessionCopy && loaded.state.open.session == juce::File() && loaded.missing.isEmpty()
+                            && loaded.state.waiting.isEmpty() && loaded.state.open.multitrack && samePlace (loaded.state.sessionPlace, place);
+            const auto opened = found && openSession (engine, copy, loaded.state.open.session, true);
+            const auto state = engine.session.getState();
+            const auto shape = state->tracks.size() == 3 && state->tracks[0].clips.size() == 1 && state->tracks[0].clips[0].source == a
+                            && state->tracks[0].clips[0].position == 12000 && state->tracks[1].isInstrument && state->tracks[1].noteClips.size() == 1
+                            && state->tracks[2].isMaster && juce::exactlyEqual (state->tempo, 97.0);
+            check (opened && shape && engine.session.isDirty() && engine.session.getFile() == juce::File(),
+                   "unsaved session: at the next start it is back (its audio clip, its instrument track, its tempo), with no file and still to be saved");
+
+            if (! (opened && shape))
+                return;
+
+            const auto& back = state->tracks[1].noteClips[0];
+            auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (engine.getTrackEffects().getInstrument (state->tracks[1].id));
+            check (back.name == notes.name && back.position == notes.position && back.length == notes.length && back.notes == notes.notes
+                       && drums != nullptr && drums->getKitName() == DrumMachine::kits()[3].name
+                       && juce::exactlyEqual (value01 (*drums->parameterOf (DrumMachine::Sound::snare, "tune")), tuneLeft),
+                   "unsaved session: its notes are the same, and its instrument has the kit and the knob as they were left");
+
+            // Saved now: the next note names the file, and the copy goes.
+            OpenFiles files (engine);
+            Resume::Keeper keeper (data);
+            keeper.restored();
+            const auto savedTo = writerFor (engine) (sessionFile).isEmpty();
+            engine.session.markSaved (sessionFile);
+            const auto saved = Resume::gather (files, {}, engine, true, place, {});
+            check (savedTo && ! saved.sessionCopy && saved.open.session == sessionFile && keeper.note (saved, writerFor (engine), true).isEmpty()
+                       && ! copy.exists() && Resume::load (data).state.open.session == sessionFile && ! Resume::load (data).state.sessionCopy,
+                   "unsaved session: once the session is saved the note names its file and the copy is removed");
+
+            // Changed again and not saved: the copy is the session, whether or not its file is still there.
+            auto next = *engine.session.getState();
+            next.tempo = 141.0;
+            engine.session.apply (std::move (next), "Tempo");
+            const auto changed = Resume::gather (files, {}, engine, true, place, {});
+            const auto kept = changed.sessionCopy && changed.open.session == sessionFile && keeper.note (changed, writerFor (engine), true).isEmpty();
+            const auto onDisk = SessionFile::load (sessionFile, engine.formatManager);
+            sessionFile.moveFileTo (user.getChildFile ("Moved.tqsession"));
+            const auto away = Resume::load (data);
+            const auto inCopy = SessionFile::load (copy, engine.formatManager);
+            check (kept && juce::exactlyEqual (onDisk.state.tempo, 97.0) && away.state.sessionCopy && away.state.open.session == sessionFile
+                       && away.missing.isEmpty() && away.state.waiting.isEmpty() && juce::exactlyEqual (inCopy.state.tempo, 141.0),
+                   "unsaved session: a saved session's unsaved changes are kept the same way, its file left as saved, and come back under its name even with the file gone");
+
+            // The copy gone: said; the session's own file is opened when it is there, and waits when it is not.
+            copy.deleteFile();
+            const auto bothGone = Resume::load (data);
+            user.getChildFile ("Moved.tqsession").moveFileTo (sessionFile);
+            const auto fileOnly = Resume::load (data);
+            check (! bothGone.state.sessionCopy && bothGone.state.open.session == juce::File() && bothGone.state.waiting.session == sessionFile
+                       && bothGone.missing.size() == 1 && ! fileOnly.state.sessionCopy && fileOnly.state.open.session == sessionFile
+                       && fileOnly.state.waiting.isEmpty() && fileOnly.missing.size() == 1,
+                   "unsaved session: with the copy gone that is said, and the session's own file is opened as saved, or waits if it is gone too");
+
+            // A session that was waiting gives way to one with unsaved work, and not to a new empty one.
+            Resume::Waiting waiting;
+            waiting.session = user.getChildFile ("Away.tqsession");
+            const auto givesWay = Resume::gather (files, {}, engine, true, place, {}, waiting).waiting.session == juce::File();
+            engine.clearTrackEffects();
+            engine.session.reset (SessionState::newEmpty (48000.0), {});
+            engine.session.ensureMaster();
+            const auto empty = Resume::gather (files, {}, engine, true, place, {}, waiting);
+            check (givesWay && ! empty.sessionCopy && empty.waiting.session == waiting.session,
+                   "unsaved session: a session waiting to be found again gives way to unsaved work, and stays for a new empty session");
+
+            // Everything closed after that: nothing to come back to, the copy included.
+            keeper.note (changed, writerFor (engine), true);
+            const auto there = copy.existsAsFile();
+            keeper.note (Resume::gather (files, {}, engine, false, {}, {}), writerFor (engine), true);
+            check (there && ! copy.exists() && ! note.exists(), "unsaved session: with nothing left open the note and the copy are both removed");
+        }
+    }
+
     /** The files are read once each, in order, by the loader given, and reading can be stopped. */
     void testLoading (const juce::File& work)
     {
@@ -449,6 +734,8 @@ void runResumeTests()
     testMissingAndChanged (work);
     testKeeping (work);
     testLoading (work);
+    testInstrumentEdits (work);
+    testUnsavedSession (work);
 
     work.deleteRecursively();
 }

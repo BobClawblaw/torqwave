@@ -1642,6 +1642,14 @@ public:
     /** Track effects live outside the undoable state; changing them still needs saving. */
     void markEffectsChanged();
 
+    /** The same for a change made inside an effect or instrument (TrackEffects::onEdited), which
+        may come many times a second: listeners are told only when it is the first since saving. */
+    void markEffectsEdited();
+
+    /** Goes up with every markEffectsChanged and markEffectsEdited: with getVersion(), whether
+        anything a session file would hold has changed since it was last looked at. */
+    juce::uint32 getEffectsEdits() const noexcept { return effectsEdits; }
+
     /** Puts in a state that only brings the current one up to date (audio stretched to the tempo,
         TempoFollow::Renderer): in its place, not a step of its own, and not a change to save. */
     void refresh (SessionState);
@@ -1672,6 +1680,7 @@ private:
     int position = 0;
     int savedPosition = 0;
     bool effectsChanged = false;
+    juce::uint32 effectsEdits = 0;
     bool viewChanged = false;   // the loop or bars and beats, since the last save
     std::vector<State> pendingRelease;
     juce::File file;

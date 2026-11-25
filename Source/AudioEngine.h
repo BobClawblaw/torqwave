@@ -615,6 +615,10 @@ public:
     /** Restores track effects from session file EFFECTS elements, by track id, one after another. */
     void loadTrackEffects (std::map<juce::uint32, std::shared_ptr<juce::XmlElement>> effects, AddCallback onDone);
 
+    /** True from a loadTrackEffects until its plug-ins are all in (or the load was given up):
+        until then the tracks' chains are not yet what the session holds. */
+    bool isLoadingTrackEffects() const noexcept               { return trackEffectsLoading.use_count() > 1; }
+
     /** The same into other track effects (a Sequencer's own), made at this rate. The loading
         stops (without calling back) when the engine goes, or when *intoAlive turns false, which
         their owner sets before they go. */
@@ -691,6 +695,7 @@ private:
     std::unique_ptr<juce::AudioIODeviceCallback> insertCycle;   // the graph player inside the hardware inserts' cycle
     juce::BigInteger insertOutputs, insertInputs;              // the pairs the hardware inserts use, as last turned on
     std::shared_ptr<bool> alive = std::make_shared<bool> (true);
+    std::shared_ptr<int> trackEffectsLoading = std::make_shared<int> (0);   // shared with each load under way
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioEngine)
 };

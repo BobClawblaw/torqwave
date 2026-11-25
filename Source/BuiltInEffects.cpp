@@ -12,6 +12,9 @@ namespace BuiltInEffects
 {
 namespace
 {
+    // How deep this thread is in built-in effects' setStateInformation (isRestoringState).
+    thread_local int restoringState = 0;
+
     constexpr double shelfQ = 0.7071067811865476;
     const juce::StringArray typeNames { "Bell", "Low Shelf", "High Shelf", "High-Pass", "Low-Pass" };
 
@@ -446,8 +449,20 @@ void BuiltInEffect::getStateInformation (juce::MemoryBlock& block)
     copyXmlToBinary (xml, block);
 }
 
+bool BuiltInEffect::isRestoringState() noexcept
+{
+    return restoringState > 0;
+}
+
+void BuiltInEffect::stateEdited()
+{
+    if (restoringState == 0 && juce::MessageManager::existsAndIsCurrentThread())
+        updateHostDisplay (ChangeDetails().withNonParameterStateChanged (true));
+}
+
 void BuiltInEffect::setStateInformation (const void* data, int size)
 {
+    const juce::ScopedValueSetter<int> restoring (restoringState, restoringState + 1);
     const auto xml = getXmlFromBinary (data, size);
 
     if (xml == nullptr || ! PreviousName::hasTag (*xml, tag))

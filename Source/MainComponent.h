@@ -734,6 +734,7 @@ private:
     std::function<void()> placesAfterBoot;     // puts the views back where they were once the window has its size
     juce::String startNotice;                  // what couldn't be reopened, said once the start's other question is answered
     juce::uint32 lastLeftOffNote = 0;          // when, in milliseconds since startup
+    juce::uint32 leftOffSessionVersion = 0, leftOffEffectsEdits = 0;   // the session as its unsaved changes were last kept
     bool leftOffOnOffer = false;               // a note from an earlier run was there at start
     bool continuing = false, continuingAtStart = false;
     bool deviceAsked = false, pluginListRead = false;

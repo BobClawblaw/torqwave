@@ -56,6 +56,13 @@ public:
         envelopes are not reported. */
     std::function<void (const ParameterTouch&)> onParameterTouched;
 
+    /** Called on the message thread after an effect or instrument was changed in its own window,
+        so its state needs saving: a control grabbed in any plug-in; and in a built-in one, a value
+        set from the message thread (a preset or a kit chosen) or its other state changed
+        (BuiltInEffect::stateEdited). A saved state coming back (setStateInformation), values from
+        envelopes and values set from the audio thread (MIDI controllers) are not edits. */
+    std::function<void()> onEdited;
+
     /** While a parameter is touched, its envelope doesn't set it, so what the hand does wins. */
     void setTouched (juce::uint32 trackId, juce::uint32 slotId, const juce::String& parameterId, bool touched);
 
@@ -173,16 +180,23 @@ public:
 
 private:
     /** Listens to one slot's parameters for touches. */
-    struct Watcher final : public juce::AudioProcessorParameter::Listener
+    struct Watcher final : public juce::AudioProcessorParameter::Listener,
+                           public juce::AudioProcessorListener
     {
-        Watcher (TrackEffects&, juce::uint32 trackId, juce::uint32 slotId, const std::map<juce::String, juce::AudioProcessorParameter*>&);
+        Watcher (TrackEffects&, juce::AudioPluginInstance&, juce::uint32 trackId, juce::uint32 slotId,
+                 const std::map<juce::String, juce::AudioProcessorParameter*>&);
         ~Watcher() override;
 
         void parameterValueChanged (int index, float value) override;
         void parameterGestureChanged (int index, bool starting) override;
+        void audioProcessorParameterChanged (juce::AudioProcessor*, int, float) override {}
+        void audioProcessorChanged (juce::AudioProcessor*, const ChangeDetails&) override;
         void report (ParameterTouch::Kind, int index, float value);
+        void edited();
 
         TrackEffects& owner;
+        juce::AudioPluginInstance& plugin;
+        const bool builtIn;
         juce::uint32 trackId, slotId;
         std::map<int, std::pair<juce::AudioProcessorParameter*, juce::String>> byIndex;
     };
@@ -270,6 +284,7 @@ private:
 
     juce::SpinLock touchesLock;
     std::vector<ParameterTouch> touches;   // waiting for the message thread
+    std::atomic<bool> editWaiting { false };   // an edit to tell onEdited of
     juce::MidiBuffer midi;
 
     // Live MIDI for one track's instrument this block (audio thread): the buffer, the track, and

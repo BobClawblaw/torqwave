@@ -21,33 +21,59 @@ TrackEffects::~TrackEffects()
 }
 
 //==============================================================================
-TrackEffects::Watcher::Watcher (TrackEffects& o, juce::uint32 track, juce::uint32 slot,
+TrackEffects::Watcher::Watcher (TrackEffects& o, juce::AudioPluginInstance& p, juce::uint32 track, juce::uint32 slot,
                                 const std::map<juce::String, juce::AudioProcessorParameter*>& parameters)
-    : owner (o), trackId (track), slotId (slot)
+    : owner (o), plugin (p), builtIn (dynamic_cast<BuiltInEffects::BuiltInEffect*> (&p) != nullptr), trackId (track), slotId (slot)
 {
     for (auto& [id, parameter] : parameters)
     {
         byIndex[parameter->getParameterIndex()] = { parameter, id };
         parameter->addListener (this);
     }
+
+    plugin.addListener (this);
 }
 
 TrackEffects::Watcher::~Watcher()
 {
+    plugin.removeListener (this);
+
     for (auto& [index, entry] : byIndex)
         entry.first->removeListener (this);
 }
 
 void TrackEffects::Watcher::parameterValueChanged (int index, float value)
 {
-    if (! followingEnvelope)
-        report (ParameterTouch::Kind::change, index, value);
+    if (followingEnvelope)
+        return;
+
+    // A built-in effect's value set on the message thread is somebody's doing (its window, a
+    // preset, a kit), unless it is a saved state coming back. Other plug-ins send values here
+    // for reasons of their own (meters, their own modulation), so only a gesture counts for them.
+    if (builtIn && ! BuiltInEffects::BuiltInEffect::isRestoringState() && juce::MessageManager::existsAndIsCurrentThread())
+        edited();
+
+    report (ParameterTouch::Kind::change, index, value);
 }
 
 void TrackEffects::Watcher::parameterGestureChanged (int index, bool starting)
 {
+    edited();
+
     if (const auto found = byIndex.find (index); found != byIndex.end())
         report (starting ? ParameterTouch::Kind::begin : ParameterTouch::Kind::end, index, found->second.first->getValue());
+}
+
+void TrackEffects::Watcher::audioProcessorChanged (juce::AudioProcessor*, const ChangeDetails& details)
+{
+    if (builtIn && details.nonParameterStateChanged && ! BuiltInEffects::BuiltInEffect::isRestoringState())
+        edited();
+}
+
+void TrackEffects::Watcher::edited()
+{
+    owner.editWaiting.store (true);
+    owner.triggerAsyncUpdate();
 }
 
 void TrackEffects::Watcher::report (ParameterTouch::Kind kind, int index, float value)
@@ -74,6 +100,9 @@ void TrackEffects::handleAsyncUpdate()
         const juce::SpinLock::ScopedLockType sl (touchesLock);
         std::swap (pending, touches);
     }
+
+    if (editWaiting.exchange (false) && onEdited != nullptr)
+        onEdited();
 
     if (onParameterTouched != nullptr)
         for (auto& t : pending)
@@ -320,6 +349,10 @@ void TrackEffects::clear()
             slot->plugin->releaseResources();
             release (slot->copies);
         }
+
+    // An edit of what is now gone is not one of whatever comes next (another session).
+    old.clear();
+    editWaiting.store (false);
 }
 
 TrackEffects::Chain* TrackEffects::find (juce::uint32 trackId)
@@ -406,7 +439,7 @@ juce::uint32 TrackEffects::add (juce::uint32 trackId, std::unique_ptr<juce::Audi
     const juce::ScopedLock sr (readers);
     slot->id = slotId != 0 ? slotId : nextSlotId;
     nextSlotId = juce::jmax (nextSlotId, slot->id + 1);
-    slot->watcher = std::make_unique<Watcher> (*this, trackId, slot->id, slot->parameters);
+    slot->watcher = std::make_unique<Watcher> (*this, *slot->plugin, trackId, slot->id, slot->parameters);
     const auto id = slot->id;
     auto& chain = chains[trackId];
 
