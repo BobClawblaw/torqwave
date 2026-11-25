@@ -309,13 +309,13 @@ void runPresetTests (AudioEngine& engine)
     }
 
     // Sameness (docs/plans/PLAN-SEQUENCE-LIBRARY.md). One measure, what a preset plays, against the others
-    // of its category (a role's sub-role): for a drum part the sounds and where they fall, for the rest the
-    // pitches in order. Its looser form, the shape, is the
+    // of its category (a role's sub-role): the pitches, or a drum part's sounds, and where they fall. Its
+    // looser form, the shape, is the
     // rhythm and whether each note steps up, down or stays, whatever the chord. The numbers a category
     // is still allowed are what it stood at when the test was written; they only go down, to none with
     // the same notes and no shape in more than three styles.
     {
-        struct One { juce::String name, category, style, notes, shape; bool rises = false; };
+        struct One { juce::String name, category, style, notes, shape; bool rises = false; int highest = 0; };
         std::vector<One> ones;
 
         for (auto& f : all)
@@ -330,10 +330,8 @@ void runPresetTests (AudioEngine& engine)
 
                     for (auto& n : played)
                     {
-                        if (drums)
-                            one.notes << n.pitch << "@" << juce::String (n.start) << " ";
-                        else if (n.pitch != last)
-                            one.notes << n.pitch << " ";
+                        one.notes << n.pitch << "@" << juce::String (n.start) << " ";
+                        one.highest = juce::jmax (one.highest, n.pitch);
 
                         if (drums)
                             one.shape << n.pitch << "@" << juce::String (n.start) << " ";
@@ -404,8 +402,7 @@ void runPresetTests (AudioEngine& engine)
             { "Arps > Up & Down", { 15, 6 } },
             { "Bass > Arp Bass", { 5, 7 } },
             { "Bass > Picked & Played", { 4, 2 } },
-            { "Bass > Sub", { 38, 5 } },
-            { "Bass > Synth Bass", { 61, 5 } },
+            { "Bass > Synth Bass", { 34, 5 } },
             { "Drums > Breaks", { 2, 2 } },
             { "Drums > Fills", { 31, 9 } },
             { "Drums > Full Grooves", { 8, 2 } },
@@ -413,20 +410,28 @@ void runPresetTests (AudioEngine& engine)
             { "Drums > Kick", { 31, 15 } },
             { "Drums > Percussion", { 2, 2 } },
             { "Drums > Snare & Clap", { 7, 5 } },
-            { "Harmony > Keys & Comping", { 18, 7 } },
+            { "Harmony > Keys & Comping", { 14, 7 } },
             { "Harmony > Progressions", { 12, 9 } },
-            { "Harmony > Stabs", { 36, 8 } },
             { "Harmony > Strums", { 2, 7 } },
             { "Pads > Drones", { 19, 11 } },
             { "Pads > Evolving", { 22, 23 } },
             { "Pads > Sustained", { 26, 19 } }
         };
-        const int stylesUnderHalfAllowed = 17;
+        const int stylesUnderHalfAllowed = 11;
         juce::StringArray over, table, flat;
 
+        juce::StringArray high;
+
         for (auto& o : ones)
+        {
             if (o.category == "SFX > Risers" && ! o.rises)
                 flat.add (o.name);
+
+            if (o.category == "Bass > Sub" && o.highest > 45)
+                high.add (o.name);
+        }
+
+        check (high.isEmpty(), "presets: every sub stays in the sub register, at or under A2" + (high.isEmpty() ? juce::String() : " (" + high.joinIntoString (", ") + ")"));
 
         int stylesUnderHalf = 0;
 

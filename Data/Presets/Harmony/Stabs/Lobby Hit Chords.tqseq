@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Lobby Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor stabs in a syncopated one-bar pattern" style="Game/Menu" energy="1" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="90.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Lobby Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A with the second in place of the third every dotted 8th across the bar" style="Game/Menu" energy="1" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="90.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="220" v="0.818898"/>
-    <N p="60" s="0" l="220" v="0.818898"/>
+    <N p="59" s="0" l="220" v="0.818898"/>
     <N p="64" s="0" l="220" v="0.818898"/>
-    <N p="57" s="480" l="220" v="0.818898"/>
-    <N p="60" s="480" l="220" v="0.818898"/>
-    <N p="64" s="480" l="220" v="0.818898"/>
+    <N p="57" s="720" l="220" v="0.818898"/>
+    <N p="59" s="720" l="220" v="0.818898"/>
+    <N p="64" s="720" l="220" v="0.818898"/>
     <N p="57" s="1440" l="220" v="0.818898"/>
-    <N p="60" s="1440" l="220" v="0.818898"/>
+    <N p="59" s="1440" l="220" v="0.818898"/>
     <N p="64" s="1440" l="220" v="0.818898"/>
-    <N p="57" s="2400" l="220" v="0.818898"/>
-    <N p="60" s="2400" l="220" v="0.818898"/>
-    <N p="64" s="2400" l="220" v="0.818898"/>
+    <N p="57" s="2160" l="220" v="0.818898"/>
+    <N p="59" s="2160" l="220" v="0.818898"/>
+    <N p="64" s="2160" l="220" v="0.818898"/>
     <N p="57" s="2880" l="220" v="0.818898"/>
-    <N p="60" s="2880" l="220" v="0.818898"/>
+    <N p="59" s="2880" l="220" v="0.818898"/>
     <N p="64" s="2880" l="220" v="0.818898"/>
   </NOTES>
   <VOICE><TRACKTEMPLATE name="Torqwave Synth: Factory Hit" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhQgMFcuIWdffTZzIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>

@@ -114,38 +114,30 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Overlord Sub Pulse" role="Bass" subRole="Sub" key="A minor" tags="" note="An 8th on every offbeat, moving through the roots of A minor, A minor, F, E" style="Game/Boss" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="160.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Overlord Sub Pulse" role="Bass" subRole="Sub" key="A minor" tags="Harmonic minor" note="The sub on the root, falling a step at half the bar, moving through the roots of A minor, A minor, F, E" style="Game/Boss" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="160.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
-      <N p="33" s="480" l="144" v="0.755906"/>
-      <N p="33" s="1440" l="144" v="0.755906"/>
-      <N p="33" s="2400" l="144" v="0.755906"/>
-      <N p="33" s="3360" l="144" v="0.755906"/>
-      <N p="33" s="4320" l="144" v="0.755906"/>
-      <N p="33" s="5280" l="144" v="0.755906"/>
-      <N p="33" s="6240" l="144" v="0.755906"/>
-      <N p="33" s="7200" l="144" v="0.755906"/>
-      <N p="29" s="8160" l="144" v="0.755906"/>
-      <N p="29" s="9120" l="144" v="0.755906"/>
-      <N p="29" s="10080" l="144" v="0.755906"/>
-      <N p="29" s="11040" l="144" v="0.755906"/>
-      <N p="28" s="12000" l="144" v="0.755906"/>
-      <N p="28" s="12960" l="144" v="0.755906"/>
-      <N p="28" s="13920" l="144" v="0.755906"/>
-      <N p="28" s="14880" l="144" v="0.755906"/>
+      <N p="33" s="0" l="1920" v="0.755906"/>
+      <N p="32" s="1920" l="1920" v="0.755906"/>
+      <N p="33" s="3840" l="1920" v="0.755906"/>
+      <N p="32" s="5760" l="1920" v="0.755906"/>
+      <N p="29" s="7680" l="1920" v="0.755906"/>
+      <N p="28" s="9600" l="1920" v="0.755906"/>
+      <N p="28" s="11520" l="1920" v="0.755906"/>
+      <N p="26" s="13440" l="1920" v="0.755906"/>
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Warehouse Sub" bus="0" instrument="1" musical="1" gainDb="-6.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUgIWYn8VcyUFHSUmXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Last Stand Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor stabs in a syncopated one-bar pattern" style="Game/Boss" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="160.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Last Stand Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor on the one, the and of 2 and beat 4" style="Game/Boss" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="160.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.818898"/>
       <N p="60" s="0" l="220" v="0.818898"/>
       <N p="64" s="0" l="220" v="0.818898"/>
-      <N p="57" s="720" l="220" v="0.818898"/>
-      <N p="60" s="720" l="220" v="0.818898"/>
-      <N p="64" s="720" l="220" v="0.818898"/>
       <N p="57" s="1440" l="220" v="0.818898"/>
       <N p="60" s="1440" l="220" v="0.818898"/>
       <N p="64" s="1440" l="220" v="0.818898"/>
+      <N p="57" s="2880" l="220" v="0.818898"/>
+      <N p="60" s="2880" l="220" v="0.818898"/>
+      <N p="64" s="2880" l="220" v="0.818898"/>
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Abandoned Crack" bus="0" instrument="1" musical="1" gainDb="-6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>75.VMjLgHD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhElaj8lakQFHCIWXislHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>

@@ -15,7 +15,7 @@ Acidic Transition|-2.5
 Afterglow Chords|1.5
 Afterglow Hook|10.0
 Afterglow Line|0.0
-Afterglow Sub|-0.5
+Afterglow Sub|-1.0
 Afterhours Gated Chord|0.5
 Afterhours Plucks|6.5
 Afterhours Riser|-2.0
@@ -52,12 +52,12 @@ Back Room Break|-3.5
 Backbeat Clap Layer|1.5
 Barbed Arp|0.5
 Barbed Backbeat|-1.5
-Barbwire Hit Chords|-4.0
+Barbwire Hit Chords|-2.5
 Barbwire Pound|-1.5
 Barbwire Throb|0.0
 Basement Bass Riff|10.0
 Basement Jam Sixteenths|4.5
-Basement Jam Stabs|-0.5
+Basement Jam Stabs|-1.5
 Basement Jam Wash|-0.5
 Bassline Bot Build|-1.0
 Bassline Bot Pulse|-1.5
@@ -69,7 +69,7 @@ Big Beat Transition|-3.0
 Biohazard Beat|-3.0
 Biohazard Bridge|0.0
 Biohazard Line|3.5
-Biohazard Stabs|-2.0
+Biohazard Stabs|-3.0
 Bitcrush Pluck Line|14.0
 Bitcrush Pressure|-1.5
 Bitcrush Stabs|-1.0
@@ -82,7 +82,7 @@ Blackout Pad|-1.0
 Blast Furnace Engine|-2.0
 Blast Wall Hook|1.5
 Blast Wall Lift|-1.0
-Blast Wall Stab|-3.0
+Blast Wall Stab|-2.0
 Blast Wall Strum|4.5
 Bleep Machine|-5.5
 Bleep Pattern|4.0
@@ -148,7 +148,7 @@ Cellar Line|3.5
 Cellar Strummed Chords|4.5
 Chain Drive Beat|-2.0
 Chain Drive Up-Down Arp|4.5
-Chopshop Hit Chords|-2.0
+Chopshop Hit Chords|-2.5
 Chopshop Kick Line|-3.5
 Chrome Motif|-3.0
 Chrome Night Kick Line|-1.5
@@ -162,7 +162,7 @@ Circuit Clap Stutter|-1.5
 Circuit Stomp|-2.0
 Clap Roll Build|1.0
 Clap Stutter Fill|-1.5
-Clash Stabs|-1.0
+Clash Stabs|-1.5
 Clean Room Groove|-4.0
 Coastline Line|7.5
 Coastline Transition|-3.5
@@ -188,7 +188,7 @@ Concrete Perc Loop|0.5
 Concrete Pluck|3.5
 Concrete Winter Bed|1.0
 Concrete Winter Pulse|-1.5
-Conveyor Sub Line|-0.5
+Conveyor Sub Line|-1.0
 Conveyor Thump|-1.5
 Corrosion Bass Run|-1.5
 Corrosion Drive|-1.5
@@ -222,10 +222,10 @@ Darkwave Drum Machine|-2.0
 Darkwave Eighth Roots|-0.5
 Darkwave Lead|13.0
 Darkwave Sub Roots|-1.0
-Data Hit Chords|-3.0
+Data Hit Chords|-0.5
 Data Kick Line|-2.0
 Datastream Pluck Line|9.5
-Datastream Stabs|-1.0
+Datastream Stabs|1.0
 Datastream Theme|-3.0
 Datastream Up-Down Arp|4.5
 Daybreak Bridge|2.5
@@ -287,7 +287,7 @@ Flicker Evolving Pad|2.0
 Flicker Kick Push|-1.5
 Flicker Line|9.0
 Flicker Pressure|-1.0
-Flicker Stabs|4.5
+Flicker Stabs|4.0
 Flicker Sub|0.0
 Flicker Under-line|5.0
 Flicker Up-Down Arp|3.0
@@ -299,10 +299,10 @@ Floodlight Line|-2.0
 Floodlight Perc Loop|1.0
 Floodlight Turn|-0.5
 Fog Evolving Pad|1.5
-Fog Machine Sub|-0.5
+Fog Machine Sub|-1.0
 Fog Roller|-0.5
 Forest Night Engine|-1.5
-Forest Night Stabs|-1.5
+Forest Night Stabs|-1.0
 Foundry Hat Line|1.5
 Foundry Pressure|0.0
 Foundry Wash|-1.0
@@ -341,7 +341,7 @@ Gated Sixteenths|-3.0
 Gated Snare Machine|2.0
 Gearbox Backbeat|-1.5
 Gearbox Kick Push|-1.5
-Gearbox Stab|0.0
+Gearbox Stab|-2.0
 Ghost Note Riser|0.0
 Girder Pressure|-1.0
 Glacier Chord Pulse|8.0
@@ -404,12 +404,12 @@ Hollow Theme|0.5
 Hologram Arp|0.0
 Hologram Tops|9.5
 Horizon Line Beat|-2.0
-Horizon Line Stabs|8.5
+Horizon Line Stabs|7.0
 Horizon Shifting Pad|-0.5
 Hub Low Drone|3.0
 Hub Motif|3.0
 Hub Stomp|-2.0
-Hub Sub Pulse|-1.0
+Hub Sub Pulse|-0.5
 Hydraulic Bassline|4.0
 Hydraulic Pattern|0.5
 Hydraulic Snare Fill|-1.5
@@ -440,7 +440,7 @@ Iron Curtain Engine|-2.0
 Iron Curtain Strum|0.5
 Iron Fist Sequence|-2.5
 Iron Fist Up-Down Arp|-1.0
-Ironworks Hit Chords|-2.0
+Ironworks Hit Chords|-1.5
 Ironworks Hook|0.5
 Ironworks Impact|-2.0
 Ironworks Perc Loop|-1.5
@@ -464,7 +464,7 @@ Lagoon Thump|-2.0
 Laser Grid Groove|-2.0
 Laser Grid Roll Fill|-1.5
 Laser Grid Sixteenths|3.0
-Laser Grid Stab|-2.5
+Laser Grid Stab|-0.5
 Lasers Clap Stutter|-1.5
 Lasers Strummed Chords|3.5
 Last Stand Bloom|1.0
@@ -550,7 +550,7 @@ Minor Swell Build|0.0
 Minor Triad Up-Down|5.0
 Mirror Bridge|0.5
 Mirror Pound|-3.5
-Mirror Stabs|-2.0
+Mirror Stabs|-0.5
 Momentum Chopper|5.0
 Momentum Comp|0.0
 Momentum Drive Bass|-2.0
@@ -643,7 +643,7 @@ Overworld Pluck Line|7.0
 Pale Bridge|-1.5
 Pale Drive|-2.0
 Pale Progression|0.5
-Pale Stabs|-1.0
+Pale Stabs|0.5
 Parade Bed|-1.5
 Parade Drive|-5.0
 Parade Kick Line|2.5
@@ -688,7 +688,7 @@ Plague Climb|3.5
 Plague Line|-3.0
 Plague Pad|1.0
 Plague Shifting Pad|-4.5
-Plague Stab|0.0
+Plague Stab|-2.0
 Plague Tom Run|-1.5
 Plateau Drone|2.0
 Plateau Pad|-3.0
@@ -727,7 +727,7 @@ Rave Hall Transition|-1.5
 Rave Stab Fifths|-1.5
 Raven Pluck Line|6.0
 Raven Stabs|-1.0
-Razor Hit Chords|-1.0
+Razor Hit Chords|-0.5
 Razor Lift|-1.0
 Resonance Bass Run|-2.5
 Resonance Roller|-3.0
@@ -748,7 +748,7 @@ Riot Gear Sub|0.0
 Riot Pulse|-1.5
 Ritual Kick Line|-1.5
 Ritual Stomp|-2.0
-Riverbed Stab|-2.5
+Riverbed Stab|-3.0
 Rivet Evolving Pad|0.5
 Rivet Groove|-2.0
 Rivet Line Stomp|-2.0
@@ -762,7 +762,7 @@ Rough Cut Pressure|-2.0
 Rough Cut Sub|0.0
 Rubber Kick Line|-1.5
 Rubber Tom Fall|2.5
-Ruin Hit Chords|7.5
+Ruin Hit Chords|10.0
 Ruin Hook|7.0
 Ruin Sub Line|-0.5
 Rumble Drone|7.0
@@ -772,7 +772,7 @@ Rust Belt Keys|0.0
 Rust Belt Pluck|1.5
 Rust Belt Riff|0.0
 Rust Belt Riser|-2.5
-Satellite Hit Chords|0.0
+Satellite Hit Chords|0.5
 Satellite Keys|1.0
 Satellite Pluck Line|6.5
 Satellite Roller|6.0
@@ -820,20 +820,20 @@ Skirmish Motif|0.5
 Skirmish Pattern|3.5
 Skirmish Pluck Line|-3.5
 Skirmish Sub Pulse|0.0
-Skyline Hit Chords|8.0
+Skyline Hit Chords|6.5
 Skyline Lift|6.5
 Slag Arp|3.0
 Slag Build|-0.5
 Slag Chords|-3.5
 Slag Drone|5.0
 Slag Hammer Pound|-2.0
-Slag Stabs|-2.0
+Slag Stabs|0.0
 Slag Sub Line|0.0
 Sledge Up-Down Arp|1.0
 Slide Bass Run|-2.0
 Slide Build|-2.0
 Slide Pluck Line|0.5
-Slide Stabs|-1.0
+Slide Stabs|1.0
 Slow Light Build|1.5
 Slow Minor Progression|0.5
 Smoke Bass|6.0
@@ -853,7 +853,7 @@ Sparse Room Bass Sequence|5.5
 Sparse Room Kick Push|2.5
 Sparse Room Loop|-2.0
 Sparse Room Sequence|4.5
-Sparse Room Stabs|-1.0
+Sparse Room Stabs|-0.5
 Sparse Room Tom Fall|-1.5
 Sparse Room Wash|-1.0
 Specter Chord Pulse|6.0
@@ -959,7 +959,7 @@ Torque Bass Run|4.0
 Torque Line|0.5
 Torque Plucks|5.0
 Torque Progression|-1.5
-Trance State Stabs|-1.5
+Trance State Stabs|-0.5
 Trance State Thump|-5.5
 Trance-Gate Minor|0.0
 Transistor Groove|-1.5
@@ -987,10 +987,10 @@ Undercurrent Drive|-2.5
 Undercurrent Sub Pulse|0.0
 Undertow Sub|-1.0
 Uniform Machine|-3.5
-Uniform Stabs|-2.5
+Uniform Stabs|-3.0
 Uniform Throb|0.0
 Valley Drive|-2.0
-Valley Stabs|-3.0
+Valley Stabs|-4.0
 Vanguard Loop|-1.5
 Vanguard Pad|0.5
 Vanguard Shifting Pad|2.5

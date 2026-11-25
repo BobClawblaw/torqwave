@@ -565,7 +565,7 @@ preset("Industrial Breakdown", D, "Breaks", "Techno/Industrial", 3, ["Dark", "Sp
 B = "Bass"
 
 preset("Sub Root Pulse", B, "Sub", "Techno/Driving", 2, ["Dark", "Sparse", "Straight", "Clean"],
-       "The sub on the root, an 8th on each offbeat", Part(1).line(". . a1 . . . a1 . . . a1 . . . a1 .", gate=1.0), 134, synth("sub"))
+       "The sub on the root, an 8th on each offbeat and a 16th more before the bar", Part(1).line(". . a1 . . . a1 . . . a1 . . . a1 a1", gate=0.9), 134, synth("sub"))
 preset("Offbeat Sub", B, "Sub", "Techno/Club tools", 2, ["Dark", "Sparse", "Straight", "Clean"],
        "A short sub on every offbeat, out of the kick's way", Part(1).line(". . a1 . . . a1 . . . a1 . . . a1 .", gate=0.9), 128, synth("sub"))
 preset("Sub Drone Hold", B, "Sub", "Techno/Dark", 1, ["Dark", "Sparse", "Straight", "Clean"],
@@ -1240,6 +1240,124 @@ BASS = {
     "march":     ("1 . 1 1 1 . 1 1 1 . 1 1 1 . 8 .", "a marching 16th line"),
     "drone":     ("1 - - - - - - - - - - - - - - -", "one held note a bar"),
     "pulse":     ("1 . . . 1 . . . 1 . . . 1 . . .", "a quarter-note pulse on the root"),
+}
+
+# What a stab is struck with, and when. A chord: its notes, what to call it, the tags it needs.
+STAB_CHORDS = {
+    "minor":     (["a3", "c4", "e4"], "A minor", []),
+    "seventh":   (["a3", "c4", "e4", "g4"], "A minor seventh", []),
+    "ninth":     (["a3", "c4", "e4", "g4", "b4"], "A minor ninth", []),
+    "power":     (["a2", "e3", "a3"], "a bare fifth, A and E", []),
+    "octaves":   (["a2", "a3", "a4"], "A in three octaves", []),
+    "phrygian":  (["a3", "bb3", "e4"], "A with the flat second against it", ["Phrygian"]),
+    "flattwo":   (["bb3", "d4", "f4"], "B flat major, the flat second's chord", ["Phrygian"]),
+    "tritone":   (["a3", "eb4"], "the tritone, A and E flat", ["Chromatic"]),
+    "diminished": (["a3", "c4", "eb4"], "A diminished", ["Chromatic"]),
+    "cluster":   (["a3", "bb3", "b3"], "a three-semitone cluster on A", ["Chromatic"]),
+    "sus":       (["a3", "d4", "e4"], "A with the fourth in place of the third", []),
+    "quartal":   (["a3", "d4", "g4"], "fourths stacked on A", []),
+    "second":    (["a3", "b3", "e4"], "A with the second in place of the third", []),
+    "first":     (["c4", "e4", "a4"], "A minor with the third at the bottom", []),
+    "wide":      (["a2", "e3", "c4"], "A minor spread over a tenth", []),
+    "sixth":     (["f3", "a3", "c4"], "F major", []),
+    "seventhflat": (["g3", "b3", "d4"], "G major", []),
+    "majorseven": (["f3", "a3", "c4", "e4"], "F major seventh", []),
+    "leading":   (["e3", "g#3", "b3"], "E major, the dominant", ["Harmonic minor"]),
+    "minorsixth": (["a3", "c4", "f4"], "A and C under an F", []),
+}
+
+STAB_RHYTHMS = [
+    ("x.....x.....x...", "on the one, the and of 2 and beat 4"),
+    ("..x.....x.x.....", "on the and of 1, then beat 3 and its offbeat"),
+    ("x..x..x.........", "three times in dotted 8ths from the one, then nothing"),
+    ("x.x...x...x.x...", "twice in 8ths, on the and of 2, and twice more into beat 4"),
+    ("...x......x.....", "twice only, a 16th before beat 2 and on the and of 3"),
+    ("x..x..x..x..x...", "every dotted 8th across the bar"),
+    ("..x..x..x.......", "three times in dotted 8ths off the beat"),
+    ("x.......x..x....", "on 1, on 3 and a dotted 8th after it"),
+    (".x..x.....x.....", "a 16th late, then on beat 2 and the and of 3"),
+    ("x.x.....x.x.....", "twice in 8ths on 1 and again on 3"),
+    ("....x.x.......x.", "on beat 2 and its offbeat, then the last 8th of the bar"),
+    ("x..x....x..x....", "a dotted pair on 1 and again on 3"),
+    ("..x...x.x.....x.", "on the offbeats of 1 and 2, on 3, and the last 8th"),
+    ("x.....x..x..x.x.", "on the one, then gathering through the back half of the bar"),
+    ("...x..x......x..", "pushed: a 16th before 2, the and of 2, a 16th after 4"),
+    ("x...........x.x.", "on the one and twice into the next bar"),
+    ("..x.x.....x.x...", "two 8ths off each of beats 1 and 3"),
+    ("x....x....x....x", "every five 16ths, four times across the bar"),
+]
+
+# The chords a genre stabs with first, or one style where it differs from its genre.
+STABS_FOR = {
+    "Techno": ["minor", "power", "seventh", "sus", "first"],
+    "Techno/Dark": ["phrygian", "flattwo", "power", "minor", "cluster"],
+    "Techno/Industrial": ["tritone", "cluster", "power", "phrygian"],
+    "Techno/Hard": ["power", "octaves", "tritone", "minor"],
+    "Techno/Peak-time": ["minor", "first", "wide", "seventh"],
+    "Techno/Melodic": ["ninth", "majorseven", "second", "sixth"],
+    "Techno/Dub": ["seventh", "ninth", "minorsixth", "quartal"],
+    "Techno/Acid": ["power", "phrygian", "octaves", "minor"],
+    "Industrial": ["power", "octaves", "minor", "tritone", "sus"],
+    "Industrial/EBM": ["power", "octaves", "minor", "seventhflat"],
+    "Industrial/Electro-industrial": ["tritone", "diminished", "phrygian", "cluster"],
+    "Industrial/Aggrotech": ["diminished", "power", "cluster", "phrygian"],
+    "Industrial/Darkwave": ["minor", "leading", "sixth", "second"],
+    "Industrial/Coldwave": ["second", "sus", "minor", "sixth"],
+    "Industrial/Futurepop": ["first", "sixth", "seventhflat", "wide"],
+    "Electro": ["quartal", "seventh", "octaves", "sus"],
+    "Breakbeat": ["seventh", "quartal", "minor", "first"],
+    "Drum and Bass": ["ninth", "diminished", "wide", "seventh"],
+    "Ambient": ["wide", "second", "ninth", "sus"],
+    "House": ["ninth", "seventh", "majorseven", "minorsixth"],
+    "Synthwave": ["first", "sixth", "seventhflat", "leading"],
+    "Trance": ["phrygian", "leading", "power", "minor"],
+    "Game": ["minor", "leading", "sus", "sixth"],
+    "Game/Horror": ["diminished", "cluster", "tritone", "leading"],
+    "Game/Chiptune": ["first", "seventhflat", "sixth", "minor"],
+    "Game/Menu": ["second", "sus", "majorseven", "sixth"],
+}
+
+# Sub figures, a bar each. Nothing here leaves the sub register.
+SUB_FIGURES = {
+    "sub":      ("1 - - - - - - - - - - - - - - -", "a held sub on the root"),
+    "subhalf":  ("1 - - - - - - - 1 - - - - - - -", "the sub in half notes"),
+    "offbeat":  (". . 1 . . . 1 . . . 1 . . . 1 .", "an 8th on every offbeat"),
+    "pulse":    ("1 . . . 1 . . . 1 . . . 1 . . .", "a quarter-note pulse on the root"),
+    "kickgap":  (". 1 - - . 1 - - . 1 - - . 1 - -", "the sub held in the gap after each kick"),
+    "dotted":   ("1 - - 1 - - 1 - - 1 - - 1 - 1 -", "the sub in dotted 8ths, twice as fast into the bar"),
+    "backbeat": (". . . . 1 - - - . . . . 1 - - -", "the sub on beats 2 and 4 only"),
+    "sync":     ("1 - - . . . 1 - . . 1 - - - . .", "a syncopated sub: the one, the and of 2, and a long note before 4"),
+    "fall":     ("1 - - - - - - - b - - - - - - -", "the sub on the root, falling a step at half the bar"),
+    "fifth":    ("1 - - - - - - - - - - - 5 - - -", "a held root with the fifth on beat 4"),
+    "three":    ("1 - - - - - 1 - - - - - 1 - - -", "the sub every dotted quarter, three across the bar"),
+    "pickup":   ("1 - - - - - - - - - - - - - 1 -", "a held sub struck again an 8th before the bar"),
+    "short":    ("1 - . . . . . . 1 - . . . . . .", "a short sub on 1 and 3"),
+    "tresillo": ("1 - - 1 - - 1 - 1 - - 1 - - 1 -", "the sub in a three-three-two figure stated twice"),
+    "late":     (". . . . . . 1 - - - - - - - - -", "the sub coming in on the and of 2 and held"),
+    "stepback": ("1 - - - b - - - 1 - - - 5 - - -", "quarter notes: root, the step under it, root, fifth"),
+    "pushed":   (". . . 1 - - - - . . . 1 - - - -", "the sub pushed a 16th ahead of beats 2 and 4"),
+    "twelve":   ("1 - - - - - - - - - - - 1 - 1 -", "a held sub with two 8ths at the end of the bar"),
+}
+
+# The sub figures a genre plays first, or one style where it differs from its genre.
+SUBS_FOR = {
+    "Techno": ["kickgap", "offbeat", "dotted", "three", "sub", "pickup"],
+    "Techno/Dark": ["kickgap", "sub", "fall", "pickup", "late"],
+    "Techno/Hypnotic": ["three", "dotted", "tresillo", "kickgap"],
+    "Techno/Dub": ["late", "backbeat", "fifth", "sub"],
+    "Techno/Minimal": ["short", "late", "sync", "backbeat"],
+    "Industrial": ["pulse", "short", "sync", "stepback", "twelve"],
+    "Industrial/EBM": ["pulse", "tresillo", "short", "stepback"],
+    "Industrial/Darkwave": ["subhalf", "fall", "fifth", "stepback"],
+    "Industrial/Coldwave": ["subhalf", "fifth", "fall", "twelve"],
+    "Electro": ["sync", "pushed", "tresillo", "short"],
+    "Breakbeat": ["sync", "pushed", "backbeat", "twelve"],
+    "Drum and Bass": ["sync", "late", "fall", "pushed", "twelve"],
+    "Ambient": ["sub", "fall", "fifth", "pickup", "late"],
+    "House": ["offbeat", "pushed", "dotted", "fifth"],
+    "Synthwave": ["pulse", "subhalf", "twelve", "stepback"],
+    "Trance": ["kickgap", "offbeat", "three"],
+    "Game": ["subhalf", "fall", "stepback", "fifth", "short"],
 }
 
 PROGRESSIONS = {
@@ -1998,6 +2116,40 @@ IMPACTS = {
 }
 
 LEFT_OUT = []   # (style, name) of each preset not written
+
+# Sameness, as the tests measure it: what a preset plays against the others of its category. The same
+# notes are the same pitches (a drum part's sounds) at the same places; the same shape is the same
+# rhythm with each note stepping up, down or staying as the other's does, whatever the chord.
+PLAYED = {}       # category -> the notes of each preset written
+SHAPES = {}       # (category, shape) -> the styles that have it
+SHAPE_STYLES = 3  # a shape may be in this many styles
+
+
+def notes_of(part):
+    return tuple(sorted((n[1], n[0]) for n in part.notes))
+
+
+def shape_of(part, on_drums):
+    if on_drums:
+        return notes_of(part)
+
+    shape, last = [], None
+    for start, p in notes_of(part):
+        shape.append((start, 0 if last is None or p == last else 1 if p > last else -1))
+        last = p
+    return tuple(shape)
+
+
+def is_new(category, style, part, on_drums):
+    """Whether a part plays what no preset of its category does, in a shape not yet in three other styles."""
+    styles = SHAPES.get((category, shape_of(part, on_drums)), set())
+    return notes_of(part) not in PLAYED.get(category, set()) and (style in styles or len(styles) < SHAPE_STYLES)
+
+
+def remember(category, style, part, on_drums):
+    PLAYED.setdefault(category, set()).add(notes_of(part))
+    SHAPES.setdefault((category, shape_of(part, on_drums)), set()).add(style)
+
 DRAWN = {}   # how often each UI sound and stinger has been drawn, over every style
 
 
@@ -2058,13 +2210,27 @@ class Maker:
         description = description[0].upper() + description[1:]
         PRESETS.append(Preset(name, role, sub, self.s.style, self.energy(energy_shift), self.character(part, distorted),
                               description, part, tempo or self.tempo(), voice, sorted(set(tags))))
+        remember(role + " > " + sub, self.s.style, part, voice[0] == "drums")
         self.made.setdefault(kind, []).append(name)
 
-    def leave_out(self, nouns):
+    def leave_out(self, nouns, category="SFX"):
         """A preset that is not written, since it would only play what another does. Its name and its
         energy are drawn as if it were, so the presets after it keep their names."""
-        LEFT_OUT.append((self.s.style, self.name(nouns)))
+        LEFT_OUT.append((self.s.style, category, self.name(nouns)))
         self.energy()
+
+    def add_new(self, kind, nouns, role, sub, candidates, **more):
+        """Writes the first of the candidates (description, part, voice, tags) that plays what no preset
+        of the category plays yet, in a shape not yet in three other styles; none of them, no preset."""
+        category = role + " > " + sub
+
+        for description, part, voice, tags in candidates:
+            if is_new(category, self.s.style, part, voice[0] == "drums"):
+                self.add(kind, nouns, role, sub, description, part, voice, tags, **more)
+                return True
+
+        self.leave_out(nouns, category)
+        return False
 
     # -- Drums ------------------------------------------------------------------------------
 
@@ -2207,6 +2373,8 @@ class Maker:
         if sub == "Sub":
             key = self.pick(["sub", "subhalf", "offbeat", "pulse", "drone"])
             patch = "sub"
+            bars = self.pick([2, 4]) if len(set(degrees)) > 1 else self.pick([1, 2, 4])
+            return self.sub_bass(mode, degrees, key, bars)
         elif sub == "Arp Bass":
             key = "acid" if s.acid else self.pick(["chip", "octave8", "ebm", "electro"] if not s.game else ["chip", "octave8"])
             patch = "acid" if s.acid else self.pick(s.bass_patches)
@@ -2228,6 +2396,42 @@ class Maker:
 
         words += (", moving through the roots of " + chord_names(mode, degrees)) if moving else ", on A"
         self.add("bass", ROLE_NOUNS[sub], "Bass", sub, words, part, synth(patch), self.mode_tags(mode, [n[0] for n in part.notes]))
+
+    def sub_bass(self, mode, degrees, drawn, bars):
+        """A sub: the figures its kind of style plays first (the one drawn before them where it is one of
+        those), on the root and through the style's roots, then the rest, until one is new."""
+        s = self.s
+        mine = SUBS_FOR.get(s.style) or SUBS_FOR[s.style.split("/")[0]]
+        keys = ([drawn] if drawn in mine else []) + [k for k in mine if k != drawn] + [k for k in SUB_FIGURES if k not in mine]
+        candidates = []
+
+        for key in keys:
+            rhythm, words = SUB_FIGURES[key]
+
+            for moving in ([False, True] if bars < 4 or len(set(degrees)) == 1 else [True, False]):
+                length = 4 if moving else min(bars, 2)
+                part = Part(length)
+
+                for b in range(length):
+                    part.line(self.sub_bar(mode, rhythm, degrees[b] if moving else 0), gate=0.95, bar=b, repeat=False)
+
+                said = words + (", moving through the roots of " + chord_names(mode, degrees) if moving else ", on A")
+                candidates.append((said, part, synth("sub"), self.mode_tags(mode, [n[0] for n in part.notes])))
+
+        self.add_new("bass", ROLE_NOUNS["Sub"], "Bass", "Sub", candidates)
+
+    def sub_bar(self, mode, rhythm, degree):
+        """A bar of a sub figure on a degree, kept at or under A2: '1' the root, '5' the fifth above it
+        (below, where above would leave the sub register), 'b' the step under the root."""
+        root = degree_pitch(mode, degree, 28, 39)
+        i = ladder_index(mode, root)
+        fifth = LADDER[mode][i + 4] if LADDER[mode][i + 4] <= 45 else LADDER[mode][i - 3]
+        tokens = []
+
+        for t in rhythm.split():
+            tokens.append(t if t in (".", "-") else name_of({"1": root, "5": fifth, "b": LADDER[mode][i - 1]}[t]))
+
+        return " ".join(tokens)
 
     def mode_tags(self, mode, pitches):
         pcs = {p % 12 for p in pitches}
@@ -2266,11 +2470,9 @@ class Maker:
             part.chords(chords[:2], rhythm=rhythm, length_steps=1, velocity=82)
             words = f"short {chord_names(mode, degrees[:2], seventh)} chords comping over two bars"
         elif sub == "Stabs":
-            rhythm = self.pick(["x.....x.....x...", "..x.....x.x.....", "x..x..x.........", "x.x...x...x.x...", "...x......x....."])
-            part = Part(1)
-            part.chords([chords[0]], rhythm=rhythm, length_steps=1, velocity=104)
-            words = f"{chord_name(mode, degrees[0], seventh)} stabs in a syncopated one-bar pattern"
+            self.pick([0, 1, 2, 3, 4])   # the rhythm, drawn as before so the names after it stay
             patch = self.pick(["stab"] + s.chord_patches)
+            return self.stabs(patch)
         else:   # Strums: the chord's notes a 16th apart, each held to the bar's end
             part = Part(4)
             for b, ch in enumerate(chords):
@@ -2280,6 +2482,23 @@ class Maker:
 
         tags = self.mode_tags(mode, [n[0] for n in part.notes])
         self.add("harmony", ROLE_NOUNS[sub], "Harmony", sub, words, part, synth(patch), tags)
+
+    def stabs(self, patch):
+        """Stabs: the chords its kind of style stabs with, each in the rhythms it favours, until one is new."""
+        s = self.s
+        chords = STABS_FOR.get(s.style) or STABS_FOR[s.style.split("/")[0]]
+        start = zlib.crc32(s.style.encode("utf-8"))
+        candidates = []
+
+        for turn in range(len(STAB_RHYTHMS)):
+            for c, key in enumerate(chords):
+                notes, said, tags = STAB_CHORDS[key]
+                rhythm, how = STAB_RHYTHMS[(start + turn + 5 * c) % len(STAB_RHYTHMS)]
+                part = Part(1)
+                part.chords([notes], rhythm=rhythm, length_steps=1, velocity=104)
+                candidates.append((f"{said} {how}", part, synth(patch), tags))
+
+        self.add_new("harmony", ROLE_NOUNS["Stabs"], "Harmony", "Stabs", candidates)
 
     def pads(self, sub):
         s = self.s
@@ -2579,6 +2798,10 @@ def join(phrases):
 
 def generate():
     used = {p.name for p in PRESETS} | {k[0] for k in KITS}
+
+    # The presets written by hand come first: what they play is theirs.
+    for p in PRESETS:
+        remember(p.role + " > " + p.sub, p.style, p.part, p.voice[0] == "drums")
 
     for s in STYLES:
         maker = Maker(s, used).make()
