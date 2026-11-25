@@ -1,0 +1,224 @@
+[
+  {
+    "style": "Techno/Dark",
+    "presets": 48,
+    "own": 21,
+    "shown": 6
+  },
+  {
+    "style": "Techno/Industrial",
+    "presets": 41,
+    "own": 14,
+    "shown": 5
+  },
+  {
+    "style": "Techno/Hard",
+    "presets": 41,
+    "own": 14,
+    "shown": 6
+  },
+  {
+    "style": "Techno/Acid",
+    "presets": 28,
+    "own": 8,
+    "shown": 4
+  },
+  {
+    "style": "Industrial/EBM",
+    "presets": 48,
+    "own": 22,
+    "shown": 7
+  },
+  {
+    "style": "Industrial/Electro-industrial",
+    "presets": 41,
+    "own": 16,
+    "shown": 7
+  },
+  {
+    "style": "Industrial/Dark electro",
+    "presets": 22,
+    "own": 3,
+    "shown": 2
+  },
+  {
+    "style": "Industrial/Aggrotech",
+    "presets": 36,
+    "own": 11,
+    "shown": 5
+  },
+  {
+    "style": "Industrial/Techno-body",
+    "presets": 37,
+    "own": 13,
+    "shown": 5
+  },
+  {
+    "style": "Breakbeat/Breaks",
+    "presets": 22,
+    "own": 6,
+    "shown": 2
+  },
+  {
+    "style": "Ambient/Drone",
+    "presets": 18,
+    "own": 2,
+    "shown": 2
+  },
+  {
+    "style": "Ambient/Dark ambient",
+    "presets": 18,
+    "own": 2,
+    "shown": 2
+  },
+  {
+    "style": "Drum and Bass/Liquid",
+    "presets": 18,
+    "own": 3,
+    "shown": 2
+  },
+  {
+    "style": "Drum and Bass/Neurofunk",
+    "presets": 18,
+    "own": 3,
+    "shown": 2
+  },
+  {
+    "style": "Electro/Electro",
+    "presets": 18,
+    "own": 3,
+    "shown": 1
+  },
+  {
+    "style": "Game/Boss",
+    "presets": 24,
+    "own": 5,
+    "shown": 2
+  },
+  {
+    "style": "Game/Chiptune",
+    "presets": 24,
+    "own": 1,
+    "shown": 2
+  },
+  {
+    "style": "Game/Combat",
+    "presets": 24,
+    "own": 4,
+    "shown": 2
+  },
+  {
+    "style": "Game/Exploration",
+    "presets": 24,
+    "own": 6,
+    "shown": 2
+  },
+  {
+    "style": "Game/Horror",
+    "presets": 24,
+    "own": 3,
+    "shown": 2
+  },
+  {
+    "style": "Game/Menu",
+    "presets": 24,
+    "own": 3,
+    "shown": 2
+  },
+  {
+    "style": "House/Deep house",
+    "presets": 18,
+    "own": 2,
+    "shown": 2
+  },
+  {
+    "style": "Industrial/Coldwave",
+    "presets": 22,
+    "own": 4,
+    "shown": 2
+  },
+  {
+    "style": "Industrial/Darkwave",
+    "presets": 33,
+    "own": 14,
+    "shown": 2
+  },
+  {
+    "style": "Industrial/Futurepop",
+    "presets": 29,
+    "own": 8,
+    "shown": 2
+  },
+  {
+    "style": "Industrial/Industrial rock",
+    "presets": 26,
+    "own": 8,
+    "shown": 2
+  },
+  {
+    "style": "Industrial/Synth-EBM",
+    "presets": 30,
+    "own": 11,
+    "shown": 2
+  },
+  {
+    "style": "Synthwave/Darksynth",
+    "presets": 18,
+    "own": 4,
+    "shown": 2
+  },
+  {
+    "style": "Techno/Club tools",
+    "presets": 3,
+    "own": 3,
+    "shown": 1
+  },
+  {
+    "style": "Techno/Driving",
+    "presets": 47,
+    "own": 21,
+    "shown": 2
+  },
+  {
+    "style": "Techno/Dub",
+    "presets": 22,
+    "own": 4,
+    "shown": 1
+  },
+  {
+    "style": "Techno/Hypnotic",
+    "presets": 32,
+    "own": 14,
+    "shown": 2
+  },
+  {
+    "style": "Techno/Melodic",
+    "presets": 39,
+    "own": 20,
+    "shown": 2
+  },
+  {
+    "style": "Techno/Minimal",
+    "presets": 26,
+    "own": 7,
+    "shown": 2
+  },
+  {
+    "style": "Techno/Peak-time",
+    "presets": 44,
+    "own": 18,
+    "shown": 2
+  },
+  {
+    "style": "Techno/Percussive",
+    "presets": 27,
+    "own": 8,
+    "shown": 2
+  },
+  {
+    "style": "Trance/Psytrance",
+    "presets": 18,
+    "own": 6,
+    "shown": 1
+  }
+]

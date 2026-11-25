@@ -1,5 +1,7 @@
 #include <JuceHeader.h>
+#include <map>
 #include <numeric>
+#include <regex>
 #include <set>
 #include "../Source/AudioEdits.h"
 #include "../Source/BuiltInEffects.h"
@@ -1089,8 +1091,27 @@ namespace
                 bool still = false;   // two notes a bar or fewer, or one pitch (one drum sound) only
                 bool oneNoteSub = false;   // a Bass > Sub part on one pitch: the last thing to show
                 juce::String notes;        // what it plays, to know it when another sequence plays the same
-                bool heard = false;        // a clip chosen before this one plays the same notes
+                juce::String figure;       // the line about it with the bars, chords and key taken out, after its role
+                bool own = false;          // no other style has a sequence of that figure
                 double score = 0.0;
+            };
+
+            // What a sequence does, apart from how long, on which chords and in what key.
+            const auto figureOf = [] (const juce::String& description)
+            {
+                static const std::string chord = "(A|B flat|B|C|D|E flat|E|F sharp|F|G sharp|G)( harmonic)?( (minor|major))?( (seventh|ninth))?";
+                static const std::regex bars ("\\b(for|over|through) (\\d+|two|four|eight) bars\\b"), barCount ("\\d+ bars?"),
+                                        placed ("(, )?(through|on|in|moving through the roots of) (" + chord + ")(, " + chord + ")*( Phrygian| Dorian)?"),
+                                        chords (chord + "(, " + chord + ")+"),
+                                        key ("\\bA minor( seventh| ninth)?\\b|\\bA Phrygian\\b|\\bA harmonic minor\\b|\\bA Dorian\\b"), spaces ("\\s+");
+                auto text = description.toStdString();
+                text = std::regex_replace (text, bars, "");
+                text = std::regex_replace (text, barCount, "");
+                text = std::regex_replace (text, placed, "");
+                text = std::regex_replace (text, chords, "CHORDS");
+                text = std::regex_replace (text, key, "KEY");
+                text = std::regex_replace (text, spaces, " ");
+                return juce::String (text).trimCharactersAtStart (" ,").trimCharactersAtEnd (" ,");
             };
 
             const auto measure = [] (const SequenceLibrary::Entry& e, SequenceFile::Sequence q)
@@ -1137,93 +1158,151 @@ namespace
                 return f;
             };
 
-            const std::vector<juce::StringArray> leadingSlots { { "Drums" }, { "Bass" }, { "Harmony" }, { "Pads" }, { "Arps" }, { "Melody" }, { "SFX" } },
-                                                 otherSlots { { "Bass" }, { "Melody", "Arps", "Harmony" } };
+            // Every sequence measured once, with its figure. A figure only one style has is that style's own;
+            // most are written once and given to many styles with other chords, another voice and tempo.
+            std::vector<Found> all;
 
-            juce::StringArray heardNotes;   // what the clips chosen so far play, on the whole page
+            for (auto& e : entries)
+                if (! e.isKit && e.path.size() > 1)
+                {
+                    juce::String error;
 
-            // The leading styles choose first, in the page's order, so what they play is not passed over
-            // for having been heard in a style further down.
+                    if (auto q = SequenceFile::load (e.file, error))
+                    {
+                        all.push_back (measure (e, std::move (*q)));
+                        all.back().figure = e.path[0] + ": " + figureOf (e.description);
+                    }
+                    else
+                    {
+                        std::cout << "FAILED " << e.name << ": " << error << std::endl;
+                    }
+                }
+
+            std::map<juce::String, std::set<juce::String>> stylesOf;
+
+            for (auto& f : all)
+                stylesOf[f.figure].insert (f.entry->style);
+
+            for (auto& f : all)
+                f.own = stylesOf[f.figure].size() == 1;
+
+            // A sub-role that names the style (Drones in Drone, Breaks in Breaks) is what the style promises.
+            const auto named = [] (const Found& f)
+            {
+                const auto leaf = f.entry->style.fromFirstOccurrenceOf ("/", false, false), sub = f.entry->path[1];
+                return sub.startsWithIgnoreCase (leaf) || leaf.startsWithIgnoreCase (sub);
+            };
+
+            // The leading styles choose first, in the page's order, then the styles a sub-role names.
             auto styles = leading;
+
+            for (auto& f : all)
+                if (named (f))
+                    styles.addIfNotAlreadyThere (f.entry->style);
 
             for (auto& style : SequenceLibrary::stylesIn (entries))
                 styles.addIfNotAlreadyThere (style);
 
+            juce::StringArray heardNotes, heardFigures;   // what the clips chosen so far play, on the whole page
+            juce::Array<juce::var> facts;
+            const juce::StringArray roles { "Drums", "Bass", "Harmony", "Pads", "Arps", "Melody", "SFX" };
+
             for (auto& style : styles)
             {
                 juce::StringArray voices;   // the voices this style's clips already play on
-                juce::StringArray taken;    // the names of the sequences already chosen for it
+                int presets = 0, own = 0, shown = 0;
 
-                for (auto& slot : leading.contains (style) ? leadingSlots : otherSlots)
-                {
-                    const auto candidates = [&] (bool anyRole)
+                for (auto& f : all)
+                    if (f.entry->style == style)
                     {
-                        std::vector<Found> found;
-
-                        for (auto& e : entries)
-                            if (! e.isKit && e.style == style && e.path.size() > 0 && (anyRole || slot.contains (e.path[0])) && ! taken.contains (e.name))
-                            {
-                                juce::String error;
-
-                                if (auto q = SequenceFile::load (e.file, error))
-                                {
-                                    found.push_back (measure (e, std::move (*q)));
-                                    found.back().heard = heardNotes.contains (found.back().notes);
-                                }
-                                else
-                                    std::cout << "FAILED " << e.name << ": " << error << std::endl;
-                            }
-
-                        return found;
-                    };
-
-                    auto found = candidates (false);
-
-                    // Where every one of the role stands still or plays what a clip before it plays, the
-                    // style's other roles are looked at too. An effect has no other role to stand in for it.
-                    if (! slot.contains ("SFX") && std::all_of (found.begin(), found.end(), [] (const Found& f) { return f.still || f.heard; }))
-                        found = candidates (true);
-
-                    if (found.empty())
-                        continue;
-
-                    // Notes no clip before it plays before notes heard already, one that moves before one that stands still, a voice the style has not played before one
-                    // it has, then the highest score, the most energy, and the first by name.
-                    const auto best = std::min_element (found.begin(), found.end(), [&voices] (const Found& x, const Found& y)
-                    {
-                        const auto xUsed = voices.contains (x.voice), yUsed = voices.contains (y.voice);
-
-                        if (x.oneNoteSub != y.oneNoteSub)   return ! x.oneNoteSub;
-                        if (x.heard != y.heard)   return ! x.heard;
-                        if (x.still != y.still)   return ! x.still;
-                        if (xUsed != yUsed)       return ! xUsed;
-                        if (! juce::approximatelyEqual (x.score, y.score))   return x.score > y.score;
-                        if (x.entry->energy != y.entry->energy)              return x.entry->energy > y.entry->energy;
-                        return x.entry->name.compareNatural (y.entry->name) < 0;
-                    });
-
-                    // An effect that would only play again what an earlier style's effect played is left out.
-                    if (best->heard && slot.contains ("SFX"))
-                    {
-                        std::cout << style << ": no effect shown, " << best->entry->name << " plays notes heard already" << std::endl;
-                        continue;
+                        ++presets;
+                        own += f.own ? 1 : 0;
                     }
 
+                // The best of the style's sequences that pass, and that no clip on the page has played: neither
+                // its notes nor its figure. One that moves before one that stands still, a voice the style has
+                // not played before one it has, then the highest score, the most energy, the first by name.
+                const auto choose = [&] (const std::function<bool (const Found&)>& passes)
+                {
+                    const Found* best = nullptr;
+                    int of = 0;
+
+                    for (auto& f : all)
+                    {
+                        if (f.entry->style != style || f.oneNoteSub || ! passes (f) || heardNotes.contains (f.notes) || heardFigures.contains (f.figure))
+                            continue;
+
+                        ++of;
+                        const auto better = [&voices] (const Found& x, const Found& y)
+                        {
+                            const auto xUsed = voices.contains (x.voice), yUsed = voices.contains (y.voice);
+
+                            if (x.still != y.still)   return ! x.still;
+                            if (xUsed != yUsed)       return ! xUsed;
+                            if (! juce::approximatelyEqual (x.score, y.score))   return x.score > y.score;
+                            if (x.entry->energy != y.entry->energy)              return x.entry->energy > y.entry->energy;
+                            return x.entry->name.compareNatural (y.entry->name) < 0;
+                        };
+
+                        if (best == nullptr || better (f, *best))
+                            best = &f;
+                    }
+
+                    if (best == nullptr)
+                        return false;
+
                     heardNotes.add (best->notes);
+                    heardFigures.add (best->figure);
                     voices.add (best->voice);
-                    taken.add (best->entry->name);
+                    ++shown;
                     auto* entry = index.add ("sequences", style, best->entry->name, fileFor ("sequences", *best->entry));
                     note (entry, *best->entry);
                     entry->setProperty ("voice", best->voice);
                     entry->setProperty ("notesPerBar", juce::roundToInt (best->notesPerBar * 10.0) / 10.0);
                     entry->setProperty ("pitches", best->pitches);
-                    entry->setProperty ("of", (int) found.size());
+                    entry->setProperty ("of", of);
                     entry->setProperty ("still", best->still);
-                    entry->setProperty ("heard", best->heard);
+                    entry->setProperty ("own", best->own);
+                    entry->setProperty ("named", named (*best));
                     entry->setProperty ("voiceAgain", voices.indexOf (best->voice) != voices.size() - 1);
                     writeLoop (folder, entry, { best->sequence }, formats, best->entry->path[0] == "SFX");
+                    return true;
+                };
+
+                const auto is = [] (const Found& f, const char* role)   { return f.entry->path[0] == role; };
+
+                if (leading.contains (style))
+                {
+                    // One of each role, where the style has a figure of its own in it; a melody's notes are
+                    // always its own, whatever the line about it says.
+                    for (auto& role : roles)
+                        choose ([&] (const Found& f) { return f.entry->path[0] == role && (f.own || is (f, "Melody")); });
                 }
+                else
+                {
+                    // Two at most: what the style's name promises, a part of its own that is not drums, a
+                    // groove of its own, a melody.
+                    const std::function<bool (const Found&)> kinds[] {
+                        [&] (const Found& f) { return named (f); },
+                        [&] (const Found& f) { return f.own && ! is (f, "Drums") && ! is (f, "Melody"); },
+                        [&] (const Found& f) { return f.own && is (f, "Drums"); },
+                        [&] (const Found& f) { return is (f, "Melody"); } };
+
+                    for (auto& kind : kinds)
+                        if (shown < 2)
+                            choose (kind);
+                }
+
+                auto* fact = new juce::DynamicObject();
+                fact->setProperty ("style", style);
+                fact->setProperty ("presets", presets);
+                fact->setProperty ("own", own);
+                fact->setProperty ("shown", shown);
+                facts.add (juce::var (fact));
+                std::cout << style << ": " << shown << " shown, " << own << " of " << presets << " presets are figures of its own" << std::endl;
             }
+
+            folder.getChildFile ("sequence-styles.json").replaceWithText (juce::JSON::toString (juce::var (facts)) + "\n");
         }
     }
     //==============================================================================

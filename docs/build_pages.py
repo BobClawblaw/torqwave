@@ -157,6 +157,10 @@ def loop_card(clip, prefix, heading="h3", kind=None):
     if clip.get("energy"):
         facts.append(f'energy {clip["energy"]} of 5')
 
+    # A sequence's kind is what it is (its role), never its style: the style is the heading it stands under.
+    if clip["group"] == "sequences":
+        kind = clip["role"].replace(" > ", " › ")
+
     lines = [f'<div class="clip"><div class="kind">{esc(kind or clip["category"].replace("/", " › "))}</div><{heading}>{esc(clip["name"])}</{heading}>']
 
     if clip["group"] == "kits":
@@ -165,7 +169,7 @@ def loop_card(clip, prefix, heading="h3", kind=None):
         lines.append("</ul>")
     else:
         lines.append(f'<p class="what">{esc(clip["about"])}</p>')
-        lines.append(f'<p>{esc(clip["role"].replace(" > ", " › "))} · {esc(" · ".join(facts))} · on {esc(clip["parts"][0]["voice"])}.{joined(clip)}</p>')
+        lines.append(f'<p>{esc(" · ".join(facts))} · on {esc(clip["parts"][0]["voice"])}.{joined(clip)}</p>')
 
     lines.append(f'<div class="fill"></div>{player(clip, prefix)}</div>')
     return "".join(lines)
@@ -349,6 +353,10 @@ def style_order(styles):
     return sorted(styles, key=rank)
 
 
+OWN_ALL = sum(f["own"] for f in json.loads((DOCS / "sounds/audio/sequence-styles.json").read_text()))
+STYLE_FACTS = {f["style"]: f for f in json.loads((DOCS / "sounds/audio/sequence-styles.json").read_text())}
+
+
 def library_page(group, path, title, heading, intro, description):
     clips = of(group)
     by_style = grouped(clips, lambda c: c["category"])
@@ -370,7 +378,9 @@ def library_page(group, path, title, heading, intro, description):
             else:
                 in_style.sort(key=lambda c: c["name"])
 
-            body.append(f'<h3 class="sub" id="{anchor(style)}">{esc(style.split("/")[1])} <small>{len(in_style)} {"kit" if group == "kits" else "sequence"}{"" if len(in_style) == 1 else "s"}</small></h3>'
+            fact = STYLE_FACTS.get(style) if group == "sequences" else None
+            own = (f'<p class="meta">{fact["own"]} of this style\'s {fact["presets"]} sequences are figures no other style has; the other {fact["presets"] - fact["own"]} are figures it shares.</p>' if fact else "")
+            body.append(f'<h3 class="sub" id="{anchor(style)}">{esc(style.split("/")[1])} <small>{len(in_style)} {"kit" if group == "kits" else "sequence"}{"" if len(in_style) == 1 else "s"}</small></h3>{own}'
                         '<div class="clips">' + "".join(card(c, "audio/", "h4", style.split("/")[1]) for c in in_style) + "</div>")
 
     page(path, title, description, "\n".join(body))
@@ -389,12 +399,15 @@ def sequences_page():
     clips = of("sequences")
     library_page("sequences", "sounds/sequences.html", "Sequence Library: factory sequences", f"The Sequence Library: {len(clips)} of its 1,032 factory sequences",
                  f'<p>The Sequence Library ships 1,032 sequence presets in 37 styles: drums, bass lines, harmony, pads, arps, melodies and effects, each with a line saying what it does. '
-                 f'Here are {len(clips)} on their own: one of each role from nine techno and industrial styles, and from each of the others a bass line and a melody, an arp or a harmony part. '
-                 'Of each, the one that does the most by measure was taken: its notes to a bar, its different pitches and how varied its rhythm is, on a voice the style\'s other clips do not play. '
-                 'A part with two notes a bar or fewer, or that repeats one note, is passed over, and where a style\'s bass lines all do that, another role stands in. '
-                 'A sub on one note is shown nowhere. Club tools has only one-sound parts, and shows its kick and its hats. '
-                 'No two clips here play the same notes: many of the library\'s sequences share their notes with one in another style, on another voice and at another tempo (its risers all climb the same scale), '
-                 'so a sequence whose notes a clip above already plays is passed over, and three of the nine styles show no effect for that reason. An effect plays once; the other parts go round as loops. Chosen by that rule, not by ear: nobody has listened to them one by one. '
+                 f'Here are {len(clips)} on their own. </p>'
+                 '<p><b>What is shown, and why so few.</b> Most of the library is a smaller set of figures given to many styles on other chords, with another voice and tempo: '
+                 f'{OWN_ALL} of the 1,032 sequences are figures only one style has, going by the line that says what each does with its bars, chords and key left out. '
+                 'The risers are the plainest case: 34 of the 38 are one climb up the A minor scale. So a style shows only figures of its own here, each figure once on the whole page, '
+                 'and a part marked Melody, whose notes are always its own. The nine techno and industrial styles show one of each role where they have one of their own; '
+                 'the others show two at most: what the style\'s name promises where it has it (a drone under Drone, a break under Breaks), a part of its own, a groove of its own, a melody. '
+                 'Under each heading is how many of the style\'s sequences are its own. An effect plays once; the other parts go round as loops. '
+                 'Each card is marked with what the clip is; the style is only the heading. Chosen by that rule, not by ear: nobody has listened to them one by one, '
+                 'and a figure of a style\'s own is not proof that it sounds of the style. '
                  'The <a href="kits.html">kits</a> play six sequences together.</p>',
                  f"{len(clips)} of the 1,032 factory sequences in Torqwave's Sequence Library, from all 37 styles, rendered by Torqwave with nothing added.")
 
@@ -427,7 +440,7 @@ def sounds_index():
              ("sources", "drums-and-sampler.html#the-sources", "Basic Drums: sources", "clips of the 24 synthesized sources any pad can play, each alone and in a groove"),
              ("sampler", "drums-and-sampler.html#torqwave-sampler", "Torqwave Sampler", "all 11 factory presets"),
              ("kits", "kits.html", "Sequence Library: kits", f"all 116 factory kits, in {len(set(c['category'] for c in of('kits')))} styles"),
-             ("sequences", "sequences.html", "Sequence Library: sequences", "of 1,032 factory sequences, from all 37 styles")]
+             ("sequences", "sequences.html", "Sequence Library: sequences", "of 1,032 factory sequences, from all 37 styles: figures a style has to itself")]
     cards = []
 
     for group, link, name, what in pages:
@@ -448,7 +461,7 @@ def sounds_index():
             '<li><b>Chosen by ear:</b> 18 Torqwave Synth patches and 22 StringSwarm presets, picked for the first version of this page and each given a part that suits it (four bars at 120 BPM). Their cards say so.</li>'
             '<li><b>Chosen by rule:</b> everything else, so the pages show what the lists are like and not only their best. Of the synth\'s patches, the ones that use the most of the synth, by a count of their parts in use, a share from every category; '
             'from each StringSwarm category, the first preset and two more; every Basic Drums kit and each of its 24 sources, every sampler preset and every kit of the Sequence Library; '
-            'and of the sequences, the one in each role of a style that does the most by measure (notes to a bar, different pitches, rhythm), on a voice the style\'s other clips do not play, and never the same notes twice.</li>'
+            'and of the sequences, only figures that one style alone has, each once, the one that does the most by measure where there are several.</li>'
             '<li><b>Played as the app plays them:</b> patches and presets on the audition phrases Torqwave plays when you choose a sound; kits and sequences through the Sequence Library\'s own preview, at the tempo they were written at.</li>'
             '<li><b>Not listened to one by one.</b> The 40 chosen by ear were; the rest were rendered and checked by measurement only (each has sound, none reaches full scale). If one is wrong, <a href="https://github.com/BobClawblaw/torqwave/issues">say so</a>.</li>'
             '<li><b>MP3s</b> at a variable bit rate (LAME V4), stereo, 48 kHz, written by Torqwave\'s own exporter. The app plays the instruments themselves, not these files.</li>'
