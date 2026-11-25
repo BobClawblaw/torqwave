@@ -9,7 +9,7 @@
     note of their own (a right-click on one, or Pad in its panel's header, renames it, moves it to
     another note, colours it or empties it; a sound's pad can be renamed and coloured the same way
     while its type is Sample, its note staying its own). A pad is lit as it
-    plays; a click plays it (louder towards the pad's top) and selects it. On the right the
+    plays; a click plays it, at the velocity of the keys under the window, and selects it. On the right the
     selected sound: a picture of one hit (its waveform and its level falling, a line sweeping across
     as it plays), its six knobs in real units (tune in semitones, decay in ms, tone, level in dB,
     pan, drive), its effects (a filter's type, cutoff and resonance, a crush, and how much goes to
