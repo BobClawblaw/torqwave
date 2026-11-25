@@ -392,7 +392,9 @@ def sequences_page():
                  f'Here are {len(clips)} on their own: one of each role from nine techno and industrial styles, and from each of the others a bass line and a melody, an arp or a harmony part. '
                  'Of each, the one that does the most by measure was taken: its notes to a bar, its different pitches and how varied its rhythm is, on a voice the style\'s other clips do not play. '
                  'A part with two notes a bar or fewer, or that repeats one note, is passed over, and where a style\'s bass lines all do that, another role stands in. '
-                 'A sub on one note is shown nowhere. Club tools has only one-sound parts, and shows its kick and its hats. Chosen by that rule, not by ear: nobody has listened to them one by one. '
+                 'A sub on one note is shown nowhere. Club tools has only one-sound parts, and shows its kick and its hats. '
+                 'No two clips here play the same notes: many of the library\'s sequences share their notes with one in another style, on another voice and at another tempo (its risers all climb the same scale), '
+                 'so a sequence whose notes a clip above already plays is passed over, and three of the nine styles show no effect for that reason. An effect plays once; the other parts go round as loops. Chosen by that rule, not by ear: nobody has listened to them one by one. '
                  'The <a href="kits.html">kits</a> play six sequences together.</p>',
                  f"{len(clips)} of the 1,032 factory sequences in Torqwave's Sequence Library, from all 37 styles, rendered by Torqwave with nothing added.")
 
@@ -446,7 +448,7 @@ def sounds_index():
             '<li><b>Chosen by ear:</b> 18 Torqwave Synth patches and 22 StringSwarm presets, picked for the first version of this page and each given a part that suits it (four bars at 120 BPM). Their cards say so.</li>'
             '<li><b>Chosen by rule:</b> everything else, so the pages show what the lists are like and not only their best. Of the synth\'s patches, the ones that use the most of the synth, by a count of their parts in use, a share from every category; '
             'from each StringSwarm category, the first preset and two more; every Basic Drums kit and each of its 24 sources, every sampler preset and every kit of the Sequence Library; '
-            'and of the sequences, the one in each role of a style that does the most by measure (notes to a bar, different pitches, rhythm), on a voice the style\'s other clips do not play.</li>'
+            'and of the sequences, the one in each role of a style that does the most by measure (notes to a bar, different pitches, rhythm), on a voice the style\'s other clips do not play, and never the same notes twice.</li>'
             '<li><b>Played as the app plays them:</b> patches and presets on the audition phrases Torqwave plays when you choose a sound; kits and sequences through the Sequence Library\'s own preview, at the tempo they were written at.</li>'
             '<li><b>Not listened to one by one.</b> The 40 chosen by ear were; the rest were rendered and checked by measurement only (each has sound, none reaches full scale). If one is wrong, <a href="https://github.com/BobClawblaw/torqwave/issues">say so</a>.</li>'
             '<li><b>MP3s</b> at a variable bit rate (LAME V4), stereo, 48 kHz, written by Torqwave\'s own exporter. The app plays the instruments themselves, not these files.</li>'

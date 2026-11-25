@@ -863,8 +863,9 @@ namespace
     };
 
     /** A sequence's or a kit's loop, as the Sequence Library's preview renders it at its written tempo:
-        round again until it is five seconds or more from where its sound arrives. */
-    bool writeLoop (const juce::File& folder, juce::DynamicObject* entry, const std::vector<SequenceFile::Sequence>& parts, juce::AudioPluginFormatManager& formats)
+        round again until it is five seconds or more from where its sound arrives. A part that is an event
+        and not a loop (a riser, a transition, a hit) plays once. */
+    bool writeLoop (const juce::File& folder, juce::DynamicObject* entry, const std::vector<SequenceFile::Sequence>& parts, juce::AudioPluginFormatManager& formats, bool once = false)
     {
         const auto tempo = parts.front().writtenTempo;
         juce::AudioBuffer<float> pass;
@@ -878,7 +879,7 @@ namespace
 
         // Five seconds or more after the sound has arrived: a part slow to arrive goes round once more.
         const auto arrives = arrival (pass);
-        const auto rounds = juce::jlimit (1, 4, (int) std::ceil ((5.0 * rate + (arrives > (int) (0.1 * rate) ? arrives : 0)) / pass.getNumSamples()));
+        const auto rounds = once ? 1 : juce::jlimit (1, 4, (int) std::ceil ((5.0 * rate + (arrives > (int) (0.1 * rate) ? arrives : 0)) / pass.getNumSamples()));
         juce::AudioBuffer<float> audio (pass.getNumChannels(), pass.getNumSamples() * rounds);
 
         for (int r = 0; r < rounds; ++r)
@@ -1087,6 +1088,8 @@ namespace
                 int pitches = 0, gaps = 0, lengths = 0;
                 bool still = false;   // two notes a bar or fewer, or one pitch (one drum sound) only
                 bool oneNoteSub = false;   // a Bass > Sub part on one pitch: the last thing to show
+                juce::String notes;        // what it plays, to know it when another sequence plays the same
+                bool heard = false;        // a clip chosen before this one plays the same notes
                 double score = 0.0;
             };
 
@@ -1112,7 +1115,22 @@ namespace
                 f.pitches = (int) pitches.size();
                 f.gaps = (int) gaps.size();
                 f.lengths = (int) lengths.size();
-                f.still = f.notesPerBar <= 2.0 || f.pitches <= 1;
+                // An effect is an event: a hit or a sweep of one note is not a part standing still.
+                f.still = (f.notesPerBar <= 2.0 || f.pitches <= 1) && ! (e.path.size() > 0 && e.path[0] == "SFX");
+
+                // The same notes: for drums the same sounds at the same places; for the rest the same
+                // pitches in the same order, so a climb written over two bars and over four is one climb.
+                auto played = q.notes;
+                std::stable_sort (played.begin(), played.end(), [] (const auto& x, const auto& y) { return x.start != y.start ? x.start < y.start : x.pitch < y.pitch; });
+                const auto drums = e.path.size() > 0 && e.path[0] == "Drums";
+                int last = -1;
+
+                for (auto& n : played)
+                    if (drums)
+                        f.notes << n.pitch << "@" << juce::String (n.start) << " ";
+                    else if (n.pitch != last)
+                        f.notes << (last = n.pitch) << " ";
+
                 f.oneNoteSub = f.pitches <= 1 && e.path.size() > 1 && e.path[0] == "Bass" && e.path[1] == "Sub";
                 f.score = juce::jmin (16.0, f.notesPerBar) + 2.0 * juce::jmin (8, f.pitches) + 2.0 * juce::jmin (6, f.gaps) + juce::jmin (4, f.lengths);
                 f.sequence = std::move (q);
@@ -1122,7 +1140,16 @@ namespace
             const std::vector<juce::StringArray> leadingSlots { { "Drums" }, { "Bass" }, { "Harmony" }, { "Pads" }, { "Arps" }, { "Melody" }, { "SFX" } },
                                                  otherSlots { { "Bass" }, { "Melody", "Arps", "Harmony" } };
 
+            juce::StringArray heardNotes;   // what the clips chosen so far play, on the whole page
+
+            // The leading styles choose first, in the page's order, so what they play is not passed over
+            // for having been heard in a style further down.
+            auto styles = leading;
+
             for (auto& style : SequenceLibrary::stylesIn (entries))
+                styles.addIfNotAlreadyThere (style);
+
+            for (auto& style : styles)
             {
                 juce::StringArray voices;   // the voices this style's clips already play on
                 juce::StringArray taken;    // the names of the sequences already chosen for it
@@ -1139,7 +1166,10 @@ namespace
                                 juce::String error;
 
                                 if (auto q = SequenceFile::load (e.file, error))
+                                {
                                     found.push_back (measure (e, std::move (*q)));
+                                    found.back().heard = heardNotes.contains (found.back().notes);
+                                }
                                 else
                                     std::cout << "FAILED " << e.name << ": " << error << std::endl;
                             }
@@ -1149,20 +1179,22 @@ namespace
 
                     auto found = candidates (false);
 
-                    // Where every one of the role stands still, the style's other roles are looked at too.
-                    if (std::all_of (found.begin(), found.end(), [] (const Found& f) { return f.still; }))
+                    // Where every one of the role stands still or plays what a clip before it plays, the
+                    // style's other roles are looked at too. An effect has no other role to stand in for it.
+                    if (! slot.contains ("SFX") && std::all_of (found.begin(), found.end(), [] (const Found& f) { return f.still || f.heard; }))
                         found = candidates (true);
 
                     if (found.empty())
                         continue;
 
-                    // One that moves before one that stands still, a voice the style has not played before one
+                    // Notes no clip before it plays before notes heard already, one that moves before one that stands still, a voice the style has not played before one
                     // it has, then the highest score, the most energy, and the first by name.
                     const auto best = std::min_element (found.begin(), found.end(), [&voices] (const Found& x, const Found& y)
                     {
                         const auto xUsed = voices.contains (x.voice), yUsed = voices.contains (y.voice);
 
                         if (x.oneNoteSub != y.oneNoteSub)   return ! x.oneNoteSub;
+                        if (x.heard != y.heard)   return ! x.heard;
                         if (x.still != y.still)   return ! x.still;
                         if (xUsed != yUsed)       return ! xUsed;
                         if (! juce::approximatelyEqual (x.score, y.score))   return x.score > y.score;
@@ -1170,6 +1202,14 @@ namespace
                         return x.entry->name.compareNatural (y.entry->name) < 0;
                     });
 
+                    // An effect that would only play again what an earlier style's effect played is left out.
+                    if (best->heard && slot.contains ("SFX"))
+                    {
+                        std::cout << style << ": no effect shown, " << best->entry->name << " plays notes heard already" << std::endl;
+                        continue;
+                    }
+
+                    heardNotes.add (best->notes);
                     voices.add (best->voice);
                     taken.add (best->entry->name);
                     auto* entry = index.add ("sequences", style, best->entry->name, fileFor ("sequences", *best->entry));
@@ -1179,8 +1219,9 @@ namespace
                     entry->setProperty ("pitches", best->pitches);
                     entry->setProperty ("of", (int) found.size());
                     entry->setProperty ("still", best->still);
+                    entry->setProperty ("heard", best->heard);
                     entry->setProperty ("voiceAgain", voices.indexOf (best->voice) != voices.size() - 1);
-                    writeLoop (folder, entry, { best->sequence }, formats);
+                    writeLoop (folder, entry, { best->sequence }, formats, best->entry->path[0] == "SFX");
                 }
             }
         }
