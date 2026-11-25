@@ -92,6 +92,9 @@ public:
     /** What the selected pad plays, as its selector shows it: "Classic", "Modern" or "Sample", or a source's name ("Rumble Kick"). */
     juce::String getTypeText() const;
 
+    /** The selector itself, for a picture of its menu. */
+    juce::Component* getTypeSelector() noexcept             { return &type; }
+
     /** Chooses what the selected pad plays, by its name in the selector; false when the selector has none of that name. */
     bool chooseType (const juce::String& name);
 

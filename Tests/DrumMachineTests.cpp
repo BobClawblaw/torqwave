@@ -3,6 +3,7 @@
 #include "../Source/DrumMachineEditor.h"
 #include "../Source/InstrumentKeys.h"
 #include "../Source/NoteEditor.h"
+#include "../Source/DrumKitImport.h"
 #include "../Source/Instrument.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/Theme.h"
@@ -3001,6 +3002,225 @@ void saveDrumMachineDemos (const juce::File& folder)
 
         std::cout << file.getFileName() << ": peak " << juce::Decibels::gainToDecibels (peakOf (audio)) << " dB" << std::endl;
     }
+}
+
+/** The guide's pictures of Basic Drums, drawn here and nowhere else, in the dark theme at twice
+    the size, into <folder>: guide-drums.png (the Bunker kit, the kick's pad selected),
+    guide-drums-sample.png (a pad that plays samples, its layers and its last hit),
+    guide-drums-effects.png (the Effects' EQ page), guide-drums-sources.png (the selector's menu
+    of the pad's own choices and the sources, drawn with the app's menu drawing) and guide-drums-import.png (the report after a folder of sounds is
+    imported). Every sample is made here, in a folder of this run's own that is taken away. */
+void saveDrumGuidePictures (const juce::File& folder)
+{
+    folder.createDirectory();
+    Theme::apply (Theme::make ("Dark", "Blue"));
+    const auto sounds = juce::File::createTempFile ("drumguidesounds");
+    sounds.createDirectory();
+
+    const auto hitNamed = [&sounds] (const juce::String& name, int seed, int frames, double ring, const juce::File& in = {})
+    {
+        juce::Random random (seed);
+        juce::AudioBuffer<float> hit (1, frames);
+
+        for (int i = 0; i < frames; ++i)
+            hit.setSample (0, i, 0.5f * (float) std::exp (-(double) i / ring) * (0.6f * (random.nextFloat() * 2.0f - 1.0f) + 0.4f * (float) std::sin (0.024 * i)));
+
+        return writeSound (in == juce::File() ? sounds : in, name, hit);
+    };
+
+    const auto save = [&folder] (const juce::String& name, const juce::Image& image)
+    {
+        auto file = folder.getChildFile (name + ".png");
+        file.deleteFile();
+        juce::FileOutputStream out (file);
+        juce::PNGImageFormat().writeImageToStream (image, out);
+        std::cout << file.getFullPathName() << " " << image.getWidth() << " x " << image.getHeight() << std::endl;
+    };
+
+    const auto hitPad = [] (BuiltInEffects::BasicDrumsProcessor& drums, DrumMachineEditor& window, int pad, int velocity)
+    {
+        drums.auditionPad (pad, (float) velocity / 127.0f);
+        juce::AudioBuffer<float> block (2, 4800);
+        juce::MidiBuffer midi;
+        drums.processBlock (block, midi);
+        window.showHits();
+        window.getEffectsView().refresh();
+    };
+
+    // The window as it opens on a factory kit made with sources.
+    {
+        BuiltInEffects::BasicDrumsProcessor drums;
+        drums.prepareToPlay (rate, 512);
+        drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Bunker")]);
+        std::unique_ptr<juce::AudioProcessorEditor> window (drums.createEditorAndMakeActive());
+        save ("guide-drums", window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f));
+
+        // The selector's menu open on the kick's pad: the pad's own choices, then the sources under their families.
+        if (auto* drumWindow = dynamic_cast<DrumMachineEditor*> (window.get()))
+        {
+            // The selector's menu is a window of the system's, which only an app in front can open, so
+            // it is drawn here with the app's own menu drawing: the same rows, headings and tick.
+            auto base = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+            auto& look = window->getLookAndFeel();
+            const juce::PopupMenu::Options options;
+            struct Row { juce::String text; bool heading; };
+            std::vector<Row> rows;
+            juce::String family;
+
+            for (auto& own : DrumMachine::typeNamesFor (Sound::kick))
+                rows.push_back ({ own, false });
+
+            for (int s = 1; s <= DrumMachine::numSources; ++s)
+            {
+                const auto& info = DrumMachine::sourceInfo (s);
+
+                if (family != info.family)
+                    rows.push_back ({ family = info.family, true });
+
+                rows.push_back ({ info.name, false });
+            }
+
+            // Too long for one column in a window this tall, it goes in two, as a menu does on a small screen.
+            auto* selector = drumWindow->getTypeSelector();
+            const auto width = selector->getWidth() + 40;
+            std::vector<int> heights;
+            std::array<int, 2> tall { 4, 4 };
+            size_t second = rows.size();
+
+            for (size_t i = 0; i < rows.size(); ++i)
+            {
+                int w = 0, h = 0;
+                look.getIdealPopupMenuItemSizeWithOptions (rows[i].text, false, 0, w, h, options);
+                heights.push_back (h);
+
+                if (rows[i].heading && rows[i].text == "Hats and Cymbals")
+                    second = i;
+
+                tall[i >= second ? 1 : 0] += h;
+            }
+
+            const auto total = juce::jmax (tall[0], tall[1]);
+            juce::Image menu (juce::Image::ARGB, width * 4, total * 2, true);
+            {
+                juce::Graphics g (menu);
+                g.addTransform (juce::AffineTransform::scale (2.0f));
+                g.fillAll (look.findColour (juce::PopupMenu::backgroundColourId).withAlpha (1.0f));
+                look.drawPopupMenuBackgroundWithOptions (g, width * 2, total, options);
+                int y = 2;
+
+                for (size_t i = 0; i < rows.size(); ++i)
+                {
+                    if (i == second)
+                        y = 2;
+
+                    const juce::Rectangle<int> area (i >= second ? width : 0, y, width, heights[i]);
+
+                    if (rows[i].heading)
+                    {
+                        look.drawPopupMenuSectionHeaderWithOptions (g, area, rows[i].text, options);
+                    }
+                    else
+                    {
+                        juce::PopupMenu::Item item (rows[i].text);
+                        item.setID ((int) i + 1);
+                        item.setTicked (rows[i].text == drumWindow->getTypeText());
+                        look.drawPopupMenuItemWithOptions (g, area, rows[i].text == "Distorted Kick", item, options);
+                    }
+
+                    y += heights[i];
+                }
+            }
+
+            {
+                const auto where = (selector->getScreenBounds().getBottomLeft() - window->getScreenPosition()) * 2;
+                const auto x = juce::jmin (where.x, base.getWidth() - menu.getWidth() - 16);
+                const auto y = juce::jmax (8, juce::jmin (where.y + 4, base.getHeight() - menu.getHeight() - 8));
+                juce::Graphics g (base);
+                g.setColour (juce::Colours::black.withAlpha (0.4f));
+                g.fillRect (x - 6, y - 6, menu.getWidth() + 12, menu.getHeight() + 12);
+                g.setOpacity (1.0f);
+                g.drawImageAt (menu, x, y);
+            }
+
+            save ("guide-drums-sources", base);
+        }
+    }
+
+    // A pad that plays samples, and the Effects' EQ page on it.
+    {
+        BuiltInEffects::BasicDrumsProcessor drums;
+        drums.prepareToPlay (rate, 512);
+        drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Warehouse")]);
+        std::unique_ptr<juce::AudioProcessorEditor> window (drums.createEditorAndMakeActive());
+
+        if (auto* drumWindow = dynamic_cast<DrumMachineEditor*> (window.get()))
+        {
+            drums.addFiles (DrumMachine::numSounds, { hitNamed ("Low Thud", 5, 12000, 2500.0) });
+            drums.setPadName (DrumMachine::numSounds, "Kick Layer");
+            drums.setPadColour (DrumMachine::numSounds, juce::Colour (0xffe8604c));
+            drums.setPadNote (DrumMachine::numSounds, 36);
+            drums.setSource (DrumMachine::numSounds + 1, DrumMachine::sourceWithId ("zap"));
+            drums.setChoke ((int) Sound::snare, 2);
+            drums.setChoke ((int) Sound::clap, 2);
+            drumWindow->addFiles (Sound::snare, { hitNamed ("Snare Soft", 17, 9600, 1500.0), hitNamed ("Snare Medium", 18, 12000, 2000.0), hitNamed ("Snare Hard", 19, 14400, 2500.0) });
+            drumWindow->pressLayerButton ("spread");
+            drumWindow->selectLayer (1);
+            hitPad (drums, *drumWindow, (int) Sound::snare, 100);
+            save ("guide-drums-sample", window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f));
+
+            using DrumMachine::Fx;
+
+            for (auto [f, v] : std::initializer_list<std::pair<Fx, float>> {
+                     { Fx::envOn, 1.0f }, { Fx::envHold, 40.0f }, { Fx::envDecay, 180.0f },
+                     { Fx::eqOn, 1.0f }, { Fx::eqLowFreq, 90.0f }, { Fx::eqLowGain, -4.0f }, { Fx::eqBell1Freq, 220.0f }, { Fx::eqBell1Gain, 5.0f },
+                     { Fx::eqBell2Freq, 1800.0f }, { Fx::eqBell2Gain, -6.0f }, { Fx::eqBell2Width, 0.6f }, { Fx::eqHighFreq, 7000.0f }, { Fx::eqHighGain, 3.0f },
+                     { Fx::compOn, 1.0f }, { Fx::compThreshold, -24.0f }, { Fx::compGain, 4.0f } })
+                drums.setEffect ((int) Sound::snare, f, v);
+
+            drumWindow->getEffectsView().setPage (DrumPadEffectsView::eqPage);
+            hitPad (drums, *drumWindow, (int) Sound::snare, 100);
+            save ("guide-drums-effects", window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f));
+        }
+    }
+
+    // A folder of sounds imported, and the report it shows.
+    {
+        const auto kit = sounds.getChildFile ("Factory Floor");
+        kit.createDirectory();
+        int seed = 40;
+
+        for (auto name : { "Kick", "Kick Sub", "Snare v1", "Snare v2", "Snare v3", "Clap rr1", "Clap rr2", "ClosedHH", "Open Hat", "Low Tom", "Crash",
+                           "56 Clank", "Hiss D7", "Girder", "Sheet Metal", "Chain Drop" })
+            hitNamed (name, ++seed, 9600, 1800.0, kit);
+
+        BuiltInEffects::BasicDrumsProcessor drums;
+        drums.prepareToPlay (rate, 512);
+        std::unique_ptr<juce::AudioProcessorEditor> window (drums.createEditorAndMakeActive());
+        auto plan = DrumKitImport::fromFolder (kit);
+        DrumKitImport::place (plan);
+        const auto error = DrumKitImport::apply (drums, plan);
+
+        if (auto* drumWindow = dynamic_cast<DrumMachineEditor*> (window.get()); drumWindow != nullptr && error.isEmpty())
+        {
+            drumWindow->select (Sound::snare);
+            auto base = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+
+            // The report as the import shows it: the same title, words and button.
+            juce::AlertWindow report ("Imported " + plan.name, plan.report.joinIntoString ("\n\n"), juce::MessageBoxIconType::InfoIcon);
+            report.addButton ("OK", 1);
+            const auto box = report.createComponentSnapshot (report.getLocalBounds(), true, 2.0f);
+            juce::Graphics g (base);
+            g.fillAll (juce::Colours::black.withAlpha (0.35f));
+            g.drawImageAt (box, (base.getWidth() - box.getWidth()) / 2, (base.getHeight() - box.getHeight()) / 2);
+            save ("guide-drums-import", base);
+        }
+        else
+        {
+            std::cout << "import failed: " << error << std::endl;
+        }
+    }
+
+    sounds.deleteRecursively();
 }
 
 /** Clips of the 24 sources to listen to, 48 kHz, 24-bit, in <folder>: each alone ("NN Name.wav":
