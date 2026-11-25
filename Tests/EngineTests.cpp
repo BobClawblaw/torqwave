@@ -45,6 +45,7 @@
 #include "SoundDemos.h"
 #include "SignalConsoleTests.h"
 #include "DecryptTests.h"
+#include "BatteryKitTests.h"
 #include "DecryptReal.h"
 #include "WaveSynthTests.h"
 #include "DrumMachineTests.h"
@@ -776,6 +777,21 @@ int main (int argc, char* argv[])
     {
         AudioEngine engine;
         runDrumMachineTests (engine, args.contains ("--drums-levels"));
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (const auto list = valueOf ("--battery-kit-files"); list.isNotEmpty())
+    {
+        juce::StringArray files;
+        files.addLines (juce::File::getCurrentWorkingDirectory().getChildFile (list).loadFileAsString());
+        files.removeEmptyStrings();
+        return runBatteryKitFiles (files);
+    }
+
+    if (args.contains ("--battery-kit"))
+    {
+        runBatteryKitTests();
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }

@@ -1,4 +1,5 @@
 #include "DrumMachineEditor.h"
+#include "DrumKitImport.h"
 #include "InstrumentKeys.h"
 #include "SoundDrops.h"
 #include "Theme.h"
@@ -1556,7 +1557,7 @@ bool DrumMachineEditor::addFiles (int s, const juce::Array<juce::File>& sounds)
 bool DrumMachineEditor::isInterestedInFileDrag (const juce::StringArray& dragged)
 {
     for (auto& f : dragged)
-        if (juce::File (f).hasFileExtension (soundFileTypes))
+        if (juce::File (f).hasFileExtension (soundFileTypes) || DrumKitImport::isBatteryKit (juce::File (f)))
             return true;
 
     return false;
@@ -1567,6 +1568,14 @@ void DrumMachineEditor::fileDragExit (const juce::StringArray&)                 
 
 void DrumMachineEditor::filesDropped (const juce::StringArray& dropped, int x, int y)
 {
+    // A Battery kit dropped anywhere on the window is imported, in place of the kit here.
+    if (dropped.size() == 1 && DrumKitImport::isBatteryKit (juce::File (dropped[0])))
+    {
+        setDropTarget ({});
+        importBatteryKit (juce::File (dropped[0]));
+        return;
+    }
+
     const auto to = padAt ({ x, y });
     setDropTarget ({});
 
@@ -1634,11 +1643,25 @@ void DrumMachineEditor::chooseSamples()
                           });
 }
 
+void DrumMachineEditor::importBatteryKit (const juce::File& kit)
+{
+    DrumKitImport::importBatteryKit (*this, drums, chooser, [safe = juce::Component::SafePointer<DrumMachineEditor> (this)] (const juce::String& said)
+    {
+        if (safe != nullptr)
+        {
+            safe->showSelected();
+            safe->say (said);
+        }
+    }, kit);
+}
+
 void DrumMachineEditor::showFilesMenu()
 {
     juce::PopupMenu menu;
     menu.addItem (1, "Open Kit File...");
     menu.addItem (2, "Save Kit with Samples...");
+    menu.addSeparator();
+    menu.addItem (4, "Import Battery Kit...");
     menu.addSeparator();
     menu.addItem (3, "Find Missing Samples...", ! drums.getMissing().isEmpty());
 
@@ -1679,6 +1702,10 @@ void DrumMachineEditor::showFilesMenu()
                 safe->say (error.isNotEmpty() ? error : missing.isEmpty() ? "Saved " + folder.getFileName() + " with its samples."
                                                                            : "Saved " + folder.getFileName() + ", without " + juce::String (missing.size()) + " samples that are not where the kit says.");
             });
+        }
+        else if (chosen == 4)
+        {
+            self.importBatteryKit ({});
         }
         else if (chosen == 3)
         {

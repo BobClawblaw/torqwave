@@ -145,6 +145,7 @@ private:
     void say (const juce::String&);
     void setDropTarget (std::optional<int>);
     void chooseSamples();
+    void importBatteryKit (const juce::File& kit);   // none: asks for one
     void showFilesMenu();
     void showPadMenu (int pad);
     void markSampledPads();
