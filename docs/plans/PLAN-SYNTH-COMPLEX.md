@@ -47,7 +47,7 @@ Measured for every patch by the tests, not left to taste:
 - **It cuts:** hooks have energy from 1 to 5 kHz at their start, so they are heard over a kick and hats.
 - **No clicks, no DC, no step** at a note's start, end, restrike or release, as every patch is held to now.
 - **Four macros that change the character,** each named, each moving the sound by an amount the test can measure.
-- **A cost each patch must stay under:** a nine-oscillator patch with unison is the most expensive thing the synth can do. Each patch is measured with eight notes held and must stay under a share of one core to be set when the engine's cost is measured; a patch over it loses unison, not oscillators.
+- **Eight notes at once, at least.** The synth sounds at most 384 unison voices at a time, which is what three oscillators could ask for and keeps its worst cost where it is today. A patch asking for more plays fewer notes. So a Complex patch uses at most 48 unison voices a note, counting every oscillator that is on or driving another: nine oscillators have about five each to share, not eight. A chord stab that dropped notes would be heard.
 - **Different from each other:** no two patches in a category nearer than a set distance by the measure Decrypt uses to compare sounds, so 25 basses are 25 basses and not one bass 25 times.
 
 And heard, because measurements do not make a sound good:
@@ -76,7 +76,16 @@ In `--synth`, for every Complex patch: four or more oscillators on, and nine whe
 
 ## Time
 
-About twelve working days after the engine and window are in: one for the folder in the browser, the tests and the clip command; one for the tables made from sounds; one and a half for the first 58 and their clips; then, after the user has heard them, eight to nine for the other 442 in batches. The listening is the user's time, about an hour for the first 58 and less for each batch after.
+About fifteen working days after the engine and window are in, by the estimate of the session that made the synth's layered patches, which took several rounds of fixes after their first pass (near-copies, loud outliers): one for the folder in the browser, the tests and the clip command; one and a half for tables in factory patches; one and a half for the first 58 and their clips; then, after the user has heard them, ten to eleven for the other 442 in batches. Twelve is the least it could take. The listening is the user's time, about an hour for the first 58 and less for each batch after.
+
+## What the engine needs first
+
+Found by asking the session building the nine oscillators what this plan asks that the engine cannot yet do:
+
+- **An oscillator that is only a modulator.** Today an oscillator at no level is not computed, so it could drive nothing. An oscillator named by another's FM From will be computed and kept out of the mix. Being done with the engine.
+- **Tables in factory patches.** A factory patch holds settings and macro names only; tables from sounds exist for the user's presets and Decrypt. Each Complex patch that needs one will carry its table in the patch itself (a few kilobytes), so it is the same on every machine and loads at once.
+- **A folder level in the patch list,** which touches the arrows, favourites and Audition's choice of pattern.
+- **The distance from every existing patch** needs each of the 3,743 measured once and kept, not rendered again for every new patch.
 
 ## Risks
 
