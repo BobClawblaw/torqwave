@@ -74,6 +74,9 @@ namespace DrumMachine
         // in: the hats, the triangle, the cuica).
         int choke = 0;
 
+        // The source it plays in place of its own sound or samples: 0 for none, 1 to numSources.
+        int source = 0;
+
         bool operator== (const Settings& o) const
         {
             return juce::exactlyEqual (tune, o.tune) && juce::exactlyEqual (decay, o.decay) && juce::exactlyEqual (tone, o.tone)
@@ -81,12 +84,32 @@ namespace DrumMachine
                 && filter == o.filter && juce::exactlyEqual (cutoff, o.cutoff) && juce::exactlyEqual (resonance, o.resonance)
                 && juce::exactlyEqual (crush, o.crush) && juce::exactlyEqual (reverb, o.reverb) && juce::exactlyEqual (delay, o.delay)
                 && type == o.type && juce::exactlyEqual (start, o.start) && reverse == o.reverse && juce::exactlyEqual (bend, o.bend)
-                && effects == o.effects && choke == o.choke;
+                && effects == o.effects && choke == o.choke && source == o.source;
         }
     };
 
     constexpr int classicType = 0, modernType = 1, sampleType = 2;
     constexpr int numChokeGroups = 8;
+
+    //==============================================================================
+    // Sources: synthesized sounds beside the 30, which belong to no note. Any pad can play one in
+    // place of its own sound or its samples, through the same settings and effects: a user pad,
+    // or a sound's pad (a Rumble Kick on the kick's notes). They are numbered from 1; a pad's
+    // source 0 is none. The order here is the order they are listed in and never changes; a state
+    // keeps a source by its id.
+    constexpr int numSources = 24;
+
+    struct SourceInfo
+    {
+        const char* id;
+        const char* name;
+        const char* family;     // "Kicks", "Snares and Claps", "Hats and Cymbals", "Metal", "Industrial", "Low"
+        float decayMs;          // its decay as it starts
+        float trimDb;
+    };
+
+    const SourceInfo& sourceInfo (int source);          // 1 to numSources
+    int sourceWithId (const juce::String& id);          // 0 when there is none of that id
 
     //==============================================================================
     // Pads. The 30 sounds are the first 30 pads, in the order of Sound. After them come 34 user
@@ -393,6 +416,14 @@ namespace BuiltInEffects
         /** A user pad back as it starts: no layers, its own name, colour, note and settings. */
         void clearPad (int pad);
 
+        /** The source a pad plays in place of its own sound or samples (DrumMachine::sourceInfo): 0
+            for none, or 1 to DrumMachine::numSources. Choosing one sets the pad's decay to the
+            source's own; a pad with a source and no name of its own is called by the source's.
+            Kept in the state, in kit files and in presets, by the source's id. Message thread to
+            set; any thread to read. */
+        int getSource (int pad) const;
+        void setSource (int pad, int source);
+
         /** The choke group a pad is in: 0 for none, or 1 to DrumMachine::numChokeGroups. Pads in one
             group cut each other: a hit of one fades whatever of the others is sounding (and, for a
             sound with two notes, its other note). Kept in the state, in kit files and in presets;
@@ -430,7 +461,7 @@ namespace BuiltInEffects
         juce::AudioParameterChoice* filterParameter (int pad) const noexcept  { return of (pad).filter; }
         juce::AudioParameterBool* reverseParameter (int pad) const noexcept   { return of (pad).reverse; }
 
-        /** Whether a pad plays samples now: a user pad always, a sound when its type is Sample. */
+        /** Whether a pad plays samples now: a user pad, or a sound whose type is Sample, that has no source. */
         bool playsSamples (int pad) const;
 
         const DrumMachine::Engine& getEngine() const noexcept      { return engine; }
@@ -547,6 +578,7 @@ namespace BuiltInEffects
         std::array<juce::Colour, (size_t) DrumMachine::numSounds> soundColours;
         std::array<std::atomic<int>, (size_t) DrumMachine::numUserPads> userNotes;
         std::array<std::atomic<int>, (size_t) DrumMachine::numPads> chokes {};
+        std::array<std::atomic<int>, (size_t) DrumMachine::numPads> sources {};
         std::atomic<juce::uint32> padsVersion { 0 };
 
         // Every pad's effects, a value at a time so the audio thread reads them without waiting.

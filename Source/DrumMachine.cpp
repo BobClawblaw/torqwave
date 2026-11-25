@@ -592,6 +592,7 @@ struct Engine::Hit
     int note = 0;
     int pad = 0;
     bool shaped = false;                  // whether any of its pad's own effects is on
+    int source = 0;                       // the source it plays in place of its pad's own sound; 0 for none
     HitEffects effects;
     float gainL = 1.0f, gainR = 1.0f;     // level, pan and velocity
     float drive = 0.0f, driveNorm = 1.0f;
@@ -1237,11 +1238,446 @@ namespace
         h.place += ratio;
     }
 
+    //==============================================================================
+    // The sources: synthesized sounds that belong to no note, which any pad can play in place of
+    // its own. Each is set up once when its hit starts and then made a sample at a time, as the
+    // sounds are, from the hit's tune (T), decay (D, seconds to fall 60 dB; S against its own),
+    // tone (u, -1 to 1) and its note's noise.
+    enum class Source { none, subKick, rumbleKick, distortedKick, fmKick, clickKick, noiseSnare, fmSnare, metalSnare, clapStack, snap,
+                        fmHat, noiseHat, darkRide, trashCrash, fmBell, anvil, pipe, tin, zap, noiseBurst, machineHit, staticBurst, fmTom, subDrop };
+
+    // In the order of Source, from its first: the name it is saved under, its name and family, its
+    // decay as it starts, and the trim in dB that sets its peak where it sits in a kit.
+    constexpr std::array<SourceInfo, (size_t) numSources> sourceInfos {{
+        { "subKick", "Sub Kick", "Kicks", 900.0f, -0.6f },             { "rumbleKick", "Rumble Kick", "Kicks", 1500.0f, -0.3f },
+        { "distortedKick", "Distorted Kick", "Kicks", 450.0f, -0.9f }, { "fmKick", "FM Kick", "Kicks", 500.0f, 0.0f },
+        { "clickKick", "Click Kick", "Kicks", 160.0f, -1.2f },         { "noiseSnare", "Noise Snare", "Snares and Claps", 280.0f, -7.7f },
+        { "fmSnare", "FM Snare", "Snares and Claps", 250.0f, -3.7f },  { "metalSnare", "Metal Snare", "Snares and Claps", 350.0f, -8.5f },
+        { "clapStack", "Clap Stack", "Snares and Claps", 500.0f, -5.5f }, { "snap", "Snap", "Snares and Claps", 90.0f, -3.1f },
+        { "fmHat", "FM Hat", "Hats and Cymbals", 80.0f, -3.1f },       { "noiseHat", "Noise Hat", "Hats and Cymbals", 60.0f, -14.2f },
+        { "darkRide", "Dark Ride", "Hats and Cymbals", 2800.0f, -14.1f }, { "trashCrash", "Trash Crash", "Hats and Cymbals", 1200.0f, -8.0f },
+        { "fmBell", "FM Bell", "Metal", 1800.0f, -3.9f },              { "anvil", "Anvil", "Metal", 900.0f, -4.7f },
+        { "pipe", "Pipe", "Metal", 700.0f, -4.9f },                    { "tin", "Tin", "Metal", 140.0f, -12.9f },
+        { "zap", "Zap", "Industrial", 220.0f, -1.5f },                 { "noiseBurst", "Noise Burst", "Industrial", 160.0f, -0.8f },
+        { "machineHit", "Machine Hit", "Industrial", 500.0f, 1.2f },  { "static", "Static", "Industrial", 400.0f, -12.4f },
+        { "fmTom", "FM Tom", "Low", 600.0f, -3.2f },                   { "subDrop", "Sub Drop", "Low", 2200.0f, -1.4f },
+    }};
+
+    /** The sources whose recipe has no use of its own for tone: for them tone tilts the top end. */
+    bool sourceTilts (int source)
+    {
+        const auto s = (Source) source;
+        return s == Source::fmBell || s == Source::pipe || s == Source::subDrop;
+    }
+
+    /** A sine whose phase is moved by another's: two-operator FM. The modulator runs at ratio times the carrier. */
+    float fm (double& carrier, double& modulator, double hz, double ratio, double index, double rate)
+    {
+        const auto s = (float) std::sin (twoPi * carrier + index * std::sin (twoPi * modulator));
+        carrier += hz / rate;
+        carrier -= std::floor (carrier);
+        modulator += hz * ratio / rate;
+        modulator -= std::floor (modulator);
+        return s;
+    }
+
+    constexpr std::array<double, 6> anvilRatios { 1.0, 1.47, 2.09, 2.56, 3.39, 4.08 };
+    constexpr std::array<float, 6> anvilLevels { 1.0f, 0.8f, 0.7f, 0.55f, 0.4f, 0.3f };
+    constexpr std::array<double, 4> pipeRatios { 1.0, 2.76, 5.40, 8.93 };
+    constexpr std::array<float, 4> pipeLevels { 1.0f, 0.5f, 0.3f, 0.15f };
+    constexpr std::array<double, 7> stackTimes { 0.0, 0.006, 0.011, 0.019, 0.027, 0.034, 0.045 };
+
+    /** Sets a source's hit up; the seconds its start rises over. */
+    double startSource (Hit& h, double D)
+    {
+        const auto rate = h.rate, T = h.T, S = h.S, u = h.u;
+        const auto fall = D / 6.9;   // the time constant of a fall of 60 dB in D
+        h.length = (juce::int64) (D * rate);
+        auto rise = 0.00025;
+
+        switch ((Source) h.source)
+        {
+            case Source::subKick:
+            {
+                const auto hold = 0.03 * juce::jmin (1.0, S);
+                h.v[0] = 44.0 * T;
+                h.v[1] = 0.35 * (0.5 + 0.5 * u);
+                h.v[2] = hold * rate;
+                h.e[0].set (juce::jmax (0.005, D - hold) / 6.9, rate);
+                h.e[1].set (0.014, rate);
+                h.e[2].set (0.002, rate);
+                h.f[0].set (900.0 * std::exp2 (2.0 * u), 0.7, rate);
+                h.length = (juce::int64) ((hold + D) * rate);
+                rise = 0.0002;
+                break;
+            }
+            case Source::rumbleKick:
+                h.v[0] = 50.0 * T;
+                h.v[1] = 0.4 * (0.5 + 0.5 * u);
+                h.e[0].set (0.05 * juce::jlimit (0.5, 1.5, S), rate);
+                h.e[1].set (0.005, rate);
+                h.e[2].set (0.03, rate);
+                h.e[3].set (fall, rate);
+                h.e[4].set (0.0015, rate);
+                h.f[0].set (75.0 * T * std::exp2 (0.7 * u), 0.9, rate);
+                h.f[1].set (75.0 * T * std::exp2 (0.7 * u), 0.7, rate);
+                h.f[2].set (3000.0, 0.7, rate);
+                rise = 0.0002;
+                break;
+            case Source::distortedKick:
+                h.v[0] = 58.0 * T;
+                h.e[0].set (fall, rate);
+                h.e[1].set (0.004, rate);
+                h.e[2].set (0.035, rate);
+                h.f[0].set (2500.0 * std::exp2 (1.5 * u), 0.8, rate);
+                rise = 0.0002;
+                break;
+            case Source::fmKick:
+                h.v[0] = 52.0 * T;
+                h.v[1] = 5.0 * (0.6 + 0.4 * u);
+                h.e[0].set (fall, rate);
+                h.e[1].set (0.006, rate);
+                h.e[2].set (0.02, rate);
+                rise = 0.0002;
+                break;
+            case Source::clickKick:
+                h.v[0] = 62.0 * T;
+                h.e[0].set (fall, rate);
+                h.e[1].set (0.003, rate);
+                h.e[2].set (0.0012, rate);
+                h.f[0].set (3800.0 * std::exp2 (u), 0.8, rate);
+                rise = 0.0002;
+                break;
+            case Source::noiseSnare:
+                h.v[0] = 185.0 * T;
+                h.v[1] = 280.0 * T;
+                h.e[0].set (0.03 * juce::jlimit (0.5, 2.0, S), rate);
+                h.e[1].set (0.02, rate);
+                h.e[2].set (fall, rate);
+                h.e[3].set (0.004, rate);
+                h.f[0].set (350.0, 0.7, rate);
+                h.f[1].set (2200.0 * T * std::exp2 (1.2 * u), 0.5, rate);
+                h.f[2].set (5000.0, 0.7, rate);
+                rise = 0.0003;
+                break;
+            case Source::fmSnare:
+                h.v[0] = 210.0 * T;
+                h.e[0].set (0.07 * juce::jlimit (0.5, 2.0, S), rate);
+                h.e[1].set (0.025, rate);
+                h.e[2].set (fall, rate);
+                h.f[0].set (3200.0 * T * std::exp2 (u), 0.6, rate);
+                rise = 0.0003;
+                break;
+            case Source::metalSnare:
+                h.e[0].set (0.6 * fall, rate);
+                h.e[1].set (0.04, rate);
+                h.e[2].set (fall, rate);
+                h.f[0].set (2400.0 * T * std::exp2 (u), 1.2, rate);
+                h.f[1].set (1800.0 * T, 0.7, rate);
+                rise = 0.0003;
+                break;
+            case Source::clapStack:
+                h.v[0] = fall;
+                h.f[0].set (1250.0 * T * std::exp2 (u), 1.1, rate);
+                h.f[1].set (600.0 * T, 0.7, rate);
+                h.f[2].set (1250.0 * T * std::exp2 (u) * 1.04, 1.1, rate);
+                h.f[3].set (600.0 * T, 0.7, rate);
+                h.length = (juce::int64) ((stackTimes.back() + D) * rate);
+                break;
+            case Source::snap:
+                h.e[0].set (fall, rate);
+                h.e[1].set (0.004, rate);
+                h.f[0].set (2800.0 * T * std::exp2 (u), 0.9, rate);
+                break;
+            case Source::fmHat:
+                h.e[0].set (fall, rate);
+                h.f[0].set (6500.0 * T * std::exp2 (0.6 * u), 0.7, rate);
+                break;
+            case Source::noiseHat:
+                h.e[0].set (fall, rate);
+                h.e[1].set (0.002, rate);
+                h.f[0].set (7000.0 * T * std::exp2 (0.7 * u), 0.7, rate);
+                h.f[1].set (9500.0 * T * std::exp2 (0.4 * u), 1.5, rate);
+                break;
+            case Source::darkRide:
+                startCymbal (h, 0.62, 2600.0 * T, 1.0, 1500.0 * T, 4000.0 * T, 0.22, 1.0, D);
+                h.e[3].set (0.5 * fall, rate);
+                h.e[4].set (0.3 * fall, rate);
+                break;
+            case Source::trashCrash:
+                startCymbal (h, 1.37, 5200.0 * T, 0.5, 2600.0 * T, 3000.0 * T, 0.5, 1.0, D);
+                break;
+            case Source::fmBell:
+                h.v[0] = 620.0 * T;
+                h.e[0].set (fall, rate);
+                h.e[1].set (0.5 * fall, rate);
+                h.e[2].set (0.6 * fall, rate);
+                break;
+            case Source::anvil:
+                h.v[0] = 760.0 * T;
+
+                for (size_t k = 0; k < 6; ++k)
+                    h.e[k].set (fall / (1.0 + 0.5 * (double) k), rate);
+
+                h.e[6].set (0.003, rate);
+                h.f[0].set (4200.0 * std::exp2 (u), 1.0, rate);
+                break;
+            case Source::pipe:
+                h.v[0] = 330.0 * T;
+
+                for (size_t k = 0; k < 4; ++k)
+                    h.e[k].set (fall / (1.0 + (double) k), rate);
+
+                h.e[4].set (0.03, rate);
+                h.f[0].set (h.v[0], 6.0, rate);
+                break;
+            case Source::tin:
+                h.e[0].set (fall, rate);
+                h.f[0].set (3100.0 * std::exp2 (0.8 * u), 4.0, rate);
+                break;
+            case Source::zap:
+                h.v[0] = 70.0 * T;
+                h.v[1] = 7000.0 * T;
+                h.v[2] = 0.09 * D;
+                h.e[0].set (fall, rate);
+                h.f[0].set (9000.0 * std::exp2 (u), 0.7, rate);
+                break;
+            case Source::noiseBurst:
+                h.v[0] = 0.55 * D;
+                h.v[1] = 0.065 * D;
+                h.f[0].set (1500.0 * std::exp2 (2.0 * u) * T, 0.9, rate);
+                break;
+            case Source::machineHit:
+            {
+                // Three resonators struck by a burst of noise, each ringing for its share of the decay, over a thump.
+                static constexpr double hz[] { 310.0, 730.0, 1850.0 }, share[] { 1.0, 0.7, 0.4 };
+
+                for (size_t k = 0; k < 3; ++k)
+                {
+                    const auto f = hz[k] * T * (k == 2 ? std::exp2 (0.5 * u) : 1.0);
+                    h.f[k].set (f, juce::jlimit (2.0, 400.0, juce::MathConstants<double>::pi * f * fall * share[k]), rate);
+                    h.v[k] = 1.0 / std::sqrt (juce::jlimit (2.0, 400.0, juce::MathConstants<double>::pi * f * fall * share[k]));
+                }
+
+                h.v[3] = 65.0 * T;
+                h.e[0].set (0.004, rate);
+                h.e[1].set (0.05, rate);
+                break;
+            }
+            case Source::staticBurst:
+                h.e[0].set (fall, rate);
+                h.f[0].set (3200.0 * T * std::exp2 (u), 1.5, rate);
+                h.f[1].set (6000.0 * T, 0.7, rate);
+                break;
+            case Source::fmTom:
+                h.v[0] = 105.0 * T;
+                h.e[0].set (fall, rate);
+                h.e[1].set (0.035, rate);
+                h.e[2].set (0.05, rate);
+                h.e[3].set (0.004, rate);
+                h.f[0].set (1200.0 * std::exp2 (u), 0.8, rate);
+                break;
+            case Source::subDrop:
+                h.v[0] = 30.0 * T;
+                h.v[1] = 85.0 * T;
+                h.v[2] = 0.22 * D;
+                h.e[0].set (D / 5.0, rate);
+                rise = 0.006;
+                break;
+            case Source::none:
+                break;
+        }
+
+        return rise;
+    }
+
+    void voiceSource (Hit& h, float& l, float& r)
+    {
+        const auto t = (double) h.age / h.rate;
+        const auto rate = h.rate, T = h.T;
+        float s = 0.0f;
+
+        switch ((Source) h.source)
+        {
+            case Source::subKick:
+            {
+                const auto body = sine (h.ph[0], h.v[0] * (1.0 + 1.6 * h.e[1].next()), rate);
+                const auto amp = h.age < (juce::int64) h.v[2] ? 1.0f : h.e[0].next();
+                s = 0.95f * std::tanh (1.2f * body * amp) / std::tanh (1.2f) + h.f[0].lowPass (noise (h.n1)) * h.e[2].next() * (float) h.v[1];
+                break;
+            }
+            case Source::rumbleKick:
+            {
+                // A short kick, and under it a rumble: noise kept below its note, swelling up after the kick and dying away slowly.
+                const auto body = sine (h.ph[0], h.v[0] * (1.0 + 3.0 * h.e[1].next() + 0.9 * h.e[2].next()), rate);
+                const auto kick = std::tanh (1.8f * body * h.e[0].next()) / std::tanh (1.8f);
+                const auto swell = (float) (1.0 - std::exp (-t / 0.06)) * h.e[3].next();
+                const auto rumble = std::tanh (14.0f * h.f[1].lowPass (h.f[0].lowPass (noise (h.n1))) * swell);
+                const auto click = h.f[2].bandPass (noise (h.n2)) * h.e[4].next() * (float) h.v[1];
+                s = 0.9f * kick + 0.55f * rumble + click;
+                break;
+            }
+            case Source::distortedKick:
+            {
+                const auto body = sine (h.ph[0], h.v[0] * (1.0 + 5.0 * h.e[1].next() + 1.2 * h.e[2].next()), rate);
+                const auto amp = h.e[0].next();
+                s = 0.9f * h.f[0].lowPass (std::tanh (9.0f * body * amp)) * (0.3f + 0.7f * amp);
+                break;
+            }
+            case Source::fmKick:
+                s = 0.9f * fm (h.ph[0], h.ph[1], h.v[0] * (1.0 + 2.5 * h.e[1].next()), 1.0, h.v[1] * h.e[2].next(), rate) * h.e[0].next();
+                break;
+            case Source::clickKick:
+                s = 0.9f * sine (h.ph[0], h.v[0] * (1.0 + 4.0 * h.e[1].next()), rate) * h.e[0].next() + 0.7f * h.f[0].bandPass (noise (h.n1)) * h.e[2].next();
+                break;
+            case Source::noiseSnare:
+            {
+                const auto snap = h.e[3].next();
+                const auto body = 0.5f * sine (h.ph[0], h.v[0] * (1.0 + 0.2 * snap), rate) * h.e[0].next() + 0.3f * sine (h.ph[1], h.v[1], rate) * h.e[1].next();
+                s = body + 1.6f * h.f[1].bandPass (h.f[0].highPass (noise (h.n1))) * h.e[2].next() + 0.5f * h.f[2].highPass (noise (h.n2)) * snap;
+                break;
+            }
+            case Source::fmSnare:
+            {
+                const auto index = h.e[1].next();
+                s = 0.6f * fm (h.ph[0], h.ph[1], h.v[0] * (1.0 + 0.3 * index), 1.48, 3.5 * index, rate) * h.e[0].next()
+                  + 0.9f * h.f[0].bandPass (noise (h.n1)) * h.e[2].next();
+                break;
+            }
+            case Source::metalSnare:
+            {
+                const auto ring = square (h.ph[0], 330.0 * T, rate) * square (h.ph[1], 522.0 * T, rate);
+                s = 0.7f * h.f[0].bandPass (ring) * h.e[0].next() + 0.5f * sine (h.ph[2], 175.0 * T, rate) * h.e[1].next()
+                  + 0.45f * h.f[1].highPass (noise (h.n1)) * h.e[2].next();
+                break;
+            }
+            case Source::clapStack:
+            {
+                // Seven bursts over 45 ms, then the tail; each side its own noise, so it is wide.
+                float bursts = 0.0f;
+
+                for (auto at : stackTimes)
+                    if (const auto dt = t - at; dt >= 0.0)
+                        bursts += (float) (juce::jmin (1.0, dt / 0.0004) * std::exp (-dt / 0.0026));
+
+                const auto dt = t - stackTimes.back();
+                const auto env = bursts + (dt >= 0.0 ? (float) (0.6 * juce::jmin (1.0, dt / 0.002) * std::exp (-dt / h.v[0])) : 0.0f);
+                l = 2.4f * h.f[0].bandPass (h.f[1].highPass (noise (h.n1))) * env;
+                r = 2.4f * h.f[2].bandPass (h.f[3].highPass (noise (h.n2))) * env;
+                return;
+            }
+            case Source::snap:
+            {
+                float bursts = 0.0f;
+
+                for (auto at : { 0.0, 0.007 })
+                    if (const auto dt = t - at; dt >= 0.0)
+                        bursts += (float) (juce::jmin (1.0, dt / 0.0003) * std::exp (-dt / 0.002));
+
+                s = 1.6f * h.f[0].bandPass (noise (h.n1)) * (bursts + 0.25f * h.e[0].next()) + 0.3f * sine (h.ph[0], 1900.0 * T, rate) * h.e[1].next();
+                break;
+            }
+            case Source::fmHat:
+            {
+                const auto metal = fm (h.ph[0], h.ph[1], 3100.0 * T, 1.41, 3.0, rate) + fm (h.ph[2], h.ph[3], 4300.0 * T, 1.73, 3.0, rate)
+                                 + fm (h.ph[4], h.ph[5], 5900.0 * T, 2.19, 3.0, rate);
+                s = 0.9f * h.f[0].highPass (metal / 3.0f) * h.e[0].next();
+                break;
+            }
+            case Source::noiseHat:
+            {
+                const auto high = h.f[0].highPass (noise (h.n1));
+                s = (2.0f * h.f[1].bandPass (high) + 0.4f * high) * (h.e[0].next() + 0.5f * h.e[1].next());
+                break;
+            }
+            case Source::darkRide:
+            {
+                cymbal (h, l, r, 0.0f);
+                const auto ping = 0.25f * sine (h.ph[12], 480.0 * T, rate) * h.e[3].next() + 0.12f * sine (h.ph[13], 1152.0 * T, rate) * h.e[4].next();
+                l += ping;
+                r += ping;
+                return;
+            }
+            case Source::trashCrash:
+                cymbal (h, l, r, 3.0f);
+                return;
+            case Source::fmBell:
+            {
+                const auto index = h.e[1].next();
+                s = 0.6f * fm (h.ph[0], h.ph[1], h.v[0], 3.5, 2.2 * index, rate) * h.e[0].next()
+                  + 0.2f * fm (h.ph[2], h.ph[3], h.v[0] * 2.76, 1.0, 0.8 * index, rate) * h.e[2].next();
+                break;
+            }
+            case Source::anvil:
+            {
+                for (size_t k = 0; k < 6; ++k)
+                    s += anvilLevels[k] * sine (h.ph[k], h.v[0] * anvilRatios[k], rate) * h.e[k].next();
+
+                s = 0.3f * s + 0.8f * h.f[0].bandPass (noise (h.n1)) * h.e[6].next();
+                break;
+            }
+            case Source::pipe:
+            {
+                for (size_t k = 0; k < 4; ++k)
+                    s += pipeLevels[k] * sine (h.ph[k], h.v[0] * pipeRatios[k], rate) * h.e[k].next();
+
+                s = 0.5f * s + 0.8f * h.f[0].bandPass (noise (h.n1)) * h.f[0].k * h.e[4].next();
+                break;
+            }
+            case Source::tin:
+                s = 1.4f * h.f[0].bandPass (square (h.ph[0], 1130.0 * T, rate) * square (h.ph[1], 1740.0 * T, rate)) * h.f[0].k * 2.0f * h.e[0].next();
+                break;
+            case Source::zap:
+                s = 0.75f * h.f[0].lowPass (std::tanh (2.5f * sine (h.ph[0], h.v[0] + h.v[1] * std::exp (-t / h.v[2]), rate))) * h.e[0].next();
+                break;
+            case Source::noiseBurst:
+            {
+                // Held, then shut like a gate.
+                const auto gate = t < h.v[0] ? 1.0f : (float) std::exp (-(t - h.v[0]) / h.v[1]);
+                s = 1.3f * h.f[0].bandPass (noise (h.n1)) * gate;
+                break;
+            }
+            case Source::machineHit:
+            {
+                const auto strike = noise (h.n1) * h.e[0].next();
+                s = 2.0f * (h.f[0].bandPass (strike) * (float) h.v[0] + 0.7f * h.f[1].bandPass (strike) * (float) h.v[1] + 0.5f * h.f[2].bandPass (strike) * (float) h.v[2])
+                  + 0.4f * sine (h.ph[0], h.v[3], rate) * h.e[1].next();
+                break;
+            }
+            case Source::staticBurst:
+            {
+                // Crackle: sparks at random, fewer as it dies away, each through a band so it is a tick and not a step; and a little hiss.
+                const auto env = h.e[0].next();
+                const auto chance = 0.5f + 0.5f * noise (h.n2);
+                const auto spark = chance < 0.03f * env * env + 0.002f * env ? noise (h.n3) : 0.0f;
+                s = 9.0f * h.f[0].bandPass (spark) + 0.12f * h.f[1].highPass (noise (h.n1)) * env;
+                break;
+            }
+            case Source::fmTom:
+                s = 0.85f * fm (h.ph[0], h.ph[1], h.v[0] * (1.0 + 0.7 * h.e[1].next()), 1.0, 1.8 * h.e[2].next(), rate) * h.e[0].next()
+                  + 0.3f * h.f[0].bandPass (noise (h.n1)) * h.e[3].next();
+                break;
+            case Source::subDrop:
+                s = 0.95f * sine (h.ph[0], h.v[0] + h.v[1] * std::exp (-t / h.v[2]), rate) * h.e[0].next();
+                break;
+            case Source::none:
+                break;
+        }
+
+        l = r = s;
+    }
+
     void voice (Hit& h, float& l, float& r)
     {
         if (h.sample != nullptr)
         {
             voiceSample (h, l, r);
+            return;
+        }
+
+        if (h.source > 0)
+        {
+            voiceSource (h, l, r);
             return;
         }
 
@@ -1417,6 +1853,21 @@ namespace
 
         l = r = s;
     }
+}
+
+//==============================================================================
+const SourceInfo& sourceInfo (int source)
+{
+    return sourceInfos[(size_t) juce::jlimit (1, numSources, source) - 1];
+}
+
+int sourceWithId (const juce::String& id)
+{
+    for (int s = 1; s <= numSources; ++s)
+        if (id == sourceInfos[(size_t) s - 1].id)
+            return s;
+
+    return 0;
 }
 
 //==============================================================================
@@ -1697,7 +2148,8 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
     h = {};
 
     // A Sample: the layer whose turn it is among those for this velocity. With none, the pad is silent.
-    const auto sampled = user || st.type == sampleType;
+    const auto sourced = st.source > 0 && st.source <= numSources;
+    const auto sampled = ! sourced && (user || st.type == sampleType);
     const Sampler::Sample* recording = nullptr;
     auto played = 0;   // one more than the layer's place in the list, for the window
 
@@ -1742,14 +2194,14 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
     h.rate = rate;
     h.kick = settings.kick;
     h.T = semis (st.tune);
-    h.S = st.decay / infos[(size_t) sound].decayMs;
+    h.S = st.decay / (sourced ? sourceInfos[(size_t) (st.source - 1)].decayMs : infos[(size_t) sound].decayMs);
     h.u = juce::jlimit (-1.0, 1.0, st.tone * 0.01);
     h.n1 = 0x9e3779b9u ^ ((juce::uint32) note * 2654435761u);
     h.n2 = h.n1 * 747796405u + 2891336453u;
     h.n3 = h.n2 * 747796405u + 2891336453u;
 
     // A Modern sound is duller the softer it is struck, by up to a third of the tone's range.
-    if (st.type == modernType && hasTypes (sound))
+    if (! sourced && st.type == modernType && hasTypes (sound))
     {
         h.modern = true;
         h.vel = juce::jlimit (0.0, 1.0, (double) velocity);
@@ -1757,7 +2209,9 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
     }
 
     // A synthesized sound has a trim that sets its peak; a sample plays at the level it was recorded at.
-    const auto levelDb = sampled ? st.level : st.level + infos[(size_t) sound].trimDb + (h.modern ? modernTrimDb (sound) : 0.0f);
+    const auto levelDb = sampled ? st.level
+                       : sourced ? st.level + sourceInfos[(size_t) (st.source - 1)].trimDb
+                                 : st.level + infos[(size_t) sound].trimDb + (h.modern ? modernTrimDb (sound) : 0.0f);
     const auto gain = juce::Decibels::decibelsToGain (levelDb, -100.0f) * velocity;
     const auto angle = (juce::jlimit (-100.0f, 100.0f, st.pan) * 0.01f + 1.0f) * juce::MathConstants<float>::pi * 0.25f;
     h.gainL = gain * std::sqrt (2.0f) * std::cos (angle);
@@ -1790,7 +2244,7 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
     h.sendReverb = juce::jlimit (0.0f, 100.0f, st.reverb) * 0.01f;
     h.sendDelay = juce::jlimit (0.0f, 100.0f, st.delay) * 0.01f;
 
-    if (sampled ? ! juce::exactlyEqual (st.tone, 0.0f) : tilts (sound))
+    if (sampled || sourced ? ! juce::exactlyEqual (st.tone, 0.0f) && (sampled || sourceTilts (st.source)) : tilts (sound))
     {
         h.tilt = (float) std::exp2 (1.5 * h.u);   // the top end above 2 kHz, up to 9 dB either way
         h.tiltK = (float) (1.0 - std::exp (-twoPi * 2000.0 / rate));
@@ -1825,6 +2279,11 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
             h.fadeOver = juce::jmax ((juce::int64) 1, h.length * 2 / 5);
             h.fadeFrom = h.length - h.fadeOver;
         }
+    }
+    else if (sourced)
+    {
+        h.source = st.source;
+        riseSeconds = startSource (h, D);
     }
     else if (h.modern)
         riseSeconds = startModern (h, note, D);
@@ -2454,7 +2913,7 @@ KitSettings BasicDrumsProcessor::currentSettings() const
         const auto& p = sounds[i];
         k.sounds[i] = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
                         p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
-                        typeAt ((Sound) i, p.type->getIndex()), p.start->get(), p.reverse->get(), p.bend->get(), getEffects ((int) i), getChoke ((int) i) };
+                        typeAt ((Sound) i, p.type->getIndex()), p.start->get(), p.reverse->get(), p.bend->get(), getEffects ((int) i), getChoke ((int) i), getSource ((int) i) };
     }
 
     for (size_t u = 0; u < users.size(); ++u)
@@ -2462,7 +2921,7 @@ KitSettings BasicDrumsProcessor::currentSettings() const
         const auto& p = users[u];
         k.user[u].settings = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
                                p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
-                               sampleType, p.start->get(), p.reverse->get(), p.bend->get(), getEffects (numSounds + (int) u), getChoke (numSounds + (int) u) };
+                               sampleType, p.start->get(), p.reverse->get(), p.bend->get(), getEffects (numSounds + (int) u), getChoke (numSounds + (int) u), getSource (numSounds + (int) u) };
         k.user[u].note = userNotes[u].load (std::memory_order_relaxed);
     }
 
@@ -2528,6 +2987,9 @@ void BasicDrumsProcessor::applySettings (const KitSettings& k)
         const auto& s = pad < numSounds ? k.sounds[(size_t) pad] : k.user[(size_t) (pad - numSounds)].settings;
         setEffects (pad, s.effects);
         setChoke (pad, s.choke);
+
+        if (const auto source = juce::jlimit (0, numSources, s.source); sources[(size_t) pad].exchange (source) != source)
+            samplesVersion.fetch_add (1);
     }
 
     padsVersion.fetch_add (1);
@@ -2542,9 +3004,9 @@ void BasicDrumsProcessor::applySettings (const KitSettings& k)
 
 void BasicDrumsProcessor::applyKit (const Kit& kit)
 {
+    resetPads();        // a factory kit gives no pad a name or a colour
     applySettings (kit.settings);
-    clearSamples();     // a factory kit is all synthesized, and has no user pads
-    resetPads();
+    clearSamples();     // and is all synthesized
     kitName = kit.name;
 }
 
@@ -2576,11 +3038,12 @@ bool BasicDrumsProcessor::kitModified() const
 
     // Nor a pad whose own effects, or choke group, are not as the kit has them.
     for (size_t i = 0; i < now.sounds.size(); ++i)
-        if (now.sounds[i].effects != kit.sounds[i].effects || now.sounds[i].choke != kit.sounds[i].choke)
+        if (now.sounds[i].effects != kit.sounds[i].effects || now.sounds[i].choke != kit.sounds[i].choke || now.sounds[i].source != kit.sounds[i].source)
             return true;
 
     for (size_t u = 0; u < now.user.size(); ++u)
-        if (now.user[u].settings.effects != kit.user[u].settings.effects || now.user[u].settings.choke != kit.user[u].settings.choke)
+        if (now.user[u].settings.effects != kit.user[u].settings.effects || now.user[u].settings.choke != kit.user[u].settings.choke
+            || now.user[u].settings.source != kit.user[u].settings.source)
             return true;
 
     for (size_t i = 0; i < now.sounds.size(); ++i)
@@ -2871,20 +3334,49 @@ void BasicDrumsProcessor::setLayers (int pad, std::vector<Layer> layers)
 //==============================================================================
 bool BasicDrumsProcessor::playsSamples (int pad) const
 {
-    return pad >= numSounds || getType ((Sound) pad) == sampleType;
+    return getSource (pad) == 0 && (pad >= numSounds || getType ((Sound) pad) == sampleType);
+}
+
+int BasicDrumsProcessor::getSource (int pad) const
+{
+    return sources[(size_t) juce::jlimit (0, numPads - 1, pad)].load (std::memory_order_relaxed);
+}
+
+void BasicDrumsProcessor::setSource (int pad, int source)
+{
+    if (! juce::isPositiveAndBelow (pad, numPads))
+        return;
+
+    source = juce::jlimit (0, numSources, source);
+
+    if (sources[(size_t) pad].exchange (source) == source)
+        return;
+
+    // It starts at its own decay, as a sound does; taken off, a user pad's decay goes back to the top, where a sample plays whole.
+    if (source > 0)
+        setExactly (*of (pad).decay, sourceInfo (source).decayMs);
+    else if (pad >= numSounds)
+        setExactly (*of (pad).decay, defaultUserSettings().decay);
+
+    samplesVersion.fetch_add (1);
+    padsVersion.fetch_add (1);
+    stateEdited();
 }
 
 juce::String BasicDrumsProcessor::getPadName (int pad) const
 {
     if (pad < numSounds)
     {
-        // A sound's pad has the name given to it while it plays samples; otherwise the sound's.
+        // A sound's pad has the name given to it while it plays samples or a source; with a source
+        // and no name given, the source's; otherwise the sound's.
         const auto& given = soundNames[(size_t) juce::jmax (0, pad)];
-        return given.isNotEmpty() && playsSamples (pad) ? given : nameOf ((Sound) pad);
+        const auto source = getSource (pad);
+        return given.isNotEmpty() && (source > 0 || playsSamples (pad)) ? given : source > 0 ? juce::String (sourceInfo (source).name) : nameOf ((Sound) pad);
     }
 
     const auto& name = userNames[(size_t) (pad - numSounds)];
-    return name.isNotEmpty() ? name : "Pad " + juce::String (pad + 1);
+    const auto source = getSource (pad);
+    return name.isNotEmpty() ? name : source > 0 ? juce::String (sourceInfo (source).name) : "Pad " + juce::String (pad + 1);
 }
 
 void BasicDrumsProcessor::setPadName (int pad, const juce::String& name)
@@ -2908,7 +3400,7 @@ juce::Colour BasicDrumsProcessor::getPadColour (int pad) const
         return {};
 
     if (pad < numSounds)
-        return playsSamples (pad) ? soundColours[(size_t) pad] : juce::Colour();
+        return playsSamples (pad) || getSource (pad) > 0 ? soundColours[(size_t) pad] : juce::Colour();
 
     return userColours[(size_t) (pad - numSounds)];
 }
@@ -2927,7 +3419,7 @@ std::vector<DrumSound> BasicDrumsProcessor::drumSounds() const
     auto rows = DrumSound::generalMidi();
 
     for (auto& row : rows)
-        if (const auto sound = DrumMachine::soundFor (row.pitch); sound.has_value() && playsSamples ((int) *sound) && soundNames[(size_t) *sound].isNotEmpty())
+        if (const auto sound = DrumMachine::soundFor (row.pitch); sound.has_value() && (playsSamples ((int) *sound) || getSource ((int) *sound) > 0) && soundNames[(size_t) *sound].isNotEmpty())
             row.name = soundNames[(size_t) *sound];
 
     std::vector<DrumSound> added;
@@ -2936,7 +3428,7 @@ std::vector<DrumSound> BasicDrumsProcessor::drumSounds() const
     {
         const auto layers = getLayers (pad);
 
-        if (std::none_of (layers.begin(), layers.end(), [] (const Layer& l) { return l.sample != nullptr; }))
+        if (getSource (pad) == 0 && std::none_of (layers.begin(), layers.end(), [] (const Layer& l) { return l.sample != nullptr; }))
             continue;
 
         const auto note = getPadNote (pad);
@@ -3035,6 +3527,10 @@ void BasicDrumsProcessor::resetPads()
     for (auto& c : chokes)
         c.store (0);
 
+    for (auto& s : sources)
+        s.store (0);
+
+    samplesVersion.fetch_add (1);
     padsVersion.fetch_add (1);
 }
 
@@ -3049,6 +3545,7 @@ void BasicDrumsProcessor::clearPad (int pad)
     userColours[u] = juce::Colour();
     userNotes[u].store (firstUserNote + (int) u);
     chokes[(size_t) pad].store (0);
+    sources[(size_t) pad].store (0);
     padsVersion.fetch_add (1);
     setEffects (pad, {});
     setLayers (pad, {});
@@ -3149,9 +3646,9 @@ void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
     {
         const auto note = userNotes[(size_t) u].load();
 
-        const auto choke = getChoke (numSounds + u);
+        const auto choke = getChoke (numSounds + u), source = getSource (numSounds + u);
 
-        if (userNames[(size_t) u].isEmpty() && userColours[(size_t) u].isTransparent() && note == firstUserNote + u && choke == 0)
+        if (userNames[(size_t) u].isEmpty() && userColours[(size_t) u].isTransparent() && note == firstUserNote + u && choke == 0 && source == 0)
             continue;
 
         auto* e = all.createNewChildElement ("USER");
@@ -3162,13 +3659,16 @@ void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
 
         if (choke != 0)
             e->setAttribute ("choke", choke);
+
+        if (source != 0)
+            e->setAttribute ("source", sourceInfo (source).id);
     }
 
     for (int i = 0; i < numSounds; ++i)
     {
-        const auto choke = getChoke (i);
+        const auto choke = getChoke (i), source = getSource (i);
 
-        if (soundNames[(size_t) i].isEmpty() && soundColours[(size_t) i].isTransparent() && choke == 0)
+        if (soundNames[(size_t) i].isEmpty() && soundColours[(size_t) i].isTransparent() && choke == 0 && source == 0)
             continue;
 
         auto* e = all.createNewChildElement ("SOUND");
@@ -3178,6 +3678,9 @@ void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
 
         if (choke != 0)
             e->setAttribute ("choke", choke);
+
+        if (source != 0)
+            e->setAttribute ("source", sourceInfo (source).id);
     }
 
     if (all.getNumChildElements() > 0)
@@ -3196,6 +3699,7 @@ void BasicDrumsProcessor::readPads (const juce::XmlElement& xml)
                     soundNames[(size_t) i] = e->getStringAttribute ("name");
                     soundColours[(size_t) i] = juce::Colour::fromString (e->getStringAttribute ("colour", "00000000"));
                     chokes[(size_t) i].store (juce::jlimit (0, numChokeGroups, e->getIntAttribute ("choke")));
+                    sources[(size_t) i].store (sourceWithId (e->getStringAttribute ("source")));
                 }
 
     if (const auto* all = xml.getChildByName ("PADS"))
@@ -3206,6 +3710,7 @@ void BasicDrumsProcessor::readPads (const juce::XmlElement& xml)
                 userColours[(size_t) u] = juce::Colour::fromString (e->getStringAttribute ("colour", "00000000"));
                 userNotes[(size_t) u].store (juce::jlimit (0, 127, e->getIntAttribute ("note", firstUserNote + u)));
                 chokes[(size_t) (numSounds + u)].store (juce::jlimit (0, numChokeGroups, e->getIntAttribute ("choke")));
+                sources[(size_t) (numSounds + u)].store (sourceWithId (e->getStringAttribute ("source")));
             }
 
     padsVersion.fetch_add (1);
@@ -3287,6 +3792,7 @@ juce::String BasicDrumsProcessor::addSamples (int s, const std::vector<std::pair
     if (added > 0)
     {
         setLayers (s, std::move (layers));
+        setSource (s, 0);   // a pad given samples plays them
 
         if (s < numSounds)
             setType ((Sound) s, sampleType);

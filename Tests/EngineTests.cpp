@@ -766,6 +766,12 @@ int main (int argc, char* argv[])
         return 0;
     }
 
+    if (const auto folder = valueOf ("--drums-sources"); folder.isNotEmpty())
+    {
+        saveDrumSourceClips (juce::File (folder));
+        return 0;
+    }
+
     if (args.contains ("--drums") || args.contains ("--drums-levels"))
     {
         AudioEngine engine;

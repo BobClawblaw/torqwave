@@ -89,8 +89,11 @@ public:
     juce::String getKitText() const;
     juce::String getKnobText (const juce::String& what) const;
 
-    /** The selected sound's type as its selector shows it ("Classic", "Modern", "Sample"). */
+    /** What the selected pad plays, as its selector shows it: "Classic", "Modern" or "Sample", or a source's name ("Rumble Kick"). */
     juce::String getTypeText() const;
+
+    /** Chooses what the selected pad plays, by its name in the selector; false when the selector has none of that name. */
+    bool chooseType (const juce::String& name);
 
     /** Sounds dropped: on a pad they go to that pad, on the selected sound's panel to it. */
     bool isInterestedInFileDrag (const juce::StringArray& files) override;
@@ -134,6 +137,9 @@ private:
     void refreshPicture (bool force);
     void refreshReadouts();
     void refreshFilterKnobs();
+    int typeIndexNow() const;
+    int firstSourceIndex() const;
+    juce::StringArray typeChoices() const;
     void showEffectsPage();
     void showSelected();
     void say (const juce::String&);

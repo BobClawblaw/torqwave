@@ -958,13 +958,31 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     character.setTooltip ("The kick's character: Boom (long and round), Punch (909-style), Hard (an overdriven industrial kick)");
     soundPanel.addChildComponent (character);
 
-    type.setTooltip ("The sound's type: Classic, as it has always been; Modern, a second model with more to it, duller the softer it is struck; or Sample, which plays the sounds given to the pad");
-    type.onChange = [this] (int)
+    type.setTooltip ("What the pad plays. A sound's own types: Classic, as it has always been; Modern, a second model with more to it, duller the softer it is struck. "
+                     "Sample plays the sounds given to the pad. Or one of the sources: 24 more synthesized sounds, which any pad can play in place of its own");
+    type.onChange = [this] (int index)
     {
-        if (drums.playsSamples (selectedPad) != shownSample)
-            showSelected();
+        // Past the pad's own choices, a source; among them, no source and (for a sound) its type.
+        const auto first = firstSourceIndex();
+
+        if (index >= first)
+        {
+            drums.setSource (selectedPad, index - first + 1);
+        }
         else
-            refreshPicture (true);
+        {
+            drums.setSource (selectedPad, 0);
+
+            if (selectedPad < DrumMachine::numSounds)
+            {
+                auto* choice = drums.typeParameter (selected);
+                choice->beginChangeGesture();
+                choice->setValueNotifyingHost (choice->convertTo0to1 ((float) index));
+                choice->endChangeGesture();
+            }
+        }
+
+        showSelected();
     };
     soundPanel.addAndMakeVisible (type);
 
@@ -1079,7 +1097,7 @@ void DrumMachineEditor::describePads()
         const auto user = pad >= DrumMachine::numSounds;
         const auto note = drums.getPadNote (pad);
         pads[place]->describe (drums.getPadName (pad), user ? juce::String (note) + " " + noteName (note) : notesOf ((Sound) pad), colourOfPad (pad),
-                               user && (held == nullptr || held->pads[(size_t) pad].empty()));
+                               user && drums.getSource (pad) == 0 && (held == nullptr || held->pads[(size_t) pad].empty()));
     }
 }
 
@@ -1156,14 +1174,20 @@ void DrumMachineEditor::showSelected()
 
     // A sound's type (a user pad has none: it plays samples, and has a menu of its own there), and
     // for a Sample its layers and its own three controls.
-    if (! user)
     {
-        type.setChoices (DrumMachine::typeNamesFor (selected));
-        type.attach (drums.typeParameter (selected));
+        // In its menu the sources come under their families.
+        std::vector<std::pair<int, juce::String>> sections;
+        juce::String family;
+
+        for (int s = 1; s <= DrumMachine::numSources; ++s)
+            if (const auto& info = DrumMachine::sourceInfo (s); family != info.family)
+                sections.emplace_back (firstSourceIndex() + s - 1, family = info.family);
+
+        type.setChoices (typeChoices());
+        type.setSections (std::move (sections));
+        type.setIndex (typeIndexNow(), false);
         type.setColour (colour);
     }
-
-    type.setVisible (! user);
     shownSample = drums.playsSamples (selectedPad);
     samplesSeen = drums.getSamplesVersion();
     padsSeen = drums.getPadsVersion();
@@ -1266,7 +1290,42 @@ juce::String DrumMachineEditor::getKitText() const
 
 juce::String DrumMachineEditor::getTypeText() const
 {
-    return selectedPad >= DrumMachine::numSounds ? juce::String ("Sample") : DrumMachine::typeNamesFor (selected)[type.getIndex()];
+    return type.getText();
+}
+
+int DrumMachineEditor::firstSourceIndex() const
+{
+    return selectedPad >= DrumMachine::numSounds ? 1 : DrumMachine::typeNamesFor (selected).size();
+}
+
+int DrumMachineEditor::typeIndexNow() const
+{
+    if (const auto source = drums.getSource (selectedPad); source > 0)
+        return firstSourceIndex() + source - 1;
+
+    return selectedPad >= DrumMachine::numSounds ? 0 : drums.typeParameter (selected)->getIndex();
+}
+
+juce::StringArray DrumMachineEditor::typeChoices() const
+{
+    // The pad's own choices (a sound's types; for a user pad, Sample), then the sources.
+    auto choices = selectedPad >= DrumMachine::numSounds ? juce::StringArray { "Sample" } : DrumMachine::typeNamesFor (selected);
+
+    for (int s = 1; s <= DrumMachine::numSources; ++s)
+        choices.add (DrumMachine::sourceInfo (s).name);
+
+    return choices;
+}
+
+bool DrumMachineEditor::chooseType (const juce::String& name)
+{
+    const auto index = typeChoices().indexOf (name);
+
+    if (index < 0)
+        return false;
+
+    type.setIndex (index);
+    return true;
 }
 
 int DrumMachineEditor::getNumLayersShown() const            { return layers->getNumRows(); }
@@ -1380,7 +1439,7 @@ void DrumMachineEditor::showPadMenu (int pad)
     const auto user = pad >= DrumMachine::numSounds;
 
     // A sound's pad is renamed and coloured while it plays samples (its note is its own); any pad can be in a choke group.
-    const auto named = user || drums.playsSamples (pad);
+    const auto named = user || drums.playsSamples (pad) || drums.getSource (pad) > 0;
     juce::PopupMenu chokeMenu;
     const auto group = drums.getChoke (pad);
     chokeMenu.addItem (3000, "None", true, group == 0);
@@ -1698,7 +1757,7 @@ void DrumMachineEditor::timerCallback()
     reverse.refresh();
 
     // The type and the layers may have changed from outside the window (a preset, a kit, the host).
-    if (const auto was = type.getIndex(); (type.refresh(), type.getIndex() != was)
+    if (typeIndexNow() != type.getIndex()
             || drums.playsSamples (selectedPad) != shownSample || drums.getSamplesVersion() != samplesSeen || drums.getPadsVersion() != padsSeen)
         showSelected();
 
@@ -1807,12 +1866,11 @@ void DrumMachineEditor::resized()
             header.removeFromRight (6);
         }
 
-        if (type.isVisible())
-            type.setBounds (header.removeFromRight (140).reduced (0, 2));
+        type.setBounds (header.removeFromRight (140).reduced (0, 2));
 
         if (padMenu.isVisible())
         {
-            header.removeFromRight (type.isVisible() ? 6 : 0);
+            header.removeFromRight (6);
             padMenu.setBounds (header.removeFromRight (50).reduced (0, 2));
         }
 

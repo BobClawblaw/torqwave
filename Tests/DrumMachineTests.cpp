@@ -2444,6 +2444,302 @@ namespace
         folder.deleteRecursively();
     }
 
+    //==============================================================================
+    // The sources: 24 more synthesized sounds, which any pad can play in place of its own.
+
+    /** Where a sound's energy sits, as one frequency: that of a sine that moves as much from sample to sample for its level. */
+    double registerOf (const juce::AudioBuffer<float>& b)
+    {
+        return rate / juce::MathConstants<double>::pi * std::asin (juce::jmin (1.0, 0.5 * std::sqrt (brightnessOf (b))));
+    }
+
+    void testSources()
+    {
+        using BuiltInEffects::BasicDrumsProcessor;
+        const auto user = DrumMachine::numSounds, userNote = DrumMachine::firstUserNote;
+        const auto n = DrumMachine::numSources;
+
+        // The 24, by family, each with an id of its own that finds it again.
+        {
+            juce::StringArray ids, families;
+            auto found = true;
+
+            for (int s = 1; s <= n; ++s)
+            {
+                const auto& info = DrumMachine::sourceInfo (s);
+                ids.addIfNotAlreadyThere (info.id);
+                families.addIfNotAlreadyThere (info.family);
+                found = found && DrumMachine::sourceWithId (info.id) == s;
+            }
+
+            check (n == 24 && ids.size() == 24 && found && DrumMachine::sourceWithId ("nothing") == 0 && DrumMachine::sourceWithId ({}) == 0
+                       && families.joinIntoString (", ") == "Kicks, Snares and Claps, Hats and Cymbals, Metal, Industrial, Low",
+                   "drum sources: 24 sources in six families (" + families.joinIntoString (", ") + "), each found again by its id");
+        }
+
+        // Each alone on a user pad, at its own decay, the kit's level at 0 dB: its level, where it sits, how long it lasts,
+        // that it starts from silence and ends at nothing, and that its knobs and the velocity move it.
+        {
+            // Where each family's energy sits, in Hz (registerOf), and its peak in dB.
+            struct Range { const char* family; double lowHz, highHz; float lowDb, highDb; };
+            static const Range ranges[] { { "Kicks", 40.0, 1200.0, -2.0f, -0.5f },          { "Snares and Claps", 1200.0, 9000.0, -6.0f, -3.0f },
+                                          { "Hats and Cymbals", 4000.0, 16000.0, -11.0f, -5.0f }, { "Metal", 400.0, 9000.0, -7.0f, -5.0f },
+                                          { "Industrial", 300.0, 9000.0, -5.0f, -3.0f },     { "Low", 30.0, 600.0, -5.5f, -1.5f } };
+
+            BasicDrumsProcessor drums;
+            drums.applyKit (DrumMachine::kits()[0]);
+            set (drums.levelParameter(), 0.0f);
+            const auto silentBefore = juce::exactlyEqual (peakOf (play (drums, { { userNote, 0.0, 1.0f } }, 0.2)), 0.0f);
+            juce::StringArray said, bad;
+            float worstStart = 0.0f, worstEnd = 0.0f;
+
+            for (int s = 1; s <= n; ++s)
+            {
+                const auto& info = DrumMachine::sourceInfo (s);
+                const juce::String name (info.name);
+                drums.setSource (user, s);
+                const auto decay = drums.parameterOf (user, "decay")->get();
+                const auto seconds = decay * 0.001 + 0.5;
+                const auto out = play (drums, { { userNote, 0.0, 1.0f } }, seconds);
+                const auto peak = peakOf (out), peakDb = juce::Decibels::gainToDecibels (peak);
+                const auto hz = registerOf (out);
+                const auto last = lastSounding (out);
+                const auto* range = std::find_if (std::begin (ranges), std::end (ranges), [&info] (const Range& r) { return juce::String (r.family) == info.family; });
+                said.add (name + " " + juce::String (peakDb, 1) + " dB " + juce::String (juce::roundToInt (hz)) + " Hz " + juce::String (juce::roundToInt (last / rate * 1000.0)) + " ms");
+
+                if (std::abs (decay - info.decayMs) > 1.0e-4f * info.decayMs || drums.getPadName (user) != name)
+                    bad.add (name + ": its decay or its name is not the pad's");
+
+                if (range == std::end (ranges) || peakDb < range->lowDb || peakDb > range->highDb || hz < range->lowHz || hz > range->highHz)
+                    bad.add (name + ": level or register outside its family's");
+
+                // It lasts about its decay: no longer than it and 60 ms, no shorter than two fifths of it.
+                if (last > (int) ((decay * 0.001 + 0.06) * rate) || last < (int) (decay * 0.0004 * rate))
+                    bad.add (name + ": ends at " + juce::String (juce::roundToInt (last / rate * 1000.0)) + " ms");
+
+                const auto first = juce::jmax (std::abs (out.getSample (0, 0)), std::abs (out.getSample (1, 0)));
+                const auto second = juce::jmax (std::abs (out.getSample (0, 1)), std::abs (out.getSample (1, 1)));
+                const auto tail = peakOf (out, juce::jmax (0, last - 48), 49);
+                worstStart = juce::jmax (worstStart, second / peak);
+                worstEnd = juce::jmax (worstEnd, tail / peak);
+
+                if (first > 0.02f * peak || second > 0.2f * peak || tail > 0.01f * peak)
+                    bad.add (name + ": steps at its start or end");
+
+                // Half as hard, half as loud; an octave up, higher; half the decay, shorter; the tone, another sound.
+                const auto soft = play (drums, { { userNote, 0.0, 0.5f } }, seconds);
+                set (drums.parameterOf (user, "tune"), 12.0f);
+                const auto up = play (drums, { { userNote, 0.0, 1.0f } }, seconds);
+                set (drums.parameterOf (user, "tune"), 0.0f);
+                set (drums.parameterOf (user, "decay"), decay * 0.5f);
+                const auto shorter = play (drums, { { userNote, 0.0, 1.0f } }, seconds);
+                set (drums.parameterOf (user, "decay"), decay);
+                set (drums.parameterOf (user, "tone"), 60.0f);
+                const auto bright = play (drums, { { userNote, 0.0, 1.0f } }, seconds);
+                set (drums.parameterOf (user, "tone"), -60.0f);
+                const auto dark = play (drums, { { userNote, 0.0, 1.0f } }, seconds);
+                set (drums.parameterOf (user, "tone"), 0.0f);
+
+                if (std::abs (peakOf (soft) / peak - 0.5f) > 0.01f)
+                    bad.add (name + ": velocity");
+
+                // (What is all at the top already has nowhere higher to go: it is only another sound.)
+                if (same (up, out) || (hz < 8000.0 && registerOf (up) < hz * 1.05))
+                    bad.add (name + ": tune (" + juce::String (juce::roundToInt (registerOf (up))) + " Hz an octave up)");
+
+                if (lastSounding (shorter) > last - (int) (decay * 0.0002 * rate))
+                    bad.add (name + ": decay");
+
+                if (registerOf (bright) <= registerOf (dark))
+                    bad.add (name + ": tone (" + juce::String (juce::roundToInt (registerOf (dark))) + " to " + juce::String (juce::roundToInt (registerOf (bright))) + " Hz)");
+            }
+
+            // Taken off, the pad is silent again and its decay back at the top.
+            drums.setSource (user, 0);
+            const auto silentAfter = juce::exactlyEqual (peakOf (play (drums, { { userNote, 0.0, 1.0f } }, 0.2)), 0.0f) && juce::exactlyEqual (drums.parameterOf (user, "decay")->get(), 5000.0f)
+                                  && drums.getPadName (user) == "Pad 31";
+
+            check (silentBefore && bad.isEmpty() && silentAfter,
+                   "drum sources: each on a user pad sounds at its family's level and register, lasts about its decay, starts from silence (its second sample at most "
+                       + juce::String (worstStart * 100.0f, 1) + " % of its peak) and ends at nothing (" + juce::String (worstEnd * 100.0f, 2) + " %); half the velocity is half the level, "
+                       "an octave of Tune moves it up, half the Decay shortens it, Tone brightens it; taken off, the pad is silent again: " + said.joinIntoString ("; ")
+                       + (bad.isEmpty() ? juce::String() : " (FAILED: " + bad.joinIntoString ("; ") + ")"));
+        }
+
+        // On the sounds' pads, a source in place of each sound: the kit's no-click checks, restrikes, the hats' chokes and All Sound Off among them.
+        {
+            BasicDrumsProcessor drums;
+            drums.applyKit (DrumMachine::kits()[0]);
+            const auto before = play (drums, { { 36, 0.0, 1.0f }, { 42, 0.1, 0.8f } }, 0.5);
+            const auto typeBefore = drums.getType (Sound::kick);
+
+            for (int pad = 0; pad < DrumMachine::numSounds; ++pad)
+                drums.setSource (pad, 1 + (pad * 5) % n);
+
+            // The low tom's two notes are listened to 100 ms on, so it has a long one (the FM Bell), and the short one it had goes to another pad.
+            drums.setSource ((int) Sound::lowTom, DrumMachine::sourceWithId ("fmBell"));
+            drums.setSource (24, DrumMachine::sourceWithId ("noiseHat"));
+
+            // Every source is on some pad: 30 pads, 24 sources, a step of 5.
+            std::set<int> used;
+
+            for (int pad = 0; pad < DrumMachine::numSounds; ++pad)
+                used.insert (drums.getSource (pad));
+
+            checkNoClicks (drums, "drums (a source on every sound's pad): ");
+            const auto kickSource = drums.getSource ((int) Sound::kick);
+            const auto both = peakOf (play (drums, { { 35, 0.0, 1.0f } }, 0.3)) > 0.03f && peakOf (play (drums, { { 36, 0.0, 1.0f } }, 0.3)) > 0.03f
+                           && drums.getPadName ((int) Sound::kick) == DrumMachine::sourceInfo (kickSource).name && ! drums.playsSamples ((int) Sound::kick);
+
+            for (int pad = 0; pad < DrumMachine::numSounds; ++pad)
+                drums.setSource (pad, 0);
+
+            // Taken off again, with each sound's decay put back, the kit is as it was to the bit; its type was never touched.
+            drums.applySettings (DrumMachine::kits()[0].settings);
+            check ((int) used.size() == n && both && drums.getType (Sound::kick) == typeBefore && drums.getPadName ((int) Sound::kick) == "Kick" && same (play (drums, { { 36, 0.0, 1.0f }, { 42, 0.1, 0.8f } }, 0.5), before),
+                   "drum sources: a sound's pad plays a source on each of its notes under the source's name, its type left alone; taken off, the kit plays bit for bit as before");
+        }
+
+        // A pattern of sources renders the same at any block size; sources choke in the user's groups; kept and restored.
+        {
+            BasicDrumsProcessor drums;
+            drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Industrial")]);
+            Notes pattern;
+
+            for (int u = 0; u < 12; ++u)
+            {
+                drums.setSource (user + u, 1 + 2 * u);
+                pattern.push_back ({ userNote + u, 0.11 * u, 0.9f });
+                pattern.push_back ({ userNote + u, 0.11 * u + 0.07, 0.6f });
+            }
+
+            drums.setSource ((int) Sound::kick, DrumMachine::sourceWithId ("rumbleKick"));
+            drums.setSource ((int) Sound::openHat, DrumMachine::sourceWithId ("trashCrash"));
+
+            for (int step = 0; step < 8; ++step)
+            {
+                pattern.push_back ({ 36, step * 0.25, 1.0f });
+                pattern.push_back ({ step % 2 == 0 ? 42 : 46, step * 0.25 + 0.125, 0.8f });
+            }
+
+            const auto first = play (drums, pattern, 2.5), again = play (drums, pattern, 2.5), odd = play (drums, pattern, 2.5, 37), one = play (drums, pattern, 2.5, 1);
+            const auto sameAtAnySize = same (first, again) && same (first, odd) && same (first, one) && peakOf (first) > 0.05f && peakOf (first) < 1.0f;
+
+            // A long source cut by a short one in its group fades, with no click (in a kit with nothing on its bus, so the one can be taken from the other).
+            juce::String why;
+            const auto choked = [&why, user, userNote]
+            {
+                BasicDrumsProcessor plain;
+                plain.applyKit (DrumMachine::kits()[0]);
+                plain.setSource (user, DrumMachine::sourceWithId ("fmBell"));
+                plain.setSource (user + 1, DrumMachine::sourceWithId ("tin"));
+                plain.setChoke (user, 2);
+                plain.setChoke (user + 1, 2);
+                const auto at = (int) std::round (0.05 * rate);
+                const auto cutBoth = play (plain, { { userNote, 0.0, 1.0f }, { userNote + 1, 0.05, 1.0f } }, 0.4);
+                const auto chokerAlone = play (plain, { { userNote + 1, 0.05, 1.0f } }, 0.4), ringing = play (plain, { { userNote, 0.0, 1.0f } }, 0.4);
+                return fadesOut (minus (cutBoth, chokerAlone), at, why, &ringing) && peakOf (ringing, at + 400, 2000) > 1.0e-3f;
+            }();
+
+            // The state, a preset and a kit file keep them, by id; a state that names a source there is none of has none on that pad.
+            const auto edited = drums.kitModified();
+            juce::MemoryBlock state;
+            drums.getStateInformation (state);
+            BasicDrumsProcessor another;
+            another.setStateInformation (state.getData(), (int) state.getSize());
+            const auto fromState = another.currentSettings() == drums.currentSettings() && same (play (another, pattern, 2.5), first)
+                                && another.getSource ((int) Sound::kick) == DrumMachine::sourceWithId ("rumbleKick");
+            auto xml = juce::AudioProcessor::getXmlFromBinary (state.getData(), (int) state.getSize());
+            auto renamed = 0, named = 0;
+
+            if (xml != nullptr)
+                if (auto* pads = xml->getChildByName ("PADS"))
+                    for (auto* e : pads->getChildIterator())
+                        if (e->hasAttribute ("source"))
+                        {
+                            ++named;
+
+                            if (e->getStringAttribute ("source") == "rumbleKick")
+                            {
+                                e->setAttribute ("source", "noSuchSource");
+                                ++renamed;
+                            }
+                        }
+
+            juce::MemoryBlock strange;
+
+            if (xml != nullptr)
+                juce::AudioProcessor::copyXmlToBinary (*xml, strange);
+
+            another.setStateInformation (strange.getData(), (int) strange.getSize());
+            const auto unknown = named == 14 && renamed == 1 && another.getSource ((int) Sound::kick) == 0 && another.getSource (user) == 1;
+
+            BasicDrumsProcessor viaPreset;
+            viaPreset.setPresetValues (drums.getPresetValues());
+            viaPreset.setPresetTexts (drums.getPresetTexts());
+            const auto fromPreset = viaPreset.currentSettings() == drums.currentSettings();
+
+            const auto folder = juce::File::createTempFile ("drumsources");
+            juce::StringArray notThere;
+            const auto saveError = drums.saveKitWithSamples (folder, notThere);
+            BasicDrumsProcessor opened;
+            const auto openError = opened.loadKitFile (folder.getChildFile (folder.getFileName() + BasicDrumsProcessor::kitFileExtension));
+            const auto fromKit = opened.currentSettings() == drums.currentSettings();
+
+            // The grid lists a user pad with a source on its note under its name; samples given to it take the source off.
+            const auto rows = drums.drumSounds();
+            const auto listed = rows.size() == 47 + 12 && rows[47].pitch == userNote && rows[47].name == "Sub Kick";
+            const auto sound = writeSound (folder, "Hit", tone (200.0, 2400, 0.5f));
+            drums.addFiles (user, { sound });
+            const auto sampledNow = drums.getSource (user) == 0 && drums.playsSamples (user) && drums.getLayers (user).size() == 1;
+            drums.clearPad (user + 1);
+            const auto emptied = drums.getSource (user + 1) == 0;
+            drums.applyKit (DrumMachine::kits()[0]);
+            auto factory = ! drums.kitModified();
+
+            for (int pad = 0; pad < DrumMachine::numPads; ++pad)
+                factory = factory && drums.getSource (pad) == 0;
+
+            folder.deleteRecursively();
+            check (sameAtAnySize && choked && edited && fromState && unknown && fromPreset && saveError.isEmpty() && openError.isEmpty() && fromKit && listed && sampledNow && emptied && factory
+                       && drums.getParameters().size() == 997,
+                   "drum sources: a pattern of fourteen sources renders bit-identically twice, in 37-sample blocks and sample by sample; one source fades another in its choke group (" + why
+                       + "); they mark the kit edited and are kept by the state, a preset and a kit file by their ids, and a pad naming a source there is none of has none; "
+                       "the drum grid lists a user pad with a source under its name; samples given to it, emptying it and a factory kit take the source off; no hosted parameter is added (997)");
+        }
+
+        // The window: the pad's selector lists the sources after its own choices.
+        {
+            BasicDrumsProcessor drums;
+            drums.applyKit (DrumMachine::kits()[0]);
+            std::unique_ptr<juce::AudioProcessorEditor> made (drums.createEditor());
+            auto* window = dynamic_cast<DrumMachineEditor*> (made.get());
+            check (window != nullptr, "drum sources: the window opens");
+
+            if (window != nullptr)
+            {
+                window->select (Sound::kick);
+                const auto own = window->getTypeText() == "Classic";
+                const auto chosen = window->chooseType ("Rumble Kick");
+                const auto onKick = drums.getSource ((int) Sound::kick) == DrumMachine::sourceWithId ("rumbleKick") && window->getTypeText() == "Rumble Kick"
+                                 && window->getPadText ((int) Sound::kick).startsWith ("Rumble Kick") && ! window->showsLayers() && window->getKnobText ("Decay") == "1.50 s";
+                const auto modern = window->chooseType ("Modern") && drums.getSource ((int) Sound::kick) == 0 && drums.getType (Sound::kick) == DrumMachine::modernType
+                                 && window->getPadText ((int) Sound::kick).startsWith ("Kick");
+                window->selectPad (DrumMachine::numSounds);
+                const auto userOwn = window->getTypeText() == "Sample" && window->showsLayers() && ! window->chooseType ("Classic");
+                const auto zap = window->chooseType ("Zap") && drums.getSource (DrumMachine::numSounds) == DrumMachine::sourceWithId ("zap") && ! window->showsLayers()
+                              && window->getPadText (DrumMachine::numSounds).startsWith ("Zap") && window->getPictureSeconds() > 0.1;
+                drums.setSource (DrumMachine::numSounds, DrumMachine::sourceWithId ("anvil"));
+                window->showHits();
+                const auto back = window->chooseType ("Sample") && drums.getSource (DrumMachine::numSounds) == 0 && window->showsLayers()
+                               && window->getPadText (DrumMachine::numSounds).startsWith ("Pad 31");
+                check (own && chosen && onKick && modern && userOwn && zap && back,
+                       "drum sources: the pad's selector lists them after its own choices; Rumble Kick chosen for the kick's pad shows on its card and sets its decay (1.50 s), "
+                       "Modern takes it off again; a user pad's selector has Sample and the sources, and Zap chosen there hides its layers and names its card");
+            }
+        }
+    }
+
     void printLevels (BuiltInEffects::BasicDrumsProcessor& drums)
     {
         drums.applyKit (DrumMachine::kits()[0]);
@@ -2472,6 +2768,18 @@ namespace
             }
 
             std::cout << std::endl;
+        }
+
+        // The sources, each on the first user pad at its own decay: with a trim of 0 dB in its table, this is what its trim should take off.
+        for (int source = 1; source <= DrumMachine::numSources; ++source)
+        {
+            drums.setSource (DrumMachine::numSounds, source);
+            const auto out = play (drums, { { DrumMachine::firstUserNote, 0.0, 1.0f } }, 4.0);
+            const auto last = lastSounding (out);
+            std::cout << "source " << source << " " << DrumMachine::sourceInfo (source).name << ": peak " << juce::Decibels::gainToDecibels (peakOf (out))
+                      << " dB, rms(100ms) " << juce::Decibels::gainToDecibels (out.getRMSLevel (0, 0, (int) (0.1 * rate))) << " dB, ends at " << juce::roundToInt (last / rate * 1000.0)
+                      << " ms, 60 dB down by " << juce::roundToInt ([&] { auto i = last; const auto floor = peakOf (out) * 0.001f; while (i > 0 && std::abs (out.getSample (0, i)) < floor && std::abs (out.getSample (1, i)) < floor) --i; return i; }() / rate * 1000.0)
+                      << " ms, trim " << DrumMachine::sourceInfo (source).trimDb << std::endl;
         }
     }
 }
@@ -2676,6 +2984,92 @@ void saveDrumMachineDemos (const juce::File& folder)
     }
 }
 
+/** Clips of the 24 sources to listen to, 48 kHz, 24-bit, in <folder>: each alone ("NN Name.wav":
+    a hard hit, a softer one, then five semitones down and five up), and each in two bars at
+    130 BPM in the part its family plays, over a plain groove of the Dark Techno kit ("NN Name -
+    pattern.wav"). The kit's level is at 0 dB for the hits alone. */
+void saveDrumSourceClips (const juce::File& folder)
+{
+    folder.createDirectory();
+    const auto user = DrumMachine::numSounds, note = DrumMachine::firstUserNote;
+
+    const auto write = [&folder] (const juce::String& name, const juce::AudioBuffer<float>& audio)
+    {
+        auto file = folder.getChildFile (name + ".wav");
+        file.deleteFile();
+        std::unique_ptr<juce::OutputStream> stream (new juce::FileOutputStream (file));
+        const auto options = juce::AudioFormatWriterOptions{}.withSampleRate (rate).withNumChannels (2).withBitsPerSample (24);
+
+        if (auto writer = juce::WavAudioFormat().createWriterFor (stream, options))
+            writer->writeFromAudioSampleBuffer (audio, 0, audio.getNumSamples());
+
+        std::cout << file.getFileName() << ": peak " << juce::Decibels::gainToDecibels (peakOf (audio)) << " dB" << std::endl;
+    };
+
+    // The part each family plays (x hard, o soft), and what of the groove gives way to it.
+    struct Part { const char* family; const char* steps; int instead; };
+    static const Part parts[] { { "Kicks", "x...x...x...x.o.", 36 },            { "Snares and Claps", "....x.......x..o", 39 },
+                                { "Hats and Cymbals", "x.oxx.oxx.oxx.ox", 42 }, { "Metal", "..x..o.x..x..o.x", -1 },
+                                { "Industrial", "...x..o...x..x.o", -1 },       { "Low", "x.........o.x...", -1 } };
+    static const DemoRow groove[] { { 36, "x...x...x...x..." }, { 39, "....x.......x..." }, { 42, "x.x.x.x.x.x.x.x." }, { 46, "..o...o...o...o." } };
+
+    for (int s = 1; s <= DrumMachine::numSources; ++s)
+    {
+        const auto& info = DrumMachine::sourceInfo (s);
+        const auto name = juce::String (s).paddedLeft ('0', 2) + " " + info.name;
+        const auto gap = info.decayMs * 0.001 + 0.25;
+
+        BuiltInEffects::BasicDrumsProcessor alone;
+        alone.applyKit (DrumMachine::kits()[0]);
+        set (alone.levelParameter(), 0.0f);
+        alone.setSource (user, s);
+        auto clip = play (alone, { { note, 0.0, 1.0f }, { note, gap, 0.6f } }, 2.0 * gap);
+
+        for (auto semitones : { -5.0f, 5.0f })
+        {
+            set (alone.parameterOf (user, "tune"), semitones);
+            const auto tuned = play (alone, { { note, 0.0, 1.0f } }, gap + 0.3);
+            juce::AudioBuffer<float> longer (2, clip.getNumSamples() + tuned.getNumSamples());
+
+            for (int ch = 0; ch < 2; ++ch)
+            {
+                longer.copyFrom (ch, 0, clip, ch, 0, clip.getNumSamples());
+                longer.copyFrom (ch, clip.getNumSamples(), tuned, ch, 0, tuned.getNumSamples());
+            }
+
+            clip = longer;
+        }
+
+        write (name, clip);
+
+        // A cymbal rings across the bar: the ride on the beats, the crash on the one.
+        const auto* part = std::find_if (std::begin (parts), std::end (parts), [&info] (const Part& p) { return juce::String (p.family) == info.family; });
+        const auto steps = juce::String (info.id) == "darkRide" ? "x...x...x...x..." : juce::String (info.id) == "trashCrash" ? "x..............." : juce::String (info.id) == "subDrop" ? "x..............." : part->steps;
+        const auto instead = juce::String (info.id) == "darkRide" || juce::String (info.id) == "trashCrash" ? -1 : part->instead;
+
+        BuiltInEffects::BasicDrumsProcessor kit;
+        kit.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Dark Techno")]);
+        kit.setSource (user, s);
+        const auto step = 60.0 / 130.0 / 4.0;
+        Notes notes;
+
+        for (int bar = 0; bar < 2; ++bar)
+        {
+            for (auto& row : groove)
+                if (row.note != instead)
+                    for (int i = 0; i < 16; ++i)
+                        if (row.steps[i] != '.')
+                            notes.push_back ({ row.note, (bar * 16 + i) * step, row.steps[i] == 'x' ? 1.0f : 0.6f });
+
+            for (int i = 0; i < 16; ++i)
+                if (steps[i] != '.')
+                    notes.push_back ({ note, (bar * 16 + i) * step, steps[i] == 'x' ? 1.0f : 0.6f });
+        }
+
+        write (name + " - pattern", play (kit, notes, 32 * step + juce::jmin (3.0, info.decayMs * 0.001 + 0.5)));
+    }
+}
+
 void saveDrumMachineSounds (const juce::File& folder)
 {
     folder.createDirectory();
@@ -2758,4 +3152,5 @@ void runDrumMachineTests (AudioEngine& engine, bool levels)
     testPadEffects();
     testDrumRows();
     testChokeGroups();
+    testSources();
 }
