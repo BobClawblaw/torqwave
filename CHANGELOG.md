@@ -4,6 +4,12 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Basic Drums: the Battery import reads kits the user's own Battery saves**
+- **What was wrong,** found with the first kit the user saved for it: the import refused it, "its program record is version 178". Every kit it had been checked against came from a library, and the newest of those was version 175. A kit saved by the Battery 4 on the development Mac is newer, and its table of sample paths is laid out differently too.
+- **Now** program records up to 178 are taken, and both path tables are read. The newer one starts with the kit file itself, so its zones name the samples from 1, it says one more than the paths it holds, and each path is followed by 28 bytes about its file. A path table of any other version is still refused by name.
+- **Checked in place:** three kits saved from that Battery (two new ones of two cells, one factory kit resaved with 16) read with all 20 samples found; the 5,227 library kits read as before, 117,066 samples found. Nothing of them is in the repository.
+- Tested (`--battery-kit`, 83 checks, 2 new): a kit written the newer way reads back as written, a packed one cut short at every length is refused, and an unknown path table is refused by name. `--drums` was not run again: only the reader changed. The 28 bytes after a path are taken as a fixed length from the three kits seen; a kit saved without its samples copied beside it has not been seen in the newer layout.
+
 **Basic Drums: Files > Import Folder of Sounds** (the fallback of phase 3 in `docs/plans/PLAN-DRUM-SAMPLER.md`; a first working version, not yet tried by hand)
 - **What it does.** Lays a folder's sound files, the ones in its folders too, on the pads by their names, in place of the kit there, from the Files menu or by dropping the folder on the window. The files are read where they are.
 - **How a pad is chosen,** in this order: a General MIDI drum note number (35 to 81) at the front or the end of the name, unless the folder's files are numbered from below 35, which makes the numbers a count; an instrument's name or short form (Kick, BD, Snare, ClosedHH, Open Hat, Low Tom and so on, thirty sounds), which takes that sound's pad the first time, the plainest name first; a note's name at the front or the end, middle C being C4; and otherwise a user pad on a note of its own from 82 up.

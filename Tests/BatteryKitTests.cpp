@@ -211,7 +211,10 @@ namespace
             BatteryKit::WriteOptions options;
         };
 
-        BatteryKit::WriteOptions packedOld, newer, cellFile, small;
+        BatteryKit::WriteOptions packedOld, newer, cellFile, small, newest;
+        newest.programVersion = 0xb2;
+        newest.zoneVersion = 0x9a;
+        newest.pathsVersion = 3;
         newer.programVersion = 0xab;
         newer.zoneVersion = 0x9a;
         cellFile.packed = false;
@@ -219,7 +222,8 @@ namespace
         small.programVersion = 0xaf;
 
         for (auto& layout : { Layout { "a packed kit", packedOld }, Layout { "a newer kit, its zones with more in them", newer },
-                              Layout { "a file whose block is not packed, as a cell file's", cellFile }, Layout { "the newest program seen", small } })
+                              Layout { "a file whose block is not packed, as a cell file's", cellFile }, Layout { "the newest program seen in a library", small },
+                              Layout { "a kit as Battery saves one now: the path table that starts with the kit file", newest } })
         {
             BatteryKit::Kit back;
             const auto file = BatteryKit::write (kit, layout.options);
@@ -241,8 +245,8 @@ namespace
         const auto refusal = [&] (BatteryKit::WriteOptions options) { return readBack (BatteryKit::write (kit, options), back); };
 
         BatteryKit::WriteOptions o;
-        o.programVersion = 0xb0;
-        check (refusal (o).contains ("program record is version 176") && back.cells.empty(), "A program record newer than any seen is refused by name, and nothing comes over");
+        o.programVersion = 0xb3;
+        check (refusal (o).contains ("program record is version 179") && back.cells.empty(), "A program record newer than any seen is refused by name, and nothing comes over");
         o.programVersion = 0xa2;
         check (refusal (o).contains ("program record is version 162"), "An older one too");
 
@@ -253,6 +257,10 @@ namespace
         o = {};
         o.zoneVersion = 0x99;
         check (refusal (o).contains ("zone record is version 153"), "An unknown zone record is refused by name");
+
+        o = {};
+        o.pathsVersion = 4;
+        check (refusal (o).contains ("sample path record is version 4"), "An unknown path table is refused by name");
 
         o = {};
         o.voiceGroupVersion = 0x61;
@@ -325,11 +333,13 @@ namespace
         BatteryKit::WriteOptions plainOptions;
         plainOptions.packed = false;
 
-        // Cut short at every length (a packed kit by steps: each try unpacks what is left).
+        // Cut short at every length (a packed kit by steps: each try unpacks what is left), the
+        // packed one with the newer path table.
         for (auto packed : { false, true })
         {
             auto options = plainOptions;
             options.packed = packed;
+            options.pathsVersion = packed ? 3 : 2;
             const auto whole = BatteryKit::write (kit, options);
             int tried = 0, bad = 0, taken = 0;
 

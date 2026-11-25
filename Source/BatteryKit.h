@@ -106,6 +106,7 @@ namespace BatteryKit
         int cellVersion = 0x95;
         int zoneVersion = 0x98;            // 0x98, or 0x9a with six more bytes after a layer's tune
         int voiceGroupVersion = 0x60;
+        int pathsVersion = 2;              // 2, or 3: the kit file first, the zones naming samples from 1
         int numCells = 128;                // the matrix written, cells without a name or layer included
     };
 

@@ -19,8 +19,11 @@ namespace
 
     // The versions of each this has been checked against. A program's own layout is not read, only
     // its children, each of which is checked for itself, so any version in the range seen is taken.
-    constexpr int oldestProgram = 0xa3, newestProgram = 0xaf, cellVersion = 0x95, zoneVersion = 0x98, zoneVersionWithMore = 0x9a,
-                  voiceGroupVersion = 0x60, pathsVersion = 2;
+    constexpr int oldestProgram = 0xa3, newestProgram = 0xb2, cellVersion = 0x95, zoneVersion = 0x98, zoneVersionWithMore = 0x9a,
+                  voiceGroupVersion = 0x60, pathsVersion = 2, pathsVersionWithKit = 3;
+
+    // In the newer path table every path is followed by this many bytes about its file.
+    constexpr size_t pathFileBytes = 28;
 
     // A cell's private part starts with a table of this many bytes; its flags, colour and keys follow.
     constexpr size_t cellTableBytes = 1632, cellColourAt = cellTableBytes + 3, cellLowKeyAt = cellColourAt + 4, cellHighKeyAt = cellLowKeyAt + 4,
@@ -442,15 +445,36 @@ namespace
         return true;
     }
 
-    juce::String readPaths (In table, std::vector<Path>& paths)
+    /** The table of paths. The older one is a count and the paths, and the zones name them from 0.
+        The newer one (what a current Battery 4 saves) starts with the kit file itself, so the zones name
+        the samples from 1, says one more than how many paths it holds, and follows each path with
+        some bytes about its file. kitFirst says which it was. */
+    juce::String readPaths (In table, std::vector<Path>& paths, bool& kitFirst)
     {
         constexpr int upPart = 3, folderPart = 2, filePart = 4;
+        const auto version = (int) table.u16();
 
-        if (const auto version = (int) table.u16(); version != pathsVersion)
+        if (version != pathsVersion && version != pathsVersionWithKit)
             return table.ok ? unknownVersion ("sample path", version) : damaged;
 
-        table.skip (8);
-        const auto count = table.u32();
+        kitFirst = version == pathsVersionWithKit;
+        uint32 count = 0;
+
+        if (kitFirst)
+        {
+            const auto onePast = table.u32();
+            table.skip (8);
+
+            if (onePast == 0)
+                return damaged;
+
+            count = onePast - 1;
+        }
+        else
+        {
+            table.skip (8);
+            count = table.u32();
+        }
 
         if (! table.ok || count > (uint32) mostPaths)
             return damaged;
@@ -491,6 +515,9 @@ namespace
                 }
             }
 
+            if (kitFirst)
+                table.skip (pathFileBytes);
+
             if (! table.ok)
                 return damaged;
 
@@ -503,7 +530,7 @@ namespace
     juce::String readRecords (In records, Kit& kit)
     {
         std::vector<Cell> cells;
-        bool program = false, pathTable = false;
+        bool program = false, pathTable = false, kitFirst = false;
         In zones;
 
         while (records.left() > 0)
@@ -571,7 +598,7 @@ namespace
             {
                 pathTable = true;
 
-                if (const auto error = readPaths (body, kit.paths); error.isNotEmpty())
+                if (const auto error = readPaths (body, kit.paths, kitFirst); error.isNotEmpty())
                     return error;
             }
         }
@@ -579,11 +606,20 @@ namespace
         if (! program)
             return notAKit;
 
+        // Where the table began with the kit file, that is taken off and the samples count from 0.
+        if (kitFirst && ! kit.paths.empty())
+            kit.paths.erase (kit.paths.begin());
+
         for (auto& c : cells)
         {
             for (auto& l : c.layers)
+            {
+                if (kitFirst)
+                    l.path = l.path >= 1 ? l.path - 1 : -1;
+
                 if (! juce::isPositiveAndBelow (l.path, (int) kit.paths.size()))
                     l.path = -1;
+            }
 
             if (! juce::isPositiveAndBelow (c.voiceGroup, (int) kit.voiceGroups.size()))
                 c.voiceGroup = -1;
@@ -1065,7 +1101,7 @@ juce::MemoryBlock write (const Kit& kit, const WriteOptions& options)
             if (options.zoneVersion == zoneVersionWithMore)
                 zonePub.zeros (6);
 
-            zonePub.i32 (l.path);
+            zonePub.i32 (options.pathsVersion == pathsVersionWithKit && l.path >= 0 ? l.path + 1 : l.path);
             zonePub.i32 (3);
             zonePub.i32 (44100);
             zonePub.u8 (2);
@@ -1110,17 +1146,37 @@ juce::MemoryBlock write (const Kit& kit, const WriteOptions& options)
         group (g, false);
 
     Out paths;
-    paths.u16 (pathsVersion);
-    paths.u32 (1);
-    paths.u32 (0);
-    paths.u32 ((uint32) kit.paths.size());
+    const auto kitFirst = options.pathsVersion == pathsVersionWithKit;
+    paths.u16 (options.pathsVersion);
+
+    if (kitFirst)
+    {
+        paths.u32 ((uint32) kit.paths.size() + 2);
+        paths.u32 (0);
+        paths.u32 (0);
+        paths.u32 (1);
+        paths.u8 (4);
+        paths.text ("Made Up.nbkt");
+        paths.zeros (pathFileBytes);
+    }
+    else
+    {
+        paths.u32 (1);
+        paths.u32 (0);
+        paths.u32 ((uint32) kit.paths.size());
+    }
 
     for (auto& p : kit.paths)
     {
         paths.u32 ((uint32) (p.parts.isEmpty() ? 0 : p.up + p.parts.size()));
 
         if (p.parts.isEmpty())
+        {
+            if (kitFirst)
+                paths.zeros (pathFileBytes);
+
             continue;
+        }
 
         for (int i = 0; i < p.up; ++i)
             paths.u8 (3);
@@ -1130,6 +1186,9 @@ juce::MemoryBlock write (const Kit& kit, const WriteOptions& options)
             paths.u8 (i == p.parts.size() - 1 ? 4 : 2);
             paths.text (p.parts[i]);
         }
+
+        if (kitFirst)
+            paths.zeros (pathFileBytes);
     }
 
     Out programChildren, programPrivate;
