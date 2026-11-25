@@ -69,6 +69,11 @@ namespace DrumMachine
         // (DrumPadEffects.h). They come after the filter and the crusher, before its level and pan.
         PadEffects effects {};
 
+        // The choke group it is in, of the user's eight: 0 none, 1 to numChokeGroups. A hit of a
+        // pad in a group fades every other hit sounding in that group (beside the groups built
+        // in: the hats, the triangle, the cuica).
+        int choke = 0;
+
         bool operator== (const Settings& o) const
         {
             return juce::exactlyEqual (tune, o.tune) && juce::exactlyEqual (decay, o.decay) && juce::exactlyEqual (tone, o.tone)
@@ -76,11 +81,12 @@ namespace DrumMachine
                 && filter == o.filter && juce::exactlyEqual (cutoff, o.cutoff) && juce::exactlyEqual (resonance, o.resonance)
                 && juce::exactlyEqual (crush, o.crush) && juce::exactlyEqual (reverb, o.reverb) && juce::exactlyEqual (delay, o.delay)
                 && type == o.type && juce::exactlyEqual (start, o.start) && reverse == o.reverse && juce::exactlyEqual (bend, o.bend)
-                && effects == o.effects;
+                && effects == o.effects && choke == o.choke;
         }
     };
 
     constexpr int classicType = 0, modernType = 1, sampleType = 2;
+    constexpr int numChokeGroups = 8;
 
     //==============================================================================
     // Pads. The 30 sounds are the first 30 pads, in the order of Sound. After them come 34 user
@@ -281,8 +287,9 @@ namespace DrumMachine
         void start (Hit&, int pad, int note, float velocity);
         void cut (int note);
         void cutUser (int userPad);
-        void strike (int note, float velocity);
-        void strikeUser (int userPad, float velocity);
+        void silence (int pad, int note);
+        void begin (int note, float velocity);
+        void beginUser (int userPad, float velocity);
         void renderBlock (float* left, float* right, int count);
         void renderEffects (float* left, float* right, int count);
         void clearEffects();
@@ -385,6 +392,13 @@ namespace BuiltInEffects
 
         /** A user pad back as it starts: no layers, its own name, colour, note and settings. */
         void clearPad (int pad);
+
+        /** The choke group a pad is in: 0 for none, or 1 to DrumMachine::numChokeGroups. Pads in one
+            group cut each other: a hit of one fades whatever of the others is sounding (and, for a
+            sound with two notes, its other note). Kept in the state, in kit files and in presets;
+            a factory kit has none. Message thread to set; any thread to read. */
+        int getChoke (int pad) const;
+        void setChoke (int pad, int group);
 
         /** A pad's own effects (DrumMachine::Fx): its envelope, transient shaper, saturator, EQ and
             compressor. They are kept in the state, in kit files and in presets, and are not hosted
@@ -532,6 +546,7 @@ namespace BuiltInEffects
         std::array<juce::String, (size_t) DrumMachine::numSounds> soundNames;      // a sound's pad's, shown while it is a Sample
         std::array<juce::Colour, (size_t) DrumMachine::numSounds> soundColours;
         std::array<std::atomic<int>, (size_t) DrumMachine::numUserPads> userNotes;
+        std::array<std::atomic<int>, (size_t) DrumMachine::numPads> chokes {};
         std::atomic<juce::uint32> padsVersion { 0 };
 
         // Every pad's effects, a value at a time so the audio thread reads them without waiting.

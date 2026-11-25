@@ -901,10 +901,10 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     }
 
     describePads();
-    padMenu.setTooltip ("This pad: rename it and colour it; a user pad can also move to another note or be emptied (a right-click on the pad does the same)");
+    padMenu.setTooltip ("This pad: its choke group; its name and colour while it plays samples; a user pad can also move to another note or be emptied (a right-click on the pad does the same)");
     padMenu.setWantsKeyboardFocus (false);
     padMenu.onClick = [this] { showPadMenu (selectedPad); };
-    soundPanel.addChildComponent (padMenu);
+    soundPanel.addAndMakeVisible (padMenu);
 
     picture = std::make_unique<Picture>();
     soundPanel.addAndMakeVisible (*picture);
@@ -1165,7 +1165,6 @@ void DrumMachineEditor::showSelected()
 
     type.setVisible (! user);
     shownSample = drums.playsSamples (selectedPad);
-    padMenu.setVisible (shownSample);
     samplesSeen = drums.getSamplesVersion();
     padsSeen = drums.getPadsVersion();
     describePads();
@@ -1339,19 +1338,62 @@ void DrumMachineEditor::changeUserPad (int pad, const juce::String& what, int va
         drums.setPadNote (pad, value);
     else if (what == "colour")
         drums.setPadColour (pad, value == 0 ? juce::Colour() : juce::Colour ((juce::uint32) value));
+    else if (what == "choke")
+        drums.setChoke (pad, value);
 
     showSelected();
+}
+
+juce::String DrumMachineEditor::getChokeText() const
+{
+    // The group built in that a sound is in, then the user's group with who else is in it.
+    const auto user = selectedPad >= DrumMachine::numSounds;
+    const auto group = drums.getChoke (selectedPad);
+    juce::String builtIn;
+
+    if (! user && (selected == Sound::closedHat || selected == Sound::pedalHat || selected == Sound::openHat || selected == Sound::triangle || selected == Sound::cuica))
+        builtIn = chokesOf (selected);
+
+    if (group == 0)
+        return builtIn.isNotEmpty() ? builtIn : user ? juce::String ("Plays with whatever else is on its note; a hit struck again fades the last") : chokesOf (selected);
+
+    juce::StringArray others;
+
+    for (int pad = 0; pad < DrumMachine::numPads; ++pad)
+        if (pad != selectedPad && drums.getChoke (pad) == group)
+            others.add (drums.getPadName (pad));
+
+    const auto more = others.size() - 2;
+
+    if (more > 0)
+    {
+        others.removeRange (2, more);
+        others.add (juce::String (more) + " more");
+    }
+
+    return (builtIn.isNotEmpty() ? builtIn + "; " : juce::String()) + "Choke group " + juce::String (group)
+         + (others.isEmpty() ? juce::String (", alone in it") : " with " + others.joinIntoString (", "));
 }
 
 void DrumMachineEditor::showPadMenu (int pad)
 {
     const auto user = pad >= DrumMachine::numSounds;
 
-    // A sound's pad is renamed and coloured while it plays samples; its note is its own.
-    if (! user && ! drums.playsSamples (pad))
+    // A sound's pad is renamed and coloured while it plays samples (its note is its own); any pad can be in a choke group.
+    const auto named = user || drums.playsSamples (pad);
+    juce::PopupMenu chokeMenu;
+    const auto group = drums.getChoke (pad);
+    chokeMenu.addItem (3000, "None", true, group == 0);
+
+    for (int g = 1; g <= DrumMachine::numChokeGroups; ++g)
     {
-        say ("Set " + drums.getPadName (pad) + "'s type to Sample to give its pad a name and a colour of your own.");
-        return;
+        juce::StringArray in;
+
+        for (int other = 0; other < DrumMachine::numPads; ++other)
+            if (other != pad && drums.getChoke (other) == g)
+                in.add (drums.getPadName (other));
+
+        chokeMenu.addItem (3000 + g, "Group " + juce::String (g) + (in.isEmpty() ? juce::String() : "   with " + in.joinIntoString (", ")), true, group == g);
     }
 
     // The notes by octave, each with the sound or pads already on it; and a few colours.
@@ -1392,18 +1434,21 @@ void DrumMachineEditor::showPadMenu (int pad)
 
     juce::PopupMenu menu;
     menu.addSectionHeader (drums.getPadName (pad));
-    menu.addItem (1, "Rename...");
+    menu.addItem (1, "Rename...", named);
 
     if (user)
         menu.addSubMenu ("Note (" + juce::String (now) + " " + noteName (now) + ")", notes);
 
-    menu.addSubMenu ("Colour", colourMenu);
+    menu.addSubMenu ("Colour", colourMenu, named);
+    menu.addSubMenu (group == 0 ? juce::String ("Choke Group") : "Choke Group (" + juce::String (group) + ")", chokeMenu);
     menu.addSeparator();
 
     if (user)
         menu.addItem (2, "Empty This Pad");
-    else
+    else if (named)
         menu.addItem (2, "Use " + DrumMachine::nameOf ((Sound) pad) + "'s Own Name and Colour", drums.hasOwnLook (pad));
+    else
+        menu.addItem (2, "A name and a colour of its own: set its type to Sample", false);
 
     menu.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (padBounds (pad) + getScreenPosition()),
                         [safe = juce::Component::SafePointer<DrumMachineEditor> (this), pad] (int chosen)
@@ -1428,6 +1473,8 @@ void DrumMachineEditor::showPadMenu (int pad)
         }
         else if (chosen == 2)
             safe->changeUserPad (pad, "clear");
+        else if (chosen >= 3000)
+            safe->changeUserPad (pad, "choke", chosen - 3000);
         else if (chosen >= 2000)
             safe->changeUserPad (pad, "colour", chosen == 2000 ? 0 : (int) colours[chosen - 2001].second);
         else if (chosen >= 1000)
@@ -1848,10 +1895,10 @@ void DrumMachineEditor::paintOverChildren (juce::Graphics& g)
     else
     {
         if (selectedPad < DrumMachine::numSounds)
-            g.drawText ("Notes " + notesOf (selected) + "    " + chokesOf (selected), line, juce::Justification::centredLeft);
+            g.drawText ("Notes " + notesOf (selected) + "    " + getChokeText(), line, juce::Justification::centredLeft);
         else
             g.drawText ("Note " + juce::String (drums.getPadNote (selectedPad)) + " " + noteName (drums.getPadNote (selectedPad))
-                            + "    Plays with whatever else is on its note; a hit struck again fades the last", line, juce::Justification::centredLeft);
+                            + "    " + getChokeText(), line, juce::Justification::centredLeft);
     }
 
     // A drag over the selected sound's panel: its edge lit, as a pad's is.

@@ -4,6 +4,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Basic Drums: eight choke groups of your own**
+- **Any of the 64 pads can be put in one of eight choke groups,** beside the three built in (the hats, the triangle, the cuica), from the pad's menu: right-click a pad, or **Pad** in its header, which every pad now has. Pads in a group fade each other over 3 ms; a sound with two notes in a group has one note cut the other; a hat in a group of yours still chokes the other hats.
+- **Pads struck by one note never cut each other,** so a user pad layered on a sound's note plays with it whatever groups they are in: everything a note's pads cut is faded first, then each starts.
+- **The line under the knobs** says the selected pad's group and who shares it. The pad menu's Rename and Colour are greyed for a sound that does not play samples, where before the menu did not open for it.
+- **Kept with the kit** in the state, presets and kit files, beside the pad's name; a session, preset or kit saved before has none. A factory kit has none and takes them off. No hosted parameter is added (997).
+- **Tested in `--drums`** (109 checks pass): a crash, a ride and a user pad in one group fading each other both ways with the no-click measure the built-in groups have; pads outside the group and in another left alone; the built-in groups as they were; one note's pads playing together; the same render in blocks of 512, 37 and 1; kept and restored; and with the groups taken off the kit plays bit for bit as before. The 267 renders of every sound and kit demo are byte for byte as they were.
+
 **Basic Drums: the drum grid lists the kit's user pads and the names given to pads**
 - **The grid of a Basic Drums track follows its kit** while the track has no drum map of its own: a row for each user pad that has samples, on its note under its name, after General MIDI's 47; a user pad on a note that has a row already joins that row's name ("Bass Drum 1 + Kick Layer"), as do two user pads on one note; a sound's pad that plays samples under a given name is listed by it. A kit with no samples and no names lists as General MIDI's map exactly, as before.
 - **Drum maps and Remap Notes** work on those rows as on any: change the map in the grid and it becomes the track's own (General MIDI Map gives it back to the kit); a user pad's row edited to stand for a General MIDI drum takes that drum's notes with Remap Notes to This Map.

@@ -1582,9 +1582,41 @@ void Engine::cutUser (int userPad)
     h.active = false;
 }
 
-void Engine::strikeUser (int userPad, float velocity)
+void Engine::silence (int pad, int note)
 {
-    cutUser (userPad);
+    // What a hit of this pad on this note fades: its own last hit; for a sound, the group built in
+    // that its note is in; and everything sounding of the pads in its own choke group.
+    if (pad >= numSounds)
+    {
+        cutUser (pad - numSounds);
+    }
+    else if (const auto group = chokeGroup (note); group != 0)
+    {
+        for (int other = firstNote; other <= lastNote; ++other)
+            if (chokeGroup (other) == group)
+                cut (other);
+    }
+    else
+    {
+        cut (note);
+    }
+
+    const auto own = pad < numSounds ? settings.sounds[(size_t) pad].choke : settings.user[(size_t) (pad - numSounds)].settings.choke;
+
+    if (own <= 0)
+        return;
+
+    for (int other = firstNote; other <= lastNote; ++other)
+        if (const auto sound = soundFor (other); sound.has_value() && settings.sounds[(size_t) *sound].choke == own)
+            cut (other);
+
+    for (int u = 0; u < numUserPads; ++u)
+        if (settings.user[(size_t) u].settings.choke == own)
+            cutUser (u);
+}
+
+void Engine::beginUser (int userPad, float velocity)
+{
     const auto pad = numSounds + userPad;
     start (userHits[(size_t) userPad], pad, settings.user[(size_t) userPad].note, velocity);
     hitCount[(size_t) pad].fetch_add (1, std::memory_order_relaxed);
@@ -1596,11 +1628,23 @@ void Engine::noteOn (int note, float velocity)
     if (velocity <= 0.0f)
         return;
 
-    strike (note, velocity);
+    // Everything the note's pads cut is faded first, then each starts: pads struck by one note
+    // never cut each other, whatever groups they are in.
+    const auto sound = soundFor (note);
+
+    if (sound.has_value())
+        silence ((int) *sound, note);
 
     for (int u = 0; u < numUserPads; ++u)
         if (settings.user[(size_t) u].note == note)
-            strikeUser (u, velocity);
+            silence (numSounds + u, note);
+
+    if (sound.has_value())
+        begin (note, velocity);
+
+    for (int u = 0; u < numUserPads; ++u)
+        if (settings.user[(size_t) u].note == note)
+            beginUser (u, velocity);
 }
 
 void Engine::padOn (int pad, float velocity)
@@ -1609,28 +1653,23 @@ void Engine::padOn (int pad, float velocity)
         return;
 
     if (pad < numSounds)
-        strike (padNote ((Sound) pad), velocity);
+    {
+        silence (pad, padNote ((Sound) pad));
+        begin (padNote ((Sound) pad), velocity);
+    }
     else
-        strikeUser (pad - numSounds, velocity);
+    {
+        silence (pad, settings.user[(size_t) (pad - numSounds)].note);
+        beginUser (pad - numSounds, velocity);
+    }
 }
 
-void Engine::strike (int note, float velocity)
+void Engine::begin (int note, float velocity)
 {
     const auto sound = soundFor (note);
 
     if (! sound.has_value())
         return;
-
-    if (const auto group = chokeGroup (note); group != 0)
-    {
-        for (int other = firstNote; other <= lastNote; ++other)
-            if (chokeGroup (other) == group)
-                cut (other);
-    }
-    else
-    {
-        cut (note);
-    }
 
     start (hits[(size_t) (note - firstNote)], (int) *sound, note, velocity);
     hitCount[(size_t) *sound].fetch_add (1, std::memory_order_relaxed);
@@ -2415,7 +2454,7 @@ KitSettings BasicDrumsProcessor::currentSettings() const
         const auto& p = sounds[i];
         k.sounds[i] = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
                         p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
-                        typeAt ((Sound) i, p.type->getIndex()), p.start->get(), p.reverse->get(), p.bend->get(), getEffects ((int) i) };
+                        typeAt ((Sound) i, p.type->getIndex()), p.start->get(), p.reverse->get(), p.bend->get(), getEffects ((int) i), getChoke ((int) i) };
     }
 
     for (size_t u = 0; u < users.size(); ++u)
@@ -2423,7 +2462,7 @@ KitSettings BasicDrumsProcessor::currentSettings() const
         const auto& p = users[u];
         k.user[u].settings = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
                                p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
-                               sampleType, p.start->get(), p.reverse->get(), p.bend->get(), getEffects (numSounds + (int) u) };
+                               sampleType, p.start->get(), p.reverse->get(), p.bend->get(), getEffects (numSounds + (int) u), getChoke (numSounds + (int) u) };
         k.user[u].note = userNotes[u].load (std::memory_order_relaxed);
     }
 
@@ -2485,7 +2524,11 @@ void BasicDrumsProcessor::applySettings (const KitSettings& k)
     }
 
     for (int pad = 0; pad < numPads; ++pad)
-        setEffects (pad, pad < numSounds ? k.sounds[(size_t) pad].effects : k.user[(size_t) (pad - numSounds)].settings.effects);
+    {
+        const auto& s = pad < numSounds ? k.sounds[(size_t) pad] : k.user[(size_t) (pad - numSounds)].settings;
+        setEffects (pad, s.effects);
+        setChoke (pad, s.choke);
+    }
 
     padsVersion.fetch_add (1);
     kickCharacter->setValueNotifyingHost (kickCharacter->convertTo0to1 ((float) (int) k.kick));
@@ -2531,13 +2574,13 @@ bool BasicDrumsProcessor::kitModified() const
     const auto now = currentSettings();
     const auto& kit = kits()[(size_t) index].settings;
 
-    // Nor a pad whose own effects are not as the kit has them.
+    // Nor a pad whose own effects, or choke group, are not as the kit has them.
     for (size_t i = 0; i < now.sounds.size(); ++i)
-        if (now.sounds[i].effects != kit.sounds[i].effects)
+        if (now.sounds[i].effects != kit.sounds[i].effects || now.sounds[i].choke != kit.sounds[i].choke)
             return true;
 
     for (size_t u = 0; u < now.user.size(); ++u)
-        if (now.user[u].settings.effects != kit.user[u].settings.effects)
+        if (now.user[u].settings.effects != kit.user[u].settings.effects || now.user[u].settings.choke != kit.user[u].settings.choke)
             return true;
 
     for (size_t i = 0; i < now.sounds.size(); ++i)
@@ -2935,6 +2978,25 @@ void BasicDrumsProcessor::setPadNote (int pad, int note)
     padsVersion.fetch_add (1);
 }
 
+int BasicDrumsProcessor::getChoke (int pad) const
+{
+    return chokes[(size_t) juce::jlimit (0, numPads - 1, pad)].load (std::memory_order_relaxed);
+}
+
+void BasicDrumsProcessor::setChoke (int pad, int group)
+{
+    if (! juce::isPositiveAndBelow (pad, numPads))
+        return;
+
+    group = juce::jlimit (0, numChokeGroups, group);
+
+    if (chokes[(size_t) pad].exchange (group) != group)
+    {
+        padsVersion.fetch_add (1);
+        stateEdited();
+    }
+}
+
 void BasicDrumsProcessor::setUserDefaults (const SoundParameters& p)
 {
     const auto d = defaultUserSettings();
@@ -2970,6 +3032,9 @@ void BasicDrumsProcessor::resetPads()
         soundColours[i] = juce::Colour();
     }
 
+    for (auto& c : chokes)
+        c.store (0);
+
     padsVersion.fetch_add (1);
 }
 
@@ -2983,6 +3048,7 @@ void BasicDrumsProcessor::clearPad (int pad)
     userNames[u].clear();
     userColours[u] = juce::Colour();
     userNotes[u].store (firstUserNote + (int) u);
+    chokes[(size_t) pad].store (0);
     padsVersion.fetch_add (1);
     setEffects (pad, {});
     setLayers (pad, {});
@@ -3083,7 +3149,9 @@ void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
     {
         const auto note = userNotes[(size_t) u].load();
 
-        if (userNames[(size_t) u].isEmpty() && userColours[(size_t) u].isTransparent() && note == firstUserNote + u)
+        const auto choke = getChoke (numSounds + u);
+
+        if (userNames[(size_t) u].isEmpty() && userColours[(size_t) u].isTransparent() && note == firstUserNote + u && choke == 0)
             continue;
 
         auto* e = all.createNewChildElement ("USER");
@@ -3091,17 +3159,25 @@ void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
         e->setAttribute ("name", userNames[(size_t) u]);
         e->setAttribute ("colour", userColours[(size_t) u].toString());
         e->setAttribute ("note", note);
+
+        if (choke != 0)
+            e->setAttribute ("choke", choke);
     }
 
     for (int i = 0; i < numSounds; ++i)
     {
-        if (soundNames[(size_t) i].isEmpty() && soundColours[(size_t) i].isTransparent())
+        const auto choke = getChoke (i);
+
+        if (soundNames[(size_t) i].isEmpty() && soundColours[(size_t) i].isTransparent() && choke == 0)
             continue;
 
         auto* e = all.createNewChildElement ("SOUND");
         e->setAttribute ("id", idOf ((Sound) i));
         e->setAttribute ("name", soundNames[(size_t) i]);
         e->setAttribute ("colour", soundColours[(size_t) i].toString());
+
+        if (choke != 0)
+            e->setAttribute ("choke", choke);
     }
 
     if (all.getNumChildElements() > 0)
@@ -3119,6 +3195,7 @@ void BasicDrumsProcessor::readPads (const juce::XmlElement& xml)
                 {
                     soundNames[(size_t) i] = e->getStringAttribute ("name");
                     soundColours[(size_t) i] = juce::Colour::fromString (e->getStringAttribute ("colour", "00000000"));
+                    chokes[(size_t) i].store (juce::jlimit (0, numChokeGroups, e->getIntAttribute ("choke")));
                 }
 
     if (const auto* all = xml.getChildByName ("PADS"))
@@ -3128,6 +3205,7 @@ void BasicDrumsProcessor::readPads (const juce::XmlElement& xml)
                 userNames[(size_t) u] = e->getStringAttribute ("name");
                 userColours[(size_t) u] = juce::Colour::fromString (e->getStringAttribute ("colour", "00000000"));
                 userNotes[(size_t) u].store (juce::jlimit (0, 127, e->getIntAttribute ("note", firstUserNote + u)));
+                chokes[(size_t) (numSounds + u)].store (juce::jlimit (0, numChokeGroups, e->getIntAttribute ("choke")));
             }
 
     padsVersion.fetch_add (1);

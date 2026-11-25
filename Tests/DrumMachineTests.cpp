@@ -2273,6 +2273,177 @@ namespace
         folder.deleteRecursively();
     }
 
+    //==============================================================================
+    // The user's own choke groups, eight of them, beside the three built in.
+    void testChokeGroups()
+    {
+        using BuiltInEffects::BasicDrumsProcessor;
+        const auto folder = juce::File::createTempFile ("drumchokes");
+        folder.createDirectory();
+        const auto file = writeSound (folder, "Ring", tone (300.0, 28800, 0.4f));
+        const auto user = DrumMachine::numSounds, userNote = DrumMachine::firstUserNote;
+        const auto kickPad = (int) Sound::kick, crashPad = (int) Sound::crash, rideNote = 51, crashNote = 49;
+        const auto at = (int) std::round (0.05 * rate);
+
+        BasicDrumsProcessor drums;
+        drums.applyKit (DrumMachine::kits()[0]);
+        drums.addFiles (user, { file });
+        auto noneAtFirst = true;
+
+        for (int pad = 0; pad < DrumMachine::numPads; ++pad)
+            noneAtFirst = noneAtFirst && drums.getChoke (pad) == 0;
+
+        /** Whether `ringing`, struck at 0, is faded out by `choker` struck 50 ms later (and rang on by itself). */
+        const auto cuts = [&] (int ringing, int choker, juce::String& why)
+        {
+            const auto both = play (drums, { { ringing, 0.0, 1.0f }, { choker, 0.05, 1.0f } }, 0.4);
+            const auto chokerAlone = play (drums, { { choker, 0.05, 1.0f } }, 0.4);
+            const auto ringingAlone = play (drums, { { ringing, 0.0, 1.0f } }, 0.4);
+            return fadesOut (minus (both, chokerAlone), at, why, &ringingAlone) && peakOf (ringingAlone, at + 400, 2000) > 1.0e-3f;
+        };
+
+        /** How much of `ringing` is left 150 ms after `other` was struck over it. */
+        const auto leftUnder = [&] (int ringing, int other)
+        {
+            const auto both = play (drums, { { ringing, 0.0, 1.0f }, { other, 0.05, 1.0f } }, 0.4);
+            const auto otherAlone = play (drums, { { other, 0.05, 1.0f } }, 0.4);
+            return peakOf (minus (both, otherAlone), (int) (0.2 * rate), (int) (0.1 * rate));
+        };
+
+        // In no group, a ride rings on under a crash, and the user pad under both.
+        const auto freeBefore = leftUnder (crashNote, rideNote) > 1.0e-3f && leftUnder (userNote, crashNote) > 1.0e-3f;
+        const auto before = play (drums, { { crashNote, 0.0, 1.0f }, { rideNote, 0.05, 0.9f }, { userNote, 0.1, 0.8f }, { 36, 0.15, 1.0f } }, 0.6);
+
+        // The crash, the ride and the user pad in group 3: each fades the others, both ways.
+        drums.setChoke (crashPad, 3);
+        drums.setChoke ((int) Sound::ride, 3);
+        drums.setChoke (user, 3);
+        juce::StringArray failed;
+        juce::String why;
+
+        for (auto [ringing, choker] : std::vector<std::pair<int, int>> { { crashNote, rideNote }, { rideNote, crashNote }, { userNote, crashNote }, { crashNote, userNote } })
+            if (! cuts (ringing, choker, why))
+                failed.add (juce::String (choker) + " on " + juce::String (ringing) + " (" + why + ")");
+
+        // A pad outside the group cuts nothing and is not cut; nor does a pad in another group.
+        drums.setChoke ((int) Sound::clap, 4);
+        const auto outside = leftUnder (crashNote, 36) > 1.0e-3f && leftUnder (36, crashNote) > 1.0e-3f && leftUnder (crashNote, 39) > 1.0e-3f;
+
+        // The groups built in go on as they were, and a hat can be in a group of the user's as well.
+        drums.setChoke ((int) Sound::openHat, 3);
+        const auto builtIn = cuts (46, 42, why) && cuts (46, crashNote, why) && cuts (crashNote, 46, why);
+        drums.setChoke ((int) Sound::openHat, 0);
+
+        // A sound's two notes: in a group one fades the other; out of one each rings on its own voice.
+        const auto tomsFree = leftUnder (41, 43) > 1.0e-3f;
+        drums.setChoke ((int) Sound::lowTom, 5);
+        const auto tomsCut = cuts (41, 43, why);
+
+        // Pads struck by one note never cut each other: the user pad moved onto the crash's note, both in group 3.
+        drums.setPadNote (user, crashNote);
+        const auto together = play (drums, { { crashNote, 0.0, 1.0f } }, 0.3);
+        drums.setChoke (user, 0);
+        drums.setChoke (crashPad, 0);
+        const auto ungrouped = play (drums, { { crashNote, 0.0, 1.0f } }, 0.3);
+        drums.setChoke (user, 3);
+        drums.setChoke (crashPad, 3);
+        const auto layered = same (together, ungrouped) && peakOf (together) > 0.05f;
+        drums.setPadNote (user, userNote);
+
+        // The same at any block size.
+        Notes busy { { crashNote, 0.0, 1.0f }, { rideNote, 0.05, 0.9f }, { userNote, 0.1, 0.8f }, { 41, 0.12, 0.8f }, { 43, 0.15, 0.8f }, { crashNote, 0.2, 1.0f }, { 36, 0.2, 1.0f } };
+        const auto first = play (drums, busy, 0.6), odd = play (drums, busy, 0.6, 37), one = play (drums, busy, 0.6, 1);
+
+        check (noneAtFirst && freeBefore && failed.isEmpty() && outside && builtIn && tomsFree && tomsCut && layered && same (first, odd) && same (first, one),
+               "drum choke groups: no pad is in one to begin with; a crash, a ride and a user pad put in group 3 fade each other over 3 ms, both ways, with no click; a kick outside it and a clap in group 4 "
+               "cut nothing of theirs; the hats still choke each other, and an open hat also in group 3 cuts and is cut by the crash; a sound's two notes (41 and 43) cut each other once the sound is in a group; "
+               "a sound and a user pad on one note in one group both play; the same in 37-sample blocks and sample by sample"
+                   + (failed.isEmpty() ? juce::String() : " (failed: " + failed.joinIntoString ("; ") + ")"));
+
+        // Kept: by the state, a preset and a kit file; a state from before has none; a factory kit and Empty This Pad take them off.
+        {
+            const auto edited = drums.kitModified();
+            drums.setChoke (kickPad, 99);
+            const auto limited = drums.getChoke (kickPad) == DrumMachine::numChokeGroups;
+            drums.setChoke (kickPad, 0);
+            juce::MemoryBlock state;
+            drums.getStateInformation (state);
+            BasicDrumsProcessor another;
+            another.setStateInformation (state.getData(), (int) state.getSize());
+            const auto fromState = another.getChoke (crashPad) == 3 && another.getChoke ((int) Sound::ride) == 3 && another.getChoke (user) == 3 && another.getChoke ((int) Sound::clap) == 4
+                                && another.getChoke ((int) Sound::lowTom) == 5 && another.getChoke (kickPad) == 0 && another.currentSettings() == drums.currentSettings()
+                                && same (play (another, busy, 0.6), first);
+
+            auto xml = juce::AudioProcessor::getXmlFromBinary (state.getData(), (int) state.getSize());
+            auto stripped = 0;
+
+            if (xml != nullptr)
+                if (auto* pads = xml->getChildByName ("PADS"))
+                    for (auto* e : pads->getChildIterator())
+                        if (e->hasAttribute ("choke"))
+                        {
+                            e->removeAttribute ("choke");
+                            ++stripped;
+                        }
+
+            juce::MemoryBlock old;
+
+            if (xml != nullptr)
+                juce::AudioProcessor::copyXmlToBinary (*xml, old);
+
+            another.setStateInformation (old.getData(), (int) old.getSize());
+            const auto oldState = stripped == 5 && another.getChoke (crashPad) == 0 && another.getChoke (user) == 0 && another.getLayers (user).size() == 1;
+
+            BasicDrumsProcessor viaPreset;
+            viaPreset.setPresetTexts (drums.getPresetTexts());
+            const auto fromPreset = viaPreset.getChoke (crashPad) == 3 && viaPreset.getChoke (user) == 3 && viaPreset.getChoke ((int) Sound::clap) == 4;
+
+            const auto kitFolder = folder.getChildFile ("Choke Kit");
+            juce::StringArray notThere;
+            const auto saveError = drums.saveKitWithSamples (kitFolder, notThere);
+            BasicDrumsProcessor opened;
+            const auto openError = opened.loadKitFile (kitFolder.getChildFile (kitFolder.getFileName() + BasicDrumsProcessor::kitFileExtension));
+            const auto fromKit = opened.getChoke (crashPad) == 3 && opened.getChoke (user) == 3 && opened.getChoke ((int) Sound::lowTom) == 5;
+
+            // The window: the pad's menu sets it, and the line under the knobs says who is in the group.
+            std::unique_ptr<juce::AudioProcessorEditor> made (drums.createEditor());
+            auto* window = dynamic_cast<DrumMachineEditor*> (made.get());
+            juce::String crashText, kickText, hatText, userText, aloneText;
+
+            if (window != nullptr)
+            {
+                window->select (Sound::crash);
+                crashText = window->getChokeText();
+                window->select (Sound::kick);
+                kickText = window->getChokeText();
+                window->changeUserPad (kickPad, "choke", 6);
+                aloneText = window->getChokeText();
+                window->changeUserPad (kickPad, "choke", 0);
+                window->select (Sound::openHat);
+                window->changeUserPad ((int) Sound::openHat, "choke", 4);
+                hatText = window->getChokeText();
+                window->changeUserPad ((int) Sound::openHat, "choke", 0);
+                window->selectPad (user);
+                userText = window->getChokeText();
+            }
+
+            made = nullptr;
+            drums.clearPad (user);
+            const auto emptied = drums.getChoke (user) == 0;
+            drums.applyKit (DrumMachine::kits()[0]);
+            const auto factory = drums.getChoke (crashPad) == 0 && drums.getChoke ((int) Sound::clap) == 0 && ! drums.kitModified();
+            const auto asBefore = [&] { drums.addFiles (user, { file }); return same (play (drums, { { crashNote, 0.0, 1.0f }, { rideNote, 0.05, 0.9f }, { userNote, 0.1, 0.8f }, { 36, 0.15, 1.0f } }, 0.6), before); }();
+
+            check (edited && limited && fromState && oldState && fromPreset && saveError.isEmpty() && openError.isEmpty() && fromKit && window != nullptr
+                       && crashText == "Choke group 3 with Ride, Pad 31" && kickText == "Chokes nothing; a hit struck again fades the last" && aloneText == "Choke group 6, alone in it"
+                       && hatText == "Hats choke each other; Choke group 4 with Clap" && userText == "Choke group 3 with Crash, Ride" && emptied && factory && asBefore,
+                   "drum choke groups: they mark the kit edited and are kept by the state, a preset and a kit file, sounding the same; a group past the eighth is the eighth; a state from before them has none "
+                   "and keeps its pads; the window's line says the group and who is in it (\"" + crashText + "\", \"" + hatText + "\"); emptying a user pad and a factory kit take them off, and the kit then plays bit for bit as before them");
+        }
+
+        folder.deleteRecursively();
+    }
+
     void printLevels (BuiltInEffects::BasicDrumsProcessor& drums)
     {
         drums.applyKit (DrumMachine::kits()[0]);
@@ -2586,4 +2757,5 @@ void runDrumMachineTests (AudioEngine& engine, bool levels)
     testSamples();
     testPadEffects();
     testDrumRows();
+    testChokeGroups();
 }

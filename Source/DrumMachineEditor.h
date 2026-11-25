@@ -8,7 +8,7 @@
 /** Basic Drums' window. On the left its 64 pads, eight across: one for each of its 30 sounds,
     coloured by family, then the 34 user pads, which play samples and have a name, a colour and a
     note of their own (a right-click on one, or Pad in its panel's header, renames it, moves it to
-    another note, colours it or empties it; a sound's pad can be renamed and coloured the same way
+    another note, colours it or empties it, and any pad's menu puts it in a choke group; a sound's pad can be renamed and coloured the same way
     while its type is Sample, its note staying its own). A pad is lit as it
     plays; a click plays it, at the velocity of the keys under the window, and selects it. On the right the
     selected sound: a picture of one hit (its waveform and its level falling, a line sweeping across
@@ -62,8 +62,12 @@ public:
     juce::String getPadText (int pad) const;
 
     /** What a pad's menu does, by name: "clear" (a user pad emptied; a sound's pad given its own
-        name and colour back); "colour" takes the value, and for a user pad so does "note". */
+        name and colour back); "colour" takes the value, and for a user pad so does "note";
+        "choke" puts any pad in a choke group (0 for none, 1 to 8). */
     void changeUserPad (int pad, const juce::String& what, int value = 0);
+
+    /** The words under the knobs about what the selected pad cuts and is cut by. */
+    juce::String getChokeText() const;
 
     /** Takes in the hits since the last look, as the window's timer does: lights their pads, and
         for the selected pad says the hit's velocity and lights the layer it played. */
