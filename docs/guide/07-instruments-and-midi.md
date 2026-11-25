@@ -343,6 +343,8 @@ Notes sound as you put them in, click them or drag them. The **grid** choice div
 
 The rows come from the track's drum map, General MIDI's (notes 35 to 81) unless you change it. The map is saved with the session. Notes not in the map get rows of their own at the bottom, named by pitch; **Add to the Map...** names one.
 
+**A Basic Drums track lists its kit.** While the track has no map of its own, the grid follows the kit in Basic Drums: each user pad that has samples gets a row on its note under its name, after the 47 (a user pad on a note that has a row already is added to that row's name, "Bass Drum 1 + Kick Layer"), and a sound's pad that plays samples under a name you gave it is listed by that name. Rename a pad, move it to another note or give it samples and the rows follow. Once you change the map in the grid (move a row, edit one, save or load a map) it is the track's own and stops following; **General MIDI Map** in the row menu gives the track back to the kit. To play a General MIDI pattern's snares on a user pad, edit that pad's row to stand for the snare and use **Remap Notes to This Map**, as for any kit below.
+
 #### A kit that isn't laid out as General MIDI is
 
 Drum presets and the drum grid write General MIDI notes: kick 36, snare 38 and so on. A kit in a drum plug-in (a Battery kit, for one) often has its sounds on other keys. Tell the map where the kit's sounds are, and patterns follow:

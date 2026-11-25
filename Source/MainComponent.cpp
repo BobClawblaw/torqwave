@@ -3,6 +3,7 @@
 #include "SoundDrops.h"
 #include "SamplerTrack.h"
 #include "WaveSynth.h"
+#include "DrumMachine.h"
 #include "AiDecrypt.h"
 #include "SequencePropertiesDialog.h"
 #include "InstrumentPresets.h"
@@ -16223,6 +16224,12 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
             shown.hasInstrument = engine.getTrackEffects().getInstrument (track.id) != nullptr;
             shown.drums = track.drumGrid;
             shown.drumMap = track.drumSounds();
+
+            // A Basic Drums track with no map of its own lists the kit as it is: its user pads and the names given to its pads.
+            if (track.drumMap.empty())
+                if (const auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (engine.getTrackEffects().getInstrument (track.id)))
+                    shown.drumMap = drums->drumSounds();
+
             shown.beatsPerBar = state->tempoMap().beatsPerBarAt (clip.position);
 
             if (const auto link = sequenceLinks.find (clip.id); link != sequenceLinks.end())

@@ -4,6 +4,11 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Basic Drums: the drum grid lists the kit's user pads and the names given to pads**
+- **The grid of a Basic Drums track follows its kit** while the track has no drum map of its own: a row for each user pad that has samples, on its note under its name, after General MIDI's 47; a user pad on a note that has a row already joins that row's name ("Bass Drum 1 + Kick Layer"), as do two user pads on one note; a sound's pad that plays samples under a given name is listed by it. A kit with no samples and no names lists as General MIDI's map exactly, as before.
+- **Drum maps and Remap Notes** work on those rows as on any: change the map in the grid and it becomes the track's own (General MIDI Map gives it back to the kit); a user pad's row edited to stand for a General MIDI drum takes that drum's notes with Remap Notes to This Map.
+- **Tested in `--drums`** (107 checks pass): the rows the kit lists in each of those cases, the same rows in the grid, and a pattern's snare moved onto a user pad by Remap Notes. The three lines that hand the kit's rows to the piano roll in the main window are not covered by a test.
+
 **Basic Drums: each pad's own envelope, transient shaper, saturator, EQ and compressor** (a first working version, not yet tried by hand or listened to)
 - **Five effects on every pad,** all 64 and every type, beside the filter, crusher and sends it had: a volume envelope (attack, hold, decay and a curve for the fall), a transient shaper (attack and sustain, up to 12 dB each way), a saturator (Tape, Tube, Clip or Fold, with an amount and a mix), a four-band EQ (low shelf, two bells, high shelf) and a compressor (threshold, ratio, attack, release, gain). Each is off until switched on.
 - **The order is fixed:** the sound, Drive, Tone, filter, Crush, then envelope, transient shaper, saturator, EQ and compressor, then Level and Pan, then the sends. Drive stays where it was, at the source before the filter; the saturator is a second colour after the filter and crusher. The envelope is laid over what the Decay knob does, and the hit ends when either ends.

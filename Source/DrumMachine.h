@@ -398,6 +398,14 @@ namespace BuiltInEffects
         /** Counts up when any pad's effects change. */
         juce::uint32 getEffectsVersion() const noexcept             { return effectsVersion.load(); }
 
+        /** The kit as the piano roll's drum grid lists it: General MIDI's 47 rows, a row of a
+            sound's pad that plays samples under the name given to it, and a row for each user pad
+            that has samples, under its name on its note (after the 47, lowest note first). A user
+            pad on a note that has a row already is added to that row's name ("Bass Drum 1 + Kick
+            Layer"), as are two user pads on one note. With no samples and no names it is General
+            MIDI's map exactly. Message thread. */
+        std::vector<DrumSound> drumSounds() const;
+
         /** Whether a pad has a name or a colour given to it (shown or not). */
         bool hasOwnLook (int pad) const;
 

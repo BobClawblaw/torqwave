@@ -1,4 +1,5 @@
 #include "DrumMachine.h"
+#include "Session.h"
 #include "DrumMachineEditor.h"
 
 namespace DrumMachine
@@ -2876,6 +2877,39 @@ void BasicDrumsProcessor::setPadColour (int pad, juce::Colour colour)
 
     (pad < numSounds ? soundColours[(size_t) pad] : userColours[(size_t) (pad - numSounds)]) = colour;
     padsVersion.fetch_add (1);
+}
+
+std::vector<DrumSound> BasicDrumsProcessor::drumSounds() const
+{
+    auto rows = DrumSound::generalMidi();
+
+    for (auto& row : rows)
+        if (const auto sound = DrumMachine::soundFor (row.pitch); sound.has_value() && playsSamples ((int) *sound) && soundNames[(size_t) *sound].isNotEmpty())
+            row.name = soundNames[(size_t) *sound];
+
+    std::vector<DrumSound> added;
+
+    for (int pad = numSounds; pad < numPads; ++pad)
+    {
+        const auto layers = getLayers (pad);
+
+        if (std::none_of (layers.begin(), layers.end(), [] (const Layer& l) { return l.sample != nullptr; }))
+            continue;
+
+        const auto note = getPadNote (pad);
+        const auto sameNote = [note] (const DrumSound& d) { return d.pitch == note; };
+
+        if (const auto there = std::find_if (rows.begin(), rows.end(), sameNote); there != rows.end())
+            there->name << " + " << getPadName (pad);
+        else if (const auto also = std::find_if (added.begin(), added.end(), sameNote); also != added.end())
+            also->name << " + " << getPadName (pad);
+        else
+            added.push_back ({ note, getPadName (pad) });
+    }
+
+    std::sort (added.begin(), added.end(), [] (const DrumSound& a, const DrumSound& b) { return a.pitch < b.pitch; });
+    rows.insert (rows.end(), added.begin(), added.end());
+    return rows;
 }
 
 bool BasicDrumsProcessor::hasOwnLook (int pad) const

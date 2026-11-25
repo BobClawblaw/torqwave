@@ -2,6 +2,7 @@
 #include "../Source/DrumMachine.h"
 #include "../Source/DrumMachineEditor.h"
 #include "../Source/InstrumentKeys.h"
+#include "../Source/NoteEditor.h"
 #include "../Source/Instrument.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/Theme.h"
@@ -2188,6 +2189,90 @@ namespace
         folder.deleteRecursively();
     }
 
+    //==============================================================================
+    // The kit as the piano roll's drum grid lists it.
+    void testDrumRows()
+    {
+        using BuiltInEffects::BasicDrumsProcessor;
+        const auto folder = juce::File::createTempFile ("drumrows");
+        folder.createDirectory();
+        const auto file = writeSound (folder, "Hit", tone (200.0, 2400, 0.5f));
+        const auto user = DrumMachine::numSounds;
+        const auto nameAt = [] (const std::vector<DrumSound>& rows, int pitch)
+        {
+            juce::StringArray names;
+
+            for (auto& r : rows)
+                if (r.pitch == pitch)
+                    names.add (r.name);
+
+            return names.joinIntoString ("|");
+        };
+
+        BasicDrumsProcessor drums;
+        const auto plain = drums.drumSounds() == DrumSound::generalMidi();
+
+        // Names given to pads that do not play samples, and user pads with none, change nothing.
+        drums.setPadName ((int) Sound::snare, "Metal Hit");
+        drums.setPadName (user + 2, "Empty");
+        const auto stillPlain = drums.drumSounds() == DrumSound::generalMidi();
+
+        drums.addFiles (Sound::snare, { file });
+        drums.addFiles (user, { file });
+        drums.setPadName (user, "Zap");
+        drums.addFiles (user + 1, { file });
+        drums.setPadName (user + 1, "Kick Layer");
+        drums.setPadNote (user + 1, 36);
+        drums.addFiles (user + 3, { file });
+        drums.addFiles (user + 4, { file });
+        drums.setPadNote (user + 3, 100);
+        drums.setPadNote (user + 4, 100);
+        const auto rows = drums.drumSounds();
+        const auto gm = DrumSound::generalMidi();
+        const auto listed = rows.size() == 49 && nameAt (rows, 38) == "Metal Hit" && nameAt (rows, 40) == "Metal Hit" && nameAt (rows, 36) == nameAt (gm, 36) + " + Kick Layer"
+                         && nameAt (rows, 82) == "Zap" && nameAt (rows, 100) == "Pad 34 + Pad 35" && rows[47].pitch == 82 && rows[48].pitch == 100
+                         && nameAt (rows, 42) == nameAt (gm, 42) && nameAt (rows, 84).isEmpty();
+        drums.setType (Sound::snare, DrumMachine::classicType);
+        const auto classicAgain = nameAt (drums.drumSounds(), 38) == nameAt (gm, 38);
+
+        // In the grid: its rows are those; a user pad's row made to stand for the snare takes a General MIDI pattern's snares.
+        NoteEditor::Shown shown;
+        shown.clip.id = 3;
+        shown.clip.length = 96000;
+        shown.clip.notes.push_back ({ 38, 24000, 6000, 0.8f });
+        shown.clip.notes.push_back ({ 36, 0, 6000, 0.8f });
+        shown.sampleRate = rate;
+        shown.beatSeconds = 0.5;
+        shown.drums = true;
+        shown.drumMap = drums.drumSounds();
+        NoteEditor editor;
+        editor.readClip = [&shown] { return std::optional<NoteEditor::Shown> (shown); };
+        editor.apply = [&shown] (const NoteClip& c, const juce::String&) { shown.clip = c; };
+        editor.applyDrumMap = [&shown] (const std::vector<DrumSound>& map, const juce::String&) { shown.drumMap = map.empty() ? DrumSound::generalMidi() : map; };
+        editor.setBounds (0, 0, 1000, 600);
+        editor.refresh();
+        const auto inGrid = editor.drumRows() == drums.drumSounds() && nameAt (editor.drumRows(), 82) == "Zap";
+        auto map = shown.drumMap;
+
+        for (auto& r : map)
+            if (r.pitch == 82)
+                r.standsFor = 38;
+
+        editor.setDrumMap (map, "Edit Drum Sound");
+        editor.refresh();
+        const auto moved = editor.remapNotes (true);
+        auto snareNow = -1, kickNow = -1;
+
+        for (auto& n : shown.clip.notes)
+            (n.start == 0 ? kickNow : snareNow) = n.pitch;
+
+        check (plain && stillPlain && listed && classicAgain && inGrid && moved == 1 && snareNow == 82 && kickNow == 36,
+               "drum pads: with no samples the kit lists as General MIDI's map exactly; a sound's pad that plays samples lists under its given name (Metal Hit on 38 and 40), a user pad with samples "
+               "gets a row on its note under its name (Zap on 82), one on a sound's note joins that row (" + nameAt (rows, 36) + "), two on one note share a row (" + nameAt (rows, 100)
+                   + "), a user pad with no samples has none; in the drum grid those are the rows, and a user pad's row made to stand for the snare takes a pattern's snares with Remap Notes");
+        folder.deleteRecursively();
+    }
+
     void printLevels (BuiltInEffects::BasicDrumsProcessor& drums)
     {
         drums.applyKit (DrumMachine::kits()[0]);
@@ -2500,4 +2585,5 @@ void runDrumMachineTests (AudioEngine& engine, bool levels)
     testRendering (drums);
     testSamples();
     testPadEffects();
+    testDrumRows();
 }
