@@ -589,6 +589,9 @@ struct Engine::Hit
     bool active = false;
     Sound sound = Sound::kick;
     int note = 0;
+    int pad = 0;
+    bool shaped = false;                  // whether any of its pad's own effects is on
+    HitEffects effects;
     float gainL = 1.0f, gainR = 1.0f;     // level, pan and velocity
     float drive = 0.0f, driveNorm = 1.0f;
     float tilt = 0.0f, tiltK = 0.0f, tiltL = 0.0f, tiltR = 0.0f;
@@ -1683,6 +1686,7 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
     }
 
     lastLayer[(size_t) pad].store (played, std::memory_order_relaxed);
+    padReduction[(size_t) pad].store (0.0f, std::memory_order_relaxed);
 
     if (sampled)
     {
@@ -1693,6 +1697,8 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
     h.active = true;
     h.sound = sound;
     h.note = note;
+    h.pad = pad;
+    h.shaped = h.effects.start (st.effects, rate);
     h.rate = rate;
     h.kick = settings.kick;
     h.T = semis (st.tune);
@@ -2009,6 +2015,10 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
             break;
     }
 
+    // Its envelope, when it has one, ends it no later than the envelope does.
+    if (h.effects.envelopeLength > 0)
+        h.length = juce::jmin (h.length, h.effects.envelopeLength);
+
     h.rise = juce::jmax (1, juce::roundToInt (riseSeconds * rate));
     h.length = juce::jmax ((juce::int64) h.rise + 1, h.length);
     h.tail = (int) juce::jmin ((juce::int64) juce::roundToInt (0.005 * rate), h.length / 2);
@@ -2018,7 +2028,7 @@ void Engine::renderHits (float* left, float* right, int count, float* toReverbL,
 {
     const auto sends = toReverbL != nullptr && toReverbR != nullptr && toDelayL != nullptr && toDelayR != nullptr;
 
-    const auto play = [=] (Hit& h, bool fadingOut)
+    const auto play = [=, this] (Hit& h, bool fadingOut)
     {
         for (int n = 0; n < count && h.active; ++n)
         {
@@ -2060,6 +2070,10 @@ void Engine::renderHits (float* left, float* right, int count, float* toReverbL,
                 r = h.heldR;
             }
 
+            // The pad's own envelope, transient shaper, saturator, EQ and compressor.
+            if (h.shaped)
+                h.effects.run (l, r, h.age);
+
             // It rises from silence, and falls to nothing over its last 5 ms.
             auto g = 1.0f;
 
@@ -2088,6 +2102,9 @@ void Engine::renderHits (float* left, float* right, int count, float* toReverbL,
             if (++h.age >= h.length || (fadingOut && --h.fade <= 0))
                 h.active = false;
         }
+
+        if (h.shaped && ! fadingOut)
+            padReduction[(size_t) h.pad].store (h.effects.reductionDb, std::memory_order_relaxed);
     };
 
     for (size_t i = 0; i < hits.size(); ++i)
@@ -2370,6 +2387,10 @@ BasicDrumsProcessor::BasicDrumsProcessor()
         userNotes[(size_t) u].store (firstUserNote + u);
     }
 
+    for (auto& pad : effects)
+        for (int f = 0; f < numFx; ++f)
+            pad[(size_t) f].store (fxInfo (f).start);
+
     auditions.reserve (64);
     retiredSamples.reserve (64);
 }
@@ -2393,7 +2414,7 @@ KitSettings BasicDrumsProcessor::currentSettings() const
         const auto& p = sounds[i];
         k.sounds[i] = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
                         p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
-                        typeAt ((Sound) i, p.type->getIndex()), p.start->get(), p.reverse->get(), p.bend->get() };
+                        typeAt ((Sound) i, p.type->getIndex()), p.start->get(), p.reverse->get(), p.bend->get(), getEffects ((int) i) };
     }
 
     for (size_t u = 0; u < users.size(); ++u)
@@ -2401,7 +2422,7 @@ KitSettings BasicDrumsProcessor::currentSettings() const
         const auto& p = users[u];
         k.user[u].settings = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
                                p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
-                               sampleType, p.start->get(), p.reverse->get(), p.bend->get() };
+                               sampleType, p.start->get(), p.reverse->get(), p.bend->get(), getEffects (numSounds + (int) u) };
         k.user[u].note = userNotes[u].load (std::memory_order_relaxed);
     }
 
@@ -2462,6 +2483,9 @@ void BasicDrumsProcessor::applySettings (const KitSettings& k)
         userNotes[u].store (juce::jlimit (0, 127, k.user[u].note));
     }
 
+    for (int pad = 0; pad < numPads; ++pad)
+        setEffects (pad, pad < numSounds ? k.sounds[(size_t) pad].effects : k.user[(size_t) (pad - numSounds)].settings.effects);
+
     padsVersion.fetch_add (1);
     kickCharacter->setValueNotifyingHost (kickCharacter->convertTo0to1 ((float) (int) k.kick));
     setExactly (*kitDrive, k.drive);
@@ -2505,6 +2529,15 @@ bool BasicDrumsProcessor::kitModified() const
     const auto near = [] (float a, float b) { return std::abs (a - b) <= 1.0e-3f * juce::jmax (1.0f, std::abs (b)); };
     const auto now = currentSettings();
     const auto& kit = kits()[(size_t) index].settings;
+
+    // Nor a pad whose own effects are not as the kit has them.
+    for (size_t i = 0; i < now.sounds.size(); ++i)
+        if (now.sounds[i].effects != kit.sounds[i].effects)
+            return true;
+
+    for (size_t u = 0; u < now.user.size(); ++u)
+        if (now.user[u].settings.effects != kit.user[u].settings.effects)
+            return true;
 
     for (size_t i = 0; i < now.sounds.size(); ++i)
     {
@@ -2557,6 +2590,7 @@ void BasicDrumsProcessor::addToState (juce::XmlElement& xml) const
     xml.setAttribute ("kit", kitName);
     writeSamples (xml);
     writePads (xml);
+    writeEffects (xml);
 }
 
 void BasicDrumsProcessor::readFromState (const juce::XmlElement& xml)
@@ -2572,6 +2606,7 @@ void BasicDrumsProcessor::readFromState (const juce::XmlElement& xml)
     kitName = xml.getStringAttribute ("kit", "Standard");
     readSamples (xml);
     readPads (xml);
+    readEffects (xml);
 
     // Before step 10 there were a kick, snare, hat and tom tune (semitones, as now) and decay (in
     // percent of the sound's own); they go to the sounds they meant, the decays scaled from the new
@@ -2915,7 +2950,101 @@ void BasicDrumsProcessor::clearPad (int pad)
     userColours[u] = juce::Colour();
     userNotes[u].store (firstUserNote + (int) u);
     padsVersion.fetch_add (1);
+    setEffects (pad, {});
     setLayers (pad, {});
+}
+
+//==============================================================================
+float BasicDrumsProcessor::getEffect (int pad, Fx fx) const
+{
+    return effects[(size_t) juce::jlimit (0, numPads - 1, pad)][(size_t) fx].load (std::memory_order_relaxed);
+}
+
+PadEffects BasicDrumsProcessor::getEffects (int pad) const
+{
+    PadEffects all;
+    const auto& held = effects[(size_t) juce::jlimit (0, numPads - 1, pad)];
+
+    for (size_t f = 0; f < all.values.size(); ++f)
+        all.values[f] = held[f].load (std::memory_order_relaxed);
+
+    return all;
+}
+
+void BasicDrumsProcessor::setEffect (int pad, Fx fx, float value)
+{
+    if (! juce::isPositiveAndBelow (pad, numPads))
+        return;
+
+    auto all = getEffects (pad);
+    all[fx] = value;
+    setEffects (pad, all);
+}
+
+void BasicDrumsProcessor::setEffects (int pad, const PadEffects& given)
+{
+    if (! juce::isPositiveAndBelow (pad, numPads))
+        return;
+
+    auto all = given;
+    all.limit();
+
+    if (all == getEffects (pad))
+        return;
+
+    for (size_t f = 0; f < all.values.size(); ++f)
+        effects[(size_t) pad][f].store (all.values[f], std::memory_order_relaxed);
+
+    effectsVersion.fetch_add (1);
+    stateEdited();
+}
+
+void BasicDrumsProcessor::resetEffects()
+{
+    for (int pad = 0; pad < numPads; ++pad)
+        setEffects (pad, {});
+}
+
+void BasicDrumsProcessor::writeEffects (juce::XmlElement& xml) const
+{
+    // Only what is not as it starts: a kit that uses none of them says nothing of them.
+    juce::XmlElement all ("PADEFFECTS");
+    const PadEffects fresh;
+
+    for (int pad = 0; pad < numPads; ++pad)
+    {
+        const auto now = getEffects (pad);
+
+        if (now == fresh)
+            continue;
+
+        auto* e = all.createNewChildElement ("PAD");
+        e->setAttribute ("id", idOfPad (pad));
+
+        for (int f = 0; f < numFx; ++f)
+            if (! juce::exactlyEqual (now.values[(size_t) f], fresh.values[(size_t) f]))
+                e->setAttribute (fxInfo (f).id, (double) now.values[(size_t) f]);
+    }
+
+    if (all.getNumChildElements() > 0)
+        xml.addChildElement (new juce::XmlElement (all));
+}
+
+void BasicDrumsProcessor::readEffects (const juce::XmlElement& xml)
+{
+    // A state from before pads had effects has none: every pad's are off, as they start.
+    std::array<PadEffects, (size_t) numPads> read;
+
+    if (const auto* all = xml.getChildByName ("PADEFFECTS"))
+        for (auto* e : all->getChildWithTagNameIterator ("PAD"))
+            for (int pad = 0; pad < numPads; ++pad)
+                if (idOfPad (pad) == e->getStringAttribute ("id"))
+                    for (int f = 0; f < numFx; ++f)
+                        if (e->hasAttribute (fxInfo (f).id))
+                            read[(size_t) pad].values[(size_t) f] = (float) e->getDoubleAttribute (fxInfo (f).id);
+
+    for (int pad = 0; pad < numPads; ++pad)
+        setEffects (pad, read[(size_t) pad]);
 }
 
 void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
@@ -3241,6 +3370,11 @@ EffectPresets::Texts BasicDrumsProcessor::getPresetTexts() const
     if (const auto* all = holder.getChildByName ("PADS"))
         texts["pads"] = all->toString (juce::XmlElement::TextFormat().singleLine());
 
+    writeEffects (holder);
+
+    if (const auto* all = holder.getChildByName ("PADEFFECTS"))
+        texts["effects"] = all->toString (juce::XmlElement::TextFormat().singleLine());
+
     return texts;
 }
 
@@ -3256,8 +3390,13 @@ void BasicDrumsProcessor::setPresetTexts (const EffectPresets::Texts& texts)
         if (auto all = juce::XmlDocument::parse (found->second))
             holder.addChildElement (all.release());
 
+    if (const auto found = texts.find ("effects"); found != texts.end() && found->second.isNotEmpty())
+        if (auto all = juce::XmlDocument::parse (found->second))
+            holder.addChildElement (all.release());
+
     readSamples (holder);
     readPads (holder);
+    readEffects (holder);
 }
 
 void BasicDrumsProcessor::setPresetValues (const EffectPresets::Values& values)

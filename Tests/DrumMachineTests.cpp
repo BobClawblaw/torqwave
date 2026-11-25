@@ -274,11 +274,9 @@ namespace
 
     /** In a kit with no drive or glue on the bus, so hits add as they are: Standard for the Classic
         sounds, Modern for the Modern ones. */
-    void testNoClicks (BuiltInEffects::BasicDrumsProcessor& drums, const juce::String& kitName)
+    /** The kit as it stands: nothing in it steps. */
+    void checkNoClicks (BuiltInEffects::BasicDrumsProcessor& drums, const juce::String& tag)
     {
-        drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex (kitName)]);
-        const auto tag = kitName == "Standard" ? juce::String ("drums: ") : "drums (the " + kitName + " kit's sounds): ";
-
         // Each note starts from silence, ends falling to nothing, and struck again 60 ms in, fades its
         // last hit rather than cutting it.
         juce::StringArray starts, ends, cuts;
@@ -364,6 +362,12 @@ namespace
         // Every sound ends: a whole kit is silent within six and a half seconds.
         const auto all = play (drums, kit, 7.0);
         check (drums.getNumSounding() == 0 && peakOf (all, (int) (6.5 * rate)) == 0.0f, tag + "every sound ends, a whole kit silent within 6.5 seconds");
+    }
+
+    void testNoClicks (BuiltInEffects::BasicDrumsProcessor& drums, const juce::String& kitName)
+    {
+        drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex (kitName)]);
+        checkNoClicks (drums, kitName == "Standard" ? juce::String ("drums: ") : "drums (the " + kitName + " kit's sounds): ");
     }
 
     void testSettings (BuiltInEffects::BasicDrumsProcessor& drums)
@@ -1667,6 +1671,441 @@ namespace
         folder.deleteRecursively();
     }
 
+    //==============================================================================
+    // Each pad's own effects: its envelope, transient shaper, saturator, EQ and compressor.
+    using DrumMachine::Fx;
+
+    /** One pad's hit alone at full velocity, through nothing of the kit's (its bus, reverb and delay). */
+    juce::AudioBuffer<float> hitOf (BuiltInEffects::BasicDrumsProcessor& d, int pad, double seconds)
+    {
+        return DrumMachine::Engine::renderPad (d.currentSettings(), pad, rate, seconds, d.getSamples());
+    }
+
+    float dbOf (double gain)   { return (float) (20.0 * std::log10 (juce::jmax (1.0e-9, gain))); }
+
+    /** How much of one frequency there is in a stretch of the left side, as an amplitude, with its phase. */
+    std::complex<double> partialOf (const juce::AudioBuffer<float>& b, int from, int n, double hz)
+    {
+        std::complex<double> sum;
+
+        for (int i = 0; i < n; ++i)
+            sum += (double) b.getSample (0, from + i) * std::polar (1.0, -juce::MathConstants<double>::twoPi * hz * (double) i / rate);
+
+        return sum * (2.0 / (double) n);
+    }
+
+    /** Every pad's effects switched on, with settings that each do something. */
+    void allEffectsOn (BuiltInEffects::BasicDrumsProcessor& d)
+    {
+        DrumMachine::PadEffects fx;
+        fx[Fx::envOn] = 1.0f;       fx[Fx::envAttack] = 1.0f;     fx[Fx::envHold] = 80.0f;     fx[Fx::envDecay] = 600.0f;   fx[Fx::envCurve] = 30.0f;
+        fx[Fx::transOn] = 1.0f;     fx[Fx::transAttack] = 40.0f;  fx[Fx::transSustain] = 20.0f;
+        fx[Fx::satOn] = 1.0f;       fx[Fx::satType] = 1.0f;       fx[Fx::satAmount] = 50.0f;   fx[Fx::satMix] = 80.0f;
+        fx[Fx::eqOn] = 1.0f;        fx[Fx::eqLowGain] = 4.0f;     fx[Fx::eqBell1Gain] = -5.0f; fx[Fx::eqBell2Gain] = 3.0f;  fx[Fx::eqHighGain] = -2.0f;
+        fx[Fx::compOn] = 1.0f;      fx[Fx::compThreshold] = -20.0f;  fx[Fx::compGain] = 3.0f;
+
+        for (int pad = 0; pad < DrumMachine::numPads; ++pad)
+            d.setEffects (pad, fx);
+    }
+
+    void testPadEffects()
+    {
+        using BuiltInEffects::BasicDrumsProcessor;
+        using DrumMachine::PadEffects;
+        const auto folder = juce::File::createTempFile ("drumeffects");
+        folder.createDirectory();
+
+        // A steady tone, a thud that dies away, and a single tick, each on a user pad of its own.
+        const auto held = tone (300.0, 28800, 0.5f);
+        const auto thud = tone (110.0, 12000, 0.8f, true, 0.05);
+        juce::AudioBuffer<float> tick (1, 9600);
+        tick.clear();
+        tick.setSample (0, 2400, 0.5f);
+        const auto heldFile = writeSound (folder, "Held", held), thudFile = writeSound (folder, "Thud", thud), tickFile = writeSound (folder, "Tick", tick);
+        const auto tonePad = DrumMachine::numSounds, thudPad = tonePad + 1, tickPad = tonePad + 2;
+
+        BasicDrumsProcessor drums;
+        drums.applyKit (DrumMachine::kits()[0]);
+        const auto added = drums.addFiles (tonePad, { heldFile }) + drums.addFiles (thudPad, { thudFile }) + drums.addFiles (tickPad, { tickFile });
+        const auto parameters = drums.getParameters().size();
+        const auto set1 = [&drums] (int pad, std::initializer_list<std::pair<Fx, float>> values)
+        {
+            for (auto [f, v] : values)
+                drums.setEffect (pad, f, v);
+        };
+        const auto off = [&drums] (int pad) { drums.setEffects (pad, {}); };
+
+        Notes pattern;
+
+        for (int step = 0; step < 16; ++step)
+        {
+            const auto at = step * 0.125;
+
+            if (step % 4 == 0) pattern.push_back ({ 36, at, 1.0f });
+            if (step % 8 == 4) pattern.push_back ({ 39, at, 0.9f });
+            if (step == 10) pattern.push_back ({ 49, at, 0.8f });
+            if (step >= 12) pattern.push_back ({ step % 2 == 0 ? 45 : 47, at, 0.8f });
+            if (step % 4 == 3) pattern.push_back ({ DrumMachine::firstUserNote + 1, at, 0.7f });
+            pattern.push_back ({ step % 4 == 2 ? 46 : 42, at, step % 2 == 0 ? 0.8f : 0.6f });
+        }
+
+        // Off, they are not there: every value of every pad moved, every switch left off, and a
+        // pattern is the same to the last bit. Nor are they hosted parameters.
+        {
+            const auto before = play (drums, pattern, 2.5);
+
+            for (int pad = 0; pad < DrumMachine::numPads; ++pad)
+            {
+                PadEffects moved;
+
+                for (int f = 0; f < DrumMachine::numFx; ++f)
+                    if (const auto& info = DrumMachine::fxInfo (f); info.unit[0] != 0 || f == Fx::envCurve || f == Fx::satType)
+                        moved.values[(size_t) f] = info.low + 0.8f * (info.high - info.low);
+
+                drums.setEffects (pad, moved);
+            }
+
+            const auto movedButOff = play (drums, pattern, 2.5);
+            const auto changed = ! (drums.getEffects (0) == PadEffects()) && drums.kitModified();
+
+            for (int pad = 0; pad < DrumMachine::numPads; ++pad)
+                off (pad);
+
+            // On with nothing to do (an EQ with every band at 0 dB, a saturator mixed out, a shaper at 0 and 0) is the same too.
+            set1 (0, { { Fx::eqOn, 1.0f }, { Fx::satOn, 1.0f }, { Fx::satMix, 0.0f }, { Fx::transOn, 1.0f } });
+            const auto idle = play (drums, pattern, 2.5);
+            off (0);
+
+            check (added.isEmpty() && same (before, movedButOff) && changed && same (before, idle) && parameters == 997 && drums.getParameters().size() == 997
+                       && peakOf (before) > 0.05f,
+                   "drum pad effects: with every pad's 24 settings moved and its five switches off, a pattern of sounds and a sample is bit-identical to before; "
+                   "so is an EQ with every band at 0 dB, a saturator mixed out and a shaper at 0; they add no hosted parameter (997 as before)");
+        }
+
+        // The envelope: the hit times the shape drawn, on a sample and on a synthesized sound, and no longer than it.
+        {
+            const auto dry = hitOf (drums, tonePad, 0.7);
+            juce::StringArray said;
+            auto good = true;
+
+            for (auto curve : { 0.0f, 100.0f, -100.0f })
+            {
+                set1 (tonePad, { { Fx::envOn, 1.0f }, { Fx::envAttack, 10.0f }, { Fx::envHold, 50.0f }, { Fx::envDecay, 100.0f }, { Fx::envCurve, curve } });
+                const auto fx = drums.getEffects (tonePad);
+                const auto wet = hitOf (drums, tonePad, 0.7);
+                const auto length = (int) std::round (DrumMachine::envelopeSeconds (fx) * rate), tail = (int) (0.005 * rate);
+                auto furthest = 0.0f;
+
+                for (int i = 0; i < length - tail; ++i)
+                    furthest = juce::jmax (furthest, std::abs (wet.getSample (0, i) - dry.getSample (0, i) * DrumMachine::envelopeGain (fx, (double) i / rate)));
+
+                const auto middle = peakOf (wet, (int) (0.105 * rate), (int) (0.01 * rate)) / peakOf (dry, (int) (0.105 * rate), (int) (0.01 * rate));
+                const auto last = lastSounding (wet);
+                good = good && furthest < 2.0e-5f && last < length && last > length - 4 && std::abs (wet.getSample (0, last)) < 0.01f
+                    && largestStep (wet, length - tail - 48, length + 48) < 0.03f;
+                said.add ("curve " + juce::String ((int) curve) + ": " + juce::String (furthest, 7) + " away, " + juce::String (juce::roundToInt (middle * 100.0f)) + " % halfway down its fall");
+            }
+
+            off (tonePad);
+            const auto kickPad = (int) Sound::kick;
+            const auto kickDry = hitOf (drums, kickPad, 0.6);
+            set1 (kickPad, { { Fx::envOn, 1.0f }, { Fx::envAttack, 0.0f }, { Fx::envHold, 20.0f }, { Fx::envDecay, 60.0f } });
+            const auto kickFx = drums.getEffects (kickPad);
+            const auto kickWet = hitOf (drums, kickPad, 0.6);
+            auto kickFurthest = 0.0f;
+
+            for (int i = 0; i < (int) (0.075 * rate); ++i)
+                kickFurthest = juce::jmax (kickFurthest, std::abs (kickWet.getSample (0, i) - kickDry.getSample (0, i) * DrumMachine::envelopeGain (kickFx, (double) i / rate)));
+
+            const auto kickLast = lastSounding (kickWet);
+            off (kickPad);
+            check (good && kickFurthest < 2.0e-5f && kickLast < (int) (0.08 * rate) && kickLast > (int) (0.079 * rate) && lastSounding (kickDry) > (int) (0.2 * rate),
+                   "drum pad effects: the envelope (attack 10 ms, hold 50, decay 100) is the hit times the shape drawn, to its last 5 ms, and ends the hit where it ends ("
+                       + said.joinIntoString ("; ") + "); the same on the synthesized kick, which stops at 80 ms with hold 20 and decay 60 (" + juce::String (kickFurthest, 7) + " away)");
+        }
+
+        // The transient shaper: Attack moves the start of a hit and leaves its tail, Sustain the other way round.
+        {
+            const auto dry = hitOf (drums, thudPad, 0.3);
+            const auto startOf = [] (const juce::AudioBuffer<float>& b) { return peakOf (b, 0, (int) (0.004 * rate)); };
+            const auto tailOf = [] (const juce::AudioBuffer<float>& b) { return b.getRMSLevel (0, (int) (0.1 * rate), (int) (0.06 * rate)); };
+            const auto shapedBy = [&] (float attack, float sustain, float& start, float& tail)
+            {
+                set1 (thudPad, { { Fx::transOn, 1.0f }, { Fx::transAttack, attack }, { Fx::transSustain, sustain } });
+                const auto wet = hitOf (drums, thudPad, 0.3);
+                start = dbOf (startOf (wet) / startOf (dry));
+                tail = dbOf (tailOf (wet) / tailOf (dry));
+                return largestStep (wet, 0, wet.getNumSamples());
+            };
+
+            float upStart, upTail, downStart, downTail, longStart, longTail, shortStart, shortTail;
+            const auto stepUp = shapedBy (100.0f, 0.0f, upStart, upTail);
+            shapedBy (-100.0f, 0.0f, downStart, downTail);
+            shapedBy (0.0f, 100.0f, longStart, longTail);
+            shapedBy (0.0f, -100.0f, shortStart, shortTail);
+            off (thudPad);
+            check (upStart > 6.0f && upStart <= 12.1f && std::abs (upTail) < 1.5f && downStart < -6.0f && downStart >= -12.1f && std::abs (downTail) < 1.5f
+                       && longTail > 4.0f && longTail <= 12.1f && std::abs (longStart) < 1.0f && shortTail < -4.0f && shortTail >= -12.1f && std::abs (shortStart) < 1.0f
+                       && stepUp < 4.1f * largestStep (dry, 0, dry.getNumSamples()),
+                   "drum pad effects: the transient shaper's Attack at +100 % lifts a thud's first 4 ms by " + juce::String (upStart, 1) + " dB and its tail by " + juce::String (upTail, 1)
+                       + "; at -100 % " + juce::String (downStart, 1) + " and " + juce::String (downTail, 1) + "; Sustain at +100 % lifts the tail (100 to 160 ms) by " + juce::String (longTail, 1)
+                       + " dB and the start by " + juce::String (longStart, 1) + "; at -100 % " + juce::String (shortTail, 1) + " and " + juce::String (shortStart, 1) + "; never more than 12 dB");
+        }
+
+        // The saturator: each curve is the curve drawn, sample for sample; Tube's lopsidedness leaves no offset; Mix blends.
+        {
+            const auto dry = hitOf (drums, tonePad, 0.5);
+            const auto from = 2400, to = 19200;
+            juce::StringArray said;
+            auto good = true;
+            std::array<double, 4> second {};
+
+            for (int curve = 0; curve < 4; ++curve)
+            {
+                set1 (tonePad, { { Fx::satOn, 1.0f }, { Fx::satType, (float) curve }, { Fx::satAmount, 60.0f }, { Fx::satMix, 100.0f } });
+                const auto fx = drums.getEffects (tonePad);
+                const auto wet = hitOf (drums, tonePad, 0.5);
+                auto furthest = 0.0f;
+                auto mean = 0.0, curveMean = 0.0;
+
+                for (int i = from; i < to; ++i)
+                {
+                    const auto want = DrumMachine::saturated (fx, dry.getSample (0, i));
+                    furthest = juce::jmax (furthest, std::abs (wet.getSample (0, i) - want));
+                    mean += wet.getSample (0, i) / (double) (to - from);
+                    curveMean += want / (double) (to - from);
+                }
+
+                second[(size_t) curve] = std::abs (partialOf (wet, from, to - from, 600.0));
+
+                // Tube's curve is lopsided, so it has an offset, which is taken off: what is left is the curve less its mean.
+                good = good && (curve == 1 ? std::abs (mean) < 0.004 && std::abs (curveMean) > 0.02 && second[1] > 0.01
+                                           : furthest < 2.0e-5f && second[(size_t) curve] < 1.0e-4);
+                said.add (DrumMachine::saturationNames()[curve] + (curve == 1 ? " offset " + juce::String (mean, 4) + " (its curve's " + juce::String (curveMean, 3) + "), second harmonic " + juce::String (second[1], 3)
+                                                                            : " " + juce::String (furthest, 7) + " away"));
+            }
+
+            set1 (tonePad, { { Fx::satType, 2.0f }, { Fx::satAmount, 100.0f } });
+            const auto clipped = hitOf (drums, tonePad, 0.5);
+            set1 (tonePad, { { Fx::satMix, 50.0f } });
+            const auto half = hitOf (drums, tonePad, 0.5);
+            auto halfFurthest = 0.0f;
+
+            for (int i = from; i < to; ++i)
+                halfFurthest = juce::jmax (halfFurthest, std::abs (half.getSample (0, i) - 0.5f * (dry.getSample (0, i) + clipped.getSample (0, i))));
+
+            // Then the EQ and the compressor come after it: a clipped tone is no longer square, nor at full scale.
+            set1 (tonePad, { { Fx::satMix, 100.0f }, { Fx::eqOn, 1.0f }, { Fx::eqHighFreq, 1000.0f }, { Fx::eqHighGain, -18.0f } });
+            const auto fifth = std::abs (partialOf (hitOf (drums, tonePad, 0.5), from, to - from, 1500.0)) / std::abs (partialOf (clipped, from, to - from, 1500.0));
+            set1 (tonePad, { { Fx::eqOn, 0.0f }, { Fx::compOn, 1.0f }, { Fx::compThreshold, -30.0f }, { Fx::compRatio, 20.0f }, { Fx::compAttack, 0.1f } });
+            const auto held1 = peakOf (hitOf (drums, tonePad, 0.5), from, to - from);
+            off (tonePad);
+            check (good && std::abs (peakOf (clipped, from, to - from) - 1.0f) < 1.0e-6f && halfFurthest < 1.0e-6f && fifth < 0.3 && held1 < 0.1f,
+                   "drum pad effects: the saturator's curves at 60 % on a steady tone: " + said.joinIntoString ("; ") + "; Clip at 100 % holds it at full scale (" + juce::String (peakOf (clipped, from, to - from), 7) + "); Mix at 50 % is halfway ("
+                       + juce::String (halfFurthest, 8) + " away); the EQ after it (a high shelf, -18 dB from 1 kHz) takes the clipped tone's fifth harmonic to " + juce::String (juce::roundToInt (fifth * 100.0))
+                       + " %, and the compressor after it holds the square to " + juce::String (dbOf (held1), 1) + " dB");
+        }
+
+        // The EQ: a tick through it measures as the curve drawn.
+        {
+            const auto dry = hitOf (drums, tickPad, 0.25);
+            set1 (tickPad, { { Fx::eqOn, 1.0f }, { Fx::eqLowFreq, 100.0f }, { Fx::eqLowGain, 6.0f }, { Fx::eqBell1Freq, 500.0f }, { Fx::eqBell1Gain, -9.0f }, { Fx::eqBell1Width, 1.0f },
+                             { Fx::eqBell2Freq, 3000.0f }, { Fx::eqBell2Gain, 4.0f }, { Fx::eqBell2Width, 0.5f }, { Fx::eqHighFreq, 8000.0f }, { Fx::eqHighGain, -6.0f } });
+            const auto fx = drums.getEffects (tickPad);
+            const auto wet = hitOf (drums, tickPad, 0.25);
+            const auto n = (int) (0.2 * rate);
+            auto furthest = 0.0f;
+            juce::StringArray said;
+
+            for (auto hz : { 30.0, 100.0, 300.0, 500.0, 1000.0, 3000.0, 8000.0, 15000.0 })
+            {
+                const auto measured = dbOf (std::abs (partialOf (wet, 0, n, hz)) / std::abs (partialOf (dry, 0, n, hz)));
+                furthest = juce::jmax (furthest, std::abs (measured - DrumMachine::eqGainDb (fx, hz, rate)));
+                said.add (juce::String (juce::roundToInt (hz)) + " Hz " + juce::String (measured, 1));
+            }
+
+            // And the curve is what its settings say: a bell alone at its centre and its width's edges, a shelf far from its corner and at it.
+            PadEffects bell, low, high;
+            bell[Fx::eqBell1Freq] = 500.0f;  bell[Fx::eqBell1Gain] = -9.0f;  bell[Fx::eqBell1Width] = 1.0f;
+            low[Fx::eqLowFreq] = 100.0f;     low[Fx::eqLowGain] = 6.0f;
+            high[Fx::eqHighFreq] = 8000.0f;  high[Fx::eqHighGain] = -6.0f;
+            const auto g = [] (const PadEffects& e, double hz) { return DrumMachine::eqGainDb (e, hz, rate); };
+            const auto asSet = std::abs (g (bell, 500.0) + 9.0f) < 0.01f && std::abs (g (bell, 500.0 * std::sqrt (2.0)) + 4.5f) < 0.3f && std::abs (g (bell, 500.0 / std::sqrt (2.0)) + 4.5f) < 0.3f
+                            && std::abs (g (bell, 50.0)) < 0.3f && std::abs (g (bell, 5000.0)) < 0.3f
+                            && std::abs (g (low, 10.0) - 6.0f) < 0.1f && std::abs (g (low, 100.0) - 3.0f) < 0.1f && std::abs (g (low, 2000.0)) < 0.1f
+                            && std::abs (g (high, 20000.0) + 6.0f) < 0.2f && std::abs (g (high, 8000.0) + 3.0f) < 0.2f && std::abs (g (high, 400.0)) < 0.1f;
+            off (tickPad);
+            check (furthest < 0.05f && asSet,
+                   "drum pad effects: the EQ (low shelf +6 dB at 100 Hz, bells -9 at 500 and +4 at 3 kHz, high shelf -6 at 8 kHz) measures as its curve, at most "
+                       + juce::String (furthest, 3) + " dB away (" + said.joinIntoString (", ") + " dB); a bell is its gain at its centre and half of it an octave apart, a shelf its gain far out and half at its corner");
+        }
+
+        // The compressor: a steady tone settles where its curve says, the gain is added after, and the window's meter says how far.
+        {
+            const auto dry = hitOf (drums, tonePad, 0.55);
+            const auto from = 14400, n = 9600;
+            set1 (tonePad, { { Fx::compOn, 1.0f }, { Fx::compThreshold, -18.0f }, { Fx::compRatio, 4.0f }, { Fx::compAttack, 20.0f }, { Fx::compRelease, 100.0f }, { Fx::compGain, 0.0f } });
+            const auto fx = drums.getEffects (tonePad);
+            const auto wet = hitOf (drums, tonePad, 0.55);
+            const auto in = dbOf (peakOf (dry, from, n)), out = dbOf (peakOf (wet, from, n)), want = DrumMachine::compressedDb (fx, in);
+            const auto onset = dbOf (peakOf (wet, 0, (int) (0.005 * rate)));
+            set1 (tonePad, { { Fx::compGain, 6.0f } });
+            const auto louder = dbOf (peakOf (hitOf (drums, tonePad, 0.55), from, n));
+            set1 (tonePad, { { Fx::compGain, 0.0f }, { Fx::compRatio, 1.0f } });
+            const auto one = dbOf (peakOf (hitOf (drums, tonePad, 0.55), from, n));
+            set1 (tonePad, { { Fx::compRatio, 4.0f } });
+            play (drums, { { DrumMachine::firstUserNote, 0.0, 1.0f } }, 0.4);
+            const auto meter = drums.getEngine().padReductionDb (tonePad), other = drums.getEngine().padReductionDb (thudPad);
+            off (tonePad);
+            check (std::abs (want - (in - 9.0f)) < 0.05f && std::abs (out - want) < 0.5f && onset > out + 6.0f && std::abs (louder - out - 6.0f) < 0.01f && std::abs (one - in) < 0.01f
+                       && std::abs (meter + 9.0f) < 0.5f && juce::exactlyEqual (other, 0.0f),
+                   "drum pad effects: the compressor (threshold -18 dB, 4:1) settles a " + juce::String (in, 1) + " dB tone at " + juce::String (out, 1) + " dB (its curve says "
+                       + juce::String (want, 1) + "), its first 5 ms through a 20 ms attack reaching " + juce::String (onset, 1) + "; Gain +6 dB adds 6.0; at 1:1 it does nothing; the pad's meter reads "
+                       + juce::String (meter, 1) + " dB, another pad's 0");
+        }
+
+        // A change is heard from the next hit: the one sounding goes on as it was, to the last bit, so no switch can click.
+        {
+            const auto run = [&drums] (bool change)
+            {
+                drums.prepareToPlay (rate, 2400);
+                juce::AudioBuffer<float> out (2, 9600), block (2, 2400);
+
+                for (int at = 0; at < 9600; at += 2400)
+                {
+                    juce::MidiBuffer midi;
+
+                    if (at == 0)
+                        midi.addEvent (juce::MidiMessage::noteOn (10, 49, 1.0f), 0);
+
+                    if (at == 4800)
+                        midi.addEvent (juce::MidiMessage::noteOn (10, 38, 1.0f), 0);
+
+                    if (change && at == 2400)
+                        allEffectsOn (drums);
+
+                    drums.processBlock (block, midi);
+
+                    for (int ch = 0; ch < 2; ++ch)
+                        out.copyFrom (ch, at, block, ch, 0, 2400);
+                }
+
+                return out;
+            };
+
+            const auto steady = run (false), changed = run (true);
+            auto sameUntil = 0;
+
+            while (sameUntil < 9600 && juce::exactlyEqual (steady.getSample (0, sameUntil), changed.getSample (0, sameUntil)) && juce::exactlyEqual (steady.getSample (1, sameUntil), changed.getSample (1, sameUntil)))
+                ++sameUntil;
+
+            for (int pad = 0; pad < DrumMachine::numPads; ++pad)
+                off (pad);
+
+            check (sameUntil >= 4800 && sameUntil < 4800 + 48,
+                   "drum pad effects: every effect switched on 50 ms into a crash leaves the crash as it was, bit for bit; the snare struck 50 ms later is the first to have them (the two differ from sample "
+                       + juce::String (sameUntil) + ")");
+        }
+
+        // With every effect on on every pad: no clicks, and the same at any block size.
+        {
+            BasicDrumsProcessor busy;
+            busy.applyKit (DrumMachine::kits()[0]);
+            allEffectsOn (busy);
+            checkNoClicks (busy, "drums (every pad's five effects on): ");
+
+            drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Industrial")]);
+            allEffectsOn (drums);
+            const auto first = play (drums, pattern, 2.5), again = play (drums, pattern, 2.5), odd = play (drums, pattern, 2.5, 37), one = play (drums, pattern, 2.5, 1);
+            check (same (first, again) && same (first, odd) && same (first, one) && peakOf (first) > 0.05f,
+                   "drum pad effects: with all five on on every pad, a pattern renders bit-identically twice, in 37-sample blocks and sample by sample");
+
+            // What they cost: a busy bar, 12 notes on every sixteenth, with them off and with them all on.
+            Notes dense;
+
+            for (int step = 0; step < 64; ++step)
+                for (int k = 0; k < 12; ++k)
+                    dense.push_back ({ DrumMachine::firstNote + (step * 5 + k * 4) % DrumMachine::numNotes, step * 0.125, 0.8f });
+
+            const auto timed = [&] (BasicDrumsProcessor& d, int& sounding)
+            {
+                auto best = 1.0e9;
+
+                for (int pass = 0; pass < 3; ++pass)
+                {
+                    const auto began = juce::Time::getMillisecondCounterHiRes();
+                    play (d, dense, 8.0);
+                    best = juce::jmin (best, juce::Time::getMillisecondCounterHiRes() - began);
+                }
+
+                play (d, dense, 7.9);
+                sounding = d.getNumSounding();
+                return best;
+            };
+
+            BasicDrumsProcessor plain;
+            plain.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Industrial")]);
+            int plainSounding = 0, busySounding = 0;
+            const auto without = timed (plain, plainSounding), with = timed (drums, busySounding);
+            check (with < 2000.0,
+                   "drum pad effects: 8 seconds of 96 notes a second (" + juce::String (plainSounding) + " hits sounding at the end with them off, " + juce::String (busySounding)
+                       + " with them on) render in " + juce::String (juce::roundToInt (without)) + " ms with every pad's effects off and " + juce::String (juce::roundToInt (with)) + " ms with all five on on every pad: "
+                       + juce::String (without / 80.0, 1) + " % and " + juce::String (with / 80.0, 1) + " % of real time on one core");
+        }
+
+        // Kept: by the state, a preset and a kit file; a state or preset from before has none; a factory kit takes them off.
+        {
+            drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Industrial")]);
+            const auto unedited = ! drums.kitModified();
+            juce::MemoryBlock before;
+            drums.getStateInformation (before);
+            const auto plainXml = juce::AudioProcessor::getXmlFromBinary (before.getData(), (int) before.getSize());
+
+            set1 ((int) Sound::kick, { { Fx::compOn, 1.0f }, { Fx::compRatio, 500.0f }, { Fx::eqOn, 1.0f }, { Fx::eqBell1Gain, 7.5f } });
+            set1 (thudPad, { { Fx::satOn, 1.0f }, { Fx::satType, 3.0f }, { Fx::envOn, 1.0f }, { Fx::envDecay, 90.0f } });
+            const auto limited = juce::exactlyEqual (drums.getEffect ((int) Sound::kick, Fx::compRatio), 20.0f);
+            const auto edited = drums.kitModified();
+            const auto sound = play (drums, pattern, 2.5);
+
+            juce::MemoryBlock state;
+            drums.getStateInformation (state);
+            const auto xml = juce::AudioProcessor::getXmlFromBinary (state.getData(), (int) state.getSize());
+            const auto* kept = xml != nullptr ? xml->getChildByName ("PADEFFECTS") : nullptr;
+            BasicDrumsProcessor another;
+            another.setStateInformation (state.getData(), (int) state.getSize());
+            const auto fromState = another.currentSettings() == drums.currentSettings() && same (play (another, pattern, 2.5), sound);
+
+            // The state from before they were set, loaded over them: they are off again.
+            another.setStateInformation (before.getData(), (int) before.getSize());
+            const auto oldState = another.getEffects ((int) Sound::kick) == PadEffects() && another.getEffects (thudPad) == PadEffects() && ! another.kitModified();
+
+            BasicDrumsProcessor viaPreset;
+            viaPreset.setPresetTexts (drums.getPresetTexts());
+            const auto fromPreset = viaPreset.getEffects ((int) Sound::kick) == drums.getEffects ((int) Sound::kick) && viaPreset.getEffects (thudPad) == drums.getEffects (thudPad);
+            viaPreset.setPresetTexts ({});
+            const auto oldPreset = viaPreset.getEffects ((int) Sound::kick) == PadEffects() && viaPreset.getEffects (thudPad) == PadEffects();
+
+            const auto kitFolder = folder.getChildFile ("Effects Kit");
+            juce::StringArray notThere;
+            const auto saveError = drums.saveKitWithSamples (kitFolder, notThere);
+            BasicDrumsProcessor opened;
+            const auto openError = opened.loadKitFile (kitFolder.getChildFile (kitFolder.getFileName() + BasicDrumsProcessor::kitFileExtension));
+            const auto fromKit = opened.getEffects ((int) Sound::kick) == drums.getEffects ((int) Sound::kick) && opened.getEffects (thudPad) == drums.getEffects (thudPad);
+
+            drums.clearPad (thudPad);
+            const auto cleared = drums.getEffects (thudPad) == PadEffects();
+            drums.applyKit (DrumMachine::kits()[0]);
+            const auto factory = drums.getEffects ((int) Sound::kick) == PadEffects() && ! drums.kitModified();
+
+            check (unedited && plainXml != nullptr && plainXml->getChildByName ("PADEFFECTS") == nullptr && limited && edited && kept != nullptr && kept->getNumChildElements() == 2
+                       && fromState && oldState && fromPreset && oldPreset && saveError.isEmpty() && openError.isEmpty() && fromKit && cleared && factory,
+                   "drum pad effects: a kit that uses none says nothing of them in its state; set on two pads they mark the kit edited and are kept by the state (those two pads alone), a preset and a kit file, "
+                   "sounding the same; a value set outside its range is brought inside it; a state or preset from before them takes them off; so does emptying the pad and choosing a factory kit");
+        }
+
+        folder.deleteRecursively();
+    }
+
     void printLevels (BuiltInEffects::BasicDrumsProcessor& drums)
     {
         drums.applyKit (DrumMachine::kits()[0]);
@@ -1946,4 +2385,5 @@ void runDrumMachineTests (AudioEngine& engine, bool levels)
     testKitsAndState (drums);
     testRendering (drums);
     testSamples();
+    testPadEffects();
 }

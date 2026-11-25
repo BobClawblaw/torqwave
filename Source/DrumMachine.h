@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BuiltInEffects.h"
+#include "DrumPadEffects.h"
 #include "Sampler.h"
 
 /** The drum machine behind Basic Drums: synthesised sounds on the General MIDI drum map (35 to 81),
@@ -64,13 +65,18 @@ namespace DrumMachine
         bool reverse = false;
         float bend = 0.0f;           // semitones, -24 to 24
 
+        // Its own envelope, transient shaper, saturator, EQ and compressor, each off to start with
+        // (DrumPadEffects.h). They come after the filter and the crusher, before its level and pan.
+        PadEffects effects;
+
         bool operator== (const Settings& o) const
         {
             return juce::exactlyEqual (tune, o.tune) && juce::exactlyEqual (decay, o.decay) && juce::exactlyEqual (tone, o.tone)
                 && juce::exactlyEqual (level, o.level) && juce::exactlyEqual (pan, o.pan) && juce::exactlyEqual (drive, o.drive)
                 && filter == o.filter && juce::exactlyEqual (cutoff, o.cutoff) && juce::exactlyEqual (resonance, o.resonance)
                 && juce::exactlyEqual (crush, o.crush) && juce::exactlyEqual (reverb, o.reverb) && juce::exactlyEqual (delay, o.delay)
-                && type == o.type && juce::exactlyEqual (start, o.start) && reverse == o.reverse && juce::exactlyEqual (bend, o.bend);
+                && type == o.type && juce::exactlyEqual (start, o.start) && reverse == o.reverse && juce::exactlyEqual (bend, o.bend)
+                && effects == o.effects;
         }
     };
 
@@ -255,6 +261,10 @@ namespace DrumMachine
             none (no layer takes that velocity, or the pad does not play samples). */
         int lastLayerOfPad (int pad) const noexcept                { return lastLayer[(size_t) pad].load (std::memory_order_relaxed) - 1; }
 
+        /** The furthest a pad's compressor has turned its last hit down so far, in dB (0 or less;
+            0 with the compressor off). Any thread. */
+        float padReductionDb (int pad) const noexcept              { return padReduction[(size_t) pad].load (std::memory_order_relaxed); }
+
         /** How far the glue is turning the kit down, in dB (0 or less). Any thread. */
         float getReductionDb() const noexcept                       { return reductionDb.load (std::memory_order_relaxed); }
 
@@ -306,6 +316,7 @@ namespace DrumMachine
         std::array<std::atomic<juce::uint32>, (size_t) numPads> hitCount {};
         std::array<std::atomic<float>, (size_t) numPads> lastVelocity {};
         std::array<std::atomic<int>, (size_t) numPads> lastLayer {};   // one more than the layer; 0 for none
+        std::array<std::atomic<float>, (size_t) numPads> padReduction {};
         std::atomic<float> reductionDb { 0.0f };
     };
 }
@@ -374,6 +385,18 @@ namespace BuiltInEffects
 
         /** A user pad back as it starts: no layers, its own name, colour, note and settings. */
         void clearPad (int pad);
+
+        /** A pad's own effects (DrumMachine::Fx): its envelope, transient shaper, saturator, EQ and
+            compressor. They are kept in the state, in kit files and in presets, and are not hosted
+            parameters: a hit takes them as they are when it is struck. Setting one puts it inside
+            its range. Message thread to set; any thread to read. */
+        float getEffect (int pad, DrumMachine::Fx) const;
+        void setEffect (int pad, DrumMachine::Fx, float value);
+        DrumMachine::PadEffects getEffects (int pad) const;
+        void setEffects (int pad, const DrumMachine::PadEffects&);
+
+        /** Counts up when any pad's effects change. */
+        juce::uint32 getEffectsVersion() const noexcept             { return effectsVersion.load(); }
 
         /** Whether a pad has a name or a colour given to it (shown or not). */
         bool hasOwnLook (int pad) const;
@@ -486,6 +509,9 @@ namespace BuiltInEffects
         void writePads (juce::XmlElement& into) const;
         void readPads (const juce::XmlElement& from);
         void resetPads();
+        void writeEffects (juce::XmlElement& into) const;
+        void readEffects (const juce::XmlElement& from);
+        void resetEffects();
         static void setUserDefaults (const SoundParameters&);
         static juce::String idOfPad (int pad);
         const SoundParameters& of (int pad) const noexcept;
@@ -500,6 +526,10 @@ namespace BuiltInEffects
         std::array<juce::Colour, (size_t) DrumMachine::numSounds> soundColours;
         std::array<std::atomic<int>, (size_t) DrumMachine::numUserPads> userNotes;
         std::atomic<juce::uint32> padsVersion { 0 };
+
+        // Every pad's effects, a value at a time so the audio thread reads them without waiting.
+        std::array<std::array<std::atomic<float>, (size_t) DrumMachine::numFx>, (size_t) DrumMachine::numPads> effects;
+        std::atomic<juce::uint32> effectsVersion { 0 };
         juce::AudioParameterChoice* kickCharacter = nullptr;
         juce::AudioParameterFloat *kitDrive = nullptr, *glue = nullptr, *level = nullptr, *reverbSize = nullptr, *feedback = nullptr;
         juce::AudioParameterChoice* delayTime = nullptr;

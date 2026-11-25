@@ -218,6 +218,7 @@ target_sources(Torqwave PRIVATE
     Source/SamplerEditor.cpp
     Source/SamplerTrack.cpp
     Source/DrumMachine.cpp
+    Source/DrumPadEffects.cpp
     Source/DrumMachineEditor.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
@@ -671,6 +672,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/SamplerEditor.cpp
     Source/SamplerTrack.cpp
     Source/DrumMachine.cpp
+    Source/DrumPadEffects.cpp
     Source/DrumMachineEditor.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
