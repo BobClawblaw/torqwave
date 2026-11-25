@@ -251,6 +251,10 @@ namespace DrumMachine
         juce::uint32 hitsOfPad (int pad) const noexcept            { return hitCount[(size_t) pad].load (std::memory_order_relaxed); }
         float lastVelocityOfPad (int pad) const noexcept           { return lastVelocity[(size_t) pad].load (std::memory_order_relaxed); }
 
+        /** The layer a pad's last hit played, counted from 0 in the pad's list; -1 when it played
+            none (no layer takes that velocity, or the pad does not play samples). */
+        int lastLayerOfPad (int pad) const noexcept                { return lastLayer[(size_t) pad].load (std::memory_order_relaxed) - 1; }
+
         /** How far the glue is turning the kit down, in dB (0 or less). Any thread. */
         float getReductionDb() const noexcept                       { return reductionDb.load (std::memory_order_relaxed); }
 
@@ -301,6 +305,7 @@ namespace DrumMachine
 
         std::array<std::atomic<juce::uint32>, (size_t) numPads> hitCount {};
         std::array<std::atomic<float>, (size_t) numPads> lastVelocity {};
+        std::array<std::atomic<int>, (size_t) numPads> lastLayer {};   // one more than the layer; 0 for none
         std::atomic<float> reductionDb { 0.0f };
     };
 }

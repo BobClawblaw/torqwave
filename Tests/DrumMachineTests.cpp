@@ -182,7 +182,7 @@ namespace
         drums.processBlock (block, midi);
         check (window->getSelected() == Sound::snare && drums.getEngine().hitsOf (Sound::snare) == hits + 1 && drums.getEngine().lastVelocityOf (Sound::snare) > 0.95f
                    && block.getMagnitude (0, 512) > 0.05f && DrumMachineEditor::velocityAt (0.0f) > DrumMachineEditor::velocityAt (0.5f)
-                   && DrumMachineEditor::velocityAt (0.5f) > DrumMachineEditor::velocityAt (1.0f) && DrumMachineEditor::velocityAt (1.0f) >= 0.3f,
+                   && DrumMachineEditor::velocityAt (0.5f) > DrumMachineEditor::velocityAt (1.0f) && juce::roundToInt (DrumMachineEditor::velocityAt (1.0f) * 127.0f) == 6,
                "drums window: clicking the snare's pad near its top plays it at full velocity and selects it; lower on a pad plays softer");
 
         // The selected sound's knobs read in real units and follow it.
@@ -1268,6 +1268,80 @@ namespace
             many.deleteRecursively();
         }
 
+        // The window says what a hit was: its velocity and the layer it played, lit in the list, whether
+        // the hit came from a click on the pad or from a note. (From use: two layers spread on a user pad
+        // seemed to be one, because a click's velocity comes from its height on the pad and nothing showed it.)
+        {
+            const auto there = juce::File::createTempFile ("drumshits");
+            there.createDirectory();
+            const auto quiet = writeSound (there, "Soft", a), loud = writeSound (there, "Hard", b);
+            BasicDrumsProcessor drums;
+            drums.prepareToPlay (rate, 512);
+            std::unique_ptr<juce::AudioProcessorEditor> made (drums.createEditorAndMakeActive());
+
+            if (auto* window = dynamic_cast<DrumMachineEditor*> (made.get()))
+            {
+                constexpr int pad = 51;   // the 52nd pad, a user pad
+                const auto note = drums.getPadNote (pad);
+                window->addFiles (pad, { quiet, loud });
+                window->pressLayerButton ("spread");
+                const auto before = window->getHitText().isEmpty() && window->getLitLayer() == -1;
+
+                juce::AudioBuffer<float> block (2, 512);
+                const auto play = [&] (int velocity)
+                {
+                    juce::MidiBuffer midi;
+
+                    if (velocity > 0)
+                        midi.addEvent (juce::MidiMessage::noteOn (1, note, (juce::uint8) velocity), 0);
+
+                    drums.processBlock (block, midi);
+                    window->showHits();
+                };
+
+                // A click low on the pad is soft and plays the first layer; one at its top is hard and plays the second.
+                window->clickPad (pad, 0.95f);
+                play (0);
+                const auto low = window->getHitText() == "hit 6: layer 1" && window->getLitLayer() == 0;
+                window->clickPad (pad, 0.05f);
+                play (0);
+                const auto high = window->getHitText() == "hit 127: layer 2" && window->getLitLayer() == 1;
+
+                // A note, as the keys, a controller or a sequence send it.
+                play (20);
+                const auto played = window->getHitText() == "hit 20: layer 1" && window->getLitLayer() == 0;
+                play (64);
+                const auto harder = window->getHitText() == "hit 64: layer 2" && window->getLitLayer() == 1;
+
+                // A velocity no layer takes says so, and lights none.
+                auto layers = drums.getLayers (pad);
+                layers[0].lowVelocity = 30;
+                drums.setLayers (pad, layers);
+                play (20);
+                const auto none = window->getHitText() == "hit 20: no layer" && window->getLitLayer() == -1;
+
+                // Another pad's hits are not this pad's, and another pad selected starts with nothing said.
+                window->addFiles ((int) Sound::clap, { quiet });
+                window->selectPad (pad);
+                play (64);
+                drums.auditionPad ((int) Sound::clap, 1.0f);
+                play (0);
+                const auto apart = window->getHitText() == "hit 64: layer 2" && window->getLitLayer() == 1;
+                window->selectPad ((int) Sound::clap);
+                const auto other = apart && window->getHitText().isEmpty() && window->getLitLayer() == -1;
+
+                // The softest click is inside the softest of 16 layers spread evenly (1 to 7).
+                const auto reach = juce::roundToInt (DrumMachineEditor::velocityAt (1.0f) * 127.0f) <= 127 / DrumMachine::maxLayers;
+
+                check (before && low && high && played && harder && none && other && reach,
+                       juce::String ("drums window: the layers say the last hit's velocity and light the layer it played, for a click on the pad (soft at its bottom, hard at its top) and for a note; a velocity no layer takes says so")
+                           + (before ? "" : " [before]") + (low ? "" : " [low]") + (high ? "" : " [high]") + (played ? "" : " [note]") + (harder ? "" : " [harder]")
+                           + (none ? "" : " [none]") + (other ? "" : " [other]") + (reach ? "" : " [reach]"));
+            }
+
+            there.deleteRecursively();
+        }
+
         // The window: sounds dropped on a pad become its layers; the list shows them, and its buttons work on them.
         {
             const auto there = juce::File::createTempFile ("drumswindow");
@@ -1576,6 +1650,15 @@ void saveDrumMachineWindow (const juce::File& folder)
         drumWindow->addFiles (Sound::snare, hits);
         drumWindow->pressLayerButton ("spread");
         drumWindow->selectLayer (1);
+
+        // A hit on it, so the layers say its velocity and the one that played is lit.
+        {
+            drums.auditionPad ((int) Sound::snare, 100.0f / 127.0f);
+            juce::AudioBuffer<float> block (2, 512);
+            juce::MidiBuffer midi;
+            drums.processBlock (block, midi);
+            drumWindow->showHits();
+        }
 
         for (auto theme : { "Dark", "Light" })
         {

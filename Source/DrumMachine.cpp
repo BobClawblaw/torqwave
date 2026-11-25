@@ -1656,6 +1656,7 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
     // A Sample: the layer whose turn it is among those for this velocity. With none, the pad is silent.
     const auto sampled = user || st.type == sampleType;
     const Sampler::Sample* recording = nullptr;
+    auto played = 0;   // one more than the layer's place in the list, for the window
 
     if (sampled)
     {
@@ -1669,12 +1670,22 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
             {
                 auto turn = turns[(size_t) pad]++ % among;
 
-                for (auto& l : layers)
-                    if (l.plays (v) && turn-- == 0)
-                        recording = l.sample.get();
+                for (size_t i = 0; i < layers.size(); ++i)
+                {
+                    if (layers[i].plays (v) && turn-- == 0)
+                    {
+                        recording = layers[i].sample.get();
+                        played = (int) i + 1;
+                    }
+                }
             }
         }
+    }
 
+    lastLayer[(size_t) pad].store (played, std::memory_order_relaxed);
+
+    if (sampled)
+    {
         if (recording == nullptr || recording->getNumFrames() < 2)
             return;
     }

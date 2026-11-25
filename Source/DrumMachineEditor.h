@@ -62,8 +62,19 @@ public:
         name and colour back); "colour" takes the value, and for a user pad so does "note". */
     void changeUserPad (int pad, const juce::String& what, int value = 0);
 
-    /** The velocity a click at a height inside a pad plays: 1 at its top to about 0.3 at its bottom. */
+    /** The velocity a click at a height inside a pad plays: 1 (127) at its top down to softestClick
+        (6) at its bottom, which is inside the softest of 16 layers spread evenly. */
+    static constexpr float softestClick = 6.0f / 127.0f;
     static float velocityAt (float proportionDown) noexcept;
+
+    /** Takes in the hits since the last look, as the window's timer does: lights their pads, and
+        for the selected pad says the hit's velocity and lights the layer it played. */
+    void showHits();
+
+    /** For the tests: the layer the selected pad's last hit played (-1 for none, or before a hit),
+        and the layer list's words about that hit ("hit 52: layer 2", "hit 20: no layer"). */
+    int getLitLayer() const;
+    juce::String getHitText() const;
 
     /** What the window shows, for the tests: the kit's name as shown, a knob's readout, and the
         length of the picture's hit in seconds. */

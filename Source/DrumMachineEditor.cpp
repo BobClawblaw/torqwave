@@ -49,13 +49,15 @@ namespace
 //==============================================================================
 /** A pad: its name and notes on a card in its colour (a sound's family's, a user pad's own), lit as
     it plays. A user pad with no samples is drawn fainter. */
-class DrumMachineEditor::Pad final : public juce::Component
+class DrumMachineEditor::Pad final : public juce::Component,
+                                    public juce::SettableTooltipClient
 {
 public:
     Pad (int p, std::function<void (int, float)> clicked, std::function<void (int)> menu)
         : pad (p), onClick (std::move (clicked)), onMenu (std::move (menu))
     {
         setRepaintsOnMouseActivity (true);
+        setTooltip ("Click to play it: harder near the pad's top, softer near its bottom (velocity 127 down to 6). The playing keys' Velocity is for the keys only");
     }
 
     void describe (const juce::String& newName, const juce::String& newNotes, juce::Colour c, bool isEmpty)
@@ -68,7 +70,7 @@ public:
         colour = c;
         empty = isEmpty;
         setTitle (name);
-        setDescription ("Plays " + name + "; click higher for louder");
+        setDescription ("Plays " + name + "; click higher for harder, lower for softer");
         repaint();
     }
 
@@ -464,9 +466,55 @@ public:
 
     void show (int p, juce::Colour c)
     {
+        if (p != pad)
+            forgetHit();
+
         pad = p;
         colour = c;
         reload();
+    }
+
+    /** The pad's last hit, from wherever it came: its velocity (1 to 127) and the layer it played
+        (-1 for none). The header says both, and the layer's row lights and stays marked. */
+    void played (int velocity, int row)
+    {
+        hitVelocity = velocity;
+        hitRow = row;
+        light = 1.0f;
+
+        // The row that played is brought into view.
+        if (juce::isPositiveAndBelow (row, (int) rows.size()))
+            scroll = juce::jlimit (juce::jmax (0, row - visibleRows() + 1), row, scroll);
+
+        repaint();
+    }
+
+    /** The light falls away over about half a second; the mark stays. */
+    void fade()
+    {
+        if (light > 0.0f)
+        {
+            light = light < 0.02f ? 0.0f : light * 0.9f;
+            repaint();
+        }
+    }
+
+    void forgetHit()
+    {
+        hitVelocity = 0;
+        hitRow = -1;
+        light = 0.0f;
+    }
+
+    int getLitRow() const noexcept        { return hitRow; }
+
+    /** The header's words about the last hit: "hit 52: layer 2", "hit 20: no layer", or nothing before one. */
+    juce::String hitText() const
+    {
+        if (hitVelocity <= 0)
+            return {};
+
+        return "hit " + juce::String (hitVelocity) + (hitRow >= 0 ? ": layer " + juce::String (hitRow + 1) : juce::String (": no layer"));
     }
 
     void reload()
@@ -541,6 +589,10 @@ public:
         auto next = rows;
         const auto at = selectedRow;
 
+        // The rows are about to change places or ranges: the last hit's mark would point at the wrong one.
+        if (which == "remove" || which == "up" || which == "down")
+            hitRow = -1;
+
         if (which == "remove" && juce::isPositiveAndBelow (at, (int) next.size()))
         {
             next.erase (next.begin() + at);
@@ -600,7 +652,14 @@ public:
         g.setFont (juce::FontOptions (10.5f, juce::Font::bold));
         g.drawText ("LAYERS", header.removeFromLeft (50), juce::Justification::centredLeft);
         g.setFont (juce::FontOptions (10.5f));
-        g.drawText (juce::String ((int) rows.size()) + " of " + juce::String (DrumMachine::maxLayers), header.removeFromLeft (60), juce::Justification::centredLeft);
+        g.drawText (juce::String ((int) rows.size()) + " of " + juce::String (DrumMachine::maxLayers), header.removeFromLeft (48), juce::Justification::centredLeft);
+
+        // The last hit: its velocity and the layer it played, so a layer that does not sound can be told from a velocity that missed it.
+        if (const auto hit = hitText(); hit.isNotEmpty())
+        {
+            g.setColour (hitRow >= 0 ? Theme::accentLight.interpolatedWith (Theme::textStrong, light * 0.6f) : Theme::warn);
+            g.drawText (hit, header.withRight (add.getX() - 4), juce::Justification::centredLeft);
+        }
 
         auto list = listBounds();
 
@@ -626,6 +685,15 @@ public:
                 g.fillRoundedRectangle (row.toFloat().reduced (1.0f, 0.5f), 3.0f);
                 g.setColour (colour.withAlpha (0.8f));
                 g.fillRect (row.getX() + 1, row.getY() + 3, 2, row.getHeight() - 6);
+            }
+
+            // The layer the last hit played: lit at the hit, and outlined after it.
+            if (i == hitRow)
+            {
+                g.setColour (Theme::accentLight.withAlpha (0.10f + 0.35f * light));
+                g.fillRoundedRectangle (row.toFloat().reduced (1.0f, 0.5f), 3.0f);
+                g.setColour (Theme::accentLight.withAlpha (0.55f + 0.45f * light));
+                g.drawRoundedRectangle (row.toFloat().reduced (1.5f, 1.0f), 3.0f, 1.0f);
             }
 
             g.setFont (juce::FontOptions (10.5f));
@@ -771,6 +839,8 @@ private:
     std::vector<std::vector<std::pair<float, float>>> shapes;
     juce::TextButton add { "Add..." }, remove { "-" }, up { juce::String::fromUTF8 ("\xe2\x96\xb2") }, down { juce::String::fromUTF8 ("\xe2\x96\xbc") }, spread { "Spread" };
     int selectedRow = -1, scroll = 0, dragging = 0, dragFrom = 0;
+    int hitVelocity = 0, hitRow = -1;
+    float light = 0.0f;
 };
 
 //==============================================================================
@@ -942,7 +1012,7 @@ juce::Colour DrumMachineEditor::colourOf (Sound s)
 
 float DrumMachineEditor::velocityAt (float proportionDown) noexcept
 {
-    return juce::jlimit (0.3f, 1.0f, 1.0f - 0.7f * juce::jlimit (0.0f, 1.0f, (proportionDown - 0.1f) / 0.85f));
+    return juce::jlimit (softestClick, 1.0f, 1.0f - (1.0f - softestClick) * juce::jlimit (0.0f, 1.0f, (proportionDown - 0.1f) / 0.85f));
 }
 
 int DrumMachineEditor::padAtPlace (size_t place) const
@@ -1150,6 +1220,8 @@ juce::String DrumMachineEditor::getLayerText (int row) const { return layers->ro
 bool DrumMachineEditor::showsLayers() const                 { return layers->isVisible(); }
 void DrumMachineEditor::selectLayer (int row)               { layers->select (row); }
 void DrumMachineEditor::pressLayerButton (const juce::String& which)    { layers->press (which); }
+int DrumMachineEditor::getLitLayer() const                  { return layers->getLitRow(); }
+juce::String DrumMachineEditor::getHitText() const          { return layers->hitText(); }
 
 void DrumMachineEditor::say (const juce::String& text)
 {
@@ -1475,6 +1547,40 @@ juce::String DrumMachineEditor::getKnobText (const juce::String& what) const
     return {};
 }
 
+void DrumMachineEditor::showHits()
+{
+    // The pads light at each new hit; the picture sweeps when its own sound plays, and the layers
+    // say the hit's velocity and light the one it played.
+    const auto& engine = drums.getEngine();
+
+    for (size_t i = 0; i < pads.size(); ++i)
+    {
+        const auto pad = padAtPlace (i);
+        const auto count = engine.hitsOfPad (pad);
+
+        if (count != seenHits[i])
+        {
+            seenHits[i] = count;
+            const auto velocity = engine.lastVelocityOfPad (pad);
+            pads[i]->hit (velocity);
+
+            if (pad == selectedPad)
+            {
+                picture->sweep();
+
+                if (shownSample)
+                        layers->played (juce::jlimit (1, 127, juce::roundToInt (velocity * 127.0f)), engine.lastLayerOfPad (pad));
+            }
+        }
+        else
+        {
+            pads[i]->fade();
+        }
+    }
+
+    layers->fade();
+}
+
 void DrumMachineEditor::timerCallback()
 {
     for (auto* k : soundKnobs())
@@ -1505,27 +1611,7 @@ void DrumMachineEditor::timerCallback()
     if (const auto was = filter.getIndex(); (filter.refresh(), filter.getIndex() != was))
         refreshFilterKnobs();
 
-    // The pads light at each new hit; the picture sweeps when its own sound plays.
-    const auto& engine = drums.getEngine();
-
-    for (size_t i = 0; i < pads.size(); ++i)
-    {
-        const auto pad = padAtPlace (i);
-        const auto count = engine.hitsOfPad (pad);
-
-        if (count != seenHits[i])
-        {
-            seenHits[i] = count;
-            pads[i]->hit (engine.lastVelocityOfPad (pad));
-
-            if (pad == selectedPad)
-                picture->sweep();
-        }
-        else
-        {
-            pads[i]->fade();
-        }
-    }
+    showHits();
 
     if (picture->isSweeping())
         picture->repaint();
