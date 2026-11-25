@@ -717,6 +717,65 @@ namespace
         check (plan.pads[0].pad == (int) DrumMachine::Sound::kick && plan.pads[1].pad == DrumMachine::numSounds, "The second cell on a sound's note takes a user pad, on that note");
         check (reports (plan, "29 cells are on a pad whose note is fixed") && reports (plan, "8 were left out"), "The cells that changed note and the ones left out are counted in the report");
     }
+
+    void folders()
+    {
+        Library library;
+        const auto folder = library.folder.getChildFile ("Loose Sounds");
+
+        for (auto* name : { "Kick.wav", "Kick Sub.wav", "Snare v1.wav", "Snare v2.wav", "Snare v3.wav", "ClosedHH rr1.wav", "ClosedHH rr2.wav", "OpenHat.wav", "hi tom.wav",
+                            "BD9.wav", "Thud D7.wav", "Whatever.wav" })
+            library.add (name, folder);
+
+        library.add ("36 thump.wav", folder.getChildFile ("By Note"));
+        library.add ("crack 039.wav", folder.getChildFile ("By Note"));
+        library.add ("01 one.wav", folder.getChildFile ("Counted"));
+        library.add ("40 forty.wav", folder.getChildFile ("Counted"));
+        folder.getChildFile ("notes.txt").replaceWithText ("not a sound");
+
+        auto plan = DrumKitImport::fromFolder (folder);
+        const auto noteOf = [&plan] (const juce::String& name) { const auto* p = padNamed (plan, name); return p != nullptr ? p->note : -99; };
+
+        const auto ranges = [&plan] (const juce::String& name)
+        {
+            juce::String s;
+
+            if (const auto* p = padNamed (plan, name))
+                for (auto& l : p->layers)
+                    s << l.file.getFileNameWithoutExtension() << " " << l.lowVelocity << "-" << l.highVelocity << ", ";
+
+            return s.trim();
+        };
+
+        check (plan.name == "Loose Sounds" && plan.pads.size() == 13, "A folder's sound files, the ones in its folders too, become pads, files alike but for a mark one pad ("
+                                                                         + juce::String ((int) plan.pads.size()) + ")");
+        check (noteOf ("Kick") == 36 && noteOf ("OpenHat") == 46 && noteOf ("hi tom") == 48 && noteOf ("ClosedHH") == 42 && noteOf ("Snare") == 38,
+               "An instrument's name, or its short form, puts a file on that sound's note");
+        check (noteOf ("Whatever") == 82 && noteOf ("Kick Sub") == 83 && noteOf ("BD9") == 84, "A file with no name this knows gets a note of its own, from 82 up, and so does another file of an instrument whose pad the plainest name has taken");
+        check (noteOf ("01 one") == 85 && noteOf ("40 forty") == 86, "Where a folder's files are numbered from below 35, the numbers are a count, not notes");
+        check (noteOf ("36 thump") == 36 && noteOf ("crack 039") == 39, "A drum note's number at the front or the end of a name is its note");
+        check (noteOf ("Thud D7") == 98, "A note's name is its note, middle C being C4");
+        check (ranges ("Snare") == "Snare v1 1-42, Snare v2 43-84, Snare v3 85-127,", "Files marked v1, v2, v3 are one pad's layers, the velocities split between them");
+        check (ranges ("ClosedHH") == "ClosedHH rr1 1-127, ClosedHH rr2 1-127,", "Files marked rr1, rr2 are layers that take turns");
+        check (reports (plan, "13 pads from 16 sound files: 2 by a drum note's number in the name, 5 by an instrument's name, 1 by a note's name, and 5 on notes of their own")
+                   && reports (plan, "2 pads have several layers"),
+               "The report counts how each pad was chosen");
+
+        DrumKitImport::place (plan);
+        BuiltInEffects::BasicDrumsProcessor drums;
+        const auto error = DrumKitImport::apply (drums, plan);
+        const auto snare = (int) DrumMachine::Sound::snare, kick = (int) DrumMachine::Sound::kick;
+        check (error.isEmpty() && drums.getKitName() == "Loose Sounds" && drums.playsSamples (kick) && drums.getLayers (kick).size() == 1 && drums.getLayers (snare).size() == 3
+                   && drums.getLayers (snare)[1].lowVelocity == 43 && drums.getPadName (kick) == "Kick",
+               "The folder's plan is put on the pads: the kick's and the snare's play the files");
+
+        const auto* thump = padNamed (plan, "36 thump");
+        check (thump != nullptr && thump->pad >= DrumMachine::numSounds && drums.getPadNote (thump->pad) == 36, "A file numbered for a note a pad already has takes a user pad on that note");
+
+        const auto empty = library.folder.getChildFile ("Nothing Here");
+        empty.createDirectory();
+        check (DrumKitImport::fromFolder (empty).pads.empty(), "A folder with no sound files gives no pads");
+    }
 }
 
 void runBatteryKitTests()
@@ -729,6 +788,7 @@ void runBatteryKitTests()
     hostile();
     planning();
     placing();
+    folders();
 }
 
 int runBatteryKitFiles (const juce::StringArray& files)

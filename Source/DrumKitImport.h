@@ -4,9 +4,10 @@
 #include "BatteryKit.h"
 
 /** Bringing a kit made elsewhere onto Basic Drums' pads: a Battery 4 kit file the user owns, read
-    where it is. An import is first a plan (which pad gets what, and a report of everything that
-    was approximated or left out), which nothing has touched yet; then the plan is put on the pads.
-    Samples are read from where the kit points and are never copied. */
+    where it is, or a folder of sound files laid on the pads by their names. An import is first a
+    plan (which pad gets what, and a report of everything that was approximated or left out), which
+    nothing has touched yet; then the plan is put on the pads. Samples are read from where they
+    are and are never copied. */
 namespace DrumKitImport
 {
     /** The files a pad can play. */
@@ -45,6 +46,22 @@ namespace DrumKitImport
         then under `library` if one is given (a library that has moved). */
     Plan fromBattery (const BatteryKit::Kit&, const juce::File& kitFile, const juce::File& library = {});
 
+    /** A folder of sound files as a plan (the folders inside it too), each file's pad chosen from
+        its name:
+        - a General MIDI drum note number at the front or the end ("36 Thud", "Thud 038"), unless
+          the files' numbers go below 35, which makes them a count and not notes;
+        - else an instrument's name or its usual short form ("Kick", "BD", "Snare", "ClosedHH",
+          "Open Hat", "Low Tom", "Crash", "Cowbell" and so on): that sound's pad, the first time.
+          Another file with the same instrument goes on a pad and a note of its own;
+        - else a note's name at the front or the end ("Thud C2"), middle C being C4;
+        - else a pad and a note of its own, from 82 up.
+        Files alike but for a mark are one pad's layers: "v1", "v2" (or "vel1") split the velocities
+        between them in that order, and "rr1", "rr2" take turns. */
+    Plan fromFolder (const juce::File& folder);
+
+    /** The most files a folder import looks at. */
+    constexpr int mostFolderFiles = 2000;
+
     /** Gives every pad of a plan its place. A pad on a note one of the 30 sounds has, with that
         sound's pad still free, takes it; others take the user pads in order, keeping their notes;
         when those are full the rest take the sounds' pads left, and so change note. Pads past the
@@ -62,6 +79,10 @@ namespace DrumKitImport
         and shows the report. `done` is called with a line to say once the pads have changed. */
     void importBatteryKit (juce::Component& window, BuiltInEffects::BasicDrumsProcessor&, std::unique_ptr<juce::FileChooser>&,
                            std::function<void (const juce::String&)> done, const juce::File& kitFile = {});
+
+    /** The same for a folder of sounds: asks for one, or takes the one given. */
+    void importFolder (juce::Component& window, BuiltInEffects::BasicDrumsProcessor&, std::unique_ptr<juce::FileChooser>&,
+                       std::function<void (const juce::String&)> done, const juce::File& folder = {});
 
     /** Whether a file is one importBatteryKit takes. */
     bool isBatteryKit (const juce::File&);

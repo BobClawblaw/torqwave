@@ -283,6 +283,339 @@ Plan fromBattery (const BatteryKit::Kit& kit, const juce::File& kitFile, const j
     return plan;
 }
 
+//==============================================================================
+namespace
+{
+    /** A file's name as words: lower case, split where a capital follows a small letter and where
+        a letter follows a digit, everything else that is not a letter, a digit or a sharp a space.
+        With digitsApart, a digit after a letter starts a word too ("bd2" is "bd" and "2"); without,
+        it stays ("v2", "c3"). */
+    juce::StringArray wordsOf (const juce::String& name, bool digitsApart)
+    {
+        juce::String spaced;
+        juce::juce_wchar last = 0;
+
+        for (auto c : name)
+        {
+            const auto letter = juce::CharacterFunctions::isLetter (c), digit = juce::CharacterFunctions::isDigit (c);
+            const auto lastLetter = juce::CharacterFunctions::isLetter (last), lastDigit = juce::CharacterFunctions::isDigit (last);
+
+            if ((letter && juce::CharacterFunctions::isUpperCase (c) && lastLetter && juce::CharacterFunctions::isLowerCase (last)) || (letter && lastDigit) || (digitsApart && digit && lastLetter))
+                spaced << ' ';
+
+            spaced << (letter || digit || c == '#' ? juce::CharacterFunctions::toLowerCase (c) : (juce::juce_wchar) ' ');
+            last = c;
+        }
+
+        juce::StringArray words;
+        words.addTokens (spaced, " ", {});
+        words.removeEmptyStrings();
+        return words;
+    }
+
+    bool has (const juce::StringArray& words, std::initializer_list<const char*> any)
+    {
+        for (auto* w : any)
+            if (words.contains (w))
+                return true;
+
+        return false;
+    }
+
+    /** The instrument a name speaks of, or none. */
+    std::optional<Sound> soundNamed (const juce::StringArray& w)
+    {
+        const auto hat = has (w, { "hat", "hats", "hihat", "hihats", "hh" });
+        const auto tom = has (w, { "tom", "toms" });
+        const auto conga = has (w, { "conga", "congas" });
+
+        if (has (w, { "ohh", "openhat", "openhh" }) || (hat && has (w, { "open", "opn", "op" })))     return Sound::openHat;
+        if (has (w, { "phh", "pedalhat" }) || (hat && has (w, { "pedal", "foot" })))                  return Sound::pedalHat;
+        if (hat || has (w, { "chh", "closedhat", "closedhh" }))                                       return Sound::closedHat;
+        if (has (w, { "kick", "kicks", "kik", "kck", "bd", "bassdrum" }) || (w.contains ("bass") && w.contains ("drum")))   return Sound::kick;
+        if (has (w, { "rim", "rimshot", "sidestick" }) || (w.contains ("side") && w.contains ("stick")))                    return Sound::rim;
+        if (has (w, { "snare", "snares", "snr", "sd", "sn" }))                                        return Sound::snare;
+        if (has (w, { "clap", "claps", "handclap", "cp" }))                                           return Sound::clap;
+        if ((tom && has (w, { "low", "lo", "floor" })) || has (w, { "lowtom", "floortom", "lt" }))    return Sound::lowTom;
+        if ((tom && has (w, { "high", "hi" })) || has (w, { "hightom", "hitom", "ht" }))              return Sound::highTom;
+        if (tom || has (w, { "midtom", "mt" }))                                                       return Sound::midTom;
+        if (has (w, { "crash", "cymbal", "cymbals" }))                                                return Sound::crash;
+        if (w.contains ("ride"))                                                                      return w.contains ("bell") ? Sound::rideBell : Sound::ride;
+        if (w.contains ("china"))                                                                     return Sound::china;
+        if (w.contains ("splash"))                                                                    return Sound::splash;
+        if (has (w, { "cowbell", "cb" }) || (w.contains ("cow") && w.contains ("bell")))              return Sound::cowbell;
+        if (has (w, { "shaker", "shakers", "maraca", "maracas", "cabasa" }))                          return Sound::shaker;
+        if (has (w, { "tambourine", "tamb", "tambo" }))                                               return Sound::tambourine;
+        if (has (w, { "vibraslap", "vibra" }))                                                        return Sound::vibraslap;
+        if (has (w, { "bongo", "bongos" }))                                                           return Sound::bongo;
+        if (conga)                                                                                    return has (w, { "mute", "muted", "slap" }) ? Sound::muteConga : Sound::openConga;
+        if (has (w, { "timbale", "timbales" }))                                                       return Sound::timbale;
+        if (w.contains ("agogo"))                                                                     return Sound::agogo;
+        if (w.contains ("whistle"))                                                                   return Sound::whistle;
+        if (w.contains ("guiro"))                                                                     return Sound::guiro;
+        if (has (w, { "clave", "claves" }))                                                           return Sound::claves;
+        if (w.contains ("woodblock") || (w.contains ("wood") && w.contains ("block")))                return Sound::woodBlock;
+        if (w.contains ("cuica"))                                                                     return Sound::cuica;
+        if (w.contains ("triangle"))                                                                  return Sound::triangle;
+        return std::nullopt;
+    }
+
+    /** A whole number a word is, or -1. */
+    int numberOf (const juce::String& word)
+    {
+        return word.isNotEmpty() && word.length() <= 3 && word.containsOnly ("0123456789") ? word.getIntValue() : -1;
+    }
+
+    /** The note a word names ("c2", "f#3", "bb1"; middle C is c4), or -1. */
+    int noteNamed (const juce::String& word)
+    {
+        static const int steps[] { 9, 11, 0, 2, 4, 5, 7 };   // a to g
+
+        if (word.length() < 2 || word.length() > 3 || word[0] < 'a' || word[0] > 'g' || ! juce::CharacterFunctions::isDigit (word.getLastCharacter()))
+            return -1;
+
+        auto step = steps[word[0] - 'a'];
+
+        if (word.length() == 3)
+        {
+            if (word[1] == '#')        ++step;
+            else if (word[1] == 'b')   --step;
+            else                       return -1;
+        }
+
+        const auto note = (word.getLastCharacter() - '0' + 1) * 12 + step;
+        return juce::isPositiveAndBelow (note, 128) ? note : -1;
+    }
+
+    /** A mark that makes a file one of a pad's layers: "v3" or "vel3" (by velocity), "rr2" (taking turns). */
+    bool layerMark (const juce::String& word, bool& byVelocity, int& number)
+    {
+        for (auto* prefix : { "vel", "v", "rr" })
+        {
+            if (word.startsWith (prefix) && numberOf (word.substring ((int) std::strlen (prefix))) >= 0)
+            {
+                byVelocity = prefix[0] == 'v';
+                number = numberOf (word.substring ((int) std::strlen (prefix)));
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+Plan fromFolder (const juce::File& folder)
+{
+    Plan plan;
+    plan.name = folder.getFileName();
+
+    juce::Array<juce::File> files;
+    int looked = 0;
+
+    for (const auto& entry : juce::RangedDirectoryIterator (folder, true, "*", juce::File::findFiles | juce::File::ignoreHiddenFiles))
+    {
+        if (++looked > mostFolderFiles * 4 || files.size() >= mostFolderFiles)
+            break;
+
+        if (entry.getFile().hasFileExtension (soundFileTypes))
+            files.add (entry.getFile());
+    }
+
+    const auto tooMany = files.size() >= mostFolderFiles;
+    std::sort (files.begin(), files.end(), [] (const juce::File& a, const juce::File& b) { return a.getFullPathName().compareNatural (b.getFullPathName()) < 0; });
+
+    // In a folder whose files are numbered from below 35, a number is a count and not a note.
+    std::map<juce::String, bool> numbered;
+
+    for (auto& f : files)
+    {
+        const auto words = wordsOf (f.getFileNameWithoutExtension(), true);
+
+        for (auto n : { words.isEmpty() ? -1 : numberOf (words[0]), words.isEmpty() ? -1 : numberOf (words[words.size() - 1]) })
+            if (n >= 0 && n < DrumMachine::firstNote)
+                numbered[f.getParentDirectory().getFullPathName()] = true;
+    }
+
+    // Files alike but for a layer's mark are one pad.
+    struct Group
+    {
+        juce::String name;
+        juce::StringArray words;
+        juce::File folder;
+        struct Member { juce::File file; int velocity, turn; };
+        std::vector<Member> members;
+    };
+
+    std::vector<Group> groups;
+    std::map<juce::String, size_t> groupOf;
+
+    for (auto& f : files)
+    {
+        auto words = wordsOf (f.getFileNameWithoutExtension(), false);
+        int velocity = -1, turn = -1;
+
+        for (int i = words.size(); --i >= 0;)
+        {
+            bool byVelocity = false;
+            int number = 0;
+
+            if (words.size() > 1 && layerMark (words[i], byVelocity, number))
+            {
+                (byVelocity ? velocity : turn) = number;
+                words.remove (i);
+            }
+        }
+
+        const auto marked = velocity >= 0 || turn >= 0;
+        const auto key = f.getParentDirectory().getFullPathName() + "\n" + (marked ? words.joinIntoString (" ") : f.getFileName());
+        const auto [at, isNew] = groupOf.try_emplace (key, groups.size());
+
+        if (isNew)
+        {
+            // Its name is the file's, without the mark where the mark stands as a word of its own.
+            juce::StringArray named;
+            named.addTokens (f.getFileNameWithoutExtension(), " _-.", {});
+            named.removeEmptyStrings();
+            const auto before = named.size();
+
+            for (int i = named.size(); --i >= 0;)
+            {
+                bool byVelocity = false;
+                int number = 0;
+
+                if (named.size() > 1 && layerMark (named[i].toLowerCase(), byVelocity, number))
+                    named.remove (i);
+            }
+
+            groups.push_back ({ ! marked ? f.getFileNameWithoutExtension() : named.size() < before ? named.joinIntoString (" ") : words.joinIntoString (" "),
+                                words, f.getParentDirectory(), {} });
+        }
+
+        groups[at->second].members.push_back ({ f, velocity, turn });
+    }
+
+    // The folder's own files before its folders'; a plain name before one with a number in it or more
+    // words, so that of "Kick", "Kick Sub" and "BD 2" it is "Kick" that gets the kick's pad.
+    const auto depthOf = [&folder] (const juce::File& f) { return f.getRelativePathFrom (folder).retainCharacters ("/\\").length(); };
+
+    std::stable_sort (groups.begin(), groups.end(), [&depthOf] (const Group& a, const Group& b)
+    {
+        const auto key = [&depthOf] (const Group& g)
+        {
+            return std::make_tuple (depthOf (g.folder), g.folder.getFullPathName(), g.name.containsAnyOf ("0123456789"), g.words.size());
+        };
+
+        return key (a) < key (b);
+    });
+
+    std::set<int> notesTaken;
+    std::vector<size_t> unplaced;
+    int byNumber = 0, byInstrument = 0, byNoteName = 0, layered = 0, thinned = 0;
+
+    for (auto& g : groups)
+    {
+        Pad pad;
+        pad.name = g.name;
+
+        // Its layers: by velocity where the files say, each velocity's files taking turns.
+        std::stable_sort (g.members.begin(), g.members.end(), [] (const Group::Member& a, const Group::Member& b) { return std::tie (a.velocity, a.turn) < std::tie (b.velocity, b.turn); });
+        std::vector<int> velocities;
+
+        for (auto& m : g.members)
+            if (m.velocity >= 0 && (velocities.empty() || velocities.back() != m.velocity))
+                velocities.push_back (m.velocity);
+
+        for (auto& m : g.members)
+        {
+            PadLayer l { m.file, 1, 127 };
+
+            if (m.velocity >= 0 && velocities.size() > 1)
+            {
+                const auto step = (int) (std::find (velocities.begin(), velocities.end(), m.velocity) - velocities.begin()), steps = (int) velocities.size();
+                l.lowVelocity = 1 + 127 * step / steps;
+                l.highVelocity = 127 * (step + 1) / steps;
+            }
+
+            pad.layers.push_back (l);
+        }
+
+        if ((int) pad.layers.size() > DrumMachine::maxLayers)
+        {
+            pad.layers.resize ((size_t) DrumMachine::maxLayers);
+            ++thinned;
+        }
+
+        layered += pad.layers.size() > 1 ? 1 : 0;
+
+        // Its note. Marks and note names are read with a digit kept on its letter, the rest with it apart.
+        const auto& whole = g.words;
+        const auto w = wordsOf (whole.joinIntoString (" "), true);
+        const auto isCount = numbered[g.folder.getFullPathName()];
+        const auto first = w.isEmpty() ? -1 : numberOf (w[0]), last = w.isEmpty() ? -1 : numberOf (w[w.size() - 1]);
+        const auto inRange = [] (int n) { return n >= DrumMachine::firstNote && n <= DrumMachine::lastNote; };
+
+        if (! isCount && (inRange (first) || inRange (last)))
+        {
+            pad.note = inRange (first) ? first : last;
+            ++byNumber;
+        }
+        else if (const auto sound = soundNamed (w); sound.has_value() && notesTaken.count (DrumMachine::padNote (*sound)) == 0)
+        {
+            pad.note = DrumMachine::padNote (*sound);
+            ++byInstrument;
+        }
+        else if (const auto named = whole.isEmpty() ? -1 : juce::jmax (noteNamed (whole[0]), noteNamed (whole[whole.size() - 1])); named >= 0 && ! sound.has_value())
+        {
+            pad.note = named;
+            ++byNoteName;
+        }
+        else
+        {
+            pad.note = -1;
+            unplaced.push_back (plan.pads.size());
+        }
+
+        if (pad.note >= 0)
+            notesTaken.insert (pad.note);
+
+        plan.pads.push_back (std::move (pad));
+    }
+
+    // The rest get notes of their own: from 82 up, then whatever is free below.
+    int next = DrumMachine::firstUserNote;
+
+    for (auto i : unplaced)
+    {
+        while (next < 128 && notesTaken.count (next) > 0)
+            ++next;
+
+        if (next >= 128)
+            for (next = 0; next < 128 && notesTaken.count (next) > 0;)
+                ++next;
+
+        plan.pads[i].note = juce::jmin (127, next);
+        notesTaken.insert (plan.pads[i].note);
+    }
+
+    auto& report = plan.report;
+    report.add (counted ((int) plan.pads.size(), "pad", "pads") + " from " + counted (files.size(), "sound file", "sound files") + ": " + juce::String (byNumber)
+                + " by a drum note's number in the name, " + juce::String (byInstrument) + " by an instrument's name, " + juce::String (byNoteName) + " by a note's name, and "
+                + juce::String ((int) unplaced.size()) + " on notes of their own, from " + juce::String (DrumMachine::firstUserNote) + " up.");
+
+    if (layered > 0)
+        report.add (counted (layered, "pad has", "pads have") + " several layers, from files alike but for a mark: v1, v2 split the velocities, rr1, rr2 take turns.");
+
+    if (thinned > 0)
+        report.add (counted (thinned, "pad was", "pads were") + " given more than " + juce::String (DrumMachine::maxLayers) + " files, the most layers a pad has: the first "
+                    + juce::String (DrumMachine::maxLayers) + " were kept.");
+
+    if (tooMany)
+        report.add ("The folder has more sound files than an import looks at: the first " + juce::String (mostFolderFiles) + " by name were used.");
+
+    report.add ("Check the pads by ear: names are a guess at what a file is. A pad's note, name and layers can be changed from its menu and its panel.");
+    return plan;
+}
+
 void place (Plan& plan)
 {
     std::array<bool, (size_t) DrumMachine::numPads> taken {};
@@ -467,7 +800,7 @@ namespace
             return;
         }
 
-        done ("Imported " + plan.name + ": " + counted ((int) plan.pads.size(), "pad", "pads") + ". Its samples are read where they are, not copied.");
+        done ("Imported " + plan.name + ": " + counted ((int) plan.pads.size(), "pad", "pads") + ". The samples are read where they are, not copied.");
         juce::AlertWindow::showAsync (juce::MessageBoxOptions().withIconType (juce::MessageBoxIconType::InfoIcon).withTitle ("Imported " + plan.name)
                                           .withMessage (plan.report.joinIntoString ("\n\n")).withButton ("OK").withAssociatedComponent (window.getComponent()),
                                       nullptr);
@@ -518,6 +851,34 @@ namespace
             });
         });
     }
+}
+
+void importFolder (juce::Component& window, BuiltInEffects::BasicDrumsProcessor& drums, std::unique_ptr<juce::FileChooser>& chooser, Say done, const juce::File& folder)
+{
+    const juce::Component::SafePointer<juce::Component> safe (&window);
+
+    const auto import = [] (juce::Component::SafePointer<juce::Component> to, BuiltInEffects::BasicDrumsProcessor& into, const Say& say, const juce::File& from)
+    {
+        auto plan = fromFolder (from);
+
+        if (plan.pads.empty())
+            say (from.getFileName() + " has no sound files in it.");
+        else
+            finish (to, into, std::move (plan), say);
+    };
+
+    if (folder != juce::File())
+    {
+        import (safe, drums, done, folder);
+        return;
+    }
+
+    chooser = std::make_unique<juce::FileChooser> ("Import a folder of sounds, laid on the pads by their names", juce::File(), juce::String());
+    chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories, [safe, &drums, done, import] (const juce::FileChooser& c)
+    {
+        if (safe != nullptr && c.getResult().isDirectory())
+            import (safe, drums, done, c.getResult());
+    });
 }
 
 void importBatteryKit (juce::Component& window, BuiltInEffects::BasicDrumsProcessor& drums, std::unique_ptr<juce::FileChooser>& chooser, Say done, const juce::File& kitFile)
