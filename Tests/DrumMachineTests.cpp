@@ -136,9 +136,9 @@ namespace
         auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (instance.get());
         check (drums != nullptr && error.isEmpty() && description.isInstrument && description.numInputChannels == 0 && description.name == "Basic Drums"
                    && description.uniqueId == 0x53424452 && drums->acceptsMidi() && drums->getTotalNumInputChannels() == 0
-                   && drums->getTotalNumOutputChannels() == 2 && drums->getParameters().size() == DrumMachine::numSounds * 12 + 21 + 7 + 9 + DrumMachine::numSounds * 3,
+                   && drums->getTotalNumOutputChannels() == 2 && drums->getParameters().size() == DrumMachine::numSounds * 12 + 21 + 7 + 9 + DrumMachine::numSounds * 3 + DrumMachine::numUserPads * 15,
                "drums: Basic Drums is made from its description (the same ID, so sessions find it), an instrument with no audio input, a stereo output and "
-                   + juce::String (drums != nullptr ? drums->getParameters().size() : 0) + " parameters (twelve for each of 30 sounds, a type for the 21 that have a Modern one, the kick's character, the kit's drive, glue, level, reverb size, delay time and feedback, and after all those a type for the other nine and a Sample's start, reverse and pitch envelope for each sound)");
+                   + juce::String (drums != nullptr ? drums->getParameters().size() : 0) + " parameters (twelve for each of 30 sounds, a type for the 21 that have a Modern one, the kick's character, the kit's drive, glue, level, reverb size, delay time and feedback, and after all those a type for the other nine, a Sample's start, reverse and pitch envelope for each sound, and fifteen for each of 34 user pads)");
 
         BuiltInEffects::addTo (engine.knownPlugins);
         const auto known = Instrument::known (engine.knownPlugins);
@@ -1294,11 +1294,11 @@ namespace
 
                 // On the selected sound's panel a drop goes to that sound; anywhere else it goes nowhere, and says so.
                 window->select (Sound::cowbell);
-                const auto panel = window->soundAt ({ window->getWidth() - 60, window->getHeight() - 200 });
+                const auto panel = window->padAt ({ window->getWidth() - 60, window->getHeight() - 200 });
                 window->filesDropped ({ two.getFullPathName() }, window->getWidth() - 60, window->getHeight() - 200);
-                const auto onPanel = panel == Sound::cowbell && drums.getLayers (Sound::cowbell).size() == 1 && window->getTypeText() == "Sample";
+                const auto onPanel = panel == (int) Sound::cowbell && drums.getLayers (Sound::cowbell).size() == 1 && window->getTypeText() == "Sample";
                 window->filesDropped ({ two.getFullPathName() }, 30, 30);
-                const auto nowhere = ! window->soundAt ({ 30, 30 }).has_value() && window->getMessage().isNotEmpty() && drums.getLayers (Sound::cowbell).size() == 1;
+                const auto nowhere = ! window->padAt ({ 30, 30 }).has_value() && window->getMessage().isNotEmpty() && drums.getLayers (Sound::cowbell).size() == 1;
                 window->select (Sound::kick);
                 check (interested && dropped && spread && reordered && removed && onPanel && nowhere && ! window->showsLayers() && window->getTypeText() == "Classic",
                        juce::String ("drum samples window: two sounds dropped on the clap's pad select it, make it a Sample and show two layers with their names and velocities; ")
@@ -1309,6 +1309,144 @@ namespace
             else
             {
                 check (false, "drum samples window: it opens");
+            }
+
+            made = nullptr;
+            there.deleteRecursively();
+        }
+
+        // The 34 user pads: each plays samples on a note of its own, with a name and a colour.
+        {
+            const auto there = juce::File::createTempFile ("drumuserpads");
+            there.createDirectory();
+            const auto aHere = writeSound (there, "A", a), bHere = writeSound (there, "B", b), thudHere = writeSound (there, "Thud", thud);
+            const auto first = DrumMachine::numSounds, second = first + 1;
+            BasicDrumsProcessor drums;
+            clean (drums);
+            const auto startsEmpty = drums.getPadName (first) == "Pad 31" && drums.getPadNote (first) == 82 && drums.getPadNote (DrumMachine::numPads - 1) == 115
+                                     && drums.playsSamples (first) && ! BasicDrumsProcessor().kitModified() && juce::exactlyEqual (peakOf (play (drums, { { 82, 0.0, 1.0f } }, 0.2)), 0.0f);
+            const auto error = drums.addFiles (first, { thudHere });
+            const auto on82 = play (drums, { { 82, 0.0, 1.0f } }, 0.5);
+            const auto elsewhere = peakOf (play (drums, { { 83, 0.0, 1.0f }, { 20, 0.1, 1.0f } }, 0.3));
+            check (startsEmpty && error.isEmpty() && furthestFrom (on82, 0, thud, 1.0f, 12000 - 30) < 2.0e-6f && juce::exactlyEqual (elsewhere, 0.0f) && drums.kitModified(),
+                   "drum user pads: 34 pads after the 30 sounds, named Pad 31 to Pad 64 on notes 82 to 115, silent until given a sound; pad 31 then plays its sample whole on note 82, as it is, and on no other note");
+
+            // On a note a sound has, both play; clicked, the pad plays alone.
+            drums.setPadNote (first, kick);
+            const auto kickAlone = [&] { BasicDrumsProcessor plain; clean (plain); return play (plain, { { kick, 0.0, 1.0f } }, 0.5); }();
+            const auto both = play (drums, { { kick, 0.0, 1.0f } }, 0.5);
+            const auto layered = furthestFrom (minus (both, kickAlone), 0, thud, 1.0f, 12000 - 30);
+            drums.auditionPad (first, 1.0f);
+            const auto clicked = play (drums, {}, 0.5);
+            check (layered < 1.0e-5f && furthestFrom (clicked, 0, thud, 1.0f, 12000 - 30) < 2.0e-6f && drums.getPadNote (first) == kick,
+                   "drum user pads: moved to the kick's note, the pad's sample plays with the kick (the two together less the kick alone is the sample, at most " + juce::String (layered, 7)
+                       + " away); a click on the pad plays it alone");
+
+            // Struck again a user pad fades its last hit; its layers take turns; the render is the same at any block size.
+            drums.setPadNote (first, 90);
+            drums.setLayers (first, {});
+            drums.addFiles (first, { heldFile.existsAsFile() ? heldFile : writeSound (there, "Held", held) });
+            juce::String whyAgain;
+            const auto restruck = fadesOut (minus (play (drums, { { 90, 0.0, 1.0f }, { 90, 0.1, 1.0f } }, 0.4), play (drums, { { 90, 0.1, 1.0f } }, 0.4)), 4800, whyAgain);
+            drums.addFiles (second, { aHere, bHere });
+            const Notes four { { 83, 0.0, 1.0f }, { 83, 0.1, 1.0f }, { 83, 0.2, 1.0f }, { 83, 0.3, 1.0f } };
+            const auto turns = play (drums, four, 0.5);
+            const auto order = juce::String::charToString ((juce::juce_wchar) heard (turns, 0.0, 1.0f)) + heard (turns, 0.1, 1.0f) + heard (turns, 0.2, 1.0f) + heard (turns, 0.3, 1.0f);
+            check (restruck && order == "ABAB" && same (turns, play (drums, four, 0.5, 64)) && same (turns, play (drums, four, 0.5, 37)),
+                   "drum user pads: a pad struck again fades its last hit over 3 ms (" + whyAgain + "); two layers take turns (" + order + "), the same at blocks of 512, 64 and 37");
+
+            // The state and a preset keep a user pad's name, colour, note, settings and layers; a factory kit and an older state have none.
+            drums.setPadName (second, "Clang");
+            drums.setPadColour (second, juce::Colour (0xff2fb8a6));
+            drums.setPadNote (second, 60);
+            set (drums.parameterOf (second, "tune"), -5.0f);
+            const Notes line { { 60, 0.0, 1.0f }, { 90, 0.1, soft }, { 60, 0.2, hard } };
+            const auto padSound = play (drums, line, 0.8);
+            juce::MemoryBlock padState;
+            drums.getStateInformation (padState);
+            BasicDrumsProcessor another;
+            another.setStateInformation (padState.getData(), (int) padState.getSize());
+            BasicDrumsProcessor fromPreset;
+            fromPreset.setPresetValues (drums.getPresetValues());
+            fromPreset.setPresetTexts (drums.getPresetTexts());
+            const auto kept = another.getPadName (second) == "Clang" && another.getPadColour (second) == juce::Colour (0xff2fb8a6) && another.getPadNote (second) == 60
+                              && another.getPadNote (first) == 90 && another.getLayers (second).size() == 2 && another.currentSettings() == drums.currentSettings()
+                              && same (play (another, line, 0.8), padSound);
+            const auto presetKept = fromPreset.getPadName (second) == "Clang" && fromPreset.getPadNote (second) == 60 && same (play (fromPreset, line, 0.8), padSound);
+
+            auto older = juce::AudioProcessor::getXmlFromBinary (padState.getData(), (int) padState.getSize());
+            int removed = 0;
+
+            if (older != nullptr)
+            {
+                for (int i = older->getNumAttributes(); --i >= 0;)
+                    if (older->getAttributeName (i).startsWith ("user"))
+                    {
+                        older->removeAttribute (older->getAttributeName (i));
+                        ++removed;
+                    }
+
+                older->deleteAllChildElementsWithTagName ("PADS");
+                older->deleteAllChildElementsWithTagName ("SAMPLES");
+            }
+
+            juce::MemoryBlock olderState;
+
+            if (older != nullptr)
+                juce::AudioProcessor::copyXmlToBinary (*older, olderState);
+
+            BasicDrumsProcessor fromOlder;
+            fromOlder.setPadName (second, "Left Over");
+            fromOlder.setStateInformation (olderState.getData(), (int) olderState.getSize());
+            const auto olderPlain = fromOlder.getPadName (second) == "Pad 32" && fromOlder.getPadNote (second) == 83 && fromOlder.getFiles().isEmpty()
+                                    && juce::exactlyEqual (fromOlder.parameterOf (second, "tune")->get(), 0.0f);
+            fromPreset.applyKit (DrumMachine::kits()[2]);
+            const auto kitPlain = fromPreset.getPadName (second) == "Pad 32" && fromPreset.getPadNote (second) == 83 && fromPreset.getFiles().isEmpty() && ! fromPreset.kitModified()
+                                  && juce::exactlyEqual (fromPreset.parameterOf (second, "tune")->get(), 0.0f);
+            drums.clearPad (second);
+            check (kept && presetKept && removed == DrumMachine::numUserPads * 15 && olderPlain && kitPlain && drums.getLayers (second).empty() && drums.getPadName (second) == "Pad 32"
+                       && drums.getPadNote (second) == 83 && juce::exactlyEqual (drums.parameterOf (second, "tune")->get(), 0.0f),
+                   juce::String ("drum user pads: the state and a preset bring back a pad's name, colour, note, settings and layers, and the same sound; a state with none of that in it, and a factory kit, leave every user pad as it starts; emptying a pad does the same for one (")
+                       + (kept ? "" : "state ") + (presetKept ? "" : "preset ") + (olderPlain ? "" : "older ") + (kitPlain ? "" : "kit ") + ")");
+
+            // The window: all 64 pads; a drop on a user pad fills it; its menu's choices work on it.
+            BasicDrumsProcessor shown;
+            shown.prepareToPlay (rate, 512);
+            std::unique_ptr<juce::AudioProcessorEditor> made (shown.createEditorAndMakeActive());
+
+            if (auto* window = dynamic_cast<DrumMachineEditor*> (made.get()))
+            {
+                std::set<int> places;
+                auto allInside = true;
+
+                for (int pad = 0; pad < DrumMachine::numPads; ++pad)
+                {
+                    const auto bounds = window->padBounds (pad);
+                    allInside = allInside && ! bounds.isEmpty() && window->getLocalBounds().contains (bounds) && places.insert (bounds.getX() * 10000 + bounds.getY()).second;
+                }
+
+                const auto before = window->getPadText (first);
+                const auto pad = window->padBounds (first).getCentre();
+                window->filesDropped ({ aHere.getFullPathName() }, pad.x, pad.y);
+                const auto dropped = window->getSelectedPad() == first && window->getTypeText() == "Sample" && window->showsLayers() && window->getNumLayersShown() == 1
+                                     && shown.getLayers (first).size() == 1 && window->getSelected() == Sound::kick;
+                window->changeUserPad (first, "note", 36);
+                shown.setPadName (first, "Sub Layer");
+                window->selectPad (first);
+                const auto renamed = window->getPadText (first);
+                window->changeUserPad (first, "colour", (int) 0xffe8604c);
+                const auto coloured = shown.getPadColour (first) == juce::Colour (0xffe8604c);
+                window->changeUserPad (first, "clear");
+                window->select (Sound::snare);
+                check (allInside && places.size() == 64 && before == "Pad 31 / 82 " + juce::MidiMessage::getMidiNoteName (82, true, true, 3) && dropped
+                           && renamed == "Sub Layer / 36 " + juce::MidiMessage::getMidiNoteName (36, true, true, 3) && coloured
+                           && window->getPadText (first) == before && shown.getLayers (first).empty() && window->getSelectedPad() == (int) Sound::snare && ! window->showsLayers(),
+                       "drum user pads window: 64 pads, each in its own place inside the window; a sound dropped on pad 31 selects it and shows its layer; given another note, a name and a colour its card reads "
+                           + renamed + "; emptied, it reads " + before + " again");
+            }
+            else
+            {
+                check (false, "drum user pads window: it opens");
             }
 
             made = nullptr;
@@ -1390,6 +1528,11 @@ void saveDrumMachineWindow (const juce::File& folder)
 
     if (auto* drumWindow = dynamic_cast<DrumMachineEditor*> (window.get()))
     {
+        // A user pad too, with a name and a colour of its own, on the kick's note.
+        drums.addFiles (DrumMachine::numSounds, { hits[2] });
+        drums.setPadName (DrumMachine::numSounds, "Kick Layer");
+        drums.setPadColour (DrumMachine::numSounds, juce::Colour (0xffe8604c));
+        drums.setPadNote (DrumMachine::numSounds, 36);
         drumWindow->addFiles (Sound::snare, hits);
         drumWindow->pressLayerButton ("spread");
         drumWindow->selectLayer (1);

@@ -4,7 +4,10 @@
 #include "SoundControls.h"
 #include "EffectPresets.h"
 
-/** Basic Drums' window. On the left a pad for each of its 30 sounds, coloured by family, lit as it
+/** Basic Drums' window. On the left its 64 pads, eight across: one for each of its 30 sounds,
+    coloured by family, then the 34 user pads, which play samples and have a name, a colour and a
+    note of their own (a right-click on one, or Pad in its panel's header, renames it, moves it to
+    another note, colours it or empties it). A pad is lit as it
     plays; a click plays it (louder towards the pad's top) and selects it. On the right the
     selected sound: a picture of one hit (its waveform and its level falling, a line sweeping across
     as it plays), its six knobs in real units (tune in semitones, decay in ms, tone, level in dB,
@@ -35,15 +38,27 @@ public:
 
     /** The sound whose settings are shown; selecting one shows its knobs and picture. */
     DrumMachine::Sound getSelected() const noexcept       { return selected; }
-    void select (DrumMachine::Sound);
+    void select (DrumMachine::Sound s)                      { selectPad ((int) s); }
 
-    /** The pads in the order shown, left to right and down; and where one is. */
+    /** The same by pad (0 to 63: a sound's is its place in DrumMachine::Sound, the user pads follow). */
+    int getSelectedPad() const noexcept                    { return selectedPad; }
+    void selectPad (int pad);
+
+    /** The sounds' pads in the order shown, left to right and down (the user pads come after them, in their own order); and where a pad is. */
     static const std::array<DrumMachine::Sound, (size_t) DrumMachine::numSounds>& padOrder();
-    juce::Rectangle<int> padBounds (DrumMachine::Sound) const;
+    juce::Rectangle<int> padBounds (DrumMachine::Sound s) const    { return padBounds ((int) s); }
+    juce::Rectangle<int> padBounds (int pad) const;
 
-    /** What a click on a pad does: plays its sound at the velocity for the click's height
+    /** What a click on a pad does: plays it alone at the velocity for the click's height
         (0 its top, 1 its bottom) and selects it. */
-    void clickPad (DrumMachine::Sound, float proportionDown);
+    void clickPad (DrumMachine::Sound s, float proportionDown)     { clickPad ((int) s, proportionDown); }
+    void clickPad (int pad, float proportionDown);
+
+    /** A pad's card as it reads: its name, then its notes ("Pad 31 / 82"). */
+    juce::String getPadText (int pad) const;
+
+    /** What the user pad's menu does, by name: "clear"; "note" and "colour" take the value. */
+    void changeUserPad (int pad, const juce::String& what, int value = 0);
 
     /** The velocity a click at a height inside a pad plays: 1 at its top to about 0.3 at its bottom. */
     static float velocityAt (float proportionDown) noexcept;
@@ -66,11 +81,12 @@ public:
     void itemDragExit (const SourceDetails&) override;
     void itemDropped (const SourceDetails&) override;
 
-    /** The sound a drop at a place in the window goes to: the pad there, the selected sound over its panel, none elsewhere. */
-    std::optional<DrumMachine::Sound> soundAt (juce::Point<int>) const;
+    /** The pad a drop at a place in the window goes to: the pad there, the selected one over its panel, none elsewhere. */
+    std::optional<int> padAt (juce::Point<int>) const;
 
-    /** Gives files to a sound, as a drop does, and selects it. False when none of them became a layer. */
-    bool addFiles (DrumMachine::Sound, const juce::Array<juce::File>&);
+    /** Gives files to a pad, as a drop does, and selects it. False when none of them became a layer. */
+    bool addFiles (DrumMachine::Sound s, const juce::Array<juce::File>& sounds)   { return addFiles ((int) s, sounds); }
+    bool addFiles (int pad, const juce::Array<juce::File>&);
 
     /** For the tests: how many layers the selected sound's list shows, a row as it reads
         ("Name  1-127"), whether the list is shown at all, and the line of news along the bottom. */
@@ -99,19 +115,24 @@ private:
     void refreshFilterKnobs();
     void showSelected();
     void say (const juce::String&);
-    void setDropTarget (std::optional<DrumMachine::Sound>);
+    void setDropTarget (std::optional<int>);
     void chooseSamples();
     void showFilesMenu();
+    void showPadMenu (int pad);
     void markSampledPads();
+    void describePads();
+    juce::Colour colourOfPad (int pad) const;
+    int padAtPlace (size_t place) const;
 
     BuiltInEffects::BasicDrumsProcessor& drums;
-    DrumMachine::Sound selected = DrumMachine::Sound::kick;
+    DrumMachine::Sound selected = DrumMachine::Sound::kick;   // the selected pad's sound; with a user pad selected, the last sound that was
+    int selectedPad = 0;
 
     std::vector<std::unique_ptr<Pad>> pads;
     std::unique_ptr<Picture> picture;
     std::unique_ptr<GlueMeter> glueMeter;
     std::unique_ptr<Layers> layers;
-    std::array<juce::uint32, (size_t) DrumMachine::numSounds> seenHits {};
+    std::array<juce::uint32, (size_t) DrumMachine::numPads> seenHits {};
 
     SoundControls::Panel padPanel { "Pads" }, soundPanel { "Kick" }, kitPanel { "Kit" }, busPanel { "Bus" }, spacePanel { "Space" };
     SoundControls::StepSelector kits, character, type, filter, delayTime;
@@ -122,7 +143,7 @@ private:
                         delay { "Delay", SoundControls::Knob::Size::small };
     SoundControls::Knob start { "Start" }, bend { "Bend" };   // a Sample's own
     SoundControls::LedToggle reverse { "Reverse" };
-    juce::TextButton files { "Files" };
+    juce::TextButton files { "Files" }, padMenu { "Pad" };
     std::unique_ptr<juce::FileChooser> chooser;
     std::array<SoundControls::ValueReadout, 13> readouts;
     SoundControls::Knob kitDrive { "Drive", SoundControls::Knob::Size::small }, glue { "Glue", SoundControls::Knob::Size::small },
@@ -140,8 +161,8 @@ private:
     double pictureSeconds = 0.0;
     bool shownModified = false;
     bool shownSample = false;                  // whether the selected sound is laid out as a Sample
-    juce::uint32 samplesSeen = 0;              // the processor's count of its layers' changes when last read
-    std::optional<DrumMachine::Sound> dropTarget;   // the sound a drag is over
+    juce::uint32 samplesSeen = 0, padsSeen = 0;   // the processor's counts of its layers' and its user pads' changes when last read
+    std::optional<int> dropTarget;             // the pad a drag is over
     juce::String message;                      // news for the line along the bottom, until messageUntil
     double messageUntil = 0.0;
     juce::Rectangle<int> fxLine;   // where the effects' heading is drawn

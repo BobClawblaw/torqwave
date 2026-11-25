@@ -76,6 +76,30 @@ namespace DrumMachine
 
     constexpr int classicType = 0, modernType = 1, sampleType = 2;
 
+    //==============================================================================
+    // Pads. The 30 sounds are the first 30 pads, in the order of Sound. After them come 34 user
+    // pads, 64 in all: each plays samples only, on a note of its own choosing, which may be one a
+    // sound has (then both play: a layered kick) or one outside 35 to 81. Until given another, user
+    // pad 1 is on note 82, the next on 83, and so on up to 115.
+    constexpr int numUserPads = 34, numPads = numSounds + numUserPads, firstUserNote = 82;
+
+    /** A user pad's settings as it starts: a Sample, its decay at the top, so a sample plays whole. */
+    inline Settings defaultUserSettings()
+    {
+        Settings s;
+        s.decay = 5000.0f;
+        s.type = sampleType;
+        return s;
+    }
+
+    struct UserPad
+    {
+        Settings settings = defaultUserSettings();
+        int note = firstUserNote;      // 0 to 127
+
+        bool operator== (const UserPad& o) const   { return settings == o.settings && note == o.note; }
+    };
+
     /** A sound's types ("Classic", "Modern"), and whether it has the second. Classic is the model
         every sound had before there were two, unchanged: a hit's level follows how hard it is
         struck and nothing else. A Modern sound is also duller, and where it suits shorter or less
@@ -106,9 +130,11 @@ namespace DrumMachine
     };
 
     /** Every pad's layers, as the hits read them: never changed once made. */
+    using PadLayers = std::array<std::vector<Layer>, (size_t) numPads>;
+
     struct Samples
     {
-        std::array<std::vector<Layer>, (size_t) numSounds> pads;
+        PadLayers pads;                // the 30 sounds' in the order of Sound, then the user pads'
         juce::uint32 generation = 0;
     };
 
@@ -131,7 +157,14 @@ namespace DrumMachine
     /** Everything a kit sets. */
     struct KitSettings
     {
+        KitSettings()
+        {
+            for (int i = 0; i < numUserPads; ++i)
+                user[(size_t) i].note = firstUserNote + i;
+        }
+
         std::array<Settings, (size_t) numSounds> sounds {};
+        std::array<UserPad, (size_t) numUserPads> user {};
         KickCharacter kick = KickCharacter::punch;
         float drive = 0.0f;     // %, 0 to 100: the whole kit through a soft clipper
         float glue = 0.0f;      // %, 0 to 100: a bus compressor, threshold and ratio together
@@ -142,7 +175,7 @@ namespace DrumMachine
 
         bool operator== (const KitSettings& o) const
         {
-            return sounds == o.sounds && kick == o.kick && juce::exactlyEqual (drive, o.drive) && juce::exactlyEqual (glue, o.glue) && juce::exactlyEqual (level, o.level)
+            return sounds == o.sounds && user == o.user && kick == o.kick && juce::exactlyEqual (drive, o.drive) && juce::exactlyEqual (glue, o.glue) && juce::exactlyEqual (level, o.level)
                 && juce::exactlyEqual (reverbSize, o.reverbSize) && delayTime == o.delayTime && juce::exactlyEqual (feedback, o.feedback);
         }
     };
@@ -188,7 +221,12 @@ namespace DrumMachine
         void setSamples (SamplesPtr);
         juce::uint32 oldestSamplesInUse() const noexcept;
 
+        /** A note: its sound, if it is one of 35 to 81, and every user pad on that note. */
         void noteOn (int note, float velocity);
+
+        /** One pad alone, as a click on it plays it: a sound on its pad's note, or a user pad
+            without whatever else is on its note. */
+        void padOn (int pad, float velocity);
 
         /** The tempo the delay's times follow (120 until told). */
         void setTempo (double bpm);
@@ -210,6 +248,8 @@ namespace DrumMachine
         /** For lights: a count of each sound's hits, and the last one's velocity. Any thread. */
         juce::uint32 hitsOf (Sound s) const noexcept               { return hitCount[(size_t) s].load (std::memory_order_relaxed); }
         float lastVelocityOf (Sound s) const noexcept              { return lastVelocity[(size_t) s].load (std::memory_order_relaxed); }
+        juce::uint32 hitsOfPad (int pad) const noexcept            { return hitCount[(size_t) pad].load (std::memory_order_relaxed); }
+        float lastVelocityOfPad (int pad) const noexcept           { return lastVelocity[(size_t) pad].load (std::memory_order_relaxed); }
 
         /** How far the glue is turning the kit down, in dB (0 or less). Any thread. */
         float getReductionDb() const noexcept                       { return reductionDb.load (std::memory_order_relaxed); }
@@ -218,11 +258,17 @@ namespace DrumMachine
             through nothing else: what the window draws. */
         static juce::AudioBuffer<float> renderOne (const KitSettings&, Sound, double sampleRate, double seconds, int note = -1, SamplesPtr = {});
 
+        /** The same for any pad, a user pad among them. */
+        static juce::AudioBuffer<float> renderPad (const KitSettings&, int pad, double sampleRate, double seconds, SamplesPtr = {});
+
         struct Hit;
 
     private:
-        void start (Hit&, int note, float velocity);
+        void start (Hit&, int pad, int note, float velocity);
         void cut (int note);
+        void cutUser (int userPad);
+        void strike (int note, float velocity);
+        void strikeUser (int userPad, float velocity);
         void renderBlock (float* left, float* right, int count);
         void renderEffects (float* left, float* right, int count);
         void clearEffects();
@@ -232,8 +278,9 @@ namespace DrumMachine
         double rate = 48000.0;
         KitSettings settings;
         SamplesPtr samples;
-        std::array<juce::uint32, (size_t) numSounds> turns {};   // each sound's hits on its samples so far: whose turn it is
+        std::array<juce::uint32, (size_t) numPads> turns {};     // each pad's hits on its samples so far: whose turn it is
         std::vector<Hit> hits, fading;   // one each per note
+        std::vector<Hit> userHits, userFading;   // and one each per user pad
         int fadeLength = 144;
 
         // The kit's bus: drive, glue and level, smoothed.
@@ -252,8 +299,8 @@ namespace DrumMachine
         int effectsFade = 0;    // samples left of the effects fading after All Sound Off
         juce::SmoothedValue<float> feedbackAmount;
 
-        std::array<std::atomic<juce::uint32>, (size_t) numSounds> hitCount {};
-        std::array<std::atomic<float>, (size_t) numSounds> lastVelocity {};
+        std::array<std::atomic<juce::uint32>, (size_t) numPads> hitCount {};
+        std::array<std::atomic<float>, (size_t) numPads> lastVelocity {};
         std::atomic<float> reductionDb { 0.0f };
     };
 }
@@ -302,6 +349,36 @@ namespace BuiltInEffects
         /** Plays a note now, as a pad does: added to the next block. Any thread. */
         void audition (int note, float velocity);
 
+        /** Plays one pad alone (0 to 63), a user pad without whatever else is on its note. Any thread. */
+        void auditionPad (int pad, float velocity);
+
+        //==============================================================================
+        // The 64 pads: the 30 sounds first (a sound's pad is its place in DrumMachine::Sound), then
+        // the 34 user pads, which play samples only. What follows takes any of them by its number.
+
+        /** A pad's name: a sound's own, or a user pad's ("Pad 31" until it is given one); a user
+            pad's colour (none set: transparent, and the window picks one); and its note. Names,
+            colours and notes are kept in the state and in presets. Message thread. */
+        juce::String getPadName (int pad) const;
+        void setPadName (int pad, const juce::String&);
+        juce::Colour getPadColour (int pad) const;
+        void setPadColour (int pad, juce::Colour);
+        int getPadNote (int pad) const;
+        void setPadNote (int pad, int note);
+
+        /** A user pad back as it starts: no layers, its own name, colour, note and settings. */
+        void clearPad (int pad);
+
+        /** Counts up when a user pad's name, colour or note changes. */
+        juce::uint32 getPadsVersion() const noexcept                { return padsVersion.load(); }
+
+        juce::AudioParameterFloat* parameterOf (int pad, const juce::String& what) const;
+        juce::AudioParameterChoice* filterParameter (int pad) const noexcept  { return of (pad).filter; }
+        juce::AudioParameterBool* reverseParameter (int pad) const noexcept   { return of (pad).reverse; }
+
+        /** Whether a pad plays samples now: a user pad always, a sound when its type is Sample. */
+        bool playsSamples (int pad) const;
+
         const DrumMachine::Engine& getEngine() const noexcept      { return engine; }
 
         /** A parameter of a sound, by its suffix: "tune", "decay", "tone", "level", "pan", "drive",
@@ -324,17 +401,21 @@ namespace BuiltInEffects
         // Samples on the pads. Message thread; the hits take them up at their next block.
 
         /** A pad's layers, in order. Setting them keeps the first DrumMachine::maxLayers. */
-        std::vector<DrumMachine::Layer> getLayers (Sound) const;
-        void setLayers (Sound, std::vector<DrumMachine::Layer>);
+        std::vector<DrumMachine::Layer> getLayers (int pad) const;
+        void setLayers (int pad, std::vector<DrumMachine::Layer>);
+        std::vector<DrumMachine::Layer> getLayers (Sound s) const                  { return getLayers ((int) s); }
+        void setLayers (Sound s, std::vector<DrumMachine::Layer> layers)           { setLayers ((int) s, std::move (layers)); }
 
         /** Sounds given to a pad, as a drop on it gives them: each becomes a layer over every
             velocity after the ones there (so they take turns), the pad's type becomes Sample, and
             its decay is made long enough for the longest of them to play whole. An error (no room
             for a layer or for its memory: what fitted is kept), or empty. */
-        juce::String addSamples (Sound, const std::vector<std::pair<Sampler::SamplePtr, juce::File>>&);
+        juce::String addSamples (int pad, const std::vector<std::pair<Sampler::SamplePtr, juce::File>>&);
+        juce::String addSamples (Sound s, const std::vector<std::pair<Sampler::SamplePtr, juce::File>>& given)   { return addSamples ((int) s, given); }
 
         /** Files given to a pad: read through the store every sampler shares, then as addSamples. */
-        juce::String addFiles (Sound, const juce::Array<juce::File>&);
+        juce::String addFiles (int pad, const juce::Array<juce::File>&);
+        juce::String addFiles (Sound s, const juce::Array<juce::File>& files)      { return addFiles ((int) s, files); }
 
         /** Counts up each time any pad's layers are set, so a window knows to read them again. */
         juce::uint32 getSamplesVersion() const noexcept                { return samplesVersion.load(); }
@@ -389,12 +470,25 @@ namespace BuiltInEffects
             juce::AudioParameterBool* reverse = nullptr;
         };
 
-        void setSamples (std::array<std::vector<DrumMachine::Layer>, (size_t) DrumMachine::numSounds>);
+        void setSamples (DrumMachine::PadLayers);
         void clearSamples();
         void writeSamples (juce::XmlElement& into) const;
         void readSamples (const juce::XmlElement& from);
+        void writePads (juce::XmlElement& into) const;
+        void readPads (const juce::XmlElement& from);
+        void resetPads();
+        static void setUserDefaults (const SoundParameters&);
+        static juce::String idOfPad (int pad);
+        const SoundParameters& of (int pad) const noexcept;
 
         std::array<SoundParameters, (size_t) DrumMachine::numSounds> sounds;
+        std::array<SoundParameters, (size_t) DrumMachine::numUserPads> users;   // the user pads': no type, they play samples
+
+        // The user pads' names, colours (transparent: none chosen) and notes.
+        std::array<juce::String, (size_t) DrumMachine::numUserPads> userNames;
+        std::array<juce::Colour, (size_t) DrumMachine::numUserPads> userColours;
+        std::array<std::atomic<int>, (size_t) DrumMachine::numUserPads> userNotes;
+        std::atomic<juce::uint32> padsVersion { 0 };
         juce::AudioParameterChoice* kickCharacter = nullptr;
         juce::AudioParameterFloat *kitDrive = nullptr, *glue = nullptr, *level = nullptr, *reverbSize = nullptr, *feedback = nullptr;
         juce::AudioParameterChoice* delayTime = nullptr;

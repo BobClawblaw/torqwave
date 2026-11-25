@@ -35,6 +35,8 @@ namespace
         return "Chokes nothing; a hit struck again fades the last";
     }
 
+    juce::String noteName (int note)   { return juce::MidiMessage::getMidiNoteName (note, true, true, 3); }
+
     constexpr const char* soundFileTypes = "wav;wave;bwf;aif;aiff;aifc;flac;ogg;opus;mp3;m4a;caf";
 
     juce::String panText (float v)
@@ -45,17 +47,32 @@ namespace
 }
 
 //==============================================================================
-/** A pad: its sound's name and notes on a card in its family's colour, lit as it plays. */
+/** A pad: its name and notes on a card in its colour (a sound's family's, a user pad's own), lit as
+    it plays. A user pad with no samples is drawn fainter. */
 class DrumMachineEditor::Pad final : public juce::Component
 {
 public:
-    Pad (Sound s, std::function<void (Sound, float)> clicked)
-        : sound (s), name (DrumMachine::nameOf (s)), notes (notesOf (s)), onClick (std::move (clicked))
+    Pad (int p, std::function<void (int, float)> clicked, std::function<void (int)> menu)
+        : pad (p), onClick (std::move (clicked)), onMenu (std::move (menu))
     {
         setRepaintsOnMouseActivity (true);
+    }
+
+    void describe (const juce::String& newName, const juce::String& newNotes, juce::Colour c, bool isEmpty)
+    {
+        if (newName == name && newNotes == notes && c == colour && isEmpty == empty)
+            return;
+
+        name = newName;
+        notes = newNotes;
+        colour = c;
+        empty = isEmpty;
         setTitle (name);
         setDescription ("Plays " + name + "; click higher for louder");
+        repaint();
     }
+
+    juce::String getText() const   { return name + " / " + notes; }
 
     void setSelected (bool s)
     {
@@ -106,9 +123,13 @@ public:
     void paint (juce::Graphics& g) override
     {
         const auto light = Theme::current().light;
-        const auto colour = colourOf (sound);
         auto r = getLocalBounds().toFloat().reduced (2.0f);
         constexpr auto corner = 6.0f;
+
+        // An empty user pad: the whole card fainter.
+        if (empty && ! selected && ! dropping)
+            g.beginTransparencyLayer (0.55f);
+
         const auto over = isMouseOver (true), down = isMouseButtonDown();
 
         // The card: raised, tinted by its family, brighter under the mouse, pressed in when down.
@@ -132,7 +153,7 @@ public:
 
         // The family's mark along the top, and the edge: the accent when selected.
         g.setColour (colour.withAlpha (light ? 0.85f : 0.9f));
-        g.fillRoundedRectangle (r.getX() + 8.0f, r.getY() + 7.0f, 14.0f, 3.0f, 1.5f);
+        g.fillRoundedRectangle (r.getX() + 7.0f, r.getY() + 6.0f, 12.0f, 3.0f, 1.5f);
 
         if (selected)
         {
@@ -147,13 +168,13 @@ public:
             g.drawRoundedRectangle (r, corner, 1.0f);
         }
 
-        auto text = r.reduced (8.0f, 6.0f);
-        text.removeFromTop (8.0f);
+        auto text = r.reduced (6.0f, 4.0f);
+        text.removeFromTop (7.0f);
         g.setColour (selected || glow > 0.3f ? Theme::textStrong : Theme::text);
-        g.setFont (juce::FontOptions (12.5f, juce::Font::bold));
-        g.drawFittedText (name, text.removeFromTop (text.getHeight() * 0.6f).toNearestInt(), juce::Justification::bottomLeft, 2, 0.9f);
+        g.setFont (juce::FontOptions (11.5f, juce::Font::bold));
+        g.drawFittedText (name, text.removeFromTop (text.getHeight() * 0.64f).toNearestInt(), juce::Justification::bottomLeft, 2, 0.8f);
         g.setColour (Theme::dimText);
-        g.setFont (juce::FontOptions (10.5f));
+        g.setFont (juce::FontOptions (9.5f));
         g.drawText (notes, text, juce::Justification::bottomLeft);
 
         // A pad that plays samples: three bars of a waveform in its corner.
@@ -163,8 +184,11 @@ public:
             const float heights[] { 4.0f, 9.0f, 6.0f, 3.0f };
 
             for (int i = 0; i < 4; ++i)
-                g.fillRect (r.getRight() - 22.0f + 4.0f * (float) i, r.getY() + 12.0f - heights[i] * 0.5f, 2.0f, heights[i]);
+                g.fillRect (r.getRight() - 20.0f + 4.0f * (float) i, r.getY() + 10.0f - heights[i] * 0.5f, 2.0f, heights[i]);
         }
+
+        if (empty && ! selected && ! dropping)
+            g.endTransparencyLayer();
 
         if (dropping)
         {
@@ -180,18 +204,23 @@ public:
         repaint();
 
         if (e.mods.isPopupMenu())
+        {
+            onMenu (pad);
             return;
+        }
 
-        onClick (sound, (float) e.y / (float) juce::jmax (1, getHeight()));
+        onClick (pad, (float) e.y / (float) juce::jmax (1, getHeight()));
     }
 
     void mouseUp (const juce::MouseEvent&) override   { repaint(); }
 
 private:
-    Sound sound;
+    int pad;
     juce::String name, notes;
-    std::function<void (Sound, float)> onClick;
-    bool selected = false, sampled = false, dropping = false;
+    juce::Colour colour;
+    std::function<void (int, float)> onClick;
+    std::function<void (int)> onMenu;
+    bool selected = false, sampled = false, dropping = false, empty = false;
     float glow = 0.0f;
 };
 
@@ -433,16 +462,16 @@ public:
         spread.onClick = [this] { press ("spread"); };
     }
 
-    void show (Sound s, juce::Colour c)
+    void show (int p, juce::Colour c)
     {
-        sound = s;
+        pad = p;
         colour = c;
         reload();
     }
 
     void reload()
     {
-        rows = drums.getLayers (sound);
+        rows = drums.getLayers (pad);
         selectedRow = rows.empty() ? -1 : juce::jlimit (0, (int) rows.size() - 1, selectedRow);
         shapes.clear();
 
@@ -541,7 +570,7 @@ public:
             return;
         }
 
-        drums.setLayers (sound, std::move (next));
+        drums.setLayers (pad, std::move (next));
         reload();
     }
 
@@ -682,7 +711,7 @@ public:
         if (l.lowVelocity == rows[(size_t) selectedRow].lowVelocity && l.highVelocity == rows[(size_t) selectedRow].highVelocity)
             return;
 
-        drums.setLayers (sound, std::move (next));
+        drums.setLayers (pad, std::move (next));
         reload();
     }
 
@@ -696,7 +725,7 @@ public:
         auto next = rows;
         next[(size_t) row].lowVelocity = 1;
         next[(size_t) row].highVelocity = 127;
-        drums.setLayers (sound, std::move (next));
+        drums.setLayers (pad, std::move (next));
         reload();
     }
 
@@ -736,7 +765,7 @@ private:
     }
 
     BuiltInEffects::BasicDrumsProcessor& drums;
-    Sound sound = Sound::kick;
+    int pad = 0;
     juce::Colour colour;
     std::vector<DrumMachine::Layer> rows;
     std::vector<std::vector<std::pair<float, float>>> shapes;
@@ -756,11 +785,19 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     for (auto* panel : { &padPanel, &soundPanel, &kitPanel, &busPanel, &spacePanel })
         addAndMakeVisible (*panel);
 
-    for (auto s : padOrder())
+    // The sounds' pads in their order, then the user pads.
+    for (size_t place = 0; place < (size_t) DrumMachine::numPads; ++place)
     {
-        pads.push_back (std::make_unique<Pad> (s, [this] (Sound sound, float proportionDown) { clickPad (sound, proportionDown); }));
+        pads.push_back (std::make_unique<Pad> (padAtPlace (place), [this] (int pad, float proportionDown) { clickPad (pad, proportionDown); },
+                                               [this] (int pad) { selectPad (pad); showPadMenu (pad); }));
         padPanel.addAndMakeVisible (*pads.back());
     }
+
+    describePads();
+    padMenu.setTooltip ("This user pad: rename it, move it to another note, colour it, or empty it (a right-click on the pad does the same)");
+    padMenu.setWantsKeyboardFocus (false);
+    padMenu.onClick = [this] { showPadMenu (selectedPad); };
+    soundPanel.addChildComponent (padMenu);
 
     picture = std::make_unique<Picture>();
     soundPanel.addAndMakeVisible (*picture);
@@ -812,7 +849,7 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     type.setTooltip ("The sound's type: Classic, as it has always been; Modern, a second model with more to it, duller the softer it is struck; or Sample, which plays the sounds given to the pad");
     type.onChange = [this] (int)
     {
-        if ((drums.getType (selected) == DrumMachine::sampleType) != shownSample)
+        if (drums.playsSamples (selectedPad) != shownSample)
             showSelected();
         else
             refreshPicture (true);
@@ -908,56 +945,95 @@ float DrumMachineEditor::velocityAt (float proportionDown) noexcept
     return juce::jlimit (0.3f, 1.0f, 1.0f - 0.7f * juce::jlimit (0.0f, 1.0f, (proportionDown - 0.1f) / 0.85f));
 }
 
-void DrumMachineEditor::clickPad (Sound s, float proportionDown)
+int DrumMachineEditor::padAtPlace (size_t place) const
 {
-    drums.audition (DrumMachine::padNote (s), velocityAt (proportionDown));
-    select (s);
+    return place < padOrder().size() ? (int) padOrder()[place] : (int) place;
 }
 
-juce::Rectangle<int> DrumMachineEditor::padBounds (Sound s) const
+juce::Colour DrumMachineEditor::colourOfPad (int pad) const
 {
-    const auto& order = padOrder();
+    if (pad < DrumMachine::numSounds)
+        return colourOf ((Sound) pad);
 
-    for (size_t i = 0; i < order.size(); ++i)
-        if (order[i] == s)
-            return pads[i]->getBounds() + padPanel.getPosition();
+    // A user pad's own, or a quiet slate until it is given one.
+    const auto own = drums.getPadColour (pad);
+    return own.isTransparent() ? juce::Colour (0xff8f9bb3) : own;
+}
+
+void DrumMachineEditor::describePads()
+{
+    const auto held = drums.getSamples();
+
+    for (size_t place = 0; place < pads.size(); ++place)
+    {
+        const auto pad = padAtPlace (place);
+        const auto user = pad >= DrumMachine::numSounds;
+        const auto note = drums.getPadNote (pad);
+        pads[place]->describe (drums.getPadName (pad), user ? juce::String (note) + " " + noteName (note) : notesOf ((Sound) pad), colourOfPad (pad),
+                               user && (held == nullptr || held->pads[(size_t) pad].empty()));
+    }
+}
+
+juce::String DrumMachineEditor::getPadText (int pad) const
+{
+    for (size_t place = 0; place < pads.size(); ++place)
+        if (padAtPlace (place) == pad)
+            return pads[place]->getText();
 
     return {};
 }
 
-void DrumMachineEditor::select (Sound s)
+void DrumMachineEditor::clickPad (int pad, float proportionDown)
 {
-    selected = s;
-    const auto& order = padOrder();
+    drums.auditionPad (pad, velocityAt (proportionDown));
+    selectPad (pad);
+}
 
-    for (size_t i = 0; i < order.size(); ++i)
-        pads[i]->setSelected (order[i] == s);
+juce::Rectangle<int> DrumMachineEditor::padBounds (int pad) const
+{
+    for (size_t place = 0; place < pads.size(); ++place)
+        if (padAtPlace (place) == pad)
+            return pads[place]->getBounds() + padPanel.getPosition();
+
+    return {};
+}
+
+void DrumMachineEditor::selectPad (int pad)
+{
+    selectedPad = juce::jlimit (0, DrumMachine::numPads - 1, pad);
+
+    if (selectedPad < DrumMachine::numSounds)
+        selected = (Sound) selectedPad;
+
+    for (size_t place = 0; place < pads.size(); ++place)
+        pads[place]->setSelected (padAtPlace (place) == selectedPad);
 
     showSelected();
 }
 
 void DrumMachineEditor::showSelected()
 {
-    const auto colour = colourOf (selected);
-    soundPanel.setTitle (DrumMachine::nameOf (selected));
+    const auto user = selectedPad >= DrumMachine::numSounds;
+    const auto colour = colourOfPad (selectedPad);
+    soundPanel.setTitle (drums.getPadName (selectedPad));
     soundPanel.setAccent (colour);
 
-    tune.attach (drums.parameterOf (selected, "tune"));
-    decay.attach (drums.parameterOf (selected, "decay"));
-    tone.attach (drums.parameterOf (selected, "tone"));
-    level.attach (drums.parameterOf (selected, "level"));
-    pan.attach (drums.parameterOf (selected, "pan"));
-    drive.attach (drums.parameterOf (selected, "drive"));
-    start.attach (drums.parameterOf (selected, "start"));
-    bend.attach (drums.parameterOf (selected, "bend"));
-    reverse.attach (drums.reverseParameter (selected));
+    tune.attach (drums.parameterOf (selectedPad, "tune"));
+    decay.attach (drums.parameterOf (selectedPad, "decay"));
+    tone.attach (drums.parameterOf (selectedPad, "tone"));
+    level.attach (drums.parameterOf (selectedPad, "level"));
+    pan.attach (drums.parameterOf (selectedPad, "pan"));
+    drive.attach (drums.parameterOf (selectedPad, "drive"));
+    start.attach (drums.parameterOf (selectedPad, "start"));
+    bend.attach (drums.parameterOf (selectedPad, "bend"));
+    reverse.attach (drums.reverseParameter (selectedPad));
     reverse.setColour (colour);
-    cutoff.attach (drums.parameterOf (selected, "cutoff"));
-    resonance.attach (drums.parameterOf (selected, "resonance"));
-    crush.attach (drums.parameterOf (selected, "crush"));
-    reverb.attach (drums.parameterOf (selected, "reverb"));
-    delay.attach (drums.parameterOf (selected, "delay"));
-    filter.attach (drums.filterParameter (selected));
+    cutoff.attach (drums.parameterOf (selectedPad, "cutoff"));
+    resonance.attach (drums.parameterOf (selectedPad, "resonance"));
+    crush.attach (drums.parameterOf (selectedPad, "crush"));
+    reverb.attach (drums.parameterOf (selectedPad, "reverb"));
+    delay.attach (drums.parameterOf (selectedPad, "delay"));
+    filter.attach (drums.filterParameter (selectedPad));
     filter.setColour (colour);
 
     for (auto* k : soundKnobs())
@@ -965,15 +1041,24 @@ void DrumMachineEditor::showSelected()
 
     refreshFilterKnobs();
 
-    character.setVisible (selected == Sound::kick);
+    character.setVisible (! user && selected == Sound::kick);
 
-    // Its type, and for a Sample its layers and its own three controls.
-    type.setChoices (DrumMachine::typeNamesFor (selected));
-    type.attach (drums.typeParameter (selected));
-    type.setColour (colour);
-    shownSample = drums.getType (selected) == DrumMachine::sampleType;
+    // A sound's type (a user pad has none: it plays samples, and has a menu of its own there), and
+    // for a Sample its layers and its own three controls.
+    if (! user)
+    {
+        type.setChoices (DrumMachine::typeNamesFor (selected));
+        type.attach (drums.typeParameter (selected));
+        type.setColour (colour);
+    }
+
+    type.setVisible (! user);
+    padMenu.setVisible (user);
+    shownSample = drums.playsSamples (selectedPad);
     samplesSeen = drums.getSamplesVersion();
-    layers->show (selected, colour);
+    padsSeen = drums.getPadsVersion();
+    describePads();
+    layers->show (selectedPad, colour);
     layers->setVisible (shownSample);
     reverse.setVisible (shownSample);
 
@@ -1017,16 +1102,34 @@ void DrumMachineEditor::refreshReadouts()
 void DrumMachineEditor::refreshPicture (bool force)
 {
     const auto now = drums.currentSettings();
-    const auto& was = pictured.sounds[(size_t) selected];
+    const auto user = selectedPad >= DrumMachine::numSounds;
+    const auto settingsOf = [this, user] (const DrumMachine::KitSettings& k) -> const DrumMachine::Settings&
+    {
+        return user ? k.user[(size_t) (selectedPad - DrumMachine::numSounds)].settings : k.sounds[(size_t) selectedPad];
+    };
 
-    if (! force && hasPicture && was == now.sounds[(size_t) selected] && (selected != Sound::kick || pictured.kick == now.kick))
+    if (! force && hasPicture && settingsOf (pictured) == settingsOf (now) && (selectedPad != (int) Sound::kick || pictured.kick == now.kick))
         return;
 
     pictured = now;
     hasPicture = true;
-    const auto guess = juce::jlimit (0.05, 6.5, now.sounds[(size_t) selected].decay * 0.00125 + 0.06);
-    const auto hit = DrumMachine::Engine::renderOne (now, selected, pictureRate, guess, -1, drums.getSamples());
-    picture->set (hit, pictureRate, now.sounds[(size_t) selected].decay, colourOf (selected));
+
+    // As long as its decay says, or for a sample that plays whole, as long as its longest layer.
+    auto guess = juce::jlimit (0.05, 6.5, settingsOf (now).decay * 0.00125 + 0.06);
+
+    if (drums.playsSamples (selectedPad))
+    {
+        auto longest = 0.05;
+
+        for (auto& l : drums.getLayers (selectedPad))
+            if (l.sample != nullptr)
+                longest = juce::jmax (longest, (double) l.sample->getNumFrames() / l.sample->rate);
+
+        guess = juce::jmin (guess, longest * 4.0 + 0.1);
+    }
+
+    const auto hit = DrumMachine::Engine::renderPad (now, selectedPad, pictureRate, guess, drums.getSamples());
+    picture->set (hit, pictureRate, settingsOf (now).decay, colourOfPad (selectedPad));
     pictureSeconds = picture->getSeconds();
 }
 
@@ -1037,7 +1140,7 @@ juce::String DrumMachineEditor::getKitText() const
 
 juce::String DrumMachineEditor::getTypeText() const
 {
-    return DrumMachine::typeNamesFor (selected)[type.getIndex()];
+    return selectedPad >= DrumMachine::numSounds ? juce::String ("Sample") : DrumMachine::typeNamesFor (selected)[type.getIndex()];
 }
 
 int DrumMachineEditor::getNumLayersShown() const            { return layers->getNumRows(); }
@@ -1055,46 +1158,141 @@ void DrumMachineEditor::say (const juce::String& text)
 
 void DrumMachineEditor::markSampledPads()
 {
-    const auto& order = padOrder();
+    const auto held = drums.getSamples();
 
-    for (size_t i = 0; i < order.size(); ++i)
-        pads[i]->setSampled (drums.getType (order[i]) == DrumMachine::sampleType);
+    // A sound's pad when its type is Sample; a user pad once it has a layer.
+    for (size_t place = 0; place < pads.size(); ++place)
+    {
+        const auto pad = padAtPlace (place);
+        pads[place]->setSampled (pad < DrumMachine::numSounds ? drums.playsSamples (pad) : held != nullptr && ! held->pads[(size_t) pad].empty());
+    }
 }
 
 //==============================================================================
-std::optional<Sound> DrumMachineEditor::soundAt (juce::Point<int> p) const
+std::optional<int> DrumMachineEditor::padAt (juce::Point<int> p) const
 {
-    const auto& order = padOrder();
-
-    for (size_t i = 0; i < order.size(); ++i)
-        if ((pads[i]->getBounds() + padPanel.getPosition()).contains (p))
-            return order[i];
+    for (size_t place = 0; place < pads.size(); ++place)
+        if ((pads[place]->getBounds() + padPanel.getPosition()).contains (p))
+            return padAtPlace (place);
 
     if (soundPanel.getBounds().contains (p))
-        return selected;
+        return selectedPad;
 
     return {};
 }
 
-void DrumMachineEditor::setDropTarget (std::optional<Sound> s)
+void DrumMachineEditor::setDropTarget (std::optional<int> s)
 {
     if (s == dropTarget)
         return;
 
     dropTarget = s;
-    const auto& order = padOrder();
 
-    for (size_t i = 0; i < order.size(); ++i)
-        pads[i]->setDropping (s.has_value() && order[i] == *s);
+    for (size_t place = 0; place < pads.size(); ++place)
+        pads[place]->setDropping (s.has_value() && padAtPlace (place) == *s);
 
     repaint();
 }
 
-bool DrumMachineEditor::addFiles (Sound s, const juce::Array<juce::File>& sounds)
+void DrumMachineEditor::changeUserPad (int pad, const juce::String& what, int value)
+{
+    if (pad < DrumMachine::numSounds)
+        return;
+
+    if (what == "clear")
+        drums.clearPad (pad);
+    else if (what == "note")
+        drums.setPadNote (pad, value);
+    else if (what == "colour")
+        drums.setPadColour (pad, value == 0 ? juce::Colour() : juce::Colour ((juce::uint32) value));
+
+    showSelected();
+}
+
+void DrumMachineEditor::showPadMenu (int pad)
+{
+    if (pad < DrumMachine::numSounds)
+        return;
+
+    // The notes by octave, each with the sound or pads already on it; and a few colours.
+    juce::PopupMenu notes;
+    const auto now = drums.getPadNote (pad);
+
+    for (int octave = 0; octave < 11; ++octave)
+    {
+        juce::PopupMenu sub;
+        auto holdsNow = false;
+
+        for (int note = octave * 12; note < juce::jmin (128, octave * 12 + 12); ++note)
+        {
+            juce::StringArray on;
+
+            if (const auto sound = DrumMachine::soundFor (note))
+                on.add (DrumMachine::nameOf (*sound));
+
+            for (int other = DrumMachine::numSounds; other < DrumMachine::numPads; ++other)
+                if (other != pad && drums.getPadNote (other) == note && ! drums.getLayers (other).empty())
+                    on.add (drums.getPadName (other));
+
+            sub.addItem (1000 + note, juce::String (note) + "  " + noteName (note) + (on.isEmpty() ? juce::String() : "   with " + on.joinIntoString (", ")), true, note == now);
+            holdsNow = holdsNow || note == now;
+        }
+
+        notes.addSubMenu (noteName (octave * 12) + " to " + noteName (juce::jmin (127, octave * 12 + 11)), sub, true, nullptr, holdsNow);
+    }
+
+    static const std::pair<const char*, juce::uint32> colours[] { { "Red", 0xffe8604c }, { "Orange", 0xffe9a23b }, { "Yellow", 0xffd9c545 }, { "Green", 0xff7cc35a },
+                                                                  { "Teal", 0xff2fb8a6 }, { "Blue", 0xff4f9be8 }, { "Purple", 0xffa678e0 }, { "Pink", 0xffe07ab0 } };
+    juce::PopupMenu colourMenu;
+    const auto own = drums.getPadColour (pad);
+    colourMenu.addItem (2000, "None", true, own.isTransparent());
+
+    for (int i = 0; i < (int) std::size (colours); ++i)
+        colourMenu.addItem (2001 + i, colours[i].first, true, own == juce::Colour (colours[i].second));
+
+    juce::PopupMenu menu;
+    menu.addSectionHeader (drums.getPadName (pad));
+    menu.addItem (1, "Rename...");
+    menu.addSubMenu ("Note (" + juce::String (now) + " " + noteName (now) + ")", notes);
+    menu.addSubMenu ("Colour", colourMenu);
+    menu.addSeparator();
+    menu.addItem (2, "Empty This Pad");
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (padBounds (pad) + getScreenPosition()),
+                        [safe = juce::Component::SafePointer<DrumMachineEditor> (this), pad] (int chosen)
+    {
+        if (safe == nullptr || chosen == 0)
+            return;
+
+        if (chosen == 1)
+        {
+            auto* box = new juce::AlertWindow ("Rename " + safe->drums.getPadName (pad), {}, juce::MessageBoxIconType::NoIcon, safe.getComponent());
+            box->addTextEditor ("name", safe->drums.getPadName (pad));
+            box->addButton ("Rename", 1, juce::KeyPress (juce::KeyPress::returnKey));
+            box->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+            box->enterModalState (true, juce::ModalCallbackFunction::create ([safe, box, pad] (int result)
+            {
+                if (safe != nullptr && result == 1)
+                {
+                    safe->drums.setPadName (pad, box->getTextEditorContents ("name"));
+                    safe->showSelected();
+                }
+            }), true);
+        }
+        else if (chosen == 2)
+            safe->changeUserPad (pad, "clear");
+        else if (chosen >= 2000)
+            safe->changeUserPad (pad, "colour", chosen == 2000 ? 0 : (int) colours[chosen - 2001].second);
+        else if (chosen >= 1000)
+            safe->changeUserPad (pad, "note", chosen - 1000);
+    });
+}
+
+bool DrumMachineEditor::addFiles (int s, const juce::Array<juce::File>& sounds)
 {
     const auto before = drums.getLayers (s).size();
     const auto error = drums.addFiles (s, sounds);
-    select (s);
+    selectPad (s);
 
     if (error.isNotEmpty())
         say (error);
@@ -1111,12 +1309,12 @@ bool DrumMachineEditor::isInterestedInFileDrag (const juce::StringArray& dragged
     return false;
 }
 
-void DrumMachineEditor::fileDragMove (const juce::StringArray&, int x, int y)      { setDropTarget (soundAt ({ x, y })); }
+void DrumMachineEditor::fileDragMove (const juce::StringArray&, int x, int y)      { setDropTarget (padAt ({ x, y })); }
 void DrumMachineEditor::fileDragExit (const juce::StringArray&)                    { setDropTarget ({}); }
 
 void DrumMachineEditor::filesDropped (const juce::StringArray& dropped, int x, int y)
 {
-    const auto to = soundAt ({ x, y });
+    const auto to = padAt ({ x, y });
     setDropTarget ({});
 
     if (! to.has_value())
@@ -1135,12 +1333,12 @@ void DrumMachineEditor::filesDropped (const juce::StringArray& dropped, int x, i
 }
 
 bool DrumMachineEditor::isInterestedInDragSource (const SourceDetails& details)    { return SoundDrops::accepts (details.description); }
-void DrumMachineEditor::itemDragMove (const SourceDetails& details)                { setDropTarget (soundAt (details.localPosition)); }
+void DrumMachineEditor::itemDragMove (const SourceDetails& details)                { setDropTarget (padAt (details.localPosition)); }
 void DrumMachineEditor::itemDragExit (const SourceDetails&)                        { setDropTarget ({}); }
 
 void DrumMachineEditor::itemDropped (const SourceDetails& details)
 {
-    const auto to = soundAt (details.localPosition);
+    const auto to = padAt (details.localPosition);
     setDropTarget ({});
 
     if (! to.has_value())
@@ -1174,9 +1372,9 @@ void DrumMachineEditor::itemDropped (const SourceDetails& details)
 
 void DrumMachineEditor::chooseSamples()
 {
-    chooser = std::make_unique<juce::FileChooser> ("Choose sounds for " + DrumMachine::nameOf (selected), juce::File(), "*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3;*.m4a;*.caf");
+    chooser = std::make_unique<juce::FileChooser> ("Choose sounds for " + drums.getPadName (selectedPad), juce::File(), "*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3;*.m4a;*.caf");
     chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::canSelectMultipleItems,
-                          [safe = juce::Component::SafePointer<DrumMachineEditor> (this), to = selected] (const juce::FileChooser& c)
+                          [safe = juce::Component::SafePointer<DrumMachineEditor> (this), to = selectedPad] (const juce::FileChooser& c)
                           {
                               if (safe != nullptr && ! c.getResults().isEmpty())
                                   safe->addFiles (to, c.getResults());
@@ -1273,7 +1471,7 @@ void DrumMachineEditor::timerCallback()
 
     // The type and the layers may have changed from outside the window (a preset, a kit, the host).
     if (const auto was = type.getIndex(); (type.refresh(), type.getIndex() != was)
-            || (drums.getType (selected) == DrumMachine::sampleType) != shownSample || drums.getSamplesVersion() != samplesSeen)
+            || drums.playsSamples (selectedPad) != shownSample || drums.getSamplesVersion() != samplesSeen || drums.getPadsVersion() != padsSeen)
         showSelected();
 
     markSampledPads();
@@ -1289,18 +1487,18 @@ void DrumMachineEditor::timerCallback()
 
     // The pads light at each new hit; the picture sweeps when its own sound plays.
     const auto& engine = drums.getEngine();
-    const auto& order = padOrder();
 
-    for (size_t i = 0; i < order.size(); ++i)
+    for (size_t i = 0; i < pads.size(); ++i)
     {
-        const auto count = engine.hitsOf (order[i]);
+        const auto pad = padAtPlace (i);
+        const auto count = engine.hitsOfPad (pad);
 
         if (count != seenHits[i])
         {
             seenHits[i] = count;
-            pads[i]->hit (engine.lastVelocityOf (order[i]));
+            pads[i]->hit (engine.lastVelocityOfPad (pad));
 
-            if (order[i] == selected)
+            if (pad == selectedPad)
                 picture->sweep();
         }
         else
@@ -1381,7 +1579,7 @@ void DrumMachineEditor::resized()
     padPanel.setBounds (r.removeFromLeft (600));
     {
         const auto area = padPanel.getContentBounds().reduced (2, 2);
-        constexpr int columns = 6, rows = 5;
+        constexpr int columns = 8, rows = 8;
         const auto w = area.getWidth() / columns, h = area.getHeight() / rows;
 
         for (size_t i = 0; i < pads.size(); ++i)
@@ -1400,7 +1598,10 @@ void DrumMachineEditor::resized()
             header.removeFromRight (6);
         }
 
-        type.setBounds (header.removeFromRight (140).reduced (0, 2));
+        if (padMenu.isVisible())
+            padMenu.setBounds (header.removeFromRight (60).reduced (0, 2));
+        else
+            type.setBounds (header.removeFromRight (140).reduced (0, 2));
 
         if (shownSample)
         {
@@ -1478,7 +1679,11 @@ void DrumMachineEditor::paintOverChildren (juce::Graphics& g)
     }
     else
     {
-        g.drawText ("Notes " + notesOf (selected) + "    " + chokesOf (selected), line, juce::Justification::centredLeft);
+        if (selectedPad < DrumMachine::numSounds)
+            g.drawText ("Notes " + notesOf (selected) + "    " + chokesOf (selected), line, juce::Justification::centredLeft);
+        else
+            g.drawText ("Note " + juce::String (drums.getPadNote (selectedPad)) + " " + noteName (drums.getPadNote (selectedPad))
+                            + "    Plays with whatever else is on its note; a hit struck again fades the last", line, juce::Justification::centredLeft);
     }
 
     // A drag over the selected sound's panel: its edge lit, as a pad's is.

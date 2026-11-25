@@ -1417,7 +1417,7 @@ namespace
 
 //==============================================================================
 Engine::Engine()
-    : hits ((size_t) numNotes), fading ((size_t) (2 * numNotes))
+    : hits ((size_t) numNotes), fading ((size_t) (2 * numNotes)), userHits ((size_t) numUserPads), userFading ((size_t) (2 * numUserPads))
 {
     settings = defaultKit();
 }
@@ -1450,6 +1450,10 @@ void Engine::reset()
 
     for (auto& h : fading)
         h = {};
+
+    for (auto* all : { &userHits, &userFading })
+        for (auto& h : *all)
+            h = {};
 
     turns.fill (0);
     driveAmount.setCurrentAndTargetValue (settings.drive * 0.01f);
@@ -1523,7 +1527,7 @@ juce::uint32 Engine::oldestSamplesInUse() const noexcept
 {
     auto oldest = samples != nullptr ? samples->generation : std::numeric_limits<juce::uint32>::max();
 
-    for (auto* all : { &hits, &fading })
+    for (auto* all : { &hits, &fading, &userHits, &userFading })
         for (auto& h : *all)
             if (h.active && h.sample != nullptr)
                 oldest = juce::jmin (oldest, h.samplesGeneration);
@@ -1533,8 +1537,12 @@ juce::uint32 Engine::oldestSamplesInUse() const noexcept
 
 int Engine::getNumSounding() const
 {
-    return (int) std::count_if (hits.begin(), hits.end(), [] (const Hit& h) { return h.active; })
-         + (int) std::count_if (fading.begin(), fading.end(), [] (const Hit& h) { return h.active; });
+    int sounding = 0;
+
+    for (auto* all : { &hits, &fading, &userHits, &userFading })
+        sounding += (int) std::count_if (all->begin(), all->end(), [] (const Hit& h) { return h.active; });
+
+    return sounding;
 }
 
 void Engine::cut (int note)
@@ -1555,11 +1563,58 @@ void Engine::cut (int note)
     h.active = false;
 }
 
+void Engine::cutUser (int userPad)
+{
+    auto& h = userHits[(size_t) userPad];
+
+    if (! h.active)
+        return;
+
+    auto& a = userFading[2 * (size_t) userPad];
+    auto& b = userFading[2 * (size_t) userPad + 1];
+    auto& f = ! a.active ? a : ! b.active ? b : (a.fade <= b.fade ? a : b);
+    f = h;
+    f.fade = f.fadeLength = fadeLength;
+    h.active = false;
+}
+
+void Engine::strikeUser (int userPad, float velocity)
+{
+    cutUser (userPad);
+    const auto pad = numSounds + userPad;
+    start (userHits[(size_t) userPad], pad, settings.user[(size_t) userPad].note, velocity);
+    hitCount[(size_t) pad].fetch_add (1, std::memory_order_relaxed);
+    lastVelocity[(size_t) pad].store (velocity, std::memory_order_relaxed);
+}
+
 void Engine::noteOn (int note, float velocity)
+{
+    if (velocity <= 0.0f)
+        return;
+
+    strike (note, velocity);
+
+    for (int u = 0; u < numUserPads; ++u)
+        if (settings.user[(size_t) u].note == note)
+            strikeUser (u, velocity);
+}
+
+void Engine::padOn (int pad, float velocity)
+{
+    if (velocity <= 0.0f || ! juce::isPositiveAndBelow (pad, numPads))
+        return;
+
+    if (pad < numSounds)
+        strike (padNote ((Sound) pad), velocity);
+    else
+        strikeUser (pad - numSounds, velocity);
+}
+
+void Engine::strike (int note, float velocity)
 {
     const auto sound = soundFor (note);
 
-    if (! sound.has_value() || velocity <= 0.0f)
+    if (! sound.has_value())
         return;
 
     if (const auto group = chokeGroup (note); group != 0)
@@ -1573,7 +1628,7 @@ void Engine::noteOn (int note, float velocity)
         cut (note);
     }
 
-    start (hits[(size_t) (note - firstNote)], note, velocity);
+    start (hits[(size_t) (note - firstNote)], (int) *sound, note, velocity);
     hitCount[(size_t) *sound].fetch_add (1, std::memory_order_relaxed);
     lastVelocity[(size_t) *sound].store (velocity, std::memory_order_relaxed);
 }
@@ -1583,31 +1638,36 @@ void Engine::allSoundOff()
     for (int note = firstNote; note <= lastNote; ++note)
         cut (note);
 
+    for (int u = 0; u < numUserPads; ++u)
+        cutUser (u);
+
     effectsFade = fadeLength;
 }
 
-void Engine::start (Hit& h, int note, float velocity)
+void Engine::start (Hit& h, int pad, int note, float velocity)
 {
-    const auto sound = *soundFor (note);
-    const auto& st = settings.sounds[(size_t) sound];
+    // A user pad plays samples only; what is said of its sound below is never reached for one.
+    const auto user = pad >= numSounds;
+    const auto sound = user ? Sound::kick : (Sound) pad;
+    const auto& st = user ? settings.user[(size_t) (pad - numSounds)].settings : settings.sounds[(size_t) sound];
 
     h = {};
 
     // A Sample: the layer whose turn it is among those for this velocity. With none, the pad is silent.
-    const auto sampled = st.type == sampleType;
+    const auto sampled = user || st.type == sampleType;
     const Sampler::Sample* recording = nullptr;
 
     if (sampled)
     {
         if (samples != nullptr)
         {
-            const auto& layers = samples->pads[(size_t) sound];
+            const auto& layers = samples->pads[(size_t) pad];
             const auto v = juce::jlimit (1, 127, juce::roundToInt (velocity * 127.0f));
             const auto among = (juce::uint32) std::count_if (layers.begin(), layers.end(), [v] (const Layer& l) { return l.plays (v); });
 
             if (among > 0)
             {
-                auto turn = turns[(size_t) sound]++ % among;
+                auto turn = turns[(size_t) pad]++ % among;
 
                 for (auto& l : layers)
                     if (l.plays (v) && turn-- == 0)
@@ -2025,6 +2085,13 @@ void Engine::renderHits (float* left, float* right, int count, float* toReverbL,
         play (fading[2 * i], true);
         play (fading[2 * i + 1], true);
     }
+
+    for (size_t i = 0; i < userHits.size(); ++i)
+    {
+        play (userHits[i], false);
+        play (userFading[2 * i], true);
+        play (userFading[2 * i + 1], true);
+    }
 }
 
 void Engine::render (float* left, float* right, int count)
@@ -2180,6 +2247,19 @@ juce::AudioBuffer<float> Engine::renderOne (const KitSettings& kit, Sound sound,
     engine.renderHits (out.getWritePointer (0), out.getWritePointer (1), out.getNumSamples());
     return out;
 }
+
+juce::AudioBuffer<float> Engine::renderPad (const KitSettings& kit, int pad, double sampleRate, double seconds, SamplesPtr with)
+{
+    Engine engine;
+    engine.setSettings (kit);
+    engine.setSamples (std::move (with));
+    engine.prepare (sampleRate);
+    engine.padOn (pad, 1.0f);
+    juce::AudioBuffer<float> out (2, juce::jmax (1, (int) (seconds * sampleRate)));
+    out.clear();
+    engine.renderHits (out.getWritePointer (0), out.getWritePointer (1), out.getNumSamples());
+    return out;
+}
 }
 
 //==============================================================================
@@ -2255,8 +2335,42 @@ BasicDrumsProcessor::BasicDrumsProcessor()
         p.bend = addFloat (id + "_bend", name + " Sample Pitch Envelope", { -24.0f, 24.0f }, 0.0f, "st");
     }
 
+    // And after those, the 34 user pads: each the twelve settings a sound has and a Sample's three.
+    for (int u = 0; u < numUserPads; ++u)
+    {
+        const auto id = idOfPad (numSounds + u), name = "User Pad " + juce::String (u + 1);
+        const auto d = defaultUserSettings();
+        auto& p = users[(size_t) u];
+        p.tune = addFloat (id + "_tune", name + " Tune", { -24.0f, 24.0f }, d.tune, "st");
+        p.decay = addFloat (id + "_decay", name + " Decay", { 5.0f, 5000.0f, 0.0f, 0.3f }, d.decay, "ms");
+        p.tone = addFloat (id + "_tone", name + " Tone", { -100.0f, 100.0f }, d.tone, "%");
+        p.level = addFloat (id + "_level", name + " Level", { -48.0f, 6.0f }, d.level, "dB");
+        p.pan = addFloat (id + "_pan", name + " Pan", { -100.0f, 100.0f }, d.pan, "%");
+        p.drive = addFloat (id + "_drive", name + " Drive", { 0.0f, 100.0f }, d.drive, "%");
+        p.filter = addChoice (id + "_filter", name + " Filter", filterNames(), d.filter);
+        p.cutoff = addFloat (id + "_cutoff", name + " Cutoff", { 20.0f, 20000.0f, 0.0f, 0.25f }, d.cutoff, "Hz");
+        p.resonance = addFloat (id + "_resonance", name + " Resonance", { 0.0f, 100.0f }, d.resonance, "%");
+        p.crush = addFloat (id + "_crush", name + " Crush", { 0.0f, 100.0f }, d.crush, "%");
+        p.reverb = addFloat (id + "_reverb", name + " Reverb", { 0.0f, 100.0f }, d.reverb, "%");
+        p.delay = addFloat (id + "_delay", name + " Delay", { 0.0f, 100.0f }, d.delay, "%");
+        p.start = addFloat (id + "_start", name + " Sample Start", { 0.0f, 95.0f }, 0.0f, "%");
+        p.reverse = addBool (id + "_reverse", name + " Sample Reverse", false);
+        p.bend = addFloat (id + "_bend", name + " Sample Pitch Envelope", { -24.0f, 24.0f }, 0.0f, "st");
+        userNotes[(size_t) u].store (firstUserNote + u);
+    }
+
     auditions.reserve (64);
     retiredSamples.reserve (64);
+}
+
+juce::String BasicDrumsProcessor::idOfPad (int pad)
+{
+    return pad < numSounds ? idOf ((Sound) pad) : "user" + juce::String (pad - numSounds + 1);
+}
+
+const BasicDrumsProcessor::SoundParameters& BasicDrumsProcessor::of (int pad) const noexcept
+{
+    return pad < numSounds ? sounds[(size_t) juce::jmax (0, pad)] : users[(size_t) juce::jmin (numUserPads - 1, pad - numSounds)];
 }
 
 KitSettings BasicDrumsProcessor::currentSettings() const
@@ -2269,6 +2383,15 @@ KitSettings BasicDrumsProcessor::currentSettings() const
         k.sounds[i] = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
                         p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
                         typeAt ((Sound) i, p.type->getIndex()), p.start->get(), p.reverse->get(), p.bend->get() };
+    }
+
+    for (size_t u = 0; u < users.size(); ++u)
+    {
+        const auto& p = users[u];
+        k.user[u].settings = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
+                               p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
+                               sampleType, p.start->get(), p.reverse->get(), p.bend->get() };
+        k.user[u].note = userNotes[u].load (std::memory_order_relaxed);
     }
 
     k.kick = (KickCharacter) kickCharacter->getIndex();
@@ -2306,6 +2429,29 @@ void BasicDrumsProcessor::applySettings (const KitSettings& k)
         setExactly (*p.bend, s.bend);
     }
 
+    for (size_t u = 0; u < users.size(); ++u)
+    {
+        const auto& p = users[u];
+        const auto& s = k.user[u].settings;
+        setExactly (*p.tune, s.tune);
+        setExactly (*p.decay, s.decay);
+        setExactly (*p.tone, s.tone);
+        setExactly (*p.level, s.level);
+        setExactly (*p.pan, s.pan);
+        setExactly (*p.drive, s.drive);
+        p.filter->setValueNotifyingHost (p.filter->convertTo0to1 ((float) s.filter));
+        setExactly (*p.cutoff, s.cutoff);
+        setExactly (*p.resonance, s.resonance);
+        setExactly (*p.crush, s.crush);
+        setExactly (*p.reverb, s.reverb);
+        setExactly (*p.delay, s.delay);
+        setExactly (*p.start, s.start);
+        p.reverse->setValueNotifyingHost (s.reverse ? 1.0f : 0.0f);
+        setExactly (*p.bend, s.bend);
+        userNotes[u].store (juce::jlimit (0, 127, k.user[u].note));
+    }
+
+    padsVersion.fetch_add (1);
     kickCharacter->setValueNotifyingHost (kickCharacter->convertTo0to1 ((float) (int) k.kick));
     setExactly (*kitDrive, k.drive);
     setExactly (*glue, k.glue);
@@ -2318,7 +2464,8 @@ void BasicDrumsProcessor::applySettings (const KitSettings& k)
 void BasicDrumsProcessor::applyKit (const Kit& kit)
 {
     applySettings (kit.settings);
-    clearSamples();     // a factory kit is all synthesized
+    clearSamples();     // a factory kit is all synthesized, and has no user pads
+    resetPads();
     kitName = kit.name;
 }
 
@@ -2359,13 +2506,30 @@ bool BasicDrumsProcessor::kitModified() const
             return true;
     }
 
+    // Nor has it any user pad that is not as it starts.
+    for (size_t u = 0; u < now.user.size(); ++u)
+    {
+        const auto &a = now.user[u].settings, &b = kit.user[u].settings;
+
+        if (! (near (a.tune, b.tune) && near (a.decay, b.decay) && near (a.tone, b.tone) && near (a.level, b.level) && near (a.pan, b.pan) && near (a.drive, b.drive)
+               && a.filter == b.filter && near (a.cutoff, b.cutoff) && near (a.resonance, b.resonance) && near (a.crush, b.crush)
+               && near (a.reverb, b.reverb) && near (a.delay, b.delay) && near (a.start, b.start) && a.reverse == b.reverse && near (a.bend, b.bend))
+            || now.user[u].note != kit.user[u].note || userNames[u].isNotEmpty() || ! userColours[u].isTransparent())
+            return true;
+    }
+
     return now.kick != kit.kick || ! near (now.drive, kit.drive) || ! near (now.glue, kit.glue) || ! near (now.level, kit.level)
         || ! near (now.reverbSize, kit.reverbSize) || now.delayTime != kit.delayTime || ! near (now.feedback, kit.feedback);
 }
 
 juce::AudioParameterFloat* BasicDrumsProcessor::parameterOf (Sound sound, const juce::String& what) const
 {
-    const auto& p = sounds[(size_t) sound];
+    return parameterOf ((int) sound, what);
+}
+
+juce::AudioParameterFloat* BasicDrumsProcessor::parameterOf (int pad, const juce::String& what) const
+{
+    const auto& p = of (pad);
     return what == "tune" ? p.tune : what == "decay" ? p.decay : what == "tone" ? p.tone
          : what == "level" ? p.level : what == "pan" ? p.pan : what == "drive" ? p.drive
          : what == "cutoff" ? p.cutoff : what == "resonance" ? p.resonance : what == "crush" ? p.crush
@@ -2376,6 +2540,7 @@ void BasicDrumsProcessor::addToState (juce::XmlElement& xml) const
 {
     xml.setAttribute ("kit", kitName);
     writeSamples (xml);
+    writePads (xml);
 }
 
 void BasicDrumsProcessor::readFromState (const juce::XmlElement& xml)
@@ -2390,6 +2555,7 @@ void BasicDrumsProcessor::readFromState (const juce::XmlElement& xml)
 
     kitName = xml.getStringAttribute ("kit", "Standard");
     readSamples (xml);
+    readPads (xml);
 
     // Before step 10 there were a kick, snare, hat and tom tune (semitones, as now) and decay (in
     // percent of the sound's own); they go to the sounds they meant, the decays scaled from the new
@@ -2445,6 +2611,11 @@ void BasicDrumsProcessor::audition (int note, float velocity)
         auditions.emplace_back (note, velocity);
 }
 
+void BasicDrumsProcessor::auditionPad (int pad, float velocity)
+{
+    audition (-pad - 1, velocity);
+}
+
 void BasicDrumsProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     const auto n = buffer.getNumSamples();
@@ -2478,8 +2649,14 @@ void BasicDrumsProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
 
     if (const juce::SpinLock::ScopedTryLockType lock (auditionLock); lock.isLocked())
     {
+        // A pad alone is kept as a note below zero.
         for (auto [note, velocity] : auditions)
-            engine.noteOn (note, velocity);
+        {
+            if (note >= 0)
+                engine.noteOn (note, velocity);
+            else
+                engine.padOn (-note - 1, velocity);
+        }
 
         auditions.clear();
     }
@@ -2536,7 +2713,7 @@ SamplesPtr BasicDrumsProcessor::getSamples() const
     return samples;
 }
 
-void BasicDrumsProcessor::setSamples (std::array<std::vector<Layer>, (size_t) numSounds> pads)
+void BasicDrumsProcessor::setSamples (PadLayers pads)
 {
     auto next = std::make_shared<Samples>();
     next->pads = std::move (pads);
@@ -2579,18 +2756,158 @@ void BasicDrumsProcessor::clearSamples()
     setSamples ({});
 }
 
-std::vector<Layer> BasicDrumsProcessor::getLayers (Sound s) const
+std::vector<Layer> BasicDrumsProcessor::getLayers (int pad) const
 {
     const auto held = getSamples();
-    return held != nullptr ? held->pads[(size_t) s] : std::vector<Layer>();
+    return held != nullptr && juce::isPositiveAndBelow (pad, numPads) ? held->pads[(size_t) pad] : std::vector<Layer>();
 }
 
-void BasicDrumsProcessor::setLayers (Sound s, std::vector<Layer> layers)
+void BasicDrumsProcessor::setLayers (int pad, std::vector<Layer> layers)
 {
+    if (! juce::isPositiveAndBelow (pad, numPads))
+        return;
+
     const auto held = getSamples();
-    auto pads = held != nullptr ? held->pads : std::array<std::vector<Layer>, (size_t) numSounds>();
-    pads[(size_t) s] = std::move (layers);
+    auto pads = held != nullptr ? held->pads : PadLayers();
+    pads[(size_t) pad] = std::move (layers);
     setSamples (std::move (pads));
+}
+
+//==============================================================================
+bool BasicDrumsProcessor::playsSamples (int pad) const
+{
+    return pad >= numSounds || getType ((Sound) pad) == sampleType;
+}
+
+juce::String BasicDrumsProcessor::getPadName (int pad) const
+{
+    if (pad < numSounds)
+        return nameOf ((Sound) pad);
+
+    const auto& name = userNames[(size_t) (pad - numSounds)];
+    return name.isNotEmpty() ? name : "Pad " + juce::String (pad + 1);
+}
+
+void BasicDrumsProcessor::setPadName (int pad, const juce::String& name)
+{
+    if (pad < numSounds || pad >= numPads)
+        return;
+
+    const auto trimmed = name.trim().substring (0, 40);
+    userNames[(size_t) (pad - numSounds)] = trimmed == "Pad " + juce::String (pad + 1) ? juce::String() : trimmed;
+    padsVersion.fetch_add (1);
+}
+
+juce::Colour BasicDrumsProcessor::getPadColour (int pad) const
+{
+    return pad >= numSounds && pad < numPads ? userColours[(size_t) (pad - numSounds)] : juce::Colour();
+}
+
+void BasicDrumsProcessor::setPadColour (int pad, juce::Colour colour)
+{
+    if (pad < numSounds || pad >= numPads)
+        return;
+
+    userColours[(size_t) (pad - numSounds)] = colour;
+    padsVersion.fetch_add (1);
+}
+
+int BasicDrumsProcessor::getPadNote (int pad) const
+{
+    return pad < numSounds ? padNote ((Sound) pad) : userNotes[(size_t) juce::jmin (numUserPads - 1, pad - numSounds)].load();
+}
+
+void BasicDrumsProcessor::setPadNote (int pad, int note)
+{
+    if (pad < numSounds || pad >= numPads)
+        return;
+
+    userNotes[(size_t) (pad - numSounds)].store (juce::jlimit (0, 127, note));
+    padsVersion.fetch_add (1);
+}
+
+void BasicDrumsProcessor::setUserDefaults (const SoundParameters& p)
+{
+    const auto d = defaultUserSettings();
+    setExactly (*p.tune, d.tune);
+    setExactly (*p.decay, d.decay);
+    setExactly (*p.tone, d.tone);
+    setExactly (*p.level, d.level);
+    setExactly (*p.pan, d.pan);
+    setExactly (*p.drive, d.drive);
+    p.filter->setValueNotifyingHost (0.0f);
+    setExactly (*p.cutoff, d.cutoff);
+    setExactly (*p.resonance, d.resonance);
+    setExactly (*p.crush, d.crush);
+    setExactly (*p.reverb, d.reverb);
+    setExactly (*p.delay, d.delay);
+    setExactly (*p.start, d.start);
+    p.reverse->setValueNotifyingHost (0.0f);
+    setExactly (*p.bend, d.bend);
+}
+
+void BasicDrumsProcessor::resetPads()
+{
+    for (size_t u = 0; u < userNames.size(); ++u)
+    {
+        userNames[u].clear();
+        userColours[u] = juce::Colour();
+        userNotes[u].store (firstUserNote + (int) u);
+    }
+
+    padsVersion.fetch_add (1);
+}
+
+void BasicDrumsProcessor::clearPad (int pad)
+{
+    if (pad < numSounds || pad >= numPads)
+        return;
+
+    const auto u = (size_t) (pad - numSounds);
+    setUserDefaults (users[u]);
+    userNames[u].clear();
+    userColours[u] = juce::Colour();
+    userNotes[u].store (firstUserNote + (int) u);
+    padsVersion.fetch_add (1);
+    setLayers (pad, {});
+}
+
+void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
+{
+    juce::XmlElement all ("PADS");
+
+    for (int u = 0; u < numUserPads; ++u)
+    {
+        const auto note = userNotes[(size_t) u].load();
+
+        if (userNames[(size_t) u].isEmpty() && userColours[(size_t) u].isTransparent() && note == firstUserNote + u)
+            continue;
+
+        auto* e = all.createNewChildElement ("USER");
+        e->setAttribute ("index", u + 1);
+        e->setAttribute ("name", userNames[(size_t) u]);
+        e->setAttribute ("colour", userColours[(size_t) u].toString());
+        e->setAttribute ("note", note);
+    }
+
+    if (all.getNumChildElements() > 0)
+        xml.addChildElement (new juce::XmlElement (all));
+}
+
+void BasicDrumsProcessor::readPads (const juce::XmlElement& xml)
+{
+    resetPads();
+
+    if (const auto* all = xml.getChildByName ("PADS"))
+        for (auto* e : all->getChildWithTagNameIterator ("USER"))
+            if (const auto u = e->getIntAttribute ("index") - 1; juce::isPositiveAndBelow (u, numUserPads))
+            {
+                userNames[(size_t) u] = e->getStringAttribute ("name");
+                userColours[(size_t) u] = juce::Colour::fromString (e->getStringAttribute ("colour", "00000000"));
+                userNotes[(size_t) u].store (juce::jlimit (0, 127, e->getIntAttribute ("note", firstUserNote + u)));
+            }
+
+    padsVersion.fetch_add (1);
 }
 
 juce::Array<juce::File> BasicDrumsProcessor::getFiles() const
@@ -2620,8 +2937,11 @@ juce::int64 BasicDrumsProcessor::bytesHeld() const
     return bytes;
 }
 
-juce::String BasicDrumsProcessor::addSamples (Sound s, const std::vector<std::pair<Sampler::SamplePtr, juce::File>>& given)
+juce::String BasicDrumsProcessor::addSamples (int s, const std::vector<std::pair<Sampler::SamplePtr, juce::File>>& given)
 {
+    if (! juce::isPositiveAndBelow (s, numPads))
+        return {};
+
     auto layers = getLayers (s);
     juce::String refused;
     auto bytes = bytesHeld();
@@ -2641,7 +2961,7 @@ juce::String BasicDrumsProcessor::addSamples (Sound s, const std::vector<std::pa
 
         if ((int) layers.size() >= maxLayers)
         {
-            refused = nameOf (s) + " has " + juce::String (maxLayers) + " layers, the most a pad can have: " + sample->name + " was left out.";
+            refused = getPadName (s) + " has " + juce::String (maxLayers) + " layers, the most a pad can have: " + sample->name + " was left out.";
             break;
         }
 
@@ -2666,10 +2986,12 @@ juce::String BasicDrumsProcessor::addSamples (Sound s, const std::vector<std::pa
     if (added > 0)
     {
         setLayers (s, std::move (layers));
-        setType (s, sampleType);
+
+        if (s < numSounds)
+            setType ((Sound) s, sampleType);
 
         // Long enough for the longest of them to play whole (the knob's top plays any sample whole).
-        auto& decay = *sounds[(size_t) s].decay;
+        auto& decay = *of (s).decay;
         const auto needed = (float) juce::jmin (longestDecaySeconds * 1000.0, std::ceil (longest * 1000.0));
 
         if (decay.get() < needed)
@@ -2679,7 +3001,7 @@ juce::String BasicDrumsProcessor::addSamples (Sound s, const std::vector<std::pa
     return refused;
 }
 
-juce::String BasicDrumsProcessor::addFiles (Sound s, const juce::Array<juce::File>& files)
+juce::String BasicDrumsProcessor::addFiles (int s, const juce::Array<juce::File>& files)
 {
     std::vector<std::pair<Sampler::SamplePtr, juce::File>> read;
     juce::String error;
@@ -2752,13 +3074,13 @@ void BasicDrumsProcessor::writeSamples (juce::XmlElement& xml) const
 
     auto* all = xml.createNewChildElement ("SAMPLES");
 
-    for (int i = 0; i < numSounds; ++i)
+    for (int i = 0; i < numPads; ++i)
     {
         if (held->pads[(size_t) i].empty())
             continue;
 
         auto* pad = all->createNewChildElement ("PAD");
-        pad->setAttribute ("sound", idOf ((Sound) i));
+        pad->setAttribute ("sound", idOfPad (i));
 
         for (auto& l : held->pads[(size_t) i])
         {
@@ -2781,7 +3103,7 @@ void BasicDrumsProcessor::readSamples (const juce::XmlElement& xml)
         return;
     }
 
-    std::array<std::vector<Layer>, (size_t) numSounds> pads;
+    PadLayers pads;
     std::map<juce::String, Sampler::SamplePtr> read;
     juce::int64 held = 0;
 
@@ -2790,8 +3112,8 @@ void BasicDrumsProcessor::readSamples (const juce::XmlElement& xml)
         const auto id = pad->getStringAttribute ("sound");
         int sound = -1;
 
-        for (int i = 0; i < numSounds && sound < 0; ++i)
-            if (idOf ((Sound) i) == id)
+        for (int i = 0; i < numPads && sound < 0; ++i)
+            if (idOfPad (i) == id)
                 sound = i;
 
         if (sound < 0)
@@ -2844,10 +3166,16 @@ EffectPresets::Texts BasicDrumsProcessor::getPresetTexts() const
     juce::XmlElement holder ("DRUMS");
     writeSamples (holder);
 
-    if (const auto* all = holder.getChildByName ("SAMPLES"))
-        return { { "samples", all->toString (juce::XmlElement::TextFormat().singleLine()) } };
+    writePads (holder);
+    EffectPresets::Texts texts;
 
-    return {};
+    if (const auto* all = holder.getChildByName ("SAMPLES"))
+        texts["samples"] = all->toString (juce::XmlElement::TextFormat().singleLine());
+
+    if (const auto* all = holder.getChildByName ("PADS"))
+        texts["pads"] = all->toString (juce::XmlElement::TextFormat().singleLine());
+
+    return texts;
 }
 
 void BasicDrumsProcessor::setPresetTexts (const EffectPresets::Texts& texts)
@@ -2858,7 +3186,12 @@ void BasicDrumsProcessor::setPresetTexts (const EffectPresets::Texts& texts)
         if (auto all = juce::XmlDocument::parse (found->second))
             holder.addChildElement (all.release());
 
+    if (const auto found = texts.find ("pads"); found != texts.end() && found->second.isNotEmpty())
+        if (auto all = juce::XmlDocument::parse (found->second))
+            holder.addChildElement (all.release());
+
     readSamples (holder);
+    readPads (holder);
 }
 
 void BasicDrumsProcessor::setPresetValues (const EffectPresets::Values& values)
@@ -2879,6 +3212,11 @@ void BasicDrumsProcessor::setPresetValues (const EffectPresets::Values& values)
             setExactly (*p.bend, 0.0f);
         }
     }
+
+    // Nor of the user pads: each as it starts.
+    for (auto& p : users)
+        if (values.find (p.tune->paramID) == values.end())
+            setUserDefaults (p);
 
     BuiltInEffect::setPresetValues (values);
 }
