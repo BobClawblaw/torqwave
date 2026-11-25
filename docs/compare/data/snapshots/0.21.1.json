@@ -2,7 +2,7 @@
  "schema": 1,
  "release": "0.21.1",
  "previous": "0.20.0",
- "previous_note": "The 0.20.0 column is the release 0.21.1 is set against. 0.20.1 and 0.21.0 came out between them, on 2026-11-24; each keeps its snapshot, and what they added is counted here as new since 0.20.0.",
+ "previous_note": "0.21.1 is set against 0.20.0. Every row has the same value in both, so the tables show one Torqwave column and the release graphic shows what changed. 0.20.1 and 0.21.0 came out between them, on 2026-11-24; each keeps its snapshot, and what they added is counted here as new since 0.20.0.",
  "status": "released",
  "as_of": "2026-11-25",
  "release_numbers": [

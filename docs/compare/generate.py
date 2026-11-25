@@ -59,6 +59,20 @@ def label(defs, snap, pid):
     return p["name"]
 
 
+def own_columns(defs, snap):
+    """Torqwave's columns in a table: the release, and the earlier release beside it only when a row's
+    value differs between them. Two columns alike in every row say nothing the one does not."""
+    P = snap["products"]
+    if "torqwave_prev" in P and any(P["torqwave"]["cells"][r["id"]]["value"] != P["torqwave_prev"]["cells"][r["id"]]["value"] for r in all_rows(defs)):
+        return ["torqwave", "torqwave_prev"]
+    return ["torqwave"]
+
+
+def product_columns(defs, snap):
+    own = own_columns(defs, snap)
+    return [p["id"] for p in defs["products"] if not p["id"].startswith("torqwave") or p["id"] in own]
+
+
 # ---------------------------------------------------------------- SVG helpers
 
 class Svg:
@@ -174,13 +188,15 @@ def graphic_matrix(defs, snap, m):
     s = Svg()
     s.frame(m["title"].replace("{release}", snap["release"]), "What ships in each product, from its own documentation", snap)
     rows = [r for r in all_rows(defs) if m["rows"] in r["graphics"]]
-    pids = ["torqwave", "torqwave_prev"] + [p["id"] for p in defs["products"] if p.get("matrix") == m["id"]]
+    own = own_columns(defs, snap)
+    nt = len(own)
+    pids = own + [p["id"] for p in defs["products"] if p.get("matrix") == m["id"]]
     lx, cx0, top, bottom = 50, 440, 150, H - 70
     cw = (W - 50 - cx0) / len(pids)
     head = 70
     rh = (bottom - top - head) / len(rows)
-    s.rect(cx0, top, cw * 2, bottom - top, RAISED, 8)
-    s.rect(cx0, top, cw * 2, 5, WAVE, 2)
+    s.rect(cx0, top, cw * nt, bottom - top, RAISED, 8)
+    s.rect(cx0, top, cw * nt, 5, WAVE, 2)
     for i, pid in enumerate(pids):
         x = cx0 + cw * (i + 0.5)
         p = snap["products"][pid]
@@ -195,7 +211,7 @@ def graphic_matrix(defs, snap, m):
         y = top + head + k * rh
         if k % 2 == 0:
             s.rect(lx - 10, y, cx0 - lx + 10, rh, SURFACE)
-            s.rect(cx0 + cw * 2, y, W - 50 - cx0 - cw * 2 + 10, rh, SURFACE)
+            s.rect(cx0 + cw * nt, y, W - 50 - cx0 - cw * nt + 10, rh, SURFACE)
         s.text(lx, y + rh / 2 + 7, r["title"], 21, TEXT)
         for i, pid in enumerate(pids):
             s.mark(cx0 + cw * (i + 0.5), y + rh / 2, snap["products"][pid]["cells"][r["id"]]["value"])
@@ -205,18 +221,20 @@ def graphic_matrix(defs, snap, m):
 
 def graphic_whole(defs, snap):
     """Every row of the matrix against every product, in one tall picture."""
-    pids = [p["id"] for p in defs["products"]]
+    pids = product_columns(defs, snap)
+    nt = len(own_columns(defs, snap))
     groups = defs["groups"]
     lx, cx0, top, head, rh, gh = 50, 420, 150, 262, 30, 44
     h = top + head + sum(gh + rh * len(g["rows"]) for g in groups) + 90
     s = Svg(W, h)
     s.frame(f'Torqwave {snap["release"]} against the alternatives: the whole matrix',
-            f'{len(all_rows(defs))} rows in {len(groups)} areas, {len(pids) - 2} products, each from its own documentation', snap)
+            f'{len(all_rows(defs))} rows in {len(groups)} areas, {len(pids) - nt} products, each from its own documentation', snap)
     cw = (W - 50 - cx0) / len(pids)
     bottom = h - 70
-    s.rect(cx0, top, cw * 2, bottom - top, RAISED, 8)
-    s.rect(cx0, top, cw * 2, 5, WAVE, 2)
-    first_daw = next(i for i, p in enumerate(defs["products"]) if p["group"] == "daw")
+    s.rect(cx0, top, cw * nt, bottom - top, RAISED, 8)
+    s.rect(cx0, top, cw * nt, 5, WAVE, 2)
+    group_of = {p["id"]: p["group"] for p in defs["products"]}
+    first_daw = next(i for i, pid in enumerate(pids) if group_of[pid] == "daw")
     for i, pid in enumerate(pids):
         x = cx0 + cw * (i + 0.5)
         own = pid.startswith("torqwave")
@@ -229,14 +247,14 @@ def graphic_whole(defs, snap):
         for k, r in enumerate(g["rows"]):
             if k % 2 == 0:
                 s.rect(lx - 10, y, cx0 - lx + 10, rh, SURFACE)
-                s.rect(cx0 + cw * 2, y, W - 50 - cx0 - cw * 2 + 10, rh, SURFACE)
+                s.rect(cx0 + cw * nt, y, W - 50 - cx0 - cw * nt + 10, rh, SURFACE)
             s.text(lx, y + rh / 2 + 6, r["title"], 18, TEXT)
             for i, pid in enumerate(pids):
                 s.mark(cx0 + cw * (i + 0.5), y + rh / 2, snap["products"][pid]["cells"][r["id"]]["value"], 9)
             y += rh
-    for i in (2, first_daw):
+    for i in (nt, first_daw):
         s.line(cx0 + cw * i, top + head - 6, cx0 + cw * i, bottom, LINE2, 1)
-    s.text(cx0 + cw * (2 + (first_daw - 2) / 2), top + 22, "The editors", 17, DIM, "middle")
+    s.text(cx0 + cw * (nt + (first_daw - nt) / 2), top + 22, "The editors", 17, DIM, "middle")
     s.text(cx0 + cw * (first_daw + (len(pids) - first_daw) / 2), top + 22, "The DAWs", 17, DIM, "middle")
     s.legend(50, h - 28)
     return s.save(f"{len(defs['matrices']) + 3}-the-whole-matrix.svg"), h
@@ -260,11 +278,64 @@ def trend_points(defs, snaps, announced_only=False):
     return pts, len(rows)
 
 
+def standing_trend(s, pts, total, px, pw, top, bottom):
+    s.text(px + 18, top + 34, "Torqwave by release", 19, WHITE, weight="bold")
+    s.text(px + 18, top + 58, f"rows covered, of {total}", 15, DIM)
+    slots = max(2, len(pts))   # the releases shown, side by side: no empty slots
+    shown = pts[-slots:]
+    bx0, by0, bh = px + 18, top + 90, bottom - top - 150
+    bw = (pw - 36) / slots
+    for k in range(slots):
+        x = bx0 + k * bw + 5
+        if k < len(shown):
+            ver, c = shown[k]
+            hy, hp = bh * c["yes"] / total, bh * c["partial"] / total
+            s.rect(x, by0, bw - 10, bh, BG, 4, LINE)
+            s.rect(x, by0 + bh - hy, bw - 10, hy, "#2f7f5b", 4)
+            s.rect(x, by0 + bh - hy - hp, bw - 10, hp, "#8a7a2c", 0)
+            s.text(x + (bw - 10) / 2, by0 + bh - hy - hp - 8, c["yes"], 17, WHITE, "middle", "bold")
+            s.text(x + (bw - 10) / 2, by0 + bh + 24, ver, 13, TEXT, "middle")
+        else:
+            s.rect(x, by0, bw - 10, bh, "none", 4, LINE, "4 5")
+
+
+def standing_gaps(s, defs, snap, px, pw, top):
+    """Torqwave's rows that are not yes, by name: the part of the count the grid does not spell out."""
+    cells = snap["products"]["torqwave"]["cells"]
+    rows = all_rows(defs)
+    c = coverage(cells, rows)
+    s.text(px + 18, top + 34, f'Torqwave {snap["release"]}', 19, WHITE, weight="bold")
+    s.text(px + 18, top + 58, f"of {len(rows)} rows", 15, DIM)
+    s.text(px + 18, top + 132, c["yes"], 72, WAVE, weight="bold")
+    s.text(px + 18, top + 160, "rows covered", 17, TEXT)
+    y = top + 212
+    for value, word, colour in (("partial", "Partial", "#c9b04a"), ("no", "No", DIM)):
+        names = [r["title"] for r in rows if cells[r["id"]]["value"] == value]
+        if not names:
+            continue
+        s.text(px + 18, y, f"{word}: {len(names)}", 17, colour, weight="bold")
+        y += 28
+        for name in names:
+            words, lines, cur = name.split(" "), [], ""
+            for w in words:
+                if len(cur) + len(w) + 1 > 24:
+                    lines.append(cur)
+                    cur = w
+                else:
+                    cur = (cur + " " + w).strip()
+            lines.append(cur)
+            for ln in lines:
+                s.text(px + 18, y, ln, 16, TEXT)
+                y += 21
+            y += 7
+        y += 22
+
+
 def graphic_standing(defs, snaps):
     snap = snaps[-1]
     s = Svg()
     s.frame("Where Torqwave stands, area by area", "Rows covered in each area, of the rows this comparison tracks. A count of features, not of depth or maturity.", snap)
-    pids = [p["id"] for p in defs["products"]]
+    pids = product_columns(defs, snap)
     lx, gx, top, bottom = 50, 285, 150, H - 70
     cw, head = 91, 62
     rh = (bottom - top - head) / len(pids)
@@ -294,29 +365,15 @@ def graphic_standing(defs, snaps):
             if wu:
                 s.rect(x + bw - wu, by, wu, bh, LINE2, 0)
             s.text(x + bw / 2, by + bh / 2 + 6, f'{c["yes"]}/{n}', fs - 1, WHITE, "middle", "bold")
-    # the trend across releases
+    # the trend across releases, or, when the releases shown count the same, what the release leaves out
     pts, total = trend_points(defs, snaps, announced_only=True)
     px = gx + len(defs["groups"]) * cw + 30
     pw = W - 50 - px
     s.rect(px, top, pw, bottom - top, SURFACE, 10, LINE)
-    s.text(px + 18, top + 34, "Torqwave by release", 19, WHITE, weight="bold")
-    s.text(px + 18, top + 58, f"rows covered, of {total}", 15, DIM)
-    slots = max(2, len(pts))   # the releases shown, side by side: no empty slots
-    shown = pts[-slots:]
-    bx0, by0, bh = px + 18, top + 90, bottom - top - 150
-    bw = (pw - 36) / slots
-    for k in range(slots):
-        x = bx0 + k * bw + 5
-        if k < len(shown):
-            ver, c = shown[k]
-            hy, hp = bh * c["yes"] / total, bh * c["partial"] / total
-            s.rect(x, by0, bw - 10, bh, BG, 4, LINE)
-            s.rect(x, by0 + bh - hy, bw - 10, hy, "#2f7f5b", 4)
-            s.rect(x, by0 + bh - hy - hp, bw - 10, hp, "#8a7a2c", 0)
-            s.text(x + (bw - 10) / 2, by0 + bh - hy - hp - 8, c["yes"], 17, WHITE, "middle", "bold")
-            s.text(x + (bw - 10) / 2, by0 + bh + 24, ver, 13, TEXT, "middle")
-        else:
-            s.rect(x, by0, bw - 10, bh, "none", 4, LINE, "4 5")
+    if len({(c["yes"], c["partial"]) for _, c in pts}) > 1:
+        standing_trend(s, pts, total, px, pw, top, bottom)
+    else:
+        standing_gaps(s, defs, snap, px, pw, top)
     # legend
     x = 50
     for col, word in (("#2f7f5b", "yes (the number)"), ("#8a7a2c", "partial"), (LINE2, "not confirmed"), (SURFACE, "no")):
@@ -364,12 +421,12 @@ def matrix_md(defs, snaps):
     o.append("\n## Graphics\n")
     pics = [("1-release-by-the-numbers", "What the release adds over the one before, by the numbers")]
     pics += [(m["file"], m["title"].replace("{release}", snap["release"])) for m in defs["matrices"]]
-    pics += [(f"{len(defs['matrices']) + 2}-where-torqwave-stands", "Rows covered in each area by each product, and Torqwave's trend by release")]
+    pics += [(f"{len(defs['matrices']) + 2}-where-torqwave-stands", "Rows covered in each area by each product, and Torqwave's rows that are partial or no")]
     for f, alt in pics:
         o.append(f"![{alt}](graphics/{f}.png)\n")
     o.append("## Coverage by area\n")
     o.append("Rows that are yes, with partial rows after a plus sign and rows not confirmed after a question mark. Counts, not a score.\n")
-    tq = ["torqwave", "torqwave_prev"]
+    tq = own_columns(defs, snap)
     sets = [("The editors", tq + [p["id"] for p in defs["products"] if p["group"] == "editor"]),
             ("The DAWs", tq + [p["id"] for p in defs["products"] if p["group"] == "daw"])]
     def cov_text(c):

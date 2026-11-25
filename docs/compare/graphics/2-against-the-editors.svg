@@ -3,198 +3,176 @@
 <text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.21.1 and the audio editors</text>
 <text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">What ships in each product, from its own documentation</text>
 <text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-25. Torqwave 0.21.1 is released. Sources and method: docs/compare in the Torqwave repository.</text>
-<rect x="440.0" y="150.0" width="317.1" height="680.0" rx="8" fill="#1d2126"/>
-<rect x="440.0" y="150.0" width="317.1" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="519.3" y="184.0" font-size="21" fill="#ffffff" text-anchor="middle" font-weight="bold">Torqwave</text>
-<text x="519.3" y="208.0" font-size="19" fill="#4fc3a1" text-anchor="middle" font-weight="bold">0.21.1</text>
-<text x="677.9" y="184.0" font-size="21" fill="#ffffff" text-anchor="middle" font-weight="bold">Torqwave</text>
-<text x="677.9" y="208.0" font-size="19" fill="#8b939e" text-anchor="middle" font-weight="bold">0.20.0</text>
-<text x="836.4" y="184.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Adobe</text>
-<text x="836.4" y="208.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Audition</text>
-<text x="995.0" y="196.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Audacity</text>
-<text x="1153.6" y="184.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">iZotope</text>
-<text x="1153.6" y="208.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">RX</text>
-<text x="1312.1" y="184.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Steinberg</text>
-<text x="1312.1" y="208.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">SpectraLayers</text>
-<text x="1470.7" y="184.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Steinberg</text>
-<text x="1470.7" y="208.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">WaveLab</text>
+<rect x="440.0" y="150.0" width="185.0" height="680.0" rx="8" fill="#1d2126"/>
+<rect x="440.0" y="150.0" width="185.0" height="5.0" rx="2" fill="#4fc3a1"/>
+<text x="532.5" y="184.0" font-size="21" fill="#ffffff" text-anchor="middle" font-weight="bold">Torqwave</text>
+<text x="532.5" y="208.0" font-size="19" fill="#4fc3a1" text-anchor="middle" font-weight="bold">0.21.1</text>
+<text x="717.5" y="184.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Adobe</text>
+<text x="717.5" y="208.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Audition</text>
+<text x="902.5" y="196.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Audacity</text>
+<text x="1087.5" y="184.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">iZotope</text>
+<text x="1087.5" y="208.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">RX</text>
+<text x="1272.5" y="184.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Steinberg</text>
+<text x="1272.5" y="208.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">SpectraLayers</text>
+<text x="1457.5" y="184.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">Steinberg</text>
+<text x="1457.5" y="208.0" font-size="20" fill="#d8dde3" text-anchor="middle" font-weight="bold">WaveLab</text>
 <rect x="40.0" y="220.0" width="400.0" height="33.9" rx="0" fill="#16191d"/>
-<rect x="757.1" y="220.0" width="802.9" height="33.9" rx="0" fill="#16191d"/>
+<rect x="625.0" y="220.0" width="935.0" height="33.9" rx="0" fill="#16191d"/>
 <text x="50.0" y="243.9" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Edits a single audio file</text>
-<circle cx="519.3" cy="236.9" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="236.9" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="236.9" r="11" fill="#4cc38a"/>
-<circle cx="995.0" cy="236.9" r="11" fill="#4cc38a"/>
-<circle cx="1153.6" cy="236.9" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="236.9" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 1312.1 225.9 A 11 11 0 0 0 1312.1 247.9 Z" fill="#e3c74f"/>
-<circle cx="1470.7" cy="236.9" r="11" fill="#4cc38a"/>
+<circle cx="532.5" cy="236.9" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="236.9" r="11" fill="#4cc38a"/>
+<circle cx="902.5" cy="236.9" r="11" fill="#4cc38a"/>
+<circle cx="1087.5" cy="236.9" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="236.9" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 1272.5 225.9 A 11 11 0 0 0 1272.5 247.9 Z" fill="#e3c74f"/>
+<circle cx="1457.5" cy="236.9" r="11" fill="#4cc38a"/>
 <text x="50.0" y="277.8" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Spectral selection and editing</text>
-<circle cx="519.3" cy="270.8" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="270.8" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="270.8" r="11" fill="#4cc38a"/>
-<circle cx="995.0" cy="270.8" r="11" fill="#4cc38a"/>
-<circle cx="1153.6" cy="270.8" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="270.8" r="11" fill="#4cc38a"/>
-<circle cx="1470.7" cy="270.8" r="11" fill="#4cc38a"/>
+<circle cx="532.5" cy="270.8" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="270.8" r="11" fill="#4cc38a"/>
+<circle cx="902.5" cy="270.8" r="11" fill="#4cc38a"/>
+<circle cx="1087.5" cy="270.8" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="270.8" r="11" fill="#4cc38a"/>
+<circle cx="1457.5" cy="270.8" r="11" fill="#4cc38a"/>
 <rect x="40.0" y="287.8" width="400.0" height="33.9" rx="0" fill="#16191d"/>
-<rect x="757.1" y="287.8" width="802.9" height="33.9" rx="0" fill="#16191d"/>
+<rect x="625.0" y="287.8" width="935.0" height="33.9" rx="0" fill="#16191d"/>
 <text x="50.0" y="311.7" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Spectral heal</text>
-<circle cx="519.3" cy="304.7" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="304.7" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="304.7" r="11" fill="#4cc38a"/>
-<line x1="987.0" y1="304.7" x2="1003.0" y2="304.7" stroke="#434a54" stroke-width="3"/>
-<circle cx="1153.6" cy="304.7" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="304.7" r="11" fill="#4cc38a"/>
-<circle cx="1470.7" cy="304.7" r="11" fill="#4cc38a"/>
+<circle cx="532.5" cy="304.7" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="304.7" r="11" fill="#4cc38a"/>
+<line x1="894.5" y1="304.7" x2="910.5" y2="304.7" stroke="#434a54" stroke-width="3"/>
+<circle cx="1087.5" cy="304.7" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="304.7" r="11" fill="#4cc38a"/>
+<circle cx="1457.5" cy="304.7" r="11" fill="#4cc38a"/>
 <text x="50.0" y="345.6" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Batch processing</text>
-<circle cx="519.3" cy="338.6" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="338.6" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="338.6" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 836.4 327.6 A 11 11 0 0 0 836.4 349.6 Z" fill="#e3c74f"/>
-<circle cx="995.0" cy="338.6" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 995.0 327.6 A 11 11 0 0 0 995.0 349.6 Z" fill="#e3c74f"/>
-<circle cx="1153.6" cy="338.6" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="338.6" r="11" fill="#4cc38a"/>
-<circle cx="1470.7" cy="338.6" r="11" fill="#4cc38a"/>
+<circle cx="532.5" cy="338.6" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="338.6" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 717.5 327.6 A 11 11 0 0 0 717.5 349.6 Z" fill="#e3c74f"/>
+<circle cx="902.5" cy="338.6" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 902.5 327.6 A 11 11 0 0 0 902.5 349.6 Z" fill="#e3c74f"/>
+<circle cx="1087.5" cy="338.6" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="338.6" r="11" fill="#4cc38a"/>
+<circle cx="1457.5" cy="338.6" r="11" fill="#4cc38a"/>
 <rect x="40.0" y="355.6" width="400.0" height="33.9" rx="0" fill="#16191d"/>
-<rect x="757.1" y="355.6" width="802.9" height="33.9" rx="0" fill="#16191d"/>
+<rect x="625.0" y="355.6" width="935.0" height="33.9" rx="0" fill="#16191d"/>
 <text x="50.0" y="379.5" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Noise reduction</text>
-<circle cx="519.3" cy="372.5" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="372.5" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="372.5" r="11" fill="#4cc38a"/>
-<circle cx="995.0" cy="372.5" r="11" fill="#4cc38a"/>
-<circle cx="1153.6" cy="372.5" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="372.5" r="11" fill="#4cc38a"/>
-<circle cx="1470.7" cy="372.5" r="11" fill="#4cc38a"/>
+<circle cx="532.5" cy="372.5" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="372.5" r="11" fill="#4cc38a"/>
+<circle cx="902.5" cy="372.5" r="11" fill="#4cc38a"/>
+<circle cx="1087.5" cy="372.5" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="372.5" r="11" fill="#4cc38a"/>
+<circle cx="1457.5" cy="372.5" r="11" fill="#4cc38a"/>
 <text x="50.0" y="413.4" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Click, hum and clipping repair</text>
-<circle cx="519.3" cy="406.4" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="406.4" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="406.4" r="11" fill="#4cc38a"/>
-<circle cx="995.0" cy="406.4" r="11" fill="#4cc38a"/>
-<circle cx="1153.6" cy="406.4" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="406.4" r="11" fill="#4cc38a"/>
-<circle cx="1470.7" cy="406.4" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 1470.7 395.4 A 11 11 0 0 0 1470.7 417.4 Z" fill="#e3c74f"/>
+<circle cx="532.5" cy="406.4" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="406.4" r="11" fill="#4cc38a"/>
+<circle cx="902.5" cy="406.4" r="11" fill="#4cc38a"/>
+<circle cx="1087.5" cy="406.4" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="406.4" r="11" fill="#4cc38a"/>
+<circle cx="1457.5" cy="406.4" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 1457.5 395.4 A 11 11 0 0 0 1457.5 417.4 Z" fill="#e3c74f"/>
 <rect x="40.0" y="423.3" width="400.0" height="33.9" rx="0" fill="#16191d"/>
-<rect x="757.1" y="423.3" width="802.9" height="33.9" rx="0" fill="#16191d"/>
+<rect x="625.0" y="423.3" width="935.0" height="33.9" rx="0" fill="#16191d"/>
 <text x="50.0" y="447.3" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Reverb reduction</text>
-<circle cx="519.3" cy="440.3" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="440.3" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="440.3" r="11" fill="#4cc38a"/>
-<line x1="987.0" y1="440.3" x2="1003.0" y2="440.3" stroke="#434a54" stroke-width="3"/>
-<circle cx="1153.6" cy="440.3" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="440.3" r="11" fill="#4cc38a"/>
-<circle cx="1470.7" cy="440.3" r="11" fill="#4cc38a"/>
+<circle cx="532.5" cy="440.3" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="440.3" r="11" fill="#4cc38a"/>
+<line x1="894.5" y1="440.3" x2="910.5" y2="440.3" stroke="#434a54" stroke-width="3"/>
+<circle cx="1087.5" cy="440.3" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="440.3" r="11" fill="#4cc38a"/>
+<circle cx="1457.5" cy="440.3" r="11" fill="#4cc38a"/>
 <text x="50.0" y="481.2" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Dialogue isolation</text>
-<circle cx="519.3" cy="474.2" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="474.2" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="474.2" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 836.4 463.2 A 11 11 0 0 0 836.4 485.2 Z" fill="#e3c74f"/>
-<circle cx="995.0" cy="474.2" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 995.0 463.2 A 11 11 0 0 0 995.0 485.2 Z" fill="#e3c74f"/>
-<circle cx="1153.6" cy="474.2" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="474.2" r="11" fill="#4cc38a"/>
-<line x1="1462.7" y1="474.2" x2="1478.7" y2="474.2" stroke="#434a54" stroke-width="3"/>
+<circle cx="532.5" cy="474.2" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="474.2" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 717.5 463.2 A 11 11 0 0 0 717.5 485.2 Z" fill="#e3c74f"/>
+<circle cx="902.5" cy="474.2" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 902.5 463.2 A 11 11 0 0 0 902.5 485.2 Z" fill="#e3c74f"/>
+<circle cx="1087.5" cy="474.2" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="474.2" r="11" fill="#4cc38a"/>
+<line x1="1449.5" y1="474.2" x2="1465.5" y2="474.2" stroke="#434a54" stroke-width="3"/>
 <rect x="40.0" y="491.1" width="400.0" height="33.9" rx="0" fill="#16191d"/>
-<rect x="757.1" y="491.1" width="802.9" height="33.9" rx="0" fill="#16191d"/>
+<rect x="625.0" y="491.1" width="935.0" height="33.9" rx="0" fill="#16191d"/>
 <text x="50.0" y="515.1" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Stem separation</text>
-<circle cx="519.3" cy="508.1" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 519.3 497.1 A 11 11 0 0 0 519.3 519.1 Z" fill="#e3c74f"/>
-<circle cx="677.9" cy="508.1" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 677.9 497.1 A 11 11 0 0 0 677.9 519.1 Z" fill="#e3c74f"/>
-<line x1="828.4" y1="508.1" x2="844.4" y2="508.1" stroke="#434a54" stroke-width="3"/>
-<circle cx="995.0" cy="508.1" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 995.0 497.1 A 11 11 0 0 0 995.0 519.1 Z" fill="#e3c74f"/>
-<circle cx="1153.6" cy="508.1" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="508.1" r="11" fill="#4cc38a"/>
-<line x1="1462.7" y1="508.1" x2="1478.7" y2="508.1" stroke="#434a54" stroke-width="3"/>
+<circle cx="532.5" cy="508.1" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 532.5 497.1 A 11 11 0 0 0 532.5 519.1 Z" fill="#e3c74f"/>
+<line x1="709.5" y1="508.1" x2="725.5" y2="508.1" stroke="#434a54" stroke-width="3"/>
+<circle cx="902.5" cy="508.1" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 902.5 497.1 A 11 11 0 0 0 902.5 519.1 Z" fill="#e3c74f"/>
+<circle cx="1087.5" cy="508.1" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="508.1" r="11" fill="#4cc38a"/>
+<line x1="1449.5" y1="508.1" x2="1465.5" y2="508.1" stroke="#434a54" stroke-width="3"/>
 <text x="50.0" y="548.9" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Loudness (LUFS) measure and match</text>
-<circle cx="519.3" cy="541.9" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="541.9" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="541.9" r="11" fill="#4cc38a"/>
-<circle cx="995.0" cy="541.9" r="11" fill="#4cc38a"/>
-<circle cx="1153.6" cy="541.9" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="541.9" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 1312.1 530.9 A 11 11 0 0 0 1312.1 552.9 Z" fill="#e3c74f"/>
-<circle cx="1470.7" cy="541.9" r="11" fill="#4cc38a"/>
+<circle cx="532.5" cy="541.9" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="541.9" r="11" fill="#4cc38a"/>
+<circle cx="902.5" cy="541.9" r="11" fill="#4cc38a"/>
+<circle cx="1087.5" cy="541.9" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="541.9" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 1272.5 530.9 A 11 11 0 0 0 1272.5 552.9 Z" fill="#e3c74f"/>
+<circle cx="1457.5" cy="541.9" r="11" fill="#4cc38a"/>
 <rect x="40.0" y="558.9" width="400.0" height="33.9" rx="0" fill="#16191d"/>
-<rect x="757.1" y="558.9" width="802.9" height="33.9" rx="0" fill="#16191d"/>
+<rect x="625.0" y="558.9" width="935.0" height="33.9" rx="0" fill="#16191d"/>
 <text x="50.0" y="582.8" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Delivery-spec check with a report</text>
-<circle cx="519.3" cy="575.8" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="575.8" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="575.8" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 836.4 564.8 A 11 11 0 0 0 836.4 586.8 Z" fill="#e3c74f"/>
-<line x1="987.0" y1="575.8" x2="1003.0" y2="575.8" stroke="#434a54" stroke-width="3"/>
-<circle cx="1153.6" cy="575.8" r="11" fill="#4cc38a"/>
-<line x1="1304.1" y1="575.8" x2="1320.1" y2="575.8" stroke="#434a54" stroke-width="3"/>
-<circle cx="1470.7" cy="575.8" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 1470.7 564.8 A 11 11 0 0 0 1470.7 586.8 Z" fill="#e3c74f"/>
+<circle cx="532.5" cy="575.8" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="575.8" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 717.5 564.8 A 11 11 0 0 0 717.5 586.8 Z" fill="#e3c74f"/>
+<line x1="894.5" y1="575.8" x2="910.5" y2="575.8" stroke="#434a54" stroke-width="3"/>
+<circle cx="1087.5" cy="575.8" r="11" fill="#4cc38a"/>
+<line x1="1264.5" y1="575.8" x2="1280.5" y2="575.8" stroke="#434a54" stroke-width="3"/>
+<circle cx="1457.5" cy="575.8" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 1457.5 564.8 A 11 11 0 0 0 1457.5 586.8 Z" fill="#e3c74f"/>
 <text x="50.0" y="616.7" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Multitrack sessions</text>
-<circle cx="519.3" cy="609.7" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="609.7" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="609.7" r="11" fill="#4cc38a"/>
-<circle cx="995.0" cy="609.7" r="11" fill="#4cc38a"/>
-<line x1="1145.6" y1="609.7" x2="1161.6" y2="609.7" stroke="#434a54" stroke-width="3"/>
-<circle cx="1312.1" cy="609.7" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 1312.1 598.7 A 11 11 0 0 0 1312.1 620.7 Z" fill="#e3c74f"/>
-<circle cx="1470.7" cy="609.7" r="11" fill="#4cc38a"/>
+<circle cx="532.5" cy="609.7" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="609.7" r="11" fill="#4cc38a"/>
+<circle cx="902.5" cy="609.7" r="11" fill="#4cc38a"/>
+<line x1="1079.5" y1="609.7" x2="1095.5" y2="609.7" stroke="#434a54" stroke-width="3"/>
+<circle cx="1272.5" cy="609.7" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 1272.5 598.7 A 11 11 0 0 0 1272.5 620.7 Z" fill="#e3c74f"/>
+<circle cx="1457.5" cy="609.7" r="11" fill="#4cc38a"/>
 <rect x="40.0" y="626.7" width="400.0" height="33.9" rx="0" fill="#16191d"/>
-<rect x="757.1" y="626.7" width="802.9" height="33.9" rx="0" fill="#16191d"/>
+<rect x="625.0" y="626.7" width="935.0" height="33.9" rx="0" fill="#16191d"/>
 <text x="50.0" y="650.6" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">VST3</text>
-<circle cx="519.3" cy="643.6" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="643.6" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="643.6" r="11" fill="#4cc38a"/>
-<circle cx="995.0" cy="643.6" r="11" fill="#4cc38a"/>
-<circle cx="1153.6" cy="643.6" r="11" fill="#4cc38a"/>
-<circle cx="1312.1" cy="643.6" r="11" fill="#4cc38a"/>
-<circle cx="1470.7" cy="643.6" r="11" fill="#4cc38a"/>
+<circle cx="532.5" cy="643.6" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="643.6" r="11" fill="#4cc38a"/>
+<circle cx="902.5" cy="643.6" r="11" fill="#4cc38a"/>
+<circle cx="1087.5" cy="643.6" r="11" fill="#4cc38a"/>
+<circle cx="1272.5" cy="643.6" r="11" fill="#4cc38a"/>
+<circle cx="1457.5" cy="643.6" r="11" fill="#4cc38a"/>
 <text x="50.0" y="684.5" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Video playback in sync</text>
-<circle cx="519.3" cy="677.5" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="677.5" r="11" fill="#4cc38a"/>
-<circle cx="836.4" cy="677.5" r="11" fill="#4cc38a"/>
-<line x1="987.0" y1="677.5" x2="1003.0" y2="677.5" stroke="#434a54" stroke-width="3"/>
-<line x1="1145.6" y1="677.5" x2="1161.6" y2="677.5" stroke="#434a54" stroke-width="3"/>
-<line x1="1304.1" y1="677.5" x2="1320.1" y2="677.5" stroke="#434a54" stroke-width="3"/>
-<circle cx="1470.7" cy="677.5" r="11" fill="#4cc38a"/>
+<circle cx="532.5" cy="677.5" r="11" fill="#4cc38a"/>
+<circle cx="717.5" cy="677.5" r="11" fill="#4cc38a"/>
+<line x1="894.5" y1="677.5" x2="910.5" y2="677.5" stroke="#434a54" stroke-width="3"/>
+<line x1="1079.5" y1="677.5" x2="1095.5" y2="677.5" stroke="#434a54" stroke-width="3"/>
+<line x1="1264.5" y1="677.5" x2="1280.5" y2="677.5" stroke="#434a54" stroke-width="3"/>
+<circle cx="1457.5" cy="677.5" r="11" fill="#4cc38a"/>
 <rect x="40.0" y="694.4" width="400.0" height="33.9" rx="0" fill="#16191d"/>
-<rect x="757.1" y="694.4" width="802.9" height="33.9" rx="0" fill="#16191d"/>
+<rect x="625.0" y="694.4" width="935.0" height="33.9" rx="0" fill="#16191d"/>
 <text x="50.0" y="718.4" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Searchable sound library</text>
-<circle cx="519.3" cy="711.4" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="711.4" r="11" fill="#4cc38a"/>
-<text x="836.4" y="718.4" font-size="21" fill="#8b939e" text-anchor="middle" font-weight="bold">?</text>
-<line x1="987.0" y1="711.4" x2="1003.0" y2="711.4" stroke="#434a54" stroke-width="3"/>
-<line x1="1145.6" y1="711.4" x2="1161.6" y2="711.4" stroke="#434a54" stroke-width="3"/>
-<line x1="1304.1" y1="711.4" x2="1320.1" y2="711.4" stroke="#434a54" stroke-width="3"/>
-<line x1="1462.7" y1="711.4" x2="1478.7" y2="711.4" stroke="#434a54" stroke-width="3"/>
+<circle cx="532.5" cy="711.4" r="11" fill="#4cc38a"/>
+<text x="717.5" y="718.4" font-size="21" fill="#8b939e" text-anchor="middle" font-weight="bold">?</text>
+<line x1="894.5" y1="711.4" x2="910.5" y2="711.4" stroke="#434a54" stroke-width="3"/>
+<line x1="1079.5" y1="711.4" x2="1095.5" y2="711.4" stroke="#434a54" stroke-width="3"/>
+<line x1="1264.5" y1="711.4" x2="1280.5" y2="711.4" stroke="#434a54" stroke-width="3"/>
+<line x1="1449.5" y1="711.4" x2="1465.5" y2="711.4" stroke="#434a54" stroke-width="3"/>
 <text x="50.0" y="752.3" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">A typed request becomes edits</text>
-<circle cx="519.3" cy="745.3" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 519.3 734.3 A 11 11 0 0 0 519.3 756.3 Z" fill="#e3c74f"/>
-<circle cx="677.9" cy="745.3" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
-<path d="M 677.9 734.3 A 11 11 0 0 0 677.9 756.3 Z" fill="#e3c74f"/>
-<line x1="828.4" y1="745.3" x2="844.4" y2="745.3" stroke="#434a54" stroke-width="3"/>
-<line x1="987.0" y1="745.3" x2="1003.0" y2="745.3" stroke="#434a54" stroke-width="3"/>
-<line x1="1145.6" y1="745.3" x2="1161.6" y2="745.3" stroke="#434a54" stroke-width="3"/>
-<line x1="1304.1" y1="745.3" x2="1320.1" y2="745.3" stroke="#434a54" stroke-width="3"/>
-<line x1="1462.7" y1="745.3" x2="1478.7" y2="745.3" stroke="#434a54" stroke-width="3"/>
+<circle cx="532.5" cy="745.3" r="10" fill="none" stroke="#e3c74f" stroke-width="2"/>
+<path d="M 532.5 734.3 A 11 11 0 0 0 532.5 756.3 Z" fill="#e3c74f"/>
+<line x1="709.5" y1="745.3" x2="725.5" y2="745.3" stroke="#434a54" stroke-width="3"/>
+<line x1="894.5" y1="745.3" x2="910.5" y2="745.3" stroke="#434a54" stroke-width="3"/>
+<line x1="1079.5" y1="745.3" x2="1095.5" y2="745.3" stroke="#434a54" stroke-width="3"/>
+<line x1="1264.5" y1="745.3" x2="1280.5" y2="745.3" stroke="#434a54" stroke-width="3"/>
+<line x1="1449.5" y1="745.3" x2="1465.5" y2="745.3" stroke="#434a54" stroke-width="3"/>
 <rect x="40.0" y="762.2" width="400.0" height="33.9" rx="0" fill="#16191d"/>
-<rect x="757.1" y="762.2" width="802.9" height="33.9" rx="0" fill="#16191d"/>
+<rect x="625.0" y="762.2" width="935.0" height="33.9" rx="0" fill="#16191d"/>
 <text x="50.0" y="786.2" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Linux</text>
-<circle cx="519.3" cy="779.2" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="779.2" r="11" fill="#4cc38a"/>
-<line x1="828.4" y1="779.2" x2="844.4" y2="779.2" stroke="#434a54" stroke-width="3"/>
-<circle cx="995.0" cy="779.2" r="11" fill="#4cc38a"/>
-<line x1="1145.6" y1="779.2" x2="1161.6" y2="779.2" stroke="#434a54" stroke-width="3"/>
-<line x1="1304.1" y1="779.2" x2="1320.1" y2="779.2" stroke="#434a54" stroke-width="3"/>
-<line x1="1462.7" y1="779.2" x2="1478.7" y2="779.2" stroke="#434a54" stroke-width="3"/>
+<circle cx="532.5" cy="779.2" r="11" fill="#4cc38a"/>
+<line x1="709.5" y1="779.2" x2="725.5" y2="779.2" stroke="#434a54" stroke-width="3"/>
+<circle cx="902.5" cy="779.2" r="11" fill="#4cc38a"/>
+<line x1="1079.5" y1="779.2" x2="1095.5" y2="779.2" stroke="#434a54" stroke-width="3"/>
+<line x1="1264.5" y1="779.2" x2="1280.5" y2="779.2" stroke="#434a54" stroke-width="3"/>
+<line x1="1449.5" y1="779.2" x2="1465.5" y2="779.2" stroke="#434a54" stroke-width="3"/>
 <text x="50.0" y="820.1" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Open source</text>
-<circle cx="519.3" cy="813.1" r="11" fill="#4cc38a"/>
-<circle cx="677.9" cy="813.1" r="11" fill="#4cc38a"/>
-<line x1="828.4" y1="813.1" x2="844.4" y2="813.1" stroke="#434a54" stroke-width="3"/>
-<circle cx="995.0" cy="813.1" r="11" fill="#4cc38a"/>
-<line x1="1145.6" y1="813.1" x2="1161.6" y2="813.1" stroke="#434a54" stroke-width="3"/>
-<line x1="1304.1" y1="813.1" x2="1320.1" y2="813.1" stroke="#434a54" stroke-width="3"/>
-<line x1="1462.7" y1="813.1" x2="1478.7" y2="813.1" stroke="#434a54" stroke-width="3"/>
+<circle cx="532.5" cy="813.1" r="11" fill="#4cc38a"/>
+<line x1="709.5" y1="813.1" x2="725.5" y2="813.1" stroke="#434a54" stroke-width="3"/>
+<circle cx="902.5" cy="813.1" r="11" fill="#4cc38a"/>
+<line x1="1079.5" y1="813.1" x2="1095.5" y2="813.1" stroke="#434a54" stroke-width="3"/>
+<line x1="1264.5" y1="813.1" x2="1280.5" y2="813.1" stroke="#434a54" stroke-width="3"/>
+<line x1="1449.5" y1="813.1" x2="1465.5" y2="813.1" stroke="#434a54" stroke-width="3"/>
 <circle cx="60.0" cy="866.0" r="9" fill="#4cc38a"/>
 <text x="78.0" y="872.0" font-size="17" fill="#8b939e" text-anchor="start" font-weight="normal">yes</text>
 <circle cx="134.5" cy="866.0" r="8" fill="none" stroke="#e3c74f" stroke-width="2"/>
