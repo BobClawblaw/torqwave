@@ -3,7 +3,7 @@
  "release": "0.21.1",
  "previous": "0.19.2",
  "previous_note": "The 0.19.2 column is the last announced release. 0.20.0, 0.20.1 and 0.21.0 came out on 2026-11-24 and were not announced; each keeps its snapshot.",
- "status": "about to be released",
+ "status": "released",
  "as_of": "2026-11-25",
  "release_numbers": [
   {
@@ -62,9 +62,9 @@
    "name": "Torqwave",
    "version": "0.21.1",
    "edition": "the only edition",
-   "version_date": "",
+   "version_date": "2026-11-25",
    "looked_up": "2026-11-25",
-   "source_note": "This repository's main branch at e8d83af, before the v0.21.1 tag.",
+   "source_note": "This repository at tag v0.21.1.",
    "cells": {
     "wave_editor": {
      "value": "yes",
@@ -319,12 +319,12 @@
     },
     "windows": {
      "value": "yes",
-     "note": "Windows 10 or later, 64-bit. The installer and zip are built by a workflow from the release tag, as 0.21.0's were. The 0.20 and 0.21 releases were not run or tried on Windows. 0.21.1's packages did not exist on the snapshot's date.",
+     "note": "Windows 10 or later, 64-bit. The installer and zip are built by a workflow from the release tag, as 0.21.0's were. The 0.20 and 0.21 releases were not run or tried on Windows. 0.21.1's packages were still being built when this was written.",
      "source": "README.md"
     },
     "linux": {
      "value": "yes",
-     "note": "64-bit x86, tried on Ubuntu 24.04 in earlier releases. The tarball is built by a workflow from the release tag, as 0.21.0's was. The 0.20 and 0.21 releases were not run or tried on Linux. 0.21.1's packages did not exist on the snapshot's date.",
+     "note": "64-bit x86, tried on Ubuntu 24.04 in earlier releases. The tarball is built by a workflow from the release tag, as 0.21.0's was. The 0.20 and 0.21 releases were not run or tried on Linux. 0.21.1's packages were still being built when this was written.",
      "source": "README.md"
     },
     "open_source": {
@@ -349,7 +349,7 @@
     },
     "current_version": {
      "value": "info",
-     "note": "0.21.1, about to be released: the first announced release since 0.19.2. 0.21.0 came out on 2026-11-24.",
+     "note": "0.21.1, released 2026-11-25: the first announced release since 0.19.2. 0.21.0 came out on 2026-11-24.",
      "source": "CHANGELOG.md"
     },
     "signed_installers": {
