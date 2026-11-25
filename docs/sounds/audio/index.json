@@ -12053,840 +12053,6 @@
     "bytes": 37608
   },
   {
-    "group": "drums",
-    "category": "Standard",
-    "name": "Afterimage Beat",
-    "file": "drums/standard-afterimage-beat.mp3",
-    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
-    "groove": "Four to the floor, a snare on 2 and 4 and open hats on the offbeats",
-    "style": "Industrial/Futurepop",
-    "bars": 1.0,
-    "energy": 5,
-    "of": 36,
-    "joinStep": 0.0058,
-    "insideStep": 0.1466,
-    "tempo": 135.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Afterimage Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Standard"
-      }
-    ],
-    "seconds": 5.3,
-    "peakDb": -9.199999999999999,
-    "faded": true,
-    "bytes": 104784
-  },
-  {
-    "group": "drums",
-    "category": "Standard",
-    "name": "Peak Hour Driver",
-    "file": "drums/standard-peak-hour-driver.mp3",
-    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
-    "groove": "Four to the floor, clap and snare on 2 and 4, ghost kicks before them, 16th hats with the offbeat lifted",
-    "style": "Techno/Driving",
-    "bars": 2.0,
-    "energy": 5,
-    "of": 36,
-    "joinStep": 0.0003,
-    "insideStep": 0.2038,
-    "tempo": 134.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Peak Hour Driver",
-        "role": "Drums",
-        "voice": "Basic Drums: Standard"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 150216
-  },
-  {
-    "group": "drums",
-    "category": "Standard",
-    "name": "Throttle Drive",
-    "file": "drums/standard-throttle-drive.mp3",
-    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
-    "groove": "Four to the floor, a clap layered with a snare on 2 and 4, 16th hats with the offbeat lifted, a shaker in 16ths and a tom run ends bar 4",
-    "style": "Techno/Driving",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 36,
-    "tempo": 134.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Throttle Drive",
-        "role": "Drums",
-        "voice": "Basic Drums: Standard"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 146496
-  },
-  {
-    "group": "drums",
-    "category": "Dark Techno",
-    "name": "Hard Offbeat Rumble",
-    "file": "drums/dark-techno-hard-offbeat-rumble.mp3",
-    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
-    "groove": "Fast four-to-the-floor with a rumble between the kicks and metal accented every three 16ths; a kick roll ends bar 4",
-    "style": "Techno/Hard",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 8,
-    "tempo": 150.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Hard Offbeat Rumble",
-        "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
-      }
-    ],
-    "seconds": 6.4,
-    "peakDb": -11.699999999999999,
-    "faded": true,
-    "bytes": 139680
-  },
-  {
-    "group": "drums",
-    "category": "Dark Techno",
-    "name": "Black Stomp",
-    "file": "drums/dark-techno-black-stomp.mp3",
-    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
-    "groove": "Four to the floor with a skipped kick before the one, a clap on 4 only, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
-    "style": "Techno/Dark",
-    "bars": 4.0,
-    "energy": 4,
-    "of": 8,
-    "tempo": 130.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Black Stomp",
-        "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -9.9,
-    "faded": true,
-    "bytes": 205872
-  },
-  {
-    "group": "drums",
-    "category": "Dark Techno",
-    "name": "Furnace Thump",
-    "file": "drums/dark-techno-furnace-thump.mp3",
-    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
-    "groove": "Four to the floor with a rolling rumble between the kicks, a clap on 2 and 4, a ride in 8ths, toms in shifting 16ths and a tom run ends bar 4",
-    "style": "Techno/Industrial",
-    "bars": 4.0,
-    "energy": 4,
-    "of": 8,
-    "tempo": 132.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Furnace Thump",
-        "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -11.699999999999999,
-    "faded": true,
-    "bytes": 232704
-  },
-  {
-    "group": "drums",
-    "category": "Industrial",
-    "name": "Anvil Beat",
-    "file": "drums/industrial-anvil-beat.mp3",
-    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
-    "groove": "Four to the floor with a rolling rumble between the kicks, a snare on 2 and 4, a ride in 8ths, a syncopated rimshot and a tom run ends bar 4",
-    "style": "Techno/Industrial",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 31,
-    "tempo": 126.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Anvil Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 7.6,
-    "peakDb": -13.0,
-    "faded": true,
-    "bytes": 223488
-  },
-  {
-    "group": "drums",
-    "category": "Industrial",
-    "name": "Bloodline Beat",
-    "file": "drums/industrial-bloodline-beat.mp3",
-    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
-    "groove": "Four to the floor, a clap layered with a snare on 2 and 4, open hats on the offbeats, a crash on the one and a tom run ends bar 4",
-    "style": "Industrial/Aggrotech",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 31,
-    "tempo": 138.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Bloodline Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 7.0,
-    "peakDb": -10.800000000000001,
-    "faded": true,
-    "bytes": 222624
-  },
-  {
-    "group": "drums",
-    "category": "Industrial",
-    "name": "Bunker Stomp",
-    "file": "drums/industrial-bunker-stomp.mp3",
-    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
-    "groove": "Four to the floor with a rolling rumble between the kicks, a big snare and clap together on 2 and 4 and closed hats on the beat and open ones between",
-    "style": "Techno/Hard",
-    "bars": 1.0,
-    "energy": 5,
-    "of": 31,
-    "joinStep": 0.0219,
-    "insideStep": 0.4221,
-    "tempo": 150.0,
-    "rounds": 4,
-    "parts": [
-      {
-        "name": "Bunker Stomp",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial"
-      }
-    ],
-    "seconds": 6.4,
-    "peakDb": -13.300000000000001,
-    "faded": true,
-    "bytes": 167856
-  },
-  {
-    "group": "drums",
-    "category": "EBM Machine",
-    "name": "Chain Drive Beat",
-    "file": "drums/ebm-machine-chain-drive-beat.mp3",
-    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
-    "groove": "Four to the floor with ghost kicks after each, a big snare and clap together on 2 and 4, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
-    "style": "Industrial/Techno-body",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 27,
-    "tempo": 134.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Chain Drive Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -9.5,
-    "faded": true,
-    "bytes": 150048
-  },
-  {
-    "group": "drums",
-    "category": "EBM Machine",
-    "name": "Overdrive Machine",
-    "file": "drums/ebm-machine-overdrive-machine.mp3",
-    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
-    "groove": "A rock kick on 1, 3 and the and of 3, a snare on 2 and 4 and 16th hats with the offbeat lifted",
-    "style": "Synthwave/Darksynth",
-    "bars": 1.0,
-    "energy": 5,
-    "of": 27,
-    "joinStep": 0.0039,
-    "insideStep": 0.4407,
-    "tempo": 100.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Overdrive Machine",
-        "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -9.199999999999999,
-    "faded": true,
-    "bytes": 141456
-  },
-  {
-    "group": "drums",
-    "category": "EBM Machine",
-    "name": "Transistor Groove",
-    "file": "drums/ebm-machine-transistor-groove.mp3",
-    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
-    "groove": "An electro kick on 1, the a of 2 and 3, a clap on 2 and 4, 16th hats with the offbeat lifted and a cowbell on the and of 2 and 4",
-    "style": "Electro/Electro",
-    "bars": 2.0,
-    "energy": 5,
-    "of": 27,
-    "joinStep": 0.004,
-    "insideStep": 0.2948,
-    "tempo": 130.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Transistor Groove",
-        "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -8.800000000000001,
-    "faded": true,
-    "bytes": 162960
-  },
-  {
-    "group": "drums",
-    "category": "Electro",
-    "name": "Battle Groove",
-    "file": "drums/electro-battle-groove.mp3",
-    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
-    "groove": "Four to the floor with a gallop into beats 3 and 1, a snare on 2 and 4, 8th hats, the downbeats stronger, toms in shifting 16ths and a tom run ends bar 4",
-    "style": "Game/Combat",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 9,
-    "tempo": 140.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Battle Groove",
-        "role": "Drums",
-        "voice": "Basic Drums: Electro"
-      }
-    ],
-    "seconds": 6.9,
-    "peakDb": -9.699999999999999,
-    "faded": true,
-    "bytes": 120936
-  },
-  {
-    "group": "drums",
-    "category": "Electro",
-    "name": "Bonus Stage Pound",
-    "file": "drums/electro-bonus-stage-pound.mp3",
-    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
-    "groove": "Four to the floor, a snare on 2 and 4, 16th hats with the offbeat lifted and a tom run ends bar 4",
-    "style": "Game/Chiptune",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 9,
-    "tempo": 160.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Bonus Stage Pound",
-        "role": "Drums",
-        "voice": "Basic Drums: Electro"
-      }
-    ],
-    "seconds": 6.0,
-    "peakDb": -10.300000000000001,
-    "faded": true,
-    "bytes": 108432
-  },
-  {
-    "group": "drums",
-    "category": "Electro",
-    "name": "Sprite Machine",
-    "file": "drums/electro-sprite-machine.mp3",
-    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
-    "groove": "A marching kick with a pickup before beat 3, a snare on 2 and 4 with ghost notes after them, 16th hats with the offbeat lifted and a tom run ends bar 4",
-    "style": "Game/Chiptune",
-    "bars": 4.0,
-    "energy": 4,
-    "of": 9,
-    "tempo": 160.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Sprite Machine",
-        "role": "Drums",
-        "voice": "Basic Drums: Electro"
-      }
-    ],
-    "seconds": 6.0,
-    "peakDb": -10.300000000000001,
-    "faded": true,
-    "bytes": 108600
-  },
-  {
-    "group": "drums",
-    "category": "Breaks",
-    "name": "Tape Splice Groove",
-    "file": "drums/breaks-tape-splice-groove.mp3",
-    "about": "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.",
-    "groove": "A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, 16th hats and an open hat before 3 and 1",
-    "style": "Breakbeat/Breaks",
-    "bars": 2.0,
-    "energy": 4,
-    "of": 2,
-    "joinStep": 0.0012,
-    "insideStep": 0.5233,
-    "tempo": 128.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Tape Splice Groove",
-        "role": "Drums",
-        "voice": "Basic Drums: Breaks"
-      }
-    ],
-    "seconds": 7.5,
-    "peakDb": -9.6,
-    "faded": true,
-    "bytes": 167712
-  },
-  {
-    "group": "drums",
-    "category": "Breaks",
-    "name": "Back Room Break",
-    "file": "drums/breaks-back-room-break.mp3",
-    "about": "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.",
-    "groove": "A two-step break with a kick pickup in bar 2, ghost snares before the backbeat, 8th hats and a ride on the beat",
-    "style": "Breakbeat/Breaks",
-    "bars": 2.0,
-    "energy": 3,
-    "of": 2,
-    "joinStep": 0.0034,
-    "insideStep": 0.548,
-    "tempo": 130.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Back Room Break",
-        "role": "Drums",
-        "voice": "Basic Drums: Breaks"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -9.1,
-    "faded": true,
-    "bytes": 180336
-  },
-  {
-    "group": "drums",
-    "category": "Industrial Rock",
-    "name": "Biohazard Beat",
-    "file": "drums/industrial-rock-biohazard-beat.mp3",
-    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
-    "groove": "The two-step kick on 1 and the and of 3, the snare on 2 and 4 and 8th hats, the downbeats stronger",
-    "style": "Drum and Bass/Neurofunk",
-    "bars": 2.0,
-    "energy": 4,
-    "of": 3,
-    "joinStep": 0.0084,
-    "insideStep": 0.4474,
-    "tempo": 174.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Biohazard Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial Rock"
-      }
-    ],
-    "seconds": 5.5,
-    "peakDb": -9.300000000000001,
-    "faded": true,
-    "bytes": 123168
-  },
-  {
-    "group": "drums",
-    "category": "Industrial Rock",
-    "name": "Rough Cut Beat",
-    "file": "drums/industrial-rock-rough-cut-beat.mp3",
-    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
-    "groove": "A breakbeat kick with a push before the 4, a snare on 2 and 4 with ghost notes in between, hats pushing into each beat and a crash on the one",
-    "style": "Breakbeat/Breaks",
-    "bars": 1.0,
-    "energy": 4,
-    "of": 3,
-    "joinStep": 0.0045,
-    "insideStep": 0.5022,
-    "tempo": 132.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Rough Cut Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial Rock"
-      }
-    ],
-    "seconds": 5.5,
-    "peakDb": -10.0,
-    "faded": true,
-    "bytes": 129624
-  },
-  {
-    "group": "drums",
-    "category": "Industrial Rock",
-    "name": "Scratch Loop",
-    "file": "drums/industrial-rock-scratch-loop.mp3",
-    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
-    "groove": "A breakbeat kick on 1, the and of 1 and the and of 3, a snare on 2 and 4 with ghost notes in between, 16th hats with the offbeat lifted, a crash on the one and a tom run ends bar 4",
-    "style": "Breakbeat/Breaks",
-    "bars": 4.0,
-    "energy": 4,
-    "of": 3,
-    "tempo": 128.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Scratch Loop",
-        "role": "Drums",
-        "voice": "Basic Drums: Industrial Rock"
-      }
-    ],
-    "seconds": 7.5,
-    "peakDb": -9.5,
-    "faded": true,
-    "bytes": 189240
-  },
-  {
-    "group": "drums",
-    "category": "Modern",
-    "name": "Clean Room Groove",
-    "file": "drums/modern-clean-room-groove.mp3",
-    "about": "Every sound that has a Modern type on it, clean: nothing on the bus.",
-    "groove": "Four to the floor with ghost kicks before 2 and 4, a clap over a snare, 16th hats with the offbeat lifted, a shaker between them and open hats in bar 2",
-    "style": "Techno/Driving",
-    "bars": 2.0,
-    "energy": 4,
-    "of": 1,
-    "joinStep": 0.0003,
-    "insideStep": 0.1608,
-    "tempo": 134.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Clean Room Groove",
-        "role": "Drums",
-        "voice": "Basic Drums: Modern"
-      }
-    ],
-    "seconds": 7.2,
-    "peakDb": -9.0,
-    "faded": true,
-    "bytes": 145392
-  },
-  {
-    "group": "drums",
-    "category": "Warehouse",
-    "name": "Night Shift Hammer",
-    "file": "drums/warehouse-night-shift-hammer.mp3",
-    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
-    "groove": "A peak-time groove: a crash on the one, a clap on 2 and 4, open hats on the offbeats over closed ones, a ride in 8ths and a skipped kick in bar 2",
-    "style": "Techno/Peak-time",
-    "bars": 2.0,
-    "energy": 5,
-    "of": 3,
-    "joinStep": 0.0025,
-    "insideStep": 0.507,
-    "tempo": 136.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Night Shift Hammer",
-        "role": "Drums",
-        "voice": "Basic Drums: Warehouse"
-      }
-    ],
-    "seconds": 7.1,
-    "peakDb": -8.800000000000001,
-    "faded": true,
-    "bytes": 161760
-  },
-  {
-    "group": "drums",
-    "category": "Warehouse",
-    "name": "Concrete Floor Roller",
-    "file": "drums/warehouse-concrete-floor-roller.mp3",
-    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
-    "groove": "Four to the floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a rim against it; a ride comes in for bars 3 and 4, and a clap pickup ends bar 4",
-    "style": "Techno/Dark",
-    "bars": 4.0,
-    "energy": 4,
-    "of": 3,
-    "tempo": 132.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Concrete Floor Roller",
-        "role": "Drums",
-        "voice": "Basic Drums: Warehouse"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -9.199999999999999,
-    "faded": true,
-    "bytes": 165792
-  },
-  {
-    "group": "drums",
-    "category": "Warehouse",
-    "name": "Strobe Tunnel Pulse",
-    "file": "drums/warehouse-strobe-tunnel-pulse.mp3",
-    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
-    "groove": "A rim every three 16ths and a shaker every five turn against the kick and offbeat hats, a low tom answering in bars 2 and 4, open hats over bar 4",
-    "style": "Techno/Hypnotic",
-    "bars": 4.0,
-    "energy": 3,
-    "of": 3,
-    "tempo": 130.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Strobe Tunnel Pulse",
-        "role": "Drums",
-        "voice": "Basic Drums: Warehouse"
-      }
-    ],
-    "seconds": 7.4,
-    "peakDb": -9.1,
-    "faded": true,
-    "bytes": 119712
-  },
-  {
-    "group": "drums",
-    "category": "Body Music",
-    "name": "Cold Assembly Drive",
-    "file": "drums/body-music-cold-assembly-drive.mp3",
-    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
-    "groove": "Techno kick and 16th hats with a snare on 2 and 4 and a metal figure, ready for an EBM bass in the gaps; a snare roll rises through the end of bar 4",
-    "style": "Industrial/Techno-body",
-    "bars": 4.0,
-    "energy": 4,
-    "of": 3,
-    "tempo": 128.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Cold Assembly Drive",
-        "role": "Drums",
-        "voice": "Basic Drums: Body Music"
-      }
-    ],
-    "seconds": 7.5,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 166752
-  },
-  {
-    "group": "drums",
-    "category": "Body Music",
-    "name": "Marching Order Beat",
-    "file": "drums/body-music-marching-order-beat.mp3",
-    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
-    "groove": "Four to the floor, a big snare and clap together on 2 and 4, open hats on the offbeats and flat machine hats round them",
-    "style": "Industrial/EBM",
-    "bars": 1.0,
-    "energy": 4,
-    "of": 3,
-    "joinStep": 0.0118,
-    "insideStep": 0.5368,
-    "tempo": 124.0,
-    "rounds": 3,
-    "parts": [
-      {
-        "name": "Marching Order Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Body Music"
-      }
-    ],
-    "seconds": 5.8,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 121248
-  },
-  {
-    "group": "drums",
-    "category": "Body Music",
-    "name": "Muscle Memory Beat",
-    "file": "drums/body-music-muscle-memory-beat.mp3",
-    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
-    "groove": "The machine backbeat: kick on 1 and 3 with a push, a big snare on 2 and 4, 8th hats with the downbeats stronger, three toms falling into the next bar",
-    "style": "Industrial/EBM",
-    "bars": 2.0,
-    "energy": 3,
-    "of": 3,
-    "joinStep": 0.0043,
-    "insideStep": 0.5927,
-    "tempo": 118.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Muscle Memory Beat",
-        "role": "Drums",
-        "voice": "Basic Drums: Body Music"
-      }
-    ],
-    "seconds": 8.1,
-    "peakDb": -9.1,
-    "faded": true,
-    "bytes": 154272
-  },
-  {
-    "group": "drums",
-    "category": "Foundry",
-    "name": "Blast Furnace Engine",
-    "file": "drums/foundry-blast-furnace-engine.mp3",
-    "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
-    "groove": "Fast four-to-the-floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a crash every other bar; a kick roll ends bar 4",
-    "style": "Techno/Hard",
-    "bars": 4.0,
-    "energy": 5,
-    "of": 3,
-    "tempo": 148.0,
-    "rounds": 1,
-    "parts": [
-      {
-        "name": "Blast Furnace Engine",
-        "role": "Drums",
-        "voice": "Basic Drums: Foundry"
-      }
-    ],
-    "seconds": 6.5,
-    "peakDb": -12.6,
-    "faded": true,
-    "bytes": 187440
-  },
-  {
-    "group": "drums",
-    "category": "Foundry",
-    "name": "Rivet Line Stomp",
-    "file": "drums/foundry-rivet-line-stomp.mp3",
-    "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
-    "groove": "A broken kick with a push before the 4, a snare on 2 and 4 with ghost notes after them, 16th hats shaped by velocity and metal struck in threes",
-    "style": "Industrial/Electro-industrial",
-    "bars": 2.0,
-    "energy": 4,
-    "of": 3,
-    "joinStep": 0.007,
-    "insideStep": 0.62,
-    "tempo": 112.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Rivet Line Stomp",
-        "role": "Drums",
-        "voice": "Basic Drums: Foundry"
-      }
-    ],
-    "seconds": 8.6,
-    "peakDb": -9.4,
-    "faded": true,
-    "bytes": 206592
-  },
-  {
-    "group": "drums",
-    "category": "Foundry",
-    "name": "Slag Hammer Pound",
-    "file": "drums/foundry-slag-hammer-pound.mp3",
-    "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
-    "groove": "A pounding kick with low toms in its gaps, a hard snare on 2 and 4, flat 8th hats, a rim against them and a crash on the one",
-    "style": "Techno/Industrial",
-    "bars": 2.0,
-    "energy": 4,
-    "of": 3,
-    "joinStep": 0.0003,
-    "insideStep": 0.3995,
-    "tempo": 128.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Slag Hammer Pound",
-        "role": "Drums",
-        "voice": "Basic Drums: Foundry"
-      }
-    ],
-    "seconds": 7.5,
-    "peakDb": -13.6,
-    "faded": true,
-    "bytes": 224544
-  },
-  {
-    "group": "drums",
-    "category": "Broken Beat",
-    "name": "Cracked Pavement Break",
-    "file": "drums/broken-beat-cracked-pavement-break.mp3",
-    "about": "Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.",
-    "groove": "A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, 8th hats and an open hat into the next bar",
-    "style": "Breakbeat/Breaks",
-    "bars": 2.0,
-    "energy": 4,
-    "of": 2,
-    "joinStep": 0.0033,
-    "insideStep": 0.69,
-    "tempo": 132.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Cracked Pavement Break",
-        "role": "Drums",
-        "voice": "Basic Drums: Broken Beat"
-      }
-    ],
-    "seconds": 7.3,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 146880
-  },
-  {
-    "group": "drums",
-    "category": "Broken Beat",
-    "name": "Loose Wire Break",
-    "file": "drums/broken-beat-loose-wire-break.mp3",
-    "about": "Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.",
-    "groove": "A chopped break, the snare doubling at the end of bar 2, hats pushing into each beat and a crash on the one",
-    "style": "Breakbeat/Breaks",
-    "bars": 2.0,
-    "energy": 4,
-    "of": 2,
-    "joinStep": 0.0107,
-    "insideStep": 0.6698,
-    "tempo": 135.0,
-    "rounds": 2,
-    "parts": [
-      {
-        "name": "Loose Wire Break",
-        "role": "Drums",
-        "voice": "Basic Drums: Broken Beat"
-      }
-    ],
-    "seconds": 7.1,
-    "peakDb": -8.9,
-    "faded": true,
-    "bytes": 155328
-  },
-  {
     "group": "kits",
     "category": "Techno/Acid",
     "name": "Acid Techno Kit",
@@ -22248,5 +21414,1523 @@
     "peakDb": -8.6,
     "faded": true,
     "bytes": 83448
+  },
+  {
+    "group": "drums",
+    "category": "Standard",
+    "name": "Afterimage Beat",
+    "file": "drums/standard-afterimage-beat.mp3",
+    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
+    "groove": "Four to the floor, a snare on 2 and 4 and open hats on the offbeats",
+    "style": "Industrial/Futurepop",
+    "bars": 1.0,
+    "energy": 5,
+    "of": 36,
+    "joinStep": 0.0058,
+    "insideStep": 0.1466,
+    "tempo": 135.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Afterimage Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Standard"
+      }
+    ],
+    "seconds": 5.3,
+    "peakDb": -9.199999999999999,
+    "faded": true,
+    "bytes": 104784
+  },
+  {
+    "group": "drums",
+    "category": "Standard",
+    "name": "Peak Hour Driver",
+    "file": "drums/standard-peak-hour-driver.mp3",
+    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
+    "groove": "Four to the floor, clap and snare on 2 and 4, ghost kicks before them, 16th hats with the offbeat lifted",
+    "style": "Techno/Driving",
+    "bars": 2.0,
+    "energy": 5,
+    "of": 36,
+    "joinStep": 0.0003,
+    "insideStep": 0.2038,
+    "tempo": 134.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Peak Hour Driver",
+        "role": "Drums",
+        "voice": "Basic Drums: Standard"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 150216
+  },
+  {
+    "group": "drums",
+    "category": "Standard",
+    "name": "Throttle Drive",
+    "file": "drums/standard-throttle-drive.mp3",
+    "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
+    "groove": "Four to the floor, a clap layered with a snare on 2 and 4, 16th hats with the offbeat lifted, a shaker in 16ths and a tom run ends bar 4",
+    "style": "Techno/Driving",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 36,
+    "tempo": 134.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Throttle Drive",
+        "role": "Drums",
+        "voice": "Basic Drums: Standard"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 146496
+  },
+  {
+    "group": "drums",
+    "category": "Dark Techno",
+    "name": "Hard Offbeat Rumble",
+    "file": "drums/dark-techno-hard-offbeat-rumble.mp3",
+    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
+    "groove": "Fast four-to-the-floor with a rumble between the kicks and metal accented every three 16ths; a kick roll ends bar 4",
+    "style": "Techno/Hard",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 8,
+    "tempo": 150.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Hard Offbeat Rumble",
+        "role": "Drums",
+        "voice": "Basic Drums: Dark Techno"
+      }
+    ],
+    "seconds": 6.4,
+    "peakDb": -11.699999999999999,
+    "faded": true,
+    "bytes": 139680
+  },
+  {
+    "group": "drums",
+    "category": "Dark Techno",
+    "name": "Black Stomp",
+    "file": "drums/dark-techno-black-stomp.mp3",
+    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
+    "groove": "Four to the floor with a skipped kick before the one, a clap on 4 only, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
+    "style": "Techno/Dark",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 8,
+    "tempo": 130.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Black Stomp",
+        "role": "Drums",
+        "voice": "Basic Drums: Dark Techno"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -9.9,
+    "faded": true,
+    "bytes": 205872
+  },
+  {
+    "group": "drums",
+    "category": "Dark Techno",
+    "name": "Furnace Thump",
+    "file": "drums/dark-techno-furnace-thump.mp3",
+    "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
+    "groove": "Four to the floor with a rolling rumble between the kicks, a clap on 2 and 4, a ride in 8ths, toms in shifting 16ths and a tom run ends bar 4",
+    "style": "Techno/Industrial",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 8,
+    "tempo": 132.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Furnace Thump",
+        "role": "Drums",
+        "voice": "Basic Drums: Dark Techno"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -11.699999999999999,
+    "faded": true,
+    "bytes": 232704
+  },
+  {
+    "group": "drums",
+    "category": "Industrial",
+    "name": "Anvil Beat",
+    "file": "drums/industrial-anvil-beat.mp3",
+    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
+    "groove": "Four to the floor with a rolling rumble between the kicks, a snare on 2 and 4, a ride in 8ths, a syncopated rimshot and a tom run ends bar 4",
+    "style": "Techno/Industrial",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 31,
+    "tempo": 126.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Anvil Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 7.6,
+    "peakDb": -13.0,
+    "faded": true,
+    "bytes": 223488
+  },
+  {
+    "group": "drums",
+    "category": "Industrial",
+    "name": "Bloodline Beat",
+    "file": "drums/industrial-bloodline-beat.mp3",
+    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
+    "groove": "Four to the floor, a clap layered with a snare on 2 and 4, open hats on the offbeats, a crash on the one and a tom run ends bar 4",
+    "style": "Industrial/Aggrotech",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 31,
+    "tempo": 138.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Bloodline Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 7.0,
+    "peakDb": -10.800000000000001,
+    "faded": true,
+    "bytes": 222624
+  },
+  {
+    "group": "drums",
+    "category": "Industrial",
+    "name": "Bunker Stomp",
+    "file": "drums/industrial-bunker-stomp.mp3",
+    "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
+    "groove": "Four to the floor with a rolling rumble between the kicks, a big snare and clap together on 2 and 4 and closed hats on the beat and open ones between",
+    "style": "Techno/Hard",
+    "bars": 1.0,
+    "energy": 5,
+    "of": 31,
+    "joinStep": 0.0219,
+    "insideStep": 0.4221,
+    "tempo": 150.0,
+    "rounds": 4,
+    "parts": [
+      {
+        "name": "Bunker Stomp",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial"
+      }
+    ],
+    "seconds": 6.4,
+    "peakDb": -13.300000000000001,
+    "faded": true,
+    "bytes": 167856
+  },
+  {
+    "group": "drums",
+    "category": "EBM Machine",
+    "name": "Chain Drive Beat",
+    "file": "drums/ebm-machine-chain-drive-beat.mp3",
+    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
+    "groove": "Four to the floor with ghost kicks after each, a big snare and clap together on 2 and 4, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
+    "style": "Industrial/Techno-body",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 27,
+    "tempo": 134.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Chain Drive Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -9.5,
+    "faded": true,
+    "bytes": 150048
+  },
+  {
+    "group": "drums",
+    "category": "EBM Machine",
+    "name": "Overdrive Machine",
+    "file": "drums/ebm-machine-overdrive-machine.mp3",
+    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
+    "groove": "A rock kick on 1, 3 and the and of 3, a snare on 2 and 4 and 16th hats with the offbeat lifted",
+    "style": "Synthwave/Darksynth",
+    "bars": 1.0,
+    "energy": 5,
+    "of": 27,
+    "joinStep": 0.0039,
+    "insideStep": 0.4407,
+    "tempo": 100.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Overdrive Machine",
+        "role": "Drums",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -9.199999999999999,
+    "faded": true,
+    "bytes": 141456
+  },
+  {
+    "group": "drums",
+    "category": "EBM Machine",
+    "name": "Transistor Groove",
+    "file": "drums/ebm-machine-transistor-groove.mp3",
+    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
+    "groove": "An electro kick on 1, the a of 2 and 3, a clap on 2 and 4, 16th hats with the offbeat lifted and a cowbell on the and of 2 and 4",
+    "style": "Electro/Electro",
+    "bars": 2.0,
+    "energy": 5,
+    "of": 27,
+    "joinStep": 0.004,
+    "insideStep": 0.2948,
+    "tempo": 130.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Transistor Groove",
+        "role": "Drums",
+        "voice": "Basic Drums: EBM Machine"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -8.800000000000001,
+    "faded": true,
+    "bytes": 162960
+  },
+  {
+    "group": "drums",
+    "category": "Electro",
+    "name": "Battle Groove",
+    "file": "drums/electro-battle-groove.mp3",
+    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
+    "groove": "Four to the floor with a gallop into beats 3 and 1, a snare on 2 and 4, 8th hats, the downbeats stronger, toms in shifting 16ths and a tom run ends bar 4",
+    "style": "Game/Combat",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 9,
+    "tempo": 140.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Battle Groove",
+        "role": "Drums",
+        "voice": "Basic Drums: Electro"
+      }
+    ],
+    "seconds": 6.9,
+    "peakDb": -9.699999999999999,
+    "faded": true,
+    "bytes": 120936
+  },
+  {
+    "group": "drums",
+    "category": "Electro",
+    "name": "Bonus Stage Pound",
+    "file": "drums/electro-bonus-stage-pound.mp3",
+    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
+    "groove": "Four to the floor, a snare on 2 and 4, 16th hats with the offbeat lifted and a tom run ends bar 4",
+    "style": "Game/Chiptune",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 9,
+    "tempo": 160.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Bonus Stage Pound",
+        "role": "Drums",
+        "voice": "Basic Drums: Electro"
+      }
+    ],
+    "seconds": 6.0,
+    "peakDb": -10.300000000000001,
+    "faded": true,
+    "bytes": 108432
+  },
+  {
+    "group": "drums",
+    "category": "Electro",
+    "name": "Sprite Machine",
+    "file": "drums/electro-sprite-machine.mp3",
+    "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
+    "groove": "A marching kick with a pickup before beat 3, a snare on 2 and 4 with ghost notes after them, 16th hats with the offbeat lifted and a tom run ends bar 4",
+    "style": "Game/Chiptune",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 9,
+    "tempo": 160.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Sprite Machine",
+        "role": "Drums",
+        "voice": "Basic Drums: Electro"
+      }
+    ],
+    "seconds": 6.0,
+    "peakDb": -10.300000000000001,
+    "faded": true,
+    "bytes": 108600
+  },
+  {
+    "group": "drums",
+    "category": "Breaks",
+    "name": "Tape Splice Groove",
+    "file": "drums/breaks-tape-splice-groove.mp3",
+    "about": "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.",
+    "groove": "A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, 16th hats and an open hat before 3 and 1",
+    "style": "Breakbeat/Breaks",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 2,
+    "joinStep": 0.0012,
+    "insideStep": 0.5233,
+    "tempo": 128.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Tape Splice Groove",
+        "role": "Drums",
+        "voice": "Basic Drums: Breaks"
+      }
+    ],
+    "seconds": 7.5,
+    "peakDb": -9.6,
+    "faded": true,
+    "bytes": 167712
+  },
+  {
+    "group": "drums",
+    "category": "Breaks",
+    "name": "Back Room Break",
+    "file": "drums/breaks-back-room-break.mp3",
+    "about": "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.",
+    "groove": "A two-step break with a kick pickup in bar 2, ghost snares before the backbeat, 8th hats and a ride on the beat",
+    "style": "Breakbeat/Breaks",
+    "bars": 2.0,
+    "energy": 3,
+    "of": 2,
+    "joinStep": 0.0034,
+    "insideStep": 0.548,
+    "tempo": 130.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Back Room Break",
+        "role": "Drums",
+        "voice": "Basic Drums: Breaks"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 180336
+  },
+  {
+    "group": "drums",
+    "category": "Industrial Rock",
+    "name": "Biohazard Beat",
+    "file": "drums/industrial-rock-biohazard-beat.mp3",
+    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
+    "groove": "The two-step kick on 1 and the and of 3, the snare on 2 and 4 and 8th hats, the downbeats stronger",
+    "style": "Drum and Bass/Neurofunk",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 3,
+    "joinStep": 0.0084,
+    "insideStep": 0.4474,
+    "tempo": 174.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Biohazard Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial Rock"
+      }
+    ],
+    "seconds": 5.5,
+    "peakDb": -9.300000000000001,
+    "faded": true,
+    "bytes": 123168
+  },
+  {
+    "group": "drums",
+    "category": "Industrial Rock",
+    "name": "Rough Cut Beat",
+    "file": "drums/industrial-rock-rough-cut-beat.mp3",
+    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
+    "groove": "A breakbeat kick with a push before the 4, a snare on 2 and 4 with ghost notes in between, hats pushing into each beat and a crash on the one",
+    "style": "Breakbeat/Breaks",
+    "bars": 1.0,
+    "energy": 4,
+    "of": 3,
+    "joinStep": 0.0045,
+    "insideStep": 0.5022,
+    "tempo": 132.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Rough Cut Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial Rock"
+      }
+    ],
+    "seconds": 5.5,
+    "peakDb": -10.0,
+    "faded": true,
+    "bytes": 129624
+  },
+  {
+    "group": "drums",
+    "category": "Industrial Rock",
+    "name": "Scratch Loop",
+    "file": "drums/industrial-rock-scratch-loop.mp3",
+    "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
+    "groove": "A breakbeat kick on 1, the and of 1 and the and of 3, a snare on 2 and 4 with ghost notes in between, 16th hats with the offbeat lifted, a crash on the one and a tom run ends bar 4",
+    "style": "Breakbeat/Breaks",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 128.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Scratch Loop",
+        "role": "Drums",
+        "voice": "Basic Drums: Industrial Rock"
+      }
+    ],
+    "seconds": 7.5,
+    "peakDb": -9.5,
+    "faded": true,
+    "bytes": 189240
+  },
+  {
+    "group": "drums",
+    "category": "Modern",
+    "name": "Clean Room Groove",
+    "file": "drums/modern-clean-room-groove.mp3",
+    "about": "Every sound that has a Modern type on it, clean: nothing on the bus.",
+    "groove": "Four to the floor with ghost kicks before 2 and 4, a clap over a snare, 16th hats with the offbeat lifted, a shaker between them and open hats in bar 2",
+    "style": "Techno/Driving",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 1,
+    "joinStep": 0.0003,
+    "insideStep": 0.1608,
+    "tempo": 134.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Clean Room Groove",
+        "role": "Drums",
+        "voice": "Basic Drums: Modern"
+      }
+    ],
+    "seconds": 7.2,
+    "peakDb": -9.0,
+    "faded": true,
+    "bytes": 145392
+  },
+  {
+    "group": "drums",
+    "category": "Warehouse",
+    "name": "Night Shift Hammer",
+    "file": "drums/warehouse-night-shift-hammer.mp3",
+    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
+    "groove": "A peak-time groove: a crash on the one, a clap on 2 and 4, open hats on the offbeats over closed ones, a ride in 8ths and a skipped kick in bar 2",
+    "style": "Techno/Peak-time",
+    "bars": 2.0,
+    "energy": 5,
+    "of": 3,
+    "joinStep": 0.0025,
+    "insideStep": 0.507,
+    "tempo": 136.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Night Shift Hammer",
+        "role": "Drums",
+        "voice": "Basic Drums: Warehouse"
+      }
+    ],
+    "seconds": 7.1,
+    "peakDb": -8.800000000000001,
+    "faded": true,
+    "bytes": 161760
+  },
+  {
+    "group": "drums",
+    "category": "Warehouse",
+    "name": "Concrete Floor Roller",
+    "file": "drums/warehouse-concrete-floor-roller.mp3",
+    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
+    "groove": "Four to the floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a rim against it; a ride comes in for bars 3 and 4, and a clap pickup ends bar 4",
+    "style": "Techno/Dark",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 132.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Concrete Floor Roller",
+        "role": "Drums",
+        "voice": "Basic Drums: Warehouse"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -9.199999999999999,
+    "faded": true,
+    "bytes": 165792
+  },
+  {
+    "group": "drums",
+    "category": "Warehouse",
+    "name": "Strobe Tunnel Pulse",
+    "file": "drums/warehouse-strobe-tunnel-pulse.mp3",
+    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
+    "groove": "A rim every three 16ths and a shaker every five turn against the kick and offbeat hats, a low tom answering in bars 2 and 4, open hats over bar 4",
+    "style": "Techno/Hypnotic",
+    "bars": 4.0,
+    "energy": 3,
+    "of": 3,
+    "tempo": 130.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Strobe Tunnel Pulse",
+        "role": "Drums",
+        "voice": "Basic Drums: Warehouse"
+      }
+    ],
+    "seconds": 7.4,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 119712
+  },
+  {
+    "group": "drums",
+    "category": "Body Music",
+    "name": "Cold Assembly Drive",
+    "file": "drums/body-music-cold-assembly-drive.mp3",
+    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
+    "groove": "Techno kick and 16th hats with a snare on 2 and 4 and a metal figure, ready for an EBM bass in the gaps; a snare roll rises through the end of bar 4",
+    "style": "Industrial/Techno-body",
+    "bars": 4.0,
+    "energy": 4,
+    "of": 3,
+    "tempo": 128.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Cold Assembly Drive",
+        "role": "Drums",
+        "voice": "Basic Drums: Body Music"
+      }
+    ],
+    "seconds": 7.5,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 166752
+  },
+  {
+    "group": "drums",
+    "category": "Body Music",
+    "name": "Marching Order Beat",
+    "file": "drums/body-music-marching-order-beat.mp3",
+    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
+    "groove": "Four to the floor, a big snare and clap together on 2 and 4, open hats on the offbeats and flat machine hats round them",
+    "style": "Industrial/EBM",
+    "bars": 1.0,
+    "energy": 4,
+    "of": 3,
+    "joinStep": 0.0118,
+    "insideStep": 0.5368,
+    "tempo": 124.0,
+    "rounds": 3,
+    "parts": [
+      {
+        "name": "Marching Order Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Body Music"
+      }
+    ],
+    "seconds": 5.8,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 121248
+  },
+  {
+    "group": "drums",
+    "category": "Body Music",
+    "name": "Muscle Memory Beat",
+    "file": "drums/body-music-muscle-memory-beat.mp3",
+    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
+    "groove": "The machine backbeat: kick on 1 and 3 with a push, a big snare on 2 and 4, 8th hats with the downbeats stronger, three toms falling into the next bar",
+    "style": "Industrial/EBM",
+    "bars": 2.0,
+    "energy": 3,
+    "of": 3,
+    "joinStep": 0.0043,
+    "insideStep": 0.5927,
+    "tempo": 118.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Muscle Memory Beat",
+        "role": "Drums",
+        "voice": "Basic Drums: Body Music"
+      }
+    ],
+    "seconds": 8.1,
+    "peakDb": -9.1,
+    "faded": true,
+    "bytes": 154272
+  },
+  {
+    "group": "drums",
+    "category": "Foundry",
+    "name": "Blast Furnace Engine",
+    "file": "drums/foundry-blast-furnace-engine.mp3",
+    "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
+    "groove": "Fast four-to-the-floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a crash every other bar; a kick roll ends bar 4",
+    "style": "Techno/Hard",
+    "bars": 4.0,
+    "energy": 5,
+    "of": 3,
+    "tempo": 148.0,
+    "rounds": 1,
+    "parts": [
+      {
+        "name": "Blast Furnace Engine",
+        "role": "Drums",
+        "voice": "Basic Drums: Foundry"
+      }
+    ],
+    "seconds": 6.5,
+    "peakDb": -12.6,
+    "faded": true,
+    "bytes": 187440
+  },
+  {
+    "group": "drums",
+    "category": "Foundry",
+    "name": "Rivet Line Stomp",
+    "file": "drums/foundry-rivet-line-stomp.mp3",
+    "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
+    "groove": "A broken kick with a push before the 4, a snare on 2 and 4 with ghost notes after them, 16th hats shaped by velocity and metal struck in threes",
+    "style": "Industrial/Electro-industrial",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 3,
+    "joinStep": 0.007,
+    "insideStep": 0.62,
+    "tempo": 112.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Rivet Line Stomp",
+        "role": "Drums",
+        "voice": "Basic Drums: Foundry"
+      }
+    ],
+    "seconds": 8.6,
+    "peakDb": -9.4,
+    "faded": true,
+    "bytes": 206592
+  },
+  {
+    "group": "drums",
+    "category": "Foundry",
+    "name": "Slag Hammer Pound",
+    "file": "drums/foundry-slag-hammer-pound.mp3",
+    "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
+    "groove": "A pounding kick with low toms in its gaps, a hard snare on 2 and 4, flat 8th hats, a rim against them and a crash on the one",
+    "style": "Techno/Industrial",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 3,
+    "joinStep": 0.0003,
+    "insideStep": 0.3995,
+    "tempo": 128.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Slag Hammer Pound",
+        "role": "Drums",
+        "voice": "Basic Drums: Foundry"
+      }
+    ],
+    "seconds": 7.5,
+    "peakDb": -13.6,
+    "faded": true,
+    "bytes": 224544
+  },
+  {
+    "group": "drums",
+    "category": "Broken Beat",
+    "name": "Cracked Pavement Break",
+    "file": "drums/broken-beat-cracked-pavement-break.mp3",
+    "about": "Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.",
+    "groove": "A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, 8th hats and an open hat into the next bar",
+    "style": "Breakbeat/Breaks",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 2,
+    "joinStep": 0.0033,
+    "insideStep": 0.69,
+    "tempo": 132.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Cracked Pavement Break",
+        "role": "Drums",
+        "voice": "Basic Drums: Broken Beat"
+      }
+    ],
+    "seconds": 7.3,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 146880
+  },
+  {
+    "group": "drums",
+    "category": "Broken Beat",
+    "name": "Loose Wire Break",
+    "file": "drums/broken-beat-loose-wire-break.mp3",
+    "about": "Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.",
+    "groove": "A chopped break, the snare doubling at the end of bar 2, hats pushing into each beat and a crash on the one",
+    "style": "Breakbeat/Breaks",
+    "bars": 2.0,
+    "energy": 4,
+    "of": 2,
+    "joinStep": 0.0107,
+    "insideStep": 0.6698,
+    "tempo": 135.0,
+    "rounds": 2,
+    "parts": [
+      {
+        "name": "Loose Wire Break",
+        "role": "Drums",
+        "voice": "Basic Drums: Broken Beat"
+      }
+    ],
+    "seconds": 7.1,
+    "peakDb": -8.9,
+    "faded": true,
+    "bytes": 155328
+  },
+  {
+    "group": "drums",
+    "category": "Bunker",
+    "name": "Bunker: Kick Hat Snare",
+    "file": "drums/bunker-kick-hat-snare.mp3",
+    "about": "Dark techno from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
+    "phrase": "Kick Hat Snare",
+    "seconds": 3.4,
+    "peakDb": -7.6,
+    "faded": false,
+    "bytes": 59256
+  },
+  {
+    "group": "drums",
+    "category": "Bunker",
+    "name": "Bunker: Body Beat",
+    "file": "drums/bunker-body-beat.mp3",
+    "about": "Dark techno from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
+    "phrase": "Body Beat",
+    "seconds": 4.9,
+    "peakDb": -7.4,
+    "faded": false,
+    "bytes": 79248
+  },
+  {
+    "group": "drums",
+    "category": "Bunker",
+    "name": "Bunker: demo groove",
+    "file": "drums/bunker-demo-groove.mp3",
+    "about": "Dark techno from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
+    "demo": true,
+    "seconds": 10.300000000000001,
+    "peakDb": -7.3,
+    "faded": false,
+    "bytes": 239232
+  },
+  {
+    "group": "drums",
+    "category": "Machine Shop",
+    "name": "Machine Shop: Kick Hat Snare",
+    "file": "drums/machine-shop-kick-hat-snare.mp3",
+    "about": "Industrial from the sources: a distorted kick, a metal snare, an FM hat, a tin for the cowbell, a trash crash for the china, a machine hit for the rim; an anvil, a pipe, static, a zap, a low machine hit and a sub drop on pads 31 to 36.",
+    "phrase": "Kick Hat Snare",
+    "seconds": 3.4,
+    "peakDb": -8.4,
+    "faded": false,
+    "bytes": 66552
+  },
+  {
+    "group": "drums",
+    "category": "Machine Shop",
+    "name": "Machine Shop: Hammer Works",
+    "file": "drums/machine-shop-hammer-works.mp3",
+    "about": "Industrial from the sources: a distorted kick, a metal snare, an FM hat, a tin for the cowbell, a trash crash for the china, a machine hit for the rim; an anvil, a pipe, static, a zap, a low machine hit and a sub drop on pads 31 to 36.",
+    "phrase": "Hammer Works",
+    "seconds": 5.3,
+    "peakDb": -8.4,
+    "faded": false,
+    "bytes": 133320
+  },
+  {
+    "group": "drums",
+    "category": "Machine Shop",
+    "name": "Machine Shop: demo groove",
+    "file": "drums/machine-shop-demo-groove.mp3",
+    "about": "Industrial from the sources: a distorted kick, a metal snare, an FM hat, a tin for the cowbell, a trash crash for the china, a machine hit for the rim; an anvil, a pipe, static, a zap, a low machine hit and a sub drop on pads 31 to 36.",
+    "demo": true,
+    "seconds": 10.5,
+    "peakDb": -8.4,
+    "faded": false,
+    "bytes": 331176
+  },
+  {
+    "group": "drums",
+    "category": "Voltage",
+    "name": "Voltage: Kick Hat Snare",
+    "file": "drums/voltage-kick-hat-snare.mp3",
+    "about": "EBM from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
+    "phrase": "Kick Hat Snare",
+    "seconds": 3.4,
+    "peakDb": -7.6,
+    "faded": true,
+    "bytes": 62856
+  },
+  {
+    "group": "drums",
+    "category": "Voltage",
+    "name": "Voltage: Two-Step Break",
+    "file": "drums/voltage-two-step-break.mp3",
+    "about": "EBM from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
+    "phrase": "Two-Step Break",
+    "seconds": 5.3,
+    "peakDb": -7.2,
+    "faded": true,
+    "bytes": 92424
+  },
+  {
+    "group": "drums",
+    "category": "Voltage",
+    "name": "Voltage: demo groove",
+    "file": "drums/voltage-demo-groove.mp3",
+    "about": "EBM from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
+    "demo": true,
+    "seconds": 11.0,
+    "peakDb": -6.8,
+    "faded": false,
+    "bytes": 222576
+  },
+  {
+    "group": "sources",
+    "category": "Kicks",
+    "name": "Sub Kick",
+    "file": "sources/sub-kick.mp3",
+    "pattern": false,
+    "number": 1,
+    "seconds": 4.4,
+    "peakDb": -1.0,
+    "faded": false,
+    "bytes": 19776
+  },
+  {
+    "group": "sources",
+    "category": "Kicks",
+    "name": "Sub Kick",
+    "file": "sources/sub-kick-pattern.mp3",
+    "pattern": true,
+    "number": 1,
+    "seconds": 5.1,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 105360
+  },
+  {
+    "group": "sources",
+    "category": "Kicks",
+    "name": "Rumble Kick",
+    "file": "sources/rumble-kick.mp3",
+    "pattern": false,
+    "number": 2,
+    "seconds": 6.0,
+    "peakDb": -0.7,
+    "faded": false,
+    "bytes": 26640
+  },
+  {
+    "group": "sources",
+    "category": "Kicks",
+    "name": "Rumble Kick",
+    "file": "sources/rumble-kick-pattern.mp3",
+    "pattern": true,
+    "number": 2,
+    "seconds": 5.5,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 105528
+  },
+  {
+    "group": "sources",
+    "category": "Kicks",
+    "name": "Distorted Kick",
+    "file": "sources/distorted-kick.mp3",
+    "pattern": false,
+    "number": 3,
+    "seconds": 2.6,
+    "peakDb": -0.8,
+    "faded": false,
+    "bytes": 13728
+  },
+  {
+    "group": "sources",
+    "category": "Kicks",
+    "name": "Distorted Kick",
+    "file": "sources/distorted-kick-pattern.mp3",
+    "pattern": true,
+    "number": 3,
+    "seconds": 4.6,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 94080
+  },
+  {
+    "group": "sources",
+    "category": "Kicks",
+    "name": "FM Kick",
+    "file": "sources/fm-kick.mp3",
+    "pattern": false,
+    "number": 4,
+    "seconds": 2.8,
+    "peakDb": -0.9,
+    "faded": false,
+    "bytes": 13536
+  },
+  {
+    "group": "sources",
+    "category": "Kicks",
+    "name": "FM Kick",
+    "file": "sources/fm-kick-pattern.mp3",
+    "pattern": true,
+    "number": 4,
+    "seconds": 4.7,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 94608
+  },
+  {
+    "group": "sources",
+    "category": "Kicks",
+    "name": "Click Kick",
+    "file": "sources/click-kick.mp3",
+    "pattern": false,
+    "number": 5,
+    "seconds": 1.4,
+    "peakDb": -0.8,
+    "faded": false,
+    "bytes": 7896
+  },
+  {
+    "group": "sources",
+    "category": "Kicks",
+    "name": "Click Kick",
+    "file": "sources/click-kick-pattern.mp3",
+    "pattern": true,
+    "number": 5,
+    "seconds": 4.4,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 88272
+  },
+  {
+    "group": "sources",
+    "category": "Snares and Claps",
+    "name": "Noise Snare",
+    "file": "sources/noise-snare.mp3",
+    "pattern": false,
+    "number": 6,
+    "seconds": 1.8,
+    "peakDb": -4.6,
+    "faded": false,
+    "bytes": 16152
+  },
+  {
+    "group": "sources",
+    "category": "Snares and Claps",
+    "name": "Noise Snare",
+    "file": "sources/noise-snare-pattern.mp3",
+    "pattern": true,
+    "number": 6,
+    "seconds": 4.2,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 87000
+  },
+  {
+    "group": "sources",
+    "category": "Snares and Claps",
+    "name": "FM Snare",
+    "file": "sources/fm-snare.mp3",
+    "pattern": false,
+    "number": 7,
+    "seconds": 1.8,
+    "peakDb": -4.8,
+    "faded": false,
+    "bytes": 15576
+  },
+  {
+    "group": "sources",
+    "category": "Snares and Claps",
+    "name": "FM Snare",
+    "file": "sources/fm-snare-pattern.mp3",
+    "pattern": true,
+    "number": 7,
+    "seconds": 4.2,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 87672
+  },
+  {
+    "group": "sources",
+    "category": "Snares and Claps",
+    "name": "Metal Snare",
+    "file": "sources/metal-snare.mp3",
+    "pattern": false,
+    "number": 8,
+    "seconds": 2.0,
+    "peakDb": -4.6,
+    "faded": false,
+    "bytes": 18888
+  },
+  {
+    "group": "sources",
+    "category": "Snares and Claps",
+    "name": "Metal Snare",
+    "file": "sources/metal-snare-pattern.mp3",
+    "pattern": true,
+    "number": 8,
+    "seconds": 4.2,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 91704
+  },
+  {
+    "group": "sources",
+    "category": "Snares and Claps",
+    "name": "Clap Stack",
+    "file": "sources/clap-stack.mp3",
+    "pattern": false,
+    "number": 9,
+    "seconds": 2.8,
+    "peakDb": -2.5,
+    "faded": false,
+    "bytes": 52272
+  },
+  {
+    "group": "sources",
+    "category": "Snares and Claps",
+    "name": "Clap Stack",
+    "file": "sources/clap-stack-pattern.mp3",
+    "pattern": true,
+    "number": 9,
+    "seconds": 4.2,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 106296
+  },
+  {
+    "group": "sources",
+    "category": "Snares and Claps",
+    "name": "Snap",
+    "file": "sources/snap.mp3",
+    "pattern": false,
+    "number": 10,
+    "seconds": 1.1,
+    "peakDb": -3.4,
+    "faded": false,
+    "bytes": 8664
+  },
+  {
+    "group": "sources",
+    "category": "Snares and Claps",
+    "name": "Snap",
+    "file": "sources/snap-pattern.mp3",
+    "pattern": true,
+    "number": 10,
+    "seconds": 4.3,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 87816
+  },
+  {
+    "group": "sources",
+    "category": "Hats and Cymbals",
+    "name": "FM Hat",
+    "file": "sources/fm-hat.mp3",
+    "pattern": false,
+    "number": 11,
+    "seconds": 1.1,
+    "peakDb": -5.6,
+    "faded": false,
+    "bytes": 10104
+  },
+  {
+    "group": "sources",
+    "category": "Hats and Cymbals",
+    "name": "FM Hat",
+    "file": "sources/fm-hat-pattern.mp3",
+    "pattern": true,
+    "number": 11,
+    "seconds": 4.3,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 117528
+  },
+  {
+    "group": "sources",
+    "category": "Hats and Cymbals",
+    "name": "Noise Hat",
+    "file": "sources/noise-hat.mp3",
+    "pattern": false,
+    "number": 12,
+    "seconds": 1.0,
+    "peakDb": -5.2,
+    "faded": false,
+    "bytes": 8376
+  },
+  {
+    "group": "sources",
+    "category": "Hats and Cymbals",
+    "name": "Noise Hat",
+    "file": "sources/noise-hat-pattern.mp3",
+    "pattern": true,
+    "number": 12,
+    "seconds": 4.3,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 116424
+  },
+  {
+    "group": "sources",
+    "category": "Hats and Cymbals",
+    "name": "Dark Ride",
+    "file": "sources/dark-ride.mp3",
+    "pattern": false,
+    "number": 13,
+    "seconds": 11.199999999999999,
+    "peakDb": -9.9,
+    "faded": false,
+    "bytes": 202848
+  },
+  {
+    "group": "sources",
+    "category": "Hats and Cymbals",
+    "name": "Dark Ride",
+    "file": "sources/dark-ride-pattern.mp3",
+    "pattern": true,
+    "number": 13,
+    "seconds": 6.0,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 157080
+  },
+  {
+    "group": "sources",
+    "category": "Hats and Cymbals",
+    "name": "Trash Crash",
+    "file": "sources/trash-crash.mp3",
+    "pattern": false,
+    "number": 14,
+    "seconds": 5.6,
+    "peakDb": -8.0,
+    "faded": false,
+    "bytes": 123360
+  },
+  {
+    "group": "sources",
+    "category": "Hats and Cymbals",
+    "name": "Trash Crash",
+    "file": "sources/trash-crash-pattern.mp3",
+    "pattern": true,
+    "number": 14,
+    "seconds": 5.4,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 140544
+  },
+  {
+    "group": "sources",
+    "category": "Metal",
+    "name": "FM Bell",
+    "file": "sources/fm-bell.mp3",
+    "pattern": false,
+    "number": 15,
+    "seconds": 7.6,
+    "peakDb": -6.0,
+    "faded": false,
+    "bytes": 43752
+  },
+  {
+    "group": "sources",
+    "category": "Metal",
+    "name": "FM Bell",
+    "file": "sources/fm-bell-pattern.mp3",
+    "pattern": true,
+    "number": 15,
+    "seconds": 5.5,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 124392
+  },
+  {
+    "group": "sources",
+    "category": "Metal",
+    "name": "Anvil",
+    "file": "sources/anvil.mp3",
+    "pattern": false,
+    "number": 16,
+    "seconds": 3.8,
+    "peakDb": -5.6,
+    "faded": false,
+    "bytes": 21576
+  },
+  {
+    "group": "sources",
+    "category": "Metal",
+    "name": "Anvil",
+    "file": "sources/anvil-pattern.mp3",
+    "pattern": true,
+    "number": 16,
+    "seconds": 5.1,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 123120
+  },
+  {
+    "group": "sources",
+    "category": "Metal",
+    "name": "Pipe",
+    "file": "sources/pipe.mp3",
+    "pattern": false,
+    "number": 17,
+    "seconds": 3.4,
+    "peakDb": -6.0,
+    "faded": false,
+    "bytes": 18720
+  },
+  {
+    "group": "sources",
+    "category": "Metal",
+    "name": "Pipe",
+    "file": "sources/pipe-pattern.mp3",
+    "pattern": true,
+    "number": 17,
+    "seconds": 4.9,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 122904
+  },
+  {
+    "group": "sources",
+    "category": "Metal",
+    "name": "Tin",
+    "file": "sources/tin.mp3",
+    "pattern": false,
+    "number": 18,
+    "seconds": 1.4,
+    "peakDb": -6.0,
+    "faded": false,
+    "bytes": 10704
+  },
+  {
+    "group": "sources",
+    "category": "Metal",
+    "name": "Tin",
+    "file": "sources/tin-pattern.mp3",
+    "pattern": true,
+    "number": 18,
+    "seconds": 4.3,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 115536
+  },
+  {
+    "group": "sources",
+    "category": "Industrial",
+    "name": "Zap",
+    "file": "sources/zap.mp3",
+    "pattern": false,
+    "number": 19,
+    "seconds": 1.7,
+    "peakDb": -3.4,
+    "faded": false,
+    "bytes": 12888
+  },
+  {
+    "group": "sources",
+    "category": "Industrial",
+    "name": "Zap",
+    "file": "sources/zap-pattern.mp3",
+    "pattern": true,
+    "number": 19,
+    "seconds": 4.4,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 116280
+  },
+  {
+    "group": "sources",
+    "category": "Industrial",
+    "name": "Noise Burst",
+    "file": "sources/noise-burst.mp3",
+    "pattern": false,
+    "number": 20,
+    "seconds": 1.4,
+    "peakDb": -3.1,
+    "faded": false,
+    "bytes": 12432
+  },
+  {
+    "group": "sources",
+    "category": "Industrial",
+    "name": "Noise Burst",
+    "file": "sources/noise-burst-pattern.mp3",
+    "pattern": true,
+    "number": 20,
+    "seconds": 4.4,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 112344
+  },
+  {
+    "group": "sources",
+    "category": "Industrial",
+    "name": "Machine Hit",
+    "file": "sources/machine-hit.mp3",
+    "pattern": false,
+    "number": 21,
+    "seconds": 2.2,
+    "peakDb": -4.0,
+    "faded": false,
+    "bytes": 12240
+  },
+  {
+    "group": "sources",
+    "category": "Industrial",
+    "name": "Machine Hit",
+    "file": "sources/machine-hit-pattern.mp3",
+    "pattern": true,
+    "number": 21,
+    "seconds": 4.7,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 123432
+  },
+  {
+    "group": "sources",
+    "category": "Industrial",
+    "name": "Static",
+    "file": "sources/static.mp3",
+    "pattern": false,
+    "number": 22,
+    "seconds": 1.7,
+    "peakDb": -2.0,
+    "faded": false,
+    "bytes": 24216
+  },
+  {
+    "group": "sources",
+    "category": "Industrial",
+    "name": "Static",
+    "file": "sources/static-pattern.mp3",
+    "pattern": true,
+    "number": 22,
+    "seconds": 4.6,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 129192
+  },
+  {
+    "group": "sources",
+    "category": "Low",
+    "name": "FM Tom",
+    "file": "sources/fm-tom.mp3",
+    "pattern": false,
+    "number": 23,
+    "seconds": 3.2,
+    "peakDb": -4.1,
+    "faded": false,
+    "bytes": 15768
+  },
+  {
+    "group": "sources",
+    "category": "Low",
+    "name": "FM Tom",
+    "file": "sources/fm-tom-pattern.mp3",
+    "pattern": true,
+    "number": 23,
+    "seconds": 4.8,
+    "peakDb": -6.9,
+    "faded": true,
+    "bytes": 123816
+  },
+  {
+    "group": "sources",
+    "category": "Low",
+    "name": "Sub Drop",
+    "file": "sources/sub-drop.mp3",
+    "pattern": false,
+    "number": 24,
+    "seconds": 9.6,
+    "peakDb": -2.0,
+    "faded": false,
+    "bytes": 39696
+  },
+  {
+    "group": "sources",
+    "category": "Low",
+    "name": "Sub Drop",
+    "file": "sources/sub-drop-pattern.mp3",
+    "pattern": true,
+    "number": 24,
+    "seconds": 5.5,
+    "peakDb": -6.9,
+    "faded": false,
+    "bytes": 132240
   }
 ]
