@@ -31,6 +31,8 @@ namespace DrumKitImport
         float pan = 0.0f;              // -100 to 100
         float start = 0.0f;            // %
         bool reverse = false;
+        bool envelope = false;         // a volume envelope, for the pad's ENV page: on, with these in ms
+        float attack = 0.0f, hold = 0.0f, decay = 0.0f;
         std::vector<PadLayer> layers;
     };
 

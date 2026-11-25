@@ -51,6 +51,10 @@ namespace
         low->gain = 0.5f;
         low->pan = -0.25f;
         low->tune = 1.5f;
+        low->envelopeRead = low->envelopeOn = true;
+        low->attack = 2.5f;
+        low->hold = 8.0f;
+        low->decay = 1250.0f;
 
         auto* split = cell (1, "Split", 38);
         split->layers = { layer (path (1, { "Sounds", "soft.wav" }), 1, 63), layer (path (1, { "Sounds", "hard.wav" }), 64, 127) };
@@ -58,6 +62,9 @@ namespace
         split->layers[1].tune = 1.25f;
         split->layers[1].start = 120;
         split->layers[1].endBack = 4000;
+        split->envelopeRead = true;      // there, and switched off
+        split->attack = 1.0f;
+        split->decay = 750.0f;
 
         auto* faded = cell (2, "Faded", 40);
         faded->layers = { layer (0, 1, 80), layer (1, 50, 127) };
@@ -119,7 +126,8 @@ namespace
 
             if (x.index != y.index || x.name != y.name || ! juce::exactlyEqual (x.gain, y.gain) || ! juce::exactlyEqual (x.pan, y.pan) || ! juce::exactlyEqual (x.tune, y.tune)
                 || x.keyTracking != y.keyTracking || x.reverse != y.reverse || x.voiceGroup != y.voiceGroup || x.colour != y.colour || x.lowKey != y.lowKey
-                || x.highKey != y.highKey || x.layers.size() != y.layers.size())
+                || x.highKey != y.highKey || x.layers.size() != y.layers.size() || x.envelopeRead != y.envelopeRead || x.envelopeOn != y.envelopeOn
+                || ! juce::exactlyEqual (x.attack, y.attack) || ! juce::exactlyEqual (x.hold, y.hold) || ! juce::exactlyEqual (x.decay, y.decay))
                 return false;
 
             for (size_t j = 0; j < x.layers.size(); ++j)
@@ -550,8 +558,15 @@ namespace
         plainCell.reverse = true;
         plainCell.layers[0].start = 1200;
         plainCell.layers[0].endBack = 100;
+        plainCell.envelopeRead = plainCell.envelopeOn = true;
+        plainCell.attack = 2.5f;
+        plainCell.hold = 8.0f;
+        plainCell.decay = 9000.0f;
 
-        m.cell ("Split", 38).layers = { KitMaker::layer (b, 64, 127, 38), KitMaker::layer (a, 1, 63, 38) };
+        auto& splitCell = m.cell ("Split", 38);
+        splitCell.layers = { KitMaker::layer (b, 64, 127, 38), KitMaker::layer (a, 1, 63, 38) };
+        splitCell.envelopeRead = true;
+        splitCell.decay = 100.0f;
 
         auto& fade = m.cell ("Fade", 40);
         fade.layers = { KitMaker::layer (a, 1, 80, 40), KitMaker::layer (b, 50, 127, 40) };
@@ -656,7 +671,9 @@ namespace
             check (false, "Many has a pad");
         }
 
-        check (reports (plan, "effects, envelopes, modulation"), "The report always says what an import never brings");
+        check (reports (plan, "effects, pitch envelopes, modulation"), "The report always says what an import never brings");
+        check (padNamed (plan, "Plain")->envelope && near (padNamed (plan, "Plain")->hold, 8.0f) && ! padNamed (plan, "Split")->envelope && reports (plan, "1 cell has a volume envelope on"),
+               "A cell's volume envelope is planned when it is on, not when it is there and off, and the report counts it");
 
         // The library moved: its samples are found under the folder given.
         const auto moved = library.folder.getChildFile ("Moved Library");
@@ -683,6 +700,11 @@ namespace
                    && near (drums.parameterOf (kick, "level")->get(), -6.02f) && near (drums.parameterOf (kick, "pan")->get(), -25.0f) && near (drums.parameterOf (kick, "tune")->get(), 7.02f)
                    && near (drums.parameterOf (kick, "start")->get(), 25.0f) && drums.reverseParameter (kick)->get() && near (drums.parameterOf (kick, "decay")->get(), 5000.0f),
                "The kick's pad plays the cell's sample with its level, pan, tune, start and reverse, its decay long enough to play whole");
+
+        const auto kickEffects = drums.getEffects (kick), snareEffects = drums.getEffects ((int) DrumMachine::Sound::snare);
+        check (kickEffects.on (DrumMachine::envOn) && near (kickEffects[DrumMachine::envAttack], 2.5f) && near (kickEffects[DrumMachine::envHold], 8.0f)
+                   && near (kickEffects[DrumMachine::envDecay], 5000.0f) && ! snareEffects.on (DrumMachine::envOn),
+               "The envelope is on the pad's ENV page: attack and hold as in the kit, a decay past the knob's top held at it; a pad whose cell had it off has it off");
 
         const auto fadePad = placeOf ("Fade");
         check (drums.getPadName (fadePad) == "Fade" && drums.getPadNote (fadePad) == 40 && drums.getLayers (fadePad).size() == 2 && drums.getLayers (fadePad)[1].lowVelocity == 66,
@@ -803,7 +825,7 @@ void runBatteryKitTests()
 
 int runBatteryKitFiles (const juce::StringArray& files)
 {
-    int read = 0, refused = 0, cells = 0, layers = 0, found = 0, pads = 0;
+    int read = 0, refused = 0, cells = 0, layers = 0, found = 0, pads = 0, envelopes = 0, envelopesOn = 0;
     std::map<juce::String, int> errors, versions;
 
     for (auto& name : files)
@@ -827,6 +849,8 @@ int runBatteryKitFiles (const juce::StringArray& files)
         for (auto& c : kit.cells)
         {
             cells += c.layers.empty() ? 0 : 1;
+            envelopes += ! c.layers.empty() && c.envelopeRead ? 1 : 0;
+            envelopesOn += ! c.layers.empty() && c.envelopeRead && c.envelopeOn ? 1 : 0;
 
             for (auto& l : c.layers)
             {
@@ -837,7 +861,7 @@ int runBatteryKitFiles (const juce::StringArray& files)
     }
 
     std::cout << files.size() << " files: " << read << " read, " << refused << " refused; " << cells << " cells with samples, " << layers << " layers, "
-              << found << " samples found; " << pads << " pads planned" << std::endl;
+              << found << " samples found; " << pads << " pads planned; " << envelopes << " volume envelopes read, " << envelopesOn << " of them on" << std::endl;
 
     for (auto& [what, n] : versions)
         std::cout << "  " << what << ": " << n << std::endl;

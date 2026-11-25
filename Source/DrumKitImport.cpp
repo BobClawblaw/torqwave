@@ -80,7 +80,7 @@ Plan fromBattery (const BatteryKit::Kit& kit, const juce::File& kitFile, const j
     auto cells = kit.cells;
     std::stable_sort (cells.begin(), cells.end(), [] (const BatteryKit::Cell& a, const BatteryKit::Cell& b) { return a.index < b.index; });
 
-    int samples = 0, faded = 0, stacked = 0, thinned = 0, wide = 0, ownValues = 0, ownStarts = 0, ends = 0, loops = 0, otherTypes = 0, unreadable = 0, emptied = 0;
+    int samples = 0, faded = 0, stacked = 0, thinned = 0, wide = 0, ownValues = 0, ownStarts = 0, ends = 0, loops = 0, otherTypes = 0, unreadable = 0, emptied = 0, enveloped = 0;
 
     for (auto& c : cells)
     {
@@ -221,6 +221,11 @@ Plan fromBattery (const BatteryKit::Kit& kit, const juce::File& kitFile, const j
         pad.tune = semitones (c.tune * tune.value_or (1.0f));
         pad.start = juce::jlimit (0.0f, 95.0f, start.value_or (kept.front()->frames > 0 ? 100.0f * (float) kept.front()->start / (float) kept.front()->frames : 0.0f));
         pad.reverse = c.reverse;
+        pad.envelope = c.envelopeRead && c.envelopeOn;
+        pad.attack = c.attack;
+        pad.hold = c.hold;
+        pad.decay = c.decay;
+        enveloped += pad.envelope ? 1 : 0;
 
         // A cell over several keys follows them in pitch: on its lowest it is that far below its root.
         if (cellWide && c.keyTracking)
@@ -261,6 +266,9 @@ Plan fromBattery (const BatteryKit::Kit& kit, const juce::File& kitFile, const j
     if (ends > 0)
         report.add (counted (ends, "sample ends", "samples end") + " before its file does in the kit. Here it plays to its end, or as long as the pad's Decay.");
 
+    if (enveloped > 0)
+        report.add (counted (enveloped, "cell has", "cells have") + " a volume envelope on. Its attack, hold and decay are on the pad's ENV page; a sustain and a release are not brought over.");
+
     if (const auto choked = kit.voiceGroupsRead ? chokedCells (kit) : 0; choked > 0)
         report.add (counted (choked, "cell cuts", "cells cut") + " others off in the kit (hi-hats, usually). Pads here cut each other off by their notes alone: the hats on 42, 44 and 46 do, the rest ring.");
 
@@ -279,7 +287,7 @@ Plan fromBattery (const BatteryKit::Kit& kit, const juce::File& kitFile, const j
     if (emptied > 0)
         report.add (counted (emptied, "cell was", "cells were") + " left with no sample, and has no pad.");
 
-    report.add ("Battery's effects, envelopes, modulation, time-stretching, articulations and buses are not brought over.");
+    report.add ("Battery's effects, pitch envelopes, modulation, time-stretching, articulations and buses are not brought over.");
     return plan;
 }
 
@@ -747,6 +755,15 @@ juce::String apply (BuiltInEffects::BasicDrumsProcessor& drums, Plan& plan)
         s.pan = juce::jlimit (-100.0f, 100.0f, p.pan);
         s.start = juce::jlimit (0.0f, 95.0f, p.start);
         s.reverse = p.reverse;
+
+        if (p.envelope)
+        {
+            s.effects[DrumMachine::envOn] = 1.0f;
+            s.effects[DrumMachine::envAttack] = p.attack;
+            s.effects[DrumMachine::envHold] = p.hold;
+            s.effects[DrumMachine::envDecay] = p.decay;
+            s.effects.limit();
+        }
 
         if (p.pad < DrumMachine::numSounds)
             settings.sounds[(size_t) p.pad] = s;

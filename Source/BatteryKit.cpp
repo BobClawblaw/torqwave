@@ -17,6 +17,10 @@ namespace
     // The records.
     constexpr int programRecord = 0x28, voiceGroupsRecord = 0x32, cellsRecord = 0x33, zonesRecord = 0x34, pathsRecord = 0x4b;
 
+    // Inside a cell: its modulators, each a record in a list; an envelope's holder and its values.
+    constexpr int modulatorsRecord = 0x3b, modulatorRecord = 0x0d, envelopeHolderRecord = 0x07, envelopeRecord = 0x3f;
+    constexpr char volumeTarget[] = "volume", volumeEnvelopeName[] = "ENV_AHDSR_VOLUME";
+
     // The versions of each this has been checked against. A program's own layout is not read, only
     // its children, each of which is checked for itself, so any version in the range seen is taken.
     constexpr int oldestProgram = 0xa3, newestProgram = 0xb2, cellVersion = 0x95, zoneVersion = 0x98, zoneVersionWithMore = 0x9a,
@@ -132,6 +136,28 @@ namespace
             const auto same = std::memcmp (data + at, tag, 4) == 0;
             at += 4;
             return same;
+        }
+
+        /** A short name in ASCII: its length, then its bytes. */
+        juce::String ascii()
+        {
+            const auto length = u32();
+
+            if (length > 64 || ! need (length))
+            {
+                ok = false;
+                return {};
+            }
+
+            juce::String s;
+
+            for (uint32 i = 0; i < length; ++i)
+            {
+                const auto c = (char) data[at++];
+                s << (c >= 32 && c < 127 ? c : '?');
+            }
+
+            return s;
         }
 
         /** Text: its length in characters, then UTF-16. */
@@ -298,6 +324,78 @@ namespace
     }
 
     //==============================================================================
+    /** A cell's volume envelope, from its modulators. Left unread (and the cell says so) where
+        they are not laid out as this knows: an envelope is not worth refusing a kit for. */
+    void readEnvelope (In list, Cell& c)
+    {
+        list.skip (3);
+
+        while (list.left() > 0 && list.u8() == 1)
+        {
+            const auto id = (int) list.u16();
+            auto body = list.take (list.u32());
+            Parts modulator;
+
+            if (! list.ok)
+                return;
+
+            if (id != modulatorRecord || ! readParts (body, modulator))
+                continue;
+
+            auto& priv = modulator.priv;
+            priv.skip (4);
+            const auto target = priv.ascii();
+            priv.skip (9);
+            const auto name = priv.ascii();
+            priv.skip (3);
+            const auto bypassed = priv.u8() != 0;
+
+            if (! priv.ok || target != volumeTarget || name != volumeEnvelopeName)
+                continue;
+
+            for (auto& children = modulator.children; children.left() > 0;)
+            {
+                const auto child = (int) children.u16();
+                auto holder = children.take (children.u32());
+                Parts held;
+
+                if (! children.ok)
+                    return;
+
+                if (child != envelopeHolderRecord || ! readParts (holder, held))
+                    continue;
+
+                while (held.children.left() > 0)
+                {
+                    const auto inner = (int) held.children.u16();
+                    auto values = held.children.take (held.children.u32());
+
+                    if (! held.children.ok)
+                        return;
+
+                    if (inner != envelopeRecord)
+                        continue;
+
+                    // A curve, then attack, decay and hold, in ms.
+                    values.skip (7);
+                    const auto attack = values.f32 (0.0f), decay = values.f32 (0.0f), hold = values.f32 (0.0f);
+
+                    if (! values.ok)
+                        return;
+
+                    c.envelopeRead = true;
+                    c.envelopeOn = ! bypassed;
+                    c.attack = juce::jlimit (0.0f, 60000.0f, attack);
+                    c.hold = juce::jlimit (0.0f, 60000.0f, hold);
+                    c.decay = juce::jlimit (0.0f, 60000.0f, decay);
+                    return;
+                }
+            }
+
+            return;
+        }
+    }
+
     juce::String readCells (In list, std::vector<Cell>& cells)
     {
         const auto count = list.u32();
@@ -347,6 +445,18 @@ namespace
                     c.lowKey = low;
                     c.highKey = high;
                 }
+            }
+
+            for (auto& children = parts.children; children.left() > 0;)
+            {
+                const auto child = (int) children.u16();
+                const auto body = children.take (children.u32());
+
+                if (! children.ok)
+                    return damaged;
+
+                if (child == modulatorsRecord && ! c.envelopeRead)
+                    readEnvelope (body, c);
             }
 
             cells.push_back (std::move (c));
@@ -1081,7 +1191,48 @@ juce::MemoryBlock write (const Kit& kit, const WriteOptions& options)
         pub.zeros (8);
         pub.i32 (c.voiceGroup >= 0 ? c.voiceGroup + 1 : -1);
         pub.zeros (12);
-        cells.add (partsOf (options.cellVersion, priv, pub, {}));
+        Out cellChildren;
+
+        if (c.envelopeRead)
+        {
+            const auto shortName = [] (Out& o, const char* name)
+            {
+                o.u32 ((uint32) std::strlen (name));
+                o.add (name, std::strlen (name));
+            };
+
+            Out values, holderPub, modulatorPrivate, modulators;
+            values.u8 (0);
+            values.u16 (0x11);
+
+            for (auto v : { -0.332f, c.attack, c.decay, c.hold, 1050.0f, 0.25f })
+                values.f32 (v);
+
+            holderPub.u32 (0);
+            modulatorPrivate.u32 (1);
+            shortName (modulatorPrivate, volumeTarget);
+            modulatorPrivate.f32 (1.0f);
+            modulatorPrivate.zeros (5);
+            shortName (modulatorPrivate, volumeEnvelopeName);
+            modulatorPrivate.zeros (3);
+            modulatorPrivate.u8 (c.envelopeOn ? 0 : 1);
+            modulatorPrivate.u16 (1);
+            modulatorPrivate.u32 (907);
+            shortName (modulatorPrivate, "ENV_AHDSR");
+            modulatorPrivate.u32 (2);
+
+            const auto modulator = partsOf (0x81, modulatorPrivate, {}, record (envelopeHolderRecord, partsOf (0x90, {}, holderPub, record (envelopeRecord, values))));
+            modulators.u8 (0);
+            modulators.u16 (0x12);
+            modulators.u8 (1);
+            modulators.u16 (modulatorRecord);
+            modulators.u32 ((uint32) modulator.bytes.size());
+            modulators.add (modulator);
+            modulators.zeros (11);
+            cellChildren = record (modulatorsRecord, modulators);
+        }
+
+        cells.add (partsOf (options.cellVersion, priv, pub, cellChildren));
 
         for (auto& l : c.layers)
         {

@@ -45,6 +45,11 @@ namespace BatteryKit
         int voiceGroup = -1;               // which of the kit's voice groups, or -1
         int colour = -1;                   // a place in Battery's palette, or -1
         int lowKey = -1, highKey = -1;     // the keys that play it, or -1 where the cell does not say
+
+        // Its volume envelope, where the kit keeps one in a layout this reads: whether it is on, and
+        // its attack, hold and decay in ms. (Its sustain and release are not read.)
+        bool envelopeRead = false, envelopeOn = false;
+        float attack = 0.0f, hold = 0.0f, decay = 0.0f;
         std::vector<Layer> layers;
     };
 
