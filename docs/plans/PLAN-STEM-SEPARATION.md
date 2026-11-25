@@ -1,6 +1,8 @@
 # Plan: stem separation
 
-A scope, not yet started. Asked for on 2026-11-25: splitting a finished mix into stems (vocals, drums, bass and the rest), the row of the [comparison](../compare/MATRIX.md) where Torqwave is marked partial and eight of the fifteen other products are marked yes.
+**Decided on 2026-11-25: out of scope for this project.** The scope below is kept as a record of what was looked at; nothing in it is planned. Rebalance stays as it is.
+
+A scope, never started. Asked for on 2026-11-25: splitting a finished mix into stems (vocals, drums, bass and the rest), the row of the [comparison](../compare/MATRIX.md) where Torqwave is marked partial and eight of the fifteen other products are marked yes.
 
 ## Where things stand
 
