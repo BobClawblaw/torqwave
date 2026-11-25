@@ -37,36 +37,44 @@ namespace
         return first;
     }
 
-    /** How many of a kit's cells Battery lets cut each other off: the ones in a voice group of one
-        voice that another cell is in too, and the ones whose groups share an exclusive group. */
-    int chokedCells (const BatteryKit::Kit& kit)
+    /** The cells of a kit that cut each other off, as sets: a cell's index to its set's number, from
+        1 in the order the sets' first cells stand. In a set are the cells of a voice group of one
+        voice, and the cells of every group that shares an exclusive group. A cell alone in its set
+        has none (a hit always cuts its own last one). */
+    std::map<int, int> chokeSets (const BatteryKit::Kit& kit)
     {
-        std::map<int, int> inGroup, inExclusive;
-
-        const auto groupOf = [&kit] (const BatteryKit::Cell& c) -> const BatteryKit::VoiceGroup*
-        {
-            return ! c.layers.empty() && juce::isPositiveAndBelow (c.voiceGroup, (int) kit.voiceGroups.size()) ? &kit.voiceGroups[(size_t) c.voiceGroup] : nullptr;
-        };
+        std::map<juce::String, std::vector<int>> members;
 
         for (auto& c : kit.cells)
         {
-            if (auto* g = groupOf (c))
-            {
-                ++inGroup[c.voiceGroup];
+            if (c.layers.empty() || ! juce::isPositiveAndBelow (c.voiceGroup, (int) kit.voiceGroups.size()))
+                continue;
 
-                if (g->exclusiveGroup >= 0)
-                    ++inExclusive[g->exclusiveGroup];
-            }
+            const auto& g = kit.voiceGroups[(size_t) c.voiceGroup];
+
+            if (g.exclusiveGroup >= 0)
+                members["x" + juce::String (g.exclusiveGroup)].push_back (c.index);
+            else if (g.voices == 1)
+                members["g" + juce::String (c.voiceGroup)].push_back (c.index);
         }
 
-        int choked = 0;
+        std::vector<std::vector<int>> sets;
 
-        for (auto& c : kit.cells)
-            if (auto* g = groupOf (c))
-                if ((g->voices == 1 && inGroup[c.voiceGroup] > 1) || (g->exclusiveGroup >= 0 && inExclusive[g->exclusiveGroup] > 1))
-                    ++choked;
+        for (auto& [key, cells] : members)
+            if (cells.size() > 1)
+                sets.push_back (cells);
 
-        return choked;
+        for (auto& cells : sets)
+            std::sort (cells.begin(), cells.end());
+
+        std::sort (sets.begin(), sets.end());
+        std::map<int, int> setOf;
+
+        for (size_t i = 0; i < sets.size(); ++i)
+            for (auto cell : sets[i])
+                setOf[cell] = (int) i + 1;
+
+        return setOf;
     }
 }
 
@@ -80,7 +88,9 @@ Plan fromBattery (const BatteryKit::Kit& kit, const juce::File& kitFile, const j
     auto cells = kit.cells;
     std::stable_sort (cells.begin(), cells.end(), [] (const BatteryKit::Cell& a, const BatteryKit::Cell& b) { return a.index < b.index; });
 
-    int samples = 0, faded = 0, stacked = 0, thinned = 0, wide = 0, ownValues = 0, ownStarts = 0, ends = 0, loops = 0, otherTypes = 0, unreadable = 0, emptied = 0;
+    int samples = 0, faded = 0, stacked = 0, thinned = 0, wide = 0, ownValues = 0, ownStarts = 0, ends = 0, loops = 0, otherTypes = 0, unreadable = 0, emptied = 0, enveloped = 0, choked = 0;
+    const auto setOf = chokeSets (kit);
+    std::set<int> chokeSetsKept, chokeSetsDropped;
 
     for (auto& c : cells)
     {
@@ -221,6 +231,25 @@ Plan fromBattery (const BatteryKit::Kit& kit, const juce::File& kitFile, const j
         pad.tune = semitones (c.tune * tune.value_or (1.0f));
         pad.start = juce::jlimit (0.0f, 95.0f, start.value_or (kept.front()->frames > 0 ? 100.0f * (float) kept.front()->start / (float) kept.front()->frames : 0.0f));
         pad.reverse = c.reverse;
+        pad.envelope = c.envelopeRead && c.envelopeOn;
+        pad.attack = c.attack;
+        pad.hold = c.hold;
+        pad.decay = c.decay;
+        enveloped += pad.envelope ? 1 : 0;
+
+        if (const auto set = setOf.find (c.index); set != setOf.end())
+        {
+            if (set->second <= DrumMachine::numChokeGroups)
+            {
+                pad.choke = set->second;
+                chokeSetsKept.insert (set->second);
+                ++choked;
+            }
+            else
+            {
+                chokeSetsDropped.insert (set->second);
+            }
+        }
 
         // A cell over several keys follows them in pitch: on its lowest it is that far below its root.
         if (cellWide && c.keyTracking)
@@ -261,8 +290,19 @@ Plan fromBattery (const BatteryKit::Kit& kit, const juce::File& kitFile, const j
     if (ends > 0)
         report.add (counted (ends, "sample ends", "samples end") + " before its file does in the kit. Here it plays to its end, or as long as the pad's Decay.");
 
-    if (const auto choked = kit.voiceGroupsRead ? chokedCells (kit) : 0; choked > 0)
-        report.add (counted (choked, "cell cuts", "cells cut") + " others off in the kit (hi-hats, usually). Pads here cut each other off by their notes alone: the hats on 42, 44 and 46 do, the rest ring.");
+    if (enveloped > 0)
+        report.add (counted (enveloped, "cell has", "cells have") + " a volume envelope on. Its attack, hold and decay are on the pad's ENV page; a sustain and a release are not brought over.");
+
+    if (choked > 0)
+        report.add (counted (choked, "cell cuts", "cells cut") + " others off in the kit (hi-hats, usually), in " + counted ((int) chokeSetsKept.size(), "set", "sets")
+                    + ". Each set is a choke group here, from group 1.");
+
+    if (! chokeSetsDropped.empty())
+        report.add ("The kit has " + counted ((int) chokeSetsDropped.size(), "more set", "more sets") + " of cells that cut each other off than the "
+                    + juce::String (DrumMachine::numChokeGroups) + " choke groups here: those cells ring.");
+
+    if (kit.voiceGroupsRead && kit.kitVoices == 1)
+        report.add ("The kit as a whole is set to one voice in Battery, where each hit cuts the last. That is not brought over: here only the pads in a choke group cut each other.");
 
     if (! kit.voiceGroupsRead)
         report.add ("The kit's voice groups are laid out in a way this does not read, so which cells cut each other off is not known.");
@@ -279,7 +319,7 @@ Plan fromBattery (const BatteryKit::Kit& kit, const juce::File& kitFile, const j
     if (emptied > 0)
         report.add (counted (emptied, "cell was", "cells were") + " left with no sample, and has no pad.");
 
-    report.add ("Battery's effects, envelopes, modulation, time-stretching, articulations and buses are not brought over.");
+    report.add ("Battery's effects, pitch envelopes, modulation, time-stretching, articulations and buses are not brought over.");
     return plan;
 }
 
@@ -747,6 +787,16 @@ juce::String apply (BuiltInEffects::BasicDrumsProcessor& drums, Plan& plan)
         s.pan = juce::jlimit (-100.0f, 100.0f, p.pan);
         s.start = juce::jlimit (0.0f, 95.0f, p.start);
         s.reverse = p.reverse;
+        s.choke = juce::jlimit (0, DrumMachine::numChokeGroups, p.choke);
+
+        if (p.envelope)
+        {
+            s.effects[DrumMachine::envOn] = 1.0f;
+            s.effects[DrumMachine::envAttack] = p.attack;
+            s.effects[DrumMachine::envHold] = p.hold;
+            s.effects[DrumMachine::envDecay] = p.decay;
+            s.effects.limit();
+        }
 
         if (p.pad < DrumMachine::numSounds)
             settings.sounds[(size_t) p.pad] = s;

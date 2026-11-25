@@ -42,19 +42,30 @@ namespace BatteryKit
         juce::String name;
         float gain = 1.0f, pan = 0.0f, tune = 1.0f;
         bool keyTracking = false, reverse = false;
-        int voiceGroup = -1;               // which of the kit's voice groups, or -1
+        int voiceGroup = -1;               // which of the kit's voice groups (0 is Battery's group 1), or -1: the kit's own
         int colour = -1;                   // a place in Battery's palette, or -1
         int lowKey = -1, highKey = -1;     // the keys that play it, or -1 where the cell does not say
+
+        // Its volume envelope, where the kit keeps one in a layout this reads: whether it is on, and
+        // its attack, hold and decay in ms. (Its sustain and release are not read.)
+        bool envelopeRead = false, envelopeOn = false;
+        float attack = 0.0f, hold = 0.0f, decay = 0.0f;
         std::vector<Layer> layers;
     };
 
     /** Cells in one voice group share its voices: with one voice, each cuts the others off. Groups
-        with the same exclusive group (0 or more) cut each other off too. */
+        with the same exclusive group (0 or more) cut each other off too. A kit has 128 of them,
+        and keeps only the ones changed from how a group starts: one voice, no name, no exclusive
+        group. */
+    constexpr int numVoiceGroups = 128;
+
     struct VoiceGroup
     {
         juce::String name;
-        int voices = 0;
+        int voices = 1;
         int exclusiveGroup = -1;
+
+        bool isDefault() const   { return name.isEmpty() && voices == 1 && exclusiveGroup == -1; }
     };
 
     /** A sample's place, relative to the kit file's folder: up some folders, then down by name. */
@@ -70,7 +81,8 @@ namespace BatteryKit
     {
         int programVersion = 0;
         std::vector<Cell> cells;           // only the cells with a name or a layer
-        std::vector<VoiceGroup> voiceGroups;
+        std::vector<VoiceGroup> voiceGroups;   // from Battery's group 1, up to the last one kept or used; the ones between as a group starts
+        int kitVoices = 32;                // the voices of the kit's own group, which a cell in no other is in
         std::vector<Path> paths;
         bool voiceGroupsRead = true;       // false when that record was not one this knows: the cells came over without chokes
     };
@@ -106,6 +118,7 @@ namespace BatteryKit
         int cellVersion = 0x95;
         int zoneVersion = 0x98;            // 0x98, or 0x9a with six more bytes after a layer's tune
         int voiceGroupVersion = 0x60;
+        int pathsVersion = 2;              // 2, or 3: the kit file first, the zones naming samples from 1
         int numCells = 128;                // the matrix written, cells without a name or layer included
     };
 

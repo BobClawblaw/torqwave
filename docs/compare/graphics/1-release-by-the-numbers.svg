@@ -1,72 +1,70 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
 <rect width="1600" height="900" fill="#111317"/>
-<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.21.0: what it adds over 0.19.2</text>
+<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.21.1: what it adds over 0.20.0</text>
 <text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">By the numbers, counted from the release&#x27;s own files and documentation</text>
-<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-24. Torqwave 0.21.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
+<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-25. Torqwave 0.21.1 is released. Sources and method: docs/compare in the Torqwave repository.</text>
 <rect x="50.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="50.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="74.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">3,743</text>
-<text x="74.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Synth patches</text>
-<text x="74.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
-<text x="74.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Torqwave Synth, in 29</text>
-<text x="74.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">categories; 1,280 hand-made</text>
+<text x="74.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">64</text>
+<text x="74.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Drum pads</text>
+<text x="74.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.20.0: 30</text>
+<text x="74.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">30 sounds and 34 pads of your</text>
+<text x="74.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">own</text>
 <rect x="390.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="390.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="414.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">4</text>
-<text x="414.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Built-in instruments</text>
-<text x="414.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 1</text>
-<text x="414.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Torqwave Synth, StringSwarm,</text>
-<text x="414.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Basic Drums, Torqwave Sampler</text>
-<text x="414.0" y="438.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">(Basic Synth before)</text>
+<text x="414.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">54</text>
+<text x="414.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Drum sources</text>
+<text x="414.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.20.0: 30</text>
+<text x="414.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">24 more synthesized sounds,</text>
+<text x="414.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">for any pad</text>
 <rect x="730.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="730.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="754.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">1,032</text>
-<text x="754.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Sequence presets</text>
-<text x="754.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
-<text x="754.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">in 37 styles, with 116 starter</text>
-<text x="754.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">kits</text>
+<text x="754.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">15</text>
+<text x="754.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Drum kits</text>
+<text x="754.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.20.0: 7</text>
+<text x="754.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">five came in 0.21.0, three in</text>
+<text x="754.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">0.21.1</text>
 <rect x="50.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="50.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="74.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">296</text>
-<text x="74.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">StringSwarm presets</text>
-<text x="74.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
-<text x="74.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">strings on one note, or a</text>
-<text x="74.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">swarm of oscillators</text>
+<text x="74.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">16</text>
+<text x="74.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Layers a pad</text>
+<text x="74.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.20.0: 0</text>
+<text x="74.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">your own samples by velocity,</text>
+<text x="74.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">with round robin</text>
 <rect x="390.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="390.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="414.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">12</text>
-<text x="414.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Drum kits</text>
-<text x="414.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
-<text x="414.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Basic Drums: 30 sounds on</text>
-<text x="414.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">pads, 21 with a second, Modern</text>
-<text x="414.0" y="758.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">type</text>
+<text x="414.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">8</text>
+<text x="414.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Your choke groups</text>
+<text x="414.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.20.0: 0</text>
+<text x="414.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">beside the three built in</text>
 <rect x="730.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="730.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="754.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">93</text>
-<text x="754.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Audition patterns</text>
-<text x="754.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.19.2: 0</text>
-<text x="754.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">each sound plays as it is</text>
-<text x="754.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">chosen</text>
+<text x="754.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">1,032</text>
+<text x="754.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Sequence presets</text>
+<text x="754.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.20.0: 1,018</text>
+<text x="754.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">in 37 styles, with 116 starter</text>
+<text x="754.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">kits</text>
 <rect x="1080.0" y="160.0" width="470.0" height="620.0" rx="10" fill="#1d2126" stroke="#2a2f36" stroke-width="1.5"/>
-<text x="1108.0" y="212.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Also new since 0.19.2</text>
+<text x="1108.0" y="212.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Also new since 0.20.0</text>
 <rect x="1108.0" y="248.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="260.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Continue where you left off: every</text>
-<text x="1130.0" y="290.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">open file and the session back at</text>
-<text x="1130.0" y="320.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">the next start</text>
-<rect x="1108.0" y="360.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="372.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Decrypt: a synth patch from a</text>
-<text x="1130.0" y="402.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">recording of one note</text>
-<rect x="1108.0" y="442.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="454.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Torqwave Sampler: your own sounds</text>
-<text x="1130.0" y="484.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">across the keys, or cut into</text>
-<text x="1130.0" y="514.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">slices</text>
-<rect x="1108.0" y="554.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="566.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">A wavetable from any sound dropped</text>
-<text x="1130.0" y="596.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">on an oscillator</text>
-<rect x="1108.0" y="636.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="648.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Instruments played from the</text>
-<text x="1130.0" y="678.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">computer&#x27;s keys</text>
-<rect x="1108.0" y="718.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="730.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Maximizer, Click Repair and Repair</text>
-<text x="1130.0" y="760.0" font-size="22" fill="#d8dde3" text-anchor="start" font-weight="normal">Clipping corrected</text>
+<text x="1130.0" y="260.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Sample pads: your own sounds on any</text>
+<text x="1130.0" y="288.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">drum pad, in layers</text>
+<rect x="1108.0" y="321.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="333.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">On each pad: envelope, transient</text>
+<text x="1130.0" y="361.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">shaper, saturator, EQ, compressor</text>
+<rect x="1108.0" y="394.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="406.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Imports a folder of sounds, or a</text>
+<text x="1130.0" y="434.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Battery 4 kit you own</text>
+<rect x="1108.0" y="467.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="479.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Modern types for 21 drum sounds</text>
+<rect x="1108.0" y="512.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="524.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Continue where you left off, unsaved</text>
+<text x="1130.0" y="552.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">sessions too</text>
+<rect x="1108.0" y="585.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="597.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Ask Torq remembers the conversation</text>
+<rect x="1108.0" y="630.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="642.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Maximizer, Click Repair and Repair</text>
+<text x="1130.0" y="670.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Clipping corrected</text>
+<rect x="1108.0" y="703.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="715.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Panic: every instrument silenced</text>
 </svg>

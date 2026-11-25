@@ -113,7 +113,7 @@ juce::String Turn::after() const
 
 juce::String releaseNotesFor()
 {
-    return "0.21.0";
+    return "0.21.1";
 }
 
 bool asksAboutRelease (const juce::String& request)
@@ -136,7 +136,12 @@ juce::String aboutThisRelease (bool withNotes)
 
     return line + " The user may be asking about the program, not for a change: then answer from these notes in a few lines, make no changes, and "
            "say the full list is the changelog at https://github.com/BobClawblaw/torqwave/blob/main/CHANGELOG.md. "
-           "New in 0.21.0: Basic Drums has a second type, Modern, for 21 of its 30 sounds, and five kits made of them; the Maximizer holds its "
+           "New in 0.21.1: Basic Drums is a drum synth and sampler in one: any pad can play your own samples in up to 16 velocity layers "
+           "with round robin, there are 64 pads (34 user pads), every pad has its own envelope, transient shaper, saturator, EQ and "
+           "compressor, 24 more synthesized sources make 54, three more kits make fifteen, pads take choke groups of your own, and Files > "
+           "Import Battery Kit and Import Folder of Sounds bring kits in; Continue where you left off keeps a session never saved; "
+           "Transport > Silence All Instruments is a panic. "
+           "0.21.0: Basic Drums has a second type, Modern, for 21 of its 30 sounds, and five kits made of them; the Maximizer holds its "
            "true-peak ceiling as the loudness meter reads it; Click and Pop Repair finds flat-topped clicks and leaves drum hits alone; Repair "
            "Clipping rebuilds from the sound round the clip; Ask Torq remembers the conversation. "
            "0.20.1: Continue where you left off, a start that reopens the files and session that were open. "

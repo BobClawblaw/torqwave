@@ -2,8 +2,9 @@
  "schema": 1,
  "release": "0.21.0",
  "previous": "0.19.2",
- "previous_note": "The 0.19.2 column is the last announced release. 0.20.0 and 0.20.1 came out on 2026-11-24 before 0.21.0 and were not announced; both are in the trend.",
+ "previous_note": "The 0.19.2 column is the release 0.21.0's graphics were drawn against. 0.20.0 and 0.20.1 came out on 2026-11-24 before 0.21.0.",
  "status": "released",
+ "announced": false,
  "as_of": "2026-11-24",
  "release_numbers": [
   {
@@ -348,7 +349,7 @@
     },
     "current_version": {
      "value": "info",
-     "note": "0.21.0, released 2026-11-24, the first announced release since 0.19.2.",
+     "note": "0.21.0, released 2026-11-24 and not announced.",
      "source": "CHANGELOG.md"
     },
     "signed_installers": {
