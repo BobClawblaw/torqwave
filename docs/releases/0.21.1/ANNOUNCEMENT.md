@@ -91,7 +91,7 @@ A reply under them can carry the comparison's address: `https://github.com/BobCl
 
 ## Alt text
 
-The pictures that are new or changed in 0.21.1 are below. For Continue and the Quality page, use the alt text in [ANNOUNCEMENT-0.21.0.md](../../announcements/ANNOUNCEMENT-0.21.0.md). Graphics 2 to 5 set 0.21.1 against 0.20.0; use their alt text from the same file, reading 0.21.1 and 0.20.0 for the two Torqwave versions (no row differs between the two).
+The pictures that are new or changed in 0.21.1 are below. For Continue and the Quality page, use the alt text in [ANNOUNCEMENT-0.21.0.md](../../announcements/ANNOUNCEMENT-0.21.0.md). Graphics 2 to 4 show one Torqwave column, 0.21.1 (0.20.0 read the same in every row, so its column was dropped), and graphic 5's panel lists the rows 0.21.1 lacks; start from their alt text in the same file and describe the pictures as they are now.
 
 For graphic 1, `1-release-by-the-numbers.png`:
 
