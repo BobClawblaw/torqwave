@@ -7,7 +7,8 @@
 /** Basic Drums' window. On the left its 64 pads, eight across: one for each of its 30 sounds,
     coloured by family, then the 34 user pads, which play samples and have a name, a colour and a
     note of their own (a right-click on one, or Pad in its panel's header, renames it, moves it to
-    another note, colours it or empties it). A pad is lit as it
+    another note, colours it or empties it; a sound's pad can be renamed and coloured the same way
+    while its type is Sample, its note staying its own). A pad is lit as it
     plays; a click plays it (louder towards the pad's top) and selects it. On the right the
     selected sound: a picture of one hit (its waveform and its level falling, a line sweeping across
     as it plays), its six knobs in real units (tune in semitones, decay in ms, tone, level in dB,
@@ -57,7 +58,8 @@ public:
     /** A pad's card as it reads: its name, then its notes ("Pad 31 / 82"). */
     juce::String getPadText (int pad) const;
 
-    /** What the user pad's menu does, by name: "clear"; "note" and "colour" take the value. */
+    /** What a pad's menu does, by name: "clear" (a user pad emptied; a sound's pad given its own
+        name and colour back); "colour" takes the value, and for a user pad so does "note". */
     void changeUserPad (int pad, const juce::String& what, int value = 0);
 
     /** The velocity a click at a height inside a pad plays: 1 at its top to about 0.3 at its bottom. */

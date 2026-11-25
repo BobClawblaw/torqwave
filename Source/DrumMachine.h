@@ -356,9 +356,10 @@ namespace BuiltInEffects
         // The 64 pads: the 30 sounds first (a sound's pad is its place in DrumMachine::Sound), then
         // the 34 user pads, which play samples only. What follows takes any of them by its number.
 
-        /** A pad's name: a sound's own, or a user pad's ("Pad 31" until it is given one); a user
-            pad's colour (none set: transparent, and the window picks one); and its note. Names,
-            colours and notes are kept in the state and in presets. Message thread. */
+        /** A pad's name: a sound's own, or a user pad's ("Pad 31" until it is given one); its
+            colour (none set: transparent, and the window picks one); and its note. A sound's pad
+            can be given a name and a colour too, which show while its type is Sample (its note is
+            its own and stays). Names, colours and notes are kept in the state and in presets. Message thread. */
         juce::String getPadName (int pad) const;
         void setPadName (int pad, const juce::String&);
         juce::Colour getPadColour (int pad) const;
@@ -368,6 +369,9 @@ namespace BuiltInEffects
 
         /** A user pad back as it starts: no layers, its own name, colour, note and settings. */
         void clearPad (int pad);
+
+        /** Whether a pad has a name or a colour given to it (shown or not). */
+        bool hasOwnLook (int pad) const;
 
         /** Counts up when a user pad's name, colour or note changes. */
         juce::uint32 getPadsVersion() const noexcept                { return padsVersion.load(); }
@@ -487,6 +491,8 @@ namespace BuiltInEffects
         // The user pads' names, colours (transparent: none chosen) and notes.
         std::array<juce::String, (size_t) DrumMachine::numUserPads> userNames;
         std::array<juce::Colour, (size_t) DrumMachine::numUserPads> userColours;
+        std::array<juce::String, (size_t) DrumMachine::numSounds> soundNames;      // a sound's pad's, shown while it is a Sample
+        std::array<juce::Colour, (size_t) DrumMachine::numSounds> soundColours;
         std::array<std::atomic<int>, (size_t) DrumMachine::numUserPads> userNotes;
         std::atomic<juce::uint32> padsVersion { 0 };
         juce::AudioParameterChoice* kickCharacter = nullptr;

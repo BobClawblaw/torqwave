@@ -794,7 +794,7 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     }
 
     describePads();
-    padMenu.setTooltip ("This user pad: rename it, move it to another note, colour it, or empty it (a right-click on the pad does the same)");
+    padMenu.setTooltip ("This pad: rename it and colour it; a user pad can also move to another note or be emptied (a right-click on the pad does the same)");
     padMenu.setWantsKeyboardFocus (false);
     padMenu.onClick = [this] { showPadMenu (selectedPad); };
     soundPanel.addChildComponent (padMenu);
@@ -952,12 +952,14 @@ int DrumMachineEditor::padAtPlace (size_t place) const
 
 juce::Colour DrumMachineEditor::colourOfPad (int pad) const
 {
-    if (pad < DrumMachine::numSounds)
-        return colourOf ((Sound) pad);
-
-    // A user pad's own, or a quiet slate until it is given one.
+    // The colour given to it (a sound's pad shows its own only while it plays samples); else its
+    // family's, or for a user pad a quiet slate.
     const auto own = drums.getPadColour (pad);
-    return own.isTransparent() ? juce::Colour (0xff8f9bb3) : own;
+
+    if (! own.isTransparent())
+        return own;
+
+    return pad < DrumMachine::numSounds ? colourOf ((Sound) pad) : juce::Colour (0xff8f9bb3);
 }
 
 void DrumMachineEditor::describePads()
@@ -1053,8 +1055,8 @@ void DrumMachineEditor::showSelected()
     }
 
     type.setVisible (! user);
-    padMenu.setVisible (user);
     shownSample = drums.playsSamples (selectedPad);
+    padMenu.setVisible (shownSample);
     samplesSeen = drums.getSamplesVersion();
     padsSeen = drums.getPadsVersion();
     describePads();
@@ -1196,12 +1198,17 @@ void DrumMachineEditor::setDropTarget (std::optional<int> s)
 
 void DrumMachineEditor::changeUserPad (int pad, const juce::String& what, int value)
 {
-    if (pad < DrumMachine::numSounds)
-        return;
+    const auto user = pad >= DrumMachine::numSounds;
 
-    if (what == "clear")
+    if (what == "clear" && user)
         drums.clearPad (pad);
-    else if (what == "note")
+    else if (what == "clear")
+    {
+        // A sound's pad: its own name and colour back.
+        drums.setPadName (pad, {});
+        drums.setPadColour (pad, {});
+    }
+    else if (what == "note" && user)
         drums.setPadNote (pad, value);
     else if (what == "colour")
         drums.setPadColour (pad, value == 0 ? juce::Colour() : juce::Colour ((juce::uint32) value));
@@ -1211,8 +1218,14 @@ void DrumMachineEditor::changeUserPad (int pad, const juce::String& what, int va
 
 void DrumMachineEditor::showPadMenu (int pad)
 {
-    if (pad < DrumMachine::numSounds)
+    const auto user = pad >= DrumMachine::numSounds;
+
+    // A sound's pad is renamed and coloured while it plays samples; its note is its own.
+    if (! user && ! drums.playsSamples (pad))
+    {
+        say ("Set " + drums.getPadName (pad) + "'s type to Sample to give its pad a name and a colour of your own.");
         return;
+    }
 
     // The notes by octave, each with the sound or pads already on it; and a few colours.
     juce::PopupMenu notes;
@@ -1253,10 +1266,17 @@ void DrumMachineEditor::showPadMenu (int pad)
     juce::PopupMenu menu;
     menu.addSectionHeader (drums.getPadName (pad));
     menu.addItem (1, "Rename...");
-    menu.addSubMenu ("Note (" + juce::String (now) + " " + noteName (now) + ")", notes);
+
+    if (user)
+        menu.addSubMenu ("Note (" + juce::String (now) + " " + noteName (now) + ")", notes);
+
     menu.addSubMenu ("Colour", colourMenu);
     menu.addSeparator();
-    menu.addItem (2, "Empty This Pad");
+
+    if (user)
+        menu.addItem (2, "Empty This Pad");
+    else
+        menu.addItem (2, "Use " + DrumMachine::nameOf ((Sound) pad) + "'s Own Name and Colour", drums.hasOwnLook (pad));
 
     menu.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (padBounds (pad) + getScreenPosition()),
                         [safe = juce::Component::SafePointer<DrumMachineEditor> (this), pad] (int chosen)
@@ -1598,10 +1618,14 @@ void DrumMachineEditor::resized()
             header.removeFromRight (6);
         }
 
-        if (padMenu.isVisible())
-            padMenu.setBounds (header.removeFromRight (60).reduced (0, 2));
-        else
+        if (type.isVisible())
             type.setBounds (header.removeFromRight (140).reduced (0, 2));
+
+        if (padMenu.isVisible())
+        {
+            header.removeFromRight (type.isVisible() ? 6 : 0);
+            padMenu.setBounds (header.removeFromRight (50).reduced (0, 2));
+        }
 
         if (shownSample)
         {

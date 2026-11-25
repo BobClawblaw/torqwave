@@ -1449,6 +1449,46 @@ namespace
                 check (false, "drum user pads window: it opens");
             }
 
+            // A sound's pad can be named and coloured too, while its type is Sample; its note stays its own.
+            {
+                BasicDrumsProcessor named;
+                named.addFiles (Sound::clap, { aHere });
+                named.setPadName ((int) Sound::clap, "Metal Hit");
+                named.setPadColour ((int) Sound::clap, juce::Colour (0xff4f9be8));
+                named.setPadNote ((int) Sound::clap, 90);
+                const auto asSample = named.getPadName ((int) Sound::clap) == "Metal Hit" && named.getPadColour ((int) Sound::clap) == juce::Colour (0xff4f9be8)
+                                      && named.getPadNote ((int) Sound::clap) == DrumMachine::padNote (Sound::clap) && named.kitModified();
+                juce::MemoryBlock block;
+                named.getStateInformation (block);
+                BasicDrumsProcessor back;
+                back.setStateInformation (block.getData(), (int) block.getSize());
+                BasicDrumsProcessor viaPreset;
+                viaPreset.setPresetValues (named.getPresetValues());
+                viaPreset.setPresetTexts (named.getPresetTexts());
+                const auto lookKept = back.getPadName ((int) Sound::clap) == "Metal Hit" && back.getPadColour ((int) Sound::clap) == juce::Colour (0xff4f9be8)
+                                  && viaPreset.getPadName ((int) Sound::clap) == "Metal Hit";
+                back.setType (Sound::clap, DrumMachine::classicType);
+                const auto asClassic = back.getPadName ((int) Sound::clap) == "Clap" && back.getPadColour ((int) Sound::clap).isTransparent() && back.hasOwnLook ((int) Sound::clap);
+                back.setType (Sound::clap, DrumMachine::sampleType);
+                const auto shownAgain = back.getPadName ((int) Sound::clap) == "Metal Hit";
+
+                named.prepareToPlay (rate, 512);
+                std::unique_ptr<juce::AudioProcessorEditor> shownNamed (named.createEditorAndMakeActive());
+                auto* namedWindow = dynamic_cast<DrumMachineEditor*> (shownNamed.get());
+                const auto card = namedWindow != nullptr ? namedWindow->getPadText ((int) Sound::clap) : juce::String();
+
+                if (namedWindow != nullptr)
+                    namedWindow->changeUserPad ((int) Sound::clap, "clear");
+
+                const auto cardAfter = namedWindow != nullptr ? namedWindow->getPadText ((int) Sound::clap) : juce::String();
+                shownNamed = nullptr;
+                viaPreset.applyKit (DrumMachine::kits()[0]);
+                check (asSample && lookKept && asClassic && shownAgain && card == "Metal Hit / 39" && cardAfter == "Clap / 39" && named.getLayers (Sound::clap).size() == 1
+                           && ! named.hasOwnLook ((int) Sound::clap) && ! viaPreset.hasOwnLook ((int) Sound::clap),
+                       "drum pads: a sound's pad that plays samples takes a name and a colour, kept by the state and a preset, its note staying its own; as Classic again it reads Clap, as a Sample again its given name; its own name and colour come back from its menu, its layers staying, and from a factory kit ("
+                           + card + ", then " + cardAfter + ")");
+            }
+
             made = nullptr;
             there.deleteRecursively();
         }

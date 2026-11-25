@@ -2506,6 +2506,11 @@ bool BasicDrumsProcessor::kitModified() const
             return true;
     }
 
+    // Nor a sound's pad with a name or colour given to it.
+    for (int i = 0; i < numSounds; ++i)
+        if (hasOwnLook (i))
+            return true;
+
     // Nor has it any user pad that is not as it starts.
     for (size_t u = 0; u < now.user.size(); ++u)
     {
@@ -2782,7 +2787,11 @@ bool BasicDrumsProcessor::playsSamples (int pad) const
 juce::String BasicDrumsProcessor::getPadName (int pad) const
 {
     if (pad < numSounds)
-        return nameOf ((Sound) pad);
+    {
+        // A sound's pad has the name given to it while it plays samples; otherwise the sound's.
+        const auto& given = soundNames[(size_t) juce::jmax (0, pad)];
+        return given.isNotEmpty() && playsSamples (pad) ? given : nameOf ((Sound) pad);
+    }
 
     const auto& name = userNames[(size_t) (pad - numSounds)];
     return name.isNotEmpty() ? name : "Pad " + juce::String (pad + 1);
@@ -2790,26 +2799,46 @@ juce::String BasicDrumsProcessor::getPadName (int pad) const
 
 void BasicDrumsProcessor::setPadName (int pad, const juce::String& name)
 {
-    if (pad < numSounds || pad >= numPads)
+    if (! juce::isPositiveAndBelow (pad, numPads))
         return;
 
     const auto trimmed = name.trim().substring (0, 40);
-    userNames[(size_t) (pad - numSounds)] = trimmed == "Pad " + juce::String (pad + 1) ? juce::String() : trimmed;
+
+    if (pad < numSounds)
+        soundNames[(size_t) pad] = trimmed == nameOf ((Sound) pad) ? juce::String() : trimmed;
+    else
+        userNames[(size_t) (pad - numSounds)] = trimmed == "Pad " + juce::String (pad + 1) ? juce::String() : trimmed;
+
     padsVersion.fetch_add (1);
 }
 
 juce::Colour BasicDrumsProcessor::getPadColour (int pad) const
 {
-    return pad >= numSounds && pad < numPads ? userColours[(size_t) (pad - numSounds)] : juce::Colour();
+    if (! juce::isPositiveAndBelow (pad, numPads))
+        return {};
+
+    if (pad < numSounds)
+        return playsSamples (pad) ? soundColours[(size_t) pad] : juce::Colour();
+
+    return userColours[(size_t) (pad - numSounds)];
 }
 
 void BasicDrumsProcessor::setPadColour (int pad, juce::Colour colour)
 {
-    if (pad < numSounds || pad >= numPads)
+    if (! juce::isPositiveAndBelow (pad, numPads))
         return;
 
-    userColours[(size_t) (pad - numSounds)] = colour;
+    (pad < numSounds ? soundColours[(size_t) pad] : userColours[(size_t) (pad - numSounds)]) = colour;
     padsVersion.fetch_add (1);
+}
+
+bool BasicDrumsProcessor::hasOwnLook (int pad) const
+{
+    if (! juce::isPositiveAndBelow (pad, numPads))
+        return false;
+
+    return pad < numSounds ? soundNames[(size_t) pad].isNotEmpty() || ! soundColours[(size_t) pad].isTransparent()
+                           : userNames[(size_t) (pad - numSounds)].isNotEmpty() || ! userColours[(size_t) (pad - numSounds)].isTransparent();
 }
 
 int BasicDrumsProcessor::getPadNote (int pad) const
@@ -2855,6 +2884,12 @@ void BasicDrumsProcessor::resetPads()
         userNotes[u].store (firstUserNote + (int) u);
     }
 
+    for (size_t i = 0; i < soundNames.size(); ++i)
+    {
+        soundNames[i].clear();
+        soundColours[i] = juce::Colour();
+    }
+
     padsVersion.fetch_add (1);
 }
 
@@ -2890,6 +2925,17 @@ void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
         e->setAttribute ("note", note);
     }
 
+    for (int i = 0; i < numSounds; ++i)
+    {
+        if (soundNames[(size_t) i].isEmpty() && soundColours[(size_t) i].isTransparent())
+            continue;
+
+        auto* e = all.createNewChildElement ("SOUND");
+        e->setAttribute ("id", idOf ((Sound) i));
+        e->setAttribute ("name", soundNames[(size_t) i]);
+        e->setAttribute ("colour", soundColours[(size_t) i].toString());
+    }
+
     if (all.getNumChildElements() > 0)
         xml.addChildElement (new juce::XmlElement (all));
 }
@@ -2897,6 +2943,15 @@ void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
 void BasicDrumsProcessor::readPads (const juce::XmlElement& xml)
 {
     resetPads();
+
+    if (const auto* all = xml.getChildByName ("PADS"))
+        for (auto* e : all->getChildWithTagNameIterator ("SOUND"))
+            for (int i = 0; i < numSounds; ++i)
+                if (idOf ((Sound) i) == e->getStringAttribute ("id"))
+                {
+                    soundNames[(size_t) i] = e->getStringAttribute ("name");
+                    soundColours[(size_t) i] = juce::Colour::fromString (e->getStringAttribute ("colour", "00000000"));
+                }
 
     if (const auto* all = xml.getChildByName ("PADS"))
         for (auto* e : all->getChildWithTagNameIterator ("USER"))
