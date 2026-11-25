@@ -127,6 +127,9 @@ def instrument_card(clip, prefix, heading="h3", kind=None):
     else:
         plays = f'Plays the audition phrase “{clip["phrase"]}” at 125 BPM.'
 
+        if clip.get("moving"):
+            plays = "Its sound dies away under a held key, so it plays " + clip["phrase"] + ", not an audition phrase."
+
         if "parts" in clip:
             plays = f'{clip["parts"]} parts in use; no. {clip["place"]} of {clip["of"]} in the synth\'s {clip["category"]} list. ' + plays
         elif "place" in clip:

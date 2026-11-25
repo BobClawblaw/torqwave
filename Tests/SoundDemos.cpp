@@ -151,6 +151,18 @@ namespace
     const Part melody = line ({ { 64, 1.5 }, { 67, 0.5 }, { 71, 2.0 }, { 69, 1.0 }, { 67, 1.0 }, { 64, 2.0 }, { 62, 1.0 }, { 64, 1.0 }, { 67, 2.0 }, { 64, 4.0 } }, true);
     const Part power = line ({ { 40, 2.0 }, { 40, 1.0 }, { 43, 1.0 }, { 45, 2.0 }, { 43, 1.0 }, { 38, 1.0 }, { 40, 2.0 }, { 40, 1.0 }, { 43, 1.0 }, { 47, 2.0 }, { 45, 2.0 } }, false);
     const Part chug = [] { Part p; for (int i = 0; i < 64; ++i) p.push_back ({ i * 0.25, 0.18, i % 16 >= 12 ? (i % 32 >= 16 ? 38 : 43) : 40, i % 4 == 0 ? 1.0f : 0.72f }); return p; }();
+    // Sixteenths with gaps and octave leaps, a bar each on E, E, C and D: for a sound that dies away under a held key.
+    const Part pulse = [] {
+        const int bars[4][16] = { { 40, 40, 52, 40, 0, 40, 47, 40, 40, 52, 0, 40, 43, 40, 55, 52 }, { 40, 40, 52, 40, 0, 40, 47, 40, 40, 52, 0, 40, 45, 47, 50, 47 },
+                                  { 36, 36, 48, 36, 0, 36, 43, 36, 36, 48, 0, 36, 38, 36, 50, 48 }, { 38, 38, 50, 38, 0, 38, 45, 38, 38, 50, 0, 45, 47, 45, 43, 42 } };
+        Part p;
+
+        for (int i = 0; i < 64; ++i)
+            if (const auto pitch = bars[i / 16][i % 16]; pitch > 0)
+                p.push_back ({ i * 0.25, 0.2, pitch, i % 4 == 0 ? 1.0f : 0.78f });
+
+        return p;
+    }();
     const Part held = { { 0.0, 7.5, 43, 0.95f }, { 8.0, 7.5, 45, 0.95f } };
     const Part one = { { 0.0, 15.5, 45, 0.95f } };
     const Part hits = { { 0.0, 1.0, 36, 1.0f }, { 6.0, 1.0, 33, 1.0f }, { 10.0, 1.0, 36, 0.8f } };
@@ -320,6 +332,20 @@ namespace
 
         out.setSize (out.getNumChannels(), frames, true);
         return out;
+    }
+
+    /** The share of the audio, in hundredths of a second, that stands at a tenth of its peak or more. */
+    double soundingShare (const juce::AudioBuffer<float>& audio)
+    {
+        const auto window = (int) (0.01 * rate), windows = audio.getNumSamples() / window;
+        const auto level = 0.1f * audio.getMagnitude (0, audio.getNumSamples());
+        int sounding = 0;
+
+        for (int w = 0; w < windows; ++w)
+            if (audio.getMagnitude (w * window, window) >= level)
+                ++sounding;
+
+        return windows > 0 && level > 0.0f ? (double) sounding / windows : 0.0;
     }
 
     /** A WAV file's audio in stereo; nothing when it cannot be read. */
@@ -765,7 +791,22 @@ namespace
                 entry->setProperty ("phrase", pattern.name);
                 entry->setProperty ("place", at + 1);
                 entry->setProperty ("of", (int) inCategory.size());
-                save (folder, entry, audition (guitar, pattern, 2.5));
+                auto audio = audition (guitar, pattern, 2.5);
+
+                // A sound that dies away under a held key is a blip and then nothing on the audition
+                // phrases, which hold their notes: it plays a moving part, as it is made to be played.
+                if (const auto standing = soundingShare (audio); standing < 0.3)
+                {
+                    BuiltInEffects::SwarmGuitarProcessor again;
+                    again.setPresetValues (preset.values);
+                    audio = play (again, pulse, length);
+                    entry->setProperty ("phrase", "four bars of sixteenths at 120 BPM");
+                    entry->setProperty ("moving", true);
+                    entry->setProperty ("heldShare", juce::roundToInt (standing * 100.0));
+                    entry->setProperty ("share", juce::roundToInt (soundingShare (audio) * 100.0));
+                }
+
+                save (folder, entry, std::move (audio));
                 done.add (preset.name);
             }
         }

@@ -4,6 +4,14 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The site: Pulsing Circuit plays a line, not one held note** (the demo renderer and rendered clips only)
+- **What was wrong.** The user, listening to the site: the StringSwarm preset Pulsing Circuit (Swarm Sequences) was a poor demo. Its sound is a pluck: it falls to nothing in about a quarter of a second with the key still down (decay 263 ms, sustain level 0). The rule gave it the audition phrase Low E Held, one low E held for a second and a half, played twice. The clip was two blips and then nothing: 2.2 s long, sound at a tenth of its peak or more for a tenth of that, peak -13.4 dB, where the four Swarm Sequences clips beside it run 8 s with sound for 56 to 96 % of it.
+- **Now** `TorqwaveTests --sound-demos` measures each StringSwarm preset on its audition phrase, and one that stands at a tenth of its peak for under 30 % of the render plays four bars of sixteenths at 120 BPM in its place: a line with gaps and octave leaps, a bar each on E, E, C and D, which is not the part the two neighbours chosen by ear play. Its card says so.
+- **Measured after:** Pulsing Circuit runs 8.1 s with 54 notes heard, sound for 56 % of the clip, peak -5.0 dB and -23.9 dB RMS (the neighbours -21.8 to -29.7), starting at once. On the held phrase the render had sound for 4 % of its length.
+- **The rest of StringSwarm:** the other 37 clips came out byte for byte as they were; none of the other presets on Low E Held or Power Chord dies away under the key (the lowest stands for 47 % of its clip).
+- **Not changed:** the preset. And not looked into further: a few Torqwave Synth clips look the same by this measure, a short sound on a phrase that holds (Tungsten Tick on High Held, Ignition Twang on Slow Swell, Plasma Tick and Crowd Shiver on Long Note). Their phrases are the ones Audition gives those patches in the program.
+- 1,123 clips, 106.5 MB. Tested: the renderer ran without a failure, the pages were built and their links checked. **Not listened to.** The test suite was not run for this.
+
 ## Released
 
 **Release 0.21.1: Basic Drums becomes a drum synth and sampler in one**
