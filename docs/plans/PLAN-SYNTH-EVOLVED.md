@@ -1,6 +1,8 @@
 # Plan: Torqwave Synth Evolved
 
-A scope, not yet started. Asked for on 2026-11-25: a nine-oscillator synth, "Torqwave Synth Evolved", as another instrument beside the ones there are.
+**Decided on 2026-11-25: not built as a separate instrument.** The user chose to put nine free oscillators into Torqwave Synth itself. What follows is kept as a record of what was weighed (the cost measured, the risks, the layers and scenes that were proposed); none of it is planned.
+
+A scope, never started. Asked for on 2026-11-25: a nine-oscillator synth, "Torqwave Synth Evolved", as another instrument beside the ones there are.
 
 ## Where things stand
 
