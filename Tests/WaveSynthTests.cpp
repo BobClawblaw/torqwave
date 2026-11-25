@@ -1281,6 +1281,174 @@ void writePatchHashes (const juce::File& file)
     std::cout << lines.size() << " patches" << std::endl;
 }
 
+void writeSynthReference (const juce::File& folder)
+{
+    // Renders that reach what the factory patches don't: every warp on each oscillator with full unison,
+    // strum and drift; the FM chain; Sampled tables; level envelopes; odd block sizes; and a synth loaded
+    // from a state file. A state file is written the first time and loaded every time after, so a build
+    // made later loads the states an earlier one saved. Each render's hash goes to hashes.txt.
+    folder.createDirectory();
+    juce::StringArray lines;
+
+    const auto hashOf = [] (const juce::AudioBuffer<float>& out)
+    {
+        juce::uint64 hash = 1469598103934665603ull;
+
+        for (int ch = 0; ch < out.getNumChannels(); ++ch)
+            for (int n = 0; n < out.getNumSamples(); ++n)
+            {
+                juce::uint32 bits;
+                const auto sample = out.getSample (ch, n);
+                std::memcpy (&bits, &sample, sizeof (bits));
+                hash = (hash ^ bits) * 1099511628211ull;
+            }
+
+        return juce::String::toHexString ((juce::int64) hash);
+    };
+
+    const auto phrase = []
+    {
+        auto e = held ({ 36, 43, 48 }, 1.2, 0.9f);
+        const auto more = held ({ 55, 62 }, 0.8, 0.5f, 0.6);
+        e.insert (e.end(), more.begin(), more.end());
+        return e;
+    };
+
+    std::vector<float> saw (48000), hum (48000);
+
+    for (size_t i = 0; i < saw.size(); ++i)
+    {
+        saw[i] = (float) (0.6 * (std::fmod ((double) i * 110.0 / rate, 1.0) * 2.0 - 1.0));
+        hum[i] = (float) (0.5 * std::sin (juce::MathConstants<double>::twoPi * 165.0 * (double) i / rate) * (0.5 + 0.5 * std::sin ((double) i * 0.0003)));
+    }
+
+    const auto sampledSaw = WaveTables::sampledFromAudio (saw.data(), (int) saw.size(), rate, 0.0, "Saw");
+    const auto sampledHum = WaveTables::sampledFromAudio (hum.data(), (int) hum.size(), rate, 0.0, "Hum");
+
+    /** A synth set up for a case: three oscillators sounding, the one under test with full unison. */
+    const auto setUp = [&] (Synth& s, int warp, int oscillator)
+    {
+        defaults (s);
+
+        for (int o = 1; o <= 3; ++o)
+        {
+            const auto id = "osc" + juce::String (o);
+            set (s, id + "On", 1.0f);
+            set (s, id + "Table", (float) ((o + warp) % 4));
+            set (s, id + "Position", 20.0f + 25.0f * (float) o);
+            set (s, id + "Pitch", (float) (o == 2 ? 7 : o == 3 ? -12 : 0));
+            set (s, id + "Volume", 60.0f);
+            set (s, id + "Pan", (float) (o - 2) * 40.0f);
+        }
+
+        const auto id = "osc" + juce::String (oscillator);
+        set (s, id + "Warp", (float) warp);
+        set (s, id + "WarpAmount", 60.0f);
+        set (s, id + "Unison", 8.0f);
+        set (s, id + "UnisonDetune", 30.0f);
+        set (s, id + "UnisonStrum", 20.0f);
+        set (s, id + "UnisonDrift", 50.0f);
+        set (s, id + "Route", 40.0f);
+        set (s, "filter2Type", 5.0f);
+        set (s, "mod1Source", (float) WaveSynth::lfo1);
+        set (s, "mod1Destination", (float) (WaveSynth::destinationIds().indexOf (id + "Position") + 1));
+        set (s, "mod1Amount", 40.0f);
+    };
+
+    for (int oscillator = 1; oscillator <= 3; ++oscillator)
+        for (int warp = 0; warp < WaveSynth::warpNames().size(); ++warp)
+        {
+            Synth synth;
+            setUp (synth, warp, oscillator);
+            lines.add ("warp " + juce::String (warp) + " on osc " + juce::String (oscillator) + "|" + hashOf (play (synth, phrase(), (int) (2.0 * rate))));
+        }
+
+    {
+        Synth synth;
+        setUp (synth, (int) WaveSynth::Warp::fm, 1);
+
+        for (int o = 2; o <= 3; ++o)
+        {
+            set (synth, "osc" + juce::String (o) + "Warp", (float) WaveSynth::Warp::fm);
+            set (synth, "osc" + juce::String (o) + "WarpAmount", 45.0f);
+            set (synth, "osc" + juce::String (o) + "Unison", 3.0f);
+        }
+
+        lines.add ("fm chain|" + hashOf (play (synth, phrase(), (int) (2.0 * rate))));
+    }
+
+    {
+        Synth synth;
+        setUp (synth, 0, 2);
+
+        for (int o = 1; o <= 3; ++o)
+        {
+            const auto id = "osc" + juce::String (o) + "Env";
+            set (synth, id + "On", 1.0f);
+            set (synth, id + "Attack", 5.0f * (float) o);
+            set (synth, id + "Hold", 30.0f);
+            set (synth, id + "Decay", 200.0f * (float) o);
+            set (synth, id + "Sustain", 20.0f * (float) o);
+        }
+
+        lines.add ("level envelopes|" + hashOf (play (synth, phrase(), (int) (2.0 * rate))));
+
+        for (auto block : { 37, 64, 1000 })
+        {
+            Synth again;
+            juce::MemoryBlock state;
+            synth.getStateInformation (state);
+            again.setStateInformation (state.getData(), (int) state.getSize());
+            lines.add ("level envelopes in blocks of " + juce::String (block) + "|" + hashOf (play (again, phrase(), (int) (2.0 * rate), block)));
+        }
+    }
+
+    // States: written once, loaded ever after.
+    for (int k = 0; k < 4; ++k)
+    {
+        const auto file = folder.getChildFile ("state-" + juce::String (k) + ".bin");
+
+        if (! file.existsAsFile())
+        {
+            Synth synth;
+            setUp (synth, k * 2 + 1, k % 3 + 1);
+
+            if (k >= 2)
+            {
+                set (synth, "osc1Table", (float) WaveTables::Table::sampled);
+                synth.setSampledTable (0, sampledSaw);
+                set (synth, "osc3Table", (float) WaveTables::Table::sampled);
+                synth.setSampledTable (2, sampledHum);
+            }
+
+            if (k == 3)
+                synth.loadPatch (100);
+
+            juce::MemoryBlock state;
+            synth.getStateInformation (state);
+            file.replaceWithData (state.getData(), state.getSize());
+        }
+
+        juce::MemoryBlock state;
+        file.loadFileAsData (state);
+        Synth synth;
+        synth.setStateInformation (state.getData(), (int) state.getSize());
+        lines.add ("state " + juce::String (k) + "|" + hashOf (play (synth, phrase(), (int) (2.0 * rate))));
+        lines.add ("state " + juce::String (k) + " in blocks of 37|" + hashOf (play (synth, phrase(), (int) (2.0 * rate), 37)));
+    }
+
+    // Factory patches in odd blocks, every 97th.
+    for (size_t i = 0; i < WaveSynth::factoryPatches().size(); i += 97)
+    {
+        Synth synth;
+        synth.loadPatch ((int) i);
+        lines.add ("patch " + juce::String ((int) i) + " in blocks of 37|" + hashOf (play (synth, phrase(), (int) (2.0 * rate), 37)));
+    }
+
+    folder.getChildFile ("hashes.txt").replaceWithText (lines.joinIntoString ("\n") + "\n");
+    std::cout << lines.size() << " renders" << std::endl;
+}
+
 void saveSynthWindow (const juce::File& folder)
 {
     folder.createDirectory();

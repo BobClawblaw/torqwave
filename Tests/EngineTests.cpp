@@ -622,6 +622,7 @@ int main (int argc, char* argv[])
     //   --synth-window <folder> only save pictures of the synth's window (a patch, the level envelopes, a Sampled table)
     //   --patch-levels          only print each factory patch's level (name|category|dB of a held chord's peak)
     //   --patch-hashes <file>   only write a hash of each factory patch's render, to compare two builds sample for sample
+    //   --synth-reference <folder> only write hashes of the synth's other reference renders (warps, Sampled tables, states) there
     //   --sound-demos <folder>  only write the Sounds pages' demos (the built-in instruments' patches, presets and kits, and
     //                           the Sequence Library's factory kits and sequences) as MP3s with index.json; --only synth,kits for some
     //   --sequence-clips <folder> --into <folder>  only render each .tqseq in the first folder to a WAV in the second, to hear presets by
@@ -873,6 +874,12 @@ int main (int argc, char* argv[])
     if (const auto file = valueOf ("--patch-hashes"); file.isNotEmpty())
     {
         writePatchHashes (juce::File (file));
+        return 0;
+    }
+
+    if (const auto folder = valueOf ("--synth-reference"); folder.isNotEmpty())
+    {
+        writeSynthReference (juce::File::getCurrentWorkingDirectory().getChildFile (folder));
         return 0;
     }
 
