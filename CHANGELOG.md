@@ -4,6 +4,16 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Torqwave Synth: nine oscillators**
+- **The engine.** Six more oscillators, the same as the first three (tables, warps, unison, level envelope), off to begin with. An oscillator that is off is neither worked out nor played. Their settings and modulation destinations come after every earlier one, so the first 235 settings keep their IDs, order and names (376 in all) and a slot's Destination keeps its place in the list. A session, preset or patch saved before loads with 4 to 9 off and FM From on Before, and an automation lane on a slot's Destination is put back on the same destinations among the 101 there are now.
+- **FM From** on every oscillator: Before is the chain as it was (1 takes 3, 2 takes 1, 3 takes 2, and each of 4 to 9 the one before it), or any of the nine. An oscillator named there is worked out even while off or silent, drives the FM and is never heard for it.
+- **A unison budget** of 384 voices: the most a patch could ask for before (three oscillators in 8-voice unison on sixteen notes). A patch that asks for more plays fewer notes, the oldest fading out to make room as when all sixteen are taken.
+- **The window:** an Oscillators strip across the top with a cell for each of the nine (on, table, wave, level), and the three panels showing 1-3, 4-6 or 7-9. The Osc Levels page follows, and FM From appears beside the warp while it is FM. The window is 48 points taller.
+- **Elsewhere:** Torqwave Synth's parameters are in a sub-menu per oscillator and section in the automation menus. Decrypt and Trace search oscillators 1 to 3 only. The AI's table_from_clip takes oscillators 1 to 9.
+- **Unchanged, bit for bit:** all 3,743 factory patches and 76 more reference renders (`--synth-reference`: every warp with full unison, the FM chain, level envelopes, Sampled tables, odd block sizes, saved states) match the build before, sample for sample.
+- **Cost**, as the cost test measures it (sixteen notes in 8-voice unison through both filters and every effect, six runs each, the build before and this one back to back): 6.5 against 6.7 % of a core with one oscillator, 10.4 against 10.4 % with three. Nine in 8-voice unison play five notes (the budget) at 7.6 %; nine in 2-voice unison play sixteen at 11.5 %.
+- Tested: `--synth` (56 checks, 17 new), `--ai`, `--decrypt` and `--instruments` pass. **Not tried by hand** in the app yet.
+
 **The site: the sequence, kit and drum clips rendered from the library as it is now** (rendered clips and documents only; goes up with the library, not before)
 - The Sounds pages' sequence clips, every factory kit and Basic Drums' grooves were rendered again from the 1,025 sequences. Sequences: 111 clips where there were 99; 70 are the presets there were (68 of the files byte for byte), 41 are new and 29 are gone. Kits: the same 116, 108 of them changed, since nearly every kit holds a part that was written again. Basic Drums: 41 as before, one groove swapped for another, since one of the four grooves left out was a kit's.
 - By the page's own count, the line that says what a sequence does with its bars, chords and key left out, 543 of the 1,025 are figures only one style has, where 315 of 1,032 were. Every style but Club tools, which has three presets, now shows two clips or more.
