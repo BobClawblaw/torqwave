@@ -20,22 +20,11 @@ A free, open-source audio editor and DAW in one, for macOS, Windows and Linux: f
 
 **[Download the latest release](https://github.com/BobClawblaw/torqwave/releases/latest)** (macOS 13 or later, Apple silicon or Intel; Windows 10 or later, 64-bit; Linux, 64-bit x86). Every build is on the [Releases](https://github.com/BobClawblaw/torqwave/releases) page.
 
-**Status:** 0.21.0 is the latest release. Torqwave is growing into an editor and a DAW in one, for sound design, writing music and working to picture; what real use turns up is fixed alongside.
+**Status:** 0.21.1 is the latest release. Torqwave is growing into an editor and a DAW in one, for sound design, writing music and working to picture; what real use turns up is fixed alongside.
 
+- **0.21.1:** Basic Drums becomes a drum synth and sampler in one: pads that play your own samples in velocity layers with round robin, 64 pads, an envelope, transient shaper, saturator, EQ and compressor on every pad, 24 more synthesized sources (54 in all), fifteen kits, choke groups of your own, and kits brought in from a Battery 4 kit file you own or a folder of sounds. A session never saved comes back when you continue where you left off, and Transport > Silence All Instruments is a panic.
 - **0.21.0:** Basic Drums gets a Modern type for 21 of its sounds and five kits made of them, and the Maximizer, Click and Pop Repair and Repair Clipping are corrected (the Maximizer now holds its ceiling on the meter).
 - **0.20.1:** **Continue where you left off**, a start that brings back every file that was open in the editor and the session, each where you were. It has the Linux package 0.20.0 failed to build.
-- **0.20.0:** built-in instruments worth playing and something to play on them.
-  - Torqwave Synth, a wavetable synth with its own window and 3,743 patches, takes the place of Basic Synth.
-  - Basic Drums sounds every General MIDI drum, in twelve kits with effects on each pad.
-  - StringSwarm is a guitar with every string tuned to one note, through a fuzz, or a swarm of oscillators, with 296 presets (hear both instruments on the [Sounds page](docs/sounds/index.html)).
-  - Torqwave Sampler plays your own sounds across the keys or cut into slices, straight from the editor's selection, a session's clip, the Files panel or the Sound Library.
-  - 1,032 factory sequence presets and 116 starter kits fill the Sequence Library, which sorts by style, energy and character.
-  - Remap Notes puts a drum pattern on any kit's keys.
-  - Decrypt finds a Torqwave Synth patch that plays like a recording of one note.
-  - The computer's keys play an instrument from any window, and Audition plays each sound as it is chosen.
-  - Instruments and plug-ins follow the session's tempo.
-  - The editor gains a Hand tool, the time-view strip over its ruler and Paste Clipboard as New File.
-  - The Levels panel stands upright at a side.
 
 See the [changelog](CHANGELOG.md) for earlier releases and what each version holds, the [fix log](docs/DOGFOODING.md) for what use has found and what fixed it, the [roadmap](ROADMAP.md) for what comes next, and [keyboard shortcuts](docs/SHORTCUTS.md) for the keys.
 
@@ -241,7 +230,7 @@ This builds a Release program in `build-release-linux/`, runs the tests with it 
 To check a disk image's app on its own, mount it and point the tests at it:
 
 ```bash
-./build-release/TorqwaveTests_artefacts/Release/TorqwaveTests --app "/Volumes/Torqwave 0.21.0/Torqwave.app/Contents/MacOS/Torqwave"
+./build-release/TorqwaveTests_artefacts/Release/TorqwaveTests --app "/Volumes/Torqwave 0.21.1/Torqwave.app/Contents/MacOS/Torqwave"
 ```
 
 ## Tests
