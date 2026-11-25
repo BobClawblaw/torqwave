@@ -136,9 +136,9 @@ namespace
         auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (instance.get());
         check (drums != nullptr && error.isEmpty() && description.isInstrument && description.numInputChannels == 0 && description.name == "Basic Drums"
                    && description.uniqueId == 0x53424452 && drums->acceptsMidi() && drums->getTotalNumInputChannels() == 0
-                   && drums->getTotalNumOutputChannels() == 2 && drums->getParameters().size() == DrumMachine::numSounds * 12 + 21 + 7,
+                   && drums->getTotalNumOutputChannels() == 2 && drums->getParameters().size() == DrumMachine::numSounds * 12 + 21 + 7 + 9 + DrumMachine::numSounds * 3,
                "drums: Basic Drums is made from its description (the same ID, so sessions find it), an instrument with no audio input, a stereo output and "
-                   + juce::String (drums != nullptr ? drums->getParameters().size() : 0) + " parameters (twelve for each of 30 sounds, a type for the 21 that have two, the kick's character, the kit's drive, glue, level, reverb size, delay time and feedback)");
+                   + juce::String (drums != nullptr ? drums->getParameters().size() : 0) + " parameters (twelve for each of 30 sounds, a type for the 21 that have a Modern one, the kick's character, the kit's drive, glue, level, reverb size, delay time and feedback, and after all those a type for the other nine and a Sample's start, reverse and pitch envelope for each sound)");
 
         BuiltInEffects::addTo (engine.knownPlugins);
         const auto known = Instrument::known (engine.knownPlugins);
@@ -205,19 +205,20 @@ namespace
                "drums window: the picture shows the whole hit, " + juce::String (longPicture * 1000.0, 0) + " ms at a 640 ms decay and "
                    + juce::String (shortPicture * 1000.0, 0) + " ms at 160 ms");
 
-        // A sound with two types has a selector for them, and its picture follows it; a sound with one has none.
+        // Every sound has a selector for its type, and its picture follows it; a sound with no Modern type is offered Classic and Sample.
         const auto classicShown = window->getTypeText();
         const auto classicSeconds = window->getPictureSeconds();
-        drums.typeParameter (Sound::snare)->setValueNotifyingHost (1.0f);
+        drums.setType (Sound::snare, DrumMachine::modernType);
         window->select (Sound::snare);
         const auto modernShown = window->getTypeText();
         window->select (Sound::rim);
         const auto rimShown = window->getTypeText();
-        drums.typeParameter (Sound::snare)->setValueNotifyingHost (0.0f);
+        drums.setType (Sound::snare, DrumMachine::classicType);
         window->select (Sound::kick);
-        check (classicShown == "Classic" && modernShown == "Modern" && rimShown.isEmpty() && window->getTypeText() == "Classic" && classicSeconds > 0.0
-                   && drums.typeParameter (Sound::rim) == nullptr,
-               "drums window: the snare's type reads Classic, then Modern once chosen; the rim, which has one type, shows no selector; the kick has its type beside its character");
+        check (classicShown == "Classic" && modernShown == "Modern" && rimShown == "Classic" && window->getTypeText() == "Classic" && classicSeconds > 0.0
+                   && DrumMachine::typeNamesFor (Sound::rim) == juce::StringArray ({ "Classic", "Sample" })
+                   && DrumMachine::typeNamesFor (Sound::snare) == juce::StringArray ({ "Classic", "Modern", "Sample" }) && ! window->showsLayers(),
+               "drums window: the snare's type reads Classic, then Modern once chosen, of Classic, Modern and Sample; the rim's reads Classic, of Classic and Sample; no layers are shown for either");
 
         // The kits: choosing one sets every sound; a knob moved marks it edited.
         drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Dark Techno")]);
@@ -506,7 +507,7 @@ namespace
     void testTypes (BuiltInEffects::BasicDrumsProcessor& drums)
     {
         drums.applyKit (DrumMachine::kits()[0]);
-        const auto setType = [&drums] (Sound s, int index) { drums.typeParameter (s)->setValueNotifyingHost ((float) index); };
+        const auto setType = [&drums] (Sound s, int index) { drums.setType (s, index); };
 
         // Twenty-one sounds have a Modern type: another sound at the level of the Classic one, which is left as it was.
         juce::StringArray sameSound, offLevel, noTone, rigid;
@@ -519,8 +520,8 @@ namespace
 
             if (! DrumMachine::hasTypes (sound))
             {
-                if (drums.typeParameter (sound) != nullptr)
-                    sameSound.add (DrumMachine::nameOf (sound) + " has a type");
+                if (DrumMachine::typeNamesFor (sound).contains ("Modern"))
+                    sameSound.add (DrumMachine::nameOf (sound) + " has a Modern type");
 
                 continue;
             }
@@ -750,12 +751,14 @@ namespace
         auto before = juce::AudioProcessor::getXmlFromBinary (full.getData(), (int) full.getSize());
         int removed = 0;
 
+        // (Nor had it what came with samples on the pads: nine more types, and a Sample's own three settings.)
         for (int i = 0; before != nullptr && i < DrumMachine::numSounds; ++i)
-            if (const auto id = DrumMachine::idOf ((Sound) i) + "_type"; before->hasAttribute (id))
-            {
-                before->removeAttribute (id);
-                ++removed;
-            }
+            for (auto what : { "_type", "_start", "_reverse", "_bend" })
+                if (const auto id = DrumMachine::idOf ((Sound) i) + what; before->hasAttribute (id))
+                {
+                    before->removeAttribute (id);
+                    ++removed;
+                }
 
         juce::MemoryBlock beforeTypes;
 
@@ -765,7 +768,7 @@ namespace
         BuiltInEffects::BasicDrumsProcessor untyped;
         untyped.setStateInformation (beforeTypes.getData(), (int) beforeTypes.getSize());
         check (warehouse.getKitName() == "Warehouse" && ! warehouse.kitModified() && warehouse.currentSettings().sounds[0].type == 1
-                   && removed == 21 && untyped.getKitName() == "Dark Techno" && ! untyped.kitModified() && untyped.currentSettings() == drums.currentSettings()
+                   && removed == 4 * DrumMachine::numSounds && before->getChildByName ("SAMPLES") == nullptr && untyped.getKitName() == "Dark Techno" && ! untyped.kitModified() && untyped.currentSettings() == drums.currentSettings()
                    && same (play (untyped, groove, 0.6), play (drums, groove, 0.6)),
                "drums: a kit of Modern sounds comes back from the state as itself; a state saved before there were types loads as its kit, unedited, every sound Classic and sounding the same");
 
@@ -854,6 +857,467 @@ namespace
     }
 
     /** Peak and RMS of every note at full velocity, for setting the sounds' levels (--drums-levels). */
+    //==============================================================================
+    // Samples on the pads. Every sound here is made in memory and written into a folder of this
+    // run's own, which is taken away when the tests are done.
+
+    /** A tone: a sine (a cosine when fromPeak, so it starts off zero) at a level, dying away with
+        a time constant when one is given. */
+    juce::AudioBuffer<float> tone (double hz, int frames, float level, bool fromPeak = false, double dieAway = 0.0, double sampleRate = rate, int channels = 1)
+    {
+        juce::AudioBuffer<float> b (channels, frames);
+
+        for (int i = 0; i < frames; ++i)
+        {
+            const auto angle = juce::MathConstants<double>::twoPi * hz * (double) i / sampleRate;
+            const auto fall = dieAway > 0.0 ? std::exp (-(double) i / (dieAway * sampleRate)) : 1.0;
+            b.setSample (0, i, level * (float) ((fromPeak ? std::cos (angle) : std::sin (angle)) * fall));
+
+            for (int ch = 1; ch < channels; ++ch)
+                b.setSample (ch, i, 0.0f);
+        }
+
+        return b;
+    }
+
+    juce::File writeSound (const juce::File& folder, const juce::String& name, const juce::AudioBuffer<float>& audio, double sampleRate = rate)
+    {
+        juce::String error;
+        return Sampler::writeSample (audio, sampleRate, name, {}, error, folder);
+    }
+
+    /** The furthest the left side of `out` is, from `at` on, from `expected` times `gain` (its
+        frames from `from`, read backwards when `back`), over `count` samples after the first `skip`. */
+    float furthestFrom (const juce::AudioBuffer<float>& out, int at, const juce::AudioBuffer<float>& expected, float gain, int count, int skip = 12, int from = 0, bool back = false)
+    {
+        float most = 0.0f;
+
+        for (int i = skip; i < count; ++i)
+        {
+            const auto frame = back ? expected.getNumSamples() - 1 - from - i : from + i;
+            const auto want = juce::isPositiveAndBelow (frame, expected.getNumSamples()) ? expected.getSample (0, frame) * gain : 0.0f;
+            most = juce::jmax (most, std::abs (out.getSample (0, at + i) - want));
+        }
+
+        return most;
+    }
+
+    void testSamples()
+    {
+        using BuiltInEffects::BasicDrumsProcessor;
+        const auto folder = juce::File::createTempFile ("drumsamples");
+        folder.createDirectory();
+
+        // The sounds: a thud that starts off zero and dies away, a tone cut off at its peak, three
+        // short tones to tell layers apart, a long tone, a tone at half the rate, and one on the left alone.
+        const auto thud = tone (110.0, 12000, 0.8f, true, 0.05);
+        const auto cut = tone (100.0, 4920, 0.8f);
+        const auto a = tone (200.0, 2400, 0.5f), b = tone (400.0, 2400, 0.5f), c = tone (800.0, 2400, 0.5f);
+        const auto held = tone (300.0, 28800, 0.5f);
+        const auto slow = tone (110.0, 6000, 0.5f, false, 0.0, 24000.0);
+        const auto leftOnly = tone (220.0, 4800, 0.5f, false, 0.0, rate, 2);
+        const auto thudFile = writeSound (folder, "Thud", thud), cutFile = writeSound (folder, "Cut", cut);
+        const auto aFile = writeSound (folder, "A", a), bFile = writeSound (folder, "B", b), cFile = writeSound (folder, "C", c);
+        const auto heldFile = writeSound (folder, "Held", held), slowFile = writeSound (folder, "Slow", slow, 24000.0), leftFile = writeSound (folder, "Left", leftOnly);
+        check (thudFile.existsAsFile() && cutFile.existsAsFile() && aFile.existsAsFile() && bFile.existsAsFile() && cFile.existsAsFile()
+                   && heldFile.existsAsFile() && slowFile.existsAsFile() && leftFile.existsAsFile(),
+               "drum samples: the test's own sounds are written into a folder of this run's");
+
+        // A kit with nothing on its bus and its level at 0 dB, so what a pad plays is what comes out.
+        const auto clean = [] (BasicDrumsProcessor& d)
+        {
+            d.applyKit (DrumMachine::kits()[0]);
+            set (d.levelParameter(), 0.0f);
+
+            for (int i = 0; i < DrumMachine::numSounds; ++i)
+                for (auto what : { "tune", "tone", "level", "pan", "drive" })
+                    set (d.parameterOf ((Sound) i, what), 0.0f);
+        };
+
+        const auto kick = DrumMachine::padNote (Sound::kick), snare = DrumMachine::padNote (Sound::snare);
+
+        // Velocities as MIDI carries them, in 127 steps: a soft hit, a middling one and a hard one.
+        constexpr auto soft = 38.0f / 127.0f, middling = 64.0f / 127.0f, hard = 114.0f / 127.0f;
+
+        // A pad given a sound plays it: its type becomes Sample, and at its own pitch and rate the
+        // sample comes out as it is, at the level it was recorded at.
+        {
+            BasicDrumsProcessor drums;
+            clean (drums);
+            const auto silentBefore = [&] { drums.setType (Sound::kick, DrumMachine::sampleType); const auto out = play (drums, { { kick, 0.0, 1.0f } }, 0.3); return peakOf (out); }();
+            const auto error = drums.addFiles (Sound::kick, { thudFile });
+            const auto out = play (drums, { { kick, 0.0, 1.0f } }, 0.5);
+            const auto off = furthestFrom (out, 0, thud, 1.0f, 12000 - 30);
+            const auto half = play (drums, { { kick, 0.0, middling } }, 0.5);
+            check (error.isEmpty() && juce::exactlyEqual (silentBefore, 0.0f) && drums.getType (Sound::kick) == DrumMachine::sampleType && drums.getLayers (Sound::kick).size() == 1 && off < 2.0e-6f
+                       && furthestFrom (half, 0, thud, middling, 12000 - 30) < 2.0e-6f && std::abs (peakOf (out) - 0.8f) < 0.02f,
+                   "drum samples: a pad whose type is Sample is silent with no layers; given a sound it plays it as it is, frame for frame (at most "
+                       + juce::String (off, 8) + " away), at the level it was recorded at, and at half the velocity at half that");
+
+            // It starts off zero, so it rises over a quarter of a millisecond; its end is where the sample's is.
+            const auto startStep = largestStep (out, 0, 14);
+            check (juce::exactlyEqual (out.getSample (0, 0), 0.0f) && startStep < 0.8f / 12.0f * 1.3f && lastSounding (out) < 12000 && lastSounding (out) > 11900,
+                   "drum samples: a sample that starts off zero rises from silence (its largest step " + juce::String (startStep, 4) + " of a 0.8 start) and ends where the sample does");
+
+            // The decay: shorter than the sample, it fades it to nothing; at its top or longer, the sample plays whole.
+            set (drums.parameterOf (Sound::kick, "decay"), 100.0f);
+            const auto shortened = play (drums, { { kick, 0.0, 1.0f } }, 0.5);
+            const auto fadeStep = largestStep (shortened, 2880, 4810), ownStep = largestStep (out, 2880, 4810);
+            set (drums.parameterOf (Sound::kick, "decay"), 5000.0f);
+            const auto whole = play (drums, { { kick, 0.0, 1.0f } }, 0.5);
+            check (lastSounding (shortened) < 4800 && lastSounding (shortened) > 4000 && furthestFrom (shortened, 0, thud, 1.0f, 2880) < 2.0e-6f
+                       && fadeStep <= ownStep * 1.05f + 1.0e-4f && same (whole, out),
+                   "drum samples: a decay of 100 ms fades a 250 ms sample to nothing by then, untouched for the first 60 ms and with no step (" + juce::String (fadeStep, 4)
+                       + " against the sample's own " + juce::String (ownStep, 4) + "); at the decay's top it plays whole");
+
+            // Tune repitches it; start skips into it; reverse plays it backwards; the pitch envelope bends its start.
+            set (drums.parameterOf (Sound::kick, "tune"), 12.0f);
+            const auto up = lastSounding (play (drums, { { kick, 0.0, 1.0f } }, 0.5));
+            set (drums.parameterOf (Sound::kick, "tune"), 0.0f);
+            set (drums.parameterOf (Sound::kick, "start"), 50.0f);
+            const auto later = play (drums, { { kick, 0.0, 1.0f } }, 0.5);
+            set (drums.parameterOf (Sound::kick, "start"), 0.0f);
+            drums.reverseParameter (Sound::kick)->setValueNotifyingHost (1.0f);
+            const auto backwards = play (drums, { { kick, 0.0, 1.0f } }, 0.5);
+            drums.reverseParameter (Sound::kick)->setValueNotifyingHost (0.0f);
+            set (drums.parameterOf (Sound::kick, "bend"), 12.0f);
+            const auto bent = play (drums, { { kick, 0.0, 1.0f } }, 0.5);
+            set (drums.parameterOf (Sound::kick, "bend"), 0.0f);
+            check (std::abs (up - 6000) < 40 && furthestFrom (later, 0, thud, 1.0f, 5900, 12, 6000) < 2.0e-6f && furthestFrom (backwards, 0, thud, 1.0f, 11900, 12, 0, true) < 2.0e-6f
+                       && ! same (bent, out) && lastSounding (bent) < lastSounding (out) - 200,
+                   "drum samples: an octave up it lasts half as long (" + juce::String (up) + " samples of 12000); a start of 50 % plays from its middle; reverse plays it backwards; a pitch envelope of an octave makes it another sound that ends sooner");
+
+            // A sample cut off at its own end is faded there; one at another rate plays at its own pitch; a stereo one keeps its sides.
+            drums.setLayers (Sound::kick, {});
+            drums.addFiles (Sound::kick, { cutFile });
+            const auto ended = play (drums, { { kick, 0.0, 1.0f } }, 0.3);
+            const auto endStep = largestStep (ended, 4880, 4930);
+            drums.setLayers (Sound::kick, {});
+            drums.addFiles (Sound::kick, { slowFile });
+            const auto slowed = lastSounding (play (drums, { { kick, 0.0, 1.0f } }, 0.5));
+            drums.setLayers (Sound::kick, {});
+            drums.addFiles (Sound::kick, { leftFile });
+            const auto sides = play (drums, { { kick, 0.0, 1.0f } }, 0.3);
+            check (endStep < 0.8f / 24.0f * 1.3f + 0.011f && lastSounding (ended) < 4920 && std::abs (slowed - 12000) < 60
+                       && sides.getMagnitude (0, 0, sides.getNumSamples()) > 0.45f && juce::exactlyEqual (sides.getMagnitude (1, 0, sides.getNumSamples()), 0.0f),
+                   "drum samples: a sample that stops at its peak is faded over its last half millisecond (largest step " + juce::String (endStep, 4)
+                       + "); one recorded at 24 kHz lasts as long at 48 kHz (" + juce::String (slowed) + " samples for 6000 frames); a sample on the left alone stays there");
+        }
+
+        // Which of the three short tones a hit at `at` played ('A', 'B', 'C'; '-' silence, '?' something else).
+        const auto heard = [&] (const juce::AudioBuffer<float>& out, double second, float velocity)
+        {
+            const auto at = (int) std::round (second * rate);
+
+            if (peakOf (out, at, 2400) < 1.0e-6f)
+                return '-';
+
+            for (auto [name, sound] : { std::pair { 'A', &a }, std::pair { 'B', &b }, std::pair { 'C', &c } })
+                if (furthestFrom (out, at, *sound, velocity, 2300) < 1.0e-4f)
+                    return name;
+
+            return '?';
+        };
+
+        const auto layersOf = [&] (std::initializer_list<std::tuple<juce::File, int, int>> wanted)
+        {
+            std::vector<DrumMachine::Layer> layers;
+
+            for (auto& [file, low, high] : wanted)
+            {
+                juce::String error;
+                DrumMachine::Layer l;
+                l.sample = Sampler::sharedSample (file, error);
+                l.file = file;
+                l.lowVelocity = low;
+                l.highVelocity = high;
+                layers.push_back (l);
+            }
+
+            return layers;
+        };
+
+        // Layers by velocity, and round robin among those that share a hit's velocity.
+        {
+            BasicDrumsProcessor drums;
+            clean (drums);
+            drums.addFiles (Sound::snare, { aFile, bFile, cFile });
+            const auto three = drums.getLayers (Sound::snare);
+            const Notes six { { snare, 0.0, 1.0f }, { snare, 0.1, 1.0f }, { snare, 0.2, 1.0f }, { snare, 0.3, 1.0f }, { snare, 0.4, 1.0f }, { snare, 0.5, 1.0f } };
+            const auto turns = play (drums, six, 0.7);
+            juce::String order;
+
+            for (int i = 0; i < 6; ++i)
+                order << heard (turns, 0.1 * i, 1.0f);
+
+            check (three.size() == 3 && three[0].lowVelocity == 1 && three[2].highVelocity == 127 && order == "ABCABC" && same (turns, play (drums, six, 0.7))
+                       && same (turns, play (drums, six, 0.7, 64)) && same (turns, play (drums, six, 0.7, 37)),
+                   "drum samples: three sounds dropped together are three layers over every velocity, taking turns in their order (" + order
+                       + "), the same played again and at blocks of 512, 64 and 37 samples");
+
+            drums.setLayers (Sound::snare, layersOf ({ { aFile, 1, 63 }, { bFile, 64, 127 } }));
+            const auto split = play (drums, { { snare, 0.0, soft }, { snare, 0.1, hard }, { snare, 0.2, soft } }, 0.4);
+            const auto splitOrder = juce::String::charToString ((juce::juce_wchar) heard (split, 0.0, soft)) + heard (split, 0.1, hard) + heard (split, 0.2, soft);
+            drums.setLayers (Sound::snare, layersOf ({ { aFile, 1, 40 }, { bFile, 80, 127 } }));
+            const auto gap = play (drums, { { snare, 0.0, middling } }, 0.2);
+            drums.setLayers (Sound::snare, layersOf ({ { aFile, 1, 127 }, { bFile, 64, 127 }, { cFile, 64, 127 } }));
+            const auto mixed = play (drums, { { snare, 0.0, 1.0f }, { snare, 0.1, soft }, { snare, 0.2, 1.0f }, { snare, 0.3, 1.0f }, { snare, 0.4, soft } }, 0.6);
+            const auto mixedOrder = juce::String::charToString ((juce::juce_wchar) heard (mixed, 0.0, 1.0f)) + heard (mixed, 0.1, soft) + heard (mixed, 0.2, 1.0f) + heard (mixed, 0.3, 1.0f) + heard (mixed, 0.4, soft);
+            check (splitOrder == "ABA" && juce::exactlyEqual (peakOf (gap), 0.0f) && mixedOrder == "AACAA",
+                   "drum samples: a soft layer and a hard one play for their own velocities (" + splitOrder + "); a velocity no layer takes is silent; with one layer for every velocity and two more for hard hits, each hit moves the turn on among the layers for its velocity ("
+                       + mixedOrder + ")");
+
+            // The nine sounds with no Modern type take samples too, and a pad's settings work on a sample.
+            const auto rim = DrumMachine::padNote (Sound::rim);
+            drums.addFiles (Sound::rim, { aFile });
+            const auto rimOut = play (drums, { { rim, 0.0, 1.0f } }, 0.5);
+            juce::StringArray unchanged;
+
+            for (auto [what, value] : { std::pair { "tone", 60.0f }, std::pair { "level", -6.0f }, std::pair { "pan", 50.0f }, std::pair { "drive", 60.0f },
+                                        std::pair { "crush", 60.0f }, std::pair { "reverb", 50.0f }, std::pair { "delay", 50.0f } })
+            {
+                const auto was = drums.parameterOf (Sound::rim, what)->get();
+                set (drums.parameterOf (Sound::rim, what), value);
+
+                if (same (play (drums, { { rim, 0.0, 1.0f } }, 0.5), rimOut))
+                    unchanged.add (what);
+
+                set (drums.parameterOf (Sound::rim, what), was);
+            }
+
+            drums.filterParameter (Sound::rim)->setValueNotifyingHost (drums.filterParameter (Sound::rim)->convertTo0to1 (1.0f));
+            set (drums.parameterOf (Sound::rim, "cutoff"), 150.0f);
+
+            if (same (play (drums, { { rim, 0.0, 1.0f } }, 0.5), rimOut))
+                unchanged.add ("filter");
+
+            check (drums.getType (Sound::rim) == DrumMachine::sampleType && heard (rimOut, 0.0, 1.0f) == 'A' && unchanged.isEmpty(),
+                   "drum samples: the rim, which has no Modern type, plays a sample given to it; tone, level, pan, drive, crush, the two sends and the filter each change a sampled sound"
+                       + (unchanged.isEmpty() ? juce::String() : " (no change: " + unchanged.joinIntoString (", ") + ")"));
+        }
+
+        // Chokes work across types, and nothing stops dead.
+        {
+            BasicDrumsProcessor drums;
+            clean (drums);
+            const auto open = DrumMachine::padNote (Sound::openHat), closed = DrumMachine::padNote (Sound::closedHat);
+            const auto at = (int) (0.1 * rate);
+            juce::String whySampled, whySynth, whyAgain, whyOff;
+
+            // A sampled open hat cut by a synthesized closed one.
+            drums.addFiles (Sound::openHat, { heldFile });
+            const auto sampledCut = fadesOut (minus (play (drums, { { open, 0.0, 1.0f }, { closed, 0.1, 1.0f } }, 0.4), play (drums, { { closed, 0.1, 1.0f } }, 0.4)), at, whySampled);
+            const auto again = fadesOut (minus (play (drums, { { open, 0.0, 1.0f }, { open, 0.1, 1.0f } }, 0.4), play (drums, { { open, 0.1, 1.0f } }, 0.4)), at, whyAgain);
+            const auto off = fadesOut (play (drums, { { open, 0.0, 1.0f } }, 0.4, 512, 0.1), at, whyOff);
+            const auto ringing = peakOf (play (drums, { { open, 0.0, 1.0f } }, 0.4), at + 400, 4000);
+
+            // A synthesized open hat cut by a sampled closed one.
+            drums.setLayers (Sound::openHat, {});
+            drums.setType (Sound::openHat, DrumMachine::classicType);
+            drums.addFiles (Sound::closedHat, { aFile });
+            const auto alone = play (drums, { { open, 0.0, 1.0f } }, 0.4);
+            const auto synthCut = fadesOut (minus (play (drums, { { open, 0.0, 1.0f }, { closed, 0.1, 1.0f } }, 0.4), play (drums, { { closed, 0.1, 1.0f } }, 0.4)), at, whySynth, &alone);
+            check (sampledCut && synthCut && again && off && ringing > 0.4f,
+                   "drum samples: a sampled open hat is cut by a synthesized closed one (" + whySampled + "), a synthesized open hat by a sampled closed one (" + whySynth
+                       + "), a sample struck again fades its last hit (" + whyAgain + "), and All Sound Off fades it (" + whyOff + "): each over 3 ms, none stopping dead");
+        }
+
+        // The state keeps the layers, each sample named by its file; a kit with samples is its own, edited.
+        const Notes groove { { kick, 0.0, 1.0f }, { snare, 0.1, soft }, { snare, 0.2, 1.0f }, { kick, 0.3, middling }, { snare, 0.4, 1.0f } };
+        juce::MemoryBlock state;
+        juce::AudioBuffer<float> sound;
+        EffectPresets::Values presetValues;
+        EffectPresets::Texts presetTexts;
+        {
+            BasicDrumsProcessor drums;
+            clean (drums);
+            drums.addFiles (Sound::kick, { thudFile });
+            drums.setLayers (Sound::snare, layersOf ({ { aFile, 1, 80 }, { bFile, 81, 127 }, { cFile, 81, 127 } }));
+            drums.setType (Sound::snare, DrumMachine::sampleType);
+            set (drums.parameterOf (Sound::kick, "start"), 5.0f);
+            sound = play (drums, groove, 0.7);
+            drums.getStateInformation (state);
+            presetValues = drums.getPresetValues();
+            presetTexts = drums.getPresetTexts();
+
+            BasicDrumsProcessor another;
+            another.setStateInformation (state.getData(), (int) state.getSize());
+            const auto back = another.getLayers (Sound::snare);
+            check (drums.kitModified() && another.getMissing().isEmpty() && back.size() == 3 && back[0].file == aFile && back[0].highVelocity == 80 && back[1].lowVelocity == 81
+                       && another.getLayers (Sound::kick).size() == 1 && another.getType (Sound::snare) == DrumMachine::sampleType
+                       && another.getFiles().size() == 4 && another.bytesHeld() == drums.bytesHeld() && another.bytesHeld() > 0 && same (play (another, groove, 0.7), sound),
+                   "drum samples: the state brings back each pad's layers, their files and velocity ranges, and the same sound; a kit with samples reads as edited");
+
+            // A preset (a kit of the user's) carries them; a factory kit, and a preset saved before pads played samples, has none.
+            BasicDrumsProcessor fromPreset;
+            fromPreset.setPresetValues (presetValues);
+            fromPreset.setPresetTexts (presetTexts);
+            const auto presetSame = same (play (fromPreset, groove, 0.7), sound);
+            auto older = presetValues;
+
+            for (int i = 0; i < DrumMachine::numSounds; ++i)
+                for (auto what : { "_start", "_reverse", "_bend" })
+                    older.erase (DrumMachine::idOf ((Sound) i) + what);
+
+            for (auto s : { Sound::rim, Sound::cowbell })
+                older.erase (DrumMachine::idOf (s) + "_type");
+
+            older[DrumMachine::idOf (Sound::kick) + "_type"] = 0.0;
+            older[DrumMachine::idOf (Sound::snare) + "_type"] = 1.0;
+            fromPreset.setType (Sound::rim, DrumMachine::sampleType);
+            fromPreset.setPresetValues (older);
+            fromPreset.setPresetTexts ({});
+            const auto olderClean = fromPreset.getFiles().isEmpty() && fromPreset.getType (Sound::rim) == DrumMachine::classicType && fromPreset.getType (Sound::snare) == DrumMachine::modernType
+                                    && juce::exactlyEqual (fromPreset.parameterOf (Sound::kick, "start")->get(), 0.0f);
+            another.applyKit (DrumMachine::kits()[1]);
+            check (presetSame && olderClean && another.getFiles().isEmpty() && ! another.kitModified() && another.getType (Sound::snare) == DrumMachine::classicType,
+                   "drum samples: a preset carries the layers and plays the same; a preset from before samples takes them away and sets what it does not name back to where it starts; a factory kit has no samples");
+        }
+
+        // A sample that has moved: missing when the state is read, silent, and found again in the folder it is in now.
+        {
+            const auto moved = juce::File::createTempFile ("drumsmoved");
+            moved.createDirectory();
+
+            for (auto& f : { thudFile, aFile, bFile, cFile })
+                f.moveFileTo (moved.getChildFile (f.getFileName()));
+
+            BasicDrumsProcessor drums;
+            drums.setStateInformation (state.getData(), (int) state.getSize());
+            const auto missing = drums.getMissing().size();
+            const auto silent = peakOf (play (drums, groove, 0.7));
+            const auto layersKept = drums.getLayers (Sound::snare).size();
+            const auto found = drums.locate (moved);
+            check (missing == 4 && juce::exactlyEqual (silent, 0.0f) && layersKept == 3 && found == 4 && drums.getMissing().isEmpty() && same (play (drums, groove, 0.7), sound)
+                       && drums.getLayers (Sound::kick)[0].file == moved.getChildFile (thudFile.getFileName()),
+                   "drum samples: with its four samples moved, the state loads with four missing and the pads silent, their layers kept; pointed at the folder they are in now, all four come back and it sounds the same");
+
+            // Saved into a session, a sample is named relative to it too, so the session's folder can be moved.
+            const auto session = juce::File::createTempFile ("drumsession");
+            session.getChildFile ("Samples").createDirectory();
+
+            for (auto name : { "Thud", "A", "B", "C" })
+                moved.getChildFile (juce::String (name) + ".wav").moveFileTo (session.getChildFile ("Samples").getChildFile (juce::String (name) + ".wav"));
+
+            BasicDrumsProcessor inSession;
+            inSession.setStateInformation (state.getData(), (int) state.getSize());
+            inSession.locate (session.getChildFile ("Samples"));
+            juce::MemoryBlock sessionState;
+            {
+                const Sampler::SavingInto saving (session);
+                inSession.getStateInformation (sessionState);
+            }
+
+            const auto elsewhere = juce::File::createTempFile ("drumsessionmoved");
+            session.moveFileTo (elsewhere);
+            const auto folderBefore = Sampler::getSessionFolder();
+            Sampler::setSessionFolder (elsewhere);
+            BasicDrumsProcessor reopened;
+            reopened.setStateInformation (sessionState.getData(), (int) sessionState.getSize());
+            Sampler::setSessionFolder (folderBefore);
+            check (reopened.getMissing().isEmpty() && same (play (reopened, groove, 0.7), sound)
+                       && reopened.getLayers (Sound::kick)[0].file == elsewhere.getChildFile ("Samples").getChildFile ("Thud.wav"),
+                   "drum samples: saved into a session its samples are named relative to it, and are found beside the session after its folder has moved");
+
+            // Save Kit with Samples: the kit and copies of its samples in one folder, which opens from wherever it is moved to.
+            const auto kitFolder = juce::File::createTempFile ("drumkit").getSiblingFile ("Test Kit " + juce::String::toHexString (juce::Random::getSystemRandom().nextInt()));
+            juce::StringArray notThere;
+            const auto saveError = reopened.saveKitWithSamples (kitFolder, notThere);
+            const auto kitFile = kitFolder.getChildFile (kitFolder.getFileName() + BasicDrumsProcessor::kitFileExtension);
+            const auto copies = kitFolder.getChildFile ("Samples").findChildFiles (juce::File::findFiles, false, "*.wav").size();
+            const auto kitMoved = kitFolder.getSiblingFile (kitFolder.getFileName() + " moved");
+            const auto written = kitFile.existsAsFile();
+            kitFolder.moveFileTo (kitMoved);
+            elsewhere.deleteRecursively();
+            BasicDrumsProcessor opened;
+            const auto openError = opened.loadKitFile (kitMoved.getChildFile (kitFile.getFileName()));
+            BasicDrumsProcessor notAKit;
+            const auto refused = notAKit.loadKitFile (kitMoved.getChildFile ("Samples").getChildFile ("A.wav"));
+            check (saveError.isEmpty() && notThere.isEmpty() && written && copies == 4 && openError.isEmpty() && opened.getMissing().isEmpty()
+                       && opened.getKitName() == kitFolder.getFileName() && same (play (opened, groove, 0.7), sound)
+                       && opened.getLayers (Sound::kick)[0].file == kitMoved.getChildFile ("Samples").getChildFile ("Thud.wav")
+                       && refused.isNotEmpty() && notAKit.getKitName() == "Standard",
+                   "drum samples: Save Kit with Samples writes the kit file and four copies of its samples into one folder; moved, with the originals gone, the kit opens from it and sounds the same; a file that is no kit is refused"
+                       + (saveError.isEmpty() && openError.isEmpty() ? juce::String() : " (" + saveError + openError + ")"));
+
+            kitMoved.deleteRecursively();
+            moved.deleteRecursively();
+        }
+
+        // The limits: sixteen layers a pad, and what one kit may hold in memory. A sample longer than the pad's decay lengthens it.
+        {
+            const auto many = juce::File::createTempFile ("drumsmany");
+            many.createDirectory();
+            juce::Array<juce::File> seventeen;
+
+            for (int i = 0; i < 17; ++i)
+                seventeen.add (writeSound (many, "Hit " + juce::String (i + 1), tone (150.0 + 20.0 * i, 1200, 0.4f)));
+
+            BasicDrumsProcessor drums;
+            const auto tooMany = drums.addFiles (Sound::clap, seventeen);
+            BasicDrumsProcessor small;
+            small.setMostBytes (3 * 1200 * (juce::int64) sizeof (float));
+            const auto tooMuch = small.addFiles (Sound::clap, seventeen);
+            const auto longOne = writeSound (many, "Long", tone (90.0, 48000, 0.4f));
+            const auto before = drums.parameterOf (Sound::closedHat, "decay")->get();
+            drums.addFiles (Sound::closedHat, { longOne });
+            check (drums.getLayers (Sound::clap).size() == 16 && tooMany.contains ("16 layers") && small.getLayers (Sound::clap).size() == 3 && tooMuch.contains ("held in memory")
+                       && before < 200.0f && juce::exactlyEqual (drums.parameterOf (Sound::closedHat, "decay")->get(), 1000.0f),
+                   "drum samples: a pad takes sixteen layers and says so of the seventeenth; a kit that may hold three samples' memory takes three and says why; a one-second sample on the closed hat (decay "
+                       + juce::String (before, 0) + " ms) lengthens its decay to 1000 ms");
+            many.deleteRecursively();
+        }
+
+        // The window: sounds dropped on a pad become its layers; the list shows them, and its buttons work on them.
+        {
+            const auto there = juce::File::createTempFile ("drumswindow");
+            there.createDirectory();
+            const auto one = writeSound (there, "One", a), two = writeSound (there, "Two", b);
+            BasicDrumsProcessor drums;
+            drums.prepareToPlay (rate, 512);
+            std::unique_ptr<juce::AudioProcessorEditor> made (drums.createEditorAndMakeActive());
+
+            if (auto* window = dynamic_cast<DrumMachineEditor*> (made.get()))
+            {
+                const auto pad = window->padBounds (Sound::clap).getCentre();
+                const auto interested = window->isInterestedInFileDrag ({ one.getFullPathName() }) && ! window->isInterestedInFileDrag ({ there.getChildFile ("notes.txt").getFullPathName() });
+                window->filesDropped ({ one.getFullPathName(), two.getFullPathName() }, pad.x, pad.y);
+                const auto dropped = window->getSelected() == Sound::clap && window->getTypeText() == "Sample" && window->showsLayers() && window->getNumLayersShown() == 2
+                                     && window->getLayerText (0) == "One  1-127" && window->getLayerText (1) == "Two  1-127" && window->getKnobText ("Start").isNotEmpty();
+                window->pressLayerButton ("spread");
+                const auto spread = window->getLayerText (0) == "One  1-63" && window->getLayerText (1) == "Two  64-127";
+                window->selectLayer (1);
+                window->pressLayerButton ("up");
+                const auto reordered = window->getLayerText (0) == "Two  64-127" && drums.getLayers (Sound::clap)[0].file == two;
+                window->pressLayerButton ("remove");
+                const auto removed = window->getNumLayersShown() == 1 && window->getLayerText (0) == "One  1-63";
+
+                // On the selected sound's panel a drop goes to that sound; anywhere else it goes nowhere, and says so.
+                window->select (Sound::cowbell);
+                const auto panel = window->soundAt ({ window->getWidth() - 60, window->getHeight() - 200 });
+                window->filesDropped ({ two.getFullPathName() }, window->getWidth() - 60, window->getHeight() - 200);
+                const auto onPanel = panel == Sound::cowbell && drums.getLayers (Sound::cowbell).size() == 1 && window->getTypeText() == "Sample";
+                window->filesDropped ({ two.getFullPathName() }, 30, 30);
+                const auto nowhere = ! window->soundAt ({ 30, 30 }).has_value() && window->getMessage().isNotEmpty() && drums.getLayers (Sound::cowbell).size() == 1;
+                window->select (Sound::kick);
+                check (interested && dropped && spread && reordered && removed && onPanel && nowhere && ! window->showsLayers() && window->getTypeText() == "Classic",
+                       juce::String ("drum samples window: two sounds dropped on the clap's pad select it, make it a Sample and show two layers with their names and velocities; ")
+                           + "Spread gives each its own range, the arrows reorder, - removes; a drop on the selected sound's panel goes to it, one on neither is refused with a line; a pad that is not a Sample shows no layers ("
+                           + (interested ? "" : "interest ") + (dropped ? "" : "drop ") + (spread ? "" : "spread ") + (reordered ? "" : "order ") + (removed ? "" : "remove ")
+                           + (onPanel ? "" : "panel ") + (nowhere ? "" : "nowhere ") + ")");
+            }
+            else
+            {
+                check (false, "drum samples window: it opens");
+            }
+
+            made = nullptr;
+            there.deleteRecursively();
+        }
+
+        folder.deleteRecursively();
+    }
+
     void printLevels (BuiltInEffects::BasicDrumsProcessor& drums)
     {
         drums.applyKit (DrumMachine::kits()[0]);
@@ -872,11 +1336,11 @@ namespace
                       << " dB, rms(100ms) " << juce::Decibels::gainToDecibels ((float) std::sqrt (sum / n)) << " dB";
 
             // Its Modern type against it, for modernTrimDb.
-            if (auto* type = drums.typeParameter (*DrumMachine::soundFor (note)))
+            if (const auto sound = *DrumMachine::soundFor (note); DrumMachine::hasTypes (sound))
             {
-                type->setValueNotifyingHost (1.0f);
+                drums.setType (sound, DrumMachine::modernType);
                 const auto modern = play (drums, { { note, 0.0, 1.0f } }, 0.5);
-                type->setValueNotifyingHost (0.0f);
+                drums.setType (sound, DrumMachine::classicType);
                 std::cout << "; Modern peak " << juce::Decibels::gainToDecibels (peakOf (modern)) << " dB ("
                           << juce::Decibels::gainToDecibels (peakOf (modern)) - juce::Decibels::gainToDecibels (peakOf (out)) << " dB against it)";
             }
@@ -888,6 +1352,7 @@ namespace
 
 void saveDrumMachineWindow (const juce::File& folder)
 {
+    folder.createDirectory();
     BuiltInEffects::BasicDrumsProcessor drums;
     drums.prepareToPlay (rate, 512);
     drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Warehouse")]);
@@ -903,6 +1368,46 @@ void saveDrumMachineWindow (const juce::File& folder)
         juce::PNGImageFormat().writeImageToStream (image, out);
         std::cout << file.getFullPathName() << std::endl;
     }
+
+    // And with a pad that plays samples selected: three layers on the snare, made here, spread across the velocities.
+    const auto sounds = juce::File::createTempFile ("drumwindowsounds");
+    sounds.createDirectory();
+    juce::Array<juce::File> hits;
+    int n = 0;
+
+    for (auto name : { "Snare Soft", "Snare Medium", "Snare Hard" })
+    {
+        juce::Random random (17 + n);
+        juce::AudioBuffer<float> hit (1, 9600 + 2400 * n);
+
+        for (int i = 0; i < hit.getNumSamples(); ++i)
+            hit.setSample (0, i, (0.3f + 0.2f * (float) n) * (float) std::exp (-(double) i / (1500.0 + 500.0 * n))
+                                     * (0.6f * (random.nextFloat() * 2.0f - 1.0f) + 0.4f * (float) std::sin (0.024 * i)));
+
+        hits.add (writeSound (sounds, name, hit));
+        ++n;
+    }
+
+    if (auto* drumWindow = dynamic_cast<DrumMachineEditor*> (window.get()))
+    {
+        drumWindow->addFiles (Sound::snare, hits);
+        drumWindow->pressLayerButton ("spread");
+        drumWindow->selectLayer (1);
+
+        for (auto theme : { "Dark", "Light" })
+        {
+            Theme::apply (Theme::make (theme, "Blue"));
+            const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+            auto file = folder.getChildFile (juce::String ("drums-sample-") + theme + ".png");
+            file.deleteFile();
+            juce::FileOutputStream out (file);
+            juce::PNGImageFormat().writeImageToStream (image, out);
+            std::cout << file.getFullPathName() << std::endl;
+        }
+    }
+
+    window = nullptr;
+    sounds.deleteRecursively();
 }
 
 /** A step pattern: each row a note and 16 steps ('x' loud, 'o' soft, '.' rest). */
@@ -1029,12 +1534,12 @@ void saveDrumMachineSounds (const juce::File& folder)
             write ("Standard " + juce::String (note) + " " + DrumMachine::nameOf (sound) + " v" + juce::String (velocity),
                    play (drums, { { note, 0.0, (float) velocity / 127.0f } }, seconds));
 
-            if (auto* type = drums.typeParameter (sound))
+            if (DrumMachine::hasTypes (sound))
             {
-                type->setValueNotifyingHost (1.0f);
+                drums.setType (sound, DrumMachine::modernType);
                 write ("Modern " + juce::String (note) + " " + DrumMachine::nameOf (sound) + " v" + juce::String (velocity),
                        play (drums, { { note, 0.0, (float) velocity / 127.0f } }, seconds));
-                type->setValueNotifyingHost (0.0f);
+                drums.setType (sound, DrumMachine::classicType);
             }
         }
     }
@@ -1077,4 +1582,5 @@ void runDrumMachineTests (AudioEngine& engine, bool levels)
     testEffects (drums);
     testKitsAndState (drums);
     testRendering (drums);
+    testSamples();
 }

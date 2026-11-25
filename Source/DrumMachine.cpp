@@ -213,6 +213,22 @@ bool hasTypes (Sound s)
             return false;
     }
 }
+
+juce::StringArray typeNamesFor (Sound s)
+{
+    return hasTypes (s) ? juce::StringArray { "Classic", "Modern", "Sample" } : juce::StringArray { "Classic", "Sample" };
+}
+
+int typeAt (Sound s, int index)
+{
+    return index <= 0 ? classicType : hasTypes (s) && index == 1 ? modernType : sampleType;
+}
+
+int typeIndexFor (Sound s, int type)
+{
+    return type == sampleType ? (hasTypes (s) ? 2 : 1) : type == modernType && hasTypes (s) ? 1 : 0;
+}
+
 juce::StringArray filterNames()          { return { "Off", "Low-pass", "Band-pass", "High-pass" }; }
 juce::StringArray delayTimeNames()       { return { "1/16", "1/8T", "1/8", "1/8 dotted", "1/4", "1/4 dotted" }; }
 
@@ -587,6 +603,17 @@ struct Engine::Hit
     double rate = 48000.0;
     double T = 1.0, S = 1.0, u = 0.0;     // its tune as a ratio, decay as a ratio of the sound's own, and tone, -1 to 1
     bool modern = false;                  // its type: the Modern model, not the Classic
+
+    // A Sample's hit: the recording it plays (kept by whoever set the engine's samples), the part of
+    // it played ([first, first + frames) in its frames), how far along that it is and how many of
+    // its frames go by in a sample of output at its tuning, and how far its pitch starts off (octaves).
+    const Sampler::Sample* sample = nullptr;
+    juce::uint32 samplesGeneration = 0;
+    juce::int64 first = 0, frames = 0;
+    double place = 0.0, ratio = 1.0, bend = 0.0;
+    bool reverse = false;
+    juce::int64 fadeFrom = 0, fadeOver = 0;   // its decay: from that age it falls to nothing over this many samples (0: it plays to its end)
+    float endFade = 1.0f;                     // samples of output its own end is faded over
     double vel = 1.0;                     // how hard it is struck, 0 to 1: a Modern sound's own use of it
     KickCharacter kick = KickCharacter::punch;
     std::array<double, 14> ph {};
@@ -1157,8 +1184,63 @@ namespace
     }
 
     /** One sample of a hit, before its level, pan, drive, onset and end. */
+    /** One sample of a Sample's hit: its recording read at its pitch through the Sampler's windowed
+        sinc (as it is, frame for frame, at its own pitch and rate), its own end and its decay faded. */
+    void voiceSample (Hit& h, float& l, float& r)
+    {
+        const auto left = (double) h.frames - h.place;
+
+        if (left <= 0.0)
+        {
+            l = r = 0.0f;
+            h.length = h.age + 1;   // its end
+            return;
+        }
+
+        const auto ratio = h.bend != 0.0 ? h.ratio * std::exp2 (h.bend * (double) h.e[0].next()) : h.ratio;
+        const auto& audio = h.sample->audio;
+        const auto total = audio.getNumSamples();
+        const auto at = h.reverse ? (double) (h.first + h.frames - 1) - h.place : (double) h.first + h.place;
+        const auto* a = audio.getReadPointer (0);
+        const auto* b = audio.getNumChannels() > 1 ? audio.getReadPointer (1) : nullptr;
+
+        if (juce::exactlyEqual (ratio, 1.0) && juce::exactlyEqual (at, std::floor (at)))
+        {
+            const auto i = (int) at;
+            l = a[i];
+            r = b != nullptr ? b[i] : l;
+        }
+        else
+        {
+            l = Sampler::interpolate (a, total, at, ratio);
+            r = b != nullptr ? Sampler::interpolate (b, total, at, ratio) : l;
+        }
+
+        auto g = 1.0f;
+
+        if (const auto last = (float) (left / ratio); last < h.endFade)
+            g = last / h.endFade;
+
+        if (h.fadeOver > 0 && h.age > h.fadeFrom)
+        {
+            const auto x = juce::jmin (1.0f, (float) (h.age - h.fadeFrom) / (float) h.fadeOver);
+            const auto c = std::cos (x * juce::MathConstants<float>::halfPi);
+            g *= c * c;
+        }
+
+        l *= g;
+        r *= g;
+        h.place += ratio;
+    }
+
     void voice (Hit& h, float& l, float& r)
     {
+        if (h.sample != nullptr)
+        {
+            voiceSample (h, l, r);
+            return;
+        }
+
         if (h.modern)
         {
             voiceModern (h, l, r);
@@ -1369,6 +1451,7 @@ void Engine::reset()
     for (auto& h : fading)
         h = {};
 
+    turns.fill (0);
     driveAmount.setCurrentAndTargetValue (settings.drive * 0.01f);
     glueAmount.setCurrentAndTargetValue (settings.glue * 0.01f);
     outputGain.setCurrentAndTargetValue (juce::Decibels::decibelsToGain (settings.level, -100.0f));
@@ -1411,8 +1494,8 @@ float Engine::delayTarget() const
     if (delayL.size() < 8)
         return 1.0f;
 
-    const auto samples = delayBeats (settings.delayTime) * 60.0 / juce::jlimit (20.0, 999.0, tempo) * rate;
-    return (float) juce::jlimit (1.0, (double) delayL.size() - 3.0, samples);
+    const auto length = delayBeats (settings.delayTime) * 60.0 / juce::jlimit (20.0, 999.0, tempo) * rate;
+    return (float) juce::jlimit (1.0, (double) delayL.size() - 3.0, length);
 }
 
 void Engine::setTempo (double bpm)
@@ -1429,6 +1512,23 @@ void Engine::setSettings (const KitSettings& s)
     outputGain.setTargetValue (juce::Decibels::decibelsToGain (s.level, -100.0f));
     feedbackAmount.setTargetValue (s.feedback * 0.009f);
     setReverbSize();
+}
+
+void Engine::setSamples (SamplesPtr next)
+{
+    samples = std::move (next);
+}
+
+juce::uint32 Engine::oldestSamplesInUse() const noexcept
+{
+    auto oldest = samples != nullptr ? samples->generation : std::numeric_limits<juce::uint32>::max();
+
+    for (auto* all : { &hits, &fading })
+        for (auto& h : *all)
+            if (h.active && h.sample != nullptr)
+                oldest = juce::jmin (oldest, h.samplesGeneration);
+
+    return oldest;
 }
 
 int Engine::getNumSounding() const
@@ -1492,6 +1592,33 @@ void Engine::start (Hit& h, int note, float velocity)
     const auto& st = settings.sounds[(size_t) sound];
 
     h = {};
+
+    // A Sample: the layer whose turn it is among those for this velocity. With none, the pad is silent.
+    const auto sampled = st.type == sampleType;
+    const Sampler::Sample* recording = nullptr;
+
+    if (sampled)
+    {
+        if (samples != nullptr)
+        {
+            const auto& layers = samples->pads[(size_t) sound];
+            const auto v = juce::jlimit (1, 127, juce::roundToInt (velocity * 127.0f));
+            const auto among = (juce::uint32) std::count_if (layers.begin(), layers.end(), [v] (const Layer& l) { return l.plays (v); });
+
+            if (among > 0)
+            {
+                auto turn = turns[(size_t) sound]++ % among;
+
+                for (auto& l : layers)
+                    if (l.plays (v) && turn-- == 0)
+                        recording = l.sample.get();
+            }
+        }
+
+        if (recording == nullptr || recording->getNumFrames() < 2)
+            return;
+    }
+
     h.active = true;
     h.sound = sound;
     h.note = note;
@@ -1505,14 +1632,16 @@ void Engine::start (Hit& h, int note, float velocity)
     h.n3 = h.n2 * 747796405u + 2891336453u;
 
     // A Modern sound is duller the softer it is struck, by up to a third of the tone's range.
-    if (st.type == 1 && hasTypes (sound))
+    if (st.type == modernType && hasTypes (sound))
     {
         h.modern = true;
         h.vel = juce::jlimit (0.0, 1.0, (double) velocity);
         h.u = juce::jlimit (-1.0, 1.0, h.u - 0.45 * (1.0 - h.vel));
     }
 
-    const auto gain = juce::Decibels::decibelsToGain (st.level + infos[(size_t) sound].trimDb + (h.modern ? modernTrimDb (sound) : 0.0f), -100.0f) * velocity;
+    // A synthesized sound has a trim that sets its peak; a sample plays at the level it was recorded at.
+    const auto levelDb = sampled ? st.level : st.level + infos[(size_t) sound].trimDb + (h.modern ? modernTrimDb (sound) : 0.0f);
+    const auto gain = juce::Decibels::decibelsToGain (levelDb, -100.0f) * velocity;
     const auto angle = (juce::jlimit (-100.0f, 100.0f, st.pan) * 0.01f + 1.0f) * juce::MathConstants<float>::pi * 0.25f;
     h.gainL = gain * std::sqrt (2.0f) * std::cos (angle);
     h.gainR = gain * std::sqrt (2.0f) * std::sin (angle);
@@ -1544,7 +1673,7 @@ void Engine::start (Hit& h, int note, float velocity)
     h.sendReverb = juce::jlimit (0.0f, 100.0f, st.reverb) * 0.01f;
     h.sendDelay = juce::jlimit (0.0f, 100.0f, st.delay) * 0.01f;
 
-    if (tilts (sound))
+    if (sampled ? ! juce::exactlyEqual (st.tone, 0.0f) : tilts (sound))
     {
         h.tilt = (float) std::exp2 (1.5 * h.u);   // the top end above 2 kHz, up to 9 dB either way
         h.tiltK = (float) (1.0 - std::exp (-twoPi * 2000.0 / rate));
@@ -1554,7 +1683,33 @@ void Engine::start (Hit& h, int note, float velocity)
     const auto u = h.u, T = h.T, S = h.S;
     auto riseSeconds = 0.00025;
 
-    if (h.modern)
+    if (sampled)
+    {
+        // The part from its start setting on, read forwards or back, at its own pitch moved by the
+        // tune. It plays to its own end unless the decay is shorter: then it falls to nothing over
+        // the last two fifths of the decay.
+        h.sample = recording;
+        h.samplesGeneration = samples->generation;
+        const auto total = (juce::int64) recording->getNumFrames();
+        const auto skipped = (juce::int64) ((double) total * juce::jlimit (0.0f, 95.0f, st.start) * 0.01);
+        h.reverse = st.reverse;
+        h.first = h.reverse ? 0 : skipped;
+        h.frames = total - skipped;
+        h.ratio = recording->rate / rate * T;
+        h.bend = (double) juce::jlimit (-24.0f, 24.0f, st.bend) / 12.0;
+        h.e[0].set (0.03, rate);
+        h.endFade = (float) juce::jmax (1.0, Sampler::endFadeSeconds * rate);
+        h.length = std::numeric_limits<juce::int64>::max() / 4;
+        riseSeconds = Sampler::minimumAttackSeconds;
+
+        if (const auto decaying = (juce::int64) (D * rate); D < longestDecaySeconds - 1.0e-4 && (double) decaying < (double) h.frames / h.ratio)
+        {
+            h.length = juce::jmax ((juce::int64) 8, decaying);
+            h.fadeOver = juce::jmax ((juce::int64) 1, h.length * 2 / 5);
+            h.fadeFrom = h.length - h.fadeOver;
+        }
+    }
+    else if (h.modern)
         riseSeconds = startModern (h, note, D);
     else switch (sound)
     {
@@ -2013,10 +2168,11 @@ void Engine::renderBlock (float* left, float* right, int count)
     reductionDb.store (mostReduction, std::memory_order_relaxed);
 }
 
-juce::AudioBuffer<float> Engine::renderOne (const KitSettings& kit, Sound sound, double sampleRate, double seconds, int note)
+juce::AudioBuffer<float> Engine::renderOne (const KitSettings& kit, Sound sound, double sampleRate, double seconds, int note, SamplesPtr with)
 {
     Engine engine;
     engine.setSettings (kit);
+    engine.setSamples (std::move (with));
     engine.prepare (sampleRate);
     engine.noteOn (note < 0 ? padNote (sound) : note, 1.0f);
     juce::AudioBuffer<float> out (2, juce::jmax (1, (int) (seconds * sampleRate)));
@@ -2070,10 +2226,10 @@ BasicDrumsProcessor::BasicDrumsProcessor()
         p.delay = addFloat (id + "_delay", name + " Delay", { 0.0f, 100.0f }, d.delay, "%");
     }
 
-    // After every sound's own twelve, so those keep their places: the type of each sound that has two.
+    // After every sound's own twelve, so those keep their places: the type of each sound that has a Modern one.
     for (int i = 0; i < numSounds; ++i)
         if (const auto sound = (Sound) i; hasTypes (sound))
-            sounds[(size_t) i].type = addChoice (idOf (sound) + "_type", nameOf (sound) + " Type", typeNames(), 0);
+            sounds[(size_t) i].type = addChoice (idOf (sound) + "_type", nameOf (sound) + " Type", typeNamesFor (sound), 0);
 
     const auto start = defaultKit();
     kickCharacter = addChoice ("kick_character", "Kick Character", kickCharacterNames(), (int) start.kick);
@@ -2083,7 +2239,24 @@ BasicDrumsProcessor::BasicDrumsProcessor()
     reverbSize = addFloat ("reverb_size", "Reverb Size", { 0.0f, 100.0f }, start.reverbSize, "%");
     delayTime = addChoice ("delay_time", "Delay Time", delayTimeNames(), start.delayTime);
     feedback = addFloat ("delay_feedback", "Delay Feedback", { 0.0f, 100.0f }, start.feedback, "%");
+
+    // After everything there was before pads played samples: the type of the nine sounds that had
+    // one, and every sound's settings for a Sample alone.
+    for (int i = 0; i < numSounds; ++i)
+        if (const auto sound = (Sound) i; ! hasTypes (sound))
+            sounds[(size_t) i].type = addChoice (idOf (sound) + "_type", nameOf (sound) + " Type", typeNamesFor (sound), 0);
+
+    for (int i = 0; i < numSounds; ++i)
+    {
+        const auto id = idOf ((Sound) i), name = nameOf ((Sound) i);
+        auto& p = sounds[(size_t) i];
+        p.start = addFloat (id + "_start", name + " Sample Start", { 0.0f, 95.0f }, 0.0f, "%");
+        p.reverse = addBool (id + "_reverse", name + " Sample Reverse", false);
+        p.bend = addFloat (id + "_bend", name + " Sample Pitch Envelope", { -24.0f, 24.0f }, 0.0f, "st");
+    }
+
     auditions.reserve (64);
+    retiredSamples.reserve (64);
 }
 
 KitSettings BasicDrumsProcessor::currentSettings() const
@@ -2095,7 +2268,7 @@ KitSettings BasicDrumsProcessor::currentSettings() const
         const auto& p = sounds[i];
         k.sounds[i] = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
                         p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
-                        p.type != nullptr ? p.type->getIndex() : 0 };
+                        typeAt ((Sound) i, p.type->getIndex()), p.start->get(), p.reverse->get(), p.bend->get() };
     }
 
     k.kick = (KickCharacter) kickCharacter->getIndex();
@@ -2127,8 +2300,10 @@ void BasicDrumsProcessor::applySettings (const KitSettings& k)
         setExactly (*p.reverb, s.reverb);
         setExactly (*p.delay, s.delay);
 
-        if (p.type != nullptr)
-            p.type->setValueNotifyingHost (p.type->convertTo0to1 ((float) juce::jlimit (0, 1, s.type)));
+        p.type->setValueNotifyingHost (p.type->convertTo0to1 ((float) typeIndexFor ((Sound) i, s.type)));
+        setExactly (*p.start, s.start);
+        p.reverse->setValueNotifyingHost (s.reverse ? 1.0f : 0.0f);
+        setExactly (*p.bend, s.bend);
     }
 
     kickCharacter->setValueNotifyingHost (kickCharacter->convertTo0to1 ((float) (int) k.kick));
@@ -2143,7 +2318,19 @@ void BasicDrumsProcessor::applySettings (const KitSettings& k)
 void BasicDrumsProcessor::applyKit (const Kit& kit)
 {
     applySettings (kit.settings);
+    clearSamples();     // a factory kit is all synthesized
     kitName = kit.name;
+}
+
+int BasicDrumsProcessor::getType (Sound s) const
+{
+    return typeAt (s, sounds[(size_t) s].type->getIndex());
+}
+
+void BasicDrumsProcessor::setType (Sound s, int type)
+{
+    auto* p = sounds[(size_t) s].type;
+    p->setValueNotifyingHost (p->convertTo0to1 ((float) typeIndexFor (s, type)));
 }
 
 bool BasicDrumsProcessor::kitModified() const
@@ -2151,6 +2338,10 @@ bool BasicDrumsProcessor::kitModified() const
     const auto index = kitIndex (kitName);
 
     if (index < 0)
+        return true;
+
+    // A factory kit has no samples.
+    if (const auto held = getSamples(); held != nullptr && std::any_of (held->pads.begin(), held->pads.end(), [] (const auto& layers) { return ! layers.empty(); }))
         return true;
 
     const auto near = [] (float a, float b) { return std::abs (a - b) <= 1.0e-3f * juce::jmax (1.0f, std::abs (b)); };
@@ -2163,7 +2354,8 @@ bool BasicDrumsProcessor::kitModified() const
 
         if (! (near (a.tune, b.tune) && near (a.decay, b.decay) && near (a.tone, b.tone) && near (a.level, b.level) && near (a.pan, b.pan) && near (a.drive, b.drive)
                && a.filter == b.filter && near (a.cutoff, b.cutoff) && near (a.resonance, b.resonance) && near (a.crush, b.crush)
-               && near (a.reverb, b.reverb) && near (a.delay, b.delay) && a.type == b.type))
+               && near (a.reverb, b.reverb) && near (a.delay, b.delay) && a.type == b.type
+               && near (a.start, b.start) && a.reverse == b.reverse && near (a.bend, b.bend)))
             return true;
     }
 
@@ -2177,12 +2369,13 @@ juce::AudioParameterFloat* BasicDrumsProcessor::parameterOf (Sound sound, const 
     return what == "tune" ? p.tune : what == "decay" ? p.decay : what == "tone" ? p.tone
          : what == "level" ? p.level : what == "pan" ? p.pan : what == "drive" ? p.drive
          : what == "cutoff" ? p.cutoff : what == "resonance" ? p.resonance : what == "crush" ? p.crush
-         : what == "reverb" ? p.reverb : what == "delay" ? p.delay : nullptr;
+         : what == "reverb" ? p.reverb : what == "delay" ? p.delay : what == "start" ? p.start : what == "bend" ? p.bend : nullptr;
 }
 
 void BasicDrumsProcessor::addToState (juce::XmlElement& xml) const
 {
     xml.setAttribute ("kit", kitName);
+    writeSamples (xml);
 }
 
 void BasicDrumsProcessor::readFromState (const juce::XmlElement& xml)
@@ -2196,6 +2389,7 @@ void BasicDrumsProcessor::readFromState (const juce::XmlElement& xml)
     }
 
     kitName = xml.getStringAttribute ("kit", "Standard");
+    readSamples (xml);
 
     // Before step 10 there were a kick, snare, hat and tom tune (semitones, as now) and decay (in
     // percent of the sound's own); they go to the sounds they meant, the decays scaled from the new
@@ -2228,6 +2422,12 @@ void BasicDrumsProcessor::prepareToPlay (double sampleRate, int)
     engine.setSettings (currentSettings());
     engine.prepare (sampleRate);
     volume = 1.0f;
+
+    const juce::SpinLock::ScopedLockType lock (samplesLock);
+    engine.setSamples (samples);
+    pendingSamples = nullptr;
+    samplesChanged.store (false);
+    oldestSamplesInUse.store (engine.oldestSamplesInUse());
 }
 
 void BasicDrumsProcessor::reset()
@@ -2258,6 +2458,18 @@ void BasicDrumsProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     }
 
     engine.setSettings (currentSettings());
+
+    if (samplesChanged.load())
+    {
+        const juce::SpinLock::ScopedTryLockType lock (samplesLock);
+
+        if (lock.isLocked() && pendingSamples != nullptr)
+        {
+            engine.setSamples (std::move (pendingSamples));
+            pendingSamples = nullptr;
+            samplesChanged.store (false);
+        }
+    }
 
     if (auto* head = getPlayHead())
         if (const auto position = head->getPosition())
@@ -2295,6 +2507,7 @@ void BasicDrumsProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     }
 
     engine.render (left + done, right != nullptr ? right + done : nullptr, n - done);
+    oldestSamplesInUse.store (engine.oldestSamplesInUse());
 
     if (! juce::exactlyEqual (volume, 1.0f))
         buffer.applyGain (volume * volume);
@@ -2308,5 +2521,432 @@ void BasicDrumsProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
 juce::AudioProcessorEditor* BasicDrumsProcessor::createEditor()
 {
     return new DrumMachineEditor (*this);
+}
+}
+
+//==============================================================================
+// Samples on the pads.
+namespace BuiltInEffects
+{
+using namespace DrumMachine;
+
+SamplesPtr BasicDrumsProcessor::getSamples() const
+{
+    const juce::SpinLock::ScopedLockType lock (samplesLock);
+    return samples;
+}
+
+void BasicDrumsProcessor::setSamples (std::array<std::vector<Layer>, (size_t) numSounds> pads)
+{
+    auto next = std::make_shared<Samples>();
+    next->pads = std::move (pads);
+    next->generation = ++samplesGenerations;
+
+    for (auto& layers : next->pads)
+    {
+        if ((int) layers.size() > maxLayers)
+            layers.resize ((size_t) maxLayers);
+
+        for (auto& l : layers)
+        {
+            l.lowVelocity = juce::jlimit (1, 127, l.lowVelocity);
+            l.highVelocity = juce::jlimit (l.lowVelocity, 127, l.highVelocity);
+        }
+    }
+
+    const juce::SpinLock::ScopedLockType lock (samplesLock);
+
+    if (samples != nullptr)
+        retiredSamples.push_back (samples);
+
+    // Ones no hit plays from any more are let go, here and never on the audio thread.
+    const auto oldest = oldestSamplesInUse.load();
+    retiredSamples.erase (std::remove_if (retiredSamples.begin(), retiredSamples.end(), [oldest] (const SamplesPtr& s) { return s->generation < oldest; }),
+                          retiredSamples.end());
+    samples = next;
+    pendingSamples = std::move (next);
+    samplesChanged.store (true);
+    samplesVersion.fetch_add (1);
+}
+
+void BasicDrumsProcessor::clearSamples()
+{
+    missing.clear();
+
+    if (const auto held = getSamples(); held == nullptr || std::all_of (held->pads.begin(), held->pads.end(), [] (const auto& layers) { return layers.empty(); }))
+        return;
+
+    setSamples ({});
+}
+
+std::vector<Layer> BasicDrumsProcessor::getLayers (Sound s) const
+{
+    const auto held = getSamples();
+    return held != nullptr ? held->pads[(size_t) s] : std::vector<Layer>();
+}
+
+void BasicDrumsProcessor::setLayers (Sound s, std::vector<Layer> layers)
+{
+    const auto held = getSamples();
+    auto pads = held != nullptr ? held->pads : std::array<std::vector<Layer>, (size_t) numSounds>();
+    pads[(size_t) s] = std::move (layers);
+    setSamples (std::move (pads));
+}
+
+juce::Array<juce::File> BasicDrumsProcessor::getFiles() const
+{
+    juce::Array<juce::File> files;
+
+    if (const auto held = getSamples())
+        for (auto& layers : held->pads)
+            for (auto& l : layers)
+                if (l.file != juce::File())
+                    files.addIfNotAlreadyThere (l.file);
+
+    return files;
+}
+
+juce::int64 BasicDrumsProcessor::bytesHeld() const
+{
+    std::set<const Sampler::Sample*> counted;
+    juce::int64 bytes = 0;
+
+    if (const auto held = getSamples())
+        for (auto& layers : held->pads)
+            for (auto& l : layers)
+                if (l.sample != nullptr && counted.insert (l.sample.get()).second)
+                    bytes += l.sample->bytes();
+
+    return bytes;
+}
+
+juce::String BasicDrumsProcessor::addSamples (Sound s, const std::vector<std::pair<Sampler::SamplePtr, juce::File>>& given)
+{
+    auto layers = getLayers (s);
+    juce::String refused;
+    auto bytes = bytesHeld();
+    std::set<const Sampler::Sample*> here;
+    auto longest = 0.0;
+    int added = 0;
+
+    if (const auto held = getSamples())
+        for (auto& pad : held->pads)
+            for (auto& l : pad)
+                here.insert (l.sample.get());
+
+    for (auto& [sample, file] : given)
+    {
+        if (sample == nullptr)
+            continue;
+
+        if ((int) layers.size() >= maxLayers)
+        {
+            refused = nameOf (s) + " has " + juce::String (maxLayers) + " layers, the most a pad can have: " + sample->name + " was left out.";
+            break;
+        }
+
+        if (here.count (sample.get()) == 0 && bytes + sample->bytes() > most)
+        {
+            refused = sample->name + " takes " + juce::File::descriptionOfSizeInBytes (sample->bytes()) + ", and the kit holds " + juce::File::descriptionOfSizeInBytes (bytes)
+                      + " already. One kit can hold " + juce::File::descriptionOfSizeInBytes (most) + " of samples: they are held in memory, not played from disk.";
+            break;
+        }
+
+        if (here.insert (sample.get()).second)
+            bytes += sample->bytes();
+
+        Layer l;
+        l.sample = sample;
+        l.file = file;
+        layers.push_back (std::move (l));
+        longest = juce::jmax (longest, (double) sample->getNumFrames() / sample->rate);
+        ++added;
+    }
+
+    if (added > 0)
+    {
+        setLayers (s, std::move (layers));
+        setType (s, sampleType);
+
+        // Long enough for the longest of them to play whole (the knob's top plays any sample whole).
+        auto& decay = *sounds[(size_t) s].decay;
+        const auto needed = (float) juce::jmin (longestDecaySeconds * 1000.0, std::ceil (longest * 1000.0));
+
+        if (decay.get() < needed)
+            setExactly (decay, needed);
+    }
+
+    return refused;
+}
+
+juce::String BasicDrumsProcessor::addFiles (Sound s, const juce::Array<juce::File>& files)
+{
+    std::vector<std::pair<Sampler::SamplePtr, juce::File>> read;
+    juce::String error;
+
+    for (auto& f : files)
+    {
+        juce::String why;
+
+        if (auto sample = Sampler::sharedSample (f, why))
+            read.emplace_back (sample, f);
+        else if (error.isEmpty())
+            error = why.isNotEmpty() ? why : f.getFileName() + " could not be read.";
+    }
+
+    const auto refused = addSamples (s, read);
+    return refused.isNotEmpty() ? refused : error;
+}
+
+int BasicDrumsProcessor::locate (const juce::File& found)
+{
+    const auto held = getSamples();
+
+    if (held == nullptr)
+        return 0;
+
+    auto pads = held->pads;
+    const auto folder = found.isDirectory() ? found : found.getParentDirectory();
+    auto bytes = bytesHeld();
+    int back = 0;
+    juce::StringArray still;
+
+    for (auto& layers : pads)
+    {
+        for (auto& l : layers)
+        {
+            if (l.sample != nullptr || l.file == juce::File())
+                continue;
+
+            const auto candidate = ! found.isDirectory() && found.getFileName() == l.file.getFileName() ? found : folder.getChildFile (l.file.getFileName());
+            juce::String error;
+            auto sample = candidate.existsAsFile() ? Sampler::sharedSample (candidate, error) : nullptr;
+
+            if (sample != nullptr && bytes + sample->bytes() <= most)
+            {
+                bytes += sample->bytes();
+                l.sample = sample;
+                l.file = candidate;
+                ++back;
+            }
+            else
+            {
+                still.addIfNotAlreadyThere (error.isNotEmpty() ? error : l.file.getFileName() + " was not found.");
+            }
+        }
+    }
+
+    if (back > 0)
+        setSamples (std::move (pads));
+
+    missing = still;
+    return back;
+}
+
+void BasicDrumsProcessor::writeSamples (juce::XmlElement& xml) const
+{
+    const auto held = getSamples();
+
+    if (held == nullptr || std::all_of (held->pads.begin(), held->pads.end(), [] (const auto& layers) { return layers.empty(); }))
+        return;
+
+    auto* all = xml.createNewChildElement ("SAMPLES");
+
+    for (int i = 0; i < numSounds; ++i)
+    {
+        if (held->pads[(size_t) i].empty())
+            continue;
+
+        auto* pad = all->createNewChildElement ("PAD");
+        pad->setAttribute ("sound", idOf ((Sound) i));
+
+        for (auto& l : held->pads[(size_t) i])
+        {
+            auto* e = pad->createNewChildElement ("LAYER");
+            Sampler::nameFile (*e, l.file);
+            e->setAttribute ("lowVelocity", l.lowVelocity);
+            e->setAttribute ("highVelocity", l.highVelocity);
+        }
+    }
+}
+
+void BasicDrumsProcessor::readSamples (const juce::XmlElement& xml)
+{
+    missing.clear();
+    const auto* all = xml.getChildByName ("SAMPLES");
+
+    if (all == nullptr)
+    {
+        clearSamples();
+        return;
+    }
+
+    std::array<std::vector<Layer>, (size_t) numSounds> pads;
+    std::map<juce::String, Sampler::SamplePtr> read;
+    juce::int64 held = 0;
+
+    for (auto* pad : all->getChildWithTagNameIterator ("PAD"))
+    {
+        const auto id = pad->getStringAttribute ("sound");
+        int sound = -1;
+
+        for (int i = 0; i < numSounds && sound < 0; ++i)
+            if (idOf ((Sound) i) == id)
+                sound = i;
+
+        if (sound < 0)
+            continue;
+
+        for (auto* e : pad->getChildWithTagNameIterator ("LAYER"))
+        {
+            Layer l;
+            l.lowVelocity = e->getIntAttribute ("lowVelocity", 1);
+            l.highVelocity = e->getIntAttribute ("highVelocity", 127);
+            l.file = Sampler::findFile (*e, kitFolder);
+
+            if (l.file == juce::File())
+                continue;
+
+            const auto path = l.file.getFullPathName();
+
+            if (const auto found = read.find (path); found != read.end())
+            {
+                l.sample = found->second;
+            }
+            else
+            {
+                juce::String error;
+                l.sample = Sampler::sharedSample (l.file, error);
+
+                if (l.sample != nullptr && held + l.sample->bytes() > most)
+                {
+                    error = l.file.getFileName() + " was left out: with it the kit would hold more than " + juce::File::descriptionOfSizeInBytes (most) + " of samples.";
+                    l.sample = nullptr;
+                }
+
+                if (l.sample != nullptr)
+                    held += l.sample->bytes();
+                else
+                    missing.add (error.isNotEmpty() ? error : l.file.getFileName() + " was not found.");
+
+                read[path] = l.sample;
+            }
+
+            pads[(size_t) sound].push_back (std::move (l));
+        }
+    }
+
+    setSamples (std::move (pads));
+}
+
+EffectPresets::Texts BasicDrumsProcessor::getPresetTexts() const
+{
+    juce::XmlElement holder ("DRUMS");
+    writeSamples (holder);
+
+    if (const auto* all = holder.getChildByName ("SAMPLES"))
+        return { { "samples", all->toString (juce::XmlElement::TextFormat().singleLine()) } };
+
+    return {};
+}
+
+void BasicDrumsProcessor::setPresetTexts (const EffectPresets::Texts& texts)
+{
+    juce::XmlElement holder ("DRUMS");
+
+    if (const auto found = texts.find ("samples"); found != texts.end() && found->second.isNotEmpty())
+        if (auto all = juce::XmlDocument::parse (found->second))
+            holder.addChildElement (all.release());
+
+    readSamples (holder);
+}
+
+void BasicDrumsProcessor::setPresetValues (const EffectPresets::Values& values)
+{
+    // A preset saved before pads played samples says nothing of a Sample's settings or of nine
+    // sounds' types: those go back to where they start, not left as they happen to be.
+    for (size_t i = 0; i < sounds.size(); ++i)
+    {
+        auto& p = sounds[i];
+
+        if (values.find (p.type->paramID) == values.end())
+            p.type->setValueNotifyingHost (0.0f);
+
+        if (values.find (p.start->paramID) == values.end())
+        {
+            setExactly (*p.start, 0.0f);
+            p.reverse->setValueNotifyingHost (0.0f);
+            setExactly (*p.bend, 0.0f);
+        }
+    }
+
+    BuiltInEffect::setPresetValues (values);
+}
+
+juce::String BasicDrumsProcessor::saveKitWithSamples (const juce::File& folder, juce::StringArray& notThere)
+{
+    if (! folder.createDirectory())
+        return "Could not make the folder " + folder.getFullPathName();
+
+    // The state, as a session's track would hold it, so the samples are gathered the way a
+    // session's are (Sampler::collectFiles): copied beside the kit and named relative to it.
+    juce::MemoryBlock block;
+    getStateInformation (block);
+
+    juce::XmlElement effects ("EFFECTS");
+    auto* slot = effects.createNewChildElement ("SLOT");
+    slot->createNewChildElement ("PLUGIN")->setAttribute ("file", basicDrumsId);
+    slot->createNewChildElement ("STATE")->addTextElement (block.toBase64Encoding());
+
+    std::vector<std::pair<juce::File, juce::File>> copies;
+
+    if (const auto error = Sampler::collectFiles (effects, folder, folder.getChildFile ("Samples"), copies, notThere); error.isNotEmpty())
+        return error;
+
+    juce::MemoryBlock gathered;
+
+    if (! gathered.fromBase64Encoding (slot->getChildByName ("STATE")->getAllSubText()))
+        return "Could not write the kit.";
+
+    auto state = getXmlFromBinary (gathered.getData(), (int) gathered.getSize());
+
+    if (state == nullptr)
+        return "Could not write the kit.";
+
+    state->setAttribute ("kit", folder.getFileName());
+    const auto file = folder.getChildFile (juce::File::createLegalFileName (folder.getFileName()) + kitFileExtension);
+
+    if (! state->writeTo (file))
+        return "Could not write " + file.getFullPathName();
+
+    return {};
+}
+
+juce::String BasicDrumsProcessor::loadKitFile (const juce::File& file)
+{
+    const auto state = juce::XmlDocument::parse (file);
+
+    if (state == nullptr)
+        return file.getFileName() + " is not a Basic Drums kit.";
+
+    juce::MemoryBlock block;
+    copyXmlToBinary (*state, block);
+
+    // Its samples are looked for beside it first.
+    kitFolder = file.getParentDirectory();
+    const auto before = samplesVersion.load();
+    const auto nameBefore = kitName;
+    kitName = {};
+    setStateInformation (block.getData(), (int) block.getSize());
+    kitFolder = juce::File();
+
+    // A file that isn't a kit's state changes nothing.
+    if (kitName.isEmpty() && before == samplesVersion.load())
+    {
+        kitName = nameBefore;
+        return file.getFileName() + " is not a Basic Drums kit.";
+    }
+
+    return {};
 }
 }

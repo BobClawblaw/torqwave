@@ -588,6 +588,35 @@ SavingInto::~SavingInto()
     store().savingInto = before;
 }
 
+void nameFile (juce::XmlElement& e, const juce::File& file)
+{
+    const auto saving = [] { const juce::ScopedLock sl (store().lock); return store().savingInto; }();
+    const auto path = file != juce::File() ? pathFor (file) : juce::String();
+    e.setAttribute ("file", path);
+
+    if (saving != juce::File() && file != juce::File() && ! path.startsWith (factoryPrefix))
+        e.setAttribute ("relative", file.getRelativePathFrom (saving));
+}
+
+juce::File findFile (const juce::XmlElement& e, const juce::File& beside)
+{
+    auto path = e.getStringAttribute ("file");
+
+    if (path.isEmpty())
+        return {};
+
+    const auto folder = beside != juce::File() ? beside : getSessionFolder();
+
+    if (const auto relative = e.getStringAttribute ("relative"); relative.isNotEmpty() && folder != juce::File())
+        if (const auto there = folder.getChildFile (relative); there.existsAsFile())
+            path = there.getFullPathName();
+
+    if (path.startsWith (factoryPrefix))
+        unpackFactorySamples();
+
+    return fileFor (path);
+}
+
 juce::String collectFiles (juce::XmlElement& effects, const juce::File& sessionFolder, const juce::File& folder,
                            std::vector<std::pair<juce::File, juce::File>>& copies, juce::StringArray& missing)
 {
@@ -596,7 +625,12 @@ juce::String collectFiles (juce::XmlElement& effects, const juce::File& sessionF
         const auto* plugin = slot->getChildByName ("PLUGIN");
         auto* stateXml = slot->getChildByName ("STATE");
 
-        if (plugin == nullptr || stateXml == nullptr || plugin->getStringAttribute ("file") != BuiltInEffects::samplerId)
+        if (plugin == nullptr || stateXml == nullptr)
+            continue;
+
+        const auto sampler = plugin->getStringAttribute ("file") == BuiltInEffects::samplerId;
+
+        if (! sampler && plugin->getStringAttribute ("file") != BuiltInEffects::basicDrumsId)
             continue;
 
         juce::MemoryBlock block;
@@ -605,12 +639,23 @@ juce::String collectFiles (juce::XmlElement& effects, const juce::File& sessionF
             continue;
 
         auto state = juce::AudioProcessor::getXmlFromBinary (block.getData(), (int) block.getSize());
-        auto* zones = state != nullptr ? state->getChildByName ("ZONES") : nullptr;
 
-        if (zones == nullptr)
+        // A sampler's zones, or a drum machine's layers on its pads: each names a file.
+        std::vector<juce::XmlElement*> named;
+
+        if (auto* zones = state != nullptr && sampler ? state->getChildByName ("ZONES") : nullptr)
+            for (auto* zone : zones->getChildWithTagNameIterator ("ZONE"))
+                named.push_back (zone);
+
+        if (auto* pads = state != nullptr && ! sampler ? state->getChildByName ("SAMPLES") : nullptr)
+            for (auto* pad : pads->getChildWithTagNameIterator ("PAD"))
+                for (auto* layer : pad->getChildWithTagNameIterator ("LAYER"))
+                    named.push_back (layer);
+
+        if (named.empty())
             continue;
 
-        for (auto* zone : zones->getChildWithTagNameIterator ("ZONE"))
+        for (auto* zone : named)
         {
             const auto path = zone->getStringAttribute ("file");
 

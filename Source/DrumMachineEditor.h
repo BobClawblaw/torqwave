@@ -12,8 +12,17 @@
     the kit's reverb and delay) and, for the kick, its character. Along the top the kits and the
     user's own presets; the bus, the whole kit's drive, glue (with how far it turns the kit down)
     and level; and the space, the reverb's size and the delay's time and feedback. In Torqwave's
-    theme, light or dark. */
+    theme, light or dark.
+
+    A pad whose type is Sample shows, under a shorter picture, its layers: each one's waveform, name
+    and velocity range, with buttons to add, remove and reorder them and to spread them across the
+    velocities; and three more controls, where the sample starts, how far its pitch bends, and
+    Reverse. Sounds dropped on a pad, or on the selected sound's panel, become its layers: files
+    from Finder, or a sound dragged from inside Torqwave (SoundDrops). Files beside the kits opens
+    and saves a kit with its samples and looks for samples that have moved. */
 class DrumMachineEditor final : public juce::AudioProcessorEditor,
+                                public juce::FileDragAndDropTarget,
+                                public juce::DragAndDropTarget,
                                 private juce::Timer
 {
 public:
@@ -44,8 +53,35 @@ public:
     juce::String getKitText() const;
     juce::String getKnobText (const juce::String& what) const;
 
-    /** The selected sound's type as its selector shows it ("Classic", "Modern"); empty for a sound with one type, which has no selector. */
+    /** The selected sound's type as its selector shows it ("Classic", "Modern", "Sample"). */
     juce::String getTypeText() const;
+
+    /** Sounds dropped: on a pad they go to that pad, on the selected sound's panel to it. */
+    bool isInterestedInFileDrag (const juce::StringArray& files) override;
+    void fileDragMove (const juce::StringArray&, int x, int y) override;
+    void fileDragExit (const juce::StringArray&) override;
+    void filesDropped (const juce::StringArray& files, int x, int y) override;
+    bool isInterestedInDragSource (const SourceDetails&) override;
+    void itemDragMove (const SourceDetails&) override;
+    void itemDragExit (const SourceDetails&) override;
+    void itemDropped (const SourceDetails&) override;
+
+    /** The sound a drop at a place in the window goes to: the pad there, the selected sound over its panel, none elsewhere. */
+    std::optional<DrumMachine::Sound> soundAt (juce::Point<int>) const;
+
+    /** Gives files to a sound, as a drop does, and selects it. False when none of them became a layer. */
+    bool addFiles (DrumMachine::Sound, const juce::Array<juce::File>&);
+
+    /** For the tests: how many layers the selected sound's list shows, a row as it reads
+        ("Name  1-127"), whether the list is shown at all, and the line of news along the bottom. */
+    int getNumLayersShown() const;
+    juce::String getLayerText (int row) const;
+    bool showsLayers() const;
+    juce::String getMessage() const                        { return message; }
+
+    /** The layer list's buttons, by what they do: "remove", "up", "down", "spread" on its selected row (selectLayer). */
+    void selectLayer (int row);
+    void pressLayerButton (const juce::String& which);
     double getPictureSeconds() const noexcept              { return pictureSeconds; }
 
     /** Each family's colour: kick, snares and claps, hats, toms, cymbals, hand percussion. */
@@ -54,6 +90,7 @@ public:
     class Pad;
     class Picture;
     class GlueMeter;
+    class Layers;
 
 private:
     void timerCallback() override;
@@ -61,6 +98,11 @@ private:
     void refreshReadouts();
     void refreshFilterKnobs();
     void showSelected();
+    void say (const juce::String&);
+    void setDropTarget (std::optional<DrumMachine::Sound>);
+    void chooseSamples();
+    void showFilesMenu();
+    void markSampledPads();
 
     BuiltInEffects::BasicDrumsProcessor& drums;
     DrumMachine::Sound selected = DrumMachine::Sound::kick;
@@ -68,6 +110,7 @@ private:
     std::vector<std::unique_ptr<Pad>> pads;
     std::unique_ptr<Picture> picture;
     std::unique_ptr<GlueMeter> glueMeter;
+    std::unique_ptr<Layers> layers;
     std::array<juce::uint32, (size_t) DrumMachine::numSounds> seenHits {};
 
     SoundControls::Panel padPanel { "Pads" }, soundPanel { "Kick" }, kitPanel { "Kit" }, busPanel { "Bus" }, spacePanel { "Space" };
@@ -77,14 +120,18 @@ private:
     SoundControls::Knob cutoff { "Cutoff", SoundControls::Knob::Size::small }, resonance { "Reso", SoundControls::Knob::Size::small },
                         crush { "Crush", SoundControls::Knob::Size::small }, reverb { "Reverb", SoundControls::Knob::Size::small },
                         delay { "Delay", SoundControls::Knob::Size::small };
-    std::array<SoundControls::ValueReadout, 11> readouts;
+    SoundControls::Knob start { "Start" }, bend { "Bend" };   // a Sample's own
+    SoundControls::LedToggle reverse { "Reverse" };
+    juce::TextButton files { "Files" };
+    std::unique_ptr<juce::FileChooser> chooser;
+    std::array<SoundControls::ValueReadout, 13> readouts;
     SoundControls::Knob kitDrive { "Drive", SoundControls::Knob::Size::small }, glue { "Glue", SoundControls::Knob::Size::small },
                         kitLevel { "Level", SoundControls::Knob::Size::small }, reverbSize { "Size", SoundControls::Knob::Size::small },
                         feedback { "Feedback", SoundControls::Knob::Size::small };
 
-    std::array<SoundControls::Knob*, 11> soundKnobs() noexcept
+    std::array<SoundControls::Knob*, 13> soundKnobs() noexcept
     {
-        return { &tune, &decay, &tone, &level, &pan, &drive, &cutoff, &resonance, &crush, &reverb, &delay };
+        return { &tune, &decay, &tone, &level, &pan, &drive, &cutoff, &resonance, &crush, &reverb, &delay, &start, &bend };
     }
     EffectPresets::Bar presets;
 
@@ -92,6 +139,11 @@ private:
     bool hasPicture = false;
     double pictureSeconds = 0.0;
     bool shownModified = false;
+    bool shownSample = false;                  // whether the selected sound is laid out as a Sample
+    juce::uint32 samplesSeen = 0;              // the processor's count of its layers' changes when last read
+    std::optional<DrumMachine::Sound> dropTarget;   // the sound a drag is over
+    juce::String message;                      // news for the line along the bottom, until messageUntil
+    double messageUntil = 0.0;
     juce::Rectangle<int> fxLine;   // where the effects' heading is drawn
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumMachineEditor)

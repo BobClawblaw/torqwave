@@ -104,8 +104,16 @@ namespace Sampler
         juce::File before;
     };
 
+    /** A sample's file as a state names it, for anything that keeps samples by reference as a zone
+        does: `nameFile` sets the element's "file" (a factory sample by its place among them) and,
+        while a SavingInto lives, "relative" to that folder. `findFile` gives the file an element
+        names: the one "relative" to `beside` (the session's folder when none is given) when it is
+        there, else the one "file" says, a factory sample unpacked first. None for an element that names none. */
+    void nameFile (juce::XmlElement&, const juce::File&);
+    juce::File findFile (const juce::XmlElement&, const juce::File& beside = {});
+
     /** In a track's effects (as TrackEffects::createXml gives them), copies every sample its
-        samplers name into `folder` (under its own name, numbered when another file has it), and
+        samplers and drum machines name into `folder` (under its own name, numbered when another file has it), and
         names the copies in their states, relative to sessionFolder too. The copies made are added
         to `copies`, files that aren't there to `missing`. An error, or empty. */
     juce::String collectFiles (juce::XmlElement& effects, const juce::File& sessionFolder, const juce::File& folder,

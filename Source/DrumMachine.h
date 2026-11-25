@@ -1,11 +1,14 @@
 #pragma once
 
 #include "BuiltInEffects.h"
+#include "Sampler.h"
 
 /** The drum machine behind Basic Drums: synthesised sounds on the General MIDI drum map (35 to 81),
     each with its own tune, decay, tone, level, pan and drive, a kit-wide drive, glue compressor and
     level, and the kits made from them. Twenty-one of the sounds come in two types: Classic, the
-    sound as it has always been, and Modern, a second model of it with more to it. The engine knows nothing of plug-ins, so the window can
+    sound as it has always been, and Modern, a second model of it with more to it. Every sound has
+    one more type, Sample: the pad plays recordings given to it, in layers by velocity, through the
+    same settings. The engine knows nothing of plug-ins, so the window can
     render a sound with it to draw, and the tests can play it bare. */
 namespace DrumMachine
 {
@@ -52,8 +55,14 @@ namespace DrumMachine
         float reverb = 0.0f;         // %, 0 to 100, sent
         float delay = 0.0f;          // %, 0 to 100, sent
 
-        // Which model of the sound plays: 0 Classic, 1 Modern (for the sounds that have one, hasTypes).
+        // What plays: 0 Classic, 1 Modern (for the sounds that have one, hasTypes), 2 Sample (the pad's layers).
         int type = 0;
+
+        // For a Sample alone: where in the sample it starts, whether it plays backwards, and how far
+        // off its pitch it starts (it comes to pitch over about a tenth of a second).
+        float start = 0.0f;          // %, 0 to 95 of the sample's length
+        bool reverse = false;
+        float bend = 0.0f;           // semitones, -24 to 24
 
         bool operator== (const Settings& o) const
         {
@@ -61,9 +70,11 @@ namespace DrumMachine
                 && juce::exactlyEqual (level, o.level) && juce::exactlyEqual (pan, o.pan) && juce::exactlyEqual (drive, o.drive)
                 && filter == o.filter && juce::exactlyEqual (cutoff, o.cutoff) && juce::exactlyEqual (resonance, o.resonance)
                 && juce::exactlyEqual (crush, o.crush) && juce::exactlyEqual (reverb, o.reverb) && juce::exactlyEqual (delay, o.delay)
-                && type == o.type;
+                && type == o.type && juce::exactlyEqual (start, o.start) && reverse == o.reverse && juce::exactlyEqual (bend, o.bend);
         }
     };
+
+    constexpr int classicType = 0, modernType = 1, sampleType = 2;
 
     /** A sound's types ("Classic", "Modern"), and whether it has the second. Classic is the model
         every sound had before there were two, unchanged: a hit's level follows how hard it is
@@ -71,6 +82,41 @@ namespace DrumMachine
         bent in pitch, the softer it is struck. */
     juce::StringArray typeNames();
     bool hasTypes (Sound);
+
+    /** The types a sound's selector offers, in order: "Classic", "Modern" where it has one, and
+        "Sample"; the type (classicType, modernType, sampleType) at a place in that list, and a
+        type's place in it. */
+    juce::StringArray typeNamesFor (Sound);
+    int typeAt (Sound, int index);
+    int typeIndexFor (Sound, int type);
+
+    //==============================================================================
+    // Samples on a pad. A pad whose type is Sample plays its layers: recordings, each for a range
+    // of velocities. Layers whose ranges both hold a hit's velocity take turns, in their order,
+    // one for each hit of the sound (round robin), so a repeated hit is not one recording twice.
+    constexpr int maxLayers = 16;
+
+    struct Layer
+    {
+        Sampler::SamplePtr sample;     // none when its file can't be read
+        juce::File file;               // where it is from, kept when it can't be read so it can be found again
+        int lowVelocity = 1, highVelocity = 127;
+
+        bool plays (int velocity) const noexcept   { return sample != nullptr && velocity >= lowVelocity && velocity <= highVelocity; }
+    };
+
+    /** Every pad's layers, as the hits read them: never changed once made. */
+    struct Samples
+    {
+        std::array<std::vector<Layer>, (size_t) numSounds> pads;
+        juce::uint32 generation = 0;
+    };
+
+    using SamplesPtr = std::shared_ptr<const Samples>;
+
+    /** The longest a sample on a pad plays for, in seconds: with its decay at this (the knob's top)
+        or longer than the sample, a sample plays to its own end. */
+    constexpr double longestDecaySeconds = 5.0;
 
     /** The kick's three characters. */
     enum class KickCharacter { boom, punch, hard };
@@ -136,6 +182,12 @@ namespace DrumMachine
         void setSettings (const KitSettings&);
         const KitSettings& getSettings() const noexcept   { return settings; }
 
+        /** The pads' layers the next hits of a Sample pad play; a hit already sounding goes on with
+            the sample it started with, which whoever set it must keep until oldestSamplesInUse()
+            has passed its generation. */
+        void setSamples (SamplesPtr);
+        juce::uint32 oldestSamplesInUse() const noexcept;
+
         void noteOn (int note, float velocity);
 
         /** The tempo the delay's times follow (120 until told). */
@@ -164,7 +216,7 @@ namespace DrumMachine
 
         /** One hit of a sound (its pad's note unless note is given) at full velocity alone,
             through nothing else: what the window draws. */
-        static juce::AudioBuffer<float> renderOne (const KitSettings&, Sound, double sampleRate, double seconds, int note = -1);
+        static juce::AudioBuffer<float> renderOne (const KitSettings&, Sound, double sampleRate, double seconds, int note = -1, SamplesPtr = {});
 
         struct Hit;
 
@@ -179,6 +231,8 @@ namespace DrumMachine
 
         double rate = 48000.0;
         KitSettings settings;
+        SamplesPtr samples;
+        std::array<juce::uint32, (size_t) numSounds> turns {};   // each sound's hits on its samples so far: whose turn it is
         std::vector<Hit> hits, fading;   // one each per note
         int fadeLength = 144;
 
@@ -209,9 +263,10 @@ namespace BuiltInEffects
     juce::PluginDescription basicDrumsDescription();
 
     /** Basic Drums, the drum machine built in (DrumMachine), as an instrument: each sound's tune,
-        decay, tone, level, pan and drive, its type where it has two, the kick's character and the
+        decay, tone, level, pan and drive, its type, the kick's character and the
         kit's drive, glue and level are hosted parameters, so automation and sessions find them. A
-        session saved before there were types has none, and plays every sound Classic, as it did. Stereo out. A kit sets them all
+        session saved before there were types has none, and plays every sound Classic, as it did. A
+        pad's samples (its layers) are kept in the state, each named by its file. Stereo out. A kit sets them all
         at once; the state keeps the kit's name. Sessions saved before 0.20.0's step 10 (a kick,
         snare, hat and tom tune and decay in percent) load into the nearest settings: the same
         tunings, their decays scaled from the new sounds' own. MIDI: notes, CC 7 volume, CC 121 and
@@ -250,12 +305,69 @@ namespace BuiltInEffects
         const DrumMachine::Engine& getEngine() const noexcept      { return engine; }
 
         /** A parameter of a sound, by its suffix: "tune", "decay", "tone", "level", "pan", "drive",
-            "cutoff", "resonance", "crush", "reverb" or "delay"; and its filter's type. */
+            "cutoff", "resonance", "crush", "reverb", "delay", and for a Sample "start" or "bend"; and its filter's type. */
         juce::AudioParameterFloat* parameterOf (Sound, const juce::String& what) const;
         juce::AudioParameterChoice* filterParameter (Sound s) const noexcept { return sounds[(size_t) s].filter; }
 
-        /** A sound's type, for the sounds that have two (null for the rest). */
+        /** A sound's type: a choice among DrumMachine::typeNamesFor (s). */
         juce::AudioParameterChoice* typeParameter (Sound s) const noexcept   { return sounds[(size_t) s].type; }
+
+        /** A sound's type as the engine knows it (DrumMachine::classicType, modernType, sampleType);
+            setting one the sound hasn't (Modern, for nine of them) sets Classic. */
+        int getType (Sound) const;
+        void setType (Sound, int type);
+
+        /** A Sample's own settings: where it starts ("start"), how far off pitch ("bend"), and backwards or not. */
+        juce::AudioParameterBool* reverseParameter (Sound s) const noexcept  { return sounds[(size_t) s].reverse; }
+
+        //==============================================================================
+        // Samples on the pads. Message thread; the hits take them up at their next block.
+
+        /** A pad's layers, in order. Setting them keeps the first DrumMachine::maxLayers. */
+        std::vector<DrumMachine::Layer> getLayers (Sound) const;
+        void setLayers (Sound, std::vector<DrumMachine::Layer>);
+
+        /** Sounds given to a pad, as a drop on it gives them: each becomes a layer over every
+            velocity after the ones there (so they take turns), the pad's type becomes Sample, and
+            its decay is made long enough for the longest of them to play whole. An error (no room
+            for a layer or for its memory: what fitted is kept), or empty. */
+        juce::String addSamples (Sound, const std::vector<std::pair<Sampler::SamplePtr, juce::File>>&);
+
+        /** Files given to a pad: read through the store every sampler shares, then as addSamples. */
+        juce::String addFiles (Sound, const juce::Array<juce::File>&);
+
+        /** Counts up each time any pad's layers are set, so a window knows to read them again. */
+        juce::uint32 getSamplesVersion() const noexcept                { return samplesVersion.load(); }
+        DrumMachine::SamplesPtr getSamples() const;
+
+        /** Samples named in its state that could not be read when it was last restored, with why;
+            the files its layers name, each once; and the memory its samples take, each counted once. */
+        juce::StringArray getMissing() const                           { return missing; }
+        juce::Array<juce::File> getFiles() const;
+        juce::int64 bytesHeld() const;
+
+        /** Looks for its missing samples, as Torqwave Sampler does: `found` is one of them where it
+            is now, or a folder they may be in. How many layers got their sample back. */
+        int locate (const juce::File& found);
+
+        /** Writes the kit as it is now into a folder (made if need be): a kit file named after the
+            folder, and beside it, in Samples, a copy of every sample its layers play, which the kit
+            file names relative to itself, so the folder can be moved to another computer. Files that
+            aren't there are added to `missing`. An error, or empty. */
+        juce::String saveKitWithSamples (const juce::File& folder, juce::StringArray& missing);
+
+        /** Loads a kit file saved that way: its settings, and its samples from beside it. An error, or empty. */
+        juce::String loadKitFile (const juce::File&);
+        static constexpr const char* kitFileExtension = ".tqdrums";
+
+        /** What a preset carries besides its values: the pads' layers ("samples", as the state keeps
+            them). Applying texts without any takes every pad's layers away: a preset is a whole kit. */
+        EffectPresets::Texts getPresetTexts() const;
+        void setPresetTexts (const EffectPresets::Texts&);
+        void setPresetValues (const EffectPresets::Values&) override;
+
+        /** For the tests: what it may hold, in place of Sampler::mostBytes. */
+        void setMostBytes (juce::int64 bytes)                          { most = bytes; }
         juce::AudioParameterChoice* kickCharacterParameter() const noexcept   { return kickCharacter; }
         juce::AudioParameterFloat* kitDriveParameter() const noexcept         { return kitDrive; }
         juce::AudioParameterFloat* glueParameter() const noexcept             { return glue; }
@@ -273,7 +385,14 @@ namespace BuiltInEffects
             juce::AudioParameterFloat *tune = nullptr, *decay = nullptr, *tone = nullptr, *level = nullptr, *pan = nullptr, *drive = nullptr;
             juce::AudioParameterChoice *filter = nullptr, *type = nullptr;
             juce::AudioParameterFloat *cutoff = nullptr, *resonance = nullptr, *crush = nullptr, *reverb = nullptr, *delay = nullptr;
+            juce::AudioParameterFloat *start = nullptr, *bend = nullptr;
+            juce::AudioParameterBool* reverse = nullptr;
         };
+
+        void setSamples (std::array<std::vector<DrumMachine::Layer>, (size_t) DrumMachine::numSounds>);
+        void clearSamples();
+        void writeSamples (juce::XmlElement& into) const;
+        void readSamples (const juce::XmlElement& from);
 
         std::array<SoundParameters, (size_t) DrumMachine::numSounds> sounds;
         juce::AudioParameterChoice* kickCharacter = nullptr;
@@ -286,6 +405,18 @@ namespace BuiltInEffects
         // Pads clicked in the window, waiting for the audio thread.
         juce::SpinLock auditionLock;
         std::vector<std::pair<int, float>> auditions;
+
+        // The pads' layers: swapped under the lock, which the audio thread only tries. Ones taken
+        // away are kept until no hit plays from them.
+        DrumMachine::SamplesPtr samples, pendingSamples;
+        std::vector<DrumMachine::SamplesPtr> retiredSamples;
+        juce::SpinLock samplesLock;
+        std::atomic<bool> samplesChanged { false };
+        std::atomic<juce::uint32> oldestSamplesInUse { 0 }, samplesVersion { 0 };
+        juce::uint32 samplesGenerations = 0;
+        juce::StringArray missing;
+        juce::File kitFolder;                  // while a kit file is read: where its samples are beside
+        juce::int64 most = Sampler::mostBytes;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BasicDrumsProcessor)
     };

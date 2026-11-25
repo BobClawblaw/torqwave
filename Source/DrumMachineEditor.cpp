@@ -1,4 +1,5 @@
 #include "DrumMachineEditor.h"
+#include "SoundDrops.h"
 #include "Theme.h"
 
 using DrumMachine::Sound;
@@ -33,6 +34,8 @@ namespace
 
         return "Chokes nothing; a hit struck again fades the last";
     }
+
+    constexpr const char* soundFileTypes = "wav;wave;bwf;aif;aiff;aifc;flac;ogg;opus;mp3;m4a;caf";
 
     juce::String panText (float v)
     {
@@ -80,6 +83,25 @@ public:
     }
 
     float getGlow() const noexcept   { return glow; }
+
+    /** Whether it plays samples (a mark in its corner), and whether a drag is over it. */
+    void setSampled (bool s)
+    {
+        if (s != sampled)
+        {
+            sampled = s;
+            repaint();
+        }
+    }
+
+    void setDropping (bool d)
+    {
+        if (d != dropping)
+        {
+            dropping = d;
+            repaint();
+        }
+    }
 
     void paint (juce::Graphics& g) override
     {
@@ -133,6 +155,24 @@ public:
         g.setColour (Theme::dimText);
         g.setFont (juce::FontOptions (10.5f));
         g.drawText (notes, text, juce::Justification::bottomLeft);
+
+        // A pad that plays samples: three bars of a waveform in its corner.
+        if (sampled)
+        {
+            g.setColour (colour.withAlpha (0.9f));
+            const float heights[] { 4.0f, 9.0f, 6.0f, 3.0f };
+
+            for (int i = 0; i < 4; ++i)
+                g.fillRect (r.getRight() - 22.0f + 4.0f * (float) i, r.getY() + 12.0f - heights[i] * 0.5f, 2.0f, heights[i]);
+        }
+
+        if (dropping)
+        {
+            g.setColour (Theme::accent.withAlpha (0.22f));
+            g.fillRoundedRectangle (r, corner);
+            g.setColour (Theme::accent);
+            g.drawRoundedRectangle (r, corner, 2.0f);
+        }
     }
 
     void mouseDown (const juce::MouseEvent& e) override
@@ -151,7 +191,7 @@ private:
     Sound sound;
     juce::String name, notes;
     std::function<void (Sound, float)> onClick;
-    bool selected = false;
+    bool selected = false, sampled = false, dropping = false;
     float glow = 0.0f;
 };
 
@@ -365,12 +405,353 @@ private:
 };
 
 //==============================================================================
+/** A Sample pad's layers: a row each, with its waveform, its name and the velocities that play it.
+    A click selects a row; dragging its low or high velocity up or down changes it, and a double
+    click on either gives the row every velocity again. The buttons along the top add sounds,
+    remove the selected row, move it up or down (round robin goes in this order), and spread the
+    rows evenly across the velocities, the first the softest. The wheel scrolls. */
+class DrumMachineEditor::Layers final : public juce::Component
+{
+public:
+    Layers (BuiltInEffects::BasicDrumsProcessor& d, std::function<void()> addSounds) : drums (d)
+    {
+        for (auto* b : { &add, &remove, &up, &down, &spread })
+        {
+            addAndMakeVisible (*b);
+            b->setWantsKeyboardFocus (false);
+        }
+
+        add.setTooltip ("Add sounds to this pad as layers (or drop them on the pad)");
+        remove.setTooltip ("Remove the selected layer");
+        up.setTooltip ("Move the selected layer up: layers that share velocities take turns in this order");
+        down.setTooltip ("Move the selected layer down");
+        spread.setTooltip ("Spread the layers evenly across the velocities, the first the softest, so each plays for its own range");
+        add.onClick = std::move (addSounds);
+        remove.onClick = [this] { press ("remove"); };
+        up.onClick = [this] { press ("up"); };
+        down.onClick = [this] { press ("down"); };
+        spread.onClick = [this] { press ("spread"); };
+    }
+
+    void show (Sound s, juce::Colour c)
+    {
+        sound = s;
+        colour = c;
+        reload();
+    }
+
+    void reload()
+    {
+        rows = drums.getLayers (sound);
+        selectedRow = rows.empty() ? -1 : juce::jlimit (0, (int) rows.size() - 1, selectedRow);
+        shapes.clear();
+
+        // Each sample's shape: the lowest and highest of its two channels' mean in each of 72 columns.
+        for (auto& l : rows)
+        {
+            std::vector<std::pair<float, float>> shape;
+
+            if (l.sample != nullptr && l.sample->getNumFrames() > 0)
+            {
+                constexpr int columns = 72;
+                shape.assign ((size_t) columns, { 0.0f, 0.0f });
+                const auto& audio = l.sample->audio;
+                const auto n = audio.getNumSamples();
+                const auto* a = audio.getReadPointer (0);
+                const auto* b = audio.getNumChannels() > 1 ? audio.getReadPointer (1) : a;
+                auto peak = 1.0e-6f;
+
+                for (int i = 0; i < n; ++i)
+                {
+                    const auto v = 0.5f * (a[i] + b[i]);
+                    auto& [low, high] = shape[(size_t) juce::jmin (columns - 1, (int) ((juce::int64) i * columns / n))];
+                    low = juce::jmin (low, v);
+                    high = juce::jmax (high, v);
+                    peak = juce::jmax (peak, std::abs (v));
+                }
+
+                for (auto& [low, high] : shape)
+                {
+                    low /= peak;
+                    high /= peak;
+                }
+            }
+
+            shapes.push_back (std::move (shape));
+        }
+
+        const auto any = ! rows.empty();
+        remove.setEnabled (any);
+        up.setEnabled (selectedRow > 0);
+        down.setEnabled (any && selectedRow < (int) rows.size() - 1);
+        spread.setEnabled (rows.size() > 1);
+        scroll = juce::jlimit (0, juce::jmax (0, (int) rows.size() - visibleRows()), scroll);
+        repaint();
+    }
+
+    int getNumRows() const noexcept       { return (int) rows.size(); }
+
+    juce::String rowText (int row) const
+    {
+        if (! juce::isPositiveAndBelow (row, (int) rows.size()))
+            return {};
+
+        const auto& l = rows[(size_t) row];
+        return nameOfLayer (l) + "  " + juce::String (l.lowVelocity) + "-" + juce::String (l.highVelocity);
+    }
+
+    void select (int row)
+    {
+        selectedRow = rows.empty() ? -1 : juce::jlimit (0, (int) rows.size() - 1, row);
+        reload();
+    }
+
+    /** What a button does, by name: "remove", "up", "down", "spread". */
+    void press (const juce::String& which)
+    {
+        auto next = rows;
+        const auto at = selectedRow;
+
+        if (which == "remove" && juce::isPositiveAndBelow (at, (int) next.size()))
+        {
+            next.erase (next.begin() + at);
+        }
+        else if (which == "up" && at > 0 && at < (int) next.size())
+        {
+            std::swap (next[(size_t) at], next[(size_t) at - 1]);
+            --selectedRow;
+        }
+        else if (which == "down" && at >= 0 && at + 1 < (int) next.size())
+        {
+            std::swap (next[(size_t) at], next[(size_t) at + 1]);
+            ++selectedRow;
+        }
+        else if (which == "spread" && next.size() > 1)
+        {
+            const auto n = (int) next.size();
+
+            for (int i = 0; i < n; ++i)
+            {
+                next[(size_t) i].lowVelocity = 1 + 127 * i / n;
+                next[(size_t) i].highVelocity = i == n - 1 ? 127 : 127 * (i + 1) / n;
+            }
+        }
+        else
+        {
+            return;
+        }
+
+        drums.setLayers (sound, std::move (next));
+        reload();
+    }
+
+    void resized() override
+    {
+        auto top = getLocalBounds().reduced (4, 2).removeFromTop (headerHeight);
+        spread.setBounds (top.removeFromRight (58).reduced (0, 1));
+        top.removeFromRight (4);
+        down.setBounds (top.removeFromRight (30).reduced (0, 1));
+        top.removeFromRight (2);
+        up.setBounds (top.removeFromRight (30).reduced (0, 1));
+        top.removeFromRight (4);
+        remove.setBounds (top.removeFromRight (26).reduced (0, 1));
+        add.setBounds (top.removeFromRight (48).reduced (1, 1));
+    }
+
+    void paint (juce::Graphics& g) override
+    {
+        const auto area = getLocalBounds().toFloat();
+        g.setColour (Theme::inset);
+        g.fillRoundedRectangle (area, 5.0f);
+        g.setColour (Theme::line.withAlpha (0.8f));
+        g.drawRoundedRectangle (area.reduced (0.5f), 5.0f, 1.0f);
+
+        auto header = getLocalBounds().reduced (8, 2).removeFromTop (headerHeight);
+        g.setColour (Theme::dimText);
+        g.setFont (juce::FontOptions (10.5f, juce::Font::bold));
+        g.drawText ("LAYERS", header.removeFromLeft (50), juce::Justification::centredLeft);
+        g.setFont (juce::FontOptions (10.5f));
+        g.drawText (juce::String ((int) rows.size()) + " of " + juce::String (DrumMachine::maxLayers), header.removeFromLeft (60), juce::Justification::centredLeft);
+
+        auto list = listBounds();
+
+        if (rows.empty())
+        {
+            g.setColour (Theme::dimText);
+            g.setFont (juce::FontOptions (11.5f));
+            g.drawText ("Drop sounds here or on the pad: each becomes a layer", list, juce::Justification::centred);
+            return;
+        }
+
+        g.saveState();
+        g.reduceClipRegion (list);
+
+        for (int i = scroll; i < (int) rows.size() && i < scroll + visibleRows() + 1; ++i)
+        {
+            auto row = rowBounds (i);
+            const auto& l = rows[(size_t) i];
+
+            if (i == selectedRow)
+            {
+                g.setColour (colour.withAlpha (0.16f));
+                g.fillRoundedRectangle (row.toFloat().reduced (1.0f, 0.5f), 3.0f);
+                g.setColour (colour.withAlpha (0.8f));
+                g.fillRect (row.getX() + 1, row.getY() + 3, 2, row.getHeight() - 6);
+            }
+
+            g.setFont (juce::FontOptions (10.5f));
+            g.setColour (Theme::dimText);
+            g.drawText (juce::String (i + 1), row.removeFromLeft (22), juce::Justification::centred);
+
+            // Its waveform.
+            auto wave = row.removeFromLeft (waveWidth).reduced (0, 3).toFloat();
+            const auto& shape = shapes[(size_t) i];
+            g.setColour (Theme::base.withAlpha (0.6f));
+            g.fillRoundedRectangle (wave, 2.0f);
+
+            if (! shape.empty())
+            {
+                g.setColour (colour.withAlpha (0.9f));
+                const auto mid = wave.getCentreY(), half = wave.getHeight() * 0.5f - 1.0f;
+                const auto w = wave.getWidth() / (float) shape.size();
+
+                for (size_t c = 0; c < shape.size(); ++c)
+                {
+                    const auto top = mid - shape[c].second * half, bottom = mid - shape[c].first * half;
+                    g.fillRect (wave.getX() + w * (float) c, top, juce::jmax (1.0f, w), juce::jmax (1.0f, bottom - top));
+                }
+            }
+
+            row.removeFromLeft (8);
+            const auto high = row.removeFromRight (velocityWidth), dash = row.removeFromRight (10), low = row.removeFromRight (velocityWidth);
+
+            for (auto [cell, value] : { std::pair { low, l.lowVelocity }, std::pair { high, l.highVelocity } })
+            {
+                g.setColour (Theme::base.withAlpha (0.7f));
+                g.fillRoundedRectangle (cell.toFloat().reduced (1.0f, 3.0f), 3.0f);
+                g.setColour (Theme::accentLight);
+                g.drawText (juce::String (value), cell, juce::Justification::centred);
+            }
+
+            g.setColour (Theme::dimText);
+            g.drawText ("-", dash, juce::Justification::centred);
+            row.removeFromRight (6);
+            g.setColour (l.sample == nullptr ? Theme::warn : (i == selectedRow ? Theme::textStrong : Theme::text));
+            g.setFont (juce::FontOptions (11.5f));
+            g.drawText (nameOfLayer (l) + (l.sample == nullptr ? " (missing)" : ""), row, juce::Justification::centredLeft);
+        }
+
+        g.restoreState();
+    }
+
+    void mouseDown (const juce::MouseEvent& e) override
+    {
+        dragging = 0;
+        const auto row = rowAt (e.getPosition());
+
+        if (row < 0)
+            return;
+
+        selectedRow = row;
+        const auto bounds = rowBounds (row);
+
+        // Its two velocities are dragged; the rest of the row only selects it.
+        if (e.x >= bounds.getRight() - velocityWidth)
+            dragging = 2;
+        else if (e.x >= bounds.getRight() - 2 * velocityWidth - 10 && e.x < bounds.getRight() - velocityWidth - 10)
+            dragging = 1;
+
+        dragFrom = dragging == 1 ? rows[(size_t) row].lowVelocity : rows[(size_t) row].highVelocity;
+        reload();
+    }
+
+    void mouseDrag (const juce::MouseEvent& e) override
+    {
+        if (dragging == 0 || ! juce::isPositiveAndBelow (selectedRow, (int) rows.size()))
+            return;
+
+        auto next = rows;
+        auto& l = next[(size_t) selectedRow];
+        const auto value = juce::jlimit (1, 127, dragFrom - e.getDistanceFromDragStartY() / 2);
+
+        if (dragging == 1)
+            l.lowVelocity = juce::jmin (value, l.highVelocity);
+        else
+            l.highVelocity = juce::jmax (value, l.lowVelocity);
+
+        if (l.lowVelocity == rows[(size_t) selectedRow].lowVelocity && l.highVelocity == rows[(size_t) selectedRow].highVelocity)
+            return;
+
+        drums.setLayers (sound, std::move (next));
+        reload();
+    }
+
+    void mouseDoubleClick (const juce::MouseEvent& e) override
+    {
+        const auto row = rowAt (e.getPosition());
+
+        if (row < 0 || e.x < rowBounds (row).getRight() - 2 * velocityWidth - 10)
+            return;
+
+        auto next = rows;
+        next[(size_t) row].lowVelocity = 1;
+        next[(size_t) row].highVelocity = 127;
+        drums.setLayers (sound, std::move (next));
+        reload();
+    }
+
+    void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails& wheel) override
+    {
+        const auto most = juce::jmax (0, (int) rows.size() - visibleRows());
+        const auto next = juce::jlimit (0, most, scroll - (wheel.deltaY > 0.0f ? 1 : wheel.deltaY < 0.0f ? -1 : 0));
+
+        if (next != scroll)
+        {
+            scroll = next;
+            repaint();
+        }
+    }
+
+private:
+    static constexpr int headerHeight = 22, rowHeight = 22, waveWidth = 84, velocityWidth = 34;
+
+    static juce::String nameOfLayer (const DrumMachine::Layer& l)
+    {
+        return l.file != juce::File() ? l.file.getFileNameWithoutExtension() : l.sample != nullptr ? l.sample->name : juce::String ("Sample");
+    }
+
+    juce::Rectangle<int> listBounds() const         { return getLocalBounds().reduced (4, 2).withTrimmedTop (headerHeight + 2); }
+    int visibleRows() const                         { return juce::jmax (1, listBounds().getHeight() / rowHeight); }
+    juce::Rectangle<int> rowBounds (int row) const  { const auto list = listBounds(); return { list.getX(), list.getY() + (row - scroll) * rowHeight, list.getWidth(), rowHeight }; }
+
+    int rowAt (juce::Point<int> p) const
+    {
+        const auto list = listBounds();
+
+        if (! list.contains (p))
+            return -1;
+
+        const auto row = scroll + (p.y - list.getY()) / rowHeight;
+        return row < (int) rows.size() ? row : -1;
+    }
+
+    BuiltInEffects::BasicDrumsProcessor& drums;
+    Sound sound = Sound::kick;
+    juce::Colour colour;
+    std::vector<DrumMachine::Layer> rows;
+    std::vector<std::vector<std::pair<float, float>>> shapes;
+    juce::TextButton add { "Add..." }, remove { "-" }, up { juce::String::fromUTF8 ("\xe2\x96\xb2") }, down { juce::String::fromUTF8 ("\xe2\x96\xbc") }, spread { "Spread" };
+    int selectedRow = -1, scroll = 0, dragging = 0, dragFrom = 0;
+};
+
+//==============================================================================
 DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     : AudioProcessorEditor (p), drums (p),
       presets (EffectPresets::userStore(), p.getPresetKey(), [&p] { return p.getPresetValues(); },
                [&p] (const EffectPresets::Values& v) { p.setPresetValues (v); })
 {
     setOpaque (true);
+    presets.carryTexts ([&p] { return p.getPresetTexts(); }, [&p] (const EffectPresets::Texts& t) { p.setPresetTexts (t); });
 
     for (auto* panel : { &padPanel, &soundPanel, &kitPanel, &busPanel, &spacePanel })
         addAndMakeVisible (*panel);
@@ -383,6 +764,8 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
 
     picture = std::make_unique<Picture>();
     soundPanel.addAndMakeVisible (*picture);
+    layers = std::make_unique<Layers> (drums, [this] { chooseSamples(); });
+    soundPanel.addChildComponent (*layers);
 
     for (auto* k : soundKnobs())
         soundPanel.addAndMakeVisible (*k);
@@ -406,6 +789,15 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     crush.setTooltip ("Fewer bits and a lower sample rate: from a little grit to a broken toy");
     reverb.setTooltip ("How much of the sound goes to the kit's reverb");
     delay.setTooltip ("How much of the sound goes to the kit's delay");
+    start.setTooltip ("Where in the sample a hit starts, as a share of its length");
+    bend.setBipolar (true);
+    bend.setTooltip ("A pitch envelope: how many semitones off its pitch a hit starts, coming to pitch over about a tenth of a second");
+    reverse.setTooltip ("Plays the sample backwards");
+    soundPanel.addChildComponent (reverse);
+    files.setTooltip ("Kit files: open a kit saved with its samples, save this kit with copies of its samples in one folder, find samples that have moved");
+    files.setWantsKeyboardFocus (false);
+    files.onClick = [this] { showFilesMenu(); };
+    kitPanel.addAndMakeVisible (files);
 
     filter.setChoices (DrumMachine::filterNames());
     filter.setTooltip ("A filter on this sound alone: off, low-pass, band-pass or high-pass");
@@ -417,10 +809,15 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     character.setTooltip ("The kick's character: Boom (long and round), Punch (909-style), Hard (an overdriven industrial kick)");
     soundPanel.addChildComponent (character);
 
-    type.setChoices (DrumMachine::typeNames());
-    type.setTooltip ("The sound's type: Classic, as it has always been, or Modern, a second model with more to it, duller the softer it is struck");
-    type.onChange = [this] (int) { refreshPicture (true); };
-    soundPanel.addChildComponent (type);
+    type.setTooltip ("The sound's type: Classic, as it has always been; Modern, a second model with more to it, duller the softer it is struck; or Sample, which plays the sounds given to the pad");
+    type.onChange = [this] (int)
+    {
+        if ((drums.getType (selected) == DrumMachine::sampleType) != shownSample)
+            showSelected();
+        else
+            refreshPicture (true);
+    };
+    soundPanel.addAndMakeVisible (type);
 
     juce::StringArray kitNames;
 
@@ -432,8 +829,7 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     kits.onChange = [this] (int i)
     {
         drums.applyKit (DrumMachine::kits()[(size_t) i]);
-        refreshPicture (true);
-        repaint();
+        showSelected();
     };
     kits.setTooltip ("The factory kits: every sound's settings, its effects, and the bus and space at once");
     kitPanel.addAndMakeVisible (kits);
@@ -552,6 +948,10 @@ void DrumMachineEditor::showSelected()
     level.attach (drums.parameterOf (selected, "level"));
     pan.attach (drums.parameterOf (selected, "pan"));
     drive.attach (drums.parameterOf (selected, "drive"));
+    start.attach (drums.parameterOf (selected, "start"));
+    bend.attach (drums.parameterOf (selected, "bend"));
+    reverse.attach (drums.reverseParameter (selected));
+    reverse.setColour (colour);
     cutoff.attach (drums.parameterOf (selected, "cutoff"));
     resonance.attach (drums.parameterOf (selected, "resonance"));
     crush.attach (drums.parameterOf (selected, "crush"));
@@ -567,14 +967,26 @@ void DrumMachineEditor::showSelected()
 
     character.setVisible (selected == Sound::kick);
 
-    // Its type, where it has two.
-    if (auto* p = drums.typeParameter (selected))
+    // Its type, and for a Sample its layers and its own three controls.
+    type.setChoices (DrumMachine::typeNamesFor (selected));
+    type.attach (drums.typeParameter (selected));
+    type.setColour (colour);
+    shownSample = drums.getType (selected) == DrumMachine::sampleType;
+    samplesSeen = drums.getSamplesVersion();
+    layers->show (selected, colour);
+    layers->setVisible (shownSample);
+    reverse.setVisible (shownSample);
+
+    for (size_t i : { (size_t) 11, (size_t) 12 })
     {
-        type.attach (p);
-        type.setColour (colour);
+        soundKnobs()[i]->setVisible (shownSample);
+        readouts[i].setVisible (shownSample);
     }
 
-    type.setVisible (drums.typeParameter (selected) != nullptr);
+    for (auto* k : { &level, &pan, &drive })
+        k->setSize (shownSample ? SoundControls::Knob::Size::small : SoundControls::Knob::Size::normal);
+
+    markSampledPads();
     refreshReadouts();
     refreshPicture (true);
     resized();
@@ -613,7 +1025,7 @@ void DrumMachineEditor::refreshPicture (bool force)
     pictured = now;
     hasPicture = true;
     const auto guess = juce::jlimit (0.05, 6.5, now.sounds[(size_t) selected].decay * 0.00125 + 0.06);
-    const auto hit = DrumMachine::Engine::renderOne (now, selected, pictureRate, guess);
+    const auto hit = DrumMachine::Engine::renderOne (now, selected, pictureRate, guess, -1, drums.getSamples());
     picture->set (hit, pictureRate, now.sounds[(size_t) selected].decay, colourOf (selected));
     pictureSeconds = picture->getSeconds();
 }
@@ -625,7 +1037,212 @@ juce::String DrumMachineEditor::getKitText() const
 
 juce::String DrumMachineEditor::getTypeText() const
 {
-    return type.isVisible() ? DrumMachine::typeNames()[type.getIndex()] : juce::String();
+    return DrumMachine::typeNamesFor (selected)[type.getIndex()];
+}
+
+int DrumMachineEditor::getNumLayersShown() const            { return layers->getNumRows(); }
+juce::String DrumMachineEditor::getLayerText (int row) const { return layers->rowText (row); }
+bool DrumMachineEditor::showsLayers() const                 { return layers->isVisible(); }
+void DrumMachineEditor::selectLayer (int row)               { layers->select (row); }
+void DrumMachineEditor::pressLayerButton (const juce::String& which)    { layers->press (which); }
+
+void DrumMachineEditor::say (const juce::String& text)
+{
+    message = text;
+    messageUntil = juce::Time::getMillisecondCounterHiRes() + 9000.0;
+    repaint();
+}
+
+void DrumMachineEditor::markSampledPads()
+{
+    const auto& order = padOrder();
+
+    for (size_t i = 0; i < order.size(); ++i)
+        pads[i]->setSampled (drums.getType (order[i]) == DrumMachine::sampleType);
+}
+
+//==============================================================================
+std::optional<Sound> DrumMachineEditor::soundAt (juce::Point<int> p) const
+{
+    const auto& order = padOrder();
+
+    for (size_t i = 0; i < order.size(); ++i)
+        if ((pads[i]->getBounds() + padPanel.getPosition()).contains (p))
+            return order[i];
+
+    if (soundPanel.getBounds().contains (p))
+        return selected;
+
+    return {};
+}
+
+void DrumMachineEditor::setDropTarget (std::optional<Sound> s)
+{
+    if (s == dropTarget)
+        return;
+
+    dropTarget = s;
+    const auto& order = padOrder();
+
+    for (size_t i = 0; i < order.size(); ++i)
+        pads[i]->setDropping (s.has_value() && order[i] == *s);
+
+    repaint();
+}
+
+bool DrumMachineEditor::addFiles (Sound s, const juce::Array<juce::File>& sounds)
+{
+    const auto before = drums.getLayers (s).size();
+    const auto error = drums.addFiles (s, sounds);
+    select (s);
+
+    if (error.isNotEmpty())
+        say (error);
+
+    return drums.getLayers (s).size() > before;
+}
+
+bool DrumMachineEditor::isInterestedInFileDrag (const juce::StringArray& dragged)
+{
+    for (auto& f : dragged)
+        if (juce::File (f).hasFileExtension (soundFileTypes))
+            return true;
+
+    return false;
+}
+
+void DrumMachineEditor::fileDragMove (const juce::StringArray&, int x, int y)      { setDropTarget (soundAt ({ x, y })); }
+void DrumMachineEditor::fileDragExit (const juce::StringArray&)                    { setDropTarget ({}); }
+
+void DrumMachineEditor::filesDropped (const juce::StringArray& dropped, int x, int y)
+{
+    const auto to = soundAt ({ x, y });
+    setDropTarget ({});
+
+    if (! to.has_value())
+    {
+        say ("Drop sounds on a pad, or on the selected sound's panel.");
+        return;
+    }
+
+    juce::Array<juce::File> sounds;
+
+    for (auto& f : dropped)
+        if (juce::File (f).hasFileExtension (soundFileTypes))
+            sounds.add (juce::File (f));
+
+    addFiles (*to, sounds);
+}
+
+bool DrumMachineEditor::isInterestedInDragSource (const SourceDetails& details)    { return SoundDrops::accepts (details.description); }
+void DrumMachineEditor::itemDragMove (const SourceDetails& details)                { setDropTarget (soundAt (details.localPosition)); }
+void DrumMachineEditor::itemDragExit (const SourceDetails&)                        { setDropTarget ({}); }
+
+void DrumMachineEditor::itemDropped (const SourceDetails& details)
+{
+    const auto to = soundAt (details.localPosition);
+    setDropTarget ({});
+
+    if (! to.has_value())
+    {
+        say ("Drop sounds on a pad, or on the selected sound's panel.");
+        return;
+    }
+
+    const auto sound = SoundDrops::take (details.description, Sampler::longestSampleSeconds);
+
+    if (! sound.has_value())
+        return;
+
+    // A saved file as it stands is sampled where it is; anything else is written to the Samples folder first.
+    auto file = sound->file;
+
+    if (file == juce::File())
+    {
+        juce::String error;
+        file = Sampler::writeSample (sound->audio, sound->sampleRate, sound->name, sound->markers, error);
+
+        if (file == juce::File())
+        {
+            say (error);
+            return;
+        }
+    }
+
+    addFiles (*to, { file });
+}
+
+void DrumMachineEditor::chooseSamples()
+{
+    chooser = std::make_unique<juce::FileChooser> ("Choose sounds for " + DrumMachine::nameOf (selected), juce::File(), "*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3;*.m4a;*.caf");
+    chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::canSelectMultipleItems,
+                          [safe = juce::Component::SafePointer<DrumMachineEditor> (this), to = selected] (const juce::FileChooser& c)
+                          {
+                              if (safe != nullptr && ! c.getResults().isEmpty())
+                                  safe->addFiles (to, c.getResults());
+                          });
+}
+
+void DrumMachineEditor::showFilesMenu()
+{
+    juce::PopupMenu menu;
+    menu.addItem (1, "Open Kit File...");
+    menu.addItem (2, "Save Kit with Samples...");
+    menu.addSeparator();
+    menu.addItem (3, "Find Missing Samples...", ! drums.getMissing().isEmpty());
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (files), [safe = juce::Component::SafePointer<DrumMachineEditor> (this)] (int chosen)
+    {
+        if (safe == nullptr || chosen == 0)
+            return;
+
+        auto& self = *safe;
+        using Flags = juce::FileBrowserComponent;
+
+        if (chosen == 1)
+        {
+            self.chooser = std::make_unique<juce::FileChooser> ("Open a Basic Drums kit", juce::File(), juce::String ("*") + BuiltInEffects::BasicDrumsProcessor::kitFileExtension);
+            self.chooser->launchAsync (Flags::openMode | Flags::canSelectFiles, [safe] (const juce::FileChooser& c)
+            {
+                if (safe == nullptr || c.getResult() == juce::File())
+                    return;
+
+                const auto error = safe->drums.loadKitFile (c.getResult());
+                safe->showSelected();
+                const auto missing = safe->drums.getMissing();
+                safe->say (error.isNotEmpty() ? error : missing.isEmpty() ? "Opened " + c.getResult().getFileNameWithoutExtension() + "."
+                                                                           : juce::String (missing.size()) + " of its samples could not be found: " + missing[0]);
+            });
+        }
+        else if (chosen == 2)
+        {
+            self.chooser = std::make_unique<juce::FileChooser> ("Save the kit and its samples into a new folder", juce::File(), juce::String());
+            self.chooser->launchAsync (Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [safe] (const juce::FileChooser& c)
+            {
+                if (safe == nullptr || c.getResult() == juce::File())
+                    return;
+
+                juce::StringArray missing;
+                const auto folder = c.getResult().withFileExtension ({});
+                const auto error = safe->drums.saveKitWithSamples (folder, missing);
+                safe->say (error.isNotEmpty() ? error : missing.isEmpty() ? "Saved " + folder.getFileName() + " with its samples."
+                                                                           : "Saved " + folder.getFileName() + ", without " + juce::String (missing.size()) + " samples that are not where the kit says.");
+            });
+        }
+        else if (chosen == 3)
+        {
+            self.chooser = std::make_unique<juce::FileChooser> ("Find a missing sample, or the folder they are in", juce::File(), "*");
+            self.chooser->launchAsync (Flags::openMode | Flags::canSelectFiles | Flags::canSelectDirectories, [safe] (const juce::FileChooser& c)
+            {
+                if (safe == nullptr || c.getResult() == juce::File())
+                    return;
+
+                const auto found = safe->drums.locate (c.getResult());
+                safe->showSelected();
+                safe->say (found == 0 ? juce::String ("None of the missing samples are there.") : juce::String (found) + (found == 1 ? " layer has" : " layers have") + " its sample back.");
+            });
+        }
+    });
 }
 
 juce::String DrumMachineEditor::getKnobText (const juce::String& what) const
@@ -652,6 +1269,20 @@ void DrumMachineEditor::timerCallback()
 
     character.refresh();
     delayTime.refresh();
+    reverse.refresh();
+
+    // The type and the layers may have changed from outside the window (a preset, a kit, the host).
+    if (const auto was = type.getIndex(); (type.refresh(), type.getIndex() != was)
+            || (drums.getType (selected) == DrumMachine::sampleType) != shownSample || drums.getSamplesVersion() != samplesSeen)
+        showSelected();
+
+    markSampledPads();
+
+    if (message.isNotEmpty() && juce::Time::getMillisecondCounterHiRes() > messageUntil)
+    {
+        message.clear();
+        repaint();
+    }
 
     if (const auto was = filter.getIndex(); (filter.refresh(), filter.getIndex() != was))
         refreshFilterKnobs();
@@ -725,6 +1356,7 @@ void DrumMachineEditor::resized()
     {
         auto c = kitPanel.getContentBounds();
         auto first = c.removeFromTop (c.getHeight() / 2).withSizeKeepingCentre (c.getWidth(), 28);
+        files.setBounds (first.removeFromRight (54).reduced (0, 2));
         kits.setBounds (first.removeFromLeft (juce::jmin (260, first.getWidth() - 64)));
         presets.setBounds (c.withSizeKeepingCentre (c.getWidth(), 28));
     }
@@ -770,9 +1402,27 @@ void DrumMachineEditor::resized()
 
         type.setBounds (header.removeFromRight (140).reduced (0, 2));
 
+        if (shownSample)
+        {
+            header.removeFromRight (6);
+            reverse.setBounds (header.removeFromRight (84).reduced (0, 2));
+        }
+
         auto c = soundPanel.getContentBounds();
         c.removeFromBottom (20);   // the line about notes and chokes, painted by the panel's owner below
-        picture->setBounds (c.removeFromTop (170));
+
+        // A Sample's picture is shorter, to make room for its layers under it.
+        if (shownSample)
+        {
+            picture->setBounds (c.removeFromTop (76));
+            c.removeFromTop (4);
+            layers->setBounds (c.removeFromTop (90));
+        }
+        else
+        {
+            picture->setBounds (c.removeFromTop (170));
+        }
+
         c.removeFromTop (8);
         // Each knob with its value in a readout under it, in real units.
         const auto knobs = soundKnobs();
@@ -798,10 +1448,13 @@ void DrumMachineEditor::resized()
         for (size_t i = 0; i < 3; ++i)
             place (i, big.removeFromLeft (bw).reduced (0, 2), 8);
 
-        const auto sw = c.getWidth() / 3;
+        // Level, pan and drive; for a Sample, where it starts and its pitch envelope beside them.
+        const auto across = shownSample ? 5 : 3;
+        const auto sw = c.getWidth() / across;
 
-        for (size_t i = 3; i < 6; ++i)
-            place (i, c.removeFromLeft (sw).reduced (0, 4), 18);
+        for (size_t i : { (size_t) 3, (size_t) 4, (size_t) 5, (size_t) 11, (size_t) 12 })
+            if (i < 6 || shownSample)
+                place (i, c.removeFromLeft (sw).reduced (0, 4), shownSample ? 6 : 18);
     }
 }
 
@@ -811,7 +1464,29 @@ void DrumMachineEditor::paintOverChildren (juce::Graphics& g)
     auto line = soundPanel.getBounds().reduced (16, 8).removeFromBottom (16);
     g.setColour (Theme::dimText);
     g.setFont (juce::FontOptions (11.0f));
-    g.drawText ("Notes " + notesOf (selected) + "    " + chokesOf (selected), line, juce::Justification::centredLeft);
+    const auto missing = drums.getMissing();
+
+    if (message.isNotEmpty())
+    {
+        g.setColour (Theme::accentLight);
+        g.drawText (message, line, juce::Justification::centredLeft);
+    }
+    else if (! missing.isEmpty())
+    {
+        g.setColour (Theme::warn);
+        g.drawText (juce::String (missing.size()) + (missing.size() == 1 ? " sample is" : " samples are") + " missing: Files > Find Missing Samples", line, juce::Justification::centredLeft);
+    }
+    else
+    {
+        g.drawText ("Notes " + notesOf (selected) + "    " + chokesOf (selected), line, juce::Justification::centredLeft);
+    }
+
+    // A drag over the selected sound's panel: its edge lit, as a pad's is.
+    if (dropTarget.has_value() && soundPanel.getBounds().contains (getMouseXYRelative()))
+    {
+        g.setColour (Theme::accent);
+        g.drawRoundedRectangle (soundPanel.getBounds().toFloat().reduced (1.0f), 6.0f, 2.0f);
+    }
 
     // A rule and a heading over its effects.
     g.setColour (Theme::dimText.withAlpha (0.35f));
