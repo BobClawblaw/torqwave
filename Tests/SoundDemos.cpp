@@ -788,6 +788,24 @@ namespace
             for (int ch = 0; ch < pass.getNumChannels(); ++ch)
                 audio.copyFrom (ch, r * pass.getNumSamples(), pass, ch, 0, pass.getNumSamples());
 
+        // The step from one sample to the next where the loop joins, against the largest step anywhere else:
+        // a join that steps much more than the sound itself does is a click each time round.
+        if (rounds > 1)
+        {
+            auto join = 0.0f, inside = 0.0f;
+
+            for (int ch = 0; ch < audio.getNumChannels(); ++ch)
+                for (int i = 1; i < audio.getNumSamples(); ++i)
+                {
+                    const auto step = std::abs (audio.getSample (ch, i) - audio.getSample (ch, i - 1));
+                    auto& into = i % pass.getNumSamples() == 0 ? join : inside;
+                    into = juce::jmax (into, step);
+                }
+
+            entry->setProperty ("joinStep", juce::roundToInt (join * 10000.0f) / 10000.0);
+            entry->setProperty ("insideStep", juce::roundToInt (inside * 10000.0f) / 10000.0);
+        }
+
         juce::Array<juce::var> voices;
 
         for (auto& part : parts)
