@@ -36,39 +36,8 @@ A free, open-source audio editor and DAW in one, for macOS, Windows and Linux: f
   - Instruments and plug-ins follow the session's tempo.
   - The editor gains a Hand tool, the time-view strip over its ruler and Paste Clipboard as New File.
   - The Levels panel stands upright at a side.
-- **0.19.2:** crossfades clips you have laid over each other (double-click their overlap), which popped in 0.19.1.
-- **0.19.1:** crossfades between overlapping clips in a session, made with Shift-X, dragged and shaped on the lane, and set in a crossfade editor with presets and auditions; fades that meet now add up exactly.
-- **0.19.0:**
-  - Sound design in the session: Edit in Place, clip effects, Combine to New Sound and Add to Library.
-  - Working to picture: session timecode, Find Cuts and hit markers.
-  - Mixing: mixer scenes, channel-strip presets and hardware inserts, automation modes and VCA faders, a master track.
-  - Audio that follows the tempo, comping and an arranger.
-  - MIDI: a drum grid with swing and Capture MIDI, MIDI out, control surfaces and MIDI learn.
-  - For writing music: the Sequence Library, the Sequencer window with its writing tools, the Idea Board for launching sequences together, kits, MIDI files and packs.
-  - Ask Torq gains a list of servers, writes and reviews sequences, and on sessions works whole track chains, effect automation, freezes and bounces.
-- **0.18.0:**
-  - The multitrack view gets a session loop, a bar grid with snapping, loop locators, a bars clock, Tap tempo, an info line and a Track Inspector, Cubase-style, with a Studio theme.
-  - Ask Torq works on sessions too (tracks, clips, note clips, instruments, automation and track effects) and uses nearly the whole Effects menu on files.
-  - ASIO devices on Windows.
-  - The Mac app is universal again, for Apple silicon and Intel Macs.
-- **0.17.0:**
-  - Ask Torq 🐶, an experimental assistant that turns a sentence into a plan of edits on the open audio file using a language model you run yourself (off by default; see [Ask Torq](docs/guide/13-ask-torq.md)), with a plug-in catalogue that learns what your effects do and ships reviewed descriptions of 406 of them.
-  - Folders in sessions that can be added, emptied and deleted from right-click menus, with tracks dragged out of them.
-  - The keyboard shortcut list inside Settings > Keys.
-- **0.16.4:** envelopes over note clips on instrument tracks, the instrument with its own entry in the A menu for automating its parameters, and envelopes left by a removed effect kept out of the way.
-- **0.16.3:** the home screen at start-up, saved files on the recent list, Option-drag to copy clips, envelope and clip gain points you can select and delete with Delete, ripple for a time range, and automation that shows itself.
-- **0.16.2:** the user guide inside the app (Help > User Guide, F1), a home screen with your recent files, sessions and projects as cards with pictures, ripple editing, layered overlapping clips, splitting clips on every track at once, an accent colour for each workspace, and LV2 plug-ins on the Mac and Linux.
-- **0.16.1:** instruments that sound as you play them (the piano roll's keys and notes, the Keyboard panel and MIDI inputs going to the track being worked on, and a plug-in's own keys), fixes for notes left sounding, right-click menus across the multitrack view, a track list that drags wider, sessions and projects in File > Open, and the build shown on the loading screen.
-- **0.16.0:** the app's new name and artwork, with nothing else changed from 0.15.10.
-- **The 0.15 line,** which 0.15.10 ends:
-  - Instrument plug-ins, MIDI and automation for sound design (instrument tracks, note clips, a piano roll, live MIDI input, controller lanes), with the fixes from using it.
-  - A round of MIDI editing in the multitrack view: a toolbar with Select, Draw, Split, Stretch, Glue, Range and Mute tools, the time under the bars on the ruler, several note clips selected at once with audio clips, a rubber band, Clip Properties for note clips, a musical timebase so clips follow tempo changes, and transpose, velocity and quantize for the selected clips' notes.
-  - A round on the effects rack: the rack stays live until it is applied, an Apply button on its panel, Save As and every export written through the rack as it plays, and applying the rack empties it with Undo bringing it back.
-  - 0.15.8 makes Loop Playback go round the whole file or session when nothing is selected.
-  - 0.15.9 brings Torqwave to Linux.
-  - 0.15.10 gives the spectrogram a Time Selection tool beside a Box tool that draws a box on a plain drag, resizable by its edges and corners, with a new box taking over while one plays.
 
-See the [changelog](CHANGELOG.md) for what each version holds, the [fix log](docs/DOGFOODING.md) for what use has found and what fixed it, the [roadmap](ROADMAP.md) for what comes next, and [keyboard shortcuts](docs/SHORTCUTS.md) for the keys.
+See the [changelog](CHANGELOG.md) for earlier releases and what each version holds, the [fix log](docs/DOGFOODING.md) for what use has found and what fixed it, the [roadmap](ROADMAP.md) for what comes next, and [keyboard shortcuts](docs/SHORTCUTS.md) for the keys.
 
 **New to Torqwave?** The [user guide](docs/guide/README.md) shows how to do things, one job at a time. The app carries it too: **Help > User Guide** (`F1`) opens it in a window of its own, pictures and all.
 
