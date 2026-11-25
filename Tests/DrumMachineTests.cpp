@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "../Source/DrumMachine.h"
 #include "../Source/DrumMachineEditor.h"
+#include "../Source/InstrumentKeys.h"
 #include "../Source/Instrument.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/Theme.h"
@@ -174,16 +175,15 @@ namespace
         std::set<Sound> each (DrumMachineEditor::padOrder().begin(), DrumMachineEditor::padOrder().end());
         check (inside && apart && each.size() == (size_t) DrumMachine::numSounds, "drums window: a pad for each of the 30 sounds, inside the window, none overlapping");
 
-        // Clicking a pad plays it (louder nearer its top) and selects it.
+        // Clicking a pad plays it and selects it; with no keys under the window, at the usual velocity of 100.
         const auto hits = drums.getEngine().hitsOf (Sound::snare);
-        window->clickPad (Sound::snare, 0.02f);
+        window->clickPad (Sound::snare);
         juce::AudioBuffer<float> block (2, 512);
         juce::MidiBuffer midi;
         drums.processBlock (block, midi);
-        check (window->getSelected() == Sound::snare && drums.getEngine().hitsOf (Sound::snare) == hits + 1 && drums.getEngine().lastVelocityOf (Sound::snare) > 0.95f
-                   && block.getMagnitude (0, 512) > 0.05f && DrumMachineEditor::velocityAt (0.0f) > DrumMachineEditor::velocityAt (0.5f)
-                   && DrumMachineEditor::velocityAt (0.5f) > DrumMachineEditor::velocityAt (1.0f) && juce::roundToInt (DrumMachineEditor::velocityAt (1.0f) * 127.0f) == 6,
-               "drums window: clicking the snare's pad near its top plays it at full velocity and selects it; lower on a pad plays softer");
+        check (window->getSelected() == Sound::snare && drums.getEngine().hitsOf (Sound::snare) == hits + 1 && juce::roundToInt (drums.getEngine().lastVelocityOf (Sound::snare) * 127.0f) == 100
+                   && block.getMagnitude (0, 512) > 0.05f,
+               "drums window: clicking the snare's pad plays it and selects it, at velocity 100 with no keys under the window");
 
         // The selected sound's knobs read in real units and follow it.
         BuiltInEffects::setExactly (*drums.parameterOf (Sound::snare, "decay"), 640.0f);
@@ -1269,8 +1269,9 @@ namespace
         }
 
         // The window says what a hit was: its velocity and the layer it played, lit in the list, whether
-        // the hit came from a click on the pad or from a note. (From use: two layers spread on a user pad
-        // seemed to be one, because a click's velocity comes from its height on the pad and nothing showed it.)
+        // the hit came from a click on the pad or from a note. A click plays at the velocity of the keys
+        // under the window. (From use: two layers spread on a user pad seemed to be one, because a click's
+        // velocity came from its height on the pad, not from the keys' Velocity, and nothing showed it.)
         {
             const auto there = juce::File::createTempFile ("drumshits");
             there.createDirectory();
@@ -1281,6 +1282,11 @@ namespace
 
             if (auto* window = dynamic_cast<DrumMachineEditor*> (made.get()))
             {
+                // The window with its keys under it, as an instrument's window holds them.
+                juce::Component holder;
+                InstrumentKeys::Strip keys ([] (const juce::MidiMessage&) {});
+                holder.addAndMakeVisible (*window);
+                holder.addAndMakeVisible (keys);
                 constexpr int pad = 51;   // the 52nd pad, a user pad
                 const auto note = drums.getPadNote (pad);
                 window->addFiles (pad, { quiet, loud });
@@ -1299,13 +1305,15 @@ namespace
                     window->showHits();
                 };
 
-                // A click low on the pad is soft and plays the first layer; one at its top is hard and plays the second.
-                window->clickPad (pad, 0.95f);
+                // A click on the pad plays at the keys' velocity: at 20 the first layer, at 100 the second.
+                keys.setVelocity (20);
+                window->clickPad (pad);
                 play (0);
-                const auto low = window->getHitText() == "hit 6: layer 1" && window->getLitLayer() == 0;
-                window->clickPad (pad, 0.05f);
+                const auto low = window->getHitText() == "hit 20: layer 1" && window->getLitLayer() == 0;
+                keys.setVelocity (100);
+                window->clickPad (pad);
                 play (0);
-                const auto high = window->getHitText() == "hit 127: layer 2" && window->getLitLayer() == 1;
+                const auto high = window->getHitText() == "hit 100: layer 2" && window->getLitLayer() == 1;
 
                 // A note, as the keys, a controller or a sequence send it.
                 play (20);
@@ -1330,15 +1338,104 @@ namespace
                 window->selectPad ((int) Sound::clap);
                 const auto other = apart && window->getHitText().isEmpty() && window->getLitLayer() == -1;
 
-                // The softest click is inside the softest of 16 layers spread evenly (1 to 7).
-                const auto reach = juce::roundToInt (DrumMachineEditor::velocityAt (1.0f) * 127.0f) <= 127 / DrumMachine::maxLayers;
+                // A user pad's note is named as the keys under the window name it: middle C is C4.
+                const auto named = note == 103 && window->getPadText (pad) == "Pad 52 / 103 G7";
+                holder.removeAllChildren();
 
-                check (before && low && high && played && harder && none && other && reach,
-                       juce::String ("drums window: the layers say the last hit's velocity and light the layer it played, for a click on the pad (soft at its bottom, hard at its top) and for a note; a velocity no layer takes says so")
+                check (before && low && high && played && harder && none && other && named,
+                       juce::String ("drums window: the layers say the last hit's velocity and light the layer it played, for a click on the pad (at the velocity of the keys under the window) and for a note; a velocity no layer takes says so; the pad's note is named with middle C as C4")
                            + (before ? "" : " [before]") + (low ? "" : " [low]") + (high ? "" : " [high]") + (played ? "" : " [note]") + (harder ? "" : " [harder]")
-                           + (none ? "" : " [none]") + (other ? "" : " [other]") + (reach ? "" : " [reach]"));
+                           + (none ? "" : " [none]") + (other ? "" : " [other]") + (named ? "" : " [named " + window->getPadText (pad) + "]"));
             }
 
+            there.deleteRecursively();
+        }
+
+        // The keys strip under the window: a key clicked on its piano and a typed key both play at the
+        // strip's Velocity (C and V), and that is the velocity the layer is chosen by.
+        {
+            const auto there = juce::File::createTempFile ("drumskeys");
+            there.createDirectory();
+            const auto quiet = writeSound (there, "Soft", a), loud = writeSound (there, "Hard", b);
+            BasicDrumsProcessor drums;
+            drums.prepareToPlay (rate, 512);
+            constexpr int pad = 51;
+            const auto note = drums.getPadNote (pad);
+            drums.addFiles (pad, { quiet, loud });
+            auto layers = drums.getLayers (pad);
+            layers[0].highVelocity = 63;
+            layers[1].lowVelocity = 64;
+            drums.setLayers (pad, layers);
+
+            juce::MidiBuffer sent;
+            InstrumentKeys::Strip strip ([&sent] (const juce::MidiMessage& m) { sent.addEvent (m, 0); });
+            strip.setSize (1100, InstrumentKeys::Strip::height);
+            strip.setVisible (true);
+            strip.addToDesktop (0);   // a click is taken only by a piano that is somewhere
+            strip.setAlwaysOnTop (true);
+            strip.setTopLeftPosition (40, 80);
+            strip.toFront (false);
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (300);
+            juce::AudioBuffer<float> block (2, 512);
+            const auto takeIn = [&]
+            {
+                drums.processBlock (block, sent);
+                sent.clear();
+                return std::pair { juce::roundToInt (drums.getEngine().lastVelocityOfPad (pad) * 127.0f), drums.getEngine().lastLayerOfPad (pad) };
+            };
+
+            juce::MidiKeyboardComponent* piano = nullptr;
+
+            for (auto* child : strip.getChildren())
+                if (auto* k = dynamic_cast<juce::MidiKeyboardComponent*> (child))
+                    piano = k;
+
+            // A click is taken only by a piano the screen shows at that place: where it cannot be (a
+            // locked screen, a window over it), the typed keys alone are checked, and the line says so.
+            const auto clickable = piano != nullptr && piano->contains (piano->getRectangleForKey (note).getCentre());
+            juce::String got = clickable ? "" : " piano not clickable here, typed keys only;";
+            auto good = piano != nullptr;
+
+            for (auto velocity : { 20, 100 })
+            {
+                strip.setVelocity (velocity);
+                const auto layer = velocity < 64 ? 0 : 1;
+
+                if (clickable)
+                {
+                    const auto key = piano->getRectangleForKey (note);
+
+                    for (auto down : { 0.2f, 0.9f })   // high and low on the key: its height sets nothing
+                    {
+                        const auto at = juce::Point<float> (key.getCentreX(), key.getY() + key.getHeight() * down);
+                        const juce::MouseEvent e (juce::Desktop::getInstance().getMainMouseSource(), at, juce::ModifierKeys::leftButtonModifier, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                                                  piano, piano, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false);
+                        piano->mouseDown (e);
+                        const auto [v, l] = takeIn();
+                        piano->mouseUp (e);
+                        takeIn();
+                        got << " piano " << v << "/" << l;
+                        good = good && v == velocity && l == layer;
+                    }
+                }
+
+                // A typed key: the octave is set so that the first key of the row is the pad's note's C.
+                strip.setOctave (note / 12 - 1);
+                juce::juce_wchar typed = 0;
+
+                for (auto letter : juce::String ("qwertyuiop234567890asdfghjkl"))
+                    if (InstrumentKeys::noteFor (letter, strip.getOctave()) == note)
+                        typed = letter;
+
+                strip.keyDown (typed);
+                const auto [v, l] = takeIn();
+                strip.keyUp (typed);
+                takeIn();
+                got << " typed " << v << "/" << l;
+                good = good && v == velocity && l == layer;
+            }
+
+            check (good, "drums keys: a key clicked on the window's piano and a typed key play a sampled user pad at the strip's velocity, 20 the soft layer and 100 the hard one, wherever on the key the click is (velocity/layer:" + got + ")");
             there.deleteRecursively();
         }
 
@@ -1512,8 +1609,8 @@ namespace
                 const auto coloured = shown.getPadColour (first) == juce::Colour (0xffe8604c);
                 window->changeUserPad (first, "clear");
                 window->select (Sound::snare);
-                check (allInside && places.size() == 64 && before == "Pad 31 / 82 " + juce::MidiMessage::getMidiNoteName (82, true, true, 3) && dropped
-                           && renamed == "Sub Layer / 36 " + juce::MidiMessage::getMidiNoteName (36, true, true, 3) && coloured
+                check (allInside && places.size() == 64 && before == "Pad 31 / 82 " + juce::MidiMessage::getMidiNoteName (82, true, true, 4) && dropped
+                           && renamed == "Sub Layer / 36 " + juce::MidiMessage::getMidiNoteName (36, true, true, 4) && coloured
                            && window->getPadText (first) == before && shown.getLayers (first).empty() && window->getSelectedPad() == (int) Sound::snare && ! window->showsLayers(),
                        "drum user pads window: 64 pads, each in its own place inside the window; a sound dropped on pad 31 selects it and shows its layer; given another note, a name and a colour its card reads "
                            + renamed + "; emptied, it reads " + before + " again");

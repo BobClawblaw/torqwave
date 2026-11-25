@@ -1,4 +1,5 @@
 #include "DrumMachineEditor.h"
+#include "InstrumentKeys.h"
 #include "SoundDrops.h"
 #include "Theme.h"
 
@@ -35,7 +36,8 @@ namespace
         return "Chokes nothing; a hit struck again fades the last";
     }
 
-    juce::String noteName (int note)   { return juce::MidiMessage::getMidiNoteName (note, true, true, 3); }
+    // Middle C is C4, as on the keys under the window and everywhere else in Torqwave.
+    juce::String noteName (int note)   { return juce::MidiMessage::getMidiNoteName (note, true, true, 4); }
 
     constexpr const char* soundFileTypes = "wav;wave;bwf;aif;aiff;aifc;flac;ogg;opus;mp3;m4a;caf";
 
@@ -53,11 +55,11 @@ class DrumMachineEditor::Pad final : public juce::Component,
                                     public juce::SettableTooltipClient
 {
 public:
-    Pad (int p, std::function<void (int, float)> clicked, std::function<void (int)> menu)
+    Pad (int p, std::function<void (int)> clicked, std::function<void (int)> menu)
         : pad (p), onClick (std::move (clicked)), onMenu (std::move (menu))
     {
         setRepaintsOnMouseActivity (true);
-        setTooltip ("Click to play it: harder near the pad's top, softer near its bottom (velocity 127 down to 6). The playing keys' Velocity is for the keys only");
+        setTooltip ("Click to play it, at the velocity the keys below play at (C and V change it)");
     }
 
     void describe (const juce::String& newName, const juce::String& newNotes, juce::Colour c, bool isEmpty)
@@ -70,7 +72,7 @@ public:
         colour = c;
         empty = isEmpty;
         setTitle (name);
-        setDescription ("Plays " + name + "; click higher for harder, lower for softer");
+        setDescription ("Plays " + name + " at the keys' velocity");
         repaint();
     }
 
@@ -211,7 +213,7 @@ public:
             return;
         }
 
-        onClick (pad, (float) e.y / (float) juce::jmax (1, getHeight()));
+        onClick (pad);
     }
 
     void mouseUp (const juce::MouseEvent&) override   { repaint(); }
@@ -220,7 +222,7 @@ private:
     int pad;
     juce::String name, notes;
     juce::Colour colour;
-    std::function<void (int, float)> onClick;
+    std::function<void (int)> onClick;
     std::function<void (int)> onMenu;
     bool selected = false, sampled = false, dropping = false, empty = false;
     float glow = 0.0f;
@@ -858,7 +860,7 @@ DrumMachineEditor::DrumMachineEditor (BuiltInEffects::BasicDrumsProcessor& p)
     // The sounds' pads in their order, then the user pads.
     for (size_t place = 0; place < (size_t) DrumMachine::numPads; ++place)
     {
-        pads.push_back (std::make_unique<Pad> (padAtPlace (place), [this] (int pad, float proportionDown) { clickPad (pad, proportionDown); },
+        pads.push_back (std::make_unique<Pad> (padAtPlace (place), [this] (int pad) { clickPad (pad); },
                                                [this] (int pad) { selectPad (pad); showPadMenu (pad); }));
         padPanel.addAndMakeVisible (*pads.back());
     }
@@ -1010,11 +1012,6 @@ juce::Colour DrumMachineEditor::colourOf (Sound s)
     return Theme::accent;
 }
 
-float DrumMachineEditor::velocityAt (float proportionDown) noexcept
-{
-    return juce::jlimit (softestClick, 1.0f, 1.0f - (1.0f - softestClick) * juce::jlimit (0.0f, 1.0f, (proportionDown - 0.1f) / 0.85f));
-}
-
 int DrumMachineEditor::padAtPlace (size_t place) const
 {
     return place < padOrder().size() ? (int) padOrder()[place] : (int) place;
@@ -1055,9 +1052,9 @@ juce::String DrumMachineEditor::getPadText (int pad) const
     return {};
 }
 
-void DrumMachineEditor::clickPad (int pad, float proportionDown)
+void DrumMachineEditor::clickPad (int pad)
 {
-    drums.auditionPad (pad, velocityAt (proportionDown));
+    drums.auditionPad (pad, (float) InstrumentKeys::velocityFor (*this) / 127.0f);
     selectPad (pad);
 }
 

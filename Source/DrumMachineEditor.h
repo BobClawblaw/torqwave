@@ -50,10 +50,11 @@ public:
     juce::Rectangle<int> padBounds (DrumMachine::Sound s) const    { return padBounds ((int) s); }
     juce::Rectangle<int> padBounds (int pad) const;
 
-    /** What a click on a pad does: plays it alone at the velocity for the click's height
-        (0 its top, 1 its bottom) and selects it. */
-    void clickPad (DrumMachine::Sound s, float proportionDown)     { clickPad ((int) s, proportionDown); }
-    void clickPad (int pad, float proportionDown);
+    /** What a click on a pad does: plays it alone and selects it. It plays at the velocity the
+        window's keys play at (the strip under it, set with C and V; 100 with no strip), wherever
+        on the pad the click is. */
+    void clickPad (DrumMachine::Sound s)     { clickPad ((int) s); }
+    void clickPad (int pad);
 
     /** A pad's card as it reads: its name, then its notes ("Pad 31 / 82"). */
     juce::String getPadText (int pad) const;
@@ -61,11 +62,6 @@ public:
     /** What a pad's menu does, by name: "clear" (a user pad emptied; a sound's pad given its own
         name and colour back); "colour" takes the value, and for a user pad so does "note". */
     void changeUserPad (int pad, const juce::String& what, int value = 0);
-
-    /** The velocity a click at a height inside a pad plays: 1 (127) at its top down to softestClick
-        (6) at its bottom, which is inside the softest of 16 layers spread evenly. */
-    static constexpr float softestClick = 6.0f / 127.0f;
-    static float velocityAt (float proportionDown) noexcept;
 
     /** Takes in the hits since the last look, as the window's timer does: lights their pads, and
         for the selected pad says the hit's velocity and lights the layer it played. */

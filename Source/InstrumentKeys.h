@@ -61,6 +61,11 @@ namespace InstrumentKeys
         Transport > Silence All Instruments. Message thread. */
     void silenceEveryStrip();
 
+    /** The velocity the keys play at in the window a component is in: that of the strip under its
+        instrument's editor (Strip::getVelocity, set with C and V), or the usual 100 where there is
+        no strip (the editor on its own). For what is played by a click in the window. */
+    int velocityFor (const juce::Component& inWindow);
+
     /** The session's tempo where it stands, for auditions to play at (they are written at 125 BPM
         and stretched to it); unset or 0, 125. Message thread. */
     extern std::function<double()> sessionTempo;

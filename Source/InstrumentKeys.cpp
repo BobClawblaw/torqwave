@@ -302,6 +302,17 @@ juce::String stepSound (juce::AudioProcessor& p, juce::Component* editor, int by
     return {};
 }
 
+int velocityFor (const juce::Component& inWindow)
+{
+    // The strip is beside the editor in what holds them both: looked for from the component upwards.
+    for (auto* c = &inWindow; c != nullptr; c = c->getParentComponent())
+        for (auto* child : c->getChildren())
+            if (auto* strip = dynamic_cast<const Strip*> (child))
+                return strip->getVelocity();
+
+    return 100;
+}
+
 //==============================================================================
 namespace
 {
