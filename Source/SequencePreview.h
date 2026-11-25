@@ -62,8 +62,13 @@ public:
     /** Called on the message thread when the state, the file or the description changed. */
     std::function<void()> onChange;
 
+    /** The length of the fade at the loop's join (see render). */
+    static constexpr double loopJoinMs = 20.0;
+
     /** The sequence through its voice at a steady tempo, one pass of it as it sounds looping: the
-        pass after one before it, so what rings past the end comes in at the start. Empty with an
+        pass after one before it, so what rings past the end comes in at the start, with its last
+        loopJoinMs faded into the end of the pass before, so a note held to the end goes round
+        without a click. Empty with an
         error when its voice has no instrument or the instrument can't load. Call off the message
         thread: plug-ins are made as offline rendering makes them. */
     static juce::String render (const SequenceFile::Sequence&, double tempo, int beatsPerBar, double sampleRate,

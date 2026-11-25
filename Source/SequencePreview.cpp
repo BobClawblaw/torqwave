@@ -159,6 +159,26 @@ juce::String SequencePreview::render (const std::vector<SequenceFile::Sequence>&
     for (int ch = 0; ch < mix.getNumChannels(); ++ch)
         out.copyFrom (ch, 0, mix, ch, (int) length, (int) length);
 
+    // The join. The pass starts as the first pass ended, so what rings over comes in; but a note
+    // held to the end on a free-running oscillator ends this pass at another point of its wave than
+    // the first pass did, and going round would jump there: a click. The pass's last few
+    // milliseconds are faded into the end of the pass before it, which its start follows on from.
+    // Where the two ends are the same (drums, anything struck afresh each round), nothing changes.
+    const auto fade = (int) juce::jmin ((juce::int64) std::llround (loopJoinMs / 1000.0 * sampleRate), length / 4);
+
+    for (int ch = 0; ch < out.getNumChannels(); ++ch)
+    {
+        auto* into = out.getWritePointer (ch);
+        const auto* before = mix.getReadPointer (ch);
+
+        for (int i = 0; i < fade; ++i)
+        {
+            const auto t = (float) (i + 1) / (float) (fade + 1);
+            const auto at = (int) length - fade + i;
+            into[at] += t * (before[at] - into[at]);
+        }
+    }
+
     return {};
 }
 
