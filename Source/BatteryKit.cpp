@@ -526,32 +526,55 @@ namespace
         return {};
     }
 
-    /** False when the record is not laid out as this knows: then the kit has no voice groups. */
-    bool readVoiceGroups (In list, std::vector<VoiceGroup>& groups)
+    /** False when the record is not laid out as this knows: then the kit has no voice groups.
+        The kit's own group comes first, then sixteen bytes with a bit for each of the 128 groups
+        that is kept, then those groups in order. */
+    bool readVoiceGroups (In list, Kit& kit)
     {
-        // The kit's own group comes first, with sixteen bytes more after it.
-        for (bool first = true; list.left() > 0; first = false)
+        const auto readOne = [&list] (VoiceGroup& g)
         {
             if (list.u8() != 0 || list.u16() != voiceGroupVersion)
                 return false;
 
-            VoiceGroup g;
             g.name = list.text();
             list.skip (3);
             g.voices = juce::jlimit (0, 4096, list.i32());
             list.skip (4);
             g.exclusiveGroup = juce::jmax (-1, list.i32());
+            return list.ok;
+        };
 
-            if (first)
-                list.skip (16);
+        VoiceGroup own;
 
-            if (! list.ok || groups.size() >= (size_t) mostCells)
+        if (! readOne (own))
+            return false;
+
+        std::array<uint8, numVoiceGroups / 8> kept {};
+
+        for (auto& byte : kept)
+            byte = list.u8();
+
+        if (! list.ok)
+            return false;
+
+        std::vector<VoiceGroup> groups;
+
+        for (int i = 0; i < numVoiceGroups; ++i)
+        {
+            if ((kept[(size_t) (i / 8)] & (1 << (i % 8))) == 0)
+                continue;
+
+            groups.resize ((size_t) i + 1);
+
+            if (! readOne (groups[(size_t) i]))
                 return false;
-
-            if (! first)
-                groups.push_back (std::move (g));
         }
 
+        if (list.left() > 0)
+            return false;
+
+        kit.kitVoices = own.voices;
+        kit.voiceGroups = std::move (groups);
         return true;
     }
 
@@ -663,7 +686,7 @@ namespace
                     return unknownVersion ("program", parts.version);
 
                 kit.programVersion = parts.version;
-                bool hadCells = false, hadZones = false;
+                bool hadCells = false, hadZones = false, hadGroups = false;
                 auto& children = parts.children;
 
                 while (children.left() > 0)
@@ -686,13 +709,10 @@ namespace
                         hadZones = true;
                         zones = childBody;
                     }
-                    else if (child == voiceGroupsRecord && kit.voiceGroups.empty())
+                    else if (child == voiceGroupsRecord && ! hadGroups)
                     {
-                        if (! readVoiceGroups (childBody, kit.voiceGroups))
-                        {
-                            kit.voiceGroups.clear();
-                            kit.voiceGroupsRead = false;
-                        }
+                        hadGroups = true;
+                        kit.voiceGroupsRead = readVoiceGroups (childBody, kit);
                     }
                 }
 
@@ -731,8 +751,11 @@ namespace
                     l.path = -1;
             }
 
-            if (! juce::isPositiveAndBelow (c.voiceGroup, (int) kit.voiceGroups.size()))
+            // A cell may be in a group the kit does not keep, which is then as a group starts.
+            if (! kit.voiceGroupsRead || ! juce::isPositiveAndBelow (c.voiceGroup, numVoiceGroups))
                 c.voiceGroup = -1;
+            else if (c.voiceGroup >= (int) kit.voiceGroups.size())
+                kit.voiceGroups.resize ((size_t) c.voiceGroup + 1);
 
             if (c.name.isNotEmpty() || ! c.layers.empty())
                 kit.cells.push_back (std::move (c));
@@ -1275,7 +1298,7 @@ juce::MemoryBlock write (const Kit& kit, const WriteOptions& options)
 
     Out groups;
 
-    const auto group = [&] (const VoiceGroup& g, bool first)
+    const auto group = [&] (const VoiceGroup& g)
     {
         groups.u8 (0);
         groups.u16 (options.voiceGroupVersion);
@@ -1286,15 +1309,20 @@ juce::MemoryBlock write (const Kit& kit, const WriteOptions& options)
         groups.i32 (g.voices);
         groups.i32 (10);
         groups.i32 (g.exclusiveGroup);
-
-        if (first)
-            groups.zeros (16);
     };
 
-    group ({ "<Kit>", 32, -1 }, true);
+    group ({ "<Kit>", kit.kitVoices, -1 });
+    std::array<uint8, numVoiceGroups / 8> kept {};
 
-    for (auto& g : kit.voiceGroups)
-        group (g, false);
+    for (size_t i = 0; i < kit.voiceGroups.size() && i < (size_t) numVoiceGroups; ++i)
+        if (! kit.voiceGroups[i].isDefault())
+            kept[i / 8] = (uint8) (kept[i / 8] | (1 << (i % 8)));
+
+    groups.add (kept.data(), kept.size());
+
+    for (size_t i = 0; i < kit.voiceGroups.size() && i < (size_t) numVoiceGroups; ++i)
+        if (! kit.voiceGroups[i].isDefault())
+            group (kit.voiceGroups[i]);
 
     Out paths;
     const auto kitFirst = options.pathsVersion == pathsVersionWithKit;

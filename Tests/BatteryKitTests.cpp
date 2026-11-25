@@ -112,7 +112,8 @@ namespace
         std::sort (a.cells.begin(), a.cells.end(), byPlace);
         std::sort (b.cells.begin(), b.cells.end(), byPlace);
 
-        if (a.cells.size() != b.cells.size() || a.paths != b.paths || a.voiceGroups.size() != b.voiceGroups.size() || a.voiceGroupsRead != b.voiceGroupsRead)
+        if (a.cells.size() != b.cells.size() || a.paths != b.paths || a.voiceGroups.size() != b.voiceGroups.size() || a.voiceGroupsRead != b.voiceGroupsRead
+            || a.kitVoices != b.kitVoices)
             return false;
 
         for (size_t i = 0; i < a.voiceGroups.size(); ++i)
@@ -648,7 +649,9 @@ namespace
             check (false, "Wide has a pad");
 
         check (reports (plan, "1 cell has layers with a level, tune or pan of their own") && near (padNamed (plan, "Own")->level, 0.0f), "A layer's own level is not kept, and that is said");
-        check (reports (plan, "2 cells cut others off"), "Cells that share a one-voice group are reported as chokes not brought over");
+        check (reports (plan, "2 cells cut others off in the kit (hi-hats, usually), in 1 set") && padNamed (plan, "Closed")->choke == 1 && padNamed (plan, "Open")->choke == 1
+                   && padNamed (plan, "Plain")->choke == 0,
+               "Cells that share a one-voice group are one choke group, and the report says so");
         check (reports (plan, "1 sample ends before its file does"), "An end marker is reported");
         check (plan.missing.size() == 1 && plan.missing[0].endsWith ("gone.wav") && ranges ("Partly Gone") == "a 1-63 gone 64-127", "A sample that is not there is listed as missing, its layer still planned");
         check (padNamed (plan, "Loop") == nullptr && reports (plan, "1 REX loop was left out"), "A REX loop is left out and reported");
@@ -705,6 +708,9 @@ namespace
         check (kickEffects.on (DrumMachine::envOn) && near (kickEffects[DrumMachine::envAttack], 2.5f) && near (kickEffects[DrumMachine::envHold], 8.0f)
                    && near (kickEffects[DrumMachine::envDecay], 5000.0f) && ! snareEffects.on (DrumMachine::envOn),
                "The envelope is on the pad's ENV page: attack and hold as in the kit, a decay past the knob's top held at it; a pad whose cell had it off has it off");
+
+        check (drums.getChoke ((int) DrumMachine::Sound::closedHat) == 1 && drums.getChoke ((int) DrumMachine::Sound::openHat) == 1 && drums.getChoke (kick) == 0,
+               "The two cells that cut each other off are in choke group 1 on the pads, the others in none");
 
         const auto fadePad = placeOf ("Fade");
         check (drums.getPadName (fadePad) == "Fade" && drums.getPadNote (fadePad) == 40 && drums.getLayers (fadePad).size() == 2 && drums.getLayers (fadePad)[1].lowVelocity == 66,
@@ -808,6 +814,78 @@ namespace
         empty.createDirectory();
         check (DrumKitImport::fromFolder (empty).pads.empty(), "A folder with no sound files gives no pads");
     }
+
+    void chokes()
+    {
+        Library library;
+        library.add ("a.wav");
+
+        // Groups kept with gaps between them, one used and not kept, and exclusive groups.
+        KitMaker m;
+        const auto a = m.path ("a.wav");
+        m.kit.kitVoices = 1;
+        m.kit.voiceGroups.resize (40);
+        m.kit.voiceGroups[4] = { "Named", 1, -1 };       // Battery's group 5
+        m.kit.voiceGroups[9] = { {}, 4, 2 };             // group 10, in exclusive group 2
+        m.kit.voiceGroups[39] = { {}, 4, 2 };            // group 40, in it too
+        m.kit.voiceGroups[20] = { {}, 6, -1 };           // group 21: six voices, no chokes
+
+        const auto cellIn = [&] (const juce::String& name, int key, int group)
+        {
+            auto& c = m.cell (name, key);
+            c.layers = { KitMaker::layer (a, 1, 127, key) };
+            c.voiceGroup = group;
+        };
+
+        cellIn ("Alone", 60, 4);
+        cellIn ("Unkept 1", 61, 2);
+        cellIn ("Unkept 2", 62, 2);
+        cellIn ("Exclusive 1", 63, 9);
+        cellIn ("Exclusive 2", 64, 39);
+        cellIn ("Many 1", 65, 20);
+        cellIn ("Many 2", 66, 20);
+        cellIn ("Kit's Own", 67, -1);
+
+        BatteryKit::Kit kit;
+        const auto file = BatteryKit::write (m.kit);
+        const auto error = BatteryKit::read (file.getData(), file.getSize(), kit);
+        check (error.isEmpty() && same (m.kit, kit) && kit.kitVoices == 1 && kit.voiceGroups.size() == 40 && kit.voiceGroups[4].name == "Named" && kit.voiceGroups[2].isDefault()
+                   && kit.voiceGroups[39].exclusiveGroup == 2,
+               "Voice groups kept with gaps between them are read into their own places, the ones between as a group starts, and the kit's own voices");
+
+        const auto plan = DrumKitImport::fromBattery (kit, library.kit);
+        const auto chokeOf = [&plan] (const juce::String& name) { const auto* p = padNamed (plan, name); return p != nullptr ? p->choke : -99; };
+        check (chokeOf ("Unkept 1") == 1 && chokeOf ("Unkept 2") == 1, "Two cells in a group the kit does not keep (one voice, as a group starts) cut each other off");
+        check (chokeOf ("Exclusive 1") == 2 && chokeOf ("Exclusive 2") == 2, "Cells of two groups that share an exclusive group are one choke group");
+        check (chokeOf ("Alone") == 0 && chokeOf ("Many 1") == 0 && chokeOf ("Many 2") == 0 && chokeOf ("Kit's Own") == 0,
+               "A cell alone in a one-voice group, cells in a group of several voices and a cell in the kit's own group are in none");
+        check (reports (plan, "4 cells cut others off in the kit (hi-hats, usually), in 2 sets") && reports (plan, "The kit as a whole is set to one voice"),
+               "The report counts them, and says a one-voice kit is not brought over as one");
+
+        // More sets than there are choke groups.
+        KitMaker many;
+        const auto b = many.path ("a.wav");
+        many.kit.voiceGroups.resize (10);    // ten groups as a group starts: one voice each
+
+        for (int i = 0; i < 20; ++i)
+        {
+            auto& c = many.cell ("Cell " + juce::String (i + 1), 60 + i);
+            c.layers = { KitMaker::layer (b, 1, 127, 60 + i) };
+            c.voiceGroup = i / 2;
+        }
+
+        const auto manyPlan = DrumKitImport::fromBattery (many.kit, library.kit);
+        int inGroups = 0, highest = 0;
+
+        for (auto& p : manyPlan.pads)
+        {
+            inGroups += p.choke > 0 ? 1 : 0;
+            highest = juce::jmax (highest, p.choke);
+        }
+
+        check (inGroups == 16 && highest == 8 && reports (manyPlan, "2 more sets of cells that cut each other off than the 8 choke groups"),
+               "Ten sets of cells that cut each other off: the first eight are choke groups, and the report says two are not");
+    }
 }
 
 void runBatteryKitTests()
@@ -821,11 +899,12 @@ void runBatteryKitTests()
     planning();
     placing();
     folders();
+    chokes();
 }
 
 int runBatteryKitFiles (const juce::StringArray& files)
 {
-    int read = 0, refused = 0, cells = 0, layers = 0, found = 0, pads = 0, envelopes = 0, envelopesOn = 0;
+    int read = 0, refused = 0, cells = 0, layers = 0, found = 0, pads = 0, envelopes = 0, envelopesOn = 0, choked = 0, kitsWithChokes = 0, groupsUnread = 0;
     std::map<juce::String, int> errors, versions;
 
     for (auto& name : files)
@@ -845,6 +924,10 @@ int runBatteryKitFiles (const juce::StringArray& files)
         auto plan = DrumKitImport::fromBattery (kit, file);
         DrumKitImport::place (plan);
         pads += (int) plan.pads.size();
+        const auto inGroups = (int) std::count_if (plan.pads.begin(), plan.pads.end(), [] (const DrumKitImport::Pad& p) { return p.choke > 0; });
+        choked += inGroups;
+        kitsWithChokes += inGroups > 0 ? 1 : 0;
+        groupsUnread += kit.voiceGroupsRead ? 0 : 1;
 
         for (auto& c : kit.cells)
         {
@@ -861,7 +944,8 @@ int runBatteryKitFiles (const juce::StringArray& files)
     }
 
     std::cout << files.size() << " files: " << read << " read, " << refused << " refused; " << cells << " cells with samples, " << layers << " layers, "
-              << found << " samples found; " << pads << " pads planned; " << envelopes << " volume envelopes read, " << envelopesOn << " of them on" << std::endl;
+              << found << " samples found; " << pads << " pads planned; " << envelopes << " volume envelopes read, " << envelopesOn << " of them on; "
+              << choked << " pads in choke groups in " << kitsWithChokes << " kits; voice groups not read in " << groupsUnread << std::endl;
 
     for (auto& [what, n] : versions)
         std::cout << "  " << what << ": " << n << std::endl;
