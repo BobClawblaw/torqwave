@@ -1,4 +1,5 @@
 #include "MultitrackView.h"
+#include "BuiltInEffects.h"
 #include "Instrument.h"
 #include "OpenFiles.h"
 #include "Theme.h"
@@ -1048,6 +1049,50 @@ namespace
     }
 }
 
+juce::PopupMenu MultitrackView::parameterMenu (juce::AudioPluginInstance& plugin, juce::uint32 slotId, const SessionTrack& track,
+                                              const std::optional<AutomationTarget>& showing, int firstId, std::vector<AutomationTarget>& targets)
+{
+    std::vector<std::pair<int, juce::String>> byIndex;
+
+    for (auto& [id, parameter] : TrackEffects::parametersById (plugin))
+        byIndex.emplace_back (parameter->getParameterIndex(), id);
+
+    std::sort (byIndex.begin(), byIndex.end());
+    juce::PopupMenu parameters;
+
+    // An instrument with many parameters (Torqwave Synth's) names its groups: a sub-menu each, in its order,
+    // marked when anything in it is automated.
+    const auto* builtIn = dynamic_cast<const BuiltInEffects::BuiltInEffect*> (&plugin);
+    const auto groups = builtIn != nullptr ? builtIn->parameterGroups() : juce::StringArray();
+    std::vector<juce::PopupMenu> grouped ((size_t) groups.size());
+    std::vector<bool> groupAutomated ((size_t) groups.size(), false);
+
+    for (auto& [index, id] : byIndex)
+    {
+        const auto target = AutomationTarget::effect (slotId, id);
+        const auto* parameter = plugin.getParameters()[index];
+        const auto automated = ! track.envelope (target).isEmpty();
+        const auto group = groups.indexOf (builtIn != nullptr ? builtIn->parameterGroupOf (id) : juce::String());
+        auto& into = group >= 0 ? grouped[(size_t) group] : parameters;
+        into.addItem (firstId + (int) targets.size(), parameter->getName (60) + (automated ? " (automated)" : ""), true, showing == target);
+        targets.push_back (target);
+
+        if (group >= 0 && automated)
+            groupAutomated[(size_t) group] = true;
+    }
+
+    for (int g = 0; g < groups.size(); ++g)
+        if (grouped[(size_t) g].getNumItems() > 0)
+        {
+            if (g > 0 && groups[g - 1].startsWith ("Oscillator ") && ! groups[g].startsWith ("Oscillator "))
+                parameters.addSeparator();
+
+            parameters.addSubMenu (groups[g] + (groupAutomated[(size_t) g] ? " (automated)" : ""), grouped[(size_t) g]);
+        }
+
+    return parameters;
+}
+
 void MultitrackView::showAutomationMenu (juce::uint32 trackId, juce::Component& target)
 {
     const auto* track = shown().findTrack (trackId);
@@ -1093,27 +1138,9 @@ void MultitrackView::showAutomationMenu (juce::uint32 trackId, juce::Component& 
     for (int slot = 0; slot < effects.getNumSlots (trackId); ++slot)
     {
         auto* plugin = effects.getPlugin (trackId, slot);
-        const auto slotId = effects.getSlotId (trackId, slot);
-        std::vector<std::pair<int, juce::String>> byIndex;
-
-        for (auto& [id, parameter] : TrackEffects::parametersById (*plugin))
-            byIndex.emplace_back (parameter->getParameterIndex(), id);
-
-        std::sort (byIndex.begin(), byIndex.end());
-        juce::PopupMenu parameters;
-
-        for (auto& [index, id] : byIndex)
-        {
-            const auto effectTarget = AutomationTarget::effect (slotId, id);
-            const auto* parameter = plugin->getParameters()[index];
-            parameters.addItem (firstEffect + (int) effectTargets.size(),
-                                parameter->getName (60) + (track->envelope (effectTarget).isEmpty() ? "" : " (automated)"),
-                                true, showing == effectTarget);
-            effectTargets.push_back (effectTarget);
-        }
-
+        const auto parameters = parameterMenu (*plugin, effects.getSlotId (trackId, slot), *track, showing, firstEffect, effectTargets);
         const auto name = slot < firstEffectSlot ? plugin->getName() : juce::String (slot - firstEffectSlot + 1) + ". " + plugin->getName();
-        menu.addSubMenu ("Show " + name + " Envelope", parameters, ! byIndex.empty());
+        menu.addSubMenu ("Show " + name + " Envelope", parameters, parameters.getNumItems() > 0);
     }
 
     menu.addItem (hide, "Hide Envelope", showing.has_value());

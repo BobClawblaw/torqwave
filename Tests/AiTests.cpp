@@ -2179,10 +2179,10 @@ namespace
                "Ask Torq parameters: every one of StringSwarm's " + juce::String (guitarCount) + " parameters is read for the model, as Torqwave Synth's "
                    + juce::String (synthCount) + " are, Source and Strum Sync with their choices, and the synth's level envelopes and slots 9 to 16");
 
-        // The Sequencer names an instrument's parameters to the model up to 256, the plug-in catalogue up to 300.
+        // The Sequencer names an instrument's parameters to the model up to 400, and the plug-in catalogue keeps as many.
         const auto facts = PluginCatalogue::factsOf (*guitar);
-        check (guitarCount <= 256 && synthCount <= 256 && synthCount <= PluginCatalogue::maxParameters && facts["parameters"].size() == guitarCount,
-               "Ask Torq parameters: both instruments' parameters fit under the 256 the Sequencer's tools name and the 300 the catalogue keeps (StringSwarm "
+        check (guitarCount <= 400 && synthCount <= 400 && synthCount <= PluginCatalogue::maxParameters && facts["parameters"].size() == guitarCount,
+               "Ask Torq parameters: both instruments' parameters fit under the 400 the Sequencer's tools name and the catalogue keeps (StringSwarm "
                    + juce::String (guitarCount) + ", Torqwave Synth " + juce::String (synthCount) + ")");
 
         if (source == nullptr || sync == nullptr)
@@ -3209,10 +3209,10 @@ namespace
         const auto noSynth = parse (r.run ("decrypt_clip", "{\"clip\": 7001, \"track\": \"Keys\"}"));
         const auto noClip = parse (r.run ("decrypt_clip", "{\"clip\": 9999, \"track\": \"Bass\"}"));
         const auto silent = parse (r.run ("decrypt_clip", "{\"clip\": 7002, \"track\": \"Bass\"}"));
-        const auto badOscillator = parse (r.run ("table_from_clip", "{\"clip\": 7001, \"track\": \"Bass\", \"oscillator\": 4}"));
+        const auto badOscillator = parse (r.run ("table_from_clip", "{\"clip\": 7001, \"track\": \"Bass\", \"oscillator\": 10}"));
         check (! (bool) noSynth["ok"] && noSynth["error"].toString().contains ("doesn't play Torqwave Synth") && ! (bool) noClip["ok"] && ! (bool) silent["ok"]
                    && silent["error"].toString().contains ("silent") && ! (bool) badOscillator["ok"] && r.getSynthChanges().empty() && r.getSteps().isEmpty(),
-               "Ask Torq Decrypt: a track without Torqwave Synth, a clip that isn't there, a silent clip and a fourth oscillator are refused with the reason (" + silent["error"].toString() + ")");
+               "Ask Torq Decrypt: a track without Torqwave Synth, a clip that isn't there, a silent clip and a tenth oscillator are refused with the reason (" + silent["error"].toString() + ")");
 
         // Stopped (Ask Torq's Stop while it searches): nothing planned, the patch as it was.
         synth->loadPatch ("Cathedral Stack Pad");

@@ -1209,7 +1209,7 @@ namespace
             auto* p = synth.parameter (id);
             const auto part = SignalConsole::partOf (id);
 
-            if (p == nullptr || part == SignalConsole::effects || ! std::isfinite (value))
+            if (p == nullptr || part == SignalConsole::effects || WaveSynth::isAddedWithNine (id) || ! std::isfinite (value))
                 continue;
 
             const auto range = p->getNormalisableRange();

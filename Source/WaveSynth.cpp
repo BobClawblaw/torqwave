@@ -3,6 +3,7 @@
 #include "SignalConsole.h"
 #include "WaveSynthFavourites.h"
 #include "DecryptPatches.h"
+#include "PreviousName.h"
 
 namespace WaveSynth
 {
@@ -23,7 +24,7 @@ namespace
             std::vector<Destination> all;
             const auto add = [&all] (const juce::String& id, const juce::String& name) { all.push_back ({ id, name }); };
 
-            for (int o = 1; o <= numOscillators; ++o)
+            const auto addOscillator = [&add] (int o)
             {
                 const auto p = "osc" + juce::String (o), n = "Osc " + juce::String (o) + " ";
                 add (p + "Position", n + "Position");
@@ -35,7 +36,10 @@ namespace
                 add (p + "UnisonDetune", n + "Detune");
                 add (p + "UnisonSpread", n + "Spread");
                 add (p + "Route", n + "Filter Route");
-            }
+            };
+
+            for (int o = 1; o <= numFirstOscillators; ++o)
+                addOscillator (o);
 
             add ("subLevel", "Sub Level");
             add ("noiseLevel", "Noise Level");
@@ -59,15 +63,26 @@ namespace
             add ("fxDelayMix", "Delay Mix");
             add ("fxDelayFeedback", "Delay Feedback");
             add ("fxReverbMix", "Reverb Mix");
+
+            // Oscillators 4 to 9, after every earlier destination (sessions keep a slot's by its index).
+            for (int o = numFirstOscillators + 1; o <= numOscillators; ++o)
+                addOscillator (o);
+
+            jassert ((int) all.size() == numDestinations);
             return all;
         }();
         return d;
     }
 
     // Where each destination sits in the list (fixed by the order above).
-    constexpr int oscDest (int o, int field)        { return o * 9 + field; }   // fields: position, warp, pitch, fine, volume, pan, detune, spread, route
+    // Oscillators 1 to 3 first, then the rest of the first list, then oscillators 4 to 9.
+    constexpr int oscDest (int o, int field)
+    {
+        return (o < numFirstOscillators ? o * 9 : numFirstDestinations + (o - numFirstOscillators) * 9) + field;   // fields: position, warp, pitch, fine, volume, pan, detune, spread, route
+    }
     enum : int { dSubLevel = 27, dNoiseLevel, dNoiseColour, dF1Cutoff, dF1Res, dF1Drive, dF2Cutoff, dF2Res, dF2Drive, dAmpLevel, dAmpPan,
-                 dLfo1Rate, dLfo2Rate, dFxDrive, dFxChorus, dFxPhaser, dFxDelayMix, dFxDelayFeedback, dFxReverb, numDestinations };
+                 dLfo1Rate, dLfo2Rate, dFxDrive, dFxChorus, dFxPhaser, dFxDelayMix, dFxDelayFeedback, dFxReverb, dEndOfFirst };
+    static_assert (dEndOfFirst == numFirstDestinations);
     enum : int { fPosition, fWarp, fPitch, fFine, fVolume, fPan, fDetune, fSpread, fRoute };
 }
 
@@ -87,7 +102,9 @@ const std::vector<std::pair<int, juce::String>>& destinationSections()
 {
     // In a slot's menu the destinations come after "None", so each index is one on.
     static const std::vector<std::pair<int, juce::String>> s { { 1, "Oscillator 1" }, { 10, "Oscillator 2" }, { 19, "Oscillator 3" }, { 28, "Sub and Noise" },
-                                                                { 31, "Filters" }, { 37, "Amp" }, { 39, "LFOs" }, { 41, "Effects" } };
+                                                                { 31, "Filters" }, { 37, "Amp" }, { 39, "LFOs" }, { 41, "Effects" },
+                                                                { 47, "Oscillator 4" }, { 56, "Oscillator 5" }, { 65, "Oscillator 6" },
+                                                                { 74, "Oscillator 7" }, { 83, "Oscillator 8" }, { 92, "Oscillator 9" } };
     return s;
 }
 
@@ -95,6 +112,48 @@ const juce::StringArray& warpNames()
 {
     static const juce::StringArray n { "Off", "Sync", "Bend", "Squeeze", "Mirror", "FM", "Crush", "Fold" };
     return n;
+}
+
+const juce::StringArray& fmFromNames()
+{
+    static const juce::StringArray n { "Before", "Osc 1", "Osc 2", "Osc 3", "Osc 4", "Osc 5", "Osc 6", "Osc 7", "Osc 8", "Osc 9" };
+    return n;
+}
+
+int oscillatorOf (const juce::String& id)
+{
+    if (! id.startsWith ("osc") || id.length() < 4)
+        return 0;
+
+    const auto digit = id[3] - '0';
+    return digit >= 1 && digit <= numOscillators ? digit : 0;
+}
+
+bool isAddedWithNine (const juce::String& id)
+{
+    return oscillatorOf (id) > numFirstOscillators || id.endsWith ("FmFrom");
+}
+
+bool stateIsBeforeNine (const juce::String& base64State)
+{
+    juce::MemoryBlock data;
+
+    if (! data.fromBase64Encoding (base64State))
+        return false;
+
+    const auto xml = juce::AudioProcessor::getXmlFromBinary (data.getData(), (int) data.getSize());
+    return xml != nullptr && PreviousName::hasTag (*xml, "TORQWAVE_BASIC_SYNTH") && ! xml->hasAttribute ("osc4On");
+}
+
+float destinationFromBeforeNine (float normalised)
+{
+    const auto index = juce::roundToInt (juce::jlimit (0.0f, 1.0f, normalised) * (float) numFirstDestinations);
+    return (float) index / (float) numDestinations;
+}
+
+bool isSlotDestination (const juce::String& id)
+{
+    return id.startsWith ("mod") && id.endsWith ("Destination") && id.substring (3).getIntValue() >= 1;
 }
 
 const juce::StringArray& filterNames()
@@ -373,7 +432,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     struct OscParams
     {
         juce::AudioParameterBool* on;
-        juce::AudioParameterChoice *table, *warp;
+        juce::AudioParameterChoice *table, *warp, *fmFrom;
         juce::AudioParameterFloat *phase, *unison, *strum, *drift;
         juce::AudioParameterBool* randomPhase;
         juce::AudioParameterBool* envOn;
@@ -418,6 +477,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         {
             const auto n = "osc" + juce::String (o + 1);
             oscP[(size_t) o] = { find<juce::AudioParameterBool> (n + "On"), find<juce::AudioParameterChoice> (n + "Table"), find<juce::AudioParameterChoice> (n + "Warp"),
+                                 find<juce::AudioParameterChoice> (n + "FmFrom"),
                                  find<juce::AudioParameterFloat> (n + "Phase"), find<juce::AudioParameterFloat> (n + "Unison"), find<juce::AudioParameterFloat> (n + "UnisonStrum"),
                                  find<juce::AudioParameterFloat> (n + "UnisonDrift"), find<juce::AudioParameterBool> (n + "RandomPhase"),
                                  find<juce::AudioParameterBool> (n + "EnvOn"), find<juce::AudioParameterFloat> (n + "EnvAttack"), find<juce::AudioParameterFloat> (n + "EnvHold"),
@@ -504,6 +564,14 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         std::array<float, numDestinations> base {};    // normalised
         std::array<bool, numOscillators> on {};
         std::array<int, numOscillators> table {}, warp {}, unison {};
+        std::array<int, numOscillators> fmFrom {};   // the oscillator (0 to 8) an FM warp takes
+        std::array<bool, numOscillators> fmChosen {};   // FM From names it (not Before)
+        // Named by an FM From and wanted by an oscillator that is heard (or by another such): worked out and
+        // played even when off or at no level, its samples driving that FM and never heard themselves.
+        std::array<bool, numOscillators> modulator {};
+        // Oscillators 4 to 9 that are off: nothing of theirs is worked out or played (1 to 3 run as they always have).
+        std::array<bool, numOscillators> idle {};
+        int unisonPerNote = 1;   // the unison voices a note plays: each oscillator on or modulating, its unison
         std::array<float, numOscillators> strumSamples {}, drift {}, phase {};
         std::array<bool, numOscillators> randomPhase {};
         // Each oscillator's own level envelope, when it is on: the attack's step a sample, the hold in
@@ -531,15 +599,17 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     {
         auto& s = shared;
 
-        for (int d = 0; d < numDestinations; ++d)
-            s.base[(size_t) d] = destP[(size_t) d]->getValue();
-
         for (int o = 0; o < numOscillators; ++o)
         {
             const auto& p = oscP[(size_t) o];
             s.on[(size_t) o] = p.on->get();
             s.table[(size_t) o] = p.table->getIndex();
             s.warp[(size_t) o] = p.warp->getIndex();
+            // Before: the one before it, 1 taking 3 as it always has; each of 4 to 9 the one before it.
+            const auto from = p.fmFrom->getIndex();
+            s.fmFrom[(size_t) o] = from > 0 ? from - 1 : o < numFirstOscillators ? (o + numFirstOscillators - 1) % numFirstOscillators : o - 1;
+            s.fmChosen[(size_t) o] = from > 0;
+            s.idle[(size_t) o] = o >= numFirstOscillators && ! s.on[(size_t) o];
             s.unison[(size_t) o] = juce::jlimit (1, maxUnison, juce::roundToInt (p.unison->get()));
             s.strumSamples[(size_t) o] = p.strum->get() * 0.001f * (float) rate;
             s.drift[(size_t) o] = p.drift->get() * 0.01f;
@@ -552,6 +622,34 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
             s.levelDecay[(size_t) o] = (float) std::exp (-4.605170186 / (juce::jmax (0.001, (double) p.envDecay->get() * 0.001) * rate));
             s.levelSustain[(size_t) o] = p.envSustain->get() * 0.01f;
         }
+
+        // The silent modulators: FM chosen by an oscillator that is on, or by one of these, two or more deep.
+        s.modulator.fill (false);
+
+        for (int depth = 0; depth < numOscillators; ++depth)
+            for (int o = 0; o < numOscillators; ++o)
+                if ((s.on[(size_t) o] || s.modulator[(size_t) o]) && s.fmChosen[(size_t) o] && s.warp[(size_t) o] == (int) Warp::fm)
+                    s.modulator[(size_t) s.fmFrom[(size_t) o]] = true;
+
+        s.unisonPerNote = 0;
+
+        for (int o = 0; o < numOscillators; ++o)
+        {
+            if (s.modulator[(size_t) o])
+                s.idle[(size_t) o] = false;
+
+            if (s.on[(size_t) o] || s.modulator[(size_t) o])
+                s.unisonPerNote += s.unison[(size_t) o];
+        }
+
+        // The destinations' settings: those of an idle oscillator are never read, so aren't worked out.
+        for (int d = 0; d < numFirstDestinations; ++d)
+            s.base[(size_t) d] = destP[(size_t) d]->getValue();
+
+        for (int o = numFirstOscillators; o < numOscillators; ++o)
+            if (! s.idle[(size_t) o])
+                for (int f = 0; f < 9; ++f)
+                    s.base[(size_t) oscDest (o, f)] = destP[(size_t) oscDest (o, f)]->getValue();
 
         s.subOctave = subOctave->getIndex() + 1;
         s.subShape = subShape->getIndex();
@@ -1000,8 +1098,11 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 return;
             }
 
-        // All sixteen sounding: the oldest (one released first, if any) fades out to make room.
-        if (sounding() >= numVoices)
+        // All sixteen sounding, or as many as the patch's unison allows (see unisonBudget): the oldest (one
+        // released first, if any) fades out to make room, over the 4 ms a voice taken always has.
+        const auto limit = juce::jlimit (1, numVoices, unisonBudget / juce::jmax (1, shared.unisonPerNote));
+
+        for (auto playing = sounding(); playing >= limit; --playing)
         {
             Voice* oldest = nullptr;
 
@@ -1015,8 +1116,10 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                         oldest = &v;
                 }
 
-            if (oldest != nullptr)
-                fadeOut (*oldest);
+            if (oldest == nullptr)
+                break;
+
+            fadeOut (*oldest);
         }
 
         startFresh (*freeVoice(), note, velocity);
@@ -1200,7 +1303,20 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
     void modulate (const Voice* v, std::array<float, numDestinations>& value) const noexcept
     {
-        value = shared.base;
+        // The settings, each kept in range after the modulation below; those of an idle oscillator are
+        // never read, so are left as they are.
+        const auto inUse = [this] (auto&& each)
+        {
+            for (int d = 0; d < numFirstDestinations; ++d)
+                each (d);
+
+            for (int o = numFirstOscillators; o < numOscillators; ++o)
+                if (! shared.idle[(size_t) o])
+                    for (int f = 0; f < 9; ++f)
+                        each (oscDest (o, f));
+        };
+
+        inUse ([&] (int d) { value[(size_t) d] = shared.base[(size_t) d]; });
 
         if (shared.anyModulation)
             for (auto& slot : shared.slots)
@@ -1215,8 +1331,13 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 value[(size_t) r] += ccResonance * (1.0f - value[(size_t) r]);
             }
 
-        for (auto& x : value)
-            x = juce::jlimit (0.0f, 1.0f, x);
+        inUse ([&] (int d) { value[(size_t) d] = juce::jlimit (0.0f, 1.0f, value[(size_t) d]); });
+    }
+
+    /** A destination of an idle oscillator, whose settings aren't worked out. */
+    bool idleDestination (int d) const noexcept
+    {
+        return d >= numFirstDestinations && shared.idle[(size_t) (numFirstOscillators + (d - numFirstDestinations) / 9)];
     }
 
     float plain (int d, float normalised) const   { return destP[(size_t) d]->convertFrom0to1 (normalised); }
@@ -1264,6 +1385,13 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
         for (int o = 0; o < numOscillators; ++o)
         {
+            // An oscillator of 4 to 9 that is off, and has faded out, is left as it is.
+            if (auto& gain = v.oscGain[(size_t) o]; shared.idle[(size_t) o] && (jump || std::abs (gain.value) < 1.0e-6f))
+            {
+                gain.value = gain.step = 0.0f;
+                continue;
+            }
+
             auto& os = v.osc[(size_t) o];
             const auto n = shared.unison[(size_t) o];
             // The Pitch knob steps in semitones; modulation moves it smoothly between them (a vibrato of less
@@ -1382,7 +1510,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
             }
             case Warp::fm:
             {
-                const auto& from = v.osc[(size_t) ((o + numOscillators - 1) % numOscillators)].unison[(size_t) (&un - v.osc[(size_t) o].unison.data())];
+                const auto& from = v.osc[(size_t) shared.fmFrom[(size_t) o]].unison[(size_t) (&un - v.osc[(size_t) o].unison.data())];
                 phase += (double) (warpAmount * 1.5f * from.last);
                 phase -= std::floor (phase);
                 break;
@@ -1477,9 +1605,19 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         const auto serial = s.routing == 0;
         std::array<const WaveTables::Level*, numOscillators> levels {};
         std::array<float, numOscillators> positions {}, warpAmounts {}, decays {};
+        // The oscillators this block plays, in order: all but those of 4 to 9 that are off and faded out
+        // (a gain ramp only changes at a tick, so this holds for the block).
+        std::array<int, numOscillators> playing {};
+        int numPlaying = 0;
 
         for (int o = 0; o < numOscillators; ++o)
+            if (! (s.idle[(size_t) o] && v.oscGain[(size_t) o].value == 0.0f && v.oscGain[(size_t) o].step == 0.0f))
+                playing[(size_t) numPlaying++] = o;
+
+        for (int k = 0; k < numPlaying; ++k)
         {
+            const auto o = playing[(size_t) k];
+
             const auto* own = s.table[(size_t) o] == (int) WaveTables::Table::sampled ? sampledBank[(size_t) o] : nullptr;
             levels[(size_t) o] = &(own != nullptr ? *own : WaveTables::get ((WaveTables::Table) s.table[(size_t) o])).levels[(size_t) v.osc[(size_t) o].level];
             positions[(size_t) o] = v.value[(size_t) oscDest (o, fPosition)];
@@ -1510,8 +1648,9 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
             float f1L = 0, f1R = 0, f2L = 0, f2R = 0, directL = 0, directR = 0;
 
-            for (int o = 0; o < numOscillators; ++o)
+            for (int k = 0; k < numPlaying; ++k)
             {
+                const auto o = playing[(size_t) k];
                 auto gain = v.oscGain[(size_t) o].next();
                 const auto route = v.oscRoute[(size_t) o].next();
                 auto& os = v.osc[(size_t) o];
@@ -1536,8 +1675,13 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
                 if (gain <= 0.0f && v.oscGain[(size_t) o].step == 0.0f)
                 {
-                    for (int u = 0; u < n; ++u) { os.unison[(size_t) u].gainL.next(); os.unison[(size_t) u].gainR.next(); }
-                    continue;
+                    if (! s.modulator[(size_t) o])
+                    {
+                        for (int u = 0; u < n; ++u) { os.unison[(size_t) u].gainL.next(); os.unison[(size_t) u].gainR.next(); }
+                        continue;
+                    }
+
+                    gain = 0.0f;   // a silent modulator: played for the FM that takes it, and mixed at nothing
                 }
 
                 if (s.levelEnv[(size_t) o])
@@ -1755,7 +1899,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         setEffects();
 
         for (int d = 0; d < numDestinations; ++d)
-            owner.readings.destination[(size_t) d].store (newest != nullptr ? newest->value[(size_t) d] : (d >= dFxDrive ? fxValue[(size_t) d] : -1.0f), std::memory_order_relaxed);
+            owner.readings.destination[(size_t) d].store (newest != nullptr && ! idleDestination (d) ? newest->value[(size_t) d] : (d >= dFxDrive && d < dEndOfFirst ? fxValue[(size_t) d] : -1.0f), std::memory_order_relaxed);
 
         for (int l = 0; l < numLfos; ++l)
             owner.readings.lfo[(size_t) l].store (newest != nullptr ? newest->lfoValue[(size_t) l] : globalLfoValue[(size_t) l], std::memory_order_relaxed);
@@ -2157,7 +2301,7 @@ BasicSynthProcessor::BasicSynthProcessor()
                                                      [] (float, float, float v) { return std::log (juce::jlimit (20.0f, 20000.0f, v) / 20.0f) / std::log (1000.0f); });
     const auto keep = [this] (juce::RangedAudioParameter* p) { byId[p->paramID] = p; return p; };
 
-    for (int o = 1; o <= numOscillators; ++o)
+    const auto addOscillator = [&] (int o)
     {
         const auto id = "osc" + juce::String (o);
         const auto name = "Osc " + juce::String (o) + " ";
@@ -2178,7 +2322,10 @@ BasicSynthProcessor::BasicSynthProcessor()
         keep (addFloat (id + "UnisonStrum", name + "Strum", { 0.0f, 60.0f, 0.0f, 0.6f }, 0.0f, "ms"));
         keep (addFloat (id + "UnisonDrift", name + "Drift", percent, 0.0f, "%"));
         keep (addFloat (id + "Route", name + "Filter Route", percent, 0.0f, "%"));
-    }
+    };
+
+    for (int o = 1; o <= numFirstOscillators; ++o)
+        addOscillator (o);
 
     keep (addFloat ("subLevel", "Sub Level", percent, 0.0f, "%"));
     keep (addChoice ("subOctave", "Sub Octave", { "-1 oct", "-2 oct" }, 0));
@@ -2289,7 +2436,7 @@ BasicSynthProcessor::BasicSynthProcessor()
     for (int s = 9; s <= numSlots; ++s)
         addSlot (s);
 
-    for (int o = 1; o <= numOscillators; ++o)
+    const auto addLevelEnvelope = [&] (int o)
     {
         const auto id = "osc" + juce::String (o) + "Env";
         const auto name = "Osc " + juce::String (o) + " Level ";
@@ -2298,11 +2445,49 @@ BasicSynthProcessor::BasicSynthProcessor()
         keep (addFloat (id + "Hold", name + "Hold", time (10000.0f), 0.0f, "ms"));
         keep (addFloat (id + "Decay", name + "Decay", time (10000.0f), 400.0f, "ms"));
         keep (addFloat (id + "Sustain", name + "Sustain", percent, 100.0f, "%"));
+    };
+
+    for (int o = 1; o <= numFirstOscillators; ++o)
+        addLevelEnvelope (o);
+
+    // Added with nine oscillators, after everything else so every earlier parameter keeps its place: oscillators 4
+    // to 9 (off, so a patch that doesn't name them sounds as it did), then each oscillator's FM From.
+    for (int o = numFirstOscillators + 1; o <= numOscillators; ++o)
+    {
+        addOscillator (o);
+        addLevelEnvelope (o);
     }
+
+    for (int o = 1; o <= numOscillators; ++o)
+        keep (addChoice ("osc" + juce::String (o) + "FmFrom", "Osc " + juce::String (o) + " FM From", fmFromNames(), 0));
 
     engine = std::make_unique<Engine> (*this);
     engine->bind();
     WaveTables::get (WaveTables::Table::analog);   // the tables, built now rather than on the audio thread
+}
+
+juce::StringArray BasicSynthProcessor::parameterGroups() const
+{
+    juce::StringArray groups;
+
+    for (int o = 1; o <= WaveSynth::numOscillators; ++o)
+        groups.add ("Oscillator " + juce::String (o));
+
+    groups.addArray ({ "Sub and Noise", "Filters", "Amp and Voice", "Envelopes", "LFOs", "Modulation Slots", "Macros", "Effects" });
+    return groups;
+}
+
+juce::String BasicSynthProcessor::parameterGroupOf (const juce::String& id) const
+{
+    if (const auto o = WaveSynth::oscillatorOf (id); o > 0)  return "Oscillator " + juce::String (o);
+    if (id.startsWith ("sub") || id.startsWith ("noise"))    return "Sub and Noise";
+    if (id.startsWith ("filter"))                            return "Filters";
+    if (id.startsWith ("env"))                               return "Envelopes";
+    if (id.startsWith ("lfo"))                               return "LFOs";
+    if (id.startsWith ("mod"))                               return "Modulation Slots";
+    if (id.startsWith ("macro"))                             return "Macros";
+    if (id.startsWith ("fx"))                                return "Effects";
+    return "Amp and Voice";   // the amp, the voice mode, glide and bend
 }
 
 BasicSynthProcessor::~BasicSynthProcessor()
@@ -2668,7 +2853,22 @@ void BasicSynthProcessor::setPresetValues (const EffectPresets::Values& values)
         return;
     }
 
+    // A whole patch saved before there were nine (a user preset, a patch from Decrypt) names none of oscillators 4
+    // to 9 or FM From: they go to their defaults (off, Before), so it sounds as it did.
+    if (values.count ("osc1Table") > 0 && values.count ("fxReverbMix") > 0 && values.count ("mod8Amount") > 0 && values.count ("osc4On") == 0)
+        resetAddedWithNine();
+
     BuiltInEffect::setPresetValues (values);
+}
+
+void BasicSynthProcessor::resetAddedWithNine()
+{
+    for (auto* p : getParameters())
+        if (auto* r = dynamic_cast<juce::RangedAudioParameter*> (p); r != nullptr && WaveSynth::isAddedWithNine (r->paramID))
+            r->setValueNotifyingHost (r->getDefaultValue());
+
+    for (int o = WaveSynth::numFirstOscillators; o < WaveSynth::numOscillators; ++o)
+        setSampledTable (o, nullptr);
 }
 
 void BasicSynthProcessor::addToState (juce::XmlElement& xml) const
@@ -2771,6 +2971,10 @@ void BasicSynthProcessor::readFromState (const juce::XmlElement& xml)
         patchName = "Old Basic Synth";
         return;
     }
+
+    // Saved before there were nine: oscillators 4 to 9 and FM From weren't in it, so they go to their defaults.
+    if (! xml.hasAttribute ("osc4On"))
+        resetAddedWithNine();
 
     patchName = xml.getStringAttribute ("patch", "Init");
 

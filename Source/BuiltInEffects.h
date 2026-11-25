@@ -95,6 +95,11 @@ namespace BuiltInEffects
             value); ones it doesn't name, and names that aren't parameters, are left alone. */
         virtual void setPresetValues (const EffectPresets::Values&);
 
+        /** The groups its automation menus put its parameters in, in menu order, and a parameter's group
+            (by ID): none for an effect whose parameters are few enough to list as they are. */
+        virtual juce::StringArray parameterGroups() const                        { return {}; }
+        virtual juce::String parameterGroupOf (const juce::String& /*parameterId*/) const   { return {}; }
+
         /** Most channels processLinked takes. */
         static constexpr int mostLinkedChannels = 8;
 

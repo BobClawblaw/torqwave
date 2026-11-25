@@ -713,6 +713,11 @@ public:
         one chosen in the track's A menu; without a choice, a track with automation shows it
         (volume first), unless it was hidden there. */
     std::optional<AutomationTarget> getShownEnvelope (juce::uint32 trackId) const;
+    /** The automation menu's list of one plug-in's parameters, in its order: in sub-menus where the plug-in
+        names groups (Torqwave Synth's oscillators and sections), each item's ID firstId + its index in
+        targets, to which each one's target is added. */
+    static juce::PopupMenu parameterMenu (juce::AudioPluginInstance&, juce::uint32 slotId, const SessionTrack&,
+                                          const std::optional<AutomationTarget>& showing, int firstId, std::vector<AutomationTarget>& targets);
 
     /** True when a track has automation that plays: volume, pan or surround envelopes, or an
         envelope of an effect (or instrument) still on it. Lights its A button. */

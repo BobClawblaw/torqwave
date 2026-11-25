@@ -38,8 +38,8 @@ namespace
     }
 
     const char* aboutDecrypt =
-        "You help Decrypt, in Torqwave Synth (a wavetable synth with three oscillators, a sub, noise, two filters, four envelopes, two LFOs "
-        "and 16 modulation slots), find a patch that sounds like a recording of one note. A search renders candidate patches and scores "
+        "You help Decrypt, in Torqwave Synth (a wavetable synth with nine oscillators, of which the search moves the first three, a sub, noise, two filters, four "
+        "envelopes, two LFOs and 16 modulation slots), find a patch that sounds like a recording of one note. A search renders candidate patches and scores "
         "each against the recording by its spectrum over time and its loudness; whatever you propose is scored the same way and kept "
         "only if it comes closer. The effects are off while matching. Answer with one JSON object and nothing else.";
 }

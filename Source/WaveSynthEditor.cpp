@@ -1262,7 +1262,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         presets.carryTexts ([&s] { return s.getPresetTexts(); }, [&s] (const EffectPresets::Texts& t) { s.setPresetTexts (t); });
 
         // The oscillators.
-        for (int o = 0; o < WaveSynth::numOscillators; ++o)
+        for (int o = 0; o < WaveSynth::numFirstOscillators; ++o)
         {
             const auto n = "osc" + juce::String (o + 1);
             auto& osc = oscillators[(size_t) o];
@@ -1354,7 +1354,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         levelsTab->onClick = [this] { showModulator (6); };
         modulatorPanel->addAndMakeVisible (*levelsTab);
 
-        for (int o = 0; o < WaveSynth::numOscillators; ++o)
+        for (int o = 0; o < WaveSynth::numFirstOscillators; ++o)
         {
             const auto n = "osc" + juce::String (o + 1) + "Env";
             LevelControls c;
@@ -1659,7 +1659,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         }
 
         // What a string's knobs mean, and which controls a choice leaves idle.
-        for (int o = 0; o < WaveSynth::numOscillators; ++o)
+        for (int o = 0; o < WaveSynth::numFirstOscillators; ++o)
         {
             auto& osc = oscillators[(size_t) o];
             const auto string = osc.table->getIndex() == (int) WaveTables::Table::string;
@@ -2042,7 +2042,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         Knob *position = nullptr, *warpAmount = nullptr;
         std::vector<Knob*> knobs;
     };
-    std::array<Osc, WaveSynth::numOscillators> oscillators;
+    std::array<Osc, WaveSynth::numFirstOscillators> oscillators;
 
     std::unique_ptr<Panel> sourcesPanel, routingPanel, ampPanel, modulatorPanel, macroPanel, rightPanel;
     Knob *subLevel = nullptr, *noiseLevel = nullptr, *noiseColour = nullptr, *ampLevel = nullptr, *ampPan = nullptr, *velocity = nullptr, *glide = nullptr, *bendRange = nullptr;

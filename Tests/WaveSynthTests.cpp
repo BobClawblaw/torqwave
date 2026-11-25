@@ -10,6 +10,7 @@
 #include "WaveSynthTests.h"
 #include "ClickCheck.h"
 #include "../Source/WaveSynthPatchBuilder.h"
+#include "../Source/MultitrackView.h"
 
 namespace
 {
@@ -687,6 +688,18 @@ namespace
         {
             everything (synth);
             set (synth, "lfo1Sync", 0.0f);
+
+            // One of oscillators 4 to 9: switched on, so it is heard.
+            if (const auto o = WaveSynth::oscillatorOf (ids[d]); o > WaveSynth::numFirstOscillators)
+            {
+                set (synth, "osc" + juce::String (o) + "On", 1.0f);
+                set (synth, "osc" + juce::String (o) + "Position", 40.0f);
+                set (synth, "osc" + juce::String (o) + "Volume", 50.0f);
+                set (synth, "osc" + juce::String (o) + "Unison", 2.0f);
+                set (synth, "osc" + juce::String (o) + "Warp", (float) WaveSynth::Warp::bend);
+                set (synth, "osc" + juce::String (o) + "Route", 50.0f);
+            }
+
             const auto base = synth.parameter (ids[d])->getValue();
             const auto amount = base > 0.5f ? -0.4f : 0.4f;
             synth.addModulation (WaveSynth::macro1, ids[d], amount);
@@ -919,7 +932,7 @@ namespace
                 const auto name = xml->getAttributeName (i);
                 const auto slot = name.startsWith ("mod") ? name.substring (3).getIntValue() : 0;
 
-                if (slot > 8 || (name.contains ("Env") && name.startsWith ("osc")))
+                if (slot > 8 || (name.contains ("Env") && name.startsWith ("osc") && WaveSynth::oscillatorOf (name) <= WaveSynth::numFirstOscillators))
                 {
                     xml->removeAttribute (name);
                     ++removed;
@@ -1194,19 +1207,348 @@ namespace
                                      + (differ.isEmpty() ? juce::String() : " (not: " + differ.joinIntoString (", ") + ")"));
     }
 
-    void testCpu (Synth& synth)
+    /** Oscillators 4 to 9 on with a little of everything: their own tables, warps, unison, pans and routes. */
+    void nine (Synth& synth)
     {
-        // Sixteen voices of one oscillator in 8-voice unison, through both filters and every effect; then
-        // all three oscillators so. The time to render, against the time it plays. (A build without
-        // optimisation, as the tests are built, is several times slower than the app.)
-        const auto load = [&synth] (int oscillators)
+        everything (synth);
+
+        for (int o = 4; o <= WaveSynth::numOscillators; ++o)
+        {
+            const auto id = "osc" + juce::String (o);
+            set (synth, id + "On", 1.0f);
+            set (synth, id + "Table", (float) (o % 5));
+            set (synth, id + "Position", 10.0f * (float) o);
+            set (synth, id + "Volume", 40.0f);
+            set (synth, id + "Pitch", (float) ((o % 3) * 7 - 7));
+            set (synth, id + "Pan", (float) (o - 6) * 25.0f);
+            set (synth, id + "Unison", 2.0f);
+            set (synth, id + "Warp", (float) (o % 8));
+            set (synth, id + "WarpAmount", 35.0f);
+            set (synth, id + "Route", (float) (o % 2) * 60.0f);
+        }
+    }
+
+    void testNine (Synth& synth)
+    {
+        // The parameters: the 235 there were keep their places (their IDs in the order a state written by
+        // 0.21.1 lists them), oscillators 4 to 9 and FM From after them.
+        const auto& all = synth.getParameters();
+        juce::uint64 firstIds = 1469598103934665603ull;
+
+        for (int i = 0; i < 235 && i < all.size(); ++i)
+            for (auto c : dynamic_cast<juce::RangedAudioParameter*> (all[i])->paramID)
+                firstIds = (firstIds ^ (juce::uint64) c) * 1099511628211ull;
+
+        const auto idAt = [&all] (int i) { return dynamic_cast<juce::RangedAudioParameter*> (all[i])->paramID; };
+        check (all.size() == 376 && firstIds == 0x76c5005fb974585bull && idAt (235) == "osc4On" && idAt (366) == "osc9EnvSustain" && idAt (367) == "osc1FmFrom"
+                   && WaveSynth::destinationIds().size() == 100 && WaveSynth::destinationIds()[45] == "fxReverbMix" && WaveSynth::destinationIds()[46] == "osc4Position",
+               "synth: nine oscillators, 376 parameters: the first 235 as 0.21.1 had them, in its order, then oscillators 4 to 9 and each one's FM From; "
+               "100 modulation destinations, the first 46 where they were");
+
+        // Off, 4 to 9 change nothing: a patch with them off renders as it does with them switched on and off again.
+        synth.loadPatch ("Abyss Reese");
+        const auto phrase = held ({ 36, 43 }, 1.0, 0.8f);
+        const auto reference = play (synth, phrase, (int) (1.5 * rate));
+        synth.loadPatch ("Abyss Reese");
+
+        for (int o = 4; o <= 9; ++o)
+        {
+            set (synth, "osc" + juce::String (o) + "On", 1.0f);
+            set (synth, "osc" + juce::String (o) + "On", 0.0f);
+        }
+
+        check (identical (play (synth, phrase, (int) (1.5 * rate)), reference), "synth: oscillators 4 to 9 off leave a patch sample for sample as it was");
+
+        // A state, and a whole preset, saved before there were nine: whatever the synth had on, 4 to 9 go off.
+        synth.loadPatch ("Abyss Reese");
+        juce::MemoryBlock state;
+        synth.getStateInformation (state);
+        auto xml = juce::AudioProcessor::getXmlFromBinary (state.getData(), (int) state.getSize());
+        auto values = synth.getPresetValues();
+
+        for (int i = xml->getNumAttributes(); --i >= 0;)
+            if (WaveSynth::isAddedWithNine (xml->getAttributeName (i)))
+                xml->removeAttribute (xml->getAttributeName (i));
+
+        for (auto it = values.begin(); it != values.end();)
+            it = WaveSynth::isAddedWithNine (it->first) ? values.erase (it) : std::next (it);
+
+        juce::MemoryBlock old;
+        juce::AudioProcessor::copyXmlToBinary (*xml, old);
+        nine (synth);
+        set (synth, "osc1FmFrom", 5.0f);
+        synth.setStateInformation (old.getData(), (int) old.getSize());
+        const auto fromState = play (synth, phrase, (int) (1.5 * rate));
+        nine (synth);
+        synth.setPresetValues (values);
+        const auto fromPreset = play (synth, phrase, (int) (1.5 * rate));
+        check (identical (fromState, reference) && identical (fromPreset, reference),
+               "synth: a state or a whole preset saved before there were nine oscillators loads with 4 to 9 off and FM From at Before, sample for sample as it was");
+
+        // A session saved before: an automation lane on slot 3's Destination, its values normalised over the 47
+        // choices the menu had, lands on the same destinations in the longer menu; a lane saved since is left alone.
+        {
+            const auto track = [&] (const juce::MemoryBlock& synthState, int slotId)
+            {
+                juce::XmlElement xmlTrack ("TRACK");
+                auto* slot = xmlTrack.createNewChildElement ("EFFECTS")->createNewChildElement ("SLOT");
+                slot->setAttribute ("id", slotId);
+                slot->createNewChildElement ("STATE")->addTextElement (synthState.toBase64Encoding());
+                auto* lane = xmlTrack.createNewChildElement ("ENVELOPE");
+                lane->setAttribute ("parameter", "effect");
+                lane->setAttribute ("slot", slotId);
+                lane->setAttribute ("id", "mod3Destination");
+
+                for (auto [frame, index] : { std::pair { 0, 1 }, std::pair { 48000, 28 }, std::pair { 96000, 46 } })
+                {
+                    auto* point = lane->createNewChildElement ("POINT");
+                    point->setAttribute ("frame", frame);
+                    point->setAttribute ("value", (double) index / 46.0);
+                }
+
+                SessionState s;
+                s.tracks.emplace_back();
+                s.tracks.back().id = 5;
+                SessionFile::readEnvelopes (s, 5, xmlTrack);
+                juce::StringArray landed;
+                auto* destination = synth.parameter ("mod3Destination");
+
+                for (auto& p : s.tracks.back().envelope (AutomationTarget::effect ((juce::uint32) slotId, "mod3Destination")).points)
+                {
+                    destination->setValueNotifyingHost (p.value);
+                    landed.add (dynamic_cast<juce::AudioParameterChoice*> (destination)->getCurrentChoiceName());
+                }
+
+                return landed.joinIntoString (", ");
+            };
+
+            juce::MemoryBlock now;
+            synth.getStateInformation (now);
+            const auto oldLanes = track (old, 7);
+            const auto newLanes = track (now, 8);
+            check (oldLanes == "Osc 1 Position, Sub Level, Reverb Mix" && newLanes != oldLanes,
+                   "synth: a lane drawn on a slot's Destination in a session saved before there were nine oscillators lands on the destinations it did (" + oldLanes
+                       + "); one saved since is read as it is");
+        }
+
+        // The automation menu: a sub-menu for each oscillator, then the synth's sections, every parameter once; a
+        // group holding a lane says so.
+        {
+            SessionState s;
+            s.tracks.emplace_back();
+            s.tracks.back().id = 3;
+            Envelope lane;
+            lane.points.push_back ({ 0, 0.5f });
+            SessionEdits::setEnvelope (s, 3, AutomationTarget::effect (9, "osc7Volume"), std::move (lane));
+            std::vector<AutomationTarget> targets;
+            const auto menu = MultitrackView::parameterMenu (synth, 9, s.tracks.back(), std::nullopt, 1000, targets);
+            juce::StringArray groups, seventh;
+            int items = 0;
+
+            for (juce::PopupMenu::MenuItemIterator group (menu); group.next();)
+                if (const auto& g = group.getItem(); g.subMenu != nullptr)
+                {
+                    groups.add (g.text);
+
+                    for (juce::PopupMenu::MenuItemIterator item (*g.subMenu); item.next(); ++items)
+                        if (g.text.startsWith ("Oscillator 7"))
+                            seventh.add (item.getItem().text);
+                }
+
+            check (groups.joinIntoString (", ") == "Oscillator 1, Oscillator 2, Oscillator 3, Oscillator 4, Oscillator 5, Oscillator 6, Oscillator 7 (automated), Oscillator 8, "
+                                                   "Oscillator 9, Sub and Noise, Filters, Amp and Voice, Envelopes, LFOs, Modulation Slots, Macros, Effects"
+                       && items == 376 && (int) targets.size() == 376 && seventh.size() == 23 && seventh.contains ("Osc 7 Level (automated)") && seventh.contains ("Osc 7 FM From"),
+                   "synth: its automation menu groups its " + juce::String (items) + " parameters in " + juce::String (groups.size())
+                       + " sub-menus (an oscillator's 23 in each of nine, then sub and noise, filters, amp and voice, envelopes, LFOs, slots, macros, effects); an automated one marks its group");
+        }
+
+        // FM From: Before is the chain it always was (1 takes 3, 2 takes 1, 3 takes 2); any oscillator can be chosen.
+        const auto fm = [&] (std::array<int, 3> from)
         {
             everything (synth);
 
             for (int o = 1; o <= 3; ++o)
             {
+                set (synth, "osc" + juce::String (o) + "Warp", (float) WaveSynth::Warp::fm);
+                set (synth, "osc" + juce::String (o) + "WarpAmount", 50.0f);
+                set (synth, "osc" + juce::String (o) + "FmFrom", (float) from[(size_t) o - 1]);
+            }
+
+            return play (synth, phrase, (int) (1.0 * rate));
+        };
+
+        const auto before = fm ({ 0, 0, 0 });
+        check (identical (before, fm ({ 3, 1, 2 })) && ! identical (before, fm ({ 2, 3, 1 })),
+               "synth: FM From at Before takes the oscillator before, as FM always has (1 from 3, 2 from 1, 3 from 2), the same sample for sample as choosing those; other choices sound otherwise");
+
+        nine (synth);
+        set (synth, "osc5Warp", (float) WaveSynth::Warp::fm);
+        set (synth, "osc5FmFrom", 9.0f);
+        const auto fromNine = play (synth, phrase, (int) (1.0 * rate));
+        set (synth, "osc5FmFrom", 0.0f);
+        check (! identical (fromNine, play (synth, phrase, (int) (1.0 * rate))), "synth: oscillator 5's FM can come from oscillator 9");
+
+        // Silent modulators: an oscillator an FM From names is worked out even when off, its samples driving the FM
+        // and none heard; Before still takes an oscillator that is off as nothing, as it always has.
+        const auto modulated = [&] (int from, float amount, bool fiveOn)
+        {
+            bare (synth);
+            set (synth, "osc1On", 0.0f);
+            set (synth, "osc2On", 1.0f);
+            set (synth, "osc2Volume", 100.0f);
+            set (synth, "osc2RandomPhase", 0.0f);
+            set (synth, "osc2Warp", (float) WaveSynth::Warp::fm);
+            set (synth, "osc2WarpAmount", amount);
+            set (synth, "osc2FmFrom", (float) from);
+            set (synth, "osc5On", fiveOn ? 1.0f : 0.0f);
+            set (synth, "osc5Volume", 0.0f);
+            set (synth, "osc5Pitch", 7.0f);
+            set (synth, "osc1Pitch", 7.0f);
+            return play (synth, held ({ 57 }, 0.4), (int) (0.5 * rate));
+        };
+
+        const auto plain = modulated (0, 0.0f, false);
+        const auto byFive = modulated (5, 60.0f, false), byFiveSilentOn = modulated (5, 60.0f, true);
+        const auto byOneOff = modulated (0, 60.0f, false), byOneNamed = modulated (1, 60.0f, false);
+        check (! identical (byFive, plain) && identical (byFive, byFiveSilentOn) && identical (modulated (5, 0.0f, false), plain)
+                   && identical (byOneOff, plain) && ! identical (byOneNamed, plain),
+               "synth: an oscillator named by FM From drives the FM though it is off or at no level, and is never heard itself (FM of nothing from it is the plain wave); "
+               "Before still takes oscillator 1, off, as nothing, as FM always has, while naming oscillator 1 brings it in");
+
+        // ...and counts against the unison budget: three heard in 8-voice unison, each driven by two silent
+        // oscillators of 4 to 9 in 8-voice unison, is 72 unison voices a note, so five notes at once.
+        everything (synth);
+
+        for (int o = 1; o <= 9; ++o)
+        {
+            set (synth, "osc" + juce::String (o) + "Unison", 8.0f);
+            set (synth, "osc" + juce::String (o) + "Warp", (float) WaveSynth::Warp::fm);
+            set (synth, "osc" + juce::String (o) + "WarpAmount", 30.0f);
+        }
+
+        for (int o = 1; o <= 3; ++o)
+            set (synth, "osc" + juce::String (o) + "FmFrom", (float) (o + 3));   // 1 from 4, 2 from 5, 3 from 6
+
+        for (int o = 4; o <= 6; ++o)
+            set (synth, "osc" + juce::String (o) + "FmFrom", (float) (o + 3));   // 4 from 7, 5 from 8, 6 from 9
+
+        std::vector<Event> eight;
+
+        for (int i = 0; i < 8; ++i)
+            eight.push_back ({ i * 2400, juce::MidiMessage::noteOn (1, 40 + i * 3, 0.8f) });
+
+        int mostWithModulators = 0;
+        play (synth, eight, (int) (0.6 * rate), 512, [&] (int) { mostWithModulators = juce::jmax (mostWithModulators, synth.getNumSounding()); });
+        check (mostWithModulators == 5, "synth: silent modulators count against the unison budget: three oscillators heard, six driving them two deep, all in 8-voice unison, play "
+                                            + juce::String (mostWithModulators) + " notes at once");
+
+        // Each of 4 to 9 sounds, as loud as oscillator 1 would at its settings, and its destinations move it.
+        juce::StringArray quiet;
+
+        for (int o = 4; o <= 9; ++o)
+        {
+            bare (synth);
+            set (synth, "osc1On", 0.0f);
+            const auto id = "osc" + juce::String (o);
+            set (synth, id + "On", 1.0f);
+            set (synth, id + "Volume", 100.0f);
+            set (synth, id + "RandomPhase", 0.0f);
+            const auto alone = play (synth, held ({ 57 }, 0.5), (int) (0.4 * rate));
+            const auto level = amplitude (alone, 0, 220.0, 4800, 9600);
+            set (synth, "mod1Source", (float) WaveSynth::macro1);
+            set (synth, "mod1Destination", (float) (WaveSynth::destinationIds().indexOf (id + "Volume") + 1));
+            set (synth, "mod1Amount", -100.0f);
+            set (synth, "macro1", 100.0f);
+            const auto moved = amplitude (play (synth, held ({ 57 }, 0.5), (int) (0.4 * rate)), 0, 220.0, 4800, 9600);
+            set (synth, "mod1Source", 0.0f);
+
+            if (level < 0.3 || moved > level * 0.01)
+                quiet.add (juce::String (o));
+        }
+
+        check (quiet.isEmpty(), "synth: oscillators 4 to 9 each sound on their own, and a slot turns each one's level down to nothing" + (quiet.isEmpty() ? juce::String() : " (not: " + quiet.joinIntoString (", ") + ")"));
+
+        // Nine sounding: the same at any block size; no click switching 7 on and off in a note, nor in steals.
+        std::vector<Event> events;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            events.push_back ({ 500 + i * 5003, juce::MidiMessage::noteOn (1, 40 + (i * 7) % 19, 0.6f + 0.05f * (float) i) });
+            events.push_back ({ 500 + i * 5003 + 11000, juce::MidiMessage::noteOff (1, 40 + (i * 7) % 19) });
+        }
+
+        const auto playNine = [&] (int block)
+        {
+            nine (synth);
+            return play (synth, events, (int) (1.5 * rate), block, [&] (int at)
+            {
+                // Oscillator 7 off at 18,944 samples (a whole number of blocks of every size here), on again at twice that.
+                if (at == 18944) set (synth, "osc7On", 0.0f);
+                if (at == 2 * 18944) set (synth, "osc7On", 1.0f);
+            });
+        };
+
+        const auto whole = playNine (512);
+        juce::StringArray differ;
+
+        for (auto size : { 1, 37, 64 })
+            if (! identical (playNine (size), whole))
+                differ.add (juce::String (size));
+
+        const auto click = ClickCheck::worst (whole, rate, 0.03f);
+        check (differ.isEmpty() && click.ratio <= 4.0f && whole.getMagnitude (0, whole.getNumSamples()) > 0.05f,
+               "synth: nine oscillators sounding, oscillator 7 switched off and on in the notes, render bit for bit the same in blocks of 512, 64, 37 and 1"
+                   + (differ.isEmpty() ? juce::String() : " (not: " + differ.joinIntoString (", ") + ")") + " with no click (the nearest a jump "
+                   + juce::String (click.ratio, 1) + " times the steps around it)");
+
+        // Notes end: all nine on, a chord released goes to silence (the delay and reverb off, which ring on by design).
+        nine (synth);
+
+        for (auto fx : { "Delay", "Reverb", "Chorus", "Phaser" })
+            set (synth, "fx" + juce::String (fx) + "On", 0.0f);
+
+        const auto ending = play (synth, held ({ 48, 52, 55 }, 0.3), (int) (1.5 * rate));
+        check (ending.getMagnitude (0, (int) (0.3 * rate)) > 0.05f && ending.getMagnitude ((int) (1.3 * rate), (int) (0.2 * rate)) < 1.0e-6f && synth.getNumSounding() == 0,
+               "synth: with nine oscillators sounding, a chord released ends: no voice left, and under -120 dB a second after (the drive's tone filter dying away)");
+
+        // The guard: nine in 8-voice unison is 72 unison voices a note, so five notes at once (384 / 72),
+        // the oldest fading out as a sixth starts, with no click.
+        nine (synth);
+
+        for (int o = 1; o <= 9; ++o)
+            set (synth, "osc" + juce::String (o) + "Unison", 8.0f);
+
+        std::vector<Event> chord;
+
+        for (int i = 0; i < 8; ++i)
+            chord.push_back ({ i * 2400, juce::MidiMessage::noteOn (1, 40 + i * 3, 0.8f) });
+
+        int most = 0;
+        const auto guarded = play (synth, chord, (int) (0.8 * rate), 512, [&] (int) { most = juce::jmax (most, synth.getNumSounding()); });
+        const auto stolen = ClickCheck::worst (guarded, rate, 0.03f);
+        check (most == WaveSynth::unisonBudget / 72 && synth.getNumSounding() == 5 && stolen.ratio <= 4.0f,
+               "synth: nine oscillators in 8-voice unison play " + juce::String (most) + " notes at once (" + juce::String (WaveSynth::unisonBudget)
+                   + " unison voices at most), the oldest fading out for a new one with no click (the nearest a jump " + juce::String (stolen.ratio, 1) + " times the steps around it)");
+    }
+
+    void testCpu (Synth& synth)
+    {
+        // Sixteen voices of one oscillator in 8-voice unison, through both filters and every effect; then
+        // all three oscillators so, then all nine (the guard lets five notes of that sound: 384 unison voices),
+        // and nine in 2-voice unison (288 unison voices, all sixteen notes). The time to render, against the
+        // time it plays. (A build without optimisation, as the tests are built, is several times slower than the app.)
+        const auto load = [&synth] (int oscillators, int unison)
+        {
+            everything (synth);
+
+            for (int o = 1; o <= WaveSynth::numOscillators; ++o)
+            {
                 set (synth, "osc" + juce::String (o) + "On", o <= oscillators ? 1.0f : 0.0f);
-                set (synth, "osc" + juce::String (o) + "Unison", 8.0f);
+                set (synth, "osc" + juce::String (o) + "Unison", (float) unison);
+                set (synth, "osc" + juce::String (o) + "Position", 40.0f);
+                set (synth, "osc" + juce::String (o) + "Volume", 50.0f);
+                set (synth, "osc" + juce::String (o) + "Warp", (float) WaveSynth::Warp::bend);
+                set (synth, "osc" + juce::String (o) + "WarpAmount", 30.0f);
             }
 
             std::vector<Event> e;
@@ -1218,19 +1560,23 @@ namespace
             const auto start = juce::Time::getMillisecondCounterHiRes();
             const auto out = play (synth, e, (int) (seconds * rate), 512);
             const auto took = (juce::Time::getMillisecondCounterHiRes() - start) / 1000.0;
-            return std::pair { took / seconds, out.getMagnitude (0, out.getNumSamples()) > 0.0f && synth.getNumSounding() == 16 };
+            const auto notes = juce::jmin (16, WaveSynth::unisonBudget / (oscillators * unison));
+            return std::pair { took / seconds, out.getMagnitude (0, out.getNumSamples()) > 0.0f && synth.getNumSounding() == notes };
         };
 
-        const auto [one, sounded] = load (1);
-        const auto [three, soundedAll] = load (3);
+        const auto [one, sounded] = load (1, 8);
+        const auto [three, soundedAll] = load (3, 8);
+        const auto [nineFull, soundedNine] = load (9, 8);
+        const auto [nineTwo, soundedNineTwo] = load (9, 2);
        #if defined (__OPTIMIZE__)
         constexpr auto optimised = true;
        #else
         constexpr auto optimised = false;
        #endif
-        check (sounded && soundedAll && (! optimised || one < 0.25),
+        check (sounded && soundedAll && soundedNine && soundedNineTwo && (! optimised || (one < 0.25 && nineFull < 0.25)),
                "synth: sixteen voices in 8-voice unison through both filters and every effect take " + juce::String (one * 100.0, 1) + " % of a core at 48 kHz with one oscillator, "
-                   + juce::String (three * 100.0, 1) + " % with all three" + (optimised ? " (under 25 % with one)" : " (unoptimised build)"));
+                   + juce::String (three * 100.0, 1) + " % with three; nine in 8-voice unison (five notes, as the guard allows) " + juce::String (nineFull * 100.0, 1)
+                   + " %, nine in 2-voice unison (sixteen notes) " + juce::String (nineTwo * 100.0, 1) + " %" + (optimised ? " (under 25 % with one, and with nine)" : " (unoptimised build)"));
     }
 }
 
@@ -1250,6 +1596,7 @@ void runWaveSynthTests (AudioEngine& engine)
     testFaults();
     testPresetTexts();
     testBlockSizes (synth);
+    testNine (synth);
     testCpu (synth);
 }
 
