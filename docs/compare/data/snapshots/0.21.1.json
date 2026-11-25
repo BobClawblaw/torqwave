@@ -115,8 +115,8 @@
     },
     "stem_separation": {
      "value": "partial",
-     "note": "Rebalance turns the voice, bass, drums and the rest of a mix up or down in place; it writes no stems. Stem separation with a model is on the roadmap, not built.",
-     "source": "docs/guide/03-spectral-editing-and-repair.md"
+     "note": "Rebalance turns the voice, bass, drums and the rest of a mix up or down in place; it writes no stems. Stem separation with a model is not planned: the roadmap puts it out of scope.",
+     "source": "docs/guide/03-spectral-editing-and-repair.md; ROADMAP.md"
     },
     "loudness_lufs": {
      "value": "yes",

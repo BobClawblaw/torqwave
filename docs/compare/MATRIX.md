@@ -144,6 +144,7 @@ Rows where Torqwave 0.21.1 is yes and at most two of the 15 other products are y
 
 | Row | 0.20.0 | 0.21.1 |
 |---|---|---|
+| Stem separation | Partial: Rebalance turns the voice, bass, drums and the rest of a mix up or down in place; it writes no stems. Stem separation with a model is on the roadmap, not built. | Partial: Rebalance turns the voice, bass, drums and the rest of a mix up or down in place; it writes no stems. Stem separation with a model is not planned: the roadmap puts it out of scope. |
 | Step or drum grid | Yes: Drum grid with swing in the Sequencer (since 0.19.0). | Yes: Drum grid with swing in the Sequencer (since 0.19.0). On a Basic Drums track it lists the kit's user pads under their names. |
 | Factory MIDI patterns | Yes: 1,018 factory sequence presets and 116 starter kits in 37 styles. | Yes: 1,032 factory sequence presets and 116 starter kits in 37 styles. |
 | Built-in drum instrument | Yes: Basic Drums: 30 synthesised sounds on pads covering the 47 General MIDI drum notes, seven kits. | Yes: Basic Drums, a drum synth and a drum sampler: 64 pads, 30 for the sounds that cover the 47 General MIDI drum notes and 34 user pads; 54 synthesized sources; a Sample type on every pad with up to 16 velocity layers and round robin; an envelope, transient shaper, saturator, four-band EQ and compressor on each pad; eight choke groups of the user's own; fifteen kits, all synthesized, with no factory samples. It imports a folder of sounds, or a Battery 4 kit file the user owns, without that kit's effects, envelopes or modulation. The changelog calls the sample pads, the pad effects, the 24 new sources and both imports first working versions: covered by the tests, not yet tried by hand or listened to. |
@@ -542,7 +543,7 @@ Version 0.21.1, the only edition. Looked up 2026-11-25. This repository at tag v
 | Click, hum and clipping repair | Yes | Click and Pop Repair, Remove Hum, Repair Clipping. | `README.md` |  |
 | Reverb reduction | Yes | Reduce Reverb. | `README.md` |  |
 | Dialogue isolation | Yes | Dialogue Isolation keeps speech and lowers the rest. Signal processing, no model. The roadmap notes it needs quiet moments or one pitch, and that the repair tools have had little real use. | `docs/guide/03-spectral-editing-and-repair.md` |  |
-| Stem separation | Partial | Rebalance turns the voice, bass, drums and the rest of a mix up or down in place; it writes no stems. Stem separation with a model is on the roadmap, not built. | `docs/guide/03-spectral-editing-and-repair.md` |  |
+| Stem separation | Partial | Rebalance turns the voice, bass, drums and the rest of a mix up or down in place; it writes no stems. Stem separation with a model is not planned: the roadmap puts it out of scope. | `docs/guide/03-spectral-editing-and-repair.md; ROADMAP.md` |  |
 | Loudness (LUFS) measure and match | Yes | EBU R128 loudness, Match Loudness. | `README.md` |  |
 | True-peak limiting or metering | Yes | True-peak limiting and true-peak figures in Amplitude Statistics. | `README.md` |  |
 | Delivery-spec check with a report | Yes | Meet Delivery Spec: EBU R128, ATSC A/85, an online target or a custom spec, with a report; also for mixdowns and stems. | `README.md` |  |
