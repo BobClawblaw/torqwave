@@ -96,23 +96,24 @@ With this chosen, Torqwave starts with what was open when it last closed:
 - every file that was open in the editor, in the same order, with the one you were on in front;
 - each file's selection, cursor, zoom and scroll, and the video attached to it;
 - the effects rack beside the editor, with its effects' settings;
-- the multitrack session, with its cursor, time range, zoom, scroll and selected track;
+- the multitrack session, with its cursor, time range, zoom, scroll and selected track, and with any changes you had not saved, even if you never saved the session at all;
 - the editor or the Multitrack view in front, whichever it was, and the project they belonged to.
 
 Whatever the setting, the same is on offer once after a start, until you use it or open something else: **File > Continue Where You Left Off**, and a button of that name at the start of the home screen's row.
 
 ![The home screen after a start with something left off: the Continue Where You Left Off button beside New File and Open..., in an empty editor with no files open](../screenshots/guide-continue.png)
 
-**It reopens files; it does not keep unsaved work.** Torqwave notes which files were open and where you were in them, in its own data folder. It writes no audio there. So:
+**It keeps a session's unsaved work, and no audio.** Torqwave notes which files were open and where you were in them, in its own data folder. A session with changes you had not saved is kept there whole, as **Save Session** would write it: its tracks, clips and notes, its instruments and effects with their settings, its tempo, automation and mix. It writes no audio there. So:
 
-- A file comes back as it is on disk. If you chose **Don't Save** when you quit, those changes are gone, as that choice says.
-- A file you never saved, and a session you never saved, are not brought back. Quitting asks whether to save them first, as it always has.
-- Undo histories are not brought back, and neither are open instrument, plug-in or tool windows. The panels and their layout come back as they always do, with the workspace.
+- **A session comes back as you left it.** One you never saved comes back untitled and still to be saved. One with a file comes back under that file's name with your changes in it, marked as changed; the file itself is as you last saved it until you save again. This holds whichever answer you gave when quitting asked about the session: **Don't Save** leaves the file alone, and what you were working on still comes back here. To go back to the session as saved instead, open it again from **File > Open Recent** and answer **Don't Save**.
+- **A session's audio is not copied.** Its clips name their audio files where they are, as a saved session does: recordings and imported files are files already. A clip whose file has gone since is left out, and Torqwave says which.
+- **A file in the editor comes back as it is on disk.** If you chose **Don't Save** for a file when you quit, those changes are gone, as that choice says, and a file you never saved is not brought back. Quitting asks whether to save them first, as it always has.
+- Undo histories are not brought back, the session's included, and neither are open instrument, plug-in or tool windows. The panels and their layout come back as they always do, with the workspace.
 - To keep unsaved audio and undo steps between runs, save a [project](11-projects-and-file-types.md#projects).
 
 **If something is no longer there** (moved, renamed, deleted, or on a drive that isn't connected), Torqwave reopens the rest and lists what it could not reopen. Those stay in its note, each with its place, and are tried again at every start: connect the drive or put the file back, and the next start reopens it, after the files that were there all along. Opening one by hand, or opening another session or project in place of a missing one, also ends the wait. For something that is gone for good, click **Forget Them** on the message (Return and Escape only close it) and Torqwave stops looking. A file that changed on disk opens as it is now.
 
-**After a crash** it brings back what was open up to 30 seconds before (the note is refreshed that often while nothing is playing or recording), each file as it is on disk. If the session had unsaved changes, Torqwave then offers its recovery copy, as it does without this setting: one question, and **Open** puts the copy in place of the saved session. If Torqwave closed while it was reopening, the next start skips it once and says so, so that one bad file can't stop the app from starting; File > Continue Where You Left Off tries again.
+**After a crash** it brings back what was open up to 30 seconds before (the note, and the session's unsaved changes with it, are refreshed that often while nothing is playing or recording), each file as it is on disk. The session's [recovery copy](11-projects-and-file-types.md#sessions-and-their-audio) is written on a clock of its own: when it is the later of the two, it is the one opened, and nothing is asked. Only if the session's changes were all made after the last note does Torqwave ask about the recovery copy, as it does without this setting: one question, and **Open** puts the copy in place of the saved session. If Torqwave closed while it was reopening, the next start skips it once and says so, so that one bad file can't stop the app from starting; File > Continue Where You Left Off tries again.
 
 The files are read while the loading screen is up, one after another, so a start takes about as long as opening them by hand. If a drive doesn't answer, **Continue** appears after three seconds: the app is usable at once and the files come in when they are read, unless you have opened or changed something by then.
 

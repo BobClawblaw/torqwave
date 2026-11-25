@@ -740,7 +740,7 @@ void runResumeTests()
     work.deleteRecursively();
 }
 
-bool makeResumeDemo (const juce::File& folder)
+bool makeResumeDemo (const juce::File& folder, bool unsavedSession)
 {
     const auto user = folder.getChildFile ("Files");
     user.createDirectory();
@@ -757,8 +757,28 @@ bool makeResumeDemo (const juce::File& folder)
     SessionEdits::addClip (session, 0, a, AudioFileIO::load (a, engine.formatManager).snapshot, 48000);
     SessionEdits::addClip (session, 1, b, AudioFileIO::load (b, engine.formatManager).snapshot, 480000);
     SessionEdits::addClip (session, 2, c, AudioFileIO::load (c, engine.formatManager).snapshot, 240000);
-    const auto error = SessionFile::save (session, sessionFile);
-    engine.session.reset (std::move (session), sessionFile);
+    const auto error = unsavedSession ? juce::String() : SessionFile::save (session, sessionFile);
+    engine.session.reset (std::move (session), unsavedSession ? juce::File() : sessionFile);
+
+    if (unsavedSession)
+    {
+        // Never saved: a drum track with a kit chosen and a bar of notes, at 97 beats a minute.
+        engine.session.ensureMaster();
+        const auto drumsId = addInstrumentTrack (engine, "Basic Drums");
+
+        if (auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (engine.getTrackEffects().getInstrument (drumsId)))
+            drums->applyKit (DrumMachine::kits()[3]);
+
+        NoteClip notes;
+        notes.name = "Pattern";
+        notes.position = 48000;
+        notes.length = 192000;
+        notes.notes = { { 36, 0, 6000, 0.9f, 1.0f }, { 38, 48000, 6000, 0.7f, 1.0f }, { 42, 72000, 3000, 0.5f, 1.0f }, { 36, 96000, 6000, 0.9f, 1.0f } };
+        auto next = *engine.session.getState();
+        next.tempo = 97.0;
+        SessionEdits::addNoteClip (next, drumsId, notes);
+        engine.session.apply (std::move (next), "Add Notes");
+    }
 
     engine.adoptFile (a, AudioFileIO::load (a, engine.formatManager));
     files.prepareForAnother ({ { 48000, 96000 }, 48000, 24000.0, 120.0, {}, {} });
@@ -769,5 +789,12 @@ bool makeResumeDemo (const juce::File& folder)
 
     const auto state = Resume::gather (files, { { 100000, 130000 }, 130000, 90000.0, 60.0, {}, {} }, engine, true,
                                        { 300000, { 240000, 360000 }, 200000.0, 400.0, 0, 1 }, {});
-    return error.isEmpty() && Resume::write (state, folder.getChildFile ("Left Off")).isEmpty();
+
+    if (! unsavedSession)
+        return error.isEmpty() && Resume::write (state, folder.getChildFile ("Left Off")).isEmpty();
+
+    Resume::Keeper keeper (folder.getChildFile ("Left Off"));
+    const auto kept = state.sessionCopy && keeper.note (state, writerFor (engine), true).isEmpty();
+    engine.clearTrackEffects();
+    return kept;
 }
