@@ -107,7 +107,6 @@ These need models that run on audio, so they wait until the first step has been 
 | Feature | Candidate | Licence (to confirm) |
 |---|---|---|
 | Transcription: markers, regions, subtitles (SRT, WebVTT), search, editing speech as text | whisper.cpp, or a server's `/v1/audio/transcriptions` | MIT |
-| Stem separation onto session tracks | HT-Demucs through ONNX Runtime | MIT |
 | Audio to MIDI, into a note clip | Basic Pitch | Apache-2.0 |
 | Voice noise reduction | DeepFilterNet, RNNoise | MIT/Apache, BSD |
 | Search the Sound Library by meaning ("metal door slam in a big room") | CLAP audio embeddings | to check |
