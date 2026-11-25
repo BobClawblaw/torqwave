@@ -567,6 +567,122 @@ const std::vector<Kit>& kits()
             k.feedback = 25.0f;
         });
 
+        // The kits made with sources, after those. A pad given a source: its settings, its decay as
+        // a share of the source's own.
+        const auto source = [] (Settings& to, const char* id, float tune, float decay, float tone, float level, float pan, float drive)
+        {
+            to.source = sourceWithId (id);
+            to.tune = tune;
+            to.decay = sourceInfo (to.source).decayMs * decay;
+            to.tone = tone;
+            to.level = level;
+            to.pan = pan;
+            to.drive = drive;
+        };
+
+        make ("Bunker", "Dark techno from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
+              [&source] (KitSettings& k, auto&& s)
+        {
+            source (s (Sound::kick), "rumbleKick", -1.0f, 1.0f, -10.0f, -1.0f, 0.0f, 15.0f);
+            source (s (Sound::snare), "noiseSnare", -2.0f, 1.0f, -20.0f, -2.0f, 0.0f, 15.0f);
+            source (s (Sound::clap), "clapStack", -1.0f, 1.0f, -10.0f, -1.0f, 0.0f, 10.0f);
+            source (s (Sound::closedHat), "noiseHat", 0.0f, 1.0f, 0.0f, -2.0f, 12.0f, 0.0f);
+            source (s (Sound::ride), "darkRide", 0.0f, 1.0f, -10.0f, -2.0f, -20.0f, 0.0f);
+            source (s (Sound::rim), "snap", -2.0f, 1.0f, 0.0f, -3.0f, -10.0f, 0.0f);
+            source (s (Sound::lowTom), "fmTom", -3.0f, 1.2f, -10.0f, -2.0f, s (Sound::lowTom).pan, 20.0f);
+            source (s (Sound::midTom), "fmTom", 1.0f, 1.1f, -10.0f, -2.0f, s (Sound::midTom).pan, 20.0f);
+            source (s (Sound::highTom), "fmTom", 5.0f, 1.0f, -10.0f, -2.0f, s (Sound::highTom).pan, 20.0f);
+            s (Sound::openHat) = { 0.0f, 520.0f, 10.0f, -4.0f, 12.0f, 0.0f };
+            source (k.user[0].settings, "subDrop", 0.0f, 1.0f, 0.0f, -2.0f, 0.0f, 0.0f);
+            source (k.user[1].settings, "zap", 0.0f, 1.0f, -10.0f, -6.0f, 15.0f, 0.0f);
+            source (k.user[2].settings, "noiseBurst", 0.0f, 1.0f, -20.0f, -5.0f, -15.0f, 10.0f);
+            source (k.user[3].settings, "tin", -2.0f, 1.0f, 0.0f, -5.0f, 20.0f, 0.0f);
+            s (Sound::clap).reverb = 28.0f;
+            s (Sound::snare).reverb = 12.0f;
+            s (Sound::rim).delay = 22.0f;
+            s (Sound::ride).reverb = 8.0f;
+            k.user[1].settings.delay = 25.0f;
+            k.user[3].settings.delay = 20.0f;
+            k.drive = 20.0f;
+            k.glue = 40.0f;
+            k.level = -6.0f;
+            k.reverbSize = 60.0f;
+            k.delayTime = 3;
+            k.feedback = 42.0f;
+        });
+
+        make ("Machine Shop", "Industrial from the sources: a distorted kick, a metal snare, an FM hat, a tin for the cowbell, a trash crash for the china, a machine hit for the rim; an anvil, a pipe, static, a zap, a low machine hit and a sub drop on pads 31 to 36.",
+              [&source] (KitSettings& k, auto&& s)
+        {
+            source (s (Sound::kick), "distortedKick", 0.0f, 1.0f, 10.0f, -1.0f, 0.0f, 20.0f);
+            source (s (Sound::snare), "metalSnare", -2.0f, 1.0f, 10.0f, -2.0f, 0.0f, 35.0f);
+            source (s (Sound::clap), "clapStack", -3.0f, 0.9f, 0.0f, -2.0f, 0.0f, 35.0f);
+            source (s (Sound::closedHat), "fmHat", -2.0f, 1.0f, 10.0f, -2.0f, 15.0f, 20.0f);
+            source (s (Sound::cowbell), "tin", -3.0f, 1.5f, 10.0f, -3.0f, 10.0f, 30.0f);
+            source (s (Sound::china), "trashCrash", -2.0f, 1.2f, 0.0f, -2.0f, -25.0f, 20.0f);
+            source (s (Sound::rim), "machineHit", 0.0f, 0.8f, 20.0f, -3.0f, -10.0f, 30.0f);
+            source (s (Sound::lowTom), "fmTom", -5.0f, 1.2f, 20.0f, -1.0f, s (Sound::lowTom).pan, 45.0f);
+            source (s (Sound::midTom), "fmTom", -1.0f, 1.1f, 20.0f, -1.0f, s (Sound::midTom).pan, 45.0f);
+            source (s (Sound::highTom), "fmTom", 3.0f, 1.0f, 20.0f, -1.0f, s (Sound::highTom).pan, 45.0f);
+            s (Sound::openHat) = { -3.0f, 480.0f, 30.0f, -4.0f, 15.0f, 35.0f };
+            source (k.user[0].settings, "anvil", 0.0f, 1.0f, 0.0f, -3.0f, -20.0f, 15.0f);
+            source (k.user[1].settings, "pipe", 0.0f, 1.0f, 0.0f, -3.0f, 20.0f, 10.0f);
+            source (k.user[2].settings, "static", 0.0f, 1.0f, 0.0f, -6.0f, 0.0f, 0.0f);
+            source (k.user[3].settings, "zap", -5.0f, 1.2f, 0.0f, -6.0f, 10.0f, 25.0f);
+            source (k.user[4].settings, "machineHit", -7.0f, 1.4f, -10.0f, -3.0f, 0.0f, 30.0f);
+            source (k.user[5].settings, "subDrop", 0.0f, 0.8f, 0.0f, -3.0f, 0.0f, 20.0f);
+            s (Sound::snare).crush = 15.0f;
+            s (Sound::snare).reverb = 18.0f;
+            s (Sound::clap).crush = 15.0f;
+            s (Sound::clap).reverb = 22.0f;
+            s (Sound::cowbell).delay = 28.0f;
+            s (Sound::china).reverb = 18.0f;
+            s (Sound::rim).delay = 25.0f;
+            k.user[0].settings.reverb = 20.0f;
+            k.user[1].settings.reverb = 20.0f;
+            k.user[2].settings.delay = 20.0f;
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                s (t).reverb = 15.0f;
+            k.drive = 40.0f;
+            k.glue = 55.0f;
+            k.level = -6.0f;
+            k.reverbSize = 45.0f;
+            k.delayTime = 0;
+            k.feedback = 38.0f;
+        });
+
+        make ("Voltage", "EBM from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
+              [&source] (KitSettings& k, auto&& s)
+        {
+            source (s (Sound::kick), "fmKick", 1.0f, 0.8f, 20.0f, -1.0f, 0.0f, 15.0f);
+            source (s (Sound::snare), "fmSnare", 0.0f, 1.4f, 10.0f, -1.0f, 0.0f, 20.0f);
+            source (s (Sound::closedHat), "fmHat", 2.0f, 0.8f, 10.0f, -3.0f, 10.0f, 0.0f);
+            source (s (Sound::cowbell), "fmBell", 0.0f, 0.5f, 0.0f, -4.0f, 10.0f, 0.0f);
+            source (s (Sound::rim), "tin", 2.0f, 1.0f, 0.0f, -3.0f, -10.0f, 0.0f);
+            source (s (Sound::lowTom), "fmTom", -2.0f, 1.0f, 0.0f, -2.0f, s (Sound::lowTom).pan, 15.0f);
+            source (s (Sound::midTom), "fmTom", 2.0f, 1.0f, 0.0f, -2.0f, s (Sound::midTom).pan, 15.0f);
+            source (s (Sound::highTom), "fmTom", 6.0f, 0.9f, 0.0f, -2.0f, s (Sound::highTom).pan, 15.0f);
+            s (Sound::clap) = { 0.0f, 520.0f, 10.0f, -1.0f, 0.0f, 10.0f };
+            s (Sound::openHat) = { 2.0f, 380.0f, 10.0f, -5.0f, 10.0f, 0.0f };
+            source (k.user[0].settings, "zap", 0.0f, 1.0f, 0.0f, -6.0f, 15.0f, 0.0f);
+            source (k.user[1].settings, "fmBell", 7.0f, 0.6f, 0.0f, -5.0f, -15.0f, 0.0f);
+            source (k.user[2].settings, "noiseBurst", 5.0f, 0.8f, 10.0f, -6.0f, 0.0f, 0.0f);
+            source (k.user[3].settings, "subKick", 0.0f, 0.7f, 0.0f, -2.0f, 0.0f, 10.0f);
+            s (Sound::snare).reverb = 32.0f;
+            s (Sound::clap).reverb = 28.0f;
+            s (Sound::cowbell).delay = 20.0f;
+            k.user[0].settings.delay = 22.0f;
+            k.user[1].settings.reverb = 25.0f;
+            for (auto t : { Sound::lowTom, Sound::midTom, Sound::highTom })
+                s (t).reverb = 18.0f;
+            k.drive = 12.0f;
+            k.glue = 45.0f;
+            k.level = -7.0f;
+            k.reverbSize = 68.0f;
+            k.delayTime = 2;
+            k.feedback = 30.0f;
+        });
+
         return list;
     }();
 

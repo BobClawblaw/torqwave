@@ -713,23 +713,31 @@ namespace
         set (drums.parameterOf (Sound::kick, "tune"), 5.0f);
         const auto modified = drums.kitModified();
 
-        // The seven kits of Classic sounds come first and use no Modern sound; the five after them are made of Modern ones.
+        // The seven kits of Classic sounds come first and use no Modern sound; the five after them are made of Modern ones;
+        // the three after those have sources on their pads, some of them user pads, and the twelve before have none.
         auto classicFirst = true;
 
         for (size_t i = 0; i < all.size(); ++i)
         {
-            int modernSounds = 0;
+            int modernSounds = 0, sourced = 0, userSourced = 0;
 
             for (auto& sound : all[i].settings.sounds)
+            {
                 modernSounds += sound.type;
+                sourced += sound.source > 0 ? 1 : 0;
+            }
 
-            classicFirst = classicFirst && (i < 7 ? modernSounds == 0 : modernSounds == 21);
+            for (auto& pad : all[i].settings.user)
+                userSourced += pad.settings.source > 0 ? 1 : 0;
+
+            classicFirst = classicFirst && (i < 7 ? modernSounds == 0 : i < 12 ? modernSounds == 21 : modernSounds == 0)
+                        && (i < 12 ? sourced == 0 && userSourced == 0 : sourced >= 8 && userSourced >= 4);
         }
 
-        check (all.size() == 12 && names[0] == "Standard" && names[1] == "Dark Techno" && names[2] == "Industrial" && names[3] == "EBM Machine"
+        check (all.size() == 15 && names[12] == "Bunker" && names[13] == "Machine Shop" && names[14] == "Voltage" && names[0] == "Standard" && names[1] == "Dark Techno" && names[2] == "Industrial" && names[3] == "EBM Machine"
                    && names[4] == "Electro" && names[5] == "Breaks" && names[6] == "Industrial Rock" && names[7] == "Modern" && names.contains ("Warehouse")
                    && names.contains ("Body Music") && names.contains ("Foundry") && names.contains ("Broken Beat") && classicFirst && clean && distinct && modified,
-               "drums: twelve kits (" + names.joinIntoString (", ") + "), the first seven all Classic sounds, the five after them Modern, each sounding different; "
+               "drums: fifteen kits (" + names.joinIntoString (", ") + "), the first seven all Classic sounds, the five after them Modern, the last three with sources on eight or more of their sounds' pads and four or more user pads, each sounding different; "
                "a kit chosen reads as itself until a knob moves");
 
         // The state keeps the kit's name and every setting.
@@ -2627,7 +2635,7 @@ namespace
 
             // A long source cut by a short one in its group fades, with no click (in a kit with nothing on its bus, so the one can be taken from the other).
             juce::String why;
-            const auto choked = [&why, user, userNote]
+            const auto choked = [&why, userNote]
             {
                 BasicDrumsProcessor plain;
                 plain.applyKit (DrumMachine::kits()[0]);
@@ -2936,6 +2944,17 @@ void saveDrumMachineDemos (const juce::File& folder)
         all.push_back (grooves[beside]);
         all.back().kit = kit;
     }
+
+    // The kits made with sources, their user pads (notes 82 on) in the groove.
+    all.push_back ({ "Bunker", 132.0, { { 36, "x...x...x...x..." }, { 39, "....x.......x..." }, { 42, "xoxoxoxoxoxoxoxo" }, { 46, "..x...x...x...x." }, { 51, "x.x.x.x.x.x.x.x." },
+                                      { 37, ".......o.....o.." }, { 84, "..........o....." }, { 85, "...o.....o...o.." } },
+                                    { { 36, "x...x...x...x..." }, { 38, "....x...x.x.x.xx" }, { 42, "xoxoxoxoxoxo...." }, { 45, "............x.x." }, { 83, "..........x....." }, { 82, "x..............." } } });
+    all.push_back ({ "Machine Shop", 128.0, { { 36, "x...x...x...x..." }, { 43, "..x...x.....x.x." }, { 38, "....x.......x..." }, { 56, "x..x..x..x..x.x." }, { 42, "x.x.x.x.x.x.x.x." },
+                                            { 52, "........x......." }, { 37, "...o.......o...." }, { 82, "......x......o.." }, { 83, "..o.......x....." }, { 84, "x.......o......." } },
+                                          { { 36, "x...x...x.x.xxxx" }, { 38, "....x.x.x.x.x.xx" }, { 41, "x.x.x.x........." }, { 86, "..x...x...x....." }, { 85, "............x..." }, { 87, "x..............." } } });
+    all.push_back ({ "Voltage", 120.0, { { 36, "x...x...x...x..." }, { 38, "....x.......x..." }, { 39, "....x.......x..." }, { 42, "x.x.x.x.x.x.x.x." }, { 46, "..x...x...x...x." },
+                                       { 56, "...x......x....." }, { 82, ".......o......x." }, { 83, "x.....o........." } },
+                                     { { 36, "x...x...x...x..." }, { 38, "....x...xxxxxxxx" }, { 42, "x.x.x.x........." }, { 48, "........x.x....." }, { 45, "..........x.x..." }, { 84, "..x...x........." }, { 85, "x.......x......." } } });
 
     folder.createDirectory();
 

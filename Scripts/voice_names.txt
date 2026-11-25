@@ -3753,3 +3753,6 @@ kit|Warehouse|Dark techno on the Modern sounds: a low kick that leaves room, a d
 kit|Body Music|EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.
 kit|Foundry|Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.
 kit|Broken Beat|Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.
+kit|Bunker|Dark techno from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.
+kit|Machine Shop|Industrial from the sources: a distorted kick, a metal snare, an FM hat, a tin for the cowbell, a trash crash for the china, a machine hit for the rim; an anvil, a pipe, static, a zap, a low machine hit and a sub drop on pads 31 to 36.
+kit|Voltage|EBM from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.
