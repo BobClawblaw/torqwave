@@ -4,6 +4,16 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+## Released
+
+**Release 0.21.1: Basic Drums becomes a drum synth and sampler in one**
+- `Torqwave-0.21.1.dmg` on the repository's Releases page, with its SHA-256, and the Windows and Linux packages built by their workflows from the release's tag.
+- **New since 0.21.0** (the entries below): in Basic Drums, pads that play samples in up to 16 velocity layers with round robin, 34 user pads (64 in all), an envelope, transient shaper, saturator, EQ and compressor on every pad, 24 more synthesized sources (54 in all) and three more kits (fifteen), eight choke groups of the user's own, the kit's pads in the drum grid, and Files > Import Battery Kit and Import Folder of Sounds; Continue where you left off keeping a session never saved; Torqwave Synth's stuck note fixed and Transport > Silence All Instruments; Ask Torq's follow-ups measured with a real model; a sequence's preview going round without a click.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app universal (arm64 and x86_64) at the release's code, at the tag so the app is marked a release build, signed it ad hoc and made the disk image. The whole suite then ran once on each half of that app: 2,702 checks passed on Apple silicon, and 2,702 on Intel under Rosetta (not on an Intel Mac itself). No part of the suite was run again by area after that.
+- **Tried by hand before the release,** in try-it builds: samples on a pad in layers and the velocity a click plays at (found wrong in use and fixed, fix log 115); the 24 sources, heard as rendered clips and called good; the Battery import, with library kits and with kits saved from a current Battery 4 for the purpose, which is how the newer kit layout, the envelope, the chokes and the reverse flag were found and confirmed; and the user reported the build with the pad effects, choke groups, grid names and new kits as working. **Not known to have been tried by hand:** Import Folder of Sounds with a real folder, Save Kit with Samples and Open Kit File, and the pad effects one by one for how they sound.
+- **Windows and Linux:** the workflows build the packages without running the tests, and neither was tried by hand.
+- The comparison (`docs/compare`) is unchanged at 45 of 53 rows and is now set against 0.20.0; `docs/releases/0.21.1/` holds the announcement and an infographic.
+
 **Basic Drums: a Battery kit's chokes come over as choke groups**
 - **What comes over.** Cells that cut each other off in the kit are put in one of the eight choke groups here, a group for each such set, from group 1 in the order of the sets' first cells. A set is the cells of one voice group that has one voice, or the cells of every voice group sharing an exclusive group. The report counts the cells and the sets; a kit with more than eight sets keeps the first eight and says how many were left to ring.
 - **The reader follows the kit's map of its voice groups.** A kit has 128 voice groups and keeps only the ones changed from how a group starts (one voice, no name, no exclusive group), with a bit for each one kept. The reader had taken the kept ones as groups 1, 2, 3 in a row, which pairs cells with the wrong group in a kit that keeps, say, groups 1 and 5. Nothing was wrong on the pads, since chokes were only counted until now. A cell in a group the kit does not keep is in a one-voice group, and two such cells cut each other off.
@@ -176,8 +186,6 @@ Each milestone as it was built, newest first, with what the tests measured on th
 - **Counts and the release's name:** 1,032 sequence presets and twelve kits on the front page and the Sounds pages; the front page's "New" section is for 0.21.0, with cards for the Modern drums and the three repairs; its Ask Torq section says a request goes with the last four before it and that a line shows the model's context. The Quality page's quotes of the release notes are 0.21.0's (2,618 checks).
 - 1,065 clips, 101.1 MB; the quality clips and pictures 5.3 MB. A picture of the Quality page's top is `docs/screenshots/site-quality.png`.
 - Tested: the pages built with Jekyll and their links checked (the only broken ones are the links out of the site's folder and to folders that were broken before, and two more of the same kind in the 0.21.0 announcement). The front page, the Quality page and the drums page were looked at in dark at desktop width, not at phone width. **Not listened to:** none of the new clips. The test suite was not run for this.
-
-## Released
 
 **Release 0.21.0: the first announced release since 0.19.2**
 - `Torqwave-0.21.0.dmg` on the repository's Releases page, with its SHA-256, and the Windows and Linux packages built by their workflows from the release's tag.
