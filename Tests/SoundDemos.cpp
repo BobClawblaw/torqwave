@@ -19,6 +19,7 @@
 #include "../Source/Spectrogram.h"
 #include "../Source/SwarmGuitar.h"
 #include "../Source/WaveSynth.h"
+#include "DrumMachineTests.h"
 #include "SoundDemos.h"
 
 namespace
@@ -278,6 +279,61 @@ namespace
         std::cout << (error.isEmpty() ? entry->getProperty ("file").toString() + " (peak " + entry->getProperty ("peakDb").toString() + " dB)"
                                       : "FAILED " + file.getFileName() + ": " + error) << std::endl;
         return error.isEmpty();
+    }
+
+    /** The audio with each stretch of nothing inside it (under a thousandth of the peak, in hundredths
+        of a second) cut to a quarter of a second: its first fifth of a second and its last twentieth
+        are kept, so what dies away and what starts are whole. */
+    juce::AudioBuffer<float> withShortGaps (const juce::AudioBuffer<float>& audio)
+    {
+        const auto window = (int) (0.01 * rate), keepFirst = 20, keepLast = 5;
+        const auto floor = 0.001f * audio.getMagnitude (0, audio.getNumSamples());
+        const auto windows = audio.getNumSamples() / window;
+        std::vector<bool> kept ((size_t) windows, true);
+
+        for (int w = 0, run = 0; w <= windows; ++w)
+        {
+            if (w < windows && audio.getMagnitude (w * window, window) < floor)
+            {
+                ++run;
+                continue;
+            }
+
+            if (w < windows)
+                for (int i = w - run + keepFirst; i < w - keepLast; ++i)
+                    kept[(size_t) i] = false;
+
+            run = 0;
+        }
+
+        juce::AudioBuffer<float> out (audio.getNumChannels(), audio.getNumSamples());
+        int frames = 0;
+
+        for (int w = 0; w < windows; ++w)
+            if (kept[(size_t) w])
+            {
+                for (int ch = 0; ch < audio.getNumChannels(); ++ch)
+                    out.copyFrom (ch, frames, audio, ch, w * window, window);
+
+                frames += window;
+            }
+
+        out.setSize (out.getNumChannels(), frames, true);
+        return out;
+    }
+
+    /** A WAV file's audio in stereo; nothing when it cannot be read. */
+    juce::AudioBuffer<float> wavFile (const juce::File& file)
+    {
+        juce::AudioBuffer<float> audio;
+
+        if (std::unique_ptr<juce::AudioFormatReader> reader { juce::WavAudioFormat().createReaderFor (file.createInputStream().release(), true) })
+        {
+            audio.setSize (2, (int) reader->lengthInSamples);
+            reader->read (&audio, 0, audio.getNumSamples(), 0, true, true);
+        }
+
+        return audio;
     }
 
     //==============================================================================
@@ -828,6 +884,9 @@ namespace
         preview plays them. A kit no factory groove uses plays two of the audition beats instead. */
     void writeDrums (const juce::File& folder, Index& index)
     {
+        // The grooves of --drums-demo, for the kits no factory groove is written for.
+        const auto demos = folder.getChildFile ("wav").getChildFile ("kits");
+        saveDrumMachineDemos (demos);
         const UnpackedPresets unpacked;
         juce::AudioPluginFormatManager formats;
         formats.addFormat (BuiltInEffects::createFormat());
@@ -882,7 +941,41 @@ namespace
                     save (folder, entry, audition (drums, pattern, 1.5));
                 }
 
+            // Such a kit's own groove too: the audition beats play the sounds' notes only, and a kit
+            // made with sources has user pads on notes of their own.
+            if (auto demo = wavFile (demos.getChildFile ("Basic Drums - " + kit.name + ".wav")); shown == 0 && demo.getNumSamples() > 0)
+            {
+                auto* entry = index.add ("drums", kit.name, kit.name + ": demo groove", "drums/" + slug (kit.name + " demo groove") + ".mp3");
+                entry->setProperty ("about", kit.description);
+                entry->setProperty ("demo", true);
+                save (folder, entry, std::move (demo));
+            }
+
             ++number;
+        }
+    }
+
+    /** Basic Drums' synthesized sources that any pad can play, as --drums-sources renders them: each
+        alone (a hard hit, a softer one, then five semitones down and five up, the nothing between the
+        hits cut to a quarter of a second) and in two bars over a plain groove of the Dark Techno kit. */
+    void writeSources (const juce::File& folder, Index& index)
+    {
+        const auto rendered = folder.getChildFile ("wav").getChildFile ("sources");
+        saveDrumSourceClips (rendered);
+
+        for (int s = 1; s <= DrumMachine::numSources; ++s)
+        {
+            const auto& info = DrumMachine::sourceInfo (s);
+            const auto file = juce::String (s).paddedLeft ('0', 2) + " " + info.name;
+
+            for (auto pattern : { false, true })
+            {
+                auto* entry = index.add ("sources", info.family, info.name, "sources/" + slug (juce::String (info.name) + (pattern ? " pattern" : "")) + ".mp3");
+                entry->setProperty ("pattern", pattern);
+                entry->setProperty ("number", s);
+                const auto audio = wavFile (rendered.getChildFile (file + (pattern ? " - pattern" : "") + ".wav"));
+                save (folder, entry, pattern ? audio : withShortGaps (audio));
+            }
         }
     }
 
@@ -1490,6 +1583,7 @@ void writeSoundDemos (const juce::File& folder, const juce::StringArray& only)
     if (wanted ("synth"))      writeSynth (folder, index);
     if (wanted ("swarm"))      writeSwarm (folder, index);
     if (wanted ("drums"))      writeDrums (folder, index);
+    if (wanted ("sources"))    writeSources (folder, index);
     if (wanted ("sampler"))    writeSampler (folder, index);
 
     if (wanted ("kits") || wanted ("sequences"))

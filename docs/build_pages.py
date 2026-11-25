@@ -78,6 +78,7 @@ GROUPS = OrderedDict([
     ("synth", ("Torqwave Synth", "synth.html")),
     ("swarm", ("StringSwarm", "stringswarm.html")),
     ("drums", ("Basic Drums", "drums-and-sampler.html")),
+    ("sources", ("Basic Drums: sources", "drums-and-sampler.html")),
     ("sampler", ("Torqwave Sampler", "drums-and-sampler.html")),
     ("kits", ("Sequence Library: kits", "kits.html")),
     ("sequences", ("Sequence Library: sequences", "sequences.html")),
@@ -274,36 +275,66 @@ def swarm_page():
          f"{len(clips)} StringSwarm factory presets from all 11 categories, rendered by Torqwave with nothing added.", "\n".join(body))
 
 
+# What a source's two bars take the place of in the plain groove (a kick, a clap and hats), by family.
+SOURCE_PART = {"Kicks": "in place of the groove's kick", "Snares and Claps": "in place of its clap", "Hats and Cymbals": "in place of its closed hat"}
+SOURCE_OVER = ("Dark Ride", "Trash Crash")
+
+
+def source_card(alone, pattern):
+    """One of Basic Drums' synthesized sources that any pad can play: alone, and in a groove."""
+    name = alone["name"]
+    part = "over the groove" if name in SOURCE_OVER else SOURCE_PART.get(alone["category"], "over the groove")
+    return (f'<div class="clip"><div class="kind">{esc(alone["category"])} · source {alone["number"]} of 24</div><h4>{esc(name)}</h4>'
+            f'<p>Alone: a hard hit, a softer one, then five semitones down and five up.</p>{player(alone, "audio/")}'
+            f'<p>In two bars at 130 BPM, on a user pad of the Dark Techno kit, {part}.</p><div class="fill"></div>{player(pattern, "audio/")}</div>')
+
+
 def drums_page():
-    drums, sampler = of("drums"), of("sampler")
+    drums, sampler, sources = of("drums"), of("sampler"), of("sources")
     kits = grouped(drums, lambda c: c["category"])
+    families = grouped([c for c in sources if not c["pattern"]], lambda c: c["category"])
+    patterns = {c["name"]: c for c in sources if c["pattern"]}
     body = [f'<div class="title">{crumbs("Basic Drums and Torqwave Sampler")}<h1>Basic Drums and Torqwave Sampler</h1>',
-            f'<p>Basic Drums\' {len(kits)} kits, each playing factory grooves written for it, and Torqwave Sampler\'s {len(sampler)} factory presets.</p>',
+            f'<p>Basic Drums\' {len(kits)} kits, each playing grooves written for it, the {len(patterns)} synthesized sources any of its pads can play, and Torqwave Sampler\'s {len(sampler)} factory presets.</p>',
             f'<p class="meta">{HOW} Each kit plays the Sequence Library\'s factory grooves written for it (of its Drums › Full Grooves, the three with the most energy, or all of them where a kit has fewer), as the library\'s preview plays them, at the tempo they were written at. '
-            f'The sampler\'s presets play the audition phrases Torqwave plays when you choose a sound, at 125 BPM. {megabytes(drums + sampler)} in all.</p>',
-            chips(["Basic Drums", "Torqwave Sampler"]), "</div>",
+            'A kit no factory groove is written for yet plays two of the audition beats and a four-bar groove written for it, with a fill in its last bar. '
+            'Each source plays alone and in a groove; the nothing between its hits is cut to a quarter of a second. '
+            f'The sampler\'s presets play the audition phrases Torqwave plays when you choose a sound, at 125 BPM. {megabytes(drums + sources + sampler)} in all.</p>',
+            chips(["Basic Drums", "The sources", "Torqwave Sampler"]), "</div>",
             '<h2 id="basic-drums">Basic Drums</h2>',
-            '<p class="lede">A drum machine with 30 sounds that cover every General MIDI drum note, 21 of them with a second, Modern type beside the Classic one, each with its own tune, decay, tone, level, pan and drive, '
-            'and a filter, crush, reverb and delay on every pad. A kit sets all of it at once.</p>']
+            '<p class="lede">A drum machine with 64 pads. The first 30 are sounds that cover every General MIDI drum note, 21 of them with a Modern type beside the Classic one; '
+            'the other 34 are user pads on notes of their own. Any pad can play one of 24 more synthesized sources, or your own samples in up to 16 layers, by velocity and taking turns. '
+            'Each pad has its own tune, decay, tone, level, pan and drive, a filter, crush, reverb and delay, and five effects of its own: an envelope, a transient shaper, a saturator, an EQ and a compressor. '
+            'A kit sets all of it at once.</p>',
+            '<p class="lede">Torqwave ships no samples: everything on this page is synthesized, and the factory kits use no sample. A pad plays the sounds you give it, read where they are.</p>']
 
     for kit, found in kits.items():
         body.append(f'<h3 class="sub" id="{anchor(kit)}">{esc(kit)}</h3><p class="lede">{esc(found[0]["about"])}</p><div class="clips">')
 
         for c in found:
             what = (f'{c["groove"]}. {c["style"].replace("/", " › ")}, {number(c["tempo"])} BPM, energy {c["energy"]} of 5.' if c.get("groove")
+                    else "Four bars written for the kit, its user pads in it, the last bar a fill." if c.get("demo")
                     else f'The audition beat “{c["phrase"]}” at 125 BPM.')
             body.append(f'<div class="clip"><div class="kind">{esc(kit)}{" · one of " + str(c["of"]) + " factory grooves" if c.get("groove") else ""}</div>'
-                        f'<h4>{esc(c["name"] if c.get("groove") else c["phrase"])}</h4>'
+                        f'<h4>{esc(c["name"] if c.get("groove") else "The kit\'s own groove" if c.get("demo") else c["phrase"])}</h4>'
                         f'<p>{esc(what)}</p><div class="fill"></div>{player(c, "audio/")}</div>')
 
         body.append("</div>")
+
+    body.append('<h2 id="the-sources">The sources</h2>'
+                f'<p class="lede">{sum(len(f) for f in families.values())} synthesized sounds that belong to no drum note: any of the 64 pads can play one, through everything the pad has. '
+                'With the 30 sounds that makes 54 sources. Three kits are made with them: Bunker, Machine Shop and Voltage, above.</p>')
+
+    for family, found in families.items():
+        body.append(f'<h3 class="sub" id="{anchor(family)}">{esc(family)} <small>{len(found)} sources</small></h3><div class="clips">'
+                    + "".join(source_card(c, patterns[c["name"]]) for c in found) + "</div>")
 
     body.append('<h2 id="torqwave-sampler">Torqwave Sampler</h2>'
                 '<p class="lede">The sampler plays your own sounds across the keys, or cut into slices at their hits. '
                 'It ships with a small set of factory presets rendered from Torqwave\'s own instruments, so there is something on the keys before you add a sound of yours: these are all of them.</p>'
                 '<div class="clips">' + "".join(card(c, "audio/") for c in sampler) + "</div>")
     page("sounds/drums-and-sampler.html", "Basic Drums and Torqwave Sampler: hear them",
-         f"Basic Drums' {len(kits)} kits and Torqwave Sampler's {len(sampler)} factory presets, rendered by Torqwave with nothing added.", "\n".join(body))
+         f"Basic Drums' {len(kits)} kits and {len(patterns)} synthesized sources, and Torqwave Sampler's {len(sampler)} factory presets, rendered by Torqwave with nothing added.", "\n".join(body))
 
 
 def style_order(styles):
@@ -387,7 +418,8 @@ def sounds_index():
     rows = []
     pages = [("synth", "synth.html", "Torqwave Synth", "of 3,743 patches: the ones that use the most of the synth, from all 29 categories"),
              ("swarm", "stringswarm.html", "StringSwarm", "of 296 presets, from all 11 categories"),
-             ("drums", "drums-and-sampler.html#basic-drums", "Basic Drums", f"all {len(set(c['category'] for c in of('drums')))} kits, on factory grooves from the Sequence Library"),
+             ("drums", "drums-and-sampler.html#basic-drums", "Basic Drums", f"all {len(set(c['category'] for c in of('drums')))} kits, on grooves written for them"),
+             ("sources", "drums-and-sampler.html#the-sources", "Basic Drums: sources", "clips of the 24 synthesized sources any pad can play, each alone and in a groove"),
              ("sampler", "drums-and-sampler.html#torqwave-sampler", "Torqwave Sampler", "all 11 factory presets"),
              ("kits", "kits.html", "Sequence Library: kits", f"all 116 factory kits, in {len(set(c['category'] for c in of('kits')))} styles"),
              ("sequences", "sequences.html", "Sequence Library: sequences", "of 1,032 factory sequences, from all 37 styles")]
@@ -410,7 +442,7 @@ def sounds_index():
             '<ul class="plain">'
             '<li><b>Chosen by ear:</b> 18 Torqwave Synth patches and 22 StringSwarm presets, picked for the first version of this page and each given a part that suits it (four bars at 120 BPM). Their cards say so.</li>'
             '<li><b>Chosen by rule:</b> everything else, so the pages show what the lists are like and not only their best. Of the synth\'s patches, the ones that use the most of the synth, by a count of their parts in use, a share from every category; '
-            'from each StringSwarm category, the first preset and two more; every Basic Drums kit, every sampler preset and every kit of the Sequence Library; '
+            'from each StringSwarm category, the first preset and two more; every Basic Drums kit and each of its 24 sources, every sampler preset and every kit of the Sequence Library; '
             'and of the sequences, the one in each role of a style that does the most by measure (notes to a bar, different pitches, rhythm), on a voice the style\'s other clips do not play.</li>'
             '<li><b>Played as the app plays them:</b> patches and presets on the audition phrases Torqwave plays when you choose a sound; kits and sequences through the Sequence Library\'s own preview, at the tempo they were written at.</li>'
             '<li><b>Not listened to one by one.</b> The 40 chosen by ear were; the rest were rendered and checked by measurement only (each has sound, none reaches full scale). If one is wrong, <a href="https://github.com/BobClawblaw/torqwave/issues">say so</a>.</li>'
@@ -513,7 +545,7 @@ if __name__ == "__main__":
     between("index.html", "clips", front_clips("sounds/audio/")
             + f'\n<div class="actions"><a class="button primary" href="sounds/">Hear all {len(CLIPS)} clips</a></div>'
               f'\n<p class="meta">By instrument: <a href="sounds/synth.html">Torqwave Synth</a> ({len(of("synth"))}), '
-              f'<a href="sounds/stringswarm.html">StringSwarm</a> ({len(of("swarm"))}), <a href="sounds/drums-and-sampler.html">Basic Drums and Torqwave Sampler</a> ({len(of("drums")) + len(of("sampler"))}), '
+              f'<a href="sounds/stringswarm.html">StringSwarm</a> ({len(of("swarm"))}), <a href="sounds/drums-and-sampler.html">Basic Drums and Torqwave Sampler</a> ({len(of("drums")) + len(of("sources")) + len(of("sampler"))}), '
               f'<a href="sounds/kits.html">every factory kit</a> ({len(of("kits"))}) and <a href="sounds/sequences.html">sequences from every style</a> ({len(of("sequences"))}).</p>')
     bytes_quality = quality_demos()
     print(f"{len(CLIPS)} sound clips, {megabytes(CLIPS)}; quality clips and pictures {bytes_quality / 1048576:.1f} MB")
