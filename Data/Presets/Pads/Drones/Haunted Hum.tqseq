@@ -1,28 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Haunted Hum" role="Pads" subRole="Drones" key="A minor" tags="" note="A and E held together for 8 bars, the filter breathing in and out" style="Game/Horror" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Haunted Hum" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="A, B flat and B coming in a quarter apart, a cluster, for 8 bars, the filter closing slowly" style="Game/Horror" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
   <NOTES>
-    <N p="45" s="0" l="3800" v="0.708661"/>
-    <N p="52" s="0" l="3800" v="0.551181"/>
-    <N p="45" s="3840" l="3800" v="0.708661"/>
-    <N p="52" s="3840" l="3800" v="0.551181"/>
-    <N p="45" s="7680" l="3800" v="0.708661"/>
-    <N p="52" s="7680" l="3800" v="0.551181"/>
-    <N p="45" s="11520" l="3800" v="0.708661"/>
-    <N p="52" s="11520" l="3800" v="0.551181"/>
-    <N p="45" s="15360" l="3800" v="0.708661"/>
-    <N p="52" s="15360" l="3800" v="0.551181"/>
-    <N p="45" s="19200" l="3800" v="0.708661"/>
-    <N p="52" s="19200" l="3800" v="0.551181"/>
-    <N p="45" s="23040" l="3800" v="0.708661"/>
-    <N p="52" s="23040" l="3800" v="0.551181"/>
-    <N p="45" s="26880" l="3800" v="0.708661"/>
-    <N p="52" s="26880" l="3800" v="0.551181"/>
+    <N p="45" s="0" l="30680" v="0.724409"/>
+    <N p="46" s="7680" l="23000" v="0.614173"/>
+    <N p="47" s="15360" l="15320" v="0.614173"/>
   </NOTES>
   <LANE controller="74">
-    <P t="0" v="0.100000"/>
-    <P t="15360" v="0.600000"/>
-    <P t="30719" v="0.100000"/>
+    <P t="0" v="0.750000"/>
+    <P t="30719" v="0.300000"/>
   </LANE>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Radio Static" bus="0" instrument="1" musical="1" gainDb="1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhTgQVZuAxTzEFcoMlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Radio Static" bus="0" instrument="1" musical="1" gainDb="2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhTgQVZuAxTzEFcoMlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

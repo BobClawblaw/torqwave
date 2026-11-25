@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Jackhammer Bed" role="Pads" subRole="Sustained" key="A minor" tags="" note="A minor, A minor, A minor, F, held a bar each" style="Techno/Hard" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Jackhammer Bed" role="Pads" subRole="Sustained" key="A minor" tags="" note="A minor, A minor, A minor, F, as bare fifths, low" style="Techno/Hard" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
-    <N p="57" s="0" l="3800" v="0.629921"/>
-    <N p="60" s="0" l="3800" v="0.629921"/>
-    <N p="64" s="0" l="3800" v="0.629921"/>
-    <N p="57" s="3840" l="3800" v="0.629921"/>
-    <N p="60" s="3840" l="3800" v="0.629921"/>
-    <N p="64" s="3840" l="3800" v="0.629921"/>
-    <N p="57" s="7680" l="3800" v="0.629921"/>
-    <N p="60" s="7680" l="3800" v="0.629921"/>
-    <N p="64" s="7680" l="3800" v="0.629921"/>
-    <N p="53" s="11520" l="3800" v="0.629921"/>
-    <N p="57" s="11520" l="3800" v="0.629921"/>
-    <N p="60" s="11520" l="3800" v="0.629921"/>
+    <N p="45" s="0" l="3800" v="0.629921"/>
+    <N p="52" s="0" l="3800" v="0.629921"/>
+    <N p="45" s="3840" l="3800" v="0.629921"/>
+    <N p="52" s="3840" l="3800" v="0.629921"/>
+    <N p="45" s="7680" l="3800" v="0.629921"/>
+    <N p="52" s="7680" l="3800" v="0.629921"/>
+    <N p="41" s="11520" l="3800" v="0.629921"/>
+    <N p="48" s="11520" l="3800" v="0.629921"/>
   </NOTES>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Machine Spin Up" bus="0" instrument="1" musical="1" gainDb="1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>75.VMjLgHD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRSgMFZo4VYfLEbo4FHUAmHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Machine Spin Up" bus="0" instrument="1" musical="1" gainDb="2.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>75.VMjLgHD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRSgMFZo4VYfLEbo4FHUAmHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

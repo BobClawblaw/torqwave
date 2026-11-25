@@ -315,7 +315,7 @@ void runPresetTests (AudioEngine& engine)
     // is still allowed are what it stood at when the test was written; they only go down, to none with
     // the same notes and no shape in more than three styles.
     {
-        struct One { juce::String name, category, style, notes, shape; bool rises = false; int highest = 0; };
+        struct One { juce::String name, category, style, notes, shape; bool rises = false; int highest = 0; juce::int64 shortest = 0; };
         std::vector<One> ones;
 
         for (auto& f : all)
@@ -332,6 +332,7 @@ void runPresetTests (AudioEngine& engine)
                     {
                         one.notes << n.pitch << "@" << juce::String (n.start) << " ";
                         one.highest = juce::jmax (one.highest, n.pitch);
+                        one.shortest = one.shortest == 0 ? n.length : juce::jmin (one.shortest, n.length);
 
                         if (drums)
                             one.shape << n.pitch << "@" << juce::String (n.start) << " ";
@@ -412,15 +413,12 @@ void runPresetTests (AudioEngine& engine)
             { "Drums > Snare & Clap", { 7, 5 } },
             { "Harmony > Keys & Comping", { 14, 7 } },
             { "Harmony > Progressions", { 12, 9 } },
-            { "Harmony > Strums", { 2, 7 } },
-            { "Pads > Drones", { 19, 11 } },
-            { "Pads > Evolving", { 22, 23 } },
-            { "Pads > Sustained", { 26, 19 } }
+            { "Harmony > Strums", { 2, 7 } }
         };
-        const int stylesUnderHalfAllowed = 11;
+        const int stylesUnderHalfAllowed = 9;
         juce::StringArray over, table, flat;
 
-        juce::StringArray high;
+        juce::StringArray high, brief;
 
         for (auto& o : ones)
         {
@@ -429,7 +427,12 @@ void runPresetTests (AudioEngine& engine)
 
             if (o.category == "Bass > Sub" && o.highest > 45)
                 high.add (o.name);
+
+            if (o.category == "Pads > Drones" && o.shortest < 2 * 4 * SequenceFile::ticksPerBeat - 40)
+                brief.add (o.name);
         }
+
+        check (brief.isEmpty(), "presets: a drone holds: none of its notes lasts under two bars" + (brief.isEmpty() ? juce::String() : " (" + brief.joinIntoString (", ") + ")"));
 
         check (high.isEmpty(), "presets: every sub stays in the sub register, at or under A2" + (high.isEmpty() ? juce::String() : " (" + high.joinIntoString (", ") + ")"));
 

@@ -743,7 +743,8 @@ preset("Futurepop Pad Loop", P, "Sustained", "Industrial/Futurepop", 3, ["Bright
 preset("Darkwave Chorus Pad", P, "Sustained", "Industrial/Darkwave", 2, ["Dark", "Sparse", "Straight", "Clean"],
        "A minor, F, G, E minor held a bar each", Part(4).chords([Am, F, G, Em], velocity=70), 110, synth("pad"))
 preset("Synth-EBM Pad", P, "Sustained", "Industrial/Synth-EBM", 2, ["Dark", "Sparse", "Straight", "Clean"],
-       "A minor, C, G, F under a verse", Part(4).chords([Am, C, G, F], velocity=70), 126, synth("pad"))
+       "A minor, C, G, F under a verse, each over its root an octave down",
+       Part(4).chords([["a2"] + Am, ["c3"] + C, ["g2"] + G, ["f2"] + F], velocity=70), 126, synth("pad"))
 preset("Hypnotic Fifth Bed", P, "Sustained", "Techno/Hypnotic", 1, ["Dark", "Sparse", "Straight", "Clean"],
        "A and E held for eight bars, nothing else", Part(8).chords([["a2", "e3", "a3"]] * 8, velocity=64), 130, synth("pad"))
 
@@ -785,8 +786,8 @@ preset("Fifth Drone", P, "Drones", "Techno/Industrial", 1, ["Dark", "Sparse", "S
 preset("Phrygian Drone", P, "Drones", "Techno/Industrial", 2, ["Dark", "Sparse", "Straight", "Distorted"],
        "A1 with B flat 2 grinding above it", Part(8).add(pitch("a1"), 0, 8 * BAR - 40, 80).add(pitch("bb2"), 0, 8 * BAR - 40, 60), 128, synth("drone"), tags=["Phrygian"])
 preset("Rumble Drone", P, "Drones", "Techno/Hard", 3, ["Dark", "Dense", "Straight", "Distorted"],
-       "A low A drone with the filter breathing every bar",
-       Part(4).add(pitch("a1"), 0, 4 * BAR - 40, 90).lane(74, [(i * BAR // 2, 0.35 if i % 2 == 0 else 0.6) for i in range(9)]), 150, synth("drone"))
+       "A low A and the A under it, the filter breathing every bar",
+       Part(4).add(pitch("a1"), 0, 4 * BAR - 40, 90).add(pitch("a0"), 0, 4 * BAR - 40, 80).lane(74, [(i * BAR // 2, 0.35 if i % 2 == 0 else 0.6) for i in range(9)]), 150, synth("drone"))
 preset("Tension Drone", P, "Drones", "Industrial/EBM", 2, ["Dark", "Sparse", "Straight", "Distorted"],
        "A and E flat a tritone apart, held under a breakdown", Part(4).add(pitch("a2"), 0, 4 * BAR - 40, 76).add(pitch("eb3"), 0, 4 * BAR - 40, 66), 122, synth("drone"), tags=["Chromatic"])
 
@@ -1240,6 +1241,160 @@ BASS = {
     "march":     ("1 . 1 1 1 . 1 1 1 . 1 1 1 . 8 .", "a marching 16th line"),
     "drone":     ("1 - - - - - - - - - - - - - - -", "one held note a bar"),
     "pulse":     ("1 . . . 1 . . . 1 . . . 1 . . .", "a quarter-note pulse on the root"),
+}
+
+# Pads. A texture lays a bar's chord out (the chords as pitches, lowest first): what is held, where
+# it sits and when it comes in. Each returns the part.
+
+def pad_part(bars, chords, voice):
+    """A part from voice(chord, bar) -> [(pitch, start step in the bar, length in steps)]."""
+    part = Part(bars)
+    for b in range(bars):
+        for p, start, length in voice(chords[b % len(chords)], b):
+            part.add(p, b * BAR + start * S, length * S - 40, 80)
+    return part
+
+
+def step_above(p):
+    """The next note of A minor above a pitch."""
+    return next(q for q in LADDER["minor"] if q > p)
+
+
+def tex_block(ch, bars):    return pad_part(bars, ch, lambda c, b: [(p, 0, 16) for p in c])
+def tex_low(ch, bars):      return pad_part(bars, ch, lambda c, b: [(c[0] - 12, 0, 16)] + [(p, 0, 16) for p in c])
+def tex_open(ch, bars):     return pad_part(bars, ch, lambda c, b: [(c[0] - 12, 0, 16), (c[2], 0, 16), (c[1] + 12, 0, 16)])
+def tex_dyad(ch, bars):     return pad_part(bars, ch, lambda c, b: [(c[0], 0, 16), (c[1] + 12, 0, 16)])
+def tex_fifths(ch, bars):   return pad_part(bars, ch, lambda c, b: [(c[0] - 12, 0, 16), (c[2] - 12, 0, 16)])
+def tex_air(ch, bars):      return pad_part(bars, ch, lambda c, b: [(p + 12, 0, 16) for p in c[1:]])
+def tex_bloom(ch, bars):    return pad_part(bars, ch, lambda c, b: [(p, 4 * i, 16 - 4 * i) for i, p in enumerate(c[:4])])
+def tex_top(ch, bars):      return pad_part(bars, ch, lambda c, b: [(p, 0, 16) for p in c[:-1]] + [(c[-1], 0, 8), (step_above(c[-1]), 8, 8)])
+def tex_early(ch, bars):    return _early(ch, bars)
+def tex_pedal(ch, bars):    return pad_part(bars, ch, lambda c, b: ([(ch[0][0] - 12, 0, 16)]) + [(p, 0, 16) for p in c[1:]])
+def tex_rise(ch, bars):     return pad_part(bars, ch, lambda c, b: [(p + (12 if i < b else 0), 0, 16) for i, p in enumerate(c[:3])])
+def tex_fall(ch, bars):     return pad_part(bars, ch, lambda c, b: [(p + 12 - (12 if i >= 3 - b else 0), 0, 16) for i, p in enumerate(c[:3])])
+
+
+def _early(ch, bars):
+    """Each chord comes an 8th before its bar: the first on the one, the rest pushed."""
+    part = Part(bars)
+    for b in range(bars):
+        start = b * 16 - (2 if b else 0)
+        end = (b + 1) * 16 - (2 if b < bars - 1 else 0)
+        for p in ch[b % len(ch)]:
+            part.add(p, start * S, (end - start) * S - 40, 80)
+    return part
+
+
+def tex_half(ch, bars):
+    """Two chords to a bar: the progression goes round twice."""
+    part = Part(bars)
+    for h in range(bars * 2):
+        for p in ch[h % len(ch)]:
+            part.add(p, h * 8 * S, 8 * S - 40, 80)
+    return part
+
+
+def tex_twobar(ch, bars):
+    """Two bars a chord: the first, then the first that differs from it."""
+    other = next((c for c in ch[1:] if c != ch[0]), ch[0])
+    part = Part(bars)
+    for i, c in enumerate([ch[0], other][: max(1, bars // 2)]):
+        for p in c:
+            part.add(p, i * 2 * BAR, min(2, bars) * BAR - 40, 80)
+    return part
+
+
+PAD_TEXTURES = {
+    "block":  (tex_block, "held a bar each"),
+    "low":    (tex_low, "held a bar each over the root an octave down"),
+    "open":   (tex_open, "spread wide: the root low, the fifth, the third on top"),
+    "dyad":   (tex_dyad, "as two notes only, the root and the third a tenth above"),
+    "fifths": (tex_fifths, "as bare fifths, low"),
+    "air":    (tex_air, "without the root, an octave up"),
+    "bloom":  (tex_bloom, "each coming in a note a beat from the bottom"),
+    "top":    (tex_top, "the top note stepping up at half the bar"),
+    "early":  (tex_early, "each pushed an 8th ahead of its bar"),
+    "pedal":  (tex_pedal, "over an A held underneath all four"),
+    "rise":   (tex_rise, "each voiced higher than the last"),
+    "fall":   (tex_fall, "each voiced lower than the last"),
+    "half":   (tex_half, "two to a bar, round twice"),
+    "twobar": (tex_twobar, "the first two of them, two bars each"),
+}
+
+# An evolving pad's filter: (where in the preset, how open), and what to say.
+PAD_LANES = [
+    ([(0, 0.35), (0.5, 0.85), (1, 0.4)], "the filter opening and closing again"),
+    ([(0, 0.3), (1, 0.9)], "the filter opening the whole way"),
+    ([(0, 0.9), (1, 0.35)], "the filter closing the whole way"),
+    ([(0, 0.35), (0.25, 0.75), (0.5, 0.35), (0.75, 0.75), (1, 0.35)], "the filter breathing twice"),
+    ([(0, 0.65), (0.5, 0.3), (1, 0.85)], "the filter dipping at the middle and opening past where it began"),
+]
+
+PADS_FOR = {
+    "Techno": ["block", "fifths", "pedal", "twobar", "low"],
+    "Techno/Dark": ["pedal", "fifths", "twobar", "low", "dyad"],
+    "Techno/Melodic": ["open", "top", "bloom", "air", "rise"],
+    "Techno/Dub": ["early", "air", "dyad", "open"],
+    "Techno/Hypnotic": ["twobar", "pedal", "half", "dyad"],
+    "Industrial": ["fifths", "low", "pedal", "block", "fall"],
+    "Industrial/Darkwave": ["open", "top", "fall", "bloom"],
+    "Industrial/Coldwave": ["air", "dyad", "top", "open"],
+    "Industrial/Futurepop": ["rise", "open", "half", "top"],
+    "Electro": ["half", "early", "dyad", "air"],
+    "Breakbeat": ["early", "half", "open", "air"],
+    "Drum and Bass": ["open", "air", "bloom", "top", "early"],
+    "Ambient": ["twobar", "bloom", "pedal", "open", "air"],
+    "House": ["early", "top", "air", "open"],
+    "Synthwave": ["rise", "low", "top", "half"],
+    "Trance": ["pedal", "rise", "half"],
+    "Game": ["bloom", "top", "fall", "open", "dyad"],
+}
+
+# Drones: what is held (a note, where in the preset it comes in and where it leaves, 0 to 1), what to
+# call it, the tags it needs. Nothing lasts under two bars.
+DRONE_FIGURES = {
+    "fifth":    ([("a1", 0, 1), ("e2", 0, 1)], "A and E held together", []),
+    "root":     ([("a1", 0, 1)], "one low A held", []),
+    "octaves":  ([("a1", 0, 1), ("a2", 0, 1), ("a3", 0, 1)], "A held in three octaves", []),
+    "flattwo":  ([("a1", 0, 1), ("bb2", 0.5, 1)], "a low A, the B flat a ninth above it joining halfway", ["Phrygian"]),
+    "fourth":   ([("a1", 0, 1), ("d2", 0, 1), ("a2", 0.5, 1)], "A and D held, the A above joining halfway", []),
+    "tritone":  ([("a1", 0, 1), ("eb2", 0.25, 1)], "a low A, the tritone above it joining after a quarter", ["Chromatic"]),
+    "cluster":  ([("a2", 0, 1), ("bb2", 0.25, 1), ("b2", 0.5, 1)], "A, B flat and B coming in a quarter apart, a cluster", ["Chromatic"]),
+    "latefifth": ([("a1", 0, 1), ("e2", 0.5, 1)], "a low A, the fifth joining halfway", []),
+    "lateoctave": ([("a1", 0, 1), ("a2", 0.75, 1)], "a low A, the octave joining for the last quarter", []),
+    "stack":    ([("a1", 0, 1), ("e2", 0, 1), ("a2", 0, 1), ("e3", 0, 1)], "A and E stacked through two octaves", []),
+    "sixth":    ([("a1", 0, 1), ("e2", 0, 0.5), ("f2", 0.5, 1)], "a low A under an E that moves up to F halfway", []),
+    "ninth":    ([("a1", 0, 1), ("a2", 0, 0.5), ("b2", 0.5, 1)], "a low A under its octave, which steps up to B halfway", []),
+    "seventh":  ([("a1", 0, 1), ("e2", 0.25, 1), ("g2", 0.5, 1)], "A, then E, then G, a quarter apart: a seventh without its third", []),
+    "third":    ([("a1", 0, 1), ("e2", 0, 1), ("c3", 0.5, 1)], "A and E held, the minor third joining on top halfway", []),
+    "leading":  ([("a1", 0, 1), ("g#2", 0.5, 0.75), ("a2", 0.75, 1)], "a low A, the G sharp under its octave pulling up to it at the end", ["Harmonic minor"]),
+    "low":      ([("e1", 0, 1), ("a1", 0.5, 1)], "a low E, the A above it joining halfway", []),
+}
+
+DRONE_LANES = [
+    ([(0, 0.3), (0.5, 0.7), (1, 0.3)], "the filter breathing in and out"),
+    ([(0, 0.25), (1, 0.8)], "the filter opening slowly"),
+    ([(0, 0.75), (1, 0.3)], "the filter closing slowly"),
+    ([(0, 0.3), (0.25, 0.6), (0.5, 0.3), (0.75, 0.6), (1, 0.3)], "the filter breathing twice"),
+]
+
+DRONES_FOR = {
+    "Techno": ["fifth", "root", "latefifth", "stack"],
+    "Techno/Dark": ["flattwo", "root", "low", "fifth"],
+    "Techno/Industrial": ["tritone", "cluster", "low"],
+    "Industrial": ["tritone", "low", "fourth", "cluster"],
+    "Industrial/Darkwave": ["third", "leading", "sixth"],
+    "Industrial/Coldwave": ["ninth", "sixth", "third"],
+    "Electro": ["fourth", "seventh"],
+    "Breakbeat": ["seventh", "fourth"],
+    "Drum and Bass": ["ninth", "seventh", "lateoctave"],
+    "Ambient": ["octaves", "sixth", "ninth", "lateoctave", "third"],
+    "Ambient/Dark ambient": ["cluster", "flattwo", "low", "tritone"],
+    "House": ["seventh", "ninth"],
+    "Synthwave": ["stack", "lateoctave", "third"],
+    "Trance": ["flattwo", "leading", "stack"],
+    "Game": ["third", "fourth", "sixth"],
+    "Game/Horror": ["cluster", "tritone", "leading"],
 }
 
 # What a stab is struck with, and when. A chord: its notes, what to call it, the tags it needs.
@@ -2504,32 +2659,57 @@ class Maker:
         s = self.s
         degrees, mode = self.progression()
         seventh = self.r.random() < 0.4
-        chords = [names(triad(mode, d, seventh=seventh)) for d in degrees]
-        part = Part(4)
         patch = self.pick(s.pad_patches)
+        start = zlib.crc32((s.style + sub).encode("utf-8"))
 
-        if sub == "Sustained":
-            part.chords(chords, velocity=80)
-            words = f"{chord_names(mode, degrees, seventh)}, held a bar each"
-        elif sub == "Evolving":
-            part.chords(chords, velocity=78).lane(74, [(0, 0.2), (2 * BAR, 0.8), (4 * BAR - 1, 0.3)])
-            words = f"{chord_names(mode, degrees, seventh)}, the filter opening and closing again over four bars"
-        elif sub == "Swells":
-            part = Part(2)
-            part.chords([chords[0], chords[0]], velocity=84).lane(11, [(0, 0.0), (2 * BAR - 1, 1.0)])
-            words = f"{chord_name(mode, degrees[0], seventh)} swelling up from silence over two bars"
-        else:   # Drones
-            part = Part(self.pick([4, 8]))
-            root = degree_pitch(mode, 0, 40, 51)
-            fifth = LADDER[mode][ladder_index(mode, root) + 4]
-            for b in range(part.bars):
-                part.add(root, b * BAR, BAR - 40, 90).add(fifth, b * BAR, BAR - 40, 70)
-            part.lane(74, [(0, 0.1), (part.bars * BAR // 2, 0.6), (part.bars * BAR - 1, 0.1)])
-            words = f"A and E held together for {part.bars} bars, the filter breathing in and out"
+        if sub == "Drones":
+            bars = self.pick([4, 8])
             patch = self.pick(["drone", "noise"] if "noise" in s.pad_patches else ["drone"])
+            mine = DRONES_FOR.get(s.style) or DRONES_FOR[s.style.split("/")[0]]
+            candidates = []
 
-        tags = self.mode_tags(mode, [n[0] for n in part.notes])
-        self.add("pad", ROLE_NOUNS[sub], "Pads", sub, words, part, synth(patch), tags)
+            for key in mine + [k for k in DRONE_FIGURES if k not in mine]:
+                notes, said, tags = DRONE_FIGURES[key]
+
+                for length in (bars, 12 - bars):
+                    part = Part(length)
+                    for name, enters, leaves in notes:
+                        part.add(pitch(name), int(enters * length) * BAR, int((leaves - enters) * length) * BAR - 40, 92 if enters == 0 else 78)
+                    if any(n[2] < 2 * BAR - 40 for n in part.notes):
+                        continue   # a drone holds: nothing under two bars
+                    breath, how = DRONE_LANES[(start + len(candidates)) % len(DRONE_LANES)]
+                    part.lane(74, [(int(t * length * BAR) - (1 if t == 1 else 0), v) for t, v in breath])
+                    candidates.append((f"{said}, for {length} bars, {how}", part, synth(patch), tags))
+
+            return self.add_new("pad", ROLE_NOUNS[sub], "Pads", sub, candidates)
+
+        # The style's own progression first, then its others; the chords as drawn, then with or without the seventh.
+        progressions = [(degrees, mode)] + [PROGRESSIONS[p] for p in s.progressions if PROGRESSIONS[p] != (degrees, mode)]
+        mine = PADS_FOR.get(s.style) or PADS_FOR[s.style.split("/")[0]]
+        candidates = []
+
+        for degrees, mode in progressions:
+            for with_seventh in (seventh, not seventh):
+                chords = [triad(mode, d, seventh=with_seventh) for d in degrees]
+                said = chord_names(mode, degrees, with_seventh)
+
+                for key in mine + [k for k in PAD_TEXTURES if k not in mine]:
+                    make, how = PAD_TEXTURES[key]
+
+                    if sub == "Swells":
+                        part = make(chords[:1] * 2, 2).lane(11, [(0, 0.0), (2 * BAR - 1, 1.0)])
+                        words = f"{chord_name(mode, degrees[0], with_seventh)} swelling up from silence over two bars, {how}"
+                    elif sub == "Evolving":
+                        lane, moving = PAD_LANES[(start + len(candidates)) % len(PAD_LANES)]
+                        part = make(chords, 4).lane(74, [(int(t * 4 * BAR) - (1 if t == 1 else 0), v) for t, v in lane])
+                        words = f"{said}, {how}, {moving}"
+                    else:
+                        part = make(chords, 4)
+                        words = f"{said}, {how}"
+
+                    candidates.append((words, part, synth(patch), self.mode_tags(mode, [n[0] for n in part.notes])))
+
+        self.add_new("pad", ROLE_NOUNS[sub], "Pads", sub, candidates)
 
     # -- Arps and melody --------------------------------------------------------------------
 
