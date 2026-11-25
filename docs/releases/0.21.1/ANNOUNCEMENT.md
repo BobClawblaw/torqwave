@@ -91,7 +91,19 @@ A reply under them can carry the comparison's address: `https://github.com/BobCl
 
 ## Alt text
 
-The pictures that are new or changed in 0.21.1 are below. For Continue and the Quality page, use the alt text in [ANNOUNCEMENT-0.21.0.md](../../announcements/ANNOUNCEMENT-0.21.0.md). Graphics 1 to 5 set 0.21.1 against 0.20.0; their alt text is written from the pictures as they were drawn for this release (TO FILL at the cut).
+The pictures that are new or changed in 0.21.1 are below. For Continue and the Quality page, use the alt text in [ANNOUNCEMENT-0.21.0.md](../../announcements/ANNOUNCEMENT-0.21.0.md). Graphics 2 to 5 set 0.21.1 against 0.20.0; use their alt text from the same file, reading 0.21.1 and 0.20.0 for the two Torqwave versions (no row differs between the two).
+
+For graphic 1, `1-release-by-the-numbers.png`:
+
+```alt
+A dark chart titled "Torqwave 0.21.1: what it adds over 0.20.0". Six tiles, each with a number and the figure for 0.20.0 under it: 64 drum pads (30 before), 54 drum sources (30 before), 15 drum kits (7 before), 16 layers a pad (0 before), 8 choke groups of your own (0 before), 1,032 sequence presets (1,018 before). A list beside them, "Also new since 0.20.0": sample pads, your own sounds on any drum pad, in layers; on each pad an envelope, transient shaper, saturator, EQ and compressor; imports a folder of sounds, or a Battery 4 kit you own; Modern types for 21 drum sounds; Continue where you left off, unsaved sessions too; Ask Torq remembers the conversation; Maximizer, Click Repair and Repair Clipping corrected; Panic, every instrument silenced.
+```
+
+For the infographic, `infographic-portrait.png` (and `infographic-square.png`):
+
+```alt
+A dark poster headed Torqwave 0.21.1, "Basic Drums: a drum synth and a sampler in one". A grid of 64 pads, the first 30 coloured, beside a large 64: 30 drum sounds, 34 for your samples. Five tiles: 54 synthesized sources; 16 velocity layers a pad, round robin; 5 effects on every pad; 15 kits; 8 choke groups of your own. Under them: the five are envelope, transient shaper, saturator, EQ, compressor; imports a folder of sounds, or Battery 4 kit files you own; also an unsaved session comes back on Continue, and a Panic command. At the foot, bobclawblaw.github.io/torqwave and "Free, open source".
+```
 
 For `docs/screenshots/guide-drums.png`:
 
