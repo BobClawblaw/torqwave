@@ -378,6 +378,9 @@ VOICE_KITS = {
     "bodymusic":   ["Body Music"],
     "foundry":     ["Foundry"],
     "brokenbeat":  ["Broken Beat"],
+    "bunker":      ["Bunker"],
+    "machineshop": ["Machine Shop"],
+    "voltage":     ["Voltage"],
 }
 
 
@@ -400,6 +403,11 @@ def pick(names, preset_name):
 
 
 def patch_for(sound, preset_name):
+    # "=Name" is that factory patch and no other: a figure written for one sound.
+    if sound.startswith("="):
+        assert any(sound[1:] in v for v in FACTORY_PATCHES.values()), sound[1:] + " is not a factory patch"
+        return sound[1:]
+
     return pick(choices_for(sound), preset_name)
 
 
@@ -1522,6 +1530,252 @@ AMBIENT_SPLIT = dict(Drums=3, Bass=3, Harmony=2, Pads=5, Arps=2, Melody=2, SFX=1
 DRUM_ORDER = ["Full Grooves", "Fills", "Full Grooves", "Kick", "Hats & Tops", "Full Grooves", "Snare & Clap", "Percussion", "Breaks"]
 
 
+# ---------------------------------------------------------------------------------------------
+# Risers, one written for each style: what rises is the pitch, the level, the filter or how often it
+# strikes, and no two styles share the notes. A lane's 74 is the filter, 11 the level, 128 the bend
+# (0.5 at rest, 1.0 two semitones up).
+
+OPEN = lambda bars, low=0.12: [(0, low), (bars * BAR - 1, 1.0)]
+SWELL = lambda bars, low=0.25: [(0, low), (bars * BAR - 1, 1.0)]
+BEND_UP = lambda bars, start=0: [(0, 0.5), (start, 0.5), (bars * BAR - 1, 1.0)] if start else [(0, 0.5), (bars * BAR - 1, 1.0)]
+
+
+def ramp(step, steps, low=52, high=124):
+    """A velocity rising with the step."""
+    return low + (high - low) * step // max(1, steps - 1)
+
+
+def held(entries, bars):
+    """Notes held to the end: (name, the bar it comes in at, velocity)."""
+    part = Part(bars)
+    for name, bar, velocity in entries:
+        part.add(pitch(name), int(bar * BAR), int((bars - bar) * BAR) - 40, velocity)
+    return part
+
+
+def struck(bars, at, low=52, high=124, length=S // 2):
+    """Notes struck: `at` gives the pitches at a step (a list, or nothing), louder as it goes."""
+    part = Part(bars)
+    for step in range(bars * 16):
+        for p in at(step) or []:
+            part.add(pitch(p) if isinstance(p, str) else p, step * S, length, ramp(step, bars * 16, low, high))
+    return part
+
+
+def every(gaps):
+    """Whether a step is struck, where each bar has its own gap between strikes: [4, 4, 2, 1] is
+    quarters for two bars, then 8ths, then 16ths."""
+    return lambda step: step % gaps[min(step // 16, len(gaps) - 1)] == 0
+
+
+def riser_dark():
+    part = held([("a1", 0, 100), ("bb1", 2, 96)], 4).lane(74, OPEN(4, 0.05)).lane(11, SWELL(4))
+    return "a low A held for four bars, the B flat above it joining at bar 3, the filter opening", part, synth("=Tar Tension"), ["Phrygian"]
+
+
+def riser_driving():
+    on = every([4, 2, 1, 1])
+    part = struck(4, lambda i: (["a3"] if i < 48 else ["a3", "a4"]) if on(i) else None).lane(74, OPEN(4, 0.2))
+    return "the root struck in quarters, then 8ths, then 16ths, the octave on top in bar 4", part, synth("stab"), []
+
+
+def riser_peak():
+    notes = ["a3", "c4", "e4", "g4", "b4", "c5", "e5", "a5"]
+    part = held([(n, i / 2, 78 + 5 * i) for i, n in enumerate(notes)], 4).lane(74, OPEN(4, 0.2))
+    return "an A minor ninth stacking a note every half bar from the root to the high A, the filter opening", part, synth("=Floodlight Ramp"), []
+
+
+def riser_industrial():
+    part = struck(2, lambda i: ([COWBELL] if every([4, 2])(i) else []) + ([SNARE] if i >= 24 else []) + ([KICK] if i % 4 == 0 else []), length=S // 2)
+    return "metal struck in quarters then 8ths over a kick on every beat, snare 16ths through the last half bar", part, drums("machineshop"), []
+
+
+def riser_hard():
+    on = every([4, 4, 2, 1])
+    part = struck(4, lambda i: ([KICK] if on(i) else []) + ([CLAP] if i >= 48 and i % 4 == 0 else []) + ([RIDE] if i >= 32 and i % 2 == 1 else []))
+    return "the kick in quarters for two bars, 8ths in bar 3 with a ride between, 16ths in bar 4 with a clap on every beat", part, drums("bunker"), []
+
+
+def riser_hypnotic():
+    part = struck(4, lambda i: ["e3"] if i % 3 == 0 else None, low=40, high=118).lane(74, OPEN(4, 0.08))
+    return "one E every third 16th for four bars, three against the bar, the filter opening as it gets louder", part, synth("pluck"), []
+
+
+def riser_acid():
+    octave = "...............8.......8.......8...8...8.8.8.8.888.88888"   # where the octave takes over, an 8th at a time
+    octave = "." * (64 - len(octave)) + octave
+    part = Part(4)
+    for i in range(64):
+        high = octave[i] == "8"
+        part.add(pitch("a2" if high else "a1"), i * S, S // 2 + (SLIDE + S // 2 if i % 8 == 6 else 0), ramp(i, 64, 70, 124) if not high else 124)
+    return "16ths on a low A, the octave above breaking in more and more often, a slide into every fourth beat, the resonant filter opening", part.lane(74, OPEN(4, 0.1)), synth("acid"), []
+
+
+def riser_minimal():
+    part = struck(2, lambda i: [CH] + ([OH] if i in (26, 30) else []) + ([RIM] if i >= 16 and i % 8 == 4 else []), low=28, high=112)
+    return "closed hats in 16ths from a ghost to an accent over two bars, a rim on 2 and 4 of bar 2 and open hats on its last two offbeats", part, drums("tight"), []
+
+
+def riser_melodic():
+    notes = ["a2", "c3", "e3", "g3", "b3", "c4", "e4", "g4", "b4", "c5", "e5", "g5", "b5", "c6", "e6", "a6"]
+    part = struck(2, lambda i: [notes[i // 2]] if i % 2 == 0 else None, low=60, high=118, length=S).lane(74, OPEN(2, 0.25))
+    return "an A minor ninth arpeggio in 8ths climbing four octaves over two bars", part, synth("pluck"), []
+
+
+def riser_percussive():
+    part = struck(2, lambda i: [[LT, MT, MT, HT][i // 8]] if i < 24 and i % 2 == 0 or i >= 24 else None)
+    part.notes += [(SHAKER, i * S, S // 2, ramp(i, 32, 40, 100)) for i in range(32)]
+    return "toms in 8ths climbing from low to high over a shaker in 16ths, the high tom in 16ths through the last half bar", part, drums(), []
+
+
+def riser_dub():
+    chord = ["a3", "c4", "e4", "g4"]
+    part = struck(4, lambda i: chord if i % 4 == 2 else None, low=60, high=112, length=S).lane(74, OPEN(4, 0.05))
+    return "an A minor seventh on every offbeat for four bars, the filter opening from closed", part, synth("=Dub Chord Stab"), []
+
+
+def riser_ebm():
+    part = Part(2)
+    for i in range(32):
+        beat = i // 4
+        high = i % 4 >= 4 - [0, 0, 1, 1, 2, 2, 3, 4][beat]
+        part.add(pitch("a2" if high else "a1"), i * S, S // 2, 124 if high else ramp(i, 32, 76, 108))
+    return "a 16th bass on A, the octave taking one more 16th of every other beat until the last beat is all octave", part.lane(74, OPEN(2, 0.2)), synth("ebm"), []
+
+
+def riser_electro_industrial():
+    part = struck(2, lambda i: [pitch("a2") + i // 4 + (6 if i % 4 == 2 else 0)] if i % 2 == 0 else None, low=70, high=124, length=S)
+    return "8ths leaping the tritone and back, the pair a semitone higher on every beat for two bars", part, synth("=Metal Stab"), ["Chromatic"]
+
+
+def riser_aggrotech():
+    part = struck(4, lambda i: [pitch("a2") + i // 16, pitch("e3") + i // 16] if i % 4 != 3 else None, low=80, high=124)
+    return "a gated power fifth, three 16ths and a gap, a semitone higher each bar from A to C", part.lane(74, OPEN(4, 0.3)), synth("saw"), ["Chromatic"]
+
+
+def riser_techno_body():
+    on = every([4, 4, 2, 1])
+    part = struck(4, lambda i: ([SNARE] if on(i) else []) + ([KICK] if i % 4 == 0 else []) + ([CH] if i >= 32 and i % 4 == 2 else []))
+    return "a marching snare over the kick: quarters for two bars, 8ths in bar 3 with a hat on the offbeats, 16ths in bar 4", part, drums("voltage"), []
+
+
+def riser_futurepop():
+    part = struck(4, lambda i: [pitch("a2") + 12 * (i // 16)], low=64, high=120).lane(74, OPEN(4, 0.2))
+    return "16ths on A, an octave higher at each bar for four bars", part, synth("saw"), []
+
+
+def riser_synth_ebm():
+    notes = ["a2", "e3", "a3", "e4", "a4", "e5", "a5", "e6"]
+    part = held([(n, i / 4, 80 + 5 * i) for i, n in enumerate(notes)], 2).lane(74, OPEN(2, 0.25))
+    return "bare fifths stacking a note every beat for two bars, A and E up four octaves", part, synth("=Voltage Ladder"), []
+
+
+def riser_darkwave():
+    notes = ["e3", "f3", "g#3", "a3", "b3", "c4", "d4", "e4"]
+    part = Part(4)
+    for i, n in enumerate(notes):
+        part.add(pitch(n), i * 8 * S, 8 * S - 20, 70 + 6 * i)
+    return "a line in half notes climbing the harmonic minor from E to the E above, swelling", part.lane(11, SWELL(4, 0.3)), synth("pad"), ["Harmonic minor"]
+
+
+def riser_industrial_rock():
+    part = struck(2, lambda i: ([LT] if i < 16 and i % 2 == 0 else []) + ([SNARE] if i >= 16 else []) + ([KICK] if i % 4 == 0 else []) + ([CRASH] if i == 0 else []))
+    return "a floor tom in 8ths for a bar, then a snare roll in 16ths, the kick under every beat", part, drums("break"), []
+
+
+def riser_dark_electro():
+    part = struck(2, lambda i: [pitch("a2") + 3 * (i // 4)], low=66, high=122).lane(74, OPEN(2, 0.2))
+    return "16ths in fours, each four a minor third above the last: a diminished climb of two octaves", part, synth("pluck"), ["Chromatic"]
+
+
+def riser_coldwave():
+    part = struck(2, lambda i: (["e4"] + (["g4"] if i >= 16 else []) + (["b4"] if i >= 24 else [])) if i % 2 == 0 else None, low=58, high=112, length=S)
+    return "8ths on E, the G above joining in bar 2 and the B in its last half", part.lane(74, OPEN(2, 0.3)), synth("chord"), []
+
+
+def riser_electro():
+    part = struck(2, lambda i: ([CLAP] if every([4, 1])(i) and i >= 16 or i < 16 and i % 4 == 0 else []) + ([COWBELL] if i % 2 == 0 else []))
+    return "a clap on every beat of bar 1 and in 16ths through bar 2, over a cowbell in 8ths", part, drums("boom"), []
+
+
+def riser_breaks():
+    part = struck(2, lambda i: ([SNARE] if (i % 2 == 0 and i >= 8) or i >= 24 else []) + ([KICK] if i in (0, 6, 16, 22) else []) + ([OH] if i == 30 else []))
+    return "a snare roll coming in on beat 3, 8ths then 16ths, over a broken kick, an open hat before the bar", part, drums("breaks"), []
+
+
+def riser_neurofunk():
+    part = held([("a1", 0, 110)], 2).lane(128, BEND_UP(2, BAR)).lane(74, OPEN(2, 0.1))
+    return "a low A held for two bars, bending up two semitones through the second as the filter opens", part, synth("reese"), []
+
+
+def riser_liquid():
+    part = held([(n, 0, 84) for n in ("a3", "c4", "e4", "g4", "b4")], 4).lane(11, SWELL(4, 0.05)).lane(74, OPEN(4, 0.3))
+    return "an A minor ninth chord swelling from nothing over four bars", part, synth("warm"), []
+
+
+def riser_dark_ambient():
+    part = held([("a1", 0, 96), ("bb2", 0, 80)], 4).lane(11, SWELL(4, 0.02)).lane(74, OPEN(4, 0.05))
+    return "a low A and the B flat a ninth above it, swelling from nothing over four bars", part, synth("drone"), ["Phrygian"]
+
+
+def riser_drone():
+    part = held([("a2", 0, 96), ("a3", 4, 84)], 8).lane(74, OPEN(8, 0.05))
+    return "one A held for eight bars, the octave joining at bar 5, the filter opening the whole way", part, synth("drone"), []
+
+
+def riser_deep_house():
+    part = struck(2, lambda i: [SHAKER] + ([OH] if i >= 16 and i % 4 == 2 else []) + ([CLAP] if i in (20, 28) else []), low=36, high=108)
+    return "a shaker in 16ths rising for two bars, open hats on the offbeats of bar 2 and a clap on its 2 and 4", part, drums(), []
+
+
+def riser_darksynth():
+    ladder = [pitch(n) for n in ("a2", "c3", "e3", "a3", "c4", "e4", "a4", "c5", "e5", "a5", "c6")]
+    part = struck(2, lambda i: [ladder[i // 4 + i % 4]], low=64, high=120).lane(74, OPEN(2, 0.25))
+    return "four-note A minor arpeggios in 16ths, each starting a chord note higher than the last", part, synth("arp"), []
+
+
+def riser_psytrance():
+    part = struck(4, lambda i: ["a2"], low=70, high=120).lane(128, BEND_UP(4)).lane(74, OPEN(4, 0.15))
+    return "16ths on one A for four bars, bending up two semitones as the filter opens", part, synth("psy"), []
+
+
+def riser_combat():
+    triads = [["a3", "c4", "e4"], ["b3", "d4", "f4"], ["c4", "e4", "g4"], ["d4", "f4", "a4"], ["e4", "g4", "b4"], ["f4", "a4", "c5"], ["g4", "b4", "d5"], ["a4", "c5", "e5"]]
+    part = struck(2, lambda i: triads[i // 4] if i < 16 and i % 4 == 0 else triads[4 + (i - 16) // 4] if i >= 16 and i % 2 == 0 else None, low=80, high=124, length=S)
+    return "triads climbing the scale from A minor: a quarter each for a bar, then each twice in 8ths up to the A minor above", part, synth("brass"), []
+
+
+def riser_exploration():
+    notes = ["a3", "c4", "d4", "e4", "g4", "a4", "c5", "d5", "e5", "g5", "a5", "c6"]
+    part = struck(2, lambda i: [notes[i * 3 // 8]] if i % 8 in (0, 3, 6) else None, low=56, high=110, length=2 * S)
+    return "a pentatonic run climbing three octaves in dotted 8ths over two bars", part, synth("bell"), []
+
+
+def riser_horror():
+    part = held([("a3", 0, 80), ("bb3", 1, 84), ("b3", 2, 88), ("c4", 3, 92)], 4).lane(128, BEND_UP(4, 2 * BAR)).lane(11, SWELL(4, 0.15))
+    return "a cluster growing a semitone at a time, A, B flat, B and C a bar apart, all of it bending upward through the last two bars", part, synth("=Brutal Tension"), ["Chromatic"]
+
+
+def riser_boss():
+    on = every([4, 4, 2, 1])
+    part = struck(4, lambda i: [pitch("a1") + i // 16, pitch("a2") + i // 16] if on(i) else None, low=84, high=126, length=S)
+    return "low octaves a semitone higher each bar, A to C: quarters for two bars, then 8ths, then 16ths", part, synth("brass"), ["Chromatic"]
+
+
+RISERS = {
+    "Techno/Dark": riser_dark, "Techno/Driving": riser_driving, "Techno/Peak-time": riser_peak, "Techno/Industrial": riser_industrial,
+    "Techno/Hard": riser_hard, "Techno/Hypnotic": riser_hypnotic, "Techno/Acid": riser_acid, "Techno/Minimal": riser_minimal,
+    "Techno/Melodic": riser_melodic, "Techno/Percussive": riser_percussive, "Techno/Dub": riser_dub,
+    "Industrial/EBM": riser_ebm, "Industrial/Electro-industrial": riser_electro_industrial, "Industrial/Aggrotech": riser_aggrotech,
+    "Industrial/Techno-body": riser_techno_body, "Industrial/Futurepop": riser_futurepop, "Industrial/Synth-EBM": riser_synth_ebm,
+    "Industrial/Darkwave": riser_darkwave, "Industrial/Industrial rock": riser_industrial_rock, "Industrial/Dark electro": riser_dark_electro,
+    "Industrial/Coldwave": riser_coldwave, "Electro/Electro": riser_electro, "Breakbeat/Breaks": riser_breaks,
+    "Drum and Bass/Neurofunk": riser_neurofunk, "Drum and Bass/Liquid": riser_liquid, "Ambient/Dark ambient": riser_dark_ambient,
+    "Ambient/Drone": riser_drone, "House/Deep house": riser_deep_house, "Synthwave/Darksynth": riser_darksynth, "Trance/Psytrance": riser_psytrance,
+    "Game/Combat": riser_combat, "Game/Exploration": riser_exploration, "Game/Horror": riser_horror, "Game/Boss": riser_boss,
+}
+
+
 class Maker:
     """Makes one style's presets, choosing with a generator seeded by the style's name."""
 
@@ -1884,17 +2138,10 @@ class Maker:
         tempo = self.tempo()
 
         if sub == "Risers":
-            bars = self.pick([2, 4])
-            part = Part(bars)
-            steps = bars * 16
-            low = degree_pitch("minor", 0, 45, 56)
-            ladder = [p for p in LADDER["minor"] if p >= low]
-            for step in range(steps):
-                part.add(ladder[step * 14 // steps], step * S, S // 2, min(127, 50 + step * 70 // steps))
-            part.lane(74, [(0, 0.15), (bars * BAR - 1, 1.0)])
-            words = f"16ths climbing the A minor scale for {bars} bars, louder and brighter as they go"
-            patch = "chip" if s.style == "Game/Chiptune" else self.pick(["sweep", "saw"])
-            self.add("build", ROLE_NOUNS[sub], "SFX", sub, words, part, synth(patch), tempo=tempo)
+            self.pick([2, 4])           # drawn as before the risers were written style by style,
+            self.pick(["sweep", "saw"])   # so every preset after this one keeps its name
+            words, part, voice, tags = RISERS[s.style]()
+            self.add("build", ROLE_NOUNS[sub], "SFX", sub, words, part, voice, tags, tempo=tempo)
         elif sub == "Downlifters":
             part = Part(2).add(degree_pitch("minor", 0, 57, 68), 0, 2 * BAR - 40, 100).lane(128, [(0, 0.5), (2 * BAR - 1, 0.0)]).lane(74, [(0, 1.0), (2 * BAR - 1, 0.1)])
             self.add("build", ROLE_NOUNS[sub], "SFX", sub, "a held A bending down two semitones as its filter closes over two bars", part, synth("sweep"), tempo=tempo)

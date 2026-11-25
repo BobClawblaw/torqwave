@@ -279,6 +279,187 @@ void runPresetTests (AudioEngine& engine)
                    + (problems.isEmpty() ? juce::String() : " (" + problems.joinIntoString ("; ").substring (0, 600) + ")"));
     }
 
+    // A session holds a factory preset's notes, not the preset: one dropped into a session and saved is
+    // written out note by note and names no preset file, so a preset that changes or goes later leaves
+    // every saved session as it was.
+    {
+        juce::String error;
+        const auto file = presets.getChildFile ("SFX/Risers/Tunnel Riser.tqseq");
+        const auto q = SequenceFile::load (file, error);
+        SessionState session;
+        session.sampleRate = 48000.0;
+        session.tempo = 120.0;
+        session.beatsPerBar = 4;
+        const auto placed = q.has_value() ? SequenceFile::place (session, *q, 0, 0, false) : SequenceFile::Placed {};
+        const auto target = base.getChildFile ("pin.tqsession");
+        const auto saveError = SessionFile::save (session, target);
+        const auto text = target.loadFileAsString();
+        juce::AudioFormatManager formats;
+        const auto back = SessionFile::load (target, formats);
+        size_t notes = 0;
+
+        if (back.error.isEmpty())
+            for (auto& track : back.state.tracks)
+                for (auto& clip : track.noteClips)
+                    notes += clip.notes.size();
+
+        check (q.has_value() && placed.clipId != 0 && saveError.isEmpty() && ! text.contains (".tqseq") && ! text.contains ("Factory Presets")
+                   && ! text.contains (presets.getFullPathName()) && notes == q->notes.size() && notes > 0,
+               "presets: a factory preset dropped into a session is saved as its " + juce::String ((int) notes) + " notes, and the session file names no preset");
+    }
+
+    // Sameness (docs/plans/PLAN-SEQUENCE-LIBRARY.md). One measure, what a preset plays, against the others
+    // of its category (a role's sub-role): for a drum part the sounds and where they fall, for the rest the
+    // pitches in order. Its looser form, the shape, is the
+    // rhythm and whether each note steps up, down or stays, whatever the chord. The numbers a category
+    // is still allowed are what it stood at when the test was written; they only go down, to none with
+    // the same notes and no shape in more than three styles.
+    {
+        struct One { juce::String name, category, style, notes, shape; bool rises = false; };
+        std::vector<One> ones;
+
+        for (auto& f : all)
+            if (f.xml != nullptr && f.xml->hasTagName ("TORQWAVE_SEQUENCE"))
+                if (const auto q = SequenceFile::fromXml (*f.xml))
+                {
+                    auto played = q->notes;
+                    std::stable_sort (played.begin(), played.end(), [] (const auto& x, const auto& y) { return x.start != y.start ? x.start < y.start : x.pitch < y.pitch; });
+                    One one { q->name, q->role + " > " + q->subRole, q->style, {}, {} };
+                    const auto drums = playsOnDrums (*q);
+                    int last = -1;
+
+                    for (auto& n : played)
+                    {
+                        if (drums)
+                            one.notes << n.pitch << "@" << juce::String (n.start) << " ";
+                        else if (n.pitch != last)
+                            one.notes << n.pitch << " ";
+
+                        if (drums)
+                            one.shape << n.pitch << "@" << juce::String (n.start) << " ";
+                        else
+                            one.shape << juce::String (n.start) << (last < 0 || n.pitch == last ? "=" : n.pitch > last ? "+" : "-") << " ";
+
+                        last = n.pitch;
+                    }
+
+                    // A riser rises: its second half is higher, louder or struck more often than its first, a
+                    // note joins after the start, or its filter, level or bend ends above where it began.
+                    {
+                        const auto half = q->length / 2;
+                        double pitch[2] {}, velocity[2] {};
+                        int count[2] {};
+
+                        for (auto& n : q->notes)
+                        {
+                            const auto h = n.start >= half ? 1 : 0;
+                            pitch[h] += n.pitch;
+                            velocity[h] += n.velocity;
+                            ++count[h];
+                        }
+
+                        one.rises = count[1] > count[0] || (count[0] > 0 && count[1] > 0 && (velocity[1] / count[1] > velocity[0] / count[0] + 0.02
+                                                                                                || (! drums && pitch[1] / count[1] > pitch[0] / count[0] + 0.5)));
+
+                        for (auto& lane : q->lanes)
+                            if ((lane.controller == 74 || lane.controller == 11 || lane.controller == 7 || lane.controller == 128) && lane.points.size() > 1
+                                  && lane.points.back().value > lane.points.front().value)
+                                one.rises = true;
+                    }
+
+                    ones.push_back (std::move (one));
+                }
+
+        std::map<juce::String, int> withNotes;
+        std::map<juce::String, std::set<juce::String>> stylesOfShape;
+
+        for (auto& o : ones)
+        {
+            ++withNotes[o.category + "|" + o.notes];
+            stylesOfShape[o.category + "|" + o.shape].insert (o.style);
+        }
+
+        struct Stand { int sameNotes = 0, widest = 0, presets = 0; };
+        std::map<juce::String, Stand> stands;
+        std::map<juce::String, std::pair<int, int>> ownOfStyle;   // a style's presets of a shape no other style has, and all of them
+        int sameNotes = 0;
+
+        for (auto& o : ones)
+        {
+            auto& stand = stands[o.category];
+            const auto styles = (int) stylesOfShape[o.category + "|" + o.shape].size();
+            ++stand.presets;
+            stand.sameNotes +=  withNotes[o.category + "|" + o.notes] > 1 ? 1 : 0;
+            stand.widest = juce::jmax (stand.widest, styles);
+            sameNotes +=  withNotes[o.category + "|" + o.notes] > 1 ? 1 : 0;
+            ownOfStyle[o.style].first += styles == 1 ? 1 : 0;
+            ++ownOfStyle[o.style].second;
+        }
+
+        // What each category may still have: presets with another's notes, and the styles its widest shape is in.
+        const std::map<juce::String, std::pair<int, int>> allowed {
+            { "Arps > 16th Sequences", { 19, 6 } },
+            { "Arps > Gated", { 4, 4 } },
+            { "Arps > Plucks", { 13, 5 } },
+            { "Arps > Up & Down", { 15, 6 } },
+            { "Bass > Arp Bass", { 5, 7 } },
+            { "Bass > Picked & Played", { 4, 2 } },
+            { "Bass > Sub", { 38, 5 } },
+            { "Bass > Synth Bass", { 61, 5 } },
+            { "Drums > Breaks", { 2, 2 } },
+            { "Drums > Fills", { 31, 9 } },
+            { "Drums > Full Grooves", { 8, 2 } },
+            { "Drums > Hats & Tops", { 14, 4 } },
+            { "Drums > Kick", { 31, 15 } },
+            { "Drums > Percussion", { 2, 2 } },
+            { "Drums > Snare & Clap", { 7, 5 } },
+            { "Harmony > Keys & Comping", { 18, 7 } },
+            { "Harmony > Progressions", { 12, 9 } },
+            { "Harmony > Stabs", { 36, 8 } },
+            { "Harmony > Strums", { 2, 7 } },
+            { "Pads > Drones", { 19, 11 } },
+            { "Pads > Evolving", { 22, 23 } },
+            { "Pads > Sustained", { 26, 19 } },
+            { "SFX > Impacts", { 12, 9 } },
+            { "SFX > Stingers", { 11, 3 } },
+            { "SFX > Transitions", { 28, 28 } },
+            { "SFX > UI Sounds", { 6, 2 } }
+        };
+        const int stylesUnderHalfAllowed = 22;
+        juce::StringArray over, table, flat;
+
+        for (auto& o : ones)
+            if (o.category == "SFX > Risers" && ! o.rises)
+                flat.add (o.name);
+
+        int stylesUnderHalf = 0;
+
+        for (auto& [category, stand] : stands)
+        {
+            const auto found = allowed.find (category);
+            const auto may = found != allowed.end() ? found->second : std::pair<int, int> { 0, 3 };
+            table.add ("{ \"" + category + "\", { " + juce::String (stand.sameNotes) + ", " + juce::String (stand.widest) + " } },");
+
+            if (stand.sameNotes > may.first || stand.widest > juce::jmax (3, may.second))
+                over.add (category + ": " + juce::String (stand.sameNotes) + " of " + juce::String (stand.presets) + " with another's notes (" + juce::String (may.first)
+                              + " allowed), a shape in " + juce::String (stand.widest) + " styles (" + juce::String (juce::jmax (3, may.second)) + " allowed)");
+        }
+
+        for (auto& [style, own] : ownOfStyle)
+            stylesUnderHalf += 2 * own.first < own.second ? 1 : 0;
+
+        if (juce::SystemStats::getEnvironmentVariable ("TORQWAVE_SAMENESS_TABLE", {}).isNotEmpty())
+            std::cout << table.joinIntoString ("\n") << "\nstyles under half: " << stylesUnderHalf << std::endl;
+
+        check (flat.isEmpty(), "presets: every riser rises, in its pitch, its level, how often it strikes, or its filter, level or bend lane"
+                                   + (flat.isEmpty() ? juce::String() : " (" + flat.joinIntoString (", ") + ")"));
+        check (over.isEmpty() && stylesUnderHalf <= stylesUnderHalfAllowed,
+               "presets: no category has more presets playing another's notes, or a shape in more styles, than it is allowed (" + juce::String (sameNotes) + " of "
+                   + juce::String ((int) ones.size()) + " play another's notes; the aim is none, and no shape in more than three styles); " + juce::String (stylesUnderHalf)
+                   + " of " + juce::String ((int) ownOfStyle.size()) + " styles have under half their presets in shapes of their own (" + juce::String (stylesUnderHalfAllowed)
+                   + " allowed; the aim is none)" + (over.isEmpty() ? juce::String() : " (" + over.joinIntoString ("; ").substring (0, 600) + ")"));
+    }
+
     // Running the script again writes the same files.
     {
         const juce::File source (TORQWAVE_SOURCE_DIR);

@@ -1727,6 +1727,65 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
 }
 
 
+void writeSequenceClips (const juce::File& from, const juce::File& into)
+{
+    into.createDirectory();
+    juce::AudioPluginFormatManager formats;
+    formats.addFormat (BuiltInEffects::createFormat());
+
+    // A half's level and how bright it is (zero crossings a second), to say whether a clip rises.
+    const auto half = [] (const juce::AudioBuffer<float>& a, int from, int frames)
+    {
+        auto sum = 0.0;
+        int crossings = 0;
+
+        for (int i = from + 1; i < from + frames; ++i)
+        {
+            sum += (double) a.getSample (0, i) * a.getSample (0, i);
+            crossings += (a.getSample (0, i) >= 0.0f) != (a.getSample (0, i - 1) >= 0.0f) ? 1 : 0;
+        }
+
+        return std::pair<double, double> { 10.0 * std::log10 (juce::jmax (1.0e-12, sum / juce::jmax (1, frames))), crossings * rate / juce::jmax (1, frames) };
+    };
+
+    for (const auto& f : juce::RangedDirectoryIterator (from, false, "*.tqseq", juce::File::findFiles))
+    {
+        juce::String error;
+        auto q = SequenceFile::load (f.getFile(), error);
+
+        if (! q.has_value())
+        {
+            std::cout << "FAILED " << f.getFile().getFileName() << ": " << error << std::endl;
+            continue;
+        }
+
+        // Once through and two bars for it to ring out: the pass that would loop, of the sequence made two bars longer.
+        const auto played = q->length;
+        q->length += 2 * q->beatsPerBar * SequenceFile::ticksPerBeat;
+        juce::AudioBuffer<float> audio;
+        error = SequencePreview::render (*q, q->writtenTempo, q->beatsPerBar, rate, formats, audio);
+
+        if (error.isNotEmpty() || audio.getNumSamples() == 0)
+        {
+            std::cout << "FAILED " << q->name << ": " << error << std::endl;
+            continue;
+        }
+
+        const auto frames = (int) ((double) audio.getNumSamples() * (double) played / (double) q->length);
+        const auto first = half (audio, 0, frames / 2), second = half (audio, frames / 2, frames / 2);
+        auto file = into.getChildFile (q->style.fromFirstOccurrenceOf ("/", false, false) + " - " + q->name + ".wav");
+        file.deleteFile();
+        std::unique_ptr<juce::OutputStream> stream (new juce::FileOutputStream (file));
+
+        if (auto writer = juce::WavAudioFormat().createWriterFor (stream, juce::AudioFormatWriterOptions{}.withSampleRate (rate).withNumChannels (2).withBitsPerSample (24)))
+            writer->writeFromAudioSampleBuffer (audio, 0, audio.getNumSamples());
+
+        std::cout << q->style << "|" << q->name << "|" << (q->voice != nullptr ? q->voice->getStringAttribute ("name") : juce::String()) << "|peak " << juce::String (peakDb (audio), 1)
+                  << "|level " << juce::String (first.first, 1) << " to " << juce::String (second.first, 1) << "|crossings " << juce::roundToInt (first.second) << " to "
+                  << juce::roundToInt (second.second) << std::endl;
+    }
+}
+
 void writeSoundDemos (const juce::File& folder, const juce::StringArray& only)
 {
     folder.createDirectory();

@@ -20,3 +20,9 @@ void writeSoundDemos (const juce::File& folder, const juce::StringArray& only = 
     on 60 clicks put in; "clipping": Declip on a loop cut off 4 dB over), to measure them.
     Run with `TorqwaveTests --quality-demos <folder> [--also clicks,clipping]`. */
 void writeQualityDemos (const juce::File& folder, const juce::StringArray& also = {});
+
+/** Renders each sequence (.tqseq) in a folder once through its voice at its written tempo, with two bars
+    to ring out, to "<Style> - <Name>.wav" in another, and prints each one's peak and its level and
+    brightness in its first and second half: for hearing presets before and after a change.
+    Run with `TorqwaveTests --sequence-clips <folder of sequences> --into <folder>`. */
+void writeSequenceClips (const juce::File& from, const juce::File& into);
