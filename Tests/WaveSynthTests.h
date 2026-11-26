@@ -14,6 +14,12 @@ void runComplexPatchTests();
 
 namespace juce { class File; }
 
+/** Writes every factory and Complex patch as a line of JSON: name, category, origin (hand-made,
+    layered, bank, bank2 or complex), macro names and every setting the patch makes, for finding
+    near-alike patches and the corners of the engine the bank crowds or leaves empty
+    (Scripts/patch_sweep.py). Run with `TorqwaveTests --patch-values <file>`. */
+void writePatchValues (const juce::File&);
+
 /** Writes a line for each factory patch, `name|hash`, the hash of every sample of a held minor chord
     (two seconds and its tail) rendered on a new synth: to compare a build's patches with another's,
     sample for sample, on the same machine. Run with `TorqwaveTests --patch-hashes <file>`. */

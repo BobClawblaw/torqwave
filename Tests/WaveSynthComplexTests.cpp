@@ -4,6 +4,7 @@
 #include "../Source/Decrypt.h"
 #include "../Source/Loudness.h"
 #include "../Source/WaveSynth.h"
+#include "../Source/WaveSynthPatchBuilder.h"
 #include "ClickCheck.h"
 #include "TestUtils.h"
 #include "WaveSynthTests.h"
@@ -79,6 +80,8 @@ namespace
     }
 
     bool isLow (const juce::String& c)    { return c == "Bass" || c == "Sub" || c == "Reese" || c == "Acid"; }
+    /** A struck sound that dies by itself: judged on how it changes from strike to tail, not as held. */
+    bool isOneShot (const juce::String& c) { return c == "Impact" || c == "Bell" || c == "Pluck" || c == "Drum" || c == "Perc"; }
     bool isHook (const juce::String& c)   { return c == "Lead" || c == "Stab" || c == "Pluck" || c == "Arp" || c == "Sequence" || c == "Acid"; }
 
     /** The oscillators a patch plays and those it runs only for another's FM, and the unison a note asks for. */
@@ -295,6 +298,47 @@ namespace
         return m;
     }
 
+    /** How far a struck note's sound moves from its strike (its first 100 ms) to its tail (0.3 to 1 s
+        in), by the average shape of each (dB a band); frames 40 dB under the loudest are left out. */
+    double strikeToTailOf (const Frames& f)
+    {
+        if (f.shape.size() < 100)
+            return 0.0;
+
+        const auto loudest = *std::max_element (f.level.begin(), f.level.begin() + 100);
+        const auto average = [&f, loudest] (int from, int to)
+        {
+            std::array<double, Frames::bands> sum {};
+            int counted = 0;
+
+            for (int i = from; i < to; ++i)
+                if (f.level[(size_t) i] > loudest - 40.0f)
+                {
+                    for (int k = 0; k < Frames::bands; ++k) sum[(size_t) k] += f.shape[(size_t) i][(size_t) k];
+                    ++counted;
+                }
+
+            for (auto& v : sum) v /= juce::jmax (1, counted);
+            return std::make_pair (sum, counted);
+        };
+
+        const auto [strike, struck] = average (0, 10);
+        const auto [tail, heard] = average (30, 100);
+
+        if (struck == 0)
+            return 0.0;
+
+        // A tail that has died is as far from the strike as a sound can move.
+        if (heard == 0)
+            return 40.0;
+
+        double apart = 0.0;
+        for (int k = 0; k < Frames::bands; ++k)
+            apart += std::abs (strike[(size_t) k] - tail[(size_t) k]) / Frames::bands;
+
+        return apart;
+    }
+
     /** The worst burst in a render: above 3 kHz, a millisecond louder by this many dB than anything
         from 2 to 30 ms before it and from 5 to 30 ms after it, and no more than 50 dB under the
         render's loudest millisecond there; a click the ear hears that no single-sample step shows. */
@@ -413,7 +457,7 @@ void runComplexPatchTests()
         std::array<float, WaveSynth::numMacros> macroMoves {};
         bool roundTrip = false, blockSizes = false;
         Movement movement;
-        double velocityApart = 0.0;
+        double velocityApart = 0.0, strikeToTail = 0.0;
         Burst burst, noteBurst;
     };
 
@@ -438,6 +482,7 @@ void runComplexPatchTests()
                     r.note = measureNote (note);
                     r.momentary = Loudness::measure (note, rate).maxMomentary;
                     r.atKey = Decrypt::measureRender (note);
+                    r.strikeToTail = strikeToTailOf (framesOf (note));
 
                     Synth chord;
                     load (chord);
@@ -534,48 +579,6 @@ void runComplexPatchTests()
             t.join();
     }
 
-    // The factory patches at each key a category is measured at, for the distance where each is played.
-    std::map<int, std::vector<Decrypt::Measures>> factoryAtKey;
-    for (auto& p : complex)
-        factoryAtKey[keyFor (p.category)];
-
-    for (auto& [key, measures] : factoryAtKey)
-    {
-        measures.resize (factory.size());
-        std::atomic<size_t> next { 0 };
-        std::vector<std::thread> threads;
-
-        for (int t = 0; t < 8; ++t)
-            threads.emplace_back ([&, k = key]
-            {
-                for (auto i = next++; i < factory.size(); i = next++)
-                {
-                    Synth s;
-                    s.loadPatch ((int) i);
-                    measures[i] = Decrypt::measureRender (render (s, notes ({ k }, 0.0, 1.5, 0.9f), 3.5));
-                }
-            });
-
-        for (auto& t : threads)
-            t.join();
-    }
-
-    for (size_t i = 0; i < complex.size(); ++i)
-    {
-        const auto& r = results[i];
-        const auto& atKey = factoryAtKey[keyFor (complex[i].category)];
-        std::vector<std::pair<float, juce::String>> near;
-
-        for (size_t f = 0; f < factory.size(); ++f)
-            near.push_back ({ Decrypt::distance (r.atKey, atKey[f]).total, factory[f].name });
-
-        std::partial_sort (near.begin(), near.begin() + 3, near.end());
-        std::cout << "CALIB|" << complex[i].name << "|" << complex[i].category << "|fast " << juce::String (r.movement.fast, 2) << "|slow " << juce::String (r.movement.slow, 2)
-                  << "|level " << juce::String (r.movement.level, 2) << "|velocity " << juce::String (r.velocityApart, 2) << "|burst " << juce::String (r.burst.db, 1) << " at " << juce::String (r.burst.seconds, 3) << " note " << juce::String (r.noteBurst.db, 1) << " at " << juce::String (r.noteBurst.seconds, 3)
-                  << "|atKey " << juce::String (near[0].first, 2) << " " << near[0].second << ", " << juce::String (near[1].first, 2) << " " << near[1].second
-                  << ", " << juce::String (near[2].first, 2) << " " << near[2].second << std::endl;
-    }
-
     // How far a factory patch is from its nearest other, every twelfth one against all the rest: its
     // tenth percentile is the least a Complex patch may be from any factory patch and from its sibling.
     float floorDb = 0.0f;
@@ -633,6 +636,10 @@ void runComplexPatchTests()
         ok &= miss (nearest >= floorDb, "as far from every factory patch as a factory patch's tenth-percentile nearest");
         ok &= miss (sibling >= floorDb, "as far from the other patches of its category");
         ok &= miss (r.roundTrip && r.blockSizes, "the same after its state is loaded back, and in blocks of 37");
+        ok &= miss (isOneShot (p.category) || r.movement.fast >= 1.4, "a held note moving 1.4 dB a band or more across a sixteenth (as the patches the user called decent do; the static ones they rejected move 0.3 or less)");
+        ok &= miss (! isOneShot (p.category) || r.strikeToTail >= 3.0, "a struck sound changing 3 dB a band or more from its strike to its tail");
+        ok &= miss (r.velocityApart >= 0.4, "a soft and a hard note 0.4 dB or more apart past their level (velocity changing the sound, not only its level)");
+        ok &= miss (juce::jmax (r.burst.db, r.noteBurst.db) <= 11.0, "no burst above 3 kHz more than 11 dB over the 30 ms around it (the click the user heard was 14; the strikes they kept, 8)");
 
         if (! ok)
         {
@@ -642,7 +649,9 @@ void runComplexPatchTests()
             std::cout << "  " << p.name << " (" << p.category << "): side " << juce::String (r.note.lowSideDb, 1) << " dB, below 200 " << juce::String (r.note.below200, 0)
                       << " %, cut " << juce::String (r.note.cut, 1) << " %, dc " << juce::String (r.note.dcDb, 0) << " dB, chord " << juce::String (r.chordPeakDb, 1)
                       << " dBFS, momentary " << juce::String (r.momentary, 1) << " LUFS, click " << juce::String (r.click.ratio, 1) << ", sounding " << r.sounding
-                      << ", eight at full " << juce::String (r.fullPeakDb, 1) << " dBFS, macros " << moves.joinIntoString (" ") << ", factory " << juce::String (nearest, 2)
+                      << ", eight at full " << juce::String (r.fullPeakDb, 1) << " dBFS, moving " << juce::String (r.movement.fast, 2)
+                      << ", strike to tail " << juce::String (r.strikeToTail, 1) << ", soft to hard " << juce::String (r.velocityApart, 2)
+                      << ", burst " << juce::String (juce::jmax (r.burst.db, r.noteBurst.db), 1) << " dB, macros " << moves.joinIntoString (" ") << ", factory " << juce::String (nearest, 2)
                       << " (" << nearestName << "), sibling " << juce::String (sibling, 2) << " (" << siblingName << ")" << std::endl;
         }
     }
@@ -654,4 +663,49 @@ void runComplexPatchTests()
     check (failed.isEmpty(), "synth complex: all " + juce::String ((int) complex.size()) + " patches mono below 120 Hz, at level, the weight and cut where they belong, no clicks, "
                                  "eight notes, macros that move them, and at least " + juce::String (floorDb, 2) + " dB from every factory patch and each other"
                                  + (failed.isEmpty() ? juce::String() : " (" + failed.joinIntoString ("; ") + ")"));
+}
+
+void writePatchValues (const juce::File& file)
+{
+    using namespace WaveSynthPatchBuilder;
+    std::map<juce::String, juce::String> origin;
+    const auto mark = [&origin] (void (*add) (std::vector<Builder>&), const char* from)
+    {
+        std::vector<Builder> b;
+        add (b);
+        for (auto& x : b) origin[x.patch.name] = from;
+    };
+
+    for (auto add : { addLayered, addLayeredPads, addLayeredSequences, addLayeredStabs, addLayeredPlucks, addLayeredHits, addLayeredRisers })
+        mark (add, "layered");
+
+    mark (addBank, "bank");
+    mark (addBank2, "bank2");
+
+    juce::StringArray lines;
+    const auto write = [&lines] (const WaveSynth::Patch& p, const juce::String& from)
+    {
+        auto* o = new juce::DynamicObject();
+        auto* values = new juce::DynamicObject();
+        juce::Array<juce::var> macros;
+
+        for (auto& [id, v] : p.values) values->setProperty (id, v);
+        for (auto& m : p.macroNames) macros.add (m);
+
+        o->setProperty ("name", p.name);
+        o->setProperty ("category", p.category);
+        o->setProperty ("origin", from);
+        o->setProperty ("macros", macros);
+        o->setProperty ("values", juce::var (values));
+        lines.add (juce::JSON::toString (juce::var (o), true));
+    };
+
+    for (auto& p : WaveSynth::factoryPatches())
+        write (p, origin.count (p.name) != 0 ? origin[p.name] : juce::String ("hand-made"));
+
+    for (auto& p : WaveSynth::complexPatches())
+        write (p, "complex");
+
+    file.replaceWithText (lines.joinIntoString ("\n") + "\n");
+    std::cout << "wrote " << lines.size() << " patches to " << file.getFullPathName() << std::endl;
 }
