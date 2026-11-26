@@ -36,7 +36,7 @@ No two presets of a sub-role play the same notes, and a figure is in three style
 | Industrial › Dark electro | 110–125 | Broken and marching kicks, a gated snare, flat 8th and 16th hats, a galloping or 16th bass on a reese, harmonic minor and Phrygian, brass stabs over noise and drones |
 | Industrial › Coldwave | 104–120 | A drum machine at half weight with a snare or rim on 2 and 4, an 8th bass on the root, glassy chords and plucks, a sparse lead |
 
-Front 242 popularised the name "Electronic Body Music" with their 1984 *No Comment* EP. The term was used earlier: Ralf Hütter spoke of body music in 1977–78, and DAF of "Körpermusik" in 1981.
+The name "Electronic Body Music" became widely known in the mid-1980s. It was used earlier: Ralf Hütter spoke of body music in 1977–78, and DAF of "Körpermusik" in 1981.
 
 ## Around techno and industrial
 

@@ -188,7 +188,7 @@ Preview stays as it is now otherwise: in time with the session, at its tempo, lo
 
 - dark and industrial techno (Ancient Methods, Ansome, SHDW & Obscure Shape, Maenad Veyl, Violet Poison);
 - hypnotic techno (the Non Series: Luigi Tozzi, Biri, IORI);
-- on the band side, EBM and electro (Front 242, And One, Severed Heads) and today's darkwave (Rosa Anschütz, Pixel Grip).
+- on the band side, EBM and electro (And One, Severed Heads) and today's darkwave (Rosa Anschütz, Pixel Grip).
 
 So driving and peak-time techno, dark and industrial techno, and EBM carry the most presets. Melodic and minimal techno get a smaller set.
 
@@ -213,7 +213,7 @@ So driving and peak-time techno, dark and industrial techno, and EBM carry the m
 | Industrial › Darkwave | 100–118 | Drum-machine pop beats with long-reverb snares, 8th root bass, chorused minor pads, simple 2-bar melodies |
 | Industrial › Techno-body | 125–140 | Techno kick and hats with an EBM 16th bass in the gaps, metallic percussion, root changes on bar 3 or 4 |
 
-A note on history: Front 242 made "Electronic Body Music" known with their 1984 *No Comment* EP. Earlier uses exist, Ralf Hütter's in 1977–78 and DAF's "Körpermusik" in 1981, so the guide will say Front 242 *popularised* the term.
+A note on history: "Electronic Body Music" became widely known in the mid-1980s. Earlier uses exist, Ralf Hütter's in 1977–78 and DAF's "Körpermusik" in 1981, so the guide will not credit one act with the term.
 
 **How many.** At least 20 in each of the seven roles, 140 or more in all, weighted towards dark techno and EBM. Roughly:
 
