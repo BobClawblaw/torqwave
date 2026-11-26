@@ -4,6 +4,15 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+## Released
+
+**Release 0.22.0: nine oscillators in Torqwave Synth, and a Sequence Library rewritten**
+- `Torqwave-0.22.0.dmg` on the repository's Releases page, with its SHA-256, and the Windows and Linux packages built by their workflows from the release's tag.
+- **New since 0.21.1** (the entries below): Torqwave Synth with nine oscillators and FM From; a Complex folder of 58 patches using four to nine of them; no click when a held sound is struck again or slid to, and CC 74 and the macros gliding; 174 near-copies taken out of the factory patches, 3,569 left; the Sequence Library rewritten so no two presets play the same notes (1,024 sequences, 116 kits), its drones and pads levelled; the library's styles, three drum kits, three audition patterns and two synth patches named for what they play, with the old names still found; a Battery cell's colour brought over.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app universal (arm64 and x86_64) at the release's code, signed it ad hoc and made the disk image. The whole suite then ran once on each half of that app: 2,741 checks passed on Apple silicon, and 2,741 on Intel under Rosetta (not on an Intel Mac itself). No part of the suite was run again by area after that.
+- **Heard by the user before the release:** the click fix on Hollow Gantry, before and after; the Complex patches in two rounds of clips; the library's clips, the redone drones and the rewritten Machine Pulse, Machine Drive and Night Pulse presets among them. **Not known to have been tried by hand:** the nine-oscillator window, the renamed kits and patterns in their windows, and the near-copy cut's move of existing favourites.
+- **Windows and Linux:** the workflows build the packages without running the tests, and neither was tried by hand.
+
 **Trace: a node that still clips once levelled is drawn again**
 - A node is set to peak where the held patch does, in two passes. On a patch with a drive after the amp that doesn't answer in proportion (Cinder Circuit, a Sequence patch with a crush drive), a node could still peak 0.5 to 0.8 dB over full scale. Such a node is now drawn again, as one too quiet already was; nodes that don't clip are unchanged.
 - Found when the console's check of 600 nodes round 50 patches, taken through the list, came to Cinder Circuit after the near-copies were taken out. Its message now names the patch a clipping node lies round.
@@ -222,8 +231,6 @@ Each milestone as it was built, newest first, with what the tests measured on th
 - **What they are:** two layouts, both readable in the look taken. 105 are a short header and XML packed with zlib, every setting named. 48 are a header and the same records the import already reads, packed the same way without the container around them, with an older program record and an older table of sample paths. All 153 unpacked.
 - **Verdict:** within reach, about two to three days with tests (the XML one needs its own mapping and its sample-path text decoded; the other needs the older path table and the older cell and zone records checked), which is more than the day set for building it now. **Recommended: leave it.** Battery 4 opens these kits, and one saved from it as a Battery 4 kit imports as any other.
 - **A by-product.** The XML names the settings in the order the newer files keep them unnamed, which agrees with what the import reads there: key tracking, then reverse, among a cell's switches, and an exclusion group on a voice group.
-
-## Released
 
 **Release 0.21.1: Basic Drums becomes a drum synth and sampler in one**
 - `Torqwave-0.21.1.dmg` on the repository's Releases page, with its SHA-256, and the Windows and Linux packages built by their workflows from the release's tag.
