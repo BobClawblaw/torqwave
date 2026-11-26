@@ -665,6 +665,178 @@ void runComplexPatchTests()
                                  + (failed.isEmpty() ? juce::String() : " (" + failed.joinIntoString ("; ") + ")"));
 }
 
+//==============================================================================
+// What the synth does at a note struck again, a slide and a moving controller: no click the ear hears.
+namespace
+{
+    void setPlain (Synth& s, const juce::String& id, float plain)
+    {
+        auto* p = s.parameter (id);
+        jassert (p != nullptr);
+        p->setValueNotifyingHost (p->convertTo0to1 (plain));
+    }
+
+    /** The low band's ticks: in frames of 256 samples (a hop of 64), the average level of the bands from 40
+        to 800 Hz, and how far a frame rises over the median of the 41 around it; the worst, in dB, from
+        `from` to `to` seconds. A comb whose delay jumps ticks there, under the notes. */
+    double lowTicksOf (const juce::AudioBuffer<float>& b, double from, double to)
+    {
+        constexpr int order = 8, size = 1 << order, hop = 64;
+        juce::dsp::FFT fft (order);
+        std::vector<float> data ((size_t) (2 * size));
+        std::vector<double> level;
+        const auto first = (int) (from * rate), last = (int) (to * rate);
+
+        for (int at = first; at + size <= last; at += hop)
+        {
+            std::fill (data.begin(), data.end(), 0.0f);
+            for (int i = 0; i < size; ++i)
+                data[(size_t) i] = 0.5f * (b.getSample (0, at + i) + b.getSample (1, at + i))
+                                   * (0.5f - 0.5f * std::cos (juce::MathConstants<float>::twoPi * (float) i / (float) (size - 1)));
+
+            fft.performFrequencyOnlyForwardTransform (data.data());
+            double sum = 0.0;
+            int bins = 0;
+
+            for (int k = 1; k < size / 2; ++k)
+                if (const auto hz = k * rate / size; hz > 40.0 && hz < 800.0)
+                {
+                    sum += 20.0 * std::log10 ((double) data[(size_t) k] + 1.0e-9);
+                    ++bins;
+                }
+
+            level.push_back (sum / juce::jmax (1, bins));
+        }
+
+        double worst = 0.0;
+
+        for (size_t i = 0; i < level.size(); ++i)
+        {
+            std::vector<double> around (level.begin() + (std::ptrdiff_t) (i < 20 ? 0 : i - 20), level.begin() + (std::ptrdiff_t) juce::jmin (level.size(), i + 21));
+            std::nth_element (around.begin(), around.begin() + (std::ptrdiff_t) (around.size() / 2), around.end());
+            worst = juce::jmax (worst, level[i] - around[around.size() / 2]);
+        }
+
+        return worst;
+    }
+
+    /** The Complex tests' phrase for clicks: struck, struck again softer before it has gone, and a harder
+        note a fifth up over it (slid to in legato) let go while the first is still held. */
+    std::vector<Event> struckPhrase (int key)
+    {
+        auto events = notes ({ key }, 0.0, 0.4, 0.9f);
+        for (auto& e : notes ({ key }, 0.45, 0.6, 0.6f)) events.push_back (e);
+        for (auto& e : notes ({ key + 7 }, 0.6, 0.3, 1.0f)) events.push_back (e);
+        return events;
+    }
+
+    /** Hollow Gantry as the user heard it (since remade): a filter envelope with no attack, and a bell
+        layer (a level envelope with no attack) on every note, played poly (0), mono (1) or legato (2). */
+    void hollowGantryAsHeard (Synth& s, int voiceMode)
+    {
+        using namespace WaveSynthPatchBuilder;
+        Builder heard ("Hollow Gantry as heard", "Bass");
+        heard.osc (1, analog, sinePos, 75)
+            .osc (2, pulse, 50, 55).warp (2, wMirror, 20)
+            .osc (3, growl, 40, 28).pitch (3, 12)
+            .osc (4, analog, sinePos, 40).pitch (4, 24).fm (4, 5, 35).levelEnv (4, 0, 0, 140, 0).route (4, 100)
+            .modulator (5, analog, sinePos).pitch (5, 21, 69)
+            .filter (1, ladder24, 500, 30, 25, 30)
+            .lfoSync (1, triangle, eighthT, 0).mod (lfo1, "osc2WarpAmount", 25).mod (lfo1, "filter1Cutoff", 10)
+            .env (2, 0, 220, 0, 90, 70).mod (env2, "filter1Cutoff", 30)
+            .amp (1, 200, 50, 70).mono (0.0f, false).drive (hard, 20, 5000).level (-6.6);
+
+        for (auto* p : s.getParameters()) p->setValueNotifyingHost (p->getDefaultValue());
+        for (auto& [id, value] : heard.patch.values) setPlain (s, id, (float) value);
+        setPlain (s, "voiceMode", (float) voiceMode);
+    }
+}
+
+void runSynthEventTests()
+{
+    // The click the user heard: Hollow Gantry as it was then (mono), a note let go over a held one. Going
+    // back strikes the held note again where it sounds, and its filter envelope (no attack) opened the
+    // resonant filter two octaves in a millisecond: a 14.6 dB burst above 3 kHz. Played poly, the softer
+    // strike of a note still ringing burst 11.
+    for (auto [mode, name] : { std::pair { 1, "mono, going back to a held key" }, std::pair { 0, "poly, a ringing key struck again" } })
+    {
+        Synth s;
+        hollowGantryAsHeard (s, mode);
+        const auto burst = burstOf (render (s, struckPhrase (33), 2.5));
+        check (burst.db <= 8.0, "synth: a note struck again while it sounds rises over " + juce::String (WaveSynth::retriggerSeconds * 1000.0, 0)
+                                    + " ms, every envelope, so Hollow Gantry as the user heard it doesn't click " + name + " (burst "
+                                    + juce::String (burst.db, 1) + " dB at " + juce::String (burst.seconds, 3) + " s; at most 8)");
+    }
+
+    // A designed strike stays: a fresh note keeps its own attack (a sine reaches 90 % of its peak within
+    // 3 ms with a 1.5 ms attack), and so does a key struck again once it has fallen silent.
+    {
+        const auto riseOf = [] (const juce::AudioBuffer<float>& b, int from)
+        {
+            float peak = 0.0f;
+            for (int i = from; i < from + (int) (0.05 * rate); ++i) peak = juce::jmax (peak, std::abs (b.getSample (0, i)));
+            for (int i = from; i < from + (int) (0.05 * rate); ++i)
+                if (std::abs (b.getSample (0, i)) >= 0.9f * peak)
+                    return (double) (i - from) / rate;
+            return 1.0;
+        };
+
+        Synth s;
+        setPlain (s, "filter1Type", 0.0f);
+        setPlain (s, "osc1Table", 5.0f);   // Sub: a sine
+        setPlain (s, "osc1Position", 0.0f);
+        setPlain (s, "env1Attack", 1.5f);
+        setPlain (s, "voiceMode", 1.0f);
+        auto events = notes ({ 57 }, 0.0, 0.2, 0.9f);
+        for (auto& e : notes ({ 57 }, 0.6, 0.2, 0.9f)) events.push_back (e);
+        const auto out = render (s, events, 1.0);
+        const auto fresh = riseOf (out, 0), again = riseOf (out, (int) (0.6 * rate));
+
+        Synth tom;
+        tom.loadPatch ("Clamp Tom");
+        const auto strike = burstOf (render (tom, notes ({ 50 }, 0.2, 0.6, 1.0f), 1.5));
+        check (fresh <= 0.003 && again <= 0.003 && strike.db >= 4.0,
+               "synth: a fresh note keeps its own attack (90 % in " + juce::String (fresh * 1000.0, 2) + " ms, and " + juce::String (again * 1000.0, 2)
+                   + " ms struck again after silence; at most 3), and Clamp Tom's strike is still there (" + juce::String (strike.db, 1) + " dB over its surroundings)");
+    }
+
+    // The crackle the user heard: Acid Furnace under Body Shifting Pad's chords and its CC 74 lane, which
+    // sweeps the patch's 90 Hz comb at the top of the lane (3.2 to 5.1 s). Stepped by each controller
+    // value, the comb's delay jumped and ticked under the notes, 17 dB over the frames around; held still
+    // it measures about 7.
+    {
+        const double beat = 60.0 / 122.0, total = 16.0 * beat;
+        std::vector<Event> events;
+        const std::vector<std::vector<int>> chords { { 57, 60, 64 }, { 58, 62, 65 }, { 57, 60, 64 }, { 55, 58, 62 } };
+
+        for (size_t c = 0; c < chords.size(); ++c)
+            for (auto& e : notes ({ chords[c][0], chords[c][1], chords[c][2] }, (double) c * 4.0 * beat, 3.95 * beat, 0.61f))
+                events.push_back (e);
+
+        for (double t = 0.0; t < total; t += 0.01)
+        {
+            const auto x = t < 8.0 * beat ? 0.2 + 0.6 * t / (8.0 * beat) : 0.8 - 0.5 * (t - 8.0 * beat) / (8.0 * beat);
+            events.push_back ({ (int) (t * rate), juce::MidiMessage::controllerEvent (1, 74, juce::roundToInt (x * 127.0)) });
+        }
+
+        Synth s;
+        s.loadPatch ("Acid Furnace");
+        const auto ticks = lowTicksOf (render (s, events, total + 1.0), 3.2, 5.1);
+        check (ticks <= 12.0, "synth: CC 74 sweeping a comb (Acid Furnace under Body Shifting Pad's lane) moves it smoothly: no tick under the notes more than 12 dB "
+                                  "over the frames around (" + juce::String (ticks, 1) + " dB; stepped, it was 17)");
+    }
+
+    // A legato slide to a harder note: what velocity moves (the heard Hollow Gantry's level and filter)
+    // comes in over the slide. Taken at once, it burst 41.7 dB.
+    {
+        Synth s;
+        hollowGantryAsHeard (s, 2);
+        const auto burst = burstOf (render (s, struckPhrase (33), 2.5));
+        check (burst.db <= 8.0, "synth: a legato slide to a harder note brings its velocity in over the slide, so Hollow Gantry as heard, played legato, doesn't click (burst "
+                                    + juce::String (burst.db, 1) + " dB at " + juce::String (burst.seconds, 3) + " s; at most 8, and 41.7 taken at once)");
+    }
+}
+
 void writePatchValues (const juce::File& file)
 {
     using namespace WaveSynthPatchBuilder;

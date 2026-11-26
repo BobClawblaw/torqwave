@@ -239,8 +239,16 @@ namespace
         Stage stage = idle;
         float level = 0.0f, start = 0.0f, t = 0.0f;
         float ex = 1.0f;   // exp (-k t), kept by multiplying as t moves on, so a sample needs no exp
+        float retriggerStep = 0.0f;   // struck again while the voice sounds: the attack's step at most (0: its own)
 
-        void trigger() noexcept                       { start = level; t = 0.0f; ex = 1.0f; stage = attack; }
+        /** Starts the attack from where the envelope is. With `leastStep` (the voice struck again while it
+            sounds), an attack quicker than that takes that long instead: an amp, or a filter, jumping in a
+            millisecond over a sounding note clicks. */
+        void trigger (float leastStep) noexcept
+        {
+            retriggerStep = leastStep;
+            start = level; t = 0.0f; ex = 1.0f; stage = attack;
+        }
         void releaseNow() noexcept                    { if (stage != idle) { start = level; t = 0.0f; ex = 1.0f; stage = release; } }
     };
 
@@ -281,7 +289,7 @@ namespace
             case Envelope::idle: break;
             case Envelope::attack:
             {
-                const auto c = s.attack.advance (e);
+                const auto c = e.retriggerStep > 0.0f && s.attack.step > e.retriggerStep ? (e.t += e.retriggerStep) : s.attack.advance (e);
                 if (e.t >= 1.0f) { e.level = 1.0f; e.start = 1.0f; e.t = 0.0f; e.ex = 1.0f; e.stage = Envelope::decay; }
                 else e.level = e.start + (1.0f - e.start) * c;
                 break;
@@ -727,6 +735,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         bool active = false, fading = false, down = false, held = false;
         int note = -1;
         float velocity = 0.0f, randomValue = 0.0f;
+        float velocityTarget = 0.0f, velocityStep = 0.0f;   // a legato slide's velocity, reached a tick at a time
         juce::uint32 age = 0, serial = 0;
         double pitch = 60.0, target = 60.0, glidePerSample = 0.0;
         std::array<Envelope, numEnvelopes> env;
@@ -735,7 +744,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         juce::int64 sinceStart = 0;
         std::array<OscillatorState, numOscillators> osc;
         // Each oscillator's level envelope: rising (0), held (1) or falling to its sustain level (2).
-        struct LevelEnvelope { int stage = 2, held = 0; float level = 1.0f; };
+        struct LevelEnvelope { int stage = 2, held = 0; float level = 1.0f, retriggerStep = 0.0f; };   // retriggerStep: as Envelope's
         std::array<LevelEnvelope, numOscillators> levelEnv;
         double subPhase = 0.0, subIncrement = 0.0;
         Rng noiseL, noiseR;
@@ -763,6 +772,8 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
     // The controllers, at rest.
     float bend = 0.0f, wheel = 0.0f, channelPressure = 0.0f, volume = 1.0f, expression = 1.0f, ccPan = 0.5f, brightness = 1.0f, ccResonance = 0.0f;
+    float brightnessTarget = 1.0f;                 // CC 74 as sent; brightness follows it (see controlSmoothingSeconds)
+    std::array<float, numMacros> macrosNow {};     // the macros as the voices take them, following their parameters
     bool pedal = false;
     std::array<float, 128> polyPressure {};
     std::vector<int> heldNotes;   // for mono and legato: the keys down, oldest first
@@ -855,7 +866,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         bend = wheel = channelPressure = 0.0f;
         volume = expression = 1.0f;
         ccPan = 0.5f;
-        brightness = 1.0f;
+        brightness = brightnessTarget = 1.0f;
         ccResonance = 0.0f;
         pedal = false;
         polyPressure.fill (0.0f);
@@ -967,15 +978,22 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     void trigger (Voice& v, int note, float velocity, bool fresh)
     {
         v.note = note;
-        v.velocity = velocity;
+        v.velocity = v.velocityTarget = velocity;
+        v.velocityStep = 0.0f;
         v.down = true;
         v.held = false;
         v.age = ++counter;
         v.target = note;
         setGlide (v);
 
+        // Struck again while it sounds (its amp above nothing), no envelope rises faster than this (see
+        // Envelope::trigger), the oscillators' level envelopes included: a filter envelope or a strike layer
+        // coming in at once over a sounding note clicks. A fresh note, or one struck after silence, keeps its own.
+        const auto leastStep = (float) (1.0 / (retriggerSeconds * rate));
+        const auto sounding = ! fresh && v.env[0].level > 0.0f;
+
         for (auto& e : v.env)
-            e.trigger();
+            e.trigger (sounding ? leastStep : 0.0f);
 
         for (int l = 0; l < numLfos; ++l)
             if (fresh || shared.lfo[(size_t) l].mode != 0)
@@ -988,7 +1006,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         for (int o = 0; o < numOscillators; ++o)
         {
             auto& e = v.levelEnv[(size_t) o];
-            e = shared.levelEnv[(size_t) o] ? Voice::LevelEnvelope { 0, 0, fresh ? 0.0f : e.level } : Voice::LevelEnvelope();
+            e = shared.levelEnv[(size_t) o] ? Voice::LevelEnvelope { 0, 0, fresh ? 0.0f : e.level, sounding ? leastStep : 0.0f } : Voice::LevelEnvelope();
         }
 
         for (int o = 0; o < numOscillators; ++o)
@@ -1058,9 +1076,13 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 {
                     v->note = note;
                     v->target = note;
-                    v->velocity = velocity;
                     v->age = ++counter;
                     setGlide (*v);
+
+                    // Its velocity comes in over the glide, so what velocity moves slides too.
+                    const auto ticks = juce::jmax (1.0, juce::jmax ((double) shared.glideSeconds, velocityGlideSeconds) * rate / controlInterval);
+                    v->velocityTarget = velocity;
+                    v->velocityStep = (float) ((velocity - v->velocity) / ticks);
                 }
                 else
                 {
@@ -1227,7 +1249,11 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
             case 10: ccPan = v; break;
             case 11: expression = v; break;
             case 71: ccResonance = v; break;
-            case 74: brightness = v; break;
+            case 74:
+                brightnessTarget = v;
+                if (std::none_of (voices.begin(), voices.end(), [] (const Voice& x) { return x.active; }))
+                    brightness = v;   // nothing to sweep: taken at once, so a note starting with it starts there
+                break;
             case 64:
                 pedal = m.getControllerValue() >= 64;
                 if (! pedal)
@@ -1237,7 +1263,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 break;
             case 121:
                 bend = wheel = channelPressure = 0.0f;
-                volume = expression = brightness = 1.0f;
+                volume = expression = brightness = brightnessTarget = 1.0f;
                 ccPan = 0.5f;
                 ccResonance = 0.0f;
                 polyPressure.fill (0.0f);
@@ -1662,7 +1688,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
                     if (le.stage == 0)
                     {
-                        le.level += s.levelAttack[(size_t) o];
+                        le.level += le.retriggerStep > 0.0f ? juce::jmin (le.retriggerStep, s.levelAttack[(size_t) o]) : s.levelAttack[(size_t) o];
                         if (le.level >= 1.0f) { le.level = 1.0f; le.stage = 1; le.held = 0; }
                     }
                     else if (le.stage == 1)
@@ -1858,6 +1884,25 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     {
         readShared();
 
+        // CC 74 and the macros follow a move over a few tens of milliseconds while notes sound, so their steps
+        // don't step the filters (a comb's delay jumping crackles); with nothing sounding they are taken at once.
+        {
+            const auto quiet = std::none_of (voices.begin(), voices.end(), [] (const Voice& v) { return v.active; });
+            const auto k = (float) (1.0 - std::exp (-controlInterval / (controlSmoothingSeconds * rate)));
+            const auto follow = [quiet, k] (float& now, float target)
+            {
+                now = quiet || std::abs (target - now) < 1.0e-4f ? target : now + k * (target - now);
+            };
+
+            follow (brightness, brightnessTarget);
+
+            for (int m = 0; m < numMacros; ++m)
+            {
+                follow (macrosNow[(size_t) m], shared.macros[(size_t) m]);
+                shared.macros[(size_t) m] = macrosNow[(size_t) m];
+            }
+        }
+
         // A free-running LFO's rate takes the sources every voice shares (the macros, the wheel, pressure
         // and the free-running LFOs themselves, a tick behind); a retriggered LFO's rate is each voice's own.
         std::array<float, numDestinations> global;
@@ -1887,6 +1932,17 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
             for (int l = 0; l < numLfos; ++l)
                 v.lfoPhase[(size_t) l] += lfoHz (l, v.value[(size_t) (dLfo1Rate + l)]) * controlInterval / rate;
+
+            if (v.velocityStep != 0.0f)
+            {
+                v.velocity += v.velocityStep;
+
+                if (v.velocityStep > 0.0f ? v.velocity >= v.velocityTarget : v.velocity <= v.velocityTarget)
+                {
+                    v.velocity = v.velocityTarget;
+                    v.velocityStep = 0.0f;
+                }
+            }
 
             computeVoice (v, false);
 

@@ -34,6 +34,17 @@ namespace WaveSynth
         make room as when all sixteen are taken, so what one costs never grows past that. */
     constexpr int unisonBudget = 3 * maxUnison * numVoices;
     constexpr double fadeSeconds = 0.004, minimumAttackSeconds = 0.0015;
+    /** A note struck again while it sounds (mono, or a ringing key played again): every envelope, the
+        oscillators' level envelopes too, rises from where it is no faster than this, as an amp or a filter
+        jumping in a millisecond over a sounding note clicks. A fresh note keeps its own attack. */
+    constexpr double retriggerSeconds = 0.004;
+    /** How long CC 74 (Cutoff) and the macros take to follow a move while notes sound: a controller's steps
+        would otherwise step the filters, and a comb jumps and crackles. With no note sounding they are taken
+        at once. */
+    constexpr double controlSmoothingSeconds = 0.03;
+    /** A legato slide brings the new note's velocity in over the glide, and at least this long, so what
+        velocity moves glides rather than jumping. */
+    constexpr double velocityGlideSeconds = 0.02;
 
     /** The modulation sources, in this order (index 0 is none). */
     enum Source { none, env1, env2, env3, env4, lfo1, lfo2, velocity, modWheel, aftertouch, key, macro1, macro2, macro3, macro4, random, numSources };

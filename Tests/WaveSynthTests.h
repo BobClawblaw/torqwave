@@ -12,6 +12,10 @@ void runWaveSynthTests (AudioEngine&);
     with `TorqwaveTests --complex`. */
 void runComplexPatchTests();
 
+/** A note struck again while it sounds, a legato slide to a harder note and CC 74 sweeping a comb: no
+    click or crackle the ear hears (WaveSynthComplexTests.cpp). Run by --synth. */
+void runSynthEventTests();
+
 namespace juce { class File; }
 
 /** Writes every factory and Complex patch as a line of JSON: name, category, origin (hand-made,

@@ -1690,6 +1690,7 @@ void runWaveSynthTests (AudioEngine& engine)
     testNine (synth);
     testCpu (synth);
     runComplexPatchTests();
+    runSynthEventTests();
 }
 
 void writePatchHashes (const juce::File& file)
