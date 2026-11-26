@@ -6,7 +6,8 @@ namespace WaveSynth
 {
     /** The factory patches marked as favourites: kept by name, a line each, in a file in Torqwave's
         application data, so they are the same in every session and outlast an update. A name that
-        is no longer a factory patch is dropped when the file is read. */
+        is no longer a factory patch is dropped when the file is read, unless the patch was taken out
+        as a near-copy of another: then the one it was a copy of is marked instead. */
     class Favourites
     {
     public:

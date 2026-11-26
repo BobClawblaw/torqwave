@@ -1272,12 +1272,6 @@ namespace WaveSynthPatchBuilder
             .level (-13.5)
             .macro (1, "Crush").mod (macro1, "osc2WarpAmount", 40).macro (2, "Hum").mod (macro2, "osc2Volume", 35)
             .macro (3, "Cutoff").mod (macro3, "filter1Cutoff", 25).macro (4, "Grit").mod (macro4, "fxDriveAmount", 40);
-        add ("Caldera Thump", "Sub").osc (1, analog, sinePos, 85).osc (2, growl, 85, 30).warp (2, wBend, 30).osc (3, fm, 30, 25).pitch (3, 12).levelEnv (3, 1, 0, 60, 0)
-            .filter (1, ladder24, 480, 20, 20, 20)
-            .env (2, 0, 60, 0, 40, 90).mod (env2, "osc1Pitch", 4.17f).lfoSync (1, triangle, quarter, 1).mod (lfo1, "osc2WarpAmount", 30).mod (lfo1, "osc2Position", -20)
-            .lfoSync (2, sine, bars2, 1).mod (lfo2, "filter1Cutoff", 14).amp (2, 300, 95, 120).mono (20).drive (soft, 20, 3000, 60).level (-6.5)
-            .macro (1, "Bend").mod (macro1, "osc2WarpAmount", 40).macro (2, "Growl").mod (macro2, "osc2Volume", 35)
-            .macro (3, "Click").mod (macro3, "osc3Volume", 40).macro (4, "Warmth").mod (macro4, "fxDriveAmount", 40);
 
         // Biting subs: a clean root with a synced or FM tick on top, swept shut on each note.
         add ("Pile Ram Sub", "Sub").osc (1, analog, sinePos, 85).osc (2, sync, 30, 55).warp (2, wSync, 40).pitch (2, 12).osc (3, sub, 40, 50).levelEnv (2, 1, 0, 300, 25)
@@ -1293,14 +1287,6 @@ namespace WaveSynthPatchBuilder
             .amp (2, 300, 95, 120).mono (15).drive (soft, 15, 3000, 50).level (-9.5)
             .macro (1, "FM").mod (macro1, "osc2WarpAmount", 40).macro (2, "Tick").mod (macro2, "osc2Volume", 35)
             .macro (3, "Body").mod (macro3, "osc3Volume", 40).macro (4, "Warmth").mod (macro4, "fxDriveAmount", 40);
-        add ("Anvil Floor", "Sub").osc (1, analog, sinePos, 85).osc (2, sync, 60, 28).warp (2, wSync, 25).osc (3, metal, 30, 20).pitch (3, 24).levelEnv (3, 1, 0, 40, 0)
-            .filter (1, ladder12, 550, 20, 20, 20)
-            .env (2, 0, 160, 0, 90, 80).mod (env2, "osc2WarpAmount", 40).mod (env2, "filter1Cutoff", 20)
-            .lfoSync (1, steps, bar1, 1, 40).stepPattern (1, { 100, -40, 60, -100, 100, -40, -100, 60, 100, -40, 60, -100, 40, 100, -100, -40 })
-            .mod (lfo1, "osc2WarpAmount", 20).lfoSync (2, sine, bars2, 1).mod (lfo2, "filter1Cutoff", 12)
-            .amp (2, 300, 95, 120).mono (0, false).drive (hard, 12, 3000, 50).level (-5)
-            .macro (1, "Sync").mod (macro1, "osc2WarpAmount", 40).macro (2, "Anvil").mod (macro2, "osc3Volume", 40)
-            .macro (3, "Cutoff").mod (macro3, "filter1Cutoff", 25).macro (4, "Grit").mod (macro4, "fxDriveAmount", 40);
         add ("Sounding Charge", "Sub").osc (1, sub, 10, 85).osc (2, analog, sawPos, 30).osc (3, sync, 45, 25).pitch (3, 12).warp (3, wSync, 50).levelEnv (3, 1, 0, 90, 0)
             .filter (1, ladder24, 380, 25, 20, 20)
             .env (2, 0, 220, 0, 120, 75).mod (env2, "filter1Cutoff", 30).mod (env2, "osc3WarpAmount", 30).env (3, 0, 80, 0, 50, 90).mod (env3, "osc1Pitch", 10.42f)

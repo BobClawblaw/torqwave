@@ -1236,13 +1236,6 @@ namespace WaveSynthPatchBuilder
             .macro (3, "Cutoff").mod (macro3, "filter1Cutoff", 28).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         // Strings. Talking strings: sections that sing through vowel tables and moving formant bands.
-        add ("Singing Bows", "Strings").osc (1, string, 40, 70).unison (1, 6, 12, 100).osc (2, vowel, 30, 55).osc (3, analog, sawPos, 50).pitch (3, -12)
-            .levelEnv (2, 800, 0, 2500, 70).route (2, 100).parallel().filter (1, ladder12, 2800, 15, 10, 40).filter (2, svfBand, 1100, 45)
-            .lfoSync (1, sine, bar1, 1).mod (lfo1, "osc2Position", 35).mod (lfo1, "filter2Cutoff", 25)
-            .lfo (2, sine, 5.3f, 1).lfoFade (2, 900).mod (lfo2, "osc1Fine", 8).mod (lfo2, "osc2Fine", 8)
-            .amp (300, 1200, 95, 1200).reverb (40, 90, 6.0f).level (-6)
-            .macro (1, "Sing").mod (macro1, "osc2Volume", 40).macro (2, "Vowel").mod (macro2, "osc2Position", 40)
-            .macro (3, "Formant").mod (macro3, "filter2Cutoff", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 40);
         add ("Vowel Violins", "Strings").osc (1, vowel, 20, 70).unison (1, 7, 14, 100).osc (2, string, 70, 55).pitch (2, 12).osc (3, vowel, 70, 40)
             .pitch (3, -12)
             .levelEnv (3, 0, 300, 2000, 40).filter (1, ladder24, 3000, 15, 10, 40)

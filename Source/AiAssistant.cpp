@@ -145,7 +145,7 @@ juce::String aboutThisRelease (bool withNotes)
            "true-peak ceiling as the loudness meter reads it; Click and Pop Repair finds flat-topped clicks and leaves drum hits alone; Repair "
            "Clipping rebuilds from the sound round the clip; Ask Torq remembers the conversation. "
            "0.20.1: Continue where you left off, a start that reopens the files and session that were open. "
-           "0.20.0: Torqwave Synth (wavetable, 3,743 patches), Decrypt (a synth patch from a recording), Torqwave Sampler, StringSwarm, Basic "
+           "0.20.0: Torqwave Synth (wavetable, 3,569 patches), Decrypt (a synth patch from a recording), Torqwave Sampler, StringSwarm, Basic "
            "Drums, instruments played from the computer's keys, and over a thousand factory sequence presets.";
 }
 

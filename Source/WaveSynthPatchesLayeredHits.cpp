@@ -491,12 +491,6 @@ namespace WaveSynthPatchBuilder
             .macro (3, "Echo").mod (macro3, "fxDelayMix", 40).macro (4, "Repeats").mod (macro4, "fxDelayFeedback", 35);
 
         // Drums that talk: vowel tables and band filters on skins, toms that say a word, hats that whisper.
-        add ("Vowel Kick", "Drum").osc (1, analog, sinePos, 85).pitch (1, -24).osc (2, vowel, 30, 50).pitch (2, -12).levelEnv (2, 0, 20, 200, 0)
-            .osc (3, pulse, 60, 30).pitch (3, 7).levelEnv (3, 0, 0, 15, 0).filter (1, svfBand, 600, 40, 20).filter (2, svfLow, 4000, 10).parallel()
-            .route (1, 100).env (2, 0, 60, 0, 50, 90).mod (env2, "osc1Pitch", 50).mod (env2, "osc2Position", 50).mod (env2, "filter1Cutoff", 20)
-            .lfoSync (1, triangle, quarter, 1).mod (lfo1, "osc2Position", 15).amp (1, 500, 0, 220, 70).drive (tube, 25, 5000).level (-17)
-            .macro (1, "Vowel").mod (macro1, "osc2Position", 40).macro (2, "Punch").mod (macro2, "osc1Pitch", 12.5f)
-            .macro (3, "Mouth").mod (macro3, "osc2Volume", 40).macro (4, "Grit").mod (macro4, "fxDriveAmount", 45);
         add ("Speaking Tom", "Drum").osc (1, vowel, 10, 75).pitch (1, -12).osc (2, analog, sinePos, 75).pitch (2, -12).levelEnv (2, 0, 30, 400, 0)
             .osc (3, metal, 20, 30).pitch (3, 12).levelEnv (3, 0, 0, 20, 0).filter (1, ladderBand, 900, 45, 15, 40).env (2, 0, 120, 0, 100, 82)
             .mod (env2, "osc1Pitch", 12.5f).mod (env2, "osc2Pitch", 12.5f).env (3, 0, 500, 0, 300, 60).mod (env3, "osc1Position", 60)
@@ -511,12 +505,6 @@ namespace WaveSynthPatchBuilder
             .level (-4.5)
             .macro (1, "Vowel").mod (macro1, "osc1Position", 40).macro (2, "Wires").mod (macro2, "noiseLevel", 40)
             .macro (3, "Formant").mod (macro3, "filter1Cutoff", 25).macro (4, "Grit").mod (macro4, "fxDriveAmount", 45);
-        add ("Choir Clap", "Drum").osc (1, vowel, 80, 40).unison (1, 5, 30, 100).osc (2, vowel, 30, 35).pitch (2, 7).unison (2, 3, 20, 100)
-            .levelEnv (2, 40, 0, 500, 0).osc (3, pulse, 50, 30).pitch (3, 12).levelEnv (3, 0, 0, 20, 0).noise (80, 0, 15).filter (1, svfBand, 1300, 40, 10)
-            .lfo (1, triangle, 36, 1).mod (lfo1, "noiseLevel", 15).env (2, 0, 450, 0, 300, 65).mod (env2, "osc1Position", -40).mod (env2, "filter1Cutoff", 15)
-            .lfoSync (2, sine, half, 1).mod (lfo2, "osc2Position", 20).amp (1, 1100, 0, 600, 55).reverb (40, 85, 3, 45).level (-4)
-            .macro (1, "Choir").mod (macro1, "osc2Volume", 40).macro (2, "Hands").mod (macro2, "noiseLevel", 40)
-            .macro (3, "Vowel").mod (macro3, "osc1Position", 40).macro (4, "Hall").mod (macro4, "fxReverbMix", 40);
         add ("Wah Tom", "Drum").osc (1, analog, sawPos, 70).pitch (1, -12).osc (2, analog, sinePos, 75).pitch (2, -12).levelEnv (2, 0, 0, 350, 0)
             .osc (3, growl, 60, 35).warp (3, wBend, 30).levelEnv (3, 0, 0, 120, 0).filter (1, ladderBand, 400, 60, 20, 40).env (2, 0, 300, 0, 200, 65)
             .mod (env2, "filter1Cutoff", 35).mod (env2, "osc1Pitch", 8.33f).mod (env2, "osc2Pitch", 8.33f).lfoSync (1, triangle, quarterT, 1)

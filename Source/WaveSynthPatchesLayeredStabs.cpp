@@ -1031,14 +1031,6 @@ namespace WaveSynthPatchBuilder
             .macro (3, "Band").mod (macro3, "filter1Cutoff", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 45);
 
         // Organs with a click: a key-click transient and percussion swept by sync and FM, then the drawbars.
-        add ("Percussion Relay", "Organ").osc (1, additive, 20, 80).osc (2, sync, 30, 45).warp (2, wSync, 40).pitch (2, 19).levelEnv (2, 0, 0, 220, 0)
-            .osc (3, additive, 10, 60).pitch (3, -12)
-            .noise (5, 2).filter (1, ladder12, 5000, 10, 15, 50)
-            .env (2, 0, 200, 0, 100, 80).mod (env2, "osc2WarpAmount", 45).env (3, 0, 15, 0, 15, 90).mod (env3, "noiseLevel", 25)
-            .lfo (1, sine, 6.4f, 0).mod (lfo1, "ampPan", 20).lfoSync (2, triangle, bars2, 1).mod (lfo2, "osc1Position", 15)
-            .amp (2, 300, 100, 100).drive (tube, 25, 6000).chorus (25, 6.0f, 35).level (-16.5)
-            .macro (1, "Percussion").mod (macro1, "osc2Volume", 45).macro (2, "Click").mod (macro2, "noiseLevel", 30)
-            .macro (3, "Rotor").mod (macro3, "lfo1Rate", -40).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
         add ("Switchgear Organ", "Organ").osc (1, additive, 40, 80).osc (2, fm, 50, 45).warp (2, wFm, 45).pitch (2, 12).levelEnv (2, 0, 0, 300, 15)
             .osc (3, additive, 0, 55).pitch (3, 7)
             .filter (1, svfLow, 4500, 15, 10, 50).env (2, 0, 250, 0, 150, 80).mod (env2, "osc2WarpAmount", 50).mod (velocity, "osc2Volume", 20)
@@ -1082,13 +1074,6 @@ namespace WaveSynthPatchBuilder
             .mod (modWheel, "lfo2Rate", -30).amp (2, 300, 100, 150).drive (tube, 35, 5000).chorus (25, 0.7f, 40).level (-20.5)
             .macro (1, "Gospel").mod (macro1, "osc2Volume", 40).macro (2, "Bite").mod (macro2, "osc3Volume", 45)
             .macro (3, "Drawbars").mod (macro3, "osc1Position", 40).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
-        add ("Ignition Manual", "Organ").osc (1, additive, 45, 80).osc (2, sync, 15, 45).warp (2, wSync, 70).levelEnv (2, 0, 0, 400, 20).osc (3, sub, 50, 55)
-            .pitch (3, -12)
-            .filter (1, ladder12, 3500, 20, 25, 50).env (2, 0, 400, 0, 200, 70).mod (env2, "osc2WarpAmount", -50).mod (env2, "filter1Cutoff", 20)
-            .lfoSync (1, triangle, quarter, 1).mod (lfo1, "osc1Position", 15).lfo (2, sine, 0.5f, 0).mod (lfo2, "ampPan", 15)
-            .amp (2, 300, 100, 120).drive (hard, 30, 4800).chorus (20, 5.0f, 35).level (-19.5)
-            .macro (1, "Ignite").mod (macro1, "osc2Volume", 45).macro (2, "Sync").mod (macro2, "osc2WarpAmount", 40)
-            .macro (3, "Cutoff").mod (macro3, "filter1Cutoff", 28).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
         add ("Glass Key Organ", "Organ").osc (1, additive, 5, 75).unison (1, 4, 10, 100).osc (2, fm, 30, 45).pitch (2, 24).levelEnv (2, 0, 0, 500, 10)
             .osc (3, additive, 25, 60)
             .pitch (3, 12)
@@ -1098,13 +1083,6 @@ namespace WaveSynthPatchBuilder
             .amp (120, 300, 100, 600).delay (quarterD, 30, 16, 5000).reverb (25, 70, 3.0f).level (-14)
             .macro (1, "Glass").mod (macro1, "osc2Volume", 45).macro (2, "Drawbars").mod (macro2, "osc3Position", 40)
             .macro (3, "Rotor").mod (macro3, "lfo1Rate", -40).macro (4, "Space").mod (macro4, "fxReverbMix", 35);
-        add ("Ratchet Console", "Organ").osc (1, additive, 35, 80).osc (2, pulse, 20, 45).pitch (2, 12).warp (2, wBend, 30).levelEnv (2, 0, 0, 180, 0)
-            .osc (3, additive, 60, 55).pitch (3, -12)
-            .filter (1, ladder24, 3500, 25, 20, 50).env (2, 0, 150, 0, 100, 85).mod (env2, "osc2WarpAmount", 45).mod (env2, "filter1Cutoff", 15)
-            .lfoSync (1, randomShape, sixteenth, 1, 40).mod (lfo1, "osc3Position", 15).lfo (2, sine, 6.2f, 0).mod (lfo2, "ampPan", 18)
-            .amp (2, 300, 100, 100).drive (soft, 35, 5500).level (-21.5)
-            .macro (1, "Ratchet").mod (macro1, "osc2Volume", 45).macro (2, "Bend").mod (macro2, "osc2WarpAmount", 40)
-            .macro (3, "Cutoff").mod (macro3, "filter1Cutoff", 28).macro (4, "Rotor").mod (macro4, "lfo2Rate", -40);
 
         // Organs that pump: chopped and ducked chords on synced patterns, wide and echoed.
         add ("Warehouse Chop Organ", "Organ").osc (1, additive, 25, 80).unison (1, 3, 8, 70).osc (2, additive, 10, 60).pitch (2, 12).osc (3, sub, 40, 55)
