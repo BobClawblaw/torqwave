@@ -82,6 +82,9 @@ namespace WaveSynth
 
     /** The factory patches, by category in browser order. */
     const std::vector<Patch>& factoryPatches();
+    /** The Complex patches: a list of their own after the factory patches (whose indices they leave as
+        they are), four oscillators or more in each, by category in browser order. */
+    const std::vector<Patch>& complexPatches();
     const juce::StringArray& patchCategories();
 
     /** What the window reads as the synth plays: each destination's modulated value (normalised;
@@ -130,7 +133,8 @@ namespace BuiltInEffects
         /** A parameter by its ID (nullptr if there is none). */
         juce::RangedAudioParameter* parameter (const juce::String& id) const;
 
-        /** Loads a factory patch (every parameter to its default, then the patch's), by index or name. */
+        /** Loads a factory patch (every parameter to its default, then the patch's), by index or name; by
+            name, a Complex patch too. */
         void loadPatch (int index);
         bool loadPatch (const juce::String& name);
 

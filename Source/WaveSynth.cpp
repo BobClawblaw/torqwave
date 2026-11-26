@@ -2628,6 +2628,16 @@ bool BasicSynthProcessor::loadPatch (const juce::String& name)
             return true;
         }
 
+    for (auto& patch : WaveSynth::complexPatches())
+        if (patch.name.equalsIgnoreCase (name))
+        {
+            setAllToDefault();
+            BuiltInEffect::setPresetValues (patch.values);
+            macroNames = patch.macroNames;
+            patchName = patch.name;
+            return true;
+        }
+
     return false;
 }
 

@@ -623,6 +623,7 @@ int main (int argc, char* argv[])
     //   --patch-levels          only print each factory patch's level (name|category|dB of a held chord's peak)
     //   --patch-hashes <file>   only write a hash of each factory patch's render, to compare two builds sample for sample
     //   --synth-reference <folder> only write hashes of the synth's other reference renders (warps, Sampled tables, states) there
+    //   --complex-clips <folder> only write clips of the Complex patches, alone and over a kick and hats at 132 BPM
     //   --sound-demos <folder>  only write the Sounds pages' demos (the built-in instruments' patches, presets and kits, and
     //                           the Sequence Library's factory kits and sequences) as MP3s with index.json; --only synth,kits for some
     //   --sequence-clips <folder> --into <folder>  only render each .tqseq in the first folder to a WAV in the second, to hear presets by
@@ -880,6 +881,12 @@ int main (int argc, char* argv[])
     if (const auto folder = valueOf ("--synth-reference"); folder.isNotEmpty())
     {
         writeSynthReference (juce::File::getCurrentWorkingDirectory().getChildFile (folder));
+        return 0;
+    }
+
+    if (const auto folder = valueOf ("--complex-clips"); folder.isNotEmpty())
+    {
+        writeComplexClips (juce::File::getCurrentWorkingDirectory().getChildFile (folder));
         return 0;
     }
 

@@ -44,6 +44,15 @@ namespace WaveSynthPatchBuilder
             return set (o (n, "EnvOn"), 1).set (o (n, "EnvAttack"), attack).set (o (n, "EnvHold"), hold).set (o (n, "EnvDecay"), decay).set (o (n, "EnvSustain"), sustain);
         }
         Builder& warp (int n, int type, float amount)                   { return set (o (n, "Warp"), type).set (o (n, "WarpAmount"), amount); }
+        /** FM From: the oscillator (1 to 9) whose wave an FM warp on n takes; 0 is Before. */
+        Builder& fmFrom (int n, int from)                               { return set (o (n, "FmFrom"), from); }
+        /** An FM warp on n taken from another oscillator, named, so it is played even when off or silent. */
+        Builder& fm (int n, int from, float amount)                     { return warp (n, wFm, amount).fmFrom (n, from); }
+        /** An oscillator that is never heard: off, its table and position set, for another's FM to take. */
+        Builder& modulator (int n, int table, float position)
+        {
+            return set (o (n, "On"), 0).set (o (n, "Table"), table).set (o (n, "Position"), position);
+        }
         Builder& pan (int n, float p)                                   { return set (o (n, "Pan"), p); }
         Builder& route (int n, float r)                                 { return set (o (n, "Route"), r); }
 
@@ -174,6 +183,9 @@ namespace WaveSynthPatchBuilder
     void addLayeredPlucks (std::vector<Builder>&);
     void addLayeredHits (std::vector<Builder>&);
     void addLayeredRisers (std::vector<Builder>&);
+
+    /** The Complex patches (WaveSynthPatchesComplex.cpp): four oscillators or more each, in a list of their own. */
+    void addComplex (std::vector<Builder>&);
 
     /** The second bank's patches by name: the ones Tests/WaveSynthBankTests.cpp holds to its limits. */
     const juce::StringArray& secondBankNames();
