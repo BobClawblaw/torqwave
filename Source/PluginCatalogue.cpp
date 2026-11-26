@@ -1,4 +1,5 @@
 #include "PluginCatalogue.h"
+#include "BuiltInEffects.h"
 
 namespace
 {
@@ -66,13 +67,19 @@ juce::var PluginCatalogue::parameterFacts (juce::AudioProcessorParameter& p, boo
     return entry;
 }
 
+int PluginCatalogue::parameterLimit (const juce::PluginDescription& d)
+{
+    return d.pluginFormatName == BuiltInEffects::formatName ? std::numeric_limits<int>::max() : maxParameters;
+}
+
 juce::var PluginCatalogue::factsOf (juce::AudioPluginInstance& plugin)
 {
     juce::Array<juce::var> list;
     const auto& parameters = plugin.getParameters();
+    const auto limit = parameterLimit (plugin.getPluginDescription());
 
     for (auto* p : parameters)
-        if (list.size() < maxParameters)
+        if (list.size() < limit)
             list.add (parameterFacts (*p, false));
 
     auto result = newObject();

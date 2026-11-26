@@ -29,7 +29,7 @@ public:
 
     //==============================================================================
     /** The facts of a plug-in that is open: { parameters: [...], parameterCount, inputs, outputs,
-        latency, programs: [...], programCount }. At most maxParameters parameters and maxPrograms
+        latency, programs: [...], programCount }. At most parameterLimit's parameters and maxPrograms
         program (preset) names are listed; the counts say how many there are. */
     static juce::var factsOf (juce::AudioPluginInstance&);
 
@@ -38,6 +38,10 @@ public:
     static juce::var parameterFacts (juce::AudioProcessorParameter&, bool currentValue);
 
     static constexpr int maxParameters = 400, maxPrograms = 128;
+
+    /** How many of a plug-in's parameters Ask Torq is shown: all of Torqwave's own (its built-in format), whose
+        names it knows, and maxParameters of any other maker's, to keep the replies short for small models. */
+    static int parameterLimit (const juce::PluginDescription&);
 
     /** 2: the presets' names were added. */
     static constexpr int factsVersion = 2;

@@ -37,7 +37,7 @@ namespace
     }
 
     // An instrument's parameters named to the model: all of Torqwave Synth's 376, with room.
-    constexpr int maxNotes = 4096, maxPoints = 2048, maxSuggestions = 12, maxParameters = 400;
+    constexpr int maxNotes = 4096, maxPoints = 2048, maxSuggestions = 12;
 
     const char* notesSchema = R"JSON({ "type": "array", "items": { "type": "object", "properties": {
         "pitch": { "type": "integer", "description": "MIDI note, 0 to 127: 60 is middle C, C4 (so C2 is 36)" },
@@ -265,8 +265,8 @@ namespace Ai
 
         juce::StringArray parameters;
 
-        for (int i = 0; i < juce::jmin (maxParameters, c.instrumentParameters.size()); ++i)
-            parameters.add (c.instrumentParameters[i]);
+        for (auto& name : c.instrumentParameters)
+            parameters.add (name);
 
         auto result = object ({ { "ok", true },
                                 { "name", q.name },
@@ -786,8 +786,10 @@ namespace Ai
                 if (catalogue != nullptr)
                     c.instrumentAbout = catalogue->summaryOf (instrument->getPluginDescription());
 
+                const auto limit = PluginCatalogue::parameterLimit (instrument->getPluginDescription());
+
                 for (auto* p : instrument->getParameters())
-                    if (c.instrumentParameters.size() < maxParameters)
+                    if (c.instrumentParameters.size() < limit)
                         if (const auto name = p->getName (64).trim(); name.isNotEmpty())
                             c.instrumentParameters.addIfNotAlreadyThere (name);
             }

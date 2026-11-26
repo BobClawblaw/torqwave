@@ -27,13 +27,13 @@ WARPS = ["off", "sync", "bend", "squeeze", "mirror", "fm", "crush", "fold"]
 FILTERS = ["off", "ladder24", "ladder12", "ladderHigh", "ladderBand", "svfLow", "svfBand", "svfHigh", "svfNotch", "comb"]
 SHAPES = ["sine", "triangle", "sawUp", "sawDown", "square", "random", "drift", "steps"]
 SOURCES = ["none", "amp", "env2", "env3", "env4", "lfo1", "lfo2", "velocity", "modWheel", "aftertouch", "key",
-           "macro1", "macro2", "macro3", "macro4", "random"]
+           "macro1", "macro2", "macro3", "macro4", "random", "lfo3", "lfo4"]
 OSC_FIELDS = ["Position", "WarpAmount", "Pitch", "Fine", "Volume", "Pan", "UnisonDetune", "UnisonSpread", "Route"]
 FIRST = ["subLevel", "noiseLevel", "noiseColour", "filter1Cutoff", "filter1Resonance", "filter1Drive",
          "filter2Cutoff", "filter2Resonance", "filter2Drive", "ampLevel", "ampPan", "lfo1Rate", "lfo2Rate",
          "fxDriveAmount", "fxChorusMix", "fxPhaserMix", "fxDelayMix", "fxDelayFeedback", "fxReverbMix"]
 DESTINATIONS = ([f"osc{o}{f}" for o in range(1, 4) for f in OSC_FIELDS] + FIRST
-                + [f"osc{o}{f}" for o in range(4, 10) for f in OSC_FIELDS])
+                + [f"osc{o}{f}" for o in range(4, 10) for f in OSC_FIELDS] + ["lfo3Rate", "lfo4Rate"])
 
 DEFAULTS = {"osc1On": 1, "osc1Position": 66.67, "filter1Type": 1, "filter1Cutoff": 8000, "env1Attack": 2,
             "env1Decay": 300, "env1Sustain": 80, "env1Release": 120}
@@ -80,7 +80,7 @@ def fingerprint(v):
     named = {f for o, f in fm_from.items() if f and int(value(v, f"osc{o}Warp")) == 5}
     level_modded = set()
 
-    for s in range(1, 17):
+    for s in range(1, 25):
         src, dst = int(value(v, f"mod{s}Source")), int(value(v, f"mod{s}Destination"))
         if src and dst:
             d = DESTINATIONS[dst - 1]
@@ -147,7 +147,7 @@ def fingerprint(v):
         if value(v, f"fx{fx}On") > 0.5 and value(v, f"fx{fx}Mix") >= 10:
             tokens[f"fx:{fx.lower()}"] += 0.5
 
-    for s in range(1, 17):
+    for s in range(1, 25):
         src, dst = int(value(v, f"mod{s}Source")), int(value(v, f"mod{s}Destination"))
         if not src or not dst or abs(value(v, f"mod{s}Amount")) < 5:
             continue

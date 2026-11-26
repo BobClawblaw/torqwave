@@ -620,7 +620,7 @@ namespace
             auto r = getLocalBounds().toFloat();
             drawDisplayWell (g, r, 16, 4);
             const auto box = inner();
-            const auto colour = SoundControls::sourceColour (4 + index);
+            const auto colour = SoundControls::sourceColour (WaveSynth::lfoSource (index) - 1);
             g.setColour (Theme::overlay.withAlpha (0.1f));
             g.drawHorizontalLine ((int) box.getCentreY(), box.getX(), box.getRight());
 
@@ -1496,7 +1496,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         : synth (s),
           presets (EffectPresets::userStore(), s.getPresetKey(), [&s] { return s.getPresetValues(); },
                    [&s] (const EffectPresets::Values& v) { s.setPresetValues (v); }),
-          browser (s), modPages ({ "Slots 1-8", "Slots 9-16", "Effects" }), viewPages ({ "Knobs", "Decrypt", "Decrypted" }),
+          browser (s), modPages ({ "Slots 1-8", "Slots 9-16", "Slots 17-24", "Effects" }), viewPages ({ "Knobs", "Decrypt", "Decrypted" }),
           envelopeView (s), lfoView (s)
     {
         addAndMakeVisible (browser);
@@ -1587,11 +1587,12 @@ struct WaveSynthEditor::Content final : public juce::Component
         // The modulators: envelopes and LFOs behind tabs that are also their sources.
         modulatorPanel = std::make_unique<Panel> ("Envelopes + LFOs");
         addAndMakeVisible (*modulatorPanel);
-        const juce::StringArray tabNames { "Amp Env", "Env 2", "Env 3", "Env 4", "LFO 1", "LFO 2" };
+        const juce::StringArray tabNames { "Amp", "Env 2", "Env 3", "Env 4", "LFO 1", "LFO 2", "LFO 3", "LFO 4" };
 
-        for (int i = 0; i < 6; ++i)
+        for (int i = 0; i < oscLevelsPage; ++i)
         {
-            auto tab = std::make_unique<SourceTab> (i + 1, tabNames[i]);
+            const auto source = i < WaveSynth::numEnvelopes ? WaveSynth::env1 + i : WaveSynth::lfoSource (i - WaveSynth::numEnvelopes);
+            auto tab = std::make_unique<SourceTab> (source, tabNames[i]);
             tab->onClick = [this, i] { showModulator (i); };
             modulatorPanel->addAndMakeVisible (*tab);
             tabs.push_back (std::move (tab));
@@ -1599,7 +1600,7 @@ struct WaveSynthEditor::Content final : public juce::Component
 
         levelsTab = std::make_unique<PlainTab> ("Osc Levels");
         levelsTab->setTooltip ("Each oscillator's own level envelope: attack, hold, decay and sustain on its level, so layers come and go by themselves");
-        levelsTab->onClick = [this] { showModulator (6); };
+        levelsTab->onClick = [this] { showModulator (oscLevelsPage); };
         modulatorPanel->addAndMakeVisible (*levelsTab);
 
         for (int o = 0; o < WaveSynth::numOscillators; ++o)
@@ -1641,7 +1642,7 @@ struct WaveSynthEditor::Content final : public juce::Component
             c.phase = knob (*modulatorPanel, n + "Phase", "Phase", Knob::Size::small);
             c.fade = knob (*modulatorPanel, n + "Fade", "Fade In", Knob::Size::small);
             c.smooth = knob (*modulatorPanel, n + "Smooth", "Smooth", Knob::Size::small);
-            for (auto* k : { c.rate, c.phase, c.fade, c.smooth }) k->setColour (sourceColour (4 + l));
+            for (auto* k : { c.rate, c.phase, c.fade, c.smooth }) k->setColour (sourceColour (WaveSynth::lfoSource (l) - 1));
             lfos.push_back (c);
         }
 
@@ -1790,13 +1791,13 @@ struct WaveSynthEditor::Content final : public juce::Component
     //==========================================================================
     void showModulator (int index)
     {
-        modulator = juce::jlimit (0, 6, index);
+        modulator = juce::jlimit (0, oscLevelsPage, index);
 
         for (int i = 0; i < (int) tabs.size(); ++i)
             tabs[(size_t) i]->setHighlighted (i == modulator);
 
-        levelsTab->setHighlighted (modulator == 6);
-        const auto isEnvelope = modulator < 4, isLfo = modulator == 4 || modulator == 5;
+        levelsTab->setHighlighted (modulator == oscLevelsPage);
+        const auto isEnvelope = modulator < 4, isLfo = modulator >= 4 && modulator < oscLevelsPage;
         envelopeView.setVisible (isEnvelope);
         lfoView.setVisible (isLfo);
 
@@ -1807,7 +1808,7 @@ struct WaveSynthEditor::Content final : public juce::Component
 
         for (int o = 0; o < (int) levels.size(); ++o)
         {
-            const auto shown = modulator == 6 && onPage (o);
+            const auto shown = modulator == oscLevelsPage && onPage (o);
             levels[(size_t) o].on->setVisible (shown);
             for (auto* k : levels[(size_t) o].knobs) k->setVisible (shown);
         }
@@ -1875,9 +1876,9 @@ struct WaveSynthEditor::Content final : public juce::Component
                 c->setVisible (index == i / 8);
 
         for (auto& e : effects)
-            e.panel->setVisible (index == 2);
+            e.panel->setVisible (index == effectsPage);
 
-        rightPanel->setTitle (index == 2 ? "Effects" : "Modulation Slots");
+        rightPanel->setTitle (index == effectsPage ? "Effects" : "Modulation Slots");
         rightPanel->repaint();
     }
 
@@ -2160,7 +2161,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         auto c = modulatorPanel->getContentBounds();
         auto tabRow = c.removeFromTop (22);
         levelsTab->setBounds (tabRow.removeFromRight (78).reduced (2, 0));
-        const auto tabWidth = tabRow.getWidth() / 6;
+        const auto tabWidth = tabRow.getWidth() / (int) tabs.size();
 
         for (auto& t : tabs)
             t->setBounds (tabRow.removeFromLeft (tabWidth).reduced (2, 0));
@@ -2174,7 +2175,7 @@ struct WaveSynthEditor::Content final : public juce::Component
         c.removeFromTop (6);
         c.removeFromBottom (6);
 
-        if (modulator == 6)
+        if (modulator == oscLevelsPage)
         {
             // The level envelopes of the oscillators on the page: a row each, its switch and four knobs.
             const auto h = c.getHeight() / WaveSynth::numFirstOscillators;
@@ -2245,7 +2246,7 @@ struct WaveSynthEditor::Content final : public juce::Component
     void layoutRight()
     {
         auto header = rightPanel->getHeaderBounds();
-        modPages.setBounds (header.removeFromRight (236).reduced (0, 1));
+        modPages.setBounds (header.removeFromRight (316).reduced (0, 1));
         auto c = rightPanel->getContentBounds();
 
         // The slots, eight to a page: two columns of four, each a source, a destination and an amount.

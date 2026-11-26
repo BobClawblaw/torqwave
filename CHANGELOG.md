@@ -4,6 +4,14 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Torqwave Synth: LFOs 3 and 4, and 24 modulation slots**
+- **Two more LFOs**, as LFO 1 and 2 are (eight shapes, free or synced, retriggered, free or one-shot, a fade-in, 16 steps), on tabs beside them, each a source to drag onto a knob. Their rates are destinations too, under **LFOs 3 and 4** in a slot's menu.
+- **Slots 17 to 24**, on a third page (**Slots 1-8**, **Slots 9-16**, **Slots 17-24**, **Effects**).
+- **Nothing old changes:** the new settings come after every earlier one and are off until used, so every factory and Complex patch, preset, the reference renders and the saved sessions in the fixtures render sample for sample as 0.22.0 rendered them. A session's lane drawn on a slot's Source or Destination before this keeps its choice in the longer menus.
+- **Ask Torq** is shown all of Torqwave's own instruments' and effects' settings (the synth now has 448); another maker's plug-in is still listed to its first 400.
+- An envelope's or LFO's tab, and the drag chips, are drawn in the colour of its knobs and rings (each had taken the next source's colour).
+- Tested: `--synth-identity` (all four), `--synth` (LFOs 3 and 4 render as LFO 1 does, sample for sample; slot 24 as slot 1; every source and destination; the old lanes' choices kept), `--ai` (each built-in's full list, a 450-setting plug-in cut at 400) and `--instruments`.
+
 ## Released
 
 **Release 0.22.0: nine oscillators in Torqwave Synth, and a Sequence Library rewritten**

@@ -86,7 +86,8 @@ juce::Colour sourceColour (int index)
         0xff4dd0e1, 0xff5c9dff,                           // LFOs
         0xff7bd88f, 0xffb4e05a, 0xff52d6b0, 0xffe0e060,   // velocity, wheel, aftertouch, key
         0xffb388ff, 0xffd17bff, 0xff8f8cff, 0xffe28cff,   // macros
-        0xffc0c0c0, 0xff9ad0ff                            // others
+        0xffc0c0c0,                                       // random
+        0xff9ad0ff, 0xff3fb6ff                            // LFOs 3 and 4
     };
     constexpr auto n = (int) (sizeof (colours) / sizeof (colours[0]));
     return juce::Colour (colours[((index % n) + n) % n]);
@@ -815,13 +816,24 @@ ModSourceChip::ModSourceChip (int sourceIndex, const juce::String& t)
 void ModSourceChip::paint (juce::Graphics& g)
 {
     auto r = getLocalBounds().toFloat().reduced (0.5f);
-    const auto colour = sourceColour (source);
+    const auto colour = sourceColour (source - 1);
     g.setColour (colour.withAlpha (hovered || highlighted ? 0.3f : 0.16f));
     g.fillRoundedRectangle (r, r.getHeight() * 0.5f);
     g.setColour (colour.withAlpha (hovered || highlighted ? 1.0f : 0.7f));
     g.drawRoundedRectangle (r, r.getHeight() * 0.5f, 1.0f);
 
-    // A cross of arrows: this can be dragged.
+    // A cross of arrows: this can be dragged. Left out where the name alone fills the chip (the modulator tabs).
+    const auto font = boldFont (10.5f);
+    const auto fits = juce::GlyphArrangement::getStringWidth (font, text) + r.getHeight() + 8.0f <= r.getWidth();
+
+    if (! fits)
+    {
+        g.setColour (Theme::textStrong);
+        g.setFont (font);
+        g.drawFittedText (text, r.reduced (3.0f, 0.0f).toNearestInt(), juce::Justification::centred, 1, 0.8f);
+        return;
+    }
+
     const auto icon = r.removeFromLeft (r.getHeight()).reduced (r.getHeight() * 0.22f);
     const auto cc = icon.getCentre();
     const auto s = icon.getWidth() * 0.5f;
@@ -840,7 +852,7 @@ void ModSourceChip::paint (juce::Graphics& g)
     g.strokePath (p, juce::PathStrokeType (1.3f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
     g.setColour (Theme::textStrong);
-    g.setFont (boldFont (10.5f));
+    g.setFont (font);
     g.drawFittedText (text, r.withTrimmedRight (6.0f).toNearestInt(), juce::Justification::centredLeft, 1, 0.8f);
 }
 

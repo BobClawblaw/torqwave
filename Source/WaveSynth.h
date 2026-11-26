@@ -7,7 +7,7 @@
     eight unison voices with detune, stereo spread, strum and drift, and a level envelope of its
     own to switch on), a sub and a noise source, two
     filters in series or parallel (a 24 dB ladder and a state-variable filter among their types),
-    four envelopes, two LFOs, sixteen modulation slots, four macros, and drive, chorus, phaser, delay
+    four envelopes, four LFOs, 24 modulation slots, four macros, and drive, chorus, phaser, delay
     and reverb after the voices. Sixteen voices, poly, mono or legato with glide.
 
     Nothing it does steps the sound: a note struck again keeps its waves' phases and its filters'
@@ -17,15 +17,19 @@
     ramped between, so it renders the same at any block size. */
 namespace WaveSynth
 {
-    constexpr int numOscillators = 9, numEnvelopes = 4, numLfos = 2, numSlots = 16, numMacros = 4, numSteps = 16;
+    constexpr int numOscillators = 9, numEnvelopes = 4, numLfos = 4, numSlots = 24, numMacros = 4, numSteps = 16;
+    /** The LFOs and slots it had before 0.23.0: LFOs 3 and 4 and slots 17 to 24 were added after everything else
+        (their parameters, sources and destinations), and are off unless a patch or a session names them. */
+    constexpr int numFirstLfos = 2, numFirstSlots = 16;
     /** The oscillators it had before it had nine: their parameters and destinations come first, those of 4 to 9
         after everything else, so every earlier session, preset and patch keeps its places. Decrypt and the
         signal console's Trace move these three only. */
     constexpr int numFirstOscillators = 3;
     /** The modulation destinations before there were nine oscillators (a slot's menu held these and None). */
     constexpr int numFirstDestinations = 46;
-    /** The destinations: 9 for each oscillator, 19 more (sub, noise, filters, amp, LFO rates, effects). */
-    constexpr int numDestinations = numFirstDestinations + 9 * (numOscillators - numFirstOscillators);
+    /** The destinations: 9 for each oscillator, 19 more (sub, noise, filters, amp, LFO 1 and 2's rates, effects),
+        then LFO 3 and 4's rates. */
+    constexpr int numDestinations = numFirstDestinations + 9 * (numOscillators - numFirstOscillators) + (numLfos - numFirstLfos);
     constexpr int maxUnison = 8, numVoices = 16, numFadingVoices = 8;
     constexpr int controlInterval = 16;
     /** The unison voices that may sound at once, every note's oscillators counted (each on, its unison):
@@ -48,8 +52,12 @@ namespace WaveSynth
         velocity moves glides rather than jumping. */
     constexpr double velocityGlideSeconds = 0.02;
 
-    /** The modulation sources, in this order (index 0 is none). */
-    enum Source { none, env1, env2, env3, env4, lfo1, lfo2, velocity, modWheel, aftertouch, key, macro1, macro2, macro3, macro4, random, numSources };
+    /** The modulation sources, in this order (index 0 is none; added to at the end only, since sessions keep the index). */
+    enum Source { none, env1, env2, env3, env4, lfo1, lfo2, velocity, modWheel, aftertouch, key, macro1, macro2, macro3, macro4, random, lfo3, lfo4, numSources };
+    /** An LFO's source (0 to 3). */
+    constexpr int lfoSource (int l) noexcept      { return l < numFirstLfos ? lfo1 + l : lfo3 + (l - numFirstLfos); }
+    /** The LFO (0 to 3) a source is, or -1. */
+    constexpr int lfoOf (int source) noexcept     { return source == lfo1 || source == lfo2 ? source - lfo1 : source == lfo3 || source == lfo4 ? numFirstLfos + source - lfo3 : -1; }
     const juce::StringArray& sourceNames();
 
     /** The parameters a slot can move, by ID, and their names in its menu, in menu order (added
@@ -68,13 +76,14 @@ namespace WaveSynth
     int oscillatorOf (const juce::String& parameterId);
     /** True for a parameter added with oscillators 4 to 9 (theirs, and each oscillator's FM From). */
     bool isAddedWithNine (const juce::String& parameterId);
-    /** Whether a saved state (as a session keeps it: base64) is Torqwave Synth's from before it had nine
-        oscillators. An automation lane on a slot's Destination then holds values normalised over the 47
-        choices the menu had (None and 46 destinations), which destinationFromBeforeNine puts back on the
-        same destinations among the 101 there are now. */
-    bool stateIsBeforeNine (const juce::String& base64State);
-    float destinationFromBeforeNine (float normalised);
-    bool isSlotDestination (const juce::String& parameterId);
+    /** How many destinations a slot's menu had when a saved state (as a session keeps it: base64) was made: 46
+        before nine oscillators, 100 before LFOs 3 and 4, numDestinations since; 0 if it isn't Torqwave Synth's. An
+        automation lane on a slot's Source or Destination holds values normalised over the menu as it was, which
+        slotChoiceFrom puts back on the same source or destination in the menus there are now. */
+    int destinationsWhenSaved (const juce::String& base64State);
+    /** A slot's Source or Destination lane's value, saved when the menu had `destinationsThen` destinations (and,
+        before LFOs 3 and 4, sources up to Random), as the same choice now; any other parameter's as it is. */
+    float slotChoiceFrom (const juce::String& parameterId, float normalised, int destinationsThen);
 
     enum class FilterType { off, ladder24, ladder12, ladderHigh, ladderBand, svfLow, svfBand, svfHigh, svfNotch, comb };
     const juce::StringArray& filterNames();

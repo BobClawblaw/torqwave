@@ -69,8 +69,12 @@ public:
     /** The knob for a parameter (nullptr if it has none), for tests. */
     SoundControls::Knob* knobFor (const juce::String& id) const;
 
-    /** Shows a section of the lower half: 0 to 3 the envelopes, 4 and 5 the LFOs, 6 the oscillators'
-        level envelopes; and on the right modulation slots 1 to 8 (0), 9 to 16 (1) or the effects (2). */
+    /** The lower half's sections: the envelopes (0 to 3), the LFOs (4 to 7), then the oscillators' level envelopes. */
+    static constexpr int oscLevelsPage = WaveSynth::numEnvelopes + WaveSynth::numLfos;
+    /** The right's pages: eight modulation slots each (slots 1 to 8 are 0), then the effects. */
+    static constexpr int effectsPage = WaveSynth::numSlots / 8;
+
+    /** Shows a section of the lower half (up to oscLevelsPage), and a page on the right (up to effectsPage). */
     void showModulator (int index);
     void showRightPage (int index);
 

@@ -10,7 +10,7 @@ namespace WaveSynth
 const juce::StringArray& sourceNames()
 {
     static const juce::StringArray n { "None", "Amp Env", "Env 2", "Env 3", "Env 4", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch", "Key",
-                                       "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Random" };
+                                       "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Random", "LFO 3", "LFO 4" };
     return n;
 }
 
@@ -68,6 +68,10 @@ namespace
             for (int o = numFirstOscillators + 1; o <= numOscillators; ++o)
                 addOscillator (o);
 
+            // LFOs 3 and 4's rates, after every earlier destination.
+            for (int l = numFirstLfos + 1; l <= numLfos; ++l)
+                add ("lfo" + juce::String (l) + "Rate", "LFO " + juce::String (l) + " Rate");
+
             jassert ((int) all.size() == numDestinations);
             return all;
         }();
@@ -83,6 +87,10 @@ namespace
     enum : int { dSubLevel = 27, dNoiseLevel, dNoiseColour, dF1Cutoff, dF1Res, dF1Drive, dF2Cutoff, dF2Res, dF2Drive, dAmpLevel, dAmpPan,
                  dLfo1Rate, dLfo2Rate, dFxDrive, dFxChorus, dFxPhaser, dFxDelayMix, dFxDelayFeedback, dFxReverb, dEndOfFirst };
     static_assert (dEndOfFirst == numFirstDestinations);
+    /** Where the oscillators' destinations end: LFO 3 and 4's rates come after. */
+    constexpr int dEndOfOscillators = numFirstDestinations + 9 * (numOscillators - numFirstOscillators), dLfo3Rate = dEndOfOscillators;
+    /** An LFO's rate (0 to 3) as a destination. */
+    constexpr int lfoRateDest (int l)    { return l < numFirstLfos ? dLfo1Rate + l : dLfo3Rate + (l - numFirstLfos); }
     enum : int { fPosition, fWarp, fPitch, fFine, fVolume, fPan, fDetune, fSpread, fRoute };
 }
 
@@ -104,7 +112,8 @@ const std::vector<std::pair<int, juce::String>>& destinationSections()
     static const std::vector<std::pair<int, juce::String>> s { { 1, "Oscillator 1" }, { 10, "Oscillator 2" }, { 19, "Oscillator 3" }, { 28, "Sub and Noise" },
                                                                 { 31, "Filters" }, { 37, "Amp" }, { 39, "LFOs" }, { 41, "Effects" },
                                                                 { 47, "Oscillator 4" }, { 56, "Oscillator 5" }, { 65, "Oscillator 6" },
-                                                                { 74, "Oscillator 7" }, { 83, "Oscillator 8" }, { 92, "Oscillator 9" } };
+                                                                { 74, "Oscillator 7" }, { 83, "Oscillator 8" }, { 92, "Oscillator 9" },
+                                                                { 101, "LFOs 3 and 4" } };
     return s;
 }
 
@@ -134,26 +143,39 @@ bool isAddedWithNine (const juce::String& id)
     return oscillatorOf (id) > numFirstOscillators || id.endsWith ("FmFrom");
 }
 
-bool stateIsBeforeNine (const juce::String& base64State)
+int destinationsWhenSaved (const juce::String& base64State)
 {
     juce::MemoryBlock data;
 
     if (! data.fromBase64Encoding (base64State))
-        return false;
+        return 0;
 
     const auto xml = juce::AudioProcessor::getXmlFromBinary (data.getData(), (int) data.getSize());
-    return xml != nullptr && PreviousName::hasTag (*xml, "TORQWAVE_BASIC_SYNTH") && ! xml->hasAttribute ("osc4On");
+
+    if (xml == nullptr || ! PreviousName::hasTag (*xml, "TORQWAVE_BASIC_SYNTH"))
+        return 0;
+
+    if (! xml->hasAttribute ("osc4On"))   return numFirstDestinations;
+    if (! xml->hasAttribute ("lfo3Rate")) return numDestinations - (numLfos - numFirstLfos);
+    return numDestinations;
 }
 
-float destinationFromBeforeNine (float normalised)
+float slotChoiceFrom (const juce::String& id, float normalised, int destinationsThen)
 {
-    const auto index = juce::roundToInt (juce::jlimit (0.0f, 1.0f, normalised) * (float) numFirstDestinations);
-    return (float) index / (float) numDestinations;
-}
+    if (! id.startsWith ("mod") || id.substring (3).getIntValue() < 1 || destinationsThen <= 0 || destinationsThen >= numDestinations)
+        return normalised;
 
-bool isSlotDestination (const juce::String& id)
-{
-    return id.startsWith ("mod") && id.endsWith ("Destination") && id.substring (3).getIntValue() >= 1;
+    // A choice's value is its index over the last index: the destinations follow None, and the sources before
+    // LFOs 3 and 4 ended at Random.
+    const auto from = [normalised] (int lastThen, int lastNow)
+    {
+        const auto index = juce::roundToInt (juce::jlimit (0.0f, 1.0f, normalised) * (float) lastThen);
+        return (float) index / (float) lastNow;
+    };
+
+    if (id.endsWith ("Destination"))  return from (destinationsThen, numDestinations);
+    if (id.endsWith ("Source"))       return from (random, numSources - 1);
+    return normalised;
 }
 
 const juce::StringArray& filterNames()
@@ -658,6 +680,9 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
             if (! s.idle[(size_t) o])
                 for (int f = 0; f < 9; ++f)
                     s.base[(size_t) oscDest (o, f)] = destP[(size_t) oscDest (o, f)]->getValue();
+
+        for (int d = dEndOfOscillators; d < numDestinations; ++d)
+            s.base[(size_t) d] = destP[(size_t) d]->getValue();
 
         s.subOctave = subOctave->getIndex() + 1;
         s.subShape = subShape->getIndex();
@@ -1318,7 +1343,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         if (s.sync)
             return bpm / 60.0 / s.beats;
 
-        return destP[(size_t) (dLfo1Rate + l)]->convertFrom0to1 (rateNormalised);
+        return destP[(size_t) lfoRateDest (l)]->convertFrom0to1 (rateNormalised);
     }
 
     float sourceValue (const Voice* v, int source) const noexcept
@@ -1326,7 +1351,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         switch (source)
         {
             case env1: case env2: case env3: case env4: return v != nullptr ? v->env[(size_t) (source - env1)].level : 0.0f;
-            case lfo1: case lfo2: return v != nullptr ? v->lfoValue[(size_t) (source - lfo1)] : globalLfoValue[(size_t) (source - lfo1)];
+            case lfo1: case lfo2: case lfo3: case lfo4: return v != nullptr ? v->lfoValue[(size_t) lfoOf (source)] : globalLfoValue[(size_t) lfoOf (source)];
             case velocity:   return v != nullptr ? v->velocity : 0.0f;
             case modWheel:   return wheel;
             case aftertouch: return juce::jmax (channelPressure, v != nullptr && v->note >= 0 ? polyPressure[(size_t) v->note] : 0.0f);
@@ -1350,6 +1375,9 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 if (! shared.idle[(size_t) o])
                     for (int f = 0; f < 9; ++f)
                         each (oscDest (o, f));
+
+            for (int d = dEndOfOscillators; d < numDestinations; ++d)
+                each (d);
         };
 
         inUse ([&] (int d) { value[(size_t) d] = shared.base[(size_t) d]; });
@@ -1377,7 +1405,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     /** A destination of an idle oscillator, whose settings aren't worked out. */
     bool idleDestination (int d) const noexcept
     {
-        return d >= numFirstDestinations && shared.idle[(size_t) (numFirstOscillators + (d - numFirstDestinations) / 9)];
+        return d >= numFirstDestinations && d < dEndOfOscillators && shared.idle[(size_t) (numFirstOscillators + (d - numFirstDestinations) / 9)];
     }
 
     float plain (int d, float normalised) const   { return destP[(size_t) d]->convertFrom0to1 (normalised); }
@@ -1924,7 +1952,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
         for (int l = 0; l < numLfos; ++l)
         {
-            const auto hz = lfoHz (l, global[(size_t) (dLfo1Rate + l)]);
+            const auto hz = lfoHz (l, global[(size_t) lfoRateDest (l)]);
             globalLfoPhase[(size_t) l] += hz * controlInterval / rate;
             globalLfoValue[(size_t) l] = lfoShape (shared.lfo[(size_t) l].shape, globalLfoPhase[(size_t) l] + shared.lfo[(size_t) l].phase, shared.lfo[(size_t) l].steps);
         }
@@ -1945,7 +1973,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
             }
 
             for (int l = 0; l < numLfos; ++l)
-                v.lfoPhase[(size_t) l] += lfoHz (l, v.value[(size_t) (dLfo1Rate + l)]) * controlInterval / rate;
+                v.lfoPhase[(size_t) l] += lfoHz (l, v.value[(size_t) lfoRateDest (l)]) * controlInterval / rate;
 
             if (v.filterRise > 0.0f)
             {
@@ -2458,7 +2486,7 @@ BasicSynthProcessor::BasicSynthProcessor()
     keep (addFloat ("glideTime", "Glide", time (2000.0f), 0.0f, "ms"));
     keep (addFloat ("bendRange", "Bend Range", { 0.0f, 24.0f, 1.0f }, 2.0f, "st"));
 
-    for (int l = 1; l <= numLfos; ++l)
+    const auto addLfo = [&] (int l)
     {
         const auto id = "lfo" + juce::String (l);
         const auto name = "LFO " + juce::String (l) + " ";
@@ -2477,7 +2505,10 @@ BasicSynthProcessor::BasicSynthProcessor()
             const auto start = (s % 4 == 1) ? 100.0f : (s % 2 == 0 ? -40.0f : 30.0f);
             keep (addFloat (id + "Step" + juce::String (s), name + "Step " + juce::String (s), bipolar, start, "+%"));
         }
-    }
+    };
+
+    for (int l = 1; l <= numFirstLfos; ++l)
+        addLfo (l);
 
     juce::StringArray destinationChoices { "None" };
     destinationChoices.addArray (destinationNames());
@@ -2524,7 +2555,7 @@ BasicSynthProcessor::BasicSynthProcessor()
 
     // Added in 0.20.0's signal console, after the rest so every earlier parameter keeps its place:
     // slots 9 to 16, and a level envelope for each oscillator (off: its level as the knob has it).
-    for (int s = 9; s <= numSlots; ++s)
+    for (int s = 9; s <= numFirstSlots; ++s)
         addSlot (s);
 
     const auto addLevelEnvelope = [&] (int o)
@@ -2551,6 +2582,14 @@ BasicSynthProcessor::BasicSynthProcessor()
 
     for (int o = 1; o <= numOscillators; ++o)
         keep (addChoice ("osc" + juce::String (o) + "FmFrom", "Osc " + juce::String (o) + " FM From", fmFromNames(), 0));
+
+    // Added in 0.23.0, after everything else so every earlier parameter keeps its place: LFOs 3 and 4, and slots
+    // 17 to 24. A slot is off until it has a source, so a patch or session that doesn't name them sounds as it did.
+    for (int l = numFirstLfos + 1; l <= numLfos; ++l)
+        addLfo (l);
+
+    for (int s = numFirstSlots + 1; s <= numSlots; ++s)
+        addSlot (s);
 
     engine = std::make_unique<Engine> (*this);
     engine->bind();

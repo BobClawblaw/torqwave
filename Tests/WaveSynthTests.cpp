@@ -444,10 +444,10 @@ namespace
         {
             Theme::apply (Theme::make (theme, "Blue"));
 
-            for (int page = 0; page < 7; ++page)
+            for (int page = 0; page <= WaveSynthEditor::oscLevelsPage; ++page)
             {
                 window->showModulator (page);
-                window->showRightPage (page % 3);
+                window->showRightPage (page % (WaveSynthEditor::effectsPage + 1));
                 window->showOscillatorPage (page % 3);
                 window->refresh();
                 const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
@@ -532,7 +532,7 @@ namespace
                "synth window: a click on oscillator 8's cell shows oscillators 7 to 9 in the three panels (8 where 2 was), and a click on its dot switches it on");
 
         // The Osc Levels page shows the page's three.
-        window.showModulator (6);
+        window.showModulator (WaveSynthEditor::oscLevelsPage);
         const auto levelsThird = knobShown ("osc7EnvAttack") && knobShown ("osc9EnvSustain") && ! knobShown ("osc1EnvAttack");
         window.showOscillatorPage (1);
         const auto levelsSecond = knobShown ("osc4EnvAttack") && knobShown ("osc6EnvDecay") && ! knobShown ("osc7EnvAttack") && knobShown ("osc5Position");
@@ -758,6 +758,8 @@ namespace
         set (synth, "ampLevel", -12.0f);
         set (synth, "lfo1Rate", 3.0f);
         set (synth, "lfo2Rate", 1.0f);
+        set (synth, "lfo3Rate", 2.0f);
+        set (synth, "lfo4Rate", 0.7f);
 
         for (auto fx : { "Drive", "Chorus", "Phaser", "Delay", "Reverb" })
             set (synth, "fx" + juce::String (fx) + "On", 1.0f);
@@ -767,6 +769,8 @@ namespace
         // The LFOs heard, so their rates are.
         synth.addModulation (WaveSynth::lfo1, "osc2Position", 0.2f);
         synth.addModulation (WaveSynth::lfo2, "filter2Cutoff", 0.1f);
+        synth.addModulation (WaveSynth::lfo3, "osc3Position", 0.2f);
+        synth.addModulation (WaveSynth::lfo4, "filter1Cutoff", 0.1f);
     }
 
     void testModulation (Synth& synth)
@@ -993,7 +997,7 @@ namespace
                    + " through its 100 ms hold, with the amp envelope open; its 300 ms decay to 25 % is at " + juce::String (settled, 4) + " 300 ms on and "
                    + juce::String (later, 3) + " after; switched off, the oscillator plays as it did, sample for sample");
 
-        // Slot 16 does what slot 1 does.
+        // Slots 16 and 24 do what slot 1 does.
         const auto routed = [&synth] (int slot)
         {
             synth.loadPatch ("Warehouse Sub");
@@ -1005,9 +1009,38 @@ namespace
             return play (synth, held ({ 36, 43 }, 0.5), 36000);
         };
         const auto none = [&synth] { synth.loadPatch ("Warehouse Sub"); for (int i = 1; i <= WaveSynth::numSlots; ++i) set (synth, "mod" + juce::String (i) + "Source", 0.0f); return play (synth, held ({ 36, 43 }, 0.5), 36000); }();
-        const auto one = routed (1), sixteen = routed (16);
-        check (WaveSynth::numSlots == 16 && synth.parameter ("mod16Amount") != nullptr && sameSamples (one, sixteen) && ! sameSamples (one, none),
-               "synth: sixteen modulation slots, and envelope 2 to the cutoff in slot 16 renders the same as in slot 1, sample for sample");
+        const auto one = routed (1), sixteen = routed (16), last = routed (24);
+        check (WaveSynth::numSlots == 24 && synth.parameter ("mod24Amount") != nullptr && sameSamples (one, sixteen) && sameSamples (one, last) && ! sameSamples (one, none),
+               "synth: 24 modulation slots, and envelope 2 to the cutoff in slot 16 or slot 24 renders the same as in slot 1, sample for sample");
+
+        // LFOs 3 and 4 do what LFO 1 does: each set as LFO 1 is (a synced triangle, then a free square with a fade),
+        // routed to the cutoff by itself, renders the same, sample for sample; and its rate as a destination moves it.
+        const auto byLfo = [&synth] (int l, bool synced, float rateMacro)
+        {
+            synth.loadPatch ("Warehouse Sub");
+            for (int i = 1; i <= WaveSynth::numSlots; ++i) set (synth, "mod" + juce::String (i) + "Source", 0.0f);
+            const auto n = "lfo" + juce::String (l + 1);
+            set (synth, n + "Shape", synced ? 1.0f : 4.0f);
+            set (synth, n + "Sync", synced ? 1.0f : 0.0f);
+            set (synth, n + "Division", 10.0f);
+            set (synth, n + "Rate", 3.0f);
+            set (synth, n + "Mode", synced ? 1.0f : 0.0f);
+            set (synth, n + "Fade", synced ? 0.0f : 200.0f);
+            set (synth, "macro1", rateMacro);
+            synth.addModulation (WaveSynth::lfoSource (l), "filter1Cutoff", 0.3f);
+            synth.addModulation (WaveSynth::macro1, n + "Rate", 0.3f);
+            return play (synth, held ({ 36, 43 }, 0.8), 48000);
+        };
+        auto sameAsFirst = true;
+
+        for (auto synced : { true, false })
+            for (int l = WaveSynth::numFirstLfos; l < WaveSynth::numLfos; ++l)
+                sameAsFirst = sameAsFirst && sameSamples (byLfo (0, synced, 0.0f), byLfo (l, synced, 0.0f)) && sameSamples (byLfo (0, synced, 100.0f), byLfo (l, synced, 100.0f));
+
+        const auto rateMoves = ! sameSamples (byLfo (3, false, 0.0f), byLfo (3, false, 100.0f));
+        check (WaveSynth::numLfos == 4 && sameAsFirst && rateMoves && WaveSynth::sourceNames()[WaveSynth::lfo4] == "LFO 4" && WaveSynth::destinationIds().contains ("lfo4Rate"),
+               "synth: LFOs 3 and 4, set as LFO 1 is (synced, or free with a fade) and routed to the cutoff, render as LFO 1 does, sample for sample, "
+               "with a macro on their rates too; and LFO 4's rate as a destination changes the sound");
 
         // A patch saved with eight slots (none of the new settings in its state) loads as it was.
         synth.loadPatch ("Acid Corrosion");
@@ -1036,8 +1069,33 @@ namespace
         set (third, "mod12Source", (float) WaveSynth::lfo1);   // set here, absent from the old state: must not survive a patch's defaults
         third.loadPatch (0);
         third.setStateInformation (old.getData(), (int) old.getSize());
-        check (removed == 8 * 3 + 3 * 5 && sameSamples (before, play (third, held ({ 45 }, 0.5), 36000)),
+        check (removed == (WaveSynth::numSlots - 8) * 3 + 3 * 5 && sameSamples (before, play (third, held ({ 45 }, 0.5), 36000)),
                "synth: a state saved with eight slots and no level envelopes (the " + juce::String (removed) + " new settings taken out of it) loads and plays as it was, sample for sample");
+
+        // A session's lane on a slot's Source or Destination saved before LFOs 3 and 4 keeps its choice: values over the
+        // menus as they were (16 sources, 100 destinations) put back on the same ones in the longer menus.
+        {
+            const auto base64 = [] (const juce::XmlElement& x) { juce::MemoryBlock b; juce::AudioProcessor::copyXmlToBinary (x, b); return b.toBase64Encoding(); };
+            juce::MemoryBlock now;
+            synth.getStateInformation (now);
+            auto current = juce::AudioProcessor::getXmlFromBinary (now.getData(), (int) now.getSize());
+            auto older = std::make_unique<juce::XmlElement> (*current);
+            for (auto id : { "lfo3Rate", "lfo4Rate" }) older->removeAttribute (id);
+            auto oldest = std::make_unique<juce::XmlElement> (*older);
+            oldest->removeAttribute ("osc4On");
+            const auto thenNow = WaveSynth::destinationsWhenSaved (base64 (*current)), thenOlder = WaveSynth::destinationsWhenSaved (base64 (*older)),
+                       thenOldest = WaveSynth::destinationsWhenSaved (base64 (*oldest));
+            const auto choice = [] (float normalised, int last) { return juce::roundToInt (normalised * (float) last); };
+            const auto randomThen = (float) WaveSynth::random / 15.0f, lastThen = 1.0f, cutoffThen = 37.0f / 100.0f;
+            const auto ok = thenNow == WaveSynth::numDestinations && thenOlder == 100 && thenOldest == 46
+                            && choice (WaveSynth::slotChoiceFrom ("mod3Source", randomThen, thenOlder), WaveSynth::numSources - 1) == WaveSynth::random
+                            && choice (WaveSynth::slotChoiceFrom ("mod20Destination", lastThen, thenOlder), WaveSynth::numDestinations) == 100
+                            && choice (WaveSynth::slotChoiceFrom ("mod1Destination", cutoffThen, thenOlder), WaveSynth::numDestinations) == 37
+                            && juce::exactlyEqual (WaveSynth::slotChoiceFrom ("mod1Amount", 0.3f, thenOlder), 0.3f)
+                            && juce::exactlyEqual (WaveSynth::slotChoiceFrom ("mod1Source", 0.4f, thenNow), 0.4f);
+            check (ok, "synth: a lane on a slot's Source or Destination saved before LFOs 3 and 4 (or before nine oscillators) keeps its choice: Random stays Random "
+                       "and the last destination (oscillator 9's Route) stays it in the longer menus; a lane saved since, and an Amount, are left as they are");
+        }
 
         // No clicks: a Sampled table with its level envelope struck again and again, a steal, and All Sound Off.
         bare (synth);
@@ -1331,10 +1389,12 @@ namespace
                 firstIds = (firstIds ^ (juce::uint64) c) * 1099511628211ull;
 
         const auto idAt = [&all] (int i) { return dynamic_cast<juce::RangedAudioParameter*> (all[i])->paramID; };
-        check (all.size() == 376 && firstIds == 0x76c5005fb974585bull && idAt (235) == "osc4On" && idAt (366) == "osc9EnvSustain" && idAt (367) == "osc1FmFrom"
-                   && WaveSynth::destinationIds().size() == 100 && WaveSynth::destinationIds()[45] == "fxReverbMix" && WaveSynth::destinationIds()[46] == "osc4Position",
-               "synth: nine oscillators, 376 parameters: the first 235 as 0.21.1 had them, in its order, then oscillators 4 to 9 and each one's FM From; "
-               "100 modulation destinations, the first 46 where they were");
+        check (all.size() == 448 && firstIds == 0x76c5005fb974585bull && idAt (235) == "osc4On" && idAt (366) == "osc9EnvSustain" && idAt (367) == "osc1FmFrom"
+                   && idAt (375) == "osc9FmFrom" && idAt (376) == "lfo3Shape" && idAt (447) == "mod24Amount"
+                   && WaveSynth::destinationIds().size() == 102 && WaveSynth::destinationIds()[45] == "fxReverbMix" && WaveSynth::destinationIds()[46] == "osc4Position"
+                   && WaveSynth::destinationIds()[99] == "osc9Route" && WaveSynth::destinationIds()[100] == "lfo3Rate",
+               "synth: nine oscillators and four LFOs, 448 parameters: the first 235 as 0.21.1 had them, in its order, then oscillators 4 to 9 and each one's "
+               "FM From (to 376, as 0.22.0 had them), then LFOs 3 and 4 and slots 17 to 24; 102 modulation destinations, the first 100 where they were");
 
         // Off, 4 to 9 change nothing: a patch with them off renders as it does with them switched on and off again.
         synth.loadPatch ("Abyss Reese");
@@ -1448,7 +1508,7 @@ namespace
 
             check (groups.joinIntoString (", ") == "Oscillator 1, Oscillator 2, Oscillator 3, Oscillator 4, Oscillator 5, Oscillator 6, Oscillator 7 (automated), Oscillator 8, "
                                                    "Oscillator 9, Sub and Noise, Filters, Amp and Voice, Envelopes, LFOs, Modulation Slots, Macros, Effects"
-                       && items == 376 && (int) targets.size() == 376 && seventh.size() == 23 && seventh.contains ("Osc 7 Level (automated)") && seventh.contains ("Osc 7 FM From"),
+                       && items == 448 && (int) targets.size() == 448 && seventh.size() == 23 && seventh.contains ("Osc 7 Level (automated)") && seventh.contains ("Osc 7 FM From"),
                    "synth: its automation menu groups its " + juce::String (items) + " parameters in " + juce::String (groups.size())
                        + " sub-menus (an oscillator's 23 in each of nine, then sub and noise, filters, amp and voice, envelopes, LFOs, slots, macros, effects); an automated one marks its group");
         }
@@ -1920,9 +1980,20 @@ void saveSynthWindow (const juce::File& folder)
     set (synth, "osc2EnvOn", 1.0f);
     set (synth, "osc2EnvAttack", 400.0f);
     set (synth, "osc2EnvSustain", 60.0f);
-    window->showModulator (6);
+    window->showModulator (WaveSynthEditor::oscLevelsPage);
     window->showRightPage (1);
     save ("levels");
+
+    // LFO 4 on steps, routed in slot 17 to the cutoff, with slots 17 to 24 beside it.
+    set (synth, "lfo4Shape", 7.0f);
+    set (synth, "lfo4Rate", 4.0f);
+    set (synth, "mod17Source", (float) WaveSynth::lfo4);
+    set (synth, "mod17Destination", (float) (WaveSynth::destinationIds().indexOf ("filter1Cutoff") + 1));
+    set (synth, "mod17Amount", 30.0f);
+    window->showModulator (WaveSynthEditor::oscLevelsPage - 1);
+    window->showRightPage (2);
+    save ("lfo4");
+    set (synth, "mod17Source", 0.0f);
 
     // Oscillators 4 to 6: 4 on a vowel, 5 an FM warp taking oscillator 1, 6 off.
     set (synth, "osc4On", 1.0f);

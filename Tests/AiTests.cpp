@@ -722,6 +722,41 @@ namespace
         return {};
     }
 
+    /** Another maker's plug-in with as many parameters as it is asked for, none of them doing anything. */
+    class ManyParameters final : public juce::AudioPluginInstance
+    {
+    public:
+        explicit ManyParameters (int count)
+        {
+            for (int i = 0; i < count; ++i)
+                addHostedParameter (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("p" + juce::String (i), 1), "Param " + juce::String (i), 0.0f, 1.0f, 0.5f));
+        }
+
+        void fillInPluginDescription (juce::PluginDescription& d) const override
+        {
+            d.name = "Test Many";
+            d.pluginFormatName = "Test";
+            d.fileOrIdentifier = "test-many";
+        }
+
+        const juce::String getName() const override  { return "Test Many"; }
+        void prepareToPlay (double, int) override    {}
+        void releaseResources() override             {}
+        void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override {}
+        double getTailLengthSeconds() const override { return 0.0; }
+        bool acceptsMidi() const override            { return false; }
+        bool producesMidi() const override           { return false; }
+        juce::AudioProcessorEditor* createEditor() override { return nullptr; }
+        bool hasEditor() const override              { return false; }
+        int getNumPrograms() override                { return 1; }
+        int getCurrentProgram() override             { return 0; }
+        void setCurrentProgram (int) override        {}
+        const juce::String getProgramName (int) override { return {}; }
+        void changeProgramName (int, const juce::String&) override {}
+        void getStateInformation (juce::MemoryBlock&) override {}
+        void setStateInformation (const void*, int) override {}
+    };
+
     void testCatalogueStore()
     {
         const juce::TemporaryFile temp (".json");
@@ -2162,14 +2197,14 @@ namespace
                 if (p.id == "strumSync") sync = &p;
             }
 
-        // Torqwave Synth's newest: each oscillator's level envelope, and modulation slots 9 to 16.
+        // Torqwave Synth's newest: each oscillator's level envelope, and modulation slots 9 to 24.
         int levelEnvelopes = 0, lateSlots = 0;
 
         if (! synthChain.empty())
             for (auto& p : synthChain[0].parameters)
             {
                 levelEnvelopes += p.name.endsWith ("Level Envelope") ? 1 : 0;
-                lateSlots += p.name.startsWith ("Mod 9 ") || p.name.startsWith ("Mod 16 ") ? 1 : 0;
+                lateSlots += p.name.startsWith ("Mod 9 ") || p.name.startsWith ("Mod 16 ") || p.name.startsWith ("Mod 24 ") ? 1 : 0;
             }
 
         const auto guitarCount = guitar->getParameters().size(), synthCount = synth->getParameters().size();
@@ -2177,13 +2212,48 @@ namespace
                    && source != nullptr && source->name == "Source" && source->choices.size() == 2 && sync != nullptr && sync->name == "Strum Sync" && sync->choices.size() > 2
                    && synthChain.size() == 1 && (int) synthChain[0].parameters.size() == synthCount && levelEnvelopes == WaveSynth::numOscillators && lateSlots > 0,
                "Ask Torq parameters: every one of StringSwarm's " + juce::String (guitarCount) + " parameters is read for the model, as Torqwave Synth's "
-                   + juce::String (synthCount) + " are, Source and Strum Sync with their choices, and the synth's level envelopes and slots 9 to 16");
+                   + juce::String (synthCount) + " are, Source and Strum Sync with their choices, and the synth's level envelopes and slots 9 to 24");
 
-        // The Sequencer names an instrument's parameters to the model up to 400, and the plug-in catalogue keeps as many.
-        const auto facts = PluginCatalogue::factsOf (*guitar);
-        check (guitarCount <= 400 && synthCount <= 400 && synthCount <= PluginCatalogue::maxParameters && facts["parameters"].size() == guitarCount,
-               "Ask Torq parameters: both instruments' parameters fit under the 400 the Sequencer's tools name and the catalogue keeps (StringSwarm "
-                   + juce::String (guitarCount) + ", Torqwave Synth " + juce::String (synthCount) + ")");
+        // The Sequencer names an instrument's parameters to the model, and the plug-in catalogue keeps them: all of each of
+        // Torqwave's own (every built-in instrument and effect), and 400 of another maker's.
+        {
+            juce::AudioPluginFormatManager formats;
+            formats.addFormat (BuiltInEffects::createFormat());
+            juce::StringArray cut;
+
+            for (auto& d : BuiltInEffects::getDescriptions())
+            {
+                juce::String error;
+
+                if (auto plugin = formats.createPluginInstance (d, 48000.0, 512, error))
+                {
+                    const auto facts = PluginCatalogue::factsOf (*plugin);
+                    if (facts["parameters"].size() != plugin->getParameters().size() || PluginCatalogue::parameterLimit (d) < plugin->getParameters().size())
+                        cut.add (d.name);
+                }
+                else
+                    cut.add (d.name + " (not made)");
+            }
+
+            ManyParameters many (450);
+            const auto manyFacts = PluginCatalogue::factsOf (many);
+            const auto synthFacts = PluginCatalogue::factsOf (*synth);
+
+            // How much longer the Sequencer's context grows with the synth's full list: its names as the model reads them.
+            const auto namesLength = [&synthFacts] (int count)
+            {
+                juce::Array<juce::var> names;
+                for (int i = 0; i < count; ++i) names.add (synthFacts["parameters"][i]["name"]);
+                return juce::JSON::toString (names, true).length();
+            };
+
+            check (cut.isEmpty() && synthFacts["parameters"].size() == synthCount && synthCount > PluginCatalogue::maxParameters
+                       && manyFacts["parameters"].size() == PluginCatalogue::maxParameters && (int) manyFacts["parameterCount"] == 450,
+                   "Ask Torq parameters: every built-in instrument's and effect's parameters are all listed (Torqwave Synth's " + juce::String (synthCount)
+                       + ", their names " + juce::String (namesLength (synthCount)) + " characters against " + juce::String (namesLength (376))
+                       + " for the 376 it had in 0.22.0), and another maker's plug-in with 450 stops at " + juce::String (PluginCatalogue::maxParameters)
+                       + (cut.isEmpty() ? juce::String() : " (cut: " + cut.joinIntoString (", ") + ")"));
+        }
 
         if (source == nullptr || sync == nullptr)
             return;
@@ -2215,10 +2285,13 @@ namespace
         const auto synthAll = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument"})");
         const auto envelopes = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument", "find": "level envelope"})");
         const auto slot16 = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument", "find": "Mod 16 "})");
+        const auto lfo4 = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument", "find": "LFO 4 Rate"})");
+        const auto slot24 = call ("list_effect_parameters", R"({"track": "Synth", "effect": "instrument", "find": "Mod 24 "})");
         check (synthAll["parameters"].size() == 150 && synthAll["note"].toString().contains ("of " + juce::String (synthCount)) && envelopes["parameters"].size() == WaveSynth::numOscillators
-                   && slot16["parameters"].size() > 0,
+                   && slot16["parameters"].size() > 0 && slot24["parameters"].size() == 3 && lfo4["parameters"].size() == 1,
                "Ask Torq parameters: Torqwave Synth's are listed 150 at a time, and find reaches the rest: the " + juce::String (envelopes["parameters"].size())
-                   + " level envelopes' switches and slot 16's " + juce::String (slot16["parameters"].size()) + " settings");
+                   + " level envelopes' switches, slot 16's " + juce::String (slot16["parameters"].size()) + " and slot 24's " + juce::String (slot24["parameters"].size())
+                   + " settings, and LFO 4's rate");
         check (all["parameters"].size() == guitarCount && all["note"].isVoid() && strum["parameters"].size() == 1 && strum["parameters"][0]["choices"].toString().contains (division)
                    && (bool) set["ok"] && made && sourceNow == swarm && syncNow == division,
                "Ask Torq parameters: list_effect_parameters lists all of StringSwarm's, and set_track_effect sets Source to " + swarm.quoted() + " and Strum Sync to " + division.quoted()
