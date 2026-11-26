@@ -37,6 +37,24 @@ Nine oscillators on one note turn to mud unless each has a job. Every Complex pa
 
 A four-oscillator patch takes four of these. A nine-oscillator patch takes them all, or doubles some an octave apart.
 
+## Movement: the rule the first patches were missing
+
+Of the first 58, heard by the user on 2026-11-25: six of the eight nine-oscillator patches first sent were "decent"; a drone was "just low feedback, not interesting at all"; a lead, both subs and a chip patch sounded like patches already in the bank; a drum patch was "derivative from drum machine"; one bass clicked. Then the rule, in the user's words: **"the 4 or more oscillator sounds should really have more movement or dynamic elements."**
+
+So every Complex patch must change, in ways the ear follows:
+
+- **Inside a held note:** layers that enter, leave and swap by their own level envelopes; tables swept; a filter moving for each layer; step patterns and tempo-synced LFOs that put rhythm inside the note; FM that moves. Something heard within a bar, and something larger over four. Slow drift alone does not count.
+- **From playing:** a soft note and a hard note are different sounds, not one sound quieter; the mod wheel, aftertouch and the key's position each do something; four macros that each transform the patch.
+- **The extra oscillators are where the movement comes from.** More oscillators means more that changes, never only more thickness. A patch that would sound the same with three is not a Complex patch.
+- **Measured, so it cannot be skipped:** for a held note, how far the spectrum and the level move within a bar and across four; and how far a soft and a hard note differ beyond their level. The floors are set where the patches the user called decent pass and the static ones fail.
+
+And what the user's verdicts say about categories:
+
+- **Sub:** more oscillators in the sub register add nothing that is heard. A Complex sub is a sub with something moving above it: a growl that opens, a strike, an upper layer that comes and goes.
+- **Drum and Perc:** not a drum machine's sounds again, with Basic Drums beside it. Pitched percussion played across the keys, hits that change with velocity or a macro, tuned metal, a drum that is also a bass.
+- **Drone, pad and the other sustained sounds:** the ones most at risk of nine layers summing to a hum; they need the most movement, and are judged alone, not over a kick.
+- **Like the bank:** the distance from the 3,743 existing patches is set where it rejects the four the user named, and every patch is held to it.
+
 ## What "club ready" is held to
 
 Measured for every patch by the tests, not left to taste:
