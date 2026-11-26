@@ -1,17 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Body Shop Low Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A and D held, the A above joining halfway, for 4 bars, the filter breathing twice" style="Industrial/Techno-body" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Body Shop Low Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A and E held, the flat seventh joining at bar 3, the filter calling in a burst of 16ths and answering it, softer, a bar later" style="Industrial/Techno-body" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
-    <N p="33" s="0" l="15320" v="0.724409"/>
-    <N p="38" s="0" l="15320" v="0.724409"/>
-    <N p="45" s="7680" l="7640" v="0.614173"/>
+    <N p="33" s="0" l="15320" v="0.787402"/>
+    <N p="40" s="0" l="15320" v="0.692913"/>
+    <N p="43" s="7680" l="7640" v="0.708661"/>
   </NOTES>
   <LANE controller="74">
-    <P t="0" v="0.500000"/>
-    <P t="3840" v="0.800000"/>
-    <P t="7680" v="0.500000"/>
-    <P t="11520" v="0.800000"/>
-    <P t="15359" v="0.500000"/>
+    <P t="0" v="0.250000"/>
+    <P t="1" v="0.900000"/>
+    <P t="220" v="0.250000"/>
+    <P t="481" v="0.900000"/>
+    <P t="700" v="0.250000"/>
+    <P t="721" v="0.900000"/>
+    <P t="940" v="0.250000"/>
+    <P t="961" v="0.900000"/>
+    <P t="1180" v="0.250000"/>
+    <P t="1441" v="0.900000"/>
+    <P t="1660" v="0.250000"/>
+    <P t="3841" v="0.600000"/>
+    <P t="4060" v="0.250000"/>
+    <P t="4321" v="0.600000"/>
+    <P t="4540" v="0.250000"/>
+    <P t="4561" v="0.600000"/>
+    <P t="4780" v="0.250000"/>
+    <P t="4801" v="0.600000"/>
+    <P t="5020" v="0.250000"/>
+    <P t="5281" v="0.600000"/>
+    <P t="5500" v="0.250000"/>
+    <P t="7681" v="0.900000"/>
+    <P t="7900" v="0.250000"/>
+    <P t="8161" v="0.900000"/>
+    <P t="8380" v="0.250000"/>
+    <P t="8401" v="0.900000"/>
+    <P t="8620" v="0.250000"/>
+    <P t="8641" v="0.900000"/>
+    <P t="8860" v="0.250000"/>
+    <P t="9121" v="0.900000"/>
+    <P t="9340" v="0.250000"/>
+    <P t="11521" v="0.600000"/>
+    <P t="11740" v="0.250000"/>
+    <P t="12001" v="0.600000"/>
+    <P t="12220" v="0.250000"/>
+    <P t="12241" v="0.600000"/>
+    <P t="12460" v="0.250000"/>
+    <P t="12481" v="0.600000"/>
+    <P t="12700" v="0.250000"/>
+    <P t="12961" v="0.600000"/>
+    <P t="13180" v="0.250000"/>
   </LANE>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Abandoned Reactor" bus="0" instrument="1" musical="1" gainDb="5.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>77.VMjLgPD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhElaj8lakQFHRUVXiQ2axIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Grinder" bus="0" instrument="1" musical="1" gainDb="8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>67.VMjLgnC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxQxklajUlbh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

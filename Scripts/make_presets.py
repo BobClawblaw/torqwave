@@ -346,6 +346,7 @@ VOICE_PATCHES = {
     "pad": ["Concrete Pad", "Ashfall", "Cathedral Of Rust", "Low Ceiling", "Grey Sky", "Sodium Lamp", "Tension Choir", "Fog Machine", "Acid Embers",
         "Acid Field", "Acid Smoke", "Ash Haze"],
     "warm": ["Grey Sky", "Sodium Lamp", "Low Ceiling"],
+    "cleandrone": ["Reactor Drone", "Substation", "Void Hum", "Abandoned Reactor"],
     "drone": ["Reactor Drone", "Turbine", "Substation", "Engine Room", "Void Hum", "Power Line", "Abandoned Mains", "Abandoned Reactor", "Acid Furnace",
         "Acid Grid"],
     "arp": ["Black Pluck", "Glass Shard", "Wire Pluck", "Rubber Pluck", "Bit Pluck", "Dark Kalimba", "Acid Shard", "Basalt Wire", "Clockwork"],
@@ -359,6 +360,7 @@ VOICE_PATCHES = {
     "chip": ["Bit Pluck", "Industrial Whistle"],
     "sweep": ["Tension Riser", "Siren Climb", "Machine Spin Up"],
     "noise": ["Downlifter Noise", "Radio Static", "Ventilation"],
+    "body": ["EBM Sequence Bass", "Body Music", "Pressure Bass", "Pulse Bunker", "Distorted 909 Bass", "FM Basement", "Grinder"],
 }
 
 
@@ -407,6 +409,8 @@ def pick(names, preset_name):
 PATCH_FOR = {
     "Arcade Wash": "Platinum Square", "High Score Bloom": "Platinum Square",                 # were on Bit Pluck, which does not hold
     "Haunted Hum": "Reactor Drone", "Slag Drone": "Abandoned Reactor",   # took 4 to 8 seconds to arrive
+    "Synth-EBM Pad": "Concrete Pad", "Night Drive Pad": "Low Ceiling",   # were on Fog Machine, more noise than tone under chords
+    "Body Shifting Pad": "Grey Sky",     # was on Acid Furnace, which crackles under its tone
 }
 
 
@@ -1136,6 +1140,8 @@ PERCS = {
     "rimsync":   ([(RIM, ".x..x..x..x..x.x")], "a syncopated rimshot"),
     "conga":     ([(HT, "...x..x....x..x."), (MT, "x.....x.x.......")], "high and mid toms playing like congas"),
     "crash":     ([(CRASH, "x...............")], "a crash on the one"),
+    "anvil":     ([(COWBELL, "....x.......x.x.")], "metal struck with the snare, and once more before the bar"),
+    "metalgrid": ([(COWBELL, "x.x.x.x.x.x.x.x.")], "metal in flat 8ths"),
     "none":      ([], ""),
 }
 
@@ -1410,6 +1416,8 @@ PADS_FOR = {
     "Techno/Dub": ["early", "air", "dyad", "open"],
     "Techno/Hypnotic": ["twobar", "pedal", "half", "dyad"],
     "Industrial": ["fifths", "low", "pedal", "block", "fall"],
+    "Industrial/EBM": ["fifths", "pedal", "low"],
+    "Industrial/Techno-body": ["fifths", "low", "pedal"],
     "Industrial/Darkwave": ["open", "top", "fall", "bloom"],
     "Industrial/Coldwave": ["air", "dyad", "top", "open"],
     "Industrial/Futurepop": ["rise", "open", "half", "top"],
@@ -1498,6 +1506,12 @@ def drone_hard(voice):
     return "A low A and the A above it, the filter rolling through the three 16ths after every beat, as a rumble does", part, synth(voice), []
 
 
+def drone_body(voice):
+    part = held([("a1", 0, 100), ("e2", 0, 88), ("g2", 2, 90)], 4)
+    part.lane(74, ticking(4, "x.xxx.x.........o.ooo.o.........", 0.25, 0.9, weak=0.6))
+    return "A and E held, the flat seventh joining at bar 3, the filter calling in a burst of 16ths and answering it, softer, a bar later", part, synth(voice), []
+
+
 def drone_ebm_tension(voice):
     part = held([("a1", 0, 100), ("a2", 0, 90), ("eb3", 1, 92)], 4)
     part.lane(11, ticking(4, "x.x.x.x.x.x.xxxx", 0.35, 1.0)).lane(74, [(0, 0.45), (4 * BAR - 1, 0.9)])
@@ -1514,7 +1528,8 @@ def rewrite(name, written):
 
 # The style, what writes its drone, and the voice it is written for.
 DRONES_WRITTEN = {
-    "Industrial/EBM": (drone_ebm, "Pulse Bunker"), "Techno/Driving": (drone_driving, "Abyss Reese"),
+    "Industrial/EBM": (drone_ebm, "Pulse Bunker"), "Industrial/Techno-body": (drone_body, "Grinder"),
+    "Techno/Driving": (drone_driving, "Abyss Reese"),
     "Game/Combat": (drone_combat, "Corroded Reese"), "Game/Exploration": (drone_exploration, "Cathedral Of Rust"),
 }
 
@@ -1680,7 +1695,23 @@ BASS.update({
     "pedalseven": ("1 . 1 . 1 . 7 . 1 . 1 . 1 . 5 .", "8ths on the root with the seventh at the end of beat 2 and the fifth at the end of 4"),
 })
 
-SYNTH_BASS_KEYS = ["roll", "rollacc", "rollfive", "rollback", "offbeat", "offsixteen", "offdrop", "offpair", "gallop", "gallopback", "ebm", "ebmrest", "ebmthird", "ebmfive",
+# EBM: a sequencer bass is the hook. Tight 16ths on a few notes (the root, its octave, the fifth, the flat
+# seventh, the note next above the root), accented and syncopated; from one note driven without a break
+# to two halves of a bar answering each other. '2' is the step above the root: a semitone in Phrygian.
+BASS.update({
+    "bodydrive":  ("1! 1 1 1 1! 1 1 1 1! 1 1 1 1! 1 8 1", "one note driven in 16ths with an accent on every beat, the octave once before the bar"),
+    "bodyeighths": ("1! . 1 . 1! . 1 . 1! . 1 . 1! . 8 .", "one note in hard 8ths, accented on the beats, the octave on the last"),
+    "bodysync":   ("1! . 1 1 . 1! . 1 1 . 1! . 8 . 7 .", "a three-16th figure pushed across the beats, turning on the octave and the flat seventh"),
+    "bodyseven":  ("1! 1 8 1 7! 1 8 1 1! 1 8 1 7 8 5 8", "16ths on the root with the octave between, the flat seventh taking beats 2 and 4"),
+    "bodycall":   ("1! 1 . 1 8! . . . 1! 1 . 1 7! . 5 .", "a call low on the root, answered from the octave, then from the flat seventh and fifth"),
+    "bodybite":   ("1! 1 1 2 1! 1 1 . 1! 1 1 2 1! . 8 .", "16ths on the root with the note above it biting at the end of beats 1 and 3"),
+    "bodygate":   ("1! 1 . 1 1 . 1! 1 . 1 1 . 1! . 1 8", "pairs of 16ths with a gap after each, three against the beat, the accent moving"),
+    "bodyfifth":  ("1! . 5 1 . 1 5! . 1 . 5 1 8! . 1 .", "root and fifth trading places off the beat, the octave on beat 4"),
+    "bodyhammer": ("1! 1 1! 1 . . 1 1 1! 1 1! 1 . . 8 8", "two beats of accented 16ths and a hole after each"),
+    "bodyladder": ("1! 1 5 1 7! 1 8 1 7! 1 5 1 1! 1 1 1", "the root between the fifth, the flat seventh and the octave, up and back down"),
+})
+
+SYNTH_BASS_KEYS = ["bodydrive", "bodyeighths", "bodysync", "bodyseven", "bodycall", "bodybite", "bodygate", "bodyfifth", "bodyhammer", "bodyladder", "roll", "rollacc", "rollfive", "rollback", "offbeat", "offsixteen", "offdrop", "offpair", "gallop", "gallopback", "ebm", "ebmrest", "ebmthird", "ebmfive",
                    "eighths", "sixteens", "sixteensoct", "stomp", "threes", "threesoct", "pushpull", "electro", "electrob", "reese", "reesemove", "halftime", "march",
                    "psy", "synthwave", "dropout", "lazy", "underturn", "anticipate", "pedalseven"]
 ARP_BASS_KEYS = ["chip", "octave8", "ebm", "electro", "upstep", "downstep", "octjump", "fifthwalk", "sixteenturn", "ebmthird", "ebmfive", "threesoct", "sixteensoct", "thirdfall"]
@@ -1920,9 +1951,9 @@ STYLES = [
     # Industrial and its neighbours: the core again.
     Style("Industrial/EBM", [118, 120, 122, 124], 32, words=W("Body", "Marching", "Leather", "Iron Curtain", "Drill", "Boot Camp", "Uniform", "Muscle", "Parade", "Command", "Sweat", "Discipline"),
           drums_sound=["machine", "standard"], kicks=["ebm", "march", "four"], backbeats=["gated", "snare24", "clap24"],
-          hats=["eighths", "sixteenflat", "offclosed"], percs=["metal", "none", "cowbell"], bass=["ebm", "ebmrest", "gallop", "octave8"],
-          bass_patches=["ebm", "dark"], progressions=["i-VI-VII-i", "i-II-i-VII", "i-i-VI-VII"], chord_patches=["stab", "brass"],
-          arp_patches=["arp", "ebm"], lead_patches=["lead", "saw"], pad_patches=["pad", "drone"], energy=4, modes=("minor", "phrygian")),
+          hats=["eighths", "sixteenflat", "none"], percs=["metal", "anvil", "metalgrid"], bass=["bodydrive", "bodyseven", "bodycall", "bodysync"],
+          bass_patches=["body", "body"], progressions=["i-i-i-i", "i-II-i-VII", "i-i-i-VI"], chord_patches=["stab", "brass"],
+          arp_patches=["body", "arp"], lead_patches=["lead", "saw"], pad_patches=["pad", "drone"], energy=4, modes=("minor", "phrygian")),
     Style("Industrial/Electro-industrial", [110, 114, 118, 122], 32, words=W("Static", "Circuit", "Wiretap", "Transmission", "Cold Wire", "Sector", "Surveillance", "Interference", "Datastream", "Blackout", "Signal Loss", "Glitch"),
           drums_sound=["machine", "hard"], kicks=["broken", "electro", "ebm"], backbeats=["snare24", "gated", "breakghost"],
           hats=["eighths", "sixteen", "pedal"], percs=["metal", "rimsync", "none"], bass=["electro", "ebm", "sixteens"],
@@ -1935,9 +1966,9 @@ STYLES = [
           arp_patches=["saw", "arp"], lead_patches=["saw"], pad_patches=["noise", "sweep"], energy=5, distorted=True, modes=("minor", "harmonic")),
     Style("Industrial/Techno-body", [126, 128, 132, 134], 32, words=W("Body Shop", "Steel Body", "Muscle Machine", "Ironworks", "Engine Room", "Assembly", "Hydraulic", "Pistonbody", "Workshop", "Torque", "Chain Drive", "Conveyor"),
           drums_sound=["hard", "machine"], kicks=["four", "rumble", "fourghost"], backbeats=["claplayer", "gated"],
-          hats=["sixteen", "offopen", "ride"], percs=["metal", "rim3", "cowbell"], bass=["ebm", "ebmrest", "rollacc"],
-          bass_patches=["ebm", "roll"], progressions=["i-II-i-VII", "i-i-VI-VII", "i-i-i-VI"], chord_patches=["stab"],
-          arp_patches=["arp", "ebm"], lead_patches=["lead", "saw"], pad_patches=["drone"], energy=4, modes=("minor", "phrygian")),
+          hats=["sixteen", "offopen", "ride"], percs=["metal", "anvil", "metalgrid"], bass=["bodyhammer", "bodygate", "bodybite"],
+          bass_patches=["body", "roll"], progressions=["i-II-i-VII", "i-i-VI-VII", "i-i-i-VI"], chord_patches=["stab"],
+          arp_patches=["arp", "body"], lead_patches=["lead", "saw"], pad_patches=["drone"], energy=4, modes=("minor", "phrygian")),
     Style("Industrial/Futurepop", [128, 130, 132, 135], 22, words=W("Neon", "Starlight", "Hologram", "Satellite", "Afterimage", "Future Tense", "Pulse Star", "Synthetic", "Daylight", "Prism"),
           drums_sound=["standard", "machine"], kicks=["four", "fourpush"], backbeats=["claplayer", "snare24"],
           hats=["offopen", "sixteen"], percs=["shaker", "none"], bass=["octave8", "offsixteen", "sixteensoct"],
@@ -1945,8 +1976,8 @@ STYLES = [
           arp_patches=["saw", "arp"], lead_patches=["lead", "saw"], pad_patches=["pad", "sweep"], energy=4, dark=False),
     Style("Industrial/Synth-EBM", [120, 124, 126, 130], 22, words=W("Cold Heart", "Machine Love", "Chrome", "Silhouette", "Mirror", "Velvet", "Neon Rain", "Synthetic Tears", "Night Shift", "Glass Heart"),
           drums_sound=["machine", "standard"], kicks=["ebm", "four"], backbeats=["snare24", "clap24"],
-          hats=["eighths", "offclosed"], percs=["none", "shaker"], bass=["octave8", "ebm", "eighths"],
-          bass_patches=["ebm"], progressions=["i-VI-III-VII", "i-III-VII-iv", "i-VI-VII-i"], chord_patches=["chord", "stab"],
+          hats=["eighths", "offclosed"], percs=["none", "shaker"], bass=["bodyeighths", "bodyladder", "bodyfifth"],
+          bass_patches=["body"], progressions=["i-VI-III-VII", "i-III-VII-iv", "i-VI-VII-i"], chord_patches=["chord", "stab"],
           arp_patches=["pluck", "arp"], lead_patches=["lead"], pad_patches=["pad"], energy=3),
     Style("Industrial/Darkwave", [100, 108, 112, 116], 22, words=W("Funeral", "Velvet Dark", "Raven", "Cathedral", "Mourning", "Candle", "Nocturne", "Black Lace", "Crypt", "Twilight"),
           drums_sound=["machine", "standard"], kicks=["half", "rock", "ebm"], backbeats=["gated", "snare24"],
@@ -2163,12 +2194,11 @@ def riser_dub():
 
 
 def riser_ebm():
-    part = Part(2)
-    for i in range(32):
-        beat = i // 4
-        high = i % 4 >= 4 - [0, 0, 1, 1, 2, 2, 3, 4][beat]
-        part.add(pitch("a2" if high else "a1"), i * S, S // 2, 124 if high else ramp(i, 32, 76, 108))
-    return "a 16th bass on A, the octave taking one more 16th of every other beat until the last beat is all octave", part.lane(74, OPEN(2, 0.2)), synth("ebm"), []
+    on = every([4, 2, 1, 1])
+    part = struck(4, lambda i: (["a2"] if i >= 48 and i % 2 == 1 else ["a1"]) if on(i) else None, low=72, high=124)
+    part.lane(74, [(0, 0.55), (2 * BAR, 0.15), (4 * BAR - 1, 1.0)])
+    return ("one low A gated short on the sequencer bass, in quarters, then 8ths, then 16ths, the filter closing over the first two bars "
+            "and tearing open over the last two, the octave hammering between the 16ths of bar 4"), part, synth("=EBM Sequence Bass"), []
 
 
 def riser_electro_industrial():
@@ -2247,8 +2277,8 @@ def riser_dark_ambient():
 
 
 def riser_drone():
-    part = held([("a2", 0, 96), ("a3", 4, 84)], 8).lane(74, OPEN(8, 0.05))
-    return "one A held for eight bars, the octave joining at bar 5, the filter opening the whole way", part, synth("drone"), []
+    part = held([("a2", 0, 96), ("a3", 2, 84)], 4).lane(74, OPEN(4, 0.35))
+    return "one A held for four bars, the octave joining at bar 3, the filter opening the rest of the way", part, synth("drone"), []
 
 
 def riser_deep_house():
@@ -2536,7 +2566,18 @@ SHAPE_STYLES = 3  # a shape may be in this many styles
 
 
 def notes_of(part):
-    return tuple(sorted((n[1], n[0]) for n in part.notes))
+    """What a part plays: its pitches and where they fall, in the shortest stretch of whole bars that it
+    repeats. A bar played twice is the same as that bar played once."""
+    notes = sorted((n[1], n[0]) for n in part.notes)
+
+    for period in (1, 2, 4):
+        if period < part.bars and part.bars % period == 0:
+            first = [n for n in notes if n[0] < period * BAR]
+            if all(sorted((start - k * period * BAR, p) for start, p in notes if k * period * BAR <= start < (k + 1) * period * BAR) == first
+                   for k in range(part.bars // period)):
+                return tuple(first)
+
+    return tuple(notes)
 
 
 def shape_of(part, on_drums):
@@ -2605,12 +2646,12 @@ LANGUAGE = {
     "Techno/Percussive": lang(0.7, 0.3, 0.7, True, 57, ["open", "sus"]),
     "Techno/Dub": lang(0.3, 0.4, 0.9, False, 57, ["seventh", "ninth"]),
     "Industrial": lang(0.8, 0.3, 0.4, False, 45, ["open", "triad"]),
-    "Industrial/EBM": lang(1.0, 0.3, 0.3, False, 45, ["open", "triad"]),
+    "Industrial/EBM": lang(1.0, 0.2, 0.4, False, 45, ["open", "flatseven"]),
     "Industrial/Electro-industrial": lang(0.7, 0.4, 0.7, True, 52, ["diminished", "tritone", "phrygian"]),
     "Industrial/Aggrotech": lang(1.0, 0.4, 0.4, False, 52, ["diminished", "open"]),
-    "Industrial/Techno-body": lang(0.9, 0.3, 0.4, True, 45, ["open", "triad"]),
+    "Industrial/Techno-body": lang(0.9, 0.2, 0.5, True, 45, ["open", "flatseven"]),
     "Industrial/Futurepop": lang(0.9, 0.8, 0.3, False, 64, ["triad", "seventh"]),
-    "Industrial/Synth-EBM": lang(0.8, 0.6, 0.3, False, 57, ["triad", "open"]),
+    "Industrial/Synth-EBM": lang(0.8, 0.4, 0.3, False, 45, ["open", "triad", "flatseven"]),
     "Industrial/Darkwave": lang(0.5, 0.6, 0.4, False, 57, ["triad", "sus"]),
     "Industrial/Industrial rock": lang(0.7, 0.3, 0.3, False, 45, ["open", "phrygian"]),
     "Industrial/Dark electro": lang(0.7, 0.5, 0.5, False, 52, ["diminished", "phrygian"]),
@@ -2645,6 +2686,7 @@ COLOURS = {
     "quartal":    ([5, 10], "fourths stacked on the root"),
     "seventh":    (["third", "seventh"], "the root, the third and the seventh"),
     "ninth":      (["fifth", "ninth"], "the root, the fifth and the ninth"),
+    "flatseven":  ([10, 12], "the root, the flat seventh and the octave"),
 }
 
 
@@ -2790,7 +2832,14 @@ class Maker:
 
         if sub == "Full Grooves":
             bars = self.pick([1, 2, 4])
+            # EBM's second groove is the bare kind, written and not drawn: kick, one hard snare and one metal
+            # sound, no hats or claps. With a one-note bass it is a whole track's worth.
+            bare = s.style == "Industrial/EBM" and getattr(self, "grooves_made", 0) == 2
             part, said = self.groove(bars)
+            if bare:
+                bars, part = 2, bare_march()
+                said = ["a march: the kick on every beat, heavier on 1 and 3, a hard snare on 2 and 4 that rolls into the bar every "
+                        "second bar, and struck metal on the offbeats, nothing else"]
             if bars == 4:
                 for n, p in TOMRUN:
                     part.grid(n, p, bar=3)
@@ -2915,7 +2964,7 @@ class Maker:
             mark = "".join(c for c in t if c in "!~_")
             core = t.rstrip("!~_")
             p = {"1": root, "8": root + 12, "5": LADDER[mode][i + 4], "3": LADDER[mode][i + 2], "7": LADDER[mode][i + 6],
-                 "b": LADDER[mode][i - 1]}[core]
+                 "b": LADDER[mode][i - 1], "2": LADDER[mode][i + 1]}[core]
             tokens.append(name_of(p) + mark)
 
         return " ".join(tokens)
@@ -2973,7 +3022,15 @@ class Maker:
             keys = [key]
         else:
             keys = nearest(ARP_BASS_KEYS if sub == "Arp Bass" else PICKED_KEYS)
-        candidates = []
+
+            # In the body styles the second bass line is a sequencer's too.
+            if s.style in ("Industrial/EBM", "Industrial/Techno-body", "Industrial/Synth-EBM"):
+                keys = (["bodyladder", "bodyseven", "bodyfifth"] if sub == "Arp Bass" else ["bodybite", "bodyeighths", "bodycall"]) + keys
+        # A rhythm the style has a bass line on already goes to the back: its bass lines differ in figure,
+        # not only in the roots they move through.
+        used = self.__dict__.setdefault("bass_rhythms", [])
+        keys = [k for k in keys if k not in used] + [k for k in keys if k in used]
+        candidates, of = [], []
 
         for k in keys:
             rhythm, words = acid if k == "acid" else BASS[k]
@@ -2987,7 +3044,9 @@ class Maker:
 
                 said = words + ((", moving through the roots of " + chord_names(mode, degrees)) if moving else ", on A")
                 candidates.append((said, part, synth(patch), self.mode_tags(mode, [n[0] for n in part.notes])))
+                of.append(k)
 
+        used += [k for k, c in zip(of, candidates) if is_new("Bass > " + sub, s.style, c[1], False)][:1]
         self.add_new("bass", ROLE_NOUNS[sub], "Bass", sub, candidates)
 
     def sub_bass(self, mode, degrees, drawn, bars):
@@ -3134,9 +3193,15 @@ class Maker:
         patch = self.pick(s.pad_patches)
         start = zlib.crc32((s.style + sub).encode("utf-8"))
 
+        # A pad under chords is on a pad: a riser sweeps and a noise texture is mostly hiss once raised to a pad's level.
+        if sub in ("Sustained", "Evolving") and patch in ("sweep", "noise"):
+            patch = "warm"
+
         if sub == "Drones":
             bars = self.pick([4, 8])
             patch = self.pick(["drone", "noise"] if "noise" in s.pad_patches else ["drone"])
+            if patch == "noise":
+                patch = "cleandrone"   # a drone holds a tone: a noise patch raised to a drone's level is mostly hiss
             mine = DRONES_FOR.get(s.style) or DRONES_FOR[s.style.split("/")[0]]
             candidates = []
 
@@ -3464,6 +3529,13 @@ class Maker:
             out.append((name, tempo, self.s.style, parts))
 
         return out
+
+
+def bare_march():
+    """EBM at its barest: a kick, a snare and one metal sound, militant and on the grid."""
+    return (Part(2).grid(KICK, "X...x...X...x...X...x...X...x...")
+            .grid(SNARE, "....X.......X.......X.......X.XX")
+            .grid(COWBELL, "..X...x...X...x...X...x...X...x."))
 
 
 def join(phrases):

@@ -326,6 +326,44 @@ void runPresetTests (AudioEngine& engine)
                 {
                     auto played = q->notes;
                     std::stable_sort (played.begin(), played.end(), [] (const auto& x, const auto& y) { return x.start != y.start ? x.start < y.start : x.pitch < y.pitch; });
+
+                    // A bar played twice is that bar: what a preset plays is taken over the shortest stretch of
+                    // whole bars that it repeats.
+                    {
+                        const auto bar = (juce::int64) q->beatsPerBar * SequenceFile::ticksPerBeat;
+                        const auto bars = bar > 0 ? q->length / bar : 0;
+
+                        for (auto period : { (juce::int64) 1, (juce::int64) 2, (juce::int64) 4 })
+                        {
+                            if (period >= bars || bars % period != 0)
+                                continue;
+
+                            std::vector<std::pair<juce::int64, int>> first;
+                            auto repeats = true;
+
+                            for (auto& n : played)
+                                if (n.start < period * bar)
+                                    first.emplace_back (n.start, n.pitch);
+
+                            for (juce::int64 k = 1; k < bars / period && repeats; ++k)
+                            {
+                                std::vector<std::pair<juce::int64, int>> again;
+
+                                for (auto& n : played)
+                                    if (n.start >= k * period * bar && n.start < (k + 1) * period * bar)
+                                        again.emplace_back (n.start - k * period * bar, n.pitch);
+
+                                repeats = again == first;
+                            }
+
+                            if (repeats)
+                            {
+                                played.erase (std::remove_if (played.begin(), played.end(), [&] (const auto& n) { return n.start >= period * bar; }), played.end());
+                                break;
+                            }
+                        }
+                    }
+
                     One one { q->name, q->role + " > " + q->subRole, q->style, {}, {} };
                     const auto drums = playsOnDrums (*q);
                     int last = -1;

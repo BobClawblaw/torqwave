@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Iron Curtain Strum" role="Harmony" subRole="Strums" key="A minor" tags="" note="A minor, F, G, A minor, each strummed downwards twice a bar" style="Industrial/EBM" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Iron Curtain Strum" role="Harmony" subRole="Strums" key="A minor" tags="" note="A minor, A minor, A minor, A minor, each strummed downwards twice a bar" style="Industrial/EBM" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="64" s="0" l="1880" v="0.708661"/>
     <N p="60" s="240" l="1640" v="0.661417"/>
@@ -8,18 +8,18 @@
     <N p="64" s="1920" l="1880" v="0.708661"/>
     <N p="60" s="2160" l="1640" v="0.661417"/>
     <N p="57" s="2400" l="1400" v="0.614173"/>
-    <N p="60" s="3840" l="1880" v="0.708661"/>
-    <N p="57" s="4080" l="1640" v="0.661417"/>
-    <N p="53" s="4320" l="1400" v="0.614173"/>
-    <N p="60" s="5760" l="1880" v="0.708661"/>
-    <N p="57" s="6000" l="1640" v="0.661417"/>
-    <N p="53" s="6240" l="1400" v="0.614173"/>
-    <N p="62" s="7680" l="1880" v="0.708661"/>
-    <N p="59" s="7920" l="1640" v="0.661417"/>
-    <N p="55" s="8160" l="1400" v="0.614173"/>
-    <N p="62" s="9600" l="1880" v="0.708661"/>
-    <N p="59" s="9840" l="1640" v="0.661417"/>
-    <N p="55" s="10080" l="1400" v="0.614173"/>
+    <N p="64" s="3840" l="1880" v="0.708661"/>
+    <N p="60" s="4080" l="1640" v="0.661417"/>
+    <N p="57" s="4320" l="1400" v="0.614173"/>
+    <N p="64" s="5760" l="1880" v="0.708661"/>
+    <N p="60" s="6000" l="1640" v="0.661417"/>
+    <N p="57" s="6240" l="1400" v="0.614173"/>
+    <N p="64" s="7680" l="1880" v="0.708661"/>
+    <N p="60" s="7920" l="1640" v="0.661417"/>
+    <N p="57" s="8160" l="1400" v="0.614173"/>
+    <N p="64" s="9600" l="1880" v="0.708661"/>
+    <N p="60" s="9840" l="1640" v="0.661417"/>
+    <N p="57" s="10080" l="1400" v="0.614173"/>
     <N p="64" s="11520" l="1880" v="0.708661"/>
     <N p="60" s="11760" l="1640" v="0.661417"/>
     <N p="57" s="12000" l="1400" v="0.614173"/>
@@ -27,5 +27,5 @@
     <N p="60" s="13680" l="1640" v="0.661417"/>
     <N p="57" s="13920" l="1400" v="0.614173"/>
   </NOTES>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Rave Hoover Stab" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>76.VMjLgLD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhTgYWYffzauYWYxAxTzElXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Rave Hoover Stab" bus="0" instrument="1" musical="1" gainDb="0.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>76.VMjLgLD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhTgYWYffzauYWYxAxTzElXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

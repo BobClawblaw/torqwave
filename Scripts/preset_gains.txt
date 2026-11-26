@@ -8,7 +8,7 @@ Acid Pentatonic Squelch|-4.0
 Acid Phrygian Crawl|-2.5
 Acid Root Jumper|-3.5
 Acid Slide Rider|-2.5
-Acidic Comp|-1.0
+Acidic Comp|-2.0
 Acidic Engine|-3.5
 Acidic Theme|2.0
 Acidic Transition|-2.0
@@ -25,7 +25,7 @@ Afterimage Progression|-2.0
 Afterimage Shifting Pad|-1.0
 Afterimage Snare Roll|-1.5
 Afterimage Sub Line|0.0
-Afterparty Changes|-1.5
+Afterparty Changes|-3.0
 Afterparty Top Loop|2.5
 Aggro Saw Gate|-2.5
 Alarm Line|1.5
@@ -37,13 +37,13 @@ Anvil Beat|-1.5
 Anvil Low End Kick|-2.0
 Anvil Throb|7.0
 Arcade Hum|2.0
-Arcade Wash|-2.0
+Arcade Wash|-2.5
 Arena Hook|-3.5
 Ashes Sub Pulse|-1.0
 Assault Turn|-2.0
-Assembly Keys|-2.0
-Assembly Played Bass|2.5
-Assembly Throb|-0.5
+Assembly Keys|-1.5
+Assembly Played Bass|2.0
+Assembly Throb|-2.5
 Assembly Wash|-1.5
 Aurora Bass|0.0
 Autobahn Slam|-1.5
@@ -76,7 +76,7 @@ Bitcrush Sub Line|0.0
 Black Answer|4.0
 Black Hook|-1.0
 Black Stomp|-1.5
-Blackout Pad|3.0
+Blackout Pad|-2.0
 Blast Furnace Engine|-2.0
 Blast Wall Hook|1.5
 Blast Wall Lift|-1.0
@@ -84,7 +84,7 @@ Blast Wall Stab|-2.0
 Blast Wall Strum|5.0
 Bleep Machine|-5.5
 Bleep Pattern|4.0
-Bloodline Bassline|4.5
+Bloodline Bassline|0.5
 Bloodline Beat|-1.5
 Bloodline Motif|0.5
 Bloodline Snare Fill|-1.5
@@ -95,19 +95,19 @@ Body Drone|6.5
 Body Gallop|-1.5
 Body Hat Line|4.5
 Body Music Beat|-1.5
-Body Shifting Pad|5.5
+Body Shifting Pad|3.5
 Body Shop Bloom|-1.0
-Body Shop Low Drone|5.0
+Body Shop Low Drone|8.0
 Body Shop Transition|-0.5
 Body Slam|-2.0
 Bodypop Sub Pulse|0.0
 Bodypop Throb|8.0
 Bongo Room Pound|-4.5
 Bonus Stage Danger Sting|13.5
-Boot Camp Gate|5.5
-Boot Camp Sequence|4.0
+Boot Camp Gate|1.0
+Boot Camp Sequence|-1.5
 Boot Camp Under-line|-2.5
-Boot Camp Up-Down Arp|5.0
+Boot Camp Up-Down Arp|-0.5
 Breakdance Pluck Line|3.0
 Breakdance Shifting Pad|6.5
 Breakdance Theme|0.0
@@ -118,10 +118,10 @@ Breaker Lift|-2.5
 Breaker Plucks|-2.5
 Broken Octave Arp Bass|8.0
 Broken Root Fifth Octave|4.5
-Bulldozer Drive Bass|6.5
+Bulldozer Drive Bass|7.0
 Bunker Chopper|-2.5
 Bunker Clap Stutter|-1.5
-Bunker Evolving Pad|4.5
+Bunker Evolving Pad|6.5
 Bunker Stomp|-1.5
 Call and Answer Hook|3.0
 Candle Pulse|0.5
@@ -131,7 +131,7 @@ Cartridge Comp|14.0
 Cartridge Throb|-1.0
 Cartridge Tom Run|-1.5
 Cathedral Bass|0.0
-Cathedral Chord Pulse|6.5
+Cathedral Chord Pulse|7.0
 Cathedral Line|5.0
 Cathedral Pad|0.5
 Caverns Build|0.0
@@ -144,7 +144,7 @@ Cellar Door Motif|8.0
 Cellar Line|3.5
 Cellar Strummed Chords|4.0
 Chain Drive Beat|-2.0
-Chain Drive Up-Down Arp|4.0
+Chain Drive Up-Down Arp|4.5
 Chopshop Hit Chords|-2.5
 Chopshop Kick Line|-3.5
 Chrome Motif|-3.0
@@ -154,7 +154,7 @@ Chrome Night Transition|-1.0
 Chrome Night Turn|1.0
 Chrome Pound|-3.0
 Chrome Turn|-0.5
-Circuit Bass|-4.0
+Circuit Bass|-2.5
 Circuit Clap Stutter|-1.5
 Circuit Stomp|-0.5
 Clap Roll Build|1.0
@@ -167,7 +167,7 @@ Cold Assembly Drive|-3.0
 Cold Heart Shifting Pad|3.5
 Cold Wire Engine|-1.5
 Cold Wire Impact|-0.5
-Colossus Bed|3.0
+Colossus Bed|1.0
 Colossus Kick Line|-1.5
 Command Pulse|-3.0
 Compass Loop|-2.0
@@ -191,7 +191,7 @@ Corrosion Bass Run|-1.0
 Corrosion Drive|-1.5
 Corrosion Pattern|3.0
 Corrosion Percussion|-1.5
-Corrosive Tops|0.5
+Corrosive Tops|-1.5
 Counterstrike Arp|3.0
 Counterstrike Kick Pattern|-1.5
 Cracked Pavement Break|-3.5
@@ -199,7 +199,7 @@ Crash and Kick Impact|-2.0
 Creeping Hat Line|3.0
 Creeping Loop|-1.5
 Crowd Played Bass|-1.0
-Crowd Roller|-2.0
+Crowd Roller|-1.0
 Cruise Shifting Pad|2.5
 Crypt Sub Line|-1.0
 Cyborg Break|-3.5
@@ -247,7 +247,7 @@ Dot Changes|-1.5
 Dread Sub Line|-1.0
 Dread Wash|-0.5
 Drill Tom Fill|-1.5
-Drum Circle Comp|-1.5
+Drum Circle Comp|0.0
 Dub Chord Echo|-1.0
 Dub Pluck Echoes|6.0
 Dub Siren Pluck Line|3.5
@@ -256,18 +256,18 @@ Dusk Bass|0.0
 Dusk Pluck Line|6.5
 EBM Sequence Arp|-0.5
 Echo Chamber Bass Run|0.0
-Echo Chamber Drive Bass|-1.0
+Echo Chamber Drive Bass|-0.5
 Echo Chamber Hook|7.5
 Echo Chamber Stab|-3.0
 Endless Riff|7.0
-Engine Room Top Loop|-1.5
+Engine Room Top Loop|-1.0
 Euphoria Pattern|4.0
 Factory Riff|3.5
 Factory Slam|-0.5
 Falling Note Ramp|18.0
 Fallout Low Drone|1.0
 Fallout Pad|1.5
-Fallout Rising Pad|6.5
+Fallout Rising Pad|7.0
 Far Shore Bloom|1.0
 Far Shore Counter-line|7.0
 Far Shore Kick Pattern|2.5
@@ -280,7 +280,7 @@ Final Boss Turn|1.0
 Five-Step Shaker|9.0
 Fizz Motif|0.5
 Flam Snare Figure|-2.0
-Flicker Evolving Pad|12.5
+Flicker Evolving Pad|2.0
 Flicker Kick Push|-1.5
 Flicker Line|9.0
 Flicker Pressure|-1.0
@@ -290,7 +290,7 @@ Flicker Under-line|5.0
 Flicker Up-Down Arp|5.0
 Floodlight Arp|-0.5
 Floodlight Backbeat Loop|-1.5
-Floodlight Bed|6.0
+Floodlight Bed|0.0
 Floodlight Kick Push|2.5
 Floodlight Line|-2.0
 Floodlight Perc Loop|1.0
@@ -301,13 +301,13 @@ Fog Roller|-0.5
 Forest Night Engine|-1.5
 Forest Night Stabs|-1.0
 Foundry Hat Line|1.5
-Foundry Pressure|-1.0
+Foundry Pressure|0.5
 Foundry Wash|5.0
-Fractal Changes|-1.0
+Fractal Changes|-1.5
 Fractal Line|-1.5
-Fractal Shifting Pad|9.0
+Fractal Shifting Pad|17.0
 Frontline Bass|1.0
-Frontline Comp|0.5
+Frontline Comp|-0.5
 Frontline Counter-line|2.0
 Frontline Riser|-3.5
 Frost Bass Run|4.5
@@ -327,7 +327,6 @@ Furnace Under-line|0.0
 Fuse Box Snare Fill|2.5
 Fuse Box Stomp|-6.5
 Fuse Box Theme|2.0
-Future Tense Engine|-2.0
 Future Tense Kick Pattern|-1.5
 Future Tense Lead|-3.0
 Futurepop Arp Loop|4.5
@@ -340,8 +339,8 @@ Gearbox Backbeat|-1.5
 Gearbox Kick Push|-1.5
 Gearbox Stab|-2.0
 Ghost Note Riser|0.0
-Girder Pressure|0.0
-Glacier Chord Pulse|9.5
+Girder Pressure|-1.5
+Glacier Chord Pulse|6.0
 Glacier Roller|7.0
 Glacier Sixteenths|5.0
 Glass Heart Pad|3.0
@@ -349,14 +348,14 @@ Glass Heart Top Loop|2.5
 Glitch Drone|8.0
 Glitch Gated Chord|7.0
 Goa Motif|-2.5
-Goa Roller|-1.5
+Goa Roller|-2.5
 Goa Sub|-1.0
 Grave Pound|-2.0
 Grave Pulse|-2.0
 Grave Turn|-1.5
 Grey Sky Pattern|3.5
 Grey Sky Pluck|5.0
-Grey Sky Pressure|0.5
+Grey Sky Pressure|1.0
 Grind Changes|-2.5
 Grind Kick Line|-1.5
 Grinder Lead|2.0
@@ -365,7 +364,7 @@ Grinder Roll Fill|-1.5
 Half-time Break|-1.5
 Halo Climb|3.0
 Halo Stomp|-2.5
-Hammer Roller|-2.0
+Hammer Roller|-1.5
 Hand Drum Chords|-2.0
 Hand Drum Climb|4.5
 Hands Up Drone|7.5
@@ -389,26 +388,26 @@ Haunted Sixteenths|7.0
 Hellfire Drone|6.5
 Hex Bass Arp|-1.5
 Hex Riser|3.5
-High Score Bloom|-2.5
+High Score Bloom|-3.0
 High Score Hook|6.5
-Highway Bassline|0.0
+Highway Bassline|-0.5
 Highway Sub|-1.0
 Hollow Engine|-2.0
 Hollow Evolving Pad|6.0
-Hollow Pad|1.0
+Hollow Pad|2.5
 Hollow Sixteenths|3.5
 Hollow Theme|0.5
 Hologram Arp|0.0
-Hologram Tops|9.5
+Hologram Tops|7.0
 Horizon Line Beat|-2.0
 Horizon Line Stabs|7.0
 Horizon Shifting Pad|2.0
 Hub Low Drone|4.0
 Hub Motif|3.0
 Hub Stomp|-2.0
-Hub Sub Pulse|-0.5
-Hydraulic Bassline|4.0
-Hydraulic Pattern|-1.0
+Hub Sub Pulse|-1.0
+Hydraulic Bassline|-1.5
+Hydraulic Pattern|-0.5
 Hydraulic Snare Fill|-1.5
 Hypnotic Bell Fives|9.5
 Hypnotic Fifth Bed|8.5
@@ -426,7 +425,7 @@ Industrial Rock Riff Bass|-1.5
 Inner Space Lead|8.0
 Inner Space Motif|5.5
 Inner Space Sequence|5.0
-Interference Chord Pulse|-1.0
+Interference Chord Pulse|-1.5
 Interference Hats|2.0
 Interference Pressure|0.0
 Interference Riser|2.0
@@ -434,21 +433,21 @@ Inventory Bloom|8.5
 Inventory Discovery Sting|2.0
 Iron Curtain Chord Pulse|0.0
 Iron Curtain Engine|-2.0
-Iron Curtain Strum|0.0
+Iron Curtain Strum|0.5
 Iron Fist Sequence|-2.5
 Iron Fist Up-Down Arp|-0.5
 Ironworks Hit Chords|-1.5
 Ironworks Hook|0.5
 Ironworks Impact|-2.0
-Ironworks Perc Loop|-1.5
+Ironworks Perc Loop|-0.5
 Isolation Bass|0.5
 Isolation Chord Pulse|2.5
 Jackhammer Bass Run|-3.0
-Jackhammer Bed|3.5
+Jackhammer Bed|3.0
 Jackhammer Stomp|-1.5
 Joypad Counter-line|13.5
 Kaleidoscope Kick Pattern|2.5
-Kaleidoscope Pad|5.5
+Kaleidoscope Pad|-3.5
 Kick Only Four|4.5
 Kick Roll Builder|-1.5
 Kick and Rumble Tool|-2.0
@@ -464,27 +463,27 @@ Laser Grid Sixteenths|3.0
 Laser Grid Stab|-0.5
 Lasers Clap Stutter|-1.5
 Lasers Strummed Chords|3.5
-Last Stand Bloom|6.5
-Last Stand Hats|4.0
+Last Stand Bloom|9.0
+Last Stand Hats|3.0
 Last Stand Hit Chords|-0.5
 Last Stand Lift|-1.0
 Last Stand Pulse|-1.5
 Late Night Riff|3.5
 Late Night Shifting Pad|4.5
-Leather Bass Walk|3.0
+Leather Bass Walk|2.5
 Leather Line|3.0
-Leather Pressure|0.0
+Leather Pressure|-2.0
 Lightless Pound|-2.5
 Loading Danger Sting|1.5
 Loading Low End Kick|-1.5
 Loading Progression|3.0
 Loading Sixteenths|5.0
-Loading Sub Line|-0.5
+Loading Sub Line|-1.0
 Loading Tom Fill|2.5
 Loading Wash|0.0
 Lobby Hit Chords|-2.0
 Lobby Line|10.5
-Long Shadow Changes|-2.0
+Long Shadow Changes|-3.0
 Loopwise Bridge|9.0
 Loopwise Clap Fill|-2.0
 Loopwise Groove|-2.5
@@ -507,7 +506,7 @@ Low-Light Sequence|3.0
 Low-Light Tom Fall|2.5
 Lumen Bass Sequence|7.5
 Lumen Engine|-5.0
-Lumen Hat Line|5.5
+Lumen Hat Line|9.0
 Lumen Pluck Line|7.0
 Lumen Tom Fill|2.5
 Machine Disco Beat|-2.0
@@ -518,12 +517,12 @@ Mainframe Hook|3.0
 Mainline Motif|14.0
 Mainline Plucks|5.5
 Mainline Sub|0.0
-Mainroom Drive Bass|-1.5
+Mainroom Drive Bass|-1.0
 Mantra Loop|-2.0
 Mantra Pluck Line|3.5
-Marching Build|-1.5
+Marching Build|-2.0
 Marching Order Beat|-3.0
-Marching Perc Loop|0.5
+Marching Perc Loop|1.0
 Marching Sub|0.0
 Melodic Four-Six Turn|0.5
 Melodic Minor Turn|-1.5
@@ -567,29 +566,29 @@ Mourning Build|6.5
 Mourning Clap Roll|-1.5
 Moving Inner Voice|0.5
 Murk Up-Down Arp|3.5
-Muscle Bass Run|3.0
-Muscle Changes|-4.0
-Muscle Machine Bassline|0.5
+Muscle Bass Run|0.0
+Muscle Changes|-3.5
+Muscle Machine Bassline|0.0
 Muscle Machine Lift|-1.5
 Muscle Memory Beat|-3.0
-Muscle Pluck|1.0
+Muscle Pluck|7.0
 Muscle Riff|-1.0
 Muscle Transition|-2.0
 Mushroom Pattern|-2.0
 Music Box Minor|9.0
-Mutant Chords|-2.0
+Mutant Chords|-1.5
 Nanotech Kick Line|-1.5
 Neon Rain Sixteenths|2.5
 Neuro Bassline|5.0
 Neuro Riser|2.5
 Neuro Tom Run|-2.5
 Night Drive Bass Sequence|-1.0
-Night Drive Pad|0.0
+Night Drive Pad|0.5
 Night Drive Stomp|-1.5
-Night Shift Comp|0.0
+Night Shift Comp|0.5
 Night Shift Hammer|-2.5
 Night Shift Pluck|6.0
-Night Shift Roller|-1.5
+Night Shift Roller|-0.5
 Night Shift Sub|0.0
 Night Shift Theme|0.0
 Nightcall Hat Line|0.0
@@ -618,17 +617,17 @@ Open Field Bassline|14.5
 Open Field Up-Down Arp|6.5
 Open Field Victory Sting|-1.5
 Options Beat|-1.5
-Orbit Chord Pulse|-2.0
+Orbit Chord Pulse|-1.5
 Orbit Climb|4.0
-Orbit Drive Bass|-0.5
+Orbit Drive Bass|-1.0
 Orbit Kick Pattern|2.0
 Orbit Lift|3.5
-Overdrive Bassline|-1.0
+Overdrive Bassline|-1.5
 Overdrive Machine|-2.0
 Overdrive Perc Loop|-0.5
 Overdrive Pluck|0.0
 Overdrive Under-line|-0.5
-Overload Bloom|2.5
+Overload Bloom|2.0
 Overload Sub Pulse|0.0
 Overload Throb|0.0
 Overlord Counter-line|4.5
@@ -639,9 +638,9 @@ Overworld Keys|1.0
 Overworld Pluck Line|9.5
 Pale Bridge|-1.5
 Pale Drive|-2.0
-Pale Progression|0.0
+Pale Progression|0.5
 Pale Stabs|0.5
-Parade Bed|-1.5
+Parade Bed|-1.0
 Parade Drive|-2.0
 Parade Kick Line|2.5
 Pathfinder Chords|0.5
@@ -683,7 +682,7 @@ Pitch-bend Dive|7.0
 Pitch-bend Riser|-4.5
 Plague Climb|4.0
 Plague Line|-3.0
-Plague Pad|5.0
+Plague Pad|-0.5
 Plague Shifting Pad|-3.5
 Plague Stab|-2.0
 Plague Tom Run|-1.5
@@ -708,7 +707,7 @@ Pulse Star Throb|1.0
 Pulse Star Transition|-1.5
 Rage Drive|-0.5
 Rage Plucks|4.5
-Rage Shifting Pad|9.0
+Rage Shifting Pad|6.0
 Rage Sixteenths|8.0
 Rage Strummed Chords|0.0
 Rainfall Groove|-1.5
@@ -728,24 +727,24 @@ Razor Hit Chords|-0.5
 Razor Lift|-1.0
 Resonance Bass Run|-2.5
 Resonance Roller|-3.0
-Resonance Shifting Pad|3.0
+Resonance Shifting Pad|3.5
 Resonant Sweep|-0.5
 Reverb Hall Bed|1.5
 Reverb Hall Drive|-2.5
 Reverb Hall Transition|-2.5
 Reverse Swell Transition|3.0
-Rewind Pluck Line|4.0
+Rewind Pluck Line|3.5
 Rhythm Pit Lead|10.5
 Rhythm Pit Stomp|-3.0
 Rhythm Pit Top Loop|7.5
 Ride Eighths|6.5
 Riot Crack|-1.5
-Riot Gear Bass|-2.0
+Riot Gear Bass|-4.0
 Riot Gear Sub|0.0
 Riot Pulse|-1.5
 Ritual Kick Line|-1.5
 Riverbed Stab|-3.0
-Rivet Evolving Pad|5.0
+Rivet Evolving Pad|3.0
 Rivet Groove|-0.5
 Rivet Line Stomp|-2.0
 Rolling Kick Gap Bass|6.0
@@ -764,7 +763,7 @@ Ruin Sub Line|-0.5
 Rumble Drone|7.5
 Rumble Roller|-2.0
 Rust Belt Drive|-1.5
-Rust Belt Keys|-0.5
+Rust Belt Keys|0.0
 Rust Belt Pluck|-0.5
 Rust Belt Riff|0.0
 Rust Belt Riser|-2.5
@@ -773,10 +772,10 @@ Satellite Keys|1.0
 Satellite Pluck Line|6.5
 Satellite Roller|6.0
 Satellite Sixteenths|-3.5
-Save Point Chord Pulse|0.0
+Save Point Chord Pulse|0.5
 Save Point Climb|6.5
 Save Point Under-line|2.5
-Scrap Metal Pad|4.5
+Scrap Metal Pad|1.5
 Scrap Metal Sixteenths|-1.0
 Scrap Metal Tops|-1.5
 Scrapyard Chord Pulse|0.0
@@ -788,7 +787,7 @@ Seventh Up-Down|4.0
 Shadow Bass Sequence|-1.0
 Shadow Bed|-1.5
 Shadow Kick Pattern|2.5
-Shaman Bassline|-1.0
+Shaman Bassline|-1.5
 Shaman Pluck|5.5
 Shaman Roll Fill|-1.5
 Shaped Sixteenth Hats|9.5
@@ -798,7 +797,7 @@ Signal Bass Walk|0.0
 Signal Drive|-1.5
 Signal Loss Chords|-2.5
 Signal Loss Motif|0.5
-Signal Pad|4.0
+Signal Pad|-1.0
 Signal Snare Roll|-1.5
 Silence Build|3.0
 Silence Throb|0.0
@@ -825,12 +824,12 @@ Slag Drone|6.5
 Slag Hammer Pound|-2.0
 Slag Stabs|0.0
 Slag Sub Line|0.0
-Sledge Up-Down Arp|0.0
+Sledge Up-Down Arp|-0.5
 Slide Bass Run|-2.0
 Slide Build|-2.5
 Slide Pluck Line|-0.5
 Slide Stabs|1.0
-Slow Light Build|3.5
+Slow Light Build|3.0
 Slow Minor Progression|3.0
 Smoke Bass|6.0
 Smoke Bloom|-0.5
@@ -851,11 +850,11 @@ Sparse Room Loop|-2.0
 Sparse Room Sequence|5.0
 Sparse Room Stabs|-0.5
 Sparse Room Tom Fall|-1.5
-Sparse Room Wash|1.0
-Specter Chord Pulse|6.5
+Sparse Room Wash|3.5
+Specter Chord Pulse|5.5
 Specter Pluck|6.5
 Spin Back Break Loop|-3.0
-Spin Back Wash|-0.5
+Spin Back Wash|-1.5
 Spiral Bass Run|-1.0
 Spiral Changes|-0.5
 Spring Room Roll Fill|-2.0
@@ -866,13 +865,13 @@ Sprite Machine|-2.0
 Sprite Pattern|5.0
 Square Lead Phrase|13.5
 Squelch Thump|-1.5
-Starfield Bed|1.0
+Starfield Bed|0.5
 Starfield Kick Pattern|2.5
 Starfield Stomp|-3.0
 Starlight Riser|0.5
 Start Menu Pluck Line|6.5
 Static Answer|1.0
-Static Evolving Pad|8.5
+Static Evolving Pad|6.5
 Static Field Engine|-2.5
 Static Field Rising Pad|3.0
 Static Pound|-2.0
@@ -885,7 +884,7 @@ Stickwork Sub|0.0
 Stillness Sub|0.0
 Stillness Theme|14.0
 Stop Gap|0.0
-Street Evolving Pad|10.5
+Street Evolving Pad|0.0
 Street Throb|0.5
 Strobe Bass Run|-1.5
 Strobe Pulse|-1.5
@@ -899,14 +898,14 @@ Sunset Progression|4.5
 Supersaw Riff|1.0
 Surveillance Beat|-0.5
 Surveillance Crack|1.0
-Sweat Pressure|-1.5
+Sweat Pressure|-2.5
 Synapse Drive Bass|-1.0
-Synth-EBM Pad|1.0
+Synth-EBM Pad|2.5
 Synth-EBM Pluck|5.5
 Synth-EBM Verse Chords|-2.0
 Synthetic Groove|-2.0
-Synthetic Tears Arp|4.5
-Synthetic Tears Bass Arp|7.0
+Synthetic Tears Arp|3.5
+Synthetic Tears Bass Arp|-1.5
 Tape Delay Evolving Pad|2.0
 Tape Delay Kick Line|2.5
 Tape Delay Sixteenths|4.0
@@ -919,7 +918,7 @@ Techno Body Stab|-1.5
 Tension Drone|7.5
 Terror Gate|-2.5
 Terror Kick Pattern|-1.5
-Terror Top Loop|-0.5
+Terror Top Loop|-1.5
 Thin Line Beat|-5.0
 Thin Line Chord Pulse|17.0
 Thin Line Pluck Line|3.0
@@ -928,7 +927,7 @@ Third Eye Machine|-1.5
 Third Eye Riser|-1.5
 Three Against Four|-0.5
 Three-Oh Arp|2.5
-Three-Oh Bed|1.0
+Three-Oh Bed|-0.5
 Three-Oh Changes|-3.5
 Three-Oh Sub Line|-1.0
 Throttle Drive|-6.0
@@ -946,12 +945,12 @@ Tom Impact|-2.0
 Tom Run Down|3.5
 Tool Loop Percussion|-1.5
 Torment Bass Walk|-1.0
-Torment Bed|5.5
+Torment Bed|3.0
 Torment Bridge|-3.0
 Torment Comp|-1.0
 Torment Pressure|-1.5
 Torque Answer|0.5
-Torque Bass Run|6.5
+Torque Bass Run|3.0
 Torque Line|0.5
 Torque Plucks|3.5
 Torque Progression|-1.5
@@ -968,7 +967,7 @@ Transmission Perc Loop|0.0
 Transmission Sub Line|0.0
 Tribal Evolving Pad|6.5
 Tribal Riff|3.0
-Tribal Roller|6.5
+Tribal Roller|4.5
 Tribal Sixteenths|4.0
 Tribal Snare Roll|2.5
 Tribal Transition|-0.5
@@ -984,16 +983,16 @@ Undercurrent Sub Pulse|0.0
 Undertow Sub|-1.0
 Uniform Machine|-2.0
 Uniform Stabs|-3.0
-Uniform Throb|0.0
+Uniform Throb|-2.0
 Valley Drive|-2.0
 Valley Stabs|-4.0
 Vanguard Loop|-1.5
-Vanguard Pad|6.0
-Vanguard Shifting Pad|9.0
+Vanguard Pad|1.5
+Vanguard Shifting Pad|3.0
 Vanguard Theme|4.5
-Vanguard Turn|-1.5
-Vault Progression|-0.5
-Velvet Bassline|-1.0
+Vanguard Turn|-2.5
+Vault Progression|-2.0
+Velvet Bassline|-2.5
 Velvet Beat|-2.0
 Velvet Kick Pattern|-1.5
 Velvet Room Line|7.5
@@ -1012,9 +1011,9 @@ Warehouse Stomp|-1.5
 Warhead Low Drone|0.5
 Wasteland Clap Fill|-2.0
 Wasteland Pluck Line|5.0
-Wasteland Sub Line|-0.5
+Wasteland Sub Line|-1.0
 Whisper Groove|-2.5
-Wired Bed|5.0
+Wired Bed|1.5
 Wiretap Bass Riff|1.0
 Wiretap Bass Sequence|2.0
 Wiretap Drive Bass|-0.5

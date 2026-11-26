@@ -2,7 +2,7 @@
 
 Every factory preset in the [Sequence Library](07-instruments-and-midi.md#presets) carries a style, and it is written to that style's conventions. This page says what those conventions are, so the presets can teach as well as play: open one in the [Sequencer](07-instruments-and-midi.md#the-sequencer) next to the row here and you can see each rule in its notes. **Filters > Style** in the library shows a style's presets, and **By Style** groups them (see [Sort, group and filter](07-instruments-and-midi.md#sort-group-and-filter)).
 
-No two presets of a sub-role play the same notes, and a figure is in three styles at most, so a style's presets are its own and not another's under a new name. There are 37 styles. The presets lean towards techno (398 of the 1,025) and industrial (322): dark, driving and peak-time techno and EBM have the most, 44 to 48 each. Around them are smaller sets of 17 or 18 for electro, drum and bass, ambient, deep house, darksynth and psytrance, 22 for breaks, and six game styles of 22 to 24.
+No two presets of a sub-role play the same notes, and a figure is in three styles at most, so a style's presets are its own and not another's under a new name. There are 37 styles. The presets lean towards techno (398 of the 1,024) and industrial (321): dark, driving and peak-time techno and EBM have the most, 44 to 48 each. Around them are smaller sets of 17 or 18 for electro, drum and bass, ambient, deep house, darksynth and psytrance, 22 for breaks, and six game styles of 22 to 24.
 
 ## Techno
 
@@ -25,14 +25,14 @@ No two presets of a sub-role play the same notes, and a figure is in three style
 
 | Style | Tempo | What defines it |
 |---|---|---|
-| Industrial › EBM | 110–130 | A sequenced 16th or 8th bass in the kick's gaps, the jump from low to octave, a short gate and rests so it breathes; roots moving i to ♭VI to ♭VII or i to ♭II; disco or backbeat drums with near-flat "machine" velocities and big gated snares; alarm lines a semitone or a tritone apart |
+| Industrial › EBM | 110–130 | A sequencer bass driven in hard, short 16ths on a few notes (the root, its octave and fifth, the flat seventh, a semitone above), accented and syncopated, calling low and answering itself higher; militant drums, a hard snare and struck metal; cold minor and bare fifths, the chord barely moving (one step from i to ♭II, ♭VI or ♭VII and back at most); alarm lines a semitone or a tritone apart. Its bare kind stands on one bass note, a kick, a snare and one metal sound |
 | Industrial › Electro-industrial | 100–135 | Syncopated kicks, flammed snares, a 16th bass with a semitone shift, Phrygian and harmonic minor clusters, pitch-bend dives |
 | Industrial › Industrial rock | 90–140 | Programmed rock beats, synth riffs doubling a guitar in 8ths with ♭2 and ♭5 moves, power chords |
 | Industrial › Futurepop | 125–140 | Trance drums and an offbeat bass, minor 4-chord loops, gated 16th arps, 2-bar call-and-answer leads |
 | Industrial › Aggrotech | 130–150 | A hard 4/4, snare-roll fills, a distorted offbeat bass, 16th supersaw riffs |
-| Industrial › Synth-EBM | 120–135 | EBM bass sequences under synth-pop chords and a sung hook: 8th and 16th bass on the roots, minor progressions, square and saw leads in 2-bar phrases |
+| Industrial › Synth-EBM | 120–135 | EBM bass sequences under synth-pop chords and a sung hook: a driven 8th or 16th bass climbing root, fifth, flat seventh and octave, minor progressions, square and saw leads in 2-bar phrases |
 | Industrial › Darkwave | 100–118 | Drum-machine pop beats with long-reverb snares, an 8th root bass, chorused minor pads, simple 2-bar melodies |
-| Industrial › Techno-body | 125–140 | A techno kick and hats with an EBM 16th bass in the gaps, metallic percussion, the root changing in bar 3 or 4 |
+| Industrial › Techno-body | 125–140 | A techno kick and hats with an EBM 16th bass hammering, gating and biting in the gaps, struck metal, bare fifths and the flat seventh, the root changing in bar 3 or 4 |
 | Industrial › Dark electro | 110–125 | Broken and marching kicks, a gated snare, flat 8th and 16th hats, a galloping or 16th bass on a reese, harmonic minor and Phrygian, brass stabs over noise and drones |
 | Industrial › Coldwave | 104–120 | A drum machine at half weight with a snare or rim on 2 and 4, an 8th bass on the root, glassy chords and plucks, a sparse lead |
 

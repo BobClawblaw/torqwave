@@ -1,24 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="High Score Bloom" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor, F, G, A minor, each pushed an 8th ahead of its bar, the filter dipping at the middle and opening past where it began" style="Game/Chiptune" energy="5" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="High Score Bloom" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor, F, G, A minor, the top note stepping up at half the bar, the filter opening the whole way" style="Game/Chiptune" energy="5" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
-    <N p="57" s="0" l="3320" v="0.629921"/>
-    <N p="60" s="0" l="3320" v="0.629921"/>
-    <N p="64" s="0" l="3320" v="0.629921"/>
-    <N p="53" s="3360" l="3800" v="0.629921"/>
-    <N p="57" s="3360" l="3800" v="0.629921"/>
-    <N p="60" s="3360" l="3800" v="0.629921"/>
-    <N p="55" s="7200" l="3800" v="0.629921"/>
-    <N p="59" s="7200" l="3800" v="0.629921"/>
-    <N p="62" s="7200" l="3800" v="0.629921"/>
-    <N p="57" s="11040" l="4280" v="0.629921"/>
-    <N p="60" s="11040" l="4280" v="0.629921"/>
-    <N p="64" s="11040" l="4280" v="0.629921"/>
+    <N p="57" s="0" l="3800" v="0.629921"/>
+    <N p="60" s="0" l="3800" v="0.629921"/>
+    <N p="64" s="0" l="1880" v="0.629921"/>
+    <N p="65" s="1920" l="1880" v="0.629921"/>
+    <N p="53" s="3840" l="3800" v="0.629921"/>
+    <N p="57" s="3840" l="3800" v="0.629921"/>
+    <N p="60" s="3840" l="1880" v="0.629921"/>
+    <N p="62" s="5760" l="1880" v="0.629921"/>
+    <N p="55" s="7680" l="3800" v="0.629921"/>
+    <N p="59" s="7680" l="3800" v="0.629921"/>
+    <N p="62" s="7680" l="1880" v="0.629921"/>
+    <N p="64" s="9600" l="1880" v="0.629921"/>
+    <N p="57" s="11520" l="3800" v="0.629921"/>
+    <N p="60" s="11520" l="3800" v="0.629921"/>
+    <N p="64" s="11520" l="1880" v="0.629921"/>
+    <N p="65" s="13440" l="1880" v="0.629921"/>
   </NOTES>
   <LANE controller="74">
-    <P t="0" v="0.700000"/>
-    <P t="7680" v="0.400000"/>
+    <P t="0" v="0.400000"/>
     <P t="15359" v="0.900000"/>
   </LANE>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Platinum Square" bus="0" instrument="1" musical="1" gainDb="-2.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>75.VMjLgHD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBTrEFco4VcsAxTwUWXxUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Platinum Square" bus="0" instrument="1" musical="1" gainDb="-3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>75.VMjLgHD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBTrEFco4VcsAxTwUWXxUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>
