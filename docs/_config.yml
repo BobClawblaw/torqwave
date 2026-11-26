@@ -3,7 +3,7 @@
 title: Torqwave
 description: A free, open-source audio editor and DAW in one, for macOS, Windows and Linux.
 # The release the download buttons name. Change it when a release is published.
-version: "0.21.1"
+version: "0.22.0"
 repository: BobClawblaw/torqwave
 # Where the site is served, for the links and the picture a shared page shows (Open Graph, X cards).
 address: https://bobclawblaw.github.io/torqwave

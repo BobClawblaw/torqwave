@@ -113,7 +113,7 @@ juce::String Turn::after() const
 
 juce::String releaseNotesFor()
 {
-    return "0.21.1";
+    return "0.22.0";
 }
 
 bool asksAboutRelease (const juce::String& request)
@@ -136,7 +136,12 @@ juce::String aboutThisRelease (bool withNotes)
 
     return line + " The user may be asking about the program, not for a change: then answer from these notes in a few lines, make no changes, and "
            "say the full list is the changelog at https://github.com/BobClawblaw/torqwave/blob/main/CHANGELOG.md. "
-           "New in 0.21.1: Basic Drums is a drum synth and sampler in one: any pad can play your own samples in up to 16 velocity layers "
+           "New in 0.22.0: Torqwave Synth has nine oscillators, each with FM From to choose which oscillator drives it, and a "
+           "Complex folder of 58 patches that use four to nine of them and move as they are held; re-striking a held note, sweeping "
+           "the cutoff and legato slides no longer click; 174 near-copies are taken out of the factory patches, 3,569 left; the "
+           "Sequence Library is rewritten so no two presets play the same notes (1,024 sequences, 116 kits), its drones and pads "
+           "are levelled, and its styles, kits and audition patterns are named for what they play. "
+           "0.21.1: Basic Drums is a drum synth and sampler in one: any pad can play your own samples in up to 16 velocity layers "
            "with round robin, there are 64 pads (34 user pads), every pad has its own envelope, transient shaper, saturator, EQ and "
            "compressor, 24 more synthesized sources make 54, three more kits make fifteen, pads take choke groups of your own, and Files > "
            "Import Battery Kit and Import Folder of Sounds bring kits in; Continue where you left off keeps a session never saved; "
