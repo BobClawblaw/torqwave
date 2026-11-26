@@ -4,6 +4,11 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Torqwave Synth: two patches named for a style renamed with the styles**
+- EBM Sequence Bass is now **Machine Sequence** and Body Music **Iron Motion**, as the library's styles take generic names in this release. The sounds are unchanged (the same settings' hashes).
+- **Found under the old names:** loading a patch by its old name, a favourite marked under it and a session or preset saved with it all give the renamed patch.
+- Tested: `--instruments` (a new check: each old name loads, comes back from a saved state and stays a favourite).
+
 **Torqwave Synth: 174 near-copies taken out of the factory patches, 3,569 left**
 - **Which:** within each category, a patch whose sound is closer than 2.25 to one that stays (the distance Decrypt and the second bank use, measured on every patch's note by `Scripts/patch_sweep.py sweep`). The patches were taken in order, hand-made first, then the first bank, layered, the second bank, and those with the most movement first. Before the cut, ten pairs from just under and just over the line were rendered and listened to, and the line was set there.
 - **Gone:** 165 from the first bank and 9 layered: Bass 37, Perc 26, Lead 24, Acid 22, Pluck 13, Stab 12, Riser 9, Drone 8, Pad 6, Reese 3, Organ 3, Texture, Sub, Impact and Drum 2 each, Vox, Strings and Sequence 1 each.

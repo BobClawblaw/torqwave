@@ -594,7 +594,7 @@ namespace
 
         // Chosen by ear for the first Sounds page, each on a part that suits it.
         const std::vector<std::pair<const char*, const Part*>> featured {
-            { "Target Lock Bass", &bassLine }, { "EBM Sequence Bass", &bassLine }, { "Warehouse Sub", &bassLine }, { "Abyss Reese", &bassLine },
+            { "Target Lock Bass", &bassLine }, { "Machine Sequence", &bassLine }, { "Warehouse Sub", &bassLine }, { "Abyss Reese", &bassLine },
             { "Acid Corrosion", &bassLine }, { "Siren Burn", &melody }, { "Mercury Lead", &melody }, { "Minor Stab", &stabs },
             { "Glass Shard", &arpeggio }, { "Wailing Fuzz Lead", &melody }, { "Body Riff Power Chord", &power }, { "Swarm Drone", &held },
             { "Concrete Pad", &minorChords }, { "Reactor Drone", &one }, { "Cold Bell", &arpeggio }, { "Gated Machine", &minorChords },

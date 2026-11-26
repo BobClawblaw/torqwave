@@ -51,9 +51,9 @@ namespace WaveSynthPatchBuilder
         add ("FM Basement", "Bass").osc (1, fm, 30).subOsc (40).env (2, 0, 180, 10, 120, 70).mod (env2, "osc1Position", 40)
             .filter (1, ladder24, 1200, 15).amp (1, 300, 80, 80).mono().level (-4)
             .macro (1, "Index").mod (macro1, "osc1Position", 60).macro (2, "Bark").mod (macro2, "filter1Drive", 70);
-        add ("EBM Sequence Bass", "Bass").osc (1, analog, sawPos).osc (2, analog, squarePos, 50).pitch (2, 0, 7).filter (1, ladder24, 350, 40, 25)
+        add ("Machine Sequence", "Bass").osc (1, analog, sawPos).osc (2, analog, squarePos, 50).pitch (2, 0, 7).filter (1, ladder24, 350, 40, 25)
             .env (2, 0, 110, 0, 90, 80).mod (env2, "filter1Cutoff", 40).amp (0, 180, 0, 50).mono (0, false).level (-3).standardMacros (30);
-        add ("Body Music", "Bass").osc (1, pulse, 20).osc (2, analog, sawPos, 70).pitch (2, -12).filter (1, ladder12, 600, 30, 20)
+        add ("Iron Motion", "Bass").osc (1, pulse, 20).osc (2, analog, sawPos, 70).pitch (2, -12).filter (1, ladder12, 600, 30, 20)
             .env (2, 0, 160, 0, 120, 70).mod (env2, "filter1Cutoff", 30).amp (0, 250, 0, 60).mono (0, false).drive (tube, 25).level (-12)
             .standardMacros (30);
         // Target Lock Bass: a sequenced bass matched by spectrum to an early EBM classic: one sawtooth through a
@@ -538,6 +538,14 @@ namespace WaveSynth
     {
         static const auto all = WaveSynthPatchBuilder::build();
         return all;
+    }
+
+    juce::String patchNamedNow (const juce::String& name)
+    {
+        // Two factory patches that carried a style's name, renamed with the styles in 0.22.0.
+        if (name.equalsIgnoreCase ("EBM Sequence Bass")) return "Machine Sequence";
+        if (name.equalsIgnoreCase ("Body Music"))        return "Iron Motion";
+        return name;
     }
 
     const juce::StringArray& patchCategories()

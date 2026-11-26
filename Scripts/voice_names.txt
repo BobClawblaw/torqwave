@@ -49,8 +49,8 @@ patch|Bass|Grinder
 patch|Bass|Pulse Bunker
 patch|Bass|Distorted 909 Bass
 patch|Bass|FM Basement
-patch|Bass|EBM Sequence Bass
-patch|Bass|Body Music
+patch|Bass|Machine Sequence
+patch|Bass|Iron Motion
 patch|Bass|Target Lock Bass
 patch|Bass|Three Stage Bass
 patch|Bass|Girder Bass

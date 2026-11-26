@@ -58,7 +58,7 @@ namespace
         { "Dead Hat", "Pressed Kick" },
         { "Dead Pebble", "Dry Pin" },
         { "Dead Throb", "Warehouse Sub" },
-        { "Deep Bass", "Body Music" },
+        { "Deep Bass", "Iron Motion" },
         { "Derelict Chop", "Abandoned Crack" },
         { "Derelict Drip", "Abandoned Drip" },
         { "Derelict Engine", "Foundry Pump" },
@@ -198,8 +198,10 @@ namespace
 
     /** The name itself if it is a factory patch, the patch it was merged into if it was taken out,
         or nothing. */
-    juce::String stillAFactoryPatch (const juce::String& name)
+    juce::String stillAFactoryPatch (const juce::String& asSaved)
     {
+        const auto name = patchNamedNow (asSaved);
+
         if (indexOfPatch (name) >= 0)
             return name;
 

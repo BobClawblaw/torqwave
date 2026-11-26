@@ -49,8 +49,8 @@ Bass|Grinder|acdb982462479aa1
 Bass|Pulse Bunker|1487e64a4d83f32f
 Bass|Distorted 909 Bass|cc04c1aef7b8e283
 Bass|FM Basement|fc27f11786423c47
-Bass|EBM Sequence Bass|667251ac8c6709f5
-Bass|Body Music|bee67b05610ac250
+Bass|Machine Sequence|667251ac8c6709f5
+Bass|Iron Motion|bee67b05610ac250
 Bass|Target Lock Bass|f9b4a69efe44d359
 Bass|Three Stage Bass|dd347f1720cfc8d9
 Bass|Girder Bass|4fdc5afee6e955a9
