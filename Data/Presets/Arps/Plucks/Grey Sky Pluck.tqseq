@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Grey Sky Pluck" role="Arps" subRole="Plucks" key="A minor" tags="" note="8ths up and down, the fourth in place of the third, through the roots A, A" style="Industrial/Coldwave" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="104.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Grey Sky Pluck" role="Arps" subRole="Plucks" key="A minor" tags="" note="8ths up and down, the fourth in place of the third, through the roots A, A" style="Machine/Cold Glow" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="104.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.755906"/>
     <N p="62" s="480" l="120" v="0.755906"/>

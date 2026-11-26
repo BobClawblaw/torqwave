@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Metal Sixteenths" role="Drums" subRole="Percussion" key="" tags="" note="Metallic 16ths accented every three steps, then every six" style="Techno/Hard" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="148.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Metal Sixteenths" role="Drums" subRole="Percussion" key="" tags="" note="Metallic 16ths accented every three steps, then every six" style="Floor/Hard Floor" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="148.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="56" s="0" l="120" v="0.771654"/>
     <N p="56" s="240" l="120" v="0.314961"/>

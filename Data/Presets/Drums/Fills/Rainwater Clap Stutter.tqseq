@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rainwater Clap Stutter" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, a clap and snare on 3, then claps into the bar" style="Drum and Bass/Liquid" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rainwater Clap Stutter" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, a clap and snare on 3, then claps into the bar" style="Fast/Fast Flow" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="38" s="1920" l="120" v="0.771654"/>

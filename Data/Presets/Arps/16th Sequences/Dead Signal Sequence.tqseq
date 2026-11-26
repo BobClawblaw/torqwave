@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Dead Signal Sequence" role="Arps" subRole="16th Sequences" key="A minor" tags="Chromatic,Phrygian" note="Root, fifth, third and a rest, the octave leading the third time, the root, the semitone above it and the fifth, through the roots A, D, E, A" style="Industrial/Dark electro" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="125.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Dead Signal Sequence" role="Arps" subRole="16th Sequences" key="A minor" tags="Chromatic,Phrygian" note="Root, fifth, third and a rest, the octave leading the third time, the root, the semitone above it and the fifth, through the roots A, D, E, A" style="Machine/Dark Circuit" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="125.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.755906"/>
     <N p="64" s="240" l="120" v="0.755906"/>

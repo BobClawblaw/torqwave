@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Wasteland Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="Phrygian" note="Four plucks, wide apart, root, fifth and octave, no third, through the roots A, B flat" style="Ambient/Dark ambient" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="80.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Wasteland Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="Phrygian" note="Four plucks, wide apart, root, fifth and octave, no third, through the roots A, B flat" style="Space/Dark Space" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="80.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="120" v="0.755906"/>
     <N p="57" s="1440" l="120" v="0.755906"/>

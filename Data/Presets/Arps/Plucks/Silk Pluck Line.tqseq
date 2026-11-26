@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Silk Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="8ths up and down, the root, the fifth and the ninth, on A" style="Drum and Bass/Liquid" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="170.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Silk Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="8ths up and down, the root, the fifth and the ninth, on A" style="Fast/Fast Flow" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="170.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.755906"/>
     <N p="64" s="480" l="120" v="0.755906"/>

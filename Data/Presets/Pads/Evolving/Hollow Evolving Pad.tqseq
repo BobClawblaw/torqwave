@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Hollow Evolving Pad" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor, A minor, F, E, the first two of them, two bars each, the filter closing the whole way" style="Ambient/Dark ambient" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="90.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Hollow Evolving Pad" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor, A minor, F, E, the first two of them, two bars each, the filter closing the whole way" style="Space/Dark Space" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="90.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="7640" v="0.629921"/>
     <N p="60" s="0" l="7640" v="0.629921"/>

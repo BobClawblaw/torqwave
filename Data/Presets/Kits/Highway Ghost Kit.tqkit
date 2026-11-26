@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Highway Ghost Kit" key="A minor" tags="Starter kit" note="A starting point for Darksynth: one of each part, in A minor at 100 BPM" style="Synthwave/Darksynth">
-  <TORQWAVE_SEQUENCE version="1" name="Laser Grid Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a snare on 2 and 4 and 16th hats with the offbeat lifted" style="Synthwave/Darksynth" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_KIT version="1" name="Highway Ghost Kit" key="A minor" tags="Starter kit" note="A starting point for Neon Menace: one of each part, in A minor at 100 BPM" style="Neon/Neon Menace">
+  <TORQWAVE_SEQUENCE version="1" name="Laser Grid Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a snare on 2 and 4 and 16th hats with the offbeat lifted" style="Neon/Neon Menace" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="42" s="0" l="120" v="0.503937"/>
@@ -50,7 +50,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Overdrive Bassline" role="Bass" subRole="Synth Bass" key="A minor" tags="Harmonic minor" note="Pumping 16ths with the octave, moving through the roots of A minor, G sharp diminished, F, G sharp diminished" style="Synthwave/Darksynth" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Overdrive Bassline" role="Bass" subRole="Synth Bass" key="A minor" tags="Harmonic minor" note="Pumping 16ths with the octave, moving through the roots of A minor, G sharp diminished, F, G sharp diminished" style="Neon/Neon Menace" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="33" s="0" l="144" v="0.755906"/>
       <N p="33" s="240" l="144" v="0.755906"/>
@@ -119,7 +119,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Abyss Reese" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhk2byAhTkU1bkIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Chrome Night Turn" role="Harmony" subRole="Progressions" key="A minor" tags="Harmonic minor" note="A minor, F, D minor, E, a bar each" style="Synthwave/Darksynth" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Chrome Night Turn" role="Harmony" subRole="Progressions" key="A minor" tags="Harmonic minor" note="A minor, F, D minor, E, a bar each" style="Neon/Neon Menace" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="3800" v="0.661417"/>
       <N p="60" s="0" l="3800" v="0.661417"/>
@@ -136,7 +136,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Cold Saw Lead" bus="0" instrument="1" musical="1" gainDb="-5.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxPuwFYfLUX2ABSkEFYh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Laser Grid Sixteenths" role="Arps" subRole="16th Sequences" key="A minor" tags="" note="Root, fifth, third and a rest, the octave leading the third time, the root, the third and the seventh, through the roots A, G" style="Synthwave/Darksynth" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Laser Grid Sixteenths" role="Arps" subRole="16th Sequences" key="A minor" tags="" note="Root, fifth, third and a rest, the octave leading the third time, the root, the third and the seventh, through the roots A, G" style="Neon/Neon Menace" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="120" v="0.755906"/>
       <N p="67" s="240" l="120" v="0.755906"/>
@@ -165,7 +165,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Wire Pluck" bus="0" instrument="1" musical="1" gainDb="-3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUoIWYf.Ea0M1Zh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Laser Grid Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Synthwave/Darksynth" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Laser Grid Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Neon/Neon Menace" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="38" s="1920" l="120" v="0.314961"/>
@@ -179,7 +179,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Vice Lift" role="SFX" subRole="Risers" key="A minor" tags="" note="Four-note A minor arpeggios in 16ths, each starting a chord note higher than the last" style="Synthwave/Darksynth" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Vice Lift" role="SFX" subRole="Risers" key="A minor" tags="" note="Four-note A minor arpeggios in 16ths, each starting a chord note higher than the last" style="Neon/Neon Menace" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="45" s="0" l="120" v="0.503937"/>
       <N p="48" s="240" l="120" v="0.511811"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Pitch-bend Riser" role="SFX" subRole="Risers" key="A minor" tags="" note="One held note bending up two semitones over four bars as the filter opens" style="Techno/Driving" energy="4" character="Bright,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Pitch-bend Riser" role="SFX" subRole="Risers" key="A minor" tags="" note="One held note bending up two semitones over four bars as the filter opens" style="Floor/Driving" energy="4" character="Bright,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="15320" v="0.708661"/>
   </NOTES>

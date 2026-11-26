@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Blast Furnace Engine" role="Drums" subRole="Full Grooves" key="" tags="" note="Fast four-to-the-floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a crash every other bar; a kick roll ends bar 4" style="Techno/Hard" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="148.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Blast Furnace Engine" role="Drums" subRole="Full Grooves" key="" tags="" note="Fast four-to-the-floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a crash every other bar; a kick roll ends bar 4" style="Floor/Hard Floor" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="148.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="49" s="0" l="120" v="0.771654"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Velvet Room Line" role="Melody" subRole="Leads" key="A minor" tags="" note="A two-bar sparse phrase in A minor" style="House/Deep house" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Velvet Room Line" role="Melody" subRole="Leads" key="A minor" tags="" note="A two-bar sparse phrase in A minor" style="Swing/Deep Swing" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="72" s="0" l="960" v="0.755906"/>
     <N p="71" s="1920" l="120" v="0.755906"/>

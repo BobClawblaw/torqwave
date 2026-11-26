@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Transmission Pattern" role="Arps" subRole="16th Sequences" key="A minor" tags="Chromatic,Phrygian" note="Three notes against four beats, turning back at the octave, the root, its tritone and the octave, through the roots A, B flat, G, A" style="Industrial/Electro-industrial" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Transmission Pattern" role="Arps" subRole="16th Sequences" key="A minor" tags="Chromatic,Phrygian" note="Three notes against four beats, turning back at the octave, the root, its tritone and the octave, through the roots A, B flat, G, A" style="Machine/Broken Circuit" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.755906"/>
     <N p="63" s="240" l="120" v="0.755906"/>

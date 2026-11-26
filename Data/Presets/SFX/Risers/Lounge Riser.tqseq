@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Lounge Riser" role="SFX" subRole="Risers" key="" tags="" note="A shaker in 16ths rising for two bars, open hats on the offbeats of bar 2 and a clap on its 2 and 4" style="House/Deep house" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Lounge Riser" role="SFX" subRole="Risers" key="" tags="" note="A shaker in 16ths rising for two bars, open hats on the offbeats of bar 2 and a clap on its 2 and 4" style="Swing/Deep Swing" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="70" s="0" l="120" v="0.283465"/>
     <N p="70" s="240" l="120" v="0.299213"/>

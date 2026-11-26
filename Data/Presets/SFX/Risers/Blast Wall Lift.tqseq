@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Blast Wall Lift" role="SFX" subRole="Risers" key="" tags="" note="The kick in quarters for two bars, 8ths in bar 3 with a ride between, 16ths in bar 4 with a clap on every beat" style="Techno/Hard" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="155.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Blast Wall Lift" role="SFX" subRole="Risers" key="" tags="" note="The kick in quarters for two bars, 8ths in bar 3 with a ride between, 16ths in bar 4 with a clap on every beat" style="Floor/Hard Floor" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="155.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.409449"/>
     <N p="36" s="960" l="120" v="0.440945"/>

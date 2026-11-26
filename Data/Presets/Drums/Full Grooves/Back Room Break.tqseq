@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Back Room Break" role="Drums" subRole="Full Grooves" key="" tags="" note="A two-step break with a kick pickup in bar 2, ghost snares before the backbeat, 8th hats and a ride on the beat" style="Breakbeat/Breaks" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Back Room Break" role="Drums" subRole="Full Grooves" key="" tags="" note="A two-step break with a kick pickup in bar 2, ghost snares before the backbeat, 8th hats and a ride on the beat" style="Broken/Broken Beat" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="42" s="0" l="120" v="0.771654"/>

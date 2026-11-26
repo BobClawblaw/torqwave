@@ -2,9 +2,21 @@
 #include "SequenceMidi.h"
 #include "NoteTools.h"
 #include "FactoryPresetData.h"
+#include "PresetRenames.h"
 
 namespace
 {
+    /** A factory style's name as it is now, for one saved before 0.22.0 renamed it ("Industrial/EBM" or
+        the genre alone, "Industrial"); any other as it is. */
+    juce::String renamedStyle (const juce::String& style)
+    {
+        for (auto& [before, now] : renamedStyles)
+            if (style == before)
+                return now;
+
+        return style;
+    }
+
     juce::File& chosenFolder()
     {
         static juce::File chosen;
@@ -38,7 +50,16 @@ namespace
     std::unique_ptr<juce::XmlElement> factoryRatings()
     {
         auto xml = juce::XmlDocument::parse (SequenceLibrary::factoryRatingsFile());
-        return xml != nullptr && xml->hasTagName ("TORQWAVE_PRESET_RATINGS") ? std::move (xml) : std::make_unique<juce::XmlElement> ("TORQWAVE_PRESET_RATINGS");
+
+        if (xml == nullptr || ! xml->hasTagName ("TORQWAVE_PRESET_RATINGS"))
+            return std::make_unique<juce::XmlElement> ("TORQWAVE_PRESET_RATINGS");
+
+        // A preset renamed since its rating was made keeps it under its new path (unless that has one).
+        for (auto& [before, now] : renamedPresetPaths)
+            if (auto* line = xml->getChildByAttribute ("path", before); line != nullptr && xml->getChildByAttribute ("path", now) == nullptr)
+                line->setAttribute ("path", now);
+
+        return xml;
     }
 
     /** Changes a factory preset's line in factoryRatingsFile (dropping it when it says nothing). */
@@ -671,8 +692,14 @@ bool SequenceLibrary::passes (const Entry& e, const Filters& f, const juce::Stri
     if (f.role.isNotEmpty() && role != f.role)
         return false;
 
-    // A style, or a whole genre.
-    if (f.style.isNotEmpty() && e.style != f.style && ! (f.style.indexOfChar ('/') < 0 && SequenceFile::splitStyle (e.style).first == f.style))
+    // A style, or a whole genre; a factory preset also by the name its style had before 0.22.0, so a
+    // search saved then still finds it (your own sequences keep whatever style you gave them).
+    const auto styleIs = [&e] (const juce::String& s)
+    {
+        return e.style == s || (s.indexOfChar ('/') < 0 && SequenceFile::splitStyle (e.style).first == s);
+    };
+
+    if (f.style.isNotEmpty() && ! styleIs (f.style) && ! (e.factory && styleIs (renamedStyle (f.style))))
         return false;
 
     if (f.key.isNotEmpty() && (! NoteTools::parseKey (e.key).has_value() || NoteTools::parseKey (e.key) != NoteTools::parseKey (f.key)))

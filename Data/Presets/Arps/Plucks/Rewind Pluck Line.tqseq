@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rewind Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, the root, the third and the seventh, through the roots A, A, F, G" style="Breakbeat/Breaks" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rewind Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, the root, the third and the seventh, through the roots A, A, F, G" style="Broken/Broken Beat" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="69" s="0" l="120" v="0.755906"/>
     <N p="67" s="720" l="120" v="0.755906"/>

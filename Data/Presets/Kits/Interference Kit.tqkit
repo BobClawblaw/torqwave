@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Interference Kit" key="A minor" tags="Starter kit" note="A starting point for Electro-industrial: one of each part, in A minor at 110 BPM" style="Industrial/Electro-industrial">
-  <TORQWAVE_SEQUENCE version="1" name="Cold Wire Engine" role="Drums" subRole="Full Grooves" key="" tags="" note="An electro kick on 1, the a of 2 and 3, a snare on 2 and 4 with ghost notes in between, 16th hats with the offbeat lifted and a tom run ends bar 4" style="Industrial/Electro-industrial" energy="2" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_KIT version="1" name="Interference Kit" key="A minor" tags="Starter kit" note="A starting point for Broken Circuit: one of each part, in A minor at 110 BPM" style="Machine/Broken Circuit">
+  <TORQWAVE_SEQUENCE version="1" name="Cold Wire Engine" role="Drums" subRole="Full Grooves" key="" tags="" note="An electro kick on 1, the a of 2 and 3, a snare on 2 and 4 with ghost notes in between, 16th hats with the offbeat lifted and a tom run ends bar 4" style="Machine/Broken Circuit" energy="2" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="42" s="0" l="120" v="0.503937"/>
@@ -106,7 +106,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Circuit Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="A syncopated electro line round the root and fifth, moving through the roots of A minor, D minor, E, A minor" style="Industrial/Electro-industrial" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Circuit Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="A syncopated electro line round the root and fifth, moving through the roots of A minor, D minor, E, A minor" style="Machine/Broken Circuit" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="33" s="0" l="144" v="0.755906"/>
       <N p="33" s="720" l="144" v="0.755906"/>
@@ -135,7 +135,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Acid Helix" bus="0" instrument="1" musical="1" gainDb="-8.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPikFYffTYrkFdh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Interference Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Chromatic,Phrygian" note="Short chords of diminished triads on A, B flat, comping over two bars, in a dotted figure that turns round at beat 3" style="Industrial/Electro-industrial" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Interference Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Chromatic,Phrygian" note="Short chords of diminished triads on A, B flat, comping over two bars, in a dotted figure that turns round at beat 3" style="Machine/Broken Circuit" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.645669"/>
       <N p="60" s="0" l="220" v="0.645669"/>
@@ -170,7 +170,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Dub Chord Stab" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>74.VMjLgDD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQ0IFHCg1axQFHSQWXhIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Datastream Up-Down Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Chromatic,Phrygian" note="Three up, a rest, three down, a rest, diminished triads, through the roots A, B flat" style="Industrial/Electro-industrial" energy="2" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Datastream Up-Down Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Chromatic,Phrygian" note="Three up, a rest, three down, a rest, diminished triads, through the roots A, B flat" style="Machine/Broken Circuit" energy="2" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="120" v="0.755906"/>
       <N p="60" s="240" l="120" v="0.755906"/>
@@ -199,7 +199,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Glass Shard" bus="0" instrument="1" musical="1" gainDb="-1.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxQrE1byAxTnElbjIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Circuit Clap Stutter" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps stuttering into the next bar" style="Industrial/Electro-industrial" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Circuit Clap Stutter" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps stuttering into the next bar" style="Machine/Broken Circuit" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="1440" l="120" v="0.771654"/>
@@ -212,7 +212,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Cold Wire Impact" role="SFX" subRole="Impacts" key="A minor" tags="Chromatic" note="A low tritone inside an octave, A, E flat and A, struck and left to ring" style="Industrial/Electro-industrial" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Cold Wire Impact" role="SFX" subRole="Impacts" key="A minor" tags="Chromatic" note="A low tritone inside an octave, A, E flat and A, struck and left to ring" style="Machine/Broken Circuit" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="33" s="0" l="3800" v="0.976378"/>
       <N p="39" s="0" l="3800" v="0.881890"/>

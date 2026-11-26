@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Piston Transition" role="SFX" subRole="Transitions" key="" tags="" note="A bar of four to the floor, then the kick stops at beat 3 and the snare takes the last two beats, 8ths then 16ths" style="Techno/Driving" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Piston Transition" role="SFX" subRole="Transitions" key="" tags="" note="A bar of four to the floor, then the kick stops at beat 3 and the snare takes the last two beats, 8ths then 16ths" style="Floor/Driving" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.771654"/>
     <N p="36" s="960" l="120" v="0.771654"/>

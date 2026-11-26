@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Alarm Stab Tritone" role="Harmony" subRole="Stabs" key="A minor" tags="Chromatic" note="A and E flat together: the alarm interval, struck on the beat" style="Industrial/EBM" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Alarm Stab Tritone" role="Harmony" subRole="Stabs" key="A minor" tags="Chromatic" note="A and E flat together: the alarm interval, struck on the beat" style="Machine/Machine Pulse" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="220" v="0.724409"/>
     <N p="63" s="0" l="220" v="0.724409"/>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Afterglow Kit" key="A minor" tags="Starter kit" note="A starting point for Melodic: one of each part, in A minor at 122 BPM" style="Techno/Melodic">
-  <TORQWAVE_SEQUENCE version="1" name="Halo Stomp" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap on 2 and 4, open hats on the offbeats and a rimshot every three 16ths, against the beat" style="Techno/Melodic" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_KIT version="1" name="Afterglow Kit" key="A minor" tags="Starter kit" note="A starting point for Melodic: one of each part, in A minor at 122 BPM" style="Floor/Melodic">
+  <TORQWAVE_SEQUENCE version="1" name="Halo Stomp" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap on 2 and 4, open hats on the offbeats and a rimshot every three 16ths, against the beat" style="Floor/Melodic" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="37" s="0" l="120" v="0.582677"/>
@@ -22,7 +22,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Standard" bus="0" instrument="1" musical="1" gainDb="-8.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>66.VMjLgjC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHSQWXtQVXxQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Aurora Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="An 8th on every offbeat, moving through the roots of A minor, F, C, G" style="Techno/Melodic" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Aurora Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="An 8th on every offbeat, moving through the roots of A minor, F, C, G" style="Floor/Melodic" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="33" s="480" l="144" v="0.755906"/>
       <N p="33" s="1440" l="144" v="0.755906"/>
@@ -43,7 +43,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Warehouse Sub" bus="0" instrument="1" musical="1" gainDb="-6.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUgIWYn8VcyUFHSUmXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Glacier Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short chords of the root, the fifth and the ninth on A, F, comping over two bars, on the one, then pairs across the beats" style="Techno/Melodic" energy="2" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Glacier Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short chords of the root, the fifth and the ninth on A, F, comping over two bars, on the one, then pairs across the beats" style="Floor/Melodic" energy="2" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.645669"/>
       <N p="64" s="0" l="220" v="0.645669"/>
@@ -78,7 +78,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Grey Sky" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxQxUVdfL0Z4IxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Halo Climb" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Up past the octave to the third above it and back, in 16ths, the root, the fifth and the ninth, on A" style="Techno/Melodic" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Halo Climb" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Up past the octave to the third above it and back, in 16ths, the root, the fifth and the ninth, on A" style="Floor/Melodic" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="120" v="0.755906"/>
       <N p="64" s="240" l="120" v="0.755906"/>
@@ -99,7 +99,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Wire Pluck" bus="0" instrument="1" musical="1" gainDb="-3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUoIWYf.Ea0M1Zh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Lumen Tom Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then toms falling high to low" style="Techno/Melodic" energy="2" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Lumen Tom Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then toms falling high to low" style="Floor/Melodic" energy="2" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="960" l="120" v="0.944882"/>
@@ -114,7 +114,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Standard" bus="0" instrument="1" musical="1" gainDb="-3.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>66.VMjLgjC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHSQWXtQVXxQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Skyline Lift" role="SFX" subRole="Risers" key="A minor" tags="" note="An A minor ninth arpeggio in 8ths climbing four octaves over two bars" style="Techno/Melodic" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Skyline Lift" role="SFX" subRole="Risers" key="A minor" tags="" note="An A minor ninth arpeggio in 8ths climbing four octaves over two bars" style="Floor/Melodic" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="45" s="0" l="240" v="0.472441"/>
       <N p="48" s="480" l="240" v="0.496063"/>

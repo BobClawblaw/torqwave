@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Five-Step Shaker" role="Drums" subRole="Percussion" key="" tags="" note="A shaker every five 16ths, coming round against the bar over four bars" style="Techno/Hypnotic" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Five-Step Shaker" role="Drums" subRole="Percussion" key="" tags="" note="A shaker every five 16ths, coming round against the bar over four bars" style="Floor/Hypnotic" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="70" s="0" l="120" v="0.582677"/>
     <N p="37" s="720" l="120" v="0.503937"/>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Hex Kit" key="A minor" tags="Starter kit" note="A starting point for Dark electro: one of each part, in A minor at 110 BPM" style="Industrial/Dark electro">
-  <TORQWAVE_SEQUENCE version="1" name="Grave Pulse" role="Drums" subRole="Full Grooves" key="" tags="" note="A flat machine kick on every beat, a snare on 2 and 4, 8th hats, the downbeats stronger, a crash on the one and a tom run ends bar 4" style="Industrial/Dark electro" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_KIT version="1" name="Hex Kit" key="A minor" tags="Starter kit" note="A starting point for Dark Circuit: one of each part, in A minor at 110 BPM" style="Machine/Dark Circuit">
+  <TORQWAVE_SEQUENCE version="1" name="Grave Pulse" role="Drums" subRole="Full Grooves" key="" tags="" note="A flat machine kick on every beat, a snare on 2 and 4, 8th hats, the downbeats stronger, a crash on the one and a tom run ends bar 4" style="Machine/Dark Circuit" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="42" s="0" l="120" v="0.771654"/>
@@ -74,7 +74,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Dead Signal Drive Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Driving 16ths on the root, moving through the roots of A minor, D minor, E, A minor" style="Industrial/Dark electro" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Dead Signal Drive Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Driving 16ths on the root, moving through the roots of A minor, D minor, E, A minor" style="Machine/Dark Circuit" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="33" s="0" l="144" v="0.755906"/>
       <N p="33" s="240" l="144" v="0.755906"/>
@@ -143,7 +143,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Abandoned Piston" bus="0" instrument="1" musical="1" gainDb="-7.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>76.VMjLgLD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhElaj8lakQFHPk1bz8lah7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Dead Signal Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Chromatic" note="Short chords of diminished triads on A, A, comping over two bars, three times a bar" style="Industrial/Dark electro" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Dead Signal Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Chromatic" note="Short chords of diminished triads on A, A, comping over two bars, three times a bar" style="Machine/Dark Circuit" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.645669"/>
       <N p="60" s="0" l="220" v="0.645669"/>
@@ -166,7 +166,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Factory Hit" bus="0" instrument="1" musical="1" gainDb="-7.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhQgMFcuIWdffTZzIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Plague Climb" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Phrygian" note="Three up, a rest, three down, a rest, the root, the semitone above it and the fifth, through the roots A, B flat" style="Industrial/Dark electro" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Plague Climb" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Phrygian" note="Three up, a rest, three down, a rest, the root, the semitone above it and the fifth, through the roots A, B flat" style="Machine/Dark Circuit" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="120" v="0.755906"/>
       <N p="58" s="240" l="120" v="0.755906"/>
@@ -195,7 +195,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Acid Shard" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPikFYfLEZgIGYh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Plague Tom Run" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then high and mid toms trading and a low tom into the bar" style="Industrial/Dark electro" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Plague Tom Run" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then high and mid toms trading and a low tom into the bar" style="Machine/Dark Circuit" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="1440" l="120" v="0.771654"/>
@@ -208,7 +208,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Hex Riser" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="16ths in fours, each four a minor third above the last: a diminished climb of two octaves" style="Industrial/Dark electro" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Hex Riser" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="16ths in fours, each four a minor third above the last: a diminished climb of two octaves" style="Machine/Dark Circuit" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="45" s="0" l="120" v="0.519685"/>
       <N p="45" s="240" l="120" v="0.527559"/>

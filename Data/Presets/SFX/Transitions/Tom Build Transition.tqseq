@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Tom Build Transition" role="SFX" subRole="Transitions" key="" tags="" note="Toms in 8ths, then 16ths, louder through two bars" style="Techno/Percussive" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Tom Build Transition" role="SFX" subRole="Transitions" key="" tags="" note="Toms in 8ths, then 16ths, louder through two bars" style="Floor/Percussive" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="48" s="0" l="120" v="0.393701"/>
     <N p="48" s="480" l="120" v="0.425197"/>

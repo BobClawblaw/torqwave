@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Peak Lead Motif" role="Melody" subRole="Leads" key="A minor" tags="" note="A three-note motif pushing up a step in bar 2" style="Techno/Peak-time" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="136.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Peak Lead Motif" role="Melody" subRole="Leads" key="A minor" tags="" note="A three-note motif pushing up a step in bar 2" style="Floor/Peak-time" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="136.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="69" s="0" l="120" v="0.755906"/>
     <N p="69" s="720" l="120" v="0.755906"/>

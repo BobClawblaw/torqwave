@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Cartridge Changes" role="Harmony" subRole="Progressions" key="A minor" tags="" note="A minor, F, C, G, a bar each" style="Game/Chiptune" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Cartridge Changes" role="Harmony" subRole="Progressions" key="A minor" tags="" note="A minor, F, C, G, a bar each" style="Game/8-bit" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="3800" v="0.661417"/>
     <N p="60" s="0" l="3800" v="0.661417"/>

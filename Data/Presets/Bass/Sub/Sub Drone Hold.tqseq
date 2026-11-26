@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Sub Drone Hold" role="Bass" subRole="Sub" key="A minor" tags="" note="A held A1 for three bars, falling to F1 in bar 4" style="Techno/Dark" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Sub Drone Hold" role="Bass" subRole="Sub" key="A minor" tags="" note="A held A1 for three bars, falling to F1 in bar 4" style="Floor/Dark Floor" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="3840" v="0.755906"/>
     <N p="33" s="3840" l="3840" v="0.755906"/>

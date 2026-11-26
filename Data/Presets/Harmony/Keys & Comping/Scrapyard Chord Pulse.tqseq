@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Scrapyard Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Chromatic" note="Short chords of the root, its tritone and the octave on A, A, comping over two bars, in a dotted figure that turns round at beat 3" style="Techno/Industrial" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Scrapyard Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Chromatic" note="Short chords of the root, its tritone and the octave on A, A, comping over two bars, in a dotted figure that turns round at beat 3" style="Floor/Factory Floor" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="220" v="0.645669"/>
     <N p="63" s="0" l="220" v="0.645669"/>

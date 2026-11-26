@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Sledge Up-Down Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Chromatic,Harmonic minor,Phrygian" note="Three up, a rest, three down, a rest, the root, the semitone above it and the fifth, through the roots A, A, F, G" style="Industrial/Industrial rock" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Sledge Up-Down Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Chromatic,Harmonic minor,Phrygian" note="Three up, a rest, three down, a rest, the root, the semitone above it and the fifth, through the roots A, A, F, G" style="Machine/Iron Riff" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="120" v="0.755906"/>
     <N p="46" s="240" l="120" v="0.755906"/>

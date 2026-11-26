@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Horizon Line Stabs" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor spread over a tenth on 1, on 3 and a dotted 8th after it" style="Ambient/Drone" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="60.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Horizon Line Stabs" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor spread over a tenth on 1, on 3 and a dotted 8th after it" style="Space/Drone" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="60.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="220" v="0.818898"/>
     <N p="52" s="0" l="220" v="0.818898"/>

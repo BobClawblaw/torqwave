@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Sparse Click Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Kick, a few syncopated rims, soft offbeat hats and one clap on the fourth beat of bar 2" style="Techno/Minimal" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Sparse Click Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Kick, a few syncopated rims, soft offbeat hats and one clap on the fourth beat of bar 2" style="Floor/Minimal" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="42" s="480" l="120" v="0.503937"/>

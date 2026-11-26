@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Mourning Clap Roll" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps in a dotted figure" style="Industrial/Darkwave" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="108.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Mourning Clap Roll" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps in a dotted figure" style="Machine/Night Wave" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="108.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="39" s="1920" l="120" v="0.771654"/>

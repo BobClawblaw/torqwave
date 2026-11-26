@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Overload Throb" role="Bass" subRole="Synth Bass" key="A minor" tags="Phrygian" note="16ths on the root dipping a step under it, moving through the roots of A minor, B flat, A minor, G minor" style="Industrial/Industrial rock" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="112.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Overload Throb" role="Bass" subRole="Synth Bass" key="A minor" tags="Phrygian" note="16ths on the root dipping a step under it, moving through the roots of A minor, B flat, A minor, G minor" style="Machine/Iron Riff" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="112.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="144" v="0.755906"/>
     <N p="33" s="240" l="144" v="0.755906"/>

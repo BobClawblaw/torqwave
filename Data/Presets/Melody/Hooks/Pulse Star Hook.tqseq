@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Pulse Star Hook" role="Melody" subRole="Hooks" key="A minor" tags="" note="A two-bar held phrase in A minor" style="Industrial/Futurepop" energy="5" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Pulse Star Hook" role="Melody" subRole="Hooks" key="A minor" tags="" note="A two-bar held phrase in A minor" style="Machine/Bright Pulse" energy="5" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="64" s="0" l="720" v="0.755906"/>
     <N p="67" s="960" l="480" v="0.755906"/>

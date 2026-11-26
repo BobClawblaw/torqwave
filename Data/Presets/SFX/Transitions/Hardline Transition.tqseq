@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Hardline Transition" role="SFX" subRole="Transitions" key="" tags="" note="The kick in 8ths for half a bar and 16ths for the rest, the clap staying on 2 and 4" style="Techno/Hard" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Hardline Transition" role="SFX" subRole="Transitions" key="" tags="" note="The kick in 8ths for half a bar and 16ths for the rest, the clap staying on 2 and 4" style="Floor/Hard Floor" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.771654"/>
     <N p="36" s="480" l="120" v="0.771654"/>

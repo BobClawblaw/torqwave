@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Dub Siren Top Loop" role="Drums" subRole="Hats &amp; Tops" key="" tags="" note="A pedal hat on the offbeats, with open hats on the offbeats added in bar 2" style="Techno/Dub" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Dub Siren Top Loop" role="Drums" subRole="Hats &amp; Tops" key="" tags="" note="A pedal hat on the offbeats, with open hats on the offbeats added in bar 2" style="Floor/Echo Chamber" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="44" s="480" l="120" v="0.771654"/>
     <N p="44" s="1440" l="120" v="0.771654"/>

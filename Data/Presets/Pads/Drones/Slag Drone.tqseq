@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Slag Drone" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="A low A, the tritone above it joining after a quarter, for 8 bars, the filter opening slowly" style="Techno/Industrial" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Slag Drone" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="A low A, the tritone above it joining after a quarter, for 8 bars, the filter opening slowly" style="Floor/Factory Floor" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="30680" v="0.724409"/>
     <N p="39" s="7680" l="23000" v="0.614173"/>

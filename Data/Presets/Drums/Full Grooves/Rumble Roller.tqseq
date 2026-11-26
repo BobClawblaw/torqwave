@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rumble Roller" role="Drums" subRole="Full Grooves" key="" tags="" note="A short kick with a low rumble on the 16th after it, offbeat open hats and a ride in 8ths" style="Techno/Dark" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rumble Roller" role="Drums" subRole="Full Grooves" key="" tags="" note="A short kick with a low rumble on the 16th after it, offbeat open hats and a ride in 8ths" style="Floor/Dark Floor" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="51" s="0" l="120" v="0.771654"/>

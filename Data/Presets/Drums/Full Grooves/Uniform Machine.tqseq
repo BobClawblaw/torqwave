@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Uniform Machine" role="Drums" subRole="Full Grooves" key="" tags="" note="A march: the kick on every beat, heavier on 1 and 3, a hard snare on 2 and 4 that rolls into the bar every second bar, and struck metal on the offbeats, nothing else" style="Industrial/EBM" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Uniform Machine" role="Drums" subRole="Full Grooves" key="" tags="" note="A march: the kick on every beat, heavier on 1 and 3, a hard snare on 2 and 4 that rolls into the bar every second bar, and struck metal on the offbeats, nothing else" style="Machine/Machine Pulse" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="56" s="480" l="120" v="0.944882"/>

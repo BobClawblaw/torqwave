@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Motor Low Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A and E held for eight bars, the filter pulsing on every beat and brighter each time, then on every 8th, the A above joining for the last two bars: a motor picking up" style="Techno/Driving" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Motor Low Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A and E held for eight bars, the filter pulsing on every beat and brighter each time, then on every 8th, the A above joining for the last two bars: a motor picking up" style="Floor/Driving" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="30680" v="0.787402"/>
     <N p="40" s="0" l="30680" v="0.708661"/>

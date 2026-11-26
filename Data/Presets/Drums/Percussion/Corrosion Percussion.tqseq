@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Corrosion Percussion" role="Drums" subRole="Percussion" key="" tags="" note="Metal struck in threes, with a shaker in 16ths joining in bars 3 and 4" style="Techno/Industrial" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Corrosion Percussion" role="Drums" subRole="Percussion" key="" tags="" note="Metal struck in threes, with a shaker in 16ths joining in bars 3 and 4" style="Floor/Factory Floor" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="56" s="0" l="120" v="0.771654"/>
     <N p="56" s="720" l="120" v="0.771654"/>

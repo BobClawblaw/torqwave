@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Hard Offbeat Drive" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Fast offbeat 16th pairs on the root" style="Techno/Hard" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Hard Offbeat Drive" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Fast offbeat 16th pairs on the root" style="Floor/Hard Floor" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="33" s="480" l="120" v="0.755906"/>
     <N p="33" s="720" l="120" v="0.755906"/>

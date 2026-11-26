@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rubber Tom Fall" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then high and mid toms trading and a low tom into the bar" style="Techno/Acid" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rubber Tom Fall" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then high and mid toms trading and a low tom into the bar" style="Floor/Squelch" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="36" s="480" l="120" v="0.314961"/>

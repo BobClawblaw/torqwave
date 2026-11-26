@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Engine Room Top Loop" role="Drums" subRole="Hats &amp; Tops" key="" tags="" note="Open hats on the offbeats, with a hat on 1 and 3 added in bar 2" style="Industrial/Techno-body" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Engine Room Top Loop" role="Drums" subRole="Hats &amp; Tops" key="" tags="" note="Open hats on the offbeats, with a hat on 1 and 3 added in bar 2" style="Machine/Machine Drive" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="46" s="480" l="120" v="0.771654"/>
     <N p="46" s="1440" l="120" v="0.771654"/>

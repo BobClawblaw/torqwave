@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Corrosion Pattern" role="Arps" subRole="16th Sequences" key="A minor" tags="Phrygian" note="Three notes against four beats, turning back at the octave, root, fifth and octave, no third, through the roots A, B flat" style="Techno/Industrial" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Corrosion Pattern" role="Arps" subRole="16th Sequences" key="A minor" tags="Phrygian" note="Three notes against four beats, turning back at the octave, root, fifth and octave, no third, through the roots A, B flat" style="Floor/Factory Floor" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="120" v="0.755906"/>
     <N p="52" s="240" l="120" v="0.755906"/>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Mainroom Kit" key="A minor" tags="Starter kit" note="A starting point for Peak-time: one of each part, in A minor at 138 BPM" style="Techno/Peak-time">
-  <TORQWAVE_SEQUENCE version="1" name="Peak Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor with a skipped kick before the one, a clap on 2 and 4 and a ride in 8ths" style="Techno/Peak-time" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_KIT version="1" name="Mainroom Kit" key="A minor" tags="Starter kit" note="A starting point for Peak-time: one of each part, in A minor at 138 BPM" style="Floor/Peak-time">
+  <TORQWAVE_SEQUENCE version="1" name="Peak Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor with a skipped kick before the one, a clap on 2 and 4 and a ride in 8ths" style="Floor/Peak-time" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="51" s="0" l="120" v="0.771654"/>
@@ -36,7 +36,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Fog Machine Sub" role="Bass" subRole="Sub" key="A minor" tags="" note="The sub held in the gap after each kick, moving through the roots of A minor, F, C, G" style="Techno/Peak-time" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Fog Machine Sub" role="Bass" subRole="Sub" key="A minor" tags="" note="The sub held in the gap after each kick, moving through the roots of A minor, F, C, G" style="Floor/Peak-time" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="33" s="240" l="720" v="0.755906"/>
       <N p="33" s="1200" l="720" v="0.755906"/>
@@ -57,7 +57,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Iron Sub" bus="0" instrument="1" musical="1" gainDb="-7.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRRx8lafLUchIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Peak Stab" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor every dotted 8th across the bar" style="Techno/Peak-time" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Peak Stab" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor every dotted 8th across the bar" style="Floor/Peak-time" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.818898"/>
       <N p="60" s="0" l="220" v="0.818898"/>
@@ -77,7 +77,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Factory Hit" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhQgMFcuIWdffTZzIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Afterhours Plucks" role="Arps" subRole="Plucks" key="A minor" tags="" note="8th plucks on the chord's notes, root, fifth and octave, no third, through the roots A, F, G, A" style="Techno/Peak-time" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Afterhours Plucks" role="Arps" subRole="Plucks" key="A minor" tags="" note="8th plucks on the chord's notes, root, fifth and octave, no third, through the roots A, F, G, A" style="Floor/Peak-time" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="120" v="0.755906"/>
       <N p="69" s="480" l="120" v="0.755906"/>
@@ -114,7 +114,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Bit Pluck" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPoQGHPwVcislHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Lasers Clap Stutter" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps stuttering into the next bar" style="Techno/Peak-time" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Lasers Clap Stutter" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps stuttering into the next bar" style="Floor/Peak-time" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="960" l="120" v="0.944882"/>
@@ -127,7 +127,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Rave Hall Transition" role="SFX" subRole="Transitions" key="" tags="" note="A snare roll for a bar accented in threes across the beat, a kick under the first" style="Techno/Peak-time" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Rave Hall Transition" role="SFX" subRole="Transitions" key="" tags="" note="A snare roll for a bar accented in threes across the beat, a kick under the first" style="Floor/Peak-time" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="38" s="0" l="120" v="0.771654"/>

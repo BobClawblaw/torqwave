@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Tribal Roller" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Root and octave in threes against the beat, on A" style="Techno/Percussive" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Tribal Roller" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Root and octave in threes against the beat, on A" style="Floor/Percussive" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="144" v="0.755906"/>
     <N p="45" s="480" l="144" v="0.755906"/>

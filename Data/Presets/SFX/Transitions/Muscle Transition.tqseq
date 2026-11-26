@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Muscle Transition" role="SFX" subRole="Transitions" key="" tags="" note="A gated snare in a dotted figure stated twice, a kick under each start, two high toms into the bar" style="Industrial/EBM" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Muscle Transition" role="SFX" subRole="Transitions" key="" tags="" note="A gated snare in a dotted figure stated twice, a kick under each start, two high toms into the bar" style="Machine/Machine Pulse" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.771654"/>
     <N p="38" s="0" l="120" v="0.944882"/>

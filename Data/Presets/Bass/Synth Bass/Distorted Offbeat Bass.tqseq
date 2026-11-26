@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Distorted Offbeat Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Offbeat 8ths with a 16th after each, a harsh drive under a hard kick" style="Industrial/Aggrotech" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Distorted Offbeat Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Offbeat 8ths with a 16th after each, a harsh drive under a hard kick" style="Machine/Overdrive" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="33" s="480" l="120" v="0.929134"/>
     <N p="33" s="720" l="120" v="0.755906"/>

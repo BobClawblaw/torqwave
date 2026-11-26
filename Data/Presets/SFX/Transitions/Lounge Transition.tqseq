@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Lounge Transition" role="SFX" subRole="Transitions" key="A minor" tags="" note="D minor seventh for two beats, then E minor seventh, leading home" style="House/Deep house" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Lounge Transition" role="SFX" subRole="Transitions" key="A minor" tags="" note="D minor seventh for two beats, then E minor seventh, leading home" style="Swing/Deep Swing" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="50" s="0" l="1880" v="0.692913"/>
     <N p="53" s="0" l="1880" v="0.692913"/>

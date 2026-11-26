@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Lightless Pound" role="Drums" subRole="Full Grooves" key="" tags="" note="A half-time kick on 1 and 3 and a crash on the one" style="Ambient/Dark ambient" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Lightless Pound" role="Drums" subRole="Full Grooves" key="" tags="" note="A half-time kick on 1 and 3 and a crash on the one" style="Space/Dark Space" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="49" s="0" l="120" v="0.771654"/>

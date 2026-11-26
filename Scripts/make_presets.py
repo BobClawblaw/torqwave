@@ -11,11 +11,13 @@ line, chords by bar), so a change to the conventions is one edit and a rerun. Th
 - velocities carry the groove: accents 110-127, normal 90-105, weak hats 60-80, ghosts 25-50;
 - one home key, A minor (Phrygian's B flat and harmonic minor's G sharp where tagged so);
 - 1, 2, 4 or 8 bars; a 4-bar preset changes in bar 4;
-- original patterns written to a style's conventions, named for the style, never a band or a song;
-- a one-line description (the sequence's note) and a style ("Techno/Dark").
+- original patterns written to a style's conventions, named for what they play, never a band, a song or a scene;
+- a one-line description (the sequence's note) and a style, drawn here under its old name ("Techno/Dark")
+  and written under the one shown ("Floor/Dark Floor", STYLE_NAMES).
 
 Run it from anywhere: python3 Scripts/make_presets.py. --check writes into a temporary folder and
-says whether that matches Data/Presets byte for byte.
+says whether that matches Data/Presets byte for byte, and Source/PresetRenames.h (the old paths and
+styles of renamed presets, so ratings and saved searches follow them) with it.
 """
 
 import base64
@@ -250,6 +252,79 @@ class Part:
         return self
 
 
+# What the user sees is named for what a preset plays, not for a scene: a scene's name promises a
+# sound the presets cannot keep. The script draws under the names it always had (a style's name seeds
+# its draws), so the notes stay as they are; the shown names are put on as the files are written.
+STYLE_NAMES = {
+    "Techno/Dark": "Floor/Dark Floor", "Techno/Driving": "Floor/Driving", "Techno/Peak-time": "Floor/Peak-time",
+    "Techno/Industrial": "Floor/Factory Floor", "Techno/Hard": "Floor/Hard Floor", "Techno/Hypnotic": "Floor/Hypnotic",
+    "Techno/Acid": "Floor/Squelch", "Techno/Minimal": "Floor/Minimal", "Techno/Melodic": "Floor/Melodic",
+    "Techno/Percussive": "Floor/Percussive", "Techno/Dub": "Floor/Echo Chamber", "Techno/Club tools": "Floor/Club tools",
+    "Industrial/EBM": "Machine/Machine Pulse", "Industrial/Electro-industrial": "Machine/Broken Circuit",
+    "Industrial/Aggrotech": "Machine/Overdrive", "Industrial/Techno-body": "Machine/Machine Drive",
+    "Industrial/Futurepop": "Machine/Bright Pulse", "Industrial/Synth-EBM": "Machine/Night Pulse",
+    "Industrial/Darkwave": "Machine/Night Wave", "Industrial/Industrial rock": "Machine/Iron Riff",
+    "Industrial/Dark electro": "Machine/Dark Circuit", "Industrial/Coldwave": "Machine/Cold Glow",
+    "Electro/Electro": "Funk/Machine Funk", "Breakbeat/Breaks": "Broken/Broken Beat",
+    "Drum and Bass/Neurofunk": "Fast/Fast Grind", "Drum and Bass/Liquid": "Fast/Fast Flow",
+    "Ambient/Dark ambient": "Space/Dark Space", "Ambient/Drone": "Space/Drone", "House/Deep house": "Swing/Deep Swing",
+    "Synthwave/Darksynth": "Neon/Neon Menace", "Trance/Psytrance": "Spiral/Rolling Spiral",
+    "Game/Chiptune": "Game/8-bit", "Game/Horror": "Game/Dread",
+}
+
+# Presets and kits whose names carried a scene's name.
+NAMES = {
+    "EBM Kit": "Machine Pulse Kit", "EBM Starter Kit": "Machine Pulse Starter Kit", "EBM Sequence Arp": "Machine Pulse Arp",
+    "Synth-EBM Kit": "Night Pulse Kit", "Synth-EBM Pad": "Night Pulse Pad", "Synth-EBM Pluck": "Night Pulse Pluck",
+    "Synth-EBM Verse Chords": "Night Pulse Verse Chords",
+    "Techno-body Kit": "Machine Drive Kit", "Techno Body Arp": "Machine Drive Arp", "Techno Body Sixteenths": "Machine Drive Sixteenths",
+    "Techno Body Groove": "Machine Drive Groove", "Techno Body Stab": "Machine Drive Stab", "Belgian Body Bass": "Iron Body Bass",
+    "Darkwave Kit": "Night Wave Kit", "Darkwave Starter Kit": "Night Wave Starter Kit", "Darkwave Arp": "Night Wave Arp",
+    "Darkwave Sub Roots": "Night Wave Sub Roots", "Darkwave Eighth Roots": "Night Wave Eighth Roots",
+    "Darkwave Drum Machine": "Night Wave Drum Machine", "Darkwave Chorus Chords": "Night Wave Chorus Chords",
+    "Darkwave Counter-melody": "Night Wave Counter-melody", "Darkwave Lead": "Night Wave Lead", "Darkwave Chorus Pad": "Night Wave Chorus Pad",
+    "Futurepop Kit": "Bright Pulse Kit", "Futurepop Arp Loop": "Bright Pulse Arp Loop", "Futurepop Minor Loop": "Bright Pulse Minor Loop",
+    "Futurepop Chorus Hook": "Bright Pulse Chorus Hook", "Futurepop Pad Loop": "Bright Pulse Pad Loop",
+    "Acid Techno Kit": "Squelch Kit", "Acid Techno Starter Kit": "Squelch Starter Kit", "Acid Arp": "Squelch Arp",
+    "Acid Pentatonic Squelch": "Pentatonic Squelch", "Acid Phrygian Crawl": "Squelch Phrygian Crawl",
+    "Acid Root Jumper": "Squelch Root Jumper", "Acid Slide Rider": "Squelch Slide Rider",
+    "Industrial Techno Kit": "Factory Floor Kit", "Industrial Techno Starter Kit": "Factory Floor Starter Kit",
+    "Industrial rock Kit": "Iron Riff Kit", "Industrial Rock Riff Bass": "Iron Riff Bass", "Industrial Rock Riff": "Iron Riff",
+    "Industrial Breakdown": "Factory Breakdown", "Industrial Pound": "Factory Pound",
+    "Industrial Metal Stab": "Factory Metal Stab", "Industrial Metal Hit": "Factory Metal Hit",
+    "Microdub Kit": "Micro Echo Kit", "Microdub Arp": "Micro Echo Arp", "Microdub Stomp": "Micro Echo Stomp",
+    "Microdub Hook": "Micro Echo Hook", "Microdub Theme": "Micro Echo Theme", "Microdub Transition": "Micro Echo Transition",
+    "Dark Techno Kit": "Dark Floor Kit", "Dark Techno Starter Kit": "Dark Floor Starter Kit",
+    "Driving Techno Kit": "Driving Floor Kit", "Hard Techno Kit": "Hard Floor Kit", "Dub Techno Kit": "Echo Chamber Kit",
+    "Hypnotic Techno Kit": "Hypnotic Floor Kit", "Hypnotic Techno Starter Kit": "Hypnotic Floor Starter Kit",
+    "Melodic Techno Kit": "Melodic Floor Kit", "Minimal Techno Kit": "Minimal Floor Kit",
+    "Peak-time Techno Kit": "Peak-time Floor Kit", "Peak-time Techno Starter Kit": "Peak-time Floor Starter Kit",
+    "Percussive Techno Kit": "Percussive Floor Kit", "Percussive Techno Starter Kit": "Percussive Floor Starter Kit",
+    "Aggrotech Kit": "Overdrive Kit", "Electro-industrial Kit": "Broken Circuit Kit", "Dark electro Kit": "Dark Circuit Kit",
+    "Coldwave Kit": "Cold Glow Kit", "Electro Kit": "Machine Funk Kit", "Breaks Kit": "Broken Beat Kit",
+    "Neurofunk Kit": "Fast Grind Kit", "Liquid Kit": "Fast Flow Kit", "Dark ambient Kit": "Dark Space Kit",
+    "Deep house Kit": "Deep Swing Kit", "Darksynth Kit": "Neon Menace Kit", "Psytrance Kit": "Rolling Spiral Kit",
+    "Chiptune Game Kit": "8-bit Game Kit", "Horror Game Kit": "Dread Game Kit", "Goa Roller": "Lotus Roller",
+}
+
+# Notes that named a scene.
+NOTE_WORDS = [("an EBM bass", "a sequencer bass"), ("EBM 16ths", "Sequencer 16ths")]
+
+
+def shown(name):
+    return NAMES.get(name, name)
+
+
+def shown_style(style):
+    return STYLE_NAMES.get(style, style)
+
+
+def shown_note(note):
+    for old, new in NOTE_WORDS:
+        note = note.replace(old, new)
+    return note
+
+
 class Preset:
     def __init__(self, name, role, sub, style, energy, character, description, part, tempo, voice, tags=(), key=KEY):
         self.name, self.role, self.sub, self.style = name, role, sub, style
@@ -260,8 +335,8 @@ class Preset:
     def xml(self, indent="", trim_db=0.0):
         p = self.part
         tags = ",".join(self.tags)
-        out = [f'{indent}<TORQWAVE_SEQUENCE version="1" name={quoteattr(self.name)} role={quoteattr(self.role)} subRole={quoteattr(self.sub)} '
-               f'key={quoteattr(self.key)} tags={quoteattr(tags)} note={quoteattr(self.description)} style={quoteattr(self.style)} '
+        out = [f'{indent}<TORQWAVE_SEQUENCE version="1" name={quoteattr(shown(self.name))} role={quoteattr(self.role)} subRole={quoteattr(self.sub)} '
+               f'key={quoteattr(self.key)} tags={quoteattr(tags)} note={quoteattr(shown_note(self.description))} style={quoteattr(shown_style(self.style))} '
                f'energy="{self.energy}" character={quoteattr(",".join(self.character))} ticksPerBeat="{TPB}" '
                f'writtenTempo="{self.tempo:.1f}" beatsPerBar="4" channel="{10 if self.voice[0] == "drums" else 1}" offset="0" '
                f'length="{p.bars * BAR}" loopLength="0">',
@@ -3657,9 +3732,9 @@ KIT_TRIM_DB = -6.0
 
 def kit_xml(name, tempo, style, parts):
     by_name = {p.name: p for p in PRESETS}
-    out = [f'<TORQWAVE_KIT version="1" name={quoteattr(name)} key="{KEY}" tags="Starter kit" '
-           f'note={quoteattr("A starting point for " + style.split("/")[1] + ": one of each part, in A minor at " + str(tempo) + " BPM")} '
-           f'style={quoteattr(style)}>']
+    out = [f'<TORQWAVE_KIT version="1" name={quoteattr(shown(name))} key="{KEY}" tags="Starter kit" '
+           f'note={quoteattr("A starting point for " + shown_style(style).split("/")[1] + ": one of each part, in A minor at " + str(tempo) + " BPM")} '
+           f'style={quoteattr(shown_style(style))}>']
 
     for part_name in parts:
         p = by_name[part_name]
@@ -3677,34 +3752,62 @@ def kit_xml(name, tempo, style, parts):
 def write(into):
     names = [p.name for p in PRESETS] + [k[0] for k in KITS]
     assert len(names) == len(set(names)), "names must be unique"
+    assert len({shown(n) for n in names}) == len(names), "shown names must be unique"
+    assert all(n in names for n in NAMES), [n for n in NAMES if n not in names]
+    assert all(s in {p.style for p in PRESETS} | {k[2] for k in KITS} for s in STYLE_NAMES)
 
     for p in PRESETS:
         folder = os.path.join(into, p.role, p.sub)
         os.makedirs(folder, exist_ok=True)
 
-        with open(os.path.join(folder, p.name + ".tqseq"), "w", encoding="utf-8", newline="\n") as f:
+        with open(os.path.join(folder, shown(p.name) + ".tqseq"), "w", encoding="utf-8", newline="\n") as f:
             f.write('<?xml version="1.0" encoding="UTF-8"?>\n\n' + p.xml() + "\n")
 
     os.makedirs(os.path.join(into, "Kits"), exist_ok=True)
 
     for name, tempo, style, parts in KITS:
-        with open(os.path.join(into, "Kits", name + ".tqkit"), "w", encoding="utf-8", newline="\n") as f:
+        with open(os.path.join(into, "Kits", shown(name) + ".tqkit"), "w", encoding="utf-8", newline="\n") as f:
             f.write('<?xml version="1.0" encoding="UTF-8"?>\n\n' + kit_xml(name, tempo, style, parts) + "\n")
+
+
+def renames_header():
+    """Source/PresetRenames.h: the old path of each renamed preset with its new one, and each old style
+    with its new name, so a rating, a favourite mark or a saved search made before follows the preset."""
+    paths = [(f"{p.role}/{p.sub}/{p.name}.tqseq", f"{p.role}/{p.sub}/{shown(p.name)}.tqseq") for p in PRESETS if p.name in NAMES]
+    paths += [(f"Kits/{k[0]}.tqkit", f"Kits/{shown(k[0])}.tqkit") for k in KITS if k[0] in NAMES]
+    styles = [(old, new) for old, new in STYLE_NAMES.items() if old != new]
+    styles += sorted({(old.split("/")[0], new.split("/")[0]) for old, new in STYLE_NAMES.items() if old.split("/")[0] != new.split("/")[0]})
+
+    def lines(pairs):
+        return "".join(f"    {{ {cstr(a)}, {cstr(b)} }},\n" for a, b in sorted(pairs))
+
+    def cstr(s):
+        return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+    return ("#pragma once\n\n"
+            "// Written by Scripts/make_presets.py: do not edit. Factory presets and styles renamed in 0.22.0\n"
+            "// (named for what they play, not for a scene), old name first.\n\n"
+            "#include <utility>\n\n"
+            "inline constexpr std::pair<const char*, const char*> renamedPresetPaths[] = {\n" + lines(paths) + "};\n\n"
+            "inline constexpr std::pair<const char*, const char*> renamedStyles[] = {\n" + lines(styles) + "};\n")
 
 
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
     target = os.path.join(here, "..", "Data", "Presets")
+    header = os.path.join(here, "..", "Source", "PresetRenames.h")
 
     if "--calibrate" in sys.argv:
         # Each preset's track gain from its measured peak without it (name|peak in dB, as the tests write
         # with TQ_PRESET_LEVELS set): the gain that puts the peak at -9 dB, to the half dB.
         levels = sys.argv[sys.argv.index("--calibrate") + 1]
         gains = {}
+        drawn = {new: old for old, new in NAMES.items()}   # the levels name presets as shown
 
         with open(levels, encoding="utf-8") as f:
             for line in f:
                 name, _, peak = line.rstrip("\n").rpartition("|")
+                name = drawn.get(name, name)
 
                 # A preset in a kit is measured again at the kit's tempo: the loudest of them sets its gain.
                 if name and float(peak) > -100.0:
@@ -3741,6 +3844,10 @@ def main():
                     if not os.path.exists(b) or not filecmp.cmp(a, b, shallow=False):
                         same = False
 
+            with open(header, encoding="utf-8") as f:
+                if f.read() != renames_header():
+                    same = False
+
             print("same" if same else "different")
             return 0 if same else 1
 
@@ -3748,6 +3855,9 @@ def main():
         shutil.rmtree(target)
 
     write(target)
+
+    with open(header, "w", encoding="utf-8", newline="\n") as f:
+        f.write(renames_header())
     counts = {}
     for p in PRESETS:
         counts[p.role] = counts.get(p.role, 0) + 1

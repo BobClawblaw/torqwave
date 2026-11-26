@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Velvet Beat" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap on 2 and 4, closed hats on the offbeats and a shaker in 16ths" style="Industrial/Synth-EBM" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Velvet Beat" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap on 2 and 4, closed hats on the offbeats and a shaker in 16ths" style="Machine/Night Pulse" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="70" s="0" l="120" v="0.771654"/>

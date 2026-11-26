@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Neon Kit" key="A minor" tags="Starter kit" note="A starting point for Futurepop: one of each part, in A minor at 128 BPM" style="Industrial/Futurepop">
-  <TORQWAVE_SEQUENCE version="1" name="Afterimage Beat" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a snare on 2 and 4 and open hats on the offbeats" style="Industrial/Futurepop" energy="5" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_KIT version="1" name="Neon Kit" key="A minor" tags="Starter kit" note="A starting point for Bright Pulse: one of each part, in A minor at 128 BPM" style="Machine/Bright Pulse">
+  <TORQWAVE_SEQUENCE version="1" name="Afterimage Beat" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a snare on 2 and 4 and open hats on the offbeats" style="Machine/Bright Pulse" energy="5" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="46" s="480" l="120" v="0.771654"/>
@@ -16,7 +16,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Standard" bus="0" instrument="1" musical="1" gainDb="-9.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>66.VMjLgjC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHSQWXtQVXxQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Pulse Star Throb" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Driving 16ths with the octave on each offbeat, moving through the roots of A minor, F, G, A minor" style="Industrial/Futurepop" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Pulse Star Throb" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Driving 16ths with the octave on each offbeat, moving through the roots of A minor, F, G, A minor" style="Machine/Bright Pulse" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="33" s="0" l="144" v="0.755906"/>
       <N p="33" s="240" l="144" v="0.755906"/>
@@ -85,7 +85,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Grinder" bus="0" instrument="1" musical="1" gainDb="-5.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>67.VMjLgnC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxQxklajUlbh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Satellite Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short chords of the triads on A, F, comping over two bars, three times a bar" style="Industrial/Futurepop" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Satellite Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short chords of the triads on A, F, comping over two bars, three times a bar" style="Machine/Bright Pulse" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.645669"/>
       <N p="60" s="0" l="220" v="0.645669"/>
@@ -108,7 +108,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Mercury Lead" bus="0" instrument="1" musical="1" gainDb="-5.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRSkI2X0IWdfvTYgQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Hologram Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Three up, a rest, three down, a rest, the root, the third and the seventh, through the roots A, F" style="Industrial/Futurepop" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Hologram Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Three up, a rest, three down, a rest, the root, the third and the seventh, through the roots A, F" style="Machine/Bright Pulse" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="69" s="0" l="120" v="0.755906"/>
       <N p="72" s="240" l="120" v="0.755906"/>
@@ -137,7 +137,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Cold Saw Lead" bus="0" instrument="1" musical="1" gainDb="-6.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxPuwFYfLUX2ABSkEFYh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Afterimage Snare Roll" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Industrial/Futurepop" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Afterimage Snare Roll" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Machine/Bright Pulse" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="1440" l="120" v="0.771654"/>
@@ -152,7 +152,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Starlight Riser" role="SFX" subRole="Risers" key="A minor" tags="" note="16ths on A, an octave higher at each bar for four bars" style="Industrial/Futurepop" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Starlight Riser" role="SFX" subRole="Risers" key="A minor" tags="" note="16ths on A, an octave higher at each bar for four bars" style="Machine/Bright Pulse" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="45" s="0" l="120" v="0.503937"/>
       <N p="45" s="240" l="120" v="0.503937"/>

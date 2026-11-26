@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Neuro Bassline" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Long held roots, out of the drums' way, on A" style="Drum and Bass/Neurofunk" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Neuro Bassline" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Long held roots, out of the drums' way, on A" style="Fast/Fast Grind" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="1920" v="0.755906"/>
     <N p="33" s="2400" l="1440" v="0.755906"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Hex Riser" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="16ths in fours, each four a minor third above the last: a diminished climb of two octaves" style="Industrial/Dark electro" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Hex Riser" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="16ths in fours, each four a minor third above the last: a diminished climb of two octaves" style="Machine/Dark Circuit" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="120" v="0.519685"/>
     <N p="45" s="240" l="120" v="0.527559"/>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Dot Kit" key="A minor" tags="Starter kit" note="A starting point for Minimal: one of each part, in A minor at 122 BPM" style="Techno/Minimal">
-  <TORQWAVE_SEQUENCE version="1" name="Sparse Room Loop" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap on 2 and 4, hats pushing into each beat, a shaker in 16ths and a tom run ends bar 4" style="Techno/Minimal" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_KIT version="1" name="Dot Kit" key="A minor" tags="Starter kit" note="A starting point for Minimal: one of each part, in A minor at 122 BPM" style="Floor/Minimal">
+  <TORQWAVE_SEQUENCE version="1" name="Sparse Room Loop" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap on 2 and 4, hats pushing into each beat, a shaker in 16ths and a tom run ends bar 4" style="Floor/Minimal" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="42" s="0" l="120" v="0.771654"/>
@@ -134,14 +134,14 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Pinpoint Sub Pulse" role="Bass" subRole="Sub" key="A minor" tags="" note="A short sub on 1 and 3, on A" style="Techno/Minimal" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Pinpoint Sub Pulse" role="Bass" subRole="Sub" key="A minor" tags="" note="A short sub on 1 and 3, on A" style="Floor/Minimal" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="33" s="0" l="480" v="0.755906"/>
       <N p="33" s="1920" l="480" v="0.755906"/>
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Warehouse Sub" bus="0" instrument="1" musical="1" gainDb="-6.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUgIWYn8VcyUFHSUmXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Sparse Room Stabs" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor on the one, then gathering through the back half of the bar" style="Techno/Minimal" energy="1" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Sparse Room Stabs" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor on the one, then gathering through the back half of the bar" style="Floor/Minimal" energy="1" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.818898"/>
       <N p="60" s="0" l="220" v="0.818898"/>
@@ -161,7 +161,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Dark Kalimba" bus="0" instrument="1" musical="1" gainDb="-6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQgI2ZfrTXrkVahElHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Thin Line Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, the fourth in place of the third, through the roots A, A, D, A" style="Techno/Minimal" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Thin Line Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, the fourth in place of the third, through the roots A, A, D, A" style="Floor/Minimal" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="69" s="0" l="120" v="0.755906"/>
       <N p="64" s="720" l="120" v="0.755906"/>
@@ -186,7 +186,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Wire Pluck" bus="0" instrument="1" musical="1" gainDb="-3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUoIWYf.Ea0M1Zh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Sparse Room Tom Fall" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then one tom to a beat, down" style="Techno/Minimal" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Sparse Room Tom Fall" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then one tom to a beat, down" style="Floor/Minimal" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="960" l="120" v="0.944882"/>
@@ -197,7 +197,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Microdub Transition" role="SFX" subRole="Transitions" key="" tags="" note="One kick, three rims in the space after it and a single clap on beat 4" style="Techno/Minimal" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Micro Echo Transition" role="SFX" subRole="Transitions" key="" tags="" note="One kick, three rims in the space after it and a single clap on beat 4" style="Floor/Minimal" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.771654"/>
       <N p="37" s="0" l="120" v="0.771654"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Body Crack" role="Drums" subRole="Snare &amp; Clap" key="" tags="" note="A snare on 2 and 4, with a snare pickup ending bar 2" style="Industrial/EBM" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Body Crack" role="Drums" subRole="Snare &amp; Clap" key="" tags="" note="A snare on 2 and 4, with a snare pickup ending bar 2" style="Machine/Machine Pulse" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="38" s="960" l="120" v="0.944882"/>
     <N p="38" s="2880" l="120" v="0.944882"/>

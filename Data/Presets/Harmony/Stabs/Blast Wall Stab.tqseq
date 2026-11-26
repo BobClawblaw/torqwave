@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Blast Wall Stab" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A bare fifth, A and E on the one, then gathering through the back half of the bar" style="Techno/Hard" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="155.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Blast Wall Stab" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A bare fifth, A and E on the one, then gathering through the back half of the bar" style="Floor/Hard Floor" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="155.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="220" v="0.818898"/>
     <N p="52" s="0" l="220" v="0.818898"/>

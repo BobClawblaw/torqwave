@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Frost Bloom" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor, A minor, D minor, A minor, without the root, an octave up, the filter closing the whole way" style="Industrial/Coldwave" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Frost Bloom" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor, A minor, D minor, A minor, without the root, an octave up, the filter closing the whole way" style="Machine/Cold Glow" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="72" s="0" l="3800" v="0.629921"/>
     <N p="76" s="0" l="3800" v="0.629921"/>

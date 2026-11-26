@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="One-Note Minor Stab" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A short minor stab on the and of every second beat" style="Techno/Dark" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="One-Note Minor Stab" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A short minor stab on the and of every second beat" style="Floor/Dark Floor" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="1440" l="220" v="0.724409"/>
     <N p="60" s="1440" l="220" v="0.724409"/>

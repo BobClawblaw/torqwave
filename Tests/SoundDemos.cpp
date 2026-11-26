@@ -1076,8 +1076,8 @@ namespace
 
         if (sequences)
         {
-            const juce::StringArray leading { "Techno/Dark", "Techno/Industrial", "Techno/Hard", "Techno/Acid", "Industrial/EBM", "Industrial/Electro-industrial",
-                                              "Industrial/Dark electro", "Industrial/Aggrotech", "Industrial/Techno-body" };
+            const juce::StringArray leading { "Floor/Dark Floor", "Floor/Factory Floor", "Floor/Hard Floor", "Floor/Squelch", "Machine/Machine Pulse", "Machine/Broken Circuit",
+                                              "Machine/Dark Circuit", "Machine/Overdrive", "Machine/Machine Drive" };
             // What can be measured of how much a sequence does: its notes to a bar, its different pitches
             // (a drum part's different sounds), and its rhythm (the different gaps between one note's start
             // and the next, and the different note lengths).
@@ -1464,7 +1464,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
         formats.addFormat (BuiltInEffects::createFormat());
 
         for (auto& e : SequenceLibrary (unpacked.presets).scan())
-            if (e.isKit && e.style == "Industrial/EBM" && (kitName.isEmpty() || e.name.compareNatural (kitName) < 0))
+            if (e.isKit && e.style == "Machine/Machine Pulse" && (kitName.isEmpty() || e.name.compareNatural (kitName) < 0))
             {
                 juce::String error;
 
@@ -1492,7 +1492,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
     }
 
     const auto tonalSource = juce::String ("Torqwave Synth: Concrete Pad's chords under Cold Bell's arpeggio, four bars at 120 BPM");
-    const auto beatSource = "The factory kit " + kitName + " (Industrial/EBM), its loop twice, as the Sequence Library plays it";
+    const auto beatSource = "The factory kit " + kitName + " (Machine/Machine Pulse), its loop twice, as the Sequence Library plays it";
 
     // Clicks: 60 of them, one to three samples long, at up to nine tenths of full scale.
     if (also.contains ("clicks"))

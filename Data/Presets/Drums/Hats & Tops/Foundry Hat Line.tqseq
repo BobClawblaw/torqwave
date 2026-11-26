@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Foundry Hat Line" role="Drums" subRole="Hats &amp; Tops" key="" tags="" note="Open hats on the offbeats, with a pedal hat on the offbeats added in bar 2" style="Techno/Industrial" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Foundry Hat Line" role="Drums" subRole="Hats &amp; Tops" key="" tags="" note="Open hats on the offbeats, with a pedal hat on the offbeats added in bar 2" style="Floor/Factory Floor" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="46" s="480" l="120" v="0.771654"/>
     <N p="46" s="1440" l="120" v="0.771654"/>

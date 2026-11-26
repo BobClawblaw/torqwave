@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Glass Heart Top Loop" role="Drums" subRole="Hats &amp; Tops" key="" tags="" note="8th hats, the downbeats stronger, with a pedal hat on the offbeats added in bar 2" style="Industrial/Synth-EBM" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Glass Heart Top Loop" role="Drums" subRole="Hats &amp; Tops" key="" tags="" note="8th hats, the downbeats stronger, with a pedal hat on the offbeats added in bar 2" style="Machine/Night Pulse" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="42" s="0" l="120" v="0.771654"/>
     <N p="42" s="480" l="120" v="0.582677"/>

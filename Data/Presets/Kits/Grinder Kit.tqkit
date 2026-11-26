@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Grinder Kit" key="A minor" tags="Starter kit" note="A starting point for Industrial: one of each part, in A minor at 128 BPM" style="Techno/Industrial">
-  <TORQWAVE_SEQUENCE version="1" name="Anvil Beat" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor with a rolling rumble between the kicks, a snare on 2 and 4, a ride in 8ths, a syncopated rimshot and a tom run ends bar 4" style="Techno/Industrial" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_KIT version="1" name="Grinder Kit" key="A minor" tags="Starter kit" note="A starting point for Factory Floor: one of each part, in A minor at 128 BPM" style="Floor/Factory Floor">
+  <TORQWAVE_SEQUENCE version="1" name="Anvil Beat" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor with a rolling rumble between the kicks, a snare on 2 and 4, a ride in 8ths, a syncopated rimshot and a tom run ends bar 4" style="Floor/Factory Floor" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="51" s="0" l="120" v="0.771654"/>
@@ -126,7 +126,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Foundry Pressure" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="An 8th on every offbeat, on A" style="Techno/Industrial" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Foundry Pressure" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="An 8th on every offbeat, on A" style="Floor/Factory Floor" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="33" s="480" l="144" v="0.755906"/>
       <N p="33" s="1440" l="144" v="0.755906"/>
@@ -139,7 +139,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Tar Reese" bus="0" instrument="1" musical="1" gainDb="-5.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBUgIGHRUVYyUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Scrapyard Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Chromatic" note="Short chords of the root, its tritone and the octave on A, A, comping over two bars, in a dotted figure that turns round at beat 3" style="Techno/Industrial" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Scrapyard Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="Chromatic" note="Short chords of the root, its tritone and the octave on A, A, comping over two bars, in a dotted figure that turns round at beat 3" style="Floor/Factory Floor" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.645669"/>
       <N p="63" s="0" l="220" v="0.645669"/>
@@ -174,7 +174,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Dub Chord Stab" bus="0" instrument="1" musical="1" gainDb="-6.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>74.VMjLgDD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQ0IFHCg1axQFHSQWXhIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Slag Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Root, fifth and octave up and down, the third left out, the root, its tritone and the octave, on A" style="Techno/Industrial" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Slag Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Root, fifth and octave up and down, the third left out, the root, its tritone and the octave, on A" style="Floor/Factory Floor" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="45" s="0" l="120" v="0.755906"/>
       <N p="57" s="240" l="120" v="0.755906"/>
@@ -195,7 +195,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Basalt Wire" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPgMWXrQGHWklbkIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Grinder Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, a gap, then a short snare roll" style="Techno/Industrial" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Grinder Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, a gap, then a short snare roll" style="Floor/Factory Floor" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="960" l="120" v="0.944882"/>
@@ -208,7 +208,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Factory Slam" role="SFX" subRole="Impacts" key="" tags="" note="Kick, metal and snare on the one, the kick and metal again softer an 8th later" style="Techno/Industrial" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Factory Slam" role="SFX" subRole="Impacts" key="" tags="" note="Kick, metal and snare on the one, the kick and metal again softer an 8th later" style="Floor/Factory Floor" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="38" s="0" l="120" v="0.944882"/>

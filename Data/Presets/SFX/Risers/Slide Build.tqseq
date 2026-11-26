@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Slide Build" role="SFX" subRole="Risers" key="A minor" tags="" note="16ths on a low A, the octave above breaking in more and more often, a slide into every fourth beat, the resonant filter opening" style="Techno/Acid" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Slide Build" role="SFX" subRole="Risers" key="A minor" tags="" note="16ths on a low A, the octave above breaking in more and more often, a slide into every fourth beat, the resonant filter opening" style="Floor/Squelch" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="120" v="0.551181"/>
     <N p="33" s="240" l="120" v="0.551181"/>

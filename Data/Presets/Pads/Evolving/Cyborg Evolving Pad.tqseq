@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Cyborg Evolving Pad" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor, A minor, A minor, A minor, spread wide: the root low, the fifth, the third on top, the filter closing the whole way" style="Drum and Bass/Neurofunk" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Cyborg Evolving Pad" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor, A minor, A minor, A minor, spread wide: the root low, the fifth, the third on top, the filter closing the whole way" style="Fast/Fast Grind" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="3800" v="0.629921"/>
     <N p="64" s="0" l="3800" v="0.629921"/>

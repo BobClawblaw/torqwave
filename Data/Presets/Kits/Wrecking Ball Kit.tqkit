@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Wrecking Ball Kit" key="A minor" tags="Starter kit" note="A starting point for Industrial rock: one of each part, in A minor at 120 BPM" style="Industrial/Industrial rock">
-  <TORQWAVE_SEQUENCE version="1" name="Rust Belt Drive" role="Drums" subRole="Full Grooves" key="" tags="" note="A rock kick on 1, 3 and the and of 3, a snare on 2 and 4, 8th hats, the downbeats stronger and a crash on the one" style="Industrial/Industrial rock" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_KIT version="1" name="Wrecking Ball Kit" key="A minor" tags="Starter kit" note="A starting point for Iron Riff: one of each part, in A minor at 120 BPM" style="Machine/Iron Riff">
+  <TORQWAVE_SEQUENCE version="1" name="Rust Belt Drive" role="Drums" subRole="Full Grooves" key="" tags="" note="A rock kick on 1, 3 and the and of 3, a snare on 2 and 4, 8th hats, the downbeats stronger and a crash on the one" style="Machine/Iron Riff" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="42" s="0" l="120" v="0.771654"/>
@@ -20,7 +20,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Barbwire Throb" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Straight 8ths on the root, moving through the roots of A minor, G minor, F, G minor" style="Industrial/Industrial rock" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Barbwire Throb" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Straight 8ths on the root, moving through the roots of A minor, G minor, F, G minor" style="Machine/Iron Riff" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="33" s="0" l="144" v="0.755906"/>
       <N p="33" s="480" l="144" v="0.755906"/>
@@ -57,7 +57,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Warehouse Sub" bus="0" instrument="1" musical="1" gainDb="-6.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUgIWYn8VcyUFHSUmXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Rust Belt Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short chords of root, fifth and octave, no third on A, A, comping over two bars, three times a bar" style="Industrial/Industrial rock" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Rust Belt Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short chords of root, fifth and octave, no third on A, A, comping over two bars, three times a bar" style="Machine/Iron Riff" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.645669"/>
       <N p="64" s="0" l="220" v="0.645669"/>
@@ -80,7 +80,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Minor Stab" bus="0" instrument="1" musical="1" gainDb="-6.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRSo41axAxTzElXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Sledge Up-Down Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Chromatic,Harmonic minor,Phrygian" note="Three up, a rest, three down, a rest, the root, the semitone above it and the fifth, through the roots A, A, F, G" style="Industrial/Industrial rock" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Sledge Up-Down Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Chromatic,Harmonic minor,Phrygian" note="Three up, a rest, three down, a rest, the root, the semitone above it and the fifth, through the roots A, A, F, G" style="Machine/Iron Riff" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="45" s="0" l="120" v="0.755906"/>
       <N p="46" s="240" l="120" v="0.755906"/>
@@ -133,7 +133,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Cold Saw Lead" bus="0" instrument="1" musical="1" gainDb="-6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxPuwFYfLUX2ABSkEFYh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Fuse Box Snare Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, a gap, then a short snare roll" style="Industrial/Industrial rock" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Fuse Box Snare Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, a gap, then a short snare roll" style="Machine/Iron Riff" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="38" s="2400" l="120" v="0.314961"/>
@@ -145,7 +145,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Standard" bus="0" instrument="1" musical="1" gainDb="-3.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>66.VMjLgjC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHSQWXtQVXxQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Rust Belt Riser" role="SFX" subRole="Risers" key="" tags="" note="A floor tom in 8ths for a bar, then a snare roll in 16ths, the kick under every beat" style="Industrial/Industrial rock" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Rust Belt Riser" role="SFX" subRole="Risers" key="" tags="" note="A floor tom in 8ths for a bar, then a snare roll in 16ths, the kick under every beat" style="Machine/Iron Riff" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.409449"/>
       <N p="41" s="0" l="120" v="0.409449"/>

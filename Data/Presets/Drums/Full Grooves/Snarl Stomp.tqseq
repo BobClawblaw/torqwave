@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Snarl Stomp" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor with a skipped kick before the one, a clap layered with a snare on 2 and 4 and flat machine 16th hats" style="Industrial/Aggrotech" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Snarl Stomp" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor with a skipped kick before the one, a clap layered with a snare on 2 and 4 and flat machine 16th hats" style="Machine/Overdrive" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="42" s="0" l="120" v="0.771654"/>

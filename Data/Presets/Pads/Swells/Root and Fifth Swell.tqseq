@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Root and Fifth Swell" role="Pads" subRole="Swells" key="A minor" tags="" note="A and E swelling up over four bars" style="Techno/Dark" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Root and Fifth Swell" role="Pads" subRole="Swells" key="A minor" tags="" note="A and E swelling up over four bars" style="Floor/Dark Floor" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="3800" v="0.566929"/>
     <N p="52" s="0" l="3800" v="0.566929"/>

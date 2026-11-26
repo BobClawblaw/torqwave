@@ -109,7 +109,7 @@ namespace
   { "name": "find_sequence_presets", "description": "Find factory sequences and kits (the Sequence Library's Presets) by role, style, energy, character and search words. At most 40 come back, with how many more match; each has its name, path, role, bars, the tempo it was written at, key, style, energy, character, whether it brings an instrument, and what it does. With nothing to narrow by, the result also names the roles and styles there are.",
     "parameters": { "type": "object", "properties": {
                     "role": { "type": "string", "description": "Drums, Bass, Harmony, Pads, Arps, Melody, SFX, or Kits for whole kits." },
-                    "style": { "type": "string", "description": "A genre (\"Techno\") or a genre and style (\"Techno/Dark\"), as the result names them." },
+                    "style": { "type": "string", "description": "A genre (\"Floor\") or a genre and style (\"Floor/Dark Floor\"), as the result names them." },
                     "energy": { "type": "integer", "description": "1 (an intro tool) to 5 (peak)." },
                     "character": { "type": "array", "items": { "type": "string" }, "description": "Any of Dark, Bright, Sparse, Dense, Straight, Swung, Clean, Distorted; a preset must have every one given." },
                     "search": { "type": "string", "description": "Words that must all be in its name, key, tags, folders, style or description." } } } },

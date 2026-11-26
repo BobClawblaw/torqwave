@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="8-Bit Discovery Sting" role="SFX" subRole="Stingers" key="A minor" tags="" note="A discovery sting: fifths and fourths stacking upward from A a 16th apart and held" style="Game/Chiptune" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="8-Bit Discovery Sting" role="SFX" subRole="Stingers" key="A minor" tags="" note="A discovery sting: fifths and fourths stacking upward from A a 16th apart and held" style="Game/8-bit" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="7640" v="0.787402"/>
     <N p="64" s="240" l="7400" v="0.787402"/>

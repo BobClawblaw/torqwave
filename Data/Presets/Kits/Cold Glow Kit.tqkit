@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_KIT version="1" name="Cold Glow Kit" key="A minor" tags="Starter kit" note="A starting point for Cold Glow: one of each part, in A minor at 116 BPM" style="Machine/Cold Glow">
+  <TORQWAVE_SEQUENCE version="1" name="Concrete Winter Pulse" role="Drums" subRole="Full Grooves" key="" tags="" note="A half-time kick on 1 and 3, a snare on 2 and 4 and closed hats on the offbeats" style="Machine/Cold Glow" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="116.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+    <NOTES>
+      <N p="36" s="0" l="120" v="0.944882"/>
+      <N p="42" s="480" l="120" v="0.771654"/>
+      <N p="38" s="960" l="120" v="0.944882"/>
+      <N p="42" s="1440" l="120" v="0.771654"/>
+      <N p="36" s="1920" l="120" v="0.771654"/>
+      <N p="42" s="2400" l="120" v="0.771654"/>
+      <N p="38" s="2880" l="120" v="0.944882"/>
+      <N p="42" s="3360" l="120" v="0.771654"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Isolation Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="8th roots with an octave before the last, on A" style="Machine/Cold Glow" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="116.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+    <NOTES>
+      <N p="33" s="0" l="144" v="0.755906"/>
+      <N p="33" s="480" l="144" v="0.755906"/>
+      <N p="33" s="960" l="144" v="0.755906"/>
+      <N p="33" s="1440" l="144" v="0.755906"/>
+      <N p="33" s="1920" l="144" v="0.755906"/>
+      <N p="33" s="2400" l="144" v="0.755906"/>
+      <N p="45" s="2880" l="144" v="0.755906"/>
+      <N p="33" s="3360" l="144" v="0.755906"/>
+      <N p="33" s="3840" l="144" v="0.755906"/>
+      <N p="33" s="4320" l="144" v="0.755906"/>
+      <N p="33" s="4800" l="144" v="0.755906"/>
+      <N p="33" s="5280" l="144" v="0.755906"/>
+      <N p="33" s="5760" l="144" v="0.755906"/>
+      <N p="33" s="6240" l="144" v="0.755906"/>
+      <N p="45" s="6720" l="144" v="0.755906"/>
+      <N p="33" s="7200" l="144" v="0.755906"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Abandoned Pump" bus="0" instrument="1" musical="1" gainDb="-5.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>74.VMjLgDD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhElaj8lakQFHPUWavIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Pale Progression" role="Harmony" subRole="Progressions" key="A minor" tags="" note="A minor, A minor, D minor, A minor, a bar each" style="Machine/Cold Glow" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="116.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+    <NOTES>
+      <N p="57" s="0" l="3800" v="0.661417"/>
+      <N p="60" s="0" l="3800" v="0.661417"/>
+      <N p="64" s="0" l="3800" v="0.661417"/>
+      <N p="57" s="3840" l="3800" v="0.661417"/>
+      <N p="60" s="3840" l="3800" v="0.661417"/>
+      <N p="64" s="3840" l="3800" v="0.661417"/>
+      <N p="62" s="7680" l="3800" v="0.661417"/>
+      <N p="65" s="7680" l="3800" v="0.661417"/>
+      <N p="69" s="7680" l="3800" v="0.661417"/>
+      <N p="57" s="11520" l="3800" v="0.661417"/>
+      <N p="60" s="11520" l="3800" v="0.661417"/>
+      <N p="64" s="11520" l="3800" v="0.661417"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Glass Shard" bus="0" instrument="1" musical="1" gainDb="-5.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxQrE1byAxTnElbjIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Grey Sky Pattern" role="Arps" subRole="16th Sequences" key="A minor" tags="" note="Pairs of notes with a gap after each, three against the beat, the root, the third and the seventh, through the roots A, F, G, A" style="Machine/Cold Glow" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="116.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+    <NOTES>
+      <N p="57" s="0" l="120" v="0.755906"/>
+      <N p="57" s="480" l="120" v="0.755906"/>
+      <N p="67" s="720" l="120" v="0.755906"/>
+      <N p="67" s="1200" l="120" v="0.755906"/>
+      <N p="60" s="1440" l="120" v="0.755906"/>
+      <N p="60" s="1920" l="120" v="0.755906"/>
+      <N p="69" s="2160" l="120" v="0.755906"/>
+      <N p="69" s="2640" l="120" v="0.755906"/>
+      <N p="67" s="2880" l="120" v="0.755906"/>
+      <N p="60" s="3360" l="120" v="0.755906"/>
+      <N p="65" s="3840" l="120" v="0.755906"/>
+      <N p="65" s="4320" l="120" v="0.755906"/>
+      <N p="76" s="4560" l="120" v="0.755906"/>
+      <N p="76" s="5040" l="120" v="0.755906"/>
+      <N p="69" s="5280" l="120" v="0.755906"/>
+      <N p="69" s="5760" l="120" v="0.755906"/>
+      <N p="77" s="6000" l="120" v="0.755906"/>
+      <N p="77" s="6480" l="120" v="0.755906"/>
+      <N p="76" s="6720" l="120" v="0.755906"/>
+      <N p="69" s="7200" l="120" v="0.755906"/>
+      <N p="67" s="7680" l="120" v="0.755906"/>
+      <N p="67" s="8160" l="120" v="0.755906"/>
+      <N p="77" s="8400" l="120" v="0.755906"/>
+      <N p="77" s="8880" l="120" v="0.755906"/>
+      <N p="71" s="9120" l="120" v="0.755906"/>
+      <N p="71" s="9600" l="120" v="0.755906"/>
+      <N p="79" s="9840" l="120" v="0.755906"/>
+      <N p="79" s="10320" l="120" v="0.755906"/>
+      <N p="77" s="10560" l="120" v="0.755906"/>
+      <N p="71" s="11040" l="120" v="0.755906"/>
+      <N p="57" s="11520" l="120" v="0.755906"/>
+      <N p="57" s="12000" l="120" v="0.755906"/>
+      <N p="67" s="12240" l="120" v="0.755906"/>
+      <N p="67" s="12720" l="120" v="0.755906"/>
+      <N p="60" s="12960" l="120" v="0.755906"/>
+      <N p="60" s="13440" l="120" v="0.755906"/>
+      <N p="69" s="13680" l="120" v="0.755906"/>
+      <N p="69" s="14160" l="120" v="0.755906"/>
+      <N p="67" s="14400" l="120" v="0.755906"/>
+      <N p="60" s="14880" l="120" v="0.755906"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Black Tick" bus="0" instrument="1" musical="1" gainDb="-2.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPrE1XqABUoM1Zh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Frost Clap Roll" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps in a dotted figure" style="Machine/Cold Glow" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="116.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+    <NOTES>
+      <N p="36" s="0" l="120" v="0.944882"/>
+      <N p="36" s="960" l="120" v="0.944882"/>
+      <N p="39" s="1920" l="120" v="0.771654"/>
+      <N p="39" s="2640" l="120" v="0.771654"/>
+      <N p="39" s="3360" l="120" v="0.771654"/>
+      <N p="39" s="3600" l="120" v="0.944882"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Frost Build" role="SFX" subRole="Risers" key="A minor" tags="" note="8ths on E, the G above joining in bar 2 and the B in its last half" style="Machine/Cold Glow" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="116.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+    <NOTES>
+      <N p="64" s="0" l="240" v="0.456693"/>
+      <N p="64" s="480" l="240" v="0.480315"/>
+      <N p="64" s="960" l="240" v="0.503937"/>
+      <N p="64" s="1440" l="240" v="0.535433"/>
+      <N p="64" s="1920" l="240" v="0.559055"/>
+      <N p="64" s="2400" l="240" v="0.590551"/>
+      <N p="64" s="2880" l="240" v="0.614173"/>
+      <N p="64" s="3360" l="240" v="0.645669"/>
+      <N p="64" s="3840" l="240" v="0.669291"/>
+      <N p="67" s="3840" l="240" v="0.669291"/>
+      <N p="64" s="4320" l="240" v="0.700787"/>
+      <N p="67" s="4320" l="240" v="0.700787"/>
+      <N p="64" s="4800" l="240" v="0.724409"/>
+      <N p="67" s="4800" l="240" v="0.724409"/>
+      <N p="64" s="5280" l="240" v="0.755906"/>
+      <N p="67" s="5280" l="240" v="0.755906"/>
+      <N p="64" s="5760" l="240" v="0.779528"/>
+      <N p="67" s="5760" l="240" v="0.779528"/>
+      <N p="71" s="5760" l="240" v="0.779528"/>
+      <N p="64" s="6240" l="240" v="0.811024"/>
+      <N p="67" s="6240" l="240" v="0.811024"/>
+      <N p="71" s="6240" l="240" v="0.811024"/>
+      <N p="64" s="6720" l="240" v="0.834646"/>
+      <N p="67" s="6720" l="240" v="0.834646"/>
+      <N p="71" s="6720" l="240" v="0.834646"/>
+      <N p="64" s="7200" l="240" v="0.866142"/>
+      <N p="67" s="7200" l="240" v="0.866142"/>
+      <N p="71" s="7200" l="240" v="0.866142"/>
+    </NOTES>
+    <LANE controller="74">
+      <P t="0" v="0.300000"/>
+      <P t="7679" v="1.000000"/>
+    </LANE>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Pump Chord" bus="0" instrument="1" musical="1" gainDb="9.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBT00FbfLDZuIGYh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+</TORQWAVE_KIT>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Fifth Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A1 and E2 held for eight bars" style="Techno/Industrial" energy="1" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Fifth Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A1 and E2 held for eight bars" style="Floor/Factory Floor" energy="1" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="30680" v="0.629921"/>
     <N p="40" s="0" l="30680" v="0.551181"/>

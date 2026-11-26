@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Note Ramp Riser" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="16ths climbing a semitone a beat for four bars, louder and brighter as they go" style="Techno/Peak-time" energy="5" character="Bright,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Note Ramp Riser" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="16ths climbing a semitone a beat for four bars, louder and brighter as they go" style="Floor/Peak-time" energy="5" character="Bright,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.393701"/>
     <N p="57" s="240" l="120" v="0.401575"/>

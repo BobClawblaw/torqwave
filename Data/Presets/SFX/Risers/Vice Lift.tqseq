@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Vice Lift" role="SFX" subRole="Risers" key="A minor" tags="" note="Four-note A minor arpeggios in 16ths, each starting a chord note higher than the last" style="Synthwave/Darksynth" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Vice Lift" role="SFX" subRole="Risers" key="A minor" tags="" note="Four-note A minor arpeggios in 16ths, each starting a chord note higher than the last" style="Neon/Neon Menace" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="120" v="0.503937"/>
     <N p="48" s="240" l="120" v="0.511811"/>

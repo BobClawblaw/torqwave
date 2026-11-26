@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Body Shop Low Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A and E held, the flat seventh joining at bar 3, the filter calling in a burst of 16ths and answering it, softer, a bar later" style="Industrial/Techno-body" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Body Shop Low Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A and E held, the flat seventh joining at bar 3, the filter calling in a burst of 16ths and answering it, softer, a bar later" style="Machine/Machine Drive" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="15320" v="0.787402"/>
     <N p="40" s="0" l="15320" v="0.692913"/>

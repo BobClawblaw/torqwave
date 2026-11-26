@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Satellite Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short chords of the triads on A, F, comping over two bars, three times a bar" style="Industrial/Futurepop" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Satellite Keys" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short chords of the triads on A, F, comping over two bars, three times a bar" style="Machine/Bright Pulse" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="220" v="0.645669"/>
     <N p="60" s="0" l="220" v="0.645669"/>

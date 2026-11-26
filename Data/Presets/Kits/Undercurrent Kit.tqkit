@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Undercurrent Kit" key="A minor" tags="Starter kit" note="A starting point for Dub: one of each part, in A minor at 122 BPM" style="Techno/Dub">
-  <TORQWAVE_SEQUENCE version="1" name="Reverb Hall Drive" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor with a rolling rumble between the kicks, a clap on 4 only and a pedal hat on the offbeats" style="Techno/Dub" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_KIT version="1" name="Undercurrent Kit" key="A minor" tags="Starter kit" note="A starting point for Echo Chamber: one of each part, in A minor at 122 BPM" style="Floor/Echo Chamber">
+  <TORQWAVE_SEQUENCE version="1" name="Reverb Hall Drive" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor with a rolling rumble between the kicks, a clap on 4 only and a pedal hat on the offbeats" style="Floor/Echo Chamber" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="240" l="120" v="0.314961"/>
@@ -40,7 +40,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Standard" bus="0" instrument="1" musical="1" gainDb="-8.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>66.VMjLgjC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHSQWXtQVXxQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Submerged Throb" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="A deep line in dotted 8ths round the root, octave and fifth, on A" style="Techno/Dub" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Submerged Throb" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="A deep line in dotted 8ths round the root, octave and fifth, on A" style="Floor/Echo Chamber" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="33" s="0" l="144" v="0.755906"/>
       <N p="33" s="720" l="144" v="0.755906"/>
@@ -50,7 +50,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: FM Basement" bus="0" instrument="1" musical="1" gainDb="-6.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhQMAhPgMWYsUlazIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Submerged Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short chords of the root, the third and the seventh on A, A, comping over two bars, on the offbeats" style="Techno/Dub" energy="1" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Submerged Chord Pulse" role="Harmony" subRole="Keys &amp; Comping" key="A minor" tags="" note="Short chords of the root, the third and the seventh on A, A, comping over two bars, on the offbeats" style="Floor/Echo Chamber" energy="1" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="480" l="220" v="0.645669"/>
       <N p="60" s="480" l="220" v="0.645669"/>
@@ -79,7 +79,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Cold Bell" bus="0" instrument="1" musical="1" gainDb="-1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxPuwFYfHTYrwlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Deep Water Climb" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Three up, a rest, three down, a rest, the root, the fifth and the ninth, through the roots A, A" style="Techno/Dub" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Deep Water Climb" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Three up, a rest, three down, a rest, the root, the fifth and the ninth, through the roots A, A" style="Floor/Echo Chamber" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="120" v="0.755906"/>
       <N p="64" s="240" l="120" v="0.755906"/>
@@ -108,7 +108,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Wire Pluck" bus="0" instrument="1" musical="1" gainDb="-3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUoIWYf.Ea0M1Zh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Spring Room Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then the snare in a dotted figure" style="Techno/Dub" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Spring Room Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then the snare in a dotted figure" style="Floor/Echo Chamber" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="960" l="120" v="0.944882"/>
@@ -119,7 +119,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Dark Techno" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHDElbqABUkMFZt8lHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Deep Water Build" role="SFX" subRole="Risers" key="A minor" tags="" note="An A minor seventh on every offbeat for four bars, the filter opening from closed" style="Techno/Dub" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Deep Water Build" role="SFX" subRole="Risers" key="A minor" tags="" note="An A minor seventh on every offbeat for four bars, the filter opening from closed" style="Floor/Echo Chamber" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="57" s="480" l="240" v="0.480315"/>
       <N p="60" s="480" l="240" v="0.480315"/>

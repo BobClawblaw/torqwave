@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Dub Pluck Echoes" role="Arps" subRole="Plucks" key="A minor" tags="" note="A pluck repeated quieter like an echo" style="Techno/Minimal" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Dub Pluck Echoes" role="Arps" subRole="Plucks" key="A minor" tags="" note="A pluck repeated quieter like an echo" style="Floor/Minimal" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="64" s="0" l="96" v="0.929134"/>
     <N p="64" s="720" l="96" v="0.755906"/>

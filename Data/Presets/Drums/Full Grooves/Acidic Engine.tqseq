@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Acidic Engine" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap layered with a snare on 2 and 4 and open hats on the offbeats" style="Techno/Acid" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Acidic Engine" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap layered with a snare on 2 and 4 and open hats on the offbeats" style="Floor/Squelch" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="46" s="480" l="120" v="0.771654"/>

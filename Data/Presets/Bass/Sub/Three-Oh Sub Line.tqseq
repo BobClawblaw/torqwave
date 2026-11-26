@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Three-Oh Sub Line" role="Bass" subRole="Sub" key="A minor" tags="" note="An 8th on every offbeat, moving through the roots of A minor, A minor, A minor, F" style="Techno/Acid" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Three-Oh Sub Line" role="Bass" subRole="Sub" key="A minor" tags="" note="An 8th on every offbeat, moving through the roots of A minor, A minor, A minor, F" style="Floor/Squelch" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="480" l="228" v="0.755906"/>
     <N p="33" s="1440" l="228" v="0.755906"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Breakdown Swell" role="Pads" subRole="Swells" key="A minor" tags="" note="F to G, swelling into the drop" style="Techno/Melodic" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Breakdown Swell" role="Pads" subRole="Swells" key="A minor" tags="" note="F to G, swelling into the drop" style="Floor/Melodic" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="53" s="0" l="3800" v="0.582677"/>
     <N p="57" s="0" l="3800" v="0.582677"/>

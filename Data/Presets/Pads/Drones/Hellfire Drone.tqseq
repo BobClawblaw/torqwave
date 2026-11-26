@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Hellfire Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A low E, the A above it joining halfway, for 8 bars, the filter closing slowly" style="Industrial/Aggrotech" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Hellfire Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A low E, the A above it joining halfway, for 8 bars, the filter closing slowly" style="Machine/Overdrive" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
   <NOTES>
     <N p="28" s="0" l="30680" v="0.724409"/>
     <N p="33" s="15360" l="15320" v="0.614173"/>

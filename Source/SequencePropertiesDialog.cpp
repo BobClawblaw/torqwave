@@ -64,7 +64,7 @@ SequencePropertiesDialog::SequencePropertiesDialog (Options o, const SequenceLib
         style.addItem (SequenceFile::styleName (styles[i]), i + 2);
 
     style.setText (p.style.isNotEmpty() ? SequenceFile::styleName (p.style) : noChoice, juce::dontSendNotification);
-    style.setTooltip ("A genre and a style, such as Techno/Dark or Industrial/EBM: pick one or type your own");
+    style.setTooltip ("A genre and a style, such as Floor/Dark Floor or Machine/Machine Pulse: pick one or type your own");
     addRow ("Style", style);
 
     key.setEditableText (true);

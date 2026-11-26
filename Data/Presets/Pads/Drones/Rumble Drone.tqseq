@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rumble Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A low A and the A above it, the filter rolling through the three 16ths after every beat, as a rumble does" style="Techno/Hard" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rumble Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A low A and the A above it, the filter rolling through the three 16ths after every beat, as a rumble does" style="Floor/Hard Floor" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="15320" v="0.818898"/>
     <N p="45" s="0" l="15320" v="0.708661"/>

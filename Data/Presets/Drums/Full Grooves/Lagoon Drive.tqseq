@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Lagoon Drive" role="Drums" subRole="Full Grooves" key="" tags="" note="A two-step kick with a pickup into the next bar, the snare on 2 and 4, hats pushing into each beat and a shaker in 16ths" style="Drum and Bass/Liquid" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Lagoon Drive" role="Drums" subRole="Full Grooves" key="" tags="" note="A two-step kick with a pickup into the next bar, the snare on 2 and 4, hats pushing into each beat and a shaker in 16ths" style="Fast/Fast Flow" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="42" s="0" l="120" v="0.771654"/>

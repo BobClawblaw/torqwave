@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rough Cut Sub" role="Bass" subRole="Sub" key="A minor" tags="" note="A syncopated sub: the one, the and of 2, and a long note before 4, on A" style="Breakbeat/Breaks" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rough Cut Sub" role="Bass" subRole="Sub" key="A minor" tags="" note="A syncopated sub: the one, the and of 2, and a long note before 4, on A" style="Broken/Broken Beat" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="720" v="0.755906"/>
     <N p="33" s="1440" l="480" v="0.755906"/>

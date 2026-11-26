@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Datastream Up-Down Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Chromatic,Phrygian" note="Three up, a rest, three down, a rest, diminished triads, through the roots A, B flat" style="Industrial/Electro-industrial" energy="2" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="114.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Datastream Up-Down Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="Chromatic,Phrygian" note="Three up, a rest, three down, a rest, diminished triads, through the roots A, B flat" style="Machine/Broken Circuit" energy="2" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="114.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.755906"/>
     <N p="60" s="240" l="120" v="0.755906"/>

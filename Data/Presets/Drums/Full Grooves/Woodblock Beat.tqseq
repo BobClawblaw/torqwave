@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Woodblock Beat" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor with ghost kicks after each, hats pushing into each beat, a cowbell on the and of 2 and 4 and a tom run ends bar 4" style="Techno/Percussive" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Woodblock Beat" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor with ghost kicks after each, hats pushing into each beat, a cowbell on the and of 2 and 4 and a tom run ends bar 4" style="Floor/Percussive" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="42" s="0" l="120" v="0.771654"/>

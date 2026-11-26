@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Barbed Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Root, fifth and octave up and down, the third left out, root, fifth and octave, no third, on A" style="Industrial/Aggrotech" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Barbed Arp" role="Arps" subRole="Up &amp; Down" key="A minor" tags="" note="Root, fifth and octave up and down, the third left out, root, fifth and octave, no third, on A" style="Machine/Overdrive" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.755906"/>
     <N p="69" s="240" l="120" v="0.755906"/>

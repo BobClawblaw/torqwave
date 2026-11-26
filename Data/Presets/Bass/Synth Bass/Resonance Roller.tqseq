@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Resonance Roller" role="Bass" subRole="Synth Bass" key="A minor" tags="Phrygian" note="16ths on the root with the note above it biting at the end of beats 1 and 3, moving through the roots of A minor, A minor, A minor, F" style="Techno/Acid" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Resonance Roller" role="Bass" subRole="Synth Bass" key="A minor" tags="Phrygian" note="16ths on the root with the note above it biting at the end of beats 1 and 3, moving through the roots of A minor, A minor, A minor, F" style="Floor/Squelch" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="144" v="0.929134"/>
     <N p="33" s="240" l="144" v="0.755906"/>

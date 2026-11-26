@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Overdrive Pluck" role="Arps" subRole="Plucks" key="A minor" tags="Harmonic minor" note="8th plucks on the chord's notes, the triads, through the roots A, F, D, E" style="Synthwave/Darksynth" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Overdrive Pluck" role="Arps" subRole="Plucks" key="A minor" tags="Harmonic minor" note="8th plucks on the chord's notes, the triads, through the roots A, F, D, E" style="Neon/Neon Menace" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="100.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.755906"/>
     <N p="64" s="480" l="120" v="0.755906"/>

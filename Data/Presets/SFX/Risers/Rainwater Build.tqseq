@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rainwater Build" role="SFX" subRole="Risers" key="A minor" tags="" note="An A minor ninth chord swelling from nothing over four bars" style="Drum and Bass/Liquid" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rainwater Build" role="SFX" subRole="Risers" key="A minor" tags="" note="An A minor ninth chord swelling from nothing over four bars" style="Fast/Fast Flow" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="15320" v="0.661417"/>
     <N p="60" s="0" l="15320" v="0.661417"/>

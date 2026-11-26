@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Fractal Kit" key="A minor" tags="Starter kit" note="A starting point for Psytrance: one of each part, in A minor at 140 BPM" style="Trance/Psytrance">
-  <TORQWAVE_SEQUENCE version="1" name="Forest Night Engine" role="Drums" subRole="Full Grooves" key="" tags="" note="A short kick on every beat, leaving the 16ths after it to the bass, a clap on 2 and 4, open hats on the offbeats and a syncopated rimshot" style="Trance/Psytrance" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_KIT version="1" name="Fractal Kit" key="A minor" tags="Starter kit" note="A starting point for Rolling Spiral: one of each part, in A minor at 140 BPM" style="Spiral/Rolling Spiral">
+  <TORQWAVE_SEQUENCE version="1" name="Forest Night Engine" role="Drums" subRole="Full Grooves" key="" tags="" note="A short kick on every beat, leaving the 16ths after it to the bass, a clap on 2 and 4, open hats on the offbeats and a syncopated rimshot" style="Spiral/Rolling Spiral" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="37" s="240" l="120" v="0.771654"/>
@@ -38,7 +38,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Goa Sub" role="Bass" subRole="Sub" key="A minor" tags="Phrygian" note="An 8th on every offbeat, moving through the roots of A minor, B flat, A minor, G minor" style="Trance/Psytrance" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Goa Sub" role="Bass" subRole="Sub" key="A minor" tags="Phrygian" note="An 8th on every offbeat, moving through the roots of A minor, B flat, A minor, G minor" style="Spiral/Rolling Spiral" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="33" s="480" l="228" v="0.755906"/>
       <N p="33" s="1440" l="228" v="0.755906"/>
@@ -59,7 +59,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Iron Sub" bus="0" instrument="1" musical="1" gainDb="-7.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRRx8lafLUchIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Forest Night Stabs" role="Harmony" subRole="Stabs" key="A minor" tags="Phrygian" note="A with the flat second against it on 1, on 3 and a dotted 8th after it" style="Trance/Psytrance" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Forest Night Stabs" role="Harmony" subRole="Stabs" key="A minor" tags="Phrygian" note="A with the flat second against it on 1, on 3 and a dotted 8th after it" style="Spiral/Rolling Spiral" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="220" v="0.818898"/>
       <N p="58" s="0" l="220" v="0.818898"/>
@@ -73,7 +73,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Abandoned Clamp" bus="0" instrument="1" musical="1" gainDb="-7.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>75.VMjLgHD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhElaj8lakQFHCwVXsAmHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Shaman Pluck" role="Arps" subRole="Plucks" key="A minor" tags="Phrygian" note="Pairs of 16th plucks on each beat, the root, the semitone above it and the fifth, on A" style="Trance/Psytrance" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Shaman Pluck" role="Arps" subRole="Plucks" key="A minor" tags="Phrygian" note="Pairs of 16th plucks on each beat, the root, the semitone above it and the fifth, on A" style="Spiral/Rolling Spiral" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="57" s="0" l="120" v="0.755906"/>
       <N p="64" s="240" l="120" v="0.755906"/>
@@ -86,7 +86,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Dark Kalimba" bus="0" instrument="1" musical="1" gainDb="-0.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQgI2ZfrTXrkVahElHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Shaman Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Trance/Psytrance" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Shaman Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Spiral/Rolling Spiral" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="1680" l="120" v="0.771654"/>
@@ -101,7 +101,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Lotus Bridge" role="SFX" subRole="Transitions" key="A minor" tags="" note="The 16th bass on A for three beats, its last note an octave up, stopping a beat early as the filter closes" style="Trance/Psytrance" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Lotus Bridge" role="SFX" subRole="Transitions" key="A minor" tags="" note="The 16th bass on A for three beats, its last note an octave up, stopping a beat early as the filter closes" style="Spiral/Rolling Spiral" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="33" s="0" l="120" v="0.787402"/>
       <N p="33" s="240" l="120" v="0.944882"/>

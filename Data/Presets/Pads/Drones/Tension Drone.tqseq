@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Tension Drone" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="An octave on A gated in 8ths, with 16ths at the end of each bar, the tritone above joining at bar 2 as the filter opens" style="Industrial/EBM" energy="2" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Tension Drone" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="An octave on A gated in 8ths, with 16ths at the end of each bar, the tritone above joining at bar 2 as the filter opens" style="Machine/Machine Pulse" energy="2" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="15320" v="0.787402"/>
     <N p="45" s="0" l="15320" v="0.708661"/>

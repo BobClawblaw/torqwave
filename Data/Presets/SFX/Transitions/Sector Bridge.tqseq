@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Sector Bridge" role="SFX" subRole="Transitions" key="A minor" tags="Chromatic" note="One note stuttering, each repeat half as long as the last, the tritone above on the last 16th" style="Industrial/Electro-industrial" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="114.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Sector Bridge" role="SFX" subRole="Transitions" key="A minor" tags="Chromatic" note="One note stuttering, each repeat half as long as the last, the tritone above on the last 16th" style="Machine/Broken Circuit" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="114.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="1900" v="0.818898"/>
     <N p="57" s="1920" l="940" v="0.818898"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rivet Line Stomp" role="Drums" subRole="Full Grooves" key="" tags="" note="A broken kick with a push before the 4, a snare on 2 and 4 with ghost notes after them, 16th hats shaped by velocity and metal struck in threes" style="Industrial/Electro-industrial" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="112.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rivet Line Stomp" role="Drums" subRole="Full Grooves" key="" tags="" note="A broken kick with a push before the 4, a snare on 2 and 4 with ghost notes after them, 16th hats shaped by velocity and metal struck in threes" style="Machine/Broken Circuit" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="112.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="42" s="0" l="120" v="0.771654"/>

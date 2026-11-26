@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Mutant Chords" role="Harmony" subRole="Progressions" key="A minor" tags="" note="A minor, A minor, A minor, A minor, struck on the offbeats" style="Drum and Bass/Neurofunk" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Mutant Chords" role="Harmony" subRole="Progressions" key="A minor" tags="" note="A minor, A minor, A minor, A minor, struck on the offbeats" style="Fast/Fast Grind" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="480" l="460" v="0.677165"/>
     <N p="60" s="480" l="460" v="0.677165"/>

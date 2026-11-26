@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Pale Stabs" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A with the second in place of the third on the one, then gathering through the back half of the bar" style="Industrial/Coldwave" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Pale Stabs" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A with the second in place of the third on the one, then gathering through the back half of the bar" style="Machine/Cold Glow" energy="2" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="220" v="0.818898"/>
     <N p="59" s="0" l="220" v="0.818898"/>

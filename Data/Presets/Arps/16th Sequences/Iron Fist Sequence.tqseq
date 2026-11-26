@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Iron Fist Sequence" role="Arps" subRole="16th Sequences" key="A minor" tags="Chromatic" note="Three notes against four beats, turning back at the octave, the root, its tritone and the octave, on A" style="Techno/Hard" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="155.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Iron Fist Sequence" role="Arps" subRole="16th Sequences" key="A minor" tags="Chromatic" note="Three notes against four beats, turning back at the octave, the root, its tritone and the octave, on A" style="Floor/Hard Floor" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="155.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="120" v="0.755906"/>
     <N p="51" s="240" l="120" v="0.755906"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Corrosion Bass Run" role="Bass" subRole="Arp Bass" key="A minor" tags="" note="Root and octave in threes against the beat, moving through the roots of A minor, A minor, A minor, F" style="Techno/Industrial" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Corrosion Bass Run" role="Bass" subRole="Arp Bass" key="A minor" tags="" note="Root and octave in threes against the beat, moving through the roots of A minor, A minor, A minor, F" style="Floor/Factory Floor" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="144" v="0.755906"/>
     <N p="45" s="480" l="144" v="0.755906"/>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Bulldozer Kit" key="A minor" tags="Starter kit" note="A starting point for Hard: one of each part, in A minor at 145 BPM" style="Techno/Hard">
-  <TORQWAVE_SEQUENCE version="1" name="Riot Pulse" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap on 2 and 4, closed hats on the beat and open ones between and metal struck in threes" style="Techno/Hard" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_KIT version="1" name="Bulldozer Kit" key="A minor" tags="Starter kit" note="A starting point for Hard Floor: one of each part, in A minor at 145 BPM" style="Floor/Hard Floor">
+  <TORQWAVE_SEQUENCE version="1" name="Riot Pulse" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap on 2 and 4, closed hats on the beat and open ones between and metal struck in threes" style="Floor/Hard Floor" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="42" s="0" l="120" v="0.771654"/>
@@ -52,7 +52,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Bunker" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>64.VMjLgbC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHBUmaqUlbh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Hammer Roller" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Two 16ths on each offbeat, the last up an octave, moving through the roots of A minor, A minor, A minor, F" style="Techno/Hard" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Hammer Roller" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="Two 16ths on each offbeat, the last up an octave, moving through the roots of A minor, A minor, A minor, F" style="Floor/Hard Floor" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="33" s="480" l="144" v="0.755906"/>
       <N p="33" s="720" l="144" v="0.755906"/>
@@ -89,7 +89,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Square Acid" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxTwUWXxUFHAMVZjIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Blast Wall Stab" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A bare fifth, A and E on the one, then gathering through the back half of the bar" style="Techno/Hard" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Blast Wall Stab" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A bare fifth, A and E on the one, then gathering through the back half of the bar" style="Floor/Hard Floor" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="45" s="0" l="220" v="0.818898"/>
       <N p="52" s="0" l="220" v="0.818898"/>
@@ -109,7 +109,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Rust Lead" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhT0MGcfvTYgQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Breaker Plucks" role="Arps" subRole="Plucks" key="A minor" tags="" note="Pairs of 16th plucks on each beat, root, fifth and octave, no third, through the roots A, G, F, G" style="Techno/Hard" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Breaker Plucks" role="Arps" subRole="Plucks" key="A minor" tags="" note="Pairs of 16th plucks on each beat, root, fifth and octave, no third, through the roots A, G, F, G" style="Floor/Hard Floor" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
       <N p="45" s="0" l="120" v="0.755906"/>
       <N p="57" s="240" l="120" v="0.755906"/>
@@ -146,7 +146,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Rust Lead" bus="0" instrument="1" musical="1" gainDb="-8.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhT0MGcfvTYgQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Bunker Clap Stutter" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps stuttering into the next bar" style="Techno/Hard" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Bunker Clap Stutter" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then claps stuttering into the next bar" style="Floor/Hard Floor" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="960" l="120" v="0.944882"/>
@@ -160,7 +160,7 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Hardline Transition" role="SFX" subRole="Transitions" key="" tags="" note="The kick in 8ths for half a bar and 16ths for the rest, the clap staying on 2 and 4" style="Techno/Hard" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Hardline Transition" role="SFX" subRole="Transitions" key="" tags="" note="The kick in 8ths for half a bar and 16ths for the rest, the clap staying on 2 and 4" style="Floor/Hard Floor" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.771654"/>
       <N p="36" s="480" l="120" v="0.771654"/>

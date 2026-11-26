@@ -520,7 +520,7 @@ void runPresetTests (AudioEngine& engine)
     // the synth's Acid patches, a drum groove on one of Basic Drums' kits, channel 10.
     {
         juce::String error;
-        const auto acid = SequenceFile::load (presets.getChildFile ("Bass/Arp Bass/Acid Root Jumper.tqseq"), error);
+        const auto acid = SequenceFile::load (presets.getChildFile ("Bass/Arp Bass/Squelch Root Jumper.tqseq"), error);
         const auto synth = acid.has_value() && acid->voice != nullptr ? synthFrom (*acid->voice) : nullptr;
         const auto groove = SequenceFile::load (presets.getChildFile ("Drums/Full Grooves/Peak Hour Driver.tqseq"), error);
         const auto patch = synth != nullptr ? synth->getPatchName() : juce::String();
@@ -770,11 +770,42 @@ void runPresetTests (AudioEngine& engine)
                "presets: found by search (\"presets acid\" finds only presets); rated and marked as a favourite beside the presets, the preset's file unchanged, "
                "and Favourites shows it");
 
+        // Renamed in 0.22.0: a rating made under a preset's old path follows it to its new one, and a
+        // filter by a style's old name still finds its factory presets.
+        {
+            auto ratings = juce::XmlDocument::parse (SequenceLibrary::factoryRatingsFile());
+            auto* old = ratings->createNewChildElement ("PRESET");
+            old->setAttribute ("path", "Kits/EBM Kit.tqkit");
+            old->setAttribute ("rating", 5);
+            ratings->writeTo (SequenceLibrary::factoryRatingsFile());
+        }
+
+        const auto renamed = SequenceLibrary (presets).scan();
+        const auto kit = std::find_if (renamed.begin(), renamed.end(), [&presets] (auto& e) { return e.file == presets.getChildFile ("Kits/Machine Pulse Kit.tqkit"); });
+        SequenceLibrary::Filters before, now, oldGenre;
+        before.style = "Industrial/EBM";
+        now.style = "Machine/Machine Pulse";
+        oldGenre.style = "Industrial";
+        int byOld = 0, byNew = 0, byOldGenre = 0, machine = 0;
+
+        for (auto& e : renamed)
+        {
+            byOld += SequenceLibrary::passes (e, before, {}) ? 1 : 0;
+            byNew += SequenceLibrary::passes (e, now, {}) ? 1 : 0;
+            byOldGenre += SequenceLibrary::passes (e, oldGenre, {}) ? 1 : 0;
+            machine += SequenceFile::splitStyle (e.style).first == "Machine" ? 1 : 0;
+        }
+
+        check (kit != renamed.end() && kit->rating == 5 && byNew > 40 && byOld == byNew && byOldGenre == machine,
+               "presets renamed: a rating saved under Kits/EBM Kit.tqkit shows on Machine Pulse Kit; the style Industrial/EBM finds the "
+                   + juce::String (byOld) + " Machine Pulse presets, and the genre Industrial the " + juce::String (byOldGenre) + " of Machine");
+        SequenceLibrary::setRating (presets.getChildFile ("Kits/Machine Pulse Kit.tqkit"), 0);
+
         // Copy to My Library: the user's copy in the same role and sub-role, with its notes.
         juce::String error;
-        const auto bass = presets.getChildFile ("Bass/Synth Bass/Belgian Body Bass.tqseq");
+        const auto bass = presets.getChildFile ("Bass/Synth Bass/Iron Body Bass.tqseq");
         view.copyToLibrary ({ bass });
-        const auto copy = mine.getChildFile ("Bass/Synth Bass/Belgian Body Bass.tqseq");
+        const auto copy = mine.getChildFile ("Bass/Synth Bass/Iron Body Bass.tqseq");
         const auto original = SequenceFile::load (bass, error);
         const auto copied = SequenceFile::load (copy, error);
         check (copy.existsAsFile() && copy.hasWriteAccess() && original.has_value() && copied.has_value() && copied->notes == original->notes
@@ -826,7 +857,7 @@ void runPresetTests (AudioEngine& engine)
             return lowest >= low && highest <= high;
         };
 
-        const auto bass = presets.getChildFile ("Bass/Arp Bass/Acid Slide Rider.tqseq");
+        const auto bass = presets.getChildFile ("Bass/Arp Bass/Squelch Slide Rider.tqseq");
         SequencerView fresh (engine);
         fresh.openFile (bass);
         fresh.setSize (1200, 700);
@@ -838,7 +869,7 @@ void runPresetTests (AudioEngine& engine)
         laidOut.openFile (users.getFile());
         const auto leadShown = inView (laidOut, lead) && ! laidOut.getDocument().isDirty();
         laidOut.openFile (bass);
-        check (leadShown && inView (laidOut, bass) && inView (fresh, bass) && laidOut.getDocument().get().name == "Acid Slide Rider",
+        check (leadShown && inView (laidOut, bass) && inView (fresh, bass) && laidOut.getDocument().get().name == "Squelch Slide Rider",
                "presets: a sequence opened before the Sequencer is laid out, and one opened after another far above it, show their notes "
                "(the bass from " + juce::MidiMessage::getMidiNoteName (bassLow, true, true, 4) + ")");
     }
@@ -846,7 +877,7 @@ void runPresetTests (AudioEngine& engine)
     // Dropped: on an instrument track the notes play on its instrument; on empty space a new track plays the preview voice.
     {
         juce::String error;
-        const auto q = SequenceFile::load (presets.getChildFile ("Bass/Arp Bass/Acid Slide Rider.tqseq"), error);
+        const auto q = SequenceFile::load (presets.getChildFile ("Bass/Arp Bass/Squelch Slide Rider.tqseq"), error);
         SessionState s;
         s.sampleRate = 48000.0;
         s.addTrack();

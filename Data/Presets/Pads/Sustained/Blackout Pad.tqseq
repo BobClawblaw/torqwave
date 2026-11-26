@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Blackout Pad" role="Pads" subRole="Sustained" key="A minor" tags="Phrygian" note="A minor seventh, B flat major seventh, A minor seventh, G minor seventh, held a bar each over the root an octave down" style="Industrial/Electro-industrial" energy="2" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Blackout Pad" role="Pads" subRole="Sustained" key="A minor" tags="Phrygian" note="A minor seventh, B flat major seventh, A minor seventh, G minor seventh, held a bar each over the root an octave down" style="Machine/Broken Circuit" energy="2" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="3800" v="0.629921"/>
     <N p="57" s="0" l="3800" v="0.629921"/>

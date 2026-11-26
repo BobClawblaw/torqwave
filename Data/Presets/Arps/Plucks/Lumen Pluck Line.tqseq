@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Lumen Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="8th plucks up past the octave and back, the triads, through the roots A, F, C, G" style="Techno/Melodic" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Lumen Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="8th plucks up past the octave and back, the triads, through the roots A, F, C, G" style="Floor/Melodic" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.755906"/>
     <N p="60" s="480" l="120" v="0.755906"/>

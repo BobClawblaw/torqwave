@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Thin Line Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, the fourth in place of the third, through the roots A, A, D, A" style="Techno/Minimal" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Thin Line Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, the fourth in place of the third, through the roots A, A, D, A" style="Floor/Minimal" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="69" s="0" l="120" v="0.755906"/>
     <N p="64" s="720" l="120" v="0.755906"/>

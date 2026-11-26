@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Kick and Rumble Tool" role="Drums" subRole="Kick" key="" tags="" note="Kick on the beat with a quieter rumble on the three 16ths after it" style="Techno/Dark" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Kick and Rumble Tool" role="Drums" subRole="Kick" key="" tags="" note="Kick on the beat with a quieter rumble on the three 16ths after it" style="Floor/Dark Floor" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="36" s="240" l="120" v="0.314961"/>

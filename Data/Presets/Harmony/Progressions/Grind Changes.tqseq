@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Grind Changes" role="Harmony" subRole="Progressions" key="A minor" tags="Phrygian" note="A minor, B flat, A minor, G minor, pulsing in 8ths" style="Industrial/Industrial rock" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Grind Changes" role="Harmony" subRole="Progressions" key="A minor" tags="Phrygian" note="A minor, B flat, A minor, G minor, pulsing in 8ths" style="Machine/Iron Riff" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="220" v="0.677165"/>
     <N p="60" s="0" l="220" v="0.677165"/>

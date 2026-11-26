@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rust Belt Riser" role="SFX" subRole="Risers" key="" tags="" note="A floor tom in 8ths for a bar, then a snare roll in 16ths, the kick under every beat" style="Industrial/Industrial rock" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rust Belt Riser" role="SFX" subRole="Risers" key="" tags="" note="A floor tom in 8ths for a bar, then a snare roll in 16ths, the kick under every beat" style="Machine/Iron Riff" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.409449"/>
     <N p="41" s="0" l="120" v="0.409449"/>

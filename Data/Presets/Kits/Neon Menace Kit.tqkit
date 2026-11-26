@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_KIT version="1" name="Neon Menace Kit" key="A minor" tags="Starter kit" note="A starting point for Neon Menace: one of each part, in A minor at 118 BPM" style="Neon/Neon Menace">
+  <TORQWAVE_SEQUENCE version="1" name="Laser Grid Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a snare on 2 and 4 and 16th hats with the offbeat lifted" style="Neon/Neon Menace" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+    <NOTES>
+      <N p="36" s="0" l="120" v="0.944882"/>
+      <N p="42" s="0" l="120" v="0.503937"/>
+      <N p="42" s="240" l="120" v="0.503937"/>
+      <N p="42" s="480" l="120" v="0.771654"/>
+      <N p="42" s="720" l="120" v="0.503937"/>
+      <N p="36" s="960" l="120" v="0.944882"/>
+      <N p="38" s="960" l="120" v="0.944882"/>
+      <N p="42" s="960" l="120" v="0.503937"/>
+      <N p="42" s="1200" l="120" v="0.503937"/>
+      <N p="42" s="1440" l="120" v="0.771654"/>
+      <N p="42" s="1680" l="120" v="0.503937"/>
+      <N p="36" s="1920" l="120" v="0.944882"/>
+      <N p="42" s="1920" l="120" v="0.503937"/>
+      <N p="42" s="2160" l="120" v="0.503937"/>
+      <N p="42" s="2400" l="120" v="0.771654"/>
+      <N p="42" s="2640" l="120" v="0.503937"/>
+      <N p="36" s="2880" l="120" v="0.944882"/>
+      <N p="38" s="2880" l="120" v="0.944882"/>
+      <N p="42" s="2880" l="120" v="0.503937"/>
+      <N p="42" s="3120" l="120" v="0.503937"/>
+      <N p="42" s="3360" l="120" v="0.771654"/>
+      <N p="42" s="3600" l="120" v="0.503937"/>
+      <N p="36" s="3840" l="120" v="0.944882"/>
+      <N p="42" s="3840" l="120" v="0.503937"/>
+      <N p="42" s="4080" l="120" v="0.503937"/>
+      <N p="42" s="4320" l="120" v="0.771654"/>
+      <N p="42" s="4560" l="120" v="0.503937"/>
+      <N p="36" s="4800" l="120" v="0.944882"/>
+      <N p="38" s="4800" l="120" v="0.944882"/>
+      <N p="42" s="4800" l="120" v="0.503937"/>
+      <N p="42" s="5040" l="120" v="0.503937"/>
+      <N p="42" s="5280" l="120" v="0.771654"/>
+      <N p="42" s="5520" l="120" v="0.503937"/>
+      <N p="36" s="5760" l="120" v="0.944882"/>
+      <N p="42" s="5760" l="120" v="0.503937"/>
+      <N p="42" s="6000" l="120" v="0.503937"/>
+      <N p="42" s="6240" l="120" v="0.771654"/>
+      <N p="42" s="6480" l="120" v="0.503937"/>
+      <N p="36" s="6720" l="120" v="0.944882"/>
+      <N p="38" s="6720" l="120" v="0.944882"/>
+      <N p="42" s="6720" l="120" v="0.503937"/>
+      <N p="42" s="6960" l="120" v="0.503937"/>
+      <N p="42" s="7200" l="120" v="0.771654"/>
+      <N p="42" s="7440" l="120" v="0.503937"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Midnight Run Bassline" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="8th roots with an octave before the last, moving through the roots of A minor, F, G, A minor" style="Neon/Neon Menace" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+    <NOTES>
+      <N p="33" s="0" l="144" v="0.755906"/>
+      <N p="33" s="480" l="144" v="0.755906"/>
+      <N p="33" s="960" l="144" v="0.755906"/>
+      <N p="33" s="1440" l="144" v="0.755906"/>
+      <N p="33" s="1920" l="144" v="0.755906"/>
+      <N p="33" s="2400" l="144" v="0.755906"/>
+      <N p="45" s="2880" l="144" v="0.755906"/>
+      <N p="33" s="3360" l="144" v="0.755906"/>
+      <N p="29" s="3840" l="144" v="0.755906"/>
+      <N p="29" s="4320" l="144" v="0.755906"/>
+      <N p="29" s="4800" l="144" v="0.755906"/>
+      <N p="29" s="5280" l="144" v="0.755906"/>
+      <N p="29" s="5760" l="144" v="0.755906"/>
+      <N p="29" s="6240" l="144" v="0.755906"/>
+      <N p="41" s="6720" l="144" v="0.755906"/>
+      <N p="29" s="7200" l="144" v="0.755906"/>
+      <N p="31" s="7680" l="144" v="0.755906"/>
+      <N p="31" s="8160" l="144" v="0.755906"/>
+      <N p="31" s="8640" l="144" v="0.755906"/>
+      <N p="31" s="9120" l="144" v="0.755906"/>
+      <N p="31" s="9600" l="144" v="0.755906"/>
+      <N p="31" s="10080" l="144" v="0.755906"/>
+      <N p="43" s="10560" l="144" v="0.755906"/>
+      <N p="31" s="11040" l="144" v="0.755906"/>
+      <N p="33" s="11520" l="144" v="0.755906"/>
+      <N p="33" s="12000" l="144" v="0.755906"/>
+      <N p="33" s="12480" l="144" v="0.755906"/>
+      <N p="33" s="12960" l="144" v="0.755906"/>
+      <N p="33" s="13440" l="144" v="0.755906"/>
+      <N p="33" s="13920" l="144" v="0.755906"/>
+      <N p="45" s="14400" l="144" v="0.755906"/>
+      <N p="33" s="14880" l="144" v="0.755906"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Pressure Bass" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBTxU1byUmbkAhPgM2bh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Chrome Night Turn" role="Harmony" subRole="Progressions" key="A minor" tags="Harmonic minor" note="A minor, F, D minor, E, a bar each" style="Neon/Neon Menace" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+    <NOTES>
+      <N p="57" s="0" l="3800" v="0.661417"/>
+      <N p="60" s="0" l="3800" v="0.661417"/>
+      <N p="64" s="0" l="3800" v="0.661417"/>
+      <N p="53" s="3840" l="3800" v="0.661417"/>
+      <N p="57" s="3840" l="3800" v="0.661417"/>
+      <N p="60" s="3840" l="3800" v="0.661417"/>
+      <N p="62" s="7680" l="3800" v="0.661417"/>
+      <N p="65" s="7680" l="3800" v="0.661417"/>
+      <N p="69" s="7680" l="3800" v="0.661417"/>
+      <N p="52" s="11520" l="3800" v="0.661417"/>
+      <N p="56" s="11520" l="3800" v="0.661417"/>
+      <N p="59" s="11520" l="3800" v="0.661417"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Cold Saw Lead" bus="0" instrument="1" musical="1" gainDb="-5.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxPuwFYfLUX2ABSkEFYh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Laser Grid Sixteenths" role="Arps" subRole="16th Sequences" key="A minor" tags="" note="Root, fifth, third and a rest, the octave leading the third time, the root, the third and the seventh, through the roots A, G" style="Neon/Neon Menace" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+    <NOTES>
+      <N p="57" s="0" l="120" v="0.755906"/>
+      <N p="67" s="240" l="120" v="0.755906"/>
+      <N p="60" s="480" l="120" v="0.755906"/>
+      <N p="57" s="960" l="120" v="0.755906"/>
+      <N p="67" s="1200" l="120" v="0.755906"/>
+      <N p="60" s="1440" l="120" v="0.755906"/>
+      <N p="69" s="1920" l="120" v="0.755906"/>
+      <N p="67" s="2160" l="120" v="0.755906"/>
+      <N p="60" s="2400" l="120" v="0.755906"/>
+      <N p="57" s="2880" l="120" v="0.755906"/>
+      <N p="67" s="3120" l="120" v="0.755906"/>
+      <N p="60" s="3360" l="120" v="0.755906"/>
+      <N p="67" s="3840" l="120" v="0.755906"/>
+      <N p="77" s="4080" l="120" v="0.755906"/>
+      <N p="71" s="4320" l="120" v="0.755906"/>
+      <N p="67" s="4800" l="120" v="0.755906"/>
+      <N p="77" s="5040" l="120" v="0.755906"/>
+      <N p="71" s="5280" l="120" v="0.755906"/>
+      <N p="79" s="5760" l="120" v="0.755906"/>
+      <N p="77" s="6000" l="120" v="0.755906"/>
+      <N p="71" s="6240" l="120" v="0.755906"/>
+      <N p="67" s="6720" l="120" v="0.755906"/>
+      <N p="77" s="6960" l="120" v="0.755906"/>
+      <N p="71" s="7200" l="120" v="0.755906"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Wire Pluck" bus="0" instrument="1" musical="1" gainDb="-3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUoIWYf.Ea0M1Zh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Laser Grid Roll Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Neon/Neon Menace" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+    <NOTES>
+      <N p="36" s="0" l="120" v="0.944882"/>
+      <N p="38" s="1920" l="120" v="0.314961"/>
+      <N p="38" s="2160" l="120" v="0.582677"/>
+      <N p="38" s="2400" l="120" v="0.314961"/>
+      <N p="38" s="2640" l="120" v="0.582677"/>
+      <N p="38" s="2880" l="120" v="0.771654"/>
+      <N p="38" s="3120" l="120" v="0.771654"/>
+      <N p="38" s="3360" l="120" v="0.944882"/>
+      <N p="38" s="3600" l="120" v="0.944882"/>
+    </NOTES>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: EBM Machine" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEITSfzTXigVZtUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+  <TORQWAVE_SEQUENCE version="1" name="Vice Lift" role="SFX" subRole="Risers" key="A minor" tags="" note="Four-note A minor arpeggios in 16ths, each starting a chord note higher than the last" style="Neon/Neon Menace" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+    <NOTES>
+      <N p="45" s="0" l="120" v="0.503937"/>
+      <N p="48" s="240" l="120" v="0.511811"/>
+      <N p="52" s="480" l="120" v="0.527559"/>
+      <N p="57" s="720" l="120" v="0.543307"/>
+      <N p="48" s="960" l="120" v="0.559055"/>
+      <N p="52" s="1200" l="120" v="0.574803"/>
+      <N p="57" s="1440" l="120" v="0.582677"/>
+      <N p="60" s="1680" l="120" v="0.598425"/>
+      <N p="52" s="1920" l="120" v="0.614173"/>
+      <N p="57" s="2160" l="120" v="0.629921"/>
+      <N p="60" s="2400" l="120" v="0.645669"/>
+      <N p="64" s="2640" l="120" v="0.653543"/>
+      <N p="57" s="2880" l="120" v="0.669291"/>
+      <N p="60" s="3120" l="120" v="0.685039"/>
+      <N p="64" s="3360" l="120" v="0.700787"/>
+      <N p="69" s="3600" l="120" v="0.716535"/>
+      <N p="60" s="3840" l="120" v="0.724409"/>
+      <N p="64" s="4080" l="120" v="0.740157"/>
+      <N p="69" s="4320" l="120" v="0.755906"/>
+      <N p="72" s="4560" l="120" v="0.771654"/>
+      <N p="64" s="4800" l="120" v="0.787402"/>
+      <N p="69" s="5040" l="120" v="0.795276"/>
+      <N p="72" s="5280" l="120" v="0.811024"/>
+      <N p="76" s="5520" l="120" v="0.826772"/>
+      <N p="69" s="5760" l="120" v="0.842520"/>
+      <N p="72" s="6000" l="120" v="0.858268"/>
+      <N p="76" s="6240" l="120" v="0.866142"/>
+      <N p="81" s="6480" l="120" v="0.881890"/>
+      <N p="72" s="6720" l="120" v="0.897638"/>
+      <N p="76" s="6960" l="120" v="0.913386"/>
+      <N p="81" s="7200" l="120" v="0.929134"/>
+      <N p="84" s="7440" l="120" v="0.944882"/>
+    </NOTES>
+    <LANE controller="74">
+      <P t="0" v="0.250000"/>
+      <P t="7679" v="1.000000"/>
+    </LANE>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Bit Pluck" bus="0" instrument="1" musical="1" gainDb="-0.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPoQGHPwVcislHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  </TORQWAVE_SEQUENCE>
+</TORQWAVE_KIT>

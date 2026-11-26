@@ -1919,17 +1919,17 @@ namespace
         const auto began = juce::Time::getMillisecondCounterHiRes();
         const auto everything = call ("find_sequence_presets", "{}");
         const auto scanMs = juce::Time::getMillisecondCounterHiRes() - began;
-        const auto kits = call ("find_sequence_presets", R"({"role": "Kits", "style": "Industrial/EBM"})");
+        const auto kits = call ("find_sequence_presets", R"({"role": "Kits", "style": "Machine/Machine Pulse"})");
         auto allKits = kits["presets"].size() > 0;
 
         if (auto* list = kits["presets"].getArray())
             for (auto& kit : *list)
-                allKits = allKits && kit["kind"] == juce::var ("kit") && kit["style"] == juce::var ("Industrial/EBM") && kit["path"].toString().startsWith ("Kits/");
+                allKits = allKits && kit["kind"] == juce::var ("kit") && kit["style"] == juce::var ("Machine/Machine Pulse") && kit["path"].toString().startsWith ("Kits/");
 
         check (unpackError.isEmpty() && (bool) everything["ok"] && (int) everything["total"] > 1000 && everything["presets"].size() == 40
-                   && (int) everything["more"] == (int) everything["total"] - 40 && everything["styles"].toString().contains ("Industrial/EBM") && allKits,
+                   && (int) everything["more"] == (int) everything["total"] - 40 && everything["styles"].toString().contains ("Machine/Machine Pulse") && allKits,
                "Ask Torq presets: the app's own " + everything["total"].toString() + " factory sequences and kits are found through the library the app hands over (read in "
-                   + juce::String ((int) std::lround (scanMs)) + " ms); role Kits with style Industrial/EBM finds " + juce::String (kits["presets"].size()) + " kits, each of that style");
+                   + juce::String ((int) std::lround (scanMs)) + " ms); role Kits with style Machine/Machine Pulse finds " + juce::String (kits["presets"].size()) + " kits, each of that style");
 
         if (allKits)
         {

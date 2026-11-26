@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Haunted Hum" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="A, B flat and B coming in a quarter apart, a cluster, for 8 bars, the filter closing slowly" style="Game/Horror" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Haunted Hum" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="A, B flat and B coming in a quarter apart, a cluster, for 8 bars, the filter closing slowly" style="Game/Dread" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="30680" v="0.724409"/>
     <N p="46" s="7680" l="23000" v="0.614173"/>

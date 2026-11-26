@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Arcade Hum" role="Pads" subRole="Drones" key="A minor" tags="" note="A low A under an E that moves up to F halfway, for 8 bars, the filter opening slowly" style="Game/Chiptune" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Arcade Hum" role="Pads" subRole="Drones" key="A minor" tags="" note="A low A under an E that moves up to F halfway, for 8 bars, the filter opening slowly" style="Game/8-bit" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="30680" v="0.724409"/>
     <N p="40" s="0" l="15320" v="0.724409"/>

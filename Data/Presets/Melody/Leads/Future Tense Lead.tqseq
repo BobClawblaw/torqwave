@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Future Tense Lead" role="Melody" subRole="Leads" key="A minor" tags="" note="A two-bar long phrase in A minor" style="Industrial/Futurepop" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Future Tense Lead" role="Melody" subRole="Leads" key="A minor" tags="" note="A two-bar long phrase in A minor" style="Machine/Bright Pulse" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="84" s="0" l="1440" v="0.755906"/>
     <N p="83" s="1440" l="480" v="0.755906"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rage Plucks" role="Arps" subRole="Plucks" key="A minor" tags="Chromatic" note="8th plucks on the chord's notes, diminished triads, on A" style="Industrial/Aggrotech" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rage Plucks" role="Arps" subRole="Plucks" key="A minor" tags="Chromatic" note="8th plucks on the chord's notes, diminished triads, on A" style="Machine/Overdrive" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.755906"/>
     <N p="63" s="480" l="120" v="0.755906"/>

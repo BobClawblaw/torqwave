@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Nightmare Transition" role="SFX" subRole="Transitions" key="A minor" tags="Chromatic" note="A tritone falling in quarters on a bell: E flat, A, E flat, A, two octaves down" style="Industrial/Dark electro" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Nightmare Transition" role="SFX" subRole="Transitions" key="A minor" tags="Chromatic" note="A tritone falling in quarters on a bell: E flat, A, E flat, A, two octaves down" style="Machine/Dark Circuit" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="75" s="0" l="940" v="0.818898"/>
     <N p="69" s="960" l="940" v="0.818898"/>

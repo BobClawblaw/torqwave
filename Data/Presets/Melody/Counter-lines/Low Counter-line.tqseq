@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Low Counter-line" role="Melody" subRole="Counter-lines" key="A minor" tags="" note="A slow line under a lead: C, B, A, G" style="Techno/Melodic" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Low Counter-line" role="Melody" subRole="Counter-lines" key="A minor" tags="" note="A slow line under a lead: C, B, A, G" style="Floor/Melodic" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="60" s="0" l="1920" v="0.755906"/>
     <N p="59" s="1920" l="1920" v="0.755906"/>

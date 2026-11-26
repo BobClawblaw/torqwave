@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Marching Perc Loop" role="Drums" subRole="Percussion" key="" tags="" note="Metal struck with the snare, and once more before the bar, with high and mid toms playing like congas joining in bars 3 and 4" style="Industrial/EBM" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Marching Perc Loop" role="Drums" subRole="Percussion" key="" tags="" note="Metal struck with the snare, and once more before the bar, with high and mid toms playing like congas joining in bars 3 and 4" style="Machine/Machine Pulse" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="56" s="960" l="120" v="0.771654"/>
     <N p="56" s="2880" l="120" v="0.771654"/>

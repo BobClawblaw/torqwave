@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Torment Bed" role="Pads" subRole="Sustained" key="A minor" tags="" note="A minor, G, F, G, as bare fifths, low" style="Industrial/Aggrotech" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Torment Bed" role="Pads" subRole="Sustained" key="A minor" tags="" note="A minor, G, F, G, as bare fifths, low" style="Machine/Overdrive" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="3800" v="0.629921"/>
     <N p="52" s="0" l="3800" v="0.629921"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Snarl Bass Arp" role="Bass" subRole="Arp Bass" key="A minor" tags="Harmonic minor" note="16ths turning through the chord, moving through the roots of A minor, G sharp diminished, F, G sharp diminished" style="Industrial/Aggrotech" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Snarl Bass Arp" role="Bass" subRole="Arp Bass" key="A minor" tags="Harmonic minor" note="16ths turning through the chord, moving through the roots of A minor, G sharp diminished, F, G sharp diminished" style="Machine/Overdrive" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="145.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="144" v="0.755906"/>
     <N p="36" s="240" l="144" v="0.755906"/>

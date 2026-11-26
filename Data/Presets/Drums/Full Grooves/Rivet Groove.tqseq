@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rivet Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a big snare and clap together on 2 and 4, a ride in 8ths and metal struck in threes" style="Techno/Industrial" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rivet Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a big snare and clap together on 2 and 4, a ride in 8ths and metal struck in threes" style="Floor/Factory Floor" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="51" s="0" l="120" v="0.771654"/>
