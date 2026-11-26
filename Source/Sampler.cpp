@@ -5,6 +5,7 @@
 #include "WaveTables.h"
 #include "SequenceLibrary.h"
 #include "FactorySampleData.h"
+#include "FactoryRenames.h"
 #include "Session.h"
 
 namespace Sampler
@@ -559,7 +560,9 @@ namespace
 
     juce::File fileFor (const juce::String& path)
     {
-        return path.startsWith (factoryPrefix) ? factoryFolder().getChildFile (path.fromFirstOccurrenceOf (factoryPrefix, false, false)) : juce::File (path);
+        // A factory sample by its place among them, as it is named now.
+        return path.startsWith (factoryPrefix) ? factoryFolder().getChildFile (FactoryRenames::now (FactoryRenames::samplerFiles, path.fromFirstOccurrenceOf (factoryPrefix, false, false)))
+                                               : juce::File (path);
     }
 }
 
@@ -2197,7 +2200,7 @@ juce::String SamplerProcessor::addSamples (const std::vector<std::pair<SamplePtr
 bool SamplerProcessor::loadFactory (const juce::String& name)
 {
     for (auto& preset : EffectPresets::factory (samplerId))
-        if (preset.name == name)
+        if (preset.name == FactoryRenames::now (FactoryRenames::samplerPresets, name))
         {
             setPresetValues (preset.values);
             setPresetTexts (preset.texts);

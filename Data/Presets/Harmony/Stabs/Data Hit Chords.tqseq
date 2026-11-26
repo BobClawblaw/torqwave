@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Data Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="Fourths stacked on A a dotted pair on 1 and again on 3" style="Electro/Electro" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Data Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="Fourths stacked on A a dotted pair on 1 and again on 3" style="Funk/Machine Funk" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="220" v="0.818898"/>
     <N p="62" s="0" l="220" v="0.818898"/>

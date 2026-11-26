@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_KIT version="1" name="Woodblock Kit" key="A minor" tags="Starter kit" note="A starting point for Percussive: one of each part, in A minor at 132 BPM" style="Techno/Percussive">
-  <TORQWAVE_SEQUENCE version="1" name="Bongo Room Pound" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap on 2 and 4, closed hats on the offbeats and toms in shifting 16ths" style="Techno/Percussive" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_KIT version="1" name="Woodblock Kit" key="A minor" tags="Starter kit" note="A starting point for Percussive: one of each part, in A minor at 132 BPM" style="Floor/Percussive">
+  <TORQWAVE_SEQUENCE version="1" name="Bongo Room Pound" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a clap on 2 and 4, closed hats on the offbeats and toms in shifting 16ths" style="Floor/Percussive" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="45" s="240" l="120" v="0.582677"/>
@@ -42,14 +42,14 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Standard" bus="0" instrument="1" musical="1" gainDb="-10.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>66.VMjLgjC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHSQWXtQVXxQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Stickwork Sub" role="Bass" subRole="Sub" key="A minor" tags="" note="A held sub on the root, on A" style="Techno/Percussive" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Stickwork Sub" role="Bass" subRole="Sub" key="A minor" tags="" note="A held sub on the root, on A" style="Floor/Percussive" energy="5" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
       <N p="33" s="0" l="3840" v="0.755906"/>
       <N p="33" s="3840" l="3840" v="0.755906"/>
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Warehouse Sub" bus="0" instrument="1" musical="1" gainDb="-6.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUgIWYn8VcyUFHSUmXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Skin Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor on beat 2 and its offbeat, then the last 8th of the bar" style="Techno/Percussive" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Skin Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor on beat 2 and its offbeat, then the last 8th of the bar" style="Floor/Percussive" energy="4" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="57" s="960" l="220" v="0.818898"/>
       <N p="60" s="960" l="220" v="0.818898"/>
@@ -63,41 +63,37 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Dub Chord Stab" bus="0" instrument="1" musical="1" gainDb="-6.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>74.VMjLgDD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQ0IFHCg1axQFHSQWXhIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Kinetic Pluck" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, through A minor, A minor" style="Techno/Percussive" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Kinetic Pluck" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, root, fifth and octave, no third, through the roots A, A" style="Floor/Percussive" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
-      <N p="81" s="0" l="120" v="0.755906"/>
-      <N p="76" s="720" l="120" v="0.755906"/>
-      <N p="81" s="1440" l="120" v="0.755906"/>
-      <N p="72" s="2160" l="120" v="0.755906"/>
-      <N p="76" s="2880" l="120" v="0.755906"/>
-      <N p="81" s="3840" l="120" v="0.755906"/>
-      <N p="76" s="4560" l="120" v="0.755906"/>
-      <N p="81" s="5280" l="120" v="0.755906"/>
-      <N p="72" s="6000" l="120" v="0.755906"/>
-      <N p="76" s="6720" l="120" v="0.755906"/>
+      <N p="69" s="0" l="120" v="0.755906"/>
+      <N p="69" s="720" l="120" v="0.755906"/>
+      <N p="69" s="1440" l="120" v="0.755906"/>
+      <N p="64" s="2160" l="120" v="0.755906"/>
+      <N p="69" s="2880" l="120" v="0.755906"/>
+      <N p="69" s="3840" l="120" v="0.755906"/>
+      <N p="69" s="4560" l="120" v="0.755906"/>
+      <N p="69" s="5280" l="120" v="0.755906"/>
+      <N p="64" s="6000" l="120" v="0.755906"/>
+      <N p="69" s="6720" l="120" v="0.755906"/>
     </NOTES>
-    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Dark Kalimba" bus="0" instrument="1" musical="1" gainDb="2.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQgI2ZfrTXrkVahElHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Dark Kalimba" bus="0" instrument="1" musical="1" gainDb="1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQgI2ZfrTXrkVahElHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Tribal Snare Roll" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Techno/Percussive" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Tribal Snare Roll" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, a gap, then a short snare roll" style="Floor/Percussive" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
-      <N p="36" s="240" l="120" v="0.314961"/>
       <N p="36" s="480" l="120" v="0.314961"/>
       <N p="36" s="960" l="120" v="0.944882"/>
-      <N p="36" s="1200" l="120" v="0.314961"/>
       <N p="36" s="1440" l="120" v="0.314961"/>
-      <N p="38" s="1920" l="120" v="0.314961"/>
-      <N p="38" s="2160" l="120" v="0.582677"/>
       <N p="38" s="2400" l="120" v="0.314961"/>
-      <N p="38" s="2640" l="120" v="0.582677"/>
-      <N p="38" s="2880" l="120" v="0.771654"/>
+      <N p="38" s="2640" l="120" v="0.314961"/>
+      <N p="38" s="2880" l="120" v="0.314961"/>
       <N p="38" s="3120" l="120" v="0.771654"/>
-      <N p="38" s="3360" l="120" v="0.944882"/>
+      <N p="38" s="3360" l="120" v="0.771654"/>
       <N p="38" s="3600" l="120" v="0.944882"/>
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Basic Drums: Standard" bus="0" instrument="1" musical="1" gainDb="-3.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>66.VMjLgjC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHSQWXtQVXxQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Tribal Transition" role="SFX" subRole="Transitions" key="" tags="" note="High and mid toms interlocking in 16ths, the low tom on beat 3 and into the bar" style="Techno/Percussive" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Tribal Transition" role="SFX" subRole="Transitions" key="" tags="" note="High and mid toms interlocking in 16ths, the low tom on beat 3 and into the bar" style="Floor/Percussive" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="48" s="0" l="120" v="0.771654"/>
       <N p="45" s="240" l="120" v="0.771654"/>

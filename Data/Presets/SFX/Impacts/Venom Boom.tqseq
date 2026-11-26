@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Venom Boom" role="SFX" subRole="Impacts" key="A minor" tags="Phrygian" note="Octave A with the B flat and the fifth above it, a distorted cluster cut off at half the bar" style="Industrial/Aggrotech" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Venom Boom" role="SFX" subRole="Impacts" key="A minor" tags="Phrygian" note="Octave A with the B flat and the fifth above it, a distorted cluster cut off at half the bar" style="Machine/Overdrive" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="1920" v="1.000000"/>
     <N p="45" s="0" l="1920" v="0.944882"/>

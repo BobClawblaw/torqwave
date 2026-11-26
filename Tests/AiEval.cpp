@@ -661,11 +661,11 @@ namespace
         const auto patch = patches[patches.size() / 2].name;
         const auto kit = DrumMachine::kits().back().name;
         const auto guitar = EffectPresets::factory (BuiltInEffects::swarmGuitarId).front().name;
-        const juce::String ebm = "Industrial/EBM";
+        const juce::String pulse = "Machine/Machine Pulse";
         juce::String kitByName;
 
         for (auto& e : factoryEntries())
-            if (e.isKit && e.style != ebm && kitByName.isEmpty())
+            if (e.isKit && e.style != pulse && kitByName.isEmpty())
                 kitByName = e.name;
 
         const juce::String gmBeat = "36 36 38 36 36 38", kitBeat = "60 60 40 60 60 40";
@@ -708,7 +708,7 @@ namespace
                 const auto problem = factoryLoadOn (w, "Guitar", "StringSwarm", load);
                 return problem.isNotEmpty() ? problem : load.preset == guitar && ! load.onlyPreset ? juce::String() : "it chose " + load.preset.quoted();
             }),
-            onLibrary ("Give me an EBM kit at 124.", [ebm] (Ai::Workspace& w) { return kitLanded (w, 124.0, 1, ebm, {}); }),
+            onLibrary ("Give me a Machine Pulse kit at 124.", [pulse] (Ai::Workspace& w) { return kitLanded (w, 124.0, 1, pulse, {}); }),
             onLibrary ("Add the factory kit called " + kitByName + " at bar 9.", [kitByName] (Ai::Workspace& w) { return kitLanded (w, 120.0, 9, {}, kitByName); }),
             onLibrary ("Add the factory kit called Polka Wedding Kit.", [] (Ai::Workspace& w) -> juce::String
             {

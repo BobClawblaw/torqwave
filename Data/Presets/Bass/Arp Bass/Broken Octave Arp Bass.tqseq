@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Broken Octave Arp Bass" role="Bass" subRole="Arp Bass" key="A minor" tags="" note="Root, fifth, octave and minor third broken over the bar" style="Techno/Peak-time" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Broken Octave Arp Bass" role="Bass" subRole="Arp Bass" key="A minor" tags="" note="Root, fifth, octave and minor third broken over the bar" style="Floor/Peak-time" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="120" v="0.755906"/>
     <N p="40" s="240" l="120" v="0.755906"/>

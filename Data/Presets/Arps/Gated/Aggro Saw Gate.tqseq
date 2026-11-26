@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Aggro Saw Gate" role="Arps" subRole="Gated" key="A minor" tags="" note="Supersaw 16ths gated round the root and fifth" style="Industrial/Aggrotech" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Aggro Saw Gate" role="Arps" subRole="Gated" key="A minor" tags="" note="Supersaw 16ths gated round the root and fifth" style="Machine/Overdrive" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="96" v="0.755906"/>
     <N p="57" s="240" l="96" v="0.755906"/>

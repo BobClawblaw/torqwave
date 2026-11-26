@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Torment Bridge" role="SFX" subRole="Transitions" key="A minor" tags="" note="Power fifths falling from A to D on every third 16th, the E under the bar's last 8th" style="Industrial/Aggrotech" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Torment Bridge" role="SFX" subRole="Transitions" key="A minor" tags="" note="Power fifths falling from A to D on every third 16th, the E under the bar's last 8th" style="Machine/Overdrive" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="460" v="0.881890"/>
     <N p="52" s="0" l="460" v="0.881890"/>

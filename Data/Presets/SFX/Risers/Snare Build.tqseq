@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Snare Build" role="SFX" subRole="Risers" key="" tags="" note="Eight bars of snare: 8ths for four bars, then 16ths, ramping from 40 to 127" style="Techno/Driving" energy="5" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="10" offset="0" length="30720" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Snare Build" role="SFX" subRole="Risers" key="" tags="" note="Eight bars of snare: 8ths for four bars, then 16ths, ramping from 40 to 127" style="Floor/Driving" energy="5" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="10" offset="0" length="30720" loopLength="0">
   <NOTES>
     <N p="38" s="0" l="120" v="0.314961"/>
     <N p="38" s="480" l="120" v="0.330709"/>

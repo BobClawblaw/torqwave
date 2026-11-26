@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Razor Lift" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="A gated power fifth, three 16ths and a gap, a semitone higher each bar from A to C" style="Industrial/Aggrotech" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Razor Lift" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="A gated power fifth, three 16ths and a gap, a semitone higher each bar from A to C" style="Machine/Overdrive" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="120" v="0.629921"/>
     <N p="52" s="0" l="120" v="0.629921"/>

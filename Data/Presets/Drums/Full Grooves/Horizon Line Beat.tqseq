@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Horizon Line Beat" role="Drums" subRole="Full Grooves" key="" tags="" note="One kick a bar, a hat on 1 and 3 and a low tom every five 16ths" style="Ambient/Drone" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="80.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Horizon Line Beat" role="Drums" subRole="Full Grooves" key="" tags="" note="One kick a bar, a hat on 1 and 3 and a low tom every five 16ths" style="Space/Drone" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="80.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="42" s="0" l="120" v="0.771654"/>

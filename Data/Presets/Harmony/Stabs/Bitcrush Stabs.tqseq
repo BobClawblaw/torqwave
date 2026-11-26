@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Bitcrush Stabs" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor with the third at the bottom twice only, a 16th before beat 2 and on the and of 3" style="Game/Chiptune" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Bitcrush Stabs" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A minor with the third at the bottom twice only, a 16th before beat 2 and on the and of 3" style="Game/8-bit" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="60" s="720" l="220" v="0.818898"/>
     <N p="64" s="720" l="220" v="0.818898"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="8-Bit Hat Line" role="Drums" subRole="Hats &amp; Tops" key="" tags="" note="8th hats, the downbeats stronger, with closed hats on the offbeats added in bar 2" style="Game/Chiptune" energy="5" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="160.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="8-Bit Hat Line" role="Drums" subRole="Hats &amp; Tops" key="" tags="" note="8th hats, the downbeats stronger, with closed hats on the offbeats added in bar 2" style="Game/8-bit" energy="5" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="160.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="42" s="0" l="120" v="0.771654"/>
     <N p="42" s="480" l="120" v="0.582677"/>

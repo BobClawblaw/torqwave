@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Mainline Sub" role="Bass" subRole="Sub" key="A minor" tags="" note="A syncopated sub: the one, the and of 2, and a long note before 4, on A" style="Drum and Bass/Neurofunk" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Mainline Sub" role="Bass" subRole="Sub" key="A minor" tags="" note="The sub on the root, falling a step at half the bar, on A" style="Fast/Fast Grind" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="172.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
-    <N p="33" s="0" l="720" v="0.755906"/>
-    <N p="33" s="1440" l="480" v="0.755906"/>
-    <N p="33" s="2400" l="960" v="0.755906"/>
+    <N p="33" s="0" l="1920" v="0.755906"/>
+    <N p="31" s="1920" l="1920" v="0.755906"/>
   </NOTES>
   <VOICE><TRACKTEMPLATE name="Torqwave Synth: Warehouse Sub" bus="0" instrument="1" musical="1" gainDb="0.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxUgIWYn8VcyUFHSUmXh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

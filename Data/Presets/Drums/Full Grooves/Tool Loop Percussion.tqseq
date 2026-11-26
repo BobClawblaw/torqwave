@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Tool Loop Percussion" role="Drums" subRole="Full Grooves" key="" tags="" note="A loop track of toms in 16ths with shifting accents over a straight kick, the cowbell coming in on bar 2" style="Techno/Percussive" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Tool Loop Percussion" role="Drums" subRole="Full Grooves" key="" tags="" note="A loop track of toms in 16ths with shifting accents over a straight kick, the cowbell coming in on bar 2" style="Floor/Percussive" energy="4" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="138.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="37" s="0" l="120" v="0.314961"/>

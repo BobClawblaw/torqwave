@@ -2,11 +2,11 @@
 
 This plan was released as **0.20.0**: it grew past a point release (a new synth, a new drum machine, StringSwarm, Remap Notes and 1,018 presets). The steps keep the number they were written under.
 
-Torqwave's Sequence Library starts empty, so a new user has nothing to drop, hear or learn from. Its drum sequences can only play on Basic Synth, which makes tones, not drums. And the library sorts by role alone (Drums, Bass, Harmony and so on), with no way to ask for "dark techno" or "EBM".
+Torqwave's Sequence Library starts empty, so a new user has nothing to drop, hear or learn from. Its drum sequences can only play on Basic Synth, which makes tones, not drums. And the library sorts by role alone (Drums, Bass, Harmony and so on), with no way to ask for a style such as "Dark Floor" or "Machine Pulse".
 
 This plan adds three things:
 
-- **Factory presets:** at least 20 sequences in every role, written for dark techno and industrial/EBM first and for the techno styles around them.
+- **Factory presets:** at least 20 sequences in every role, written for the dark club and machine styles first and for the club styles around them.
 - **Two basic built-in voices to hear them:** a basic drum machine, and a few additions to Basic Synth.
 - **A library that groups and filters by style, energy and character**, not just by role.
 
@@ -125,7 +125,7 @@ Factory presets ship with the app, read-only, and appear in the Sequence Library
 
 New things a sequence (factory or the user's) can carry. All are optional, and older files read as before:
 
-- **Style:** a genre and a style, such as Techno › Dark or Industrial › EBM. Step 6 lists the styles the presets use, and the user can type their own.
+- **Style:** a genre and a style, such as Floor › Dark Floor or Machine › Machine Pulse. Step 6 lists the styles the presets use, and the user can type their own.
 - **Energy:** 1 to 5, from intro tool to peak.
 - **Character:** pairs that are quick to tick and hard to get wrong. Dark/Bright, Sparse/Dense, Straight/Swung and Clean/Distorted.
 - **Description:** one line on what it does, such as "16ths between the kicks, octave up on beat 4". It shows under the name and doubles as a lesson.
@@ -188,9 +188,9 @@ Preview stays as it is now otherwise: in time with the session, at its tempo, lo
 
 - dark and industrial techno (Ancient Methods, Ansome, SHDW & Obscure Shape, Maenad Veyl, Violet Poison);
 - hypnotic techno (the Non Series: Luigi Tozzi, Biri, IORI);
-- on the band side, EBM and electro (And One, Severed Heads) and today's darkwave (Rosa Anschütz, Pixel Grip).
+- on the band side, sequenced basses and electro (And One, Severed Heads) and today's darkwave (Rosa Anschütz, Pixel Grip).
 
-So driving and peak-time techno, dark and industrial techno, and EBM carry the most presets. Melodic and minimal techno get a smaller set.
+So driving and peak-time techno, dark and industrial techno, and Machine Pulse carry the most presets. Melodic and minimal techno get a smaller set.
 
 | Genre › Style | Tempo | What defines it |
 |---|---|---|
@@ -204,23 +204,22 @@ So driving and peak-time techno, dark and industrial techno, and EBM carry the m
 | Techno › Industrial | 126–130 | Overdriven kick, low tom figures in the kick's gaps, noise snare, metallic percussion |
 | Techno › Hard | 145–155 | Offbeat rumble, metallic 16th percussion with 3- and 6-step accents, kick rolls |
 | Techno › Acid | 128–140 | 303 lines: 16 steps, root with octave jumps, rests, 25–40% accents, 10–25% slides, minor pentatonic or Phrygian |
-| Industrial › EBM | 110–130 | Sequenced 16th or 8th bass in the kick's gaps, the low-to-octave jump, short gate, rests so it breathes; root moves of i to ♭VI to ♭VII or i to ♭II; disco or backbeat drums with near-flat "machine" velocities and big gated snares; alarm lines a semitone or tritone apart |
+| Machine › Machine Pulse | 110–130 | Sequenced 16th or 8th bass in the kick's gaps, the low-to-octave jump, short gate, rests so it breathes; root moves of i to ♭VI to ♭VII or i to ♭II; disco or backbeat drums with near-flat "machine" velocities and big gated snares; alarm lines a semitone or tritone apart |
 | Industrial › Electro-industrial | 100–135 | Syncopated kicks, flammed snares, 16th bass with a semitone shift, Phrygian and harmonic minor clusters, pitch-bend dives |
 | Industrial › Industrial rock | 90–140 | Programmed rock beats, synth riffs doubling guitar in 8ths with ♭2 and ♭5 moves, power chords |
 | Industrial › Futurepop | 125–140 | Trance drums and offbeat bass, minor 4-chord loops, gated 16th arps, 2-bar call and answer leads |
 | Industrial › Aggrotech | 130–150 | Hard 4/4, snare-roll fills, distorted offbeat bass, 16th supersaw riffs |
-| Industrial › Synth-EBM | 120–135 | EBM bass sequences under synth-pop chords and a sung hook: 8th and 16th bass on the roots, minor progressions, square and saw leads in 2-bar phrases |
+| Machine › Night Pulse | 120–135 | Machine Pulse's bass sequences under synth-pop chords and a sung hook: 8th and 16th bass on the roots, minor progressions, square and saw leads in 2-bar phrases |
 | Industrial › Darkwave | 100–118 | Drum-machine pop beats with long-reverb snares, 8th root bass, chorused minor pads, simple 2-bar melodies |
-| Industrial › Techno-body | 125–140 | Techno kick and hats with an EBM 16th bass in the gaps, metallic percussion, root changes on bar 3 or 4 |
+| Machine › Machine Drive | 125–140 | Techno kick and hats with a sequenced 16th bass in the gaps, metallic percussion, root changes on bar 3 or 4 |
 
-A note on history: "Electronic Body Music" became widely known in the mid-1980s. Earlier uses exist, Ralf Hütter's in 1977–78 and DAF's "Körpermusik" in 1981, so the guide will not credit one act with the term.
 
-**How many.** At least 20 in each of the seven roles, 140 or more in all, weighted towards dark techno and EBM. Roughly:
+**How many.** At least 20 in each of the seven roles, 140 or more in all, weighted towards Dark Floor and Machine Pulse. Roughly:
 
 | Role | Count | What's in it |
 |---|---|---|
 | **Drums** (30) | 30 | Full grooves per style; kick and kick-rumble tools; top loops; percussion and polymetric loops; fills; builds (16th snare and clap rolls ramping from 40 to 127) |
-| **Bass** (30) | 30 | EBM gallops and octave sequences; rolling techno; offbeat; acid; rumble; melodic-techno root lines; darkwave roots |
+| **Bass** (30) | 30 | Sequenced gallops and octave sequences; rolling techno; offbeat; acid; rumble; melodic-techno root lines; darkwave roots |
 | **Harmony** (20) | 20 | Minor and Phrygian stabs; dub chords; melodic and futurepop progressions; power-chord riffs |
 | **Pads** (20) | 20 | Drones; root-and-fifth swells; slow minor progressions; harmonic-minor clusters |
 | **Arps** (20) | 20 | Gated 16ths; up-and-down; 1-5-8-♭3 broken figures; plucks; acid-style arps |
@@ -284,7 +283,7 @@ Steps 1 to 7 are done. Using them showed that the built-in voices aren't good en
 
 The aim when this step was written was a lighter take on a classic wavetable synth: rich, wide sounds from a few panels, in its own look and names. It has since grown well past "lighter": by 0.20.0 it is a full synth in its own right (parts two and three), and is no longer described as a lite version of anything.
 
-**As built:** a synth of its own, in its own look and words, that takes up the best ideas of the classic wavetable synths: three wavetable oscillators with Position, serial or parallel filters, macros and a step LFO; a warp mode on each oscillator, a sub and a noise oscillator, a large wavetable view, drag-to-modulate rings and an effects rack. Added at the user's request: a plucked **String** table (each unison voice a string tuned to the note, with Strum and Drift on unison), and Fuzz in the drive, for the fuzzed string sounds. The factory patches are all for dark techno, industrial and EBM, with no keys or brass: 97 made by hand (Init among them), from basses and reeses to impacts and textures, and, at the user's later request for at least a thousand, a bank of 970 more drawn from 24 kinds of sound, with two more categories (Perc and Vox): 1,067 in all. At the user's request it is renamed **Torqwave Synth** (the plug-in ID stays `torqwave:basic-synth`), and the lead first called StringSwarm is **Wailing Fuzz Lead**, so it doesn't share a name with the built-in StringSwarm instrument.
+**As built:** a synth of its own, in its own look and words, that takes up the best ideas of the classic wavetable synths: three wavetable oscillators with Position, serial or parallel filters, macros and a step LFO; a warp mode on each oscillator, a sub and a noise oscillator, a large wavetable view, drag-to-modulate rings and an effects rack. Added at the user's request: a plucked **String** table (each unison voice a string tuned to the note, with Strum and Drift on unison), and Fuzz in the drive, for the fuzzed string sounds. The factory patches are all for dark club music, industrial and sequenced basses, with no keys or brass: 97 made by hand (Init among them), from basses and reeses to impacts and textures, and, at the user's later request for at least a thousand, a bank of 970 more drawn from 24 kinds of sound, with two more categories (Perc and Vox): 1,067 in all. At the user's request it is renamed **Torqwave Synth** (the plug-in ID stays `torqwave:basic-synth`), and the lead first called StringSwarm is **Wailing Fuzz Lead**, so it doesn't share a name with the built-in StringSwarm instrument.
 
 - **Three wavetable oscillators:**
   - Each has a table and a **Position** that morphs through it.
@@ -322,7 +321,7 @@ The aim when this step was written was a lighter take on a classic wavetable syn
 
 ### Step 9b: a second bank of patches (M, done)
 
-About 1,500 more factory patches, asked for after step 9 shipped with 1,067. Step 9 kept the factory patches to dark techno, industrial and EBM, with no keys or brass; this step keeps those first and adds what sound design, picture and game work reach for.
+About 1,500 more factory patches, asked for after step 9 shipped with 1,067. Step 9 kept the factory patches to dark club music, industrial and sequenced basses, with no keys or brass; this step keeps those first and adds what sound design, picture and game work reach for.
 
 - **1,493 patches** in `Source/WaveSynthPatchBank2.cpp`, making 2,560. More in the categories there were, and thirteen new ones: Sub, Chord, Arp, Keys, Organ, Brass, Strings, Cinematic, Drum, FX, Glitch, Game and Chip.
 - **Made by measurement.** `Scripts/make_patch_bank.py` draws each of 193 kinds of sound (`Scripts/patch_bank_kinds.py`) four times for every patch wanted, plays every candidate through the synth and keeps a patch only if it sounds in its register, does not click, has four macros that are heard, and is not a near-copy of a patch already in its category. The file it writes is plain settings, the same on every machine.
@@ -341,13 +340,13 @@ About 1,500 more factory patches, asked for after step 9 shipped with 1,067. Ste
   - Toms and hand drums: pitch drops and a strike.
 - **Every sound:** tune, decay, level, pan and tone. Choke groups (hats, triangle and cuica). Stereo out.
 - **Kit-wide controls:** drive, a glue compressor and the level.
-- **Several kits from the same engine:** dark techno, industrial, EBM machine, electro, breaks and acoustic-ish. Each sequence preset names its kit.
+- **Several kits from the same engine:** a low rumble, industrial, a gated machine, electro, breaks and acoustic-ish. Each sequence preset names its kit.
 - **Its own window:** a pad for each sound, click to hear it, with that sound's settings beside it.
 - **Tested:**
   - all 47 notes sound, none clipping;
   - each sound's settings change it;
   - chokes, renders identical at any block size, and the click check.
-- **Done:** seven kits (Standard, Dark Techno, Industrial, EBM Machine, Electro, Breaks and Industrial Rock), each sound with Tune, Decay, Tone, Level, Pan and Drive. Added beyond the plan: a filter, Crush and sends to the kit's reverb and ping-pong delay on every pad.
+- **Done:** seven kits (Standard, Low Rumble, Industrial, Iron Shutter, Electro, Breaks and Industrial Rock; the two renamed in 0.22.0), each sound with Tune, Decay, Tone, Level, Pan and Drive. Added beyond the plan: a filter, Crush and sends to the kit's reverb and ping-pong delay on every pad.
 
 ### Step 11: drum patterns on any drum plug-in (M, done)
 
@@ -458,7 +457,7 @@ The look is the feature's identity, so it gets its own step and a mock-up the us
 Ask Torq already chooses an instrument and a saved preset for a track (`set_instrument`, `list_instrument_presets`), sets its parameters, and writes sequences. It does not yet know the factory sounds or anything in part three. Each line below is a tool or an addition to one, with the plan step it writes shown to the user before Apply, in the one undo step where the session's state holds it.
 
 - **Factory sounds by name and kind.** `list_instrument_presets` also lists Torqwave Synth's factory patches (by category, with a search word, since there are over a thousand), Basic Drums' kits and StringSwarm's presets; `set_instrument` takes one. "Put a dark reese on the bass track" picks from what is really there. **Done:** the list is 60 at a time with the categories and how many more; a name that matches nothing is refused with the five nearest.
-- **Factory sequences and kits.** A tool to find factory sequence presets by role, style, energy and character, and one to drop a preset or a whole kit on the session at a bar. "Give me an EBM kit at 124" lands a real kit. **Done:** `find_sequence_presets`, `add_sequence_preset` and `add_kit`, through the code a drop runs. They reach the factory presets, not the user's own library.
+- **Factory sequences and kits.** A tool to find factory sequence presets by role, style, energy and character, and one to drop a preset or a whole kit on the session at a bar. "Give me a Machine Pulse kit at 124" lands a real kit. **Done:** `find_sequence_presets`, `add_sequence_preset` and `add_kit`, through the code a drop runs. They reach the factory presets, not the user's own library.
 - **Trace by words** is not built in 0.20.0 (see step 15); what follows it in this list stands. As it was planned: **Trace by words.** A tool that reads the node held and the twelve within reach as numbers (how bright, how loud over time, how noisy, how wide: the same measures the signatures are drawn from) and jumps to one, or sets Reach, a firewall or a Bridge. The model cannot hear; "darker, less attack" becomes a choice among measured nodes, and the plan says which measure it went by.
 - **Decrypt from the session.** A tool that takes a clip in the session (or the selection in the editor), runs Decrypt on a track's synth, and reports the lock figure when it ends; the search runs in the background as it does from the window, and the result is one undo step. **Done:** `decrypt_clip`, on a session's audio clips (not the editor's selection). The patch is set once the plan is applied, outside its undo step, as other instrument changes are.
 - **A table from a clip.** A tool that gives an oscillator a Sampled table made from a clip. **Done:** `table_from_clip` (a clip of up to 30 s, oscillator 1, 2 or 3), also outside the undo step.

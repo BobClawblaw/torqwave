@@ -81,7 +81,7 @@ The sequences, tracks, drum map and moved notes are part of the plan's one undo 
 Things to try, with a session open:
 
 - "Put a dark reese bass patch on the Bass track."
-- "Set the tempo to 124 and give me an EBM kit at bar 1."
+- "Set the tempo to 124 and give me a Machine Pulse kit at bar 1."
 - "Find a sparse hat pattern and put it on the Hats track at bar 9."
 - "Give the Drums track my sampler's drum map and move the Beat clip's notes onto it."
 

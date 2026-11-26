@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Kick Only Four" role="Drums" subRole="Kick" key="" tags="" note="The kick alone on every beat, to build on" style="Techno/Club tools" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Kick Only Four" role="Drums" subRole="Kick" key="" tags="" note="The kick alone on every beat, to build on" style="Floor/Club tools" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="128.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.771654"/>
     <N p="36" s="960" l="120" v="0.771654"/>

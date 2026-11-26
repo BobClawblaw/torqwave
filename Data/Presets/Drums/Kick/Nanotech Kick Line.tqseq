@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Nanotech Kick Line" role="Drums" subRole="Kick" key="" tags="" note="A two-step kick with a pickup into the next bar, with ghost kicks leading into the next bar at the end of bar 2" style="Drum and Bass/Neurofunk" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="174.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Nanotech Kick Line" role="Drums" subRole="Kick" key="" tags="" note="A two-step kick with a pickup into the next bar, with ghost kicks leading into the next bar at the end of bar 2" style="Fast/Fast Grind" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="174.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="36" s="2400" l="120" v="0.944882"/>

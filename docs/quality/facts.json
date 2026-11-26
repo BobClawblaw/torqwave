@@ -67,7 +67,7 @@
   {
     "id": "clipping",
     "title": "Clipping",
-    "source": "The factory kit EBM Kit (Industrial/EBM), its loop twice, as the Sequence Library plays it",
+    "source": "The factory kit Machine Pulse Kit (Machine/Machine Pulse), its loop twice, as the Sequence Library plays it",
     "damage": "the loop turned up until its peak stood 4 dB over full scale, and cut off flat there",
     "repair": "Effects > Noise Reduction and Repair > Repair Clipping at its defaults (threshold 99% of the peak, the peak kept)",
     "clippedSamples": 1544,
@@ -85,7 +85,7 @@
   {
     "id": "highs",
     "title": "Missing highs",
-    "source": "The factory kit EBM Kit (Industrial/EBM), its loop twice, as the Sequence Library plays it",
+    "source": "The factory kit Machine Pulse Kit (Machine/Machine Pulse), its loop twice, as the Sequence Library plays it",
     "damage": "everything over 5 kHz filtered away (eight 12 dB low-pass sections in a row at 5 kHz)",
     "repair": "Effects > Noise Reduction and Repair > Spectral Recovery at its defaults (the cutoff found from the audio, level -3 dB, rebuilt up to 16 kHz)",
     "recovered": true,
@@ -106,7 +106,7 @@
   {
     "id": "loudness",
     "title": "Loudness",
-    "source": "The factory kit EBM Kit (Industrial/EBM), its loop twice, as the Sequence Library plays it",
+    "source": "The factory kit Machine Pulse Kit (Machine/Machine Pulse), its loop twice, as the Sequence Library plays it",
     "damage": "nothing: the loop as the instruments made it",
     "repair": "Effects > Dynamics > Maximizer: Balanced, ceiling -1 dBTP, its gain set so the clip measures -10 LUFS",
     "gainDb": 8.4,

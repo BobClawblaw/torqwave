@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Plague Tom Run" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then toms falling high to low" style="Industrial/Dark electro" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Plague Tom Run" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then high and mid toms trading and a low tom into the bar" style="Machine/Dark Circuit" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="110.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
-    <N p="36" s="480" l="120" v="0.771654"/>
+    <N p="36" s="1440" l="120" v="0.771654"/>
     <N p="48" s="1920" l="120" v="0.771654"/>
-    <N p="48" s="2160" l="120" v="0.771654"/>
     <N p="45" s="2400" l="120" v="0.771654"/>
-    <N p="45" s="2640" l="120" v="0.771654"/>
-    <N p="41" s="2880" l="120" v="0.771654"/>
-    <N p="41" s="3120" l="120" v="0.771654"/>
-    <N p="41" s="3360" l="120" v="0.944882"/>
+    <N p="48" s="2640" l="120" v="0.771654"/>
+    <N p="45" s="3120" l="120" v="0.771654"/>
+    <N p="41" s="3360" l="120" v="0.771654"/>
     <N p="41" s="3600" l="120" v="0.944882"/>
   </NOTES>
   <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>

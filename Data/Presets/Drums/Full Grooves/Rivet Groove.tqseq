@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Rivet Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a big snare and clap together on 2 and 4, a ride in 8ths and metal struck in threes" style="Techno/Industrial" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Rivet Groove" role="Drums" subRole="Full Grooves" key="" tags="" note="Four to the floor, a big snare and clap together on 2 and 4, a ride in 8ths and metal struck in threes" style="Floor/Factory Floor" energy="3" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="51" s="0" l="120" v="0.771654"/>
@@ -45,5 +45,5 @@
     <N p="56" s="6720" l="120" v="0.771654"/>
     <N p="51" s="7200" l="120" v="0.582677"/>
   </NOTES>
-  <VOICE><TRACKTEMPLATE name="Basic Drums: Dark Techno" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHDElbqABUkMFZt8lHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Basic Drums: Machine Shop" bus="0" instrument="1" musical="1" gainDb="-0.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHME1XnklakAxTn8Fbh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

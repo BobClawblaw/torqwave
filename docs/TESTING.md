@@ -362,6 +362,7 @@ Others write something to look at or listen to, and check nothing:
 |---|---|
 | `--synth-window <folder>`, `--swarm-window <folder>`, `--sampler-window <folder>`, `--drums-window <folder>`, `--console-window <folder>` | Saves pictures of that instrument's window, or of the signal console's scope |
 | `--drums-guide <folder>` | Draws the guide's pictures of Basic Drums (`guide-drums.png` and the four beside it in `docs/screenshots`), with sounds made for the pictures |
+| `--sequencer-guide <folder>` | Draws the guide's picture of the Sequence Library and the Sequencer (`guide-presets.png` in `docs/screenshots`): the factory presets grouped by style and searched for "dark floor", and Rumble Roller open |
 | `--drums-sources <folder>` | Renders each of Basic Drums' 24 sources to listen to: alone (hard, soft, five semitones down and up) and in two bars over a plain groove, 48 files |
 | `--drums-sounds <folder>`, `--drums-demo <folder>` | Renders every note of the Standard kit and each kit's main sounds; and four bars of a groove for each kit. The same files each time, so two builds can be compared byte for byte |
 | `--battery-kit-files <list>` | Reads every Battery kit named in a list of your own and prints counts only: how many read, how many samples they name and how many are found. Not part of the suite: the kits are yours |

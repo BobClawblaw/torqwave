@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Octave Sequencer Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="8ths leaping between root and octave on A, F, C and G" style="Industrial/Synth-EBM" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Octave Sequencer Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="8ths leaping between root and octave on A, F, C and G" style="Machine/Night Pulse" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="120" v="0.755906"/>
     <N p="45" s="480" l="120" v="0.755906"/>

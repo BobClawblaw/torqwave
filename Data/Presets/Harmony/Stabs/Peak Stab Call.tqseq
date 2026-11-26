@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Peak Stab Call" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A stab call in bar 1, answered higher in bar 2" style="Techno/Peak-time" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="136.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Peak Stab Call" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A stab call in bar 1, answered higher in bar 2" style="Floor/Peak-time" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="136.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="220" v="0.724409"/>
     <N p="60" s="0" l="220" v="0.724409"/>

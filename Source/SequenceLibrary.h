@@ -163,7 +163,7 @@ public:
     /** Whether an entry passes the filters (with the session's key for Fits the Session). */
     static bool passes (const Entry&, const Filters&, const juce::String& sessionKey);
 
-    /** The styles the entries carry, sorted ("Industrial/EBM", "Techno/Dark"). */
+    /** The styles the entries carry, sorted ("Floor/Dark Floor", "Machine/Machine Pulse"). */
     static juce::StringArray stylesIn (const std::vector<Entry>&);
 
     /** The keys they carry, as each names itself, from C ("A minor"). */

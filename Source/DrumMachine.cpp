@@ -1,4 +1,5 @@
 #include "DrumMachine.h"
+#include "FactoryRenames.h"
 #include "Session.h"
 #include "DrumMachineEditor.h"
 
@@ -289,7 +290,7 @@ const std::vector<Kit>& kits()
 
         make ("Standard", "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.", [] (KitSettings&, auto&&) {});
 
-        make ("Dark Techno", "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.", [] (KitSettings& k, auto&& s)
+        make ("Low Rumble", "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.", [] (KitSettings& k, auto&& s)
         {
             k.kick = KickCharacter::punch;
             s (Sound::kick) = { -2.0f, 750.0f, -25.0f, 0.0f, 0.0f, 35.0f };
@@ -348,7 +349,7 @@ const std::vector<Kit>& kits()
             k.feedback = 40.0f;
         });
 
-        make ("EBM Machine", "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.", [] (KitSettings& k, auto&& s)
+        make ("Iron Shutter", "A tight drum machine: a short punchy kick, big gated snares, near-flat hats.", [] (KitSettings& k, auto&& s)
         {
             k.kick = KickCharacter::punch;
             s (Sound::kick) = { 1.0f, 340.0f, 10.0f, 0.0f, 0.0f, 20.0f };
@@ -470,7 +471,7 @@ const std::vector<Kit>& kits()
 
         modern ("Modern", "Every sound that has a Modern type on it, clean: nothing on the bus.", [] (KitSettings&, auto&&) {});
 
-        modern ("Warehouse", "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.", [&set] (KitSettings& k, auto&& s)
+        modern ("Warehouse", "Low and long on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.", [&set] (KitSettings& k, auto&& s)
         {
             k.kick = KickCharacter::punch;
             set (s (Sound::kick), -2.0f, 440.0f, -10.0f, -2.0f, 0.0f, 25.0f);
@@ -495,7 +496,7 @@ const std::vector<Kit>& kits()
             k.feedback = 40.0f;
         });
 
-        modern ("Body Music", "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.", [&set] (KitSettings& k, auto&& s)
+        modern ("Pressure Room", "Short and tight on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.", [&set] (KitSettings& k, auto&& s)
         {
             k.kick = KickCharacter::punch;
             set (s (Sound::kick), 1.0f, 360.0f, 15.0f, 0.0f, 0.0f, 20.0f);
@@ -580,7 +581,7 @@ const std::vector<Kit>& kits()
             to.drive = drive;
         };
 
-        make ("Bunker", "Dark techno from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
+        make ("Bunker", "A rumble from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
               [&source] (KitSettings& k, auto&& s)
         {
             source (s (Sound::kick), "rumbleKick", -1.0f, 1.0f, -10.0f, -1.0f, 0.0f, 15.0f);
@@ -651,7 +652,7 @@ const std::vector<Kit>& kits()
             k.feedback = 38.0f;
         });
 
-        make ("Voltage", "EBM from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
+        make ("Voltage", "Tight and gated from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
               [&source] (KitSettings& k, auto&& s)
         {
             source (s (Sound::kick), "fmKick", 1.0f, 0.8f, 20.0f, -1.0f, 0.0f, 15.0f);
@@ -692,9 +693,10 @@ const std::vector<Kit>& kits()
 int kitIndex (const juce::String& name)
 {
     const auto& all = kits();
+    const auto now = FactoryRenames::now (FactoryRenames::drumKits, name);   // a kit by its name before 0.22.0 too
 
     for (size_t i = 0; i < all.size(); ++i)
-        if (all[i].name == name)
+        if (all[i].name == now)
             return (int) i;
 
     return -1;
@@ -3226,7 +3228,7 @@ void BasicDrumsProcessor::readFromState (const juce::XmlElement& xml)
         return;
     }
 
-    kitName = xml.getStringAttribute ("kit", "Standard");
+    kitName = FactoryRenames::now (FactoryRenames::drumKits, xml.getStringAttribute ("kit", "Standard"));
     readSamples (xml);
     readPads (xml);
     readEffects (xml);

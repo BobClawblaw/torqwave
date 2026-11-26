@@ -16,8 +16,8 @@
   {
     "group": "synth",
     "category": "Bass",
-    "name": "EBM Sequence Bass",
-    "file": "synth/ebm-sequence-bass.mp3",
+    "name": "Machine Sequence",
+    "file": "synth/machine-sequence.mp3",
     "featured": true,
     "about": "Analog saw, Analog square. Filter: Ladder 24 at 350 Hz. Mono. Macros: Cutoff, Grit, Space.",
     "phrase": "four bars at 120 BPM",
@@ -306,7 +306,7 @@
     "name": "Cinder Mandible",
     "file": "synth/cinder-mandible.mp3",
     "about": "Growl (Fold warp), Growl an octave down (Fold warp), Sync +7 st, pink noise. Filter: Ladder 24 at 850 Hz. Legato. Effects: fold drive. Macros: Fold, Jaw, Hiss, Grit.",
-    "phrase": "EBM Gallop",
+    "phrase": "Iron Gallop",
     "place": 10,
     "of": 271,
     "parts": 20,
@@ -488,7 +488,7 @@
     "name": "Lockjaw Engine",
     "file": "synth/lockjaw-engine.mp3",
     "about": "Sync x3 (Sync warp), FM an octave up (FM warp), Analog square an octave down. Filter: Ladder 24 at 800 Hz. Legato. Effects: tube drive. Macros: Lock, FM, Cutoff, Grit.",
-    "phrase": "EBM Gallop",
+    "phrase": "Iron Gallop",
     "place": 17,
     "of": 271,
     "parts": 18,
@@ -669,7 +669,7 @@
     "name": "Tension Strap",
     "file": "synth/tension-strap.mp3",
     "about": "String, Sync (Sync warp), Analog sine an octave down. Filter: Ladder 24 at 1.0 kHz. Mono. Effects: hard drive. Macros: Strap, Sync, Cutoff, Grit.",
-    "phrase": "EBM Gallop",
+    "phrase": "Iron Gallop",
     "place": 19,
     "of": 271,
     "parts": 17,
@@ -850,7 +850,7 @@
     "name": "Vox Hammer Bass",
     "file": "synth/vox-hammer-bass.mp3",
     "about": "Vowel, Analog saw an octave down, Sync an octave up, a sub. Filter: Ladder 24 at 1.3 kHz. Mono. Effects: hard drive. Macros: Ya, Click, Cutoff, Grit.",
-    "phrase": "EBM Gallop",
+    "phrase": "Iron Gallop",
     "place": 36,
     "of": 271,
     "parts": 16,
@@ -1077,7 +1077,7 @@
     "name": "Magma Floor",
     "file": "synth/magma-floor.mp3",
     "about": "Analog sine, Growl x3 an octave up (Fold warp), Sub. Filter: SVF Low at 1.1 kHz. Legato. Effects: fold drive. Macros: Fold, Upper, Cutoff, Grit.",
-    "phrase": "EBM Gallop",
+    "phrase": "Iron Gallop",
     "place": 3,
     "of": 44,
     "parts": 19,
@@ -1228,7 +1228,7 @@
     "name": "Riptide Clamp",
     "file": "synth/riptide-clamp.mp3",
     "about": "Sync (Sync warp), Analog square x3, FM an octave up. Filters: Ladder 24 at 700 Hz and SVF High at 40 Hz. Legato. Effects: hard drive. Macros: Clamp, Beat, FM, Grit.",
-    "phrase": "EBM Gallop",
+    "phrase": "Iron Gallop",
     "place": 20,
     "of": 133,
     "parts": 22,
@@ -1409,7 +1409,7 @@
     "name": "Flood Engine",
     "file": "synth/flood-engine.mp3",
     "about": "String x5, Analog saw x3, Sub an octave down. Filter: Ladder 12 at 720 Hz. Legato. Effects: soft drive, reverb. Macros: Width, Beat, Cutoff, Space.",
-    "phrase": "EBM Gallop",
+    "phrase": "Iron Gallop",
     "place": 28,
     "of": 133,
     "parts": 21,
@@ -1620,7 +1620,7 @@
     "name": "Mordant Spark",
     "file": "synth/mordant-spark.mp3",
     "about": "Sync (Sync warp), FM an octave up (FM warp), Analog saw an octave down. Filter: Ladder 24 at 520 Hz. Legato. Effects: tube drive, 1/16 D delay. Macros: Cutoff, Spark, FM, Grit.",
-    "phrase": "EBM Gallop",
+    "phrase": "Iron Gallop",
     "place": 17,
     "of": 135,
     "parts": 23,
@@ -1801,7 +1801,7 @@
     "name": "Effluent Wave",
     "file": "synth/effluent-wave.mp3",
     "about": "Analog saw x4, Pulse x3, Sub an octave down. Filter: Ladder 24 at 470 Hz. Legato. Effects: phaser, 1/8 D delay. Macros: Cutoff, Width, Swirl, Squelch.",
-    "phrase": "EBM Gallop",
+    "phrase": "Iron Gallop",
     "place": 22,
     "of": 135,
     "parts": 22,
@@ -2086,7 +2086,7 @@
     "name": "Victory Lap",
     "file": "synth/victory-lap.mp3",
     "about": "Analog saw x5, Sync an octave up (Sync warp), Analog square x2 an octave down. Filter: Ladder 12 at 2.8 kHz. Legato. Effects: 1/4 D delay, reverb. Macros: Cutoff, Sync, Width, Space.",
-    "phrase": "EBM Riff",
+    "phrase": "Signal Riff",
     "place": 24,
     "of": 189,
     "parts": 21,
@@ -2266,7 +2266,7 @@
     "name": "Hyperion Lead",
     "file": "synth/hyperion-lead.mp3",
     "about": "Analog saw x6, Additive +19 st, Analog saw x3 an octave down. Filter: Ladder 12 at 2.6 kHz. Effects: 1/4 delay, reverb. Macros: Cutoff, Halo, Width, Space.",
-    "phrase": "EBM Riff",
+    "phrase": "Signal Riff",
     "place": 28,
     "of": 189,
     "parts": 20,
@@ -2446,7 +2446,7 @@
     "name": "Crystal Engine",
     "file": "synth/crystal-engine.mp3",
     "about": "FM (FM warp), Metal an octave up, Analog sine an octave down. Filter: SVF Low at 5.0 kHz. Legato. Effects: 1/4 delay, reverb. Macros: Crystal, FM, Cutoff, Space.",
-    "phrase": "EBM Riff",
+    "phrase": "Signal Riff",
     "place": 33,
     "of": 189,
     "parts": 19,
@@ -3450,7 +3450,7 @@
     "name": "Rivet Snarl",
     "file": "synth/rivet-snarl.mp3",
     "about": "Growl (Fold warp), Analog saw an octave up, Metal two octaves up. Filter: Ladder 24 at 1.2 kHz. Effects: fold drive, 1/8 D delay. Macros: Fold, Snap, Cutoff, Grit.",
-    "phrase": "EBM Riff",
+    "phrase": "Signal Riff",
     "place": 1,
     "of": 149,
     "parts": 19,
@@ -3630,7 +3630,7 @@
     "name": "Swarm Ledger",
     "file": "synth/swarm-ledger.mp3",
     "about": "Growl x5, Analog saw x3 an octave down, FM an octave up. Filter: Ladder 24 at 1.1 kHz. Effects: phaser, 1/4 D delay. Macros: Swarm, Growl, Phase, Echo.",
-    "phrase": "EBM Riff",
+    "phrase": "Signal Riff",
     "place": 25,
     "of": 149,
     "parts": 19,
@@ -4185,7 +4185,7 @@
     "name": "Ferric Pluck Clav",
     "file": "synth/ferric-pluck-clav.mp3",
     "about": "Pulse (Fold warp), String, Sub an octave down. Filters: Ladder BP at 1.2 kHz and Ladder 12 at 5.0 kHz. Effects: hard drive, phaser. Macros: Fold, Pluck, Band, Phase.",
-    "phrase": "EBM Riff",
+    "phrase": "Signal Riff",
     "place": 7,
     "of": 90,
     "parts": 19,
@@ -6539,7 +6539,7 @@
     "name": "Clocktower Pump",
     "file": "synth/clocktower-pump.mp3",
     "about": "Metal x3, FM x3 an octave down, Sync an octave up (Sync warp). Filter: Ladder 24 at 3.5 kHz. Effects: soft drive, 1/4 delay. Macros: Pump, Tick, Cutoff, Echo.",
-    "phrase": "EBM Riff",
+    "phrase": "Signal Riff",
     "place": 29,
     "of": 127,
     "parts": 20,
@@ -6719,7 +6719,7 @@
     "name": "Grievance Bell",
     "file": "synth/grievance-bell.mp3",
     "about": "Metal (Mirror warp), Vowel, Analog triangle an octave down. Filters: SVF Band at 900 Hz and SVF Notch at 2.5 kHz. Effects: phaser, reverb. Macros: Grieve, Vowel, Mirror, Phase.",
-    "phrase": "EBM Riff",
+    "phrase": "Signal Riff",
     "place": 40,
     "of": 127,
     "parts": 19,
@@ -10458,7 +10458,7 @@
     "name": "Pixel Mangler",
     "file": "synth/pixel-mangler.mp3",
     "about": "Pulse (Mirror warp), Pulse +7 st (Crush warp), Analog saw an octave up (Crush warp). Filter: Ladder 24 at 2.5 kHz. Effects: fold drive. Macros: Mirror, Fifth, Cutoff, Grit.",
-    "phrase": "EBM Riff",
+    "phrase": "Signal Riff",
     "place": 3,
     "of": 93,
     "parts": 19,
@@ -11490,8 +11490,8 @@
   {
     "group": "sampler",
     "category": "Sliced Kits",
-    "name": "Dark Techno Break",
-    "file": "sampler/dark-techno-break.mp3",
+    "name": "Low Rumble Break",
+    "file": "sampler/low-rumble-break.mp3",
     "about": "A loop cut into 29 slices, each on a key of its own.",
     "phrase": "Kick Hat Snare",
     "seconds": 1.8,
@@ -11514,8 +11514,8 @@
   {
     "group": "sampler",
     "category": "Sliced Kits",
-    "name": "EBM Machine Break",
-    "file": "sampler/ebm-machine-break.mp3",
+    "name": "Iron Shutter Break",
+    "file": "sampler/iron-shutter-break.mp3",
     "about": "A loop cut into 30 slices, each on a key of its own.",
     "phrase": "Kick Hat Snare",
     "seconds": 1.9,
@@ -12638,7 +12638,7 @@
     "file": "drums/standard-afterimage-beat.mp3",
     "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
     "groove": "Four to the floor, a snare on 2 and 4 and open hats on the offbeats",
-    "style": "Industrial/Futurepop",
+    "style": "Machine/Bright Pulse",
     "bars": 1.0,
     "energy": 5,
     "of": 35,
@@ -12665,7 +12665,7 @@
     "file": "drums/standard-peak-hour-driver.mp3",
     "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
     "groove": "Four to the floor, clap and snare on 2 and 4, ghost kicks before them, 16th hats with the offbeat lifted",
-    "style": "Techno/Driving",
+    "style": "Floor/Driving",
     "bars": 2.0,
     "energy": 5,
     "of": 35,
@@ -12692,7 +12692,7 @@
     "file": "drums/standard-throttle-drive.mp3",
     "about": "Every sound as it starts: a 909-style punch kick, clean, nothing on the bus.",
     "groove": "Four to the floor, a clap layered with a snare on 2 and 4, 16th hats with the offbeat lifted, a shaker in 16ths and a tom run ends bar 4",
-    "style": "Techno/Driving",
+    "style": "Floor/Driving",
     "bars": 4.0,
     "energy": 5,
     "of": 35,
@@ -12712,12 +12712,12 @@
   },
   {
     "group": "drums",
-    "category": "Dark Techno",
+    "category": "Low Rumble",
     "name": "Hard Offbeat Rumble",
-    "file": "drums/dark-techno-hard-offbeat-rumble.mp3",
+    "file": "drums/low-rumble-hard-offbeat-rumble.mp3",
     "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
     "groove": "Fast four-to-the-floor with a rumble between the kicks and metal accented every three 16ths; a kick roll ends bar 4",
-    "style": "Techno/Hard",
+    "style": "Floor/Hard Floor",
     "bars": 4.0,
     "energy": 5,
     "of": 8,
@@ -12727,7 +12727,7 @@
       {
         "name": "Hard Offbeat Rumble",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       }
     ],
     "seconds": 6.4,
@@ -12737,12 +12737,12 @@
   },
   {
     "group": "drums",
-    "category": "Dark Techno",
+    "category": "Low Rumble",
     "name": "Black Stomp",
-    "file": "drums/dark-techno-black-stomp.mp3",
+    "file": "drums/low-rumble-black-stomp.mp3",
     "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
     "groove": "Four to the floor with a skipped kick before the one, a clap on 4 only, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
-    "style": "Techno/Dark",
+    "style": "Floor/Dark Floor",
     "bars": 4.0,
     "energy": 4,
     "of": 8,
@@ -12752,7 +12752,7 @@
       {
         "name": "Black Stomp",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       }
     ],
     "seconds": 7.4,
@@ -12762,12 +12762,12 @@
   },
   {
     "group": "drums",
-    "category": "Dark Techno",
+    "category": "Low Rumble",
     "name": "Furnace Thump",
-    "file": "drums/dark-techno-furnace-thump.mp3",
+    "file": "drums/low-rumble-furnace-thump.mp3",
     "about": "A low, long kick with drive for rumbles, dark snares and claps, crisp hats, the bus glued.",
     "groove": "Four to the floor with a rolling rumble between the kicks, a clap on 2 and 4, a ride in 8ths, toms in shifting 16ths and a tom run ends bar 4",
-    "style": "Techno/Industrial",
+    "style": "Floor/Factory Floor",
     "bars": 4.0,
     "energy": 4,
     "of": 8,
@@ -12777,7 +12777,7 @@
       {
         "name": "Furnace Thump",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       }
     ],
     "seconds": 7.3,
@@ -12792,7 +12792,7 @@
     "file": "drums/industrial-anvil-beat.mp3",
     "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
     "groove": "Four to the floor with a rolling rumble between the kicks, a snare on 2 and 4, a ride in 8ths, a syncopated rimshot and a tom run ends bar 4",
-    "style": "Techno/Industrial",
+    "style": "Floor/Factory Floor",
     "bars": 4.0,
     "energy": 5,
     "of": 31,
@@ -12817,7 +12817,7 @@
     "file": "drums/industrial-bloodline-beat.mp3",
     "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
     "groove": "Four to the floor, a clap layered with a snare on 2 and 4, open hats on the offbeats, a crash on the one and a tom run ends bar 4",
-    "style": "Industrial/Aggrotech",
+    "style": "Machine/Overdrive",
     "bars": 4.0,
     "energy": 5,
     "of": 31,
@@ -12842,7 +12842,7 @@
     "file": "drums/industrial-bunker-stomp.mp3",
     "about": "A hard, overdriven kick, noise snares, metal that bites: everything through drive.",
     "groove": "Four to the floor with a rolling rumble between the kicks, a big snare and clap together on 2 and 4 and closed hats on the beat and open ones between",
-    "style": "Techno/Hard",
+    "style": "Floor/Hard Floor",
     "bars": 1.0,
     "energy": 5,
     "of": 31,
@@ -12864,12 +12864,12 @@
   },
   {
     "group": "drums",
-    "category": "EBM Machine",
+    "category": "Iron Shutter",
     "name": "Chain Drive Beat",
-    "file": "drums/ebm-machine-chain-drive-beat.mp3",
-    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
+    "file": "drums/iron-shutter-chain-drive-beat.mp3",
+    "about": "A tight drum machine: a short punchy kick, big gated snares, near-flat hats.",
     "groove": "Four to the floor with ghost kicks after each, a big snare and clap together on 2 and 4, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
-    "style": "Industrial/Techno-body",
+    "style": "Machine/Machine Drive",
     "bars": 4.0,
     "energy": 5,
     "of": 25,
@@ -12879,7 +12879,7 @@
       {
         "name": "Chain Drive Beat",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.2,
@@ -12889,12 +12889,12 @@
   },
   {
     "group": "drums",
-    "category": "EBM Machine",
+    "category": "Iron Shutter",
     "name": "Overdrive Machine",
-    "file": "drums/ebm-machine-overdrive-machine.mp3",
-    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
+    "file": "drums/iron-shutter-overdrive-machine.mp3",
+    "about": "A tight drum machine: a short punchy kick, big gated snares, near-flat hats.",
     "groove": "A rock kick on 1, 3 and the and of 3, a snare on 2 and 4 and 16th hats with the offbeat lifted",
-    "style": "Synthwave/Darksynth",
+    "style": "Neon/Neon Menace",
     "bars": 1.0,
     "energy": 5,
     "of": 25,
@@ -12906,7 +12906,7 @@
       {
         "name": "Overdrive Machine",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.2,
@@ -12916,12 +12916,12 @@
   },
   {
     "group": "drums",
-    "category": "EBM Machine",
+    "category": "Iron Shutter",
     "name": "Transistor Groove",
-    "file": "drums/ebm-machine-transistor-groove.mp3",
-    "about": "Tight drum-machine body music: a short punchy kick, big gated snares, near-flat hats.",
+    "file": "drums/iron-shutter-transistor-groove.mp3",
+    "about": "A tight drum machine: a short punchy kick, big gated snares, near-flat hats.",
     "groove": "An electro kick on 1, the a of 2 and 3, a clap on 2 and 4, 16th hats with the offbeat lifted and a cowbell on the and of 2 and 4",
-    "style": "Electro/Electro",
+    "style": "Funk/Machine Funk",
     "bars": 2.0,
     "energy": 5,
     "of": 25,
@@ -12933,7 +12933,7 @@
       {
         "name": "Transistor Groove",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.4,
@@ -12973,7 +12973,7 @@
     "file": "drums/electro-sprite-machine.mp3",
     "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
     "groove": "A marching kick with a pickup before beat 3, a snare on 2 and 4 with ghost notes after them, 16th hats with the offbeat lifted and a tom run ends bar 4",
-    "style": "Game/Chiptune",
+    "style": "Game/8-bit",
     "bars": 4.0,
     "energy": 4,
     "of": 8,
@@ -12998,7 +12998,7 @@
     "file": "drums/electro-whisper-groove.mp3",
     "about": "An 808 in spirit: a long booming kick, snappy snare, sine toms and the cowbell.",
     "groove": "A half-time kick on 1 and 3, a hat on 1 and 3, a low tom every five 16ths and a tom run ends bar 4",
-    "style": "Game/Horror",
+    "style": "Game/Dread",
     "bars": 4.0,
     "energy": 3,
     "of": 8,
@@ -13023,7 +13023,7 @@
     "file": "drums/breaks-tape-splice-groove.mp3",
     "about": "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.",
     "groove": "A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, 16th hats and an open hat before 3 and 1",
-    "style": "Breakbeat/Breaks",
+    "style": "Broken/Broken Beat",
     "bars": 2.0,
     "energy": 4,
     "of": 2,
@@ -13050,7 +13050,7 @@
     "file": "drums/breaks-back-room-break.mp3",
     "about": "Crunchy and squashed: a tight kick, a cracking snare, bright hats, the bus driven and glued hard.",
     "groove": "A two-step break with a kick pickup in bar 2, ghost snares before the backbeat, 8th hats and a ride on the beat",
-    "style": "Breakbeat/Breaks",
+    "style": "Broken/Broken Beat",
     "bars": 2.0,
     "energy": 3,
     "of": 2,
@@ -13077,7 +13077,7 @@
     "file": "drums/industrial-rock-biohazard-beat.mp3",
     "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
     "groove": "The two-step kick on 1 and the and of 3, the snare on 2 and 4 and 8th hats, the downbeats stronger",
-    "style": "Drum and Bass/Neurofunk",
+    "style": "Fast/Fast Grind",
     "bars": 2.0,
     "energy": 4,
     "of": 3,
@@ -13104,7 +13104,7 @@
     "file": "drums/industrial-rock-rough-cut-beat.mp3",
     "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
     "groove": "A breakbeat kick with a push before the 4, a snare on 2 and 4 with ghost notes in between, hats pushing into each beat and a crash on the one",
-    "style": "Breakbeat/Breaks",
+    "style": "Broken/Broken Beat",
     "bars": 1.0,
     "energy": 4,
     "of": 3,
@@ -13131,7 +13131,7 @@
     "file": "drums/industrial-rock-scratch-loop.mp3",
     "about": "A played kit pushed hard, as on the industrial rock records: a beater on the kick, a ringing snare, big toms, cymbals spread wide, the room squashed.",
     "groove": "A breakbeat kick on 1, the and of 1 and the and of 3, a snare on 2 and 4 with ghost notes in between, 16th hats with the offbeat lifted, a crash on the one and a tom run ends bar 4",
-    "style": "Breakbeat/Breaks",
+    "style": "Broken/Broken Beat",
     "bars": 4.0,
     "energy": 4,
     "of": 3,
@@ -13156,7 +13156,7 @@
     "file": "drums/modern-clean-room-groove.mp3",
     "about": "Every sound that has a Modern type on it, clean: nothing on the bus.",
     "groove": "Four to the floor with ghost kicks before 2 and 4, a clap over a snare, 16th hats with the offbeat lifted, a shaker between them and open hats in bar 2",
-    "style": "Techno/Driving",
+    "style": "Floor/Driving",
     "bars": 2.0,
     "energy": 4,
     "of": 1,
@@ -13181,9 +13181,9 @@
     "category": "Warehouse",
     "name": "Night Shift Hammer",
     "file": "drums/warehouse-night-shift-hammer.mp3",
-    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
+    "about": "Low and long on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
     "groove": "A peak-time groove: a crash on the one, a clap on 2 and 4, open hats on the offbeats over closed ones, a ride in 8ths and a skipped kick in bar 2",
-    "style": "Techno/Peak-time",
+    "style": "Floor/Peak-time",
     "bars": 2.0,
     "energy": 5,
     "of": 3,
@@ -13208,9 +13208,9 @@
     "category": "Warehouse",
     "name": "Concrete Floor Roller",
     "file": "drums/warehouse-concrete-floor-roller.mp3",
-    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
+    "about": "Low and long on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
     "groove": "Four to the floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a rim against it; a ride comes in for bars 3 and 4, and a clap pickup ends bar 4",
-    "style": "Techno/Dark",
+    "style": "Floor/Dark Floor",
     "bars": 4.0,
     "energy": 4,
     "of": 3,
@@ -13233,9 +13233,9 @@
     "category": "Warehouse",
     "name": "Strobe Tunnel Pulse",
     "file": "drums/warehouse-strobe-tunnel-pulse.mp3",
-    "about": "Dark techno on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
+    "about": "Low and long on the Modern sounds: a low kick that leaves room, a dark clap in a room, hats and a ride that carry, the bus glued.",
     "groove": "A rim every three 16ths and a shaker every five turn against the kick and offbeat hats, a low tom answering in bars 2 and 4, open hats over bar 4",
-    "style": "Techno/Hypnotic",
+    "style": "Floor/Hypnotic",
     "bars": 4.0,
     "energy": 3,
     "of": 3,
@@ -13255,12 +13255,12 @@
   },
   {
     "group": "drums",
-    "category": "Body Music",
+    "category": "Pressure Room",
     "name": "Cold Assembly Drive",
-    "file": "drums/body-music-cold-assembly-drive.mp3",
-    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
-    "groove": "Techno kick and 16th hats with a snare on 2 and 4 and a metal figure, ready for an EBM bass in the gaps; a snare roll rises through the end of bar 4",
-    "style": "Industrial/Techno-body",
+    "file": "drums/pressure-room-cold-assembly-drive.mp3",
+    "about": "Short and tight on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
+    "groove": "Techno kick and 16th hats with a snare on 2 and 4 and a metal figure, ready for a sequencer bass in the gaps; a snare roll rises through the end of bar 4",
+    "style": "Machine/Machine Drive",
     "bars": 4.0,
     "energy": 4,
     "of": 3,
@@ -13270,7 +13270,7 @@
       {
         "name": "Cold Assembly Drive",
         "role": "Drums",
-        "voice": "Basic Drums: Body Music"
+        "voice": "Basic Drums: Pressure Room"
       }
     ],
     "seconds": 7.5,
@@ -13280,12 +13280,12 @@
   },
   {
     "group": "drums",
-    "category": "Body Music",
+    "category": "Pressure Room",
     "name": "Marching Order Beat",
-    "file": "drums/body-music-marching-order-beat.mp3",
-    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
+    "file": "drums/pressure-room-marching-order-beat.mp3",
+    "about": "Short and tight on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
     "groove": "Four to the floor, a big snare and clap together on 2 and 4, open hats on the offbeats and flat machine hats round them",
-    "style": "Industrial/EBM",
+    "style": "Machine/Machine Pulse",
     "bars": 1.0,
     "energy": 4,
     "of": 3,
@@ -13297,7 +13297,7 @@
       {
         "name": "Marching Order Beat",
         "role": "Drums",
-        "voice": "Basic Drums: Body Music"
+        "voice": "Basic Drums: Pressure Room"
       }
     ],
     "seconds": 5.8,
@@ -13307,12 +13307,12 @@
   },
   {
     "group": "drums",
-    "category": "Body Music",
+    "category": "Pressure Room",
     "name": "Muscle Memory Beat",
-    "file": "drums/body-music-muscle-memory-beat.mp3",
-    "about": "EBM on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
+    "file": "drums/pressure-room-muscle-memory-beat.mp3",
+    "about": "Short and tight on the Modern sounds: a short kick with a beater, a big snare in a room, flat tight hats, toms for the fills.",
     "groove": "The machine backbeat: kick on 1 and 3 with a push, a big snare on 2 and 4, 8th hats with the downbeats stronger, three toms falling into the next bar",
-    "style": "Industrial/EBM",
+    "style": "Machine/Machine Pulse",
     "bars": 2.0,
     "energy": 3,
     "of": 3,
@@ -13324,7 +13324,7 @@
       {
         "name": "Muscle Memory Beat",
         "role": "Drums",
-        "voice": "Basic Drums: Body Music"
+        "voice": "Basic Drums: Pressure Room"
       }
     ],
     "seconds": 8.1,
@@ -13339,7 +13339,7 @@
     "file": "drums/foundry-blast-furnace-engine.mp3",
     "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
     "groove": "Fast four-to-the-floor with a rumble between the kicks, offbeat open hats, a clap on 2 and 4 and a crash every other bar; a kick roll ends bar 4",
-    "style": "Techno/Hard",
+    "style": "Floor/Hard Floor",
     "bars": 4.0,
     "energy": 5,
     "of": 3,
@@ -13364,7 +13364,7 @@
     "file": "drums/foundry-rivet-line-stomp.mp3",
     "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
     "groove": "A broken kick with a push before the 4, a snare on 2 and 4 with ghost notes after them, 16th hats shaped by velocity and metal struck in threes",
-    "style": "Industrial/Electro-industrial",
+    "style": "Machine/Broken Circuit",
     "bars": 2.0,
     "energy": 4,
     "of": 3,
@@ -13391,7 +13391,7 @@
     "file": "drums/foundry-slag-hammer-pound.mp3",
     "about": "Industrial on the Modern sounds: a hard driven kick, a crushed snare, hats and a china with grit, toms that pound.",
     "groove": "A pounding kick with low toms in its gaps, a hard snare on 2 and 4, flat 8th hats, a rim against them and a crash on the one",
-    "style": "Techno/Industrial",
+    "style": "Floor/Factory Floor",
     "bars": 2.0,
     "energy": 4,
     "of": 3,
@@ -13418,7 +13418,7 @@
     "file": "drums/broken-beat-cracked-pavement-break.mp3",
     "about": "Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.",
     "groove": "A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, 8th hats and an open hat into the next bar",
-    "style": "Breakbeat/Breaks",
+    "style": "Broken/Broken Beat",
     "bars": 2.0,
     "energy": 4,
     "of": 2,
@@ -13445,7 +13445,7 @@
     "file": "drums/broken-beat-loose-wire-break.mp3",
     "about": "Breaks on the Modern sounds: a tight kick, a snare with a crack and ghost notes that sit under it, bright hats, the bus driven and glued.",
     "groove": "A chopped break, the snare doubling at the end of bar 2, hats pushing into each beat and a crash on the one",
-    "style": "Breakbeat/Breaks",
+    "style": "Broken/Broken Beat",
     "bars": 2.0,
     "energy": 4,
     "of": 2,
@@ -13470,7 +13470,7 @@
     "category": "Bunker",
     "name": "Bunker: Kick Hat Snare",
     "file": "drums/bunker-kick-hat-snare.mp3",
-    "about": "Dark techno from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
+    "about": "A rumble from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
     "phrase": "Kick Hat Snare",
     "seconds": 3.4,
     "peakDb": -7.6,
@@ -13482,7 +13482,7 @@
     "category": "Bunker",
     "name": "Bunker: Body Beat",
     "file": "drums/bunker-body-beat.mp3",
-    "about": "Dark techno from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
+    "about": "A rumble from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
     "phrase": "Body Beat",
     "seconds": 4.9,
     "peakDb": -7.4,
@@ -13494,7 +13494,7 @@
     "category": "Bunker",
     "name": "Bunker: demo groove",
     "file": "drums/bunker-demo-groove.mp3",
-    "about": "Dark techno from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
+    "about": "A rumble from the sources: a kick with a rumble under it, a noise snare and a wide clap, a noise hat and a dark ride, FM toms; a sub drop, a zap, a noise burst and a tin on pads 31 to 34.",
     "demo": true,
     "seconds": 10.300000000000001,
     "peakDb": -7.3,
@@ -13542,7 +13542,7 @@
     "category": "Voltage",
     "name": "Voltage: Kick Hat Snare",
     "file": "drums/voltage-kick-hat-snare.mp3",
-    "about": "EBM from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
+    "about": "Tight and gated from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
     "phrase": "Kick Hat Snare",
     "seconds": 3.4,
     "peakDb": -7.6,
@@ -13554,7 +13554,7 @@
     "category": "Voltage",
     "name": "Voltage: Two-Step Break",
     "file": "drums/voltage-two-step-break.mp3",
-    "about": "EBM from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
+    "about": "Tight and gated from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
     "phrase": "Two-Step Break",
     "seconds": 5.3,
     "peakDb": -7.2,
@@ -13566,7 +13566,7 @@
     "category": "Voltage",
     "name": "Voltage: demo groove",
     "file": "drums/voltage-demo-groove.mp3",
-    "about": "EBM from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
+    "about": "Tight and gated from the sources: an FM kick and an FM snare in a room, an FM hat, a bell for the cowbell, a tin for the rim, FM toms; a zap, a high bell, a noise burst and a sub kick on pads 31 to 34.",
     "demo": true,
     "seconds": 11.0,
     "peakDb": -6.8,
@@ -13575,9 +13575,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Acid",
-    "name": "Acid Techno Kit",
-    "file": "kits/acid-acid-techno-kit.mp3",
+    "category": "Floor/Squelch",
+    "name": "Squelch Kit",
+    "file": "kits/squelch-squelch-kit.mp3",
     "about": "A starting point for Acid: one of each part, in A minor at 134 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -13592,7 +13592,7 @@
         "voice": "Basic Drums: Industrial"
       },
       {
-        "name": "Acid Root Jumper",
+        "name": "Squelch Root Jumper",
         "role": "Bass",
         "voice": "Torqwave Synth: Bleak Sting"
       },
@@ -13602,7 +13602,7 @@
         "voice": "Torqwave Synth: Organ Stab"
       },
       {
-        "name": "Acid Arp",
+        "name": "Squelch Arp",
         "role": "Arps",
         "voice": "Torqwave Synth: Basalt Sting"
       },
@@ -13624,9 +13624,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Acid",
-    "name": "Acid Techno Starter Kit",
-    "file": "kits/acid-acid-techno-starter-kit.mp3",
+    "category": "Floor/Squelch",
+    "name": "Squelch Starter Kit",
+    "file": "kits/squelch-squelch-starter-kit.mp3",
     "about": "A starting point for Acid: one of each part, in A minor at 134 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -13673,7 +13673,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Melodic",
+    "category": "Floor/Melodic",
     "name": "Afterglow Kit",
     "file": "kits/melodic-afterglow-kit.mp3",
     "about": "A starting point for Melodic: one of each part, in A minor at 122 BPM",
@@ -13724,9 +13724,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Aggrotech",
-    "name": "Aggrotech Kit",
-    "file": "kits/aggrotech-aggrotech-kit.mp3",
+    "category": "Machine/Overdrive",
+    "name": "Overdrive Kit",
+    "file": "kits/overdrive-overdrive-kit.mp3",
     "about": "A starting point for Aggrotech: one of each part, in A minor at 140 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -13773,9 +13773,9 @@
   },
   {
     "group": "kits",
-    "category": "Game/Chiptune",
+    "category": "Game/8-bit",
     "name": "Arcade Kit",
-    "file": "kits/chiptune-arcade-kit.mp3",
+    "file": "kits/8-bit-arcade-kit.mp3",
     "about": "A starting point for Chiptune: one of each part, in A minor at 160 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -13871,9 +13871,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Dark",
+    "category": "Floor/Dark Floor",
     "name": "Basement Kit",
-    "file": "kits/dark-basement-kit.mp3",
+    "file": "kits/dark-floor-basement-kit.mp3",
     "about": "A starting point for Dark: one of each part, in A minor at 132 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -13885,7 +13885,7 @@
       {
         "name": "Obsidian Thump",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Smoke Bass",
@@ -13920,9 +13920,9 @@
   },
   {
     "group": "kits",
-    "category": "Game/Horror",
+    "category": "Game/Dread",
     "name": "Bloodmoon Kit",
-    "file": "kits/horror-bloodmoon-kit.mp3",
+    "file": "kits/dread-bloodmoon-kit.mp3",
     "about": "A starting point for Horror: one of each part, in A minor at 70 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14018,9 +14018,9 @@
   },
   {
     "group": "kits",
-    "category": "Electro/Electro",
+    "category": "Funk/Machine Funk",
     "name": "Breakdance Kit",
-    "file": "kits/electro-breakdance-kit.mp3",
+    "file": "kits/machine-funk-breakdance-kit.mp3",
     "about": "A starting point for Electro: one of each part, in A minor at 130 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14032,7 +14032,7 @@
       {
         "name": "Bassline Bot Pulse",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Bodypop Sub Pulse",
@@ -14052,7 +14052,7 @@
       {
         "name": "Transistor Tom Fall",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Computer Transition",
@@ -14067,9 +14067,9 @@
   },
   {
     "group": "kits",
-    "category": "Breakbeat/Breaks",
-    "name": "Breaks Kit",
-    "file": "kits/breaks-breaks-kit.mp3",
+    "category": "Broken/Broken Beat",
+    "name": "Broken Beat Kit",
+    "file": "kits/broken-beat-broken-beat-kit.mp3",
     "about": "A starting point for Breaks: one of each part, in A minor at 132 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14116,9 +14116,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Hard",
+    "category": "Floor/Hard Floor",
     "name": "Bulldozer Kit",
-    "file": "kits/hard-bulldozer-kit.mp3",
+    "file": "kits/hard-floor-bulldozer-kit.mp3",
     "about": "A starting point for Hard: one of each part, in A minor at 145 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14165,9 +14165,9 @@
   },
   {
     "group": "kits",
-    "category": "Game/Chiptune",
-    "name": "Chiptune Game Kit",
-    "file": "kits/chiptune-chiptune-game-kit.mp3",
+    "category": "Game/8-bit",
+    "name": "8-bit Game Kit",
+    "file": "kits/8-bit-8-bit-game-kit.mp3",
     "about": "A starting point for Chiptune: one of each part, in A minor at 150 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14214,9 +14214,9 @@
   },
   {
     "group": "kits",
-    "category": "Breakbeat/Breaks",
+    "category": "Broken/Broken Beat",
     "name": "Chopshop Kit",
-    "file": "kits/breaks-chopshop-kit.mp3",
+    "file": "kits/broken-beat-chopshop-kit.mp3",
     "about": "A starting point for Breaks: one of each part, in A minor at 128 BPM",
     "key": "A minor",
     "bars": 2.0,
@@ -14265,9 +14265,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Coldwave",
-    "name": "Coldwave Kit",
-    "file": "kits/coldwave-coldwave-kit.mp3",
+    "category": "Machine/Cold Glow",
+    "name": "Cold Glow Kit",
+    "file": "kits/cold-glow-cold-glow-kit.mp3",
     "about": "A starting point for Coldwave: one of each part, in A minor at 116 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14279,7 +14279,7 @@
       {
         "name": "Concrete Winter Pulse",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Isolation Bass",
@@ -14299,7 +14299,7 @@
       {
         "name": "Frost Clap Roll",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Frost Build",
@@ -14363,9 +14363,9 @@
   },
   {
     "group": "kits",
-    "category": "Electro/Electro",
+    "category": "Funk/Machine Funk",
     "name": "Computer Kit",
-    "file": "kits/electro-computer-kit.mp3",
+    "file": "kits/machine-funk-computer-kit.mp3",
     "about": "A starting point for Electro: one of each part, in A minor at 130 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14377,7 +14377,7 @@
       {
         "name": "Transistor Groove",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Transistor Pressure",
@@ -14397,7 +14397,7 @@
       {
         "name": "Transistor Tom Fall",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Bassline Bot Build",
@@ -14412,9 +14412,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Coldwave",
+    "category": "Machine/Cold Glow",
     "name": "Concrete Winter Kit",
-    "file": "kits/coldwave-concrete-winter-kit.mp3",
+    "file": "kits/cold-glow-concrete-winter-kit.mp3",
     "about": "A starting point for Coldwave: one of each part, in A minor at 116 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14426,7 +14426,7 @@
       {
         "name": "Rainfall Groove",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Distant Sub Pulse",
@@ -14446,7 +14446,7 @@
       {
         "name": "Frost Clap Roll",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Pale Bridge",
@@ -14461,9 +14461,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Acid",
+    "category": "Floor/Squelch",
     "name": "Corrosive Kit",
-    "file": "kits/acid-corrosive-kit.mp3",
+    "file": "kits/squelch-corrosive-kit.mp3",
     "about": "A starting point for Acid: one of each part, in A minor at 134 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14510,9 +14510,9 @@
   },
   {
     "group": "kits",
-    "category": "Ambient/Dark ambient",
-    "name": "Dark ambient Kit",
-    "file": "kits/dark-ambient-dark-ambient-kit.mp3",
+    "category": "Space/Dark Space",
+    "name": "Dark Space Kit",
+    "file": "kits/dark-space-dark-space-kit.mp3",
     "about": "A starting point for Dark ambient: one of each part, in A minor at 80 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14559,9 +14559,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Dark electro",
-    "name": "Dark electro Kit",
-    "file": "kits/dark-electro-dark-electro-kit.mp3",
+    "category": "Machine/Dark Circuit",
+    "name": "Dark Circuit Kit",
+    "file": "kits/dark-circuit-dark-circuit-kit.mp3",
     "about": "A starting point for Dark electro: one of each part, in A minor at 120 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14573,7 +14573,7 @@
       {
         "name": "Grave Pulse",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Nightmare Bassline",
@@ -14608,9 +14608,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Dark",
-    "name": "Dark Techno Kit",
-    "file": "kits/dark-dark-techno-kit.mp3",
+    "category": "Floor/Dark Floor",
+    "name": "Dark Floor Kit",
+    "file": "kits/dark-floor-dark-floor-kit.mp3",
     "about": "A starting point for Dark: one of each part, in A minor at 132 BPM",
     "key": "A minor",
     "bars": 8.0,
@@ -14622,7 +14622,7 @@
       {
         "name": "Rumble Roller",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Peak Rumble Bass",
@@ -14657,9 +14657,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Dark",
-    "name": "Dark Techno Starter Kit",
-    "file": "kits/dark-dark-techno-starter-kit.mp3",
+    "category": "Floor/Dark Floor",
+    "name": "Dark Floor Starter Kit",
+    "file": "kits/dark-floor-dark-floor-starter-kit.mp3",
     "about": "A starting point for Dark: one of each part, in A minor at 130 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14706,9 +14706,9 @@
   },
   {
     "group": "kits",
-    "category": "Synthwave/Darksynth",
-    "name": "Darksynth Kit",
-    "file": "kits/darksynth-darksynth-kit.mp3",
+    "category": "Neon/Neon Menace",
+    "name": "Neon Menace Kit",
+    "file": "kits/neon-menace-neon-menace-kit.mp3",
     "about": "A starting point for Darksynth: one of each part, in A minor at 118 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14720,7 +14720,7 @@
       {
         "name": "Laser Grid Groove",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Midnight Run Bassline",
@@ -14740,7 +14740,7 @@
       {
         "name": "Laser Grid Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Vice Lift",
@@ -14755,9 +14755,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Darkwave",
-    "name": "Darkwave Kit",
-    "file": "kits/darkwave-darkwave-kit.mp3",
+    "category": "Machine/Night Wave",
+    "name": "Night Wave Kit",
+    "file": "kits/night-wave-night-wave-kit.mp3",
     "about": "A starting point for Darkwave: one of each part, in A minor at 110 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14767,29 +14767,29 @@
     "rounds": 1,
     "parts": [
       {
-        "name": "Darkwave Drum Machine",
+        "name": "Night Wave Drum Machine",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
-        "name": "Darkwave Eighth Roots",
+        "name": "Night Wave Eighth Roots",
         "role": "Bass",
-        "voice": "Torqwave Synth: Body Music"
+        "voice": "Torqwave Synth: Iron Motion"
       },
       {
-        "name": "Darkwave Chorus Chords",
+        "name": "Night Wave Chorus Chords",
         "role": "Harmony",
         "voice": "Torqwave Synth: Minor Stab"
       },
       {
-        "name": "Darkwave Lead",
+        "name": "Night Wave Lead",
         "role": "Melody",
         "voice": "Torqwave Synth: Industrial Whistle"
       },
       {
         "name": "Clap Stutter Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Reverse Swell Transition",
@@ -14804,9 +14804,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Darkwave",
-    "name": "Darkwave Starter Kit",
-    "file": "kits/darkwave-darkwave-starter-kit.mp3",
+    "category": "Machine/Night Wave",
+    "name": "Night Wave Starter Kit",
+    "file": "kits/night-wave-night-wave-starter-kit.mp3",
     "about": "A starting point for Darkwave: one of each part, in A minor at 112 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14818,7 +14818,7 @@
       {
         "name": "Twilight Pulse",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Cathedral Bass",
@@ -14838,7 +14838,7 @@
       {
         "name": "Mourning Clap Roll",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Mourning Build",
@@ -14853,9 +14853,9 @@
   },
   {
     "group": "kits",
-    "category": "House/Deep house",
-    "name": "Deep house Kit",
-    "file": "kits/deep-house-deep-house-kit.mp3",
+    "category": "Swing/Deep Swing",
+    "name": "Deep Swing Kit",
+    "file": "kits/deep-swing-deep-swing-kit.mp3",
     "about": "A starting point for Deep house: one of each part, in A minor at 120 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14902,9 +14902,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Aggrotech",
+    "category": "Machine/Overdrive",
     "name": "Detonator Kit",
-    "file": "kits/aggrotech-detonator-kit.mp3",
+    "file": "kits/overdrive-detonator-kit.mp3",
     "about": "A starting point for Aggrotech: one of each part, in A minor at 135 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -14951,7 +14951,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Minimal",
+    "category": "Floor/Minimal",
     "name": "Dot Kit",
     "file": "kits/minimal-dot-kit.mp3",
     "about": "A starting point for Minimal: one of each part, in A minor at 122 BPM",
@@ -14965,7 +14965,7 @@
       {
         "name": "Sparse Room Loop",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Pinpoint Sub Pulse",
@@ -14985,12 +14985,12 @@
       {
         "name": "Sparse Room Tom Fall",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
-        "name": "Microdub Transition",
+        "name": "Micro Echo Transition",
         "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.9,
@@ -15000,7 +15000,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Hypnotic",
+    "category": "Floor/Hypnotic",
     "name": "Drift Kit",
     "file": "kits/hypnotic-drift-kit.mp3",
     "about": "A starting point for Hypnotic: one of each part, in A minor at 128 BPM",
@@ -15034,7 +15034,7 @@
       {
         "name": "Loopwise Clap Fill",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Orbit Lift",
@@ -15049,9 +15049,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Driving",
-    "name": "Driving Techno Kit",
-    "file": "kits/driving-driving-techno-kit.mp3",
+    "category": "Floor/Driving",
+    "name": "Driving Floor Kit",
+    "file": "kits/driving-driving-floor-kit.mp3",
     "about": "A starting point for Driving: one of each part, in A minor at 132 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15098,7 +15098,7 @@
   },
   {
     "group": "kits",
-    "category": "Ambient/Drone",
+    "category": "Space/Drone",
     "name": "Drone Kit",
     "file": "kits/drone-drone-kit.mp3",
     "about": "A starting point for Drone: one of each part, in A minor at 72 BPM",
@@ -15147,9 +15147,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Dub",
-    "name": "Dub Techno Kit",
-    "file": "kits/dub-dub-techno-kit.mp3",
+    "category": "Floor/Echo Chamber",
+    "name": "Echo Chamber Kit",
+    "file": "kits/echo-chamber-echo-chamber-kit.mp3",
     "about": "A starting point for Dub: one of each part, in A minor at 120 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15181,7 +15181,7 @@
       {
         "name": "Spring Room Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Deep Water Build",
@@ -15196,10 +15196,10 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/EBM",
-    "name": "EBM Kit",
-    "file": "kits/ebm-ebm-kit.mp3",
-    "about": "A starting point for EBM: one of each part, in A minor at 122 BPM",
+    "category": "Machine/Machine Pulse",
+    "name": "Machine Pulse Kit",
+    "file": "kits/machine-pulse-machine-pulse-kit.mp3",
+    "about": "A starting point for Machine Pulse: one of each part, in A minor at 122 BPM",
     "key": "A minor",
     "bars": 4.0,
     "energy": 0,
@@ -15208,12 +15208,12 @@
     "rounds": 1,
     "parts": [
       {
-        "name": "Body Music Beat",
+        "name": "Machine March Beat",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
-        "name": "Belgian Body Bass",
+        "name": "Iron Body Bass",
         "role": "Bass",
         "voice": "Torqwave Synth: Abandoned Pump"
       },
@@ -15230,12 +15230,12 @@
       {
         "name": "Clap Stutter Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Clap Roll Build",
         "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.9,
@@ -15245,10 +15245,10 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/EBM",
-    "name": "EBM Starter Kit",
-    "file": "kits/ebm-ebm-starter-kit.mp3",
-    "about": "A starting point for EBM: one of each part, in A minor at 122 BPM",
+    "category": "Machine/Machine Pulse",
+    "name": "Machine Pulse Starter Kit",
+    "file": "kits/machine-pulse-machine-pulse-starter-kit.mp3",
+    "about": "A starting point for Machine Pulse: one of each part, in A minor at 122 BPM",
     "key": "A minor",
     "bars": 4.0,
     "energy": 0,
@@ -15259,7 +15259,7 @@
       {
         "name": "Iron Curtain Engine",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Sweat Pressure",
@@ -15279,7 +15279,7 @@
       {
         "name": "Drill Tom Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Marching Build",
@@ -15294,9 +15294,9 @@
   },
   {
     "group": "kits",
-    "category": "Electro/Electro",
-    "name": "Electro Kit",
-    "file": "kits/electro-electro-kit.mp3",
+    "category": "Funk/Machine Funk",
+    "name": "Machine Funk Kit",
+    "file": "kits/machine-funk-machine-funk-kit.mp3",
     "about": "A starting point for Electro: one of each part, in A minor at 128 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15308,7 +15308,7 @@
       {
         "name": "Transistor Groove",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Bodypop Throb",
@@ -15328,7 +15328,7 @@
       {
         "name": "Transistor Tom Fall",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Bassline Bot Build",
@@ -15343,9 +15343,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Electro-industrial",
-    "name": "Electro-industrial Kit",
-    "file": "kits/electro-industrial-electro-industrial-kit.mp3",
+    "category": "Machine/Broken Circuit",
+    "name": "Broken Circuit Kit",
+    "file": "kits/broken-circuit-broken-circuit-kit.mp3",
     "about": "A starting point for Electro-industrial: one of each part, in A minor at 118 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15357,7 +15357,7 @@
       {
         "name": "Static Pound",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Wiretap Drive Bass",
@@ -15377,7 +15377,7 @@
       {
         "name": "Circuit Clap Stutter",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Interference Riser",
@@ -15392,7 +15392,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Peak-time",
+    "category": "Floor/Peak-time",
     "name": "Euphoria Kit",
     "file": "kits/peak-time-euphoria-kit.mp3",
     "about": "A starting point for Peak-time: one of each part, in A minor at 138 BPM",
@@ -15541,9 +15541,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Acid",
+    "category": "Floor/Squelch",
     "name": "Fizz Kit",
-    "file": "kits/acid-fizz-kit.mp3",
+    "file": "kits/squelch-fizz-kit.mp3",
     "about": "A starting point for Acid: one of each part, in A minor at 130 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15590,9 +15590,9 @@
   },
   {
     "group": "kits",
-    "category": "Game/Horror",
+    "category": "Game/Dread",
     "name": "Flicker Kit",
-    "file": "kits/horror-flicker-kit.mp3",
+    "file": "kits/dread-flicker-kit.mp3",
     "about": "A starting point for Horror: one of each part, in A minor at 70 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15639,9 +15639,9 @@
   },
   {
     "group": "kits",
-    "category": "Drum and Bass/Liquid",
+    "category": "Fast/Fast Flow",
     "name": "Flowing Kit",
-    "file": "kits/liquid-flowing-kit.mp3",
+    "file": "kits/fast-flow-flowing-kit.mp3",
     "about": "A starting point for Liquid: one of each part, in A minor at 170 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15688,9 +15688,9 @@
   },
   {
     "group": "kits",
-    "category": "Trance/Psytrance",
+    "category": "Spiral/Rolling Spiral",
     "name": "Fractal Kit",
-    "file": "kits/psytrance-fractal-kit.mp3",
+    "file": "kits/rolling-spiral-fractal-kit.mp3",
     "about": "A starting point for Psytrance: one of each part, in A minor at 140 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15722,7 +15722,7 @@
       {
         "name": "Shaman Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Lotus Bridge",
@@ -15786,9 +15786,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Darkwave",
+    "category": "Machine/Night Wave",
     "name": "Funeral Kit",
-    "file": "kits/darkwave-funeral-kit.mp3",
+    "file": "kits/night-wave-funeral-kit.mp3",
     "about": "A starting point for Darkwave: one of each part, in A minor at 116 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15820,12 +15820,12 @@
       {
         "name": "Mourning Clap Roll",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Twilight Bridge",
         "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 8.300000000000001,
@@ -15835,9 +15835,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Futurepop",
+    "category": "Machine/Bright Pulse",
     "name": "Future Tense Kit",
-    "file": "kits/futurepop-future-tense-kit.mp3",
+    "file": "kits/bright-pulse-future-tense-kit.mp3",
     "about": "A starting point for Futurepop: one of each part, in A minor at 132 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15849,7 +15849,7 @@
       {
         "name": "Synthetic Groove",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Afterimage Sub Line",
@@ -15869,7 +15869,7 @@
       {
         "name": "Afterimage Snare Roll",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Pulse Star Transition",
@@ -15884,9 +15884,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Futurepop",
-    "name": "Futurepop Kit",
-    "file": "kits/futurepop-futurepop-kit.mp3",
+    "category": "Machine/Bright Pulse",
+    "name": "Bright Pulse Kit",
+    "file": "kits/bright-pulse-bright-pulse-kit.mp3",
     "about": "A starting point for Futurepop: one of each part, in A minor at 132 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -15918,7 +15918,7 @@
       {
         "name": "Afterimage Snare Roll",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Starlight Riser",
@@ -15933,7 +15933,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Driving",
+    "category": "Floor/Driving",
     "name": "Gearbox Kit",
     "file": "kits/driving-gearbox-kit.mp3",
     "about": "A starting point for Driving: one of each part, in A minor at 134 BPM",
@@ -15982,7 +15982,7 @@
   },
   {
     "group": "kits",
-    "category": "Ambient/Drone",
+    "category": "Space/Drone",
     "name": "Glacial Kit",
     "file": "kits/drone-glacial-kit.mp3",
     "about": "A starting point for Drone: one of each part, in A minor at 60 BPM",
@@ -16031,7 +16031,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Melodic",
+    "category": "Floor/Melodic",
     "name": "Glacier Kit",
     "file": "kits/melodic-glacier-kit.mp3",
     "about": "A starting point for Melodic: one of each part, in A minor at 122 BPM",
@@ -16080,9 +16080,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Industrial",
+    "category": "Floor/Factory Floor",
     "name": "Grinder Kit",
-    "file": "kits/industrial-grinder-kit.mp3",
+    "file": "kits/factory-floor-grinder-kit.mp3",
     "about": "A starting point for Industrial: one of each part, in A minor at 128 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16129,9 +16129,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Hard",
-    "name": "Hard Techno Kit",
-    "file": "kits/hard-hard-techno-kit.mp3",
+    "category": "Floor/Hard Floor",
+    "name": "Hard Floor Kit",
+    "file": "kits/hard-floor-hard-floor-kit.mp3",
     "about": "A starting point for Hard: one of each part, in A minor at 150 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16178,9 +16178,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Dark electro",
+    "category": "Machine/Dark Circuit",
     "name": "Hex Kit",
-    "file": "kits/dark-electro-hex-kit.mp3",
+    "file": "kits/dark-circuit-hex-kit.mp3",
     "about": "A starting point for Dark electro: one of each part, in A minor at 110 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16192,7 +16192,7 @@
       {
         "name": "Grave Pulse",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Dead Signal Drive Bass",
@@ -16227,9 +16227,9 @@
   },
   {
     "group": "kits",
-    "category": "Synthwave/Darksynth",
+    "category": "Neon/Neon Menace",
     "name": "Highway Ghost Kit",
-    "file": "kits/darksynth-highway-ghost-kit.mp3",
+    "file": "kits/neon-menace-highway-ghost-kit.mp3",
     "about": "A starting point for Darksynth: one of each part, in A minor at 100 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16241,7 +16241,7 @@
       {
         "name": "Laser Grid Groove",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Overdrive Bassline",
@@ -16261,7 +16261,7 @@
       {
         "name": "Laser Grid Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Vice Lift",
@@ -16276,9 +16276,9 @@
   },
   {
     "group": "kits",
-    "category": "Game/Horror",
-    "name": "Horror Game Kit",
-    "file": "kits/horror-horror-game-kit.mp3",
+    "category": "Game/Dread",
+    "name": "Dread Game Kit",
+    "file": "kits/dread-dread-game-kit.mp3",
     "about": "A starting point for Horror: one of each part, in A minor at 80 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16325,9 +16325,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Hypnotic",
-    "name": "Hypnotic Techno Kit",
-    "file": "kits/hypnotic-hypnotic-techno-kit.mp3",
+    "category": "Floor/Hypnotic",
+    "name": "Hypnotic Floor Kit",
+    "file": "kits/hypnotic-hypnotic-floor-kit.mp3",
     "about": "A starting point for Hypnotic: one of each part, in A minor at 130 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16374,9 +16374,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Hypnotic",
-    "name": "Hypnotic Techno Starter Kit",
-    "file": "kits/hypnotic-hypnotic-techno-starter-kit.mp3",
+    "category": "Floor/Hypnotic",
+    "name": "Hypnotic Floor Starter Kit",
+    "file": "kits/hypnotic-hypnotic-floor-starter-kit.mp3",
     "about": "A starting point for Hypnotic: one of each part, in A minor at 128 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16388,7 +16388,7 @@
       {
         "name": "Mantra Loop",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Fog Roller",
@@ -16408,7 +16408,7 @@
       {
         "name": "Loopwise Clap Fill",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Orbit Lift",
@@ -16423,9 +16423,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Industrial rock",
-    "name": "Industrial rock Kit",
-    "file": "kits/industrial-rock-industrial-rock-kit.mp3",
+    "category": "Machine/Iron Riff",
+    "name": "Iron Riff Kit",
+    "file": "kits/iron-riff-iron-riff-kit.mp3",
     "about": "A starting point for Industrial rock: one of each part, in A minor at 120 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16472,9 +16472,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Industrial",
-    "name": "Industrial Techno Kit",
-    "file": "kits/industrial-industrial-techno-kit.mp3",
+    "category": "Floor/Factory Floor",
+    "name": "Factory Floor Kit",
+    "file": "kits/factory-floor-factory-floor-kit.mp3",
     "about": "A starting point for Industrial: one of each part, in A minor at 128 BPM",
     "key": "A minor",
     "bars": 8.0,
@@ -16484,7 +16484,7 @@
     "rounds": 1,
     "parts": [
       {
-        "name": "Industrial Pound",
+        "name": "Factory Pound",
         "role": "Drums",
         "voice": "Basic Drums: Industrial"
       },
@@ -16494,12 +16494,12 @@
         "voice": "Torqwave Synth: Mercury Lead"
       },
       {
-        "name": "Industrial Metal Stab",
+        "name": "Factory Metal Stab",
         "role": "Harmony",
         "voice": "Torqwave Synth: Strobe Stab"
       },
       {
-        "name": "Techno Body Arp",
+        "name": "Machine Drive Arp",
         "role": "Arps",
         "voice": "Torqwave Synth: Wire Pluck"
       },
@@ -16521,9 +16521,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Industrial",
-    "name": "Industrial Techno Starter Kit",
-    "file": "kits/industrial-industrial-techno-starter-kit.mp3",
+    "category": "Floor/Factory Floor",
+    "name": "Factory Floor Starter Kit",
+    "file": "kits/factory-floor-factory-floor-starter-kit.mp3",
     "about": "A starting point for Industrial: one of each part, in A minor at 130 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16570,9 +16570,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Electro-industrial",
+    "category": "Machine/Broken Circuit",
     "name": "Interference Kit",
-    "file": "kits/electro-industrial-interference-kit.mp3",
+    "file": "kits/broken-circuit-interference-kit.mp3",
     "about": "A starting point for Electro-industrial: one of each part, in A minor at 110 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16604,7 +16604,7 @@
       {
         "name": "Circuit Clap Stutter",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Cold Wire Impact",
@@ -16619,10 +16619,10 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/EBM",
+    "category": "Machine/Machine Pulse",
     "name": "Iron Curtain Kit",
-    "file": "kits/ebm-iron-curtain-kit.mp3",
-    "about": "A starting point for EBM: one of each part, in A minor at 120 BPM",
+    "file": "kits/machine-pulse-iron-curtain-kit.mp3",
+    "about": "A starting point for Machine Pulse: one of each part, in A minor at 120 BPM",
     "key": "A minor",
     "bars": 4.0,
     "energy": 0,
@@ -16653,12 +16653,12 @@
       {
         "name": "Drill Tom Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Body Slam",
         "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 8.0,
@@ -16668,9 +16668,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Techno-body",
+    "category": "Machine/Machine Drive",
     "name": "Ironworks Kit",
-    "file": "kits/techno-body-ironworks-kit.mp3",
+    "file": "kits/machine-drive-ironworks-kit.mp3",
     "about": "A starting point for Techno-body: one of each part, in A minor at 126 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16717,9 +16717,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Coldwave",
+    "category": "Machine/Cold Glow",
     "name": "Isolation Kit",
-    "file": "kits/coldwave-isolation-kit.mp3",
+    "file": "kits/cold-glow-isolation-kit.mp3",
     "about": "A starting point for Coldwave: one of each part, in A minor at 110 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16731,7 +16731,7 @@
       {
         "name": "Pale Drive",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Grey Sky Pressure",
@@ -16751,7 +16751,7 @@
       {
         "name": "Frost Clap Roll",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Frost Build",
@@ -16766,9 +16766,9 @@
   },
   {
     "group": "kits",
-    "category": "Game/Chiptune",
+    "category": "Game/8-bit",
     "name": "Joypad Kit",
-    "file": "kits/chiptune-joypad-kit.mp3",
+    "file": "kits/8-bit-joypad-kit.mp3",
     "about": "A starting point for Chiptune: one of each part, in A minor at 140 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16815,9 +16815,9 @@
   },
   {
     "group": "kits",
-    "category": "Drum and Bass/Liquid",
-    "name": "Liquid Kit",
-    "file": "kits/liquid-liquid-kit.mp3",
+    "category": "Fast/Fast Flow",
+    "name": "Fast Flow Kit",
+    "file": "kits/fast-flow-fast-flow-kit.mp3",
     "about": "A starting point for Liquid: one of each part, in A minor at 172 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -16878,7 +16878,7 @@
       {
         "name": "Options Beat",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Loading Sub Line",
@@ -16913,7 +16913,7 @@
   },
   {
     "group": "kits",
-    "category": "Ambient/Drone",
+    "category": "Space/Drone",
     "name": "Long Shadow Kit",
     "file": "kits/drone-long-shadow-kit.mp3",
     "about": "A starting point for Drone: one of each part, in A minor at 60 BPM",
@@ -16962,7 +16962,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Peak-time",
+    "category": "Floor/Peak-time",
     "name": "Mainroom Kit",
     "file": "kits/peak-time-mainroom-kit.mp3",
     "about": "A starting point for Peak-time: one of each part, in A minor at 138 BPM",
@@ -17011,9 +17011,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Melodic",
-    "name": "Melodic Techno Kit",
-    "file": "kits/melodic-melodic-techno-kit.mp3",
+    "category": "Floor/Melodic",
+    "name": "Melodic Floor Kit",
+    "file": "kits/melodic-melodic-floor-kit.mp3",
     "about": "A starting point for Melodic: one of each part, in A minor at 122 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17074,7 +17074,7 @@
       {
         "name": "Options Beat",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Hub Sub Pulse",
@@ -17109,9 +17109,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Minimal",
-    "name": "Microdub Kit",
-    "file": "kits/minimal-microdub-kit.mp3",
+    "category": "Floor/Minimal",
+    "name": "Micro Echo Kit",
+    "file": "kits/minimal-micro-echo-kit.mp3",
     "about": "A starting point for Minimal: one of each part, in A minor at 124 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17121,7 +17121,7 @@
     "rounds": 1,
     "parts": [
       {
-        "name": "Microdub Stomp",
+        "name": "Micro Echo Stomp",
         "role": "Drums",
         "voice": "Basic Drums: Standard"
       },
@@ -17136,19 +17136,19 @@
         "voice": "Torqwave Synth: Pump Chord"
       },
       {
-        "name": "Microdub Arp",
+        "name": "Micro Echo Arp",
         "role": "Arps",
         "voice": "Torqwave Synth: Rubber Pluck"
       },
       {
         "name": "Sparse Room Tom Fall",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Ghost Note Riser",
         "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.7,
@@ -17158,9 +17158,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Dark",
+    "category": "Floor/Dark Floor",
     "name": "Midnight Kit",
-    "file": "kits/dark-midnight-kit.mp3",
+    "file": "kits/dark-floor-midnight-kit.mp3",
     "about": "A starting point for Dark: one of each part, in A minor at 130 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17172,7 +17172,7 @@
       {
         "name": "Black Stomp",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Undertow Sub",
@@ -17197,7 +17197,7 @@
       {
         "name": "Void Bridge",
         "role": "SFX",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       }
     ],
     "seconds": 7.4,
@@ -17207,9 +17207,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Minimal",
-    "name": "Minimal Techno Kit",
-    "file": "kits/minimal-minimal-techno-kit.mp3",
+    "category": "Floor/Minimal",
+    "name": "Minimal Floor Kit",
+    "file": "kits/minimal-minimal-floor-kit.mp3",
     "about": "A starting point for Minimal: one of each part, in A minor at 124 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17241,12 +17241,12 @@
       {
         "name": "Sparse Room Tom Fall",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Ghost Note Riser",
         "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.7,
@@ -17256,9 +17256,9 @@
   },
   {
     "group": "kits",
-    "category": "Drum and Bass/Liquid",
+    "category": "Fast/Fast Flow",
     "name": "Moonlit Kit",
-    "file": "kits/liquid-moonlit-kit.mp3",
+    "file": "kits/fast-flow-moonlit-kit.mp3",
     "about": "A starting point for Liquid: one of each part, in A minor at 172 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17305,9 +17305,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Darkwave",
+    "category": "Machine/Night Wave",
     "name": "Mourning Kit",
-    "file": "kits/darkwave-mourning-kit.mp3",
+    "file": "kits/night-wave-mourning-kit.mp3",
     "about": "A starting point for Darkwave: one of each part, in A minor at 116 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17319,7 +17319,7 @@
       {
         "name": "Twilight Pulse",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Nocturne Bass",
@@ -17339,7 +17339,7 @@
       {
         "name": "Mourning Clap Roll",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Mourning Build",
@@ -17354,9 +17354,9 @@
   },
   {
     "group": "kits",
-    "category": "Synthwave/Darksynth",
+    "category": "Neon/Neon Menace",
     "name": "Neon Blood Kit",
-    "file": "kits/darksynth-neon-blood-kit.mp3",
+    "file": "kits/neon-menace-neon-blood-kit.mp3",
     "about": "A starting point for Darksynth: one of each part, in A minor at 110 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17368,7 +17368,7 @@
       {
         "name": "Overdrive Machine",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Chrome Night Sub Pulse",
@@ -17388,7 +17388,7 @@
       {
         "name": "Laser Grid Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Chrome Night Transition",
@@ -17403,9 +17403,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Futurepop",
+    "category": "Machine/Bright Pulse",
     "name": "Neon Kit",
-    "file": "kits/futurepop-neon-kit.mp3",
+    "file": "kits/bright-pulse-neon-kit.mp3",
     "about": "A starting point for Futurepop: one of each part, in A minor at 128 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17417,7 +17417,7 @@
       {
         "name": "Future Tense Engine",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Pulse Star Throb",
@@ -17437,7 +17437,7 @@
       {
         "name": "Afterimage Snare Roll",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Starlight Riser",
@@ -17452,9 +17452,9 @@
   },
   {
     "group": "kits",
-    "category": "Drum and Bass/Neurofunk",
-    "name": "Neurofunk Kit",
-    "file": "kits/neurofunk-neurofunk-kit.mp3",
+    "category": "Fast/Fast Grind",
+    "name": "Fast Grind Kit",
+    "file": "kits/fast-grind-fast-grind-kit.mp3",
     "about": "A starting point for Neurofunk: one of each part, in A minor at 174 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17501,10 +17501,10 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Synth-EBM",
+    "category": "Machine/Night Pulse",
     "name": "Night Shift Kit",
-    "file": "kits/synth-ebm-night-shift-kit.mp3",
-    "about": "A starting point for Synth-EBM: one of each part, in A minor at 120 BPM",
+    "file": "kits/night-pulse-night-shift-kit.mp3",
+    "about": "A starting point for Night Pulse: one of each part, in A minor at 120 BPM",
     "key": "A minor",
     "bars": 4.0,
     "energy": 0,
@@ -17515,7 +17515,7 @@
       {
         "name": "Velvet Beat",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Night Shift Sub",
@@ -17535,7 +17535,7 @@
       {
         "name": "Machine Love Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Mirror Bridge",
@@ -17550,9 +17550,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Dark electro",
+    "category": "Machine/Dark Circuit",
     "name": "Nightmare Kit",
-    "file": "kits/dark-electro-nightmare-kit.mp3",
+    "file": "kits/dark-circuit-nightmare-kit.mp3",
     "about": "A starting point for Dark electro: one of each part, in A minor at 110 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17564,7 +17564,7 @@
       {
         "name": "Grave Pound",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Ashes Sub Pulse",
@@ -17648,10 +17648,10 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/EBM",
+    "category": "Machine/Machine Pulse",
     "name": "Parade Kit",
-    "file": "kits/ebm-parade-kit.mp3",
-    "about": "A starting point for EBM: one of each part, in A minor at 124 BPM",
+    "file": "kits/machine-pulse-parade-kit.mp3",
+    "about": "A starting point for Machine Pulse: one of each part, in A minor at 124 BPM",
     "key": "A minor",
     "bars": 2.0,
     "energy": 0,
@@ -17684,12 +17684,12 @@
       {
         "name": "Drill Tom Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Muscle Transition",
         "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.7,
@@ -17713,7 +17713,7 @@
       {
         "name": "Hub Stomp",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Title Screen Bassline",
@@ -17748,9 +17748,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Peak-time",
-    "name": "Peak-time Techno Kit",
-    "file": "kits/peak-time-peak-time-techno-kit.mp3",
+    "category": "Floor/Peak-time",
+    "name": "Peak-time Floor Kit",
+    "file": "kits/peak-time-peak-time-floor-kit.mp3",
     "about": "A starting point for Peak-time: one of each part, in A minor at 134 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17797,9 +17797,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Peak-time",
-    "name": "Peak-time Techno Starter Kit",
-    "file": "kits/peak-time-peak-time-techno-starter-kit.mp3",
+    "category": "Floor/Peak-time",
+    "name": "Peak-time Floor Starter Kit",
+    "file": "kits/peak-time-peak-time-floor-starter-kit.mp3",
     "about": "A starting point for Peak-time: one of each part, in A minor at 136 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17846,7 +17846,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Hypnotic",
+    "category": "Floor/Hypnotic",
     "name": "Pendulum Kit",
     "file": "kits/hypnotic-pendulum-kit.mp3",
     "about": "A starting point for Hypnotic: one of each part, in A minor at 130 BPM",
@@ -17880,7 +17880,7 @@
       {
         "name": "Loopwise Clap Fill",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Loopwise Bridge",
@@ -17895,9 +17895,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Percussive",
-    "name": "Percussive Techno Kit",
-    "file": "kits/percussive-percussive-techno-kit.mp3",
+    "category": "Floor/Percussive",
+    "name": "Percussive Floor Kit",
+    "file": "kits/percussive-percussive-floor-kit.mp3",
     "about": "A starting point for Percussive: one of each part, in A minor at 138 BPM",
     "key": "A minor",
     "bars": 2.0,
@@ -17946,9 +17946,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Percussive",
-    "name": "Percussive Techno Starter Kit",
-    "file": "kits/percussive-percussive-techno-starter-kit.mp3",
+    "category": "Floor/Percussive",
+    "name": "Percussive Floor Starter Kit",
+    "file": "kits/percussive-percussive-floor-starter-kit.mp3",
     "about": "A starting point for Percussive: one of each part, in A minor at 134 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -17995,7 +17995,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Driving",
+    "category": "Floor/Driving",
     "name": "Piston Kit",
     "file": "kits/driving-piston-kit.mp3",
     "about": "A starting point for Driving: one of each part, in A minor at 130 BPM",
@@ -18044,9 +18044,9 @@
   },
   {
     "group": "kits",
-    "category": "Trance/Psytrance",
-    "name": "Psytrance Kit",
-    "file": "kits/psytrance-psytrance-kit.mp3",
+    "category": "Spiral/Rolling Spiral",
+    "name": "Rolling Spiral Kit",
+    "file": "kits/rolling-spiral-rolling-spiral-kit.mp3",
     "about": "A starting point for Psytrance: one of each part, in A minor at 142 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18078,7 +18078,7 @@
       {
         "name": "Shaman Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Third Eye Riser",
@@ -18093,9 +18093,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Dub",
+    "category": "Floor/Echo Chamber",
     "name": "Reverb Hall Kit",
-    "file": "kits/dub-reverb-hall-kit.mp3",
+    "file": "kits/echo-chamber-reverb-hall-kit.mp3",
     "about": "A starting point for Dub: one of each part, in A minor at 122 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18107,7 +18107,7 @@
       {
         "name": "Deep Water Machine",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Undercurrent Sub Pulse",
@@ -18127,7 +18127,7 @@
       {
         "name": "Spring Room Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Reverb Hall Transition",
@@ -18142,9 +18142,9 @@
   },
   {
     "group": "kits",
-    "category": "Breakbeat/Breaks",
+    "category": "Broken/Broken Beat",
     "name": "Rough Cut Kit",
-    "file": "kits/breaks-rough-cut-kit.mp3",
+    "file": "kits/broken-beat-rough-cut-kit.mp3",
     "about": "A starting point for Breaks: one of each part, in A minor at 132 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18191,9 +18191,9 @@
   },
   {
     "group": "kits",
-    "category": "Ambient/Dark ambient",
+    "category": "Space/Dark Space",
     "name": "Silence Kit",
-    "file": "kits/dark-ambient-silence-kit.mp3",
+    "file": "kits/dark-space-silence-kit.mp3",
     "about": "A starting point for Dark ambient: one of each part, in A minor at 70 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18289,9 +18289,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Industrial rock",
+    "category": "Machine/Iron Riff",
     "name": "Sledge Kit",
-    "file": "kits/industrial-rock-sledge-kit.mp3",
+    "file": "kits/iron-riff-sledge-kit.mp3",
     "about": "A starting point for Industrial rock: one of each part, in A minor at 116 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18338,9 +18338,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Industrial",
+    "category": "Floor/Factory Floor",
     "name": "Smokestack Kit",
-    "file": "kits/industrial-smokestack-kit.mp3",
+    "file": "kits/factory-floor-smokestack-kit.mp3",
     "about": "A starting point for Industrial: one of each part, in A minor at 132 BPM",
     "key": "A minor",
     "bars": 2.0,
@@ -18354,7 +18354,7 @@
       {
         "name": "Rivet Groove",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Slag Sub Line",
@@ -18389,9 +18389,9 @@
   },
   {
     "group": "kits",
-    "category": "House/Deep house",
+    "category": "Swing/Deep Swing",
     "name": "Soulful Kit",
-    "file": "kits/deep-house-soulful-kit.mp3",
+    "file": "kits/deep-swing-soulful-kit.mp3",
     "about": "A starting point for Deep house: one of each part, in A minor at 120 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18438,9 +18438,9 @@
   },
   {
     "group": "kits",
-    "category": "Drum and Bass/Neurofunk",
+    "category": "Fast/Fast Grind",
     "name": "Synapse Kit",
-    "file": "kits/neurofunk-synapse-kit.mp3",
+    "file": "kits/fast-grind-synapse-kit.mp3",
     "about": "A starting point for Neurofunk: one of each part, in A minor at 174 BPM",
     "key": "A minor",
     "bars": 2.0,
@@ -18489,10 +18489,10 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Synth-EBM",
-    "name": "Synth-EBM Kit",
-    "file": "kits/synth-ebm-synth-ebm-kit.mp3",
-    "about": "A starting point for Synth-EBM: one of each part, in A minor at 126 BPM",
+    "category": "Machine/Night Pulse",
+    "name": "Night Pulse Kit",
+    "file": "kits/night-pulse-night-pulse-kit.mp3",
+    "about": "A starting point for Night Pulse: one of each part, in A minor at 126 BPM",
     "key": "A minor",
     "bars": 4.0,
     "energy": 0,
@@ -18523,7 +18523,7 @@
       {
         "name": "Machine Love Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Machine Love Riser",
@@ -18538,10 +18538,10 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Synth-EBM",
+    "category": "Machine/Night Pulse",
     "name": "Synthetic Tears Kit",
-    "file": "kits/synth-ebm-synthetic-tears-kit.mp3",
-    "about": "A starting point for Synth-EBM: one of each part, in A minor at 120 BPM",
+    "file": "kits/night-pulse-synthetic-tears-kit.mp3",
+    "about": "A starting point for Night Pulse: one of each part, in A minor at 120 BPM",
     "key": "A minor",
     "bars": 4.0,
     "energy": 0,
@@ -18572,7 +18572,7 @@
       {
         "name": "Machine Love Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Machine Love Riser",
@@ -18587,9 +18587,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Techno-body",
-    "name": "Techno-body Kit",
-    "file": "kits/techno-body-techno-body-kit.mp3",
+    "category": "Machine/Machine Drive",
+    "name": "Machine Drive Kit",
+    "file": "kits/machine-drive-machine-drive-kit.mp3",
     "about": "A starting point for Techno-body: one of each part, in A minor at 132 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18636,9 +18636,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Aggrotech",
+    "category": "Machine/Overdrive",
     "name": "Terror Kit",
-    "file": "kits/aggrotech-terror-kit.mp3",
+    "file": "kits/overdrive-terror-kit.mp3",
     "about": "A starting point for Aggrotech: one of each part, in A minor at 145 BPM",
     "key": "A minor",
     "bars": 2.0,
@@ -18687,9 +18687,9 @@
   },
   {
     "group": "kits",
-    "category": "Trance/Psytrance",
+    "category": "Spiral/Rolling Spiral",
     "name": "Third Eye Kit",
-    "file": "kits/psytrance-third-eye-kit.mp3",
+    "file": "kits/rolling-spiral-third-eye-kit.mp3",
     "about": "A starting point for Psytrance: one of each part, in A minor at 140 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18704,7 +18704,7 @@
         "voice": "Basic Drums: Industrial"
       },
       {
-        "name": "Goa Roller",
+        "name": "Lotus Roller",
         "role": "Bass",
         "voice": "Torqwave Synth: Pressure Bass"
       },
@@ -18721,7 +18721,7 @@
       {
         "name": "Shaman Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Third Eye Riser",
@@ -18736,9 +18736,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Techno-body",
+    "category": "Machine/Machine Drive",
     "name": "Torque Kit",
-    "file": "kits/techno-body-torque-kit.mp3",
+    "file": "kits/machine-drive-torque-kit.mp3",
     "about": "A starting point for Techno-body: one of each part, in A minor at 128 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18750,12 +18750,12 @@
       {
         "name": "Chain Drive Beat",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Assembly Throb",
         "role": "Bass",
-        "voice": "Torqwave Synth: Body Music"
+        "voice": "Torqwave Synth: Iron Motion"
       },
       {
         "name": "Assembly Keys",
@@ -18785,7 +18785,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Percussive",
+    "category": "Floor/Percussive",
     "name": "Tribal Kit",
     "file": "kits/percussive-tribal-kit.mp3",
     "about": "A starting point for Percussive: one of each part, in A minor at 134 BPM",
@@ -18834,9 +18834,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Dub",
+    "category": "Floor/Echo Chamber",
     "name": "Undercurrent Kit",
-    "file": "kits/dub-undercurrent-kit.mp3",
+    "file": "kits/echo-chamber-undercurrent-kit.mp3",
     "about": "A starting point for Dub: one of each part, in A minor at 122 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18868,7 +18868,7 @@
       {
         "name": "Spring Room Roll Fill",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       },
       {
         "name": "Deep Water Build",
@@ -18883,9 +18883,9 @@
   },
   {
     "group": "kits",
-    "category": "Ambient/Dark ambient",
+    "category": "Space/Dark Space",
     "name": "Vault Kit",
-    "file": "kits/dark-ambient-vault-kit.mp3",
+    "file": "kits/dark-space-vault-kit.mp3",
     "about": "A starting point for Dark ambient: one of each part, in A minor at 90 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18932,9 +18932,9 @@
   },
   {
     "group": "kits",
-    "category": "House/Deep house",
+    "category": "Swing/Deep Swing",
     "name": "Velvet Room Kit",
-    "file": "kits/deep-house-velvet-room-kit.mp3",
+    "file": "kits/deep-swing-velvet-room-kit.mp3",
     "about": "A starting point for Deep house: one of each part, in A minor at 120 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -18995,7 +18995,7 @@
       {
         "name": "Valley Drive",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Caverns Sub Pulse",
@@ -19030,9 +19030,9 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Hard",
+    "category": "Floor/Hard Floor",
     "name": "Warhead Kit",
-    "file": "kits/hard-warhead-kit.mp3",
+    "file": "kits/hard-floor-warhead-kit.mp3",
     "about": "A starting point for Hard: one of each part, in A minor at 145 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -19079,9 +19079,9 @@
   },
   {
     "group": "kits",
-    "category": "Drum and Bass/Neurofunk",
+    "category": "Fast/Fast Grind",
     "name": "Wired Kit",
-    "file": "kits/neurofunk-wired-kit.mp3",
+    "file": "kits/fast-grind-wired-kit.mp3",
     "about": "A starting point for Neurofunk: one of each part, in A minor at 174 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -19128,9 +19128,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Electro-industrial",
+    "category": "Machine/Broken Circuit",
     "name": "Wiretap Kit",
-    "file": "kits/electro-industrial-wiretap-kit.mp3",
+    "file": "kits/broken-circuit-wiretap-kit.mp3",
     "about": "A starting point for Electro-industrial: one of each part, in A minor at 118 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -19142,7 +19142,7 @@
       {
         "name": "Circuit Stomp",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Transmission Sub Line",
@@ -19162,7 +19162,7 @@
       {
         "name": "Circuit Clap Stutter",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       },
       {
         "name": "Sector Bridge",
@@ -19177,7 +19177,7 @@
   },
   {
     "group": "kits",
-    "category": "Techno/Percussive",
+    "category": "Floor/Percussive",
     "name": "Woodblock Kit",
     "file": "kits/percussive-woodblock-kit.mp3",
     "about": "A starting point for Percussive: one of each part, in A minor at 132 BPM",
@@ -19228,9 +19228,9 @@
   },
   {
     "group": "kits",
-    "category": "Industrial/Industrial rock",
+    "category": "Machine/Iron Riff",
     "name": "Wrecking Ball Kit",
-    "file": "kits/industrial-rock-wrecking-ball-kit.mp3",
+    "file": "kits/iron-riff-wrecking-ball-kit.mp3",
     "about": "A starting point for Industrial rock: one of each part, in A minor at 120 BPM",
     "key": "A minor",
     "bars": 4.0,
@@ -19277,9 +19277,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Dark",
+    "category": "Floor/Dark Floor",
     "name": "Concrete Drive",
-    "file": "sequences/dark-concrete-drive.mp3",
+    "file": "sequences/dark-floor-concrete-drive.mp3",
     "about": "Four to the floor, a clap layered with a snare on 2 and 4, a ride on the offbeats, metal struck in threes and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -19309,9 +19309,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Dark",
+    "category": "Floor/Dark Floor",
     "name": "Peak Rumble Bass",
-    "file": "sequences/dark-peak-rumble-bass.mp3",
+    "file": "sequences/dark-floor-peak-rumble-bass.mp3",
     "about": "Offbeat 16ths on the root with an octave accent at the end of each half bar",
     "key": "A minor",
     "bars": 2.0,
@@ -19344,9 +19344,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Dark",
+    "category": "Floor/Dark Floor",
     "name": "Phrygian Stab",
-    "file": "sequences/dark-phrygian-stab.mp3",
+    "file": "sequences/dark-floor-phrygian-stab.mp3",
     "about": "A minor stabs leaning on B flat at the end of the bar",
     "key": "A minor",
     "bars": 1.0,
@@ -19379,9 +19379,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Dark",
+    "category": "Floor/Dark Floor",
     "name": "Smoke Bloom",
-    "file": "sequences/dark-smoke-bloom.mp3",
+    "file": "sequences/dark-floor-smoke-bloom.mp3",
     "about": "A minor seventh, G seventh, A minor seventh, F major seventh, over an A held underneath all four, the filter opening the whole way",
     "key": "A minor",
     "bars": 4.0,
@@ -19411,9 +19411,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Dark",
+    "category": "Floor/Dark Floor",
     "name": "Black Answer",
-    "file": "sequences/dark-black-answer.mp3",
+    "file": "sequences/dark-floor-black-answer.mp3",
     "about": "A dotted phrase stated twice, the second time ending another way in A Phrygian",
     "key": "A minor",
     "bars": 4.0,
@@ -19443,15 +19443,15 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Dark",
+    "category": "Floor/Dark Floor",
     "name": "Void Bridge",
-    "file": "sequences/dark-void-bridge.mp3",
+    "file": "sequences/dark-floor-void-bridge.mp3",
     "about": "The kick drops out after beat 3 of the first bar, a low tom answers in the gap and rolls into the next",
     "key": "",
     "bars": 2.0,
     "energy": 4,
     "role": "SFX > Transitions",
-    "voice": "Basic Drums: Dark Techno",
+    "voice": "Basic Drums: Low Rumble",
     "notesPerBar": 12.0,
     "pitches": 3,
     "of": 5,
@@ -19465,7 +19465,7 @@
       {
         "name": "Void Bridge",
         "role": "SFX",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       }
     ],
     "seconds": 3.8,
@@ -19475,9 +19475,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Industrial",
+    "category": "Floor/Factory Floor",
     "name": "Anvil Beat",
-    "file": "sequences/industrial-anvil-beat.mp3",
+    "file": "sequences/factory-floor-anvil-beat.mp3",
     "about": "Four to the floor with a rolling rumble between the kicks, a snare on 2 and 4, a ride in 8ths, a syncopated rimshot and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -19507,9 +19507,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Industrial",
-    "name": "Industrial Metal Stab",
-    "file": "sequences/industrial-industrial-metal-stab.mp3",
+    "category": "Floor/Factory Floor",
+    "name": "Factory Metal Stab",
+    "file": "sequences/factory-floor-factory-metal-stab.mp3",
     "about": "A cluster of A, B flat and E hit like metal",
     "key": "A minor",
     "bars": 1.0,
@@ -19529,7 +19529,7 @@
     "rounds": 3,
     "parts": [
       {
-        "name": "Industrial Metal Stab",
+        "name": "Factory Metal Stab",
         "role": "Harmony",
         "voice": "Torqwave Synth: Strobe Stab"
       }
@@ -19541,9 +19541,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Industrial",
+    "category": "Floor/Factory Floor",
     "name": "Phrygian Drone",
-    "file": "sequences/industrial-phrygian-drone.mp3",
+    "file": "sequences/factory-floor-phrygian-drone.mp3",
     "about": "A1 with B flat 2 grinding above it",
     "key": "A minor",
     "bars": 8.0,
@@ -19573,9 +19573,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Industrial",
+    "category": "Floor/Factory Floor",
     "name": "Grinder Lead",
-    "file": "sequences/industrial-grinder-lead.mp3",
+    "file": "sequences/factory-floor-grinder-lead.mp3",
     "about": "A offbeat phrase stated twice, the second time ending another way in A minor",
     "key": "A minor",
     "bars": 4.0,
@@ -19606,9 +19606,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Industrial",
+    "category": "Floor/Factory Floor",
     "name": "Slag Build",
-    "file": "sequences/industrial-slag-build.mp3",
+    "file": "sequences/factory-floor-slag-build.mp3",
     "about": "Metal struck in quarters then 8ths over a kick on every beat, snare 16ths through the last half bar",
     "key": "",
     "bars": 2.0,
@@ -19638,9 +19638,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Hard",
+    "category": "Floor/Hard Floor",
     "name": "Jackhammer Stomp",
-    "file": "sequences/hard-jackhammer-stomp.mp3",
+    "file": "sequences/hard-floor-jackhammer-stomp.mp3",
     "about": "Four to the floor with a skipped kick before the one, a clap layered with a snare on 2 and 4, open hats on the offbeats and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -19670,9 +19670,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Hard",
+    "category": "Floor/Hard Floor",
     "name": "Hard Offbeat Drive",
-    "file": "sequences/hard-hard-offbeat-drive.mp3",
+    "file": "sequences/hard-floor-hard-offbeat-drive.mp3",
     "about": "Fast offbeat 16th pairs on the root",
     "key": "A minor",
     "bars": 1.0,
@@ -19705,9 +19705,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Hard",
+    "category": "Floor/Hard Floor",
     "name": "Blast Wall Stab",
-    "file": "sequences/hard-blast-wall-stab.mp3",
+    "file": "sequences/hard-floor-blast-wall-stab.mp3",
     "about": "A bare fifth, A and E on the one, then gathering through the back half of the bar",
     "key": "A minor",
     "bars": 1.0,
@@ -19739,9 +19739,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Hard",
+    "category": "Floor/Hard Floor",
     "name": "Warhead Low Drone",
-    "file": "sequences/hard-warhead-low-drone.mp3",
+    "file": "sequences/hard-floor-warhead-low-drone.mp3",
     "about": "A and E stacked through two octaves, for 8 bars, the filter opening slowly",
     "key": "A minor",
     "bars": 8.0,
@@ -19771,9 +19771,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Hard",
+    "category": "Floor/Hard Floor",
     "name": "Hard Gate Arp",
-    "file": "sequences/hard-hard-gate-arp.mp3",
+    "file": "sequences/hard-floor-hard-gate-arp.mp3",
     "about": "A hard 16th gate on the root with octave accents",
     "key": "A minor",
     "bars": 1.0,
@@ -19805,9 +19805,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Hard",
+    "category": "Floor/Hard Floor",
     "name": "Blast Wall Hook",
-    "file": "sequences/hard-blast-wall-hook.mp3",
+    "file": "sequences/hard-floor-blast-wall-hook.mp3",
     "about": "A held phrase stated twice, the second time ending another way in A Phrygian",
     "key": "A minor",
     "bars": 4.0,
@@ -19837,9 +19837,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Hard",
+    "category": "Floor/Hard Floor",
     "name": "Blast Wall Lift",
-    "file": "sequences/hard-blast-wall-lift.mp3",
+    "file": "sequences/hard-floor-blast-wall-lift.mp3",
     "about": "The kick in quarters for two bars, 8ths in bar 3 with a ride between, 16ths in bar 4 with a clap on every beat",
     "key": "",
     "bars": 4.0,
@@ -19869,9 +19869,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Acid",
+    "category": "Floor/Squelch",
     "name": "Bleep Machine",
-    "file": "sequences/acid-bleep-machine.mp3",
+    "file": "sequences/squelch-bleep-machine.mp3",
     "about": "Four to the floor, a clap layered with a snare on 2 and 4, 16th hats with the offbeat lifted, a cowbell on the and of 2 and 4 and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -19901,9 +19901,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Acid",
-    "name": "Acid Slide Rider",
-    "file": "sequences/acid-acid-slide-rider.mp3",
+    "category": "Floor/Squelch",
+    "name": "Squelch Slide Rider",
+    "file": "sequences/squelch-squelch-slide-rider.mp3",
     "about": "A two-bar 303 line with longer slides and the answer an octave up",
     "key": "A minor",
     "bars": 2.0,
@@ -19923,7 +19923,7 @@
     "rounds": 2,
     "parts": [
       {
-        "name": "Acid Slide Rider",
+        "name": "Squelch Slide Rider",
         "role": "Bass",
         "voice": "Torqwave Synth: Acid Scream"
       }
@@ -19935,9 +19935,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Acid",
+    "category": "Floor/Squelch",
     "name": "Slide Stabs",
-    "file": "sequences/acid-slide-stabs.mp3",
+    "file": "sequences/squelch-slide-stabs.mp3",
     "about": "A bare fifth, A and E a dotted pair on 1 and again on 3",
     "key": "A minor",
     "bars": 1.0,
@@ -19969,9 +19969,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Acid",
-    "name": "Acid Arp",
-    "file": "sequences/acid-acid-arp.mp3",
+    "category": "Floor/Squelch",
+    "name": "Squelch Arp",
+    "file": "sequences/squelch-squelch-arp.mp3",
     "about": "An arp with 303 accents and slides",
     "key": "A minor",
     "bars": 1.0,
@@ -19991,7 +19991,7 @@
     "rounds": 3,
     "parts": [
       {
-        "name": "Acid Arp",
+        "name": "Squelch Arp",
         "role": "Arps",
         "voice": "Torqwave Synth: Basalt Sting"
       }
@@ -20003,9 +20003,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Acid",
+    "category": "Floor/Squelch",
     "name": "Acidic Theme",
-    "file": "sequences/acid-acidic-theme.mp3",
+    "file": "sequences/squelch-acidic-theme.mp3",
     "about": "A long phrase stated twice, the second time ending another way in A minor",
     "key": "A minor",
     "bars": 4.0,
@@ -20035,9 +20035,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Acid",
+    "category": "Floor/Squelch",
     "name": "Slide Build",
-    "file": "sequences/acid-slide-build.mp3",
+    "file": "sequences/squelch-slide-build.mp3",
     "about": "16ths on a low A, the octave above breaking in more and more often, a slide into every fourth beat, the resonant filter opening",
     "key": "A minor",
     "bars": 4.0,
@@ -20068,9 +20068,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/EBM",
+    "category": "Machine/Machine Pulse",
     "name": "Parade Drive",
-    "file": "sequences/ebm-parade-drive.mp3",
+    "file": "sequences/machine-pulse-parade-drive.mp3",
     "about": "Four to the floor, a clap on 2 and 4, flat machine 16th hats, a cowbell on the and of 2 and 4 and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -20100,9 +20100,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/EBM",
-    "name": "Belgian Body Bass",
-    "file": "sequences/ebm-belgian-body-bass.mp3",
+    "category": "Machine/Machine Pulse",
+    "name": "Iron Body Bass",
+    "file": "sequences/machine-pulse-iron-body-bass.mp3",
     "about": "16ths in the kick's gaps with the jump to the octave, moving A to F to G",
     "key": "A minor",
     "bars": 4.0,
@@ -20120,7 +20120,7 @@
     "rounds": 1,
     "parts": [
       {
-        "name": "Belgian Body Bass",
+        "name": "Iron Body Bass",
         "role": "Bass",
         "voice": "Torqwave Synth: Abandoned Pump"
       }
@@ -20133,9 +20133,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/EBM",
+    "category": "Machine/Machine Pulse",
     "name": "Alarm Stab Tritone",
-    "file": "sequences/ebm-alarm-stab-tritone.mp3",
+    "file": "sequences/machine-pulse-alarm-stab-tritone.mp3",
     "about": "A and E flat together: the alarm interval, struck on the beat",
     "key": "A minor",
     "bars": 1.0,
@@ -20167,9 +20167,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/EBM",
+    "category": "Machine/Machine Pulse",
     "name": "Tension Drone",
-    "file": "sequences/ebm-tension-drone.mp3",
+    "file": "sequences/machine-pulse-tension-drone.mp3",
     "about": "A and E flat a tritone apart, held under a breakdown",
     "key": "A minor",
     "bars": 4.0,
@@ -20199,9 +20199,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/EBM",
-    "name": "EBM Sequence Arp",
-    "file": "sequences/ebm-ebm-sequence-arp.mp3",
+    "category": "Machine/Machine Pulse",
+    "name": "Machine Pulse Arp",
+    "file": "sequences/machine-pulse-machine-pulse-arp.mp3",
     "about": "16ths on A with octave jumps, F in bar 3 and G in bar 4",
     "key": "A minor",
     "bars": 4.0,
@@ -20219,7 +20219,7 @@
     "rounds": 1,
     "parts": [
       {
-        "name": "EBM Sequence Arp",
+        "name": "Machine Pulse Arp",
         "role": "Arps",
         "voice": "Torqwave Synth: Pulse Bunker"
       }
@@ -20231,9 +20231,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/EBM",
+    "category": "Machine/Machine Pulse",
     "name": "Alarm Line",
-    "file": "sequences/ebm-alarm-line.mp3",
+    "file": "sequences/machine-pulse-alarm-line.mp3",
     "about": "A and B flat a semitone apart, alternating in 8ths like an alarm",
     "key": "A minor",
     "bars": 1.0,
@@ -20265,15 +20265,15 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/EBM",
+    "category": "Machine/Machine Pulse",
     "name": "Muscle Transition",
-    "file": "sequences/ebm-muscle-transition.mp3",
+    "file": "sequences/machine-pulse-muscle-transition.mp3",
     "about": "A gated snare in a dotted figure stated twice, a kick under each start, two high toms into the bar",
     "key": "",
     "bars": 1.0,
     "energy": 4,
     "role": "SFX > Transitions",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 10.0,
     "pitches": 3,
     "of": 6,
@@ -20287,7 +20287,7 @@
       {
         "name": "Muscle Transition",
         "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 1.9,
@@ -20297,15 +20297,15 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Electro-industrial",
+    "category": "Machine/Broken Circuit",
     "name": "Static Pound",
-    "file": "sequences/electro-industrial-static-pound.mp3",
+    "file": "sequences/broken-circuit-static-pound.mp3",
     "about": "An electro kick on 1, the a of 2 and 3, a snare on 2 and 4, 16th hats with the offbeat lifted, metal struck in threes and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
     "energy": 3,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 28.0,
     "pitches": 7,
     "of": 10,
@@ -20319,7 +20319,7 @@
       {
         "name": "Static Pound",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.9,
@@ -20329,15 +20329,15 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Electro-industrial",
+    "category": "Machine/Broken Circuit",
     "name": "Harmonic Minor Arp Bass",
-    "file": "sequences/electro-industrial-harmonic-minor-arp-bass.mp3",
+    "file": "sequences/broken-circuit-harmonic-minor-arp-bass.mp3",
     "about": "16ths climbing to the sharp seventh and back, in harmonic minor",
     "key": "A minor",
     "bars": 1.0,
     "energy": 4,
     "role": "Bass > Arp Bass",
-    "voice": "Torqwave Synth: Body Music",
+    "voice": "Torqwave Synth: Iron Motion",
     "notesPerBar": 16.0,
     "pitches": 6,
     "of": 2,
@@ -20353,7 +20353,7 @@
       {
         "name": "Harmonic Minor Arp Bass",
         "role": "Bass",
-        "voice": "Torqwave Synth: Body Music"
+        "voice": "Torqwave Synth: Iron Motion"
       }
     ],
     "seconds": 6.0,
@@ -20363,9 +20363,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Electro-industrial",
+    "category": "Machine/Broken Circuit",
     "name": "Phrygian Descent",
-    "file": "sequences/electro-industrial-phrygian-descent.mp3",
+    "file": "sequences/broken-circuit-phrygian-descent.mp3",
     "about": "A minor, B flat, A minor, G: the Phrygian turn",
     "key": "A minor",
     "bars": 4.0,
@@ -20396,9 +20396,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Electro-industrial",
+    "category": "Machine/Broken Circuit",
     "name": "Static Evolving Pad",
-    "file": "sequences/electro-industrial-static-evolving-pad.mp3",
+    "file": "sequences/broken-circuit-static-evolving-pad.mp3",
     "about": "A minor, B flat, G minor, A minor, held a bar each over the root an octave down, the filter breathing twice",
     "key": "A minor",
     "bars": 4.0,
@@ -20429,9 +20429,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Electro-industrial",
+    "category": "Machine/Broken Circuit",
     "name": "Harmonic Minor Up-Down",
-    "file": "sequences/electro-industrial-harmonic-minor-up-down.mp3",
+    "file": "sequences/broken-circuit-harmonic-minor-up-down.mp3",
     "about": "Up and down through A minor with the sharp seventh",
     "key": "A minor",
     "bars": 1.0,
@@ -20463,9 +20463,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Electro-industrial",
+    "category": "Machine/Broken Circuit",
     "name": "Datastream Theme",
-    "file": "sequences/electro-industrial-datastream-theme.mp3",
+    "file": "sequences/broken-circuit-datastream-theme.mp3",
     "about": "A call-and-answer phrase stated twice, the second time ending another way in A Phrygian",
     "key": "A minor",
     "bars": 4.0,
@@ -20495,9 +20495,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Electro-industrial",
+    "category": "Machine/Broken Circuit",
     "name": "Interference Riser",
-    "file": "sequences/electro-industrial-interference-riser.mp3",
+    "file": "sequences/broken-circuit-interference-riser.mp3",
     "about": "8ths leaping the tritone and back, the pair a semitone higher on every beat for two bars",
     "key": "A minor",
     "bars": 2.0,
@@ -20527,15 +20527,15 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Dark electro",
+    "category": "Machine/Dark Circuit",
     "name": "Grave Pulse",
-    "file": "sequences/dark-electro-grave-pulse.mp3",
+    "file": "sequences/dark-circuit-grave-pulse.mp3",
     "about": "A flat machine kick on every beat, a snare on 2 and 4, 8th hats, the downbeats stronger, a crash on the one and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
     "energy": 4,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 17.0,
     "pitches": 7,
     "of": 4,
@@ -20549,7 +20549,7 @@
       {
         "name": "Grave Pulse",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 8.300000000000001,
@@ -20559,9 +20559,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Dark electro",
+    "category": "Machine/Dark Circuit",
     "name": "Plague Shifting Pad",
-    "file": "sequences/dark-electro-plague-shifting-pad.mp3",
+    "file": "sequences/dark-circuit-plague-shifting-pad.mp3",
     "about": "A minor seventh, A minor seventh, F major seventh, E seventh, held a bar each over the root an octave down, the filter opening and closing again",
     "key": "A minor",
     "bars": 4.0,
@@ -20592,9 +20592,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Dark electro",
+    "category": "Machine/Dark Circuit",
     "name": "Nightmare Motif",
-    "file": "sequences/dark-electro-nightmare-motif.mp3",
+    "file": "sequences/dark-circuit-nightmare-motif.mp3",
     "about": "A two-bar dotted phrase in A harmonic minor",
     "key": "A minor",
     "bars": 2.0,
@@ -20626,9 +20626,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Dark electro",
+    "category": "Machine/Dark Circuit",
     "name": "Hex Riser",
-    "file": "sequences/dark-electro-hex-riser.mp3",
+    "file": "sequences/dark-circuit-hex-riser.mp3",
     "about": "16ths in fours, each four a minor third above the last: a diminished climb of two octaves",
     "key": "A minor",
     "bars": 2.0,
@@ -20658,9 +20658,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Aggrotech",
+    "category": "Machine/Overdrive",
     "name": "Bloodline Beat",
-    "file": "sequences/aggrotech-bloodline-beat.mp3",
+    "file": "sequences/overdrive-bloodline-beat.mp3",
     "about": "Four to the floor, a clap layered with a snare on 2 and 4, open hats on the offbeats, a crash on the one and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -20690,9 +20690,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Aggrotech",
+    "category": "Machine/Overdrive",
     "name": "Distorted Offbeat Bass",
-    "file": "sequences/aggrotech-distorted-offbeat-bass.mp3",
+    "file": "sequences/overdrive-distorted-offbeat-bass.mp3",
     "about": "Offbeat 8ths with a 16th after each, a harsh drive under a hard kick",
     "key": "A minor",
     "bars": 1.0,
@@ -20724,9 +20724,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Aggrotech",
+    "category": "Machine/Overdrive",
     "name": "Power Fifths Gallop",
-    "file": "sequences/aggrotech-power-fifths-gallop.mp3",
+    "file": "sequences/overdrive-power-fifths-gallop.mp3",
     "about": "Galloping power fifths: an 8th and two 16ths",
     "key": "A minor",
     "bars": 1.0,
@@ -20758,9 +20758,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Aggrotech",
+    "category": "Machine/Overdrive",
     "name": "Hellfire Drone",
-    "file": "sequences/aggrotech-hellfire-drone.mp3",
+    "file": "sequences/overdrive-hellfire-drone.mp3",
     "about": "A low E, the A above it joining halfway, for 8 bars, the filter closing slowly",
     "key": "A minor",
     "bars": 8.0,
@@ -20790,9 +20790,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Aggrotech",
+    "category": "Machine/Overdrive",
     "name": "Aggro Saw Gate",
-    "file": "sequences/aggrotech-aggro-saw-gate.mp3",
+    "file": "sequences/overdrive-aggro-saw-gate.mp3",
     "about": "Supersaw 16ths gated round the root and fifth",
     "key": "A minor",
     "bars": 1.0,
@@ -20824,9 +20824,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Aggrotech",
+    "category": "Machine/Overdrive",
     "name": "Supersaw Riff",
-    "file": "sequences/aggrotech-supersaw-riff.mp3",
+    "file": "sequences/overdrive-supersaw-riff.mp3",
     "about": "A 16th supersaw riff on the root, fifth and flat seventh",
     "key": "A minor",
     "bars": 1.0,
@@ -20858,9 +20858,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Aggrotech",
+    "category": "Machine/Overdrive",
     "name": "Razor Lift",
-    "file": "sequences/aggrotech-razor-lift.mp3",
+    "file": "sequences/overdrive-razor-lift.mp3",
     "about": "A gated power fifth, three 16ths and a gap, a semitone higher each bar from A to C",
     "key": "A minor",
     "bars": 4.0,
@@ -20890,15 +20890,15 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Techno-body",
+    "category": "Machine/Machine Drive",
     "name": "Chain Drive Beat",
-    "file": "sequences/techno-body-chain-drive-beat.mp3",
+    "file": "sequences/machine-drive-chain-drive-beat.mp3",
     "about": "Four to the floor with ghost kicks after each, a big snare and clap together on 2 and 4, open hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
     "energy": 5,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 23.5,
     "pitches": 8,
     "of": 10,
@@ -20912,7 +20912,7 @@
       {
         "name": "Chain Drive Beat",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.2,
@@ -20922,15 +20922,15 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Techno-body",
+    "category": "Machine/Machine Drive",
     "name": "Assembly Throb",
-    "file": "sequences/techno-body-assembly-throb.mp3",
+    "file": "sequences/machine-drive-assembly-throb.mp3",
     "about": "16ths in the kick's gaps with rests to breathe, moving through the roots of A minor, B flat, A minor, G minor",
     "key": "A minor",
     "bars": 4.0,
     "energy": 4,
     "role": "Bass > Synth Bass",
-    "voice": "Torqwave Synth: Body Music",
+    "voice": "Torqwave Synth: Iron Motion",
     "notesPerBar": 10.0,
     "pitches": 6,
     "of": 4,
@@ -20944,7 +20944,7 @@
       {
         "name": "Assembly Throb",
         "role": "Bass",
-        "voice": "Torqwave Synth: Body Music"
+        "voice": "Torqwave Synth: Iron Motion"
       }
     ],
     "joined": 0.1,
@@ -20955,9 +20955,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Techno-body",
+    "category": "Machine/Machine Drive",
     "name": "Pistonbody Strummed Chords",
-    "file": "sequences/techno-body-pistonbody-strummed-chords.mp3",
+    "file": "sequences/machine-drive-pistonbody-strummed-chords.mp3",
     "about": "A minor, B flat, A minor, G minor, each strummed downwards a 16th a note",
     "key": "A minor",
     "bars": 4.0,
@@ -20987,9 +20987,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Techno-body",
+    "category": "Machine/Machine Drive",
     "name": "Body Shop Bloom",
-    "file": "sequences/techno-body-body-shop-bloom.mp3",
+    "file": "sequences/machine-drive-body-shop-bloom.mp3",
     "about": "A minor seventh, B flat major seventh, A minor seventh, G minor seventh, held a bar each over the root an octave down, the filter closing the whole way",
     "key": "A minor",
     "bars": 4.0,
@@ -21019,9 +21019,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Techno-body",
-    "name": "Techno Body Arp",
-    "file": "sequences/techno-body-techno-body-arp.mp3",
+    "category": "Machine/Machine Drive",
+    "name": "Machine Drive Arp",
+    "file": "sequences/machine-drive-machine-drive-arp.mp3",
     "about": "A short repeating arp with rests on the kicks",
     "key": "A minor",
     "bars": 1.0,
@@ -21041,7 +21041,7 @@
     "rounds": 3,
     "parts": [
       {
-        "name": "Techno Body Arp",
+        "name": "Machine Drive Arp",
         "role": "Arps",
         "voice": "Torqwave Synth: Wire Pluck"
       }
@@ -21054,9 +21054,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Techno-body",
+    "category": "Machine/Machine Drive",
     "name": "Ironworks Hook",
-    "file": "sequences/techno-body-ironworks-hook.mp3",
+    "file": "sequences/machine-drive-ironworks-hook.mp3",
     "about": "A busy phrase stated twice, the second time ending another way in A Phrygian",
     "key": "A minor",
     "bars": 4.0,
@@ -21086,9 +21086,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Techno-body",
+    "category": "Machine/Machine Drive",
     "name": "Muscle Machine Lift",
-    "file": "sequences/techno-body-muscle-machine-lift.mp3",
+    "file": "sequences/machine-drive-muscle-machine-lift.mp3",
     "about": "A marching snare over the kick: quarters for two bars, 8ths in bar 3 with a hat on the offbeats, 16ths in bar 4",
     "key": "",
     "bars": 4.0,
@@ -21118,9 +21118,9 @@
   },
   {
     "group": "sequences",
-    "category": "Breakbeat/Breaks",
+    "category": "Broken/Broken Beat",
     "name": "Spin Back Break Loop",
-    "file": "sequences/breaks-spin-back-break-loop.mp3",
+    "file": "sequences/broken-beat-spin-back-break-loop.mp3",
     "about": "A chopped break, the snare doubling at the end of bar 2, under 8th hats, the downbeats stronger",
     "key": "",
     "bars": 2.0,
@@ -21152,9 +21152,9 @@
   },
   {
     "group": "sequences",
-    "category": "Breakbeat/Breaks",
+    "category": "Broken/Broken Beat",
     "name": "Skate Turn",
-    "file": "sequences/breaks-skate-turn.mp3",
+    "file": "sequences/broken-beat-skate-turn.mp3",
     "about": "A minor, A minor, F, G, on the one, on 3 and its offbeat",
     "key": "A minor",
     "bars": 4.0,
@@ -21184,7 +21184,7 @@
   },
   {
     "group": "sequences",
-    "category": "Ambient/Drone",
+    "category": "Space/Drone",
     "name": "Plateau Drone",
     "file": "sequences/drone-plateau-drone.mp3",
     "about": "A held in three octaves, for 8 bars, the filter closing slowly",
@@ -21216,7 +21216,7 @@
   },
   {
     "group": "sequences",
-    "category": "Ambient/Drone",
+    "category": "Space/Drone",
     "name": "Monolith Sequence",
     "file": "sequences/drone-monolith-sequence.mp3",
     "about": "Root, fifth, octave, third, round and round, through A minor, A minor",
@@ -21248,9 +21248,9 @@
   },
   {
     "group": "sequences",
-    "category": "Ambient/Dark ambient",
+    "category": "Space/Dark Space",
     "name": "Vault Progression",
-    "file": "sequences/dark-ambient-vault-progression.mp3",
+    "file": "sequences/dark-space-vault-progression.mp3",
     "about": "A minor, A minor, A minor, A minor, in dotted 8ths across the bar",
     "key": "A minor",
     "bars": 4.0,
@@ -21280,9 +21280,9 @@
   },
   {
     "group": "sequences",
-    "category": "Ambient/Dark ambient",
+    "category": "Space/Dark Space",
     "name": "Hollow Engine",
-    "file": "sequences/dark-ambient-hollow-engine.mp3",
+    "file": "sequences/dark-space-hollow-engine.mp3",
     "about": "A half-time kick on 1 and 3 and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -21312,9 +21312,9 @@
   },
   {
     "group": "sequences",
-    "category": "Drum and Bass/Liquid",
+    "category": "Fast/Fast Flow",
     "name": "Coastline Transition",
-    "file": "sequences/liquid-coastline-transition.mp3",
+    "file": "sequences/fast-flow-coastline-transition.mp3",
     "about": "A ride in 8ths over two kicks, ghost snares gathering into an accent on the last 16th",
     "key": "",
     "bars": 1.0,
@@ -21344,9 +21344,9 @@
   },
   {
     "group": "sequences",
-    "category": "Drum and Bass/Liquid",
+    "category": "Fast/Fast Flow",
     "name": "Lagoon Drive",
-    "file": "sequences/liquid-lagoon-drive.mp3",
+    "file": "sequences/fast-flow-lagoon-drive.mp3",
     "about": "A two-step kick with a pickup into the next bar, the snare on 2 and 4, hats pushing into each beat and a shaker in 16ths",
     "key": "",
     "bars": 2.0,
@@ -21378,9 +21378,9 @@
   },
   {
     "group": "sequences",
-    "category": "Drum and Bass/Neurofunk",
+    "category": "Fast/Fast Grind",
     "name": "Biohazard Stabs",
-    "file": "sequences/neurofunk-biohazard-stabs.mp3",
+    "file": "sequences/fast-grind-biohazard-stabs.mp3",
     "about": "A minor ninth three times in dotted 8ths from the one, then nothing",
     "key": "A minor",
     "bars": 1.0,
@@ -21412,9 +21412,9 @@
   },
   {
     "group": "sequences",
-    "category": "Drum and Bass/Neurofunk",
+    "category": "Fast/Fast Grind",
     "name": "Implant Stomp",
-    "file": "sequences/neurofunk-implant-stomp.mp3",
+    "file": "sequences/fast-grind-implant-stomp.mp3",
     "about": "The two-step kick on 1 and the and of 3, the snare on 2 and 4, 8th hats, the downbeats stronger and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -21444,9 +21444,9 @@
   },
   {
     "group": "sequences",
-    "category": "Electro/Electro",
+    "category": "Funk/Machine Funk",
     "name": "Breakdance Pluck Line",
-    "file": "sequences/electro-breakdance-pluck-line.mp3",
+    "file": "sequences/machine-funk-breakdance-pluck-line.mp3",
     "about": "8th plucks up past the octave and back, through A minor, A minor, F, G",
     "key": "A minor",
     "bars": 4.0,
@@ -21476,15 +21476,15 @@
   },
   {
     "group": "sequences",
-    "category": "Electro/Electro",
+    "category": "Funk/Machine Funk",
     "name": "Bassline Bot Pulse",
-    "file": "sequences/electro-bassline-bot-pulse.mp3",
+    "file": "sequences/machine-funk-bassline-bot-pulse.mp3",
     "about": "A syncopated electro kick, a snare on 2 and 4, 16th hats with the offbeat lifted and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
     "energy": 4,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 24.0,
     "pitches": 6,
     "of": 4,
@@ -21498,7 +21498,7 @@
       {
         "name": "Bassline Bot Pulse",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.7,
@@ -21572,9 +21572,9 @@
   },
   {
     "group": "sequences",
-    "category": "Game/Chiptune",
+    "category": "Game/8-bit",
     "name": "Sprite Level Up",
-    "file": "sequences/chiptune-sprite-level-up.mp3",
+    "file": "sequences/8-bit-sprite-level-up.mp3",
     "about": "An A minor ninth run up in 16ths, A, B, C, E, G, B, the high A held",
     "key": "A minor",
     "bars": 1.0,
@@ -21604,9 +21604,9 @@
   },
   {
     "group": "sequences",
-    "category": "Game/Chiptune",
+    "category": "Game/8-bit",
     "name": "Sprite Machine",
-    "file": "sequences/chiptune-sprite-machine.mp3",
+    "file": "sequences/8-bit-sprite-machine.mp3",
     "about": "A marching kick with a pickup before beat 3, a snare on 2 and 4 with ghost notes after them, 16th hats with the offbeat lifted and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -21740,7 +21740,7 @@
     "bars": 2.0,
     "energy": 1,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 19.0,
     "pitches": 5,
     "of": 5,
@@ -21754,7 +21754,7 @@
       {
         "name": "Valley Drive",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 5.3,
@@ -21764,9 +21764,9 @@
   },
   {
     "group": "sequences",
-    "category": "Game/Horror",
+    "category": "Game/Dread",
     "name": "Specter Chord Pulse",
-    "file": "sequences/horror-specter-chord-pulse.mp3",
+    "file": "sequences/dread-specter-chord-pulse.mp3",
     "about": "Short A minor, D minor chords comping over two bars, a 16th late, then gathering",
     "key": "A minor",
     "bars": 2.0,
@@ -21797,9 +21797,9 @@
   },
   {
     "group": "sequences",
-    "category": "Game/Horror",
+    "category": "Game/Dread",
     "name": "Whisper Groove",
-    "file": "sequences/horror-whisper-groove.mp3",
+    "file": "sequences/dread-whisper-groove.mp3",
     "about": "A half-time kick on 1 and 3, a hat on 1 and 3, a low tom every five 16ths and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -21871,7 +21871,7 @@
     "bars": 2.0,
     "energy": 1,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 6.0,
     "pitches": 2,
     "of": 4,
@@ -21885,7 +21885,7 @@
       {
         "name": "Options Beat",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 4.8,
@@ -21895,9 +21895,9 @@
   },
   {
     "group": "sequences",
-    "category": "House/Deep house",
+    "category": "Swing/Deep Swing",
     "name": "Lounge Transition",
-    "file": "sequences/deep-house-lounge-transition.mp3",
+    "file": "sequences/deep-swing-lounge-transition.mp3",
     "about": "D minor seventh for two beats, then E minor seventh, leading home",
     "key": "A minor",
     "bars": 1.0,
@@ -21927,9 +21927,9 @@
   },
   {
     "group": "sequences",
-    "category": "House/Deep house",
+    "category": "Swing/Deep Swing",
     "name": "Lounge Drive",
-    "file": "sequences/deep-house-lounge-drive.mp3",
+    "file": "sequences/deep-swing-lounge-drive.mp3",
     "about": "Four to the floor with ghost kicks pushing into beats 4 and 1, a clap on 2 and 4, open hats on the offbeats and a shaker in 16ths",
     "key": "",
     "bars": 1.0,
@@ -21961,9 +21961,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Coldwave",
+    "category": "Machine/Cold Glow",
     "name": "Pale Stabs",
-    "file": "sequences/coldwave-pale-stabs.mp3",
+    "file": "sequences/cold-glow-pale-stabs.mp3",
     "about": "A with the second in place of the third on the one, then gathering through the back half of the bar",
     "key": "A minor",
     "bars": 1.0,
@@ -21995,15 +21995,15 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Coldwave",
+    "category": "Machine/Cold Glow",
     "name": "Pale Drive",
-    "file": "sequences/coldwave-pale-drive.mp3",
+    "file": "sequences/cold-glow-pale-drive.mp3",
     "about": "A rock kick on 1, 3 and the and of 3, a rimshot on 2 and 4, 8th hats, the downbeats stronger and a shaker in 16ths",
     "key": "",
     "bars": 2.0,
     "energy": 2,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 29.0,
     "pitches": 4,
     "of": 5,
@@ -22019,7 +22019,7 @@
       {
         "name": "Pale Drive",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 9.199999999999999,
@@ -22029,9 +22029,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Darkwave",
-    "name": "Darkwave Arp",
-    "file": "sequences/darkwave-darkwave-arp.mp3",
+    "category": "Machine/Night Wave",
+    "name": "Night Wave Arp",
+    "file": "sequences/night-wave-night-wave-arp.mp3",
     "about": "8th arpeggios through A minor, F, G and E minor",
     "key": "A minor",
     "bars": 4.0,
@@ -22049,7 +22049,7 @@
     "rounds": 1,
     "parts": [
       {
-        "name": "Darkwave Arp",
+        "name": "Night Wave Arp",
         "role": "Arps",
         "voice": "Torqwave Synth: Wire Pluck"
       }
@@ -22061,15 +22061,15 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Darkwave",
+    "category": "Machine/Night Wave",
     "name": "Twilight Pulse",
-    "file": "sequences/darkwave-twilight-pulse.mp3",
+    "file": "sequences/night-wave-twilight-pulse.mp3",
     "about": "A rock kick on 1, 3 and the and of 3, a snare on 2 and 4, closed hats on the offbeats, a crash on the one and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
     "energy": 3,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 12.0,
     "pitches": 7,
     "of": 6,
@@ -22083,7 +22083,7 @@
       {
         "name": "Twilight Pulse",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 8.9,
@@ -22093,9 +22093,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Futurepop",
-    "name": "Futurepop Arp Loop",
-    "file": "sequences/futurepop-futurepop-arp-loop.mp3",
+    "category": "Machine/Bright Pulse",
+    "name": "Bright Pulse Arp Loop",
+    "file": "sequences/bright-pulse-bright-pulse-arp-loop.mp3",
     "about": "Up and down through A minor, F, C and G",
     "key": "A minor",
     "bars": 4.0,
@@ -22113,7 +22113,7 @@
     "rounds": 1,
     "parts": [
       {
-        "name": "Futurepop Arp Loop",
+        "name": "Bright Pulse Arp Loop",
         "role": "Arps",
         "voice": "Torqwave Synth: Black Pluck"
       }
@@ -22125,15 +22125,15 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Futurepop",
+    "category": "Machine/Bright Pulse",
     "name": "Synthetic Groove",
-    "file": "sequences/futurepop-synthetic-groove.mp3",
+    "file": "sequences/bright-pulse-synthetic-groove.mp3",
     "about": "Four to the floor, a snare on 2 and 4, 16th hats with the offbeat lifted and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
     "energy": 4,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 24.0,
     "pitches": 6,
     "of": 4,
@@ -22147,7 +22147,7 @@
       {
         "name": "Synthetic Groove",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.5,
@@ -22157,9 +22157,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Industrial rock",
+    "category": "Machine/Iron Riff",
     "name": "Rust Belt Riser",
-    "file": "sequences/industrial-rock-rust-belt-riser.mp3",
+    "file": "sequences/iron-riff-rust-belt-riser.mp3",
     "about": "A floor tom in 8ths for a bar, then a snare roll in 16ths, the kick under every beat",
     "key": "",
     "bars": 2.0,
@@ -22189,9 +22189,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Industrial rock",
+    "category": "Machine/Iron Riff",
     "name": "Fuse Box Stomp",
-    "file": "sequences/industrial-rock-fuse-box-stomp.mp3",
+    "file": "sequences/iron-riff-fuse-box-stomp.mp3",
     "about": "A marching kick with a pickup before beat 3, a big snare and clap together on 2 and 4, a ride in 8ths, metal struck in threes and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
@@ -22221,9 +22221,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Synth-EBM",
+    "category": "Machine/Night Pulse",
     "name": "Mirror Bridge",
-    "file": "sequences/synth-ebm-mirror-bridge.mp3",
+    "file": "sequences/night-pulse-mirror-bridge.mp3",
     "about": "An octave bass in 16ths stepping down from A through G and F to E",
     "key": "A minor",
     "bars": 1.0,
@@ -22253,9 +22253,9 @@
   },
   {
     "group": "sequences",
-    "category": "Industrial/Synth-EBM",
+    "category": "Machine/Night Pulse",
     "name": "Mirror Pound",
-    "file": "sequences/synth-ebm-mirror-pound.mp3",
+    "file": "sequences/night-pulse-mirror-pound.mp3",
     "about": "A flat machine kick on every beat, a snare on 2 and 4, 8th hats, the downbeats stronger and a shaker in 16ths",
     "key": "",
     "bars": 2.0,
@@ -22287,9 +22287,9 @@
   },
   {
     "group": "sequences",
-    "category": "Synthwave/Darksynth",
+    "category": "Neon/Neon Menace",
     "name": "Vice Lift",
-    "file": "sequences/darksynth-vice-lift.mp3",
+    "file": "sequences/neon-menace-vice-lift.mp3",
     "about": "Four-note A minor arpeggios in 16ths, each starting a chord note higher than the last",
     "key": "A minor",
     "bars": 2.0,
@@ -22319,15 +22319,15 @@
   },
   {
     "group": "sequences",
-    "category": "Synthwave/Darksynth",
+    "category": "Neon/Neon Menace",
     "name": "Overdrive Machine",
-    "file": "sequences/darksynth-overdrive-machine.mp3",
+    "file": "sequences/neon-menace-overdrive-machine.mp3",
     "about": "A rock kick on 1, 3 and the and of 3, a snare on 2 and 4 and 16th hats with the offbeat lifted",
     "key": "",
     "bars": 1.0,
     "energy": 5,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 21.0,
     "pitches": 3,
     "of": 5,
@@ -22343,7 +22343,7 @@
       {
         "name": "Overdrive Machine",
         "role": "Drums",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "seconds": 7.2,
@@ -22353,7 +22353,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Club tools",
+    "category": "Floor/Club tools",
     "name": "Kick Only Four",
     "file": "sequences/club-tools-kick-only-four.mp3",
     "about": "The kick alone on every beat, to build on",
@@ -22387,7 +22387,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Driving",
+    "category": "Floor/Driving",
     "name": "Broken Root Fifth Octave",
     "file": "sequences/driving-broken-root-fifth-octave.mp3",
     "about": "The 1-5-8-flat 3 figure: A, E, A, C in 16ths",
@@ -22421,7 +22421,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Driving",
+    "category": "Floor/Driving",
     "name": "Throttle Drive",
     "file": "sequences/driving-throttle-drive.mp3",
     "about": "Four to the floor, a clap layered with a snare on 2 and 4, 16th hats with the offbeat lifted, a shaker in 16ths and a tom run ends bar 4",
@@ -22453,9 +22453,9 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Dub",
+    "category": "Floor/Echo Chamber",
     "name": "Deep Water Build",
-    "file": "sequences/dub-deep-water-build.mp3",
+    "file": "sequences/echo-chamber-deep-water-build.mp3",
     "about": "An A minor seventh on every offbeat for four bars, the filter opening from closed",
     "key": "A minor",
     "bars": 4.0,
@@ -22485,15 +22485,15 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Dub",
+    "category": "Floor/Echo Chamber",
     "name": "Deep Water Machine",
-    "file": "sequences/dub-deep-water-machine.mp3",
+    "file": "sequences/echo-chamber-deep-water-machine.mp3",
     "about": "Four to the floor, a clap on 4 only, a pedal hat on the offbeats and a tom run ends bar 4",
     "key": "",
     "bars": 4.0,
     "energy": 2,
     "role": "Drums > Full Grooves",
-    "voice": "Basic Drums: Dark Techno",
+    "voice": "Basic Drums: Low Rumble",
     "notesPerBar": 11.0,
     "pitches": 6,
     "of": 5,
@@ -22507,7 +22507,7 @@
       {
         "name": "Deep Water Machine",
         "role": "Drums",
-        "voice": "Basic Drums: Dark Techno"
+        "voice": "Basic Drums: Low Rumble"
       }
     ],
     "seconds": 7.9,
@@ -22517,7 +22517,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Hypnotic",
+    "category": "Floor/Hypnotic",
     "name": "Hypnotic Five-Step Arp",
     "file": "sequences/hypnotic-hypnotic-five-step-arp.mp3",
     "about": "Five notes cycling over 16ths, coming round against the bar",
@@ -22549,7 +22549,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Hypnotic",
+    "category": "Floor/Hypnotic",
     "name": "Strobe Tunnel Pulse",
     "file": "sequences/hypnotic-strobe-tunnel-pulse.mp3",
     "about": "A rim every three 16ths and a shaker every five turn against the kick and offbeat hats, a low tom answering in bars 2 and 4, open hats over bar 4",
@@ -22581,7 +22581,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Melodic",
+    "category": "Floor/Melodic",
     "name": "Daybreak Bridge",
     "file": "sequences/melodic-daybreak-bridge.mp3",
     "about": "An A minor arpeggio in 16ths falling two and a half octaves and turning back up",
@@ -22613,7 +22613,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Melodic",
+    "category": "Floor/Melodic",
     "name": "Lumen Engine",
     "file": "sequences/melodic-lumen-engine.mp3",
     "about": "Four to the floor with ghost kicks pushing into beats 4 and 1, a snare on 2 and 4, open hats on the offbeats, a shaker in 16ths and a tom run ends bar 4",
@@ -22645,7 +22645,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Minimal",
+    "category": "Floor/Minimal",
     "name": "Ghost Note Riser",
     "file": "sequences/minimal-ghost-note-riser.mp3",
     "about": "Closed hats in 16ths from a ghost to an accent over two bars, a rim on 2 and 4 of bar 2 and open hats on its last two offbeats",
@@ -22653,7 +22653,7 @@
     "bars": 2.0,
     "energy": 2,
     "role": "SFX > Risers",
-    "voice": "Basic Drums: EBM Machine",
+    "voice": "Basic Drums: Iron Shutter",
     "notesPerBar": 18.0,
     "pitches": 3,
     "of": 5,
@@ -22667,7 +22667,7 @@
       {
         "name": "Ghost Note Riser",
         "role": "SFX",
-        "voice": "Basic Drums: EBM Machine"
+        "voice": "Basic Drums: Iron Shutter"
       }
     ],
     "joined": 0.4,
@@ -22678,7 +22678,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Minimal",
+    "category": "Floor/Minimal",
     "name": "Thin Line Beat",
     "file": "sequences/minimal-thin-line-beat.mp3",
     "about": "Four to the floor with ghost kicks pushing into beats 4 and 1, a clap on 2 and 4, closed hats on the offbeats, a rimshot every three 16ths, against the beat and a tom run ends bar 4",
@@ -22710,7 +22710,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Peak-time",
+    "category": "Floor/Peak-time",
     "name": "Note Ramp Riser",
     "file": "sequences/peak-time-note-ramp-riser.mp3",
     "about": "16ths climbing a semitone a beat for four bars, louder and brighter as they go",
@@ -22742,7 +22742,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Peak-time",
+    "category": "Floor/Peak-time",
     "name": "Night Shift Hammer",
     "file": "sequences/peak-time-night-shift-hammer.mp3",
     "about": "A peak-time groove: a crash on the one, a clap on 2 and 4, open hats on the offbeats over closed ones, a ride in 8ths and a skipped kick in bar 2",
@@ -22776,7 +22776,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Percussive",
+    "category": "Floor/Percussive",
     "name": "Stickwork Riser",
     "file": "sequences/percussive-stickwork-riser.mp3",
     "about": "Toms in 8ths climbing from low to high over a shaker in 16ths, the high tom in 16ths through the last half bar",
@@ -22808,7 +22808,7 @@
   },
   {
     "group": "sequences",
-    "category": "Techno/Percussive",
+    "category": "Floor/Percussive",
     "name": "Woodblock Beat",
     "file": "sequences/percussive-woodblock-beat.mp3",
     "about": "Four to the floor with ghost kicks after each, hats pushing into each beat, a cowbell on the and of 2 and 4 and a tom run ends bar 4",
@@ -22840,9 +22840,9 @@
   },
   {
     "group": "sequences",
-    "category": "Trance/Psytrance",
-    "name": "Goa Roller",
-    "file": "sequences/psytrance-goa-roller.mp3",
+    "category": "Spiral/Rolling Spiral",
+    "name": "Lotus Roller",
+    "file": "sequences/rolling-spiral-lotus-roller.mp3",
     "about": "Rolling 16ths in the kick's gaps, touching the fifth and ending on the octave, on A",
     "key": "A minor",
     "bars": 4.0,
@@ -22860,7 +22860,7 @@
     "rounds": 1,
     "parts": [
       {
-        "name": "Goa Roller",
+        "name": "Lotus Roller",
         "role": "Bass",
         "voice": "Torqwave Synth: Pressure Bass"
       }
@@ -22872,9 +22872,9 @@
   },
   {
     "group": "sequences",
-    "category": "Trance/Psytrance",
+    "category": "Spiral/Rolling Spiral",
     "name": "Forest Night Engine",
-    "file": "sequences/psytrance-forest-night-engine.mp3",
+    "file": "sequences/rolling-spiral-forest-night-engine.mp3",
     "about": "A short kick on every beat, leaving the 16ths after it to the bass, a clap on 2 and 4, open hats on the offbeats and a syncopated rimshot",
     "key": "",
     "bars": 2.0,

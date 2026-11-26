@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Dot Changes" role="Harmony" subRole="Progressions" key="A minor" tags="" note="A minor seventh, A minor seventh, D minor seventh, A minor seventh, pulsing in 8ths" style="Techno/Minimal" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Dot Changes" role="Harmony" subRole="Progressions" key="A minor" tags="" note="A minor seventh, A minor seventh, D minor seventh, A minor seventh, pulsing in 8ths" style="Floor/Minimal" energy="3" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="220" v="0.677165"/>
     <N p="60" s="0" l="220" v="0.677165"/>

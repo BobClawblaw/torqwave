@@ -30,7 +30,7 @@ Nine oscillators are easy to add and hard to justify. A single voice with nine o
 
 - **Scenes:** up to four snapshots of every knob in a patch, and one control, **Evolve**, that moves between them. Where two scenes differ, the sound glides from one to the other; a macro, an envelope, an LFO or the mod wheel can drive it.
 - **An evolve lane:** a line drawn over bars of the session's tempo that moves Evolve by itself, so a pad opens over sixteen bars or a bass mutates through a phrase, the same each time it is rendered.
-- This is the piece that gives the instrument its own character for dark techno, EBM and industrial: long builds, slow corrosion, a sound that is not the same at bar 16 as at bar 1. It needs no new kind of oscillator.
+- This is the piece that gives the instrument its own character for dark, driving electronic music: long builds, slow corrosion, a sound that is not the same at bar 16 as at bar 1. It needs no new kind of oscillator.
 
 ### C. Oscillators that work on each other
 

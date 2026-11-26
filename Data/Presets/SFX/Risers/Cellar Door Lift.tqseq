@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Cellar Door Lift" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="A cluster growing a semitone at a time, A, B flat, B and C a bar apart, all of it bending upward through the last two bars" style="Game/Horror" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Cellar Door Lift" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="A cluster growing a semitone at a time, A, B flat, B and C a bar apart, all of it bending upward through the last two bars" style="Game/Dread" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="15320" v="0.629921"/>
     <N p="58" s="3840" l="11480" v="0.661417"/>
@@ -16,5 +16,5 @@
     <P t="7680" v="0.500000"/>
     <P t="15359" v="1.000000"/>
   </LANE>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Brutal Tension" bus="0" instrument="1" musical="1" gainDb="11.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>74.VMjLgDD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPxUGcgwFHTUlayk1atIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Brutal Tension" bus="0" instrument="1" musical="1" gainDb="15.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>74.VMjLgDD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPxUGcgwFHTUlayk1atIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

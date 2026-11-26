@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Minor Bell Motif" role="Melody" subRole="Bells &amp; Mallets" key="A minor" tags="" note="A four-note bell motif" style="Techno/Melodic" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Minor Bell Motif" role="Melody" subRole="Bells &amp; Mallets" key="A minor" tags="" note="A four-note bell motif" style="Floor/Melodic" energy="2" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="81" s="0" l="240" v="0.755906"/>
     <N p="76" s="720" l="240" v="0.755906"/>

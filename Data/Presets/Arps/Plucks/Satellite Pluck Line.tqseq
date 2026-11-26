@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Satellite Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="8th plucks on the chord's notes, through A minor, F" style="Industrial/Futurepop" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Satellite Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="8th plucks on the chord's notes, the triads, through the roots A, F" style="Machine/Bright Pulse" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="130.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="69" s="0" l="120" v="0.755906"/>
     <N p="76" s="480" l="120" v="0.755906"/>

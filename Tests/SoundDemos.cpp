@@ -1001,7 +1001,7 @@ namespace
 
     /** Basic Drums' synthesized sources that any pad can play, as --drums-sources renders them: each
         alone (a hard hit, a softer one, then five semitones down and five up, the nothing between the
-        hits cut to a quarter of a second) and in two bars over a plain groove of the Dark Techno kit. */
+        hits cut to a quarter of a second) and in two bars over a plain groove of the Low Rumble kit. */
     void writeSources (const juce::File& folder, Index& index)
     {
         const auto rendered = folder.getChildFile ("wav").getChildFile ("sources");
@@ -1076,8 +1076,8 @@ namespace
 
         if (sequences)
         {
-            const juce::StringArray leading { "Techno/Dark", "Techno/Industrial", "Techno/Hard", "Techno/Acid", "Industrial/EBM", "Industrial/Electro-industrial",
-                                              "Industrial/Dark electro", "Industrial/Aggrotech", "Industrial/Techno-body" };
+            const juce::StringArray leading { "Floor/Dark Floor", "Floor/Factory Floor", "Floor/Hard Floor", "Floor/Squelch", "Machine/Machine Pulse", "Machine/Broken Circuit",
+                                              "Machine/Dark Circuit", "Machine/Overdrive", "Machine/Machine Drive" };
             // What can be measured of how much a sequence does: its notes to a bar, its different pitches
             // (a drum part's different sounds), and its rhythm (the different gaps between one note's start
             // and the next, and the different note lengths).
@@ -1464,7 +1464,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
         formats.addFormat (BuiltInEffects::createFormat());
 
         for (auto& e : SequenceLibrary (unpacked.presets).scan())
-            if (e.isKit && e.style == "Industrial/EBM" && (kitName.isEmpty() || e.name.compareNatural (kitName) < 0))
+            if (e.isKit && e.style == "Machine/Machine Pulse" && (kitName.isEmpty() || e.name.compareNatural (kitName) < 0))
             {
                 juce::String error;
 
@@ -1492,7 +1492,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
     }
 
     const auto tonalSource = juce::String ("Torqwave Synth: Concrete Pad's chords under Cold Bell's arpeggio, four bars at 120 BPM");
-    const auto beatSource = "The factory kit " + kitName + " (Industrial/EBM), its loop twice, as the Sequence Library plays it";
+    const auto beatSource = "The factory kit " + kitName + " (Machine/Machine Pulse), its loop twice, as the Sequence Library plays it";
 
     // Clicks: 60 of them, one to three samples long, at up to nine tenths of full scale.
     if (also.contains ("clicks"))
@@ -1759,19 +1759,60 @@ void writeSequenceClips (const juce::File& from, const juce::File& into)
             continue;
         }
 
-        // Once through and two bars for it to ring out: the pass that would loop, of the sequence made two bars longer.
+        // An event (a riser, a hit, anything under SFX) plays once. Anything else is the pass the library's
+        // preview loops, round until four bars or more and seven seconds or more have played. Either way the
+        // sound rings out after, for as long as it takes to fall 45 dB under the clip's peak, and no longer.
+        const auto once = q->role == "SFX";
         const auto played = q->length;
-        q->length += 2 * q->beatsPerBar * SequenceFile::ticksPerBeat;
-        juce::AudioBuffer<float> audio;
-        error = SequencePreview::render (*q, q->writtenTempo, q->beatsPerBar, rate, formats, audio);
+        juce::AudioBuffer<float> pass, rung;
+        error = once ? juce::String() : SequencePreview::render (*q, q->writtenTempo, q->beatsPerBar, rate, formats, pass);
+        auto longer = *q;
+        longer.length += 4 * q->beatsPerBar * SequenceFile::ticksPerBeat;
 
-        if (error.isNotEmpty() || audio.getNumSamples() == 0)
+        if (error.isEmpty())
+            error = SequencePreview::render (longer, q->writtenTempo, q->beatsPerBar, rate, formats, rung);
+
+        if (error.isNotEmpty() || rung.getNumSamples() == 0 || (! once && pass.getNumSamples() == 0))
         {
             std::cout << "FAILED " << q->name << ": " << error << std::endl;
             continue;
         }
 
-        const auto frames = (int) ((double) audio.getNumSamples() * (double) played / (double) q->length);
+        const auto playedFrames = (int) ((double) rung.getNumSamples() * (double) played / (double) longer.length);
+        const auto barFrames = (double) playedFrames / juce::jmax (1.0, (double) played / (q->beatsPerBar * SequenceFile::ticksPerBeat));
+        const auto rounds = once ? 1 : juce::jlimit (1, 8, (int) std::ceil (juce::jmax (4.0 * barFrames, 7.0 * rate) / juce::jmax (1, pass.getNumSamples()) - 0.001));
+        const auto& head = once ? rung : pass;
+        const auto headFrames = once ? playedFrames : pass.getNumSamples();
+
+        // The ring after the last round: where the once-through render goes on past its length.
+        auto peak = 0.0f;
+
+        for (int ch = 0; ch < rung.getNumChannels(); ++ch)
+            peak = juce::jmax (peak, rung.getMagnitude (ch, 0, rung.getNumSamples()), head.getMagnitude (ch, 0, headFrames));
+
+        const auto floor = peak * juce::Decibels::decibelsToGain (-45.0f);
+        auto last = playedFrames;
+
+        for (int i = playedFrames; i < rung.getNumSamples(); ++i)
+            for (int ch = 0; ch < rung.getNumChannels(); ++ch)
+                if (std::abs (rung.getSample (ch, i)) > floor)
+                    last = i;
+
+        const auto fade = (int) (0.02 * rate);
+        const auto tail = juce::jmin (rung.getNumSamples() - playedFrames, last - playedFrames + fade);
+        juce::AudioBuffer<float> audio (rung.getNumChannels(), headFrames * rounds + tail);
+
+        for (int r = 0; r < rounds; ++r)
+            for (int ch = 0; ch < audio.getNumChannels(); ++ch)
+                audio.copyFrom (ch, r * headFrames, head, juce::jmin (ch, head.getNumChannels() - 1), 0, headFrames);
+
+        for (int ch = 0; ch < audio.getNumChannels(); ++ch)
+        {
+            audio.copyFrom (ch, headFrames * rounds, rung, ch, playedFrames, tail);
+            audio.applyGainRamp (ch, audio.getNumSamples() - juce::jmin (fade, tail), juce::jmin (fade, tail), 1.0f, 0.0f);
+        }
+
+        const auto frames = playedFrames;
         const auto first = half (audio, 0, frames / 2), second = half (audio, frames / 2, frames / 2);
         auto file = into.getChildFile (q->style.fromFirstOccurrenceOf ("/", false, false) + " - " + q->name + ".wav");
         file.deleteFile();

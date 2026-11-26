@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Forest Night Engine" role="Drums" subRole="Full Grooves" key="" tags="" note="A short kick on every beat, leaving the 16ths after it to the bass, a clap on 2 and 4, open hats on the offbeats and a syncopated rimshot" style="Trance/Psytrance" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="142.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Forest Night Engine" role="Drums" subRole="Full Grooves" key="" tags="" note="A short kick on every beat, leaving the 16ths after it to the bass, a clap on 2 and 4, open hats on the offbeats and a syncopated rimshot" style="Spiral/Rolling Spiral" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="142.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="37" s="240" l="120" v="0.771654"/>

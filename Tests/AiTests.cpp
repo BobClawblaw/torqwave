@@ -1683,7 +1683,7 @@ namespace
         MadePresets()
         {
             constexpr juce::int64 beat = SequenceFile::ticksPerBeat;
-            kick = sequence ("Iron Kick", "Drums", "Kick", "Industrial/EBM", 4, { "Dark", "Distorted" },
+            kick = sequence ("Iron Kick", "Drums", "Kick", "Machine/Pulse", 4, { "Dark", "Distorted" },
                              { { 36, 0, 240, 0.9f }, { 36, beat, 240, 0.8f }, { 38, 2 * beat, 240, 0.7f }, { 36, 3 * beat, 240, 0.8f }, { 42, 3 * beat + 480, 240, 0.5f } }, "Basic Drums");
             hats = sequence ("Thin Hats", "Drums", "Hats & Tops", "Techno/Dark", 2, { "Sparse" }, { { 42, 480, 120, 0.6f }, { 42, beat + 480, 120, 0.6f } }, "Basic Drums");
             reese = sequence ("Slow Reese", "Bass", {}, "Techno/Dark", 4, { "Dark" }, { { 33, 0, 2 * beat, 0.8f }, { 36, 2 * beat, 2 * beat, 0.8f } }, "Torqwave Synth");
@@ -1702,13 +1702,13 @@ namespace
                 ok = SequenceFile::save (filler, fileFor (filler)).isEmpty() && ok;
             }
 
-            kit.name = "EBM Engine";
-            kit.style = "Industrial/EBM";
+            kit.name = "Pulse Engine";
+            kit.style = "Machine/Pulse";
             kit.note = "A kick and a bass made to play together";
             kit.added = 1000;
             kit.parts = { kick, reese };
             folder.getChildFile ("Kits").createDirectory();
-            ok = SequenceKit::save (kit, folder.getChildFile ("Kits").getChildFile ("EBM Engine.tqkit")).isEmpty() && ok;
+            ok = SequenceKit::save (kit, folder.getChildFile ("Kits").getChildFile ("Pulse Engine.tqkit")).isEmpty() && ok;
             check (ok, "Ask Torq presets: the made-up factory folder is written");
         }
 
@@ -1781,17 +1781,17 @@ namespace
         const auto everything = call ("find_sequence_presets", "{}");
         const auto drums = call ("find_sequence_presets", R"({"role": "drums"})");
         const auto techno = call ("find_sequence_presets", R"({"style": "techno", "energy": 4})");
-        const auto ebm = call ("find_sequence_presets", R"({"style": "Industrial/EBM", "character": ["dark", "Distorted"]})");
+        const auto pulse = call ("find_sequence_presets", R"({"style": "Machine/Pulse", "character": ["dark", "Distorted"]})");
         const auto kits = call ("find_sequence_presets", R"({"role": "Kits"})");
         const auto words = call ("find_sequence_presets", R"({"search": "detuned BASS"})");
         const auto arps = call ("find_sequence_presets", R"({"role": "Arps", "search": "filler"})");
         const auto nothing = call ("find_sequence_presets", R"({"role": "Bass", "energy": 1})");
         check ((bool) everything["ok"] && (int) everything["total"] == 51 && (int) everything["matching"] == 51 && everything["presets"].size() == 40 && (int) everything["more"] == 11
-                   && everything["roles"] == juce::var ("Arps, Bass, Drums, Kits") && everything["styles"] == juce::var ("House/Deep, Industrial/EBM, Techno/Dark")
+                   && everything["roles"] == juce::var ("Arps, Bass, Drums, Kits") && everything["styles"] == juce::var ("House/Deep, Machine/Pulse, Techno/Dark")
                    && namesOf (drums) == juce::StringArray { "Thin Hats", "Iron Kick", "Thin Hats" } && drums["roles"].isVoid()
-                   && namesOf (techno) == juce::StringArray { "Slow Reese" } && namesOf (ebm) == juce::StringArray { "Iron Kick" }
-                   && namesOf (kits) == juce::StringArray { "EBM Engine" } && kits["presets"][0]["kind"] == juce::var ("kit") && (int) kits["presets"][0]["parts"] == 2
-                   && kits["presets"][0]["path"] == juce::var ("Kits/EBM Engine.tqkit") && (bool) kits["presets"][0]["brings_instrument"]
+                   && namesOf (techno) == juce::StringArray { "Slow Reese" } && namesOf (pulse) == juce::StringArray { "Iron Kick" }
+                   && namesOf (kits) == juce::StringArray { "Pulse Engine" } && kits["presets"][0]["kind"] == juce::var ("kit") && (int) kits["presets"][0]["parts"] == 2
+                   && kits["presets"][0]["path"] == juce::var ("Kits/Pulse Engine.tqkit") && (bool) kits["presets"][0]["brings_instrument"]
                    && namesOf (words) == juce::StringArray { "Slow Reese" } && words["presets"][0]["path"] == juce::var ("Bass/Slow Reese.tqseq")
                    && words["presets"][0]["key"] == juce::var ("A minor") && (int) words["presets"][0]["energy"] == 4 && juce::exactlyEqual ((double) words["presets"][0]["bars"], 4.0)
                    && words["presets"][0]["character"] == juce::var ("Dark") && words["presets"][0]["about"].toString().startsWith ("A slow")
@@ -1842,22 +1842,22 @@ namespace
         // Refusals leave the plan and the session as they were.
         const auto beforeRefusals = *w->getSession();
         const auto unknown = call ("add_sequence_preset", R"({"preset": "slow rese"})");
-        const auto isKit = call ("add_sequence_preset", R"({"preset": "EBM Engine"})");
+        const auto isKit = call ("add_sequence_preset", R"({"preset": "Pulse Engine"})");
         const auto twins = call ("add_sequence_preset", R"({"preset": "Thin Hats"})");
         const auto onAudio = call ("add_sequence_preset", R"({"preset": "Slow Reese", "track": "Guitar"})");
         const auto barZero = call ("add_sequence_preset", R"({"preset": "Slow Reese", "bar": 0})");
         const auto notKit = call ("add_kit", R"({"kit": "Slow Reese"})");
-        const auto noKit = call ("add_kit", R"({"kit": "EBM Engin"})");
+        const auto noKit = call ("add_kit", R"({"kit": "Pulse Engin"})");
         check (! (bool) unknown["ok"] && unknown["error"].toString().contains ("the nearest are Slow Reese") && ! (bool) isKit["ok"] && isKit["error"].toString().contains ("add_kit")
                    && ! (bool) twins["ok"] && twins["error"].toString().contains ("Drums/Hats & Tops/Thin Hats.tqseq") && twins["error"].toString().contains ("Drums/Kick/Thin Hats.tqseq")
                    && ! (bool) onAudio["ok"] && ! (bool) barZero["ok"] && ! (bool) notKit["ok"] && notKit["error"].toString().contains ("add_sequence_preset")
-                   && ! (bool) noKit["ok"] && noKit["error"].toString().contains ("the nearest are EBM Engine")
+                   && ! (bool) noKit["ok"] && noKit["error"].toString().contains ("the nearest are Pulse Engine")
                    && sameSession (*w->getSession(), beforeRefusals) && w->getSteps().size() == 2 && w->getVoiceLoads().size() == 1,
                "Ask Torq presets: a name that matches nothing is refused with the nearest names, a name two presets share with their paths, a kit given as a sequence "
                "(and a sequence as a kit), an audio track and bar 0 too; the plan and the session are left as they were");
 
         // A kit at bar 5: the same session as a dropped kit's, and each part's voice to load.
-        const auto kitAdded = call ("add_kit", R"({"kit": "Kits/EBM Engine.tqkit", "bar": 5})");
+        const auto kitAdded = call ("add_kit", R"({"kit": "Kits/Pulse Engine.tqkit", "bar": 5})");
         const auto kitPlaced = SequenceKit::place (direct, made.kit, bar (5));
         const auto kitVoices = w->getVoiceLoads();
         auto sameVoices = kitVoices.size() == 3 && kitPlaced.parts.size() == 2;
@@ -1867,7 +1867,7 @@ namespace
 
         check ((bool) kitAdded["ok"] && sameSession (*w->getSession(), direct) && sameVoices && kitVoices[1].instrument == "Basic Drums" && kitVoices[2].instrument == "Torqwave Synth"
                    && kitAdded["tracks"].size() == 2 && kitAdded["tracks"][0]["name"] == juce::var ("Iron Kick") && (int) kitAdded["tracks"][1]["clip"] == (int) kitPlaced.parts[1].clipId
-                   && kitAdded["step"] == juce::var ("Add the kit \"EBM Engine\" at bar 5: a folder with 2 tracks (Iron Kick, Slow Reese), 4 bars")
+                   && kitAdded["step"] == juce::var ("Add the kit \"Pulse Engine\" at bar 5: a folder with 2 tracks (Iron Kick, Slow Reese), 4 bars")
                    && w->getSession()->findTrack (kitPlaced.folderId) != nullptr && w->getSession()->findTrack (kitPlaced.folderId)->isFolder && w->getSteps().size() == 3,
                "Ask Torq presets: add_kit puts a factory kit at a bar as a drop does: the session is the same as SequenceKit::place makes it (a folder, a track a part), "
                "with each part's voice to load; one plan step");
@@ -1893,7 +1893,7 @@ namespace
         Ai::Workspace::Start bare;
         bare.session = s;
         Ai::Workspace none (std::move (bare));
-        check (! (bool) parse (none.run ("find_sequence_presets", "{}"))["ok"] && ! (bool) parse (none.run ("add_kit", R"({"kit": "EBM Engine"})"))["ok"]
+        check (! (bool) parse (none.run ("find_sequence_presets", "{}"))["ok"] && ! (bool) parse (none.run ("add_kit", R"({"kit": "Pulse Engine"})"))["ok"]
                    && (bool) parse (none.run ("list_drum_maps", "{}"))["ok"] && parse (none.run ("list_drum_maps", "{}"))["maps"].size() == 0 && none.getSteps().isEmpty(),
                "Ask Torq presets: with no factory presets or drum maps to reach, the tools say there are none");
     }
@@ -1919,17 +1919,17 @@ namespace
         const auto began = juce::Time::getMillisecondCounterHiRes();
         const auto everything = call ("find_sequence_presets", "{}");
         const auto scanMs = juce::Time::getMillisecondCounterHiRes() - began;
-        const auto kits = call ("find_sequence_presets", R"({"role": "Kits", "style": "Industrial/EBM"})");
+        const auto kits = call ("find_sequence_presets", R"({"role": "Kits", "style": "Machine/Machine Pulse"})");
         auto allKits = kits["presets"].size() > 0;
 
         if (auto* list = kits["presets"].getArray())
             for (auto& kit : *list)
-                allKits = allKits && kit["kind"] == juce::var ("kit") && kit["style"] == juce::var ("Industrial/EBM") && kit["path"].toString().startsWith ("Kits/");
+                allKits = allKits && kit["kind"] == juce::var ("kit") && kit["style"] == juce::var ("Machine/Machine Pulse") && kit["path"].toString().startsWith ("Kits/");
 
         check (unpackError.isEmpty() && (bool) everything["ok"] && (int) everything["total"] > 1000 && everything["presets"].size() == 40
-                   && (int) everything["more"] == (int) everything["total"] - 40 && everything["styles"].toString().contains ("Industrial/EBM") && allKits,
+                   && (int) everything["more"] == (int) everything["total"] - 40 && everything["styles"].toString().contains ("Machine/Machine Pulse") && allKits,
                "Ask Torq presets: the app's own " + everything["total"].toString() + " factory sequences and kits are found through the library the app hands over (read in "
-                   + juce::String ((int) std::lround (scanMs)) + " ms); role Kits with style Industrial/EBM finds " + juce::String (kits["presets"].size()) + " kits, each of that style");
+                   + juce::String ((int) std::lround (scanMs)) + " ms); role Kits with style Machine/Machine Pulse finds " + juce::String (kits["presets"].size()) + " kits, each of that style");
 
         if (allKits)
         {
@@ -1972,9 +1972,9 @@ namespace
         start.session = *asked.session.getState();
         start.library = made.library();
         Ai::Workspace w (std::move (start));
-        const auto planned = parse (w.run ("add_kit", R"({"kit": "EBM Engine", "bar": 3})"));
+        const auto planned = parse (w.run ("add_kit", R"({"kit": "Pulse Engine", "bar": 3})"));
         const auto untouched = asked.session.getState()->tracks.size() == 1;
-        asked.session.apply (*w.getSession(), "Ask Torq: an EBM kit");
+        asked.session.apply (*w.getSession(), "Ask Torq: a pulse kit");
         auto askedDone = false, droppedDone = false;
         juce::String askedErrors, droppedErrors;
         Ai::loadVoices (asked, w.getVoiceLoads(), [&] (const juce::String& e) { askedErrors = e; askedDone = true; });
@@ -2238,7 +2238,7 @@ namespace
         };
         const auto last = chunk (R"({"choices":[{"delta":{"content":"A patch on the bass and a kit at bar 5."},"finish_reason":"stop"}]})") + "data: [DONE]\n\n";
         MockServer server ({ { 200, "text/event-stream", toolCall ("a", "set_instrument", "{\"track\": \"Bass\", \"plugin\": \"Torqwave Synth\", \"preset\": " + juce::JSON::toString (juce::var (patch)) + "}") },
-                             { 200, "text/event-stream", toolCall ("b", "add_kit", R"({"kit": "EBM Engine", "bar": 5})") },
+                             { 200, "text/event-stream", toolCall ("b", "add_kit", R"({"kit": "Pulse Engine", "bar": 5})") },
                              { 200, "text/event-stream", last } });
 
         SessionState s;
@@ -2265,7 +2265,7 @@ namespace
                                 return juce::String();
                             });
 
-        panel.getRequestBox().setText ("A dark patch on the bass, and an EBM kit at bar 5");
+        panel.getRequestBox().setText ("A dark patch on the bass, and a pulse kit at bar 5");
         panel.ask();
         TestUtils::runUntil ([&] { return panel.getLog().contains ("Apply to make these changes"); }, 10000);
         const auto log = panel.getLog();
@@ -2278,7 +2278,7 @@ namespace
                 tools.add (t["function"]["name"].toString());
 
         check (log.contains ("1. Load Torqwave Synth with the factory sound " + patch.quoted() + " on \"Bass\"")
-                   && log.contains ("2. Add the kit \"EBM Engine\" at bar 5: a folder with 2 tracks (Iron Kick, Slow Reese), 4 bars")
+                   && log.contains ("2. Add the kit \"Pulse Engine\" at bar 5: a folder with 2 tracks (Iron Kick, Slow Reese), 4 bars")
                    && log.contains ("Instruments are loaded once the plan is applied; that isn't part of the undo step.") && ! log.contains ("applied as one undo step"),
                "Ask Torq: asked by a made-up model for a factory patch and a kit, the window shows both plan steps and says the instruments load outside the undo step");
         check (requests.size() == 3 && tools.size() == Ai::SessionTools::toolDefinitions().size() + 2 && tools.contains ("find_sequence_presets") && tools.contains ("add_sequence_preset")

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Minimal Syncopated Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="A few short syncopated notes, room left for the groove" style="Techno/Minimal" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Minimal Syncopated Bass" role="Bass" subRole="Synth Bass" key="A minor" tags="" note="A few short syncopated notes, room left for the groove" style="Floor/Minimal" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="126.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="33" s="720" l="120" v="0.755906"/>
     <N p="33" s="2400" l="120" v="0.755906"/>

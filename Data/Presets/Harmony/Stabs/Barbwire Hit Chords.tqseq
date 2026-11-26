@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Barbwire Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A bare fifth, A and E pushed: a 16th before 2, the and of 2, a 16th after 4" style="Industrial/Industrial rock" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="116.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Barbwire Hit Chords" role="Harmony" subRole="Stabs" key="A minor" tags="" note="A bare fifth, A and E pushed: a 16th before 2, the and of 2, a 16th after 4" style="Machine/Iron Riff" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="116.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="45" s="720" l="220" v="0.818898"/>
     <N p="52" s="720" l="220" v="0.818898"/>

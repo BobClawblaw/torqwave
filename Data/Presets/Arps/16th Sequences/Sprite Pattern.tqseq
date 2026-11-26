@@ -1,71 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Sprite Pattern" role="Arps" subRole="16th Sequences" key="A minor" tags="Harmonic minor" note="A pedal on the root with the chord's notes between, through A minor, D minor, E, A minor" style="Game/Chiptune" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Sprite Pattern" role="Arps" subRole="16th Sequences" key="A minor" tags="Harmonic minor" note="A turning figure, root, fifth, third and octave, the root, the third and the seventh, through the roots A, D" style="Game/8-bit" energy="4" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="140.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
-    <N p="57" s="0" l="120" v="0.755906"/>
-    <N p="57" s="240" l="120" v="0.755906"/>
-    <N p="60" s="480" l="120" v="0.755906"/>
-    <N p="57" s="720" l="120" v="0.755906"/>
-    <N p="64" s="960" l="120" v="0.755906"/>
-    <N p="57" s="1200" l="120" v="0.755906"/>
-    <N p="60" s="1440" l="120" v="0.755906"/>
-    <N p="57" s="1680" l="120" v="0.755906"/>
-    <N p="57" s="1920" l="120" v="0.755906"/>
-    <N p="57" s="2160" l="120" v="0.755906"/>
-    <N p="60" s="2400" l="120" v="0.755906"/>
-    <N p="57" s="2640" l="120" v="0.755906"/>
-    <N p="64" s="2880" l="120" v="0.755906"/>
-    <N p="57" s="3120" l="120" v="0.755906"/>
-    <N p="69" s="3360" l="120" v="0.755906"/>
-    <N p="57" s="3600" l="120" v="0.755906"/>
-    <N p="62" s="3840" l="120" v="0.755906"/>
-    <N p="62" s="4080" l="120" v="0.755906"/>
-    <N p="65" s="4320" l="120" v="0.755906"/>
-    <N p="62" s="4560" l="120" v="0.755906"/>
-    <N p="69" s="4800" l="120" v="0.755906"/>
-    <N p="62" s="5040" l="120" v="0.755906"/>
-    <N p="65" s="5280" l="120" v="0.755906"/>
-    <N p="62" s="5520" l="120" v="0.755906"/>
-    <N p="62" s="5760" l="120" v="0.755906"/>
-    <N p="62" s="6000" l="120" v="0.755906"/>
-    <N p="65" s="6240" l="120" v="0.755906"/>
-    <N p="62" s="6480" l="120" v="0.755906"/>
-    <N p="69" s="6720" l="120" v="0.755906"/>
-    <N p="62" s="6960" l="120" v="0.755906"/>
-    <N p="74" s="7200" l="120" v="0.755906"/>
-    <N p="62" s="7440" l="120" v="0.755906"/>
-    <N p="64" s="7680" l="120" v="0.755906"/>
-    <N p="64" s="7920" l="120" v="0.755906"/>
-    <N p="68" s="8160" l="120" v="0.755906"/>
-    <N p="64" s="8400" l="120" v="0.755906"/>
-    <N p="71" s="8640" l="120" v="0.755906"/>
-    <N p="64" s="8880" l="120" v="0.755906"/>
-    <N p="68" s="9120" l="120" v="0.755906"/>
-    <N p="64" s="9360" l="120" v="0.755906"/>
-    <N p="64" s="9600" l="120" v="0.755906"/>
-    <N p="64" s="9840" l="120" v="0.755906"/>
-    <N p="68" s="10080" l="120" v="0.755906"/>
-    <N p="64" s="10320" l="120" v="0.755906"/>
-    <N p="71" s="10560" l="120" v="0.755906"/>
-    <N p="64" s="10800" l="120" v="0.755906"/>
-    <N p="76" s="11040" l="120" v="0.755906"/>
-    <N p="64" s="11280" l="120" v="0.755906"/>
-    <N p="57" s="11520" l="120" v="0.755906"/>
-    <N p="57" s="11760" l="120" v="0.755906"/>
-    <N p="60" s="12000" l="120" v="0.755906"/>
-    <N p="57" s="12240" l="120" v="0.755906"/>
-    <N p="64" s="12480" l="120" v="0.755906"/>
-    <N p="57" s="12720" l="120" v="0.755906"/>
-    <N p="60" s="12960" l="120" v="0.755906"/>
-    <N p="57" s="13200" l="120" v="0.755906"/>
-    <N p="57" s="13440" l="120" v="0.755906"/>
-    <N p="57" s="13680" l="120" v="0.755906"/>
-    <N p="60" s="13920" l="120" v="0.755906"/>
-    <N p="57" s="14160" l="120" v="0.755906"/>
-    <N p="64" s="14400" l="120" v="0.755906"/>
-    <N p="57" s="14640" l="120" v="0.755906"/>
-    <N p="69" s="14880" l="120" v="0.755906"/>
-    <N p="57" s="15120" l="120" v="0.755906"/>
+    <N p="69" s="0" l="120" v="0.755906"/>
+    <N p="80" s="240" l="120" v="0.755906"/>
+    <N p="72" s="480" l="120" v="0.755906"/>
+    <N p="81" s="720" l="120" v="0.755906"/>
+    <N p="69" s="960" l="120" v="0.755906"/>
+    <N p="80" s="1200" l="120" v="0.755906"/>
+    <N p="72" s="1440" l="120" v="0.755906"/>
+    <N p="81" s="1680" l="120" v="0.755906"/>
+    <N p="69" s="1920" l="120" v="0.755906"/>
+    <N p="80" s="2160" l="120" v="0.755906"/>
+    <N p="72" s="2400" l="120" v="0.755906"/>
+    <N p="81" s="2640" l="120" v="0.755906"/>
+    <N p="69" s="2880" l="120" v="0.755906"/>
+    <N p="80" s="3120" l="120" v="0.755906"/>
+    <N p="72" s="3360" l="120" v="0.755906"/>
+    <N p="80" s="3600" l="120" v="0.755906"/>
+    <N p="74" s="3840" l="120" v="0.755906"/>
+    <N p="84" s="4080" l="120" v="0.755906"/>
+    <N p="77" s="4320" l="120" v="0.755906"/>
+    <N p="86" s="4560" l="120" v="0.755906"/>
+    <N p="74" s="4800" l="120" v="0.755906"/>
+    <N p="84" s="5040" l="120" v="0.755906"/>
+    <N p="77" s="5280" l="120" v="0.755906"/>
+    <N p="86" s="5520" l="120" v="0.755906"/>
+    <N p="74" s="5760" l="120" v="0.755906"/>
+    <N p="84" s="6000" l="120" v="0.755906"/>
+    <N p="77" s="6240" l="120" v="0.755906"/>
+    <N p="86" s="6480" l="120" v="0.755906"/>
+    <N p="74" s="6720" l="120" v="0.755906"/>
+    <N p="84" s="6960" l="120" v="0.755906"/>
+    <N p="77" s="7200" l="120" v="0.755906"/>
+    <N p="84" s="7440" l="120" v="0.755906"/>
   </NOTES>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Bit Pluck" bus="0" instrument="1" musical="1" gainDb="4.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPoQGHPwVcislHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Bit Pluck" bus="0" instrument="1" musical="1" gainDb="5.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPoQGHPwVcislHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

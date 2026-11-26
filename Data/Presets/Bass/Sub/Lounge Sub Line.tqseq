@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Lounge Sub Line" role="Bass" subRole="Sub" key="A minor" tags="" note="An 8th on every offbeat, moving through the roots of A minor, G, F, G" style="House/Deep house" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Lounge Sub Line" role="Bass" subRole="Sub" key="A minor" tags="" note="An 8th on every offbeat, moving through the roots of A minor, G, F, G" style="Swing/Deep Swing" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="120.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="480" l="228" v="0.755906"/>
     <N p="33" s="1440" l="228" v="0.755906"/>

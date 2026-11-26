@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Interference Riser" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="8ths leaping the tritone and back, the pair a semitone higher on every beat for two bars" style="Industrial/Electro-industrial" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Interference Riser" role="SFX" subRole="Risers" key="A minor" tags="Chromatic" note="8ths leaping the tritone and back, the pair a semitone higher on every beat for two bars" style="Machine/Broken Circuit" energy="3" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="118.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="45" s="0" l="240" v="0.551181"/>
     <N p="51" s="480" l="240" v="0.574803"/>

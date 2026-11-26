@@ -1,12 +1,15 @@
 #include <JuceHeader.h>
 #include "../Source/SequenceLibraryView.h"
 #include "../Source/SequencerView.h"
+#include "../Source/Loudness.h"
+#include "../Source/SequencePreview.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/WaveSynth.h"
 #include "../Source/DrumMachine.h"
 #include "../Source/NoteTools.h"
 #include "../Source/Instrument.h"
+#include "../Source/Theme.h"
 #include "TestUtils.h"
 #include "PresetTests.h"
 
@@ -324,6 +327,44 @@ void runPresetTests (AudioEngine& engine)
                 {
                     auto played = q->notes;
                     std::stable_sort (played.begin(), played.end(), [] (const auto& x, const auto& y) { return x.start != y.start ? x.start < y.start : x.pitch < y.pitch; });
+
+                    // A bar played twice is that bar: what a preset plays is taken over the shortest stretch of
+                    // whole bars that it repeats.
+                    {
+                        const auto bar = (juce::int64) q->beatsPerBar * SequenceFile::ticksPerBeat;
+                        const auto bars = bar > 0 ? q->length / bar : 0;
+
+                        for (auto period : { (juce::int64) 1, (juce::int64) 2, (juce::int64) 4 })
+                        {
+                            if (period >= bars || bars % period != 0)
+                                continue;
+
+                            std::vector<std::pair<juce::int64, int>> first;
+                            auto repeats = true;
+
+                            for (auto& n : played)
+                                if (n.start < period * bar)
+                                    first.emplace_back (n.start, n.pitch);
+
+                            for (juce::int64 k = 1; k < bars / period && repeats; ++k)
+                            {
+                                std::vector<std::pair<juce::int64, int>> again;
+
+                                for (auto& n : played)
+                                    if (n.start >= k * period * bar && n.start < (k + 1) * period * bar)
+                                        again.emplace_back (n.start - k * period * bar, n.pitch);
+
+                                repeats = again == first;
+                            }
+
+                            if (repeats)
+                            {
+                                played.erase (std::remove_if (played.begin(), played.end(), [&] (const auto& n) { return n.start >= period * bar; }), played.end());
+                                break;
+                            }
+                        }
+                    }
+
                     One one { q->name, q->role + " > " + q->subRole, q->style, {}, {} };
                     const auto drums = playsOnDrums (*q);
                     int last = -1;
@@ -480,7 +521,7 @@ void runPresetTests (AudioEngine& engine)
     // the synth's Acid patches, a drum groove on one of Basic Drums' kits, channel 10.
     {
         juce::String error;
-        const auto acid = SequenceFile::load (presets.getChildFile ("Bass/Arp Bass/Acid Root Jumper.tqseq"), error);
+        const auto acid = SequenceFile::load (presets.getChildFile ("Bass/Arp Bass/Squelch Root Jumper.tqseq"), error);
         const auto synth = acid.has_value() && acid->voice != nullptr ? synthFrom (*acid->voice) : nullptr;
         const auto groove = SequenceFile::load (presets.getChildFile ("Drums/Full Grooves/Peak Hour Driver.tqseq"), error);
         const auto patch = synth != nullptr ? synth->getPatchName() : juce::String();
@@ -572,12 +613,51 @@ void runPresetTests (AudioEngine& engine)
 
                 juce::AudioBuffer<float> out;
                 const auto error = Instrument::render (engine.pluginFormatManager, description, state, phrase, 48000.0, 2, out);
-                const auto peak = out.getMagnitude (0, 0, out.getNumSamples());
+                auto peak = out.getMagnitude (0, 0, out.getNumSamples());
                 const auto gain = juce::Decibels::decibelsToGain ((float) q->voice->getDoubleAttribute ("gainDb"));
+
+                // A preset with a filter, level or bend lane plays louder or quieter than its notes alone:
+                // its peak is taken as it plays, by how far the lanes move the peak of the pass that loops.
+                if (error.isEmpty() && ! q->lanes.empty())
+                {
+                    auto bare = *q;
+                    bare.lanes.clear();
+                    juce::AudioBuffer<float> with, without;
+
+                    if (SequencePreview::render (*q, q->writtenTempo, q->beatsPerBar, 48000.0, engine.pluginFormatManager, with).isEmpty()
+                          && SequencePreview::render (bare, q->writtenTempo, q->beatsPerBar, 48000.0, engine.pluginFormatManager, without).isEmpty()
+                          && without.getMagnitude (0, without.getNumSamples()) > 1.0e-6f)
+                        peak *= with.getMagnitude (0, with.getNumSamples()) / without.getMagnitude (0, without.getNumSamples());
+                }
+
+                // A pad or a drone is set by how loud it is as the library's preview plays it (the pass that
+                // loops, its lanes and all), not by the peak of its notes: a held sound's peak says little of
+                // its loudness, and some patches play quieter held in a loop than struck once. The level
+                // written for the script is the peak that would put its loudest three seconds at -17 LUFS (-15
+                // where nothing in it is above A2: a low sound reads louder on a meter than it is heard),
+                // never past a peak of -4 dB.
+                auto levelDb = juce::Decibels::gainToDecibels (peak, -200.0f);
+
+                if (error.isEmpty() && q->role == "Pads")
+                {
+                    juce::AudioBuffer<float> played;
+
+                    if (SequencePreview::render (*q, q->writtenTempo, q->beatsPerBar, 48000.0, engine.pluginFormatManager, played).isEmpty()
+                          && played.getMagnitude (0, played.getNumSamples()) > 1.0e-6f)
+                    {
+                        const auto trackDb = q->voice->getDoubleAttribute ("gainDb");   // the preview plays the track's gain: taken off again
+                        const auto playedPeak = juce::Decibels::gainToDecibels (played.getMagnitude (0, played.getNumSamples()), -200.0f) - trackDb;
+                        const auto loudness = Loudness::measure (played, 48000.0).maxShortTerm - trackDb;
+                        const auto low = std::all_of (q->notes.begin(), q->notes.end(), [] (const auto& n) { return n.pitch <= 45; });
+
+                        if (std::isfinite (loudness))
+                            levelDb = (float) juce::jmax (playedPeak - 5.0, loudness + (-9.0 - (low ? -15.0 : -17.0)));
+                    }
+                }
 
                 // For Scripts/make_presets.py --calibrate: each preset's peak without its track gain.
                 if (const auto levels = juce::SystemStats::getEnvironmentVariable ("TQ_PRESET_LEVELS", {}); levels.isNotEmpty() && error.isEmpty())
-                    juce::File (levels).appendText (q->name + "|" + juce::String (juce::Decibels::gainToDecibels (peak, -200.0f), 2) + "\n");
+                    juce::File (levels).appendText (q->name + "|" + juce::String (levelDb, 2) + "\n");
 
                 // A part in a kit sits 6 dB lower than it does alone, since six play together.
                 const auto least = f.file.hasFileExtension (SequenceFile::kitExtension) ? -30.0f : -24.0f;
@@ -691,11 +771,42 @@ void runPresetTests (AudioEngine& engine)
                "presets: found by search (\"presets acid\" finds only presets); rated and marked as a favourite beside the presets, the preset's file unchanged, "
                "and Favourites shows it");
 
+        // Renamed in 0.22.0: a rating made under a preset's old path follows it to its new one, and a
+        // filter by a style's old name still finds its factory presets.
+        {
+            auto ratings = juce::XmlDocument::parse (SequenceLibrary::factoryRatingsFile());
+            auto* old = ratings->createNewChildElement ("PRESET");
+            old->setAttribute ("path", "Kits/EBM Kit.tqkit");
+            old->setAttribute ("rating", 5);
+            ratings->writeTo (SequenceLibrary::factoryRatingsFile());
+        }
+
+        const auto renamed = SequenceLibrary (presets).scan();
+        const auto kit = std::find_if (renamed.begin(), renamed.end(), [&presets] (auto& e) { return e.file == presets.getChildFile ("Kits/Machine Pulse Kit.tqkit"); });
+        SequenceLibrary::Filters before, now, oldGenre;
+        before.style = "Industrial/EBM";
+        now.style = "Machine/Machine Pulse";
+        oldGenre.style = "Industrial";
+        int byOld = 0, byNew = 0, byOldGenre = 0, machine = 0;
+
+        for (auto& e : renamed)
+        {
+            byOld += SequenceLibrary::passes (e, before, {}) ? 1 : 0;
+            byNew += SequenceLibrary::passes (e, now, {}) ? 1 : 0;
+            byOldGenre += SequenceLibrary::passes (e, oldGenre, {}) ? 1 : 0;
+            machine += SequenceFile::splitStyle (e.style).first == "Machine" ? 1 : 0;
+        }
+
+        check (kit != renamed.end() && kit->rating == 5 && byNew > 40 && byOld == byNew && byOldGenre == machine,
+               "presets renamed: a rating saved under Kits/EBM Kit.tqkit shows on Machine Pulse Kit; the style Industrial/EBM finds the "
+                   + juce::String (byOld) + " Machine Pulse presets, and the genre Industrial the " + juce::String (byOldGenre) + " of Machine");
+        SequenceLibrary::setRating (presets.getChildFile ("Kits/Machine Pulse Kit.tqkit"), 0);
+
         // Copy to My Library: the user's copy in the same role and sub-role, with its notes.
         juce::String error;
-        const auto bass = presets.getChildFile ("Bass/Synth Bass/Belgian Body Bass.tqseq");
+        const auto bass = presets.getChildFile ("Bass/Synth Bass/Iron Body Bass.tqseq");
         view.copyToLibrary ({ bass });
-        const auto copy = mine.getChildFile ("Bass/Synth Bass/Belgian Body Bass.tqseq");
+        const auto copy = mine.getChildFile ("Bass/Synth Bass/Iron Body Bass.tqseq");
         const auto original = SequenceFile::load (bass, error);
         const auto copied = SequenceFile::load (copy, error);
         check (copy.existsAsFile() && copy.hasWriteAccess() && original.has_value() && copied.has_value() && copied->notes == original->notes
@@ -747,7 +858,7 @@ void runPresetTests (AudioEngine& engine)
             return lowest >= low && highest <= high;
         };
 
-        const auto bass = presets.getChildFile ("Bass/Arp Bass/Acid Slide Rider.tqseq");
+        const auto bass = presets.getChildFile ("Bass/Arp Bass/Squelch Slide Rider.tqseq");
         SequencerView fresh (engine);
         fresh.openFile (bass);
         fresh.setSize (1200, 700);
@@ -759,7 +870,7 @@ void runPresetTests (AudioEngine& engine)
         laidOut.openFile (users.getFile());
         const auto leadShown = inView (laidOut, lead) && ! laidOut.getDocument().isDirty();
         laidOut.openFile (bass);
-        check (leadShown && inView (laidOut, bass) && inView (fresh, bass) && laidOut.getDocument().get().name == "Acid Slide Rider",
+        check (leadShown && inView (laidOut, bass) && inView (fresh, bass) && laidOut.getDocument().get().name == "Squelch Slide Rider",
                "presets: a sequence opened before the Sequencer is laid out, and one opened after another far above it, show their notes "
                "(the bass from " + juce::MidiMessage::getMidiNoteName (bassLow, true, true, 4) + ")");
     }
@@ -767,7 +878,7 @@ void runPresetTests (AudioEngine& engine)
     // Dropped: on an instrument track the notes play on its instrument; on empty space a new track plays the preview voice.
     {
         juce::String error;
-        const auto q = SequenceFile::load (presets.getChildFile ("Bass/Arp Bass/Acid Slide Rider.tqseq"), error);
+        const auto q = SequenceFile::load (presets.getChildFile ("Bass/Arp Bass/Squelch Slide Rider.tqseq"), error);
         SessionState s;
         s.sampleRate = 48000.0;
         s.addTrack();
@@ -782,6 +893,48 @@ void runPresetTests (AudioEngine& engine)
     }
 
     SequenceLibrary::setChosenFolder ({});
+    SequenceLibrary::setFactoryFolder (before);
+    base.deleteRecursively();
+}
+
+void saveSequencerGuidePicture (AudioEngine& engine, const juce::File& folder)
+{
+    folder.createDirectory();
+    Theme::apply (Theme::make ("Dark", "Blue"));
+    const auto before = SequenceLibrary::factoryFolder();
+    const auto base = juce::File::createTempFile ("guidepresets");
+    const auto presets = base.getChildFile ("Factory Presets").getChildFile ("set");
+    SequenceLibrary::setFactoryFolder (presets);
+    SequenceLibrary::setChosenFolder (base.getChildFile ("Mine"));
+    SequenceLibrary::unpackFactoryPresets();
+
+    // The Sequencer workspace's two panes: the library grouped by style and searched, and a
+    // groove from what it found open in the Sequencer.
+    juce::Component workspace;
+    SequenceLibraryView library (base.getChildFile ("Mine"));
+    SequencerView sequencer (engine);
+    workspace.addAndMakeVisible (library);
+    workspace.addAndMakeVisible (sequencer);
+    workspace.setBounds (0, 0, 1600, 990);
+    library.setBounds (0, 0, 320, 990);
+    sequencer.setBounds (326, 0, 1274, 990);
+    library.setGroup (SequenceLibrary::Group::style);
+    library.setSearch ("dark floor");
+    const auto groove = presets.getChildFile ("Drums/Full Grooves/Rumble Roller.tqseq");
+    library.select (groove);
+    sequencer.openFile (groove);
+
+    // Basic Drums loads in the background: given up to five seconds to show its name.
+    for (int i = 0; i < 50; ++i)
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (100);
+
+    const auto image = workspace.createComponentSnapshot (workspace.getLocalBounds(), true, 1.0f);
+    auto file = folder.getChildFile ("guide-presets.png");
+    file.deleteFile();
+    juce::FileOutputStream out (file);
+    juce::PNGImageFormat().writeImageToStream (image, out);
+    std::cout << file.getFullPathName() << " " << image.getWidth() << " x " << image.getHeight() << std::endl;
+
     SequenceLibrary::setFactoryFolder (before);
     base.deleteRecursively();
 }

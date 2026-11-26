@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Alarm Line" role="Melody" subRole="Hooks" key="A minor" tags="Phrygian" note="A and B flat a semitone apart, alternating in 8ths like an alarm" style="Industrial/EBM" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Alarm Line" role="Melody" subRole="Hooks" key="A minor" tags="Phrygian" note="A and B flat a semitone apart, alternating in 8ths like an alarm" style="Machine/Machine Pulse" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="69" s="0" l="216" v="0.755906"/>
     <N p="70" s="480" l="216" v="0.755906"/>

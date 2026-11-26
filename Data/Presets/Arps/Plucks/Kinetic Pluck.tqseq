@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Kinetic Pluck" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, through A minor, A minor" style="Techno/Percussive" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Kinetic Pluck" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, root, fifth and octave, no third, through the roots A, A" style="Floor/Percussive" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="134.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
-    <N p="81" s="0" l="120" v="0.755906"/>
-    <N p="76" s="720" l="120" v="0.755906"/>
-    <N p="81" s="1440" l="120" v="0.755906"/>
-    <N p="72" s="2160" l="120" v="0.755906"/>
-    <N p="76" s="2880" l="120" v="0.755906"/>
-    <N p="81" s="3840" l="120" v="0.755906"/>
-    <N p="76" s="4560" l="120" v="0.755906"/>
-    <N p="81" s="5280" l="120" v="0.755906"/>
-    <N p="72" s="6000" l="120" v="0.755906"/>
-    <N p="76" s="6720" l="120" v="0.755906"/>
+    <N p="69" s="0" l="120" v="0.755906"/>
+    <N p="69" s="720" l="120" v="0.755906"/>
+    <N p="69" s="1440" l="120" v="0.755906"/>
+    <N p="64" s="2160" l="120" v="0.755906"/>
+    <N p="69" s="2880" l="120" v="0.755906"/>
+    <N p="69" s="3840" l="120" v="0.755906"/>
+    <N p="69" s="4560" l="120" v="0.755906"/>
+    <N p="69" s="5280" l="120" v="0.755906"/>
+    <N p="64" s="6000" l="120" v="0.755906"/>
+    <N p="69" s="6720" l="120" v="0.755906"/>
   </NOTES>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Dark Kalimba" bus="0" instrument="1" musical="1" gainDb="8.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQgI2ZfrTXrkVahElHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Dark Kalimba" bus="0" instrument="1" musical="1" gainDb="7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HBQgI2ZfrTXrkVahElHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

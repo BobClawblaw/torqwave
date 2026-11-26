@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Moonlit Break" role="Drums" subRole="Breaks" key="" tags="" note="A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, under 8th hats, the downbeats stronger" style="Drum and Bass/Liquid" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="170.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Moonlit Break" role="Drums" subRole="Breaks" key="" tags="" note="A two-bar break, the kick moving in bar 2 and the snare ghosting round the backbeat, under 8th hats, the downbeats stronger" style="Fast/Fast Flow" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="170.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="42" s="0" l="120" v="0.771654"/>

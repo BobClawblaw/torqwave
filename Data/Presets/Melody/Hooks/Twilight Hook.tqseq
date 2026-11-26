@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Twilight Hook" role="Melody" subRole="Hooks" key="A minor" tags="" note="A sparse phrase stated twice, the second time ending another way in A minor" style="Industrial/Darkwave" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="116.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Twilight Hook" role="Melody" subRole="Hooks" key="A minor" tags="" note="A sparse phrase stated twice, the second time ending another way in A minor" style="Machine/Night Wave" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="116.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="69" s="0" l="960" v="0.755906"/>
     <N p="72" s="1920" l="120" v="0.755906"/>

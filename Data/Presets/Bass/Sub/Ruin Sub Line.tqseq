@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Ruin Sub Line" role="Bass" subRole="Sub" key="A minor" tags="" note="A held sub on the root, moving through the roots of A minor, A minor, F, E" style="Ambient/Dark ambient" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="80.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Ruin Sub Line" role="Bass" subRole="Sub" key="A minor" tags="" note="A held sub on the root, moving through the roots of A minor, A minor, F, E" style="Space/Dark Space" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="80.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="3840" v="0.755906"/>
     <N p="33" s="3840" l="3840" v="0.755906"/>

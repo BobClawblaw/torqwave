@@ -49,6 +49,7 @@
 #include "DecryptReal.h"
 #include "WaveSynthTests.h"
 #include "DrumMachineTests.h"
+#include "PresetTests.h"
 #include "SoundControlsTests.h"
 #include "InstrumentTrackTests.h"
 #include "NoteEditorTests.h"
@@ -776,6 +777,13 @@ int main (int argc, char* argv[])
     if (const auto folder = valueOf ("--drums-guide"); folder.isNotEmpty())
     {
         saveDrumGuidePictures (juce::File (folder));
+        return 0;
+    }
+
+    if (const auto folder = valueOf ("--sequencer-guide"); folder.isNotEmpty())
+    {
+        AudioEngine engine;
+        saveSequencerGuidePicture (engine, juce::File (folder));
         return 0;
     }
 

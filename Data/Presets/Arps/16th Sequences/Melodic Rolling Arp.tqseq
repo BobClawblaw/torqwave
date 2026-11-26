@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Melodic Rolling Arp" role="Arps" subRole="16th Sequences" key="A minor" tags="" note="16ths through A minor, F, C and G with the octave on top" style="Techno/Melodic" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Melodic Rolling Arp" role="Arps" subRole="16th Sequences" key="A minor" tags="" note="16ths through A minor, F, C and G with the octave on top" style="Floor/Melodic" energy="3" character="Bright,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="120" v="0.755906"/>
     <N p="60" s="240" l="120" v="0.755906"/>

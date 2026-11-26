@@ -1,15 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Ambush Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A and E held, the minor third joining on top halfway, for 4 bars, the filter breathing in and out" style="Game/Combat" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Ambush Drone" role="Pads" subRole="Drones" key="A minor" tags="Phrygian" note="A and E held, the B flat pressing in at bar 3, the pitch wavering a little either way and the filter surging and snapping shut" style="Game/Combat" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="150.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
-    <N p="33" s="0" l="15320" v="0.724409"/>
-    <N p="40" s="0" l="15320" v="0.724409"/>
-    <N p="48" s="7680" l="7640" v="0.614173"/>
+    <N p="33" s="0" l="15320" v="0.787402"/>
+    <N p="40" s="0" l="15320" v="0.692913"/>
+    <N p="34" s="7680" l="7640" v="0.755906"/>
   </NOTES>
   <LANE controller="74">
-    <P t="0" v="0.300000"/>
-    <P t="7680" v="0.700000"/>
-    <P t="15359" v="0.300000"/>
+    <P t="0" v="0.400000"/>
+    <P t="5760" v="0.900000"/>
+    <P t="6000" v="0.350000"/>
+    <P t="11520" v="0.850000"/>
+    <P t="11760" v="0.400000"/>
+    <P t="15359" v="0.950000"/>
   </LANE>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Acid Furnace" bus="0" instrument="1" musical="1" gainDb="-1.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPikFYfXTcx4VXiUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <LANE controller="128">
+    <P t="0" v="0.500000"/>
+    <P t="3840" v="0.440000"/>
+    <P t="5760" v="0.560000"/>
+    <P t="8640" v="0.460000"/>
+    <P t="11520" v="0.600000"/>
+    <P t="14400" v="0.500000"/>
+  </LANE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Corroded Reese" bus="0" instrument="1" musical="1" gainDb="4.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>74.VMjLgDD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxPuImbuQVYjAhTkU1bkIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

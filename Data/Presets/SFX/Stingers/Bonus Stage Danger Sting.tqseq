@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Bonus Stage Danger Sting" role="SFX" subRole="Stingers" key="A minor" tags="" note="A danger sting: B and F low together, a tritone, struck three times and the last held" style="Game/Chiptune" energy="5" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="160.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Bonus Stage Danger Sting" role="SFX" subRole="Stingers" key="A minor" tags="" note="A danger sting: B and F low together, a tritone, struck three times and the last held" style="Game/8-bit" energy="5" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="160.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="47" s="0" l="460" v="0.866142"/>
     <N p="53" s="0" l="460" v="0.866142"/>

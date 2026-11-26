@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
+#include "../Source/FactoryRenames.h"
 #include "../Source/Sampler.h"
 #include "../Source/SamplerEditor.h"
 #include "../Source/SamplerTrack.h"
@@ -1948,7 +1949,9 @@ namespace
             const auto asState = Ai::FactorySounds::stateOf (BuiltInEffects::samplerDescription(), "Cold Bell");
             const auto noSuch = Ai::FactorySounds::stateOf (BuiltInEffects::samplerDescription(), "No Such Sound");
             Processor loaded;
-            const auto byName = loaded.loadFactory ("Dark Techno Break") && loaded.getSlicing().on && loaded.getZones().size() > 8 && ! loaded.loadFactory ("No Such Sound");
+            const auto byName = loaded.loadFactory ("Low Rumble Break") && loaded.getSlicing().on && loaded.getZones().size() > 8 && ! loaded.loadFactory ("No Such Sound");
+            Processor renamed;   // by its name before 0.22.0 (FactoryRenames.h)
+            const auto byOldName = renamed.loadFactory (FactoryRenames::samplerPresets[0].first) && renamed.getZones().size() == loaded.getZones().size();
 
             Processor stepped;
             std::unique_ptr<juce::AudioProcessorEditor> made (stepped.createEditorAndMakeActive());
@@ -1963,10 +1966,10 @@ namespace
             stepped.editorBeingDeleted (made.get());
             made.reset();
 
-            check (named.startsWith ("factory:Strings/") && there && same2 && listed.size() == 11 && listed[0].category == "Keys" && asState.has_value() && ! noSuch.has_value() && byName && steppedOn
+            check (named.startsWith ("factory:Strings/") && there && same2 && listed.size() == 11 && listed[0].category == "Keys" && asState.has_value() && ! noSuch.has_value() && byName && byOldName && steppedOn
                        && InstrumentKeys::kindFor (loaded) == InstrumentKeys::Kind::kit,
                    "sampler factory: a factory preset's state names its samples by their place among the factory samples (" + named + ") and plays the same with them unpacked somewhere else; "
-                   "Ask Torq is given the eleven by name and category and a state for one; a preset is loaded by name; the presets row's next arrow puts one on the keys");
+                   "Ask Torq is given the eleven by name and category and a state for one; a preset is loaded by name, and by the name it had before 0.22.0; the presets row's next arrow puts one on the keys");
             elsewhere.deleteRecursively();
         }
 

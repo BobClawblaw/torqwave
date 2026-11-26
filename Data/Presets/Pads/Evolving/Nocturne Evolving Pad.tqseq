@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Nocturne Evolving Pad" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor seventh, F major seventh, G seventh, A minor seventh, the top note stepping up at half the bar, the filter breathing twice" style="Industrial/Darkwave" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="112.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Nocturne Evolving Pad" role="Pads" subRole="Evolving" key="A minor" tags="" note="A minor seventh, F major seventh, G seventh, A minor seventh, the top note stepping up at half the bar, the filter breathing twice" style="Machine/Night Wave" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="112.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="3800" v="0.629921"/>
     <N p="60" s="0" l="3800" v="0.629921"/>
@@ -24,11 +24,11 @@
     <N p="69" s="13440" l="1880" v="0.629921"/>
   </NOTES>
   <LANE controller="74">
-    <P t="0" v="0.350000"/>
-    <P t="3840" v="0.750000"/>
-    <P t="7680" v="0.350000"/>
-    <P t="11520" v="0.750000"/>
-    <P t="15359" v="0.350000"/>
+    <P t="0" v="0.450000"/>
+    <P t="3840" v="0.800000"/>
+    <P t="7680" v="0.450000"/>
+    <P t="11520" v="0.800000"/>
+    <P t="15359" v="0.450000"/>
   </LANE>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Sodium Lamp" bus="0" instrument="1" musical="1" gainDb="-3.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxTuQVZ00FHLEVavIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Sodium Lamp" bus="0" instrument="1" musical="1" gainDb="1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxTuQVZ00FHLEVavIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

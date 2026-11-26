@@ -52,7 +52,7 @@ BY_EAR = {
     ("synth", "Siren Burn"): "Three saws through the fuzz, a vibrato fading in, and a dotted echo.",
     ("synth", "Mercury Lead"): "A hard-synced wave swept by its envelope, with an echo.",
     ("synth", "Wailing Fuzz Lead"): "Strings ringing on over a sustained wave, fuzz, long slides and a late vibrato.",
-    ("synth", "Body Riff Power Chord"): "A synth guitar for EBM: a power chord from one key, clipped hard.",
+    ("synth", "Body Riff Power Chord"): "A hard synth guitar: a power chord from one key, clipped hard.",
     ("synth", "Swarm Drone"): "Strings all on one note, strummed, drifting and fuzzed.",
     ("synth", "Minor Stab"): "A minor triad from one key, three saws plucked by the filter.",
     ("synth", "Glass Shard"): "A bright FM pluck with a dotted echo.",
@@ -68,10 +68,10 @@ BY_EAR = {
 FRONT = [("synth", "Concrete Pad"), ("synth", "Furnace Halo"), ("synth", "Cold Bell"), ("synth", "Glass Shard"), ("synth", "Iron Verdict"),
          ("synth", "Ghost Radio Choir"), ("synth", "Abyss Reese"), ("synth", "Siren Burn"), ("swarm", "Tremolo Swarm Wall")]
 
-# The Sequence Library's genres and styles in the order the pages show them: techno and industrial first.
-GENRES = ["Techno", "Industrial"]
-FIRST_STYLES = ["Techno/Dark", "Techno/Industrial", "Techno/Hard", "Techno/Acid", "Industrial/EBM", "Industrial/Electro-industrial",
-                "Industrial/Dark electro", "Industrial/Aggrotech", "Industrial/Techno-body"]
+# The Sequence Library's genres and styles in the order the pages show them: the floor and machine styles first.
+GENRES = ["Floor", "Machine"]
+FIRST_STYLES = ["Floor/Dark Floor", "Floor/Factory Floor", "Floor/Hard Floor", "Floor/Squelch", "Machine/Machine Pulse", "Machine/Broken Circuit",
+                "Machine/Dark Circuit", "Machine/Overdrive", "Machine/Machine Drive"]
 ROLES = ["Drums", "Bass", "Harmony", "Pads", "Arps", "Melody", "SFX"]
 
 GROUPS = OrderedDict([
@@ -293,7 +293,7 @@ def source_card(alone, pattern):
     part = "over the groove" if name in SOURCE_OVER else SOURCE_PART.get(alone["category"], "over the groove")
     return (f'<div class="clip"><div class="kind">{esc(alone["category"])} · source {alone["number"]} of 24</div><h4>{esc(name)}</h4>'
             f'<p>Alone: a hard hit, a softer one, then five semitones down and five up.</p>{player(alone, "audio/")}'
-            f'<p>In two bars at 130 BPM, on a user pad of the Dark Techno kit, {part}.</p><div class="fill"></div>{player(pattern, "audio/")}</div>')
+            f'<p>In two bars at 130 BPM, on a user pad of the Low Rumble kit, {part}.</p><div class="fill"></div>{player(pattern, "audio/")}</div>')
 
 
 def drums_page():
@@ -391,7 +391,7 @@ def kits_page():
     library_page("kits", "sounds/kits.html", "Sequence Library: every factory kit", f"The Sequence Library: all {len(clips)} factory kits",
                  f'<p>A kit is a set of sequences written to play together: a groove, a bass line, chords or stabs, an arp or a hook, a fill and a transition. '
                  f'Dropped into a session it makes a track for each part, with its instrument. The Sequence Library ships {len(clips)} of them in '
-                 f'{len(set(c["category"] for c in clips))} styles, techno and industrial first. This is every one, each part named with the voice it plays on.</p>',
+                 f'{len(set(c["category"] for c in clips))} styles, the floor and machine styles first. This is every one, each part named with the voice it plays on.</p>',
                  f"All {len(clips)} factory kits of Torqwave's Sequence Library, by style, rendered by Torqwave with nothing added.")
 
 

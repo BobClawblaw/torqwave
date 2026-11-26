@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Silk Sub" role="Bass" subRole="Sub" key="A minor" tags="" note="A syncopated sub: the one, the and of 2, and a long note before 4, moving through the roots of A minor, D minor, F, G" style="Drum and Bass/Liquid" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="174.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Silk Sub" role="Bass" subRole="Sub" key="A minor" tags="" note="A syncopated sub: the one, the and of 2, and a long note before 4, moving through the roots of A minor, D minor, F, G" style="Fast/Fast Flow" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="174.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="720" v="0.755906"/>
     <N p="33" s="1440" l="480" v="0.755906"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Lagoon Hook" role="Melody" subRole="Hooks" key="A minor" tags="" note="A two-bar syncopated phrase in A minor" style="Drum and Bass/Liquid" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="170.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Lagoon Hook" role="Melody" subRole="Hooks" key="A minor" tags="" note="A two-bar syncopated phrase in A minor" style="Fast/Fast Flow" energy="4" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="170.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="69" s="0" l="480" v="0.755906"/>
     <N p="71" s="720" l="120" v="0.755906"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Concrete Perc Loop" role="Drums" subRole="Percussion" key="" tags="" note="Metal struck in threes, with high and mid toms playing like congas joining in bars 3 and 4" style="Techno/Dark" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Concrete Perc Loop" role="Drums" subRole="Percussion" key="" tags="" note="Metal struck in threes, with high and mid toms playing like congas joining in bars 3 and 4" style="Floor/Dark Floor" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="10" offset="0" length="15360" loopLength="0">
   <NOTES>
     <N p="56" s="0" l="120" v="0.771654"/>
     <N p="56" s="720" l="120" v="0.771654"/>

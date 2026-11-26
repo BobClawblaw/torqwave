@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Moonlit Kick Line" role="Drums" subRole="Kick" key="" tags="" note="A two-step kick with a pickup into the next bar, with a pickup kick an 8th before the next bar" style="Drum and Bass/Liquid" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="174.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Moonlit Kick Line" role="Drums" subRole="Kick" key="" tags="" note="A two-step kick with a pickup into the next bar, with a pickup kick an 8th before the next bar" style="Fast/Fast Flow" energy="3" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="174.0" beatsPerBar="4" channel="10" offset="0" length="7680" loopLength="0">
   <NOTES>
     <N p="36" s="0" l="120" v="0.944882"/>
     <N p="36" s="2400" l="120" v="0.944882"/>

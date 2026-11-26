@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Slag Drone" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="A low A, the tritone above it joining after a quarter, for 8 bars, the filter opening slowly" style="Techno/Industrial" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Slag Drone" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="A low A, the tritone above it joining after a quarter, for 8 bars, the filter opening slowly" style="Floor/Factory Floor" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
   <NOTES>
     <N p="33" s="0" l="30680" v="0.724409"/>
     <N p="39" s="7680" l="23000" v="0.614173"/>
   </NOTES>
   <LANE controller="74">
-    <P t="0" v="0.250000"/>
-    <P t="30719" v="0.800000"/>
+    <P t="0" v="0.450000"/>
+    <P t="30719" v="0.900000"/>
   </LANE>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Substation" bus="0" instrument="1" musical="1" gainDb="4.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxT0I1bzEFco8lah7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Abandoned Reactor" bus="0" instrument="1" musical="1" gainDb="6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>77.VMjLgPD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhElaj8lakQFHRUVXiQ2axIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

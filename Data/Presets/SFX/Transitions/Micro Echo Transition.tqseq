@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TORQWAVE_SEQUENCE version="1" name="Micro Echo Transition" role="SFX" subRole="Transitions" key="" tags="" note="One kick, three rims in the space after it and a single clap on beat 4" style="Floor/Minimal" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="124.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
+  <NOTES>
+    <N p="36" s="0" l="120" v="0.771654"/>
+    <N p="37" s="0" l="120" v="0.771654"/>
+    <N p="37" s="1440" l="120" v="0.771654"/>
+    <N p="37" s="2400" l="120" v="0.771654"/>
+    <N p="39" s="2880" l="120" v="0.771654"/>
+  </NOTES>
+  <VOICE><TRACKTEMPLATE name="Basic Drums: Iron Shutter" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHII2atAxTnUGczUlbh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+</TORQWAVE_SEQUENCE>
