@@ -402,7 +402,19 @@ def pick(names, preset_name):
     return names[zlib.crc32(preset_name.encode("utf-8")) % len(names)]
 
 
+# Presets moved by name to a patch that suits them, where the patch their name drew does not: a pad on a
+# pluck that does not hold, a drone on a patch that takes bars to arrive.
+PATCH_FOR = {
+    "Arcade Wash": "Platinum Square", "High Score Bloom": "Platinum Square",                 # were on Bit Pluck, which does not hold
+    "Haunted Hum": "Reactor Drone", "Slag Drone": "Abandoned Reactor",   # took 4 to 8 seconds to arrive
+}
+
+
 def patch_for(sound, preset_name):
+    if preset_name in PATCH_FOR:
+        assert any(PATCH_FOR[preset_name] in v for v in FACTORY_PATCHES.values()), PATCH_FOR[preset_name] + " is not a factory patch"
+        return PATCH_FOR[preset_name]
+
     # "=Name" is that factory patch and no other: a figure written for one sound.
     if sound.startswith("="):
         assert any(sound[1:] in v for v in FACTORY_PATCHES.values()), sound[1:] + " is not a factory patch"
@@ -1439,6 +1451,72 @@ DRONE_LANES = [
     ([(0, 0.9), (1, 0.5)], "the filter closing slowly"),
     ([(0, 0.5), (0.25, 0.8), (0.5, 0.5), (0.75, 0.8), (1, 0.5)], "the filter breathing twice"),
 ]
+
+# Drones written for one style: a drone that only holds is a hum. These move inside, by a lane that
+# keeps time or a note that changes, and every note still lasts two bars or more.
+
+def ticking(bars, pattern, low, high, weak=None, rise=0.0):
+    """A lane that strikes on a bar's 16ths ('x' full, 'o' weaker, '.' not) and falls back before the
+    next: a filter or a level that keeps time. `rise` lifts the strikes by that much from first to last."""
+    points, steps = [(0, low)], bars * 16
+    for i in range(steps):
+        c = pattern[i % len(pattern)]
+        if c != ".":
+            top = (high if c == "x" else weak if weak is not None else (low + high) / 2) - rise * (1 - i / steps)
+            points += [(i * S + 1, max(low, top)), (i * S + S - 20, low)]
+    return points
+
+
+def drone_ebm(voice):
+    part = held([("a1", 0, 100), ("e2", 0, 92), ("a2", 0, 84)], 4).lane(74, ticking(4, "x.oxx.ox", 0.25, 0.9, weak=0.6))
+    return "a bare fifth and its octave, A, E and A, held for four bars while the filter marches in 16ths: an 8th and two 16ths, over and over", part, synth(voice), []
+
+
+def drone_driving(voice):
+    part = held([("a1", 0, 100), ("e2", 0, 90), ("a2", 6, 88)], 8)
+    lane = ticking(4, "x...x...x...x...", 0.3, 0.95, rise=0.35) + [(t + 4 * BAR, v) for t, v in ticking(4, "x.x.x.x.x.x.x.x.", 0.3, 0.95, rise=0.1)[1:]]
+    return "A and E held for eight bars, the filter pulsing on every beat and brighter each time, then on every 8th, the A above joining for the last two bars: a motor picking up", part.lane(74, lane), synth(voice), []
+
+
+def drone_combat(voice):
+    part = held([("a1", 0, 100), ("e2", 0, 88), ("bb1", 2, 96)], 4)
+    part.lane(128, [(0, 0.5), (BAR, 0.44), (BAR + 2 * TPB, 0.56), (2 * BAR + TPB, 0.46), (3 * BAR, 0.6), (3 * BAR + 3 * TPB, 0.5)])
+    part.lane(74, [(0, 0.4), (BAR + 2 * TPB, 0.9), (BAR + 2 * TPB + S, 0.35), (3 * BAR, 0.85), (3 * BAR + S, 0.4), (4 * BAR - 1, 0.95)])
+    return "A and E held, the B flat pressing in at bar 3, the pitch wavering a little either way and the filter surging and snapping shut", part, synth(voice), ["Phrygian"]
+
+
+def drone_exploration(voice):
+    part = held([("a2", 0, 92), ("e3", 0, 84)], 8)
+    for i, name in enumerate(["b3", "c4", "e4", "d4"]):
+        part.add(pitch(name), i * 2 * BAR, 2 * BAR - 40, 80)
+    part.lane(74, [(0, 0.45), (2 * BAR, 0.75), (4 * BAR, 0.55), (6 * BAR, 0.9), (8 * BAR - 1, 0.6)])
+    return "A and E held for eight bars under a top note that moves every two: B, C, E, D, the filter opening and settling as it goes", part, synth(voice), []
+
+
+def drone_hard(voice):
+    part = held([("a1", 0, 104), ("a2", 0, 90)], 4).lane(74, ticking(4, ".xxo", 0.3, 0.85, weak=0.6))
+    return "A low A and the A above it, the filter rolling through the three 16ths after every beat, as a rumble does", part, synth(voice), []
+
+
+def drone_ebm_tension(voice):
+    part = held([("a1", 0, 100), ("a2", 0, 90), ("eb3", 1, 92)], 4)
+    part.lane(11, ticking(4, "x.x.x.x.x.x.xxxx", 0.35, 1.0)).lane(74, [(0, 0.45), (4 * BAR - 1, 0.9)])
+    return "An octave on A gated in 8ths, with 16ths at the end of each bar, the tritone above joining at bar 2 as the filter opens", part, synth(voice), ["Chromatic"]
+
+
+def rewrite(name, written):
+    """A preset written by hand above, written again here where the lanes that keep time are."""
+    words, part, voice, tags = written
+    old = next(p for p in PRESETS if p.name == name)
+    remember(old.role + " > " + old.sub, old.style, old.part, old.voice[0] == "drums")   # what it played stays taken
+    old.description, old.part, old.voice, old.tags = words, part, voice, list(tags)
+
+
+# The style, what writes its drone, and the voice it is written for.
+DRONES_WRITTEN = {
+    "Industrial/EBM": (drone_ebm, "Pulse Bunker"), "Techno/Driving": (drone_driving, "Abyss Reese"),
+    "Game/Combat": (drone_combat, "Corroded Reese"), "Game/Exploration": (drone_exploration, "Cathedral Of Rust"),
+}
 
 DRONES_FOR = {
     "Techno": ["fifth", "root", "latefifth", "stack"],
@@ -3075,6 +3153,16 @@ class Maker:
                     part.lane(74, [(int(t * length * BAR) - (1 if t == 1 else 0), v) for t, v in breath])
                     candidates.append((f"{said}, for {length} bars, {how}", part, synth(patch), tags))
 
+            # A style with a drone written for it plays that. The figure it would have drawn is kept in mind
+            # all the same, so the styles after it draw what they drew before.
+            if s.style in DRONES_WRITTEN:
+                for _, part, voice, _ in candidates:
+                    if is_new("Pads > Drones", s.style, part, False):
+                        remember("Pads > Drones", s.style, part, False)
+                        break
+
+                candidates = [DRONES_WRITTEN[s.style][0]("=" + DRONES_WRITTEN[s.style][1])]
+
             return self.add_new("pad", ROLE_NOUNS[sub], "Pads", sub, candidates)
 
         # The style's own progression first, then its others; the chords as drawn, then with or without the seventh.
@@ -3381,6 +3469,10 @@ class Maker:
 def join(phrases):
     phrases = [p for p in phrases if p]
     return phrases[0] if len(phrases) == 1 else ", ".join(phrases[:-1]) + " and " + phrases[-1]
+
+
+rewrite("Rumble Drone", drone_hard("=Corroded Reese"))
+rewrite("Tension Drone", drone_ebm_tension("=Cold Saw Lead"))
 
 
 def generate():

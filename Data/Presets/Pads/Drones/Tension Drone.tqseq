@@ -1,9 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Tension Drone" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="A and E flat a tritone apart, held under a breakdown" style="Industrial/EBM" energy="2" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Tension Drone" role="Pads" subRole="Drones" key="A minor" tags="Chromatic" note="An octave on A gated in 8ths, with 16ths at the end of each bar, the tritone above joining at bar 2 as the filter opens" style="Industrial/EBM" energy="2" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="122.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
-    <N p="45" s="0" l="15320" v="0.598425"/>
-    <N p="51" s="0" l="15320" v="0.519685"/>
+    <N p="33" s="0" l="15320" v="0.787402"/>
+    <N p="45" s="0" l="15320" v="0.708661"/>
+    <N p="51" s="3840" l="11480" v="0.724409"/>
   </NOTES>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Abandoned Reactor" bus="0" instrument="1" musical="1" gainDb="3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>77.VMjLgPD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhElaj8lakQFHRUVXiQ2axIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <LANE controller="11">
+    <P t="0" v="0.350000"/>
+    <P t="1" v="1.000000"/>
+    <P t="220" v="0.350000"/>
+    <P t="481" v="1.000000"/>
+    <P t="700" v="0.350000"/>
+    <P t="961" v="1.000000"/>
+    <P t="1180" v="0.350000"/>
+    <P t="1441" v="1.000000"/>
+    <P t="1660" v="0.350000"/>
+    <P t="1921" v="1.000000"/>
+    <P t="2140" v="0.350000"/>
+    <P t="2401" v="1.000000"/>
+    <P t="2620" v="0.350000"/>
+    <P t="2881" v="1.000000"/>
+    <P t="3100" v="0.350000"/>
+    <P t="3121" v="1.000000"/>
+    <P t="3340" v="0.350000"/>
+    <P t="3361" v="1.000000"/>
+    <P t="3580" v="0.350000"/>
+    <P t="3601" v="1.000000"/>
+    <P t="3820" v="0.350000"/>
+    <P t="3841" v="1.000000"/>
+    <P t="4060" v="0.350000"/>
+    <P t="4321" v="1.000000"/>
+    <P t="4540" v="0.350000"/>
+    <P t="4801" v="1.000000"/>
+    <P t="5020" v="0.350000"/>
+    <P t="5281" v="1.000000"/>
+    <P t="5500" v="0.350000"/>
+    <P t="5761" v="1.000000"/>
+    <P t="5980" v="0.350000"/>
+    <P t="6241" v="1.000000"/>
+    <P t="6460" v="0.350000"/>
+    <P t="6721" v="1.000000"/>
+    <P t="6940" v="0.350000"/>
+    <P t="6961" v="1.000000"/>
+    <P t="7180" v="0.350000"/>
+    <P t="7201" v="1.000000"/>
+    <P t="7420" v="0.350000"/>
+    <P t="7441" v="1.000000"/>
+    <P t="7660" v="0.350000"/>
+    <P t="7681" v="1.000000"/>
+    <P t="7900" v="0.350000"/>
+    <P t="8161" v="1.000000"/>
+    <P t="8380" v="0.350000"/>
+    <P t="8641" v="1.000000"/>
+    <P t="8860" v="0.350000"/>
+    <P t="9121" v="1.000000"/>
+    <P t="9340" v="0.350000"/>
+    <P t="9601" v="1.000000"/>
+    <P t="9820" v="0.350000"/>
+    <P t="10081" v="1.000000"/>
+    <P t="10300" v="0.350000"/>
+    <P t="10561" v="1.000000"/>
+    <P t="10780" v="0.350000"/>
+    <P t="10801" v="1.000000"/>
+    <P t="11020" v="0.350000"/>
+    <P t="11041" v="1.000000"/>
+    <P t="11260" v="0.350000"/>
+    <P t="11281" v="1.000000"/>
+    <P t="11500" v="0.350000"/>
+    <P t="11521" v="1.000000"/>
+    <P t="11740" v="0.350000"/>
+    <P t="12001" v="1.000000"/>
+    <P t="12220" v="0.350000"/>
+    <P t="12481" v="1.000000"/>
+    <P t="12700" v="0.350000"/>
+    <P t="12961" v="1.000000"/>
+    <P t="13180" v="0.350000"/>
+    <P t="13441" v="1.000000"/>
+    <P t="13660" v="0.350000"/>
+    <P t="13921" v="1.000000"/>
+    <P t="14140" v="0.350000"/>
+    <P t="14401" v="1.000000"/>
+    <P t="14620" v="0.350000"/>
+    <P t="14641" v="1.000000"/>
+    <P t="14860" v="0.350000"/>
+    <P t="14881" v="1.000000"/>
+    <P t="15100" v="0.350000"/>
+    <P t="15121" v="1.000000"/>
+    <P t="15340" v="0.350000"/>
+  </LANE>
+  <LANE controller="74">
+    <P t="0" v="0.450000"/>
+    <P t="15359" v="0.900000"/>
+  </LANE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Cold Saw Lead" bus="0" instrument="1" musical="1" gainDb="7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxPuwFYfLUX2ABSkEFYh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

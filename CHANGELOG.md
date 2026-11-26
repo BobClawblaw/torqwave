@@ -4,6 +4,23 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The Sequence Library: six drones written again with movement inside, and five presets on voices that suit**
+- **What was wrong,** found by the user listening to the 22 drones: Rumble Drone, Pathfinder Hum, Motor Low Drone and Ambush Drone "suck, redo", and "there's nothing really EBM about the EBM drones" (Body Drone, Tension Drone). Their rule for sounds: more movement or dynamic elements.
+- **What the four had in common:** a fifth on a low A that only holds, and a slow filter. Three of them played on one patch, Acid Furnace, bright and buzzing (about 1,500 Hz by zero crossings, where most drones sit under 300). Measured 16th by 16th, their level moved 1.4 to 2.4 dB a step, and Rumble Drone's only by dropping out. Nothing in any of them kept time or changed note.
+- **Now each moves, and every note still lasts two bars or more:**
+  - **Motor Low Drone** (Driving): A and E for eight bars, the filter pulsing on every beat and brighter each time, then on every 8th, the A above joining for the last two bars. On Abyss Reese. Level moves 5.8 dB a step.
+  - **Rumble Drone** (Hard): a low A and the A above, the filter rolling through the three 16ths after every beat as a rumble does. On Corroded Reese. 5.2 dB a step.
+  - **Ambush Drone** (Combat): A and E, the B flat pressing in at bar 3, the pitch wavering either way and the filter surging and snapping shut. On Corroded Reese. 2.4 dB a step, 14.9 dB between quietest and loudest.
+  - **Pathfinder Hum** (Exploration): A and E for eight bars under a top note that moves every two, B, C, E, D. On Cathedral Of Rust.
+  - **Body Drone** (EBM): a bare fifth and its octave held while the filter marches in 16ths, an 8th and two 16ths over and over. On Pulse Bunker, a sequencer bass. 3.3 dB a step where it had 0.4.
+  - **Tension Drone** (EBM): an octave on A gated in 8ths with 16ths at the end of each bar, the tritone joining at bar 2 as the filter opens. On Cold Saw Lead. 4.8 dB a step.
+- A lane that keeps time is new to the script (`ticking`): a filter or a level that strikes on a bar's 16ths and falls back before the next.
+- **The other sixteen drones are as they were,** note for note: the figure a rewritten style would have drawn is kept in mind, so the styles after it draw what they drew.
+- **Voices that suit** (the script can now move one preset to a named patch): Arcade Wash and High Score Bloom, Chiptune's pads, were on a pluck that does not hold and are on Platinum Square, a held square; they stood at -25 and -28 LUFS and stand at -17. Haunted Hum and Slag Drone took 8.0 and 4.1 s to arrive on their patches and take 1.1 and 1.2 s on Reactor Drone and Abandoned Reactor. No drone now takes more than 2.6 s.
+- **Levels after:** the 22 drones' loudest three seconds run from -17.6 to -14.1 LUFS, peaks to -3.3 dB.
+- **By the test for a style, the drones I would also change** (not changed): Body Shop Low Drone (Techno-body: wants the marching filter the EBM one has), Fifth Drone and Low A Drone (a fifth and one note, nothing moving), Hands Up Drone (Peak-time), Concrete Hum (the stillest of all: 0.2 dB a step), Hub Low Drone (Menu) and Arcade Hum (Chiptune: a drone has little to do with either style).
+- Tested: `--sequences`, 103 checks, all passing; `make_presets.py --check` writes the same files. The whole suite was not run. **Not listened to.**
+
 **The Sequence Library: pads and drones are set by how loud they play, and a drone is there from its first bar**
 - **What was wrong,** found by the user listening: "many of the drone samples are too quiet". Measured, the loudest three seconds of each of the 22 drones, rendered once through: in 0.21.1 six stood 14 to 23 LU under the rest (Body Shop Low Drone, Glitch Drone, Slag Drone and Concrete Hum at -40 to -42 LUFS, Rampage Drone -38, Hub Low Drone -33, the others -16 to -21); in the library as pushed two were still far down (Body Shop Low Drone -29, Glitch Drone -25) and the 22 ran from -29 to -13; with the levels set by peak and lanes they ran from -26 to -14.
 - **Why.** Three things. The six had a filter lane that began and ended nearly closed, so most of the sound was filtered away. A preset's level was set from its peak, and a held low sound's peak says little of how loud it is: two drones with the same peak stood 10 LU apart. And the level was measured on the notes played once through the instrument, where some patches play far quieter held in the library's looping preview than struck once (a pad on Fog Machine came out 10 dB under where it was set).

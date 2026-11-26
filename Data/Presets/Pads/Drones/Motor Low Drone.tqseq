@@ -1,14 +1,109 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Motor Low Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A low A, the fifth joining halfway, for 8 bars, the filter breathing in and out" style="Techno/Driving" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Motor Low Drone" role="Pads" subRole="Drones" key="A minor" tags="" note="A and E held for eight bars, the filter pulsing on every beat and brighter each time, then on every 8th, the A above joining for the last two bars: a motor picking up" style="Techno/Driving" energy="3" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="132.0" beatsPerBar="4" channel="1" offset="0" length="30720" loopLength="0">
   <NOTES>
-    <N p="33" s="0" l="30680" v="0.724409"/>
-    <N p="40" s="15360" l="15320" v="0.614173"/>
+    <N p="33" s="0" l="30680" v="0.787402"/>
+    <N p="40" s="0" l="30680" v="0.708661"/>
+    <N p="45" s="23040" l="7640" v="0.692913"/>
   </NOTES>
   <LANE controller="74">
-    <P t="0" v="0.500000"/>
-    <P t="15360" v="0.850000"/>
-    <P t="30719" v="0.500000"/>
+    <P t="0" v="0.300000"/>
+    <P t="1" v="0.600000"/>
+    <P t="220" v="0.300000"/>
+    <P t="961" v="0.621875"/>
+    <P t="1180" v="0.300000"/>
+    <P t="1921" v="0.643750"/>
+    <P t="2140" v="0.300000"/>
+    <P t="2881" v="0.665625"/>
+    <P t="3100" v="0.300000"/>
+    <P t="3841" v="0.687500"/>
+    <P t="4060" v="0.300000"/>
+    <P t="4801" v="0.709375"/>
+    <P t="5020" v="0.300000"/>
+    <P t="5761" v="0.731250"/>
+    <P t="5980" v="0.300000"/>
+    <P t="6721" v="0.753125"/>
+    <P t="6940" v="0.300000"/>
+    <P t="7681" v="0.775000"/>
+    <P t="7900" v="0.300000"/>
+    <P t="8641" v="0.796875"/>
+    <P t="8860" v="0.300000"/>
+    <P t="9601" v="0.818750"/>
+    <P t="9820" v="0.300000"/>
+    <P t="10561" v="0.840625"/>
+    <P t="10780" v="0.300000"/>
+    <P t="11521" v="0.862500"/>
+    <P t="11740" v="0.300000"/>
+    <P t="12481" v="0.884375"/>
+    <P t="12700" v="0.300000"/>
+    <P t="13441" v="0.906250"/>
+    <P t="13660" v="0.300000"/>
+    <P t="14401" v="0.928125"/>
+    <P t="14620" v="0.300000"/>
+    <P t="15361" v="0.850000"/>
+    <P t="15580" v="0.300000"/>
+    <P t="15841" v="0.853125"/>
+    <P t="16060" v="0.300000"/>
+    <P t="16321" v="0.856250"/>
+    <P t="16540" v="0.300000"/>
+    <P t="16801" v="0.859375"/>
+    <P t="17020" v="0.300000"/>
+    <P t="17281" v="0.862500"/>
+    <P t="17500" v="0.300000"/>
+    <P t="17761" v="0.865625"/>
+    <P t="17980" v="0.300000"/>
+    <P t="18241" v="0.868750"/>
+    <P t="18460" v="0.300000"/>
+    <P t="18721" v="0.871875"/>
+    <P t="18940" v="0.300000"/>
+    <P t="19201" v="0.875000"/>
+    <P t="19420" v="0.300000"/>
+    <P t="19681" v="0.878125"/>
+    <P t="19900" v="0.300000"/>
+    <P t="20161" v="0.881250"/>
+    <P t="20380" v="0.300000"/>
+    <P t="20641" v="0.884375"/>
+    <P t="20860" v="0.300000"/>
+    <P t="21121" v="0.887500"/>
+    <P t="21340" v="0.300000"/>
+    <P t="21601" v="0.890625"/>
+    <P t="21820" v="0.300000"/>
+    <P t="22081" v="0.893750"/>
+    <P t="22300" v="0.300000"/>
+    <P t="22561" v="0.896875"/>
+    <P t="22780" v="0.300000"/>
+    <P t="23041" v="0.900000"/>
+    <P t="23260" v="0.300000"/>
+    <P t="23521" v="0.903125"/>
+    <P t="23740" v="0.300000"/>
+    <P t="24001" v="0.906250"/>
+    <P t="24220" v="0.300000"/>
+    <P t="24481" v="0.909375"/>
+    <P t="24700" v="0.300000"/>
+    <P t="24961" v="0.912500"/>
+    <P t="25180" v="0.300000"/>
+    <P t="25441" v="0.915625"/>
+    <P t="25660" v="0.300000"/>
+    <P t="25921" v="0.918750"/>
+    <P t="26140" v="0.300000"/>
+    <P t="26401" v="0.921875"/>
+    <P t="26620" v="0.300000"/>
+    <P t="26881" v="0.925000"/>
+    <P t="27100" v="0.300000"/>
+    <P t="27361" v="0.928125"/>
+    <P t="27580" v="0.300000"/>
+    <P t="27841" v="0.931250"/>
+    <P t="28060" v="0.300000"/>
+    <P t="28321" v="0.934375"/>
+    <P t="28540" v="0.300000"/>
+    <P t="28801" v="0.937500"/>
+    <P t="29020" v="0.300000"/>
+    <P t="29281" v="0.940625"/>
+    <P t="29500" v="0.300000"/>
+    <P t="29761" v="0.943750"/>
+    <P t="29980" v="0.300000"/>
+    <P t="30241" v="0.946875"/>
+    <P t="30460" v="0.300000"/>
   </LANE>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Acid Furnace" bus="0" instrument="1" musical="1" gainDb="3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>72.VMjLg7C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPikFYfXTcx4VXiUlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Abyss Reese" bus="0" instrument="1" musical="1" gainDb="4.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhk2byAhTkU1bkIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

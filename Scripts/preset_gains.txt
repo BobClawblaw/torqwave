@@ -31,13 +31,13 @@ Aggro Saw Gate|-2.5
 Alarm Line|1.5
 Alarm Stab Tritone|0.5
 Ambush Defeat|-0.5
-Ambush Drone|1.0
+Ambush Drone|4.5
 Answering Line|0.0
 Anvil Beat|-1.5
 Anvil Low End Kick|-2.0
 Anvil Throb|7.0
 Arcade Hum|2.0
-Arcade Wash|6.0
+Arcade Wash|-2.0
 Arena Hook|-3.5
 Ashes Sub Pulse|-1.0
 Assault Turn|-2.0
@@ -91,7 +91,7 @@ Bloodline Snare Fill|-1.5
 Bloodmoon Open Sound|14.0
 Bloodmoon Snare Fill|-1.5
 Body Crack|1.0
-Body Drone|2.0
+Body Drone|6.5
 Body Gallop|-1.5
 Body Hat Line|4.5
 Body Music Beat|-1.5
@@ -384,12 +384,12 @@ Harmonic Minor Cluster|-0.5
 Harmonic Minor Up-Down|3.5
 Haunted Changes|-0.5
 Haunted Defeat Sting|-1.5
-Haunted Hum|1.5
+Haunted Hum|3.0
 Haunted Sixteenths|7.0
 Hellfire Drone|6.5
 Hex Bass Arp|-1.5
 Hex Riser|3.5
-High Score Bloom|5.0
+High Score Bloom|-2.5
 High Score Hook|6.5
 Highway Bassline|0.0
 Highway Sub|-1.0
@@ -560,7 +560,7 @@ Monolith Tom Fall|-1.5
 Moonlit Break|-3.5
 Moonlit Kick Line|-2.5
 Moonlit Wash|2.5
-Motor Low Drone|3.0
+Motor Low Drone|4.5
 Motor Sequence|5.0
 Motor Strummed Chords|2.0
 Mourning Build|6.5
@@ -645,7 +645,7 @@ Parade Bed|-1.5
 Parade Drive|-2.0
 Parade Kick Line|2.5
 Pathfinder Chords|0.5
-Pathfinder Hum|0.0
+Pathfinder Hum|3.5
 Pause Level Up Sound|13.5
 Peak Bass|-2.0
 Peak Groove|-1.5
@@ -761,7 +761,7 @@ Rubber Tom Fall|2.5
 Ruin Hit Chords|10.0
 Ruin Hook|7.0
 Ruin Sub Line|-0.5
-Rumble Drone|6.5
+Rumble Drone|7.5
 Rumble Roller|-2.0
 Rust Belt Drive|-1.5
 Rust Belt Keys|-0.5
@@ -821,7 +821,7 @@ Skyline Lift|7.0
 Slag Arp|4.0
 Slag Build|-0.5
 Slag Chords|-3.5
-Slag Drone|6.0
+Slag Drone|6.5
 Slag Hammer Pound|-2.0
 Slag Stabs|0.0
 Slag Sub Line|0.0
@@ -916,7 +916,7 @@ Techno Body Arp|3.0
 Techno Body Groove|-2.0
 Techno Body Sixteenths|-0.5
 Techno Body Stab|-1.5
-Tension Drone|3.0
+Tension Drone|7.5
 Terror Gate|-2.5
 Terror Kick Pattern|-1.5
 Terror Top Loop|-0.5
