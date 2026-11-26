@@ -2,169 +2,79 @@
   {
     "style": "Floor/Dark Floor",
     "presets": 48,
-    "own": 31,
-    "shown": 6
+    "own": 34,
+    "shown": 7
   },
   {
     "style": "Floor/Factory Floor",
     "presets": 41,
-    "own": 21,
-    "shown": 5
-  },
-  {
-    "style": "Floor/Hard Floor",
-    "presets": 41,
-    "own": 22,
-    "shown": 7
-  },
-  {
-    "style": "Floor/Squelch",
-    "presets": 28,
-    "own": 13,
+    "own": 24,
     "shown": 6
   },
   {
-    "style": "Machine/Machine Pulse",
-    "presets": 48,
-    "own": 28,
-    "shown": 7
-  },
-  {
-    "style": "Machine/Broken Circuit",
+    "style": "Floor/Hard Floor",
     "presets": 41,
     "own": 24,
     "shown": 7
   },
   {
+    "style": "Floor/Squelch",
+    "presets": 28,
+    "own": 17,
+    "shown": 7
+  },
+  {
+    "style": "Machine/Machine Pulse",
+    "presets": 48,
+    "own": 37,
+    "shown": 7
+  },
+  {
+    "style": "Machine/Broken Circuit",
+    "presets": 41,
+    "own": 28,
+    "shown": 7
+  },
+  {
     "style": "Machine/Dark Circuit",
     "presets": 21,
-    "own": 8,
-    "shown": 4
+    "own": 9,
+    "shown": 5
   },
   {
     "style": "Machine/Overdrive",
     "presets": 36,
-    "own": 18,
+    "own": 24,
     "shown": 7
   },
   {
     "style": "Machine/Machine Drive",
     "presets": 37,
-    "own": 23,
+    "own": 26,
     "shown": 7
-  },
-  {
-    "style": "Broken/Broken Beat",
-    "presets": 22,
-    "own": 13,
-    "shown": 2
   },
   {
     "style": "Space/Drone",
     "presets": 18,
-    "own": 7,
+    "own": 9,
     "shown": 2
   },
   {
-    "style": "Space/Dark Space",
-    "presets": 18,
-    "own": 6,
+    "style": "Broken/Broken Beat",
+    "presets": 22,
+    "own": 14,
     "shown": 2
   },
   {
     "style": "Fast/Fast Flow",
     "presets": 18,
-    "own": 8,
+    "own": 9,
     "shown": 2
   },
   {
     "style": "Fast/Fast Grind",
     "presets": 18,
-    "own": 8,
-    "shown": 2
-  },
-  {
-    "style": "Funk/Machine Funk",
-    "presets": 18,
-    "own": 9,
-    "shown": 2
-  },
-  {
-    "style": "Game/Boss",
-    "presets": 22,
-    "own": 11,
-    "shown": 2
-  },
-  {
-    "style": "Game/8-bit",
-    "presets": 23,
-    "own": 11,
-    "shown": 2
-  },
-  {
-    "style": "Game/Combat",
-    "presets": 24,
-    "own": 11,
-    "shown": 2
-  },
-  {
-    "style": "Game/Exploration",
-    "presets": 24,
-    "own": 11,
-    "shown": 2
-  },
-  {
-    "style": "Game/Dread",
-    "presets": 23,
-    "own": 13,
-    "shown": 2
-  },
-  {
-    "style": "Game/Menu",
-    "presets": 24,
     "own": 12,
-    "shown": 2
-  },
-  {
-    "style": "Swing/Deep Swing",
-    "presets": 17,
-    "own": 6,
-    "shown": 2
-  },
-  {
-    "style": "Machine/Cold Glow",
-    "presets": 22,
-    "own": 9,
-    "shown": 2
-  },
-  {
-    "style": "Machine/Night Wave",
-    "presets": 32,
-    "own": 19,
-    "shown": 2
-  },
-  {
-    "style": "Machine/Bright Pulse",
-    "presets": 29,
-    "own": 14,
-    "shown": 2
-  },
-  {
-    "style": "Machine/Iron Riff",
-    "presets": 26,
-    "own": 13,
-    "shown": 2
-  },
-  {
-    "style": "Machine/Night Pulse",
-    "presets": 30,
-    "own": 16,
-    "shown": 2
-  },
-  {
-    "style": "Neon/Neon Menace",
-    "presets": 18,
-    "own": 10,
     "shown": 2
   },
   {
@@ -176,49 +86,139 @@
   {
     "style": "Floor/Driving",
     "presets": 47,
-    "own": 30,
+    "own": 32,
     "shown": 2
   },
   {
     "style": "Floor/Echo Chamber",
     "presets": 22,
-    "own": 10,
+    "own": 11,
     "shown": 2
   },
   {
     "style": "Floor/Hypnotic",
     "presets": 32,
-    "own": 20,
+    "own": 21,
     "shown": 2
   },
   {
     "style": "Floor/Melodic",
     "presets": 39,
-    "own": 25,
+    "own": 27,
     "shown": 2
   },
   {
     "style": "Floor/Minimal",
     "presets": 26,
-    "own": 11,
+    "own": 13,
     "shown": 2
   },
   {
     "style": "Floor/Peak-time",
     "presets": 44,
-    "own": 26,
+    "own": 30,
     "shown": 2
   },
   {
     "style": "Floor/Percussive",
     "presets": 27,
+    "own": 17,
+    "shown": 2
+  },
+  {
+    "style": "Funk/Machine Funk",
+    "presets": 18,
+    "own": 10,
+    "shown": 2
+  },
+  {
+    "style": "Game/8-bit",
+    "presets": 23,
     "own": 13,
+    "shown": 2
+  },
+  {
+    "style": "Game/Boss",
+    "presets": 22,
+    "own": 10,
+    "shown": 2
+  },
+  {
+    "style": "Game/Combat",
+    "presets": 24,
+    "own": 11,
+    "shown": 2
+  },
+  {
+    "style": "Game/Dread",
+    "presets": 23,
+    "own": 14,
+    "shown": 2
+  },
+  {
+    "style": "Game/Exploration",
+    "presets": 24,
+    "own": 10,
+    "shown": 2
+  },
+  {
+    "style": "Game/Menu",
+    "presets": 24,
+    "own": 15,
+    "shown": 2
+  },
+  {
+    "style": "Machine/Bright Pulse",
+    "presets": 28,
+    "own": 15,
+    "shown": 2
+  },
+  {
+    "style": "Machine/Cold Glow",
+    "presets": 22,
+    "own": 11,
+    "shown": 2
+  },
+  {
+    "style": "Machine/Iron Riff",
+    "presets": 26,
+    "own": 12,
+    "shown": 2
+  },
+  {
+    "style": "Machine/Night Pulse",
+    "presets": 30,
+    "own": 18,
+    "shown": 2
+  },
+  {
+    "style": "Machine/Night Wave",
+    "presets": 32,
+    "own": 21,
+    "shown": 2
+  },
+  {
+    "style": "Neon/Neon Menace",
+    "presets": 18,
+    "own": 11,
+    "shown": 2
+  },
+  {
+    "style": "Space/Dark Space",
+    "presets": 18,
+    "own": 9,
     "shown": 2
   },
   {
     "style": "Spiral/Rolling Spiral",
     "presets": 18,
-    "own": 10,
+    "own": 8,
+    "shown": 2
+  },
+  {
+    "style": "Swing/Deep Swing",
+    "presets": 17,
+    "own": 6,
     "shown": 2
   }
 ]
