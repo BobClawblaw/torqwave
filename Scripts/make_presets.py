@@ -786,8 +786,8 @@ preset("Fifth Drone", P, "Drones", "Techno/Industrial", 1, ["Dark", "Sparse", "S
 preset("Phrygian Drone", P, "Drones", "Techno/Industrial", 2, ["Dark", "Sparse", "Straight", "Distorted"],
        "A1 with B flat 2 grinding above it", Part(8).add(pitch("a1"), 0, 8 * BAR - 40, 80).add(pitch("bb2"), 0, 8 * BAR - 40, 60), 128, synth("drone"), tags=["Phrygian"])
 preset("Rumble Drone", P, "Drones", "Techno/Hard", 3, ["Dark", "Dense", "Straight", "Distorted"],
-       "A low A and the A under it, the filter breathing every bar",
-       Part(4).add(pitch("a1"), 0, 4 * BAR - 40, 90).add(pitch("a0"), 0, 4 * BAR - 40, 80).lane(74, [(i * BAR // 2, 0.35 if i % 2 == 0 else 0.6) for i in range(9)]), 150, synth("drone"))
+       "A low A and the A above it, the filter breathing every bar",
+       Part(4).add(pitch("a1"), 0, 4 * BAR - 40, 90).add(pitch("a2"), 0, 4 * BAR - 40, 80).lane(74, [(i * BAR // 2, 0.5 if i % 2 == 0 else 0.8) for i in range(9)]), 150, synth("drone"))
 preset("Tension Drone", P, "Drones", "Industrial/EBM", 2, ["Dark", "Sparse", "Straight", "Distorted"],
        "A and E flat a tritone apart, held under a breakdown", Part(4).add(pitch("a2"), 0, 4 * BAR - 40, 76).add(pitch("eb3"), 0, 4 * BAR - 40, 66), 122, synth("drone"), tags=["Chromatic"])
 
@@ -1384,11 +1384,11 @@ PAD_TEXTURES = {
 
 # An evolving pad's filter: (where in the preset, how open), and what to say.
 PAD_LANES = [
-    ([(0, 0.35), (0.5, 0.85), (1, 0.4)], "the filter opening and closing again"),
-    ([(0, 0.3), (1, 0.9)], "the filter opening the whole way"),
-    ([(0, 0.9), (1, 0.35)], "the filter closing the whole way"),
-    ([(0, 0.35), (0.25, 0.75), (0.5, 0.35), (0.75, 0.75), (1, 0.35)], "the filter breathing twice"),
-    ([(0, 0.65), (0.5, 0.3), (1, 0.85)], "the filter dipping at the middle and opening past where it began"),
+    ([(0, 0.45), (0.5, 0.9), (1, 0.5)], "the filter opening and closing again"),
+    ([(0, 0.4), (1, 0.9)], "the filter opening the whole way"),
+    ([(0, 0.9), (1, 0.45)], "the filter closing the whole way"),
+    ([(0, 0.45), (0.25, 0.8), (0.5, 0.45), (0.75, 0.8), (1, 0.45)], "the filter breathing twice"),
+    ([(0, 0.7), (0.5, 0.4), (1, 0.9)], "the filter dipping at the middle and opening past where it began"),
 ]
 
 PADS_FOR = {
@@ -1432,11 +1432,12 @@ DRONE_FIGURES = {
     "low":      ([("e1", 0, 1), ("a1", 0.5, 1)], "a low E, the A above it joining halfway", []),
 }
 
+# A drone is there from its first bar: its filter never starts or ends near closed.
 DRONE_LANES = [
-    ([(0, 0.3), (0.5, 0.7), (1, 0.3)], "the filter breathing in and out"),
-    ([(0, 0.25), (1, 0.8)], "the filter opening slowly"),
-    ([(0, 0.75), (1, 0.3)], "the filter closing slowly"),
-    ([(0, 0.3), (0.25, 0.6), (0.5, 0.3), (0.75, 0.6), (1, 0.3)], "the filter breathing twice"),
+    ([(0, 0.5), (0.5, 0.85), (1, 0.5)], "the filter breathing in and out"),
+    ([(0, 0.45), (1, 0.9)], "the filter opening slowly"),
+    ([(0, 0.9), (1, 0.5)], "the filter closing slowly"),
+    ([(0, 0.5), (0.25, 0.8), (0.5, 0.5), (0.75, 0.8), (1, 0.5)], "the filter breathing twice"),
 ]
 
 DRONES_FOR = {

@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "../Source/SequenceLibraryView.h"
 #include "../Source/SequencerView.h"
+#include "../Source/Loudness.h"
 #include "../Source/SequencePreview.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
@@ -590,9 +591,34 @@ void runPresetTests (AudioEngine& engine)
                         peak *= with.getMagnitude (0, with.getNumSamples()) / without.getMagnitude (0, without.getNumSamples());
                 }
 
+                // A pad or a drone is set by how loud it is as the library's preview plays it (the pass that
+                // loops, its lanes and all), not by the peak of its notes: a held sound's peak says little of
+                // its loudness, and some patches play quieter held in a loop than struck once. The level
+                // written for the script is the peak that would put its loudest three seconds at -17 LUFS (-15
+                // where nothing in it is above A2: a low sound reads louder on a meter than it is heard),
+                // never past a peak of -4 dB.
+                auto levelDb = juce::Decibels::gainToDecibels (peak, -200.0f);
+
+                if (error.isEmpty() && q->role == "Pads")
+                {
+                    juce::AudioBuffer<float> played;
+
+                    if (SequencePreview::render (*q, q->writtenTempo, q->beatsPerBar, 48000.0, engine.pluginFormatManager, played).isEmpty()
+                          && played.getMagnitude (0, played.getNumSamples()) > 1.0e-6f)
+                    {
+                        const auto trackDb = q->voice->getDoubleAttribute ("gainDb");   // the preview plays the track's gain: taken off again
+                        const auto playedPeak = juce::Decibels::gainToDecibels (played.getMagnitude (0, played.getNumSamples()), -200.0f) - trackDb;
+                        const auto loudness = Loudness::measure (played, 48000.0).maxShortTerm - trackDb;
+                        const auto low = std::all_of (q->notes.begin(), q->notes.end(), [] (const auto& n) { return n.pitch <= 45; });
+
+                        if (std::isfinite (loudness))
+                            levelDb = (float) juce::jmax (playedPeak - 5.0, loudness + (-9.0 - (low ? -15.0 : -17.0)));
+                    }
+                }
+
                 // For Scripts/make_presets.py --calibrate: each preset's peak without its track gain.
                 if (const auto levels = juce::SystemStats::getEnvironmentVariable ("TQ_PRESET_LEVELS", {}); levels.isNotEmpty() && error.isEmpty())
-                    juce::File (levels).appendText (q->name + "|" + juce::String (juce::Decibels::gainToDecibels (peak, -200.0f), 2) + "\n");
+                    juce::File (levels).appendText (q->name + "|" + juce::String (levelDb, 2) + "\n");
 
                 // A part in a kit sits 6 dB lower than it does alone, since six play together.
                 const auto least = f.file.hasFileExtension (SequenceFile::kitExtension) ? -30.0f : -24.0f;
