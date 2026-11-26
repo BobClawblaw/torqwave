@@ -72,6 +72,10 @@ namespace
             for (int l = numFirstLfos + 1; l <= numLfos; ++l)
                 add ("lfo" + juce::String (l) + "Rate", "LFO " + juce::String (l) + " Rate");
 
+            // Each slot's depth: a slot can move another's.
+            for (int s = 1; s <= numSlots; ++s)
+                add ("mod" + juce::String (s) + "Amount", "Slot " + juce::String (s) + " Depth");
+
             jassert ((int) all.size() == numDestinations);
             return all;
         }();
@@ -113,7 +117,7 @@ const std::vector<std::pair<int, juce::String>>& destinationSections()
                                                                 { 31, "Filters" }, { 37, "Amp" }, { 39, "LFOs" }, { 41, "Effects" },
                                                                 { 47, "Oscillator 4" }, { 56, "Oscillator 5" }, { 65, "Oscillator 6" },
                                                                 { 74, "Oscillator 7" }, { 83, "Oscillator 8" }, { 92, "Oscillator 9" },
-                                                                { 101, "LFOs 3 and 4" } };
+                                                                { 101, "LFOs 3 and 4" }, { firstSlotDepth + 1, "Slot Depths" } };
     return s;
 }
 
@@ -156,7 +160,7 @@ int destinationsWhenSaved (const juce::String& base64State)
         return 0;
 
     if (! xml->hasAttribute ("osc4On"))   return numFirstDestinations;
-    if (! xml->hasAttribute ("lfo3Rate")) return numDestinations - (numLfos - numFirstLfos);
+    if (! xml->hasAttribute ("lfo3Rate")) return firstSlotDepth - (numLfos - numFirstLfos);
     return numDestinations;
 }
 
@@ -1383,13 +1387,42 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         inUse ([&] (int d) { value[(size_t) d] = shared.base[(size_t) d]; });
 
         if (shared.anyModulation)
+        {
+            const auto reach = [&] (const auto& slot, float amount)
+            {
+                const auto toFilter = v != nullptr && slot.source >= env1 && slot.source <= env4
+                                      && slot.destination >= dF1Cutoff && slot.destination <= dF2Drive;
+                value[(size_t) slot.destination] += amount * (toFilter ? v->toFilter[(size_t) (slot.source - env1)] : sourceValue (v, slot.source));
+            };
+
+            // The slots moving another slot's depth first, each at its own depth (one level: a depth slot's
+            // own depth moved by another is left as its knob has it).
+            bool depthMoved = false;
+
             for (auto& slot : shared.slots)
-                if (slot.source != 0 && slot.destination >= 0 && slot.destination < numDestinations)
+                if (slot.source != 0 && slot.destination >= firstSlotDepth && slot.destination < numDestinations)
                 {
-                    const auto toFilter = v != nullptr && slot.source >= env1 && slot.source <= env4
-                                          && slot.destination >= dF1Cutoff && slot.destination <= dF2Drive;
-                    value[(size_t) slot.destination] += slot.amount * (toFilter ? v->toFilter[(size_t) (slot.source - env1)] : sourceValue (v, slot.source));
+                    reach (slot, slot.amount);
+                    depthMoved = true;
                 }
+
+            // Then the rest, each at its depth as moved (its knob's own where nothing moves it).
+            for (int i = 0; i < numSlots; ++i)
+            {
+                const auto& slot = shared.slots[(size_t) i];
+
+                if (slot.source == 0 || slot.destination < 0 || slot.destination >= firstSlotDepth)
+                    continue;
+
+                auto amount = slot.amount;
+                const auto d = firstSlotDepth + i;
+
+                if (depthMoved && ! juce::exactlyEqual (value[(size_t) d], shared.base[(size_t) d]))
+                    amount = plain (d, juce::jlimit (0.0f, 1.0f, value[(size_t) d])) * 0.01f;
+
+                reach (slot, amount);
+            }
+        }
 
         // Cutoff (CC 74) takes both filters down as far as eight octaves; Resonance (CC 71) up toward the most.
         if (brightness < 1.0f || ccResonance > 0.0f)

@@ -33,7 +33,8 @@ FIRST = ["subLevel", "noiseLevel", "noiseColour", "filter1Cutoff", "filter1Reson
          "filter2Cutoff", "filter2Resonance", "filter2Drive", "ampLevel", "ampPan", "lfo1Rate", "lfo2Rate",
          "fxDriveAmount", "fxChorusMix", "fxPhaserMix", "fxDelayMix", "fxDelayFeedback", "fxReverbMix"]
 DESTINATIONS = ([f"osc{o}{f}" for o in range(1, 4) for f in OSC_FIELDS] + FIRST
-                + [f"osc{o}{f}" for o in range(4, 10) for f in OSC_FIELDS] + ["lfo3Rate", "lfo4Rate"])
+                + [f"osc{o}{f}" for o in range(4, 10) for f in OSC_FIELDS] + ["lfo3Rate", "lfo4Rate"]
+                + [f"mod{s}Amount" for s in range(1, 25)])
 
 DEFAULTS = {"osc1On": 1, "osc1Position": 66.67, "filter1Type": 1, "filter1Cutoff": 8000, "env1Attack": 2,
             "env1Decay": 300, "env1Sustain": 80, "env1Release": 120}
@@ -63,6 +64,8 @@ def family(dest):
         return "fx"
     if dest.startswith("lfo"):
         return "lfo-rate"
+    if dest.startswith("mod"):
+        return "depth"
     if dest in ("ampLevel",):
         return "level"
     if dest in ("ampPan",):

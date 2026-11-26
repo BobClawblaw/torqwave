@@ -27,9 +27,11 @@ namespace WaveSynth
     constexpr int numFirstOscillators = 3;
     /** The modulation destinations before there were nine oscillators (a slot's menu held these and None). */
     constexpr int numFirstDestinations = 46;
+    /** Where the slots' depths begin among the destinations (after LFO 3 and 4's rates). */
+    constexpr int firstSlotDepth = numFirstDestinations + 9 * (numOscillators - numFirstOscillators) + (numLfos - numFirstLfos);
     /** The destinations: 9 for each oscillator, 19 more (sub, noise, filters, amp, LFO 1 and 2's rates, effects),
-        then LFO 3 and 4's rates. */
-    constexpr int numDestinations = numFirstDestinations + 9 * (numOscillators - numFirstOscillators) + (numLfos - numFirstLfos);
+        then LFO 3 and 4's rates, then each slot's depth (its Amount: a slot moving another's depth). */
+    constexpr int numDestinations = firstSlotDepth + numSlots;
     constexpr int maxUnison = 8, numVoices = 16, numFadingVoices = 8;
     constexpr int controlInterval = 16;
     /** The unison voices that may sound at once, every note's oscillators counted (each on, its unison):
@@ -77,7 +79,7 @@ namespace WaveSynth
     /** True for a parameter added with oscillators 4 to 9 (theirs, and each oscillator's FM From). */
     bool isAddedWithNine (const juce::String& parameterId);
     /** How many destinations a slot's menu had when a saved state (as a session keeps it: base64) was made: 46
-        before nine oscillators, 100 before LFOs 3 and 4, numDestinations since; 0 if it isn't Torqwave Synth's. An
+        before nine oscillators, 100 before 0.23.0 (LFOs 3 and 4, the slots' depths), numDestinations since; 0 if it isn't Torqwave Synth's. An
         automation lane on a slot's Source or Destination holds values normalised over the menu as it was, which
         slotChoiceFrom puts back on the same source or destination in the menus there are now. */
     int destinationsWhenSaved (const juce::String& base64State);
@@ -188,7 +190,7 @@ namespace BuiltInEffects
         void setMacroName (int i, const juce::String& n)              { macroNames[(size_t) i] = n; }
 
         /** Routes a source to a destination parameter in the first free slot (or the slot already
-            joining them); the slot's index, or -1 when all sixteen are taken. */
+            joining them); the slot's index, or -1 when every slot is taken. */
         int addModulation (int source, const juce::String& destinationId, float amount = 0.25f);
         void removeModulation (int slot);
         void setModulationAmount (int slot, float amount);

@@ -762,7 +762,7 @@ void StepSelector::mouseWheelMove (const juce::MouseEvent&, const juce::MouseWhe
     }
 }
 
-void StepSelector::showMenu()
+juce::PopupMenu StepSelector::makeMenu() const
 {
     juce::PopupMenu menu;
     size_t nextSection = 0;
@@ -775,8 +775,13 @@ void StepSelector::showMenu()
         menu.addItem (i + 1, choices[i], true, i == index);
     }
 
+    return menu;
+}
+
+void StepSelector::showMenu()
+{
     juce::Component::SafePointer<StepSelector> safe (this);
-    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMinimumWidth (getWidth()), [safe] (int chosen)
+    makeMenu().showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMinimumWidth (getWidth()), [safe] (int chosen)
     {
         if (safe != nullptr && chosen > 0)
             safe->setIndex (chosen - 1);

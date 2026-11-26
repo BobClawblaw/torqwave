@@ -30,7 +30,8 @@ void writePatchValues (const juce::File&);
 void writePatchHashes (const juce::File&);
 
 /** Saves pictures of the synth's window into the folder, in the dark theme at 2x: a patch as it
-    opens, the oscillators' level envelopes with slots 9 to 16, oscillators 4 to 6, an oscillator playing
+    opens, the oscillators' level envelopes with slots 9 to 16, LFO 4 in slot 17, envelope 3 moving slot 17's
+    depth, oscillators 4 to 6, an oscillator playing
     a Sampled table, and the guide's picture (guide-synth.png: five oscillators on, a note held). Run with `TorqwaveTests --synth-window <folder>`. */
 void saveSynthWindow (const juce::File& folder);
 

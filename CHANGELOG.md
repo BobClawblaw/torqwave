@@ -4,6 +4,11 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Torqwave Synth: a slot's depth as a destination**
+- **Each slot's amount is a destination**, under **Slot Depths** at the end of a slot's menu (or drag a source onto a slot's knob, which shows its ring as any knob does). An envelope fades a wobble in, velocity makes it deeper instead of louder, a macro turns a step pattern from a nudge into a gate. One level deep: the slots moving depths are worked out first, each at its own knob's depth, then every other slot at its depth as moved.
+- **Nothing old changes:** no new settings; a slot that moves no depth works as before, so every factory and Complex patch (the 20 new ones too, by their hashes), preset, the reference renders and the saved sessions in the fixtures render sample for sample as before. A lane drawn on a slot's Destination before 0.23.0 keeps its choice in the longer menu.
+- Tested: `--synth-identity` (all four), `--patch-hashes` (all 3,647 the same before and after), `--synth` (a macro moving a depth renders as that depth on the knob, sample for sample; an envelope on a depth renders unlike both no depth and a fixed one; a depth moved on an empty slot changes nothing; every destination, the 24 depths among them, moves by its amount), `--instruments` and `--ai`.
+
 **Torqwave Synth: LFOs 3 and 4, and 24 modulation slots**
 - **Two more LFOs**, as LFO 1 and 2 are (eight shapes, free or synced, retriggered, free or one-shot, a fade-in, 16 steps), on tabs beside them, each a source to drag onto a knob. Their rates are destinations too, under **LFOs 3 and 4** in a slot's menu.
 - **Slots 17 to 24**, on a third page (**Slots 1-8**, **Slots 9-16**, **Slots 17-24**, **Effects**).
