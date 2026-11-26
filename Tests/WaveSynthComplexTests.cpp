@@ -298,14 +298,16 @@ namespace
     /** The worst burst in a render: above 3 kHz, a millisecond louder by this many dB than anything
         from 2 to 30 ms before it and from 5 to 30 ms after it, and no more than 50 dB under the
         render's loudest millisecond there; a click the ear hears that no single-sample step shows. */
-    double burstDbOf (const juce::AudioBuffer<float>& out)
+    struct Burst { double db = 0.0, seconds = 0.0; };
+
+    Burst burstOf (const juce::AudioBuffer<float>& out)
     {
         const auto n = (size_t) out.getNumSamples();
         std::vector<float> mid (n);
         for (size_t i = 0; i < n; ++i)
             mid[i] = 0.5f * (out.getSample (0, (int) i) + out.getSample (1, (int) i));
 
-        const auto high = pass (pass (mid, 3000.0, true), 3000.0, true);
+        const auto high = pass (mid, 3000.0, true);
         std::vector<float> env (n, 0.0f);
         double sum = 0.0;
 
@@ -317,7 +319,7 @@ namespace
         }
 
         const auto loudest = *std::max_element (env.begin(), env.end());
-        double worst = 0.0;
+        Burst worst;
 
         for (size_t i = 1440; i + 1440 < n; i += 12)
         {
@@ -327,7 +329,8 @@ namespace
             float around = 1.0e-9f;
             for (size_t j = i - 1440; j < i - 96; j += 12) around = juce::jmax (around, env[j]);
             for (size_t j = i + 240; j < i + 1440; j += 12) around = juce::jmax (around, env[j]);
-            worst = juce::jmax (worst, 20.0 * std::log10 ((double) env[i] / around));
+            if (const auto db = 20.0 * std::log10 ((double) env[i] / around); db > worst.db)
+                worst = { db, (double) i / rate };
         }
 
         return worst;
@@ -410,7 +413,8 @@ void runComplexPatchTests()
         std::array<float, WaveSynth::numMacros> macroMoves {};
         bool roundTrip = false, blockSizes = false;
         Movement movement;
-        double velocityApart = 0.0, burstDb = 0.0;
+        double velocityApart = 0.0;
+        Burst burst, noteBurst;
     };
 
     std::vector<Result> results (complex.size());
@@ -477,7 +481,8 @@ void runComplexPatchTests()
                     load (hard);
                     r.velocityApart = Decrypt::distance (Decrypt::measureRender (render (soft, notes ({ key }, 0.0, 1.5, 0.3f), 3.5)),
                                                          Decrypt::measureRender (render (hard, notes ({ key }, 0.0, 1.5, 1.0f), 3.5))).total;
-                    r.burstDb = juce::jmax (burstDbOf (s), burstDbOf (note));
+                    r.burst = burstOf (s);
+                    r.noteBurst = burstOf (note);
 
                     Synth atC3;
                     load (atC3);
@@ -566,7 +571,7 @@ void runComplexPatchTests()
 
         std::partial_sort (near.begin(), near.begin() + 3, near.end());
         std::cout << "CALIB|" << complex[i].name << "|" << complex[i].category << "|fast " << juce::String (r.movement.fast, 2) << "|slow " << juce::String (r.movement.slow, 2)
-                  << "|level " << juce::String (r.movement.level, 2) << "|velocity " << juce::String (r.velocityApart, 2) << "|burst " << juce::String (r.burstDb, 1)
+                  << "|level " << juce::String (r.movement.level, 2) << "|velocity " << juce::String (r.velocityApart, 2) << "|burst " << juce::String (r.burst.db, 1) << " at " << juce::String (r.burst.seconds, 3) << " note " << juce::String (r.noteBurst.db, 1) << " at " << juce::String (r.noteBurst.seconds, 3)
                   << "|atKey " << juce::String (near[0].first, 2) << " " << near[0].second << ", " << juce::String (near[1].first, 2) << " " << near[1].second
                   << ", " << juce::String (near[2].first, 2) << " " << near[2].second << std::endl;
     }
