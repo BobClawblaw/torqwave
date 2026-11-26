@@ -3,11 +3,6 @@
 8-Bit Up-Down Arp|5.5
 Abyss Pluck Line|5.5
 Abyss Top Loop|5.0
-Acid Arp|0.0
-Acid Pentatonic Squelch|-4.0
-Acid Phrygian Crawl|-2.5
-Acid Root Jumper|-3.5
-Acid Slide Rider|-2.5
 Acidic Comp|-2.0
 Acidic Engine|-3.5
 Acidic Theme|2.0
@@ -62,7 +57,6 @@ Bassline Bot Build|-1.0
 Bassline Bot Pulse|-1.5
 Battle Groove|-2.0
 Battle Hat Line|-1.5
-Belgian Body Bass|0.5
 Big Beat Lead|14.0
 Big Beat Transition|-3.0
 Biohazard Beat|-3.0
@@ -94,7 +88,6 @@ Body Crack|1.0
 Body Drone|6.5
 Body Gallop|-1.5
 Body Hat Line|4.5
-Body Music Beat|-1.5
 Body Shifting Pad|3.5
 Body Shop Bloom|-1.0
 Body Shop Low Drone|8.0
@@ -116,6 +109,10 @@ Breakdown Swell|3.5
 Breaker Bass Run|-2.5
 Breaker Lift|-2.5
 Breaker Plucks|-2.5
+Bright Pulse Arp Loop|4.5
+Bright Pulse Chorus Hook|-3.5
+Bright Pulse Minor Loop|-1.5
+Bright Pulse Pad Loop|0.0
 Broken Octave Arp Bass|8.0
 Broken Root Fifth Octave|4.5
 Bulldozer Drive Bass|7.0
@@ -211,14 +208,6 @@ Dark Lord Groove|-1.5
 Dark Lord Open Blip|3.0
 Dark Lord Pluck Line|2.5
 Dark Minor Hold|2.0
-Darkwave Arp|3.0
-Darkwave Chorus Chords|0.5
-Darkwave Chorus Pad|1.5
-Darkwave Counter-melody|0.0
-Darkwave Drum Machine|-2.0
-Darkwave Eighth Roots|-0.5
-Darkwave Lead|13.0
-Darkwave Sub Roots|-1.0
 Data Hit Chords|-0.5
 Data Kick Line|-2.0
 Datastream Pluck Line|10.5
@@ -254,7 +243,6 @@ Dub Siren Pluck Line|3.5
 Dub Siren Top Loop|0.5
 Dusk Bass|0.0
 Dusk Pluck Line|6.5
-EBM Sequence Arp|-0.5
 Echo Chamber Bass Run|0.0
 Echo Chamber Drive Bass|-0.5
 Echo Chamber Hook|7.5
@@ -262,6 +250,10 @@ Echo Chamber Stab|-3.0
 Endless Riff|7.0
 Engine Room Top Loop|-1.0
 Euphoria Pattern|4.0
+Factory Breakdown|4.0
+Factory Metal Hit|-1.5
+Factory Metal Stab|-0.5
+Factory Pound|-1.5
 Factory Riff|3.5
 Factory Slam|-0.5
 Falling Note Ramp|18.0
@@ -329,10 +321,6 @@ Fuse Box Stomp|-6.5
 Fuse Box Theme|2.0
 Future Tense Kick Pattern|-1.5
 Future Tense Lead|-3.0
-Futurepop Arp Loop|4.5
-Futurepop Chorus Hook|-3.5
-Futurepop Minor Loop|-1.5
-Futurepop Pad Loop|0.0
 Gated Sixteenths|-3.0
 Gated Snare Machine|2.0
 Gearbox Backbeat|-1.5
@@ -348,7 +336,6 @@ Glass Heart Top Loop|2.5
 Glitch Drone|8.0
 Glitch Gated Chord|7.0
 Goa Motif|-2.5
-Goa Roller|-2.5
 Goa Sub|-1.0
 Grave Pound|-2.0
 Grave Pulse|-2.0
@@ -416,12 +403,6 @@ Hypnotic One Chord|16.5
 Hypnotic Two-Note Bass|-1.0
 Hypnotic Two-Note Hook|6.0
 Implant Stomp|-1.5
-Industrial Breakdown|4.0
-Industrial Metal Hit|-1.5
-Industrial Metal Stab|-0.5
-Industrial Pound|-1.5
-Industrial Rock Riff|-1.5
-Industrial Rock Riff Bass|-1.5
 Inner Space Lead|8.0
 Inner Space Motif|5.5
 Inner Space Sequence|5.0
@@ -431,11 +412,14 @@ Interference Pressure|0.0
 Interference Riser|2.0
 Inventory Bloom|8.5
 Inventory Discovery Sting|2.0
+Iron Body Bass|0.5
 Iron Curtain Chord Pulse|0.0
 Iron Curtain Engine|-2.0
 Iron Curtain Strum|0.5
 Iron Fist Sequence|-2.5
 Iron Fist Up-Down Arp|-0.5
+Iron Riff|-1.5
+Iron Riff Bass|-1.5
 Ironworks Hit Chords|-1.5
 Ironworks Hook|0.5
 Ironworks Impact|-2.0
@@ -492,6 +476,7 @@ Lost Woods Line|10.0
 Lost Woods Pattern|3.5
 Lotus Bridge|-2.0
 Lotus Hats|-1.0
+Lotus Roller|-2.5
 Lounge Drive|-2.5
 Lounge Drive Bass|3.0
 Lounge Riser|2.5
@@ -510,8 +495,14 @@ Lumen Hat Line|9.0
 Lumen Pluck Line|7.0
 Lumen Tom Fill|2.5
 Machine Disco Beat|-2.0
+Machine Drive Arp|3.0
+Machine Drive Groove|-2.0
+Machine Drive Sixteenths|-0.5
+Machine Drive Stab|-1.5
 Machine Love Riser|-2.0
 Machine Love Roll Fill|-1.5
+Machine March Beat|-1.5
+Machine Pulse Arp|-0.5
 Main Menu Error Blip|1.5
 Mainframe Hook|3.0
 Mainline Motif|14.0
@@ -530,11 +521,11 @@ Melodic One-Bar Lead|0.0
 Melodic Rolling Arp|3.5
 Melodic Root Roller|6.5
 Metal Sixteenths|6.0
-Microdub Arp|5.0
-Microdub Hook|6.5
-Microdub Stomp|-4.5
-Microdub Theme|9.5
-Microdub Transition|-2.0
+Micro Echo Arp|5.0
+Micro Echo Hook|6.5
+Micro Echo Stomp|-4.5
+Micro Echo Theme|9.5
+Micro Echo Transition|-2.0
 Midnight Backbeat|-2.0
 Midnight Run Bassline|-2.0
 Midnight Run Hook|-3.0
@@ -585,12 +576,23 @@ Neuro Tom Run|-2.5
 Night Drive Bass Sequence|-1.0
 Night Drive Pad|0.5
 Night Drive Stomp|-1.5
+Night Pulse Pad|2.5
+Night Pulse Pluck|5.5
+Night Pulse Verse Chords|-2.0
 Night Shift Comp|0.5
 Night Shift Hammer|-2.5
 Night Shift Pluck|6.0
 Night Shift Roller|-0.5
 Night Shift Sub|0.0
 Night Shift Theme|0.0
+Night Wave Arp|3.0
+Night Wave Chorus Chords|0.5
+Night Wave Chorus Pad|1.5
+Night Wave Counter-melody|0.0
+Night Wave Drum Machine|-2.0
+Night Wave Eighth Roots|-0.5
+Night Wave Lead|13.0
+Night Wave Sub Roots|-1.0
 Nightcall Hat Line|0.0
 Nightmare Bassline|0.0
 Nightmare Motif|3.0
@@ -660,6 +662,7 @@ Peak Under-line|13.0
 Pendulum Sub Pulse|-0.5
 Pendulum Top Loop|0.5
 Pendulum Wash|1.5
+Pentatonic Squelch|-4.0
 Percussive Tool Bass|7.5
 Percussive Top Loop|7.0
 Phrygian Cloud|4.0
@@ -864,6 +867,10 @@ Sprite Low End Kick|-2.0
 Sprite Machine|-2.0
 Sprite Pattern|5.0
 Square Lead Phrase|13.5
+Squelch Arp|0.0
+Squelch Phrygian Crawl|-2.5
+Squelch Root Jumper|-3.5
+Squelch Slide Rider|-2.5
 Squelch Thump|-1.5
 Starfield Bed|0.5
 Starfield Kick Pattern|2.5
@@ -900,9 +907,6 @@ Surveillance Beat|-0.5
 Surveillance Crack|1.0
 Sweat Pressure|-2.5
 Synapse Drive Bass|-1.0
-Synth-EBM Pad|2.5
-Synth-EBM Pluck|5.5
-Synth-EBM Verse Chords|-2.0
 Synthetic Groove|-2.0
 Synthetic Tears Arp|3.5
 Synthetic Tears Bass Arp|-1.5
@@ -911,10 +915,6 @@ Tape Delay Kick Line|2.5
 Tape Delay Sixteenths|4.0
 Tape Delay Theme|8.0
 Tape Splice Groove|-3.5
-Techno Body Arp|3.0
-Techno Body Groove|-2.0
-Techno Body Sixteenths|-0.5
-Techno Body Stab|-1.5
 Tension Drone|7.5
 Terror Gate|-2.5
 Terror Kick Pattern|-1.5

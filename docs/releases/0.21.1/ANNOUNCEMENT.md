@@ -150,7 +150,7 @@ macOS, Windows and Linux. No account, no subscription.
 
 Hear it before you download it: link in bio (bobclawblaw.github.io/torqwave)
 
-#torqwave #musicproduction #daw #audioeditor #drummachine #sampler #synth #sounddesign #techno #industrialmusic #ebm #opensource
+#torqwave #musicproduction #daw #audioeditor #drummachine #sampler #synth #sounddesign #techno #industrialmusic #darkmusic #opensource
 ```
 
 Alt text, one a slide:

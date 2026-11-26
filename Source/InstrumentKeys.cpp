@@ -1,4 +1,5 @@
 #include "InstrumentKeys.h"
+#include "FactoryRenames.h"
 #include "BuiltInEffects.h"
 #include "EffectPresets.h"
 #include "Theme.h"
@@ -153,7 +154,7 @@ void setPatternChoices (const juce::String& text)
                 const auto& list = patternsFor ((Kind) i);
 
                 for (size_t j = 0; j < list.size(); ++j)
-                    if (list[j].name == item.fromFirstOccurrenceOf ("=", false, false))
+                    if (list[j].name == FactoryRenames::now (FactoryRenames::auditionPatterns, item.fromFirstOccurrenceOf ("=", false, false)))
                         chosenPatterns[i] = (int) j;
             }
 }

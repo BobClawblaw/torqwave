@@ -24,6 +24,7 @@ inline constexpr std::pair<const char*, const char*> renamedPresetPaths[] = {
     { "Bass/Synth Bass/Industrial Rock Riff Bass.tqseq", "Bass/Synth Bass/Iron Riff Bass.tqseq" },
     { "Bass/Synth Bass/Techno Body Sixteenths.tqseq", "Bass/Synth Bass/Machine Drive Sixteenths.tqseq" },
     { "Drums/Breaks/Industrial Breakdown.tqseq", "Drums/Breaks/Factory Breakdown.tqseq" },
+    { "Drums/Full Grooves/Body Music Beat.tqseq", "Drums/Full Grooves/Machine March Beat.tqseq" },
     { "Drums/Full Grooves/Darkwave Drum Machine.tqseq", "Drums/Full Grooves/Night Wave Drum Machine.tqseq" },
     { "Drums/Full Grooves/Industrial Pound.tqseq", "Drums/Full Grooves/Factory Pound.tqseq" },
     { "Drums/Full Grooves/Microdub Stomp.tqseq", "Drums/Full Grooves/Micro Echo Stomp.tqseq" },

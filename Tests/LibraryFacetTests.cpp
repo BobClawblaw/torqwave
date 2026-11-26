@@ -36,7 +36,7 @@ namespace
     {
         return { entry ({ "Bass" }, "Alpha", "Techno/Dark", "A minor", 4, { "Dark", "Dense" }, 1, 130, 3, 300, false, false),
                  entry ({ "Presets", "Bass" }, "Bravo", "Techno/Peak", "C minor", 5, { "Bright" }, 2, 128, 0, 200, true, true),
-                 entry ({ "Drums", "Kick" }, "Charlie", "Industrial/EBM", "", 2, {}, 4, 120, 0, 100, false, false),
+                 entry ({ "Drums", "Kick" }, "Charlie", "Machine/Pulse", "", 2, {}, 4, 120, 0, 100, false, false),
                  entry ({ "Presets", "Lead" }, "Delta", "", "A minor", 0, {}, 8, 140, 0, 0, true, false) };
     }
 
@@ -105,7 +105,7 @@ void runLibraryFacetTests()
         favourites.favourites = true;
         fits.fitsSession = true;
         role.role = "Bass";
-        search.search = "ebm";
+        search.search = "pulse";
         both.style = "Techno";
         both.source = Filters::Source::presets;
 
@@ -135,7 +135,7 @@ void runLibraryFacetTests()
         const auto styleOf = SequenceFile::styleName ("Techno/Dark");
 
         check (path (0, G::role) == "Bass" && path (1, G::role) == "Presets | Bass"
-                   && path (0, G::style) == styleOf + " | Bass" && path (2, G::style) == SequenceFile::styleName ("Industrial/EBM") + " | Drums"
+                   && path (0, G::style) == styleOf + " | Bass" && path (2, G::style) == SequenceFile::styleName ("Machine/Pulse") + " | Drums"
                    && path (3, G::style) == "No Style | Lead" && path (1, G::key) == "C minor | Bass" && path (2, G::key) == "No Key | Drums"
                    && path (1, G::energy) == "Energy 5 | Bass" && path (3, G::energy) == "No Energy | Lead"
                    && styleOf == juce::String::fromUTF8 ("Techno \xe2\x80\xba Dark"),
@@ -196,7 +196,7 @@ void runLibraryFacetTests()
         const auto older = SequenceFile::toXml (q);
         const auto read = SequenceFile::fromXml (*older);
         auto withFacets = q;
-        withFacets.style = "Industrial/EBM";
+        withFacets.style = "Machine/Pulse";
         withFacets.energy = 3;
         withFacets.character = { "Dark", "Distorted" };
         withFacets.note = "16ths between the kicks";
@@ -205,7 +205,7 @@ void runLibraryFacetTests()
 
         check (read.has_value() && read->style.isEmpty() && read->energy == 0 && read->character.isEmpty()
                    && SequenceFile::toXml (*read)->isEquivalentTo (older.get(), false) && ! older->hasAttribute ("style") && ! older->hasAttribute ("energy")
-                   && ! older->hasAttribute ("character") && back.has_value() && back->style == "Industrial/EBM" && back->energy == 3
+                   && ! older->hasAttribute ("character") && back.has_value() && back->style == "Machine/Pulse" && back->energy == 3
                    && back->character == juce::StringArray { "Dark", "Distorted" } && back->note == withFacets.note,
                "Facets: an older sequence reads with no style, energy or character and is written back the same; a newer one keeps all of them");
     }
@@ -257,7 +257,7 @@ void runLibraryFacetTests()
 
         // The dialog: what is shown is what comes back; a style picked as shown is written as stored.
         SequencePropertiesDialog::Options options;
-        options.styles = { "Techno/Dark", "Industrial/EBM" };
+        options.styles = { "Techno/Dark", "Machine/Pulse" };
         SequencePropertiesDialog dialog (options, p);
         const auto same = dialog.result().properties;
         auto* styleBox = dynamic_cast<juce::ComboBox*> (dialog.find ("style"));
@@ -271,7 +271,7 @@ void runLibraryFacetTests()
 
         if (styleBox != nullptr && energyBox != nullptr && darkBox != nullptr && description != nullptr)
         {
-            styleBox->setText (SequenceFile::styleName ("Industrial/EBM"), juce::dontSendNotification);
+            styleBox->setText (SequenceFile::styleName ("Machine/Pulse"), juce::dontSendNotification);
             energyBox->setSelectedId (1, juce::dontSendNotification);
             darkBox->setSelectedId (3, juce::dontSendNotification);
             description->setText ("  Gated  ", false);
@@ -283,7 +283,7 @@ void runLibraryFacetTests()
         }
 
         check (same.style == p.style && same.key == p.key && same.description == p.description && same.energy == p.energy && same.character == p.character
-                   && same.tags == p.tags && changedStyle == "Industrial/EBM" && changedEnergy == 0 && changedCharacter == juce::StringArray { "Bright", "Sparse" }
+                   && same.tags == p.tags && changedStyle == "Machine/Pulse" && changedEnergy == 0 && changedCharacter == juce::StringArray { "Bright", "Sparse" }
                    && changedDescription == "Gated",
                "Facets: the Sequence Properties dialog gives back what it was opened with, and what is changed in it: " + changedStyle + " " + changedCharacter.joinIntoString (","));
 

@@ -175,7 +175,7 @@ GATES = ["X.X.X.X.X.X.X.X.", "X.xxX.xxX.xxX.xx", "XxxxXxxxXxxxXxxx", "X..X..X.X.
 
 @kind("Bass", 9, "Lever Crank Ram Throttle Piston Plunger Gauge Valve Crusher Stamper Winch Jack")
 def bass_sync_sweep(p, r):
-    # A hard-synced saw whose sync falls with each note: the snarl of EBM sequencer basses.
+    # A hard-synced saw whose sync falls with each note: the snarl of a hard sequencer bass.
     p.osc(1, sync, r.u(10, 40, 5)).subOsc(r.u(30, 55, 5), 0, r.pick([0, 1]))
     p.filter(1, r.pick([ladder24, ladder12]), r.log(600, 2200), r.u(10, 35, 5), r.u(0, 40, 10))
     p.env(2, 0, r.u(90, 320, 10), r.pick([0, 0, 10, 20]), r.u(80, 160, 20), r.u(60, 85, 5))
@@ -188,7 +188,7 @@ def bass_sync_sweep(p, r):
 
 @kind("Bass", 9, "Pulse Relay Shunt Solenoid Breaker Contact Switch Coil Stator Rotor Armature")
 def bass_pwm(p, r):
-    # A pulse whose width an LFO keeps moving, over a sub: body music's sequencer bass.
+    # A pulse whose width an LFO keeps moving, over a sub: a driven sequencer bass.
     p.osc(1, pulse, r.u(15, 60, 5)).subOsc(r.u(30, 50, 5), 0, r.pick([0, 2]))
     if r.chance(0.4): p.osc(2, pulse, r.u(30, 75, 5), r.u(45, 65, 5)).pitch(2, r.pick([12, -12, 0]), r.u(4, 9))
     p.filter(1, r.pick([svfLow, ladder12, ladder24]), r.log(400, 1500), r.u(15, 45, 5), r.u(0, 30, 10))
@@ -1291,7 +1291,7 @@ def seq_cross_rhythm(p, r):
 
 @kind("Sequence", 10, "March Drill Patrol Column Convoy Parade Advance Charge")
 def seq_octave_bass(p, r):
-    # The EBM octave bass from one key: a step pattern jumps the pitch an octave, another makes the notes.
+    # The sequenced octave bass from one key: a step pattern jumps the pitch an octave, another makes the notes.
     p.osc(1, *wave(r, [analog, analog, pulse, sync], [sawPos, squarePos]))
     if r.chance(0.5): p.osc(2, analog, r.pick([sawPos, squarePos]), r.u(50, 70, 5)).pitch(2, 0, r.u(5, 12))
     p.subOsc(r.u(25, 45, 5))

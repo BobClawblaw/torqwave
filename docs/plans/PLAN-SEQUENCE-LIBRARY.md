@@ -8,7 +8,7 @@ is the overhaul: presets written for their style, not figures given a style's na
 ## How the library is made
 
 `Scripts/make_presets.py` writes every preset. About ninety are written by hand at the top (the
-Phrygian stab, the acid lines, the EBM grooves). The rest come from a table of 37 `Style` lines and a
+Phrygian stab, the acid lines, the Machine Pulse grooves). The rest come from a table of 37 `Style` lines and a
 `Maker` that draws, with a generator seeded by the style's name, from tables every style shares:
 kicks, backbeats, hats, bass rhythms of one bar, chord progressions, arp figures, melody rhythms.
 
@@ -35,11 +35,11 @@ from a script, one edit and a rerun, checked byte for byte by `--check`.
 1. **A style gets a language.** Each `Style` line gains what makes it its own in notes and rhythm:
    its scales and the intervals it leans on, its register, how dense it is, how it syncopates, how it
    moves (static, climbing, falling, turning), and how long its phrases are. First drafts:
-   - Dark techno: Phrygian and the flat second, low register, one-bar and two-bar loops that change
+   - Dark Floor: Phrygian and the flat second, low register, one-bar and two-bar loops that change
      little, rumble under the kick, offbeats.
    - Industrial techno, Electro-industrial, Aggrotech: tritone and minor second, metal and noise
      sources, gated and distorted, machine rhythms in threes against four.
-   - EBM, Techno-body, Synth-EBM: sequenced bass in 16ths on root, octave and flat seventh, marching
+   - Machine Pulse, Machine Drive, Night Pulse: sequenced bass in 16ths on root, octave and flat seventh, marching
      and galloping rhythms, bare fifths.
    - Horror: diminished and whole-tone sets, clusters, tritones, wide leaps, sparse and off the
      strong beats, falling lines, long holds that do not resolve.
@@ -56,8 +56,8 @@ from a script, one edit and a rerun, checked byte for byte by `--check`.
    stabs and pads likewise.
 3. **Voices that suit the figure.** A riser on a sweep, a noise or a riser patch, never a lead by
    default; a drone on a drone or pad patch; a sub on a sub. Basic Drums' fifteen kits and its 24
-   sources are used where they fit (Bunker, Machine Shop, Voltage for dark techno, industrial and
-   EBM). Nothing depends on Torqwave Synth's oscillators 4 to 9.
+   sources are used where they fit (Bunker, Machine Shop, Voltage for Dark Floor, industrial and
+   Machine Pulse). Nothing depends on Torqwave Synth's oscillators 4 to 9.
 
 ## The order
 
@@ -68,7 +68,7 @@ from a script, one edit and a rerun, checked byte for byte by `--check`.
 5. Arps, then bass lines, kicks and fills.
 6. Grooves and melodies are left as they are, but a groove may move to one of the new kits.
 
-Dark techno, EBM and industrial first inside each step.
+Dark Floor, Machine Pulse and industrial first inside each step.
 
 ## How many presets
 

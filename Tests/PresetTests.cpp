@@ -9,6 +9,7 @@
 #include "../Source/DrumMachine.h"
 #include "../Source/NoteTools.h"
 #include "../Source/Instrument.h"
+#include "../Source/Theme.h"
 #include "TestUtils.h"
 #include "PresetTests.h"
 
@@ -892,6 +893,48 @@ void runPresetTests (AudioEngine& engine)
     }
 
     SequenceLibrary::setChosenFolder ({});
+    SequenceLibrary::setFactoryFolder (before);
+    base.deleteRecursively();
+}
+
+void saveSequencerGuidePicture (AudioEngine& engine, const juce::File& folder)
+{
+    folder.createDirectory();
+    Theme::apply (Theme::make ("Dark", "Blue"));
+    const auto before = SequenceLibrary::factoryFolder();
+    const auto base = juce::File::createTempFile ("guidepresets");
+    const auto presets = base.getChildFile ("Factory Presets").getChildFile ("set");
+    SequenceLibrary::setFactoryFolder (presets);
+    SequenceLibrary::setChosenFolder (base.getChildFile ("Mine"));
+    SequenceLibrary::unpackFactoryPresets();
+
+    // The Sequencer workspace's two panes: the library grouped by style and searched, and a
+    // groove from what it found open in the Sequencer.
+    juce::Component workspace;
+    SequenceLibraryView library (base.getChildFile ("Mine"));
+    SequencerView sequencer (engine);
+    workspace.addAndMakeVisible (library);
+    workspace.addAndMakeVisible (sequencer);
+    workspace.setBounds (0, 0, 1600, 990);
+    library.setBounds (0, 0, 320, 990);
+    sequencer.setBounds (326, 0, 1274, 990);
+    library.setGroup (SequenceLibrary::Group::style);
+    library.setSearch ("dark floor");
+    const auto groove = presets.getChildFile ("Drums/Full Grooves/Rumble Roller.tqseq");
+    library.select (groove);
+    sequencer.openFile (groove);
+
+    // Basic Drums loads in the background: given up to five seconds to show its name.
+    for (int i = 0; i < 50; ++i)
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (100);
+
+    const auto image = workspace.createComponentSnapshot (workspace.getLocalBounds(), true, 1.0f);
+    auto file = folder.getChildFile ("guide-presets.png");
+    file.deleteFile();
+    juce::FileOutputStream out (file);
+    juce::PNGImageFormat().writeImageToStream (image, out);
+    std::cout << file.getFullPathName() << " " << image.getWidth() << " x " << image.getHeight() << std::endl;
+
     SequenceLibrary::setFactoryFolder (before);
     base.deleteRecursively();
 }

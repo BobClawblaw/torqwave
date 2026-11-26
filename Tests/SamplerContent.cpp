@@ -71,13 +71,13 @@ namespace
     const std::vector<Loop>& loops()
     {
         static const std::vector<Loop> all {
-            { "Dark Techno Break", "Dark Techno", 130.0,
+            { "Low Rumble Break", "Low Rumble", 130.0,
               joined ({ every (0, 4, 36, 1.0f), every (2, 4, 46, 0.7f), every (4, 8, 39, 0.9f), { { 7, 37, 0.6f }, { 23, 37, 0.6f }, { 29, 37, 0.5f }, { 30, 42, 0.6f }, { 31, 42, 0.8f } } }) },
             { "Industrial Break", "Industrial", 125.0,
               joined ({ { { 0, 36, 1.0f }, { 3, 36, 0.8f }, { 6, 36, 0.9f }, { 8, 36, 1.0f }, { 11, 36, 0.8f }, { 14, 36, 0.9f }, { 16, 36, 1.0f }, { 19, 36, 0.8f }, { 22, 36, 0.9f },
                           { 24, 36, 1.0f }, { 27, 36, 0.8f } },
                         every (4, 8, 38, 1.0f), every (2, 4, 42, 0.6f), { { 0, 49, 0.8f }, { 28, 45, 0.9f }, { 29, 45, 0.8f }, { 30, 41, 0.9f }, { 31, 41, 1.0f } } }) },
-            { "EBM Machine Break", "EBM Machine", 120.0,
+            { "Iron Shutter Break", "Iron Shutter", 120.0,
               joined ({ every (0, 4, 36, 1.0f), { { 14, 36, 0.8f }, { 30, 36, 0.8f } }, every (4, 8, 38, 1.0f), every (1, 4, 42, 0.5f), every (3, 4, 42, 0.7f),
                         { { 2, 56, 0.6f }, { 10, 56, 0.6f }, { 18, 56, 0.6f }, { 26, 56, 0.6f } } }) },
             { "Breaks Break", "Breaks", 135.0,

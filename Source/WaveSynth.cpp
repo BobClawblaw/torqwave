@@ -2432,8 +2432,9 @@ void BasicSynthProcessor::loadPatch (int index)
     patchName = patch.name;
 }
 
-bool BasicSynthProcessor::loadPatch (const juce::String& name)
+bool BasicSynthProcessor::loadPatch (const juce::String& asSaved)
 {
+    const auto name = WaveSynth::patchNamedNow (asSaved);
     const auto& all = WaveSynth::factoryPatches();
 
     for (size_t i = 0; i < all.size(); ++i)
@@ -2730,7 +2731,7 @@ void BasicSynthProcessor::setPresetTexts (const EffectPresets::Texts& texts)
         return;
 
     const auto text = [&texts] (const juce::String& id) { const auto t = texts.find (id); return t != texts.end() ? t->second : juce::String(); };
-    patchName = text ("patch");
+    patchName = WaveSynth::patchNamedNow (text ("patch"));
 
     for (int m = 0; m < WaveSynth::numMacros; ++m)
         macroNames[(size_t) m] = text ("macro" + juce::String (m + 1) + "Name");
@@ -2772,7 +2773,7 @@ void BasicSynthProcessor::readFromState (const juce::XmlElement& xml)
         return;
     }
 
-    patchName = xml.getStringAttribute ("patch", "Init");
+    patchName = WaveSynth::patchNamedNow (xml.getStringAttribute ("patch", "Init"));
 
     for (int m = 0; m < WaveSynth::numMacros; ++m)
         macroNames[(size_t) m] = xml.getStringAttribute ("macro" + juce::String (m + 1) + "Name");

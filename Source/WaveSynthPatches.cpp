@@ -1,6 +1,6 @@
 #include "WaveSynthPatchBuilder.h"
 
-// Torqwave Synth's factory patches: sounds for dark techno and industrial music. Each is written as
+// Torqwave Synth's factory patches: sounds for dark club and industrial music. Each is written as
 // the settings it changes from the defaults (a patch loads onto a fresh synth), its modulation
 // slots and its macros. Their levels are checked by a test: every patch plays a held chord
 // between -24 and -1 dB.
@@ -51,18 +51,18 @@ namespace WaveSynthPatchBuilder
         add ("FM Basement", "Bass").osc (1, fm, 30).subOsc (40).env (2, 0, 180, 10, 120, 70).mod (env2, "osc1Position", 40)
             .filter (1, ladder24, 1200, 15).amp (1, 300, 80, 80).mono().level (-4)
             .macro (1, "Index").mod (macro1, "osc1Position", 60).macro (2, "Bark").mod (macro2, "filter1Drive", 70);
-        add ("EBM Sequence Bass", "Bass").osc (1, analog, sawPos).osc (2, analog, squarePos, 50).pitch (2, 0, 7).filter (1, ladder24, 350, 40, 25)
+        add ("Machine Sequence", "Bass").osc (1, analog, sawPos).osc (2, analog, squarePos, 50).pitch (2, 0, 7).filter (1, ladder24, 350, 40, 25)
             .env (2, 0, 110, 0, 90, 80).mod (env2, "filter1Cutoff", 40).amp (0, 180, 0, 50).mono (0, false).level (-3).standardMacros (30);
-        add ("Body Music", "Bass").osc (1, pulse, 20).osc (2, analog, sawPos, 70).pitch (2, -12).filter (1, ladder12, 600, 30, 20)
+        add ("Iron Motion", "Bass").osc (1, pulse, 20).osc (2, analog, sawPos, 70).pitch (2, -12).filter (1, ladder12, 600, 30, 20)
             .env (2, 0, 160, 0, 120, 70).mod (env2, "filter1Cutoff", 30).amp (0, 250, 0, 60).mono (0, false).drive (tube, 25).level (-12)
             .standardMacros (30);
-        // Target Lock Bass: a sequenced bass matched by spectrum to an early EBM classic: one sawtooth through a
+        // Target Lock Bass: a sequenced bass matched by spectrum to an early sequencer-bass classic: one sawtooth through a
         // resonant 24 dB low-pass that follows the key, ringing on the 3rd harmonic with a cliff after the 4th, its
         // fundamental thinned by a high-pass and a little tube drive on top.
         add ("Target Lock Bass", "Bass").osc (1, analog, sawPos).filter (1, ladder24, 780, 90, 30, 100).filter (2, svfHigh, 90, 10).env (2, 0, 140, 20, 90, 70)
             .mod (env2, "filter1Cutoff", 12).drive (tube, 30, 6000).amp (0, 300, 70, 40).mono (0, false).level (-9).standardMacros (30);
 
-        // Reese: detuned and moving, for drum and bass and dark techno alike.
+        // Reese: detuned and moving, for drum and bass and dark club tracks alike.
         add ("Abyss Reese", "Reese").osc (1, analog, sawPos).osc (2, analog, sawPos).pitch (2, 0, 12).unison (1, 2, 10, 40).unison (2, 2, 14, 40)
             .filter (1, ladder24, 700, 25, 30).lfo (1, sine, 0.2f, 0).mod (lfo1, "filter1Cutoff", 8).subOsc (30).mono().amp (5, 400, 90, 150)
             .level (-4).standardMacros (25);
@@ -189,7 +189,7 @@ namespace WaveSynthPatchBuilder
             .subOsc (20).filter (1, ladder24, 3000, 20).drive (fuzz, 65, 4000).amp (0, 1500, 50, 200).mono (0, false).level (-23)
             .standardMacros (25);
 
-        // The early-90s EBM synth guitar: a power chord (root, fifth, octave) from one key, clipped
+        // The early-90s synth guitar of sequenced industrial music: a power chord (root, fifth, octave) from one key, clipped
         // hard and left bright, its spectrum matched to a recording of one: nearly flat to 4 kHz,
         // a strong fifth, a quiet octave, and the low end thinned so the bass has room.
         add ("Body Riff Power Chord", "Guitar").osc (1, analog, sawPos).unison (1, 2, 8, 50).osc (2, analog, sawPos, 0).pitch (2, 7)
@@ -538,6 +538,14 @@ namespace WaveSynth
     {
         static const auto all = WaveSynthPatchBuilder::build();
         return all;
+    }
+
+    juce::String patchNamedNow (const juce::String& name)
+    {
+        // Two factory patches that carried a style's name, renamed with the styles in 0.22.0.
+        if (name.equalsIgnoreCase ("EBM Sequence Bass")) return "Machine Sequence";
+        if (name.equalsIgnoreCase ("Body Music"))        return "Iron Motion";
+        return name;
     }
 
     const juce::StringArray& patchCategories()

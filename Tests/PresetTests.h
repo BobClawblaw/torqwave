@@ -6,3 +6,6 @@ class AudioEngine;
     rated beside their files, copied (never changed) when kept or edited, and the rules every
     preset keeps (the grid, the drum map, mono bass, the key, lengths, descriptions, styles). */
 void runPresetTests (AudioEngine&);
+
+/** The guide's picture of the Sequence Library and the Sequencer (guide-presets.png), into folder. */
+void saveSequencerGuidePicture (AudioEngine&, const juce::File& folder);

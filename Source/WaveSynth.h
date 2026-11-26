@@ -56,6 +56,9 @@ namespace WaveSynth
     /** The factory patches, by category in browser order. */
     const std::vector<Patch>& factoryPatches();
     const juce::StringArray& patchCategories();
+    /** The name a factory patch has now: a patch renamed since a session, preset or favourite was
+        saved is found under its new name; any other name is given back as it is. */
+    juce::String patchNamedNow (const juce::String& name);
 
     /** What the window reads as the synth plays: each destination's modulated value (normalised;
         negative when nothing sounds), each LFO's output, and envelope 1's level in the newest voice. */

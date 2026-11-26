@@ -51,7 +51,7 @@ void Favourites::read()
     marked.clear();
 
     for (auto& line : juce::StringArray::fromLines (file.loadFileAsString()))
-        if (const auto name = line.trim(); name.isNotEmpty() && indexOfPatch (name) >= 0)
+        if (const auto name = WaveSynth::patchNamedNow (line.trim()); name.isNotEmpty() && indexOfPatch (name) >= 0)
             marked.addIfNotAlreadyThere (name);
 
     marked.sort (true);

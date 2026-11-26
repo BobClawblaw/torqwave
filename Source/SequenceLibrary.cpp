@@ -6,8 +6,8 @@
 
 namespace
 {
-    /** A factory style's name as it is now, for one saved before 0.22.0 renamed it ("Industrial/EBM" or
-        the genre alone, "Industrial"); any other as it is. */
+    /** A factory style's name as it is now, for one saved before 0.22.0 renamed it ("Techno/Dark" or
+        the genre alone, "Techno"); any other as it is. */
     juce::String renamedStyle (const juce::String& style)
     {
         for (auto& [before, now] : renamedStyles)

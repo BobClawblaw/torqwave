@@ -202,7 +202,7 @@ namespace
         Synth synth;
         synth.setPlayConfigDetails (0, 2, 48000.0, 512);
         synth.prepareToPlay (48000.0, 512);
-        synth.loadPatch ("EBM Sequence Bass");
+        synth.loadPatch ("Machine Sequence");
         auto& console = synth.getConsole();
         int changes = 0;
         console.onChange = [&changes] { ++changes; };

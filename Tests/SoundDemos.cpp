@@ -594,7 +594,7 @@ namespace
 
         // Chosen by ear for the first Sounds page, each on a part that suits it.
         const std::vector<std::pair<const char*, const Part*>> featured {
-            { "Target Lock Bass", &bassLine }, { "EBM Sequence Bass", &bassLine }, { "Warehouse Sub", &bassLine }, { "Abyss Reese", &bassLine },
+            { "Target Lock Bass", &bassLine }, { "Machine Sequence", &bassLine }, { "Warehouse Sub", &bassLine }, { "Abyss Reese", &bassLine },
             { "Acid Corrosion", &bassLine }, { "Siren Burn", &melody }, { "Mercury Lead", &melody }, { "Minor Stab", &stabs },
             { "Glass Shard", &arpeggio }, { "Wailing Fuzz Lead", &melody }, { "Body Riff Power Chord", &power }, { "Swarm Drone", &held },
             { "Concrete Pad", &minorChords }, { "Reactor Drone", &one }, { "Cold Bell", &arpeggio }, { "Gated Machine", &minorChords },
@@ -1001,7 +1001,7 @@ namespace
 
     /** Basic Drums' synthesized sources that any pad can play, as --drums-sources renders them: each
         alone (a hard hit, a softer one, then five semitones down and five up, the nothing between the
-        hits cut to a quarter of a second) and in two bars over a plain groove of the Dark Techno kit. */
+        hits cut to a quarter of a second) and in two bars over a plain groove of the Low Rumble kit. */
     void writeSources (const juce::File& folder, Index& index)
     {
         const auto rendered = folder.getChildFile ("wav").getChildFile ("sources");

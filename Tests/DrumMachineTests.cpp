@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "../Source/DrumMachine.h"
 #include "../Source/DrumMachineEditor.h"
+#include "../Source/FactoryRenames.h"
 #include "../Source/InstrumentKeys.h"
 #include "../Source/NoteEditor.h"
 #include "../Source/DrumKitImport.h"
@@ -223,10 +224,10 @@ namespace
                "drums window: the snare's type reads Classic, then Modern once chosen, of Classic, Modern and Sample; the rim's reads Classic, of Classic and Sample; no layers are shown for either");
 
         // The kits: choosing one sets every sound; a knob moved marks it edited.
-        drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Dark Techno")]);
+        drums.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Low Rumble")]);
         const auto chosen = window->getKitText();
         BuiltInEffects::setExactly (*drums.parameterOf (Sound::kick, "drive"), 90.0f);
-        check (chosen == "Dark Techno" && window->getKitText() == "Dark Techno (edited)", "drums window: shows the kit's name, and \"(edited)\" once a knob moves");
+        check (chosen == "Low Rumble" && window->getKitText() == "Low Rumble (edited)", "drums window: shows the kit's name, and \"(edited)\" once a knob moves");
 
         // It paints in a light and a dark theme.
         for (auto theme : { "Light", "Dark" })
@@ -735,10 +736,11 @@ namespace
                         && (i < 12 ? sourced == 0 && userSourced == 0 : sourced >= 8 && userSourced >= 4);
         }
 
-        check (all.size() == 15 && names[12] == "Bunker" && names[13] == "Machine Shop" && names[14] == "Voltage" && names[0] == "Standard" && names[1] == "Dark Techno" && names[2] == "Industrial" && names[3] == "EBM Machine"
+        check (all.size() == 15 && names[12] == "Bunker" && names[13] == "Machine Shop" && names[14] == "Voltage" && names[0] == "Standard" && names[1] == "Low Rumble" && names[2] == "Industrial" && names[3] == "Iron Shutter"
                    && names[4] == "Electro" && names[5] == "Breaks" && names[6] == "Industrial Rock" && names[7] == "Modern" && names.contains ("Warehouse")
-                   && names.contains ("Body Music") && names.contains ("Foundry") && names.contains ("Broken Beat") && classicFirst && clean && distinct && modified,
-               "drums: fifteen kits (" + names.joinIntoString (", ") + "), the first seven all Classic sounds, the five after them Modern, the last three with sources on eight or more of their sounds' pads and four or more user pads, each sounding different; "
+                   && names.contains ("Pressure Room") && names.contains ("Foundry") && names.contains ("Broken Beat") && classicFirst
+                   && DrumMachine::kitIndex (FactoryRenames::drumKits[0].first) == 1 && DrumMachine::kitIndex (FactoryRenames::drumKits[1].first) == 3 && clean && distinct && modified,
+               "drums: fifteen kits (" + names.joinIntoString (", ") + "), the first seven all Classic sounds (found by their names before 0.22.0 too), the five after them Modern, the last three with sources on eight or more of their sounds' pads and four or more user pads, each sounding different; "
                "a kit chosen reads as itself until a knob moves");
 
         // The state keeps the kit's name and every setting.
@@ -759,7 +761,7 @@ namespace
         BuiltInEffects::BasicDrumsProcessor warehouse;
         warehouse.setStateInformation (modernState.getData(), (int) modernState.getSize());
 
-        drums.applyKit (all[(size_t) DrumMachine::kitIndex ("Dark Techno")]);
+        drums.applyKit (all[(size_t) DrumMachine::kitIndex ("Low Rumble")]);
         juce::MemoryBlock full;
         drums.getStateInformation (full);
         auto before = juce::AudioProcessor::getXmlFromBinary (full.getData(), (int) full.getSize());
@@ -782,7 +784,7 @@ namespace
         BuiltInEffects::BasicDrumsProcessor untyped;
         untyped.setStateInformation (beforeTypes.getData(), (int) beforeTypes.getSize());
         check (warehouse.getKitName() == "Warehouse" && ! warehouse.kitModified() && warehouse.currentSettings().sounds[0].type == 1
-                   && removed == 4 * DrumMachine::numSounds && before->getChildByName ("SAMPLES") == nullptr && untyped.getKitName() == "Dark Techno" && ! untyped.kitModified() && untyped.currentSettings() == drums.currentSettings()
+                   && removed == 4 * DrumMachine::numSounds && before->getChildByName ("SAMPLES") == nullptr && untyped.getKitName() == "Low Rumble" && ! untyped.kitModified() && untyped.currentSettings() == drums.currentSettings()
                    && same (play (untyped, groove, 0.6), play (drums, groove, 0.6)),
                "drums: a kit of Modern sounds comes back from the state as itself; a state saved before there were types loads as its kit, unedited, every sound Classic and sounding the same");
 
@@ -2920,13 +2922,13 @@ void saveDrumMachineDemos (const juce::File& folder)
     const std::vector<DemoRow> fourFloor { { 36, "x...x...x...x..." }, { 39, "....x.......x..." }, { 42, "x.oxx.oxx.oxx.ox" }, { 46, "..x...x...x...x." } };
     const std::vector<Groove> grooves {
         { "Standard", 126.0, fourFloor, { { 36, "x...x...x...x..." }, { 38, "....x...x.x.xxxx" }, { 42, "x.oxx.oxx.ox...." } } },
-        { "Dark Techno", 132.0, { { 36, "x...x...x...x..." }, { 36, "..o...o...o..o.o" }, { 39, "....x.......x..." }, { 42, "xoxoxoxoxoxoxoxo" },
+        { "Low Rumble", 132.0, { { 36, "x...x...x...x..." }, { 36, "..o...o...o..o.o" }, { 39, "....x.......x..." }, { 42, "xoxoxoxoxoxoxoxo" },
                                   { 46, "..x...x...x...x." }, { 51, "x.x.x.x.x.x.x.x." }, { 37, ".......o.....o.." } },
                                 { { 36, "x...x...x...x..." }, { 39, "....x...x.x.x.xx" }, { 42, "xoxoxoxoxoxo...." }, { 45, "............x.x." } } },
         { "Industrial", 128.0, { { 36, "x...x...x...x..." }, { 43, "..x...x.....x.x." }, { 38, "....x.......x..." }, { 56, "x..x..x..x..x.x." },
                                  { 42, "x.x.x.x.x.x.x.x." }, { 52, "........x......." }, { 37, "...o.......o...." } },
                                { { 36, "x...x...x.x.xxxx" }, { 38, "....x.x.x.x.x.xx" }, { 41, "x.x.x.x........." } } },
-        { "EBM Machine", 120.0, { { 36, "x...x...x...x..." }, { 38, "....x.......x..." }, { 39, "....x.......x..." }, { 42, "x.x.x.x.x.x.x.x." }, { 46, "..x...x...x...x." } },
+        { "Iron Shutter", 120.0, { { 36, "x...x...x...x..." }, { 38, "....x.......x..." }, { 39, "....x.......x..." }, { 42, "x.x.x.x.x.x.x.x." }, { 46, "..x...x...x...x." } },
                                 { { 36, "x...x...x...x..." }, { 38, "....x...xxxxxxxx" }, { 42, "x.x.x.x........." } } },
         { "Electro", 116.0, { { 36, "x.....x...x....." }, { 38, "....x.......x..." }, { 42, "x.xxx.x.x.xxx.x." }, { 56, "...x.......x...." }, { 63, "......o......o.." },
                               { 39, "....x.......x..." }, { 37, ".......o........" } },
@@ -2940,7 +2942,7 @@ void saveDrumMachineDemos (const juce::File& folder)
     // Each kit of Modern sounds plays the groove of the kit it stands beside, to hear one against the other.
     auto all = grooves;
 
-    for (auto [kit, beside] : std::vector<std::pair<const char*, size_t>> { { "Modern", 0 }, { "Warehouse", 1 }, { "Foundry", 2 }, { "Body Music", 3 }, { "Broken Beat", 5 } })
+    for (auto [kit, beside] : std::vector<std::pair<const char*, size_t>> { { "Modern", 0 }, { "Warehouse", 1 }, { "Foundry", 2 }, { "Pressure Room", 3 }, { "Broken Beat", 5 } })
     {
         all.push_back (grooves[beside]);
         all.back().kit = kit;
@@ -3225,7 +3227,7 @@ void saveDrumGuidePictures (const juce::File& folder)
 
 /** Clips of the 24 sources to listen to, 48 kHz, 24-bit, in <folder>: each alone ("NN Name.wav":
     a hard hit, a softer one, then five semitones down and five up), and each in two bars at
-    130 BPM in the part its family plays, over a plain groove of the Dark Techno kit ("NN Name -
+    130 BPM in the part its family plays, over a plain groove of the Low Rumble kit ("NN Name -
     pattern.wav"). The kit's level is at 0 dB for the hits alone. */
 void saveDrumSourceClips (const juce::File& folder)
 {
@@ -3287,7 +3289,7 @@ void saveDrumSourceClips (const juce::File& folder)
         const auto instead = juce::String (info.id) == "darkRide" || juce::String (info.id) == "trashCrash" ? -1 : part->instead;
 
         BuiltInEffects::BasicDrumsProcessor kit;
-        kit.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Dark Techno")]);
+        kit.applyKit (DrumMachine::kits()[(size_t) DrumMachine::kitIndex ("Low Rumble")]);
         kit.setSource (user, s);
         const auto step = 60.0 / 130.0 / 4.0;
         Notes notes;

@@ -195,7 +195,7 @@
             loopInRelease="1" choke="0"/>
     </ZONES>
   </PRESET>
-  <PRESET name="Dark Techno Break" category="Sliced Kits">
+  <PRESET name="Low Rumble Break" category="Sliced Kits">
     <VALUES attack="0.0" bendRange="2.0" cutoff="20000.0" decay="300.0000305175781"
             filter="0.0" filterAttack="0.0" filterDecay="300.0000305175781"
             filterEnv="0.0" filterRelease="100.0000076293945" filterSustain="0.0"
@@ -205,147 +205,147 @@
             resonance="0.0" sustain="100.0" transpose="0.0" velocity="80.0"
             velocityToCutoff="0.0" voices="0.0" wheel="50.0"/>
     <ZONES slices="1" sliceSource="2" sensitivity="70.0" parts="16" cutEachOther="0">
-      <ZONE id="1" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="1" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 1" root="36" tune="0.0" lowKey="36" highKey="36"
             lowVelocity="1" highVelocity="127" start="0" end="11343" level="0.0"
             pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0" loopEnd="-1"
             crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="2" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="2" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 2" root="37" tune="0.0" lowKey="37" highKey="37"
             lowVelocity="1" highVelocity="127" start="11343" end="22156"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="3" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="3" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 3" root="38" tune="0.0" lowKey="38" highKey="38"
             lowVelocity="1" highVelocity="127" start="22156" end="33411"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="4" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="4" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 4" root="39" tune="0.0" lowKey="39" highKey="39"
             lowVelocity="1" highVelocity="127" start="33411" end="37124"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="5" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="5" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 5" root="40" tune="0.0" lowKey="40" highKey="40"
             lowVelocity="1" highVelocity="127" start="37124" end="38733"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="6" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="6" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 6" root="41" tune="0.0" lowKey="41" highKey="41"
             lowVelocity="1" highVelocity="127" start="38733" end="55651"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="7" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="7" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 7" root="42" tune="0.0" lowKey="42" highKey="42"
             lowVelocity="1" highVelocity="127" start="55651" end="66464"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="8" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="8" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 8" root="43" tune="0.0" lowKey="43" highKey="43"
             lowVelocity="1" highVelocity="127" start="66464" end="72169"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="9" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="9" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 9" root="44" tune="0.0" lowKey="44" highKey="44"
             lowVelocity="1" highVelocity="127" start="72169" end="77718"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="10" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="10" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 10" root="45" tune="0.0" lowKey="45" highKey="45"
             lowVelocity="1" highVelocity="127" start="77718" end="79361"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="11" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="11" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 11" root="46" tune="0.0" lowKey="46" highKey="46"
             lowVelocity="1" highVelocity="127" start="79361" end="81431"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="12" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="12" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 12" root="47" tune="0.0" lowKey="47" highKey="47"
             lowVelocity="1" highVelocity="127" start="81431" end="99958"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="13" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="13" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 13" root="48" tune="0.0" lowKey="48" highKey="48"
             lowVelocity="1" highVelocity="127" start="99958" end="110771"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="14" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="14" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 14" root="49" tune="0.0" lowKey="49" highKey="49"
             lowVelocity="1" highVelocity="127" start="110771" end="116363"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="15" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="15" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 15" root="50" tune="0.0" lowKey="50" highKey="50"
             lowVelocity="1" highVelocity="127" start="116363" end="119029"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="16" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="16" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 16" root="51" tune="0.0" lowKey="51" highKey="51"
             lowVelocity="1" highVelocity="127" start="119029" end="122026"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="17" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="17" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 17" root="52" tune="0.0" lowKey="52" highKey="52"
             lowVelocity="1" highVelocity="127" start="122026" end="123669"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="18" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="18" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 18" root="53" tune="0.0" lowKey="53" highKey="53"
             lowVelocity="1" highVelocity="127" start="123669" end="125739"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="19" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="19" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 19" root="54" tune="0.0" lowKey="54" highKey="54"
             lowVelocity="1" highVelocity="127" start="125739" end="127312"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="20" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="20" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 20" root="55" tune="0.0" lowKey="55" highKey="55"
             lowVelocity="1" highVelocity="127" start="127312" end="132913"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="21" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="21" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 21" root="56" tune="0.0" lowKey="56" highKey="56"
             lowVelocity="1" highVelocity="127" start="132913" end="144266"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="22" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="22" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 22" root="57" tune="0.0" lowKey="57" highKey="57"
             lowVelocity="1" highVelocity="127" start="144266" end="145878"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="23" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="23" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 23" root="58" tune="0.0" lowKey="58" highKey="58"
             lowVelocity="1" highVelocity="127" start="145878" end="147943"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="24" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="24" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 24" root="59" tune="0.0" lowKey="59" highKey="59"
             lowVelocity="1" highVelocity="127" start="147943" end="155079"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="25" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="25" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 25" root="60" tune="0.0" lowKey="60" highKey="60"
             lowVelocity="1" highVelocity="127" start="155079" end="160953"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="26" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="26" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 26" root="61" tune="0.0" lowKey="61" highKey="61"
             lowVelocity="1" highVelocity="127" start="160953" end="163337"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="27" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="27" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 27" root="62" tune="0.0" lowKey="62" highKey="62"
             lowVelocity="1" highVelocity="127" start="163337" end="166323"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="28" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="28" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 28" root="63" tune="0.0" lowKey="63" highKey="63"
             lowVelocity="1" highVelocity="127" start="166323" end="171698"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="29" file="factory:Sliced Kits/Dark Techno Break 130 BPM.flac"
+      <ZONE id="29" file="factory:Sliced Kits/Low Rumble Break 130 BPM.flac"
             name="Slice 29" root="64" tune="0.0" lowKey="64" highKey="64"
             lowVelocity="1" highVelocity="127" start="171698" end="177231"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
@@ -519,7 +519,7 @@
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
     </ZONES>
   </PRESET>
-  <PRESET name="EBM Machine Break" category="Sliced Kits">
+  <PRESET name="Iron Shutter Break" category="Sliced Kits">
     <VALUES attack="0.0" bendRange="2.0" cutoff="20000.0" decay="300.0000305175781"
             filter="0.0" filterAttack="0.0" filterDecay="300.0000305175781"
             filterEnv="0.0" filterRelease="100.0000076293945" filterSustain="0.0"
@@ -529,152 +529,152 @@
             resonance="0.0" sustain="100.0" transpose="0.0" velocity="80.0"
             velocityToCutoff="0.0" voices="0.0" wheel="50.0"/>
     <ZONES slices="1" sliceSource="2" sensitivity="70.0" parts="16" cutEachOther="0">
-      <ZONE id="1" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="1" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 1" root="36" tune="0.0" lowKey="36" highKey="36"
             lowVelocity="1" highVelocity="127" start="0" end="6005" level="0.0"
             pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0" loopEnd="-1"
             crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="2" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="2" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 2" root="37" tune="0.0" lowKey="37" highKey="37"
             lowVelocity="1" highVelocity="127" start="6005" end="12032" level="0.0"
             pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0" loopEnd="-1"
             crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="3" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="3" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 3" root="38" tune="0.0" lowKey="38" highKey="38"
             lowVelocity="1" highVelocity="127" start="12032" end="18005"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="4" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="4" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 4" root="39" tune="0.0" lowKey="39" highKey="39"
             lowVelocity="1" highVelocity="127" start="18005" end="23999"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="5" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="5" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 5" root="40" tune="0.0" lowKey="40" highKey="40"
             lowVelocity="1" highVelocity="127" start="23999" end="29850"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="6" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="6" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 6" root="41" tune="0.0" lowKey="41" highKey="41"
             lowVelocity="1" highVelocity="127" start="29850" end="42005"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="7" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="7" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 7" root="42" tune="0.0" lowKey="42" highKey="42"
             lowVelocity="1" highVelocity="127" start="42005" end="48002"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="8" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="8" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 8" root="43" tune="0.0" lowKey="43" highKey="43"
             lowVelocity="1" highVelocity="127" start="48002" end="54005"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="9" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="9" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 9" root="44" tune="0.0" lowKey="44" highKey="44"
             lowVelocity="1" highVelocity="127" start="54005" end="60032"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="10" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="10" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 10" root="45" tune="0.0" lowKey="45" highKey="45"
             lowVelocity="1" highVelocity="127" start="60032" end="66005"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="11" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="11" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 11" root="46" tune="0.0" lowKey="46" highKey="46"
             lowVelocity="1" highVelocity="127" start="66005" end="71999"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="12" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="12" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 12" root="47" tune="0.0" lowKey="47" highKey="47"
             lowVelocity="1" highVelocity="127" start="71999" end="77850"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="13" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="13" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 13" root="48" tune="0.0" lowKey="48" highKey="48"
             lowVelocity="1" highVelocity="127" start="77850" end="83923"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="14" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="14" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 14" root="49" tune="0.0" lowKey="49" highKey="49"
             lowVelocity="1" highVelocity="127" start="83923" end="90074"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="15" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="15" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 15" root="50" tune="0.0" lowKey="50" highKey="50"
             lowVelocity="1" highVelocity="127" start="90074" end="96002"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="16" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="16" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 16" root="51" tune="0.0" lowKey="51" highKey="51"
             lowVelocity="1" highVelocity="127" start="96002" end="102005"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="17" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="17" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 17" root="52" tune="0.0" lowKey="52" highKey="52"
             lowVelocity="1" highVelocity="127" start="102005" end="108032"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="18" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="18" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 18" root="53" tune="0.0" lowKey="53" highKey="53"
             lowVelocity="1" highVelocity="127" start="108032" end="114005"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="19" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="19" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 19" root="54" tune="0.0" lowKey="54" highKey="54"
             lowVelocity="1" highVelocity="127" start="114005" end="119998"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="20" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="20" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 20" root="55" tune="0.0" lowKey="55" highKey="55"
             lowVelocity="1" highVelocity="127" start="119998" end="125850"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="21" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="21" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 21" root="56" tune="0.0" lowKey="56" highKey="56"
             lowVelocity="1" highVelocity="127" start="125850" end="138005"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="22" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="22" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 22" root="57" tune="0.0" lowKey="57" highKey="57"
             lowVelocity="1" highVelocity="127" start="138005" end="144002"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="23" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="23" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 23" root="58" tune="0.0" lowKey="58" highKey="58"
             lowVelocity="1" highVelocity="127" start="144002" end="150005"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="24" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="24" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 24" root="59" tune="0.0" lowKey="59" highKey="59"
             lowVelocity="1" highVelocity="127" start="150005" end="156032"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="25" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="25" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 25" root="60" tune="0.0" lowKey="60" highKey="60"
             lowVelocity="1" highVelocity="127" start="156032" end="162005"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="26" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="26" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 26" root="61" tune="0.0" lowKey="61" highKey="61"
             lowVelocity="1" highVelocity="127" start="162005" end="167998"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="27" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="27" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 27" root="62" tune="0.0" lowKey="62" highKey="62"
             lowVelocity="1" highVelocity="127" start="167998" end="173850"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="28" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="28" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 28" root="63" tune="0.0" lowKey="63" highKey="63"
             lowVelocity="1" highVelocity="127" start="173850" end="179923"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="29" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="29" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 29" root="64" tune="0.0" lowKey="64" highKey="64"
             lowVelocity="1" highVelocity="127" start="179923" end="186074"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"
             loopEnd="-1" crossfade="0.0" loopInRelease="1" choke="0"/>
-      <ZONE id="30" file="factory:Sliced Kits/EBM Machine Break 120 BPM.flac"
+      <ZONE id="30" file="factory:Sliced Kits/Iron Shutter Break 120 BPM.flac"
             name="Slice 30" root="65" tune="0.0" lowKey="65" highKey="65"
             lowVelocity="1" highVelocity="127" start="186074" end="192000"
             level="0.0" pan="0.0" reverse="0" oneShot="1" loop="0" loopStart="0"

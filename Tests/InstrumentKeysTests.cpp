@@ -1,5 +1,6 @@
 #include <JuceHeader.h>
 #include "../Source/InstrumentKeys.h"
+#include "../Source/FactoryRenames.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/EffectPresets.h"
 #include "../Source/WaveSynth.h"
@@ -174,6 +175,18 @@ void runInstrumentKeysTests()
         const WaveSynth::Favourites again (file);
         const auto kept = again.names() == favourites.names() && file.loadFileAsString().contains ("A Patch That Was Renamed") && ! again.contains ("A Patch That Was Renamed");
 
+        // Renamed patches (style names taken out in 0.22.0): found under their old names when loaded, in favourites and in a saved state.
+        BuiltInEffects::BasicSynthProcessor renamed;
+        const auto loadedOld = renamed.loadPatch ("EBM Sequence Bass") && renamed.getPatchName() == "Machine Sequence";
+        renamed.setPresetTexts ({ { "patch", "Body Music" } });
+        const auto savedOld = renamed.getPatchName() == "Iron Motion";
+        const auto oldFile = file.getSiblingFile ("renamed favourites.txt");
+        oldFile.replaceWithText ("Body Music\nEBM Sequence Bass\n");
+        const WaveSynth::Favourites oldNames (oldFile);
+        oldFile.deleteFile();
+        const auto renamedFound = loadedOld && savedOld && treeIndexOf ("Body Music") < 0 && treeIndexOf ("Iron Motion") > 0
+                                  && oldNames.names() == juce::StringArray { "Iron Motion", "Machine Sequence" };
+
         // Unmarked, it leaves the list; with none left the arrows go through every patch again; a sound that is no factory patch has no heart.
         synth.loadPatch ("Cold Bell");
         const auto unmarked = ! toggleFavourite (synth) && favourites.names() == juce::StringArray { "Abyss Reese", "Warehouse Sub" };
@@ -208,6 +221,7 @@ void runInstrumentKeysTests()
         check (marked && listed && kept && unmarked && noneLeft && notMarked,
                "synth favourites: a factory patch is marked and unmarked by name, listed by name and in the patch tree's order (Warehouse Sub, Abyss Reese, Cold Bell: Bass, Reese, Bell), kept in a file that reads back the same and drops a name that is no patch any more; "
                "a sound that is no factory patch can't be marked");
+        check (renamedFound, "synth: a patch renamed in 0.22.0 is found under its old name, loaded, in a saved state and in favourites (" + oldNames.names().joinIntoString (", ") + ")");
         check (inTree, "synth favourites: the Favourites menu shows them under their categories in the tree's order (" + menuCategories.joinIntoString (", ")
                            + ": " + menuItems.joinIntoString (", ") + "), the patch it is on ticked with its category");
         check (everyPatch && stepped && inWindow,
@@ -263,12 +277,15 @@ void runInstrumentKeysTests()
 
             // A pattern chosen is what the sound plays, is kept by name, and an unknown name leaves the first.
             setPattern (Kind::bass, 3);
-            const auto galloping = phraseOf ("Warehouse Sub").size() == patternsFor (Kind::bass)[3].notes.size() && patternFor (synth).name == "EBM Gallop";
+            const auto galloping = phraseOf ("Warehouse Sub").size() == patternsFor (Kind::bass)[3].notes.size() && patternFor (synth).name == "Iron Gallop";
             const auto saved = getPatternChoices();
             setPatternChoices ({});
             const auto cleared = getPattern (Kind::bass) == 0;
             setPatternChoices (saved);
-            const auto restored = getPattern (Kind::bass) == 3 && saved == "bass=EBM Gallop";
+            auto restored = getPattern (Kind::bass) == 3 && saved == "bass=Iron Gallop";
+            setPatternChoices ({});
+            setPatternChoices (juce::String ("bass=") + FactoryRenames::auditionPatterns[0].first);   // saved before 0.22.0 renamed it
+            restored = restored && getPattern (Kind::bass) == 3;
             setPatternChoices ("bass=No Such Pattern;kit=Four on the Floor");
             const auto unknown = getPattern (Kind::bass) == 0 && getPattern (Kind::kit) == 1;
             setPatternChoices ({});
@@ -281,7 +298,7 @@ void runInstrumentKeysTests()
 
             check (counts && fit && named && galloping && cleared && restored && unknown && onBars && kindFor (drums) == Kind::kit && kindFor (guitar) == Kind::strings,
                    "audition patterns: " + juce::String (total) + " in all, a dozen for basses, chords, stabs and leads, twenty for kits and eight for held sounds, hits and strings, "
-                   "each named once, in range and inside its round of whole bars; the one chosen plays, is kept by name, and an unknown name falls back to the first");
+                   "each named once, in range and inside its round of whole bars; the one chosen plays, is kept by name (and found by the name it had before 0.22.0), and an unknown name falls back to the first");
         }
 
         // Over time: each note starts and ends when it is due, a new phrase ends the one playing, and a key played by hand ends it.

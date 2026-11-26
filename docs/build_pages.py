@@ -45,14 +45,14 @@ BY_EAR = {
     ("swarm", "Swarm Through Fuzz"): "The swarm through the guitar's fuzz and cabinet.",
     ("swarm", "Wailing Swarm"): "A gliding, fuzzed swarm lead.",
     ("synth", "Target Lock Bass"): "A sequenced bass: a sawtooth through a resonant low-pass that rings on its third harmonic.",
-    ("synth", "EBM Sequence Bass"): "A saw and a square 7 cents apart, the filter plucked on every note.",
+    ("synth", "Machine Sequence"): "A saw and a square 7 cents apart, the filter plucked on every note.",
     ("synth", "Warehouse Sub"): "A round, mono sub, its Grit macro left down.",
     ("synth", "Abyss Reese"): "Two pairs of detuned saws beating, under a slow filter sway.",
     ("synth", "Acid Corrosion"): "A squelching acid line with a dotted echo.",
     ("synth", "Siren Burn"): "Three saws through the fuzz, a vibrato fading in, and a dotted echo.",
     ("synth", "Mercury Lead"): "A hard-synced wave swept by its envelope, with an echo.",
     ("synth", "Wailing Fuzz Lead"): "Strings ringing on over a sustained wave, fuzz, long slides and a late vibrato.",
-    ("synth", "Body Riff Power Chord"): "A synth guitar for EBM: a power chord from one key, clipped hard.",
+    ("synth", "Body Riff Power Chord"): "A hard synth guitar: a power chord from one key, clipped hard.",
     ("synth", "Swarm Drone"): "Strings all on one note, strummed, drifting and fuzzed.",
     ("synth", "Minor Stab"): "A minor triad from one key, three saws plucked by the filter.",
     ("synth", "Glass Shard"): "A bright FM pluck with a dotted echo.",
@@ -293,7 +293,7 @@ def source_card(alone, pattern):
     part = "over the groove" if name in SOURCE_OVER else SOURCE_PART.get(alone["category"], "over the groove")
     return (f'<div class="clip"><div class="kind">{esc(alone["category"])} · source {alone["number"]} of 24</div><h4>{esc(name)}</h4>'
             f'<p>Alone: a hard hit, a softer one, then five semitones down and five up.</p>{player(alone, "audio/")}'
-            f'<p>In two bars at 130 BPM, on a user pad of the Dark Techno kit, {part}.</p><div class="fill"></div>{player(pattern, "audio/")}</div>')
+            f'<p>In two bars at 130 BPM, on a user pad of the Low Rumble kit, {part}.</p><div class="fill"></div>{player(pattern, "audio/")}</div>')
 
 
 def drums_page():
