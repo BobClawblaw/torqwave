@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Afterhours Gated Chord" role="Arps" subRole="Gated" key="A minor" tags="" note="Each note of the chord three times over, on A minor" style="Techno/Peak-time" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="136.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Afterhours Gated Chord" role="Arps" subRole="Gated" key="A minor" tags="" note="Pairs with a gap, up the chord and back, the root, the third and the seventh, on A" style="Techno/Peak-time" energy="5" character="Dark,Dense,Straight,Clean" ticksPerBeat="960" writtenTempo="136.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
   <NOTES>
     <N p="57" s="0" l="96" v="0.755906"/>
     <N p="57" s="240" l="96" v="0.755906"/>
-    <N p="57" s="480" l="96" v="0.755906"/>
-    <N p="60" s="960" l="96" v="0.755906"/>
-    <N p="60" s="1200" l="96" v="0.755906"/>
+    <N p="67" s="720" l="96" v="0.755906"/>
+    <N p="67" s="960" l="96" v="0.755906"/>
     <N p="60" s="1440" l="96" v="0.755906"/>
-    <N p="64" s="1920" l="96" v="0.755906"/>
-    <N p="64" s="2160" l="96" v="0.755906"/>
-    <N p="64" s="2400" l="96" v="0.755906"/>
-    <N p="60" s="2880" l="96" v="0.755906"/>
-    <N p="60" s="3120" l="96" v="0.755906"/>
-    <N p="60" s="3360" l="96" v="0.755906"/>
+    <N p="60" s="1680" l="96" v="0.755906"/>
+    <N p="69" s="2160" l="96" v="0.755906"/>
+    <N p="69" s="2400" l="96" v="0.755906"/>
+    <N p="67" s="2880" l="96" v="0.755906"/>
+    <N p="67" s="3120" l="96" v="0.755906"/>
+    <N p="60" s="3600" l="96" v="0.755906"/>
   </NOTES>
   <VOICE><TRACKTEMPLATE name="Torqwave Synth: Cold Saw Lead" bus="0" instrument="1" musical="1" gainDb="0.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>73.VMjLg.D....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxPuwFYfLUX2ABSkEFYh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

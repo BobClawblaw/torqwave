@@ -1234,6 +1234,10 @@ def chord_names(mode, degrees, seventh=False):
     return ", ".join(chord_name(mode, d, seventh) for d in degrees)
 
 
+def root_names(mode, degrees):
+    return ", ".join(LETTERS[MODES[mode][d % 7]] for d in degrees)
+
+
 def names(pitches):
     return [name_of(p) for p in pitches]
 
@@ -2494,6 +2498,121 @@ RISERS = {
 }
 
 
+# ---------------------------------------------------------------------------------------------
+# A style's language: what makes its arps, its bass figures, its comping and its fills its own.
+#   density  how full a bar is, 0 (a few notes) to 1 (every 16th)
+#   wide     how far a figure travels, 0 (round one note) to 1 (through the octaves)
+#   off      how far off the beat it sits, 0 (on the beats) to 1 (between them)
+#   cross    whether it likes threes against the bar's four
+#   register where its arps sit: the lowest root
+#   colours  what its arps and comping are made of, in turn (see COLOURS)
+# A style with no line of its own speaks its genre's.
+
+def lang(density, wide, off, cross, register, colours):
+    return dict(density=density, wide=wide, off=off, cross=cross, register=register, colours=colours)
+
+
+LANGUAGE = {
+    "Techno": lang(0.7, 0.4, 0.4, False, 57, ["triad", "open"]),
+    "Techno/Dark": lang(0.6, 0.2, 0.5, True, 45, ["phrygian", "open", "triad"]),
+    "Techno/Driving": lang(0.9, 0.4, 0.3, False, 57, ["triad", "open", "seventh"]),
+    "Techno/Peak-time": lang(1.0, 0.7, 0.3, False, 57, ["triad", "seventh", "open"]),
+    "Techno/Industrial": lang(0.8, 0.3, 0.6, True, 45, ["tritone", "open", "phrygian"]),
+    "Techno/Hard": lang(1.0, 0.3, 0.4, True, 45, ["open", "tritone"]),
+    "Techno/Hypnotic": lang(0.6, 0.2, 0.6, True, 57, ["open", "sus"]),
+    "Techno/Acid": lang(0.8, 0.5, 0.6, False, 45, ["phrygian", "open"]),
+    "Techno/Minimal": lang(0.3, 0.2, 0.8, False, 57, ["sus", "seventh"]),
+    "Techno/Melodic": lang(0.9, 0.9, 0.3, False, 57, ["ninth", "seventh", "triad"]),
+    "Techno/Percussive": lang(0.7, 0.3, 0.7, True, 57, ["open", "sus"]),
+    "Techno/Dub": lang(0.3, 0.4, 0.9, False, 57, ["seventh", "ninth"]),
+    "Industrial": lang(0.8, 0.3, 0.4, False, 45, ["open", "triad"]),
+    "Industrial/EBM": lang(1.0, 0.3, 0.3, False, 45, ["open", "triad"]),
+    "Industrial/Electro-industrial": lang(0.7, 0.4, 0.7, True, 52, ["diminished", "tritone", "phrygian"]),
+    "Industrial/Aggrotech": lang(1.0, 0.4, 0.4, False, 52, ["diminished", "open"]),
+    "Industrial/Techno-body": lang(0.9, 0.3, 0.4, True, 45, ["open", "triad"]),
+    "Industrial/Futurepop": lang(0.9, 0.8, 0.3, False, 64, ["triad", "seventh"]),
+    "Industrial/Synth-EBM": lang(0.8, 0.6, 0.3, False, 57, ["triad", "open"]),
+    "Industrial/Darkwave": lang(0.5, 0.6, 0.4, False, 57, ["triad", "sus"]),
+    "Industrial/Industrial rock": lang(0.7, 0.3, 0.3, False, 45, ["open", "phrygian"]),
+    "Industrial/Dark electro": lang(0.7, 0.5, 0.5, False, 52, ["diminished", "phrygian"]),
+    "Industrial/Coldwave": lang(0.5, 0.5, 0.5, False, 57, ["sus", "seventh"]),
+    "Electro": lang(0.6, 0.5, 0.8, False, 57, ["quartal", "seventh"]),
+    "Breakbeat": lang(0.6, 0.5, 0.8, False, 57, ["seventh", "quartal"]),
+    "Drum and Bass": lang(0.6, 0.7, 0.7, False, 57, ["ninth", "seventh"]),
+    "Drum and Bass/Neurofunk": lang(0.7, 0.4, 0.8, True, 45, ["diminished", "tritone"]),
+    "Ambient": lang(0.2, 0.7, 0.5, False, 57, ["open", "sus", "ninth"]),
+    "Ambient/Dark ambient": lang(0.2, 0.6, 0.6, False, 45, ["phrygian", "tritone", "open"]),
+    "House": lang(0.5, 0.6, 0.8, False, 57, ["ninth", "seventh"]),
+    "Synthwave": lang(0.9, 0.8, 0.2, False, 57, ["triad", "seventh"]),
+    "Trance": lang(1.0, 0.5, 0.4, True, 57, ["phrygian", "open"]),
+    "Game": lang(0.6, 0.7, 0.4, False, 57, ["triad", "sus"]),
+    "Game/Combat": lang(0.9, 0.5, 0.3, False, 52, ["open", "triad"]),
+    "Game/Exploration": lang(0.4, 0.9, 0.4, False, 64, ["sus", "ninth"]),
+    "Game/Menu": lang(0.4, 0.6, 0.5, False, 64, ["sus", "triad"]),
+    "Game/Chiptune": lang(1.0, 1.0, 0.2, False, 64, ["triad", "seventh"]),
+    "Game/Horror": lang(0.3, 0.8, 0.8, False, 52, ["diminished", "tritone", "phrygian"]),
+    "Game/Boss": lang(0.9, 0.5, 0.4, True, 45, ["diminished", "open"]),
+}
+
+# What a chord is made of on a root, in semitones (a name: the scale step above the root, in the mode),
+# and how to say it.
+COLOURS = {
+    "triad":      (["third", "fifth"], "the triads"),
+    "open":       ([7, 12], "root, fifth and octave, no third"),
+    "phrygian":   ([1, 7], "the root, the semitone above it and the fifth"),
+    "tritone":    ([6, 12], "the root, its tritone and the octave"),
+    "diminished": ([3, 6], "diminished triads"),
+    "sus":        ([5, 7], "the fourth in place of the third"),
+    "quartal":    ([5, 10], "fourths stacked on the root"),
+    "seventh":    (["third", "seventh"], "the root, the third and the seventh"),
+    "ninth":      (["fifth", "ninth"], "the root, the fifth and the ninth"),
+}
+
+
+def language_of(style):
+    return LANGUAGE.get(style) or LANGUAGE[style.split("/")[0]]
+
+
+def coloured(mode, degree, low, colour):
+    """A chord of three notes on the mode's degree in a colour, as pitches from low up."""
+    root = degree_pitch(mode, degree, low, low + 11)
+    i = ladder_index(mode, root)
+    step = {"third": 2, "fifth": 4, "seventh": 6, "ninth": 8}
+    return [root] + [LADDER[mode][i + step[x]] if isinstance(x, str) else root + x for x in COLOURS[colour][0]]
+
+
+def tags_for(pitches):
+    """The tags a part's notes need: Phrygian's B flat, harmonic minor's G sharp, anything else chromatic."""
+    pcs = {p % 12 for p in pitches} - {9, 11, 0, 2, 4, 5, 7}
+    return (["Phrygian"] if 10 in pcs else []) + (["Harmonic minor"] if 8 in pcs else []) + (["Chromatic"] if pcs - {10, 8} else [])
+
+
+def traits(tokens):
+    """What a figure of 16 steps does, from its tokens: how full, how wide, how far off the beat, whether
+    it runs in threes. A token is a rest ('.'), a hold ('-') or a note; `wide` counts the different notes."""
+    notes = [(i, t.rstrip("!~_")) for i, t in enumerate(tokens) if t not in (".", "-")]
+    starts = [i for i, _ in notes]
+    density = len(notes) / 16
+    wide = min(1.0, (len({t for _, t in notes}) - 1) / 4)
+    off = sum(1 for i in starts if i % 4 != 0) / max(1, len(starts)) / 0.75
+    threes = sum(1 for a, b in zip(starts, starts[1:]) if b - a == 3) >= 3 or sum(1 for i in range(13) if tokens[i] == tokens[i + 3] != ".") >= 8
+    return density, wide, min(1.0, off), threes
+
+
+def fits(tokens, language):
+    """How well a figure fits a style's language: higher is nearer."""
+    density, wide, off, threes = traits(tokens)
+    return -(abs(density - language["density"]) + abs(wide - language["wide"]) + 0.7 * abs(off - language["off"])) + (0.4 if threes and language["cross"] else 0.0)
+
+
+# The kits made from sources, for the styles they were made for: every second groove of the style plays one.
+KIT_MOVES = {
+    "Techno/Dark": "bunker", "Techno/Hard": "bunker",
+    "Techno/Industrial": "machineshop", "Industrial/Electro-industrial": "machineshop", "Industrial/Aggrotech": "machineshop",
+    "Industrial/EBM": "voltage", "Industrial/Techno-body": "voltage", "Industrial/Synth-EBM": "voltage",
+}
+
+
 class Maker:
     """Makes one style's presets, choosing with a generator seeded by the style's name."""
 
@@ -2584,6 +2703,12 @@ class Maker:
         s = self.s
         sound = drums(self.pick(s.drums_sound))
 
+        # A style the source kits were made for puts every second groove on one.
+        if sub == "Full Grooves" and s.style in KIT_MOVES:
+            self.grooves_made = getattr(self, "grooves_made", 0) + 1
+            if self.grooves_made % 2 == 0:
+                sound = drums(KIT_MOVES[s.style])
+
         if sub == "Full Grooves":
             bars = self.pick([1, 2, 4])
             part, said = self.groove(bars)
@@ -2669,7 +2794,8 @@ class Maker:
 
             # The first of its kind as it was, then the others from a place of the style's own; under each
             # the kick drawn, then the style's others.
-            for body, words in bodies[:1] + [bodies[1 + (start + i) % (len(bodies) - 1)] for i in range(len(bodies) - 1)]:
+            dense = lambda body: sum(1 for _, pattern in body for c in pattern if c != ".") / 8
+            for body, words in sorted(bodies, key=lambda b: abs(dense(b[0]) - language_of(s.style)["density"])):
                 for key in [drawn] + [k for k in s.kicks if k != drawn] + [k for k in KICKS if k not in s.kicks]:
                     part = Part(1)
                     put(part, [(n, p[:8] + "........") for n, p in KICKS[key][0] if isinstance(n, int)])
@@ -2760,8 +2886,14 @@ class Maker:
         bars = self.pick([2, 4]) if len(set(degrees)) > 1 else self.pick([1, 2, 4])
 
         # The rhythm drawn first, then the style's own, then the rest of its kind; as long as drawn, then the others.
-        kind = {"Arp Bass": ARP_BASS_KEYS, "Picked & Played": PICKED_KEYS}.get(sub, s.bass + [k for k in SYNTH_BASS_KEYS if k not in s.bass])
-        keys = [key] + [k for k in kind if k != key]
+        nearest = lambda keys: sorted(keys, key=lambda k: -fits(BASS[k][0].split(), language_of(s.style)))
+
+        if sub == "Synth Bass":
+            keys = [key] + [k for k in s.bass if k != key] + nearest([k for k in SYNTH_BASS_KEYS if k not in s.bass and k != key])
+        elif key == "acid":
+            keys = [key]
+        else:
+            keys = nearest(ARP_BASS_KEYS if sub == "Arp Bass" else PICKED_KEYS)
         candidates = []
 
         for k in keys:
@@ -2858,20 +2990,20 @@ class Maker:
 
             return self.add_new("harmony", ROLE_NOUNS[sub], "Harmony", sub, candidates)
         elif sub == "Keys & Comping":
-            drawn = self.pick([0, 1, 2, 3])
-            order = [drawn] + [(start + i) % len(COMP_RHYTHMS) for i in range(len(COMP_RHYTHMS)) if (start + i) % len(COMP_RHYTHMS) != drawn]
+            self.pick([0, 1, 2, 3])   # drawn as before
+            order = sorted(range(len(COMP_RHYTHMS)), key=lambda i: -fits(list(COMP_RHYTHMS[i][0]), language_of(s.style)))
             candidates = []
 
             for i in order:
                 rhythm, how = COMP_RHYTHMS[i]
 
                 for d, m in progressions:
-                    for with_seventh in (seventh, not seventh):
-                        chords = [names(triad(m, x, seventh=with_seventh)) for x in d]
+                    for colour in language_of(s.style)["colours"]:
+                        chords = [names(coloured(m, x, 52, colour)) for x in d]
                         part = Part(2)
                         part.chords(chords[:2], rhythm=rhythm, length_steps=1, velocity=82)
-                        candidates.append((f"short {chord_names(m, d[:2], with_seventh)} chords comping over two bars, {how}", part, synth(patch),
-                                           self.mode_tags(m, [n[0] for n in part.notes])))
+                        candidates.append((f"short chords of {COLOURS[colour][1]} on {root_names(m, d[:2])}, comping over two bars, {how}", part, synth(patch),
+                                           tags_for([n[0] for n in part.notes])))
 
             return self.add_new("harmony", ROLE_NOUNS[sub], "Harmony", sub, candidates)
         elif sub == "Stabs":
@@ -2983,17 +3115,22 @@ class Maker:
         bars = self.pick([1, 2, 4])
         patch = self.pick(s.arp_patches)
 
-        # The figure drawn first, then the others from a place of the style's own; its length as drawn, then the others.
-        start = zlib.crc32((s.style + sub).encode("utf-8")) % len(figures)
+        # The style's language chooses: the figures nearest it first, in the colour whose turn it is and then
+        # its others, where its arps sit; as long as drawn, then the other lengths.
+        language = language_of(s.style)
+        self.arps_made = getattr(self, "arps_made", 0) + 1
+        colours = language["colours"][self.arps_made % len(language["colours"]):] + language["colours"][:self.arps_made % len(language["colours"])]
+        ranked = sorted(figures, key=lambda f: -fits(f[0].split(), language))
         candidates = []
 
-        for figure, words, _ in [drawn] + [f for f in figures[start:] + figures[:start] if f != drawn]:
-            for length in [bars] + [b for b in (2, 4, 1) if b != bars]:
-                chords = [names(triad(mode, d, low=octave_low, high=octave_low + 11)) for d in degrees]
-                chords = chords[:length] if length > 1 else chords[:1]
-                part = arp(chords, figure, gate=0.4 if sub == "Gated" else 0.5)
-                said = words + (", through " + chord_names(mode, degrees[:length]) if length > 1 else ", on " + chord_name(mode, degrees[0]))
-                candidates.append((said, part, synth(patch), self.mode_tags(mode, [n[0] for n in part.notes])))
+        for figure, words, _ in ranked:
+            for colour in colours:
+                for length in [bars] + [b for b in (2, 4, 1) if b != bars]:
+                    chords = [names(coloured(mode, d, language["register"], colour)) for d in degrees]
+                    chords = chords[:length] if length > 1 else chords[:1]
+                    part = arp(chords, figure, gate=0.4 if sub == "Gated" else 0.5)
+                    where = "through the roots " + root_names(mode, degrees[:length]) if length > 1 else "on " + LETTERS[MODES[mode][degrees[0] % 7]]
+                    candidates.append((f"{words}, {COLOURS[colour][1]}, {where}", part, synth(patch), tags_for([n[0] for n in part.notes])))
 
         self.add_new("arp", ROLE_NOUNS[sub], "Arps", sub, candidates)
 

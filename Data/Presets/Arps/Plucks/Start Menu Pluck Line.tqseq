@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Start Menu Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="" note="Dotted-8th plucks falling from the octave, through A minor, F, C, G" style="Game/Menu" energy="1" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="96.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Start Menu Pluck Line" role="Arps" subRole="Plucks" key="A minor" tags="Phrygian" note="Sparse plucks, five to the bar, the fourth in place of the third, through the roots A, F, C, G" style="Game/Menu" energy="1" character="Bright,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="96.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
   <NOTES>
-    <N p="81" s="0" l="120" v="0.755906"/>
-    <N p="76" s="720" l="120" v="0.755906"/>
-    <N p="81" s="1440" l="120" v="0.755906"/>
-    <N p="72" s="2160" l="120" v="0.755906"/>
+    <N p="69" s="0" l="120" v="0.755906"/>
+    <N p="76" s="480" l="120" v="0.755906"/>
+    <N p="74" s="1440" l="120" v="0.755906"/>
+    <N p="81" s="1920" l="120" v="0.755906"/>
     <N p="76" s="2880" l="120" v="0.755906"/>
-    <N p="77" s="3840" l="120" v="0.755906"/>
-    <N p="72" s="4560" l="120" v="0.755906"/>
-    <N p="77" s="5280" l="120" v="0.755906"/>
-    <N p="69" s="6000" l="120" v="0.755906"/>
+    <N p="65" s="3840" l="120" v="0.755906"/>
+    <N p="72" s="4320" l="120" v="0.755906"/>
+    <N p="70" s="5280" l="120" v="0.755906"/>
+    <N p="77" s="5760" l="120" v="0.755906"/>
     <N p="72" s="6720" l="120" v="0.755906"/>
-    <N p="84" s="7680" l="120" v="0.755906"/>
-    <N p="79" s="8400" l="120" v="0.755906"/>
-    <N p="84" s="9120" l="120" v="0.755906"/>
-    <N p="76" s="9840" l="120" v="0.755906"/>
+    <N p="72" s="7680" l="120" v="0.755906"/>
+    <N p="79" s="8160" l="120" v="0.755906"/>
+    <N p="77" s="9120" l="120" v="0.755906"/>
+    <N p="84" s="9600" l="120" v="0.755906"/>
     <N p="79" s="10560" l="120" v="0.755906"/>
-    <N p="79" s="11520" l="120" v="0.755906"/>
-    <N p="74" s="12240" l="120" v="0.755906"/>
-    <N p="79" s="12960" l="120" v="0.755906"/>
-    <N p="71" s="13680" l="120" v="0.755906"/>
+    <N p="67" s="11520" l="120" v="0.755906"/>
+    <N p="74" s="12000" l="120" v="0.755906"/>
+    <N p="72" s="12960" l="120" v="0.755906"/>
+    <N p="79" s="13440" l="120" v="0.755906"/>
     <N p="74" s="14400" l="120" v="0.755906"/>
   </NOTES>
   <VOICE><TRACKTEMPLATE name="Torqwave Synth: Basalt Wire" bus="0" instrument="1" musical="1" gainDb="6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPgMWXrQGHWklbkIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>

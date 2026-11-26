@@ -33,7 +33,7 @@
       <N p="42" s="3360" l="120" v="0.771654"/>
       <N p="42" s="3600" l="120" v="0.771654"/>
     </NOTES>
-    <VOICE><TRACKTEMPLATE name="Basic Drums: Industrial" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHI4FY0MGcxkVXrIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: Machine Shop" bus="0" instrument="1" musical="1" gainDb="-6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>70.VMjLgzC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHME1XnklakAxTn8Fbh7hO..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
   <TORQWAVE_SEQUENCE version="1" name="Riot Gear Sub" role="Bass" subRole="Sub" key="A minor" tags="Harmonic minor" note="A quarter-note pulse on the root, moving through the roots of A minor, G sharp diminished, F, G sharp diminished" style="Industrial/Aggrotech" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="1" offset="0" length="15360" loopLength="0">
     <NOTES>
@@ -70,24 +70,23 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Abandoned Clamp" bus="0" instrument="1" musical="1" gainDb="-6.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>75.VMjLgHD....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HRPhElaj8lakQFHCwVXsAmHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Rage Plucks" role="Arps" subRole="Plucks" key="A minor" tags="" note="8ths up and down, on A minor" style="Industrial/Aggrotech" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Rage Plucks" role="Arps" subRole="Plucks" key="A minor" tags="Chromatic" note="8th plucks on the chord's notes, diminished triads, on A" style="Industrial/Aggrotech" energy="5" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
     <NOTES>
-      <N p="69" s="0" l="120" v="0.755906"/>
-      <N p="72" s="480" l="120" v="0.755906"/>
-      <N p="76" s="960" l="120" v="0.755906"/>
-      <N p="72" s="1440" l="120" v="0.755906"/>
-      <N p="69" s="1920" l="120" v="0.755906"/>
-      <N p="72" s="2400" l="120" v="0.755906"/>
-      <N p="76" s="2880" l="120" v="0.755906"/>
-      <N p="81" s="3360" l="120" v="0.755906"/>
+      <N p="57" s="0" l="120" v="0.755906"/>
+      <N p="63" s="480" l="120" v="0.755906"/>
+      <N p="60" s="960" l="120" v="0.755906"/>
+      <N p="69" s="1440" l="120" v="0.755906"/>
+      <N p="57" s="1920" l="120" v="0.755906"/>
+      <N p="63" s="2400" l="120" v="0.755906"/>
+      <N p="60" s="2880" l="120" v="0.755906"/>
+      <N p="63" s="3360" l="120" v="0.755906"/>
     </NOTES>
-    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Basalt Wire" bus="0" instrument="1" musical="1" gainDb="-0.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPgMWXrQGHWklbkIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Basalt Wire" bus="0" instrument="1" musical="1" gainDb="-1.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>71.VMjLg3C....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhPgMWXrQGHWklbkIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
   <TORQWAVE_SEQUENCE version="1" name="Bloodline Snare Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then a snare roll rising to the next bar" style="Industrial/Aggrotech" energy="5" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="135.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
       <N p="36" s="960" l="120" v="0.944882"/>
-      <N p="36" s="1680" l="120" v="0.771654"/>
       <N p="38" s="1920" l="120" v="0.314961"/>
       <N p="38" s="2160" l="120" v="0.582677"/>
       <N p="38" s="2400" l="120" v="0.314961"/>

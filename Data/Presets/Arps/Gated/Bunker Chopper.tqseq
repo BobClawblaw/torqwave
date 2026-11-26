@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<TORQWAVE_SEQUENCE version="1" name="Bunker Chopper" role="Arps" subRole="Gated" key="A minor" tags="" note="Each note of the chord three times over, on A minor" style="Techno/Hard" energy="4" character="Dark,Dense,Straight,Distorted" ticksPerBeat="960" writtenTempo="155.0" beatsPerBar="4" channel="1" offset="0" length="3840" loopLength="0">
+<TORQWAVE_SEQUENCE version="1" name="Bunker Chopper" role="Arps" subRole="Gated" key="A minor" tags="" note="Two 16ths on every beat, climbing through the chord in the back half, root, fifth and octave, no third, through the roots A, G" style="Techno/Hard" energy="4" character="Dark,Sparse,Straight,Distorted" ticksPerBeat="960" writtenTempo="155.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
   <NOTES>
-    <N p="69" s="0" l="96" v="0.755906"/>
-    <N p="69" s="240" l="96" v="0.755906"/>
-    <N p="69" s="480" l="96" v="0.755906"/>
-    <N p="72" s="960" l="96" v="0.755906"/>
-    <N p="72" s="1200" l="96" v="0.755906"/>
-    <N p="72" s="1440" l="96" v="0.755906"/>
-    <N p="76" s="1920" l="96" v="0.755906"/>
-    <N p="76" s="2160" l="96" v="0.755906"/>
-    <N p="76" s="2400" l="96" v="0.755906"/>
-    <N p="72" s="2880" l="96" v="0.755906"/>
-    <N p="72" s="3120" l="96" v="0.755906"/>
-    <N p="72" s="3360" l="96" v="0.755906"/>
+    <N p="45" s="0" l="96" v="0.755906"/>
+    <N p="45" s="240" l="96" v="0.755906"/>
+    <N p="45" s="960" l="96" v="0.755906"/>
+    <N p="45" s="1200" l="96" v="0.755906"/>
+    <N p="52" s="1920" l="96" v="0.755906"/>
+    <N p="52" s="2160" l="96" v="0.755906"/>
+    <N p="57" s="2880" l="96" v="0.755906"/>
+    <N p="57" s="3120" l="96" v="0.755906"/>
+    <N p="55" s="3840" l="96" v="0.755906"/>
+    <N p="55" s="4080" l="96" v="0.755906"/>
+    <N p="55" s="4800" l="96" v="0.755906"/>
+    <N p="55" s="5040" l="96" v="0.755906"/>
+    <N p="62" s="5760" l="96" v="0.755906"/>
+    <N p="62" s="6000" l="96" v="0.755906"/>
+    <N p="67" s="6720" l="96" v="0.755906"/>
+    <N p="67" s="6960" l="96" v="0.755906"/>
   </NOTES>
-  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Rust Lead" bus="0" instrument="1" musical="1" gainDb="-3.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhT0MGcfvTYgQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+  <VOICE><TRACKTEMPLATE name="Torqwave Synth: Rust Lead" bus="0" instrument="1" musical="1" gainDb="-2.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HhT0MGcfvTYgQlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
 </TORQWAVE_SEQUENCE>

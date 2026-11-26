@@ -81,35 +81,32 @@
     </NOTES>
     <VOICE><TRACKTEMPLATE name="Torqwave Synth: Grey Sky" bus="0" instrument="1" musical="1" gainDb="-2.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>68.VMjLgrC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxQxUVdfL0Z4IxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
-  <TORQWAVE_SEQUENCE version="1" name="Specter Pluck" role="Arps" subRole="Plucks" key="A minor" tags="" note="Plucks in a three-two figure, through A minor, D minor" style="Game/Horror" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
+  <TORQWAVE_SEQUENCE version="1" name="Specter Pluck" role="Arps" subRole="Plucks" key="A minor" tags="Chromatic,Phrygian" note="Dotted-8th plucks climbing to the octave, the root, the semitone above it and the fifth, through the roots A, D" style="Game/Horror" energy="2" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
-      <N p="69" s="0" l="120" v="0.755906"/>
-      <N p="76" s="720" l="120" v="0.755906"/>
-      <N p="72" s="1200" l="120" v="0.755906"/>
-      <N p="81" s="1920" l="120" v="0.755906"/>
-      <N p="76" s="2640" l="120" v="0.755906"/>
-      <N p="72" s="3120" l="120" v="0.755906"/>
-      <N p="74" s="3840" l="120" v="0.755906"/>
-      <N p="81" s="4560" l="120" v="0.755906"/>
-      <N p="77" s="5040" l="120" v="0.755906"/>
-      <N p="86" s="5760" l="120" v="0.755906"/>
-      <N p="81" s="6480" l="120" v="0.755906"/>
-      <N p="77" s="6960" l="120" v="0.755906"/>
+      <N p="57" s="0" l="120" v="0.755906"/>
+      <N p="58" s="720" l="120" v="0.755906"/>
+      <N p="64" s="1440" l="120" v="0.755906"/>
+      <N p="69" s="2160" l="120" v="0.755906"/>
+      <N p="64" s="2880" l="120" v="0.755906"/>
+      <N p="58" s="3360" l="120" v="0.755906"/>
+      <N p="62" s="3840" l="120" v="0.755906"/>
+      <N p="63" s="4560" l="120" v="0.755906"/>
+      <N p="69" s="5280" l="120" v="0.755906"/>
+      <N p="74" s="6000" l="120" v="0.755906"/>
+      <N p="69" s="6720" l="120" v="0.755906"/>
+      <N p="63" s="7200" l="120" v="0.755906"/>
     </NOTES>
-    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Cold Bell" bus="0" instrument="1" musical="1" gainDb="4.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxPuwFYfHTYrwlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+    <VOICE><TRACKTEMPLATE name="Torqwave Synth: Cold Bell" bus="0" instrument="1" musical="1" gainDb="0.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Torqwave Synth" descriptiveName="Torqwave Synth" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-synth" uniqueId="53425359" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53425359"/><STATE>69.VMjLgvC....OT8jTQcUPVUzWBEzTIMzWSkkSTgDH1Ulbyk1at0iHwHBHlE1Xz8lb4AUXzMFZ8HxPuwFYfHTYrwlHu3C.</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
   <TORQWAVE_SEQUENCE version="1" name="Bloodmoon Snare Fill" role="Drums" subRole="Fills" key="" tags="" note="The kick for two beats, then the snare in a dotted figure" style="Game/Horror" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="10" offset="0" length="3840" loopLength="0">
     <NOTES>
       <N p="36" s="0" l="120" v="0.944882"/>
-      <N p="36" s="480" l="120" v="0.314961"/>
-      <N p="36" s="960" l="120" v="0.944882"/>
-      <N p="36" s="1440" l="120" v="0.314961"/>
       <N p="38" s="1920" l="120" v="0.944882"/>
       <N p="38" s="2640" l="120" v="0.771654"/>
       <N p="38" s="3360" l="120" v="0.771654"/>
       <N p="38" s="3600" l="120" v="0.944882"/>
     </NOTES>
-    <VOICE><TRACKTEMPLATE name="Basic Drums: Electro" bus="0" instrument="1" musical="1" gainDb="-8.0" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>65.VMjLgfC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEwVYiQmbuIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
+    <VOICE><TRACKTEMPLATE name="Basic Drums: Electro" bus="0" instrument="1" musical="1" gainDb="-7.5" pan="0.0" colour="-1" note=""><EFFECTS><SLOT bypassed="0" id="1"><PLUGIN name="Basic Drums" descriptiveName="Basic Drums" format="Torqwave" category="Instrument" manufacturer="Torqwave" version="1" file="torqwave:basic-drums" uniqueId="53424452" isInstrument="1" numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0" uid="53424452"/><STATE>65.VMjLgfC....OT8jTQcUPVUzWBEzTIMzWDIUUMMEH1Ulbyk1at0iHwHBHlE1Xz8lb4sTZz0iHEwVYiQmbuIxK9..</STATE></SLOT></EFFECTS></TRACKTEMPLATE></VOICE>
   </TORQWAVE_SEQUENCE>
   <TORQWAVE_SEQUENCE version="1" name="Haunted Defeat Sting" role="SFX" subRole="Stingers" key="A minor" tags="" note="A defeat sting: A minor falling by step through G and F to a low held E" style="Game/Horror" energy="1" character="Dark,Sparse,Straight,Clean" ticksPerBeat="960" writtenTempo="70.0" beatsPerBar="4" channel="1" offset="0" length="7680" loopLength="0">
     <NOTES>
