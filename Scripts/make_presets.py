@@ -2082,7 +2082,7 @@ STYLES = [
           arp_patches=["pluck", "glass"], lead_patches=["lead", "glass"], pad_patches=["pad"], energy=2),
 
     # Further afield.
-    Style("Electro/Electro", [124, 128, 130], 18, words=W("Robot", "Mainframe", "Kraftwerk Lane", "Bodypop", "Computer", "Bassline Bot", "Transistor", "Mechanoid", "Data", "Breakdance"),
+    Style("Electro/Electro", [124, 128, 130], 18, words=W("Robot", "Mainframe", "Circuit Lane", "Bodypop", "Computer", "Bassline Bot", "Transistor", "Mechanoid", "Data", "Breakdance"),
           drums_sound=["machine", "tight"], kicks=["electro", "electrob"], backbeats=["snare24", "clap24"],
           hats=["sixteen", "eighths"], percs=["cowbell", "none"], bass=["electro", "electrob"], bass_patches=["machinepulse", "dark"],
           progressions=["i-i-VI-VII", "i-II-i-VII"], chord_patches=["stab", "chord"], arp_patches=["arp", "pluck"], lead_patches=["lead", "bell"],
