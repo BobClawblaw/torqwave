@@ -241,8 +241,8 @@ namespace
         float ex = 1.0f;   // exp (-k t), kept by multiplying as t moves on, so a sample needs no exp
         float retriggerStep = 0.0f;   // struck again while the voice sounds: the attack's step at most (0: its own)
 
-        /** Starts the attack from where the envelope is. With `leastStep` (the voice struck again while it
-            sounds), an attack quicker than that takes that long instead: an amp, or a filter, jumping in a
+        /** Starts the attack from where the envelope is. With `leastStep` (the amp of a held sound struck
+            again while it sounds), an attack quicker than that takes that long instead: an amp jumping in a
             millisecond over a sounding note clicks. */
         void trigger (float leastStep) noexcept
         {
@@ -736,6 +736,10 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         int note = -1;
         float velocity = 0.0f, randomValue = 0.0f;
         float velocityTarget = 0.0f, velocityStep = 0.0f;   // a legato slide's velocity, reached a tick at a time
+        // The envelopes as the filters take them: the envelopes themselves, except just after a held note is
+        // struck again while it sounds, when they rise toward them no faster than filterRise a tick (0: not now).
+        std::array<float, numEnvelopes> toFilter {};
+        float filterRise = 0.0f;
         juce::uint32 age = 0, serial = 0;
         double pitch = 60.0, target = 60.0, glidePerSample = 0.0;
         std::array<Envelope, numEnvelopes> env;
@@ -744,7 +748,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         juce::int64 sinceStart = 0;
         std::array<OscillatorState, numOscillators> osc;
         // Each oscillator's level envelope: rising (0), held (1) or falling to its sustain level (2).
-        struct LevelEnvelope { int stage = 2, held = 0; float level = 1.0f, retriggerStep = 0.0f; };   // retriggerStep: as Envelope's
+        struct LevelEnvelope { int stage = 2, held = 0; float level = 1.0f; };
         std::array<LevelEnvelope, numOscillators> levelEnv;
         double subPhase = 0.0, subIncrement = 0.0;
         Rng noiseL, noiseR;
@@ -986,14 +990,20 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         v.target = note;
         setGlide (v);
 
-        // Struck again while it sounds (its amp above nothing), no envelope rises faster than this (see
-        // Envelope::trigger), the oscillators' level envelopes included: a filter envelope or a strike layer
-        // coming in at once over a sounding note clicks. A fresh note, or one struck after silence, keeps its own.
+        // A held sound (its amp sustains) struck again while it sounds: the amp, and what the envelopes do to
+        // the filters, rise from where they are over at least retriggerSeconds, as the amp opening at once or a
+        // filter envelope opening a resonant filter over a sounding note clicks. Pitch, wave, FM, warp and the
+        // oscillators' levels start as they always did, and a one-shot (no sustain: a drum, a hit) is left
+        // alone, its strike being its sound; so is a fresh note, or one struck after silence.
+        const auto ramp = ! fresh && v.env[0].level > 0.0f && shared.env[0].sustain > 0.0f;
         const auto leastStep = (float) (1.0 / (retriggerSeconds * rate));
-        const auto sounding = ! fresh && v.env[0].level > 0.0f;
+        v.filterRise = ramp ? leastStep * (float) controlInterval : 0.0f;
 
-        for (auto& e : v.env)
-            e.trigger (sounding ? leastStep : 0.0f);
+        for (int e = 0; e < numEnvelopes; ++e)
+        {
+            v.toFilter[(size_t) e] = v.env[(size_t) e].level;
+            v.env[(size_t) e].trigger (e == 0 && ramp ? leastStep : 0.0f);
+        }
 
         for (int l = 0; l < numLfos; ++l)
             if (fresh || shared.lfo[(size_t) l].mode != 0)
@@ -1006,7 +1016,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         for (int o = 0; o < numOscillators; ++o)
         {
             auto& e = v.levelEnv[(size_t) o];
-            e = shared.levelEnv[(size_t) o] ? Voice::LevelEnvelope { 0, 0, fresh ? 0.0f : e.level, sounding ? leastStep : 0.0f } : Voice::LevelEnvelope();
+            e = shared.levelEnv[(size_t) o] ? Voice::LevelEnvelope { 0, 0, fresh ? 0.0f : e.level } : Voice::LevelEnvelope();
         }
 
         for (int o = 0; o < numOscillators; ++o)
@@ -1347,7 +1357,11 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         if (shared.anyModulation)
             for (auto& slot : shared.slots)
                 if (slot.source != 0 && slot.destination >= 0 && slot.destination < numDestinations)
-                    value[(size_t) slot.destination] += slot.amount * sourceValue (v, slot.source);
+                {
+                    const auto toFilter = v != nullptr && slot.source >= env1 && slot.source <= env4
+                                          && slot.destination >= dF1Cutoff && slot.destination <= dF2Drive;
+                    value[(size_t) slot.destination] += slot.amount * (toFilter ? v->toFilter[(size_t) (slot.source - env1)] : sourceValue (v, slot.source));
+                }
 
         // Cutoff (CC 74) takes both filters down as far as eight octaves; Resonance (CC 71) up toward the most.
         if (brightness < 1.0f || ccResonance > 0.0f)
@@ -1688,7 +1702,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
                     if (le.stage == 0)
                     {
-                        le.level += le.retriggerStep > 0.0f ? juce::jmin (le.retriggerStep, s.levelAttack[(size_t) o]) : s.levelAttack[(size_t) o];
+                        le.level += s.levelAttack[(size_t) o];
                         if (le.level >= 1.0f) { le.level = 1.0f; le.stage = 1; le.held = 0; }
                     }
                     else if (le.stage == 1)
@@ -1932,6 +1946,27 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
             for (int l = 0; l < numLfos; ++l)
                 v.lfoPhase[(size_t) l] += lfoHz (l, v.value[(size_t) (dLfo1Rate + l)]) * controlInterval / rate;
+
+            if (v.filterRise > 0.0f)
+            {
+                auto rising = false;
+
+                for (int e = 0; e < numEnvelopes; ++e)
+                {
+                    auto& f = v.toFilter[(size_t) e];
+                    const auto level = v.env[(size_t) e].level;
+                    if (level > f + v.filterRise) { f += v.filterRise; rising = true; }
+                    else f = level;
+                }
+
+                if (! rising)
+                    v.filterRise = 0.0f;
+            }
+            else
+            {
+                for (int e = 0; e < numEnvelopes; ++e)
+                    v.toFilter[(size_t) e] = v.env[(size_t) e].level;
+            }
 
             if (v.velocityStep != 0.0f)
             {

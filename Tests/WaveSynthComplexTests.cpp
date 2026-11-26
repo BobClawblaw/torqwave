@@ -763,8 +763,8 @@ void runSynthEventTests()
         Synth s;
         hollowGantryAsHeard (s, mode);
         const auto burst = burstOf (render (s, struckPhrase (33), 2.5));
-        check (burst.db <= 8.0, "synth: a note struck again while it sounds rises over " + juce::String (WaveSynth::retriggerSeconds * 1000.0, 0)
-                                    + " ms, every envelope, so Hollow Gantry as the user heard it doesn't click " + name + " (burst "
+        check (burst.db <= 8.0, "synth: a held sound struck again while it sounds brings its amp and filter envelope in over " + juce::String (WaveSynth::retriggerSeconds * 1000.0, 0)
+                                    + " ms, so Hollow Gantry as the user heard it doesn't click " + name + " (burst "
                                     + juce::String (burst.db, 1) + " dB at " + juce::String (burst.seconds, 3) + " s; at most 8)");
     }
 
@@ -798,6 +798,46 @@ void runSynthEventTests()
         check (fresh <= 0.003 && again <= 0.003 && strike.db >= 4.0,
                "synth: a fresh note keeps its own attack (90 % in " + juce::String (fresh * 1000.0, 2) + " ms, and " + juce::String (again * 1000.0, 2)
                    + " ms struck again after silence; at most 3), and Clamp Tom's strike is still there (" + juce::String (strike.db, 1) + " dB over its surroundings)");
+    }
+
+    // A drum struck again while it rings hits as hard as the first time: a fast roll (sixteen strikes 70 ms
+    // apart) on synth drums whose pitch, level and filter envelopes make the strike. Struck again, each
+    // strike's edge (the RMS of the change from sample to sample over its first 2 ms) and its level (RMS over
+    // its first 5 ms) are on average no more than 1.25 and 1 dB under the first strike's. The ring under each
+    // strike moves them a little either way; every envelope softened over 4 ms, the edges fell 1.9 to 4.7 dB.
+    for (auto* name : { "Scalding Kick", "Gnarled Stomp", "Clamp Tom" })
+    {
+        Synth s;
+        s.loadPatch (name);
+        std::vector<Event> events;
+        const auto gap = 0.07;
+
+        for (int n = 0; n < 16; ++n)
+            for (auto& e : notes ({ 45 }, n * gap, 0.05, 1.0f)) events.push_back (e);
+
+        const auto out = render (s, events, 16 * gap + 1.0);
+        const auto* x = out.getReadPointer (0);
+        const auto rms = [x] (int from, int length, bool edge)
+        {
+            double sum = 0.0;
+            for (int i = from; i < from + length; ++i) { const auto d = edge ? x[i] - (i > 0 ? x[i - 1] : 0.0f) : x[i]; sum += (double) d * d; }
+            return std::sqrt (sum / length);
+        };
+
+        double edge = 0.0, level = 0.0;
+
+        for (int n = 1; n < 16; ++n)
+        {
+            const auto at = (int) (n * gap * rate);
+            edge += rms (at, (int) (0.002 * rate), true) / 15.0;
+            level += rms (at, (int) (0.005 * rate), false) / 15.0;
+        }
+
+        const auto edgeDb = 20.0 * std::log10 (edge / rms (0, (int) (0.002 * rate), true));
+        const auto levelDb = 20.0 * std::log10 (level / rms (0, (int) (0.005 * rate), false));
+        check (edgeDb >= -1.25 && levelDb >= -1.0,
+               juce::String ("synth: ") + name + " rolled (16 strikes 70 ms apart) hits as hard struck again as the first time: its edge "
+                   + juce::String (edgeDb, 2) + " dB (at least -1.25) and its level " + juce::String (levelDb, 2) + " dB (at least -1) against the first strike's");
     }
 
     // The crackle the user heard: Acid Furnace under Body Shifting Pad's chords and its CC 74 lane, which

@@ -34,9 +34,11 @@ namespace WaveSynth
         make room as when all sixteen are taken, so what one costs never grows past that. */
     constexpr int unisonBudget = 3 * maxUnison * numVoices;
     constexpr double fadeSeconds = 0.004, minimumAttackSeconds = 0.0015;
-    /** A note struck again while it sounds (mono, or a ringing key played again): every envelope, the
-        oscillators' level envelopes too, rises from where it is no faster than this, as an amp or a filter
-        jumping in a millisecond over a sounding note clicks. A fresh note keeps its own attack. */
+    /** A held sound (its amp sustains) struck again while it sounds (mono, or a ringing key played again):
+        its amp, and what the envelopes do to the filters, rise from where they are no faster than this, as
+        an amp or a filter jumping in a millisecond over a sounding note clicks. Pitch, wave, FM, warp and the
+        oscillators' levels are left as they were, and so is a one-shot (no sustain), a fresh note and a note
+        struck after silence. */
     constexpr double retriggerSeconds = 0.004;
     /** How long CC 74 (Cutoff) and the macros take to follow a move while notes sound: a controller's steps
         would otherwise step the filters, and a comb jumps and crackles. With no note sounding they are taken
