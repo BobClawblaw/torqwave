@@ -1695,13 +1695,15 @@ void runWaveSynthTests (AudioEngine& engine)
 
 void writePatchHashes (const juce::File& file)
 {
-    const auto& all = WaveSynth::factoryPatches();
+    // The factory patches, then the Complex ones, each by name.
+    auto all = WaveSynth::factoryPatches();
+    all.insert (all.end(), WaveSynth::complexPatches().begin(), WaveSynth::complexPatches().end());
     juce::StringArray lines;
 
     for (size_t i = 0; i < all.size(); ++i)
     {
         Synth synth;
-        synth.loadPatch ((int) i);
+        synth.loadPatch (all[i].name);
         const auto out = play (synth, held ({ 48, 51, 55 }, 2.0, 0.8f), (int) (4.0 * rate));
         juce::uint64 hash = 1469598103934665603ull;   // FNV-1a over the samples' bits
 

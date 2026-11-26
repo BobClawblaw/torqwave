@@ -1727,7 +1727,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also)
 }
 
 
-void writeSequenceClips (const juce::File& from, const juce::File& into)
+void writeSequenceClips (const juce::File& from, const juce::File& into, bool exact)
 {
     into.createDirectory();
     juce::AudioPluginFormatManager formats;
@@ -1748,7 +1748,7 @@ void writeSequenceClips (const juce::File& from, const juce::File& into)
         return std::pair<double, double> { 10.0 * std::log10 (juce::jmax (1.0e-12, sum / juce::jmax (1, frames))), crossings * rate / juce::jmax (1, frames) };
     };
 
-    for (const auto& f : juce::RangedDirectoryIterator (from, false, "*.tqseq", juce::File::findFiles))
+    for (const auto& f : juce::RangedDirectoryIterator (from, true, "*.tqseq", juce::File::findFiles))
     {
         juce::String error;
         auto q = SequenceFile::load (f.getFile(), error);
@@ -1818,7 +1818,7 @@ void writeSequenceClips (const juce::File& from, const juce::File& into)
         file.deleteFile();
         std::unique_ptr<juce::OutputStream> stream (new juce::FileOutputStream (file));
 
-        if (auto writer = juce::WavAudioFormat().createWriterFor (stream, juce::AudioFormatWriterOptions{}.withSampleRate (rate).withNumChannels (2).withBitsPerSample (24)))
+        if (auto writer = juce::WavAudioFormat().createWriterFor (stream, juce::AudioFormatWriterOptions{}.withSampleRate (rate).withNumChannels (2).withBitsPerSample (exact ? 32 : 24)))
             writer->writeFromAudioSampleBuffer (audio, 0, audio.getNumSamples());
 
         std::cout << q->style << "|" << q->name << "|" << (q->voice != nullptr ? q->voice->getStringAttribute ("name") : juce::String()) << "|peak " << juce::String (peakDb (audio), 1)

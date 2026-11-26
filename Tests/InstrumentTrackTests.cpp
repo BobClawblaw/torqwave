@@ -9,6 +9,7 @@
 #include "../Source/TrackEffects.h"
 #include "../Source/OfflineRender.h"
 #include "../Source/BuiltInEffects.h"
+#include "../Source/WaveSynth.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/MidiInput.h"
 #include "../Source/Instrument.h"
@@ -1553,6 +1554,165 @@ namespace
 
         folder.deleteRecursively();
     }
+}
+
+bool writeSessionReference (AudioEngine& engine, const juce::File& folder, bool writeFixtures)
+{
+    // Sessions with Torqwave Synth on their tracks, kept as fixtures (Tests/Fixtures/SynthSessions)
+    // written once by the 0.22.0 engine, so a later build plays the files that one saved and can
+    // never write them afresh and pass against itself: factory and Complex patches and
+    // a hand-set one, automation on the synth's level, cutoff, macros, an LFO's rate and an FM
+    // depth, and note clips with mod-wheel, CC 74 and pitch-bend lanes. Each session is loaded,
+    // its chains made afresh as a bounce makes them, and played for six seconds; the hash of each
+    // goes to hashes.txt in the folder. A fixture missing is a failure; --write-session-fixtures
+    // writes them, and only where none is.
+    folder.createDirectory();
+    const auto fixtures = juce::File::getCurrentWorkingDirectory().getChildFile ("Tests/Fixtures/SynthSessions");
+    juce::PluginDescription synthDescription;
+
+    for (auto& d : BuiltInEffects::getDescriptions())
+        if (d.fileOrIdentifier == BuiltInEffects::basicSynthId)
+            synthDescription = d;
+
+    struct Part
+    {
+        juce::String patch;                                            // a factory or Complex patch, or empty to set by hand
+        std::vector<std::pair<juce::String, float>> settings;          // plain values set after it
+        std::vector<ClipNote> notes;
+        std::vector<std::pair<juce::String, Envelope>> automation;     // parameter, its envelope (0 to 1)
+        std::vector<ControllerLane> lanes;
+    };
+
+    const auto phrase = [] (std::vector<int> keys, juce::int64 step, juce::int64 hold, float velocity)
+    {
+        std::vector<ClipNote> n;
+        juce::int64 at = 0;
+
+        for (auto k : keys)
+        {
+            n.push_back ({ k, at, hold, velocity });
+            velocity = juce::jlimit (0.2f, 1.0f, velocity * 0.87f + 0.11f);
+            at += step;
+        }
+
+        return n;
+    };
+
+    const auto ramp = [] (float a, float b) { return Envelope { { { 0, a }, { 144000, b }, { 287999, a } } }; };
+
+    const auto part = [] (const char* patch, std::vector<ClipNote> notes) { Part p; p.patch = patch; p.notes = std::move (notes); return p; };
+    std::vector<std::vector<Part>> sessions (3);
+
+    // One track: a factory bass, its level, cutoff and first macro automated.
+    sessions[0].push_back (part ("Iron Motion", phrase ({ 33, 33, 45, 33, 36, 33, 43, 31, 33, 33, 45, 40 }, 12000, 9000, 0.9f)));
+    sessions[0].back().automation = { { "ampLevel", ramp (0.75f, 0.9f) }, { "filter1Cutoff", ramp (0.3f, 0.7f) }, { "macro1", ramp (0.0f, 1.0f) } };
+
+    // Three tracks: two Complex patches with macros, an LFO's rate and CC 74 moving, and a nine-oscillator
+    // synth set by hand (FM From, unison, a slot) with its FM depth automated, the wheel and the bend moving.
+    sessions[1].push_back (part ("Rivet Engine", phrase ({ 33, 36, 33, 31, 33, 40, 33, 38 }, 18000, 15000, 1.0f)));
+    sessions[1].back().automation = { { "macro2", ramp (0.0f, 1.0f) }, { "macro4", ramp (0.5f, 0.0f) } };
+    sessions[1].push_back (part ("Caustic Lattice", phrase ({ 45, 45, 57, 45, 48, 45, 55, 43 }, 18000, 12000, 0.8f)));
+    sessions[1].back().automation = { { "macro1", ramp (0.2f, 0.9f) }, { "lfo1Rate", ramp (0.4f, 0.6f) } };
+    sessions[1].back().lanes = { ControllerLane { 74, Envelope { { { 0, 0.2f }, { 200000, 1.0f } } } } };
+    sessions[1].push_back (part ("", { { 57, 0, 96000, 0.7f }, { 60, 0, 96000, 0.6f }, { 64, 0, 96000, 0.8f }, { 55, 120000, 120000, 1.0f }, { 62, 120000, 120000, 0.5f } }));
+    sessions[1].back().settings = { { "osc2On", 1.0f }, { "osc2Table", 4.0f }, { "osc2Pitch", 7.0f }, { "osc4On", 1.0f }, { "osc4Table", 2.0f }, { "osc4Warp", 5.0f },
+                                    { "osc4FmFrom", 6.0f }, { "osc4WarpAmount", 40.0f }, { "osc6Table", 4.0f }, { "osc9On", 1.0f }, { "osc9Unison", 4.0f },
+                                    { "osc9UnisonDetune", 30.0f }, { "mod1Source", (float) WaveSynth::lfo1 },
+                                    { "mod1Destination", (float) (WaveSynth::destinationIds().indexOf ("osc4WarpAmount") + 1) },
+                                    { "mod1Amount", 35.0f }, { "lfo1Rate", 3.0f }, { "env1Attack", 200.0f }, { "env1Release", 900.0f } };
+    sessions[1].back().automation = { { "osc4WarpAmount", ramp (0.1f, 0.8f) } };
+    sessions[1].back().lanes = { ControllerLane { 1, Envelope { { { 0, 0.0f }, { 240000, 1.0f } } } },
+                                 ControllerLane { ControllerLane::pitchBend, Envelope { { { 0, 0.5f }, { 100000, 0.5f }, { 140000, 0.8f }, { 200000, 0.5f } } } } };
+
+    // One track: a Complex pad held as a chord, a macro automated and the wheel coming down.
+    sessions[2].push_back (part ("Ozone Nave", { { 57, 0, 200000, 0.6f }, { 60, 0, 200000, 0.9f }, { 64, 0, 200000, 0.4f } }));
+    sessions[2].back().automation = { { "macro3", ramp (0.0f, 1.0f) } };
+    sessions[2].back().lanes = { ControllerLane { 1, Envelope { { { 0, 0.5f }, { 280000, 0.0f } } } } };
+
+    juce::StringArray lines;
+
+    for (size_t n = 0; n < sessions.size(); ++n)
+    {
+        const auto file = fixtures.getChildFile ("session-" + juce::String ((int) n) + ".tqsession");
+
+        if (file.existsAsFile() == writeFixtures)
+        {
+            std::cout << "FAILED " << file.getFileName() << (writeFixtures ? ": a fixture is there already; it is never written afresh" : ": the fixture is missing") << std::endl;
+            return false;
+        }
+
+        if (writeFixtures)
+        {
+            fixtures.createDirectory();
+
+            SessionState s;
+            s.sampleRate = rate;
+            TrackEffects effects;
+            effects.prepare (rate);
+
+            for (auto& piece : sessions[n])
+            {
+                juce::String error;
+                auto instance = engine.pluginFormatManager.createPluginInstance (synthDescription, rate, 512, error);
+                auto* synth = dynamic_cast<BuiltInEffects::BasicSynthProcessor*> (instance.get());
+
+                if (synth == nullptr || (piece.patch.isNotEmpty() && ! synth->loadPatch (piece.patch)))
+                {
+                    std::cout << "FAILED session " << n << ": " << (synth == nullptr ? error : "no patch " + piece.patch) << std::endl;
+                    return false;
+                }
+
+                for (auto& [id, value] : piece.settings)
+                    setPlain (*synth, id, value);
+
+                auto& t = s.addInstrumentTrack();
+                const auto trackId = t.id;
+                NoteClip clip;
+                clip.length = 288000;
+                clip.notes = piece.notes;
+                clip.lanes = piece.lanes;
+                SessionEdits::addNoteClip (s, trackId, clip);
+                const auto slot = effects.add (trackId, std::move (instance));
+
+                for (auto& [id, envelope] : piece.automation)
+                    SessionEdits::setEnvelope (s, trackId, AutomationTarget::effect (slot, id), envelope);
+            }
+
+            if (const auto error = SessionFile::save (s, file, [&effects] (juce::uint32 id) { return effects.createXml (id); }); error.isNotEmpty())
+            {
+                std::cout << "FAILED session " << n << ": " << error << std::endl;
+                return false;
+            }
+        }
+
+        const auto loaded = SessionFile::load (file, engine.formatManager);
+        std::map<juce::uint32, std::unique_ptr<juce::XmlElement>> xml;
+
+        for (auto& [id, chain] : loaded.effects)
+            if (chain != nullptr)
+                xml[id] = std::make_unique<juce::XmlElement> (*chain);
+
+        TrackEffects chains;
+        const auto errors = OfflineRender::loadTrackEffects (xml, engine.pluginFormatManager, rate, chains);
+        const auto out = play (loaded.state, 0, 288000, 512, &chains);
+        juce::uint64 hash = 1469598103934665603ull;
+
+        for (int ch = 0; ch < out.getNumChannels(); ++ch)
+            for (int i = 0; i < out.getNumSamples(); ++i)
+            {
+                juce::uint32 bits;
+                const auto sample = out.getSample (ch, i);
+                std::memcpy (&bits, &sample, sizeof (bits));
+                hash = (hash ^ bits) * 1099511628211ull;
+            }
+
+        lines.add (file.getFileName() + "|" + juce::String ((int) loaded.state.tracks.size()) + " tracks|" + (loaded.error + errors).trim()
+                   + "|rms " + juce::String (rms (out, 0, out.getNumSamples()), 5) + "|" + juce::String::toHexString ((juce::int64) hash));
+    }
+
+    folder.getChildFile ("hashes.txt").replaceWithText (lines.joinIntoString ("\n") + "\n");
+    std::cout << lines.joinIntoString ("\n") << std::endl;
+    return true;
 }
 
 void runInstrumentTrackTests (AudioEngine& engine)

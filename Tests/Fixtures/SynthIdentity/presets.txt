@@ -1,0 +1,1024 @@
+8-bit - 8-Bit Discovery Sting.wav|cf71207e2b802032
+8-bit - 8-Bit Hat Line.wav|10f780474b85e629
+8-bit - 8-Bit Up-Down Arp.wav|b68b435d38a928a1
+8-bit - Arcade Hum.wav|e68e616d7e8bcb6d
+8-bit - Arcade Wash.wav|3c7b275e48cbf3b0
+8-bit - Bitcrush Pluck Line.wav|e24aed5cf4ee3d33
+8-bit - Bitcrush Pressure.wav|82070e1543321475
+8-bit - Bitcrush Stabs.wav|98d5a87fac9fa22c
+8-bit - Bitcrush Sub Line.wav|1c1e8b24b8e511d1
+8-bit - Bonus Stage Danger Sting.wav|eeecbdfe94a41cea
+8-bit - Cartridge Changes.wav|f0be9bf6c830b986
+8-bit - Cartridge Comp.wav|d03bea5ff570dbc0
+8-bit - Cartridge Throb.wav|cd38ae5d46783be9
+8-bit - Cartridge Tom Run.wav|b52e3fdc2860480
+8-bit - High Score Bloom.wav|cd2835b7b65ec2e9
+8-bit - High Score Hook.wav|f33d2ae7fbb3c359
+8-bit - Joypad Counter-line.wav|5dd024c129ca8059
+8-bit - Power-Up Line.wav|e40fd8b29d562619
+8-bit - Sprite Error Blip.wav|5a8ce36e6c59a241
+8-bit - Sprite Level Up.wav|101cd12e3536abf8
+8-bit - Sprite Low End Kick.wav|324d0ba4e44bd4da
+8-bit - Sprite Machine.wav|ffc5c05720ec0a5d
+8-bit - Sprite Pattern.wav|b9205783c96a9aa
+Boss - Arena Hook.wav|550f6be600a176fb
+Boss - Colossus Bed.wav|c2aa4dedf3d37bc7
+Boss - Colossus Kick Line.wav|e76a3c75004d5951
+Boss - Dark Lord Comp.wav|b646712c3a097912
+Boss - Dark Lord Groove.wav|c2bd18e510a322c
+Boss - Dark Lord Open Blip.wav|fff3472ba32a9d8
+Boss - Dark Lord Pluck Line.wav|54d8cdffb587dbcd
+Boss - Doom Bassline.wav|ff6d22faefb688d9
+Boss - Doom Roller.wav|5b8a5f0db18566f5
+Boss - Doom Snare Fill.wav|d150f205f4ca0736
+Boss - Final Boss Line.wav|a25004df2506013
+Boss - Final Boss Turn.wav|eb84d2ac36b05b31
+Boss - Last Stand Bloom.wav|2cb39c543d86fb1a
+Boss - Last Stand Hats.wav|74acf113d0a1dbda
+Boss - Last Stand Hit Chords.wav|d66026d1cb398c49
+Boss - Last Stand Lift.wav|4821d06c6d5256a3
+Boss - Last Stand Pulse.wav|7209f04c9c91296b
+Boss - Overlord Counter-line.wav|d09fad9ac85e0956
+Boss - Overlord Pattern.wav|916c5f486caa71c4
+Boss - Overlord Sub Pulse.wav|9cabdda2eb883c51
+Boss - Rampage Drone.wav|1e2d19d7120f3519
+Boss - Titan Up-Down Arp.wav|582bed28c61a2250
+Bright Pulse - Afterimage Beat.wav|7533ea72a7cf481d
+Bright Pulse - Afterimage Bed.wav|8e5294f0118a8348
+Bright Pulse - Afterimage Progression.wav|8fd836529ec29ce4
+Bright Pulse - Afterimage Shifting Pad.wav|5d82755f158c79ce
+Bright Pulse - Afterimage Snare Roll.wav|bccb19432b5de005
+Bright Pulse - Afterimage Sub Line.wav|f8ddd60d43cf07dd
+Bright Pulse - Bright Pulse Arp Loop.wav|ed8e172962258a77
+Bright Pulse - Bright Pulse Chorus Hook.wav|1bc773daf13029cf
+Bright Pulse - Bright Pulse Minor Loop.wav|53335f18db9ff647
+Bright Pulse - Bright Pulse Pad Loop.wav|c82d6b42d675402b
+Bright Pulse - Future Tense Kick Pattern.wav|b10a9d166592c851
+Bright Pulse - Future Tense Lead.wav|6167fcce84db2ed3
+Bright Pulse - Gated Sixteenths.wav|23158fda838bebb2
+Bright Pulse - Hologram Arp.wav|bce2c1670273a3a8
+Bright Pulse - Hologram Tops.wav|ef2f13bca65a1a5d
+Bright Pulse - Offbeat Pump Bass.wav|1b651561f7c224cd
+Bright Pulse - Prism Bass Arp.wav|e027a077753add19
+Bright Pulse - Pulse Star Hook.wav|f94a0f07eb4f9751
+Bright Pulse - Pulse Star Throb.wav|36e271fd2db3b441
+Bright Pulse - Pulse Star Transition.wav|35d8a1c58c9d548d
+Bright Pulse - Satellite Hit Chords.wav|7a78cb771069a2f0
+Bright Pulse - Satellite Keys.wav|d6e30d36fccc5ab
+Bright Pulse - Satellite Pluck Line.wav|9b3413d575736975
+Bright Pulse - Satellite Roller.wav|b317f7d970e5869a
+Bright Pulse - Satellite Sixteenths.wav|5b5b1415229d56a3
+Bright Pulse - Starlight Riser.wav|7c200769258b9a1e
+Bright Pulse - Synthetic Groove.wav|d8b5d8d0ea379e51
+Bright Pulse - Trance-Gate Minor.wav|d7af696b5a24df86
+Broken Beat - Back Room Break.wav|7583787f59e0d0e2
+Broken Beat - Big Beat Lead.wav|6277b5dea9115ed9
+Broken Beat - Big Beat Transition.wav|2083fb25f16371ac
+Broken Beat - Breaker Lift.wav|d48cd6e14f1d9628
+Broken Beat - Chopshop Hit Chords.wav|a5adc241cb7162cb
+Broken Beat - Chopshop Kick Line.wav|56f07ca306e49920
+Broken Beat - Cracked Pavement Break.wav|41d8ed2b8c374873
+Broken Beat - Funk Box Snare Roll.wav|6931e4917e7b9d35
+Broken Beat - Loose Wire Break.wav|f62230326073eb22
+Broken Beat - Rewind Pluck Line.wav|b316ec269f1e046e
+Broken Beat - Rough Cut Beat.wav|1eff43c76a93ccea
+Broken Beat - Rough Cut Pressure.wav|f55a02b0c383b613
+Broken Beat - Rough Cut Sub.wav|19d303fe4cba7f92
+Broken Beat - Scratch Loop.wav|717ae557da506824
+Broken Beat - Scratch Sequence.wav|bd5cfd5ce418efa6
+Broken Beat - Skate Riff.wav|d67f6ec3101db761
+Broken Beat - Skate Turn.wav|b1026a8b6b1487fe
+Broken Beat - Spin Back Break Loop.wav|68cad082b547ed8c
+Broken Beat - Spin Back Wash.wav|690d707e15e685b9
+Broken Beat - Street Evolving Pad.wav|c7f602a99f39181b
+Broken Beat - Street Throb.wav|c5de5040edbbfa12
+Broken Beat - Tape Splice Groove.wav|39645ef985774529
+Broken Circuit - Blackout Pad.wav|65515cca2b28f8fb
+Broken Circuit - Circuit Bass.wav|4eba0a079cb3543
+Broken Circuit - Circuit Clap Stutter.wav|9ed1e8ff4a3d3a94
+Broken Circuit - Circuit Stomp.wav|25651b9593d1d372
+Broken Circuit - Cold Wire Engine.wav|b12a14e93af16192
+Broken Circuit - Cold Wire Impact.wav|2571ee4a8a4a5cf0
+Broken Circuit - Datastream Pluck Line.wav|7dd5218bcf3e90ec
+Broken Circuit - Datastream Stabs.wav|3b1a3d7cf3a3df7e
+Broken Circuit - Datastream Theme.wav|bcb70d06da76ddc
+Broken Circuit - Datastream Up-Down Arp.wav|6a9ab0bf722e555d
+Broken Circuit - Flam Snare Figure.wav|325376f72efb6f99
+Broken Circuit - Glitch Drone.wav|f5e84dfbe0fec926
+Broken Circuit - Glitch Gated Chord.wav|c5353917e607a42b
+Broken Circuit - Harmonic Minor Arp Bass.wav|68d4387280a5c6e1
+Broken Circuit - Harmonic Minor Cluster.wav|14b9482dbc9faf0e
+Broken Circuit - Harmonic Minor Up-Down.wav|c48566b177379946
+Broken Circuit - Interference Chord Pulse.wav|c486e8312d81ccf4
+Broken Circuit - Interference Hats.wav|3fd821d35bcce122
+Broken Circuit - Interference Pressure.wav|4d52b1ed2120d819
+Broken Circuit - Interference Riser.wav|7c20046bf2906bbc
+Broken Circuit - Phrygian Descent.wav|838d5107d8f22e6b
+Broken Circuit - Phrygian Lead.wav|774f602e5cc03d71
+Broken Circuit - Phrygian Shift Bass.wav|14dfb391cf67b035
+Broken Circuit - Pitch-bend Dive.wav|f9b231768d76a5b7
+Broken Circuit - Rivet Line Stomp.wav|28b00a91c115f18f
+Broken Circuit - Sector Bridge.wav|73b8fe48da6c521d
+Broken Circuit - Signal Loss Chords.wav|6fb90bf814d087e7
+Broken Circuit - Signal Loss Motif.wav|a12ea41d8b7a766
+Broken Circuit - Static Answer.wav|7b95ee9a7fe5c42e
+Broken Circuit - Static Evolving Pad.wav|3da35a7dc9c660f4
+Broken Circuit - Static Pound.wav|a5fb773d30cdba34
+Broken Circuit - Surveillance Beat.wav|de49b686a1a25dfb
+Broken Circuit - Surveillance Crack.wav|9ffe521da7d4e8eb
+Broken Circuit - Transmission Low End Kick.wav|c0a799df4d06685d
+Broken Circuit - Transmission Pattern.wav|bcdfe4bd0dba7c56
+Broken Circuit - Transmission Perc Loop.wav|c80a5ac877d1f213
+Broken Circuit - Transmission Sub Line.wav|a3ef39b54fa6f285
+Broken Circuit - Wiretap Bass Riff.wav|70634dcb01c23199
+Broken Circuit - Wiretap Bass Sequence.wav|6304d962fbfb09aa
+Broken Circuit - Wiretap Drive Bass.wav|a10c905bd4e74c05
+Broken Circuit - Wiretap Strum.wav|57fd084d8659d593
+Club tools - Kick Only Four.wav|211a42beb5b84119
+Club tools - Offbeat Open Hats.wav|8561f3e85018262c
+Club tools - Offbeat Sub.wav|da50895fefcd3e2d
+Cold Glow - Concrete Winter Bed.wav|10980b8f1140ff50
+Cold Glow - Concrete Winter Pulse.wav|9f18c67ad85d461f
+Cold Glow - Distant Hat Line.wav|1a2d77c6c947c817
+Cold Glow - Distant Kick Pattern.wav|139d4ae5fb62664a
+Cold Glow - Distant Motif.wav|50a5e839c5f4e804
+Cold Glow - Distant Sub Pulse.wav|f66c62beed591135
+Cold Glow - Frost Bass Run.wav|b09fad695b07787b
+Cold Glow - Frost Bloom.wav|fac27716413a0a07
+Cold Glow - Frost Build.wav|cf2befd3da925272
+Cold Glow - Frost Clap Roll.wav|54b6286f2f69bf3d
+Cold Glow - Grey Sky Pattern.wav|3897d545d4217c11
+Cold Glow - Grey Sky Pluck.wav|f44f2aadc613b6ff
+Cold Glow - Grey Sky Pressure.wav|785325519536b6bd
+Cold Glow - Isolation Bass.wav|cde41502b7d52122
+Cold Glow - Isolation Chord Pulse.wav|c6e7b15bba602d61
+Cold Glow - Monochrome Climb.wav|9a544a02be294e4d
+Cold Glow - Monochrome Lead.wav|d9fffc8b7edfb081
+Cold Glow - Pale Bridge.wav|ce3da3e1f247e73a
+Cold Glow - Pale Drive.wav|9a93f30ded1fba2a
+Cold Glow - Pale Progression.wav|5f0e0d5147cb0c0b
+Cold Glow - Pale Stabs.wav|78575f426001e277
+Cold Glow - Rainfall Groove.wav|fc86ebab57640129
+Combat - Ambush Defeat.wav|c1030c8627edba9b
+Combat - Ambush Drone.wav|ab8918db2afe4a2f
+Combat - Battle Groove.wav|2943bfc77dc0ad87
+Combat - Battle Hat Line.wav|c04757076e97cd22
+Combat - Clash Stabs.wav|bb41fc2ec29ed3dc
+Combat - Counterstrike Arp.wav|634e828526871206
+Combat - Counterstrike Kick Pattern.wav|614e467259b7ba49
+Combat - Frontline Bass.wav|105bf4639c64813d
+Combat - Frontline Comp.wav|e369ec2070c285c
+Combat - Frontline Counter-line.wav|13286929ca657d01
+Combat - Frontline Riser.wav|cf66e50bf230549e
+Combat - Onslaught Roller.wav|e22eaaac0ba780f5
+Combat - Onslaught Victory.wav|f2500fbedc2cb507
+Combat - Siege Power Down Blip.wav|b104135d1a34bdb2
+Combat - Skirmish Clap Roll.wav|25a122086b6bfb4d
+Combat - Skirmish Motif.wav|47bc771ced265a69
+Combat - Skirmish Pattern.wav|30cb03d37478f93f
+Combat - Skirmish Pluck Line.wav|34f2dea2030372
+Combat - Skirmish Sub Pulse.wav|c7f205561d9589
+Combat - Vanguard Loop.wav|ad430bf952c0de12
+Combat - Vanguard Pad.wav|ab1de5ebd9a728a3
+Combat - Vanguard Shifting Pad.wav|73188a2f2ad967c8
+Combat - Vanguard Theme.wav|eabc87d7a4cdce6b
+Combat - Vanguard Turn.wav|1f98ec840bfe36bf
+Dark Circuit - Abyss Pluck Line.wav|4decc29a0c1a9350
+Dark Circuit - Abyss Top Loop.wav|10e9269370f2f542
+Dark Circuit - Ashes Sub Pulse.wav|a5869da7aa537b1
+Dark Circuit - Dead Signal Drive Bass.wav|693d96406b3f5559
+Dark Circuit - Dead Signal Keys.wav|f10ee1657d81838f
+Dark Circuit - Dead Signal Sequence.wav|872b7b6d7fdb483
+Dark Circuit - Grave Pound.wav|b23ab6f0f1b7e589
+Dark Circuit - Grave Pulse.wav|cdc12345ebd0d56b
+Dark Circuit - Grave Turn.wav|6ecf3985044ba433
+Dark Circuit - Hex Bass Arp.wav|63f55bbe77d822bc
+Dark Circuit - Hex Riser.wav|48f4bd6236b69920
+Dark Circuit - Nightmare Bassline.wav|fc255968b85530e3
+Dark Circuit - Nightmare Motif.wav|5ef4b2c61cf97875
+Dark Circuit - Nightmare Transition.wav|cbd0aee3b2191e3c
+Dark Circuit - Plague Climb.wav|acdd83a9faf67de4
+Dark Circuit - Plague Line.wav|24b538bbf1843a4c
+Dark Circuit - Plague Pad.wav|cd91904a45f9d861
+Dark Circuit - Plague Shifting Pad.wav|7cd13fe10f63a1af
+Dark Circuit - Plague Stab.wav|63ce2ca0f0d2535e
+Dark Circuit - Plague Tom Run.wav|58f08b9f72e189ae
+Dark Circuit - Ritual Kick Line.wav|163efebf8d926fd1
+Dark Floor - Basement Bass Riff.wav|f5b5bde6a0543cce
+Dark Floor - Black Answer.wav|d34918a5301a5ac7
+Dark Floor - Black Hook.wav|afbd8b931da9e999
+Dark Floor - Black Stomp.wav|eec832fcf29d4e52
+Dark Floor - Cellar Line.wav|368a3d26d95b643
+Dark Floor - Cellar Strummed Chords.wav|7a13394e1d7c47f7
+Dark Floor - Concrete Boom.wav|6398889b47bc988b
+Dark Floor - Concrete Drive.wav|d24e257a122043fe
+Dark Floor - Concrete Floor Roller.wav|bf5fb86493558840
+Dark Floor - Concrete Hum.wav|5c45f534c7aee23a
+Dark Floor - Concrete Perc Loop.wav|2cdf3b964c2615f9
+Dark Floor - Concrete Pluck.wav|9f78b308f74163e1
+Dark Floor - Dark Bell Toll.wav|a085d884be1a7fed
+Dark Floor - Dark Minor Hold.wav|5b4cf192c7730114
+Dark Floor - Filter Sweep Down.wav|ffb8bcfc9132c967
+Dark Floor - Kick and Rumble Tool.wav|cddeafa81a3d1a21
+Dark Floor - Low A Drone.wav|6561c798db3b5813
+Dark Floor - Low Boom.wav|b974d0abc5ede315
+Dark Floor - Low-Light Pressure.wav|a2909e6cb0de66a9
+Dark Floor - Low-Light Sequence.wav|d3bd833de7e8caf7
+Dark Floor - Low-Light Tom Fall.wav|3017f640bddad2fd
+Dark Floor - Midnight Backbeat.wav|71f978f6aaf34fcc
+Dark Floor - Murk Up-Down Arp.wav|9e290cf901dd36eb
+Dark Floor - Obsidian Pound.wav|19e5a466ac13aad1
+Dark Floor - Obsidian Progression.wav|cf807de6a0bd33ea
+Dark Floor - Obsidian Roller.wav|7b05e5ff52725c68
+Dark Floor - Obsidian Thump.wav|37729e3e158351d7
+Dark Floor - One-Note Minor Stab.wav|529c16759dfb5b51
+Dark Floor - Peak Rumble Bass.wav|f3bee18332267c72
+Dark Floor - Phrygian Cloud.wav|a2152e675006df4f
+Dark Floor - Phrygian Stab.wav|98b98faa8733aac3
+Dark Floor - Ride Eighths.wav|c1aab349857baefa
+Dark Floor - Root and Fifth Swell.wav|49bbe1e78c18671d
+Dark Floor - Rumble Roller.wav|3435595cc53a0447
+Dark Floor - Shadow Bass Sequence.wav|1f9ba415baa54ed1
+Dark Floor - Shadow Bed.wav|bb63bd36c4662038
+Dark Floor - Shadow Kick Pattern.wav|3dc4e92315dbb2ed
+Dark Floor - Short Minor Motif.wav|286ea0d9e0192dfb
+Dark Floor - Smoke Bass.wav|ee4be63eb7630735
+Dark Floor - Smoke Bloom.wav|cf4d62ed179e2773
+Dark Floor - Sub Drone Hold.wav|99ba26abc0d8752d
+Dark Floor - Tunnel Riser.wav|ea67b0ae777ce902
+Dark Floor - Tunnel Stabs.wav|d353a661f080b8d3
+Dark Floor - Undertow Sub.wav|61f385b95ebc337c
+Dark Floor - Void Bridge.wav|72376819b140d59c
+Dark Floor - Void Chopper.wav|ecd2a836e1bc5dbe
+Dark Floor - Void Chord Pulse.wav|9a68e13005b864cd
+Dark Floor - Void Tops.wav|e83d2a373ca99004
+Dark Space - Fallout Low Drone.wav|5eacd64c64993ac7
+Dark Space - Fallout Pad.wav|9e142584538b2a42
+Dark Space - Fallout Rising Pad.wav|1128cb481b737343
+Dark Space - Hollow Engine.wav|e91f8b4cd4466620
+Dark Space - Hollow Evolving Pad.wav|cdb82299ccd428ce
+Dark Space - Hollow Pad.wav|ae6d9ad8cf500f0c
+Dark Space - Hollow Sixteenths.wav|4cb86fbbe4333acd
+Dark Space - Hollow Theme.wav|b86a092d97cb50d0
+Dark Space - Lightless Pound.wav|ba43d5973e06b735
+Dark Space - Ruin Hit Chords.wav|9da13257ca9045e8
+Dark Space - Ruin Hook.wav|674dae7a68f3ccba
+Dark Space - Ruin Sub Line.wav|ed2af3efa0a98efd
+Dark Space - Silence Build.wav|43bf494e051ae93b
+Dark Space - Silence Throb.wav|ec5534e42fa823d1
+Dark Space - Vault Progression.wav|e97101f648a14304
+Dark Space - Wasteland Clap Fill.wav|c40f90d046c8a28c
+Dark Space - Wasteland Pluck Line.wav|d5cd4d6fe2f8df2
+Dark Space - Wasteland Sub Line.wav|d3a4e9251357f1f2
+Deep Swing - Afterparty Changes.wav|da0a4428369d90a0
+Deep Swing - Afterparty Top Loop.wav|ccfba822aa3a46bd
+Deep Swing - Basement Jam Sixteenths.wav|9f2a6a53a5530be4
+Deep Swing - Basement Jam Stabs.wav|cc30b48984ce9ef7
+Deep Swing - Basement Jam Wash.wav|7e10f538af11f0b7
+Deep Swing - Late Night Riff.wav|5c821687a8ac3be7
+Deep Swing - Late Night Shifting Pad.wav|8f55017186a9677b
+Deep Swing - Lounge Drive Bass.wav|2e33f4bd51deef21
+Deep Swing - Lounge Drive.wav|ca7eecb9e96dc2f7
+Deep Swing - Lounge Riser.wav|112beacb44a84e2f
+Deep Swing - Lounge Sub Line.wav|8f5e08c70633c675
+Deep Swing - Lounge Transition.wav|28d1a4dc3b49ebc4
+Deep Swing - Low Lamp Roller.wav|9686bdb7f4f92491
+Deep Swing - Rooftop Clap Stutter.wav|5bf591c547d54d2c
+Deep Swing - Rooftop Kick Pattern.wav|4ee190bd5827269
+Deep Swing - Smoky Pluck Line.wav|27aa88dc162e9264
+Deep Swing - Velvet Room Line.wav|4afbd2157e0e20c5
+Dread - Bloodmoon Open Sound.wav|1b4a2a21dfecf6b6
+Dread - Bloodmoon Snare Fill.wav|d12c77265b409d8
+Dread - Cellar Door Lift.wav|38b95105d2093948
+Dread - Cellar Door Motif.wav|a917d0f715cdeecf
+Dread - Creeping Hat Line.wav|e804d3f1473d2679
+Dread - Creeping Loop.wav|95fa697eaf3b80bc
+Dread - Dread Sub Line.wav|bb2742f16f085841
+Dread - Dread Wash.wav|dd551b541c843f09
+Dread - Flicker Evolving Pad.wav|2fa55df6c98d6102
+Dread - Flicker Kick Push.wav|63798d4cd4a6047d
+Dread - Flicker Line.wav|f813cb4d2222ab2d
+Dread - Flicker Pressure.wav|6f4798e60934f1dd
+Dread - Flicker Stabs.wav|93c5332217c99e75
+Dread - Flicker Sub.wav|abae6ecde4c7e775
+Dread - Flicker Under-line.wav|120843c8a300794b
+Dread - Flicker Up-Down Arp.wav|5e76342c25840690
+Dread - Haunted Changes.wav|b33a8e74d1d0b1c6
+Dread - Haunted Defeat Sting.wav|4be7c05656ab2ddc
+Dread - Haunted Hum.wav|f621fbd9158d0205
+Dread - Haunted Sixteenths.wav|eab75178ec600ad0
+Dread - Specter Chord Pulse.wav|c2f257ea5ceebdc1
+Dread - Specter Pluck.wav|15a88ee68b9057c5
+Dread - Whisper Groove.wav|b583438ff84c5f52
+Driving - Autobahn Slam.wav|dc3680d950640f7b
+Driving - Backbeat Clap Layer.wav|7e7997549917832b
+Driving - Broken Root Fifth Octave.wav|a7025cb4569e8a6d
+Driving - Call and Answer Hook.wav|65481e4e12d4959e
+Driving - Clean Room Groove.wav|1e0948bb71fc9248
+Driving - Cruise Shifting Pad.wav|d9a7d22a0e2585cd
+Driving - Filter Sweep Up.wav|837646877717a7ca
+Driving - Gearbox Backbeat.wav|a8614ada662b1003
+Driving - Gearbox Kick Push.wav|fc01e15a5f7f33e2
+Driving - Gearbox Stab.wav|cfd82d75fd89b73b
+Driving - Highway Bassline.wav|b3995e50dc13b0b1
+Driving - Highway Sub.wav|d841affe5c7ac6fd
+Driving - Minor Swell Build.wav|49b3bcce1f4e1a61
+Driving - Momentum Chopper.wav|a79628d60937f2c2
+Driving - Momentum Comp.wav|97554f8a2370c3ab
+Driving - Momentum Drive Bass.wav|b0e3c424553ebcaa
+Driving - Motor Low Drone.wav|b93cca1ebaa3f5dc
+Driving - Motor Sequence.wav|1ee21777d77105c1
+Driving - Motor Strummed Chords.wav|f30100023e8dc52f
+Driving - Night Drive Bass Sequence.wav|1b798b4d9aa63e05
+Driving - Night Drive Stomp.wav|abf677789359a44a
+Driving - Offbeat Minor Comp.wav|a123b2084ce694d9
+Driving - Overpass Machine.wav|5f5b749775f7bf9c
+Driving - Peak Hour Driver.wav|5a9a9beca7f0fef9
+Driving - Piston Changes.wav|ce8793f13e05734
+Driving - Piston Percussion.wav|5e1b1b56f121fcab
+Driving - Piston Pluck Line.wav|1b1f3fbe2f3e4de4
+Driving - Piston Transition.wav|e9ac7757b56dd4f4
+Driving - Pitch-bend Riser.wav|89e04f7c69e6c3cb
+Driving - Pluck Call.wav|ec7077c4d88bcd09
+Driving - Rolling Kick Gap Bass.wav|891cbcc59825caf1
+Driving - Shaped Sixteenth Hats.wav|8883eb834630202d
+Driving - Signal Bass Walk.wav|8e2c73ccee2cd244
+Driving - Signal Drive.wav|ffbc1cddfc089458
+Driving - Signal Pad.wav|27869d26a920de8
+Driving - Signal Snare Roll.wav|b525890efe7a0d9
+Driving - Snare Build.wav|4e92c289b78f9db1
+Driving - Snare Roll Fill.wav|6623e3d3a5ff0184
+Driving - Steel Answer.wav|62e633664153ce60
+Driving - Steel Bass.wav|627d2909ee609519
+Driving - Steel Lead.wav|433e44bd355cc5de
+Driving - Sub Root Pulse.wav|bf67e11c7ef9a3dd
+Driving - Throttle Drive.wav|e7afabca919d18ae
+Driving - Throttle Hats.wav|171fd80b7650c704
+Driving - Throttle Hook.wav|ae4ef363ad568c0c
+Driving - Throttle Riser.wav|7719a9eabbe7605e
+Driving - Throttle Up-Down Arp.wav|7e5e7976accda799
+Drone - Dusk Bass.wav|e6faac874a424ccd
+Drone - Dusk Pluck Line.wav|210a63b14c4eee41
+Drone - Endless Riff.wav|f5c81afcc5df519e
+Drone - Horizon Line Beat.wav|2b521a09fe892ac7
+Drone - Horizon Line Stabs.wav|46f8fe23607f7cdc
+Drone - Long Shadow Changes.wav|ceeda3dd45f01fae
+Drone - Monolith Evolving Pad.wav|a16a2ed80fff79aa
+Drone - Monolith Sequence.wav|395653cacc45f561
+Drone - Monolith Sub Pulse.wav|266b2ed931e6cb60
+Drone - Monolith Tom Fall.wav|ba4f25d150665df5
+Drone - Plateau Drone.wav|c0581b1cd1d48c69
+Drone - Plateau Pad.wav|ba6eb86b78716086
+Drone - Plateau Wash.wav|73b88f61505bc883
+Drone - Slow Light Build.wav|b91587b172f412c5
+Drone - Static Field Engine.wav|640d4aa0e7a9a9f0
+Drone - Static Field Rising Pad.wav|43e1f9d228cb3058
+Drone - Stillness Sub.wav|e3a0b5ee97505f21
+Drone - Stillness Theme.wav|3a53b6ae6a9152a
+Echo Chamber - Deep Water Build.wav|f4054369cd2d3e03
+Echo Chamber - Deep Water Climb.wav|5458ebfba57f4147
+Echo Chamber - Deep Water Machine.wav|d687a3cd74c3135c
+Echo Chamber - Dub Siren Pluck Line.wav|cd73d47bf48377cb
+Echo Chamber - Dub Siren Top Loop.wav|8b489b319cad39ce
+Echo Chamber - Echo Chamber Bass Run.wav|d1400c5d42e273d
+Echo Chamber - Echo Chamber Drive Bass.wav|c6392bc3d1ea42e4
+Echo Chamber - Echo Chamber Hook.wav|128a2be1e009b02d
+Echo Chamber - Echo Chamber Stab.wav|c4b013086b963dd7
+Echo Chamber - Reverb Hall Bed.wav|844461693ab16231
+Echo Chamber - Reverb Hall Drive.wav|47ca9a07dc2a824a
+Echo Chamber - Reverb Hall Transition.wav|e0354f93ca2ecc2d
+Echo Chamber - Spring Room Roll Fill.wav|d253e8852b89f5aa
+Echo Chamber - Submerged Chord Pulse.wav|6dc6d293d85b0c9
+Echo Chamber - Submerged Throb.wav|6f0118f909613e9
+Echo Chamber - Tape Delay Evolving Pad.wav|ed9c35ca19e69ca2
+Echo Chamber - Tape Delay Kick Line.wav|83b1c192d9864f09
+Echo Chamber - Tape Delay Sixteenths.wav|e07fd0112b406341
+Echo Chamber - Tape Delay Theme.wav|3ab60ad63b807a9f
+Echo Chamber - Undercurrent Chords.wav|a6c0440215bf4e8f
+Echo Chamber - Undercurrent Drive.wav|1973f9ac2a8f907b
+Echo Chamber - Undercurrent Sub Pulse.wav|57edc9a55dde2299
+Exploration - Caverns Build.wav|83d9498a6614db29
+Exploration - Caverns Confirm Sound.wav|d7ab7247f8083e8a
+Exploration - Caverns Hat Line.wav|4761cffd06652f09
+Exploration - Caverns Sub Pulse.wav|cad2d5b038b5dd2d
+Exploration - Caverns Tom Fall.wav|354304a4c7b17357
+Exploration - Compass Loop.wav|66e0bcc48faacfe6
+Exploration - Compass Pad.wav|175ce571a2ee1629
+Exploration - Compass Pressure.wav|b5c36ea78c72263e
+Exploration - Far Shore Bloom.wav|ec26f77cbb1aff6a
+Exploration - Far Shore Counter-line.wav|fc38c6d8e2bbbe4f
+Exploration - Far Shore Kick Pattern.wav|cf039c5cd70a23c5
+Exploration - Lost Woods Line.wav|4f5358d0d19e3569
+Exploration - Lost Woods Pattern.wav|eb690d13e5eb6455
+Exploration - Old Ruins Riff.wav|88a478560f16230d
+Exploration - Open Field Bassline.wav|df4a1ffd6c1fec82
+Exploration - Open Field Up-Down Arp.wav|e8abd6b1b5fef3ab
+Exploration - Open Field Victory Sting.wav|b17675912d8de9a5
+Exploration - Overworld Keys.wav|a90435d4ca7bdb10
+Exploration - Overworld Pluck Line.wav|b914e19861ae485e
+Exploration - Pathfinder Chords.wav|225180ac8270bef1
+Exploration - Pathfinder Hum.wav|9b022deac50a2b43
+Exploration - Valley Drive.wav|26e49f7d91508b17
+Exploration - Valley Stabs.wav|e1f957a12330164b
+Exploration - Wanderer Game Over Stinger.wav|2f68b84c601fb6d6
+Factory Floor - Anvil Beat.wav|ebe3a55cb301caa9
+Factory Floor - Anvil Low End Kick.wav|4f026f5aa887b560
+Factory Floor - Anvil Throb.wav|7a34b9961006c0f9
+Factory Floor - Corrosion Bass Run.wav|b4aafa9c477e0960
+Factory Floor - Corrosion Drive.wav|87fbf88cc75afcc1
+Factory Floor - Corrosion Pattern.wav|1fc268b2846573d9
+Factory Floor - Corrosion Percussion.wav|d9c7b12a142f6f64
+Factory Floor - Factory Breakdown.wav|433c2b4f06afa202
+Factory Floor - Factory Metal Hit.wav|35da6d719db4f972
+Factory Floor - Factory Metal Stab.wav|c9dbf5d4060f865f
+Factory Floor - Factory Pound.wav|40ec4700fccf257b
+Factory Floor - Factory Riff.wav|db02b59c2af98d47
+Factory Floor - Factory Slam.wav|fabb14a1da03fce3
+Factory Floor - Fifth Drone.wav|8ba88c3a0b769373
+Factory Floor - Foundry Hat Line.wav|5050edc0b8eb2d2
+Factory Floor - Foundry Pressure.wav|72504b8da02147f8
+Factory Floor - Foundry Wash.wav|44c53415e9443911
+Factory Floor - Furnace Thump.wav|4334dc0c12c316b9
+Factory Floor - Furnace Under-line.wav|f5baaa2520994cd9
+Factory Floor - Girder Pressure.wav|b6930fd62a08147
+Factory Floor - Grinder Lead.wav|f3e3873544088412
+Factory Floor - Grinder Played Bass.wav|c3f455c04b2b38c8
+Factory Floor - Grinder Roll Fill.wav|2995363f419bdd74
+Factory Floor - Phrygian Drone.wav|7a0ed5e44dbdf07e
+Factory Floor - Pressworks Backbeat.wav|c237821c94a03c83
+Factory Floor - Pressworks Pluck Line.wav|2a25811dd704e9a8
+Factory Floor - Pressworks Strum.wav|76cc19a4d13d06f0
+Factory Floor - Pressworks Transition.wav|fb2e709228898b63
+Factory Floor - Rivet Evolving Pad.wav|f4985ec3f9fe6434
+Factory Floor - Rivet Groove.wav|4e41512443d1cd92
+Factory Floor - Scrapyard Chord Pulse.wav|b132eaec5039a633
+Factory Floor - Scrapyard Gated Chord.wav|d15822d5b98dc45
+Factory Floor - Slag Arp.wav|864ff9e48870f224
+Factory Floor - Slag Build.wav|55db0bb6b4016412
+Factory Floor - Slag Chords.wav|4666e11c24789de7
+Factory Floor - Slag Drone.wav|4378e1c54cca0ca3
+Factory Floor - Slag Hammer Pound.wav|ec59386e2e1b5a15
+Factory Floor - Slag Stabs.wav|22928056cd78a1b0
+Factory Floor - Slag Sub Line.wav|afa87af729f66c1
+Factory Floor - Tom Impact.wav|e89b415fd82a6761
+Factory Floor - Tom Run Down.wav|2b9dd40862207b17
+Fast Flow - Coastline Line.wav|10be14985ffc4cf8
+Fast Flow - Coastline Transition.wav|39b252c7b00dae50
+Fast Flow - Lagoon Drive.wav|55957ec4fb95d709
+Fast Flow - Lagoon Hook.wav|c7d3cbf9d073edf
+Fast Flow - Lagoon Thump.wav|a9845db838eddea4
+Fast Flow - Moonlit Break.wav|43b29426c8f54e
+Fast Flow - Moonlit Kick Line.wav|81cc11cb2dc26cd8
+Fast Flow - Moonlit Wash.wav|765e3ceadb5af1c6
+Fast Flow - Rainwater Bloom.wav|9ce100d6af8a0b8
+Fast Flow - Rainwater Build.wav|a24ccf8666acf14b
+Fast Flow - Rainwater Clap Stutter.wav|732849f3cd2c3a96
+Fast Flow - Rainwater Roller.wav|d735e04abcf720dd
+Fast Flow - Riverbed Stab.wav|b3afcfb7565abba4
+Fast Flow - Silk Pluck Line.wav|808eb308c9c94ed9
+Fast Flow - Silk Sub.wav|d45f6372176ed870
+Fast Flow - Soft Focus Bassline.wav|652aca341058dc71
+Fast Flow - Soft Focus Sixteenths.wav|df19c159ae791b93
+Fast Flow - Sunset Progression.wav|d1f030ac2e391dc4
+Fast Grind - Biohazard Beat.wav|c977a833e26ee1a3
+Fast Grind - Biohazard Bridge.wav|6671a8d0ecd1519
+Fast Grind - Biohazard Line.wav|20e29c2cfb9925e6
+Fast Grind - Biohazard Stabs.wav|53acff95342dec65
+Fast Grind - Cyborg Break.wav|fd64972e632eee13
+Fast Grind - Cyborg Evolving Pad.wav|33a9759ca31aa5d3
+Fast Grind - Cyborg Pattern.wav|b506644771db4388
+Fast Grind - Implant Stomp.wav|d79199dcc6256fbe
+Fast Grind - Mainline Motif.wav|c9753605a7a7c789
+Fast Grind - Mainline Plucks.wav|ef4f7d23be370eb6
+Fast Grind - Mainline Sub.wav|97850cc3c7fef0e9
+Fast Grind - Mutant Chords.wav|1de69a979d392224
+Fast Grind - Nanotech Kick Line.wav|ec4ab8fe67f24cbd
+Fast Grind - Neuro Bassline.wav|964a28c19c192820
+Fast Grind - Neuro Riser.wav|4b7d40fbc3e0f20e
+Fast Grind - Neuro Tom Run.wav|6f4673dd5eb1c30b
+Fast Grind - Synapse Drive Bass.wav|edc809f78ba286d
+Fast Grind - Wired Bed.wav|70876dc854c9e7a2
+Hard Floor - Blast Furnace Engine.wav|386971eb8f8d3737
+Hard Floor - Blast Wall Hook.wav|dc2e06f27cec57a7
+Hard Floor - Blast Wall Lift.wav|37cdab82937fe582
+Hard Floor - Blast Wall Stab.wav|79f1006426bd6f11
+Hard Floor - Blast Wall Strum.wav|8f7b47a4fe61216d
+Hard Floor - Breaker Bass Run.wav|7f3cc37621c43341
+Hard Floor - Breaker Plucks.wav|f74423118956d209
+Hard Floor - Bulldozer Drive Bass.wav|db6e987548444f1
+Hard Floor - Bunker Chopper.wav|ed6f20d7b2573d33
+Hard Floor - Bunker Clap Stutter.wav|653ea7336cb1fe27
+Hard Floor - Bunker Evolving Pad.wav|a53a0f611e38a8de
+Hard Floor - Bunker Stomp.wav|c8b4b971f2f91b4e
+Hard Floor - Full Force Bass Sequence.wav|46d00181f78db745
+Hard Floor - Full Force Boom.wav|f7c69253b4ea48d4
+Hard Floor - Full Force Comp.wav|2577c442902b8c92
+Hard Floor - Full Force Top Loop.wav|36d6a1d85c3f809d
+Hard Floor - Hammer Roller.wav|408d8c9f3ed7f7c8
+Hard Floor - Hard Gate Arp.wav|85f467d635096a0d
+Hard Floor - Hard Gate Stab.wav|8ee7b2128fa87b1e
+Hard Floor - Hard Offbeat Drive.wav|c006d1b25277aee1
+Hard Floor - Hard Offbeat Rumble.wav|a98ea2ebcdf0179f
+Hard Floor - Hardline Chords.wav|2fd00f7e43369f04
+Hard Floor - Hardline Low End Kick.wav|65f216f84cb302c5
+Hard Floor - Hardline Pound.wav|1b71638f1959a56e
+Hard Floor - Hardline Sub Line.wav|1697eb9f99c727e1
+Hard Floor - Hardline Theme.wav|7bae9d7f8a891d91
+Hard Floor - Hardline Transition.wav|9fcaf95a9aa2ec53
+Hard Floor - Iron Fist Sequence.wav|81079c80701246bb
+Hard Floor - Iron Fist Up-Down Arp.wav|a85c771406b75e3d
+Hard Floor - Jackhammer Bass Run.wav|5996b1b2670e843e
+Hard Floor - Jackhammer Bed.wav|6d3993a30f407756
+Hard Floor - Jackhammer Stomp.wav|204f48b219c33d5c
+Hard Floor - Kick Roll Builder.wav|4b091624d07dca1d
+Hard Floor - Metal Sixteenths.wav|fe53ada493521f8d
+Hard Floor - Overdrive Perc Loop.wav|787d84933dec7c97
+Hard Floor - Overdrive Under-line.wav|cb196b463e7c255
+Hard Floor - Riot Crack.wav|40fed26c98102fea
+Hard Floor - Riot Pulse.wav|a6025b1f7ccea0eb
+Hard Floor - Rumble Drone.wav|d9fb359473870d33
+Hard Floor - Sub Drop Impact.wav|6c504d9996cd365
+Hard Floor - Warhead Low Drone.wav|c1508bfbecb70eda
+Hypnotic - Five-Step Shaker.wav|4ad7b203941f3a80
+Hypnotic - Fog Evolving Pad.wav|791d77289d174fc7
+Hypnotic - Fog Roller.wav|1ea862ec076c7719
+Hypnotic - Hypnotic Bell Fives.wav|8564ccb6abc84f74
+Hypnotic - Hypnotic Fifth Bed.wav|e156a7ef4bdac53a
+Hypnotic - Hypnotic Five-Step Arp.wav|f9198f32ce8bf543
+Hypnotic - Hypnotic One Chord.wav|720af08519e75b59
+Hypnotic - Hypnotic Two-Note Bass.wav|4e512f53516baed
+Hypnotic - Hypnotic Two-Note Hook.wav|a6ea2b193c704c8a
+Hypnotic - Inner Space Lead.wav|8757ea24e3d7d1d1
+Hypnotic - Inner Space Motif.wav|73fe7b5953349af8
+Hypnotic - Inner Space Sequence.wav|604e29e99970240d
+Hypnotic - Loopwise Bridge.wav|e390bc939dfb9bfc
+Hypnotic - Loopwise Clap Fill.wav|796b0babaaa4b744
+Hypnotic - Loopwise Groove.wav|76c3f5d1633935b0
+Hypnotic - Mantra Loop.wav|17fc98bc4c8217ba
+Hypnotic - Mantra Pluck Line.wav|808ca647872ce83
+Hypnotic - Octave Swell.wav|a0fce0695fb4c1c6
+Hypnotic - Orbit Chord Pulse.wav|e52775e4176211ba
+Hypnotic - Orbit Climb.wav|372eaf5b7da89f09
+Hypnotic - Orbit Drive Bass.wav|48ea773ffc67dd0
+Hypnotic - Orbit Kick Pattern.wav|850f4488d0e910dd
+Hypnotic - Orbit Lift.wav|6660f7445122c81d
+Hypnotic - Pendulum Sub Pulse.wav|90a094590c0698d
+Hypnotic - Pendulum Top Loop.wav|506eb5a3a6bf33d
+Hypnotic - Pendulum Wash.wav|ab54c025e0567621
+Hypnotic - Spiral Bass Run.wav|3b21e261ad4931b7
+Hypnotic - Spiral Changes.wav|9e1d27a9a3b12e07
+Hypnotic - Strobe Tunnel Pulse.wav|11581f6e6aa69d48
+Hypnotic - Three Against Four.wav|293eb0e4fe3aa629
+Hypnotic - Trance State Stabs.wav|afa0b5575ada965e
+Hypnotic - Trance State Thump.wav|6b8c3fa3d97ab90c
+Iron Riff - Barbwire Hit Chords.wav|8d0c2a6559e0ccae
+Iron Riff - Barbwire Pound.wav|ddb1eb6ca9fca3f2
+Iron Riff - Barbwire Throb.wav|d88aea62ff8bf324
+Iron Riff - Breakdown Bridge.wav|824504559ae0dd24
+Iron Riff - Fuse Box Snare Fill.wav|4b107e1f999ea0b5
+Iron Riff - Fuse Box Stomp.wav|86b23db10f4a1dfd
+Iron Riff - Fuse Box Theme.wav|d5df58843b1cd111
+Iron Riff - Grind Changes.wav|b0ec833124c176ba
+Iron Riff - Grind Kick Line.wav|c8e3e21721135f40
+Iron Riff - Iron Riff Bass.wav|fd6835f272221d17
+Iron Riff - Iron Riff.wav|7bb6efbba069107e
+Iron Riff - Overload Bloom.wav|3ae94864ffa58faf
+Iron Riff - Overload Sub Pulse.wav|d8733c176a5c1588
+Iron Riff - Overload Throb.wav|1ca0bb286925543a
+Iron Riff - Picked Eighths Downstroke.wav|48943564c8663f92
+Iron Riff - Power Chord Riff.wav|9dbab42f9c79564a
+Iron Riff - Rust Belt Drive.wav|69a7592f37a819d4
+Iron Riff - Rust Belt Keys.wav|22d891a6fbc0f415
+Iron Riff - Rust Belt Pluck.wav|aea2815707ee4796
+Iron Riff - Rust Belt Riff.wav|5ecd6ef02f85f887
+Iron Riff - Rust Belt Riser.wav|e4c94818e5405395
+Iron Riff - Scrap Metal Pad.wav|c35a51c9f484115b
+Iron Riff - Scrap Metal Sixteenths.wav|cf09d35f242bfd19
+Iron Riff - Scrap Metal Tops.wav|7f6d8afae069b5d1
+Iron Riff - Sledge Up-Down Arp.wav|7ce68f8846edbe7a
+Iron Riff - Wrecking Ball Bass Arp.wav|7b5b1300766e03af
+Machine Drive - Assembly Keys.wav|bfda70121a9a98b7
+Machine Drive - Assembly Played Bass.wav|6236cc1c3b282590
+Machine Drive - Assembly Throb.wav|538568bf61ade789
+Machine Drive - Assembly Wash.wav|db759c40a775fd04
+Machine Drive - Body Shop Bloom.wav|19b45cd67b30918a
+Machine Drive - Body Shop Low Drone.wav|838825cb42464366
+Machine Drive - Body Shop Transition.wav|ef042e8fa77a17a4
+Machine Drive - Chain Drive Beat.wav|f584231c97b52fab
+Machine Drive - Chain Drive Up-Down Arp.wav|52f1cbc2f1292a82
+Machine Drive - Cold Assembly Drive.wav|9519f775fe2bcc50
+Machine Drive - Conveyor Sub Line.wav|cc8ca2d25b570f9
+Machine Drive - Conveyor Thump.wav|aafba94781744ef4
+Machine Drive - Engine Room Top Loop.wav|575424b7518b5e3c
+Machine Drive - Hydraulic Bassline.wav|25c074212d46ae55
+Machine Drive - Hydraulic Pattern.wav|1e61624bfbf32082
+Machine Drive - Hydraulic Snare Fill.wav|af7eeef587866cb7
+Machine Drive - Ironworks Hit Chords.wav|6cf2bb3fe000fb6c
+Machine Drive - Ironworks Hook.wav|a7bc1458a782a31a
+Machine Drive - Ironworks Impact.wav|a98882fddebd99e0
+Machine Drive - Ironworks Perc Loop.wav|fc1e6541d9f86dff
+Machine Drive - Machine Drive Arp.wav|539ba2003f000e3b
+Machine Drive - Machine Drive Groove.wav|f94aec6d0c12d5a5
+Machine Drive - Machine Drive Sixteenths.wav|889690d7da2c991d
+Machine Drive - Machine Drive Stab.wav|f53f3b8e7a40aca6
+Machine Drive - Muscle Machine Bassline.wav|4096cf9ba6910b1
+Machine Drive - Muscle Machine Lift.wav|6719ce992d6350af
+Machine Drive - Pistonbody Beat.wav|c5cabf6415229a99
+Machine Drive - Pistonbody Kick Pattern.wav|d73a06a0b23aec65
+Machine Drive - Pistonbody Strummed Chords.wav|4f8ef7c535fe5474
+Machine Drive - Steel Body Backbeat Loop.wav|2fa02ea54231cdc5
+Machine Drive - Torque Answer.wav|411d0e9425dd1b69
+Machine Drive - Torque Bass Run.wav|59a633593260ab89
+Machine Drive - Torque Line.wav|7659dc8122c087e8
+Machine Drive - Torque Plucks.wav|16d017bd9b4301b1
+Machine Drive - Torque Progression.wav|5658f774ed6625f7
+Machine Drive - Workshop Chopper.wav|f03f03a5b08c2aac
+Machine Drive - Workshop Drive.wav|f5456bf0c7b584ed
+Machine Funk - Bassline Bot Build.wav|bb7edeea104583e6
+Machine Funk - Bassline Bot Pulse.wav|ea455a982a19be9c
+Machine Funk - Bodypop Sub Pulse.wav|c6c8806a88f4e03e
+Machine Funk - Bodypop Throb.wav|51e5ca6ede02cd2d
+Machine Funk - Breakdance Pluck Line.wav|b6361dd864b00f95
+Machine Funk - Breakdance Shifting Pad.wav|2d6b4026c45c5975
+Machine Funk - Breakdance Theme.wav|9692193f1b8012b1
+Machine Funk - Computer Breakbeat.wav|77a7ce472d84f4d8
+Machine Funk - Computer Progression.wav|38578a96e29639ce
+Machine Funk - Computer Sixteenths.wav|aea1dbeb94f2a426
+Machine Funk - Computer Transition.wav|8ecdc5a4d01dbc7e
+Machine Funk - Data Hit Chords.wav|93b62064d1589f82
+Machine Funk - Data Kick Line.wav|f414475453b61d72
+Machine Funk - Mainframe Hook.wav|b497e727e0307a8e
+Machine Funk - Transistor Groove.wav|3faccc886e3ca09e
+Machine Funk - Transistor Pressure.wav|9d53b62d87083fa2
+Machine Funk - Transistor Tom Fall.wav|bf84a0a1567c4653
+Machine Funk - Transistor Wash.wav|9ff6e4c28bb3fee6
+Machine Pulse - Alarm Line.wav|a90bce3c36fee6b8
+Machine Pulse - Alarm Stab Tritone.wav|3ad05ddd4066070c
+Machine Pulse - Body Crack.wav|782310c8c1b3f689
+Machine Pulse - Body Drone.wav|a0cde7bdad138aa1
+Machine Pulse - Body Gallop.wav|55d572592e46c321
+Machine Pulse - Body Hat Line.wav|870e89b4e79ba4c
+Machine Pulse - Body Shifting Pad.wav|e88d845a3b706ae5
+Machine Pulse - Body Slam.wav|62d72061ed6e00ba
+Machine Pulse - Boot Camp Gate.wav|b36d3d18b965349
+Machine Pulse - Boot Camp Sequence.wav|ebc65a284c2bea1
+Machine Pulse - Boot Camp Under-line.wav|738cdaff0c1b36f3
+Machine Pulse - Boot Camp Up-Down Arp.wav|81925606b9df8950
+Machine Pulse - Clap Roll Build.wav|32902d3ce2e67358
+Machine Pulse - Clap Stutter Fill.wav|5e35a0a9c4306404
+Machine Pulse - Command Pulse.wav|75a9447c66e7ba90
+Machine Pulse - Drill Tom Fill.wav|54c7edcf0b1b4488
+Machine Pulse - Gated Snare Machine.wav|9b9310f0bbfee8f3
+Machine Pulse - Iron Body Bass.wav|cb9cb2f2c8fdf7ad
+Machine Pulse - Iron Curtain Chord Pulse.wav|543b66dbd6985dd7
+Machine Pulse - Iron Curtain Engine.wav|8648ee968299ad28
+Machine Pulse - Iron Curtain Strum.wav|d0514f7be7ededbf
+Machine Pulse - Leather Bass Walk.wav|17b30c80d68224bf
+Machine Pulse - Leather Line.wav|a24d1465029a9eb3
+Machine Pulse - Leather Pressure.wav|7f9b14210c7428c9
+Machine Pulse - Machine Disco Beat.wav|9370ff241a78e859
+Machine Pulse - Machine March Beat.wav|b71b442299978f8b
+Machine Pulse - Machine Pulse Arp.wav|8d9e4ff5d64a36a0
+Machine Pulse - Marching Build.wav|2297ae587a7728c5
+Machine Pulse - Marching Order Beat.wav|c411df4c3f06643e
+Machine Pulse - Marching Perc Loop.wav|bbe89dd625af15a
+Machine Pulse - Marching Sub.wav|a32ad3c063c3dd15
+Machine Pulse - Muscle Bass Run.wav|8c251f6c18f01d21
+Machine Pulse - Muscle Changes.wav|da33009105c44e70
+Machine Pulse - Muscle Memory Beat.wav|69f2cf9eae2f0271
+Machine Pulse - Muscle Pluck.wav|b308dd79a71082fc
+Machine Pulse - Muscle Riff.wav|7442cc7d30f68398
+Machine Pulse - Muscle Transition.wav|2e675aa4860e8a29
+Machine Pulse - Parade Bed.wav|586a8abf111cb8b0
+Machine Pulse - Parade Drive.wav|538dd23b076941d2
+Machine Pulse - Parade Kick Line.wav|960ee60de02977ad
+Machine Pulse - Siren Hit.wav|7de17a8bd74ac960
+Machine Pulse - Siren Tritone.wav|cad4b8f57ba4b647
+Machine Pulse - Stop Gap.wav|33b675af7369e886
+Machine Pulse - Sweat Pressure.wav|388738f1f4a68c35
+Machine Pulse - Tension Drone.wav|5de0be65c21494b6
+Machine Pulse - Uniform Machine.wav|ee1dfbcd953c58a6
+Machine Pulse - Uniform Stabs.wav|6da92c5c210fb0c6
+Machine Pulse - Uniform Throb.wav|3610800a6fd21361
+Melodic - Afterglow Chords.wav|e9359915ae5bd610
+Melodic - Afterglow Hook.wav|ec6885f52927479a
+Melodic - Afterglow Line.wav|f44c74f92cc10f42
+Melodic - Afterglow Sub.wav|7d9aad8d08ecac7d
+Melodic - Aurora Bass.wav|768d3b2f607fabad
+Melodic - Breakdown Swell.wav|72aba90bee1196de
+Melodic - Daybreak Bridge.wav|f09fa2284b0b8bc4
+Melodic - Deep Minor Seventh Comp.wav|a47c9f1b1b80cd71
+Melodic - Filter Close Down.wav|fc83d15a6a548763
+Melodic - Glacier Chord Pulse.wav|a11a7c57c7de4c70
+Melodic - Glacier Roller.wav|13af7b66de71c3ba
+Melodic - Glacier Sixteenths.wav|18aebbc663e57fe
+Melodic - Halo Climb.wav|e6228d8eb6bdb8cd
+Melodic - Halo Stomp.wav|9a6dd409613ebdb1
+Melodic - Horizon Shifting Pad.wav|cf79344685e383a9
+Melodic - Low Counter-line.wav|55572a5fb6f3d319
+Melodic - Lumen Bass Sequence.wav|1f2aed584bc30e69
+Melodic - Lumen Engine.wav|e81ed8c573d9fc1a
+Melodic - Lumen Hat Line.wav|1c447bd7a88903f1
+Melodic - Lumen Pluck Line.wav|57cbd79893d36d6
+Melodic - Lumen Tom Fill.wav|38e0796d3057fc36
+Melodic - Melodic Four-Six Turn.wav|840a7c764b0300a7
+Melodic - Melodic Minor Turn.wav|636ae941a6a16dbf
+Melodic - Melodic One-Bar Lead.wav|27c40eea1600a72
+Melodic - Melodic Rolling Arp.wav|4a2db3069adddd1e
+Melodic - Melodic Root Roller.wav|e5e959cfaddd032c
+Melodic - Minor Bed.wav|1aad4a33054deeb4
+Melodic - Minor Bell Motif.wav|cc203e9ed9af7d2f
+Melodic - Minor Triad Up-Down.wav|e18f542ef3922ebd
+Melodic - Moving Inner Voice.wav|2ebb8c08b4566d8b
+Melodic - Plucked Minor Riff.wav|a2871c54ed9535a5
+Melodic - Reverse Swell Transition.wav|ddbb2d10f00cc5f4
+Melodic - Seventh Up-Down.wav|86579458a847e455
+Melodic - Skyline Hit Chords.wav|3ef375d277585d1
+Melodic - Skyline Lift.wav|4536672b97c3d3c1
+Melodic - Slow Minor Progression.wav|6afbda4c7a8ca57f
+Melodic - Starfield Bed.wav|d3b5bc69fd4a3e85
+Melodic - Starfield Kick Pattern.wav|2044bff3a55c2bb4
+Melodic - Starfield Stomp.wav|dd6611c560ec79aa
+Menu - Hub Low Drone.wav|4b571b9de012829b
+Menu - Hub Motif.wav|36daf9173183cd2d
+Menu - Hub Stomp.wav|8c2c80547a4234f1
+Menu - Hub Sub Pulse.wav|db368c78cbfbc1a9
+Menu - Inventory Bloom.wav|63a4a87fc885e205
+Menu - Inventory Discovery Sting.wav|7b4b5af5d7e4f804
+Menu - Loading Danger Sting.wav|3142ede4bb49bd90
+Menu - Loading Low End Kick.wav|53bf8d728dfba691
+Menu - Loading Progression.wav|502b07d1435b3c16
+Menu - Loading Sixteenths.wav|b973da9d6d3b0391
+Menu - Loading Sub Line.wav|b96cab3f6f038b91
+Menu - Loading Tom Fill.wav|28624c0ae0158639
+Menu - Loading Wash.wav|3930c103c5f98925
+Menu - Lobby Hit Chords.wav|f5a56550a5add42a
+Menu - Lobby Line.wav|bab81cf1fd5a3e61
+Menu - Main Menu Error Blip.wav|a75b6ff1d1ee1608
+Menu - Options Beat.wav|9a07fdc9109b3559
+Menu - Pause Level Up Sound.wav|376fde509149cd37
+Menu - Save Point Chord Pulse.wav|9d95b73fe6912dd3
+Menu - Save Point Climb.wav|3398b4c5b72853e7
+Menu - Save Point Under-line.wav|85ee41368516a365
+Menu - Start Menu Pluck Line.wav|e935c61b5ea200fd
+Menu - Title Screen Bassline.wav|9e798c5221e95aa8
+Menu - Title Screen Tops.wav|18c14cbd599afe9
+Minimal - Dot Bass.wav|e284fb935ca44075
+Minimal - Dot Changes.wav|4c5df4abcc1c31b0
+Minimal - Dub Chord Echo.wav|f38f89cc46a75ba
+Minimal - Dub Pluck Echoes.wav|2bb559512c3b034
+Minimal - Ghost Note Riser.wav|ee5a9e0ea43cee23
+Minimal - Micro Echo Arp.wav|93862de6781948f1
+Minimal - Micro Echo Hook.wav|4ff936defc9984e1
+Minimal - Micro Echo Stomp.wav|ac361621f4d9bc19
+Minimal - Micro Echo Theme.wav|feddf5f4f3efd60d
+Minimal - Micro Echo Transition.wav|92f0505d04b12dc9
+Minimal - Minimal Syncopated Bass.wav|3cdea4c3128df721
+Minimal - Pinpoint Sub Pulse.wav|919c676394debab2
+Minimal - Pinpoint Tops.wav|a67862fb69cd7b3a
+Minimal - Sparse Click Groove.wav|da1a52f8bd42dc85
+Minimal - Sparse Room Bass Sequence.wav|71717017e4f81b25
+Minimal - Sparse Room Kick Push.wav|80fbe4059af6f074
+Minimal - Sparse Room Loop.wav|90ec12e60634388a
+Minimal - Sparse Room Sequence.wav|83aa707cced14300
+Minimal - Sparse Room Stabs.wav|ec39f7976e38cce
+Minimal - Sparse Room Tom Fall.wav|1e3536d22236d5f9
+Minimal - Sparse Room Wash.wav|7c8d4ed3b1dd8608
+Minimal - Thin Line Beat.wav|ad9765df1660d472
+Minimal - Thin Line Chord Pulse.wav|ee4a5c22147190f2
+Minimal - Thin Line Pluck Line.wav|68ded6aa67f5ce77
+Minimal - Thin Line Pressure.wav|910dd062db475691
+Minimal - Tick Evolving Pad.wav|5c6521c92a5dc44
+Neon Menace - Chrome Night Kick Line.wav|69fbb03e248a7fa
+Neon Menace - Chrome Night Sub Pulse.wav|b991ab264041fd4d
+Neon Menace - Chrome Night Transition.wav|f25526f7b07c1e8a
+Neon Menace - Chrome Night Turn.wav|a412de899f91f57a
+Neon Menace - Laser Grid Groove.wav|94e00d37de495989
+Neon Menace - Laser Grid Roll Fill.wav|9b5f2af57b01691
+Neon Menace - Laser Grid Sixteenths.wav|e13684582448073
+Neon Menace - Laser Grid Stab.wav|deb20b1cdd52aa3c
+Neon Menace - Midnight Run Bassline.wav|4b15d43ffb866392
+Neon Menace - Midnight Run Hook.wav|f1e6ed1e0072f3e
+Neon Menace - Nightcall Hat Line.wav|411c19a8578502b6
+Neon Menace - Overdrive Bassline.wav|c68e9c38b2a3d537
+Neon Menace - Overdrive Machine.wav|c6f71661f2f43f85
+Neon Menace - Overdrive Pluck.wav|431f1287912c6e7d
+Neon Menace - Vice Lead.wav|b2381cf0b43fbfb9
+Neon Menace - Vice Lift.wav|fa58417167009152
+Neon Menace - Vice Shifting Pad.wav|4450aa7cff2c484
+Neon Menace - Vice Wash.wav|c83aa5e377f872ca
+Night Pulse - Answering Line.wav|80b87b5b034ab746
+Night Pulse - Chrome Motif.wav|16a61e4ee8a9985a
+Night Pulse - Chrome Pound.wav|987a0da6d834047a
+Night Pulse - Chrome Turn.wav|9687876a03b96345
+Night Pulse - Cold Heart Shifting Pad.wav|400cd5e1427be7d8
+Night Pulse - Glass Heart Pad.wav|d67c6c71bbe6766d
+Night Pulse - Glass Heart Top Loop.wav|3f77ae9852c828e2
+Night Pulse - Machine Love Riser.wav|f9c91aa79279a8e
+Night Pulse - Machine Love Roll Fill.wav|9b2e0ebefaec5c31
+Night Pulse - Mirror Bridge.wav|8ae95bbdad0cec5c
+Night Pulse - Mirror Pound.wav|c4981ec9c581c166
+Night Pulse - Mirror Stabs.wav|30524d23825ba11a
+Night Pulse - Neon Rain Sixteenths.wav|204dbbeebdf45b8
+Night Pulse - Night Drive Pad.wav|20db9277d47d7e13
+Night Pulse - Night Pulse Pad.wav|c454dfe5abdcc9d5
+Night Pulse - Night Pulse Pluck.wav|a8ef1abe3cb5d1d
+Night Pulse - Night Pulse Verse Chords.wav|e78b6153545e2eaf
+Night Pulse - Night Shift Comp.wav|c69899dda65b5d99
+Night Pulse - Night Shift Pluck.wav|aebf3c6c73ea0c49
+Night Pulse - Night Shift Roller.wav|ca087da3b304c581
+Night Pulse - Night Shift Sub.wav|48b81f39eed24cbe
+Night Pulse - Night Shift Theme.wav|899cd85ed5b63570
+Night Pulse - Octave Sequencer Bass.wav|6796af9b82499ad9
+Night Pulse - Played Root Fifth.wav|e6ceb53b6ebbfe31
+Night Pulse - Square Lead Phrase.wav|c6a789232b60ddd
+Night Pulse - Synthetic Tears Arp.wav|20ca27a933310c37
+Night Pulse - Synthetic Tears Bass Arp.wav|ce2a5b710c5d5656
+Night Pulse - Velvet Bassline.wav|7f727c2070d5d7ea
+Night Pulse - Velvet Beat.wav|a27a07bc8c320c8c
+Night Pulse - Velvet Kick Pattern.wav|b8d0bdbd9e0d50f9
+Night Wave - Candle Pulse.wav|734924451c915382
+Night Wave - Candle Turn.wav|7a5f22841218a10a
+Night Wave - Cathedral Bass.wav|f11f9c0b23222585
+Night Wave - Cathedral Chord Pulse.wav|25fe04d23dade8f6
+Night Wave - Cathedral Line.wav|96a984671a757b8
+Night Wave - Cathedral Pad.wav|6327fb65b98ff893
+Night Wave - Crypt Sub Line.wav|dd302fa0a24c32cc
+Night Wave - Funeral Bass Arp.wav|30322a256d7809e1
+Night Wave - Funeral Kick Push.wav|73b7bd33b21a4978
+Night Wave - Funeral Top Loop.wav|fc43320057cff912
+Night Wave - Half-time Break.wav|68c40643d187bd6
+Night Wave - Mourning Build.wav|6f1991286b097c0c
+Night Wave - Mourning Clap Roll.wav|e985bfdfd96589a0
+Night Wave - Music Box Minor.wav|2fc1798c3cf547db
+Night Wave - Night Wave Arp.wav|2c2fd9d085bedd0
+Night Wave - Night Wave Chorus Chords.wav|4b4cdaed0c2f5e0c
+Night Wave - Night Wave Chorus Pad.wav|5538df17d877ccc9
+Night Wave - Night Wave Counter-melody.wav|4763de11cf266921
+Night Wave - Night Wave Drum Machine.wav|523be7677f1c301a
+Night Wave - Night Wave Eighth Roots.wav|8dac92ade36dbf8a
+Night Wave - Night Wave Lead.wav|7957f5415d811b22
+Night Wave - Night Wave Sub Roots.wav|a9fd9973073694a2
+Night Wave - Nocturne Bass.wav|24a1f88566e19f31
+Night Wave - Nocturne Evolving Pad.wav|c9fc5ec08d8a8b17
+Night Wave - Nocturne Up-Down Arp.wav|a9931dc7fbd94343
+Night Wave - Raven Pluck Line.wav|f93a2c977957d5c0
+Night Wave - Raven Stabs.wav|d53fcc81c14a7f1b
+Night Wave - Twilight Bridge.wav|6f8fbbe29fb6e6fc
+Night Wave - Twilight Hook.wav|a1778b3a7d58a358
+Night Wave - Twilight Pulse.wav|10571c885eadb942
+Night Wave - Twilight Sixteenths.wav|2327ad467842ecc
+Night Wave - Walking Dark Line.wav|6a87454506422429
+Overdrive - Aggro Saw Gate.wav|4960e947bb374828
+Overdrive - Assault Turn.wav|a8a3247f1bac38ce
+Overdrive - Barbed Arp.wav|b7b0805f139a1d02
+Overdrive - Barbed Backbeat.wav|d67050e9ffca3ab6
+Overdrive - Bloodline Bassline.wav|3d23a21e75b7ebc4
+Overdrive - Bloodline Beat.wav|700ba7b31fe02bc7
+Overdrive - Bloodline Motif.wav|70d6a4cdd836683e
+Overdrive - Bloodline Snare Fill.wav|a3fac3868eef0053
+Overdrive - Detonator Percussion.wav|a4cc2d883a2aaef9
+Overdrive - Distorted Offbeat Bass.wav|75b4433a19da8016
+Overdrive - Hellfire Drone.wav|68f1354349fbce33
+Overdrive - Power Fifths Gallop.wav|cdf1abb1b660800
+Overdrive - Rage Drive.wav|1dacc762019b93fd
+Overdrive - Rage Plucks.wav|f41fd51abe75a2ba
+Overdrive - Rage Shifting Pad.wav|853f5ce8537cb2c6
+Overdrive - Rage Sixteenths.wav|e77be1a22232bdb1
+Overdrive - Rage Strummed Chords.wav|9bc36666156dd46c
+Overdrive - Razor Hit Chords.wav|199c3ee73b0bf3a6
+Overdrive - Razor Lift.wav|95c611e4edefbe5f
+Overdrive - Riot Gear Bass.wav|7d7a077a499edd7f
+Overdrive - Riot Gear Sub.wav|d1ee73fd4121cbed
+Overdrive - Snarl Bass Arp.wav|7288e87f0d5d97a5
+Overdrive - Snarl Counter-line.wav|96e082007ee5e0c3
+Overdrive - Snarl Lead.wav|be6e331739612071
+Overdrive - Snarl Stomp.wav|8dddf963df6e7323
+Overdrive - Snarl Thump.wav|6a6fb1f2e6e4f0d
+Overdrive - Supersaw Riff.wav|73ce4d22f46a896f
+Overdrive - Terror Gate.wav|b0e44195b8b7ba27
+Overdrive - Terror Kick Pattern.wav|55e524438d4a84a8
+Overdrive - Terror Top Loop.wav|8a490d3b9aaeb8c2
+Overdrive - Torment Bass Walk.wav|92459b2dc9f5a808
+Overdrive - Torment Bed.wav|e5ef02c992c791fa
+Overdrive - Torment Bridge.wav|5c94981720953483
+Overdrive - Torment Comp.wav|3a41e6a81a0858f0
+Overdrive - Torment Pressure.wav|b5ffee7f3e99e3ef
+Overdrive - Venom Boom.wav|4a1bcd2f8897afff
+Peak-time - Afterhours Gated Chord.wav|c50ab930c982077c
+Peak-time - Afterhours Plucks.wav|e586cd98950301a1
+Peak-time - Afterhours Riser.wav|cdfb1e5e7c638c77
+Peak-time - Broken Octave Arp Bass.wav|dce452d9bb2bfcd1
+Peak-time - Crash and Kick Impact.wav|5c7be211b12e9d12
+Peak-time - Crowd Played Bass.wav|21ba0a5c6712ae0f
+Peak-time - Crowd Roller.wav|bb587bb4fbab32c4
+Peak-time - Euphoria Pattern.wav|c6ba95838fcb0b8e
+Peak-time - Falling Note Ramp.wav|aace04bf836eef5c
+Peak-time - Floodlight Arp.wav|6da0b354d0536bbc
+Peak-time - Floodlight Backbeat Loop.wav|b6616e30ba5c358c
+Peak-time - Floodlight Bed.wav|f7838e894dd69e14
+Peak-time - Floodlight Kick Push.wav|ca232cef71b5053e
+Peak-time - Floodlight Line.wav|abc614332a3d3f8b
+Peak-time - Floodlight Perc Loop.wav|c050e234ba6cc612
+Peak-time - Floodlight Turn.wav|1f8e6a9f9d6b7547
+Peak-time - Fog Machine Sub.wav|2fa52efe0e933ce9
+Peak-time - Hands Up Drone.wav|2f42ece7744dcb76
+Peak-time - Lasers Clap Stutter.wav|42a14b04055d8e33
+Peak-time - Lasers Strummed Chords.wav|cc6f4b556fe55a43
+Peak-time - Mainroom Drive Bass.wav|4d0f7aa636bef991
+Peak-time - Minor Chord Hit.wav|6523e18fdd1cbbd5
+Peak-time - Night Shift Hammer.wav|25420a8df1ccd4ca
+Peak-time - Note Ramp Riser.wav|29a1966277da576b
+Peak-time - Peak Bass.wav|a14c0edd86da8511
+Peak-time - Peak Groove.wav|4711cd0f5f29fbb
+Peak-time - Peak Impact.wav|e29802d0d07fc1d8
+Peak-time - Peak Lead Motif.wav|183b847290bead6f
+Peak-time - Peak Pulse.wav|8808287f05bfafdd
+Peak-time - Peak Sixteenth Sequence.wav|62c3265b2ac51a85
+Peak-time - Peak Stab Call.wav|62d9ba9e15cbe52
+Peak-time - Peak Stab.wav|ceb1e76e4c9cdee0
+Peak-time - Peak Under-line.wav|a2bc0f0ccc1cf8ea
+Peak-time - Prime Time Groove.wav|cec404a8262e5e0e
+Peak-time - Prime Time Shifting Pad.wav|8eadd7d3fc0c753c
+Peak-time - Rave Hall Hat Line.wav|118ab1cbf1879c4
+Peak-time - Rave Hall Keys.wav|e9627263234a98e1
+Peak-time - Rave Hall Motif.wav|5704d487cb1e7b2c
+Peak-time - Rave Hall Transition.wav|adde2f2c91732d10
+Peak-time - Rave Stab Fifths.wav|2dff10bb79d78ae7
+Peak-time - Rolling Sub Sixteenths.wav|5333965bf5e57645
+Peak-time - Strobe Bass Run.wav|ad2867eaa36ae33b
+Peak-time - Strobe Pulse.wav|a867efa5edd9d3e5
+Peak-time - Warehouse Stomp.wav|7cc740862c8f034a
+Percussive - Bongo Room Pound.wav|c4c1b8290ae14dbb
+Percussive - Drum Circle Comp.wav|1008b7161d1f65bf
+Percussive - Hand Drum Chords.wav|8c8c50f701070053
+Percussive - Hand Drum Climb.wav|70bdda03d527219c
+Percussive - Kinetic Bass Arp.wav|a40e3cc0aecc5575
+Percussive - Kinetic Kick Pattern.wav|26da019f4f8ce715
+Percussive - Kinetic Pluck.wav|dc42eca293d9f9ef
+Percussive - Percussive Tool Bass.wav|8a8d6727cf2b3ecf
+Percussive - Percussive Top Loop.wav|c76df0eb59ed8b60
+Percussive - Rhythm Pit Lead.wav|99f271a274a38af0
+Percussive - Rhythm Pit Stomp.wav|babaa506c0d9485c
+Percussive - Rhythm Pit Top Loop.wav|2eb032d3ab8d518d
+Percussive - Skin Drive Bass.wav|c118627a8b426cbd
+Percussive - Skin Hit Chords.wav|512b89e386f29def
+Percussive - Skin Pad.wav|fb9d4696978a0129
+Percussive - Stickwork Riser.wav|4f16689ef5d22422
+Percussive - Stickwork Sub.wav|2652c3d33f93ff82
+Percussive - Tom Build Transition.wav|15e197d54cc20f52
+Percussive - Tom Conga Roll.wav|bd7d97bbcb0fa17f
+Percussive - Tool Loop Percussion.wav|43a9f26362dc519e
+Percussive - Tribal Evolving Pad.wav|94e25cc0f88466d1
+Percussive - Tribal Riff.wav|1c5ff5d47e673db9
+Percussive - Tribal Roller.wav|9b00622a84b0b1b6
+Percussive - Tribal Sixteenths.wav|f0f72bb798ffe5a8
+Percussive - Tribal Snare Roll.wav|fbebb92ff94b06d9
+Percussive - Tribal Transition.wav|592f8700e40b692e
+Percussive - Woodblock Beat.wav|a47607410e9a6d12
+Rolling Spiral - Forest Night Engine.wav|355c454ae630c6ff
+Rolling Spiral - Forest Night Stabs.wav|bb9cb1b9b18f686f
+Rolling Spiral - Fractal Changes.wav|8333d86d5a4b1961
+Rolling Spiral - Fractal Line.wav|6e518564d5b4b6e5
+Rolling Spiral - Fractal Shifting Pad.wav|1dd7c4415b4b61d7
+Rolling Spiral - Goa Motif.wav|36842ed4ad097e4b
+Rolling Spiral - Goa Sub.wav|85ff1e3f179aaaf9
+Rolling Spiral - Kaleidoscope Kick Pattern.wav|db6367fdd8611b64
+Rolling Spiral - Kaleidoscope Pad.wav|bba39d9da2203cec
+Rolling Spiral - Lotus Bridge.wav|dedf16da24882151
+Rolling Spiral - Lotus Hats.wav|6e89c18e6353a27
+Rolling Spiral - Lotus Roller.wav|4dab120867b3d80d
+Rolling Spiral - Mushroom Pattern.wav|7951015b17f4eabb
+Rolling Spiral - Shaman Bassline.wav|a7b0aa6fef6ae6e
+Rolling Spiral - Shaman Pluck.wav|733de0b5f533e07c
+Rolling Spiral - Shaman Roll Fill.wav|cf7c6daef614bd86
+Rolling Spiral - Third Eye Machine.wav|ff40e15a764299a0
+Rolling Spiral - Third Eye Riser.wav|2e855add808daedc
+Squelch - Acidic Comp.wav|96c217467833cce
+Squelch - Acidic Engine.wav|e7bc12a7424e3bbd
+Squelch - Acidic Theme.wav|3dcc92d0c6f469ce
+Squelch - Acidic Transition.wav|6c7cacedc5aa7e7d
+Squelch - Bleep Machine.wav|26c58aeaad952f33
+Squelch - Bleep Pattern.wav|8bce9b746e91fd70
+Squelch - Corrosive Tops.wav|2a109a9559109bdc
+Squelch - Fizz Motif.wav|28f7a0aa77cffe53
+Squelch - Pentatonic Squelch.wav|e72717973c9a3930
+Squelch - Resonance Bass Run.wav|532d3dd32d37cfe3
+Squelch - Resonance Roller.wav|9fb3ac1fadd548a9
+Squelch - Resonance Shifting Pad.wav|bb23087549c73a1
+Squelch - Resonant Sweep.wav|1872b36d51495cdd
+Squelch - Rubber Kick Line.wav|a63b2dad54be6026
+Squelch - Rubber Tom Fall.wav|1d890c14bc5bc98f
+Squelch - Slide Bass Run.wav|28c6b79acc570a09
+Squelch - Slide Build.wav|8d134fd0e144e4a2
+Squelch - Slide Pluck Line.wav|50b07af30caeb256
+Squelch - Slide Stabs.wav|a629f1679a4c597b
+Squelch - Squelch Arp.wav|dbefa5ba81f32ef
+Squelch - Squelch Phrygian Crawl.wav|3d96874ef9446e41
+Squelch - Squelch Root Jumper.wav|6478edcff7e956cf
+Squelch - Squelch Slide Rider.wav|a7b4971ef2dfaa4c
+Squelch - Squelch Thump.wav|6b1073726bb151c2
+Squelch - Three-Oh Arp.wav|9855612183e4ea4e
+Squelch - Three-Oh Bed.wav|646edef73f905ff7
+Squelch - Three-Oh Changes.wav|81e77b971fb91351
+Squelch - Three-Oh Sub Line.wav|658b60909796d735

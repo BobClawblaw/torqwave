@@ -610,6 +610,124 @@ namespace
     }
 }
 
+/** Every factory and Complex patch, the synth's reference renders, every preset and the fixture sessions,
+    rendered and compared with what 0.22.0's engine made of them (Tests/Fixtures/SynthIdentity), sample for
+    sample: a change to the synth that adds to it (a parameter, a source, a destination) must leave all of
+    them as they were. Optimised builds only (the fixtures are an optimised build's; a debug build rounds
+    differently). With record, writes the fixtures, only where none are. */
+static int runSynthIdentity (bool record)
+{
+   #if ! defined (__OPTIMIZE__)
+    std::cout << "FAILED  synth identity: run it on an optimised build (the fixtures are one's)" << std::endl;
+    return 1;
+   #endif
+
+    const auto fixtures = juce::File::getCurrentWorkingDirectory().getChildFile ("Tests/Fixtures/SynthIdentity");
+    const auto work = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-identity-" + juce::String (juce::Random().nextInt64()));
+    work.createDirectory();
+    std::map<juce::String, juce::StringArray> now;
+
+    // The patches.
+    writePatchHashes (work.getChildFile ("patches.txt"));
+    now["patches"] = juce::StringArray::fromLines (work.getChildFile ("patches.txt").loadFileAsString().trim());
+
+    // The reference renders, the synth's states loaded from the fixtures' copies.
+    const auto states = work.getChildFile ("reference");
+    states.createDirectory();
+    for (const auto& f : juce::RangedDirectoryIterator (fixtures.getChildFile ("states"), false, "*.bin"))
+        f.getFile().copyFileTo (states.getChildFile (f.getFile().getFileName()));
+    writeSynthReference (states);
+    now["reference"] = juce::StringArray::fromLines (states.getChildFile ("hashes.txt").loadFileAsString().trim());
+
+    // The presets, each a float WAV.
+    const auto clips = work.getChildFile ("presets");
+    writeSequenceClips (juce::File::getCurrentWorkingDirectory().getChildFile ("Data/Presets"), clips, true);
+    {
+        juce::StringArray lines;
+        for (const auto& f : juce::RangedDirectoryIterator (clips, false, "*.wav"))
+        {
+            juce::MemoryBlock bytes;
+            f.getFile().loadFileAsData (bytes);
+            juce::uint64 hash = 1469598103934665603ull;   // FNV-1a over the file
+            for (size_t i = 0; i < bytes.getSize(); ++i)
+                hash = (hash ^ (juce::uint8) bytes[i]) * 1099511628211ull;
+            lines.add (f.getFile().getFileName() + "|" + juce::String::toHexString ((juce::int64) hash));
+        }
+        lines.sort (false);
+        now["presets"] = lines;
+    }
+
+    // The sessions.
+    {
+        AudioEngine engine;
+        const auto out = work.getChildFile ("sessions");
+        if (! writeSessionReference (engine, out, false))
+        {
+            work.deleteRecursively();
+            return 1;
+        }
+        now["sessions"] = juce::StringArray::fromLines (out.getChildFile ("hashes.txt").loadFileAsString().trim());
+    }
+
+    // A state file written as the reference ran is one the fixtures were missing.
+    juce::StringArray newStates;
+    for (const auto& f : juce::RangedDirectoryIterator (states, false, "*.bin"))
+        if (! fixtures.getChildFile ("states").getChildFile (f.getFile().getFileName()).existsAsFile())
+            newStates.add (f.getFile().getFileName());
+
+    int failures = 0;
+
+    if (record)
+    {
+        for (auto& [name, lines] : now)
+            if (fixtures.getChildFile (name + ".txt").existsAsFile())
+            {
+                std::cout << "FAILED  synth identity: " << name << ".txt is there already; fixtures are never written afresh" << std::endl;
+                work.deleteRecursively();
+                return 1;
+            }
+
+        fixtures.getChildFile ("states").createDirectory();
+        for (auto& s : newStates)
+            states.getChildFile (s).copyFileTo (fixtures.getChildFile ("states").getChildFile (s));
+        for (auto& [name, lines] : now)
+            fixtures.getChildFile (name + ".txt").replaceWithText (lines.joinIntoString ("\n") + "\n");
+
+        std::cout << "wrote the synth identity fixtures" << std::endl;
+    }
+    else
+    {
+        if (! newStates.isEmpty())
+        {
+            std::cout << "FAILED  synth identity: state fixtures missing (" << newStates.joinIntoString (", ") << ")" << std::endl;
+            ++failures;
+        }
+
+        for (auto& [name, lines] : now)
+        {
+            // Every line the fixture has, the same now; lines it doesn't have (patches added since) pass by.
+            std::map<juce::String, juce::String> byKey;
+            for (auto& l : lines)
+                byKey[l.upToLastOccurrenceOf ("|", false, false)] = l;
+
+            const auto was = juce::StringArray::fromLines (fixtures.getChildFile (name + ".txt").loadFileAsString().trim());
+            juce::StringArray changed;
+
+            for (auto& l : was)
+                if (l.isNotEmpty() && byKey[l.upToLastOccurrenceOf ("|", false, false)] != l)
+                    changed.add (l.upToLastOccurrenceOf ("|", false, false));
+
+            const auto ok = was.size() > 0 && changed.isEmpty();
+            failures += ok ? 0 : 1;
+            std::cout << (ok ? "PASS    " : "FAILED  ") << "synth identity: all " << was.size() << " " << name << " render as 0.22.0's engine rendered them, sample for sample"
+                      << (changed.isEmpty() ? juce::String() : " (not: " + changed.joinIntoString (", ").substring (0, 2000) + ")") << std::endl;
+        }
+    }
+
+    work.deleteRecursively();
+    return failures == 0 ? 0 : 1;
+}
+
 int main (int argc, char* argv[])
 {
     // The live input test opens the interface's inputs. macOS asks for microphone access for
@@ -626,11 +744,17 @@ int main (int argc, char* argv[])
     //   --synth-reference <folder> only write hashes of the synth's other reference renders (warps, Sampled tables, states) there
     //   --complex               only the Complex patches' tests (also part of --synth)
     //   --synth-events          only the synth's tests of notes struck again, legato slides and CC 74 sweeping a comb (also part of --synth)
+    //   --synth-identity        only render every factory and Complex patch, the reference renders, every preset and the
+    //                           fixture sessions and compare them with 0.22.0's (Tests/Fixtures/SynthIdentity), sample for sample;
+    //                           optimised builds; --record writes the fixtures, only where none are
+    //   --session-reference <folder> only write hashes of the sessions in Tests/Fixtures/SynthSessions (the synth on their tracks)
+    //                           there; --write-session-fixtures writes the fixtures first, only where none is
     //   --patch-values <file>   only write every factory and Complex patch's settings as JSON lines (Scripts/patch_sweep.py)
     //   --complex-clips <folder> only write clips of the Complex patches, alone and over a kick and hats at 132 BPM
     //   --sound-demos <folder>  only write the Sounds pages' demos (the built-in instruments' patches, presets and kits, and
     //                           the Sequence Library's factory kits and sequences) as MP3s with index.json; --only synth,kits for some
-    //   --sequence-clips <folder> --into <folder>  only render each .tqseq in the first folder to a WAV in the second, to hear presets by
+    //   --sequence-clips <folder> --into <folder>  only render each .tqseq in the first folder (and those under it) to a WAV in the
+    //                           second, to hear presets by; --exact writes 32-bit float, to compare two builds sample for sample
     //   --quality-demos <folder> only write the Quality page's before-and-after clips, their spectrograms and facts.json; --also clicks,clipping for two more
     //   --console-window <folder> only save pictures of the synth's window showing the Trace view
     //   --console               only the signal console's tests (Trace: the nodes within reach of a patch)
@@ -895,6 +1019,15 @@ int main (int argc, char* argv[])
         return 0;
     }
 
+    if (args.contains ("--synth-identity"))
+        return runSynthIdentity (args.contains ("--record"));
+
+    if (const auto folder = valueOf ("--session-reference"); folder.isNotEmpty())
+    {
+        AudioEngine engine;
+        return writeSessionReference (engine, juce::File::getCurrentWorkingDirectory().getChildFile (folder), args.contains ("--write-session-fixtures")) ? 0 : 1;
+    }
+
     if (const auto file = valueOf ("--patch-values"); file.isNotEmpty())
     {
         writePatchValues (juce::File::getCurrentWorkingDirectory().getChildFile (file));
@@ -915,7 +1048,7 @@ int main (int argc, char* argv[])
 
     if (const auto folder = valueOf ("--sequence-clips"); folder.isNotEmpty())
     {
-        writeSequenceClips (juce::File::getCurrentWorkingDirectory().getChildFile (folder), juce::File::getCurrentWorkingDirectory().getChildFile (valueOf ("--into")));
+        writeSequenceClips (juce::File::getCurrentWorkingDirectory().getChildFile (folder), juce::File::getCurrentWorkingDirectory().getChildFile (valueOf ("--into")), args.contains ("--exact"));
         return 0;
     }
 

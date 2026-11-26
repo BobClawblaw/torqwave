@@ -25,7 +25,7 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also 
     to ring out, to "<Style> - <Name>.wav" in another, and prints each one's peak and its level and
     brightness in its first and second half: for hearing presets before and after a change.
     Run with `TorqwaveTests --sequence-clips <folder of sequences> --into <folder>`. */
-void writeSequenceClips (const juce::File& from, const juce::File& into);
+void writeSequenceClips (const juce::File& from, const juce::File& into, bool exact = false);
 
 /** Writes clips of the Complex patches into the folder, a folder for each category: each patch alone
     in its category's phrase (four bars at 132 BPM) and the same over a four-to-the-floor kick and
