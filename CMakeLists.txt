@@ -310,6 +310,7 @@ target_sources(Torqwave PRIVATE
     Source/WaveSynthPatchesLayeredPlucks.cpp
     Source/WaveSynthPatchesLayeredHits.cpp
     Source/WaveSynthPatchesLayeredRisers.cpp
+    Source/WaveSynthPatchesComplex.cpp
     Source/WaveSynthEditor.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp
@@ -589,6 +590,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/BatteryKitTests.cpp
     Tests/SoundControlsTests.cpp
     Tests/WaveSynthTests.cpp
+    Tests/WaveSynthComplexTests.cpp
     Tests/SynthClickTests.cpp
     Tests/WaveSynthBankTests.cpp
     Tests/InstrumentTrackTests.cpp
@@ -784,6 +786,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/WaveSynthPatchesLayeredPlucks.cpp
     Source/WaveSynthPatchesLayeredHits.cpp
     Source/WaveSynthPatchesLayeredRisers.cpp
+    Source/WaveSynthPatchesComplex.cpp
     Source/WaveSynthEditor.cpp
     Source/FileFades.cpp
     Source/FileChecks.cpp

@@ -341,8 +341,9 @@ namespace
 
         node.signature = measured;
         node.address = addressOf (node.patch);
-        // A node the amp's level can't bring within 6 dB of the one held (a slower swell, its level already at +6 dB) is drawn again.
-        return measured.peak >= 0.5f * juce::jlimit (0.0316f, 0.89f, heldPeak);
+        // A node the amp's level can't bring within 6 dB of the one held (a slower swell, its level already at +6 dB) is drawn
+        // again, and so is one that still clips (a drive after the amp that doesn't answer in proportion, as on Cinder Circuit).
+        return measured.peak >= 0.5f * juce::jlimit (0.0316f, 0.89f, heldPeak) && measured.peak <= 1.0f;
     }
 }
 
@@ -357,7 +358,8 @@ int partOf (const juce::String& id)
 {
     static const juce::StringArray never { "ampLevel", "ampPan", "ampVelocity", "voiceMode", "glideMode", "glideTime", "bendRange" };
 
-    if (never.contains (id) || id.startsWith ("macro"))   return -1;
+    // Oscillators 4 to 9 and FM From are outside the search (Decrypt's and Trace's move 1 to 3 alone).
+    if (never.contains (id) || id.startsWith ("macro") || WaveSynth::isAddedWithNine (id))   return -1;
     if (id.startsWith ("osc"))                            return id.contains ("Env") ? envelopes : oscillators;
     if (id.startsWith ("sub") || id.startsWith ("noise")) return oscillators;
     if (id.startsWith ("filter"))                         return filter;
@@ -401,9 +403,19 @@ juce::uint32 addressOf (const Patch& p)
     juce::uint32 h = 2166136261u;
     const auto add = [&h] (juce::uint32 x) { h = (h ^ x) * 16777619u; };
 
-    // The settings in the order of their IDs, each to a thousandth.
+    // The settings in the order of their IDs, each to a thousandth. Oscillators 4 to 9 count only while on,
+    // and FM From only when it isn't Before, so a patch that doesn't use them keeps the address it had.
     for (auto& [id, value] : p.values)
     {
+        if (WaveSynth::isAddedWithNine (id))
+        {
+            const auto o = WaveSynth::oscillatorOf (id);
+            const auto on = p.values.find ("osc" + juce::String (o) + "On");
+
+            if (id.endsWith ("FmFrom") ? value == 0.0 : (on == p.values.end() || on->second == 0.0))
+                continue;
+        }
+
         add (hashOf (id));
         add ((juce::uint32) (juce::int32) std::llround (value * 1000.0));
     }

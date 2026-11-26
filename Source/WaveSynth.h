@@ -3,7 +3,7 @@
 #include "BuiltInEffects.h"
 #include "WaveTables.h"
 
-/** The built-in synth's engine: three wavetable oscillators (each with Position, a warp, and up to
+/** The built-in synth's engine: nine wavetable oscillators (each with Position, a warp, and up to
     eight unison voices with detune, stereo spread, strum and drift, and a level envelope of its
     own to switch on), a sub and a noise source, two
     filters in series or parallel (a 24 dB ladder and a state-variable filter among their types),
@@ -17,10 +17,36 @@
     ramped between, so it renders the same at any block size. */
 namespace WaveSynth
 {
-    constexpr int numOscillators = 3, numEnvelopes = 4, numLfos = 2, numSlots = 16, numMacros = 4, numSteps = 16;
+    constexpr int numOscillators = 9, numEnvelopes = 4, numLfos = 2, numSlots = 16, numMacros = 4, numSteps = 16;
+    /** The oscillators it had before it had nine: their parameters and destinations come first, those of 4 to 9
+        after everything else, so every earlier session, preset and patch keeps its places. Decrypt and the
+        signal console's Trace move these three only. */
+    constexpr int numFirstOscillators = 3;
+    /** The modulation destinations before there were nine oscillators (a slot's menu held these and None). */
+    constexpr int numFirstDestinations = 46;
+    /** The destinations: 9 for each oscillator, 19 more (sub, noise, filters, amp, LFO rates, effects). */
+    constexpr int numDestinations = numFirstDestinations + 9 * (numOscillators - numFirstOscillators);
     constexpr int maxUnison = 8, numVoices = 16, numFadingVoices = 8;
     constexpr int controlInterval = 16;
+    /** The unison voices that may sound at once, every note's oscillators counted (each on, its unison):
+        three oscillators in 8-voice unison on all sixteen voices, the most a patch could ask for before
+        there were nine. A patch that asks for more plays fewer notes at once, the oldest fading out to
+        make room as when all sixteen are taken, so what one costs never grows past that. */
+    constexpr int unisonBudget = 3 * maxUnison * numVoices;
     constexpr double fadeSeconds = 0.004, minimumAttackSeconds = 0.0015;
+    /** A held sound (its amp sustains) struck again while it sounds (mono, or a ringing key played again):
+        its amp, and what the envelopes do to the filters, rise from where they are no faster than this, as
+        an amp or a filter jumping in a millisecond over a sounding note clicks. Pitch, wave, FM, warp and the
+        oscillators' levels are left as they were, and so is a one-shot (no sustain), a fresh note and a note
+        struck after silence. */
+    constexpr double retriggerSeconds = 0.004;
+    /** How long CC 74 (Cutoff) and the macros take to follow a move while notes sound: a controller's steps
+        would otherwise step the filters, and a comb jumps and crackles. With no note sounding they are taken
+        at once. */
+    constexpr double controlSmoothingSeconds = 0.03;
+    /** A legato slide brings the new note's velocity in over the glide, and at least this long, so what
+        velocity moves glides rather than jumping. */
+    constexpr double velocityGlideSeconds = 0.02;
 
     /** The modulation sources, in this order (index 0 is none). */
     enum Source { none, env1, env2, env3, env4, lfo1, lfo2, velocity, modWheel, aftertouch, key, macro1, macro2, macro3, macro4, random, numSources };
@@ -35,6 +61,20 @@ namespace WaveSynth
 
     enum class Warp { off, sync, bend, squeeze, mirror, fm, crush, fold };
     const juce::StringArray& warpNames();
+    /** An oscillator's FM From choices: "Before" (the one before it: 1 takes 3, 2 takes 1, 3 takes 2, as
+        it always has, and each of 4 to 9 the one before it), then Osc 1 to Osc 9. */
+    const juce::StringArray& fmFromNames();
+    /** The oscillator (1 to 9) a parameter ID belongs to, or 0. */
+    int oscillatorOf (const juce::String& parameterId);
+    /** True for a parameter added with oscillators 4 to 9 (theirs, and each oscillator's FM From). */
+    bool isAddedWithNine (const juce::String& parameterId);
+    /** Whether a saved state (as a session keeps it: base64) is Torqwave Synth's from before it had nine
+        oscillators. An automation lane on a slot's Destination then holds values normalised over the 47
+        choices the menu had (None and 46 destinations), which destinationFromBeforeNine puts back on the
+        same destinations among the 101 there are now. */
+    bool stateIsBeforeNine (const juce::String& base64State);
+    float destinationFromBeforeNine (float normalised);
+    bool isSlotDestination (const juce::String& parameterId);
 
     enum class FilterType { off, ladder24, ladder12, ladderHigh, ladderBand, svfLow, svfBand, svfHigh, svfNotch, comb };
     const juce::StringArray& filterNames();
@@ -55,7 +95,13 @@ namespace WaveSynth
 
     /** The factory patches, by category in browser order. */
     const std::vector<Patch>& factoryPatches();
+    /** The Complex patches: a list of their own after the factory patches (whose indices they leave as
+        they are), four oscillators or more in each, by category in browser order. */
+    const std::vector<Patch>& complexPatches();
     const juce::StringArray& patchCategories();
+    /** The name a factory patch has now: a patch renamed since a session, preset or favourite was
+        saved is found under its new name; any other name is given back as it is. */
+    juce::String patchNamedNow (const juce::String& name);
 
     /** What the window reads as the synth plays: each destination's modulated value (normalised;
         negative when nothing sounds), each LFO's output, and envelope 1's level in the newest voice. */
@@ -64,7 +110,7 @@ namespace WaveSynth
         // Nothing has sounded yet: the window shows the knobs' own values.
         Readings()                                                   { for (auto& d : destination) d.store (-1.0f); }
 
-        std::array<std::atomic<float>, 64> destination {};
+        std::array<std::atomic<float>, numDestinations> destination {};
         std::array<std::atomic<float>, numLfos> lfo {};
         std::array<std::atomic<float>, numEnvelopes> envelope {};
         std::atomic<int> sounding { 0 };
@@ -92,6 +138,10 @@ namespace BuiltInEffects
         void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
         double getTailLengthSeconds() const override;
         juce::AudioProcessorEditor* createEditor() override;
+        /** Its automation menus' groups: each oscillator, then sub and noise, the filters, amp and voice,
+            the envelopes, the LFOs, the modulation slots, the macros and the effects. */
+        juce::StringArray parameterGroups() const override;
+        juce::String parameterGroupOf (const juce::String& parameterId) const override;
 
         /** How many notes are sounding (not counting voices fading out). */
         int getNumSounding() const;
@@ -99,7 +149,8 @@ namespace BuiltInEffects
         /** A parameter by its ID (nullptr if there is none). */
         juce::RangedAudioParameter* parameter (const juce::String& id) const;
 
-        /** Loads a factory patch (every parameter to its default, then the patch's), by index or name. */
+        /** Loads a factory patch (every parameter to its default, then the patch's), by index or name; by
+            name, a Complex patch too. */
         void loadPatch (int index);
         bool loadPatch (const juce::String& name);
 
@@ -108,12 +159,16 @@ namespace BuiltInEffects
             there are some, the favourites in the tree's order (by category, then as the tree lists
             them). The factory list's indices. */
         std::vector<int> browseList() const;
-        void setBrowsingFavourites (bool favourites) noexcept        { browsingFavourites = favourites; browsingDecrypted = browsingDecrypted && ! favourites; }
+        void setBrowsingFavourites (bool favourites) noexcept        { browsingFavourites = favourites; browsingDecrypted = browsingDecrypted && ! favourites; browsingComplex = browsingComplex && ! favourites; }
         bool isBrowsingFavourites() const noexcept                   { return browsingFavourites; }
         /** While on, and there are some, the arrows go through the patches taken from Decrypt and
             named (DecryptedPatches), by name; stepPatch then returns -1, the patch being no factory one. */
-        void setBrowsingDecrypted (bool decrypted) noexcept          { browsingDecrypted = decrypted; browsingFavourites = browsingFavourites && ! decrypted; }
+        void setBrowsingDecrypted (bool decrypted) noexcept          { browsingDecrypted = decrypted; browsingFavourites = browsingFavourites && ! decrypted; browsingComplex = browsingComplex && ! decrypted; }
         bool isBrowsingDecrypted() const noexcept                    { return browsingDecrypted; }
+        /** While on, the arrows go through the Complex patches (complexPatches(), by category), by
+            name; stepPatch then returns -1, the patch being no factory one. */
+        void setBrowsingComplex (bool complex) noexcept              { browsingComplex = complex; browsingFavourites = browsingFavourites && ! complex; browsingDecrypted = browsingDecrypted && ! complex; }
+        bool isBrowsingComplex() const noexcept                      { return browsingComplex; }
         /** Loads the patch after (by 1) or before (by -1) the one it is on in that list, round its
             ends; from a sound that isn't in the list, the first (or last). Its index, or -1 if
             the list is empty. */
@@ -134,7 +189,7 @@ namespace BuiltInEffects
 
         WaveSynth::Readings& getReadings() noexcept                  { return readings; }
 
-        /** The table an oscillator (0 to 2) plays when its Table is "Sampled": one made from a sound
+        /** The table an oscillator (0 to 8) plays when its Table is "Sampled": one made from a sound
             (WaveTables::sampledFromAudio). Nullptr takes it away, and the oscillator plays a
             sawtooth. Kept in the state, so a session or a patch with one plays anywhere; a factory
             patch has none. Set from the message thread; the voices take it up at their next block. */
@@ -143,7 +198,7 @@ namespace BuiltInEffects
 
         /** What a preset carries besides its values: the patch's name ("patch"), the macros' names
             ("macro1Name" to "macro4Name", those named) and each Sampled table ("osc1Sampled" to
-            "osc3Sampled", as the state keeps it). Applying a preset's texts sets all of them, a
+            "osc9Sampled", as the state keeps it). Applying a preset's texts sets all of them, a
             name or table it lacks to none; empty texts (a preset saved before 0.20.0, or by an
             effect's dialog) leave them as they are. */
         EffectPresets::Texts getPresetTexts() const;
@@ -168,6 +223,9 @@ namespace BuiltInEffects
     private:
         std::unique_ptr<juce::XmlElement> sampledElement (int oscillator) const;
         void setAllToDefault();
+        /** Oscillators 4 to 9 (with their Sampled tables) and every FM From to their defaults: for a state
+            or a whole patch saved before they were added. */
+        void resetAddedWithNine();
 
         std::unique_ptr<Engine> engine;
         std::map<juce::String, juce::RangedAudioParameter*> byId;
@@ -182,7 +240,7 @@ namespace BuiltInEffects
         juce::SpinLock sampledLock;
         std::atomic<juce::uint32> sampledGeneration { 0 }, sampledSeen { 0 };
 
-        bool browsingFavourites = false, browsingDecrypted = false;
+        bool browsingFavourites = false, browsingDecrypted = false, browsingComplex = false;
         std::unique_ptr<SignalConsole::Console> console;
         std::atomic<SignalConsole::Console*> consoleForAudio { nullptr };
         double preparedRate = 0.0;

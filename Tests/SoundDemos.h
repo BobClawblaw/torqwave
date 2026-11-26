@@ -26,3 +26,10 @@ void writeQualityDemos (const juce::File& folder, const juce::StringArray& also 
     brightness in its first and second half: for hearing presets before and after a change.
     Run with `TorqwaveTests --sequence-clips <folder of sequences> --into <folder>`. */
 void writeSequenceClips (const juce::File& from, const juce::File& into);
+
+/** Writes clips of the Complex patches into the folder, a folder for each category: each patch alone
+    in its category's phrase (four bars at 132 BPM) and the same over a four-to-the-floor kick and
+    off-beat hats from Basic Drums (`-club`), with index.json listing what each plays (the
+    oscillators on and those only modulating, the unison voices a note asks for, its loudness and
+    the level check's measure). Run with `TorqwaveTests --complex-clips <folder>`. */
+void writeComplexClips (const juce::File& folder);

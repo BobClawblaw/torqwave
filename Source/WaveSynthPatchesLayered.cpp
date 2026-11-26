@@ -501,13 +501,6 @@ namespace WaveSynthPatchBuilder
             .amp (3, 700, 85, 350).mono (60).chorus (20).delay (quarterD, 30, 20, 5000).reverb (22).level (-5.5)
             .macro (1, "Mercury").mod (macro1, "osc1WarpAmount", 40).macro (2, "Shimmer").mod (macro2, "osc2Volume", 40)
             .macro (3, "Cutoff").mod (macro3, "filter1Cutoff", 28).macro (4, "Space").mod (macro4, "fxReverbMix", 35);
-        add ("Tungsten Bell Lead", "Lead").osc (1, metal, 50, 60).levelEnv (1, 0, 0, 500, 15).osc (2, analog, sawPos, 70).unison (2, 3, 10, 70)
-            .osc (3, fm, 30, 50).pitch (3, 12).levelEnv (3, 0, 0, 900, 30).filter (1, ladder12, 3200, 20, 10, 50)
-            .env (2, 0, 700, 30, 300, 55).mod (env2, "filter1Cutoff", 20).mod (env2, "osc1Position", 30)
-            .lfo (1, sine, 5.3f, 1).lfoFade (1, 800).mod (lfo1, "osc2Fine", 8).lfoSync (2, triangle, bar1, 1).mod (lfo2, "osc3Position", 25)
-            .amp (1, 600, 85, 350).mono (35).delay (eighthD, 30, 20, 5000).reverb (22).level (-4)
-            .macro (1, "Bell").mod (macro1, "osc1Volume", 40).macro (2, "Body").mod (macro2, "osc2Volume", 40)
-            .macro (3, "Cutoff").mod (macro3, "filter1Cutoff", 28).macro (4, "Space").mod (macro4, "fxReverbMix", 35);
         add ("Ice Lattice", "Lead").osc (1, additive, 70, 75).osc (2, metal, 20, 40).pitch (2, 7).levelEnv (2, 0, 0, 300, 15).osc (3, fm, 40, 50).pitch (3, -12)
             .filter (1, svfLow, 5500, 15, 0, 50).filter (2, comb, 1760, 25, 0, 100)
             .lfoSync (1, steps, bar1, 1, 40).stepPattern (1, { 100, 0, 50, 0, -50, 0, 100, 0, -100, 0, 50, 0, 0, 0, -50, 0 }).mod (lfo1, "osc1Position", 30)

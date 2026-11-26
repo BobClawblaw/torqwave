@@ -16,6 +16,7 @@
 #include "TimeStretch.h"
 #include "TrackColours.h"
 #include "Sampler.h"
+#include "WaveSynth.h"
 
 //==============================================================================
 juce::int64 SessionState::getLength() const
@@ -5283,6 +5284,15 @@ void writeEnvelopes (const SessionTrack& t, juce::XmlElement& into)
 
 void readEnvelopes (SessionState& state, juce::uint32 trackId, const juce::XmlElement& from, double frameScale)
 {
+    // Torqwave Synth's slots saved before it had nine oscillators: a lane on a modulation slot's Destination
+    // there holds values over the menu as it was, put back on the same destinations in the longer one.
+    std::set<juce::uint32> synthBeforeNine;
+
+    if (auto* effects = from.getChildByName ("EFFECTS"))
+        for (auto* slot : effects->getChildWithTagNameIterator ("SLOT"))
+            if (auto* stateXml = slot->getChildByName ("STATE"); stateXml != nullptr && WaveSynth::stateIsBeforeNine (stateXml->getAllSubText()))
+                synthBeforeNine.insert ((juce::uint32) slot->getIntAttribute ("id"));
+
     for (auto* envelopeXml : from.getChildWithTagNameIterator ("ENVELOPE"))
     {
         const auto name = envelopeXml->getStringAttribute ("parameter");
@@ -5310,6 +5320,10 @@ void readEnvelopes (SessionState& state, juce::uint32 trackId, const juce::XmlEl
 
             envelope.points.push_back ({ frame, (float) pointXml->getDoubleAttribute ("value") });
         }
+
+        if (target.parameter == AutomationParameter::effect && synthBeforeNine.count (target.slotId) > 0 && WaveSynth::isSlotDestination (target.parameterId))
+            for (auto& point : envelope.points)
+                point.value = WaveSynth::destinationFromBeforeNine (point.value);
 
         SessionEdits::setEnvelope (state, trackId, target, std::move (envelope));
     }

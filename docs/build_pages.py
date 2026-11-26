@@ -45,7 +45,7 @@ BY_EAR = {
     ("swarm", "Swarm Through Fuzz"): "The swarm through the guitar's fuzz and cabinet.",
     ("swarm", "Wailing Swarm"): "A gliding, fuzzed swarm lead.",
     ("synth", "Target Lock Bass"): "A sequenced bass: a sawtooth through a resonant low-pass that rings on its third harmonic.",
-    ("synth", "EBM Sequence Bass"): "A saw and a square 7 cents apart, the filter plucked on every note.",
+    ("synth", "Machine Sequence"): "A saw and a square 7 cents apart, the filter plucked on every note.",
     ("synth", "Warehouse Sub"): "A round, mono sub, its Grit macro left down.",
     ("synth", "Abyss Reese"): "Two pairs of detuned saws beating, under a slow filter sway.",
     ("synth", "Acid Corrosion"): "A squelching acid line with a dotted echo.",

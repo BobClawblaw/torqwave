@@ -10,6 +10,7 @@
 #include "WaveSynthTests.h"
 #include "ClickCheck.h"
 #include "../Source/WaveSynthPatchBuilder.h"
+#include "../Source/MultitrackView.h"
 
 namespace
 {
@@ -400,6 +401,8 @@ namespace
                "the filter envelope and velocity as modulation slots, glide as legato");
     }
 
+    void testOscillatorPages (Synth&, WaveSynthEditor&);
+
     void testEditor (Synth& synth)
     {
         synth.loadPatch ("Init");
@@ -445,6 +448,7 @@ namespace
             {
                 window->showModulator (page);
                 window->showRightPage (page % 3);
+                window->showOscillatorPage (page % 3);
                 window->refresh();
                 const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
                 drawn = drawn && image.getWidth() == window->getWidth() * 2;
@@ -452,6 +456,7 @@ namespace
         }
 
         Theme::apply (before);
+        testOscillatorPages (synth, *window);
         synth.loadPatch ("Wailing Fuzz Lead");
         window->refresh();
         synth.loadPatch ("Wailing Fuzz Lead");
@@ -459,6 +464,93 @@ namespace
         check (drawn && window->knobFor ("osc1Position") != nullptr && window->knobFor ("osc1Position")->getLabel() == "Bright",
                "synth: every page of its window draws in dark and light at 2x, and a string's Position reads as its brightness");
         editor.reset();
+    }
+
+    /** The window's nine oscillators: three at a time in the panels, the strip choosing which (a click on a
+        cell, its dot switching the oscillator), the Osc Levels page following, and FM From beside the warp
+        while the warp is FM. */
+    void testOscillatorPages (Synth& synth, WaveSynthEditor& window)
+    {
+        synth.loadPatch ("Init");
+        window.showModulator (0);
+        window.showOscillatorPage (0);
+        window.refresh();
+
+        // Shown in the window: it and every parent up to the window visible (none is on the screen in a test).
+        const auto shown = [&window] (const juce::Component* c)
+        {
+            for (; c != nullptr && c != &window; c = c->getParentComponent())
+                if (! c->isVisible())
+                    return false;
+
+            return c == &window;
+        };
+        const auto knobShown = [&] (const juce::String& id) { return shown (window.knobFor (id)); };
+
+        std::vector<juce::Component*> cells, fmFrom;
+        const std::function<void (juce::Component&)> find = [&] (juce::Component& in)
+        {
+            for (auto* c : in.getChildren())
+            {
+                if (auto* t = dynamic_cast<juce::SettableTooltipClient*> (c))
+                {
+                    if (t->getTooltip().startsWith ("Oscillator ") && t->getTooltip().contains ("click the dot")) cells.push_back (c);
+                    if (t->getTooltip().startsWith ("FM From:")) fmFrom.push_back (c);
+                }
+
+                find (*c);
+            }
+        };
+        find (window);
+
+        const auto click = [] (juce::Component& c, juce::Point<float> at)
+        {
+            const auto event = juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, {}, 0.5f, 0, 0, 0, 0, &c, &c, juce::Time::getCurrentTime(), at, juce::Time::getCurrentTime(), 1, false);
+            c.mouseDown (event);
+            c.mouseUp (event);
+        };
+
+        const auto firstPage = knobShown ("osc1Position") && knobShown ("osc3Unison") && ! knobShown ("osc4Position") && ! knobShown ("osc7Position");
+        check (cells.size() == 9 && fmFrom.size() == 9 && firstPage && window.knobFor ("osc9Position") != nullptr,
+               "synth window: nine cells in the oscillator strip and nine oscillator panels, oscillators 1 to 3 shown first");
+
+        if (cells.size() != 9 || fmFrom.size() != 9)
+            return;
+
+        // A click on oscillator 8's cell shows 7 to 9; one on its dot switches it on.
+        const auto wasOn = synth.parameter ("osc8On")->getValue();
+        click (*cells[7], cells[7]->getLocalBounds().getCentre().toFloat());
+        window.refresh();
+        const auto thirdPage = window.getOscillatorPage() == 2 && knobShown ("osc8Position") && knobShown ("osc9Pitch") && ! knobShown ("osc1Position") && ! knobShown ("osc5Position");
+        click (*cells[7], { 8.0f, 8.0f });
+        window.refresh();
+        const auto switched = wasOn < 0.5f && synth.parameter ("osc8On")->getValue() > 0.5f && window.getOscillatorPage() == 2;
+        const auto samePlace = window.knobFor ("osc8Position") != nullptr && window.knobFor ("osc2Position") != nullptr
+                                && window.knobFor ("osc8Position")->getBoundsInParent() == window.knobFor ("osc2Position")->getBoundsInParent()
+                                && window.knobFor ("osc8Position")->getParentComponent()->getBounds() == window.knobFor ("osc2Position")->getParentComponent()->getBounds();
+        check (thirdPage && switched && samePlace,
+               "synth window: a click on oscillator 8's cell shows oscillators 7 to 9 in the three panels (8 where 2 was), and a click on its dot switches it on");
+
+        // The Osc Levels page shows the page's three.
+        window.showModulator (6);
+        const auto levelsThird = knobShown ("osc7EnvAttack") && knobShown ("osc9EnvSustain") && ! knobShown ("osc1EnvAttack");
+        window.showOscillatorPage (1);
+        const auto levelsSecond = knobShown ("osc4EnvAttack") && knobShown ("osc6EnvDecay") && ! knobShown ("osc7EnvAttack") && knobShown ("osc5Position");
+        window.showModulator (0);
+        const auto levelsGone = ! knobShown ("osc4EnvAttack") && knobShown ("osc4Position");
+        check (levelsThird && levelsSecond && levelsGone, "synth window: the Osc Levels page shows the level envelopes of the oscillators the strip's page shows");
+
+        // FM From appears beside the warp while the warp is FM.
+        set (synth, "osc5Warp", (float) WaveSynth::Warp::fm);
+        window.refresh();
+        const auto fmShown = shown (fmFrom[4]) && ! shown (fmFrom[3]) && ! shown (fmFrom[5]) && ! fmFrom[4]->getBounds().isEmpty();
+        set (synth, "osc5Warp", (float) WaveSynth::Warp::off);
+        window.refresh();
+        check (fmShown && ! shown (fmFrom[4]), "synth window: FM From shows beside oscillator 5's warp while the warp is FM, and goes with it");
+
+        window.showOscillatorPage (0);
+        synth.loadPatch ("Init");
+        window.refresh();
     }
 
     //==========================================================================
@@ -687,6 +779,18 @@ namespace
         {
             everything (synth);
             set (synth, "lfo1Sync", 0.0f);
+
+            // One of oscillators 4 to 9: switched on, so it is heard.
+            if (const auto o = WaveSynth::oscillatorOf (ids[d]); o > WaveSynth::numFirstOscillators)
+            {
+                set (synth, "osc" + juce::String (o) + "On", 1.0f);
+                set (synth, "osc" + juce::String (o) + "Position", 40.0f);
+                set (synth, "osc" + juce::String (o) + "Volume", 50.0f);
+                set (synth, "osc" + juce::String (o) + "Unison", 2.0f);
+                set (synth, "osc" + juce::String (o) + "Warp", (float) WaveSynth::Warp::bend);
+                set (synth, "osc" + juce::String (o) + "Route", 50.0f);
+            }
+
             const auto base = synth.parameter (ids[d])->getValue();
             const auto amount = base > 0.5f ? -0.4f : 0.4f;
             synth.addModulation (WaveSynth::macro1, ids[d], amount);
@@ -919,7 +1023,7 @@ namespace
                 const auto name = xml->getAttributeName (i);
                 const auto slot = name.startsWith ("mod") ? name.substring (3).getIntValue() : 0;
 
-                if (slot > 8 || (name.contains ("Env") && name.startsWith ("osc")))
+                if (slot > 8 || (name.contains ("Env") && name.startsWith ("osc") && WaveSynth::oscillatorOf (name) <= WaveSynth::numFirstOscillators))
                 {
                     xml->removeAttribute (name);
                     ++removed;
@@ -1194,19 +1298,348 @@ namespace
                                      + (differ.isEmpty() ? juce::String() : " (not: " + differ.joinIntoString (", ") + ")"));
     }
 
-    void testCpu (Synth& synth)
+    /** Oscillators 4 to 9 on with a little of everything: their own tables, warps, unison, pans and routes. */
+    void nine (Synth& synth)
     {
-        // Sixteen voices of one oscillator in 8-voice unison, through both filters and every effect; then
-        // all three oscillators so. The time to render, against the time it plays. (A build without
-        // optimisation, as the tests are built, is several times slower than the app.)
-        const auto load = [&synth] (int oscillators)
+        everything (synth);
+
+        for (int o = 4; o <= WaveSynth::numOscillators; ++o)
+        {
+            const auto id = "osc" + juce::String (o);
+            set (synth, id + "On", 1.0f);
+            set (synth, id + "Table", (float) (o % 5));
+            set (synth, id + "Position", 10.0f * (float) o);
+            set (synth, id + "Volume", 40.0f);
+            set (synth, id + "Pitch", (float) ((o % 3) * 7 - 7));
+            set (synth, id + "Pan", (float) (o - 6) * 25.0f);
+            set (synth, id + "Unison", 2.0f);
+            set (synth, id + "Warp", (float) (o % 8));
+            set (synth, id + "WarpAmount", 35.0f);
+            set (synth, id + "Route", (float) (o % 2) * 60.0f);
+        }
+    }
+
+    void testNine (Synth& synth)
+    {
+        // The parameters: the 235 there were keep their places (their IDs in the order a state written by
+        // 0.21.1 lists them), oscillators 4 to 9 and FM From after them.
+        const auto& all = synth.getParameters();
+        juce::uint64 firstIds = 1469598103934665603ull;
+
+        for (int i = 0; i < 235 && i < all.size(); ++i)
+            for (auto c : dynamic_cast<juce::RangedAudioParameter*> (all[i])->paramID)
+                firstIds = (firstIds ^ (juce::uint64) c) * 1099511628211ull;
+
+        const auto idAt = [&all] (int i) { return dynamic_cast<juce::RangedAudioParameter*> (all[i])->paramID; };
+        check (all.size() == 376 && firstIds == 0x76c5005fb974585bull && idAt (235) == "osc4On" && idAt (366) == "osc9EnvSustain" && idAt (367) == "osc1FmFrom"
+                   && WaveSynth::destinationIds().size() == 100 && WaveSynth::destinationIds()[45] == "fxReverbMix" && WaveSynth::destinationIds()[46] == "osc4Position",
+               "synth: nine oscillators, 376 parameters: the first 235 as 0.21.1 had them, in its order, then oscillators 4 to 9 and each one's FM From; "
+               "100 modulation destinations, the first 46 where they were");
+
+        // Off, 4 to 9 change nothing: a patch with them off renders as it does with them switched on and off again.
+        synth.loadPatch ("Abyss Reese");
+        const auto phrase = held ({ 36, 43 }, 1.0, 0.8f);
+        const auto reference = play (synth, phrase, (int) (1.5 * rate));
+        synth.loadPatch ("Abyss Reese");
+
+        for (int o = 4; o <= 9; ++o)
+        {
+            set (synth, "osc" + juce::String (o) + "On", 1.0f);
+            set (synth, "osc" + juce::String (o) + "On", 0.0f);
+        }
+
+        check (identical (play (synth, phrase, (int) (1.5 * rate)), reference), "synth: oscillators 4 to 9 off leave a patch sample for sample as it was");
+
+        // A state, and a whole preset, saved before there were nine: whatever the synth had on, 4 to 9 go off.
+        synth.loadPatch ("Abyss Reese");
+        juce::MemoryBlock state;
+        synth.getStateInformation (state);
+        auto xml = juce::AudioProcessor::getXmlFromBinary (state.getData(), (int) state.getSize());
+        auto values = synth.getPresetValues();
+
+        for (int i = xml->getNumAttributes(); --i >= 0;)
+            if (WaveSynth::isAddedWithNine (xml->getAttributeName (i)))
+                xml->removeAttribute (xml->getAttributeName (i));
+
+        for (auto it = values.begin(); it != values.end();)
+            it = WaveSynth::isAddedWithNine (it->first) ? values.erase (it) : std::next (it);
+
+        juce::MemoryBlock old;
+        juce::AudioProcessor::copyXmlToBinary (*xml, old);
+        nine (synth);
+        set (synth, "osc1FmFrom", 5.0f);
+        synth.setStateInformation (old.getData(), (int) old.getSize());
+        const auto fromState = play (synth, phrase, (int) (1.5 * rate));
+        nine (synth);
+        synth.setPresetValues (values);
+        const auto fromPreset = play (synth, phrase, (int) (1.5 * rate));
+        check (identical (fromState, reference) && identical (fromPreset, reference),
+               "synth: a state or a whole preset saved before there were nine oscillators loads with 4 to 9 off and FM From at Before, sample for sample as it was");
+
+        // A session saved before: an automation lane on slot 3's Destination, its values normalised over the 47
+        // choices the menu had, lands on the same destinations in the longer menu; a lane saved since is left alone.
+        {
+            const auto track = [&] (const juce::MemoryBlock& synthState, int slotId)
+            {
+                juce::XmlElement xmlTrack ("TRACK");
+                auto* slot = xmlTrack.createNewChildElement ("EFFECTS")->createNewChildElement ("SLOT");
+                slot->setAttribute ("id", slotId);
+                slot->createNewChildElement ("STATE")->addTextElement (synthState.toBase64Encoding());
+                auto* lane = xmlTrack.createNewChildElement ("ENVELOPE");
+                lane->setAttribute ("parameter", "effect");
+                lane->setAttribute ("slot", slotId);
+                lane->setAttribute ("id", "mod3Destination");
+
+                for (auto [frame, index] : { std::pair { 0, 1 }, std::pair { 48000, 28 }, std::pair { 96000, 46 } })
+                {
+                    auto* point = lane->createNewChildElement ("POINT");
+                    point->setAttribute ("frame", frame);
+                    point->setAttribute ("value", (double) index / 46.0);
+                }
+
+                SessionState s;
+                s.tracks.emplace_back();
+                s.tracks.back().id = 5;
+                SessionFile::readEnvelopes (s, 5, xmlTrack);
+                juce::StringArray landed;
+                auto* destination = synth.parameter ("mod3Destination");
+
+                for (auto& p : s.tracks.back().envelope (AutomationTarget::effect ((juce::uint32) slotId, "mod3Destination")).points)
+                {
+                    destination->setValueNotifyingHost (p.value);
+                    landed.add (dynamic_cast<juce::AudioParameterChoice*> (destination)->getCurrentChoiceName());
+                }
+
+                return landed.joinIntoString (", ");
+            };
+
+            juce::MemoryBlock now;
+            synth.getStateInformation (now);
+            const auto oldLanes = track (old, 7);
+            const auto newLanes = track (now, 8);
+            check (oldLanes == "Osc 1 Position, Sub Level, Reverb Mix" && newLanes != oldLanes,
+                   "synth: a lane drawn on a slot's Destination in a session saved before there were nine oscillators lands on the destinations it did (" + oldLanes
+                       + "); one saved since is read as it is");
+        }
+
+        // The automation menu: a sub-menu for each oscillator, then the synth's sections, every parameter once; a
+        // group holding a lane says so.
+        {
+            SessionState s;
+            s.tracks.emplace_back();
+            s.tracks.back().id = 3;
+            Envelope lane;
+            lane.points.push_back ({ 0, 0.5f });
+            SessionEdits::setEnvelope (s, 3, AutomationTarget::effect (9, "osc7Volume"), std::move (lane));
+            std::vector<AutomationTarget> targets;
+            const auto menu = MultitrackView::parameterMenu (synth, 9, s.tracks.back(), std::nullopt, 1000, targets);
+            juce::StringArray groups, seventh;
+            int items = 0;
+
+            for (juce::PopupMenu::MenuItemIterator group (menu); group.next();)
+                if (const auto& g = group.getItem(); g.subMenu != nullptr)
+                {
+                    groups.add (g.text);
+
+                    for (juce::PopupMenu::MenuItemIterator item (*g.subMenu); item.next(); ++items)
+                        if (g.text.startsWith ("Oscillator 7"))
+                            seventh.add (item.getItem().text);
+                }
+
+            check (groups.joinIntoString (", ") == "Oscillator 1, Oscillator 2, Oscillator 3, Oscillator 4, Oscillator 5, Oscillator 6, Oscillator 7 (automated), Oscillator 8, "
+                                                   "Oscillator 9, Sub and Noise, Filters, Amp and Voice, Envelopes, LFOs, Modulation Slots, Macros, Effects"
+                       && items == 376 && (int) targets.size() == 376 && seventh.size() == 23 && seventh.contains ("Osc 7 Level (automated)") && seventh.contains ("Osc 7 FM From"),
+                   "synth: its automation menu groups its " + juce::String (items) + " parameters in " + juce::String (groups.size())
+                       + " sub-menus (an oscillator's 23 in each of nine, then sub and noise, filters, amp and voice, envelopes, LFOs, slots, macros, effects); an automated one marks its group");
+        }
+
+        // FM From: Before is the chain it always was (1 takes 3, 2 takes 1, 3 takes 2); any oscillator can be chosen.
+        const auto fm = [&] (std::array<int, 3> from)
         {
             everything (synth);
 
             for (int o = 1; o <= 3; ++o)
             {
+                set (synth, "osc" + juce::String (o) + "Warp", (float) WaveSynth::Warp::fm);
+                set (synth, "osc" + juce::String (o) + "WarpAmount", 50.0f);
+                set (synth, "osc" + juce::String (o) + "FmFrom", (float) from[(size_t) o - 1]);
+            }
+
+            return play (synth, phrase, (int) (1.0 * rate));
+        };
+
+        const auto before = fm ({ 0, 0, 0 });
+        check (identical (before, fm ({ 3, 1, 2 })) && ! identical (before, fm ({ 2, 3, 1 })),
+               "synth: FM From at Before takes the oscillator before, as FM always has (1 from 3, 2 from 1, 3 from 2), the same sample for sample as choosing those; other choices sound otherwise");
+
+        nine (synth);
+        set (synth, "osc5Warp", (float) WaveSynth::Warp::fm);
+        set (synth, "osc5FmFrom", 9.0f);
+        const auto fromNine = play (synth, phrase, (int) (1.0 * rate));
+        set (synth, "osc5FmFrom", 0.0f);
+        check (! identical (fromNine, play (synth, phrase, (int) (1.0 * rate))), "synth: oscillator 5's FM can come from oscillator 9");
+
+        // Silent modulators: an oscillator an FM From names is worked out even when off, its samples driving the FM
+        // and none heard; Before still takes an oscillator that is off as nothing, as it always has.
+        const auto modulated = [&] (int from, float amount, bool fiveOn)
+        {
+            bare (synth);
+            set (synth, "osc1On", 0.0f);
+            set (synth, "osc2On", 1.0f);
+            set (synth, "osc2Volume", 100.0f);
+            set (synth, "osc2RandomPhase", 0.0f);
+            set (synth, "osc2Warp", (float) WaveSynth::Warp::fm);
+            set (synth, "osc2WarpAmount", amount);
+            set (synth, "osc2FmFrom", (float) from);
+            set (synth, "osc5On", fiveOn ? 1.0f : 0.0f);
+            set (synth, "osc5Volume", 0.0f);
+            set (synth, "osc5Pitch", 7.0f);
+            set (synth, "osc1Pitch", 7.0f);
+            return play (synth, held ({ 57 }, 0.4), (int) (0.5 * rate));
+        };
+
+        const auto plain = modulated (0, 0.0f, false);
+        const auto byFive = modulated (5, 60.0f, false), byFiveSilentOn = modulated (5, 60.0f, true);
+        const auto byOneOff = modulated (0, 60.0f, false), byOneNamed = modulated (1, 60.0f, false);
+        check (! identical (byFive, plain) && identical (byFive, byFiveSilentOn) && identical (modulated (5, 0.0f, false), plain)
+                   && identical (byOneOff, plain) && ! identical (byOneNamed, plain),
+               "synth: an oscillator named by FM From drives the FM though it is off or at no level, and is never heard itself (FM of nothing from it is the plain wave); "
+               "Before still takes oscillator 1, off, as nothing, as FM always has, while naming oscillator 1 brings it in");
+
+        // ...and counts against the unison budget: three heard in 8-voice unison, each driven by two silent
+        // oscillators of 4 to 9 in 8-voice unison, is 72 unison voices a note, so five notes at once.
+        everything (synth);
+
+        for (int o = 1; o <= 9; ++o)
+        {
+            set (synth, "osc" + juce::String (o) + "Unison", 8.0f);
+            set (synth, "osc" + juce::String (o) + "Warp", (float) WaveSynth::Warp::fm);
+            set (synth, "osc" + juce::String (o) + "WarpAmount", 30.0f);
+        }
+
+        for (int o = 1; o <= 3; ++o)
+            set (synth, "osc" + juce::String (o) + "FmFrom", (float) (o + 3));   // 1 from 4, 2 from 5, 3 from 6
+
+        for (int o = 4; o <= 6; ++o)
+            set (synth, "osc" + juce::String (o) + "FmFrom", (float) (o + 3));   // 4 from 7, 5 from 8, 6 from 9
+
+        std::vector<Event> eight;
+
+        for (int i = 0; i < 8; ++i)
+            eight.push_back ({ i * 2400, juce::MidiMessage::noteOn (1, 40 + i * 3, 0.8f) });
+
+        int mostWithModulators = 0;
+        play (synth, eight, (int) (0.6 * rate), 512, [&] (int) { mostWithModulators = juce::jmax (mostWithModulators, synth.getNumSounding()); });
+        check (mostWithModulators == 5, "synth: silent modulators count against the unison budget: three oscillators heard, six driving them two deep, all in 8-voice unison, play "
+                                            + juce::String (mostWithModulators) + " notes at once");
+
+        // Each of 4 to 9 sounds, as loud as oscillator 1 would at its settings, and its destinations move it.
+        juce::StringArray quiet;
+
+        for (int o = 4; o <= 9; ++o)
+        {
+            bare (synth);
+            set (synth, "osc1On", 0.0f);
+            const auto id = "osc" + juce::String (o);
+            set (synth, id + "On", 1.0f);
+            set (synth, id + "Volume", 100.0f);
+            set (synth, id + "RandomPhase", 0.0f);
+            const auto alone = play (synth, held ({ 57 }, 0.5), (int) (0.4 * rate));
+            const auto level = amplitude (alone, 0, 220.0, 4800, 9600);
+            set (synth, "mod1Source", (float) WaveSynth::macro1);
+            set (synth, "mod1Destination", (float) (WaveSynth::destinationIds().indexOf (id + "Volume") + 1));
+            set (synth, "mod1Amount", -100.0f);
+            set (synth, "macro1", 100.0f);
+            const auto moved = amplitude (play (synth, held ({ 57 }, 0.5), (int) (0.4 * rate)), 0, 220.0, 4800, 9600);
+            set (synth, "mod1Source", 0.0f);
+
+            if (level < 0.3 || moved > level * 0.01)
+                quiet.add (juce::String (o));
+        }
+
+        check (quiet.isEmpty(), "synth: oscillators 4 to 9 each sound on their own, and a slot turns each one's level down to nothing" + (quiet.isEmpty() ? juce::String() : " (not: " + quiet.joinIntoString (", ") + ")"));
+
+        // Nine sounding: the same at any block size; no click switching 7 on and off in a note, nor in steals.
+        std::vector<Event> events;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            events.push_back ({ 500 + i * 5003, juce::MidiMessage::noteOn (1, 40 + (i * 7) % 19, 0.6f + 0.05f * (float) i) });
+            events.push_back ({ 500 + i * 5003 + 11000, juce::MidiMessage::noteOff (1, 40 + (i * 7) % 19) });
+        }
+
+        const auto playNine = [&] (int block)
+        {
+            nine (synth);
+            return play (synth, events, (int) (1.5 * rate), block, [&] (int at)
+            {
+                // Oscillator 7 off at 18,944 samples (a whole number of blocks of every size here), on again at twice that.
+                if (at == 18944) set (synth, "osc7On", 0.0f);
+                if (at == 2 * 18944) set (synth, "osc7On", 1.0f);
+            });
+        };
+
+        const auto whole = playNine (512);
+        juce::StringArray differ;
+
+        for (auto size : { 1, 37, 64 })
+            if (! identical (playNine (size), whole))
+                differ.add (juce::String (size));
+
+        const auto click = ClickCheck::worst (whole, rate, 0.03f);
+        check (differ.isEmpty() && click.ratio <= 4.0f && whole.getMagnitude (0, whole.getNumSamples()) > 0.05f,
+               "synth: nine oscillators sounding, oscillator 7 switched off and on in the notes, render bit for bit the same in blocks of 512, 64, 37 and 1"
+                   + (differ.isEmpty() ? juce::String() : " (not: " + differ.joinIntoString (", ") + ")") + " with no click (the nearest a jump "
+                   + juce::String (click.ratio, 1) + " times the steps around it)");
+
+        // Notes end: all nine on, a chord released goes to silence (the delay and reverb off, which ring on by design).
+        nine (synth);
+
+        for (auto fx : { "Delay", "Reverb", "Chorus", "Phaser" })
+            set (synth, "fx" + juce::String (fx) + "On", 0.0f);
+
+        const auto ending = play (synth, held ({ 48, 52, 55 }, 0.3), (int) (1.5 * rate));
+        check (ending.getMagnitude (0, (int) (0.3 * rate)) > 0.05f && ending.getMagnitude ((int) (1.3 * rate), (int) (0.2 * rate)) < 1.0e-6f && synth.getNumSounding() == 0,
+               "synth: with nine oscillators sounding, a chord released ends: no voice left, and under -120 dB a second after (the drive's tone filter dying away)");
+
+        // The guard: nine in 8-voice unison is 72 unison voices a note, so five notes at once (384 / 72),
+        // the oldest fading out as a sixth starts, with no click.
+        nine (synth);
+
+        for (int o = 1; o <= 9; ++o)
+            set (synth, "osc" + juce::String (o) + "Unison", 8.0f);
+
+        std::vector<Event> chord;
+
+        for (int i = 0; i < 8; ++i)
+            chord.push_back ({ i * 2400, juce::MidiMessage::noteOn (1, 40 + i * 3, 0.8f) });
+
+        int most = 0;
+        const auto guarded = play (synth, chord, (int) (0.8 * rate), 512, [&] (int) { most = juce::jmax (most, synth.getNumSounding()); });
+        const auto stolen = ClickCheck::worst (guarded, rate, 0.03f);
+        check (most == WaveSynth::unisonBudget / 72 && synth.getNumSounding() == 5 && stolen.ratio <= 4.0f,
+               "synth: nine oscillators in 8-voice unison play " + juce::String (most) + " notes at once (" + juce::String (WaveSynth::unisonBudget)
+                   + " unison voices at most), the oldest fading out for a new one with no click (the nearest a jump " + juce::String (stolen.ratio, 1) + " times the steps around it)");
+    }
+
+    void testCpu (Synth& synth)
+    {
+        // Sixteen voices of one oscillator in 8-voice unison, through both filters and every effect; then
+        // all three oscillators so, then all nine (the guard lets five notes of that sound: 384 unison voices),
+        // and nine in 2-voice unison (288 unison voices, all sixteen notes). The time to render, against the
+        // time it plays. (A build without optimisation, as the tests are built, is several times slower than the app.)
+        const auto load = [&synth] (int oscillators, int unison)
+        {
+            everything (synth);
+
+            for (int o = 1; o <= WaveSynth::numOscillators; ++o)
+            {
                 set (synth, "osc" + juce::String (o) + "On", o <= oscillators ? 1.0f : 0.0f);
-                set (synth, "osc" + juce::String (o) + "Unison", 8.0f);
+                set (synth, "osc" + juce::String (o) + "Unison", (float) unison);
+                set (synth, "osc" + juce::String (o) + "Position", 40.0f);
+                set (synth, "osc" + juce::String (o) + "Volume", 50.0f);
+                set (synth, "osc" + juce::String (o) + "Warp", (float) WaveSynth::Warp::bend);
+                set (synth, "osc" + juce::String (o) + "WarpAmount", 30.0f);
             }
 
             std::vector<Event> e;
@@ -1218,19 +1651,23 @@ namespace
             const auto start = juce::Time::getMillisecondCounterHiRes();
             const auto out = play (synth, e, (int) (seconds * rate), 512);
             const auto took = (juce::Time::getMillisecondCounterHiRes() - start) / 1000.0;
-            return std::pair { took / seconds, out.getMagnitude (0, out.getNumSamples()) > 0.0f && synth.getNumSounding() == 16 };
+            const auto notes = juce::jmin (16, WaveSynth::unisonBudget / (oscillators * unison));
+            return std::pair { took / seconds, out.getMagnitude (0, out.getNumSamples()) > 0.0f && synth.getNumSounding() == notes };
         };
 
-        const auto [one, sounded] = load (1);
-        const auto [three, soundedAll] = load (3);
+        const auto [one, sounded] = load (1, 8);
+        const auto [three, soundedAll] = load (3, 8);
+        const auto [nineFull, soundedNine] = load (9, 8);
+        const auto [nineTwo, soundedNineTwo] = load (9, 2);
        #if defined (__OPTIMIZE__)
         constexpr auto optimised = true;
        #else
         constexpr auto optimised = false;
        #endif
-        check (sounded && soundedAll && (! optimised || one < 0.25),
+        check (sounded && soundedAll && soundedNine && soundedNineTwo && (! optimised || (one < 0.25 && nineFull < 0.25)),
                "synth: sixteen voices in 8-voice unison through both filters and every effect take " + juce::String (one * 100.0, 1) + " % of a core at 48 kHz with one oscillator, "
-                   + juce::String (three * 100.0, 1) + " % with all three" + (optimised ? " (under 25 % with one)" : " (unoptimised build)"));
+                   + juce::String (three * 100.0, 1) + " % with three; nine in 8-voice unison (five notes, as the guard allows) " + juce::String (nineFull * 100.0, 1)
+                   + " %, nine in 2-voice unison (sixteen notes) " + juce::String (nineTwo * 100.0, 1) + " %" + (optimised ? " (under 25 % with one, and with nine)" : " (unoptimised build)"));
     }
 }
 
@@ -1250,7 +1687,10 @@ void runWaveSynthTests (AudioEngine& engine)
     testFaults();
     testPresetTexts();
     testBlockSizes (synth);
+    testNine (synth);
     testCpu (synth);
+    runComplexPatchTests();
+    runSynthEventTests();
 }
 
 void writePatchHashes (const juce::File& file)
@@ -1279,6 +1719,174 @@ void writePatchHashes (const juce::File& file)
 
     file.replaceWithText (lines.joinIntoString ("\n") + "\n");
     std::cout << lines.size() << " patches" << std::endl;
+}
+
+void writeSynthReference (const juce::File& folder)
+{
+    // Renders that reach what the factory patches don't: every warp on each oscillator with full unison,
+    // strum and drift; the FM chain; Sampled tables; level envelopes; odd block sizes; and a synth loaded
+    // from a state file. A state file is written the first time and loaded every time after, so a build
+    // made later loads the states an earlier one saved. Each render's hash goes to hashes.txt.
+    folder.createDirectory();
+    juce::StringArray lines;
+
+    const auto hashOf = [] (const juce::AudioBuffer<float>& out)
+    {
+        juce::uint64 hash = 1469598103934665603ull;
+
+        for (int ch = 0; ch < out.getNumChannels(); ++ch)
+            for (int n = 0; n < out.getNumSamples(); ++n)
+            {
+                juce::uint32 bits;
+                const auto sample = out.getSample (ch, n);
+                std::memcpy (&bits, &sample, sizeof (bits));
+                hash = (hash ^ bits) * 1099511628211ull;
+            }
+
+        return juce::String::toHexString ((juce::int64) hash);
+    };
+
+    const auto phrase = []
+    {
+        auto e = held ({ 36, 43, 48 }, 1.2, 0.9f);
+        const auto more = held ({ 55, 62 }, 0.8, 0.5f, 0.6);
+        e.insert (e.end(), more.begin(), more.end());
+        return e;
+    };
+
+    std::vector<float> saw (48000), hum (48000);
+
+    for (size_t i = 0; i < saw.size(); ++i)
+    {
+        saw[i] = (float) (0.6 * (std::fmod ((double) i * 110.0 / rate, 1.0) * 2.0 - 1.0));
+        hum[i] = (float) (0.5 * std::sin (juce::MathConstants<double>::twoPi * 165.0 * (double) i / rate) * (0.5 + 0.5 * std::sin ((double) i * 0.0003)));
+    }
+
+    const auto sampledSaw = WaveTables::sampledFromAudio (saw.data(), (int) saw.size(), rate, 0.0, "Saw");
+    const auto sampledHum = WaveTables::sampledFromAudio (hum.data(), (int) hum.size(), rate, 0.0, "Hum");
+
+    /** A synth set up for a case: three oscillators sounding, the one under test with full unison. */
+    const auto setUp = [&] (Synth& s, int warp, int oscillator)
+    {
+        defaults (s);
+
+        for (int o = 1; o <= 3; ++o)
+        {
+            const auto id = "osc" + juce::String (o);
+            set (s, id + "On", 1.0f);
+            set (s, id + "Table", (float) ((o + warp) % 4));
+            set (s, id + "Position", 20.0f + 25.0f * (float) o);
+            set (s, id + "Pitch", (float) (o == 2 ? 7 : o == 3 ? -12 : 0));
+            set (s, id + "Volume", 60.0f);
+            set (s, id + "Pan", (float) (o - 2) * 40.0f);
+        }
+
+        const auto id = "osc" + juce::String (oscillator);
+        set (s, id + "Warp", (float) warp);
+        set (s, id + "WarpAmount", 60.0f);
+        set (s, id + "Unison", 8.0f);
+        set (s, id + "UnisonDetune", 30.0f);
+        set (s, id + "UnisonStrum", 20.0f);
+        set (s, id + "UnisonDrift", 50.0f);
+        set (s, id + "Route", 40.0f);
+        set (s, "filter2Type", 5.0f);
+        set (s, "mod1Source", (float) WaveSynth::lfo1);
+        set (s, "mod1Destination", (float) (WaveSynth::destinationIds().indexOf (id + "Position") + 1));
+        set (s, "mod1Amount", 40.0f);
+    };
+
+    for (int oscillator = 1; oscillator <= 3; ++oscillator)
+        for (int warp = 0; warp < WaveSynth::warpNames().size(); ++warp)
+        {
+            Synth synth;
+            setUp (synth, warp, oscillator);
+            lines.add ("warp " + juce::String (warp) + " on osc " + juce::String (oscillator) + "|" + hashOf (play (synth, phrase(), (int) (2.0 * rate))));
+        }
+
+    {
+        Synth synth;
+        setUp (synth, (int) WaveSynth::Warp::fm, 1);
+
+        for (int o = 2; o <= 3; ++o)
+        {
+            set (synth, "osc" + juce::String (o) + "Warp", (float) WaveSynth::Warp::fm);
+            set (synth, "osc" + juce::String (o) + "WarpAmount", 45.0f);
+            set (synth, "osc" + juce::String (o) + "Unison", 3.0f);
+        }
+
+        lines.add ("fm chain|" + hashOf (play (synth, phrase(), (int) (2.0 * rate))));
+    }
+
+    {
+        Synth synth;
+        setUp (synth, 0, 2);
+
+        for (int o = 1; o <= 3; ++o)
+        {
+            const auto id = "osc" + juce::String (o) + "Env";
+            set (synth, id + "On", 1.0f);
+            set (synth, id + "Attack", 5.0f * (float) o);
+            set (synth, id + "Hold", 30.0f);
+            set (synth, id + "Decay", 200.0f * (float) o);
+            set (synth, id + "Sustain", 20.0f * (float) o);
+        }
+
+        lines.add ("level envelopes|" + hashOf (play (synth, phrase(), (int) (2.0 * rate))));
+
+        for (auto block : { 37, 64, 1000 })
+        {
+            Synth again;
+            juce::MemoryBlock state;
+            synth.getStateInformation (state);
+            again.setStateInformation (state.getData(), (int) state.getSize());
+            lines.add ("level envelopes in blocks of " + juce::String (block) + "|" + hashOf (play (again, phrase(), (int) (2.0 * rate), block)));
+        }
+    }
+
+    // States: written once, loaded ever after.
+    for (int k = 0; k < 4; ++k)
+    {
+        const auto file = folder.getChildFile ("state-" + juce::String (k) + ".bin");
+
+        if (! file.existsAsFile())
+        {
+            Synth synth;
+            setUp (synth, k * 2 + 1, k % 3 + 1);
+
+            if (k >= 2)
+            {
+                set (synth, "osc1Table", (float) WaveTables::Table::sampled);
+                synth.setSampledTable (0, sampledSaw);
+                set (synth, "osc3Table", (float) WaveTables::Table::sampled);
+                synth.setSampledTable (2, sampledHum);
+            }
+
+            if (k == 3)
+                synth.loadPatch (100);
+
+            juce::MemoryBlock state;
+            synth.getStateInformation (state);
+            file.replaceWithData (state.getData(), state.getSize());
+        }
+
+        juce::MemoryBlock state;
+        file.loadFileAsData (state);
+        Synth synth;
+        synth.setStateInformation (state.getData(), (int) state.getSize());
+        lines.add ("state " + juce::String (k) + "|" + hashOf (play (synth, phrase(), (int) (2.0 * rate))));
+        lines.add ("state " + juce::String (k) + " in blocks of 37|" + hashOf (play (synth, phrase(), (int) (2.0 * rate), 37)));
+    }
+
+    // Factory patches in odd blocks, every 97th.
+    for (size_t i = 0; i < WaveSynth::factoryPatches().size(); i += 97)
+    {
+        Synth synth;
+        synth.loadPatch ((int) i);
+        lines.add ("patch " + juce::String ((int) i) + " in blocks of 37|" + hashOf (play (synth, phrase(), (int) (2.0 * rate), 37)));
+    }
+
+    folder.getChildFile ("hashes.txt").replaceWithText (lines.joinIntoString ("\n") + "\n");
+    std::cout << lines.size() << " renders" << std::endl;
 }
 
 void saveSynthWindow (const juce::File& folder)
@@ -1314,6 +1922,22 @@ void saveSynthWindow (const juce::File& folder)
     window->showRightPage (1);
     save ("levels");
 
+    // Oscillators 4 to 6: 4 on a vowel, 5 an FM warp taking oscillator 1, 6 off.
+    set (synth, "osc4On", 1.0f);
+    set (synth, "osc4Table", (float) WaveTables::Table::vowel);
+    set (synth, "osc4Position", 40.0f);
+    set (synth, "osc5On", 1.0f);
+    set (synth, "osc5Table", (float) WaveTables::Table::pulse);
+    set (synth, "osc5Warp", (float) WaveSynth::Warp::fm);
+    set (synth, "osc5WarpAmount", 45.0f);
+    set (synth, "osc5FmFrom", 1.0f);
+    set (synth, "osc5Volume", 50.0f);
+    window->showModulator (0);
+    window->showRightPage (0);
+    window->showOscillatorPage (1);
+    save ("oscillators-4-6");
+    window->showOscillatorPage (0);
+
     // Oscillator 1 playing a table made from a sound: a sawtooth whose filter closes over two seconds.
     std::vector<float> sound ((size_t) (2.0 * rate));
     float low = 0.0f;
@@ -1332,6 +1956,32 @@ void saveSynthWindow (const juce::File& folder)
     window->showModulator (0);
     window->showRightPage (0);
     save ("sampled");
+
+    // The guide's picture: Turbine Throat with two more layers on oscillators 4 and 5 (a sub an octave down,
+    // and a metal edge whose FM takes oscillator 1), C2 held.
+    synth.loadPatch ("Turbine Throat");
+    set (synth, "osc4On", 1.0f);
+    set (synth, "osc4Table", (float) WaveTables::Table::sub);
+    set (synth, "osc4Pitch", -12.0f);
+    set (synth, "osc4Volume", 45.0f);
+    set (synth, "osc5On", 1.0f);
+    set (synth, "osc5Table", (float) WaveTables::Table::metal);
+    set (synth, "osc5Position", 30.0f);
+    set (synth, "osc5Warp", (float) WaveSynth::Warp::fm);
+    set (synth, "osc5WarpAmount", 35.0f);
+    set (synth, "osc5FmFrom", 1.0f);
+    set (synth, "osc5Volume", 25.0f);
+    play (synth, { { 0, juce::MidiMessage::noteOn (1, 36, 0.8f) } }, (int) (0.6 * rate));
+    window->showOscillatorPage (0);
+    window->refresh();
+    {
+        const auto image = window->createComponentSnapshot (window->getLocalBounds(), true, 2.0f);
+        auto file = folder.getChildFile ("guide-synth.png");
+        file.deleteFile();
+        juce::FileOutputStream out (file);
+        juce::PNGImageFormat().writeImageToStream (image, out);
+        std::cout << file.getFullPathName() << std::endl;
+    }
 }
 
 void printPatchLevels()

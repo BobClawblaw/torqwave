@@ -622,6 +622,11 @@ int main (int argc, char* argv[])
     //   --synth-window <folder> only save pictures of the synth's window (a patch, the level envelopes, a Sampled table)
     //   --patch-levels          only print each factory patch's level (name|category|dB of a held chord's peak)
     //   --patch-hashes <file>   only write a hash of each factory patch's render, to compare two builds sample for sample
+    //   --synth-reference <folder> only write hashes of the synth's other reference renders (warps, Sampled tables, states) there
+    //   --complex               only the Complex patches' tests (also part of --synth)
+    //   --synth-events          only the synth's tests of notes struck again, legato slides and CC 74 sweeping a comb (also part of --synth)
+    //   --patch-values <file>   only write every factory and Complex patch's settings as JSON lines (Scripts/patch_sweep.py)
+    //   --complex-clips <folder> only write clips of the Complex patches, alone and over a kick and hats at 132 BPM
     //   --sound-demos <folder>  only write the Sounds pages' demos (the built-in instruments' patches, presets and kits, and
     //                           the Sequence Library's factory kits and sequences) as MP3s with index.json; --only synth,kits for some
     //   --sequence-clips <folder> --into <folder>  only render each .tqseq in the first folder to a WAV in the second, to hear presets by
@@ -876,6 +881,24 @@ int main (int argc, char* argv[])
         return 0;
     }
 
+    if (const auto folder = valueOf ("--synth-reference"); folder.isNotEmpty())
+    {
+        writeSynthReference (juce::File::getCurrentWorkingDirectory().getChildFile (folder));
+        return 0;
+    }
+
+    if (const auto file = valueOf ("--patch-values"); file.isNotEmpty())
+    {
+        writePatchValues (juce::File::getCurrentWorkingDirectory().getChildFile (file));
+        return 0;
+    }
+
+    if (const auto folder = valueOf ("--complex-clips"); folder.isNotEmpty())
+    {
+        writeComplexClips (juce::File::getCurrentWorkingDirectory().getChildFile (folder));
+        return 0;
+    }
+
     if (const auto folder = valueOf ("--sound-demos"); folder.isNotEmpty())
     {
         writeSoundDemos (juce::File::getCurrentWorkingDirectory().getChildFile (folder), juce::StringArray::fromTokens (valueOf ("--only"), ",", ""));
@@ -931,6 +954,20 @@ int main (int argc, char* argv[])
     {
         AudioEngine engine;
         runDrumGridTests (engine.formatManager);
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (args.contains ("--synth-events"))
+    {
+        runSynthEventTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
+    if (args.contains ("--complex"))
+    {
+        runComplexPatchTests();
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }

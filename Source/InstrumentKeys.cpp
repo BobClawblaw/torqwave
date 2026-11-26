@@ -292,7 +292,7 @@ juce::String stepSound (juce::AudioProcessor& p, juce::Component* editor, int by
     {
         const auto loaded = synth->stepPatch (by);
         return loaded >= 0 ? WaveSynth::factoryPatches()[(size_t) loaded].name
-                           : synth->isBrowsingDecrypted() ? synth->getPatchName() : juce::String();   // one of the user's Decrypted patches
+                           : synth->isBrowsingDecrypted() || synth->isBrowsingComplex() ? synth->getPatchName() : juce::String();   // a Decrypted or Complex patch
     }
 
     if (editor != nullptr)

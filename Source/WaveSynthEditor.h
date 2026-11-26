@@ -7,8 +7,8 @@ class SignalConsoleView;
 class DecryptView;
 class DecryptedView;
 
-/** Torqwave Synth's window: the three oscillators with their wavetables drawn at the position they
-    play, the sub and noise; the two filters with their response curves; the amp and voice; the
+/** Torqwave Synth's window: a strip of all nine oscillators, and three of them at a time with their
+    wavetables drawn at the position they play; the sub and noise; the two filters with their response curves; the amp and voice; the
     envelopes (drag their points) and LFOs (draw their steps), each a modulation source to drag
     onto any knob; the oscillators' level envelopes; the modulation slots; the macros; the effects;
     a sound dropped on an oscillator made into its table; and a browser for the factory
@@ -22,7 +22,7 @@ public:
     explicit WaveSynthEditor (BuiltInEffects::BasicSynthProcessor&);
     ~WaveSynthEditor() override;
 
-    static constexpr int designWidth = 1240, designHeight = 760;
+    static constexpr int designWidth = 1240, designHeight = 808;
 
     void paint (juce::Graphics&) override;
     void resized() override;
@@ -73,6 +73,11 @@ public:
         level envelopes; and on the right modulation slots 1 to 8 (0), 9 to 16 (1) or the effects (2). */
     void showModulator (int index);
     void showRightPage (int index);
+
+    /** Which three oscillators the panels show: 1 to 3 (0), 4 to 6 (1) or 7 to 9 (2), as the strip's
+        page switch chooses; the Osc Levels page shows the same three. */
+    void showOscillatorPage (int page);
+    int getOscillatorPage() const;
 
     /** The heart in the patch browser: marks the patch it is on as a favourite, or unmarks it.
         Where the heart is, in the window. */

@@ -124,7 +124,7 @@ namespace
                     "words": { "type": "string", "description": "What the user said the sound is (\"a reese\", \"match the body, not the click\"), when they said it." },
                     "tables_only": { "type": "boolean", "description": "true: only the synth's own waves (never a table sampled from the clip). Leave out for either." } }, "required": ["clip", "track"] } },
   { "name": "table_from_clip", "description": "Give one oscillator of the Torqwave Synth an instrument track plays a Sampled wavetable made from an audio clip (up to 30 s of it): the clip's tone at steps through it, so the oscillator's Position plays through the sound from start to end. The rest of the patch stays as it is. Made once the plan is applied.",
-    "parameters": { "type": "object", "properties": { CLIP, TRACK, "oscillator": { "type": "integer", "description": "1, 2 or 3." } }, "required": ["clip", "track", "oscillator"] } },
+    "parameters": { "type": "object", "properties": { CLIP, TRACK, "oscillator": { "type": "integer", "description": "1 to 9." } }, "required": ["clip", "track", "oscillator"] } },
   { "name": "sampler_from_clip", "description": "Make an audio clip the sound of a new instrument track playing Torqwave Sampler, the sampler built in. Across the keys (the default): the clip's part of its file plays at every key, its pitch found so the key it was recorded at plays it as it is. With slices: the clip is cut at its hits (or at the markers its file has there), each slice goes on its own key from C2 (36) up, a note clip that plays the slices as the sound was is put where the audio clip is, and the audio clip is muted, so the session sounds the same and every hit is a note to move with the note tools. It samples the file as recorded, without the clip's gain, fades or effects. The sampler is loaded once the plan is applied.",
     "parameters": { "type": "object", "properties": { CLIP, "slices": { "type": "boolean", "description": "true: cut it into slices on keys, with the notes that play them. Leave out to play it across the keys." } }, "required": ["clip"] } },
   { "name": "set_sampler", "description": "Change the Torqwave Sampler an instrument track already plays: a zone's keys, root, part, loop and switches, or how it plays (zones across the keys, or slices). Give only what should change. Times are seconds from the start of the sample. Made once the plan is applied, outside its undo step. get_session says what a sampler holds.",
@@ -2410,7 +2410,7 @@ namespace Ai
         const auto oscillator = (int) a["oscillator"];
 
         if (oscillator < 1 || oscillator > WaveSynth::numOscillators)
-            return refused ("oscillator must be 1, 2 or 3");
+            return refused ("oscillator must be 1 to 9");
 
         juce::AudioBuffer<float> audio;
         const auto* clip = audioClipOf (a["clip"], audio, 30.0, error);

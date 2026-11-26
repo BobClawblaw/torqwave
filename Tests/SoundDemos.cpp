@@ -594,7 +594,7 @@ namespace
 
         // Chosen by ear for the first Sounds page, each on a part that suits it.
         const std::vector<std::pair<const char*, const Part*>> featured {
-            { "Target Lock Bass", &bassLine }, { "EBM Sequence Bass", &bassLine }, { "Warehouse Sub", &bassLine }, { "Abyss Reese", &bassLine },
+            { "Target Lock Bass", &bassLine }, { "Machine Sequence", &bassLine }, { "Warehouse Sub", &bassLine }, { "Abyss Reese", &bassLine },
             { "Acid Corrosion", &bassLine }, { "Siren Burn", &melody }, { "Mercury Lead", &melody }, { "Minor Stab", &stabs },
             { "Glass Shard", &arpeggio }, { "Wailing Fuzz Lead", &melody }, { "Body Riff Power Chord", &power }, { "Swarm Drone", &held },
             { "Concrete Pad", &minorChords }, { "Reactor Drone", &one }, { "Cold Bell", &arpeggio }, { "Gated Machine", &minorChords },
@@ -1817,4 +1817,366 @@ void writeSoundDemos (const juce::File& folder, const juce::StringArray& only)
         bytes += (juce::int64) entry["bytes"];
 
     std::cout << index.entries.size() << " clips, " << juce::String ((double) bytes / 1048576.0, 1) << " MB" << std::endl;
+}
+
+//==============================================================================
+namespace
+{
+    /** A Complex category's phrase: four bars at 132 BPM in A minor, in beats. */
+    Part complexPhrase (const juce::String& category)
+    {
+        Part p;
+        const auto note = [&p] (double at, double length, int pitch, float velocity = 0.9f) { p.push_back ({ at, length, pitch, velocity }); };
+        const auto chord = [&note] (double at, double length, std::initializer_list<int> pitches, float velocity = 0.9f) { for (auto n : pitches) note (at, length, n, velocity); };
+        const std::vector<std::vector<int>> progression { { 57, 60, 64, 69 }, { 53, 57, 60, 64 }, { 50, 57, 62, 65 }, { 52, 59, 64, 67 } };
+        const int roots[] = { 33, 33, 29, 31 };
+
+        if (category == "Bass")            // rolling: the three sixteenths after each kick
+            for (int b = 0; b < 16; ++b)
+                for (int s = 1; s < 4; ++s)
+                    note (b + s * 0.25, 0.2, roots[b / 4] + (b % 4 == 3 && s == 3 ? 12 : 0), s == 2 ? 0.95f : 0.8f);
+        else if (category == "Sub")        // the off-beats
+            for (int b = 0; b < 16; ++b)
+                note (b + 0.5, 0.42, roots[b / 4], 0.9f);
+        else if (category == "Reese")      // held, legato
+        {
+            note (0, 8.1, 33); note (8, 4.1, 29); note (12, 3.9, 31);
+        }
+        else if (category == "Acid")       // sixteenths with rests, octave leaps and slides (a note held into the next)
+        {
+            const int pitches[16] = { 45, 45, 57, 45, 0, 48, 45, 57, 45, 0, 52, 45, 57, 55, 45, 43 };
+            const bool slide[16] = { false, true, false, false, false, false, true, false, false, false, true, false, false, true, false, false };
+
+            for (int i = 0; i < 64; ++i)
+                if (const auto pitch = pitches[i % 16]; pitch > 0)
+                    note (i * 0.25, slide[i % 16] ? 0.3 : 0.18, pitch - (i >= 32 && i < 48 ? 4 : 0), i % 4 == 0 || i % 16 == 7 ? 1.0f : 0.72f);
+        }
+        else if (category == "Lead" || category == "Vox" || category == "Brass")
+        {
+            const std::vector<std::pair<int, double>> line = category == "Lead" ? std::vector<std::pair<int, double>> { { 69, 1.5 }, { 72, 0.5 }, { 76, 2 }, { 74, 1 }, { 72, 1 }, { 69, 2 }, { 67, 1 }, { 69, 1 }, { 72, 2 }, { 69, 4 } }
+                                                           : category == "Vox" ? std::vector<std::pair<int, double>> { { 64, 2 }, { 67, 2 }, { 69, 4 }, { 67, 2 }, { 64, 2 }, { 62, 4 } }
+                                                                               : std::vector<std::pair<int, double>> { { 57, 4 }, { 60, 2 }, { 59, 2 }, { 57, 3 }, { 55, 1 }, { 52, 4 } };
+            double at = 0.0;
+
+            for (auto [pitch, length] : line)
+            {
+                note (at, length + 0.05, pitch);
+                at += length;
+            }
+        }
+        else if (category == "Stab")       // syncopated single notes (a patch may make the chord)
+        {
+            const int pitches[] = { 57, 57, 53, 55 };
+
+            for (int bar = 0; bar < 4; ++bar)
+                for (auto t : { 0.5, 1.75, 2.5, 3.25 })
+                    note (bar * 4 + t, 0.3, pitches[bar]);
+        }
+        else if (category == "Chord" || category == "Strings")
+            for (int bar = 0; bar < 4; ++bar)
+                chord (bar * 4.0, 3.9, { progression[(size_t) bar][0], progression[(size_t) bar][1], progression[(size_t) bar][2], progression[(size_t) bar][3] });
+        else if (category == "Pad")
+        {
+            chord (0, 7.9, { 57, 60, 64, 71 });
+            chord (8, 7.9, { 53, 57, 60, 64 });
+        }
+        else if (category == "Keys" || category == "Organ")
+        {
+            const auto rhythm = category == "Keys" ? std::vector<double> { 0.5, 1.5, 2.5, 3.0 } : std::vector<double> { 0.0, 0.75, 1.5, 2.5, 3.25 };
+
+            for (int bar = 0; bar < 4; ++bar)
+                for (auto t : rhythm)
+                    chord (bar * 4 + t, category == "Keys" ? 0.45 : 0.4, { progression[(size_t) bar][0], progression[(size_t) bar][1], progression[(size_t) bar][2] });
+        }
+        else if (category == "Pluck")
+        {
+            const int pitches[] = { 69, 76, 72, 74, 67, 72 };
+            int n = 0;
+
+            for (int bar = 0; bar < 4; ++bar)
+                for (auto t : { 0.0, 0.75, 1.5, 2.0, 2.75, 3.5 })
+                    note (bar * 4 + t, 0.3, pitches[n++ % 6]);
+        }
+        else if (category == "Arp")
+        {
+            const std::vector<std::vector<int>> arps { { 57, 60, 64, 69 }, { 53, 57, 60, 65 }, { 50, 53, 57, 62 }, { 52, 56, 59, 64 } };
+
+            for (int i = 0; i < 64; ++i)
+            {
+                const auto& a = arps[(size_t) i / 16];
+                const int order[] = { 0, 1, 2, 3, 2, 1 };
+                note (i * 0.25, 0.2, a[(size_t) order[i % 6]] + (i % 16 >= 12 ? 12 : 0), i % 4 == 0 ? 1.0f : 0.75f);
+            }
+        }
+        else if (category == "Guitar")     // a chug on A, a turn at the end of each bar
+            for (int i = 0; i < 64; ++i)
+                note (i * 0.25, 0.18, i % 16 >= 12 ? (i % 32 >= 16 ? 43 : 48) : 45, i % 4 == 0 ? 1.0f : 0.72f);
+        else if (category == "Sequence")
+        {
+            const int pitches[] = { 45, 45, 57, 45, 48, 45, 52, 43 };
+
+            for (int i = 0; i < 64; ++i)
+                note (i * 0.25, 0.2, pitches[i % 8] - (i >= 32 && i < 48 ? 4 : 0), i % 4 == 0 ? 1.0f : 0.78f);
+        }
+        else if (category == "Drone" || category == "Riser" || category == "Texture")
+            note (0, 15.5, category == "Riser" ? 57 : 45, 0.95f);
+        else if (category == "Cinematic")
+        {
+            note (0, 7.5, 45, 1.0f); note (8, 7.5, 41, 1.0f);
+        }
+        else if (category == "Bell")
+        {
+            const std::pair<double, int> hits[] = { { 0, 69 }, { 1.5, 76 }, { 3, 72 }, { 4.5, 74 }, { 6, 67 }, { 8, 69 }, { 9.5, 72 }, { 11, 79 }, { 12.5, 76 } };
+
+            for (auto [at, pitch] : hits)
+                note (at, 1.0, pitch);
+        }
+        else if (category == "Impact")
+        {
+            note (0, 1.0, 33, 1.0f); note (8, 1.0, 29, 1.0f);
+        }
+        else if (category == "Perc")
+        {
+            const int pitches[] = { 57, 60, 64, 55, 62, 57, 67, 60 };
+            int n = 0;
+
+            for (int bar = 0; bar < 4; ++bar)
+                for (auto t : { 0.25, 0.75, 1.0, 1.5, 1.75, 2.25, 2.75, 3.5 })
+                    note (bar * 4 + t, 0.2, pitches[n++ % 8], t == 1.0 || t == 2.75 ? 1.0f : 0.75f);
+        }
+        else if (category == "Drum")       // on two and four, a ghost before the next bar, a fill at the end
+            for (int bar = 0; bar < 4; ++bar)
+            {
+                note (bar * 4 + 1, 0.2, 50, 1.0f);
+                note (bar * 4 + 3, 0.2, 50, 1.0f);
+                note (bar * 4 + 3.75, 0.15, 50, 0.5f);
+
+                if (bar == 3)
+                    for (auto t : { 2.25, 2.5 })
+                        note (bar * 4 + t, 0.15, 47, 0.7f);
+            }
+        else if (category == "FX")
+            for (auto [at, pitch] : std::initializer_list<std::pair<double, int>> { { 0, 60 }, { 3.5, 67 }, { 8, 60 }, { 11.5, 72 } })
+                note (at, 1.0, pitch);
+        else if (category == "Glitch")
+        {
+            const bool on[16] = { true, false, true, true, false, true, false, false, true, true, false, true, false, false, true, true };
+
+            for (int i = 0; i < 64; ++i)
+                if (on[(i * 7 + i / 16) % 16])
+                    note (i * 0.25, 0.12, i % 8 == 3 ? 69 : 57, i % 4 == 0 ? 1.0f : 0.7f);
+        }
+        else if (category == "Game")
+        {
+            const int motif[] = { 57, 60, 64, 69, 68, 64, 60, 59 };
+
+            for (int i = 0; i < 32; ++i)
+                note (i * 0.5, 0.35, motif[i % 8] + (i >= 16 && i < 24 ? 5 : 0), i % 2 == 0 ? 0.95f : 0.8f);
+        }
+        else if (category == "Chip")
+        {
+            const std::vector<std::pair<int, double>> line { { 69, 1 }, { 72, 0.5 }, { 74, 0.5 }, { 76, 1 }, { 74, 1 }, { 72, 1 }, { 69, 1 }, { 67, 1 }, { 69, 1 },
+                                                             { 65, 1 }, { 67, 1 }, { 69, 2 }, { 64, 2 }, { 69, 2 } };
+            double at = 0.0;
+
+            for (auto [pitch, length] : line)
+            {
+                note (at, length * 0.9, pitch);
+                at += length;
+            }
+        }
+
+        return p;
+    }
+
+    /** An RBJ biquad, low- or high-pass, run over a copy of one channel. */
+    std::vector<float> biquad (const float* x, int n, double hz, bool high)
+    {
+        const auto w = juce::MathConstants<double>::twoPi * hz / rate, c = std::cos (w), a = std::sin (w) / (2.0 * 0.7071);
+        const auto b0 = high ? (1 + c) / 2 : (1 - c) / 2, b1 = high ? -(1 + c) : 1 - c, a0 = 1 + a, a1 = -2 * c, a2 = 1 - a;
+        std::vector<float> y ((size_t) n);
+        double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+
+        for (int i = 0; i < n; ++i)
+        {
+            const auto out = (b0 * x[i] + b1 * x1 + b0 * x2 - a1 * y1 - a2 * y2) / a0;
+            x2 = x1; x1 = x[i]; y2 = y1; y1 = out;
+            y[(size_t) i] = (float) out;
+        }
+
+        return y;
+    }
+
+    double meanSquare (const std::vector<float>& v)   { double sum = 0; for (auto x : v) sum += (double) x * x; return sum / juce::jmax ((size_t) 1, v.size()); }
+
+    /** Where a render's energy sits: the side's level below 120 Hz against the mid's there (dB), and the
+        shares of its power below 200 Hz and from 1 to 5 kHz (%). */
+    struct Balance { double lowSideDb, below200, presence; };
+
+    Balance balanceOf (const juce::AudioBuffer<float>& audio)
+    {
+        const auto n = audio.getNumSamples();
+        std::vector<float> mid ((size_t) n), side ((size_t) n);
+
+        for (int i = 0; i < n; ++i)
+        {
+            mid[(size_t) i] = 0.5f * (audio.getSample (0, i) + audio.getSample (1, i));
+            side[(size_t) i] = 0.5f * (audio.getSample (0, i) - audio.getSample (1, i));
+        }
+
+        const auto low = [n] (const std::vector<float>& v, double hz) { auto a = biquad (v.data(), n, hz, false); return biquad (a.data(), n, hz, false); };
+        const auto high = [n] (const std::vector<float>& v, double hz) { auto a = biquad (v.data(), n, hz, true); return biquad (a.data(), n, hz, true); };
+        const auto all = meanSquare (mid) + meanSquare (side);
+        const auto lowMid = meanSquare (low (mid, 120.0)), lowSide = meanSquare (low (side, 120.0));
+        const auto under = meanSquare (low (mid, 200.0)) + meanSquare (low (side, 200.0));
+        const auto band = [&] (const std::vector<float>& v) { auto h = high (v, 1000.0); return meanSquare (low (h, 5000.0)); };
+
+        return { 10.0 * std::log10 ((lowSide + 1.0e-12) / (lowMid + 1.0e-12)), 100.0 * under / juce::jmax (1.0e-12, all),
+                 100.0 * (band (mid) + band (side)) / juce::jmax (1.0e-12, all) };
+    }
+
+    /** The oscillators a patch plays (on) and those it only runs for another's FM (named by an explicit
+        FM From of one played or run, its warp FM, and itself off), and the unison voices a note asks for. */
+    struct Used { juce::Array<int> on, modulators; int unison = 0; };
+
+    Used oscillatorsUsed (const WaveSynth::Patch& patch)
+    {
+        const auto value = [&patch] (const juce::String& id, double otherwise)
+        {
+            const auto found = patch.values.find (id);
+            return found != patch.values.end() ? found->second : otherwise;
+        };
+        const auto field = [] (int o, const char* f) { return "osc" + juce::String (o) + f; };
+        Used u;
+
+        for (int o = 1; o <= WaveSynth::numOscillators; ++o)
+            if (value (field (o, "On"), o == 1 ? 1.0 : 0.0) > 0.5)
+                u.on.add (o);
+
+        for (bool grown = true; grown;)
+        {
+            grown = false;
+            auto all = u.on;
+            all.addArray (u.modulators);
+
+            for (auto o : all)
+                if ((int) value (field (o, "Warp"), 0.0) == (int) WaveSynth::Warp::fm)
+                    if (const auto from = (int) value (field (o, "FmFrom"), 0.0); from > 0 && ! u.on.contains (from) && ! u.modulators.contains (from))
+                    {
+                        u.modulators.add (from);
+                        grown = true;
+                    }
+        }
+
+        for (auto o : u.on)          u.unison += (int) value (field (o, "Unison"), 1.0);
+        for (auto o : u.modulators)  u.unison += (int) value (field (o, "Unison"), 1.0);
+        return u;
+    }
+}
+
+void writeComplexClips (const juce::File& folder)
+{
+    folder.createDirectory();
+    constexpr double tempo = 132.0, beatSeconds = 60.0 / tempo, seconds = 16.0 * beatSeconds + 2.5;
+    const auto toHits = [] (const Part& part)
+    {
+        std::vector<Hit> hits;
+
+        for (auto& n : part)
+            hits.push_back ({ n.at * beatSeconds, n.length * beatSeconds, n.pitch, n.velocity });
+
+        return hits;
+    };
+
+    // The floor: a kick on every beat, a closed hat on every off-beat, Basic Drums' Standard kit, at
+    // -15 LUFS on its own.
+    Part beat;
+
+    for (int b = 0; b < 16; ++b)
+    {
+        beat.push_back ({ (double) b, 0.2, 36, 1.0f });
+        beat.push_back ({ b + 0.5, 0.1, 42, 0.8f });
+    }
+
+    BuiltInEffects::BasicDrumsProcessor drumMachine;
+    auto drums = play (drumMachine, toHits (beat), seconds, tempo);
+    drums.applyGain ((float) juce::Decibels::decibelsToGain (-15.0 - Loudness::measure (drums, rate).integrated));
+
+    juce::StringArray factoryNames;
+
+    for (auto& p : WaveSynth::factoryPatches())
+        factoryNames.add (p.name.toLowerCase());
+
+    Index index;
+
+    for (auto& patch : WaveSynth::complexPatches())
+    {
+        if (factoryNames.contains (patch.name.toLowerCase()))
+            std::cout << "FAILED " << patch.name << " is a factory patch's name too" << std::endl;
+
+        BuiltInEffects::BasicSynthProcessor synth;
+
+        if (! synth.loadPatch (patch.name))
+        {
+            std::cout << "FAILED no patch " << patch.name << std::endl;
+            continue;
+        }
+
+        const auto used = oscillatorsUsed (patch);
+        const auto file = patch.category.toLowerCase() + "/" + slug (patch.name);
+        auto solo = play (synth, toHits (complexPhrase (patch.category)), seconds, tempo);
+        const auto loudness = Loudness::measure (solo, rate);
+
+        // The level check's measure: the peak of a held C minor chord for two seconds and its tail.
+        BuiltInEffects::BasicSynthProcessor fresh;
+        fresh.loadPatch (patch.name);
+        const auto chordPeak = peakDb (play (fresh, std::vector<Hit> { { 0.0, 2.0, 48, 0.8f }, { 0.0, 2.0, 51, 0.8f }, { 0.0, 2.0, 55, 0.8f } }, 4.0, tempo));
+
+        juce::AudioBuffer<float> club (2, solo.getNumSamples());
+
+        for (int ch = 0; ch < 2; ++ch)
+        {
+            club.copyFrom (ch, 0, drums, ch, 0, club.getNumSamples());
+            club.addFrom (ch, 0, solo, ch, 0, club.getNumSamples());
+        }
+
+        // Never clipped: a mix that would be is turned down as a whole (and says so).
+        const auto clubPeak = club.getMagnitude (0, club.getNumSamples());
+        const auto turnedDown = clubPeak > 0.944f ? juce::Decibels::gainToDecibels (0.944f / clubPeak) : 0.0f;
+
+        if (turnedDown < 0.0f)
+            club.applyGain (juce::Decibels::decibelsToGain (turnedDown));
+
+        juce::StringArray on, modulators;
+        for (auto o : used.on)          on.add (juce::String (o));
+        for (auto o : used.modulators)  modulators.add (juce::String (o));
+
+        auto* entry = index.add ("complex", patch.category, patch.name, file + ".mp3");
+        entry->setProperty ("club", file + "-club.mp3");
+        entry->setProperty ("oscillators", used.on.size() + used.modulators.size());
+        entry->setProperty ("on", on.joinIntoString (","));
+        entry->setProperty ("modulators", modulators.joinIntoString (","));
+        entry->setProperty ("unisonPerNote", used.unison);
+        entry->setProperty ("macros", juce::StringArray (patch.macroNames.data(), (int) patch.macroNames.size()).joinIntoString (", "));
+        entry->setProperty ("loudness", juce::roundToInt (loudness.integrated * 10.0) / 10.0);
+        entry->setProperty ("chordPeakDb", juce::roundToInt (chordPeak * 10.0) / 10.0);
+        entry->setProperty ("clubTurnedDownDb", juce::roundToInt (turnedDown * 10.0) / 10.0);
+        const auto balance = balanceOf (solo);
+        entry->setProperty ("lowSideDb", juce::roundToInt (balance.lowSideDb * 10.0) / 10.0);
+        entry->setProperty ("below200", juce::roundToInt (balance.below200));
+        entry->setProperty ("presence", juce::roundToInt (balance.presence));
+        std::cout << "LEVEL|" << patch.name << "|" << patch.category << "|" << juce::String (loudness.integrated, 1) << "|" << juce::String (peakDb (solo), 1)
+                  << "|" << juce::String (chordPeak, 1) << "|" << (used.on.size() + used.modulators.size()) << "|" << used.unison << "|" << juce::String (balance.lowSideDb, 1) << "|" << juce::roundToInt (balance.below200) << "|" << juce::roundToInt (balance.presence) << std::endl;
+
+        save (folder, entry, std::move (solo));
+
+        juce::DynamicObject::Ptr clubEntry = new juce::DynamicObject();
+        clubEntry->setProperty ("file", file + "-club.mp3");
+        save (folder, clubEntry.get(), std::move (club), 4, false);
+        entry->setProperty ("clubPeakDb", clubEntry->getProperty ("peakDb"));
+        entry->setProperty ("clubBytes", clubEntry->getProperty ("bytes"));
+    }
+
+    folder.getChildFile ("index.json").replaceWithText (juce::JSON::toString (juce::var (index.entries)) + "\n");
+    std::cout << index.entries.size() << " patches" << std::endl;
 }

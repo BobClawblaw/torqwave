@@ -37,7 +37,7 @@ public:
         values as the plug-in writes them, and the default or the current value. */
     static juce::var parameterFacts (juce::AudioProcessorParameter&, bool currentValue);
 
-    static constexpr int maxParameters = 300, maxPrograms = 128;
+    static constexpr int maxParameters = 400, maxPrograms = 128;
 
     /** 2: the presets' names were added. */
     static constexpr int factsVersion = 2;
