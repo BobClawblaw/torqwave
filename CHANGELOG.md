@@ -4,6 +4,14 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The site: the sequence, kit and drum clips rendered from the library as it is now** (rendered clips and documents only; goes up with the library, not before)
+- The Sounds pages' sequence clips, every factory kit and Basic Drums' grooves were rendered again from the 1,025 sequences. Sequences: 111 clips where there were 99; 70 are the presets there were (68 of the files byte for byte), 41 are new and 29 are gone. Kits: the same 116, 108 of them changed, since nearly every kit holds a part that was written again. Basic Drums: 41 as before, one groove swapped for another, since one of the four grooves left out was a kit's.
+- By the page's own count, the line that says what a sequence does with its bars, chords and key left out, 543 of the 1,025 are figures only one style has, where 315 of 1,032 were. Every style but Club tools, which has three presets, now shows two clips or more.
+- The pages say 1,025, and the sequences page's introduction no longer says most of the library is shared figures: it says no two presets of a kind play the same notes and a figure is in three styles at most.
+- **Measured:** none of the 111 sequence clips is silent; two take more than 0.3 s to arrive, both builds; of those that go round more than once the largest step at a join is 0.14 of the largest inside.
+- The 78 clip files retired by the push before are removed; the 30 no longer listed stay for this push and go in the next. 1,115 clips listed, 105.1 MB.
+- Tested: the renderer ran without a failure, the pages were built, their links checked and each of the 1,163 players' files found. **Not listened to** as site clips; the user heard the library's own before and after clips. The test suite was not run for this.
+
 **The Sequence Library overhaul is whole** (fix log 117, closing `docs/plans/PLAN-SEQUENCE-LIBRARY.md`)
 - The user listened to the clips of every category, before and after, and said "those are good". The five entries below are the work: 1,025 sequences where there were 1,032, none playing another's notes of its category, no figure in more than three styles.
 - The guide says so: the presets' rules in Instruments and MIDI have a line for it and for the notes outside the scale that some effects, stabs and drones now use, and Styles opens with it.

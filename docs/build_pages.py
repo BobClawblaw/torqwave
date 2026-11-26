@@ -397,19 +397,19 @@ def kits_page():
 
 def sequences_page():
     clips = of("sequences")
-    library_page("sequences", "sounds/sequences.html", "Sequence Library: factory sequences", f"The Sequence Library: {len(clips)} of its 1,032 factory sequences",
-                 f'<p>The Sequence Library ships 1,032 sequence presets in 37 styles: drums, bass lines, harmony, pads, arps, melodies and effects, each with a line saying what it does. '
+    library_page("sequences", "sounds/sequences.html", "Sequence Library: factory sequences", f"The Sequence Library: {len(clips)} of its 1,025 factory sequences",
+                 f'<p>The Sequence Library ships 1,025 sequence presets in 37 styles: drums, bass lines, harmony, pads, arps, melodies and effects, each with a line saying what it does. '
                  f'Here are {len(clips)} on their own. </p>'
-                 '<p><b>What is shown, and why so few.</b> Most of the library is a smaller set of figures given to many styles on other chords, with another voice and tempo: '
-                 f'{OWN_ALL} of the 1,032 sequences are figures only one style has, going by the line that says what each does with its bars, chords and key left out. '
-                 'The risers are the plainest case: 34 of the 38 are one climb up the A minor scale. So a style shows only figures of its own here, each figure once on the whole page, '
+                 '<p><b>What is shown.</b> No two presets of a kind play the same notes, and a figure is in three styles at most. '
+                 f'{OWN_ALL} of the 1,025 sequences are figures only one style has, going by the line that says what each does with its bars, chords and key left out. '
+                 'A style shows only those here, each figure once on the whole page, '
                  'and a part marked Melody, whose notes are always its own. The nine techno and industrial styles show one of each role where they have one of their own; '
                  'the others show two at most: what the style\'s name promises where it has it (a drone under Drone, a break under Breaks), a part of its own, a groove of its own, a melody. '
                  'Under each heading is how many of the style\'s sequences are its own. An effect plays once; the other parts go round as loops. '
                  'Each card is marked with what the clip is; the style is only the heading. Chosen by that rule, not by ear: nobody has listened to them one by one, '
                  'and a figure of a style\'s own is not proof that it sounds of the style. '
                  'The <a href="kits.html">kits</a> play six sequences together.</p>',
-                 f"{len(clips)} of the 1,032 factory sequences in Torqwave's Sequence Library, from all 37 styles, rendered by Torqwave with nothing added.")
+                 f"{len(clips)} of the 1,025 factory sequences in Torqwave's Sequence Library, from all 37 styles, rendered by Torqwave with nothing added.")
 
 
 def find(group, name):
@@ -440,7 +440,7 @@ def sounds_index():
              ("sources", "drums-and-sampler.html#the-sources", "Basic Drums: sources", "clips of the 24 synthesized sources any pad can play, each alone and in a groove"),
              ("sampler", "drums-and-sampler.html#torqwave-sampler", "Torqwave Sampler", "all 11 factory presets"),
              ("kits", "kits.html", "Sequence Library: kits", f"all 116 factory kits, in {len(set(c['category'] for c in of('kits')))} styles"),
-             ("sequences", "sequences.html", "Sequence Library: sequences", "of 1,032 factory sequences, from all 37 styles: figures a style has to itself")]
+             ("sequences", "sequences.html", "Sequence Library: sequences", "of 1,025 factory sequences, from all 37 styles: figures a style has to itself")]
     cards = []
 
     for group, link, name, what in pages:
