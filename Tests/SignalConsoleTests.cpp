@@ -144,7 +144,7 @@ namespace
         int nodes = 0, silent = 0, clipped = 0, same = 0;
         float quietest = 1.0f, loudest = 0.0f, furthestUnder = 0.0f;
         juce::String quietestName;
-        juce::StringArray sameNames;
+        juce::StringArray sameNames, clippedNames;
         const auto started = juce::Time::getMillisecondCounterHiRes();
 
         for (int k = 0; k < 50; ++k)
@@ -163,7 +163,7 @@ namespace
                 // and the amp's level only goes up to +6 dB).
                 if (peak < 0.01f && peak < heldPeak * 0.708f) ++silent;
                 if (heldPeak > 0.0f) furthestUnder = juce::jmin (furthestUnder, juce::Decibels::gainToDecibels (peak / heldPeak));
-                if (peak > 1.0f) ++clipped;
+                if (peak > 1.0f) { ++clipped; clippedNames.addIfNotAlreadyThere (all[(size_t) index].name + " " + juce::String (juce::Decibels::gainToDecibels (peak), 1) + " dB"); }
                 if (n.changes.empty()) { ++same; sameNames.addIfNotAlreadyThere (all[(size_t) index].name); }
                 if (peak < quietest) { quietest = peak; quietestName = all[(size_t) index].name; }
                 loudest = juce::jmax (loudest, peak);
@@ -175,7 +175,7 @@ namespace
                "console: all 600 nodes round 50 factory patches at Reach 0.7 sound (the quietest peaks at " + juce::String (juce::Decibels::gainToDecibels (quietest), 1) + " dB, round "
                    + quietestName + "; the furthest under the node it lies round, " + juce::String (-furthestUnder, 1) + " dB, where the amp's level stops at +6 dB) and none clips (the loudest at " + juce::String (juce::Decibels::gainToDecibels (loudest), 1)
                    + " dB); " + (same == 0 ? juce::String ("every one differs") : juce::String (same) + " do not differ") + " from the node held"
-                   + (silent > 0 ? ", " + juce::String (silent) + " silent" : juce::String()) + (clipped > 0 ? ", " + juce::String (clipped) + " clipped" : juce::String())
+                   + (silent > 0 ? ", " + juce::String (silent) + " silent" : juce::String()) + (clipped > 0 ? ", " + juce::String (clipped) + " clipped (round " + clippedNames.joinIntoString (", ") + ")" : juce::String())
                    + (sameNames.isEmpty() ? juce::String() : " (round " + sameNames.joinIntoString (", ") + ")") + "; a patch's twelve take about " + juce::String (juce::roundToInt (seconds / 50.0 * 1000.0 * 0.5)) + " ms to make");
     }
 

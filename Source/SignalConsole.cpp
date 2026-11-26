@@ -341,8 +341,9 @@ namespace
 
         node.signature = measured;
         node.address = addressOf (node.patch);
-        // A node the amp's level can't bring within 6 dB of the one held (a slower swell, its level already at +6 dB) is drawn again.
-        return measured.peak >= 0.5f * juce::jlimit (0.0316f, 0.89f, heldPeak);
+        // A node the amp's level can't bring within 6 dB of the one held (a slower swell, its level already at +6 dB) is drawn
+        // again, and so is one that still clips (a drive after the amp that doesn't answer in proportion, as on Cinder Circuit).
+        return measured.peak >= 0.5f * juce::jlimit (0.0316f, 0.89f, heldPeak) && measured.peak <= 1.0f;
     }
 }
 

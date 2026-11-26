@@ -4,6 +4,11 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**Trace: a node that still clips once levelled is drawn again**
+- A node is set to peak where the held patch does, in two passes. On a patch with a drive after the amp that doesn't answer in proportion (Cinder Circuit, a Sequence patch with a crush drive), a node could still peak 0.5 to 0.8 dB over full scale. Such a node is now drawn again, as one too quiet already was; nodes that don't clip are unchanged.
+- Found when the console's check of 600 nodes round 50 patches, taken through the list, came to Cinder Circuit after the near-copies were taken out. Its message now names the patch a clipping node lies round.
+- Tested: `--console` (18 checks).
+
 **Torqwave Synth: two patches named for a style renamed with the styles**
 - EBM Sequence Bass is now **Machine Sequence** and Body Music **Iron Motion**, as the library's styles take generic names in this release. The sounds are unchanged (the same settings' hashes).
 - **Found under the old names:** loading a patch by its old name, a favourite marked under it and a session or preset saved with it all give the renamed patch.
