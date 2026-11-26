@@ -230,7 +230,7 @@ def synth_page():
                      f'<h3>{esc(category)}</h3><p>{esc(", ".join(c["name"] for c in found[:3]))} and {len(found) - 3} more.</p></a>')
 
     body = [f'<div class="title">{crumbs("Torqwave Synth")}<h1>Torqwave Synth: {len(clips)} of its patches</h1>',
-            f'<p>A wavetable synth with 3,743 factory patches in 29 categories. Here are {len(clips)} of them: the ones that use the most of the synth, from every category, '
+            f'<p>A wavetable synth with 3,569 factory patches in 29 categories. Here are {len(clips)} of them: the ones that use the most of the synth, from every category, '
             f'and {len(by_ear)} chosen by ear. Under each name is what the patch is made of, read off the synth with the patch loaded.</p>',
             f'<p class="meta">{HOW} Each patch plays one of the audition phrases Torqwave itself plays when you choose a sound, at 125 BPM; the {len(by_ear)} chosen by ear play a part that suits them. '
             f'{megabytes(clips)} in all; a clip loads only when you play it.</p>',
@@ -434,7 +434,7 @@ def front_clips(prefix):
 def sounds_index():
     total = len(CLIPS)
     rows = []
-    pages = [("synth", "synth.html", "Torqwave Synth", "of 3,743 patches: the ones that use the most of the synth, from all 29 categories"),
+    pages = [("synth", "synth.html", "Torqwave Synth", "of 3,569 patches: the ones that use the most of the synth, from all 29 categories"),
              ("swarm", "stringswarm.html", "StringSwarm", "of 296 presets, from all 11 categories"),
              ("drums", "drums-and-sampler.html#basic-drums", "Basic Drums", f"all {len(set(c['category'] for c in of('drums')))} kits, on grooves written for them"),
              ("sources", "drums-and-sampler.html#the-sources", "Basic Drums: sources", "clips of the 24 synthesized sources any pad can play, each alone and in a groove"),

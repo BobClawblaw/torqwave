@@ -2,7 +2,7 @@
 <rect width="1600" height="900" fill="#111317"/>
 <text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Where Torqwave stands, area by area</text>
 <text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">Rows covered in each area, of the rows this comparison tracks. A count of features, not of depth or maturity.</text>
-<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-25. Torqwave 0.21.1 is released. Sources and method: docs/compare in the Torqwave repository.</text>
+<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-26. Torqwave 0.22.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
 <text x="330.5" y="176.0" font-size="15" fill="#d8dde3" text-anchor="middle" font-weight="bold">Editing</text>
 <text x="330.5" y="196.0" font-size="13" fill="#6b737d" text-anchor="middle" font-weight="normal">5 rows</text>
 <text x="421.5" y="176.0" font-size="15" fill="#d8dde3" text-anchor="middle" font-weight="bold">Repair</text>
@@ -26,7 +26,7 @@
 <text x="1240.5" y="176.0" font-size="15" fill="#d8dde3" text-anchor="middle" font-weight="bold">Platforms</text>
 <text x="1240.5" y="196.0" font-size="13" fill="#6b737d" text-anchor="middle" font-weight="normal">4 rows</text>
 <rect x="40.0" y="212.0" width="1250.0" height="38.6" rx="0" fill="#1d2126"/>
-<text x="50.0" y="237.3" font-size="18" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.21.1</text>
+<text x="50.0" y="237.3" font-size="18" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.22.0</text>
 <rect x="291.0" y="216.0" width="79.0" height="30.6" rx="4" fill="#111317" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="291.0" y="216.0" width="79.0" height="30.6" rx="4" fill="#2f7f5b"/>
 <text x="330.5" y="237.3" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">5/5</text>
@@ -612,7 +612,7 @@
 <rect x="1201.0" y="795.4" width="79.0" height="30.6" rx="4" fill="#2f7f5b"/>
 <text x="1240.5" y="816.7" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="bold">4/4</text>
 <rect x="1316.0" y="150.0" width="234.0" height="680.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
-<text x="1334.0" y="184.0" font-size="19" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.21.1</text>
+<text x="1334.0" y="184.0" font-size="19" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.22.0</text>
 <text x="1334.0" y="208.0" font-size="15" fill="#8b939e" text-anchor="start" font-weight="normal">of 53 rows</text>
 <text x="1334.0" y="282.0" font-size="72" fill="#4fc3a1" text-anchor="start" font-weight="bold">45</text>
 <text x="1334.0" y="310.0" font-size="17" fill="#d8dde3" text-anchor="start" font-weight="normal">rows covered</text>
