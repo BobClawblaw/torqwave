@@ -4,6 +4,12 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The Sequence Library: a preset's level is set as it plays, lanes and all**
+- **What was wrong.** A preset's track gain was set from the peak of its notes alone. One with a filter, level or bend lane plays louder or quieter than that, so the drones peaked anywhere from -16.8 to -2.5 dB and the evolving pads from -21.5 to -6.1 dB.
+- **Now** the test that measures each preset's peak (`--sequences`, and the levels `make_presets.py --calibrate` reads) scales it by how far the lanes move the peak of the pass that loops, with and without them. 80 presets' gains changed.
+- **Measured after,** each rendered once through with its lanes: drones peak from -13.8 to -6.9 dB, evolving pads from -16.0 to -4.6 dB, risers from -13.4 to -6.3 dB. Not all at one level still: a lane moves a pass that loops and a pass played once differently.
+- Tested: `--sequences`, 103 checks, all passing; `make_presets.py --check` writes the same files. The whole suite was not run. Not listened to.
+
 **The site: the sequence, kit and drum clips rendered from the library as it is now** (rendered clips and documents only; goes up with the library, not before)
 - The Sounds pages' sequence clips, every factory kit and Basic Drums' grooves were rendered again from the 1,025 sequences. Sequences: 111 clips where there were 99; 70 are the presets there were (68 of the files byte for byte), 41 are new and 29 are gone. Kits: the same 116, 108 of them changed, since nearly every kit holds a part that was written again. Basic Drums: 41 as before, one groove swapped for another, since one of the four grooves left out was a kit's.
 - By the page's own count, the line that says what a sequence does with its bars, chords and key left out, 543 of the 1,025 are figures only one style has, where 315 of 1,032 were. Every style but Club tools, which has three presets, now shows two clips or more.

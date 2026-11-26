@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "../Source/SequenceLibraryView.h"
 #include "../Source/SequencerView.h"
+#include "../Source/SequencePreview.h"
 #include "../Source/AudioEngine.h"
 #include "../Source/BuiltInEffects.h"
 #include "../Source/WaveSynth.h"
@@ -572,8 +573,22 @@ void runPresetTests (AudioEngine& engine)
 
                 juce::AudioBuffer<float> out;
                 const auto error = Instrument::render (engine.pluginFormatManager, description, state, phrase, 48000.0, 2, out);
-                const auto peak = out.getMagnitude (0, 0, out.getNumSamples());
+                auto peak = out.getMagnitude (0, 0, out.getNumSamples());
                 const auto gain = juce::Decibels::decibelsToGain ((float) q->voice->getDoubleAttribute ("gainDb"));
+
+                // A preset with a filter, level or bend lane plays louder or quieter than its notes alone:
+                // its peak is taken as it plays, by how far the lanes move the peak of the pass that loops.
+                if (error.isEmpty() && ! q->lanes.empty())
+                {
+                    auto bare = *q;
+                    bare.lanes.clear();
+                    juce::AudioBuffer<float> with, without;
+
+                    if (SequencePreview::render (*q, q->writtenTempo, q->beatsPerBar, 48000.0, engine.pluginFormatManager, with).isEmpty()
+                          && SequencePreview::render (bare, q->writtenTempo, q->beatsPerBar, 48000.0, engine.pluginFormatManager, without).isEmpty()
+                          && without.getMagnitude (0, without.getNumSamples()) > 1.0e-6f)
+                        peak *= with.getMagnitude (0, with.getNumSamples()) / without.getMagnitude (0, without.getNumSamples());
+                }
 
                 // For Scripts/make_presets.py --calibrate: each preset's peak without its track gain.
                 if (const auto levels = juce::SystemStats::getEnvironmentVariable ("TQ_PRESET_LEVELS", {}); levels.isNotEmpty() && error.isEmpty())
