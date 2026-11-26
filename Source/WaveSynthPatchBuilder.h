@@ -85,7 +85,7 @@ namespace WaveSynthPatchBuilder
 
         Builder& amp (float a, float d, float s, float r, float curve = 50.0f)    { return env (1, a, d, s, r, curve); }
 
-        Builder& level (float db, float velocity = 70.0f)               { return set ("ampLevel", db).set ("ampVelocity", velocity); }
+        Builder& level (double db, double velocity = 70.0)             { return set ("ampLevel", db).set ("ampVelocity", velocity); }
         Builder& mono (float glideMs = 0.0f, bool legato = true)         { return set ("voiceMode", legato ? 2 : 1).set ("glideTime", glideMs); }
         Builder& glideAlways()                                           { return set ("glideMode", 1); }
         Builder& bend (float st)                                         { return set ("bendRange", st); }

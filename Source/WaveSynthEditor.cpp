@@ -1039,8 +1039,8 @@ namespace
         {
             const auto x = (float) getMouseXYRelative().x;
 
-            if (x < 24.0f)                       return synth.isBrowsingFavourites() ? "The favourite before this one" : synth.isBrowsingDecrypted() ? "The Decrypted patch before this one" : "The patch before this one";
-            if (x > (float) getWidth() - 24.0f)  return synth.isBrowsingFavourites() ? "The next favourite" : synth.isBrowsingDecrypted() ? "The next Decrypted patch" : "The next patch";
+            if (x < 24.0f)                       return synth.isBrowsingFavourites() ? "The favourite before this one" : synth.isBrowsingDecrypted() ? "The Decrypted patch before this one" : synth.isBrowsingComplex() ? "The Complex patch before this one" : "The patch before this one";
+            if (x > (float) getWidth() - 24.0f)  return synth.isBrowsingFavourites() ? "The next favourite" : synth.isBrowsingDecrypted() ? "The next Decrypted patch" : synth.isBrowsingComplex() ? "The next Complex patch" : "The next patch";
             if (heartBounds().contains (getMouseXYRelative().toFloat()))
                 return WaveSynth::Favourites::shared().contains (synth.getPatchName()) ? "A favourite: click to unmark it" : "Mark this patch as a favourite";
 
@@ -1137,7 +1137,8 @@ namespace
             const auto favourite = index >= 0 && WaveSynth::Favourites::shared().contains (synth.getPatchName());
             const auto category = favourite && synth.isBrowsingFavourites() ? juce::String ("Favourites")
                                 : index >= 0 ? WaveSynth::factoryPatches()[(size_t) index].category
-                                : onDecrypted() ? juce::String ("Decrypted") : juce::String ("Patch");
+                                : onDecrypted() ? juce::String ("Decrypted")
+                                : complexIndex() >= 0 ? WaveSynth::complexPatches()[(size_t) complexIndex()].category : juce::String ("Patch");
 
             // The heart: filled when the patch is a favourite, an outline when it could be one.
             if (index >= 0)
@@ -1198,7 +1199,7 @@ namespace
                 return;
             }
 
-            constexpr int decryptedIds = 2000000, renameId = 2900001, deleteId = 2900002;
+            constexpr int decryptedIds = 2000000, renameId = 2900001, deleteId = 2900002, complexIds = 3000000;
 
             // A right-click on one of the user's own: its name and whether it stays.
             if (e.mods.isPopupMenu())
@@ -1229,6 +1230,31 @@ namespace
                 auto decryptedTicked = false;
                 const auto decrypted = WaveSynthEditor::decryptedMenu (onDecrypted() ? current : juce::String(), decryptedIds + 1, renameId, deleteId, decryptedTicked);
                 menu.addSubMenu ("Decrypted", decrypted, true, nullptr, decryptedTicked);
+
+                // The Complex patches: four oscillators or more each, a sub-menu for each category.
+                juce::PopupMenu complexMenu;
+                auto complexTicked = false;
+                const auto& complex = WaveSynth::complexPatches();
+
+                for (auto& c : WaveSynth::patchCategories())
+                {
+                    juce::PopupMenu category;
+                    auto ticked = false;
+
+                    for (size_t i = 0; i < complex.size(); ++i)
+                        if (complex[i].category == c)
+                        {
+                            ticked = ticked || complex[i].name == current;
+                            category.addItem (complexIds + 1 + (int) i, complex[i].name, true, complex[i].name == current);
+                        }
+
+                    if (category.getNumItems() > 0)
+                        complexMenu.addSubMenu (c, category, true, nullptr, ticked);
+
+                    complexTicked = complexTicked || ticked;
+                }
+
+                menu.addSubMenu ("Complex", complexMenu, true, nullptr, complexTicked);
                 menu.addSeparator();
             }
 
@@ -1280,6 +1306,22 @@ namespace
                 if (chosen == renameId)     { safe->askRename(); return; }
                 if (chosen == deleteId)     { safe->askDelete(); return; }
 
+                // A Complex patch: the arrows then go through those.
+                if (chosen > complexIds)
+                {
+                    const auto& complex = WaveSynth::complexPatches();
+
+                    if (juce::isPositiveAndBelow (chosen - complexIds - 1, (int) complex.size())
+                        && safe->synth.loadPatch (complex[(size_t) (chosen - complexIds - 1)].name))
+                    {
+                        safe->synth.setBrowsingComplex (true);
+                        safe->repaint();
+                        if (safe->onLoaded != nullptr) safe->onLoaded();
+                    }
+
+                    return;
+                }
+
                 // One of the user's Decrypted patches: the arrows then go through those.
                 if (chosen > decryptedIds)
                 {
@@ -1297,6 +1339,7 @@ namespace
                 }
 
                 safe->synth.setBrowsingDecrypted (false);
+                safe->synth.setBrowsingComplex (false);
 
                 // A patch chosen from the favourites puts the arrows on the favourites; one from a category, on every patch.
                 safe->synth.setBrowsingFavourites (chosen > favouriteIds);
@@ -1318,6 +1361,18 @@ namespace
 
             for (size_t i = 0; i < all.size(); ++i)
                 if (all[i].name == synth.getPatchName())
+                    return (int) i;
+
+            return -1;
+        }
+
+        /** The Complex patch the synth is on, by name; -1 on any other. */
+        int complexIndex() const
+        {
+            const auto& complex = WaveSynth::complexPatches();
+
+            for (size_t i = 0; i < complex.size(); ++i)
+                if (complex[i].name == synth.getPatchName())
                     return (int) i;
 
             return -1;

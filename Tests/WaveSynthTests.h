@@ -6,6 +6,12 @@ class AudioEngine;
     their settings, every modulation route, block-size invariance, old sessions and CPU. */
 void runWaveSynthTests (AudioEngine&);
 
+/** The Complex patches (WaveSynthComplexTests.cpp): four oscillators or more, nine in some of each
+    category, the low end mono, level, weight and cut, no clicks, eight notes at once, macros that move
+    the sound, and the distance from each other and from the factory patches. Run by --synth, or alone
+    with `TorqwaveTests --complex`. */
+void runComplexPatchTests();
+
 namespace juce { class File; }
 
 /** Writes a line for each factory patch, `name|hash`, the hash of every sample of a held minor chord

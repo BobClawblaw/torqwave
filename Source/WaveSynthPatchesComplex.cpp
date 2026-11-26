@@ -29,11 +29,11 @@ namespace WaveSynthPatchBuilder
             .osc (3, pulse, 30, 30).pitch (3, 12).warp (3, wSqueeze, 30)
             .osc (4, sync, 40, 45).pitch (4, 12).warp (4, wSync, 20).levelEnv (4, 0, 0, 70, 0)
             .osc (7, fm, 85, 35).pitch (7, 24).levelEnv (7, 0, 0, 18, 0).route (7, 100)
-            .osc (8, analog, sawPos, 22).pitch (8, 12).unison (8, 3, 18, 100).route (8, 100)
-            .osc (9, additive, 90, 10).pitch (9, 24).route (9, 100)
-            .parallel().filter (1, ladder24, 380, 25, 20, 30).filter (2, svfHigh, 300, 10)
+            .osc (8, analog, sawPos, 40).pitch (8, 12).unison (8, 3, 18, 100).route (8, 100)
+            .osc (9, additive, 90, 25).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder24, 650, 35, 30, 30).filter (2, svfHigh, 300, 10)
             .env (2, 0, 180, 0, 80, 70).mod (env2, "filter1Cutoff", 30).mod (env2, "osc4WarpAmount", 40)
-            .env (3, 0, 90, 0, 50, 70).mod (env3, "osc2WarpAmount", 35)
+            .env (3, 0, 90, 0, 50, 70).mod (env3, "osc2WarpAmount", 60)
             .lfoSync (1, steps, bar1, 0).stepPattern (1, { 0, 60, -40, 100, 0, -80, 40, 60, 0, 100, -40, 20, 0, -60, 80, -100 })
             .mod (lfo1, "osc2WarpAmount", 15).mod (lfo1, "osc8Volume", 15)
             .amp (1, 160, 40, 60).mono (0.0f, false).drive (tube, 25, 6000).level (-5.3)
@@ -46,14 +46,14 @@ namespace WaveSynthPatchBuilder
         add ("Hollow Gantry", "Bass").osc (1, analog, sinePos, 75)
             .osc (2, pulse, 50, 55).warp (2, wMirror, 20)
             .osc (3, growl, 40, 28).pitch (3, 12)
-            .osc (4, analog, sinePos, 40).pitch (4, 24).fm (4, 5, 35).levelEnv (4, 0, 0, 140, 0).route (4, 100)
+            .osc (4, analog, sinePos, 70).pitch (4, 24).fm (4, 5, 35).levelEnv (4, 0, 0, 800, 0).route (4, 100)
             .modulator (5, analog, sinePos).pitch (5, 21, 69)
             .filter (1, ladder24, 500, 30, 25, 30)
             .lfoSync (1, triangle, eighthT, 0).mod (lfo1, "osc2WarpAmount", 25).mod (lfo1, "filter1Cutoff", 10)
             .env (2, 0, 220, 0, 90, 70).mod (env2, "filter1Cutoff", 30)
             .amp (1, 200, 50, 70).mono (0.0f, false).drive (hard, 20, 5000).level (-6.6)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Bell").mod (macro2, "osc4Volume", 40)
-            .macro (3, "Mirror").mod (macro3, "osc2WarpAmount", 40).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
+            .macro (3, "Growl").mod (macro3, "osc3Volume", 50).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         //======================================================================
         // Sub
@@ -62,33 +62,34 @@ namespace WaveSynthPatchBuilder
         // that opens and settles, so the note is heard on small speakers; 3 the third harmonic for
         // the same; strike 4, a click; grit 5, a crushed metal octave very low in the mix.
         add ("Basalt Floor", "Sub").osc (1, analog, sinePos, 85)
-            .osc (2, analog, trianglePos, 30).pitch (2, 12).warp (2, wFold, 10).levelEnv (2, 0, 30, 250, 35)
-            .osc (3, analog, sinePos, 14).pitch (3, 19)
+            .osc (2, analog, trianglePos, 55).pitch (2, 12).warp (2, wFold, 55).levelEnv (2, 0, 30, 250, 85)
+            .osc (3, analog, sinePos, 25).pitch (3, 19)
             .osc (4, pulse, 15, 22).pitch (4, 24).levelEnv (4, 0, 0, 14, 0)
             .osc (5, metal, 20, 6).pitch (5, 12).warp (5, wCrush, 50)
-            .filter (1, ladder12, 900, 0, 0, 50)
+            .filter (1, ladder12, 1500, 0, 0, 50)
             .env (2, 0, 120, 0, 60, 70).mod (env2, "osc2WarpAmount", 30)
+            .lfoSync (1, sine, half, 0).mod (lfo1, "osc2WarpAmount", 50)
             .env (3, 0, 45, 0, 30, 70).mod (env3, "osc1Pitch", 4.17f).mod (env3, "osc2Pitch", 4.17f)
-            .amp (1, 300, 80, 90).mono (0.0f, false).level (-2.9)
-            .macro (1, "Fold").mod (macro1, "osc2WarpAmount", 40).macro (2, "Overtone").mod (macro2, "osc3Volume", 30)
-            .macro (3, "Click").mod (macro3, "osc4Volume", 40).macro (4, "Grit").mod (macro4, "osc5Volume", 30);
+            .amp (1, 300, 80, 90).mono (0.0f, false).drive (foldDrive, 0, 6000).level (-2.9)
+            .macro (1, "Grind").mod (macro1, "fxDriveAmount", 60).macro (2, "Overtone").mod (macro2, "osc3Volume", 60)
+            .macro (3, "Body").mod (macro3, "osc2Volume", 60).macro (4, "Grit").mod (macro4, "osc5Volume", 60);
 
         // Nine. Weight 1; 2 to 5 the second to fifth harmonics, each dying at its own rate, so a note
         // thumps bright and settles to a sub; 2 FM'd by 7 (unheard) at its own pitch, struck harder at the
         // start; 4 FM'd by 9 (unheard) an octave below, breathing on the half bar; strike 6; grit 8.
         add ("Pressure Vault", "Sub").osc (1, analog, sinePos, 80)
-            .osc (2, analog, sinePos, 26).pitch (2, 12).fm (2, 7, 10).modulator (7, analog, sinePos).pitch (7, 12)
-            .osc (3, analog, sinePos, 12).pitch (3, 19).levelEnv (3, 0, 0, 600, 40)
-            .osc (4, analog, sinePos, 9).pitch (4, 24).fm (4, 9, 12).levelEnv (4, 0, 0, 300, 20).modulator (9, analog, sinePos)
-            .osc (5, analog, sinePos, 6).pitch (5, 28).levelEnv (5, 0, 0, 180, 0)
+            .osc (2, analog, sinePos, 40).pitch (2, 12).fm (2, 7, 35).modulator (7, analog, sinePos).pitch (7, 19)
+            .osc (3, analog, sinePos, 40).pitch (3, 19).levelEnv (3, 0, 0, 1200, 75)
+            .osc (4, analog, sinePos, 30).pitch (4, 24).fm (4, 9, 30).levelEnv (4, 0, 0, 700, 60).modulator (9, analog, sinePos)
+            .osc (5, analog, sinePos, 22).pitch (5, 28).levelEnv (5, 0, 0, 400, 45)
             .osc (6, fm, 70, 30).pitch (6, 24).levelEnv (6, 0, 0, 12, 0)
             .osc (8, analog, trianglePos, 5).pitch (8, 12).warp (8, wCrush, 60)
-            .filter (1, ladder12, 1200, 0, 0, 60)
+            .filter (1, ladder12, 2200, 0, 0, 60)
             .env (3, 0, 40, 0, 30, 70).mod (env3, "osc1Pitch", 4.17f).mod (env3, "osc2Pitch", 4.17f).mod (env3, "osc2WarpAmount", 30)
-            .lfoSync (1, sine, half, 0).mod (lfo1, "osc4WarpAmount", 10)
-            .amp (1, 300, 85, 90).mono (0.0f, false).level (-2.3)
-            .macro (1, "Harmonics").mod (macro1, "osc3Volume", 30).macro (2, "Knock").mod (macro2, "osc6Volume", 40)
-            .macro (3, "Growl").mod (macro3, "osc4WarpAmount", 40).macro (4, "Grit").mod (macro4, "osc8Volume", 30);
+            .lfoSync (1, sine, half, 0).mod (lfo1, "osc4WarpAmount", 30)
+            .amp (1, 300, 85, 90).mono (0.0f, false).drive (foldDrive, 0, 6000).level (-2.3)
+            .macro (1, "Harmonics").mod (macro1, "osc3Volume", 60).macro (2, "Bloom").mod (macro2, "osc4Volume", 60)
+            .macro (3, "Grind").mod (macro3, "fxDriveAmount", 60).macro (4, "Grit").mod (macro4, "osc8Volume", 70);
 
         //======================================================================
         // Reese
@@ -101,8 +102,8 @@ namespace WaveSynthPatchBuilder
             .osc (2, analog, sawPos, 55).pitch (2, 0, -11)
             .osc (3, analog, sawPos, 55).pitch (3, 0, 11).fm (3, 8, 4).modulator (8, analog, sinePos).pitch (8, 0, 3)
             .osc (4, analog, sawPos, 25).pitch (4, 12).unison (4, 4, 25, 100).route (4, 100)
-            .osc (5, growl, 30, 30).fm (5, 9, 12).modulator (9, analog, trianglePos).pitch (9, -12)
-            .osc (6, vowel, 50, 18).pitch (6, 12)
+            .osc (5, growl, 30, 40).fm (5, 9, 12).modulator (9, analog, trianglePos).pitch (9, -12)
+            .osc (6, vowel, 50, 30).pitch (6, 12)
             .osc (7, metal, 40, 6).pitch (7, 24).warp (7, wFold, 30).route (7, 100)
             .parallel().filter (1, ladder24, 420, 30, 30, 20).filter (2, svfHigh, 260, 10)
             .lfoSync (1, sine, bars2, 0).mod (lfo1, "filter1Cutoff", 18).mod (lfo1, "osc5Position", 30)
@@ -118,13 +119,13 @@ namespace WaveSynthPatchBuilder
         add ("Smolder Choir", "Reese").osc (1, analog, sinePos, 60)
             .osc (2, vowel, 20, 50).pitch (2, 0, -9)
             .osc (3, vowel, 60, 50).pitch (3, 0, 9)
-            .osc (4, vowel, 40, 22).pitch (4, 12).unison (4, 3, 20, 100).route (4, 100)
-            .osc (5, sync, 30, 35).pitch (5, 12).warp (5, wSync, 25).levelEnv (5, 0, 0, 120, 0)
+            .osc (4, vowel, 40, 35).pitch (4, 12).unison (4, 3, 20, 100).route (4, 100)
+            .osc (5, sync, 30, 50).pitch (5, 12).warp (5, wSync, 25).levelEnv (5, 0, 0, 250, 0)
             .parallel().filter (1, ladder12, 700, 25, 20, 20).filter (2, svfHigh, 300, 10)
             .lfoSync (1, sine, bar1, 0).mod (lfo1, "osc2Position", 35).mod (lfo1, "osc3Position", -35)
             .lfo (2, drift, 0.2f, 0).mod (lfo2, "filter1Cutoff", 10).mod (lfo2, "osc4Position", 25)
             .amp (5, 400, 100, 200).mono (60).drive (tube, 30, 5000).level (-11.4)
-            .macro (1, "Vowel").mod (macro1, "osc2Position", 30).macro (2, "Bite").mod (macro2, "osc5Volume", 40)
+            .macro (1, "Vowel").mod (macro1, "osc2Position", 30).macro (2, "Shear").mod (macro2, "osc3Fine", 10)
             .macro (3, "Width").mod (macro3, "osc4Volume", 35).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         //======================================================================
@@ -150,7 +151,7 @@ namespace WaveSynthPatchBuilder
             .lfoSync (2, triangle, bars4, 0).mod (lfo2, "filter1Cutoff", 15)
             .amp (1, 200, 70, 60).mono (70).drive (fuzz, 30, 7000).delay (eighthD, 30, 12, 3000, false).level (-19.9)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Corrode").mod (macro2, "osc1WarpAmount", 40)
-            .macro (3, "Squeeze").mod (macro3, "osc3WarpAmount", 45).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
+            .macro (3, "Res").mod (macro3, "filter1Resonance", 25).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         // Five. Body 1, a plucked string, so every note of the line is struck; 2 a saw FM'd by 5 (unheard,
         // the third harmonic) as the filter envelope opens; weight 3 an octave down; 4 a vowel an octave
@@ -158,7 +159,7 @@ namespace WaveSynthPatchBuilder
         add ("Wet Circuit", "Acid").osc (1, string, 75, 55)
             .osc (2, analog, sawPos, 55).fm (2, 5, 0).modulator (5, analog, sinePos).pitch (5, 19)
             .osc (3, analog, squarePos, 30).pitch (3, -12)
-            .osc (4, vowel, 10, 25).pitch (4, 12)
+            .osc (4, vowel, 10, 40).pitch (4, 12)
             .filter (1, ladder24, 650, 65, 30, 40)
             .env (2, 0, 180, 0, 80, 75).mod (env2, "filter1Cutoff", 40).mod (env2, "osc2WarpAmount", 25)
             .env (3, 0, 300, 0, 100, 60).mod (env3, "osc4Position", 50)
@@ -200,7 +201,7 @@ namespace WaveSynthPatchBuilder
             .lfo (1, sine, 5.0f, 1).lfoFade (1, 600).mod (lfo1, "osc1Fine", 5).mod (lfo1, "osc3Fine", 5)
             .lfoSync (2, triangle, half, 0).mod (lfo2, "osc1Position", 35).mod (lfo2, "osc2Position", -30)
             .env (2, 0, 500, 0, 200).mod (env2, "osc3WarpAmount", 25)
-            .amp (10, 400, 90, 300).mono (80).chorus (25).delay (quarter, 30, 20, 4000).reverb (25, 70, 2.5f).level (0.3)
+            .amp (10, 400, 90, 300).mono (80).drive (tube, 0, 8000).chorus (25).delay (quarter, 30, 20, 4000).reverb (25, 70, 2.5f).level (0.3)
             .macro (1, "Vowel").mod (macro1, "osc1Position", 30).macro (2, "Choir").mod (macro2, "osc2Volume", 30)
             .macro (3, "Static").mod (macro3, "osc3WarpAmount", 35).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
@@ -225,18 +226,18 @@ namespace WaveSynthPatchBuilder
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Dub").mod (macro2, "fxDelayFeedback", 30)
             .macro (3, "Bite").mod (macro3, "osc6Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
-        // Five. Body 1, metal; 2 an FM table a fifth up; weight 3, a growl an octave down; 4 a ring, a
+        // Five. Body 1, metal; 2 an FM table a fifth up; 3 a growl at the note, the low end left to the kick; 4 a ring, a
         // sine an octave up FM'd by 5 (unheard) two and a half times its pitch, dying first. Fuzz into a
         // large room.
-        add ("Rust Cathedral", "Stab").osc (1, metal, 40, 45).warp (1, wCrush, 0)
+        add ("Rust Cathedral", "Stab").osc (1, metal, 40, 45).warp (1, wFold, 0)
             .osc (2, fm, 60, 30).pitch (2, 7)
-            .osc (3, growl, 30, 40).pitch (3, -12)
+            .osc (3, growl, 30, 30)
             .osc (4, analog, sinePos, 35).pitch (4, 12).fm (4, 5, 40).levelEnv (4, 0, 0, 250, 0).modulator (5, analog, sinePos).pitch (5, 15, 86)
             .filter (1, ladder12, 2500, 20, 0, 30)
             .env (2, 0, 180, 0, 100, 70).mod (env2, "filter1Cutoff", 30).mod (env2, "osc4WarpAmount", 30)
             .amp (1, 400, 0, 350).drive (fuzz, 35, 4500).reverb (30, 85, 3.0f).level (-10.6)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Ring").mod (macro2, "osc4Volume", 30)
-            .macro (3, "Rust").mod (macro3, "osc1WarpAmount", 50).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
+            .macro (3, "Rust").mod (macro3, "osc1WarpAmount", 70).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
         //======================================================================
         // Chord
@@ -259,7 +260,7 @@ namespace WaveSynthPatchBuilder
             .env (2, 0, 1200, 30, 600).mod (env2, "filter1Cutoff", 20)
             .amp (8, 600, 85, 900).chorus (30).reverb (30, 80, 3.5f).level (4.4)
             .macro (1, "Bloom").mod (macro1, "filter1Cutoff", 30).macro (2, "Voice").mod (macro2, "osc2Volume", 30)
-            .macro (3, "Pluck").mod (macro3, "osc7Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
+            .macro (3, "Air").mod (macro3, "osc9Volume", 50).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
         // Five. A chord that rewires itself each sixteenth: two step patterns hand the level between body
         // 1 (a pulse) and 2 (a saw), and between 3 (an FM table an octave up, FM'd by 5, unheard, a fifth
@@ -275,7 +276,7 @@ namespace WaveSynthPatchBuilder
             .mod (lfo2, "osc3Volume", 30).mod (lfo2, "osc4Volume", -20)
             .env (2, 0, 500, 30, 300).mod (env2, "filter1Cutoff", 20)
             .amp (3, 500, 80, 300).reverb (20, 60, 2.0f).level (-11.5)
-            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Metal").mod (macro2, "osc4Volume", 30)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Metal").mod (macro2, "osc4Volume", 60)
             .macro (3, "FM").mod (macro3, "osc3WarpAmount", 40).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
         //======================================================================
@@ -296,7 +297,7 @@ namespace WaveSynthPatchBuilder
             .env (2, 0, 250, 0, 150, 70).mod (env2, "filter1Cutoff", 30)
             .lfoSync (1, randomShape, sixteenth, 0).mod (lfo1, "osc2WarpAmount", 15)
             .amp (1, 600, 0, 400).delay (eighthD, 40, 25, 4000).reverb (20, 60, 2.0f).level (5)
-            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 35).macro (2, "Tine").mod (macro2, "osc4Volume", 30)
+            .macro (1, "Echo").mod (macro1, "fxDelayMix", 40).macro (2, "Tine").mod (macro2, "osc4Volume", 30)
             .macro (3, "Thump").mod (macro3, "osc6Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
         // Four. Body 1, a plucked string; 2 metal an octave up, dying fast; 3 an FM table; strike 4.
@@ -307,8 +308,8 @@ namespace WaveSynthPatchBuilder
             .filter (1, ladder12, 2800, 25, 10, 50)
             .env (2, 0, 200, 0, 120, 70).mod (env2, "filter1Cutoff", 30)
             .lfoSync (1, triangle, bars2, 0).mod (lfo1, "osc3Position", 40)
-            .amp (1, 400, 0, 300).delay (sixteenthD, 35, 20, 3500).level (4.3)
-            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 35).macro (2, "Copper").mod (macro2, "osc2Volume", 30)
+            .amp (1, 400, 0, 300).drive (hard, 0, 8000).delay (sixteenthD, 35, 20, 3500).level (4.3)
+            .macro (1, "Echo").mod (macro1, "fxDelayMix", 40).macro (2, "Copper").mod (macro2, "osc2Volume", 30)
             .macro (3, "Tick").mod (macro3, "osc4Volume", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         //======================================================================
@@ -356,8 +357,8 @@ namespace WaveSynthPatchBuilder
         // FM'd by 9's metal (unheard); strike 6, the hammer; width 7, a trembling octave; grit 8. All
         // through a tube drive that breaks up.
         add ("Fused Tine", "Keys").osc (1, analog, sinePos, 45).fm (1, 2, 12).modulator (2, analog, sinePos)
-            .osc (3, analog, sinePos, 20).pitch (3, 24).fm (3, 4, 30).levelEnv (3, 0, 0, 350, 10).modulator (4, analog, sinePos).pitch (4, 24, 40)
-            .osc (5, analog, squarePos, 10).pitch (5, 12).fm (5, 9, 15).levelEnv (5, 0, 0, 200, 0).modulator (9, metal, 30).pitch (9, 12)
+            .osc (3, analog, sinePos, 32).pitch (3, 24).fm (3, 4, 30).levelEnv (3, 0, 0, 350, 10).modulator (4, analog, sinePos).pitch (4, 24, 40)
+            .osc (5, analog, squarePos, 20).pitch (5, 12).fm (5, 9, 15).levelEnv (5, 0, 0, 200, 0).modulator (9, metal, 30).pitch (9, 12)
             .osc (6, pulse, 80, 20).pitch (6, 24).levelEnv (6, 0, 0, 8, 0)
             .osc (7, analog, sinePos, 14).pitch (7, 12).unison (7, 3, 10, 100)
             .osc (8, growl, 50, 8).warp (8, wCrush, 60)
@@ -398,7 +399,7 @@ namespace WaveSynthPatchBuilder
             .filter (1, ladder12, 7000, 10, 0, 20)
             .lfo (1, sine, 6.5f, 0).mod (lfo1, "osc4Pan", 40).mod (lfo1, "osc6Pan", -40).mod (lfo1, "osc5Fine", 4)
             .amp (1, 500, 40, 150).drive (hard, 50, 7000).chorus (30, 4.0f, 40).reverb (15, 50, 1.5f).level (-15.7)
-            .macro (1, "Click").mod (macro1, "osc7Volume", 40).macro (2, "Perc").mod (macro2, "osc8Volume", 40)
+            .macro (1, "Low").mod (macro1, "osc1Volume", 50).macro (2, "Perc").mod (macro2, "osc8Volume", 40)
             .macro (3, "Buzz").mod (macro3, "osc2WarpAmount", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         // Five, an industrial organ. Body 1 and 2, squares an octave apart, 1 folded by the macro and a
@@ -463,7 +464,7 @@ namespace WaveSynthPatchBuilder
             .filter (1, ladder12, 3500, 15, 0, 30)
             .env (3, 0, 220, 0, 100, 60).mod (env3, "osc1Pitch", -4.17f).mod (env3, "osc2Pitch", -4.17f).mod (env3, "osc3Pitch", -4.17f)
             .lfo (1, sine, 0.9f, 0).mod (lfo1, "osc2Position", 30)
-            .amp (5, 500, 90, 300).mono (90).glideAlways().drive (tube, 25, 7000).chorus (30).reverb (15, 60, 2.0f).level (1.7)
+            .amp (5, 500, 90, 300).mono (90).glideAlways().drive (tube, 25, 7000).reverb (15, 60, 2.0f).level (1.7)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Hoover").mod (macro2, "osc2Volume", 30)
             .macro (3, "Throat").mod (macro3, "osc8Volume", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
@@ -479,7 +480,7 @@ namespace WaveSynthPatchBuilder
             .env (2, 60, 300, 60, 200).mod (env2, "osc1WarpAmount", 40).mod (env2, "osc2WarpAmount", 30).mod (velocity, "osc1WarpAmount", 15)
             .amp (40, 400, 85, 250).reverb (20, 70, 2.5f).level (0.2)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Blare").mod (macro2, "osc1WarpAmount", 30)
-            .macro (3, "Breath").mod (macro3, "osc5Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
+            .macro (3, "Growl").mod (macro3, "osc3Volume", 50).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
         //======================================================================
         // Strings
@@ -499,7 +500,7 @@ namespace WaveSynthPatchBuilder
             .env (2, 400, 1500, 60, 900).mod (env2, "filter1Cutoff", 20)
             .lfo (1, sine, 0.18f, 0).mod (lfo1, "osc1UnisonDetune", 15).mod (lfo1, "osc5Position", 30)
             .amp (350, 800, 90, 900).chorus (30).reverb (35, 80, 3.0f).level (5.6)
-            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Bow").mod (macro2, "osc4Volume", 30)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Vowel").mod (macro2, "osc5Volume", 50)
             .macro (3, "Wall").mod (macro3, "osc2Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
         // Four, tremolo strings for a chase. Body 1 (three saws) and 2 (two an octave up), cut in triplet
@@ -533,8 +534,8 @@ namespace WaveSynthPatchBuilder
             .env (3, 6000, 0, 100, 2000).mod (env3, "osc1WarpAmount", 35).mod (env3, "osc6WarpAmount", 30)
             .lfoSync (1, triangle, bars4, 0).mod (lfo1, "filter1Cutoff", 15).mod (lfo1, "osc2Position", 30)
             .lfo (2, drift, 0.1f, 0).mod (lfo2, "osc3Position", 30)
-            .amp (900, 1000, 100, 2500).chorus (30).reverb (40, 85, 5.0f).level (5.5)
-            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Corrode").mod (macro2, "osc1WarpAmount", 40)
+            .amp (900, 1000, 100, 2500).reverb (22, 85, 5.0f).level (5.5)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Corrode").mod (macro2, "osc1WarpAmount", 80)
             .macro (3, "Metal").mod (macro3, "osc5Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
         // Five. Body 1 (three vowels) and 2 (two an octave up) whose mouths an eight-bar LFO turns opposite
@@ -545,7 +546,7 @@ namespace WaveSynthPatchBuilder
             .osc (4, additive, 30, 10).pitch (4, 19)
             .filter (1, ladder12, 3000, 15, 0, 20)
             .lfoSync (1, sine, bars8, 0).mod (lfo1, "osc1Position", 40).mod (lfo1, "osc2Position", -40)
-            .amp (1200, 1000, 100, 3000).phaser (30, 0.15f, 40).reverb (45, 85, 5.0f).level (3.4)
+            .amp (1200, 1000, 100, 3000).phaser (30, 0.15f, 40).reverb (30, 85, 5.0f).level (3.4)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Vowel").mod (macro2, "osc1Position", 30)
             .macro (3, "Glow").mod (macro3, "osc3WarpAmount", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
@@ -557,8 +558,8 @@ namespace WaveSynthPatchBuilder
         // octave down; width 8; grit 9 arriving over four seconds. A drift LFO moves both FMs.
         add ("Turbine Monastery", "Drone").osc (1, analog, sinePos, 40)
             .osc (2, analog, sawPos, 25).fm (2, 3, 10).modulator (3, analog, sinePos).pitch (3, 0, 1)
-            .osc (4, vowel, 40, 18).pitch (4, 12)
-            .osc (5, metal, 30, 12).pitch (5, 7).fm (5, 6, 20).modulator (6, analog, sinePos).pitch (6, 19, -13)
+            .osc (4, vowel, 40, 30).pitch (4, 12)
+            .osc (5, metal, 30, 20).pitch (5, 7).fm (5, 6, 20).modulator (6, analog, sinePos).pitch (6, 19, -13)
             .osc (7, growl, 50, 18).pitch (7, -12)
             .osc (8, additive, 70, 6).pitch (8, 24).unison (8, 3, 30, 100)
             .osc (9, pulse, 50, 6).pitch (9, 12).warp (9, wCrush, 70).levelEnv (9, 4000, 0, 0, 100)
@@ -566,9 +567,9 @@ namespace WaveSynthPatchBuilder
             .lfo (1, drift, 0.07f, 0).mod (lfo1, "osc2WarpAmount", 20).mod (lfo1, "osc5WarpAmount", 25).mod (lfo1, "filter1Cutoff", 10)
             .lfo (2, randomShape, 0.3f, 0, 80).mod (lfo2, "osc4Position", 40).mod (lfo2, "osc9Volume", 10)
             .env (2, 8000, 0, 100, 3000).mod (env2, "filter1Cutoff", 25)
-            .amp (2000, 1000, 100, 4000).reverb (22, 90, 6.0f).level (2.7)
-            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Turbine").mod (macro2, "osc5WarpAmount", 35)
-            .macro (3, "Choir").mod (macro3, "osc4Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
+            .amp (600, 1000, 100, 4000).reverb (22, 90, 6.0f).level (2.7)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Metal").mod (macro2, "osc5Volume", 50)
+            .macro (3, "Choir").mod (macro3, "osc4Volume", 80).macro (4, "Space").mod (macro4, "fxReverbMix", 60);
 
         // Four, mains hum. Body 1, a square; 2 a pulse an octave up three cents off; 3 a growl a twelfth
         // up; weight 4. A comb tuned to the note, its cutoff wandering.
@@ -581,7 +582,7 @@ namespace WaveSynthPatchBuilder
             .lfo (2, square, 0.5f, 0, 70).mod (lfo2, "osc3Volume", 10)
             .amp (1500, 1000, 100, 3000).reverb (25, 80, 4.0f).level (4.5)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Comb").mod (macro2, "filter2Resonance", 30)
-            .macro (3, "Buzz").mod (macro3, "osc3Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
+            .macro (3, "Buzz").mod (macro3, "osc3Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 50);
 
         //======================================================================
         // Bell
@@ -595,11 +596,11 @@ namespace WaveSynthPatchBuilder
             .osc (3, analog, sinePos, 22).pitch (3, 3, 16).levelEnv (3, 0, 0, 2200, 0).pan (3, -30)
             .osc (4, analog, sinePos, 15).pitch (4, 7, 2).levelEnv (4, 0, 0, 1600, 0).pan (4, 30)
             .osc (5, analog, sinePos, 30).pitch (5, 12).fm (5, 9, 0).levelEnv (5, 0, 0, 2500, 0).modulator (9, analog, sinePos).pitch (9, 17)
-            .osc (6, analog, sinePos, 14).pitch (6, 15, 86).levelEnv (6, 0, 0, 1000, 0).pan (6, -40)
+            .osc (6, analog, sinePos, 24).pitch (6, 15, 86).levelEnv (6, 0, 0, 1000, 0).pan (6, -40)
             .osc (7, analog, sinePos, 12).pitch (7, 19, 2).levelEnv (7, 0, 0, 800, 0).pan (7, 40)
-            .osc (8, analog, sinePos, 10).pitch (8, 24, 80).levelEnv (8, 0, 0, 500, 0)
+            .osc (8, analog, sinePos, 20).pitch (8, 24, 80).levelEnv (8, 0, 0, 500, 0)
             .filter (1, ladder12, 9000, 0, 0, 0)
-            .env (2, 0, 60, 0, 40, 70).mod (env2, "osc5WarpAmount", 35)
+            .env (2, 0, 60, 0, 40, 70).mod (env2, "osc5WarpAmount", 55)
             .amp (1, 4000, 0, 3000).reverb (30, 80, 3.0f).level (4.7)
             .macro (1, "Strike").mod (macro1, "osc5WarpAmount", 30).macro (2, "Hum").mod (macro2, "osc1Volume", 30)
             .macro (3, "Tierce").mod (macro3, "osc3Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
@@ -635,19 +636,19 @@ namespace WaveSynthPatchBuilder
             .mod (lfo1, "osc5Volume", 30).mod (lfo1, "osc6Position", 40).mod (lfo1, "osc3WarpAmount", 20)
             .lfoSync (2, steps, bars2, 0).stepPattern (2, { -100, 0, 100, 40, -40, 80, -80, 0, 60, -100, 100, -20, 20, -60, 40, 100 })
             .mod (lfo2, "osc7WarpAmount", 30).mod (lfo2, "filter1Cutoff", 15)
-            .amp (1, 150, 0, 80).delay (sixteenthD, 30, 15, 4000).level (3.1)
+            .amp (1, 150, 0, 80).drive (hard, 0, 8000).delay (sixteenthD, 30, 15, 4000).level (3.1)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Metal").mod (macro2, "osc5Volume", 30)
-            .macro (3, "Sync").mod (macro3, "osc7WarpAmount", 35).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
+            .macro (3, "Res").mod (macro3, "filter1Resonance", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         // Five. Body 1, a square; 2 an FM table an octave up; weight 3, a growl; strike 4; 5 additive an
         // octave up a dotted-quarter LFO turns.
         add ("Gauge Pulse", "Sequence").osc (1, analog, squarePos, 40)
-            .osc (2, fm, 30, 25).pitch (2, 12)
-            .osc (3, growl, 30, 30).pitch (3, -12)
-            .osc (4, metal, 70, 20).pitch (4, 24).levelEnv (4, 0, 0, 20, 0)
-            .osc (5, additive, 70, 12).pitch (5, 12)
-            .filter (1, ladder24, 1400, 45, 10, 40)
-            .env (2, 0, 120, 0, 60, 70).mod (env2, "filter1Cutoff", 35)
+            .osc (2, fm, 30, 55).pitch (2, 12)
+            .osc (3, growl, 30, 15).pitch (3, -12)
+            .osc (4, metal, 70, 50).pitch (4, 24).levelEnv (4, 0, 0, 60, 0).route (4, 100)
+            .osc (5, additive, 70, 28).pitch (5, 12).route (5, 100)
+            .filter (1, ladder24, 3500, 45, 10, 40)
+            .env (2, 0, 120, 0, 60, 70).mod (env2, "filter1Cutoff", 70)
             .lfoSync (1, triangle, quarterD, 0).mod (lfo1, "osc5Position", 40).mod (lfo1, "osc2Position", 25)
             .amp (1, 140, 0, 70).drive (hard, 20, 6000).level (1.4)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Gauge").mod (macro2, "osc2Volume", 30)
@@ -675,7 +676,7 @@ namespace WaveSynthPatchBuilder
             .lfo (1, sine, 2.0f, 1).mod (lfo1, "filter1Cutoff", 12)
             .amp (50, 100, 100, 1500).reverb (30, 80, 3.0f).level (4)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 30).macro (2, "Steam").mod (macro2, "noiseLevel", 30)
-            .macro (3, "Metal").mod (macro3, "osc5Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
+            .macro (3, "Weight").mod (macro3, "osc6Volume", 50).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
         // Five. Body 1, a growl whose position climbs; 2 a vowel that opens; 3 a sine FM'd by 5 (unheard)
         // harder and harder; 4 metal arriving at four seconds. Pitch climbs four semitones; a phaser.
@@ -688,49 +689,52 @@ namespace WaveSynthPatchBuilder
             .mod (env3, "osc1Pitch", 8.33f).mod (env3, "osc3Pitch", 8.33f).mod (env3, "filter1Cutoff", 40)
             .amp (50, 100, 100, 1500).phaser (40, 0.4f, 60).reverb (30, 80, 3.0f).level (3.9)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 30).macro (2, "Vowel").mod (macro2, "osc2Volume", 30)
-            .macro (3, "Metal").mod (macro3, "osc4Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
+            .macro (3, "FM").mod (macro3, "osc3WarpAmount", 50).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
         //======================================================================
         // Impact
 
         // Nine. Weight 1, falling an octave; 2 a sub tail an octave down; 3 metal FM'd by 9's metal
-        // (unheard); strike 4; 5 a clang, a sine a fifth up FM'd by 6 (unheard) at an odd interval; grit
-        // 7, a folded growl; width 8, four saws dying; and a burst of noise. Into a hall.
+        // (unheard), groaning for seconds; strike 4; 5 a clang, a sine a fifth up FM'd by 6 (unheard) at
+        // an odd interval; grit 7, a folded growl; width 8, four saws two octaves up, dying; and a burst of
+        // noise. Dry, so the boom stays mono; the Space macro opens a hall.
         add ("Keel Rupture", "Impact").osc (1, analog, sinePos, 70)
             .osc (2, analog, sinePos, 40).pitch (2, -12).levelEnv (2, 0, 0, 2500, 0)
-            .osc (3, metal, 40, 30).pitch (3, 12).fm (3, 9, 25).levelEnv (3, 0, 0, 900, 0).modulator (9, metal, 80).pitch (9, 5)
+            .osc (3, metal, 40, 30).pitch (3, 12).fm (3, 9, 25).levelEnv (3, 0, 0, 2500, 0).modulator (9, metal, 80).pitch (9, 5)
             .osc (4, fm, 80, 40).pitch (4, 24).levelEnv (4, 0, 0, 25, 0)
-            .osc (5, analog, sinePos, 25).pitch (5, 7).fm (5, 6, 40).levelEnv (5, 0, 0, 600, 0).modulator (6, analog, sinePos).pitch (6, 18, 60)
-            .osc (7, growl, 70, 20).warp (7, wFold, 40).levelEnv (7, 0, 0, 400, 0)
-            .osc (8, analog, sawPos, 15).pitch (8, 12).unison (8, 4, 40, 100).levelEnv (8, 0, 0, 800, 0)
+            .osc (5, analog, sinePos, 35).pitch (5, 7).fm (5, 6, 40).levelEnv (5, 0, 0, 1500, 0).modulator (6, analog, sinePos).pitch (6, 18, 60)
+            .osc (7, growl, 70, 20).warp (7, wFold, 40).levelEnv (7, 0, 0, 1200, 0)
+            .osc (8, analog, sawPos, 15).pitch (8, 24).unison (8, 4, 40, 100).levelEnv (8, 0, 0, 800, 0)
             .noise (0, 0)
             .filter (1, ladder12, 6000, 10, 0, 0)
             .env (3, 0, 400, 0, 300, 70).mod (env3, "osc1Pitch", 25)
             .env (2, 0, 300, 0, 200, 70).mod (env2, "noiseLevel", 40)
-            .amp (1, 3500, 0, 2500).drive (hard, 35, 7000).reverb (22, 90, 5.0f).level (-7.8)
-            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 35).macro (2, "Clang").mod (macro2, "osc5Volume", 30)
+            .amp (1, 3500, 0, 2500).drive (hard, 35, 7000).reverb (0, 90, 5.0f).level (-7.8)
+            .macro (1, "Tail").mod (macro1, "osc2Volume", 50).macro (2, "Clang").mod (macro2, "osc5Volume", 30)
             .macro (3, "Grit").mod (macro3, "fxDriveAmount", 40).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
-        // Four. Weight 1 falling; 2 a sub an octave down; 3 crushed metal; strike 4.
+        // Four. Weight 1 falling slowly; 2 a sub an octave down; 3 crushed metal crumbling, a random step
+        // each sixteenth changing how crushed; strike 4; a long burst of noise. Dry; Space opens a room.
         add ("Slab Collapse", "Impact").osc (1, analog, sinePos, 70)
             .osc (2, analog, sinePos, 40).pitch (2, -12).levelEnv (2, 0, 0, 1800, 0)
-            .osc (3, metal, 60, 30).pitch (3, 12).warp (3, wCrush, 40).levelEnv (3, 0, 0, 500, 0)
+            .osc (3, metal, 60, 50).pitch (3, 12).warp (3, wCrush, 40).levelEnv (3, 0, 0, 1500, 0)
             .osc (4, pulse, 80, 35).pitch (4, 24).levelEnv (4, 0, 0, 15, 0)
             .noise (0, 1)
             .filter (1, ladder12, 5000, 10, 0, 0)
-            .env (3, 0, 300, 0, 200, 70).mod (env3, "osc1Pitch", 20)
-            .env (2, 0, 200, 0, 150, 70).mod (env2, "noiseLevel", 35)
-            .amp (1, 2500, 0, 2000).drive (tube, 30, 6000).reverb (20, 85, 4.0f).level (-4.7)
-            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 35).macro (2, "Crush").mod (macro2, "osc3WarpAmount", 40)
-            .macro (3, "Grit").mod (macro3, "fxDriveAmount", 40).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
+            .env (3, 0, 900, 0, 200, 60).mod (env3, "osc1Pitch", 20)
+            .env (2, 0, 900, 0, 300, 70).mod (env2, "noiseLevel", 50)
+            .lfoSync (1, randomShape, sixteenth, 0).mod (lfo1, "osc3WarpAmount", 40)
+            .amp (1, 2500, 0, 2000).drive (tube, 30, 6000).reverb (0, 85, 4.0f).level (-4.7)
+            .macro (1, "Tail").mod (macro1, "osc2Volume", 50).macro (2, "Metal").mod (macro2, "osc3Volume", 50)
+            .macro (3, "Grit").mod (macro3, "fxDriveAmount", 40).macro (4, "Space").mod (macro4, "fxReverbMix", 50);
 
         //======================================================================
         // Cinematic
 
-        // Nine, a braam. Body 1 (three saws an octave down, nearly mono) and 2 (three at the note);
+        // Nine, a braam. Body 1 (three saws an octave down, mono) and 2 (three at the note);
         // 3 a growl an octave down; weight 4; 5 metal shimmer arriving after a second; 6 a blare, a sine
         // an octave up FM'd by 7 (unheard) as the filter opens; 8 a vowel; width 9 arriving after two.
-        add ("Black Meridian", "Cinematic").osc (1, analog, sawPos, 30).pitch (1, -12).unison (1, 3, 20, 30)
+        add ("Black Meridian", "Cinematic").osc (1, analog, sawPos, 30).pitch (1, -12).unison (1, 3, 20, 0)
             .osc (2, analog, sawPos, 25).unison (2, 3, 18, 70)
             .osc (3, growl, 50, 25).pitch (3, -12)
             .osc (4, analog, sinePos, 35).pitch (4, -12)
@@ -749,12 +753,12 @@ namespace WaveSynthPatchBuilder
         // a twelfth up. A slow LFO turns the vowel; a long room.
         add ("Glacier Wire", "Cinematic").osc (1, string, 90, 70).pitch (1, 12)
             .osc (2, additive, 70, 42).pitch (2, 24).levelEnv (2, 800, 0, 0, 100)
-            .osc (3, analog, sinePos, 51).pitch (3, -12)
+            .osc (3, analog, sinePos, 25).pitch (3, -12)
             .osc (4, vowel, 20, 56)
             .osc (5, metal, 30, 28).pitch (5, 19)
             .filter (1, ladder12, 5000, 15, 0, 20)
             .lfo (1, sine, 0.12f, 0).mod (lfo1, "osc4Position", 40).mod (lfo1, "osc5Position", 30)
-            .amp (400, 2000, 80, 3000).reverb (30, 90, 6.0f).level (-2.3)
+            .amp (400, 2000, 80, 3000).reverb (15, 90, 6.0f).level (-2.3)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Ice").mod (macro2, "osc2Volume", 30)
             .macro (3, "Vowel").mod (macro3, "osc4Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
@@ -776,8 +780,8 @@ namespace WaveSynthPatchBuilder
             .lfoSync (1, steps, bar1, 0).stepPattern (1, { 100, -40, 20, -100, 60, 0, -60, 100, -20, 40, -100, 80, 0, -40, 100, -80 })
             .mod (lfo1, "osc2WarpAmount", 25).mod (lfo1, "osc4Pitch", 8.33f)
             .amp (0, 260, 0, 200).drive (hard, 20, 7000).level (-3)
-            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 35).macro (2, "Metal").mod (macro2, "osc4Volume", 30)
-            .macro (3, "Wood").mod (macro3, "osc7Volume", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
+            .macro (1, "Knock").mod (macro1, "osc6Volume", 60).macro (2, "Hollow").mod (macro2, "osc1Volume", -40)
+            .macro (3, "Wood").mod (macro3, "osc7Volume", 60).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         // Four. Body 1, metal; 2 an FM table an octave up; weight 3 a body dying fast; strike 4, crushed.
         add ("Tin Oracle", "Perc").osc (1, metal, 70, 52)
@@ -786,7 +790,7 @@ namespace WaveSynthPatchBuilder
             .osc (4, pulse, 50, 30).pitch (4, 24).warp (4, wCrush, 60).levelEnv (4, 0, 0, 20, 0)
             .filter (1, ladder12, 7000, 15, 0, 30)
             .env (3, 0, 30, 0, 20, 70).mod (env3, "osc3Pitch", 6.25f)
-            .amp (0, 180, 0, 150).delay (sixteenthT, 30, 15, 5000).level (2.7)
+            .amp (0, 180, 0, 150).drive (hard, 0, 8000).delay (sixteenthT, 30, 15, 5000).level (2.7)
             .macro (1, "Tone").mod (macro1, "filter1Cutoff", 35).macro (2, "Tin").mod (macro2, "osc1Volume", 30)
             .macro (3, "Body").mod (macro3, "osc3Volume", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
@@ -809,18 +813,18 @@ namespace WaveSynthPatchBuilder
             .env (3, 0, 50, 0, 30, 70).mod (env3, "osc1Pitch", 8.33f).mod (env3, "osc2Pitch", 8.33f)
             .amp (0, 220, 0, 160).drive (hard, 25, 8000).reverb (18, 40, 1.0f).level (-0.1)
             .macro (1, "Tone").mod (macro1, "filter1Cutoff", 35).macro (2, "Wires").mod (macro2, "noiseLevel", 30)
-            .macro (3, "Ring").mod (macro3, "osc4Volume", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
+            .macro (3, "Ring").mod (macro3, "osc4Volume", 60).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         // Four, a tom. Body 1 falling; 2 a fifth up; 3 metal; strike 4.
         add ("Clamp Tom", "Drum").osc (1, analog, sinePos, 50)
-            .osc (2, analog, sinePos, 25).pitch (2, 7).levelEnv (2, 0, 0, 200, 0)
-            .osc (3, metal, 40, 15).pitch (3, 12).levelEnv (3, 0, 0, 90, 0)
+            .osc (2, analog, sinePos, 25).pitch (2, 7).levelEnv (2, 0, 0, 350, 0)
+            .osc (3, metal, 40, 45).pitch (3, 12).levelEnv (3, 0, 0, 400, 0)
             .osc (4, fm, 90, 25).pitch (4, 24).levelEnv (4, 0, 0, 10, 0)
             .filter (1, ladder12, 6000, 10, 0, 0)
-            .env (3, 0, 120, 0, 80, 70).mod (env3, "osc1Pitch", 12.5f).mod (env3, "osc2Pitch", 12.5f)
+            .env (3, 0, 200, 0, 80, 70).mod (env3, "osc1Pitch", 20.8f).mod (env3, "osc2Pitch", 20.8f)
             .amp (0, 500, 0, 400).drive (tube, 30, 6000).reverb (15, 40, 1.0f).level (-0.5)
-            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 35).macro (2, "Clamp").mod (macro2, "osc3Volume", 30)
-            .macro (3, "Stick").mod (macro3, "osc4Volume", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
+            .macro (1, "Fifth").mod (macro1, "osc2Volume", 50).macro (2, "Clamp").mod (macro2, "osc3Volume", 60)
+            .macro (3, "Stick").mod (macro3, "osc4Volume", 60).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         //======================================================================
         // FX
@@ -924,7 +928,7 @@ namespace WaveSynthPatchBuilder
             .env (2, 0, 150, 0, 100, 70).mod (env2, "filter1Cutoff", 30)
             .amp (1, 250, 40, 100).drive (hard, 25, 6000).level (1.8)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Growl").mod (macro2, "osc1WarpAmount", 30)
-            .macro (3, "Servo").mod (macro3, "osc4Volume", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
+            .macro (3, "Square").mod (macro3, "osc2Volume", 50).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         //======================================================================
         // Chip
@@ -944,20 +948,20 @@ namespace WaveSynthPatchBuilder
             .lfoSync (1, steps, quarter, 0).stepPattern (1, { 0, 25, 58.33f, 0, 25, 58.33f, 0, 25, 58.33f, 0, 25, 58.33f, 0, 25, 58.33f, 100 })
             .mod (lfo1, "osc1Pitch", 25).mod (lfo1, "osc2Pitch", 25)
             .amp (1, 200, 60, 60).drive (crush, 20, 9000).delay (eighthD, 30, 15, 5000).level (4.5)
-            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 35).macro (2, "Bits").mod (macro2, "osc1WarpAmount", 40)
-            .macro (3, "Noise").mod (macro3, "osc4Volume", 30).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
+            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 35).macro (2, "Duty").mod (macro2, "osc1Position", 40)
+            .macro (3, "FM").mod (macro3, "osc6WarpAmount", 50).macro (4, "Grit").mod (macro4, "fxDriveAmount", 50);
 
         // Four, chip acid. Body 1, a crushed pulse; weight 2, a crushed triangle; 3 a squeezed pulse an
         // octave up; strike 4. Glides, a resonant filter the envelope snaps.
         add ("Sprite Acid", "Chip").osc (1, pulse, 30, 40).warp (1, wCrush, 40)
             .osc (2, analog, trianglePos, 30).pitch (2, -12).warp (2, wCrush, 60)
-            .osc (3, pulse, 60, 20).pitch (3, 12).warp (3, wSqueeze, 40)
+            .osc (3, pulse, 60, 35).pitch (3, 12).warp (3, wSqueeze, 40)
             .osc (4, fm, 100, 20).pitch (4, 24).warp (4, wCrush, 80).levelEnv (4, 0, 0, 15, 0)
-            .filter (1, ladder24, 1200, 60, 20, 40)
-            .env (2, 0, 180, 0, 80, 75).mod (env2, "filter1Cutoff", 40)
-            .amp (1, 200, 60, 60).mono (30).level (3.3)
-            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Bits").mod (macro2, "osc1WarpAmount", 40)
-            .macro (3, "Squeeze").mod (macro3, "osc3WarpAmount", 40).macro (4, "Res").mod (macro4, "filter1Resonance", 30);
+            .filter (1, ladder24, 1800, 60, 20, 40)
+            .env (2, 0, 180, 0, 80, 75).mod (env2, "filter1Cutoff", 55)
+            .amp (1, 200, 60, 60).mono (30).drive (crush, 0, 9000).level (3.3)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Bits").mod (macro2, "fxDriveAmount", 60)
+            .macro (3, "Octave").mod (macro3, "osc3Volume", 50).macro (4, "Res").mod (macro4, "filter1Resonance", 30);
 
         //======================================================================
         // Texture
@@ -966,20 +970,20 @@ namespace WaveSynthPatchBuilder
         // 4 a growl an octave down; 5 a sine a fifth up FM'd by 6's metal (unheard); grit 7, crushed;
         // weight 8; 9 a folded FM table; crackle. A smoothed random LFO turns the positions and the fold.
         add ("Ash Weather", "Texture").osc (1, vowel, 20, 53).pitch (1, 12).unison (1, 3, 40, 90, 40, 60)
-            .osc (2, metal, 60, 32).pitch (2, 12).unison (2, 2, 20, 100, 0, 80)
+            .osc (2, metal, 60, 32).pitch (2, 24).unison (2, 2, 20, 100, 0, 80)
             .osc (3, additive, 80, 21).pitch (3, 24)
             .osc (4, growl, 50, 53).pitch (4, -12)
             .osc (5, analog, sinePos, 32).pitch (5, 7).fm (5, 6, 30).modulator (6, metal, 40).pitch (6, 11, 30)
             .osc (7, pulse, 50, 16).pitch (7, 19).warp (7, wCrush, 70)
             .osc (8, analog, sinePos, 53).pitch (8, -12)
             .osc (9, fm, 50, 27).pitch (9, 12).warp (9, wFold, 40)
-            .noise (12, 2, 60)
+            .noise (6, 2, 60)
             .filter (1, ladder12, 3000, 20, 0, 20)
             .lfo (1, randomShape, 3.0f, 0, 60).mod (lfo1, "osc1Position", 30).mod (lfo1, "osc2Position", 40).mod (lfo1, "osc9WarpAmount", 30)
             .lfo (2, drift, 0.1f, 0).mod (lfo2, "filter1Cutoff", 20).mod (lfo2, "osc5WarpAmount", 25)
-            .amp (1500, 1000, 100, 3000).reverb (30, 90, 6.0f).level (-3.7)
-            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Ash").mod (macro2, "noiseLevel", 30)
-            .macro (3, "Metal").mod (macro3, "osc2Volume", 30).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
+            .amp (1500, 1000, 100, 3000).reverb (8, 90, 6.0f).level (-3.7)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Air").mod (macro2, "osc3Volume", 60)
+            .macro (3, "Metal").mod (macro3, "osc2Volume", 60).macro (4, "Space").mod (macro4, "fxReverbMix", 30);
 
         // Four, a lung of tar breathing. Body 1 and 2, vowels at the ends of the table, a slow LFO
         // handing the breath between them; 3 metal; weight 4, a growl; pink noise breathing with them.

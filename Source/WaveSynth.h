@@ -143,12 +143,16 @@ namespace BuiltInEffects
             there are some, the favourites in the tree's order (by category, then as the tree lists
             them). The factory list's indices. */
         std::vector<int> browseList() const;
-        void setBrowsingFavourites (bool favourites) noexcept        { browsingFavourites = favourites; browsingDecrypted = browsingDecrypted && ! favourites; }
+        void setBrowsingFavourites (bool favourites) noexcept        { browsingFavourites = favourites; browsingDecrypted = browsingDecrypted && ! favourites; browsingComplex = browsingComplex && ! favourites; }
         bool isBrowsingFavourites() const noexcept                   { return browsingFavourites; }
         /** While on, and there are some, the arrows go through the patches taken from Decrypt and
             named (DecryptedPatches), by name; stepPatch then returns -1, the patch being no factory one. */
-        void setBrowsingDecrypted (bool decrypted) noexcept          { browsingDecrypted = decrypted; browsingFavourites = browsingFavourites && ! decrypted; }
+        void setBrowsingDecrypted (bool decrypted) noexcept          { browsingDecrypted = decrypted; browsingFavourites = browsingFavourites && ! decrypted; browsingComplex = browsingComplex && ! decrypted; }
         bool isBrowsingDecrypted() const noexcept                    { return browsingDecrypted; }
+        /** While on, the arrows go through the Complex patches (complexPatches(), by category), by
+            name; stepPatch then returns -1, the patch being no factory one. */
+        void setBrowsingComplex (bool complex) noexcept              { browsingComplex = complex; browsingFavourites = browsingFavourites && ! complex; browsingDecrypted = browsingDecrypted && ! complex; }
+        bool isBrowsingComplex() const noexcept                      { return browsingComplex; }
         /** Loads the patch after (by 1) or before (by -1) the one it is on in that list, round its
             ends; from a sound that isn't in the list, the first (or last). Its index, or -1 if
             the list is empty. */
@@ -220,7 +224,7 @@ namespace BuiltInEffects
         juce::SpinLock sampledLock;
         std::atomic<juce::uint32> sampledGeneration { 0 }, sampledSeen { 0 };
 
-        bool browsingFavourites = false, browsingDecrypted = false;
+        bool browsingFavourites = false, browsingDecrypted = false, browsingComplex = false;
         std::unique_ptr<SignalConsole::Console> console;
         std::atomic<SignalConsole::Console*> consoleForAudio { nullptr };
         double preparedRate = 0.0;

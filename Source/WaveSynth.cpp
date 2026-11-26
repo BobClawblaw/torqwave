@@ -2658,6 +2658,22 @@ int BasicSynthProcessor::stepPatch (int by)
     if (browsingDecrypted && by != 0 && DecryptedPatches::Store::shared().step (*this, by).isNotEmpty())
         return -1;
 
+    // The Complex patches, while they are browsed: by name, round the ends.
+    if (browsingComplex && by != 0)
+    {
+        const auto& complex = WaveSynth::complexPatches();
+        const auto count = (int) complex.size();
+        auto at = -1;
+
+        for (int i = 0; i < count; ++i)
+            if (complex[(size_t) i].name == patchName)
+                at = i;
+
+        const auto next = at < 0 ? (by > 0 ? 0 : count - 1) : (((at + by) % count) + count) % count;
+        loadPatch (complex[(size_t) next].name);
+        return -1;
+    }
+
     const auto list = browseList();
 
     if (list.empty() || by == 0)

@@ -590,6 +590,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/BatteryKitTests.cpp
     Tests/SoundControlsTests.cpp
     Tests/WaveSynthTests.cpp
+    Tests/WaveSynthComplexTests.cpp
     Tests/SynthClickTests.cpp
     Tests/WaveSynthBankTests.cpp
     Tests/InstrumentTrackTests.cpp
