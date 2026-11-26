@@ -572,7 +572,8 @@ Show it with **Window > Sequence Library**. In the Multitrack workspace it is a 
 
 Torqwave comes with 1,025 factory presets and 116 starter kits, under **Presets** at the top of the library, sorted by the same roles and sub-roles as your own. They lean towards techno (driving, peak-time, dark, industrial, hypnotic, minimal, melodic, acid, hard) and industrial and EBM (electro-industrial, futurepop, aggrotech, synth-EBM, darkwave, industrial rock), and reach into electro, breakbeat, drum and bass, ambient, deep house, darksynth and psytrance, with a set for game audio: loops, **UI Sounds** and **Stingers** under SFX. [Styles](14-styles.md) says what defines the techno and industrial ones. Each preset plays on a factory patch of Torqwave Synth or a kit of Basic Drums, named on its track when you drop it, at a level set so none is quiet or clips. Every preset is:
 
-- in **A minor** (a few use Phrygian's B♭ or harmonic minor's G♯, and say so in their tags), so any of them plays with any other;
+- in **A minor** (some use Phrygian's B♭ or harmonic minor's G♯, and a few effects, stabs and drones a tritone or a cluster outside the scale: each says so in its tags), so any of them plays with any other;
+- **its own**: no two presets of a sub-role play the same notes, and no figure, whatever chord it is on, is in more than three styles. A riser, a transition, an impact, a sub, a stab, a pad and a drone are written for the kind of style they are filed under;
 - on the **16th grid**, 1, 2, 4 or 8 bars long, a 4-bar one changing in its last bar;
 - for drums, on the **General MIDI drum map** (kick 36, snare 38, clap 39, closed hat 42, open hat 46, ride 51 and so on), so it plays any drum plug-in or kit that follows it;
 - for bass, **one note at a time**, except an acid slide, which overlaps the next note by a hair so the synth glides;

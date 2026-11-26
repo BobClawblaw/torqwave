@@ -4,6 +4,13 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Unreleased
 
+**The Sequence Library overhaul is whole** (fix log 117, closing `docs/plans/PLAN-SEQUENCE-LIBRARY.md`)
+- The user listened to the clips of every category, before and after, and said "those are good". The five entries below are the work: 1,025 sequences where there were 1,032, none playing another's notes of its category, no figure in more than three styles.
+- The guide says so: the presets' rules in Instruments and MIDI have a line for it and for the notes outside the scale that some effects, stabs and drones now use, and Styles opens with it.
+- **Not done, and said in the plan:** a language of its own for each style in arps, bass lines, chord parts and drum parts, which are different from each other but drawn from lists every style shares; the grooves stay on the kits they were on (Bunker, Machine Shop and Voltage play the risers, transitions and impacts written for them, and no groove); and a preset's level is still set without its filter lane.
+- Ask Torq reads the library that is there when it is asked, so it needs nothing.
+- Tested: `--sequences` (103 checks) and `--ai`, all passing. The whole suite was not run.
+
 **The Sequence Library: no two presets play the same notes; 1,025 sequences** (fix log 117, the fifth step of `docs/plans/PLAN-SEQUENCE-LIBRARY.md`; not listened to)
 - **The rest of the library goes through the rule** the subs, stabs and pads went through: a preset is written only if no preset of its category plays the same pitches at the same places and its shape is not already in three other styles. A style tries what it drew first, then the rest of what there is for its kind, and a preset with nothing new to play is left out.
 - **Arps:** 49 figures where there were 11 (16th sequences 14, plucks 14, up and down 12, gated 9), each style starting from a place of its own in the list. A 16th figure was in six styles and a pluck in five.
