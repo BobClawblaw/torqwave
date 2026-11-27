@@ -1,68 +1,72 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
 <rect width="1600" height="900" fill="#111317"/>
-<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.22.0: what it adds over 0.21.1</text>
+<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.23.0: what it adds over 0.22.0</text>
 <text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">By the numbers, counted from the release&#x27;s own files and documentation</text>
-<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-26. Torqwave 0.22.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
+<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-27. Torqwave 0.23.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
 <rect x="50.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="50.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="74.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">9</text>
-<text x="74.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Synth oscillators</text>
-<text x="74.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.21.1: 3</text>
-<text x="74.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">each can drive another&#x27;s FM</text>
+<text x="74.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">32</text>
+<text x="74.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Built-in plug-ins</text>
+<text x="74.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 22</text>
+<text x="74.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">+6 live creative FX, +4 live</text>
+<text x="74.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">MIDI FX</text>
 <rect x="390.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="390.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="414.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">58</text>
+<text x="414.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">116</text>
 <text x="414.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Complex patches</text>
-<text x="414.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.21.1: 0</text>
-<text x="414.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">four oscillators or more, two</text>
-<text x="414.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">a category</text>
+<text x="414.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 58</text>
+<text x="414.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">58 new 9-osc club patches in</text>
+<text x="414.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">0.22.1</text>
 <rect x="730.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="730.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="754.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">3,569</text>
-<text x="754.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Factory patches</text>
-<text x="754.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.21.1: 3,743</text>
-<text x="754.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">174 near-copies taken out</text>
+<text x="754.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">24</text>
+<text x="754.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Synth mod slots</text>
+<text x="754.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 16</text>
+<text x="754.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">4 LFOs, MSEG Curve, Slot</text>
+<text x="754.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Depth, Arp, 4 scenes</text>
 <rect x="50.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="50.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="74.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">1,024</text>
-<text x="74.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Sequence presets</text>
-<text x="74.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.21.1: 1,032</text>
-<text x="74.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">in 37 styles, with 116 starter</text>
-<text x="74.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">kits</text>
+<text x="74.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">47</text>
+<text x="74.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Matrix coverage</text>
+<text x="74.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 45</text>
+<text x="74.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">of 53 rows (+Audio to MIDI,</text>
+<text x="74.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">+CLAP 1.2)</text>
 <rect x="390.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="390.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="414.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">0</text>
-<text x="414.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Presets sharing notes</text>
-<text x="414.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.21.1: 446</text>
-<text x="414.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">a test fails if a repeat comes</text>
-<text x="414.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">back</text>
+<text x="414.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">9</text>
+<text x="414.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Drum output buses</text>
+<text x="414.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 1</text>
+<text x="414.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Main + 8 stereo Aux buses per</text>
+<text x="414.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">pad</text>
 <rect x="730.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
 <rect x="730.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="754.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">29</text>
-<text x="754.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Patches on all nine</text>
-<text x="754.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.21.1: 0</text>
-<text x="754.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">one in each category</text>
+<text x="754.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">2,782</text>
+<text x="754.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Automated checks</text>
+<text x="754.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 2,741</text>
+<text x="754.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">arm64 + Intel Rosetta, plus</text>
+<text x="754.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">headless CI</text>
 <rect x="1080.0" y="160.0" width="470.0" height="620.0" rx="10" fill="#1d2126" stroke="#2a2f36" stroke-width="1.5"/>
-<text x="1108.0" y="212.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Also new since 0.21.1</text>
+<text x="1108.0" y="212.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Also new since 0.22.0</text>
 <rect x="1108.0" y="248.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="260.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Nine wavetable oscillators in</text>
-<text x="1130.0" y="288.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Torqwave Synth</text>
-<rect x="1108.0" y="321.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="333.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">FM from any oscillator, two and</text>
-<text x="1130.0" y="361.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">three deep</text>
-<rect x="1108.0" y="394.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="406.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">A Complex folder of patches that use</text>
-<text x="1130.0" y="434.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">them</text>
-<rect x="1108.0" y="467.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="479.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">No click when a held sound is struck</text>
-<text x="1130.0" y="507.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">again</text>
-<rect x="1108.0" y="540.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="552.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">A Sequence Library with no two</text>
-<text x="1130.0" y="580.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">presets alike</text>
-<rect x="1108.0" y="613.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="625.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Drones and pads levelled, from their</text>
-<text x="1130.0" y="653.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">first bar</text>
-<rect x="1108.0" y="686.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="698.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Styles, kits and patterns named for</text>
-<text x="1130.0" y="726.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">what they play</text>
+<text x="1130.0" y="260.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">6 live Creative FX: Delay,</text>
+<text x="1130.0" y="288.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Distortion, Auto-Filter, Volume</text>
+<text x="1130.0" y="316.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Shaper, Gate, Tremolo</text>
+<rect x="1108.0" y="349.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="361.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">4 live MIDI FX: Arp, Chord Trigger,</text>
+<text x="1130.0" y="389.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Scale Lock &amp; Note Echo</text>
+<rect x="1108.0" y="422.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="434.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Synth: 4 LFOs, 24 slots, Slot Depth,</text>
+<text x="1130.0" y="462.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Curve LFO, Arp &amp; 4 scenes</text>
+<rect x="1108.0" y="495.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="507.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Audio to MIDI: melody (YIN) &amp; drums</text>
+<text x="1130.0" y="535.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">(3-band + groove)</text>
+<rect x="1108.0" y="568.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="580.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Piano Roll: ratchets, micro-timing,</text>
+<text x="1130.0" y="608.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">grooves &amp; ghost notes</text>
+<rect x="1108.0" y="641.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="653.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Sampler SFZ, round robin &amp; Warp;</text>
+<text x="1130.0" y="681.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Drums 8-bus multi-out</text>
+<rect x="1108.0" y="714.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
+<text x="1130.0" y="726.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Track Modulators, native CLAP 1.2 &amp;</text>
+<text x="1130.0" y="754.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">headless CI tests</text>
 </svg>

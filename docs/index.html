@@ -45,7 +45,7 @@ wide: true
   <div class="numbers">
     <div><b>9</b><span>oscillators, 4 LFOs, 24 mod slots, 4 Evolve scenes</span></div>
     <div><b>3,569</b><span>synth patches in 29 categories, and 116 Complex</span></div>
-    <div><b>23</b><span>built-in live audio &amp; MIDI effects</span></div>
+    <div><b>27</b><span>built-in live audio &amp; MIDI effects</span></div>
     <div><b>1,024</b><span>sequence presets in 37 styles, no two alike</span></div>
     <div><b>64</b><span>drum pads, 54 sources, 15 kits, 8 aux buses</span></div>
     <div><b>CLAP</b><span>plus VST3, Audio Unit and LV2 hosting</span></div>
@@ -124,11 +124,11 @@ wide: true
     <div class="words">
       <ul>
         <li><b>EQ:</b> parametric (each band on every channel, the mid or the side, in minimum or linear phase), dynamic, graphic with 10 or 31 bands, and match EQ, which takes a reference's tone onto the sound.</li>
-        <li><b>Dynamics:</b> compressor, multiband compressor, de-esser, transient shaper, limiter and maximizer.</li>
-        <li><b>Space and movement:</b> reverb and convolution reverb, echo, chorus, flanger, phaser and tremolo.</li>
+        <li><b>Dynamics:</b> compressor, multiband compressor, de-esser, transient shaper, noise gate (with hysteresis, sidechain and linked surround), limiter and maximizer.</li>
+        <li><b>Creative &amp; space:</b> stereo/ping-pong/tape delay with wet ducking, 4x-oversampled multi-mode distortion &amp; bitcrusher, resonant auto-filter (LFO + envelope follower + sidechain), tempo-synced volume shaper / sidechain pump (with low-band split), tremolo &amp; auto-pan, reverb, convolution reverb, chorus, flanger and phaser.</li>
         <li><b>Every dialog</b> has a preview, Bypass to compare, and presets: 201 factory presets for common jobs to start from.</li>
         <li><b>The effects rack</b> runs effects live on what plays until you apply it.</li>
-        <li><b>Plug-ins:</b> VST3, with Audio Units on the Mac and LV2 on the Mac and Linux, each checked when it is scanned.</li>
+        <li><b>Plug-ins:</b> CLAP 1.2 and VST3 everywhere, with Audio Units on the Mac and LV2 on the Mac and Linux, each checked out of process when scanned.</li>
       </ul>
       <p class="read">In the guide: <a href="guide/04-effects-and-the-rack.html">Effects and the rack</a></p>
     </div>
@@ -167,8 +167,8 @@ wide: true
       <ul>
         <li><b>Tracks and routing:</b> audio and instrument tracks, folders, buses and sends, VCA faders, sidechain inputs on plug-ins, ducking under a voice.</li>
         <li><b>Clips:</b> ripple editing, takes and comping, clip gain, fades, and crossfades you shape on the lane or in an editor of their own.</li>
-        <li><b>Mixer and automation:</b> effects on every track and bus with plug-in latency lined up, mixer scenes, and automation of volume, pan and any effect setting, drawn or written while playing.</li>
-        <li><b>Tempo:</b> a tempo map with bars and beats, an arranger, and audio that follows the tempo.</li>
+        <li><b>Mixer and automation:</b> effects on every track and bus with plug-in latency lined up, mixer scenes, track-level LFO and audio envelope follower modulators driving any plug-in parameter, and automation of volume, pan and any effect setting, drawn or written while playing.</li>
+        <li><b>Tempo &amp; Audio to MIDI:</b> a tempo map with bars and beats, an arranger, audio that follows the tempo, and right-click Convert to MIDI (Melody or Drums) on any audio clip.</li>
         <li><b>Sound design in the session:</b> Edit in Place, clip effects, Combine to New Sound and Add to Library.</li>
         <li><b>Out the door:</b> freeze, bounce, mix down and export stems; recovery after a crash.</li>
       </ul>
@@ -188,7 +188,7 @@ wide: true
     <div class="words">
       <ul>
         <li><b>Nine wavetable oscillators</b> with warps, unison and FM from any of them, a sub and noise. Drop any sound on an oscillator and it becomes that oscillator's table.</li>
-        <li><b>Two filters,</b> four envelopes, two LFOs, sixteen modulation slots and four macros.</li>
+        <li><b>Two filters,</b> four envelopes, four LFOs (including a 16-node smooth MSEG Curve), 24 modulation slots with Slot Depth as a destination, a built-in tempo-synced Arpeggiator, 4-scene continuous Evolve morphing, and four macros.</li>
         <li><b>A rack of effects</b> inside the synth: drive, chorus, phaser, delay and reverb.</li>
         <li><b>Patches</b> by category, with favourites. Audition plays each one as you choose it, on a phrase that suits it, in the session's tempo.</li>
       </ul>
@@ -208,7 +208,7 @@ wide: true
     <div class="words">
       <ul>
         <li><b>A chain you can hear:</b> each step of the search is a patch, nearer the recording than the one before.</li>
-        <li><b>Choices, not copies:</b> up to eight different candidates round the scope, each with its lock: how near it measures.</li>
+        <li><b>Choices, not copies:</b> up to eight different candidates round the scope, each with its lock: how near it measures, with optional 9-oscillator Complex matching.</li>
         <li><b>Chords as chords:</b> where it finds three or more notes it names them and plays every candidate on those keys.</li>
         <li><b>The Decrypted page</b> keeps the patches you take and name, by category.</li>
         <li><b>What it is not:</b> the lock is a measurement, not a listening test, and two notes at once are still matched as one.</li>
@@ -236,7 +236,7 @@ wide: true
     </figure>
   </div>
   <ul class="plain">
-    <li><b>Zones:</b> up to 128, each a sample with the keys and velocities that play it, with loops and crossfades.</li>
+    <li><b>Zones &amp; SFZ:</b> up to 128 zones with loops, crossfades, per-zone round-robin groups (1–16), tempo-synced Warp playback (Signalsmith Stretch), and standard SFZ multisample import.</li>
     <li><b>Slices:</b> a loop cut at its hits, its markers or its regions.</li>
     <li><b>Straight from where the sound is:</b> the editor's selection, a clip in a session, the Files panel or the Sound Library.</li>
     <li><b>Eleven factory presets,</b> rendered from Torqwave's own instruments. The set is small on purpose: the sampler is for your sounds.</li>
@@ -254,10 +254,10 @@ wide: true
     </figure>
     <figure>
       <img loading="lazy" src="screenshots/guide-drums.png" alt="The Basic Drums window with its pads and each pad's settings">
-      <figcaption><b>Basic Drums:</b> 64 pads. Thirty are synthesized sounds that cover every General MIDI drum note, 21 of them with a second, Modern type; 34 are user pads on notes of their own. Any pad can play one of 24 more synthesized sources, or your own samples in up to 16 layers. Each has its own tune, decay, tone and drive, a filter, crush, reverb and delay, and an envelope, transient shaper, saturator, EQ and compressor. Fifteen kits, all synthesized: no samples are shipped. <a href="sounds/drums-and-sampler.html">Hear it</a> · <a href="guide/07-instruments-and-midi.html">Guide</a></figcaption>
+      <figcaption><b>Basic Drums:</b> 64 pads. Thirty are synthesized sounds that cover every General MIDI drum note, 21 of them with a second, Modern type; 34 are user pads on notes of their own. Any pad can play one of 24 more synthesized sources, or your own samples in up to 16 layers. Each has its own tune, decay, tone and drive, a filter, crush, reverb and delay, an envelope, transient shaper, saturator, EQ and compressor, and per-pad routing to Main or 8 stereo Aux buses. Fifteen kits, all synthesized: no samples are shipped. <a href="sounds/drums-and-sampler.html">Hear it</a> · <a href="guide/07-instruments-and-midi.html">Guide</a></figcaption>
     </figure>
   </div>
-  <p class="meta">Any VST3, Audio Unit or LV2 instrument works on an instrument track too, and a sequence can drive your own plug-ins as well as the built-in ones.</p>
+  <p class="meta">Any CLAP, VST3, Audio Unit or LV2 instrument works on an instrument track too, and a sequence can drive your own plug-ins as well as the built-in ones.</p>
 </section>
 
 <section id="sequencer">
@@ -267,7 +267,8 @@ wide: true
     <div class="words">
       <ul>
         <li><b>The Sequencer</b> window, with its writing tools, and the <b>Idea Board</b> for launching sequences together.</li>
-        <li><b>The Piano Roll:</b> notes placed, moved and resized, a drum grid with swing and probability, controller lanes, and Capture MIDI for what you just played.</li>
+        <li><b>The Piano Roll:</b> notes placed, moved and resized, per-note ratchets (1x–8x) and micro-timing offsets, built-in groove/swing templates (MPC, Shuffle, Push, Laid-Back), cross-track ghost notes, a drum grid with swing and probability, controller lanes, and Capture MIDI for what you just played.</li>
+        <li><b>Live MIDI FX:</b> four real-time MIDI effects — MIDI Arpeggiator, Chord Trigger, Scale Lock and Note Echo — chained right ahead of any instrument on the same track.</li>
         <li><b>The Sequence Library:</b> 1,024 factory sequences and 116 kits in 37 styles, found by role, style, key, energy and character, heard on their own voices or on your own instruments before you drop them in.</li>
         <li><b>Kits</b> make a track for each part. <b>Remap Notes</b> puts a drum pattern on any kit's keys.</li>
         <li><b>MIDI:</b> files in and out, hardware synths through MIDI out, MIDI clock, control surfaces and MIDI learn.</li>

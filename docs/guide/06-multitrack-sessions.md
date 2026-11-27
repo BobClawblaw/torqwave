@@ -124,6 +124,7 @@ Beside the tools are the tempo (click it to set it) and the **Bars** switch, whi
 - Reverse Clip, Stretch Clip... and Shift Clip Pitch...;
 - Show Takes and Flatten Comp, for [comping](08-recording.md#comping-takes) a clip's takes;
 - Edit Clip in Place (Option-E), Clip Effects..., Combine to New Sound and Add to Library..., for [sound design](#sound-design-in-the-session);
+- **Convert to MIDI (Melody)** and **Convert to MIDI (Drums)** (right-click any audio clip): extracts monophonic melody or bass notes via YIN pitch tracking (with velocity and optional scale snap), or classifies drum hits across three frequency bands into Kick (36), Snare (38), Closed Hat (42) and Open Hat (46) with groove offsets, placing a ready-to-play note clip onto a new instrument track aligned with the audio clip;
 - Lock Clip, Mute Clip, and Group and Ungroup Clips.
 
 **Clip Gain Lines** shows a gain line on each clip:
@@ -305,6 +306,10 @@ The modes are saved with the session but are not undo steps: an undo leaves ever
 A parameter that has an envelope is marked "(automated)" in the menu.
 
 **Automation follows the clips.** Moving clips in time on their track (dragging them, nudging them, or typing a new start in Clip Properties) takes the envelope points under them along, so a fade or a filter sweep drawn under a clip stays with it. Where they land, they replace the points that were there; where they were, a straight line joins the two sides. An envelope with no point under the clip stays as it is, and so does the automation when a clip moves to another track or is copied with Option.
+
+### Track modulators
+
+In addition to drawn envelopes, a session track can carry live **Track Modulators** — tempo-synced or free-running LFOs (sine, triangle, saw, square, sample-and-hold) and audio **Envelope Followers** — targeting any automatable parameter of any plug-in in the track's chain. Modulators are evaluated continuously during playback and mixdown and are saved with the session.
 
 ## Tempo and bars
 

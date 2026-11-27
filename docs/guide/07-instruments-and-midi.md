@@ -51,7 +51,8 @@ Torqwave Synth is a wavetable synth made for dark club music, industrial and seq
 | **Sub + Noise** | A sub an octave or two down (sine, triangle or round square), straight to the output with **Direct** or through the filters, and noise (white, pink, crackle or digital), tilted dark or bright. |
 | **Filters 1 and 2** | Ladder (24 and 12 dB low-pass, high-pass, band-pass), SVF (low, band, high, notch) or Comb, each with Cutoff, Resonance, Drive and Key tracking; in series or side by side (**Route**). The curve shows the filter as it is now, modulation included. |
 | **Amp + Voice** | Level, pan, how much velocity matters, Poly, Mono or Legato, Glide (on overlapping notes, or always) and the pitch bend range. Up to sixteen notes sound at once, and up to 384 unison voices: each note counts the unison of every oscillator that plays (three oscillators in 8-voice unison on sixteen notes is the most). A patch that asks for more plays fewer notes, the oldest fading out to make room. |
-| **Envelopes and LFOs** | Four envelopes (the first is the amp's) with a curve; drag their points. Four LFOs (**LFO 1** to **LFO 4**), free or synced to the tempo, eight shapes including Drift and 16 Steps you draw; retriggered, free or one-shot, with a fade-in. **Osc Levels**, the last tab, gives each oscillator a level envelope of its own (**Attack**, **Hold**, **Decay**, **Sustain**; those of the three the panels show), off until you switch it on: a layer can swell in late, or strike and fall away under the others, without using a modulation slot. |
+| **Envelopes and LFOs** | Four envelopes (the first is the amp's) with a curve; drag their points. Four LFOs (**LFO 1** to **LFO 4**), free or synced to the tempo, nine shapes including Drift, 16 Steps you draw, and a 16-node smooth Catmull-Rom MSEG **Curve** you shape directly in the LFO display; retriggered, free or one-shot, with a fade-in. **Osc Levels**, the last tab, gives each oscillator a level envelope of its own (**Attack**, **Hold**, **Decay**, **Sustain**; those of the three the panels show), off until you switch it on: a layer can swell in late, or strike and fall away under the others, without using a modulation slot. |
+| **Arpeggiator & Scenes** | A built-in tempo-synced **Arpeggiator** (Up, Down, Up-Down, Down-Up, As Played, Random; 1 to 4 octaves, gate and swing) and **4-Scene continuous Evolve morphing**: capture up to four full patch snapshots and smoothly morph across them in real time with the automatable **Evolve** control (saved with the session and preset). |
 | **Macros** | Four knobs a patch names (Cutoff, Grit, Space...), each routed to whatever the patch needs. |
 | **Modulation** | 24 slots, eight to a page (**Slots 1-8**, **Slots 9-16**, **Slots 17-24**): a source, a destination and an amount. LFOs 3 and 4 are sources like the others, and their rates are destinations under **LFOs 3 and 4** in the destination menu. A slot's amount is a destination too (**Slot Depths** in the menu, or drag a source onto a slot's knob): an envelope can fade an LFO's wobble in, velocity can make it deeper rather than louder, a macro can turn a step pattern from a nudge into a gate. One level deep: a slot moving another slot's depth moves it by its own knob's amount, even if a third slot moves that. |
 | **Effects** | Drive (Soft, Hard, Tube, Fuzz, Fold, Crush), Chorus, Phaser, a tempo-synced ping-pong Delay and Reverb, in that order. |
@@ -64,7 +65,7 @@ Torqwave Synth is a wavetable synth made for dark club music, industrial and seq
 
 ### Decrypt: a patch from a recording
 
-**Decrypt**, the second page of the synth's window (the **Knobs / Decrypt / Decrypted** switch at the top right), finds a Torqwave Synth patch that plays like a recording of one note. Drop the note on the scope, or click **Decrypt a Sound...** to choose a file. It searches with oscillators 1 to 3, and the patches it finds have oscillators 4 to 9 off; switch them on afterwards to add layers.
+**Decrypt**, the second page of the synth's window (the **Knobs / Decrypt / Decrypted** switch at the top right), finds a Torqwave Synth patch that plays like a recording of one note. Drop the note on the scope, or click **Decrypt a Sound...** to choose a file. By default it searches with oscillators 1 to 3 (leaving oscillators 4 to 9 off so you can add layers afterwards); turn on Complex matching to allow up to nine oscillators and multi-stage FM candidates.
 
 <img src="../screenshots/guide-decrypt.png" width="720" alt="Torqwave Synth's Decrypt page after a search on a bell note: the scope with the recording's signature in the middle and eight candidate patches round it, each with its lock, the nearest ringed at 99 %; a numbered path of three steps; the panel on the right with the lock, how far apart tone and loudness are, a bar each for oscillators, filter, envelopes and modulation, and Stop, Take and Again; and the chain along the bottom with Play, the signal and three links at 23, 37 and 99 %">
 
@@ -135,7 +136,7 @@ A session, preset or patch saved before Torqwave Synth had nine oscillators open
 - **64 pads.** The first 30 are the **sounds**, which cover every General MIDI drum note (35 to 81), the notes the drum grid writes and most drum plug-ins play. The 34 after them are **user pads**, on notes of your choosing.
 - **54 synthesized sources.** The 30 sounds, 21 of them in two types (Classic and Modern), and 24 more that belong to no note and that any pad can play: 75 models in all. Nothing here is a recording.
 - **Your own samples** on any pad, in up to 16 layers by velocity, with round robin. No samples come with Torqwave.
-- **On every pad:** tune, decay, tone, level, pan and drive; a filter, a crusher and two sends; its own envelope, transient shaper, saturator, EQ and compressor; and a place in one of eight choke groups, beside the three built in.
+- **On every pad:** tune, decay, tone, level, pan and drive; a filter, a crusher and two sends; its own envelope, transient shaper, saturator, EQ and compressor; per-pad routing to the **Main** stereo bus or any of **8 stereo Aux buses** (saved with the kit and session); and a place in one of eight choke groups, beside the three built in.
 - **Fifteen factory kits,** your own as presets or as kit files that carry their samples, and imports of a folder of sounds or of a Battery 4 kit.
 
 Each note rings on its own voice (a tom fill rings over itself), it plays in stereo, and nothing in it stops dead: a hit struck again or cut off fades over 3 ms.
@@ -366,6 +367,10 @@ Six notes can sound at once; a seventh takes the oldest's place. It answers pitc
 | **Reverse** | Plays the part backwards. |
 | **One-Shot** | The sample plays to its end whatever the note's length, as a drum hit should. A one-shot doesn't loop. |
 | **Choke** | Zones in one choke group cut each other off, as a closed hat cuts an open one. |
+| **Round Robin** | Assign overlapping zones to a round-robin group (1 to 16) so repeated hits cycle cleanly across recordings instead of machine-gunning the same sample. |
+| **Warp & Source BPM** | Tempo-synced time-stretching powered by Signalsmith Stretch so loops and phrases stay locked to the session's tempo across pitch and tempo changes. |
+
+**SFZ multisample import.** Torqwave Sampler imports standard `.sfz` instruments (`<control> default_path`, `<global>`, `<group>`, `<region>`, key/velocity ranges, loop points, choke groups, `seq_length` round robin, and amp envelopes), reading the referenced audio files in place.
 
 **The sound's settings** are for every zone: **Amp** (Attack, Decay, Sustain, Release, and how much Velocity sets the level), **Filter** (a low-pass at 12 or 24 dB an octave, a band-pass or a high-pass, with Cutoff, Reso, Key tracking, Vel for velocity to cutoff, and an envelope of its own: Env is how far it opens the filter), **LFO** (five shapes, a Rate in Hz or, with Sync, in note values at the session's tempo, a Fade In, and how far it moves the pitch, filter, level and pan) and **Voice** (Level, Pan, Transpose, Fine, the Bend range, Glide, the vibrato the mod Wheel adds, and Poly or Mono). These can be automated like any instrument's settings.
 
@@ -400,7 +405,7 @@ They play in the octave their source does: the sub and the cello sound an octave
 
 **Presets.** A preset saved from the presets row keeps the knobs and the zones. It names each sample's file where it is; it does not hold the audio. Move or rename the files and the preset's zones come up missing (see below).
 
-**What it holds, and what it doesn't do.** Samples are held whole in memory, not played from disk: one sample can be up to 10 minutes long, and one sampler holds up to 1 GB of samples (about 46 minutes of 48 kHz stereo). A file past either is refused, and the status line says why. Two samplers playing the same file hold it once. There is no import of sample libraries (SFZ, SF2 or others), no round robins, one stereo output, and a sample played higher is shorter, as on any sampler that plays by resampling.
+**What it holds, and what it doesn't do.** Samples are held whole in memory, not played from disk: one sample can be up to 10 minutes long, and one sampler holds up to 1 GB of samples (about 46 minutes of 48 kHz stereo). A file past either is refused, and the status line says why. Two samplers playing the same file hold it once. Standard `.sfz` multisamples are imported directly (SF2 and proprietary formats are not), round-robin groups cycle per zone, and tempo-synced Warp stretches loops to the session tempo. Without Warp, a sample played higher is shorter, as on any sampler that plays by resampling. One stereo output.
 
 **In a session.** The session keeps the sampler's settings and zones, and names each sample by where it is beside the session as well as by its full path, as it does for clips' audio: move the session's folder with its audio and it still opens. **Save a Copy with Audio** copies the samples into the copy's Audio/Samples folder. A sample that can't be found leaves its zone silent and red in the key map, the rest playing; the session says which files are missing, and **Locate...** in the window finds one where it is now, and looks in the same folder for the others.
 
@@ -419,6 +424,8 @@ Double-click a note clip, or choose **Window > Piano Roll**, to edit the clip's 
 | Nudge the selected notes | Up and Down move a semitone (Shift: an octave). Left and Right move a grid step (Shift: a quarter step) |
 | Set velocity | Select the notes and move the velocity slider, or right-click one and choose from **Velocity** |
 | Let a note play only sometimes | Right-click it and choose from **Probability** (see below) |
+| Ratchets & micro-timing | Right-click a note to set **Ratchets** (1x to 8x rhythmic subdivisions) or **Micro-Timing** offsets (early/late nudge in ticks) |
+| Ghost notes | View overlapping notes from other unmuted instrument tracks faintly behind the active clip to write harmonies and counter-melodies in context |
 | Set the loop | Drag the first repeat line |
 | Hear a pitch | Click a key on the keyboard at the left; drag along it to play each key you pass |
 | Zoom in or out on time | Cmd-scroll or pinch, around the mouse; or **-** and **+** at the top right. **Fit** shows the whole clip |
@@ -482,6 +489,7 @@ With the drum grid's steps, its velocities, probability and swing, a drum clip i
 - **Chords...** writes a chord progression in Roman numerals from the clip's start: upper case for major (IV), lower case for minor (ii), with 7, maj7, dim or °, ø (or m7b5), aug or +, sus2 and sus4, and b or # before a numeral for a borrowed chord (bVII). Separate them with spaces or dashes: `i–VI–III–VII`, `ii7 V7 Imaj7`. Choose how long each chord lasts (a beat, two beats, a bar or two bars), the octave of the roots, and whether they replace the notes or are added to them. The chords are built on the key's scale degrees, in root position.
 - **Arpeggiate...** plays each chord (notes that start together) as an arpeggio over its length, in place of it: **Up**, **Down**, **Up and Down** or **Random**, over one to four octaves, at a rate from 1/2 to 1/8 beat, with notes from short (50 %) to legato. Draw or play the chords first, then arpeggiate them.
 - **Humanize...** moves each note by a random amount up to 5, 10, 20 or 40 ms either way, and changes its velocity up to 5 to 30 %.
+- **Groove...** applies built-in groove and swing templates (MPC 54%–66%, 16th Shuffle, Push, Laid-Back, or groove offsets extracted from an audio drum loop via Audio to MIDI) with adjustable timing strength.
 - **Fit to the Key** moves each note to the nearest note of the key.
 - **Scale Lock** keeps notes in the key while you write: a click puts the note on the nearest note of the key, a drag moves notes only onto the key's notes, and Up and Down move a step of the scale instead of a semitone. Rows outside the key are shaded.
 - **Key...** sets the key the tools use: a root and a scale (major, minor, harmonic and melodic minor, the modes, the pentatonics and blues). Until you set one, the tools use the part's key (a sequence's, or the key given when the clip was made with New Sequence), or guess one from the notes; the menu's first line says which, and "(guessed)" when it is a guess.
@@ -546,9 +554,16 @@ The messages leave when the audio they go with is heard, allowing for the rack a
 
 MIDI out needs the session and the interface at the same sample rate: while Torqwave converts between them, nothing goes out. A port that isn't connected when the session opens is reported. Choose it again once it is.
 
-## MIDI from another track's plug-in
+## Live MIDI FX and MIDI from another track's plug-in
 
-An arpeggiator, chord or other MIDI plug-in can play another track's instrument. Put the MIDI plug-in on one instrument track, as its instrument. Then, on the track whose instrument should play, choose that track under **MIDI From** in the instrument button's menu. The track plays both its own notes and what the MIDI plug-in puts out.
+Four built-in live **MIDI FX** can be inserted directly ahead of any instrument on the same track from the track's **FX** menu:
+
+- **MIDI Arpeggiator:** real-time tempo-synced arpeggiation (Up, Down, Up-Down, Down-Up, As Played, Random, octaves, gate, swing).
+- **Chord Trigger:** expands single notes into triads, 7ths, 9ths, sus or diatonic scale chords with inversions and strum.
+- **Scale Lock:** snaps, filters or transposes incoming notes into a chosen root and scale with stuck-note-safe note-off tracking.
+- **Note Echo:** tempo-synced decaying MIDI repeats with optional semitone pitch shift per echo.
+
+A third-party arpeggiator, chord or other MIDI plug-in can also play another track's instrument. Put the MIDI plug-in on one instrument track, as its instrument. Then, on the track whose instrument should play, choose that track under **MIDI From** in the instrument button's menu. The track plays both its own notes and what the MIDI plug-in puts out.
 
 Keep the track with the MIDI plug-in above the one it plays. Placed below, its notes arrive one block late.
 

@@ -33,7 +33,7 @@ The model works Torqwave through tools: functions with typed settings that Torqw
 
 ### Plug-ins
 
-Plug-ins are driven through what every host can see: their parameters and their saved state. So this works for any AU, VST3 or LV2 plug-in you have, not only Torqwave's built-in effects.
+Plug-ins are driven through what every host can see: their parameters and their saved state. So this works for any AU, CLAP, VST3 or LV2 plug-in you have, not only Torqwave's built-in effects.
 
 - **Find:** list the built-in effects and instruments and every scanned plug-in, with maker, category and format.
 - **Build a chain:** add a plug-in to the effects rack, a track, a bus, or a track's instrument slot, then reorder, bypass or remove it.
@@ -107,7 +107,7 @@ These need models that run on audio, so they wait until the first step has been 
 | Feature | Candidate | Licence (to confirm) |
 |---|---|---|
 | Transcription: markers, regions, subtitles (SRT, WebVTT), search, editing speech as text | whisper.cpp, or a server's `/v1/audio/transcriptions` | MIT |
-| Audio to MIDI, into a note clip | Basic Pitch | Apache-2.0 |
+| Polyphonic Audio to MIDI, into a note clip (monophonic melody & drum Audio to MIDI shipped in 0.23.0 via DSP) | Basic Pitch | Apache-2.0 |
 | Voice noise reduction | DeepFilterNet, RNNoise | MIT/Apache, BSD |
 | Search the Sound Library by meaning ("metal door slam in a big room") | CLAP audio embeddings | to check |
 | Scratch voice-over from text | Kokoro | Apache-2.0 |

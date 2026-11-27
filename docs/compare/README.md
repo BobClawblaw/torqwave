@@ -83,3 +83,13 @@ The cells marked `not confirmed` are listed in MATRIX.md under "Cells not confir
 - 0.20.0 and 0.21.1 are alike in every row, and both count 45 of 53: nothing since 0.20.0 changed a row's value. So the tables (graphics 2, 3, 4 and 6, and MATRIX.md's) show one Torqwave column, 0.21.1; the generator adds the earlier release's column only when a row's value differs. Graphic 5's panel, which would show two equal bars, lists the rows where 0.21.1 is partial or no; it draws the bars again when the releases shown count differently. 0.20.0 stays in the release graphic and in MATRIX.md's table of Torqwave by release.
 - The release graphic's tiles count Basic Drums against 0.20.0's (pads 64 from 30, sources 54 from 30, kits 15 from 7, layers a pad 16 from 0, choke groups of the user's own 8 from 0) and the sequence presets (1,032 from 1,018). Its list has eight lines and is set a little smaller to fit.
 - The other products' cells were not read again for it: they are as read on 2026-11-23.
+
+## 0.23.0
+
+- 0.23.0 is set against 0.22.0, the last snapshot before 0.22.1 (which added 58 nine-oscillator Complex patches and reworked the website demos) and 0.23.0.
+- Two matrix rows flip from **no** to **yes**, lifting Torqwave from **45 of 53** to **47 of 53**:
+  - **Audio to MIDI** (`no` → `yes`): right-click any audio clip in a session for Convert to MIDI (Melody) via YIN pitch tracking or Convert to MIDI (Drums) via 3-band transient classification (Kick, Snare, Closed/Open Hat + groove offsets).
+  - **CLAP plug-ins** (`no` → `yes`): native CLAP 1.2.2 hosting across macOS, Windows and Linux, scanned out of process alongside VST3, Audio Units and LV2.
+- Because two rows differ from 0.22.0, the matrix graphics (2, 3, 4 and 6) and `MATRIX.md` show both **Torqwave 0.23.0** and **Torqwave 0.22.0**, and graphic 5's panel draws the release trend (45 → 47 of 53).
+- Updated notes across existing rows carry the rest of 0.22.1 and 0.23.0: six new Live Creative FX and four Live MIDI FX (32 built-in plug-ins total), Torqwave Synth's 4 LFOs / 24 mod slots / Slot Depth / MSEG Curve / built-in Arpeggiator / 4-scene Evolve morphing and 116 Complex patches, Piano Roll ratchets / micro-timing / groove templates / ghost notes, Torqwave Sampler SFZ import / round-robin groups / Warp, Basic Drums 8-bus multi-out, Track-Level Modulators, and headless CI test runs on Windows and Linux.
+- The other products' cells were not read again for it: they are as read on 2026-11-23.
