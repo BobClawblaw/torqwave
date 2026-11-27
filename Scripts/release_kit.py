@@ -103,11 +103,11 @@ body{{font-family:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Helvetica N
 .grid{{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:52px 52px;mask-image:linear-gradient(180deg,rgba(0,0,0,.85),rgba(0,0,0,.18) 60%,transparent)}}
 .top{{position:absolute;left:68px;right:68px;top:58px;display:flex;justify-content:space-between;align-items:center}}
 .brand{{display:flex;align-items:center;gap:12px;font:800 24px/1 "SF Pro Display",-apple-system,sans-serif;letter-spacing:.14em}}
-.brand .bar{{width:7px;height:28px;border-radius:4px;background:linear-gradient(180deg,#34e8a8,#38d9f5)}}
-.brand em{{font-style:normal;color:#34e8a8}}
-.tag{{font:700 18px/1 "SF Mono",Menlo,monospace;letter-spacing:.12em;color:var(--a);background:rgba(16,32,42,.72);border:1.5px solid var(--a);border-radius:999px;padding:10px 18px}}
+.brand .bar{{width:7px;height:28px;border-radius:4px;background:linear-gradient(180deg,#ff5c1f,#ff8a3d);box-shadow:0 0 18px rgba(255,92,31,.45)}}
+.brand em{{font-style:normal;color:#ff5c1f}}
+.tag{{font:700 18px/1 "SF Mono",Menlo,monospace;letter-spacing:.12em;color:var(--a);background:rgba(28,17,13,.82);border:1.5px solid var(--a);border-radius:999px;padding:10px 18px}}
 h1{{position:absolute;left:68px;right:64px;top:154px;font-weight:800;font-size:var(--hs,104px);line-height:.99;letter-spacing:-.035em}}
-h1 em{{font-style:normal;background:linear-gradient(95deg,var(--a),var(--a2,#38d9f5));-webkit-background-clip:text;-webkit-text-fill-color:transparent}}
+h1 em{{font-style:normal;background:linear-gradient(95deg,var(--a),var(--a2,#ff9c59));-webkit-background-clip:text;-webkit-text-fill-color:transparent}}
 .sub{{position:absolute;left:68px;right:72px;font-weight:450;font-size:34px;line-height:1.32;color:#b8c4d6;letter-spacing:-.01em}}
 .sub b{{color:#f8fafc;font-weight:650}}
 .chips{{position:absolute;left:68px;right:68px;display:flex;flex-wrap:wrap;gap:12px}}
@@ -115,24 +115,24 @@ h1 em{{font-style:normal;background:linear-gradient(95deg,var(--a),var(--a2,#38d
 .chip b{{color:var(--a);font-weight:800}}
 .cards{{position:absolute;left:68px;right:68px;display:grid;grid-template-columns:1fr 1fr;gap:16px}}
 .card{{background:linear-gradient(180deg,rgba(23,32,49,.92),rgba(14,20,32,.92));border:1.5px solid #243248;border-radius:18px;padding:22px 24px;position:relative;overflow:hidden}}
-.card:before{{content:"";position:absolute;left:20px;top:0;width:72px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--a),var(--a2,#38d9f5))}}
+.card:before{{content:"";position:absolute;left:20px;top:0;width:72px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--a),var(--a2,#ff9c59))}}
 .card h3{{font-size:26px;font-weight:750;color:#fff;margin-bottom:8px;letter-spacing:-.01em}}
 .card p{{font-size:21px;line-height:1.32;color:#99a8bf}}
 .shot{{position:absolute;border-radius:20px;border:1.5px solid rgba(255,255,255,.16);box-shadow:0 0 0 1px rgba(0,0,0,.65),0 44px 110px rgba(0,0,0,.8),0 0 120px var(--glow);transform-origin:left top}}
-.chart{{position:absolute;left:68px;width:944px;border-radius:18px;border:1.5px solid #284158;box-shadow:0 36px 90px rgba(0,0,0,.75),0 0 90px var(--glow)}}
+.chart{{position:absolute;left:68px;width:944px;border-radius:18px;border:1.5px solid #4d2d1e;box-shadow:0 36px 90px rgba(0,0,0,.75),0 0 90px var(--glow)}}
 .fade{{position:absolute;left:0;right:0;bottom:0;height:210px;background:linear-gradient(180deg,transparent,#080b11 80%)}}
 .list{{position:absolute;left:68px;right:68px;display:flex;flex-direction:column;gap:18px}}
 .list-row{{display:flex;align-items:center;gap:18px;font-size:33px;font-weight:600;color:#e2e8f2;background:rgba(19,27,42,.72);border:1.5px solid #223047;border-radius:16px;padding:18px 24px}}
 .list-row span{{color:var(--a);font-weight:800;font-size:30px}}
-.urlbox{{position:absolute;left:68px;right:68px;padding:26px 32px;border-radius:18px;background:linear-gradient(95deg,rgba(20,56,48,.85),rgba(18,45,66,.85));border:1.5px solid #2de1a8;text-align:center;font-weight:800;font-size:44px;letter-spacing:-.02em;color:#5ff7c4}}
+.urlbox{{position:absolute;left:68px;right:68px;padding:26px 32px;border-radius:18px;background:linear-gradient(95deg,rgba(48,22,12,.92),rgba(34,17,12,.92));border:1.5px solid #ff5c1f;text-align:center;font-weight:800;font-size:44px;letter-spacing:-.02em;color:#ff8a4d}}
 .foot{{position:absolute;left:68px;right:68px;bottom:48px;display:flex;justify-content:space-between;align-items:center;font:600 20px/1 "SF Mono",Menlo,monospace;letter-spacing:.12em;color:#8e9cb2}}
 .dots{{display:flex;gap:8px;align-items:center}}
 .dots i{{display:block;width:8px;height:8px;border-radius:999px;background:#2b384e}}
-.dots i.on{{width:28px;background:linear-gradient(90deg,var(--a),var(--a2,#38d9f5))}}
+.dots i.on{{width:28px;background:linear-gradient(90deg,var(--a),var(--a2,#ff9c59))}}
 </style></head><body>
 
 <!-- Slide 1: Flagship Cover -->
-<section class="slide" style="--a:#34e8a8;--a2:#38d9f5;--g1:rgba(52,232,168,.26);--g2:rgba(56,217,245,.20);--glow:rgba(52,232,168,.26)">
+<section class="slide" style="--a:#ff5c1f;--a2:#ff9c59;--g1:rgba(255,92,31,.28);--g2:rgba(255,138,61,.18);--glow:rgba(255,92,31,.28)">
  <div class="grid"></div>
  <div class="top"><div class="brand"><div class="bar"></div><span>TORQ<em>WAVE</em></span></div><div class="tag">v{escape(ver)} OUT NOW</div></div>
  <h1 style="top:154px;--hs:114px">Edit it.<br>Design it.<br><em>Produce it.</em></h1>
@@ -214,7 +214,7 @@ h1 em{{font-style:normal;background:linear-gradient(95deg,var(--a),var(--a2,#38d
 </section>
 
 <!-- Slide 6: CLAP 1.2 + Track Modulators + Matrix -->
-<section class="slide" style="--a:#34e8a8;--a2:#38d9f5;--g1:rgba(52,232,168,.26);--g2:rgba(78,168,255,.20);--glow:rgba(52,232,168,.22)">
+<section class="slide" style="--a:#ff5c1f;--a2:#ff9c59;--g1:rgba(255,92,31,.26);--g2:rgba(52,232,168,.16);--glow:rgba(255,92,31,.24)">
  <div class="grid"></div>
  <div class="top"><div class="brand"><div class="bar"></div><span>TORQ<em>WAVE</em></span></div><div class="tag">CLAP 1.2 + MATRIX</div></div>
  <h1 style="top:148px;--hs:96px"><em>{yes_now} of {total}</em> rows.<br>Native CLAP 1.2.</h1>
@@ -229,7 +229,7 @@ h1 em{{font-style:normal;background:linear-gradient(95deg,var(--a),var(--a2,#38d
 </section>
 
 <!-- Slide 7: CTA Closer -->
-<section class="slide" style="--a:#34e8a8;--a2:#38d9f5;--g1:rgba(52,232,168,.30);--g2:rgba(56,217,245,.22);--glow:rgba(52,232,168,.24)">
+<section class="slide" style="--a:#ff5c1f;--a2:#ff9c59;--g1:rgba(255,92,31,.30);--g2:rgba(255,138,61,.20);--glow:rgba(255,92,31,.26)">
  <div class="grid"></div>
  <div class="top"><div class="brand"><div class="bar"></div><span>TORQ<em>WAVE</em></span></div><div class="tag">v{escape(ver)}</div></div>
  <h1 style="top:174px;--hs:112px"><em>Free.</em><br>Open source.<br>No account.</h1>
@@ -439,7 +439,7 @@ No account. No subscription. Hear 1,243 built-in clips at bobclawblaw.github.io/
 For `x/01-release-hero.png`:
 
 ```alt
-Flagship dark studio release graphic for Torqwave {ver} featuring a glowing mint-to-cyan waveform backdrop, four summary pills (32 Built-In FX and Instruments, {yes_now}/{total} Matrix Rows, CLAP 1.2/VST3/AU/LV2, 2,782 Verified Checks), and six glass feature cards covering 6 Live Creative FX, Torqwave Synth Upgrades, Live MIDI FX and Piano Roll, Audio to MIDI, Sampler SFZ and 8-Bus Drums, and Track Modulators and CLAP 1.2.
+Flagship dark studio release graphic for Torqwave {ver} featuring a glowing Torqwave orange waveform backdrop, four summary pills (32 Built-In FX and Instruments, {yes_now}/{total} Matrix Rows, CLAP 1.2/VST3/AU/LV2, 2,782 Verified Checks), and six glass feature cards covering 6 Live Creative FX, Torqwave Synth Upgrades, Live MIDI FX and Piano Roll, Audio to MIDI, Sampler SFZ and 8-Bus Drums, and Track Modulators and CLAP 1.2.
 ```
 
 For `x/02-release-by-the-numbers.png`:

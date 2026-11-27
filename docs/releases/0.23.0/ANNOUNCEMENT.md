@@ -134,7 +134,7 @@ No account. No subscription. Hear 1,243 built-in clips at bobclawblaw.github.io/
 For `x/01-release-hero.png`:
 
 ```alt
-Flagship dark studio release graphic for Torqwave 0.23.0 featuring a glowing mint-to-cyan waveform backdrop, four summary pills (32 Built-In FX and Instruments, 47/53 Matrix Rows, CLAP 1.2/VST3/AU/LV2, 2,782 Verified Checks), and six glass feature cards covering 6 Live Creative FX, Torqwave Synth Upgrades, Live MIDI FX and Piano Roll, Audio to MIDI, Sampler SFZ and 8-Bus Drums, and Track Modulators and CLAP 1.2.
+Flagship dark studio release graphic for Torqwave 0.23.0 featuring a glowing Torqwave orange waveform backdrop, four summary pills (32 Built-In FX and Instruments, 47/53 Matrix Rows, CLAP 1.2/VST3/AU/LV2, 2,782 Verified Checks), and six glass feature cards covering 6 Live Creative FX, Torqwave Synth Upgrades, Live MIDI FX and Piano Roll, Audio to MIDI, Sampler SFZ and 8-Bus Drums, and Track Modulators and CLAP 1.2.
 ```
 
 For `x/02-release-by-the-numbers.png`:

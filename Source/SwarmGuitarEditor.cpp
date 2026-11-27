@@ -448,7 +448,7 @@ void SwarmGuitarEditor::paint (juce::Graphics& g)
     g.fillAll (Theme::base);
 
     auto top = getLocalBounds().reduced (12).removeFromTop (30);
-    g.setColour (Theme::accent);
+    g.setColour (Theme::brandOrange());
     g.fillRoundedRectangle ((float) top.getX(), (float) top.getY() + 7.0f, 3.0f, 16.0f, 1.5f);
     g.setColour (Theme::textStrong);
     g.setFont (juce::FontOptions (15.0f, juce::Font::bold));

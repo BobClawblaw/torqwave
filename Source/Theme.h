@@ -82,6 +82,13 @@ namespace Theme
     /** The palette in use. */
     const Palette& current();
 
+    /** Official Torqwave brand orange (Art/ridges.py HOT = #ff5c1f on dark themes, #d9480f on light).
+        Used for the "WAVE" half of the TORQWAVE wordmark and brand header bars across all built-in plugins. */
+    inline juce::Colour brandOrange() noexcept
+    {
+        return current().light ? juce::Colour (0xffd9480f) : juce::Colour (0xffff5c1f);
+    }
+
     /** Gives a control one of the theme's colours, kept up to date when the theme changes. */
     void follow (juce::Component&, int colourId, const juce::Colour& themeColour);
 

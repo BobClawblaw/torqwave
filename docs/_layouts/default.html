@@ -23,20 +23,22 @@
 <meta property="og:image" content="{{ site.address }}/assets/social-card.png">
 <meta property="og:image:width" content="1600">
 <meta property="og:image:height" content="900">
-<meta property="og:image:alt" content="Torqwave: a ridged waveform drawn in white lines over the name, and the words cut, shape, restore.">
+<meta property="og:image:alt" content="Torqwave: a ridged waveform drawn in white and hot orange lines over the TORQWAVE wordmark.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ shared_title }}">
 <meta name="twitter:description" content="{{ shared_text }}">
 <meta name="twitter:image" content="{{ site.address }}/assets/social-card.png">
-<meta name="twitter:image:alt" content="Torqwave: a ridged waveform drawn in white lines over the name, and the words cut, shape, restore.">
+<meta name="twitter:image:alt" content="Torqwave: a ridged waveform drawn in white and hot orange lines over the TORQWAVE wordmark.">
 <link rel="stylesheet" href="{{ root }}assets/site.css">
 </head>
 <body{% if section == 'guide' %} class="has-side"{% endif %}>
 <header class="top">
   <div class="top-in">
     <a class="mark" href="{{ root }}{% if root == '' %}./{% endif %}">TORQ<span>WAVE</span></a>
+    <a class="ver-pill" href="https://github.com/BobClawblaw/torqwave/releases/latest">v{{ site.version }}</a>
     <nav class="top-nav" aria-label="Site">
       <a href="{{ root }}{% if root == '' %}./{% endif %}"{% if section == 'home' %} aria-current="page"{% endif %}>Overview</a>
+      <a href="{{ root }}sounds/release-023.html">0.23 Demos</a>
       <a href="{{ root }}sounds/"{% if section == 'sounds' %} aria-current="page"{% endif %}>Sounds</a>
       <a href="{{ root }}quality/"{% if section == 'quality' %} aria-current="page"{% endif %}>Quality</a>
       <a href="{{ root }}guide/"{% if section == 'guide' %} aria-current="page"{% endif %}>Guide</a>
@@ -85,7 +87,10 @@
 {%- endif %}
 <footer class="foot">
   <div class="foot-in">
-    <p>Torqwave is free software under the GNU Affero General Public License, version 3.</p>
+    <div>
+      <a class="mark" href="{{ root }}{% if root == '' %}./{% endif %}">TORQ<span>WAVE</span></a>
+      <p>Free software under the GNU Affero General Public License, version 3.</p>
+    </div>
     <p><a href="https://github.com/BobClawblaw/torqwave">Source on GitHub</a> · <a href="https://github.com/BobClawblaw/torqwave/releases">Releases</a> · <a href="https://github.com/BobClawblaw/torqwave/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/BobClawblaw/torqwave/issues">Report a problem</a></p>
   </div>
 </footer>

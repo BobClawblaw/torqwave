@@ -1379,11 +1379,24 @@ void SamplerEditor::paint (juce::Graphics& g)
     g.fillAll (Theme::base);
 
     auto top = getLocalBounds().reduced (12).removeFromTop (30);
-    g.setColour (Theme::accent);
+    const auto brandCol = Theme::brandOrange();
+    g.setColour (brandCol);
     g.fillRoundedRectangle ((float) top.getX(), (float) top.getY() + 7.0f, 3.0f, 16.0f, 1.5f);
+    const auto titleFont = juce::Font (juce::FontOptions (15.0f, juce::Font::bold));
+    const float baseY = (float) top.getCentreY() + 5.0f;
+    float x = (float) top.getX() + 10.0f;
+    juce::GlyphArrangement gTorq, gWave, gRest;
+    gTorq.addLineOfText (titleFont, "TORQ", x, baseY);
+    const float torqW = gTorq.getBoundingBox (0, -1, true).getWidth();
+    gWave.addLineOfText (titleFont, "WAVE", x + torqW + 1.5f, baseY);
+    const float waveRight = gWave.getBoundingBox (0, -1, true).getRight();
+    gRest.addLineOfText (titleFont, "SAMPLER", waveRight + 6.0f, baseY);
     g.setColour (Theme::textStrong);
-    g.setFont (juce::FontOptions (15.0f, juce::Font::bold));
-    g.drawText ("TORQWAVE SAMPLER", top.withTrimmedLeft (10), juce::Justification::centredLeft);
+    gTorq.draw (g);
+    g.setColour (brandCol);
+    gWave.draw (g);
+    g.setColour (Theme::dimText);
+    gRest.draw (g);
 
     // The status keeps to the theme's colour when the theme changes.
     statusLine.setColour (juce::Label::textColourId, Theme::dimText);

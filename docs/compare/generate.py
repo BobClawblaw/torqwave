@@ -14,16 +14,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
 OUT = os.path.join(HERE, "graphics")
 
-# Studio Obsidian + Luminous Mint/Cyan palette (inspired by Torqwave Dark theme with flagship studio depth).
-BG_TOP, BG_MID, BG_BOT = "#080b11", "#0c111b", "#080c14"
-SURFACE, SURFACE_HI = "#111724", "#172031"
-RAISED, RAISED_HI = "#151d2d", "#1d283d"
-LINE, LINE2 = "#232e42", "#374660"
-WHITE, TEXT, DIM, FAINT = "#f8fafc", "#dce3ee", "#8e9cb2", "#64728a"
+# Studio Obsidian + Torqwave Hot Orange (#ff5c1f) brand chrome + Emerald Green matrix semantics.
+BG_TOP, BG_MID, BG_BOT = "#07090e", "#0c1018", "#07090e"
+SURFACE, SURFACE_HI = "#111621", "#171e2d"
+RAISED, RAISED_HI = "#151c29", "#1d2638"
+LINE, LINE2 = "#232d40", "#37445c"
+WHITE, TEXT, DIM, FAINT = "#f8fafc", "#dce3ee", "#929eb3", "#68758c"
+BRAND, BRAND_HI, BRAND_DK = "#ff5c1f", "#ff8a3d", "#c84110"
 GOOD, GOOD_DK = "#34e8a8", "#18a877"
 WARN, WARN_DK = "#f4ca53", "#a88321"
-ACCENT, CYAN = "#4ea8ff", "#38d9f5"
-WAVE = "#34e8a8"
+ACCENT, CYAN = "#ff7840", "#ff9f5a"
+WAVE = "#ff5c1f"
 FONT = "SF Pro Display, -apple-system, BlinkMacSystemFont, Helvetica Neue, Inter, Arial, sans-serif"
 W, H = 1600, 900
 
@@ -134,41 +135,41 @@ class Svg:
             f'<stop offset="52%" stop-color="{BG_MID}"/>'
             f'<stop offset="100%" stop-color="{BG_BOT}"/>'
             "</linearGradient>",
-            # Ambient studio aurora glows
-            '<radialGradient id="glowMint" cx="0.16" cy="0.06" r="0.55">'
-            '<stop offset="0%" stop-color="#34e8a8" stop-opacity="0.14"/>'
-            '<stop offset="55%" stop-color="#1cb58c" stop-opacity="0.04"/>'
-            '<stop offset="100%" stop-color="#080b11" stop-opacity="0"/>'
+            # Ambient studio glows (Torqwave Hot Orange + warm amber counterweight)
+            '<radialGradient id="glowBrand" cx="0.16" cy="0.06" r="0.56">'
+            '<stop offset="0%" stop-color="#ff5c1f" stop-opacity="0.18"/>'
+            '<stop offset="55%" stop-color="#ff5c1f" stop-opacity="0.045"/>'
+            '<stop offset="100%" stop-color="#07090e" stop-opacity="0"/>'
             "</radialGradient>",
-            '<radialGradient id="glowCyan" cx="0.88" cy="0.92" r="0.55">'
-            '<stop offset="0%" stop-color="#38d9f5" stop-opacity="0.12"/>'
-            '<stop offset="55%" stop-color="#2563eb" stop-opacity="0.035"/>'
-            '<stop offset="100%" stop-color="#080b11" stop-opacity="0"/>'
+            '<radialGradient id="glowWarm" cx="0.88" cy="0.92" r="0.54">'
+            '<stop offset="0%" stop-color="#ff8a3d" stop-opacity="0.11"/>'
+            '<stop offset="55%" stop-color="#c84110" stop-opacity="0.03"/>'
+            '<stop offset="100%" stop-color="#07090e" stop-opacity="0"/>'
             "</radialGradient>",
             # Card gradients
             '<linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#151d2d"/>'
-            '<stop offset="100%" stop-color="#0e1420"/>'
+            '<stop offset="0%" stop-color="#151b28"/>'
+            '<stop offset="100%" stop-color="#0d111a"/>'
             "</linearGradient>",
             '<linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#172133"/>'
-            '<stop offset="100%" stop-color="#0f1522"/>'
+            '<stop offset="0%" stop-color="#171e2c"/>'
+            '<stop offset="100%" stop-color="#0e131d"/>'
             "</linearGradient>",
-            # Featured Torqwave column gradient
+            # Featured Torqwave column gradient (subtle warm studio ember tint)
             '<linearGradient id="tqColGrad" x1="0" y1="0" x2="0" y2="1">'
-            '<stop offset="0%" stop-color="#162933" stop-opacity="0.95"/>'
-            '<stop offset="100%" stop-color="#101827" stop-opacity="0.92"/>'
+            '<stop offset="0%" stop-color="#291914" stop-opacity="0.96"/>'
+            '<stop offset="100%" stop-color="#14141d" stop-opacity="0.94"/>'
             "</linearGradient>",
-            # Luminous Mint -> Cyan accent gradients
+            # Torqwave Hot Orange -> Warm Amber brand accent gradients
             '<linearGradient id="accentH" x1="0" y1="0" x2="1" y2="0">'
-            '<stop offset="0%" stop-color="#34e8a8"/>'
-            '<stop offset="65%" stop-color="#38d9f5"/>'
-            '<stop offset="100%" stop-color="#4ea8ff"/>'
+            '<stop offset="0%" stop-color="#ff5c1f"/>'
+            '<stop offset="65%" stop-color="#ff7a33"/>'
+            '<stop offset="100%" stop-color="#ffa35c"/>'
             "</linearGradient>",
             '<linearGradient id="accentFade" x1="0" y1="0" x2="1" y2="0">'
-            '<stop offset="0%" stop-color="#34e8a8" stop-opacity="0.85"/>'
-            '<stop offset="45%" stop-color="#38d9f5" stop-opacity="0.45"/>'
-            '<stop offset="100%" stop-color="#38d9f5" stop-opacity="0"/>'
+            '<stop offset="0%" stop-color="#ff5c1f" stop-opacity="0.92"/>'
+            '<stop offset="45%" stop-color="#ff8a3d" stop-opacity="0.45"/>'
+            '<stop offset="100%" stop-color="#ff8a3d" stop-opacity="0"/>'
             "</linearGradient>",
             '<linearGradient id="barYes" x1="0" y1="0" x2="1" y2="0">'
             '<stop offset="0%" stop-color="#1fa87a"/>'
@@ -184,12 +185,16 @@ class Svg:
             '<stop offset="100%" stop-color="#bf9226"/>'
             "</linearGradient>",
             '<linearGradient id="kpiText" x1="0" y1="0" x2="1" y2="1">'
-            '<stop offset="0%" stop-color="#5ff7c4"/>'
-            '<stop offset="100%" stop-color="#38d9f5"/>'
+            '<stop offset="0%" stop-color="#ff6e35"/>'
+            '<stop offset="100%" stop-color="#ffa159"/>'
             "</linearGradient>",
             '<linearGradient id="pillBg" x1="0" y1="0" x2="1" y2="0">'
-            '<stop offset="0%" stop-color="#13342d"/>'
-            '<stop offset="100%" stop-color="#122c3c"/>'
+            '<stop offset="0%" stop-color="#301810"/>'
+            '<stop offset="100%" stop-color="#241512"/>'
+            "</linearGradient>",
+            '<linearGradient id="deltaBg" x1="0" y1="0" x2="1" y2="0">'
+            '<stop offset="0%" stop-color="#113025"/>'
+            '<stop offset="100%" stop-color="#112829"/>'
             "</linearGradient>",
             # Subtle studio grid pattern
             '<pattern id="studioGrid" width="48" height="48" patternUnits="userSpaceOnUse">'
@@ -198,8 +203,8 @@ class Svg:
             "</defs>",
             f'<rect width="{w}" height="{h}" fill="url(#bgGrad)"/>',
             f'<rect width="{w}" height="{h}" fill="url(#studioGrid)"/>',
-            f'<rect width="{w}" height="{h}" fill="url(#glowMint)"/>',
-            f'<rect width="{w}" height="{h}" fill="url(#glowCyan)"/>',
+            f'<rect width="{w}" height="{h}" fill="url(#glowBrand)"/>',
+            f'<rect width="{w}" height="{h}" fill="url(#glowWarm)"/>',
         ]
         if hero_wave:
             self._draw_hero_waveform()
@@ -217,18 +222,18 @@ class Svg:
             pts1.append(f"{x},{y1:.1f}")
             pts2.append(f"{x},{y2:.1f}")
         self.parts.append(
-            f'<polyline points="{" ".join(pts1)}" fill="none" stroke="url(#accentH)" stroke-opacity="0.22" stroke-width="2"/>'
+            f'<polyline points="{" ".join(pts1)}" fill="none" stroke="url(#accentH)" stroke-opacity="0.26" stroke-width="2"/>'
         )
         self.parts.append(
-            f'<polyline points="{" ".join(pts2)}" fill="none" stroke="#38d9f5" stroke-opacity="0.12" stroke-width="1.5"/>'
+            f'<polyline points="{" ".join(pts2)}" fill="none" stroke="#ff8a3d" stroke-opacity="0.14" stroke-width="1.5"/>'
         )
 
     def _draw_hero_waveform(self):
         # Rich multi-oscillator harmonic ribbons across the hero header backdrop
         for idx, (amp, freq1, freq2, phase, op, sw, col) in enumerate((
-            (54, 9.5, 23.0, 0.0, 0.30, 2.5, "url(#accentH)"),
-            (36, 7.2, 17.0, 1.1, 0.18, 1.8, "#38d9f5"),
-            (24, 13.0, 29.0, 2.3, 0.12, 1.3, "#34e8a8"),
+            (54, 9.5, 23.0, 0.0, 0.34, 2.5, "url(#accentH)"),
+            (36, 7.2, 17.0, 1.1, 0.20, 1.8, "#ff8a3d"),
+            (24, 13.0, 29.0, 2.3, 0.14, 1.3, "#ff5c1f"),
         )):
             pts = []
             for x in range(560, self.w + 20, 10):
@@ -261,7 +266,7 @@ class Svg:
             f'font-weight="{weight}"{t}{l}>{escape(str(s))}</text>'
         )
 
-    def pill(self, x, y, label_text, fill="url(#pillBg)", stroke="#2be0a2", text_col=GOOD, size=14, h=28, pad_x=14):
+    def pill(self, x, y, label_text, fill="url(#pillBg)", stroke="#ff5c1f", text_col="#ff8a4d", size=14, h=28, pad_x=14):
         pw = max(60, len(label_text) * (size * 0.62) + pad_x * 2)
         self.rect(x, y, pw, h, fill, h / 2, stroke, sw=1.1)
         self.text(x + pw / 2, y + h / 2 + size * 0.35, label_text, size, text_col, "middle", "bold", ls="0.06em")
@@ -270,9 +275,9 @@ class Svg:
     def mark(self, cx, cy, value, r=12, highlight=False):
         if value == "yes":
             if highlight:
-                # Subtle cyan-mint halo highlighting a brand-new row in this release
-                self.parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r + 5:.1f}" fill="#34e8a8" fill-opacity="0.16" stroke="#38d9f5" stroke-opacity="0.65" stroke-width="1.3"/>')
-            self.parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="url(#accentH)"/>')
+                # Warm Torqwave Hot Orange halo highlighting a brand-new row in this release
+                self.parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r + 5:.1f}" fill="#ff5c1f" fill-opacity="0.20" stroke="#ff7a3d" stroke-opacity="0.85" stroke-width="1.5"/>')
+            self.parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="url(#barYes)"/>')
             # Crisp dark checkmark inside
             s = r / 12.0
             self.parts.append(
@@ -296,13 +301,14 @@ class Svg:
             x += 46 + len(word) * 8.6
         if show_new:
             self.mark(x + 12, y - 5, "yes", 9, highlight=True)
-            self.text(x + 31, y, "New in this release", 15, CYAN, weight="600")
+            self.text(x + 31, y, "New in this release", 15, BRAND_HI, weight="600")
 
     def brand_header(self, title, sub, snap, right_badge=None):
-        # Top meta row: TORQWAVE wordmark + release pill + optional right badge
-        self.text(50, 44, "TORQ", 16, WHITE, weight="800", ls="0.14em")
-        self.text(105, 44, "WAVE", 16, GOOD, weight="800", ls="0.14em")
-        self.pill(176, 24, f'v{snap["release"]}', size=12, h=24, pad_x=11)
+        # Top meta row: TORQ (white) + WAVE (Torqwave Hot Orange) + release pill + right badge
+        self.rect(50, 26, 4.5, 20, BRAND, 2.2)
+        self.text(62, 43, "TORQ", 16, WHITE, weight="800", ls="0.14em")
+        self.text(117, 43, "WAVE", 16, BRAND, weight="800", ls="0.14em")
+        self.pill(188, 24, f'v{snap["release"]}', size=12, h=24, pad_x=11)
         badge = right_badge or "FREE · OPEN SOURCE · macOS / WIN / LINUX"
         self.text(self.w - 50, 42, badge, 13, DIM, "end", "600", ls="0.09em")
         # Title & subtitle
@@ -320,35 +326,35 @@ class Svg:
         )
 
     def icon(self, kind, cx, cy):
-        # Minimal crisp geometric vector badges for the hero cards
-        self.rect(cx - 20, cy - 20, 40, 40, "#12292f", 10, "#295866", sw=1.1)
+        # Minimal crisp geometric vector badges for the hero cards (warm studio ember badge)
+        self.rect(cx - 20, cy - 20, 40, 40, "#241611", 10, "#5e301e", sw=1.1)
         if kind == "fx":
             # Three equalizer sliders
             for dx, ky in ((-9, -4), (0, 5), (9, -7)):
-                self.line(cx + dx, cy - 11, cx + dx, cy + 11, "#3b5670", 2)
-                self.raw(f'<circle cx="{cx + dx}" cy="{cy + ky}" r="3.4" fill="{GOOD}"/>')
+                self.line(cx + dx, cy - 11, cx + dx, cy + 11, "#6b4738", 2)
+                self.raw(f'<circle cx="{cx + dx}" cy="{cy + ky}" r="3.4" fill="{BRAND}"/>')
         elif kind == "synth":
             # Saw / harmonic wave
-            self.raw(f'<polyline points="{cx-12},{cy+6} {cx-4},{cy-8} {cx-4},{cy+6} {cx+4},{cy-8} {cx+4},{cy+6} {cx+12},{cy-8}" fill="none" stroke="{GOOD}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>')
+            self.raw(f'<polyline points="{cx-12},{cy+6} {cx-4},{cy-8} {cx-4},{cy+6} {cx+4},{cy-8} {cx+4},{cy+6} {cx+12},{cy-8}" fill="none" stroke="{BRAND_HI}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>')
         elif kind == "midi":
             # Piano roll notes
-            self.rect(cx - 11, cy - 8, 9, 4, CYAN, 2)
-            self.rect(cx - 2, cy - 2, 13, 4, GOOD, 2)
-            self.rect(cx - 8, cy + 4, 11, 4, ACCENT, 2)
+            self.rect(cx - 11, cy - 8, 9, 4, BRAND_HI, 2)
+            self.rect(cx - 2, cy - 2, 13, 4, BRAND, 2)
+            self.rect(cx - 8, cy + 4, 11, 4, WARN, 2)
         elif kind == "wave":
             # Audio waveform -> note
             for dx, hh in ((-11, 4), (-7, 9), (-3, 6), (1, 11), (5, 5), (9, 8)):
-                self.raw(f'<line x1="{cx+dx}" y1="{cy-hh}" x2="{cx+dx}" y2="{cy+hh}" stroke="{CYAN}" stroke-width="2.2" stroke-linecap="round"/>')
+                self.raw(f'<line x1="{cx+dx}" y1="{cy-hh}" x2="{cx+dx}" y2="{cy+hh}" stroke="{BRAND_HI}" stroke-width="2.2" stroke-linecap="round"/>')
         elif kind == "drums":
             # 2x2 drum pads
             for dx in (-8, 2):
                 for dy in (-8, 2):
-                    col = GOOD if (dx == -8 and dy == -8) or (dx == 2 and dy == 2) else "#2d4c5c"
+                    col = BRAND if (dx == -8 and dy == -8) or (dx == 2 and dy == 2) else "#53362a"
                     self.rect(cx + dx, cy + dy, 7, 7, col, 2)
         else:
             # Modular node / CLAP plug-in connector
-            self.raw(f'<circle cx="{cx - 7}" cy="{cy}" r="4.5" fill="none" stroke="{GOOD}" stroke-width="2"/>')
-            self.raw(f'<circle cx="{cx + 7}" cy="{cy}" r="4.5" fill="none" stroke="{CYAN}" stroke-width="2"/>')
+            self.raw(f'<circle cx="{cx - 7}" cy="{cy}" r="4.5" fill="none" stroke="{BRAND}" stroke-width="2"/>')
+            self.raw(f'<circle cx="{cx + 7}" cy="{cy}" r="4.5" fill="none" stroke="{BRAND_HI}" stroke-width="2"/>')
             self.line(cx - 2.5, cy, cx + 2.5, cy, WHITE, 2)
 
     def save(self, name):
@@ -383,9 +389,9 @@ def graphic_hero(defs, snap):
     prev_cov = coverage(snap["products"]["torqwave_prev"]["cells"], rows) if "torqwave_prev" in snap["products"] else None
     cov_str = f'{cov["yes"]}/{len(rows)} Matrix Rows' + (f' (+{cov["yes"] - prev_cov["yes"]})' if prev_cov and cov["yes"] > prev_cov["yes"] else "")
     chips = [
-        ("32 Built-In FX & Instruments", GOOD),
-        (cov_str, CYAN),
-        ("CLAP 1.2 · VST3 · AU · LV2", ACCENT),
+        ("32 Built-In FX & Instruments", BRAND),
+        (cov_str, GOOD),
+        ("CLAP 1.2 · VST3 · AU · LV2", BRAND_HI),
         ("2,782 Verified Checks", GOOD),
     ]
     cx = 56
@@ -439,7 +445,7 @@ def graphic_numbers(defs, snap):
         d = delta_text(n["prev"], n["now"])
         if d:
             pw = max(54, len(d) * 9.5 + 22)
-            s.rect(x + tw - pw - 18, y + 20, pw, 28, "url(#pillBg)", 14, "#279e78", sw=1)
+            s.rect(x + tw - pw - 18, y + 20, pw, 28, "url(#deltaBg)", 14, "#279e78", sw=1)
             s.text(x + tw - pw / 2 - 18, y + 39, d, 15, GOOD, "middle", "700")
         s.text(x + 24, y + 114, fmt(n["now"]), 78, "url(#kpiText)", weight="800", ls="-0.03em")
         s.text(x + 24, y + 158, n["label"], 25, WHITE, weight="700")
@@ -494,7 +500,7 @@ def graphic_matrix(defs, snap, m):
     # Outer table frame
     s.rect(lx - 12, top, W - 2 * lx + 24, bottom - top, "#0c111b", 12, LINE, sw=1, opacity="0.65")
     # Highlighted Torqwave column(s)
-    s.rect(cx0, top, cw * nt, bottom - top, "url(#tqColGrad)", 10, "#245763", sw=1.2)
+    s.rect(cx0, top, cw * nt, bottom - top, "url(#tqColGrad)", 10, "#5c3322", sw=1.2)
     s.rect(cx0 + 12, top, cw * nt - 24, 3.5, "url(#accentH)", 2)
 
     for i, pid in enumerate(pids):
@@ -503,7 +509,7 @@ def graphic_matrix(defs, snap, m):
         if pid.startswith("torqwave"):
             is_cur = pid == "torqwave"
             s.text(x, top + 34, "Torqwave", 20, WHITE, "middle", "700")
-            s.text(x, top + 58, p["version"], 18, GOOD if is_cur else DIM, "middle", "700")
+            s.text(x, top + 58, p["version"], 18, BRAND_HI if is_cur else DIM, "middle", "700")
         else:
             lines = split_name(p["name"])
             for j, ln in enumerate(lines):
@@ -522,7 +528,7 @@ def graphic_matrix(defs, snap, m):
         flipped = prev_v is not None and cur_v == "yes" and prev_v != "yes"
         if flipped:
             has_new = True
-            s.rect(lx - 10, y + 1, cx0 - lx + 8, rh - 2, "#112b2e", 4, opacity="0.75")
+            s.rect(lx - 10, y + 1, cx0 - lx + 8, rh - 2, "#2c1812", 4, opacity="0.78")
         s.text(lx + 4, y + rh / 2 + 6, r["title"], 19, WHITE if flipped else TEXT, weight="600" if flipped else "400")
         for i, pid in enumerate(pids):
             val = snap["products"][pid]["cells"][r["id"]]["value"]
@@ -547,7 +553,7 @@ def graphic_whole(defs, snap):
     )
     cw = (W - 50 - cx0) / len(pids)
     bottom = h - 72
-    s.rect(cx0, top, cw * nt, bottom - top, "url(#tqColGrad)", 10, "#245763", sw=1.2)
+    s.rect(cx0, top, cw * nt, bottom - top, "url(#tqColGrad)", 10, "#5c3322", sw=1.2)
     s.rect(cx0 + 8, top, cw * nt - 16, 3.5, "url(#accentH)", 2)
 
     group_of = {p["id"]: p["group"] for p in defs["products"]}
@@ -557,7 +563,7 @@ def graphic_whole(defs, snap):
         own = pid.startswith("torqwave")
         s.text(
             x + 6, top + head - 14, label(defs, snap, pid), 18,
-            (GOOD if pid == "torqwave" else WHITE) if own else TEXT, "start", "700" if own else "600", -90
+            (BRAND_HI if pid == "torqwave" else WHITE) if own else TEXT, "start", "700" if own else "600", -90
         )
 
     y = top + head
@@ -609,7 +615,7 @@ def standing_trend(s, pts, total, px, pw, top, bottom):
     if len(pts) >= 2:
         diff = pts[-1][1]["yes"] - pts[0][1]["yes"]
         if diff > 0:
-            s.pill(px + pw - 78, top + 18, f"+{diff}", size=13, h=24, pad_x=10)
+            s.pill(px + pw - 78, top + 18, f"+{diff}", fill="url(#deltaBg)", stroke="#279e78", text_col=GOOD, size=13, h=24, pad_x=10)
     slots = max(2, len(pts))
     shown = pts[-slots:]
     bx0, by0, bh = px + 20, top + 92, bottom - top - 152

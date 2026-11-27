@@ -1,41 +1,43 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="SF Pro Display, -apple-system, BlinkMacSystemFont, Helvetica Neue, Inter, Arial, sans-serif">
 <defs>
-<linearGradient id="bgGrad" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#080b11"/><stop offset="52%" stop-color="#0c111b"/><stop offset="100%" stop-color="#080c14"/></linearGradient>
-<radialGradient id="glowMint" cx="0.16" cy="0.06" r="0.55"><stop offset="0%" stop-color="#34e8a8" stop-opacity="0.14"/><stop offset="55%" stop-color="#1cb58c" stop-opacity="0.04"/><stop offset="100%" stop-color="#080b11" stop-opacity="0"/></radialGradient>
-<radialGradient id="glowCyan" cx="0.88" cy="0.92" r="0.55"><stop offset="0%" stop-color="#38d9f5" stop-opacity="0.12"/><stop offset="55%" stop-color="#2563eb" stop-opacity="0.035"/><stop offset="100%" stop-color="#080b11" stop-opacity="0"/></radialGradient>
-<linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#151d2d"/><stop offset="100%" stop-color="#0e1420"/></linearGradient>
-<linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#172133"/><stop offset="100%" stop-color="#0f1522"/></linearGradient>
-<linearGradient id="tqColGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#162933" stop-opacity="0.95"/><stop offset="100%" stop-color="#101827" stop-opacity="0.92"/></linearGradient>
-<linearGradient id="accentH" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#34e8a8"/><stop offset="65%" stop-color="#38d9f5"/><stop offset="100%" stop-color="#4ea8ff"/></linearGradient>
-<linearGradient id="accentFade" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#34e8a8" stop-opacity="0.85"/><stop offset="45%" stop-color="#38d9f5" stop-opacity="0.45"/><stop offset="100%" stop-color="#38d9f5" stop-opacity="0"/></linearGradient>
+<linearGradient id="bgGrad" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#07090e"/><stop offset="52%" stop-color="#0c1018"/><stop offset="100%" stop-color="#07090e"/></linearGradient>
+<radialGradient id="glowBrand" cx="0.16" cy="0.06" r="0.56"><stop offset="0%" stop-color="#ff5c1f" stop-opacity="0.18"/><stop offset="55%" stop-color="#ff5c1f" stop-opacity="0.045"/><stop offset="100%" stop-color="#07090e" stop-opacity="0"/></radialGradient>
+<radialGradient id="glowWarm" cx="0.88" cy="0.92" r="0.54"><stop offset="0%" stop-color="#ff8a3d" stop-opacity="0.11"/><stop offset="55%" stop-color="#c84110" stop-opacity="0.03"/><stop offset="100%" stop-color="#07090e" stop-opacity="0"/></radialGradient>
+<linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#151b28"/><stop offset="100%" stop-color="#0d111a"/></linearGradient>
+<linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#171e2c"/><stop offset="100%" stop-color="#0e131d"/></linearGradient>
+<linearGradient id="tqColGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#291914" stop-opacity="0.96"/><stop offset="100%" stop-color="#14141d" stop-opacity="0.94"/></linearGradient>
+<linearGradient id="accentH" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ff5c1f"/><stop offset="65%" stop-color="#ff7a33"/><stop offset="100%" stop-color="#ffa35c"/></linearGradient>
+<linearGradient id="accentFade" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ff5c1f" stop-opacity="0.92"/><stop offset="45%" stop-color="#ff8a3d" stop-opacity="0.45"/><stop offset="100%" stop-color="#ff8a3d" stop-opacity="0"/></linearGradient>
 <linearGradient id="barYes" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1fa87a"/><stop offset="100%" stop-color="#34e8a8"/></linearGradient>
 <linearGradient id="barYesV" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#147a5b"/><stop offset="65%" stop-color="#22bd89"/><stop offset="100%" stop-color="#34e8a8"/></linearGradient>
 <linearGradient id="barPart" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8b6918"/><stop offset="100%" stop-color="#bf9226"/></linearGradient>
-<linearGradient id="kpiText" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5ff7c4"/><stop offset="100%" stop-color="#38d9f5"/></linearGradient>
-<linearGradient id="pillBg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#13342d"/><stop offset="100%" stop-color="#122c3c"/></linearGradient>
+<linearGradient id="kpiText" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff6e35"/><stop offset="100%" stop-color="#ffa159"/></linearGradient>
+<linearGradient id="pillBg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#301810"/><stop offset="100%" stop-color="#241512"/></linearGradient>
+<linearGradient id="deltaBg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#113025"/><stop offset="100%" stop-color="#112829"/></linearGradient>
 <pattern id="studioGrid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M 48 0 L 0 0 0 48" fill="none" stroke="#ffffff" stroke-opacity="0.025" stroke-width="1"/></pattern>
 </defs>
 <rect width="1600" height="900" fill="url(#bgGrad)"/>
 <rect width="1600" height="900" fill="url(#studioGrid)"/>
-<rect width="1600" height="900" fill="url(#glowMint)"/>
-<rect width="1600" height="900" fill="url(#glowCyan)"/>
-<polyline points="880,74.0 892,74.3 904,75.2 916,76.5 928,77.9 940,78.9 952,79.4 964,79.2 976,78.6 988,77.9 1000,77.4 1012,77.3 1024,77.5 1036,77.5 1048,76.8 1060,74.8 1072,71.2 1084,66.0 1096,60.0 1108,54.1 1120,49.5 1132,47.4 1144,48.5 1156,52.7 1168,59.5 1180,67.8 1192,76.1 1204,83.1 1216,87.9 1228,90.2 1240,90.3 1252,89.1 1264,87.7 1276,86.8 1288,87.0 1300,88.1 1312,89.6 1324,90.6 1336,90.2 1348,87.7 1360,83.0 1372,76.7 1384,69.8 1396,63.2 1408,58.2 1420,55.6 1432,55.4 1444,57.5 1456,61.1 1468,65.2 1480,69.0 1492,72.0 1504,73.9 1516,74.8 1528,75.0 1540,74.9 1552,74.8 1564,74.7 1576,74.6 1588,74.4 1600,74.0 1612,73.5-0.4j" fill="none" stroke="url(#accentH)" stroke-opacity="0.22" stroke-width="2"/>
-<polyline points="880,74.0 892,74.3 904,74.7 916,74.9 928,75.0 940,74.7 952,73.9 964,72.6 976,70.9 988,68.8 1000,66.6 1012,64.6 1024,63.0 1036,62.1 1048,62.0 1060,62.9 1072,64.7 1084,67.1 1096,70.0 1108,73.0 1120,75.9 1132,78.3 1144,80.1 1156,81.3 1168,81.9 1180,82.0 1192,82.0 1204,82.0 1216,82.2 1228,82.8 1240,83.7 1252,84.9 1264,86.1 1276,87.0 1288,87.3 1300,86.9 1312,85.5 1324,83.2 1336,80.1 1348,76.3 1360,72.4 1372,68.5 1384,65.2 1396,62.7 1408,61.2 1420,60.8 1432,61.4 1444,62.8 1456,64.8 1468,67.0 1480,69.2 1492,71.1 1504,72.7 1516,73.7 1528,74.3 1540,74.6 1552,74.6 1564,74.5 1576,74.3 1588,74.2 1600,74.0 1612,73.8-0.1j" fill="none" stroke="#38d9f5" stroke-opacity="0.12" stroke-width="1.5"/>
-<text x="50.0" y="44.0" font-size="16" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="0.14em">TORQ</text>
-<text x="105.0" y="44.0" font-size="16" fill="#34e8a8" text-anchor="start" font-weight="800" letter-spacing="0.14em">WAVE</text>
-<rect x="176.0" y="24.0" width="74.1" height="24.0" rx="12.0" fill="url(#pillBg)" stroke="#2be0a2" stroke-width="1.1"/>
-<text x="213.0" y="40.2" font-size="12" fill="#34e8a8" text-anchor="middle" font-weight="bold" letter-spacing="0.06em">v0.23.0</text>
-<text x="1550.0" y="42.0" font-size="13" fill="#8e9cb2" text-anchor="end" font-weight="600" letter-spacing="0.09em">FREE · OPEN SOURCE · macOS / WIN / LINUX</text>
+<rect width="1600" height="900" fill="url(#glowBrand)"/>
+<rect width="1600" height="900" fill="url(#glowWarm)"/>
+<polyline points="880,74.0 892,74.3 904,75.2 916,76.5 928,77.9 940,78.9 952,79.4 964,79.2 976,78.6 988,77.9 1000,77.4 1012,77.3 1024,77.5 1036,77.5 1048,76.8 1060,74.8 1072,71.2 1084,66.0 1096,60.0 1108,54.1 1120,49.5 1132,47.4 1144,48.5 1156,52.7 1168,59.5 1180,67.8 1192,76.1 1204,83.1 1216,87.9 1228,90.2 1240,90.3 1252,89.1 1264,87.7 1276,86.8 1288,87.0 1300,88.1 1312,89.6 1324,90.6 1336,90.2 1348,87.7 1360,83.0 1372,76.7 1384,69.8 1396,63.2 1408,58.2 1420,55.6 1432,55.4 1444,57.5 1456,61.1 1468,65.2 1480,69.0 1492,72.0 1504,73.9 1516,74.8 1528,75.0 1540,74.9 1552,74.8 1564,74.7 1576,74.6 1588,74.4 1600,74.0 1612,73.5-0.4j" fill="none" stroke="url(#accentH)" stroke-opacity="0.26" stroke-width="2"/>
+<polyline points="880,74.0 892,74.3 904,74.7 916,74.9 928,75.0 940,74.7 952,73.9 964,72.6 976,70.9 988,68.8 1000,66.6 1012,64.6 1024,63.0 1036,62.1 1048,62.0 1060,62.9 1072,64.7 1084,67.1 1096,70.0 1108,73.0 1120,75.9 1132,78.3 1144,80.1 1156,81.3 1168,81.9 1180,82.0 1192,82.0 1204,82.0 1216,82.2 1228,82.8 1240,83.7 1252,84.9 1264,86.1 1276,87.0 1288,87.3 1300,86.9 1312,85.5 1324,83.2 1336,80.1 1348,76.3 1360,72.4 1372,68.5 1384,65.2 1396,62.7 1408,61.2 1420,60.8 1432,61.4 1444,62.8 1456,64.8 1468,67.0 1480,69.2 1492,71.1 1504,72.7 1516,73.7 1528,74.3 1540,74.6 1552,74.6 1564,74.5 1576,74.3 1588,74.2 1600,74.0 1612,73.8-0.1j" fill="none" stroke="#ff8a3d" stroke-opacity="0.14" stroke-width="1.5"/>
+<rect x="50.0" y="26.0" width="4.5" height="20.0" rx="2.2" fill="#ff5c1f"/>
+<text x="62.0" y="43.0" font-size="16" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="0.14em">TORQ</text>
+<text x="117.0" y="43.0" font-size="16" fill="#ff5c1f" text-anchor="start" font-weight="800" letter-spacing="0.14em">WAVE</text>
+<rect x="188.0" y="24.0" width="74.1" height="24.0" rx="12.0" fill="url(#pillBg)" stroke="#ff5c1f" stroke-width="1.1"/>
+<text x="225.0" y="40.2" font-size="12" fill="#ff8a4d" text-anchor="middle" font-weight="bold" letter-spacing="0.06em">v0.23.0</text>
+<text x="1550.0" y="42.0" font-size="13" fill="#929eb3" text-anchor="end" font-weight="600" letter-spacing="0.09em">FREE · OPEN SOURCE · macOS / WIN / LINUX</text>
 <text x="50.0" y="92.0" font-size="40" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="-0.02em">Torqwave 0.23.0 and the audio editors</text>
-<text x="50.0" y="124.0" font-size="20" fill="#8e9cb2" text-anchor="start" font-weight="400">What ships built into each product, read from its own documentation</text>
+<text x="50.0" y="124.0" font-size="20" fill="#929eb3" text-anchor="start" font-weight="400">What ships built into each product, read from its own documentation</text>
 <rect x="50.0" y="138.0" width="1500.0" height="1.5" rx="0" fill="url(#accentFade)"/>
-<rect x="38.0" y="158.0" width="1524.0" height="672.0" rx="12" fill="#0c111b" stroke="#232e42" stroke-width="1" opacity="0.65"/>
-<rect x="435.0" y="158.0" width="318.6" height="672.0" rx="10" fill="url(#tqColGrad)" stroke="#245763" stroke-width="1.2"/>
+<rect x="38.0" y="158.0" width="1524.0" height="672.0" rx="12" fill="#0c111b" stroke="#232d40" stroke-width="1" opacity="0.65"/>
+<rect x="435.0" y="158.0" width="318.6" height="672.0" rx="10" fill="url(#tqColGrad)" stroke="#5c3322" stroke-width="1.2"/>
 <rect x="447.0" y="158.0" width="294.6" height="3.5" rx="2" fill="url(#accentH)"/>
 <text x="514.6" y="192.0" font-size="20" fill="#f8fafc" text-anchor="middle" font-weight="700">Torqwave</text>
-<text x="514.6" y="216.0" font-size="18" fill="#34e8a8" text-anchor="middle" font-weight="700">0.23.0</text>
+<text x="514.6" y="216.0" font-size="18" fill="#ff8a3d" text-anchor="middle" font-weight="700">0.23.0</text>
 <text x="673.9" y="192.0" font-size="20" fill="#f8fafc" text-anchor="middle" font-weight="700">Torqwave</text>
-<text x="673.9" y="216.0" font-size="18" fill="#8e9cb2" text-anchor="middle" font-weight="700">0.22.0</text>
+<text x="673.9" y="216.0" font-size="18" fill="#929eb3" text-anchor="middle" font-weight="700">0.22.0</text>
 <text x="833.2" y="191.0" font-size="18" fill="#dce3ee" text-anchor="middle" font-weight="600">Adobe</text>
 <text x="833.2" y="214.0" font-size="18" fill="#dce3ee" text-anchor="middle" font-weight="600">Audition</text>
 <text x="992.5" y="204.0" font-size="18" fill="#dce3ee" text-anchor="middle" font-weight="600">Audacity</text>
@@ -45,132 +47,132 @@
 <text x="1311.1" y="214.0" font-size="18" fill="#dce3ee" text-anchor="middle" font-weight="600">SpectraLayers</text>
 <text x="1470.4" y="191.0" font-size="18" fill="#dce3ee" text-anchor="middle" font-weight="600">Steinberg</text>
 <text x="1470.4" y="214.0" font-size="18" fill="#dce3ee" text-anchor="middle" font-weight="600">WaveLab</text>
-<line x1="38.0" y1="232.0" x2="1562.0" y2="232.0" stroke="#232e42" stroke-width="1"/>
+<line x1="38.0" y1="232.0" x2="1562.0" y2="232.0" stroke="#232d40" stroke-width="1"/>
 <rect x="40.0" y="232.0" width="395.0" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <rect x="753.6" y="232.0" width="806.4" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <text x="54.0" y="254.6" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Edits a single audio file</text>
-<circle cx="514.6" cy="248.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="248.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 249.0 L 513.5 251.9 L 519.0 245.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="248.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="248.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 249.0 L 672.8 251.9 L 678.3 245.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="248.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="833.2" cy="248.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 829.2 249.0 L 832.1 251.9 L 837.6 245.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="992.5" cy="248.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="992.5" cy="248.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 988.5 249.0 L 991.4 251.9 L 996.9 245.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1151.8" cy="248.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="1151.8" cy="248.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 249.0 L 1150.6 251.9 L 1156.2 245.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="1311.1" cy="248.6" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 1311.1 239.6 A 9.0 9.0 0 0 0 1311.1 257.6 Z" fill="#f4ca53"/>
-<circle cx="1470.4" cy="248.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="1470.4" cy="248.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 1466.3 249.0 L 1469.2 251.9 L 1474.7 245.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="54.0" y="287.8" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Spectral selection and editing</text>
-<circle cx="514.6" cy="281.8" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="281.8" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 282.2 L 513.5 285.2 L 519.0 278.7" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="281.8" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="281.8" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 282.2 L 672.8 285.2 L 678.3 278.7" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="281.8" r="10.5" fill="url(#accentH)"/>
+<circle cx="833.2" cy="281.8" r="10.5" fill="url(#barYes)"/>
 <path d="M 829.2 282.2 L 832.1 285.2 L 837.6 278.7" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="992.5" cy="281.8" r="10.5" fill="url(#accentH)"/>
+<circle cx="992.5" cy="281.8" r="10.5" fill="url(#barYes)"/>
 <path d="M 988.5 282.2 L 991.4 285.2 L 996.9 278.7" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1151.8" cy="281.8" r="10.5" fill="url(#accentH)"/>
+<circle cx="1151.8" cy="281.8" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 282.2 L 1150.6 285.2 L 1156.2 278.7" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1311.1" cy="281.8" r="10.5" fill="url(#accentH)"/>
+<circle cx="1311.1" cy="281.8" r="10.5" fill="url(#barYes)"/>
 <path d="M 1307.0 282.2 L 1309.9 285.2 L 1315.4 278.7" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1470.4" cy="281.8" r="10.5" fill="url(#accentH)"/>
+<circle cx="1470.4" cy="281.8" r="10.5" fill="url(#barYes)"/>
 <path d="M 1466.3 282.2 L 1469.2 285.2 L 1474.7 278.7" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="40.0" y="298.4" width="395.0" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <rect x="753.6" y="298.4" width="806.4" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <text x="54.0" y="321.1" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Spectral heal</text>
-<circle cx="514.6" cy="315.1" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="315.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 315.4 L 513.5 318.4 L 519.0 311.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="315.1" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="315.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 315.4 L 672.8 318.4 L 678.3 311.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="315.1" r="10.5" fill="url(#accentH)"/>
+<circle cx="833.2" cy="315.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 829.2 315.4 L 832.1 318.4 L 837.6 311.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="985.5" y1="315.1" x2="999.5" y2="315.1" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<circle cx="1151.8" cy="315.1" r="10.5" fill="url(#accentH)"/>
+<line x1="985.5" y1="315.1" x2="999.5" y2="315.1" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="1151.8" cy="315.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 315.4 L 1150.6 318.4 L 1156.2 311.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1311.1" cy="315.1" r="10.5" fill="url(#accentH)"/>
+<circle cx="1311.1" cy="315.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 1307.0 315.4 L 1309.9 318.4 L 1315.4 311.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1470.4" cy="315.1" r="10.5" fill="url(#accentH)"/>
+<circle cx="1470.4" cy="315.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 1466.3 315.4 L 1469.2 318.4 L 1474.7 311.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="54.0" y="354.3" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Batch processing</text>
-<circle cx="514.6" cy="348.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="348.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 348.6 L 513.5 351.6 L 519.0 345.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="348.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="348.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 348.6 L 672.8 351.6 L 678.3 345.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="833.2" cy="348.3" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 833.2 339.3 A 9.0 9.0 0 0 0 833.2 357.3 Z" fill="#f4ca53"/>
 <circle cx="992.5" cy="348.3" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 992.5 339.3 A 9.0 9.0 0 0 0 992.5 357.3 Z" fill="#f4ca53"/>
-<circle cx="1151.8" cy="348.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="1151.8" cy="348.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 348.6 L 1150.6 351.6 L 1156.2 345.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1311.1" cy="348.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="1311.1" cy="348.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 1307.0 348.6 L 1309.9 351.6 L 1315.4 345.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1470.4" cy="348.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="1470.4" cy="348.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 1466.3 348.6 L 1469.2 351.6 L 1474.7 345.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="40.0" y="364.9" width="395.0" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <rect x="753.6" y="364.9" width="806.4" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <text x="54.0" y="387.5" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Noise reduction</text>
-<circle cx="514.6" cy="381.5" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="381.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 381.9 L 513.5 384.8 L 519.0 378.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="381.5" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="381.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 381.9 L 672.8 384.8 L 678.3 378.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="381.5" r="10.5" fill="url(#accentH)"/>
+<circle cx="833.2" cy="381.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 829.2 381.9 L 832.1 384.8 L 837.6 378.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="992.5" cy="381.5" r="10.5" fill="url(#accentH)"/>
+<circle cx="992.5" cy="381.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 988.5 381.9 L 991.4 384.8 L 996.9 378.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1151.8" cy="381.5" r="10.5" fill="url(#accentH)"/>
+<circle cx="1151.8" cy="381.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 381.9 L 1150.6 384.8 L 1156.2 378.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1311.1" cy="381.5" r="10.5" fill="url(#accentH)"/>
+<circle cx="1311.1" cy="381.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 1307.0 381.9 L 1309.9 384.8 L 1315.4 378.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1470.4" cy="381.5" r="10.5" fill="url(#accentH)"/>
+<circle cx="1470.4" cy="381.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 1466.3 381.9 L 1469.2 384.8 L 1474.7 378.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="54.0" y="420.7" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Click, hum and clipping repair</text>
-<circle cx="514.6" cy="414.7" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="414.7" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 415.1 L 513.5 418.0 L 519.0 411.6" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="414.7" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="414.7" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 415.1 L 672.8 418.0 L 678.3 411.6" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="414.7" r="10.5" fill="url(#accentH)"/>
+<circle cx="833.2" cy="414.7" r="10.5" fill="url(#barYes)"/>
 <path d="M 829.2 415.1 L 832.1 418.0 L 837.6 411.6" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="992.5" cy="414.7" r="10.5" fill="url(#accentH)"/>
+<circle cx="992.5" cy="414.7" r="10.5" fill="url(#barYes)"/>
 <path d="M 988.5 415.1 L 991.4 418.0 L 996.9 411.6" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1151.8" cy="414.7" r="10.5" fill="url(#accentH)"/>
+<circle cx="1151.8" cy="414.7" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 415.1 L 1150.6 418.0 L 1156.2 411.6" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1311.1" cy="414.7" r="10.5" fill="url(#accentH)"/>
+<circle cx="1311.1" cy="414.7" r="10.5" fill="url(#barYes)"/>
 <path d="M 1307.0 415.1 L 1309.9 418.0 L 1315.4 411.6" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="1470.4" cy="414.7" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 1470.4 405.7 A 9.0 9.0 0 0 0 1470.4 423.7 Z" fill="#f4ca53"/>
 <rect x="40.0" y="431.3" width="395.0" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <rect x="753.6" y="431.3" width="806.4" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <text x="54.0" y="453.9" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Reverb reduction</text>
-<circle cx="514.6" cy="447.9" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="447.9" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 448.3 L 513.5 451.3 L 519.0 444.8" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="447.9" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="447.9" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 448.3 L 672.8 451.3 L 678.3 444.8" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="447.9" r="10.5" fill="url(#accentH)"/>
+<circle cx="833.2" cy="447.9" r="10.5" fill="url(#barYes)"/>
 <path d="M 829.2 448.3 L 832.1 451.3 L 837.6 444.8" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="985.5" y1="447.9" x2="999.5" y2="447.9" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<circle cx="1151.8" cy="447.9" r="10.5" fill="url(#accentH)"/>
+<line x1="985.5" y1="447.9" x2="999.5" y2="447.9" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="1151.8" cy="447.9" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 448.3 L 1150.6 451.3 L 1156.2 444.8" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1311.1" cy="447.9" r="10.5" fill="url(#accentH)"/>
+<circle cx="1311.1" cy="447.9" r="10.5" fill="url(#barYes)"/>
 <path d="M 1307.0 448.3 L 1309.9 451.3 L 1315.4 444.8" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1470.4" cy="447.9" r="10.5" fill="url(#accentH)"/>
+<circle cx="1470.4" cy="447.9" r="10.5" fill="url(#barYes)"/>
 <path d="M 1466.3 448.3 L 1469.2 451.3 L 1474.7 444.8" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="54.0" y="487.2" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Dialogue isolation</text>
-<circle cx="514.6" cy="481.2" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="481.2" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 481.5 L 513.5 484.5 L 519.0 478.0" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="481.2" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="481.2" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 481.5 L 672.8 484.5 L 678.3 478.0" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="833.2" cy="481.2" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 833.2 472.2 A 9.0 9.0 0 0 0 833.2 490.2 Z" fill="#f4ca53"/>
 <circle cx="992.5" cy="481.2" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 992.5 472.2 A 9.0 9.0 0 0 0 992.5 490.2 Z" fill="#f4ca53"/>
-<circle cx="1151.8" cy="481.2" r="10.5" fill="url(#accentH)"/>
+<circle cx="1151.8" cy="481.2" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 481.5 L 1150.6 484.5 L 1156.2 478.0" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1311.1" cy="481.2" r="10.5" fill="url(#accentH)"/>
+<circle cx="1311.1" cy="481.2" r="10.5" fill="url(#barYes)"/>
 <path d="M 1307.0 481.5 L 1309.9 484.5 L 1315.4 478.0" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="1463.4" y1="481.2" x2="1477.4" y2="481.2" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1463.4" y1="481.2" x2="1477.4" y2="481.2" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <rect x="40.0" y="497.8" width="395.0" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <rect x="753.6" y="497.8" width="806.4" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <text x="54.0" y="520.4" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Stem separation</text>
@@ -178,145 +180,145 @@
 <path d="M 514.6 505.4 A 9.0 9.0 0 0 0 514.6 523.4 Z" fill="#f4ca53"/>
 <circle cx="673.9" cy="514.4" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 673.9 505.4 A 9.0 9.0 0 0 0 673.9 523.4 Z" fill="#f4ca53"/>
-<line x1="826.2" y1="514.4" x2="840.2" y2="514.4" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="826.2" y1="514.4" x2="840.2" y2="514.4" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <circle cx="992.5" cy="514.4" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 992.5 505.4 A 9.0 9.0 0 0 0 992.5 523.4 Z" fill="#f4ca53"/>
-<circle cx="1151.8" cy="514.4" r="10.5" fill="url(#accentH)"/>
+<circle cx="1151.8" cy="514.4" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 514.7 L 1150.6 517.7 L 1156.2 511.2" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1311.1" cy="514.4" r="10.5" fill="url(#accentH)"/>
+<circle cx="1311.1" cy="514.4" r="10.5" fill="url(#barYes)"/>
 <path d="M 1307.0 514.7 L 1309.9 517.7 L 1315.4 511.2" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="1463.4" y1="514.4" x2="1477.4" y2="514.4" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1463.4" y1="514.4" x2="1477.4" y2="514.4" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <text x="54.0" y="553.6" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Loudness (LUFS) measure and match</text>
-<circle cx="514.6" cy="547.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="547.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 548.0 L 513.5 550.9 L 519.0 544.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="547.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="547.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 548.0 L 672.8 550.9 L 678.3 544.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="547.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="833.2" cy="547.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 829.2 548.0 L 832.1 550.9 L 837.6 544.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="992.5" cy="547.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="992.5" cy="547.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 988.5 548.0 L 991.4 550.9 L 996.9 544.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1151.8" cy="547.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="1151.8" cy="547.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 548.0 L 1150.6 550.9 L 1156.2 544.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="1311.1" cy="547.6" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 1311.1 538.6 A 9.0 9.0 0 0 0 1311.1 556.6 Z" fill="#f4ca53"/>
-<circle cx="1470.4" cy="547.6" r="10.5" fill="url(#accentH)"/>
+<circle cx="1470.4" cy="547.6" r="10.5" fill="url(#barYes)"/>
 <path d="M 1466.3 548.0 L 1469.2 550.9 L 1474.7 544.5" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="40.0" y="564.2" width="395.0" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <rect x="753.6" y="564.2" width="806.4" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <text x="54.0" y="586.8" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Delivery-spec check with a report</text>
-<circle cx="514.6" cy="580.8" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="580.8" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 581.2 L 513.5 584.2 L 519.0 577.7" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="580.8" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="580.8" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 581.2 L 672.8 584.2 L 678.3 577.7" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="833.2" cy="580.8" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 833.2 571.8 A 9.0 9.0 0 0 0 833.2 589.8 Z" fill="#f4ca53"/>
-<line x1="985.5" y1="580.8" x2="999.5" y2="580.8" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<circle cx="1151.8" cy="580.8" r="10.5" fill="url(#accentH)"/>
+<line x1="985.5" y1="580.8" x2="999.5" y2="580.8" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="1151.8" cy="580.8" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 581.2 L 1150.6 584.2 L 1156.2 577.7" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="1304.1" y1="580.8" x2="1318.1" y2="580.8" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1304.1" y1="580.8" x2="1318.1" y2="580.8" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <circle cx="1470.4" cy="580.8" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 1470.4 571.8 A 9.0 9.0 0 0 0 1470.4 589.8 Z" fill="#f4ca53"/>
 <text x="54.0" y="620.1" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Multitrack sessions</text>
-<circle cx="514.6" cy="614.1" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="614.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 614.4 L 513.5 617.4 L 519.0 610.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="614.1" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="614.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 614.4 L 672.8 617.4 L 678.3 610.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="614.1" r="10.5" fill="url(#accentH)"/>
+<circle cx="833.2" cy="614.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 829.2 614.4 L 832.1 617.4 L 837.6 610.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="992.5" cy="614.1" r="10.5" fill="url(#accentH)"/>
+<circle cx="992.5" cy="614.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 988.5 614.4 L 991.4 617.4 L 996.9 610.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="1144.8" y1="614.1" x2="1158.8" y2="614.1" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1144.8" y1="614.1" x2="1158.8" y2="614.1" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <circle cx="1311.1" cy="614.1" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 1311.1 605.1 A 9.0 9.0 0 0 0 1311.1 623.1 Z" fill="#f4ca53"/>
-<circle cx="1470.4" cy="614.1" r="10.5" fill="url(#accentH)"/>
+<circle cx="1470.4" cy="614.1" r="10.5" fill="url(#barYes)"/>
 <path d="M 1466.3 614.4 L 1469.2 617.4 L 1474.7 610.9" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="40.0" y="630.7" width="395.0" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <rect x="753.6" y="630.7" width="806.4" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <text x="54.0" y="653.3" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">VST3</text>
-<circle cx="514.6" cy="647.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="647.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 647.6 L 513.5 650.6 L 519.0 644.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="647.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="647.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 647.6 L 672.8 650.6 L 678.3 644.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="647.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="833.2" cy="647.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 829.2 647.6 L 832.1 650.6 L 837.6 644.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="992.5" cy="647.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="992.5" cy="647.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 988.5 647.6 L 991.4 650.6 L 996.9 644.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1151.8" cy="647.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="1151.8" cy="647.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 1147.8 647.6 L 1150.6 650.6 L 1156.2 644.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1311.1" cy="647.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="1311.1" cy="647.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 1307.0 647.6 L 1309.9 650.6 L 1315.4 644.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1470.4" cy="647.3" r="10.5" fill="url(#accentH)"/>
+<circle cx="1470.4" cy="647.3" r="10.5" fill="url(#barYes)"/>
 <path d="M 1466.3 647.6 L 1469.2 650.6 L 1474.7 644.1" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="54.0" y="686.5" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Video playback in sync</text>
-<circle cx="514.6" cy="680.5" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="680.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 680.9 L 513.5 683.8 L 519.0 677.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="680.5" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="680.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 680.9 L 672.8 683.8 L 678.3 677.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="680.5" r="10.5" fill="url(#accentH)"/>
+<circle cx="833.2" cy="680.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 829.2 680.9 L 832.1 683.8 L 837.6 677.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="985.5" y1="680.5" x2="999.5" y2="680.5" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1144.8" y1="680.5" x2="1158.8" y2="680.5" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1304.1" y1="680.5" x2="1318.1" y2="680.5" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<circle cx="1470.4" cy="680.5" r="10.5" fill="url(#accentH)"/>
+<line x1="985.5" y1="680.5" x2="999.5" y2="680.5" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1144.8" y1="680.5" x2="1158.8" y2="680.5" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1304.1" y1="680.5" x2="1318.1" y2="680.5" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="1470.4" cy="680.5" r="10.5" fill="url(#barYes)"/>
 <path d="M 1466.3 680.9 L 1469.2 683.8 L 1474.7 677.4" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="40.0" y="697.1" width="395.0" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <rect x="753.6" y="697.1" width="806.4" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <text x="54.0" y="719.7" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Searchable sound library</text>
-<circle cx="514.6" cy="713.7" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="713.7" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 714.1 L 513.5 717.0 L 519.0 710.6" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="713.7" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="713.7" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 714.1 L 672.8 717.0 L 678.3 710.6" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="833.2" cy="713.7" r="9.5" fill="#171f2e" stroke="#374660" stroke-width="1.2"/>
-<text x="833.2" y="719.2" font-size="15" fill="#8e9cb2" text-anchor="middle" font-weight="bold">?</text>
-<line x1="985.5" y1="713.7" x2="999.5" y2="713.7" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1144.8" y1="713.7" x2="1158.8" y2="713.7" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1304.1" y1="713.7" x2="1318.1" y2="713.7" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1463.4" y1="713.7" x2="1477.4" y2="713.7" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="833.2" cy="713.7" r="9.5" fill="#171f2e" stroke="#37445c" stroke-width="1.2"/>
+<text x="833.2" y="719.2" font-size="15" fill="#929eb3" text-anchor="middle" font-weight="bold">?</text>
+<line x1="985.5" y1="713.7" x2="999.5" y2="713.7" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1144.8" y1="713.7" x2="1158.8" y2="713.7" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1304.1" y1="713.7" x2="1318.1" y2="713.7" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1463.4" y1="713.7" x2="1477.4" y2="713.7" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <text x="54.0" y="752.9" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">A typed request becomes edits</text>
 <circle cx="514.6" cy="746.9" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 514.6 737.9 A 9.0 9.0 0 0 0 514.6 755.9 Z" fill="#f4ca53"/>
 <circle cx="673.9" cy="746.9" r="9.7" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 673.9 737.9 A 9.0 9.0 0 0 0 673.9 755.9 Z" fill="#f4ca53"/>
-<line x1="826.2" y1="746.9" x2="840.2" y2="746.9" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="985.5" y1="746.9" x2="999.5" y2="746.9" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1144.8" y1="746.9" x2="1158.8" y2="746.9" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1304.1" y1="746.9" x2="1318.1" y2="746.9" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1463.4" y1="746.9" x2="1477.4" y2="746.9" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="826.2" y1="746.9" x2="840.2" y2="746.9" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="985.5" y1="746.9" x2="999.5" y2="746.9" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1144.8" y1="746.9" x2="1158.8" y2="746.9" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1304.1" y1="746.9" x2="1318.1" y2="746.9" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1463.4" y1="746.9" x2="1477.4" y2="746.9" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <rect x="40.0" y="763.6" width="395.0" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <rect x="753.6" y="763.6" width="806.4" height="33.2" rx="0" fill="#121a29" opacity="0.65"/>
 <text x="54.0" y="786.2" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Linux</text>
-<circle cx="514.6" cy="780.2" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="780.2" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 780.5 L 513.5 783.5 L 519.0 777.0" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="780.2" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="780.2" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 780.5 L 672.8 783.5 L 678.3 777.0" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="826.2" y1="780.2" x2="840.2" y2="780.2" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<circle cx="992.5" cy="780.2" r="10.5" fill="url(#accentH)"/>
+<line x1="826.2" y1="780.2" x2="840.2" y2="780.2" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="992.5" cy="780.2" r="10.5" fill="url(#barYes)"/>
 <path d="M 988.5 780.5 L 991.4 783.5 L 996.9 777.0" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="1144.8" y1="780.2" x2="1158.8" y2="780.2" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1304.1" y1="780.2" x2="1318.1" y2="780.2" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1463.4" y1="780.2" x2="1477.4" y2="780.2" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1144.8" y1="780.2" x2="1158.8" y2="780.2" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1304.1" y1="780.2" x2="1318.1" y2="780.2" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1463.4" y1="780.2" x2="1477.4" y2="780.2" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <text x="54.0" y="819.4" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="400">Open source</text>
-<circle cx="514.6" cy="813.4" r="10.5" fill="url(#accentH)"/>
+<circle cx="514.6" cy="813.4" r="10.5" fill="url(#barYes)"/>
 <path d="M 510.6 813.7 L 513.5 816.7 L 519.0 810.2" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="673.9" cy="813.4" r="10.5" fill="url(#accentH)"/>
+<circle cx="673.9" cy="813.4" r="10.5" fill="url(#barYes)"/>
 <path d="M 669.9 813.7 L 672.8 816.7 L 678.3 810.2" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="826.2" y1="813.4" x2="840.2" y2="813.4" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<circle cx="992.5" cy="813.4" r="10.5" fill="url(#accentH)"/>
+<line x1="826.2" y1="813.4" x2="840.2" y2="813.4" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="992.5" cy="813.4" r="10.5" fill="url(#barYes)"/>
 <path d="M 988.5 813.7 L 991.4 816.7 L 996.9 810.2" fill="none" stroke="#071512" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="1144.8" y1="813.4" x2="1158.8" y2="813.4" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1304.1" y1="813.4" x2="1318.1" y2="813.4" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="1463.4" y1="813.4" x2="1477.4" y2="813.4" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<line x1="50.0" y1="848.0" x2="1550.0" y2="848.0" stroke="#232e42" stroke-width="1" opacity="0.7"/>
-<text x="1550.0" y="876.0" font-size="14" fill="#64728a" text-anchor="end" font-weight="normal">As of 2026-11-27 · Torqwave 0.23.0 (released) · Sources &amp; method: docs/compare</text>
-<circle cx="60.0" cy="871.0" r="9.0" fill="url(#accentH)"/>
+<line x1="1144.8" y1="813.4" x2="1158.8" y2="813.4" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1304.1" y1="813.4" x2="1318.1" y2="813.4" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="1463.4" y1="813.4" x2="1477.4" y2="813.4" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<line x1="50.0" y1="848.0" x2="1550.0" y2="848.0" stroke="#232d40" stroke-width="1" opacity="0.7"/>
+<text x="1550.0" y="876.0" font-size="14" fill="#68758c" text-anchor="end" font-weight="normal">As of 2026-11-27 · Torqwave 0.23.0 (released) · Sources &amp; method: docs/compare</text>
+<circle cx="60.0" cy="871.0" r="9.0" fill="url(#barYes)"/>
 <path d="M 56.5 871.3 L 59.0 873.9 L 63.8 868.3" fill="none" stroke="#071512" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="77.0" y="876.0" font-size="15" fill="#8e9cb2" text-anchor="start" font-weight="500">Yes</text>
+<text x="77.0" y="876.0" font-size="15" fill="#929eb3" text-anchor="start" font-weight="500">Yes</text>
 <circle cx="131.8" cy="871.0" r="8.2" fill="#261f0d" stroke="#f4ca53" stroke-width="1.8"/>
 <path d="M 131.8 863.5 A 7.5 7.5 0 0 0 131.8 878.5 Z" fill="#f4ca53"/>
-<text x="148.8" y="876.0" font-size="15" fill="#8e9cb2" text-anchor="start" font-weight="500">Partial</text>
-<line x1="231.0" y1="871.0" x2="245.0" y2="871.0" stroke="#374660" stroke-width="2.6" stroke-linecap="round"/>
-<text x="255.0" y="876.0" font-size="15" fill="#8e9cb2" text-anchor="start" font-weight="500">No</text>
-<circle cx="301.2" cy="871.0" r="8.0" fill="#171f2e" stroke="#374660" stroke-width="1.2"/>
-<text x="301.2" y="876.5" font-size="15" fill="#8e9cb2" text-anchor="middle" font-weight="bold">?</text>
-<text x="318.2" y="876.0" font-size="15" fill="#8e9cb2" text-anchor="start" font-weight="500">Not confirmed</text>
+<text x="148.8" y="876.0" font-size="15" fill="#929eb3" text-anchor="start" font-weight="500">Partial</text>
+<line x1="231.0" y1="871.0" x2="245.0" y2="871.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<text x="255.0" y="876.0" font-size="15" fill="#929eb3" text-anchor="start" font-weight="500">No</text>
+<circle cx="301.2" cy="871.0" r="8.0" fill="#171f2e" stroke="#37445c" stroke-width="1.2"/>
+<text x="301.2" y="876.5" font-size="15" fill="#929eb3" text-anchor="middle" font-weight="bold">?</text>
+<text x="318.2" y="876.0" font-size="15" fill="#929eb3" text-anchor="start" font-weight="500">Not confirmed</text>
 </svg>

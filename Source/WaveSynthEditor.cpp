@@ -2003,19 +2003,25 @@ struct WaveSynthEditor::Content final : public juce::Component
         g.setGradientFill (juce::ColourGradient (Theme::base.brighter (light ? 0.0f : 0.03f), 0.0f, 0.0f, Theme::base.darker (light ? 0.02f : 0.25f), 0.0f, (float) getHeight(), false));
         g.fillAll();
 
-        // The name, in spaced capitals, with a line in the accent under the first word.
+        // Brand mark: "TORQ" in white/strong text, "WAVE" in official Torqwave orange (#ff5c1f),
+        // followed by "SYNTH", with the signature orange bar underneath.
         auto header = getLocalBounds().removeFromTop (headerHeight).reduced (16, 0).toFloat();
-        juce::GlyphArrangement glyphs;
         const auto font = bold (17.0f).withExtraKerningFactor (0.22f);
-        glyphs.addLineOfText (font, "TORQWAVE", header.getX(), header.getCentreY() + 6.0f);
-        const auto firstWidth = glyphs.getBoundingBox (0, -1, true).getWidth();
+        const auto brandCol = Theme::brandOrange();
+        juce::GlyphArrangement torqGlyphs, waveGlyphs, synthGlyphs;
+        torqGlyphs.addLineOfText (font, "TORQ", header.getX(), header.getCentreY() + 6.0f);
+        const auto torqW = torqGlyphs.getBoundingBox (0, -1, true).getWidth();
+        waveGlyphs.addLineOfText (font, "WAVE", header.getX() + torqW + 3.0f, header.getCentreY() + 6.0f);
+        const auto waveRight = waveGlyphs.getBoundingBox (0, -1, true).getRight();
+        const auto firstWidth = waveRight - header.getX();
         g.setColour (Theme::textStrong);
-        glyphs.draw (g);
-        juce::GlyphArrangement second;
-        second.addLineOfText (bold (17.0f).withExtraKerningFactor (0.22f), "SYNTH", header.getX() + firstWidth + 8.0f, header.getCentreY() + 6.0f);
-        g.setColour (Theme::accent);
-        second.draw (g);
-        g.setColour (Theme::accent);
+        torqGlyphs.draw (g);
+        g.setColour (brandCol);
+        waveGlyphs.draw (g);
+        synthGlyphs.addLineOfText (font, "SYNTH", waveRight + 10.0f, header.getCentreY() + 6.0f);
+        g.setColour (Theme::dimText);
+        synthGlyphs.draw (g);
+        g.setColour (brandCol);
         g.fillRoundedRectangle (header.getX(), header.getCentreY() + 11.0f, firstWidth, 2.0f, 1.0f);
         g.setFont (plain (10.0f));
         g.setColour (Theme::dimText);

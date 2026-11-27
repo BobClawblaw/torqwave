@@ -25,3 +25,7 @@ Every release must ship complete, accurate documentation and a marketing kit tra
    - **`docs/releases/<version>/manifest.json`** — tracks release metadata, matrix coverage, generated assets, and optional posting status for X.com and Instagram.
 4. **Visual QA:** Always visually inspect the generated X and Instagram PNGs before committing to confirm clean typography, contrast, and zero clipped or overlapping text.
 5. **Honesty Standard:** Never exaggerate coverage or hide limitations; state what Torqwave lacks (and what has not been tested by hand) as plainly as what it has.
+
+## 4. Brand Identity Standard
+- **Official Wordmark & Alternate Mark:** `"TORQ"` is always white (or strong ink on light themes) and `"WAVE"` + brand header accent bars are always Torqwave Hot Orange (`#ff5c1f` on dark surfaces, `#d9480f` on light surfaces — matching `Art/ridges.py` `HOT`).
+- **Consistency Across Surfaces:** Apply this white + orange mark across all built-in plugins (`Theme::brandOrange()` in `WaveSynthEditor`, `SamplerEditor`, `SwarmGuitarEditor`), GitHub Pages (`docs/`), X.com graphics (`docs/compare/generate.py`), and Instagram carousels (`Scripts/release_kit.py`). Never use blue or teal/mint for the Torqwave wordmark or brand header bar.
