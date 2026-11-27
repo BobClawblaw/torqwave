@@ -441,7 +441,7 @@ namespace
         const Settings p (synth);
         juce::StringArray sources, filters, effects, macros;
 
-        for (int o = 1; o <= 3; ++o)
+        for (int o = 1; o <= WaveSynth::numOscillators; ++o)
         {
             const auto id = "osc" + juce::String (o);
 
@@ -1827,37 +1827,43 @@ void writeSequenceClips (const juce::File& from, const juce::File& into)
     }
 }
 
-void writeSoundDemos (const juce::File& folder, const juce::StringArray& only)
+namespace
 {
-    folder.createDirectory();
-    const auto wanted = [&only] (const char* group) { return only.isEmpty() || only.contains (group); };
-    const auto indexFile = folder.getChildFile ("index.json");
-    Index index;
+    void writeComplexDemos (const juce::File& folder, Index& index);
 
-    // Rendering some of the groups keeps the others' lines.
-    if (! only.isEmpty())
-        if (const auto old = juce::JSON::parse (indexFile); old.isArray())
-            for (auto& entry : *old.getArray())
-                if (! only.contains (entry["group"].toString()))
-                    index.entries.add (entry);
+    void writeSoundDemosImpl (const juce::File& folder, const juce::StringArray& only)
+    {
+        folder.createDirectory();
+        const auto wanted = [&only] (const char* group) { return only.isEmpty() || only.contains (group); };
+        const auto indexFile = folder.getChildFile ("index.json");
+        Index index;
 
-    if (wanted ("synth"))      writeSynth (folder, index);
-    if (wanted ("swarm"))      writeSwarm (folder, index);
-    if (wanted ("drums"))      writeDrums (folder, index);
-    if (wanted ("sources"))    writeSources (folder, index);
-    if (wanted ("sampler"))    writeSampler (folder, index);
+        // Rendering some of the groups keeps the others' lines.
+        if (! only.isEmpty())
+            if (const auto old = juce::JSON::parse (indexFile); old.isArray())
+                for (auto& entry : *old.getArray())
+                    if (! only.contains (entry["group"].toString()))
+                        index.entries.add (entry);
 
-    if (wanted ("kits") || wanted ("sequences"))
-        writeLibrary (folder, index, wanted ("kits"), wanted ("sequences"));
+        if (wanted ("synth"))      writeSynth (folder, index);
+        if (wanted ("complex"))    writeComplexDemos (folder, index);
+        if (wanted ("swarm"))      writeSwarm (folder, index);
+        if (wanted ("drums"))      writeDrums (folder, index);
+        if (wanted ("sources"))    writeSources (folder, index);
+        if (wanted ("sampler"))    writeSampler (folder, index);
 
-    indexFile.replaceWithText (juce::JSON::toString (juce::var (index.entries)) + "\n");
+        if (wanted ("kits") || wanted ("sequences"))
+            writeLibrary (folder, index, wanted ("kits"), wanted ("sequences"));
 
-    juce::int64 bytes = 0;
+        indexFile.replaceWithText (juce::JSON::toString (juce::var (index.entries)) + "\n");
 
-    for (auto& entry : index.entries)
-        bytes += (juce::int64) entry["bytes"];
+        juce::int64 bytes = 0;
 
-    std::cout << index.entries.size() << " clips, " << juce::String ((double) bytes / 1048576.0, 1) << " MB" << std::endl;
+        for (auto& entry : index.entries)
+            bytes += (juce::int64) entry["bytes"];
+
+        std::cout << index.entries.size() << " clips, " << juce::String ((double) bytes / 1048576.0, 1) << " MB" << std::endl;
+    }
 }
 
 //==============================================================================
@@ -2113,6 +2119,58 @@ namespace
         for (auto o : u.modulators)  u.unison += (int) value (field (o, "Unison"), 1.0);
         return u;
     }
+
+    void writeComplexDemos (const juce::File& folder, Index& index)
+    {
+        constexpr double tempo = 132.0, beatSeconds = 60.0 / tempo, seconds = 16.0 * beatSeconds + 2.5;
+        const auto toHits = [] (const Part& part)
+        {
+            std::vector<Hit> hits;
+
+            for (auto& n : part)
+                hits.push_back ({ n.at * beatSeconds, n.length * beatSeconds, n.pitch, n.velocity });
+
+            return hits;
+        };
+
+        std::map<juce::String, int> totals, seen;
+
+        for (auto& p : WaveSynth::complexPatches())
+            ++totals[p.category];
+
+        for (auto& patch : WaveSynth::complexPatches())
+        {
+            BuiltInEffects::BasicSynthProcessor synth;
+
+            if (! synth.loadPatch (patch.name))
+                continue;
+
+            const auto used = oscillatorsUsed (patch);
+            auto about = describe (synth, patch);
+
+            if (! used.modulators.isEmpty())
+                about = juce::String (used.on.size() + used.modulators.size()) + " oscillators (" + juce::String (used.on.size())
+                        + " sounding, " + juce::String (used.modulators.size()) + " silent FM): " + about;
+            else
+                about = juce::String (used.on.size()) + " oscillators: " + about;
+
+            const auto place = ++seen[patch.category];
+            auto* entry = index.add ("complex", patch.category, patch.name, "complex/" + slug (patch.name) + ".mp3");
+            entry->setProperty ("about", about);
+            entry->setProperty ("phrase", "four bars at 132 BPM");
+            entry->setProperty ("oscillators", used.on.size() + used.modulators.size());
+            entry->setProperty ("modulators", used.modulators.size());
+            entry->setProperty ("parts", partsInUse (synth, patch));
+            entry->setProperty ("place", place);
+            entry->setProperty ("of", totals[patch.category]);
+            save (folder, entry, play (synth, toHits (complexPhrase (patch.category)), seconds, tempo));
+        }
+    }
+}
+
+void writeSoundDemos (const juce::File& folder, const juce::StringArray& only)
+{
+    writeSoundDemosImpl (folder, only);
 }
 
 void writeComplexClips (const juce::File& folder)

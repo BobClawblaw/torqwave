@@ -64,9 +64,12 @@ BY_EAR = {
     ("synth", "Low Boom"): "A sine dropping in pitch over a sub, into a long reverb.",
 }
 
-# The clips on the front page, in this order.
-FRONT = [("synth", "Concrete Pad"), ("synth", "Furnace Halo"), ("synth", "Cold Bell"), ("synth", "Glass Shard"), ("synth", "Iron Verdict"),
-         ("synth", "Ghost Radio Choir"), ("synth", "Abyss Reese"), ("synth", "Siren Burn"), ("swarm", "Tremolo Swarm Wall")]
+# The clips on the front page, in this order: nine-oscillator Complex club sounds, rewritten Sequence Library
+# kits and patterns, and Torqwave Synth / StringSwarm staples.
+FRONT = [("complex", "Velvet Roller"), ("complex", "Afterlife Anthem"), ("complex", "Elysian Bloom"),
+         ("complex", "Palazzo Chord"), ("complex", "Strobe Pluck"), ("complex", "Lagoon Rhodes"),
+         ("complex", "Angelic Chop"), ("kits", "Afterglow Kit"), ("sequences", "Peak Rumble Bass"),
+         ("sequences", "Low-Light Sequence"), ("synth", "Concrete Pad"), ("swarm", "Tremolo Swarm Wall")]
 
 # The Sequence Library's genres and styles in the order the pages show them: the floor and machine styles first.
 GENRES = ["Floor", "Machine"]
@@ -75,6 +78,7 @@ FIRST_STYLES = ["Floor/Dark Floor", "Floor/Factory Floor", "Floor/Hard Floor", "
 ROLES = ["Drums", "Bass", "Harmony", "Pads", "Arps", "Melody", "SFX"]
 
 GROUPS = OrderedDict([
+    ("complex", ("Torqwave Synth: Complex", "complex.html")),
     ("synth", ("Torqwave Synth", "synth.html")),
     ("swarm", ("StringSwarm", "stringswarm.html")),
     ("drums", ("Basic Drums", "drums-and-sampler.html")),
@@ -122,6 +126,8 @@ def instrument_card(clip, prefix, heading="h3", kind=None):
 
     if clip.get("groove"):
         plays = groove_line(clip)
+    elif clip["group"] == "complex":
+        plays = f'{clip["oscillators"]} oscillators ({clip["parts"]} parts in use); no. {clip["place"]} of {clip["of"]} in Complex › {clip["category"]}. Plays {clip["phrase"]}.'
     elif clip.get("featured"):
         plays = "Chosen by ear. Plays " + clip["phrase"] + "."
     else:
@@ -218,6 +224,28 @@ RULE = ("A point for each oscillator on, each of those with unison voices, each 
         "each modulation routing in use and each named macro.")
 
 
+def complex_page():
+    clips = of("complex")
+    by_category = grouped(clips, lambda c: c["category"])
+    categories = list(by_category)
+    counts = {cat: len(by_category[cat]) for cat in categories}
+    nines = sum(1 for c in clips if c.get("oscillators") == 9)
+    body = [f'<div class="title">{crumbs("Torqwave Synth: Complex")}<h1>Torqwave Synth: all {len(clips)} Complex patches</h1>',
+            f'<p>Multi-oscillator patches built for Torqwave Synth\'s nine-oscillator engine, four in each of the 29 categories ({nines} of the {len(clips)} use all nine oscillators): '
+            'mono low end below 120 Hz, parallel stereo width and air, tempo-synced movement as notes are held, and expressive velocity response. '
+            '0.22.1 adds two new nine-oscillator musical club patches to every category alongside the initial 58 from 0.22.0.</p>',
+            f'<p class="meta">{HOW} Each patch plays four bars at 132 BPM in its category\'s phrase. {megabytes(clips)} in all; a clip loads only when you play it.</p>',
+            chips(categories, counts), "</div>"]
+
+    for category in categories:
+        found = by_category[category]
+        body.append(f'<h2 id="{anchor(category)}">{esc(category)} <small>{len(found)} patches</small></h2>'
+                    '<div class="clips">' + "".join(card(c, "audio/", "h3", f'Complex · {c["oscillators"]} oscillators') for c in found) + "</div>")
+
+    page("sounds/complex.html", "Torqwave Synth: hear the Complex patches",
+         f"All {len(clips)} Complex patches of Torqwave Synth across all 29 categories, using four to nine oscillators each, rendered by Torqwave with nothing added.", "\n".join(body))
+
+
 def synth_page():
     clips = of("synth")
     by_ear = [c for c in clips if c.get("featured")]
@@ -230,7 +258,7 @@ def synth_page():
                      f'<h3>{esc(category)}</h3><p>{esc(", ".join(c["name"] for c in found[:3]))} and {len(found) - 3} more.</p></a>')
 
     body = [f'<div class="title">{crumbs("Torqwave Synth")}<h1>Torqwave Synth: {len(clips)} of its patches</h1>',
-            f'<p>A wavetable synth with 3,569 factory patches in 29 categories. Here are {len(clips)} of them: the ones that use the most of the synth, from every category, '
+            f'<p>A wavetable synth with 3,569 factory patches and <a href="complex.html">{len(of("complex"))} multi-oscillator Complex patches</a> in 29 categories. Here are {len(clips)} of the factory patches: the ones that use the most of the synth, from every category, '
             f'and {len(by_ear)} chosen by ear. Under each name is what the patch is made of, read off the synth with the patch loaded.</p>',
             f'<p class="meta">{HOW} Each patch plays one of the audition phrases Torqwave itself plays when you choose a sound, at 125 BPM; the {len(by_ear)} chosen by ear play a part that suits them. '
             f'{megabytes(clips)} in all; a clip loads only when you play it.</p>',
@@ -425,7 +453,12 @@ def front_clips(prefix):
 
     for group, name in FRONT:
         clip = find(group, name)
-        kind = GROUPS[group][0].replace("Sequence Library: kits", "Factory kit") + (" · " + clip["category"].replace("/", " › ") if group in ("kits", "synth", "sampler") else "")
+        if group == "complex":
+            kind = f'Complex · {clip["category"]} ({clip["oscillators"]} osc)'
+        elif group == "sequences":
+            kind = f'Sequence · {clip["category"].replace("/", " › ")}'
+        else:
+            kind = GROUPS[group][0].replace("Sequence Library: kits", "Factory kit") + (" · " + clip["category"].replace("/", " › ") if group in ("kits", "synth", "sampler") else "")
         cards.append(card(clip, prefix, "h3", kind))
 
     return '<div class="clips">' + "".join(cards) + "</div>"
@@ -434,7 +467,8 @@ def front_clips(prefix):
 def sounds_index():
     total = len(CLIPS)
     rows = []
-    pages = [("synth", "synth.html", "Torqwave Synth", "of 3,569 patches: the ones that use the most of the synth, from all 29 categories"),
+    pages = [("complex", "complex.html", "Torqwave Synth: Complex", f"all {len(of('complex'))} Complex patches across all 29 categories, 4 to 9 oscillators each"),
+             ("synth", "synth.html", "Torqwave Synth", "of 3,569 factory patches: the ones that use the most of the synth, from all 29 categories"),
              ("swarm", "stringswarm.html", "StringSwarm", "of 296 presets, from all 11 categories"),
              ("drums", "drums-and-sampler.html#basic-drums", "Basic Drums", f"all {len(set(c['category'] for c in of('drums')))} kits, on grooves written for them"),
              ("sources", "drums-and-sampler.html#the-sources", "Basic Drums: sources", "clips of the 24 synthesized sources any pad can play, each alone and in a groove"),
@@ -449,10 +483,10 @@ def sounds_index():
         rows.append(f'<tr><td>{esc(name)}</td><td class="n">{len(clips)}</td><td>{esc(what)}</td><td class="n">{megabytes(clips)}</td></tr>')
 
     body = [f'<div class="title"><h1>Hear Torqwave: {total} clips of what is built in</h1>',
-            '<p>Torqwave comes with four instruments, thousands of patches and presets for them, and a library of sequences and kits to play on them. '
+            '<p>Torqwave comes with four instruments, thousands of patches and presets for them (including 116 multi-oscillator Complex patches), and a library of 1,024 sequences and 116 kits to play on them. '
             'These pages let you hear them before you download anything.</p>',
             f'<p class="meta">{HOW}</p></div>',
-            '<h2 id="start">Start here</h2><p class="lede">Pads, bells, a choir, a lead and a wall of strings from Torqwave Synth and StringSwarm.</p>', front_clips("audio/"),
+            '<h2 id="start">Start here</h2><p class="lede">Nine-oscillator Complex club sounds, rewritten Sequence Library kits and patterns, Torqwave Synth and StringSwarm.</p>', front_clips("audio/"),
             '<h2 id="all">Everything rendered</h2><div class="grid">' + "".join(cards) + "</div>",
             '<table class="facts"><tr><th>What</th><th>Clips</th><th>Which</th><th>Size</th></tr>' + "".join(rows)
             + f'<tr><th>All</th><th>{total}</th><th></th><th>{megabytes(CLIPS)}</th></tr></table>',
@@ -555,14 +589,18 @@ def quality_demos():
 
 if __name__ == "__main__":
     sounds_index()
+    complex_page()
     synth_page()
     swarm_page()
     drums_page()
     kits_page()
     sequences_page()
     between("index.html", "clips", front_clips("sounds/audio/")
-            + f'\n<div class="actions"><a class="button primary" href="sounds/">Hear all {len(CLIPS)} clips</a></div>'
-              f'\n<p class="meta">By instrument: <a href="sounds/synth.html">Torqwave Synth</a> ({len(of("synth"))}), '
+            + f'\n<div class="actions"><a class="button primary" href="sounds/">Hear all {len(CLIPS)} clips</a> '
+              f'<a class="button plain" href="sounds/complex.html">Hear all {len(of("complex"))} Complex patches</a> '
+              f'<a class="button plain" href="sounds/sequences.html">Hear the Sequence Library</a></div>'
+              f'\n<p class="meta">By instrument: <a href="sounds/complex.html">Complex patches</a> ({len(of("complex"))}), '
+              f'<a href="sounds/synth.html">Torqwave Synth</a> ({len(of("synth"))}), '
               f'<a href="sounds/stringswarm.html">StringSwarm</a> ({len(of("swarm"))}), <a href="sounds/drums-and-sampler.html">Basic Drums and Torqwave Sampler</a> ({len(of("drums")) + len(of("sources")) + len(of("sampler"))}), '
               f'<a href="sounds/kits.html">every factory kit</a> ({len(of("kits"))}) and <a href="sounds/sequences.html">sequences from every style</a> ({len(of("sequences"))}).</p>')
     bytes_quality = quality_demos()

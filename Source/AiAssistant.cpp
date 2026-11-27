@@ -113,7 +113,7 @@ juce::String Turn::after() const
 
 juce::String releaseNotesFor()
 {
-    return "0.22.0";
+    return "0.22.1";
 }
 
 bool asksAboutRelease (const juce::String& request)
@@ -136,7 +136,10 @@ juce::String aboutThisRelease (bool withNotes)
 
     return line + " The user may be asking about the program, not for a change: then answer from these notes in a few lines, make no changes, and "
            "say the full list is the changelog at https://github.com/BobClawblaw/torqwave/blob/main/CHANGELOG.md. "
-           "New in 0.22.0: Torqwave Synth has nine oscillators, each with FM From to choose which oscillator drives it, and a "
+           "New in 0.22.1: 58 more nine-oscillator musical club patches in Torqwave Synth's Complex folder (two new per category, "
+           "116 Complex patches in all, three nine-oscillator patches in every category), calibrated around -17 LUFS with parallel "
+           "mono low end and stereo air; reworked website demos showcasing the Complex patches and Sequence Library patterns. "
+           "0.22.0: Torqwave Synth has nine oscillators, each with FM From to choose which oscillator drives it, and a "
            "Complex folder of 58 patches that use four to nine of them and move as they are held; re-striking a held note, sweeping "
            "the cutoff and legato slides no longer click; 174 near-copies are taken out of the factory patches, 3,569 left; the "
            "Sequence Library is rewritten so no two presets play the same notes (1,024 sequences, 116 kits), its drones and pads "

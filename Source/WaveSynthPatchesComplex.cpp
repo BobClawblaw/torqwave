@@ -1159,6 +1159,1375 @@ namespace WaveSynthPatchBuilder
             .amp (1, 200, 60, 80).delay (sixteenthD, 35, 18, 4500).level (4.7)
             .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 35).macro (2, "Mouth").mod (macro2, "osc1Position", 30)
             .macro (3, "Weight").mod (macro3, "osc3Volume", 30).macro (4, "Echo").mod (macro4, "fxDelayMix", 30);
+
+        //======================================================================
+        // Musical Club Nine-Oscillator Collection (2 per category, all 9 oscillators)
+        //======================================================================
+
+        //----------------------------------------------------------------------
+        // Bass
+
+        // Nine. Velvet Roller: warm Afterlife/Bodzin rolling analog club bass.
+        // 1 pure mono sub sine; 2 warm saturated sub; 3 analog saw body FM'd gently by 4 (1:2 woody);
+        // 5 warm pulse octave; 6 Karplus plucked transient; 7 & 8 stereo high-passed detuned saws
+        // pulsing on an 8th-note groove; 9 glassy additive sparkle opening with velocity.
+        add ("Velvet Roller", "Bass").osc (1, analog, sinePos, 78)
+            .osc (2, sub, 30, 56)
+            .osc (3, analog, sawPos, 54).fm (3, 4, 10).modulator (4, analog, sinePos).pitch (4, 12)
+            .osc (5, pulse, 35, 36).pitch (5, 12).warp (5, wBend, 20)
+            .osc (6, string, 65, 34).pitch (6, 12).levelEnv (6, 0, 0, 55, 0)
+            .osc (7, analog, sawPos, 28).pitch (7, 12, -9).pan (7, -55).route (7, 100)
+            .osc (8, analog, sawPos, 28).pitch (8, 12, 9).pan (8, 55).route (8, 100)
+            .osc (9, additive, 55, 16).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder24, 480, 28, 22, 35).filter (2, svfHigh, 340, 12)
+            .env (2, 0, 190, 8, 90, 68).mod (env2, "filter1Cutoff", 34).mod (env2, "osc3WarpAmount", 18)
+            .lfoSync (1, triangle, eighth, 0, 20).mod (lfo1, "filter1Cutoff", 20).mod (lfo1, "osc7Volume", 32).mod (lfo1, "osc8Volume", 32)
+            .lfoSync (2, sine, bars2, 0).mod (lfo2, "osc5Position", 35).mod (lfo2, "filter2Cutoff", 18)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc9Volume", 36).mod (velocity, "osc3WarpAmount", 18)
+            .amp (2, 220, 52, 85).mono (25.0f, true).drive (tube, 16, 6500).level (-5.5)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Wood").mod (macro2, "osc3WarpAmount", 38)
+            .macro (3, "Width").mod (macro3, "osc7Volume", 42)
+            .macro (4, "Warmth").mod (macro4, "fxDriveAmount", 48);
+
+        // Nine. Midnight Garage: silky UKG / deep-house woody FM donk-bass.
+        // 1 pure mono sub; 2 classic 1:2 FM carrier driven by 3 (unheard) + 4 (1:3 sheen, unheard);
+        // 5 hollow square body; 6 warm octave triangle; 7 & 8 stereo high-passed vowel/additive
+        // shimmer rocking on dotted 8ths; 9 crisp hammer transient.
+        add ("Midnight Garage", "Bass").osc (1, analog, sinePos, 82)
+            .osc (2, analog, sinePos, 66).fm (2, 3, 28).modulator (3, analog, sinePos).pitch (3, 12).fm (3, 4, 14).modulator (4, analog, sinePos).pitch (4, 19)
+            .osc (5, analog, squarePos, 32).pitch (5, 0, 4)
+            .osc (6, analog, trianglePos, 38).pitch (6, 12)
+            .osc (7, vowel, 35, 22).pitch (7, 12).pan (7, -45).route (7, 100)
+            .osc (8, additive, 35, 22).pitch (8, 19).pan (8, 45).route (8, 100)
+            .osc (9, fm, 30, 32).pitch (9, 24).levelEnv (9, 0, 0, 28, 0).route (9, 100)
+            .parallel().filter (1, ladder24, 620, 24, 16, 40).filter (2, svfHigh, 360, 14)
+            .env (2, 0, 145, 0, 80, 75).mod (env2, "filter1Cutoff", 32).mod (env2, "osc2WarpAmount", 34)
+            .lfoSync (1, sine, eighthD, 0, 15).mod (lfo1, "osc2WarpAmount", 20).mod (lfo1, "osc7Position", 40).mod (lfo1, "filter1Cutoff", 16)
+            .lfoSync (2, triangle, bar1, 0).mod (lfo2, "osc8Position", 35)
+            .mod (velocity, "osc2WarpAmount", 32).mod (velocity, "filter1Cutoff", 22).mod (velocity, "osc9Volume", 35)
+            .amp (2, 260, 38, 90).mono (18.0f, true).drive (soft, 18, 7000).level (-7.5)
+            .macro (1, "Donk").mod (macro1, "osc2WarpAmount", 42)
+            .macro (2, "Cutoff").mod (macro2, "filter1Cutoff", 36)
+            .macro (3, "Shimmer").mod (macro3, "osc8Volume", 48)
+            .macro (4, "Drive").mod (macro4, "fxDriveAmount", 50);
+
+        //----------------------------------------------------------------------
+        // Sub
+
+        // Nine. Abyssal Pulse: seismic melodic-techno chest sub with hypnotic 1/4-note breathing halo.
+        // 1 pure direct sine; 2 rounded saturated sub; 3 warm triangle; 4 octave-up sine FM'd by 5 (1:2);
+        // 6 soft saw octave breathing on 1/4-note sidechain; 7 & 8 high-passed stereo fifth/octave glass
+        // choir; 9 soft pluck transient.
+        add ("Abyssal Pulse", "Sub").osc (1, analog, sinePos, 86).route (1, 100)
+            .osc (2, sub, 28, 52)
+            .osc (3, analog, trianglePos, 38)
+            .osc (4, analog, sinePos, 34).pitch (4, 12).fm (4, 5, 16).modulator (5, analog, sinePos).pitch (5, 24)
+            .osc (6, analog, sawPos, 24).pitch (6, 12)
+            .osc (7, additive, 30, 16).pitch (7, 19).pan (7, -40)
+            .osc (8, vowel, 45, 16).pitch (8, 24).pan (8, 40)
+            .osc (9, string, 55, 22).pitch (9, 12).levelEnv (9, 0, 0, 35, 0)
+            .filter (1, ladder24, 340, 22, 14, 35)
+            .lfoSync (1, sawUp, quarter, 0, 30).mod (lfo1, "filter1Cutoff", 26).mod (lfo1, "osc6Volume", 38).mod (lfo1, "osc4WarpAmount", 24)
+            .lfoSync (2, sine, bars2, 0).mod (lfo2, "osc7Position", 40).mod (lfo2, "osc8Position", 35)
+            .env (2, 0, 65, 0, 40, 75).mod (env2, "osc1Pitch", 2.08f)
+            .mod (velocity, "filter1Cutoff", 28).mod (velocity, "osc4WarpAmount", 28).mod (velocity, "osc6Volume", 30)
+            .amp (3, 350, 88, 120).mono (20.0f, true).drive (soft, 12, 4000).level (-9)
+            .macro (1, "Glow").mod (macro1, "filter1Cutoff", 40)
+            .macro (2, "Pulse").mod (macro2, "osc6Volume", 48)
+            .macro (3, "Halo").mod (macro3, "osc7Volume", 50)
+            .macro (4, "Warmth").mod (macro4, "fxDriveAmount", 55);
+
+        // Nine. Silk Undertow: liquid DnB / deep house rolling sub with velvety low-mid purr.
+        // 1 pure direct sine; 2 warm sub-wave; 3 2:1 warm FM fundamental (3 driven by 4);
+        // 5 soft octave pulse; 6 octave triangle; 7 & 8 stereo high-passed air twins blooming on velocity;
+        // 9 subtle woody knock.
+        add ("Silk Undertow", "Sub").osc (1, analog, sinePos, 84).route (1, 100)
+            .osc (2, sub, 48, 46)
+            .osc (3, analog, sinePos, 46).fm (3, 4, 12).modulator (4, analog, trianglePos).pitch (4, 12)
+            .osc (5, pulse, 30, 26).pitch (5, 12)
+            .osc (6, analog, trianglePos, 30).pitch (6, 19)
+            .osc (7, analog, sawPos, 15).pitch (7, 24, -7).pan (7, -50)
+            .osc (8, analog, sawPos, 15).pitch (8, 24, 7).pan (8, 50)
+            .osc (9, fm, 22, 24).pitch (9, 12).levelEnv (9, 0, 0, 26, 0)
+            .filter (1, ladder12, 460, 24, 12, 40)
+            .lfoSync (1, triangle, eighth, 0, 20).mod (lfo1, "filter1Cutoff", 24).mod (lfo1, "osc5Position", 45).mod (lfo1, "osc3WarpAmount", 20)
+            .lfoSync (2, sine, bars4, 0).mod (lfo2, "osc6Volume", 25).mod (lfo2, "filter1Resonance", 15)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc3WarpAmount", 28).mod (velocity, "osc7Volume", 35)
+            .amp (4, 320, 90, 140).mono (45.0f, true).drive (tube, 10, 4500).level (-7.3)
+            .macro (1, "Purr").mod (macro1, "osc3WarpAmount", 42)
+            .macro (2, "Cutoff").mod (macro2, "filter1Cutoff", 38)
+            .macro (3, "Air").mod (macro3, "osc8Volume", 50)
+            .macro (4, "Saturate").mod (macro4, "fxDriveAmount", 50);
+
+        //----------------------------------------------------------------------
+        // Reese
+
+        // Nine. Aurora Reese: lush Liquid DnB / melodic-club Reese with mono sub anchor and wide silk shimmer.
+        // 1 pure mono sub; 2 & 3 beating mono saws (+/-8 ct); 4 warm pulse body; 5 FM shimmer (driven by 6);
+        // 7 & 8 stereo high-passed unison saws + additive choir an octave up; 9 airy fifth shimmer.
+        add ("Aurora Reese", "Reese").osc (1, analog, sinePos, 74)
+            .osc (2, analog, sawPos, 50).pitch (2, 0, -8)
+            .osc (3, analog, sawPos, 50).pitch (3, 0, 8)
+            .osc (4, pulse, 40, 32)
+            .osc (5, analog, sinePos, 36).pitch (5, 12).fm (5, 6, 18).modulator (6, analog, sinePos).pitch (6, 19)
+            .osc (7, analog, sawPos, 28).pitch (7, 12).unison (7, 4, 18, 95, 0, 25).route (7, 100)
+            .osc (8, additive, 50, 24).pitch (8, 12, 6).pan (8, -45).route (8, 100)
+            .osc (9, vowel, 40, 22).pitch (9, 19).pan (9, 45).route (9, 100)
+            .parallel().filter (1, ladder24, 360, 28, 22, 25).filter (2, svfHigh, 320, 14)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "filter1Cutoff", 22).mod (lfo1, "osc5WarpAmount", 22).mod (lfo1, "osc8Position", 35)
+            .lfoSync (2, triangle, bars2, 0).mod (lfo2, "filter2Cutoff", 24).mod (lfo2, "osc9Position", 40)
+            .env (2, 15, 700, 35, 300).mod (env2, "filter1Cutoff", 22)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc7Volume", 32).mod (velocity, "osc5WarpAmount", 24)
+            .amp (10, 400, 95, 220).mono (65.0f, true).drive (tube, 18, 5500).level (-8.5)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Detune").mod (macro2, "osc3Fine", 14)
+            .macro (3, "Aurora").mod (macro3, "osc7Volume", 42)
+            .macro (4, "Warmth").mod (macro4, "fxDriveAmount", 45);
+
+        // Nine. Solstice Drift: emotional progressive-house / deep-techno PWM Reese with silky parallel notch motion.
+        // 1 pure sub; 2 & 3 opposite-moving mono PWM pulses (+/-7 ct); 4 warm triangle; 5 octave analog saw
+        // FM'd gently by 6 (1:1); 7 & 8 panned stereo fifth/octave glass voices through parallel SVF Notch; 9 breathy top.
+        add ("Solstice Drift", "Reese").osc (1, sub, 20, 74)
+            .osc (2, pulse, 25, 48).pitch (2, 0, -7)
+            .osc (3, pulse, 75, 48).pitch (3, 0, 7)
+            .osc (4, analog, trianglePos, 36).pitch (4, 12)
+            .osc (5, analog, sawPos, 34).pitch (5, 12).fm (5, 6, 12).modulator (6, analog, sinePos).pitch (6, 12)
+            .osc (7, additive, 45, 24).pitch (7, 19).pan (7, -55).route (7, 100)
+            .osc (8, vowel, 55, 24).pitch (8, 12).pan (8, 55).route (8, 100)
+            .osc (9, analog, sawPos, 20).pitch (9, 24).unison (9, 3, 14, 90).route (9, 100)
+            .parallel().filter (1, ladder12, 420, 26, 18, 25).filter (2, svfHigh, 360, 20)
+            .lfoSync (1, triangle, quarter, 0, 15).mod (lfo1, "osc2Position", 42).mod (lfo1, "osc3Position", -42).mod (lfo1, "filter1Cutoff", 20)
+            .lfoSync (2, sine, eighthD, 0).mod (lfo2, "filter2Cutoff", 30).mod (lfo2, "osc8Position", 35)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc5WarpAmount", 28).mod (velocity, "osc9Volume", 35)
+            .amp (12, 450, 95, 250).mono (75.0f, true).drive (soft, 20, 6000).level (-11)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "PWM").mod (macro2, "osc2Position", 36)
+            .macro (3, "Shimmer").mod (macro3, "osc7Volume", 45)
+            .macro (4, "Warmth").mod (macro4, "fxDriveAmount", 48);
+
+        //----------------------------------------------------------------------
+        // Acid
+
+        // Nine. Liquid Acid: hypnotic melodic-techno / classic 303-plus liquid acid.
+        // 1 crisp saw; 2 warm square; 3 mono sub octave; 4 1:2 FM squelch driven by 5 (unheard);
+        // 6 silky sync overtone; 7 & 8 high-passed wide stereo harmonic twins; 9 crisp pluck bite.
+        add ("Liquid Acid", "Acid").osc (1, analog, sawPos, 66)
+            .osc (2, analog, squarePos, 42)
+            .osc (3, analog, sinePos, 54).pitch (3, -12)
+            .osc (4, analog, sawPos, 40).fm (4, 5, 10).modulator (5, analog, sinePos).pitch (5, 12)
+            .osc (6, sync, 25, 28).pitch (6, 12).warp (6, wSync, 15)
+            .osc (7, pulse, 35, 18).pitch (7, 12, -8).pan (7, -55).route (7, 100)
+            .osc (8, pulse, 35, 18).pitch (8, 12, 8).pan (8, 55).route (8, 100)
+            .osc (9, string, 75, 26).pitch (9, 12).levelEnv (9, 0, 0, 35, 0)
+            .parallel().filter (1, ladder24, 520, 66, 26, 45).filter (2, svfHigh, 420, 18)
+            .env (2, 0, 210, 0, 95, 76).mod (env2, "filter1Cutoff", 44).mod (env2, "osc6WarpAmount", 32).mod (env2, "osc4WarpAmount", 22)
+            .lfoSync (1, steps, bar1, 0, 35).stepPattern (1, { 85, 20, -40, 65, -20, 90, -50, 30, 75, -30, 50, 95, -40, 25, 60, -25 })
+            .mod (lfo1, "filter1Cutoff", 18).mod (lfo1, "osc6Position", 38)
+            .lfoSync (2, triangle, bars2, 0).mod (lfo2, "filter1Resonance", 16)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc4WarpAmount", 28)
+            .amp (2, 220, 68, 70).mono (55.0f, true).drive (tube, 22, 7500).delay (eighthD, 34, 18, 3600, true).level (-7.5)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Res").mod (macro2, "filter1Resonance", 28)
+            .macro (3, "Liquid").mod (macro3, "osc6WarpAmount", 45)
+            .macro (4, "Echo").mod (macro4, "fxDelayMix", 40);
+
+        // Nine. Neon Squelch: progressive-trance / electro singing formant-acid.
+        // 1 warm saw; 2 mono sub octave; 3 liquid sync; 4 vowel formant octave singing on 8ths;
+        // 5 FM bell-acid layer driven by 6 (1:3); 7 & 8 high-passed wide stereo sheen; 9 sharp pick.
+        add ("Neon Squelch", "Acid").osc (1, analog, sawPos, 64)
+            .osc (2, sub, 30, 52).pitch (2, -12)
+            .osc (3, sync, 35, 38).warp (3, wSync, 18)
+            .osc (4, vowel, 20, 38).pitch (4, 12)
+            .osc (5, analog, sinePos, 30).pitch (5, 12).fm (5, 6, 16).modulator (6, analog, sinePos).pitch (6, 19)
+            .osc (7, additive, 60, 18).pitch (7, 12, -10).pan (7, -50).route (7, 100)
+            .osc (8, additive, 60, 18).pitch (8, 12, 10).pan (8, 50).route (8, 100)
+            .osc (9, fm, 45, 24).pitch (9, 24).levelEnv (9, 0, 0, 24, 0).route (9, 100)
+            .parallel().filter (1, ladder24, 580, 62, 24, 45).filter (2, svfHigh, 450, 16)
+            .env (2, 0, 195, 0, 85, 74).mod (env2, "filter1Cutoff", 40).mod (env2, "osc3WarpAmount", 36)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "osc4Position", 52).mod (lfo1, "filter1Cutoff", 18).mod (lfo1, "osc5WarpAmount", 22)
+            .lfoSync (2, triangle, bars2, 0).mod (lfo2, "filter2Cutoff", 24)
+            .mod (velocity, "filter1Cutoff", 22).mod (velocity, "osc3WarpAmount", 30)
+            .amp (2, 210, 64, 65).mono (48.0f, true).drive (soft, 24, 8000).delay (sixteenthD, 30, 18, 4200, true).level (-8)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Formant").mod (macro2, "osc4Position", 45)
+            .macro (3, "Squelch").mod (macro3, "filter1Resonance", 30)
+            .macro (4, "Echo").mod (macro4, "fxDelayMix", 38);
+
+        //----------------------------------------------------------------------
+        // Lead
+
+        // Nine. Afterlife Anthem: soaring melodic-techno / Bodzin emotional analog lead.
+        // 1 warm detuned saw stack; 2 silky PWM pulse; 3 expressive 1:2 FM voice driven by 4 (unheard);
+        // 5 fifth harmonic bloom (levelEnv); 6 Karplus plucked attack; 7 & 8 wide stereo high-passed
+        // supersaw shimmer; 9 crystalline additive top air. Clean above 200Hz!
+        add ("Afterlife Anthem", "Lead").osc (1, analog, sawPos, 56).unison (1, 3, 14, 70, 0, 15)
+            .osc (2, pulse, 35, 44).pitch (2, 0, 5)
+            .osc (3, analog, sinePos, 40).fm (3, 4, 16).modulator (4, analog, sinePos).pitch (4, 12)
+            .osc (5, analog, trianglePos, 24).pitch (5, 7).levelEnv (5, 220, 0, 1200, 55)
+            .osc (6, string, 78, 30).levelEnv (6, 0, 0, 55, 0)
+            .osc (7, analog, sawPos, 28).pitch (7, 12, -10).pan (7, -55).route (7, 100)
+            .osc (8, analog, sawPos, 28).pitch (8, 12, 10).pan (8, 55).route (8, 100)
+            .osc (9, additive, 70, 18).pitch (9, 12).route (9, 100)
+            .parallel().filter (1, ladder24, 2400, 22, 14, 55).filter (2, svfHigh, 520, 14)
+            .env (2, 0, 320, 28, 220, 65).mod (env2, "filter1Cutoff", 24).mod (env2, "osc3WarpAmount", 20)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "filter1Cutoff", 20).mod (lfo1, "osc2Position", 40).mod (lfo1, "osc9Position", 35)
+            .lfo (2, sine, 5.2f, 1).lfoFade (2, 450).mod (lfo2, "osc1Fine", 6).mod (lfo2, "osc3Fine", 6)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc3WarpAmount", 28).mod (velocity, "osc6Volume", 32)
+            .amp (4, 350, 88, 260).mono (38.0f, true).drive (tube, 14, 9500).chorus (22, 0.5f, 40).delay (eighthD, 36, 24, 4800, true).reverb (24, 72, 3.0f, 40).level (-6)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 36)
+            .macro (2, "Shimmer").mod (macro2, "osc7Volume", 42)
+            .macro (3, "Fifth").mod (macro3, "osc5Volume", 48)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Prism Euphoria: progressive-house / trance crystal festival hook lead.
+        // 1 bright additive body; 2 silky sync lead; 3 crystal 1:3 FM chime driven by 4 (unheard);
+        // 5 warm triangle foundation; 6 & 7 lush panned octave saws; 8 vowel air; 9 plucked sparkle.
+        add ("Prism Euphoria", "Lead").osc (1, additive, 52, 52).unison (1, 2, 10, 65)
+            .osc (2, sync, 28, 46).warp (2, wSync, 14)
+            .osc (3, analog, sinePos, 38).pitch (3, 12).fm (3, 4, 22).levelEnv (3, 0, 0, 280, 25).modulator (4, analog, sinePos).pitch (4, 19)
+            .osc (5, analog, trianglePos, 40)
+            .osc (6, analog, sawPos, 26).pitch (6, 12, -8).pan (6, -60).route (6, 100)
+            .osc (7, analog, sawPos, 26).pitch (7, 12, 8).pan (7, 60).route (7, 100)
+            .osc (8, vowel, 30, 22).pitch (8, 12).route (8, 100)
+            .osc (9, fm, 55, 24).pitch (9, 12).levelEnv (9, 0, 0, 32, 0).route (9, 100)
+            .parallel().filter (1, svfLow, 2800, 18, 10, 55).filter (2, svfHigh, 600, 14)
+            .env (2, 0, 260, 20, 180, 65).mod (env2, "filter1Cutoff", 24).mod (env2, "osc2WarpAmount", 28)
+            .lfoSync (1, triangle, eighthD, 0, 15).mod (lfo1, "osc1Position", 38).mod (lfo1, "osc8Position", 42).mod (lfo1, "filter1Cutoff", 18)
+            .lfo (2, sine, 5.6f, 1).lfoFade (2, 380).mod (lfo2, "osc2Fine", 6)
+            .mod (velocity, "osc2WarpAmount", 32).mod (velocity, "filter1Cutoff", 22).mod (velocity, "osc3WarpAmount", 26)
+            .amp (3, 300, 86, 280).chorus (28, 0.7f, 45).delay (eighthD, 38, 26, 5500, true).reverb (26, 78, 3.4f, 35).level (-3)
+            .macro (1, "Bright").mod (macro1, "filter1Cutoff", 36)
+            .macro (2, "Sync").mod (macro2, "osc2WarpAmount", 42)
+            .macro (3, "Crystal").mod (macro3, "osc3Volume", 46)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 40);
+
+        //----------------------------------------------------------------------
+        // Stab
+
+        // Nine. Palazzo Chord: classic deep/melodic-house minor-9th chord stab on a single key!
+        // 1 root saw; 2 m3 (+3); 3 5th (+7); 4 m7 (+10); 5 9th (+14) additive glass;
+        // 6 woody 1:2 FM attack driven by 7 (unheard); 8 & 9 wide stereo high-passed octave shimmer.
+        add ("Palazzo Chord", "Stab").osc (1, analog, sawPos, 46)
+            .osc (2, analog, sawPos, 38).pitch (2, 3, -4)
+            .osc (3, pulse, 35, 38).pitch (3, 7, 4)
+            .osc (4, analog, sawPos, 32).pitch (4, 10, -5)
+            .osc (5, additive, 45, 28).pitch (5, 14, 5)
+            .osc (6, analog, sinePos, 34).pitch (6, 12).fm (6, 7, 26).levelEnv (6, 0, 0, 95, 0).modulator (7, analog, sinePos).pitch (7, 24)
+            .osc (8, analog, sawPos, 20).pitch (8, 12, -9).pan (8, -60).route (8, 100)
+            .osc (9, analog, sawPos, 20).pitch (9, 15, 9).pan (9, 60).route (9, 100)
+            .parallel().filter (1, ladder24, 920, 38, 18, 45).filter (2, svfHigh, 520, 14)
+            .env (2, 0, 230, 0, 120, 72).mod (env2, "filter1Cutoff", 40).mod (env2, "osc6WarpAmount", 26)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "filter1Cutoff", 18).mod (lfo1, "osc5Position", 40).mod (lfo1, "filter2Cutoff", 22)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc6Volume", 36).mod (velocity, "osc8Volume", 30)
+            .amp (2, 360, 0, 240).chorus (20, 0.6f, 40).delay (eighthD, 46, 28, 3200, true).reverb (24, 72, 2.6f, 45).level (0)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Dub").mod (macro2, "fxDelayFeedback", 34)
+            .macro (3, "Sparkle").mod (macro3, "osc5Volume", 46)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Mirage Dub: Berlin / Basic Channel warm resonant dub-techno chord stab.
+        // 1 root warm FM driven by 5 (1:2); 2 m3 (+3) soft pulse; 3 5th (+7) triangle; 4 m7 (+10) vowel;
+        // 6 Karplus string pluck; 7 & 8 stereo SVF Band dub shimmer; 9 airy top harmonic.
+        add ("Mirage Dub", "Stab").osc (1, analog, sinePos, 48).fm (1, 5, 20).modulator (5, analog, sinePos).pitch (5, 12)
+            .osc (2, pulse, 40, 38).pitch (2, 3, -5)
+            .osc (3, analog, trianglePos, 36).pitch (3, 7, 5)
+            .osc (4, vowel, 35, 32).pitch (4, 10)
+            .osc (6, string, 72, 30).pitch (6, 12).levelEnv (6, 0, 0, 75, 0)
+            .osc (7, analog, sawPos, 24).pitch (7, 12, -7).pan (7, -55).route (7, 100)
+            .osc (8, additive, 55, 24).pitch (8, 19, 7).pan (8, 55).route (8, 100)
+            .osc (9, fm, 35, 20).pitch (9, 24).levelEnv (9, 0, 0, 50, 0).route (9, 100)
+            .parallel().filter (1, ladder12, 1050, 44, 16, 40).filter (2, svfBand, 1400, 35, 0, 40)
+            .env (2, 0, 280, 0, 150, 70).mod (env2, "filter1Cutoff", 38).mod (env2, "filter2Cutoff", 28)
+            .lfoSync (1, triangle, eighthD, 0, 15).mod (lfo1, "filter1Cutoff", 20).mod (lfo1, "osc4Position", 42).mod (lfo1, "filter2Cutoff", 28)
+            .mod (velocity, "filter1Cutoff", 25).mod (velocity, "osc1WarpAmount", 30).mod (velocity, "osc6Volume", 32)
+            .amp (2, 420, 0, 320).delay (eighthD, 52, 32, 2800, true).reverb (28, 82, 3.4f, 40).level (1)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Dub").mod (macro2, "fxDelayFeedback", 32)
+            .macro (3, "Shimmer").mod (macro3, "filter2Cutoff", 36)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Chord
+
+        // Nine. Velvet Horizon: lush Rüfüs Du Sol / Anjunadeep polyphonic club chord synth.
+        // 1 warm detuned saws; 2 silky PWM pulse; 3 warm triangle body; 4 1:2 FM warmth driven by 5;
+        // 6 additive bloom entering at 280ms; 7 & 8 wide stereo high-passed octave saws pulsing in 1/4-note
+        // sidechain; 9 soft airy vowel halo.
+        add ("Velvet Horizon", "Chord").osc (1, analog, sawPos, 40).unison (1, 3, 12, 75, 0, 20)
+            .osc (2, pulse, 38, 36).pitch (2, 0, 5)
+            .osc (3, analog, trianglePos, 38).pitch (3, -12)
+            .osc (4, analog, sinePos, 32).fm (4, 5, 14).modulator (5, analog, sinePos).pitch (5, 12)
+            .osc (6, additive, 42, 26).pitch (6, 12).levelEnv (6, 280, 0, 1600, 65)
+            .osc (7, analog, sawPos, 24).pitch (7, 12, -8).pan (7, -60).route (7, 100)
+            .osc (8, analog, sawPos, 24).pitch (8, 12, 8).pan (8, 60).route (8, 100)
+            .osc (9, vowel, 45, 20).pitch (9, 12).route (9, 100)
+            .parallel().filter (1, ladder24, 1500, 18, 12, 35).filter (2, svfHigh, 420, 12)
+            .lfoSync (1, sawUp, quarter, 0, 30).mod (lfo1, "filter1Cutoff", 24).mod (lfo1, "osc7Volume", 36).mod (lfo1, "osc8Volume", 36)
+            .lfoSync (2, sine, bars2, 0).mod (lfo2, "osc2Position", 38).mod (lfo2, "osc9Position", 36)
+            .env (2, 10, 850, 25, 450, 60).mod (env2, "filter1Cutoff", 22)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc4WarpAmount", 26).mod (velocity, "osc6Volume", 34)
+            .amp (12, 700, 84, 750).chorus (28, 0.5f, 45).delay (eighthD, 32, 18, 4200, true).reverb (28, 78, 3.2f, 40).level (-7.5)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Bloom").mod (macro2, "osc6Volume", 46)
+            .macro (3, "Pulse").mod (macro3, "osc7Volume", 44)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Glass Pavilion: ethereal Four Tet / Bonobo crystal FM & plucked-string poly chord.
+        // 1 silky 1:2 FM Rhodes core driven by 2; 3 crystal 1:3 bell halo driven by 4; 5 Karplus string;
+        // 6 warm sub-octave triangle; 7 & 8 stereo high-passed additive fifth/octave shimmer alternating on 8ths;
+        // 9 glassy top air.
+        add ("Glass Pavilion", "Chord").osc (1, analog, sinePos, 46).fm (1, 2, 16).modulator (2, analog, sinePos).pitch (2, 12)
+            .osc (3, analog, sinePos, 32).pitch (3, 12).fm (3, 4, 22).levelEnv (3, 0, 0, 550, 30).modulator (4, analog, sinePos).pitch (4, 19)
+            .osc (5, string, 68, 32).pitch (5, 12).unison (5, 2, 8, 60, 12)
+            .osc (6, analog, trianglePos, 34).pitch (6, -12)
+            .osc (7, additive, 52, 24).pitch (7, 7).pan (7, -55).route (7, 100)
+            .osc (8, additive, 62, 24).pitch (8, 12).pan (8, 55).route (8, 100)
+            .osc (9, fm, 32, 20).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder12, 2400, 16, 8, 40).filter (2, svfBand, 1800, 26, 0, 45)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "osc7Volume", 36).mod (lfo1, "osc8Volume", -32).mod (lfo1, "filter2Cutoff", 30)
+            .lfoSync (2, triangle, bars2, 0).mod (lfo2, "filter1Cutoff", 18).mod (lfo2, "osc1WarpAmount", 14)
+            .mod (velocity, "osc1WarpAmount", 28).mod (velocity, "osc3WarpAmount", 30).mod (velocity, "filter1Cutoff", 22)
+            .amp (6, 650, 80, 900).chorus (24, 0.6f, 40).delay (eighthD, 38, 22, 5200, true).reverb (32, 82, 3.8f, 35).level (-7)
+            .macro (1, "Glass").mod (macro1, "osc3WarpAmount", 40)
+            .macro (2, "Warmth").mod (macro2, "filter1Cutoff", -35)
+            .macro (3, "Shimmer").mod (macro3, "filter2Cutoff", 38)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Pluck (One-shot: strikeToTail >= 3.0)
+
+        // Nine. Strobe Pluck: legendary Deadmau5 / Prydz progressive-house supersaw pluck!
+        // 1 tight unison saws; 2 warm pulse body; 3 pure triangle anchor; 4 crisp 1:2 FM pluck driven by 5;
+        // 6 Karplus wooden string transient; 7 & 8 wide stereo high-passed octave supersaw sparkle (fast decay);
+        // 9 airy top chime (fast decay).
+        add ("Strobe Pluck", "Pluck").osc (1, analog, sawPos, 46).unison (1, 3, 15, 70)
+            .osc (2, pulse, 35, 34)
+            .osc (3, analog, trianglePos, 38).pitch (3, -12)
+            .osc (4, analog, sinePos, 36).pitch (4, 12).fm (4, 5, 32).levelEnv (4, 0, 0, 110, 0).modulator (5, analog, sinePos).pitch (5, 24)
+            .osc (6, string, 82, 34).levelEnv (6, 0, 0, 90, 0)
+            .osc (7, analog, sawPos, 28).pitch (7, 12, -10).pan (7, -60).levelEnv (7, 0, 0, 140, 0).route (7, 100)
+            .osc (8, analog, sawPos, 28).pitch (8, 12, 10).pan (8, 60).levelEnv (8, 0, 0, 140, 0).route (8, 100)
+            .osc (9, additive, 88, 22).pitch (9, 24).levelEnv (9, 0, 0, 70, 0).route (9, 100)
+            .parallel().filter (1, ladder24, 460, 26, 14, 50).filter (2, svfHigh, 500, 12)
+            .env (2, 0, 140, 0, 90, 76).mod (env2, "filter1Cutoff", 48).mod (env2, "osc4WarpAmount", 32)
+            .lfoSync (1, sine, bars2, 0).mod (lfo1, "osc2Position", 35)
+            .mod (velocity, "filter1Cutoff", 28).mod (velocity, "osc4Volume", 35).mod (velocity, "osc6Position", 35)
+            .amp (2, 540, 0, 380).delay (eighthD, 38, 22, 2100, true).reverb (20, 72, 2.4f, 52).level (-2.5)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 40)
+            .macro (2, "Snap").mod (macro2, "osc4Volume", 48)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Marimba Glass: organic tropical/melodic-house glassy FM-marimba pluck.
+        // 1 woody 1:2 FM core driven by 2 (unheard); 3 bright 1:4 glass overtone driven by 4 (fast decay);
+        // 5 Karplus plucked string; 6 warm sine body; 7 & 8 panned octave/twelfth sparkle (fast decay);
+        // 9 crisp mallet click.
+        add ("Marimba Glass", "Pluck").osc (1, analog, sinePos, 54).fm (1, 2, 0).modulator (2, analog, sinePos).pitch (2, 12)
+            .osc (3, analog, sinePos, 46).pitch (3, 12).fm (3, 4, 48).levelEnv (3, 0, 20, 75, 0).modulator (4, analog, sinePos).pitch (4, 24)
+            .osc (5, string, 85, 42).levelEnv (5, 0, 15, 85, 0)
+            .osc (6, analog, sinePos, 54).pitch (6, -12).levelEnv (6, 0, 0, 700, 0)
+            .osc (7, additive, 88, 32).pitch (7, 19).pan (7, -50).levelEnv (7, 0, 15, 65, 0).route (7, 100)
+            .osc (8, analog, sawPos, 28).pitch (8, 12).pan (8, 50).levelEnv (8, 0, 15, 70, 0).route (8, 100)
+            .osc (9, metal, 24, 30).pitch (9, 24).levelEnv (9, 0, 0, 35, 0).route (9, 100)
+            .parallel().filter (1, ladder24, 380, 18, 8, 55).filter (2, svfHigh, 750, 12)
+            .env (2, 0, 90, 0, 60, 82).mod (env2, "filter1Cutoff", 55).mod (env2, "osc1WarpAmount", 62)
+            .mod (velocity, "osc1WarpAmount", 36).mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc3Volume", 38)
+            .amp (1.5f, 700, 0, 420).delay (eighthD, 28, 12, 1000, true).reverb (14, 70, 2.2f, 80).level (-5.0)
+            .macro (1, "Wood").mod (macro1, "osc1WarpAmount", 42)
+            .macro (2, "Glass").mod (macro2, "osc3Volume", 48)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Arp
+
+        // Nine. Starlight Pulse: sparkling Prydz / melodic-techno 16th-note club arp voice.
+        // 1 crisp analog saw; 2 warm PWM pulse; 3 woody 1:2 FM sparkle driven by 4; 5 Karplus string pick;
+        // 6 clean sub-octave body; 7 & 8 wide stereo high-passed octave shimmer; 9 airy top sparkle.
+        add ("Starlight Pulse", "Arp").osc (1, analog, sawPos, 48)
+            .osc (2, pulse, 32, 40).pitch (2, 0, 6)
+            .osc (3, analog, sinePos, 34).pitch (3, 12).fm (3, 4, 24).levelEnv (3, 0, 0, 150, 0).modulator (4, analog, sinePos).pitch (4, 24)
+            .osc (5, string, 78, 30).levelEnv (5, 0, 0, 75, 0)
+            .osc (6, analog, trianglePos, 30).pitch (6, -12)
+            .osc (7, analog, sawPos, 24).pitch (7, 12, -8).pan (7, -55).route (7, 100)
+            .osc (8, analog, sawPos, 24).pitch (8, 12, 8).pan (8, 55).route (8, 100)
+            .osc (9, additive, 82, 18).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder24, 1100, 30, 14, 50).filter (2, svfHigh, 480, 14)
+            .env (2, 0, 180, 8, 100, 72).mod (env2, "filter1Cutoff", 38)
+            .lfoSync (1, triangle, eighth, 0, 15).mod (lfo1, "filter1Cutoff", 22).mod (lfo1, "osc2Position", 44).mod (lfo1, "osc9Position", 36)
+            .lfoSync (2, sine, bars2, 0).mod (lfo2, "filter2Cutoff", 24)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc3WarpAmount", 30).mod (velocity, "osc5Volume", 32)
+            .amp (2, 240, 28, 140).delay (eighthD, 40, 26, 4800, true).reverb (20, 68, 2.2f, 40).level (0.5)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Sparkle").mod (macro2, "osc3Volume", 46)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Emerald Cascade: hypnotic progressive-trance / synthwave glassy arp.
+        // 1 crystalline additive drawbars; 2 silky sync shimmer; 3 1:3 FM glass driven by 4;
+        // 5 warm triangle; 6 & 7 panned stereo fifth/octave twins crossfading on 8ths; 8 vowel air; 9 pick.
+        add ("Emerald Cascade", "Arp").osc (1, additive, 48, 48)
+            .osc (2, sync, 24, 36).warp (2, wSync, 14)
+            .osc (3, analog, sinePos, 32).pitch (3, 12).fm (3, 4, 20).modulator (4, analog, sinePos).pitch (4, 19)
+            .osc (5, analog, trianglePos, 34).pitch (5, -12)
+            .osc (6, pulse, 40, 24).pitch (6, 7).pan (6, -55).route (6, 100)
+            .osc (7, analog, sawPos, 24).pitch (7, 12).pan (7, 55).route (7, 100)
+            .osc (8, vowel, 35, 20).pitch (8, 12).route (8, 100)
+            .osc (9, fm, 48, 22).pitch (9, 24).levelEnv (9, 0, 0, 28, 0).route (9, 100)
+            .parallel().filter (1, svfLow, 1500, 24, 10, 50).filter (2, svfHigh, 520, 16)
+            .env (2, 0, 210, 12, 120, 70).mod (env2, "filter1Cutoff", 32).mod (env2, "osc2WarpAmount", 26)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "osc6Volume", 36).mod (lfo1, "osc7Volume", -34).mod (lfo1, "filter1Cutoff", 20)
+            .lfoSync (2, triangle, bar1, 0).mod (lfo2, "osc1Position", 38)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc2WarpAmount", 30).mod (velocity, "osc3WarpAmount", 26)
+            .amp (2, 260, 32, 160).phaser (24, 0.35f, 38).delay (sixteenthD, 38, 24, 5200, true).reverb (22, 72, 2.6f, 38).level (0)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Sync").mod (macro2, "osc2WarpAmount", 42)
+            .macro (3, "Shimmer").mod (macro3, "osc6Volume", 46)
+            .macro (4, "Echo").mod (macro4, "fxDelayMix", 38);
+
+        //----------------------------------------------------------------------
+        // Keys
+
+        // Nine. Lagoon Rhodes: lush deep-house / neo-soul crystal electric piano with silky stereo tremolo.
+        // 1 warm 1:1/1:2 FM tine body (1 driven by 2); 3 crystal bell tine (3 driven by 4, fast decay);
+        // 5 pure warm triangle body; 6 sub-octave warmth; 7 & 8 stereo high-passed shimmering tine twins
+        // panning/breathing in silky 8th-note tremolo; 9 felt hammer transient.
+        add ("Lagoon Rhodes", "Keys").osc (1, analog, sinePos, 56).fm (1, 2, 18).modulator (2, analog, sinePos).pitch (2, 12)
+            .osc (3, analog, sinePos, 32).pitch (3, 12).fm (3, 4, 28).levelEnv (3, 0, 0, 140, 0).modulator (4, analog, sinePos).pitch (4, 24)
+            .osc (5, analog, trianglePos, 38)
+            .osc (6, analog, sinePos, 28).pitch (6, -12)
+            .osc (7, additive, 34, 24).pitch (7, 12, -5).pan (7, -60).route (7, 100)
+            .osc (8, additive, 34, 24).pitch (8, 12, 5).pan (8, 60).route (8, 100)
+            .osc (9, string, 55, 24).levelEnv (9, 0, 0, 30, 0)
+            .parallel().filter (1, ladder12, 2200, 14, 10, 45).filter (2, svfHigh, 480, 12)
+            .env (2, 0, 380, 10, 180, 68).mod (env2, "osc1WarpAmount", 22).mod (env2, "filter1Cutoff", 20)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "osc7Volume", 42).mod (lfo1, "osc8Volume", -42).mod (lfo1, "filter1Cutoff", 16)
+            .lfoSync (2, triangle, bars2, 0).mod (lfo2, "osc7Position", 35)
+            .mod (velocity, "osc1WarpAmount", 32).mod (velocity, "osc3Volume", 38).mod (velocity, "filter1Cutoff", 24)
+            .amp (2, 1100, 34, 380).chorus (30, 0.65f, 45).delay (eighthD, 28, 16, 4200, true).reverb (24, 70, 2.4f, 42).level (-7)
+            .macro (1, "Bark").mod (macro1, "osc1WarpAmount", 40)
+            .macro (2, "Tine").mod (macro2, "osc3Volume", 48)
+            .macro (3, "Tremolo").mod (macro3, "osc7Volume", 46)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Ivory Cassette: nostalgic Bicep / lo-fi club warm felt-DX hybrid keys with organic drift.
+        // 1 warm triangle/sine fundamental; 2 gentle additive wood; 3 warm 1:2 FM driven by 4;
+        // 5 Karplus felt-key attack; 6 octave-down warmth; 7 & 8 stereo drifting unison halo; 9 airy top.
+        add ("Ivory Cassette", "Keys").osc (1, analog, trianglePos, 54)
+            .osc (2, additive, 26, 40)
+            .osc (3, analog, sinePos, 36).fm (3, 4, 14).modulator (4, analog, trianglePos).pitch (4, 12)
+            .osc (5, string, 48, 28).levelEnv (5, 0, 0, 48, 0)
+            .osc (6, analog, sinePos, 30).pitch (6, -12)
+            .osc (7, analog, sawPos, 22).pitch (7, 12).unison (7, 3, 14, 90, 0, 48).route (7, 100)
+            .osc (8, vowel, 50, 20).pitch (8, 12).pan (8, -40).route (8, 100)
+            .osc (9, fm, 24, 20).pitch (9, 19).pan (9, 40).route (9, 100)
+            .parallel().filter (1, ladder12, 1100, 18, 12, 40).filter (2, svfHigh, 420, 14)
+            .env (2, 0, 420, 15, 220, 66).mod (env2, "filter1Cutoff", 22)
+            .lfoSync (1, triangle, eighth, 0, 20).mod (lfo1, "filter1Cutoff", 20).mod (lfo1, "osc2Position", 38).mod (lfo1, "osc8Position", 40)
+            .lfo (2, drift, 0.8f, 0).mod (lfo2, "osc1Fine", 8).mod (lfo2, "osc2Fine", -8)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc3WarpAmount", 30).mod (velocity, "osc5Volume", 34)
+            .amp (3, 950, 32, 420).drive (soft, 14, 5800).chorus (22, 0.45f, 45).reverb (24, 76, 2.8f, 48).level (-6)
+            .macro (1, "Dark").mod (macro1, "filter1Cutoff", -46)
+            .macro (2, "Flutter").mod (macro2, "osc7Volume", 48)
+            .macro (3, "Warmth").mod (macro3, "fxDriveAmount", 46)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Organ
+
+        // Nine. Ibiza Organ: iconic 90s/modern UK House & Garage percussive M1-style club organ!
+        // 1 16' sub sine; 2 8' warm fundamental; 3 4' octave; 4 2-2/3' fifth harmonic;
+        // 5 percussive key-click FM driven by 6 (unheard, fast 60ms decay);
+        // 7 & 8 stereo high-passed Leslie rotary additive twins alternating on 8ths; 9 2' sparkle.
+        add ("Ibiza Organ", "Organ").osc (1, analog, sinePos, 54).pitch (1, -12)
+            .osc (2, analog, sinePos, 58)
+            .osc (3, analog, sinePos, 42).pitch (3, 12)
+            .osc (4, analog, sinePos, 34).pitch (4, 19)
+            .osc (5, analog, sinePos, 40).pitch (5, 12).fm (5, 6, 30).levelEnv (5, 0, 0, 95, 0).modulator (6, analog, sinePos).pitch (6, 24)
+            .osc (7, additive, 32, 28).pitch (7, 12, -5).pan (7, -60).route (7, 100)
+            .osc (8, additive, 42, 28).pitch (8, 19, 5).pan (8, 60).route (8, 100)
+            .osc (9, analog, trianglePos, 24).pitch (9, 24).levelEnv (9, 0, 0, 160, 25).route (9, 100)
+            .parallel().filter (1, ladder12, 2400, 16, 14, 40).filter (2, svfHigh, 420, 14)
+            .env (2, 0, 160, 20, 80, 72).mod (env2, "filter1Cutoff", 26)
+            .lfoSync (1, sine, eighth, 0, 10).mod (lfo1, "osc7Volume", 42).mod (lfo1, "osc8Volume", -42).mod (lfo1, "filter1Cutoff", 18)
+            .lfoSync (2, triangle, bar1, 0).mod (lfo2, "osc7Position", 30)
+            .mod (velocity, "osc5Volume", 48).mod (velocity, "osc7Position", 48).mod (velocity, "osc8Volume", 44)
+            .amp (2, 280, 65, 95).drive (tube, 16, 7500).chorus (14, 1.4f, 40).reverb (16, 58, 1.6f, 45).level (-11.5)
+            .macro (1, "Click").mod (macro1, "osc5Volume", 48)
+            .macro (2, "Rotary").mod (macro2, "osc7Volume", 45)
+            .macro (3, "Dark").mod (macro3, "filter1Cutoff", -48)
+            .macro (4, "Drive").mod (macro4, "fxDriveAmount", 50);
+
+        // Nine. Cathedral Glass: soulful progressive/melodic-techno harmonic pipe-glass organ.
+        // 1 16' sub triangle; 2 8' additive drawbars; 3 4' silky FM pipe driven by 4 (1:2);
+        // 5 2-2/3' warm fifth; 6 breathy vowel choir; 7 & 8 stereo high-passed shimmering pipes; 9 airy 2' gleam.
+        add ("Cathedral Glass", "Organ").osc (1, analog, trianglePos, 44).pitch (1, -12)
+            .osc (2, additive, 38, 52)
+            .osc (3, analog, sinePos, 40).pitch (3, 12).fm (3, 4, 16).modulator (4, analog, sinePos).pitch (4, 24)
+            .osc (5, analog, sinePos, 30).pitch (5, 19)
+            .osc (6, vowel, 40, 28).pitch (6, 12)
+            .osc (7, additive, 58, 24).pitch (7, 12, -7).pan (7, -55).route (7, 100)
+            .osc (8, additive, 58, 24).pitch (8, 19, 7).pan (8, 55).route (8, 100)
+            .osc (9, analog, sinePos, 20).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder12, 2200, 14, 10, 35).filter (2, svfHigh, 480, 14)
+            .lfoSync (1, sine, quarter, 0, 15).mod (lfo1, "filter1Cutoff", 22).mod (lfo1, "osc2Position", 36).mod (lfo1, "osc6Position", 42)
+            .lfoSync (2, triangle, eighth, 0, 15).mod (lfo2, "osc7Volume", 36).mod (lfo2, "osc8Volume", -34)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc3WarpAmount", 30).mod (velocity, "osc2Position", 32)
+            .amp (10, 400, 92, 420).chorus (10, 0.55f, 35).reverb (22, 84, 3.8f, 40).level (-7.5)
+            .macro (1, "Drawbars").mod (macro1, "osc2Position", 44)
+            .macro (2, "Choir").mod (macro2, "osc6Volume", 48)
+            .macro (3, "Cutoff").mod (macro3, "filter1Cutoff", 36)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Guitar
+
+        // Nine. Balearic Nylon: warm Ibiza sunset-house acoustic-hybrid plucked guitar.
+        // 1, 2, 3 triple Karplus-Strong plucked strings (slight detune + strum); 4 warm woody 1:2 FM body
+        // driven by 5 (unheard); 6 octave-up harmonic string; 7 & 8 stereo high-passed sunset shimmer
+        // breathing on 8ths; 9 delicate finger-nail harmonic.
+        add ("Balearic Nylon", "Guitar").osc (1, string, 64, 52).unison (1, 2, 6, 40, 8)
+            .osc (2, string, 54, 42).pitch (2, 0, 5).pan (2, -30).route (2, 50)
+            .osc (3, string, 72, 40).pitch (3, 12, -5).pan (3, 30).route (3, 50)
+            .osc (4, analog, sinePos, 36).fm (4, 5, 16).levelEnv (4, 0, 0, 380, 20).modulator (5, analog, sinePos).pitch (5, 12)
+            .osc (6, analog, trianglePos, 32).levelEnv (6, 15, 0, 600, 30)
+            .osc (7, additive, 45, 22).pitch (7, 12, -8).pan (7, -55).route (7, 100)
+            .osc (8, additive, 45, 22).pitch (8, 19, 8).pan (8, 55).route (8, 100)
+            .osc (9, fm, 32, 22).pitch (9, 24).levelEnv (9, 0, 0, 35, 0).route (9, 100)
+            .parallel().filter (1, ladder12, 2600, 14, 10, 45).filter (2, svfHigh, 450, 14)
+            .env (2, 0, 260, 15, 160, 70).mod (env2, "filter1Cutoff", 24)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "filter1Cutoff", 20).mod (lfo1, "osc7Volume", 38).mod (lfo1, "osc8Volume", -34)
+            .mod (velocity, "osc1Position", 38).mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc4WarpAmount", 28)
+            .amp (2, 750, 28, 360).chorus (18, 0.5f, 38).delay (eighthD, 38, 24, 4400, true).reverb (24, 76, 3.0f, 40).level (1)
+            .macro (1, "Mellow").mod (macro1, "filter1Cutoff", -48)
+            .macro (2, "Body").mod (macro2, "osc4Volume", 46)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Chrome Shoegaze: dreamy M83 / Bicep chorus-drenched synth-guitar wall.
+        // 1 & 2 dual Karplus plucked strings; 3 lush detuned saw sustain blooming at 120ms;
+        // 4 fifth harmonic bloom; 5 warm FM shimmer driven by 6 (1:2); 7 & 8 wide stereo high-passed
+        // octave saws; 9 ethereal vowel wash.
+        add ("Chrome Shoegaze", "Guitar").osc (1, string, 74, 48).unison (1, 2, 10, 0, 10)
+            .osc (2, string, 62, 36).pitch (2, 12).levelEnv (2, 0, 0, 450, 0)
+            .osc (3, analog, sawPos, 38).unison (3, 3, 16, 0).levelEnv (3, 120, 0, 1200, 75)
+            .osc (4, pulse, 40, 26).pitch (4, 7).levelEnv (4, 180, 0, 1400, 60)
+            .osc (5, analog, sinePos, 30).pitch (5, 12).fm (5, 6, 20).modulator (6, analog, sinePos).pitch (6, 19)
+            .osc (7, analog, sawPos, 28).pitch (7, 12, -10).pan (7, -60).route (7, 100)
+            .osc (8, analog, sawPos, 28).pitch (8, 12, 10).pan (8, 60).route (8, 100)
+            .osc (9, vowel, 45, 22).pitch (9, 12).route (9, 100)
+            .parallel().filter (1, ladder12, 2200, 18, 14, 40).filter (2, svfHigh, 480, 16)
+            .lfoSync (1, triangle, eighth, 0, 15).mod (lfo1, "filter1Cutoff", 22).mod (lfo1, "osc9Position", 44).mod (lfo1, "filter2Cutoff", 24)
+            .lfoSync (2, sine, bars2, 0).mod (lfo2, "osc4Position", 38)
+            .mod (velocity, "osc1Position", 35).mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc5WarpAmount", 30)
+            .amp (3, 550, 76, 550).drive (tube, 18, 7200).chorus (12, 0.7f, 40).reverb (22, 82, 3.4f, 42).level (-2)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Bloom").mod (macro2, "osc3Volume", 46)
+            .macro (3, "Wash").mod (macro3, "fxChorusMix", 42)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Brass
+
+        // Nine. Vangelis Gold: iconic Blade Runner / progressive-house warm analog poly-brass!
+        // 1 & 2 lush detuned saws; 3 silky PWM pulse; 4 warm sub-octave saw; 5 expressive 1:1 brassy FM
+        // driven by 6 (swells via Env 2!); 7 & 8 wide stereo high-passed unison brass shimmer; 9 bright air.
+        add ("Vangelis Gold", "Brass").osc (1, analog, sawPos, 46).unison (1, 3, 14, 65, 0, 22)
+            .osc (2, analog, sawPos, 40).pitch (2, 0, 7)
+            .osc (3, pulse, 38, 34).pitch (3, 0, -6)
+            .osc (4, analog, sawPos, 32).pitch (4, -12)
+            .osc (5, analog, sinePos, 38).fm (5, 6, 12).modulator (6, analog, sinePos)
+            .osc (7, analog, sawPos, 24).pitch (7, 12, -10).pan (7, -55).route (7, 100)
+            .osc (8, analog, sawPos, 24).pitch (8, 12, 10).pan (8, 55).route (8, 100)
+            .osc (9, additive, 62, 18).pitch (9, 12).route (9, 100)
+            .parallel().filter (1, ladder24, 900, 22, 16, 40).filter (2, svfHigh, 450, 14)
+            .env (2, 110, 650, 48, 380, 45).mod (env2, "filter1Cutoff", 34).mod (env2, "osc5WarpAmount", 28)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "filter1Cutoff", 20).mod (lfo1, "osc3Position", 40).mod (lfo1, "osc9Position", 36)
+            .lfo (2, sine, 5.0f, 1).lfoFade (2, 500).mod (lfo2, "osc1Fine", 6)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc5WarpAmount", 28).mod (velocity, "osc7Volume", 32)
+            .amp (55, 500, 88, 480).drive (tube, 14, 8500).chorus (24, 0.45f, 40).reverb (32, 84, 4.2f, 38).level (-5)
+            .macro (1, "Swell").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Brass").mod (macro2, "osc5WarpAmount", 42)
+            .macro (3, "Shimmer").mod (macro3, "osc7Volume", 44)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Solaria Horns: punchy French-house / Nu-Disco funk synth-brass section.
+        // 1 & 2 snappy saws; 3 bright additive brass harmonics; 4 sync horn bite (fast decay);
+        // 5 warm octave-down body; 6 1:2 FM punch driven by 7; 8 & 9 stereo SVF Band horn shimmer.
+        add ("Solaria Horns", "Brass").osc (1, analog, sawPos, 48).pitch (1, 0, -5)
+            .osc (2, analog, sawPos, 44).pitch (2, 0, 5)
+            .osc (3, additive, 54, 40)
+            .osc (4, sync, 30, 42).warp (4, wSync, 18).levelEnv (4, 15, 0, 320, 40)
+            .osc (5, pulse, 30, 30).pitch (5, -12)
+            .osc (6, analog, sinePos, 32).pitch (6, 7).fm (6, 7, 18).modulator (7, analog, sinePos).pitch (7, 19)
+            .osc (8, analog, sawPos, 24).pitch (8, 12, -8).pan (8, -55).route (8, 100)
+            .osc (9, additive, 68, 22).pitch (9, 12, 8).pan (9, 55).route (9, 100)
+            .parallel().filter (1, ladder24, 1300, 26, 18, 45).filter (2, svfBand, 1800, 28, 0, 45)
+            .env (2, 18, 280, 28, 160, 62).mod (env2, "filter1Cutoff", 32).mod (env2, "osc4WarpAmount", 28)
+            .lfoSync (1, triangle, eighth, 0, 15).mod (lfo1, "filter1Cutoff", 20).mod (lfo1, "filter2Cutoff", 28).mod (lfo1, "osc3Position", 35)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc4WarpAmount", 32).mod (velocity, "osc6WarpAmount", 26)
+            .amp (12, 340, 76, 180).drive (tube, 18, 9000).reverb (20, 62, 1.8f, 45).level (-6.0)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Bite").mod (macro2, "osc4Volume", 50)
+            .macro (3, "Fifth").mod (macro3, "osc6Volume", 46)
+            .macro (4, "Room").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Strings
+
+        // Nine. Solina Velvet: classic Solina / Anjuna silky analog string ensemble.
+        // 1 & 2 lush detuned saws across root & octave; 3 & 4 warm PWM pulses; 5 Karplus bow rosin;
+        // 6 subtle 1:1 FM warmth driven by 7; 8 & 9 wide stereo high-passed air choir.
+        add ("Solina Velvet", "Strings").osc (1, analog, sawPos, 40).unison (1, 3, 14, 75, 0, 20)
+            .osc (2, analog, sawPos, 34).pitch (2, 12).unison (2, 3, 16, 85, 0, 25).route (2, 100)
+            .osc (3, pulse, 30, 36).pitch (3, 0, -6)
+            .osc (4, pulse, 65, 32).pitch (4, 12, 6).route (4, 100)
+            .osc (5, string, 58, 22).levelEnv (5, 0, 0, 140, 0)
+            .osc (6, analog, sinePos, 32).pitch (6, -12).fm (6, 7, 10).modulator (7, analog, trianglePos).pitch (7, -12)
+            .osc (8, vowel, 42, 22).pitch (8, 12).pan (8, -50).route (8, 100)
+            .osc (9, additive, 72, 18).pitch (9, 24).pan (9, 50).route (9, 100)
+            .parallel().filter (1, ladder12, 1300, 14, 8, 35).filter (2, svfHigh, 480, 14)
+            .lfoSync (1, sine, quarter, 0, 15).mod (lfo1, "osc3Position", 44).mod (lfo1, "osc4Position", -44).mod (lfo1, "filter1Cutoff", 22)
+            .lfoSync (2, triangle, eighth, 0, 15).mod (lfo2, "filter2Cutoff", 24).mod (lfo2, "osc8Position", 36)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc2Volume", 34).mod (velocity, "osc6WarpAmount", 26)
+            .amp (180, 600, 92, 950).chorus (34, 0.75f, 52).phaser (26, 0.25f, 40).reverb (32, 86, 4.2f, 38).level (-6.5)
+            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 44)
+            .macro (2, "Ensemble").mod (macro2, "fxChorusMix", 42)
+            .macro (3, "Air").mod (macro3, "osc9Volume", 48)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Nordic Chamber: emotional Max Cooper / Olafur Arnalds intimate hybrid club strings.
+        // 1 warm cello additive; 2 violin octave triangle/saw; 3 fifth harmonic shimmer; 4 warm 1:2 FM
+        // chamber resonance driven by 5; 6 Karplus bow strike; 7 & 8 stereo drifting high-passed strings
+        // with delicate 8th-note bow-tremolo shimmer; 9 glassy top air.
+        add ("Nordic Chamber", "Strings").osc (1, additive, 32, 46).unison (1, 2, 10, 60, 0, 35)
+            .osc (2, analog, 50, 40).pitch (2, 12).unison (2, 3, 12, 85, 0, 40).route (2, 100)
+            .osc (3, analog, trianglePos, 28).pitch (3, 7).levelEnv (3, 240, 0, 1400, 60)
+            .osc (4, analog, sinePos, 34).pitch (4, -12).fm (4, 5, 14).modulator (5, analog, sinePos)
+            .osc (6, string, 62, 26).levelEnv (6, 0, 0, 120, 0)
+            .osc (7, analog, sawPos, 22).pitch (7, 12, -7).pan (7, -55).route (7, 100)
+            .osc (8, vowel, 55, 22).pitch (8, 12, 7).pan (8, 55).route (8, 100)
+            .osc (9, additive, 76, 16).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, svfLow, 1200, 16, 8, 40).filter (2, svfHigh, 450, 14)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "osc7Volume", 36).mod (lfo1, "osc8Volume", -32).mod (lfo1, "filter1Cutoff", 20)
+            .lfoSync (2, triangle, bars2, 0).mod (lfo2, "osc1Position", 36).mod (lfo2, "osc8Position", 38)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc4WarpAmount", 28).mod (velocity, "osc2Volume", 34)
+            .amp (140, 700, 90, 1100).chorus (24, 0.4f, 40).reverb (36, 88, 4.8f, 34).level (-12)
+            .macro (1, "Bright").mod (macro1, "filter1Cutoff", 44)
+            .macro (2, "Tremolo").mod (macro2, "osc7Volume", 46)
+            .macro (3, "Cello").mod (macro3, "osc4Volume", 48)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Pad
+
+        // Nine. Elysian Bloom: pure Afterlife / Anjunadeep euphoric club breakdown pad!
+        // 1 warm analog sine/tri foundation; 2 lush detuned saws; 3 silky PWM pulse; 4 angelic vowel choir;
+        // 5 crystal 1:2 FM shimmer driven by 6; 7 & 8 wide stereo high-passed additive/saw halo blooming in
+        // and pulsing gently in 1/4-note club sidechain; 9 ethereal top air.
+        add ("Elysian Bloom", "Pad").osc (1, analog, trianglePos, 40).pitch (1, -12)
+            .osc (2, analog, sawPos, 36).unison (2, 3, 16, 0, 0, 22)
+            .osc (3, pulse, 35, 32).pitch (3, 0, 6)
+            .osc (4, vowel, 28, 30).pitch (4, 12).levelEnv (4, 420, 0, 2000, 75)
+            .osc (5, analog, sinePos, 28).pitch (5, 12).fm (5, 6, 16).modulator (6, analog, sinePos).pitch (6, 24)
+            .osc (7, analog, sawPos, 26).pitch (7, 12, -9).pan (7, -60).levelEnv (7, 650, 0, 2000, 80).route (7, 100)
+            .osc (8, additive, 58, 26).pitch (8, 19, 9).pan (8, 60).levelEnv (8, 900, 0, 2000, 70).route (8, 100)
+            .osc (9, additive, 82, 18).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder12, 1300, 18, 10, 35).filter (2, svfHigh, 480, 14)
+            .lfoSync (1, sawUp, quarter, 0, 35).mod (lfo1, "filter1Cutoff", 24).mod (lfo1, "osc7Volume", 36).mod (lfo1, "osc8Volume", 36)
+            .lfoSync (2, sine, bars4, 0).mod (lfo2, "osc4Position", 48).mod (lfo2, "osc3Position", 40)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc5WarpAmount", 30).mod (velocity, "osc8Volume", 34)
+            .amp (420, 1000, 92, 1800).chorus (12, 0.45f, 38).delay (eighthD, 32, 16, 4800, false).reverb (22, 90, 5.2f, 38).level (-12.5)
+            .macro (1, "Bloom").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Choir").mod (macro2, "osc4Volume", 48)
+            .macro (3, "Halo").mod (macro3, "osc8Volume", 48)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Astral Glass: ethereal Jon Hopkins / Four Tet crystalline harmonic pad with sweeping SVF Notch.
+        // 1 warm 1:2 FM glass core driven by 2; 3 crystal 1:3 ninth halo driven by 4; 5 warm fifth sine;
+        // 6 delicate Karplus harp shimmer; 7 & 8 stereo high-passed additive/vowel voices through parallel SVF Notch;
+        // 9 warm fundamental bed.
+        add ("Astral Glass", "Pad").osc (1, analog, sinePos, 44).fm (1, 2, 16).modulator (2, analog, sinePos).pitch (2, 12)
+            .osc (3, analog, sinePos, 30).pitch (3, 14).fm (3, 4, 20).levelEnv (3, 500, 0, 2200, 65).modulator (4, analog, sinePos).pitch (4, 19)
+            .osc (5, analog, trianglePos, 32).pitch (5, 7)
+            .osc (6, string, 68, 26).pitch (6, 12).unison (6, 2, 10, 70, 20).route (6, 100)
+            .osc (7, additive, 52, 26).pitch (7, 12, -6).pan (7, -55).route (7, 100)
+            .osc (8, vowel, 42, 26).pitch (8, 12, 6).pan (8, 55).route (8, 100)
+            .osc (9, analog, sinePos, 36).pitch (9, -12)
+            .parallel().filter (1, svfLow, 1900, 16, 8, 40).filter (2, svfBand, 1500, 32, 0, 45)
+            .lfoSync (1, sine, eighthD, 0, 15).mod (lfo1, "osc7Volume", 38).mod (lfo1, "osc8Volume", -34).mod (lfo1, "filter2Cutoff", 34)
+            .lfoSync (2, triangle, bars4, 0).mod (lfo2, "filter1Cutoff", 22).mod (lfo2, "osc8Position", 44)
+            .mod (velocity, "osc1WarpAmount", 30).mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc3Volume", 36)
+            .amp (360, 900, 90, 2000).chorus (12, 0.35f, 36).delay (eighthD, 36, 18, 5500, false).reverb (24, 92, 5.6f, 36).level (-13)
+            .macro (1, "Glass").mod (macro1, "osc1WarpAmount", 42)
+            .macro (2, "Sweep").mod (macro2, "filter2Cutoff", 40)
+            .macro (3, "Ninth").mod (macro3, "osc3Volume", 48)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Drone
+
+        // Nine. Obsidian Tide: deep hypnotic Berlin-club tonal drone locked to 1/8-note subtle pulse.
+        // 1 pure mono sub; 2 & 3 warm beating mono fifths; 4 warm 1:2 FM tide driven by 5;
+        // 6 slow-breathing vowel choir; 7 & 8 stereo high-passed additive/saw shimmer; 9 airy overtone.
+        add ("Obsidian Tide", "Drone").osc (1, analog, sinePos, 64).pitch (1, -12)
+            .osc (2, analog, sawPos, 42).pitch (2, 0, -6)
+            .osc (3, analog, trianglePos, 38).pitch (3, 7, 6)
+            .osc (4, analog, sinePos, 36).fm (4, 5, 16).modulator (5, analog, sinePos).pitch (5, 12)
+            .osc (6, vowel, 30, 32).pitch (6, 12)
+            .osc (7, additive, 48, 26).pitch (7, 12, -8).pan (7, -55).route (7, 100)
+            .osc (8, analog, sawPos, 24).pitch (8, 19, 8).pan (8, 55).route (8, 100)
+            .osc (9, fm, 30, 18).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder24, 620, 28, 16, 30).filter (2, svfHigh, 380, 18)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "filter1Cutoff", 24).mod (lfo1, "osc4WarpAmount", 24).mod (lfo1, "osc7Volume", 34)
+            .lfoSync (2, triangle, bars4, 0).mod (lfo2, "osc6Position", 48).mod (lfo2, "filter2Cutoff", 28)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc4WarpAmount", 30).mod (velocity, "osc8Volume", 34)
+            .amp (600, 1200, 95, 2200).drive (tube, 14, 5500).delay (quarter, 34, 16, 3200, false).reverb (14, 86, 4.8f, 44).level (-9.5)
+            .macro (1, "Tide").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Choir").mod (macro2, "osc6Volume", 48)
+            .macro (3, "Shimmer").mod (macro3, "osc7Volume", 46)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Celestial Hum: warm Eno / Max Cooper harmonic sunrise drone with stacked pure intervals.
+        // 1 sub fundamental; 2 root additive; 3 fifth triangle; 4 octave 1:2 FM glow driven by 5;
+        // 6 ninth harmonic bloom; 7 & 8 stereo SVF Band sweeping overtones; 9 drifting crystal top.
+        add ("Celestial Hum", "Drone").osc (1, analog, sinePos, 56).pitch (1, -12)
+            .osc (2, additive, 24, 46)
+            .osc (3, analog, trianglePos, 36).pitch (3, 7)
+            .osc (4, analog, sinePos, 34).pitch (4, 12).fm (4, 5, 14).modulator (5, analog, sinePos).pitch (5, 19)
+            .osc (6, analog, sinePos, 24).pitch (6, 14).levelEnv (6, 800, 0, 2000, 80)
+            .osc (7, additive, 56, 28).pitch (7, 12, -5).pan (7, -55).route (7, 100)
+            .osc (8, vowel, 50, 26).pitch (8, 19, 5).pan (8, 55).route (8, 100)
+            .osc (9, analog, trianglePos, 20).pitch (9, 24).unison (9, 2, 12, 80, 0, 45).route (9, 100)
+            .parallel().filter (1, ladder12, 1100, 18, 8, 30).filter (2, svfBand, 1200, 34, 0, 35)
+            .lfoSync (1, triangle, quarter, 0, 15).mod (lfo1, "filter2Cutoff", 34).mod (lfo1, "osc2Position", 36).mod (lfo1, "osc7Volume", 36)
+            .lfoSync (2, sine, bars4, 0).mod (lfo2, "filter1Cutoff", 22).mod (lfo2, "osc8Position", 44)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc4WarpAmount", 30).mod (velocity, "osc6Volume", 36)
+            .amp (750, 1200, 96, 2600).reverb (7, 90, 5.8f, 45).level (-6.0)
+            .macro (1, "Glow").mod (macro1, "osc2Position", 55)
+            .macro (2, "Overtones").mod (macro2, "filter2Cutoff", 40)
+            .macro (3, "Ninth").mod (macro3, "osc6Volume", 48)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Bell (One-shot: strikeToTail >= 3.0)
+
+        // Nine. Crystal Celesta: glistening Four Tet / Anjuna glass celesta bell with staggered partial decays.
+        // 1 pure warm fundamental; 2 harmonic 1:2 FM glass driven by 3 (medium decay);
+        // 4 crystal 1:3 FM sparkle driven by 5 (short decay); 6 delicate metal chime (18% pos, short decay);
+        // 7 & 8 stereo high-passed panned twelfth/double-octave sparkle (fast decay); 9 mallet strike.
+        add ("Crystal Celesta", "Bell").osc (1, analog, sinePos, 54).levelEnv (1, 0, 0, 2400, 0)
+            .osc (2, analog, sinePos, 40).pitch (2, 12).fm (2, 3, 24).levelEnv (2, 0, 0, 620, 0).modulator (3, analog, sinePos).pitch (3, 24)
+            .osc (4, analog, sinePos, 32).pitch (4, 19).fm (4, 5, 30).levelEnv (4, 0, 0, 180, 0).modulator (5, analog, sinePos).pitch (5, 24)
+            .osc (6, metal, 16, 24).pitch (6, 12).levelEnv (6, 0, 0, 140, 0).route (6, 100)
+            .osc (7, additive, 72, 22).pitch (7, 19).pan (7, -55).levelEnv (7, 0, 0, 150, 0).route (7, 100)
+            .osc (8, additive, 82, 22).pitch (8, 24).pan (8, 55).levelEnv (8, 0, 0, 120, 0).route (8, 100)
+            .osc (9, string, 85, 24).pitch (9, 12).levelEnv (9, 0, 0, 40, 0).route (9, 100)
+            .parallel().filter (1, ladder12, 1600, 14, 6, 55).filter (2, svfHigh, 700, 12)
+            .env (2, 0, 160, 0, 120, 75).mod (env2, "filter1Cutoff", 38).mod (env2, "osc2WarpAmount", 28)
+            .mod (velocity, "osc2WarpAmount", 34).mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc6Volume", 36)
+            .amp (1.5f, 2200, 0, 1200).delay (eighthD, 40, 24, 6000, true).reverb (32, 82, 3.8f, 32).level (-2.0)
+            .macro (1, "Sparkle").mod (macro1, "osc4Volume", 48)
+            .macro (2, "Chime").mod (macro2, "osc6Volume", 48)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Kyoto Chime: lush progressive-house wooden/glass temple bell with hovering warm fifth tail.
+        // 1 warm sine hum (-12); 2 prime warm triangle; 3 fifth resonant FM driven by 4 (1:2);
+        // 5 Karplus wooden mallet attack; 6 glassy octave FM driven by 7 (fast decay);
+        // 8 & 9 stereo airy temple shimmer (short decay).
+        add ("Kyoto Chime", "Bell").osc (1, analog, sinePos, 46).pitch (1, -12).levelEnv (1, 0, 0, 2600, 0)
+            .osc (2, analog, trianglePos, 44).levelEnv (2, 0, 0, 1800, 0)
+            .osc (3, analog, sinePos, 36).pitch (3, 7).fm (3, 4, 22).levelEnv (3, 0, 0, 480, 0).modulator (4, analog, sinePos).pitch (4, 19)
+            .osc (5, string, 72, 32).levelEnv (5, 0, 0, 65, 0)
+            .osc (6, analog, sinePos, 30).pitch (6, 12).fm (6, 7, 32).levelEnv (6, 0, 0, 130, 0).modulator (7, analog, sinePos).pitch (7, 24)
+            .osc (8, vowel, 35, 22).pitch (8, 12).pan (8, -50).levelEnv (8, 0, 0, 220, 0).route (8, 100)
+            .osc (9, additive, 75, 22).pitch (9, 24).pan (9, 50).levelEnv (9, 0, 0, 110, 0).route (9, 100)
+            .parallel().filter (1, ladder12, 1300, 18, 6, 50).filter (2, svfHigh, 600, 14)
+            .env (2, 0, 180, 0, 140, 74).mod (env2, "filter1Cutoff", 38).mod (env2, "osc3WarpAmount", 26)
+            .mod (velocity, "osc3WarpAmount", 32).mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc5Volume", 36)
+            .amp (1.5f, 2400, 0, 1400).chorus (18, 0.4f, 35).delay (quarter, 34, 20, 4800, true).reverb (34, 86, 4.4f, 36).level (-0.5)
+            .macro (1, "Wood").mod (macro1, "osc5Volume", 48)
+            .macro (2, "Fifth").mod (macro2, "osc3Volume", 48)
+            .macro (3, "Shimmer").mod (macro3, "osc9Volume", 48)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Sequence
+
+        // Nine. Berlin Pulse: classic hypnotic Tale Of Us / Bodzin melodic-techno rolling sequence synth.
+        // 1 punchy analog saw; 2 warm PWM pulse; 3 pure mono sub octave; 4 silky 1:2 FM bite driven by 5;
+        // 6 Karplus crisp attack; 7 & 8 stereo high-passed octave shimmer; 9 airy top harmonic.
+        add ("Berlin Pulse", "Sequence").osc (1, analog, sawPos, 54)
+            .osc (2, pulse, 34, 42).pitch (2, 0, 5)
+            .osc (3, analog, sinePos, 50).pitch (3, -12)
+            .osc (4, analog, sinePos, 36).pitch (4, 12).fm (4, 5, 22).modulator (5, analog, sinePos).pitch (5, 24)
+            .osc (6, string, 76, 28).pitch (6, 12).levelEnv (6, 0, 0, 45, 0)
+            .osc (7, analog, sawPos, 24).pitch (7, 12, -9).pan (7, -55).route (7, 100)
+            .osc (8, analog, sawPos, 24).pitch (8, 12, 9).pan (8, 55).route (8, 100)
+            .osc (9, additive, 72, 18).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder24, 760, 32, 18, 45).filter (2, svfHigh, 420, 14)
+            .env (2, 0, 170, 8, 85, 72).mod (env2, "filter1Cutoff", 38).mod (env2, "osc4WarpAmount", 24)
+            .lfoSync (1, steps, bar1, 0, 35).stepPattern (1, { 90, 20, -30, 70, -40, 85, -20, 40, 80, -30, 55, 95, -40, 30, 65, -20 })
+            .mod (lfo1, "filter1Cutoff", 20).mod (lfo1, "osc7Volume", 32).mod (lfo1, "osc8Volume", 32)
+            .lfoSync (2, triangle, bars2, 0).mod (lfo2, "osc2Position", 40)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc4WarpAmount", 28)
+            .amp (2, 220, 42, 90).mono (18.0f, true).drive (tube, 18, 7200).delay (eighthD, 38, 22, 4200, true).reverb (16, 62, 1.8f, 45).level (-6.5)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Bite").mod (macro2, "osc4WarpAmount", 42)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Warmth").mod (macro4, "fxDriveAmount", 48);
+
+        // Nine. Kinetix Arp: driving progressive-trance / electro sequence voice with syncopated harmonic groove.
+        // 1 tight crisp pulse; 2 liquid sync sweep; 3 clean sub-octave triangle; 4 1:3 FM glass driven by 5;
+        // 6 sparkling additive harmonic; 7 & 8 stereo panned fifth/octave twins; 9 crisp mallet attack.
+        add ("Kinetix Arp", "Sequence").osc (1, pulse, 28, 50)
+            .osc (2, sync, 26, 40).warp (2, wSync, 16)
+            .osc (3, analog, trianglePos, 46).pitch (3, -12)
+            .osc (4, analog, sinePos, 32).pitch (4, 12).fm (4, 5, 22).modulator (5, analog, sinePos).pitch (5, 19)
+            .osc (6, additive, 52, 28).pitch (6, 12)
+            .osc (7, analog, sawPos, 22).pitch (7, 7).pan (7, -55).route (7, 100)
+            .osc (8, analog, sawPos, 22).pitch (8, 12).pan (8, 55).route (8, 100)
+            .osc (9, fm, 42, 24).pitch (9, 24).levelEnv (9, 0, 0, 26, 0).route (9, 100)
+            .parallel().filter (1, svfLow, 980, 30, 14, 50).filter (2, svfHigh, 450, 16)
+            .env (2, 0, 190, 5, 90, 74).mod (env2, "filter1Cutoff", 36).mod (env2, "osc2WarpAmount", 30)
+            .lfoSync (1, steps, bar1, 0, 30).stepPattern (1, { 80, -30, 60, 95, -40, 50, 85, -20, 70, -40, 90, 20, -30, 75, 45, -35 })
+            .mod (lfo1, "osc2WarpAmount", 24).mod (lfo1, "osc6Position", 42).mod (lfo1, "filter1Cutoff", 18)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc4WarpAmount", 28).mod (velocity, "osc2WarpAmount", 26)
+            .amp (2, 240, 38, 100).drive (soft, 16, 8000).delay (sixteenthD, 36, 20, 4800, false).reverb (12, 66, 1.8f, 45).level (-7)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Sync").mod (macro2, "osc2WarpAmount", 42)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Riser
+
+        // Nine. Euphoria Lift: anthemic melodic-techno / progressive-house 4-bar rising build-up!
+        // 1 & 2 lush detuned saws climbing cleanly in pitch over 4 bars; 3 sub anchor; 4 additive shimmer
+        // climbing; 5 1:2 FM tension driven by 6; 7 & 8 wide stereo octave saws pulsing in 8th-note gate;
+        // 9 bright air harmonic + pink noise sweep.
+        add ("Euphoria Lift", "Riser").osc (1, analog, sawPos, 44).unison (1, 3, 18, 0)
+            .osc (2, analog, sawPos, 36).pitch (2, 12).levelEnv (2, 1200, 0, 0, 100)
+            .osc (3, analog, sinePos, 42).pitch (3, -12)
+            .osc (4, additive, 35, 34).pitch (4, 12).levelEnv (4, 1800, 0, 0, 100)
+            .osc (5, analog, sinePos, 32).fm (5, 6, 18).modulator (6, analog, sinePos).pitch (6, 12)
+            .osc (7, analog, sawPos, 28).pitch (7, 12, -10).pan (7, -60).route (7, 100)
+            .osc (8, analog, sawPos, 28).pitch (8, 19, 10).pan (8, 60).route (8, 100)
+            .osc (9, vowel, 25, 24).pitch (9, 12).levelEnv (9, 2200, 0, 0, 100).route (9, 100)
+            .noise (14, 1, 30)
+            .parallel().filter (1, ladder24, 420, 32, 14, 30).filter (2, svfHigh, 500, 18)
+            .env (2, 5500, 0, 100, 500, 25).mod (env2, "filter1Cutoff", 48).mod (env2, "osc1Pitch", 25.0f).mod (env2, "osc2Pitch", 25.0f).mod (env2, "noiseLevel", 34)
+            .lfoSync (1, sawDown, eighth, 0, 20).mod (lfo1, "osc7Volume", 42).mod (lfo1, "osc8Volume", 42).mod (lfo1, "filter2Cutoff", 26)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc5WarpAmount", 32)
+            .amp (40, 1000, 100, 900).chorus (10, 0.5f, 35).delay (eighthD, 34, 18, 5200, false).reverb (20, 86, 4.2f, 38).level (-4.5)
+            .macro (1, "Lift").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Air").mod (macro2, "noiseLevel", 48)
+            .macro (3, "Pulse").mod (macro3, "osc7Volume", 46)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Aurora Swell: hypnotic trance / deep-house ascending harmonic choir riser.
+        // 1 & 2 layered vowel choir opening across formants; 3 warm fifth triangle; 4 crystal 1:3 FM
+        // driven by 5 (swells); 6 sub bed; 7 & 8 stereo high-passed additive/sync flutter on 16ths; 9 air.
+        add ("Aurora Swell", "Riser").osc (1, vowel, 15, 44).unison (1, 2, 12, 0)
+            .osc (2, vowel, 55, 36).pitch (2, 12).levelEnv (2, 1000, 0, 0, 100)
+            .osc (3, analog, trianglePos, 34).pitch (3, 7).levelEnv (3, 1600, 0, 0, 100)
+            .osc (4, analog, sinePos, 32).pitch (4, 12).fm (4, 5, 16).modulator (5, analog, sinePos).pitch (5, 19)
+            .osc (6, analog, sinePos, 38).pitch (6, -12)
+            .osc (7, additive, 40, 28).pitch (7, 12).pan (7, -55).route (7, 100)
+            .osc (8, sync, 25, 26).pitch (8, 12).pan (8, 55).warp (8, wSync, 15).route (8, 100)
+            .osc (9, additive, 80, 20).pitch (9, 24).levelEnv (9, 2400, 0, 0, 100).route (9, 100)
+            .parallel().filter (1, ladder12, 550, 24, 10, 35).filter (2, svfHigh, 520, 16)
+            .env (2, 5200, 0, 100, 600, 20).mod (env2, "filter1Cutoff", 46).mod (env2, "osc1Position", 55).mod (env2, "osc4WarpAmount", 36).mod (env2, "osc8Pitch", 25.0f)
+            .lfoSync (1, sine, sixteenth, 0, 15).mod (lfo1, "osc7Volume", 38).mod (lfo1, "osc8WarpAmount", 30).mod (lfo1, "filter2Cutoff", 24)
+            .mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc4WarpAmount", 30)
+            .amp (60, 1000, 100, 1000).chorus (10, 0.6f, 35).delay (eighthD, 34, 18, 5000, false).reverb (22, 88, 4.6f, 38).level (-3)
+            .macro (1, "Open").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Choir").mod (macro2, "osc1Position", 44)
+            .macro (3, "Flutter").mod (macro3, "osc7Volume", 46)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Impact (One-shot: strikeToTail >= 3.0, below200 >= 40%)
+
+        // Nine. Horizon Drop: massive clean melodic-techno drop impact with shimmering glass chord burst.
+        // 1 huge pitch-dropping mono sub boom; 2 warm saturated sub tail; 3 warm fifth boom;
+        // 4 crystal 1:2 FM chord chime driven by 5 (fast decay); 6 Karplus slam transient;
+        // 7 & 8 stereo high-passed shimmering burst (fast decay); 9 airy top wash (fast decay).
+        add ("Horizon Drop", "Impact").osc (1, analog, sinePos, 84).levelEnv (1, 0, 120, 1800, 0)
+            .osc (2, sub, 38, 56).levelEnv (2, 0, 80, 1500, 0)
+            .osc (3, analog, trianglePos, 38).pitch (3, 7).levelEnv (3, 0, 0, 480, 0)
+            .osc (4, analog, sinePos, 40).pitch (4, 12).fm (4, 5, 34).levelEnv (4, 0, 0, 220, 0).modulator (5, analog, sinePos).pitch (5, 19)
+            .osc (6, string, 80, 32).pitch (6, 12).levelEnv (6, 0, 0, 80, 0)
+            .osc (7, analog, sawPos, 32).pitch (7, 12, -9).pan (7, -60).levelEnv (7, 0, 0, 260, 0).route (7, 100)
+            .osc (8, additive, 82, 32).pitch (8, 19, 9).pan (8, 60).levelEnv (8, 0, 0, 280, 0).route (8, 100)
+            .osc (9, vowel, 40, 22).pitch (9, 24).levelEnv (9, 0, 0, 220, 0).route (9, 100)
+            .parallel().filter (1, ladder24, 280, 20, 18, 10).filter (2, svfHigh, 450, 12)
+            .env (2, 0, 220, 0, 120, 76).mod (env2, "filter1Cutoff", 46).mod (env2, "osc4WarpAmount", 30)
+            .env (3, 0, 260, 0, 120, 74).mod (env3, "osc1Pitch", 25.0f).mod (env3, "osc2Pitch", 25.0f)
+            .mod (velocity, "filter1Cutoff", 30).mod (velocity, "osc4Volume", 42).mod (velocity, "osc7Volume", 42)
+            .amp (2, 2200, 0, 950).drive (soft, 16, 5500).reverb (14, 82, 3.8f, 45).level (-6)
+            .macro (1, "Boom").mod (macro1, "osc2Volume", 48)
+            .macro (2, "Burst").mod (macro2, "osc4Volume", 55)
+            .macro (3, "Shimmer").mod (macro3, "osc8Volume", 55)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Velvet Subdrop: deep progressive-house velvety pitch-drop boom with woody FM punch.
+        // 1 pure mono sub sine; 2 warm triangle drop; 3 woody 1:2 FM punch driven by 4 (fast decay);
+        // 5 warm octave body; 6 noise puff; 7 & 8 stereo high-passed air wash (fast decay); 9 crisp strike.
+        add ("Velvet Subdrop", "Impact").osc (1, analog, sinePos, 84).levelEnv (1, 0, 100, 1600, 0)
+            .osc (2, analog, trianglePos, 52).levelEnv (2, 0, 60, 1200, 0)
+            .osc (3, analog, sinePos, 46).fm (3, 4, 30).levelEnv (3, 0, 0, 260, 0).modulator (4, analog, sinePos).pitch (4, 12)
+            .osc (5, pulse, 35, 38).pitch (5, 12).levelEnv (5, 0, 0, 280, 0)
+            .osc (6, additive, 70, 26).pitch (6, 24).levelEnv (6, 0, 0, 160, 0).route (6, 100)
+            .osc (7, analog, sawPos, 26).pitch (7, 12, -8).pan (7, -55).levelEnv (7, 0, 0, 240, 0).route (7, 100)
+            .osc (8, analog, sawPos, 26).pitch (8, 12, 8).pan (8, 55).levelEnv (8, 0, 0, 240, 0).route (8, 100)
+            .osc (9, fm, 50, 26).pitch (9, 24).levelEnv (9, 0, 0, 60, 0).route (9, 100)
+            .noise (14, 1, 20)
+            .parallel().filter (1, ladder24, 240, 18, 16, 10).filter (2, svfHigh, 480, 12)
+            .env (2, 0, 200, 0, 100, 76).mod (env2, "filter1Cutoff", 44).mod (env2, "noiseLevel", 34)
+            .env (3, 0, 340, 0, 140, 72).mod (env3, "osc1Pitch", 20.8f).mod (env3, "osc2Pitch", 20.8f)
+            .mod (velocity, "osc3Volume", 48).mod (velocity, "osc7Volume", 48).mod (velocity, "noiseLevel", 48)
+            .amp (2, 1900, 0, 850).drive (tube, 14, 4800).reverb (12, 78, 3.2f, 48).level (-5.0)
+            .macro (1, "Drive").mod (macro1, "fxDriveAmount", 65)
+            .macro (2, "Shimmer").mod (macro2, "osc7Volume", 60)
+            .macro (3, "Air").mod (macro3, "noiseLevel", 48)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Cinematic
+
+        // Nine. Overture Glass: Zimmer meets Anyma widescreen club-intro brass/strings/glass hybrid.
+        // 1 deep cello/sub anchor; 2 lush brassy saw unison; 3 warm fifth pulse; 4 glassy 1:2 FM shimmer
+        // driven by 5; 6 soaring additive choir blooming at 500ms; 7 & 8 wide stereo pulsing octave shimmer;
+        // 9 delicate plucked glass sparkle.
+        add ("Overture Glass", "Cinematic").osc (1, sub, 28, 52).pitch (1, -12)
+            .osc (2, analog, sawPos, 44).unison (2, 3, 16, 0, 0, 20)
+            .osc (3, pulse, 38, 34).pitch (3, 7)
+            .osc (4, analog, sinePos, 32).pitch (4, 12).fm (4, 5, 18).modulator (5, analog, sinePos).pitch (5, 24)
+            .osc (6, additive, 52, 30).pitch (6, 12).levelEnv (6, 520, 0, 2000, 80)
+            .osc (7, analog, sawPos, 28).pitch (7, 12, -9).pan (7, -60).route (7, 100)
+            .osc (8, vowel, 42, 26).pitch (8, 19, 9).pan (8, 60).route (8, 100)
+            .osc (9, string, 72, 22).pitch (9, 12).levelEnv (9, 0, 0, 180, 0).route (9, 100)
+            .parallel().filter (1, ladder24, 900, 20, 14, 30).filter (2, svfHigh, 450, 14)
+            .env (2, 380, 1200, 55, 700, 40).mod (env2, "filter1Cutoff", 30)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "osc7Volume", 36).mod (lfo1, "osc8Volume", 36).mod (lfo1, "filter1Cutoff", 18)
+            .lfoSync (2, triangle, bars4, 0).mod (lfo2, "osc6Position", 40).mod (lfo2, "osc8Position", 44)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc4WarpAmount", 30).mod (velocity, "osc6Volume", 34)
+            .amp (260, 1000, 94, 1800).delay (eighthD, 34, 10, 4400, false).reverb (7, 90, 5.0f, 44).level (-8.0)
+            .macro (1, "Swell").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Choir").mod (macro2, "osc6Volume", 48)
+            .macro (3, "Pulse").mod (macro3, "osc7Volume", 46)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Solaris Brass: emotional sci-fi / melodic-techno widescreen brass & vowel swell.
+        // 1 deep saw sub; 2 & 3 warm wide brassy pulses (+/-7 ct); 4 ethereal vowel choir; 5 1:1 brass FM
+        // driven by 6; 7 & 8 stereo high-passed fifth/octave shimmer; 9 airy top drawbars.
+        add ("Solaris Brass", "Cinematic").osc (1, analog, sawPos, 46).pitch (1, -12)
+            .osc (2, pulse, 30, 44).pitch (2, 0, -7)
+            .osc (3, pulse, 65, 44).pitch (3, 0, 7)
+            .osc (4, vowel, 25, 34).pitch (4, 12)
+            .osc (5, analog, sinePos, 36).fm (5, 6, 14).modulator (6, analog, sinePos)
+            .osc (7, analog, sawPos, 28).pitch (7, 7, -8).pan (7, -55).route (7, 100)
+            .osc (8, additive, 58, 28).pitch (8, 12, 8).pan (8, 55).route (8, 100)
+            .osc (9, additive, 82, 18).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder24, 780, 22, 16, 30).filter (2, svfHigh, 420, 14)
+            .env (2, 240, 950, 50, 600, 42).mod (env2, "filter1Cutoff", 32).mod (env2, "osc5WarpAmount", 26)
+            .lfoSync (1, triangle, quarter, 0, 15).mod (lfo1, "filter1Cutoff", 22).mod (lfo1, "osc4Position", 44).mod (lfo1, "osc2Position", 38)
+            .lfoSync (2, sine, bars4, 0).mod (lfo2, "filter2Cutoff", 24)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc5WarpAmount", 30).mod (velocity, "osc7Volume", 34)
+            .amp (200, 900, 92, 1600).drive (tube, 14, 7000).reverb (14, 90, 4.8f, 42).level (-7.5)
+            .macro (1, "Swell").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Choir").mod (macro2, "osc4Volume", 48)
+            .macro (3, "Brass").mod (macro3, "osc5WarpAmount", 42)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Perc (One-shot: strikeToTail >= 3.0)
+
+        // Nine. Kalimba Wood: organic Afro-House / Deep-House melodic wooden kalimba-marimba perc.
+        // 1 warm woody 1:2 FM tone driven by 2; 3 Karplus plucked tine; 4 hollow fifth body;
+        // 5 resonant octave sine; 6 crisp wood mallet click (14ms); 7 & 8 stereo high-passed tine sparkle
+        // (fast decay); 9 sub-octave thumb warmth.
+        add ("Kalimba Wood", "Perc").osc (1, analog, sinePos, 56).fm (1, 2, 22).levelEnv (1, 0, 0, 340, 0).modulator (2, analog, sinePos).pitch (2, 12)
+            .osc (3, string, 76, 42).levelEnv (3, 0, 0, 140, 0)
+            .osc (4, analog, trianglePos, 32).pitch (4, 7).levelEnv (4, 0, 0, 180, 0)
+            .osc (5, analog, sinePos, 34).pitch (5, 12).levelEnv (5, 0, 0, 110, 0)
+            .osc (6, fm, 52, 28).pitch (6, 24).levelEnv (6, 0, 0, 16, 0).route (6, 100)
+            .osc (7, additive, 68, 22).pitch (7, 19).pan (7, -50).levelEnv (7, 0, 0, 80, 0).route (7, 100)
+            .osc (8, metal, 14, 20).pitch (8, 24).pan (8, 50).levelEnv (8, 0, 0, 65, 0).route (8, 100)
+            .osc (9, analog, sinePos, 32).pitch (9, -12).levelEnv (9, 0, 0, 260, 0)
+            .parallel().filter (1, ladder12, 1200, 18, 10, 55).filter (2, svfHigh, 650, 14)
+            .env (2, 0, 110, 0, 70, 78).mod (env2, "filter1Cutoff", 40).mod (env2, "osc1WarpAmount", 30)
+            .mod (velocity, "osc1WarpAmount", 34).mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc6Volume", 36)
+            .amp (1.5f, 440, 0, 260).delay (eighthD, 34, 20, 4800, true).reverb (20, 62, 1.8f, 44).level (-2.5)
+            .macro (1, "Wood").mod (macro1, "osc1WarpAmount", 42)
+            .macro (2, "Tine").mod (macro2, "osc3Volume", 48)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Bongo Glass: playable tribal/tech-house pitched glassy conga-bongo.
+        // 1 pitch-enveloped skin sine; 2 warm triangle shell; 3 hollow 1:3 FM shell driven by 4;
+        // 5 fifth harmonic ring (short); 6 palm slap transient (14ms); 7 & 8 stereo rim/air snap (short);
+        // 9 Karplus woody knock.
+        add ("Bongo Glass", "Perc").osc (1, analog, sinePos, 62).levelEnv (1, 0, 0, 320, 0)
+            .osc (2, analog, trianglePos, 40).levelEnv (2, 0, 0, 240, 0)
+            .osc (3, analog, sinePos, 36).pitch (3, 7).fm (3, 4, 28).levelEnv (3, 0, 0, 110, 0).modulator (4, analog, sinePos).pitch (4, 19)
+            .osc (5, analog, sinePos, 28).pitch (5, 12).levelEnv (5, 0, 0, 95, 0)
+            .osc (6, pulse, 65, 28).pitch (6, 24).levelEnv (6, 0, 0, 14, 0).route (6, 100)
+            .osc (7, additive, 75, 22).pitch (7, 19).pan (7, -45).levelEnv (7, 0, 0, 60, 0).route (7, 100)
+            .osc (8, vowel, 35, 22).pitch (8, 12).pan (8, 45).levelEnv (8, 0, 0, 85, 0).route (8, 100)
+            .osc (9, string, 72, 26).levelEnv (9, 0, 0, 55, 0)
+            .parallel().filter (1, ladder12, 1050, 22, 12, 50).filter (2, svfHigh, 600, 14)
+            .env (2, 0, 95, 0, 60, 78).mod (env2, "filter1Cutoff", 40)
+            .env (3, 0, 70, 0, 40, 76).mod (env3, "osc1Pitch", 12.5f).mod (env3, "osc2Pitch", 12.5f)
+            .mod (velocity, "osc3WarpAmount", 34).mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc6Volume", 36)
+            .amp (1.5f, 380, 0, 220).drive (soft, 14, 7000).reverb (18, 56, 1.5f, 45).level (-1.5)
+            .macro (1, "Pitch").mod (macro1, "osc3Volume", 48)
+            .macro (2, "Wood").mod (macro2, "osc9Volume", 52)
+            .macro (3, "Slap").mod (macro3, "osc6Volume", 48)
+            .macro (4, "Room").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Drum (One-shot: strikeToTail >= 3.0)
+
+        // Nine. Club Punch: tight, warm melodic-techno / electro pitched synth-tom/snare hybrid.
+        // 1 snappy pitch-dropping sine body; 2 warm saturated chest; 3 tuned fifth body; 4 woody 1:2 FM
+        // punch driven by 5 (fast decay); 6 crisp stick snap (12ms); 7 & 8 stereo high-passed airy brush
+        // snap (110ms); 9 Karplus membrane transient + tight noise burst.
+        add ("Club Punch", "Drum").osc (1, analog, sinePos, 66).levelEnv (1, 0, 0, 320, 0)
+            .osc (2, sub, 40, 44).levelEnv (2, 0, 0, 240, 0)
+            .osc (3, analog, trianglePos, 32).pitch (3, 7).levelEnv (3, 0, 0, 160, 0)
+            .osc (4, analog, sinePos, 36).pitch (4, 12).fm (4, 5, 34).levelEnv (4, 0, 0, 70, 0).modulator (5, analog, sinePos).pitch (5, 24)
+            .osc (6, pulse, 55, 28).pitch (6, 24).levelEnv (6, 0, 0, 12, 0).route (6, 100)
+            .osc (7, additive, 82, 24).pitch (7, 19).pan (7, -45).levelEnv (7, 0, 0, 95, 0).route (7, 100)
+            .osc (8, vowel, 60, 22).pitch (8, 12).pan (8, 45).levelEnv (8, 0, 0, 110, 0).route (8, 100)
+            .osc (9, string, 80, 24).pitch (9, 12).levelEnv (9, 0, 0, 45, 0)
+            .noise (20, 1, 25)
+            .parallel().filter (1, ladder24, 900, 18, 16, 20).filter (2, svfHigh, 550, 14)
+            .env (2, 0, 110, 0, 60, 78).mod (env2, "filter1Cutoff", 42).mod (env2, "noiseLevel", 38)
+            .env (3, 0, 85, 0, 40, 76).mod (env3, "osc1Pitch", 16.67f).mod (env3, "osc2Pitch", 16.67f)
+            .mod (velocity, "filter1Cutoff", 28).mod (velocity, "osc4WarpAmount", 34).mod (velocity, "noiseLevel", 36)
+            .amp (1.5f, 440, 0, 260).drive (tube, 18, 7200).reverb (14, 48, 1.2f, 50).level (-3)
+            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 40)
+            .macro (2, "Snap").mod (macro2, "noiseLevel", 48)
+            .macro (3, "Punch").mod (macro3, "osc4Volume", 48)
+            .macro (4, "Room").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Electro Rim: crisp 808/909-meets-FM pitched electro rimshot / clap-tom.
+        // 1 woody pitch-dropped sine; 2 hollow square resonance; 3 1:3 FM rim click driven by 4 (45ms);
+        // 5 bright twelfth woody overtone (80ms); 6 crisp tick (10ms); 7 & 8 stereo high-passed clap air
+        // (130ms); 9 Karplus woody rim knock.
+        add ("Electro Rim", "Drum").osc (1, analog, sinePos, 56).levelEnv (1, 0, 0, 260, 0)
+            .osc (2, analog, squarePos, 34).pitch (2, 12).levelEnv (2, 0, 0, 110, 0)
+            .osc (3, analog, sinePos, 42).pitch (3, 12).fm (3, 4, 38).levelEnv (3, 0, 0, 48, 0).modulator (4, analog, sinePos).pitch (4, 19)
+            .osc (5, analog, trianglePos, 30).pitch (5, 19).levelEnv (5, 0, 0, 85, 0)
+            .osc (6, fm, 68, 28).pitch (6, 24).levelEnv (6, 0, 0, 12, 0).route (6, 100)
+            .osc (7, additive, 86, 24).pitch (7, 19).pan (7, -50).levelEnv (7, 0, 0, 120, 0).route (7, 100)
+            .osc (8, metal, 20, 20).pitch (8, 24).pan (8, 50).levelEnv (8, 0, 0, 90, 0).route (8, 100)
+            .osc (9, string, 82, 28).pitch (9, 12).levelEnv (9, 0, 0, 40, 0)
+            .noise (18, 0, 35)
+            .parallel().filter (1, ladder12, 1300, 22, 14, 30).filter (2, svfHigh, 620, 16)
+            .env (2, 0, 95, 0, 50, 80).mod (env2, "filter1Cutoff", 40).mod (env2, "noiseLevel", 36)
+            .env (3, 0, 60, 0, 30, 78).mod (env3, "osc1Pitch", 12.5f)
+            .mod (velocity, "osc3WarpAmount", 36).mod (velocity, "filter1Cutoff", 26).mod (velocity, "noiseLevel", 36)
+            .amp (1.5f, 380, 0, 220).drive (soft, 18, 8200).reverb (16, 52, 1.4f, 48).level (-2.0)
+            .macro (1, "Rim").mod (macro1, "osc3Volume", 48)
+            .macro (2, "Snap").mod (macro2, "noiseLevel", 48)
+            .macro (3, "Tone").mod (macro3, "filter1Cutoff", 38)
+            .macro (4, "Room").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // FX
+
+        // Nine. Comet Shimmer: gorgeous progressive-house crystalline cascading ear-candy sweep.
+        // 1 warm sine foundation; 2 glassy 1:3 FM sparkle driven by 3 (sweeping down cleanly);
+        // 4 airy vowel sweep; 5 fifth harmonic halo; 6 Karplus sparkle; 7 & 8 stereo high-passed
+        // additive shimmer fluttering smoothly on 16ths; 9 ethereal top chime.
+        add ("Comet Shimmer", "FX").osc (1, analog, sinePos, 46).pitch (1, -12)
+            .osc (2, analog, sinePos, 40).pitch (2, 12).fm (2, 3, 28).modulator (3, analog, sinePos).pitch (3, 19)
+            .osc (4, vowel, 15, 34).pitch (4, 12)
+            .osc (5, analog, trianglePos, 32).pitch (5, 7)
+            .osc (6, string, 82, 26).pitch (6, 12).levelEnv (6, 0, 0, 240, 0)
+            .osc (7, additive, 62, 26).pitch (7, 12, -8).pan (7, -60).route (7, 100)
+            .osc (8, additive, 76, 26).pitch (8, 24, 8).pan (8, 60).route (8, 100)
+            .osc (9, fm, 55, 22).pitch (9, 19).route (9, 100)
+            .parallel().filter (1, svfLow, 1300, 24, 8, 35).filter (2, svfBand, 2200, 30, 0, 40)
+            .env (2, 0, 850, 15, 450, 64).mod (env2, "osc2Pitch", 25.0f).mod (env2, "osc4Position", 55).mod (env2, "filter1Cutoff", 28)
+            .lfoSync (1, sine, sixteenth, 0, 15).mod (lfo1, "osc7Volume", 42).mod (lfo1, "osc8Volume", -38).mod (lfo1, "filter2Cutoff", 34).mod (lfo1, "filter1Cutoff", 22)
+            .mod (velocity, "osc2WarpAmount", 32).mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc6Volume", 36)
+            .amp (6, 1200, 45, 950).delay (eighthD, 42, 22, 5600, false).reverb (20, 84, 3.8f, 38).level (-2)
+            .macro (1, "Sweep").mod (macro1, "filter1Cutoff", 45)
+            .macro (2, "Flutter").mod (macro2, "osc7Volume", 46)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Liquid Sonar: hypnotic minimal/deep-house dub sonar ping with underwater resonant halo.
+        // 1 pure resonant sine ping; 2 glassy 1:2 FM overtone driven by 3; 4 warm sub bed;
+        // 5 fifth harmonic halo; 6 soft vowel underwater wash; 7 & 8 stereo SVF Band dub echoes
+        // breathing on dotted 8ths; 9 delicate droplet click.
+        add ("Liquid Sonar", "FX").osc (1, analog, sinePos, 54)
+            .osc (2, analog, sinePos, 38).pitch (2, 12).fm (2, 3, 24).modulator (3, analog, sinePos).pitch (3, 24)
+            .osc (4, analog, sinePos, 42).pitch (4, -12)
+            .osc (5, analog, trianglePos, 30).pitch (5, 7)
+            .osc (6, vowel, 45, 28).pitch (6, 12)
+            .osc (7, additive, 50, 24).pitch (7, 12, -6).pan (7, -55).route (7, 100)
+            .osc (8, additive, 68, 24).pitch (8, 19, 6).pan (8, 55).route (8, 100)
+            .osc (9, string, 75, 24).pitch (9, 24).levelEnv (9, 0, 0, 50, 0).route (9, 100)
+            .parallel().filter (1, ladder24, 1500, 38, 10, 40).filter (2, svfBand, 1400, 36, 0, 45)
+            .env (2, 0, 450, 15, 300, 68).mod (env2, "filter1Cutoff", 30).mod (env2, "osc2WarpAmount", 28)
+            .lfoSync (1, sine, eighthD, 0, 15).mod (lfo1, "filter2Cutoff", 34).mod (lfo1, "osc6Position", 44).mod (lfo1, "filter1Cutoff", 20)
+            .mod (velocity, "osc2WarpAmount", 32).mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc9Volume", 36)
+            .amp (4, 950, 50, 850).phaser (28, 0.3f, 45).delay (eighthD, 52, 32, 3800, true).reverb (34, 86, 4.2f, 38).level (0.5)
+            .macro (1, "Ping").mod (macro1, "osc2WarpAmount", 42)
+            .macro (2, "Depth").mod (macro2, "filter1Cutoff", 38)
+            .macro (3, "Dub").mod (macro3, "fxDelayFeedback", 34)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Glitch
+
+        // Nine. Crystal Stutter: musical Four Tet / Flume sparkling micro-rhythmic synth!
+        // 1 warm sine/tri foundation; 2 glassy 1:2 FM pluck driven by 3; 4 Karplus harp sparkle;
+        // 5 warm octave pulse; 6 musical fifth bell; 7 & 8 stereo high-passed additive/vowel micro-chops
+        // dancing cleanly on a musical 16th groove (smooth=25!); 9 high droplet sparkle.
+        add ("Crystal Stutter", "Glitch").osc (1, analog, trianglePos, 46)
+            .osc (2, analog, sinePos, 40).pitch (2, 12).fm (2, 3, 24).modulator (3, analog, sinePos).pitch (3, 24)
+            .osc (4, string, 80, 32).pitch (4, 12)
+            .osc (5, pulse, 35, 30).pitch (5, -12)
+            .osc (6, analog, sinePos, 28).pitch (6, 7)
+            .osc (7, additive, 62, 28).pitch (7, 12).pan (7, -60).route (7, 100)
+            .osc (8, vowel, 35, 28).pitch (8, 19).pan (8, 60).route (8, 100)
+            .osc (9, fm, 52, 24).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, svfLow, 1400, 20, 8, 45).filter (2, svfHigh, 550, 16)
+            .lfoSync (1, steps, bar1, 0, 25).stepPattern (1, { 90, -80, 70, 95, -90, 60, -80, 90, 40, -90, 85, -70, 95, -60, 80, -85 })
+            .mod (lfo1, "osc7Volume", 42).mod (lfo1, "osc8Volume", -40).mod (lfo1, "osc2WarpAmount", 26).mod (lfo1, "filter1Cutoff", 18)
+            .lfoSync (2, triangle, quarter, 0, 15).mod (lfo2, "osc8Position", 44).mod (lfo2, "osc9Position", 36)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc2WarpAmount", 30).mod (velocity, "osc4Position", 36)
+            .amp (2, 380, 64, 180).delay (sixteenth, 42, 24, 5800, true).reverb (22, 70, 2.2f, 38).level (-8.0)
+            .macro (1, "Tone").mod (macro1, "filter1Cutoff", 45)
+            .macro (2, "Chop").mod (macro2, "osc7Volume", 48)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Prism Flicker: playable Overmono / UKG melodic micro-chop synth.
+        // 1 warm Rhodes 1:2 FM core driven by 2; 3 crisp additive octave; 4 warm sub-octave sine;
+        // 5 vowel chop layer; 6 silky sync overtone; 7 & 8 stereo high-passed panned harmonic flickers
+        // trading cleanly across a syncopated 1/2-bar step groove; 9 glass pick.
+        add ("Prism Flicker", "Glitch").osc (1, analog, sinePos, 50).fm (1, 2, 20).modulator (2, analog, sinePos).pitch (2, 12)
+            .osc (3, additive, 45, 36).pitch (3, 12)
+            .osc (4, analog, sinePos, 38).pitch (4, -12)
+            .osc (5, vowel, 25, 32).pitch (5, 12)
+            .osc (6, sync, 25, 26).warp (6, wSync, 14)
+            .osc (7, pulse, 40, 26).pitch (7, 12, -7).pan (7, -55).route (7, 100)
+            .osc (8, analog, sawPos, 26).pitch (8, 19, 7).pan (8, 55).route (8, 100)
+            .osc (9, string, 78, 24).pitch (9, 12).levelEnv (9, 0, 0, 45, 0).route (9, 100)
+            .parallel().filter (1, ladder12, 2400, 22, 10, 45).filter (2, svfHigh, 500, 16)
+            .lfoSync (1, steps, half, 0, 25).stepPattern (1, { 95, -75, 40, 90, -85, 75, -90, 85, 60, -80, 95, -60, 70, -90, 85, -50 })
+            .mod (lfo1, "osc5Position", 48).mod (lfo1, "osc7Volume", 40).mod (lfo1, "osc8Volume", -36).mod (lfo1, "osc6WarpAmount", 26)
+            .lfoSync (2, sine, bar1, 0).mod (lfo2, "filter1Cutoff", 18)
+            .mod (velocity, "osc1WarpAmount", 30).mod (velocity, "filter1Cutoff", 24).mod (velocity, "osc6WarpAmount", 28)
+            .amp (2, 340, 62, 160).delay (sixteenthD, 40, 24, 5200, true).reverb (20, 68, 2.0f, 40).level (-4.5)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Flicker").mod (macro2, "osc7Volume", 46)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Game
+
+        // Nine. Hyperlight Lead: lush Disasterpeace / synthwave playable adventure synth!
+        // 1 warm singing pulse; 2 lush detuned saw; 3 glassy 1:2 FM bell attack driven by 4;
+        // 5 warm octave-down triangle; 6 shimmering fifth harmonic; 7 & 8 stereo high-passed nostalgic
+        // shimmer breathing on 8ths; 9 airy additive sparkle.
+        add ("Hyperlight Lead", "Game").osc (1, pulse, 32, 48).unison (1, 2, 10, 60, 0, 18)
+            .osc (2, analog, sawPos, 42).pitch (2, 0, 6)
+            .osc (3, analog, sinePos, 34).pitch (3, 12).fm (3, 4, 24).levelEnv (3, 0, 0, 240, 20).modulator (4, analog, sinePos).pitch (4, 24)
+            .osc (5, analog, trianglePos, 36).pitch (5, -12)
+            .osc (6, analog, trianglePos, 24).pitch (6, 7)
+            .osc (7, pulse, 60, 24).pitch (7, 12, -8).pan (7, -55).route (7, 100)
+            .osc (8, analog, sawPos, 24).pitch (8, 12, 8).pan (8, 55).route (8, 100)
+            .osc (9, additive, 76, 18).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder24, 1900, 20, 12, 45).filter (2, svfHigh, 480, 14)
+            .env (2, 0, 320, 22, 180, 68).mod (env2, "filter1Cutoff", 28)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "osc1Position", 42).mod (lfo1, "filter1Cutoff", 20).mod (lfo1, "osc7Volume", 34)
+            .lfo (2, sine, 5.4f, 1).lfoFade (2, 420).mod (lfo2, "osc1Fine", 6)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc3WarpAmount", 30).mod (velocity, "osc9Volume", 36)
+            .amp (3, 420, 78, 320).chorus (28, 0.6f, 45).delay (eighthD, 38, 22, 4800, true).reverb (28, 78, 3.2f, 38).level (-2.5)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Bell").mod (macro2, "osc3Volume", 46)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Starfield Quest: vibrant modern electronic / arcade heroic poly-synth.
+        // 1 bright additive chime; 2 warm analog brass saw; 3 1:3 FM sparkle driven by 4;
+        // 5 Karplus crisp pluck attack; 6 clean sub-octave; 7 & 8 wide stereo high-passed fifth/octave
+        // air pulsing on 8ths; 9 glassy top.
+        add ("Starfield Quest", "Game").osc (1, additive, 36, 48)
+            .osc (2, analog, sawPos, 42).unison (2, 2, 12, 0)
+            .osc (3, analog, sinePos, 32).pitch (3, 12).fm (3, 4, 22).modulator (4, analog, sinePos).pitch (4, 19)
+            .osc (5, string, 78, 30).levelEnv (5, 0, 0, 80, 0)
+            .osc (6, analog, sinePos, 34).pitch (6, -12)
+            .osc (7, analog, sawPos, 26).pitch (7, 7, -7).pan (7, -55).route (7, 100)
+            .osc (8, pulse, 35, 26).pitch (8, 12, 7).pan (8, 55).route (8, 100)
+            .osc (9, fm, 44, 20).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, svfLow, 1150, 18, 10, 45).filter (2, svfHigh, 500, 14)
+            .env (2, 0, 280, 20, 160, 68).mod (env2, "filter1Cutoff", 28)
+            .lfoSync (1, triangle, eighth, 0, 15).mod (lfo1, "osc1Position", 38).mod (lfo1, "osc7Volume", 36).mod (lfo1, "osc8Volume", -32)
+            .lfoSync (2, sine, bars2, 0).mod (lfo2, "filter1Cutoff", 18)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc3WarpAmount", 30).mod (velocity, "osc5Volume", 34)
+            .amp (3, 380, 76, 300).chorus (12, 0.55f, 36).delay (eighthD, 34, 20, 5200, false).reverb (18, 76, 2.6f, 40).level (-3.5)
+            .macro (1, "Harmonics").mod (macro1, "osc1Position", 58)
+            .macro (2, "Heroic").mod (macro2, "osc7Volume", 46)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Chip
+
+        // Nine. Arcade Blossom: Porter Robinson / dream-pop lush chiptune-club poly!
+        // 1 crisp 25% pulse; 2 silky triangle core; 3 glassy 1:2 FM sparkle driven by 4;
+        // 5 clean sub-octave triangle; 6 octave pulse with subtle musical octave-blip shimmer;
+        // 7 & 8 wide stereo detuned octave halo; 9 sparkling additive top.
+        add ("Arcade Blossom", "Chip").osc (1, pulse, 45, 48)
+            .osc (2, analog, trianglePos, 44)
+            .osc (3, analog, sinePos, 32).pitch (3, 12).fm (3, 4, 22).modulator (4, analog, squarePos).pitch (4, 12)
+            .osc (5, analog, trianglePos, 34).pitch (5, -12)
+            .osc (6, pulse, 25, 28).pitch (6, 12)
+            .osc (7, pulse, 55, 22).pitch (7, 12, -8).pan (7, -55).route (7, 100)
+            .osc (8, analog, sawPos, 22).pitch (8, 12, 8).pan (8, 55).route (8, 100)
+            .osc (9, additive, 78, 18).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder12, 3200, 18, 8, 45).filter (2, svfHigh, 550, 14)
+            .env (2, 0, 240, 15, 140, 70).mod (env2, "filter1Cutoff", 28)
+            .lfoSync (1, steps, quarter, 0, 20).stepPattern (1, { 0, 0, 50, 50, 100, 100, 50, 50, 0, 0, 50, 50, 100, 100, 0, 0 })
+            .mod (lfo1, "osc1Position", 44).mod (lfo1, "osc6Position", -40).mod (lfo1, "filter1Cutoff", 20)
+            .lfoSync (2, sine, eighth, 0, 15).mod (lfo2, "osc7Volume", 34).mod (lfo2, "osc8Volume", -32)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc3WarpAmount", 30).mod (velocity, "osc9Volume", 36)
+            .amp (2, 340, 72, 240).chorus (24, 0.6f, 40).delay (eighthD, 36, 22, 5600, true).reverb (24, 74, 2.6f, 36).level (-2)
+            .macro (1, "Duty").mod (macro1, "osc1Position", 44)
+            .macro (2, "Sparkle").mod (macro2, "osc3WarpAmount", 42)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Pixel Horizon: punchy synthwave / electro-house chiptune poly with NES triangle warmth.
+        // 1 singing square/pulse lead; 2 warm NES triangle bass layer; 3 fifth chip pulse;
+        // 4 1:2 FM arcade pluck driven by 5; 6 octave crisp pulse; 7 & 8 stereo high-passed shimmer;
+        // 9 crisp mallet attack.
+        add ("Pixel Horizon", "Chip").osc (1, pulse, 20, 50)
+            .osc (2, analog, trianglePos, 46).pitch (2, -12)
+            .osc (3, pulse, 65, 28).pitch (3, 7)
+            .osc (4, analog, sinePos, 34).pitch (4, 12).fm (4, 5, 26).levelEnv (4, 0, 0, 180, 15).modulator (5, analog, squarePos).pitch (5, 24)
+            .osc (6, analog, squarePos, 28).pitch (6, 12)
+            .osc (7, additive, 58, 22).pitch (7, 12, -7).pan (7, -55).route (7, 100)
+            .osc (8, pulse, 45, 22).pitch (8, 12, 7).pan (8, 55).route (8, 100)
+            .osc (9, string, 82, 24).pitch (9, 12).levelEnv (9, 0, 0, 38, 0).route (9, 100)
+            .parallel().filter (1, ladder24, 2400, 26, 12, 45).filter (2, svfHigh, 520, 14)
+            .env (2, 0, 210, 12, 120, 72).mod (env2, "filter1Cutoff", 30)
+            .lfoSync (1, steps, bar1, 0, 22).stepPattern (1, { 80, 20, -40, 80, 40, -60, 90, 20, 60, -40, 95, 30, -50, 75, 40, -30 })
+            .mod (lfo1, "osc1Position", 46).mod (lfo1, "filter1Cutoff", 22).mod (lfo1, "osc6Position", -36)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc4WarpAmount", 30).mod (velocity, "osc9Volume", 36)
+            .amp (2, 300, 68, 180).delay (sixteenthD, 36, 20, 5400, true).reverb (20, 66, 2.0f, 40).level (-2)
+            .macro (1, "Cutoff").mod (macro1, "filter1Cutoff", 38)
+            .macro (2, "Duty").mod (macro2, "osc1Position", 44)
+            .macro (3, "Fifth").mod (macro3, "osc3Volume", 48)
+            .macro (4, "Echo").mod (macro4, "fxDelayMix", 40);
+
+        //----------------------------------------------------------------------
+        // Texture
+
+        // Nine. Velvet Mist: lush Anjunadeep / Bonobo warm organic atmospheric bed.
+        // 1 warm sine foundation; 2 velvety detuned triangle choir; 3 distant vowel breath;
+        // 4 crystal 1:2 FM mist driven by 5; 6 delicate Karplus harp sparkles; 7 & 8 stereo SVF Band
+        // harmonic mist sweeping softly on 1/4-note & 4-bar arcs; 9 airy top + warm pink breeze.
+        add ("Velvet Mist", "Texture").osc (1, analog, sinePos, 48).pitch (1, -12)
+            .osc (2, analog, trianglePos, 42).unison (2, 3, 18, 0, 0, 35)
+            .osc (3, vowel, 30, 34).pitch (3, 12)
+            .osc (4, analog, sinePos, 30).pitch (4, 12).fm (4, 5, 16).modulator (5, analog, sinePos).pitch (5, 19)
+            .osc (6, string, 65, 24).pitch (6, 12).unison (6, 2, 12, 70, 25).route (6, 100)
+            .osc (7, additive, 48, 28).pitch (7, 7).pan (7, -55).route (7, 100)
+            .osc (8, additive, 62, 28).pitch (8, 12).pan (8, 55).route (8, 100)
+            .osc (9, vowel, 65, 20).pitch (9, 24).route (9, 100)
+            .noise (12, 0, 75)
+            .parallel().filter (1, svfLow, 1100, 16, 6, 35).filter (2, svfBand, 1400, 30, 0, 40)
+            .lfoSync (1, sine, quarter, 0, 15).mod (lfo1, "filter2Cutoff", 36).mod (lfo1, "osc7Volume", 36).mod (lfo1, "osc8Volume", -34)
+            .lfoSync (2, triangle, bars4, 0).mod (lfo2, "osc3Position", 48).mod (lfo2, "filter1Cutoff", 22).mod (lfo2, "noiseLevel", 20)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc4WarpAmount", 30).mod (velocity, "noiseLevel", 30)
+            .amp (650, 1200, 94, 2400).delay (eighthD, 34, 12, 4800, false).reverb (7, 90, 5.4f, 42).level (-4.5)
+            .macro (1, "Mist").mod (macro1, "filter1Cutoff", 46)
+            .macro (2, "Breeze").mod (macro2, "noiseLevel", 48)
+            .macro (3, "Shimmer").mod (macro3, "filter2Cutoff", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Rainlight Halo: ethereal Max Cooper / Rival Consoles glistening harmonic rain texture.
+        // 1 warm drifting analog sine bed; 2 soft fifth triangle; 3 delicate 1:3 FM droplets driven by 4;
+        // 5 Karplus glass rain; 6 soft octave vowel; 7 & 8 stereo high-passed shimmering droplets dancing
+        // smoothly on 16th-note groove; 9 crystal double-octave air.
+        add ("Rainlight Halo", "Texture").osc (1, analog, sinePos, 46).pitch (1, -12)
+            .osc (2, analog, trianglePos, 38).pitch (2, 7).unison (2, 2, 12, 0, 0, 42)
+            .osc (3, analog, sinePos, 32).pitch (3, 12).fm (3, 4, 22).modulator (4, analog, sinePos).pitch (4, 19)
+            .osc (5, string, 76, 26).pitch (5, 12).unison (5, 2, 10, 80, 18).route (5, 100)
+            .osc (6, vowel, 45, 26).pitch (6, 12)
+            .osc (7, additive, 68, 28).pitch (7, 19).pan (7, -60).route (7, 100)
+            .osc (8, fm, 44, 28).pitch (8, 24).pan (8, 60).route (8, 100)
+            .osc (9, additive, 85, 18).pitch (9, 24).route (9, 100)
+            .parallel().filter (1, ladder12, 1050, 18, 6, 40).filter (2, svfHigh, 580, 16)
+            .lfoSync (1, steps, bar1, 0, 28).stepPattern (1, { 80, -60, 40, 95, -75, 50, -80, 90, 20, -70, 85, -40, 95, -65, 60, -80 })
+            .mod (lfo1, "osc7Volume", 40).mod (lfo1, "osc8Volume", -38).mod (lfo1, "osc3WarpAmount", 24)
+            .lfoSync (2, sine, bars4, 0).mod (lfo2, "filter1Cutoff", 22).mod (lfo2, "osc6Position", 44)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc3WarpAmount", 30).mod (velocity, "osc7Volume", 34)
+            .amp (520, 1000, 92, 2200).delay (eighthD, 36, 12, 5600, false).reverb (7, 90, 5.2f, 40).level (-13.0)
+            .macro (1, "Glass").mod (macro1, "osc3WarpAmount", 55)
+            .macro (2, "Rain").mod (macro2, "osc7Volume", 48)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        //----------------------------------------------------------------------
+        // Vox
+
+        // Nine. Angelic Chop: modern Fred again.. / Bicep lush playable vocal-chop club synth!
+        // 1 & 2 smooth vowel formants across A-E-O; 3 octave vowel air; 4 warm chest triangle;
+        // 5 silky 1:2 FM breath sheen driven by 6; 7 & 8 wide stereo high-passed vocal choir twins;
+        // 9 crisp consonant attack.
+        add ("Angelic Chop", "Vox").osc (1, vowel, 18, 52)
+            .osc (2, vowel, 58, 42).pitch (2, 0, 6)
+            .osc (3, vowel, 38, 32).pitch (3, 12)
+            .osc (4, analog, trianglePos, 38).pitch (4, -12)
+            .osc (5, analog, sinePos, 30).pitch (5, 12).fm (5, 6, 16).modulator (6, analog, sinePos).pitch (6, 24)
+            .osc (7, vowel, 25, 26).pitch (7, 12, -8).pan (7, -55).route (7, 100)
+            .osc (8, vowel, 75, 26).pitch (8, 12, 8).pan (8, 55).route (8, 100)
+            .osc (9, string, 72, 22).pitch (9, 12).levelEnv (9, 0, 0, 28, 0).route (9, 100)
+            .parallel().filter (1, ladder12, 2800, 16, 8, 40).filter (2, svfHigh, 520, 14)
+            .env (2, 0, 280, 20, 160, 68).mod (env2, "filter1Cutoff", 24)
+            .lfoSync (1, sine, eighth, 0, 15).mod (lfo1, "osc1Position", 44).mod (lfo1, "osc2Position", -40).mod (lfo1, "filter1Cutoff", 18)
+            .lfo (2, sine, 5.2f, 1).lfoFade (2, 420).mod (lfo2, "osc1Fine", 5).mod (lfo2, "osc2Fine", 5)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc5WarpAmount", 30).mod (velocity, "osc9Volume", 36)
+            .amp (8, 420, 82, 320).chorus (26, 0.6f, 44).delay (eighthD, 38, 24, 4800, true).reverb (30, 80, 3.4f, 38).level (-1)
+            .macro (1, "Vowel").mod (macro1, "osc1Position", 44)
+            .macro (2, "Choir").mod (macro2, "osc7Volume", 48)
+            .macro (3, "Echo").mod (macro3, "fxDelayMix", 40)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
+
+        // Nine. Aurelia Choir: transcendent melodic-techno / trance cathedral vocal pad-lead.
+        // 1, 2, 3 lush multi-voice vowel choir; 4 warm cello-octave support; 5 fifth harmonic halo;
+        // 6 crystal 1:2 FM angelic glow driven by 7; 8 & 9 stereo high-passed ethereal octave choir & air.
+        add ("Aurelia Choir", "Vox").osc (1, vowel, 22, 46).unison (1, 2, 10, 65, 0, 22)
+            .osc (2, vowel, 52, 40).pitch (2, 0, -6)
+            .osc (3, vowel, 78, 34).pitch (3, 12, 6)
+            .osc (4, analog, sawPos, 32).pitch (4, -12)
+            .osc (5, analog, trianglePos, 26).pitch (5, 7)
+            .osc (6, analog, sinePos, 28).pitch (6, 12).fm (6, 7, 16).modulator (7, analog, sinePos).pitch (7, 24)
+            .osc (8, vowel, 40, 26).pitch (8, 12, -9).pan (8, -60).route (8, 100)
+            .osc (9, additive, 74, 20).pitch (9, 24, 9).pan (9, 60).route (9, 100)
+            .parallel().filter (1, svfLow, 2400, 16, 6, 35).filter (2, svfHigh, 500, 14)
+            .lfoSync (1, triangle, quarter, 0, 15).mod (lfo1, "osc1Position", 44).mod (lfo1, "osc2Position", -40).mod (lfo1, "filter1Cutoff", 22)
+            .lfo (2, sine, 4.8f, 1).lfoFade (2, 550).mod (lfo2, "osc1Fine", 5).mod (lfo2, "osc3Fine", 5)
+            .mod (velocity, "filter1Cutoff", 26).mod (velocity, "osc6WarpAmount", 30).mod (velocity, "osc9Volume", 36)
+            .amp (120, 700, 92, 950).chorus (30, 0.45f, 46).delay (quarter, 32, 18, 4400, true).reverb (40, 90, 5.4f, 34).level (-3)
+            .macro (1, "Formant").mod (macro1, "osc1Position", 44)
+            .macro (2, "Halo").mod (macro2, "osc9Volume", 48)
+            .macro (3, "Warmth").mod (macro3, "osc4Volume", 46)
+            .macro (4, "Space").mod (macro4, "fxReverbMix", 38);
     }
 }
 

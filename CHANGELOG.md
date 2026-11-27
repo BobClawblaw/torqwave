@@ -6,6 +6,15 @@ Each milestone as it was built, newest first, with what the tests measured on th
 
 ## Released
 
+**Release 0.22.1: 58 new nine-oscillator musical club patches in Complex, and reworked site demos**
+- `Torqwave-0.22.1.dmg` on the repository's Releases page, with its SHA-256, and the Windows and Linux packages built by their workflows from the release's tag.
+- **New since 0.22.0:**
+  - **Torqwave Synth Complex folder doubled to 116 patches:** two new hand-crafted nine-oscillator musical club patches added to every one of the 29 categories (58 new patches, all 58 using all nine oscillators, three nine-oscillator patches per category). Built around harmonic FM ratios (1:1, 1:2, 1:3, 2:1, 3:2), mono sub anchors below 120 Hz, parallel stereo width and air through Filter 2, tempo-synced movement and expressive velocity response; calibrated around -17.0 LUFS median with solo peaks at -2.5 dBFS or under and chord peaks at -1.8 dBFS or under.
+  - **GitHub Pages demos reworked:** `TorqwaveTests --sound-demos` now renders all 116 Complex patches (`docs/sounds/audio/complex/`) alongside the refreshed Sequence Library patterns, kits and Basic Drums grooves (1,235 clips, 123.3 MB in all). Added a dedicated Complex page (`docs/sounds/complex.html`), updated the home page and Sounds landing page to lead with nine-oscillator Complex club sounds and Sequence Library kits and patterns, and refreshed the Quality page and README counts.
+- Checked on the development Mac (macOS 27): `Scripts/package.sh` built the app universal (arm64 and x86_64) at 0.22.1, signed it ad hoc and made the disk image. The whole suite then ran once on each half of that app: 2,740 checks passed on Apple silicon, and 2,740 on Intel under Rosetta (not on an Intel Mac itself).
+- **Heard by the user before the release:** audition clips (solo and 132 BPM club mix) of the 58 new Complex patches.
+- **Windows and Linux:** the workflows build the packages without running the tests, and neither was tried by hand.
+
 **Release 0.22.0: nine oscillators in Torqwave Synth, and a Sequence Library rewritten**
 - `Torqwave-0.22.0.dmg` on the repository's Releases page, with its SHA-256, and the Windows and Linux packages built by their workflows from the release's tag.
 - **New since 0.21.1** (the entries below): Torqwave Synth with nine oscillators and FM From; a Complex folder of 58 patches using four to nine of them; no click when a held sound is struck again or slid to, and CC 74 and the macros gliding; 174 near-copies taken out of the factory patches, 3,569 left; the Sequence Library rewritten so no two presets play the same notes (1,024 sequences, 116 kits), its drones and pads levelled; the library's styles, three drum kits, three audition patterns and two synth patches named for what they play, with the old names still found; a Battery cell's colour brought over.
