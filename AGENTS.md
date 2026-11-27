@@ -9,7 +9,7 @@ Rules and release standards that every agent and contributor must follow in this
 ## 2. Build, Verification & Local Install
 - **Synth bit-identity:** Whenever modifying `WaveSynth`, run `TorqwaveTests --synth-identity` on an optimized build and confirm 100% sample-for-sample identity on all existing patches, presets, reference renders, and sessions.
 - **Universal macOS verification:** Before tagging a release, run `bash Scripts/package.sh --jobs 8` and verify the full test suite passes on **both** `arm64` and `x86_64` (Rosetta).
-- **Update `/Applications/Torqwave.app`:** After every macOS release build, install the newly built universal `Torqwave.app` to `/Applications/Torqwave.app` and verify `CFBundleShortVersionString` and `codesign --verify --deep --strict`.
+- **Update `/Applications/Torqwave.app` & Release Packages:** Whenever application code changes (including post-release fixes or visual updates), rebuild the universal macOS bundle via `bash Scripts/package.sh --jobs 8`, install it locally to `/Applications/Torqwave.app` (verifying `CFBundleShortVersionString`, `lipo -archs`, and `codesign --verify --deep --strict`), and refresh the current GitHub Release `.dmg` and `.sha256` assets (`gh release upload v<version> --clobber dist/Torqwave-<version>.dmg dist/Torqwave-<version>.dmg.sha256`).
 - **Cross-platform CI:** Keep `TorqwaveTests --headless` passing on Windows (`windows-2025`) and Linux (`ubuntu-24.04` via `xvfb-run`).
 
 ## 3. Documentation, Comparison Matrix & Release Marketing Pipeline

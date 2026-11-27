@@ -7,7 +7,7 @@ description: Torqwave project constitution covering git hygiene, local /Applicat
 
 1. **Zero co-attribution:** Never add `Co-Authored-By:` or any AI attribution to git commits, tags, GitHub release notes, docs, or social announcements.
 2. **Keep `tmp/`, `build*/`, and `dist/` untracked.**
-3. **Update `/Applications/Torqwave.app`** with every macOS release build and verify version + `codesign --verify --deep --strict`.
+3. **Rebuild, Deploy Locally & Refresh Release Packages:** Whenever app code changes, rebuild the universal macOS bundle (`bash Scripts/package.sh --jobs 8`), install to `/Applications/Torqwave.app` (verifying version, `x86_64 arm64`, and `codesign --verify --deep --strict`), and refresh the active GitHub Release `.dmg` + `.sha256` assets (`gh release upload v<version> --clobber ...`).
 4. **Verify `--synth-identity`** after any `WaveSynth` change, and full universal `Scripts/package.sh` (`arm64` + `x86_64` Rosetta) before tagging a release.
 5. **Release Marketing Kit (`docs/releases/<version>/`) is mandatory for every release:**
    - Update all docs (`CHANGELOG.md`, `README.md`, `ROADMAP.md`, `docs/index.html`, `docs/quality/index.html`, `docs/TESTING.md`, `docs/AI.md`, `docs/guide/*.md`) and `docs/compare/data/snapshots/<version>.json`.
