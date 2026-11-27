@@ -1,0 +1,13 @@
+Torqwave 0.23.0 is out: a free, open-source audio editor and DAW in one app for macOS, Windows and Linux.
+
+New in 0.23.0:
+• 6 Live Creative FX (Delay, 4x Distortion, Auto-Filter, Volume Shaper, Noise Gate, Auto-Pan)
+• 4 Live MIDI FX (Arpeggiator, Chord Trigger, Scale Lock, Note Echo) + Piano Roll ratchets, micro-timing, grooves & ghost notes
+• Torqwave Synth: 4 LFOs, 24 mod slots, Slot Depth, 16-node Curve LFO, built-in Arp, 4-scene Evolve morphing & 116 Complex 9-osc patches
+• Audio to MIDI (pure DSP melody & 3-band drum extraction)
+• Torqwave Sampler SFZ import, round-robin groups & tempo Warp + Basic Drums 8-bus multi-out
+• Track-level Modulators & native CLAP 1.2 hosting (47 of 53 matrix rows)
+
+No account. No subscription. Hear 1,235 built-in clips at bobclawblaw.github.io/torqwave — link in bio.
+
+#torqwave #daw #audioeditor #musicproduction #sounddesign #synth #wavetablesynth #opensource #clap #vst3 #electronicmusic #techno #producer

@@ -1,0 +1,33 @@
+--- POST 1 / 5 ---
+
+Torqwave 0.23.0 is out: free, open-source audio editor + DAW for macOS, Windows & Linux.
+
+New: 6 Live Creative FX, 4 MIDI FX, Audio to MIDI, CLAP 1.2, Synth Arp + 4 scenes + Curve LFO, Sampler SFZ + Warp, Drums 8-bus out & Track Modulators.
+
+https://github.com/BobClawblaw/torqwave/releases/tag/v0.23.0
+
+--- POST 2 / 5 ---
+
+In our feature comparison against 15 editors and DAWs (read from each product's own docs), 0.23.0 moves Torqwave from 45 to 47 of 53 rows with native CLAP 1.2 hosting and Audio to MIDI (melody via YIN + 3-band drum extraction).
+
+Matrix: https://github.com/BobClawblaw/torqwave/blob/main/docs/compare/MATRIX.md
+
+--- POST 3 / 5 ---
+
+Built-in plug-ins grow from 22 to 32:
+• Live FX: Delay, 4x Distortion, Auto-Filter, Volume Shaper, Noise Gate, Tremolo & Auto-Pan
+• MIDI FX: Arpeggiator, Chord Trigger, Scale Lock, Note Echo
+
+Plus Piano Roll ratchets, micro-timing, grooves & ghost notes.
+
+--- POST 4 / 5 ---
+
+Torqwave Synth keeps 100% sample-for-sample identity on all 3,627 prior patches while adding LFOs 3-4, 24 mod slots, Slot Depth modulation, 16-node Curve LFOs, a built-in Arp, 4-scene Evolve morphing & Complex Decrypt.
+
+Hear 1,235 clips: https://bobclawblaw.github.io/torqwave/
+
+--- POST 5 / 5 ---
+
+What Torqwave still doesn't have: Dolby Atmos, ARA 2, a notation editor, full neural stem export, or notarized macOS/Windows installers yet.
+
+2,782 automated checks passed on Apple Silicon & Intel (Rosetta), plus headless CI tests on Windows & Linux. AGPL-3.0, no account.

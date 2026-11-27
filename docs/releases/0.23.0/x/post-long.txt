@@ -1,0 +1,55 @@
+Torqwave 0.23.0 is out.
+
+Torqwave is a free, open-source audio editor and DAW in one program for macOS, Windows and Linux — spectral editing, repair and mastering alongside multitrack sessions, instruments, a sequencer, automation, surround and video. No account, no subscription.
+
+0.23.0 lifts Torqwave from 45 to 47 of 53 rows in our documented comparison against 15 editors and DAWs (+Audio to MIDI, CLAP) and grows the built-in plug-in suite from 22 to 32.
+
+HERE IS EVERYTHING NEW IN 0.23.0
+
+SIX NEW LIVE CREATIVE FX
+Real-time built-in effects for tracks, buses and the Effects Rack:
+• Delay — Stereo, Ping-Pong and Tape modes with tempo sync, feedback HP/LP filters, tape wow/drive and input-triggered wet ducking.
+• Distortion — Tape, Tube, Soft Clip, Hard Clip, Wavefold and Bitcrush/Downsample with 4x oversampling (latency-compensated) plus pre-HPF / post-LPF tone shaping.
+• Auto-Filter — LP12/24, BP, HP, Notch and Comb driven by a tempo-synced LFO (with stereo phase), audio envelope follower and sidechain key.
+• Volume Shaper — tempo-synced sidechain pumping and gating (Club Pump, Tight Duck, Deep Duck, Trance Gate, Half-Time, Saw and custom 8-step curve) with a low-band split crossover.
+• Noise Gate — hysteresis, hold, floor range, sidechain filtering/key and linked surround channels.
+• Tremolo & Auto-Pan — tempo-synced across 6 shapes with 0–180° stereo phase spread.
+
+FOUR LIVE MIDI FX & PIANO ROLL UPGRADES
+• Live MIDI FX chain — MIDI Arpeggiator, Chord Trigger (triads/7ths/9ths/sus/diatonic + inversions + strum), Scale Lock (snap/filter/transpose, stuck-note safe) and Note Echo, running directly ahead of any instrument on the same track.
+• Piano Roll Ratchets (1x–8x rhythmic subdivisions) and Micro-Timing offsets per note, saved in sessions.
+• Built-in Groove & Swing templates (MPC 54%–66%, 16th Shuffle, Push, Laid-Back, plus extracted audio grooves).
+• Cross-track Ghost Notes showing overlapping notes from other instrument tracks behind your active clip.
+
+TORQWAVE SYNTH UPGRADES (100% BIT-IDENTICAL ON OLD PATCHES)
+• LFOs 3 & 4, 24 modulation slots and Slot Depth as a modulation destination.
+• 16-node smooth Catmull-Rom MSEG "Curve" LFO shape you can edit directly in the LFO display.
+• Built-in tempo-synced Arpeggiator (Up, Down, Up-Down, Down-Up, As Played, Random, 1–4 octaves, gate, swing).
+• 4-Scene continuous "Evolve" morphing with state persistence.
+• Optional 9-oscillator Complex matching in Decrypt.
+• Plus 58 new hand-crafted 9-oscillator musical club patches in Complex (116 Complex patches + 3,569 factory patches total).
+• All 3,627 prior patches, 1,024 presets, 74 reference renders and 3 saved sessions remain sample-for-sample identical to 0.22.0.
+
+AUDIO TO MIDI (PURE DSP)
+Right-click any audio clip in a session:
+• Convert to MIDI (Melody) — YIN pitch tracking with RMS velocity and optional scale quantization.
+• Convert to MIDI (Drums) — 3-band transient classification into Kick (36), Snare (38), Closed Hat (42) and Open Hat (46), plus groove offset extraction.
+
+SAMPLER & BASIC DRUMS DEPTH
+• Torqwave Sampler now imports standard SFZ multisamples, cycles per-zone Round-Robin groups (1–16), and supports Signalsmith Stretch tempo-synced Warp playback.
+• Basic Drums adds 8 stereo Aux output buses for per-pad multi-out routing (Main + Aux 1–8), saved with your kit and session.
+
+TRACK MODULATORS, CLAP 1.2 & HEADLESS CI
+• Track-Level Modulators — attach tempo-synced/free LFOs and audio envelope followers to any session track to modulate any automatable parameter on any plug-in.
+• Native CLAP 1.2 plug-in hosting across macOS, Windows and Linux (scanned out of process alongside VST3, Audio Units and LV2).
+• Automated headless test suite (TorqwaveTests --headless) now running in CI on Windows and Linux, alongside 2,782 passing checks on Apple Silicon and Intel (Rosetta).
+
+WHAT IT STILL DOESN'T DO
+No Dolby Atmos, no ARA 2, no notation editor, no full neural stem export, and installers aren't notarized with a Developer ID yet (so macOS asks on first launch). Our 15-product feature comparison lists every gap as plainly as what's built.
+
+HEAR 1,235 BUILT-IN CLIPS & COMPARE
+Site: https://bobclawblaw.github.io/torqwave/
+Full 15-product matrix: https://github.com/BobClawblaw/torqwave/blob/main/docs/compare/MATRIX.md
+
+GET TORQWAVE 0.23.0 (FREE, AGPL-3.0)
+Download: https://github.com/BobClawblaw/torqwave/releases/tag/v0.23.0

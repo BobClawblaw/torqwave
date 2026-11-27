@@ -464,7 +464,37 @@ Two dark feature matrices comparing Torqwave {ver} and {snap['previous']} agains
     print("wrote", path.relative_to(ROOT))
 
 
-def update_manifest(ver, defs, snap, rel_dir, x_files, ig_files):
+def export_plaintext_copy(ann_path, x_dir, ig_dir):
+    """Extracts pure plaintext .txt files (zero Markdown) into x/ and instagram/ for instant Cmd-A/Cmd-C posting."""
+    text = ann_path.read_text(encoding="utf-8")
+    exported = []
+
+    m_long = re.search(r"```long\n(.*?)```", text, re.S)
+    if m_long:
+        p = x_dir / "post-long.txt"
+        p.write_text(m_long.group(1).strip() + "\n", encoding="utf-8")
+        exported.append(p)
+        print("wrote", p.relative_to(ROOT))
+
+    threads = [b.strip() for b in re.findall(r"```text\n(.*?)```", text, re.S)]
+    if threads:
+        p = x_dir / "post-thread.txt"
+        blocks = [f"--- POST {i} / {len(threads)} ---\n\n{t}" for i, t in enumerate(threads, 1)]
+        p.write_text("\n\n".join(blocks) + "\n", encoding="utf-8")
+        exported.append(p)
+        print("wrote", p.relative_to(ROOT))
+
+    m_ig = re.search(r"```instagram\n(.*?)```", text, re.S)
+    if m_ig:
+        p = ig_dir / "caption.txt"
+        p.write_text(m_ig.group(1).strip() + "\n", encoding="utf-8")
+        exported.append(p)
+        print("wrote", p.relative_to(ROOT))
+
+    return exported
+
+
+def update_manifest(ver, defs, snap, rel_dir, x_files, ig_files, txt_files):
     yes_now, yes_prev, total, new_rows = coverage_summary(defs, snap)
     manifest_path = rel_dir / "manifest.json"
     existing = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
@@ -479,12 +509,12 @@ def update_manifest(ver, defs, snap, rel_dir, x_files, ig_files):
     channels.setdefault("x", {
         "posted": False,
         "url": None,
-        "notes": "Optional — drag files from x/ into X.com composer and paste copy from ANNOUNCEMENT.md.",
+        "notes": "Optional — drag files from x/ into X.com composer and paste x/post-long.txt (or x/post-thread.txt).",
     })
     channels.setdefault("instagram", {
         "posted": False,
         "url": None,
-        "notes": "Optional — drag slide-1.png..slide-7.png from instagram/ and paste caption from ANNOUNCEMENT.md.",
+        "notes": "Optional — drag slide-1.png..slide-7.png from instagram/ and paste instagram/caption.txt.",
     })
 
     manifest = {
@@ -495,6 +525,7 @@ def update_manifest(ver, defs, snap, rel_dir, x_files, ig_files):
         "matrix_coverage": {"yes": yes_now, "previous_yes": yes_prev, "total": total, "new_rows": new_rows},
         "assets": {
             "announcement": str((rel_dir / "ANNOUNCEMENT.md").relative_to(ROOT)),
+            "plaintext_copy": [str(p.relative_to(ROOT)) for p in txt_files],
             "x_graphics": [str(p.relative_to(ROOT)) for p in x_files],
             "instagram_slides": [str(p.relative_to(ROOT)) for p in ig_files],
         },
@@ -540,7 +571,8 @@ def main():
     print("== Verifying X.com thread lengths & alt texts")
     subprocess.run([sys.executable, str(COMPARE_DIR / "generate.py"), "--posts", str(ann_path)], check=True)
 
-    update_manifest(ver, defs, snap, rel_dir, x_files, ig_files)
+    txt_files = export_plaintext_copy(ann_path, x_dir, ig_dir)
+    update_manifest(ver, defs, snap, rel_dir, x_files, ig_files, txt_files)
 
     if args.open and sys.platform == "darwin":
         subprocess.run(["open", str(rel_dir)], check=False)

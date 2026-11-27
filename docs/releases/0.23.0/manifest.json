@@ -14,6 +14,11 @@
   },
   "assets": {
     "announcement": "docs/releases/0.23.0/ANNOUNCEMENT.md",
+    "plaintext_copy": [
+      "docs/releases/0.23.0/x/post-long.txt",
+      "docs/releases/0.23.0/x/post-thread.txt",
+      "docs/releases/0.23.0/instagram/caption.txt"
+    ],
     "x_graphics": [
       "docs/releases/0.23.0/x/01-release-hero.png",
       "docs/releases/0.23.0/x/02-release-by-the-numbers.png",

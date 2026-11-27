@@ -4,10 +4,10 @@ Every Torqwave release stores its marketing copy, comparison & social graphics, 
 
 ```text
 docs/releases/<version>/
-├── ANNOUNCEMENT.md      # Copy-paste-ready X.com long post, verified 280-char X thread, Instagram caption & alt texts
+├── ANNOUNCEMENT.md      # Full Markdown reference (long post, verified 280-char thread, Instagram caption & alt texts)
 ├── manifest.json        # Release date, matrix score, generated asset list, and optional X / Instagram posting status
-├── x/                   # Numbered 1600×900 PNGs ready to drag into X.com (01–04 main post, 05–08 optional reply)
-└── instagram/           # 7-slide 1080×1350 carousel (slides.html + slide-1.png..slide-7.png) ready for Instagram
+├── x/                   # Numbered 1600×900 PNGs + pure plaintext post-long.txt and post-thread.txt (zero Markdown)
+└── instagram/           # 7-slide 1080×1350 carousel (slides.html + slide-1.png..slide-7.png) + pure plaintext caption.txt
 ```
 
 ## Generating a Release Kit
