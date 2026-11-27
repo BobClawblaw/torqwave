@@ -205,6 +205,8 @@ namespace SoundControls
         void setIndex (int, bool notify = true);
         int getIndex() const noexcept                                { return index; }
         juce::String getText() const                                 { return choices[index]; }
+        /** The menu a click on the text opens: each choice (its id the index + 1), a heading before each section. */
+        juce::PopupMenu makeMenu() const;
         void step (int by);
         void setColour (juce::Colour c)                              { tint = c; repaint(); }
 

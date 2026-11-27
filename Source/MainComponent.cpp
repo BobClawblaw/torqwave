@@ -27,6 +27,7 @@
 #include "Ffmpeg.h"
 #include "Theme.h"
 #include "BuiltInEffects.h"
+#include "AudioToMidi.h"
 #include "AudioFileIO.h"
 #include "Bounce.h"
 #include "SoundCategories.h"
@@ -1383,6 +1384,55 @@ MainComponent::MainComponent()
     multitrack.onOpenInEditor = [this] (const juce::File& f) { openFile (f); };
     multitrack.onEditClip = [this] (juce::uint32 clipId) { editClipInPlace (clipId); };
     multitrack.onClipEffects = [this] (juce::uint32 clipId) { showClipEffects (clipId); };
+    multitrack.onConvertToMidi = [this] (juce::uint32 clipId, bool drums)
+    {
+        const auto state = engine.session.getState();
+        const auto where = state->findClip (clipId);
+        if (! where.has_value())
+            return;
+
+        const auto& srcClip = state->tracks[(size_t) where->first].clips[(size_t) where->second];
+        if (srcClip.audio == nullptr || srcClip.length <= 0)
+            return;
+
+        const auto sr = state->sampleRate;
+        const auto bpm = state->tempoMap().tempoAt (srcClip.position);
+        const auto extracted = drums
+            ? AudioToMidi::extractDrums (*srcClip.audio, srcClip.offset, srcClip.offset + srcClip.length, sr, {}, bpm)
+            : AudioToMidi::extractMelody (*srcClip.audio, srcClip.offset, srcClip.offset + srcClip.length, sr);
+
+        if (extracted.notes.empty())
+        {
+            juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::InfoIcon, "Audio to MIDI",
+                                                    "No " + juce::String (drums ? "drum hits" : "pitched notes") + " were detected in this clip.");
+            return;
+        }
+
+        auto next = *state;
+        SessionTrack newTrack;
+        newTrack.id = next.nextId++;
+        newTrack.name = srcClip.name + (drums ? " (Drums MIDI)" : " (Melody MIDI)");
+        newTrack.isInstrument = true;
+        newTrack.musical = true;
+        newTrack.drumGrid = drums;
+
+        NoteClip nc;
+        nc.id = next.nextId++;
+        nc.name = srcClip.name + " MIDI";
+        nc.position = srcClip.position;
+        nc.length = srcClip.length;
+        nc.notes = extracted.notes;
+        newTrack.noteClips.push_back (std::move (nc));
+        const auto newTrackId = newTrack.id;
+        next.tracks.push_back (std::move (newTrack));
+
+        const auto desc = drums ? BuiltInEffects::basicDrumsDescription() : BuiltInEffects::basicSynthDescription();
+        juce::String err;
+        if (auto inst = engine.getPluginFormats().createPluginInstance (desc, sr, TrackEffects::maxBlock, err))
+            engine.getTrackEffects().add (newTrackId, std::move (inst));
+
+        engine.session.apply (std::move (next), drums ? "Convert Audio to MIDI (Drums)" : "Convert Audio to MIDI (Melody)");
+    };
     multitrack.onEditCrossfades = [this] (std::vector<SessionEdits::Crossfade> chosen) { showCrossfadeEditor (std::move (chosen)); };
     multitrack.onCombineClips = [this] (const std::vector<juce::uint32>& clipIds) { combineClips (clipIds); };
     multitrack.onAddToLibrary = [this] (juce::uint32 clipId) { askToAddToLibrary (clipId); };
@@ -16234,6 +16284,27 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
 
             if (const auto link = sequenceLinks.find (clip.id); link != sequenceLinks.end())
                 shown.key = link->second.properties.key;
+
+            // Ghost notes: notes from other unmuted instrument tracks overlapping this clip's span.
+            const auto clipOrigin = clip.getOrigin();
+            for (const auto& other : state->tracks)
+            {
+                if (other.id == track.id || ! other.isInstrument || other.mute)
+                    continue;
+                for (const auto& oc : other.noteClips)
+                {
+                    if (oc.muted || oc.getEnd() <= clip.position || oc.position >= clip.getEnd())
+                        continue;
+                    const auto shift = oc.getOrigin() - clipOrigin;
+                    for (const auto& gn : oc.notes)
+                    {
+                        auto copy = gn;
+                        copy.start += shift;
+                        if (copy.start + copy.length > 0 && copy.start < clip.offset + clip.length)
+                            shown.ghostNotes.push_back (copy);
+                    }
+                }
+            }
 
             return shown;
         };

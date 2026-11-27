@@ -18,6 +18,7 @@
 #include "Analysis.h"
 
 #include "BuiltInEffects.h"
+#include "ClapHost.h"
 #include "AudioFileIO.h"
 #include "Metronome.h"
 #include "SessionMixer.h"
@@ -1004,6 +1005,7 @@ AudioEngine::AudioEngine()
 {
     AudioFileIO::registerFormats (formatManager);
     juce::addDefaultFormatsToManager (pluginFormatManager);
+    pluginFormatManager.addFormat (ClapHost::createFormat());
     pluginFormatManager.addFormat (BuiltInEffects::createFormat());
     trackEffects.prepare (session.getSampleRate());
     trackEffects.onEdited = [this] { session.markEffectsEdited(); };

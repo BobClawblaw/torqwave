@@ -106,4 +106,23 @@ namespace NoteTools
         is a softer copy of the note before it (the first note when none is before it), a step
         long at most. At least one note is kept. */
     std::vector<ClipNote> vary (const std::vector<ClipNote>&, const Vary&, juce::int64 length);
+
+    /** A 16-step timing and velocity groove template (16th-note grid over one 4/4 bar). */
+    struct GrooveTemplate
+    {
+        juce::String name;
+        int stepsPerBeat = 4;                  // 4 = 16th-note grid
+        std::vector<double> beatOffsets;       // fractional beat offset per step (+ late, - early)
+        std::vector<float> velocityScales;     // optional velocity multiplier per step (1.0 = unchanged)
+    };
+
+    /** Built-in groove templates: Straight, MPC 54%, MPC 58%, MPC 62%, MPC 66%, 16th Shuffle, Push, Laid-Back. */
+    std::vector<GrooveTemplate> groovePresets();
+
+    /** Builds a groove template from normalized beat offsets (e.g. from AudioToMidi::extractDrums). */
+    GrooveTemplate grooveFromOffsets (const juce::String& name, const std::vector<double>& offsets, int stepsPerBeat = 4);
+
+    /** Applies a groove template to notes in `which` (all when empty), scaled by `strength` (0 to 1). */
+    void applyGroove (std::vector<ClipNote>&, const std::set<int>& which, const GrooveTemplate&, double beatFrames,
+                      float strength, juce::int64 length);
 }

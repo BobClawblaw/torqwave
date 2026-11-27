@@ -567,6 +567,8 @@ public:
     //==============================================================================
     /** Each session track's effects. Read them here; change them through the methods below. */
     const TrackEffects& getTrackEffects() const   { return trackEffects; }
+    TrackEffects& getTrackEffects() noexcept      { return trackEffects; }
+    juce::AudioPluginFormatManager& getPluginFormats() noexcept { return pluginFormatManager; }
 
     /** MIDI played live (the MIDI inputs the audio settings turn on, and the on-screen keyboard),
         heard by the instrument of the track set on it, and recorded by it. */

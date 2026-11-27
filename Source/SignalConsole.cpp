@@ -142,7 +142,7 @@ namespace
             const auto n = id.substring (3, 4).getIntValue();
             const auto lfo = id.substring (0, 4);
 
-            if (! sourceUsed (v, WaveSynth::lfo1 + n - 1))            return {};
+            if (! sourceUsed (v, WaveSynth::lfoSource (n - 1)))      return {};
             if (ends ("Rate"))                                        return isOn (v, lfo + "Sync") ? Rule {} : Rule { Kind::slide, 0.25f };
             if (ends ("Division"))                                    return isOn (v, lfo + "Sync") ? Rule { Kind::choose, 0.15f } : Rule {};
             if (ends ("Shape"))                                       return { Kind::choose, 0.15f };

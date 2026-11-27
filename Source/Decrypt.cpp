@@ -1197,6 +1197,16 @@ namespace
         return c;
     }
 
+    /** A Complex (4 to 9 oscillator) patch as a candidate. */
+    Candidate complexCandidate (Synth& synth, const WaveSynth::Patch& p)
+    {
+        synth.loadPatch (p.name);
+        Candidate c;
+        c.patch = SignalConsole::capture (synth);
+        c.from = p.name;
+        return c;
+    }
+
     /** A proposal's settings on a patch, each clamped to its parameter's range (the voice's and the
         macros' too, which the search itself doesn't move); IDs the synth doesn't have and the effects
         are left out. False when nothing it names is a setting that can change while matching. */
@@ -1566,6 +1576,11 @@ void Search::run (const std::function<bool()>& shouldStop)
         for (int i = 0; i < (int) factory.size(); ++i)
             if (startable (i))
                 jobs.push_back (factoryCandidate (*synth, i));
+
+        if (options.includeComplex)
+            for (const auto& cp : WaveSynth::complexPatches())
+                if (! options.leaveOut.contains (cp.name))
+                    jobs.push_back (complexCandidate (*synth, cp));
 
         // A first look at one in 64 of them, a closer look at one in 8, then all: the best of each look
         // is shown as it is found, so the chain starts with rough matches and not with the nearest of

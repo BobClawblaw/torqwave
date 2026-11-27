@@ -77,6 +77,9 @@ namespace DrumMachine
         // The source it plays in place of its own sound or samples: 0 for none, 1 to numSources.
         int source = 0;
 
+        // Multi-out bus routing: 0 = Main mix, 1..numAuxBuses = dedicated stereo aux output bus.
+        int outputBus = 0;
+
         bool operator== (const Settings& o) const
         {
             return juce::exactlyEqual (tune, o.tune) && juce::exactlyEqual (decay, o.decay) && juce::exactlyEqual (tone, o.tone)
@@ -84,12 +87,14 @@ namespace DrumMachine
                 && filter == o.filter && juce::exactlyEqual (cutoff, o.cutoff) && juce::exactlyEqual (resonance, o.resonance)
                 && juce::exactlyEqual (crush, o.crush) && juce::exactlyEqual (reverb, o.reverb) && juce::exactlyEqual (delay, o.delay)
                 && type == o.type && juce::exactlyEqual (start, o.start) && reverse == o.reverse && juce::exactlyEqual (bend, o.bend)
-                && effects == o.effects && choke == o.choke && source == o.source;
+                && effects == o.effects && choke == o.choke && source == o.source && outputBus == o.outputBus;
         }
     };
 
     constexpr int classicType = 0, modernType = 1, sampleType = 2;
     constexpr int numChokeGroups = 8;
+    constexpr int numAuxBuses = 8;
+    juce::StringArray outputBusNames();
 
     //==============================================================================
     // Sources: synthesized sounds beside the 30, which belong to no note. Any pad can play one in
@@ -296,6 +301,12 @@ namespace DrumMachine
 
         /** How far the glue is turning the kit down, in dB (0 or less). Any thread. */
         float getReductionDb() const noexcept                       { return reductionDb.load (std::memory_order_relaxed); }
+
+        /** Renders main stereo mix plus up to numAuxBuses separate stereo pad buses (pads with
+            outputBus > 0 route to auxL/auxR[outputBus - 1] instead of main). */
+        void renderMultiOut (float* mainL, float* mainR,
+                             std::array<float*, numAuxBuses> auxL, std::array<float*, numAuxBuses> auxR,
+                             int count);
 
         /** One hit of a sound (its pad's note unless note is given) at full velocity alone,
             through nothing else: what the window draws. */
@@ -532,6 +543,10 @@ namespace BuiltInEffects
         void setPresetTexts (const EffectPresets::Texts&);
         void setPresetValues (const EffectPresets::Values&) override;
 
+        /** Multi-out bus assignment for each pad: 0 = Main, 1..numAuxBuses = Aux 1..8. */
+        int getOutputBus (int pad) const;
+        void setOutputBus (int pad, int bus);
+
         /** For the tests: what it may hold, in place of Sampler::mostBytes. */
         void setMostBytes (juce::int64 bytes)                          { most = bytes; }
         juce::AudioParameterChoice* kickCharacterParameter() const noexcept   { return kickCharacter; }
@@ -579,6 +594,7 @@ namespace BuiltInEffects
         std::array<std::atomic<int>, (size_t) DrumMachine::numUserPads> userNotes;
         std::array<std::atomic<int>, (size_t) DrumMachine::numPads> chokes {};
         std::array<std::atomic<int>, (size_t) DrumMachine::numPads> sources {};
+        std::array<std::atomic<int>, (size_t) DrumMachine::numPads> outputBuses {};
         std::atomic<juce::uint32> padsVersion { 0 };
 
         // Every pad's effects, a value at a time so the audio thread reads them without waiting.

@@ -461,4 +461,94 @@ std::vector<ClipNote> vary (const std::vector<ClipNote>& notes, const Vary& v, j
 
     return kept;
 }
+
+std::vector<GrooveTemplate> groovePresets()
+{
+    auto makeSwing = [] (const char* name, double swingPct, float offVel = 0.94f)
+    {
+        GrooveTemplate g;
+        g.name = name;
+        g.stepsPerBeat = 4;
+        const auto shift = (swingPct - 50.0) / 100.0 * 0.5; // shift on odd 16ths in beats
+        g.beatOffsets.resize (16, 0.0);
+        g.velocityScales.resize (16, 1.0f);
+        for (int i = 0; i < 16; ++i)
+            if (i % 2 == 1)
+            {
+                g.beatOffsets[(size_t) i] = shift;
+                g.velocityScales[(size_t) i] = offVel;
+            }
+        return g;
+    };
+
+    std::vector<GrooveTemplate> list;
+    list.push_back (makeSwing ("Straight", 50.0, 1.0f));
+    list.push_back (makeSwing ("MPC 54%", 54.0, 0.96f));
+    list.push_back (makeSwing ("MPC 58%", 58.0, 0.93f));
+    list.push_back (makeSwing ("MPC 62%", 62.0, 0.90f));
+    list.push_back (makeSwing ("MPC 66%", 66.0, 0.88f));
+
+    GrooveTemplate shuffle;
+    shuffle.name = "16th Shuffle";
+    shuffle.stepsPerBeat = 4;
+    shuffle.beatOffsets    = { 0.0, 0.06, 0.0, 0.075, 0.0, 0.06, 0.0, 0.08, 0.0, 0.06, 0.0, 0.075, 0.0, 0.065, 0.0, 0.085 };
+    shuffle.velocityScales = { 1.05f, 0.85f, 0.95f, 0.88f, 1.05f, 0.85f, 0.95f, 0.88f, 1.05f, 0.85f, 0.95f, 0.88f, 1.05f, 0.85f, 0.95f, 0.90f };
+    list.push_back (std::move (shuffle));
+
+    GrooveTemplate push;
+    push.name = "Push Forward";
+    push.stepsPerBeat = 4;
+    push.beatOffsets.assign (16, -0.025);
+    push.velocityScales.assign (16, 1.02f);
+    list.push_back (std::move (push));
+
+    GrooveTemplate laid;
+    laid.name = "Laid-Back";
+    laid.stepsPerBeat = 4;
+    laid.beatOffsets    = { 0.0, 0.03, 0.02, 0.035, 0.015, 0.03, 0.02, 0.035, 0.0, 0.03, 0.02, 0.035, 0.015, 0.03, 0.02, 0.04 };
+    laid.velocityScales = { 1.0f, 0.92f, 0.96f, 0.90f, 1.02f, 0.92f, 0.96f, 0.90f, 1.0f, 0.92f, 0.96f, 0.90f, 1.02f, 0.92f, 0.96f, 0.90f };
+    list.push_back (std::move (laid));
+
+    return list;
+}
+
+GrooveTemplate grooveFromOffsets (const juce::String& name, const std::vector<double>& offsets, int stepsPerBeat)
+{
+    GrooveTemplate g;
+    g.name = name.isNotEmpty() ? name : juce::String ("Extracted Groove");
+    g.stepsPerBeat = juce::jmax (1, stepsPerBeat);
+    g.beatOffsets.assign (16, 0.0);
+    g.velocityScales.assign (16, 1.0f);
+    for (size_t i = 0; i < juce::jmin (offsets.size(), g.beatOffsets.size()); ++i)
+        g.beatOffsets[i] = juce::jlimit (-0.2, 0.2, offsets[i]);
+    return g;
+}
+
+void applyGroove (std::vector<ClipNote>& notes, const std::set<int>& which, const GrooveTemplate& groove,
+                  double beatFrames, float strength, juce::int64 length)
+{
+    if (notes.empty() || groove.beatOffsets.empty() || beatFrames <= 1.0 || strength <= 0.0f)
+        return;
+
+    const auto s = juce::jlimit (0.0f, 1.0f, strength);
+    const auto stepFrames = beatFrames / (double) juce::jmax (1, groove.stepsPerBeat);
+    const auto nSteps = (int) groove.beatOffsets.size();
+
+    for (size_t i = 0; i < notes.size(); ++i)
+    {
+        if (! which.empty() && which.count ((int) i) == 0)
+            continue;
+
+        auto& n = notes[i];
+        const auto stepIndex = ((int) std::llround ((double) n.start / stepFrames) % nSteps + nSteps) % nSteps;
+        const auto offsetFrames = (juce::int64) std::llround (groove.beatOffsets[(size_t) stepIndex] * beatFrames * (double) s);
+        n.start = juce::jlimit ((juce::int64) 0, juce::jmax ((juce::int64) 0, length - 1), n.start + offsetFrames);
+
+        if ((int) groove.velocityScales.size() > stepIndex)
+        {
+            const auto scale = 1.0f + s * (groove.velocityScales[(size_t) stepIndex] - 1.0f);
+            n.velocity = juce::jlimit (1.0f / 127.0f, 1.0f, n.velocity * scale);
+        }
+    }
+}
 }

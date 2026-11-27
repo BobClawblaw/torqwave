@@ -9,7 +9,7 @@
 ![Apple silicon and x64](https://img.shields.io/badge/arch-Apple%20silicon%20%7C%20x64-555)
 ![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C?logo=cplusplus)
 [![JUCE 9.0.4](https://img.shields.io/badge/JUCE-9.0.4-8DC63F)](https://juce.com)
-![Plug-ins: VST3, AU and LV2](https://img.shields.io/badge/plug--ins-VST3%20%7C%20AU%20%7C%20LV2-orange)
+![Plug-ins: VST3, AU, LV2 and CLAP](https://img.shields.io/badge/plug--ins-VST3%20%7C%20AU%20%7C%20LV2%20%7C%20CLAP-orange)
 [![Last commit](https://img.shields.io/github/last-commit/BobClawblaw/torqwave)](https://github.com/BobClawblaw/torqwave/commits/main)
 
 A free, open-source audio editor and DAW in one, for macOS, Windows and Linux: for sound designers, for writing and producing music, and for working to picture. Waveform and spectral editing, repair and mastering suites, built-in effects, multitrack sessions with instruments, a piano roll, automation and mixdown, a Sound Library for large effects collections, video, and VST3 plug-ins (with Audio Units on the Mac, and LV2 on the Mac and Linux). It is also a free alternative to Audacity for everyday editing. Clean-room, built on JUCE 9.0.4.
@@ -20,8 +20,9 @@ A free, open-source audio editor and DAW in one, for macOS, Windows and Linux: f
 
 **[Download the latest release](https://github.com/BobClawblaw/torqwave/releases/latest)** (macOS 13 or later, Apple silicon or Intel; Windows 10 or later, 64-bit; Linux, 64-bit x86). Every build is on the [Releases](https://github.com/BobClawblaw/torqwave/releases) page.
 
-**Status:** 0.22.1 is the latest release. Torqwave is growing into an editor and a DAW in one, for sound design, writing music and working to picture; what real use turns up is fixed alongside.
+**Status:** 0.23.0 is the latest release. Torqwave is growing into an editor and a DAW in one, for sound design, writing music and working to picture; what real use turns up is fixed alongside.
 
+- **0.23.0:** Live Creative FX pack (Delay, Distortion with 4x oversampling, Auto-Filter, Volume Shaper / Sidechain Pump, Noise Gate, Tremolo & Auto-Pan); Torqwave Synth expanded with LFOs 3–4, 24 modulation slots, Slot Depth as a destination, 16-node MSEG Curve LFOs, a built-in arpeggiator, 4-scene Evolve morphing, and Complex support in Decrypt; Live MIDI FX chain (MIDI Arpeggiator, Chord Trigger, Scale Lock, Note Echo); Piano Roll ratchets, micro-timing, groove templates and ghost notes; Audio to MIDI (melody and drums with groove extraction); Torqwave Sampler SFZ import, round-robin groups and Signalsmith tempo-synced warp; Basic Drums 8-bus multi-out pad routing; Track-level LFO & envelope follower modulators; CLAP 1.2 plug-in hosting; and headless CI tests on Windows and Linux.
 - **0.22.1:** 58 new musical nine-oscillator club patches added to Torqwave Synth's Complex folder (two new per category, 116 Complex patches in all, three nine-oscillator patches per category), calibrated around -17 LUFS with parallel mono low end and stereo air; reworked website demos featuring all Complex patches and Sequence Library patterns.
 - **0.22.0:** Torqwave Synth has nine oscillators, each able to drive another's FM, and a Complex folder of 58 patches that use four to nine of them and move as they are held. Re-striking a held note, sweeping the cutoff and legato slides no longer click. 174 near-copies are taken out of the factory patches (3,569 left). The Sequence Library is rewritten so no two presets play the same notes (1,024 sequences, 116 kits), its drones and pads are levelled, and its styles and kits are named for what they play.
 - **0.21.1:** Basic Drums becomes a drum synth and sampler in one: pads that play your own samples in velocity layers with round robin, 64 pads, an envelope, transient shaper, saturator, EQ and compressor on every pad, 24 more synthesized sources (54 in all), fifteen kits, choke groups of your own, and kits brought in from a Battery 4 kit file you own or a folder of sounds. A session never saved comes back when you continue where you left off, and Transport > Silence All Instruments is a panic.
@@ -230,7 +231,7 @@ This builds a Release program in `build-release-linux/`, runs the tests with it 
 To check a disk image's app on its own, mount it and point the tests at it:
 
 ```bash
-./build-release/TorqwaveTests_artefacts/Release/TorqwaveTests --app "/Volumes/Torqwave 0.22.1/Torqwave.app/Contents/MacOS/Torqwave"
+./build-release/TorqwaveTests_artefacts/Release/TorqwaveTests --app "/Volumes/Torqwave 0.23.0/Torqwave.app/Contents/MacOS/Torqwave"
 ```
 
 ## Tests

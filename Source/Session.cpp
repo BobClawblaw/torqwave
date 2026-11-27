@@ -621,22 +621,59 @@ void NoteClip::addMidi (juce::int64 from, int count, juce::MidiBuffer& midi) con
 
         for (auto& n : notes)
         {
-            const auto on = passStart + n.start;
+            const auto rawOn = passStart + n.start + (juce::int64) n.microTiming;
+            const auto on = juce::jmax (position, rawOn);
             const auto off = juce::jmin (on + juce::jmax ((juce::int64) 1, n.length), end);
 
-            if (n.start >= period || on < position || on >= end || off <= on || ! plays ((size_t) (&n - notes.data()), pass))
+            if (n.start >= period || rawOn < position - std::abs ((juce::int64) n.microTiming) || on >= end || off <= on
+                || ! plays ((size_t) (&n - notes.data()), pass))
                 continue;
 
-            if (off >= from && off < to)
-                midi.addEvent (juce::MidiMessage::noteOff (juce::jlimit (1, 16, channel), juce::jlimit (0, 127, n.pitch)), (int) (off - from));
+            const auto reps = juce::jlimit (1, 8, n.ratchets);
+            if (reps == 1)
+            {
+                if (off >= from && off < to)
+                    midi.addEvent (juce::MidiMessage::noteOff (juce::jlimit (1, 16, channel), juce::jlimit (0, 127, n.pitch)), (int) (off - from));
+            }
+            else
+            {
+                const auto total = off - on;
+                for (int r = 0; r < reps; ++r)
+                {
+                    const auto subOn = on + (total * r) / reps;
+                    const auto subOff = juce::jmax (subOn + 1, on + (total * (r + 1)) / reps - (r + 1 < reps ? 1 : 0));
+                    if (subOff >= from && subOff < to)
+                        midi.addEvent (juce::MidiMessage::noteOff (juce::jlimit (1, 16, channel), juce::jlimit (0, 127, n.pitch)), (int) (subOff - from));
+                }
+            }
         }
 
         for (auto& n : notes)
         {
-            const auto on = passStart + n.start;
+            const auto rawOn = passStart + n.start + (juce::int64) n.microTiming;
+            const auto on = juce::jmax (position, rawOn);
+            const auto off = juce::jmin (on + juce::jmax ((juce::int64) 1, n.length), end);
 
-            if (n.start < period && on >= position && on < end && on >= from && on < to && plays ((size_t) (&n - notes.data()), pass))
-                midi.addEvent (juce::MidiMessage::noteOn (juce::jlimit (1, 16, channel), juce::jlimit (0, 127, n.pitch), juce::jlimit (0.0f, 1.0f, n.velocity)), (int) (on - from));
+            if (n.start >= period || rawOn < position - std::abs ((juce::int64) n.microTiming) || on >= end || off <= on
+                || ! plays ((size_t) (&n - notes.data()), pass))
+                continue;
+
+            const auto reps = juce::jlimit (1, 8, n.ratchets);
+            if (reps == 1)
+            {
+                if (on >= from && on < to)
+                    midi.addEvent (juce::MidiMessage::noteOn (juce::jlimit (1, 16, channel), juce::jlimit (0, 127, n.pitch), juce::jlimit (0.0f, 1.0f, n.velocity)), (int) (on - from));
+            }
+            else
+            {
+                const auto total = off - on;
+                for (int r = 0; r < reps; ++r)
+                {
+                    const auto subOn = on + (total * r) / reps;
+                    if (subOn >= from && subOn < to)
+                        midi.addEvent (juce::MidiMessage::noteOn (juce::jlimit (1, 16, channel), juce::jlimit (0, 127, n.pitch), juce::jlimit (0.0f, 1.0f, n.velocity)), (int) (subOn - from));
+                }
+            }
         }
     }
 }
@@ -5284,14 +5321,16 @@ void writeEnvelopes (const SessionTrack& t, juce::XmlElement& into)
 
 void readEnvelopes (SessionState& state, juce::uint32 trackId, const juce::XmlElement& from, double frameScale)
 {
-    // Torqwave Synth's slots saved before it had nine oscillators: a lane on a modulation slot's Destination
-    // there holds values over the menu as it was, put back on the same destinations in the longer one.
-    std::set<juce::uint32> synthBeforeNine;
+    // Torqwave Synth's slots saved before its menus grew (nine oscillators, then LFOs 3 and 4): a lane on a
+    // modulation slot's Source or Destination there holds values over the menu as it was, put back on the same
+    // choices in the longer one.
+    std::map<juce::uint32, int> synthMenus;
 
     if (auto* effects = from.getChildByName ("EFFECTS"))
         for (auto* slot : effects->getChildWithTagNameIterator ("SLOT"))
-            if (auto* stateXml = slot->getChildByName ("STATE"); stateXml != nullptr && WaveSynth::stateIsBeforeNine (stateXml->getAllSubText()))
-                synthBeforeNine.insert ((juce::uint32) slot->getIntAttribute ("id"));
+            if (auto* stateXml = slot->getChildByName ("STATE"))
+                if (const auto destinations = WaveSynth::destinationsWhenSaved (stateXml->getAllSubText()); destinations > 0 && destinations < WaveSynth::numDestinations)
+                    synthMenus[(juce::uint32) slot->getIntAttribute ("id")] = destinations;
 
     for (auto* envelopeXml : from.getChildWithTagNameIterator ("ENVELOPE"))
     {
@@ -5321,9 +5360,9 @@ void readEnvelopes (SessionState& state, juce::uint32 trackId, const juce::XmlEl
             envelope.points.push_back ({ frame, (float) pointXml->getDoubleAttribute ("value") });
         }
 
-        if (target.parameter == AutomationParameter::effect && synthBeforeNine.count (target.slotId) > 0 && WaveSynth::isSlotDestination (target.parameterId))
+        if (target.parameter == AutomationParameter::effect && synthMenus.count (target.slotId) > 0)
             for (auto& point : envelope.points)
-                point.value = WaveSynth::destinationFromBeforeNine (point.value);
+                point.value = WaveSynth::slotChoiceFrom (target.parameterId, point.value, synthMenus.at (target.slotId));
 
         SessionEdits::setEnvelope (state, trackId, target, std::move (envelope));
     }
@@ -5466,6 +5505,9 @@ juce::String save (const SessionState& state, const juce::File& target,
                 side->setAttribute ("key", indexOf[chain.keyTrackId]);
             }
         }
+
+        for (auto& mod : t.modulators)
+            track->addChildElement (mod.toXml().release());
 
         for (auto& send : t.sends)
         {
@@ -5645,6 +5687,12 @@ juce::String save (const SessionState& state, const juce::File& target,
 
                 if (n.probability < 1.0f)
                     note->setAttribute ("probability", n.probability);
+
+                if (n.ratchets > 1)
+                    note->setAttribute ("ratchets", n.ratchets);
+
+                if (n.microTiming != 0)
+                    note->setAttribute ("microTiming", n.microTiming);
             }
 
             for (auto& lane : c.lanes)
@@ -5928,6 +5976,10 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
 
         for (auto* side : trackXml->getChildWithTagNameIterator ("SIDECHAIN"))   // keys as indices, likewise
             track.sidechains.push_back ({ (juce::uint32) side->getIntAttribute ("slot"), (juce::uint32) side->getIntAttribute ("key", -1) });
+
+        for (auto* modXml : trackXml->getChildWithTagNameIterator ("MODULATOR"))
+            if (auto m = TrackModulator::fromXml (*modXml))
+                track.modulators.push_back (std::move (*m));
         track.name = trackXml->getStringAttribute ("name", track.name);
 
         for (auto* sendXml : trackXml->getChildWithTagNameIterator ("SEND"))
@@ -6093,7 +6145,9 @@ Loaded load (const juce::File& file, juce::AudioFormatManager& formats)
             for (auto* noteXml : clipXml->getChildWithTagNameIterator ("NOTE"))
                 clip.notes.push_back ({ noteXml->getIntAttribute ("pitch"), noteXml->getStringAttribute ("start").getLargeIntValue(),
                                         noteXml->getStringAttribute ("length").getLargeIntValue(), (float) noteXml->getDoubleAttribute ("velocity"),
-                                        juce::jlimit (0.0f, 1.0f, (float) noteXml->getDoubleAttribute ("probability", 1.0)) });
+                                        juce::jlimit (0.0f, 1.0f, (float) noteXml->getDoubleAttribute ("probability", 1.0)),
+                                        juce::jlimit (1, 8, noteXml->getIntAttribute ("ratchets", 1)),
+                                        noteXml->getIntAttribute ("microTiming", 0) });
 
             for (auto* laneXml : clipXml->getChildWithTagNameIterator ("LANE"))
             {

@@ -4,6 +4,7 @@
 #include "FadeShape.h"
 #include "Metronome.h"
 #include "TimeFormat.h"
+#include "TrackModulators.h"
 
 /** A point on an envelope: the value at a frame (of the session, or for a clip's gain, of its audio). */
 struct AutomationPoint
@@ -328,11 +329,13 @@ struct ClipNote
     juce::int64 start = 0, length = 0;
     float velocity = 0.8f;
     float probability = 1.0f;   // the chance it plays on each pass, 0 to 1 (see NoteClip::plays)
+    int ratchets = 1;           // 1 to 8: splits the note into equal rhythmic subdivisions
+    int microTiming = 0;        // frames offset (-early / +late) applied when playing
 
     bool operator== (const ClipNote& o) const noexcept
     {
         return pitch == o.pitch && start == o.start && length == o.length && juce::exactlyEqual (velocity, o.velocity)
-            && juce::exactlyEqual (probability, o.probability);
+            && juce::exactlyEqual (probability, o.probability) && ratchets == o.ratchets && microTiming == o.microTiming;
     }
 };
 
@@ -609,6 +612,9 @@ struct SessionTrack
 
     /** The effect slots fed a key track's output on their sidechain input, at most one key each. */
     std::vector<Sidechain> sidechains;
+
+    /** Track-level modulators (LFO / audio envelope follower) driving parameters of plug-ins in this track's chain. */
+    std::vector<TrackModulator> modulators;
 
     /** The key feeding this slot's sidechain, or 0. */
     juce::uint32 sidechainKey (juce::uint32 slotId) const;

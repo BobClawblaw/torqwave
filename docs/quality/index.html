@@ -61,12 +61,12 @@ wide: true
 <blockquote class="said"><p>every patch plays a held chord between -24 and -1 dB (the new ones at -12.2 to -7.3 dB, levelled to -9 dB, or -11 for pads, drones and textures); none is a near-copy of another in its category.</p><footer>Torqwave Synth&#x27;s 3,569 factory patches and 116 Complex patches · tested</footer></blockquote>
 <blockquote class="said"><p>what is left beside the tone is 94.7 dB under it at worst, the level within 0.022 dB, and a tone the output can't hold comes through 89.6 dB down at worst.</p><footer>Torqwave Sampler playing a sample at another pitch · measured by the tests</footer></blockquote>
 <blockquote class="said"><p>1,024 sequences and 116 kits unpack; every one keeps the preset rules; <code>Scripts/voice_names.txt</code> matches the instruments' patches and kits; every voice names a patch or kit there is and sounds on it between -24 and -1 dB; the script run again writes the same files byte for byte; a kit's parts added together peak below -1 dB; no preset clicks on its voice</p><footer>The Sequence Library&#x27;s 1,024 factory presets and 116 kits · tested</footer></blockquote>
-<blockquote class="said"><p>The whole suite (2,740 checks) then passed once in each half of that build, the Intel one under Rosetta, with the signed app as the plug-in scan worker.</p><footer>The test suite at 0.22.1 · on the development Mac</footer></blockquote></div>
+<blockquote class="said"><p>The whole suite (2,782 checks) then passed once in each half of that build, the Intel one under Rosetta, with the signed app as the plug-in scan worker.</p><footer>The test suite at 0.23.0 · on the development Mac</footer></blockquote></div>
 
 <h2 id="not-checked">What has not been checked</h2>
 <p class="lede">Also in the changelog's own words.</p>
-<div class="quotes"><blockquote class="said"><p>the workflows build the packages without running the tests, and neither was tried by hand.</p><footer>Windows and Linux · release 0.22.1</footer></blockquote>
-<blockquote class="said"><p>Not run on an Intel Mac itself.</p><footer>Release 0.22.1</footer></blockquote>
+<div class="quotes"><blockquote class="said"><p>the Windows and Linux workflows run <code>TorqwaveTests --headless</code> automatically on CI, though neither packaged installer was tried by hand on hardware.</p><footer>Windows and Linux · release 0.23.0</footer></blockquote>
+<blockquote class="said"><p>Not run on an Intel Mac itself.</p><footer>Release 0.23.0</footer></blockquote>
 <blockquote class="said"><p>They were chosen by the measurements above, which catch silence, clicks, dead macros and copies, and cannot tell a good sound from a dull one.</p><footer>The synth&#x27;s second patch bank (0.20.0)</footer></blockquote>
 <blockquote class="said"><p>Not done: the new presets were not listened to one by one.</p><footer>The Sequence Library&#x27;s 1,018 presets (0.20.0)</footer></blockquote>
 <blockquote class="said"><p>that the notes are right is measured, whether the result sounds like the recording to an ear is not known. Two notes at once are still matched as one.</p><footer>Decrypt on chords (0.20.0)</footer></blockquote></div>

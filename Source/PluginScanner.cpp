@@ -11,6 +11,7 @@
 #endif
 
 #include "PluginScanner.h"
+#include "ClapHost.h"
 #include "PluginCatalogue.h"
 
 #include <csignal>
@@ -224,6 +225,7 @@ namespace
 ScannerWorker::ScannerWorker()
 {
     juce::addDefaultFormatsToManager (formatManager);
+    formatManager.addFormat (ClapHost::createFormat());
 }
 
 bool ScannerWorker::initialiseFromCommandLine (const juce::String& commandLine, const juce::String& uid)

@@ -20,7 +20,7 @@ namespace PluginMenu
         for (auto& t : types)
             formats.addIfNotAlreadyThere (t.pluginFormatName);
 
-        const auto rank = [] (const juce::String& f) { return f == "AudioUnit" ? 0 : f == "VST3" ? 1 : 2; };
+        const auto rank = [] (const juce::String& f) { return f == "AudioUnit" ? 0 : f == "VST3" ? 1 : f == "CLAP" ? 2 : 3; };
         std::stable_sort (formats.begin(), formats.end(), [&rank] (const juce::String& a, const juce::String& b)
         {
             return rank (a) != rank (b) ? rank (a) < rank (b) : a.compareIgnoreCase (b) < 0;

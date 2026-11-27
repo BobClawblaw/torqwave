@@ -1234,6 +1234,8 @@ void MultitrackView::showClipMenu (juce::uint32 clipId, juce::PopupMenu first)
     menu.addItem ("Edit in Place", ! clip.locked, false, [safe, clipId] { if (safe != nullptr && safe->onEditClip != nullptr) safe->onEditClip (clipId); });
     menu.addItem ("Open Source File", source.existsAsFile(), false, [safe, source] { if (safe != nullptr && safe->onOpenInEditor != nullptr) safe->onOpenInEditor (source); });
     menu.addItem ("Clip Effects...", ! clip.locked, clip.effects.isOn(), [safe, clipId] { if (safe != nullptr && safe->onClipEffects != nullptr) safe->onClipEffects (clipId); });
+    menu.addItem ("Convert to MIDI (Melody)", true, false, [safe, clipId] { if (safe != nullptr && safe->onConvertToMidi != nullptr) safe->onConvertToMidi (clipId, false); });
+    menu.addItem ("Convert to MIDI (Drums)", true, false, [safe, clipId] { if (safe != nullptr && safe->onConvertToMidi != nullptr) safe->onConvertToMidi (clipId, true); });
     menu.addItem ("Combine to New Sound", true, false, [safe] { if (safe != nullptr && safe->onCombineClips != nullptr) safe->onCombineClips (safe->getSelectedClips()); });
     menu.addItem ("Add to Library...", true, false, [safe, clipId] { if (safe != nullptr && safe->onAddToLibrary != nullptr) safe->onAddToLibrary (clipId); });
     menu.addSeparator();

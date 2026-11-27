@@ -431,8 +431,9 @@ juce::uint32 TrackEffects::add (juce::uint32 trackId, std::unique_ptr<juce::Audi
     }
 
     const auto instrument = isInstrument (*slot->plugin);
+    const auto midiFx = isMidiFx (*slot->plugin);
 
-    if (count > 0 && ! instrument)
+    if (count > 0 && ! instrument && ! midiFx)
         slot->copies = copiesOf (*slot, count);
 
     const juce::ScopedLock sl (lock);
@@ -443,17 +444,36 @@ juce::uint32 TrackEffects::add (juce::uint32 trackId, std::unique_ptr<juce::Audi
     const auto id = slot->id;
     auto& chain = chains[trackId];
 
-    if (instrument)
-        chain.insert (chain.begin(), std::move (slot));
+    if (midiFx)
+    {
+        // Insert MIDI FX after existing MIDI FX and before any instrument/audio FX.
+        auto pos = chain.begin();
+        while (pos != chain.end() && isMidiFx (*(*pos)->plugin))
+            ++pos;
+        chain.insert (pos, std::move (slot));
+    }
+    else if (instrument)
+    {
+        // Insert instrument right after any leading MIDI FX.
+        auto pos = chain.begin();
+        while (pos != chain.end() && isMidiFx (*(*pos)->plugin))
+            ++pos;
+        chain.insert (pos, std::move (slot));
+    }
     else
         chain.push_back (std::move (slot));
 
     return id;
 }
 
+bool TrackEffects::isMidiFx (const juce::AudioPluginInstance& p)
+{
+    return p.acceptsMidi() && p.producesMidi() && p.isMidiEffect() && ! p.getPluginDescription().isInstrument;
+}
+
 bool TrackEffects::isInstrument (const juce::AudioPluginInstance& p)
 {
-    return p.acceptsMidi() && (p.getPluginDescription().isInstrument || p.isMidiEffect());
+    return p.acceptsMidi() && p.getPluginDescription().isInstrument;
 }
 
 void TrackEffects::setMidiSources (const std::set<juce::uint32>& trackIds)
@@ -477,14 +497,28 @@ bool TrackEffects::hasInstrument (juce::uint32 trackId)
         return true;
 
     const auto* chain = find (trackId);
-    return chain != nullptr && ! chain->empty() && isInstrument (*chain->front()->plugin);
+    return chain != nullptr && std::any_of (chain->begin(), chain->end(), [] (auto& s)
+    {
+        return isInstrument (*s->plugin) || isMidiFx (*s->plugin);
+    });
 }
 
 juce::AudioPluginInstance* TrackEffects::getInstrument (juce::uint32 trackId) const
 {
     const juce::ScopedLock sl (readers);
     const auto* chain = find (trackId);
-    return chain != nullptr && ! chain->empty() && isInstrument (*chain->front()->plugin) ? chain->front()->plugin.get() : nullptr;
+    if (chain == nullptr)
+        return nullptr;
+
+    for (auto& s : *chain)
+        if (isInstrument (*s->plugin))
+            return s->plugin.get();
+
+    for (auto& s : *chain)
+        if (isMidiFx (*s->plugin))
+            return s->plugin.get();
+
+    return nullptr;
 }
 
 juce::uint32 TrackEffects::getSlotId (juce::uint32 trackId, int slot) const
@@ -742,9 +776,123 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
         return std::any_of (chain->begin(), chain->end(), [&e] (auto& s) { return s->id == e.slotId && ! s->bypassed; });
     });
 
+    const auto modulated = std::any_of (track.modulators.begin(), track.modulators.end(), [chain] (const TrackModulator& m)
+    {
+        return m.enabled && m.targetSlotId != 0 && m.targetParameterId.isNotEmpty()
+               && std::any_of (chain->begin(), chain->end(), [&m] (auto& s) { return s->id == m.targetSlotId && ! s->bypassed; });
+    });
+
+    const auto stepped = automated || modulated;
+
+    // Gathers this step's incoming MIDI (reset/held offs, clip notes, live MIDI, routed MIDI) into `midi`.
+    const auto gatherMidi = [&] (Slot& leadSlot, int n, juce::int64 at)
+    {
+        midi.clear();
+
+        const auto wasReset = leadSlot.allOff.exchange (false);
+        const auto playEnded = leadSlot.notesEnded != notesEnded;
+        leadSlot.notesEnded = notesEnded;
+
+        if (wasReset || playEnded)
+        {
+            for (int channel = 0; channel < 16; ++channel)
+                for (int pitch = 0; pitch < 128; ++pitch)
+                    if (leadSlot.held[(size_t) channel][(size_t) pitch])
+                        midi.addEvent (juce::MidiMessage::noteOff (channel + 1, pitch), 0);
+
+            midi.addEvent (juce::MidiMessage::allNotesOff (1), 0);
+            midi.addEvent (juce::MidiMessage::allSoundOff (1), 0);
+        }
+        else if (leadSlot.heldOff.exchange (false))
+        {
+            for (int channel = 0; channel < 16; ++channel)
+                for (int pitch = 0; pitch < 128; ++pitch)
+                    if (leadSlot.held[(size_t) channel][(size_t) pitch])
+                        midi.addEvent (juce::MidiMessage::noteOff (channel + 1, pitch), 0);
+        }
+
+        if (clipNotes && ! playEnded)
+            for (auto& clip : track.noteClips)
+                if (! clip.muted)
+                    clip.addMidi (at, n, midi);
+
+        if (track.id == missedTrack && ! missedLive.isEmpty())
+        {
+            for (const auto meta : missedLive)
+                midi.addEvent (meta.getMessage(), 0);
+
+            missedLive.clear();
+        }
+
+        if (liveMidi != nullptr && track.id == liveTrack)
+        {
+            for (const auto meta : *liveMidi)
+                if (meta.samplePosition >= liveFrom && meta.samplePosition < liveFrom + n)
+                    midi.addEvent (meta.getMessage(), meta.samplePosition - liveFrom);
+
+            liveFrom += n;
+        }
+
+        if (track.midiFromTrackId != 0)
+            if (const auto found = routes.find (track.midiFromTrackId); found != routes.end())
+            {
+                auto& events = found->second.events;
+                auto kept = events.begin();
+
+                for (auto& e : events)
+                {
+                    if (e.frame >= at + n)
+                        *kept++ = e;
+                    else if (e.frame >= at - routedLate)
+                        midi.addEvent (e.bytes, e.size, (int) juce::jmax ((juce::int64) 0, e.frame - at));
+                }
+
+                events.erase (kept, events.end());
+            }
+    };
+
+    const auto recordHeld = [] (Slot& s, const juce::MidiBuffer& buf)
+    {
+        for (const auto meta : buf)
+        {
+            const auto m = meta.getMessage();
+            auto& held = s.held[(size_t) juce::jlimit (0, 15, m.getChannel() - 1)];
+
+            if (m.isNoteOn())
+                held.set ((size_t) m.getNoteNumber());
+            else if (m.isNoteOff())
+                held.reset ((size_t) m.getNoteNumber());
+            else if (m.isAllNotesOff() || m.isAllSoundOff())
+                held.reset();
+        }
+    };
+
+    const auto publishRoutedMidi = [&] (juce::int64 at, int n)
+    {
+        if (const auto found = routes.find (track.id); found != routes.end())
+        {
+            auto& routed = found->second;
+
+            if (at != routed.nextFrame)
+                routed.events.clear();
+
+            routed.nextFrame = at + n;
+
+            for (const auto meta : midi)
+                if (meta.numBytes <= 3 && routed.events.size() < routed.events.capacity())
+                {
+                    Routed::Event e;
+                    e.frame = at + meta.samplePosition;
+                    e.size = meta.numBytes;
+                    std::memcpy (e.bytes, meta.data, (size_t) meta.numBytes);
+                    routed.events.push_back (e);
+                }
+        }
+    };
+
     // One plug-in over one pair of the buffer's channels, from `first`; `at` is the session frame
     // of the audio it is given (what its notes, if it is an instrument, are taken at).
-    const auto run = [&] (juce::AudioPluginInstance& p, Slot& s, int first, int done, int n, juce::int64 at)
+    const auto run = [&] (juce::AudioPluginInstance& p, Slot& s, int first, int done, int n, juce::int64 at, bool midiPrepared)
     {
         if (timing.has_value())
             head.set (*timing, at, timingPlays);
@@ -753,118 +901,29 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
         work.clear();
         const auto ins = juce::jmin (2, juce::jmax (1, p.getBusCount (true) > 0 ? p.getChannelCountOfBus (true, 0) : 0));
 
-        // An instrument: its notes from the track's note clips, after every note off when it was
-        // reset; what it plays is added to the track's audio.
+        // Live MIDI FX: transforms `midi` in place before any downstream MIDI FX or instrument.
+        if (isMidiFx (p))
+        {
+            if (! midiPrepared)
+                gatherMidi (s, n, at);
+
+            p.processBlock (work, midi);
+            recordHeld (s, midi);
+            return;
+        }
+
+        // An instrument: receives the track's (possibly MIDI-FX-transformed) MIDI and adds its audio.
         if (isInstrument (p))
         {
-            midi.clear();
+            if (! midiPrepared)
+                gatherMidi (s, n, at);
 
-            const auto wasReset = s.allOff.exchange (false);
-            const auto playEnded = s.notesEnded != notesEnded;
-            s.notesEnded = notesEnded;
-
-            // Every note it was given and not yet ended gets its own off first: many instruments
-            // ignore All Notes Off and All Sound Off.
-            if (wasReset || playEnded)
-            {
-                for (int channel = 0; channel < 16; ++channel)
-                    for (int pitch = 0; pitch < 128; ++pitch)
-                        if (s.held[(size_t) channel][(size_t) pitch])
-                            midi.addEvent (juce::MidiMessage::noteOff (channel + 1, pitch), 0);
-
-                midi.addEvent (juce::MidiMessage::allNotesOff (1), 0);
-                midi.addEvent (juce::MidiMessage::allSoundOff (1), 0);
-            }
-            else if (s.heldOff.exchange (false))
-            {
-                for (int channel = 0; channel < 16; ++channel)
-                    for (int pitch = 0; pitch < 128; ++pitch)
-                        if (s.held[(size_t) channel][(size_t) pitch])
-                            midi.addEvent (juce::MidiMessage::noteOff (channel + 1, pitch), 0);
-            }
-
-            // The block the play stopped in starts no clip notes: their offs would never come.
-            if (clipNotes && ! playEnded)
-                for (auto& clip : track.noteClips)
-                    if (! clip.muted)
-                        clip.addMidi (at, n, midi);
-
-            // Live messages from blocks locked out, first; then what is played live for this
-            // track: the next n frames of this block's messages.
-            if (track.id == missedTrack && ! missedLive.isEmpty())
-            {
-                for (const auto meta : missedLive)
-                    midi.addEvent (meta.getMessage(), 0);
-
-                missedLive.clear();
-            }
-
-            if (liveMidi != nullptr && track.id == liveTrack)
-            {
-                for (const auto meta : *liveMidi)
-                    if (meta.samplePosition >= liveFrom && meta.samplePosition < liveFrom + n)
-                        midi.addEvent (meta.getMessage(), meta.samplePosition - liveFrom);
-
-                liveFrom += n;
-            }
-
-            // MIDI another track's instrument put out: what falls in these frames at its place,
-            // what is late (its source mixed after this track) at the start; too late, dropped.
-            if (track.midiFromTrackId != 0)
-                if (const auto found = routes.find (track.midiFromTrackId); found != routes.end())
-                {
-                    auto& events = found->second.events;
-                    auto kept = events.begin();
-
-                    for (auto& e : events)
-                    {
-                        if (e.frame >= at + n)
-                            *kept++ = e;
-                        else if (e.frame >= at - routedLate)
-                            midi.addEvent (e.bytes, e.size, (int) juce::jmax ((juce::int64) 0, e.frame - at));
-                    }
-
-                    events.erase (kept, events.end());
-                }
-
-            // The notes it is left holding, for ending them later.
-            for (const auto meta : midi)
-            {
-                const auto m = meta.getMessage();
-                auto& held = s.held[(size_t) juce::jlimit (0, 15, m.getChannel() - 1)];
-
-                if (m.isNoteOn())
-                    held.set ((size_t) m.getNoteNumber());
-                else if (m.isNoteOff())
-                    held.reset ((size_t) m.getNoteNumber());
-                else if (m.isAllNotesOff() || m.isAllSoundOff())
-                    held.reset();
-            }
-
+            recordHeld (s, midi);
             p.processBlock (work, midi);
             const auto outs = p.getTotalNumOutputChannels();
 
-            // What it puts out, kept for the track that plays it (none kept across a jump).
             if (p.producesMidi())
-                if (const auto found = routes.find (track.id); found != routes.end())
-                {
-                    auto& routed = found->second;
-
-                    if (at != routed.nextFrame)
-                        routed.events.clear();
-
-                    routed.nextFrame = at + n;
-
-                    for (const auto meta : midi)
-                        if (meta.numBytes <= 3 && routed.events.size() < routed.events.capacity())
-                        {
-                            Routed::Event e;
-                            e.frame = at + meta.samplePosition;
-                            e.size = meta.numBytes;
-                            std::memcpy (e.bytes, meta.data, (size_t) meta.numBytes);
-                            routed.events.push_back (e);
-                        }
-                }
+                publishRoutedMidi (at, n);
 
             if (outs > 0)
             {
@@ -925,16 +984,26 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
         auto n = juce::jmin (maxBlock, numFrames - done);
         auto stepStart = frame + done;
 
-        if (automated)
+        if (stepped)
         {
             const auto into = (int) (((stepStart % automationStep) + automationStep) % automationStep);
             stepStart -= into;
             n = juce::jmin (n, automationStep - into);
         }
 
+        // Pre-compute track peak for any audio envelope follower modulator this step.
+        float trackPeak = 0.0f;
+        if (modulated)
+            for (int ch = 0; ch < juce::jmin (2, buffer.getNumChannels()); ++ch)
+                trackPeak = juce::jmax (trackPeak, buffer.getMagnitude (ch, done, n));
+
         // Effects earlier in the chain delay the audio, so each one is working on audio from
         // that much earlier, and its parameters follow their envelopes from there.
         juce::int64 delayed = 0;
+        bool midiPrepared = false;
+        bool sawMidiFx = false;
+        bool sawInstrument = false;
+        juce::int64 midiAt = stepStart;
 
         for (auto& s : *chain)
         {
@@ -947,9 +1016,58 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
                         if (const auto found = s->parameters.find (e.parameterId); found != s->parameters.end())
                             if (touched.empty() || touched.count ({ track.id, s->id, e.parameterId }) == 0)
                             {
+                                const auto v = e.envelope.valueAt (stepStart - delayed);
+                                s->modBase[e.parameterId] = v;
                                 const juce::ScopedValueSetter<bool> following (followingEnvelope, true);
-                                found->second->setValue (e.envelope.valueAt (stepStart - delayed));
+                                found->second->setValue (v);
                             }
+
+            if (modulated)
+            {
+                auto& rt = modRuntimes[track.id];
+                const auto atFrame = stepStart - delayed;
+
+                for (size_t mi = 0; mi < track.modulators.size() && mi < (size_t) TrackModulators::Runtime::maxModulators; ++mi)
+                {
+                    const auto& mod = track.modulators[mi];
+                    if (! mod.enabled || mod.targetSlotId != s->id || mod.targetParameterId.isEmpty())
+                        continue;
+
+                    const auto found = s->parameters.find (mod.targetParameterId);
+                    if (found == s->parameters.end())
+                        continue;
+
+                    if (! touched.empty() && touched.count ({ track.id, s->id, mod.targetParameterId }) > 0)
+                    {
+                        s->modBase[mod.targetParameterId] = found->second->getValue();
+                        continue;
+                    }
+
+                    auto baseIt = s->modBase.find (mod.targetParameterId);
+                    if (baseIt == s->modBase.end())
+                        baseIt = s->modBase.emplace (mod.targetParameterId, found->second->getValue()).first;
+
+                    float modSignal = 0.0f;
+                    if (mod.kind == TrackModulator::Kind::lfo)
+                    {
+                        double cyclePhase = 0.0;
+                        if (mod.sync && timing.has_value())
+                            cyclePhase = (double) timing->beatAt (atFrame) / juce::jmax (0.0625, mod.divisionBeats);
+                        else
+                            cyclePhase = ((double) atFrame / juce::jmax (1.0, rate)) * mod.rateHz;
+
+                        modSignal = TrackModulators::evaluateLfo (mod, cyclePhase);
+                    }
+                    else
+                    {
+                        modSignal = rt.advanceFollower ((int) mi, mod, trackPeak, rate, n);
+                    }
+
+                    const auto modulatedVal = juce::jlimit (0.0f, 1.0f, baseIt->second + modSignal * mod.amount);
+                    const juce::ScopedValueSetter<bool> following (followingEnvelope, true);
+                    found->second->setValue (modulatedVal);
+                }
+            }
 
             // The audio going into this slot is from `before` frames earlier than the chain's input.
             const auto before = delayed;
@@ -965,8 +1083,22 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
                         continue;
                 }
 
-            // An instrument plays into the first pair only (L and R on a wide track).
-            const auto runPairs = isInstrument (*s->plugin) ? 1 : pairs;
+            const auto slotMidiFx = isMidiFx (*s->plugin);
+            const auto slotInst = isInstrument (*s->plugin);
+            if (slotMidiFx || slotInst)
+            {
+                if (! midiPrepared)
+                {
+                    gatherMidi (*s, n, stepStart - before);
+                    midiPrepared = true;
+                    midiAt = stepStart - before;
+                }
+                if (slotMidiFx) sawMidiFx = true;
+                if (slotInst) sawInstrument = true;
+            }
+
+            // An instrument or MIDI FX runs once on the first pair only.
+            const auto runPairs = (slotInst || slotMidiFx) ? 1 : pairs;
 
             for (int pair = 0; pair < runPairs; ++pair)
             {
@@ -982,9 +1114,13 @@ void TrackEffects::process (const SessionTrack& track, juce::int64 frame, juce::
                 if (pair > 0)
                     followParameters (*s->plugin, *p);
 
-                run (*p, *s, 2 * pair, done, n, stepStart - before);
+                run (*p, *s, 2 * pair, done, n, stepStart - before, midiPrepared);
             }
         }
+
+        // If the track ran MIDI FX with no downstream instrument, publish its transformed MIDI for midiFromTrackId.
+        if (sawMidiFx && ! sawInstrument)
+            publishRoutedMidi (midiAt, n);
 
         done += n;
     }

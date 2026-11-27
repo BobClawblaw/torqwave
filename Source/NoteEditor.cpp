@@ -1111,6 +1111,19 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
         g.drawVerticalLine ((int) xOf (c.offset), (float) area.getY(), (float) area.getBottom());
     }
 
+    // Ghost notes from other instrument tracks, drawn faintly behind the active clip's notes.
+    if (showGhostNotes && ! shown->ghostNotes.empty())
+    {
+        g.setColour (Theme::dimText.withAlpha (0.22f));
+        for (const auto& gn : shown->ghostNotes)
+        {
+            const auto gr = noteBounds (gn);
+            if (gr.getBottom() < (float) area.getY() || gr.getY() > (float) area.getBottom())
+                continue;
+            g.fillRoundedRectangle (gr.getIntersection (area.toFloat()), 2.0f);
+        }
+    }
+
     // The notes: velocity as their depth of colour, the selected outlined.
     for (size_t i = 0; i < c.notes.size(); ++i)
     {
@@ -1133,11 +1146,14 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
         g.setColour ((playing ? Theme::accent : Theme::dimText).withAlpha (0.45f + 0.55f * juce::jlimit (0.0f, 1.0f, n.velocity)));
         g.fillRoundedRectangle (r.getIntersection (area.toFloat()), 2.0f);
 
-        if (n.probability < 1.0f && r.getWidth() >= 26.0f && r.getHeight() >= 9.0f)
+        if ((n.probability < 1.0f || n.ratchets > 1) && r.getWidth() >= 22.0f && r.getHeight() >= 9.0f)
         {
+            juce::String tag;
+            if (n.ratchets > 1) tag += juce::String (n.ratchets) + "x";
+            if (n.probability < 1.0f) tag += (tag.isNotEmpty() ? " " : "") + juce::String (juce::roundToInt (n.probability * 100.0f)) + "%";
             g.setColour (Theme::textStrong);
             g.setFont (juce::jmin (11.0f, r.getHeight() - 1.0f));
-            g.drawText (juce::String (juce::roundToInt (n.probability * 100.0f)) + "%", r.toNearestInt(), juce::Justification::centred, false);
+            g.drawText (tag, r.toNearestInt(), juce::Justification::centred, false);
         }
 
         if (selected.count ((int) i) > 0)
@@ -2123,13 +2139,46 @@ void NoteEditor::setProbability (float probability)
     commit ("Note Probability");
 }
 
+void NoteEditor::setRatchets (int count)
+{
+    if (! shown.has_value() || selected.empty())
+        return;
+
+    for (auto i : selected)
+        if (juce::isPositiveAndBelow (i, (int) shown->clip.notes.size()))
+            shown->clip.notes[(size_t) i].ratchets = juce::jlimit (1, 8, count);
+
+    commit ("Note Ratchets");
+}
+
+void NoteEditor::setMicroTiming (int offsetFrames)
+{
+    if (! shown.has_value() || selected.empty())
+        return;
+
+    for (auto i : selected)
+        if (juce::isPositiveAndBelow (i, (int) shown->clip.notes.size()))
+            shown->clip.notes[(size_t) i].microTiming = offsetFrames;
+
+    commit ("Note Micro-Timing");
+}
+
+void NoteEditor::applyGroove (const NoteTools::GrooveTemplate& groove, float strength)
+{
+    if (! shown.has_value() || shown->clip.notes.empty())
+        return;
+
+    NoteTools::applyGroove (shown->clip.notes, selected, groove, (double) beatFrames(), strength, wholeLength());
+    commit ("Apply Groove (" + groove.name + ")");
+}
+
 void NoteEditor::noteMenu()
 {
     if (! shown.has_value() || selected.empty())
         return;
 
     const auto first = shown->clip.notes[(size_t) *selected.begin()];
-    juce::PopupMenu chance, velocity;
+    juce::PopupMenu chance, velocity, ratchets, micro;
     const int percents[] = { 100, 90, 75, 50, 33, 25, 10 };
 
     for (auto p : percents)
@@ -2138,19 +2187,38 @@ void NoteEditor::noteMenu()
     for (auto v : { 127, 110, 96, 80, 64, 48, 32 })
         velocity.addItem (2000 + v, juce::String (v), true, juce::roundToInt (first.velocity * 127.0f) == v);
 
+    for (int r : { 1, 2, 3, 4, 6, 8 })
+        ratchets.addItem (3000 + r, r == 1 ? "Off (1x)" : juce::String (r) + "x Ratchet", true, first.ratchets == r);
+
+    const auto msToFrames = [sr = shown->sampleRate] (int ms) { return (int) std::lround (ms * 0.001 * sr); };
+    const int offsetsMs[] = { -20, -10, -5, 0, 5, 10, 20 };
+    for (int idx = 0; idx < (int) std::size (offsetsMs); ++idx)
+    {
+        const auto ms = offsetsMs[idx];
+        const auto label = ms == 0 ? juce::String ("On Grid (0 ms)") : (ms > 0 ? ("+" + juce::String (ms) + " ms (late)") : (juce::String (ms) + " ms (early)"));
+        micro.addItem (4000 + idx, label, true, std::abs (first.microTiming - msToFrames (ms)) <= 2);
+    }
+
     juce::PopupMenu menu;
     menu.addSectionHeader (selected.size() == 1 ? juce::String ("Note") : juce::String ((int) selected.size()) + " notes");
     menu.addSubMenu ("Probability", chance);
+    menu.addSubMenu ("Ratchets / Flams", ratchets);
+    menu.addSubMenu ("Micro-Timing", micro);
     menu.addSubMenu ("Velocity", velocity);
     menu.addItem (3, "Delete");
 
-    menu.showMenuAsync (juce::PopupMenu::Options().withMousePosition(), [safe = juce::Component::SafePointer<NoteEditor> (this)] (int result)
+    menu.showMenuAsync (juce::PopupMenu::Options().withMousePosition(), [safe = juce::Component::SafePointer<NoteEditor> (this), msToFrames] (int result)
     {
         if (safe == nullptr || result == 0)
             return;
 
+        static constexpr int microMs[] = { -20, -10, -5, 0, 5, 10, 20 };
         if (result == 3)
             safe->removeSelected();
+        else if (result >= 4000 && result < 4007)
+            safe->setMicroTiming (msToFrames (microMs[result - 4000]));
+        else if (result >= 3000)
+            safe->setRatchets (result - 3000);
         else if (result >= 2000)
             safe->setVelocity ((float) (result - 2000) / 127.0f);   // an undo step of its own
         else if (result >= 1000)
@@ -2164,20 +2232,32 @@ void NoteEditor::showToolsMenu()
         return;
 
     const auto some = selected.empty() ? juce::String ("all the notes") : juce::String ("the selected notes");
-    juce::PopupMenu menu;
+    juce::PopupMenu menu, grooves;
+    const auto presets = NoteTools::groovePresets();
+    for (int g = 0; g < (int) presets.size(); ++g)
+        grooves.addItem (100 + g, presets[(size_t) g].name);
+
     menu.addSectionHeader ("Key: " + getKey().name() + (chosenKey.has_value() || NoteTools::parseKey (shown->key).has_value() ? juce::String() : juce::String (" (guessed)")));
     menu.addItem (1, "Chords...");
     menu.addItem (2, "Arpeggiate " + some + "...", ! shown->clip.notes.empty());
     menu.addItem (3, "Humanize " + some + "...", ! shown->clip.notes.empty());
+    menu.addSubMenu ("Apply Groove to " + some, grooves, ! shown->clip.notes.empty());
     menu.addItem (4, "Fit " + some + " to the Key", ! shown->clip.notes.empty());
     menu.addSeparator();
     menu.addItem (5, "Scale Lock", true, scaleLock);
+    menu.addItem (7, "Show Ghost Notes", true, showGhostNotes);
     menu.addItem (6, "Key...");
 
-    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (toolsButton), [safe = juce::Component::SafePointer<NoteEditor> (this)] (int result)
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (toolsButton), [safe = juce::Component::SafePointer<NoteEditor> (this), presets] (int result)
     {
         if (safe == nullptr)
             return;
+
+        if (result >= 100 && result < 100 + (int) presets.size())
+        {
+            safe->applyGroove (presets[(size_t) (result - 100)], 1.0f);
+            return;
+        }
 
         switch (result)
         {
@@ -2187,6 +2267,7 @@ void NoteEditor::showToolsMenu()
             case 4: safe->fitToScale(); break;
             case 5: safe->setScaleLock (! safe->scaleLock); break;
             case 6: safe->askForKey(); break;
+            case 7: safe->setShowGhostNotes (! safe->showGhostNotes); break;
             default: break;
         }
     });

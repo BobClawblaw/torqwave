@@ -54,6 +54,10 @@ namespace Sampler
         with the reason in error, for a file that can't be read or holds no audio. */
     SamplePtr loadSample (const juce::File&, juce::AudioFormatManager&, juce::String& error);
 
+    /** Time-stretches a sample by `speedRatio` (> 1 faster / shorter, < 1 slower / longer) while
+        preserving pitch (Signalsmith Stretch), for tempo-synced warp playback in Sampler and Basic Drums. */
+    SamplePtr warpSample (const Sample&, double speedRatio);
+
     //==============================================================================
     // Samples are held whole in memory. The limits: one sample's length, and what one sampler holds.
     constexpr double longestSampleSeconds = 600.0;
@@ -169,6 +173,9 @@ namespace Sampler
         float crossfade = 0.0f;        // ms of the loop's end crossfaded into what comes before its start (forward loops)
         bool loopInRelease = true;     // the loop goes on while the note dies away; off, a note let go plays on to the end
         int choke = 0;                 // a group whose zones cut each other off; 0, none
+        int roundRobinGroup = 0;       // 0: play with other matching zones; 1..16: cycle one zone per hit in group
+        bool warp = false;             // tempo-synced playback locking sourceBpm to session tempo
+        float sourceBpm = 120.0f;      // original tempo of sample when warp is enabled
 
         /** The part played, held to the sample: [first, last). Empty with no sample. */
         juce::Range<juce::int64> span() const;
@@ -366,6 +373,7 @@ namespace Sampler
         float lastNote = -1.0f;        // the note the next glides from; below 0, none yet
         float gainL = 0.0f, gainR = 0.0f;   // the output's gains, smoothed sample by sample
         bool gainsSet = false;
+        std::array<juce::uint32, 16> rrCounters {}; // round-robin hit counter per group (1..16)
         std::array<Reading, (size_t) numVoices + numFadingVoices> readings;
     };
 }
@@ -414,6 +422,10 @@ namespace BuiltInEffects
 
         /** Loads a factory preset by name: its settings and its zones. False when there is none of that name. */
         bool loadFactory (const juce::String& name);
+
+        /** Imports a standard SFZ (.sfz) multisample file into this sampler's zones and amp envelope.
+            Returns an error message, or empty string on success. */
+        juce::String loadSfz (const juce::File& sfzFile);
 
         /** Plays a note now, as a click in its window does, and lets it go: added to the next block. Any thread. */
         void play (int note, float velocity);

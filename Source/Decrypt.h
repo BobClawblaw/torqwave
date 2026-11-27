@@ -213,6 +213,9 @@ namespace Decrypt
         /** What each of those grew from (Candidate::from), in the same order, so that the lines the
             last search kept apart stay apart; where there is none, "the last search". */
         juce::StringArray resumeFrom;
+        /** Also include the nine-oscillator Complex patches in the initial search pool (keeping
+            oscillators 4 to 9 on Complex candidates). */
+        bool includeComplex = false;
         /** The chain's last link, when this search carries a chain on: its first link must be nearer
             the signal than this and sound different enough from it. */
         std::optional<Patch> chainFrom;

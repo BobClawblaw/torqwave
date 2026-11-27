@@ -10,7 +10,7 @@ namespace WaveSynth
 const juce::StringArray& sourceNames()
 {
     static const juce::StringArray n { "None", "Amp Env", "Env 2", "Env 3", "Env 4", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch", "Key",
-                                       "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Random" };
+                                       "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Random", "LFO 3", "LFO 4" };
     return n;
 }
 
@@ -68,6 +68,14 @@ namespace
             for (int o = numFirstOscillators + 1; o <= numOscillators; ++o)
                 addOscillator (o);
 
+            // LFOs 3 and 4's rates, after every earlier destination.
+            for (int l = numFirstLfos + 1; l <= numLfos; ++l)
+                add ("lfo" + juce::String (l) + "Rate", "LFO " + juce::String (l) + " Rate");
+
+            // Each slot's depth: a slot can move another's.
+            for (int s = 1; s <= numSlots; ++s)
+                add ("mod" + juce::String (s) + "Amount", "Slot " + juce::String (s) + " Depth");
+
             jassert ((int) all.size() == numDestinations);
             return all;
         }();
@@ -83,6 +91,10 @@ namespace
     enum : int { dSubLevel = 27, dNoiseLevel, dNoiseColour, dF1Cutoff, dF1Res, dF1Drive, dF2Cutoff, dF2Res, dF2Drive, dAmpLevel, dAmpPan,
                  dLfo1Rate, dLfo2Rate, dFxDrive, dFxChorus, dFxPhaser, dFxDelayMix, dFxDelayFeedback, dFxReverb, dEndOfFirst };
     static_assert (dEndOfFirst == numFirstDestinations);
+    /** Where the oscillators' destinations end: LFO 3 and 4's rates come after. */
+    constexpr int dEndOfOscillators = numFirstDestinations + 9 * (numOscillators - numFirstOscillators), dLfo3Rate = dEndOfOscillators;
+    /** An LFO's rate (0 to 3) as a destination. */
+    constexpr int lfoRateDest (int l)    { return l < numFirstLfos ? dLfo1Rate + l : dLfo3Rate + (l - numFirstLfos); }
     enum : int { fPosition, fWarp, fPitch, fFine, fVolume, fPan, fDetune, fSpread, fRoute };
 }
 
@@ -104,7 +116,8 @@ const std::vector<std::pair<int, juce::String>>& destinationSections()
     static const std::vector<std::pair<int, juce::String>> s { { 1, "Oscillator 1" }, { 10, "Oscillator 2" }, { 19, "Oscillator 3" }, { 28, "Sub and Noise" },
                                                                 { 31, "Filters" }, { 37, "Amp" }, { 39, "LFOs" }, { 41, "Effects" },
                                                                 { 47, "Oscillator 4" }, { 56, "Oscillator 5" }, { 65, "Oscillator 6" },
-                                                                { 74, "Oscillator 7" }, { 83, "Oscillator 8" }, { 92, "Oscillator 9" } };
+                                                                { 74, "Oscillator 7" }, { 83, "Oscillator 8" }, { 92, "Oscillator 9" },
+                                                                { 101, "LFOs 3 and 4" }, { firstSlotDepth + 1, "Slot Depths" } };
     return s;
 }
 
@@ -134,26 +147,39 @@ bool isAddedWithNine (const juce::String& id)
     return oscillatorOf (id) > numFirstOscillators || id.endsWith ("FmFrom");
 }
 
-bool stateIsBeforeNine (const juce::String& base64State)
+int destinationsWhenSaved (const juce::String& base64State)
 {
     juce::MemoryBlock data;
 
     if (! data.fromBase64Encoding (base64State))
-        return false;
+        return 0;
 
     const auto xml = juce::AudioProcessor::getXmlFromBinary (data.getData(), (int) data.getSize());
-    return xml != nullptr && PreviousName::hasTag (*xml, "TORQWAVE_BASIC_SYNTH") && ! xml->hasAttribute ("osc4On");
+
+    if (xml == nullptr || ! PreviousName::hasTag (*xml, "TORQWAVE_BASIC_SYNTH"))
+        return 0;
+
+    if (! xml->hasAttribute ("osc4On"))   return numFirstDestinations;
+    if (! xml->hasAttribute ("lfo3Rate")) return firstSlotDepth - (numLfos - numFirstLfos);
+    return numDestinations;
 }
 
-float destinationFromBeforeNine (float normalised)
+float slotChoiceFrom (const juce::String& id, float normalised, int destinationsThen)
 {
-    const auto index = juce::roundToInt (juce::jlimit (0.0f, 1.0f, normalised) * (float) numFirstDestinations);
-    return (float) index / (float) numDestinations;
-}
+    if (! id.startsWith ("mod") || id.substring (3).getIntValue() < 1 || destinationsThen <= 0 || destinationsThen >= numDestinations)
+        return normalised;
 
-bool isSlotDestination (const juce::String& id)
-{
-    return id.startsWith ("mod") && id.endsWith ("Destination") && id.substring (3).getIntValue() >= 1;
+    // A choice's value is its index over the last index: the destinations follow None, and the sources before
+    // LFOs 3 and 4 ended at Random.
+    const auto from = [normalised] (int lastThen, int lastNow)
+    {
+        const auto index = juce::roundToInt (juce::jlimit (0.0f, 1.0f, normalised) * (float) lastThen);
+        return (float) index / (float) lastNow;
+    };
+
+    if (id.endsWith ("Destination"))  return from (destinationsThen, numDestinations);
+    if (id.endsWith ("Source"))       return from (random, numSources - 1);
+    return normalised;
 }
 
 const juce::StringArray& filterNames()
@@ -164,7 +190,7 @@ const juce::StringArray& filterNames()
 
 const juce::StringArray& lfoShapeNames()
 {
-    static const juce::StringArray n { "Sine", "Triangle", "Saw Up", "Saw Down", "Square", "Random", "Drift", "Steps" };
+    static const juce::StringArray n { "Sine", "Triangle", "Saw Up", "Saw Down", "Square", "Random", "Drift", "Steps", "Curve" };
     return n;
 }
 
@@ -471,6 +497,16 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     juce::AudioParameterFloat *driveTone = nullptr, *driveMix = nullptr, *chorusRate = nullptr, *chorusDepth = nullptr, *phaserRate = nullptr,
                               *phaserFeedback = nullptr, *delayTone = nullptr, *reverbSize = nullptr, *reverbDecay = nullptr, *reverbDamping = nullptr;
     std::array<juce::RangedAudioParameter*, numDestinations> destP {};
+    juce::AudioParameterBool* arpOn = nullptr;
+    juce::AudioParameterChoice *arpMode = nullptr, *arpDivision = nullptr, *sceneCount = nullptr;
+    juce::AudioParameterFloat *arpOctaves = nullptr, *arpGate = nullptr, *arpSwing = nullptr, *evolve = nullptr;
+
+    struct ArpNote { int pitch = 60; float velocity = 0.8f; };
+    std::vector<ArpNote> arpHeld, arpOrder;
+    int arpStep = 0, arpActivePitch = -1, arpOffCountdown = 0;
+    double arpNextStep = 0.0;
+    juce::uint32 arpRng = 0x5f3759dfu;
+    juce::MidiBuffer arpOut;
 
     template <typename T> T* find (const juce::String& id)
     {
@@ -563,6 +599,15 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
         for (int d = 0; d < numDestinations; ++d)
             destP[(size_t) d] = owner.parameter (destinationIds()[d]);
+
+        arpOn = find<juce::AudioParameterBool> ("arpOn");
+        arpMode = find<juce::AudioParameterChoice> ("arpMode");
+        arpDivision = find<juce::AudioParameterChoice> ("arpDivision");
+        arpOctaves = find<juce::AudioParameterFloat> ("arpOctaves");
+        arpGate = find<juce::AudioParameterFloat> ("arpGate");
+        arpSwing = find<juce::AudioParameterFloat> ("arpSwing");
+        evolve = find<juce::AudioParameterFloat> ("evolve");
+        sceneCount = find<juce::AudioParameterChoice> ("sceneCount");
     }
 
     //==========================================================================
@@ -658,6 +703,35 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
             if (! s.idle[(size_t) o])
                 for (int f = 0; f < 9; ++f)
                     s.base[(size_t) oscDest (o, f)] = destP[(size_t) oscDest (o, f)]->getValue();
+
+        for (int d = dEndOfOscillators; d < numDestinations; ++d)
+            s.base[(size_t) d] = destP[(size_t) d]->getValue();
+
+        // Patch Scenes / Evolve morph: off by default so existing patches remain bit-identical.
+        if (sceneCount != nullptr && sceneCount->getIndex() > 0 && evolve != nullptr)
+        {
+            const juce::SpinLock::ScopedTryLockType sl (owner.sceneLock);
+            if (sl.isLocked())
+            {
+                const int activeScenes = juce::jmin (BasicSynthProcessor::maxScenes, sceneCount->getIndex() + 1);
+                int validCount = 0;
+                std::array<int, BasicSynthProcessor::maxScenes> validIdx {};
+                for (int i = 0; i < activeScenes; ++i)
+                    if (owner.sceneCaptured[(size_t) i])
+                        validIdx[(size_t) validCount++] = i;
+
+                if (validCount >= 2)
+                {
+                    const auto pos = juce::jlimit (0.0f, 1.0f, evolve->get() * 0.01f) * (float) (validCount - 1);
+                    const auto i0 = juce::jlimit (0, validCount - 2, (int) std::floor (pos));
+                    const auto frac = pos - (float) i0;
+                    const auto& a = owner.sceneValues[(size_t) validIdx[(size_t) i0]];
+                    const auto& b = owner.sceneValues[(size_t) validIdx[(size_t) (i0 + 1)]];
+                    for (int d = 0; d < numDestinations; ++d)
+                        s.base[(size_t) d] = a[(size_t) d] + frac * (b[(size_t) d] - a[(size_t) d]);
+                }
+            }
+        }
 
         s.subOctave = subOctave->getIndex() + 1;
         s.subShape = subShape->getIndex();
@@ -882,6 +956,13 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         globalLfoPhase.fill (0.0);
         globalLfoValue.fill (0.0f);
         outGain.to (1.0f, true);
+        arpHeld.clear();
+        arpOrder.clear();
+        arpStep = 0;
+        arpActivePitch = -1;
+        arpOffCountdown = 0;
+        arpNextStep = 0.0;
+        arpRng = 0x5f3759dfu;
         resetEffects();
     }
 
@@ -1307,6 +1388,22 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 const auto t = 0.5f - 0.5f * std::cos (juce::MathConstants<float>::pi * p);
                 return a + (b - a) * t;
             }
+            case 7: return steps[(size_t) juce::jlimit (0, numSteps - 1, (int) (p * numSteps))];
+            case 8: // Smooth 16-point MSEG Catmull-Rom curve through steps
+            {
+                const auto pos = p * (float) numSteps;
+                const auto i1 = juce::jlimit (0, numSteps - 1, (int) std::floor (pos));
+                const auto t = pos - std::floor (pos);
+                const auto p0 = steps[(size_t) ((i1 + numSteps - 1) % numSteps)];
+                const auto p1 = steps[(size_t) i1];
+                const auto p2 = steps[(size_t) ((i1 + 1) % numSteps)];
+                const auto p3 = steps[(size_t) ((i1 + 2) % numSteps)];
+                const auto t2 = t * t, t3 = t2 * t;
+                const auto v = 0.5f * ((2.0f * p1) + (-p0 + p2) * t
+                                       + (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t2
+                                       + (-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t3);
+                return juce::jlimit (-1.0f, 1.0f, v);
+            }
             default: return steps[(size_t) juce::jlimit (0, numSteps - 1, (int) (p * numSteps))];
         }
     }
@@ -1318,7 +1415,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         if (s.sync)
             return bpm / 60.0 / s.beats;
 
-        return destP[(size_t) (dLfo1Rate + l)]->convertFrom0to1 (rateNormalised);
+        return destP[(size_t) lfoRateDest (l)]->convertFrom0to1 (rateNormalised);
     }
 
     float sourceValue (const Voice* v, int source) const noexcept
@@ -1326,7 +1423,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
         switch (source)
         {
             case env1: case env2: case env3: case env4: return v != nullptr ? v->env[(size_t) (source - env1)].level : 0.0f;
-            case lfo1: case lfo2: return v != nullptr ? v->lfoValue[(size_t) (source - lfo1)] : globalLfoValue[(size_t) (source - lfo1)];
+            case lfo1: case lfo2: case lfo3: case lfo4: return v != nullptr ? v->lfoValue[(size_t) lfoOf (source)] : globalLfoValue[(size_t) lfoOf (source)];
             case velocity:   return v != nullptr ? v->velocity : 0.0f;
             case modWheel:   return wheel;
             case aftertouch: return juce::jmax (channelPressure, v != nullptr && v->note >= 0 ? polyPressure[(size_t) v->note] : 0.0f);
@@ -1350,18 +1447,50 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 if (! shared.idle[(size_t) o])
                     for (int f = 0; f < 9; ++f)
                         each (oscDest (o, f));
+
+            for (int d = dEndOfOscillators; d < numDestinations; ++d)
+                each (d);
         };
 
         inUse ([&] (int d) { value[(size_t) d] = shared.base[(size_t) d]; });
 
         if (shared.anyModulation)
+        {
+            const auto reach = [&] (const auto& slot, float amount)
+            {
+                const auto toFilter = v != nullptr && slot.source >= env1 && slot.source <= env4
+                                      && slot.destination >= dF1Cutoff && slot.destination <= dF2Drive;
+                value[(size_t) slot.destination] += amount * (toFilter ? v->toFilter[(size_t) (slot.source - env1)] : sourceValue (v, slot.source));
+            };
+
+            // The slots moving another slot's depth first, each at its own depth (one level: a depth slot's
+            // own depth moved by another is left as its knob has it).
+            bool depthMoved = false;
+
             for (auto& slot : shared.slots)
-                if (slot.source != 0 && slot.destination >= 0 && slot.destination < numDestinations)
+                if (slot.source != 0 && slot.destination >= firstSlotDepth && slot.destination < numDestinations)
                 {
-                    const auto toFilter = v != nullptr && slot.source >= env1 && slot.source <= env4
-                                          && slot.destination >= dF1Cutoff && slot.destination <= dF2Drive;
-                    value[(size_t) slot.destination] += slot.amount * (toFilter ? v->toFilter[(size_t) (slot.source - env1)] : sourceValue (v, slot.source));
+                    reach (slot, slot.amount);
+                    depthMoved = true;
                 }
+
+            // Then the rest, each at its depth as moved (its knob's own where nothing moves it).
+            for (int i = 0; i < numSlots; ++i)
+            {
+                const auto& slot = shared.slots[(size_t) i];
+
+                if (slot.source == 0 || slot.destination < 0 || slot.destination >= firstSlotDepth)
+                    continue;
+
+                auto amount = slot.amount;
+                const auto d = firstSlotDepth + i;
+
+                if (depthMoved && ! juce::exactlyEqual (value[(size_t) d], shared.base[(size_t) d]))
+                    amount = plain (d, juce::jlimit (0.0f, 1.0f, value[(size_t) d])) * 0.01f;
+
+                reach (slot, amount);
+            }
+        }
 
         // Cutoff (CC 74) takes both filters down as far as eight octaves; Resonance (CC 71) up toward the most.
         if (brightness < 1.0f || ccResonance > 0.0f)
@@ -1377,7 +1506,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
     /** A destination of an idle oscillator, whose settings aren't worked out. */
     bool idleDestination (int d) const noexcept
     {
-        return d >= numFirstDestinations && shared.idle[(size_t) (numFirstOscillators + (d - numFirstDestinations) / 9)];
+        return d >= numFirstDestinations && d < dEndOfOscillators && shared.idle[(size_t) (numFirstOscillators + (d - numFirstDestinations) / 9)];
     }
 
     float plain (int d, float normalised) const   { return destP[(size_t) d]->convertFrom0to1 (normalised); }
@@ -1924,7 +2053,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
 
         for (int l = 0; l < numLfos; ++l)
         {
-            const auto hz = lfoHz (l, global[(size_t) (dLfo1Rate + l)]);
+            const auto hz = lfoHz (l, global[(size_t) lfoRateDest (l)]);
             globalLfoPhase[(size_t) l] += hz * controlInterval / rate;
             globalLfoValue[(size_t) l] = lfoShape (shared.lfo[(size_t) l].shape, globalLfoPhase[(size_t) l] + shared.lfo[(size_t) l].phase, shared.lfo[(size_t) l].steps);
         }
@@ -1945,7 +2074,7 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
             }
 
             for (int l = 0; l < numLfos; ++l)
-                v.lfoPhase[(size_t) l] += lfoHz (l, v.value[(size_t) (dLfo1Rate + l)]) * controlInterval / rate;
+                v.lfoPhase[(size_t) l] += lfoHz (l, v.value[(size_t) lfoRateDest (l)]) * controlInterval / rate;
 
             if (v.filterRise > 0.0f)
             {
@@ -2267,8 +2396,125 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 if (const auto b = position->getBpm())
                     bpm = juce::jlimit (20.0, 999.0, *b);
 
+        // Built-in Arpeggiator: bypassed completely when arpOn is false for bit-identity.
+        const juce::MidiBuffer* activeMidi = &midi;
+        if (arpOn != nullptr && arpOn->get())
+        {
+            arpOut.clear();
+            const auto divBeats = divisionBeats (arpDivision->getIndex());
+            const auto baseStep = juce::jmax (64.0, divBeats * (60.0 / bpm) * rate);
+            const auto sw = juce::jlimit (0.5, 0.75, (double) arpSwing->get() * 0.01);
+            const auto gateFrac = juce::jlimit (0.05, 0.99, (double) arpGate->get() * 0.01);
+            const auto modeIdx = arpMode->getIndex();
+            const auto numOct = juce::jlimit (1, 4, juce::roundToInt (arpOctaves->get()));
+
+            auto rebuildArp = [&]
+            {
+                arpOrder.clear();
+                if (arpHeld.empty())
+                    return;
+                auto base = arpHeld;
+                if (modeIdx != 4)
+                    std::sort (base.begin(), base.end(), [] (const ArpNote& a, const ArpNote& b) { return a.pitch < b.pitch; });
+                for (int o = 0; o < numOct; ++o)
+                    for (const auto& an : base)
+                        if (an.pitch + 12 * o <= 127)
+                            arpOrder.push_back ({ an.pitch + 12 * o, an.velocity });
+                if (modeIdx == 1 || modeIdx == 3)
+                    std::reverse (arpOrder.begin(), arpOrder.end());
+                if ((modeIdx == 2 || modeIdx == 3) && arpOrder.size() > 2)
+                    for (size_t k = arpOrder.size() - 2; k >= 1; --k)
+                        arpOrder.push_back (arpOrder[k]);
+            };
+
+            auto it = midi.cbegin();
+            for (int sIdx = 0; sIdx < n; ++sIdx)
+            {
+                bool changed = false;
+                while (it != midi.cend() && (*it).samplePosition <= sIdx)
+                {
+                    const auto m = (*it).getMessage();
+                    ++it;
+                    if (m.isNoteOn())
+                    {
+                        const bool wasEmpty = arpHeld.empty();
+                        const auto p = m.getNoteNumber();
+                        arpHeld.erase (std::remove_if (arpHeld.begin(), arpHeld.end(), [p] (const ArpNote& a) { return a.pitch == p; }), arpHeld.end());
+                        arpHeld.push_back ({ p, m.getFloatVelocity() });
+                        if (wasEmpty) { arpStep = 0; arpNextStep = 0.0; }
+                        changed = true;
+                    }
+                    else if (m.isNoteOff())
+                    {
+                        const auto p = m.getNoteNumber();
+                        arpHeld.erase (std::remove_if (arpHeld.begin(), arpHeld.end(), [p] (const ArpNote& a) { return a.pitch == p; }), arpHeld.end());
+                        changed = true;
+                    }
+                    else if (m.isAllNotesOff() || m.isAllSoundOff())
+                    {
+                        arpHeld.clear(); arpOrder.clear();
+                        if (arpActivePitch >= 0) { arpOut.addEvent (juce::MidiMessage::noteOff (1, arpActivePitch), sIdx); arpActivePitch = -1; }
+                        arpOut.addEvent (m, sIdx);
+                    }
+                    else
+                    {
+                        arpOut.addEvent (m, sIdx);
+                    }
+                }
+                if (changed)
+                {
+                    rebuildArp();
+                    if (arpOrder.empty() && arpActivePitch >= 0)
+                    {
+                        arpOut.addEvent (juce::MidiMessage::noteOff (1, arpActivePitch), sIdx);
+                        arpActivePitch = -1;
+                        arpOffCountdown = 0;
+                    }
+                }
+                if (arpActivePitch >= 0 && arpOffCountdown > 0 && --arpOffCountdown == 0)
+                {
+                    arpOut.addEvent (juce::MidiMessage::noteOff (1, arpActivePitch), sIdx);
+                    arpActivePitch = -1;
+                }
+                if (! arpOrder.empty())
+                {
+                    if (arpNextStep <= 0.0)
+                    {
+                        if (arpActivePitch >= 0)
+                            arpOut.addEvent (juce::MidiMessage::noteOff (1, arpActivePitch), sIdx);
+                        int pick = 0;
+                        if (modeIdx == 5)
+                        {
+                            arpRng = arpRng * 1664525u + 1013904223u;
+                            pick = (int) ((arpRng >> 8) % (juce::uint32) arpOrder.size());
+                        }
+                        else
+                            pick = arpStep % (int) arpOrder.size();
+
+                        const auto& chosen = arpOrder[(size_t) pick];
+                        arpOut.addEvent (juce::MidiMessage::noteOn (1, chosen.pitch, chosen.velocity), sIdx);
+                        arpActivePitch = chosen.pitch;
+                        const double stepLen = (arpStep % 2 == 0) ? (baseStep * 2.0 * sw) : (baseStep * 2.0 * (1.0 - sw));
+                        arpNextStep += juce::jmax (32.0, stepLen);
+                        arpOffCountdown = juce::jmax (16, (int) std::lround (stepLen * gateFrac));
+                        ++arpStep;
+                    }
+                    arpNextStep -= 1.0;
+                }
+            }
+            activeMidi = &arpOut;
+        }
+        else if (arpActivePitch >= 0)
+        {
+            arpHeld.clear();
+            arpOrder.clear();
+            arpActivePitch = -1;
+            arpOffCountdown = 0;
+        }
+
         std::array<float, controlInterval> l {}, r {};
-        auto event = midi.cbegin();
+        auto event = activeMidi->cbegin();
+        const auto eventEnd = activeMidi->cend();
         int pos = 0;
 
         while (pos < n)
@@ -2280,13 +2526,13 @@ struct BuiltInEffects::BasicSynthProcessor::Engine
                 tick();
             }
 
-            for (; event != midi.cend() && (*event).samplePosition <= pos; ++event)
+            for (; event != eventEnd && (*event).samplePosition <= pos; ++event)
                 handle ((*event).getMessage());
 
             const auto toTick = (int) (controlInterval - clock % controlInterval);
             auto end = juce::jmin (n, pos + toTick);
 
-            if (event != midi.cend())
+            if (event != eventEnd)
                 end = juce::jmin (end, juce::jmax (pos + 1, (*event).samplePosition));
 
             const auto count = end - pos;
@@ -2458,7 +2704,7 @@ BasicSynthProcessor::BasicSynthProcessor()
     keep (addFloat ("glideTime", "Glide", time (2000.0f), 0.0f, "ms"));
     keep (addFloat ("bendRange", "Bend Range", { 0.0f, 24.0f, 1.0f }, 2.0f, "st"));
 
-    for (int l = 1; l <= numLfos; ++l)
+    const auto addLfo = [&] (int l)
     {
         const auto id = "lfo" + juce::String (l);
         const auto name = "LFO " + juce::String (l) + " ";
@@ -2477,7 +2723,10 @@ BasicSynthProcessor::BasicSynthProcessor()
             const auto start = (s % 4 == 1) ? 100.0f : (s % 2 == 0 ? -40.0f : 30.0f);
             keep (addFloat (id + "Step" + juce::String (s), name + "Step " + juce::String (s), bipolar, start, "+%"));
         }
-    }
+    };
+
+    for (int l = 1; l <= numFirstLfos; ++l)
+        addLfo (l);
 
     juce::StringArray destinationChoices { "None" };
     destinationChoices.addArray (destinationNames());
@@ -2524,7 +2773,7 @@ BasicSynthProcessor::BasicSynthProcessor()
 
     // Added in 0.20.0's signal console, after the rest so every earlier parameter keeps its place:
     // slots 9 to 16, and a level envelope for each oscillator (off: its level as the knob has it).
-    for (int s = 9; s <= numSlots; ++s)
+    for (int s = 9; s <= numFirstSlots; ++s)
         addSlot (s);
 
     const auto addLevelEnvelope = [&] (int o)
@@ -2552,6 +2801,24 @@ BasicSynthProcessor::BasicSynthProcessor()
     for (int o = 1; o <= numOscillators; ++o)
         keep (addChoice ("osc" + juce::String (o) + "FmFrom", "Osc " + juce::String (o) + " FM From", fmFromNames(), 0));
 
+    // Added in 0.23.0, after everything else so every earlier parameter keeps its place: LFOs 3 and 4, and slots
+    // 17 to 24. A slot is off until it has a source, so a patch or session that doesn't name them sounds as it did.
+    for (int l = numFirstLfos + 1; l <= numLfos; ++l)
+        addLfo (l);
+
+    for (int s = numFirstSlots + 1; s <= numSlots; ++s)
+        addSlot (s);
+
+    // Added in 0.23.0: built-in arpeggiator and patch scene morphing ("Evolve"), off by default.
+    keep (addBool   ("arpOn", "Arp On", false));
+    keep (addChoice ("arpMode", "Arp Mode", { "Up", "Down", "Up-Down", "Down-Up", "As Played", "Random" }, 0));
+    keep (addChoice ("arpDivision", "Arp Rate", divisionNames(), 13)); // 1/16
+    keep (addFloat  ("arpOctaves", "Arp Octaves", { 1.0f, 4.0f, 1.0f }, 1.0f, "oct"));
+    keep (addFloat  ("arpGate", "Arp Gate", { 5.0f, 100.0f }, 75.0f, "%"));
+    keep (addFloat  ("arpSwing", "Arp Swing", { 50.0f, 75.0f }, 50.0f, "%"));
+    keep (addFloat  ("evolve", "Evolve", percent, 0.0f, "%"));
+    keep (addChoice ("sceneCount", "Scenes", { "Off", "2 Scenes", "3 Scenes", "4 Scenes" }, 0));
+
     engine = std::make_unique<Engine> (*this);
     engine->bind();
     WaveTables::get (WaveTables::Table::analog);   // the tables, built now rather than on the audio thread
@@ -2564,7 +2831,7 @@ juce::StringArray BasicSynthProcessor::parameterGroups() const
     for (int o = 1; o <= WaveSynth::numOscillators; ++o)
         groups.add ("Oscillator " + juce::String (o));
 
-    groups.addArray ({ "Sub and Noise", "Filters", "Amp and Voice", "Envelopes", "LFOs", "Modulation Slots", "Macros", "Effects" });
+    groups.addArray ({ "Sub and Noise", "Filters", "Amp and Voice", "Envelopes", "LFOs", "Modulation Slots", "Macros", "Effects", "Arpeggiator & Scenes" });
     return groups;
 }
 
@@ -2578,6 +2845,7 @@ juce::String BasicSynthProcessor::parameterGroupOf (const juce::String& id) cons
     if (id.startsWith ("mod"))                               return "Modulation Slots";
     if (id.startsWith ("macro"))                             return "Macros";
     if (id.startsWith ("fx"))                                return "Effects";
+    if (id.startsWith ("arp") || id == "evolve" || id == "sceneCount") return "Arpeggiator & Scenes";
     return "Amp and Voice";   // the amp, the voice mode, glide and bend
 }
 
@@ -2692,6 +2960,76 @@ void BasicSynthProcessor::setAllToDefault()
 
     for (int o = 0; o < WaveSynth::numOscillators; ++o)
         setSampledTable (o, nullptr);
+
+    clearScenes();
+}
+
+void BasicSynthProcessor::captureScene (int index)
+{
+    if (! juce::isPositiveAndBelow (index, maxScenes))
+        return;
+
+    std::array<float, WaveSynth::numDestinations> snap {};
+    const auto& ids = WaveSynth::destinationIds();
+    for (int d = 0; d < WaveSynth::numDestinations; ++d)
+        if (auto* p = parameter (ids[d]))
+            snap[(size_t) d] = p->getValue();
+
+    int count = 0;
+    {
+        const juce::SpinLock::ScopedLockType sl (sceneLock);
+        sceneValues[(size_t) index] = snap;
+        sceneCaptured[(size_t) index] = true;
+        for (int i = 0; i < maxScenes; ++i)
+            if (sceneCaptured[(size_t) i])
+                count = i + 1;
+    }
+
+    if (count >= 2)
+        if (auto* sc = dynamic_cast<juce::AudioParameterChoice*> (parameter ("sceneCount")))
+            if (sc->getIndex() < count - 1)
+                sc->setValueNotifyingHost (sc->convertTo0to1 ((float) (count - 1)));
+
+    stateEdited();
+}
+
+void BasicSynthProcessor::recallScene (int index)
+{
+    if (! juce::isPositiveAndBelow (index, maxScenes))
+        return;
+
+    std::array<float, WaveSynth::numDestinations> snap {};
+    {
+        const juce::SpinLock::ScopedLockType sl (sceneLock);
+        if (! sceneCaptured[(size_t) index])
+            return;
+        snap = sceneValues[(size_t) index];
+    }
+
+    const auto& ids = WaveSynth::destinationIds();
+    for (int d = 0; d < WaveSynth::numDestinations; ++d)
+        if (auto* p = parameter (ids[d]))
+            p->setValueNotifyingHost (snap[(size_t) d]);
+}
+
+void BasicSynthProcessor::clearScenes()
+{
+    const juce::SpinLock::ScopedLockType sl (sceneLock);
+    sceneCaptured.fill (false);
+    for (auto& s : sceneValues) s.fill (0.0f);
+}
+
+bool BasicSynthProcessor::hasScene (int index) const noexcept
+{
+    return juce::isPositiveAndBelow (index, maxScenes) && sceneCaptured[(size_t) index];
+}
+
+int BasicSynthProcessor::getSceneCount() const noexcept
+{
+    int n = 0;
+    for (bool b : sceneCaptured)
+        if (b) ++n;
+    return n;
 }
 
 void BasicSynthProcessor::loadPatch (int index)
@@ -3001,6 +3339,18 @@ void BasicSynthProcessor::addToState (juce::XmlElement& xml) const
     for (int o = 0; o < WaveSynth::numOscillators; ++o)
         if (sampled[(size_t) o] != nullptr)
             xml.addChildElement (sampledElement (o).release());
+
+    for (int sc = 0; sc < maxScenes; ++sc)
+    {
+        if (! sceneCaptured[(size_t) sc])
+            continue;
+        auto* el = xml.createNewChildElement ("Scene");
+        el->setAttribute ("index", sc);
+        juce::StringArray vals;
+        for (int d = 0; d < WaveSynth::numDestinations; ++d)
+            vals.add (juce::String (sceneValues[(size_t) sc][(size_t) d], 6));
+        el->setAttribute ("values", vals.joinIntoString (","));
+    }
 }
 
 std::unique_ptr<juce::XmlElement> BasicSynthProcessor::sampledElement (int o) const
@@ -3108,6 +3458,19 @@ void BasicSynthProcessor::readFromState (const juce::XmlElement& xml)
                 table = sampledFrom (*t);
 
         setSampledTable (o, table);
+    }
+
+    clearScenes();
+    for (auto* sc : xml.getChildWithTagNameIterator ("Scene"))
+    {
+        const auto idx = sc->getIntAttribute ("index", -1);
+        if (! juce::isPositiveAndBelow (idx, maxScenes))
+            continue;
+        const auto tokens = juce::StringArray::fromTokens (sc->getStringAttribute ("values"), ",", {});
+        const juce::SpinLock::ScopedLockType sl (sceneLock);
+        for (int d = 0; d < juce::jmin (WaveSynth::numDestinations, tokens.size()); ++d)
+            sceneValues[(size_t) idx][(size_t) d] = juce::jlimit (0.0f, 1.0f, tokens[d].getFloatValue());
+        sceneCaptured[(size_t) idx] = true;
     }
 }
 }

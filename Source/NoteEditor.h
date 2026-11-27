@@ -61,12 +61,13 @@ public:
         int beatsPerBar = 4;               // at the clip's start
         juce::String key;                  // the part's key ("A minor"), or empty: the tools guess it from the notes
         bool holdOver = false;             // notes may end up to a pass past the loop's end, held into the next (the Sequencer looping)
+        std::vector<ClipNote> ghostNotes;  // notes from other instrument tracks shown faintly behind the active clip
 
         bool operator== (const Shown& o) const noexcept
         {
             return clip == o.clip && juce::exactlyEqual (sampleRate, o.sampleRate) && juce::exactlyEqual (beatSeconds, o.beatSeconds)
                 && trackName == o.trackName && hasInstrument == o.hasInstrument && drums == o.drums && drumMap == o.drumMap
-                && beatsPerBar == o.beatsPerBar && key == o.key && holdOver == o.holdOver;
+                && beatsPerBar == o.beatsPerBar && key == o.key && holdOver == o.holdOver && ghostNotes == o.ghostNotes;
         }
     };
 
@@ -189,6 +190,11 @@ public:
 
     /** The chance each selected note plays on a pass (the right-click menu on a note or step). */
     void setProbability (float);
+    void setRatchets (int count);
+    void setMicroTiming (int offsetFrames);
+    void applyGroove (const NoteTools::GrooveTemplate&, float strength = 1.0f);
+    void setShowGhostNotes (bool show) noexcept                    { showGhostNotes = show; repaint(); }
+    bool isShowingGhostNotes() const noexcept                      { return showGhostNotes; }
 
     /** The key the tools use: the one set, else the part's, else one guessed from the notes. */
     NoteTools::Scale getKey() const;
@@ -292,6 +298,7 @@ private:
     juce::TextButton drumsButton { "Drums" }, toolsButton { "Tools" };
     std::optional<NoteTools::Scale> chosenKey;
     bool scaleLock = false;
+    bool showGhostNotes = true;
     juce::TextButton zoomOutButton { "-" }, zoomInButton { "+" }, fitButton { "Fit" };
     juce::ScrollBar timeScroll { false };
     void updateScroll();

@@ -1,0 +1,74 @@
+warp 0 on osc 1|4b260830d6a34f60
+warp 1 on osc 1|234cfa320f7d73a8
+warp 2 on osc 1|105d94328d0d59a7
+warp 3 on osc 1|f785bba8687ad4a5
+warp 4 on osc 1|571e0506ae292774
+warp 5 on osc 1|b4ecb3f7a86dbb93
+warp 6 on osc 1|5720e9a6bb74ba84
+warp 7 on osc 1|5cf2a8bbca01aacf
+warp 0 on osc 2|877d7066ba1f823
+warp 1 on osc 2|305cd4b2649e8801
+warp 2 on osc 2|22af81dda5dd456e
+warp 3 on osc 2|e15de0f16d4b38ba
+warp 4 on osc 2|7ed4b20643ff1c1
+warp 5 on osc 2|23ac65daee38a9f7
+warp 6 on osc 2|1d66a1b370655230
+warp 7 on osc 2|6e9a29690e6e5bd4
+warp 0 on osc 3|3d008df2948cf6a6
+warp 1 on osc 3|e727a015b26845ca
+warp 2 on osc 3|f7fcfca080d9e323
+warp 3 on osc 3|2bec61a280449c0c
+warp 4 on osc 3|8360953fac9ea5b
+warp 5 on osc 3|c4bb770cb63b0524
+warp 6 on osc 3|a156f4d93f5c8902
+warp 7 on osc 3|25952093e14fd360
+fm chain|f998396011c655a3
+level envelopes|b9910e04c1bd86ba
+level envelopes in blocks of 37|b9910e04c1bd86ba
+level envelopes in blocks of 64|b9910e04c1bd86ba
+level envelopes in blocks of 1000|b9910e04c1bd86ba
+state 0|234cfa320f7d73a8
+state 0 in blocks of 37|234cfa320f7d73a8
+state 1|e15de0f16d4b38ba
+state 1 in blocks of 37|e15de0f16d4b38ba
+state 2|c904abc1ea7c1593
+state 2 in blocks of 37|c904abc1ea7c1593
+state 3|ce23dc4bb0d08b1b
+state 3 in blocks of 37|ce23dc4bb0d08b1b
+patch 0 in blocks of 37|294431310f6e2e5b
+patch 97 in blocks of 37|cb6efb5a40f9ba7f
+patch 194 in blocks of 37|92297c099dcb8a9b
+patch 291 in blocks of 37|f01d96f4457bcf8d
+patch 388 in blocks of 37|8c7699939f591666
+patch 485 in blocks of 37|f9c017651168e0a9
+patch 582 in blocks of 37|3dea338a666130e1
+patch 679 in blocks of 37|5e16c09bf80e9fbf
+patch 776 in blocks of 37|998455edd19ba63f
+patch 873 in blocks of 37|29730462f6cb5883
+patch 970 in blocks of 37|4920cd79831bc7e9
+patch 1067 in blocks of 37|6ad1fa59fa364ec7
+patch 1164 in blocks of 37|d1497d6e6a8d3c9e
+patch 1261 in blocks of 37|73a7eecb4d191ebb
+patch 1358 in blocks of 37|7c4d8a9f4ff6a6c4
+patch 1455 in blocks of 37|81a216fdc73499a7
+patch 1552 in blocks of 37|f626085f60a0e699
+patch 1649 in blocks of 37|d95ed410b844a675
+patch 1746 in blocks of 37|d866d89276c37e63
+patch 1843 in blocks of 37|6f64f8d9e092443d
+patch 1940 in blocks of 37|8438257c9c2152ab
+patch 2037 in blocks of 37|78a0a7712723bd47
+patch 2134 in blocks of 37|c446bc290e3fc2be
+patch 2231 in blocks of 37|ea5e7bf42ee65c9
+patch 2328 in blocks of 37|eb04b91fa08d31b8
+patch 2425 in blocks of 37|db37ff0b96516d60
+patch 2522 in blocks of 37|b68506e161de4de2
+patch 2619 in blocks of 37|ad4276e5d9c55497
+patch 2716 in blocks of 37|b6cbdc3e2cbb2f74
+patch 2813 in blocks of 37|badc27b4d6491a25
+patch 2910 in blocks of 37|a6bf9766ee33aa12
+patch 3007 in blocks of 37|28f794e51d3ec32a
+patch 3104 in blocks of 37|80d8bd4a24ebcf85
+patch 3201 in blocks of 37|8655774a9b368637
+patch 3298 in blocks of 37|359e240a6fe2dd29
+patch 3395 in blocks of 37|bd5e74df73210379
+patch 3492 in blocks of 37|b821ac6eb6d506e1

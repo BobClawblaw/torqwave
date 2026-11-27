@@ -113,6 +113,9 @@ public:
         track it plays into L and R alone, with no copies. It stays first in the chain: move()
         leaves it there. */
     static bool isInstrument (const juce::AudioPluginInstance&);
+    /** True for a MIDI effect (arpeggiator, chord trigger, scale lock, note echo) that transforms
+        MIDI before an instrument on the same track (or feeds another track via midiFromTrackId). */
+    static bool isMidiFx (const juce::AudioPluginInstance&);
 
     /** Message thread: the tracks whose plug-ins' MIDI out another track plays (its
         midiFromTrackId). What their instruments put out each run is kept, at its session frames,
@@ -232,6 +235,7 @@ private:
         std::array<std::bitset<128>, 16> held; // the audio thread's: an instrument's notes on and not yet off, by channel
         juce::AudioBuffer<float> work;
         std::map<juce::String, juce::AudioProcessorParameter*> parameters;
+        std::map<juce::String, float> modBase; // unmodulated parameter base values for track modulators
         std::unique_ptr<Watcher> watcher;      // after the plug-in, so it goes first
     };
 
@@ -281,6 +285,7 @@ private:
     std::set<std::tuple<juce::uint32, juce::uint32, juce::String>> touched;   // guarded by lock
     std::map<juce::uint32, int> wide;   // 5.1 and 7.1 tracks, and their channels; guarded by lock
     std::map<juce::uint32, Routed> routes;   // by source track; guarded by lock
+    std::map<juce::uint32, TrackModulators::Runtime> modRuntimes; // audio-thread envelope follower state per track
 
     juce::SpinLock touchesLock;
     std::vector<ParameterTouch> touches;   // waiting for the message thread

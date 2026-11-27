@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(Torqwave VERSION 0.22.1 LANGUAGES C CXX)
+project(Torqwave VERSION 0.23.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -97,6 +97,10 @@ else()
 endif()
 add_library(TorqwaveStretch INTERFACE)
 target_include_directories(TorqwaveStretch SYSTEM INTERFACE "${torqwave_stretch_src}" "${CMAKE_BINARY_DIR}/signalsmith-include")
+
+# CLAP 1.2.2 C headers (MIT-licensed, vendored in ThirdParty/clap).
+add_library(TorqwaveClap INTERFACE)
+target_include_directories(TorqwaveClap SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/clap/include")
 
 # SQLite for the Sound Library: macOS and Linux have it as a system library; on Windows the
 # amalgamation of a pinned release is built in. Use a local copy of it with -DTORQWAVE_SQLITE_DIR.
@@ -293,6 +297,12 @@ target_sources(Torqwave PRIVATE
     Source/SoundControls.cpp
     Source/WaveTables.cpp
     Source/WaveSynth.cpp
+    Source/CreativeEffects.cpp
+    Source/MidiEffects.cpp
+    Source/AudioToMidi.cpp
+    Source/SfzImport.cpp
+    Source/TrackModulators.cpp
+    Source/ClapHost.cpp
     Source/WaveSynthFavourites.cpp
     Source/SignalConsole.cpp
     Source/SignalConsoleView.cpp
@@ -461,6 +471,7 @@ target_link_libraries(Torqwave PRIVATE
     TorqwaveGuide
     TorqwaveLame
     TorqwaveStretch
+    TorqwaveClap
     juce::juce_audio_utils
     juce::juce_audio_processors
     juce::juce_dsp
@@ -590,6 +601,7 @@ target_sources(TorqwaveTests PRIVATE
     Tests/BatteryKitTests.cpp
     Tests/SoundControlsTests.cpp
     Tests/WaveSynthTests.cpp
+    Tests/Release023Tests.cpp
     Tests/WaveSynthComplexTests.cpp
     Tests/SynthClickTests.cpp
     Tests/WaveSynthBankTests.cpp
@@ -769,6 +781,12 @@ target_sources(TorqwaveTests PRIVATE
     Source/SoundControls.cpp
     Source/WaveTables.cpp
     Source/WaveSynth.cpp
+    Source/CreativeEffects.cpp
+    Source/MidiEffects.cpp
+    Source/AudioToMidi.cpp
+    Source/SfzImport.cpp
+    Source/TrackModulators.cpp
+    Source/ClapHost.cpp
     Source/WaveSynthFavourites.cpp
     Source/SignalConsole.cpp
     Source/SignalConsoleView.cpp
@@ -896,6 +914,7 @@ target_link_libraries(TorqwaveTests PRIVATE
     TorqwaveGuide
     TorqwaveLame
     TorqwaveStretch
+    TorqwaveClap
     juce::juce_audio_utils
     juce::juce_audio_processors
     juce::juce_dsp

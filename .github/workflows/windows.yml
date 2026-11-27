@@ -42,6 +42,12 @@ jobs:
         shell: pwsh
         run: ./Scripts/package-windows.ps1 -Jobs 4 -SkipTests
 
+      - name: Run headless tests
+        shell: pwsh
+        run: |
+          & .\build-release-win\TorqwaveTests_artefacts\Release\TorqwaveTests.exe --headless
+          if ($LASTEXITCODE -ne 0) { throw "TorqwaveTests --headless failed" }
+
       - uses: actions/upload-artifact@v4
         with:
           name: Torqwave-windows-x64

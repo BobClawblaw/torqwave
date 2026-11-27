@@ -113,7 +113,7 @@ juce::String Turn::after() const
 
 juce::String releaseNotesFor()
 {
-    return "0.22.1";
+    return "0.23.0";
 }
 
 bool asksAboutRelease (const juce::String& request)
@@ -136,7 +136,12 @@ juce::String aboutThisRelease (bool withNotes)
 
     return line + " The user may be asking about the program, not for a change: then answer from these notes in a few lines, make no changes, and "
            "say the full list is the changelog at https://github.com/BobClawblaw/torqwave/blob/main/CHANGELOG.md. "
-           "New in 0.22.1: 58 more nine-oscillator musical club patches in Torqwave Synth's Complex folder (two new per category, "
+           "New in 0.23.0: six Live Creative FX (Delay, 4x-oversampled Distortion & Bitcrusher, Auto-Filter, Volume Shaper / Sidechain Pump, Noise Gate, Tremolo & Auto-Pan); "
+           "Torqwave Synth expanded with LFOs 3–4, 24 mod slots, Slot Depth modulation, 16-node MSEG Curve LFOs, built-in Arpeggiator, 4-scene Evolve morphing and Complex matching in Decrypt; "
+           "four Live MIDI FX (MIDI Arpeggiator, Chord Trigger, Scale Lock, Note Echo); Piano Roll ratchets, micro-timing, groove templates and ghost notes; "
+           "Audio to MIDI (melody and drums with groove extraction); Torqwave Sampler SFZ import, round-robin groups and Signalsmith Warp; "
+           "Basic Drums 8-bus multi-out pad routing; Track-level LFO and envelope follower modulators; CLAP 1.2 plug-in hosting; and headless CI tests on Windows and Linux. "
+           "0.22.1: 58 more nine-oscillator musical club patches in Torqwave Synth's Complex folder (two new per category, "
            "116 Complex patches in all, three nine-oscillator patches in every category), calibrated around -17 LUFS with parallel "
            "mono low end and stereo air; reworked website demos showcasing the Complex patches and Sequence Library patterns. "
            "0.22.0: Torqwave Synth has nine oscillators, each with FM From to choose which oscillator drives it, and a "

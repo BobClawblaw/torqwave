@@ -44,6 +44,7 @@ public:
         or its menu's Edit in Place), its Clip Effects window, the selected clips combined into
         one sound, and a clip's sound filed in the Sound Library. */
     std::function<void (juce::uint32 clipId)> onEditClip, onClipEffects, onAddToLibrary;
+    std::function<void (juce::uint32 clipId, bool drums)> onConvertToMidi;
     std::function<void (std::vector<SessionEdits::Crossfade>)> onEditCrossfades;   // to open in the crossfade editor
     std::function<void (const std::vector<juce::uint32>& clipIds)> onCombineClips;
     std::function<void (const juce::StringArray& files, int track, juce::int64 frame)> onFilesDropped;

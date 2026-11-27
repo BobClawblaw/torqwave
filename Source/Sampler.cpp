@@ -2,6 +2,8 @@
 #include "AudioFileIO.h"
 #include "FadeShape.h"
 #include "PhaseVocoder.h"
+#include "SfzImport.h"
+#include "TimeStretch.h"
 #include "WaveTables.h"
 #include "SequenceLibrary.h"
 #include "FactorySampleData.h"
@@ -441,6 +443,26 @@ SamplePtr sharedSample (const juce::File& file, juce::String& error)
         it = it->second.sample.expired() ? s.held.erase (it) : std::next (it);
 
     return sample;
+}
+
+SamplePtr warpSample (const Sample& src, double speedRatio)
+{
+    if (src.getNumFrames() <= 0 || src.rate <= 0.0 || speedRatio <= 0.0)
+        return nullptr;
+
+    const auto lengthRatio = juce::jlimit (TimeStretch::shortest, TimeStretch::longest, 1.0 / speedRatio);
+    auto stretched = TimeStretch::stretch (src.audio, lengthRatio, src.rate, {}, TimeStretch::Method::signalsmith);
+    if (stretched.getNumSamples() <= 0)
+        return nullptr;
+
+    auto out = std::make_shared<Sample>();
+    out->audio = std::move (stretched);
+    out->rate = src.rate;
+    out->name = src.name;
+    out->file = src.file;
+    out->fileRoot = src.fileRoot;
+    out->fileTune = src.fileTune;
+    return out;
 }
 
 juce::File samplesFolder()
@@ -1182,6 +1204,7 @@ void Engine::reset()
     lastNote = -1.0f;
     gainsSet = false;
     counter = 0;
+    rrCounters.fill (0);
 }
 
 void Engine::setSettings (const Settings& s)      { settings = s; }
@@ -1325,18 +1348,41 @@ void Engine::noteOn (int note, float velocity)
         if (v.active && ! v.dying && (settings.mono || (v.note == key && (v.down || v.held))))
             fade (v);
 
+    std::array<std::vector<const Zone*>, 16> rrGroups;
+
     for (auto& zone : program->zones)
         if (zone.plays (key, struck) && ! zone.span().isEmpty())
         {
-            // A zone of a choke group cuts off the others of it, as a closed hat does an open one.
-            if (zone.choke != 0)
-                for (auto& v : voices)
-                    if (v.active && ! v.dying && v.zone->choke == zone.choke)
-                        fade (v);
+            if (zone.roundRobinGroup >= 1 && zone.roundRobinGroup <= 16)
+                rrGroups[(size_t) (zone.roundRobinGroup - 1)].push_back (&zone);
+            else
+            {
+                // A zone of a choke group cuts off the others of it, as a closed hat does an open one.
+                if (zone.choke != 0)
+                    for (auto& v : voices)
+                        if (v.active && ! v.dying && v.zone->choke == zone.choke)
+                            fade (v);
 
-            if (auto* v = take())
-                start (*v, zone, key, juce::jlimit (0.0f, 1.0f, velocity));
+                if (auto* v = take())
+                    start (*v, zone, key, juce::jlimit (0.0f, 1.0f, velocity));
+            }
         }
+
+    for (size_t g = 0; g < rrGroups.size(); ++g)
+    {
+        const auto& matches = rrGroups[g];
+        if (matches.empty())
+            continue;
+
+        const auto& chosen = *matches[(size_t) (rrCounters[g]++ % (juce::uint32) matches.size())];
+        if (chosen.choke != 0)
+            for (auto& v : voices)
+                if (v.active && ! v.dying && v.zone->choke == chosen.choke)
+                    fade (v);
+
+        if (auto* v = take())
+            start (*v, chosen, key, juce::jlimit (0.0f, 1.0f, velocity));
+    }
 
     lastNote = (float) key;
 }
@@ -1442,7 +1488,10 @@ void Engine::steer (Voice& v)
 
     const auto semitones = (double) (v.note - zone.root) + s.transpose + v.glide + bend * s.bendRange
                            + 0.01 * (zone.tune + s.fine + lfo * s.lfoPitch + wheel * s.wheel * (float) std::sin (juce::MathConstants<double>::twoPi * phase));
-    v.ratio = zone.sample->rate / rate * std::pow (2.0, semitones / 12.0);
+    auto speedScale = 1.0;
+    if (zone.warp && zone.sourceBpm > 10.0f)
+        speedScale = juce::jlimit (0.25, 4.0, tempo / (double) zone.sourceBpm);
+    v.ratio = zone.sample->rate / rate * std::pow (2.0, semitones / 12.0) * speedScale;
     v.bank = bankFor (v.ratio);
     v.endFade = (float) (1.0 / juce::jmax (1.0, endFadeSeconds * rate * v.ratio));
 
@@ -2210,6 +2259,25 @@ bool SamplerProcessor::loadFactory (const juce::String& name)
     return false;
 }
 
+juce::String SamplerProcessor::loadSfz (const juce::File& sfzFile)
+{
+    auto imported = SfzImport::loadFile (sfzFile);
+    if (! imported.ok())
+        return imported.error;
+
+    slicing.on = false;
+    if (imported.hasEnvelope)
+    {
+        if (auto* p = dynamic_cast<juce::AudioParameterFloat*> (parameter ("attack")))  setExactly (*p, imported.settings.attack);
+        if (auto* p = dynamic_cast<juce::AudioParameterFloat*> (parameter ("decay")))   setExactly (*p, imported.settings.decay);
+        if (auto* p = dynamic_cast<juce::AudioParameterFloat*> (parameter ("sustain"))) setExactly (*p, imported.settings.sustain);
+        if (auto* p = dynamic_cast<juce::AudioParameterFloat*> (parameter ("release"))) setExactly (*p, imported.settings.release);
+    }
+
+    setZones (std::move (imported.zones));
+    return {};
+}
+
 EffectPresets::Texts SamplerProcessor::getPresetTexts() const
 {
     juce::XmlElement holder ("SAMPLER");
@@ -2284,6 +2352,8 @@ void SamplerProcessor::writeZones (juce::XmlElement& xml) const
         e->setAttribute ("crossfade", (double) z.crossfade);
         e->setAttribute ("loopInRelease", z.loopInRelease ? 1 : 0);
         e->setAttribute ("choke", z.choke);
+        if (z.roundRobinGroup > 0) e->setAttribute ("rrGroup", z.roundRobinGroup);
+        if (z.warp) { e->setAttribute ("warp", 1); e->setAttribute ("sourceBpm", (double) z.sourceBpm); }
     }
 }
 
@@ -2330,6 +2400,9 @@ void SamplerProcessor::readZones (const juce::XmlElement& xml)
         z.crossfade = (float) e->getDoubleAttribute ("crossfade");
         z.loopInRelease = e->getIntAttribute ("loopInRelease", 1) != 0;
         z.choke = e->getIntAttribute ("choke");
+        z.roundRobinGroup = juce::jlimit (0, 16, e->getIntAttribute ("rrGroup", 0));
+        z.warp = e->getIntAttribute ("warp", 0) != 0;
+        z.sourceBpm = juce::jlimit (20.0f, 300.0f, (float) e->getDoubleAttribute ("sourceBpm", 120.0));
 
         if (auto path = e->getStringAttribute ("file"); path.isNotEmpty())
         {

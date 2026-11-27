@@ -40,17 +40,23 @@ wide: true
 </section>
 
 <section id="new">
-  <h2>New in 0.22.1</h2>
-  <p class="lede">0.22.1 doubles Torqwave Synth's Complex folder with 58 new musical nine-oscillator club patches (two per category, 116 Complex patches in all) and reworks the site's sound demos to showcase them alongside the rewritten Sequence Library. Below those, what landed in 0.22.0 and 0.21.1.</p>
+  <h2>New in 0.23.0</h2>
+  <p class="lede">0.23.0 adds a six-plugin Live Creative FX pack, four Live MIDI FX, Torqwave Synth LFOs 3–4, 24 mod slots, Slot Depth modulation, MSEG Curves, built-in Arpeggiator and 4-scene Evolve morphing, Audio to MIDI, Sampler SFZ import + round-robin + Warp, Basic Drums 8-bus multi-out, Track Modulators, CLAP 1.2 plug-in hosting, and headless Windows/Linux CI tests. Below those, what landed in 0.22.1, 0.22.0 and 0.21.1.</p>
   <div class="numbers">
-    <div><b>9</b><span>oscillators in Torqwave Synth, FM from any of them</span></div>
+    <div><b>9</b><span>oscillators, 4 LFOs, 24 mod slots, 4 Evolve scenes</span></div>
     <div><b>3,569</b><span>synth patches in 29 categories, and 116 Complex</span></div>
+    <div><b>23</b><span>built-in live audio &amp; MIDI effects</span></div>
     <div><b>1,024</b><span>sequence presets in 37 styles, no two alike</span></div>
-    <div><b>116</b><span>starter kits for the sequencer</span></div>
-    <div><b>296</b><span>StringSwarm presets</span></div>
-    <div><b>64</b><span>drum pads, 54 synthesized sources, 15 kits</span></div>
+    <div><b>64</b><span>drum pads, 54 sources, 15 kits, 8 aux buses</span></div>
+    <div><b>CLAP</b><span>plus VST3, Audio Unit and LV2 hosting</span></div>
   </div>
   <div class="grid">
+    <div class="card"><h3>Live Creative FX pack (0.23.0)</h3><p>Six new real-time built-in effects for tracks, buses and the rack: Stereo / Ping-Pong / Tape Delay with wet ducking, multi-mode 4x-oversampled Distortion &amp; Bitcrusher, resonant Auto-Filter with LFO + envelope follower, tempo-synced Volume Shaper / Sidechain Pump with low-band split, live Noise Gate (linked surround), and Tremolo &amp; Auto-Pan.</p></div>
+    <div class="card"><h3>Torqwave Synth: 4 LFOs, 24 slots, Arp &amp; Evolve (0.23.0)</h3><p>LFOs 3 and 4, 24 modulation slots with Slot Depth as a destination, 16-node smooth MSEG Curve LFOs, a built-in tempo-synced Arpeggiator, 4-scene continuous Evolve morphing, and optional Complex (9-oscillator) matching in Decrypt — while keeping all 3,627 existing patches sample-for-sample identical.</p><p class="more"><a href="sounds/complex.html">Hear all 116 Complex patches</a></p></div>
+    <div class="card"><h3>Live MIDI FX &amp; Piano Roll upgrades (0.23.0)</h3><p>Four live MIDI effects that run in front of any instrument on the same track — MIDI Arpeggiator, Chord Trigger, Scale Lock and Note Echo — alongside Piano Roll per-note ratchets (1x–8x), micro-timing offsets, MPC/shuffle groove templates and cross-track ghost notes.</p></div>
+    <div class="card"><h3>Audio to MIDI (0.23.0)</h3><p>Right-click any audio clip in a session to extract a monophonic melody/bass line (via YIN pitch tracking) or drum loop hits (Kick, Snare, Closed/Open Hat via 3-band transient analysis plus groove offsets) straight onto a new instrument track.</p></div>
+    <div class="card"><h3>Sampler SFZ, Warp &amp; Drums Multi-Out (0.23.0)</h3><p>Torqwave Sampler now imports standard SFZ multisamples, cycles round-robin groups per zone, and supports tempo-synced Warp playback using Signalsmith Stretch. Basic Drums adds 8 stereo aux output buses for per-pad routing.</p></div>
+    <div class="card"><h3>Track Modulators, CLAP 1.2 &amp; Headless CI (0.23.0)</h3><p>Attach tempo-synced LFOs and audio envelope followers directly to any track to modulate any plug-in parameter, host native CLAP 1.2 plug-ins on macOS, Windows and Linux, and run the headless test suite automatically on Windows and Linux GitHub Actions.</p></div>
     <div class="card"><h3>116 Complex patches (0.22.0, 0.22.1)</h3><p>Four patches in each of the 29 categories (three of each four on all nine oscillators): 0.22.1 adds 58 musical, club-ready nine-oscillator sounds built with harmonic FM ratios, mono sub anchors, parallel stereo air and tempo-synced movement, calibrated around -17 LUFS and auditioned before release.</p><p class="more"><a href="sounds/complex.html">Hear all 116 Complex patches</a></p></div>
     <div class="card"><h3>Nine oscillators (0.22.0)</h3><p>Torqwave Synth has nine wavetable oscillators, each with its table, Position, warp, unison and level envelope, and each chooses which oscillator drives its FM, so FM can run two and three deep. A strip across the top of the window shows all nine, and the panels show three at a time. Every patch, preset and session you had plays exactly as before.</p><p class="more"><a href="guide/07-instruments-and-midi.html">In the guide</a></p></div>
     <div class="card"><h3>No clicks (0.22.0)</h3><p>A held sound struck again brings its envelopes back in over 4 ms rather than jumping, CC 74 and the macros glide while notes sound, and a legato slide to a harder note glides to its velocity. Drums and one-shots keep their edge. Heard before and after on the patch that clicked.</p></div>

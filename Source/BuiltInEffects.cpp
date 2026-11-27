@@ -1,4 +1,6 @@
 #include "BuiltInEffects.h"
+#include "CreativeEffects.h"
+#include "MidiEffects.h"
 #include "DrumMachine.h"
 #include "HardwareInsert.h"
 #include "SwarmGuitar.h"
@@ -145,6 +147,26 @@ namespace
                 effect = std::make_unique<MaximizerProcessor>();
             else if (d.fileOrIdentifier == transientShaperId)
                 effect = std::make_unique<TransientShaperProcessor>();
+            else if (d.fileOrIdentifier == delayId)
+                effect = std::make_unique<DelayProcessor>();
+            else if (d.fileOrIdentifier == distortionId)
+                effect = std::make_unique<DistortionProcessor>();
+            else if (d.fileOrIdentifier == autoFilterId)
+                effect = std::make_unique<AutoFilterProcessor>();
+            else if (d.fileOrIdentifier == volumeShaperId)
+                effect = std::make_unique<VolumeShaperProcessor>();
+            else if (d.fileOrIdentifier == noiseGateId)
+                effect = std::make_unique<NoiseGateProcessor>();
+            else if (d.fileOrIdentifier == tremoloId)
+                effect = std::make_unique<TremoloProcessor>();
+            else if (d.fileOrIdentifier == midiArpId)
+                effect = std::make_unique<MidiArpProcessor>();
+            else if (d.fileOrIdentifier == midiChordId)
+                effect = std::make_unique<MidiChordProcessor>();
+            else if (d.fileOrIdentifier == midiScaleId)
+                effect = std::make_unique<MidiScaleProcessor>();
+            else if (d.fileOrIdentifier == midiEchoId)
+                effect = std::make_unique<MidiEchoProcessor>();
             else if (d.fileOrIdentifier == basicSynthId)
                 effect = std::make_unique<BasicSynthProcessor>();
             else if (d.fileOrIdentifier == basicDrumsId)
@@ -193,6 +215,8 @@ juce::Array<juce::PluginDescription> getDescriptions()
 {
     return { parametricEqDescription(), compressorDescription(), limiterDescription(), chorusDescription(), flangerDescription(), phaserDescription(), reverbDescription(), convolutionDescription(),
              graphicEqDescription (10), graphicEqDescription (31), multibandDescription(), deEsserDescription(), dynamicEqDescription(), multibandWidthDescription(), exciterDescription(), maximizerDescription(), transientShaperDescription(),
+             delayDescription(), distortionDescription(), autoFilterDescription(), volumeShaperDescription(), noiseGateDescription(), tremoloDescription(),
+             midiArpDescription(), midiChordDescription(), midiScaleDescription(), midiEchoDescription(),
              basicSynthDescription(), basicDrumsDescription(), swarmGuitarDescription(), samplerDescription(), HardwareInsert::Processor::description() };
 }
 

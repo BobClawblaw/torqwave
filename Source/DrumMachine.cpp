@@ -709,6 +709,7 @@ struct Engine::Hit
     Sound sound = Sound::kick;
     int note = 0;
     int pad = 0;
+    int outputBus = 0;
     bool shaped = false;                  // whether any of its pad's own effects is on
     int source = 0;                       // the source it plays in place of its pad's own sound; 0 for none
     HitEffects effects;
@@ -2308,6 +2309,7 @@ void Engine::start (Hit& h, int pad, int note, float velocity)
     h.sound = sound;
     h.note = note;
     h.pad = pad;
+    h.outputBus = juce::jlimit (0, numAuxBuses, st.outputBus);
     h.shaped = h.effects.start (st.effects, rate);
     h.rate = rate;
     h.kick = settings.kick;
@@ -2764,6 +2766,103 @@ void Engine::render (float* left, float* right, int count)
         renderBlock (left + done, right + done, juce::jmin (chunk, count - done));
 }
 
+juce::StringArray outputBusNames()
+{
+    return { "Main", "Out 1 (Kick)", "Out 2 (Snare)", "Out 3 (Clap)", "Out 4 (Hats)",
+             "Out 5 (Toms)", "Out 6 (Cymbals)", "Out 7 (Perc)", "Out 8 (Aux)" };
+}
+
+void Engine::renderMultiOut (float* mainL, float* mainR,
+                             std::array<float*, numAuxBuses> auxL, std::array<float*, numAuxBuses> auxR,
+                             int count)
+{
+    if (count <= 0)
+        return;
+
+    std::fill (mainL, mainL + count, 0.0f);
+    std::fill (mainR, mainR + count, 0.0f);
+    for (int b = 0; b < numAuxBuses; ++b)
+    {
+        if (auxL[(size_t) b] != nullptr) std::fill (auxL[(size_t) b], auxL[(size_t) b] + count, 0.0f);
+        if (auxR[(size_t) b] != nullptr) std::fill (auxR[(size_t) b], auxR[(size_t) b] + count, 0.0f);
+    }
+
+    auto routeHit = [&] (Hit& h, bool fadingOut, int done, int n)
+    {
+        const auto bus = h.outputBus;
+        float* dstL = (bus >= 1 && bus <= numAuxBuses && auxL[(size_t) (bus - 1)] != nullptr)
+            ? (auxL[(size_t) (bus - 1)] + done) : (mainL + done);
+        float* dstR = (bus >= 1 && bus <= numAuxBuses && auxR[(size_t) (bus - 1)] != nullptr)
+            ? (auxR[(size_t) (bus - 1)] + done) : (mainR + done);
+
+        for (int i = 0; i < n && h.active; ++i)
+        {
+            float l, r;
+            voice (h, l, r);
+            if (h.drive > 0.0f) { l = std::tanh (h.drive * l) * h.driveNorm; r = std::tanh (h.drive * r) * h.driveNorm; }
+            if (h.tilt > 0.0f) { h.tiltL += h.tiltK * (l - h.tiltL); h.tiltR += h.tiltK * (r - h.tiltR); l = h.tiltL + h.tilt * (l - h.tiltL); r = h.tiltR + h.tilt * (r - h.tiltR); }
+            if (h.filter > 0)
+            {
+                h.filterL.run (l); h.filterR.run (r);
+                l = h.filter == 1 ? h.filterL.lp : h.filter == 2 ? h.filterL.bp * h.filterGain : h.filterL.hp;
+                r = h.filter == 1 ? h.filterR.lp : h.filter == 2 ? h.filterR.bp * h.filterGain : h.filterR.hp;
+            }
+            if (h.crushStep > 0.0f)
+            {
+                if ((h.holdPhase += h.holdInc) >= 1.0f) { h.holdPhase -= 1.0f; h.heldL = std::round (l / h.crushStep) * h.crushStep; h.heldR = std::round (r / h.crushStep) * h.crushStep; }
+                l = h.heldL; r = h.heldR;
+            }
+            if (h.shaped)
+                h.effects.run (l, r, h.age);
+
+            auto g = 1.0f;
+            if (h.age < h.rise) g = (float) h.age / (float) h.rise;
+            if (const auto remaining = h.length - h.age; remaining < h.tail) g *= (float) juce::jmax ((juce::int64) 0, remaining) / (float) h.tail;
+            if (fadingOut) g *= (float) h.fade / (float) h.fadeLength;
+
+            l *= g * h.gainL;
+            r *= g * h.gainR;
+            dstL[i] += l;
+            dstR[i] += r;
+            sendReverbL[(size_t) i] += l * h.sendReverb;
+            sendReverbR[(size_t) i] += r * h.sendReverb;
+            sendDelayL[(size_t) i] += l * h.sendDelay;
+            sendDelayR[(size_t) i] += r * h.sendDelay;
+
+            if (++h.age >= h.length || (fadingOut && --h.fade <= 0))
+                h.active = false;
+        }
+    };
+
+    for (int done = 0; done < count; done += chunk)
+    {
+        const auto n = juce::jmin (chunk, count - done);
+        for (auto* send : { &sendReverbL, &sendReverbR, &sendDelayL, &sendDelayR })
+            std::fill (send->begin(), send->begin() + n, 0.0f);
+
+        for (size_t i = 0; i < hits.size(); ++i)
+        {
+            routeHit (hits[i], false, done, n);
+            routeHit (fading[2 * i], true, done, n);
+            routeHit (fading[2 * i + 1], true, done, n);
+        }
+        for (size_t i = 0; i < userHits.size(); ++i)
+        {
+            routeHit (userHits[i], false, done, n);
+            routeHit (userFading[2 * i], true, done, n);
+            routeHit (userFading[2 * i + 1], true, done, n);
+        }
+        renderEffects (mainL + done, mainR + done, n);
+
+        for (int i = 0; i < n; ++i)
+        {
+            const auto out = outputGain.getNextValue();
+            mainL[done + i] *= out;
+            mainR[done + i] *= out;
+        }
+    }
+}
+
 void Engine::renderEffects (float* left, float* right, int count)
 {
     if (delayL.empty())
@@ -3031,7 +3130,7 @@ KitSettings BasicDrumsProcessor::currentSettings() const
         const auto& p = sounds[i];
         k.sounds[i] = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
                         p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
-                        typeAt ((Sound) i, p.type->getIndex()), p.start->get(), p.reverse->get(), p.bend->get(), getEffects ((int) i), getChoke ((int) i), getSource ((int) i) };
+                        typeAt ((Sound) i, p.type->getIndex()), p.start->get(), p.reverse->get(), p.bend->get(), getEffects ((int) i), getChoke ((int) i), getSource ((int) i), getOutputBus ((int) i) };
     }
 
     for (size_t u = 0; u < users.size(); ++u)
@@ -3039,7 +3138,7 @@ KitSettings BasicDrumsProcessor::currentSettings() const
         const auto& p = users[u];
         k.user[u].settings = { p.tune->get(), p.decay->get(), p.tone->get(), p.level->get(), p.pan->get(), p.drive->get(),
                                p.filter->getIndex(), p.cutoff->get(), p.resonance->get(), p.crush->get(), p.reverb->get(), p.delay->get(),
-                               sampleType, p.start->get(), p.reverse->get(), p.bend->get(), getEffects (numSounds + (int) u), getChoke (numSounds + (int) u), getSource (numSounds + (int) u) };
+                               sampleType, p.start->get(), p.reverse->get(), p.bend->get(), getEffects (numSounds + (int) u), getChoke (numSounds + (int) u), getSource (numSounds + (int) u), getOutputBus (numSounds + (int) u) };
         k.user[u].note = userNotes[u].load (std::memory_order_relaxed);
     }
 
@@ -3607,6 +3706,24 @@ void BasicDrumsProcessor::setChoke (int pad, int group)
     }
 }
 
+int BasicDrumsProcessor::getOutputBus (int pad) const
+{
+    return outputBuses[(size_t) juce::jlimit (0, numPads - 1, pad)].load (std::memory_order_relaxed);
+}
+
+void BasicDrumsProcessor::setOutputBus (int pad, int bus)
+{
+    if (! juce::isPositiveAndBelow (pad, numPads))
+        return;
+
+    bus = juce::jlimit (0, numAuxBuses, bus);
+    if (outputBuses[(size_t) pad].exchange (bus) != bus)
+    {
+        padsVersion.fetch_add (1);
+        stateEdited();
+    }
+}
+
 void BasicDrumsProcessor::setUserDefaults (const SoundParameters& p)
 {
     const auto d = defaultUserSettings();
@@ -3648,6 +3765,9 @@ void BasicDrumsProcessor::resetPads()
     for (auto& s : sources)
         s.store (0);
 
+    for (auto& b : outputBuses)
+        b.store (0);
+
     samplesVersion.fetch_add (1);
     padsVersion.fetch_add (1);
 }
@@ -3664,6 +3784,7 @@ void BasicDrumsProcessor::clearPad (int pad)
     userNotes[u].store (firstUserNote + (int) u);
     chokes[(size_t) pad].store (0);
     sources[(size_t) pad].store (0);
+    outputBuses[(size_t) pad].store (0);
     padsVersion.fetch_add (1);
     setEffects (pad, {});
     setLayers (pad, {});
@@ -3764,9 +3885,9 @@ void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
     {
         const auto note = userNotes[(size_t) u].load();
 
-        const auto choke = getChoke (numSounds + u), source = getSource (numSounds + u);
+        const auto choke = getChoke (numSounds + u), source = getSource (numSounds + u), bus = getOutputBus (numSounds + u);
 
-        if (userNames[(size_t) u].isEmpty() && userColours[(size_t) u].isTransparent() && note == firstUserNote + u && choke == 0 && source == 0)
+        if (userNames[(size_t) u].isEmpty() && userColours[(size_t) u].isTransparent() && note == firstUserNote + u && choke == 0 && source == 0 && bus == 0)
             continue;
 
         auto* e = all.createNewChildElement ("USER");
@@ -3780,13 +3901,16 @@ void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
 
         if (source != 0)
             e->setAttribute ("source", sourceInfo (source).id);
+
+        if (bus != 0)
+            e->setAttribute ("outputBus", bus);
     }
 
     for (int i = 0; i < numSounds; ++i)
     {
-        const auto choke = getChoke (i), source = getSource (i);
+        const auto choke = getChoke (i), source = getSource (i), bus = getOutputBus (i);
 
-        if (soundNames[(size_t) i].isEmpty() && soundColours[(size_t) i].isTransparent() && choke == 0 && source == 0)
+        if (soundNames[(size_t) i].isEmpty() && soundColours[(size_t) i].isTransparent() && choke == 0 && source == 0 && bus == 0)
             continue;
 
         auto* e = all.createNewChildElement ("SOUND");
@@ -3799,6 +3923,9 @@ void BasicDrumsProcessor::writePads (juce::XmlElement& xml) const
 
         if (source != 0)
             e->setAttribute ("source", sourceInfo (source).id);
+
+        if (bus != 0)
+            e->setAttribute ("outputBus", bus);
     }
 
     if (all.getNumChildElements() > 0)
@@ -3818,6 +3945,7 @@ void BasicDrumsProcessor::readPads (const juce::XmlElement& xml)
                     soundColours[(size_t) i] = juce::Colour::fromString (e->getStringAttribute ("colour", "00000000"));
                     chokes[(size_t) i].store (juce::jlimit (0, numChokeGroups, e->getIntAttribute ("choke")));
                     sources[(size_t) i].store (sourceWithId (e->getStringAttribute ("source")));
+                    outputBuses[(size_t) i].store (juce::jlimit (0, numAuxBuses, e->getIntAttribute ("outputBus")));
                 }
 
     if (const auto* all = xml.getChildByName ("PADS"))
@@ -3829,6 +3957,7 @@ void BasicDrumsProcessor::readPads (const juce::XmlElement& xml)
                 userNotes[(size_t) u].store (juce::jlimit (0, 127, e->getIntAttribute ("note", firstUserNote + u)));
                 chokes[(size_t) (numSounds + u)].store (juce::jlimit (0, numChokeGroups, e->getIntAttribute ("choke")));
                 sources[(size_t) (numSounds + u)].store (sourceWithId (e->getStringAttribute ("source")));
+                outputBuses[(size_t) (numSounds + u)].store (juce::jlimit (0, numAuxBuses, e->getIntAttribute ("outputBus")));
             }
 
     padsVersion.fetch_add (1);
