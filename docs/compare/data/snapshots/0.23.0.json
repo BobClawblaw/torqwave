@@ -6278,5 +6278,38 @@
     }
    }
   }
- }
+ },
+ "hero_tagline": "Free, open-source audio editor + DAW in one — macOS, Windows & Linux",
+ "hero_cards": [
+  {
+   "icon": "fx",
+   "title": "6 Live Creative FX",
+   "body": "Delay with wet ducking, 4x Distortion, Auto-Filter, Volume Shaper, Noise Gate & Auto-Pan"
+  },
+  {
+   "icon": "synth",
+   "title": "Torqwave Synth Upgraded",
+   "body": "4 LFOs, 24 mod slots, Slot Depth, 16-node Curve LFO, built-in Arp, 4 Evolve scenes & 116 Complex"
+  },
+  {
+   "icon": "midi",
+   "title": "Live MIDI FX & Piano Roll",
+   "body": "MIDI Arp, Chord Trigger, Scale Lock, Note Echo + ratchets (1x-8x), micro-timing, grooves & ghosts"
+  },
+  {
+   "icon": "wave",
+   "title": "Audio to MIDI (Pure DSP)",
+   "body": "Convert audio clips to Melody (YIN pitch) or Drums (3-band Kick/Snare/Hat + groove offsets)"
+  },
+  {
+   "icon": "drums",
+   "title": "Sampler SFZ & 8-Bus Drums",
+   "body": "Standard SFZ import, round-robin groups, Signalsmith Warp + Basic Drums 8 stereo Aux buses"
+  },
+  {
+   "icon": "plug",
+   "title": "Track Modulators & CLAP 1.2",
+   "body": "Track LFO & Env Follower for any plug-in, native CLAP 1.2 hosting & headless CI tests"
+  }
+ ]
 }

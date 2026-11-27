@@ -7,22 +7,32 @@
 Python's standard library only. The data is data/comparison.json (rows, products, method) and one file per
 Torqwave release in data/snapshots/. The newest snapshot is drawn; every snapshot feeds the trend.
 """
-import json, os, re, shutil, subprocess, sys
+import json, math, os, re, shutil, subprocess, sys
 from html import escape
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
 OUT = os.path.join(HERE, "graphics")
 
-# The Dark theme's palette (Source/Theme.cpp), so the graphics sit beside the app's screenshots.
-BG, SURFACE, RAISED, LINE, LINE2 = "#111317", "#16191d", "#1d2126", "#2a2f36", "#434a54"
-WHITE, TEXT, DIM, FAINT = "#ffffff", "#d8dde3", "#8b939e", "#6b737d"
-GOOD, WARN, ACCENT, WAVE = "#4cc38a", "#e3c74f", "#4a9fe0", "#4fc3a1"
-FONT = "Helvetica Neue, Helvetica, Arial, sans-serif"
+# Studio Obsidian + Luminous Mint/Cyan palette (inspired by Torqwave Dark theme with flagship studio depth).
+BG_TOP, BG_MID, BG_BOT = "#080b11", "#0c111b", "#080c14"
+SURFACE, SURFACE_HI = "#111724", "#172031"
+RAISED, RAISED_HI = "#151d2d", "#1d283d"
+LINE, LINE2 = "#232e42", "#374660"
+WHITE, TEXT, DIM, FAINT = "#f8fafc", "#dce3ee", "#8e9cb2", "#64728a"
+GOOD, GOOD_DK = "#34e8a8", "#18a877"
+WARN, WARN_DK = "#f4ca53", "#a88321"
+ACCENT, CYAN = "#4ea8ff", "#38d9f5"
+WAVE = "#34e8a8"
+FONT = "SF Pro Display, -apple-system, BlinkMacSystemFont, Helvetica Neue, Inter, Arial, sans-serif"
 W, H = 1600, 900
-SHORT = {"editing": "Editing", "repair": "Repair", "loudness_analysis": "Loudness", "multitrack": "Multitrack", "midi": "MIDI",
-         "instruments": "Instruments", "plugins": "Plug-ins", "picture": "Picture", "library": "Library", "ai": "AI help",
-         "platform": "Platforms"}
+
+SHORT = {
+    "editing": "Editing", "repair": "Repair", "loudness_analysis": "Loudness",
+    "multitrack": "Multitrack", "midi": "MIDI", "instruments": "Instruments",
+    "plugins": "Plug-ins", "picture": "Picture", "library": "Library",
+    "ai": "AI help", "platform": "Platforms",
+}
 WORD = {"yes": "Yes", "partial": "Partial", "no": "No", "not confirmed": "Not confirmed", "info": ""}
 
 
@@ -60,10 +70,11 @@ def label(defs, snap, pid):
 
 
 def own_columns(defs, snap):
-    """Torqwave's columns in a table: the release, and the earlier release beside it only when a row's
-    value differs between them. Two columns alike in every row say nothing the one does not."""
     P = snap["products"]
-    if "torqwave_prev" in P and any(P["torqwave"]["cells"][r["id"]]["value"] != P["torqwave_prev"]["cells"][r["id"]]["value"] for r in all_rows(defs)):
+    if "torqwave_prev" in P and any(
+        P["torqwave"]["cells"][r["id"]]["value"] != P["torqwave_prev"]["cells"][r["id"]]["value"]
+        for r in all_rows(defs)
+    ):
         return ["torqwave", "torqwave_prev"]
     return ["torqwave"]
 
@@ -73,56 +84,18 @@ def product_columns(defs, snap):
     return [p["id"] for p in defs["products"] if not p["id"].startswith("torqwave") or p["id"] in own]
 
 
-# ---------------------------------------------------------------- SVG helpers
-
-class Svg:
-    def __init__(self, w=W, h=H):
-        self.w, self.h = w, h
-        self.parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" font-family="{FONT}">',
-                      f'<rect width="{w}" height="{h}" fill="{BG}"/>']
-
-    def rect(self, x, y, w, h, fill, rx=0, stroke=None, dash=None):
-        s = f' stroke="{stroke}" stroke-width="1.5"' if stroke else ""
-        d = f' stroke-dasharray="{dash}"' if dash else ""
-        self.parts.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{rx}" fill="{fill}"{s}{d}/>')
-
-    def line(self, x1, y1, x2, y2, stroke=LINE, width=1):
-        self.parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{stroke}" stroke-width="{width}"/>')
-
-    def text(self, x, y, s, size=20, fill=TEXT, anchor="start", weight="normal", turn=0):
-        t = f' transform="rotate({turn} {x:.1f} {y:.1f})"' if turn else ""
-        self.parts.append(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}" text-anchor="{anchor}" '
-                          f'font-weight="{weight}"{t}>{escape(str(s))}</text>')
-
-    def mark(self, cx, cy, value, r=11):
-        if value == "yes":
-            self.parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r}" fill="{GOOD}"/>')
-        elif value == "partial":
-            self.parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r - 1}" fill="none" stroke="{WARN}" stroke-width="2"/>')
-            self.parts.append(f'<path d="M {cx:.1f} {cy - r:.1f} A {r} {r} 0 0 0 {cx:.1f} {cy + r:.1f} Z" fill="{WARN}"/>')
-        elif value == "no":
-            self.line(cx - 8, cy, cx + 8, cy, LINE2, 3)
+def wrap_lines(text, max_chars, max_lines=3):
+    words = str(text).split(" ")
+    lines, cur = [], ""
+    for w in words:
+        if cur and len(cur) + len(w) + 1 > max_chars:
+            lines.append(cur)
+            cur = w
         else:
-            self.text(cx, cy + 7, "?", 21, DIM, "middle", "bold")
-
-    def legend(self, x, y):
-        for value, word in (("yes", "yes"), ("partial", "partial"), ("no", "no"), ("not confirmed", "not confirmed")):
-            self.mark(x + 10, y - 6, value, 9)
-            self.text(x + 28, y, word, 17, DIM)
-            x += 46 + len(word) * 9.5
-
-    def frame(self, title, sub, snap):
-        self.text(50, 76, title, 44, WHITE, weight="bold")
-        self.text(50, 116, sub, 23, DIM)
-        self.text(self.w - 50, self.h - 28, f'As of {snap["as_of"]}. Torqwave {snap["release"]} is {snap["status"]}. '
-                  'Sources and method: docs/compare in the Torqwave repository.', 17, FAINT, "end")
-
-    def save(self, name):
-        self.parts.append("</svg>")
-        path = os.path.join(OUT, name)
-        with open(path, "w", encoding="utf-8") as f:
-            f.write("\n".join(self.parts) + "\n")
-        return path
+            cur = (cur + " " + w).strip()
+    if cur:
+        lines.append(cur)
+    return lines[:max_lines]
 
 
 def split_name(name):
@@ -137,134 +110,486 @@ def fmt(n):
     return f"{n:,}"
 
 
-# ---------------------------------------------------------------- the four graphics
+def delta_text(prev, now):
+    if not isinstance(prev, (int, float)) or not isinstance(now, (int, float)):
+        return None
+    d = now - prev
+    if d == 0:
+        return None
+    sign = "+" if d > 0 else ""
+    return f"{sign}{fmt(d)}"
+
+
+# ---------------------------------------------------------------- SVG builder
+
+class Svg:
+    def __init__(self, w=W, h=H, hero_wave=False):
+        self.w, self.h = w, h
+        self.parts = [
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" font-family="{FONT}">',
+            "<defs>",
+            # Canvas background gradient
+            '<linearGradient id="bgGrad" x1="0" y1="0" x2="0.4" y2="1">'
+            f'<stop offset="0%" stop-color="{BG_TOP}"/>'
+            f'<stop offset="52%" stop-color="{BG_MID}"/>'
+            f'<stop offset="100%" stop-color="{BG_BOT}"/>'
+            "</linearGradient>",
+            # Ambient studio aurora glows
+            '<radialGradient id="glowMint" cx="0.16" cy="0.06" r="0.55">'
+            '<stop offset="0%" stop-color="#34e8a8" stop-opacity="0.14"/>'
+            '<stop offset="55%" stop-color="#1cb58c" stop-opacity="0.04"/>'
+            '<stop offset="100%" stop-color="#080b11" stop-opacity="0"/>'
+            "</radialGradient>",
+            '<radialGradient id="glowCyan" cx="0.88" cy="0.92" r="0.55">'
+            '<stop offset="0%" stop-color="#38d9f5" stop-opacity="0.12"/>'
+            '<stop offset="55%" stop-color="#2563eb" stop-opacity="0.035"/>'
+            '<stop offset="100%" stop-color="#080b11" stop-opacity="0"/>'
+            "</radialGradient>",
+            # Card gradients
+            '<linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#151d2d"/>'
+            '<stop offset="100%" stop-color="#0e1420"/>'
+            "</linearGradient>",
+            '<linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#172133"/>'
+            '<stop offset="100%" stop-color="#0f1522"/>'
+            "</linearGradient>",
+            # Featured Torqwave column gradient
+            '<linearGradient id="tqColGrad" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="#162933" stop-opacity="0.95"/>'
+            '<stop offset="100%" stop-color="#101827" stop-opacity="0.92"/>'
+            "</linearGradient>",
+            # Luminous Mint -> Cyan accent gradients
+            '<linearGradient id="accentH" x1="0" y1="0" x2="1" y2="0">'
+            '<stop offset="0%" stop-color="#34e8a8"/>'
+            '<stop offset="65%" stop-color="#38d9f5"/>'
+            '<stop offset="100%" stop-color="#4ea8ff"/>'
+            "</linearGradient>",
+            '<linearGradient id="accentFade" x1="0" y1="0" x2="1" y2="0">'
+            '<stop offset="0%" stop-color="#34e8a8" stop-opacity="0.85"/>'
+            '<stop offset="45%" stop-color="#38d9f5" stop-opacity="0.45"/>'
+            '<stop offset="100%" stop-color="#38d9f5" stop-opacity="0"/>'
+            "</linearGradient>",
+            '<linearGradient id="barYes" x1="0" y1="0" x2="1" y2="0">'
+            '<stop offset="0%" stop-color="#1fa87a"/>'
+            '<stop offset="100%" stop-color="#34e8a8"/>'
+            "</linearGradient>",
+            '<linearGradient id="barYesV" x1="0" y1="1" x2="0" y2="0">'
+            '<stop offset="0%" stop-color="#147a5b"/>'
+            '<stop offset="65%" stop-color="#22bd89"/>'
+            '<stop offset="100%" stop-color="#34e8a8"/>'
+            "</linearGradient>",
+            '<linearGradient id="barPart" x1="0" y1="0" x2="1" y2="0">'
+            '<stop offset="0%" stop-color="#8b6918"/>'
+            '<stop offset="100%" stop-color="#bf9226"/>'
+            "</linearGradient>",
+            '<linearGradient id="kpiText" x1="0" y1="0" x2="1" y2="1">'
+            '<stop offset="0%" stop-color="#5ff7c4"/>'
+            '<stop offset="100%" stop-color="#38d9f5"/>'
+            "</linearGradient>",
+            '<linearGradient id="pillBg" x1="0" y1="0" x2="1" y2="0">'
+            '<stop offset="0%" stop-color="#13342d"/>'
+            '<stop offset="100%" stop-color="#122c3c"/>'
+            "</linearGradient>",
+            # Subtle studio grid pattern
+            '<pattern id="studioGrid" width="48" height="48" patternUnits="userSpaceOnUse">'
+            '<path d="M 48 0 L 0 0 0 48" fill="none" stroke="#ffffff" stroke-opacity="0.025" stroke-width="1"/>'
+            "</pattern>",
+            "</defs>",
+            f'<rect width="{w}" height="{h}" fill="url(#bgGrad)"/>',
+            f'<rect width="{w}" height="{h}" fill="url(#studioGrid)"/>',
+            f'<rect width="{w}" height="{h}" fill="url(#glowMint)"/>',
+            f'<rect width="{w}" height="{h}" fill="url(#glowCyan)"/>',
+        ]
+        if hero_wave:
+            self._draw_hero_waveform()
+        else:
+            self._draw_header_waveform()
+
+    def _draw_header_waveform(self):
+        # Delicate harmonic ribbon sweeping across the upper-right header
+        pts1, pts2 = [], []
+        for x in range(880, self.w + 20, 12):
+            t = (x - 880) / (self.w - 880)
+            env = math.sin(t * math.pi) ** 1.2
+            y1 = 74 + env * (22 * math.sin(t * 14.0) + 9 * math.sin(t * 31.0))
+            y2 = 74 + env * (15 * math.cos(t * 11.0 + 0.8) + 6 * math.sin(t * 23.0))
+            pts1.append(f"{x},{y1:.1f}")
+            pts2.append(f"{x},{y2:.1f}")
+        self.parts.append(
+            f'<polyline points="{" ".join(pts1)}" fill="none" stroke="url(#accentH)" stroke-opacity="0.22" stroke-width="2"/>'
+        )
+        self.parts.append(
+            f'<polyline points="{" ".join(pts2)}" fill="none" stroke="#38d9f5" stroke-opacity="0.12" stroke-width="1.5"/>'
+        )
+
+    def _draw_hero_waveform(self):
+        # Rich multi-oscillator harmonic ribbons across the hero header backdrop
+        for idx, (amp, freq1, freq2, phase, op, sw, col) in enumerate((
+            (54, 9.5, 23.0, 0.0, 0.30, 2.5, "url(#accentH)"),
+            (36, 7.2, 17.0, 1.1, 0.18, 1.8, "#38d9f5"),
+            (24, 13.0, 29.0, 2.3, 0.12, 1.3, "#34e8a8"),
+        )):
+            pts = []
+            for x in range(560, self.w + 20, 10):
+                t = (x - 560) / (self.w - 560)
+                env = (math.sin(min(1.0, t * 1.05) * math.pi) ** 1.1) * (0.35 + 0.65 * t)
+                y = 185 + env * (amp * math.sin(t * freq1 + phase) + (amp * 0.35) * math.sin(t * freq2 - phase))
+                pts.append(f"{x},{y:.1f}")
+            self.parts.append(
+                f'<polyline points="{" ".join(pts)}" fill="none" stroke="{col}" stroke-opacity="{op}" stroke-width="{sw}"/>'
+            )
+
+    def raw(self, s):
+        self.parts.append(s)
+
+    def rect(self, x, y, w, h, fill, rx=0, stroke=None, dash=None, sw=1.2, opacity=None):
+        s = f' stroke="{stroke}" stroke-width="{sw}"' if stroke else ""
+        d = f' stroke-dasharray="{dash}"' if dash else ""
+        o = f' opacity="{opacity}"' if opacity is not None else ""
+        self.parts.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{rx}" fill="{fill}"{s}{d}{o}/>')
+
+    def line(self, x1, y1, x2, y2, stroke=LINE, width=1, opacity=None):
+        o = f' opacity="{opacity}"' if opacity is not None else ""
+        self.parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{stroke}" stroke-width="{width}"{o}/>')
+
+    def text(self, x, y, s, size=20, fill=TEXT, anchor="start", weight="normal", turn=0, ls=None):
+        t = f' transform="rotate({turn} {x:.1f} {y:.1f})"' if turn else ""
+        l = f' letter-spacing="{ls}"' if ls else ""
+        self.parts.append(
+            f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}" text-anchor="{anchor}" '
+            f'font-weight="{weight}"{t}{l}>{escape(str(s))}</text>'
+        )
+
+    def pill(self, x, y, label_text, fill="url(#pillBg)", stroke="#2be0a2", text_col=GOOD, size=14, h=28, pad_x=14):
+        pw = max(60, len(label_text) * (size * 0.62) + pad_x * 2)
+        self.rect(x, y, pw, h, fill, h / 2, stroke, sw=1.1)
+        self.text(x + pw / 2, y + h / 2 + size * 0.35, label_text, size, text_col, "middle", "bold", ls="0.06em")
+        return pw
+
+    def mark(self, cx, cy, value, r=12, highlight=False):
+        if value == "yes":
+            if highlight:
+                # Subtle cyan-mint halo highlighting a brand-new row in this release
+                self.parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r + 5:.1f}" fill="#34e8a8" fill-opacity="0.16" stroke="#38d9f5" stroke-opacity="0.65" stroke-width="1.3"/>')
+            self.parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="url(#accentH)"/>')
+            # Crisp dark checkmark inside
+            s = r / 12.0
+            self.parts.append(
+                f'<path d="M {cx - 4.6*s:.1f} {cy + 0.4*s:.1f} L {cx - 1.3*s:.1f} {cy + 3.8*s:.1f} L {cx + 5.0*s:.1f} {cy - 3.6*s:.1f}" '
+                f'fill="none" stroke="#071512" stroke-width="{2.3*s:.1f}" stroke-linecap="round" stroke-linejoin="round"/>'
+            )
+        elif value == "partial":
+            self.parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r - 0.8:.1f}" fill="#261f0d" stroke="{WARN}" stroke-width="1.8"/>')
+            self.parts.append(f'<path d="M {cx:.1f} {cy - r + 1.5:.1f} A {r - 1.5:.1f} {r - 1.5:.1f} 0 0 0 {cx:.1f} {cy + r - 1.5:.1f} Z" fill="{WARN}"/>')
+        elif value == "no":
+            self.parts.append(f'<line x1="{cx - 7:.1f}" y1="{cy:.1f}" x2="{cx + 7:.1f}" y2="{cy:.1f}" stroke="{LINE2}" stroke-width="2.6" stroke-linecap="round"/>')
+        else:
+            self.parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r - 1:.1f}" fill="#171f2e" stroke="{LINE2}" stroke-width="1.2"/>')
+            self.text(cx, cy + 5.5, "?", 15, DIM, "middle", "bold")
+
+    def legend(self, x, y, show_new=False):
+        items = [("yes", "Yes"), ("partial", "Partial"), ("no", "No"), ("not confirmed", "Not confirmed")]
+        for value, word in items:
+            self.mark(x + 10, y - 5, value, 9)
+            self.text(x + 27, y, word, 15, DIM, weight="500")
+            x += 46 + len(word) * 8.6
+        if show_new:
+            self.mark(x + 12, y - 5, "yes", 9, highlight=True)
+            self.text(x + 31, y, "New in this release", 15, CYAN, weight="600")
+
+    def brand_header(self, title, sub, snap, right_badge=None):
+        # Top meta row: TORQWAVE wordmark + release pill + optional right badge
+        self.text(50, 44, "TORQ", 16, WHITE, weight="800", ls="0.14em")
+        self.text(105, 44, "WAVE", 16, GOOD, weight="800", ls="0.14em")
+        self.pill(176, 24, f'v{snap["release"]}', size=12, h=24, pad_x=11)
+        badge = right_badge or "FREE · OPEN SOURCE · macOS / WIN / LINUX"
+        self.text(self.w - 50, 42, badge, 13, DIM, "end", "600", ls="0.09em")
+        # Title & subtitle
+        self.text(50, 92, title, 40, WHITE, weight="800", ls="-0.02em")
+        self.text(50, 124, sub, 20, DIM, weight="400")
+        # Thin gradient rule under header
+        self.rect(50, 138, self.w - 100, 1.5, "url(#accentFade)")
+
+    def footer(self, snap):
+        self.line(50, self.h - 52, self.w - 50, self.h - 52, LINE, 1, 0.7)
+        self.text(
+            self.w - 50, self.h - 24,
+            f'As of {snap["as_of"]} · Torqwave {snap["release"]} ({snap["status"]}) · Sources & method: docs/compare',
+            14, FAINT, "end"
+        )
+
+    def icon(self, kind, cx, cy):
+        # Minimal crisp geometric vector badges for the hero cards
+        self.rect(cx - 20, cy - 20, 40, 40, "#12292f", 10, "#295866", sw=1.1)
+        if kind == "fx":
+            # Three equalizer sliders
+            for dx, ky in ((-9, -4), (0, 5), (9, -7)):
+                self.line(cx + dx, cy - 11, cx + dx, cy + 11, "#3b5670", 2)
+                self.raw(f'<circle cx="{cx + dx}" cy="{cy + ky}" r="3.4" fill="{GOOD}"/>')
+        elif kind == "synth":
+            # Saw / harmonic wave
+            self.raw(f'<polyline points="{cx-12},{cy+6} {cx-4},{cy-8} {cx-4},{cy+6} {cx+4},{cy-8} {cx+4},{cy+6} {cx+12},{cy-8}" fill="none" stroke="{GOOD}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>')
+        elif kind == "midi":
+            # Piano roll notes
+            self.rect(cx - 11, cy - 8, 9, 4, CYAN, 2)
+            self.rect(cx - 2, cy - 2, 13, 4, GOOD, 2)
+            self.rect(cx - 8, cy + 4, 11, 4, ACCENT, 2)
+        elif kind == "wave":
+            # Audio waveform -> note
+            for dx, hh in ((-11, 4), (-7, 9), (-3, 6), (1, 11), (5, 5), (9, 8)):
+                self.raw(f'<line x1="{cx+dx}" y1="{cy-hh}" x2="{cx+dx}" y2="{cy+hh}" stroke="{CYAN}" stroke-width="2.2" stroke-linecap="round"/>')
+        elif kind == "drums":
+            # 2x2 drum pads
+            for dx in (-8, 2):
+                for dy in (-8, 2):
+                    col = GOOD if (dx == -8 and dy == -8) or (dx == 2 and dy == 2) else "#2d4c5c"
+                    self.rect(cx + dx, cy + dy, 7, 7, col, 2)
+        else:
+            # Modular node / CLAP plug-in connector
+            self.raw(f'<circle cx="{cx - 7}" cy="{cy}" r="4.5" fill="none" stroke="{GOOD}" stroke-width="2"/>')
+            self.raw(f'<circle cx="{cx + 7}" cy="{cy}" r="4.5" fill="none" stroke="{CYAN}" stroke-width="2"/>')
+            self.line(cx - 2.5, cy, cx + 2.5, cy, WHITE, 2)
+
+    def save(self, name):
+        self.parts.append("</svg>")
+        path = os.path.join(OUT, name)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(self.parts) + "\n")
+        return path
+
+
+# ---------------------------------------------------------------- graphics
+
+def graphic_hero(defs, snap):
+    """Flagship release announcement card (1600x900) designed for X.com & release pages."""
+    s = Svg(W, H, hero_wave=True)
+
+    # Top bar
+    s.pill(56, 48, f'RELEASE v{snap["release"]}', size=14, h=30, pad_x=16)
+    s.text(W - 56, 68, "FREE · OPEN SOURCE (AGPL-3.0) · macOS / WINDOWS / LINUX", 14, DIM, "end", "600", ls="0.10em")
+
+    # Giant Display Title
+    s.text(56, 174, "TORQ", 86, WHITE, weight="800", ls="-0.03em")
+    s.text(294, 174, "WAVE", 86, "url(#kpiText)", weight="800", ls="-0.03em")
+    s.text(562, 174, snap["release"], 86, DIM, weight="300", ls="-0.02em")
+
+    tagline = snap.get("hero_tagline", "An audio editor and DAW in one — spectral repair, mastering, instruments & multitrack")
+    s.text(58, 218, tagline, 24, TEXT, weight="400")
+
+    # 4 Hero KPI pills strip
+    rows = all_rows(defs)
+    cov = coverage(snap["products"]["torqwave"]["cells"], rows)
+    prev_cov = coverage(snap["products"]["torqwave_prev"]["cells"], rows) if "torqwave_prev" in snap["products"] else None
+    cov_str = f'{cov["yes"]}/{len(rows)} Matrix Rows' + (f' (+{cov["yes"] - prev_cov["yes"]})' if prev_cov and cov["yes"] > prev_cov["yes"] else "")
+    chips = [
+        ("32 Built-In FX & Instruments", GOOD),
+        (cov_str, CYAN),
+        ("CLAP 1.2 · VST3 · AU · LV2", ACCENT),
+        ("2,782 Verified Checks", GOOD),
+    ]
+    cx = 56
+    for txt, dot_col in chips:
+        cw = len(txt) * 9.8 + 44
+        s.rect(cx, 246, cw, 38, "#121a2a", 19, "#24344d", sw=1.1)
+        s.raw(f'<circle cx="{cx + 18:.1f}" cy="265" r="4.5" fill="{dot_col}"/>')
+        s.text(cx + 32, 270, txt, 16, WHITE, weight="600")
+        cx += cw + 14
+
+    # 2x3 Bento Grid of feature pillars
+    cards = snap.get("hero_cards")
+    if not cards:
+        cards = [{"icon": "fx", "title": item[:36], "body": item} for item in snap.get("release_firsts", [])[:6]]
+
+    gx0, gy0, cw, ch, gap_x, gap_y = 56, 316, 480, 244, 24, 24
+    for i, card in enumerate(cards[:6]):
+        col, row = i % 3, i // 3
+        x = gx0 + col * (cw + gap_x)
+        y = gy0 + row * (ch + gap_y)
+        s.rect(x, y, cw, ch, "url(#cardGrad)", 16, LINE, sw=1.2)
+        # Subtle top luminous edge
+        s.rect(x + 18, y, 96, 3, "url(#accentH)", 1.5)
+        s.icon(card.get("icon", "fx"), x + 44, y + 48)
+        s.text(x + 78, y + 56, card["title"], 23, WHITE, weight="700", ls="-0.01em")
+        lines = wrap_lines(card["body"], 38, max_lines=4)
+        for j, ln in enumerate(lines):
+            s.text(x + 26, y + 106 + j * 30, ln, 19, DIM, weight="400")
+
+    # Bottom footer callout
+    s.line(56, H - 56, W - 56, H - 56, LINE, 1, 0.7)
+    s.text(56, H - 24, "bobclawblaw.github.io/torqwave  ·  1,235 built-in audio clips  ·  No account, no subscription", 16, TEXT, weight="500")
+    s.text(W - 56, H - 24, f'Released {snap["as_of"]} · AGPL-3.0', 15, FAINT, "end")
+    return s.save("0-release-hero.svg")
+
 
 def graphic_numbers(defs, snap):
     s = Svg()
-    s.frame(f'Torqwave {snap["release"]}: what it adds over {snap["previous"]}', "By the numbers, counted from the release's own files and documentation", snap)
+    s.brand_header(
+        f'Torqwave {snap["release"]}: what it adds over {snap["previous"]}',
+        "By the numbers, counted directly from the release's build, tests and documentation",
+        snap,
+    )
     nums = snap["release_numbers"]
-    x0, y0, tw, th, gap = 50, 160, 320, 300, 20
+    x0, y0, tw, th, gap = 50, 166, 312, 310, 20
     for i, n in enumerate(nums[:6]):
         x, y = x0 + (i % 3) * (tw + gap), y0 + (i // 3) * (th + gap)
-        s.rect(x, y, tw, th, SURFACE, 10, LINE)
-        s.rect(x, y, tw, 5, WAVE, 2)
-        s.text(x + 24, y + 108, fmt(n["now"]), 84, WAVE, weight="bold")
-        s.text(x + 24, y + 156, n["label"], 28, WHITE, weight="bold")
-        s.text(x + 24, y + 194, f'{snap["previous"]}: {fmt(n["prev"])}', 22, DIM)
-        words, lines, cur = n["note"].split(" "), [], ""
-        for w in words:
-            if len(cur) + len(w) + 1 > 30:
-                lines.append(cur)
-                cur = w
-            else:
-                cur = (cur + " " + w).strip()
-        lines.append(cur)
-        for j, ln in enumerate(lines[:3]):
-            s.text(x + 24, y + 230 + j * 24, ln, 18, FAINT)
-    x = x0 + 3 * (tw + gap) + 10
-    s.rect(x, y0, W - 50 - x, 2 * th + gap, RAISED, 10, LINE)
-    s.text(x + 28, y0 + 52, f'Also new since {snap["previous"]}', 28, WHITE, weight="bold")
+        s.rect(x, y, tw, th, "url(#cardGrad)", 14, LINE, sw=1.2)
+        s.rect(x + 16, y, tw - 32, 3.5, "url(#accentH)", 2)
+        # Delta pill top-right
+        d = delta_text(n["prev"], n["now"])
+        if d:
+            pw = max(54, len(d) * 9.5 + 22)
+            s.rect(x + tw - pw - 18, y + 20, pw, 28, "url(#pillBg)", 14, "#279e78", sw=1)
+            s.text(x + tw - pw / 2 - 18, y + 39, d, 15, GOOD, "middle", "700")
+        s.text(x + 24, y + 114, fmt(n["now"]), 78, "url(#kpiText)", weight="800", ls="-0.03em")
+        s.text(x + 24, y + 158, n["label"], 25, WHITE, weight="700")
+        s.text(x + 24, y + 190, f'{snap["previous"]}: {fmt(n["prev"])}', 18, DIM, weight="500")
+        s.line(x + 24, y + 208, x + tw - 24, y + 208, LINE, 1, 0.7)
+        for j, ln in enumerate(wrap_lines(n["note"], 31, max_lines=3)):
+            s.text(x + 24, y + 236 + j * 23, ln, 16, FAINT)
+
+    # Right spotlight panel
+    rx = x0 + 3 * (tw + gap) + 8
+    rw = W - 50 - rx
+    rh = 2 * th + gap
+    s.rect(rx, y0, rw, rh, "url(#panelGrad)", 14, LINE, sw=1.2)
+    s.rect(rx + 20, y0, 120, 3.5, "url(#accentH)", 2)
+    s.text(rx + 28, y0 + 50, f'Highlights since {snap["previous"]}', 25, WHITE, weight="700")
+    s.line(rx + 28, y0 + 68, rx + rw - 28, y0 + 68, LINE, 1, 0.8)
+
+    items = snap["release_firsts"]
     y = y0 + 104
-    many = len(snap["release_firsts"]) > 6   # a longer list is set a little smaller, to fit the panel
-    size, step, space, wrap = (21, 28, 17, 36) if many else (22, 30, 22, 34)
-    for item in snap["release_firsts"]:
-        words, lines, cur = item.split(" "), [], ""
-        for w in words:
-            if len(cur) + len(w) + 1 > wrap:
-                lines.append(cur)
-                cur = w
-            else:
-                cur = (cur + " " + w).strip()
-        lines.append(cur)
-        s.rect(x + 28, y - 16, 8, 8, ACCENT, 2)
+    many = len(items) > 6
+    size, step, space, wrap_c = (19, 26, 18, 41) if many else (20, 28, 22, 38)
+    for item in items:
+        lines = wrap_lines(item, wrap_c, max_lines=3)
+        # Glowing diamond bullet
+        bx, by = rx + 34, y - 9
+        s.raw(f'<polygon points="{bx},{by-5} {bx+5},{by} {bx},{by+5} {bx-5},{by}" fill="url(#accentH)"/>')
         for ln in lines:
-            s.text(x + 50, y - 4, ln, size, TEXT)
+            s.text(rx + 52, y - 2, ln, size, TEXT)
             y += step
         y += space
+
+    s.footer(snap)
     return s.save("1-release-by-the-numbers.svg")
 
 
 def graphic_matrix(defs, snap, m):
     s = Svg()
-    s.frame(m["title"].replace("{release}", snap["release"]), "What ships in each product, from its own documentation", snap)
+    s.brand_header(
+        m["title"].replace("{release}", snap["release"]),
+        "What ships built into each product, read from its own documentation",
+        snap,
+    )
     rows = [r for r in all_rows(defs) if m["rows"] in r["graphics"]]
     own = own_columns(defs, snap)
     nt = len(own)
     pids = own + [p["id"] for p in defs["products"] if p.get("matrix") == m["id"]]
-    lx, cx0, top, bottom = 50, 440, 150, H - 70
+    lx, cx0, top, bottom = 50, 435, 158, H - 70
     cw = (W - 50 - cx0) / len(pids)
-    head = 70
+    head = 74
     rh = (bottom - top - head) / len(rows)
-    s.rect(cx0, top, cw * nt, bottom - top, RAISED, 8)
-    s.rect(cx0, top, cw * nt, 5, WAVE, 2)
+
+    # Outer table frame
+    s.rect(lx - 12, top, W - 2 * lx + 24, bottom - top, "#0c111b", 12, LINE, sw=1, opacity="0.65")
+    # Highlighted Torqwave column(s)
+    s.rect(cx0, top, cw * nt, bottom - top, "url(#tqColGrad)", 10, "#245763", sw=1.2)
+    s.rect(cx0 + 12, top, cw * nt - 24, 3.5, "url(#accentH)", 2)
+
     for i, pid in enumerate(pids):
         x = cx0 + cw * (i + 0.5)
         p = snap["products"][pid]
         if pid.startswith("torqwave"):
-            s.text(x, top + 34, "Torqwave", 21, WHITE, "middle", "bold")
-            s.text(x, top + 58, p["version"], 19, WAVE if pid == "torqwave" else DIM, "middle", "bold")
+            is_cur = pid == "torqwave"
+            s.text(x, top + 34, "Torqwave", 20, WHITE, "middle", "700")
+            s.text(x, top + 58, p["version"], 18, GOOD if is_cur else DIM, "middle", "700")
         else:
             lines = split_name(p["name"])
             for j, ln in enumerate(lines):
-                s.text(x, top + (34 if len(lines) > 1 else 46) + j * 24, ln, 20, TEXT, "middle", "bold")
+                s.text(x, top + (33 if len(lines) > 1 else 46) + j * 23, ln, 18, TEXT, "middle", "600")
+
+    s.line(lx - 12, top + head, W - lx + 12, top + head, LINE, 1)
+
+    has_new = False
     for k, r in enumerate(rows):
         y = top + head + k * rh
         if k % 2 == 0:
-            s.rect(lx - 10, y, cx0 - lx + 10, rh, SURFACE)
-            s.rect(cx0 + cw * nt, y, W - 50 - cx0 - cw * nt + 10, rh, SURFACE)
-        s.text(lx, y + rh / 2 + 7, r["title"], 21, TEXT)
+            s.rect(lx - 10, y, cx0 - lx + 10, rh, "#121a29", 0, opacity="0.65")
+            s.rect(cx0 + cw * nt, y, W - 50 - cx0 - cw * nt + 10, rh, "#121a29", 0, opacity="0.65")
+        prev_v = snap["products"]["torqwave_prev"]["cells"][r["id"]]["value"] if nt == 2 else None
+        cur_v = snap["products"]["torqwave"]["cells"][r["id"]]["value"]
+        flipped = prev_v is not None and cur_v == "yes" and prev_v != "yes"
+        if flipped:
+            has_new = True
+            s.rect(lx - 10, y + 1, cx0 - lx + 8, rh - 2, "#112b2e", 4, opacity="0.75")
+        s.text(lx + 4, y + rh / 2 + 6, r["title"], 19, WHITE if flipped else TEXT, weight="600" if flipped else "400")
         for i, pid in enumerate(pids):
-            s.mark(cx0 + cw * (i + 0.5), y + rh / 2, snap["products"][pid]["cells"][r["id"]]["value"])
-    s.legend(50, H - 28)
+            val = snap["products"][pid]["cells"][r["id"]]["value"]
+            s.mark(cx0 + cw * (i + 0.5), y + rh / 2, val, r=10.5, highlight=(pid == "torqwave" and flipped))
+
+    s.footer(snap)
+    s.legend(50, H - 24, show_new=has_new)
     return s.save(m["file"] + ".svg")
 
 
 def graphic_whole(defs, snap):
-    """Every row of the matrix against every product, in one tall picture."""
     pids = product_columns(defs, snap)
     nt = len(own_columns(defs, snap))
     groups = defs["groups"]
-    lx, cx0, top, head, rh, gh = 50, 420, 150, 262, 30, 44
-    h = top + head + sum(gh + rh * len(g["rows"]) for g in groups) + 90
+    lx, cx0, top, head, rh, gh = 50, 420, 158, 256, 30, 44
+    h = top + head + sum(gh + rh * len(g["rows"]) for g in groups) + 92
     s = Svg(W, h)
-    s.frame(f'Torqwave {snap["release"]} against the alternatives: the whole matrix',
-            f'{len(all_rows(defs))} rows in {len(groups)} areas, {len(pids) - nt} products, each from its own documentation', snap)
+    s.brand_header(
+        f'Torqwave {snap["release"]} against the alternatives: full matrix',
+        f'{len(all_rows(defs))} rows across {len(groups)} areas, {len(pids) - nt} products, each from its own documentation',
+        snap,
+    )
     cw = (W - 50 - cx0) / len(pids)
-    bottom = h - 70
-    s.rect(cx0, top, cw * nt, bottom - top, RAISED, 8)
-    s.rect(cx0, top, cw * nt, 5, WAVE, 2)
+    bottom = h - 72
+    s.rect(cx0, top, cw * nt, bottom - top, "url(#tqColGrad)", 10, "#245763", sw=1.2)
+    s.rect(cx0 + 8, top, cw * nt - 16, 3.5, "url(#accentH)", 2)
+
     group_of = {p["id"]: p["group"] for p in defs["products"]}
     first_daw = next(i for i, pid in enumerate(pids) if group_of[pid] == "daw")
     for i, pid in enumerate(pids):
         x = cx0 + cw * (i + 0.5)
         own = pid.startswith("torqwave")
-        s.text(x + 7, top + head - 14, label(defs, snap, pid), 19, (WAVE if pid == "torqwave" else WHITE) if own else TEXT, "start", "bold", -90)
+        s.text(
+            x + 6, top + head - 14, label(defs, snap, pid), 18,
+            (GOOD if pid == "torqwave" else WHITE) if own else TEXT, "start", "700" if own else "600", -90
+        )
+
     y = top + head
+    has_new = False
     for g in groups:
-        s.rect(lx - 10, y + 8, W - 2 * lx + 20, gh - 12, LINE, 4)
-        s.text(lx, y + gh - 13, g["title"], 20, WHITE, weight="bold")
+        s.rect(lx - 10, y + 7, W - 2 * lx + 20, gh - 12, "#192438", 6, LINE, sw=0.8)
+        s.text(lx + 4, y + gh - 14, g["title"], 18, WHITE, weight="700")
         y += gh
         for k, r in enumerate(g["rows"]):
             if k % 2 == 0:
-                s.rect(lx - 10, y, cx0 - lx + 10, rh, SURFACE)
-                s.rect(cx0 + cw * nt, y, W - 50 - cx0 - cw * nt + 10, rh, SURFACE)
-            s.text(lx, y + rh / 2 + 6, r["title"], 18, TEXT)
+                s.rect(lx - 10, y, cx0 - lx + 10, rh, "#111827", opacity="0.65")
+                s.rect(cx0 + cw * nt, y, W - 50 - cx0 - cw * nt + 10, rh, "#111827", opacity="0.65")
+            prev_v = snap["products"]["torqwave_prev"]["cells"][r["id"]]["value"] if nt == 2 else None
+            cur_v = snap["products"]["torqwave"]["cells"][r["id"]]["value"]
+            flipped = prev_v is not None and cur_v == "yes" and prev_v != "yes"
+            if flipped:
+                has_new = True
+            s.text(lx + 4, y + rh / 2 + 6, r["title"], 17, WHITE if flipped else TEXT, weight="600" if flipped else "400")
             for i, pid in enumerate(pids):
-                s.mark(cx0 + cw * (i + 0.5), y + rh / 2, snap["products"][pid]["cells"][r["id"]]["value"], 9)
+                s.mark(cx0 + cw * (i + 0.5), y + rh / 2, snap["products"][pid]["cells"][r["id"]]["value"], 8.5, highlight=(pid == "torqwave" and flipped))
             y += rh
+
     for i in (nt, first_daw):
         s.line(cx0 + cw * i, top + head - 6, cx0 + cw * i, bottom, LINE2, 1)
-    s.text(cx0 + cw * (nt + (first_daw - nt) / 2), top + 22, "The editors", 17, DIM, "middle")
-    s.text(cx0 + cw * (first_daw + (len(pids) - first_daw) / 2), top + 22, "The DAWs", 17, DIM, "middle")
-    s.legend(50, h - 28)
+    s.text(cx0 + cw * (nt + (first_daw - nt) / 2), top + 24, "EDITORS", 14, DIM, "middle", "700", ls="0.12em")
+    s.text(cx0 + cw * (first_daw + (len(pids) - first_daw) / 2), top + 24, "DAWS", 14, DIM, "middle", "700", ls="0.12em")
+    s.footer(snap)
+    s.legend(50, h - 24, show_new=has_new)
     return s.save(f"{len(defs['matrices']) + 3}-the-whole-matrix.svg"), h
 
 
 def trend_points(defs, snaps, announced_only=False):
-    """Torqwave's coverage by release. With announced_only, a release whose snapshot says
-    "announced": false is left out, and so is any release before the one the newest snapshot is set
-    against (its "previous"): the graphic and MATRIX.md show the releases being compared, and the
-    snapshots keep them all."""
     rows = all_rows(defs)
     pts = []
     for i, snap in enumerate(snaps):
@@ -279,107 +604,116 @@ def trend_points(defs, snaps, announced_only=False):
 
 
 def standing_trend(s, pts, total, px, pw, top, bottom):
-    s.text(px + 18, top + 34, "Torqwave by release", 19, WHITE, weight="bold")
-    s.text(px + 18, top + 58, f"rows covered, of {total}", 15, DIM)
-    slots = max(2, len(pts))   # the releases shown, side by side: no empty slots
+    s.text(px + 20, top + 36, "Release trend", 20, WHITE, weight="700")
+    s.text(px + 20, top + 58, f"rows covered, of {total}", 14, DIM)
+    if len(pts) >= 2:
+        diff = pts[-1][1]["yes"] - pts[0][1]["yes"]
+        if diff > 0:
+            s.pill(px + pw - 78, top + 18, f"+{diff}", size=13, h=24, pad_x=10)
+    slots = max(2, len(pts))
     shown = pts[-slots:]
-    bx0, by0, bh = px + 18, top + 90, bottom - top - 150
-    bw = (pw - 36) / slots
+    bx0, by0, bh = px + 20, top + 92, bottom - top - 152
+    bw = (pw - 40) / slots
     for k in range(slots):
-        x = bx0 + k * bw + 5
+        x = bx0 + k * bw + 6
+        w = bw - 12
         if k < len(shown):
             ver, c = shown[k]
+            is_last = k == len(shown) - 1
             hy, hp = bh * c["yes"] / total, bh * c["partial"] / total
-            s.rect(x, by0, bw - 10, bh, BG, 4, LINE)
-            s.rect(x, by0 + bh - hy, bw - 10, hy, "#2f7f5b", 4)
-            s.rect(x, by0 + bh - hy - hp, bw - 10, hp, "#8a7a2c", 0)
-            s.text(x + (bw - 10) / 2, by0 + bh - hy - hp - 8, c["yes"], 17, WHITE, "middle", "bold")
-            s.text(x + (bw - 10) / 2, by0 + bh + 24, ver, 13, TEXT, "middle")
+            s.rect(x, by0, w, bh, "#0a0f18", 8, "#254d58" if is_last else LINE, sw=1.2)
+            s.rect(x + 1, by0 + bh - hy, w - 2, hy, "url(#barYesV)" if is_last else "#1b6b54", 7)
+            if hp:
+                s.rect(x + 1, by0 + bh - hy - hp, w - 2, hp, "url(#barPart)", 0)
+            s.text(x + w / 2, by0 + bh - hy - hp - 10, c["yes"], 20, GOOD if is_last else TEXT, "middle", "800")
+            s.text(x + w / 2, by0 + bh + 26, ver, 14, WHITE if is_last else DIM, "middle", "700" if is_last else "500")
         else:
-            s.rect(x, by0, bw - 10, bh, "none", 4, LINE, "4 5")
+            s.rect(x, by0, w, bh, "none", 8, LINE, "4 5")
 
 
 def standing_gaps(s, defs, snap, px, pw, top):
-    """Torqwave's rows that are not yes, by name: the part of the count the grid does not spell out."""
     cells = snap["products"]["torqwave"]["cells"]
     rows = all_rows(defs)
     c = coverage(cells, rows)
-    s.text(px + 18, top + 34, f'Torqwave {snap["release"]}', 19, WHITE, weight="bold")
-    s.text(px + 18, top + 58, f"of {len(rows)} rows", 15, DIM)
-    s.text(px + 18, top + 132, c["yes"], 72, WAVE, weight="bold")
-    s.text(px + 18, top + 160, "rows covered", 17, TEXT)
-    y = top + 212
-    for value, word, colour in (("partial", "Partial", "#c9b04a"), ("no", "No", DIM)):
+    s.text(px + 20, top + 36, f'Torqwave {snap["release"]}', 20, WHITE, weight="700")
+    s.text(px + 20, top + 58, f"of {len(rows)} rows", 14, DIM)
+    s.text(px + 20, top + 130, c["yes"], 70, "url(#kpiText)", weight="800")
+    s.text(px + 20, top + 158, "rows covered", 16, TEXT)
+    y = top + 206
+    for value, word, colour in (("partial", "Partial", WARN), ("no", "No", DIM)):
         names = [r["title"] for r in rows if cells[r["id"]]["value"] == value]
         if not names:
             continue
-        s.text(px + 18, y, f"{word}: {len(names)}", 17, colour, weight="bold")
-        y += 28
+        s.text(px + 20, y, f"{word}: {len(names)}", 16, colour, weight="700")
+        y += 26
         for name in names:
-            words, lines, cur = name.split(" "), [], ""
-            for w in words:
-                if len(cur) + len(w) + 1 > 24:
-                    lines.append(cur)
-                    cur = w
-                else:
-                    cur = (cur + " " + w).strip()
-            lines.append(cur)
-            for ln in lines:
-                s.text(px + 18, y, ln, 16, TEXT)
-                y += 21
-            y += 7
-        y += 22
+            for ln in wrap_lines(name, 24, max_lines=2):
+                s.text(px + 20, y, ln, 15, TEXT)
+                y += 20
+            y += 6
+        y += 16
 
 
 def graphic_standing(defs, snaps):
     snap = snaps[-1]
     s = Svg()
-    s.frame("Where Torqwave stands, area by area", "Rows covered in each area, of the rows this comparison tracks. A count of features, not of depth or maturity.", snap)
+    s.brand_header(
+        "Where Torqwave stands, area by area",
+        "Rows covered in each area of the 53-row matrix. A count of documented features, not of depth or maturity.",
+        snap,
+    )
     pids = product_columns(defs, snap)
-    lx, gx, top, bottom = 50, 285, 150, H - 70
-    cw, head = 91, 62
+    lx, gx, top, bottom = 50, 282, 158, H - 70
+    cw, head = 90, 58
     rh = (bottom - top - head) / len(pids)
-    fs = 20 if rh >= 44 else 18
+    fs = 19 if rh >= 42 else 17
+
     for j, g in enumerate(defs["groups"]):
         x = gx + j * cw
-        s.text(x + cw / 2, top + 26, SHORT.get(g["id"], g["title"]), 15, TEXT, "middle", "bold")
-        s.text(x + cw / 2, top + 46, f'{len(g["rows"])} rows', 13, FAINT, "middle")
+        s.text(x + cw / 2, top + 24, SHORT.get(g["id"], g["title"]), 14, TEXT, "middle", "700")
+        s.text(x + cw / 2, top + 43, f'{len(g["rows"])} rows', 12, FAINT, "middle")
+
     for i, pid in enumerate(pids):
         y = top + head + i * rh
         mine = pid.startswith("torqwave")
+        is_cur = pid == "torqwave"
         if mine:
-            s.rect(lx - 10, y, gx + len(defs["groups"]) * cw - lx + 14, rh, RAISED)
-        s.text(lx, y + rh / 2 + 6, label(defs, snap, pid), fs, WHITE if mine else TEXT, weight="bold" if mine else "normal")
+            s.rect(lx - 12, y + 1, gx + len(defs["groups"]) * cw - lx + 16, rh - 2, "url(#tqColGrad)" if is_cur else "#141d2d", 6)
+            if is_cur:
+                s.rect(lx - 12, y + 4, 4, rh - 8, "url(#accentH)", 2)
+        s.text(lx + 2, y + rh / 2 + 6, label(defs, snap, pid), fs, WHITE if mine else TEXT, weight="700" if mine else "400")
         for j, g in enumerate(defs["groups"]):
             c = coverage(snap["products"][pid]["cells"], g["rows"])
             n = len(g["rows"])
-            pad = 7 if rh >= 44 else 4
-            x, bw, bh = gx + j * cw + 6, cw - 12, rh - 2 * pad
+            pad = 6 if rh >= 42 else 4
+            x, bw, bh = gx + j * cw + 5, cw - 10, rh - 2 * pad
             by = y + pad
-            s.rect(x, by, bw, bh, BG if mine else SURFACE, 4, LINE)
+            s.rect(x, by, bw, bh, "#0a0f18" if mine else "#101623", 6, "#264654" if is_cur else LINE, sw=1)
             wy, wp, wu = bw * c["yes"] / n, bw * c["partial"] / n, bw * c["not confirmed"] / n
             if wy:
-                s.rect(x, by, wy, bh, "#2f7f5b", 4)
+                s.rect(x, by, wy, bh, "url(#barYes)" if is_cur else "#248763", 6)
             if wp:
-                s.rect(x + wy, by, wp, bh, "#8a7a2c", 0)
+                s.rect(x + wy, by, wp, bh, "url(#barPart)", 0)
             if wu:
                 s.rect(x + bw - wu, by, wu, bh, LINE2, 0)
-            s.text(x + bw / 2, by + bh / 2 + 6, f'{c["yes"]}/{n}', fs - 1, WHITE, "middle", "bold")
-    # the trend across releases, or, when the releases shown count the same, what the release leaves out
+            s.text(x + bw / 2, by + bh / 2 + 5.5, f'{c["yes"]}/{n}', fs - 2, WHITE, "middle", "700")
+
     pts, total = trend_points(defs, snaps, announced_only=True)
-    px = gx + len(defs["groups"]) * cw + 30
+    px = gx + len(defs["groups"]) * cw + 26
     pw = W - 50 - px
-    s.rect(px, top, pw, bottom - top, SURFACE, 10, LINE)
+    s.rect(px, top, pw, bottom - top, "url(#panelGrad)", 14, LINE, sw=1.2)
+    s.rect(px + 18, top, pw - 36, 3.5, "url(#accentH)", 2)
     if len({(c["yes"], c["partial"]) for _, c in pts}) > 1:
         standing_trend(s, pts, total, px, pw, top, bottom)
     else:
         standing_gaps(s, defs, snap, px, pw, top)
-    # legend
+
+    s.footer(snap)
     x = 50
-    for col, word in (("#2f7f5b", "yes (the number)"), ("#8a7a2c", "partial"), (LINE2, "not confirmed"), (SURFACE, "no")):
-        s.rect(x, H - 42, 18, 18, col, 3, LINE)
-        s.text(x + 26, H - 28, word, 17, DIM)
-        x += 44 + len(word) * 9.5
+    for col, word in (("url(#barYes)", "Yes (count)"), ("url(#barPart)", "Partial"), (LINE2, "Not confirmed"), ("#101623", "No")):
+        s.rect(x, H - 37, 16, 16, col, 4, LINE)
+        s.text(x + 24, H - 24, word, 15, DIM)
+        x += 42 + len(word) * 8.6
     return s.save(f"{len(defs['matrices']) + 2}-where-torqwave-stands.svg")
 
 
@@ -419,9 +753,12 @@ def matrix_md(defs, snaps):
     for l in defs["left_out"]:
         o.append(f'- **{l["name"]}:** {l["why"]}')
     o.append("\n## Graphics\n")
-    pics = [("1-release-by-the-numbers", "What the release adds over the one before, by the numbers")]
+    pics = [
+        ("0-release-hero", f'Torqwave {snap["release"]} release overview'),
+        ("1-release-by-the-numbers", "What the release adds over the one before, by the numbers"),
+    ]
     pics += [(m["file"], m["title"].replace("{release}", snap["release"])) for m in defs["matrices"]]
-    pics += [(f"{len(defs['matrices']) + 2}-where-torqwave-stands", "Rows covered in each area by each product, and Torqwave's rows that are partial or no")]
+    pics += [(f"{len(defs['matrices']) + 2}-where-torqwave-stands", "Rows covered in each area by each product, and Torqwave's release trend")]
     for f, alt in pics:
         o.append(f"![{alt}](graphics/{f}.png)\n")
     o.append("## Coverage by area\n")
@@ -453,7 +790,6 @@ def matrix_md(defs, snaps):
     if quiet:
         names = quiet[0] if len(quiet) == 1 else ", ".join(quiet[:-1]) + " and " + quiet[-1]
         o.append(f'\nThe releases the comparison is drawn for. {names} came out between them; their snapshots are in `data/snapshots/`.')
-    # behind and ahead, computed
     o.append("\n## Where Torqwave is behind\n")
     o.append(f"Rows where Torqwave {snap['release']} is no or partial and at least two of the {len(comp)} other products are yes.\n")
     o.append("| Row | Torqwave | Others that are yes |")
@@ -585,7 +921,11 @@ def main():
         if missing:
             sys.exit(f"{pid} has no cell for: {', '.join(missing)}")
     os.makedirs(OUT, exist_ok=True)
-    svgs = [graphic_numbers(defs, snap)] + [graphic_matrix(defs, snap, m) for m in defs["matrices"]] + [graphic_standing(defs, snaps)]
+    svgs = (
+        [graphic_hero(defs, snap), graphic_numbers(defs, snap)]
+        + [graphic_matrix(defs, snap, m) for m in defs["matrices"]]
+        + [graphic_standing(defs, snaps)]
+    )
     whole, tall = graphic_whole(defs, snap)
     svgs.append(whole)
     heights = {whole: tall}

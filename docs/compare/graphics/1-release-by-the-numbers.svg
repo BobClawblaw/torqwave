@@ -1,72 +1,119 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
-<rect width="1600" height="900" fill="#111317"/>
-<text x="50.0" y="76.0" font-size="44" fill="#ffffff" text-anchor="start" font-weight="bold">Torqwave 0.23.0: what it adds over 0.22.0</text>
-<text x="50.0" y="116.0" font-size="23" fill="#8b939e" text-anchor="start" font-weight="normal">By the numbers, counted from the release&#x27;s own files and documentation</text>
-<text x="1550.0" y="872.0" font-size="17" fill="#6b737d" text-anchor="end" font-weight="normal">As of 2026-11-27. Torqwave 0.23.0 is released. Sources and method: docs/compare in the Torqwave repository.</text>
-<rect x="50.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
-<rect x="50.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="74.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">32</text>
-<text x="74.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Built-in plug-ins</text>
-<text x="74.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 22</text>
-<text x="74.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">+6 live creative FX, +4 live</text>
-<text x="74.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">MIDI FX</text>
-<rect x="390.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
-<rect x="390.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="414.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">116</text>
-<text x="414.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Complex patches</text>
-<text x="414.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 58</text>
-<text x="414.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">58 new 9-osc club patches in</text>
-<text x="414.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">0.22.1</text>
-<rect x="730.0" y="160.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
-<rect x="730.0" y="160.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="754.0" y="268.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">24</text>
-<text x="754.0" y="316.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Synth mod slots</text>
-<text x="754.0" y="354.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 16</text>
-<text x="754.0" y="390.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">4 LFOs, MSEG Curve, Slot</text>
-<text x="754.0" y="414.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Depth, Arp, 4 scenes</text>
-<rect x="50.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
-<rect x="50.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="74.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">47</text>
-<text x="74.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Matrix coverage</text>
-<text x="74.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 45</text>
-<text x="74.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">of 53 rows (+Audio to MIDI,</text>
-<text x="74.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">+CLAP 1.2)</text>
-<rect x="390.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
-<rect x="390.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="414.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">9</text>
-<text x="414.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Drum output buses</text>
-<text x="414.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 1</text>
-<text x="414.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">Main + 8 stereo Aux buses per</text>
-<text x="414.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">pad</text>
-<rect x="730.0" y="480.0" width="320.0" height="300.0" rx="10" fill="#16191d" stroke="#2a2f36" stroke-width="1.5"/>
-<rect x="730.0" y="480.0" width="320.0" height="5.0" rx="2" fill="#4fc3a1"/>
-<text x="754.0" y="588.0" font-size="84" fill="#4fc3a1" text-anchor="start" font-weight="bold">2,782</text>
-<text x="754.0" y="636.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Automated checks</text>
-<text x="754.0" y="674.0" font-size="22" fill="#8b939e" text-anchor="start" font-weight="normal">0.22.0: 2,741</text>
-<text x="754.0" y="710.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">arm64 + Intel Rosetta, plus</text>
-<text x="754.0" y="734.0" font-size="18" fill="#6b737d" text-anchor="start" font-weight="normal">headless CI</text>
-<rect x="1080.0" y="160.0" width="470.0" height="620.0" rx="10" fill="#1d2126" stroke="#2a2f36" stroke-width="1.5"/>
-<text x="1108.0" y="212.0" font-size="28" fill="#ffffff" text-anchor="start" font-weight="bold">Also new since 0.22.0</text>
-<rect x="1108.0" y="248.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="260.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">6 live Creative FX: Delay,</text>
-<text x="1130.0" y="288.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Distortion, Auto-Filter, Volume</text>
-<text x="1130.0" y="316.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Shaper, Gate, Tremolo</text>
-<rect x="1108.0" y="349.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="361.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">4 live MIDI FX: Arp, Chord Trigger,</text>
-<text x="1130.0" y="389.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Scale Lock &amp; Note Echo</text>
-<rect x="1108.0" y="422.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="434.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Synth: 4 LFOs, 24 slots, Slot Depth,</text>
-<text x="1130.0" y="462.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Curve LFO, Arp &amp; 4 scenes</text>
-<rect x="1108.0" y="495.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="507.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Audio to MIDI: melody (YIN) &amp; drums</text>
-<text x="1130.0" y="535.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">(3-band + groove)</text>
-<rect x="1108.0" y="568.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="580.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Piano Roll: ratchets, micro-timing,</text>
-<text x="1130.0" y="608.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">grooves &amp; ghost notes</text>
-<rect x="1108.0" y="641.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="653.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Sampler SFZ, round robin &amp; Warp;</text>
-<text x="1130.0" y="681.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Drums 8-bus multi-out</text>
-<rect x="1108.0" y="714.0" width="8.0" height="8.0" rx="2" fill="#4a9fe0"/>
-<text x="1130.0" y="726.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">Track Modulators, native CLAP 1.2 &amp;</text>
-<text x="1130.0" y="754.0" font-size="21" fill="#d8dde3" text-anchor="start" font-weight="normal">headless CI tests</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="SF Pro Display, -apple-system, BlinkMacSystemFont, Helvetica Neue, Inter, Arial, sans-serif">
+<defs>
+<linearGradient id="bgGrad" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#080b11"/><stop offset="52%" stop-color="#0c111b"/><stop offset="100%" stop-color="#080c14"/></linearGradient>
+<radialGradient id="glowMint" cx="0.16" cy="0.06" r="0.55"><stop offset="0%" stop-color="#34e8a8" stop-opacity="0.14"/><stop offset="55%" stop-color="#1cb58c" stop-opacity="0.04"/><stop offset="100%" stop-color="#080b11" stop-opacity="0"/></radialGradient>
+<radialGradient id="glowCyan" cx="0.88" cy="0.92" r="0.55"><stop offset="0%" stop-color="#38d9f5" stop-opacity="0.12"/><stop offset="55%" stop-color="#2563eb" stop-opacity="0.035"/><stop offset="100%" stop-color="#080b11" stop-opacity="0"/></radialGradient>
+<linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#151d2d"/><stop offset="100%" stop-color="#0e1420"/></linearGradient>
+<linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#172133"/><stop offset="100%" stop-color="#0f1522"/></linearGradient>
+<linearGradient id="tqColGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#162933" stop-opacity="0.95"/><stop offset="100%" stop-color="#101827" stop-opacity="0.92"/></linearGradient>
+<linearGradient id="accentH" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#34e8a8"/><stop offset="65%" stop-color="#38d9f5"/><stop offset="100%" stop-color="#4ea8ff"/></linearGradient>
+<linearGradient id="accentFade" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#34e8a8" stop-opacity="0.85"/><stop offset="45%" stop-color="#38d9f5" stop-opacity="0.45"/><stop offset="100%" stop-color="#38d9f5" stop-opacity="0"/></linearGradient>
+<linearGradient id="barYes" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1fa87a"/><stop offset="100%" stop-color="#34e8a8"/></linearGradient>
+<linearGradient id="barYesV" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#147a5b"/><stop offset="65%" stop-color="#22bd89"/><stop offset="100%" stop-color="#34e8a8"/></linearGradient>
+<linearGradient id="barPart" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8b6918"/><stop offset="100%" stop-color="#bf9226"/></linearGradient>
+<linearGradient id="kpiText" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5ff7c4"/><stop offset="100%" stop-color="#38d9f5"/></linearGradient>
+<linearGradient id="pillBg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#13342d"/><stop offset="100%" stop-color="#122c3c"/></linearGradient>
+<pattern id="studioGrid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M 48 0 L 0 0 0 48" fill="none" stroke="#ffffff" stroke-opacity="0.025" stroke-width="1"/></pattern>
+</defs>
+<rect width="1600" height="900" fill="url(#bgGrad)"/>
+<rect width="1600" height="900" fill="url(#studioGrid)"/>
+<rect width="1600" height="900" fill="url(#glowMint)"/>
+<rect width="1600" height="900" fill="url(#glowCyan)"/>
+<polyline points="880,74.0 892,74.3 904,75.2 916,76.5 928,77.9 940,78.9 952,79.4 964,79.2 976,78.6 988,77.9 1000,77.4 1012,77.3 1024,77.5 1036,77.5 1048,76.8 1060,74.8 1072,71.2 1084,66.0 1096,60.0 1108,54.1 1120,49.5 1132,47.4 1144,48.5 1156,52.7 1168,59.5 1180,67.8 1192,76.1 1204,83.1 1216,87.9 1228,90.2 1240,90.3 1252,89.1 1264,87.7 1276,86.8 1288,87.0 1300,88.1 1312,89.6 1324,90.6 1336,90.2 1348,87.7 1360,83.0 1372,76.7 1384,69.8 1396,63.2 1408,58.2 1420,55.6 1432,55.4 1444,57.5 1456,61.1 1468,65.2 1480,69.0 1492,72.0 1504,73.9 1516,74.8 1528,75.0 1540,74.9 1552,74.8 1564,74.7 1576,74.6 1588,74.4 1600,74.0 1612,73.5-0.4j" fill="none" stroke="url(#accentH)" stroke-opacity="0.22" stroke-width="2"/>
+<polyline points="880,74.0 892,74.3 904,74.7 916,74.9 928,75.0 940,74.7 952,73.9 964,72.6 976,70.9 988,68.8 1000,66.6 1012,64.6 1024,63.0 1036,62.1 1048,62.0 1060,62.9 1072,64.7 1084,67.1 1096,70.0 1108,73.0 1120,75.9 1132,78.3 1144,80.1 1156,81.3 1168,81.9 1180,82.0 1192,82.0 1204,82.0 1216,82.2 1228,82.8 1240,83.7 1252,84.9 1264,86.1 1276,87.0 1288,87.3 1300,86.9 1312,85.5 1324,83.2 1336,80.1 1348,76.3 1360,72.4 1372,68.5 1384,65.2 1396,62.7 1408,61.2 1420,60.8 1432,61.4 1444,62.8 1456,64.8 1468,67.0 1480,69.2 1492,71.1 1504,72.7 1516,73.7 1528,74.3 1540,74.6 1552,74.6 1564,74.5 1576,74.3 1588,74.2 1600,74.0 1612,73.8-0.1j" fill="none" stroke="#38d9f5" stroke-opacity="0.12" stroke-width="1.5"/>
+<text x="50.0" y="44.0" font-size="16" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="0.14em">TORQ</text>
+<text x="105.0" y="44.0" font-size="16" fill="#34e8a8" text-anchor="start" font-weight="800" letter-spacing="0.14em">WAVE</text>
+<rect x="176.0" y="24.0" width="74.1" height="24.0" rx="12.0" fill="url(#pillBg)" stroke="#2be0a2" stroke-width="1.1"/>
+<text x="213.0" y="40.2" font-size="12" fill="#34e8a8" text-anchor="middle" font-weight="bold" letter-spacing="0.06em">v0.23.0</text>
+<text x="1550.0" y="42.0" font-size="13" fill="#8e9cb2" text-anchor="end" font-weight="600" letter-spacing="0.09em">FREE · OPEN SOURCE · macOS / WIN / LINUX</text>
+<text x="50.0" y="92.0" font-size="40" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="-0.02em">Torqwave 0.23.0: what it adds over 0.22.0</text>
+<text x="50.0" y="124.0" font-size="20" fill="#8e9cb2" text-anchor="start" font-weight="400">By the numbers, counted directly from the release&#x27;s build, tests and documentation</text>
+<rect x="50.0" y="138.0" width="1500.0" height="1.5" rx="0" fill="url(#accentFade)"/>
+<rect x="50.0" y="166.0" width="312.0" height="310.0" rx="14" fill="url(#cardGrad)" stroke="#232e42" stroke-width="1.2"/>
+<rect x="66.0" y="166.0" width="280.0" height="3.5" rx="2" fill="url(#accentH)"/>
+<rect x="290.0" y="186.0" width="54.0" height="28.0" rx="14" fill="url(#pillBg)" stroke="#279e78" stroke-width="1"/>
+<text x="317.0" y="205.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+10</text>
+<text x="74.0" y="280.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">32</text>
+<text x="74.0" y="324.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">Built-in plug-ins</text>
+<text x="74.0" y="356.0" font-size="18" fill="#8e9cb2" text-anchor="start" font-weight="500">0.22.0: 22</text>
+<line x1="74.0" y1="374.0" x2="338.0" y2="374.0" stroke="#232e42" stroke-width="1" opacity="0.7"/>
+<text x="74.0" y="402.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">+6 live creative FX, +4 live</text>
+<text x="74.0" y="425.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">MIDI FX</text>
+<rect x="382.0" y="166.0" width="312.0" height="310.0" rx="14" fill="url(#cardGrad)" stroke="#232e42" stroke-width="1.2"/>
+<rect x="398.0" y="166.0" width="280.0" height="3.5" rx="2" fill="url(#accentH)"/>
+<rect x="622.0" y="186.0" width="54.0" height="28.0" rx="14" fill="url(#pillBg)" stroke="#279e78" stroke-width="1"/>
+<text x="649.0" y="205.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+58</text>
+<text x="406.0" y="280.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">116</text>
+<text x="406.0" y="324.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">Complex patches</text>
+<text x="406.0" y="356.0" font-size="18" fill="#8e9cb2" text-anchor="start" font-weight="500">0.22.0: 58</text>
+<line x1="406.0" y1="374.0" x2="670.0" y2="374.0" stroke="#232e42" stroke-width="1" opacity="0.7"/>
+<text x="406.0" y="402.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">58 new 9-osc club patches in</text>
+<text x="406.0" y="425.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">0.22.1</text>
+<rect x="714.0" y="166.0" width="312.0" height="310.0" rx="14" fill="url(#cardGrad)" stroke="#232e42" stroke-width="1.2"/>
+<rect x="730.0" y="166.0" width="280.0" height="3.5" rx="2" fill="url(#accentH)"/>
+<rect x="954.0" y="186.0" width="54.0" height="28.0" rx="14" fill="url(#pillBg)" stroke="#279e78" stroke-width="1"/>
+<text x="981.0" y="205.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+8</text>
+<text x="738.0" y="280.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">24</text>
+<text x="738.0" y="324.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">Synth mod slots</text>
+<text x="738.0" y="356.0" font-size="18" fill="#8e9cb2" text-anchor="start" font-weight="500">0.22.0: 16</text>
+<line x1="738.0" y1="374.0" x2="1002.0" y2="374.0" stroke="#232e42" stroke-width="1" opacity="0.7"/>
+<text x="738.0" y="402.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">4 LFOs, MSEG Curve, Slot Depth,</text>
+<text x="738.0" y="425.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">Arp, 4 scenes</text>
+<rect x="50.0" y="496.0" width="312.0" height="310.0" rx="14" fill="url(#cardGrad)" stroke="#232e42" stroke-width="1.2"/>
+<rect x="66.0" y="496.0" width="280.0" height="3.5" rx="2" fill="url(#accentH)"/>
+<rect x="290.0" y="516.0" width="54.0" height="28.0" rx="14" fill="url(#pillBg)" stroke="#279e78" stroke-width="1"/>
+<text x="317.0" y="535.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+2</text>
+<text x="74.0" y="610.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">47</text>
+<text x="74.0" y="654.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">Matrix coverage</text>
+<text x="74.0" y="686.0" font-size="18" fill="#8e9cb2" text-anchor="start" font-weight="500">0.22.0: 45</text>
+<line x1="74.0" y1="704.0" x2="338.0" y2="704.0" stroke="#232e42" stroke-width="1" opacity="0.7"/>
+<text x="74.0" y="732.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">of 53 rows (+Audio to MIDI,</text>
+<text x="74.0" y="755.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">+CLAP 1.2)</text>
+<rect x="382.0" y="496.0" width="312.0" height="310.0" rx="14" fill="url(#cardGrad)" stroke="#232e42" stroke-width="1.2"/>
+<rect x="398.0" y="496.0" width="280.0" height="3.5" rx="2" fill="url(#accentH)"/>
+<rect x="622.0" y="516.0" width="54.0" height="28.0" rx="14" fill="url(#pillBg)" stroke="#279e78" stroke-width="1"/>
+<text x="649.0" y="535.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+8</text>
+<text x="406.0" y="610.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">9</text>
+<text x="406.0" y="654.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">Drum output buses</text>
+<text x="406.0" y="686.0" font-size="18" fill="#8e9cb2" text-anchor="start" font-weight="500">0.22.0: 1</text>
+<line x1="406.0" y1="704.0" x2="670.0" y2="704.0" stroke="#232e42" stroke-width="1" opacity="0.7"/>
+<text x="406.0" y="732.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">Main + 8 stereo Aux buses per</text>
+<text x="406.0" y="755.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">pad</text>
+<rect x="714.0" y="496.0" width="312.0" height="310.0" rx="14" fill="url(#cardGrad)" stroke="#232e42" stroke-width="1.2"/>
+<rect x="730.0" y="496.0" width="280.0" height="3.5" rx="2" fill="url(#accentH)"/>
+<rect x="954.0" y="516.0" width="54.0" height="28.0" rx="14" fill="url(#pillBg)" stroke="#279e78" stroke-width="1"/>
+<text x="981.0" y="535.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+41</text>
+<text x="738.0" y="610.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">2,782</text>
+<text x="738.0" y="654.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">Automated checks</text>
+<text x="738.0" y="686.0" font-size="18" fill="#8e9cb2" text-anchor="start" font-weight="500">0.22.0: 2,741</text>
+<line x1="738.0" y1="704.0" x2="1002.0" y2="704.0" stroke="#232e42" stroke-width="1" opacity="0.7"/>
+<text x="738.0" y="732.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">arm64 + Intel Rosetta, plus</text>
+<text x="738.0" y="755.0" font-size="16" fill="#64728a" text-anchor="start" font-weight="normal">headless CI</text>
+<rect x="1054.0" y="166.0" width="496.0" height="640.0" rx="14" fill="url(#panelGrad)" stroke="#232e42" stroke-width="1.2"/>
+<rect x="1074.0" y="166.0" width="120.0" height="3.5" rx="2" fill="url(#accentH)"/>
+<text x="1082.0" y="216.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">Highlights since 0.22.0</text>
+<line x1="1082.0" y1="234.0" x2="1522.0" y2="234.0" stroke="#232e42" stroke-width="1" opacity="0.8"/>
+<polygon points="1088,256 1093,261 1088,266 1083,261" fill="url(#accentH)"/>
+<text x="1106.0" y="268.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">6 live Creative FX: Delay, Distortion,</text>
+<text x="1106.0" y="294.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">Auto-Filter, Volume Shaper, Gate, Tremolo</text>
+<polygon points="1088,326 1093,331 1088,336 1083,331" fill="url(#accentH)"/>
+<text x="1106.0" y="338.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">4 live MIDI FX: Arp, Chord Trigger, Scale</text>
+<text x="1106.0" y="364.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">Lock &amp; Note Echo</text>
+<polygon points="1088,396 1093,401 1088,406 1083,401" fill="url(#accentH)"/>
+<text x="1106.0" y="408.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">Synth: 4 LFOs, 24 slots, Slot Depth,</text>
+<text x="1106.0" y="434.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">Curve LFO, Arp &amp; 4 scenes</text>
+<polygon points="1088,466 1093,471 1088,476 1083,471" fill="url(#accentH)"/>
+<text x="1106.0" y="478.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">Audio to MIDI: melody (YIN) &amp; drums</text>
+<text x="1106.0" y="504.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">(3-band + groove)</text>
+<polygon points="1088,536 1093,541 1088,546 1083,541" fill="url(#accentH)"/>
+<text x="1106.0" y="548.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">Piano Roll: ratchets, micro-timing,</text>
+<text x="1106.0" y="574.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">grooves &amp; ghost notes</text>
+<polygon points="1088,606 1093,611 1088,616 1083,611" fill="url(#accentH)"/>
+<text x="1106.0" y="618.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">Sampler SFZ, round robin &amp; Warp; Drums</text>
+<text x="1106.0" y="644.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">8-bus multi-out</text>
+<polygon points="1088,676 1093,681 1088,686 1083,681" fill="url(#accentH)"/>
+<text x="1106.0" y="688.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">Track Modulators, native CLAP 1.2 &amp;</text>
+<text x="1106.0" y="714.0" font-size="19" fill="#dce3ee" text-anchor="start" font-weight="normal">headless CI tests</text>
+<line x1="50.0" y1="848.0" x2="1550.0" y2="848.0" stroke="#232e42" stroke-width="1" opacity="0.7"/>
+<text x="1550.0" y="876.0" font-size="14" fill="#64728a" text-anchor="end" font-weight="normal">As of 2026-11-27 · Torqwave 0.23.0 (released) · Sources &amp; method: docs/compare</text>
 </svg>

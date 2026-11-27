@@ -4,7 +4,7 @@
 # a disk image:
 #   dist/Torqwave-<version>.dmg (the app and the licence) and its .sha256
 #
-# Usage: Scripts/package.sh [--juce <JUCE checkout>] [--jobs <n>] [--skip-tests]
+# Usage: Scripts/package.sh [--juce <JUCE checkout>] [--jobs <n>] [--skip-tests] [--release-kit]
 #
 # Without a Developer ID the app is signed ad hoc: it runs on any Mac, but Gatekeeper asks the
 # first time it is opened (see README, "Installing").
@@ -22,12 +22,14 @@ dist="$root/dist"
 juce=""
 jobs=4
 tests=1
+release_kit=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --juce) juce="$2"; shift 2 ;;
         --jobs) jobs="$2"; shift 2 ;;
         --skip-tests) tests=0; shift ;;
+        --release-kit) release_kit=1; shift ;;
         *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
 done
@@ -88,3 +90,8 @@ hdiutil create -volname "Torqwave $version" -srcfolder "$stage" -size "${megabyt
 echo "== Done"
 ls -l "$dmg"
 cat "$dmg.sha256"
+
+if [ "$release_kit" = 1 ]; then
+    echo "== Release marketing kit (docs/releases/$version)"
+    python3 "$root/Scripts/release_kit.py" --version "$version"
+fi

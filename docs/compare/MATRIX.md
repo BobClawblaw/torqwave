@@ -52,6 +52,8 @@ Left out, and why:
 
 ## Graphics
 
+![Torqwave 0.23.0 release overview](graphics/0-release-hero.png)
+
 ![What the release adds over the one before, by the numbers](graphics/1-release-by-the-numbers.png)
 
 ![Torqwave 0.23.0 and the audio editors](graphics/2-against-the-editors.png)
@@ -60,7 +62,7 @@ Left out, and why:
 
 ![Torqwave 0.23.0 and the DAWs, 2 of 2](graphics/4-against-the-daws-2.png)
 
-![Rows covered in each area by each product, and Torqwave's rows that are partial or no](graphics/5-where-torqwave-stands.png)
+![Rows covered in each area by each product, and Torqwave's release trend](graphics/5-where-torqwave-stands.png)
 
 ## Coverage by area
 
