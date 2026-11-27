@@ -3,6 +3,7 @@
 [![Website: hear it](https://img.shields.io/badge/website-hear%20it-2f81f7)](https://bobclawblaw.github.io/torqwave/)
 [![Latest release](https://img.shields.io/github/v/release/BobClawblaw/torqwave?label=release)](https://github.com/BobClawblaw/torqwave/releases/latest)
 [![Licence: AGPL-3.0](https://img.shields.io/github/license/BobClawblaw/torqwave?label=licence)](LICENSE)
+![Zero telemetry & tracking](https://img.shields.io/badge/telemetry-zero%20tracking-ff5c1f)
 ![macOS 13 or later](https://img.shields.io/badge/macOS-13%2B-black?logo=apple)
 ![Windows 10 or later](https://img.shields.io/badge/Windows-10%2B-0078D6?logo=windows)
 ![Linux](https://img.shields.io/badge/Linux-x86__64-FCC624?logo=linux&logoColor=black)
@@ -12,7 +13,7 @@
 ![Plug-ins: VST3, AU, LV2 and CLAP](https://img.shields.io/badge/plug--ins-VST3%20%7C%20AU%20%7C%20LV2%20%7C%20CLAP-orange)
 [![Last commit](https://img.shields.io/github/last-commit/BobClawblaw/torqwave)](https://github.com/BobClawblaw/torqwave/commits/main)
 
-A free, open-source audio editor and DAW in one, for macOS, Windows and Linux: for sound designers, for writing and producing music, and for working to picture. Waveform and spectral editing, repair and mastering suites, built-in effects, multitrack sessions with instruments, a piano roll, automation and mixdown, a Sound Library for large effects collections, video, and VST3 plug-ins (with Audio Units on the Mac, and LV2 on the Mac and Linux). It is also a free alternative to Audacity for everyday editing. Clean-room, built on JUCE 9.0.4.
+A free, open-source audio editor and DAW in one, for macOS, Windows and Linux — with **zero telemetry, zero tracking, no account and no subscription**: for sound designers, for writing and producing music, and for working to picture. Waveform and spectral editing, repair and mastering suites, built-in effects, multitrack sessions with instruments, a piano roll, automation and mixdown, a Sound Library for large effects collections, video, and VST3, Audio Unit, LV2 and CLAP 1.2 plug-ins. Torqwave runs 100% offline with no background network calls (optional Ask Torq is off by default and targets a local server unless you configure one). It is also a free, privacy-first alternative to Audacity for everyday editing. Clean-room, built on JUCE 9.0.4.
 
 ![Torqwave](Art/torqwave-banner.png)
 

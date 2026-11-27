@@ -309,7 +309,7 @@ class Svg:
         self.text(62, 43, "TORQ", 16, WHITE, weight="800", ls="0.14em")
         self.text(117, 43, "WAVE", 16, BRAND, weight="800", ls="0.14em")
         self.pill(188, 24, f'v{snap["release"]}', size=12, h=24, pad_x=11)
-        badge = right_badge or "FREE · OPEN SOURCE · macOS / WIN / LINUX"
+        badge = right_badge or "FREE · OPEN SOURCE · ZERO TELEMETRY · macOS / WIN / LINUX"
         self.text(self.w - 50, 42, badge, 13, DIM, "end", "600", ls="0.09em")
         # Title & subtitle
         self.text(50, 92, title, 40, WHITE, weight="800", ls="-0.02em")
@@ -373,7 +373,7 @@ def graphic_hero(defs, snap):
 
     # Top bar
     s.pill(56, 48, f'RELEASE v{snap["release"]}', size=14, h=30, pad_x=16)
-    s.text(W - 56, 68, "FREE · OPEN SOURCE (AGPL-3.0) · macOS / WINDOWS / LINUX", 14, DIM, "end", "600", ls="0.10em")
+    s.text(W - 56, 68, "FREE · OPEN SOURCE (AGPL-3.0) · ZERO TELEMETRY · macOS / WIN / LINUX", 14, DIM, "end", "600", ls="0.10em")
 
     # Giant Display Title
     s.text(56, 174, "TORQ", 86, WHITE, weight="800", ls="-0.03em")
@@ -423,7 +423,7 @@ def graphic_hero(defs, snap):
 
     # Bottom footer callout
     s.line(56, H - 56, W - 56, H - 56, LINE, 1, 0.7)
-    s.text(56, H - 24, "bobclawblaw.github.io/torqwave  ·  1,243 built-in audio clips  ·  No account, no subscription", 16, TEXT, weight="500")
+    s.text(56, H - 24, "bobclawblaw.github.io/torqwave  ·  Zero telemetry & tracking  ·  No account, no subscription", 16, TEXT, weight="500")
     s.text(W - 56, H - 24, f'Released {snap["as_of"]} · AGPL-3.0', 15, FAINT, "end")
     return s.save("0-release-hero.svg")
 

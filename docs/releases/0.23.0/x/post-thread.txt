@@ -30,4 +30,4 @@ Hear 1,243 clips: https://bobclawblaw.github.io/torqwave/
 
 What Torqwave still doesn't have: Dolby Atmos, ARA 2, a notation editor, full neural stem export, or notarized macOS/Windows installers yet.
 
-2,782 automated checks passed on Apple Silicon & Intel (Rosetta), plus headless CI tests on Windows & Linux. AGPL-3.0, no account.
+Zero telemetry, zero tracking, no account. 2,782 checks on Apple Silicon & Intel, plus headless Win/Linux CI. AGPL-3.0.

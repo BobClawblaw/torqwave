@@ -29,3 +29,7 @@ Every release must ship complete, accurate documentation and a marketing kit tra
 ## 4. Brand Identity Standard
 - **Official Wordmark & Alternate Mark:** `"TORQ"` is always white (or strong ink on light themes) and `"WAVE"` + brand header accent bars are always Torqwave Hot Orange (`#ff5c1f` on dark surfaces, `#d9480f` on light surfaces — matching `Art/ridges.py` `HOT`).
 - **Consistency Across Surfaces:** Apply this white + orange mark across all built-in plugins (`Theme::brandOrange()` in `WaveSynthEditor`, `SamplerEditor`, `SwarmGuitarEditor`), GitHub Pages (`docs/`), X.com graphics (`docs/compare/generate.py`), and Instagram carousels (`Scripts/release_kit.py`). Never use blue or teal/mint for the Torqwave wordmark or brand header bar.
+
+## 5. Zero Telemetry & Tracking Standard
+- **Hard Engineering Ban:** Never add telemetry, usage analytics, crash-reporting beacons, license phone-home, background update checks, or any silent network calls to Torqwave. The application must remain 100% offline-first; the only network requests allowed are strictly user-initiated actions (such as the optional, off-by-default `Ask Torq` feature targeting a user-configured server, or opening explicit documentation links).
+- **Mandatory Release Messaging Pillar:** Every follow-up release from `0.23.0` onward must prominently highlight **Zero Telemetry & Zero Tracking** (alongside free, open-source AGPL-3.0, no account, no subscription) across GitHub Pages, `README.md`, X.com graphics/copy, Instagram carousel slides/captions, and GitHub Release notes.

@@ -1,6 +1,6 @@
 Torqwave 0.23.0 is out.
 
-Torqwave is a free, open-source audio editor and DAW in one program for macOS, Windows and Linux — spectral editing, repair and mastering alongside multitrack sessions, instruments, a sequencer, automation, surround and video. No account, no subscription.
+Torqwave is a free, open-source audio editor and DAW in one program for macOS, Windows and Linux — spectral editing, repair and mastering alongside multitrack sessions, instruments, a sequencer, automation, surround and video. Zero telemetry, zero tracking, no account, no subscription — 100% offline-first.
 
 0.23.0 lifts Torqwave from 45 to 47 of 53 rows in our documented comparison against 15 editors and DAWs (+Audio to MIDI, CLAP) and grows the built-in plug-in suite from 22 to 32.
 
