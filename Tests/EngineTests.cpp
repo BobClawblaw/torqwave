@@ -1360,6 +1360,12 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (const auto folder = valueOf ("--023-demos"); folder.isNotEmpty())
+    {
+        renderRelease023Demos (juce::File::getCurrentWorkingDirectory().getChildFile (folder));
+        return 0;
+    }
+
     if (const auto folder = valueOf ("--library"); folder.isNotEmpty())
     {
         runSoundLibraryOn (juce::File::getCurrentWorkingDirectory().getChildFile (folder));

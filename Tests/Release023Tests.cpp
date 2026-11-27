@@ -657,3 +657,590 @@ void runRelease023Tests()
     testSamplerAndDrumMultiOut();
     testTrackModulatorsAndClap();
 }
+
+namespace
+{
+    struct DemoPlayHead final : juce::AudioPlayHead
+    {
+        double bpm = 128.0;
+        double sampleRate = 48000.0;
+        juce::int64 samplePos = 0;
+
+        juce::Optional<PositionInfo> getPosition() const override
+        {
+            PositionInfo p;
+            p.setBpm (bpm);
+            p.setIsPlaying (true);
+            p.setTimeInSamples (samplePos);
+            p.setTimeInSeconds ((double) samplePos / sampleRate);
+            p.setPpqPosition (((double) samplePos / sampleRate) * (bpm / 60.0));
+            return p;
+        }
+    };
+
+    void setById (juce::AudioProcessor& proc, const juce::String& id, float plainOrNorm, bool isNorm = false)
+    {
+        for (auto* p : proc.getParameters())
+        {
+            if (auto* wp = dynamic_cast<juce::AudioProcessorParameterWithID*> (p); wp != nullptr && wp->paramID == id)
+            {
+                if (isNorm)
+                    wp->setValue (juce::jlimit (0.0f, 1.0f, plainOrNorm));
+                else if (auto* rp = dynamic_cast<juce::RangedAudioParameter*> (p))
+                    rp->setValue (rp->convertTo0to1 (plainOrNorm));
+                return;
+            }
+        }
+    }
+
+    void writeDemoWav (const juce::File& file, juce::AudioBuffer<float>& buf, double sr)
+    {
+        // Clean peak levelling to -1.0 dBFS (~0.891) so every audition clip plays loud & clear without clipping
+        float peak = 0.0f;
+        for (int c = 0; c < buf.getNumChannels(); ++c)
+            peak = juce::jmax (peak, buf.getMagnitude (c, 0, buf.getNumSamples()));
+        if (peak > 1.0e-4f)
+            buf.applyGain (0.891f / peak);
+
+        // Short 10ms fade-out at end to avoid any tail cut click
+        const auto fade = juce::jmin (480, buf.getNumSamples() / 8);
+        for (int c = 0; c < buf.getNumChannels(); ++c)
+            buf.applyGainRamp (c, buf.getNumSamples() - fade, fade, 1.0f, 0.0f);
+
+        file.deleteFile();
+        juce::WavAudioFormat wav;
+        if (std::unique_ptr<juce::OutputStream> out = file.createOutputStream())
+        {
+            const auto opts = juce::AudioFormatWriterOptions()
+                .withSampleRate (sr)
+                .withNumChannels (buf.getNumChannels())
+                .withBitsPerSample (24);
+            if (auto writer = wav.createWriterFor (out, opts))
+                writer->writeFromAudioSampleBuffer (buf, 0, buf.getNumSamples());
+        }
+        std::cout << "  wrote " << file.getFileName() << " (" << juce::String ((double) buf.getNumSamples() / sr, 1) << "s)" << std::endl;
+    }
+
+    void mixInto (juce::AudioBuffer<float>& dst, const juce::AudioBuffer<float>& src, int dstStart, float gain = 1.0f)
+    {
+        const auto n = juce::jmin (src.getNumSamples(), dst.getNumSamples() - dstStart);
+        if (n <= 0) return;
+        for (int c = 0; c < juce::jmin (dst.getNumChannels(), src.getNumChannels()); ++c)
+            dst.addFrom (c, dstStart, src, c, 0, n, gain);
+    }
+
+    juce::AudioBuffer<float> renderKickBed (double bpm, int bars, double sr)
+    {
+        BuiltInEffects::BasicDrumsProcessor drums;
+        drums.setPlayConfigDetails (0, 2, sr, 512);
+        drums.prepareToPlay (sr, 512);
+        const auto beatSamp = (int) std::llround (sr * 60.0 / bpm);
+        const auto total = beatSamp * 4 * bars;
+        juce::AudioBuffer<float> out (2, total);
+        out.clear();
+        for (int pos = 0; pos < total; pos += 512)
+        {
+            const auto n = juce::jmin (512, total - pos);
+            juce::AudioBuffer<float> blk (2, n);
+            blk.clear();
+            juce::MidiBuffer m;
+            for (int beat = 0; beat < 4 * bars; ++beat)
+            {
+                const auto s = beat * beatSamp;
+                if (s >= pos && s < pos + n)
+                    m.addEvent (juce::MidiMessage::noteOn (10, 36, 0.95f), s - pos);
+                const auto offHat = s + beatSamp / 2;
+                if (offHat >= pos && offHat < pos + n)
+                    m.addEvent (juce::MidiMessage::noteOn (10, 42, 0.55f), offHat - pos);
+            }
+            drums.processBlock (blk, m);
+            mixInto (out, blk, pos, 0.85f);
+        }
+        return out;
+    }
+}
+
+void renderRelease023Demos (const juce::File& folder)
+{
+    folder.createDirectory();
+    const double sr = 48000.0;
+    std::cout << "Rendering Torqwave 0.23.0 audio demos into " << folder.getFullPathName() << std::endl;
+
+    // 1. Synth Built-In Tempo-Synced Arpeggiator + 4-Scene Continuous Evolve Morphing
+    {
+        const double bpm = 128.0;
+        DemoPlayHead ph; ph.bpm = bpm; ph.sampleRate = sr;
+        BuiltInEffects::BasicSynthProcessor synth;
+        synth.setPlayHead (&ph);
+        synth.setPlayConfigDetails (0, 2, sr, 512);
+        synth.prepareToPlay (sr, 512);
+
+        // Capture 4 distinct Complex/factory scenes
+        synth.loadPatch ("Velvet Roller");  synth.captureScene (0);
+        synth.loadPatch ("Strobe Pluck");   synth.captureScene (1);
+        synth.loadPatch ("Palazzo Chord");  synth.captureScene (2);
+        synth.loadPatch ("Elysian Bloom");  synth.captureScene (3);
+        synth.recallScene (0);
+
+        setById (synth, "arpOn", 1.0f, true);
+        setById (synth, "arpMode", 2.0f);     // Up-Down
+        setById (synth, "arpDivision", 4.0f); // 1/16
+        setById (synth, "arpOctaves", 2.0f);
+        setById (synth, "arpGate", 72.0f);
+        setById (synth, "arpSwing", 58.0f);
+
+        const auto beatSamp = (int) std::llround (sr * 60.0 / bpm);
+        const auto barSamp = beatSamp * 4;
+        const int bars = 8;
+        const auto total = barSamp * bars;
+        juce::AudioBuffer<float> out (2, total);
+        out.clear();
+
+        // 4 chords (2 bars each): Am9 -> Fmaj9 -> Dm9 -> Em7
+        const std::vector<std::vector<int>> chords = {
+            { 45, 52, 55, 59, 60 },
+            { 41, 48, 52, 55, 57 },
+            { 38, 45, 48, 52, 53 },
+            { 40, 47, 50, 55, 59 }
+        };
+
+        for (int pos = 0; pos < total; pos += 512)
+        {
+            const auto n = juce::jmin (512, total - pos);
+            ph.samplePos = pos;
+            // Smoothly morph Evolve from 0% -> 100% across the 8 bars
+            setById (synth, "evolve", (float) pos / (float) total, true);
+
+            juce::MidiBuffer m;
+            for (int c = 0; c < 4; ++c)
+            {
+                const auto onAt = c * 2 * barSamp;
+                const auto offAt = (c + 1) * 2 * barSamp - 64;
+                if (onAt >= pos && onAt < pos + n)
+                    for (int p : chords[(size_t) c])
+                        m.addEvent (juce::MidiMessage::noteOn (1, p, 0.85f), onAt - pos);
+                if (offAt >= pos && offAt < pos + n)
+                    for (int p : chords[(size_t) c])
+                        m.addEvent (juce::MidiMessage::noteOff (1, p), offAt - pos);
+            }
+            juce::AudioBuffer<float> blk (2, n);
+            blk.clear();
+            synth.processBlock (blk, m);
+            mixInto (out, blk, pos);
+        }
+        writeDemoWav (folder.getChildFile ("01-synth-arp-and-4scene-evolve-morph.wav"), out, sr);
+    }
+
+    // 2. Live Creative FX: Tape/Ping-Pong Delay (with wet ducking) + Volume Shaper (Club Pump + Low-Band Split)
+    {
+        const double bpm = 132.0;
+        DemoPlayHead ph; ph.bpm = bpm; ph.sampleRate = sr;
+        BuiltInEffects::BasicSynthProcessor synth;
+        synth.setPlayHead (&ph);
+        synth.setPlayConfigDetails (0, 2, sr, 512);
+        synth.prepareToPlay (sr, 512);
+        synth.loadPatch ("Palazzo Chord");
+
+        BuiltInEffects::DelayProcessor delay;
+        delay.setPlayHead (&ph);
+        delay.setPlayConfigDetails (2, 2, sr, 512);
+        delay.prepareToPlay (sr, 512);
+        setById (delay, "mode", 2.0f);       // Tape
+        setById (delay, "sync", 1.0f, true);
+        setById (delay, "division", 7.0f);   // 1/8 D
+        setById (delay, "feedback", 58.0f);
+        setById (delay, "wow", 32.0f);
+        setById (delay, "drive", 28.0f);
+        setById (delay, "ducking", 65.0f);
+        setById (delay, "mix", 48.0f);
+
+        BuiltInEffects::VolumeShaperProcessor pump;
+        pump.setPlayHead (&ph);
+        pump.setPlayConfigDetails (2, 2, sr, 512);
+        pump.prepareToPlay (sr, 512);
+        setById (pump, "shape", 0.0f);       // Club Pump
+        setById (pump, "sync", 1.0f, true);
+        setById (pump, "division", 5.0f);    // 1/4
+        setById (pump, "depth", 88.0f);
+        setById (pump, "splitHz", 160.0f);   // Keep sub punch intact while pumping upper spectrum
+
+        const auto beatSamp = (int) std::llround (sr * 60.0 / bpm);
+        const auto barSamp = beatSamp * 4;
+        const int bars = 6; // 2 bars dry, 4 bars wet Delay + Club Pump + Kick
+        const auto total = barSamp * bars;
+        juce::AudioBuffer<float> out (2, total);
+        out.clear();
+        const auto kick = renderKickBed (bpm, bars, sr);
+
+        for (int pos = 0; pos < total; pos += 512)
+        {
+            const auto n = juce::jmin (512, total - pos);
+            ph.samplePos = pos;
+            juce::MidiBuffer m;
+            // Syncopated club stabs on beat 1 and beat 2.75 of every bar
+            for (int bar = 0; bar < bars; ++bar)
+            {
+                const int root = (bar % 4 < 2) ? 45 : (bar % 4 == 2 ? 41 : 43);
+                const int hits[2] = { bar * barSamp, bar * barSamp + (beatSamp * 11) / 4 };
+                for (int h : hits)
+                {
+                    if (h >= pos && h < pos + n)
+                        for (int iv : { 0, 3, 7, 10 })
+                            m.addEvent (juce::MidiMessage::noteOn (1, root + iv, 0.88f), h - pos);
+                    const int off = h + beatSamp / 2;
+                    if (off >= pos && off < pos + n)
+                        for (int iv : { 0, 3, 7, 10 })
+                            m.addEvent (juce::MidiMessage::noteOff (1, root + iv), off - pos);
+                }
+            }
+            juce::AudioBuffer<float> blk (2, n);
+            blk.clear();
+            synth.processBlock (blk, m);
+            if (pos >= 2 * barSamp)
+            {
+                juce::MidiBuffer empty;
+                delay.processBlock (blk, empty);
+                pump.processBlock (blk, empty);
+            }
+            mixInto (out, blk, pos, 0.85f);
+        }
+        // Bring in the kick bed after the 2 dry bars
+        for (int c = 0; c < 2; ++c)
+            out.addFrom (c, 2 * barSamp, kick, c, 2 * barSamp, total - 2 * barSamp, 0.8f);
+
+        writeDemoWav (folder.getChildFile ("02-creative-fx-tape-delay-and-volume-shaper.wav"), out, sr);
+    }
+
+    // 3. Live Creative FX: 4x-Oversampled Distortion (Clean -> Tube -> Wavefold -> Bitcrush) + Auto-Filter
+    {
+        const double bpm = 130.0;
+        DemoPlayHead ph; ph.bpm = bpm; ph.sampleRate = sr;
+        BuiltInEffects::BasicSynthProcessor synth;
+        synth.setPlayHead (&ph);
+        synth.setPlayConfigDetails (0, 2, sr, 512);
+        synth.prepareToPlay (sr, 512);
+        synth.loadPatch ("Velvet Roller");
+
+        BuiltInEffects::DistortionProcessor dist;
+        dist.setPlayConfigDetails (2, 2, sr, 512);
+        dist.prepareToPlay (sr, 512);
+        setById (dist, "oversample", 1.0f);  // 4x
+        setById (dist, "driveDb", 20.0f);
+        setById (dist, "bits", 6.0f);
+        setById (dist, "downsample", 4.0f);
+
+        BuiltInEffects::AutoFilterProcessor af;
+        af.setPlayHead (&ph);
+        af.setPlayConfigDetails (2, 2, sr, 512);
+        af.prepareToPlay (sr, 512);
+        setById (af, "filterType", 1.0f);    // LP24
+        setById (af, "cutoff", 550.0f);
+        setById (af, "resonance", 52.0f);
+        setById (af, "sync", 1.0f, true);
+        setById (af, "division", 3.0f);      // 1/2
+        setById (af, "lfoDepth", 62.0f);
+        setById (af, "envAmount", 35.0f);
+
+        const auto stepSamp = (int) std::llround (sr * 60.0 / bpm / 4.0); // 16th
+        const int bars = 8; // 2 bars clean, 2 Tube, 2 Wavefold, 2 Bitcrush + Auto-Filter
+        const auto total = stepSamp * 16 * bars;
+        juce::AudioBuffer<float> out (2, total);
+        out.clear();
+        const int riff[16] = { 33, -1, 33, 36, 33, -1, 40, -1, 33, 33, 45, -1, 43, -1, 40, 36 };
+
+        for (int pos = 0; pos < total; pos += 512)
+        {
+            const auto n = juce::jmin (512, total - pos);
+            ph.samplePos = pos;
+            const int bar = pos / (stepSamp * 16);
+            juce::MidiBuffer m;
+            for (int step = 0; step < 16 * bars; ++step)
+            {
+                const int p = riff[step % 16];
+                if (p < 0) continue;
+                const int on = step * stepSamp;
+                const int off = on + (stepSamp * 3) / 4;
+                if (on >= pos && on < pos + n) m.addEvent (juce::MidiMessage::noteOn (1, p, 0.9f), on - pos);
+                if (off >= pos && off < pos + n) m.addEvent (juce::MidiMessage::noteOff (1, p), off - pos);
+            }
+            juce::AudioBuffer<float> blk (2, n);
+            blk.clear();
+            synth.processBlock (blk, m);
+            juce::MidiBuffer empty;
+            if (bar >= 2 && bar < 4)      { setById (dist, "mode", 1.0f); setById (dist, "mix", 85.0f); dist.processBlock (blk, empty); }
+            else if (bar >= 4 && bar < 6) { setById (dist, "mode", 4.0f); setById (dist, "mix", 70.0f); dist.processBlock (blk, empty); }
+            else if (bar >= 6)            { setById (dist, "mode", 5.0f); setById (dist, "mix", 75.0f); dist.processBlock (blk, empty); }
+            if (bar >= 2)
+                af.processBlock (blk, empty);
+            mixInto (out, blk, pos);
+        }
+        writeDemoWav (folder.getChildFile ("03-creative-fx-distortion-4x-and-autofilter.wav"), out, sr);
+    }
+
+    // 4. Live Creative FX: Tremolo & Auto-Pan (180 deg stereo pan on 9-osc Elysian Bloom pad)
+    {
+        const double bpm = 124.0;
+        DemoPlayHead ph; ph.bpm = bpm; ph.sampleRate = sr;
+        BuiltInEffects::BasicSynthProcessor synth;
+        synth.setPlayHead (&ph);
+        synth.setPlayConfigDetails (0, 2, sr, 512);
+        synth.prepareToPlay (sr, 512);
+        synth.loadPatch ("Elysian Bloom");
+
+        BuiltInEffects::TremoloProcessor trem;
+        trem.setPlayHead (&ph);
+        trem.setPlayConfigDetails (2, 2, sr, 512);
+        trem.prepareToPlay (sr, 512);
+        setById (trem, "sync", 1.0f, true);
+        setById (trem, "division", 6.0f);    // 1/8
+        setById (trem, "depth", 85.0f);
+        setById (trem, "stereoPhase", 180.0f);
+
+        const auto barSamp = (int) std::llround (sr * 60.0 / bpm * 4.0);
+        const auto total = barSamp * 4;
+        juce::AudioBuffer<float> out (2, total);
+        out.clear();
+        for (int pos = 0; pos < total; pos += 512)
+        {
+            const auto n = juce::jmin (512, total - pos);
+            ph.samplePos = pos;
+            juce::MidiBuffer m;
+            if (pos == 0)
+                for (int p : { 45, 52, 55, 59, 64 }) m.addEvent (juce::MidiMessage::noteOn (1, p, 0.85f), 0);
+            if (pos <= total - 4800 && pos + n > total - 4800)
+                for (int p : { 45, 52, 55, 59, 64 }) m.addEvent (juce::MidiMessage::noteOff (1, p), (total - 4800) - pos);
+            juce::AudioBuffer<float> blk (2, n);
+            blk.clear();
+            synth.processBlock (blk, m);
+            juce::MidiBuffer empty;
+            trem.processBlock (blk, empty);
+            mixInto (out, blk, pos);
+        }
+        writeDemoWav (folder.getChildFile ("04-creative-fx-tremolo-autopan-pad.wav"), out, sr);
+    }
+
+    // 5. Live MIDI FX Chain: Scale Lock -> Chord Trigger (Min 9) -> MIDI Arp -> Note Echo (+12 st) -> Synth
+    {
+        const double bpm = 126.0;
+        DemoPlayHead ph; ph.bpm = bpm; ph.sampleRate = sr;
+        BuiltInEffects::MidiScaleProcessor scale;
+        BuiltInEffects::MidiChordProcessor chord;
+        BuiltInEffects::MidiArpProcessor arp;
+        BuiltInEffects::MidiEchoProcessor echo;
+        BuiltInEffects::BasicSynthProcessor synth;
+
+        for (juce::AudioProcessor* p : std::initializer_list<juce::AudioProcessor*> { &scale, &chord, &arp, &echo, &synth })
+        {
+            p->setPlayHead (&ph);
+            p->setPlayConfigDetails (0, 2, sr, 512);
+            p->prepareToPlay (sr, 512);
+        }
+        synth.loadPatch ("Strobe Pluck");
+        setById (scale, "root", 9.0f);       // A
+        setById (scale, "mode", 1.0f);       // Minor
+        setById (chord, "chordType", 6.0f);  // Min 9
+        setById (arp, "mode", 2.0f);         // Up-Down
+        setById (arp, "division", 8.0f);     // 1/16
+        setById (arp, "octaves", 2.0f);
+        setById (arp, "swing", 56.0f);
+        setById (echo, "sync", 1.0f, true);
+        setById (echo, "division", 7.0f);    // 1/8 D
+        setById (echo, "repeats", 3.0f);
+        setById (echo, "decay", 62.0f);
+        setById (echo, "pitchShift", 12.0f); // Octave shimmer echoes
+
+        const auto barSamp = (int) std::llround (sr * 60.0 / bpm * 4.0);
+        const int roots[4] = { 45, 41, 38, 40 }; // Single root notes only!
+        const auto total = barSamp * 4;
+        juce::AudioBuffer<float> out (2, total);
+        out.clear();
+
+        for (int pos = 0; pos < total; pos += 512)
+        {
+            const auto n = juce::jmin (512, total - pos);
+            ph.samplePos = pos;
+            juce::MidiBuffer m;
+            for (int b = 0; b < 4; ++b)
+            {
+                const int on = b * barSamp;
+                const int off = (b + 1) * barSamp - 128;
+                if (on >= pos && on < pos + n) m.addEvent (juce::MidiMessage::noteOn (1, roots[b], 0.85f), on - pos);
+                if (off >= pos && off < pos + n) m.addEvent (juce::MidiMessage::noteOff (1, roots[b]), off - pos);
+            }
+            juce::AudioBuffer<float> blk (2, n);
+            blk.clear();
+            scale.processBlock (blk, m);
+            chord.processBlock (blk, m);
+            arp.processBlock (blk, m);
+            echo.processBlock (blk, m);
+            synth.processBlock (blk, m);
+            mixInto (out, blk, pos);
+        }
+        writeDemoWav (folder.getChildFile ("05-midi-fx-chain-chord-arp-echo.wav"), out, sr);
+    }
+
+    // 6. Sequencer Ratchets (1x/2x/4x/8x rolls) + MPC 62% Groove Template on Basic Drums
+    {
+        const double bpm = 130.0;
+        const auto stepSamp = (juce::int64) std::llround (sr * 60.0 / bpm / 4.0);
+        const auto barSamp = stepSamp * 16;
+
+        NoteClip clip;
+        clip.id = 1;
+        clip.position = 0;
+        clip.length = barSamp * 4;
+        clip.loopLength = barSamp * 2;
+        for (int step = 0; step < 32; ++step)
+        {
+            const auto t = step * stepSamp;
+            if (step % 4 == 0)
+                clip.notes.push_back ({ 36, t, stepSamp, 0.95f }); // Kick
+            if (step % 8 == 4)
+                clip.notes.push_back ({ 38, t, stepSamp, 0.88f }); // Snare
+            // Hi-hat with ratchets on fill steps
+            ClipNote hat { 42, t, stepSamp, (step % 2 == 0) ? 0.72f : 0.45f };
+            if (step == 14)      hat.ratchets = 2;
+            else if (step == 15) hat.ratchets = 4;
+            else if (step == 30) hat.ratchets = 4;
+            else if (step == 31) hat.ratchets = 8;
+            clip.notes.push_back (hat);
+            // Snare roll ratchet at end of bar 2
+            if (step == 29)
+            {
+                ClipNote roll { 38, t, stepSamp * 2, 0.78f };
+                roll.ratchets = 4;
+                clip.notes.push_back (roll);
+            }
+        }
+        // Apply MPC 62% groove template!
+        const auto grooves = NoteTools::groovePresets();
+        NoteTools::applyGroove (clip.notes, {}, grooves[3], (double) (stepSamp * 4), 1.0f, clip.length);
+
+        BuiltInEffects::BasicDrumsProcessor drums;
+        drums.setPlayConfigDetails (0, 2, sr, 512);
+        drums.prepareToPlay (sr, 512);
+        const auto total = (int) clip.length;
+        juce::AudioBuffer<float> out (2, total);
+        out.clear();
+        for (int pos = 0; pos < total; pos += 512)
+        {
+            const auto n = juce::jmin (512, total - pos);
+            juce::MidiBuffer m;
+            clip.addMidi (pos, n, m);
+            juce::AudioBuffer<float> blk (2, n);
+            blk.clear();
+            drums.processBlock (blk, m);
+            mixInto (out, blk, pos);
+        }
+        writeDemoWav (folder.getChildFile ("06-sequencer-ratchets-and-mpc-groove.wav"), out, sr);
+    }
+
+    // 7. Audio to MIDI: Original melody clip -> pause -> Extracted MIDI replayed by Torqwave Synth
+    {
+        const double bpm = 124.0;
+        const auto beatSamp = (int) std::llround (sr * 60.0 / bpm);
+        const int notes[8] = { 57, 60, 64, 67, 65, 64, 60, 57 }; // A minor arpeggiated phrase
+        const auto phraseLen = beatSamp * 4;
+        juce::AudioBuffer<float> orig (2, phraseLen);
+        orig.clear();
+        double phase = 0.0;
+        for (int i = 0; i < 8; ++i)
+        {
+            const auto start = i * (beatSamp / 2);
+            const auto len = (beatSamp * 4) / 10;
+            const double freq = 440.0 * std::pow (2.0, (notes[i] - 69) / 12.0);
+            for (int k = 0; k < len && start + k < phraseLen; ++k)
+            {
+                const float env = juce::jmin (1.0f, (float) k / 240.0f) * std::exp (-3.5f * (float) k / (float) len);
+                const float s = 0.55f * env * (float) (std::sin (phase) + 0.25 * std::sin (phase * 2.0));
+                phase += juce::MathConstants<double>::twoPi * freq / sr;
+                orig.setSample (0, start + k, s);
+                orig.setSample (1, start + k, s);
+            }
+        }
+        auto snap = AudioEdits::fromBuffer (juce::AudioBuffer<float> (orig));
+        const auto extracted = AudioToMidi::extractMelody (*snap, 0, snap->getNumFrames(), sr);
+
+        // Replay extracted MIDI through Torqwave Synth ("Strobe Pluck")
+        BuiltInEffects::BasicSynthProcessor synth;
+        synth.setPlayConfigDetails (0, 2, sr, 512);
+        synth.prepareToPlay (sr, 512);
+        synth.loadPatch ("Strobe Pluck");
+
+        NoteClip extractedClip;
+        extractedClip.id = 2;
+        extractedClip.position = 0;
+        extractedClip.length = phraseLen + beatSamp;
+        extractedClip.notes = extracted.notes;
+
+        const auto gap = beatSamp / 2;
+        const auto total = phraseLen + gap + (int) extractedClip.length;
+        juce::AudioBuffer<float> out (2, total);
+        out.clear();
+        mixInto (out, orig, 0, 0.9f);
+        for (int pos = 0; pos < (int) extractedClip.length; pos += 512)
+        {
+            const auto n = juce::jmin (512, (int) extractedClip.length - pos);
+            juce::MidiBuffer m;
+            extractedClip.addMidi (pos, n, m);
+            juce::AudioBuffer<float> blk (2, n);
+            blk.clear();
+            synth.processBlock (blk, m);
+            mixInto (out, blk, phraseLen + gap + pos, 1.0f);
+        }
+        writeDemoWav (folder.getChildFile ("07-audio-to-midi-melody-resynthesis.wav"), out, sr);
+    }
+
+    // 8. Track-Level Modulator: LFO sweeping AutoFilter cutoff live on Afterlife Anthem
+    {
+        const double bpm = 128.0;
+        BuiltInEffects::BasicSynthProcessor synth;
+        synth.setPlayConfigDetails (0, 2, sr, 512);
+        synth.prepareToPlay (sr, 512);
+        synth.loadPatch ("Afterlife Anthem");
+
+        TrackEffects fx;
+        fx.prepare (sr);
+        auto af = std::make_unique<BuiltInEffects::AutoFilterProcessor>();
+        setById (*af, "filterType", 1.0f);  // LP24
+        setById (*af, "cutoff", 700.0f);
+        setById (*af, "resonance", 48.0f);
+        setById (*af, "lfoDepth", 0.0f);    // Internal LFO OFF — purely driven by Track Modulator!
+        const auto afSlot = fx.add (1, std::move (af));
+
+        SessionTrack track;
+        track.id = 1;
+        TrackModulator mod;
+        mod.id = 1;
+        mod.kind = TrackModulator::Kind::lfo;
+        mod.targetSlotId = afSlot;
+        mod.targetParameterId = "cutoff";
+        mod.sync = false;
+        mod.rateHz = bpm / 120.0; // Half-bar rhythmic sweep
+        mod.amount = 0.42f;
+        track.modulators.push_back (mod);
+
+        const auto barSamp = (int) std::llround (sr * 60.0 / bpm * 4.0);
+        const auto total = barSamp * 4;
+        juce::AudioBuffer<float> out (2, total);
+        out.clear();
+
+        for (int pos = 0; pos < total; pos += 512)
+        {
+            const auto n = juce::jmin (512, total - pos);
+            juce::MidiBuffer m;
+            if (pos == 0)
+                for (int p : { 45, 52, 57, 60, 64 }) m.addEvent (juce::MidiMessage::noteOn (1, p, 0.85f), 0);
+            if (pos <= total - 4800 && pos + n > total - 4800)
+                for (int p : { 45, 52, 57, 60, 64 }) m.addEvent (juce::MidiMessage::noteOff (1, p), (total - 4800) - pos);
+            juce::AudioBuffer<float> blk (2, n);
+            blk.clear();
+            synth.processBlock (blk, m);
+            fx.process (track, pos, blk, n, {});
+            mixInto (out, blk, pos);
+        }
+        writeDemoWav (folder.getChildFile ("08-track-modulator-lfo-filter-sweep.wav"), out, sr);
+    }
+
+    std::cout << "Done! 8 demos written to " << folder.getFullPathName() << std::endl;
+}
