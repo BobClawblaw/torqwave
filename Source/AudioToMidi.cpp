@@ -15,7 +15,7 @@ namespace
         if (chs <= 0 || b <= a)
             return 0.0f;
 
-        const auto n = (int) juce::jmin<juce::int64> (b - a, 480000);
+        const auto n = (int) std::min<juce::int64> (b - a, 480000);
         juce::AudioBuffer<float> tmp (chs, n);
         audio.read (tmp, 0, a, n);
 

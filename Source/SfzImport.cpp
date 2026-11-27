@@ -281,7 +281,7 @@ Result parse (const juce::String& sfzText, const juce::File& baseFolder)
                 z.choke = juce::jlimit (1, 16, (int) grp);
 
             if (const auto seqLen = parseInt64 (merged, "seq_length", 0); seqLen > 1)
-                z.roundRobinGroup = juce::jlimit (1, 16, (int) juce::jmax<juce::int64> (1, parseInt64 (merged, "group", 1)));
+                z.roundRobinGroup = juce::jlimit (1, 16, (int) std::max<juce::int64> (1, parseInt64 (merged, "group", 1)));
 
             if (! result.hasEnvelope && (merged.count ("ampeg_attack") || merged.count ("ampeg_decay") || merged.count ("ampeg_sustain") || merged.count ("ampeg_release")))
             {

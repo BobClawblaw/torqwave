@@ -604,7 +604,7 @@ namespace
             {
                 auto* rd = static_cast<Reader*> (s->ctx);
                 const auto avail = rd->size - rd->pos;
-                const auto take = (size_t) juce::jmin<uint64_t> (size, avail);
+                const auto take = (size_t) std::min<uint64_t> (size, avail);
                 if (take > 0)
                 {
                     std::memcpy (buf, rd->ptr + rd->pos, take);
