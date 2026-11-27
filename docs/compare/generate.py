@@ -417,7 +417,7 @@ def graphic_hero(defs, snap):
 
     # Bottom footer callout
     s.line(56, H - 56, W - 56, H - 56, LINE, 1, 0.7)
-    s.text(56, H - 24, "bobclawblaw.github.io/torqwave  ·  1,235 built-in audio clips  ·  No account, no subscription", 16, TEXT, weight="500")
+    s.text(56, H - 24, "bobclawblaw.github.io/torqwave  ·  1,243 built-in audio clips  ·  No account, no subscription", 16, TEXT, weight="500")
     s.text(W - 56, H - 24, f'Released {snap["as_of"]} · AGPL-3.0', 15, FAINT, "end")
     return s.save("0-release-hero.svg")
 

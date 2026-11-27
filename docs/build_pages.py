@@ -64,12 +64,13 @@ BY_EAR = {
     ("synth", "Low Boom"): "A sine dropping in pitch over a sub, into a long reverb.",
 }
 
-# The clips on the front page, in this order: nine-oscillator Complex club sounds, rewritten Sequence Library
-# kits and patterns, and Torqwave Synth / StringSwarm staples.
-FRONT = [("complex", "Velvet Roller"), ("complex", "Afterlife Anthem"), ("complex", "Elysian Bloom"),
-         ("complex", "Palazzo Chord"), ("complex", "Strobe Pluck"), ("complex", "Lagoon Rhodes"),
-         ("complex", "Angelic Chop"), ("kits", "Afterglow Kit"), ("sequences", "Peak Rumble Bass"),
-         ("sequences", "Low-Light Sequence"), ("synth", "Concrete Pad"), ("swarm", "Tremolo Swarm Wall")]
+# The clips on the front page, in this order: 0.23.0 live FX / MIDI FX / Synth Arp & Evolve demos,
+# nine-oscillator Complex club sounds, rewritten Sequence Library kits and patterns, and staples.
+FRONT = [("release023", "Synth Arp & 4-Scene Evolve"), ("release023", "Tape Delay & Club Pump"),
+         ("release023", "4x Distortion & Auto-Filter"), ("release023", "Live MIDI FX Chain"),
+         ("complex", "Velvet Roller"), ("complex", "Afterlife Anthem"), ("complex", "Elysian Bloom"),
+         ("complex", "Palazzo Chord"), ("kits", "Afterglow Kit"), ("sequences", "Peak Rumble Bass"),
+         ("synth", "Concrete Pad"), ("swarm", "Tremolo Swarm Wall")]
 
 # The Sequence Library's genres and styles in the order the pages show them: the floor and machine styles first.
 GENRES = ["Floor", "Machine"]
@@ -78,6 +79,7 @@ FIRST_STYLES = ["Floor/Dark Floor", "Floor/Factory Floor", "Floor/Hard Floor", "
 ROLES = ["Drums", "Bass", "Harmony", "Pads", "Arps", "Melody", "SFX"]
 
 GROUPS = OrderedDict([
+    ("release023", ("New in 0.23.0", "release-023.html")),
     ("complex", ("Torqwave Synth: Complex", "complex.html")),
     ("synth", ("Torqwave Synth", "synth.html")),
     ("swarm", ("StringSwarm", "stringswarm.html")),
@@ -126,6 +128,8 @@ def instrument_card(clip, prefix, heading="h3", kind=None):
 
     if clip.get("groove"):
         plays = groove_line(clip)
+    elif clip["group"] == "release023":
+        plays = f'Rendered directly by Torqwave 0.23.0 (TorqwaveTests --023-demos): {clip["phrase"]}.'
     elif clip["group"] == "complex":
         plays = f'{clip["oscillators"]} oscillators ({clip["parts"]} parts in use); no. {clip["place"]} of {clip["of"]} in Complex › {clip["category"]}. Plays {clip["phrase"]}.'
     elif clip.get("featured"):
@@ -222,6 +226,18 @@ def joined(clip):
 
 RULE = ("A point for each oscillator on, each of those with unison voices, each with a warp, the sub, the noise, each filter, each effect on, "
         "each modulation routing in use and each named macro.")
+
+
+def release023_page():
+    clips = of("release023")
+    body = [f'<div class="title">{crumbs("New in 0.23.0")}<h1>New in Torqwave 0.23.0: {len(clips)} audio showcase demos</h1>',
+            '<p>Hear the new 0.23.0 engine features in action: the six Live Creative FX (Tape Delay with wet ducking, 4x-oversampled Distortion, Auto-Filter, Volume Shaper / Club Pump, Tremolo &amp; Auto-Pan), '
+            'the four Live MIDI FX chained ahead of Torqwave Synth, the Synth\'s built-in tempo-synced Arpeggiator and 4-Scene continuous Evolve morphing, '
+            'Piano Roll Ratchets &amp; MPC 62% Groove Templates, Audio to MIDI melody extraction, and Track-Level LFO Modulators.</p>',
+            f'<p class="meta">Each clip was rendered directly by Torqwave 0.23.0 (<code>TorqwaveTests --023-demos</code>) and encoded as a 48 kHz LAME V4 MP3 ({megabytes(clips)} total).</p></div>',
+            '<div class="clips">' + "".join(card(c, "audio/", "h3", c["category"]) for c in clips) + "</div>"]
+    page("sounds/release-023.html", "Torqwave 0.23.0: hear the new features",
+         f"{len(clips)} audio showcase clips demonstrating Torqwave 0.23.0's Live Creative FX, Live MIDI FX, Synth Arp and 4-Scene Evolve, Ratchets, Audio to MIDI and Track Modulators.", "\n".join(body))
 
 
 def complex_page():
@@ -453,7 +469,9 @@ def front_clips(prefix):
 
     for group, name in FRONT:
         clip = find(group, name)
-        if group == "complex":
+        if group == "release023":
+            kind = clip["category"]
+        elif group == "complex":
             kind = f'Complex · {clip["category"]} ({clip["oscillators"]} osc)'
         elif group == "sequences":
             kind = f'Sequence · {clip["category"].replace("/", " › ")}'
@@ -467,7 +485,8 @@ def front_clips(prefix):
 def sounds_index():
     total = len(CLIPS)
     rows = []
-    pages = [("complex", "complex.html", "Torqwave Synth: Complex", f"all {len(of('complex'))} Complex patches across all 29 categories, 4 to 9 oscillators each"),
+    pages = [("release023", "release-023.html", "New in 0.23.0: Live FX, MIDI FX & Synth", "showcase demos of 0.23.0's Live Creative FX, Live MIDI FX, Synth Arp & 4-Scene Evolve, Ratchets, Audio to MIDI and Track Modulators"),
+             ("complex", "complex.html", "Torqwave Synth: Complex", f"all {len(of('complex'))} Complex patches across all 29 categories, 4 to 9 oscillators each"),
              ("synth", "synth.html", "Torqwave Synth", "of 3,569 factory patches: the ones that use the most of the synth, from all 29 categories"),
              ("swarm", "stringswarm.html", "StringSwarm", "of 296 presets, from all 11 categories"),
              ("drums", "drums-and-sampler.html#basic-drums", "Basic Drums", f"all {len(set(c['category'] for c in of('drums')))} kits, on grooves written for them"),
@@ -589,6 +608,7 @@ def quality_demos():
 
 if __name__ == "__main__":
     sounds_index()
+    release023_page()
     complex_page()
     synth_page()
     swarm_page()
@@ -596,10 +616,12 @@ if __name__ == "__main__":
     kits_page()
     sequences_page()
     between("index.html", "clips", front_clips("sounds/audio/")
-            + f'\n<div class="actions"><a class="button primary" href="sounds/">Hear all {len(CLIPS)} clips</a> '
+            + f'\n<div class="actions"><a class="button primary" href="sounds/release-023.html">Hear what\'s new in 0.23.0 ({len(of("release023"))} demos)</a> '
+              f'<a class="button plain" href="sounds/">Hear all {len(CLIPS)} clips</a> '
               f'<a class="button plain" href="sounds/complex.html">Hear all {len(of("complex"))} Complex patches</a> '
               f'<a class="button plain" href="sounds/sequences.html">Hear the Sequence Library</a></div>'
-              f'\n<p class="meta">By instrument: <a href="sounds/complex.html">Complex patches</a> ({len(of("complex"))}), '
+              f'\n<p class="meta">By area: <a href="sounds/release-023.html">New in 0.23.0</a> ({len(of("release023"))}), '
+              f'<a href="sounds/complex.html">Complex patches</a> ({len(of("complex"))}), '
               f'<a href="sounds/synth.html">Torqwave Synth</a> ({len(of("synth"))}), '
               f'<a href="sounds/stringswarm.html">StringSwarm</a> ({len(of("swarm"))}), <a href="sounds/drums-and-sampler.html">Basic Drums and Torqwave Sampler</a> ({len(of("drums")) + len(of("sources")) + len(of("sampler"))}), '
               f'<a href="sounds/kits.html">every factory kit</a> ({len(of("kits"))}) and <a href="sounds/sequences.html">sequences from every style</a> ({len(of("sequences"))}).</p>')

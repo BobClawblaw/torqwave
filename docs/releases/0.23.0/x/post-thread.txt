@@ -24,7 +24,7 @@ Plus Piano Roll ratchets, micro-timing, grooves & ghost notes.
 
 Torqwave Synth keeps 100% sample-for-sample identity on all 3,627 prior patches while adding LFOs 3-4, 24 mod slots, Slot Depth modulation, 16-node Curve LFOs, a built-in Arp, 4-scene Evolve morphing & Complex Decrypt.
 
-Hear 1,235 clips: https://bobclawblaw.github.io/torqwave/
+Hear 1,243 clips: https://bobclawblaw.github.io/torqwave/
 
 --- POST 5 / 5 ---
 

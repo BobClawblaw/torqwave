@@ -8,6 +8,6 @@ New in 0.23.0:
 • Torqwave Sampler SFZ import, round-robin groups & tempo Warp + Basic Drums 8-bus multi-out
 • Track-level Modulators & native CLAP 1.2 hosting (47 of 53 matrix rows)
 
-No account. No subscription. Hear 1,235 built-in clips at bobclawblaw.github.io/torqwave — link in bio.
+No account. No subscription. Hear 1,243 built-in clips at bobclawblaw.github.io/torqwave — link in bio.
 
 #torqwave #daw #audioeditor #musicproduction #sounddesign #synth #wavetablesynth #opensource #clap #vst3 #electronicmusic #techno #producer

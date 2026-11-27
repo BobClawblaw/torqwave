@@ -57,7 +57,7 @@ TRACK MODULATORS, CLAP 1.2 & HEADLESS CI
 WHAT IT STILL DOESN'T DO
 No Dolby Atmos, no ARA 2, no notation editor, no full neural stem export, and installers aren't notarized with a Developer ID yet (so macOS asks on first launch). Our 15-product feature comparison lists every gap as plainly as what's built.
 
-HEAR 1,235 BUILT-IN CLIPS & COMPARE
+HEAR 1,243 BUILT-IN CLIPS & COMPARE
 Site: https://bobclawblaw.github.io/torqwave/
 Full 15-product matrix: https://github.com/BobClawblaw/torqwave/blob/main/docs/compare/MATRIX.md
 
@@ -100,7 +100,7 @@ Plus Piano Roll ratchets, micro-timing, grooves & ghost notes.
 ```text
 Torqwave Synth keeps 100% sample-for-sample identity on all 3,627 prior patches while adding LFOs 3-4, 24 mod slots, Slot Depth modulation, 16-node Curve LFOs, a built-in Arp, 4-scene Evolve morphing & Complex Decrypt.
 
-Hear 1,235 clips: https://bobclawblaw.github.io/torqwave/
+Hear 1,243 clips: https://bobclawblaw.github.io/torqwave/
 ```
 
 **Post 5:**
@@ -124,7 +124,7 @@ New in 0.23.0:
 • Torqwave Sampler SFZ import, round-robin groups & tempo Warp + Basic Drums 8-bus multi-out
 • Track-level Modulators & native CLAP 1.2 hosting (47 of 53 matrix rows)
 
-No account. No subscription. Hear 1,235 built-in clips at bobclawblaw.github.io/torqwave — link in bio.
+No account. No subscription. Hear 1,243 built-in clips at bobclawblaw.github.io/torqwave — link in bio.
 
 #torqwave #daw #audioeditor #musicproduction #sounddesign #synth #wavetablesynth #opensource #clap #vst3 #electronicmusic #techno #producer
 ```
