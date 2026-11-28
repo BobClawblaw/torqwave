@@ -3,11 +3,13 @@
 A running comparison of Torqwave with the editors and DAWs that are real alternatives for what it does, kept so that each release shows where Torqwave stands: where it is behind as well as where it leads.
 
 - **[MATRIX.md](MATRIX.md):** the matrix, the coverage counts, where Torqwave is behind and ahead, prices and maturity facts, and every cell's note and source. Generated.
-- **[graphics/](graphics/):** five graphics at 1600 x 900, as SVG and PNG. Generated.
+- **[graphics/](graphics/):** seven graphics at 1600 × 900 (plus full-height matrix), as SVG and PNG. Generated.
+  0. `0-release-hero`: release overview hero graphic with feature highlights.
   1. `1-release-by-the-numbers`: what the release adds over the one before.
   2. `2-against-the-editors`: the feature matrix against the audio editors.
   3. `3-against-the-daws-1` and 4. `4-against-the-daws-2`: the feature matrix against the DAWs, five to a graphic so the columns stay legible at X's size.
   5. `5-where-torqwave-stands`: rows covered in each area by each product, and a panel: Torqwave's rows that are partial or no, or its trend by release when the releases shown count differently.
+  6. `6-the-whole-matrix`: the complete 15-product feature matrix in one image.
 - **[data/comparison.json](data/comparison.json):** the rows and their definitions, the products and why each is here, and the method.
 - **[data/snapshots/](data/snapshots/):** one file per Torqwave release with every cell: its value, a note, the page it was read on, a short quotation or what was checked, the version assessed and the date looked up. The files together are the history the trend is drawn from.
 - **[generate.py](generate.py):** makes MATRIX.md and the graphics from the data. Python's standard library only.
@@ -98,6 +100,6 @@ The cells marked `not confirmed` are listed in MATRIX.md under "Cells not confir
 
 - 0.24.0 is set against 0.23.0.
 - One matrix row flips from **no** to **yes**, lifting Torqwave from **47 of 53** to **48 of 53**:
-  - **Notation editor** (`no` → `yes`): interactive **Score** view in the Note Editor displaying treble + bass grand staves with clefs, key signatures, time signatures, barlines, ledger lines, note durations, direct note editing, and standard **MusicXML 3.1** export (`Tools > Export MusicXML (.musicxml)...`).
+  - **Notation editor** (`no` → `yes`): dedicated **Score / Notation** window (`Window > Score / Notation`, `Option-S`, plus **Score** toggle in Piano Roll) displaying treble + bass grand staves with clefs, key signatures, time signatures, barlines, ledger lines, note durations, direct note editing, and standard **MusicXML 3.1** export.
 - Updated notes across existing rows capture the rest of 0.24.0: **Zero Telemetry & Zero Tracking** (verified offline-first invariant), clean-room **NI Maschine 2/3 (`.mxgrp`/`.mxsnd`)** kit & MIDI pattern import (with Drum Synth & per-pad FX translation and one-click track drop), **Akai MPC (`.xpm`)** Drum & Keygroup import, **SoundFont 2 (`.sf2`)** multi-preset bank import in Torqwave Sampler, and four new Live Creative FX (**Frequency Shifter**, **Shimmer Delay**, **24-band Vocoder**, and **Spectral Freeze** — 36 built-in plug-ins total).
 - The other products' cells were not read again for it: they are as read on 2026-11-23.
