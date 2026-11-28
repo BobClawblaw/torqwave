@@ -163,6 +163,10 @@ namespace
                 effect = std::make_unique<FrequencyShifterProcessor>();
             else if (d.fileOrIdentifier == shimmerDelayId)
                 effect = std::make_unique<ShimmerDelayProcessor>();
+            else if (d.fileOrIdentifier == vocoderId)
+                effect = std::make_unique<VocoderProcessor>();
+            else if (d.fileOrIdentifier == spectralFreezeId)
+                effect = std::make_unique<SpectralFreezeProcessor>();
             else if (d.fileOrIdentifier == midiArpId)
                 effect = std::make_unique<MidiArpProcessor>();
             else if (d.fileOrIdentifier == midiChordId)
@@ -219,7 +223,7 @@ juce::Array<juce::PluginDescription> getDescriptions()
 {
     return { parametricEqDescription(), compressorDescription(), limiterDescription(), chorusDescription(), flangerDescription(), phaserDescription(), reverbDescription(), convolutionDescription(),
              graphicEqDescription (10), graphicEqDescription (31), multibandDescription(), deEsserDescription(), dynamicEqDescription(), multibandWidthDescription(), exciterDescription(), maximizerDescription(), transientShaperDescription(),
-             delayDescription(), distortionDescription(), autoFilterDescription(), volumeShaperDescription(), noiseGateDescription(), tremoloDescription(), frequencyShifterDescription(), shimmerDelayDescription(),
+             delayDescription(), distortionDescription(), autoFilterDescription(), volumeShaperDescription(), noiseGateDescription(), tremoloDescription(), frequencyShifterDescription(), shimmerDelayDescription(), vocoderDescription(), spectralFreezeDescription(),
              midiArpDescription(), midiChordDescription(), midiScaleDescription(), midiEchoDescription(),
              basicSynthDescription(), basicDrumsDescription(), swarmGuitarDescription(), samplerDescription(), HardwareInsert::Processor::description() };
 }

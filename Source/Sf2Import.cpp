@@ -460,6 +460,174 @@ Result loadFile (const juce::File& sf2File, int presetIndex)
     return res;
 }
 
+std::vector<PresetSummary> listPresets (const juce::File& sf2File, juce::String& error)
+{
+    std::vector<PresetSummary> out;
+
+    if (! sf2File.existsAsFile() || sf2File.getSize() <= 12 || (size_t) sf2File.getSize() > mostFileBytes)
+    {
+        error = "Could not open SoundFont 2 file.";
+        return out;
+    }
+
+    juce::MemoryBlock bytes;
+    if (! sf2File.loadFileAsData (bytes))
+    {
+        error = "Could not read " + sf2File.getFileName() + ".";
+        return out;
+    }
+
+    const auto* p = static_cast<const uint8_t*> (bytes.getData());
+    const size_t n = bytes.getSize();
+    if (std::memcmp (p, "RIFF", 4) != 0 || std::memcmp (p + 8, "sfbk", 4) != 0)
+    {
+        error = "Not a valid SoundFont 2 (RIFF sfbk) file.";
+        return out;
+    }
+
+    Chunk pdta;
+    size_t pos = 12;
+    while (pos + 8 <= n)
+    {
+        const uint32_t sz = rdU32 (p, pos + 4);
+        const size_t body = pos + 8;
+        if (body + sz > n) break;
+        if (std::memcmp (p + pos, "LIST", 4) == 0 && sz >= 4 && std::memcmp (p + body, "pdta", 4) == 0)
+        {
+            pdta = { p + body + 4, sz - 4 };
+            break;
+        }
+        pos = body + sz + (sz & 1u);
+    }
+
+    if (pdta.data == nullptr)
+    {
+        error = "SoundFont 2 file is missing its preset data (pdta).";
+        return out;
+    }
+
+    Chunk phdr;
+    size_t subPos = 0;
+    while (subPos + 8 <= pdta.size)
+    {
+        const uint32_t sz = rdU32 (pdta.data, subPos + 4);
+        const size_t body = subPos + 8;
+        if (body + sz > pdta.size) break;
+        if (std::memcmp (pdta.data + subPos, "phdr", 4) == 0)
+        {
+            phdr = { pdta.data + body, sz };
+            break;
+        }
+        subPos = body + sz + (sz & 1u);
+    }
+
+    const size_t numPhdr = phdr.size / 38;
+    for (size_t i = 0; i + 1 < numPhdr; ++i)
+    {
+        PresetSummary ps;
+        ps.name = rdZStr (phdr.data, i * 38, 20);
+        ps.program = (int) rdU16 (phdr.data, i * 38 + 20);
+        ps.bank = (int) rdU16 (phdr.data, i * 38 + 22);
+        out.push_back (std::move (ps));
+    }
+
+    if (out.empty())
+        error = "No presets found in SoundFont 2 file.";
+
+    return out;
+}
+
+juce::MemoryBlock writeBank (const std::vector<BankPresetSpec>& specs, int sampleRate)
+{
+    if (specs.empty())
+        return {};
+
+    juce::MemoryBlock infoBody;
+    infoBody.append ("INFO", 4);
+    juce::MemoryBlock inam;
+    inam.append ("Torqwave Test Bank\0\0", 20);
+    appendSubChunk (infoBody, "INAM", inam);
+
+    juce::MemoryBlock smpl, phdr, pbag, pgen, inst, ibag, igen, shdr;
+    std::vector<uint32_t> starts, ends;
+
+    for (size_t i = 0; i < specs.size(); ++i)
+    {
+        const uint32_t st = (uint32_t) (smpl.getSize() / 2);
+        for (int16_t s : specs[i].pcm)
+            appendU16 (smpl, (uint16_t) s);
+        const uint32_t en = (uint32_t) (smpl.getSize() / 2);
+        for (int pad = 0; pad < 46; ++pad)
+            appendU16 (smpl, 0);
+        starts.push_back (st);
+        ends.push_back (en);
+    }
+
+    juce::MemoryBlock sdtaBody;
+    sdtaBody.append ("sdta", 4);
+    appendSubChunk (sdtaBody, "smpl", smpl);
+
+    for (size_t i = 0; i < specs.size(); ++i)
+    {
+        const auto& sp = specs[i];
+        appendStr20 (phdr, sp.name);
+        appendU16 (phdr, (uint16_t) sp.program);
+        appendU16 (phdr, (uint16_t) sp.bank);
+        appendU16 (phdr, (uint16_t) i);
+        appendU32 (phdr, 0); appendU32 (phdr, 0); appendU32 (phdr, 0);
+
+        appendU16 (pbag, (uint16_t) i); appendU16 (pbag, 0);
+        appendU16 (pgen, 41); appendU16 (pgen, (uint16_t) i);
+
+        appendStr20 (inst, sp.name);
+        appendU16 (inst, (uint16_t) i);
+
+        appendU16 (ibag, (uint16_t) (i * 2)); appendU16 (ibag, 0);
+        appendU16 (igen, 43); appendU16 (igen, (uint16_t) ((sp.lowKey & 0xff) | ((sp.highKey & 0xff) << 8)));
+        appendU16 (igen, 53); appendU16 (igen, (uint16_t) i);
+
+        appendStr20 (shdr, sp.name);
+        appendU32 (shdr, starts[i]);
+        appendU32 (shdr, ends[i]);
+        appendU32 (shdr, starts[i]);
+        appendU32 (shdr, ends[i]);
+        appendU32 (shdr, (uint32_t) sampleRate);
+        const uint8_t op = (uint8_t) sp.rootKey;
+        const uint8_t pc = 0;
+        shdr.append (&op, 1); shdr.append (&pc, 1);
+        appendU16 (shdr, 0); appendU16 (shdr, 1);
+    }
+
+    // Sentinels
+    appendStr20 (phdr, "EOP"); appendU16 (phdr, 0); appendU16 (phdr, 0); appendU16 (phdr, (uint16_t) specs.size());
+    appendU32 (phdr, 0); appendU32 (phdr, 0); appendU32 (phdr, 0);
+    appendU16 (pbag, (uint16_t) specs.size()); appendU16 (pbag, 0);
+    appendStr20 (inst, "EOI"); appendU16 (inst, (uint16_t) specs.size());
+    appendU16 (ibag, (uint16_t) (specs.size() * 2)); appendU16 (ibag, 0);
+    appendStr20 (shdr, "EOS");
+    for (int z = 0; z < 26; ++z) { uint8_t b = 0; shdr.append (&b, 1); }
+
+    juce::MemoryBlock pdtaBody;
+    pdtaBody.append ("pdta", 4);
+    appendSubChunk (pdtaBody, "phdr", phdr);
+    appendSubChunk (pdtaBody, "pbag", pbag);
+    appendSubChunk (pdtaBody, "pgen", pgen);
+    appendSubChunk (pdtaBody, "inst", inst);
+    appendSubChunk (pdtaBody, "ibag", ibag);
+    appendSubChunk (pdtaBody, "igen", igen);
+    appendSubChunk (pdtaBody, "shdr", shdr);
+
+    juce::MemoryBlock riffBody;
+    riffBody.append ("sfbk", 4);
+    appendSubChunk (riffBody, "LIST", infoBody);
+    appendSubChunk (riffBody, "LIST", sdtaBody);
+    appendSubChunk (riffBody, "LIST", pdtaBody);
+
+    juce::MemoryBlock out;
+    appendSubChunk (out, "RIFF", riffBody);
+    return out;
+}
+
 juce::MemoryBlock writeMinimal (const juce::String& presetName, const std::vector<int16_t>& pcm,
                                 int sampleRate, int rootKey, int lowKey, int highKey,
                                 int lowVel, int highVel, bool looped, int loopStart, int loopEnd)

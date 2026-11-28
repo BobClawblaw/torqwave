@@ -928,12 +928,14 @@ SamplerEditor::SamplerEditor (SamplerProcessor& p)
     keysPanel.addAndMakeVisible (cutEachOther);
 
     open.onClick = [this] { chooseFile(); };
+    sf2PresetButton.onClick = [this] { showSf2Presets(); };
     pitchButton.onClick = [this] { findPitch(); };
     loopButton.onClick = [this] { findLoop(); };
     locateButton.onClick = [this] { locate(); };
     removeButton.onClick = [this] { removeZone(); };
     sliceButton.onClick = [this] { sliceAgain(); };
-    open.setTooltip ("Choose a sound for the selected zone, or to slice");
+    open.setTooltip ("Choose a sound, SFZ, SoundFont 2 (.sf2), or MPC (.xpm) program");
+    sf2PresetButton.setTooltip ("Choose a preset from the loaded SoundFont 2 (.sf2) bank");
     pitchButton.setTooltip ("Measures the sample's pitch and sets the zone's root and tuning from it");
     loopButton.setTooltip ("Looks for a loop in the held part of the sound, and sets the loop and its crossfade: a suggestion, to change with the handles");
     locateButton.setTooltip ("Finds a missing sample: choose it where it is now");
@@ -941,6 +943,7 @@ SamplerEditor::SamplerEditor (SamplerProcessor& p)
     sliceButton.setTooltip ("Cuts the sample again from its start, as Source, Sensitivity and Parts say: cuts moved or added by hand are lost");
 
     wavePanel.addAndMakeVisible (open);
+    wavePanel.addChildComponent (sf2PresetButton);
     wavePanel.addChildComponent (locateButton);
     statusLine.setJustificationType (juce::Justification::centredRight);
     statusLine.setFont (juce::FontOptions (12.0f));
@@ -1098,12 +1101,103 @@ void SamplerEditor::say (const juce::String& message)
     statusLine.setText (status, juce::dontSendNotification);
 }
 
+bool SamplerEditor::loadSf2Preset (int presetIndex)
+{
+    if (! sf2BankFile.existsAsFile() || ! juce::isPositiveAndBelow (presetIndex, (int) sf2Presets.size()))
+        return false;
+
+    const auto err = sampler.loadSf2 (sf2BankFile, presetIndex);
+    if (err.isNotEmpty())
+    {
+        say (err);
+        return false;
+    }
+
+    sf2PresetIndex = presetIndex;
+    const auto& p = sf2Presets[(size_t) presetIndex];
+    sf2PresetButton.setButtonText (p.name.isNotEmpty() ? p.name : ("Preset " + juce::String (presetIndex + 1)));
+    readZones();
+    select (0);
+    wave->showAll();
+    say ("Loaded " + p.name + " (" + juce::String ((int) zoneList.size()) + " zones) from " + sf2BankFile.getFileName() + ".");
+    return true;
+}
+
+void SamplerEditor::showSf2Presets()
+{
+    if (sf2Presets.empty() || ! sf2BankFile.existsAsFile())
+        return;
+
+    juce::PopupMenu menu;
+    const bool groupByBank = sf2Presets.size() > 30;
+
+    if (groupByBank)
+    {
+        std::map<int, juce::PopupMenu> banks;
+        for (int i = 0; i < (int) sf2Presets.size(); ++i)
+        {
+            const auto& p = sf2Presets[(size_t) i];
+            const auto label = juce::String (p.program).paddedLeft ('0', 3) + "  " + p.name;
+            banks[p.bank].addItem (i + 1, label, true, i == sf2PresetIndex);
+        }
+        for (auto& [bankNum, sub] : banks)
+            menu.addSubMenu ("Bank " + juce::String (bankNum).paddedLeft ('0', 3), sub);
+    }
+    else
+    {
+        for (int i = 0; i < (int) sf2Presets.size(); ++i)
+        {
+            const auto& p = sf2Presets[(size_t) i];
+            const auto label = juce::String (p.bank).paddedLeft ('0', 3) + ":" + juce::String (p.program).paddedLeft ('0', 3) + "  " + p.name;
+            menu.addItem (i + 1, label, true, i == sf2PresetIndex);
+        }
+    }
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (sf2PresetButton),
+                        [safe = juce::Component::SafePointer<SamplerEditor> (this)] (int chosen)
+    {
+        if (safe != nullptr && chosen > 0)
+            safe->loadSf2Preset (chosen - 1);
+    });
+}
+
 bool SamplerEditor::loadFile (const juce::File& file, int atKey)
 {
-    if (file.hasFileExtension ("sfz;sf2;xpm"))
+    if (file.hasFileExtension ("sf2"))
+    {
+        juce::String listErr;
+        auto listed = Sf2Import::listPresets (file, listErr);
+        const auto err = sampler.loadSf2 (file, 0);
+        if (err.isNotEmpty())
+        {
+            say (err);
+            return false;
+        }
+
+        sf2BankFile = file;
+        sf2Presets = std::move (listed);
+        sf2PresetIndex = 0;
+        const bool multi = sf2Presets.size() > 1;
+        sf2PresetButton.setVisible (multi);
+        if (multi)
+            sf2PresetButton.setButtonText (sf2Presets[0].name.isNotEmpty() ? sf2Presets[0].name : "SF2 Preset");
+        resized();
+        readZones();
+        select (0);
+        wave->showAll();
+        say ("Loaded " + file.getFileName() + " (" + juce::String ((int) zoneList.size()) + " zones"
+             + (multi ? ", " + juce::String ((int) sf2Presets.size()) + " presets" : "") + ").");
+        return true;
+    }
+
+    sf2BankFile = juce::File();
+    sf2Presets.clear();
+    sf2PresetButton.setVisible (false);
+    resized();
+
+    if (file.hasFileExtension ("sfz;xpm"))
     {
         const auto err = file.hasFileExtension ("sfz") ? sampler.loadSfz (file)
-                       : file.hasFileExtension ("sf2") ? sampler.loadSf2 (file)
                                                        : sampler.loadMpcKeygroup (file);
         if (err.isNotEmpty())
         {
@@ -1441,6 +1535,11 @@ void SamplerEditor::resized()
         auto header = wavePanel.getHeaderBounds();
         open.setBounds (header.removeFromRight (80).reduced (0, 2));
         header.removeFromRight (6);
+        if (sf2PresetButton.isVisible())
+        {
+            sf2PresetButton.setBounds (header.removeFromRight (140).reduced (0, 2));
+            header.removeFromRight (6);
+        }
         locateButton.setBounds (header.removeFromRight (80).reduced (0, 2));
         header.removeFromRight (6);
         statusLine.setBounds (header);

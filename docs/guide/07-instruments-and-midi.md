@@ -9,7 +9,7 @@ An **instrument track** plays an instrument: Torqwave's built-in Torqwave Synth,
 - **Multitrack > Tracks > Add Instrument Track...**, or right-click the lanes or the track list and choose **Add Instrument Track**. Pick the instrument from the menu; the track is named after it. The built-in Torqwave Synth, Basic Drums, StringSwarm and Torqwave Sampler come first; your plug-ins follow under **Audio Units** and **VST3**, each by its maker (a few of one format are listed plainly, with their format and maker in their names).
 - **Turn an empty audio track into an instrument track:** right-click its header and choose **Instrument Track**. Choose it again to turn it back.
 
-The header's instrument button, which shows the instrument's name (or **Inst** when there is none), chooses, swaps or opens the instrument. It takes the place of the record button. Effects added with **FX** run after the instrument, as on any track.
+Instrument tracks use a dedicated 3-row header with zero-friction editing: the track name with Mute and Solo on top, a split **Instrument** bar (`[Instrument Name | ▾]`) beside **FX** on the middle row, and compact Volume, Pan, Sends, and Automation below. **Left-clicking** the instrument name opens or focuses its plug-in window immediately (also accessible via **Option-I** or from the Track Inspector and Mixer strip); clicking **`▾`** or right-clicking the pill opens the swap/choose/remove menu. Effects added with **FX** run after the instrument, left-to-right as shown on the header.
 
 New instrument tracks follow the tempo ([musical timebase](06-multitrack-sessions.md#tempo-and-bars)), so their clips keep their place in bars and beats when the tempo changes.
 
@@ -283,7 +283,7 @@ A factory kit sets every pad at once, with the bus and the space. There are fift
 - **Samples stay in place:** Sample zones inside Maschine's Sampler or Audio modules are resolved automatically against the expansion or factory library folder (walking up from `Groups/Kits/` to `Samples/`) and are never copied. Multi-sample velocity layers, start points, level, pan, tune, and Sampler filter settings come over onto the pad.
 - **Clean-room Drum Synth mapping:** Pads using Maschine's internal Drum Synths (`Kick`, `Snare`, `Hi-Hat`, `Tom`, `Perc`, `Cymbal`, and `Bass Synth`) are mapped clean-room onto Basic Drums' own synthesized drum sources (`Sub Kick`, `FM Kick`, `Distorted Kick`, `Click Kick`, `Rumble Kick`, `FM Snare`, `Noise Snare`, `Metal Snare`, `Clap Stack`, `FM Hat`, `Noise Hat`, `FM Tom`, `Dark Ride`, `Trash Crash`, `FM Bell`, `Anvil`, `Pipe`, `Sub Drop`, and the built-in GM drum engines) with their tune, decay, tone, and drive parameters translated over.
 - **Clean-room per-pad & bus FX translation:** Maschine insert effects are translated into Basic Drums' own built-in DSP: `EQ` → 4-Band Pad EQ, `Filter` → Pad Resonant Filter, `Saturator` / `Distortion` / `Cabinet` → Pad Saturator (Tape/Tube/Clip/Fold), `Transient Master` → Pad Transient Shaper, `Compressor` / `Maximizer` / `Limiter` → Pad Compressor (and Group Glue), `Lo-Fi` → Pad Bitcrusher, `Metaverb` / `Reverb` / `Plate Reverb` / `Ice` → Pad Reverb Send, and `Beat Delay` / `Reflex` / `Grain Delay` → Pad Delay Send.
-- **MIDI pattern export:** **Files > Export Maschine Pattern to MIDI...** extracts the built-in note pattern from a `.mxgrp` kit (960 PPQN `NoteEvent` timing, duration, and velocity) and writes a Standard MIDI File (`.mid`) mapped directly to Basic Drums' notes so you can drop the kit's original groove onto your drum track.
+- **MIDI pattern export & one-click drop:** **Files > Drop Maschine Pattern on Track...** (or the **Drop Pattern on Track** button in the import report) drops the `.mxgrp` kit's embedded 960 PPQN `NoteEvent` groove straight onto the Basic Drums track at the playhead in one undoable step. **Files > Export Maschine Pattern to MIDI...** writes the same mapped pattern to a Standard MIDI File (`.mid`).
 - **What does not come over:** Third-party plug-in hosts inside a Maschine pad (such as Massive or Monark) and modulation effects without a direct per-pad slot (`Chorus`, `Flanger`, `Phaser`, `Freq Shifter`, `FM`, `Resochord`, `Grain Stretch`). Every mapped and skipped item is listed plainly in the import report.
 
 #### Importing an Akai MPC kit
@@ -387,7 +387,7 @@ Six notes can sound at once; a seventh takes the oldest's place. It answers pitc
 | **Round Robin** | Assign overlapping zones to a round-robin group (1 to 16) so repeated hits cycle cleanly across recordings instead of machine-gunning the same sample. |
 | **Warp & Source BPM** | Tempo-synced time-stretching powered by Signalsmith Stretch so loops and phrases stay locked to the session's tempo across pitch and tempo changes. |
 
-**SFZ, SoundFont 2, and Akai MPC import.** Torqwave Sampler imports standard `.sfz` instruments (`<control> default_path`, `<global>`, `<group>`, `<region>`, key/velocity ranges, loop points, choke groups, `seq_length` round robin, and amp envelopes), **SoundFont 2 (`.sf2`)** banks (mono and stereo 16-bit PCM zones, preset/instrument key and velocity intersections, root key, tuning, pan, attenuation, and loop points), and **Akai MPC Keygroup/Drum (`.xpm`)** programs — drop any of them onto the window or choose **Open...**. External sample files are read in place.
+**SFZ, SoundFont 2, and Akai MPC import.** Torqwave Sampler imports standard `.sfz` instruments (`<control> default_path`, `<global>`, `<group>`, `<region>`, key/velocity ranges, loop points, choke groups, `seq_length` round robin, and amp envelopes), **SoundFont 2 (`.sf2`)** banks (mono and stereo 16-bit PCM zones, preset/instrument key and velocity intersections, root key, tuning, pan, attenuation, and loop points — with an **SF2 Preset** menu beside **Open...** to browse multi-preset banks), and **Akai MPC Keygroup/Drum (`.xpm`)** programs — drop any of them onto the window or choose **Open...**. External sample files are read in place.
 
 **The sound's settings** are for every zone: **Amp** (Attack, Decay, Sustain, Release, and how much Velocity sets the level), **Filter** (a low-pass at 12 or 24 dB an octave, a band-pass or a high-pass, with Cutoff, Reso, Key tracking, Vel for velocity to cutoff, and an envelope of its own: Env is how far it opens the filter), **LFO** (five shapes, a Rate in Hz or, with Sync, in note values at the session's tempo, a Fade In, and how far it moves the pitch, filter, level and pan) and **Voice** (Level, Pan, Transpose, Fine, the Bend range, Glide, the vibrato the mod Wheel adds, and Poly or Mono). These can be automated like any instrument's settings.
 
@@ -498,6 +498,14 @@ Then:
 Learning listens to MIDI inputs; clicking a pad in the plug-in's own window doesn't send a note Torqwave can hear.
 
 With the drum grid's steps, its velocities, probability and swing, a drum clip is a step sequencer: set the grid to 1/4 beat for sixteenths, add swing, and give the ghost notes lower velocities and some steps less than 100 %.
+
+### Score (notation) view & MusicXML export
+
+Click **Score** beside **Drums** in the Note Editor toolbar to view and edit the note clip as standard grand-staff music notation:
+
+- **Treble & Bass grand staff:** displays clefs, key signature sharps or flats (following the clip's key), time signature, barlines, automatic ledger lines (middle C, above treble, below bass), accidentals, and rhythmic durations from whole notes down to 16th notes (with hollow/filled noteheads, stems, flags, and augmentation dots).
+- **Direct editing:** click on any staff line or space to add a note at that diatonic pitch, click a notehead to select it, drag up/down to change pitch or left/right to move in time, Option-click to delete, or use the arrow keys and right-click note menu just like the Piano Roll.
+- **Export MusicXML 3.1:** choose **Tools > Export MusicXML (.musicxml)...** to save a standard `score-partwise` MusicXML 3.1 file for MuseScore, Dorico, Sibelius, Finale, or Logic Pro.
 
 ### Writing tools
 

@@ -85,9 +85,27 @@ public:
         Theme::follow (effectsButton, juce::TextButton::buttonOnColourId, Theme::accentDeep);
         effectsButton.onClick = [this] { view.showEffectsMenu (trackId, effectsButton); };
 
-        instrumentButton.setTooltip ("This track's instrument: the plug-in its note clips and live MIDI play, before its effects");
+        instrumentButton.setTooltip ("Click to open this track's instrument window (or choose one if empty); right-click or use the arrow to swap instruments");
         Theme::follow (instrumentButton, juce::TextButton::buttonOnColourId, Theme::accentDeep);
-        instrumentButton.onClick = [this] { view.showInstrumentMenu (trackId, instrumentButton); };
+        instrumentButton.setConnectedEdges (juce::Button::ConnectedOnRight);
+        instrumentButton.onClick = [this]
+        {
+            view.selectTrack (index());
+            if (view.engine.getTrackEffects().getInstrument (trackId) != nullptr)
+                view.showInstrumentWindow (trackId);
+            else
+                view.showInstrumentMenu (trackId, instrumentButton);
+        };
+        instrumentButton.addMouseListener (this, false);
+
+        instrumentMenuButton.setTooltip ("Choose, swap, or remove this track's instrument (or route external MIDI Out)");
+        Theme::follow (instrumentMenuButton, juce::TextButton::buttonOnColourId, Theme::accentDeep);
+        instrumentMenuButton.setConnectedEdges (juce::Button::ConnectedOnLeft);
+        instrumentMenuButton.onClick = [this]
+        {
+            view.selectTrack (index());
+            view.showInstrumentMenu (trackId, instrumentMenuButton);
+        };
 
         automationButton.setTooltip ("Automation Envelopes");
         Theme::follow (automationButton, juce::TextButton::buttonOnColourId, Theme::accentDeep);
@@ -138,7 +156,7 @@ public:
             };
         }
 
-        for (auto* c : std::initializer_list<juce::Component*> { &name, &effectsButton, &instrumentButton, &arm, &mute, &solo, &gain, &pan, &sendsButton, &inputButton, &automationButton })
+        for (auto* c : std::initializer_list<juce::Component*> { &name, &effectsButton, &instrumentButton, &instrumentMenuButton, &arm, &mute, &solo, &gain, &pan, &sendsButton, &inputButton, &automationButton })
             addAndMakeVisible (c);
 
         // A right-click on the name opens the header's menu (a double-click still renames).
@@ -199,6 +217,7 @@ public:
         arm.setToggleState (view.isArmed (trackId), juce::dontSendNotification);
         inputButton.setVisible (! isBus && ! t.isControl() && ! isInstrument);
         instrumentButton.setVisible (isInstrument);
+        instrumentMenuButton.setVisible (isInstrument);
         inputButton.setButtonText (t.input.isDefault() ? juce::String ("In")
                                    : t.input.channels == 2 ? juce::String (t.input.first + 1) + "/" + juce::String (t.input.first + 2)
                                                            : juce::String (t.input.first + 1));
@@ -236,8 +255,12 @@ public:
         const auto external = outTrack != nullptr && outTrack->playsMidiOut();
         instrumentButton.setButtonText (instrument != nullptr ? instrument->getName()
                                         : external ? juce::String (outTrack->midiOutName.isNotEmpty() ? outTrack->midiOutName : "MIDI Out")
-                                        : juce::String ("Inst"));
+                                        : juce::String ("+ Instrument"));
         instrumentButton.setToggleState (instrument != nullptr || external, juce::dontSendNotification);
+        instrumentMenuButton.setToggleState (instrument != nullptr || external, juce::dontSendNotification);
+        instrumentButton.setTooltip (instrument != nullptr
+                                         ? "Open " + instrument->getName() + " window (Option-I) — right-click or use the arrow to swap"
+                                         : "Choose an instrument for this track");
         auto anyOn = false;
 
         for (int i = 0; i < slots; ++i)
@@ -453,16 +476,50 @@ public:
             return;
         }
 
-        if (! isBus && ! isInstrument)
+        if (isInstrument)
+        {
+            // Dedicated 3-row Instrument Track layout:
+            // Row 1: Track Name (full breathing room) + M + S
+            // Row 2: Split Instrument Bar ([Instrument Name | ▾]) + FX (signal flow L -> R)
+            // Row 3: Compact Volume + Pan + Sends + A
+            if (inverted)
+                top.removeFromLeft (14);
+
+            name.setBounds (top);
+            r.removeFromTop (6);
+
+            auto chainRow = r.removeFromTop (24);
+            effectsButton.setBounds (chainRow.removeFromRight (44));
+            chainRow.removeFromRight (4);
+            instrumentMenuButton.setBounds (chainRow.removeFromRight (20));
+            instrumentButton.setBounds (chainRow);
+
+            r.removeFromTop (6);
+            auto mixRow = r.removeFromTop (22);
+            automationButton.setBounds (mixRow.removeFromRight (24));
+            mixRow.removeFromRight (3);
+            sendsButton.setBounds (mixRow.removeFromRight (50));
+            mixRow.removeFromRight (3);
+            const auto panW = juce::jlimit (36, 48, mixRow.getWidth() / 3);
+            pan.setBounds (mixRow.removeFromRight (panW));
+            mixRow.removeFromRight (3);
+            gain.setBounds (mixRow);
+
+            // In a short lane, drop the mix row first so the one-click Instrument + FX row stays accessible.
+            for (auto* c : std::initializer_list<juce::Component*> { &instrumentButton, &instrumentMenuButton, &effectsButton, &gain, &pan, &automationButton, &sendsButton })
+                if (c->getHeight() < 18 || c->getBottom() > getHeight() - 2)
+                    c->setBounds ({});
+
+            return;
+        }
+
+        if (! isBus)
         {
             arm.setBounds (top.removeFromRight (26));
             top.removeFromRight (4);
         }
 
         effectsButton.setBounds (top.removeFromRight (40));
-
-        if (instrumentButton.isVisible())
-            instrumentButton.setBounds (top.removeFromRight (juce::jmin (90, juce::jmax (44, top.getWidth() / 3))).withTrimmedRight (2));
 
         // Inverted polarity: a Ø before the name.
         if (inverted)
@@ -479,7 +536,7 @@ public:
         sendsButton.setBounds (bottom.removeFromRight (56));
         bottom.removeFromRight (4);
 
-        if (! isBus && ! isInstrument)
+        if (! isBus)
         {
             inputButton.setBounds (bottom.removeFromRight (40));
             bottom.removeFromRight (4);
@@ -500,7 +557,10 @@ public:
             if (e.mods.isPopupMenu())
             {
                 view.selectTrack (index());
-                showGroupMenu();
+                if (e.eventComponent == &instrumentButton)
+                    view.showInstrumentMenu (trackId, instrumentButton);
+                else
+                    showGroupMenu();
             }
 
             return;
@@ -690,7 +750,8 @@ private:
     MultitrackView& view;
     int group = 0;
     juce::Label name;
-    juce::TextButton effectsButton { "FX" }, instrumentButton { "Inst" }, arm { "R" }, mute { "M" }, solo { "S" }, sendsButton { "Sends" }, inputButton { "In" }, automationButton { "A" };
+    juce::TextButton effectsButton { "FX" }, instrumentButton { "+ Instrument" }, instrumentMenuButton { juce::String (juce::CharPointer_UTF8 ("\xe2\x96\xbe")) },
+                     arm { "R" }, mute { "M" }, solo { "S" }, sendsButton { "Sends" }, inputButton { "In" }, automationButton { "A" };
     juce::Slider gain, pan;
     juce::Colour colour;
     bool isSelected = false, isBus = false, isFolder = false, isVca = false, isInstrument = false, collapsed = false, inFolder = false, soloSafe = false, inverted = false;

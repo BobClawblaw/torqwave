@@ -113,7 +113,7 @@ juce::String Turn::after() const
 
 juce::String releaseNotesFor()
 {
-    return "0.23.0";
+    return "0.24.0";
 }
 
 bool asksAboutRelease (const juce::String& request)
@@ -136,7 +136,13 @@ juce::String aboutThisRelease (bool withNotes)
 
     return line + " The user may be asking about the program, not for a change: then answer from these notes in a few lines, make no changes, and "
            "say the full list is the changelog at https://github.com/BobClawblaw/torqwave/blob/main/CHANGELOG.md. "
-           "New in 0.23.0: six Live Creative FX (Delay, 4x-oversampled Distortion & Bitcrusher, Auto-Filter, Volume Shaper / Sidechain Pump, Noise Gate, Tremolo & Auto-Pan); "
+           "New in 0.24.0: Zero Telemetry & Zero Tracking commitment (100% offline-first, zero background network calls, verified by source and unit checks); "
+           "clean-room NI Maschine 2/3 (.mxgrp/.mxsnd) kit import into Basic Drums with automatic sample resolution, Drum Synth and per-pad FX translation, 960 PPQN MIDI pattern export, and one-click pattern drop onto the track; "
+           "Akai MPC (.xpm) Drum and Keygroup kit import into Basic Drums and Torqwave Sampler; "
+           "SoundFont 2 (.sf2) RIFF bank import with multi-preset browser in Torqwave Sampler; "
+           "four new Live Creative FX bringing the built-in suite to 36 plug-ins — Hilbert SSB Frequency Shifter, granular Shimmer Delay, 24-band Vocoder (internal chord or sidechain carrier), and live STFT Spectral Freeze; "
+           "and an interactive Grand-Staff Notation (Score) View inside the Note Editor with MusicXML 3.1 export, plus a redesigned one-click Instrument Track layout across the Multitrack header, Track Inspector, and Mixer strips (Option-I). "
+           "0.23.0: six Live Creative FX (Delay, 4x-oversampled Distortion & Bitcrusher, Auto-Filter, Volume Shaper / Sidechain Pump, Noise Gate, Tremolo & Auto-Pan); "
            "Torqwave Synth expanded with LFOs 3–4, 24 mod slots, Slot Depth modulation, 16-node MSEG Curve LFOs, built-in Arpeggiator, 4-scene Evolve morphing and Complex matching in Decrypt; "
            "four Live MIDI FX (MIDI Arpeggiator, Chord Trigger, Scale Lock, Note Echo); Piano Roll ratchets, micro-timing, groove templates and ghost notes; "
            "Audio to MIDI (melody and drums with groove extraction); Torqwave Sampler SFZ import, round-robin groups and Signalsmith Warp; "

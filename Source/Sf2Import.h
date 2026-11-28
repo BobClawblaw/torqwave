@@ -36,9 +36,22 @@ namespace Sf2Import
     /** Loads an SF2 file from disk into Sampler zones (default presetIndex = 0). */
     Result loadFile (const juce::File& sf2File, int presetIndex = 0);
 
+    /** Lists all presets in an SF2 file without decoding PCM audio. */
+    std::vector<PresetSummary> listPresets (const juce::File& sf2File, juce::String& error);
+
     /** Builds a minimal valid SoundFont 2 (.sf2) binary in memory for unit/round-trip/fuzz tests. */
     juce::MemoryBlock writeMinimal (const juce::String& presetName, const std::vector<int16_t>& pcm,
                                     int sampleRate = 44100, int rootKey = 60, int lowKey = 0, int highKey = 127,
                                     int lowVel = 1, int highVel = 127, bool looped = false,
                                     int loopStart = 0, int loopEnd = 0);
+
+    /** Builds a multi-preset valid SoundFont 2 (.sf2) bank in memory for unit tests. */
+    struct BankPresetSpec
+    {
+        juce::String name;
+        int bank = 0, program = 0;
+        int rootKey = 60, lowKey = 0, highKey = 127;
+        std::vector<int16_t> pcm;
+    };
+    juce::MemoryBlock writeBank (const std::vector<BankPresetSpec>& presets, int sampleRate = 44100);
 }

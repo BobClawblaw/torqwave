@@ -26,18 +26,18 @@
 <text x="62.0" y="43.0" font-size="16" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="0.14em">TORQ</text>
 <text x="117.0" y="43.0" font-size="16" fill="#ff5c1f" text-anchor="start" font-weight="800" letter-spacing="0.14em">WAVE</text>
 <rect x="188.0" y="24.0" width="74.1" height="24.0" rx="12.0" fill="url(#pillBg)" stroke="#ff5c1f" stroke-width="1.1"/>
-<text x="225.0" y="40.2" font-size="12" fill="#ff8a4d" text-anchor="middle" font-weight="bold" letter-spacing="0.06em">v0.23.0</text>
+<text x="225.0" y="40.2" font-size="12" fill="#ff8a4d" text-anchor="middle" font-weight="bold" letter-spacing="0.06em">v0.24.0</text>
 <text x="1550.0" y="42.0" font-size="13" fill="#929eb3" text-anchor="end" font-weight="600" letter-spacing="0.09em">FREE · OPEN SOURCE · ZERO TELEMETRY · macOS / WIN / LINUX</text>
-<text x="50.0" y="92.0" font-size="40" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="-0.02em">Torqwave 0.23.0 and the audio editors</text>
+<text x="50.0" y="92.0" font-size="40" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="-0.02em">Torqwave 0.24.0 and the audio editors</text>
 <text x="50.0" y="124.0" font-size="20" fill="#929eb3" text-anchor="start" font-weight="400">What ships built into each product, read from its own documentation</text>
 <rect x="50.0" y="138.0" width="1500.0" height="1.5" rx="0" fill="url(#accentFade)"/>
 <rect x="38.0" y="158.0" width="1524.0" height="672.0" rx="12" fill="#0c111b" stroke="#232d40" stroke-width="1" opacity="0.65"/>
 <rect x="435.0" y="158.0" width="318.6" height="672.0" rx="10" fill="url(#tqColGrad)" stroke="#5c3322" stroke-width="1.2"/>
 <rect x="447.0" y="158.0" width="294.6" height="3.5" rx="2" fill="url(#accentH)"/>
 <text x="514.6" y="192.0" font-size="20" fill="#f8fafc" text-anchor="middle" font-weight="700">Torqwave</text>
-<text x="514.6" y="216.0" font-size="18" fill="#ff8a3d" text-anchor="middle" font-weight="700">0.23.0</text>
+<text x="514.6" y="216.0" font-size="18" fill="#ff8a3d" text-anchor="middle" font-weight="700">0.24.0</text>
 <text x="673.9" y="192.0" font-size="20" fill="#f8fafc" text-anchor="middle" font-weight="700">Torqwave</text>
-<text x="673.9" y="216.0" font-size="18" fill="#929eb3" text-anchor="middle" font-weight="700">0.22.0</text>
+<text x="673.9" y="216.0" font-size="18" fill="#929eb3" text-anchor="middle" font-weight="700">0.23.0</text>
 <text x="833.2" y="191.0" font-size="18" fill="#dce3ee" text-anchor="middle" font-weight="600">Adobe</text>
 <text x="833.2" y="214.0" font-size="18" fill="#dce3ee" text-anchor="middle" font-weight="600">Audition</text>
 <text x="992.5" y="204.0" font-size="18" fill="#dce3ee" text-anchor="middle" font-weight="600">Audacity</text>
@@ -309,7 +309,7 @@
 <line x1="1304.1" y1="813.4" x2="1318.1" y2="813.4" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <line x1="1463.4" y1="813.4" x2="1477.4" y2="813.4" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <line x1="50.0" y1="848.0" x2="1550.0" y2="848.0" stroke="#232d40" stroke-width="1" opacity="0.7"/>
-<text x="1550.0" y="876.0" font-size="14" fill="#68758c" text-anchor="end" font-weight="normal">As of 2026-11-27 · Torqwave 0.23.0 (released) · Sources &amp; method: docs/compare</text>
+<text x="1550.0" y="876.0" font-size="14" fill="#68758c" text-anchor="end" font-weight="normal">As of 2026-11-28 · Torqwave 0.24.0 (released) · Sources &amp; method: docs/compare</text>
 <circle cx="60.0" cy="871.0" r="9.0" fill="url(#barYes)"/>
 <path d="M 56.5 871.3 L 59.0 873.9 L 63.8 868.3" fill="none" stroke="#071512" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="77.0" y="876.0" font-size="15" fill="#929eb3" text-anchor="start" font-weight="500">Yes</text>

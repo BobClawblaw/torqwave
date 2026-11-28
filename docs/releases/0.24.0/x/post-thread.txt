@@ -1,0 +1,38 @@
+--- POST 1 / 5 ---
+
+Torqwave 0.24.0 is out: free, open-source audio editor + DAW with ZERO telemetry & ZERO tracking.
+
+New: Maschine/MPC/SF2 import, 4 live FX (Vocoder, Spectral Freeze, Freq Shifter, Shimmer Delay), Grand-Staff Notation + MusicXML & 1-click Instrument UX.
+
+https://github.com/BobClawblaw/torqwave/releases/tag/v0.24.0
+
+--- POST 2 / 5 ---
+
+Open your existing libraries without lock-in:
+• NI Maschine .mxgrp/.mxsnd (Drum Synths, pad FX & 1-click MIDI pattern drop — verified on 160/160 real files)
+• Akai MPC .xpm Drum & Keygroup kits
+• SoundFont 2 (.sf2) multi-preset banks + SFZ & Battery 4
+
+--- POST 3 / 5 ---
+
+Built-in plug-ins grow to 36 (+4 live creative FX):
+• Hilbert SSB Frequency Shifter (49.6 dB image rejection)
+• Granular Shimmer Delay
+• 24-band Vocoder (chord or sidechain carrier)
+• Live STFT Spectral Freeze & Blur
+
+Plus redesigned 1-click Instrument Tracks (Option-I).
+
+--- POST 4 / 5 ---
+
+New Grand-Staff Notation (Score) View + MusicXML 3.1 export lifts Torqwave to 48 of 53 rows in our documented 15-product comparison matrix.
+
+Matrix: https://github.com/BobClawblaw/torqwave/blob/main/docs/compare/MATRIX.md
+
+--- POST 5 / 5 ---
+
+What Torqwave still lacks: Dolby Atmos, ARA 2, legacy VST2, full neural stem export, and notarized installers yet.
+
+Zero telemetry, zero tracking, no account, 100% offline-first. AGPL-3.0 for macOS (Universal), Windows & Linux.
+
+https://bobclawblaw.github.io/torqwave/

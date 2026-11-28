@@ -1676,6 +1676,7 @@ void DrumMachineEditor::showFilesMenu()
     menu.addItem (7, "Import MPC Kit...");
     menu.addItem (5, "Import Folder of Sounds...");
     menu.addSeparator();
+    menu.addItem (9, "Drop Maschine Pattern on Track...", drums.onDropPattern != nullptr);
     menu.addItem (8, "Export Maschine Pattern to MIDI...");
     menu.addSeparator();
     menu.addItem (3, "Find Missing Samples...", ! drums.getMissing().isEmpty());
@@ -1725,6 +1726,14 @@ void DrumMachineEditor::showFilesMenu()
         else if (chosen == 8)
         {
             DrumKitImport::exportMaschineMidi (self, self.chooser, [safe] (const juce::String& said)
+            {
+                if (safe != nullptr)
+                    safe->say (said);
+            });
+        }
+        else if (chosen == 9)
+        {
+            DrumKitImport::dropMaschinePattern (self, self.drums, self.chooser, [safe] (const juce::String& said)
             {
                 if (safe != nullptr)
                     safe->say (said);

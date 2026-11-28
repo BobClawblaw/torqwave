@@ -136,6 +136,8 @@ juce::PluginDescription noiseGateDescription()    { return describeCreative ("No
 juce::PluginDescription tremoloDescription()          { return describeCreative ("Tremolo & Auto-Pan", "Modulation", tremoloId, 0x54515452); }
 juce::PluginDescription frequencyShifterDescription() { return describeCreative ("Frequency Shifter", "Modulation", frequencyShifterId, 0x54514653); }
 juce::PluginDescription shimmerDelayDescription()     { return describeCreative ("Shimmer Delay", "Delay", shimmerDelayId, 0x54515348); }
+juce::PluginDescription vocoderDescription()          { return describeCreative ("Vocoder", "Modulation", vocoderId, 0x54515643); }
+juce::PluginDescription spectralFreezeDescription()   { return describeCreative ("Spectral Freeze", "Reverb", spectralFreezeId, 0x54515346); }
 
 //==============================================================================
 // DelayProcessor
@@ -1123,6 +1125,365 @@ void ShimmerDelayProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
 
         delayWrite = (delayWrite + 1) % dLen;
         grainWrite = (grainWrite + 1) % gLen;
+    }
+}
+
+//==============================================================================
+// VocoderProcessor
+//==============================================================================
+VocoderProcessor::VocoderProcessor()
+    : BuiltInEffect (vocoderDescription(), "TORQWAVE_VOCODER", true)
+{
+    carrier   = addChoice ("carrier", "Carrier", { "Internal Saw", "Internal Pulse", "Internal Noise", "Sidechain" }, 0);
+    chord     = addChoice ("chord", "Chord", { "Mono", "Octaves", "Fifth", "Minor", "Major" }, 2);
+    pitch     = addFloat  ("pitch", "Pitch", { 24.0f, 84.0f, 1.0f }, 45.0f, "note");
+    detune    = addFloat  ("detune", "Detune", { 0.0f, 40.0f }, 10.0f, "ct");
+    formant   = addFloat  ("formant", "Formant", { -12.0f, 12.0f }, 0.0f, "st");
+    attackMs  = addFloat  ("attackMs", "Attack", { 1.0f, 60.0f, 0.0f, 0.4f }, 6.0f, "ms");
+    releaseMs = addFloat  ("releaseMs", "Release", { 5.0f, 400.0f, 0.0f, 0.4f }, 45.0f, "ms");
+    sibilance = addFloat  ("sibilance", "Sibilance", { 0.0f, 100.0f }, 25.0f, "%");
+    mix       = addFloat  ("mix", "Mix", { 0.0f, 100.0f }, 100.0f, "%");
+    updateBands();
+}
+
+void VocoderProcessor::updateBands()
+{
+    constexpr double lowHz = 80.0;
+    constexpr double highHz = 10000.0;
+    const double ratio = std::pow (highHz / lowHz, 1.0 / (double) (numBands - 1));
+
+    for (int b = 0; b < numBands; ++b)
+    {
+        const double fc = juce::jlimit (30.0, rate * 0.42, lowHz * std::pow (ratio, (double) b));
+        bandG[(size_t) b] = (float) std::tan (juce::MathConstants<double>::pi * fc / rate);
+    }
+}
+
+void VocoderProcessor::prepareToPlay (double sampleRate, int)
+{
+    rate = juce::jmax (8000.0, sampleRate);
+    updateBands();
+    reset();
+}
+
+void VocoderProcessor::reset()
+{
+    for (auto& f : modFilters) f.clear();
+    env.fill (0.0f);
+    for (auto& ch : carFilters)
+        for (auto& f : ch) f.clear();
+    oscPhase.fill (0.0);
+    hpState = 0.0f;
+    rng = 0x91e10da5u;
+}
+
+void VocoderProcessor::processInternal (juce::AudioBuffer<float>& main, const juce::AudioBuffer<float>* carrierBus)
+{
+    const int numSamples = main.getNumSamples();
+    const int numCh = juce::jmin (2, main.getNumChannels());
+    if (numSamples <= 0 || numCh <= 0)
+        return;
+
+    const int carMode = carrier->getIndex();
+    const bool useSidechain = (carMode == 3 && carrierBus != nullptr && carrierBus->getNumChannels() > 0);
+    const int chordIdx = chord->getIndex();
+    const double rootMidi = (double) pitch->get();
+    const double detCt = (double) detune->get();
+
+    // 3 chord intervals x 2 detuned voices = 6 oscillators
+    static constexpr double chordIntervals[5][3] {
+        { 0.0, 0.0, 0.0 },       // Mono
+        { -12.0, 0.0, 12.0 },    // Octaves
+        { 0.0, 7.0, 12.0 },      // Fifth
+        { 0.0, 3.0, 7.0 },       // Minor
+        { 0.0, 4.0, 7.0 }        // Major
+    };
+
+    double oscInc[6] {};
+    const int activeVoices = chordIdx == 0 ? 2 : 6;
+    for (int v = 0; v < activeVoices; ++v)
+    {
+        const double semi = chordIntervals[chordIdx][v / 2];
+        const double ct = (v & 1) ? detCt : -detCt;
+        const double hz = 440.0 * std::pow (2.0, (rootMidi + semi + ct * 0.01 - 69.0) / 12.0);
+        oscInc[v] = hz / rate;
+    }
+
+    const float atkC = smoothCoeffMs ((double) attackMs->get(), rate);
+    const float relC = smoothCoeffMs ((double) releaseMs->get(), rate);
+    const float bandShift = formant->get() * (float) (numBands - 1) / 84.0f; // ~2.8 bands per octave
+    const float sibAmt = sibilance->get() * 0.01f;
+    const float hpC = onePoleCoeff (5500.0, rate);
+    const float wet = mix->get() * 0.01f;
+    const float dry = 1.0f - wet;
+    constexpr float svfK = 1.0f / 4.2f; // crisp musical 4th-order bandpass selectivity
+    const float voiceNorm = 1.0f / (float) activeVoices;
+
+    for (int i = 0; i < numSamples; ++i)
+    {
+        float modMono = 0.0f;
+        for (int ch = 0; ch < numCh; ++ch)
+            modMono += main.getSample (ch, i);
+        modMono /= (float) numCh;
+
+        // Sibilance high-pass from modulator
+        hpState += hpC * (modMono - hpState);
+        const float sib = (modMono - hpState) * sibAmt;
+
+        // Analyze modulator across 24 bands
+        for (int b = 0; b < numBands; ++b)
+        {
+            const float bp = modFilters[(size_t) b].process (modMono, bandG[(size_t) b], svfK);
+            const float rect = std::abs (bp);
+            const float c = rect > env[(size_t) b] ? atkC : relC;
+            env[(size_t) b] += c * (rect - env[(size_t) b]);
+        }
+
+        // Generate internal carrier (stereo-spread detuned voices) or read sidechain carrier
+        float carSamp[2] { 0.0f, 0.0f };
+        if (useSidechain)
+        {
+            carSamp[0] = carrierBus->getSample (0, i);
+            carSamp[1] = carrierBus->getNumChannels() > 1 ? carrierBus->getSample (1, i) : carSamp[0];
+        }
+        else if (carMode == 2)
+        {
+            carSamp[0] = (nextRand01 (rng) * 2.0f - 1.0f) * 0.6f;
+            carSamp[1] = (nextRand01 (rng) * 2.0f - 1.0f) * 0.6f;
+        }
+        else
+        {
+            for (int v = 0; v < activeVoices; ++v)
+            {
+                oscPhase[(size_t) v] += oscInc[v];
+                if (oscPhase[(size_t) v] >= 1.0)
+                    oscPhase[(size_t) v] -= 1.0;
+
+                const float p = (float) oscPhase[(size_t) v];
+                const float w = (carMode == 1) ? (p < 0.5f ? 0.8f : -0.8f) : (2.0f * p - 1.0f);
+                const float panR = (v & 1) ? 0.65f : 0.35f;
+                carSamp[0] += w * (1.0f - panR) * voiceNorm * 1.8f;
+                carSamp[1] += w * panR * voiceNorm * 1.8f;
+            }
+        }
+
+        for (int ch = 0; ch < numCh; ++ch)
+        {
+            float sum = 0.0f;
+            for (int b = 0; b < numBands; ++b)
+            {
+                const float cBp = carFilters[(size_t) ch][(size_t) b].process (carSamp[ch], bandG[(size_t) b], svfK);
+                const float srcPos = juce::jlimit (0.0f, (float) (numBands - 1), (float) b - bandShift);
+                const int b0 = (int) srcPos;
+                const int b1 = juce::jmin (numBands - 1, b0 + 1);
+                const float frac = srcPos - (float) b0;
+                const float bandEnv = env[(size_t) b0] + frac * (env[(size_t) b1] - env[(size_t) b0]);
+                sum += cBp * bandEnv * 3.8f;
+            }
+
+            const float outWet = std::tanh (sum + sib);
+            const float inDry = main.getSample (ch, i);
+            main.setSample (ch, i, dry * inDry + wet * outWet);
+        }
+    }
+}
+
+void VocoderProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+{
+    auto main = getBusBuffer (buffer, true, 0);
+    const bool hasCarrier = carrier->getIndex() == 3 && getBusCount (true) > 1 && getChannelCountOfBus (true, 1) > 0;
+    if (hasCarrier)
+    {
+        auto sc = getBusBuffer (buffer, true, 1);
+        processInternal (main, &sc);
+    }
+    else
+    {
+        processInternal (main, nullptr);
+    }
+}
+
+bool VocoderProcessor::processLinked (juce::AudioBuffer<float>& buffer)
+{
+    processInternal (buffer, nullptr);
+    return true;
+}
+
+//==============================================================================
+// SpectralFreezeProcessor
+//==============================================================================
+SpectralFreezeProcessor::SpectralFreezeProcessor()
+    : BuiltInEffect (spectralFreezeDescription(), "TORQWAVE_SPECTRAL_FREEZE")
+{
+    freeze  = addBool  ("freeze", "Freeze", false);
+    blur    = addFloat ("blur", "Blur", { 0.0f, 100.0f }, 55.0f, "%");
+    shiftSt = addFloat ("shiftSt", "Spectral Shift", { -12.0f, 12.0f }, 0.0f, "st");
+    tilt    = addFloat ("tilt", "Tilt", { -100.0f, 100.0f }, 0.0f, "%");
+    mix     = addFloat ("mix", "Mix", { 0.0f, 100.0f }, 60.0f, "%");
+
+    for (int i = 0; i < fftSize; ++i)
+        window[(size_t) i] = 0.5f - 0.5f * std::cos (juce::MathConstants<float>::twoPi * (float) i / (float) fftSize);
+}
+
+void SpectralFreezeProcessor::prepareToPlay (double sampleRate, int)
+{
+    rate = juce::jmax (8000.0, sampleRate);
+    setLatencySamples (fftSize);
+    reset();
+}
+
+void SpectralFreezeProcessor::reset()
+{
+    for (int ch = 0; ch < 2; ++ch)
+    {
+        inRing[(size_t) ch].fill (0.0f);
+        outRing[(size_t) ch].fill (0.0f);
+        dryRing[(size_t) ch].fill (0.0f);
+        storedMag[(size_t) ch].fill (0.0f);
+        prevInPhase[(size_t) ch].fill (0.0f);
+        synthPhase[(size_t) ch].fill (0.0f);
+    }
+    ringPos = 0;
+    hopCount = 0;
+    rng = 0x51a7c391u;
+}
+
+double SpectralFreezeProcessor::getTailLengthSeconds() const
+{
+    return freeze->get() ? 30.0 : (0.5 + (double) blur->get() * 0.04);
+}
+
+void SpectralFreezeProcessor::processFrame (int ch, bool frozen, float blurCoeff, float shiftRatio, float tiltSlope)
+{
+    constexpr float twoPi = juce::MathConstants<float>::twoPi;
+
+    // Analysis window from circular input ring
+    for (int i = 0; i < fftSize; ++i)
+    {
+        const int idx = (ringPos + i) & (fftSize - 1);
+        timeBuf[(size_t) i] = { inRing[(size_t) ch][(size_t) idx] * window[(size_t) i], 0.0f };
+    }
+
+    fft.perform (timeBuf.data(), freqBuf.data(), false);
+
+    auto& mags = storedMag[(size_t) ch];
+    auto& prevP = prevInPhase[(size_t) ch];
+    auto& synP = synthPhase[(size_t) ch];
+
+    // Update magnitude spectrum + coherent / diffused phase
+    for (int k = 0; k < numBins; ++k)
+    {
+        const float mag = std::abs (freqBuf[(size_t) k]);
+        const float ph = std::arg (freqBuf[(size_t) k]);
+        const float expectedInc = twoPi * (float) k * (float) hopSize / (float) fftSize;
+
+        if (! frozen)
+        {
+            mags[(size_t) k] = blurCoeff * mags[(size_t) k] + (1.0f - blurCoeff) * mag;
+            if (blurCoeff < 0.05f)
+            {
+                synP[(size_t) k] = ph;
+            }
+            else
+            {
+                float dPh = ph - prevP[(size_t) k] - expectedInc;
+                dPh -= twoPi * std::round (dPh / twoPi);
+                const float jitter = (nextRand01 (rng) * 2.0f - 1.0f) * blurCoeff * 0.45f;
+                synP[(size_t) k] += expectedInc + dPh * (1.0f - blurCoeff * 0.7f) + jitter;
+            }
+            prevP[(size_t) k] = ph;
+        }
+        else
+        {
+            // Frozen: hold stored magnitudes and diffuse phases gently for smooth infinite pads
+            const float jitter = (nextRand01 (rng) * 2.0f - 1.0f) * 0.35f;
+            synP[(size_t) k] += expectedInc + jitter;
+        }
+
+        // Wrap phase cleanly to [-pi, pi]
+        if (synP[(size_t) k] > juce::MathConstants<float>::pi || synP[(size_t) k] < -juce::MathConstants<float>::pi)
+            synP[(size_t) k] -= twoPi * std::round (synP[(size_t) k] / twoPi);
+    }
+
+    // Apply spectral shift + brightness tilt into synthesis spectrum
+    modBuf.fill ({ 0.0f, 0.0f });
+    for (int k = 0; k < numBins; ++k)
+    {
+        const float srcBin = (float) k / shiftRatio;
+        float m = 0.0f;
+        if (srcBin >= 0.0f && srcBin < (float) (numBins - 1))
+        {
+            const int b0 = (int) srcBin;
+            const float frac = srcBin - (float) b0;
+            m = mags[(size_t) b0] + frac * (mags[(size_t) (b0 + 1)] - mags[(size_t) b0]);
+        }
+
+        if (std::abs (tiltSlope) > 1.0e-3f && k > 0)
+        {
+            const float normPos = (std::log2 ((float) k) / 10.0f) - 0.5f; // -0.5..+0.5
+            m *= std::pow (2.0f, normPos * tiltSlope);
+        }
+
+        if (k == 0 || k == numBins - 1)
+        {
+            modBuf[(size_t) k] = { m * std::cos (synP[(size_t) k]), 0.0f };
+        }
+        else
+        {
+            const std::complex<float> c = std::polar (m, synP[(size_t) k]);
+            modBuf[(size_t) k] = c;
+            modBuf[(size_t) (fftSize - k)] = std::conj (c);
+        }
+    }
+
+    fft.perform (modBuf.data(), timeBuf.data(), true);
+
+    // Overlap-add synthesis (4x Hann^2 sum = 1.5)
+    constexpr float olaNorm = 1.0f / 1.5f;
+    for (int i = 0; i < fftSize; ++i)
+    {
+        const int idx = (ringPos + i) & (fftSize - 1);
+        outRing[(size_t) ch][(size_t) idx] += timeBuf[(size_t) i].real() * window[(size_t) i] * olaNorm;
+    }
+}
+
+void SpectralFreezeProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+{
+    const int numSamples = buffer.getNumSamples();
+    const int numCh = juce::jmin (2, buffer.getNumChannels());
+    if (numSamples <= 0 || numCh <= 0)
+        return;
+
+    const bool frozen = freeze->get();
+    const float blurNorm = blur->get() * 0.01f;
+    const float blurCoeff = blurNorm <= 0.001f ? 0.0f : juce::jlimit (0.0f, 0.985f, std::pow (blurNorm, 0.45f) * 0.985f);
+    const float shiftRatio = std::pow (2.0f, shiftSt->get() / 12.0f);
+    const float tiltSlope = tilt->get() * 0.025f;
+    const float wet = mix->get() * 0.01f;
+    const float dry = 1.0f - wet;
+
+    for (int i = 0; i < numSamples; ++i)
+    {
+        for (int ch = 0; ch < numCh; ++ch)
+        {
+            const float in = buffer.getSample (ch, i);
+            const float dryDelayed = dryRing[(size_t) ch][(size_t) ringPos];
+            const float wetOut = outRing[(size_t) ch][(size_t) ringPos];
+
+            dryRing[(size_t) ch][(size_t) ringPos] = in;
+            inRing[(size_t) ch][(size_t) ringPos] = in;
+            outRing[(size_t) ch][(size_t) ringPos] = 0.0f;
+
+            buffer.setSample (ch, i, dry * dryDelayed + wet * std::tanh (wetOut));
+        }
+
+        ringPos = (ringPos + 1) & (fftSize - 1);
+        if (++hopCount >= hopSize)
+        {
+            hopCount = 0;
+            for (int ch = 0; ch < numCh; ++ch)
+                processFrame (ch, frozen, blurCoeff, shiftRatio, tiltSlope);
+        }
     }
 }
 }

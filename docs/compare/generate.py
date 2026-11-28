@@ -383,16 +383,19 @@ def graphic_hero(defs, snap):
     tagline = snap.get("hero_tagline", "An audio editor and DAW in one — spectral repair, mastering, instruments & multitrack")
     s.text(58, 218, tagline, 24, TEXT, weight="400")
 
-    # 4 Hero KPI pills strip
+    # 4 Hero KPI pills strip (dynamically read from release_numbers when present)
     rows = all_rows(defs)
     cov = coverage(snap["products"]["torqwave"]["cells"], rows)
     prev_cov = coverage(snap["products"]["torqwave_prev"]["cells"], rows) if "torqwave_prev" in snap["products"] else None
     cov_str = f'{cov["yes"]}/{len(rows)} Matrix Rows' + (f' (+{cov["yes"] - prev_cov["yes"]})' if prev_cov and cov["yes"] > prev_cov["yes"] else "")
+    num_map = {n.get("label", "").lower(): n.get("now") for n in snap.get("release_numbers", [])}
+    plugin_count = num_map.get("built-in plug-ins", 36)
+    checks_count = num_map.get("automated checks", 2816)
     chips = [
-        ("32 Built-In FX & Instruments", BRAND),
+        (f"{plugin_count} Built-In FX & Instruments", BRAND),
         (cov_str, GOOD),
         ("CLAP 1.2 · VST3 · AU · LV2", BRAND_HI),
-        ("2,782 Verified Checks", GOOD),
+        (f"{checks_count:,} Verified Checks", GOOD),
     ]
     cx = 56
     for txt, dot_col in chips:

@@ -94,6 +94,10 @@ public:
     /** Adds MIDI learn's items for a track to its strip's menu (the app's MidiLearn). */
     std::function<void (juce::PopupMenu&, juce::uint32 trackId)> addMidiLearnMenu;
 
+    /** One-click instrument window open and right-click instrument swap menu from instrument mixer strips. */
+    std::function<void (juce::uint32 trackId)> onOpenInstrument;
+    std::function<void (juce::uint32 trackId, juce::Component& target)> onInstrumentMenu;
+
     /** The level a meter shows (gain, not dB): a track's or bus's, or with id 0 the master's
         (channels 0 to 5, L R C LFE Ls Rs, in a 5.1 master). */
     float getShownLevel (juce::uint32 trackId, int channel) const;

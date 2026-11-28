@@ -132,6 +132,11 @@ namespace DrumKitImport
     void exportMaschineMidi (juce::Component& window, std::unique_ptr<juce::FileChooser>&,
                              std::function<void (const juce::String&)> done, const juce::File& kitFile = {});
 
+    /** Drops an embedded Maschine .mxgrp MIDI pattern directly onto the Basic Drums track at the
+        session cursor via BasicDrumsProcessor::onDropPattern. */
+    void dropMaschinePattern (juce::Component& window, BuiltInEffects::BasicDrumsProcessor&, std::unique_ptr<juce::FileChooser>&,
+                              std::function<void (const juce::String&)> done, const juce::File& kitFile = {});
+
     /** The same for a folder of sounds: asks for one, or takes the one given. */
     void importFolder (juce::Component& window, BuiltInEffects::BasicDrumsProcessor&, std::unique_ptr<juce::FileChooser>&,
                        std::function<void (const juce::String&)> done, const juce::File& folder = {});

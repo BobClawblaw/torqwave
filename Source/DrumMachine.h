@@ -547,6 +547,10 @@ namespace BuiltInEffects
         int getOutputBus (int pad) const;
         void setOutputBus (int pad, int bus);
 
+        /** Optional host callback: drops an imported MIDI pattern (such as a Maschine .mxgrp groove)
+            directly onto this Basic Drums track at the session cursor. Returns true if placed. */
+        std::function<bool (const juce::MidiFile&, const juce::String& clipName)> onDropPattern;
+
         /** For the tests: what it may hold, in place of Sampler::mostBytes. */
         void setMostBytes (juce::int64 bytes)                          { most = bytes; }
         juce::AudioParameterChoice* kickCharacterParameter() const noexcept   { return kickCharacter; }

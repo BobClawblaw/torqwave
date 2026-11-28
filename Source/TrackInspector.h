@@ -21,6 +21,9 @@ public:
     /** Opens a plug-in's window (the instrument's or an insert's). */
     std::function<void (juce::AudioProcessor&)> showEditor;
 
+    /** Opens the instrument picker/swap menu for a track. */
+    std::function<void (juce::uint32 trackId, juce::Component& target)> showInstrumentMenu;
+
     juce::uint32 getShownTrack() const noexcept     { return shownTrack; }
 
     // The controls, for typing into and clicking (as the tests do).
@@ -77,7 +80,7 @@ private:
     juce::ComboBox output;
     std::vector<juce::uint32> outputIds;   // the bus each output item plays into (0: the master)
     juce::Label instrumentLabel { {}, "Instrument" }, insertsLabel { {}, "Inserts" }, sendsLabel { {}, "Sends" };
-    juce::TextButton instrument;
+    juce::TextButton instrument, instrumentMenu { juce::String (juce::CharPointer_UTF8 ("\xe2\x96\xbe")) };
     juce::OwnedArray<juce::TextButton> inserts;
     juce::Label noInserts { {}, "None (add them with the track's FX button)" }, noSends { {}, "None" };
     std::vector<std::unique_ptr<Send>> sends;

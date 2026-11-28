@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(Torqwave VERSION 0.23.0 LANGUAGES C CXX)
+project(Torqwave VERSION 0.24.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -194,6 +194,7 @@ target_sources(Torqwave PRIVATE
     Source/IdeaBoard.cpp
     Source/IdeaBoardView.cpp
     Source/NoteTools.cpp
+    Source/Notation.cpp
     Source/Sequencer.cpp
     Source/SequencerView.cpp
     Source/UndoHistory.cpp
@@ -667,6 +668,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/IdeaBoard.cpp
     Source/IdeaBoardView.cpp
     Source/NoteTools.cpp
+    Source/Notation.cpp
     Source/Sequencer.cpp
     Source/SequencerView.cpp
     Source/UndoHistory.cpp

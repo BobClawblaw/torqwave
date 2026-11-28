@@ -98,6 +98,7 @@ What they check:
 - The mixer strip menu: solo safe and colour, ticks and undo steps.
 - Clip list search: names, files, tracks, case and following edits.
 - Marker list search: names, case, rows mapped to markers and following edits.
+- Release 0.24.0 features (`--024`, `--maschine-kit`, `--maschine-kit-files`): clean-room NI Maschine `.mxgrp`/`.mxsnd` parsing, sample resolution, Drum Synth & per-pad FX translation, 960 PPQN MIDI pattern export & one-click `NoteClip` drop (plus regression verification against real library files); Akai MPC `.xpm` Drum & Keygroup import; SoundFont 2 (`.sf2`) RIFF `sfbk` parsing, multi-preset bank listing/switching, and audio render; Hilbert SSB Frequency Shifter (>20 dB image rejection, measured 49.6 dB), granular Shimmer Delay, 24-band Vocoder, and live STFT Spectral Freeze; Grand-Staff Notation spelling, staff hit-testing, painting, and MusicXML 3.1 export; and Zero-Telemetry default invariants.
 - Polarity: inverted tracks and buses through the mixer, freezing, the strip switch and the session file.
 - Tap tempo: averaging, rounding, the window of taps, restarts, limits and undo steps.
 - Go to time: the time forms, bars and beats across tempo changes, refusals, and scrolling there.

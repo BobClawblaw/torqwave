@@ -1,4 +1,5 @@
 #include "NoteEditor.h"
+#include "Notation.h"
 #include "Instrument.h"
 #include "Theme.h"
 
@@ -64,11 +65,18 @@ NoteEditor::NoteEditor()
     {
         if (shown.has_value() && showDrums != nullptr)
         {
+            if (! shown->drums)
+                showScore = false;
             showDrums (! shown->drums);
             refresh();
             resized();
         }
     };
+
+    addAndMakeVisible (scoreButton);
+    scoreButton.setClickingTogglesState (false);
+    scoreButton.setTooltip ("Show the clip as standard grand-staff music notation (treble + bass staves) with direct note editing and MusicXML export");
+    scoreButton.onClick = [this] { setShowScore (! showingScore()); };
 
     addAndMakeVisible (toolsButton);
     toolsButton.setTooltip ("Writing tools: chords from Roman numerals, arpeggiate, humanize, fit to the key, scale lock");
@@ -252,8 +260,10 @@ void NoteEditor::refreshControls()
     swingBox.setEnabled (on);
     channelBox.setEnabled (on);
     drumsButton.setEnabled (on);
+    scoreButton.setEnabled (on);
     toolsButton.setEnabled (on);
     drumsButton.setToggleState (showingDrums(), juce::dontSendNotification);
+    scoreButton.setToggleState (showingScore(), juce::dontSendNotification);
 
     if (on)
         channelBox.setSelectedId (juce::jlimit (1, 16, shown->clip.channel), juce::dontSendNotification);
@@ -366,7 +376,51 @@ void NoteEditor::setChannel (int channel)
 
 int NoteEditor::leftWidth() const noexcept
 {
-    return showingDrums() ? drumNamesWidth : keyboardWidth;
+    if (showingDrums()) return drumNamesWidth;
+    if (showingScore()) return scoreClefWidth;
+    return keyboardWidth;
+}
+
+void NoteEditor::setShowScore (bool on)
+{
+    if (on && showingDrums() && showDrums != nullptr)
+    {
+        showDrums (false);
+        refresh();
+    }
+    showScore = on;
+    refreshControls();
+    resized();
+    repaint();
+}
+
+juce::String NoteEditor::exportMusicXml (const juce::File& file) const
+{
+    if (! shown.has_value())
+        return "No note clip is selected.";
+
+    return Notation::exportMusicXml (shown->clip, shown->sampleRate, shown->beatSeconds,
+                                     shown->beatsPerBar, getKey(), file, shown->clip.name);
+}
+
+void NoteEditor::exportMusicXmlDialog()
+{
+    if (! shown.has_value())
+        return;
+
+    const auto suggested = juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
+                               .getChildFile ((shown->clip.name.isNotEmpty() ? shown->clip.name : "Score") + ".musicxml");
+    exportChooser = std::make_unique<juce::FileChooser> ("Export MusicXML Score", suggested, "*.musicxml;*.xml");
+    exportChooser->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::warnAboutOverwriting,
+                                [safe = juce::Component::SafePointer<NoteEditor> (this)] (const juce::FileChooser& c)
+    {
+        if (safe == nullptr || c.getResult() == juce::File())
+            return;
+
+        const auto out = c.getResult().withFileExtension (".musicxml");
+        const auto err = safe->exportMusicXml (out);
+        safe->status.setText (err.isNotEmpty() ? err : ("Exported MusicXML to " + out.getFileName() + "."), juce::dontSendNotification);
+    });
 }
 
 //==============================================================================
@@ -823,6 +877,12 @@ float NoteEditor::yOf (int pitch) const
 
 int NoteEditor::pitchAt (float y) const
 {
+    if (showingScore())
+    {
+        const auto gs = Notation::GrandStaff::fit (rollArea().toFloat());
+        return Notation::diatonicToMidi (gs.diatonicAtY (y), getKey());
+    }
+
     return juce::jlimit (0, 127, lowPitch + (int) std::floor (((float) rollArea().getBottom() - y) / (float) rowPixels));
 }
 
@@ -854,6 +914,17 @@ juce::int64 NoteEditor::frameAt (float x) const
 
 juce::Rectangle<float> NoteEditor::noteBounds (const ClipNote& n) const
 {
+    if (showingScore())
+    {
+        const auto gs = Notation::GrandStaff::fit (rollArea().toFloat());
+        const auto sp = Notation::spell (n.pitch, Notation::prefersFlats (getKey()));
+        const float cx = xOf (n.start);
+        const float cy = gs.yForDiatonic (sp.diatonic);
+        const float hw = gs.space * 1.25f;
+        const float hh = gs.space * 0.95f;
+        return { cx - hw * 0.4f, cy - hh * 0.5f, juce::jmax (hw, xOf (n.start + n.length) - cx), hh };
+    }
+
     const auto x0 = xOf (n.start), x1 = xOf (n.start + n.length);
     return { x0, yOf (n.pitch) + 1.0f, juce::jmax (3.0f, x1 - x0), (float) rowPixels - 2.0f };
 }
@@ -917,6 +988,8 @@ void NoteEditor::paint (juce::Graphics& g)
 
     if (showingDrums())
         paintDrums (g, area);
+    else if (showingScore())
+        paintScore (g, area);
     else
         paintRoll (g, area);
 
@@ -1176,6 +1249,215 @@ void NoteEditor::paintRoll (juce::Graphics& g, juce::Rectangle<int> area)
     }
 }
 
+void NoteEditor::paintScore (juce::Graphics& g, juce::Rectangle<int> area)
+{
+    const auto& c = shown->clip;
+    const auto gs = Notation::GrandStaff::fit (area.toFloat());
+    const auto key = getKey();
+    const int fifths = Notation::keyFifths (key);
+    const bool flats = fifths < 0;
+    const auto whole = wholeLength();
+    const auto period = c.getPeriod();
+    const double beatFramesD = juce::jmax (1.0, shown->beatSeconds * shown->sampleRate);
+
+    // Left clef + key signature + time signature gutter
+    const auto gutter = juce::Rectangle<int> (0, area.getY(), scoreClefWidth, area.getHeight());
+    g.setColour (Theme::surface);
+    g.fillRect (gutter);
+    g.setColour (Theme::lineStrong);
+    g.drawVerticalLine (scoreClefWidth - 1, (float) area.getY(), (float) area.getBottom());
+
+    // Staff lines across both gutter and score canvas: Treble (E4..F5: 30,32,34,36,38) & Bass (G2..A3: 18,20,22,24,26)
+    const float staffLeft = 8.0f;
+    const float staffRight = (float) area.getRight();
+    g.setColour (Theme::lineStrong.withAlpha (0.75f));
+    for (int d : { 30, 32, 34, 36, 38, 18, 20, 22, 24, 26 })
+    {
+        const float y = gs.yForDiatonic (d);
+        g.drawHorizontalLine ((int) std::round (y), staffLeft, staffRight);
+    }
+
+    // Grand staff brace + left vertical bar connecting F5 to G2
+    const float topLineY = gs.yForDiatonic (38);
+    const float botLineY = gs.yForDiatonic (18);
+    g.setColour (Theme::text.withAlpha (0.85f));
+    g.drawVerticalLine ((int) staffLeft, topLineY, botLineY);
+
+    // Clef glyphs & labels (G treble, F bass)
+    g.setColour (Theme::textStrong);
+    g.setFont (juce::FontOptions (gs.space * 2.1f, juce::Font::bold));
+    g.drawText ("G", juce::Rectangle<float> (10.0f, gs.yForDiatonic (36) - gs.space * 0.8f, 20.0f, gs.space * 3.0f), juce::Justification::centred, false);
+    g.drawText ("F", juce::Rectangle<float> (10.0f, gs.yForDiatonic (26) - gs.space * 0.5f, 20.0f, gs.space * 2.8f), juce::Justification::centred, false);
+    // Bass clef dots flanking F3 (diatonic 24)
+    g.fillEllipse (27.0f, gs.yForDiatonic (25) - 1.5f, 3.0f, 3.0f);
+    g.fillEllipse (27.0f, gs.yForDiatonic (23) - 1.5f, 3.0f, 3.0f);
+
+    // Key signature accidentals in gutter
+    static constexpr int trebleSharpD[7] = { 38, 35, 39, 36, 33, 37, 34 }; // F5 C5 G5 D5 A4 E5 B4
+    static constexpr int trebleFlatD[7]  = { 34, 37, 33, 36, 32, 35, 31 }; // B4 E5 A4 D5 G4 C5 F4
+    static constexpr int bassSharpD[7]   = { 24, 21, 25, 22, 19, 23, 20 }; // F3 C3 G3 D3 A2 E3 B2
+    static constexpr int bassFlatD[7]    = { 20, 23, 19, 22, 18, 21, 17 }; // B2 E3 A2 D3 G2 C3 F2
+    const int numAcc = juce::jmin (5, std::abs (fifths));
+    g.setFont (juce::FontOptions (gs.space * 1.15f, juce::Font::bold));
+    for (int k = 0; k < numAcc; ++k)
+    {
+        const float ax = 28.0f + (float) k * 5.0f;
+        const juce::String sym = fifths > 0 ? "#" : "b";
+        g.drawText (sym, juce::Rectangle<float> (ax, gs.yForDiatonic (fifths > 0 ? trebleSharpD[k] : trebleFlatD[k]) - gs.space * 0.7f, 8.0f, gs.space * 1.4f), juce::Justification::centred, false);
+        g.drawText (sym, juce::Rectangle<float> (ax, gs.yForDiatonic (fifths > 0 ? bassSharpD[k] : bassFlatD[k]) - gs.space * 0.7f, 8.0f, gs.space * 1.4f), juce::Justification::centred, false);
+    }
+
+    // Time signature
+    const float tsX = (float) scoreClefWidth - 16.0f;
+    g.setFont (juce::FontOptions (gs.space * 1.5f, juce::Font::bold));
+    g.drawText (juce::String (shown->beatsPerBar), juce::Rectangle<float> (tsX, gs.yForDiatonic (38), 14.0f, gs.space * 2.0f), juce::Justification::centred, false);
+    g.drawText ("4", juce::Rectangle<float> (tsX, gs.yForDiatonic (34), 14.0f, gs.space * 2.0f), juce::Justification::centred, false);
+    g.drawText (juce::String (shown->beatsPerBar), juce::Rectangle<float> (tsX, gs.yForDiatonic (26), 14.0f, gs.space * 2.0f), juce::Justification::centred, false);
+    g.drawText ("4", juce::Rectangle<float> (tsX, gs.yForDiatonic (22), 14.0f, gs.space * 2.0f), juce::Justification::centred, false);
+
+    // Subtle beat grid + bold barlines + loop lines
+    {
+        const juce::Graphics::ScopedSaveState clipScore (g);
+        g.reduceClipRegion (area);
+
+        if (gridDivision > 0)
+        {
+            const auto step = straightStep();
+            if (step > 0 && xOf (step) - xOf (0) >= 8.0f)
+            {
+                for (juce::int64 k = 0; ; ++k)
+                {
+                    const auto f = lineFrame (k);
+                    if (f > whole) break;
+                    const float gx = xOf (f);
+                    if (gx > (float) area.getRight()) break;
+                    if (gx >= (float) area.getX())
+                    {
+                        g.setColour (k % gridDivision == 0 ? Theme::line.withAlpha (0.65f) : Theme::line.withAlpha (0.28f));
+                        g.drawVerticalLine ((int) gx, topLineY, botLineY);
+                    }
+                }
+            }
+        }
+
+        paintBars (g, area);
+
+        if (period < whole)
+            for (auto f = period; f < whole; f += period)
+            {
+                g.setColour (Theme::accent.withAlpha (f == period ? 0.9f : 0.6f));
+                g.drawVerticalLine ((int) xOf (f), (float) area.getY(), (float) area.getBottom());
+            }
+
+        // Draw notes on grand staff
+        const float headW = gs.space * 1.18f;
+        const float headH = gs.space * 0.86f;
+        const float stemH = gs.space * 3.1f;
+
+        for (size_t i = 0; i < c.notes.size(); ++i)
+        {
+            const auto& n = c.notes[i];
+            const float cx = xOf (n.start);
+            if (cx + headW * 2.0f < (float) area.getX() || cx - headW * 2.0f > (float) area.getRight())
+                continue;
+
+            const auto sp = Notation::spell (n.pitch, flats);
+            const float cy = gs.yForDiatonic (sp.diatonic);
+            const double beats = (double) n.length / beatFramesD;
+            const auto kind = Notation::classifyDuration (beats);
+            const bool isSelected = selected.count ((int) i) > 0;
+            const bool playing = n.start < period && n.start >= c.offset && shown->hasInstrument;
+
+            const auto noteCol = isSelected ? Theme::accent : (playing ? Theme::textStrong : Theme::dimText);
+
+            // Ledger lines (middle C = 28, above treble >= 40, below bass <= 16)
+            g.setColour (Theme::lineStrong.withAlpha (0.9f));
+            if (sp.diatonic == 28)
+            {
+                g.drawHorizontalLine ((int) std::round (cy), cx - headW * 0.78f, cx + headW * 0.78f);
+            }
+            else if (sp.diatonic >= 40)
+            {
+                for (int d = 40; d <= sp.diatonic; d += 2)
+                    g.drawHorizontalLine ((int) std::round (gs.yForDiatonic (d)), cx - headW * 0.78f, cx + headW * 0.78f);
+            }
+            else if (sp.diatonic <= 16)
+            {
+                for (int d = 16; d >= sp.diatonic; d -= 2)
+                    g.drawHorizontalLine ((int) std::round (gs.yForDiatonic (d)), cx - headW * 0.78f, cx + headW * 0.78f);
+            }
+
+            // Accidental left of notehead if altered relative to natural pitch
+            if (sp.accidental != 0)
+            {
+                g.setColour (noteCol);
+                g.setFont (juce::FontOptions (gs.space * 1.15f, juce::Font::bold));
+                g.drawText (sp.accidental > 0 ? "#" : "b",
+                            juce::Rectangle<float> (cx - headW * 1.35f, cy - gs.space * 0.7f, headW * 0.8f, gs.space * 1.4f),
+                            juce::Justification::centredRight, false);
+            }
+
+            // Notehead (hollow for whole/half/dotted-half, filled for quarter/eighth/sixteenth)
+            const bool hollow = (kind == Notation::DurationKind::whole || kind == Notation::DurationKind::half || kind == Notation::DurationKind::dottedHalf);
+            const juce::Rectangle<float> headRect (cx - headW * 0.5f, cy - headH * 0.5f, headW, headH);
+            g.setColour (noteCol);
+            if (hollow)
+            {
+                g.setColour (Theme::canvas);
+                g.fillEllipse (headRect);
+                g.setColour (noteCol);
+                g.drawEllipse (headRect, 1.8f);
+            }
+            else
+            {
+                g.fillEllipse (headRect);
+            }
+
+            // Augmentation dot
+            if (kind == Notation::DurationKind::dottedHalf || kind == Notation::DurationKind::dottedQuarter)
+                g.fillEllipse (cx + headW * 0.72f, cy - 1.8f, 3.4f, 3.4f);
+
+            // Stem + flags (all except whole notes)
+            if (kind != Notation::DurationKind::whole)
+            {
+                const bool treble = sp.diatonic >= 28;
+                const bool stemUp = treble ? (sp.diatonic < 34) : (sp.diatonic < 22);
+                const float stemX = stemUp ? (cx + headW * 0.45f) : (cx - headW * 0.45f);
+                const float stemY2 = stemUp ? (cy - stemH) : (cy + stemH);
+                g.drawLine (stemX, cy, stemX, stemY2, 1.5f);
+
+                const int numFlags = (kind == Notation::DurationKind::sixteenth) ? 2
+                                   : (kind == Notation::DurationKind::eighth)    ? 1 : 0;
+                for (int fl = 0; fl < numFlags; ++fl)
+                {
+                    const float fy = stemUp ? (stemY2 + (float) fl * 4.5f) : (stemY2 - (float) fl * 4.5f);
+                    const float dir = stemUp ? 1.0f : -1.0f;
+                    juce::Path flag;
+                    flag.startNewSubPath (stemX, fy);
+                    flag.quadraticTo (stemX + 6.0f, fy + dir * 3.5f, stemX + 4.5f, fy + dir * 9.0f);
+                    g.strokePath (flag, juce::PathStrokeType (1.5f));
+                }
+            }
+        }
+
+        // Box selection rectangle
+        if (drag == Drag::box)
+        {
+            g.setColour (Theme::accent.withAlpha (0.18f));
+            g.fillRect (box);
+            g.setColour (Theme::accent);
+            g.drawRect (box, 1.0f);
+        }
+
+        // Wash out offset & post-loop regions
+        g.setColour (Theme::overlay.withAlpha (0.25f));
+        if (c.offset > 0)
+            g.fillRect (juce::Rectangle<float> (xOf (0), (float) area.getY(), xOf (c.offset) - xOf (0), (float) area.getHeight()));
+        if (period < whole)
+            g.fillRect (juce::Rectangle<float> (xOf (period), (float) area.getY(), xOf (whole) - xOf (period), (float) area.getHeight()));
+    }
+}
+
 void NoteEditor::paintDrums (juce::Graphics& g, juce::Rectangle<int> area)
 {
     const auto& c = shown->clip;
@@ -1282,6 +1564,8 @@ void NoteEditor::resized()
     auto bar = getLocalBounds().removeFromTop (topBar).reduced (6, 4);
     drumsButton.setBounds (bar.removeFromLeft (56));
     bar.removeFromLeft (4);
+    scoreButton.setBounds (bar.removeFromLeft (52));
+    bar.removeFromLeft (4);
     toolsButton.setBounds (bar.removeFromLeft (52));
     bar.removeFromLeft (8);
     gridLabel.setBounds (bar.removeFromLeft (34));
@@ -1372,7 +1656,7 @@ void NoteEditor::mouseDown (const juce::MouseEvent& e)
     }
 
     // The keyboard: the key under the mouse sounds.
-    if (const auto roll = rollArea(); juce::Rectangle<int> (0, roll.getY(), keyboardWidth, roll.getHeight()).contains (e.getPosition()))
+    if (const auto roll = rollArea(); ! showingScore() && juce::Rectangle<int> (0, roll.getY(), keyboardWidth, roll.getHeight()).contains (e.getPosition()))
     {
         drag = Drag::keys;
         sound (pitchAt (e.position.y), getVelocity());
@@ -2247,6 +2531,8 @@ void NoteEditor::showToolsMenu()
     menu.addItem (5, "Scale Lock", true, scaleLock);
     menu.addItem (7, "Show Ghost Notes", true, showGhostNotes);
     menu.addItem (6, "Key...");
+    menu.addSeparator();
+    menu.addItem (8, "Export MusicXML (.musicxml)...", ! shown->clip.notes.empty());
 
     menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (toolsButton), [safe = juce::Component::SafePointer<NoteEditor> (this), presets] (int result)
     {
@@ -2268,6 +2554,7 @@ void NoteEditor::showToolsMenu()
             case 5: safe->setScaleLock (! safe->scaleLock); break;
             case 6: safe->askForKey(); break;
             case 7: safe->setShowGhostNotes (! safe->showGhostNotes); break;
+            case 8: safe->exportMusicXmlDialog(); break;
             default: break;
         }
     });

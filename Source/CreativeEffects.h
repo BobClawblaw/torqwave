@@ -13,6 +13,8 @@ namespace BuiltInEffects
     constexpr const char* tremoloId          = "torqwave:tremolo";
     constexpr const char* frequencyShifterId = "torqwave:frequency-shifter";
     constexpr const char* shimmerDelayId     = "torqwave:shimmer-delay";
+    constexpr const char* vocoderId          = "torqwave:vocoder";
+    constexpr const char* spectralFreezeId   = "torqwave:spectral-freeze";
 
     juce::PluginDescription delayDescription();
     juce::PluginDescription distortionDescription();
@@ -22,6 +24,8 @@ namespace BuiltInEffects
     juce::PluginDescription tremoloDescription();
     juce::PluginDescription frequencyShifterDescription();
     juce::PluginDescription shimmerDelayDescription();
+    juce::PluginDescription vocoderDescription();
+    juce::PluginDescription spectralFreezeDescription();
 
     /** Tempo-synced or free stereo / ping-pong / tape delay with feedback filtering, tape wow/drive,
         and input-triggered ducking of the wet signal. */
@@ -283,5 +287,107 @@ namespace BuiltInEffects
         std::array<int, 2> diffPos {};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ShimmerDelayProcessor)
+    };
+
+    /** Clean-room 24-band live filterbank Vocoder with internal Saw/Pulse/Noise chord carrier
+        or external Sidechain carrier, formant shift, unvoiced sibilance pass-through, and envelope
+        attack/release shaping. */
+    class VocoderProcessor final : public BuiltInEffect
+    {
+    public:
+        static constexpr int numBands = 24;
+
+        VocoderProcessor();
+
+        void prepareToPlay (double sampleRate, int maximumBlockSize) override;
+        void reset() override;
+        void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+        bool processLinked (juce::AudioBuffer<float>&) override;
+
+    private:
+        struct BandFilter
+        {
+            // Two cascaded 2-pole SVF bandpass stages (4th-order bandpass)
+            float ic1a = 0.0f, ic2a = 0.0f;
+            float ic1b = 0.0f, ic2b = 0.0f;
+
+            void clear() noexcept { ic1a = ic2a = ic1b = ic2b = 0.0f; }
+
+            float process (float x, float g, float k) noexcept
+            {
+                const float a1 = 1.0f / (1.0f + g * (g + k));
+                const float a2 = g * a1;
+                const float a3 = g * a2;
+
+                const float v3a = x - ic2a;
+                const float v1a = a1 * ic1a + a2 * v3a;
+                const float v2a = ic2a + a2 * ic1a + a3 * v3a;
+                ic1a = 2.0f * v1a - ic1a;
+                ic2a = 2.0f * v2a - ic2a;
+                const float y1 = k * v1a;
+
+                const float v3b = y1 - ic2b;
+                const float v1b = a1 * ic1b + a2 * v3b;
+                const float v2b = ic2b + a2 * ic1b + a3 * v3b;
+                ic1b = 2.0f * v1b - ic1b;
+                ic2b = 2.0f * v2b - ic2b;
+                return k * v1b;
+            }
+        };
+
+        void processInternal (juce::AudioBuffer<float>& main, const juce::AudioBuffer<float>* carrierBus);
+        void updateBands();
+
+        juce::AudioParameterChoice *carrier = nullptr, *chord = nullptr;
+        juce::AudioParameterFloat *pitch = nullptr, *detune = nullptr, *formant = nullptr;
+        juce::AudioParameterFloat *attackMs = nullptr, *releaseMs = nullptr;
+        juce::AudioParameterFloat *sibilance = nullptr, *mix = nullptr;
+
+        double rate = 48000.0;
+        std::array<float, numBands> bandG {};
+        std::array<BandFilter, numBands> modFilters {};
+        std::array<float, numBands> env {};
+        std::array<std::array<BandFilter, numBands>, 2> carFilters {};
+        std::array<double, 6> oscPhase {};
+        float hpState = 0.0f;
+        juce::uint32 rng = 0x91e10da5u;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VocoderProcessor)
+    };
+
+    /** Clean-room live STFT Spectral Freeze & Blur processor (2048-pt 4x overlap-add Hann window)
+        with Freeze hold, temporal spectral Blur, spectral Pitch Shift (-12..+12 st), brightness Tilt,
+        and latency-aligned Dry/Wet mix. */
+    class SpectralFreezeProcessor final : public BuiltInEffect
+    {
+    public:
+        static constexpr int fftOrder = 11;
+        static constexpr int fftSize  = 1 << fftOrder;      // 2048
+        static constexpr int hopSize  = fftSize / 4;        // 512
+        static constexpr int numBins  = fftSize / 2 + 1;    // 1025
+
+        SpectralFreezeProcessor();
+
+        void prepareToPlay (double sampleRate, int maximumBlockSize) override;
+        void reset() override;
+        void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+        double getTailLengthSeconds() const override;
+
+    private:
+        void processFrame (int ch, bool frozen, float blurCoeff, float shiftRatio, float tiltSlope);
+
+        juce::AudioParameterBool* freeze = nullptr;
+        juce::AudioParameterFloat *blur = nullptr, *shiftSt = nullptr, *tilt = nullptr, *mix = nullptr;
+
+        double rate = 48000.0;
+        juce::dsp::FFT fft { fftOrder };
+        std::array<float, fftSize> window {};
+        std::array<std::array<float, fftSize>, 2> inRing {}, outRing {}, dryRing {};
+        std::array<std::array<float, numBins>, 2> storedMag {}, prevInPhase {}, synthPhase {};
+        std::array<std::complex<float>, fftSize> timeBuf {}, freqBuf {}, modBuf {};
+        int ringPos = 0, hopCount = 0;
+        juce::uint32 rng = 0x51a7c391u;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralFreezeProcessor)
     };
 }

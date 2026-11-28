@@ -19,7 +19,7 @@ wide: true
   </div>
   <p class="meta">macOS 13+ (Apple silicon &amp; Intel Universal) · Windows 10+ (64-bit) · Linux (64-bit x86) · AGPL-3.0 · Zero telemetry &amp; tracking · No account, no subscription.</p>
   <div class="chips">
-    <a href="#hear">Hear it</a><a href="#new">New in 0.23.0</a><a href="#editor">The editor</a><a href="#repair">Spectral repair</a><a href="#effects">Effects</a><a href="#mastering">Mastering</a>
+    <a href="#hear">Hear it</a><a href="#new">New in 0.24.0</a><a href="#editor">The editor</a><a href="#repair">Spectral repair</a><a href="#effects">Effects</a><a href="#mastering">Mastering</a>
     <a href="#sessions">Sessions</a><a href="#synth">Torqwave Synth</a><a href="#decrypt">Decrypt</a><a href="#sampler">Sampler</a><a href="#swarm-drums">StringSwarm and Basic Drums</a>
     <a href="#sequencer">Sequencer</a><a href="#video">Video and surround</a><a href="#library">Sound Library</a><a href="#asktorq">Ask Torq</a><a href="#evidence">Evidence</a><a href="#get">Get it</a>
   </div>
@@ -41,22 +41,27 @@ wide: true
 </section>
 
 <section id="new">
-  <h2>New in 0.23.0</h2>
-  <p class="lede">0.23.0 adds a six-plugin Live Creative FX pack, four Live MIDI FX, Torqwave Synth LFOs 3–4, 24 mod slots, Slot Depth modulation, MSEG Curves, built-in Arpeggiator and 4-scene Evolve morphing, Audio to MIDI, Sampler SFZ import + round-robin + Warp, Basic Drums 8-bus multi-out, Track Modulators, CLAP 1.2 plug-in hosting, and headless Windows/Linux CI tests. Below those, what landed in 0.22.1, 0.22.0 and 0.21.1.</p>
+  <h2>New in 0.24.0</h2>
+  <p class="lede">0.24.0 opens your existing sample and drum libraries with zero lock-in and zero telemetry: clean-room NI Maschine 2/3 (<code>.mxgrp</code>/<code>.mxsnd</code>) kit &amp; MIDI pattern import (with Drum Synth &amp; per-pad FX translation and one-click track drop), Akai MPC (<code>.xpm</code>) Drum &amp; Keygroup import, SoundFont 2 (<code>.sf2</code>) multi-preset banks in Torqwave Sampler, four new Live Creative FX (Frequency Shifter, Shimmer Delay, 24-band Vocoder, Spectral Freeze — 36 built-in plug-ins), and an interactive Grand-Staff Notation View with MusicXML 3.1 export (48 of 53 comparison matrix rows). Below those, what landed in 0.23.0, 0.22.1, 0.22.0 and 0.21.1.</p>
   <figure>
-    <img loading="lazy" src="compare/graphics/0-release-hero.png" alt="Torqwave 0.23.0 release overview: 32 built-in FX and instruments, 47 of 53 matrix rows, CLAP 1.2 hosting, 2,782 verified checks, and the six feature pillars of 0.23.0" width="1600" height="900">
-    <figcaption>Torqwave 0.23.0 at a glance. See the full <a href="compare/">15-product comparison matrix</a>.</figcaption>
+    <img loading="lazy" src="compare/graphics/0-release-hero.png" alt="Torqwave 0.24.0 release overview: 36 built-in FX and instruments, 48 of 53 matrix rows, Maschine/MPC/SF2 import, Notation View, and Zero Telemetry &amp; Tracking" width="1600" height="900">
+    <figcaption>Torqwave 0.24.0 at a glance. See the full <a href="compare/">15-product comparison matrix</a>.</figcaption>
   </figure>
   <div class="numbers">
-    <div><b>9</b><span>oscillators, 4 LFOs, 24 mod slots, 4 Evolve scenes</span></div>
-    <div><b>3,569</b><span>synth patches in 29 categories, and 116 Complex</span></div>
-    <div><b>27</b><span>built-in live audio &amp; MIDI effects</span></div>
-    <div><b>1,024</b><span>sequence presets in 37 styles, no two alike</span></div>
-    <div><b>64</b><span>drum pads, 54 sources, 15 kits, 8 aux buses</span></div>
+    <div><b>0</b><span>telemetry, tracking, accounts, or background network calls</span></div>
+    <div><b>36</b><span>built-in live audio FX, MIDI FX &amp; instruments</span></div>
+    <div><b>48 / 53</b><span>comparison matrix rows covered (+Notation &amp; MusicXML)</span></div>
+    <div><b>5</b><span>library formats: Maschine, MPC, Battery 4, SF2 &amp; SFZ</span></div>
+    <div><b>3,685</b><span>factory + Complex 9-oscillator synth patches</span></div>
     <div><b>CLAP</b><span>plus VST3, Audio Unit and LV2 hosting</span></div>
   </div>
   <div class="grid">
-    <div class="card"><h3>Live Creative FX pack (0.23.0)</h3><p>Six new real-time built-in effects for tracks, buses and the rack: Stereo / Ping-Pong / Tape Delay with wet ducking, multi-mode 4x-oversampled Distortion &amp; Bitcrusher, resonant Auto-Filter with LFO + envelope follower, tempo-synced Volume Shaper / Sidechain Pump with low-band split, live Noise Gate (linked surround), and Tremolo &amp; Auto-Pan.</p></div>
+    <div class="card"><h3>Zero Telemetry &amp; Zero Tracking (0.24.0)</h3><p>100% offline-first by engineering rule and automated audit: no account, no subscription, no analytics, no crash beacons, and no licence phone-home. Optional Ask Torq is off by default with no server configured until you point it at your own local model.</p></div>
+    <div class="card"><h3>NI Maschine Kit &amp; Pattern Import (0.24.0)</h3><p>Import Maschine 2/3 <code>.mxgrp</code> kits and <code>.mxsnd</code> sounds straight into Basic Drums: samples stay in place, Drum Synths map clean-room onto Torqwave's drum engines, per-pad/bus FX translate to built-in DSP, and embedded 960 PPQN patterns export to <code>.mid</code> or drop straight onto the track in one click.</p></div>
+    <div class="card"><h3>Akai MPC &amp; SoundFont 2 Import (0.24.0)</h3><p>Drop Akai MPC <code>.xpm</code> Drum programs onto Basic Drums or <code>.xpm</code> Keygroups and SoundFont 2 (<code>.sf2</code>) banks onto Torqwave Sampler — complete with a built-in multi-preset bank picker for browsing full SoundFont collections.</p></div>
+    <div class="card"><h3>4 New Live Creative FX (0.24.0)</h3><p>The built-in plug-in suite grows to 36 with an 8th-order Hilbert SSB <strong>Frequency Shifter</strong> (49.6 dB image rejection), granular <strong>Shimmer Delay</strong>, 24-band <strong>Vocoder</strong> (internal chord or sidechain carrier), and real-time STFT <strong>Spectral Freeze</strong>.</p></div>
+    <div class="card"><h3>Grand-Staff Notation &amp; MusicXML (0.24.0)</h3><p>Switch the Note Editor to <strong>Score</strong> view for interactive treble + bass grand staves with key signatures, ledger lines, note durations, click-to-edit pitch/time, and standard <strong>MusicXML 3.1</strong> export.</p></div>
+    <div class="card"><h3>Live Creative FX pack (0.23.0)</h3><p>Six real-time built-in effects for tracks, buses and the rack: Stereo / Ping-Pong / Tape Delay with wet ducking, multi-mode 4x-oversampled Distortion &amp; Bitcrusher, resonant Auto-Filter with LFO + envelope follower, tempo-synced Volume Shaper / Sidechain Pump with low-band split, live Noise Gate (linked surround), and Tremolo &amp; Auto-Pan.</p></div>
     <div class="card"><h3>Torqwave Synth: 4 LFOs, 24 slots, Arp &amp; Evolve (0.23.0)</h3><p>LFOs 3 and 4, 24 modulation slots with Slot Depth as a destination, 16-node smooth MSEG Curve LFOs, a built-in tempo-synced Arpeggiator, 4-scene continuous Evolve morphing, and optional Complex (9-oscillator) matching in Decrypt — while keeping all 3,627 existing patches sample-for-sample identical.</p><p class="more"><a href="sounds/complex.html">Hear all 116 Complex patches</a></p></div>
     <div class="card"><h3>Live MIDI FX &amp; Piano Roll upgrades (0.23.0)</h3><p>Four live MIDI effects that run in front of any instrument on the same track — MIDI Arpeggiator, Chord Trigger, Scale Lock and Note Echo — alongside Piano Roll per-note ratchets (1x–8x), micro-timing offsets, MPC/shuffle groove templates and cross-track ghost notes.</p></div>
     <div class="card"><h3>Audio to MIDI (0.23.0)</h3><p>Right-click any audio clip in a session to extract a monophonic melody/bass line (via YIN pitch tracking) or drum loop hits (Kick, Snare, Closed/Open Hat via 3-band transient analysis plus groove offsets) straight onto a new instrument track.</p></div>

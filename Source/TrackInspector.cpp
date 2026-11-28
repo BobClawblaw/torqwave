@@ -73,15 +73,28 @@ TrackInspector::TrackInspector (AudioEngine& e, std::function<juce::uint32()> to
         refresh();
     };
 
-    instrument.setTooltip ("Open the instrument's window");
+    instrument.setTooltip ("Click to open the instrument window (or choose one if empty)");
+    instrument.setConnectedEdges (juce::Button::ConnectedOnRight);
+    Theme::follow (instrument, juce::TextButton::buttonOnColourId, Theme::accentDeep);
     instrument.onClick = [this]
     {
         if (auto* plugin = engine.getTrackEffects().getInstrument (shownTrack); plugin != nullptr && showEditor)
             showEditor (*plugin);
+        else if (showInstrumentMenu != nullptr && shownTrack != 0)
+            showInstrumentMenu (shownTrack, instrument);
+    };
+
+    instrumentMenu.setTooltip ("Choose, swap, or remove this track's instrument");
+    instrumentMenu.setConnectedEdges (juce::Button::ConnectedOnLeft);
+    Theme::follow (instrumentMenu, juce::TextButton::buttonOnColourId, Theme::accentDeep);
+    instrumentMenu.onClick = [this]
+    {
+        if (showInstrumentMenu != nullptr && shownTrack != 0)
+            showInstrumentMenu (shownTrack, instrumentMenu);
     };
 
     for (auto* c : std::initializer_list<juce::Component*> { &kind, &name, &volumeLabel, &volume, &panLabel, &pan, &mute, &solo, &outputLabel, &output,
-                                                             &instrumentLabel, &instrument, &insertsLabel, &noInserts, &sendsLabel, &noSends })
+                                                             &instrumentLabel, &instrument, &instrumentMenu, &insertsLabel, &noInserts, &sendsLabel, &noSends })
         addChildComponent (c);
 
     engine.session.addChangeListener (this);
@@ -191,8 +204,11 @@ void TrackInspector::refresh()
     const auto showInstrument = track->isInstrument && ! track->isFolder;
     instrumentLabel.setVisible (showInstrument);
     instrument.setVisible (showInstrument);
-    instrument.setEnabled (plays != nullptr);
-    instrument.setButtonText (plays != nullptr ? plays->getName() : juce::String ("None (choose one on the track)"));
+    instrumentMenu.setVisible (showInstrument && showInstrumentMenu != nullptr);
+    instrument.setEnabled (plays != nullptr || showInstrumentMenu != nullptr);
+    instrument.setToggleState (plays != nullptr, juce::dontSendNotification);
+    instrumentMenu.setToggleState (plays != nullptr, juce::dontSendNotification);
+    instrument.setButtonText (plays != nullptr ? plays->getName() : juce::String ("+ Choose Instrument..."));
 
     if (const auto key = layoutKey (*state); key != shownLayout)
     {
@@ -344,7 +360,10 @@ void TrackInspector::resized()
     if (instrument.isVisible())
     {
         heading (instrumentLabel);
-        instrument.setBounds (take (row));
+        auto line = take (row);
+        if (instrumentMenu.isVisible())
+            instrumentMenu.setBounds (line.removeFromRight (22));
+        instrument.setBounds (line);
     }
 
     heading (insertsLabel);

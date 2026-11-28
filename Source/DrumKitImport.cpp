@@ -1527,6 +1527,46 @@ namespace
             });
         });
     }
+    void finishMaschine (juce::Component::SafePointer<juce::Component> window, BuiltInEffects::BasicDrumsProcessor& drums,
+                         Plan plan, std::shared_ptr<MaschineKit::Kit> kit, const Say& done)
+    {
+        place (plan);
+
+        if (const auto error = apply (drums, plan); error.isNotEmpty())
+        {
+            done (error);
+            return;
+        }
+
+        const bool canDrop = kit != nullptr && ! kit->patterns.empty() && drums.onDropPattern != nullptr;
+        std::map<int, int> soundToNote;
+        if (canDrop)
+            for (size_t i = 0; i < plan.pads.size() && i < kit->sounds.size(); ++i)
+                soundToNote[kit->sounds[i].index] = plan.pads[i].note;
+
+        done ("Imported " + plan.name + ": " + counted ((int) plan.pads.size(), "pad", "pads") + ". The samples are read where they are, not copied.");
+
+        auto opts = juce::MessageBoxOptions().withIconType (juce::MessageBoxIconType::InfoIcon)
+                        .withTitle ("Imported " + plan.name)
+                        .withMessage (plan.report.joinIntoString ("\n\n"))
+                        .withButton ("OK")
+                        .withAssociatedComponent (window.getComponent());
+        if (canDrop)
+            opts = opts.withButton ("Drop Pattern on Track");
+
+        juce::AlertWindow::showAsync (opts, [window, &drums, done, kit, soundToNote, planName = plan.name, canDrop] (int chosen)
+        {
+            if (window == nullptr || ! canDrop || chosen != 2)
+                return;
+
+            const auto& pat = kit->patterns.front();
+            const auto midi = MaschineKit::buildMidiFile (pat, soundToNote);
+            const auto clipName = pat.name.isNotEmpty() ? (planName + " - " + pat.name) : planName;
+            if (drums.onDropPattern && drums.onDropPattern (midi, clipName))
+                done ("Dropped Maschine pattern (" + counted ((int) pat.notes.size(), "note", "notes") + ") onto track.");
+        });
+    }
+
     void importMaschineRead (juce::Component::SafePointer<juce::Component> window, BuiltInEffects::BasicDrumsProcessor& drums, std::unique_ptr<juce::FileChooser>& chooser,
                              const Say& done, const juce::File& file)
     {
@@ -1542,7 +1582,7 @@ namespace
 
         if (plan.missing.isEmpty())
         {
-            finish (window, drums, std::move (plan), done);
+            finishMaschine (window, drums, std::move (plan), kit, done);
             return;
         }
 
@@ -1558,7 +1598,7 @@ namespace
 
             if (chosen == 2)
             {
-                finish (window, drums, std::move (plan), done);
+                finishMaschine (window, drums, std::move (plan), kit, done);
                 return;
             }
 
@@ -1567,7 +1607,7 @@ namespace
                                   [window, &drums, done, file, kit] (const juce::FileChooser& c)
             {
                 if (window != nullptr && c.getResult() != juce::File())
-                    finish (window, drums, fromMaschine (*kit, file, c.getResult()), done);
+                    finishMaschine (window, drums, fromMaschine (*kit, file, c.getResult()), kit, done);
             });
         });
     }
@@ -1699,6 +1739,61 @@ void exportMaschineMidi (juce::Component& window, std::unique_ptr<juce::FileChoo
     }
 
     chooser = std::make_unique<juce::FileChooser> ("Choose a Maschine kit (.mxgrp) to export its pattern to MIDI", juce::File(), "*.mxgrp");
+    chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [safe, handleFile] (const juce::FileChooser& c)
+    {
+        if (safe != nullptr && c.getResult() != juce::File())
+            handleFile (c.getResult());
+    });
+}
+
+void dropMaschinePattern (juce::Component& window, BuiltInEffects::BasicDrumsProcessor& drums, std::unique_ptr<juce::FileChooser>& chooser, Say done, const juce::File& kitFile)
+{
+    const juce::Component::SafePointer<juce::Component> safe (&window);
+
+    if (drums.onDropPattern == nullptr)
+    {
+        done ("Open Basic Drums on a session track to drop patterns onto the timeline.");
+        return;
+    }
+
+    auto handleFile = [safe, &drums, done] (const juce::File& src)
+    {
+        MaschineKit::Kit kit;
+        if (const auto err = MaschineKit::read (src, kit); err.isNotEmpty())
+        {
+            done (src.getFileName() + ": " + err);
+            return;
+        }
+
+        if (kit.patterns.empty())
+        {
+            done (src.getFileName() + " has no embedded MIDI patterns.");
+            return;
+        }
+
+        auto plan = fromMaschine (kit, src);
+        place (plan);
+        std::map<int, int> soundToNote;
+        for (size_t i = 0; i < plan.pads.size() && i < kit.sounds.size(); ++i)
+            soundToNote[kit.sounds[i].index] = plan.pads[i].note;
+
+        const auto& pat = kit.patterns.front();
+        const auto midi = MaschineKit::buildMidiFile (pat, soundToNote);
+        const auto clipName = pat.name.isNotEmpty() ? (plan.name + " - " + pat.name) : plan.name;
+
+        if (drums.onDropPattern (midi, clipName))
+            done ("Dropped Maschine pattern (" + counted ((int) pat.notes.size(), "note", "notes") + ") onto track.");
+        else
+            done ("Could not drop pattern onto the session track.");
+    };
+
+    if (kitFile != juce::File())
+    {
+        handleFile (kitFile);
+        return;
+    }
+
+    chooser = std::make_unique<juce::FileChooser> ("Choose a Maschine kit (.mxgrp) to drop its pattern onto this track", juce::File(), "*.mxgrp");
     chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [safe, handleFile] (const juce::FileChooser& c)
     {
         if (safe != nullptr && c.getResult() != juce::File())

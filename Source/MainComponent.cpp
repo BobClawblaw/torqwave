@@ -197,7 +197,7 @@ namespace
         cmdSevenOneMaster, cmdMeetDeliverySpec, cmdShowSoundLibrary, cmdDynamicEq, cmdMultibandWidth, cmdExciter, cmdMaximizer, cmdTransientShaper, cmdCaptureMatchReference, cmdCaptureMatchReferenceFromFile, cmdMatchEq, cmdShowTonalBalance, cmdDither, cmdDialogueIsolation, cmdAdaptiveDenoise, cmdMouthDeClick, cmdDeCrackle, cmdDePlosive, cmdBreathControl, cmdSpill, cmdWowFlutter, cmdSpectralRecovery, cmdRebalance, cmdCaptureAmbience, cmdAmbienceMatch, cmdDialogueContour, cmdAzimuth, cmdCodecPreview,
         cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectZeroCrossings, cmdBrushLighter, cmdBrushHeavier, cmdShowStatistics,
         cmdTimeMinutesSeconds, cmdTimeDecimalSeconds, cmdTimeSamples, cmdTimeSmpte24, cmdTimeSmpte25, cmdTimeSmpte2997Drop, cmdTimeSmpte2997, cmdTimeSmpte30,   // one a TimeFormat::Kind, in its order
-        cmdExtremeStretch, cmdNewFile, cmdSettings, cmdGenerateInstrument, cmdShowPianoRoll, cmdShowKeyboard, cmdRecordNotes, cmdCaptureMidi, cmdImportMidi, cmdAddInstrumentTrack,
+        cmdExtremeStretch, cmdNewFile, cmdSettings, cmdGenerateInstrument, cmdShowPianoRoll, cmdShowKeyboard, cmdRecordNotes, cmdCaptureMidi, cmdImportMidi, cmdAddInstrumentTrack, cmdOpenTrackInstrument,
         cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute,   // one a MultitrackView::Tool, in its order
         cmdTimeWithBars, cmdMusicalTimebase, cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes, cmdTimeTool,
         cmdUserGuide, cmdShortcutList, cmdSplitAllTracks, cmdRippleOff, cmdRippleTrack, cmdRippleAll,
@@ -2599,6 +2599,16 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                             info.addDefaultKeypress ('i', cmd); info.setActive (multitrackMode); break;
         case cmdAddInstrumentTrack: info.setInfo ("Add Instrument Track...", "Add a track with an instrument plug-in (chosen from a menu), named after it, for note clips and live MIDI to play", "Multitrack", 0);
                             info.setActive (multitrackMode && ! isRecording()); break;
+        case cmdOpenTrackInstrument:
+        {
+            const auto trackId = multitrack.getSelectedTrackId();
+            const auto* inst = trackId != 0 ? engine.getTrackEffects().getInstrument (trackId) : nullptr;
+            info.setInfo (inst != nullptr ? ("Open " + inst->getName()) : juce::String ("Open Track Instrument"),
+                          "Open or bring to front the selected instrument track's plug-in window", "Multitrack", 0);
+            info.addDefaultKeypress ('i', alt);
+            info.setActive (multitrackMode && inst != nullptr);
+            break;
+        }
         case cmdTrackToolSelect: case cmdTrackToolDraw: case cmdTrackToolSplit: case cmdTrackToolStretch: case cmdTrackToolGlue: case cmdTrackToolRange: case cmdTrackToolMute:
         {
             const auto t = (MultitrackView::Tool) (id - cmdTrackToolSelect);
@@ -3543,6 +3553,10 @@ bool MainComponent::perform (const InvocationInfo& info)
             menu.showMenuAsync (juce::PopupMenu::Options().withMousePosition());
             break;
         }
+        case cmdOpenTrackInstrument:
+            if (const auto trackId = multitrack.getSelectedTrackId(); trackId != 0)
+                multitrack.showInstrumentWindow (trackId);
+            break;
         case cmdAddBus:
         {
             auto next = *engine.session.getState();
@@ -3984,7 +3998,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         case 4:
             // The panels and Import at the top; the rest in groups by what they do.
             add ({ cmdMixer, cmdTrackInspector, cmdClipProperties, cmdClipList, cmdMarkerList, cmdSessionNotes, 0, cmdImportToSession, cmdImportMidi, 0 });
-            group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdAddBus, cmdAddFolder, cmdTakeOutOfFolder, cmdAddVca, cmdAddFromTemplate, cmdSaveTrackTemplate, cmdSaveInstrumentPreset, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
+            group ("Tracks", { cmdAddTrack, cmdAddInstrumentTrack, cmdOpenTrackInstrument, cmdAddBus, cmdAddFolder, cmdTakeOutOfFolder, cmdAddVca, cmdAddFromTemplate, cmdSaveTrackTemplate, cmdSaveInstrumentPreset, 0, cmdDuplicateTrack, cmdDeleteTrack, cmdMoveTrackUp, cmdMoveTrackDown, cmdHideTrack,
                                0, cmdTrackAbove, cmdTrackBelow, 0, cmdUnsoloAll, cmdUnmuteAll });
             group ("Tools", { cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute });
             group ("Clips", { cmdSplitClip, cmdSplitAllTracks, cmdDuplicateClip, cmdRepeatClip, cmdReverseClip, cmdStretchClip, cmdShiftPitch, 0, cmdShowTakes, cmdFlattenComp, 0, cmdEditInPlace, cmdClipEffects, cmdCombineSound, cmdAddToLibrary, cmdAddToSequenceLibrary, 0, cmdLockClip, cmdMuteClip, cmdGroupClips, cmdUngroupClips, cmdClipGainLines, 0, cmdClipToFront, cmdClipToBack });
@@ -16004,6 +16018,49 @@ void MainComponent::showEditor (juce::AudioProcessor& p)
     const auto* asInstance = dynamic_cast<juce::AudioPluginInstance*> (plugin);
     const auto playable = asInstance != nullptr && TrackEffects::isInstrument (*asInstance);
 
+    if (auto* drums = dynamic_cast<BuiltInEffects::BasicDrumsProcessor*> (plugin))
+    {
+        drums->onDropPattern = [this, drums] (const juce::MidiFile& midi, const juce::String& clipName) -> bool
+        {
+            auto next = *engine.session.getState();
+            juce::uint32 targetTrackId = 0;
+
+            for (auto& track : next.tracks)
+            {
+                if (engine.getTrackEffects().getInstrument (track.id) == drums)
+                {
+                    targetTrackId = track.id;
+                    break;
+                }
+            }
+
+            if (targetTrackId == 0)
+                return false;
+
+            juce::MemoryOutputStream mos;
+            if (! midi.writeTo (mos))
+                return false;
+
+            juce::MemoryInputStream mis (mos.getData(), mos.getDataSize(), false);
+            auto imported = MidiIn::importFile (mis, next.sampleRate);
+            if (imported.clips.empty())
+                return false;
+
+            auto clip = std::move (imported.clips.front());
+            if (clipName.isNotEmpty())
+                clip.name = clipName;
+            clip.position = juce::jmax ((juce::int64) 0, multitrack.getCursor());
+
+            const auto id = SessionEdits::addNoteClip (next, targetTrackId, std::move (clip));
+            if (id == 0)
+                return false;
+
+            engine.session.apply (std::move (next), "Drop Maschine Pattern");
+            multitrack.selectNoteClip (id);
+            return true;
+        };
+    }
+
     editorWindows.add (new PluginEditorWindow (*plugin, [this] (PluginEditorWindow* w)
     {
         juce::MessageManager::callAsync ([this, safe = juce::Component::SafePointer<PluginEditorWindow> (w)]
@@ -16099,6 +16156,8 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
         auto mixer = std::make_unique<MixerView> (engine);
         mixer->setAutomationWriter (&multitrack);
         mixer->addMidiLearnMenu = [this] (juce::PopupMenu& menu, juce::uint32 trackId) { addMidiLearnMenu (menu, trackId); };
+        mixer->onOpenInstrument = [this] (juce::uint32 trackId) { multitrack.showInstrumentWindow (trackId); };
+        mixer->onInstrumentMenu = [this] (juce::uint32 trackId, juce::Component& target) { multitrack.showInstrumentMenu (trackId, target); };
         made = std::move (mixer);
     }
     else if (id == Panels::clipProperties)
@@ -16169,6 +16228,7 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
     {
         auto inspector = std::make_unique<TrackInspector> (engine, [this] { return multitrack.getSelectedTrackId(); });
         inspector->showEditor = [this] (juce::AudioProcessor& p) { showEditor (p); };
+        inspector->showInstrumentMenu = [this] (juce::uint32 trackId, juce::Component& target) { multitrack.showInstrumentMenu (trackId, target); };
         made = std::move (inspector);
     }
     else if (id == Panels::clipList)

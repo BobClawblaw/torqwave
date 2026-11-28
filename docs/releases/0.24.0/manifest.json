@@ -1,0 +1,60 @@
+{
+  "version": "0.24.0",
+  "tag": "v0.24.0",
+  "as_of": "2026-11-28",
+  "previous_snapshot": "0.23.0",
+  "matrix_coverage": {
+    "yes": 48,
+    "previous_yes": 47,
+    "total": 53,
+    "new_rows": [
+      "Notation editor"
+    ]
+  },
+  "assets": {
+    "announcement": "docs/releases/0.24.0/ANNOUNCEMENT.md",
+    "plaintext_copy": [
+      "docs/releases/0.24.0/x/post-long.txt",
+      "docs/releases/0.24.0/x/post-thread.txt",
+      "docs/releases/0.24.0/instagram/caption.txt"
+    ],
+    "x_graphics": [
+      "docs/releases/0.24.0/x/01-release-hero.png",
+      "docs/releases/0.24.0/x/02-release-by-the-numbers.png",
+      "docs/releases/0.24.0/x/03-where-torqwave-stands.png",
+      "docs/releases/0.24.0/x/04-against-the-daws-1.png",
+      "docs/releases/0.24.0/x/05-against-the-daws-2.png",
+      "docs/releases/0.24.0/x/06-against-the-editors.png",
+      "docs/releases/0.24.0/x/07-synth.png",
+      "docs/releases/0.24.0/x/08-multitrack.png"
+    ],
+    "instagram_slides": [
+      "docs/releases/0.24.0/instagram/slide-1.png",
+      "docs/releases/0.24.0/instagram/slide-2.png",
+      "docs/releases/0.24.0/instagram/slide-3.png",
+      "docs/releases/0.24.0/instagram/slide-4.png",
+      "docs/releases/0.24.0/instagram/slide-5.png",
+      "docs/releases/0.24.0/instagram/slide-6.png",
+      "docs/releases/0.24.0/instagram/slide-7.png"
+    ]
+  },
+  "channels": {
+    "github_release": {
+      "published": true,
+      "url": "https://github.com/BobClawblaw/torqwave/releases/tag/v0.24.0"
+    },
+    "site": {
+      "url": "https://bobclawblaw.github.io/torqwave/"
+    },
+    "x": {
+      "posted": false,
+      "url": null,
+      "notes": "Optional — drag files from x/ into X.com composer and paste x/post-long.txt (or x/post-thread.txt)."
+    },
+    "instagram": {
+      "posted": false,
+      "url": null,
+      "notes": "Optional — drag slide-1.png..slide-7.png from instagram/ and paste instagram/caption.txt."
+    }
+  }
+}

@@ -259,6 +259,18 @@ public:
         mute.onClick = [this] { const auto on = mute.getToggleState(); edit (on ? "Mute" : "Unmute", false, [on] (SessionTrack& t) { t.mute = on; }); };
         solo.onClick = [this] { const auto on = solo.getToggleState(); edit (on ? "Solo" : "Unsolo", false, [on] (SessionTrack& t) { t.solo = on; }); };
 
+        instrumentButton.setTooltip ("Click to open this track's instrument window; right-click to swap");
+        Theme::follow (instrumentButton, juce::TextButton::buttonOnColourId, Theme::accentDeep);
+        instrumentButton.onClick = [this]
+        {
+            if (view.engine.getTrackEffects().getInstrument (trackId) != nullptr && view.onOpenInstrument != nullptr)
+                view.onOpenInstrument (trackId);
+            else if (view.onInstrumentMenu != nullptr)
+                view.onInstrumentMenu (trackId, instrumentButton);
+        };
+        instrumentButton.addMouseListener (this, false);
+        addChildComponent (instrumentButton);
+
         for (auto* c : std::initializer_list<juce::Component*> { &fader, &pan, &mute, &polarity, &solo })
             addAndMakeVisible (c);
     }
@@ -279,6 +291,21 @@ public:
         // The master's strip: no pan or solo (the whole mix goes through it).
         pan.setVisible (! isFolder && ! t.isMaster);
         solo.setVisible (! t.isMaster);
+
+        const auto showInst = t.isInstrument && ! isFolder && ! t.isMaster;
+        const auto* instPlugin = showInst ? view.engine.getTrackEffects().getInstrument (trackId) : nullptr;
+        const auto instChanged = instrumentButton.isVisible() != showInst;
+        instrumentButton.setVisible (showInst);
+        if (showInst)
+        {
+            instrumentButton.setButtonText (instPlugin != nullptr ? instPlugin->getName() : juce::String ("+ Inst"));
+            instrumentButton.setToggleState (instPlugin != nullptr, juce::dontSendNotification);
+            instrumentButton.setTooltip (instPlugin != nullptr
+                                             ? "Open " + instPlugin->getName() + " window (right-click to swap)"
+                                             : "Choose an instrument for this track");
+        }
+        if (instChanged)
+            resized();
 
         colour = TrackColours::of (t, index);
         name.setText (t.name, juce::dontSendNotification);
@@ -418,6 +445,12 @@ public:
 
     void mouseDown (const juce::MouseEvent& e) override
     {
+        if (e.eventComponent == &instrumentButton && e.mods.isPopupMenu())
+        {
+            if (view.onInstrumentMenu != nullptr)
+                view.onInstrumentMenu (trackId, instrumentButton);
+            return;
+        }
         if (trackId != 0 && e.mods.isPopupMenu())
             createMenu().showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition());
     }
@@ -427,6 +460,11 @@ public:
         auto r = getLocalBounds().reduced (6);
         name.setBounds (r.removeFromTop (20));
         r.removeFromTop (4);
+        if (instrumentButton.isVisible())
+        {
+            instrumentButton.setBounds (r.removeFromTop (20));
+            r.removeFromTop (4);
+        }
         const auto surround = surroundPad.isVisible();
 
         if (! surround)
@@ -480,7 +518,7 @@ public:
     juce::Slider fader, pan;
     SurroundPad surroundPad;
     juce::Slider width, lfe;
-    juce::TextButton mute { "M" }, solo { "S" }, polarity { juce::String (juce::CharPointer_UTF8 ("\xc3\x98")) };
+    juce::TextButton instrumentButton { "+ Inst" }, mute { "M" }, solo { "S" }, polarity { juce::String (juce::CharPointer_UTF8 ("\xc3\x98")) };
     juce::Label readout;
 
 private:

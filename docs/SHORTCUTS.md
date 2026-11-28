@@ -103,6 +103,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 |---|---|
 | Import Audio... | `Cmd-I` |
 | Add Track | `Shift-Cmd-T` |
+| Open Track Instrument | `Option-I` |
 | Add Bus | `Shift-Cmd-B` |
 | Snapping | `S` |
 | Metronome | `C` |

@@ -81,7 +81,7 @@ void runBuiltInEffectsTests (AudioEngine& engine)
     // Created by description, through the app's own format manager.
     const auto descriptions = BuiltInEffects::getDescriptions();
     juce::String error;
-    auto instance = descriptions.size() == 34 ? engine.pluginFormatManager.createPluginInstance (descriptions[0], rate, 512, error) : nullptr;
+    auto instance = descriptions.size() == 36 ? engine.pluginFormatManager.createPluginInstance (descriptions[0], rate, 512, error) : nullptr;
     auto* eq = dynamic_cast<ParametricEqProcessor*> (instance.get());
     check (eq != nullptr && error.isEmpty() && eq->getPluginDescription().fileOrIdentifier == BuiltInEffects::parametricEqId
                && eq->getPluginDescription().pluginFormatName == BuiltInEffects::formatName && eq->getActiveBands (rate).empty(),
@@ -156,7 +156,7 @@ void runBuiltInEffectsTests (AudioEngine& engine)
 
         return (juce::AudioPluginFormat*) nullptr;
     }();
-    check (list.getNumTypes() == 34 && format != nullptr
+    check (list.getNumTypes() == 36 && format != nullptr
                && ! format->canScanForPlugins() && format->searchPathsForPlugins ({}, true, false).isEmpty(),
            "built-in effects: the thirty-two (the synth, the drums, StringSwarm, the sampler, the live creative & MIDI FX, and the hardware insert among them) listed once each however often added; their format has nothing to scan");
 

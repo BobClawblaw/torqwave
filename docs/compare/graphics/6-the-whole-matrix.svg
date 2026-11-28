@@ -26,15 +26,15 @@
 <text x="62.0" y="43.0" font-size="16" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="0.14em">TORQ</text>
 <text x="117.0" y="43.0" font-size="16" fill="#ff5c1f" text-anchor="start" font-weight="800" letter-spacing="0.14em">WAVE</text>
 <rect x="188.0" y="24.0" width="74.1" height="24.0" rx="12.0" fill="url(#pillBg)" stroke="#ff5c1f" stroke-width="1.1"/>
-<text x="225.0" y="40.2" font-size="12" fill="#ff8a4d" text-anchor="middle" font-weight="bold" letter-spacing="0.06em">v0.23.0</text>
+<text x="225.0" y="40.2" font-size="12" fill="#ff8a4d" text-anchor="middle" font-weight="bold" letter-spacing="0.06em">v0.24.0</text>
 <text x="1550.0" y="42.0" font-size="13" fill="#929eb3" text-anchor="end" font-weight="600" letter-spacing="0.09em">FREE · OPEN SOURCE · ZERO TELEMETRY · macOS / WIN / LINUX</text>
-<text x="50.0" y="92.0" font-size="40" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="-0.02em">Torqwave 0.23.0 against the alternatives: full matrix</text>
+<text x="50.0" y="92.0" font-size="40" fill="#f8fafc" text-anchor="start" font-weight="800" letter-spacing="-0.02em">Torqwave 0.24.0 against the alternatives: full matrix</text>
 <text x="50.0" y="124.0" font-size="20" fill="#929eb3" text-anchor="start" font-weight="400">53 rows across 11 areas, 15 products, each from its own documentation</text>
 <rect x="50.0" y="138.0" width="1500.0" height="1.5" rx="0" fill="url(#accentFade)"/>
 <rect x="420.0" y="158.0" width="132.9" height="2350.0" rx="10" fill="url(#tqColGrad)" stroke="#5c3322" stroke-width="1.2"/>
 <rect x="428.0" y="158.0" width="116.9" height="3.5" rx="2" fill="url(#accentH)"/>
-<text x="459.2" y="400.0" font-size="18" fill="#ff8a3d" text-anchor="start" font-weight="700" transform="rotate(-90 459.2 400.0)">Torqwave 0.23.0</text>
-<text x="525.7" y="400.0" font-size="18" fill="#f8fafc" text-anchor="start" font-weight="700" transform="rotate(-90 525.7 400.0)">Torqwave 0.22.0</text>
+<text x="459.2" y="400.0" font-size="18" fill="#ff8a3d" text-anchor="start" font-weight="700" transform="rotate(-90 459.2 400.0)">Torqwave 0.24.0</text>
+<text x="525.7" y="400.0" font-size="18" fill="#f8fafc" text-anchor="start" font-weight="700" transform="rotate(-90 525.7 400.0)">Torqwave 0.23.0</text>
 <text x="592.2" y="400.0" font-size="18" fill="#dce3ee" text-anchor="start" font-weight="600" transform="rotate(-90 592.2 400.0)">Adobe Audition</text>
 <text x="658.6" y="400.0" font-size="18" fill="#dce3ee" text-anchor="start" font-weight="600" transform="rotate(-90 658.6 400.0)">Audacity</text>
 <text x="725.1" y="400.0" font-size="18" fill="#dce3ee" text-anchor="start" font-weight="600" transform="rotate(-90 725.1 400.0)">iZotope RX</text>
@@ -935,11 +935,11 @@
 <path d="M 1513.5 1459.3 L 1515.8 1461.7 L 1520.3 1456.5" fill="none" stroke="#071512" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="40.0" y="1474.0" width="380.0" height="30.0" rx="0" fill="#111827" opacity="0.65"/>
 <rect x="552.9" y="1474.0" width="1007.1" height="30.0" rx="0" fill="#111827" opacity="0.65"/>
-<text x="54.0" y="1495.0" font-size="17" fill="#f8fafc" text-anchor="start" font-weight="600">Audio to MIDI</text>
-<circle cx="453.2" cy="1489.0" r="13.5" fill="#ff5c1f" fill-opacity="0.20" stroke="#ff7a3d" stroke-opacity="0.85" stroke-width="1.5"/>
+<text x="54.0" y="1495.0" font-size="17" fill="#dce3ee" text-anchor="start" font-weight="400">Audio to MIDI</text>
 <circle cx="453.2" cy="1489.0" r="8.5" fill="url(#barYes)"/>
 <path d="M 450.0 1489.3 L 452.3 1491.7 L 456.8 1486.5" fill="none" stroke="#071512" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="512.7" y1="1489.0" x2="526.7" y2="1489.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="519.7" cy="1489.0" r="8.5" fill="url(#barYes)"/>
+<path d="M 516.4 1489.3 L 518.8 1491.7 L 523.2 1486.5" fill="none" stroke="#071512" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 <line x1="579.2" y1="1489.0" x2="593.2" y2="1489.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <line x1="645.6" y1="1489.0" x2="659.6" y2="1489.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <line x1="712.1" y1="1489.0" x2="726.1" y2="1489.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
@@ -963,8 +963,10 @@
 <circle cx="1450.3" cy="1489.0" r="8.5" fill="url(#barYes)"/>
 <path d="M 1447.0 1489.3 L 1449.4 1491.7 L 1453.8 1486.5" fill="none" stroke="#071512" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 <line x1="1509.8" y1="1489.0" x2="1523.8" y2="1489.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
-<text x="54.0" y="1525.0" font-size="17" fill="#dce3ee" text-anchor="start" font-weight="400">Notation editor</text>
-<line x1="446.2" y1="1519.0" x2="460.2" y2="1519.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<text x="54.0" y="1525.0" font-size="17" fill="#f8fafc" text-anchor="start" font-weight="600">Notation editor</text>
+<circle cx="453.2" cy="1519.0" r="13.5" fill="#ff5c1f" fill-opacity="0.20" stroke="#ff7a3d" stroke-opacity="0.85" stroke-width="1.5"/>
+<circle cx="453.2" cy="1519.0" r="8.5" fill="url(#barYes)"/>
+<path d="M 450.0 1519.3 L 452.3 1521.7 L 456.8 1516.5" fill="none" stroke="#071512" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 <line x1="512.7" y1="1519.0" x2="526.7" y2="1519.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <line x1="579.2" y1="1519.0" x2="593.2" y2="1519.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <line x1="645.6" y1="1519.0" x2="659.6" y2="1519.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
@@ -1252,11 +1254,11 @@
 <line x1="1443.3" y1="1877.0" x2="1457.3" y2="1877.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <circle cx="1516.8" cy="1877.0" r="8.5" fill="url(#barYes)"/>
 <path d="M 1513.5 1877.3 L 1515.8 1879.7 L 1520.3 1874.5" fill="none" stroke="#071512" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="54.0" y="1913.0" font-size="17" fill="#f8fafc" text-anchor="start" font-weight="600">CLAP</text>
-<circle cx="453.2" cy="1907.0" r="13.5" fill="#ff5c1f" fill-opacity="0.20" stroke="#ff7a3d" stroke-opacity="0.85" stroke-width="1.5"/>
+<text x="54.0" y="1913.0" font-size="17" fill="#dce3ee" text-anchor="start" font-weight="400">CLAP</text>
 <circle cx="453.2" cy="1907.0" r="8.5" fill="url(#barYes)"/>
 <path d="M 450.0 1907.3 L 452.3 1909.7 L 456.8 1904.5" fill="none" stroke="#071512" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="512.7" y1="1907.0" x2="526.7" y2="1907.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="519.7" cy="1907.0" r="8.5" fill="url(#barYes)"/>
+<path d="M 516.4 1907.3 L 518.8 1909.7 L 523.2 1904.5" fill="none" stroke="#071512" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 <line x1="579.2" y1="1907.0" x2="593.2" y2="1907.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <line x1="645.6" y1="1907.0" x2="659.6" y2="1907.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
 <line x1="712.1" y1="1907.0" x2="726.1" y2="1907.0" stroke="#37445c" stroke-width="2.6" stroke-linecap="round"/>
@@ -1667,7 +1669,7 @@
 <text x="719.1" y="182.0" font-size="14" fill="#929eb3" text-anchor="middle" font-weight="700" letter-spacing="0.12em">EDITORS</text>
 <text x="1217.6" y="182.0" font-size="14" fill="#929eb3" text-anchor="middle" font-weight="700" letter-spacing="0.12em">DAWS</text>
 <line x1="50.0" y1="2528.0" x2="1550.0" y2="2528.0" stroke="#232d40" stroke-width="1" opacity="0.7"/>
-<text x="1550.0" y="2556.0" font-size="14" fill="#68758c" text-anchor="end" font-weight="normal">As of 2026-11-27 · Torqwave 0.23.0 (released) · Sources &amp; method: docs/compare</text>
+<text x="1550.0" y="2556.0" font-size="14" fill="#68758c" text-anchor="end" font-weight="normal">As of 2026-11-28 · Torqwave 0.24.0 (released) · Sources &amp; method: docs/compare</text>
 <circle cx="60.0" cy="2551.0" r="9.0" fill="url(#barYes)"/>
 <path d="M 56.5 2551.3 L 59.0 2553.8 L 63.8 2548.3" fill="none" stroke="#071512" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="77.0" y="2556.0" font-size="15" fill="#929eb3" text-anchor="start" font-weight="500">Yes</text>

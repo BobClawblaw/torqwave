@@ -1,0 +1,40 @@
+Torqwave 0.24.0 is out.
+
+Free, open-source audio editor and DAW in one app for macOS, Windows and Linux — with ZERO TELEMETRY, ZERO TRACKING, no account, no subscription, and no background network calls. 100% offline-first.
+
+0.24.0 opens your existing sample and drum libraries with zero lock-in, adds 4 new live Creative FX (36 built-in plug-ins total), introduces a Grand-Staff Notation View with MusicXML 3.1 export (lifting Torqwave to 48 of 53 rows in our 15-product comparison matrix), and redesigns instrument tracks for one-click editing.
+
+HERE IS EVERYTHING NEW IN 0.24.0
+
+ZERO TELEMETRY & ZERO TRACKING
+• Hard engineering invariant + automated unit and source audits: zero analytics, zero crash beacons, zero licence phone-home.
+• Optional Ask Torq is strictly off by default with no server URL configured unless you point it at your own local model.
+
+OPEN YOUR EXISTING LIBRARIES (CLEAN-ROOM, SAMPLES STAY IN PLACE)
+• NI Maschine 2/3 (.mxgrp / .mxsnd) import into Basic Drums: resolves samples in place, translates internal Drum Synths onto Torqwave's drum engines, maps per-pad & bus FX (EQ, Filter, Saturator, Transient Shaper, Compressor, Bitcrusher, Reverb/Delay sends), exports embedded 960 PPQN patterns to .mid, and drops patterns straight onto the track in one click. Verified on 160/160 real library files (50 patterns, 25,611 MIDI notes, 0 missing).
+• Akai MPC (.xpm) Drum & Keygroup import into Basic Drums and Torqwave Sampler (velocity layers, PadNoteMap/PadGroupMap choke groups, filter, envelope, slice start, reverse).
+• SoundFont 2 (.sf2) RIFF bank import in Torqwave Sampler with a built-in multi-preset bank picker.
+
+4 NEW LIVE CREATIVE FX (36 BUILT-IN PLUG-INS TOTAL)
+• Frequency Shifter — 8th-order Niemitalo Hilbert SSB network (49.6 dB image rejection, ±0.7° 30 Hz–20 kHz), Up/Down/Stereo Split/Ring Mod, LFO & feedback.
+• Shimmer Delay — tempo-synced/free stereo delay with dual Hann-windowed pitch-shifting grains (-24..+24 st), diffusion, damping & spread.
+• Vocoder — 24-band 4th-order SVF filterbank with internal Saw/Pulse/Noise chord carrier or external Sidechain carrier, formant shift & unvoiced sibilance bypass.
+• Spectral Freeze — live 2048-pt 4x overlap-add STFT freeze hold, temporal blur, spectral shift (-12..+12 st) & brightness tilt.
+
+GRAND-STAFF NOTATION VIEW & MUSICXML 3.1
+• Switch the Note Editor to Score view for treble + bass grand staves with clefs, key/time signatures, barlines, ledger lines, noteheads/stems/flags/dots, and direct pitch/time editing.
+• Tools > Export MusicXML (.musicxml)... exports standard MusicXML 3.1 for MuseScore, Dorico, Sibelius, Finale & Logic Pro.
+
+ONE-CLICK INSTRUMENT TRACK UX
+• Dedicated 3-row Instrument Track header: Name + M/S on top, split [Instrument Name | ▾] bar beside FX in the middle, compact mix row below.
+• Left-click opens/focuses the instrument window immediately; ▾ or right-click swaps instruments. Matching split/1-click controls in Track Inspector & Mixer strips, plus Option-I from anywhere.
+
+WHAT IT STILL DOESN'T DO
+No Dolby Atmos, no ARA 2, no legacy VST2, no full neural stem export, and installers aren't notarized with a Developer ID yet (so macOS asks on first launch). Our 15-product matrix lists every gap as plainly as what ships.
+
+HEAR & COMPARE
+Site: https://bobclawblaw.github.io/torqwave/
+Full 15-product matrix: https://github.com/BobClawblaw/torqwave/blob/main/docs/compare/MATRIX.md
+
+DOWNLOAD TORQWAVE 0.24.0 (FREE, AGPL-3.0)
+https://github.com/BobClawblaw/torqwave/releases/tag/v0.24.0

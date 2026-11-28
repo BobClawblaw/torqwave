@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Sampler.h"
+#include "Sf2Import.h"
 #include "SoundControls.h"
 #include "EffectPresets.h"
 
@@ -159,6 +160,10 @@ public:
     /** Gives it a sound from a file, as a drop does. False, with the reason in its status, when it can't. */
     bool loadFile (const juce::File&, int atKey = -1);
 
+    /** Loads a specific preset index from the currently loaded multi-preset SoundFont 2 (.sf2) bank. */
+    bool loadSf2Preset (int presetIndex);
+    int getNumSf2Presets() const noexcept                            { return (int) sf2Presets.size(); }
+
     /** Changes the selected zone and gives the zones back to the instrument. */
     void changeSelected (const std::function<void (Sampler::Zone&)>&);
 
@@ -180,6 +185,7 @@ private:
     void showZone();
     void say (const juce::String&);
     void chooseFile();
+    void showSf2Presets();
     void locate();
     std::vector<SoundControls::Knob*> allKnobs();
 
@@ -189,6 +195,9 @@ private:
     juce::uint32 seenVersion = 0;
     bool showing = false;                // setting the zone's controls from the zone, not from the user
     juce::String status;
+    juce::File sf2BankFile;
+    std::vector<Sf2Import::PresetSummary> sf2Presets;
+    int sf2PresetIndex = 0;
 
     SoundControls::Panel wavePanel { "Sample" }, keysPanel { "Keys" }, zonePanel { "Zone" }, ampPanel { "Amp" }, filterPanel { "Filter" },
                          lfoPanel { "LFO" }, voicePanel { "Voice" };
@@ -199,7 +208,7 @@ private:
     SoundControls::Knob root { "Root" }, tune { "Tune" }, zoneLevel { "Zone Level" }, zonePan { "Zone Pan" }, crossfade { "Crossfade" },
                         sensitivity { "Sensitivity" };
     SoundControls::LedToggle reverse { "Reverse" }, oneShot { "One-Shot" }, loopInRelease { "Loop in Release" }, cutEachOther { "Cut Each Other" };
-    juce::TextButton open { "Open..." }, pitchButton { "Find Pitch" }, loopButton { "Find Loop" }, locateButton { "Locate..." },
+    juce::TextButton open { "Open..." }, sf2PresetButton { "SF2 Preset" }, pitchButton { "Find Pitch" }, loopButton { "Find Loop" }, locateButton { "Locate..." },
                      removeButton { "Remove Zone" }, sliceButton { "Slice Again" };
 
     using Small = SoundControls::Knob::Size;

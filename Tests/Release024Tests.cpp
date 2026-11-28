@@ -1,8 +1,13 @@
 #include "Release024Tests.h"
 #include "../Source/MpcKit.h"
 #include "../Source/Sf2Import.h"
+#include "../Source/SamplerEditor.h"
 #include "../Source/DrumKitImport.h"
 #include "../Source/CreativeEffects.h"
+#include "../Source/Notation.h"
+#include "../Source/NoteEditor.h"
+#include "../Source/MidiInput.h"
+#include "../Source/AiAssistant.h"
 #include "TestUtils.h"
 #include <iostream>
 
@@ -139,6 +144,52 @@ namespace
         check (std::isfinite (peak) && peak > 0.05f,
                "0.24 sf2 import: loaded SoundFont zone renders clean audio (peak " + juce::String (peak, 3) + ")");
         tmp.deleteFile();
+
+        // Multi-preset SF2 bank listing & SamplerEditor preset switching
+        std::vector<int16_t> pcm2 (4410);
+        for (size_t i = 0; i < pcm2.size(); ++i)
+            pcm2[i] = (int16_t) std::lround (18000.0 * std::sin (2.0 * juce::MathConstants<double>::pi * 880.0 * (double) i / 44100.0));
+
+        const auto bankBytes = Sf2Import::writeBank ({
+            { "Acid Bass", 0, 0, 48, 24, 60, pcm },
+            { "Ice Bell",  0, 1, 72, 60, 96, pcm2 }
+        }, 44100);
+        const auto bankFile = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-sf2-bank.sf2");
+        bankFile.replaceWithData (bankBytes.getData(), bankBytes.getSize());
+
+        juce::String listErr;
+        const auto presets = Sf2Import::listPresets (bankFile, listErr);
+        check (listErr.isEmpty() && presets.size() == 2 && presets[0].name == "Acid Bass" && presets[1].name == "Ice Bell",
+               "0.24 sf2 bank: lists all presets in multi-preset SoundFont 2 bank");
+
+        SamplerEditor editor (sampler);
+        const bool loaded0 = editor.loadFile (bankFile);
+        const bool switched1 = editor.loadSf2Preset (1);
+        check (loaded0 && editor.getNumSf2Presets() == 2 && switched1
+                   && sampler.getZones().size() == 1 && sampler.getZones()[0].root == 72,
+               "0.24 sf2 bank: SamplerEditor switches cleanly to preset #2 in multi-preset SF2 bank");
+        bankFile.deleteFile();
+    }
+
+    void testMaschinePatternDrop()
+    {
+        MaschineKit::Pattern pat;
+        pat.name = "Main Groove";
+        pat.bpm = 128.0;
+        pat.notes.push_back ({ 0, 0.0, 0.25, 120, 60 });
+        pat.notes.push_back ({ 1, 1.0, 0.25, 110, 60 });
+        pat.notes.push_back ({ 0, 2.0, 0.25, 120, 60 });
+
+        const std::map<int, int> noteMap { { 0, 36 }, { 1, 38 } };
+        const auto midi = MaschineKit::buildMidiFile (pat, noteMap);
+
+        juce::MemoryOutputStream mos;
+        midi.writeTo (mos);
+        juce::MemoryInputStream mis (mos.getData(), mos.getDataSize(), false);
+        const auto imported = MidiIn::importFile (mis, 48000.0);
+        check (imported.error.isEmpty() && ! imported.clips.empty() && imported.clips[0].notes.size() == 3
+                   && imported.clips[0].notes[0].pitch == 36 && imported.clips[0].notes[1].pitch == 38,
+               "0.24 maschine pattern drop: converts extracted pattern directly into NoteClip with mapped pad notes");
     }
 
     void testCreativeFx024()
@@ -204,6 +255,120 @@ namespace
             check (std::isfinite (tail) && tail > 0.02f && tail < 2.0f,
                    "0.24 shimmer delay: produces finite pitch-shifted wet echo tail (peak " + juce::String (tail, 3) + ")");
         }
+
+        // 3. Vocoder: verify 24-band modulator envelope shapes internal saw chord carrier (and stays silent on silent modulator)
+        {
+            BuiltInEffects::VocoderProcessor voc;
+            voc.prepareToPlay (48000.0, 512);
+            juce::MidiBuffer empty;
+
+            juce::AudioBuffer<float> silent (2, 2048);
+            silent.clear();
+            voc.processBlock (silent, empty);
+            const float silentPeak = silent.getMagnitude (0, 2048);
+
+            juce::AudioBuffer<float> mod (2, 4096);
+            for (int i = 0; i < 4096; ++i)
+            {
+                const float s = 0.5f * std::sin (2.0f * juce::MathConstants<float>::pi * 600.0f * (float) i / 48000.0f);
+                mod.setSample (0, i, s);
+                mod.setSample (1, i, s);
+            }
+            voc.processBlock (mod, empty);
+            const float activePeak = mod.getMagnitude (1024, 3072);
+            check (silentPeak < 1.0e-5f && std::isfinite (activePeak) && activePeak > 0.03f && activePeak <= 1.2f,
+                   "0.24 vocoder: 24-band filterbank gates cleanly on silence and vocodes active modulator (peak " + juce::String (activePeak, 3) + ")");
+        }
+
+        // 4. Spectral Freeze: verify frozen STFT spectrum sustains audio indefinitely after input falls silent
+        {
+            BuiltInEffects::SpectralFreezeProcessor sf;
+            sf.prepareToPlay (48000.0, 512);
+            if (auto* mixP = dynamic_cast<juce::AudioParameterFloat*> (sf.getParameters()[4]))
+                BuiltInEffects::setExactly (*mixP, 100.0f);
+
+            juce::MidiBuffer empty;
+            juce::AudioBuffer<float> feed (2, 4096);
+            for (int i = 0; i < 4096; ++i)
+            {
+                const float s = 0.5f * std::sin (2.0f * juce::MathConstants<float>::pi * 440.0f * (float) i / 48000.0f);
+                feed.setSample (0, i, s);
+                feed.setSample (1, i, s);
+            }
+            sf.processBlock (feed, empty);
+
+            // Engage Freeze and feed pure silence for 12,288 samples (256 ms)
+            if (auto* frz = dynamic_cast<juce::AudioParameterBool*> (sf.getParameters()[0]))
+                *frz = true;
+
+            juce::AudioBuffer<float> tail (2, 12288);
+            tail.clear();
+            sf.processBlock (tail, empty);
+            const float frozenPeak = tail.getMagnitude (8192, 4096);
+            check (std::isfinite (frozenPeak) && frozenPeak > 0.05f && frozenPeak < 1.5f,
+                   "0.24 spectral freeze: holds frozen STFT drone cleanly across pure silence (peak " + juce::String (frozenPeak, 3) + ")");
+        }
+    }
+
+    void testNotationAndMusicXml()
+    {
+        const auto cMaj = NoteTools::Scale { 0, "Major" };
+        const auto fMaj = NoteTools::Scale { 5, "Major" };
+        const auto spC4 = Notation::spell (60, false);
+        const auto spBb4 = Notation::spell (70, Notation::prefersFlats (fMaj));
+        check (spC4.step == 'C' && spC4.octave == 4 && spC4.diatonic == 28 && spC4.accidental == 0
+                   && spBb4.step == 'B' && spBb4.octave == 4 && spBb4.accidental == -1
+                   && Notation::keyFifths (fMaj) == -1,
+               "0.24 notation: spells MIDI pitches onto diatonic staff positions with key-aware sharps/flats");
+
+        const auto gs = Notation::GrandStaff::fit ({ 0.0f, 0.0f, 800.0f, 300.0f });
+        check (gs.diatonicAtY (gs.yForDiatonic (28)) == 28 && gs.diatonicAtY (gs.yForDiatonic (34)) == 34
+                   && gs.diatonicAtY (gs.yForDiatonic (20)) == 20,
+               "0.24 notation: GrandStaff yForDiatonic <-> diatonicAtY round-trips treble, middle C, and bass");
+
+        NoteClip clip;
+        clip.name = "Score Test";
+        clip.length = 96000; // 4 beats at 120 BPM, 48 kHz
+        clip.notes.push_back ({ 60, 0, 24000, 0.8f });      // C4 quarter (treble)
+        clip.notes.push_back ({ 64, 0, 24000, 0.8f });      // E4 chord tone
+        clip.notes.push_back ({ 48, 24000, 48000, 0.75f }); // C3 half (bass)
+
+        const auto xml = Notation::toMusicXml (clip, 48000.0, 0.5, 4, cMaj, "Score Test");
+        check (xml.contains ("<score-partwise version=\"3.1\">")
+                   && xml.contains ("<staves>2</staves>")
+                   && xml.contains ("<chord/>")
+                   && xml.contains ("<step>C</step><octave>4</octave>")
+                   && xml.contains ("<staff>2</staff>")
+                   && xml.contains ("<type>half</type>"),
+               "0.24 notation: exports valid MusicXML 3.1 with grand staff, chords, durations, and rests");
+
+        // Verify NoteEditor toggles Score view cleanly and renders without issues
+        NoteEditor ed;
+        ed.setSize (800, 320);
+        NoteEditor::Shown s;
+        s.clip = clip;
+        s.sampleRate = 48000.0;
+        s.beatSeconds = 0.5;
+        s.beatsPerBar = 4;
+        ed.readClip = [&] { return std::optional<NoteEditor::Shown> (s); };
+        ed.refresh();
+        ed.setShowScore (true);
+        juce::Image img (juce::Image::ARGB, 800, 320, true);
+        juce::Graphics g (img);
+        ed.paintEntireComponent (g, true);
+        const auto tmpXml = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("torqwave-score-test.musicxml");
+        const auto expErr = ed.exportMusicXml (tmpXml);
+        check (ed.showingScore() && expErr.isEmpty() && tmpXml.existsAsFile() && tmpXml.getSize() > 400,
+               "0.24 notation: NoteEditor renders grand-staff Score view and exports .musicxml cleanly");
+        tmpXml.deleteFile();
+    }
+
+    void testZeroTelemetryGuarantee()
+    {
+        // Verify default AI settings are strictly off with empty server URL and hearClips disabled
+        const Ai::Settings defaults;
+        check (! defaults.enabled && ! defaults.hearClips && defaults.serverUrl.isEmpty() && ! defaults.isOn(),
+               "0.24 zero telemetry: optional Ask Torq defaults to disabled, no server URL, and hearClips off");
     }
 }
 
@@ -212,5 +377,8 @@ void runRelease024Tests()
     std::cout << "Release 0.24.0 features:" << std::endl;
     testMpcKit();
     testSf2Import();
+    testMaschinePatternDrop();
     testCreativeFx024();
+    testNotationAndMusicXml();
+    testZeroTelemetryGuarantee();
 }

@@ -93,3 +93,11 @@ The cells marked `not confirmed` are listed in MATRIX.md under "Cells not confir
 - Because two rows differ from 0.22.0, the matrix graphics (2, 3, 4 and 6) and `MATRIX.md` show both **Torqwave 0.23.0** and **Torqwave 0.22.0**, and graphic 5's panel draws the release trend (45 → 47 of 53).
 - Updated notes across existing rows carry the rest of 0.22.1 and 0.23.0: six new Live Creative FX and four Live MIDI FX (32 built-in plug-ins total), Torqwave Synth's 4 LFOs / 24 mod slots / Slot Depth / MSEG Curve / built-in Arpeggiator / 4-scene Evolve morphing and 116 Complex patches, Piano Roll ratchets / micro-timing / groove templates / ghost notes, Torqwave Sampler SFZ import / round-robin groups / Warp, Basic Drums 8-bus multi-out, Track-Level Modulators, and headless CI test runs on Windows and Linux.
 - The other products' cells were not read again for it: they are as read on 2026-11-23.
+
+## 0.24.0
+
+- 0.24.0 is set against 0.23.0.
+- One matrix row flips from **no** to **yes**, lifting Torqwave from **47 of 53** to **48 of 53**:
+  - **Notation editor** (`no` → `yes`): interactive **Score** view in the Note Editor displaying treble + bass grand staves with clefs, key signatures, time signatures, barlines, ledger lines, note durations, direct note editing, and standard **MusicXML 3.1** export (`Tools > Export MusicXML (.musicxml)...`).
+- Updated notes across existing rows capture the rest of 0.24.0: **Zero Telemetry & Zero Tracking** (verified offline-first invariant), clean-room **NI Maschine 2/3 (`.mxgrp`/`.mxsnd`)** kit & MIDI pattern import (with Drum Synth & per-pad FX translation and one-click track drop), **Akai MPC (`.xpm`)** Drum & Keygroup import, **SoundFont 2 (`.sf2`)** multi-preset bank import in Torqwave Sampler, and four new Live Creative FX (**Frequency Shifter**, **Shimmer Delay**, **24-band Vocoder**, and **Spectral Freeze** — 36 built-in plug-ins total).
+- The other products' cells were not read again for it: they are as read on 2026-11-23.

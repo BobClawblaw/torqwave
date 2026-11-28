@@ -151,6 +151,11 @@ public:
         notes), its steps, a cell's bounds, the cell under a point ({-1, -1}: none) and the note in
         a cell (-1: none). */
     bool showingDrums() const noexcept                             { return shown.has_value() && shown->drums; }
+
+    /** Standard grand-staff notation view (treble + bass staves) and MusicXML 3.1 export. */
+    void setShowScore (bool on);
+    bool showingScore() const noexcept                             { return showScore && ! showingDrums(); }
+    juce::String exportMusicXml (const juce::File&) const;
     std::vector<DrumSound> drumRows() const;
     int stepCount() const;
     juce::Rectangle<float> cellBounds (int row, int step) const;
@@ -224,7 +229,7 @@ public:
     void mouseMagnify (const juce::MouseEvent&, float scaleFactor) override;
     bool keyPressed (const juce::KeyPress&) override;
 
-    static constexpr int keyboardWidth = 44, rowHeight = 12, topBar = 30, laneHeight = 72;
+    static constexpr int keyboardWidth = 44, scoreClefWidth = 68, rowHeight = 12, topBar = 30, laneHeight = 72;
     static constexpr int drumNamesWidth = 130, drumRowHeight = 18;
     static constexpr int minRowHeight = 6, maxRowHeight = 32, scrollHeight = 10;
 
@@ -239,7 +244,9 @@ private:
     juce::int64 straightStep() const noexcept;     // a step's frames without swing (the drum grid's with the grid off too)
     int drumDivision() const noexcept              { return gridDivision > 0 ? gridDivision : 4; }
     void paintRoll (juce::Graphics&, juce::Rectangle<int> area);
+    void paintScore (juce::Graphics&, juce::Rectangle<int> area);
     void paintDrums (juce::Graphics&, juce::Rectangle<int> area);
+    void exportMusicXmlDialog();
     void paintBars (juce::Graphics&, juce::Rectangle<int> area);   // a line and a number at each bar
     void drumMouseDown (const juce::MouseEvent&);
     void drumMapMenu (int row);
@@ -295,10 +302,12 @@ private:
     int heard = -1;                        // the pitch sounding through `audition`, or -1
 
     juce::ComboBox gridBox, laneBox, swingBox, channelBox;
-    juce::TextButton drumsButton { "Drums" }, toolsButton { "Tools" };
+    juce::TextButton drumsButton { "Drums" }, scoreButton { "Score" }, toolsButton { "Tools" };
     std::optional<NoteTools::Scale> chosenKey;
+    bool showScore = false;
     bool scaleLock = false;
     bool showGhostNotes = true;
+    std::unique_ptr<juce::FileChooser> exportChooser;
     juce::TextButton zoomOutButton { "-" }, zoomInButton { "+" }, fitButton { "Fit" };
     juce::ScrollBar timeScroll { false };
     void updateScroll();
