@@ -152,10 +152,10 @@ Rows where Torqwave 0.24.0 is yes and at most two of the 15 other products are y
 |---|---|---|---|
 | Built-in plug-ins | 32 | 36 | +Freq Shifter, Shimmer Delay, Vocoder, Freeze |
 | Matrix coverage | 47 | 48 | of 53 rows (+Notation editor & MusicXML 3.1) |
-| Library formats | 2 | 5 | Maschine .mxgrp/.mxsnd, MPC .xpm, SF2, SFZ, Battery |
-| Maschine verified | 0 | 160 | 160/160 real files, 50 patterns / 25,611 notes |
+| Library formats | 2 | 6 | Maschine, Massive X, MPC, SF2, SFZ, Battery |
+| NI files verified | 0 | 21,425 | 13,090 Maschine + 5,214 Battery + 3,121 Massive X (0 fail) |
 | Telemetry calls | 0 | 0 | Hard offline-first ban + automated source audit |
-| Automated checks | 2,782 | 2,818 | arm64 + Intel Rosetta, plus headless CI |
+| Automated checks | 2,782 | 2,823 | arm64 + Intel Rosetta, plus headless CI |
 
 ## The matrix
 

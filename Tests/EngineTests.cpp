@@ -958,6 +958,14 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (const auto list = valueOf ("--massivex-files"); list.isNotEmpty())
+    {
+        juce::StringArray files;
+        files.addLines (juce::File (list).loadFileAsString());
+        files.removeEmptyStrings();
+        return runMassiveXFiles (files);
+    }
+
     if (args.contains ("--024"))
     {
         runMaschineKitTests();

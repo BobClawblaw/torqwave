@@ -113,6 +113,20 @@ namespace Ai
         std::function<bool()> shouldStop;
 
         //==============================================================================
+        /** A UI panel / window action requested by Ask Torq (e.g. open Score / Notation, Mixer, Piano Roll). */
+        struct PanelAction
+        {
+            juce::String panel;   // canonical panel ID ("score", "pianoRoll", "mixer", "soundLibrary", "trackInstrument", ...)
+            bool show = true;
+        };
+
+        /** Panel/window actions to execute when the plan is applied (not part of the audio undo step). */
+        const std::vector<PanelAction>& getPanelActions() const noexcept  { return panelActions; }
+
+        /** Resolves a friendly panel name ("score", "notation", "piano roll", "mixer", etc.) to a canonical
+            panel key + human title; returns empty strings if unknown. */
+        static std::pair<juce::String, juce::String> resolvePanelName (const juce::String& name);
+
         /** The plan so far: one line for each change, in order. */
         const juce::StringArray& getSteps() const noexcept          { return steps; }
 
@@ -169,6 +183,7 @@ namespace Ai
         juce::var movePlugin (const juce::var&);
         juce::var removePlugin (const juce::var&);
         juce::var applyChain (const juce::var&);
+        juce::var openPanel (const juce::var&);
 
         /** [start, end) from the call's "start" and "end" in seconds, or the selection, or the whole
             file. Sets error for times outside the file or backwards. */
@@ -195,6 +210,7 @@ namespace Ai
         bool chainLoaded = false, chainEdited = false, markersEdited = false;
         std::shared_ptr<const juce::XmlElement> rendered;
         juce::StringArray steps;
+        std::vector<PanelAction> panelActions;
         std::unique_ptr<SessionTools> sessionTools;
         std::unique_ptr<SequenceTools> sequenceTools;
     };

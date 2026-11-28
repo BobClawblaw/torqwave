@@ -230,6 +230,7 @@ target_sources(Torqwave PRIVATE
     Source/MaschineKit.cpp
     Source/MpcKit.cpp
     Source/Sf2Import.cpp
+    Source/MassiveXImport.cpp
     Source/DrumKitImport.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
@@ -704,6 +705,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/MaschineKit.cpp
     Source/MpcKit.cpp
     Source/Sf2Import.cpp
+    Source/MassiveXImport.cpp
     Source/DrumKitImport.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp

@@ -21,7 +21,8 @@ ZERO TELEMETRY & ZERO TRACKING
 • Optional Ask Torq is strictly off by default with no server URL configured unless you point it at your own local model.
 
 OPEN YOUR EXISTING LIBRARIES (CLEAN-ROOM, SAMPLES STAY IN PLACE)
-• NI Maschine 2/3 (.mxgrp / .mxsnd) import into Basic Drums: resolves samples in place, translates internal Drum Synths onto Torqwave's drum engines, maps per-pad & bus FX (EQ, Filter, Saturator, Transient Shaper, Compressor, Bitcrusher, Reverb/Delay sends), exports embedded 960 PPQN patterns to .mid, and drops patterns straight onto the track in one click. Verified on 160/160 real library files (50 patterns, 25,611 MIDI notes, 0 missing).
+• NI Maschine 2/3 (.mxgrp / .mxsnd) import into Basic Drums: resolves samples in place, translates internal Drum Synths onto Torqwave's drum engines, maps per-pad & bus FX, exports embedded 960 PPQN patterns to .mid, and drops patterns straight onto the track in one click. Verified on 13,090/13,090 real local files (6,154 patterns, 2.49M MIDI notes, 0 missing) alongside 5,214/5,214 Battery 4 kits.
+• NI Massive X (.nksf) clean-room patch import into Torqwave Synth (oscillators, warp modes, FM, filters, envelopes, Performers -> 16-node MSEG curves, mod routes, macros & FX; reads user-owned local .mxwt wavetables in place when installed, or Torqwave's own wavetables otherwise — zero NI assets bundled). Verified on 3,121/3,121 real local presets.
 • Akai MPC (.xpm) Drum & Keygroup import into Basic Drums and Torqwave Sampler (velocity layers, PadNoteMap/PadGroupMap choke groups, filter, envelope, slice start, reverse).
 • SoundFont 2 (.sf2) RIFF bank import in Torqwave Sampler with a built-in multi-preset bank picker.
 
@@ -66,9 +67,9 @@ https://github.com/BobClawblaw/torqwave/releases/tag/v0.24.0
 
 ```text
 Open your existing libraries without lock-in:
-• NI Maschine .mxgrp/.mxsnd (Drum Synths, pad FX & 1-click MIDI pattern drop — verified on 160/160 real files)
-• Akai MPC .xpm Drum & Keygroup kits
-• SoundFont 2 (.sf2) multi-preset banks + SFZ & Battery 4
+• NI Maschine (13,090/13,090) & Battery 4 (5,214/5,214) kits
+• NI Massive X .nksf patches -> Torqwave Synth (3,121/3,121)
+• Akai MPC .xpm Drum & Keygroup kits + SoundFont 2 (.sf2) & SFZ
 ```
 
 **Post 3 — attach `x/04-against-the-daws-1.png` & `x/05-against-the-daws-2.png`:**
@@ -107,7 +108,7 @@ https://bobclawblaw.github.io/torqwave/
 Torqwave 0.24.0 is out: a free, open-source audio editor and DAW in one app for macOS, Windows and Linux — with ZERO telemetry, ZERO tracking, and no account required.
 
 New in 0.24.0:
-• NI Maschine 2/3 (.mxgrp/.mxsnd) clean-room kit import: samples stay in place, Drum Synths & per-pad FX translate automatically, and embedded 960 PPQN patterns export to MIDI or drop straight onto your track in 1 click
+• NI Maschine 2/3 (.mxgrp/.mxsnd) & Massive X (.nksf) clean-room import (verified on 21,425/21,425 local NI files including Battery 4 — zero NI assets bundled)
 • Akai MPC (.xpm) Drum & Keygroup import + SoundFont 2 (.sf2) multi-preset banks in Torqwave Sampler
 • 4 new Live Creative FX (36 built-in plug-ins): Hilbert SSB Frequency Shifter, Shimmer Delay, 24-band Vocoder & STFT Spectral Freeze
 • Dedicated Grand-Staff Score / Notation window (Option-S) + MusicXML 3.1 export (48 of 53 comparison matrix rows)
@@ -123,13 +124,13 @@ New in 0.24.0:
 For `x/01-release-hero.png`:
 
 ```alt
-Dark studio release graphic for Torqwave 0.24.0 with white and orange TORQWAVE wordmark, four summary pills (36 Built-In FX and Instruments, 48/53 Matrix Rows +1, CLAP 1.2/VST3/AU/LV2, 2,818 Verified Checks), and six feature cards: Zero Telemetry and Tracking, Maschine Kits and MIDI Drop, Akai MPC and SoundFont 2, 4 New Live Creative FX, Grand-Staff Notation, and One-Click Instrument UX.
+Dark studio release graphic for Torqwave 0.24.0 with white and orange TORQWAVE wordmark, four summary pills (36 Built-In FX and Instruments, 48/53 Matrix Rows +1, CLAP 1.2/VST3/AU/LV2, 2,823 Verified Checks), and six feature cards: Zero Telemetry and Tracking, Maschine and Massive X, Akai MPC and SoundFont 2, 4 New Live Creative FX, Grand-Staff Notation, and One-Click Instrument UX.
 ```
 
 For `x/02-release-by-the-numbers.png`:
 
 ```alt
-Dark studio chart titled "Torqwave 0.24.0: what it adds over 0.23.0". Six metric cards: 36 built-in plug-ins (+4), 48 matrix coverage rows of 53 (+1), 5 library formats (+3), 160 Maschine files verified (+160), 0 telemetry calls, and 2,818 automated checks (+36), beside a highlights list of 0.24.0 additions.
+Dark studio chart titled "Torqwave 0.24.0: what it adds over 0.23.0". Six metric cards: 36 built-in plug-ins (+4), 48 matrix coverage rows of 53 (+1), 6 library formats (+4), 21,425 NI files verified (+21,425), 0 telemetry calls, and 2,823 automated checks (+41), beside a highlights list of 0.24.0 additions.
 ```
 
 For `x/03-where-torqwave-stands.png`:

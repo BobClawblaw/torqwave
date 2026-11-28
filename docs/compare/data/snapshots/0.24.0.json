@@ -23,15 +23,15 @@
   {
    "label": "Library formats",
    "prev": 2,
-   "now": 5,
-   "note": "Maschine .mxgrp/.mxsnd, MPC .xpm, SF2, SFZ, Battery",
+   "now": 6,
+   "note": "Maschine, Massive X, MPC, SF2, SFZ, Battery",
    "source": "CHANGELOG.md"
   },
   {
-   "label": "Maschine verified",
+   "label": "NI files verified",
    "prev": 0,
-   "now": 160,
-   "note": "160/160 real files, 50 patterns / 25,611 notes",
+   "now": 21425,
+   "note": "13,090 Maschine + 5,214 Battery + 3,121 Massive X (0 fail)",
    "source": "CHANGELOG.md"
   },
   {
@@ -44,18 +44,18 @@
   {
    "label": "Automated checks",
    "prev": 2782,
-   "now": 2818,
+   "now": 2823,
    "note": "arm64 + Intel Rosetta, plus headless CI",
    "source": "CHANGELOG.md"
   }
  ],
  "release_firsts": [
   "Zero Telemetry & Tracking guarantee (verified offline-first, no account)",
-  "NI Maschine .mxgrp/.mxsnd clean-room kit, Drum Synth, FX & 1-click MIDI drop",
+  "NI Maschine (13,090/13,090) & Massive X (3,121/3,121) clean-room import",
   "Akai MPC .xpm Drum & Keygroup import + SoundFont 2 (.sf2) multi-preset banks",
   "4 new live Creative FX: Frequency Shifter, Shimmer Delay, Vocoder & Spectral Freeze",
-  "Grand-Staff Notation (Score) View + MusicXML 3.1 export (48/53 matrix rows)",
-  "One-click Instrument Track layout across Header, Inspector, Mixer & Option-I"
+  "Dedicated Grand-Staff Score / Notation window (Option-S) + MusicXML 3.1 (48/53 rows)",
+  "One-click Instrument Track UX (Option-I), clean Window menu & Ask Torq open_panel"
  ],
  "products": {
   "torqwave": {
@@ -6286,8 +6286,8 @@
    "body": "100% offline-first by hard rule & audit \u2014 no account, no beacons, no tracking"
   },
   {
-   "title": "Maschine Kits & MIDI Drop",
-   "body": "Clean-room .mxgrp/.mxsnd import, Drum Synths, pad FX & 1-click track pattern drop"
+   "title": "Maschine & Massive X",
+   "body": "Clean-room .mxgrp/.mxsnd kits + Massive X .nksf synth import (21,425/21,425 verified)"
   },
   {
    "title": "Akai MPC & SoundFont 2",

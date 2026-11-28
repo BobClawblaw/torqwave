@@ -542,7 +542,14 @@ namespace
         for (auto& t : *tools.getArray())
             named += t["type"] == juce::var ("function") && t["function"]["name"].toString().isNotEmpty() && t["function"]["parameters"].isObject() ? 1 : 0;
 
-        check (tools.size() == 26 && named == tools.size(), "AI tools: 26 tools, each a function with parameters");
+        check (tools.size() == 27 && named == tools.size(), "AI tools: 27 tools, each a function with parameters");
+
+        // open_panel resolves friendly names (Score / Notation, Piano Roll, Mixer, Track Instrument) and rejects unknown ones
+        const auto openScore = call ("open_panel", R"({"panel": "score / notation"})");
+        const auto openBad   = call ("open_panel", R"({"panel": "nonexistent_panel"})");
+        check ((bool) openScore["ok"] && openScore["panel"] == juce::var ("score")
+                   && ! (bool) openBad["ok"] && w.getPanelActions().size() == 1 && w.getPanelActions()[0].panel == "score" && w.getPanelActions()[0].show,
+               "AI tools: open_panel resolves Score / Notation cleanly and rejects unknown panel names");
     }
 
     void testChannelSteps()
@@ -1029,7 +1036,7 @@ namespace
         for (auto& tool : *tools.getArray())
             names.add (tool["function"]["name"].toString());
 
-        check (w.isSession() && names.size() == 49 && names.contains ("decrypt_clip") && names.contains ("table_from_clip") && names.contains ("sampler_from_clip") && names.contains ("set_sampler") && names.contains ("find_sequence_presets") && names.contains ("add_sequence_preset") && names.contains ("add_kit") && names.contains ("list_drum_maps") && names.contains ("set_drum_map") && names.contains ("remap_clip_notes") && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("fit_tempo_to_hits") && names.contains ("store_scene") && names.contains ("recall_scene") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
+        check (w.isSession() && names.size() == 50 && names.contains ("open_panel") && names.contains ("decrypt_clip") && names.contains ("table_from_clip") && names.contains ("sampler_from_clip") && names.contains ("set_sampler") && names.contains ("find_sequence_presets") && names.contains ("add_sequence_preset") && names.contains ("add_kit") && names.contains ("list_drum_maps") && names.contains ("set_drum_map") && names.contains ("remap_clip_notes") && names.contains ("get_session") && names.contains ("set_clip_effects") && names.contains ("fit_tempo_to_hits") && names.contains ("store_scene") && names.contains ("recall_scene") && names.contains ("comp_takes") && names.contains ("move_section") && names.contains ("set_automation") && names.contains ("add_track_effect") && names.contains ("add_note_clip") && names.contains ("set_instrument") && names.contains ("list_instrument_presets") && names.contains ("list_plugins") && ! names.contains ("get_state")
                    && w.systemMessage().contains ("multitrack session"),
                "Ask Torq sessions: a session's workspace offers the session tools and the plug-in look tools, and says it is a session");
 
@@ -2354,7 +2361,7 @@ namespace
                    && log.contains ("2. Add the kit \"Pulse Engine\" at bar 5: a folder with 2 tracks (Iron Kick, Slow Reese), 4 bars")
                    && log.contains ("Instruments are loaded once the plan is applied; that isn't part of the undo step.") && ! log.contains ("applied as one undo step"),
                "Ask Torq: asked by a made-up model for a factory patch and a kit, the window shows both plan steps and says the instruments load outside the undo step");
-        check (requests.size() == 3 && tools.size() == Ai::SessionTools::toolDefinitions().size() + 2 && tools.contains ("find_sequence_presets") && tools.contains ("add_sequence_preset")
+        check (requests.size() == 3 && tools.size() == Ai::SessionTools::toolDefinitions().size() + 3 && tools.contains ("open_panel") && tools.contains ("find_sequence_presets") && tools.contains ("add_sequence_preset")
                    && tools.contains ("add_kit") && tools.contains ("list_drum_maps") && tools.contains ("set_drum_map") && tools.contains ("remap_clip_notes")
                    && body["messages"][0]["content"].toString().contains ("find_sequence_presets") && body["messages"][0]["content"].toString().contains ("remap_clip_notes")
                    && body["messages"][0]["content"].toString().contains ("list_instrument_presets (with category and search"),
@@ -2529,7 +2536,7 @@ namespace
                 names.add (t["function"]["name"].toString());
 
         const auto system = w.systemMessage();
-        check (w.isSequence() && names == juce::StringArray { "get_sequence", "write_sequence", "suggest_for_sequence", "list_plugins", "describe_plugin" }
+        check (w.isSequence() && names == juce::StringArray { "get_sequence", "write_sequence", "suggest_for_sequence", "list_plugins", "describe_plugin", "open_panel" }
                    && system.contains ("\"Night Bass\" open: a Bass part") && system.contains ("in A minor") && system.contains ("Torqwave Synth (A simple subtractive synth)")
                    && system.contains ("96 BPM") && system.contains ("session's tempo is 128 BPM") && system.contains ("the session is in E minor"),
                "Ask Torq sequences: five tools (" + names.joinIntoString (", ") + "), and the system message gives the part's role, key, instrument, the tempos and the session's key");

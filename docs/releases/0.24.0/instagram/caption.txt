@@ -1,7 +1,7 @@
 Torqwave 0.24.0 is out: a free, open-source audio editor and DAW in one app for macOS, Windows and Linux — with ZERO telemetry, ZERO tracking, and no account required.
 
 New in 0.24.0:
-• NI Maschine 2/3 (.mxgrp/.mxsnd) clean-room kit import: samples stay in place, Drum Synths & per-pad FX translate automatically, and embedded 960 PPQN patterns export to MIDI or drop straight onto your track in 1 click
+• NI Maschine 2/3 (.mxgrp/.mxsnd) & Massive X (.nksf) clean-room import (verified on 21,425/21,425 local NI files including Battery 4 — zero NI assets bundled)
 • Akai MPC (.xpm) Drum & Keygroup import + SoundFont 2 (.sf2) multi-preset banks in Torqwave Sampler
 • 4 new Live Creative FX (36 built-in plug-ins): Hilbert SSB Frequency Shifter, Shimmer Delay, 24-band Vocoder & STFT Spectral Freeze
 • Dedicated Grand-Staff Score / Notation window (Option-S) + MusicXML 3.1 export (48 of 53 comparison matrix rows)

@@ -9,6 +9,7 @@
 #include "../Source/MidiInput.h"
 #include "../Source/AiAssistant.h"
 #include "../Source/Theme.h"
+#include "../Source/MassiveXImport.h"
 #include "TestUtils.h"
 #include <iostream>
 
@@ -385,6 +386,182 @@ namespace
         check (! defaults.enabled && ! defaults.hearClips && defaults.serverUrl.isEmpty() && ! defaults.isOn(),
                "0.24 zero telemetry: optional Ask Torq defaults to disabled, no server URL, and hearClips off");
     }
+
+    void testMassiveXImport()
+    {
+        // Build a synthetic, self-contained RIFF/NIKS + MessagePack + RFC-1950 zlib .nksf in memory
+        auto mpStr = [] (std::vector<uint8_t>& b, const std::string& s)
+        {
+            if (s.size() <= 31) { b.push_back ((uint8_t) (0xa0 | s.size())); }
+            else if (s.size() <= 255) { b.push_back (0xd9); b.push_back ((uint8_t) s.size()); }
+            else { b.push_back (0xda); b.push_back ((uint8_t) (s.size() >> 8)); b.push_back ((uint8_t) (s.size() & 0xff)); }
+            b.insert (b.end(), s.begin(), s.end());
+        };
+        auto mpMap = [] (std::vector<uint8_t>& b, size_t n)
+        {
+            if (n <= 15) b.push_back ((uint8_t) (0x80 | n));
+            else { b.push_back (0xde); b.push_back ((uint8_t) (n >> 8)); b.push_back ((uint8_t) (n & 0xff)); }
+        };
+        auto mpDouble = [] (std::vector<uint8_t>& b, double v)
+        {
+            b.push_back (0xcb);
+            uint64_t bits = 0;
+            std::memcpy (&bits, &v, 8);
+            for (int i = 7; i >= 0; --i) b.push_back ((uint8_t) ((bits >> (i * 8)) & 0xff));
+        };
+        auto mpInt32 = [] (std::vector<uint8_t>& b, int32_t v)
+        {
+            b.push_back (0xd2);
+            const uint32_t u = (uint32_t) v;
+            b.push_back ((uint8_t) ((u >> 24) & 0xff)); b.push_back ((uint8_t) ((u >> 16) & 0xff));
+            b.push_back ((uint8_t) ((u >> 8) & 0xff));  b.push_back ((uint8_t) (u & 0xff));
+        };
+        auto mpBool = [] (std::vector<uint8_t>& b, bool v) { b.push_back (v ? 0xc3 : 0xc2); };
+
+        // Minimal RFC-1950 zlib wrapper using uncompressed deflate stored blocks + Adler-32
+        auto wrapZlibStored = [] (const std::vector<uint8_t>& src)
+        {
+            std::vector<uint8_t> out { 0x78, 0x01 };
+            size_t pos = 0;
+            while (pos < src.size() || pos == 0)
+            {
+                const size_t chunk = std::min<size_t> (65535, src.size() - pos);
+                const bool last = (pos + chunk >= src.size());
+                out.push_back (last ? 0x01 : 0x00);
+                const uint16_t len = (uint16_t) chunk;
+                const uint16_t nlen = (uint16_t) ~len;
+                out.push_back ((uint8_t) (len & 0xff));  out.push_back ((uint8_t) (len >> 8));
+                out.push_back ((uint8_t) (nlen & 0xff)); out.push_back ((uint8_t) (nlen >> 8));
+                out.insert (out.end(), src.begin() + (ptrdiff_t) pos, src.begin() + (ptrdiff_t) (pos + chunk));
+                pos += chunk;
+                if (last) break;
+            }
+            uint32_t s1 = 1, s2 = 0;
+            for (auto c : src) { s1 = (s1 + c) % 65521; s2 = (s2 + s1) % 65521; }
+            const uint32_t adler = (s2 << 16) | s1;
+            out.push_back ((uint8_t) ((adler >> 24) & 0xff)); out.push_back ((uint8_t) ((adler >> 16) & 0xff));
+            out.push_back ((uint8_t) ((adler >> 8) & 0xff));  out.push_back ((uint8_t) (adler & 0xff));
+            return out;
+        };
+
+        auto buildNksf = [&] (uint32_t vstMagic, const std::string& pluginName)
+        {
+            std::vector<uint8_t> nisi { 1, 0, 0, 0 };
+            mpMap (nisi, 3);
+            mpStr (nisi, "name");   mpStr (nisi, "Synthetic Acid Bass");
+            mpStr (nisi, "author"); mpStr (nisi, "Clean Room Test");
+            mpStr (nisi, "characters"); nisi.push_back (0x92); mpStr (nisi, "Acid"); mpStr (nisi, "Bass");
+
+            std::vector<uint8_t> plid { 1, 0, 0, 0 };
+            mpMap (plid, 2);
+            mpStr (plid, "VST.magic"); plid.push_back (0xce);
+            plid.push_back ((uint8_t) ((vstMagic >> 24) & 0xff)); plid.push_back ((uint8_t) ((vstMagic >> 16) & 0xff));
+            plid.push_back ((uint8_t) ((vstMagic >> 8) & 0xff));  plid.push_back ((uint8_t) (vstMagic & 0xff));
+            mpStr (plid, "pluginName"); mpStr (plid, pluginName);
+
+            std::vector<uint8_t> tree;
+            const std::string u1 = "root/engine/unit1/";
+            mpStr (tree, "strings"); tree.push_back (8);
+            mpMap (tree, 8);
+            mpStr (tree, u1 + "audioPluginSlots/MainOsc1Slot/audioPlugins/Wavetable/Mode/selectedEntryName"); mpStr (tree, "Bend");
+            mpStr (tree, u1 + "audioPluginSlots/FilterSlot/selectedPlugin"); mpStr (tree, "BlueMonarkPlugin");
+            mpStr (tree, u1 + "audioPluginSlots/FilterSlot/audioPlugins/BlueMonarkPlugin/Type/selectedEntryName"); mpStr (tree, "LP4");
+            mpStr (tree, u1 + "modulationPluginSlots/Mod2Slot/selectedPlugin"); mpStr (tree, "ModEnvelope");
+            mpStr (tree, u1 + "audioPluginSlots/FilterSlot/audioPlugins/BlueMonarkPlugin/Cutoff/ModTarget1/modulationTargetNodeState/modulationSource"); mpStr (tree, "engine/unit1/Mod2Slot/ModEnvelope/Out");
+            mpStr (tree, "root/engine/global/macros/macro1/macroName/value"); mpStr (tree, "Cutoff");
+            mpStr (tree, "root/engine/global/macros/macro1/macroAssignment/oneToOneMappingPath"); mpStr (tree, "engine/unit1/FilterSlot/BlueMonarkPlugin/Cutoff/Knob");
+            mpStr (tree, u1 + "audioPluginSlots/UnitFX1Slot/selectedPlugin"); mpStr (tree, "EcoReverb");
+
+            mpStr (tree, "doubles"); tree.push_back (9);
+            mpMap (tree, 9);
+            mpStr (tree, u1 + "audioPluginSlots/MainOsc1Slot/audioPlugins/Wavetable/Level/Knob/parameterState/normalizedValue"); mpDouble (tree, 0.9);
+            mpStr (tree, u1 + "audioPluginSlots/MainOsc1Slot/audioPlugins/Wavetable/Pos/Knob/parameterState/normalizedValue"); mpDouble (tree, 0.45);
+            mpStr (tree, u1 + "audioPluginSlots/FilterSlot/audioPlugins/BlueMonarkPlugin/Cutoff/Knob/parameterState/normalizedValue"); mpDouble (tree, 0.35);
+            mpStr (tree, u1 + "audioPluginSlots/FilterSlot/audioPlugins/BlueMonarkPlugin/Res/Knob/parameterState/normalizedValue"); mpDouble (tree, 0.55);
+            mpStr (tree, u1 + "audioPluginSlots/FilterSlot/audioPlugins/BlueMonarkPlugin/Cutoff/ModTarget1/modulationAmountState/normalizedValue"); mpDouble (tree, 0.85);
+            mpStr (tree, u1 + "modulationPluginSlots/Mod1AmpEnvSlot/modulationPlugins/AmpEnvelope/Attack/Knob/parameterState/normalizedValue"); mpDouble (tree, 0.02);
+            mpStr (tree, u1 + "modulationPluginSlots/Mod1AmpEnvSlot/modulationPlugins/AmpEnvelope/Decay/Knob/parameterState/normalizedValue"); mpDouble (tree, 0.30);
+            mpStr (tree, u1 + "modulationPluginSlots/Mod1AmpEnvSlot/modulationPlugins/AmpEnvelope/Sustain/Knob/parameterState/normalizedValue"); mpDouble (tree, 0.50);
+            mpStr (tree, u1 + "audioPluginSlots/UnitFX1Slot/audioPlugins/EcoReverb/DW/Knob/parameterState/normalizedValue"); mpDouble (tree, 0.30);
+
+            mpStr (tree, "ints"); tree.push_back (2);
+            mpMap (tree, 2);
+            mpStr (tree, u1 + "audioPluginSlots/MainOsc1Slot/audioPlugins/Wavetable/Pitch/TuningKnob/tuningState/rawValue"); mpInt32 (tree, -12000);
+            mpStr (tree, u1 + "genericAdapters/VoicePage/UnisonVoices/UnisonVoices_1/indexState/value"); mpInt32 (tree, 2);
+
+            mpStr (tree, "bools"); tree.push_back (1);
+            mpMap (tree, 1);
+            mpStr (tree, u1 + "audioPluginSlots/FilterSlot/audioPlugins/BlueMonarkPlugin/Cutoff/ModTarget1/modulationTargetNodeState/isConnected"); mpBool (tree, true);
+
+            const auto z = wrapZlibStored (tree);
+            std::vector<uint8_t> pchk (20, 0);
+            pchk[0] = 1; pchk[4] = 2; pchk[8] = 2;
+            pchk.insert (pchk.end(), z.begin(), z.end());
+
+            std::vector<uint8_t> riff { 'R', 'I', 'F', 'F', 0, 0, 0, 0, 'N', 'I', 'K', 'S' };
+            auto appendChunk = [&] (const char id[4], const std::vector<uint8_t>& body)
+            {
+                riff.insert (riff.end(), id, id + 4);
+                const uint32_t sz = (uint32_t) body.size();
+                riff.push_back ((uint8_t) (sz & 0xff)); riff.push_back ((uint8_t) ((sz >> 8) & 0xff));
+                riff.push_back ((uint8_t) ((sz >> 16) & 0xff)); riff.push_back ((uint8_t) ((sz >> 24) & 0xff));
+                riff.insert (riff.end(), body.begin(), body.end());
+                if (sz & 1u) riff.push_back (0);
+            };
+            appendChunk ("NISI", nisi);
+            appendChunk ("PLID", plid);
+            appendChunk ("PCHK", pchk);
+            const uint32_t rsz = (uint32_t) (riff.size() - 8);
+            riff[4] = (uint8_t) (rsz & 0xff); riff[5] = (uint8_t) ((rsz >> 8) & 0xff);
+            riff[6] = (uint8_t) ((rsz >> 16) & 0xff); riff[7] = (uint8_t) ((rsz >> 24) & 0xff);
+            return riff;
+        };
+
+        const auto valid = buildNksf (0x4e692448u, "Massive X");
+        const auto res = MassiveXImport::importMemory (valid.data(), valid.size(), juce::File());
+        check (res.ok && res.info.name == "Synthetic Acid Bass" && res.info.author == "Clean Room Test"
+                   && res.oscsMapped >= 1 && res.modsMapped >= 2 && res.macrosMapped == 1 && res.fxMapped >= 1
+                   && res.macroNames[0] == "Cutoff"
+                   && std::abs (res.values.at ("osc1Pitch") - (-12.0)) < 0.01
+                   && std::abs (res.values.at ("osc1Unison") - 3.0) < 0.01
+                   && res.values.at ("fxReverbOn") > 0.5,
+               "0.24 massive x: clean-room synthetic .nksf imports osc/pitch/unison/filter/mods/macros/FX cleanly");
+
+        // Reject other instruments' .nksf files cleanly
+        const auto wrongPlugin = buildNksf (0x12345678u, "Other Synth");
+        check (! MassiveXImport::importMemory (wrongPlugin.data(), wrongPlugin.size()).ok,
+               "0.24 massive x: rejects non-Massive-X .nksf presets cleanly");
+
+        // Truncated fuzz safety
+        bool fuzzSafe = true;
+        for (size_t cut = 0; cut < valid.size(); cut += std::max<size_t> (1, valid.size() / 24))
+        {
+            const auto r = MassiveXImport::importMemory (valid.data(), cut);
+            if (r.ok) { fuzzSafe = false; break; }
+        }
+        check (fuzzSafe, "0.24 massive x: truncated .nksf slices are rejected without crashing");
+
+        // Apply onto live WaveSynth and render finite non-silent audio
+        BuiltInEffects::BasicSynthProcessor synth;
+        synth.prepareToPlay (48000.0, 512);
+        const bool applied = MassiveXImport::applyToSynth (synth, res);
+        juce::AudioBuffer<float> buf (2, 2048);
+        buf.clear();
+        juce::MidiBuffer midi;
+        midi.addEvent (juce::MidiMessage::noteOn (1, 48, 0.85f), 0);
+        synth.processBlock (buf, midi);
+        float peak = 0.0f;
+        bool finite = true;
+        for (int ch = 0; ch < 2; ++ch)
+            for (int i = 0; i < buf.getNumSamples(); ++i)
+            {
+                const float v = buf.getSample (ch, i);
+                if (! std::isfinite (v)) finite = false;
+                peak = std::max (peak, std::abs (v));
+            }
+        check (applied && finite && peak > 0.01f && synth.getPatchName() == "Synthetic Acid Bass",
+               "0.24 massive x: applied patch renders clean finite audio in Torqwave Synth (peak " + juce::String (peak, 3) + ")");
+    }
 }
 
 void runRelease024Tests()
@@ -396,6 +573,37 @@ void runRelease024Tests()
     testCreativeFx024();
     testNotationAndMusicXml();
     testZeroTelemetryGuarantee();
+    testMassiveXImport();
+}
+
+int runMassiveXFiles (const juce::StringArray& files)
+{
+    int passed = 0, failed = 0, totalOsc = 0, totalMods = 0, totalMacros = 0, totalFx = 0, totalLocalWt = 0;
+    const auto wtDir = MassiveXImport::defaultLocalWavetablesFolder();
+
+    for (const auto& path : files)
+    {
+        const juce::File f (path);
+        const auto res = MassiveXImport::importFile (f, wtDir);
+        if (! res.ok)
+        {
+            ++failed;
+            if (failed <= 25)
+                std::cout << "FAIL  " << f.getFileName() << ": " << res.error << std::endl;
+            continue;
+        }
+        ++passed;
+        totalOsc += res.oscsMapped;
+        totalMods += res.modsMapped;
+        totalMacros += res.macrosMapped;
+        totalFx += res.fxMapped;
+        totalLocalWt += res.localWavetablesLoaded;
+    }
+
+    std::cout << "Massive X files verified: " << passed << "/" << files.size() << " passed (" << failed << " failed), "
+              << totalOsc << " oscs, " << totalMods << " mod routes, " << totalMacros << " macros, "
+              << totalFx << " FX, " << totalLocalWt << " local .mxwt wavetables loaded in place." << std::endl;
+    return failed == 0 ? 0 : 1;
 }
 
 void saveRelease024Pictures (const juce::File& folder)

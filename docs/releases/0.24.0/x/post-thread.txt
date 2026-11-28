@@ -9,9 +9,9 @@ https://github.com/BobClawblaw/torqwave/releases/tag/v0.24.0
 --- POST 2 / 5 ---
 
 Open your existing libraries without lock-in:
-• NI Maschine .mxgrp/.mxsnd (Drum Synths, pad FX & 1-click MIDI pattern drop — verified on 160/160 real files)
-• Akai MPC .xpm Drum & Keygroup kits
-• SoundFont 2 (.sf2) multi-preset banks + SFZ & Battery 4
+• NI Maschine (13,090/13,090) & Battery 4 (5,214/5,214) kits
+• NI Massive X .nksf patches -> Torqwave Synth (3,121/3,121)
+• Akai MPC .xpm Drum & Keygroup kits + SoundFont 2 (.sf2) & SFZ
 
 --- POST 3 / 5 ---
 

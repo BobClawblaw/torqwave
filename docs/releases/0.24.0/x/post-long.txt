@@ -11,7 +11,8 @@ ZERO TELEMETRY & ZERO TRACKING
 • Optional Ask Torq is strictly off by default with no server URL configured unless you point it at your own local model.
 
 OPEN YOUR EXISTING LIBRARIES (CLEAN-ROOM, SAMPLES STAY IN PLACE)
-• NI Maschine 2/3 (.mxgrp / .mxsnd) import into Basic Drums: resolves samples in place, translates internal Drum Synths onto Torqwave's drum engines, maps per-pad & bus FX (EQ, Filter, Saturator, Transient Shaper, Compressor, Bitcrusher, Reverb/Delay sends), exports embedded 960 PPQN patterns to .mid, and drops patterns straight onto the track in one click. Verified on 160/160 real library files (50 patterns, 25,611 MIDI notes, 0 missing).
+• NI Maschine 2/3 (.mxgrp / .mxsnd) import into Basic Drums: resolves samples in place, translates internal Drum Synths onto Torqwave's drum engines, maps per-pad & bus FX, exports embedded 960 PPQN patterns to .mid, and drops patterns straight onto the track in one click. Verified on 13,090/13,090 real local files (6,154 patterns, 2.49M MIDI notes, 0 missing) alongside 5,214/5,214 Battery 4 kits.
+• NI Massive X (.nksf) clean-room patch import into Torqwave Synth (oscillators, warp modes, FM, filters, envelopes, Performers -> 16-node MSEG curves, mod routes, macros & FX; reads user-owned local .mxwt wavetables in place when installed, or Torqwave's own wavetables otherwise — zero NI assets bundled). Verified on 3,121/3,121 real local presets.
 • Akai MPC (.xpm) Drum & Keygroup import into Basic Drums and Torqwave Sampler (velocity layers, PadNoteMap/PadGroupMap choke groups, filter, envelope, slice start, reverse).
 • SoundFont 2 (.sf2) RIFF bank import in Torqwave Sampler with a built-in multi-preset bank picker.
 

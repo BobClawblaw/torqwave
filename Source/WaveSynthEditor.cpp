@@ -1,4 +1,5 @@
 #include "WaveSynthEditor.h"
+#include "MassiveXImport.h"
 #include "SignalConsoleView.h"
 #include "DecryptView.h"
 #include "SoundDrops.h"
@@ -1225,7 +1226,7 @@ namespace
                 return;
             }
 
-            constexpr int decryptedIds = 2000000, renameId = 2900001, deleteId = 2900002, complexIds = 3000000;
+            constexpr int decryptedIds = 2000000, renameId = 2900001, deleteId = 2900002, importMassiveXId = 2900003, complexIds = 3000000;
 
             // A right-click on one of the user's own: its name and whether it stays.
             if (e.mods.isPopupMenu())
@@ -1282,6 +1283,8 @@ namespace
 
                 menu.addSubMenu ("Complex", complexMenu, true, nullptr, complexTicked);
                 menu.addSeparator();
+                menu.addItem (importMassiveXId, "Import Massive X Patch (.nksf)...");
+                menu.addSeparator();
             }
 
             for (auto& c : WaveSynth::patchCategories())
@@ -1331,6 +1334,7 @@ namespace
 
                 if (chosen == renameId)     { safe->askRename(); return; }
                 if (chosen == deleteId)     { safe->askDelete(); return; }
+                if (chosen == importMassiveXId) { safe->askImportMassiveX(); return; }
 
                 // A Complex patch: the arrows then go through those.
                 if (chosen > complexIds)
@@ -1380,7 +1384,26 @@ namespace
             if (onLoaded != nullptr) onLoaded();
         }
 
+        void askImportMassiveX()
+        {
+            const auto startDir = juce::File ("/Users/Shared/Massive X Factory Library/Presets").isDirectory()
+                                ? juce::File ("/Users/Shared/Massive X Factory Library/Presets")
+                                : juce::File::getSpecialLocation (juce::File::userHomeDirectory);
+            importChooser = std::make_unique<juce::FileChooser> ("Import Massive X Patch (.nksf)", startDir, "*.nksf");
+            juce::Component::SafePointer<PatchBrowser> safe (this);
+            importChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                                        [safe] (const juce::FileChooser& chooser)
+            {
+                if (safe == nullptr) return;
+                const auto chosen = chooser.getResult();
+                if (! chosen.existsAsFile()) return;
+                if (auto* ed = safe->findParentComponentOfClass<WaveSynthEditor>())
+                    ed->importMassiveXFile (chosen, true);
+            });
+        }
+
     private:
+        std::unique_ptr<juce::FileChooser> importChooser;
         int currentIndex() const
         {
             const auto& all = WaveSynth::factoryPatches();
@@ -2523,4 +2546,49 @@ DecryptedView* WaveSynthEditor::getDecryptedView() const
 DecryptView* WaveSynthEditor::getDecryptView() const
 {
     return content->decryptView.get();
+}
+
+bool WaveSynthEditor::isInterestedInFileDrag (const juce::StringArray& files)
+{
+    for (const auto& path : files)
+        if (juce::File (path).hasFileExtension (".nksf"))
+            return true;
+    return false;
+}
+
+void WaveSynthEditor::filesDropped (const juce::StringArray& files, int, int)
+{
+    for (const auto& path : files)
+    {
+        const juce::File f (path);
+        if (f.hasFileExtension (".nksf"))
+        {
+            importMassiveXFile (f, true);
+            return;
+        }
+    }
+}
+
+bool WaveSynthEditor::importMassiveXFile (const juce::File& file, bool showFeedback)
+{
+    const auto res = MassiveXImport::importFile (file);
+    if (! res.ok)
+    {
+        if (showFeedback)
+            juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon,
+                                                    "Import Massive X Patch", res.error);
+        return false;
+    }
+
+    MassiveXImport::applyToSynth (content->synth, res);
+    content->synth.setBrowsingFavourites (false);
+    content->synth.setBrowsingDecrypted (false);
+    content->synth.setBrowsingComplex (false);
+    refresh();
+    content->browser.repaint();
+
+    if (showFeedback)
+        juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::InfoIcon,
+                                                "Imported Massive X Patch", res.summary);
+    return true;
 }

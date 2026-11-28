@@ -15120,10 +15120,39 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
 {
     auto& doc = engine.document;
 
+    const auto applyPanels = [this, &w]
+    {
+        for (const auto& action : w.getPanelActions())
+        {
+            if (action.panel == "trackInstrument")
+            {
+                if (action.show)
+                    commands.invokeDirectly (cmdOpenTrackInstrument, true);
+            }
+            else if (action.panel == "soundLibrary")
+            {
+                const bool visible = soundLibrary != nullptr && soundLibrary->isVisible();
+                if (action.show != visible)
+                    commands.invokeDirectly (cmdShowSoundLibrary, true);
+            }
+            else if (Panels::all().contains (action.panel))
+            {
+                if (action.show)
+                    dock->show (action.panel);
+                else
+                    dock->hide (action.panel);
+            }
+        }
+    };
+
     if (w.isSequence())
     {
+        applyPanels();
         if (auto* sequencer = dynamic_cast<SequencerView*> (getPanel (Panels::sequencer)))
             return Ai::SequencerLink::applyPlan (*sequencer, w, request);
+
+        if (! w.getPanelActions().empty())
+            return {};
 
         return "The Sequencer isn't open, so the plan wasn't applied.";
     }
@@ -15132,6 +15161,8 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
     {
         if (engine.session.getState() != aiStartSession)
             return "The session changed while the plan was made, so it wasn't applied. Ask again.";
+
+        applyPanels();
 
         if (w.sessionChanged())
         {
@@ -15240,6 +15271,7 @@ juce::String MainComponent::applyAiPlan (Ai::Workspace& w, const juce::String& r
             engine.clearRack();
     }
 
+    applyPanels();
     return {};
 }
 

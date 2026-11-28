@@ -7,5 +7,8 @@
     Vocoder, Spectral Freeze, Grand-Staff Score / Notation window, and Zero Telemetry invariant. */
 void runRelease024Tests();
 
+/** Validates a list of real local Massive X (.nksf) preset files (returns 0 if all pass). */
+int runMassiveXFiles (const juce::StringArray& files);
+
 /** Renders @2x retina guide screenshots for 0.24.0 (guide-score.png) into <folder>. */
 void saveRelease024Pictures (const juce::File& folder);

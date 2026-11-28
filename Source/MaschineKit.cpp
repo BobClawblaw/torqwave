@@ -239,14 +239,20 @@ namespace
 
     bool isPrintableString (const uint8* d, size_t n) noexcept
     {
-        if (n == 0 || d[0] == ' ')
+        if (n == 0)
             return false;
 
+        bool hasNonSpace = false;
+
         for (size_t i = 0; i < n; ++i)
+        {
             if (d[i] < 0x20 || d[i] == 0x7f)
                 return false;
+            if (d[i] != ' ')
+                hasNonSpace = true;
+        }
 
-        return true;
+        return hasNonSpace;
     }
 
     //==============================================================================
@@ -1378,7 +1384,8 @@ juce::String read (const void* data, size_t size, Kit& kit)
     }
 
     // 2. Locate every Sound header (and in a .mxgrp, the Group entry right after Pad 16):
-    //    0x00 0x01 <len> <name> [oid0][oid1][oid2][oid3] 0x00 <17 bytes FloatParam> [oid4 == oid0 + 4]
+    //    Maschine 2.6+: 0x00 0x01 <len> <name> [oid0..oid3] 0x00 <17 bytes FloatParam> [oid4 == oid0 + 4]
+    //    Maschine 2.0-2.4:   0x01 <len> <name> [oid0..oid2] <17 zero bytes> [oid3 == oid0 + 3][oid4 == oid0 + 4]
     struct Entry
     {
         size_t namePos = 0;
@@ -1390,28 +1397,47 @@ juce::String read (const void* data, size_t size, Kit& kit)
 
     for (size_t p = 24; p + 32 < n && entries.size() < (size_t) mostPads + 8; ++p)
     {
-        if (d[p] == 0 && d[p + 1] == 1 && d[p + 2] >= 1 && d[p + 2] <= 64)
+        if (d[p] == 1 && d[p + 1] >= 1 && d[p + 1] <= 64)
         {
-            const size_t slen = d[p + 2];
+            const size_t slen = d[p + 1];
 
-            if (p + 3 + slen + 28 < n && isPrintableString (d + p + 3, slen))
+            if (p + 2 + slen + 28 < n && isPrintableString (d + p + 2, slen))
             {
-                size_t cur = p + 3 + slen;
-                int64_t v0 = 0, v1 = 0, v2 = 0, v3 = 0;
+                size_t cur = p + 2 + slen;
+                int64_t v0 = 0, v1 = 0, v2 = 0;
 
                 if (readPint (d, n, cur, v0) && v0 > 10
                     && readPint (d, n, cur, v1) && v1 == v0 + 1
-                    && readPint (d, n, cur, v2) && v2 == v0 + 2
-                    && readPint (d, n, cur, v3) && v3 == v0 + 3
-                    && cur + 18 < n && d[cur] == 0)
+                    && readPint (d, n, cur, v2) && v2 == v0 + 2)
                 {
-                    size_t checkNext = cur + 1 + 17;
-                    int64_t v4 = 0;
-
-                    if (readPint (d, n, checkNext, v4) && v4 == v0 + 4)
+                    // Variant A (Maschine 2.6+): 4 sequential IDs + 0x00 + 17 bytes + v0+4
+                    size_t curA = cur;
+                    int64_t v3 = 0, v4 = 0;
+                    if (d[p - 1] == 0
+                        && readPint (d, n, curA, v3) && v3 == v0 + 3
+                        && curA + 18 < n && d[curA] == 0)
                     {
-                        entries.push_back ({ p + 3, cur, juce::String::fromUTF8 ((const char*) (d + p + 3), (int) slen) });
-                        p = checkNext;
+                        size_t checkNext = curA + 1 + 17;
+                        if (readPint (d, n, checkNext, v4) && v4 == v0 + 4)
+                        {
+                            entries.push_back ({ p + 2, curA, juce::String::fromUTF8 ((const char*) (d + p + 2), (int) slen) });
+                            p = checkNext;
+                            continue;
+                        }
+                    }
+
+                    // Variant B (Maschine 2.0-2.4): 3 sequential IDs + 17-byte FloatParam + v0+3 + v0+4
+                    if (cur + 17 < n)
+                    {
+                        size_t checkNext = cur + 17;
+                        int64_t n3 = 0, n4 = 0;
+                        if (readPint (d, n, checkNext, n3) && n3 == v0 + 3
+                            && readPint (d, n, checkNext, n4) && n4 == v0 + 4)
+                        {
+                            entries.push_back ({ p + 2, cur, juce::String::fromUTF8 ((const char*) (d + p + 2), (int) slen) });
+                            p = checkNext;
+                            continue;
+                        }
                     }
                 }
             }

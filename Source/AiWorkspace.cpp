@@ -320,7 +320,9 @@ juce::var Workspace::toolDefinitions()
   { "name": "remove_plugin", "description": "Remove a slot from the chain.",
     "parameters": { "type": "object", "properties": { "slot": { "type": "integer" } }, "required": ["slot"] } },
   { "name": "apply_chain", "description": "Render a range through the chain's plug-ins into the audio, then empty the chain (as Apply Effects Rack does), so they aren't heard twice.",
-    "parameters": { "type": "object", "properties": { RANGE } } }
+    "parameters": { "type": "object", "properties": { RANGE } } },
+  { "name": "open_panel", "description": "Show or hide a Torqwave Window menu panel or window (score, piano_roll, mixer, track_inspector, effects_rack, keyboard, sequencer, sequence_library, idea_board, sound_library, files, levels, spectrum, phase, tonal_balance, statistics, video, pitch_editor, selection, clip_properties, clip_list, markers, undo_history, session_notes, or track_instrument).",
+    "parameters": { "type": "object", "properties": { "panel": { "type": "string" }, "show": { "type": "boolean" } }, "required": ["panel"] } }
 ])";
 
         juce::StringArray kinds;
@@ -376,7 +378,7 @@ juce::var Workspace::tools() const
 
     if (auto* file = fileTools.getArray())
         for (auto& t : *file)
-            if (const auto name = t["function"]["name"].toString(); name == "list_plugins" || name == "describe_plugin")
+            if (const auto name = t["function"]["name"].toString(); name == "list_plugins" || name == "describe_plugin" || name == "open_panel")
                 list.add (t);
 
     return juce::var (list);
@@ -521,6 +523,9 @@ juce::String Workspace::run (const juce::String& tool, const juce::String& argum
 
 juce::var Workspace::dispatch (const juce::String& tool, const juce::var& a)
 {
+    if (tool == "open_panel")
+        return openPanel (a);
+
     if (sequenceTools != nullptr)
     {
         if (const auto result = sequenceTools->run (tool, a))
@@ -576,6 +581,59 @@ juce::var Workspace::dispatch (const juce::String& tool, const juce::var& a)
     if (tool == "apply_chain")      return applyChain (a);
 
     return failure ("There is no tool called " + tool.quoted() + ".");
+}
+
+std::pair<juce::String, juce::String> Workspace::resolvePanelName (const juce::String& raw)
+{
+    auto k = raw.trim().toLowerCase().replaceCharacters ("/- ", "___");
+    while (k.contains ("__"))
+        k = k.replace ("__", "_");
+    k = k.trimCharactersAtStart ("_").trimCharactersAtEnd ("_");
+
+    if (k == "score" || k == "notation" || k == "score_notation" || k == "grand_staff")      return { "score", "Score / Notation" };
+    if (k == "piano_roll" || k == "pianoroll" || k == "note_editor")                         return { "pianoRoll", "Piano Roll" };
+    if (k == "mixer")                                                                         return { "mixer", "Mixer" };
+    if (k == "track_inspector" || k == "inspector")                                           return { "inspector", "Track Inspector" };
+    if (k == "effects_rack" || k == "rack" || k == "master_bus_effects")                      return { "rack", "Effects Rack" };
+    if (k == "keyboard" || k == "on_screen_keyboard" || k == "midi_keyboard")                 return { "keyboard", "On-Screen Keyboard" };
+    if (k == "sequencer")                                                                     return { "sequencer", "Sequencer" };
+    if (k == "sequence_library")                                                              return { "sequenceLibrary", "Sequence Library" };
+    if (k == "idea_board" || k == "ideaboard")                                                return { "ideaBoard", "Idea Board" };
+    if (k == "sound_library" || k == "soundlibrary")                                          return { "soundLibrary", "Sound Library" };
+    if (k == "files" || k == "file_list")                                                     return { "files", "Files" };
+    if (k == "levels" || k == "level_meter" || k == "meters")                                 return { "levels", "Levels" };
+    if (k == "spectrum" || k == "frequency_analysis" || k == "analyzer")                      return { "spectrum", "Frequency Analysis" };
+    if (k == "phase" || k == "phase_meter" || k == "goniometer")                              return { "phase", "Phase Meter" };
+    if (k == "tonal_balance" || k == "tonalbalance")                                          return { "tonalBalance", "Tonal Balance" };
+    if (k == "statistics" || k == "amplitude_statistics")                                     return { "statistics", "Amplitude Statistics" };
+    if (k == "video")                                                                         return { "video", "Video" };
+    if (k == "pitch_editor" || k == "pitch")                                                  return { "pitch", "Pitch Editor" };
+    if (k == "selection" || k == "selection_view")                                            return { "selection", "Selection/View" };
+    if (k == "clip_properties" || k == "clipproperties")                                      return { "clipProperties", "Clip Properties" };
+    if (k == "clip_list" || k == "cliplist")                                                  return { "clipList", "Clip List" };
+    if (k == "markers" || k == "marker_list")                                                 return { "markers", "Markers" };
+    if (k == "undo_history" || k == "history")                                                return { "history", "Undo History" };
+    if (k == "session_notes" || k == "notes")                                                 return { "notes", "Session Notes" };
+    if (k == "track_instrument" || k == "instrument" || k == "open_instrument")               return { "trackInstrument", "Track Instrument" };
+    return {};
+}
+
+juce::var Workspace::openPanel (const juce::var& a)
+{
+    const auto wanted = a["panel"].toString().trim();
+
+    if (wanted.isEmpty())
+        return failure ("Name the panel to open (for example: score, piano_roll, mixer, track_inspector, effects_rack, keyboard, sequencer, spectrum, or track_instrument).");
+
+    const auto [id, title] = resolvePanelName (wanted);
+
+    if (id.isEmpty())
+        return failure ("There is no Window panel called " + wanted.quoted() + ".");
+
+    const bool show = a.hasProperty ("show") ? (bool) a["show"] : true;
+    panelActions.push_back ({ id, show });
+    steps.add ((show ? "Show " : "Hide ") + title);
+    return object ({ { "ok", true }, { "panel", id }, { "title", title }, { "show", show } });
 }
 
 //==============================================================================

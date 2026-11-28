@@ -16,6 +16,7 @@ class DecryptedView;
     resized, so it stays sharp at any size and on any display. */
 class WaveSynthEditor final : public juce::AudioProcessorEditor,
                               public juce::DragAndDropContainer,
+                              public juce::FileDragAndDropTarget,
                               private juce::Timer
 {
 public:
@@ -26,6 +27,9 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
+    bool isInterestedInFileDrag (const juce::StringArray& files) override;
+    void filesDropped (const juce::StringArray& files, int x, int y) override;
+    bool importMassiveXFile (const juce::File& file, bool showFeedback = true);
 
     /** The patch browser's menu: a category's patches as pages. A category of up to `mostInAPage`
         patches is one page with no label, in the browser's order (hand-made first); a larger one is

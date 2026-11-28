@@ -54,23 +54,23 @@
 <rect x="714.0" y="166.0" width="312.0" height="310.0" rx="14" fill="url(#cardGrad)" stroke="#232d40" stroke-width="1.2"/>
 <rect x="730.0" y="166.0" width="280.0" height="3.5" rx="2" fill="url(#accentH)"/>
 <rect x="954.0" y="186.0" width="54.0" height="28.0" rx="14" fill="url(#deltaBg)" stroke="#279e78" stroke-width="1"/>
-<text x="981.0" y="205.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+3</text>
-<text x="738.0" y="280.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">5</text>
+<text x="981.0" y="205.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+4</text>
+<text x="738.0" y="280.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">6</text>
 <text x="738.0" y="324.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">Library formats</text>
 <text x="738.0" y="356.0" font-size="18" fill="#929eb3" text-anchor="start" font-weight="500">0.23.0: 2</text>
 <line x1="738.0" y1="374.0" x2="1002.0" y2="374.0" stroke="#232d40" stroke-width="1" opacity="0.7"/>
-<text x="738.0" y="402.0" font-size="16" fill="#68758c" text-anchor="start" font-weight="normal">Maschine .mxgrp/.mxsnd, MPC</text>
-<text x="738.0" y="425.0" font-size="16" fill="#68758c" text-anchor="start" font-weight="normal">.xpm, SF2, SFZ, Battery</text>
+<text x="738.0" y="402.0" font-size="16" fill="#68758c" text-anchor="start" font-weight="normal">Maschine, Massive X, MPC, SF2,</text>
+<text x="738.0" y="425.0" font-size="16" fill="#68758c" text-anchor="start" font-weight="normal">SFZ, Battery</text>
 <rect x="50.0" y="496.0" width="312.0" height="310.0" rx="14" fill="url(#cardGrad)" stroke="#232d40" stroke-width="1.2"/>
 <rect x="66.0" y="496.0" width="280.0" height="3.5" rx="2" fill="url(#accentH)"/>
-<rect x="284.0" y="516.0" width="60.0" height="28.0" rx="14" fill="url(#deltaBg)" stroke="#279e78" stroke-width="1"/>
-<text x="314.0" y="535.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+160</text>
-<text x="74.0" y="610.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">160</text>
-<text x="74.0" y="654.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">Maschine verified</text>
+<rect x="255.5" y="516.0" width="88.5" height="28.0" rx="14" fill="url(#deltaBg)" stroke="#279e78" stroke-width="1"/>
+<text x="299.8" y="535.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+21,425</text>
+<text x="74.0" y="610.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">21,425</text>
+<text x="74.0" y="654.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">NI files verified</text>
 <text x="74.0" y="686.0" font-size="18" fill="#929eb3" text-anchor="start" font-weight="500">0.23.0: 0</text>
 <line x1="74.0" y1="704.0" x2="338.0" y2="704.0" stroke="#232d40" stroke-width="1" opacity="0.7"/>
-<text x="74.0" y="732.0" font-size="16" fill="#68758c" text-anchor="start" font-weight="normal">160/160 real files, 50 patterns</text>
-<text x="74.0" y="755.0" font-size="16" fill="#68758c" text-anchor="start" font-weight="normal">/ 25,611 notes</text>
+<text x="74.0" y="732.0" font-size="16" fill="#68758c" text-anchor="start" font-weight="normal">13,090 Maschine + 5,214 Battery</text>
+<text x="74.0" y="755.0" font-size="16" fill="#68758c" text-anchor="start" font-weight="normal">+ 3,121 Massive X (0 fail)</text>
 <rect x="382.0" y="496.0" width="312.0" height="310.0" rx="14" fill="url(#cardGrad)" stroke="#232d40" stroke-width="1.2"/>
 <rect x="398.0" y="496.0" width="280.0" height="3.5" rx="2" fill="url(#accentH)"/>
 <text x="406.0" y="610.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">0</text>
@@ -82,8 +82,8 @@
 <rect x="714.0" y="496.0" width="312.0" height="310.0" rx="14" fill="url(#cardGrad)" stroke="#232d40" stroke-width="1.2"/>
 <rect x="730.0" y="496.0" width="280.0" height="3.5" rx="2" fill="url(#accentH)"/>
 <rect x="954.0" y="516.0" width="54.0" height="28.0" rx="14" fill="url(#deltaBg)" stroke="#279e78" stroke-width="1"/>
-<text x="981.0" y="535.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+36</text>
-<text x="738.0" y="610.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">2,818</text>
+<text x="981.0" y="535.0" font-size="15" fill="#34e8a8" text-anchor="middle" font-weight="700">+41</text>
+<text x="738.0" y="610.0" font-size="78" fill="url(#kpiText)" text-anchor="start" font-weight="800" letter-spacing="-0.03em">2,823</text>
 <text x="738.0" y="654.0" font-size="25" fill="#f8fafc" text-anchor="start" font-weight="700">Automated checks</text>
 <text x="738.0" y="686.0" font-size="18" fill="#929eb3" text-anchor="start" font-weight="500">0.23.0: 2,782</text>
 <line x1="738.0" y1="704.0" x2="1002.0" y2="704.0" stroke="#232d40" stroke-width="1" opacity="0.7"/>
@@ -97,24 +97,23 @@
 <text x="1106.0" y="268.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Zero Telemetry &amp; Tracking guarantee</text>
 <text x="1106.0" y="296.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">(verified offline-first, no account)</text>
 <polygon points="1088,334 1093,339 1088,344 1083,339" fill="url(#accentH)"/>
-<text x="1106.0" y="346.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">NI Maschine .mxgrp/.mxsnd clean-room</text>
-<text x="1106.0" y="374.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">kit, Drum Synth, FX &amp; 1-click MIDI</text>
-<text x="1106.0" y="402.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">drop</text>
-<polygon points="1088,440 1093,445 1088,450 1083,445" fill="url(#accentH)"/>
-<text x="1106.0" y="452.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Akai MPC .xpm Drum &amp; Keygroup import +</text>
-<text x="1106.0" y="480.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">SoundFont 2 (.sf2) multi-preset banks</text>
-<polygon points="1088,518 1093,523 1088,528 1083,523" fill="url(#accentH)"/>
-<text x="1106.0" y="530.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">4 new live Creative FX: Frequency</text>
-<text x="1106.0" y="558.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Shifter, Shimmer Delay, Vocoder &amp;</text>
-<text x="1106.0" y="586.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Spectral Freeze</text>
-<polygon points="1088,624 1093,629 1088,634 1083,629" fill="url(#accentH)"/>
-<text x="1106.0" y="636.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Grand-Staff Notation (Score) View +</text>
-<text x="1106.0" y="664.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">MusicXML 3.1 export (48/53 matrix</text>
-<text x="1106.0" y="692.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">rows)</text>
-<polygon points="1088,730 1093,735 1088,740 1083,735" fill="url(#accentH)"/>
-<text x="1106.0" y="742.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">One-click Instrument Track layout</text>
-<text x="1106.0" y="770.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">across Header, Inspector, Mixer &amp;</text>
-<text x="1106.0" y="798.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Option-I</text>
+<text x="1106.0" y="346.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">NI Maschine (13,090/13,090) &amp; Massive</text>
+<text x="1106.0" y="374.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">X (3,121/3,121) clean-room import</text>
+<polygon points="1088,412 1093,417 1088,422 1083,417" fill="url(#accentH)"/>
+<text x="1106.0" y="424.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Akai MPC .xpm Drum &amp; Keygroup import +</text>
+<text x="1106.0" y="452.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">SoundFont 2 (.sf2) multi-preset banks</text>
+<polygon points="1088,490 1093,495 1088,500 1083,495" fill="url(#accentH)"/>
+<text x="1106.0" y="502.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">4 new live Creative FX: Frequency</text>
+<text x="1106.0" y="530.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Shifter, Shimmer Delay, Vocoder &amp;</text>
+<text x="1106.0" y="558.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Spectral Freeze</text>
+<polygon points="1088,596 1093,601 1088,606 1083,601" fill="url(#accentH)"/>
+<text x="1106.0" y="608.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Dedicated Grand-Staff Score / Notation</text>
+<text x="1106.0" y="636.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">window (Option-S) + MusicXML 3.1</text>
+<text x="1106.0" y="664.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">(48/53 rows)</text>
+<polygon points="1088,702 1093,707 1088,712 1083,707" fill="url(#accentH)"/>
+<text x="1106.0" y="714.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">One-click Instrument Track UX</text>
+<text x="1106.0" y="742.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">(Option-I), clean Window menu &amp; Ask</text>
+<text x="1106.0" y="770.0" font-size="20" fill="#dce3ee" text-anchor="start" font-weight="normal">Torq open_panel</text>
 <line x1="50.0" y1="848.0" x2="1550.0" y2="848.0" stroke="#232d40" stroke-width="1" opacity="0.7"/>
 <text x="1550.0" y="876.0" font-size="14" fill="#68758c" text-anchor="end" font-weight="normal">As of 2026-11-28 · Torqwave 0.24.0 (released) · Sources &amp; method: docs/compare</text>
 </svg>

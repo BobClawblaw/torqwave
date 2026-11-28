@@ -41,7 +41,7 @@
 <text x="694.0" y="270.0" font-size="16" fill="#f8fafc" text-anchor="start" font-weight="600">CLAP 1.2 · VST3 · AU · LV2</text>
 <rect x="974.8" y="246.0" width="249.8" height="38.0" rx="19" fill="#121a2a" stroke="#24344d" stroke-width="1.1"/>
 <circle cx="992.8" cy="265" r="4.5" fill="#34e8a8"/>
-<text x="1006.8" y="270.0" font-size="16" fill="#f8fafc" text-anchor="start" font-weight="600">2,818 Verified Checks</text>
+<text x="1006.8" y="270.0" font-size="16" fill="#f8fafc" text-anchor="start" font-weight="600">2,823 Verified Checks</text>
 <rect x="56.0" y="316.0" width="480.0" height="244.0" rx="16" fill="url(#cardGrad)" stroke="#232d40" stroke-width="1.2"/>
 <rect x="74.0" y="316.0" width="96.0" height="3.0" rx="1.5" fill="url(#accentH)"/>
 <rect x="80.0" y="344.0" width="40.0" height="40.0" rx="10" fill="#241611" stroke="#5e301e" stroke-width="1.1"/>
@@ -64,10 +64,10 @@
 <circle cx="604" cy="369" r="3.4" fill="#ff5c1f"/>
 <line x1="613.0" y1="353.0" x2="613.0" y2="375.0" stroke="#6b4738" stroke-width="2"/>
 <circle cx="613" cy="357" r="3.4" fill="#ff5c1f"/>
-<text x="638.0" y="372.0" font-size="23" fill="#f8fafc" text-anchor="start" font-weight="700" letter-spacing="-0.01em">Maschine Kits &amp; MIDI Drop</text>
-<text x="586.0" y="422.0" font-size="19" fill="#929eb3" text-anchor="start" font-weight="400">Clean-room .mxgrp/.mxsnd import, Drum</text>
-<text x="586.0" y="452.0" font-size="19" fill="#929eb3" text-anchor="start" font-weight="400">Synths, pad FX &amp; 1-click track pattern</text>
-<text x="586.0" y="482.0" font-size="19" fill="#929eb3" text-anchor="start" font-weight="400">drop</text>
+<text x="638.0" y="372.0" font-size="23" fill="#f8fafc" text-anchor="start" font-weight="700" letter-spacing="-0.01em">Maschine &amp; Massive X</text>
+<text x="586.0" y="422.0" font-size="19" fill="#929eb3" text-anchor="start" font-weight="400">Clean-room .mxgrp/.mxsnd kits +</text>
+<text x="586.0" y="452.0" font-size="19" fill="#929eb3" text-anchor="start" font-weight="400">Massive X .nksf synth import</text>
+<text x="586.0" y="482.0" font-size="19" fill="#929eb3" text-anchor="start" font-weight="400">(21,425/21,425 verified)</text>
 <rect x="1064.0" y="316.0" width="480.0" height="244.0" rx="16" fill="url(#cardGrad)" stroke="#232d40" stroke-width="1.2"/>
 <rect x="1082.0" y="316.0" width="96.0" height="3.0" rx="1.5" fill="url(#accentH)"/>
 <rect x="1088.0" y="344.0" width="40.0" height="40.0" rx="10" fill="#241611" stroke="#5e301e" stroke-width="1.1"/>

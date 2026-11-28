@@ -162,7 +162,7 @@ h1 em{{font-style:normal;background:linear-gradient(95deg,var(--a),var(--a2,#ff9
  </div>
  <img class="shot" src="{rel_shots}/guide-drums.png" style="left:68px;top:790px;width:1280px;transform:perspective(2200px) rotateY(-10deg) rotateX(4deg)">
  <div class="fade" style="height:180px"></div>
- <div class="foot"><span>160/160 MASCHINE FILES VERIFIED</span><div class="dots"><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div>
+ <div class="foot"><span>21,425/21,425 LOCAL NI FILES VERIFIED</span><div class="dots"><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div>
 </section>
 
 <!-- Slide 3: 4 New Live Creative FX (36 Plug-ins) -->
