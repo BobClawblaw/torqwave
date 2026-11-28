@@ -226,6 +226,7 @@ target_sources(Torqwave PRIVATE
     Source/DrumMachineEditor.cpp
     Source/DrumPadEffectsView.cpp
     Source/BatteryKit.cpp
+    Source/MaschineKit.cpp
     Source/DrumKitImport.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp
@@ -599,6 +600,7 @@ target_sources(TorqwaveTests PRIVATE
         Tests/DecryptReal.cpp
     Tests/DrumMachineTests.cpp
     Tests/BatteryKitTests.cpp
+    Tests/MaschineKitTests.cpp
     Tests/SoundControlsTests.cpp
     Tests/WaveSynthTests.cpp
     Tests/Release023Tests.cpp
@@ -694,6 +696,7 @@ target_sources(TorqwaveTests PRIVATE
     Source/DrumMachineEditor.cpp
     Source/DrumPadEffectsView.cpp
     Source/BatteryKit.cpp
+    Source/MaschineKit.cpp
     Source/DrumKitImport.cpp
     Source/EffectPresets.cpp
     Source/FactoryPresets.cpp

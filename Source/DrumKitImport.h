@@ -2,12 +2,13 @@
 
 #include "DrumMachine.h"
 #include "BatteryKit.h"
+#include "MaschineKit.h"
 
-/** Bringing a kit made elsewhere onto Basic Drums' pads: a Battery 4 kit file the user owns, read
-    where it is, or a folder of sound files laid on the pads by their names. An import is first a
-    plan (which pad gets what, and a report of everything that was approximated or left out), which
-    nothing has touched yet; then the plan is put on the pads. Samples are read from where they
-    are and are never copied. */
+/** Bringing a kit made elsewhere onto Basic Drums' pads: a Battery 4 kit file (.nbkt/.nbcl),
+    a Maschine 2/3 kit or sound (.mxgrp/.mxsnd) the user owns, or a folder of sound files laid on
+    the pads by their names. An import is first a plan (which pad gets what, and a report of
+    everything that was mapped, approximated or left out), which nothing has touched yet; then the
+    plan is put on the pads. Samples are read from where they are and are never copied. */
 namespace DrumKitImport
 {
     /** The files a pad can play. */
@@ -35,19 +36,49 @@ namespace DrumKitImport
         bool envelope = false;         // a volume envelope, for the pad's ENV page: on, with these in ms
         float attack = 0.0f, hold = 0.0f, decay = 0.0f;
         std::vector<PadLayer> layers;
+
+        // Clean-room synthesized drum support (e.g. Maschine internal Drum Synths mapped onto Basic Drums)
+        bool synthesised = false;      // true when the pad plays a synthesized drum (GM sound or source) rather than samples
+        int source = 0;                // 0 for the pad's own GM sound, or 1..DrumMachine::numSources
+        int synthType = DrumMachine::modernType;
+        float synthDecay = 300.0f;     // ms (5..5000)
+        float tone = 0.0f;             // -100..100
+        float drive = 0.0f;            // 0..100
+
+        // Clean-room per-pad FX translation (filter, bitcrusher, sends, and PadEffects)
+        int filter = 0;                // 0 off, 1 LP, 2 BP, 3 HP
+        float cutoff = 2000.0f;        // Hz
+        float resonance = 20.0f;       // %
+        float crush = 0.0f;            // %
+        float reverb = 0.0f;           // %
+        float delay = 0.0f;            // %
+        DrumMachine::PadEffects effects {};
     };
 
     struct Plan
     {
         juce::String name;
         std::vector<Pad> pads;         // in the kit's order, every one with a place
-        juce::StringArray report;      // what was approximated or left out, a line each
+        juce::StringArray report;      // what was mapped, approximated or left out, a line each
         juce::StringArray missing;     // samples that are not where the kit says
+
+        // Optional kit-bus defaults translated from group FX
+        float kitDrive = 0.0f;         // 0..100
+        float kitGlue = 0.0f;          // 0..100
+        float reverbSize = 50.0f;      // 0..100
+        int delayTime = 2;             // index into DrumMachine::delayTimeNames()
+        float feedback = 35.0f;        // 0..100
     };
 
     /** A Battery kit as a plan. Samples are looked for where the kit points from its own folder,
         then under `library` if one is given (a library that has moved). */
     Plan fromBattery (const BatteryKit::Kit&, const juce::File& kitFile, const juce::File& library = {});
+
+    /** A Maschine 2/3 Group (.mxgrp) or Sound (.mxsnd) as a plan: sample zones, clean-room mapped
+        synthesized drum sources (Kick, Snare, Hi-Hat, Tom, Perc, Cymbal), and clean-room mapped
+        per-pad & kit-bus effects (EQ, Filter, Saturator, Transient Shaper, Compressor, Bitcrusher,
+        Reverb/Delay sends). */
+    Plan fromMaschine (const MaschineKit::Kit&, const juce::File& kitFile, const juce::File& library = {});
 
     /** A folder of sound files as a plan (the folders inside it too), each file's pad chosen from
         its name:
@@ -83,10 +114,17 @@ namespace DrumKitImport
     void importBatteryKit (juce::Component& window, BuiltInEffects::BasicDrumsProcessor&, std::unique_ptr<juce::FileChooser>&,
                            std::function<void (const juce::String&)> done, const juce::File& kitFile = {});
 
+    /** The same for a Maschine 2/3 Group (.mxgrp) or Sound (.mxsnd). */
+    void importMaschineKit (juce::Component& window, BuiltInEffects::BasicDrumsProcessor&, std::unique_ptr<juce::FileChooser>&,
+                            std::function<void (const juce::String&)> done, const juce::File& kitFile = {});
+
     /** The same for a folder of sounds: asks for one, or takes the one given. */
     void importFolder (juce::Component& window, BuiltInEffects::BasicDrumsProcessor&, std::unique_ptr<juce::FileChooser>&,
                        std::function<void (const juce::String&)> done, const juce::File& folder = {});
 
     /** Whether a file is one importBatteryKit takes. */
     bool isBatteryKit (const juce::File&);
+
+    /** Whether a file is one importMaschineKit takes (.mxgrp or .mxsnd). */
+    bool isMaschineKit (const juce::File&);
 }

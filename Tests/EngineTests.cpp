@@ -46,6 +46,7 @@
 #include "SignalConsoleTests.h"
 #include "DecryptTests.h"
 #include "BatteryKitTests.h"
+#include "MaschineKitTests.h"
 #include "DecryptReal.h"
 #include "WaveSynthTests.h"
 #include "Release023Tests.h"
@@ -941,6 +942,21 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (const auto list = valueOf ("--maschine-kit-files"); list.isNotEmpty())
+    {
+        juce::StringArray files;
+        files.addLines (juce::File::getCurrentWorkingDirectory().getChildFile (list).loadFileAsString());
+        files.removeEmptyStrings();
+        return runMaschineKitFiles (files);
+    }
+
+    if (args.contains ("--maschine-kit"))
+    {
+        runMaschineKitTests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
     if (args.contains ("--sequences"))
     {
         AudioEngine engine;
@@ -1254,6 +1270,7 @@ int main (int argc, char* argv[])
     if (args.contains ("--023"))
     {
         runRelease023Tests();
+        runMaschineKitTests();
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }
@@ -1488,6 +1505,7 @@ int main (int argc, char* argv[])
         runFadeHandleTests();
         runTimeViewStripTests();
         runRelease023Tests();
+        runMaschineKitTests();
 
         const bool headless = args.contains ("--headless");
 

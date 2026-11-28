@@ -148,7 +148,7 @@ private:
     void say (const juce::String&);
     void setDropTarget (std::optional<int>);
     void chooseSamples();
-    void importKit (const juce::File& from, bool folder);   // a Battery kit file or a folder of sounds; none: asks for one
+    void importKit (const juce::File& from, bool folder, bool maschine = false);   // Battery kit, Maschine kit, or folder of sounds; none: asks for one
     void showFilesMenu();
     void showPadMenu (int pad);
     void markSampledPads();

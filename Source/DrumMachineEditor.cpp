@@ -1557,7 +1557,8 @@ bool DrumMachineEditor::addFiles (int s, const juce::Array<juce::File>& sounds)
 bool DrumMachineEditor::isInterestedInFileDrag (const juce::StringArray& dragged)
 {
     for (auto& f : dragged)
-        if (juce::File (f).hasFileExtension (soundFileTypes) || DrumKitImport::isBatteryKit (juce::File (f)) || juce::File (f).isDirectory())
+        if (juce::File (f).hasFileExtension (soundFileTypes) || DrumKitImport::isBatteryKit (juce::File (f))
+            || DrumKitImport::isMaschineKit (juce::File (f)) || juce::File (f).isDirectory())
             return true;
 
     return false;
@@ -1568,11 +1569,11 @@ void DrumMachineEditor::fileDragExit (const juce::StringArray&)                 
 
 void DrumMachineEditor::filesDropped (const juce::StringArray& dropped, int x, int y)
 {
-    // A Battery kit or a folder of sounds dropped anywhere on the window is imported, in place of the kit here.
-    if (const juce::File one (dropped[0]); dropped.size() == 1 && (DrumKitImport::isBatteryKit (one) || one.isDirectory()))
+    // A Battery kit, Maschine kit/sound, or folder of sounds dropped anywhere on the window is imported, in place of the kit here.
+    if (const juce::File one (dropped[0]); dropped.size() == 1 && (DrumKitImport::isBatteryKit (one) || DrumKitImport::isMaschineKit (one) || one.isDirectory()))
     {
         setDropTarget ({});
-        importKit (one, one.isDirectory());
+        importKit (one, one.isDirectory(), DrumKitImport::isMaschineKit (one));
         return;
     }
 
@@ -1643,7 +1644,7 @@ void DrumMachineEditor::chooseSamples()
                           });
 }
 
-void DrumMachineEditor::importKit (const juce::File& from, bool folder)
+void DrumMachineEditor::importKit (const juce::File& from, bool folder, bool maschine)
 {
     const auto done = [safe = juce::Component::SafePointer<DrumMachineEditor> (this)] (const juce::String& said)
     {
@@ -1656,6 +1657,8 @@ void DrumMachineEditor::importKit (const juce::File& from, bool folder)
 
     if (folder)
         DrumKitImport::importFolder (*this, drums, chooser, done, from);
+    else if (maschine)
+        DrumKitImport::importMaschineKit (*this, drums, chooser, done, from);
     else
         DrumKitImport::importBatteryKit (*this, drums, chooser, done, from);
 }
@@ -1667,6 +1670,7 @@ void DrumMachineEditor::showFilesMenu()
     menu.addItem (2, "Save Kit with Samples...");
     menu.addSeparator();
     menu.addItem (4, "Import Battery Kit...");
+    menu.addItem (6, "Import Maschine Kit...");
     menu.addItem (5, "Import Folder of Sounds...");
     menu.addSeparator();
     menu.addItem (3, "Find Missing Samples...", ! drums.getMissing().isEmpty());
@@ -1709,9 +1713,9 @@ void DrumMachineEditor::showFilesMenu()
                                                                            : "Saved " + folder.getFileName() + ", without " + juce::String (missing.size()) + " samples that are not where the kit says.");
             });
         }
-        else if (chosen == 4 || chosen == 5)
+        else if (chosen == 4 || chosen == 5 || chosen == 6)
         {
-            self.importKit ({}, chosen == 5);
+            self.importKit ({}, chosen == 5, chosen == 6);
         }
         else if (chosen == 3)
         {

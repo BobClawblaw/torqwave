@@ -137,7 +137,7 @@ A session, preset or patch saved before Torqwave Synth had nine oscillators open
 - **54 synthesized sources.** The 30 sounds, 21 of them in two types (Classic and Modern), and 24 more that belong to no note and that any pad can play: 75 models in all. Nothing here is a recording.
 - **Your own samples** on any pad, in up to 16 layers by velocity, with round robin. No samples come with Torqwave.
 - **On every pad:** tune, decay, tone, level, pan and drive; a filter, a crusher and two sends; its own envelope, transient shaper, saturator, EQ and compressor; per-pad routing to the **Main** stereo bus or any of **8 stereo Aux buses** (saved with the kit and session); and a place in one of eight choke groups, beside the three built in.
-- **Fifteen factory kits,** your own as presets or as kit files that carry their samples, and imports of a folder of sounds or of a Battery 4 kit.
+- **Fifteen factory kits,** your own as presets or as kit files that carry their samples, and imports of a folder of sounds, a Battery 4 kit, or a Maschine 2/3 kit.
 
 Each note rings on its own voice (a tom fill rings over itself), it plays in stereo, and nothing in it stops dead: a hit struck again or cut off fades over 3 ms.
 
@@ -275,6 +275,15 @@ A factory kit sets every pad at once, with the bus and the space. There are fift
 - **What does not come over:** Battery's effects, pitch envelopes, modulation, time-stretching, articulations and buses; and REX loops. A kit with more than eight sets of cells that cut each other off keeps the first eight; the report says how many ring.
 - **The report.** After an import a window lists each of these with how many cells it touched, so you know what to set by hand.
 - **Which kits.** Kit files saved by Battery 4. Kits from Battery 3 and earlier are other file types and are not read. A kit whose layout this does not know is refused by name, not guessed at.
+
+#### Importing a Maschine kit
+
+**Files > Import Maschine Kit...** reads a Native Instruments Maschine 2/3 Group kit (`.mxgrp`) or Sound (`.mxsnd`) of yours and puts its pads into Basic Drums. Dropping a `.mxgrp` or `.mxsnd` file onto the window does the same.
+
+- **Samples stay in place:** Sample zones inside Maschine's Sampler or Audio modules are resolved automatically against the expansion or factory library folder (walking up from `Groups/Kits/` to `Samples/`) and are never copied. Multi-sample velocity layers, start points, level, pan, tune, and Sampler filter settings come over onto the pad.
+- **Clean-room Drum Synth mapping:** Pads using Maschine's internal Drum Synths (`Kick`, `Snare`, `Hi-Hat`, `Tom`, `Perc`, `Cymbal`, and `Bass Synth`) are mapped clean-room onto Basic Drums' own synthesized drum sources (`Sub Kick`, `FM Kick`, `Distorted Kick`, `Click Kick`, `Rumble Kick`, `FM Snare`, `Noise Snare`, `Metal Snare`, `Clap Stack`, `FM Hat`, `Noise Hat`, `FM Tom`, `Dark Ride`, `Trash Crash`, `FM Bell`, `Anvil`, `Pipe`, `Sub Drop`, and the built-in GM drum engines) with their tune, decay, tone, and drive parameters translated over.
+- **Clean-room per-pad & bus FX translation:** Maschine insert effects are translated into Basic Drums' own built-in DSP: `EQ` → 4-Band Pad EQ, `Filter` → Pad Resonant Filter, `Saturator` / `Distortion` / `Cabinet` → Pad Saturator (Tape/Tube/Clip/Fold), `Transient Master` → Pad Transient Shaper, `Compressor` / `Maximizer` / `Limiter` → Pad Compressor (and Group Glue), `Lo-Fi` → Pad Bitcrusher, `Metaverb` / `Reverb` / `Plate Reverb` / `Ice` → Pad Reverb Send, and `Beat Delay` / `Reflex` / `Grain Delay` → Pad Delay Send.
+- **What does not come over:** Third-party plug-in hosts inside a Maschine pad (such as Massive or Monark) and modulation effects without a direct per-pad slot (`Chorus`, `Flanger`, `Phaser`, `Freq Shifter`, `FM`, `Resochord`, `Grain Stretch`). Every mapped and skipped item is listed plainly in the import report.
 
 #### What is kept, and what can be automated
 
