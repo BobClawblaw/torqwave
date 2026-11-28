@@ -155,7 +155,7 @@ Rows where Torqwave 0.24.0 is yes and at most two of the 15 other products are y
 | Library formats | 2 | 5 | Maschine .mxgrp/.mxsnd, MPC .xpm, SF2, SFZ, Battery |
 | Maschine verified | 0 | 160 | 160/160 real files, 50 patterns / 25,611 notes |
 | Telemetry calls | 0 | 0 | Hard offline-first ban + automated source audit |
-| Automated checks | 2,782 | 2,816 | arm64 + Intel Rosetta, plus headless CI |
+| Automated checks | 2,782 | 2,818 | arm64 + Intel Rosetta, plus headless CI |
 
 ## The matrix
 

@@ -91,6 +91,7 @@ public:
 
     /** A note clip double-clicked: asks for it in the piano roll. */
     std::function<void (juce::uint32 clipId)> onOpenNotes;
+    std::function<void (juce::uint32 clipId)> onOpenScore;
 
     /** The note clip clicked last, or 0: what the piano roll and Clip Properties follow. A plain
         click selects one clip, audio or notes, alone; Shift-click adds a clip of either kind to

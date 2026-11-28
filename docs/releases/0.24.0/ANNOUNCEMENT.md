@@ -31,13 +31,13 @@ OPEN YOUR EXISTING LIBRARIES (CLEAN-ROOM, SAMPLES STAY IN PLACE)
 • Vocoder — 24-band 4th-order SVF filterbank with internal Saw/Pulse/Noise chord carrier or external Sidechain carrier, formant shift & unvoiced sibilance bypass.
 • Spectral Freeze — live 2048-pt 4x overlap-add STFT freeze hold, temporal blur, spectral shift (-12..+12 st) & brightness tilt.
 
-GRAND-STAFF NOTATION VIEW & MUSICXML 3.1
-• Switch the Note Editor to Score view for treble + bass grand staves with clefs, key/time signatures, barlines, ledger lines, noteheads/stems/flags/dots, and direct pitch/time editing.
-• Tools > Export MusicXML (.musicxml)... exports standard MusicXML 3.1 for MuseScore, Dorico, Sibelius, Finale & Logic Pro.
+GRAND-STAFF SCORE / NOTATION WINDOW & MUSICXML 3.1
+• Open Window > Score / Notation (Option-S), right-click any note clip → Score / Notation, or toggle Score inside Piano Roll for interactive treble + bass grand staves with clefs, key/time signatures, barlines, ledger lines, noteheads/stems/flags/dots, and direct pitch/time editing.
+• One-click MusicXML... export generates standard MusicXML 3.1 for MuseScore, Dorico, Sibelius, Finale & Logic Pro.
 
-ONE-CLICK INSTRUMENT TRACK UX
+ONE-CLICK INSTRUMENT TRACK UX & CLEAN WINDOW MENU
 • Dedicated 3-row Instrument Track header: Name + M/S on top, split [Instrument Name | ▾] bar beside FX in the middle, compact mix row below.
-• Left-click opens/focuses the instrument window immediately; ▾ or right-click swaps instruments. Matching split/1-click controls in Track Inspector & Mixer strips, plus Option-I from anywhere.
+• Left-click opens/focuses the instrument window immediately; ▾ or right-click swaps instruments. Matching split/1-click controls in Track Inspector & Mixer strips, Option-I from anywhere, and a cleanly grouped Window menu.
 
 WHAT IT STILL DOESN'T DO
 No Dolby Atmos, no ARA 2, no legacy VST2, no full neural stem export, and installers aren't notarized with a Developer ID yet (so macOS asks on first launch). Our 15-product matrix lists every gap as plainly as what ships.
@@ -86,7 +86,7 @@ Plus redesigned 1-click Instrument Tracks (Option-I).
 **Post 4 — attach `x/06-against-the-editors.png` & `x/07-synth.png`:**
 
 ```text
-New Grand-Staff Notation (Score) View + MusicXML 3.1 export lifts Torqwave to 48 of 53 rows in our documented 15-product comparison matrix.
+New dedicated Grand-Staff Score / Notation window (Option-S) + MusicXML 3.1 export lifts Torqwave to 48 of 53 rows in our documented 15-product comparison matrix.
 
 Matrix: https://github.com/BobClawblaw/torqwave/blob/main/docs/compare/MATRIX.md
 ```
@@ -110,8 +110,8 @@ New in 0.24.0:
 • NI Maschine 2/3 (.mxgrp/.mxsnd) clean-room kit import: samples stay in place, Drum Synths & per-pad FX translate automatically, and embedded 960 PPQN patterns export to MIDI or drop straight onto your track in 1 click
 • Akai MPC (.xpm) Drum & Keygroup import + SoundFont 2 (.sf2) multi-preset banks in Torqwave Sampler
 • 4 new Live Creative FX (36 built-in plug-ins): Hilbert SSB Frequency Shifter, Shimmer Delay, 24-band Vocoder & STFT Spectral Freeze
-• Interactive Grand-Staff Notation (Score) View + MusicXML 3.1 export (48 of 53 comparison matrix rows)
-• Redesigned 1-click Instrument Track layout across Header, Track Inspector & Mixer strips (Option-I)
+• Dedicated Grand-Staff Score / Notation window (Option-S) + MusicXML 3.1 export (48 of 53 comparison matrix rows)
+• Redesigned 1-click Instrument Track layout across Header, Track Inspector & Mixer strips (Option-I) + cleanly grouped Window menu
 
 100% offline-first. Free & open source (AGPL-3.0). Link in bio: bobclawblaw.github.io/torqwave
 
@@ -123,13 +123,13 @@ New in 0.24.0:
 For `x/01-release-hero.png`:
 
 ```alt
-Dark studio release graphic for Torqwave 0.24.0 with white and orange TORQWAVE wordmark, four summary pills (36 Built-In FX and Instruments, 48/53 Matrix Rows +1, CLAP 1.2/VST3/AU/LV2, 2,816 Verified Checks), and six feature cards: Zero Telemetry and Tracking, Maschine Kits and MIDI Drop, Akai MPC and SoundFont 2, 4 New Live Creative FX, Grand-Staff Notation, and One-Click Instrument UX.
+Dark studio release graphic for Torqwave 0.24.0 with white and orange TORQWAVE wordmark, four summary pills (36 Built-In FX and Instruments, 48/53 Matrix Rows +1, CLAP 1.2/VST3/AU/LV2, 2,818 Verified Checks), and six feature cards: Zero Telemetry and Tracking, Maschine Kits and MIDI Drop, Akai MPC and SoundFont 2, 4 New Live Creative FX, Grand-Staff Notation, and One-Click Instrument UX.
 ```
 
 For `x/02-release-by-the-numbers.png`:
 
 ```alt
-Dark studio chart titled "Torqwave 0.24.0: what it adds over 0.23.0". Six metric cards: 36 built-in plug-ins (+4), 48 matrix coverage rows of 53 (+1), 5 library formats (+3), 160 Maschine files verified (+160), 0 telemetry calls, and 2,816 automated checks (+34), beside a highlights list of 0.24.0 additions.
+Dark studio chart titled "Torqwave 0.24.0: what it adds over 0.23.0". Six metric cards: 36 built-in plug-ins (+4), 48 matrix coverage rows of 53 (+1), 5 library formats (+3), 160 Maschine files verified (+160), 0 telemetry calls, and 2,818 automated checks (+36), beside a highlights list of 0.24.0 additions.
 ```
 
 For `x/03-where-torqwave-stands.png`:

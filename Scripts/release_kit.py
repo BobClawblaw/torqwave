@@ -187,16 +187,16 @@ h1 em{{font-style:normal;background:linear-gradient(95deg,var(--a),var(--a2,#ff9
  <div class="grid"></div>
  <div class="top"><div class="brand"><div class="bar"></div><span>TORQ<em>WAVE</em></span></div><div class="tag">NOTATION + WORKFLOW</div></div>
  <h1 style="top:150px;--hs:92px"><em>Grand-Staff</em> Score<br>&amp; 1-Click UX.</h1>
- <div class="sub" style="top:368px">{escape(c4_b)}. Plus a redesigned 1-click Instrument Track layout.</div>
+ <div class="sub" style="top:368px">{escape(c4_b)}. Plus a redesigned 1-click Instrument Track layout and clean Window menu.</div>
  <div class="chips" style="top:518px">
-  <div class="chip"><b>Treble + Bass</b> grand staff</div>
+  <div class="chip"><b>Window &gt; Score</b> (Option-S)</div>
   <div class="chip"><b>MusicXML 3.1</b> export</div>
   <div class="chip"><b>1-Click</b> instrument window</div>
   <div class="chip"><b>Option-I</b> from anywhere</div>
  </div>
- <img class="shot" src="{rel_shots}/guide-pianoroll.png" style="left:68px;top:742px;width:1320px;transform:perspective(2200px) rotateY(-10deg) rotateX(4deg)">
+ <img class="shot" src="{rel_shots}/guide-score.png" style="left:68px;top:742px;width:1320px;transform:perspective(2200px) rotateY(-10deg) rotateX(4deg)">
  <div class="fade" style="height:170px"></div>
- <div class="foot"><span>PIANO ROLL · DRUM GRID · SCORE VIEW</span><div class="dots"><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i></div></div>
+ <div class="foot"><span>SCORE / NOTATION · PIANO ROLL · DRUM GRID</span><div class="dots"><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i></div></div>
 </section>
 
 <!-- Slide 5: Torqwave Synth -->

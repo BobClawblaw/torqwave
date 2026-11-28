@@ -499,13 +499,17 @@ Learning listens to MIDI inputs; clicking a pad in the plug-in's own window does
 
 With the drum grid's steps, its velocities, probability and swing, a drum clip is a step sequencer: set the grid to 1/4 beat for sixteenths, add swing, and give the ghost notes lower velocities and some steps less than 100 %.
 
-### Score (notation) view & MusicXML export
+### Score / Notation window & MusicXML export
 
-Click **Score** beside **Drums** in the Note Editor toolbar to view and edit the note clip as standard grand-staff music notation:
+Choose **Window > Score / Notation** (`Option-S`), right-click any note clip and choose **Score / Notation**, or click **Score** beside **Drums** in the Piano Roll toolbar to view and edit the note clip as standard grand-staff music notation (the Score / Notation panel can be docked alongside the Piano Roll or floated as its own window):
 
 - **Treble & Bass grand staff:** displays clefs, key signature sharps or flats (following the clip's key), time signature, barlines, automatic ledger lines (middle C, above treble, below bass), accidentals, and rhythmic durations from whole notes down to 16th notes (with hollow/filled noteheads, stems, flags, and augmentation dots).
 - **Direct editing:** click on any staff line or space to add a note at that diatonic pitch, click a notehead to select it, drag up/down to change pitch or left/right to move in time, Option-click to delete, or use the arrow keys and right-click note menu just like the Piano Roll.
-- **Export MusicXML 3.1:** choose **Tools > Export MusicXML (.musicxml)...** to save a standard `score-partwise` MusicXML 3.1 file for MuseScore, Dorico, Sibelius, Finale, or Logic Pro.
+- **Export MusicXML 3.1:** click **MusicXML...** in the Score / Notation toolbar (or choose **Tools > Export MusicXML (.musicxml)...**) to save a standard `score-partwise` MusicXML 3.1 file for MuseScore, Dorico, Sibelius, Finale, or Logic Pro.
+
+![The Score / Notation window showing a grand-staff passage in D major with treble and bass clefs, key signature, 4/4 time signature, barlines, chord stacks, ledger lines, and the MusicXML export button](../screenshots/guide-score.png)
+
+*The Score / Notation window (`Window > Score / Notation`, `Option-S`). Drawn by Torqwave's tests.*
 
 ### Writing tools
 

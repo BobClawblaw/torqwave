@@ -25,7 +25,7 @@ Plus redesigned 1-click Instrument Tracks (Option-I).
 
 --- POST 4 / 5 ---
 
-New Grand-Staff Notation (Score) View + MusicXML 3.1 export lifts Torqwave to 48 of 53 rows in our documented 15-product comparison matrix.
+New dedicated Grand-Staff Score / Notation window (Option-S) + MusicXML 3.1 export lifts Torqwave to 48 of 53 rows in our documented 15-product comparison matrix.
 
 Matrix: https://github.com/BobClawblaw/torqwave/blob/main/docs/compare/MATRIX.md
 

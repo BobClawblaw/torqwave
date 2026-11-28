@@ -21,13 +21,13 @@ OPEN YOUR EXISTING LIBRARIES (CLEAN-ROOM, SAMPLES STAY IN PLACE)
 • Vocoder — 24-band 4th-order SVF filterbank with internal Saw/Pulse/Noise chord carrier or external Sidechain carrier, formant shift & unvoiced sibilance bypass.
 • Spectral Freeze — live 2048-pt 4x overlap-add STFT freeze hold, temporal blur, spectral shift (-12..+12 st) & brightness tilt.
 
-GRAND-STAFF NOTATION VIEW & MUSICXML 3.1
-• Switch the Note Editor to Score view for treble + bass grand staves with clefs, key/time signatures, barlines, ledger lines, noteheads/stems/flags/dots, and direct pitch/time editing.
-• Tools > Export MusicXML (.musicxml)... exports standard MusicXML 3.1 for MuseScore, Dorico, Sibelius, Finale & Logic Pro.
+GRAND-STAFF SCORE / NOTATION WINDOW & MUSICXML 3.1
+• Open Window > Score / Notation (Option-S), right-click any note clip → Score / Notation, or toggle Score inside Piano Roll for interactive treble + bass grand staves with clefs, key/time signatures, barlines, ledger lines, noteheads/stems/flags/dots, and direct pitch/time editing.
+• One-click MusicXML... export generates standard MusicXML 3.1 for MuseScore, Dorico, Sibelius, Finale & Logic Pro.
 
-ONE-CLICK INSTRUMENT TRACK UX
+ONE-CLICK INSTRUMENT TRACK UX & CLEAN WINDOW MENU
 • Dedicated 3-row Instrument Track header: Name + M/S on top, split [Instrument Name | ▾] bar beside FX in the middle, compact mix row below.
-• Left-click opens/focuses the instrument window immediately; ▾ or right-click swaps instruments. Matching split/1-click controls in Track Inspector & Mixer strips, plus Option-I from anywhere.
+• Left-click opens/focuses the instrument window immediately; ▾ or right-click swaps instruments. Matching split/1-click controls in Track Inspector & Mixer strips, Option-I from anywhere, and a cleanly grouped Window menu.
 
 WHAT IT STILL DOESN'T DO
 No Dolby Atmos, no ARA 2, no legacy VST2, no full neural stem export, and installers aren't notarized with a Developer ID yet (so macOS asks on first launch). Our 15-product matrix lists every gap as plainly as what ships.

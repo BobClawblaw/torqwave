@@ -108,12 +108,12 @@ namespace
                            clipProperties { "clipProperties" }, clipList { "clipList" }, markers { "markers" },
                            history { "history" }, notes { "notes" }, files { "files" }, levels { "levels" },
                                 spectrum { "spectrum" }, phase { "phase" }, video { "video" }, pitch { "pitch" }, tonalBalance { "tonalBalance" }, statistics { "statistics" },
-                           pianoRoll { "pianoRoll" }, keyboard { "keyboard" }, inspector { "inspector" }, sequenceLibrary { "sequenceLibrary" },
+                           pianoRoll { "pianoRoll" }, score { "score" }, keyboard { "keyboard" }, inspector { "inspector" }, sequenceLibrary { "sequenceLibrary" },
                            sequencer { "sequencer" }, ideaBoard { "ideaBoard" };
 
         juce::StringArray all()
         {
-            return { editor, rack, selection, mixer, clipProperties, clipList, markers, history, notes, files, levels, spectrum, phase, video, pitch, tonalBalance, statistics, pianoRoll, keyboard, inspector, sequenceLibrary, sequencer, ideaBoard };
+            return { editor, rack, selection, mixer, clipProperties, clipList, markers, history, notes, files, levels, spectrum, phase, video, pitch, tonalBalance, statistics, pianoRoll, score, keyboard, inspector, sequenceLibrary, sequencer, ideaBoard };
         }
     }
 
@@ -197,7 +197,7 @@ namespace
         cmdSevenOneMaster, cmdMeetDeliverySpec, cmdShowSoundLibrary, cmdDynamicEq, cmdMultibandWidth, cmdExciter, cmdMaximizer, cmdTransientShaper, cmdCaptureMatchReference, cmdCaptureMatchReferenceFromFile, cmdMatchEq, cmdShowTonalBalance, cmdDither, cmdDialogueIsolation, cmdAdaptiveDenoise, cmdMouthDeClick, cmdDeCrackle, cmdDePlosive, cmdBreathControl, cmdSpill, cmdWowFlutter, cmdSpectralRecovery, cmdRebalance, cmdCaptureAmbience, cmdAmbienceMatch, cmdDialogueContour, cmdAzimuth, cmdCodecPreview,
         cmdNudgeStartEarlier, cmdNudgeStartLater, cmdNudgeEndEarlier, cmdNudgeEndLater, cmdSelectZeroCrossings, cmdBrushLighter, cmdBrushHeavier, cmdShowStatistics,
         cmdTimeMinutesSeconds, cmdTimeDecimalSeconds, cmdTimeSamples, cmdTimeSmpte24, cmdTimeSmpte25, cmdTimeSmpte2997Drop, cmdTimeSmpte2997, cmdTimeSmpte30,   // one a TimeFormat::Kind, in its order
-        cmdExtremeStretch, cmdNewFile, cmdSettings, cmdGenerateInstrument, cmdShowPianoRoll, cmdShowKeyboard, cmdRecordNotes, cmdCaptureMidi, cmdImportMidi, cmdAddInstrumentTrack, cmdOpenTrackInstrument,
+        cmdExtremeStretch, cmdNewFile, cmdSettings, cmdGenerateInstrument, cmdShowPianoRoll, cmdShowScore, cmdShowKeyboard, cmdRecordNotes, cmdCaptureMidi, cmdImportMidi, cmdAddInstrumentTrack, cmdOpenTrackInstrument,
         cmdTrackToolSelect, cmdTrackToolDraw, cmdTrackToolSplit, cmdTrackToolStretch, cmdTrackToolGlue, cmdTrackToolRange, cmdTrackToolMute,   // one a MultitrackView::Tool, in its order
         cmdTimeWithBars, cmdMusicalTimebase, cmdTransposeNotes, cmdNoteVelocity, cmdQuantizeNotes, cmdTimeTool,
         cmdUserGuide, cmdShortcutList, cmdSplitAllTracks, cmdRippleOff, cmdRippleTrack, cmdRippleAll,
@@ -1481,6 +1481,16 @@ MainComponent::MainComponent()
 
         if (auto* panel = dynamic_cast<NoteEditor*> (getPanel (Panels::pianoRoll)))
             panel->refresh();
+        if (auto* scorePanel = dynamic_cast<NoteEditor*> (getPanel (Panels::score)))
+            scorePanel->refresh();
+    };
+    multitrack.onOpenScore = [this] (juce::uint32 clipId)
+    {
+        multitrack.selectNoteClip (clipId);
+        dock->show (Panels::score);
+
+        if (auto* panel = dynamic_cast<NoteEditor*> (getPanel (Panels::score)))
+            panel->refresh();
     };
 
     waveform.getRecentFiles = [this]
@@ -2477,6 +2487,9 @@ void MainComponent::describeCommand (juce::CommandID id, juce::ApplicationComman
                            info.setTicked (dock->isShown (Panels::pitch)); break;
         case cmdShowPianoRoll: info.setInfo ("Piano Roll", "Show or hide the panel for editing the selected note clip's notes on a grid of pitch and time", "Window", 0);
                            info.setTicked (dock->isShown (Panels::pianoRoll)); break;
+        case cmdShowScore: info.setInfo ("Score / Notation", "Show or hide the grand-staff music notation window for viewing, editing, and exporting the selected note clip to MusicXML", "Window", 0);
+                           info.addDefaultKeypress ('s', juce::ModifierKeys::altModifier);
+                           info.setTicked (dock->isShown (Panels::score)); break;
         case cmdShowKeyboard: info.setInfo ("On-Screen Keyboard", "Show or hide the on-screen keyboard: while it shows, the computer's keys play the selected track's instrument from any window", "Window", 0);
                            info.addDefaultKeypress ('k', juce::ModifierKeys::altModifier);
                            info.setTicked (dock->isShown (Panels::keyboard)); break;
@@ -3788,6 +3801,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case cmdShowVideo: dock->toggle (Panels::video); break;
         case cmdShowPitchEditor: dock->toggle (Panels::pitch); break;
         case cmdShowPianoRoll: dock->toggle (Panels::pianoRoll); break;
+        case cmdShowScore: dock->toggle (Panels::score); break;
         case cmdShowKeyboard: dock->toggle (Panels::keyboard); break;
         case cmdRecordNotes: toggleRecordNotes(); break;
         case cmdCaptureMidi: captureMidi(); break;
@@ -4056,8 +4070,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         case 6: add ({ cmdAddMarker, cmdRegionFromClips, cmdRegionsOverClips, cmdMarkersAtIntervals, cmdMarkersAtSilences, cmdRegionsOverSounds, cmdMarkClipping, cmdRegionsFromMarkers, cmdFitRegions, cmdRenameMarkers, 0, cmdPreviousMarker, cmdNextMarker, cmdSelectBetweenMarkers, cmdSelectRegion, cmdPreviousRegion, cmdNextRegion, cmdMarkersToZero, 0, cmdMoveMarkersInSelection, cmdDeleteMarkersInSelection, cmdDeleteAllMarkers }); break;
         case 7:
         {
-            add ({ cmdPlugins, cmdAudioSettings, cmdKeyShortcuts, 0, cmdSaveRack, cmdLoadRack, 0,
-                   cmdMaximizeEditor, 0, cmdShowFiles, cmdShowFileTabs, cmdInfoLine, cmdTrackInspector, cmdShowRack, cmdShowSelectionPanel, cmdShowLevels, cmdShowSpectrum, cmdShowPhase, cmdShowTonalBalance, cmdShowStatistics, cmdShowVideo, cmdShowPitchEditor, cmdShowPianoRoll, cmdShowKeyboard, cmdUndoHistory, cmdMarkerList, cmdMixer, cmdClipProperties, cmdClipList, cmdSessionNotes, 0, cmdShowSoundLibrary, cmdShowSequenceLibrary, cmdShowSequencer, cmdShowIdeaBoard });
+            add ({ cmdMaximizeEditor });
 
             juce::PopupMenu workspaceMenu;
 
@@ -4079,8 +4092,17 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
             workspaceMenu.addCommandItem (&commands, cmdSaveWorkspace);
             workspaceMenu.addCommandItem (&commands, cmdResetWorkspace);
             workspaceMenu.addCommandItem (&commands, cmdDeleteWorkspace);
-            menu.addSeparator();
             menu.addSubMenu ("Workspace", workspaceMenu);
+
+            add ({ 0, cmdMixer, cmdTrackInspector, cmdShowRack, 0,
+                   cmdShowPianoRoll, cmdShowScore, cmdShowKeyboard, 0 });
+
+            group ("Sequencing & Libraries", { cmdShowSoundLibrary, cmdShowSequenceLibrary, cmdShowSequencer, cmdShowIdeaBoard, 0, cmdShowFiles });
+            group ("Meters & Analysis", { cmdShowLevels, cmdShowSpectrum, cmdShowPhase, cmdShowTonalBalance, cmdShowStatistics });
+            group ("Session & Clips", { cmdClipProperties, cmdClipList, cmdMarkerList, cmdUndoHistory, cmdSessionNotes, 0, cmdInfoLine, cmdShowFileTabs });
+            group ("Editing & Picture", { cmdShowPitchEditor, cmdShowVideo, cmdShowSelectionPanel });
+
+            add ({ 0, cmdSaveRack, cmdLoadRack, 0, cmdPlugins, cmdAudioSettings, cmdKeyShortcuts });
             break;
         }
         case 8:
@@ -16304,9 +16326,11 @@ juce::Component* MainComponent::getPanel (const juce::String& id)
     }
     else if (id == Panels::keyboard)
         made = std::make_unique<MidiIn::KeyboardPanel> (engine.getLiveMidi());
-    else if (id == Panels::pianoRoll)
+    else if (id == Panels::pianoRoll || id == Panels::score)
     {
         auto panel = std::make_unique<NoteEditor>();
+        if (id == Panels::score)
+            panel->setScoreOnlyMode (true);
         panel->readNoteIn = [this] { return std::pair<juce::uint32, int> { engine.getLiveMidi().getNotesIn(), engine.getLiveMidi().getLastNoteIn() }; };
         panel->readPlayhead = [this]() -> std::optional<juce::int64>
         {
@@ -16526,6 +16550,7 @@ juce::String MainComponent::getTitle (const juce::String& id)
     if (id == Panels::video)           return "Video";
     if (id == Panels::pitch)           return "Pitch Editor";
     if (id == Panels::pianoRoll)       return "Piano Roll";
+    if (id == Panels::score)           return "Score / Notation";
     if (id == Panels::keyboard)        return "Keyboard";
     return id;
 }
@@ -16547,7 +16572,7 @@ void MainComponent::layoutChanged()
 
 double MainComponent::defaultShare (const juce::String& id)
 {
-    return id == Panels::levels ? 0.12 : id == Panels::files ? 0.2 : id == Panels::video ? 0.45 : 0.3;
+    return id == Panels::levels ? 0.12 : id == Panels::files ? 0.2 : id == Panels::video ? 0.45 : id == Panels::score ? 0.36 : 0.3;
 }
 
 std::pair<juce::String, Dock::Side> MainComponent::defaultPlace (const juce::String& id)
@@ -16564,6 +16589,7 @@ std::pair<juce::String, Dock::Side> MainComponent::defaultPlace (const juce::Str
     if (id == Panels::spectrum)    return { Panels::editor, Dock::Side::bottom };
     if (id == Panels::statistics)  return { Panels::editor, Dock::Side::bottom };
     if (id == Panels::pianoRoll)   return { Panels::editor, Dock::Side::bottom };
+    if (id == Panels::score)       return { Panels::editor, Dock::Side::bottom };
     if (id == Panels::keyboard)    return { Panels::editor, Dock::Side::bottom };
     if (id == Panels::phase)       return { dock->getLayout().isDocked (Panels::spectrum) ? Panels::spectrum : Panels::editor,
                                             dock->getLayout().isDocked (Panels::spectrum) ? Dock::Side::right : Dock::Side::bottom };

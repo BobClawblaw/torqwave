@@ -150,11 +150,13 @@ public:
     /** The drum grid: whether it is shown, its rows (the map's sounds, then the clip's other
         notes), its steps, a cell's bounds, the cell under a point ({-1, -1}: none) and the note in
         a cell (-1: none). */
-    bool showingDrums() const noexcept                             { return shown.has_value() && shown->drums; }
+    bool showingDrums() const noexcept                             { return ! scoreOnly && shown.has_value() && shown->drums; }
 
     /** Standard grand-staff notation view (treble + bass staves) and MusicXML 3.1 export. */
     void setShowScore (bool on);
-    bool showingScore() const noexcept                             { return showScore && ! showingDrums(); }
+    void setScoreOnlyMode (bool on);
+    bool isScoreOnlyMode() const noexcept                          { return scoreOnly; }
+    bool showingScore() const noexcept                             { return scoreOnly || (showScore && ! showingDrums()); }
     juce::String exportMusicXml (const juce::File&) const;
     std::vector<DrumSound> drumRows() const;
     int stepCount() const;
@@ -229,7 +231,7 @@ public:
     void mouseMagnify (const juce::MouseEvent&, float scaleFactor) override;
     bool keyPressed (const juce::KeyPress&) override;
 
-    static constexpr int keyboardWidth = 44, scoreClefWidth = 68, rowHeight = 12, topBar = 30, laneHeight = 72;
+    static constexpr int keyboardWidth = 44, scoreClefWidth = 96, rowHeight = 12, topBar = 30, laneHeight = 72;
     static constexpr int drumNamesWidth = 130, drumRowHeight = 18;
     static constexpr int minRowHeight = 6, maxRowHeight = 32, scrollHeight = 10;
 
@@ -302,9 +304,10 @@ private:
     int heard = -1;                        // the pitch sounding through `audition`, or -1
 
     juce::ComboBox gridBox, laneBox, swingBox, channelBox;
-    juce::TextButton drumsButton { "Drums" }, scoreButton { "Score" }, toolsButton { "Tools" };
+    juce::TextButton drumsButton { "Drums" }, scoreButton { "Score" }, exportMusicXmlButton { "MusicXML..." }, toolsButton { "Tools" };
     std::optional<NoteTools::Scale> chosenKey;
     bool showScore = false;
+    bool scoreOnly = false;
     bool scaleLock = false;
     bool showGhostNotes = true;
     std::unique_ptr<juce::FileChooser> exportChooser;

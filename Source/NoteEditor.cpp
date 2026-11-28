@@ -78,6 +78,10 @@ NoteEditor::NoteEditor()
     scoreButton.setTooltip ("Show the clip as standard grand-staff music notation (treble + bass staves) with direct note editing and MusicXML export");
     scoreButton.onClick = [this] { setShowScore (! showingScore()); };
 
+    addChildComponent (exportMusicXmlButton);
+    exportMusicXmlButton.setTooltip ("Export the current note clip as a standard MusicXML 3.1 (.musicxml) grand-staff score");
+    exportMusicXmlButton.onClick = [this] { exportMusicXmlDialog(); };
+
     addAndMakeVisible (toolsButton);
     toolsButton.setTooltip ("Writing tools: chords from Roman numerals, arpeggiate, humanize, fit to the key, scale lock");
     toolsButton.onClick = [this] { showToolsMenu(); };
@@ -259,8 +263,9 @@ void NoteEditor::refreshControls()
     velocitySlider.setEnabled (on);
     swingBox.setEnabled (on);
     channelBox.setEnabled (on);
-    drumsButton.setEnabled (on);
-    scoreButton.setEnabled (on);
+    drumsButton.setEnabled (on && ! scoreOnly);
+    scoreButton.setEnabled (on && ! scoreOnly);
+    exportMusicXmlButton.setEnabled (on && ! shown->clip.notes.empty());
     toolsButton.setEnabled (on);
     drumsButton.setToggleState (showingDrums(), juce::dontSendNotification);
     scoreButton.setToggleState (showingScore(), juce::dontSendNotification);
@@ -270,7 +275,10 @@ void NoteEditor::refreshControls()
 
     if (! on)
     {
-        status.setText ("Select a note clip in the multitrack (Add Notes... in a track's menu makes one).", juce::dontSendNotification);
+        status.setText (scoreOnly
+                            ? "Select a note clip in Multitrack (right-click a track -> Add Notes...) to view and edit it in Score / Notation."
+                            : "Select a note clip in the multitrack (Add Notes... in a track's menu makes one).",
+                        juce::dontSendNotification);
         return;
     }
 
@@ -383,12 +391,26 @@ int NoteEditor::leftWidth() const noexcept
 
 void NoteEditor::setShowScore (bool on)
 {
+    if (scoreOnly)
+        on = true;
     if (on && showingDrums() && showDrums != nullptr)
     {
         showDrums (false);
         refresh();
     }
     showScore = on;
+    refreshControls();
+    resized();
+    repaint();
+}
+
+void NoteEditor::setScoreOnlyMode (bool on)
+{
+    scoreOnly = on;
+    showScore = on;
+    drumsButton.setVisible (! on);
+    scoreButton.setVisible (! on);
+    exportMusicXmlButton.setVisible (on);
     refreshControls();
     resized();
     repaint();
@@ -918,11 +940,11 @@ juce::Rectangle<float> NoteEditor::noteBounds (const ClipNote& n) const
     {
         const auto gs = Notation::GrandStaff::fit (rollArea().toFloat());
         const auto sp = Notation::spell (n.pitch, Notation::prefersFlats (getKey()));
-        const float cx = xOf (n.start);
-        const float cy = gs.yForDiatonic (sp.diatonic);
         const float hw = gs.space * 1.25f;
         const float hh = gs.space * 0.95f;
-        return { cx - hw * 0.4f, cy - hh * 0.5f, juce::jmax (hw, xOf (n.start + n.length) - cx), hh };
+        const float cx = xOf (n.start) + hw * 0.75f;
+        const float cy = gs.yForDiatonic (sp.diatonic);
+        return { cx - hw * 0.5f, cy - hh * 0.5f, juce::jmax (hw, xOf (n.start + n.length) - xOf (n.start)), hh };
     }
 
     const auto x0 = xOf (n.start), x1 = xOf (n.start + n.length);
@@ -981,6 +1003,48 @@ void NoteEditor::paint (juce::Graphics& g)
 
     if (! shown.has_value())
     {
+        if (showingScore())
+        {
+            const auto gutter = juce::Rectangle<int> (0, area.getY(), scoreClefWidth, area.getHeight());
+            g.setColour (Theme::surface);
+            g.fillRect (gutter);
+            g.setColour (Theme::lineStrong);
+            g.drawVerticalLine (scoreClefWidth - 1, (float) area.getY(), (float) area.getBottom());
+
+            const auto gs = Notation::GrandStaff::fit (area.toFloat());
+            const float staffLeft = 8.0f;
+            const float staffRight = (float) area.getRight();
+            g.setColour (Theme::lineStrong.withAlpha (0.45f));
+            for (int d : { 30, 32, 34, 36, 38, 18, 20, 22, 24, 26 })
+                g.drawHorizontalLine ((int) std::round (gs.yForDiatonic (d)), staffLeft, staffRight);
+
+            const float topLineY = gs.yForDiatonic (38);
+            const float botLineY = gs.yForDiatonic (18);
+            g.setColour (Theme::dimText.withAlpha (0.75f));
+            g.drawVerticalLine ((int) staffLeft, topLineY, botLineY);
+
+            g.setFont (juce::FontOptions (gs.space * 2.1f, juce::Font::bold));
+            g.drawText ("G", juce::Rectangle<float> (10.0f, gs.yForDiatonic (36) - gs.space * 0.8f, 20.0f, gs.space * 3.0f), juce::Justification::centred, false);
+            g.drawText ("F", juce::Rectangle<float> (10.0f, gs.yForDiatonic (26) - gs.space * 0.5f, 20.0f, gs.space * 2.8f), juce::Justification::centred, false);
+            g.fillEllipse (27.0f, gs.yForDiatonic (25) - 1.5f, 3.0f, 3.0f);
+            g.fillEllipse (27.0f, gs.yForDiatonic (23) - 1.5f, 3.0f, 3.0f);
+
+            const float tsX = (float) scoreClefWidth - 20.0f;
+            g.setFont (juce::FontOptions (gs.space * 1.5f, juce::Font::bold));
+            g.drawText ("4", juce::Rectangle<float> (tsX, gs.yForDiatonic (38), 16.0f, gs.space * 2.0f), juce::Justification::centred, false);
+            g.drawText ("4", juce::Rectangle<float> (tsX, gs.yForDiatonic (34), 16.0f, gs.space * 2.0f), juce::Justification::centred, false);
+            g.drawText ("4", juce::Rectangle<float> (tsX, gs.yForDiatonic (26), 16.0f, gs.space * 2.0f), juce::Justification::centred, false);
+            g.drawText ("4", juce::Rectangle<float> (tsX, gs.yForDiatonic (22), 16.0f, gs.space * 2.0f), juce::Justification::centred, false);
+
+            g.setColour (Theme::dimText);
+            g.setFont (juce::FontOptions (13.0f));
+            g.drawText ("Select a note clip in Multitrack to view and edit it in Grand-Staff Notation",
+                        area.reduced (16), juce::Justification::centred, true);
+            g.setColour (Theme::line);
+            g.drawRect (area);
+            return;
+        }
+
         g.setColour (Theme::surface);
         g.fillRect (keys);
         return;
@@ -1297,23 +1361,33 @@ void NoteEditor::paintScore (juce::Graphics& g, juce::Rectangle<int> area)
     static constexpr int trebleFlatD[7]  = { 34, 37, 33, 36, 32, 35, 31 }; // B4 E5 A4 D5 G4 C5 F4
     static constexpr int bassSharpD[7]   = { 24, 21, 25, 22, 19, 23, 20 }; // F3 C3 G3 D3 A2 E3 B2
     static constexpr int bassFlatD[7]    = { 20, 23, 19, 22, 18, 21, 17 }; // B2 E3 A2 D3 G2 C3 F2
+    static constexpr int sharpSteps[7]   = { 3, 0, 4, 1, 5, 2, 6 };        // F C G D A E B
+    static constexpr int flatSteps[7]    = { 6, 2, 5, 1, 4, 0, 3 };        // B E A D G C F
+    int keyAcc[7] = {};
+    if (fifths > 0)
+        for (int i = 0; i < juce::jmin (7, fifths); ++i)
+            keyAcc[sharpSteps[i]] = 1;
+    else if (fifths < 0)
+        for (int i = 0; i < juce::jmin (7, -fifths); ++i)
+            keyAcc[flatSteps[i]] = -1;
+
     const int numAcc = juce::jmin (5, std::abs (fifths));
-    g.setFont (juce::FontOptions (gs.space * 1.15f, juce::Font::bold));
+    g.setFont (juce::FontOptions (gs.space * 1.05f, juce::Font::bold));
     for (int k = 0; k < numAcc; ++k)
     {
-        const float ax = 28.0f + (float) k * 5.0f;
+        const float ax = 33.0f + (float) k * 8.0f;
         const juce::String sym = fifths > 0 ? "#" : "b";
-        g.drawText (sym, juce::Rectangle<float> (ax, gs.yForDiatonic (fifths > 0 ? trebleSharpD[k] : trebleFlatD[k]) - gs.space * 0.7f, 8.0f, gs.space * 1.4f), juce::Justification::centred, false);
-        g.drawText (sym, juce::Rectangle<float> (ax, gs.yForDiatonic (fifths > 0 ? bassSharpD[k] : bassFlatD[k]) - gs.space * 0.7f, 8.0f, gs.space * 1.4f), juce::Justification::centred, false);
+        g.drawText (sym, juce::Rectangle<float> (ax, gs.yForDiatonic (fifths > 0 ? trebleSharpD[k] : trebleFlatD[k]) - gs.space * 0.7f, 14.0f, gs.space * 1.4f), juce::Justification::centred, false);
+        g.drawText (sym, juce::Rectangle<float> (ax, gs.yForDiatonic (fifths > 0 ? bassSharpD[k] : bassFlatD[k]) - gs.space * 0.7f, 14.0f, gs.space * 1.4f), juce::Justification::centred, false);
     }
 
     // Time signature
-    const float tsX = (float) scoreClefWidth - 16.0f;
+    const float tsX = (float) scoreClefWidth - 20.0f;
     g.setFont (juce::FontOptions (gs.space * 1.5f, juce::Font::bold));
-    g.drawText (juce::String (shown->beatsPerBar), juce::Rectangle<float> (tsX, gs.yForDiatonic (38), 14.0f, gs.space * 2.0f), juce::Justification::centred, false);
-    g.drawText ("4", juce::Rectangle<float> (tsX, gs.yForDiatonic (34), 14.0f, gs.space * 2.0f), juce::Justification::centred, false);
-    g.drawText (juce::String (shown->beatsPerBar), juce::Rectangle<float> (tsX, gs.yForDiatonic (26), 14.0f, gs.space * 2.0f), juce::Justification::centred, false);
-    g.drawText ("4", juce::Rectangle<float> (tsX, gs.yForDiatonic (22), 14.0f, gs.space * 2.0f), juce::Justification::centred, false);
+    g.drawText (juce::String (shown->beatsPerBar), juce::Rectangle<float> (tsX, gs.yForDiatonic (38), 16.0f, gs.space * 2.0f), juce::Justification::centred, false);
+    g.drawText ("4", juce::Rectangle<float> (tsX, gs.yForDiatonic (34), 16.0f, gs.space * 2.0f), juce::Justification::centred, false);
+    g.drawText (juce::String (shown->beatsPerBar), juce::Rectangle<float> (tsX, gs.yForDiatonic (26), 16.0f, gs.space * 2.0f), juce::Justification::centred, false);
+    g.drawText ("4", juce::Rectangle<float> (tsX, gs.yForDiatonic (22), 16.0f, gs.space * 2.0f), juce::Justification::centred, false);
 
     // Subtle beat grid + bold barlines + loop lines
     {
@@ -1357,7 +1431,7 @@ void NoteEditor::paintScore (juce::Graphics& g, juce::Rectangle<int> area)
         for (size_t i = 0; i < c.notes.size(); ++i)
         {
             const auto& n = c.notes[i];
-            const float cx = xOf (n.start);
+            const float cx = xOf (n.start) + headW * 0.75f;
             if (cx + headW * 2.0f < (float) area.getX() || cx - headW * 2.0f > (float) area.getRight())
                 continue;
 
@@ -1387,14 +1461,29 @@ void NoteEditor::paintScore (juce::Graphics& g, juce::Rectangle<int> area)
                     g.drawHorizontalLine ((int) std::round (gs.yForDiatonic (d)), cx - headW * 0.78f, cx + headW * 0.78f);
             }
 
-            // Accidental left of notehead if altered relative to natural pitch
-            if (sp.accidental != 0)
+            // Accidental left of notehead only when differing from the key signature
+            const int expectedAcc = keyAcc[sp.diatonic % 7];
+            if (sp.accidental != expectedAcc)
             {
                 g.setColour (noteCol);
-                g.setFont (juce::FontOptions (gs.space * 1.15f, juce::Font::bold));
-                g.drawText (sp.accidental > 0 ? "#" : "b",
-                            juce::Rectangle<float> (cx - headW * 1.35f, cy - gs.space * 0.7f, headW * 0.8f, gs.space * 1.4f),
-                            juce::Justification::centredRight, false);
+                if (sp.accidental == 0)
+                {
+                    // Draw a crisp natural sign (4 strokes, independent of glyph font support)
+                    const float nx = cx - headW * 0.92f;
+                    const float nw = headW * 0.28f;
+                    const float nh = gs.space * 0.52f;
+                    g.drawLine (nx - nw, cy - nh * 1.45f, nx - nw, cy + nh * 0.55f, 1.3f);
+                    g.drawLine (nx + nw, cy - nh * 0.55f, nx + nw, cy + nh * 1.45f, 1.3f);
+                    g.drawLine (nx - nw, cy - nh * 0.45f, nx + nw, cy - nh * 0.65f, 1.6f);
+                    g.drawLine (nx - nw, cy + nh * 0.65f, nx + nw, cy + nh * 0.45f, 1.6f);
+                }
+                else
+                {
+                    g.setFont (juce::FontOptions (gs.space * 1.05f, juce::Font::bold));
+                    g.drawText (sp.accidental > 0 ? "#" : "b",
+                                juce::Rectangle<float> (cx - headW * 1.45f, cy - gs.space * 0.7f, headW * 0.92f, gs.space * 1.4f),
+                                juce::Justification::centredRight, false);
+                }
             }
 
             // Notehead (hollow for whole/half/dotted-half, filled for quarter/eighth/sixteenth)
@@ -1562,10 +1651,18 @@ void NoteEditor::paintDrums (juce::Graphics& g, juce::Rectangle<int> area)
 void NoteEditor::resized()
 {
     auto bar = getLocalBounds().removeFromTop (topBar).reduced (6, 4);
-    drumsButton.setBounds (bar.removeFromLeft (56));
-    bar.removeFromLeft (4);
-    scoreButton.setBounds (bar.removeFromLeft (52));
-    bar.removeFromLeft (4);
+    if (scoreOnly)
+    {
+        exportMusicXmlButton.setBounds (bar.removeFromLeft (86));
+        bar.removeFromLeft (4);
+    }
+    else
+    {
+        drumsButton.setBounds (bar.removeFromLeft (56));
+        bar.removeFromLeft (4);
+        scoreButton.setBounds (bar.removeFromLeft (52));
+        bar.removeFromLeft (4);
+    }
     toolsButton.setBounds (bar.removeFromLeft (52));
     bar.removeFromLeft (8);
     gridLabel.setBounds (bar.removeFromLeft (34));

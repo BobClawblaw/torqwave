@@ -148,6 +148,7 @@ In the multitrack view the same keys act on clips where that makes sense: Delete
 | Command | Keys |
 |---|---|
 | Effects Rack | `Option-Cmd-E` |
+| Score / Notation | `Option-S` |
 | Sound Library (show, or hide when it is showing) | `F5` |
 | Settings... | `Cmd-,` |
 | On-Screen Keyboard (while it shows, the Q row and the digits above it play notes in place of their commands) | `Option-K` |

@@ -95,6 +95,10 @@ A multitrack session in the Multitrack workspace, counted in bars and beats with
 
 The Sequencer workspace, for writing music: the Sequence Library on the left, sorted by role; the Sequencer with one sequence open by itself, its notes in bars and its voice (instrument and effects) on the right; and the Idea Board below, a grid of parts and scenes, here with the Chorus scene's four sequences launched together.
 
+![The Score / Notation window: treble and bass grand staff with clefs, D major key signature, 4/4 time signature, barlines, ledger lines, chord stacks, and one-click MusicXML 3.1 export](docs/screenshots/guide-score.png)
+
+The dedicated **Score / Notation** window (`Window > Score / Notation`, `Option-S`): interactive treble + bass grand-staff music notation with key-aware spelling, automatic ledger lines, direct click/drag note editing, and one-click MusicXML 3.1 export.
+
 ![The Analysis workspace in the Darker theme: the frequency analyzer and phase meter under the editor](docs/screenshots/analysis.png)
 
 The Analysis workspace, in the Darker theme: a frequency analyzer and a phase meter of what plays, under the editor.

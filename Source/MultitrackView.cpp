@@ -4848,6 +4848,7 @@ void MultitrackView::showNoteClipMenu (juce::uint32 clipId)
     const juce::Component::SafePointer<MultitrackView> safe (this);
     juce::PopupMenu menu;
     menu.addItem ("Piano Roll", onOpenNotes != nullptr, false, [safe, clipId] { if (safe != nullptr && safe->onOpenNotes != nullptr) safe->onOpenNotes (clipId); });
+    menu.addItem ("Score / Notation", onOpenScore != nullptr, false, [safe, clipId] { if (safe != nullptr && safe->onOpenScore != nullptr) safe->onOpenScore (clipId); });
     menu.addItem ("Edit Notes...", onEditNotes != nullptr, false, [safe, trackId, clipId] { if (safe != nullptr && safe->onEditNotes != nullptr) safe->onEditNotes (trackId, clipId); });
     menu.addItem ("Merge with Next", nextNoteClip (clipId) != 0, false, [safe, clipId] { if (safe != nullptr) safe->mergeWithNext (clipId); });
     menu.addItem ("Add to Sequence Library...", onAddToSequenceLibrary != nullptr, false,

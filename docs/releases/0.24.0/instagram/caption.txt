@@ -4,8 +4,8 @@ New in 0.24.0:
 • NI Maschine 2/3 (.mxgrp/.mxsnd) clean-room kit import: samples stay in place, Drum Synths & per-pad FX translate automatically, and embedded 960 PPQN patterns export to MIDI or drop straight onto your track in 1 click
 • Akai MPC (.xpm) Drum & Keygroup import + SoundFont 2 (.sf2) multi-preset banks in Torqwave Sampler
 • 4 new Live Creative FX (36 built-in plug-ins): Hilbert SSB Frequency Shifter, Shimmer Delay, 24-band Vocoder & STFT Spectral Freeze
-• Interactive Grand-Staff Notation (Score) View + MusicXML 3.1 export (48 of 53 comparison matrix rows)
-• Redesigned 1-click Instrument Track layout across Header, Track Inspector & Mixer strips (Option-I)
+• Dedicated Grand-Staff Score / Notation window (Option-S) + MusicXML 3.1 export (48 of 53 comparison matrix rows)
+• Redesigned 1-click Instrument Track layout across Header, Track Inspector & Mixer strips (Option-I) + cleanly grouped Window menu
 
 100% offline-first. Free & open source (AGPL-3.0). Link in bio: bobclawblaw.github.io/torqwave
 

@@ -141,7 +141,7 @@ juce::String aboutThisRelease (bool withNotes)
            "Akai MPC (.xpm) Drum and Keygroup kit import into Basic Drums and Torqwave Sampler; "
            "SoundFont 2 (.sf2) RIFF bank import with multi-preset browser in Torqwave Sampler; "
            "four new Live Creative FX bringing the built-in suite to 36 plug-ins — Hilbert SSB Frequency Shifter, granular Shimmer Delay, 24-band Vocoder (internal chord or sidechain carrier), and live STFT Spectral Freeze; "
-           "and an interactive Grand-Staff Notation (Score) View inside the Note Editor with MusicXML 3.1 export, plus a redesigned one-click Instrument Track layout across the Multitrack header, Track Inspector, and Mixer strips (Option-I). "
+           "a dedicated Grand-Staff Score / Notation window (Window > Score / Notation, Option-S) with direct note editing and MusicXML 3.1 export, a redesigned one-click Instrument Track layout across the Multitrack header, Track Inspector, and Mixer strips (Option-I), and a reorganized Window menu. "
            "0.23.0: six Live Creative FX (Delay, 4x-oversampled Distortion & Bitcrusher, Auto-Filter, Volume Shaper / Sidechain Pump, Noise Gate, Tremolo & Auto-Pan); "
            "Torqwave Synth expanded with LFOs 3–4, 24 mod slots, Slot Depth modulation, 16-node MSEG Curve LFOs, built-in Arpeggiator, 4-scene Evolve morphing and Complex matching in Decrypt; "
            "four Live MIDI FX (MIDI Arpeggiator, Chord Trigger, Scale Lock, Note Echo); Piano Roll ratchets, micro-timing, groove templates and ghost notes; "

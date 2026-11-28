@@ -966,6 +966,12 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (const auto folder = valueOf ("--024-pictures"); folder.isNotEmpty())
+    {
+        saveRelease024Pictures (juce::File (folder));
+        return 0;
+    }
+
     if (args.contains ("--sequences"))
     {
         AudioEngine engine;

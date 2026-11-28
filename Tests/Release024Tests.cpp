@@ -8,6 +8,7 @@
 #include "../Source/NoteEditor.h"
 #include "../Source/MidiInput.h"
 #include "../Source/AiAssistant.h"
+#include "../Source/Theme.h"
 #include "TestUtils.h"
 #include <iostream>
 
@@ -361,6 +362,20 @@ namespace
         check (ed.showingScore() && expErr.isEmpty() && tmpXml.existsAsFile() && tmpXml.getSize() > 400,
                "0.24 notation: NoteEditor renders grand-staff Score view and exports .musicxml cleanly");
         tmpXml.deleteFile();
+
+        // Dedicated Score / Notation window mode: stays in grand-staff mode even with no clip selected or on a drum track
+        NoteEditor scoreWin;
+        scoreWin.setSize (800, 320);
+        scoreWin.setScoreOnlyMode (true);
+        juce::Image emptyImg (juce::Image::ARGB, 800, 320, true);
+        juce::Graphics emptyG (emptyImg);
+        scoreWin.paintEntireComponent (emptyG, true);
+        NoteEditor::Shown drumShown = s;
+        drumShown.drums = true;
+        scoreWin.readClip = [&] { return std::optional<NoteEditor::Shown> (drumShown); };
+        scoreWin.refresh();
+        check (scoreWin.isScoreOnlyMode() && scoreWin.showingScore() && ! scoreWin.showingDrums(),
+               "0.24 notation: dedicated Score / Notation window renders empty grand staff and stays in score mode");
     }
 
     void testZeroTelemetryGuarantee()
@@ -381,4 +396,95 @@ void runRelease024Tests()
     testCreativeFx024();
     testNotationAndMusicXml();
     testZeroTelemetryGuarantee();
+}
+
+void saveRelease024Pictures (const juce::File& folder)
+{
+    folder.createDirectory();
+    Theme::apply (Theme::make ("Dark", "Blue"));
+    Theme::LookAndFeel laf;
+
+    constexpr double sr = 48000.0;
+    constexpr double beatSec = 0.5; // 120 BPM
+    constexpr juce::int64 B = (juce::int64) (sr * beatSec); // 1 beat = 24000 frames
+
+    NoteClip clip;
+    clip.id = 42;
+    clip.name = "Nocturne in D";
+    clip.length = 16 * B; // 4 bars of 4/4
+    clip.channel = 1;
+
+    auto add = [&] (int pitch, double startBeat, double lenBeats, float vel = 0.82f)
+    {
+        clip.notes.push_back ({ pitch, (juce::int64) std::llround (startBeat * (double) B),
+                                (juce::int64) std::llround (lenBeats * (double) B), vel });
+    };
+
+    // Bar 1: Dmaj7
+    add (38, 0.0, 2.0, 0.72f); // D2
+    add (45, 0.0, 2.0, 0.70f); // A2
+    add (50, 2.0, 2.0, 0.72f); // D3
+    add (57, 2.0, 2.0, 0.70f); // A3
+    add (66, 0.0, 1.5, 0.86f); // F#4 dotted quarter
+    add (69, 1.5, 0.5, 0.80f); // A4 eighth
+    add (73, 2.0, 1.0, 0.88f); // C#5 quarter
+    add (71, 3.0, 1.0, 0.84f); // B4 quarter
+
+    // Bar 2: Bm7
+    add (47, 4.0, 2.0, 0.74f); // B2
+    add (54, 4.0, 2.0, 0.70f); // F#3
+    add (50, 6.0, 1.0, 0.72f); // D3
+    add (45, 7.0, 1.0, 0.70f); // A2
+    add (69, 4.0, 1.0, 0.86f); // A4
+    add (66, 5.0, 0.5, 0.80f); // F#4
+    add (64, 5.5, 0.5, 0.78f); // E4
+    add (62, 6.0, 2.0, 0.84f); // D4 half
+    add (60, 6.0, 2.0, 0.76f); // C4 (natural accidental on middle C ledger line)
+
+    // Bar 3: Gmaj7 -> A7
+    add (43, 8.0, 2.0, 0.76f);  // G2
+    add (50, 8.0, 2.0, 0.72f);  // D3
+    add (45, 10.0, 2.0, 0.76f); // A2
+    add (52, 10.0, 2.0, 0.72f); // E3
+    add (71, 8.0, 2.0, 0.88f);  // B4 chord
+    add (74, 8.0, 2.0, 0.88f);  // D5 chord
+    add (78, 8.0, 2.0, 0.90f);  // F#5 chord
+    add (79, 10.0, 1.0, 0.92f); // G5
+    add (76, 11.0, 0.5, 0.84f); // E5
+    add (73, 11.5, 0.5, 0.82f); // C#5
+
+    // Bar 4: Dmaj9 resolution
+    add (38, 12.0, 4.0, 0.78f); // D2 whole
+    add (45, 12.0, 4.0, 0.74f); // A2 whole
+    add (54, 12.0, 4.0, 0.72f); // F#3 whole
+    add (66, 12.0, 4.0, 0.84f); // F#4 whole
+    add (74, 12.0, 4.0, 0.90f); // D5 whole
+    add (81, 12.0, 4.0, 0.92f); // A5 whole (ledger line above treble)
+
+    NoteEditor::Shown shown;
+    shown.clip = clip;
+    shown.sampleRate = sr;
+    shown.beatSeconds = beatSec;
+    shown.beatsPerBar = 4;
+    shown.trackName = "Grand Piano";
+    shown.key = "D major";
+    shown.hasInstrument = true;
+
+    NoteEditor ed;
+    ed.setLookAndFeel (&laf);
+    ed.setScoreOnlyMode (true);
+    ed.setGridDivision (4);
+    ed.readClip = [&] { return std::optional<NoteEditor::Shown> (shown); };
+    ed.readPlayhead = [&] { return std::optional<juce::int64> (6 * B); };
+    ed.setSize (1120, 460);
+    ed.refresh();
+    ed.fitTime();
+
+    const auto img = ed.createComponentSnapshot (ed.getLocalBounds(), true, 2.0f);
+    auto outFile = folder.getChildFile ("guide-score.png");
+    outFile.deleteFile();
+    juce::FileOutputStream out (outFile);
+    juce::PNGImageFormat().writeImageToStream (img, out);
+    ed.setLookAndFeel (nullptr);
+    std::cout << outFile.getFullPathName() << " " << img.getWidth() << " x " << img.getHeight() << std::endl;
 }

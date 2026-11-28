@@ -44,7 +44,7 @@
   {
    "label": "Automated checks",
    "prev": 2782,
-   "now": 2816,
+   "now": 2818,
    "note": "arm64 + Intel Rosetta, plus headless CI",
    "source": "CHANGELOG.md"
   }
@@ -6299,7 +6299,7 @@
   },
   {
    "title": "Grand-Staff Notation",
-   "body": "Interactive treble + bass Score view in Note Editor with MusicXML 3.1 export"
+   "body": "Dedicated Score / Notation window (Option-S) with treble + bass staff & MusicXML 3.1"
   },
   {
    "title": "One-Click Instrument UX",
