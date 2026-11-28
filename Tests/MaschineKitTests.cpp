@@ -270,7 +270,7 @@ void runMaschineKitTests()
 
 int runMaschineKitFiles (const juce::StringArray& files)
 {
-    int ok = 0, failed = 0, totalPads = 0, totalSamples = 0, totalMissing = 0, totalSynthPads = 0, totalFx = 0;
+    int ok = 0, failed = 0, totalPads = 0, totalSamples = 0, totalMissing = 0, totalSynthPads = 0, totalFx = 0, totalPatterns = 0, totalPatNotes = 0;
 
     for (auto& path : files)
     {
@@ -290,6 +290,9 @@ int runMaschineKitFiles (const juce::StringArray& files)
         ++ok;
         totalPads += (int) plan.pads.size();
         totalMissing += plan.missing.size();
+        totalPatterns += (int) kit.patterns.size();
+        for (auto& pat : kit.patterns)
+            totalPatNotes += (int) pat.notes.size();
 
         for (auto& p : plan.pads)
         {
@@ -306,6 +309,7 @@ int runMaschineKitFiles (const juce::StringArray& files)
     std::cout << "Maschine files verified: " << ok << "/" << files.size()
               << " passed (" << failed << " failed), " << totalPads << " pads ("
               << totalSamples << " resolved samples, " << totalMissing << " missing, "
-              << totalSynthPads << " clean-room synth pads, " << totalFx << " pads with FX)." << std::endl;
+              << totalSynthPads << " clean-room synth pads, " << totalFx << " pads with FX, "
+              << totalPatterns << " patterns / " << totalPatNotes << " MIDI notes)." << std::endl;
     return failed == 0 ? 0 : 1;
 }

@@ -3,6 +3,8 @@
 #include "FadeShape.h"
 #include "PhaseVocoder.h"
 #include "SfzImport.h"
+#include "Sf2Import.h"
+#include "MpcKit.h"
 #include "TimeStretch.h"
 #include "WaveTables.h"
 #include "SequenceLibrary.h"
@@ -2274,6 +2276,32 @@ juce::String SamplerProcessor::loadSfz (const juce::File& sfzFile)
         if (auto* p = dynamic_cast<juce::AudioParameterFloat*> (parameter ("release"))) setExactly (*p, imported.settings.release);
     }
 
+    setZones (std::move (imported.zones));
+    return {};
+}
+
+juce::String SamplerProcessor::loadSf2 (const juce::File& sf2File, int presetIndex)
+{
+    auto imported = Sf2Import::loadFile (sf2File, presetIndex);
+    if (! imported.ok())
+        return imported.error;
+
+    slicing.on = false;
+    setZones (std::move (imported.zones));
+    return {};
+}
+
+juce::String SamplerProcessor::loadMpcKeygroup (const juce::File& xpmFile)
+{
+    MpcKit::Program prog;
+    if (const auto err = MpcKit::read (xpmFile, prog); err.isNotEmpty())
+        return err;
+
+    auto imported = MpcKit::toSamplerZones (prog, xpmFile);
+    if (! imported.ok())
+        return imported.error;
+
+    slicing.on = false;
     setZones (std::move (imported.zones));
     return {};
 }

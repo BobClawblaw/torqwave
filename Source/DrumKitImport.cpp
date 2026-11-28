@@ -1358,6 +1358,91 @@ Plan fromMaschine (const MaschineKit::Kit& kit, const juce::File& kitFile, const
         report.add (counted (pluginHosts, "pad hosted a third-party plug-in", "pads hosted third-party plug-ins")
                     + " (such as Massive or Monark) and was left out.");
 
+    if (! kit.patterns.empty())
+        report.add (counted ((int) kit.patterns.front().notes.size(), "embedded pattern note was", "embedded pattern notes were")
+                    + " found in this kit (use Files > Export Maschine Pattern to MIDI... to save as .mid).");
+
+    return plan;
+}
+
+Plan fromMpc (const MpcKit::Program& prog, const juce::File& xpmFile, const juce::File& library)
+{
+    Plan plan;
+    plan.name = prog.name.isNotEmpty() ? prog.name : xpmFile.getFileNameWithoutExtension();
+
+    int filtered = 0, enveloped = 0, choked = 0;
+
+    for (auto& inst : prog.instruments)
+    {
+        if (inst.layers.empty())
+            continue;
+
+        Pad pad;
+        pad.name = inst.name;
+        pad.note = juce::jlimit (0, 127, inst.lowNote);
+        pad.colour = maschinePadColour (inst.number > 0 ? inst.number - 1 : 0);
+
+        const float baseGain = juce::jmax (1.0e-4f, inst.volume / 0.707946f);
+        pad.level = juce::jlimit (-48.0f, 6.0f, 20.0f * std::log10 (baseGain));
+        pad.pan = juce::jlimit (-100.0f, 100.0f, (inst.pan - 0.5f) * 200.0f);
+        pad.tune = juce::jlimit (-24.0f, 24.0f, inst.tuneCoarse + inst.tuneFine * 0.01f);
+
+        if (inst.muteGroup > 0 && inst.muteGroup <= DrumMachine::numChokeGroups)
+        {
+            pad.choke = inst.muteGroup;
+            ++choked;
+        }
+
+        if (inst.filterType > 0)
+        {
+            pad.filter = juce::jlimit (1, 3, inst.filterType);
+            pad.cutoff = logFreq (inst.cutoff, 40.0f, 18000.0f);
+            pad.resonance = juce::jlimit (0.0f, 90.0f, inst.resonance * 85.0f);
+            ++filtered;
+        }
+
+        if (inst.hasEnvelope)
+        {
+            pad.envelope = true;
+            pad.attack = juce::jlimit (0.0f, 500.0f, inst.attack * 500.0f);
+            pad.hold = juce::jlimit (0.0f, 2000.0f, inst.hold * 2000.0f);
+            pad.decay = juce::jlimit (5.0f, 5000.0f, 5.0f + inst.decay * 4995.0f);
+            ++enveloped;
+        }
+
+        for (auto& lay : inst.layers)
+        {
+            const auto resolved = MpcKit::resolve (lay, xpmFile, library);
+
+            if (resolved == juce::File())
+                continue;
+
+            if (! resolved.existsAsFile())
+                plan.missing.addIfNotAlreadyThere (resolved.getFullPathName());
+
+            const int loV = juce::jlimit (1, 127, lay.lowVelocity <= 0 ? 1 : lay.lowVelocity);
+            const int hiV = juce::jlimit (loV, 127, lay.highVelocity <= 0 ? 127 : lay.highVelocity);
+            pad.layers.push_back ({ resolved, loV, hiV });
+        }
+
+        if (! pad.layers.empty())
+        {
+            const auto& l0 = inst.layers.front();
+            pad.reverse = l0.reverse;
+            pad.tune = juce::jlimit (-24.0f, 24.0f, pad.tune + l0.tuneCoarse + l0.tuneFine * 0.01f);
+            if (l0.sliceEnd > l0.sliceStart && l0.sliceStart > 0)
+                pad.start = juce::jlimit (0.0f, 95.0f, 100.0f * (float) l0.sliceStart / (float) l0.sliceEnd);
+            plan.pads.push_back (std::move (pad));
+        }
+    }
+
+    auto& report = plan.report;
+    report.add (counted ((int) plan.pads.size(), "pad", "pads") + " imported from Akai MPC program " + plan.name + ".");
+    if (choked > 0)
+        report.add (counted (choked, "pad uses", "pads use") + " MPC mute/choke groups mapped to Basic Drums choke groups.");
+    if (filtered > 0 || enveloped > 0)
+        report.add ("Carried over " + counted (filtered, "pad filter", "pad filters") + " and " + counted (enveloped, "volume envelope", "volume envelopes") + ".");
+
     return plan;
 }
 
@@ -1370,6 +1455,11 @@ bool isBatteryKit (const juce::File& file)
 bool isMaschineKit (const juce::File& file)
 {
     return file.hasFileExtension ("mxgrp;mxsnd");
+}
+
+bool isMpcKit (const juce::File& file)
+{
+    return file.hasFileExtension ("xpm");
 }
 
 namespace
@@ -1481,6 +1571,49 @@ namespace
             });
         });
     }
+    void importMpcRead (juce::Component::SafePointer<juce::Component> window, BuiltInEffects::BasicDrumsProcessor& drums, std::unique_ptr<juce::FileChooser>& chooser,
+                        const Say& done, const juce::File& file)
+    {
+        auto prog = std::make_shared<MpcKit::Program>();
+
+        if (const auto error = MpcKit::read (file, *prog); error.isNotEmpty())
+        {
+            done (file.getFileName() + ": " + error);
+            return;
+        }
+
+        auto plan = fromMpc (*prog, file);
+
+        if (plan.missing.isEmpty())
+        {
+            finish (window, drums, std::move (plan), done);
+            return;
+        }
+
+        const auto options = juce::MessageBoxOptions().withIconType (juce::MessageBoxIconType::QuestionIcon).withTitle ("Import " + plan.name)
+                                 .withMessage (counted (plan.missing.size(), "sample is", "samples are") + " not beside " + file.getFileName() + ".\n\nChoose the folder its samples are in.")
+                                 .withButton ("Choose Folder...").withButton ("Import Without Them").withButton ("Cancel").withAssociatedComponent (window.getComponent());
+
+        juce::AlertWindow::showAsync (options, [window, &drums, &chooser, done, file, prog, plan] (int chosen) mutable
+        {
+            if (window == nullptr || chosen == 0)
+                return;
+
+            if (chosen == 2)
+            {
+                finish (window, drums, std::move (plan), done);
+                return;
+            }
+
+            chooser = std::make_unique<juce::FileChooser> ("Choose the folder the MPC samples are in", file.getParentDirectory(), juce::String());
+            chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories,
+                                  [window, &drums, done, file, prog] (const juce::FileChooser& c)
+            {
+                if (window != nullptr && c.getResult() != juce::File())
+                    finish (window, drums, fromMpc (*prog, file, c.getResult()), done);
+            });
+        });
+    }
 }
 
 void importMaschineKit (juce::Component& window, BuiltInEffects::BasicDrumsProcessor& drums, std::unique_ptr<juce::FileChooser>& chooser, Say done, const juce::File& kitFile)
@@ -1498,6 +1631,78 @@ void importMaschineKit (juce::Component& window, BuiltInEffects::BasicDrumsProce
     {
         if (safe != nullptr && c.getResult() != juce::File())
             importMaschineRead (safe, drums, chooser, done, c.getResult());
+    });
+}
+
+void importMpcKit (juce::Component& window, BuiltInEffects::BasicDrumsProcessor& drums, std::unique_ptr<juce::FileChooser>& chooser, Say done, const juce::File& xpmFile)
+{
+    const juce::Component::SafePointer<juce::Component> safe (&window);
+
+    if (xpmFile != juce::File())
+    {
+        importMpcRead (safe, drums, chooser, done, xpmFile);
+        return;
+    }
+
+    chooser = std::make_unique<juce::FileChooser> ("Import an Akai MPC Drum program (.xpm)", juce::File(), "*.xpm");
+    chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [safe, &drums, &chooser, done] (const juce::FileChooser& c)
+    {
+        if (safe != nullptr && c.getResult() != juce::File())
+            importMpcRead (safe, drums, chooser, done, c.getResult());
+    });
+}
+
+void exportMaschineMidi (juce::Component& window, std::unique_ptr<juce::FileChooser>& chooser, Say done, const juce::File& kitFile)
+{
+    const juce::Component::SafePointer<juce::Component> safe (&window);
+
+    auto handleFile = [safe, &chooser, done] (const juce::File& src)
+    {
+        auto kit = std::make_shared<MaschineKit::Kit>();
+
+        if (const auto err = MaschineKit::read (src, *kit); err.isNotEmpty())
+        {
+            done (src.getFileName() + ": " + err);
+            return;
+        }
+
+        if (kit->patterns.empty())
+        {
+            done (src.getFileName() + " has no embedded MIDI patterns.");
+            return;
+        }
+
+        // Build soundIndex -> Basic Drums MIDI note map from the kit's plan
+        auto plan = fromMaschine (*kit, src);
+        std::map<int, int> soundToNote;
+        for (size_t i = 0; i < plan.pads.size() && i < kit->sounds.size(); ++i)
+            soundToNote[kit->sounds[i].index] = plan.pads[i].note;
+
+        const auto suggested = src.getParentDirectory().getChildFile (src.getFileNameWithoutExtension() + ".mid");
+        chooser = std::make_unique<juce::FileChooser> ("Export Maschine pattern as MIDI", suggested, "*.mid");
+        chooser->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::warnAboutOverwriting,
+                              [safe, done, kit, soundToNote] (const juce::FileChooser& c)
+        {
+            if (safe == nullptr || c.getResult() == juce::File())
+                return;
+
+            const auto out = c.getResult().withFileExtension (".mid");
+            const auto err = MaschineKit::exportPatternToMidi (kit->patterns.front(), soundToNote, out);
+            done (err.isNotEmpty() ? err : "Exported " + counted ((int) kit->patterns.front().notes.size(), "note", "notes") + " to " + out.getFileName() + ".");
+        });
+    };
+
+    if (kitFile != juce::File())
+    {
+        handleFile (kitFile);
+        return;
+    }
+
+    chooser = std::make_unique<juce::FileChooser> ("Choose a Maschine kit (.mxgrp) to export its pattern to MIDI", juce::File(), "*.mxgrp");
+    chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [safe, handleFile] (const juce::FileChooser& c)
+    {
+        if (safe != nullptr && c.getResult() != juce::File())
+            handleFile (c.getResult());
     });
 }
 

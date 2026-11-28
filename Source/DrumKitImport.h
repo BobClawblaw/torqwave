@@ -3,6 +3,7 @@
 #include "DrumMachine.h"
 #include "BatteryKit.h"
 #include "MaschineKit.h"
+#include "MpcKit.h"
 
 /** Bringing a kit made elsewhere onto Basic Drums' pads: a Battery 4 kit file (.nbkt/.nbcl),
     a Maschine 2/3 kit or sound (.mxgrp/.mxsnd) the user owns, or a folder of sound files laid on
@@ -80,6 +81,10 @@ namespace DrumKitImport
         Reverb/Delay sends). */
     Plan fromMaschine (const MaschineKit::Kit&, const juce::File& kitFile, const juce::File& library = {});
 
+    /** An Akai MPC Drum (.xpm) program as a plan: pad layers, velocity ranges, tune, level, pan,
+        start, reverse, choke/mute groups, filter, and volume envelope. */
+    Plan fromMpc (const MpcKit::Program&, const juce::File& xpmFile, const juce::File& library = {});
+
     /** A folder of sound files as a plan (the folders inside it too), each file's pad chosen from
         its name:
         - a General MIDI drum note number at the front or the end ("36 Thud", "Thud 038"), unless
@@ -118,6 +123,15 @@ namespace DrumKitImport
     void importMaschineKit (juce::Component& window, BuiltInEffects::BasicDrumsProcessor&, std::unique_ptr<juce::FileChooser>&,
                             std::function<void (const juce::String&)> done, const juce::File& kitFile = {});
 
+    /** The same for an Akai MPC Drum program (.xpm). */
+    void importMpcKit (juce::Component& window, BuiltInEffects::BasicDrumsProcessor&, std::unique_ptr<juce::FileChooser>&,
+                       std::function<void (const juce::String&)> done, const juce::File& xpmFile = {});
+
+    /** Exports embedded MIDI patterns from a Maschine .mxgrp file to a chosen .mid file,
+        mapped to Basic Drums' notes. */
+    void exportMaschineMidi (juce::Component& window, std::unique_ptr<juce::FileChooser>&,
+                             std::function<void (const juce::String&)> done, const juce::File& kitFile = {});
+
     /** The same for a folder of sounds: asks for one, or takes the one given. */
     void importFolder (juce::Component& window, BuiltInEffects::BasicDrumsProcessor&, std::unique_ptr<juce::FileChooser>&,
                        std::function<void (const juce::String&)> done, const juce::File& folder = {});
@@ -127,4 +141,7 @@ namespace DrumKitImport
 
     /** Whether a file is one importMaschineKit takes (.mxgrp or .mxsnd). */
     bool isMaschineKit (const juce::File&);
+
+    /** Whether a file is one importMpcKit takes (.xpm). */
+    bool isMpcKit (const juce::File&);
 }

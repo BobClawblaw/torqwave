@@ -137,7 +137,7 @@ A session, preset or patch saved before Torqwave Synth had nine oscillators open
 - **54 synthesized sources.** The 30 sounds, 21 of them in two types (Classic and Modern), and 24 more that belong to no note and that any pad can play: 75 models in all. Nothing here is a recording.
 - **Your own samples** on any pad, in up to 16 layers by velocity, with round robin. No samples come with Torqwave.
 - **On every pad:** tune, decay, tone, level, pan and drive; a filter, a crusher and two sends; its own envelope, transient shaper, saturator, EQ and compressor; per-pad routing to the **Main** stereo bus or any of **8 stereo Aux buses** (saved with the kit and session); and a place in one of eight choke groups, beside the three built in.
-- **Fifteen factory kits,** your own as presets or as kit files that carry their samples, and imports of a folder of sounds, a Battery 4 kit, or a Maschine 2/3 kit.
+- **Fifteen factory kits,** your own as presets or as kit files that carry their samples, and imports of a folder of sounds, a Battery 4 kit, a Maschine 2/3 kit (with MIDI pattern export), or an Akai MPC `.xpm` kit.
 
 Each note rings on its own voice (a tom fill rings over itself), it plays in stereo, and nothing in it stops dead: a hit struck again or cut off fades over 3 ms.
 
@@ -283,7 +283,15 @@ A factory kit sets every pad at once, with the bus and the space. There are fift
 - **Samples stay in place:** Sample zones inside Maschine's Sampler or Audio modules are resolved automatically against the expansion or factory library folder (walking up from `Groups/Kits/` to `Samples/`) and are never copied. Multi-sample velocity layers, start points, level, pan, tune, and Sampler filter settings come over onto the pad.
 - **Clean-room Drum Synth mapping:** Pads using Maschine's internal Drum Synths (`Kick`, `Snare`, `Hi-Hat`, `Tom`, `Perc`, `Cymbal`, and `Bass Synth`) are mapped clean-room onto Basic Drums' own synthesized drum sources (`Sub Kick`, `FM Kick`, `Distorted Kick`, `Click Kick`, `Rumble Kick`, `FM Snare`, `Noise Snare`, `Metal Snare`, `Clap Stack`, `FM Hat`, `Noise Hat`, `FM Tom`, `Dark Ride`, `Trash Crash`, `FM Bell`, `Anvil`, `Pipe`, `Sub Drop`, and the built-in GM drum engines) with their tune, decay, tone, and drive parameters translated over.
 - **Clean-room per-pad & bus FX translation:** Maschine insert effects are translated into Basic Drums' own built-in DSP: `EQ` → 4-Band Pad EQ, `Filter` → Pad Resonant Filter, `Saturator` / `Distortion` / `Cabinet` → Pad Saturator (Tape/Tube/Clip/Fold), `Transient Master` → Pad Transient Shaper, `Compressor` / `Maximizer` / `Limiter` → Pad Compressor (and Group Glue), `Lo-Fi` → Pad Bitcrusher, `Metaverb` / `Reverb` / `Plate Reverb` / `Ice` → Pad Reverb Send, and `Beat Delay` / `Reflex` / `Grain Delay` → Pad Delay Send.
+- **MIDI pattern export:** **Files > Export Maschine Pattern to MIDI...** extracts the built-in note pattern from a `.mxgrp` kit (960 PPQN `NoteEvent` timing, duration, and velocity) and writes a Standard MIDI File (`.mid`) mapped directly to Basic Drums' notes so you can drop the kit's original groove onto your drum track.
 - **What does not come over:** Third-party plug-in hosts inside a Maschine pad (such as Massive or Monark) and modulation effects without a direct per-pad slot (`Chorus`, `Flanger`, `Phaser`, `Freq Shifter`, `FM`, `Resochord`, `Grain Stretch`). Every mapped and skipped item is listed plainly in the import report.
+
+#### Importing an Akai MPC kit
+
+**Files > Import MPC Kit...** reads an Akai MPC Drum or Keygroup program file (`.xpm`) and lays its pads into Basic Drums. Dropping a `.xpm` file onto the window does the same.
+
+- **What comes over:** Each pad's sample layers with their velocity ranges, note assignment (`PadNoteMap` or instrument key range), mute/choke groups (`PadGroupMap` and `MuteGroup`), level, pan, coarse and fine tune, sample slice start, reverse playback, resonant filter (low-pass, band-pass, high-pass), and volume envelope (attack, hold, decay).
+- **Samples stay where they are:** Samples are resolved beside the `.xpm` file, inside a `Samples/` subfolder, or in the parent folder without copying. If samples live elsewhere, the import asks for the library folder.
 
 #### What is kept, and what can be automated
 
@@ -379,7 +387,7 @@ Six notes can sound at once; a seventh takes the oldest's place. It answers pitc
 | **Round Robin** | Assign overlapping zones to a round-robin group (1 to 16) so repeated hits cycle cleanly across recordings instead of machine-gunning the same sample. |
 | **Warp & Source BPM** | Tempo-synced time-stretching powered by Signalsmith Stretch so loops and phrases stay locked to the session's tempo across pitch and tempo changes. |
 
-**SFZ multisample import.** Torqwave Sampler imports standard `.sfz` instruments (`<control> default_path`, `<global>`, `<group>`, `<region>`, key/velocity ranges, loop points, choke groups, `seq_length` round robin, and amp envelopes), reading the referenced audio files in place.
+**SFZ, SoundFont 2, and Akai MPC import.** Torqwave Sampler imports standard `.sfz` instruments (`<control> default_path`, `<global>`, `<group>`, `<region>`, key/velocity ranges, loop points, choke groups, `seq_length` round robin, and amp envelopes), **SoundFont 2 (`.sf2`)** banks (mono and stereo 16-bit PCM zones, preset/instrument key and velocity intersections, root key, tuning, pan, attenuation, and loop points), and **Akai MPC Keygroup/Drum (`.xpm`)** programs — drop any of them onto the window or choose **Open...**. External sample files are read in place.
 
 **The sound's settings** are for every zone: **Amp** (Attack, Decay, Sustain, Release, and how much Velocity sets the level), **Filter** (a low-pass at 12 or 24 dB an octave, a band-pass or a high-pass, with Cutoff, Reso, Key tracking, Vel for velocity to cutoff, and an envelope of its own: Env is how far it opens the filter), **LFO** (five shapes, a Rate in Hz or, with Sync, in note values at the session's tempo, a Fade In, and how far it moves the pitch, filter, level and pan) and **Voice** (Level, Pan, Transpose, Fine, the Bend range, Glide, the vibrato the mod Wheel adds, and Poly or Mono). These can be automated like any instrument's settings.
 
@@ -414,7 +422,7 @@ They play in the octave their source does: the sub and the cello sound an octave
 
 **Presets.** A preset saved from the presets row keeps the knobs and the zones. It names each sample's file where it is; it does not hold the audio. Move or rename the files and the preset's zones come up missing (see below).
 
-**What it holds, and what it doesn't do.** Samples are held whole in memory, not played from disk: one sample can be up to 10 minutes long, and one sampler holds up to 1 GB of samples (about 46 minutes of 48 kHz stereo). A file past either is refused, and the status line says why. Two samplers playing the same file hold it once. Standard `.sfz` multisamples are imported directly (SF2 and proprietary formats are not), round-robin groups cycle per zone, and tempo-synced Warp stretches loops to the session tempo. Without Warp, a sample played higher is shorter, as on any sampler that plays by resampling. One stereo output.
+**What it holds, and what it doesn't do.** Samples are held whole in memory, not played from disk: one sample can be up to 10 minutes long, and one sampler holds up to 1 GB of samples (about 46 minutes of 48 kHz stereo). A file past either is refused, and the status line says why. Two samplers playing the same file hold it once. Standard `.sfz` multisamples, SoundFont 2 (`.sf2`) presets, and Akai MPC (`.xpm`) keygroups are imported directly (encrypted proprietary formats are not), round-robin groups cycle per zone, and tempo-synced Warp stretches loops to the session tempo. Without Warp, a sample played higher is shorter, as on any sampler that plays by resampling. One stereo output.
 
 **In a session.** The session keeps the sampler's settings and zones, and names each sample by where it is beside the session as well as by its full path, as it does for clips' audio: move the session's folder with its audio and it still opens. **Save a Copy with Audio** copies the samples into the copy's Audio/Samples folder. A sample that can't be found leaves its zone silent and red in the key map, the rest playing; the session says which files are missing, and **Locate...** in the window finds one where it is now, and looks in the same folder for the others.
 

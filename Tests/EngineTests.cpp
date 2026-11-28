@@ -47,6 +47,7 @@
 #include "DecryptTests.h"
 #include "BatteryKitTests.h"
 #include "MaschineKitTests.h"
+#include "Release024Tests.h"
 #include "DecryptReal.h"
 #include "WaveSynthTests.h"
 #include "Release023Tests.h"
@@ -957,6 +958,14 @@ int main (int argc, char* argv[])
         return TestUtils::failures == 0 ? 0 : 1;
     }
 
+    if (args.contains ("--024"))
+    {
+        runMaschineKitTests();
+        runRelease024Tests();
+        std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
+        return TestUtils::failures == 0 ? 0 : 1;
+    }
+
     if (args.contains ("--sequences"))
     {
         AudioEngine engine;
@@ -1271,6 +1280,7 @@ int main (int argc, char* argv[])
     {
         runRelease023Tests();
         runMaschineKitTests();
+        runRelease024Tests();
         std::cout << (TestUtils::failures == 0 ? "ALL PASSED" : juce::String (TestUtils::failures) + " FAILED") << std::endl;
         return TestUtils::failures == 0 ? 0 : 1;
     }
@@ -1506,6 +1516,7 @@ int main (int argc, char* argv[])
         runTimeViewStripTests();
         runRelease023Tests();
         runMaschineKitTests();
+        runRelease024Tests();
 
         const bool headless = args.contains ("--headless");
 

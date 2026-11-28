@@ -133,7 +133,9 @@ juce::PluginDescription distortionDescription()   { return describeCreative ("Di
 juce::PluginDescription autoFilterDescription()   { return describeCreative ("Auto-Filter", "Filter", autoFilterId, 0x54514146); }
 juce::PluginDescription volumeShaperDescription() { return describeCreative ("Volume Shaper", "Dynamics", volumeShaperId, 0x54515653); }
 juce::PluginDescription noiseGateDescription()    { return describeCreative ("Noise Gate", "Dynamics", noiseGateId, 0x54514e47); }
-juce::PluginDescription tremoloDescription()      { return describeCreative ("Tremolo & Auto-Pan", "Modulation", tremoloId, 0x54515452); }
+juce::PluginDescription tremoloDescription()          { return describeCreative ("Tremolo & Auto-Pan", "Modulation", tremoloId, 0x54515452); }
+juce::PluginDescription frequencyShifterDescription() { return describeCreative ("Frequency Shifter", "Modulation", frequencyShifterId, 0x54514653); }
+juce::PluginDescription shimmerDelayDescription()     { return describeCreative ("Shimmer Delay", "Delay", shimmerDelayId, 0x54515348); }
 
 //==============================================================================
 // DelayProcessor
@@ -887,5 +889,240 @@ void TremoloProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     }
 
     phase -= std::floor (phase);
+}
+
+//==============================================================================
+// FrequencyShifterProcessor
+//==============================================================================
+FrequencyShifterProcessor::FrequencyShifterProcessor()
+    : BuiltInEffect (frequencyShifterDescription(), "TORQWAVE_FREQ_SHIFTER")
+{
+    mode     = addChoice ("mode", "Mode", { "Up", "Down", "Stereo Split", "Ring Mod" }, 0);
+    shiftHz  = addFloat  ("shiftHz", "Shift", { -1000.0f, 1000.0f, 0.0f, 1.0f }, 40.0f, "Hz");
+    fineHz   = addFloat  ("fineHz", "Fine", { -20.0f, 20.0f }, 0.0f, "Hz");
+    feedback = addFloat  ("feedback", "Feedback", { 0.0f, 85.0f }, 0.0f, "%");
+    lfoRate  = addFloat  ("lfoRate", "LFO Rate", { 0.05f, 20.0f, 0.0f, 0.35f }, 0.5f, "Hz");
+    lfoDepth = addFloat  ("lfoDepth", "LFO Depth", { 0.0f, 200.0f, 0.0f, 0.5f }, 0.0f, "Hz");
+    mix      = addFloat  ("mix", "Mix", { 0.0f, 100.0f }, 100.0f, "%");
+}
+
+void FrequencyShifterProcessor::prepareToPlay (double sampleRate, int)
+{
+    rate = juce::jmax (8000.0, sampleRate);
+    reset();
+}
+
+void FrequencyShifterProcessor::reset()
+{
+    oscPhase = 0.0;
+    lfoPhase = 0.0;
+    for (auto& h : hilbert) h.clear();
+    fbState = {};
+}
+
+void FrequencyShifterProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+{
+    const auto numSamples = buffer.getNumSamples();
+    const auto numCh = juce::jmin (2, buffer.getNumChannels());
+    if (numSamples <= 0 || numCh <= 0)
+        return;
+
+    // Classic Olli Niemitalo 8th-order all-pass Hilbert transformer (90-deg quadrature pair within +/-0.7 deg, 30 Hz - 20 kHz)
+    static constexpr double coeffA2[4] {
+        0.6923878 * 0.6923878,
+        0.9360654322959 * 0.9360654322959,
+        0.9882295226860 * 0.9882295226860,
+        0.9987488452737 * 0.9987488452737
+    };
+    static constexpr double coeffB2[4] {
+        0.4021921162426 * 0.4021921162426,
+        0.8561710882420 * 0.8561710882420,
+        0.9722909545651 * 0.9722909545651,
+        0.9952884791278 * 0.9952884791278
+    };
+
+    const int modeIdx = mode->getIndex();
+    const double baseShift = (double) shiftHz->get() + (double) fineHz->get();
+    const float fb = feedback->get() * 0.01f;
+    const double lfoInc = (double) lfoRate->get() / rate;
+    const double lfoD = (double) lfoDepth->get();
+    const float wet = mix->get() * 0.01f;
+    const float dry = 1.0f - wet;
+    constexpr double twoPi = juce::MathConstants<double>::twoPi;
+
+    for (int i = 0; i < numSamples; ++i)
+    {
+        const double curShift = baseShift + lfoD * std::sin (twoPi * lfoPhase);
+        lfoPhase += lfoInc;
+        if (lfoPhase >= 1.0) lfoPhase -= 1.0;
+
+        oscPhase += curShift / rate;
+        oscPhase -= std::floor (oscPhase);
+        const double cs = std::cos (twoPi * oscPhase);
+        const double sn = std::sin (twoPi * oscPhase);
+
+        for (int ch = 0; ch < numCh; ++ch)
+        {
+            const float in = buffer.getSample (ch, i);
+            const double driven = (double) in + (double) fb * std::tanh ((double) fbState[(size_t) ch]);
+
+            auto& h = hilbert[(size_t) ch];
+            double a = driven;
+            double b = driven;
+
+            for (int st = 0; st < 4; ++st)
+            {
+                a = h.branchA[(size_t) st].process (a, coeffA2[st]);
+                b = h.branchB[(size_t) st].process (b, coeffB2[st]);
+            }
+
+            // 1-sample delay aligns branch A at -90 deg relative to branch B (I = b, Q = prevA)
+            const double q = h.prevA;
+            h.prevA = a;
+
+            double shifted = 0.0;
+            if (modeIdx == 0)      shifted = b * cs - q * sn;                                     // Up
+            else if (modeIdx == 1) shifted = b * cs + q * sn;                                     // Down
+            else if (modeIdx == 2) shifted = (ch == 0) ? (b * cs - q * sn) : (b * cs + q * sn);   // Stereo Split
+            else                   shifted = driven * cs;                                         // Ring Mod
+
+            fbState[(size_t) ch] = (float) shifted;
+            buffer.setSample (ch, i, dry * in + wet * (float) shifted);
+        }
+    }
+}
+
+//==============================================================================
+// ShimmerDelayProcessor
+//==============================================================================
+ShimmerDelayProcessor::ShimmerDelayProcessor()
+    : BuiltInEffect (shimmerDelayDescription(), "TORQWAVE_SHIMMER_DELAY")
+{
+    sync      = addBool   ("sync", "Tempo Sync", true);
+    division  = addChoice ("division", "Division", syncDivisionNames(), 9); // 1/4
+    timeMs    = addFloat  ("timeMs", "Time", { 20.0f, 2000.0f, 0.0f, 0.4f }, 380.0f, "ms");
+    pitchSt   = addFloat  ("pitchSt", "Pitch", { -24.0f, 24.0f, 1.0f }, 12.0f, "st");
+    grainMs   = addFloat  ("grainMs", "Grain Size", { 25.0f, 180.0f }, 75.0f, "ms");
+    feedback  = addFloat  ("feedback", "Feedback", { 0.0f, 92.0f }, 55.0f, "%");
+    dampHz    = addFloat  ("dampHz", "Damp", { 600.0f, 18000.0f, 0.0f, 0.3f }, 7500.0f, "Hz");
+    diffusion = addFloat  ("diffusion", "Diffusion", { 0.0f, 100.0f }, 45.0f, "%");
+    spread    = addFloat  ("spread", "Stereo Spread", { 0.0f, 100.0f }, 25.0f, "%");
+    mix       = addFloat  ("mix", "Mix", { 0.0f, 100.0f }, 40.0f, "%");
+}
+
+void ShimmerDelayProcessor::prepareToPlay (double sampleRate, int)
+{
+    rate = juce::jmax (8000.0, sampleRate);
+    const size_t maxDelay = (size_t) std::ceil (rate * 2.5) + 16;
+    const size_t maxGrain = (size_t) std::ceil (rate * 0.25) + 16;
+
+    for (auto& dl : delayLines) dl.assign (maxDelay, 0.0f);
+    for (auto& gb : grainBuf)   gb.assign (maxGrain, 0.0f);
+
+    reset();
+}
+
+void ShimmerDelayProcessor::reset()
+{
+    for (auto& dl : delayLines) std::fill (dl.begin(), dl.end(), 0.0f);
+    for (auto& gb : grainBuf)   std::fill (gb.begin(), gb.end(), 0.0f);
+    delayWrite = 0;
+    grainWrite = 0;
+    grainPhase = 0.0;
+    lpState = {};
+    for (auto& db : diffBuf) db.fill (0.0f);
+    diffPos = {};
+}
+
+double ShimmerDelayProcessor::getTailLengthSeconds() const
+{
+    return 3.0;
+}
+
+void ShimmerDelayProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+{
+    const auto numSamples = buffer.getNumSamples();
+    const auto numCh = juce::jmin (2, buffer.getNumChannels());
+    if (numSamples <= 0 || numCh <= 0 || delayLines[0].empty() || grainBuf[0].empty())
+        return;
+
+    const auto timing = readPlayhead (getPlayHead());
+    const int dLen = (int) delayLines[0].size();
+    const int gLen = (int) grainBuf[0].size();
+
+    const double baseDelaySec = sync->get()
+        ? (syncDivisionBeats (division->getIndex()) * 60.0 / timing.bpm)
+        : ((double) timeMs->get() * 0.001);
+    const double baseSamples = juce::jlimit (32.0, (double) (dLen - 4), baseDelaySec * rate);
+    const double spreadOffset = (double) spread->get() * 0.0015 * baseSamples;
+
+    const double ratio = std::pow (2.0, (double) pitchSt->get() / 12.0);
+    const double windowSamples = juce::jlimit (256.0, (double) (gLen - 4), (double) grainMs->get() * 0.001 * rate);
+    const double phaseInc = (1.0 - ratio) / windowSamples;
+
+    const float fb = feedback->get() * 0.01f;
+    const float dampC = 1.0f - std::exp (-juce::MathConstants<float>::twoPi * dampHz->get() / (float) rate);
+    const float diffG = diffusion->get() * 0.0065f;
+    const float wet = mix->get() * 0.01f;
+    const float dry = 1.0f - wet;
+
+    auto readInterp = [] (const std::vector<float>& line, int wPos, double delay) -> float
+    {
+        const int len = (int) line.size();
+        double r = (double) wPos - delay;
+        while (r < 0.0) r += (double) len;
+        while (r >= (double) len) r -= (double) len;
+        const int i0 = (int) r;
+        const int i1 = (i0 + 1) % len;
+        const float frac = (float) (r - (double) i0);
+        return line[(size_t) i0] + frac * (line[(size_t) i1] - line[(size_t) i0]);
+    };
+
+    for (int i = 0; i < numSamples; ++i)
+    {
+        // Two 180-deg out-of-phase Hann grains for clickless pitch shifting
+        const double p0 = grainPhase;
+        double p1 = grainPhase + 0.5;
+        if (p1 >= 1.0) p1 -= 1.0;
+
+        const float w0 = 0.5f - 0.5f * std::cos (juce::MathConstants<float>::twoPi * (float) p0);
+        const float w1 = 0.5f - 0.5f * std::cos (juce::MathConstants<float>::twoPi * (float) p1);
+        const double d0 = p0 * windowSamples;
+        const double d1 = p1 * windowSamples;
+
+        grainPhase += phaseInc;
+        grainPhase -= std::floor (grainPhase);
+
+        for (int ch = 0; ch < numCh; ++ch)
+        {
+            const float in = buffer.getSample (ch, i);
+            const double chDelay = juce::jlimit (32.0, (double) (dLen - 4), baseSamples + (ch == 1 ? spreadOffset : -spreadOffset));
+            const float delayed = readInterp (delayLines[(size_t) ch], delayWrite, chDelay);
+
+            // Feed delayed tap into granular pitch shifter
+            grainBuf[(size_t) ch][(size_t) grainWrite] = delayed;
+            const float pitched = w0 * readInterp (grainBuf[(size_t) ch], grainWrite, d0)
+                                + w1 * readInterp (grainBuf[(size_t) ch], grainWrite, d1);
+
+            // All-pass diffusion smear
+            const int apLen = ch == 0 ? 193 : 241;
+            auto& ap = diffBuf[(size_t) ch];
+            int& apIdx = diffPos[(size_t) ch];
+            const float apDelayed = ap[(size_t) apIdx];
+            const float diffused = -diffG * pitched + apDelayed;
+            ap[(size_t) apIdx] = pitched + diffG * diffused;
+            apIdx = (apIdx + 1) % apLen;
+
+            // Low-pass feedback damping + soft saturation guard
+            lpState[(size_t) ch] += dampC * (diffused - lpState[(size_t) ch]);
+            const float fbSig = std::tanh (lpState[(size_t) ch] * fb);
+
+            delayLines[(size_t) ch][(size_t) delayWrite] = in + fbSig;
+            buffer.setSample (ch, i, dry * in + wet * diffused);
+        }
+
+        delayWrite = (delayWrite + 1) % dLen;
+        grainWrite = (grainWrite + 1) % gLen;
+    }
 }
 }

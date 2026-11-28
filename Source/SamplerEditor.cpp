@@ -1100,6 +1100,24 @@ void SamplerEditor::say (const juce::String& message)
 
 bool SamplerEditor::loadFile (const juce::File& file, int atKey)
 {
+    if (file.hasFileExtension ("sfz;sf2;xpm"))
+    {
+        const auto err = file.hasFileExtension ("sfz") ? sampler.loadSfz (file)
+                       : file.hasFileExtension ("sf2") ? sampler.loadSf2 (file)
+                                                       : sampler.loadMpcKeygroup (file);
+        if (err.isNotEmpty())
+        {
+            say (err);
+            return false;
+        }
+
+        readZones();
+        select (0);
+        wave->showAll();
+        say ("Loaded " + file.getFileName() + " (" + juce::String ((int) zoneList.size()) + " zones).");
+        return true;
+    }
+
     juce::String error;
     const auto sample = Sampler::sharedSample (file, error);
 
@@ -1131,7 +1149,7 @@ bool SamplerEditor::loadFile (const juce::File& file, int atKey)
 bool SamplerEditor::isInterestedInFileDrag (const juce::StringArray& files)
 {
     for (auto& f : files)
-        if (juce::File (f).hasFileExtension ("wav;wave;bwf;aif;aiff;aifc;flac;ogg;opus;mp3;m4a;caf"))
+        if (juce::File (f).hasFileExtension ("wav;wave;bwf;aif;aiff;aifc;flac;ogg;opus;mp3;m4a;caf;sfz;sf2;xpm"))
             return true;
 
     return false;
@@ -1139,6 +1157,12 @@ bool SamplerEditor::isInterestedInFileDrag (const juce::StringArray& files)
 
 void SamplerEditor::filesDropped (const juce::StringArray& files, int x, int y)
 {
+    if (files.size() == 1 && juce::File (files[0]).hasFileExtension ("sfz;sf2;xpm"))
+    {
+        loadFile (juce::File (files[0]));
+        return;
+    }
+
     // On the key map (playing keys, not slices) a sound lands as a new zone at the key under it.
     const auto onKeys = keyMap->getScreenBounds().contains (localPointToGlobal (juce::Point<int> (x, y))) && ! showsSlices();
     const auto key = onKeys ? keyMap->keyAt ((float) (localPointToGlobal (juce::Point<int> (x, y)).x - keyMap->getScreenX())) : -1;
@@ -1215,7 +1239,7 @@ void SamplerEditor::itemDropped (const SourceDetails& details)
 
 void SamplerEditor::chooseFile()
 {
-    chooser = std::make_unique<juce::FileChooser> ("Choose a sound to sample", juce::File(), "*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3;*.m4a;*.caf");
+    chooser = std::make_unique<juce::FileChooser> ("Choose a sound, SFZ, SF2 or MPC keygroup", juce::File(), "*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3;*.m4a;*.caf;*.sfz;*.sf2;*.xpm");
     chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
                           [safe = juce::Component::SafePointer<SamplerEditor> (this)] (const juce::FileChooser& c)
                           {

@@ -9,8 +9,10 @@ namespace BuiltInEffects
     constexpr const char* distortionId   = "torqwave:distortion";
     constexpr const char* autoFilterId   = "torqwave:auto-filter";
     constexpr const char* volumeShaperId = "torqwave:volume-shaper";
-    constexpr const char* noiseGateId    = "torqwave:noise-gate";
-    constexpr const char* tremoloId      = "torqwave:tremolo";
+    constexpr const char* noiseGateId        = "torqwave:noise-gate";
+    constexpr const char* tremoloId          = "torqwave:tremolo";
+    constexpr const char* frequencyShifterId = "torqwave:frequency-shifter";
+    constexpr const char* shimmerDelayId     = "torqwave:shimmer-delay";
 
     juce::PluginDescription delayDescription();
     juce::PluginDescription distortionDescription();
@@ -18,6 +20,8 @@ namespace BuiltInEffects
     juce::PluginDescription volumeShaperDescription();
     juce::PluginDescription noiseGateDescription();
     juce::PluginDescription tremoloDescription();
+    juce::PluginDescription frequencyShifterDescription();
+    juce::PluginDescription shimmerDelayDescription();
 
     /** Tempo-synced or free stereo / ping-pong / tape delay with feedback filtering, tape wow/drive,
         and input-triggered ducking of the wet signal. */
@@ -198,5 +202,86 @@ namespace BuiltInEffects
         juce::uint32 rng = 0x3b71a9c5u;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TremoloProcessor)
+    };
+
+    /** Clean-room Bode single-sideband Frequency Shifter using a 12-pole all-pass Hilbert network
+        (Up, Down, Stereo Split, and Ring Mod) with LFO modulation and soft-clipped feedback. */
+    class FrequencyShifterProcessor final : public BuiltInEffect
+    {
+    public:
+        FrequencyShifterProcessor();
+
+        void prepareToPlay (double sampleRate, int maximumBlockSize) override;
+        void reset() override;
+        void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+
+    private:
+        struct AllPass
+        {
+            double x1 = 0.0, x2 = 0.0, y1 = 0.0, y2 = 0.0;
+            void clear() noexcept { x1 = x2 = y1 = y2 = 0.0; }
+            double process (double x, double a2) noexcept
+            {
+                // H(z) = (a^2 - z^-2) / (1 - a^2 z^-2)
+                const double y = a2 * (x + y2) - x2;
+                x2 = x1; x1 = x;
+                y2 = y1; y1 = y;
+                return y;
+            }
+        };
+
+        struct HilbertChannel
+        {
+            std::array<AllPass, 4> branchA {}, branchB {};
+            double prevA = 0.0;
+            void clear() noexcept
+            {
+                for (auto& s : branchA) s.clear();
+                for (auto& s : branchB) s.clear();
+                prevA = 0.0;
+            }
+        };
+
+        juce::AudioParameterChoice* mode = nullptr;
+        juce::AudioParameterFloat *shiftHz = nullptr, *fineHz = nullptr, *feedback = nullptr;
+        juce::AudioParameterFloat *lfoRate = nullptr, *lfoDepth = nullptr, *mix = nullptr;
+
+        double rate = 48000.0;
+        double oscPhase = 0.0, lfoPhase = 0.0;
+        std::array<HilbertChannel, 2> hilbert {};
+        std::array<float, 2> fbState {};
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FrequencyShifterProcessor)
+    };
+
+    /** Clean-room Granular / Shimmer Feedback Delay with dual Hann-windowed pitch-shifting grains,
+        tempo sync, feedback damping, all-pass diffusion, and stereo spread. */
+    class ShimmerDelayProcessor final : public BuiltInEffect
+    {
+    public:
+        ShimmerDelayProcessor();
+
+        void prepareToPlay (double sampleRate, int maximumBlockSize) override;
+        void reset() override;
+        void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+        double getTailLengthSeconds() const override;
+
+    private:
+        juce::AudioParameterBool* sync = nullptr;
+        juce::AudioParameterChoice* division = nullptr;
+        juce::AudioParameterFloat *timeMs = nullptr, *pitchSt = nullptr, *grainMs = nullptr;
+        juce::AudioParameterFloat *feedback = nullptr, *dampHz = nullptr, *diffusion = nullptr;
+        juce::AudioParameterFloat *spread = nullptr, *mix = nullptr;
+
+        double rate = 48000.0;
+        std::array<std::vector<float>, 2> delayLines;
+        std::array<std::vector<float>, 2> grainBuf;
+        int delayWrite = 0, grainWrite = 0;
+        double grainPhase = 0.0;
+        std::array<float, 2> lpState {};
+        std::array<std::array<float, 257>, 2> diffBuf {};
+        std::array<int, 2> diffPos {};
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ShimmerDelayProcessor)
     };
 }

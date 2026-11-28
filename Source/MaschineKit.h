@@ -105,13 +105,40 @@ namespace MaschineKit
         std::vector<Module> modules;   // Slot 0 (instrument) followed by insert FX slots
     };
 
+    /** One MIDI note event extracted from a Maschine Group pattern (at 960 PPQN). */
+    struct PatternNote
+    {
+        int soundIndex = 0;            // 0..15 pad index inside the Group
+        double startBeat = 0.0;        // in quarter-note beats from pattern start
+        double durationBeats = 0.25;   // in quarter-note beats
+        int velocity = 100;            // 1..127
+        int pitch = 60;                // original Maschine note pitch (60 = default pad trigger)
+    };
+
+    /** A pattern embedded inside a Maschine Group (.mxgrp). */
+    struct Pattern
+    {
+        juce::String name;
+        double lengthBeats = 16.0;     // e.g. 16.0 = 4 bars
+        double bpm = 0.0;              // optional tempo hint parsed from pattern name (e.g. "2-126 Bpm")
+        std::vector<PatternNote> notes;
+    };
+
     struct Kit
     {
         juce::String name;             // from metadata or file name
         bool isGroup = true;           // true for .mxgrp, false for .mxsnd
         std::vector<Sound> sounds;     // up to 16 pads for a group, 1 for a sound
         std::vector<Module> groupFx;   // group-level insert FX (after pad 16)
+        std::vector<Pattern> patterns; // MIDI patterns embedded inside the .mxgrp
     };
+
+    /** Builds a standard Type-0 MIDI file (960 PPQN) for a Pattern, mapping each soundIndex
+        through `soundToNote` (falling back to 36 + soundIndex). */
+    juce::MidiFile buildMidiFile (const Pattern&, const std::map<int, int>& soundToNote, double fallbackBpm = 120.0);
+
+    /** Writes a Pattern to a standard .mid file on disk. Returns an error message or empty on success. */
+    juce::String exportPatternToMidi (const Pattern&, const std::map<int, int>& soundToNote, const juce::File& outFile, double fallbackBpm = 120.0);
 
     /** Reads a .mxgrp or .mxsnd from memory. Returns an error message to show, or empty on success. */
     juce::String read (const void* data, size_t size, Kit&);

@@ -427,6 +427,12 @@ namespace BuiltInEffects
             Returns an error message, or empty string on success. */
         juce::String loadSfz (const juce::File& sfzFile);
 
+        /** Imports a SoundFont 2 (.sf2) preset into this sampler's zones. */
+        juce::String loadSf2 (const juce::File& sf2File, int presetIndex = 0);
+
+        /** Imports an Akai MPC Keygroup or Drum (.xpm) program into this sampler's zones. */
+        juce::String loadMpcKeygroup (const juce::File& xpmFile);
+
         /** Plays a note now, as a click in its window does, and lets it go: added to the next block. Any thread. */
         void play (int note, float velocity);
         void stop (int note);

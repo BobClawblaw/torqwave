@@ -1444,6 +1444,147 @@ juce::String read (const void* data, size_t size, Kit& kit)
         kit.sounds.push_back (std::move (s));
     }
 
+    // 3b. Extract embedded MIDI NoteEvents (960 PPQN) inside each Sound's slice!
+    int noteEventClassId = -1;
+
+    for (auto& [cid, cname] : classMap)
+        if (cname == "NoteEvent")
+            noteEventClassId = cid;
+
+    if (kit.isGroup && noteEventClassId >= 0)
+    {
+        // Pattern header hint (name, length, BPM) from entries after Group entry (#16)
+        juce::String patName = kit.name.isNotEmpty() ? (kit.name + " Pattern") : "Pattern 1";
+        double patBpm = 0.0;
+        double patLenBeats = 16.0;
+
+        if (entries.size() > 17)
+        {
+            patName = entries[17].name;
+            const auto lower = patName.toLowerCase();
+            const int bpmIdx = lower.indexOf ("bpm");
+
+            if (bpmIdx > 0)
+            {
+                // Extract digits immediately preceding "bpm"
+                int j = bpmIdx - 1;
+                while (j >= 0 && patName[j] == ' ') --j;
+                int endDig = j + 1;
+                while (j >= 0 && patName[j] >= '0' && patName[j] <= '9') --j;
+                const auto num = patName.substring (j + 1, endDig).getDoubleValue();
+                if (num >= 40.0 && num <= 240.0)
+                    patBpm = num;
+            }
+        }
+
+        Pattern pat;
+        pat.name = patName;
+        pat.bpm = patBpm;
+        double maxEndBeat = 0.0;
+
+        // Parse NoteEvent streams inside each Sound's slice [entries[i].afterName, nextEntry)
+        for (size_t i = 0; i < maxSounds; ++i)
+        {
+            const size_t sStart = entries[i].afterName;
+            const size_t sEnd = (i + 1 < entries.size()) ? entries[i + 1].namePos : n;
+
+            // Scan for every NoteEvent instance:
+            //   First occurrence: "NI::MASCHINE::DATA::NoteEvent" 01 01 00 [oid] 01 01 00 [oid] 01 01 00 [oid] 00 <dur> <pitch> <vel>
+            //   Subsequent: <tick_pint> 01 <noteEventClassId> [oid][oid][oid] 00 <dur> <pitch> <vel>
+            size_t p = sStart;
+            int64_t curTick = 0;
+            int notesForPad = 0;
+
+            while (p + 12 < sEnd && notesForPad < 512)
+            {
+                bool matched = false;
+                size_t q = p;
+
+                if (d[p] == 'N' && p + 32 < sEnd && std::memcmp (d + p, "NI::MASCHINE::DATA::NoteEvent", 29) == 0)
+                {
+                    q = p + 29;
+                    // Skip class tracking/version (01 01 00) and 3 tracked fields until 0x00 before dur/pitch/vel
+                    // Pattern verified: 01 01 00 [oid] 01 01 00 [oid] 01 01 00 [oid] 00 <dur> <pitch> <vel>
+                    for (int step = 0; step < 3 && q + 4 < sEnd; ++step)
+                    {
+                        q += 3;
+                        int64_t dummy = 0;
+                        if (! readPint (d, sEnd, q, dummy)) break;
+                    }
+                    if (q < sEnd && d[q] == 0)
+                    {
+                        ++q;
+                        curTick = 0;
+                        matched = true;
+                    }
+                }
+                else if (d[p] == 1 && (int) d[p + 1] == noteEventClassId)
+                {
+                    // Check preceding 1..3 bytes for tick pint and verify 3 sequential oids follow
+                    size_t afterCid = p + 2;
+                    int64_t o0 = 0, o1 = 0, o2 = 0;
+
+                    if (readPint (d, sEnd, afterCid, o0) && o0 > 100
+                        && readPint (d, sEnd, afterCid, o1) && o1 == o0 + 1
+                        && readPint (d, sEnd, afterCid, o2) && o2 == o0 + 2
+                        && afterCid < sEnd && d[afterCid] == 0)
+                    {
+                        // Read tick pint immediately preceding p (1-byte 0x00, or 2-byte 0x01 xx, or 3-byte 0x02 xx yy)
+                        int64_t tick = -1;
+                        if (p >= sStart + 3 && d[p - 3] == 2)
+                            tick = (int64_t) (d[p - 2] | (d[p - 1] << 8));
+                        else if (p >= sStart + 2 && d[p - 2] == 1)
+                            tick = (int64_t) d[p - 1];
+                        else if (p >= sStart + 1 && d[p - 1] == 0)
+                            tick = 0;
+
+                        if (tick >= 0 && tick <= 61440)
+                        {
+                            curTick = tick;
+                            q = afterCid + 1;
+                            matched = true;
+                        }
+                    }
+                }
+
+                if (matched)
+                {
+                    int64_t dur = 0, pitch = 0, vel = 0;
+
+                    if (readPint (d, sEnd, q, dur) && readPint (d, sEnd, q, pitch) && readPint (d, sEnd, q, vel)
+                        && dur >= 1 && dur <= 30720 && pitch >= 0 && pitch <= 127 && vel >= 1 && vel <= 127)
+                    {
+                        PatternNote pn;
+                        pn.soundIndex = (int) i;
+                        pn.startBeat = (double) curTick / 960.0;
+                        pn.durationBeats = juce::jmax (0.0625, (double) dur / 960.0);
+                        pn.pitch = (int) pitch;
+                        pn.velocity = (int) vel;
+                        maxEndBeat = std::max (maxEndBeat, pn.startBeat + pn.durationBeats);
+                        pat.notes.push_back (pn);
+                        ++notesForPad;
+                        p = q;
+                        continue;
+                    }
+                }
+
+                ++p;
+            }
+        }
+
+        if (! pat.notes.empty())
+        {
+            // Snap pattern length up to a clean multiple of 4 beats (bars)
+            patLenBeats = std::max (4.0, std::ceil (maxEndBeat / 4.0) * 4.0);
+            pat.lengthBeats = patLenBeats;
+            std::sort (pat.notes.begin(), pat.notes.end(), [] (const PatternNote& a, const PatternNote& b)
+            {
+                return std::tie (a.startBeat, a.soundIndex) < std::tie (b.startBeat, b.soundIndex);
+            });
+            kit.patterns.push_back (std::move (pat));
+        }
+    }
+
     if (kit.isGroup && entries.size() > 16)
     {
         if (kit.name.isEmpty())
@@ -1676,5 +1817,56 @@ juce::MemoryBlock write (const Kit& kit)
     out.append (rootFrame.getData(), rootFrame.getSize());
     out.append (rootTail.getData(), rootTail.getSize());
     return out;
+}
+
+juce::MidiFile buildMidiFile (const Pattern& pat, const std::map<int, int>& soundToNote, double fallbackBpm)
+{
+    constexpr int tpq = 960;
+    juce::MidiFile mf;
+    mf.setTicksPerQuarterNote (tpq);
+
+    juce::MidiMessageSequence seq;
+    const double bpm = pat.bpm > 0.0 ? pat.bpm : juce::jlimit (40.0, 240.0, fallbackBpm);
+    seq.addEvent (juce::MidiMessage::tempoMetaEvent ((int) std::llround (60000000.0 / bpm)), 0.0);
+
+    if (pat.name.isNotEmpty())
+        seq.addEvent (juce::MidiMessage::textMetaEvent (3, pat.name), 0.0);
+
+    for (auto& n : pat.notes)
+    {
+        const auto it = soundToNote.find (n.soundIndex);
+        const int midiNote = juce::jlimit (0, 127, it != soundToNote.end() ? it->second : (36 + n.soundIndex));
+        const double onTick = juce::jmax (0.0, n.startBeat * (double) tpq);
+        const double offTick = onTick + juce::jmax (30.0, n.durationBeats * (double) tpq);
+        const auto vel = (juce::uint8) juce::jlimit (1, 127, n.velocity);
+
+        seq.addEvent (juce::MidiMessage::noteOn (10, midiNote, vel), onTick);
+        seq.addEvent (juce::MidiMessage::noteOff (10, midiNote), offTick);
+    }
+
+    seq.sort();
+    seq.updateMatchedPairs();
+    mf.addTrack (seq);
+    return mf;
+}
+
+juce::String exportPatternToMidi (const Pattern& pat, const std::map<int, int>& soundToNote, const juce::File& outFile, double fallbackBpm)
+{
+    if (pat.notes.empty())
+        return "This Maschine pattern has no notes to export.";
+
+    const auto mf = buildMidiFile (pat, soundToNote, fallbackBpm);
+    juce::FileOutputStream out (outFile);
+
+    if (! out.openedOk())
+        return "Could not create " + outFile.getFileName() + ".";
+
+    out.setPosition (0);
+    out.truncate();
+
+    if (! mf.writeTo (out))
+        return "Could not write MIDI data to " + outFile.getFileName() + ".";
+
+    return {};
 }
 }
